@@ -21,6 +21,7 @@ import { CodexTraitsTab } from './CodexTraitsTab';
 import { CodexCreatureFeatsTab } from './CodexCreatureFeatsTab';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SegmentedControl } from '@/components/shared';
 
 type CodexMode = 'public' | 'my';
 
@@ -96,32 +97,16 @@ export default function CodexPage() {
       </div>
 
       <div className="mb-4 flex flex-wrap items-center gap-4 min-w-0">
-        <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-alt flex-shrink-0">
-          <button
-            type="button"
-            onClick={() => setCodexMode('public')}
-            className={cn(
-              'px-3 py-1.5 rounded text-sm font-medium transition-colors',
-              codexMode === 'public'
-                ? 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white dark:hover:bg-primary-50'
-                : 'text-text-muted dark:text-text-secondary hover:text-text-primary dark:hover:text-text-primary'
-            )}
-          >
-            Realms Codex
-          </button>
-          <button
-            type="button"
-            onClick={() => setCodexMode('my')}
-            className={cn(
-              'px-3 py-1.5 rounded text-sm font-medium transition-colors',
-              codexMode === 'my'
-                ? 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white dark:hover:bg-primary-50'
-                : 'text-text-muted dark:text-text-secondary hover:text-text-primary dark:hover:text-text-primary'
-            )}
-          >
-            My Codex
-          </button>
-        </div>
+        <SegmentedControl
+          value={codexMode}
+          onChange={setCodexMode}
+          options={[
+            { value: 'public', label: 'Realms Codex' },
+            { value: 'my', label: 'My Codex' },
+          ]}
+          aria-label="Codex scope"
+          className="flex-shrink-0"
+        />
       </div>
 
       <div className="min-w-0 mb-6">

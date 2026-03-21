@@ -13,6 +13,7 @@ import { Alert } from '@/components/ui';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
 import type { ChipData } from '@/components/shared/grid-list-row';
 import type { Character } from '@/types';
+import { formatListCellLabel } from '@/lib/utils';
 
 interface FeatModal extends Feat {
   effect?: string;
@@ -80,8 +81,8 @@ function featToSelectableItem(
     description: feat.description || (feat as FeatModal).effect,
     columns: [
       { key: 'uses_per_rec', label: 'Uses', value: usesDisplay, align: 'center' as const },
-      { key: 'rec_period', label: 'Recovery', value: feat.rec_period || '-', align: 'center' as const },
-      { key: 'category', label: 'Category', value: feat.category || '-', align: 'center' as const },
+      { key: 'rec_period', label: 'Recovery', value: formatListCellLabel(feat.rec_period), align: 'center' as const },
+      { key: 'category', label: 'Category', value: formatListCellLabel(feat.category), align: 'center' as const },
     ],
     detailSections: detailSections.length > 0 ? detailSections : undefined,
     disabled,

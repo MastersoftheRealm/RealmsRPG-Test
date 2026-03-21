@@ -34,6 +34,7 @@ import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators/technique-calc';
 import type { ItemPropertyPayload } from '@/lib/calculators/item-calc';
 import { calculateItemCosts, calculateCurrencyCostAndRarity, formatRange as formatItemRange } from '@/lib/calculators/item-calc';
+import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 
 export type LibraryPublicTabId = 'powers' | 'techniques' | 'items' | 'creatures';
@@ -403,14 +404,7 @@ function PublicItemsList({ onLoginRequired, readOnly = false }: { onLoginRequire
       const costs = calculateItemCosts(props, propertiesDb);
       const { currencyCost, rarity } = calculateCurrencyCostAndRarity(costs.totalCurrency, costs.totalIP);
       const rangeStr = formatItemRange(props);
-      const damage = item.damage;
-      let damageStr = '';
-      if (Array.isArray(damage) && damage[0]) {
-        const d = damage[0] as { amount?: number; size?: number; type?: string };
-        damageStr = [d.amount && d.size ? `${d.amount}d${d.size}` : '', d.type].filter(Boolean).join(' ');
-      }
-      const typeMap: Record<string, string> = { weapon: 'Weapon', armor: 'Armor', shield: 'Shield', equipment: 'Equipment' };
-      const typeStr = typeMap[String(item.type ?? '').toLowerCase()] || String(item.type ?? '');
+      const damageStr = formatDamageDisplay(item.damage) || '';
       const parts: ChipData[] = ((item.properties as Array<{ id?: unknown; name?: string; op_1_lvl?: number }>) || []).map(prop => ({
         name: prop.name || '',
         cost: prop.op_1_lvl ?? 1,
@@ -421,8 +415,8 @@ function PublicItemsList({ onLoginRequired, readOnly = false }: { onLoginRequire
         raw: item,
         name: String(item.name ?? ''),
         description: String(item.description ?? ''),
-        type: typeStr,
-        rarity,
+        type: formatListCellLabel(item.type),
+        rarity: formatListCellLabel(rarity),
         currency: currencyCost,
         tp: costs.totalTP,
         range: rangeStr,
@@ -605,7 +599,7 @@ function PublicCreaturesList({ onLoginRequired, readOnly = false }: { onLoginReq
               gridColumns={CREATURE_GRID}
               columns={[
                 { key: 'Level', value: c.level, highlight: true, align: 'center' },
-                { key: 'Type', value: c.type, align: 'center' },
+                { key: 'Type', value: formatListCellLabel(c.type), align: 'center' },
               ]}
               badges={[{ label: 'Realms', color: 'blue' }]}
               rightSlot={readOnly ? undefined : (

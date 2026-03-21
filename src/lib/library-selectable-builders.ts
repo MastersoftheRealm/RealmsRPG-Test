@@ -5,7 +5,7 @@
 
 import type { ColumnValue, ChipData } from '@/components/shared/grid-list-row';
 import type { SelectableItem } from '@/components/shared/unified-selection-modal';
-import { formatDamageDisplay, formatActionTypeForDisplay } from '@/lib/utils';
+import { formatDamageDisplay, formatActionTypeForDisplay, formatListCellLabel } from '@/lib/utils';
 import { deriveShieldAmountFromProperties, deriveShieldDamageFromProperties } from '@/lib/calculators';
 import { derivePowerDisplay } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
@@ -270,7 +270,7 @@ export function buildSelectableItem(
 
   const columns = getItemColumns(item, itemType === 'item' ? effectiveType : itemType, techniqueDisplay);
   if (itemType === 'item') {
-    const typeLabel = capitalize((item as EqItem).type);
+    const typeLabel = formatListCellLabel((item as EqItem).type);
     columns.unshift({ key: 'type', value: typeLabel, align: 'center' as const });
   }
 

@@ -16,6 +16,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  hasListHeaderRowChrome,
+  type ListHeaderRowChrome,
+  GRID_LIST_ROW_LEFT_SLOT_WIDTH,
+  GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH,
+  GRID_LIST_ROW_ICON_COLUMN_WIDTH,
+  GRID_LIST_ROW_SELECTION_COLUMN_WIDTH,
+} from './grid-list-row-chrome';
+
+export type { ListHeaderRowChrome } from './grid-list-row-chrome';
 
 export interface ListColumn {
   /** Column key for sorting */
@@ -52,6 +62,12 @@ export interface ListHeaderProps {
   hasSelectionColumn?: boolean;
   /** Fixed width for a right slot (e.g. quantity); uses flex so header grid aligns with row grid */
   rightSlotWidth?: string;
+  /**
+   * Reserve the same horizontal space as `GridListRow` outer flex chrome (leftSlot / rightSlot / edit / delete / selection).
+   * Use when those controls sit outside the row's inner `gridColumns` grid so fractional columns line up.
+   * Do not combine with `rightSlotWidth` (equipment-step pattern uses `rightSlotWidth` only).
+   */
+  rowChrome?: ListHeaderRowChrome;
   /** Compact mode: use px-3 to match GridListRow compact rows (e.g. in modals) */
   compact?: boolean;
   /** Additional className */
@@ -77,16 +93,19 @@ export function ListHeader({
   onSort,
   hasSelectionColumn = false,
   rightSlotWidth,
+  rowChrome,
   compact = false,
   className,
 }: ListHeaderProps) {
   // Build grid template from columns if not provided
   const gridTemplate = gridColumns || columns.map(c => c.width || '1fr').join(' ');
   
-  // Add selection column space if needed (only when not using rightSlotWidth)
-  const finalGridTemplate = !rightSlotWidth && hasSelectionColumn
-    ? `${gridTemplate} 2.5rem`
-    : gridTemplate;
+  const useRowChrome = hasListHeaderRowChrome(rowChrome) && !rightSlotWidth;
+  const selectionColumnInGrid =
+    !rightSlotWidth && hasSelectionColumn && !rowChrome?.externalSelection;
+
+  // Add selection column space when the selection toggle lives inside the row grid (e.g. modals append `2.5rem`)
+  const finalGridTemplate = selectionColumnInGrid ? `${gridTemplate} 2.5rem` : gridTemplate;
 
   const handleColumnClick = (column: ListColumn) => {
     if (column.sortable !== false && onSort) {
@@ -115,9 +134,15 @@ export function ListHeader({
 
   // Use same horizontal padding as GridListRow so column content aligns with headers site-wide
   const rowPaddingX = compact ? 'px-3' : 'px-4';
-  const baseHeaderClasses = cn(
-    'hidden lg:grid gap-2 py-2 bg-primary-50 dark:bg-surface-alt dark:border dark:border-border rounded-lg mb-2',
-    'text-xs font-semibold text-primary-700 dark:text-text-secondary uppercase tracking-wide',
+  const headerTypography =
+    'text-xs font-semibold text-primary-700 dark:text-text-secondary uppercase tracking-wide';
+  const headerBarSurface =
+    'bg-primary-50 dark:bg-surface-alt dark:border dark:border-border rounded-lg';
+
+  const desktopGridOnlyClasses = cn(
+    'hidden lg:grid gap-2 py-2 mb-2',
+    headerBarSurface,
+    headerTypography,
     !rightSlotWidth && rowPaddingX,
     rightSlotWidth && 'px-3 min-w-0',
     className
@@ -170,9 +195,7 @@ export function ListHeader({
       })}
       
       {/* Selection column - no text, just space for the toggle buttons */}
-      {!rightSlotWidth && hasSelectionColumn && (
-        <span className="text-center" />
-      )}
+      {selectionColumnInGrid && <span className="text-center" />}
     </>
   );
 
@@ -180,16 +203,137 @@ export function ListHeader({
     return (
       <>
         {/* Desktop: grid header */}
-        <div className="hidden lg:flex items-center w-full">
+        <div className="hidden lg:flex items-stretch w-full mb-2">
           <div
-            className={cn(baseHeaderClasses, 'flex-1 min-w-0')}
+            className={cn(
+              'flex-1 min-w-0 grid gap-2 py-2 rounded-lg',
+              headerBarSurface,
+              headerTypography,
+              'px-3 min-w-0',
+              className
+            )}
             style={{ gridTemplateColumns: gridTemplate }}
           >
             {headerContent}
           </div>
-          <div className="flex-shrink-0" style={{ width: rightSlotWidth }} aria-hidden />
+          <div className="flex-shrink-0 self-stretch" style={{ width: rightSlotWidth }} aria-hidden />
         </div>
         {/* Mobile: sort-by dropdown (same sort logic) */}
+        {hasSortable && (
+          <div ref={mobileSortRef} className="lg:hidden mb-2">
+            <button
+              type="button"
+              onClick={() => setMobileSortOpen((o) => !o)}
+              className={cn(
+                'flex items-center justify-between w-full gap-2 py-2.5 px-3 rounded-lg border text-left text-sm font-medium',
+                'bg-primary-50 dark:bg-surface-alt border-primary-200 dark:border-border',
+                'text-primary-700 dark:text-text-secondary',
+                'hover:bg-primary-100 dark:hover:bg-surface transition-colors'
+              )}
+              aria-expanded={mobileSortOpen}
+              aria-haspopup="listbox"
+              aria-label={`Sort by. Current: ${currentLabel} ${currentDir}. Choose sort order.`}
+            >
+              <span className="flex items-center gap-1.5">
+                <span className="text-primary-600 dark:text-text-secondary">Sort by</span>
+                <span>{currentLabel}</span>
+                <span className="text-primary-600 dark:text-text-secondary text-xs">({currentDir})</span>
+              </span>
+              <ChevronsUpDown className={cn('w-4 h-4 shrink-0 transition-transform', mobileSortOpen && 'rotate-180')} />
+            </button>
+            {mobileSortOpen && (
+              <div
+                className="mt-1 rounded-lg border border-border-light bg-surface shadow-lg overflow-hidden"
+                role="listbox"
+              >
+                {sortableColumns.map((column) => {
+                  const isActive = sortState?.col === column.key;
+                  return (
+                    <button
+                      key={column.key}
+                      type="button"
+                      role="option"
+                      aria-selected={isActive}
+                      onClick={() => {
+                        handleColumnClick(column);
+                        setMobileSortOpen(false);
+                      }}
+                      className={cn(
+                        'w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-left min-h-[44px]',
+                        'hover:bg-surface-alt transition-colors',
+                        isActive && 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-medium'
+                      )}
+                    >
+                      <span>{column.label}</span>
+                      {isActive && (
+                        sortState.dir === 1
+                          ? <ChevronUp className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+                          : <ChevronDown className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </>
+    );
+  }
+
+  if (useRowChrome && rowChrome) {
+    return (
+      <>
+        <div
+          className={cn(
+            'hidden lg:flex items-stretch w-full mb-2 overflow-hidden',
+            headerBarSurface,
+            headerTypography,
+            className
+          )}
+        >
+          {rowChrome.leftSlot && (
+            <div
+              className="flex-shrink-0 self-stretch"
+              style={{ width: GRID_LIST_ROW_LEFT_SLOT_WIDTH }}
+              aria-hidden
+            />
+          )}
+          <div
+            className={cn('flex-1 min-w-0 grid gap-2 py-2', rowPaddingX)}
+            style={{ gridTemplateColumns: finalGridTemplate }}
+          >
+            {headerContent}
+          </div>
+          {rowChrome.rightSlot && (
+            <div
+              className="flex-shrink-0 self-stretch"
+              style={{ width: GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH }}
+              aria-hidden
+            />
+          )}
+          {rowChrome.edit && (
+            <div
+              className="flex-shrink-0 self-stretch"
+              style={{ width: GRID_LIST_ROW_ICON_COLUMN_WIDTH }}
+              aria-hidden
+            />
+          )}
+          {rowChrome.delete && (
+            <div
+              className="flex-shrink-0 self-stretch"
+              style={{ width: GRID_LIST_ROW_ICON_COLUMN_WIDTH }}
+              aria-hidden
+            />
+          )}
+          {rowChrome.externalSelection && (
+            <div
+              className="flex-shrink-0 self-stretch"
+              style={{ width: GRID_LIST_ROW_SELECTION_COLUMN_WIDTH }}
+              aria-hidden
+            />
+          )}
+        </div>
         {hasSortable && (
           <div ref={mobileSortRef} className="lg:hidden mb-2">
             <button
@@ -256,7 +400,7 @@ export function ListHeader({
     <>
       {/* Desktop: grid header */}
       <div
-        className={cn(baseHeaderClasses, 'lg:grid')}
+        className={desktopGridOnlyClasses}
         style={{ gridTemplateColumns: finalGridTemplate }}
       >
         {headerContent}

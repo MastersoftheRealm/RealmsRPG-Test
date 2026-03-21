@@ -660,6 +660,33 @@ export function calculateSkillBonusWithProficiency(
   }
 }
 
+/** Codex row shape for resolving a sub-skill's parent skill name (character save omits `baseSkill` string). */
+export interface CodexSkillParentRef {
+  id: string | number;
+  name?: string;
+}
+
+/**
+ * Resolve parent base skill display name for a sub-skill from codex + saved `selectedBaseSkillId` (any-base sub-skills).
+ * Character `cleanForSave` strips `baseSkill`; re-attach before sheet bonus math (GAME_RULES: ability + base value + sub value).
+ */
+export function resolveParentSkillNameForSubSkill(
+  saved: { selectedBaseSkillId?: string },
+  codexSkill: { base_skill_id?: number | string } | undefined,
+  codexSkills: CodexSkillParentRef[]
+): string | undefined {
+  if (saved.selectedBaseSkillId != null && String(saved.selectedBaseSkillId) !== '') {
+    const p = codexSkills.find((s) => String(s.id) === String(saved.selectedBaseSkillId));
+    if (p?.name) return p.name;
+  }
+  const bid = codexSkill?.base_skill_id;
+  if (bid !== undefined && bid !== null && Number(bid) !== 0) {
+    const p = codexSkills.find((s) => String(s.id) === String(bid));
+    if (p?.name) return p.name;
+  }
+  return undefined;
+}
+
 /**
  * Calculate sub-skill bonus.
  * @param chosenAbilityKey - If skill has multiple abilities, use this one; else use highest.

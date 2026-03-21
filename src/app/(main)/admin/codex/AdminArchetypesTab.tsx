@@ -11,6 +11,7 @@ import { deleteCodexDoc, saveArchetypeWithPath } from './actions';
 import { Pencil, Copy, X } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 import { getFeatLevel, formatFeatName } from '@/lib/leveled-feats';
+import { formatListCellLabel } from '@/lib/utils';
 
 const COPY_NAME_SUFFIX = ' copy';
 const ABILITY_OPTIONS = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'] as const;
@@ -680,7 +681,7 @@ export function AdminArchetypesTab() {
           {filtered.map((a: ArchetypeItem) => (
             <div key={a.id} className="flex items-center border-t border-border first:border-t-0 hover:bg-surface-alt/50">
               <div className="flex-1 min-w-0">
-                <GridListRow id={a.id} name={a.name || ''} description={(a as { description?: string }).description || ''} columns={[{ key: 'Type', value: (a.type || '-') as string }]} />
+                <GridListRow id={a.id} name={a.name || ''} description={(a as { description?: string }).description || ''} columns={[{ key: 'Type', value: formatListCellLabel(a.type) }]} />
               </div>
               <div className="flex items-center gap-1 pr-2">
                 {pendingDeleteId === a.id ? (

@@ -9,7 +9,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { cn, formatDamageDisplay, normalizeRangeDisplay } from '@/lib/utils';
+import { cn, formatDamageDisplay, formatActionTypeForDisplay, normalizeRangeDisplay, formatListCellLabel } from '@/lib/utils';
 import { Plus, X } from 'lucide-react';
 import { useRollsOptional } from './roll-context';
 import { NotesTab, type CharacterNote } from './notes-tab';
@@ -430,11 +430,6 @@ type TabType = 'powers' | 'techniques' | 'inventory' | 'feats' | 'proficiencies'
 // Column Definitions for ListHeader
 // =============================================================================
 
-// Blank header columns (empty label, same background) to align with row left/right slots. Only include when that slot is visible.
-const BLANK_LEFT = { key: '_left', label: '', width: '2rem', sortable: false as const };
-const BLANK_RIGHT = { key: '_right', label: '', width: '4rem', sortable: false as const };
-const BLANK_DELETE = { key: '_delete', label: '', width: '2.25rem', sortable: false as const };
-
 const POWER_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1.4fr' },
   { key: 'action', label: 'Action', width: '1fr', align: 'center' },
@@ -488,12 +483,10 @@ const SHIELD_COLUMNS: ListColumn[] = [
 const SHIELD_GRID = 'minmax(160px, 1fr) minmax(64px, 0.6fr) minmax(64px, 4.5rem) minmax(64px, 4.5rem) minmax(64px, 0.7fr)';
 
 const ARMOR_COLUMNS: ListColumn[] = [
-  { key: '_equip', label: '', width: '2rem', sortable: false as const },
   { key: 'name', label: 'Name', width: '1fr' },
   { key: 'dr', label: 'Dmg. Red.', width: '0.6fr', align: 'center' as const },
   { key: 'crit', label: 'Crit Range', width: '0.6fr', align: 'center' as const },
 ];
-const ARMOR_HEADER_GRID = '2rem 1fr 0.6fr 0.6fr';
 const ARMOR_ROW_GRID = '1fr 0.6fr 0.6fr'; // row content only (leftSlot is separate)
 
 const EQUIPMENT_COLUMNS: ListColumn[] = [
@@ -742,18 +735,13 @@ export function LibrarySection({
               />
               {sortedInnatePowers.length > 0 && (
                 <ListHeader
-                  columns={[
-                    ...(showLibraryEditControls && onTogglePowerInnate ? [BLANK_LEFT] : []),
-                    ...POWER_COLUMNS,
-                    BLANK_RIGHT,
-                    ...(showLibraryEditControls ? [BLANK_DELETE] : []),
-                  ]}
-                  gridColumns={[
-                    showLibraryEditControls && onTogglePowerInnate ? '2rem' : '',
-                    POWER_GRID,
-                    '4rem',
-                    showLibraryEditControls ? '2.25rem' : '',
-                  ].filter(Boolean).join(' ')}
+                  columns={POWER_COLUMNS}
+                  gridColumns={POWER_GRID}
+                  rowChrome={{
+                    leftSlot: !!(showLibraryEditControls && onTogglePowerInnate),
+                    rightSlot: true,
+                    delete: !!(showLibraryEditControls && onRemovePower),
+                  }}
                   sortState={powerSort}
                   onSort={(col) => setPowerSort(toggleSort(powerSort, col))}
                 />
@@ -862,18 +850,13 @@ export function LibrarySection({
               />
               {sortedRegularPowers.length > 0 && (
                 <ListHeader
-                  columns={[
-                    ...(showLibraryEditControls && onTogglePowerInnate ? [BLANK_LEFT] : []),
-                    ...POWER_COLUMNS,
-                    BLANK_RIGHT,
-                    ...(showLibraryEditControls ? [BLANK_DELETE] : []),
-                  ]}
-                  gridColumns={[
-                    showLibraryEditControls && onTogglePowerInnate ? '2rem' : '',
-                    POWER_GRID,
-                    '4rem',
-                    showLibraryEditControls ? '2.25rem' : '',
-                  ].filter(Boolean).join(' ')}
+                  columns={POWER_COLUMNS}
+                  gridColumns={POWER_GRID}
+                  rowChrome={{
+                    leftSlot: !!(showLibraryEditControls && onTogglePowerInnate),
+                    rightSlot: true,
+                    delete: !!(showLibraryEditControls && onRemovePower),
+                  }}
                   sortState={powerSort}
                   onSort={(col) => setPowerSort(toggleSort(powerSort, col))}
                 />
@@ -985,12 +968,12 @@ export function LibrarySection({
               />
               {sortedTechniques.length > 0 && (
                 <ListHeader
-                  columns={[
-                    ...TECHNIQUE_COLUMNS,
-                    BLANK_RIGHT,
-                    ...(showLibraryEditControls ? [BLANK_DELETE] : []),
-                  ]}
-                  gridColumns={[TECHNIQUE_GRID, '4rem', ...(showLibraryEditControls ? ['2.25rem'] : [])].join(' ')}
+                  columns={TECHNIQUE_COLUMNS}
+                  gridColumns={TECHNIQUE_GRID}
+                  rowChrome={{
+                    rightSlot: true,
+                    delete: !!(showLibraryEditControls && onRemoveTechnique),
+                  }}
                   sortState={techniqueSort}
                   onSort={(col) => setTechniqueSort(toggleSort(techniqueSort, col))}
                 />
@@ -1131,12 +1114,12 @@ export function LibrarySection({
               />
               {sortedWeapons.length > 0 && (
                 <ListHeader
-                  columns={[
-                    BLANK_LEFT,
-                    ...WEAPON_COLUMNS,
-                    ...(showLibraryEditControls ? [BLANK_DELETE] : []),
-                  ]}
-                  gridColumns={['2rem', WEAPON_GRID, ...(showLibraryEditControls ? ['2.25rem'] : [])].join(' ')}
+                  columns={WEAPON_COLUMNS}
+                  gridColumns={WEAPON_GRID}
+                  rowChrome={{
+                    leftSlot: true,
+                    delete: !!(showLibraryEditControls && onRemoveWeapon),
+                  }}
                   sortState={weaponSort}
                   onSort={(col) => setWeaponSort(toggleSort(weaponSort, col))}
                 />
@@ -1243,13 +1226,12 @@ export function LibrarySection({
               />
               {sortedShields.length > 0 && (
                 <ListHeader
-                  columns={[
-                    BLANK_LEFT,
-                    ...SHIELD_COLUMNS,
-                    BLANK_RIGHT,
-                    ...(showLibraryEditControls ? [BLANK_DELETE] : []),
-                  ]}
-                  gridColumns={['2rem', SHIELD_GRID, '4rem', ...(showLibraryEditControls ? ['2.25rem'] : [])].join(' ')}
+                  columns={SHIELD_COLUMNS}
+                  gridColumns={SHIELD_GRID}
+                  rowChrome={{
+                    leftSlot: true,
+                    delete: !!(showLibraryEditControls && onRemoveShield),
+                  }}
                   sortState={shieldSort}
                   onSort={(col) => setShieldSort(toggleSort(shieldSort, col))}
                 />
@@ -1382,11 +1364,12 @@ export function LibrarySection({
               />
               {sortedArmor.length > 0 && (
                 <ListHeader
-                  columns={[
-                    ...ARMOR_COLUMNS,
-                    ...(showLibraryEditControls ? [BLANK_DELETE] : []),
-                  ]}
-                  gridColumns={[ARMOR_HEADER_GRID, ...(showLibraryEditControls ? ['2.25rem'] : [])].join(' ')}
+                  columns={ARMOR_COLUMNS}
+                  gridColumns={ARMOR_ROW_GRID}
+                  rowChrome={{
+                    leftSlot: true,
+                    delete: !!(showLibraryEditControls && onRemoveArmor),
+                  }}
                   sortState={armorSort}
                   onSort={(col) => setArmorSort(toggleSort(armorSort, col))}
                 />
@@ -1486,11 +1469,11 @@ export function LibrarySection({
               />
               {sortedEquipment.length > 0 && (
                 <ListHeader
-                  columns={[
-                    ...EQUIPMENT_COLUMNS,
-                    ...(showLibraryEditControls ? [BLANK_DELETE] : []),
-                  ]}
-                  gridColumns={[EQUIPMENT_GRID, ...(showLibraryEditControls ? ['2.25rem'] : [])].join(' ')}
+                  columns={EQUIPMENT_COLUMNS}
+                  gridColumns={EQUIPMENT_GRID}
+                  rowChrome={{
+                    delete: !!(showLibraryEditControls && onRemoveEquipment),
+                  }}
                   sortState={equipmentSort}
                   onSort={(col) => setEquipmentSort(toggleSort(equipmentSort, col))}
                 />
@@ -1508,7 +1491,7 @@ export function LibrarySection({
                     }));
                     
                     // Capitalize item type for display
-                    const itemType = item.type ? item.type.charAt(0).toUpperCase() + item.type.slice(1) : '-';
+                    const itemType = formatListCellLabel(item.type);
                     
                     // Qty column: universal stepper (same pattern as feats Uses column). Editable outside edit mode; going to 0 removes the item.
                     const itemId = item.id ?? item.name ?? i;

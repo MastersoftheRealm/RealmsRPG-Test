@@ -239,7 +239,6 @@ export function AddProficiencyModal({
             gridColumns={gridColumns}
             hasSelectionColumn
             compact
-            className="border-0 rounded-none bg-transparent dark:bg-transparent"
           />
         )}
         <div className="flex-1 overflow-y-auto overflow-x-auto min-h-0">

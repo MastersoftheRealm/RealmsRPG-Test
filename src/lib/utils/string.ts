@@ -24,6 +24,31 @@ export function capitalizeWords(str: string | null | undefined): string {
 }
 
 /**
+ * Format taxonomy / enum-style labels for collapsed list cells (item type, category, size, rarity, creature type, etc.).
+ * - Title-cases whitespace-separated words (after replacing `_` with spaces).
+ * - Hyphenated compounds (no spaces): each segment is title-cased (e.g. `powered-martial` → `Powered-Martial`).
+ * - Preserves 2–3 letter ALL-CAPS tokens (e.g. recovery abbreviations).
+ * - Numbers pass through as string; empty → `'-'`.
+ */
+export function formatListCellLabel(value: unknown): string {
+  if (value == null || value === '') return '-';
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  const s = String(value).trim();
+  if (!s) return '-';
+  if (s === '-') return '-';
+  if (/^[A-Z]{2,3}$/.test(s)) return s;
+  const underscored = s.replace(/_/g, ' ');
+  if (underscored.includes('-') && !/\s/.test(underscored)) {
+    return underscored
+      .split('-')
+      .map((part) => capitalize(part.trim()))
+      .filter(Boolean)
+      .join('-');
+  }
+  return capitalizeWords(underscored);
+}
+
+/**
  * Safely format a damage value for display.
  * Handles both string damage values and damage objects.
  * Prevents React Error #31 (objects as children).

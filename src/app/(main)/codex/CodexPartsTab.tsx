@@ -7,7 +7,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { cn } from '@/lib/utils';
+import { cn, formatListCellLabel } from '@/lib/utils';
 import {
   SelectFilter,
   FilterSection,
@@ -105,7 +105,7 @@ function PartCard({ part }: { part: Part }) {
       description={part.description || ''}
       gridColumns={PART_GRID_COLUMNS}
       columns={[
-        { key: 'Category', value: part.category || '-' },
+        { key: 'Category', value: formatListCellLabel(part.category) },
         { key: 'Energy', value: formatEnergyCost(part.base_en, part.percentage), className: 'text-blue-600' },
         { key: 'TP', value: part.base_tp ? part.base_tp : '-', className: 'text-tp' },
       ]}

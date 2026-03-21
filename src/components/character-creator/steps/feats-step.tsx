@@ -28,7 +28,7 @@ import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
 import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
 import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats, getSkillBonusForFeatRequirement } from '@/lib/game/formulas';
-import { formatAbilityList } from '@/lib/utils';
+import { formatAbilityList, formatListCellLabel } from '@/lib/utils';
 import { buildFeatLevelChips, getFeatFamilyId, getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
 import type { ArchetypeCategory } from '@/types';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
@@ -470,9 +470,9 @@ export function FeatsStep() {
         description={feat.description}
         gridColumns={FEAT_GRID_COLUMNS}
         columns={[
-          { key: 'Category', value: feat.category || '-' },
+          { key: 'Category', value: formatListCellLabel(feat.category) },
           { key: 'Ability', value: formatAbilityList(feat.ability) },
-          { key: 'Recovery', value: feat.rec_period || '-' },
+          { key: 'Recovery', value: formatListCellLabel(feat.rec_period) },
           { key: 'Uses', value: (feat.uses_per_rec == null || feat.uses_per_rec === 0) ? '-' : String(feat.uses_per_rec) },
         ]}
         detailSections={detailSections.length > 0 ? detailSections : undefined}

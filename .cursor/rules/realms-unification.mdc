@@ -13,19 +13,33 @@ alwaysApply: false
 | Need | Import from |
 |------|-------------|
 | List rows (expandable) | `@/components/shared` → GridListRow |
+| Sortable column headers | `@/components/shared` → ListHeader (default styling; see below) |
+| List selection modal (add-X, pick from library) | `@/components/shared` → UnifiedSelectionModal |
+| Source scope: All / Realms Library / My Library | `@/components/shared` → SourceFilter (built on SegmentedControl) |
+| Two–N option pill toggle (same look as Library / source filter) | `@/components/shared` → SegmentedControl |
 | Section headers with + | `@/components/shared` → SectionHeader |
 | Roll buttons | `@/components/shared` → RollButton |
 | +/- steppers | `@/components/shared` → ValueStepper, DecrementButton, IncrementButton |
 | Point display (spent/total) | `@/components/shared` → PointStatus |
 | Skill rows | `@/components/shared` → SkillRow |
 | Search | `@/components/ui` → SearchInput |
+| Primary nav tabs (underline, badges) | `@/components/ui` → TabNavigation |
 | Page layout | `@/components/ui` → PageContainer, PageHeader |
 | Modals, Buttons, Chips | `@/components/ui` |
 
+### ListHeader in modals
+
+Do **not** strip ListHeader chrome with `className="border-0 rounded-none bg-transparent …"` unless there is an explicit design exception. Selection and proficiency modals should match Codex/Library/sheet list headers (`bg-primary-50`, rounded bar, dark border).
+
+### Segmented toggles vs TabNavigation
+
+- **SegmentedControl** — compact “pill in `bg-surface-alt`” switches (Library vs Realms, codex source, modal sub-filters). Use **SourceFilter** when the options are exactly All / Realms / My Library.
+- **TabNavigation** — main category tabs (underline variant) for large tab sets (powers, techniques, codex categories). Do not replace those with SegmentedControl.
+
 ## Design tokens (globals.css)
 
-Use semantic tokens, not raw colors: `bg-surface`, `bg-background`, `bg-surface-alt`, `text-text-primary`, `text-text-secondary`, `text-text-muted`, `border-border-light`, `border-border`. Exception: auth pages use `gray-*` for dark theme intentionally.
+Use semantic tokens, not raw colors: `bg-surface`, `bg-background`, `bg-surface-alt`, `text-text-primary`, `text-text-secondary`, `text-text-muted`, `border-border-light`, `border-border`. Exception: auth (`(auth)/`, `components/auth/`) may use `gray-*` for the dark auth shell. Outside auth, prefer tokens; migrate stray `gray-*` when editing a file.
 
 ## Before adding a new component
 
-Search for existing patterns. Prefer extending shared components with props/variants over creating new ones.
+Search `src/components/shared/index.ts` and this table. Prefer extending shared components with props/variants over creating new ones. If you duplicate `flex … p-1 rounded-lg bg-surface-alt` + multiple buttons, use **SegmentedControl** instead.

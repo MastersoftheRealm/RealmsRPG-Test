@@ -21,6 +21,7 @@ import { useOfficialLibrary } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSort } from '@/hooks/use-sort';
 import { Users } from 'lucide-react';
+import { formatListCellLabel } from '@/lib/utils';
 
 const CREATURE_GRID = '1.5fr 0.8fr 1fr 40px';
 const QUERY_KEY = ['official-library', 'creatures'] as const;
@@ -115,7 +116,7 @@ export function AdminPublicCreaturesTab() {
               gridColumns={CREATURE_GRID}
               columns={[
                 { key: 'Level', value: c.level, highlight: true },
-                { key: 'Type', value: c.type },
+                { key: 'Type', value: formatListCellLabel(c.type) },
               ]}
               onEdit={() => router.push(`/creature-creator?edit=${encodeURIComponent(c.id)}`)}
               onDelete={() => setDeleteConfirm({ id: c.id, name: c.name })}

@@ -27,7 +27,7 @@ import { EmptyState } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
 import { Input } from '@/components/ui';
 import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
-import { formatAbilityList } from '@/lib/utils';
+import { formatAbilityList, formatListCellLabel } from '@/lib/utils';
 import { groupFeatFamilies, buildFeatLevelChips } from '@/lib/leveled-feats';
 
 const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 0.8fr 1fr 40px';
@@ -73,7 +73,7 @@ function FeatCard({
   }
 
   if (feat.category) {
-    detailSections.push({ label: 'Category', chips: [{ name: feat.category, category: 'default' }], hideLabelIfSingle: true });
+    detailSections.push({ label: 'Category', chips: [{ name: formatListCellLabel(feat.category), category: 'default' }], hideLabelIfSingle: true });
   }
 
   const tagChips = feat.tags?.map(tag => ({ name: tag, category: 'tag' as const })) || [];
@@ -114,13 +114,13 @@ function FeatCard({
       gridColumns={FEAT_GRID_COLUMNS}
       columns={[
         { key: 'Req. Level', value: feat.lvl_req || '-' },
-        { key: 'Category', value: feat.category || '-' },
+        { key: 'Category', value: formatListCellLabel(feat.category) },
         {
           key: 'Ability',
           value: formatAbilityList(feat.ability),
         },
         { key: 'Uses', value: (feat.uses_per_rec != null && feat.uses_per_rec > 0) ? String(feat.uses_per_rec) : '-' },
-        { key: 'Recovery', value: feat.rec_period || '-' },
+        { key: 'Recovery', value: formatListCellLabel(feat.rec_period) },
       ]}
       detailSections={detailSections.length > 0 ? detailSections : undefined}
     />

@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, Cloud, CloudOff, Swords, Brain } from 'lucide-react';
 import { PageContainer, LoadingState, Alert } from '@/components/ui';
+import { SegmentedControl } from '@/components/shared';
 import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
 import { RollProvider, RollLog } from '@/components/character-sheet';
 import type { Encounter } from '@/types/encounter';
@@ -142,26 +143,17 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
           </div>
         </div>
 
-        <div className="flex gap-1 mb-6 p-1 bg-surface-alt rounded-lg max-w-xs">
-          <button
-            onClick={() => setActiveView('combat')}
-            className={cn(
-              'flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors',
-              activeView === 'combat' ? 'bg-surface text-text-primary shadow-sm' : 'text-text-muted hover:text-text-secondary'
-            )}
-          >
-            <Swords className="w-4 h-4" /> Combat
-          </button>
-          <button
-            onClick={() => setActiveView('skill')}
-            className={cn(
-              'flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors',
-              activeView === 'skill' ? 'bg-surface text-text-primary shadow-sm' : 'text-text-muted hover:text-text-secondary'
-            )}
-          >
-            <Brain className="w-4 h-4" /> Skill
-          </button>
-        </div>
+        <SegmentedControl
+          value={activeView}
+          onChange={setActiveView}
+          equalWidth
+          options={[
+            { value: 'combat', label: 'Combat', icon: <Swords className="w-4 h-4" aria-hidden /> },
+            { value: 'skill', label: 'Skill', icon: <Brain className="w-4 h-4" aria-hidden /> },
+          ]}
+          aria-label="Mixed encounter view"
+          className="mb-6 max-w-xs"
+        />
 
         <div className={cn(activeView !== 'combat' && 'hidden')}>
           <CombatEncounterView

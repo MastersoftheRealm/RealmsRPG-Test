@@ -18,6 +18,7 @@ import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Copy, X, Plus } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 import { useModalListState } from '@/hooks/use-modal-list-state';
+import { formatListCellLabel } from '@/lib/utils';
 
 const COPY_NAME_SUFFIX = ' copy';
 const TRAIT_PICKER_GRID = '1.5fr 0.6fr 0.6fr 60px';
@@ -409,7 +410,7 @@ export function AdminSpeciesTab() {
                   description={s.description || ''}
                   gridColumns="1.5fr 1fr 0.8fr 40px"
                   columns={[
-                    { key: 'Type', value: s.type || '-' },
+                    { key: 'Type', value: formatListCellLabel(s.type) },
                     { key: 'Sizes', value: (s.sizes || []).join(', ') || s.size || '-' },
                   ]}
                   detailSections={detailSections.length > 0 ? detailSections : undefined}

@@ -11,10 +11,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Plus, Wand2, Swords, Shield, Users, LogIn, Sparkles } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks';
 import { PageContainer, PageHeader, TabNavigation, Button, useToast } from '@/components/ui';
-import { DeleteConfirmModal, LoginPromptModal } from '@/components/shared';
+import { DeleteConfirmModal, LoginPromptModal, SegmentedControl } from '@/components/shared';
 import {
   useUserPowers,
   useUserTechniques,
@@ -182,28 +181,16 @@ function LibraryContent() {
 
       <div className="mb-4 flex flex-wrap items-center gap-4 min-w-0">
         {!isGuest && (
-          <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-alt flex-shrink-0">
-            <button
-            type="button"
-            onClick={() => setLibraryMode('my')}
-            className={cn(
-              'px-3 py-1.5 rounded text-sm font-medium transition-colors',
-              libraryMode === 'my' ? 'bg-primary-600 text-white' : 'text-text-secondary hover:text-text-primary'
-            )}
-          >
-            My Library
-          </button>
-          <button
-            type="button"
-            onClick={() => setLibraryMode('public')}
-            className={cn(
-              'px-3 py-1.5 rounded text-sm font-medium transition-colors',
-              libraryMode === 'public' ? 'bg-primary-600 text-white' : 'text-text-secondary hover:text-text-primary'
-            )}
-          >
-            Realms Library
-          </button>
-        </div>
+          <SegmentedControl
+            value={libraryMode}
+            onChange={setLibraryMode}
+            options={[
+              { value: 'my', label: 'My Library' },
+              { value: 'public', label: 'Realms Library' },
+            ]}
+            aria-label="Library scope"
+            className="flex-shrink-0"
+          />
         )}
       </div>
 

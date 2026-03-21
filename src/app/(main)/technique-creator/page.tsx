@@ -811,15 +811,7 @@ function TechniqueCreatorContent() {
             breakdowns={costs.tpSources.length > 0 ? [
               { title: 'TP Breakdown', items: costs.tpSources }
             ] : undefined}
-          >
-            {save.saveMessage && (
-              <Alert 
-                variant={save.saveMessage.type === 'success' ? 'success' : 'danger'}
-              >
-                {save.saveMessage.text}
-              </Alert>
-            )}
-          </CreatorSummaryPanel>
+          />
         </div>
       }
       modals={

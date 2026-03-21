@@ -1107,15 +1107,7 @@ function ItemCreatorContent() {
                 }))
               }
             ] : undefined}
-          >
-            {save.saveMessage && (
-              <Alert 
-                variant={save.saveMessage.type === 'success' ? 'success' : 'danger'}
-              >
-                {save.saveMessage.text}
-              </Alert>
-            )}
-          </CreatorSummaryPanel>
+          />
           <RarityReferenceTable currentIP={costs.totalIP} />
         </div>
       }

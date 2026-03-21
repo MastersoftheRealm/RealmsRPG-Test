@@ -468,6 +468,9 @@ export function FeatsTab({
           <ListHeader
             columns={FEAT_COLUMNS}
             gridColumns={FEAT_GRID}
+            rowChrome={{
+              delete: !!(showEditControls && onRemoveFeat),
+            }}
             sortState={archetypeFeatSort}
             onSort={(col) => setArchetypeFeatSort(toggleSort(archetypeFeatSort, col))}
           />
@@ -552,6 +555,9 @@ export function FeatsTab({
           <ListHeader
             columns={FEAT_COLUMNS}
             gridColumns={FEAT_GRID}
+            rowChrome={{
+              delete: !!(showEditControls && onRemoveFeat),
+            }}
             sortState={characterFeatSort}
             onSort={(col) => setCharacterFeatSort(toggleSort(characterFeatSort, col))}
           />
@@ -674,6 +680,9 @@ export function FeatsTab({
           <ListHeader
             columns={FEAT_COLUMNS}
             gridColumns={FEAT_GRID}
+            rowChrome={{
+              delete: !!(showEditControls && onRemoveFeat),
+            }}
             sortState={stateFeatSort}
             onSort={(col) => setStateFeatSort(toggleSort(stateFeatSort, col))}
           />

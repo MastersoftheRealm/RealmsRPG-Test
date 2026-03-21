@@ -11,7 +11,12 @@ import type { CreatureFeat as RTDBCreatureFeat, ItemProperty } from '@/hooks/use
 import type { PowerPart, TechniquePart } from '@/hooks';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
-import { deriveItemDisplay, type ItemPropertyPayload } from '@/lib/calculators/item-calc';
+import {
+  deriveItemDisplay,
+  deriveShieldDamageFromProperties,
+  type ItemDamage,
+  type ItemPropertyPayload,
+} from '@/lib/calculators/item-calc';
 
 // =============================================================================
 // Creature Types (for conversion back from DisplayItem)
@@ -21,6 +26,7 @@ export interface CreaturePower {
   id: string;
   name: string;
   energy: number;
+  tp?: number;
   action: string;
   duration: string;
   range: string;
@@ -39,11 +45,63 @@ export interface CreatureTechnique {
   damage: string;
 }
 
+/** Where a creature builder feat was chosen from (shown in feat list and persisted on save). */
+export type CreatureFeatSourceType =
+  | 'creature'
+  | 'character'
+  | 'archetype'
+  | 'trait'
+  | 'flaw'
+  | 'characteristic';
+
+const CREATURE_FEAT_SOURCE_LABELS: Record<CreatureFeatSourceType, string> = {
+  creature: 'Creature',
+  character: 'Character',
+  archetype: 'Archetype',
+  trait: 'Trait',
+  flaw: 'Flaw',
+  characteristic: 'Characteristic',
+};
+
+export function labelCreatureFeatSource(
+  source: CreatureFeatSourceType | undefined
+): string {
+  if (!source) return '—';
+  return CREATURE_FEAT_SOURCE_LABELS[source];
+}
+
+/** Resolve source when older saves omit `featSourceType` (best-effort from codex ids). */
+export function inferCreatureFeatSource(
+  feat: Pick<CreatureFeat, 'id' | 'featSourceType'>,
+  lookup: {
+    creatureFeatIds: Set<string>;
+    codexFeatById: Map<string, { char_feat?: boolean }>;
+    traitById: Map<string, { flaw?: boolean; characteristic?: boolean }>;
+  }
+): CreatureFeatSourceType | undefined {
+  if (feat.featSourceType) return feat.featSourceType;
+  const id = String(feat.id);
+  // Codex tables often use independent serial IDs; the same numeric id can exist on creature feats,
+  // character/archetype feats, and species traits. Prefer trait → general feat → creature-feat so UI
+  // does not label library traits or character feats as "Creature".
+  const tr = lookup.traitById.get(id);
+  if (tr) {
+    if (tr.flaw) return 'flaw';
+    if (tr.characteristic) return 'characteristic';
+    return 'trait';
+  }
+  const cf = lookup.codexFeatById.get(id);
+  if (cf) return cf.char_feat ? 'character' : 'archetype';
+  if (lookup.creatureFeatIds.has(id)) return 'creature';
+  return undefined;
+}
+
 export interface CreatureFeat {
   id: string;
   name: string;
   description?: string;
   points?: number;
+  featSourceType?: CreatureFeatSourceType;
 }
 
 export interface CreatureArmament {
@@ -83,6 +141,7 @@ export function transformUserPowerToDisplayItem(
   const damageStr = formatPowerDamage(power.damage);
 
   const stats: ItemStat[] = [
+    { label: 'Energy', value: display.energy ?? '-' },
     { label: 'Action', value: display.actionType },
     { label: 'Damage', value: damageStr || '-' },
     { label: 'Area', value: display.area && display.area !== '-' ? display.area : '-' },
@@ -103,6 +162,7 @@ export function transformUserPowerToDisplayItem(
       id: power.docId,
       name: power.name,
       energy: display.energy,
+      tp: display.tp,
       action: display.actionType,
       duration: display.duration,
       range: display.range,
@@ -138,6 +198,7 @@ export function transformUserTechniqueToDisplayItem(
 
   const stats: ItemStat[] = [
     { label: 'Energy', value: display.energy },
+    { label: 'Action', value: display.actionType },
     { label: 'Weapon', value: display.weaponName || '-' },
     { label: 'Training Pts', value: display.tp },
   ];
@@ -200,6 +261,7 @@ export function transformCreatureFeatToDisplayItem(
       name: feat.name,
       description: feat.description,
       points,
+      featSourceType: 'creature' as const,
     } as unknown as Record<string, unknown>,
   };
 }
@@ -233,9 +295,15 @@ export function transformUserItemToDisplayItem(
     description: item.description,
     armamentType: typeMap[item.type] || 'Weapon',
     properties: propertyPayloads,
+    damage: item.damage as ItemDamage[] | undefined,
   };
   
   const display = deriveItemDisplay(itemDoc, propertiesDb);
+  let damageStr = display.damage;
+  if (!damageStr && item.type === 'shield') {
+    const sd = deriveShieldDamageFromProperties(propertyPayloads);
+    if (sd) damageStr = sd;
+  }
 
   const stats: ItemStat[] = [
     { label: 'Type', value: item.type.charAt(0).toUpperCase() + item.type.slice(1) },
@@ -261,7 +329,7 @@ export function transformUserItemToDisplayItem(
       tp: display.totalTP || 0,
       currency: display.currencyCost || 0,
       rarity: display.rarity || 'Common',
-      damage: display.damage || undefined,
+      damage: damageStr || undefined,
       range: display.range || undefined,
       description: item.description,
       properties: (item.properties || []).map((prop) => ({

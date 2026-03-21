@@ -211,7 +211,7 @@ export function AddLibraryItemModal({
             damage: e.damage,
             armorValue: e.armor_value,
             properties: e.properties ?? [],
-            _source: 'my',
+            _source: 'public',
           }) as WithSource<EqItem>),
           ...userEquip.map((i: UserItem): WithSource<EqItem> => ({
             id: i.id,

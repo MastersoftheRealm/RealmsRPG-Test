@@ -7012,3 +7012,68 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     Implemented 2026-03-18:
     - Updated package.json engines.node to ">=20.9.0 <21".
     - Pinned next dependency from "^16.1.6" to "16.1.6" to avoid automatic minor upgrades changing runtime behavior.
+
+- id: TASK-301
+  title: Migrate duplicate segmented pill toggles to SegmentedControl
+  priority: medium
+  status: done
+  created_at: 2026-03-21
+  created_by: agent
+  description: |
+    Audit (2026-03): Several screens duplicate the same `bg-surface-alt` + rounded inner buttons pattern that
+    Library, SourceFilter, and SegmentedControl already implement. Replace inline implementations with
+    `SegmentedControl` from `@/components/shared` (or `SourceFilter` when options are exactly All / Realms / My)
+    so styling, focus rings, and min touch height stay consistent.
+    Candidate files: `src/app/(main)/codex/page.tsx` (Realms Codex vs My Codex),
+    `src/components/character-creator/steps/species-step.tsx`, `src/components/character-creator/MixedSpeciesModal.tsx`,
+    `src/components/shared/add-combatant-modal.tsx`, `src/app/(main)/encounters/[id]/mixed/page.tsx`,
+    `src/components/creator/CreatorSaveToolbar.tsx`. Evaluate `theme-toggle.tsx` separately (three-way system/light/dark
+    may need a variant or stay custom). Do not replace `TabNavigation` underline tabs for primary category navigation.
+  related_files:
+    - src/components/shared/segmented-control.tsx
+    - src/components/shared/filters/source-filter.tsx
+    - .cursor/rules/realms-unification.mdc
+    - src/docs/ai/AGENT_GUIDE.md
+  acceptance_criteria:
+    - Each candidate either uses SegmentedControl/SourceFilter or has a short code comment explaining why not
+    - `npm run build` passes
+    - Spot-check Codex mode toggle and at least one modal at ~360px width
+  notes: |
+    Done 2026-03-21: Extended SegmentedControl with optional icons, equalWidth, and aria-pressed on non-tab segments.
+    Migrated: codex/page.tsx, species-step.tsx, MixedSpeciesModal.tsx, add-combatant-modal.tsx,
+    encounters/[id]/mixed/page.tsx, CreatorSaveToolbar.tsx. theme-toggle inline variant documented as intentional
+    exception (icon-only + tint selected state). npm run build passes.
+
+- id: TASK-302
+  title: Creature creator inventory budget summary (current/max) + inventory type tabs
+  priority: high
+  status: in-progress
+  created_at: 2026-03-21
+  created_by: agent
+  description: |
+    Update creature creator summary and inventory workflow so spendable resources display as current/max,
+    inventory spend reduces available currency, and the add-inventory modal supports equipment type tabs.
+    Rename Armaments to Inventory in the creature creator UI while preserving existing item behavior.
+  related_files:
+    - src/app/(main)/creature-creator/page.tsx
+    - src/app/(main)/creature-creator/transformers.ts
+    - src/components/creator/creator-summary-panel.tsx
+    - src/docs/ai/AI_CHANGELOG.md
+  acceptance_criteria:
+    - Creature Summary resource boxes show current/max for ability, skill, feat, training, and currency.
+    - Currency remaining is derived from base creature currency minus inventory item costs.
+    - Armaments section is renamed to Inventory, with matching labels and add/remove actions.
+    - Add Inventory modal includes tabs for All/Weapons/Armor/Shields/Equipment and filters list accordingly.
+    - Inventory section displays currency spent/remaining in addition to per-item cost rows.
+    - npm run build passes.
+  notes: |
+    In progress 2026-03-21.
+    Implemented in this session:
+    - Added Inventory type tabs in creature add-item modal using SegmentedControl and UnifiedSelectionModal displayFilter.
+    - Renamed Armaments section UI copy to Inventory and updated empty/add/remove labels.
+    - Added current/max resource display in Creature Summary for Ability, Skill, Feat, Training, and Currency.
+    - Added training/currency spend tracking from selected creature powers/techniques/inventory items.
+    - Added inventory currency summary card in Inventory section (remaining/max and spent).
+    - Expanded CreatorSummaryPanel resource box values to support formatted strings for current/max displays.
+    - Extended creature power source payload to include tp for training-spend accounting.
+    - Verification: npm run build passes.

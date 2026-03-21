@@ -30,7 +30,7 @@ import { buildFeatLevelChips, groupFeatFamilies, formatFeatName } from '@/lib/le
 
 const COPY_NAME_SUFFIX = ' copy';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
-import { formatAbilityList } from '@/lib/utils';
+import { formatAbilityList, formatListCellLabel } from '@/lib/utils';
 
 const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 0.8fr 1fr 40px';
 const ADMIN_FEAT_COLUMNS = [
@@ -521,9 +521,9 @@ export function AdminFeatsTab() {
                 gridColumns={FEAT_GRID_COLUMNS}
                 columns={[
                   { key: 'Req. Level', value: (feat.lvl_req === 0 || feat.lvl_req == null) ? '-' : String(feat.lvl_req) },
-                  { key: 'Category', value: feat.category || '-' },
+                  { key: 'Category', value: formatListCellLabel(feat.category) },
                   { key: 'Ability', value: formatAbilityList(feat.ability) },
-                  { key: 'Recovery', value: feat.rec_period || '-' },
+                  { key: 'Recovery', value: formatListCellLabel(feat.rec_period) },
                   { key: 'Uses', value: (feat.uses_per_rec === 0 || feat.uses_per_rec == null) ? '-' : String(feat.uses_per_rec) },
                 ]}
                 detailSections={detailSections.length > 0 ? detailSections : undefined}

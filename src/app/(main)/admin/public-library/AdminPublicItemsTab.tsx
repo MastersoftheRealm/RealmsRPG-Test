@@ -21,24 +21,17 @@ import {
 import { useOfficialLibrary, useItemProperties } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSort } from '@/hooks/use-sort';
-import type { ItemPropertyPayload, ItemDamage } from '@/lib/calculators/item-calc';
+import type { ItemPropertyPayload } from '@/lib/calculators/item-calc';
 import {
   calculateItemCosts,
   calculateCurrencyCostAndRarity,
   formatRange,
-  formatDamage,
 } from '@/lib/calculators/item-calc';
+import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { Shield } from 'lucide-react';
 
 const ITEM_GRID = '1.5fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr 40px';
 const QUERY_KEY = ['official-library', 'items'] as const;
-
-const TYPE_MAP: Record<string, string> = {
-  weapon: 'Weapon',
-  armor: 'Armor',
-  shield: 'Shield',
-  equipment: 'Equipment',
-};
 
 export function AdminPublicItemsTab() {
   const router = useRouter();
@@ -56,11 +49,8 @@ export function AdminPublicItemsTab() {
       const costs = calculateItemCosts(props, propertiesDb);
       const { currencyCost, rarity } = calculateCurrencyCostAndRarity(costs.totalCurrency, costs.totalIP);
       const rangeStr = formatRange(props);
-      const damageArr = item.damage;
-      const damageStr = Array.isArray(damageArr) && damageArr[0]
-        ? formatDamage(damageArr as ItemDamage[])
-        : '';
-      const typeStr = TYPE_MAP[String(item.type ?? '').toLowerCase()] || String(item.type ?? '');
+      const damageStr = formatDamageDisplay(item.damage) || '';
+      const typeStr = formatListCellLabel(item.type);
       const parts: ChipData[] = ((item.properties as Array<{ id?: unknown; name?: string; op_1_lvl?: number }>) || []).map((prop) => ({
         name: prop.name || '',
         cost: prop.op_1_lvl ?? 1,
@@ -72,7 +62,7 @@ export function AdminPublicItemsTab() {
         name: String(item.name ?? ''),
         description: String(item.description ?? ''),
         type: typeStr,
-        rarity,
+        rarity: formatListCellLabel(rarity),
         currency: currencyCost,
         tp: costs.totalTP,
         range: rangeStr,
