@@ -75,14 +75,6 @@ function CampaignDetailContent() {
   const [copied, setCopied] = useState(false);
   const [removeConfirm, setRemoveConfirm] = useState<CampaignCharacter | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
-  const [pendingAddCharacter, setPendingAddCharacter] = useState<{
-    id: string;
-    name: string;
-    level: number;
-    portrait?: string;
-    archetypeName?: string;
-    ancestryName?: string;
-  } | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [editingName, setEditingName] = useState(false);
@@ -116,9 +108,11 @@ function CampaignDetailContent() {
       if (result.success) {
         invalidateCampaigns();
         setAddModalOpen(false);
-        setPendingAddCharacter(null);
         if (result.visibilityUpdated) {
-          showToast('Character visibility was set to Campaign so the Realm Master and players can view it.', 'success');
+          showToast(
+            'Character visibility was set to Campaign so other players in this campaign can view the sheet.',
+            'success'
+          );
         }
       } else {
         setActionError(result.error || 'Failed to add character');
@@ -130,13 +124,16 @@ function CampaignDetailContent() {
     }
   };
 
-  const handleSelectCharacterToAdd = (char: { id: string; name: string; level: number; portrait?: string; archetypeName?: string; ancestryName?: string; visibility?: string }) => {
-    if (char.visibility === 'private') {
-      setAddModalOpen(false);
-      setPendingAddCharacter(char);
-    } else {
-      handleAddCharacter(char);
-    }
+  const handleSelectCharacterToAdd = (char: {
+    id: string;
+    name: string;
+    level: number;
+    portrait?: string;
+    archetypeName?: string;
+    ancestryName?: string;
+    visibility?: string;
+  }) => {
+    handleAddCharacter(char);
   };
 
   const handleRemoveCharacter = async (c: CampaignCharacter) => {
@@ -498,31 +495,6 @@ function CampaignDetailContent() {
           onClose={() => setAddModalOpen(false)}
           loading={actionLoading}
         />
-      )}
-
-      {/* Add character visibility confirmation (private → campaign) */}
-      {pendingAddCharacter && (
-        <Modal
-          isOpen
-          onClose={() => setPendingAddCharacter(null)}
-          title="Character visibility will change"
-        >
-          <p className="text-text-secondary mb-4">
-            <strong>{pendingAddCharacter.name}</strong> is private. Adding to this campaign will set its visibility to <strong>Campaign</strong> so the Realm Master and other players can view it (read-only). You can change this later in the character&apos;s Notes tab.
-          </p>
-          <div className="flex gap-3 justify-end">
-            <Button variant="ghost" onClick={() => setPendingAddCharacter(null)} disabled={actionLoading}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => handleAddCharacter(pendingAddCharacter)}
-              disabled={actionLoading}
-              isLoading={actionLoading}
-            >
-              Add to campaign
-            </Button>
-          </div>
-        </Modal>
       )}
 
       {/* Remove Confirm */}

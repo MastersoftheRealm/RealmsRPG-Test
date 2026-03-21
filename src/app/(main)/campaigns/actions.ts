@@ -7,10 +7,11 @@
 
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/supabase/session';
 import { ensureUserProfile } from '@/lib/ensure-user-profile';
 import { getCharacterListColumns } from '@/lib/character-list-columns';
+import { normalizeInviteCodeInput, isValidInviteCodeFormat, visibilityForCampaignMembership } from '@/lib/campaign-invite';
 import type { Campaign, CampaignCharacter, ArchetypeDisplayName } from '@/types/campaign';
 import { MAX_CAMPAIGN_CHARACTERS, OWNER_MAX_CHARACTERS } from './constants';
 
@@ -97,28 +98,36 @@ export async function joinCampaignAction(data: {
 }) {
   try {
     const user = await requireAuth();
-    const code = data.inviteCode?.trim().toUpperCase();
+    const code = normalizeInviteCodeInput(data.inviteCode);
     if (!code) {
       return { success: false, error: 'Please enter an invite code' };
     }
-
-    const supabase = await createClient();
-    const { data: campaignRow } = await supabase
-      .from('campaigns')
-      .select('id, owner_id, characters, memberIds')
-      .eq('invite_code', code)
-      .maybeSingle();
-    if (!campaignRow) {
-      return { success: false, error: 'Invalid invite code. No campaign found.' };
+    if (!isValidInviteCodeFormat(code)) {
+      return {
+        success: false,
+        error:
+          'Invalid invite code format. Use 8 characters (letters A–Z except I/O, and numbers 2–9). Remove spaces or dashes if you pasted the code.',
+      };
     }
 
-    const { data: memberRows } = await supabase
-      .from('campaign_members')
-      .select('user_id')
-      .eq('campaign_id', campaignRow.id);
-    const memberIds = (memberRows ?? []).map((m: { user_id: string }) => m.user_id);
-    const campaignData = (campaignRow.characters as CampaignCharacter[]) ?? [];
-    const campaignId = campaignRow.id;
+    /**
+     * RLS: `campaigns` SELECT is only for owner or existing members. A new player
+     * joining by invite cannot see the row with the user-scoped client — that
+     * produced false "Invalid invite code". Use service role for invite lookup
+     * and roster update only, after we verify the character belongs to this user.
+     */
+    let dbService: ReturnType<typeof createServiceRoleClient>;
+    try {
+      dbService = createServiceRoleClient();
+    } catch {
+      console.error('joinCampaignAction: SUPABASE_SERVICE_ROLE_KEY missing');
+      return {
+        success: false,
+        error: 'Server cannot process campaign joins (configuration). Please contact support.',
+      };
+    }
+
+    const supabase = await createClient();
 
     const { data: charRow } = await supabase
       .from('characters')
@@ -129,6 +138,29 @@ export async function joinCampaignAction(data: {
     if (!charRow) {
       return { success: false, error: 'Character not found. You can only add your own characters.' };
     }
+
+    const { data: campaignRow, error: campErr } = await dbService
+      .from('campaigns')
+      .select('id, owner_id, characters, memberIds')
+      .eq('invite_code', code)
+      .maybeSingle();
+    if (campErr) {
+      console.error('joinCampaignAction campaign lookup:', campErr);
+      return { success: false, error: 'Failed to look up invite code' };
+    }
+    if (!campaignRow) {
+      return { success: false, error: 'Invalid invite code. No campaign found.' };
+    }
+
+    const { data: memberRows } = await dbService
+      .from('campaign_members')
+      .select('user_id')
+      .eq('campaign_id', campaignRow.id);
+    const memberIdsFromTable = (memberRows ?? []).map((m: { user_id: string }) => m.user_id);
+    const campaignData = (campaignRow.characters as CampaignCharacter[]) ?? [];
+    const memberIdsFromRoster = [...new Set(campaignData.map((c) => c.userId).filter(Boolean))];
+    const memberIds = [...new Set([...memberIdsFromTable, ...memberIdsFromRoster])];
+    const campaignId = campaignRow.id;
 
     const alreadyIn = campaignData?.some((c) => c.userId === user.uid && c.characterId === data.characterId);
     if (alreadyIn) {
@@ -161,21 +193,31 @@ export async function joinCampaignAction(data: {
     const characters = [...(campaignData || []), newChar];
     const newMemberIds = [...new Set([...memberIds, user.uid])];
 
-    await supabase.from('campaign_members').upsert(
+    const { error: memErr } = await dbService.from('campaign_members').upsert(
       { campaign_id: campaignId, user_id: user.uid },
       { onConflict: 'campaign_id,user_id' }
     );
-    await supabase
+    if (memErr) {
+      console.error('joinCampaignAction campaign_members:', memErr);
+      return { success: false, error: 'Failed to join campaign' };
+    }
+
+    const { error: updErr } = await dbService
       .from('campaigns')
       .update({ characters, memberIds: newMemberIds })
       .eq('id', campaignId);
+    if (updErr) {
+      console.error('joinCampaignAction campaigns update:', updErr);
+      return { success: false, error: 'Failed to join campaign' };
+    }
 
     const charData = (charRow.data as Record<string, unknown>) ?? {};
-    const merged = { ...charData, visibility: 'campaign', updatedAt: new Date().toISOString() };
+    const { visibility, visibilityUpdated } = visibilityForCampaignMembership(charData.visibility);
+    const merged = { ...charData, visibility, updatedAt: new Date().toISOString() };
     const listCols = getCharacterListColumns(merged);
     await supabase.from('characters').update({ data: merged, ...listCols }).eq('id', data.characterId).eq('user_id', user.uid);
 
-    return { success: true, campaignId, visibilityUpdated: true };
+    return { success: true, campaignId, visibilityUpdated };
   } catch (error) {
     console.error('Join campaign error:', error);
     return { success: false, error: 'Failed to join campaign' };
@@ -256,11 +298,12 @@ export async function addCharacterToCampaignAction(data: {
     await supabase.from('campaigns').update({ characters, memberIds }).eq('id', data.campaignId);
 
     const charData = (charRow.data as Record<string, unknown>) ?? {};
-    const merged = { ...charData, visibility: 'campaign', updatedAt: new Date().toISOString() };
+    const { visibility, visibilityUpdated } = visibilityForCampaignMembership(charData.visibility);
+    const merged = { ...charData, visibility, updatedAt: new Date().toISOString() };
     const listCols = getCharacterListColumns(merged);
     await supabase.from('characters').update({ data: merged, ...listCols }).eq('id', data.characterId).eq('user_id', user.uid);
 
-    return { success: true, visibilityUpdated: true };
+    return { success: true, visibilityUpdated };
   } catch (error) {
     console.error('Add character error:', error);
     return { success: false, error: 'Failed to add character' };

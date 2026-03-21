@@ -6,6 +6,7 @@
 
 import type { Campaign, CampaignSummary } from '@/types/campaign';
 import { apiFetch } from '@/lib/api-client';
+import { normalizeInviteCodeInput, isValidInviteCodeFormat } from '@/lib/campaign-invite';
 
 const API_BASE = '/api/campaigns';
 
@@ -40,8 +41,8 @@ export async function getCampaign(campaignId: string): Promise<Campaign | null> 
  * Look up a campaign by invite code (for join flow).
  */
 export async function getCampaignByInviteCode(inviteCode: string): Promise<{ id: string; name: string } | null> {
-  const code = inviteCode?.trim().toUpperCase();
-  if (!code || code.length < 4) return null;
+  const code = normalizeInviteCodeInput(inviteCode);
+  if (!isValidInviteCodeFormat(code)) return null;
   const res = await fetch(`${API_BASE}/invite/${encodeURIComponent(code)}`);
   if (res.status === 404) return null;
   if (!res.ok) {

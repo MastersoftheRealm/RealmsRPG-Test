@@ -1311,6 +1311,13 @@ Notes
 - Feedback: As an admin, archetypes made on the admin page do not save reliably (“can’t seem to save … well”). After saving one technique to My Library and publishing several more to the Realms Library, later publishes did not appear — treated as a major bug.
 - Expected: Archetype saves persist and lists refresh with current data. Each publish to the official Realms Library creates or updates rows and all users (and admin lists) see new content without stale cached responses.
 
+**Raw Feedback Log — 2026-03-18 (Campaign join visibility + invalid invite code)**
+- Date: 2026-03-18
+- Context: Campaigns — join with invite code, character visibility (private / campaign / public)
+- Priority: High
+- Feedback: (1) Adding/joining a campaign should set character visibility to campaign automatically unless already campaign or public (do not block public/campaign/private with denials; private should become campaign when joining). (2) Valid invite codes sometimes rejected as invalid.
+- Expected: Join succeeds; visibility rules applied without extra blocking modals; invite lookup works for users who are not yet campaign members (RLS-safe server path).
+
 **Raw Feedback Log — 2026-03-18 (Mixed species traits + library list refresh)**
 - Date: 2026-03-18
 - Context: Character Creator (mixed species); Technique Creator → My Library / Realms Library

@@ -8,6 +8,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getMyCampaigns, getMyCampaignsFull, getCampaign, getCampaignByInviteCode } from '@/services/campaign-service';
+import { normalizeInviteCodeInput, isValidInviteCodeFormat } from '@/lib/campaign-invite';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Campaign, CampaignSummary } from '@/types/campaign';
 
@@ -45,10 +46,11 @@ export function useCampaign(campaignId: string | undefined) {
 }
 
 export function useCampaignByInviteCode(inviteCode: string | undefined) {
+  const normalized = inviteCode ? normalizeInviteCodeInput(inviteCode) : '';
   return useQuery({
-    queryKey: campaignKeys.inviteCode(inviteCode || ''),
+    queryKey: campaignKeys.inviteCode(normalized),
     queryFn: () => getCampaignByInviteCode(inviteCode!),
-    enabled: !!inviteCode && inviteCode.length >= 4,
+    enabled: !!normalized && isValidInviteCodeFormat(normalized),
   });
 }
 

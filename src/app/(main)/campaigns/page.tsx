@@ -29,13 +29,13 @@ import {
   EmptyState,
   LoadingState,
   Alert,
-  Modal,
   useToast,
 } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { getEffectivePortrait } from '@/lib/portrait';
 import { useCampaigns, useCharacters, useInvalidateCampaigns, useAuth } from '@/hooks';
 import { createCampaignAction, joinCampaignAction } from './actions';
+import { isValidInviteCodeFormat } from '@/lib/campaign-invite';
 import type { CampaignSummary } from '@/types/campaign';
 
 type TabId = 'my-campaigns' | 'create' | 'join';
@@ -351,7 +351,6 @@ function JoinCampaignTab({
   const [selectedCharacterId, setSelectedCharacterId] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [visibilityConfirmOpen, setVisibilityConfirmOpen] = useState(false);
 
   const selectedCharacter = characters.find((c) => c.id === selectedCharacterId);
 
@@ -372,9 +371,13 @@ function JoinCampaignTab({
       });
       if (result.success) {
         if (result.visibilityUpdated) {
-          showToast('Character visibility was set to Campaign so the Realm Master and players can view it.', 'success');
+          showToast(
+            'Joined! Character visibility was set to Campaign so the Realm Master and players can view your sheet.',
+            'success'
+          );
+        } else {
+          showToast('Joined the campaign!', 'success');
         }
-        setVisibilityConfirmOpen(false);
         onSuccess();
       } else {
         setError(result.error || 'Failed to join campaign');
@@ -391,10 +394,6 @@ function JoinCampaignTab({
     setError(null);
     if (!selectedCharacter) {
       setError('Please select a character');
-      return;
-    }
-    if (selectedCharacter.visibility === 'private') {
-      setVisibilityConfirmOpen(true);
       return;
     }
     await performJoin();
@@ -430,12 +429,23 @@ function JoinCampaignTab({
         </label>
         <Input
           value={inviteCode}
-          onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+          onChange={(e) => {
+            const v = e.target.value
+              .toUpperCase()
+              .replace(/[\s-]/g, '')
+              .replace(/[^ABCDEFGHJKLMNPQRSTUVWXYZ23456789]/g, '')
+              .slice(0, 8);
+            setInviteCode(v);
+          }}
           placeholder="Enter 8-character code"
           required
-          maxLength={8}
+          maxLength={10}
           className="font-mono tracking-widest uppercase"
+          aria-describedby="invite-code-hint"
         />
+        <p id="invite-code-hint" className="text-xs text-text-muted dark:text-text-secondary mt-1">
+          Letters A–Z (not I or O) and numbers 2–9. Spaces or dashes are removed automatically.
+        </p>
       </div>
       <div>
         <label className="block text-sm font-medium text-text-secondary mb-2">
@@ -480,32 +490,11 @@ function JoinCampaignTab({
       {error && <Alert variant="danger">{error}</Alert>}
       <Button
         type="submit"
-        disabled={submitting || !inviteCode.trim() || !selectedCharacterId}
+        disabled={submitting || !isValidInviteCodeFormat(inviteCode) || !selectedCharacterId}
         isLoading={submitting}
       >
         Join Campaign
       </Button>
-
-      {visibilityConfirmOpen && selectedCharacter && (
-        <Modal
-          isOpen
-          onClose={() => setVisibilityConfirmOpen(false)}
-          title="Character visibility will change"
-          fullScreenOnMobile
-        >
-          <p className="text-text-secondary mb-4">
-            <strong>{selectedCharacter.name}</strong> is private. Joining this campaign will set its visibility to <strong>Campaign</strong> so the Realm Master and other players can view it (read-only). You can change this later in the character&apos;s Notes tab.
-          </p>
-          <div className="flex gap-3 justify-end">
-            <Button variant="ghost" onClick={() => setVisibilityConfirmOpen(false)} disabled={submitting}>
-              Cancel
-            </Button>
-            <Button onClick={() => performJoin()} disabled={submitting} isLoading={submitting}>
-              Join campaign
-            </Button>
-          </div>
-        </Modal>
-      )}
     </form>
   );
 }
