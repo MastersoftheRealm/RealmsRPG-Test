@@ -12,6 +12,7 @@ import { createCharacter, saveCharacter } from '@/services/character-service';
 import { useAuth, useCodexSkills, useSpecies, usePowerParts, useTechniqueParts, useItemProperties } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { cleanForSave } from '@/lib/data-enrichment';
+import { dataUrlToBlob } from '@/lib/portrait';
 import type { Character, CharacterPower, CharacterTechnique, Item } from '@/types';
 import { Spinner, Button, Alert, Modal, Textarea, useToast } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
@@ -542,10 +543,10 @@ export function FinalizeStep() {
       // Upload base64 portrait to Supabase Storage and save the URL
       if (base64Portrait && characterId) {
         try {
-          // Convert base64 data URI to a File
-          const res = await fetch(base64Portrait);
-          const blob = await res.blob();
-          const file = new File([blob], 'portrait.jpg', { type: 'image/jpeg' });
+          const blob = dataUrlToBlob(base64Portrait);
+          const file = new File([blob], 'portrait.jpg', {
+            type: blob.type?.startsWith('image/') ? blob.type : 'image/jpeg',
+          });
 
           const formData = new FormData();
           formData.append('file', file);
@@ -556,14 +557,29 @@ export function FinalizeStep() {
             body: formData,
           });
 
-          if (uploadRes.ok) {
+          if (!uploadRes.ok) {
+            const errBody = (await uploadRes.json().catch(() => ({}))) as { error?: string };
+            console.error('Portrait upload failed:', errBody.error ?? uploadRes.status);
+            showToast(
+              errBody.error
+                ? `Portrait not saved: ${errBody.error}. Add one from your character sheet.`
+                : 'Portrait upload failed. You can add one from your character sheet.',
+              'error'
+            );
+          } else {
             const { url } = (await uploadRes.json()) as { url: string };
-            // Update character with the Storage URL
-            await saveCharacter(characterId, { portrait: url });
+            if (url) {
+              await saveCharacter(characterId, { portrait: url });
+            } else {
+              showToast('Portrait upload returned no URL. Add a portrait from your character sheet.', 'error');
+            }
           }
-          // If upload fails, character is still created without portrait — not a critical error
         } catch (uploadErr) {
           console.error('Portrait upload failed (character still saved):', uploadErr);
+          showToast(
+            'Could not process or upload your portrait. Your character was created — add a portrait from the sheet.',
+            'error'
+          );
         }
       }
 

@@ -1311,6 +1311,13 @@ Notes
 - Feedback: As an admin, archetypes made on the admin page do not save reliably (“can’t seem to save … well”). After saving one technique to My Library and publishing several more to the Realms Library, later publishes did not appear — treated as a major bug.
 - Expected: Archetype saves persist and lists refresh with current data. Each publish to the official Realms Library creates or updates rows and all users (and admin lists) see new content without stale cached responses.
 
+**Raw Feedback Log — 2026-03-18 (Character creator portrait missing after finalize)**
+- Date: 2026-03-18
+- Context: Character Creator finalize — portrait upload/confirm then create character
+- Priority: High
+- Feedback: After adding a portrait and creating the character, the sheet loads without the portrait.
+- Expected: Portrait uploads to Storage and character `data.portrait` stores the public URL; sheet shows portrait; failures are visible (toast) not silent.
+
 **Raw Feedback Log — 2026-03-18 (Campaign join visibility + invalid invite code)**
 - Date: 2026-03-18
 - Context: Campaigns — join with invite code, character visibility (private / campaign / public)

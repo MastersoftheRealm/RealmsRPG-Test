@@ -21,3 +21,28 @@ export function getEffectivePortrait(portrait: string | null | undefined): strin
   }
   return portrait;
 }
+
+/**
+ * Convert a data URL (e.g. cropped JPEG from canvas) to a Blob without `fetch(dataUrl)`.
+ * Some browsers choke on `fetch()` for large data URLs; this path is reliable for portrait upload.
+ */
+export function dataUrlToBlob(dataUrl: string): Blob {
+  const comma = dataUrl.indexOf(',');
+  if (comma === -1 || !dataUrl.startsWith('data:')) {
+    throw new Error('Invalid data URL');
+  }
+  const header = dataUrl.slice(0, comma);
+  const base64 = dataUrl.slice(comma + 1);
+  const mimeMatch = /^data:([^;,]+)/.exec(header);
+  const mime = mimeMatch?.[1]?.trim() || 'image/jpeg';
+  let binary: string;
+  try {
+    binary = atob(base64);
+  } catch {
+    throw new Error('Invalid base64 in data URL');
+  }
+  const len = binary.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+}

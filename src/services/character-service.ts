@@ -38,7 +38,9 @@ export async function getCharacter(characterId: string): Promise<GetCharacterRes
     throw new Error('Invalid character ID');
   }
 
-  const res = await fetch(`${API_BASE}/${encodeURIComponent(characterId.trim())}`);
+  const res = await fetch(`${API_BASE}/${encodeURIComponent(characterId.trim())}`, {
+    cache: 'no-store',
+  });
   if (res.status === 404) return { character: null };
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
