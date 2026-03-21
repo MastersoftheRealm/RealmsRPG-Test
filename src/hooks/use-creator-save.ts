@@ -101,12 +101,16 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
       try {
         if (effectiveTarget === 'public' && publicLibraryType) {
           await saveToOfficialLibrary(publicLibraryType, payload, existingPublicId ? { existingId: existingPublicId } : undefined);
-          queryClient.invalidateQueries({ queryKey: OFFICIAL_LIBRARY_KEY });
+          // Refetch all matching official-library queries (inactive tabs too) so Library / browse update immediately
+          await queryClient.invalidateQueries({ queryKey: [...OFFICIAL_LIBRARY_KEY], refetchType: 'all' });
           setSaveMessage({ type: 'success', text: publicSuccessMessage });
         } else {
           const existing = await findLibraryItemByName(type, name.trim());
           await saveToLibrary(type, payload, existing ? { existingId: existing.id } : undefined);
-          queryClient.invalidateQueries({ queryKey: [...USER_LIBRARY_QUERY_KEYS[type]] });
+          await queryClient.invalidateQueries({
+            queryKey: [...USER_LIBRARY_QUERY_KEYS[type]],
+            refetchType: 'all',
+          });
           setSaveMessage({ type: 'success', text: successMessage });
         }
         setTimeout(() => {

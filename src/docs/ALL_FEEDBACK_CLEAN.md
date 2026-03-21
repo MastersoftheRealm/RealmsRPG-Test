@@ -1310,3 +1310,10 @@ Notes
 - Priority: High
 - Feedback: As an admin, archetypes made on the admin page do not save reliably (“can’t seem to save … well”). After saving one technique to My Library and publishing several more to the Realms Library, later publishes did not appear — treated as a major bug.
 - Expected: Archetype saves persist and lists refresh with current data. Each publish to the official Realms Library creates or updates rows and all users (and admin lists) see new content without stale cached responses.
+
+**Raw Feedback Log — 2026-03-18 (Mixed species traits + library list refresh)**
+- Date: 2026-03-18
+- Context: Character Creator (mixed species); Technique Creator → My Library / Realms Library
+- Priority: High
+- Feedback: (1) New character with mixed species did not save selected species traits — only ancestry traits. (2) Techniques after creation sometimes do not show in personal or official library immediately or at all.
+- Expected: Mixed species saves persist species trait picks (and related mixed ancestry fields). Library lists refetch after save/publish so new techniques appear without stale client cache.
