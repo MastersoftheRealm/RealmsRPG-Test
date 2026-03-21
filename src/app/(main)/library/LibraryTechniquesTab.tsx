@@ -38,15 +38,28 @@ const TECHNIQUE_HEADER_COLUMNS = [
 
 interface LibraryTechniquesTabProps {
   onDelete: (item: DisplayItem) => void;
+  mode?: 'standard' | 'empowered';
 }
 
-export function LibraryTechniquesTab({ onDelete }: LibraryTechniquesTabProps) {
+function isEmpoweredTechnique(technique: unknown): boolean {
+  const raw = technique as Record<string, unknown>;
+  return raw.empoweredTechnique === true || raw.empowered_technique === true || (raw.power != null && raw.technique != null);
+}
+
+export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTechniquesTabProps) {
   const { showToast } = useToast();
-  const { data: techniques = [], isLoading, error } = useUserTechniques();
+  const { data: allTechniques = [], isLoading, error } = useUserTechniques();
   const { data: partsDb = [] } = useTechniqueParts();
   const duplicateTechnique = useDuplicateTechnique();
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
+  const techniques = useMemo(
+    () =>
+      allTechniques.filter((technique) =>
+        mode === 'empowered' ? isEmpoweredTechnique(technique) : !isEmpoweredTechnique(technique)
+      ),
+    [allTechniques, mode]
+  );
 
   const cardData = useMemo(() => {
     return techniques.map(tech => {
@@ -100,13 +113,13 @@ export function LibraryTechniquesTab({ onDelete }: LibraryTechniquesTabProps) {
     return (
       <ListEmptyState
         icon={<Swords className="w-8 h-8" />}
-        title="No techniques yet"
-        message="Create your first technique to see it here in your library."
+        title={mode === 'empowered' ? 'No empowered techniques yet' : 'No techniques yet'}
+        message={mode === 'empowered' ? 'Create your first empowered technique to see it here in your library.' : 'Create your first technique to see it here in your library.'}
         action={
           <Button asChild>
-            <Link href="/technique-creator">
+            <Link href={mode === 'empowered' ? '/empowered-technique-creator' : '/technique-creator'}>
               <Plus className="w-4 h-4" />
-              Create Technique
+              {mode === 'empowered' ? 'Create Empowered Technique' : 'Create Technique'}
             </Link>
           </Button>
         }
@@ -135,7 +148,9 @@ export function LibraryTechniquesTab({ onDelete }: LibraryTechniquesTabProps) {
         {isLoading ? (
           <LoadingState />
         ) : filteredData.length === 0 ? (
-          <div className="py-12 text-center text-text-secondary">No techniques match your search.</div>
+          <div className="py-12 text-center text-text-secondary">
+            {mode === 'empowered' ? 'No empowered techniques match your search.' : 'No techniques match your search.'}
+          </div>
         ) : (
           filteredData.map(tech => (
             <GridListRow
@@ -155,7 +170,7 @@ export function LibraryTechniquesTab({ onDelete }: LibraryTechniquesTabProps) {
               chipsLabel="Parts & Proficiencies"
               totalCost={typeof tech.tp === 'number' ? tech.tp : (parseFloat(String(tech.tp)) || undefined)}
               costLabel="TP"
-              onEdit={() => window.open(`/technique-creator?edit=${tech.id}`, '_blank')}
+              onEdit={() => window.open(`${mode === 'empowered' ? '/empowered-technique-creator' : '/technique-creator'}?edit=${tech.id}`, '_blank')}
               onDelete={() => onDelete({ id: tech.id, name: tech.name } as DisplayItem)}
               onDuplicate={() => duplicateTechnique.mutate(tech.id, { onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error') })}
             />

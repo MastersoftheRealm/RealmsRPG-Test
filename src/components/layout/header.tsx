@@ -23,6 +23,7 @@ const navLinks: Array<{ href: string; label: string; external?: boolean } | { la
     dropdown: [
       { href: '/power-creator', label: 'Powers' },
       { href: '/technique-creator', label: 'Techniques' },
+      { href: '/empowered-technique-creator', label: 'Empowered Techniques' },
       { href: '/item-creator', label: 'Armaments' },
       { href: '/species-creator', label: 'Species' },
     ],

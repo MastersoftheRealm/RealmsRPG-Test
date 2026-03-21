@@ -107,6 +107,7 @@ import type { SelectableItem } from '@/components/shared';
 import { LoadCreatureModal } from './LoadCreatureModal';
 
 type InventoryTab = 'all' | 'weapon' | 'armor' | 'shield' | 'equipment';
+type PowerModalTab = 'powers' | 'empowered';
 
 function normalizeInventoryType(type: string | undefined): Exclude<InventoryTab, 'all'> {
   const normalized = String(type ?? '').toLowerCase().trim();
@@ -174,6 +175,7 @@ function CreatureCreatorContent() {
   const [newLanguage, setNewLanguage] = useState('');
   const [librarySource, setLibrarySource] = useState<SourceFilterValue>('all');
   const [inventoryTab, setInventoryTab] = useState<InventoryTab>('all');
+  const [powerModalTab, setPowerModalTab] = useState<PowerModalTab>('powers');
   
   // Normalize public API item to UserPower/UserTechnique/UserItem shape (with docId for transformers)
   const normalizedPublicPowers = useMemo(() => 
@@ -229,6 +231,14 @@ function CreatureCreatorContent() {
     const pub = (librarySource === 'public' || librarySource === 'all') ? normalizedPublicTechniques : [];
     return [...my, ...pub] as UserTechnique[];
   }, [userTechniques, normalizedPublicTechniques, librarySource]);
+  const empoweredTechniqueList = useMemo(
+    () =>
+      techniqueList.filter((technique: UserTechnique) => {
+        const raw = technique as unknown as Record<string, unknown>;
+        return raw.empoweredTechnique === true || raw.empowered_technique === true || (raw.power != null && raw.technique != null);
+      }),
+    [techniqueList]
+  );
   const armamentList = useMemo(() => {
     const my = (librarySource === 'my' || librarySource === 'all') ? userItems : [];
     const pub = (librarySource === 'public' || librarySource === 'all') ? normalizedPublicItems : [];
@@ -284,6 +294,68 @@ function CreatureCreatorContent() {
       };
     });
   }, [powerList, powerPartsDb]);
+  const empoweredTechniqueSelectableItems = useMemo(() => {
+    return empoweredTechniqueList.map((technique: UserTechnique) => {
+      const raw = technique as unknown as Record<string, unknown>;
+      const powerData = (raw.power as Record<string, unknown> | undefined) ?? {};
+      const totals = (raw.totals as Record<string, unknown> | undefined) ?? {};
+      const actionType = String(raw.actionType ?? '');
+      const isReaction = raw.isReaction === true;
+      const action = actionType
+        ? `${actionType.charAt(0).toUpperCase()}${actionType.slice(1)} ${isReaction ? 'Reaction' : 'Action'}`
+        : (isReaction ? 'Reaction' : '-');
+      const areaRaw = (powerData.area as Record<string, unknown> | undefined)?.type;
+      const areaValue = areaRaw ? String(areaRaw).replace(/\b\w/g, (c) => c.toUpperCase()) : '-';
+      const damageRows = Array.isArray(powerData.damage) ? (powerData.damage as Array<{ amount?: number; size?: number; type?: string }>) : [];
+      const damageValue = damageRows.length > 0
+        ? damageRows
+            .filter((row) => (row.amount ?? 0) > 0 && row.type && row.type !== 'none')
+            .map((row) => `${row.amount}d${row.size} ${row.type}`)
+            .join(', ')
+        : '-';
+      const energy = Number(totals.energy ?? 0);
+      const tp = Number(totals.trainingPoints ?? 0);
+      const displayItem = transformUserPowerToDisplayItem({
+        id: technique.id,
+        docId: technique.docId,
+        name: technique.name,
+        description: technique.description,
+        parts: [],
+        actionType,
+        isReaction,
+        area: powerData.area as UserPower['area'],
+        range: powerData.range as UserPower['range'],
+        duration: powerData.duration as UserPower['duration'],
+        damage: powerData.damage as UserPower['damage'],
+      }, powerPartsDb);
+      const base = displayItemToSelectableItem(displayItem, ['Energy', 'Action', 'Damage', 'Area']);
+      return {
+        ...base,
+        columns: [
+          { key: 'Energy', value: energy || '-', align: 'center' as const },
+          { key: 'Action', value: action, align: 'center' as const },
+          { key: 'Damage', value: damageValue || '-', align: 'center' as const },
+          { key: 'Area', value: areaValue, align: 'center' as const },
+        ],
+        badges: [{ label: 'Empowered', color: 'gray' as const }],
+        data: {
+          ...displayItem,
+          sourceData: {
+            id: technique.docId,
+            name: technique.name,
+            energy,
+            tp,
+            action,
+            duration: String((powerData.duration as Record<string, unknown> | undefined)?.type ?? '-'),
+            range: String((powerData.range as Record<string, unknown> | undefined)?.steps ?? '-'),
+            area: areaValue,
+            damage: damageValue,
+            innate: false,
+          } as unknown as Record<string, unknown>,
+        },
+      };
+    });
+  }, [empoweredTechniqueList, powerPartsDb]);
   const techniqueSelectableItems = useMemo(() => {
     return techniqueList.map((technique: UserTechnique) => {
       const displayItem = transformUserTechniqueToDisplayItem(technique, techniquePartsDb);
@@ -978,18 +1050,34 @@ function CreatureCreatorContent() {
           <UnifiedSelectionModal
             isOpen={showPowerModal}
             onClose={() => setShowPowerModal(false)}
-            headerExtra={<SourceFilter value={librarySource} onChange={setLibrarySource} />}
+            headerExtra={
+              <div className="space-y-3">
+                <SourceFilter value={librarySource} onChange={setLibrarySource} />
+                <SegmentedControl<PowerModalTab>
+                  value={powerModalTab}
+                  onChange={setPowerModalTab}
+                  aria-label="Power modal type"
+                  tabs
+                  options={[
+                    { value: 'powers', label: 'Powers' },
+                    { value: 'empowered', label: 'Empowered Techniques' },
+                  ]}
+                />
+              </div>
+            }
             onConfirm={(selected) => {
               const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
               const powers = items.map(displayItemToCreaturePower);
               setCreature(prev => ({ ...prev, powers: [...prev.powers, ...powers] }));
             }}
-            items={powerSelectableItems}
-            title="Select Powers"
-            description="Choose powers from your library or Realms Library. Click a row (or the + button) to select, then click Add Selected."
+            items={powerModalTab === 'empowered' ? empoweredTechniqueSelectableItems : powerSelectableItems}
+            title={powerModalTab === 'empowered' ? 'Select Empowered Techniques' : 'Select Powers'}
+            description={powerModalTab === 'empowered'
+              ? 'Choose empowered techniques from your library or Realms Library and add them to the creature power list.'
+              : 'Choose powers from your library or Realms Library. Click a row (or the + button) to select, then click Add Selected.'}
             maxSelections={10}
-            itemLabel="power"
-            searchPlaceholder="Search powers..."
+            itemLabel={powerModalTab === 'empowered' ? 'empowered technique' : 'power'}
+            searchPlaceholder={powerModalTab === 'empowered' ? 'Search empowered techniques...' : 'Search powers...'}
             columns={[
               { key: 'name', label: 'Name', sortable: true },
               { key: 'Energy', label: 'Energy', sortable: false },

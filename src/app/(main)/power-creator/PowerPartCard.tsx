@@ -9,15 +9,26 @@ import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { formatCost } from '@/lib/game/creator-constants';
 import { IconButton, Checkbox } from '@/components/ui';
 import { ValueStepper } from '@/components/shared';
-import type { PowerPart } from '@/hooks';
-import type { SelectedPart } from './power-creator-types';
+import type { PowerPart, TechniquePart } from '@/hooks';
+
+type CreatorPart = PowerPart | TechniquePart;
+
+interface SelectedPartLike {
+  part: CreatorPart;
+  op_1_lvl: number;
+  op_2_lvl: number;
+  op_3_lvl: number;
+  applyDuration?: boolean;
+  selectedCategory: string;
+}
 
 interface PowerPartCardProps {
-  selectedPart: SelectedPart;
+  selectedPart: SelectedPartLike;
   _index: number;
   onRemove: () => void;
-  onUpdate: (updates: Partial<SelectedPart>) => void;
-  allParts: PowerPart[];
+  onUpdate: (updates: Partial<SelectedPartLike>) => void;
+  allParts: CreatorPart[];
+  showApplyDuration?: boolean;
 }
 
 export function PowerPartCard({
@@ -25,6 +36,7 @@ export function PowerPartCard({
   onRemove,
   onUpdate,
   allParts,
+  showApplyDuration = true,
 }: PowerPartCardProps) {
   const categorySelectId = useId();
   const partSelectId = useId();
@@ -43,9 +55,20 @@ export function PowerPartCard({
   }, [allParts, selectedPart.selectedCategory]);
 
   const hasOption = (n: 1 | 2 | 3) => {
-    const desc = part[`op_${n}_desc` as keyof PowerPart] as string | undefined;
-    const en = part[`op_${n}_en` as keyof PowerPart] as number | undefined;
-    const tp = part[`op_${n}_tp` as keyof PowerPart] as number | undefined;
+    const partWithOptions = part as CreatorPart & {
+      op_1_desc?: string;
+      op_1_en?: number;
+      op_1_tp?: number;
+      op_2_desc?: string;
+      op_2_en?: number;
+      op_2_tp?: number;
+      op_3_desc?: string;
+      op_3_en?: number;
+      op_3_tp?: number;
+    };
+    const desc = partWithOptions[`op_${n}_desc`];
+    const en = partWithOptions[`op_${n}_en`];
+    const tp = partWithOptions[`op_${n}_tp`];
     return (desc && desc.trim() !== '') || (en !== undefined && en !== 0) || (tp !== undefined && tp !== 0);
   };
 
@@ -237,11 +260,13 @@ export function PowerPartCard({
             </div>
           )}
 
-          <Checkbox
-            checked={selectedPart.applyDuration}
-            onChange={(e) => onUpdate({ applyDuration: e.target.checked })}
-            label="Apply to Duration"
-          />
+          {showApplyDuration && (
+            <Checkbox
+              checked={selectedPart.applyDuration ?? false}
+              onChange={(e) => onUpdate({ applyDuration: e.target.checked })}
+              label="Apply to Duration"
+            />
+          )}
         </div>
       )}
     </div>

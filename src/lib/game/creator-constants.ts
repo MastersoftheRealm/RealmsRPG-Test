@@ -256,6 +256,7 @@ export type Skill = typeof SKILLS[number];
 export const CREATOR_CACHE_KEYS = {
   POWER: 'realms-power-creator-cache',
   TECHNIQUE: 'realms-technique-creator-cache',
+  EMPOWERED_TECHNIQUE: 'realms-empowered-technique-creator-cache',
   ITEM: 'realms-item-creator-cache',
   CREATURE: 'realms-creature-creator-cache',
 } as const;

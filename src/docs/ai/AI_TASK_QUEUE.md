@@ -7077,3 +7077,47 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Expanded CreatorSummaryPanel resource box values to support formatted strings for current/max displays.
     - Extended creature power source payload to include tp for training-spend accounting.
     - Verification: npm run build passes.
+
+- id: TASK-303
+  title: Add empowered technique creator combining power + technique systems
+  priority: high
+  status: in-progress
+  created_at: 2026-03-21
+  created_by: owner
+  description: |
+    Implement a dedicated empowered-technique creator that combines the power creator and
+    technique creator workflows using shared logic/components. The new creator should support
+    power mechanics (action type, range, area, duration, add damage, power parts/mechanics)
+    plus technique mechanics (technique parts and additional damage), with shared action type.
+    Add Weapon must use Add Weapon to Power (part id 369). Cost calculations should combine
+    power and technique costs with empowered-specific scaling behavior.
+  related_files:
+    - src/app/(main)/empowered-technique-creator/page.tsx
+    - src/app/(main)/empowered-technique-creator/layout.tsx
+    - src/lib/calculators/empowered-technique-calc.ts
+    - src/lib/calculators/index.ts
+    - src/app/(main)/power-creator/PowerPartCard.tsx
+    - src/lib/id-constants.ts
+    - src/lib/game/creator-constants.ts
+    - src/components/layout/header.tsx
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - src/docs/ai/AI_CHANGELOG.md
+  acceptance_criteria:
+    - New route exists for empowered technique creator and is reachable from Creators navigation.
+    - Creator includes power sections (action/range/area/duration/power damage/power parts/power mechanics) and technique sections (technique parts/additional damage).
+    - Shared action profile is used across both sides; Add Weapon uses Add Weapon to Power (id 369).
+    - Energy/TP totals use empowered calculation logic (combined power + technique with technique percentage scaling applied to power side).
+    - Save/load flow supports empowered technique docs.
+    - npm run build passes.
+  notes: |
+    Implemented locally 2026-03-21:
+    - Added new empowered-technique creator route with shared card/components and combined sections.
+    - Added empowered calculator and exports.
+    - Added PART_IDS.ADD_WEAPON_TO_POWER = 369 and creator cache key.
+    - Added Creators dropdown navigation link.
+    Update 2026-03-21:
+    - Added shared `WeaponSelector` component and reused it in technique and empowered technique creators.
+    - Power Creator now has an `Add Weapon to Power` section (shared weapon selector UI, power part id 369 scaling, save/load/cache support).
+    - Library now includes a dedicated `Empowered` tab in My Library and Realms Library (filtered from techniques payloads with empowered flags/data).
+    - Character Creator powers step `Add Powers` modal now has `Powers / Empowered Techniques` tabs and displays empowered selections in the powers list.
+    - Creature Creator `Add Power` modal now has `Powers / Empowered Techniques` tabs; empowered selections map into creature power entries and display in power lists.

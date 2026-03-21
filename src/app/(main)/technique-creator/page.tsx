@@ -20,7 +20,7 @@ import { useTechniqueParts, useUserItems, useItemProperties, useAdmin, useCreato
 import { useAuthStore } from '@/stores';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
-import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout, CollapsibleSection } from '@/components/creator';
+import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout, CollapsibleSection, WeaponSelector } from '@/components/creator';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
 import { ValueStepper, SectionCostBadge } from '@/components/shared';
 import { CreatorSummaryPanel } from '@/components/creator';
@@ -886,48 +886,18 @@ function TechniqueCreatorContent() {
             rightSlot={<SectionCostBadge en={combatConfigCost.totalEnergy} tp={combatConfigCost.totalTP} />}
           >
             <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <label className="block text-sm font-medium text-text-secondary">
-                    Weapon
-                  </label>
-                  <SectionCostBadge
-                    en={weaponCost.totalEnergy}
-                    tp={weaponCost.totalTP}
-                  />
-                </div>
-                <select
-                  value={String(weapon.id)}
-                  onChange={(e) => {
-                    const selectedId = e.target.value;
-                    const selected = allWeaponOptions.find(w => String(w.id) === selectedId);
-                    if (selected) setWeapon(selected);
-                  }}
-                  className="w-full px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-                  aria-label="Weapon"
-                >
-                  {/* Default options */}
-                  <optgroup label="General">
-                    {DEFAULT_WEAPON_OPTIONS.map((opt) => (
-                      <option key={String(opt.id)} value={String(opt.id)}>
-                        {opt.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                  {/* User's saved weapons */}
-                  {allWeaponOptions.filter(w => w.isUserWeapon).length > 0 && (
-                    <optgroup label="My Weapons">
-                      {allWeaponOptions
-                        .filter(w => w.isUserWeapon)
-                        .map((opt) => (
-                          <option key={String(opt.id)} value={String(opt.id)}>
-                            {opt.name}
-                          </option>
-                        ))}
-                    </optgroup>
-                  )}
-                </select>
-              </div>
+              <WeaponSelector
+                label="Weapon"
+                value={weapon.id}
+                options={allWeaponOptions}
+                onChange={(selectedId) => {
+                  const selected = allWeaponOptions.find((option) => String(option.id) === selectedId);
+                  if (selected) setWeapon(selected);
+                }}
+                ariaLabel="Weapon"
+                badgeEn={weaponCost.totalEnergy}
+                badgeTp={weaponCost.totalTP}
+              />
               <div>
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <label className="block text-sm font-medium text-text-secondary">

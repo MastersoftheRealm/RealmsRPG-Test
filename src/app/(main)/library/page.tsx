@@ -36,7 +36,7 @@ import { LibraryCreaturesTab } from './LibraryCreaturesTab';
 import { LibraryEnhancedTab } from './LibraryEnhancedTab';
 import { LibraryPublicContent, type LibraryPublicTabId } from './LibraryPublicContent';
 
-type TabId = 'powers' | 'techniques' | 'items' | 'creatures' | 'enhanced';
+type TabId = 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'enhanced';
 
 interface Tab {
   id: TabId;
@@ -49,10 +49,16 @@ interface Tab {
 const TABS: Tab[] = [
   { id: 'powers', label: 'Powers', icon: <Wand2 className="w-4 h-4" />, createHref: '/power-creator', createLabel: 'Create Power' },
   { id: 'techniques', label: 'Techniques', icon: <Swords className="w-4 h-4" />, createHref: '/technique-creator', createLabel: 'Create Technique' },
+  { id: 'empowered-techniques', label: 'Empowered', icon: <Swords className="w-4 h-4" />, createHref: '/empowered-technique-creator', createLabel: 'Create Empowered Technique' },
   { id: 'items', label: 'Armaments', icon: <Shield className="w-4 h-4" />, createHref: '/item-creator', createLabel: 'Create Armament' },
   { id: 'creatures', label: 'Creatures', icon: <Users className="w-4 h-4" />, createHref: '/creature-creator', createLabel: 'Create Creature' },
   { id: 'enhanced', label: 'Enhanced', icon: <Sparkles className="w-4 h-4" />, createHref: '/crafting', createLabel: 'From Crafting' },
 ];
+
+function isEmpoweredTechnique(item: unknown): boolean {
+  const raw = item as Record<string, unknown>;
+  return raw.empoweredTechnique === true || raw.empowered_technique === true || (raw.power != null && raw.technique != null);
+}
 
 type LibraryMode = 'my' | 'public';
 
@@ -93,7 +99,8 @@ function LibraryContent() {
 
   const myCounts: Record<TabId, number> = {
     powers: powers.length,
-    techniques: techniques.length,
+    techniques: techniques.filter((item) => !isEmpoweredTechnique(item)).length,
+    'empowered-techniques': techniques.filter((item) => isEmpoweredTechnique(item)).length,
     items: items.length,
     creatures: creatures.length,
     enhanced: enhancedItems.length,
@@ -101,7 +108,8 @@ function LibraryContent() {
 
   const publicCounts: Record<TabId, number> = {
     powers: publicPowers.length,
-    techniques: publicTechniques.length,
+    techniques: publicTechniques.filter((item) => !isEmpoweredTechnique(item)).length,
+    'empowered-techniques': publicTechniques.filter((item) => isEmpoweredTechnique(item)).length,
     items: publicItems.length,
     creatures: publicCreatures.length,
     enhanced: 0,
@@ -212,7 +220,8 @@ function LibraryContent() {
       ) : (
         <>
           {activeTab === 'powers' && <LibraryPowersTab onDelete={(item) => setDeleteConfirm({ type: 'powers', item })} />}
-          {activeTab === 'techniques' && <LibraryTechniquesTab onDelete={(item) => setDeleteConfirm({ type: 'techniques', item })} />}
+          {activeTab === 'techniques' && <LibraryTechniquesTab onDelete={(item) => setDeleteConfirm({ type: 'techniques', item })} mode="standard" />}
+          {activeTab === 'empowered-techniques' && <LibraryTechniquesTab onDelete={(item) => setDeleteConfirm({ type: 'techniques', item })} mode="empowered" />}
           {activeTab === 'items' && <LibraryItemsTab onDelete={(item) => setDeleteConfirm({ type: 'items', item })} />}
           {activeTab === 'creatures' && <LibraryCreaturesTab onDelete={(item) => setDeleteConfirm({ type: 'creatures', item })} />}
           {activeTab === 'enhanced' && <LibraryEnhancedTab onDelete={(item) => setDeleteConfirm({ type: 'enhanced', item })} />}

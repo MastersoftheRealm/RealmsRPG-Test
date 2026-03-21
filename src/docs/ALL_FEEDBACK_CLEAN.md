@@ -1310,3 +1310,17 @@ Notes
 - Priority: High
 - Feedback: As an admin, archetypes made on the admin page do not save reliably (“can’t seem to save … well”). After saving one technique to My Library and publishing several more to the Realms Library, later publishes did not appear — treated as a major bug.
 - Expected: Archetype saves persist and lists refresh with current data. Each publish to the official Realms Library creates or updates rows and all users (and admin lists) see new content without stale cached responses.
+
+**Raw Feedback Log — 2026-03-21 (Empowered Techniques creator request)**
+- Date: 2026-03-21
+- Context: Power Creator + Technique Creator convergence; new Empowered Technique flow
+- Priority: High
+- Feedback: Add support for Empowered Techniques by combining power + technique authoring. Requested behavior: shared action type/reaction profile, Add Weapon should use Add Weapon to Power (id 369), Duration applies only to power side, include both power Add Damage and technique Additional Damage, and allow adding/incrementing technique parts inside the empowered flow. Prefer a dedicated creator that reuses existing power/technique shared code/components so future updates to those creators propagate.
+- Expected: New empowered-technique creator route with power-like UX plus technique sections, empowered-aware energy/TP calculations, and high code reuse with minimal duplicated logic.
+
+**Raw Feedback Log — 2026-03-21 (Power add-weapon + empowered library/modal integration)**
+- Date: 2026-03-21
+- Context: Power Creator, Empowered Technique clarity, Library tabs, character/creature add-power modals
+- Priority: High
+- Feedback: Add a dedicated Add Weapon section to Power Creator using Add Weapon to Power logic (power part id path), modeled after the technique creator weapon UX and using shared component(s). Keep empowered technique sections clearly separated so technique parts are distinct from power parts/mechanics. Add Empowered Techniques as first-class library content in both Realms and My Library. In character/creature add-power flows, include Empowered Techniques as a tab and ensure selected entries display in the corresponding lists.
+- Expected: Power creator weapon section with shared UI, clear empowered section separation, library empowered visibility in both scopes, and add-power modal tab support for empowered selection in character/creature flows.

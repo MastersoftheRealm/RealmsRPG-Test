@@ -37,7 +37,7 @@ import { calculateItemCosts, calculateCurrencyCostAndRarity, formatRange as form
 import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 
-export type LibraryPublicTabId = 'powers' | 'techniques' | 'items' | 'creatures';
+export type LibraryPublicTabId = 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures';
 
 const POWER_GRID = '1.5fr 0.8fr 1fr 1fr 0.8fr 1fr 1fr 40px';
 const TECHNIQUE_GRID = '1.5fr 0.8fr 0.8fr 1fr 1fr 1fr 40px';
@@ -54,9 +54,15 @@ interface LibraryPublicContentProps {
 export function LibraryPublicContent({ activeTab, onLoginRequired, readOnly = false }: LibraryPublicContentProps) {
   if (activeTab === 'powers') return <PublicPowersList onLoginRequired={onLoginRequired} readOnly={readOnly} />;
   if (activeTab === 'techniques') return <PublicTechniquesList onLoginRequired={onLoginRequired} readOnly={readOnly} />;
+  if (activeTab === 'empowered-techniques') return <PublicTechniquesList onLoginRequired={onLoginRequired} readOnly={readOnly} mode="empowered" />;
   if (activeTab === 'items') return <PublicItemsList onLoginRequired={onLoginRequired} readOnly={readOnly} />;
   if (activeTab === 'creatures') return <PublicCreaturesList onLoginRequired={onLoginRequired} readOnly={readOnly} />;
   return null;
+}
+
+function isEmpoweredTechnique(item: unknown): boolean {
+  const raw = item as Record<string, unknown>;
+  return raw.empoweredTechnique === true || raw.empowered_technique === true || (raw.power != null && raw.technique != null);
 }
 
 function PublicPowersList({ onLoginRequired, readOnly = false }: { onLoginRequired: () => void; readOnly?: boolean }) {
@@ -217,7 +223,15 @@ function PublicPowersList({ onLoginRequired, readOnly = false }: { onLoginRequir
   );
 }
 
-function PublicTechniquesList({ onLoginRequired, readOnly = false }: { onLoginRequired: () => void; readOnly?: boolean }) {
+function PublicTechniquesList({
+  onLoginRequired,
+  readOnly = false,
+  mode = 'standard',
+}: {
+  onLoginRequired: () => void;
+  readOnly?: boolean;
+  mode?: 'standard' | 'empowered';
+}) {
   const { user } = useAuthStore();
   const { showToast } = useToast();
   const { data: items = [], isLoading, error } = usePublicLibrary('techniques');
@@ -248,8 +262,13 @@ function PublicTechniquesList({ onLoginRequired, readOnly = false }: { onLoginRe
     });
   };
 
+  const filteredItems = useMemo(
+    () => items.filter((item) => (mode === 'empowered' ? isEmpoweredTechnique(item) : !isEmpoweredTechnique(item))),
+    [items, mode]
+  );
+
   const cardData = useMemo(() => {
-    return items.map((t: Record<string, unknown>) => {
+    return filteredItems.map((t: Record<string, unknown>) => {
       const doc: TechniqueDocument = {
         name: String(t.name ?? ''),
         description: String(t.description ?? ''),
@@ -278,7 +297,7 @@ function PublicTechniquesList({ onLoginRequired, readOnly = false }: { onLoginRe
         parts,
       };
     });
-  }, [items, partsDb]);
+  }, [filteredItems, partsDb]);
 
   const filtered = useMemo(() => {
     let r = cardData;
@@ -289,15 +308,21 @@ function PublicTechniquesList({ onLoginRequired, readOnly = false }: { onLoginRe
     return sortItems(r);
   }, [cardData, search, sortItems]);
 
-  if (error) return <ErrorDisplay message="Failed to load Realms Library techniques" />;
+  if (error) return <ErrorDisplay message={`Failed to load Realms Library ${mode === 'empowered' ? 'empowered techniques' : 'techniques'}`} />;
   if (!isLoading && cardData.length === 0) {
-    return <ListEmptyState icon={<Swords className="w-8 h-8" />} title="No techniques yet" message="Official techniques will appear here when added to Realms Library." />;
+    return (
+      <ListEmptyState
+        icon={<Swords className="w-8 h-8" />}
+        title={mode === 'empowered' ? 'No empowered techniques yet' : 'No techniques yet'}
+        message={mode === 'empowered' ? 'Official empowered techniques will appear here when added to Realms Library.' : 'Official techniques will appear here when added to Realms Library.'}
+      />
+    );
   }
 
   return (
     <div>
       <div className="mb-4">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search techniques..." />
+        <SearchInput value={search} onChange={setSearch} placeholder={mode === 'empowered' ? 'Search empowered techniques...' : 'Search techniques...'} />
       </div>
       <ListHeader
         columns={[
@@ -315,7 +340,9 @@ function PublicTechniquesList({ onLoginRequired, readOnly = false }: { onLoginRe
       />
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? <LoadingState /> : filtered.length === 0 ? (
-          <div className="py-12 text-center text-text-secondary">No techniques match your search.</div>
+          <div className="py-12 text-center text-text-secondary">
+            {mode === 'empowered' ? 'No empowered techniques match your search.' : 'No techniques match your search.'}
+          </div>
         ) : (
           filtered.map(t => (
             <GridListRow

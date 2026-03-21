@@ -14,12 +14,13 @@
 
 import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { Plus, Wand2, Zap, Target, Info, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { usePowerParts, useAdmin, useCreatorSave, useLoadModalLibrary, type PowerPart } from '@/hooks';
+import { usePowerParts, useUserItems, useItemProperties, useAdmin, useCreatorSave, useLoadModalLibrary, type PowerPart } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
-import { CreatorSaveToolbar, CreatorLayout } from '@/components/creator';
+import { CreatorSaveToolbar, CreatorLayout, WeaponSelector } from '@/components/creator';
 import { LoadingState, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
@@ -38,6 +39,9 @@ import {
   type AreaConfig,
   type DurationConfig,
 } from '@/lib/calculators';
+import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
+import { calculateItemCosts } from '@/lib/calculators/item-calc';
+import type { ItemPropertyPayload } from '@/lib/calculators/item-calc';
 import {
   ACTION_OPTIONS,
   POWER_DAMAGE_TYPES as DAMAGE_TYPES,
@@ -80,8 +84,20 @@ interface PowerCreatorCache {
   range: RangeConfig;
   area: AreaConfig;
   duration: DurationConfig;
+  weaponId: string | number;
   timestamp: number;
 }
+
+interface WeaponConfig {
+  id: number | string;
+  name: string;
+  tp?: number;
+  isUserWeapon?: boolean;
+}
+
+const DEFAULT_WEAPON_OPTIONS: WeaponConfig[] = [
+  { id: 0, name: 'Unarmed Prowess', tp: 0 },
+];
 
 function PowerCreatorContent() {
   const { user } = useAuthStore();
@@ -114,10 +130,30 @@ function PowerCreatorContent() {
     endsOnActivation: false,
     sustain: 0,
   });
+  const [weapon, setWeapon] = useState<WeaponConfig>(DEFAULT_WEAPON_OPTIONS[0]);
   const load = useLoadModalLibrary('power');
 
   // Fetch power parts
   const { data: powerParts = [], isLoading, error } = usePowerParts();
+  const { data: userItems = [] } = useUserItems();
+  const { data: itemPropertiesDb = [] } = useItemProperties();
+
+  const allWeaponOptions = useMemo(() => {
+    const userWeapons: WeaponConfig[] = userItems
+      .filter((item) => (item.type || '').toLowerCase() === 'weapon')
+      .map((item) => {
+        const props = (item.properties || []) as ItemPropertyPayload[];
+        const costs = itemPropertiesDb.length ? calculateItemCosts(props, itemPropertiesDb) : { totalTP: 1 };
+        const tp = Math.max(0, Math.round(costs.totalTP));
+        return {
+          id: item.docId,
+          name: item.name,
+          tp: tp || 1,
+          isUserWeapon: true,
+        };
+      });
+    return [...DEFAULT_WEAPON_OPTIONS, ...userWeapons];
+  }, [userItems, itemPropertiesDb]);
 
   // Load cached state from localStorage on mount
   useEffect(() => {
@@ -154,6 +190,10 @@ function PowerCreatorContent() {
             endsOnActivation: false,
             sustain: 0,
           });
+          if (parsed.weaponId !== undefined) {
+            const restoredWeapon = allWeaponOptions.find((option) => String(option.id) === String(parsed.weaponId));
+            if (restoredWeapon) setWeapon(restoredWeapon);
+          }
           
           // Restore selected parts by finding them in powerParts
           if (parsed.selectedParts && parsed.selectedParts.length > 0) {
@@ -200,7 +240,7 @@ function PowerCreatorContent() {
       console.error('Failed to load power creator cache:', e);
     }
     setIsInitialized(true);
-  }, [powerParts, isInitialized]);
+  }, [powerParts, allWeaponOptions, isInitialized]);
 
   // Auto-save to localStorage when state changes
   useEffect(() => {
@@ -231,13 +271,14 @@ function PowerCreatorContent() {
         range,
         area,
         duration,
+        weaponId: weapon.id,
         timestamp: Date.now(),
       };
       localStorage.setItem(POWER_CREATOR_CACHE_KEY, JSON.stringify(cache));
     } catch (e) {
       console.error('Failed to save power creator cache:', e);
     }
-  }, [isInitialized, name, description, selectedParts, selectedAdvancedParts, actionType, isReaction, damages, range, area, duration]);
+  }, [isInitialized, name, description, selectedParts, selectedAdvancedParts, actionType, isReaction, damages, range, area, duration, weapon.id]);
 
   // Filter out mechanic parts for the "Add Part" dropdown
   // Mechanic parts are handled by basic mechanics UI (action, damage, range, area, duration)
@@ -280,6 +321,23 @@ function PowerCreatorContent() {
     [actionType, isReaction, damages, range, area, duration, powerParts]
   );
 
+  const addWeaponToPowerPart = useMemo(() => {
+    if ((weapon.tp ?? 0) < 1) return null;
+    const part = findByIdOrName(powerParts, {
+      id: PART_IDS.ADD_WEAPON_TO_POWER,
+      name: 'Add Weapon to Power',
+    });
+    if (!part) return null;
+    return {
+      id: part.id,
+      name: part.name,
+      op_1_lvl: Math.max(0, (weapon.tp ?? 1) - 1),
+      op_2_lvl: 0,
+      op_3_lvl: 0,
+      applyDuration: false,
+    };
+  }, [weapon.tp, powerParts]);
+
   // Convert selected parts to payload format for calculator
   const partsPayload: PowerPartPayload[] = useMemo(
     () => [
@@ -301,8 +359,9 @@ function PowerCreatorContent() {
       })),
       // Auto-generated mechanic parts from action type / damage selections
       ...mechanicParts,
+      ...(addWeaponToPowerPart ? [addWeaponToPowerPart] : []),
     ],
-    [selectedParts, selectedAdvancedParts, mechanicParts]
+    [selectedParts, selectedAdvancedParts, mechanicParts, addWeaponToPowerPart]
   );
 
   // Calculate costs
@@ -391,6 +450,7 @@ function PowerCreatorContent() {
     }));
     return {
       action: calculatePowerCosts(actionParts, powerParts),
+      weapon: calculatePowerCosts(addWeaponToPowerPart ? [addWeaponToPowerPart] : [], powerParts),
       range: calculatePowerCosts(rangeParts, powerParts),
       area: calculatePowerCosts(areaParts, powerParts),
       duration: calculatePowerCosts(durationParts, powerParts),
@@ -398,7 +458,7 @@ function PowerCreatorContent() {
       powerParts: calculatePowerCosts(partsPayload, powerParts),
       powerMechanics: calculatePowerCosts(mechanicPayload, powerParts),
     };
-  }, [mechanicParts, powerParts, selectedParts, selectedAdvancedParts]);
+  }, [mechanicParts, powerParts, selectedParts, selectedAdvancedParts, addWeaponToPowerPart]);
 
   // Actions
   const addPart = useCallback(() => {
@@ -482,6 +542,17 @@ function PowerCreatorContent() {
         applyDuration: mp.applyDuration,
         isMechanic: true,
       })),
+      ...(addWeaponToPowerPart
+        ? [{
+            id: addWeaponToPowerPart.id,
+            name: addWeaponToPowerPart.name,
+            op_1_lvl: addWeaponToPowerPart.op_1_lvl,
+            op_2_lvl: addWeaponToPowerPart.op_2_lvl,
+            op_3_lvl: addWeaponToPowerPart.op_3_lvl,
+            applyDuration: false,
+            isMechanic: true,
+          }]
+        : []),
     ];
     const damageToSave = damages
       .filter((d) => d.type !== 'none' && d.amount > 0)
@@ -498,9 +569,10 @@ function PowerCreatorContent() {
         range,
         area,
         duration,
+        weapon: Number(weapon.id) > 0 ? weapon : null,
       },
     };
-  }, [name, description, selectedParts, selectedAdvancedParts, mechanicParts, damages, actionType, isReaction, range, area, duration]);
+  }, [name, description, selectedParts, selectedAdvancedParts, mechanicParts, addWeaponToPowerPart, damages, actionType, isReaction, range, area, duration, weapon]);
 
   const save = useCreatorSave({
     type: 'powers',
@@ -532,6 +604,7 @@ function PowerCreatorContent() {
         endsOnActivation: false,
         sustain: 0,
       });
+      setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
     },
   });
 
@@ -562,6 +635,7 @@ function PowerCreatorContent() {
       endsOnActivation: false,
       sustain: 0,
     });
+    setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
     save.setSaveMessage(null);
     // Clear localStorage cache
     try {
@@ -664,6 +738,31 @@ function PowerCreatorContent() {
     // Load action type and reaction
     setActionType(power.actionType || 'basic');
     setIsReaction(power.isReaction || false);
+
+    // Load Add Weapon selection
+    if (power.weapon) {
+      const weaponMatch = allWeaponOptions.find(
+        (option) =>
+          String(option.id) === String(power.weapon.id) ||
+          option.name === power.weapon.name
+      );
+      if (weaponMatch) {
+        setWeapon(weaponMatch);
+      }
+    } else {
+      const addWeaponPart = savedParts.find((savedPart) => {
+        const byId = String(savedPart.id) === String(PART_IDS.ADD_WEAPON_TO_POWER);
+        const byName = savedPart.name === 'Add Weapon to Power';
+        return byId || byName;
+      });
+      if (addWeaponPart) {
+        const requiredTp = (addWeaponPart.op_1_lvl || 0) + 1;
+        const tpMatch = allWeaponOptions.find((option) => (option.tp ?? 0) === requiredTp);
+        setWeapon(tpMatch || DEFAULT_WEAPON_OPTIONS[0]);
+      } else {
+        setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
+      }
+    }
     
     // Load range
     if (power.range) {
@@ -710,7 +809,7 @@ function PowerCreatorContent() {
     
     save.setSaveMessage({ type: 'success', text: 'Power loaded successfully!' });
     setTimeout(() => save.setSaveMessage(null), 2000);
-  }, [powerParts, handleReset, save]);
+  }, [powerParts, allWeaponOptions, handleReset, save]);
 
   // Load power for editing from URL parameter (?edit=<id>)
   useEffect(() => {
@@ -774,6 +873,7 @@ function PowerCreatorContent() {
             ]}
             statRows={[
               { label: 'Action', value: actionTypeDisplay },
+              { label: 'Weapon', value: weapon.name },
               { label: 'Range', value: rangeDisplay },
               { label: 'Area', value: areaDisplay },
               { label: 'Duration', value: durationDisplay },
@@ -823,6 +923,17 @@ function PowerCreatorContent() {
           {/* Name & Description */}
           <div className="bg-surface rounded-xl shadow-md p-6">
             <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm text-text-secondary">
+                  Building a hybrid? Use the dedicated empowered creator for combined power + technique rules.
+                </p>
+                <Link
+                  href="/empowered-technique-creator"
+                  className="inline-flex items-center rounded-lg border border-border-light bg-surface-alt px-3 py-2 text-sm font-medium text-text-primary hover:bg-surface min-h-[44px]"
+                >
+                  Open Empowered Creator
+                </Link>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">
                   Power Name *
@@ -874,6 +985,28 @@ function PowerCreatorContent() {
                   label="Reaction"
                 />
             </div>
+          </CollapsibleSection>
+
+          {/* Add Weapon to Power */}
+          <CollapsibleSection
+            title="Add Weapon to Power"
+            collapsedSummary={weapon.name}
+            defaultExpanded={true}
+            rightSlot={<SectionCostBadge en={sectionCosts.weapon.totalEnergy} tp={sectionCosts.weapon.totalTP} />}
+          >
+            <WeaponSelector
+              label="Weapon"
+              value={weapon.id}
+              options={allWeaponOptions}
+              onChange={(selectedId) => {
+                const selected = allWeaponOptions.find((option) => String(option.id) === selectedId);
+                if (selected) setWeapon(selected);
+              }}
+              ariaLabel="Power weapon"
+            />
+            <p className="mt-2 text-sm text-text-secondary">
+              Uses the Add Weapon to Power mechanic and scales from the selected weapon&apos;s TP.
+            </p>
           </CollapsibleSection>
 
           {/* Range */}
@@ -1101,7 +1234,7 @@ function PowerCreatorContent() {
                     selectedPart={sp}
                     _index={idx}
                     onRemove={() => removePart(idx)}
-                    onUpdate={(updates) => updatePart(idx, updates)}
+                    onUpdate={(updates) => updatePart(idx, updates as Partial<SelectedPart>)}
                     allParts={nonMechanicParts}
                   />
                 ))}
@@ -1137,7 +1270,7 @@ function PowerCreatorContent() {
                     selectedPart={sp}
                     _index={idx}
                     onRemove={() => removeAdvancedPart(idx)}
-                    onUpdate={(updates) => updateAdvancedPart(idx, updates)}
+                    onUpdate={(updates) => updateAdvancedPart(idx, updates as Partial<AdvancedPart>)}
                     allParts={mechanicPartsForList}
                   />
                 ))}
