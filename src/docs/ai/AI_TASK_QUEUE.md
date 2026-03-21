@@ -7047,7 +7047,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-302
   title: Creature creator inventory budget summary (current/max) + inventory type tabs
   priority: high
-  status: in-progress
+  status: done
   created_at: 2026-03-21
   created_by: agent
   description: |
@@ -7077,11 +7077,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Expanded CreatorSummaryPanel resource box values to support formatted strings for current/max displays.
     - Extended creature power source payload to include tp for training-spend accounting.
     - Verification: npm run build passes.
+    Closed 2026-03-21: Marked done after acceptance spot-check in creature-creator (summary current/max, inventory tabs, currency spend); see branch commit.
 
 - id: TASK-303
   title: Add empowered technique creator combining power + technique systems
   priority: high
-  status: in-progress
+  status: done
   created_at: 2026-03-21
   created_by: owner
   description: |
@@ -7121,3 +7122,4 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Library now includes a dedicated `Empowered` tab in My Library and Realms Library (filtered from techniques payloads with empowered flags/data).
     - Character Creator powers step `Add Powers` modal now has `Powers / Empowered Techniques` tabs and displays empowered selections in the powers list.
     - Creature Creator `Add Power` modal now has `Powers / Empowered Techniques` tabs; empowered selections map into creature power entries and display in power lists.
+    Closed 2026-03-21: All acceptance criteria verified; build passes. Follow-up: sheet header hides duplicate martial ability when same as power ability (case-insensitive).

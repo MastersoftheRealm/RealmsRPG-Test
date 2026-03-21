@@ -526,6 +526,12 @@ export function SheetHeader({
     setIsEditingName(false);
   };
 
+  const normalizedPowerAbility = character.pow_abil?.trim().toLowerCase();
+  const normalizedMartialAbility = character.mart_abil?.trim().toLowerCase();
+  const showPowerAbility = Boolean(character.pow_abil?.trim());
+  const showMartialAbility = Boolean(character.mart_abil)
+    && normalizedMartialAbility !== normalizedPowerAbility;
+
   return (
     <div className="bg-surface rounded-xl shadow-md p-4 md:p-6 mb-4">
       <div className="flex flex-col lg:flex-row gap-6">
@@ -633,12 +639,12 @@ export function SheetHeader({
             <p className="text-base text-text-primary flex items-center gap-2">
               <span>
                 {character.archetype?.name || (character.archetype?.type ? character.archetype.type.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : 'No Archetype')}
-                {(character.pow_abil || character.mart_abil) && ': '}
-                {character.pow_abil && (
+                {(showPowerAbility || showMartialAbility) && ': '}
+                {showPowerAbility && (
                   <span className="text-category-power dark:text-violet-300 capitalize">{character.pow_abil}</span>
                 )}
-                {character.pow_abil && character.mart_abil && ' / '}
-                {character.mart_abil && (
+                {showPowerAbility && showMartialAbility && ' / '}
+                {showMartialAbility && (
                   <span className="text-category-technique dark:text-orange-300 capitalize">{character.mart_abil}</span>
                 )}
               </span>
