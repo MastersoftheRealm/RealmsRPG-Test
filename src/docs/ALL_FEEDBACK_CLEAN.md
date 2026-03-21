@@ -1331,3 +1331,10 @@ Notes
 - Priority: High
 - Feedback: (1) New character with mixed species did not save selected species traits — only ancestry traits. (2) Techniques after creation sometimes do not show in personal or official library immediately or at all.
 - Expected: Mixed species saves persist species trait picks (and related mixed ancestry fields). Library lists refetch after save/publish so new techniques appear without stale client cache.
+
+**Raw Feedback Log — 2026-03-21 (Character sheet current HP not saving / refresh loses HP)**
+- Date: 2026-03-21
+- Context: Character sheet — editing current HP (view mode vs edit mode)
+- Priority: High
+- Feedback: Current HP isn’t autosaving and doesn’t stay after refresh when editing current HP.
+- Expected: Current HP (and energy/AP) persist to the server after change and reload correctly. **Disposition:** Implemented — `useAutoSave` was only enabled in sheet edit mode while HP steppers work in view mode; autosave now enabled for owners whenever character state changes (`enabled: isOwner`).

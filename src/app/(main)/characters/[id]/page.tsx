@@ -169,8 +169,12 @@ export default function CharacterSheetPage({ params }: PageParams) {
     if (!character || !allSpecies.length) return [];
     const ancestry = character.ancestry;
 
-    if (ancestry?.mixed === true && ancestry?.selectedSpeciesTraits?.length === 2) {
-      return [...ancestry.selectedSpeciesTraits];
+    // Mixed: use saved trait IDs (always persist as [a, b] — see edit-species-modal). Accept 1+ IDs for legacy saves.
+    if (ancestry?.mixed === true && Array.isArray(ancestry.selectedSpeciesTraits)) {
+      const ids = ancestry.selectedSpeciesTraits
+        .map((id) => (id != null ? String(id).trim() : ''))
+        .filter((id) => id.length > 0);
+      if (ids.length > 0) return ids;
     }
 
     const speciesId = ancestry?.id;
@@ -430,7 +434,9 @@ export default function CharacterSheetPage({ params }: PageParams) {
     );
   }, [character, characterSpeciesSkills, featsDb]);
   
-  // Auto-save with debounce
+  // Auto-save with debounce — enabled for **owners in any mode**.
+  // HP / energy / AP (and XP) can be changed while *not* in sheet edit mode; previously `enabled: effectiveEditMode`
+  // blocked autosave, so current HP appeared to work until refresh.
   const { hasUnsavedChanges, isSaving, lastSaved, saveNow } = useAutoSave({
     data: character,
     onSave: async (data) => {
@@ -444,7 +450,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
       }
     },
     delay: 2000,
-    enabled: effectiveEditMode,
+    enabled: isOwner,
     onSaveStart: () => setSaving(true),
     onSaveComplete: () => {
       setSaving(false);
@@ -1381,7 +1387,17 @@ export default function CharacterSheetPage({ params }: PageParams) {
   // Edit species modal save: update ancestry and migrate skills
   const handleEditSpeciesSave = useCallback((updates: { ancestry: Character['ancestry']; skills: unknown }) => {
     if (!character) return;
-    setCharacter(prev => prev ? { ...prev, ancestry: updates.ancestry, skills: updates.skills as Character['skills'] } : null);
+    let ancestry = updates.ancestry;
+    if (ancestry?.mixed === true && Array.isArray(ancestry.selectedSpeciesTraits)) {
+      const st = ancestry.selectedSpeciesTraits;
+      ancestry = {
+        ...ancestry,
+        selectedSpeciesTraits: [String(st[0] ?? '').trim(), String(st[1] ?? '').trim()] as [string, string],
+      };
+    }
+    setCharacter((prev) =>
+      prev ? { ...prev, ancestry, skills: updates.skills as Character['skills'] } : null
+    );
     setShowEditSpeciesModal(false);
   }, [character]);
 

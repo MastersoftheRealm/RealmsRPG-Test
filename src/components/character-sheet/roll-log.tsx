@@ -95,7 +95,7 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
   // Normalize to string so query key matches campaign page (params.id) and realtime subscription is consistent
   const rawCampaignId = campaignContext?.campaignId ?? viewOnlyCampaignId;
   const campaignId = rawCampaignId != null ? String(rawCampaignId) : undefined;
-  const { rolls: campaignRolls, refetch: refetchCampaignRolls } = useCampaignRolls(campaignId);
+  const { rolls: campaignRolls, refetch: refetchCampaignRolls, dataUpdatedAt = 0 } = useCampaignRolls(campaignId);
   const [mode, setMode] = React.useState<RollLogMode>('personal');
   const [isOpen, setIsOpen] = React.useState(false);
   const listRef = React.useRef<HTMLDivElement>(null);
@@ -120,12 +120,20 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
     return unsubscribe;
   }, [subscribeToRolls, campaignId]);
   
-  // Scroll to bottom when new roll added (newest at bottom)
-  React.useEffect(() => {
-    if (isOpen && listRef.current) {
-      listRef.current.scrollTop = listRef.current.scrollHeight;
-    }
-  }, [displayRolls.length, isOpen]);
+  // Scroll to bottom when newest roll changes. Campaign list length can stay flat at MAX_CAMPAIGN_ROLLS, so use dataUpdatedAt.
+  const scrollToLatestKey = mode === 'campaign' && campaignId ? dataUpdatedAt : rolls.length;
+  React.useLayoutEffect(() => {
+    if (!isOpen || !listRef.current) return;
+    const el = listRef.current;
+    const scroll = () => {
+      el.scrollTop = el.scrollHeight;
+    };
+    scroll();
+    // After React paints new list items (campaign refetch is async)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(scroll);
+    });
+  }, [isOpen, scrollToLatestKey]);
   
   // Dice pool state (local to the manual dice builder)
   const [dicePool, setDicePool] = React.useState<Record<DieType, number>>({

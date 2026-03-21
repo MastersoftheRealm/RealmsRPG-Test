@@ -22,17 +22,27 @@ export type QuickArmamentItem = {
   equipped?: boolean;
   armorValue?: number;
   armor?: number;
+  /** Present on sheet-enriched items: full property payloads (op_1_lvl, etc.); `properties` may be name-only strings. */
+  libraryItem?: { properties?: QuickArmamentItem['properties'] };
 };
 
 function getPropertyNames(props: QuickArmamentItem['properties']): string[] {
   return (props || []).map((p) => (typeof p === 'string' ? p : p?.name || '')).filter(Boolean);
 }
 
+/** Use library source when enriched armaments only stored property names on `properties`. */
+function resolveQuickArmamentProperties(item: QuickArmamentItem): NonNullable<QuickArmamentItem['properties']> {
+  const fromLib = item.libraryItem?.properties;
+  if (fromLib && fromLib.length > 0) return fromLib;
+  return item.properties || [];
+}
+
 /** Attack bonus: Ability + martial proficiency. Finesse → Agility; Range (non-melee) → Acuity; else Strength. */
 function getAttackBonus(item: QuickArmamentItem, abilities: QuickArmamentAbilities, martialProf: number): number {
-  const props = getPropertyNames(item.properties).map((p) => p.toLowerCase());
+  const rawProps = resolveQuickArmamentProperties(item);
+  const props = getPropertyNames(rawProps).map((p) => p.toLowerCase());
   if (props.includes('finesse')) return (abilities.agility ?? 0) + martialProf;
-  const rangeStr = item.range ?? formatRange((item.properties || []) as { id?: number; name?: string; op_1_lvl?: number }[]);
+  const rangeStr = item.range ?? formatRange(rawProps as { id?: number; name?: string; op_1_lvl?: number }[]);
   if (String(rangeStr).toLowerCase() !== 'melee') return (abilities.acuity ?? 0) + martialProf;
   return (abilities.strength ?? 0) + martialProf;
 }
@@ -99,7 +109,7 @@ export function QuickWeaponsTable({
             const { dice, type, rollStr } = parseDamageDiceAndType(weapon.damage);
 
             const excludedProps = ['Damage Reduction', 'Split Damage Dice', 'Range', 'Shield Base', 'Armor Base', 'Weapon Damage'];
-            const displayProps = getPropertyNames(weapon.properties).filter((p) => p && !excludedProps.includes(p));
+            const displayProps = getPropertyNames(resolveQuickArmamentProperties(weapon)).filter((p) => p && !excludedProps.includes(p));
 
             return (
               <tr key={String(weapon.id ?? idx)} className="border-b border-border-subtle last:border-0 align-top">
@@ -206,13 +216,17 @@ export function QuickShieldsTable({
         </thead>
         <tbody>
           {rows.map((shield, idx) => {
-            const blockStr = String(deriveShieldAmountFromProperties((shield.properties || []) as { id?: number; name?: string; op_1_lvl?: number }[]) ?? '-');
+            const blockStr = String(
+              deriveShieldAmountFromProperties(
+                resolveQuickArmamentProperties(shield) as { id?: number; name?: string; op_1_lvl?: number }[]
+              ) ?? '-'
+            );
             const { dice, rollStr } = parseDamageDiceAndType(shield.damage);
             const hasDamage = rollStr !== '-';
             const damageRollStr = hasDamage ? (String(rollStr).includes('Bludgeoning') ? String(rollStr) : `${rollStr} Bludgeoning`) : '';
 
             const excludedProps = ['Damage Reduction', 'Split Damage Dice', 'Range', 'Shield Base', 'Armor Base', 'Weapon Damage'];
-            const displayProps = getPropertyNames(shield.properties).filter((p) => p && !excludedProps.includes(p));
+            const displayProps = getPropertyNames(resolveQuickArmamentProperties(shield)).filter((p) => p && !excludedProps.includes(p));
 
             return (
               <tr key={String(shield.id ?? idx)} className="border-b border-border-subtle last:border-0 align-top">
@@ -325,7 +339,7 @@ export function QuickArmorTable({
         </thead>
         <tbody>
           {rows.map((armorItem, idx) => {
-            const properties = armorItem.properties || [];
+            const properties = resolveQuickArmamentProperties(armorItem);
             const armorWithVal = armorItem as { armorValue?: number; armor?: number };
             let damageReduction = armorWithVal.armorValue ?? armorWithVal.armor ?? 0;
             let critRangeBonus = 0;

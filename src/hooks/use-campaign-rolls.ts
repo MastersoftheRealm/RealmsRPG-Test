@@ -18,7 +18,7 @@ export function useCampaignRolls(campaignId: string | undefined) {
   const queryClient = useQueryClient();
   const stableId = campaignId != null ? String(campaignId) : undefined;
 
-  const { data: rolls = [], isLoading, refetch } = useQuery<CampaignRollEntry[]>({
+  const { data: rolls = [], isLoading, refetch, dataUpdatedAt } = useQuery<CampaignRollEntry[]>({
     queryKey: ['campaign-rolls', stableId],
     queryFn: () => getCampaignRolls(stableId!),
     enabled: !!stableId,
@@ -53,5 +53,6 @@ export function useCampaignRolls(campaignId: string | undefined) {
     };
   }, [stableId, queryClient]);
 
-  return { rolls, loading: isLoading, refetch };
+  /** Bumps when query data refreshes (use for scroll-to-latest; length can stay flat at MAX_CAMPAIGN_ROLLS). */
+  return { rolls, loading: isLoading, refetch, dataUpdatedAt };
 }
