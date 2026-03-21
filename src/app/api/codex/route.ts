@@ -403,7 +403,8 @@ async function fetchCodexFromClient(supabase: ReturnType<typeof createServiceRol
   };
 }
 
-const cacheControl = 'public, max-age=300, s-maxage=600, stale-while-revalidate=300';
+/** Codex is admin-editable; long public cache caused stale archetypes/feats after saves. */
+const cacheControl = 'private, max-age=0, must-revalidate';
 
 export async function GET(request: Request) {
   const url = new URL(request.url);

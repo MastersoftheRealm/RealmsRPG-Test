@@ -1303,3 +1303,10 @@ Notes
 - Priority: High
 - Feedback: (1) Creators: when displaying en/ip/c/tp cost, show one decimal only when fractional (e.g. 1.5), not "1.0" for whole numbers. (2) Character Creator finalize: display abilities as plain text without chips/colors. (3) Character Creator: selected powers/techniques should persist when switching step tabs, not disappear. (4) Equipment step: show added equipment in grid list rows with expand/collapse like powers/techniques. (5) Finalize step: power/technique chips should show energy cost for each. (6) Library inventory: negative attack bonus displayed as "+-1" should be "-1"; remove redundant attack column and keep single "Attack" button column; attack button should use same calculation as character sheet weapon section (ability + proficiency).
 - Expected: Implemented 2026-03-14: formatCostDisplay in creators, plain abilities in finalize, selected powers/techniques from full pool so they persist, equipment as GridListRow list, energy cost on finalize powers/techniques, getWeaponAttackBonus with proficiency and single Attack column in library.
+
+**Raw Feedback Log — 2026-03-21 (Admin archetype save + Realms Library publish)**
+- Date: 2026-03-21
+- Context: Admin Codex archetypes; Technique Creator publish to Realms Library after private save
+- Priority: High
+- Feedback: As an admin, archetypes made on the admin page do not save reliably (“can’t seem to save … well”). After saving one technique to My Library and publishing several more to the Realms Library, later publishes did not appear — treated as a major bug.
+- Expected: Archetype saves persist and lists refresh with current data. Each publish to the official Realms Library creates or updates rows and all users (and admin lists) see new content without stale cached responses.

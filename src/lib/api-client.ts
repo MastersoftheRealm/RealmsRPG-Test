@@ -37,5 +37,5 @@ export async function apiFetch<T>(url: string, options?: RequestInit): Promise<T
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function fetchCodex(): Promise<Record<string, any[]>> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return apiFetch<Record<string, any[]>>('/api/codex');
+  return apiFetch<Record<string, any[]>>('/api/codex', { cache: 'no-store' });
 }
