@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils';
 import { usePowerParts, useUserItems, useItemProperties, useAdmin, useCreatorSave, useLoadModalLibrary, type PowerPart } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
-import { CreatorSaveToolbar, CreatorLayout, WeaponSelector } from '@/components/creator';
+import { CreatorSaveToolbar, CreatorLayout, WeaponSelector, AdvancedCalculationsPanel } from '@/components/creator';
 import { LoadingState, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
@@ -368,6 +368,15 @@ function PowerCreatorContent() {
   const costs = useMemo(
     () => calculatePowerCosts(partsPayload, powerParts),
     [partsPayload, powerParts]
+  );
+  const advancedCalcRows = useMemo(
+    () => [
+      { label: 'Energy (raw)', value: costs.energyRaw.toFixed(2) },
+      { label: 'Energy (final)', value: `ceil(${costs.energyRaw.toFixed(2)}) = ${costs.totalEnergy}` },
+      { label: 'Training points (raw)', value: costs.tpRaw.toFixed(2) },
+      { label: 'Training points (final)', value: `floor per part → ${costs.totalTP}` },
+    ],
+    [costs.energyRaw, costs.totalEnergy, costs.totalTP, costs.tpRaw]
   );
 
   // Derived display values
@@ -881,7 +890,12 @@ function PowerCreatorContent() {
             breakdowns={costs.tpSources.length > 0 ? [
               { title: 'TP Breakdown', items: costs.tpSources }
             ] : undefined}
-          />
+          >
+            <AdvancedCalculationsPanel
+              rows={advancedCalcRows}
+              ruleText="Rule: Final energy is the ceiling of raw energy; TP sums part contributions."
+            />
+          </CreatorSummaryPanel>
         </div>
       }
       modals={
@@ -964,7 +978,7 @@ function PowerCreatorContent() {
             title="Action Type"
             collapsedSummary={actionTypeDisplay}
             defaultExpanded={true}
-            rightSlot={<SectionCostBadge en={sectionCosts.action.totalEnergy} tp={sectionCosts.action.totalTP} />}
+            rightSlot={<SectionCostBadge en={sectionCosts.action.energyRaw} tp={sectionCosts.action.totalTP} />}
           >
             <div className="flex flex-wrap gap-4">
               <select
@@ -992,7 +1006,7 @@ function PowerCreatorContent() {
             title="Add Weapon to Power"
             collapsedSummary={weapon.name}
             defaultExpanded={true}
-            rightSlot={<SectionCostBadge en={sectionCosts.weapon.totalEnergy} tp={sectionCosts.weapon.totalTP} />}
+            rightSlot={<SectionCostBadge en={sectionCosts.weapon.energyRaw} tp={sectionCosts.weapon.totalTP} />}
           >
             <WeaponSelector
               label="Weapon"
@@ -1014,7 +1028,7 @@ function PowerCreatorContent() {
             title="Range"
             collapsedSummary={rangeSummary}
             defaultExpanded={true}
-            rightSlot={<SectionCostBadge en={sectionCosts.range.totalEnergy} tp={sectionCosts.range.totalTP} />}
+            rightSlot={<SectionCostBadge en={sectionCosts.range.energyRaw} tp={sectionCosts.range.totalTP} />}
           >
             <div className="flex flex-wrap items-center gap-4">
               <ValueStepper
@@ -1035,7 +1049,7 @@ function PowerCreatorContent() {
             title="Area of Effect"
             collapsedSummary={area.type === 'none' ? 'Single target' : formatAreaForDisplay(area.type, area.level)}
             defaultExpanded={true}
-            rightSlot={<SectionCostBadge en={sectionCosts.area.totalEnergy} tp={sectionCosts.area.totalTP} />}
+            rightSlot={<SectionCostBadge en={sectionCosts.area.energyRaw} tp={sectionCosts.area.totalTP} />}
           >
             <div className="flex flex-wrap items-center gap-4 mb-4">
               <select
@@ -1089,7 +1103,7 @@ function PowerCreatorContent() {
             title="Duration"
             collapsedSummary={durationSummary}
             defaultExpanded={true}
-            rightSlot={<SectionCostBadge en={sectionCosts.duration.totalEnergy} tp={sectionCosts.duration.totalTP} />}
+            rightSlot={<SectionCostBadge en={sectionCosts.duration.energyRaw} tp={sectionCosts.duration.totalTP} />}
           >
             <div className="flex flex-wrap items-center gap-4 mb-4">
               <select
@@ -1213,7 +1227,7 @@ function PowerCreatorContent() {
             defaultExpanded={true}
             rightSlot={
               <>
-                <SectionCostBadge en={sectionCosts.powerParts.totalEnergy} tp={sectionCosts.powerParts.totalTP} />
+                <SectionCostBadge en={sectionCosts.powerParts.energyRaw} tp={sectionCosts.powerParts.totalTP} />
                 <Button type="button" variant="primary" size="sm" className="flex items-center gap-1" onClick={addPart}>
                   <Plus className="w-4 h-4" />
                   Add Part
@@ -1249,7 +1263,7 @@ function PowerCreatorContent() {
             defaultExpanded={true}
             rightSlot={
               <>
-                <SectionCostBadge en={sectionCosts.powerMechanics.totalEnergy} tp={sectionCosts.powerMechanics.totalTP} />
+                <SectionCostBadge en={sectionCosts.powerMechanics.energyRaw} tp={sectionCosts.powerMechanics.totalTP} />
                 <Button type="button" variant="primary" size="sm" className="flex items-center gap-1" onClick={addMechanicPart}>
                   <Plus className="w-4 h-4" />
                   Add Part
@@ -1283,7 +1297,7 @@ function PowerCreatorContent() {
             title="Damage"
             collapsedSummary={damageSummary}
             defaultExpanded={true}
-            rightSlot={<SectionCostBadge en={sectionCosts.damage.totalEnergy} tp={sectionCosts.damage.totalTP} />}
+            rightSlot={<SectionCostBadge en={sectionCosts.damage.energyRaw} tp={sectionCosts.damage.totalTP} />}
           >
             {damages.map((d, index) => (
               <div key={index} className="flex flex-wrap items-center gap-4 mb-4 p-3 rounded-lg bg-surface-alt border border-border-light">

@@ -1324,3 +1324,11 @@ Notes
 - Priority: High
 - Feedback: Add a dedicated Add Weapon section to Power Creator using Add Weapon to Power logic (power part id path), modeled after the technique creator weapon UX and using shared component(s). Keep empowered technique sections clearly separated so technique parts are distinct from power parts/mechanics. Add Empowered Techniques as first-class library content in both Realms and My Library. In character/creature add-power flows, include Empowered Techniques as a tab and ensure selected entries display in the corresponding lists.
 - Expected: Power creator weapon section with shared UI, clear empowered section separation, library empowered visibility in both scopes, and add-power modal tab support for empowered selection in character/creature flows.
+
+**Raw Feedback Log — 2026-03-24 (Supabase columnar parity scaling request)**
+- Date: 2026-03-24
+- Context: Supabase schema scalability (official/user library + encounter/library payload depth)
+- Priority: High
+- Feedback: Move Supabase data architecture toward columnar/relational best practice for scale (D&D Beyond-level), reduce dependence on JSONB blobs, and make official and user table schemas match so rows can translate/copy between them easily.
+- Expected: A practical migration plan and execution path that promotes high-value payload fields to typed columns, keeps backward compatibility during rollout, and aligns official/user table structures.
+- Disposition: Implemented 2026-03-24 via TASK-304. Added `sql/supabase-library-columnar-parity-expansion.sql` (official_* + user_* promoted columns for powers/techniques/items, trigger-based payload->column sync, backfill updates, supporting indexes). Updated `SUPABASE_SCHEMA.md` and `OFFICIAL_LIBRARY_COLUMNAR_PLAN.md` with run order and parity notes.

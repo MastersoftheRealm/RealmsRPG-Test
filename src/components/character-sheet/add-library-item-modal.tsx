@@ -7,7 +7,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useUserPowers, useUserTechniques, useUserItems } from '@/hooks/use-user-library';
+import { useUserPowers, useUserTechniques, useUserEmpoweredTechniques, useUserItems } from '@/hooks/use-user-library';
 import { useEquipment, useTechniqueParts, usePowerParts, useItemProperties, usePublicLibrary } from '@/hooks';
 import { SourceFilter, type SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
@@ -145,6 +145,7 @@ export function AddLibraryItemModal({
   const [powerSelectionMode, setPowerSelectionMode] = useState<PowerSelectionMode>('powers');
   const { data: userPowers = [], isLoading: powersLoading } = useUserPowers();
   const { data: userTechniques = [], isLoading: techniquesLoading } = useUserTechniques();
+  const { data: userEmpoweredTechniques = [], isLoading: empoweredTechniquesLoading } = useUserEmpoweredTechniques();
   const { data: userItems = [], isLoading: itemsLoading } = useUserItems();
   const { data: codexEquipment = [], isLoading: equipmentLoading } = useEquipment();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
@@ -152,8 +153,9 @@ export function AddLibraryItemModal({
   const { data: itemPropertiesDb = [] } = useItemProperties();
   const { data: publicPowers = [], isLoading: publicPowersLoading, isError: publicPowersError } = usePublicLibrary('powers');
   const { data: publicTechniques = [], isLoading: publicTechniquesLoading, isError: publicTechniquesError } = usePublicLibrary('techniques');
+  const { data: publicEmpoweredTechniques = [], isLoading: publicEmpoweredTechniquesLoading, isError: publicEmpoweredTechniquesError } = usePublicLibrary('empowered-techniques');
   const { data: publicItems = [], isLoading: publicItemsLoading, isError: publicItemsError } = usePublicLibrary('items');
-  const publicLibraryError = publicPowersError || publicTechniquesError || publicItemsError;
+  const publicLibraryError = publicPowersError || publicTechniquesError || publicEmpoweredTechniquesError || publicItemsError;
 
   const { rawItems, isLoading } = useMemo(() => {
     const normalizePublicPower = (p: Record<string, unknown>): UserPower => {
@@ -244,9 +246,9 @@ export function AddLibraryItemModal({
 
   const empoweredRawItems = useMemo(() => {
     if (itemType !== 'power') return [];
-    const allTechniques = [
-      ...(userTechniques as Array<UserTechnique & { _source?: 'my' | 'public' }>).map((item) => ({ ...item, _source: 'my' as const })),
-      ...(publicTechniques as Record<string, unknown>[]).map((item) => ({
+    const merged = [
+      ...(userEmpoweredTechniques as Array<UserTechnique & { _source?: 'my' | 'public' }>).map((item) => ({ ...item, _source: 'my' as const })),
+      ...(publicEmpoweredTechniques as Record<string, unknown>[]).map((item) => ({
         id: String(item.id ?? item.docId ?? ''),
         docId: String(item.id ?? item.docId ?? ''),
         name: String(item.name ?? ''),
@@ -258,11 +260,14 @@ export function AddLibraryItemModal({
         _source: 'public' as const,
       })),
     ];
-    return allTechniques.filter((technique) => {
-      const raw = technique as unknown as Record<string, unknown>;
-      return raw.empoweredTechnique === true || raw.empowered_technique === true || (raw.power != null && raw.technique != null);
+    const seen = new Set<string>();
+    return merged.filter((technique) => {
+      const id = String((technique as { docId?: string; id?: string }).docId ?? (technique as { id?: string }).id ?? '');
+      if (!id || seen.has(id)) return false;
+      seen.add(id);
+      return true;
     });
-  }, [itemType, publicTechniques, userTechniques]);
+  }, [itemType, publicEmpoweredTechniques, userEmpoweredTechniques]);
 
   const items: SelectableItem[] = useMemo(() => {
     const list = itemType === 'power' && powerSelectionMode === 'empowered' ? empoweredRawItems : rawItems;
@@ -516,7 +521,11 @@ export function AddLibraryItemModal({
         </div>
       }
       items={items}
-      isLoading={isLoading}
+      isLoading={
+        itemType === 'power' && powerSelectionMode === 'empowered'
+          ? empoweredTechniquesLoading || publicEmpoweredTechniquesLoading
+          : isLoading
+      }
       onConfirm={handleConfirm}
       displayFilter={displayFilterFn}
       columns={itemType === 'power' && powerSelectionMode === 'empowered'

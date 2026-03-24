@@ -17,12 +17,13 @@ import {
   type ColumnarLibraryType,
 } from '@/lib/library-columnar';
 
-const VALID_TYPES = ['powers', 'techniques', 'items', 'creatures'] as const;
+const VALID_TYPES = ['powers', 'techniques', 'empowered-techniques', 'items', 'creatures'] as const;
 type PublicType = (typeof VALID_TYPES)[number];
 
 const PUBLIC_TABLE_MAP: Record<PublicType, string> = {
   powers: 'public_powers',
   techniques: 'public_techniques',
+  'empowered-techniques': 'public_empowered_techniques',
   items: 'public_items',
   creatures: 'public_creatures',
 };
@@ -30,6 +31,7 @@ const PUBLIC_TABLE_MAP: Record<PublicType, string> = {
 const OFFICIAL_TABLE_MAP: Record<PublicType, string> = {
   powers: 'official_powers',
   techniques: 'official_techniques',
+  'empowered-techniques': 'official_empowered_techniques',
   items: 'official_items',
   creatures: 'official_creatures',
 };

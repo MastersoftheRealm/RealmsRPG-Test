@@ -10,124 +10,23 @@ import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { validateJson, publicItemSchema } from '@/lib/api-validation';
+import {
+  rowToItem,
+  bodyToColumnar,
+  toDbRow,
+  type ColumnarLibraryType,
+} from '@/lib/library-columnar';
 
-const VALID_TYPES = ['powers', 'techniques', 'items', 'creatures'] as const;
+const VALID_TYPES = ['powers', 'techniques', 'empowered-techniques', 'items', 'creatures'] as const;
 type OfficialType = (typeof VALID_TYPES)[number];
 
 const TABLE_MAP: Record<OfficialType, string> = {
   powers: 'official_powers',
   techniques: 'official_techniques',
+  'empowered-techniques': 'official_empowered_techniques',
   items: 'official_items',
   creatures: 'official_creatures',
 };
-
-/** Row from Supabase may use snake_case columns. Prefer columnar columns over payload when present. */
-function rowToItem(type: OfficialType, row: Record<string, unknown>): Record<string, unknown> {
-  const r = row as Record<string, unknown>;
-  const payload = (r.payload as Record<string, unknown>) || {};
-  const actionType = r.action_type ?? r.actionType;
-  const createdAt = r.created_at ?? r.createdAt;
-  const updatedAt = r.updated_at ?? r.updatedAt;
-  const base: Record<string, unknown> = {
-    id: r.id,
-    docId: r.id,
-    name: r.name,
-    description: r.description,
-    _source: 'official' as const,
-    createdAt,
-    updatedAt,
-  };
-  if (type === 'powers') {
-    base.actionType = actionType;
-    base.isReaction = r.is_reaction ?? r.isReaction;
-    base.innate = r.innate;
-    const rangeSteps = r.range_steps as number | undefined | null;
-    const durationType = r.duration_type as string | undefined | null;
-    const durationValue = r.duration_value as number | undefined | null;
-    const areaType = r.area_type as string | undefined | null;
-    const areaLevel = r.area_level as number | undefined | null;
-    const damageCol = r.damage as unknown[] | undefined;
-    const payRange = payload.range as Record<string, unknown> | undefined;
-    const payDuration = payload.duration as Record<string, unknown> | undefined;
-    const payArea = payload.area as Record<string, unknown> | undefined;
-    if (rangeSteps != null) base.range = { ...payRange, steps: rangeSteps };
-    if (durationType != null || durationValue != null)
-      base.duration = { ...payDuration, type: durationType ?? payDuration?.type, value: durationValue ?? payDuration?.value };
-    if (areaType != null || areaLevel != null)
-      base.area = { ...payArea, type: areaType ?? payArea?.type, level: areaLevel ?? payArea?.level };
-    if (damageCol != null && Array.isArray(damageCol)) base.damage = damageCol;
-  }
-  if (type === 'techniques') {
-    base.actionType = actionType;
-    base.weaponName = r.weapon_name ?? r.weaponName;
-    if (base.weaponName && !payload.weapon) base.weapon = { name: base.weaponName };
-  }
-  if (type === 'items') {
-    base.type = r.type;
-    base.rarity = r.rarity;
-    base.armorValue = r.armor_value ?? r.armorValue;
-    base.damageReduction = r.damage_reduction ?? r.damageReduction;
-  }
-  if (type === 'creatures') {
-    base.level = r.level;
-    base.type = r.type;
-    base.size = r.size;
-    base.hitPoints = r.hit_points ?? r.hitPoints;
-    base.energyPoints = r.energy_points ?? r.energyPoints;
-  }
-  return { ...base, ...payload };
-}
-
-const SCALAR_KEYS: Record<OfficialType, string[]> = {
-  powers: ['name', 'description', 'actionType', 'isReaction', 'innate'],
-  techniques: ['name', 'description', 'actionType', 'weaponName'],
-  items: ['name', 'description', 'type', 'rarity', 'armorValue', 'damageReduction'],
-  creatures: ['name', 'description', 'level', 'type', 'size', 'hitPoints', 'energyPoints'],
-};
-
-const CAMEL_TO_SNAKE: Record<string, string> = {
-  actionType: 'action_type',
-  isReaction: 'is_reaction',
-  weaponName: 'weapon_name',
-  armorValue: 'armor_value',
-  damageReduction: 'damage_reduction',
-  hitPoints: 'hit_points',
-  energyPoints: 'energy_points',
-  rangeSteps: 'range_steps',
-  durationType: 'duration_type',
-  durationValue: 'duration_value',
-  areaType: 'area_type',
-  areaLevel: 'area_level',
-};
-
-function bodyToDb(type: OfficialType, body: Record<string, unknown>): Record<string, unknown> {
-  const scalarKeys = new Set(SCALAR_KEYS[type]);
-  const scalars: Record<string, unknown> = {};
-  const payload: Record<string, unknown> = {};
-
-  // Store power-specific fields in payload only so base schema (without columnar expansion) works.
-  // GET rowToItem reads range/duration/area/damage from payload when columns are absent.
-  if (type === 'powers') {
-    if (body.range != null) payload.range = body.range;
-    if (body.duration != null) payload.duration = body.duration;
-    if (body.area != null) payload.area = body.area;
-    if (body.damage != null) payload.damage = body.damage;
-  }
-
-  for (const [k, v] of Object.entries(body)) {
-    if (k === 'id' || k === 'docId' || k === '_source') continue;
-    if (type === 'powers' && (k === 'range' || k === 'duration' || k === 'area' || k === 'damage')) continue;
-    const camel = k.startsWith('_') ? k : k.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
-    const key = scalarKeys.has(camel) ? camel : scalarKeys.has(k) ? k : null;
-    if (key) {
-      const dbCol = CAMEL_TO_SNAKE[key] ?? key;
-      scalars[dbCol] = v;
-    } else {
-      payload[k] = v;
-    }
-  }
-  return { ...scalars, payload };
-}
 
 export async function GET(
   _request: NextRequest,
@@ -150,7 +49,7 @@ export async function GET(
       throw error;
     }
 
-    const items = (rows ?? []).map((r) => rowToItem(type as OfficialType, r as Record<string, unknown>));
+    const items = (rows ?? []).map((r) => rowToItem(type as ColumnarLibraryType, r as Record<string, unknown>, 'official'));
     items.sort((a, b) => {
       const na = String((a as Record<string, unknown>).name ?? '');
       const nb = String((b as Record<string, unknown>).name ?? '');
@@ -189,7 +88,8 @@ export async function POST(
     const body = validation.data as Record<string, unknown>;
 
     const withUpdated = { ...body, updatedAt: new Date().toISOString() };
-    const dbRow = bodyToDb(type as OfficialType, withUpdated);
+    const { scalars, payload } = bodyToColumnar(type as ColumnarLibraryType, withUpdated);
+    const dbRow = toDbRow({ ...scalars, payload, updatedAt: withUpdated.updatedAt });
     const existingId = body.id as string | undefined;
     const supabase = createServiceRoleClient();
     const table = TABLE_MAP[type as OfficialType];

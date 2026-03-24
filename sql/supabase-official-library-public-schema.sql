@@ -35,6 +35,20 @@ CREATE TABLE IF NOT EXISTS public.official_techniques (
 );
 
 -- -----------------------------------------------------------------------------
+-- official_empowered_techniques
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.official_empowered_techniques (
+  id           TEXT PRIMARY KEY,
+  name         TEXT,
+  description  TEXT,
+  action_type  TEXT,
+  weapon_name  TEXT,
+  created_at   TIMESTAMPTZ,
+  updated_at   TIMESTAMPTZ,
+  payload      JSONB DEFAULT '{}'
+);
+
+-- -----------------------------------------------------------------------------
 -- official_items
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.official_items (
@@ -78,6 +92,10 @@ ALTER TABLE public.official_techniques ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Anyone can read official techniques" ON public.official_techniques;
 CREATE POLICY "Anyone can read official techniques" ON public.official_techniques FOR SELECT TO public USING (true);
 
+ALTER TABLE public.official_empowered_techniques ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Anyone can read official empowered techniques" ON public.official_empowered_techniques;
+CREATE POLICY "Anyone can read official empowered techniques" ON public.official_empowered_techniques FOR SELECT TO public USING (true);
+
 ALTER TABLE public.official_items ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Anyone can read official items" ON public.official_items;
 CREATE POLICY "Anyone can read official items" ON public.official_items FOR SELECT TO public USING (true);
@@ -113,6 +131,17 @@ BEGIN
     USING (EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid()::text AND role = 'admin'));
   DROP POLICY IF EXISTS "Admin can delete official techniques" ON public.official_techniques;
   CREATE POLICY "Admin can delete official techniques" ON public.official_techniques FOR DELETE TO authenticated
+    USING (EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid()::text AND role = 'admin'));
+
+  -- official_empowered_techniques
+  DROP POLICY IF EXISTS "Admin can insert official empowered techniques" ON public.official_empowered_techniques;
+  CREATE POLICY "Admin can insert official empowered techniques" ON public.official_empowered_techniques FOR INSERT TO authenticated
+    WITH CHECK (EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid()::text AND role = 'admin'));
+  DROP POLICY IF EXISTS "Admin can update official empowered techniques" ON public.official_empowered_techniques;
+  CREATE POLICY "Admin can update official empowered techniques" ON public.official_empowered_techniques FOR UPDATE TO authenticated
+    USING (EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid()::text AND role = 'admin'));
+  DROP POLICY IF EXISTS "Admin can delete official empowered techniques" ON public.official_empowered_techniques;
+  CREATE POLICY "Admin can delete official empowered techniques" ON public.official_empowered_techniques FOR DELETE TO authenticated
     USING (EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid()::text AND role = 'admin'));
 
   -- official_items
@@ -179,6 +208,34 @@ BEGIN
       p.updated_at,
       COALESCE(p.data - 'name' - 'description' - 'actionType' - 'action_type' - 'weaponName' - 'weapon_name' - 'createdAt' - 'updatedAt' - 'id', '{}'::jsonb)
     FROM public.public_techniques p
+    WHERE NOT (
+      COALESCE((p.data->>'empoweredTechnique')::boolean, (p.data->>'empowered_technique')::boolean, false)
+      OR (p.data ? 'power' AND p.data ? 'technique')
+    )
+    ON CONFLICT (id) DO UPDATE SET
+      name = EXCLUDED.name,
+      description = EXCLUDED.description,
+      action_type = EXCLUDED.action_type,
+      weapon_name = EXCLUDED.weapon_name,
+      updated_at = EXCLUDED.updated_at,
+      payload = EXCLUDED.payload;
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'public_techniques') THEN
+    INSERT INTO public.official_empowered_techniques (id, name, description, action_type, weapon_name, created_at, updated_at, payload)
+    SELECT
+      p.id,
+      p.data->>'name',
+      p.data->>'description',
+      COALESCE(p.data->>'actionType', p.data->>'action_type'),
+      COALESCE(p.data->>'weaponName', p.data->>'weapon_name'),
+      p.created_at,
+      p.updated_at,
+      COALESCE(p.data - 'name' - 'description' - 'actionType' - 'action_type' - 'weaponName' - 'weapon_name' - 'createdAt' - 'updatedAt' - 'id', '{}'::jsonb)
+    FROM public.public_techniques p
+    WHERE
+      COALESCE((p.data->>'empoweredTechnique')::boolean, (p.data->>'empowered_technique')::boolean, false)
+      OR (p.data ? 'power' AND p.data ? 'technique')
     ON CONFLICT (id) DO UPDATE SET
       name = EXCLUDED.name,
       description = EXCLUDED.description,

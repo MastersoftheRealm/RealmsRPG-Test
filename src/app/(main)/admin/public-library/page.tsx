@@ -19,11 +19,12 @@ import { AdminPublicItemsTab } from './AdminPublicItemsTab';
 import { AdminPublicCreaturesTab } from './AdminPublicCreaturesTab';
 import { AdminPublicEnhancedItemsTab } from './AdminPublicEnhancedItemsTab';
 
-type TabId = 'powers' | 'techniques' | 'items' | 'creatures' | 'enhanced';
+type TabId = 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'enhanced';
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: 'powers', label: 'Powers', icon: <Wand2 className="w-4 h-4" /> },
   { id: 'techniques', label: 'Techniques', icon: <Swords className="w-4 h-4" /> },
+  { id: 'empowered-techniques', label: 'Empowered', icon: <Swords className="w-4 h-4" /> },
   { id: 'items', label: 'Armaments', icon: <Shield className="w-4 h-4" /> },
   { id: 'creatures', label: 'Creatures', icon: <Users className="w-4 h-4" /> },
   { id: 'enhanced', label: 'Enhanced Items', icon: <Sparkles className="w-4 h-4" /> },
@@ -49,6 +50,7 @@ export default function AdminPublicLibraryPage() {
 
       {activeTab === 'powers' && <AdminPublicPowersTab />}
       {activeTab === 'techniques' && <AdminPublicTechniquesTab />}
+      {activeTab === 'empowered-techniques' && <AdminPublicTechniquesTab mode="empowered" />}
       {activeTab === 'items' && <AdminPublicItemsTab />}
       {activeTab === 'creatures' && <AdminPublicCreaturesTab />}
       {activeTab === 'enhanced' && <AdminPublicEnhancedItemsTab />}

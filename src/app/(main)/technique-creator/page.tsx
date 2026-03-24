@@ -20,7 +20,7 @@ import { useTechniqueParts, useUserItems, useItemProperties, useAdmin, useCreato
 import { useAuthStore } from '@/stores';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
-import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout, CollapsibleSection, WeaponSelector } from '@/components/creator';
+import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout, CollapsibleSection, WeaponSelector, AdvancedCalculationsPanel } from '@/components/creator';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
 import { ValueStepper, SectionCostBadge } from '@/components/shared';
 import { CreatorSummaryPanel } from '@/components/creator';
@@ -510,6 +510,14 @@ function TechniqueCreatorContent() {
     () => calculateTechniqueCosts(partsPayload, techniqueParts),
     [partsPayload, techniqueParts]
   );
+  const advancedCalcRows = useMemo(
+    () => [
+      { label: 'Energy (raw)', value: costs.energyRaw.toFixed(2) },
+      { label: 'Energy (final)', value: `ceil(${costs.energyRaw.toFixed(2)}) = ${costs.totalEnergy}` },
+      { label: 'Training points (final)', value: String(costs.totalTP) },
+    ],
+    [costs.energyRaw, costs.totalEnergy, costs.totalTP]
+  );
 
   // Derived display values
   const actionTypeDisplay = useMemo(
@@ -811,7 +819,12 @@ function TechniqueCreatorContent() {
             breakdowns={costs.tpSources.length > 0 ? [
               { title: 'TP Breakdown', items: costs.tpSources }
             ] : undefined}
-          />
+          >
+            <AdvancedCalculationsPanel
+              rows={advancedCalcRows}
+              ruleText="Rule: Mechanic parts are auto-generated from action, reaction, damage, and weapon; costs match standalone technique math."
+            />
+          </CreatorSummaryPanel>
         </div>
       }
       modals={
@@ -883,7 +896,7 @@ function TechniqueCreatorContent() {
             title="Combat Configuration"
             collapsedSummary={combatConfigSummary}
             defaultExpanded={true}
-            rightSlot={<SectionCostBadge en={combatConfigCost.totalEnergy} tp={combatConfigCost.totalTP} />}
+            rightSlot={<SectionCostBadge en={combatConfigCost.energyRaw} tp={combatConfigCost.totalTP} />}
           >
             <div className="grid md:grid-cols-2 gap-4">
               <WeaponSelector
@@ -895,7 +908,7 @@ function TechniqueCreatorContent() {
                   if (selected) setWeapon(selected);
                 }}
                 ariaLabel="Weapon"
-                badgeEn={weaponCost.totalEnergy}
+                badgeEn={weaponCost.energyRaw}
                 badgeTp={weaponCost.totalTP}
               />
               <div>
@@ -904,7 +917,7 @@ function TechniqueCreatorContent() {
                     Action Type
                   </label>
                   <SectionCostBadge
-                    en={actionTypeCost.totalEnergy}
+                    en={actionTypeCost.energyRaw}
                     tp={actionTypeCost.totalTP}
                   />
                 </div>
@@ -930,7 +943,7 @@ function TechniqueCreatorContent() {
                   label="Can be used as a Reaction"
                 />
                 {isReaction && (
-                  <SectionCostBadge en={reactionCost.totalEnergy} tp={reactionCost.totalTP} />
+                  <SectionCostBadge en={reactionCost.energyRaw} tp={reactionCost.totalTP} />
                 )}
               </div>
             </div>
@@ -974,7 +987,7 @@ function TechniqueCreatorContent() {
             title="Additional Damage"
             collapsedSummary={damageSummary}
             defaultExpanded={true}
-            rightSlot={<SectionCostBadge en={damageSectionCost.totalEnergy} tp={damageSectionCost.totalTP} />}
+            rightSlot={<SectionCostBadge en={damageSectionCost.energyRaw} tp={damageSectionCost.totalTP} />}
           >
             <p className="text-sm text-text-secondary mb-4">
               Add extra damage dice to your technique. The damage type matches the weapon&apos;s damage type.

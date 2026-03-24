@@ -392,7 +392,7 @@ export const GridListRow = memo(function GridListRow({
           className={cn(
             'flex-1 text-left transition-colors min-h-[44px]',
             (showExpander || selectable) && (rowHoverClass ?? 'hover:bg-surface-alt'),
-            compact ? 'px-3 py-2' : 'px-4 py-3',
+            compact ? 'px-3 py-2' : 'px-4 py-2',
             disabled && 'cursor-default',
             isRowClickable && 'cursor-pointer',
             gridColumns && 'grid gap-2 items-center'
@@ -406,24 +406,6 @@ export const GridListRow = memo(function GridListRow({
               useFlex && 'flex-1'
             )}
           >
-            {showExpander && (
-              <IconButton
-                type="button"
-                variant="ghost"
-                size="md"
-                label={isExpanded ? 'Collapse details' : 'Expand details'}
-                className="min-h-[44px] min-w-[44px] shrink-0 -ml-1 text-text-muted dark:text-text-secondary hover:text-text-primary"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setExpanded(!isExpanded);
-                }}
-              >
-                <ChevronDown
-                  className={cn('w-4 h-4 transition-transform duration-200', isExpanded && 'rotate-180')}
-                  aria-hidden
-                />
-              </IconButton>
-            )}
             <span className="break-words lg:truncate">{name}</span>
             {/* Innate indicator (hidden when already in innate section) */}
             {innate && !hideInnateBadge && (

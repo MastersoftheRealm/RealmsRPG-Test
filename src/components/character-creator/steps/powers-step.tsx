@@ -14,7 +14,7 @@ import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
 import { GridListRow, ListHeader, SegmentedControl } from '@/components/shared';
 import { Button, IconButton, Spinner } from '@/components/ui';
-import { useUserPowers, useUserTechniques, usePowerParts, useTechniqueParts, usePublicLibrary, type PowerPart, type TechniquePart } from '@/hooks';
+import { useUserPowers, useUserTechniques, useUserEmpoweredTechniques, usePowerParts, useTechniqueParts, usePublicLibrary, type PowerPart, type TechniquePart } from '@/hooks';
 import type { UserPower, UserTechnique } from '@/hooks/use-user-library';
 import { SourceFilter, type SourceFilterValue } from '@/components/shared';
 import type { ChipData } from '@/components/shared/grid-list-row';
@@ -60,8 +60,10 @@ export function PowersStep() {
   // Fetch user's library and public library
   const { data: userPowers = [], isLoading: powersLoading } = useUserPowers();
   const { data: userTechniques = [], isLoading: techniquesLoading } = useUserTechniques();
+  const { data: userEmpoweredTechniques = [], isLoading: empoweredTechniquesLoading } = useUserEmpoweredTechniques();
   const { data: publicPowers = [], isLoading: publicPowersLoading } = usePublicLibrary('powers');
   const { data: publicTechniques = [], isLoading: publicTechniquesLoading } = usePublicLibrary('techniques');
+  const { data: publicEmpoweredTechniques = [], isLoading: publicEmpoweredTechniquesLoading } = usePublicLibrary('empowered-techniques');
   const { data: powerParts } = usePowerParts();
   const { data: techniqueParts } = useTechniqueParts();
   
@@ -92,6 +94,19 @@ export function PowersStep() {
       damage: t.damage,
     })) as UserTechnique[],
     [publicTechniques]
+  );
+  const normalizedPublicEmpoweredTechniques = useMemo(() =>
+    (publicEmpoweredTechniques as Record<string, unknown>[]).map((t) => ({
+      id: String(t.id ?? t.docId ?? ''),
+      docId: String(t.id ?? t.docId ?? ''),
+      name: String(t.name ?? ''),
+      description: String(t.description ?? ''),
+      parts: t.parts ?? [],
+      weapon: t.weapon,
+      damage: t.damage,
+      ...t,
+    })) as UserTechnique[],
+    [publicEmpoweredTechniques]
   );
   
   // Get selected powers and techniques from character draft
@@ -125,14 +140,18 @@ export function PowersStep() {
     const pub = (source === 'public' || source === 'all') ? normalizedPublicTechniques : [];
     return [...my, ...pub];
   }, [source, userTechniques, normalizedPublicTechniques]);
-  const empoweredTechniquesForList = useMemo(
-    () =>
-      techniquesForList.filter((technique: UserTechnique) => {
-        const raw = technique as unknown as Record<string, unknown>;
-        return raw.empoweredTechnique === true || raw.empowered_technique === true || (raw.power != null && raw.technique != null);
-      }),
-    [techniquesForList]
-  );
+  const empoweredTechniquesForList = useMemo(() => {
+    const my = (source === 'my' || source === 'all') ? userEmpoweredTechniques : [];
+    const pub = (source === 'public' || source === 'all') ? normalizedPublicEmpoweredTechniques : [];
+    const merged = [...my, ...pub];
+    const seen = new Set<string>();
+    return merged.filter((technique) => {
+      const id = String(technique.docId ?? technique.id ?? '');
+      if (!id || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+  }, [source, userEmpoweredTechniques, normalizedPublicEmpoweredTechniques]);
 
   // Merged pool (user + public, deduped) for looking up selected items so they persist when switching tabs/source
   const allPowersForLookup = useMemo(() => {
@@ -153,14 +172,15 @@ export function PowersStep() {
       return true;
     });
   }, [userTechniques, normalizedPublicTechniques]);
-  const allEmpoweredTechniquesForLookup = useMemo(
-    () =>
-      allTechniquesForLookup.filter((technique: UserTechnique) => {
-        const raw = technique as unknown as Record<string, unknown>;
-        return raw.empoweredTechnique === true || raw.empowered_technique === true || (raw.power != null && raw.technique != null);
-      }),
-    [allTechniquesForLookup]
-  );
+  const allEmpoweredTechniquesForLookup = useMemo(() => {
+    const seen = new Set<string>();
+    return [...userEmpoweredTechniques, ...normalizedPublicEmpoweredTechniques].filter((technique: UserTechnique) => {
+      const id = String(technique.docId ?? technique.id ?? '');
+      if (!id || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+  }, [userEmpoweredTechniques, normalizedPublicEmpoweredTechniques]);
 
   // Path mode: waiting for public library so we can resolve and auto-add recommended powers/techniques
   const pathRecommendationsLoading =
@@ -833,7 +853,11 @@ export function PowersStep() {
         initialSelectedIds={selectedPowerIds}
         searchPlaceholder={powerModalTab === 'empowered' ? 'Search empowered techniques...' : 'Search powers...'}
         itemLabel={powerModalTab === 'empowered' ? 'empowered technique' : 'power'}
-        isLoading={powerModalTab === 'empowered' ? (techniquesLoading || publicTechniquesLoading) : (powersLoading || publicPowersLoading)}
+        isLoading={
+          powerModalTab === 'empowered'
+            ? (empoweredTechniquesLoading || publicEmpoweredTechniquesLoading)
+            : (powersLoading || publicPowersLoading)
+        }
         columns={POWER_MODAL_COLUMNS}
         gridColumns={POWER_GRID_COLUMNS}
       />

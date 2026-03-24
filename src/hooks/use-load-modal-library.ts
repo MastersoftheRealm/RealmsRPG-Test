@@ -7,7 +7,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { useUserPowers, useUserTechniques, useUserItems } from './use-user-library';
+import { useUserPowers, useUserTechniques, useUserEmpoweredTechniques, useUserItems } from './use-user-library';
 import { usePublicLibrary } from './use-public-library';
 import {
   useCodexPowerParts,
@@ -25,7 +25,7 @@ import {
 } from '@/lib/library-selectable-builders';
 import type { UserPower, UserTechnique, UserItem } from './use-user-library';
 
-export type LoadModalLibraryType = 'power' | 'technique' | 'item';
+export type LoadModalLibraryType = 'power' | 'technique' | 'empowered-technique' | 'item';
 
 export interface UseLoadModalLibraryReturn {
   showLoadModal: boolean;
@@ -101,11 +101,14 @@ export function useLoadModalLibrary(type: LoadModalLibraryType): UseLoadModalLib
 
   const { data: userPowers = [], isLoading: powersLoading } = useUserPowers();
   const { data: userTechniques = [], isLoading: techniquesLoading } = useUserTechniques();
+  const { data: userEmpoweredTechniques = [], isLoading: empoweredTechniquesLoading } = useUserEmpoweredTechniques();
   const { data: userItems = [], isLoading: itemsLoading } = useUserItems();
 
   const { data: publicPowers = [], isLoading: publicPowersLoading, isError: publicPowersError } = usePublicLibrary('powers');
   const { data: publicTechniques = [], isLoading: publicTechniquesLoading, isError: publicTechniquesError } =
     usePublicLibrary('techniques');
+  const { data: publicEmpoweredTechniques = [], isLoading: publicEmpoweredTechniquesLoading, isError: publicEmpoweredTechniquesError } =
+    usePublicLibrary('empowered-techniques');
   const { data: publicItems = [], isLoading: publicItemsLoading, isError: publicItemsError } = usePublicLibrary('items');
 
   const { data: powerPartsDb = [] } = useCodexPowerParts();
@@ -125,6 +128,7 @@ export function useLoadModalLibrary(type: LoadModalLibraryType): UseLoadModalLib
     const publicError =
       (type === 'power' && publicPowersError) ||
       (type === 'technique' && publicTechniquesError) ||
+      (type === 'empowered-technique' && publicEmpoweredTechniquesError) ||
       (type === 'item' && publicItemsError);
 
     if (type === 'power') {
@@ -141,6 +145,15 @@ export function useLoadModalLibrary(type: LoadModalLibraryType): UseLoadModalLib
       const pub = (source === 'public' || source === 'all') ? (publicTechniques as Record<string, unknown>[]).map(normalizePublicTechnique) : [];
       const raw = [...my, ...pub];
       const loading = (source !== 'public' && techniquesLoading) || (source !== 'my' && publicTechniquesLoading);
+      const items = raw.map((item) => buildSelectableItem(item, 'technique', codex));
+      return { selectableItems: items, rawItems: raw, isLoading: loading, isPublicError: !!publicError };
+    }
+
+    if (type === 'empowered-technique') {
+      const my = (source === 'my' || source === 'all') ? (userEmpoweredTechniques as (UserPower | UserTechnique | UserItem | EqItem)[]) : [];
+      const pub = (source === 'public' || source === 'all') ? (publicEmpoweredTechniques as Record<string, unknown>[]).map(normalizePublicTechnique) : [];
+      const raw = [...my, ...pub];
+      const loading = (source !== 'public' && empoweredTechniquesLoading) || (source !== 'my' && publicEmpoweredTechniquesLoading);
       const items = raw.map((item) => buildSelectableItem(item, 'technique', codex));
       return { selectableItems: items, rawItems: raw, isLoading: loading, isPublicError: !!publicError };
     }
@@ -165,28 +178,33 @@ export function useLoadModalLibrary(type: LoadModalLibraryType): UseLoadModalLib
     source,
     userPowers,
     userTechniques,
+    userEmpoweredTechniques,
     userItems,
     publicPowers,
     publicTechniques,
+    publicEmpoweredTechniques,
     publicItems,
     powersLoading,
     techniquesLoading,
+    empoweredTechniquesLoading,
     itemsLoading,
     publicPowersLoading,
     publicTechniquesLoading,
+    publicEmpoweredTechniquesLoading,
     publicItemsLoading,
     publicPowersError,
     publicTechniquesError,
+    publicEmpoweredTechniquesError,
     publicItemsError,
     codex,
   ]);
 
-  const libraryType: LibraryItemType = type === 'item' ? 'item' : type;
+  const libraryType: LibraryItemType = type === 'item' ? 'item' : (type === 'empowered-technique' ? 'technique' : type);
   const columns = getListHeaderColumns(libraryType);
   const gridColumns = getModalGridColumns(libraryType);
 
   const typeLabel =
-    type === 'power' ? 'powers' : type === 'technique' ? 'techniques' : 'armaments';
+    type === 'power' ? 'powers' : type === 'item' ? 'armaments' : 'techniques';
   const emptyMessage =
     selectableItems.length === 0
       ? source === 'public'
@@ -201,7 +219,9 @@ export function useLoadModalLibrary(type: LoadModalLibraryType): UseLoadModalLib
         : selectableItems.length === 0
           ? type === 'power'
             ? 'Create some in the Power Creator first!'
-            : type === 'technique'
+            : type === 'empowered-technique'
+              ? 'Create some in the Empowered Technique Creator first!'
+              : type === 'technique'
               ? 'Create some in the Technique Creator first!'
               : 'Create some in the Armament Creator first!'
           : undefined;

@@ -21,12 +21,17 @@ export interface SectionCostBadgeProps {
   className?: string;
 }
 
+function formatBadgeNumber(value: number): string {
+  if (Number.isInteger(value)) return String(value);
+  return value.toFixed(2).replace(/\.?0+$/, '');
+}
+
 export function SectionCostBadge({ en, tp, ip, currency, className }: SectionCostBadgeProps) {
   const parts: string[] = [];
-  if (en !== undefined && en !== 0) parts.push(`EN: ${en >= 0 ? '+' : ''}${en}`);
-  if (tp !== undefined && tp !== 0) parts.push(`TP: ${tp >= 0 ? '+' : ''}${tp}`);
-  if (ip !== undefined && ip !== 0) parts.push(`IP: ${ip >= 0 ? '+' : ''}${ip}`);
-  if (currency !== undefined && currency !== 0) parts.push(`C: ${currency >= 0 ? '+' : ''}${currency}`);
+  if (en !== undefined && en !== 0) parts.push(`EN: ${en >= 0 ? '+' : ''}${formatBadgeNumber(en)}`);
+  if (tp !== undefined && tp !== 0) parts.push(`TP: ${tp >= 0 ? '+' : ''}${formatBadgeNumber(tp)}`);
+  if (ip !== undefined && ip !== 0) parts.push(`IP: ${ip >= 0 ? '+' : ''}${formatBadgeNumber(ip)}`);
+  if (currency !== undefined && currency !== 0) parts.push(`C: ${currency >= 0 ? '+' : ''}${formatBadgeNumber(currency)}`);
 
   if (parts.length === 0) return null;
 
@@ -40,16 +45,16 @@ export function SectionCostBadge({ en, tp, ip, currency, className }: SectionCos
       aria-label={`Cost contribution: ${parts.join(', ')}`}
     >
       {en !== undefined && en !== 0 && (
-        <span className="text-energy-text">{`EN: ${en >= 0 ? '+' : ''}${en}`}</span>
+        <span className="text-energy-text">{`EN: ${en >= 0 ? '+' : ''}${formatBadgeNumber(en)}`}</span>
       )}
       {tp !== undefined && tp !== 0 && (
-        <span className="text-tp-text">{`TP: ${tp >= 0 ? '+' : ''}${tp}`}</span>
+        <span className="text-tp-text">{`TP: ${tp >= 0 ? '+' : ''}${formatBadgeNumber(tp)}`}</span>
       )}
       {ip !== undefined && ip !== 0 && (
-        <span className="text-ip-text">{`IP: ${ip >= 0 ? '+' : ''}${ip}`}</span>
+        <span className="text-ip-text">{`IP: ${ip >= 0 ? '+' : ''}${formatBadgeNumber(ip)}`}</span>
       )}
       {currency !== undefined && currency !== 0 && (
-        <span className="text-currency-text">{`C: ${currency >= 0 ? '+' : ''}${currency}`}</span>
+        <span className="text-currency-text">{`C: ${currency >= 0 ? '+' : ''}${formatBadgeNumber(currency)}`}</span>
       )}
     </span>
   );

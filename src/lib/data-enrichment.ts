@@ -263,6 +263,14 @@ export function enrichTechniques(
     }
     
     if (libraryItem) {
+      const rawItem = libraryItem as unknown as Record<string, unknown>;
+      const isEmpowered =
+        rawItem.empoweredTechnique === true ||
+        rawItem.empowered_technique === true ||
+        (rawItem.power != null && rawItem.technique != null);
+      const empoweredTotals = rawItem.totals as Record<string, unknown> | undefined;
+      const empoweredEnergy = typeof empoweredTotals?.energy === 'number' ? empoweredTotals.energy : undefined;
+      const empoweredTP = typeof empoweredTotals?.trainingPoints === 'number' ? empoweredTotals.trainingPoints : undefined;
       // Extract first damage object if damage is an array
       const damageObj = Array.isArray(libraryItem.damage) && libraryItem.damage.length > 0
         ? libraryItem.damage[0]
@@ -293,8 +301,8 @@ export function enrichTechniques(
         })),
         libraryItem,
         // Calculated display fields from deriveTechniqueDisplay
-        cost: displayData.energy,
-        tp: displayData.tp,
+        cost: isEmpowered ? (empoweredEnergy ?? displayData.energy) : displayData.energy,
+        tp: isEmpowered ? (empoweredTP ?? displayData.tp) : displayData.tp,
         actionType: displayData.actionType,
         weaponName: displayData.weaponName,
         damageStr: displayData.damageStr,

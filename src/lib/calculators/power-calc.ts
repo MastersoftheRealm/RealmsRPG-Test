@@ -33,6 +33,8 @@ export interface PowerPartPayload {
 export interface PowerCostResult {
   totalEnergy: number;
   totalTP: number;
+  /** Sum of per-part TP before `Math.floor` (for debug / advanced cost display). */
+  tpRaw: number;
   tpSources: string[];
   energyRaw: number;
 }
@@ -87,6 +89,7 @@ export function calculatePowerCosts(
   let dur_all = 1;
   let hasDurationParts = false;
   let totalTP = 0;
+  let tpRaw = 0;
   const tpSources: string[] = [];
 
   partsPayload.forEach((pl) => {
@@ -137,6 +140,7 @@ export function calculatePowerCosts(
       (def.op_2_tp || 0) * l2 +
       (def.op_3_tp || 0) * l3;
 
+    tpRaw += rawTP;
     const partTP = Math.floor(rawTP);
     if (partTP > 0) {
       let src = `${partTP} TP: ${def.name}`;
@@ -158,7 +162,7 @@ export function calculatePowerCosts(
     flat_duration * perc_dur;
   const totalEnergy = Math.ceil(totalEnergyRaw);
 
-  return { totalEnergy, totalTP, tpSources, energyRaw: totalEnergyRaw };
+  return { totalEnergy, totalTP, tpRaw, tpSources, energyRaw: totalEnergyRaw };
 }
 
 // =============================================================================

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-21T20:37:42.870Z",
+  "generated_at": "2026-03-21T22:29:03.377Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -2656,6 +2656,22 @@
     {
       "id": "TASK-301",
       "title": "Migrate duplicate segmented pill toggles to SegmentedControl",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-302",
+      "title": "Creature creator inventory budget summary (current/max) + inventory type tabs",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-303",
+      "title": "Add empowered technique creator combining power + technique systems",
       "status": "done",
       "matches": [],
       "related_files": [],

@@ -16,6 +16,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import {
   useUserPowers,
   useUserTechniques,
+  useUserEmpoweredTechniques,
   useUserItems,
   useUserCreatures,
   usePowerParts,
@@ -150,12 +151,14 @@ function CreatureCreatorContent() {
   // Data for item selection modals
   const { data: userPowers = [] } = useUserPowers();
   const { data: userTechniques = [] } = useUserTechniques();
+  const { data: userEmpoweredTechniques = [] } = useUserEmpoweredTechniques();
   const { data: userItems = [] } = useUserItems();
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
   const { data: itemPropertiesDb = [] } = useItemProperties();
   const { data: publicPowers = [] } = usePublicLibrary('powers');
   const { data: publicTechniques = [] } = usePublicLibrary('techniques');
+  const { data: publicEmpoweredTechniques = [] } = usePublicLibrary('empowered-techniques');
   const { data: publicItems = [] } = usePublicLibrary('items');
   const { data: publicCreatures = [] } = usePublicLibrary('creatures');
   const { data: userCreatures = [] } = useUserCreatures();
@@ -206,6 +209,19 @@ function CreatureCreatorContent() {
     })) as UserTechnique[],
     [publicTechniques]
   );
+  const normalizedPublicEmpoweredTechniques = useMemo(() =>
+    (publicEmpoweredTechniques as Record<string, unknown>[]).map((t) => ({
+      id: String(t.id ?? t.docId ?? ''),
+      docId: String(t.id ?? t.docId ?? ''),
+      name: String(t.name ?? ''),
+      description: String(t.description ?? ''),
+      parts: t.parts ?? [],
+      weapon: t.weapon,
+      damage: t.damage,
+      ...t,
+    })) as UserTechnique[],
+    [publicEmpoweredTechniques]
+  );
   const normalizedPublicItems = useMemo(() => 
     (publicItems as Record<string, unknown>[]).map((i) => ({
       id: String(i.id ?? i.docId ?? ''),
@@ -231,14 +247,18 @@ function CreatureCreatorContent() {
     const pub = (librarySource === 'public' || librarySource === 'all') ? normalizedPublicTechniques : [];
     return [...my, ...pub] as UserTechnique[];
   }, [userTechniques, normalizedPublicTechniques, librarySource]);
-  const empoweredTechniqueList = useMemo(
-    () =>
-      techniqueList.filter((technique: UserTechnique) => {
-        const raw = technique as unknown as Record<string, unknown>;
-        return raw.empoweredTechnique === true || raw.empowered_technique === true || (raw.power != null && raw.technique != null);
-      }),
-    [techniqueList]
-  );
+  const empoweredTechniqueList = useMemo(() => {
+    const my = (librarySource === 'my' || librarySource === 'all') ? userEmpoweredTechniques : [];
+    const pub = (librarySource === 'public' || librarySource === 'all') ? normalizedPublicEmpoweredTechniques : [];
+    const merged = [...my, ...pub];
+    const seen = new Set<string>();
+    return merged.filter((technique) => {
+      const id = String(technique.docId ?? technique.id ?? '');
+      if (!id || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+  }, [librarySource, userEmpoweredTechniques, normalizedPublicEmpoweredTechniques]);
   const armamentList = useMemo(() => {
     const my = (librarySource === 'my' || librarySource === 'all') ? userItems : [];
     const pub = (librarySource === 'public' || librarySource === 'all') ? normalizedPublicItems : [];

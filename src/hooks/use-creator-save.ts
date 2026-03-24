@@ -19,12 +19,13 @@ const OFFICIAL_LIBRARY_KEY = ['official-library'] as const;
 const USER_LIBRARY_QUERY_KEYS: Record<CreatorLibraryType, readonly string[]> = {
   powers: ['user-powers'],
   techniques: ['user-techniques'],
+  'empowered-techniques': ['user-empowered-techniques'],
   items: ['user-items'],
   creatures: ['user-creatures'],
   species: ['user-species'],
 };
 
-export type CreatorLibraryType = 'powers' | 'techniques' | 'items' | 'creatures' | 'species';
+export type CreatorLibraryType = 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species';
 
 export interface CreatorSavePayload {
   name: string;

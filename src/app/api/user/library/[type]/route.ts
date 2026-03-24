@@ -22,7 +22,7 @@ import {
   type ColumnarLibraryType,
 } from '@/lib/library-columnar';
 
-const VALID_TYPES = ['powers', 'techniques', 'items', 'creatures', 'species'] as const;
+const VALID_TYPES = ['powers', 'techniques', 'empowered-techniques', 'items', 'creatures', 'species'] as const;
 type LibraryType = (typeof VALID_TYPES)[number];
 
 const isColumnar = (t: string): t is ColumnarLibraryType =>
@@ -31,6 +31,7 @@ const isColumnar = (t: string): t is ColumnarLibraryType =>
 const TABLE: Record<ColumnarLibraryType, string> = {
   powers: 'user_powers',
   techniques: 'user_techniques',
+  'empowered-techniques': 'user_empowered_techniques',
   items: 'user_items',
   creatures: 'user_creatures',
 };

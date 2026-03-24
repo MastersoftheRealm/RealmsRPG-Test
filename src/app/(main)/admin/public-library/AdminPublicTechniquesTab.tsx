@@ -26,12 +26,13 @@ import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators
 import { Swords } from 'lucide-react';
 
 const TECHNIQUE_GRID = '1.5fr 0.8fr 0.8fr 1fr 1fr 1fr 40px';
-const QUERY_KEY = ['official-library', 'techniques'] as const;
-
-export function AdminPublicTechniquesTab() {
+export function AdminPublicTechniquesTab({ mode = 'standard' }: { mode?: 'standard' | 'empowered' }) {
+  const libraryType = mode === 'empowered' ? 'empowered-techniques' : 'techniques';
+  const queryKey = ['official-library', libraryType] as const;
+  const creatorPath = mode === 'empowered' ? '/empowered-technique-creator' : '/technique-creator';
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: items = [], isLoading, error } = useOfficialLibrary('techniques');
+  const { data: items = [], isLoading, error } = useOfficialLibrary(libraryType);
   const { data: partsDb = [] } = useTechniqueParts();
   const [search, setSearch] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
@@ -84,31 +85,35 @@ export function AdminPublicTechniquesTab() {
     return sortItems(r);
   }, [cardData, search, sortItems]);
 
-  const handleDeleteFromList = async () => {
+  const handleDeleteFromListLegacy = async () => {
     if (!deleteConfirm) return;
     try {
-      const res = await fetch(`/api/official/techniques?id=${encodeURIComponent(deleteConfirm.id)}`, {
+      const res = await fetch(`/api/official/${libraryType}?id=${encodeURIComponent(deleteConfirm.id)}`, {
         method: 'DELETE',
       });
       if (!res.ok) {
         const msg = res.status === 404 ? 'Item not found or already deleted.' : res.statusText;
         throw new Error(msg);
       }
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-      await queryClient.refetchQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey });
+      await queryClient.refetchQueries({ queryKey });
       setDeleteConfirm(null);
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Failed to delete');
     }
   };
 
-  if (error) return <ErrorDisplay message="Failed to load official techniques" />;
+  if (error) return <ErrorDisplay message={`Failed to load official ${mode === 'empowered' ? 'empowered techniques' : 'techniques'}`} />;
 
   return (
     <div>
-      <SectionHeader title="Official Techniques" size="md" />
+      <SectionHeader title={mode === 'empowered' ? 'Official Empowered Techniques' : 'Official Techniques'} size="md" />
       <div className="mb-4">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search techniques..." />
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder={mode === 'empowered' ? 'Search empowered techniques...' : 'Search techniques...'}
+        />
       </div>
       <ListHeader
         columns={[
@@ -131,7 +136,7 @@ export function AdminPublicTechniquesTab() {
           <ListEmptyState
             icon={<Swords className="w-8 h-8" />}
             title="No official techniques"
-            message="Add one from the header or publish from a creator."
+            message={mode === 'empowered' ? 'Publish one from the Empowered Technique Creator.' : 'Add one from the header or publish from a creator.'}
           />
         ) : (
           filtered.map((t) => (
@@ -152,7 +157,7 @@ export function AdminPublicTechniquesTab() {
               chipsLabel="Parts"
               totalCost={t.tp}
               costLabel="TP"
-              onEdit={() => router.push(`/technique-creator?edit=${encodeURIComponent(t.id)}`)}
+              onEdit={() => router.push(`${creatorPath}?edit=${encodeURIComponent(t.id)}`)}
               onDelete={() => setDeleteConfirm({ id: t.id, name: t.name })}
             />
           ))
@@ -163,10 +168,10 @@ export function AdminPublicTechniquesTab() {
         <DeleteConfirmModal
           isOpen={true}
           itemName={deleteConfirm.name}
-          itemType="technique"
+          itemType={mode === 'empowered' ? 'empowered technique' : 'technique'}
           deleteContext="Realms Library"
           isDeleting={false}
-          onConfirm={handleDeleteFromList}
+          onConfirm={handleDeleteFromListLegacy}
           onClose={() => setDeleteConfirm(null)}
         />
       )}

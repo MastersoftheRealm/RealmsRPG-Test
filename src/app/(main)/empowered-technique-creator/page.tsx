@@ -49,7 +49,7 @@ import {
   DURATION_VALUES,
   POWER_DAMAGE_TYPES,
 } from '@/lib/game/creator-constants';
-import { CreatorLayout, CreatorSaveToolbar, CollapsibleSection, CreatorSummaryPanel, LoadFromLibraryModal, WeaponSelector } from '@/components/creator';
+import { CreatorLayout, CreatorSaveToolbar, CollapsibleSection, CreatorSummaryPanel, LoadFromLibraryModal, WeaponSelector, AdvancedCalculationsPanel } from '@/components/creator';
 import { Button, Checkbox, Input, Textarea, LoadingState, Alert, PageContainer } from '@/components/ui';
 import { ValueStepper, SectionCostBadge } from '@/components/shared';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
@@ -117,7 +117,7 @@ function EmpoweredTechniqueCreatorContent() {
   const { isAdmin } = useAdmin();
   const searchParams = useSearchParams();
   const editId = searchParams.get('edit');
-  const load = useLoadModalLibrary('technique');
+  const load = useLoadModalLibrary('empowered-technique');
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
@@ -294,6 +294,61 @@ function EmpoweredTechniqueCreatorContent() {
       }),
     [powerPayload, powerParts, techniquePayload, techniqueParts]
   );
+
+  const powerBaseCosts = useMemo(
+    () => calculatePowerCosts(powerPayload, powerParts),
+    [powerPayload, powerParts]
+  );
+  const techniqueBaseCosts = useMemo(
+    () => calculateTechniqueCosts(techniquePayload, techniqueParts),
+    [techniquePayload, techniqueParts]
+  );
+
+  const advancedCalcRows = useMemo(() => {
+    const powerRawBeforeMultiplier = powerBaseCosts.energyRaw;
+    const techniqueRaw = techniqueBaseCosts.energyRaw;
+    const techniqueMultiplier = costs.techniquePercentageMultiplier;
+    const adjustedPowerRaw = powerRawBeforeMultiplier * techniqueMultiplier;
+    const combinedRaw = adjustedPowerRaw + techniqueRaw;
+    return [
+      {
+        label: 'Power side — energy (raw, before technique %)',
+        value: powerRawBeforeMultiplier.toFixed(2),
+      },
+      {
+        label: 'Technique % multiplier',
+        value: techniqueMultiplier.toFixed(3),
+      },
+      {
+        label: 'Power side — energy (adjusted)',
+        value: `${powerRawBeforeMultiplier.toFixed(2)} × ${techniqueMultiplier.toFixed(3)} = ${adjustedPowerRaw.toFixed(2)}`,
+      },
+      {
+        label: 'Technique side — energy (raw)',
+        value: techniqueRaw.toFixed(2),
+      },
+      {
+        label: 'Combined energy (raw)',
+        value: `${adjustedPowerRaw.toFixed(2)} + ${techniqueRaw.toFixed(2)} = ${combinedRaw.toFixed(2)}`,
+      },
+      {
+        label: 'Energy (final)',
+        value: `ceil(${combinedRaw.toFixed(2)}) = ${costs.totalEnergy}`,
+      },
+      {
+        label: 'Training points (power side)',
+        value: String(powerBaseCosts.totalTP),
+      },
+      {
+        label: 'Training points (technique side)',
+        value: String(techniqueBaseCosts.totalTP),
+      },
+      {
+        label: 'Training points (final)',
+        value: `${powerBaseCosts.totalTP} + ${techniqueBaseCosts.totalTP} = ${costs.totalTP}`,
+      },
+    ];
+  }, [costs.techniquePercentageMultiplier, costs.totalEnergy, costs.totalTP, powerBaseCosts.energyRaw, powerBaseCosts.totalTP, techniqueBaseCosts.energyRaw, techniqueBaseCosts.totalTP]);
 
   const sectionCosts = useMemo(() => {
     const actionPartNames = ['Power Reaction', 'Power Quick or Free Action', 'Power Long Action'];
@@ -485,7 +540,7 @@ function EmpoweredTechniqueCreatorContent() {
   ]);
 
   const save = useCreatorSave({
-    type: 'techniques',
+    type: 'empowered-techniques',
     getPayload,
     requirePublishConfirm: true,
     publishConfirmTitle: 'Publish to Realms Library',
@@ -506,14 +561,7 @@ function EmpoweredTechniqueCreatorContent() {
     await save.handleSave();
   }, [save, user]);
 
-  const empoweredSelectableItems = useMemo(
-    () =>
-      load.selectableItems.filter((item) => {
-        const data = item.data as { empoweredTechnique?: boolean } | undefined;
-        return data?.empoweredTechnique === true;
-      }),
-    [load.selectableItems]
-  );
+  const empoweredSelectableItems = load.selectableItems;
 
   const handleLoadEmpoweredTechnique = useCallback(
     (doc: unknown) => {
@@ -861,7 +909,12 @@ function EmpoweredTechniqueCreatorContent() {
               { label: 'Duration', value: durationDisplay },
             ]}
             breakdowns={costs.tpSources.length > 0 ? [{ title: 'TP Breakdown', items: costs.tpSources }] : undefined}
-          />
+          >
+            <AdvancedCalculationsPanel
+              rows={advancedCalcRows}
+              ruleText="Rule: Technique percentage parts multiply the power side before adding technique energy; TP is the sum of both sides."
+            />
+          </CreatorSummaryPanel>
         </div>
       }
       modals={
@@ -916,8 +969,8 @@ function EmpoweredTechniqueCreatorContent() {
         defaultExpanded={true}
         rightSlot={
           <>
-            <SectionCostBadge en={sectionCosts.action.totalEnergy} tp={sectionCosts.action.totalTP} />
-            <SectionCostBadge en={sectionCosts.weapon.totalEnergy} tp={sectionCosts.weapon.totalTP} />
+            <SectionCostBadge en={sectionCosts.action.energyRaw} tp={sectionCosts.action.totalTP} />
+            <SectionCostBadge en={sectionCosts.weapon.energyRaw} tp={sectionCosts.weapon.totalTP} />
           </>
         }
       >
@@ -960,11 +1013,11 @@ function EmpoweredTechniqueCreatorContent() {
       >
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-4">
-            <SectionCostBadge en={sectionCosts.range.totalEnergy} tp={sectionCosts.range.totalTP} />
+            <SectionCostBadge en={sectionCosts.range.energyRaw} tp={sectionCosts.range.totalTP} />
             <ValueStepper value={range.steps} onChange={(value) => setRange({ steps: value })} label="Range:" min={0} max={10} />
           </div>
           <div className="flex flex-wrap items-center gap-4">
-            <SectionCostBadge en={sectionCosts.area.totalEnergy} tp={sectionCosts.area.totalTP} />
+            <SectionCostBadge en={sectionCosts.area.energyRaw} tp={sectionCosts.area.totalTP} />
             <select
               value={area.type}
               onChange={(event) => setArea((previous) => ({ ...previous, type: event.target.value as AreaConfig['type'] }))}
@@ -990,7 +1043,7 @@ function EmpoweredTechniqueCreatorContent() {
           </div>
           <div className="space-y-3 pt-2 border-t border-border-light">
             <div className="flex flex-wrap items-center gap-4">
-              <SectionCostBadge en={sectionCosts.duration.totalEnergy} tp={sectionCosts.duration.totalTP} />
+              <SectionCostBadge en={sectionCosts.duration.energyRaw} tp={sectionCosts.duration.totalTP} />
               <select
                 value={duration.type}
                 onChange={(event) => {
@@ -1057,7 +1110,7 @@ function EmpoweredTechniqueCreatorContent() {
         title="Power Damage (Add Damage)"
         collapsedSummary={powerDamageSummary}
         defaultExpanded={true}
-        rightSlot={<SectionCostBadge en={sectionCosts.powerDamage.totalEnergy} tp={sectionCosts.powerDamage.totalTP} />}
+        rightSlot={<SectionCostBadge en={sectionCosts.powerDamage.energyRaw} tp={sectionCosts.powerDamage.totalTP} />}
       >
         {powerDamages.map((damage, index) => (
           <div key={index} className="flex flex-wrap items-center gap-4 mb-4 p-3 rounded-lg bg-surface-alt border border-border-light">
@@ -1129,7 +1182,7 @@ function EmpoweredTechniqueCreatorContent() {
         defaultExpanded={true}
         rightSlot={
           <>
-            <SectionCostBadge en={sectionCosts.powerParts.totalEnergy} tp={sectionCosts.powerParts.totalTP} />
+            <SectionCostBadge en={sectionCosts.powerParts.energyRaw} tp={sectionCosts.powerParts.totalTP} />
             <Button type="button" variant="primary" size="sm" className="flex items-center gap-1" onClick={addPowerPart}>
               <Plus className="w-4 h-4" />
               Add Part
@@ -1180,7 +1233,7 @@ function EmpoweredTechniqueCreatorContent() {
         defaultExpanded={true}
         rightSlot={
           <>
-            <SectionCostBadge en={sectionCosts.powerMechanics.totalEnergy} tp={sectionCosts.powerMechanics.totalTP} />
+            <SectionCostBadge en={sectionCosts.powerMechanics.energyRaw} tp={sectionCosts.powerMechanics.totalTP} />
             <Button type="button" variant="primary" size="sm" className="flex items-center gap-1" onClick={addPowerMechanicPart}>
               <Plus className="w-4 h-4" />
               Add Part
@@ -1231,7 +1284,7 @@ function EmpoweredTechniqueCreatorContent() {
         defaultExpanded={true}
         rightSlot={
           <>
-            <SectionCostBadge en={sectionCosts.techniqueParts.totalEnergy} tp={sectionCosts.techniqueParts.totalTP} />
+            <SectionCostBadge en={sectionCosts.techniqueParts.energyRaw} tp={sectionCosts.techniqueParts.totalTP} />
             <Button type="button" variant="primary" size="sm" className="flex items-center gap-1" onClick={addTechniquePart}>
               <Plus className="w-4 h-4" />
               Add Part
@@ -1280,7 +1333,7 @@ function EmpoweredTechniqueCreatorContent() {
         title="Additional Damage (Technique)"
         collapsedSummary={techniqueDamageSummary}
         defaultExpanded={true}
-        rightSlot={<SectionCostBadge en={sectionCosts.techniqueDamage.totalEnergy} tp={sectionCosts.techniqueDamage.totalTP} />}
+        rightSlot={<SectionCostBadge en={sectionCosts.techniqueDamage.energyRaw} tp={sectionCosts.techniqueDamage.totalTP} />}
       >
         <p className="text-sm text-text-secondary mb-4">This is the technique additional-damage mechanic (separate from power Add Damage).</p>
         <div className="flex flex-wrap items-center gap-4">

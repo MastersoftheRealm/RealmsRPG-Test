@@ -7125,3 +7125,35 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Character Creator powers step `Add Powers` modal now has `Powers / Empowered Techniques` tabs and displays empowered selections in the powers list.
     - Creature Creator `Add Power` modal now has `Powers / Empowered Techniques` tabs; empowered selections map into creature power entries and display in power lists.
     Closed 2026-03-21: All acceptance criteria verified; build passes. Follow-up: sheet header hides duplicate martial ability when same as power ability (case-insensitive).
+
+- id: TASK-304
+  title: Supabase library columnar parity expansion (official + user)
+  priority: high
+  status: done
+  created_at: 2026-03-24
+  created_by: agent
+  description: |
+    Expand columnar coverage for library data while keeping official and user tables shape-compatible.
+    Add promoted columns for powers/techniques/items to both official_* and user_* tables, backfill from payload,
+    and keep payload-to-column sync via DB triggers so existing API writes remain backward-compatible.
+  related_files:
+    - sql/supabase-library-columnar-parity-expansion.sql
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/docs/OFFICIAL_LIBRARY_COLUMNAR_PLAN.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - src/docs/ai/AI_CHANGELOG.md
+  acceptance_criteria:
+    - New migration adds matching promoted columns on official_* and user_* library tables for powers/techniques/items.
+    - Existing rows are backfilled from payload without data loss.
+    - Trigger-based sync keeps promoted columns populated on new/updated rows written through existing payload-heavy APIs.
+    - Supabase schema docs updated to reflect parity migration and run order.
+  notes: |
+    In progress 2026-03-24: planned parity-first migration (official + user) with DB-side trigger sync to avoid API breakage.
+    Done 2026-03-24:
+    - Added sql/supabase-library-columnar-parity-expansion.sql.
+    - Added promoted columns for powers/techniques/items on official_* and user_* tables.
+    - Added trigger function sync_library_promoted_columns + per-table triggers for payload->column sync.
+    - Added trigger-driven backfill updates for existing rows.
+    - Updated SUPABASE_SCHEMA.md and OFFICIAL_LIBRARY_COLUMNAR_PLAN.md with parity migration details.
+    - App mapping follow-up 2026-03-24: updated shared `library-columnar.ts` and `api/official/[type]` to explicitly write/read promoted power/technique/item columns (column-first reads with payload fallback; official route now uses shared mapper like public/user routes).
+    - Power creator: added `tpRaw` to `PowerCostResult` / `calculatePowerCosts` and advanced calc rows (matches prior UI expectation; `npm run build` passes).

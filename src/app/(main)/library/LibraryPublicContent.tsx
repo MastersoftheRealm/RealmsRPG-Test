@@ -60,9 +60,13 @@ export function LibraryPublicContent({ activeTab, onLoginRequired, readOnly = fa
   return null;
 }
 
-function isEmpoweredTechnique(item: unknown): boolean {
+function getEmpoweredTotals(item: unknown): { energy?: number; tp?: number } {
   const raw = item as Record<string, unknown>;
-  return raw.empoweredTechnique === true || raw.empowered_technique === true || (raw.power != null && raw.technique != null);
+  const totals = raw.totals as Record<string, unknown> | undefined;
+  return {
+    energy: typeof totals?.energy === 'number' ? totals.energy : undefined,
+    tp: typeof totals?.trainingPoints === 'number' ? totals.trainingPoints : undefined,
+  };
 }
 
 function PublicPowersList({ onLoginRequired, readOnly = false }: { onLoginRequired: () => void; readOnly?: boolean }) {
@@ -234,9 +238,9 @@ function PublicTechniquesList({
 }) {
   const { user } = useAuthStore();
   const { showToast } = useToast();
-  const { data: items = [], isLoading, error } = usePublicLibrary('techniques');
+  const { data: items = [], isLoading, error } = usePublicLibrary(mode === 'empowered' ? 'empowered-techniques' : 'techniques');
   const { data: partsDb = [] } = useTechniqueParts();
-  const addMutation = useAddPublicToLibrary('techniques');
+  const addMutation = useAddPublicToLibrary(mode === 'empowered' ? 'empowered-techniques' : 'techniques');
   const [search, setSearch] = useState('');
   const [addConfirm, setAddConfirm] = useState<{ name: string; raw: Record<string, unknown> } | null>(null);
   const { sortState, handleSort, sortItems } = useSort('name');
@@ -262,13 +266,11 @@ function PublicTechniquesList({
     });
   };
 
-  const filteredItems = useMemo(
-    () => items.filter((item) => (mode === 'empowered' ? isEmpoweredTechnique(item) : !isEmpoweredTechnique(item))),
-    [items, mode]
-  );
+  const filteredItems = items;
 
   const cardData = useMemo(() => {
     return filteredItems.map((t: Record<string, unknown>) => {
+      const empowered = mode === 'empowered';
       const doc: TechniqueDocument = {
         name: String(t.name ?? ''),
         description: String(t.description ?? ''),
@@ -277,6 +279,7 @@ function PublicTechniquesList({
         weapon: t.weapon as TechniqueDocument['weapon'],
       };
       const display = deriveTechniqueDisplay(doc, partsDb);
+      const totals = getEmpoweredTotals(t);
       const damageStr = formatTechniqueDamage(doc.damage);
       const parts: ChipData[] = display.partChips.map(chip => ({
         name: chip.text.split(' | TP:')[0].replace(/\s*\(Opt\d+ \d+\)/g, '').trim(),
@@ -289,15 +292,15 @@ function PublicTechniquesList({
         raw: t,
         name: display.name,
         description: display.description,
-        energy: display.energy,
-        tp: display.tp,
+        energy: empowered ? (totals.energy ?? display.energy) : display.energy,
+        tp: empowered ? (totals.tp ?? display.tp) : display.tp,
         action: display.actionType,
         weapon: display.weaponName || '-',
         damage: damageStr,
         parts,
       };
     });
-  }, [filteredItems, partsDb]);
+  }, [filteredItems, mode, partsDb]);
 
   const filtered = useMemo(() => {
     let r = cardData;
