@@ -26,7 +26,7 @@ import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Plus, Copy, X, Layers } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 import type { ChipData } from '@/components/shared/grid-list-row';
-import { buildFeatLevelChips, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
+import { buildFeatLevelChips, groupFeatFamilies, formatFeatName, getFeatFamilyId, getFeatLevel } from '@/lib/leveled-feats';
 
 const COPY_NAME_SUFFIX = ' copy';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
@@ -279,7 +279,12 @@ export function AdminFeatsTab() {
     setCopySourceName(null);
     const ext = baseFeat as unknown as Record<string, unknown>;
     const abilityArr = Array.isArray(baseFeat.ability) ? baseFeat.ability : (baseFeat.ability ? [String(baseFeat.ability)] : []);
-    const nextLevel = (baseFeat.feat_lvl ?? 1) + 1;
+    const baseFamilyId = getFeatFamilyId(baseFeat);
+    const highestExistingLevel = (feats ?? []).reduce((maxLevel, feat) => {
+      if (getFeatFamilyId(feat) !== baseFamilyId) return maxLevel;
+      return Math.max(maxLevel, getFeatLevel(feat));
+    }, getFeatLevel(baseFeat));
+    const nextLevel = highestExistingLevel + 1;
     setForm({
       name: (baseFeat.name || '').trim(),
       description: baseFeat.description || '',

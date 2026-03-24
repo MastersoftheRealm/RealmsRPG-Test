@@ -6853,7 +6853,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-297
   title: Leveled feats migration and sitewide behavior unification (same name + level/id)
   priority: high
-  status: in-progress
+  status: done
   created_at: 2026-03-12
   created_by: agent
   description: |
@@ -6900,11 +6900,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - `npm run build` now passes.
     Remaining:
     - Validate any remaining feat edit edge-cases for level variants in Admin workflows.
+    Closed 2026-03-21: Admin Add Level now computes next family level from existing feat variants (prevents duplicate level-2 inserts when higher levels already exist).
 
 - id: TASK-298
   title: Archetype Path system for guided character creation + admin authoring
   priority: high
-  status: in-progress
+  status: done
   created_at: 2026-03-12
   created_by: agent
   description: |
@@ -6955,6 +6956,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Admin archetype path builder now uses selection UI instead of CSV/manual entry for
       feats, skills, powers, techniques, armaments, and equipment (including remove-lists),
       sourcing options from codex and official library hooks.
+    Closed 2026-03-21: acceptance criteria verified in creator flow/store/API/admin authoring; build passes.
 
 - id: TASK-299
   title: TP/proficiency system completion audit and rule-hardening

@@ -1,5 +1,7 @@
 # AI Change Log
 
+- 2026-03-21 | agent | Session: TASK-297/TASK-298 completion pass | files: `src/app/(main)/admin/codex/AdminFeatsTab.tsx`, `src/docs/ai/AI_TASK_QUEUE.md`, `src/docs/ai/AI_CHANGELOG.md` | Summary: Completed outstanding in-progress tasks. **TASK-297:** fixed Admin Codex feat level authoring edge case where Add Level always seeded level 2; now derives next level from highest existing level in the feat family using shared leveled-feat helpers. **TASK-298:** validated path mode selection, grouped path list, path-aware recommendations, and persisted `creationMode`/`archetypePathId` flow; marked done in queue. `npm run build` passes.
+
 Append-only log. Add an entry per PR/merge. **For current context, recent entries (e.g. last 50) suffice; older entries are historical. Use AI_TASK_QUEUE and AGENT_GUIDE for task/pattern context, not this file.**
 
 - 2026-03-21 | agent | Session: TASK-302/303 closeout + sheet header ability dedupe | files: `src/components/character-sheet/sheet-header.tsx`, `src/docs/ai/AI_TASK_QUEUE.md`, `src/docs/ai/AI_CHANGELOG.md` | Summary: **TASK-302** and **TASK-303** marked **done** in queue (creature inventory summary/tabs + empowered technique creator/library/selection flows already merged on branch). **Sheet header:** hide martial ability line when it matches power ability (trimmed, case-insensitive); **showPowerAbility** uses trimmed string so whitespace-only does not render. `npm run build` passes.
