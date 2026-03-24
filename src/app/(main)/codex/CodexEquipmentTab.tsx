@@ -19,7 +19,7 @@ import {
   GridListRow,
 } from '@/components/shared';
 import { EmptyState } from '@/components/ui';
-import { formatDamageDisplay } from '@/lib/utils';
+import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { useSort } from '@/hooks/use-sort';
 import { useEquipment, useItemProperties, type ItemProperty } from '@/hooks';
 
@@ -86,9 +86,9 @@ function EquipmentCard({ item, propertiesDb = [] }: { item: Equipment; propertie
       description={item.description}
       gridColumns={EQUIPMENT_GRID_COLUMNS}
       columns={[
-        { key: 'Category', value: item.category || '-' },
+        { key: 'Category', value: formatListCellLabel(item.category) },
         { key: 'Cost', value: cost > 0 ? `${cost}c` : '-', highlight: true },
-        { key: 'Rarity', value: item.rarity || '-' },
+        { key: 'Rarity', value: formatListCellLabel(item.rarity) },
       ]}
       detailSections={detailSections.length > 0 ? detailSections : undefined}
     />

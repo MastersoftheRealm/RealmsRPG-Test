@@ -8,7 +8,7 @@
 
 import { useState, useMemo } from 'react';
 import { Modal, Button } from '@/components/ui';
-import { cn } from '@/lib/utils';
+import { SegmentedControl } from '@/components/shared';
 import type { Species } from '@/hooks';
 
 type SourceFilterValue = 'all' | 'public' | 'my';
@@ -74,23 +74,19 @@ export function MixedSpeciesModal({
           Choose two species to play a mixed version. On the Ancestry step you will set physical traits (averaged), pick one species trait from each species, one ancestry trait, and optionally take a flaw for an extra ancestry trait from that same species.
         </p>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-medium text-text-secondary">Source:</span>
-          <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-alt">
-            {(['all', 'public', 'my'] as const).map((opt) => (
-              <button
-                key={opt}
-                type="button"
-                onClick={() => setSource(opt)}
-                className={cn(
-                  'px-2 py-1 rounded text-sm font-medium transition-colors',
-                  source === opt ? 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white' : 'text-text-muted dark:text-text-secondary hover:text-text-primary dark:hover:text-text-primary'
-                )}
-              >
-                {opt === 'all' ? 'All sources' : opt === 'public' ? 'Public species' : 'My species'}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            value={source}
+            onChange={setSource}
+            options={[
+              { value: 'all', label: 'All sources' },
+              { value: 'public', label: 'Public species' },
+              { value: 'my', label: 'My species' },
+            ]}
+            aria-label="Species list source"
+            className="flex-1 min-w-0 sm:flex-initial"
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

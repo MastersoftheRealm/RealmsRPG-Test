@@ -2,13 +2,15 @@
  * useCreatorSave — Unified save state and handlers for all creators
  * ==================================================================
  * Single source of truth for save message, save target, saving state,
- * and save/publish flow. Used by power, technique, item, and creature creators.
+ * and save/publish flow. Used by power, technique, item, creature, and species creators.
+ * Success/error feedback is shown via the global toast (fixed), not inline in the summary panel.
  */
 
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/components/ui';
 import { saveToLibrary, saveToOfficialLibrary, findLibraryItemByName, findOfficialLibraryItemByName } from '@/services/library-service';
 
 const OFFICIAL_LIBRARY_KEY = ['official-library'] as const;
@@ -17,12 +19,13 @@ const OFFICIAL_LIBRARY_KEY = ['official-library'] as const;
 const USER_LIBRARY_QUERY_KEYS: Record<CreatorLibraryType, readonly string[]> = {
   powers: ['user-powers'],
   techniques: ['user-techniques'],
+  'empowered-techniques': ['user-empowered-techniques'],
   items: ['user-items'],
   creatures: ['user-creatures'],
   species: ['user-species'],
 };
 
-export type CreatorLibraryType = 'powers' | 'techniques' | 'items' | 'creatures' | 'species';
+export type CreatorLibraryType = 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species';
 
 export interface CreatorSavePayload {
   name: string;
@@ -79,7 +82,17 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
   } = options;
 
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  useEffect(() => {
+    if (!saveMessage) return;
+    showToast(
+      saveMessage.text,
+      saveMessage.type === 'success' ? 'success' : 'error',
+      saveMessage.type === 'error' ? 6000 : undefined
+    );
+  }, [saveMessage, showToast]);
   const [saveTarget, setSaveTarget] = useState<'private' | 'public'>('private');
   const [saving, setSaving] = useState(false);
   const [showPublishConfirm, setShowPublishConfirmState] = useState(false);

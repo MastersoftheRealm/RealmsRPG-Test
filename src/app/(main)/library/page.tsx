@@ -11,17 +11,18 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Plus, Wand2, Swords, Shield, Users, LogIn, Sparkles } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks';
 import { PageContainer, PageHeader, TabNavigation, Button, useToast } from '@/components/ui';
-import { DeleteConfirmModal, LoginPromptModal } from '@/components/shared';
+import { DeleteConfirmModal, LoginPromptModal, SegmentedControl } from '@/components/shared';
 import {
   useUserPowers,
   useUserTechniques,
+  useUserEmpoweredTechniques,
   useUserItems,
   useUserCreatures,
   useDeletePower,
   useDeleteTechnique,
+  useDeleteEmpoweredTechnique,
   useDeleteItem,
   useDeleteCreature,
   usePublicLibrary,
@@ -37,7 +38,7 @@ import { LibraryCreaturesTab } from './LibraryCreaturesTab';
 import { LibraryEnhancedTab } from './LibraryEnhancedTab';
 import { LibraryPublicContent, type LibraryPublicTabId } from './LibraryPublicContent';
 
-type TabId = 'powers' | 'techniques' | 'items' | 'creatures' | 'enhanced';
+type TabId = 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'enhanced';
 
 interface Tab {
   id: TabId;
@@ -50,6 +51,7 @@ interface Tab {
 const TABS: Tab[] = [
   { id: 'powers', label: 'Powers', icon: <Wand2 className="w-4 h-4" />, createHref: '/power-creator', createLabel: 'Create Power' },
   { id: 'techniques', label: 'Techniques', icon: <Swords className="w-4 h-4" />, createHref: '/technique-creator', createLabel: 'Create Technique' },
+  { id: 'empowered-techniques', label: 'Empowered', icon: <Swords className="w-4 h-4" />, createHref: '/empowered-technique-creator', createLabel: 'Create Empowered Technique' },
   { id: 'items', label: 'Armaments', icon: <Shield className="w-4 h-4" />, createHref: '/item-creator', createLabel: 'Create Armament' },
   { id: 'creatures', label: 'Creatures', icon: <Users className="w-4 h-4" />, createHref: '/creature-creator', createLabel: 'Create Creature' },
   { id: 'enhanced', label: 'Enhanced', icon: <Sparkles className="w-4 h-4" />, createHref: '/crafting', createLabel: 'From Crafting' },
@@ -76,16 +78,19 @@ function LibraryContent() {
 
   const { data: powers = [] } = useUserPowers();
   const { data: techniques = [] } = useUserTechniques();
+  const { data: empoweredTechniques = [] } = useUserEmpoweredTechniques();
   const { data: items = [] } = useUserItems();
   const { data: creatures = [] } = useUserCreatures();
 
   const { data: publicPowers = [] } = usePublicLibrary('powers');
   const { data: publicTechniques = [] } = usePublicLibrary('techniques');
+  const { data: publicEmpoweredTechniques = [] } = usePublicLibrary('empowered-techniques');
   const { data: publicItems = [] } = usePublicLibrary('items');
   const { data: publicCreatures = [] } = usePublicLibrary('creatures');
 
   const deletePower = useDeletePower();
   const deleteTechnique = useDeleteTechnique();
+  const deleteEmpoweredTechnique = useDeleteEmpoweredTechnique();
   const deleteItem = useDeleteItem();
   const deleteCreature = useDeleteCreature();
   const deleteEnhancedItem = useDeleteEnhancedItem();
@@ -95,6 +100,7 @@ function LibraryContent() {
   const myCounts: Record<TabId, number> = {
     powers: powers.length,
     techniques: techniques.length,
+    'empowered-techniques': empoweredTechniques.length,
     items: items.length,
     creatures: creatures.length,
     enhanced: enhancedItems.length,
@@ -103,6 +109,7 @@ function LibraryContent() {
   const publicCounts: Record<TabId, number> = {
     powers: publicPowers.length,
     techniques: publicTechniques.length,
+    'empowered-techniques': publicEmpoweredTechniques.length,
     items: publicItems.length,
     creatures: publicCreatures.length,
     enhanced: 0,
@@ -111,7 +118,7 @@ function LibraryContent() {
   const counts = libraryMode === 'my' ? myCounts : publicCounts;
   const currentTab = TABS.find(t => t.id === activeTab)!;
 
-  const isDeleting = deletePower.isPending || deleteTechnique.isPending ||
+  const isDeleting = deletePower.isPending || deleteTechnique.isPending || deleteEmpoweredTechnique.isPending ||
     deleteItem.isPending || deleteCreature.isPending || deleteEnhancedItem.isPending;
 
   const handleDelete = async () => {
@@ -124,6 +131,9 @@ function LibraryContent() {
           break;
         case 'techniques':
           await deleteTechnique.mutateAsync(deleteConfirm.item.id);
+          break;
+        case 'empowered-techniques':
+          await deleteEmpoweredTechnique.mutateAsync(deleteConfirm.item.id);
           break;
         case 'items':
           await deleteItem.mutateAsync(deleteConfirm.item.id);
@@ -182,28 +192,16 @@ function LibraryContent() {
 
       <div className="mb-4 flex flex-wrap items-center gap-4 min-w-0">
         {!isGuest && (
-          <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-alt flex-shrink-0">
-            <button
-            type="button"
-            onClick={() => setLibraryMode('my')}
-            className={cn(
-              'px-3 py-1.5 rounded text-sm font-medium transition-colors',
-              libraryMode === 'my' ? 'bg-primary-600 text-white' : 'text-text-secondary hover:text-text-primary'
-            )}
-          >
-            My Library
-          </button>
-          <button
-            type="button"
-            onClick={() => setLibraryMode('public')}
-            className={cn(
-              'px-3 py-1.5 rounded text-sm font-medium transition-colors',
-              libraryMode === 'public' ? 'bg-primary-600 text-white' : 'text-text-secondary hover:text-text-primary'
-            )}
-          >
-            Realms Library
-          </button>
-        </div>
+          <SegmentedControl
+            value={libraryMode}
+            onChange={setLibraryMode}
+            options={[
+              { value: 'my', label: 'My Library' },
+              { value: 'public', label: 'Realms Library' },
+            ]}
+            aria-label="Library scope"
+            className="flex-shrink-0"
+          />
         )}
       </div>
 
@@ -225,7 +223,8 @@ function LibraryContent() {
       ) : (
         <>
           {activeTab === 'powers' && <LibraryPowersTab onDelete={(item) => setDeleteConfirm({ type: 'powers', item })} />}
-          {activeTab === 'techniques' && <LibraryTechniquesTab onDelete={(item) => setDeleteConfirm({ type: 'techniques', item })} />}
+          {activeTab === 'techniques' && <LibraryTechniquesTab onDelete={(item) => setDeleteConfirm({ type: 'techniques', item })} mode="standard" />}
+          {activeTab === 'empowered-techniques' && <LibraryTechniquesTab onDelete={(item) => setDeleteConfirm({ type: 'empowered-techniques', item })} mode="empowered" />}
           {activeTab === 'items' && <LibraryItemsTab onDelete={(item) => setDeleteConfirm({ type: 'items', item })} />}
           {activeTab === 'creatures' && <LibraryCreaturesTab onDelete={(item) => setDeleteConfirm({ type: 'creatures', item })} />}
           {activeTab === 'enhanced' && <LibraryEnhancedTab onDelete={(item) => setDeleteConfirm({ type: 'enhanced', item })} />}

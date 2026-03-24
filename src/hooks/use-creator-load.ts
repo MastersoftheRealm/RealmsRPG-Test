@@ -11,9 +11,10 @@
 import { useState, useCallback } from 'react';
 import { useUserPowers } from './use-user-library';
 import { useUserTechniques } from './use-user-library';
+import { useUserEmpoweredTechniques } from './use-user-library';
 import { useUserItems } from './use-user-library';
 
-export type CreatorLoadType = 'powers' | 'techniques' | 'items';
+export type CreatorLoadType = 'powers' | 'techniques' | 'empowered-techniques' | 'items';
 
 export interface UseCreatorLoadReturn<T = unknown> {
   showLoadModal: boolean;
@@ -27,12 +28,14 @@ export interface UseCreatorLoadReturn<T = unknown> {
 
 export function useCreatorLoad(type: 'powers'): UseCreatorLoadReturn;
 export function useCreatorLoad(type: 'techniques'): UseCreatorLoadReturn;
+export function useCreatorLoad(type: 'empowered-techniques'): UseCreatorLoadReturn;
 export function useCreatorLoad(type: 'items'): UseCreatorLoadReturn;
 export function useCreatorLoad(type: CreatorLoadType): UseCreatorLoadReturn {
   const [showLoadModal, setShowLoadModal] = useState(false);
 
   const powers = useUserPowers();
   const techniques = useUserTechniques();
+  const empoweredTechniques = useUserEmpoweredTechniques();
   const items = useUserItems();
 
   const openLoadModal = useCallback(() => setShowLoadModal(true), []);
@@ -58,6 +61,17 @@ export function useCreatorLoad(type: CreatorLoadType): UseCreatorLoadReturn {
       items: techniques.data ?? [],
       isLoading: techniques.isLoading,
       error: techniques.error ?? null,
+    };
+  }
+  if (type === 'empowered-techniques') {
+    return {
+      showLoadModal,
+      setShowLoadModal,
+      openLoadModal,
+      closeLoadModal,
+      items: empoweredTechniques.data ?? [],
+      isLoading: empoweredTechniques.isLoading,
+      error: empoweredTechniques.error ?? null,
     };
   }
   return {

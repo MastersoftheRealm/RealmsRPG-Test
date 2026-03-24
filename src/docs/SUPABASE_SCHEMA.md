@@ -61,16 +61,19 @@ All codex tables are **columnar** and live in **public** (no `codex` schema). Ar
 
 ### 2.4 Public library (admin-curated, browse by all)
 
-Currently **id + data (JSONB)**. Optional future: migrate to columnar (e.g. `official_*`-style scalars + payload) for consistency with user library and better querying.
+Legacy `public_*` tables remain **id + data (JSONB)** for backward compatibility. The active write path is `official_*` (columnar, scalars + payload).
 
 | Table | Shape | Key columns |
 |-------|--------|-------------|
 | `public_powers` | JSONB | id (PK), data (JSONB), created_at, updated_at |
 | `public_techniques` | JSONB | id (PK), data (JSONB), created_at, updated_at |
+| `public_empowered_techniques` | JSONB | id (PK), data (JSONB), created_at, updated_at (legacy/fallback only) |
 | `public_items` | JSONB | id (PK), data (JSONB), created_at, updated_at |
 | `public_creatures` | JSONB | id (PK), data (JSONB), created_at, updated_at |
 
-**API:** `GET /api/public/[type]` reads these tables; falls back to `official_*` in public if present (columnar). POST/DELETE require admin.
+**API:** `GET /api/public/[type]` reads these tables; falls back to `official_*` in public if present (columnar), including `official_empowered_techniques`. POST/DELETE require admin.
+
+**Official columnar parity expansion:** `sql/supabase-library-columnar-parity-expansion.sql` promotes frequently queried payload fields into columns on both official_* and user_* tables (powers/techniques/items) and keeps them synced from payload via DB triggers.
 
 ---
 
@@ -82,13 +85,14 @@ All **columnar** (scalars + `payload` JSONB). Species matches codex_species colu
 |-------|--------|-------------|
 | `user_powers` | Columnar | id (PK), user_id (FK), name, description, action_type, is_reaction, innate, created_at, updated_at, payload (JSONB) |
 | `user_techniques` | Columnar | id (PK), user_id (FK), name, description, action_type, weapon_name, created_at, updated_at, payload (JSONB) |
+| `user_empowered_techniques` | Columnar | id (PK), user_id (FK), name, description, action_type, weapon_name, created_at, updated_at, payload (JSONB) |
 | `user_items` | Columnar | id (PK), user_id (FK), name, description, type, rarity, armor_value, damage_reduction, created_at, updated_at, payload (JSONB) |
 | `user_creatures` | Columnar | id (PK), user_id (FK), name, description, level, type, size, hit_points, energy_points, created_at, updated_at, payload (JSONB) |
 | `user_species` | Columnar | id (PK), user_id (FK), name, description, type, sizes, skills, species_traits, ancestry_traits, flaws, characteristics, ave_hgt_cm, ave_wgt_kg, adulthood_lifespan, languages, created_at, updated_at, payload (JSONB) |
 
 If Supabase logs show **`permission denied for table user_species`**, the `authenticated` role is missing table `GRANT`s (common after creating/moving the table without grants). Run **`sql/supabase-user-species-grants-rls.sql`** in the SQL Editor. This does not fix campaign invite lookup by itself (that is separate RLS on `campaigns`); it fixes species library / hooks that query `user_species`.
 
-**API:** `GET/POST/PATCH/DELETE /api/user/library/[type]`; types: powers, techniques, items, creatures, species.
+**API:** `GET/POST/PATCH/DELETE /api/user/library/[type]`; types: powers, techniques, empowered-techniques, items, creatures, species.
 
 ---
 
@@ -249,6 +253,7 @@ Used by `user_profiles.role`.
 |------|--------|--------------|
 | Codex (codex_*) | Done | All columnar in public. |
 | User library (powers, techniques, items, creatures) | Done | user_* columnar (scalars + payload). |
+| Official/user column parity expansion | Done | **TASK-304:** promoted columns for powers/techniques/items on both official_* + user_*; trigger-based payload sync (`sql/supabase-library-columnar-parity-expansion.sql`). |
 | User library (species) | Done | **TASK-280:** user_species columnar (codex_species + user_id + payload); SQL + API. |
 | Public/official library | Done | **TASK-279:** official_* in public; GET /api/public prefers official_*; POST/DELETE columnar. |
 | Campaign members | Done | campaign_members table; memberIds deprecated. |
@@ -257,7 +262,7 @@ Used by `user_profiles.role`.
 | Campaign rolls list | Done | **TASK-283:** character_id, user_id, type, title; backfill + API. |
 | Core rules | Keep JSONB | Per DATABASE_SCALABILITY_AUDIT: category-specific shapes; no columnar migration planned. |
 
-See `AI_TASK_QUEUE.md` for TASK-279–TASK-283. Rationale and column sets: `DATABASE_SCALABILITY_AUDIT.md`.
+See `AI_TASK_QUEUE.md` for TASK-279–TASK-283 and TASK-304. Rationale and column sets: `DATABASE_SCALABILITY_AUDIT.md`.
 
 ---
 
@@ -275,8 +280,8 @@ See `AI_TASK_QUEUE.md` for TASK-279–TASK-283. Rationale and column sets: `DATA
 | API or feature | Tables (public) |
 |----------------|-----------------|
 | GET /api/codex | codex_feats, codex_skills, codex_species, codex_traits, codex_parts, codex_properties, codex_equipment, codex_archetypes, codex_creature_feats, core_rules |
-| GET /api/public/[type] | public_powers, public_techniques, public_items, public_creatures (or official_* if present) |
-| GET/POST/PATCH/DELETE /api/user/library/[type] | user_powers, user_techniques, user_items, user_creatures, user_species |
+| GET /api/public/[type] | public_powers, public_techniques, public_empowered_techniques, public_items, public_creatures (or official_* if present) |
+| GET/POST/PATCH/DELETE /api/user/library/[type] | user_powers, user_techniques, user_empowered_techniques, user_items, user_creatures, user_species |
 | Characters CRUD | characters |
 | Campaigns | campaigns, campaign_members, campaign_rolls |
 | Encounters | encounters |

@@ -7,10 +7,11 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useUserPowers, useUserTechniques, useUserItems } from '@/hooks/use-user-library';
+import { useUserPowers, useUserTechniques, useUserEmpoweredTechniques, useUserItems } from '@/hooks/use-user-library';
 import { useEquipment, useTechniqueParts, usePowerParts, useItemProperties, usePublicLibrary } from '@/hooks';
 import { SourceFilter, type SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
+import { SegmentedControl } from '@/components/shared';
 import type { ColumnValue, ChipData } from '@/components/shared/grid-list-row';
 import { formatDamageDisplay, formatActionTypeForDisplay } from '@/lib/utils';
 import { deriveShieldAmountFromProperties, deriveShieldDamageFromProperties } from '@/lib/calculators';
@@ -22,6 +23,7 @@ import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-librar
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 
 type ItemType = 'power' | 'technique' | 'weapon' | 'shield' | 'armor' | 'equipment';
+type PowerSelectionMode = 'powers' | 'empowered';
 
 interface AddLibraryItemModalProps {
   isOpen: boolean;
@@ -142,8 +144,10 @@ export function AddLibraryItemModal({
   onAdd,
 }: AddLibraryItemModalProps) {
   const [source, setSource] = useState<SourceFilterValue>('all');
+  const [powerSelectionMode, setPowerSelectionMode] = useState<PowerSelectionMode>('powers');
   const { data: userPowers = [], isLoading: powersLoading } = useUserPowers();
   const { data: userTechniques = [], isLoading: techniquesLoading } = useUserTechniques();
+  const { data: userEmpoweredTechniques = [], isLoading: empoweredTechniquesLoading } = useUserEmpoweredTechniques();
   const { data: userItems = [], isLoading: itemsLoading } = useUserItems();
   const { data: codexEquipment = [], isLoading: equipmentLoading } = useEquipment();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
@@ -151,8 +155,9 @@ export function AddLibraryItemModal({
   const { data: itemPropertiesDb = [] } = useItemProperties();
   const { data: publicPowers = [], isLoading: publicPowersLoading, isError: publicPowersError } = usePublicLibrary('powers');
   const { data: publicTechniques = [], isLoading: publicTechniquesLoading, isError: publicTechniquesError } = usePublicLibrary('techniques');
+  const { data: publicEmpoweredTechniques = [], isLoading: publicEmpoweredTechniquesLoading, isError: publicEmpoweredTechniquesError } = usePublicLibrary('empowered-techniques');
   const { data: publicItems = [], isLoading: publicItemsLoading, isError: publicItemsError } = usePublicLibrary('items');
-  const publicLibraryError = publicPowersError || publicTechniquesError || publicItemsError;
+  const publicLibraryError = publicPowersError || publicTechniquesError || publicEmpoweredTechniquesError || publicItemsError;
 
   const { rawItems, isLoading } = useMemo(() => {
     const normalizePublicPower = (p: Record<string, unknown>): UserPower => {
@@ -213,7 +218,7 @@ export function AddLibraryItemModal({
             damage: e.damage,
             armorValue: e.armor_value,
             properties: e.properties ?? [],
-            _source: 'my',
+            _source: 'public',
           }) as WithSource<EqItem>),
           ...userEquip.map((i: UserItem): WithSource<EqItem> => ({
             id: i.id,
@@ -241,8 +246,34 @@ export function AddLibraryItemModal({
     }
   }, [itemType, userPowers, userTechniques, userItems, codexEquipment, publicPowers, publicTechniques, publicItems, powersLoading, techniquesLoading, itemsLoading, equipmentLoading, publicPowersLoading, publicTechniquesLoading, publicItemsLoading]);
 
+  const empoweredRawItems = useMemo(() => {
+    if (itemType !== 'power') return [];
+    const merged = [
+      ...(userEmpoweredTechniques as Array<UserTechnique & { _source?: 'my' | 'public' }>).map((item) => ({ ...item, _source: 'my' as const })),
+      ...(publicEmpoweredTechniques as Record<string, unknown>[]).map((item) => ({
+        id: String(item.id ?? item.docId ?? ''),
+        docId: String(item.id ?? item.docId ?? ''),
+        name: String(item.name ?? ''),
+        description: String(item.description ?? ''),
+        parts: (item.parts ?? []) as UserTechnique['parts'],
+        weapon: item.weapon as UserTechnique['weapon'],
+        damage: item.damage as UserTechnique['damage'],
+        ...item,
+        _source: 'public' as const,
+      })),
+    ];
+    const seen = new Set<string>();
+    return merged.filter((technique) => {
+      const id = String((technique as { docId?: string; id?: string }).docId ?? (technique as { id?: string }).id ?? '');
+      if (!id || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+  }, [itemType, publicEmpoweredTechniques, userEmpoweredTechniques]);
+
   const items: SelectableItem[] = useMemo(() => {
-    return rawItems
+    const list = itemType === 'power' && powerSelectionMode === 'empowered' ? empoweredRawItems : rawItems;
+    return list
       .filter((item: { id: string }) => !existingIds.has(String(item.id)))
       .map((item: UserPower | UserTechnique | UserItem | EqItem) => {
         let techniqueDisplay: { energy: number; weaponName: string; tp: number; actionType: string } | undefined;
@@ -250,6 +281,40 @@ export function AddLibraryItemModal({
         let totalCost: number | undefined;
         const costLabel = 'TP';
 
+        if (itemType === 'power' && powerSelectionMode === 'empowered') {
+          const technique = item as UserTechnique;
+          const raw = technique as unknown as Record<string, unknown>;
+          const powerData = (raw.power as Record<string, unknown> | undefined) ?? {};
+          const totals = (raw.totals as Record<string, unknown> | undefined) ?? {};
+          const actionType = String(raw.actionType ?? '');
+          const isReaction = raw.isReaction === true;
+          const action = actionType
+            ? `${actionType.charAt(0).toUpperCase()}${actionType.slice(1)} ${isReaction ? 'Reaction' : 'Action'}`
+            : (isReaction ? 'Reaction' : '-');
+          const areaRaw = (powerData.area as Record<string, unknown> | undefined)?.type;
+          const areaValue = areaRaw ? String(areaRaw).replace(/\b\w/g, (c) => c.toUpperCase()) : '-';
+          const damageRows = Array.isArray(powerData.damage) ? (powerData.damage as Array<{ amount?: number; size?: number; type?: string }>) : [];
+          const damageValue = damageRows.length > 0
+            ? damageRows
+                .filter((row) => (row.amount ?? 0) > 0 && row.type && row.type !== 'none')
+                .map((row) => `${row.amount}d${row.size} ${row.type}`)
+                .join(', ')
+            : '-';
+          return {
+            id: String(item.id),
+            name: String(item.name ?? ''),
+            description: String((item as UserTechnique).description ?? '') || 'No description available.',
+            columns: [
+              { key: 'Action', value: action, align: 'center' as const },
+              { key: 'Damage', value: damageValue, align: 'center' as const },
+              { key: 'Area', value: areaValue, align: 'center' as const },
+            ],
+            badges: [{ label: 'Empowered', color: 'gray' as const }],
+            totalCost: Number(totals.trainingPoints ?? 0) || undefined,
+            costLabel: Number(totals.trainingPoints ?? 0) > 0 ? 'TP' : undefined,
+            data: item,
+          };
+        }
         if (itemType === 'power') {
           const p = item as UserPower;
           const doc: PowerDocument = {
@@ -337,7 +402,7 @@ export function AddLibraryItemModal({
           data: item,
         };
       });
-  }, [rawItems, existingIds, itemType, techniquePartsDb, powerPartsDb, itemPropertiesDb]);
+  }, [rawItems, empoweredRawItems, existingIds, itemType, powerSelectionMode, techniquePartsDb, powerPartsDb, itemPropertiesDb]);
 
   const typeLabel = itemType === 'power' ? 'Powers' : itemType === 'technique' ? 'Techniques' : itemType === 'weapon' ? 'Weapons' : itemType === 'shield' ? 'Shields' : itemType === 'armor' ? 'Armor' : 'Equipment';
   const displayFilterFn = useMemo(
@@ -370,20 +435,42 @@ export function AddLibraryItemModal({
     }, {} as Record<string, number>);
 
     if (itemType === 'power') {
-      const powers: CharacterPower[] = (selectedRaw as UserPower[]).map(p => ({
-        id: p.id,
-        name: p.name,
-        description: p.description || '',
-        parts: (p.parts || []).map(part => ({
-          id: String(part.id || ''),
-          name: part.name || '',
-          op_1_lvl: part.op_1_lvl,
-          op_2_lvl: part.op_2_lvl,
-          op_3_lvl: part.op_3_lvl,
-        })),
-        cost: 0,
-        level: 1,
-      }));
+      const powers: CharacterPower[] = (selectedRaw as Array<UserPower | UserTechnique>).map((entry) => {
+        const raw = entry as unknown as Record<string, unknown>;
+        if (powerSelectionMode === 'empowered') {
+          const powerData = (raw.power as Record<string, unknown> | undefined) ?? {};
+          const savedParts = (Array.isArray(powerData.parts) ? powerData.parts : []) as Array<{ id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }>;
+          return {
+            id: entry.id,
+            name: entry.name,
+            description: entry.description || '',
+            parts: savedParts.map((part) => ({
+              id: String(part.id || ''),
+              name: part.name || '',
+              op_1_lvl: part.op_1_lvl,
+              op_2_lvl: part.op_2_lvl,
+              op_3_lvl: part.op_3_lvl,
+            })),
+            cost: 0,
+            level: 1,
+          };
+        }
+        const power = entry as UserPower;
+        return {
+          id: power.id,
+          name: power.name,
+          description: power.description || '',
+          parts: (power.parts || []).map(part => ({
+            id: String(part.id || ''),
+            name: part.name || '',
+            op_1_lvl: part.op_1_lvl,
+            op_2_lvl: part.op_2_lvl,
+            op_3_lvl: part.op_3_lvl,
+          })),
+          cost: 0,
+          level: 1,
+        };
+      });
       onAdd(powers);
     } else if (itemType === 'technique') {
       const techniques: CharacterTechnique[] = (selectedRaw as UserTechnique[]).map(t => ({
@@ -427,17 +514,39 @@ export function AddLibraryItemModal({
       onClose={onClose}
       title={getTitle(itemType)}
       description="Click a row (or the + button) to select, then click Add Selected."
-      headerExtra={<SourceFilter value={source} onChange={setSource} />}
+      headerExtra={
+        <div className="space-y-3">
+          <SourceFilter value={source} onChange={setSource} />
+          {itemType === 'power' && (
+            <SegmentedControl<PowerSelectionMode>
+              value={powerSelectionMode}
+              onChange={setPowerSelectionMode}
+              aria-label="Power selection type"
+              tabs
+              options={[
+                { value: 'powers', label: 'Powers' },
+                { value: 'empowered', label: 'Empowered Techniques' },
+              ]}
+            />
+          )}
+        </div>
+      }
       items={items}
-      isLoading={isLoading}
+      isLoading={
+        itemType === 'power' && powerSelectionMode === 'empowered'
+          ? empoweredTechniquesLoading || publicEmpoweredTechniquesLoading
+          : isLoading
+      }
       onConfirm={handleConfirm}
       displayFilter={displayFilterFn}
-      columns={getListHeaderColumns(itemType)}
+      columns={itemType === 'power' && powerSelectionMode === 'empowered'
+        ? [{ key: 'name', label: 'Name' }, { key: 'Action', label: 'Action' }, { key: 'Damage', label: 'Damage' }, { key: 'Area', label: 'Area' }]
+        : getListHeaderColumns(itemType)}
       gridColumns={getModalGridColumns(itemType)}
       itemLabel={itemType}
       emptyMessage={emptyTitle}
       emptySubMessage={emptyDesc}
-      searchPlaceholder={`Search ${itemType}s...`}
+      searchPlaceholder={itemType === 'power' && powerSelectionMode === 'empowered' ? 'Search empowered techniques...' : `Search ${itemType}s...`}
       showQuantity={itemType === 'equipment'}
       size="lg"
       className="max-h-[60vh]"

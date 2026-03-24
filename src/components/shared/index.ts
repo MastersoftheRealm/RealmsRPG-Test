@@ -64,7 +64,7 @@ export type { TabSummarySectionProps, SummaryItemProps, SummaryRowProps } from '
 // ListHeader - Sortable column headers for list views
 // Use for ALL list headers matching Codex/Library patterns
 export { ListHeader } from './list-header';
-export type { ListHeaderProps, ListColumn } from './list-header';
+export type { ListHeaderProps, ListColumn, ListHeaderRowChrome } from './list-header';
 
 // Part/Property chip components (reusable across Library, Character Sheet, Codex)
 export { PartChip as PartChipComponent, PartChipDetails, PartChipList, PropertyChipList } from './part-chip';
@@ -168,6 +168,13 @@ export type {
 // Use for: equipment quantity, item counts, stacks
 export { QuantitySelector, QuantityBadge } from './quantity-selector';
 export type { QuantitySelectorProps, QuantityBadgeProps } from './quantity-selector';
+
+// SegmentedControl — My Library / Realms / All toggles (library page, modals, SourceFilter)
+export {
+  SegmentedControl,
+  type SegmentedOption,
+  type SegmentedControlProps,
+} from './segmented-control';
 
 // ============================================================================
 // FILTER COMPONENTS

@@ -6853,7 +6853,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-297
   title: Leveled feats migration and sitewide behavior unification (same name + level/id)
   priority: high
-  status: in-progress
+  status: done
   created_at: 2026-03-12
   created_by: agent
   description: |
@@ -6900,11 +6900,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - `npm run build` now passes.
     Remaining:
     - Validate any remaining feat edit edge-cases for level variants in Admin workflows.
+    Closed 2026-03-21: Admin Add Level now computes next family level from existing feat variants (prevents duplicate level-2 inserts when higher levels already exist).
 
 - id: TASK-298
   title: Archetype Path system for guided character creation + admin authoring
   priority: high
-  status: in-progress
+  status: done
   created_at: 2026-03-12
   created_by: agent
   description: |
@@ -6955,6 +6956,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Admin archetype path builder now uses selection UI instead of CSV/manual entry for
       feats, skills, powers, techniques, armaments, and equipment (including remove-lists),
       sourcing options from codex and official library hooks.
+    Closed 2026-03-21: acceptance criteria verified in creator flow/store/API/admin authoring; build passes.
 
 - id: TASK-299
   title: TP/proficiency system completion audit and rule-hardening
@@ -7012,3 +7014,146 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     Implemented 2026-03-18:
     - Updated package.json engines.node to ">=20.9.0 <21".
     - Pinned next dependency from "^16.1.6" to "16.1.6" to avoid automatic minor upgrades changing runtime behavior.
+
+- id: TASK-301
+  title: Migrate duplicate segmented pill toggles to SegmentedControl
+  priority: medium
+  status: done
+  created_at: 2026-03-21
+  created_by: agent
+  description: |
+    Audit (2026-03): Several screens duplicate the same `bg-surface-alt` + rounded inner buttons pattern that
+    Library, SourceFilter, and SegmentedControl already implement. Replace inline implementations with
+    `SegmentedControl` from `@/components/shared` (or `SourceFilter` when options are exactly All / Realms / My)
+    so styling, focus rings, and min touch height stay consistent.
+    Candidate files: `src/app/(main)/codex/page.tsx` (Realms Codex vs My Codex),
+    `src/components/character-creator/steps/species-step.tsx`, `src/components/character-creator/MixedSpeciesModal.tsx`,
+    `src/components/shared/add-combatant-modal.tsx`, `src/app/(main)/encounters/[id]/mixed/page.tsx`,
+    `src/components/creator/CreatorSaveToolbar.tsx`. Evaluate `theme-toggle.tsx` separately (three-way system/light/dark
+    may need a variant or stay custom). Do not replace `TabNavigation` underline tabs for primary category navigation.
+  related_files:
+    - src/components/shared/segmented-control.tsx
+    - src/components/shared/filters/source-filter.tsx
+    - .cursor/rules/realms-unification.mdc
+    - src/docs/ai/AGENT_GUIDE.md
+  acceptance_criteria:
+    - Each candidate either uses SegmentedControl/SourceFilter or has a short code comment explaining why not
+    - `npm run build` passes
+    - Spot-check Codex mode toggle and at least one modal at ~360px width
+  notes: |
+    Done 2026-03-21: Extended SegmentedControl with optional icons, equalWidth, and aria-pressed on non-tab segments.
+    Migrated: codex/page.tsx, species-step.tsx, MixedSpeciesModal.tsx, add-combatant-modal.tsx,
+    encounters/[id]/mixed/page.tsx, CreatorSaveToolbar.tsx. theme-toggle inline variant documented as intentional
+    exception (icon-only + tint selected state). npm run build passes.
+
+- id: TASK-302
+  title: Creature creator inventory budget summary (current/max) + inventory type tabs
+  priority: high
+  status: done
+  created_at: 2026-03-21
+  created_by: agent
+  description: |
+    Update creature creator summary and inventory workflow so spendable resources display as current/max,
+    inventory spend reduces available currency, and the add-inventory modal supports equipment type tabs.
+    Rename Armaments to Inventory in the creature creator UI while preserving existing item behavior.
+  related_files:
+    - src/app/(main)/creature-creator/page.tsx
+    - src/app/(main)/creature-creator/transformers.ts
+    - src/components/creator/creator-summary-panel.tsx
+    - src/docs/ai/AI_CHANGELOG.md
+  acceptance_criteria:
+    - Creature Summary resource boxes show current/max for ability, skill, feat, training, and currency.
+    - Currency remaining is derived from base creature currency minus inventory item costs.
+    - Armaments section is renamed to Inventory, with matching labels and add/remove actions.
+    - Add Inventory modal includes tabs for All/Weapons/Armor/Shields/Equipment and filters list accordingly.
+    - Inventory section displays currency spent/remaining in addition to per-item cost rows.
+    - npm run build passes.
+  notes: |
+    In progress 2026-03-21.
+    Implemented in this session:
+    - Added Inventory type tabs in creature add-item modal using SegmentedControl and UnifiedSelectionModal displayFilter.
+    - Renamed Armaments section UI copy to Inventory and updated empty/add/remove labels.
+    - Added current/max resource display in Creature Summary for Ability, Skill, Feat, Training, and Currency.
+    - Added training/currency spend tracking from selected creature powers/techniques/inventory items.
+    - Added inventory currency summary card in Inventory section (remaining/max and spent).
+    - Expanded CreatorSummaryPanel resource box values to support formatted strings for current/max displays.
+    - Extended creature power source payload to include tp for training-spend accounting.
+    - Verification: npm run build passes.
+    Closed 2026-03-21: Marked done after acceptance spot-check in creature-creator (summary current/max, inventory tabs, currency spend); see branch commit.
+
+- id: TASK-303
+  title: Add empowered technique creator combining power + technique systems
+  priority: high
+  status: done
+  created_at: 2026-03-21
+  created_by: owner
+  description: |
+    Implement a dedicated empowered-technique creator that combines the power creator and
+    technique creator workflows using shared logic/components. The new creator should support
+    power mechanics (action type, range, area, duration, add damage, power parts/mechanics)
+    plus technique mechanics (technique parts and additional damage), with shared action type.
+    Add Weapon must use Add Weapon to Power (part id 369). Cost calculations should combine
+    power and technique costs with empowered-specific scaling behavior.
+  related_files:
+    - src/app/(main)/empowered-technique-creator/page.tsx
+    - src/app/(main)/empowered-technique-creator/layout.tsx
+    - src/lib/calculators/empowered-technique-calc.ts
+    - src/lib/calculators/index.ts
+    - src/app/(main)/power-creator/PowerPartCard.tsx
+    - src/lib/id-constants.ts
+    - src/lib/game/creator-constants.ts
+    - src/components/layout/header.tsx
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - src/docs/ai/AI_CHANGELOG.md
+  acceptance_criteria:
+    - New route exists for empowered technique creator and is reachable from Creators navigation.
+    - Creator includes power sections (action/range/area/duration/power damage/power parts/power mechanics) and technique sections (technique parts/additional damage).
+    - Shared action profile is used across both sides; Add Weapon uses Add Weapon to Power (id 369).
+    - Energy/TP totals use empowered calculation logic (combined power + technique with technique percentage scaling applied to power side).
+    - Save/load flow supports empowered technique docs.
+    - npm run build passes.
+  notes: |
+    Implemented locally 2026-03-21:
+    - Added new empowered-technique creator route with shared card/components and combined sections.
+    - Added empowered calculator and exports.
+    - Added PART_IDS.ADD_WEAPON_TO_POWER = 369 and creator cache key.
+    - Added Creators dropdown navigation link.
+    Update 2026-03-21:
+    - Added shared `WeaponSelector` component and reused it in technique and empowered technique creators.
+    - Power Creator now has an `Add Weapon to Power` section (shared weapon selector UI, power part id 369 scaling, save/load/cache support).
+    - Library now includes a dedicated `Empowered` tab in My Library and Realms Library (filtered from techniques payloads with empowered flags/data).
+    - Character Creator powers step `Add Powers` modal now has `Powers / Empowered Techniques` tabs and displays empowered selections in the powers list.
+    - Creature Creator `Add Power` modal now has `Powers / Empowered Techniques` tabs; empowered selections map into creature power entries and display in power lists.
+    Closed 2026-03-21: All acceptance criteria verified; build passes. Follow-up: sheet header hides duplicate martial ability when same as power ability (case-insensitive).
+
+- id: TASK-304
+  title: Supabase library columnar parity expansion (official + user)
+  priority: high
+  status: done
+  created_at: 2026-03-24
+  created_by: agent
+  description: |
+    Expand columnar coverage for library data while keeping official and user tables shape-compatible.
+    Add promoted columns for powers/techniques/items to both official_* and user_* tables, backfill from payload,
+    and keep payload-to-column sync via DB triggers so existing API writes remain backward-compatible.
+  related_files:
+    - sql/supabase-library-columnar-parity-expansion.sql
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/docs/OFFICIAL_LIBRARY_COLUMNAR_PLAN.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - src/docs/ai/AI_CHANGELOG.md
+  acceptance_criteria:
+    - New migration adds matching promoted columns on official_* and user_* library tables for powers/techniques/items.
+    - Existing rows are backfilled from payload without data loss.
+    - Trigger-based sync keeps promoted columns populated on new/updated rows written through existing payload-heavy APIs.
+    - Supabase schema docs updated to reflect parity migration and run order.
+  notes: |
+    In progress 2026-03-24: planned parity-first migration (official + user) with DB-side trigger sync to avoid API breakage.
+    Done 2026-03-24:
+    - Added sql/supabase-library-columnar-parity-expansion.sql.
+    - Added promoted columns for powers/techniques/items on official_* and user_* tables.
+    - Added trigger function sync_library_promoted_columns + per-table triggers for payload->column sync.
+    - Added trigger-driven backfill updates for existing rows.
+    - Updated SUPABASE_SCHEMA.md and OFFICIAL_LIBRARY_COLUMNAR_PLAN.md with parity migration details.
+    - App mapping follow-up 2026-03-24: updated shared `library-columnar.ts` and `api/official/[type]` to explicitly write/read promoted power/technique/item columns (column-first reads with payload fallback; official route now uses shared mapper like public/user routes).
+    - Power creator: added `tpRaw` to `PowerCostResult` / `calculatePowerCosts` and advanced calc rows (matches prior UI expectation; `npm run build` passes).

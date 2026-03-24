@@ -7,7 +7,7 @@
 
 const API_BASE = '/api/user/library';
 
-export type LibraryType = 'powers' | 'techniques' | 'items' | 'creatures' | 'species';
+export type LibraryType = 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species';
 
 export async function saveToLibrary(
   type: LibraryType,
@@ -53,7 +53,7 @@ export async function findLibraryItemByName(
 
 /** Fetch official library items (no auth). Uses columnar official_* tables. */
 export async function fetchOfficialLibrary(
-  type: 'powers' | 'techniques' | 'items' | 'creatures'
+  type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures'
 ): Promise<Array<Record<string, unknown>>> {
   const res = await fetch(`/api/official/${type}`, { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch official library');
@@ -65,7 +65,7 @@ export const fetchPublicLibrary = fetchOfficialLibrary;
 
 /** Find an official library item by name (for replace-by-name when publishing). */
 export async function findOfficialLibraryItemByName(
-  type: 'powers' | 'techniques' | 'items' | 'creatures',
+  type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures',
   name: string
 ): Promise<{ id: string } | null> {
   const items = await fetchOfficialLibrary(type);
@@ -81,7 +81,7 @@ export const findPublicLibraryItemByName = findOfficialLibraryItemByName;
 
 /** Copy an official library item to the user's library. Strips _source etc. */
 export async function addOfficialItemToLibrary(
-  type: 'powers' | 'techniques' | 'items' | 'creatures',
+  type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures',
   officialItem: Record<string, unknown>
 ): Promise<string> {
   const { id: _id, docId: _docId, _source, ...data } = officialItem;
@@ -93,7 +93,7 @@ export const addPublicItemToLibrary = addOfficialItemToLibrary;
 
 /** Save to official library (admin only). Uses columnar official_* tables. */
 export async function saveToOfficialLibrary(
-  type: 'powers' | 'techniques' | 'items' | 'creatures',
+  type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures',
   data: Record<string, unknown>,
   options?: { existingId?: string }
 ): Promise<string> {

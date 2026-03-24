@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils/cn';
 import { GridListRow } from './grid-list-row';
-import type { ColumnValue } from '@/components/shared/grid-list-row';
+import type { ChipData, ColumnValue } from '@/components/shared/grid-list-row';
 import {
   PowersListSection,
   TechniquesListSection,
@@ -17,12 +17,14 @@ import {
 } from './entity-library-sections';
 import { SectionHeader } from './section-header';
 import { ListHeader, type ListColumn } from './list-header';
-import { QuickArmorTable, QuickShieldsTable, QuickWeaponsTable } from './quick-armaments-sections';
 import { RollButton } from './roll-button';
 import { useRollsOptional } from '@/components/character-sheet/roll-context';
-import { useCodexSkills } from '@/hooks';
-import { calculateSkillBonusWithProficiency } from '@/lib/game/formulas';
-import { formatDamageDisplay, normalizeRangeDisplay } from '@/lib/utils';
+import { useCodexSkills, usePowerParts, useTechniqueParts, useItemProperties } from '@/hooks';
+import {
+  calculateSkillBonusWithProficiency,
+  calculateSubSkillBonusWithProficiency,
+} from '@/lib/game/formulas';
+import { formatDamageDisplay, formatListCellLabel, normalizeRangeDisplay } from '@/lib/utils';
 import { ChevronDown } from 'lucide-react';
 
 // =============================================================================
@@ -78,8 +80,28 @@ export interface CreatureData {
   movementTypes?: string[];
   languages?: string[];
   skills?: Array<{ id?: string; name: string; value: number; proficient?: boolean; baseSkillId?: string; isSubSkill?: boolean }> | Record<string, number>;
-  powers?: Array<{ name: string; description?: string; energy?: number; action?: string; area?: string; duration?: string; damage?: string; innate?: boolean }>;
-  techniques?: Array<{ name: string; description?: string }>;
+  powers?: Array<{
+    name: string;
+    description?: string;
+    energy?: number;
+    action?: string;
+    area?: string;
+    duration?: string;
+    damage?: string;
+    range?: string;
+    innate?: boolean;
+    parts?: Array<string | { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }>;
+  }>;
+  techniques?: Array<{
+    name: string;
+    description?: string;
+    energy?: number;
+    action?: string;
+    weapon?: string;
+    tp?: number;
+    damage?: string;
+    parts?: Array<string | { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }>;
+  }>;
   feats?: Array<{ name: string; description?: string }>;
   armaments?: Array<{
     name: string;
@@ -90,6 +112,7 @@ export interface CreatureData {
     armorValue?: number;
     damageReduction?: number;
     properties?: Array<{ id?: number; name?: string; op_1_lvl?: number }>;
+    libraryItem?: { properties?: Array<{ id?: number; name?: string; op_1_lvl?: number }> };
   }>;
 }
 
@@ -197,6 +220,98 @@ function splitDamageDiceAndType(damage: unknown): { dice: string; type: string; 
   return { dice: formatted ? String(formatted) : '-', type: '', rollStr: formatted ? String(formatted) : '-' };
 }
 
+type CodexPart = {
+  id: string | number;
+  name?: string;
+  description?: string;
+  base_tp?: number;
+  op_1_tp?: number;
+  op_2_tp?: number;
+  op_3_tp?: number;
+  op_1_desc?: string;
+  op_2_desc?: string;
+  op_3_desc?: string;
+};
+
+type CodexProperty = {
+  id: string | number;
+  name?: string;
+  description?: string;
+  base_tp?: number;
+  tp_cost?: number;
+};
+
+function getWeaponAttackBonus(
+  weapon: { properties?: Array<{ name?: string }> | Array<string>; range?: string },
+  abilities: CreatureAbilities,
+  martialProficiency = 0
+): number {
+  const props = (weapon.properties || []).map((p) => (typeof p === 'string' ? p : p?.name || '')).filter(Boolean);
+  if (props.some((p) => p.toLowerCase() === 'finesse')) return getAbilityValue(abilities, 'agility') + martialProficiency;
+  const range = String(weapon.range ?? '').toLowerCase();
+  if (range && range !== 'melee') return getAbilityValue(abilities, 'acuity') + martialProficiency;
+  return getAbilityValue(abilities, 'strength') + martialProficiency;
+}
+
+function partsToChips(parts: Array<string | { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }> | undefined, codexParts: CodexPart[]): ChipData[] {
+  if (!parts || parts.length === 0) return [];
+  return parts.map((part) => {
+    const partName = typeof part === 'string' ? part : part.name || String(part.id ?? 'Part');
+    const codexPart = codexParts.find((p) =>
+      (typeof part === 'object' && part.id != null && String(p.id) === String(part.id)) ||
+      String(p.name ?? '').toLowerCase() === String(partName).toLowerCase()
+    );
+    const opt1 = typeof part === 'object' ? Number(part.op_1_lvl ?? 0) : 0;
+    const opt2 = typeof part === 'object' ? Number(part.op_2_lvl ?? 0) : 0;
+    const opt3 = typeof part === 'object' ? Number(part.op_3_lvl ?? 0) : 0;
+    const tp = (codexPart?.base_tp ?? 0) + (codexPart?.op_1_tp ?? 0) * opt1 + (codexPart?.op_2_tp ?? 0) * opt2 + (codexPart?.op_3_tp ?? 0) * opt3;
+    const options: Array<{ label: string; description?: string; level: number }> = [];
+    if (opt1 > 0) options.push({ label: 'Option 1', description: codexPart?.op_1_desc, level: opt1 });
+    if (opt2 > 0) options.push({ label: 'Option 2', description: codexPart?.op_2_desc, level: opt2 });
+    if (opt3 > 0) options.push({ label: 'Option 3', description: codexPart?.op_3_desc, level: opt3 });
+    return {
+      name: codexPart?.name || partName,
+      description: codexPart?.description,
+      cost: tp > 0 ? tp : undefined,
+      costLabel: 'TP',
+      category: tp > 0 ? ('cost' as const) : ('default' as const),
+      options: options.length > 0 ? options : undefined,
+    };
+  });
+}
+
+function resolveArmamentProperties(
+  item: { properties?: Array<{ id?: number; name?: string; op_1_lvl?: number }>; libraryItem?: { properties?: Array<{ id?: number; name?: string; op_1_lvl?: number }> } }
+): Array<{ id?: number; name?: string; op_1_lvl?: number }> {
+  const fromLib = item.libraryItem?.properties;
+  if (fromLib && fromLib.length > 0) return fromLib;
+  return item.properties || [];
+}
+
+function propertiesToChips(
+  properties: Array<{ id?: number; name?: string; op_1_lvl?: number }> | undefined,
+  codexProperties: CodexProperty[]
+): ChipData[] {
+  if (!properties || properties.length === 0) return [];
+  return properties.map((p) => {
+    const codexProp = codexProperties.find((cp) =>
+      (p.id != null && String(cp.id) === String(p.id)) ||
+      String(cp.name ?? '').toLowerCase() === String(p.name ?? '').toLowerCase()
+    );
+    const level = Number(p.op_1_lvl ?? 1);
+    const baseTp = codexProp?.base_tp ?? codexProp?.tp_cost ?? 0;
+    const tp = baseTp * level;
+    return {
+      name: codexProp?.name || p.name || 'Property',
+      description: codexProp?.description,
+      cost: tp > 0 ? tp : undefined,
+      costLabel: 'TP',
+      category: tp > 0 ? ('cost' as const) : ('default' as const),
+      level: level > 1 ? level : undefined,
+    };
+  });
+}
+
 interface StatBlockSectionProps {
   title: string;
   defaultExpanded?: boolean;
@@ -243,10 +358,13 @@ export function CreatureStatBlock({
 }: CreatureStatBlockProps) {
   const rollContext = useRollsOptional();
   const { data: skillsDb = [] } = useCodexSkills();
+  const { data: powerPartsDb = [] } = usePowerParts();
+  const { data: techniquePartsDb = [] } = useTechniqueParts();
+  const { data: itemPropertiesDb = [] } = useItemProperties();
   const hp = creature.hitPoints ?? creature.hp ?? 0;
   const ep = creature.energyPoints ?? 0;
   const archetype = formatArchetype(creature.powerProficiency, creature.martialProficiency);
-  const subline = `Level ${creature.level ?? 1} ${creature.size ? `${String(creature.size).charAt(0).toUpperCase()}${String(creature.size).slice(1)}` : 'Medium'} ${creature.type ?? 'Creature'}`;
+  const subline = `Level ${creature.level ?? 1} ${creature.size ? formatListCellLabel(creature.size) : 'Medium'} ${formatListCellLabel(creature.type ?? 'creature')}`;
 
   const highestAbility = useMemo(() => {
     const abilities = creature.abilities ?? {};
@@ -328,11 +446,11 @@ export function CreatureStatBlock({
 
   const headerColumns: ColumnValue[] = [
     { key: 'level', value: creature.level ?? 1, align: 'center' },
-    { key: 'size', value: creature.size ?? '-', align: 'center' },
-    { key: 'type', value: creature.type ?? '-', align: 'center' },
+    { key: 'size', value: formatListCellLabel(creature.size), align: 'center' },
+    { key: 'type', value: formatListCellLabel(creature.type), align: 'center' },
     {
       key: 'archetype',
-      value: archetype,
+      value: formatListCellLabel(archetype),
       align: 'center',
       className:
         archetype === 'Power'
@@ -346,6 +464,75 @@ export function CreatureStatBlock({
     { key: 'hp', value: hp, align: 'center', highlight: true },
     { key: 'en', value: ep, align: 'center' },
   ];
+
+  const skillRows = useMemo(() => {
+    return creatureSkills.map((s, idx) => {
+      const def = skillsDb.find(
+        (d) =>
+          (s.id != null && String(d.id) === String(s.id)) ||
+          (d.name != null && d.name.toLowerCase() === s.name.toLowerCase())
+      );
+      const linked = def?.ability ?? '';
+      const abilityKeys = String(linked)
+        .split(',')
+        .map((a) => a.trim().toLowerCase())
+        .filter(Boolean) as Array<(typeof REALMS_ABILITY_ORDER)[number]>;
+      const chosen =
+        abilityKeys.length > 0
+          ? abilityKeys
+              .map((k) => ({ k, v: getAbilityValue(creature.abilities ?? {}, k) }))
+              .sort((a, b) => b.v - a.v)[0]?.k
+          : undefined;
+
+      const baseSkillIdFromRow =
+        'baseSkillId' in s && s.baseSkillId != null && String(s.baseSkillId) !== '' ? s.baseSkillId : undefined;
+      const baseSkillIdRaw =
+        baseSkillIdFromRow ??
+        (def?.base_skill_id != null && Number(def.base_skill_id) !== 0 ? def.base_skill_id : undefined);
+      const isSubSkill =
+        ('isSubSkill' in s && s.isSubSkill === true) ||
+        (baseSkillIdRaw != null && String(baseSkillIdRaw) !== '' && Number(baseSkillIdRaw) !== 0);
+
+      let parent: (typeof creatureSkills)[number] | undefined;
+      if (isSubSkill && baseSkillIdRaw != null) {
+        const baseDef = skillsDb.find((d) => String(d.id) === String(baseSkillIdRaw));
+        parent = baseDef
+          ? creatureSkills.find(
+              (p) =>
+                (p.id != null && String(p.id) === String(baseDef.id)) ||
+                String(p.name ?? '').toLowerCase() === String(baseDef.name ?? '').toLowerCase()
+            )
+          : undefined;
+      }
+
+      const bonus = isSubSkill
+        ? calculateSubSkillBonusWithProficiency(
+            linked,
+            s.value ?? 0,
+            parent?.value ?? 0,
+            parent ? parent.proficient !== false : false,
+            creature.abilities as any,
+            s.proficient !== false,
+            chosen
+          )
+        : calculateSkillBonusWithProficiency(
+            linked,
+            s.value ?? 0,
+            creature.abilities as any,
+            s.proficient !== false,
+            chosen
+          );
+
+      return {
+        key: `${creature.id}-skill-${s.name}-${idx}`,
+        rowId: `${creature.id}-skill-${idx}`,
+        name: s.name,
+        description: def?.description || undefined,
+        abilityAbbr: chosen ? REALMS_ABILITY_ABBR[chosen] : '—',
+        bonus,
+      };
+    });
+  }, [creatureSkills, skillsDb, creature.id, creature.abilities]);
 
   return (
     <GridListRow
@@ -521,67 +708,56 @@ export function CreatureStatBlock({
 
               {hasSkills && (
                 <StatBlockSection title="Skills" defaultExpanded>
-                  <ListHeader
-                    columns={[
-                      { key: 'name', label: 'Name', width: '1.2fr' },
-                      { key: 'ability', label: 'Ability', width: '0.7fr', align: 'center' },
-                      { key: 'bonus', label: 'Bonus', width: '0.7fr', align: 'center' },
-                    ]}
-                    gridColumns="1.2fr 0.7fr 0.7fr"
-                  />
-                  <div className="space-y-1 mt-2">
-                    {creatureSkills.map((s, idx) => {
-                      const def = skillsDb.find((d) =>
-                        (s.id != null && String(d.id) === String(s.id)) ||
-                        (d.name != null && d.name.toLowerCase() === s.name.toLowerCase())
-                      );
-                      const linked = def?.ability ?? '';
-                      // Choose highest ability for multi-ability skills (formula helper already does this)
-                      const bonus = calculateSkillBonusWithProficiency(linked, s.value ?? 0, creature.abilities as any, s.proficient !== false);
-                      // Derive the chosen ability (for display) — pick highest among linked ability keys
-                      const abilityKeys = String(linked)
-                        .split(',')
-                        .map((a) => a.trim().toLowerCase())
-                        .filter(Boolean) as Array<(typeof REALMS_ABILITY_ORDER)[number]>;
-                      const chosen =
-                        abilityKeys.length > 0
-                          ? abilityKeys
-                              .map((k) => ({ k, v: getAbilityValue(creature.abilities ?? {}, k) }))
-                              .sort((a, b) => b.v - a.v)[0]?.k
-                          : undefined;
-                      const abilityAbbr = chosen ? REALMS_ABILITY_ABBR[chosen] : '—';
-                      const skillDescription = def?.description || undefined;
-                      return (
-                        <GridListRow
-                          key={`${creature.id}-skill-${s.name}-${idx}`}
-                          id={`${creature.id}-skill-${idx}`}
-                          name={s.name}
-                          description={skillDescription}
-                          gridColumns="1.2fr 0.7fr 0.7fr"
-                          columns={[
-                            { key: 'ability', value: abilityAbbr, align: 'center' },
-                            {
-                              key: 'bonus',
-                              value:
-                                rollContext?.canRoll !== false && rollContext ? (
-                                  <div className="flex justify-center">
-                                    <RollButton
-                                      value={bonus}
-                                      onClick={() => rollContext.rollSkill(`${creature.name}: ${s.name}`, bonus, abilityAbbr)}
-                                      size="sm"
-                                      title={`Roll ${s.name}`}
-                                    />
-                                  </div>
-                                ) : (
-                                  formatModifier(bonus)
-                                ),
-                              align: 'center',
-                            },
-                          ]}
-                          compact
-                        />
-                      );
-                    })}
+                  <div className="mt-2 grid grid-cols-1 gap-3 xl:grid-cols-2">
+                    {[skillRows.slice(0, Math.ceil(skillRows.length / 2)), skillRows.slice(Math.ceil(skillRows.length / 2))].map(
+                      (columnRows, columnIndex) =>
+                        columnRows.length > 0 ? (
+                          <div key={`${creature.id}-skills-col-${columnIndex}`}>
+                            <ListHeader
+                              columns={[
+                                { key: 'name', label: 'Name', width: '1.2fr' },
+                                { key: 'ability', label: 'Ability', width: '0.7fr', align: 'center' },
+                                { key: 'bonus', label: 'Bonus', width: '0.7fr', align: 'center' },
+                              ]}
+                              gridColumns="1.2fr 0.7fr 0.7fr"
+                            />
+                            <div className="mt-2 space-y-1">
+                              {columnRows.map((row) => (
+                                <GridListRow
+                                  key={row.key}
+                                  id={row.rowId}
+                                  name={row.name}
+                                  description={row.description}
+                                  gridColumns="1.2fr 0.7fr 0.7fr"
+                                  columns={[
+                                    { key: 'ability', value: row.abilityAbbr, align: 'center' },
+                                    {
+                                      key: 'bonus',
+                                      value:
+                                        rollContext?.canRoll !== false && rollContext ? (
+                                          <div className="flex justify-center">
+                                            <RollButton
+                                              value={row.bonus}
+                                              onClick={() =>
+                                                rollContext.rollSkill(`${creature.name}: ${row.name}`, row.bonus, row.abilityAbbr)
+                                              }
+                                              size="sm"
+                                              title={`Roll ${row.name}`}
+                                            />
+                                          </div>
+                                        ) : (
+                                          formatModifier(row.bonus)
+                                        ),
+                                      align: 'center',
+                                    },
+                                  ]}
+                                  compact
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        ) : null
+                    )}
                   </div>
                 </StatBlockSection>
               )}
@@ -589,9 +765,9 @@ export function CreatureStatBlock({
               {hasFeats && (
                 <StatBlockSection title="Creature Feats" defaultExpanded>
                   <FeatsTraitsListSection
-                    title="Creature Feats"
                     showListHeader
                     compactRows
+                    showTitle={false}
                     items={(creature.feats ?? []).map(
                       (f, idx): EntityFeatRow => ({
                         id: `${creature.id}-feat-${idx}`,
@@ -609,13 +785,20 @@ export function CreatureStatBlock({
               {hasWeapons && (
                 <StatBlockSection title="Weapons" defaultExpanded>
                   <WeaponsListSection
-                    title="Weapons"
+                    showTitle={false}
+                    rollTitlePrefix={creature.name}
                     items={weapons.map((w, idx) => ({
                       id: `${creature.id}-w-${idx}`,
                       name: w.name,
                       description: w.description,
                       damage: w.damage,
                       range: normalizeRangeDisplay(w.range) || 'Melee',
+                      attackBonus: getWeaponAttackBonus(
+                        { properties: resolveArmamentProperties(w), range: normalizeRangeDisplay(w.range) || 'Melee' },
+                        creature.abilities ?? {},
+                        creature.martialProficiency ?? 0
+                      ),
+                      chips: propertiesToChips(resolveArmamentProperties(w), itemPropertiesDb as unknown as CodexProperty[]),
                     }))}
                     showListHeader
                     compactRows
@@ -626,13 +809,14 @@ export function CreatureStatBlock({
               {hasShields && (
                 <StatBlockSection title="Shields" defaultExpanded>
                   <ShieldsListSection
-                    title="Shields"
+                    showTitle={false}
                     items={shields.map((s, idx) => ({
                       id: `${creature.id}-s-${idx}`,
                       name: s.name,
                       description: s.description,
                       damage: s.damage,
                       properties: s.properties,
+                      chips: propertiesToChips(resolveArmamentProperties(s), itemPropertiesDb as unknown as CodexProperty[]),
                     }))}
                     showListHeader
                     compactRows
@@ -643,13 +827,14 @@ export function CreatureStatBlock({
               {hasArmor && (
                 <StatBlockSection title="Armor" defaultExpanded>
                   <ArmorListSection
-                    title="Armor"
+                    showTitle={false}
                     items={armor.map((a, idx) => ({
                       id: `${creature.id}-a-${idx}`,
                       name: a.name,
                       description: a.description,
                       damageReduction: a.damageReduction,
                       armorValue: a.armorValue,
+                      chips: propertiesToChips(resolveArmamentProperties(a), itemPropertiesDb as unknown as CodexProperty[]),
                     }))}
                     showListHeader
                     compactRows
@@ -661,17 +846,27 @@ export function CreatureStatBlock({
                 <StatBlockSection title="Powers" defaultExpanded>
                   <PowersListSection
                     items={(creature.powers ?? []).map(
-                      (p, idx): EntityPowerRow => ({
-                        id: `${creature.id}-power-${idx}`,
-                        name: p.name,
-                        description: p.description,
-                        actionType: p.action,
-                        damage: p.damage,
-                        area: p.area,
-                        duration: p.duration,
-                        energyCost: p.energy,
-                        innate: p.innate,
-                      })
+                      (p, idx): EntityPowerRow => {
+                        const partsChips = partsToChips(p.parts, powerPartsDb as unknown as CodexPart[]);
+                        return {
+                          id: `${creature.id}-power-${idx}`,
+                          name: p.name,
+                          description: p.description,
+                          actionType: p.action,
+                          damage: p.damage,
+                          area: p.area,
+                          duration: p.duration,
+                          energyCost: p.energy,
+                          innate: p.innate,
+                          partsChips,
+                          totalTp: partsChips.reduce((sum, chip) => sum + (chip.cost ?? 0), 0),
+                          requirements: p.range ? (
+                            <div className="text-sm text-text-secondary">
+                              <span className="font-medium">Range:</span> {normalizeRangeDisplay(p.range)}
+                            </div>
+                          ) : undefined,
+                        };
+                      }
                     )}
                     showListHeader
                     compactRows
@@ -685,11 +880,19 @@ export function CreatureStatBlock({
                 <StatBlockSection title="Techniques" defaultExpanded>
                   <TechniquesListSection
                     items={(creature.techniques ?? []).map(
-                      (t, idx): EntityTechniqueRow => ({
-                        id: `${creature.id}-tech-${idx}`,
-                        name: t.name,
-                        description: t.description,
-                      })
+                      (t, idx): EntityTechniqueRow => {
+                        const partsChips = partsToChips(t.parts, techniquePartsDb as unknown as CodexPart[]);
+                        return {
+                          id: `${creature.id}-tech-${idx}`,
+                          name: t.name,
+                          description: t.description,
+                          energyCost: t.energy,
+                          weaponName: t.weapon,
+                          tp: t.tp,
+                          partsChips,
+                          totalTp: partsChips.reduce((sum, chip) => sum + (chip.cost ?? 0), 0),
+                        };
+                      }
                     )}
                     showListHeader
                     compactRows
@@ -717,7 +920,7 @@ export function CreatureStatBlock({
                         description={e.description}
                         gridColumns="1fr 0.6fr 4rem"
                         columns={[
-                          { key: 'type', value: e.type ? e.type.charAt(0).toUpperCase() + e.type.slice(1) : '-', align: 'center' },
+                          { key: 'type', value: formatListCellLabel(e.type), align: 'center' },
                           { key: 'quantity', value: (e as { quantity?: number }).quantity ?? 1, align: 'center' },
                         ]}
                         compact

@@ -9,6 +9,7 @@
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Chip, Button, Alert, Spinner } from '@/components/ui';
+import { SegmentedControl } from '@/components/shared';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useMergedSpecies, useUserSpecies, useTraits, type Species } from '@/hooks';
 import { SpeciesModal } from '../species-modal';
@@ -80,21 +81,17 @@ export function SpeciesStep() {
 
       <div className="flex flex-wrap items-center gap-4 mb-4">
         <span className="text-sm font-medium text-text-secondary">Source:</span>
-        <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-alt">
-          {(['all', 'public', 'my'] as const).map((opt) => (
-            <button
-              key={opt}
-              type="button"
-              onClick={() => setSource(opt)}
-              className={cn(
-                'px-2 py-1 rounded text-sm font-medium transition-colors',
-                source === opt ? 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white' : 'text-text-muted dark:text-text-secondary hover:text-text-primary dark:hover:text-text-primary'
-              )}
-            >
-              {opt === 'all' ? 'All sources' : opt === 'public' ? 'Public species' : 'My species'}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          value={source}
+          onChange={setSource}
+          options={[
+            { value: 'all', label: 'All sources' },
+            { value: 'public', label: 'Public species' },
+            { value: 'my', label: 'My species' },
+          ]}
+          aria-label="Species list source"
+          className="flex-1 min-w-0 sm:flex-initial"
+        />
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">

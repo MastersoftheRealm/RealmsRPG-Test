@@ -18,6 +18,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Copy, X, Plus } from 'lucide-react';
 import { IconButton } from '@/components/ui';
+import { formatListCellLabel } from '@/lib/utils';
 
 const COPY_NAME_SUFFIX = ' copy';
 
@@ -314,9 +315,7 @@ export function AdminPropertiesTab() {
             />
           ) : (
             filteredProperties.map((p: ItemProperty) => {
-              const typeLabel = p.type
-                ? p.type.charAt(0).toUpperCase() + p.type.slice(1).toLowerCase()
-                : 'Armor';
+              const typeLabel = formatListCellLabel(p.type || 'general');
 
               const optionChips =
                 p.op_1_desc && p.op_1_desc.length > 0

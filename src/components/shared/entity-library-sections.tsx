@@ -1,17 +1,18 @@
 'use client';
 
 import { useMemo } from 'react';
-import { GridListRow, type ColumnValue } from '@/components/shared/grid-list-row';
+import { GridListRow, type ColumnValue, type ChipData } from '@/components/shared/grid-list-row';
 import { ListHeader, type ListColumn } from '@/components/shared/list-header';
 import { SectionHeader } from '@/components/shared/section-header';
 import { QuantitySelector } from '@/components/shared/quantity-selector';
+import { RollButton } from '@/components/shared/roll-button';
 import { deriveShieldAmountFromProperties } from '@/lib/calculators/item-calc';
+import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
+import { useRollsOptional } from '@/components/character-sheet/roll-context';
 
 // =============================================================================
 // Shared display-only list sections (character sheet + creatures + elsewhere)
 // =============================================================================
-
-const BLANK_LEFT: ListColumn = { key: '_left', label: '', width: '2rem', sortable: false };
 
 // Powers (character sheet-like; creature stat block can include Energy)
 const POWER_COLUMNS: ListColumn[] = [
@@ -97,6 +98,21 @@ function formatRecoveryAbbrev(recovery: string | undefined): string {
   return '-';
 }
 
+function splitDamageDiceAndType(damage: unknown): { dice: string; type: string; rollStr: string } {
+  if (!damage) return { dice: '-', type: '', rollStr: '-' };
+  if (typeof damage === 'string') {
+    const str = damage.trim();
+    const match = str.match(/^([\dd+\-\s]+)(?:\s+(.+))?$/);
+    if (!match) return { dice: str, type: '', rollStr: str };
+    return { dice: match[1].trim(), type: (match[2] ?? '').trim(), rollStr: str };
+  }
+  const formatted = formatDamageDisplay(damage as never);
+  const str = formatted ? String(formatted) : '-';
+  const match = str.match(/^([\dd+\-\s]+)(?:\s+(.+))?$/);
+  if (!match) return { dice: str, type: '', rollStr: str };
+  return { dice: match[1].trim(), type: (match[2] ?? '').trim(), rollStr: str };
+}
+
 export type EntityPowerRow = {
   id?: string | number;
   name: string;
@@ -107,6 +123,9 @@ export type EntityPowerRow = {
   duration?: string;
   energyCost?: number;
   innate?: boolean;
+  partsChips?: ChipData[];
+  totalTp?: number;
+  requirements?: React.ReactNode;
 };
 
 export function PowersListSection({
@@ -171,6 +190,11 @@ export function PowersListSection({
                     </div>
                   </div>
                 }
+                chips={power.partsChips}
+                chipsLabel={power.partsChips?.length ? 'Parts & Proficiencies' : undefined}
+                totalCost={power.totalTp && power.totalTp > 0 ? power.totalTp : undefined}
+                costLabel={power.totalTp && power.totalTp > 0 ? 'TP' : undefined}
+                requirements={power.requirements}
                 innate={power.innate === true}
                 compact={compactRows}
               />
@@ -191,6 +215,8 @@ export type EntityTechniqueRow = {
   energyCost?: number;
   weaponName?: string;
   tp?: number | string;
+  partsChips?: ChipData[];
+  totalTp?: number;
 };
 
 export function TechniquesListSection({
@@ -236,6 +262,10 @@ export function TechniquesListSection({
                     <div className="text-sm text-text-muted dark:text-text-secondary italic">No description.</div>
                   )
                 }
+                chips={tech.partsChips}
+                chipsLabel={tech.partsChips?.length ? 'Parts & Proficiencies' : undefined}
+                totalCost={tech.totalTp && tech.totalTp > 0 ? tech.totalTp : undefined}
+                costLabel={tech.totalTp && tech.totalTp > 0 ? 'TP' : undefined}
                 compact={compactRows}
               />
             );
@@ -254,6 +284,8 @@ export type EntityWeaponRow = {
   description?: string;
   damage?: string;
   range?: string;
+  attackBonus?: number;
+  chips?: ChipData[];
 };
 
 export function WeaponsListSection({
@@ -261,34 +293,78 @@ export function WeaponsListSection({
   items,
   showListHeader = true,
   compactRows = true,
+  showTitle = true,
+  rollTitlePrefix,
 }: {
   title?: string;
   items: EntityWeaponRow[];
   showListHeader?: boolean;
   compactRows?: boolean;
+  showTitle?: boolean;
+  rollTitlePrefix?: string;
 }) {
+  const rollContext = useRollsOptional();
   const hasAny = items.length > 0;
   return (
     <div>
-      <SectionHeader title={title} size="sm" />
+      {showTitle && <SectionHeader title={title} size="sm" />}
       {showListHeader && hasAny && <ListHeader columns={WEAPON_COLUMNS} gridColumns={WEAPON_GRID} />}
       {hasAny ? (
         <div className="space-y-1">
-          {items.map((w, idx) => (
-            <GridListRow
-              key={String(w.id ?? `${w.name}-${idx}`)}
-              id={String(w.id ?? idx)}
-              name={w.name}
-              description={w.description}
-              columns={[
-                { key: 'damage', value: w.damage ?? '-', align: 'center' },
-                { key: 'range', value: w.range ?? 'Melee', align: 'center' },
-              ]}
-              gridColumns={WEAPON_GRID}
-              leftSlot={<div className="min-h-[44px]" />}
-              compact={compactRows}
-            />
-          ))}
+          {items.map((w, idx) => {
+            const attack = typeof w.attackBonus === 'number' ? w.attackBonus : 0;
+            const { dice, rollStr } = splitDamageDiceAndType(w.damage);
+            const rightSlot =
+              rollContext?.canRoll !== false && rollContext ? (
+                <div className="flex items-center gap-1">
+                  <RollButton
+                    value={attack}
+                    onClick={() =>
+                      rollContext.rollAttack(
+                        rollTitlePrefix ? `${rollTitlePrefix}: ${w.name}` : w.name,
+                        attack
+                      )
+                    }
+                    size="sm"
+                    title={`Roll attack with ${w.name}`}
+                  />
+                  {rollStr !== '-' && (
+                    <RollButton
+                      value={0}
+                      displayValue={dice}
+                      variant="danger"
+                      onClick={() =>
+                        rollContext.rollDamage(
+                          rollStr,
+                          attack,
+                          rollTitlePrefix ? `${rollTitlePrefix}: ${w.name} damage` : `${w.name} damage`
+                        )
+                      }
+                      size="sm"
+                      title={`Roll ${rollStr} damage`}
+                    />
+                  )}
+                </div>
+              ) : null;
+
+            return (
+              <GridListRow
+                key={String(w.id ?? `${w.name}-${idx}`)}
+                id={String(w.id ?? idx)}
+                name={w.name}
+                description={w.description}
+                columns={[
+                  { key: 'damage', value: w.damage ?? '-', align: 'center' },
+                  { key: 'range', value: w.range ?? 'Melee', align: 'center' },
+                ]}
+                gridColumns={WEAPON_GRID}
+                chips={w.chips}
+                chipsLabel={w.chips?.length ? 'Properties & Proficiencies' : undefined}
+                rightSlot={rightSlot}
+                compact={compactRows}
+              />
+            );
+          })}
         </div>
       ) : (
         <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">No weapons</p>
@@ -303,6 +379,7 @@ export type EntityShieldRow = {
   description?: string;
   damage?: string;
   properties?: Array<{ id?: number; name?: string; op_1_lvl?: number }>;
+  chips?: ChipData[];
 };
 
 export function ShieldsListSection({
@@ -310,16 +387,18 @@ export function ShieldsListSection({
   items,
   showListHeader = true,
   compactRows = true,
+  showTitle = true,
 }: {
   title?: string;
   items: EntityShieldRow[];
   showListHeader?: boolean;
   compactRows?: boolean;
+  showTitle?: boolean;
 }) {
   const hasAny = items.length > 0;
   return (
     <div>
-      <SectionHeader title={title} size="sm" />
+      {showTitle && <SectionHeader title={title} size="sm" />}
       {showListHeader && hasAny && <ListHeader columns={SHIELD_COLUMNS} gridColumns={SHIELD_GRID} />}
       {hasAny ? (
         <div className="space-y-1">
@@ -338,7 +417,8 @@ export function ShieldsListSection({
                 description={s.description}
                 columns={columns}
                 gridColumns={SHIELD_GRID}
-                leftSlot={<div className="min-h-[44px]" />}
+                chips={s.chips}
+                chipsLabel={s.chips?.length ? 'Properties & Proficiencies' : undefined}
                 compact={compactRows}
               />
             );
@@ -357,6 +437,7 @@ export type EntityArmorRow = {
   description?: string;
   damageReduction?: number;
   armorValue?: number;
+  chips?: ChipData[];
 };
 
 export function ArmorListSection({
@@ -364,16 +445,18 @@ export function ArmorListSection({
   items,
   showListHeader = true,
   compactRows = true,
+  showTitle = true,
 }: {
   title?: string;
   items: EntityArmorRow[];
   showListHeader?: boolean;
   compactRows?: boolean;
+  showTitle?: boolean;
 }) {
   const hasAny = items.length > 0;
   return (
     <div>
-      <SectionHeader title={title} size="sm" />
+      {showTitle && <SectionHeader title={title} size="sm" />}
       {showListHeader && hasAny && <ListHeader columns={ARMOR_COLUMNS} gridColumns={ARMOR_GRID} />}
       {hasAny ? (
         <div className="space-y-1">
@@ -388,7 +471,8 @@ export function ArmorListSection({
                 { key: 'crit', value: '-', align: 'center' },
               ]}
               gridColumns={ARMOR_GRID}
-              leftSlot={<div className="min-h-[44px]" />}
+              chips={a.chips}
+              chipsLabel={a.chips?.length ? 'Properties & Proficiencies' : undefined}
               compact={compactRows}
             />
           ))}
@@ -427,7 +511,7 @@ export function EquipmentListSection({
       {hasAny ? (
         <div className="space-y-1">
           {items.map((e, idx) => {
-            const itemType = e.type ? e.type.charAt(0).toUpperCase() + e.type.slice(1) : '-';
+            const itemType = formatListCellLabel(e.type);
             const qty = e.quantity ?? 1;
             const qtyCell = (
               <div className="flex items-center justify-center" onClick={(ev) => ev.stopPropagation()}>
@@ -472,11 +556,13 @@ export function FeatsTraitsListSection({
   items,
   showListHeader = true,
   compactRows = true,
+  showTitle = true,
 }: {
   title?: string;
   items: EntityFeatRow[];
   showListHeader?: boolean;
   compactRows?: boolean;
+  showTitle?: boolean;
 }) {
   const hasAny = items.length > 0;
 
@@ -485,7 +571,7 @@ export function FeatsTraitsListSection({
 
   return (
     <div>
-      <SectionHeader title={title} size="sm" />
+      {showTitle && <SectionHeader title={title} size="sm" />}
       {showListHeader && hasAny && <ListHeader columns={FEAT_COLUMNS} gridColumns={FEAT_GRID} />}
       {hasAny ? (
         <div className="space-y-1">

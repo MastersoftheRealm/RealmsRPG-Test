@@ -26,6 +26,7 @@ import {
   calculateCurrencyCostAndRarity,
   formatRange as formatItemRange,
 } from '@/lib/calculators/item-calc';
+import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { useUserItems, useItemProperties, useDuplicateItem } from '@/hooks';
 import { Button, useToast } from '@/components/ui';
 import type { DisplayItem } from '@/types';
@@ -41,54 +42,6 @@ const ARMAMENT_HEADER_COLUMNS = [
   { key: 'damage', label: 'DAMAGE', align: 'center' as const },
   { key: '_actions', label: '', sortable: false as const },
 ];
-
-function formatDamageValue(damage: unknown): string {
-  if (!damage) return '';
-
-  if (typeof damage === 'string') {
-    return damage;
-  }
-
-  if (Array.isArray(damage)) {
-    const formatted = damage.map(d => {
-      if (typeof d === 'string') return d;
-      if (typeof d === 'object' && d !== null) {
-        const entry = d as { size?: number | string; amount?: number | string; type?: string };
-        const parts: string[] = [];
-        if (entry.amount && entry.size) {
-          parts.push(`${entry.amount}d${entry.size}`);
-        } else if (entry.amount) {
-          parts.push(String(entry.amount));
-        }
-        if (entry.type && entry.type !== 'none') {
-          parts.push(String(entry.type));
-        }
-        return parts.join(' ');
-      }
-      return '';
-    }).filter(Boolean);
-    return formatted.join(', ') || '';
-  }
-
-  if (typeof damage === 'object' && damage !== null) {
-    const d = damage as { size?: number | string; amount?: number | string; type?: string };
-    const parts: string[] = [];
-
-    if (d.amount && d.size) {
-      parts.push(`${d.amount}d${d.size}`);
-    } else if (d.amount) {
-      parts.push(String(d.amount));
-    }
-
-    if (d.type && d.type !== 'none') {
-      parts.push(String(d.type));
-    }
-
-    return parts.join(' ');
-  }
-
-  return '';
-}
 
 interface LibraryItemsTabProps {
   onDelete: (item: DisplayItem) => void;
@@ -122,17 +75,16 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
         };
       });
       const totalTP = parts.reduce((sum, p) => sum + (p.cost || 0), 0);
-      const typeLabel = item.type === 'weapon' ? 'Weapon' : item.type === 'armor' ? 'Armor' : 'Equipment';
       return {
         id: String(item.docId ?? item.id ?? ''),
         name: String(item.name ?? ''),
         description: String(item.description ?? ''),
-        type: typeLabel,
-        rarity,
+        type: formatListCellLabel(item.type),
+        rarity: formatListCellLabel(rarity),
         currency: Math.round(currencyCost),
         tp: Math.round(totalTP),
         range: rangeStr || '-',
-        damage: formatDamageValue(item.damage) || '-',
+        damage: formatDamageDisplay(item.damage) || '-',
         parts,
       };
     });

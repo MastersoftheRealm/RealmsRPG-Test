@@ -26,11 +26,11 @@ import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Plus, Copy, X, Layers } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 import type { ChipData } from '@/components/shared/grid-list-row';
-import { buildFeatLevelChips, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
+import { buildFeatLevelChips, groupFeatFamilies, formatFeatName, getFeatFamilyId, getFeatLevel } from '@/lib/leveled-feats';
 
 const COPY_NAME_SUFFIX = ' copy';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
-import { formatAbilityList } from '@/lib/utils';
+import { formatAbilityList, formatListCellLabel } from '@/lib/utils';
 
 const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 0.8fr 1fr 40px';
 const ADMIN_FEAT_COLUMNS = [
@@ -279,7 +279,12 @@ export function AdminFeatsTab() {
     setCopySourceName(null);
     const ext = baseFeat as unknown as Record<string, unknown>;
     const abilityArr = Array.isArray(baseFeat.ability) ? baseFeat.ability : (baseFeat.ability ? [String(baseFeat.ability)] : []);
-    const nextLevel = (baseFeat.feat_lvl ?? 1) + 1;
+    const baseFamilyId = getFeatFamilyId(baseFeat);
+    const highestExistingLevel = (feats ?? []).reduce((maxLevel, feat) => {
+      if (getFeatFamilyId(feat) !== baseFamilyId) return maxLevel;
+      return Math.max(maxLevel, getFeatLevel(feat));
+    }, getFeatLevel(baseFeat));
+    const nextLevel = highestExistingLevel + 1;
     setForm({
       name: (baseFeat.name || '').trim(),
       description: baseFeat.description || '',
@@ -521,9 +526,9 @@ export function AdminFeatsTab() {
                 gridColumns={FEAT_GRID_COLUMNS}
                 columns={[
                   { key: 'Req. Level', value: (feat.lvl_req === 0 || feat.lvl_req == null) ? '-' : String(feat.lvl_req) },
-                  { key: 'Category', value: feat.category || '-' },
+                  { key: 'Category', value: formatListCellLabel(feat.category) },
                   { key: 'Ability', value: formatAbilityList(feat.ability) },
-                  { key: 'Recovery', value: feat.rec_period || '-' },
+                  { key: 'Recovery', value: formatListCellLabel(feat.rec_period) },
                   { key: 'Uses', value: (feat.uses_per_rec === 0 || feat.uses_per_rec == null) ? '-' : String(feat.uses_per_rec) },
                 ]}
                 detailSections={detailSections.length > 0 ? detailSections : undefined}

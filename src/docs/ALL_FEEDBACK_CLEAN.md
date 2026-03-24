@@ -1332,9 +1332,31 @@ Notes
 - Feedback: (1) New character with mixed species did not save selected species traits — only ancestry traits. (2) Techniques after creation sometimes do not show in personal or official library immediately or at all.
 - Expected: Mixed species saves persist species trait picks (and related mixed ancestry fields). Library lists refetch after save/publish so new techniques appear without stale client cache.
 
+**Raw Feedback Log — 2026-03-21 (Empowered Techniques creator request)**
+- Date: 2026-03-21
+- Context: Power Creator + Technique Creator convergence; new Empowered Technique flow
+- Priority: High
+- Feedback: Add support for Empowered Techniques by combining power + technique authoring. Requested behavior: shared action type/reaction profile, Add Weapon should use Add Weapon to Power (id 369), Duration applies only to power side, include both power Add Damage and technique Additional Damage, and allow adding/incrementing technique parts inside the empowered flow. Prefer a dedicated creator that reuses existing power/technique shared code/components so future updates to those creators propagate.
+- Expected: New empowered-technique creator route with power-like UX plus technique sections, empowered-aware energy/TP calculations, and high code reuse with minimal duplicated logic.
+
+**Raw Feedback Log — 2026-03-21 (Power add-weapon + empowered library/modal integration)**
+- Date: 2026-03-21
+- Context: Power Creator, Empowered Technique clarity, Library tabs, character/creature add-power modals
+- Priority: High
+- Feedback: Add a dedicated Add Weapon section to Power Creator using Add Weapon to Power logic (power part id path), modeled after the technique creator weapon UX and using shared component(s). Keep empowered technique sections clearly separated so technique parts are distinct from power parts/mechanics. Add Empowered Techniques as first-class library content in both Realms and My Library. In character/creature add-power flows, include Empowered Techniques as a tab and ensure selected entries display in the corresponding lists.
+- Expected: Power creator weapon section with shared UI, clear empowered section separation, library empowered visibility in both scopes, and add-power modal tab support for empowered selection in character/creature flows.
+
 **Raw Feedback Log — 2026-03-21 (Character sheet current HP not saving / refresh loses HP)**
 - Date: 2026-03-21
 - Context: Character sheet — editing current HP (view mode vs edit mode)
 - Priority: High
 - Feedback: Current HP isn’t autosaving and doesn’t stay after refresh when editing current HP.
 - Expected: Current HP (and energy/AP) persist to the server after change and reload correctly. **Disposition:** Implemented — `useAutoSave` was only enabled in sheet edit mode while HP steppers work in view mode; autosave now enabled for owners whenever character state changes (`enabled: isOwner`).
+
+**Raw Feedback Log — 2026-03-24 (Supabase columnar parity scaling request)**
+- Date: 2026-03-24
+- Context: Supabase schema scalability (official/user library + encounter/library payload depth)
+- Priority: High
+- Feedback: Move Supabase data architecture toward columnar/relational best practice for scale (D&D Beyond-level), reduce dependence on JSONB blobs, and make official and user table schemas match so rows can translate/copy between them easily.
+- Expected: A practical migration plan and execution path that promotes high-value payload fields to typed columns, keeps backward compatibility during rollout, and aligns official/user table structures.
+- Disposition: Implemented 2026-03-24 via TASK-304. Added `sql/supabase-library-columnar-parity-expansion.sql` (official_* + user_* promoted columns for powers/techniques/items, trigger-based payload->column sync, backfill updates, supporting indexes). Updated `SUPABASE_SCHEMA.md` and `OFFICIAL_LIBRARY_COLUMNAR_PLAN.md` with run order and parity notes.

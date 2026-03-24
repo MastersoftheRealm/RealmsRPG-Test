@@ -22,6 +22,7 @@ import { Modal, Button, Input, Textarea } from '@/components/ui';
 import { ChipSelect, SelectFilter, FilterSection } from '@/components/codex';
 import { useParts, type Part } from '@/hooks';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
+import { formatListCellLabel } from '@/lib/utils';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
@@ -465,7 +466,7 @@ export function AdminPartsTab() {
                   description={p.description || ''}
                   gridColumns={PART_GRID_COLUMNS}
                   columns={[
-                    { key: 'Type', value: (p.type || 'power').charAt(0).toUpperCase() + (p.type || 'power').slice(1) },
+                    { key: 'Type', value: formatListCellLabel(p.type || 'power') },
                     {
                       key: 'EN',
                       value: formatEnergyCost(p.base_en, p.percentage),

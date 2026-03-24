@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-22T14:25:58.860Z",
+  "generated_at": "2026-03-21T22:29:03.377Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -18,10 +18,32 @@
       "related_overlap": []
     },
     {
-      "id": "TASK-042",
-      "title": "Fix inconsistent button styling in modals",
-      "status": "not-started",
-      "matches": [],
+      "id": "TASK-284",
+      "title": "Migrate admin authorization from ADMIN_UIDS env to Supabase role-based admin",
+      "status": "done",
+      "matches": [
+        {
+          "hash": "8eb1d5cea87e84ef6b2e2f0fbbeceabfa375b026",
+          "subject": "Barfight feedback: official library save, species dedupe, sticky Continue, multiple damage types, remove (optional), range spacing, DB checklist",
+          "files": [
+            "sql/README.md",
+            "src/app/(main)/item-creator/page.tsx",
+            "src/app/(main)/power-creator/page.tsx",
+            "src/app/api/official/[type]/route.ts",
+            "src/components/character-creator/steps/ancestry-step.tsx",
+            "src/components/character-creator/steps/species-step.tsx",
+            "src/components/character-sheet/library-section.tsx",
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/DATABASE_CONSISTENCY_CHECKLIST.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/AI_TASK_QUEUE.md",
+            "src/hooks/use-creator-save.ts",
+            "src/lib/calculators/item-calc.ts",
+            "src/lib/calculators/power-calc.ts",
+            "src/lib/utils/string.ts"
+          ]
+        }
+      ],
       "related_files": [],
       "related_overlap": []
     },
@@ -2155,6 +2177,501 @@
     {
       "id": "TASK-266",
       "title": "Mobile-first UX overhaul (Phases 2–4)",
+      "status": "done",
+      "matches": [
+        {
+          "hash": "33e86f79b57dea547b1626c37244b7e9211da364",
+          "subject": "Mobile-first UX: phases 1-4 complete, finalize & audit (TASK-266)",
+          "files": [
+            ".cursor/rules/realms-mobile.mdc",
+            ".cursor/rules/realms-tasks.mdc",
+            "AGENTS.md",
+            "src/app/(main)/campaigns/[id]/page.tsx",
+            "src/app/(main)/campaigns/page.tsx",
+            "src/app/(main)/characters/[id]/page.tsx",
+            "src/app/(main)/codex/page.tsx",
+            "src/app/(main)/creature-creator/LoadCreatureModal.tsx",
+            "src/app/(main)/encounters/page.tsx",
+            "src/app/(main)/library/page.tsx",
+            "src/app/(main)/my-account/page.tsx",
+            "src/app/(main)/species-creator/page.tsx",
+            "src/app/globals.css",
+            "src/components/character-creator/MixedSpeciesModal.tsx",
+            "src/components/character-creator/creator-tab-bar.tsx",
+            "src/components/character-creator/species-modal.tsx",
+            "src/components/character-creator/steps/finalize-step.tsx",
+            "src/components/character-sheet/character-sheet-settings-modal.tsx",
+            "src/components/character-sheet/edit-archetype-modal.tsx",
+            "src/components/character-sheet/level-up-modal.tsx",
+            "src/components/character-sheet/recovery-modal.tsx",
+            "src/components/character-sheet/sheet-action-toolbar.tsx",
+            "src/components/character-sheet/sheet-header.tsx",
+            "src/components/creator/CreatorLayout.tsx",
+            "src/components/creator/LoadFromLibraryModal.tsx",
+            "src/components/shared/add-combatant-modal.tsx",
+            "src/components/shared/confirm-action-modal.tsx",
+            "src/components/shared/delete-confirm-modal.tsx",
+            "src/components/shared/image-upload-modal.tsx",
+            "src/components/shared/login-prompt-modal.tsx",
+            "src/components/shared/unified-selection-modal.tsx",
+            "src/components/ui/modal.tsx",
+            "src/components/ui/page-container.tsx",
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/MOBILE_UX.md",
+            "src/docs/ai/AGENT_GUIDE.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/AI_TASK_QUEUE.md"
+          ]
+        }
+      ],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-267",
+      "title": "Accessibility audit fixes and a11y systems (Vercel audit)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-268",
+      "title": "Investigate Range/selectNode InvalidNodeTypeError on mouse up",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-269",
+      "title": "Fix Resources page Character Sheet PDF 404",
+      "status": "not-started",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-270",
+      "title": "Use columnar codex tables in Prisma and API (after DB migration)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-271",
+      "title": "Rename public library to official + columnar official_* tables",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-272",
+      "title": "User library columnar (same schema as official + user_id)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-273",
+      "title": "Campaign members as table (replace memberIds JSONB)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-274",
+      "title": "Creature Creator — Show feat point cost for damage modifiers, senses, movement, condition immunities",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-275",
+      "title": "Creature Creator — Use AddSkillModal and AddSubSkillModal instead of skills dropdown",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-276",
+      "title": "Creature Creator — Separate Add Feat and Add Negative Feat modals",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-277",
+      "title": "Creature Creator — Power/technique/armament modals and lists show parts, properties, options as chips; use site-wide display logic",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-278",
+      "title": "Fix username change — new username replaced by Player### instead of kept",
+      "status": "not-started",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-279",
+      "title": "Public library columnar as primary (official_* preferred over public_*)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-280",
+      "title": "User species columnar (same columns as codex_species + user_id)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-281",
+      "title": "Encounters — add list columns (name, type, status) for filtering",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-282",
+      "title": "Characters — add list columns (name, level, archetype_name, etc.); keep data JSONB",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-283",
+      "title": "Campaign rolls — add list columns (character_id, user_id, type, title); keep data JSONB",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-284",
+      "title": "Species steps — deduplicate list items (flaws, traits, characteristics) when mixed",
+      "status": "done",
+      "matches": [
+        {
+          "hash": "8eb1d5cea87e84ef6b2e2f0fbbeceabfa375b026",
+          "subject": "Barfight feedback: official library save, species dedupe, sticky Continue, multiple damage types, remove (optional), range spacing, DB checklist",
+          "files": [
+            "sql/README.md",
+            "src/app/(main)/item-creator/page.tsx",
+            "src/app/(main)/power-creator/page.tsx",
+            "src/app/api/official/[type]/route.ts",
+            "src/components/character-creator/steps/ancestry-step.tsx",
+            "src/components/character-creator/steps/species-step.tsx",
+            "src/components/character-sheet/library-section.tsx",
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/DATABASE_CONSISTENCY_CHECKLIST.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/AI_TASK_QUEUE.md",
+            "src/hooks/use-creator-save.ts",
+            "src/lib/calculators/item-calc.ts",
+            "src/lib/calculators/power-calc.ts",
+            "src/lib/utils/string.ts"
+          ]
+        }
+      ],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-285",
+      "title": "Species steps — sticky Continue button",
+      "status": "done",
+      "matches": [
+        {
+          "hash": "8eb1d5cea87e84ef6b2e2f0fbbeceabfa375b026",
+          "subject": "Barfight feedback: official library save, species dedupe, sticky Continue, multiple damage types, remove (optional), range spacing, DB checklist",
+          "files": [
+            "sql/README.md",
+            "src/app/(main)/item-creator/page.tsx",
+            "src/app/(main)/power-creator/page.tsx",
+            "src/app/api/official/[type]/route.ts",
+            "src/components/character-creator/steps/ancestry-step.tsx",
+            "src/components/character-creator/steps/species-step.tsx",
+            "src/components/character-sheet/library-section.tsx",
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/DATABASE_CONSISTENCY_CHECKLIST.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/AI_TASK_QUEUE.md",
+            "src/hooks/use-creator-save.ts",
+            "src/lib/calculators/item-calc.ts",
+            "src/lib/calculators/power-calc.ts",
+            "src/lib/utils/string.ts"
+          ]
+        }
+      ],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-286",
+      "title": "Power creator — support multiple damage types per power",
+      "status": "done",
+      "matches": [
+        {
+          "hash": "8eb1d5cea87e84ef6b2e2f0fbbeceabfa375b026",
+          "subject": "Barfight feedback: official library save, species dedupe, sticky Continue, multiple damage types, remove (optional), range spacing, DB checklist",
+          "files": [
+            "sql/README.md",
+            "src/app/(main)/item-creator/page.tsx",
+            "src/app/(main)/power-creator/page.tsx",
+            "src/app/api/official/[type]/route.ts",
+            "src/components/character-creator/steps/ancestry-step.tsx",
+            "src/components/character-creator/steps/species-step.tsx",
+            "src/components/character-sheet/library-section.tsx",
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/DATABASE_CONSISTENCY_CHECKLIST.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/AI_TASK_QUEUE.md",
+            "src/hooks/use-creator-save.ts",
+            "src/lib/calculators/item-calc.ts",
+            "src/lib/calculators/power-calc.ts",
+            "src/lib/utils/string.ts"
+          ]
+        }
+      ],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-287",
+      "title": "Creators — explicit energy (EN) display per item",
+      "status": "done",
+      "matches": [
+        {
+          "hash": "8eb1d5cea87e84ef6b2e2f0fbbeceabfa375b026",
+          "subject": "Barfight feedback: official library save, species dedupe, sticky Continue, multiple damage types, remove (optional), range spacing, DB checklist",
+          "files": [
+            "sql/README.md",
+            "src/app/(main)/item-creator/page.tsx",
+            "src/app/(main)/power-creator/page.tsx",
+            "src/app/api/official/[type]/route.ts",
+            "src/components/character-creator/steps/ancestry-step.tsx",
+            "src/components/character-creator/steps/species-step.tsx",
+            "src/components/character-sheet/library-section.tsx",
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/DATABASE_CONSISTENCY_CHECKLIST.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/AI_TASK_QUEUE.md",
+            "src/hooks/use-creator-save.ts",
+            "src/lib/calculators/item-calc.ts",
+            "src/lib/calculators/power-calc.ts",
+            "src/lib/utils/string.ts"
+          ]
+        }
+      ],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-288",
+      "title": "Remove \"(optional)\" label from damage in creators",
+      "status": "done",
+      "matches": [
+        {
+          "hash": "8eb1d5cea87e84ef6b2e2f0fbbeceabfa375b026",
+          "subject": "Barfight feedback: official library save, species dedupe, sticky Continue, multiple damage types, remove (optional), range spacing, DB checklist",
+          "files": [
+            "sql/README.md",
+            "src/app/(main)/item-creator/page.tsx",
+            "src/app/(main)/power-creator/page.tsx",
+            "src/app/api/official/[type]/route.ts",
+            "src/components/character-creator/steps/ancestry-step.tsx",
+            "src/components/character-creator/steps/species-step.tsx",
+            "src/components/character-sheet/library-section.tsx",
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/DATABASE_CONSISTENCY_CHECKLIST.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/AI_TASK_QUEUE.md",
+            "src/hooks/use-creator-save.ts",
+            "src/lib/calculators/item-calc.ts",
+            "src/lib/calculators/power-calc.ts",
+            "src/lib/utils/string.ts"
+          ]
+        }
+      ],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-289",
+      "title": "Official library — fix save for powers, techniques, armaments",
+      "status": "done",
+      "matches": [
+        {
+          "hash": "8eb1d5cea87e84ef6b2e2f0fbbeceabfa375b026",
+          "subject": "Barfight feedback: official library save, species dedupe, sticky Continue, multiple damage types, remove (optional), range spacing, DB checklist",
+          "files": [
+            "sql/README.md",
+            "src/app/(main)/item-creator/page.tsx",
+            "src/app/(main)/power-creator/page.tsx",
+            "src/app/api/official/[type]/route.ts",
+            "src/components/character-creator/steps/ancestry-step.tsx",
+            "src/components/character-creator/steps/species-step.tsx",
+            "src/components/character-sheet/library-section.tsx",
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/DATABASE_CONSISTENCY_CHECKLIST.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/AI_TASK_QUEUE.md",
+            "src/hooks/use-creator-save.ts",
+            "src/lib/calculators/item-calc.ts",
+            "src/lib/calculators/power-calc.ts",
+            "src/lib/utils/string.ts"
+          ]
+        }
+      ],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-290",
+      "title": "Range display — consistent spacing for powers and armaments across views",
+      "status": "done",
+      "matches": [
+        {
+          "hash": "8eb1d5cea87e84ef6b2e2f0fbbeceabfa375b026",
+          "subject": "Barfight feedback: official library save, species dedupe, sticky Continue, multiple damage types, remove (optional), range spacing, DB checklist",
+          "files": [
+            "sql/README.md",
+            "src/app/(main)/item-creator/page.tsx",
+            "src/app/(main)/power-creator/page.tsx",
+            "src/app/api/official/[type]/route.ts",
+            "src/components/character-creator/steps/ancestry-step.tsx",
+            "src/components/character-creator/steps/species-step.tsx",
+            "src/components/character-sheet/library-section.tsx",
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/DATABASE_CONSISTENCY_CHECKLIST.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/AI_TASK_QUEUE.md",
+            "src/hooks/use-creator-save.ts",
+            "src/lib/calculators/item-calc.ts",
+            "src/lib/calculators/power-calc.ts",
+            "src/lib/utils/string.ts"
+          ]
+        }
+      ],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-291",
+      "title": "Power Mechanics rework, remove apply duration, section cost badges",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-292",
+      "title": "Area of effect description + collapsible sections in creators",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-293",
+      "title": "Add crafting rules to core_rules + admin Crafting tab",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-294",
+      "title": "Create crafting hub + crafting page with skill-encounter logic",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-295",
+      "title": "Enhanced crafting + Enhanced Equipment Library",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-296",
+      "title": "Creator resource colors — shift TP to lime and keep IP/C distinct",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-297",
+      "title": "Leveled feats migration and sitewide behavior unification (same name + level/id)",
+      "status": "in-progress",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-298",
+      "title": "Archetype Path system for guided character creation + admin authoring",
+      "status": "in-progress",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-299",
+      "title": "TP/proficiency system completion audit and rule-hardening",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-300",
+      "title": "Pin Node and Next versions for stable Vercel deploys",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-301",
+      "title": "Migrate duplicate segmented pill toggles to SegmentedControl",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-302",
+      "title": "Creature creator inventory budget summary (current/max) + inventory type tabs",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-303",
+      "title": "Add empowered technique creator combining power + technique systems",
       "status": "done",
       "matches": [],
       "related_files": [],

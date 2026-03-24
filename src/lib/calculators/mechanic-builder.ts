@@ -193,10 +193,11 @@ export function calculatePowerDamageLevel(diceAmount: number, dieSize: number): 
  */
 export function calculateTechniqueDamageLevel(diceAmount: number, dieSize: number): number {
   if (diceAmount <= 0 || dieSize < 4) return 0;
-  // Level 0 = 1d4, each +2 avg damage = +1 level
-  const avgDamage = diceAmount * ((dieSize + 1) / 2);
-  const baseDamage = 2.5; // 1d4 average
-  return Math.max(0, Math.floor((avgDamage - baseDamage) / 2));
+  // Match technique-calc computeAdditionalDamageLevel:
+  // level = floor((totalDamage - 4) / 2)
+  // So 1d4 -> 0, 1d6 -> 1, 1d8 -> 2, etc.
+  const totalDamage = diceAmount * dieSize;
+  return Math.max(0, Math.floor((totalDamage - 4) / 2));
 }
 
 /**

@@ -20,4 +20,6 @@ export { CollapsibleSection, type CollapsibleSectionProps } from './collapsible-
 export { CreatorSummaryPanel, type CreatorSummaryPanelProps } from './creator-summary-panel';
 export { CreatorSaveToolbar, type CreatorSaveToolbarProps } from './CreatorSaveToolbar';
 export { CreatorLayout, type CreatorLayoutProps } from './CreatorLayout';
+export { WeaponSelector, type WeaponOption } from './weapon-selector';
+export { AdvancedCalculationsPanel, type AdvancedCalculationRow } from './advanced-calculations-panel';
 

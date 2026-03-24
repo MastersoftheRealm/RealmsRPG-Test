@@ -8,7 +8,7 @@
 
 import { useState, useMemo } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatListCellLabel } from '@/lib/utils';
 import {
   ChipSelect,
   FilterSection,
@@ -63,8 +63,11 @@ function SpeciesCard({ species, allTraits, skillIdToName }: { species: Species; 
   }, [species.skills, skillIdToName]);
 
   const columns: ColumnValue[] = [
-    { key: 'type', value: species.type || '-' },
-    { key: 'sizes', value: species.sizes?.join(', ') || '-' },
+    { key: 'type', value: formatListCellLabel(species.type) },
+    {
+      key: 'sizes',
+      value: species.sizes?.length ? species.sizes.map((sz) => formatListCellLabel(sz)).join(', ') : '-',
+    },
     {
       key: '_desc',
       value: species.description ? `${species.description.substring(0, 60)}...` : '-',

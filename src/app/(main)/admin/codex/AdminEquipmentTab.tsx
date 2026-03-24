@@ -18,6 +18,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Copy, X } from 'lucide-react';
 import { IconButton } from '@/components/ui';
+import { formatListCellLabel } from '@/lib/utils';
 
 const COPY_NAME_SUFFIX = ' copy';
 
@@ -272,9 +273,9 @@ export function AdminEquipmentTab() {
                 description={e.description || ''}
                 gridColumns={EQUIPMENT_GRID_COLUMNS}
                 columns={[
-                  { key: 'Category', value: (e.category || 'Equipment') as string },
+                  { key: 'Category', value: formatListCellLabel(e.category || 'equipment') },
                   { key: 'Cost', value: e.cost > 0 ? `${e.cost} c` : '-', highlight: true },
-                  { key: 'Rarity', value: e.rarity || '-' },
+                  { key: 'Rarity', value: formatListCellLabel(e.rarity) },
                 ]}
                 rightSlot={
                   <div className="flex items-center gap-1 pr-2">

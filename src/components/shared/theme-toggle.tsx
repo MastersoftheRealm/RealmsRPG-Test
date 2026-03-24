@@ -38,6 +38,8 @@ export function ThemeToggle({ variant = 'dropdown', className }: ThemeToggleProp
     return null;
   }
 
+  // Inline variant stays custom: three icon-only choices with a softer selected state (tint, not solid primary).
+  // SegmentedControl is for text (or icon+label) pills with the shared primary fill — see TASK-301 / realms-unification.
   if (variant === 'inline') {
     return (
       <div className={cn('flex items-center gap-1 p-1 rounded-lg bg-surface-alt', className)}>

@@ -25,6 +25,7 @@ import { formatCostDisplay } from '@/lib/game/creator-constants';
 import { Button, IconButton } from '@/components/ui';
 import { SelectionToggle } from './selection-toggle';
 import { QuantitySelector, QuantityBadge } from './quantity-selector';
+import { GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH } from './grid-list-row-chrome';
 
 // =============================================================================
 // Types
@@ -53,6 +54,48 @@ function columnDisplayLabel(col: ColumnValue): string {
   const key = col.key;
   if (!key) return '';
   return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+/**
+ * Count explicit tracks in a grid-template-columns string.
+ * Supports basic tracks, minmax(), fit-content(), and repeat(<n>, ...).
+ * This lets GridListRow detect when callers already reserved trailing action columns.
+ */
+function countGridTemplateTracks(template?: string): number {
+  if (!template) return 0;
+
+  const tokens: string[] = [];
+  let current = '';
+  let parenDepth = 0;
+  let bracketDepth = 0;
+
+  for (const char of template) {
+    if (char === '(') parenDepth += 1;
+    if (char === ')') parenDepth = Math.max(0, parenDepth - 1);
+    if (char === '[') bracketDepth += 1;
+    if (char === ']') bracketDepth = Math.max(0, bracketDepth - 1);
+
+    const isSeparator = /\s/.test(char) && parenDepth === 0 && bracketDepth === 0;
+    if (isSeparator) {
+      const trimmed = current.trim();
+      if (trimmed) tokens.push(trimmed);
+      current = '';
+      continue;
+    }
+
+    current += char;
+  }
+
+  const last = current.trim();
+  if (last) tokens.push(last);
+
+  return tokens.reduce((count, token) => {
+    const repeatMatch = token.match(/^repeat\(\s*(\d+)\s*,/i);
+    if (repeatMatch) {
+      return count + Number.parseInt(repeatMatch[1], 10);
+    }
+    return count + 1;
+  }, 0);
 }
 
 /** Option row for part/property chips (level > 0) with optional description */
@@ -251,9 +294,16 @@ export const GridListRow = memo(function GridListRow({
   
   const hasDetailSections = (detailSections?.length ?? 0) > 0;
   const hasChips = chips.length > 0 && !hasDetailSections;
-  const hasDetails = description || hasChips || hasDetailSections || badges.length > 0 || requirements || expandedContent;
+  const descTrimmed = typeof description === 'string' ? description.trim() : '';
+  const hasBodyContent =
+    !!descTrimmed || hasChips || hasDetailSections || badges.length > 0 || !!requirements || !!expandedContent;
   const showActions = onEdit || onDuplicate || onAddToLibrary; // Delete is now inline X, not in expanded actions
-  const showExpander = hasDetails || showActions || onDelete;
+  /** Must match what we actually render when expanded (incl. total cost row and action buttons). */
+  const hasDetails =
+    hasBodyContent ||
+    (totalCost !== undefined && totalCost > 0) ||
+    !!showActions;
+  const showExpander = hasDetails || onDelete;
   
   const handleChipClick = (index: number, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -303,6 +353,18 @@ export const GridListRow = memo(function GridListRow({
   // Keep gridTemplateColumns in style (must match headers), but move layout concerns to classes
   // so spacing/alignment are controlled by shared Tailwind utilities instead of inline styles.
   const useFlex = !gridColumns;
+  const explicitGridTracks = countGridTemplateTracks(gridColumns);
+  const baseGridTracks = 1 + columns.length;
+  let remainingInlineActionTracks = Math.max(0, explicitGridTracks - baseGridTracks);
+
+  // Consume extra right-side grid tracks first for controls that normally render outside the grid.
+  const inlineSelectable = selectable && remainingInlineActionTracks > 0;
+  if (inlineSelectable) remainingInlineActionTracks -= 1;
+  const inlineDelete = !!onDelete && remainingInlineActionTracks > 0;
+  if (inlineDelete) remainingInlineActionTracks -= 1;
+  const inlineEdit = !!onEdit && remainingInlineActionTracks > 0;
+  if (inlineEdit) remainingInlineActionTracks -= 1;
+  const inlineRightSlot = !!rightSlot && remainingInlineActionTracks > 0;
 
   return (
     <div className={rowStyles}>
@@ -330,7 +392,7 @@ export const GridListRow = memo(function GridListRow({
           className={cn(
             'flex-1 text-left transition-colors min-h-[44px]',
             (showExpander || selectable) && (rowHoverClass ?? 'hover:bg-surface-alt'),
-            compact ? 'px-3 py-2' : 'px-4 py-3',
+            compact ? 'px-3 py-2' : 'px-4 py-2',
             disabled && 'cursor-default',
             isRowClickable && 'cursor-pointer',
             gridColumns && 'grid gap-2 items-center'
@@ -426,17 +488,72 @@ export const GridListRow = memo(function GridListRow({
             </div>
           )}
 
+          {/* Inline controls: used when gridColumns already includes trailing action tracks */}
+          {inlineRightSlot && (
+            <div className="flex items-center justify-center min-w-0" onClick={(e) => e.stopPropagation()}>
+              {rightSlot}
+            </div>
+          )}
+          {inlineEdit && (
+            <div className="flex items-center justify-center min-w-0" onClick={(e) => e.stopPropagation()}>
+              <IconButton
+                variant="ghost"
+                size="sm"
+                onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
+                label="Edit"
+                className="text-text-muted dark:text-text-secondary hover:text-primary-600 hover:bg-transparent"
+              >
+                <Edit className="w-4 h-4" />
+              </IconButton>
+            </div>
+          )}
+          {inlineDelete && (
+            <div className="flex items-center justify-center min-w-0" onClick={(e) => e.stopPropagation()}>
+              <IconButton
+                variant="ghost"
+                size="sm"
+                onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
+                label="Remove"
+                className="text-danger dark:text-danger-400 hover:text-danger-600 dark:hover:text-danger-300 hover:bg-transparent"
+              >
+                <X className="w-4 h-4" />
+              </IconButton>
+            </div>
+          )}
+          {inlineSelectable && (
+            <div
+              className={cn(
+                'min-w-[44px] w-11 flex items-center justify-center min-h-[44px]',
+                disabled && 'cursor-not-allowed opacity-50'
+              )}
+              onClick={(e) => e.stopPropagation()}
+              role="presentation"
+            >
+              <SelectionToggle
+                isSelected={!!isSelected}
+                onToggle={() => !disabled && onSelect?.()}
+                disabled={disabled}
+                size="md"
+                label={isSelected ? 'Remove from selection' : 'Add to selection'}
+              />
+            </div>
+          )}
+
         </div>
         
         {/* Right Slot - use button, roll buttons, quantity, etc. (before delete so X is at far right) */}
-        {rightSlot && (
-          <div className="flex items-center flex-shrink-0 justify-center w-[4rem] mr-2 pr-1" onClick={(e) => e.stopPropagation()}>
+        {rightSlot && !inlineRightSlot && (
+          <div
+            className="flex items-center flex-shrink-0 justify-center pr-1"
+            style={{ width: GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH }}
+            onClick={(e) => e.stopPropagation()}
+          >
             {rightSlot}
           </div>
         )}
 
         {/* Inline Edit pencil - visible in collapsed state for quick editing */}
-        {onEdit && (
+        {onEdit && !inlineEdit && (
           <div className="flex items-center flex-shrink-0 w-9 justify-center" onClick={(e) => e.stopPropagation()}>
             <IconButton
               variant="ghost"
@@ -451,7 +568,7 @@ export const GridListRow = memo(function GridListRow({
         )}
 
         {/* Delete X - at far right after use button */}
-        {onDelete && (
+        {onDelete && !inlineDelete && (
           <div className="flex items-center flex-shrink-0 justify-center w-9 pr-1" onClick={(e) => e.stopPropagation()}>
             <IconButton
               variant="ghost"
@@ -466,7 +583,7 @@ export const GridListRow = memo(function GridListRow({
         )}
         
         {/* Selection Button (for modals) - uses unified SelectionToggle - positioned on right */}
-        {selectable && (
+        {selectable && !inlineSelectable && (
           <div
             className={cn(
               'min-w-[44px] w-11 flex-shrink-0 flex items-center justify-center min-h-[44px]',
@@ -515,7 +632,7 @@ export const GridListRow = memo(function GridListRow({
           ) : (
             <>
               {/* Description - equal margin above/below for consistent item card spacing */}
-              {description && (
+              {descTrimmed && (
                 <p className="text-text-secondary text-sm mb-3 p-3 bg-surface rounded-lg">
                   {description}
                 </p>
@@ -530,7 +647,7 @@ export const GridListRow = memo(function GridListRow({
               )}
               
               {/* Badges */}
-              {badges.length > 0 && !compact && (
+              {badges.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-3">
                   {badges.map((badge, i) => (
                     <span 

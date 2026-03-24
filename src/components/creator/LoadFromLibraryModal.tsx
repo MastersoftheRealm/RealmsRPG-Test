@@ -298,7 +298,6 @@ function LoadFromLibraryModalUnified({
             onSort={handleSort}
             hasSelectionColumn
             compact
-            className="border-0 rounded-none bg-transparent dark:bg-transparent"
           />
         )}
 

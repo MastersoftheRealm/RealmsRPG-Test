@@ -23,7 +23,7 @@ import {
 import { CREATURE_TYPES } from '@/lib/game/creator-constants';
 import { CreatorLayout, CreatorSaveToolbar, CreatorSummaryPanel, CollapsibleSection } from '@/components/creator';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
-import { Button, Input, Textarea, Modal, LoadingState, Alert } from '@/components/ui';
+import { Button, Input, Textarea, Modal, LoadingState } from '@/components/ui';
 import {
   SearchInput,
   ListHeader,
@@ -527,12 +527,6 @@ export default function SpeciesCreatorPage() {
         </>
       }
     >
-      {save.saveMessage && (
-        <Alert variant={save.saveMessage.type === 'error' ? 'danger' : 'success'} className="mb-4">
-          {save.saveMessage.text}
-        </Alert>
-      )}
-
       <div className="space-y-6">
         <CollapsibleSection title="Basics" collapsedSummary={basicsSummary} defaultExpanded={true}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

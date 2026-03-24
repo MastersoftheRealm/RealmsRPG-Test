@@ -12,6 +12,7 @@ import { GridListRow, ListHeader } from '@/components/shared';
 import { useModalListState } from '@/hooks/use-modal-list-state';
 import type { CreatureState } from './creature-creator-types';
 import { initialState } from './creature-creator-constants';
+import { formatListCellLabel } from '@/lib/utils';
 
 export function LoadCreatureModal({
   isOpen,
@@ -131,7 +132,7 @@ export function LoadCreatureModal({
                   columns={[
                     { key: 'name', value: c.name ?? '—', align: 'left' },
                     { key: 'level', value: String(c.level ?? '—'), align: 'center' as const },
-                    { key: 'type', value: (c as unknown as CreatureState).type ?? 'Creature', align: 'center' as const },
+                    { key: 'type', value: formatListCellLabel((c as unknown as CreatureState).type ?? 'creature'), align: 'center' as const },
                   ]}
                   gridColumns="1.5fr 0.5fr 1fr"
                   compact

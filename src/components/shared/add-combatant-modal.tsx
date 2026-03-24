@@ -12,6 +12,7 @@ import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { BookOpen, Users, Search, Plus, Minus } from 'lucide-react';
 import { Modal, Button, Input, SearchInput } from '@/components/ui';
+import { SegmentedControl } from '@/components/shared';
 import { ValueStepper } from '@/components/shared/value-stepper';
 import { useUserCreatures, useCampaignsFull, type UserCreature } from '@/hooks';
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
@@ -42,27 +43,17 @@ export function AddCombatantModal({ onClose, onAdd, onAddParticipants, mode }: A
 
   return (
     <Modal isOpen onClose={onClose} title="Add From Library / Campaign" fullScreenOnMobile>
-      {/* Tab switcher */}
-      <div className="flex gap-1 mb-4 p-1 bg-surface-alt rounded-lg">
-        <button
-          onClick={() => setTab('library')}
-          className={cn(
-            'flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors',
-            tab === 'library' ? 'bg-surface text-text-primary shadow-sm' : 'text-text-muted hover:text-text-secondary'
-          )}
-        >
-          <BookOpen className="w-4 h-4" /> Creature Library
-        </button>
-        <button
-          onClick={() => setTab('campaign')}
-          className={cn(
-            'flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors',
-            tab === 'campaign' ? 'bg-surface text-text-primary shadow-sm' : 'text-text-muted hover:text-text-secondary'
-          )}
-        >
-          <Users className="w-4 h-4" /> Campaign Characters
-        </button>
-      </div>
+      <SegmentedControl
+        value={tab}
+        onChange={setTab}
+        equalWidth
+        options={[
+          { value: 'library', label: 'Creature Library', icon: <BookOpen className="w-4 h-4" aria-hidden /> },
+          { value: 'campaign', label: 'Campaign Characters', icon: <Users className="w-4 h-4" aria-hidden /> },
+        ]}
+        aria-label="Add combatants from"
+        className="mb-4"
+      />
 
       {tab === 'library' ? (
         <CreatureLibraryTab onAdd={onAdd} onAddParticipants={onAddParticipants} mode={mode} onClose={onClose} />

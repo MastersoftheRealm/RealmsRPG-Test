@@ -20,7 +20,7 @@ import { useTechniqueParts, useUserItems, useItemProperties, useAdmin, useCreato
 import { useAuthStore } from '@/stores';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
-import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout, CollapsibleSection } from '@/components/creator';
+import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout, CollapsibleSection, WeaponSelector, AdvancedCalculationsPanel } from '@/components/creator';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
 import { ValueStepper, SectionCostBadge } from '@/components/shared';
 import { CreatorSummaryPanel } from '@/components/creator';
@@ -510,6 +510,14 @@ function TechniqueCreatorContent() {
     () => calculateTechniqueCosts(partsPayload, techniqueParts),
     [partsPayload, techniqueParts]
   );
+  const advancedCalcRows = useMemo(
+    () => [
+      { label: 'Energy (raw)', value: costs.energyRaw.toFixed(2) },
+      { label: 'Energy (final)', value: `ceil(${costs.energyRaw.toFixed(2)}) = ${costs.totalEnergy}` },
+      { label: 'Training points (final)', value: String(costs.totalTP) },
+    ],
+    [costs.energyRaw, costs.totalEnergy, costs.totalTP]
+  );
 
   // Derived display values
   const actionTypeDisplay = useMemo(
@@ -812,13 +820,10 @@ function TechniqueCreatorContent() {
               { title: 'TP Breakdown', items: costs.tpSources }
             ] : undefined}
           >
-            {save.saveMessage && (
-              <Alert 
-                variant={save.saveMessage.type === 'success' ? 'success' : 'danger'}
-              >
-                {save.saveMessage.text}
-              </Alert>
-            )}
+            <AdvancedCalculationsPanel
+              rows={advancedCalcRows}
+              ruleText="Rule: Mechanic parts are auto-generated from action, reaction, damage, and weapon; costs match standalone technique math."
+            />
           </CreatorSummaryPanel>
         </div>
       }
@@ -891,58 +896,28 @@ function TechniqueCreatorContent() {
             title="Combat Configuration"
             collapsedSummary={combatConfigSummary}
             defaultExpanded={true}
-            rightSlot={<SectionCostBadge en={combatConfigCost.totalEnergy} tp={combatConfigCost.totalTP} />}
+            rightSlot={<SectionCostBadge en={combatConfigCost.energyRaw} tp={combatConfigCost.totalTP} />}
           >
             <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <label className="block text-sm font-medium text-text-secondary">
-                    Weapon
-                  </label>
-                  <SectionCostBadge
-                    en={weaponCost.totalEnergy}
-                    tp={weaponCost.totalTP}
-                  />
-                </div>
-                <select
-                  value={String(weapon.id)}
-                  onChange={(e) => {
-                    const selectedId = e.target.value;
-                    const selected = allWeaponOptions.find(w => String(w.id) === selectedId);
-                    if (selected) setWeapon(selected);
-                  }}
-                  className="w-full px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-                  aria-label="Weapon"
-                >
-                  {/* Default options */}
-                  <optgroup label="General">
-                    {DEFAULT_WEAPON_OPTIONS.map((opt) => (
-                      <option key={String(opt.id)} value={String(opt.id)}>
-                        {opt.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                  {/* User's saved weapons */}
-                  {allWeaponOptions.filter(w => w.isUserWeapon).length > 0 && (
-                    <optgroup label="My Weapons">
-                      {allWeaponOptions
-                        .filter(w => w.isUserWeapon)
-                        .map((opt) => (
-                          <option key={String(opt.id)} value={String(opt.id)}>
-                            {opt.name}
-                          </option>
-                        ))}
-                    </optgroup>
-                  )}
-                </select>
-              </div>
+              <WeaponSelector
+                label="Weapon"
+                value={weapon.id}
+                options={allWeaponOptions}
+                onChange={(selectedId) => {
+                  const selected = allWeaponOptions.find((option) => String(option.id) === selectedId);
+                  if (selected) setWeapon(selected);
+                }}
+                ariaLabel="Weapon"
+                badgeEn={weaponCost.energyRaw}
+                badgeTp={weaponCost.totalTP}
+              />
               <div>
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <label className="block text-sm font-medium text-text-secondary">
                     Action Type
                   </label>
                   <SectionCostBadge
-                    en={actionTypeCost.totalEnergy}
+                    en={actionTypeCost.energyRaw}
                     tp={actionTypeCost.totalTP}
                   />
                 </div>
@@ -968,7 +943,7 @@ function TechniqueCreatorContent() {
                   label="Can be used as a Reaction"
                 />
                 {isReaction && (
-                  <SectionCostBadge en={reactionCost.totalEnergy} tp={reactionCost.totalTP} />
+                  <SectionCostBadge en={reactionCost.energyRaw} tp={reactionCost.totalTP} />
                 )}
               </div>
             </div>
@@ -1012,7 +987,7 @@ function TechniqueCreatorContent() {
             title="Additional Damage"
             collapsedSummary={damageSummary}
             defaultExpanded={true}
-            rightSlot={<SectionCostBadge en={damageSectionCost.totalEnergy} tp={damageSectionCost.totalTP} />}
+            rightSlot={<SectionCostBadge en={damageSectionCost.energyRaw} tp={damageSectionCost.totalTP} />}
           >
             <p className="text-sm text-text-secondary mb-4">
               Add extra damage dice to your technique. The damage type matches the weapon&apos;s damage type.

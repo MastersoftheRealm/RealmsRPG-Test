@@ -5,13 +5,27 @@
  * Same column set: scalars + one payload JSONB.
  */
 
-export const COLUMNAR_LIBRARY_TYPES = ['powers', 'techniques', 'items', 'creatures'] as const;
+export const COLUMNAR_LIBRARY_TYPES = ['powers', 'techniques', 'empowered-techniques', 'items', 'creatures'] as const;
 export type ColumnarLibraryType = (typeof COLUMNAR_LIBRARY_TYPES)[number];
 
 export const SCALAR_KEYS: Record<ColumnarLibraryType, string[]> = {
-  powers: ['name', 'description', 'actionType', 'isReaction', 'innate'],
-  techniques: ['name', 'description', 'actionType', 'weaponName'],
-  items: ['name', 'description', 'type', 'rarity', 'armorValue', 'damageReduction'],
+  powers: [
+    'name', 'description', 'actionType', 'isReaction', 'innate',
+    'rangeSteps', 'durationType', 'durationValue', 'areaType', 'areaLevel', 'damage',
+  ],
+  techniques: [
+    'name', 'description', 'actionType', 'weaponName',
+    'rangeSteps', 'durationType', 'durationValue', 'damage',
+  ],
+  'empowered-techniques': [
+    'name', 'description', 'actionType', 'weaponName',
+    'rangeSteps', 'durationType', 'durationValue', 'damage',
+  ],
+  items: [
+    'name', 'description', 'type', 'rarity', 'armorValue', 'damageReduction',
+    'rangeSteps', 'isTwoHanded', 'abilityRequirement', 'costs', 'damage', 'properties',
+    'agilityReduction', 'criticalRangeIncrease', 'shieldDR', 'shieldDamage',
+  ],
   creatures: ['name', 'description', 'level', 'type', 'size', 'hitPoints', 'energyPoints'],
 };
 
@@ -23,6 +37,17 @@ const BODY_TO_CAMEL: Record<string, string> = {
   damage_reduction: 'damageReduction',
   hit_points: 'hitPoints',
   energy_points: 'energyPoints',
+  range_steps: 'rangeSteps',
+  duration_type: 'durationType',
+  duration_value: 'durationValue',
+  area_type: 'areaType',
+  area_level: 'areaLevel',
+  is_two_handed: 'isTwoHanded',
+  ability_requirement: 'abilityRequirement',
+  agility_reduction: 'agilityReduction',
+  critical_range_increase: 'criticalRangeIncrease',
+  shield_dr: 'shieldDR',
+  shield_damage: 'shieldDamage',
 };
 
 const CAMEL_TO_SNAKE: Record<string, string> = {
@@ -33,6 +58,17 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   damageReduction: 'damage_reduction',
   hitPoints: 'hit_points',
   energyPoints: 'energy_points',
+  rangeSteps: 'range_steps',
+  durationType: 'duration_type',
+  durationValue: 'duration_value',
+  areaType: 'area_type',
+  areaLevel: 'area_level',
+  isTwoHanded: 'is_two_handed',
+  abilityRequirement: 'ability_requirement',
+  agilityReduction: 'agility_reduction',
+  criticalRangeIncrease: 'critical_range_increase',
+  shieldDR: 'shield_dr',
+  shieldDamage: 'shield_damage',
   createdAt: 'created_at',
   updatedAt: 'updated_at',
   userId: 'user_id',
@@ -87,17 +123,42 @@ export function rowToItem(
       base.area = { ...payArea, type: areaType ?? payArea?.type, level: areaLevel ?? payArea?.level };
     if (damageCol != null && Array.isArray(damageCol)) base.damage = damageCol;
   }
-  if (type === 'techniques') {
+  if (type === 'techniques' || type === 'empowered-techniques') {
     base.actionType = v(row, 'actionType', 'action_type');
     const weaponName = v(row, 'weaponName', 'weapon_name');
     base.weaponName = weaponName;
     if (weaponName && !payload.weapon) base.weapon = { name: weaponName };
+    const rangeSteps = v(row, 'rangeSteps', 'range_steps') as number | undefined | null;
+    const durationType = v(row, 'durationType', 'duration_type') as string | undefined | null;
+    const durationValue = v(row, 'durationValue', 'duration_value') as number | undefined | null;
+    const damageCol = row.damage as unknown[] | undefined;
+    const payRange = payload.range as Record<string, unknown> | undefined;
+    const payDuration = payload.duration as Record<string, unknown> | undefined;
+    if (rangeSteps != null) base.range = { ...payRange, steps: rangeSteps };
+    if (durationType != null || durationValue != null) {
+      base.duration = {
+        ...payDuration,
+        type: durationType ?? payDuration?.type,
+        value: durationValue ?? payDuration?.value,
+      };
+    }
+    if (damageCol != null && Array.isArray(damageCol)) base.damage = damageCol;
   }
   if (type === 'items') {
     base.type = v(row, 'type');
     base.rarity = v(row, 'rarity');
     base.armorValue = v(row, 'armorValue', 'armor_value');
     base.damageReduction = v(row, 'damageReduction', 'damage_reduction');
+    base.rangeLevel = v(row, 'rangeSteps', 'range_steps');
+    base.isTwoHanded = v(row, 'isTwoHanded', 'is_two_handed');
+    base.abilityRequirement = v(row, 'abilityRequirement', 'ability_requirement');
+    base.costs = v(row, 'costs');
+    base.damage = v(row, 'damage');
+    base.properties = v(row, 'properties');
+    base.agilityReduction = v(row, 'agilityReduction', 'agility_reduction');
+    base.criticalRangeIncrease = v(row, 'criticalRangeIncrease', 'critical_range_increase');
+    base.shieldDR = v(row, 'shieldDR', 'shield_dr');
+    base.shieldDamage = v(row, 'shieldDamage', 'shield_damage');
   }
   if (type === 'creatures') {
     base.level = v(row, 'level');
@@ -108,7 +169,8 @@ export function rowToItem(
   }
   base.createdAt = v(row, 'createdAt', 'created_at');
   base.updatedAt = v(row, 'updatedAt', 'updated_at');
-  return { ...base, ...payload };
+  // Payload first, then explicit columns override overlapping keys.
+  return { ...payload, ...base };
 }
 
 /** Split request body into scalars (for columns) and payload (JSONB). */
@@ -119,8 +181,67 @@ export function bodyToColumnar(
   const scalarKeys = new Set(SCALAR_KEYS[type]);
   const scalars: Record<string, unknown> = {};
   const payload: Record<string, unknown> = {};
+
+  if (type === 'powers') {
+    const range = body.range as Record<string, unknown> | undefined;
+    const duration = body.duration as Record<string, unknown> | undefined;
+    const area = body.area as Record<string, unknown> | undefined;
+    if (range && typeof range === 'object' && range.steps != null) scalars.rangeSteps = range.steps;
+    if (duration && typeof duration === 'object') {
+      if (duration.type != null) scalars.durationType = duration.type;
+      if (duration.value != null) scalars.durationValue = duration.value;
+    }
+    if (area && typeof area === 'object') {
+      if (area.type != null) scalars.areaType = area.type;
+      if (area.level != null) scalars.areaLevel = area.level;
+    }
+    if (Array.isArray(body.damage)) scalars.damage = body.damage;
+  }
+
+  if (type === 'techniques' || type === 'empowered-techniques') {
+    const range = (body.range ?? (body.power as Record<string, unknown> | undefined)?.range) as
+      | Record<string, unknown>
+      | undefined;
+    const duration = (body.duration ?? (body.power as Record<string, unknown> | undefined)?.duration) as
+      | Record<string, unknown>
+      | undefined;
+    const damage = (body.damage ?? (body.power as Record<string, unknown> | undefined)?.damage) as unknown;
+    if (range && typeof range === 'object' && range.steps != null) scalars.rangeSteps = range.steps;
+    if (duration && typeof duration === 'object') {
+      if (duration.type != null) scalars.durationType = duration.type;
+      if (duration.value != null) scalars.durationValue = duration.value;
+    }
+    if (Array.isArray(damage)) scalars.damage = damage;
+  }
+
+  if (type === 'items') {
+    if (body.rangeLevel != null) scalars.rangeSteps = body.rangeLevel;
+    if (body.rangeSteps != null) scalars.rangeSteps = body.rangeSteps;
+    if (body.isTwoHanded != null) scalars.isTwoHanded = body.isTwoHanded;
+    if (body.abilityRequirement != null) scalars.abilityRequirement = body.abilityRequirement;
+    if (body.costs != null) scalars.costs = body.costs;
+    if (Array.isArray(body.damage)) scalars.damage = body.damage;
+    if (Array.isArray(body.properties)) scalars.properties = body.properties;
+    if (body.agilityReduction != null) scalars.agilityReduction = body.agilityReduction;
+    if (body.criticalRangeIncrease != null) scalars.criticalRangeIncrease = body.criticalRangeIncrease;
+    if (body.shieldDR != null) scalars.shieldDR = body.shieldDR;
+    if (body.shieldDamage != null) scalars.shieldDamage = body.shieldDamage;
+  }
+
+  const skipKeys = new Set<string>([
+    ...(type === 'powers' ? ['range', 'duration', 'area', 'damage'] : []),
+    ...((type === 'techniques' || type === 'empowered-techniques') ? ['range', 'duration', 'damage'] : []),
+    ...(type === 'items'
+      ? [
+          'rangeLevel', 'rangeSteps', 'isTwoHanded', 'abilityRequirement', 'costs', 'damage', 'properties',
+          'agilityReduction', 'criticalRangeIncrease', 'shieldDR', 'shieldDamage',
+        ]
+      : []),
+  ]);
+
   for (const [k, v] of Object.entries(body)) {
     if (k === 'id' || k === 'docId' || k === '_source') continue;
+    if (skipKeys.has(k)) continue;
     const camel = BODY_TO_CAMEL[k] ?? k.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
     if (scalarKeys.has(camel) || scalarKeys.has(k)) {
       // user_creatures.level is an INTEGER column in DB, but creature creator allows

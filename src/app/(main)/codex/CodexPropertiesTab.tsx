@@ -21,6 +21,7 @@ import {
 import { EmptyState } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
 import { useItemProperties, type ItemProperty } from '@/hooks';
+import { formatListCellLabel } from '@/lib/utils';
 
 const PROPERTY_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 0.8fr 40px';
 const PROPERTY_COLUMNS = [
@@ -65,7 +66,7 @@ function PropertyCard({ property }: { property: ItemProperty }) {
       description={property.description || ''}
       gridColumns={PROPERTY_GRID_COLUMNS}
       columns={[
-        { key: 'Type', value: property.type || 'General' },
+        { key: 'Type', value: formatListCellLabel(property.type || 'general') },
         { key: 'IP', value: ip > 0 ? ip : '-', className: 'text-blue-600' },
         { key: 'TP', value: tp > 0 ? tp : '-', className: 'text-tp' },
         { key: 'Cost', value: cost > 0 ? `×${cost}` : '-', highlight: true },
@@ -134,7 +135,7 @@ export function CodexPropertiesTab({ codexMode = 'public' }: { codexMode?: 'publ
           <SelectFilter
             label="Type"
             value={filters.typeFilter}
-            options={typeOptions.map(t => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))}
+            options={typeOptions.map(t => ({ value: t, label: formatListCellLabel(t) }))}
             onChange={(v) => setFilters(f => ({ ...f, typeFilter: v }))}
             placeholder="All Types"
           />

@@ -77,7 +77,7 @@ export interface CreatorSummaryPanelProps {
   /** Breakdown lists (TP sources, properties, etc.) */
   breakdowns?: BreakdownList[];
   /** Compact resource boxes at top (e.g. ability pts, skill pts - for creature creator) */
-  resourceBoxes?: Array<{ label: string; value: number; variant?: SummaryItem['variant'] }>;
+  resourceBoxes?: Array<{ label: string; value: number | string; variant?: SummaryItem['variant'] }>;
   /** Line items as sentences: "Skills: Stealth +3, Athletics -1" (D&D stat block style) */
   lineItems?: Array<{ label: string; items: string[] }>;
   /** Abilities as chips (e.g. STR +2, VIT +1) — rendered in a section "Abilities" below quickStats with border/chip style */
@@ -95,11 +95,12 @@ const COST_STAT_COLORS: Record<CostStat['color'], { bg: string; text: string }> 
   currency: { bg: 'bg-currency-light', text: 'text-currency-text' },
 };
 
-function getVariantClasses(variant: SummaryItem['variant'], remaining: number): string {
+function getVariantClasses(variant: SummaryItem['variant'], remaining: number | string): string {
+  const numericRemaining = typeof remaining === 'number' ? remaining : Number.NaN;
   // Auto-determine variant based on remaining if not specified
   if (!variant) {
-    if (remaining < 0) variant = 'danger';
-    else if (remaining === 0) variant = 'success';
+    if (!Number.isNaN(numericRemaining) && numericRemaining < 0) variant = 'danger';
+    else if (!Number.isNaN(numericRemaining) && numericRemaining === 0) variant = 'success';
     else variant = 'info';
   }
 
@@ -140,17 +141,24 @@ export function CreatorSummaryPanel({
 
       {/* Resource boxes (compact, for creature creator - ability/skill/feat/training/currency) */}
       {resourceBoxes && resourceBoxes.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-4">
+        <div className="flex flex-wrap gap-2 mb-4">
           {resourceBoxes.map((box, i) => (
             <div
               key={i}
               className={cn(
-                'rounded-lg p-2 text-center text-sm',
+                // w-fit lets each box grow with long current/max values; max-w-full avoids overflow on narrow sidebars
+                'rounded-lg px-3 py-2 text-center text-sm w-fit max-w-full min-w-[5rem] shrink-0',
                 getVariantClasses(box.variant, box.value)
               )}
             >
-              <div className="font-bold text-base text-inherit">{box.value}</div>
-              <div className="text-[10px] uppercase tracking-wide text-inherit opacity-80">{box.label}</div>
+              <div className="max-w-full overflow-x-auto [scrollbar-width:thin]">
+                <div className="font-bold text-base text-inherit whitespace-nowrap tabular-nums w-max max-w-none mx-auto">
+                  {typeof box.value === 'number' ? box.value.toLocaleString() : box.value}
+                </div>
+              </div>
+              <div className="text-[10px] uppercase tracking-wide text-inherit opacity-80 whitespace-normal break-words">
+                {box.label}
+              </div>
             </div>
           ))}
         </div>

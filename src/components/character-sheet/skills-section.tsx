@@ -78,7 +78,16 @@ export function SkillsSection({
   
   // Derived state: is the section actually editable right now?
   const showEditControls = isEditMode && isSectionEditing;
-  
+
+  const findParentSkill = (baseSkillName: string | undefined) =>
+    baseSkillName
+      ? skills.find(
+          (s) =>
+            !s.baseSkill &&
+            String(s.name ?? '').toLowerCase() === String(baseSkillName).toLowerCase()
+        )
+      : undefined;
+
   // Check if a skill is from species (locked)
   // Species skills may be stored as IDs or names, so check both
   const isSpeciesSkill = (skillName: string, skillId?: string): boolean => {
@@ -114,7 +123,7 @@ export function SkillsSection({
     
     if (isSubSkill) {
       // Sub-skill logic
-      const parent = skills.find(s => s.name === skill.baseSkill);
+      const parent = findParentSkill(skill.baseSkill);
       if (!skill.prof) {
         // Not proficient: check base skill proficiency first
         if (!parent?.prof) {
@@ -223,7 +232,7 @@ export function SkillsSection({
     const skillValue = skill.skill_val ?? 0;
     const isProficient = skill.prof ?? false;
     if (skill.baseSkill) {
-      const parent = skills.find((s) => s.name === skill.baseSkill);
+      const parent = findParentSkill(skill.baseSkill);
       const baseSkillVal = parent?.skill_val ?? 0;
       const baseSkillProf = parent?.prof ?? false;
       return calculateSubSkillBonusWithProficiency(

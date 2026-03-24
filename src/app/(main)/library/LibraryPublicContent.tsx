@@ -34,9 +34,10 @@ import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators/technique-calc';
 import type { ItemPropertyPayload } from '@/lib/calculators/item-calc';
 import { calculateItemCosts, calculateCurrencyCostAndRarity, formatRange as formatItemRange } from '@/lib/calculators/item-calc';
+import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 
-export type LibraryPublicTabId = 'powers' | 'techniques' | 'items' | 'creatures';
+export type LibraryPublicTabId = 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures';
 
 const POWER_GRID = '1.5fr 0.8fr 1fr 1fr 0.8fr 1fr 1fr 40px';
 const TECHNIQUE_GRID = '1.5fr 0.8fr 0.8fr 1fr 1fr 1fr 40px';
@@ -53,9 +54,19 @@ interface LibraryPublicContentProps {
 export function LibraryPublicContent({ activeTab, onLoginRequired, readOnly = false }: LibraryPublicContentProps) {
   if (activeTab === 'powers') return <PublicPowersList onLoginRequired={onLoginRequired} readOnly={readOnly} />;
   if (activeTab === 'techniques') return <PublicTechniquesList onLoginRequired={onLoginRequired} readOnly={readOnly} />;
+  if (activeTab === 'empowered-techniques') return <PublicTechniquesList onLoginRequired={onLoginRequired} readOnly={readOnly} mode="empowered" />;
   if (activeTab === 'items') return <PublicItemsList onLoginRequired={onLoginRequired} readOnly={readOnly} />;
   if (activeTab === 'creatures') return <PublicCreaturesList onLoginRequired={onLoginRequired} readOnly={readOnly} />;
   return null;
+}
+
+function getEmpoweredTotals(item: unknown): { energy?: number; tp?: number } {
+  const raw = item as Record<string, unknown>;
+  const totals = raw.totals as Record<string, unknown> | undefined;
+  return {
+    energy: typeof totals?.energy === 'number' ? totals.energy : undefined,
+    tp: typeof totals?.trainingPoints === 'number' ? totals.trainingPoints : undefined,
+  };
 }
 
 function PublicPowersList({ onLoginRequired, readOnly = false }: { onLoginRequired: () => void; readOnly?: boolean }) {
@@ -216,12 +227,20 @@ function PublicPowersList({ onLoginRequired, readOnly = false }: { onLoginRequir
   );
 }
 
-function PublicTechniquesList({ onLoginRequired, readOnly = false }: { onLoginRequired: () => void; readOnly?: boolean }) {
+function PublicTechniquesList({
+  onLoginRequired,
+  readOnly = false,
+  mode = 'standard',
+}: {
+  onLoginRequired: () => void;
+  readOnly?: boolean;
+  mode?: 'standard' | 'empowered';
+}) {
   const { user } = useAuthStore();
   const { showToast } = useToast();
-  const { data: items = [], isLoading, error } = usePublicLibrary('techniques');
+  const { data: items = [], isLoading, error } = usePublicLibrary(mode === 'empowered' ? 'empowered-techniques' : 'techniques');
   const { data: partsDb = [] } = useTechniqueParts();
-  const addMutation = useAddPublicToLibrary('techniques');
+  const addMutation = useAddPublicToLibrary(mode === 'empowered' ? 'empowered-techniques' : 'techniques');
   const [search, setSearch] = useState('');
   const [addConfirm, setAddConfirm] = useState<{ name: string; raw: Record<string, unknown> } | null>(null);
   const { sortState, handleSort, sortItems } = useSort('name');
@@ -247,8 +266,11 @@ function PublicTechniquesList({ onLoginRequired, readOnly = false }: { onLoginRe
     });
   };
 
+  const filteredItems = items;
+
   const cardData = useMemo(() => {
-    return items.map((t: Record<string, unknown>) => {
+    return filteredItems.map((t: Record<string, unknown>) => {
+      const empowered = mode === 'empowered';
       const doc: TechniqueDocument = {
         name: String(t.name ?? ''),
         description: String(t.description ?? ''),
@@ -257,6 +279,7 @@ function PublicTechniquesList({ onLoginRequired, readOnly = false }: { onLoginRe
         weapon: t.weapon as TechniqueDocument['weapon'],
       };
       const display = deriveTechniqueDisplay(doc, partsDb);
+      const totals = getEmpoweredTotals(t);
       const damageStr = formatTechniqueDamage(doc.damage);
       const parts: ChipData[] = display.partChips.map(chip => ({
         name: chip.text.split(' | TP:')[0].replace(/\s*\(Opt\d+ \d+\)/g, '').trim(),
@@ -269,15 +292,15 @@ function PublicTechniquesList({ onLoginRequired, readOnly = false }: { onLoginRe
         raw: t,
         name: display.name,
         description: display.description,
-        energy: display.energy,
-        tp: display.tp,
+        energy: empowered ? (totals.energy ?? display.energy) : display.energy,
+        tp: empowered ? (totals.tp ?? display.tp) : display.tp,
         action: display.actionType,
         weapon: display.weaponName || '-',
         damage: damageStr,
         parts,
       };
     });
-  }, [items, partsDb]);
+  }, [filteredItems, mode, partsDb]);
 
   const filtered = useMemo(() => {
     let r = cardData;
@@ -288,15 +311,21 @@ function PublicTechniquesList({ onLoginRequired, readOnly = false }: { onLoginRe
     return sortItems(r);
   }, [cardData, search, sortItems]);
 
-  if (error) return <ErrorDisplay message="Failed to load Realms Library techniques" />;
+  if (error) return <ErrorDisplay message={`Failed to load Realms Library ${mode === 'empowered' ? 'empowered techniques' : 'techniques'}`} />;
   if (!isLoading && cardData.length === 0) {
-    return <ListEmptyState icon={<Swords className="w-8 h-8" />} title="No techniques yet" message="Official techniques will appear here when added to Realms Library." />;
+    return (
+      <ListEmptyState
+        icon={<Swords className="w-8 h-8" />}
+        title={mode === 'empowered' ? 'No empowered techniques yet' : 'No techniques yet'}
+        message={mode === 'empowered' ? 'Official empowered techniques will appear here when added to Realms Library.' : 'Official techniques will appear here when added to Realms Library.'}
+      />
+    );
   }
 
   return (
     <div>
       <div className="mb-4">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search techniques..." />
+        <SearchInput value={search} onChange={setSearch} placeholder={mode === 'empowered' ? 'Search empowered techniques...' : 'Search techniques...'} />
       </div>
       <ListHeader
         columns={[
@@ -314,7 +343,9 @@ function PublicTechniquesList({ onLoginRequired, readOnly = false }: { onLoginRe
       />
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? <LoadingState /> : filtered.length === 0 ? (
-          <div className="py-12 text-center text-text-secondary">No techniques match your search.</div>
+          <div className="py-12 text-center text-text-secondary">
+            {mode === 'empowered' ? 'No empowered techniques match your search.' : 'No techniques match your search.'}
+          </div>
         ) : (
           filtered.map(t => (
             <GridListRow
@@ -403,14 +434,7 @@ function PublicItemsList({ onLoginRequired, readOnly = false }: { onLoginRequire
       const costs = calculateItemCosts(props, propertiesDb);
       const { currencyCost, rarity } = calculateCurrencyCostAndRarity(costs.totalCurrency, costs.totalIP);
       const rangeStr = formatItemRange(props);
-      const damage = item.damage;
-      let damageStr = '';
-      if (Array.isArray(damage) && damage[0]) {
-        const d = damage[0] as { amount?: number; size?: number; type?: string };
-        damageStr = [d.amount && d.size ? `${d.amount}d${d.size}` : '', d.type].filter(Boolean).join(' ');
-      }
-      const typeMap: Record<string, string> = { weapon: 'Weapon', armor: 'Armor', shield: 'Shield', equipment: 'Equipment' };
-      const typeStr = typeMap[String(item.type ?? '').toLowerCase()] || String(item.type ?? '');
+      const damageStr = formatDamageDisplay(item.damage) || '';
       const parts: ChipData[] = ((item.properties as Array<{ id?: unknown; name?: string; op_1_lvl?: number }>) || []).map(prop => ({
         name: prop.name || '',
         cost: prop.op_1_lvl ?? 1,
@@ -421,8 +445,8 @@ function PublicItemsList({ onLoginRequired, readOnly = false }: { onLoginRequire
         raw: item,
         name: String(item.name ?? ''),
         description: String(item.description ?? ''),
-        type: typeStr,
-        rarity,
+        type: formatListCellLabel(item.type),
+        rarity: formatListCellLabel(rarity),
         currency: currencyCost,
         tp: costs.totalTP,
         range: rangeStr,
@@ -605,7 +629,7 @@ function PublicCreaturesList({ onLoginRequired, readOnly = false }: { onLoginReq
               gridColumns={CREATURE_GRID}
               columns={[
                 { key: 'Level', value: c.level, highlight: true, align: 'center' },
-                { key: 'Type', value: c.type, align: 'center' },
+                { key: 'Type', value: formatListCellLabel(c.type), align: 'center' },
               ]}
               badges={[{ label: 'Realms', color: 'blue' }]}
               rightSlot={readOnly ? undefined : (

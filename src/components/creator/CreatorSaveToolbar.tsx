@@ -8,8 +8,8 @@
  */
 
 import { FolderOpen } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui';
+import { SegmentedControl } from '@/components/shared';
 
 export interface CreatorSaveToolbarProps {
   /** Current save target (private or public library) */
@@ -34,12 +34,6 @@ export interface CreatorSaveToolbarProps {
   className?: string;
 }
 
-const toggleButtonClass = (active: boolean) =>
-  cn(
-    'px-2 py-1 rounded text-sm font-medium transition-colors',
-    active ? 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white' : 'text-text-muted dark:text-text-secondary hover:text-text-secondary'
-  );
-
 export function CreatorSaveToolbar({
   saveTarget,
   onSaveTargetChange,
@@ -55,26 +49,15 @@ export function CreatorSaveToolbar({
   return (
     <div className="flex flex-wrap items-center gap-2">
       {showPublicPrivate && (
-        <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-alt">
-          <button
-            type="button"
-            onClick={() => onSaveTargetChange('private')}
-            className={toggleButtonClass(saveTarget === 'private')}
-            aria-label="Save to my library"
-            aria-pressed={saveTarget === 'private'}
-          >
-            My library
-          </button>
-          <button
-            type="button"
-            onClick={() => onSaveTargetChange('public')}
-            className={toggleButtonClass(saveTarget === 'public')}
-            aria-label="Save to Realms Library"
-            aria-pressed={saveTarget === 'public'}
-          >
-            Public library
-          </button>
-        </div>
+        <SegmentedControl
+          value={saveTarget}
+          onChange={onSaveTargetChange}
+          options={[
+            { value: 'private', label: 'My library' },
+            { value: 'public', label: 'Public library' },
+          ]}
+          aria-label="Save to my library or Realms Library"
+        />
       )}
       <Button
         variant="secondary"

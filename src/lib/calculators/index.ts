@@ -75,6 +75,14 @@ export {
   type MechanicContext,
 } from './technique-calc';
 
+// Empowered Technique Calculator
+export {
+  calculateEmpoweredTechniqueCosts,
+  getTechniquePercentageMultiplier,
+  type EmpoweredTechniqueCostResult,
+  type CalculateEmpoweredTechniqueCostsInput,
+} from './empowered-technique-calc';
+
 // Item Calculator
 export {
   calculateItemCosts,

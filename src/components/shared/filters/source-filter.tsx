@@ -7,7 +7,7 @@
 
 'use client';
 
-import { cn } from '@/lib/utils';
+import { SegmentedControl } from '../segmented-control';
 
 export type SourceFilterValue = 'all' | 'public' | 'my';
 
@@ -25,20 +25,12 @@ const OPTIONS: { value: SourceFilterValue; label: string }[] = [
 
 export function SourceFilter({ value, onChange, className }: SourceFilterProps) {
   return (
-    <div className={cn('flex items-center gap-1 p-1 rounded-lg bg-surface-alt', className)}>
-      {OPTIONS.map((opt) => (
-        <button
-          key={opt.value}
-          type="button"
-          onClick={() => onChange(opt.value)}
-          className={cn(
-            'px-2 py-1 rounded text-sm font-medium transition-colors',
-            value === opt.value ? 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white' : 'text-text-secondary dark:text-text-primary hover:text-text-primary'
-          )}
-        >
-          {opt.label}
-        </button>
-      ))}
-    </div>
+    <SegmentedControl
+      value={value}
+      onChange={onChange}
+      options={OPTIONS}
+      aria-label="Content source"
+      className={className}
+    />
   );
 }

@@ -32,7 +32,11 @@ import {
   type Species,
   type Skill,
 } from '@/hooks';
-import { calculateArchetypeProgression, calculateSkillPointsForEntity } from '@/lib/game/formulas';
+import {
+  calculateArchetypeProgression,
+  calculateSkillPointsForEntity,
+  resolveParentSkillNameForSubSkill,
+} from '@/lib/game/formulas';
 import type { Character, Item } from '@/types';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
@@ -175,19 +179,31 @@ function CampaignCharacterViewContent() {
         skill_val: number;
         prof?: boolean;
         baseSkill?: string;
+        selectedBaseSkillId?: string;
         ability?: string;
         availableAbilities?: string[];
       }>).map((skill) => {
         const codexSkill = codexSkills.find(
-          (rs: Skill) => rs.id === skill.id || rs.name?.toLowerCase() === skill.name?.toLowerCase()
+          (rs: Skill) =>
+            String(rs.id) === String(skill.id) ||
+            String(rs.name ?? '').toLowerCase() === String(skill.name ?? '').toLowerCase()
         );
-        const availableAbilities = codexSkill?.ability
+        const fromCodex = codexSkill?.ability
           ? codexSkill.ability.split(',').map((a: string) => a.trim().toLowerCase()).filter(Boolean)
           : [];
+        const availableAbilities =
+          fromCodex.length > 0 ? fromCodex : skill.availableAbilities;
+        let ability = skill.ability || availableAbilities?.[0] || 'strength';
+        if (availableAbilities?.length && !availableAbilities.includes(ability.toLowerCase())) {
+          ability = availableAbilities[0] || 'strength';
+        }
+        const parentName =
+          skill.baseSkill ?? resolveParentSkillNameForSubSkill(skill, codexSkill, codexSkills);
         return {
           ...skill,
-          ability: skill.ability || availableAbilities[0] || 'strength',
-          availableAbilities: availableAbilities.length ? availableAbilities : skill.availableAbilities,
+          ability,
+          ...(availableAbilities?.length ? { availableAbilities } : {}),
+          ...(parentName ? { baseSkill: parentName } : {}),
         };
       })
     : [];

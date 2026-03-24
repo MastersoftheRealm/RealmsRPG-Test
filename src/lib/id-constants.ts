@@ -27,6 +27,7 @@ export const PART_IDS = {
 
   // Weapon/Attack Parts
   ADD_WEAPON_ATTACK: 7,
+  ADD_WEAPON_TO_POWER: 369,
   RECKLESS: 8,
   PASS_THROUGH: 9,
   SPIN: 10,

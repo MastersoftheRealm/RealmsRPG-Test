@@ -21,7 +21,7 @@ import {
 import { useSort } from '@/hooks/use-sort';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators/technique-calc';
-import { useUserTechniques, useTechniqueParts, useDuplicateTechnique } from '@/hooks';
+import { useUserTechniques, useUserEmpoweredTechniques, useTechniqueParts, useDuplicateTechnique, useDuplicateEmpoweredTechnique } from '@/hooks';
 import { Button, useToast } from '@/components/ui';
 import type { DisplayItem } from '@/types';
 
@@ -38,18 +38,35 @@ const TECHNIQUE_HEADER_COLUMNS = [
 
 interface LibraryTechniquesTabProps {
   onDelete: (item: DisplayItem) => void;
+  mode?: 'standard' | 'empowered';
 }
 
-export function LibraryTechniquesTab({ onDelete }: LibraryTechniquesTabProps) {
+function getEmpoweredTotals(technique: unknown): { energy?: number; tp?: number } {
+  const raw = technique as Record<string, unknown>;
+  const totals = raw.totals as Record<string, unknown> | undefined;
+  const energy = typeof totals?.energy === 'number' ? totals.energy : undefined;
+  const tp = typeof totals?.trainingPoints === 'number' ? totals.trainingPoints : undefined;
+  return { energy, tp };
+}
+
+export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTechniquesTabProps) {
   const { showToast } = useToast();
-  const { data: techniques = [], isLoading, error } = useUserTechniques();
+  const standardTechniquesQuery = useUserTechniques();
+  const empoweredTechniquesQuery = useUserEmpoweredTechniques();
+  const { data: standardTechniques = [], isLoading: standardLoading, error: standardError } = standardTechniquesQuery;
+  const { data: empoweredTechniques = [], isLoading: empoweredLoading, error: empoweredError } = empoweredTechniquesQuery;
   const { data: partsDb = [] } = useTechniqueParts();
   const duplicateTechnique = useDuplicateTechnique();
+  const duplicateEmpoweredTechnique = useDuplicateEmpoweredTechnique();
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
+  const techniques = mode === 'empowered' ? empoweredTechniques : standardTechniques;
+  const isLoading = mode === 'empowered' ? empoweredLoading : standardLoading;
+  const error = mode === 'empowered' ? empoweredError : standardError;
 
   const cardData = useMemo(() => {
     return techniques.map(tech => {
+      const empowered = mode === 'empowered';
       const doc: TechniqueDocument = {
         name: String(tech.name ?? ''),
         description: String(tech.description ?? ''),
@@ -58,6 +75,7 @@ export function LibraryTechniquesTab({ onDelete }: LibraryTechniquesTabProps) {
         weapon: tech.weapon as TechniqueDocument['weapon'],
       };
       const display = deriveTechniqueDisplay(doc, partsDb);
+      const totals = getEmpoweredTotals(tech);
       const damageStr = formatTechniqueDamage(doc.damage);
       const parts: ChipData[] = display.partChips.map(chip => ({
         name: chip.text.split(' | TP:')[0].replace(/\s*\(Opt\d+ \d+\)/g, '').trim(),
@@ -69,8 +87,8 @@ export function LibraryTechniquesTab({ onDelete }: LibraryTechniquesTabProps) {
         id: String(tech.docId ?? tech.id ?? ''),
         name: display.name,
         description: display.description,
-        energy: display.energy,
-        tp: display.tp,
+        energy: empowered ? (totals.energy ?? display.energy) : display.energy,
+        tp: empowered ? (totals.tp ?? display.tp) : display.tp,
         action: display.actionType,
         weapon: display.weaponName || '-',
         damage: damageStr,
@@ -100,13 +118,13 @@ export function LibraryTechniquesTab({ onDelete }: LibraryTechniquesTabProps) {
     return (
       <ListEmptyState
         icon={<Swords className="w-8 h-8" />}
-        title="No techniques yet"
-        message="Create your first technique to see it here in your library."
+        title={mode === 'empowered' ? 'No empowered techniques yet' : 'No techniques yet'}
+        message={mode === 'empowered' ? 'Create your first empowered technique to see it here in your library.' : 'Create your first technique to see it here in your library.'}
         action={
           <Button asChild>
-            <Link href="/technique-creator">
+            <Link href={mode === 'empowered' ? '/empowered-technique-creator' : '/technique-creator'}>
               <Plus className="w-4 h-4" />
-              Create Technique
+              {mode === 'empowered' ? 'Create Empowered Technique' : 'Create Technique'}
             </Link>
           </Button>
         }
@@ -135,7 +153,9 @@ export function LibraryTechniquesTab({ onDelete }: LibraryTechniquesTabProps) {
         {isLoading ? (
           <LoadingState />
         ) : filteredData.length === 0 ? (
-          <div className="py-12 text-center text-text-secondary">No techniques match your search.</div>
+          <div className="py-12 text-center text-text-secondary">
+            {mode === 'empowered' ? 'No empowered techniques match your search.' : 'No techniques match your search.'}
+          </div>
         ) : (
           filteredData.map(tech => (
             <GridListRow
@@ -155,9 +175,13 @@ export function LibraryTechniquesTab({ onDelete }: LibraryTechniquesTabProps) {
               chipsLabel="Parts & Proficiencies"
               totalCost={typeof tech.tp === 'number' ? tech.tp : (parseFloat(String(tech.tp)) || undefined)}
               costLabel="TP"
-              onEdit={() => window.open(`/technique-creator?edit=${tech.id}`, '_blank')}
+              onEdit={() => window.open(`${mode === 'empowered' ? '/empowered-technique-creator' : '/technique-creator'}?edit=${tech.id}`, '_blank')}
               onDelete={() => onDelete({ id: tech.id, name: tech.name } as DisplayItem)}
-              onDuplicate={() => duplicateTechnique.mutate(tech.id, { onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error') })}
+              onDuplicate={() =>
+                (mode === 'empowered' ? duplicateEmpoweredTechnique : duplicateTechnique).mutate(tech.id, {
+                  onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error'),
+                })
+              }
             />
           ))
         )}

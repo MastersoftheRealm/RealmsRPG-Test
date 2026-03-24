@@ -12,7 +12,14 @@ import { getCharacter, saveCharacter, type LibraryForView } from '@/services/cha
 import { useAuth, useAutoSave, useCampaignsFull, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useMergedSpecies, useCodexFeats, useCodexSkills, useEquipment, usePublicLibrary, type Species, type Trait, type Skill } from '@/hooks';
 import { LoadingState } from '@/components/ui';
 import { enrichCharacterData, cleanForSave } from '@/lib/data-enrichment';
-import { calculateArchetypeProgression, calculateSkillPointsForEntity, calculateMaxArchetypeFeats, calculateMaxCharacterFeats, calculateProficiency } from '@/lib/game/formulas';
+import {
+  calculateArchetypeProgression,
+  calculateSkillPointsForEntity,
+  calculateMaxArchetypeFeats,
+  calculateMaxCharacterFeats,
+  calculateProficiency,
+  resolveParentSkillNameForSubSkill,
+} from '@/lib/game/formulas';
 import { getArchetypeAbilityScore } from '@/lib/game/calculations';
 import { DEFENSE_INCREASE_COST } from '@/lib/game/skill-allocation';
 import {
@@ -1589,6 +1596,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
       skill_val: number;
       prof?: boolean;
       baseSkill?: string;
+      selectedBaseSkillId?: string;
       ability?: string;
       availableAbilities?: string[];
     }>;
@@ -1620,34 +1628,39 @@ export default function CharacterSheetPage({ params }: PageParams) {
     // If no Codex skills loaded yet, return merged (species skills may not resolve)
     if (codexSkills.length === 0) return merged;
     
-    return merged.map(skill => {
-      // If skill already has availableAbilities, use those
-      if (skill.availableAbilities && skill.availableAbilities.length > 0) {
-        return skill;
-      }
-      
-      // Find matching skill in Codex by name or id
+    return merged.map((skill) => {
       const codexSkill = codexSkills.find(
-        (rs: Skill) => rs.id === skill.id || String(rs.name ?? '').toLowerCase() === String(skill.name ?? '').toLowerCase()
+        (rs: Skill) =>
+          String(rs.id) === String(skill.id) ||
+          String(rs.name ?? '').toLowerCase() === String(skill.name ?? '').toLowerCase()
       );
-      
-      if (codexSkill && codexSkill.ability) {
-        const availableAbilities = codexSkill.ability.split(',').map((a: string) => a.trim().toLowerCase()).filter(Boolean);
-        
-        // If the skill's current ability is not in the available list, default to first available
-        let ability = skill.ability;
-        if (!ability || !availableAbilities.includes(ability.toLowerCase())) {
-          ability = availableAbilities[0] || 'strength';
+
+      const parentName =
+        skill.baseSkill ?? resolveParentSkillNameForSubSkill(skill, codexSkill, codexSkills);
+
+      let availableAbilities = skill.availableAbilities;
+      let ability = skill.ability;
+      if (codexSkill?.ability) {
+        const fromCodex = codexSkill.ability
+          .split(',')
+          .map((a: string) => a.trim().toLowerCase())
+          .filter(Boolean);
+        if (fromCodex.length > 0) {
+          if (!availableAbilities?.length) {
+            availableAbilities = fromCodex;
+          }
+          if (!ability || !fromCodex.includes(ability.toLowerCase())) {
+            ability = fromCodex[0] || 'strength';
+          }
         }
-        
-        return {
-          ...skill,
-          ability,
-          availableAbilities,
-        };
       }
-      
-      return skill;
+
+      return {
+        ...skill,
+        ability: ability ?? skill.ability ?? 'strength',
+        ...(availableAbilities?.length ? { availableAbilities } : {}),
+        ...(parentName ? { baseSkill: parentName } : {}),
+      };
     });
   }, [character, codexSkills, characterSpeciesSkills]);
   

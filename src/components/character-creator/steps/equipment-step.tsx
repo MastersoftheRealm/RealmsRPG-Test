@@ -12,7 +12,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { cn, formatDamageDisplay } from '@/lib/utils';
+import { cn, formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useEquipment, useUserItems, useItemProperties, usePublicLibrary } from '@/hooks';
 import { deriveItemDisplay } from '@/lib/calculators/item-calc';
@@ -1106,7 +1106,7 @@ export function EquipmentStep() {
                       />
                     );
                   }
-                  const categoryColumn = { key: 'category', value: item.category || (item.type ? item.type.charAt(0).toUpperCase() + item.type.slice(1) : '-'), align: 'center' as const };
+                  const categoryColumn = { key: 'category', value: formatListCellLabel(item.category || item.type), align: 'center' as const };
                   return (
                     <GridListRow
                       key={item.id}

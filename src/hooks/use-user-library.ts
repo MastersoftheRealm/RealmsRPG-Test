@@ -154,6 +154,7 @@ export interface UserCreature {
 const QUERY_KEYS = {
   userPowers: (userId: string) => ['user-powers', userId] as const,
   userTechniques: (userId: string) => ['user-techniques', userId] as const,
+  userEmpoweredTechniques: (userId: string) => ['user-empowered-techniques', userId] as const,
   userItems: (userId: string) => ['user-items', userId] as const,
   userCreatures: (userId: string) => ['user-creatures', userId] as const,
   userSpecies: (userId: string) => ['user-species', userId] as const,
@@ -196,6 +197,19 @@ export function useUserTechniques(): UseQueryResult<UserTechnique[], Error> {
   return useQuery({
     queryKey: QUERY_KEYS.userTechniques(userId),
     queryFn: () => fetchLibrary<UserTechnique>('techniques', userId),
+    enabled: !!userId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+}
+
+export function useUserEmpoweredTechniques(): UseQueryResult<UserTechnique[], Error> {
+  const { user } = useAuthStore();
+  const userId = user?.uid || '';
+
+  return useQuery({
+    queryKey: QUERY_KEYS.userEmpoweredTechniques(userId),
+    queryFn: () => fetchLibrary<UserTechnique>('empowered-techniques', userId),
     enabled: !!userId,
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
@@ -343,11 +357,12 @@ async function duplicateLibraryItem(type: string, docId: string): Promise<string
 // Generic Mutation Factories
 // =============================================================================
 
-type LibraryType = 'powers' | 'techniques' | 'items' | 'creatures' | 'species';
+type LibraryType = 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species';
 
 const TYPE_QUERY_KEYS: Record<LibraryType, (uid: string) => readonly string[]> = {
   powers: QUERY_KEYS.userPowers,
   techniques: QUERY_KEYS.userTechniques,
+  'empowered-techniques': QUERY_KEYS.userEmpoweredTechniques,
   items: QUERY_KEYS.userItems,
   creatures: QUERY_KEYS.userCreatures,
   species: QUERY_KEYS.userSpecies,
@@ -382,10 +397,12 @@ function useDuplicateLibraryItem(type: LibraryType): UseMutationResult<string, E
 // Named exports for backward compatibility
 export const useDeletePower = () => useDeleteLibraryItem('powers');
 export const useDeleteTechnique = () => useDeleteLibraryItem('techniques');
+export const useDeleteEmpoweredTechnique = () => useDeleteLibraryItem('empowered-techniques');
 export const useDeleteItem = () => useDeleteLibraryItem('items');
 export const useDeleteCreature = () => useDeleteLibraryItem('creatures');
 
 export const useDuplicatePower = () => useDuplicateLibraryItem('powers');
 export const useDuplicateTechnique = () => useDuplicateLibraryItem('techniques');
+export const useDuplicateEmpoweredTechnique = () => useDuplicateLibraryItem('empowered-techniques');
 export const useDuplicateItem = () => useDuplicateLibraryItem('items');
 export const useDuplicateCreature = () => useDuplicateLibraryItem('creatures');

@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils';
 import { useItemProperties, useAdmin, useCreatorSave, useLoadModalLibrary, type ItemProperty, type UserItem } from '@/hooks';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Alert, PageContainer } from '@/components/ui';
-import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout, CollapsibleSection } from '@/components/creator';
+import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout, CollapsibleSection, AdvancedCalculationsPanel } from '@/components/creator';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
 import { ValueStepper, SectionCostBadge } from '@/components/shared';
 import { CreatorSummaryPanel } from '@/components/creator';
@@ -792,6 +792,16 @@ function ItemCreatorContent() {
     () => calculateCurrencyCostAndRarity(costs.totalCurrency, costs.totalIP),
     [costs.totalCurrency, costs.totalIP]
   );
+  const advancedCalcRows = useMemo(
+    () => [
+      { label: 'Item points (IP)', value: formatCost(costs.totalIP) },
+      { label: 'Training points (TP)', value: formatCost(costs.totalTP) },
+      { label: 'Currency sum (C)', value: formatCost(costs.totalCurrency) },
+      { label: 'Rarity', value: rarity },
+      { label: 'Currency cost (final)', value: currencyCost.toLocaleString() },
+    ],
+    [costs.totalCurrency, costs.totalIP, costs.totalTP, currencyCost, rarity]
+  );
 
   // Format damage for display
   const damageDisplay = useMemo(() => {
@@ -1108,13 +1118,10 @@ function ItemCreatorContent() {
               }
             ] : undefined}
           >
-            {save.saveMessage && (
-              <Alert 
-                variant={save.saveMessage.type === 'success' ? 'success' : 'danger'}
-              >
-                {save.saveMessage.text}
-              </Alert>
-            )}
+            <AdvancedCalculationsPanel
+              rows={advancedCalcRows}
+              ruleText="Rule: Final currency = base cost for rarity × (1 + 0.125 × C)."
+            />
           </CreatorSummaryPanel>
           <RarityReferenceTable currentIP={costs.totalIP} />
         </div>
