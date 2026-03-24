@@ -40,9 +40,15 @@ export function useAddOfficialToLibrary(type: 'powers' | 'techniques' | 'empower
 
   return useMutation({
     mutationFn: (item: Record<string, unknown>) => addOfficialItemToLibrary(type, item),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: OFFICIAL_LIBRARY_KEYS.byType(type) });
-      queryClient.invalidateQueries({ queryKey: [USER_LIBRARY_KEY_MAP[type]] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: OFFICIAL_LIBRARY_KEYS.byType(type),
+        refetchType: 'all',
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [USER_LIBRARY_KEY_MAP[type]],
+        refetchType: 'all',
+      });
     },
   });
 }

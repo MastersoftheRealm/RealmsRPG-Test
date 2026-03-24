@@ -26,9 +26,13 @@
 | **supabase-official-library-public-schema.sql** | Official library in **public** (columnar) + backfill from public_* | Run to create official_* in public and backfill from public_* (id+data). GET /api/public prefers official_*. |
 | **supabase-official-library-columnar-expansion.sql** | Official powers: add range_steps, duration_*, area_*, damage columns; backfill from payload | Run after official-library-public-schema; see [OFFICIAL_LIBRARY_COLUMNAR_PLAN.md](../src/docs/OFFICIAL_LIBRARY_COLUMNAR_PLAN.md). |
 | **supabase-user-species-columnar.sql** | user_species columnar (codex_species columns + user_id + payload) | Run once; backfill from data, then drop data. |
+| **supabase-user-species-grants-rls.sql** | `GRANT` + RLS on `user_species` for `authenticated` | Run if logs show **permission denied for table user_species** (missing table privileges after manual SQL). |
+| **supabase-campaign-members-grants.sql** | `GRANT` on `public.campaign_members` for `authenticated` (+ service_role) | Run if logs show **permission denied for table campaign_members** (join/upsert/member list fails). |
+| **supabase-characters-rls-cross-read.sql** | RLS SELECT on `public.characters` for **public** + **campaign** visibility (non-owners) | Run if viewers get **Character not found** for another player’s sheet: old RLS only allowed owner SELECT, so the API never received the row. |
 | **supabase-encounters-list-columns.sql** | Encounters: add name, type, status columns; backfill from data | Optional; list/filter by columns. |
 | **supabase-characters-list-columns.sql** | Characters: add name, level, archetype_name, ancestry_name, status, visibility; backfill from data | Hybrid list columns (TASK-282). |
 | **supabase-campaign-rolls-list-columns.sql** | Campaign rolls: add character_id, user_id, type, title; backfill from data | Hybrid list columns (TASK-283). |
+| **supabase-campaign-rolls-id-default.sql** | `campaign_rolls.id`: optional `DEFAULT gen_random_uuid()` (uuid or text column) | Run only if you want DB-side defaults; **app POST now always sets `id`**. Fixes logs: *null value in column "id"* on insert. |
 | **supabase-codex-rls-public.sql** | RLS for codex_* and core_rules in public (SELECT TO public) | Run if GET /api/codex returns 500 (permission denied). |
 | **supabase-campaign-members.sql** | campaign_members table | May already exist from consolidation |
 | **supabase-user-profiles-timestamps-default.sql** | user_profiles: set DEFAULT now() on created_at, updated_at | Run if inserts fail with "null value in column updated_at" |

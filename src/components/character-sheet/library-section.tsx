@@ -215,6 +215,17 @@ interface PropertyWithLevel {
   op_3_lvl?: number;
 }
 
+/** Enriched armaments set `properties` to name-only strings; full payloads live on `libraryItem` (same as My Library). */
+type ItemWithLibrarySource = Item & {
+  libraryItem?: { properties?: Item['properties'] };
+};
+
+function resolveItemProperties(item: ItemWithLibrarySource): Item['properties'] | undefined {
+  const fromLib = item.libraryItem?.properties;
+  if (fromLib && fromLib.length > 0) return fromLib as Item['properties'];
+  return item.properties;
+}
+
 // Helper to convert item properties to PartData format, with Codex enrichment (includes option levels for chip display)
 function propertiesToPartData(
   properties?: Item['properties'],
@@ -441,11 +452,12 @@ const POWER_GRID = '1.4fr 1fr 1fr 0.7fr 0.7fr';
 
 const TECHNIQUE_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1.4fr' },
+  { key: 'action', label: 'Action', width: '1fr', align: 'center' },
   { key: 'energy', label: 'Energy', width: '0.7fr', align: 'center' },
   { key: 'weapon', label: 'Weapon', width: '1fr', align: 'center' },
   { key: 'tp', label: 'Training Pts', width: '0.8fr', align: 'center' },
 ];
-const TECHNIQUE_GRID = '1.4fr 0.7fr 1fr 0.8fr';
+const TECHNIQUE_GRID = '1.4fr 1fr 0.7fr 1fr 0.8fr';
 
 const WEAPON_COLUMNS: ListColumn[] = [
   // Expected maxes:
@@ -998,6 +1010,11 @@ export function LibrarySection({
                     const rowBadges = hasMissingProf ? [{ label: 'Needs Proficiency', color: 'red' as const }] : undefined;
                     
                     const columns: ColumnValue[] = [
+                      {
+                        key: 'action',
+                        value: formatActionTypeForDisplay(tech.actionType ?? ''),
+                        align: 'center',
+                      },
                       { key: 'energy', value: energyCost, align: 'center' },
                       { key: 'weapon', value: tech.weaponName || '-', highlight: tech.weaponName !== undefined, align: 'center' },
                       { key: 'tp', value: techTP ?? '-', align: 'center' },
@@ -1129,7 +1146,7 @@ export function LibrarySection({
                   {sortedWeapons.map((item, i) => {
                     // Attack bonus = ability + martial proficiency (same as character sheet weapon section)
                     const { bonus: attackBonus, abilityName } = getWeaponAttackBonus(item, abilities, martialProficiency);
-                    const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({
+                    const propertyChips = propertiesToPartData(resolveItemProperties(item), itemPropertiesDb).map(p => ({
                       name: p.name,
                       description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
                       cost: p.tpCost,
@@ -1248,7 +1265,7 @@ export function LibrarySection({
                       // Prefer enriched shield damage string when present
                       shieldDamageStr !== '-' ? String(shieldDamageStr) : item.damage
                     );
-                    const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({
+                    const propertyChips = propertiesToPartData(resolveItemProperties(item), itemPropertiesDb).map(p => ({
                       name: p.name,
                       description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
                       cost: p.tpCost,
@@ -1377,7 +1394,7 @@ export function LibrarySection({
               {sortedArmor.length > 0 ? (
                 <div className="space-y-1">
                   {sortedArmor.map((item, i) => {
-                    const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({
+                    const propertyChips = propertiesToPartData(resolveItemProperties(item), itemPropertiesDb).map(p => ({
                       name: p.name,
                       description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
                       cost: p.tpCost,
@@ -1395,8 +1412,9 @@ export function LibrarySection({
                     const itemWithArmor = item as { armorValue?: number; armor?: number };
                     let damageReduction = itemWithArmor.armorValue ?? itemWithArmor.armor ?? 0;
                     let critRangeBonus = 0;
-                    if (item.properties) {
-                      for (const prop of item.properties) {
+                    const armorProps = resolveItemProperties(item as ItemWithLibrarySource);
+                    if (armorProps) {
+                      for (const prop of armorProps) {
                         if (!prop) continue;
                         const propName = typeof prop === 'string' ? prop : prop.name || '';
                         const op1Lvl = typeof prop === 'object' && 'op_1_lvl' in prop ? Number((prop as Record<string, unknown>).op_1_lvl) || 0 : 0;
@@ -1481,7 +1499,7 @@ export function LibrarySection({
               {sortedEquipment.length > 0 ? (
                 <div className="space-y-1">
                   {sortedEquipment.map((item, i) => {
-                    const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({
+                    const propertyChips = propertiesToPartData(resolveItemProperties(item), itemPropertiesDb).map(p => ({
                       name: p.name,
                       description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
                       cost: p.tpCost,

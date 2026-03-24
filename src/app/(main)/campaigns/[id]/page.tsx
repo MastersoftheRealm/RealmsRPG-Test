@@ -60,7 +60,13 @@ function CampaignDetailContent() {
 
   const { data: campaign, isLoading, error } = useCampaign(campaignId);
   const { data: characters = [] } = useCharacters();
-  const { rolls: campaignRolls = [] } = useCampaignRolls(campaignId);
+  const {
+    rolls: campaignRolls = [],
+    loading: campaignRollsLoading,
+    isError: campaignRollsQueryError,
+    error: campaignRollsQueryErr,
+    refetch: refetchCampaignRolls,
+  } = useCampaignRolls(campaignId);
   const invalidateCampaigns = useInvalidateCampaigns();
   const rollLogScrollRef = useRef<HTMLDivElement>(null);
 
@@ -75,14 +81,6 @@ function CampaignDetailContent() {
   const [copied, setCopied] = useState(false);
   const [removeConfirm, setRemoveConfirm] = useState<CampaignCharacter | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
-  const [pendingAddCharacter, setPendingAddCharacter] = useState<{
-    id: string;
-    name: string;
-    level: number;
-    portrait?: string;
-    archetypeName?: string;
-    ancestryName?: string;
-  } | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [editingName, setEditingName] = useState(false);
@@ -116,9 +114,11 @@ function CampaignDetailContent() {
       if (result.success) {
         invalidateCampaigns();
         setAddModalOpen(false);
-        setPendingAddCharacter(null);
         if (result.visibilityUpdated) {
-          showToast('Character visibility was set to Campaign so the Realm Master and players can view it.', 'success');
+          showToast(
+            'Character visibility was set to Campaign so other players in this campaign can view the sheet.',
+            'success'
+          );
         }
       } else {
         setActionError(result.error || 'Failed to add character');
@@ -130,13 +130,16 @@ function CampaignDetailContent() {
     }
   };
 
-  const handleSelectCharacterToAdd = (char: { id: string; name: string; level: number; portrait?: string; archetypeName?: string; ancestryName?: string; visibility?: string }) => {
-    if (char.visibility === 'private') {
-      setAddModalOpen(false);
-      setPendingAddCharacter(char);
-    } else {
-      handleAddCharacter(char);
-    }
+  const handleSelectCharacterToAdd = (char: {
+    id: string;
+    name: string;
+    level: number;
+    portrait?: string;
+    archetypeName?: string;
+    ancestryName?: string;
+    visibility?: string;
+  }) => {
+    handleAddCharacter(char);
   };
 
   const handleRemoveCharacter = async (c: CampaignCharacter) => {
@@ -472,12 +475,29 @@ function CampaignDetailContent() {
         <p className="text-sm text-text-secondary mb-4">
           Rolls from all characters in this campaign. Updates in real time.
         </p>
+        {campaignRollsQueryError && (
+          <Alert variant="danger" title="Couldn’t load campaign rolls" className="mb-4">
+            <p className="mb-3 text-sm">
+              {campaignRollsQueryErr?.message ?? 'Check your connection or try again.'}
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void refetchCampaignRolls()}
+              aria-label="Retry loading campaign rolls"
+            >
+              Retry
+            </Button>
+          </Alert>
+        )}
         <div ref={rollLogScrollRef} className="max-h-[400px] overflow-y-auto p-2 bg-surface-alt rounded-lg">
-          {campaignRolls.length === 0 ? (
+          {campaignRollsLoading && campaignRolls.length === 0 && !campaignRollsQueryError ? (
+            <LoadingState message="Loading campaign rolls…" />
+          ) : campaignRolls.length === 0 && !campaignRollsQueryError ? (
             <p className="text-center text-text-muted dark:text-text-secondary italic py-10">
               No campaign rolls yet. Rolls from character sheets will appear here.
             </p>
-          ) : (
+          ) : !campaignRollsQueryError ? (
             // Oldest at top, newest at bottom (API returns newest-first; reverse to match roll log elsewhere)
             [...campaignRolls].reverse().map((roll) => (
               <RollEntryCard
@@ -486,6 +506,10 @@ function CampaignDetailContent() {
                 characterName={'characterName' in roll ? roll.characterName : undefined}
               />
             ))
+          ) : (
+            <p className="text-center text-text-secondary text-sm py-8">
+              Fix the error above or tap Retry.
+            </p>
           )}
         </div>
       </div>
@@ -498,31 +522,6 @@ function CampaignDetailContent() {
           onClose={() => setAddModalOpen(false)}
           loading={actionLoading}
         />
-      )}
-
-      {/* Add character visibility confirmation (private → campaign) */}
-      {pendingAddCharacter && (
-        <Modal
-          isOpen
-          onClose={() => setPendingAddCharacter(null)}
-          title="Character visibility will change"
-        >
-          <p className="text-text-secondary mb-4">
-            <strong>{pendingAddCharacter.name}</strong> is private. Adding to this campaign will set its visibility to <strong>Campaign</strong> so the Realm Master and other players can view it (read-only). You can change this later in the character&apos;s Notes tab.
-          </p>
-          <div className="flex gap-3 justify-end">
-            <Button variant="ghost" onClick={() => setPendingAddCharacter(null)} disabled={actionLoading}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => handleAddCharacter(pendingAddCharacter)}
-              disabled={actionLoading}
-              isLoading={actionLoading}
-            >
-              Add to campaign
-            </Button>
-          </div>
-        </Modal>
       )}
 
       {/* Remove Confirm */}

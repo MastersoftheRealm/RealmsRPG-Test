@@ -669,8 +669,9 @@ export function cleanForSave(data: Character): Partial<Character> {
     };
   }
 
-  // Strip ancestry to lean { id, name, selectedTraits, selectedFlaw, selectedCharacteristic }
-  // size/speed/abilities are derived from codex; name kept for server-side listing.
+  // Strip ancestry to lean user choices. Single-species: traits/flaw/characteristic (+ optional size).
+  // Mixed species: also persist speciesIds, speciesTraits, skills, flaw source, size choice, etc.
+  // (Previously only selectedTraits/flaw/characteristic were kept, which dropped mixed species traits.)
   if (cleaned.ancestry && typeof cleaned.ancestry === 'object') {
     const anc = cleaned.ancestry as Record<string, unknown>;
     const leanAnc: Record<string, unknown> = {};
@@ -679,6 +680,27 @@ export function cleanForSave(data: Character): Partial<Character> {
     if (anc.selectedTraits) leanAnc.selectedTraits = anc.selectedTraits;
     if (anc.selectedFlaw !== undefined) leanAnc.selectedFlaw = anc.selectedFlaw;
     if (anc.selectedCharacteristic !== undefined) leanAnc.selectedCharacteristic = anc.selectedCharacteristic;
+    if (anc.size !== undefined && anc.size !== null && anc.size !== '') leanAnc.size = anc.size;
+    if (anc.mixed === true) leanAnc.mixed = true;
+    if (Array.isArray(anc.speciesIds) && anc.speciesIds.length >= 2) {
+      leanAnc.speciesIds = anc.speciesIds;
+    }
+    if (Array.isArray(anc.speciesNames) && anc.speciesNames.length >= 2) {
+      leanAnc.speciesNames = anc.speciesNames;
+    }
+    if (anc.selectedSize !== undefined && anc.selectedSize !== null && anc.selectedSize !== '') {
+      leanAnc.selectedSize = anc.selectedSize;
+    }
+    if (Array.isArray(anc.selectedSpeciesTraits) && anc.selectedSpeciesTraits.length > 0) {
+      leanAnc.selectedSpeciesTraits = anc.selectedSpeciesTraits;
+    }
+    if (anc.selectedFlawSpeciesId !== undefined) leanAnc.selectedFlawSpeciesId = anc.selectedFlawSpeciesId;
+    if (anc.mixedPhysical && typeof anc.mixedPhysical === 'object') {
+      leanAnc.mixedPhysical = anc.mixedPhysical;
+    }
+    if (Array.isArray(anc.selectedSpeciesSkillIds) && anc.selectedSpeciesSkillIds.length > 0) {
+      leanAnc.selectedSpeciesSkillIds = anc.selectedSpeciesSkillIds;
+    }
     cleaned.ancestry = leanAnc;
   }
 

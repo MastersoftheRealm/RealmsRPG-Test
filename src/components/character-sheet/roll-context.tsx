@@ -8,6 +8,7 @@
 'use client';
 
 import React, { createContext, useContext, useCallback, useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Types
 export interface DieResult {
@@ -102,6 +103,7 @@ export function RollProvider({
   /** When false, roll functions are no-ops and roll UI should be hidden (e.g. viewing another user's character) */
   canRoll?: boolean;
 }) {
+  const queryClient = useQueryClient();
   const [rolls, setRolls] = useState<RollEntry[]>(() => {
     // Hydrate from localStorage on mount
     if (typeof window === 'undefined') return [];
@@ -134,16 +136,22 @@ export function RollProvider({
     subscribersRef.current.forEach(callback => callback(roll));
     // If in campaign context, also write to campaign roll log
     if (campaignContext) {
+      const cid = String(campaignContext.campaignId);
       import('@/services/campaign-roll-service').then(({ addCampaignRoll }) => {
         addCampaignRoll({
-          campaignId: campaignContext.campaignId,
+          campaignId: cid,
           characterId: campaignContext.characterId,
           characterName: campaignContext.characterName,
           roll,
-        }).catch((err) => console.error('Failed to add campaign roll:', err));
+        })
+          .then(() => {
+            // Own roll: Realtime can lag or not fire for the writer; refetch so Campaign tab updates immediately.
+            void queryClient.invalidateQueries({ queryKey: ['campaign-rolls', cid] });
+          })
+          .catch((err) => console.error('Failed to add campaign roll:', err));
       });
     }
-  }, [maxHistory, campaignContext, canRoll]);
+  }, [maxHistory, campaignContext, canRoll, queryClient]);
 
   const clearHistory = useCallback(() => {
     setRolls([]);

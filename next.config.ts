@@ -19,11 +19,12 @@ const nextConfig: NextConfig = {
       "form-action 'self'",
       "frame-ancestors 'self'",
       "object-src 'none'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      // Vercel Toolbar / Live feedback (preview & production) loads from vercel.live
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data: https://fonts.gstatic.com",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live wss://*.vercel.live",
       "frame-src 'self'",
     ].join('; ');
 

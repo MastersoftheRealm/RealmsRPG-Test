@@ -6,8 +6,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
+import { isCharacterOnCampaignRoster } from '@/lib/campaign-roster';
 import { computeMaxHealthEnergy } from '@/lib/game/calculations';
 import { getOwnerLibraryForView } from '@/lib/owner-library-for-view';
 import type { CharacterVisibility } from '@/types';
@@ -45,10 +46,7 @@ export async function GET(
     const isRM = campaignRow.owner_id === user.uid;
     const isMember = isRM || memberIds.includes(user.uid);
 
-    const characters = (campaignRow.characters as Array<{ user_id?: string; character_id?: string; userId?: string; characterId?: string }>) ?? [];
-    const isInCampaign = characters.some(
-      (c) => (c.user_id ?? c.userId) === userId && (c.character_id ?? c.characterId) === characterId
-    );
+    const isInCampaign = isCharacterOnCampaignRoster(campaignRow.characters, userId, characterId);
     if (!isInCampaign) {
       return NextResponse.json({ error: 'Character not found in campaign' }, { status: 404 });
     }
@@ -62,12 +60,31 @@ export async function GET(
       return NextResponse.json({ error: 'Only the Realm Master can view player character sheets' }, { status: 403 });
     }
 
-    const { data: charRow } = await supabase
+    const { data: charRowUser } = await supabase
       .from('characters')
       .select('id, user_id, data, created_at, updated_at')
       .eq('id', characterId)
       .eq('user_id', userId)
       .maybeSingle();
+
+    let charRow = charRowUser;
+    // RLS often blocks non-owners from reading other players' rows; roster + membership were verified above.
+    if (!charRow) {
+      try {
+        const admin = createServiceRoleClient();
+        const { data: charRowAdmin, error: adminErr } = await admin
+          .from('characters')
+          .select('id, user_id, data, created_at, updated_at')
+          .eq('id', characterId)
+          .eq('user_id', userId)
+          .maybeSingle();
+        if (!adminErr) {
+          charRow = charRowAdmin ?? null;
+        }
+      } catch (e) {
+        console.warn('[campaign character GET] service role fetch unavailable:', e);
+      }
+    }
 
     if (!charRow) {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });

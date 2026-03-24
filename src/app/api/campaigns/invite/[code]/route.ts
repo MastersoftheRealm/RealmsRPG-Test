@@ -5,10 +5,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/server';
+import { normalizeInviteCodeInput, isValidInviteCodeFormat } from '@/lib/campaign-invite';
 import { buildRateLimitKey, inviteCodeLimiter, resolveClientIp } from '@/lib/rate-limit';
-
-const INVITE_CODE_REGEX = /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/;
 
 export async function GET(
   _request: Request,
@@ -23,12 +22,19 @@ export async function GET(
     }
 
     const { code } = await params;
-    const inviteCode = code?.trim().toUpperCase();
-    if (!inviteCode || !INVITE_CODE_REGEX.test(inviteCode)) {
+    const inviteCode = normalizeInviteCodeInput(code ?? '');
+    if (!isValidInviteCodeFormat(inviteCode)) {
       return NextResponse.json({ error: 'Invalid invite code' }, { status: 400 });
     }
 
-    const supabase = await createClient();
+    /** RLS blocks non-members from reading campaigns; invite preview must use service role (rate-limited). */
+    let supabase;
+    try {
+      supabase = createServiceRoleClient();
+    } catch {
+      return NextResponse.json({ error: 'Invite lookup unavailable' }, { status: 503 });
+    }
+
     const { data: row } = await supabase
       .from('campaigns')
       .select('id, name')

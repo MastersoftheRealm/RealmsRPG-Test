@@ -90,6 +90,8 @@ All **columnar** (scalars + `payload` JSONB). Species matches codex_species colu
 | `user_creatures` | Columnar | id (PK), user_id (FK), name, description, level, type, size, hit_points, energy_points, created_at, updated_at, payload (JSONB) |
 | `user_species` | Columnar | id (PK), user_id (FK), name, description, type, sizes, skills, species_traits, ancestry_traits, flaws, characteristics, ave_hgt_cm, ave_wgt_kg, adulthood_lifespan, languages, created_at, updated_at, payload (JSONB) |
 
+If Supabase logs show **`permission denied for table user_species`**, the `authenticated` role is missing table `GRANT`s (common after creating/moving the table without grants). Run **`sql/supabase-user-species-grants-rls.sql`** in the SQL Editor. This does not fix campaign invite lookup by itself (that is separate RLS on `campaigns`); it fixes species library / hooks that query `user_species`.
+
 **API:** `GET/POST/PATCH/DELETE /api/user/library/[type]`; types: powers, techniques, empowered-techniques, items, creatures, species.
 
 ---
@@ -102,6 +104,8 @@ All **columnar** (scalars + `payload` JSONB). Species matches codex_species colu
 
 Single document in `data`; list columns for list/filter. Realtime: `public.characters`.
 
+**Cross-user read (campaign / public):** `/api/characters/[id]` applies visibility in app code, but Supabase RLS runs first. If the only SELECT policy is “own rows,” other users get no row → “Character not found.” Run **`sql/supabase-characters-rls-cross-read.sql`** to add SELECT policies for `data.visibility = 'public'` and for `campaign` when the reader is the campaign owner or in `campaign_members` and the character appears on that campaign’s `characters` JSON roster (`userId`/`characterId` or snake_case).
+
 ---
 
 ### 2.7 Campaigns
@@ -110,9 +114,13 @@ Single document in `data`; list columns for list/filter. Realtime: `public.chara
 |-------|--------|-------------|
 | `campaigns` | Scalar + JSONB | id (PK), owner_id, name, description, invite_code, characters (JSONB), memberIds (JSONB), owner_username, created_at, updated_at |
 | `campaign_members` | Columnar | campaign_id (PK), user_id (PK); FK campaign_id → campaigns(id) |
-| `campaign_rolls` | Hybrid | id (PK), campaign_id (FK), data (JSONB), created_at; list columns: character_id, user_id, type, title |
+| `campaign_rolls` | Hybrid | id (PK, required on insert unless DB default), campaign_id (FK), data (JSONB), created_at; list columns: character_id, user_id, type, title |
 
 Membership source of truth: `campaign_members`. Realtime: `public.campaign_rolls`.
+
+**Join-by-invite (app behavior):** RLS on `campaigns` allows SELECT only for the owner or existing members, so a new player cannot load a campaign row with the normal user-scoped Supabase client. The app uses **`SUPABASE_SERVICE_ROLE_KEY`** (server-only) in `joinCampaignAction` and in `GET /api/campaigns/invite/[code]` to look up by `invite_code` and update roster/members after the user is authenticated and character ownership is verified.
+
+If logs show **`permission denied for table campaign_members`**, run **`sql/supabase-campaign-members-grants.sql`** — the `authenticated` role needs explicit `GRANT` on the table (RLS does not replace table privileges).
 
 ---
 

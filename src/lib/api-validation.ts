@@ -94,6 +94,8 @@ export const characterUpdateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   level: z.number().int().min(1).max(20).optional(),
   visibility: z.enum(['private', 'campaign', 'public']).optional(),
+  /** Storage public URL or external URL after upload */
+  portrait: z.string().min(1).max(4000).optional(),
 }).passthrough();
 
 // =============================================================================

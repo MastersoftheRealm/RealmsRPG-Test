@@ -1311,6 +1311,27 @@ Notes
 - Feedback: As an admin, archetypes made on the admin page do not save reliably (“can’t seem to save … well”). After saving one technique to My Library and publishing several more to the Realms Library, later publishes did not appear — treated as a major bug.
 - Expected: Archetype saves persist and lists refresh with current data. Each publish to the official Realms Library creates or updates rows and all users (and admin lists) see new content without stale cached responses.
 
+**Raw Feedback Log — 2026-03-18 (Character creator portrait missing after finalize)**
+- Date: 2026-03-18
+- Context: Character Creator finalize — portrait upload/confirm then create character
+- Priority: High
+- Feedback: After adding a portrait and creating the character, the sheet loads without the portrait.
+- Expected: Portrait uploads to Storage and character `data.portrait` stores the public URL; sheet shows portrait; failures are visible (toast) not silent.
+
+**Raw Feedback Log — 2026-03-18 (Campaign join visibility + invalid invite code)**
+- Date: 2026-03-18
+- Context: Campaigns — join with invite code, character visibility (private / campaign / public)
+- Priority: High
+- Feedback: (1) Adding/joining a campaign should set character visibility to campaign automatically unless already campaign or public (do not block public/campaign/private with denials; private should become campaign when joining). (2) Valid invite codes sometimes rejected as invalid.
+- Expected: Join succeeds; visibility rules applied without extra blocking modals; invite lookup works for users who are not yet campaign members (RLS-safe server path).
+
+**Raw Feedback Log — 2026-03-18 (Mixed species traits + library list refresh)**
+- Date: 2026-03-18
+- Context: Character Creator (mixed species); Technique Creator → My Library / Realms Library
+- Priority: High
+- Feedback: (1) New character with mixed species did not save selected species traits — only ancestry traits. (2) Techniques after creation sometimes do not show in personal or official library immediately or at all.
+- Expected: Mixed species saves persist species trait picks (and related mixed ancestry fields). Library lists refetch after save/publish so new techniques appear without stale client cache.
+
 **Raw Feedback Log — 2026-03-21 (Empowered Techniques creator request)**
 - Date: 2026-03-21
 - Context: Power Creator + Technique Creator convergence; new Empowered Technique flow
@@ -1324,6 +1345,13 @@ Notes
 - Priority: High
 - Feedback: Add a dedicated Add Weapon section to Power Creator using Add Weapon to Power logic (power part id path), modeled after the technique creator weapon UX and using shared component(s). Keep empowered technique sections clearly separated so technique parts are distinct from power parts/mechanics. Add Empowered Techniques as first-class library content in both Realms and My Library. In character/creature add-power flows, include Empowered Techniques as a tab and ensure selected entries display in the corresponding lists.
 - Expected: Power creator weapon section with shared UI, clear empowered section separation, library empowered visibility in both scopes, and add-power modal tab support for empowered selection in character/creature flows.
+
+**Raw Feedback Log — 2026-03-21 (Character sheet current HP not saving / refresh loses HP)**
+- Date: 2026-03-21
+- Context: Character sheet — editing current HP (view mode vs edit mode)
+- Priority: High
+- Feedback: Current HP isn’t autosaving and doesn’t stay after refresh when editing current HP.
+- Expected: Current HP (and energy/AP) persist to the server after change and reload correctly. **Disposition:** Implemented — `useAutoSave` was only enabled in sheet edit mode while HP steppers work in view mode; autosave now enabled for owners whenever character state changes (`enabled: isOwner`).
 
 **Raw Feedback Log — 2026-03-24 (Supabase columnar parity scaling request)**
 - Date: 2026-03-24

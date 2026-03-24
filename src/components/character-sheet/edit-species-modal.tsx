@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Modal, Button, Chip } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import type { Character, CharacterAncestry } from '@/types';
@@ -46,13 +46,16 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
   const [step, setStep] = useState<'species' | 'ancestry'>('species');
   const [draftAncestry, setDraftAncestry] = useState<CharacterAncestry | null>(null);
   const [showMixedModal, setShowMixedModal] = useState(false);
+  const wasOpenRef = useRef(false);
 
+  // Initialize draft only when the modal opens (not on every `character.ancestry` reference change while open).
   useEffect(() => {
-    if (isOpen && character?.ancestry) {
+    if (isOpen && !wasOpenRef.current && character?.ancestry) {
       setDraftAncestry({ ...character.ancestry } as CharacterAncestry);
       setStep('species');
     }
-  }, [isOpen, character?.id, character?.ancestry]);
+    wasOpenRef.current = isOpen;
+  }, [isOpen, character?.ancestry, character?.id]);
 
   const isMixed = draftAncestry?.mixed === true;
   const speciesIds = isMixed ? draftAncestry?.speciesIds : draftAncestry?.id ? [draftAncestry.id] : [];
@@ -226,8 +229,18 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
 
   const handleSave = useCallback(() => {
     if (!draftAncestry || !character) return;
-    const migratedSkills = migrateSkillsAfterSpeciesChange(character, draftAncestry, allSpecies);
-    onSave({ ancestry: draftAncestry, skills: migratedSkills });
+    let ancestryToSave = draftAncestry;
+    if (draftAncestry.mixed === true) {
+      const st = draftAncestry.selectedSpeciesTraits;
+      const a = Array.isArray(st) ? String(st[0] ?? '').trim() : '';
+      const b = Array.isArray(st) ? String(st[1] ?? '').trim() : '';
+      ancestryToSave = {
+        ...draftAncestry,
+        selectedSpeciesTraits: [a, b] as [string, string],
+      };
+    }
+    const migratedSkills = migrateSkillsAfterSpeciesChange(character, ancestryToSave, allSpecies);
+    onSave({ ancestry: ancestryToSave, skills: migratedSkills });
     onClose();
   }, [character, draftAncestry, allSpecies, onSave, onClose]);
 
@@ -336,7 +349,11 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                               <span className="text-xs font-medium text-text-secondary">{t.name}</span>
                               <select
                                 value={selectedSpeciesTraits?.[0] ?? ''}
-                                onChange={(e) => updateDraft({ selectedSpeciesTraits: [e.target.value, selectedSpeciesTraits?.[1] ?? ''].filter(Boolean) as [string, string] })}
+                                onChange={(e) =>
+                                  updateDraft({
+                                    selectedSpeciesTraits: [e.target.value, selectedSpeciesTraits?.[1] ?? ''] as [string, string],
+                                  })
+                                }
                                 className="rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-text-primary"
                                 aria-label={`Option for ${t.name}`}
                               >
@@ -352,7 +369,11 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                           <button
                             key={t.id}
                             type="button"
-                            onClick={() => updateDraft({ selectedSpeciesTraits: [t.id, selectedSpeciesTraits?.[1] ?? ''].filter(Boolean) as [string, string] })}
+                            onClick={() =>
+                              updateDraft({
+                                selectedSpeciesTraits: [String(t.id), selectedSpeciesTraits?.[1] ?? ''] as [string, string],
+                              })
+                            }
                           >
                             <Chip variant={selectedSpeciesTraits?.[0] === t.id ? 'primary' : 'default'} size="sm" interactive>{t.name}</Chip>
                           </button>
@@ -373,7 +394,11 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                               <span className="text-xs font-medium text-text-secondary">{t.name}</span>
                               <select
                                 value={selectedSpeciesTraits?.[1] ?? ''}
-                                onChange={(e) => updateDraft({ selectedSpeciesTraits: [selectedSpeciesTraits?.[0] ?? '', e.target.value].filter(Boolean) as [string, string] })}
+                                onChange={(e) =>
+                                  updateDraft({
+                                    selectedSpeciesTraits: [selectedSpeciesTraits?.[0] ?? '', e.target.value] as [string, string],
+                                  })
+                                }
                                 className="rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-text-primary"
                                 aria-label={`Option for ${t.name}`}
                               >
@@ -389,7 +414,11 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                           <button
                             key={t.id}
                             type="button"
-                            onClick={() => updateDraft({ selectedSpeciesTraits: [selectedSpeciesTraits?.[0] ?? '', t.id].filter(Boolean) as [string, string] })}
+                            onClick={() =>
+                              updateDraft({
+                                selectedSpeciesTraits: [selectedSpeciesTraits?.[0] ?? '', String(t.id)] as [string, string],
+                              })
+                            }
                           >
                             <Chip variant={selectedSpeciesTraits?.[1] === t.id ? 'primary' : 'default'} size="sm" interactive>{t.name}</Chip>
                           </button>

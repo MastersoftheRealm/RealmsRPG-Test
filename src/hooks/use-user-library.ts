@@ -57,6 +57,8 @@ export interface UserTechnique {
   parts: SavedPart[];
   damage?: SavedDamage[];
   weapon?: { id?: number; name?: string };
+  actionType?: string;
+  isReaction?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }

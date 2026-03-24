@@ -50,7 +50,7 @@ function capitalize(s: string | undefined): string {
 function getItemColumns(
   item: UserPower | UserTechnique | UserItem | EqItem,
   itemType: ItemType,
-  techniqueDisplay?: { energy: number; weaponName: string; tp: number }
+  techniqueDisplay?: { energy: number; weaponName: string; tp: number; actionType: string }
 ): ColumnValue[] {
   if (itemType === 'power') {
     const power = item as UserPower;
@@ -64,6 +64,7 @@ function getItemColumns(
   }
   if (itemType === 'technique' && techniqueDisplay) {
     return [
+      { key: 'Action', value: techniqueDisplay.actionType || '-', align: 'center' as const },
       { key: 'Energy', value: String(techniqueDisplay.energy), align: 'center' as const },
       { key: 'Weapon', value: techniqueDisplay.weaponName || '-', align: 'center' as const },
       { key: 'Training Pts', value: String(techniqueDisplay.tp), align: 'center' as const },
@@ -72,6 +73,7 @@ function getItemColumns(
   if (itemType === 'technique') {
     const technique = item as UserTechnique;
     return [
+      { key: 'Action', value: formatActionTypeForDisplay(technique.actionType ?? ''), align: 'center' as const },
       { key: 'Weapon', value: technique.weapon?.name || '-', align: 'center' as const },
       { key: 'Training Pts', value: '-', align: 'center' as const },
     ];
@@ -100,7 +102,7 @@ function getItemColumns(
 function getModalGridColumns(itemType: ItemType): string {
   switch (itemType) {
     case 'power': return '1.4fr 0.8fr 0.8fr 0.7fr';
-    case 'technique': return '1.4fr 0.7fr 1fr 0.8fr';
+    case 'technique': return '1.4fr 1fr 0.7fr 1fr 0.8fr';
     case 'weapon':
     case 'shield':
     case 'armor': return '1.5fr 1fr';
@@ -113,7 +115,7 @@ function getListHeaderColumns(itemType: ItemType): { key: string; label: string;
   const base = [{ key: 'name', label: 'Name' }];
   switch (itemType) {
     case 'power': return [...base, { key: 'Action', label: 'Action' }, { key: 'Damage', label: 'Damage' }, { key: 'Area', label: 'Area' }];
-    case 'technique': return [...base, { key: 'Energy', label: 'Energy' }, { key: 'Weapon', label: 'Weapon' }, { key: 'Training Pts', label: 'Training Pts' }];
+    case 'technique': return [...base, { key: 'Action', label: 'Action' }, { key: 'Energy', label: 'Energy' }, { key: 'Weapon', label: 'Weapon' }, { key: 'Training Pts', label: 'Training Pts' }];
     case 'weapon': return [...base, { key: 'damage', label: 'Damage' }];
     case 'shield': return [...base, { key: 'Block', label: 'Block' }, { key: 'Damage', label: 'Damage' }];
     case 'armor': return [...base, { key: 'armor', label: 'Armor' }];
@@ -274,7 +276,7 @@ export function AddLibraryItemModal({
     return list
       .filter((item: { id: string }) => !existingIds.has(String(item.id)))
       .map((item: UserPower | UserTechnique | UserItem | EqItem) => {
-        let techniqueDisplay: { energy: number; weaponName: string; tp: number } | undefined;
+        let techniqueDisplay: { energy: number; weaponName: string; tp: number; actionType: string } | undefined;
         let detailSections: SelectableItem['detailSections'];
         let totalCost: number | undefined;
         const costLabel = 'TP';
@@ -344,9 +346,16 @@ export function AddLibraryItemModal({
             parts: Array.isArray(t.parts) ? (t.parts as TechniqueDocument['parts']) : [],
             damage: Array.isArray(t.damage) && t.damage[0] ? t.damage[0] : (t.damage as TechniqueDocument['damage']),
             weapon: t.weapon as TechniqueDocument['weapon'],
+            actionType: t.actionType,
+            isReaction: t.isReaction,
           };
           const display = deriveTechniqueDisplay(doc, techniquePartsDb);
-          techniqueDisplay = { energy: display.energy, weaponName: display.weaponName, tp: display.tp };
+          techniqueDisplay = {
+            energy: display.energy,
+            weaponName: display.weaponName,
+            tp: display.tp,
+            actionType: display.actionType,
+          };
           const partChips: ChipData[] = display.partChips.map((chip) => ({
             name: chip.text.split(' | TP:')[0].trim(),
             description: chip.description,
@@ -476,6 +485,8 @@ export function AddLibraryItemModal({
           op_3_lvl: part.op_3_lvl,
         })),
         cost: 0,
+        actionType: t.actionType,
+        isReaction: t.isReaction,
       }));
       onAdd(techniques);
     } else {
