@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-  "node": ">=20.9.0 <21"
+  "node": "24.x"
   },
   "scripts": {
     "dev": "next dev",
@@ -37,7 +37,7 @@
     "@tailwindcss/forms": "^0.5.11",
     "@tailwindcss/postcss": "^4",
     "@tailwindcss/typography": "^0.5.19",
-    "@types/node": "^20",
+    "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "dotenv": "^17.2.4",

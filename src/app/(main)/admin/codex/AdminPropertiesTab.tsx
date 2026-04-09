@@ -216,7 +216,42 @@ export function AdminPropertiesTab() {
 
     setSaving(false);
     if (result.success) {
+      // Update the cached codex immediately so the admin list reflects the save
+      // even if the codex refetch is delayed (staleTime is long) or the network is slow.
+      const savedId = editing?.id ?? id;
+      const rawType = data.type;
+      const savedType =
+        rawType === 'general' || rawType === 'armor' || rawType === 'weapon' || rawType === 'shield'
+          ? rawType
+          : undefined;
+      const savedProperty: ItemProperty = {
+        id: savedId,
+        name: String(data.name ?? ''),
+        description: String(data.description ?? ''),
+        type: savedType,
+        tp_cost: 0,
+        gold_cost: 0,
+        base_ip: (data.base_ip as number | undefined) ?? undefined,
+        base_tp: (data.base_tp as number | undefined) ?? undefined,
+        base_c: (data.base_c as number | undefined) ?? undefined,
+        op_1_desc: (data.op_1_desc as string | undefined) ?? undefined,
+        op_1_ip: (data.op_1_ip as number | undefined) ?? undefined,
+        op_1_tp: (data.op_1_tp as number | undefined) ?? undefined,
+        op_1_c: (data.op_1_c as number | undefined) ?? undefined,
+        mechanic: Boolean(data.mechanic),
+      };
+
+      queryClient.setQueryData(['codex'], (prev: unknown) => {
+        if (!prev || typeof prev !== 'object') return prev;
+        const prevCodex = prev as Record<string, unknown>;
+        const prevProps = (prevCodex.itemProperties as ItemProperty[] | undefined) ?? [];
+        const nextProps = prevProps.some((p) => p.id === savedId)
+          ? prevProps.map((p) => (p.id === savedId ? { ...p, ...savedProperty } : p))
+          : [...prevProps, savedProperty];
+        return { ...prevCodex, itemProperties: nextProps };
+      });
       queryClient.invalidateQueries({ queryKey: ['codex'] });
+      await queryClient.refetchQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
       alert(result.error);
@@ -231,6 +266,7 @@ export function AdminPropertiesTab() {
     const result = await deleteCodexDoc('codex_properties', id);
     if (result.success) {
       queryClient.invalidateQueries({ queryKey: ['codex'] });
+      await queryClient.refetchQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
       alert(result.error);
@@ -245,6 +281,7 @@ export function AdminPropertiesTab() {
     const result = await deleteCodexDoc('codex_properties', id);
     if (result.success) {
       queryClient.invalidateQueries({ queryKey: ['codex'] });
+      await queryClient.refetchQueries({ queryKey: ['codex'] });
       setPendingDeleteId(null);
     } else {
       alert(result.error);
