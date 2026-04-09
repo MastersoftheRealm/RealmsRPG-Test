@@ -691,7 +691,7 @@ export function LibrarySection({
               isSectionEditing
                 ? 'Click to close library editing'
                 : libraryEditState === 'over-budget'
-                  ? 'Click to edit library — feats over limit'
+                  ? 'Click to edit library (feats over limit)'
                   : 'Click to edit library (powers, techniques, inventory, feats)'
             }
           />

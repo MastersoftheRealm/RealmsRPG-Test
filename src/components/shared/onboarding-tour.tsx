@@ -45,7 +45,7 @@ const TOUR_STEPS: Array<{ title: string; body: React.ReactNode; icon: React.Reac
     body: (
       <>
         <p className="text-text-secondary mb-3">
-          <strong className="text-text-primary">Realms Library</strong> has official powers, techniques, armaments, and creatures. <strong className="text-text-primary">My Library</strong> is your personal collection—add from Realms Library to use as-is or customize.
+          <strong className="text-text-primary">Realms Library</strong> has official powers, techniques, armaments, and creatures. <strong className="text-text-primary">My Library</strong> is your personal collection. Add from Realms Library to use as-is, or customize.
         </p>
         <Link href="/library" className="text-primary-600 dark:text-primary-400 hover:underline font-medium text-sm">
           Open Library →
@@ -59,7 +59,7 @@ const TOUR_STEPS: Array<{ title: string; body: React.ReactNode; icon: React.Reac
     body: (
       <>
         <p className="text-text-secondary mb-3">
-          Create a character using the Codex and Realms Library at each step. When you&apos;re ready, sign in and save—your character will be ready for the table.
+          Create a character using the Codex and Realms Library at each step. When you&apos;re ready, sign in and save. Your character will be ready for the table.
         </p>
         <Link href="/characters/new" className="text-primary-600 dark:text-primary-400 hover:underline font-medium text-sm">
           Create a character →

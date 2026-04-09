@@ -312,7 +312,7 @@ function EmpoweredTechniqueCreatorContent() {
     const combinedRaw = adjustedPowerRaw + techniqueRaw;
     return [
       {
-        label: 'Power side — energy (raw, before technique %)',
+        label: 'Power side: energy (raw, before technique %)',
         value: powerRawBeforeMultiplier.toFixed(2),
       },
       {
@@ -320,11 +320,11 @@ function EmpoweredTechniqueCreatorContent() {
         value: techniqueMultiplier.toFixed(3),
       },
       {
-        label: 'Power side — energy (adjusted)',
+        label: 'Power side: energy (adjusted)',
         value: `${powerRawBeforeMultiplier.toFixed(2)} × ${techniqueMultiplier.toFixed(3)} = ${adjustedPowerRaw.toFixed(2)}`,
       },
       {
-        label: 'Technique side — energy (raw)',
+        label: 'Technique side: energy (raw)',
         value: techniqueRaw.toFixed(2),
       },
       {

@@ -34,7 +34,7 @@ export function CodexCreatureFeatsTab({ codexMode = 'public' }: { codexMode?: 'p
     return (
       <UiEmptyState
         size="lg"
-        title="My Codex — Creature Feats"
+        title="My Codex: Creature Feats"
         description="Custom creature feats are not available yet. For now, use Realms Codex."
       />
     );

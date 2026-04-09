@@ -22,7 +22,7 @@ function baseItemName(base: UserEnhancedItem['baseItem']): string {
 }
 
 function formatUses(item: UserEnhancedItem): string {
-  if (!item.usesType) return '—';
+  if (!item.usesType) return '-';
   if (item.usesType === 'permanent') return 'Permanent';
   const count = item.usesCount ?? 1;
   const label = item.usesType === 'full' ? 'Full' : 'Partial';
@@ -156,12 +156,12 @@ export function LibraryEnhancedTab({
                 },
                 {
                   key: 'rarity',
-                  value: item.rarity ?? '—',
+                  value: item.rarity ?? '-',
                   align: 'center',
                 },
                 {
                   key: 'cost',
-                  value: item.currencyCost != null ? item.currencyCost.toLocaleString() : '—',
+                  value: item.currencyCost != null ? item.currencyCost.toLocaleString() : '-',
                   align: 'right',
                 },
                 {

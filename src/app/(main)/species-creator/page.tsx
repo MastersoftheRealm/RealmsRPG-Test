@@ -362,7 +362,7 @@ export default function SpeciesCreatorPage() {
   const sizesSummary = useMemo(() => form.sizes.join(', ') || 'Medium', [form.sizes]);
   const baseSkillsSummary = useMemo(() => {
     const names = form.skillIds.map((id) => (id === '0' || !id ? 'Any' : (skills as Skill[]).find((s) => String(s.id) === id)?.name ?? id));
-    return names.filter(Boolean).length ? names.join(', ') : '— Select —';
+    return names.filter(Boolean).length ? names.join(', ') : 'Select base skills';
   }, [form.skillIds, skills]);
   const languagesSummary = useMemo(() => form.languages.join(', ') || 'None', [form.languages]);
   const traitsSummary = useMemo(() => {
@@ -548,7 +548,7 @@ export default function SpeciesCreatorPage() {
                 onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}
                 aria-label="Creature type"
               >
-                <option value="">— Select type —</option>
+                <option value="">Select type</option>
                 {CREATURE_TYPES.map((t) => (
                   <option key={t} value={t}>{t}</option>
                 ))}
@@ -593,7 +593,7 @@ export default function SpeciesCreatorPage() {
                   onChange={(e) => setSkill(i, e.target.value)}
                   aria-label={i === 0 ? 'First base skill' : 'Second base skill'}
                 >
-                  <option value="">— Select —</option>
+                  <option value="">Select</option>
                   {skillOptions.filter((opt) => opt.value !== form.skillIds[1 - i]).map((opt) => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}

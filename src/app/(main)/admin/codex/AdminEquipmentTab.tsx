@@ -368,7 +368,7 @@ export function AdminEquipmentTab() {
                 className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
                 aria-label="Category"
               >
-                <option value="">— None —</option>
+                <option value="">None</option>
                 {filterOptions.categories.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}

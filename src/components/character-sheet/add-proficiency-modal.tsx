@@ -207,9 +207,9 @@ export function AddProficiencyModal({
           <div className="text-sm text-text-muted">
             {selectedId
               ? (isPart && selectedPart
-                  ? `Selected: ${selectedPart.name} — set option levels below`
+                  ? `Selected: ${selectedPart.name}. Set option levels below.`
                   : !isPart && selectedProperty
-                    ? `Selected: ${selectedProperty.name} — set option level below`
+                    ? `Selected: ${selectedProperty.name}. Set the option level below.`
                     : null)
               : 'Select an item from the list'}
           </div>
@@ -305,7 +305,7 @@ export function AddProficiencyModal({
                   return (
                     <div key={n} className="space-y-1">
                       <label htmlFor={`op${n}-level`} className="text-xs text-text-secondary">
-                        Option {n} {desc ? `— ${desc.slice(0, 40)}${desc.length > 40 ? '…' : ''}` : `(+${tp} TP/lvl)`}
+                        Option {n} {desc ? `: ${desc.slice(0, 40)}${desc.length > 40 ? '…' : ''}` : `(+${tp} TP/lvl)`}
                       </label>
                       <input
                         id={`op${n}-level`}
@@ -324,7 +324,7 @@ export function AddProficiencyModal({
             {!isPart && selectedProperty && (selectedProperty.op_1_tp ?? 0) > 0 && (
               <div className="space-y-1">
                 <label htmlFor="prop-op1-level" className="text-xs text-text-secondary">
-                  Option level {selectedProperty.op_1_desc ? `— ${selectedProperty.op_1_desc}` : `(+${selectedProperty.op_1_tp} TP/lvl)`}
+                  Option level {selectedProperty.op_1_desc ? `: ${selectedProperty.op_1_desc}` : `(+${selectedProperty.op_1_tp} TP/lvl)`}
                 </label>
                 <input
                   id="prop-op1-level"

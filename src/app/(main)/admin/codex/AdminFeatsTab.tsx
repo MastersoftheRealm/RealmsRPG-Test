@@ -368,7 +368,7 @@ function AdminFeatEditModal({
               className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
               aria-label="Feat category"
             >
-              <option value="">— None —</option>
+              <option value="">None</option>
               {filterOptions.categories.map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
@@ -395,7 +395,7 @@ function AdminFeatEditModal({
               className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
               aria-label="Feat category required"
             >
-              <option value="">— None —</option>
+              <option value="">None</option>
               {filterOptions.categories.map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
@@ -437,7 +437,7 @@ function AdminFeatEditModal({
               value={form.base_feat_id}
               onChange={(e) => setFormField('base_feat_id', e.target.value)}
               className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
-              aria-label="Base feat (level 1) — leave empty for level-1 feats"
+              aria-label="Base feat (level 1) (leave empty for level 1 feats)"
             >
               <option value="">None (this is level 1)</option>
               {(feats ?? [])
@@ -618,7 +618,7 @@ function AdminFeatEditModal({
               className="w-full px-3 py-2 border border-border rounded-md bg-background text-text-primary text-sm"
               aria-label="Recovery period"
             >
-              <option value="">—</option>
+              <option value="">None</option>
               <option value="Full">Full</option>
               <option value="Partial">Partial</option>
             </select>

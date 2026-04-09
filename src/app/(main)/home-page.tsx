@@ -183,7 +183,7 @@ function HomeContent() {
           <FeatureCard
             href="/characters/new"
             title="CREATE A CHARACTER"
-            description="Limitless options allow any dream character to come to life. Choose species, feats, powers, and more—from the game or build your own."
+            description="Limitless options allow any dream character to come to life. Choose species, feats, powers, and more from the game, or build your own."
             icon={<Sparkles className="w-6 h-6" suppressHydrationWarning />}
           />
           <div className="hidden lg:block w-px h-[106px] bg-neutral-400 dark:bg-neutral-600 flex-shrink-0" />
@@ -268,10 +268,10 @@ function HomeContent() {
               Dear Realms Players,
             </p>
             <p className="font-nunito text-base sm:text-lg text-text-muted dark:text-text-secondary text-center italic mb-3">
-              Thank you for playing my game! I designed it so others could have as much fun with it as I do. Realms is built to put <strong className="text-text-primary">fun first, flavor second, and rules third</strong>—so your imagination can run free.
+              Thank you for playing my game! I designed it so others could have as much fun with it as I do. Realms is built to put <strong className="text-text-primary">fun first, flavor second, and rules third</strong>, so your imagination can run free.
             </p>
             <p className="font-nunito text-base sm:text-lg text-text-muted dark:text-text-secondary text-center italic mb-5">
-              Sincerely, <span className="font-semibold text-text-primary">Kadin Brooksby</span> — Creator of Realms
+              Sincerely, <span className="font-semibold text-text-primary">Kadin Brooksby</span>, Creator of Realms
             </p>
             <div className="flex flex-row flex-wrap gap-4 sm:gap-6 justify-center items-stretch">
               <Link

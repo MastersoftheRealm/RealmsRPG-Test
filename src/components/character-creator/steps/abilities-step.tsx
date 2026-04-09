@@ -77,7 +77,7 @@ export function AbilitiesStep() {
               !
             </>
           ) : (
-            '—assign your ability points below.'
+            'Assign your ability points below.'
           )}
         </PathHelpCard>
       )}

@@ -130,8 +130,8 @@ export function LoadCreatureModal({
                   name={c.name ?? 'Unnamed'}
                   description={c.description}
                   columns={[
-                    { key: 'name', value: c.name ?? '—', align: 'left' },
-                    { key: 'level', value: String(c.level ?? '—'), align: 'center' as const },
+                    { key: 'name', value: c.name ?? '-', align: 'left' },
+                    { key: 'level', value: String(c.level ?? '-'), align: 'center' as const },
                     { key: 'type', value: formatListCellLabel((c as unknown as CreatureState).type ?? 'creature'), align: 'center' as const },
                   ]}
                   gridColumns="1.5fr 0.5fr 1fr"

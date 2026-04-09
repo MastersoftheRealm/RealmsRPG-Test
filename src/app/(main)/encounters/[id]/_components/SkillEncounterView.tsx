@@ -1012,9 +1012,9 @@ function ParticipantCard({
               role="button"
               tabIndex={0}
               onKeyDown={(e) => e.key === 'Enter' && onRollInitiative?.()}
-              aria-label={`Initiative: ${participant.initiative ?? '—'}. Click to roll.`}
+              aria-label={`Initiative: ${participant.initiative ?? 'not set'}. Click to roll.`}
             >
-              {participant.initiative ?? '—'}
+              {participant.initiative ?? '-'}
             </div>
           </div>
         )}
@@ -1161,7 +1161,7 @@ function ParticipantCard({
                 size="sm"
                 variant="ghost"
                 onClick={() => onSetHelping(true)}
-                title="Mark as helping — doesn't count toward encounter"
+                title="Mark as helping (doesn't count toward encounter)"
                 aria-label="Mark as helping"
                 className="min-h-[44px]"
               >

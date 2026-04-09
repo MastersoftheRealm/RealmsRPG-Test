@@ -39,7 +39,7 @@ function buildAbilityDisplay(abilityString?: string): {
   const detailChips: ChipData[] = abbrList.map((abbr) => ({ name: abbr, category: 'skill' as const }));
   const columnValue: string | ReactNode =
     abbrList.length === 0 ? (
-      '—'
+      '-'
     ) : (
       <span className="inline-flex flex-wrap gap-1">
         {abbrList.map((abbr) => (

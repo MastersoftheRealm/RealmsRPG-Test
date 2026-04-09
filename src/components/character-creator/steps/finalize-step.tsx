@@ -577,7 +577,7 @@ export function FinalizeStep() {
         } catch (uploadErr) {
           console.error('Portrait upload failed (character still saved):', uploadErr);
           showToast(
-            'Could not process or upload your portrait. Your character was created — add a portrait from the sheet.',
+            'Could not process or upload your portrait. Your character was created. Add a portrait from the sheet.',
             'error'
           );
         }
@@ -661,12 +661,12 @@ export function FinalizeStep() {
                       ? arch.name
                       : arch?.type
                         ? arch.type.charAt(0).toUpperCase() + arch.type.slice(1)
-                        : '—'}
+                        : '-'}
                   </p>
                 </div>
                 <div className="rounded-lg border border-border-light bg-surface-alt/50 p-3">
                   <p className="text-xs font-medium text-text-secondary uppercase tracking-wide">Species</p>
-                  <p className="text-lg font-bold text-text-primary mt-0.5">{draft.ancestry?.name || '—'}</p>
+                  <p className="text-lg font-bold text-text-primary mt-0.5">{draft.ancestry?.name || '-'}</p>
                 </div>
                 {showPowerAbility && (
                   <div className="rounded-lg border border-power bg-power-light/40 dark:bg-power-900/20 p-3">
@@ -793,7 +793,7 @@ export function FinalizeStep() {
                         duration: (p as CharacterPower & { duration?: PowerDocument['duration'] }).duration,
                       };
                       const display = derivePowerDisplay(doc, powerPartsDb ?? []);
-                      const en = typeof display.energy === 'number' ? display.energy : '—';
+                      const en = typeof display.energy === 'number' ? display.energy : '-';
                       return (
                         <span
                           key={String(p.id)}
@@ -821,7 +821,7 @@ export function FinalizeStep() {
                         weapon: (t as CharacterTechnique & { weapon?: TechniqueDocument['weapon'] }).weapon,
                       };
                       const display = deriveTechniqueDisplay(doc, techniquePartsDb ?? []);
-                      const en = typeof display.energy === 'number' ? display.energy : '—';
+                      const en = typeof display.energy === 'number' ? display.energy : '-';
                       return (
                         <span
                           key={String(t.id)}

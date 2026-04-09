@@ -100,7 +100,7 @@ export function CodexEquipmentTab({ codexMode = 'public' }: { codexMode?: 'publi
     return (
       <EmptyState
         size="lg"
-        title="My Codex — Equipment"
+        title="My Codex: Equipment"
         description="Custom equipment lives in Library (My Library). Use Realms Codex for reference."
       />
     );

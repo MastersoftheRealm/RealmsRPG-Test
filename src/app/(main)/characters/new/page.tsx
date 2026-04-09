@@ -67,7 +67,7 @@ export default function CharacterCreatorPage() {
             />
           </div>
           <p className="text-text-secondary mt-1">
-            Step {stepIndex} of {totalSteps} — Follow the steps below to build your character
+            Step {stepIndex} of {totalSteps}. Follow the steps below to build your character.
           </p>
         </div>
         

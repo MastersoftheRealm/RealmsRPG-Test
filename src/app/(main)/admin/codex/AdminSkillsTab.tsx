@@ -537,7 +537,7 @@ export function AdminSkillsTab() {
               className="w-full px-3 py-2 border border-border rounded-md bg-background text-text-primary text-sm"
               aria-label="Base skill"
             >
-              <option value="">— None (base skill)</option>
+              <option value="">None (base skill)</option>
               <option value="Any">Any base skill (id 0)</option>
               {baseSkillOptions.map((opt) => (
                 <option key={opt.id} value={opt.name}>

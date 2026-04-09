@@ -528,7 +528,7 @@ export function CreatureStatBlock({
         rowId: `${creature.id}-skill-${idx}`,
         name: s.name,
         description: def?.description || undefined,
-        abilityAbbr: chosen ? REALMS_ABILITY_ABBR[chosen] : '—',
+        abilityAbbr: chosen ? REALMS_ABILITY_ABBR[chosen] : '-',
         bonus,
       };
     });

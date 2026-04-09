@@ -66,7 +66,7 @@ const CREATURE_FEAT_SOURCE_LABELS: Record<CreatureFeatSourceType, string> = {
 export function labelCreatureFeatSource(
   source: CreatureFeatSourceType | undefined
 ): string {
-  if (!source) return '—';
+  if (!source) return '-';
   return CREATURE_FEAT_SOURCE_LABELS[source];
 }
 
