@@ -36,6 +36,8 @@
 | **supabase-codex-rls-public.sql** | RLS for codex_* and core_rules in public (SELECT TO public) | Run if GET /api/codex returns 500 (permission denied). |
 | **supabase-campaign-members.sql** | campaign_members table | May already exist from consolidation |
 | **supabase-user-profiles-timestamps-default.sql** | user_profiles: set DEFAULT now() on created_at, updated_at | Run if inserts fail with "null value in column updated_at" |
+| **supabase-user-profiles-username-display.sql** | user_profiles: add `username_display` and backfill from canonical `username` | Run once to preserve entered username casing in UI while keeping lowercase canonical uniqueness |
+| **supabase-role-policies.sql** | Create `role_policies` table + seed defaults + RLS for admin-managed role quotas/permissions | Run once before enabling `/admin/roles` and quota enforcement |
 | **supabase-ui-tooltips.sql** | Adds `user_profiles.show_tooltips`, creates `ui_tooltips` table, RLS policies, and initial seed tooltips | Run once when enabling tooltip system |
 
 **Legacy scripts (do not run on current public-only DB)** are in [sql/archive/](archive/): codex-schema columnar, official-library in codex, user-library in users, multi-schema RLS, idempotent-full, force-drop-codex scripts.

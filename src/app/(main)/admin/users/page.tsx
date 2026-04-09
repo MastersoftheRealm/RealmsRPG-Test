@@ -15,9 +15,22 @@ type UserRole = 'new_player' | 'playtester' | 'developer' | 'admin';
 interface UserRow {
   id: string;
   username: string;
+  usernameDisplay: string;
   email: string;
   displayName: string;
   role: UserRole;
+}
+
+interface RolePolicyRow {
+  role: UserRole;
+  max_campaigns: number;
+  max_players_per_campaign: number;
+  max_characters: number;
+  max_custom_powers: number;
+  max_custom_techniques: number;
+  max_custom_armaments: number;
+  max_custom_creatures: number;
+  permissions: Record<string, unknown> | null;
 }
 
 const ROLE_LABELS: Record<UserRole, string> = {
@@ -29,6 +42,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
+  const [rolePolicies, setRolePolicies] = useState<Record<UserRole, RolePolicyRow> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
@@ -39,16 +53,32 @@ export default function AdminUsersPage() {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    fetch('/api/admin/users')
-      .then((res) => {
-        if (!res.ok) throw new Error(res.status === 403 ? 'Forbidden' : 'Failed to load users');
-        return res.json();
-      })
-      .then((data: UserRow[]) => {
-        if (!cancelled) setUsers(Array.isArray(data) ? data : []);
+    Promise.all([
+      fetch('/api/admin/users').then(async (res) => {
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error((payload as { error?: string }).error ?? (res.status === 403 ? 'Forbidden' : 'Failed to load users'));
+        return payload as UserRow[];
+      }),
+      fetch('/api/admin/role-policies').then(async (res) => {
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error((payload as { error?: string }).error ?? (res.status === 403 ? 'Forbidden' : 'Failed to load role policies'));
+        return payload as RolePolicyRow[];
+      }),
+    ])
+      .then(([userData, policyData]) => {
+        if (cancelled) return;
+        setUsers(Array.isArray(userData) ? userData : []);
+        const map = (Array.isArray(policyData) ? policyData : []).reduce(
+          (acc, row) => {
+            acc[row.role] = row;
+            return acc;
+          },
+          {} as Record<UserRole, RolePolicyRow>
+        );
+        setRolePolicies(map);
       })
       .catch((err) => {
-        if (!cancelled) setError(err.message ?? 'Failed to load users');
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load admin data');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -62,6 +92,7 @@ export default function AdminUsersPage() {
     return users.filter((u) => {
       const roleLabel = ROLE_LABELS[u.role].toLowerCase();
       return (
+        u.usernameDisplay.toLowerCase().includes(q) ||
         u.username.toLowerCase().includes(q) ||
         u.displayName.toLowerCase().includes(q) ||
         u.email.toLowerCase().includes(q) ||
@@ -70,21 +101,23 @@ export default function AdminUsersPage() {
     });
   }, [users, searchQuery]);
 
-  const handleRoleChange = async (username: string, newRole: UserRole) => {
-    setUpdating(username);
+  const handleRoleChange = async (userId: string, newRole: UserRole) => {
+    setUpdating(userId);
     setMessage(null);
     try {
       const res = await fetch('/api/admin/users/update-role', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, role: newRole }),
+        body: JSON.stringify({ userId, role: newRole }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Failed to update');
       setUsers((prev) =>
-        prev.map((u) => (u.username === username ? { ...u, role: newRole } : u))
+        prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
       );
-      setMessage({ type: 'success', text: `Updated ${username} to ${ROLE_LABELS[newRole]}` });
+      const changed = users.find((u) => u.id === userId);
+      const label = changed?.usernameDisplay || changed?.username || 'user';
+      setMessage({ type: 'success', text: `Updated ${label} to ${ROLE_LABELS[newRole]}` });
     } catch (err) {
       setMessage({
         type: 'error',
@@ -139,23 +172,27 @@ export default function AdminUsersPage() {
                 <th className="text-left py-3 px-4 font-semibold text-text-primary">Display Name</th>
                 <th className="text-left py-3 px-4 font-semibold text-text-primary">Email</th>
                 <th className="text-left py-3 px-4 font-semibold text-text-primary">Role</th>
+                <th className="text-left py-3 px-4 font-semibold text-text-primary">Effective limits</th>
                 <th className="text-left py-3 px-4 font-semibold text-text-primary">Change role</th>
               </tr>
             </thead>
             <tbody>
               {filteredUsers.map((u) => (
                 <tr key={u.id} className="border-b border-border-light last:border-0">
-                  <td className="py-3 px-4 font-medium text-text-primary">{u.username || '(none)'}</td>
+                  <td className="py-3 px-4 font-medium text-text-primary">{u.usernameDisplay || u.username || '(none)'}</td>
                   <td className="py-3 px-4 text-text-secondary">{u.displayName || '(none)'}</td>
                   <td className="py-3 px-4 text-text-secondary">{u.email || '(none)'}</td>
                   <td className="py-3 px-4 text-text-secondary">{ROLE_LABELS[u.role]}</td>
+                  <td className="py-3 px-4 text-text-secondary">
+                    <RoleLimitsCell role={u.role} rolePolicies={rolePolicies} />
+                  </td>
                   <td className="py-3 px-4">
                     <select
                       value={u.role}
-                      onChange={(e) => handleRoleChange(u.username, e.target.value as UserRole)}
-                      disabled={updating === u.username}
+                      onChange={(e) => handleRoleChange(u.id, e.target.value as UserRole)}
+                      disabled={updating === u.id}
                       className="rounded border border-border bg-background px-2 py-1 text-sm"
-                      aria-label={`Role for ${u.username || 'user'}`}
+                      aria-label={`Role for ${u.usernameDisplay || u.username || 'user'}`}
                     >
                       <option value="new_player">New Player</option>
                       <option value="playtester">Playtester</option>
@@ -170,5 +207,38 @@ export default function AdminUsersPage() {
         </div>
       )}
     </PageContainer>
+  );
+}
+
+function RoleLimitsCell({
+  role,
+  rolePolicies,
+}: {
+  role: UserRole;
+  rolePolicies: Record<UserRole, RolePolicyRow> | null;
+}) {
+  const p = rolePolicies?.[role];
+  if (!p) return <span className="text-text-muted dark:text-text-secondary">—</span>;
+
+  const canUpload = Boolean(p.permissions?.can_upload_profile_picture);
+  const parts = [
+    `Campaigns: ${p.max_campaigns}`,
+    `Players/campaign: ${p.max_players_per_campaign}`,
+    `Characters: ${p.max_characters}`,
+    `Powers: ${p.max_custom_powers}`,
+    `Techniques: ${p.max_custom_techniques}`,
+    `Armaments: ${p.max_custom_armaments}`,
+    `Creatures: ${p.max_custom_creatures}`,
+    `Profile pic: ${canUpload ? 'Yes' : 'No'}`,
+  ];
+
+  return (
+    <div className="space-y-1">
+      <div className="text-text-primary">{`Campaigns: ${p.max_campaigns} · Players/campaign: ${p.max_players_per_campaign} · Characters: ${p.max_characters}`}</div>
+      <div className="text-xs text-text-muted dark:text-text-secondary">
+        {`Powers ${p.max_custom_powers} · Techniques ${p.max_custom_techniques} · Armaments ${p.max_custom_armaments} · Creatures ${p.max_custom_creatures} · Profile pic ${canUpload ? 'Yes' : 'No'}`}
+      </div>
+      <span className="sr-only">{parts.join(', ')}</span>
+    </div>
   );
 }

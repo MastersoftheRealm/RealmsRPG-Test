@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
+import { getRolePolicyForUser } from '@/lib/role-policy';
 import { validateImageMagicBytes } from '@/lib/validate-image';
 import { buildRateLimitKey, resolveClientIp, uploadLimiter } from '@/lib/rate-limit';
 
@@ -27,6 +28,12 @@ export async function POST(request: NextRequest) {
   const { success } = uploadLimiter.check(key);
   if (!success) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+  }
+
+  const supabase = await createClient();
+  const rolePolicy = await getRolePolicyForUser(user.uid, supabase);
+  if (!rolePolicy.canUploadProfilePicture) {
+    return NextResponse.json({ error: 'Your role cannot upload profile pictures.' }, { status: 403 });
   }
 
   const formData = await request.formData();
@@ -53,8 +60,6 @@ export async function POST(request: NextRequest) {
   const path = `${user.uid}.${ext}`;
 
   try {
-    const supabase = await createClient();
-
     const { data: existing } = await supabase.storage.from(BUCKET).list('', { limit: 100 });
     if (existing?.length) {
       const toRemove = existing

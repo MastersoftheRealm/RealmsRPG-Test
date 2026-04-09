@@ -12,6 +12,7 @@ import { requireAuth } from '@/lib/supabase/session';
 import { ensureUserProfile } from '@/lib/ensure-user-profile';
 import { getCharacterListColumns } from '@/lib/character-list-columns';
 import { normalizeInviteCodeInput, isValidInviteCodeFormat, visibilityForCampaignMembership } from '@/lib/campaign-invite';
+import { getRolePolicyForUser } from '@/lib/role-policy';
 import type { Campaign, CampaignCharacter, ArchetypeDisplayName } from '@/types/campaign';
 import { MAX_CAMPAIGN_CHARACTERS, OWNER_MAX_CHARACTERS } from './constants';
 
@@ -62,6 +63,19 @@ export async function createCampaignAction(data: { name: string; description?: s
     const ownerUsername = await getUsernameByUid(user.uid);
     const inviteCode = await ensureUniqueInviteCode();
     const supabase = await createClient();
+    const rolePolicy = await getRolePolicyForUser(user.uid, supabase);
+
+    const { count: campaignCount, error: campaignCountError } = await supabase
+      .from('campaigns')
+      .select('id', { count: 'exact', head: true })
+      .eq('owner_id', user.uid);
+    if (campaignCountError) throw campaignCountError;
+    if ((campaignCount ?? 0) >= rolePolicy.maxCampaigns) {
+      return {
+        success: false,
+        error: `Your role allows up to ${rolePolicy.maxCampaigns} campaign(s).`,
+      };
+    }
 
     await ensureUserProfile(supabase, user.uid);
 
@@ -160,6 +174,8 @@ export async function joinCampaignAction(data: {
     const campaignData = (campaignRow.characters as CampaignCharacter[]) ?? [];
     const memberIdsFromRoster = [...new Set(campaignData.map((c) => c.userId).filter(Boolean))];
     const memberIds = [...new Set([...memberIdsFromTable, ...memberIdsFromRoster])];
+    const ownerPolicy = await getRolePolicyForUser(campaignRow.owner_id, dbService);
+    const nonOwnerMemberIds = memberIds.filter((id) => id && id !== campaignRow.owner_id);
     const campaignId = campaignRow.id;
 
     const alreadyIn = campaignData?.some((c) => c.userId === user.uid && c.characterId === data.characterId);
@@ -169,6 +185,19 @@ export async function joinCampaignAction(data: {
 
     if (campaignData?.length >= MAX_CAMPAIGN_CHARACTERS) {
       return { success: false, error: `This campaign has reached the maximum of ${MAX_CAMPAIGN_CHARACTERS} characters.` };
+    }
+
+    const joiningAsNonOwner = user.uid !== campaignRow.owner_id;
+    const alreadyMember = nonOwnerMemberIds.includes(user.uid);
+    if (
+      joiningAsNonOwner &&
+      !alreadyMember &&
+      nonOwnerMemberIds.length >= ownerPolicy.maxPlayersPerCampaign
+    ) {
+      return {
+        success: false,
+        error: `This campaign has reached the role limit of ${ownerPolicy.maxPlayersPerCampaign} player(s).`,
+      };
     }
 
     if (campaignRow.owner_id !== user.uid) {

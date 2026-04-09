@@ -136,6 +136,7 @@ export function AdminTraitsTab() {
     setCreatingTrait(false);
     if (result.success) {
       queryClient.invalidateQueries({ queryKey: ['codex'] });
+      await queryClient.refetchQueries({ queryKey: ['codex'] });
       setForm((f) => ({ ...f, option_trait_ids: [...f.option_trait_ids, id] }));
       setCreateTraitForm({ name: '', description: '' });
       setCreateTraitOpen(false);
@@ -168,6 +169,7 @@ export function AdminTraitsTab() {
     setSaving(false);
     if (result.success) {
       queryClient.invalidateQueries({ queryKey: ['codex'] });
+      await queryClient.refetchQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
       alert(result.error);
@@ -182,6 +184,7 @@ export function AdminTraitsTab() {
     const result = await deleteCodexDoc('codex_traits', id);
     if (result.success) {
       queryClient.invalidateQueries({ queryKey: ['codex'] });
+      await queryClient.refetchQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
       alert(result.error);
@@ -196,6 +199,7 @@ export function AdminTraitsTab() {
     const result = await deleteCodexDoc('codex_traits', id);
     if (result.success) {
       queryClient.invalidateQueries({ queryKey: ['codex'] });
+      await queryClient.refetchQueries({ queryKey: ['codex'] });
       setPendingDeleteId(null);
     } else {
       alert(result.error);

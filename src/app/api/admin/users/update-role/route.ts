@@ -1,7 +1,7 @@
 /**
  * Admin Update User Role API
  * ==========================
- * Update a user's role by username.
+ * Update a user's role by user ID (or username fallback).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -34,11 +34,12 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
+    const userId = typeof body.userId === 'string' ? body.userId.trim() : '';
     const username = typeof body.username === 'string' ? body.username.trim() : '';
     const role = body.role as string;
 
-    if (!username) {
-      return NextResponse.json({ error: 'Username is required' }, { status: 400 });
+    if (!userId && !username) {
+      return NextResponse.json({ error: 'User ID or username is required' }, { status: 400 });
     }
     if (!role || !ALLOWED_ROLES.includes(role as (typeof ALLOWED_ROLES)[number])) {
       return NextResponse.json({
@@ -47,11 +48,10 @@ export async function PATCH(request: NextRequest) {
     }
 
     const supabase = getSupabaseAdmin();
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('id')
-      .ilike('username', username)
-      .maybeSingle();
+    const profileQuery = supabase.from('user_profiles').select('id').limit(1);
+    const { data: profile } = userId
+      ? await profileQuery.eq('id', userId).maybeSingle()
+      : await profileQuery.ilike('username', username.toLowerCase()).maybeSingle();
     if (!profile) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
@@ -61,7 +61,7 @@ export async function PATCH(request: NextRequest) {
       .update({ role: role as 'new_player' | 'playtester' | 'developer' | 'admin' })
       .eq('id', (profile as { id: string }).id);
 
-    return NextResponse.json({ success: true, username, role });
+    return NextResponse.json({ success: true, userId: (profile as { id: string }).id, role });
   } catch (err) {
     console.error('[API Error] PATCH /api/admin/users/update-role:', err);
     return NextResponse.json({ error: 'Failed to update role' }, { status: 500 });

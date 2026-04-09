@@ -1409,3 +1409,10 @@ Notes
 - Priority: High
 - Feedback: The email/password signup flow is confusing and likely misconfigured. Email verification isn’t clear; user may feel like they have to sign up, then verify email, then re-enter email/password again or “do it twice”. Redirection/direction after sign up and verification is unclear.
 - Expected: Clear post-signup messaging (“check your email”), proper Supabase best-practice confirmation handling, and consistent redirect back to the intended page after confirming or signing in.
+
+**Raw Feedback Log — 2026-04-09 (Username casing + role quotas/permissions management)**
+- Date: 2026-04-09
+- Context: Auth username behavior + Admin user management and role limits
+- Priority: High
+- Feedback: Allow capital letters in usernames while keeping uniqueness sane. Add user-management controls to manage what each role can do and the quotas per role (campaign count, users in campaigns, created characters, custom library limits for powers/techniques/armaments/creatures, and similar permissions), likely with a new DB table.
+- Expected: Usernames preserve entered casing (case-insensitive uniqueness), and admins can view/edit role-level permissions and quotas from the app with those limits enforced in create flows.

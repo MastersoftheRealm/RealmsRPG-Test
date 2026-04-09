@@ -1091,6 +1091,7 @@ export function AdminFeatsTab() {
     setSaving(false);
     if (result.success) {
       queryClient.invalidateQueries({ queryKey: ['codex'] });
+      await queryClient.refetchQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
       alert(result.error);
@@ -1147,6 +1148,7 @@ export function AdminFeatsTab() {
     }
 
     queryClient.invalidateQueries({ queryKey: ['codex'] });
+    await queryClient.refetchQueries({ queryKey: ['codex'] });
     closeModal();
   };
 
@@ -1158,6 +1160,7 @@ export function AdminFeatsTab() {
     const result = await deleteCodexDoc('codex_feats', id);
     if (result.success) {
       queryClient.invalidateQueries({ queryKey: ['codex'] });
+      await queryClient.refetchQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
       alert(result.error);
@@ -1172,6 +1175,7 @@ export function AdminFeatsTab() {
     const result = await deleteCodexDoc('codex_feats', id);
     if (result.success) {
       queryClient.invalidateQueries({ queryKey: ['codex'] });
+      await queryClient.refetchQueries({ queryKey: ['codex'] });
       setPendingDeleteId(null);
     } else {
       alert(result.error);

@@ -40,6 +40,17 @@ interface UserProfile {
   createdAt?: Date;
   photoURL?: string;
   showTooltips?: boolean;
+  role?: 'new_player' | 'playtester' | 'developer' | 'admin';
+  rolePolicy?: {
+    maxCampaigns: number;
+    maxPlayersPerCampaign: number;
+    maxCharacters: number;
+    maxPowers: number;
+    maxTechniques: number;
+    maxArmaments: number;
+    maxCreatures: number;
+    canUploadProfilePicture: boolean;
+  };
 }
 
 function AccountContent() {
@@ -92,11 +103,13 @@ function AccountContent() {
             ? `${rawPhoto}?t=${p.updatedAt ? new Date(p.updatedAt as string | number | Date).getTime() : Date.now()}`
             : (user.photoURL ?? undefined);
           setProfile({
-            username: (p.username as string | undefined) ?? undefined,
+            username: (p.usernameDisplay as string | undefined) ?? (p.username as string | undefined) ?? undefined,
             email: (p.email as string | undefined) ?? user.email ?? undefined,
             createdAt: p.createdAt instanceof Date ? p.createdAt : p.createdAt ? new Date(p.createdAt as string | number | Date) : undefined,
             photoURL,
             showTooltips: (p.showTooltips as boolean | undefined) ?? true,
+            role: (p.role as UserProfile['role']) ?? undefined,
+            rolePolicy: (p.rolePolicy as UserProfile['rolePolicy']) ?? undefined,
           });
         } else {
           setProfile({
@@ -186,7 +199,7 @@ function AccountContent() {
     const result = await changeUsernameAction(newUsername.trim());
 
     if (result.success) {
-      setProfile((prev) => (prev ? { ...prev, username: newUsername.trim().toLowerCase() } : null));
+      setProfile((prev) => (prev ? { ...prev, username: newUsername.trim() } : null));
       setNewUsername('');
       setUsernameMessage({ type: 'success', text: 'Username updated successfully!' });
     } else {
@@ -352,6 +365,59 @@ function AccountContent() {
             {tooltipPrefMessage.text}
           </p>
         )}
+      </div>
+
+      <div className="bg-surface rounded-xl shadow-md p-6">
+        <h2 className="text-lg font-bold text-text-primary mb-3">Role &amp; Limits</h2>
+        <p className="text-text-secondary mb-4">
+          Your role controls quotas for campaigns, characters, and custom library items.
+        </p>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between py-2 border-b border-border-subtle">
+            <span className="text-text-secondary">Role</span>
+            <span className="font-medium text-text-primary">{formatRoleLabel(profile?.role)}</span>
+          </div>
+
+          {profile?.rolePolicy ? (
+            <>
+              <div className="flex items-center justify-between py-2 border-b border-border-subtle">
+                <span className="text-text-secondary">Max Campaigns</span>
+                <span className="font-medium text-text-primary">{profile.rolePolicy.maxCampaigns}</span>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-border-subtle">
+                <span className="text-text-secondary">Max Players Per Campaign</span>
+                <span className="font-medium text-text-primary">{profile.rolePolicy.maxPlayersPerCampaign}</span>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-border-subtle">
+                <span className="text-text-secondary">Max Characters</span>
+                <span className="font-medium text-text-primary">{profile.rolePolicy.maxCharacters}</span>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-border-subtle">
+                <span className="text-text-secondary">Max Custom Powers</span>
+                <span className="font-medium text-text-primary">{profile.rolePolicy.maxPowers}</span>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-border-subtle">
+                <span className="text-text-secondary">Max Custom Techniques</span>
+                <span className="font-medium text-text-primary">{profile.rolePolicy.maxTechniques}</span>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-border-subtle">
+                <span className="text-text-secondary">Max Custom Armaments</span>
+                <span className="font-medium text-text-primary">{profile.rolePolicy.maxArmaments}</span>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-border-subtle">
+                <span className="text-text-secondary">Max Custom Creatures</span>
+                <span className="font-medium text-text-primary">{profile.rolePolicy.maxCreatures}</span>
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <span className="text-text-secondary">Profile Picture Uploads</span>
+                <span className="font-medium text-text-primary">{profile.rolePolicy.canUploadProfilePicture ? 'Allowed' : 'Not allowed'}</span>
+              </div>
+            </>
+          ) : (
+            <p className="text-text-muted dark:text-text-secondary italic">Limits unavailable.</p>
+          )}
+        </div>
       </div>
 
       <div className="bg-surface rounded-xl shadow-md p-6">
@@ -667,4 +733,13 @@ export default function MyAccountPage() {
       </div>
     </ProtectedRoute>
   );
+}
+
+function formatRoleLabel(role: UserProfile['role'] | undefined): string {
+  if (!role) return 'Unknown';
+  if (role === 'new_player') return 'New Player';
+  if (role === 'playtester') return 'Playtester';
+  if (role === 'developer') return 'Developer';
+  if (role === 'admin') return 'Admin';
+  return role;
 }

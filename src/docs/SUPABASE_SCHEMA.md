@@ -34,7 +34,7 @@ Tables are listed in dependency-friendly order. **Columnar** = proper columns; *
 
 | Table | Shape | Key columns |
 |-------|--------|-------------|
-| `user_profiles` | Columnar | id (PK), email, display_name, username, photo_url, last_username_change, created_at, updated_at, role (UserRole enum), show_tooltips |
+| `user_profiles` | Columnar | id (PK), email, display_name, username (canonical lowercase), username_display (preserved casing), photo_url, last_username_change, created_at, updated_at, role (UserRole enum), show_tooltips |
 | `usernames` | Columnar | username (PK), user_id (FK → user_profiles) |
 
 ---
@@ -245,6 +245,18 @@ Stores admin-editable tooltip/help content used across navigation, creator steps
 
 ---
 
+### 2.13 Role policies (admin-managed permissions and quotas)
+
+| Table | Shape | Key columns |
+|-------|--------|-------------|
+| `role_policies` | Columnar | role (PK, UserRole), max_campaigns, max_players_per_campaign, max_characters, max_custom_powers, max_custom_techniques, max_custom_armaments, max_custom_creatures, permissions (JSONB), updated_at, updated_by |
+
+Stores role-level quotas and permission flags used by campaign, character, library, and profile feature gating. This is the source for admin-editable role limits in the app.
+
+**Migration:** `sql/supabase-role-policies.sql`
+
+---
+
 ## 3. Enums
 
 | Name | Values |
@@ -300,7 +312,8 @@ See `AI_TASK_QUEUE.md` for TASK-279–TASK-283 and TASK-304. Rationale and colum
 | Characters CRUD | characters |
 | Campaigns | campaigns, campaign_members, campaign_rolls |
 | Encounters | encounters |
-| Auth / profile | user_profiles, usernames |
+| GET/PATCH /api/admin/role-policies | role_policies, user_profiles.role (admin check) |
+| Auth / profile | user_profiles, usernames, role_policies |
 
 ---
 

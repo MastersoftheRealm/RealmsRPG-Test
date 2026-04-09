@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { ensureUserProfile } from '@/lib/ensure-user-profile';
+import { getRolePolicyForUser } from '@/lib/role-policy';
 import { removeUndefined } from '@/lib/utils/object';
 import { validateJson, characterCreateSchema } from '@/lib/api-validation';
 import { standardLimiter } from '@/lib/rate-limit';
@@ -104,6 +105,18 @@ export async function POST(request: NextRequest) {
     const data = rest as Partial<Character>;
 
     const supabase = await createClient();
+    const rolePolicy = await getRolePolicyForUser(user.uid, supabase);
+    const { count: characterCount, error: countError } = await supabase
+      .from('characters')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.uid);
+    if (countError) throw countError;
+    if ((characterCount ?? 0) >= rolePolicy.maxCharacters) {
+      return NextResponse.json(
+        { error: `Your role allows up to ${rolePolicy.maxCharacters} character(s).` },
+        { status: 403 }
+      );
+    }
 
     if (duplicateOf) {
       const { data: existing } = await supabase

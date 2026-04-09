@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { ensureUserProfile } from '@/lib/ensure-user-profile';
+import { getRolePolicyForUser } from '@/lib/role-policy';
 import { validateJson, libraryItemCreateSchema } from '@/lib/api-validation';
 import { standardLimiter } from '@/lib/rate-limit';
 import {
@@ -117,10 +118,62 @@ export async function POST(
 
     const supabase = await createClient();
     await ensureUserProfile(supabase, user.uid);
+    const rolePolicy = await getRolePolicyForUser(user.uid, supabase);
 
     if (isColumnar(type)) {
       const table = TABLE[type];
       const now = new Date();
+
+      if (type === 'powers') {
+        const { count, error: countErr } = await supabase
+          .from('user_powers')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.uid);
+        if (countErr) throw countErr;
+        if ((count ?? 0) >= rolePolicy.maxPowers) {
+          return NextResponse.json({ error: `You can create up to ${rolePolicy.maxPowers} custom powers.` }, { status: 403 });
+        }
+      }
+
+      if (type === 'techniques' || type === 'empowered-techniques') {
+        const [{ count: techniquesCount, error: techniquesErr }, { count: empoweredCount, error: empoweredErr }] = await Promise.all([
+          supabase
+            .from('user_techniques')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.uid),
+          supabase
+            .from('user_empowered_techniques')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.uid),
+        ]);
+        if (techniquesErr) throw techniquesErr;
+        if (empoweredErr) throw empoweredErr;
+        if ((techniquesCount ?? 0) + (empoweredCount ?? 0) >= rolePolicy.maxTechniques) {
+          return NextResponse.json({ error: `You can create up to ${rolePolicy.maxTechniques} custom techniques.` }, { status: 403 });
+        }
+      }
+
+      if (type === 'items') {
+        const { count, error: countErr } = await supabase
+          .from('user_items')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.uid);
+        if (countErr) throw countErr;
+        if ((count ?? 0) >= rolePolicy.maxArmaments) {
+          return NextResponse.json({ error: `You can create up to ${rolePolicy.maxArmaments} custom armaments.` }, { status: 403 });
+        }
+      }
+
+      if (type === 'creatures') {
+        const { count, error: countErr } = await supabase
+          .from('user_creatures')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.uid);
+        if (countErr) throw countErr;
+        if ((count ?? 0) >= rolePolicy.maxCreatures) {
+          return NextResponse.json({ error: `You can create up to ${rolePolicy.maxCreatures} custom creatures.` }, { status: 403 });
+        }
+      }
 
       if (duplicateOf) {
         const { data: existing } = await supabase

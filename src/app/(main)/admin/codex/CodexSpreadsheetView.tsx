@@ -381,6 +381,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
       setDirty(new Set());
       setSaveConfirmOpen(false);
       queryClient.invalidateQueries({ queryKey: ['codex'] });
+      await queryClient.refetchQueries({ queryKey: ['codex'] });
     }
     setSaving(false);
   }, [collection, dirty, rows, queryClient]);
@@ -440,6 +441,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
           return next;
         });
         queryClient.invalidateQueries({ queryKey: ['codex'] });
+        await queryClient.refetchQueries({ queryKey: ['codex'] });
       }
     },
     [collection, rows, queryClient]

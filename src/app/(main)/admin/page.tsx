@@ -47,6 +47,16 @@ export default function AdminPage() {
         </section>
 
         <section className="rounded-lg border border-border bg-surface p-6">
+          <h2 className="text-lg font-semibold text-text-primary mb-2">Role Policies</h2>
+          <p className="text-text-secondary mb-4">
+            Configure per-role permissions and quotas for campaigns, characters, and custom library items.
+          </p>
+          <Button asChild>
+            <Link href="/admin/roles">Open Role Policies</Link>
+          </Button>
+        </section>
+
+        <section className="rounded-lg border border-border bg-surface p-6">
           <h2 className="text-lg font-semibold text-text-primary mb-2">Core Rules</h2>
           <p className="text-text-secondary mb-4">
             Edit game rules: progression, combat, archetypes, conditions, sizes, rarities, ability scores, skills, recovery, experience, and damage types.

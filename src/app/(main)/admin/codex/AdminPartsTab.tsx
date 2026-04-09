@@ -320,7 +320,44 @@ export function AdminPartsTab() {
 
     setSaving(false);
     if (result.success) {
+      // Update cached codex immediately so the admin list reflects the save
+      // even if the codex refetch is delayed (staleTime is long).
+      const savedId = editing?.id ?? id;
+      const savedPart: Part = {
+        id: savedId,
+        name: String(data.name ?? ''),
+        description: String(data.description ?? ''),
+        category: String(data.category ?? ''),
+        type: (data.type === 'technique' ? 'technique' : 'power') as 'power' | 'technique',
+        base_en: (data.base_en as number | undefined) ?? 0,
+        base_tp: (data.base_tp as number | undefined) ?? 0,
+        op_1_desc: (data.op_1_desc as string | undefined) ?? undefined,
+        op_1_en: (data.op_1_en as number | undefined) ?? undefined,
+        op_1_tp: (data.op_1_tp as number | undefined) ?? undefined,
+        op_2_desc: (data.op_2_desc as string | undefined) ?? undefined,
+        op_2_en: (data.op_2_en as number | undefined) ?? undefined,
+        op_2_tp: (data.op_2_tp as number | undefined) ?? undefined,
+        op_3_desc: (data.op_3_desc as string | undefined) ?? undefined,
+        op_3_en: (data.op_3_en as number | undefined) ?? undefined,
+        op_3_tp: (data.op_3_tp as number | undefined) ?? undefined,
+        duration: Boolean(data.duration),
+        percentage: Boolean(data.percentage),
+        mechanic: Boolean(data.mechanic),
+        defense: Array.isArray(data.defense) ? (data.defense as string[]) : undefined,
+      };
+
+      queryClient.setQueryData(['codex'], (prev: unknown) => {
+        if (!prev || typeof prev !== 'object') return prev;
+        const prevCodex = prev as Record<string, unknown>;
+        const prevParts = (prevCodex.parts as Part[] | undefined) ?? [];
+        const nextParts = prevParts.some((p) => p.id === savedId)
+          ? prevParts.map((p) => (p.id === savedId ? { ...p, ...savedPart } : p))
+          : [...prevParts, savedPart];
+        return { ...prevCodex, parts: nextParts };
+      });
+
       queryClient.invalidateQueries({ queryKey: ['codex'] });
+      await queryClient.refetchQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
       alert(result.error);

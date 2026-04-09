@@ -34,7 +34,7 @@ export function useProfile(): { profile: ProfileDisplay | null; loading: boolean
       .then(({ profile: p }) => {
         if (cancelled || !p) return;
         setProfile({
-          username: (p.username as string | null | undefined) ?? null,
+          username: (p.usernameDisplay as string | null | undefined) ?? (p.username as string | null | undefined) ?? null,
           photoUrl: (p.photoUrl as string | null | undefined) ?? null,
           showTooltips: (p.showTooltips as boolean | null | undefined) ?? true,
         });

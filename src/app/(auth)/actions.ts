@@ -12,6 +12,7 @@ import { createClient } from '@supabase/supabase-js';
 import { requireAuth, getSession } from '@/lib/supabase/session';
 import { createClient as createServerClient } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/admin';
+import { getRolePolicyForUser } from '@/lib/role-policy';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -25,11 +26,12 @@ async function generateDefaultUsername(): Promise<string> {
   const supabase = await createServerClient();
   for (let i = 0; i < 20; i++) {
     const num = Math.floor(100000 + Math.random() * 900000);
-    const username = `Player${num}`.toLowerCase();
-    const { data } = await supabase.from('user_profiles').select('id').eq('username', username).maybeSingle();
-    if (!data) return username;
+    const displayUsername = `Player${num}`;
+    const normalized = displayUsername.toLowerCase();
+    const { data } = await supabase.from('user_profiles').select('id').eq('username', normalized).maybeSingle();
+    if (!data) return displayUsername;
   }
-  return `Player${Date.now().toString(36)}`;
+  return `Player${Date.now().toString(36).toUpperCase()}`;
 }
 
 export async function createUserProfileAction(data: {
@@ -43,19 +45,20 @@ export async function createUserProfileAction(data: {
     const now = new Date().toISOString();
     const { data: existing } = await supabase
       .from('user_profiles')
-      .select('id, username')
+      .select('id, username, username_display')
       .eq('id', data.uid)
       .maybeSingle();
 
     const existingUsername = ((existing as { username?: string | null } | null)?.username ?? null)?.toString().trim() || null;
+    const existingUsernameDisplay = ((existing as { username_display?: string | null } | null)?.username_display ?? null)?.toString().trim() || null;
 
-    let username = data.username?.trim();
-    if (!username) {
+    let usernameDisplay = data.username?.trim();
+    if (!usernameDisplay) {
       // Critical: never overwrite a user's chosen username with a generated default.
       // This action can be called from auth callback/confirm routes on subsequent logins.
-      username = existingUsername ?? (await generateDefaultUsername());
+      usernameDisplay = existingUsernameDisplay ?? existingUsername ?? (await generateDefaultUsername());
     }
-    const normalized = username.toLowerCase();
+    const normalized = usernameDisplay.toLowerCase();
 
     if (existing) {
       const updates: Record<string, unknown> = {
@@ -65,6 +68,7 @@ export async function createUserProfileAction(data: {
       };
       if (!existingUsername) {
         updates.username = normalized;
+        updates.username_display = usernameDisplay;
         updates.last_username_change = null;
       }
       await supabase.from('user_profiles').update(updates).eq('id', data.uid);
@@ -74,6 +78,7 @@ export async function createUserProfileAction(data: {
         email: data.email,
         display_name: data.displayName ?? null,
         username: normalized,
+        username_display: usernameDisplay,
         show_tooltips: true,
         created_at: now,
         updated_at: now,
@@ -98,6 +103,7 @@ export async function updateUserProfileAction(data: { displayName?: string; user
     if (data.displayName !== undefined) updates.display_name = data.displayName;
     if (data.username !== undefined) {
       updates.username = data.username.toLowerCase().trim();
+      updates.username_display = data.username.trim();
       updates.last_username_change = new Date().toISOString();
     }
     await supabase.from('user_profiles').update(updates).eq('id', user.uid);
@@ -118,6 +124,7 @@ export async function getUserProfileAction() {
     const { data: profile } = await supabase.from('user_profiles').select('*').eq('id', user.uid).maybeSingle();
     if (!profile) return { profile: null, error: null };
 
+    const rolePolicy = await getRolePolicyForUser(user.uid, supabase);
     const p = profile as Record<string, unknown>;
     return {
       profile: {
@@ -126,8 +133,10 @@ export async function getUserProfileAction() {
         email: p.email,
         displayName: p.display_name,
         username: p.username,
+        usernameDisplay: p.username_display,
         photoUrl: p.photo_url,
         role: p.role,
+        rolePolicy,
         showTooltips: p.show_tooltips,
         lastUsernameChange: p.last_username_change,
         createdAt: p.created_at,
@@ -209,7 +218,11 @@ export async function changeUsernameAction(newUsername: string) {
     await supabase.from('usernames').upsert({ username: normalized, user_id: user.uid }, { onConflict: 'username' });
     await supabase
       .from('user_profiles')
-      .update({ username: normalized, last_username_change: new Date().toISOString() })
+      .update({
+        username: normalized,
+        username_display: trimmed,
+        last_username_change: new Date().toISOString(),
+      })
       .eq('id', user.uid);
 
     revalidatePath('/my-account');
