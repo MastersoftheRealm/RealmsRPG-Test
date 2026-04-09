@@ -18,6 +18,8 @@ import {
   GridListRow, 
   SearchInput, 
   ListHeader,
+  ContextHelpTooltip,
+  SegmentedControl,
   type ChipData 
 } from '@/components/shared';
 import { 
@@ -497,7 +499,14 @@ export function FeatsStep() {
     <div className="max-w-5xl mx-auto">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-text-primary mb-2">Select Feats</h2>
+          <div className="flex items-center gap-1 mb-2">
+            <h2 className="text-2xl font-bold text-text-primary">Select Feats</h2>
+            <ContextHelpTooltip
+              tooltipKey="characters.new.step.feats.selectionHelp"
+              scope="page:/characters/new"
+              label="Feat selection help"
+            />
+          </div>
           <p className="text-text-secondary">
             Choose feats that grant special abilities and bonuses. Your archetype 
             ({archetypeType}) allows {maxArchetypeFeats} archetype feat{maxArchetypeFeats !== 1 ? 's' : ''} 
@@ -652,38 +661,18 @@ export function FeatsStep() {
             </span>
           </div>
         )}
-        {draft.creationMode === 'path' && !usePathRecommendations && (
+        {(draft.creationMode !== 'path' || !usePathRecommendations) && (
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setFilters(f => ({ ...f, featType: f.featType === 'archetype' ? 'character' : 'archetype' }))}
-              className={cn(
-                'px-4 py-2 rounded-lg border text-sm font-semibold transition-colors',
-                filters.featType === 'archetype'
-                  ? 'bg-amber-100 dark:bg-amber-900/40 border-amber-400 dark:border-amber-600 text-amber-800 dark:text-amber-200'
-                  : 'bg-blue-100 dark:bg-blue-900/40 border-blue-400 dark:border-blue-600 text-blue-800 dark:text-blue-200'
-              )}
-            >
-              {filters.featType === 'archetype' ? 'Showing Archetype Feats' : 'Showing Character Feats'}
-            </button>
-            <span className="text-xs text-text-muted dark:text-text-secondary">Click to switch</span>
-          </div>
-        )}
-        {draft.creationMode !== 'path' && (
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setFilters(f => ({ ...f, featType: f.featType === 'archetype' ? 'character' : 'archetype' }))}
-              className={cn(
-                'px-4 py-2 rounded-lg border text-sm font-semibold transition-colors',
-                filters.featType === 'archetype'
-                  ? 'bg-amber-100 dark:bg-amber-900/40 border-amber-400 dark:border-amber-600 text-amber-800 dark:text-amber-200'
-                  : 'bg-blue-100 dark:bg-blue-900/40 border-blue-400 dark:border-blue-600 text-blue-800 dark:text-blue-200'
-              )}
-            >
-              {filters.featType === 'archetype' ? 'Showing Archetype Feats' : 'Showing Character Feats'}
-            </button>
-            <span className="text-xs text-text-muted dark:text-text-secondary">Click to switch</span>
+            <SegmentedControl
+              value={filters.featType}
+              onChange={(next) => setFilters((f) => ({ ...f, featType: next as 'archetype' | 'character' }))}
+              options={[
+                { value: 'archetype', label: 'Archetype Feats' },
+                { value: 'character', label: 'Character Feats' },
+              ]}
+              aria-label="Feat list type"
+              className="flex-1 min-w-0 sm:flex-initial"
+            />
           </div>
         )}
       </div>

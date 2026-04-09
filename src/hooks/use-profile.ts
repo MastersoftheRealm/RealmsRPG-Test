@@ -14,6 +14,7 @@ import { useAuth } from './use-auth';
 export interface ProfileDisplay {
   username: string | null;
   photoUrl: string | null;
+  showTooltips: boolean;
 }
 
 export function useProfile(): { profile: ProfileDisplay | null; loading: boolean } {
@@ -35,6 +36,7 @@ export function useProfile(): { profile: ProfileDisplay | null; loading: boolean
         setProfile({
           username: (p.username as string | null | undefined) ?? null,
           photoUrl: (p.photoUrl as string | null | undefined) ?? null,
+          showTooltips: (p.showTooltips as boolean | null | undefined) ?? true,
         });
       })
       .catch(() => {

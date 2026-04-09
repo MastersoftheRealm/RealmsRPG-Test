@@ -19,7 +19,7 @@ import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { getAllValidationIssues, type ValidationIssue } from '@/lib/character-creator-validation';
 import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
 import { ABILITY_DISPLAY_NAMES } from '@/lib/game/constants';
-import { LoginPromptModal, ImageUploadModal } from '@/components/shared';
+import { ContextHelpTooltip, LoginPromptModal, ImageUploadModal } from '@/components/shared';
 import { HealthEnergyAllocator } from '@/components/creator';
 import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies, getTrainingPointLimit } from '@/lib/proficiencies';
 import { derivePowerDisplay } from '@/lib/calculators/power-calc';
@@ -604,7 +604,14 @@ export function FinalizeStep() {
   
   return (
     <div className="max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold text-text-primary mb-2">Finalize Your Character</h2>
+      <div className="flex items-center gap-1 mb-2">
+        <h2 className="text-2xl font-bold text-text-primary">Finalize Your Character</h2>
+        <ContextHelpTooltip
+          tooltipKey="characters.new.step.finalize.summaryHelp"
+          scope="page:/characters/new"
+          label="Finalize character help"
+        />
+      </div>
       <p className="text-text-secondary mb-6">
         Add the final details to bring your character to life.
       </p>

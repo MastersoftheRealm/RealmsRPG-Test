@@ -31,6 +31,7 @@ import {
   Alert,
   useToast,
 } from '@/components/ui';
+import { ContextHelpTooltip } from '@/components/shared';
 import { cn } from '@/lib/utils';
 import { getEffectivePortrait } from '@/lib/portrait';
 import { useCampaigns, useCharacters, useInvalidateCampaigns, useAuth } from '@/hooks';
@@ -103,6 +104,14 @@ function CampaignsContent() {
       <PageHeader
         title="Campaigns"
         description="Create campaigns, invite players, and manage your Realm Master sessions."
+        actions={
+          <ContextHelpTooltip
+            tooltipKey="campaigns.page.help"
+            scope="page:/campaigns"
+            label="Campaign workflow help"
+            placement="left"
+          />
+        }
       />
 
       <div className="min-w-0">
@@ -424,9 +433,16 @@ function JoinCampaignTab({
   return (
     <form onSubmit={handleSubmit} className="max-w-xl space-y-6">
       <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">
-          Invite Code
-        </label>
+        <div className="flex items-center gap-1 mb-1">
+          <label className="block text-sm font-medium text-text-secondary">
+            Invite Code
+          </label>
+          <ContextHelpTooltip
+            tooltipKey="campaigns.page.inviteHelp"
+            scope="page:/campaigns"
+            label="Invite code help"
+          />
+        </div>
         <Input
           value={inviteCode}
           onChange={(e) => {

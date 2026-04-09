@@ -16,11 +16,13 @@ export default function RulesPage() {
 
       <div className="bg-surface rounded-xl shadow-lg overflow-hidden">
         <iframe 
-          src="https://docs.google.com/document/d/e/2PACX-1vR2In0Fvu9axM9bb85Ne2rSp5SEfBd3kA34a3IHtcR5fIJ4spxCVgWezaNtejtyaGGmLtG-WTTKbgbE/pub?embedded=true" 
+          src="https://docs.google.com/document/d/e/2PACX-1vQabErotA2q4K7xCPtyR1rYmsJuzBNT48N_FL3FzaxWx2H1yITOq2SyxtBwVXdqtUTOIeGCMFTtljpR/pub?embedded=true"
           className="w-full border-0"
-          style={{ height: '800px' }}
+          style={{ height: 'min(900px, calc(100vh - 220px))' }}
           allowFullScreen
           title="Realms RPG Core Rulebook"
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
         />
       </div>
     </PageContainer>

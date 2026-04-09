@@ -11,8 +11,9 @@ import { useMemo } from 'react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { AbilityScoreEditor } from '@/components/creator';
 import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
-import { Button } from '@/components/ui';
+import { Button, HelpTooltip } from '@/components/ui';
 import { calculateAbilityPoints } from '@/lib/game/formulas';
+import { useTooltipByKey } from '@/hooks';
 import type { AbilityName } from '@/types';
 
 export function AbilitiesStep() {
@@ -37,6 +38,10 @@ export function AbilitiesStep() {
   
   const remainingPoints = totalPoints - spentPoints;
   const canContinue = remainingPoints >= 0;
+  const abilitiesTooltip = useTooltipByKey('characters.new.step.abilities.pointsHelp', {
+    scope: 'page:/characters/new',
+    context: { level },
+  });
   
   // Get archetype abilities
   const pathPrimaryAbility = (draft.archetype?.archetype_ability || draft.pow_abil || draft.mart_abil) as AbilityName | undefined;
@@ -46,7 +51,16 @@ export function AbilitiesStep() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold text-text-primary mb-2">Assign Abilities</h2>
+      <div className="flex items-center gap-1 mb-2">
+        <h2 className="text-2xl font-bold text-text-primary">Assign Abilities</h2>
+        {abilitiesTooltip.showTooltips && abilitiesTooltip.body && (
+          <HelpTooltip
+            title={abilitiesTooltip.title}
+            content={abilitiesTooltip.body}
+            label="Ability allocation help"
+          />
+        )}
+      </div>
       <p className="text-text-secondary mb-6">
         Distribute your ability points. You can reduce abilities below 0 to gain extra points.
         {powerAbility && <span className="text-power-dark dark:text-power-300"> Power archetype ability highlighted.</span>}

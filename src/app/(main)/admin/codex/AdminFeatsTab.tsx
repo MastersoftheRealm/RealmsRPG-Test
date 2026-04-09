@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useTransition, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   ChipSelect,
   AbilityRequirementFilter,
@@ -42,6 +42,724 @@ const ADMIN_FEAT_COLUMNS = [
   { key: 'uses_per_rec', label: 'USES' },
   { key: '_actions', label: '', sortable: false as const },
 ];
+
+type FeatFormState = {
+  name: string;
+  description: string;
+  req_desc: string;
+  category: string;
+  ability: string[];
+  ability_req: string[];
+  abil_req_val: number[];
+  tags: string[];
+  // Skill requirement IDs (string IDs from codex_skills)
+  skill_req: string[];
+  skill_req_val: number[];
+  feat_cat_req: string;
+  pow_abil_req: number | undefined;
+  mart_abil_req: number | undefined;
+  pow_prof_req: number | undefined;
+  mart_prof_req: number | undefined;
+  speed_req: number | undefined;
+  feat_lvl: number | undefined;
+  lvl_req: number | undefined;
+  uses_per_rec: number | undefined;
+  rec_period: string;
+  char_feat: boolean;
+  state_feat: boolean;
+  base_feat_id: string;
+};
+
+function AdminFeatEditModal({
+  isOpen,
+  onClose,
+  title,
+  copySourceName,
+  feats,
+  levelFeats,
+  skills,
+  skillIdToName,
+  filterOptions,
+  abilityOptions,
+  saving,
+  canDelete,
+  deleteConfirm,
+  onRequestDelete,
+  onSave,
+  onSaveAll,
+  initialForm,
+  initialEditId,
+  sessionKey,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  copySourceName: string | null;
+  feats: Feat[] | undefined;
+  /** When editing a leveled feat family, this contains all feats in that family (sorted). */
+  levelFeats: Feat[];
+  skills: Skill[];
+  skillIdToName: Map<string, string>;
+  filterOptions: { levels: number[]; abilities: string[]; categories: string[]; tags: string[]; abilReqAbilities: string[] };
+  abilityOptions: { value: string; label: string }[];
+  saving: boolean;
+  canDelete: boolean;
+  deleteConfirm: string | null;
+  onRequestDelete: () => void;
+  onSave: (id: string | null, form: FeatFormState) => void;
+  onSaveAll: (editsById: Record<string, FeatFormState>) => void;
+  initialForm: FeatFormState;
+  initialEditId: string | null;
+  sessionKey: number;
+}) {
+  const [form, setForm] = useState<FeatFormState>(initialForm);
+  const [selectedEditId, setSelectedEditId] = useState<string | null>(initialEditId);
+  const [draftsById, setDraftsById] = useState<Record<string, FeatFormState>>({});
+  const [dirtyIds, setDirtyIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setForm(initialForm);
+    setSelectedEditId(initialEditId);
+    setDraftsById({});
+    setDirtyIds(new Set());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, sessionKey]);
+
+  const hasLevels = levelFeats.length > 1;
+  const levelOptions = useMemo(() => {
+    if (!hasLevels) return [];
+    return levelFeats.map((f) => {
+      const lvl = getFeatLevel(f);
+      const label = lvl <= 1 ? 'Base (Level 1)' : `Level ${lvl}`;
+      return { id: String(f.id), label };
+    });
+  }, [hasLevels, levelFeats]);
+
+  const dirtyLevelLabels = useMemo(() => {
+    if (!hasLevels) return [];
+    const byId = new Map(levelFeats.map((f) => [String(f.id), f] as const));
+    return [...dirtyIds]
+      .map((id) => byId.get(id))
+      .filter(Boolean)
+      .sort((a, b) => getFeatLevel(a!) - getFeatLevel(b!))
+      .map((feat) => {
+        const lvl = getFeatLevel(feat!);
+        return lvl <= 1 ? 'Base' : `L${lvl}`;
+      });
+  }, [dirtyIds, hasLevels, levelFeats]);
+
+  const markDirty = useCallback((id: string) => {
+    setDirtyIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }, []);
+
+  const setFormField = useCallback(
+    <K extends keyof FeatFormState>(key: K, value: FeatFormState[K]) => {
+      setForm((prev) => {
+        const next = { ...prev, [key]: value };
+        const id = selectedEditId;
+        if (hasLevels && id) {
+          setDraftsById((d) => ({ ...d, [id]: next }));
+          markDirty(id);
+        }
+        return next;
+      });
+    },
+    [hasLevels, selectedEditId, markDirty],
+  );
+
+  const setFormUpdater = useCallback(
+    (updater: (prev: FeatFormState) => FeatFormState) => {
+      setForm((prev) => {
+        const next = updater(prev);
+        const id = selectedEditId;
+        if (hasLevels && id) {
+          setDraftsById((d) => ({ ...d, [id]: next }));
+          markDirty(id);
+        }
+        return next;
+      });
+    },
+    [hasLevels, selectedEditId, markDirty],
+  );
+
+  // Ensure current selected level always has an entry in drafts, so switching away preserves it.
+  useEffect(() => {
+    if (!hasLevels) return;
+    if (!selectedEditId) return;
+    setDraftsById((d) => (d[selectedEditId] ? d : { ...d, [selectedEditId]: form }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasLevels, selectedEditId]);
+
+  const handleSelectLevel = (nextId: string) => {
+    // Persist current level draft before switching
+    if (hasLevels && selectedEditId) {
+      setDraftsById((d) => ({ ...d, [selectedEditId]: form }));
+    }
+    setSelectedEditId(nextId);
+
+    // If we've already started editing this level in this session, restore the draft.
+    const existingDraft = draftsById[nextId];
+    if (existingDraft) {
+      setForm(existingDraft);
+      return;
+    }
+
+    const match = levelFeats.find((f) => String(f.id) === String(nextId));
+    if (!match) return;
+
+    const ext = match as unknown as Record<string, unknown>;
+    const abilityArr = Array.isArray(match.ability) ? match.ability : (match.ability ? [String(match.ability)] : []);
+    const toOptNum = (v: unknown): number | undefined => {
+      if (v == null || v === '') return undefined;
+      const n = Number(v);
+      return Number.isNaN(n) ? undefined : n;
+    };
+
+    const nextForm: FeatFormState = {
+      name: match.name,
+      description: match.description || '',
+      req_desc: String(ext.req_desc || ''),
+      category: match.category || '',
+      ability: abilityArr,
+      ability_req: match.ability_req || [],
+      abil_req_val: match.abil_req_val || [],
+      tags: match.tags || [],
+      skill_req: match.skill_req || [],
+      skill_req_val: match.skill_req_val || [],
+      feat_cat_req: String(ext.feat_cat_req || ''),
+      pow_abil_req: toOptNum(ext.pow_abil_req),
+      mart_abil_req: toOptNum(ext.mart_abil_req),
+      pow_prof_req: toOptNum(ext.pow_prof_req),
+      mart_prof_req: toOptNum(ext.mart_prof_req),
+      speed_req: toOptNum(ext.speed_req),
+      feat_lvl: toOptNum(ext.feat_lvl),
+      lvl_req: toOptNum(match.lvl_req),
+      uses_per_rec: toOptNum(match.uses_per_rec),
+      rec_period: match.rec_period || '',
+      char_feat: match.char_feat ?? false,
+      state_feat: match.state_feat ?? false,
+      base_feat_id: String((match as { base_feat_id?: string }).base_feat_id ?? ''),
+    };
+    setForm(nextForm);
+    setDraftsById((d) => ({ ...d, [nextId]: nextForm }));
+  };
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={title}
+      size="xl"
+      fullScreenOnMobile
+      footer={
+        <div className="flex justify-between">
+          <div>
+            {canDelete && (
+              <Button
+                variant="outline"
+                onClick={onRequestDelete}
+                className={deleteConfirm ? 'border-red-500 text-red-600' : ''}
+              >
+                {deleteConfirm ? 'Click again to confirm delete' : 'Delete'}
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button
+              onClick={() => {
+                if (hasLevels) {
+                  // Ensure current form is captured before bulk-save.
+                  const currentId = selectedEditId;
+                  const nextDrafts: Record<string, FeatFormState> = { ...draftsById };
+                  if (currentId) nextDrafts[currentId] = form;
+                  const payload: Record<string, FeatFormState> = {};
+                  dirtyIds.forEach((id) => {
+                    const draft = nextDrafts[id];
+                    if (draft) payload[id] = draft;
+                  });
+                  // If user didn't change anything, do nothing.
+                  if (Object.keys(payload).length === 0) return;
+                  onSaveAll(payload);
+                  return;
+                }
+                onSave(selectedEditId, form);
+              }}
+              disabled={saving || !form.name.trim() || (hasLevels && dirtyIds.size === 0)}
+            >
+              {saving ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
+        </div>
+      }
+    >
+      <div className="space-y-4">
+        {hasLevels && (
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Editing level</label>
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+              <select
+                value={selectedEditId ?? ''}
+                onChange={(e) => handleSelectLevel(e.target.value)}
+                className="w-full sm:w-auto px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+                aria-label="Select feat level to edit"
+              >
+                {levelOptions.map((opt) => (
+                  <option key={opt.id} value={opt.id}>{opt.label}</option>
+                ))}
+              </select>
+              {dirtyLevelLabels.length > 0 && (
+                <div className="text-xs text-text-muted dark:text-text-secondary">
+                  <span className="font-medium text-text-secondary dark:text-text-secondary">Unsaved:</span> {dirtyLevelLabels.join(', ')}
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
+              This feat has multiple levels. Select which level you want to edit.
+            </p>
+          </div>
+        )}
+        {copySourceName && (
+          <p className="text-sm text-text-secondary rounded-md bg-surface-alt px-3 py-2 border border-border-light">
+            Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>. Change the name and details as needed, then save to add the new feat.
+          </p>
+        )}
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
+          <Input
+            value={form.name}
+            onChange={(e) => setFormField('name', e.target.value)}
+            placeholder="Feat name"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
+          <Textarea
+            value={form.description}
+            onChange={(e) => setFormField('description', e.target.value)}
+            placeholder="Feat description"
+            className="min-h-[120px] resize-y"
+            rows={4}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1">Requirement Description (req_desc)</label>
+          <Input
+            value={form.req_desc}
+            onChange={(e) => setFormField('req_desc', e.target.value)}
+            placeholder="Human-readable requirement text"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Category</label>
+            <select
+              value={form.category && filterOptions.categories.includes(form.category) ? form.category : (form.category ? '__new__' : '')}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === '__new__') setFormUpdater((f) => ({ ...f, category: f.category || '' }));
+                else setFormField('category', v);
+              }}
+              className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+              aria-label="Feat category"
+            >
+              <option value="">— None —</option>
+              {filterOptions.categories.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+              <option value="__new__">Add new category...</option>
+            </select>
+            {form.category && !filterOptions.categories.includes(form.category) && (
+              <Input
+                value={form.category}
+                onChange={(e) => setFormField('category', e.target.value)}
+                placeholder="Type new category"
+                className="mt-2"
+              />
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Feat Category Required (feat_cat_req)</label>
+            <select
+              value={form.feat_cat_req && filterOptions.categories.includes(form.feat_cat_req) ? form.feat_cat_req : (form.feat_cat_req ? '__new__' : '')}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === '__new__') setFormUpdater((f) => ({ ...f, feat_cat_req: f.feat_cat_req || '' }));
+                else setFormField('feat_cat_req', v);
+              }}
+              className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+              aria-label="Feat category required"
+            >
+              <option value="">— None —</option>
+              {filterOptions.categories.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+              <option value="__new__">Add new category...</option>
+            </select>
+            {form.feat_cat_req && !filterOptions.categories.includes(form.feat_cat_req) && (
+              <Input
+                value={form.feat_cat_req}
+                onChange={(e) => setFormField('feat_cat_req', e.target.value)}
+                placeholder="Type new category"
+                className="mt-2"
+              />
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Character Level Required (lvl_req)</label>
+            <Input
+              type="number"
+              min={0}
+              value={form.lvl_req ?? ''}
+              onChange={(e) => setFormField('lvl_req', e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined)}
+              placeholder="No value"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Feat Level (feat_lvl)</label>
+            <Input
+              type="number"
+              min={0}
+              value={form.feat_lvl ?? ''}
+              onChange={(e) => setFormField('feat_lvl', e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined)}
+              placeholder="No value"
+            />
+          </div>
+          <div>
+            <label htmlFor="admin-feat-base-feat-id" className="block text-sm font-medium text-text-secondary mb-1">Base feat (level 1)</label>
+            <select
+              id="admin-feat-base-feat-id"
+              value={form.base_feat_id}
+              onChange={(e) => setFormField('base_feat_id', e.target.value)}
+              className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+              aria-label="Base feat (level 1) — leave empty for level-1 feats"
+            >
+              <option value="">None (this is level 1)</option>
+              {(feats ?? [])
+                .filter((f) => !(f as Feat & { base_feat_id?: string }).base_feat_id && ((f as Feat).feat_lvl == null || (f as Feat).feat_lvl === 1))
+                .map((f) => (
+                  <option key={f.id} value={String(f.id)}>{f.name} (id: {f.id})</option>
+                ))}
+            </select>
+            <p className="text-xs text-text-muted dark:text-text-secondary mt-1">For level 2+ feats, select the level-1 feat. Same name as base; ids differentiate levels.</p>
+          </div>
+        </div>
+        <div>
+          <ChipSelect
+            label="Ability (sorting)"
+            placeholder="Choose ability/defense"
+            options={abilityOptions}
+            selectedValues={form.ability}
+            onSelect={(v) => setFormUpdater((f) => ({ ...f, ability: [...f.ability, v] }))}
+            onRemove={(v) => setFormUpdater((f) => ({ ...f, ability: f.ability.filter(a => a !== v) }))}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1">Ability Requirements (ability/defense + min value)</label>
+          <div className="space-y-2">
+            {form.ability_req.map((abil, i) => (
+              <div key={i} className="flex gap-2 items-center">
+                <select
+                  value={abil}
+                  onChange={(e) => {
+                    setFormUpdater((f) => {
+                      const next = [...f.ability_req];
+                      next[i] = e.target.value;
+                      return { ...f, ability_req: next };
+                    });
+                  }}
+                  className="flex-1 px-3 py-2 border border-border rounded-md bg-background text-text-primary text-sm"
+                  aria-label={`Ability requirement ${i + 1}`}
+                >
+                  {abil && !(ABILITIES_AND_DEFENSES as readonly string[]).includes(abil) && (
+                    <option value={abil}>{abil}</option>
+                  )}
+                  {ABILITIES_AND_DEFENSES.map(a => (
+                    <option key={a} value={a}>{a}</option>
+                  ))}
+                </select>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.abil_req_val[i] ?? ''}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setFormUpdater((f) => {
+                      const next = [...f.abil_req_val];
+                      next[i] = v === '' ? 0 : parseInt(v, 10) || 0;
+                      return { ...f, abil_req_val: next };
+                    });
+                  }}
+                  className="w-20"
+                  placeholder="Min"
+                />
+                <IconButton
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setFormUpdater((f) => ({
+                      ...f,
+                      ability_req: f.ability_req.filter((_, j) => j !== i),
+                      abil_req_val: f.abil_req_val.filter((_, j) => j !== i),
+                    }));
+                  }}
+                  label="Remove"
+                >
+                  <X className="w-4 h-4" />
+                </IconButton>
+              </div>
+            ))}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setFormUpdater((f) => ({
+                ...f,
+                ability_req: [...f.ability_req, ABILITIES_AND_DEFENSES[0]],
+                abil_req_val: [...f.abil_req_val, 0],
+              }))}
+            >
+              <Plus className="w-4 h-4 mr-1 inline" />
+              Add ability requirement
+            </Button>
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1">Skill Requirements (skill ID + min bonus)</label>
+          <div className="space-y-2">
+            {form.skill_req.map((skillId, i) => (
+              <div key={i} className="flex gap-2 items-center">
+                <select
+                  value={skillId}
+                  onChange={(e) => {
+                    setFormUpdater((f) => {
+                      const next = [...f.skill_req];
+                      next[i] = e.target.value;
+                      return { ...f, skill_req: next };
+                    });
+                  }}
+                  className="flex-1 px-3 py-2 border border-border rounded-md bg-background text-text-primary text-sm"
+                  aria-label={`Skill requirement ${i + 1}`}
+                >
+                  {skillId && !(skills as Skill[]).some((s) => String(s.id) === String(skillId)) && (
+                    <option value={skillId}>{skillId}</option>
+                  )}
+                  {(skills as Skill[]).map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.skill_req_val[i] ?? 0}
+                  onChange={(e) => {
+                    setFormUpdater((f) => {
+                      const next = [...f.skill_req_val];
+                      next[i] = parseInt(e.target.value) || 0;
+                      return { ...f, skill_req_val: next };
+                    });
+                  }}
+                  className="w-20"
+                  placeholder="Min"
+                />
+                <IconButton
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setFormUpdater((f) => ({
+                      ...f,
+                      skill_req: f.skill_req.filter((_, j) => j !== i),
+                      skill_req_val: f.skill_req_val.filter((_, j) => j !== i),
+                    }));
+                  }}
+                  label="Remove"
+                >
+                  <X className="w-4 h-4" />
+                </IconButton>
+              </div>
+            ))}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const firstSkill = (skills as Skill[])[0];
+                setFormUpdater((f) => ({
+                  ...f,
+                  skill_req: [...f.skill_req, firstSkill ? String(firstSkill.id) : ''],
+                  skill_req_val: [...f.skill_req_val, 0],
+                }));
+              }}
+            >
+              <Plus className="w-4 h-4 mr-1 inline" />
+              Add skill requirement
+            </Button>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Uses per recovery</label>
+            <Input
+              type="number"
+              min={0}
+              value={form.uses_per_rec ?? ''}
+              onChange={(e) => setFormField('uses_per_rec', e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined)}
+              placeholder="No value"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Recovery Period</label>
+            <select
+              value={form.rec_period}
+              onChange={(e) => setFormField('rec_period', e.target.value)}
+              className="w-full px-3 py-2 border border-border rounded-md bg-background text-text-primary text-sm"
+              aria-label="Recovery period"
+            >
+              <option value="">—</option>
+              <option value="Full">Full</option>
+              <option value="Partial">Partial</option>
+            </select>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Power Ability Req</label>
+            <Input
+              type="number"
+              min={0}
+              value={form.pow_abil_req ?? ''}
+              onChange={(e) => setFormField('pow_abil_req', e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined)}
+              placeholder="No value"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Martial Ability Req</label>
+            <Input
+              type="number"
+              min={0}
+              value={form.mart_abil_req ?? ''}
+              onChange={(e) => setFormField('mart_abil_req', e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined)}
+              placeholder="No value"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Power Prof Req</label>
+            <Input
+              type="number"
+              min={0}
+              value={form.pow_prof_req ?? ''}
+              onChange={(e) => setFormField('pow_prof_req', e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined)}
+              placeholder="No value"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Martial Prof Req</label>
+            <Input
+              type="number"
+              min={0}
+              value={form.mart_prof_req ?? ''}
+              onChange={(e) => setFormField('mart_prof_req', e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined)}
+              placeholder="No value"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Speed Req</label>
+            <Input
+              type="number"
+              min={0}
+              value={form.speed_req ?? ''}
+              onChange={(e) => setFormField('speed_req', e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined)}
+              placeholder="No value"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1">Tags</label>
+          <div className="flex flex-wrap gap-1 mb-2">
+            {form.tags.map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-surface-alt border border-border-light text-sm"
+              >
+                {tag}
+                <button
+                  type="button"
+                  onClick={() => setFormUpdater((f) => ({ ...f, tags: f.tags.filter((t) => t !== tag) }))}
+                  className="p-0.5 rounded hover:bg-surface text-text-muted hover:text-text-primary"
+                  aria-label={`Remove tag ${tag}`}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </span>
+            ))}
+          </div>
+          <div className="flex gap-2 flex-wrap items-center">
+            <select
+              defaultValue=""
+              onChange={(e) => {
+                const v = e.target.value;
+                e.target.value = '';
+                if (v && !form.tags.includes(v)) setFormUpdater((f) => ({ ...f, tags: [...f.tags, v] }));
+              }}
+              className="px-3 py-2 rounded-md border border-border bg-background text-text-primary text-sm"
+              aria-label="Add tag from existing"
+            >
+              <option value="">Add tag from list...</option>
+              {filterOptions.tags.filter((t) => !form.tags.includes(t)).map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </div>
+          <div className="mt-2">
+            <label htmlFor="new-tag-input" className="sr-only">New tag name</label>
+            <Input
+              id="new-tag-input"
+              placeholder="Or type new tag and press Enter"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const v = (e.target as HTMLInputElement).value.trim();
+                  if (v && !form.tags.includes(v)) {
+                    setFormUpdater((f) => ({ ...f, tags: [...f.tags, v] }));
+                    (e.target as HTMLInputElement).value = '';
+                  }
+                }
+              }}
+              onBlur={(e) => {
+                const v = e.target.value.trim();
+                if (v && !form.tags.includes(v)) {
+                  setFormUpdater((f) => ({ ...f, tags: [...f.tags, v] }));
+                  e.target.value = '';
+                }
+              }}
+            />
+          </div>
+        </div>
+        <div className="flex gap-6">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={form.char_feat}
+              onChange={(e) => setFormField('char_feat', e.target.checked)}
+            />
+            <span className="text-sm text-text-secondary">Character Feat</span>
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={form.state_feat}
+              onChange={(e) => setFormField('state_feat', e.target.checked)}
+            />
+            <span className="text-sm text-text-secondary">State Feat</span>
+          </label>
+        </div>
+      </div>
+    </Modal>
+  );
+}
 
 interface FeatFilters {
   search: string;
@@ -151,7 +869,7 @@ export function AdminFeatsTab() {
 
   const groupedFeats = useMemo(() => groupFeatFamilies(filteredFeats), [filteredFeats]);
 
-  const formDefaults = {
+  const formDefaults: FeatFormState = {
     name: '',
     description: '',
     req_desc: '',
@@ -180,11 +898,10 @@ export function AdminFeatsTab() {
 
   const ABILITY_OPTIONS = ABILITIES_AND_DEFENSES.map(a => ({ value: a, label: a }));
 
-  const [form, setForm] = useState(formDefaults);
-  const [, startTransition] = useTransition();
-  const scheduleFormUpdate = useCallback((updater: React.SetStateAction<typeof formDefaults>) => {
-    startTransition(() => setForm(updater));
-  }, []);
+  const [modalInitialForm, setModalInitialForm] = useState<FeatFormState>(formDefaults);
+  const [modalInitialEditId, setModalInitialEditId] = useState<string | null>(null);
+  const [modalLevelFeats, setModalLevelFeats] = useState<Feat[]>([]);
+  const [modalSessionKey, setModalSessionKey] = useState(0);
 
   // Map skill ID -> name for display
   const skillIdToName = useMemo(() => {
@@ -198,7 +915,10 @@ export function AdminFeatsTab() {
   const openAdd = () => {
     setEditing(null);
     setCopySourceName(null);
-    setForm(formDefaults);
+    setModalInitialForm(formDefaults);
+    setModalInitialEditId(null);
+    setModalLevelFeats([]);
+    setModalSessionKey((k) => k + 1);
     setModalOpen(true);
   };
 
@@ -212,7 +932,7 @@ export function AdminFeatsTab() {
     setCopySourceName(feat.name);
     const ext = feat as unknown as Record<string, unknown>;
     const abilityArr = Array.isArray(feat.ability) ? feat.ability : (feat.ability ? [String(feat.ability)] : []);
-    setForm({
+    setModalInitialForm({
       name: (feat.name || '').trim() + COPY_NAME_SUFFIX,
       description: feat.description || '',
       req_desc: String(ext.req_desc || ''),
@@ -237,6 +957,9 @@ export function AdminFeatsTab() {
       state_feat: feat.state_feat ?? false,
       base_feat_id: String((feat as { base_feat_id?: string }).base_feat_id ?? ''),
     });
+    setModalInitialEditId(null);
+    setModalLevelFeats([]);
+    setModalSessionKey((k) => k + 1);
     setModalOpen(true);
   };
 
@@ -245,7 +968,7 @@ export function AdminFeatsTab() {
     setCopySourceName(null);
     const ext = feat as unknown as Record<string, unknown>;
     const abilityArr = Array.isArray(feat.ability) ? feat.ability : (feat.ability ? [String(feat.ability)] : []);
-    setForm({
+    setModalInitialForm({
       name: feat.name,
       description: feat.description || '',
       req_desc: String(ext.req_desc || ''),
@@ -270,6 +993,13 @@ export function AdminFeatsTab() {
       state_feat: feat.state_feat ?? false,
       base_feat_id: String((feat as { base_feat_id?: string }).base_feat_id ?? ''),
     });
+    setModalInitialEditId(String(feat.id));
+    // If this feat belongs to a leveled family, allow selecting other levels in the modal.
+    const familyId = getFeatFamilyId(feat);
+    const familyFeats = (feats ?? []).filter((f) => getFeatFamilyId(f) === familyId);
+    familyFeats.sort((a, b) => getFeatLevel(a) - getFeatLevel(b));
+    setModalLevelFeats(familyFeats);
+    setModalSessionKey((k) => k + 1);
     setModalOpen(true);
   };
 
@@ -285,7 +1015,7 @@ export function AdminFeatsTab() {
       return Math.max(maxLevel, getFeatLevel(feat));
     }, getFeatLevel(baseFeat));
     const nextLevel = highestExistingLevel + 1;
-    setForm({
+    setModalInitialForm({
       name: (baseFeat.name || '').trim(),
       description: baseFeat.description || '',
       req_desc: String(ext.req_desc || ''),
@@ -310,6 +1040,9 @@ export function AdminFeatsTab() {
       state_feat: baseFeat.state_feat ?? false,
       base_feat_id: String(baseFeat.id),
     });
+    setModalInitialEditId(null);
+    setModalLevelFeats([]);
+    setModalSessionKey((k) => k + 1);
     setModalOpen(true);
   };
 
@@ -320,7 +1053,7 @@ export function AdminFeatsTab() {
     setDeleteConfirm(null);
   };
 
-  const handleSave = async () => {
+  const handleSave = async (editId: string | null, form: FeatFormState) => {
     if (!form.name.trim()) return;
     setSaving(true);
     const data: Record<string, unknown> = {
@@ -349,11 +1082,11 @@ export function AdminFeatsTab() {
       base_feat_id: form.base_feat_id.trim() || undefined,
     };
 
-    const id = (form.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '') || `feat_${Date.now()}`).slice(0, 100);
+    const newId = (form.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '') || `feat_${Date.now()}`).slice(0, 100);
 
     const result = editing
-      ? await updateCodexDoc('codex_feats', editing.id, data)
-      : await createCodexDoc('codex_feats', id, data);
+      ? await updateCodexDoc('codex_feats', editId ?? editing.id, data)
+      : await createCodexDoc('codex_feats', newId, data);
 
     setSaving(false);
     if (result.success) {
@@ -362,6 +1095,59 @@ export function AdminFeatsTab() {
     } else {
       alert(result.error);
     }
+  };
+
+  const handleSaveAllLevels = async (editsById: Record<string, FeatFormState>) => {
+    const ids = Object.keys(editsById);
+    if (ids.length === 0) return;
+    setSaving(true);
+    const errors: string[] = [];
+
+    for (const id of ids) {
+      const form = editsById[id];
+      if (!form?.name?.trim()) {
+        errors.push(`Level ${id}: name is required`);
+        continue;
+      }
+
+      const data: Record<string, unknown> = {
+        name: form.name.trim(),
+        description: form.description.trim(),
+        req_desc: form.req_desc.trim() || undefined,
+        category: form.category.trim() || undefined,
+        ability: form.ability.length > 0 ? (form.ability.length === 1 ? form.ability[0] : form.ability) : undefined,
+        ability_req: form.ability_req,
+        abil_req_val: form.abil_req_val,
+        tags: form.tags,
+        skill_req: form.skill_req,
+        skill_req_val: form.skill_req_val,
+        feat_cat_req: form.feat_cat_req.trim() || undefined,
+        pow_abil_req: form.pow_abil_req ?? undefined,
+        mart_abil_req: form.mart_abil_req ?? undefined,
+        pow_prof_req: form.pow_prof_req ?? undefined,
+        mart_prof_req: form.mart_prof_req ?? undefined,
+        speed_req: form.speed_req ?? undefined,
+        feat_lvl: form.feat_lvl ?? undefined,
+        lvl_req: form.lvl_req ?? undefined,
+        uses_per_rec: form.uses_per_rec ?? undefined,
+        rec_period: form.rec_period.trim() || undefined,
+        char_feat: form.char_feat,
+        state_feat: form.state_feat,
+        base_feat_id: form.base_feat_id.trim() || undefined,
+      };
+
+      const result = await updateCodexDoc('codex_feats', id, data);
+      if (!result.success) errors.push(`Update ${id}: ${result.error}`);
+    }
+
+    setSaving(false);
+    if (errors.length > 0) {
+      alert(errors.slice(0, 6).join('\n') + (errors.length > 6 ? `\n... and ${errors.length - 6} more` : ''));
+      return;
+    }
+
+    queryClient.invalidateQueries({ queryKey: ['codex'] });
+    closeModal();
   };
 
   const handleDelete = async (id: string) => {
@@ -572,451 +1358,27 @@ export function AdminFeatsTab() {
         )}
       </div>
 
-      <Modal
+      <AdminFeatEditModal
         isOpen={modalOpen}
         onClose={closeModal}
         title={editing ? 'Edit Feat' : 'Add Feat'}
-        size="xl"
-        fullScreenOnMobile
-        footer={
-          <div className="flex justify-between">
-            <div>
-              {editing && (
-                <Button
-                  variant="outline"
-                  onClick={() => handleDelete(editing.id)}
-                  className={deleteConfirm === editing.id ? 'border-red-500 text-red-600' : ''}
-                >
-                  {deleteConfirm === editing.id ? 'Click again to confirm delete' : 'Delete'}
-                </Button>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={closeModal}>Cancel</Button>
-              <Button onClick={handleSave} disabled={saving || !form.name.trim()}>
-                {saving ? 'Saving...' : 'Save'}
-              </Button>
-            </div>
-          </div>
-        }
-      >
-        <div className="space-y-4">
-          {copySourceName && (
-            <p className="text-sm text-text-secondary rounded-md bg-surface-alt px-3 py-2 border border-border-light">
-              Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>. Change the name and details as needed, then save to add the new feat.
-            </p>
-          )}
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
-            <Input
-              value={form.name}
-              onChange={(e) => scheduleFormUpdate((f) => ({ ...f, name: e.target.value }))}
-              placeholder="Feat name"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
-            <Textarea
-              value={form.description}
-              onChange={(e) => scheduleFormUpdate((f) => ({ ...f, description: e.target.value }))}
-              placeholder="Feat description"
-              className="min-h-[120px] resize-y"
-              rows={4}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Requirement Description (req_desc)</label>
-            <Input
-              value={form.req_desc}
-              onChange={(e) => scheduleFormUpdate((f) => ({ ...f, req_desc: e.target.value }))}
-              placeholder="Human-readable requirement text"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Category</label>
-              <select
-                value={form.category && filterOptions.categories.includes(form.category) ? form.category : (form.category ? '__new__' : '')}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  if (v === '__new__') scheduleFormUpdate((f) => ({ ...f, category: f.category || '' }));
-                  else scheduleFormUpdate((f) => ({ ...f, category: v }));
-                }}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
-                aria-label="Feat category"
-              >
-                <option value="">— None —</option>
-                {filterOptions.categories.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-                <option value="__new__">Add new category...</option>
-              </select>
-              {form.category && !filterOptions.categories.includes(form.category) && (
-                <Input
-                  value={form.category}
-                  onChange={(e) => scheduleFormUpdate((f) => ({ ...f, category: e.target.value }))}
-                  placeholder="Type new category"
-                  className="mt-2"
-                />
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Feat Category Required (feat_cat_req)</label>
-              <select
-                value={form.feat_cat_req && filterOptions.categories.includes(form.feat_cat_req) ? form.feat_cat_req : (form.feat_cat_req ? '__new__' : '')}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  if (v === '__new__') scheduleFormUpdate((f) => ({ ...f, feat_cat_req: f.feat_cat_req || '' }));
-                  else scheduleFormUpdate((f) => ({ ...f, feat_cat_req: v }));
-                }}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
-                aria-label="Feat category required"
-              >
-                <option value="">— None —</option>
-                {filterOptions.categories.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-                <option value="__new__">Add new category...</option>
-              </select>
-              {form.feat_cat_req && !filterOptions.categories.includes(form.feat_cat_req) && (
-                <Input
-                  value={form.feat_cat_req}
-                  onChange={(e) => scheduleFormUpdate((f) => ({ ...f, feat_cat_req: e.target.value }))}
-                  placeholder="Type new category"
-                  className="mt-2"
-                />
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Character Level Required (lvl_req)</label>
-              <Input
-                type="number"
-                min={0}
-                value={form.lvl_req ?? ''}
-                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, lvl_req: e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined }))}
-                placeholder="No value"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Feat Level (feat_lvl)</label>
-              <Input
-                type="number"
-                min={0}
-                value={form.feat_lvl ?? ''}
-                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, feat_lvl: e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined }))}
-                placeholder="No value"
-              />
-            </div>
-            <div>
-              <label htmlFor="admin-feat-base-feat-id" className="block text-sm font-medium text-text-secondary mb-1">Base feat (level 1)</label>
-              <select
-                id="admin-feat-base-feat-id"
-                value={form.base_feat_id}
-                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, base_feat_id: e.target.value }))}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
-                aria-label="Base feat (level 1) — leave empty for level-1 feats"
-              >
-                <option value="">None (this is level 1)</option>
-                {(feats ?? [])
-                  .filter((f) => !(f as Feat & { base_feat_id?: string }).base_feat_id && ((f as Feat).feat_lvl == null || (f as Feat).feat_lvl === 1))
-                  .map((f) => (
-                    <option key={f.id} value={String(f.id)}>{f.name} (id: {f.id})</option>
-                  ))}
-              </select>
-              <p className="text-xs text-text-muted dark:text-text-secondary mt-1">For level 2+ feats, select the level-1 feat. Same name as base; ids differentiate levels.</p>
-            </div>
-          </div>
-          <div>
-            <ChipSelect
-              label="Ability (sorting)"
-              placeholder="Choose ability/defense"
-              options={ABILITY_OPTIONS}
-              selectedValues={form.ability}
-              onSelect={(v) => scheduleFormUpdate((f) => ({ ...f, ability: [...f.ability, v] }))}
-              onRemove={(v) => scheduleFormUpdate((f) => ({ ...f, ability: f.ability.filter(a => a !== v) }))}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Ability Requirements (ability/defense + min value)</label>
-            <div className="space-y-2">
-              {form.ability_req.map((abil, i) => (
-                <div key={i} className="flex gap-2 items-center">
-                  <select
-                    value={abil}
-                    onChange={(e) => {
-                      const next = [...form.ability_req];
-                      next[i] = e.target.value;
-                      scheduleFormUpdate((f) => ({ ...f, ability_req: next }));
-                    }}
-                    className="flex-1 px-3 py-2 border border-border rounded-md bg-background text-text-primary text-sm"
-                    aria-label={`Ability requirement ${i + 1}`}
-                  >
-                    {abil && !(ABILITIES_AND_DEFENSES as readonly string[]).includes(abil) && (
-                      <option value={abil}>{abil}</option>
-                    )}
-                    {ABILITIES_AND_DEFENSES.map(a => (
-                      <option key={a} value={a}>{a}</option>
-                    ))}
-                  </select>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={form.abil_req_val[i] ?? ''}
-                    onChange={(e) => {
-                      const next = [...form.abil_req_val];
-                      const v = e.target.value;
-                      next[i] = v === '' ? 0 : parseInt(v, 10) || 0;
-                      scheduleFormUpdate((f) => ({ ...f, abil_req_val: next }));
-                    }}
-                    className="w-20"
-                    placeholder="Min"
-                  />
-                  <IconButton variant="ghost" size="sm" onClick={() => {
-                    scheduleFormUpdate((f) => ({
-                      ...f,
-                      ability_req: f.ability_req.filter((_, j) => j !== i),
-                      abil_req_val: f.abil_req_val.filter((_, j) => j !== i),
-                    }));
-                  }} label="Remove">
-                    <X className="w-4 h-4" />
-                  </IconButton>
-                </div>
-              ))}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => scheduleFormUpdate((f) => ({
-                  ...f,
-                  ability_req: [...f.ability_req, ABILITIES_AND_DEFENSES[0]],
-                  abil_req_val: [...f.abil_req_val, 0],
-                }))}
-              >
-                <Plus className="w-4 h-4 mr-1 inline" />
-                Add ability requirement
-              </Button>
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Skill Requirements (skill ID + min bonus)</label>
-            <div className="space-y-2">
-              {form.skill_req.map((skillId, i) => (
-                <div key={i} className="flex gap-2 items-center">
-                  <select
-                    value={skillId}
-                    onChange={(e) => {
-                      const next = [...form.skill_req];
-                      next[i] = e.target.value;
-                      scheduleFormUpdate((f) => ({ ...f, skill_req: next }));
-                    }}
-                    className="flex-1 px-3 py-2 border border-border rounded-md bg-background text-text-primary text-sm"
-                    aria-label={`Skill requirement ${i + 1}`}
-                  >
-                    {skillId && !(skills as Skill[]).some((s) => String(s.id) === String(skillId)) && (
-                      <option value={skillId}>{skillId}</option>
-                    )}
-                    {(skills as Skill[]).map((s) => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </select>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={form.skill_req_val[i] ?? 0}
-                    onChange={(e) => {
-                      const next = [...form.skill_req_val];
-                      next[i] = parseInt(e.target.value) || 0;
-                      scheduleFormUpdate((f) => ({ ...f, skill_req_val: next }));
-                    }}
-                    className="w-20"
-                    placeholder="Min"
-                  />
-                  <IconButton variant="ghost" size="sm" onClick={() => {
-                    scheduleFormUpdate((f) => ({
-                      ...f,
-                      skill_req: f.skill_req.filter((_, j) => j !== i),
-                      skill_req_val: f.skill_req_val.filter((_, j) => j !== i),
-                    }));
-                  }} label="Remove">
-                    <X className="w-4 h-4" />
-                  </IconButton>
-                </div>
-              ))}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const firstSkill = (skills as Skill[])[0];
-                  scheduleFormUpdate((f) => ({
-                    ...f,
-                    skill_req: [...f.skill_req, firstSkill ? String(firstSkill.id) : ''],
-                    skill_req_val: [...f.skill_req_val, 0],
-                  }));
-                }}
-              >
-                <Plus className="w-4 h-4 mr-1 inline" />
-                Add skill requirement
-              </Button>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Uses per recovery</label>
-              <Input
-                type="number"
-                min={0}
-                value={form.uses_per_rec ?? ''}
-                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, uses_per_rec: e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined }))}
-                placeholder="No value"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Recovery Period</label>
-              <select
-                value={form.rec_period}
-                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, rec_period: e.target.value }))}
-                className="w-full px-3 py-2 border border-border rounded-md bg-background text-text-primary text-sm"
-                aria-label="Recovery period"
-              >
-                <option value="">—</option>
-                <option value="Full">Full</option>
-                <option value="Partial">Partial</option>
-              </select>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Power Ability Req</label>
-              <Input
-                type="number"
-                min={0}
-                value={form.pow_abil_req ?? ''}
-                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, pow_abil_req: e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined }))}
-                placeholder="No value"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Martial Ability Req</label>
-              <Input
-                type="number"
-                min={0}
-                value={form.mart_abil_req ?? ''}
-                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, mart_abil_req: e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined }))}
-                placeholder="No value"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Power Prof Req</label>
-              <Input
-                type="number"
-                min={0}
-                value={form.pow_prof_req ?? ''}
-                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, pow_prof_req: e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined }))}
-                placeholder="No value"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Martial Prof Req</label>
-              <Input
-                type="number"
-                min={0}
-                value={form.mart_prof_req ?? ''}
-                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, mart_prof_req: e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined }))}
-                placeholder="No value"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Speed Req</label>
-              <Input
-                type="number"
-                min={0}
-                value={form.speed_req ?? ''}
-                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, speed_req: e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined }))}
-                placeholder="No value"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Tags</label>
-            <div className="flex flex-wrap gap-1 mb-2">
-              {form.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-surface-alt border border-border-light text-sm"
-                >
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => scheduleFormUpdate((f) => ({ ...f, tags: f.tags.filter((t) => t !== tag) }))}
-                    className="p-0.5 rounded hover:bg-surface text-text-muted hover:text-text-primary"
-                    aria-label={`Remove tag ${tag}`}
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </span>
-              ))}
-            </div>
-            <div className="flex gap-2 flex-wrap items-center">
-              <select
-                defaultValue=""
-                onChange={(e) => {
-                  const v = e.target.value;
-                  e.target.value = '';
-                  if (v && !form.tags.includes(v)) scheduleFormUpdate((f) => ({ ...f, tags: [...f.tags, v] }));
-                }}
-                className="px-3 py-2 rounded-md border border-border bg-background text-text-primary text-sm"
-                aria-label="Add tag from existing"
-              >
-                <option value="">Add tag from list...</option>
-                {filterOptions.tags.filter((t) => !form.tags.includes(t)).map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </div>
-            <div className="mt-2">
-              <label htmlFor="new-tag-input" className="sr-only">New tag name</label>
-              <Input
-                id="new-tag-input"
-                placeholder="Or type new tag and press Enter"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const v = (e.target as HTMLInputElement).value.trim();
-                    if (v && !form.tags.includes(v)) {
-                      scheduleFormUpdate((f) => ({ ...f, tags: [...f.tags, v] }));
-                      (e.target as HTMLInputElement).value = '';
-                    }
-                  }
-                }}
-                onBlur={(e) => {
-                  const v = e.target.value.trim();
-                  if (v && !form.tags.includes(v)) {
-                    scheduleFormUpdate((f) => ({ ...f, tags: [...f.tags, v] }));
-                    e.target.value = '';
-                  }
-                }}
-              />
-            </div>
-          </div>
-          <div className="flex gap-6">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={form.char_feat}
-                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, char_feat: e.target.checked }))}
-              />
-              <span className="text-sm text-text-secondary">Character Feat</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={form.state_feat}
-                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, state_feat: e.target.checked }))}
-              />
-              <span className="text-sm text-text-secondary">State Feat</span>
-            </label>
-          </div>
-        </div>
-      </Modal>
+        copySourceName={copySourceName}
+        feats={feats}
+        levelFeats={editing ? modalLevelFeats : []}
+        skills={skills as Skill[]}
+        skillIdToName={skillIdToName}
+        filterOptions={filterOptions}
+        abilityOptions={ABILITY_OPTIONS}
+        saving={saving}
+        canDelete={!!editing}
+        deleteConfirm={editing ? (deleteConfirm === editing.id ? editing.id : null) : null}
+        onRequestDelete={() => editing && handleDelete(editing.id)}
+        onSave={handleSave}
+        onSaveAll={handleSaveAllLevels}
+        initialForm={modalInitialForm}
+        initialEditId={modalInitialEditId}
+        sessionKey={modalSessionKey}
+      />
     </div>
   );
 }

@@ -155,7 +155,23 @@ export function SpeciesModal({
     : species.size || 'Medium';
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl" title={species.name} fullScreenOnMobile>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="2xl"
+      title={species.name}
+      fullScreenOnMobile
+      footer={
+        <div className="p-4 flex gap-3">
+          <Button onClick={onSelect} className="flex-1 min-h-[44px] min-w-[44px]">
+            Pick Me!
+          </Button>
+          <Button variant="secondary" onClick={onClose} className="flex-1 min-h-[44px] min-w-[44px]">
+            Nah...
+          </Button>
+        </div>
+      }
+    >
       <div className="p-6">
         {/* Header */}
         <div className="mb-4">
@@ -292,22 +308,6 @@ export function SpeciesModal({
           </>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex gap-4 mt-8 pt-4 border-t border-border-light">
-          <Button 
-            onClick={onSelect} 
-            className="flex-1"
-          >
-            Pick Me!
-          </Button>
-          <Button 
-            variant="secondary"
-            onClick={onClose} 
-            className="flex-1"
-          >
-            Nah...
-          </Button>
-        </div>
       </div>
     </Modal>
   );

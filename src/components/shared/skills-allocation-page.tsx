@@ -88,6 +88,10 @@ export interface SkillsAllocationPageProps {
   footer?: React.ReactNode;
   /** Optional content rendered after the description (e.g. path help card) */
   afterDescription?: React.ReactNode;
+  /** Optional heading-side content (e.g. help icon). */
+  headingAddon?: React.ReactNode;
+  /** Optional help content next to the "Add Sub-Skill" button. */
+  addSubSkillAddon?: React.ReactNode;
   /** When true, hide the Defense Bonuses section (e.g. for choose-a-path creation) */
   hideDefenseBonuses?: boolean;
   /** Optional className */
@@ -111,6 +115,8 @@ export function SkillsAllocationPage({
   onSkillAbilityChange,
   footer,
   afterDescription,
+  headingAddon,
+  addSubSkillAddon,
   hideDefenseBonuses = false,
   className,
 }: SkillsAllocationPageProps) {
@@ -307,7 +313,10 @@ export function SkillsAllocationPage({
     <div className={cn('max-w-5xl mx-auto', className)}>
       <div className="flex flex-nowrap items-start justify-between gap-4 mb-6">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold text-text-primary mb-2">Allocate Skills</h1>
+          <div className="flex items-center gap-1 mb-2">
+            <h1 className="text-2xl font-bold text-text-primary">Allocate Skills</h1>
+            {headingAddon}
+          </div>
           <p className="text-text-secondary">
             Spend Skill points to gain proficiency, increase Skill values, or boost defenses.
             Species Skills are always proficient and cannot be removed.
@@ -331,17 +340,20 @@ export function SkillsAllocationPage({
           <Plus size={14} />
           Add Skill
         </Button>
-        <Button
-          size="sm"
-          variant="secondary"
-          className="dark:bg-surface dark:border-border dark:hover:bg-surface-alt dark:text-text-secondary"
-          onClick={() => setAddSubSkillModalOpen(true)}
-          disabled={remainingPoints < 1}
-          title={remainingPoints < 1 ? 'No Skill points remaining' : undefined}
-        >
-          <Plus size={14} />
-          Add Sub-Skill
-        </Button>
+        <span className="inline-flex items-center gap-1">
+          <Button
+            size="sm"
+            variant="secondary"
+            className="dark:bg-surface dark:border-border dark:hover:bg-surface-alt dark:text-text-secondary"
+            onClick={() => setAddSubSkillModalOpen(true)}
+            disabled={remainingPoints < 1}
+            title={remainingPoints < 1 ? 'No Skill points remaining' : undefined}
+          >
+            <Plus size={14} />
+            Add Sub-Skill
+          </Button>
+          {addSubSkillAddon}
+        </span>
       </div>
 
       {/* Single flat Skills table — same layout as character sheet (Prof, Skill, Ability, Bonus, Value) */}

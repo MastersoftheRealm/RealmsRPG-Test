@@ -11,8 +11,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useAuth, useAdmin, useProfile } from '@/hooks';
+import { useAuth, useAdmin, useProfile, useTooltipByKey } from '@/hooks';
 import { ThemeToggle } from '@/components/shared';
+import { HelpTooltip } from '@/components/ui';
+import { useQueryClient } from '@tanstack/react-query';
 
 const navLinks: Array<{ href: string; label: string; external?: boolean } | { label: string; dropdown: { href: string; label: string }[] }> = [
   { href: '/characters', label: 'Characters' },
@@ -54,6 +56,8 @@ export function Header() {
   const { isAdmin } = useAdmin();
   const { profile } = useProfile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const libraryTooltip = useTooltipByKey('global.nav.library', { scope: 'global:nav' });
+  const codexTooltip = useTooltipByKey('global.nav.codex', { scope: 'global:nav' });
 
   // Handle login click - store current path for redirect after login
   const handleLoginClick = () => {
@@ -111,16 +115,35 @@ export function Header() {
                   {item.label}
                 </a>
               ) : (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    'font-semibold text-lg text-primary-700 dark:text-primary-300 hover:text-primary-500 dark:hover:text-primary-200 transition-colors whitespace-nowrap',
-                    pathname === item.href ? 'text-primary-500 dark:text-primary-400' : ''
+                <span key={item.href} className="inline-flex items-center gap-1">
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      'font-semibold text-lg text-primary-700 dark:text-primary-300 hover:text-primary-500 dark:hover:text-primary-200 transition-colors whitespace-nowrap',
+                      pathname === item.href ? 'text-primary-500 dark:text-primary-400' : ''
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                  {item.href === '/library' && libraryTooltip.showTooltips && libraryTooltip.body && (
+                    <HelpTooltip
+                      title={libraryTooltip.title}
+                      content={libraryTooltip.body}
+                      placement="bottom"
+                      label="Library navigation help"
+                      className="align-middle"
+                    />
                   )}
-                >
-                  {item.label}
-                </Link>
+                  {item.href === '/codex' && codexTooltip.showTooltips && codexTooltip.body && (
+                    <HelpTooltip
+                      title={codexTooltip.title}
+                      content={codexTooltip.body}
+                      placement="bottom"
+                      label="Codex navigation help"
+                      className="align-middle"
+                    />
+                  )}
+                </span>
               )
             ))}
           </nav>
@@ -209,9 +232,20 @@ interface DropdownItem {
   dropdown?: { href: string; label: string }[];
 }
 
-function AccountDropdown({ profile, signOut }: { profile: { username?: string | null } | null; signOut: () => void }) {
+function AccountDropdown({
+  profile,
+  signOut,
+}: {
+  profile: { username?: string | null; showTooltips?: boolean | null } | null;
+  signOut: () => void;
+}) {
   const [open, setOpen] = useState(false);
+  const [showTooltips, setShowTooltips] = useState<boolean>(profile?.showTooltips ?? true);
+  const queryClient = useQueryClient();
   const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    setShowTooltips(profile?.showTooltips ?? true);
+  }, [profile?.showTooltips]);
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
@@ -240,6 +274,37 @@ function AccountDropdown({ profile, signOut }: { profile: { username?: string | 
             </Link>
             <div className="border-t border-border-light my-1" />
             <ThemeToggle />
+            <button
+              type="button"
+              onClick={async () => {
+                const next = !showTooltips;
+                setShowTooltips(next);
+                try {
+                  const res = await fetch('/api/user/settings/tooltips', {
+                    method: 'PATCH',
+                    headers: { 'content-type': 'application/json' },
+                    body: JSON.stringify({ showTooltips: next }),
+                  });
+                  if (!res.ok) throw new Error('Failed to update tooltip preference');
+                  // Immediately re-render any tooltip anchors by invalidating the cached /api/tooltips response(s).
+                  queryClient.invalidateQueries({ queryKey: ['tooltips'] });
+                } catch {
+                  setShowTooltips((prev) => !prev);
+                }
+              }}
+              className="w-full text-left px-4 py-2.5 text-text-secondary hover:bg-surface-alt min-h-[44px] flex items-center justify-between gap-3"
+              aria-label="Toggle help tooltips"
+            >
+              <span>Help tooltips</span>
+              <span className={cn(
+                'text-xs font-semibold px-2 py-1 rounded-full',
+                showTooltips
+                  ? 'bg-success-100 dark:bg-success-900/40 text-success-700 dark:text-success-300'
+                  : 'bg-surface-alt text-text-secondary'
+              )}>
+                {showTooltips ? 'On' : 'Off'}
+              </span>
+            </button>
             <div className="border-t border-border-light my-1" />
             <button
               type="button"

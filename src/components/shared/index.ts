@@ -196,6 +196,7 @@ export {
 
 // ThemeToggle - Dark/Light/System theme switcher
 export { ThemeToggle } from './theme-toggle';
+export { ContextHelpTooltip } from './context-help-tooltip';
 
 // PoweredMartialSlider - Allocation slider for powered-martial characters
 export { PoweredMartialSlider } from './powered-martial-slider';

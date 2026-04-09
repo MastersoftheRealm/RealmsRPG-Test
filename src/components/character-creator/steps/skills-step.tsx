@@ -10,10 +10,10 @@
 
 import React, { useMemo, useCallback } from 'react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useMergedSpecies, useCodexSkills, type Species, type Skill } from '@/hooks';
-import { SkillsAllocationPage } from '@/components/shared';
+import { useMergedSpecies, useCodexSkills, useTooltipByKey, type Species, type Skill } from '@/hooks';
+import { ContextHelpTooltip, SkillsAllocationPage } from '@/components/shared';
 import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
-import { Button } from '@/components/ui';
+import { Button, HelpTooltip } from '@/components/ui';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
 
@@ -78,6 +78,10 @@ export function SkillsStep() {
   const defenseVals = draft.defenseVals || draft.defenseSkills || { ...DEFAULT_DEFENSE_SKILLS };
   const abilities = draft.abilities || { ...DEFAULT_ABILITIES };
   const level = draft.level || 1;
+  const skillsTooltip = useTooltipByKey('characters.new.step.skills.pointsHelp', {
+    scope: 'page:/characters/new',
+    context: { level },
+  });
 
   const mergedSkillAbilities = draft.skillAbilities ?? {};
   const pathData = useMemo(() => parseArchetypePathData(draft.archetype?.path_data), [draft.archetype?.path_data]);
@@ -178,6 +182,23 @@ export function SkillsStep() {
         onSkillAbilityChange={handleSkillAbilityChange}
         afterDescription={pathHelpAfterDescription}
         hideDefenseBonuses={draft.creationMode === 'path'}
+        headingAddon={
+          skillsTooltip.showTooltips && skillsTooltip.body ? (
+            <HelpTooltip
+              title={skillsTooltip.title}
+              content={skillsTooltip.body}
+              label="Skill allocation help"
+            />
+          ) : null
+        }
+        addSubSkillAddon={
+          <ContextHelpTooltip
+            tooltipKey="characters.new.step.skills.subskillsHelp"
+            scope="page:/characters/new"
+            label="Sub-skill help"
+            placement="top"
+          />
+        }
         footer={footer}
       />
     </div>

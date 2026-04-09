@@ -39,23 +39,46 @@ export async function createUserProfileAction(data: {
   displayName?: string;
 }) {
   try {
-    let username = data.username?.trim();
-    if (!username) username = await generateDefaultUsername();
-    const normalized = username.toLowerCase();
     const supabase = await createServerClient();
     const now = new Date().toISOString();
+    const { data: existing } = await supabase
+      .from('user_profiles')
+      .select('id, username')
+      .eq('id', data.uid)
+      .maybeSingle();
 
-    await supabase.from('user_profiles').upsert(
-      {
+    const existingUsername = ((existing as { username?: string | null } | null)?.username ?? null)?.toString().trim() || null;
+
+    let username = data.username?.trim();
+    if (!username) {
+      // Critical: never overwrite a user's chosen username with a generated default.
+      // This action can be called from auth callback/confirm routes on subsequent logins.
+      username = existingUsername ?? (await generateDefaultUsername());
+    }
+    const normalized = username.toLowerCase();
+
+    if (existing) {
+      const updates: Record<string, unknown> = {
+        email: data.email,
+        display_name: data.displayName ?? null,
+        updated_at: now,
+      };
+      if (!existingUsername) {
+        updates.username = normalized;
+        updates.last_username_change = null;
+      }
+      await supabase.from('user_profiles').update(updates).eq('id', data.uid);
+    } else {
+      await supabase.from('user_profiles').insert({
         id: data.uid,
         email: data.email,
         display_name: data.displayName ?? null,
         username: normalized,
+        show_tooltips: true,
         created_at: now,
         updated_at: now,
-      },
-      { onConflict: 'id' }
-    );
+      });
+    }
     await supabase.from('usernames').upsert(
       { username: normalized, user_id: data.uid },
       { onConflict: 'username' }
@@ -105,6 +128,7 @@ export async function getUserProfileAction() {
         username: p.username,
         photoUrl: p.photo_url,
         role: p.role,
+        showTooltips: p.show_tooltips,
         lastUsernameChange: p.last_username_change,
         createdAt: p.created_at,
         updatedAt: p.updated_at,

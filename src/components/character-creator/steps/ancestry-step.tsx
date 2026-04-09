@@ -15,7 +15,7 @@
 import { useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Chip, Button, Alert } from '@/components/ui';
-import { SelectionToggle } from '@/components/shared';
+import { ContextHelpTooltip, SelectionToggle } from '@/components/shared';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useMergedSpecies, useTraits, useCodexSkills, resolveTraitIds, resolveSkillIdsToNames, type Trait, type Species } from '@/hooks';
 import { Heart, AlertTriangle, Sparkles, Star } from 'lucide-react';
@@ -400,7 +400,14 @@ export function AncestryStep() {
   if (!draft.ancestry?.id) {
     return (
       <div className="max-w-2xl mx-auto text-center">
-        <h2 className="text-2xl font-bold text-text-primary mb-2">Choose Your Ancestry Traits</h2>
+        <div className="flex items-center justify-center gap-1 mb-2">
+          <h2 className="text-2xl font-bold text-text-primary">Choose Your Ancestry Traits</h2>
+          <ContextHelpTooltip
+            tooltipKey="characters.new.step.ancestry.rulesHelp"
+            scope="page:/characters/new"
+            label="Ancestry trait rules help"
+          />
+        </div>
         <p className="text-text-secondary mb-6">
           Customize your character with ancestry traits and an optional flaw.
         </p>
@@ -418,7 +425,7 @@ export function AncestryStep() {
           </div>
         </Alert>
         {/* Sticky footer (TASK-285) */}
-        <div className="sticky bottom-0 left-0 right-0 mt-8 flex justify-between gap-4 border-t border-border bg-background/95 py-3 px-4 -mx-4 -mb-4 md:-mx-0 md:-mb-0 md:px-0 md:rounded-b-xl md:border md:border-t">
+        <div className="sticky bottom-3 left-0 right-0 mt-8 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:-mx-0 md:px-0">
           <Button variant="secondary" onClick={prevStep} className="min-h-[44px] min-w-[44px]">← Back</Button>
           <Button disabled className="min-h-[44px] min-w-[44px]">Continue →</Button>
         </div>
@@ -441,7 +448,14 @@ export function AncestryStep() {
       <div className="max-w-4xl mx-auto">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h2 className="text-2xl font-bold text-text-primary mb-2">Mixed Species — Ancestry</h2>
+            <div className="flex items-center gap-1 mb-2">
+              <h2 className="text-2xl font-bold text-text-primary">Mixed Species — Ancestry</h2>
+              <ContextHelpTooltip
+                tooltipKey="characters.new.step.ancestry.rulesHelp"
+                scope="page:/characters/new"
+                label="Mixed ancestry rules help"
+              />
+            </div>
             <p className="text-text-secondary">
               <strong>{nameA}</strong> + <strong>{nameB}</strong>. Set physical traits and choose one species trait from each, then ancestry and optional flaw.
             </p>
@@ -564,20 +578,6 @@ export function AncestryStep() {
             allTraits={allTraits ?? undefined}
           />
         )}
-        {selectedFlaw && ancestryForSecondSlot.length > 0 && (
-          <TraitSection
-            title={`Extra ancestry trait (from ${selectedFlawSpeciesId === speciesA.id ? nameA : nameB} only)`}
-            subtitle="Choose 1"
-            icon={<Star className="w-5 h-5 text-amber-600" />}
-            traits={ancestryForSecondSlot}
-            selectable
-            selectedIds={draft.ancestry?.selectedTraits?.[1] ? [draft.ancestry.selectedTraits[1]] : []}
-            onToggle={setAncestryExtraMixed}
-            variant="ancestry"
-            allTraits={allTraits ?? undefined}
-          />
-        )}
-
         {/* Characteristic: 1 from either */}
         {characteristics.length > 0 && (
           <TraitSection
@@ -629,8 +629,23 @@ export function AncestryStep() {
           </div>
         )}
 
+        {/* Extra ancestry trait unlocked by selecting a flaw (intentionally below the flaw section) */}
+        {selectedFlaw && ancestryForSecondSlot.length > 0 && (
+          <TraitSection
+            title={`Extra ancestry trait (from ${selectedFlawSpeciesId === speciesA.id ? nameA : nameB} only)`}
+            subtitle="Choose 1"
+            icon={<Star className="w-5 h-5 text-amber-600" />}
+            traits={ancestryForSecondSlot}
+            selectable
+            selectedIds={draft.ancestry?.selectedTraits?.[1] ? [draft.ancestry.selectedTraits[1]] : []}
+            onToggle={setAncestryExtraMixed}
+            variant="ancestry"
+            allTraits={allTraits ?? undefined}
+          />
+        )}
+
         {/* Sticky footer (TASK-285) */}
-        <div className="sticky bottom-0 left-0 right-0 mt-8 flex justify-between gap-4 border-t border-border bg-background/95 py-3 px-4 -mx-4 -mb-4 md:-mx-0 md:-mb-0 md:px-0 md:rounded-b-xl md:border md:border-t">
+        <div className="sticky bottom-3 left-0 right-0 mt-8 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:-mx-0 md:px-0">
           <Button variant="secondary" onClick={prevStep} className="min-h-[44px] min-w-[44px]">← Back</Button>
           <Button onClick={nextStep} disabled={!canContinue} className="min-h-[44px] min-w-[44px]">Continue →</Button>
         </div>
@@ -646,7 +661,7 @@ export function AncestryStep() {
           Species data could not be loaded. Try changing species.
         </Alert>
         {/* Sticky footer (TASK-285) */}
-        <div className="sticky bottom-0 left-0 right-0 mt-8 flex justify-between gap-4 border-t border-border bg-background/95 py-3 px-4 -mx-4 -mb-4 md:-mx-0 md:-mb-0 md:px-0 md:rounded-b-xl md:border md:border-t">
+        <div className="sticky bottom-3 left-0 right-0 mt-8 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:-mx-0 md:px-0">
           <Button variant="secondary" onClick={prevStep} className="min-h-[44px] min-w-[44px]">← Back</Button>
           <Button onClick={() => setStep('species')} className="min-h-[44px] min-w-[44px]">Change Species</Button>
         </div>
@@ -663,7 +678,14 @@ export function AncestryStep() {
     <div className="max-w-4xl mx-auto">
       <div className="flex items-start justify-between mb-4">
         <div>
-          <h2 className="text-2xl font-bold text-text-primary mb-2">Choose Your Ancestry Traits</h2>
+          <div className="flex items-center gap-1 mb-2">
+            <h2 className="text-2xl font-bold text-text-primary">Choose Your Ancestry Traits</h2>
+            <ContextHelpTooltip
+              tooltipKey="characters.new.step.ancestry.rulesHelp"
+              scope="page:/characters/new"
+              label="Ancestry trait selection help"
+            />
+          </div>
           <p className="text-text-secondary">
             As a <strong>{selectedSpecies.name}</strong>, customize your heritage with traits and abilities.
           </p>
@@ -883,7 +905,7 @@ export function AncestryStep() {
       )}
 
       {/* Sticky footer (TASK-285) */}
-      <div className="sticky bottom-0 left-0 right-0 mt-8 flex justify-between gap-4 border-t border-border bg-background/95 py-3 px-4 -mx-4 -mb-4 md:-mx-0 md:-mb-0 md:px-0 md:rounded-b-xl md:border md:border-t">
+      <div className="sticky bottom-3 left-0 right-0 mt-8 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:-mx-0 md:px-0">
         <Button variant="secondary" onClick={prevStep} className="min-h-[44px] min-w-[44px]">← Back</Button>
         <Button onClick={nextStep} disabled={!canContinue} className="min-h-[44px] min-w-[44px]">Continue →</Button>
       </div>

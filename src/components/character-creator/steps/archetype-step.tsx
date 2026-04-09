@@ -8,9 +8,10 @@
 
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Chip, Button, Spinner } from '@/components/ui';
+import { Chip, Button, Spinner, HelpTooltip, Tooltip } from '@/components/ui';
+import { ContextHelpTooltip } from '@/components/shared';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useCodexArchetypes } from '@/hooks';
+import { useCodexArchetypes, useTooltipByKey } from '@/hooks';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
 import type { Archetype, ArchetypeCategory, AbilityName } from '@/types';
 
@@ -31,6 +32,52 @@ const ARCHETYPE_INFO: Record<ArchetypeCategory, { title: string; description: st
   },
 };
 
+function AbilityPickButton({
+  variant,
+  ability,
+  selected,
+  disabled,
+  onPick,
+}: {
+  variant: 'power' | 'martial';
+  ability: AbilityName;
+  selected: boolean;
+  disabled: boolean;
+  onPick: () => void;
+}) {
+  const tooltip = useTooltipByKey(`characters.new.step.archetype.ability.${ability}`, {
+    scope: 'page:/characters/new',
+  });
+
+  const button = (
+    <button
+      type="button"
+      onClick={onPick}
+      disabled={disabled}
+      className={cn(
+        'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+        selected
+          ? variant === 'power'
+            ? 'bg-violet-500 text-white dark:bg-violet-600 dark:text-white'
+            : 'bg-red-600 text-white dark:bg-red-700 dark:text-white'
+          : disabled
+            ? 'bg-surface text-text-muted dark:text-text-secondary cursor-not-allowed'
+            : 'bg-surface border border-border-light hover:border-border'
+      )}
+    >
+      {ability.charAt(0).toUpperCase() + ability.slice(1)}
+    </button>
+  );
+
+  if (!tooltip.showTooltips || !tooltip.body) return button;
+
+  return (
+    <Tooltip content={tooltip.body} placement="top" trigger="hover">
+      {button}
+    </Tooltip>
+  );
+}
+
 export function ArchetypeStep() {
   const { draft, setArchetype, setArchetypePath, setCreationMode, nextStep } = useCharacterCreatorStore();
   const { data: codexArchetypes = [], isLoading } = useCodexArchetypes();
@@ -46,6 +93,9 @@ export function ArchetypeStep() {
   );
   const [selectedPathId, setSelectedPathId] = useState<string | null>(draft.archetypePathId || null);
   const [creationChoice, setCreationChoice] = useState<'forge' | 'path' | null>(draft.creationMode || null);
+  const archetypeTooltip = useTooltipByKey('characters.new.step.archetype.pathHelp', {
+    scope: 'page:/characters/new',
+  });
   
   const archetypePathOptions = useMemo(() => {
     return (codexArchetypes as Archetype[])
@@ -155,7 +205,16 @@ export function ArchetypeStep() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold text-text-primary mb-2">Choose Character Creation Style</h2>
+      <div className="flex items-center gap-1 mb-2">
+        <h2 className="text-2xl font-bold text-text-primary">Choose Character Creation Style</h2>
+        {archetypeTooltip.showTooltips && archetypeTooltip.body && (
+          <HelpTooltip
+            title={archetypeTooltip.title}
+            content={archetypeTooltip.body}
+            label="Archetype style help"
+          />
+        )}
+      </div>
       <p className="text-text-secondary mb-6">Pick a fully custom creation flow or an archetype-guided path with curated recommendations.</p>
 
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-8">
@@ -287,47 +346,49 @@ export function ArchetypeStep() {
               {selectedType === 'powered-martial' ? (
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <h4 className="text-sm font-medium text-violet-600 dark:text-violet-300 mb-2">Power Ability</h4>
+                    <div className="flex items-center gap-1 mb-2">
+                      <h4 className="text-sm font-medium text-violet-600 dark:text-violet-300">Power Ability</h4>
+                      <ContextHelpTooltip
+                        tooltipKey="characters.new.step.archetype.powerAbilityHelp"
+                        scope="page:/characters/new"
+                        label="Power Ability help"
+                        placement="top"
+                      />
+                    </div>
                     <div className="grid grid-cols-2 gap-2">
                       {ABILITIES.map((ability) => (
-                        <button
+                        <AbilityPickButton
                           key={`power-${ability}`}
-                          onClick={() => setSelectedAbility(ability)}
+                          variant="power"
+                          ability={ability}
+                          selected={selectedAbility === ability}
                           disabled={selectedMartialAbility === ability}
-                          className={cn(
-                            'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                            selectedAbility === ability
-                              ? 'bg-violet-500 text-white dark:bg-violet-600 dark:text-white'
-                              : selectedMartialAbility === ability
-                              ? 'bg-surface text-text-muted dark:text-text-secondary cursor-not-allowed'
-                              : 'bg-surface border border-border-light hover:border-violet-400'
-                          )}
-                        >
-                          {ability.charAt(0).toUpperCase() + ability.slice(1)}
-                        </button>
+                          onPick={() => setSelectedAbility(ability)}
+                        />
                       ))}
                     </div>
                   </div>
                   
                   <div>
-                    <h4 className="text-sm font-medium text-red-700 dark:text-red-300 mb-2">Martial Ability</h4>
+                    <div className="flex items-center gap-1 mb-2">
+                      <h4 className="text-sm font-medium text-red-700 dark:text-red-300">Martial Ability</h4>
+                      <ContextHelpTooltip
+                        tooltipKey="characters.new.step.archetype.martialAbilityHelp"
+                        scope="page:/characters/new"
+                        label="Martial Ability help"
+                        placement="top"
+                      />
+                    </div>
                     <div className="grid grid-cols-2 gap-2">
                       {ABILITIES.map((ability) => (
-                        <button
+                        <AbilityPickButton
                           key={`martial-${ability}`}
-                          onClick={() => setSelectedMartialAbility(ability)}
+                          variant="martial"
+                          ability={ability}
+                          selected={selectedMartialAbility === ability}
                           disabled={selectedAbility === ability}
-                          className={cn(
-                            'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                            selectedMartialAbility === ability
-                              ? 'bg-red-600 text-white dark:bg-red-700 dark:text-white'
-                              : selectedAbility === ability
-                              ? 'bg-surface text-text-muted dark:text-text-secondary cursor-not-allowed'
-                              : 'bg-surface border border-border-light hover:border-red-400'
-                          )}
-                        >
-                          {ability.charAt(0).toUpperCase() + ability.slice(1)}
-                        </button>
+                          onPick={() => setSelectedMartialAbility(ability)}
+                        />
                       ))}
                     </div>
                   </div>
@@ -335,20 +396,14 @@ export function ArchetypeStep() {
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                   {ABILITIES.map((ability) => (
-                    <button
+                    <AbilityPickButton
                       key={ability}
-                      onClick={() => setSelectedAbility(ability)}
-                      className={cn(
-                        'px-4 py-3 rounded-lg font-medium transition-colors',
-                        selectedAbility === ability
-                          ? selectedType === 'power' 
-                            ? 'bg-violet-500 text-white dark:bg-violet-600 dark:text-white'
-                            : 'bg-red-600 text-white dark:bg-red-700 dark:text-white'
-                          : 'bg-surface border border-border-light hover:border-border'
-                      )}
-                    >
-                      {ability.charAt(0).toUpperCase() + ability.slice(1)}
-                    </button>
+                      variant={selectedType === 'power' ? 'power' : 'martial'}
+                      ability={ability}
+                      selected={selectedAbility === ability}
+                      disabled={false}
+                      onPick={() => setSelectedAbility(ability)}
+                    />
                   ))}
                 </div>
               )}

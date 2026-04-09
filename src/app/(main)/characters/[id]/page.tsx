@@ -42,6 +42,7 @@ import {
   CharacterSheetSettingsModal,
 } from '@/components/character-sheet';
 import { useToast } from '@/components/ui';
+import { ContextHelpTooltip } from '@/components/shared';
 import { createClient } from '@/lib/supabase/client';
 import type { Character, AbilityName, Item, CharacterPower, CharacterTechnique, CharacterFeat, Feat, CharacterProficiency } from '@/types';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
@@ -331,11 +332,20 @@ export default function CharacterSheetPage({ params }: PageParams) {
     const totalSkillPoints = rawTotalSkillPoints - speciesSkillCount + (hasAnySpeciesSkill ? 1 : 0);
     
     // Calculate spent skill points (exclude species skill proficiency costs)
-    const skills = (character.skills || []) as Array<{ skill_val?: number; prof?: boolean; baseSkill?: string; name?: string; id?: string }>;
+    const skills = (character.skills || []) as Array<{
+      skill_val?: number;
+      prof?: boolean;
+      baseSkill?: string;
+      baseSkillId?: number;
+      selectedBaseSkillId?: string;
+      name?: string;
+      id?: string;
+    }>;
     let spentSkillPoints = skills.reduce((sum, skill) => {
       let cost = skill.skill_val || 0;
       // Proficiency costs 1 for base skills, but species skills are free
-      if (skill.prof && !skill.baseSkill) {
+      const isSubSkill = Boolean(skill.baseSkill) || skill.baseSkillId != null || skill.selectedBaseSkillId != null;
+      if (skill.prof && !isSubSkill) {
         const isSpecies = characterSpeciesSkills.some(ss => 
           String(ss).toLowerCase() === String(skill.name || '').toLowerCase() ||
           String(ss) === String(skill.id || '')
@@ -396,10 +406,19 @@ export default function CharacterSheetPage({ params }: PageParams) {
     const speciesCount = characterSpeciesSkills.filter((id) => id !== '0').length;
     const hasAnySpeciesSkill = characterSpeciesSkills.some((id) => id === '0');
     const totalSkillPoints = rawTotalSkillPoints - speciesCount + (hasAnySpeciesSkill ? 1 : 0);
-    const skills = (character.skills || []) as Array<{ skill_val?: number; prof?: boolean; baseSkill?: string; name?: string; id?: string }>;
+    const skills = (character.skills || []) as Array<{
+      skill_val?: number;
+      prof?: boolean;
+      baseSkill?: string;
+      baseSkillId?: number;
+      selectedBaseSkillId?: string;
+      name?: string;
+      id?: string;
+    }>;
     const spentSkillPoints = skills.reduce((sum, skill) => {
       let cost = skill.skill_val || 0;
-      if (skill.prof && !skill.baseSkill) {
+      const isSubSkill = Boolean(skill.baseSkill) || skill.baseSkillId != null || skill.selectedBaseSkillId != null;
+      if (skill.prof && !isSubSkill) {
         const isSpecies = characterSpeciesSkills.some(ss => 
           String(ss).toLowerCase() === String(skill.name || '').toLowerCase() ||
           String(ss) === String(skill.id || '')
@@ -1763,6 +1782,14 @@ export default function CharacterSheetPage({ params }: PageParams) {
         
         {/* Character Sheet Content */}
         <div className="max-w-[1600px] mx-auto px-4 pt-4">
+          <div className="mb-2 flex justify-end">
+            <ContextHelpTooltip
+              tooltipKey="characters.sheet.help"
+              scope="page:/characters/[id]"
+              label="Character sheet usage help"
+              placement="left"
+            />
+          </div>
           {calculatedStats && (
             <>
               <SheetHeader

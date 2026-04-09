@@ -61,6 +61,12 @@ function cellValueToString(value: unknown): string {
   return JSON.stringify(value);
 }
 
+function isFiniteNumberString(str: string): boolean {
+  if (!str.trim()) return false;
+  const n = Number(str);
+  return Number.isFinite(n);
+}
+
 function stringToCellValue(str: string, original: unknown): unknown {
   const trimmed = str.trim();
   if (trimmed === '') return undefined;
@@ -651,9 +657,19 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
                   const isFocused = focusedCell?.row === rowIndex && focusedCell?.col === colIndex;
                   const left = stickyLeftFor(colKey, colIndex);
                   const isSticky = left !== undefined;
-                  const isNum = NUMERIC_COLUMNS.has(colKey);
+                  const isNumCol = NUMERIC_COLUMNS.has(colKey);
                   const isBool = BOOLEAN_COLUMNS.has(colKey);
                   const isDesc = colKey === 'description';
+                  // Some "numeric" columns can contain arrays/objects in legacy data; rendering those as
+                  // <input type="number"> causes the browser to reject values like "[]" or "[4,3]".
+                  const canRenderAsNumber =
+                    isNumCol &&
+                    (value == null ||
+                      typeof value === 'number' ||
+                      (typeof value === 'string' && (value.trim() === '' || isFiniteNumberString(value))) ||
+                      typeof value === 'boolean' === false) &&
+                    !Array.isArray(value) &&
+                    !(typeof value === 'object' && value !== null);
                   const inputClass = `w-full min-w-0 border-0 bg-transparent px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-inset focus:ring-primary-400 ${isFocused ? 'ring-1 ring-inset ring-primary-400' : ''}`;
                   return (
                     <td
@@ -691,11 +707,19 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
                           style={{ boxSizing: 'border-box' }}
                           aria-label={`Edit ${colKey}, row ${displayIndex + 1}`}
                         />
-                      ) : isNum ? (
+                      ) : canRenderAsNumber ? (
                         <input
                           type="number"
                           step="any"
-                          value={str}
+                          value={
+                            value == null
+                              ? ''
+                              : typeof value === 'number'
+                                ? (Number.isFinite(value) ? String(value) : '')
+                                : typeof value === 'string'
+                                  ? value
+                                  : ''
+                          }
                           onChange={(e) => {
                             const v = e.target.value;
                             const parsed = v === '' ? undefined : (parseFloat(v) ?? value);

@@ -9,14 +9,14 @@
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Chip, Button, Alert, Spinner } from '@/components/ui';
-import { SegmentedControl } from '@/components/shared';
+import { ContextHelpTooltip, SegmentedControl } from '@/components/shared';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useMergedSpecies, useUserSpecies, useTraits, type Species } from '@/hooks';
 import { SpeciesModal } from '../species-modal';
 import { MixedSpeciesModal } from '../MixedSpeciesModal';
 import { GitMerge } from 'lucide-react';
 
-type SourceFilterValue = 'all' | 'public' | 'my';
+type SourceFilterValue = 'all' | 'public' | 'my' | 'make';
 
 export function SpeciesStep() {
   const { draft, nextStep, prevStep, setSpecies, setMixedSpecies } = useCharacterCreatorStore();
@@ -73,7 +73,14 @@ export function SpeciesStep() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold text-text-primary mb-2">Choose Your Species</h2>
+      <div className="flex items-center gap-1 mb-2">
+        <h2 className="text-2xl font-bold text-text-primary">Choose Your Species</h2>
+        <ContextHelpTooltip
+          tooltipKey="characters.new.step.species.sourceHelp"
+          scope="page:/characters/new"
+          label="Species source help"
+        />
+      </div>
       <p className="text-text-secondary mb-4">
         Your species defines your character&apos;s physical traits and inherent abilities.
         Click a card to view details, or choose Mixed to combine two species.
@@ -83,11 +90,21 @@ export function SpeciesStep() {
         <span className="text-sm font-medium text-text-secondary">Source:</span>
         <SegmentedControl
           value={source}
-          onChange={setSource}
+          onChange={(next) => {
+            if (next === 'make') {
+              if (typeof window !== 'undefined') {
+                window.open('/species-creator', '_blank', 'noopener,noreferrer');
+              }
+              setSource('my');
+              return;
+            }
+            setSource(next);
+          }}
           options={[
             { value: 'all', label: 'All sources' },
             { value: 'public', label: 'Public species' },
             { value: 'my', label: 'My species' },
+            { value: 'make', label: 'Make a Species' },
           ]}
           aria-label="Species list source"
           className="flex-1 min-w-0 sm:flex-initial"
@@ -171,8 +188,8 @@ export function SpeciesStep() {
         </Alert>
       )}
 
-      {/* Sticky footer so Continue is always visible (TASK-285) — min-h for tap target */}
-      <div className="sticky bottom-0 left-0 right-0 mt-8 flex justify-between gap-4 border-t border-border bg-background/95 py-3 px-4 -mx-4 -mb-4 md:-mx-0 md:-mb-0 md:px-0 md:rounded-b-xl md:border md:border-t">
+      {/* Sticky footer so Continue is always visible (TASK-285) */}
+      <div className="sticky bottom-3 left-0 right-0 mt-8 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:-mx-0 md:px-0">
         <Button variant="secondary" onClick={prevStep} className="min-h-[44px] min-w-[44px]">← Back</Button>
         <Button onClick={nextStep} disabled={!canContinue} className="min-h-[44px] min-w-[44px]">Continue →</Button>
       </div>

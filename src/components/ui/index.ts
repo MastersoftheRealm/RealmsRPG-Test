@@ -30,6 +30,7 @@ export { TabNavigation, type Tab } from './tab-navigation';
 export { Modal } from './modal';
 export { ToastProvider, useToast } from './toast';
 export { Alert, type AlertProps } from './alert';
+export { Tooltip, HelpTooltip } from './tooltip';
 // Note: alert-enhanced.tsx was removed - use Alert instead
 
 // Collapsible components

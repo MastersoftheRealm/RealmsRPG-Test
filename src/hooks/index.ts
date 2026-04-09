@@ -14,6 +14,7 @@ export type { CreatorLoadType, UseCreatorLoadReturn } from './use-creator-load';
 export { useLoadModalLibrary } from './use-load-modal-library';
 export type { LoadModalLibraryType, UseLoadModalLibraryReturn } from './use-load-modal-library';
 export { useProfile } from './use-profile';
+export { useTooltips, useTooltipByKey, useTooltipDefaults } from './use-tooltips';
 
 // Campaigns
 export {

@@ -53,7 +53,7 @@ import { CreatorLayout, CreatorSaveToolbar, CollapsibleSection, CreatorSummaryPa
 import { Button, Checkbox, Input, Textarea, LoadingState, Alert, PageContainer } from '@/components/ui';
 import { ValueStepper, SectionCostBadge } from '@/components/shared';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
-import { ConfirmActionModal, LoginPromptModal } from '@/components/shared';
+import { ConfirmActionModal, ContextHelpTooltip, LoginPromptModal } from '@/components/shared';
 import { PowerPartCard } from '@/app/(main)/power-creator/PowerPartCard';
 import { EXCLUDED_PARTS } from '@/app/(main)/power-creator/power-creator-constants';
 
@@ -881,17 +881,25 @@ function EmpoweredTechniqueCreatorContent() {
       title="Empowered Technique Creator"
       description="Build an empowered technique by combining power and technique parts in one shared action profile."
       actions={
-        <CreatorSaveToolbar
-          saveTarget={save.saveTarget}
-          onSaveTargetChange={save.setSaveTarget}
-          onSave={handleSave}
-          onLoad={() => (user ? load.openLoadModal() : setShowLoginPrompt(true))}
-          onReset={resetState}
-          saving={save.saving}
-          saveDisabled={!name.trim()}
-          showPublicPrivate={isAdmin}
-          user={user}
-        />
+        <div className="flex items-center gap-2">
+          <ContextHelpTooltip
+            tooltipKey="creators.empowered.headerHelp"
+            scope="page:/empowered-technique-creator"
+            label="Empowered technique creator help"
+            placement="left"
+          />
+          <CreatorSaveToolbar
+            saveTarget={save.saveTarget}
+            onSaveTargetChange={save.setSaveTarget}
+            onSave={handleSave}
+            onLoad={() => (user ? load.openLoadModal() : setShowLoginPrompt(true))}
+            onReset={resetState}
+            saving={save.saving}
+            saveDisabled={!name.trim()}
+            showPublicPrivate={isAdmin}
+            user={user}
+          />
+        </div>
       }
       sidebar={
         <div className="self-start sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-6">

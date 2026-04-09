@@ -18,7 +18,7 @@ import { useSearchParams } from 'next/navigation';
 import { X, Plus, ChevronDown, ChevronUp, Shield, Sword, Target, Info, Coins } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useItemProperties, useAdmin, useCreatorSave, useLoadModalLibrary, type ItemProperty, type UserItem } from '@/hooks';
-import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
+import { ContextHelpTooltip, LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Alert, PageContainer } from '@/components/ui';
 import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout, CollapsibleSection, AdvancedCalculationsPanel } from '@/components/creator';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
@@ -1060,17 +1060,25 @@ function ItemCreatorContent() {
       title="Armament Creator"
       description="Design custom weapons, armor, and shields by combining item properties. Properties determine the item's rarity and cost."
       actions={
-        <CreatorSaveToolbar
-          saveTarget={save.saveTarget}
-          onSaveTargetChange={save.setSaveTarget}
-          onSave={handleSave}
-          onLoad={() => (user ? load.openLoadModal() : setShowLoginPrompt(true))}
-          onReset={handleReset}
-          saving={save.saving}
-          saveDisabled={!name.trim()}
-          showPublicPrivate={isAdmin}
-          user={user}
-        />
+        <div className="flex items-center gap-2">
+          <ContextHelpTooltip
+            tooltipKey="creators.armament.headerHelp"
+            scope="page:/item-creator"
+            label="Armament creator help"
+            placement="left"
+          />
+          <CreatorSaveToolbar
+            saveTarget={save.saveTarget}
+            onSaveTargetChange={save.setSaveTarget}
+            onSave={handleSave}
+            onLoad={() => (user ? load.openLoadModal() : setShowLoginPrompt(true))}
+            onReset={handleReset}
+            saving={save.saving}
+            saveDisabled={!name.trim()}
+            showPublicPrivate={isAdmin}
+            user={user}
+          />
+        </div>
       }
       sidebar={
         <div className="self-start sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-6">

@@ -11,6 +11,7 @@ import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, Cloud, CloudOff } from 'lucide-react';
 import { LoadingState, PageContainer, Alert } from '@/components/ui';
+import { ContextHelpTooltip } from '@/components/shared';
 import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
 import { RollProvider } from '@/components/character-sheet';
 import type { Encounter } from '@/types/encounter';
@@ -132,13 +133,22 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
                 autoFocus
               />
             ) : (
-              <h1
-                className="text-3xl font-bold text-text-primary cursor-pointer hover:text-primary-600 hover:underline"
-                onClick={() => setIsEditingName(true)}
-                title="Click to edit encounter name"
-              >
-                {encounter.name}
-              </h1>
+              <>
+                <h1
+                  className="text-3xl font-bold text-text-primary cursor-pointer hover:text-primary-600 hover:underline"
+                  onClick={() => setIsEditingName(true)}
+                  title="Click to edit encounter name"
+                >
+                  {encounter.name}
+                </h1>
+                <div className="mt-1">
+                  <ContextHelpTooltip
+                    tooltipKey="encounters.combat.headerHelp"
+                    scope="page:/encounters/[id]/combat"
+                    label="Combat encounter help"
+                  />
+                </div>
+              </>
             )}
             <p className="text-text-secondary">
               Combat Encounter{encounter.description ? ` \u2014 ${encounter.description}` : ''}
