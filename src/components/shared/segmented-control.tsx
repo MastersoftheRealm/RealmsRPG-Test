@@ -50,7 +50,8 @@ export function SegmentedControl<T extends string>({
     <div
       {...wrapperProps}
       className={cn(
-        'flex flex-wrap items-center gap-1 p-1 rounded-lg bg-surface-alt',
+        // Keep pill groups compact; segments still enforce 44px touch target.
+        'flex flex-wrap items-center gap-1 p-0.5 rounded-lg bg-surface-alt',
         equalWidth && 'w-full',
         className
       )}
@@ -58,7 +59,8 @@ export function SegmentedControl<T extends string>({
       {options.map((opt) => {
         const selected = value === opt.value;
         const baseBtn =
-          'min-h-[44px] px-3 py-1.5 rounded text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background inline-flex items-center justify-center gap-2';
+          // min-h maintains touch target; keep vertical padding tight so control doesn't feel "tall".
+          'min-h-[44px] px-3 py-1 rounded text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background inline-flex items-center justify-center gap-2';
         const selectedCls =
           'bg-primary-600 text-white dark:bg-primary-100 dark:text-white';
         const idleCls =

@@ -897,7 +897,21 @@ Notes
 - Priority: High
 - Feedback: (1) Add skill modal: In collapsed mode, display abilities as little card things; under Abilities it currently shows the skill name and the ability — format them like the sub skill ability column with a list of abilities attached to the skill in abbreviated form (STR, AGI, etc.). (2) Add modals: Each item in the list needs to be expandable so you know what you're adding (descriptions, properties, parts, etc. as in codex/library). Clicking a collapsed card should not "add" it unless you hit the + part of the card; otherwise it should expand/collapse.
 - Expected: (1) Add skill modal: Abilities column shows abbreviated ability chips (STR, AGI, …); expanded view has Abilities section in same abbreviated list style. (2) Add modals: Row click only expand/collapse; selection only via + button.
+
+**Raw Feedback Log — 2026-04-01 (Character sheet Library edit: remove button wraps)**
+- Date: 2026-04-01
+- Context: Character sheet → Library → Feats (edit mode) list rows (archetype feats + other feats)
+- Priority: High
+- Feedback: In edit mode, the Remove (X) buttons wrap to a second row for some archetype feats and other feats; they should stay right-aligned / right-most like other list items across the site.
+- Expected: Remove (X) action stays pinned to the far-right of the row on a single line; row content truncates/shrinks instead of pushing the action onto a second line.
 - Implemented 2026-02-21: add-skill-modal: getAbilityAbbrList + buildAbilityDisplay; abilities column shows chips (ReactNode); detailSections include Abilities (abbreviated chips). grid-list-row: when selectable, handleRowClick only toggles expansion, never calls onSelect; selection only via SelectionToggle (+). add-skill description updated to "Expand a row to view details. Use the + button to add."
+
+**Raw Feedback Log — 2026-04-01 (Pencil toggle: clearer active editing state)**
+- Date: 2026-04-01
+- Context: Character sheet (and any section using the pencil `EditSectionToggle`)
+- Priority: Medium
+- Feedback: When a section is actively being edited vs not, make the pencil visually indicate the active state more clearly (e.g., a light color-matched background, slight growth), while staying professional/simple and matching the pencil’s theme color (blue/green/red).
+- Expected: Clicking the pencil toggles an obvious “active” state. Active state uses a subtle tinted background + ring (theme-matched) and a small scale change; inactive remains a clean icon with hover affordance.
 
 **Raw Feedback Log — 2026-02-21 (Powers/techniques/armor/weapons modals: source switch + public library, DB usage)**
 - Date: 2026-02-21

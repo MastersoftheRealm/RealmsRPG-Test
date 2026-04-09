@@ -354,8 +354,19 @@ export const GridListRow = memo(function GridListRow({
   // so spacing/alignment are controlled by shared Tailwind utilities instead of inline styles.
   const useFlex = !gridColumns;
   const explicitGridTracks = countGridTemplateTracks(gridColumns);
-  const baseGridTracks = 1 + columns.length;
-  let remainingInlineActionTracks = Math.max(0, explicitGridTracks - baseGridTracks);
+  /**
+   * How many tracks are consumed by the rendered grid items (Name + data columns),
+   * respecting `columnSpans`. This prevents us from mistakenly treating *unused*
+   * data columns (e.g. Uses/Recovery when empty) as "action columns".
+   *
+   * Example (FeatsTab):
+   * - Grid: Name | Description | Uses | Recovery  (4 tracks)
+   * - Row: Name + Description spanning 3 tracks → consumes all 4 tracks.
+   * - Without this, we'd think there are 2 "extra" tracks and inline the delete button,
+   *   which forces it onto a second grid row.
+   */
+  const dataTracksUsed = 1 + columns.reduce((sum, _col, idx) => sum + (columnSpans?.[idx] ?? 1), 0);
+  let remainingInlineActionTracks = Math.max(0, explicitGridTracks - dataTracksUsed);
 
   // Consume extra right-side grid tracks first for controls that normally render outside the grid.
   const inlineSelectable = selectable && remainingInlineActionTracks > 0;
@@ -392,7 +403,9 @@ export const GridListRow = memo(function GridListRow({
           className={cn(
             'flex-1 text-left transition-colors min-h-[44px]',
             (showExpander || selectable) && (rowHoverClass ?? 'hover:bg-surface-alt'),
-            compact ? 'px-3 py-2' : 'px-4 py-2',
+            // Compact rows are used heavily in add/load modals; keep 44px minimum touch target,
+            // but avoid exceeding it via extra vertical padding.
+            compact ? 'px-3 py-1.5' : 'px-4 py-2',
             disabled && 'cursor-default',
             isRowClickable && 'cursor-pointer',
             gridColumns && 'grid gap-2 items-center'

@@ -5,7 +5,7 @@
  * ==============================
  * Simple pencil icon indicator for editable sections.
  * Matches vanilla site behavior with color-coded states.
- * NO circular backgrounds - just clean icon styling.
+ * Subtle active-state styling so it's obvious when a section is being edited.
  * 
  * States:
  * - normal (blue): Standard editable section
@@ -31,17 +31,28 @@ interface EditSectionToggleProps {
   isActive?: boolean;
 }
 
-const STATE_COLORS: Record<EditState, { icon: string; glow?: string }> = {
+const STATE_COLORS: Record<
+  EditState,
+  { icon: string; glow?: string; activeBg: string; activeRing: string; activeGlow?: string }
+> = {
   'normal': {
     icon: 'text-primary-500 hover:text-primary-600',
+    activeBg: 'bg-primary-50 dark:bg-primary-900/20',
+    activeRing: 'ring-primary-200 dark:ring-primary-800/50',
   },
   'has-points': {
     icon: 'text-success-700 dark:text-success-400 hover:text-success-800 dark:hover:text-success-300',
     glow: 'drop-shadow-[0_0_3px_rgba(34,197,94,0.5)]',
+    activeBg: 'bg-success-50 dark:bg-success-900/25',
+    activeRing: 'ring-success-200 dark:ring-success-800/50',
+    activeGlow: 'drop-shadow-[0_0_6px_rgba(34,197,94,0.35)]',
   },
   'over-budget': {
     icon: 'text-danger-600 dark:text-danger-400 hover:text-danger-700 dark:hover:text-danger-300',
     glow: 'drop-shadow-[0_0_3px_rgba(239,68,68,0.5)]',
+    activeBg: 'bg-danger-50 dark:bg-danger-900/25',
+    activeRing: 'ring-danger-200 dark:ring-danger-800/50',
+    activeGlow: 'drop-shadow-[0_0_6px_rgba(239,68,68,0.35)]',
   },
 };
 
@@ -62,16 +73,27 @@ export function EditSectionToggle({
         onClick?.();
       }}
       className={cn(
-        'min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] flex items-center justify-center p-2 transition-all duration-200 hover:scale-110',
+        'min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)]',
+        'flex items-center justify-center p-2 rounded-md',
+        'transition-all duration-200',
+        'hover:scale-110',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
         colors.icon,
         colors.glow,
-        isActive && 'scale-110',
+        isActive && [
+          'scale-110',
+          'ring-1',
+          colors.activeRing,
+          colors.activeBg,
+          colors.activeGlow,
+        ],
         onClick && 'cursor-pointer',
         !onClick && 'cursor-default',
         className
       )}
       title={title}
       aria-label={title}
+      aria-pressed={isActive}
     >
       <Pencil className="w-4 h-4" />
     </button>
