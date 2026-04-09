@@ -41,7 +41,10 @@ function sanitizeId(id: string): string {
 }
 
 function snakeToCamel(s: string): string {
-  return s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+  // Handle common codex column patterns like op_1_desc -> op1Desc
+  // so option fields survive the allowed-field filter.
+  const normalized = s.replace(/_(\d+)/g, '$1');
+  return normalized.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
 }
 
 function camelToSnake(s: string): string {
