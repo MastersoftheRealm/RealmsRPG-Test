@@ -137,7 +137,7 @@ export function AddSubSkillModal({
       const baseSkill = skill.base_skill_id ? skillById[String(skill.base_skill_id)] : null;
       const baseSkillName = isAnyBaseSkill ? 'Any' : baseSkill?.name ?? 'Unknown';
       const abilities = skill.ability?.split(',').map((a) => a.trim()).filter(Boolean) || [];
-      const abilityAbbrevs = abilities.map((a) => a.slice(0, 3).toUpperCase()).join(', ') || '—';
+      const abilityAbbrevs = abilities.map((a) => a.slice(0, 3).toUpperCase()).join(', ') || '-';
       const detailSections = getSkillExtraDescriptionDetailSections(skill);
       const chips: ChipData[] = (detailSections[0]?.chips ?? []).map((c) => ({
         name: c.name,

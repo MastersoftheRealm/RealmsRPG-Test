@@ -81,7 +81,7 @@ export function CodexPropertiesTab({ codexMode = 'public' }: { codexMode?: 'publ
     return (
       <EmptyState
         size="lg"
-        title="My Codex — Properties"
+        title="My Codex: Properties"
         description="Custom properties are not available yet. For now, use Realms Codex."
       />
     );

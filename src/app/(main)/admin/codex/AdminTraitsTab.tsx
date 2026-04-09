@@ -345,7 +345,7 @@ export function AdminTraitsTab() {
                 className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
                 aria-label="Recovery period"
               >
-                <option value="">—</option>
+                <option value="">None</option>
                 <option value="Full">Full</option>
                 <option value="Partial">Partial</option>
               </select>

@@ -78,7 +78,7 @@ export default function CodexPage() {
           title={isPublic ? 'Realms Codex' : 'My Codex'}
           description={
             isPublic
-              ? 'Complete reference for the Realms RPG system — feats, skills, species, equipment, parts, and properties.'
+              ? 'Complete reference for the Realms RPG system: feats, skills, species, equipment, parts, and properties.'
               : 'Your custom species and other codex content appear here. Create species in the Species Creator.'
           }
         />

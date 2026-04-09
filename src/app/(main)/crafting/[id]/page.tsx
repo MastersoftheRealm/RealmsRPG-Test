@@ -1920,7 +1920,7 @@ export default function CraftingToolPage() {
               {craftSubSkill && (craftSubSkill.craft_success_desc || craftSubSkill.craft_failure_desc) && (
                 <div className="mt-3 pt-3 border-t border-border-light">
                   <p className="text-xs font-medium text-text-muted dark:text-text-secondary uppercase tracking-wide mb-1">
-                    {craftSubSkill.name} — {netDelta >= 0 ? 'Success' : 'Failure'}
+                    {craftSubSkill.name}: {netDelta >= 0 ? 'Success' : 'Failure'}
                   </p>
                   <p className="text-sm text-text-secondary whitespace-pre-wrap">
                     {netDelta >= 0

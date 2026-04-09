@@ -146,8 +146,8 @@ export default function AdminUsersPage() {
               {filteredUsers.map((u) => (
                 <tr key={u.id} className="border-b border-border-light last:border-0">
                   <td className="py-3 px-4 font-medium text-text-primary">{u.username || '(none)'}</td>
-                  <td className="py-3 px-4 text-text-secondary">{u.displayName || '—'}</td>
-                  <td className="py-3 px-4 text-text-secondary">{u.email || '—'}</td>
+                  <td className="py-3 px-4 text-text-secondary">{u.displayName || '(none)'}</td>
+                  <td className="py-3 px-4 text-text-secondary">{u.email || '(none)'}</td>
                   <td className="py-3 px-4 text-text-secondary">{ROLE_LABELS[u.role]}</td>
                   <td className="py-3 px-4">
                     <select

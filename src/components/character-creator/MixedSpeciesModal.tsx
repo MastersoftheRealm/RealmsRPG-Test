@@ -114,7 +114,7 @@ export function MixedSpeciesModal({
               onChange={(e) => setSpeciesAId(e.target.value)}
               aria-label="First species"
             >
-              <option value="">— Select —</option>
+              <option value="">Select a species</option>
               {optionsForA.map((s) => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
@@ -128,7 +128,7 @@ export function MixedSpeciesModal({
               onChange={(e) => setSpeciesBId(e.target.value)}
               aria-label="Second species"
             >
-              <option value="">— Select —</option>
+              <option value="">Select a species</option>
               {optionsForB.map((s) => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}

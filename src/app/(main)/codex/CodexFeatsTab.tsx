@@ -132,7 +132,7 @@ export function CodexFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' |
     return (
       <EmptyState
         size="lg"
-        title="My Codex — Feats"
+        title="My Codex: Feats"
         description="Custom feats are not available yet. For now, use Realms Codex."
       />
     );

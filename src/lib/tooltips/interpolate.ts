@@ -77,31 +77,31 @@ const CALCS: Record<string, CalcFn> = {
 function resolveToken(expr: string, rules: CoreRulesMap, context: TooltipTemplateContext): string {
   if (expr.startsWith('rules.')) {
     const value = getPathValue(rules, expr.replace(/^rules\./, ''));
-    return value == null ? '—' : String(value);
+    return value == null ? '-' : String(value);
   }
 
   if (expr.startsWith('context.')) {
     const value = getPathValue(context, expr.replace(/^context\./, ''));
-    return value == null ? '—' : String(value);
+    return value == null ? '-' : String(value);
   }
 
   if (expr.startsWith('calc.')) {
     const fnMatch = expr.match(/^calc\.([A-Za-z0-9_]+)\((.*)\)$/);
-    if (!fnMatch) return '—';
+    if (!fnMatch) return '-';
     const [, fnName, argsRaw] = fnMatch;
     const fn = CALCS[fnName];
-    if (!fn) return '—';
+    if (!fn) return '-';
     const args = parseArgs(argsRaw, context);
     const value = fn(args, context, rules);
-    return value == null ? '—' : String(value);
+    return value == null ? '-' : String(value);
   }
 
   if (expr in context) {
     const value = context[expr];
-    return value == null ? '—' : String(value);
+    return value == null ? '-' : String(value);
   }
 
-  return '—';
+  return '-';
 }
 
 export function interpolateTooltipTemplate(template: string, rules: CoreRulesMap, context: TooltipTemplateContext = {}): string {

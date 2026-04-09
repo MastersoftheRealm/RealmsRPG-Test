@@ -571,7 +571,7 @@ export function AdminPartsTab() {
                 className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
                 aria-label="Part category"
               >
-                <option value="">— None —</option>
+                <option value="">None</option>
                 {filterOptions.categories.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
@@ -746,7 +746,7 @@ export function AdminPartsTab() {
                               else setForm((f) => ({ ...f, op_3_en: v }));
                             }}
                             className="w-full"
-                            placeholder="—"
+                            placeholder="-"
                           />
                         )}
                       </div>
@@ -763,7 +763,7 @@ export function AdminPartsTab() {
                             else setForm((f) => ({ ...f, op_3_tp: v }));
                           }}
                           className="w-full"
-                          placeholder="—"
+                          placeholder="-"
                         />
                       </div>
                     </div>

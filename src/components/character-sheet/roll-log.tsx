@@ -78,7 +78,7 @@ function normalizeRollTimestamp(
 /** Format roll timestamp for display: short date + time so "unavailable" is avoided. */
 function formatRollTimestamp(timestamp: Date | string | { seconds: number } | unknown): string {
   const d = normalizeRollTimestamp(timestamp);
-  if (Number.isNaN(d.getTime())) return '—';
+  if (Number.isNaN(d.getTime())) return '-';
   return d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 

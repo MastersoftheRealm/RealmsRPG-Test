@@ -344,7 +344,7 @@ function CampaignDetailContent() {
             ) : (
               (campaign.description || isRealmMaster) && (
                 <p className="mt-2 text-text-secondary flex items-center gap-2">
-                  {campaign.description || (isRealmMaster ? 'No description — click pencil to add one' : '')}
+                  {campaign.description || (isRealmMaster ? 'No description. Click the pencil to add one.' : '')}
                   {isRealmMaster && !editingName && (
                     <button
                       type="button"
@@ -399,7 +399,7 @@ function CampaignDetailContent() {
         </h2>
         <p className="text-sm text-text-secondary mb-3">
           Share this code with players so they can join your campaign.
-          {isCampaignFull && ' (Campaign is full — no new players can join until someone leaves.)'}
+          {isCampaignFull && ' (Campaign is full. No new players can join until someone leaves.)'}
         </p>
         <div className="flex items-center gap-3">
           <code className="px-4 py-2 bg-surface-alt rounded-lg font-mono text-xl font-bold tracking-widest text-primary-700">

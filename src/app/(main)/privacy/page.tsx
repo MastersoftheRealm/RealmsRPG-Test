@@ -23,8 +23,8 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-xl font-semibold text-text-primary mb-4">1. Information We Collect</h2>
           <p className="text-text-secondary">
-            We only collect information about you if we have a reason to do so—for example, to provide 
-            our services, to communicate with you, or to make our services better.
+            We only collect information about you if we have a reason to do so (for example, to provide
+            our services, to communicate with you, or to make our services better).
           </p>
         </section>
 

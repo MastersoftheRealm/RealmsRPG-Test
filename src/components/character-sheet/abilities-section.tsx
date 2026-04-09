@@ -362,7 +362,7 @@ export function AbilitiesSection({
                     <IncrementButton
                       onClick={() => onDefenseChange?.(defenseKey, defenseValue + 1)}
                       size="sm"
-                      title={atOrOverLevelCap ? `Cost: ${DEFENSE_INCREASE_COST} skill points (over level cap — allowed)` : `Cost: ${DEFENSE_INCREASE_COST} skill points`}
+                      title={atOrOverLevelCap ? `Cost: ${DEFENSE_INCREASE_COST} skill points (over level cap, allowed)` : `Cost: ${DEFENSE_INCREASE_COST} skill points`}
                     />
                   </div>
                 ) : rollContext?.canRoll !== false ? (

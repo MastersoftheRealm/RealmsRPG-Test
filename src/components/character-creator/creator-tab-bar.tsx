@@ -116,7 +116,7 @@ export function CreatorTabBar() {
         onClose={() => setPendingStep(null)}
         size="lg"
         fullScreenOnMobile
-        title={`${STEP_LABELS[currentStep]} — things left to do`}
+        title={`${STEP_LABELS[currentStep]}: things left to do`}
         showCloseButton={true}
         contentClassName="p-4 overflow-y-auto max-h-[50vh]"
         footer={

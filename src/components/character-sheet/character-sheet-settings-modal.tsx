@@ -13,17 +13,17 @@ import { Modal, Select, Button } from '@/components/ui';
 import type { CharacterVisibility } from '@/types';
 
 const VISIBILITY_OPTIONS: { value: CharacterVisibility; label: string }[] = [
-  { value: 'private', label: 'Private — Only you can view' },
-  { value: 'campaign', label: 'Campaign — Realm Master & campaign members can view' },
-  { value: 'public', label: 'Public — Anyone can view' },
+  { value: 'private', label: 'Private (only you can view)' },
+  { value: 'campaign', label: 'Campaign (Realm Master and campaign members can view)' },
+  { value: 'public', label: 'Public (anyone can view)' },
 ];
 
 export type SpeedDisplayUnit = 'spaces' | 'feet' | 'meters';
 
 const SPEED_DISPLAY_OPTIONS: { value: SpeedDisplayUnit; label: string }[] = [
   { value: 'spaces', label: 'Spaces (sp)' },
-  { value: 'feet', label: 'Feet (ft) — 1 space = 5 ft' },
-  { value: 'meters', label: 'Meters (m) — 1 space = 1.5 m' },
+  { value: 'feet', label: 'Feet (ft) (1 space = 5 ft)' },
+  { value: 'meters', label: 'Meters (m) (1 space = 1.5 m)' },
 ];
 
 export interface CharacterSheetSettingsModalProps {

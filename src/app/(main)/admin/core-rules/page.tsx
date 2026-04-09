@@ -738,7 +738,7 @@ function CategoryEditor({
                   <tr key={i} className="border-b border-border-subtle">
                     <td className="py-1 px-1"><NumInput value={(row.currencyMin as number) ?? 0} onChange={v => setGeneralRow(i, 'currencyMin', v)} min={0} /></td>
                     <td className="py-1 px-1">
-                      <input type="number" value={row.currencyMax != null ? (row.currencyMax as number) : ''} min={0} onChange={e => { const v = e.target.value; setGeneralRow(i, 'currencyMax', v === '' ? null : parseFloat(v)); }} className="w-20 px-2 py-1 text-sm rounded border border-border-light bg-surface" placeholder="—" aria-label="Currency max" />
+                      <input type="number" value={row.currencyMax != null ? (row.currencyMax as number) : ''} min={0} onChange={e => { const v = e.target.value; setGeneralRow(i, 'currencyMax', v === '' ? null : parseFloat(v)); }} className="w-20 px-2 py-1 text-sm rounded border border-border-light bg-surface" placeholder="-" aria-label="Currency max" />
                     </td>
                     <td className="py-1 px-1"><input value={(row.rarity as string) ?? ''} onChange={e => setGeneralRow(i, 'rarity', e.target.value)} className="w-24 px-2 py-1 text-sm rounded border border-border-light bg-surface" /></td>
                     <td className="py-1 px-1"><NumInput value={(row.difficultyScore as number) ?? 14} onChange={v => setGeneralRow(i, 'difficultyScore', v)} min={1} /></td>
@@ -906,7 +906,7 @@ export default function AdminCoreRulesPage() {
         </Link>
         <PageHeader
           title="Core Rules Editor"
-          description="Edit game rules — changes take effect for all users after save."
+          description="Edit game rules. Changes take effect for all users after you save."
         />
       </div>
 

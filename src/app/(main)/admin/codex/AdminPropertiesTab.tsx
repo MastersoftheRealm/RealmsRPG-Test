@@ -546,7 +546,7 @@ export function AdminPropertiesTab() {
                       step="any"
                       value={form.op_1_ip ?? ''}
                       onChange={(e) => setForm((f) => ({ ...f, op_1_ip: e.target.value === '' ? undefined : (parseFloat(e.target.value) || 0) }))}
-                      placeholder="—"
+                      placeholder="-"
                     />
                   </div>
                   <div>
@@ -557,7 +557,7 @@ export function AdminPropertiesTab() {
                       step="any"
                       value={form.op_1_tp ?? ''}
                       onChange={(e) => setForm((f) => ({ ...f, op_1_tp: e.target.value === '' ? undefined : (parseFloat(e.target.value) || 0) }))}
-                      placeholder="—"
+                      placeholder="-"
                     />
                   </div>
                   <div>
@@ -568,7 +568,7 @@ export function AdminPropertiesTab() {
                       step="any"
                       value={form.op_1_c ?? ''}
                       onChange={(e) => setForm((f) => ({ ...f, op_1_c: e.target.value === '' ? undefined : (parseFloat(e.target.value) || 0) }))}
-                      placeholder="—"
+                      placeholder="-"
                     />
                   </div>
                 </div>

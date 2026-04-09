@@ -449,7 +449,7 @@ export function AncestryStep() {
         <div className="flex items-start justify-between mb-4">
           <div>
             <div className="flex items-center gap-1 mb-2">
-              <h2 className="text-2xl font-bold text-text-primary">Mixed Species — Ancestry</h2>
+              <h2 className="text-2xl font-bold text-text-primary">Mixed Species: Ancestry</h2>
               <ContextHelpTooltip
                 tooltipKey="characters.new.step.ancestry.rulesHelp"
                 scope="page:/characters/new"
@@ -474,19 +474,19 @@ export function AncestryStep() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mb-4">
             <div>
               <span className="block text-xs text-text-muted uppercase">Avg Height</span>
-              <span className="font-bold text-text-primary">{ph?.aveHeight != null ? `${ph.aveHeight} cm` : '—'}</span>
+              <span className="font-bold text-text-primary">{ph?.aveHeight != null ? `${ph.aveHeight} cm` : '-'}</span>
             </div>
             <div>
               <span className="block text-xs text-text-muted uppercase">Avg Weight</span>
-              <span className="font-bold text-text-primary">{ph?.aveWeight != null ? `${ph.aveWeight} kg` : '—'}</span>
+              <span className="font-bold text-text-primary">{ph?.aveWeight != null ? `${ph.aveWeight} kg` : '-'}</span>
             </div>
             <div>
               <span className="block text-xs text-text-muted uppercase">Adulthood</span>
-              <span className="font-bold text-text-primary">{ph?.adulthood != null ? `${ph.adulthood} yr` : '—'}</span>
+              <span className="font-bold text-text-primary">{ph?.adulthood != null ? `${ph.adulthood} yr` : '-'}</span>
             </div>
             <div>
               <span className="block text-xs text-text-muted uppercase">Lifespan (max)</span>
-              <span className="font-bold text-text-primary">{ph?.maxAge != null ? `${ph.maxAge} yr` : '—'}</span>
+              <span className="font-bold text-text-primary">{ph?.maxAge != null ? `${ph.maxAge} yr` : '-'}</span>
             </div>
           </div>
           <div>
@@ -598,7 +598,7 @@ export function AncestryStep() {
           <div className="mb-6">
             <h3 className="font-semibold text-text-primary mb-2 flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-red-600" />
-              Flaw (optional — grants +1 ancestry trait from same species)
+              Flaw (optional, grants +1 ancestry trait from the same species)
             </h3>
             {flawsFromA.length > 0 && (
               <TraitSection
@@ -719,25 +719,25 @@ export function AncestryStep() {
           <div>
             <span className="block text-xs text-text-muted uppercase">Avg Height</span>
             <span className="font-bold text-text-primary">
-              {selectedSpecies.ave_height != null && Number(selectedSpecies.ave_height) > 0 ? `${selectedSpecies.ave_height} cm` : '—'}
+              {selectedSpecies.ave_height != null && Number(selectedSpecies.ave_height) > 0 ? `${selectedSpecies.ave_height} cm` : '-'}
             </span>
           </div>
           <div>
             <span className="block text-xs text-text-muted uppercase">Avg Weight</span>
             <span className="font-bold text-text-primary">
-              {selectedSpecies.ave_weight != null && Number(selectedSpecies.ave_weight) > 0 ? `${selectedSpecies.ave_weight} kg` : '—'}
+              {selectedSpecies.ave_weight != null && Number(selectedSpecies.ave_weight) > 0 ? `${selectedSpecies.ave_weight} kg` : '-'}
             </span>
           </div>
           <div>
             <span className="block text-xs text-text-muted uppercase">Adulthood</span>
             <span className="font-bold text-text-primary">
-              {selectedSpecies.adulthood_lifespan?.[0] != null ? `${selectedSpecies.adulthood_lifespan[0]} yr` : '—'}
+              {selectedSpecies.adulthood_lifespan?.[0] != null ? `${selectedSpecies.adulthood_lifespan[0]} yr` : '-'}
             </span>
           </div>
           <div>
             <span className="block text-xs text-text-muted uppercase">Lifespan (max)</span>
             <span className="font-bold text-text-primary">
-              {selectedSpecies.adulthood_lifespan?.[1] != null ? `${selectedSpecies.adulthood_lifespan[1]} yr` : '—'}
+              {selectedSpecies.adulthood_lifespan?.[1] != null ? `${selectedSpecies.adulthood_lifespan[1]} yr` : '-'}
             </span>
           </div>
         </div>

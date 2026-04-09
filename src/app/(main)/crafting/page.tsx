@@ -153,7 +153,7 @@ function CraftingHubContent() {
       )}
       <PageHeader
         title="Crafting"
-        description="Manage crafting sessions. Start a new craft, track rolls, view outcomes — all in one tool."
+        description="Manage crafting sessions. Start a new craft, track rolls, and view outcomes, all in one tool."
         actions={
           <div className="flex flex-wrap gap-2">
             <Button onClick={handleStartCrafting}>
