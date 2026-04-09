@@ -34,7 +34,7 @@ Tables are listed in dependency-friendly order. **Columnar** = proper columns; *
 
 | Table | Shape | Key columns |
 |-------|--------|-------------|
-| `user_profiles` | Columnar | id (PK), email, display_name, username, photo_url, last_username_change, created_at, updated_at, role (UserRole enum) |
+| `user_profiles` | Columnar | id (PK), email, display_name, username, photo_url, last_username_change, created_at, updated_at, role (UserRole enum), show_tooltips |
 | `usernames` | Columnar | username (PK), user_id (FK → user_profiles) |
 
 ---
@@ -233,6 +233,18 @@ CREATE INDEX IF NOT EXISTS idx_official_enhanced_items_updated_at ON public.offi
 
 ---
 
+### 2.12 UI Tooltips (onboarding/help text)
+
+| Table | Shape | Key columns |
+|-------|--------|-------------|
+| `ui_tooltips` | Columnar | id (PK), key (UNIQUE), scope, title, body_md, placement, trigger, audience, enabled, version, updated_at, updated_by |
+
+Stores admin-editable tooltip/help content used across navigation, creator steps, and settings. Tooltip text supports markdown-lite and runtime interpolation of Core Rule values in app code.
+
+**Migration:** `sql/supabase-ui-tooltips.sql`
+
+---
+
 ## 3. Enums
 
 | Name | Values |
@@ -261,6 +273,7 @@ Used by `user_profiles.role`.
 | Characters list | Done | **TASK-282:** name, level, archetype_name, ancestry_name, status, visibility; backfill + API. |
 | Campaign rolls list | Done | **TASK-283:** character_id, user_id, type, title; backfill + API. |
 | Core rules | Keep JSONB | Per DATABASE_SCALABILITY_AUDIT: category-specific shapes; no columnar migration planned. |
+| UI tooltips | Done | `ui_tooltips` table + `user_profiles.show_tooltips` preference via `sql/supabase-ui-tooltips.sql`. |
 
 See `AI_TASK_QUEUE.md` for TASK-279–TASK-283 and TASK-304. Rationale and column sets: `DATABASE_SCALABILITY_AUDIT.md`.
 
@@ -282,6 +295,8 @@ See `AI_TASK_QUEUE.md` for TASK-279–TASK-283 and TASK-304. Rationale and colum
 | GET /api/codex | codex_feats, codex_skills, codex_species, codex_traits, codex_parts, codex_properties, codex_equipment, codex_archetypes, codex_creature_feats, core_rules |
 | GET /api/public/[type] | public_powers, public_techniques, public_empowered_techniques, public_items, public_creatures (or official_* if present) |
 | GET/POST/PATCH/DELETE /api/user/library/[type] | user_powers, user_techniques, user_empowered_techniques, user_items, user_creatures, user_species |
+| GET/POST/PATCH/DELETE /api/tooltips | ui_tooltips (admin write, audience-filtered read) |
+| GET/PATCH /api/user/settings/tooltips | user_profiles.show_tooltips |
 | Characters CRUD | characters |
 | Campaigns | campaigns, campaign_members, campaign_rolls |
 | Encounters | encounters |

@@ -21,7 +21,7 @@ import { CodexTraitsTab } from './CodexTraitsTab';
 import { CodexCreatureFeatsTab } from './CodexCreatureFeatsTab';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { SegmentedControl } from '@/components/shared';
+import { ContextHelpTooltip, SegmentedControl } from '@/components/shared';
 
 type CodexMode = 'public' | 'my';
 
@@ -82,18 +82,26 @@ export default function CodexPage() {
               : 'Your custom species and other codex content appear here. Create species in the Species Creator.'
           }
         />
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={toggleAdvanced}
-          className={cn(
-            'gap-1.5',
-            showAdvanced && 'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700'
-          )}
-        >
-          {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          Advanced
-        </Button>
+        <div className="flex items-center gap-2">
+          <ContextHelpTooltip
+            tooltipKey="codex.page.modeHelp"
+            scope="page:/codex"
+            label="Codex usage help"
+            placement="left"
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleAdvanced}
+            className={cn(
+              'gap-1.5',
+              showAdvanced && 'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700'
+            )}
+          >
+            {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            Advanced
+          </Button>
+        </div>
       </div>
 
       <div className="mb-4 flex flex-wrap items-center gap-4 min-w-0">

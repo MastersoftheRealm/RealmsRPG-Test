@@ -25,7 +25,7 @@ const STEP_LABELS: Record<CreatorStep, string> = {
   skills: '5. Skills',
   feats: '6. Feats',
   equipment: '7. Equipment',
-  powers: '8. Powers',
+  powers: '8. Powers & Techniques',
   finalize: '9. Finalize',
 };
 

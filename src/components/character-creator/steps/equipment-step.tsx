@@ -14,10 +14,11 @@
 import { useState, useMemo, useCallback } from 'react';
 import { cn, formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useEquipment, useUserItems, useItemProperties, usePublicLibrary } from '@/hooks';
+import { useEquipment, useUserItems, useItemProperties, usePublicLibrary, usePowerParts, useTechniqueParts } from '@/hooks';
 import { deriveItemDisplay } from '@/lib/calculators/item-calc';
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 import {
+  ContextHelpTooltip,
   SearchInput,
   GridListRow,
   QuantitySelector,
@@ -34,8 +35,10 @@ import { TabNavigation } from '@/components/ui/tab-navigation';
 import { AlertCircle, Swords, Check, X, ShoppingBag, ChevronLeft } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 import type { Item } from '@/types';
+import type { CharacterPower, CharacterTechnique } from '@/types';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
 import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
+import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies, getTrainingPointLimit } from '@/lib/proficiencies';
 
 // List column definitions and grid (unified with Library/Codex); name column wider for readability
 const WEAPON_LIST_COLUMNS: ListColumn[] = [
@@ -125,6 +128,8 @@ export function EquipmentStep() {
   const { data: codexEquipment, isLoading: codexLoading, error: codexError } = useEquipment();
   // Fetch item properties for deriving display data from user items
   const { data: itemProperties } = useItemProperties();
+  const { data: powerPartsDb = [] } = usePowerParts();
+  const { data: techniquePartsDb = [] } = useTechniqueParts();
   
   const [activeTab, setActiveTab] = useState<EquipmentTabId>('weapon');
   const [searchTerm, setSearchTerm] = useState('');
@@ -430,6 +435,35 @@ export function EquipmentStep() {
 
   const remainingCurrency = startingCurrency - spentCurrency;
 
+  const proficiencyTpSummary = useMemo(() => {
+    const inventory = draft.equipment?.inventory || [];
+    const weapons = inventory.filter((item) => item.type === 'weapon');
+    const shields = inventory.filter((item) => item.type === 'shield');
+    const armor = inventory.filter((item) => item.type === 'armor');
+    const required = buildRequiredProficiencies({
+      powers: (draft.powers || []) as CharacterPower[],
+      techniques: (draft.techniques || []) as CharacterTechnique[],
+      weapons: weapons as Item[],
+      shields: shields as Item[],
+      armor: armor as Item[],
+      powerPartsDb,
+      techniquePartsDb,
+      itemPropertiesDb: itemProperties ?? [],
+    });
+    const spent = dedupeHighestProficiencies(required).reduce((sum, p) => sum + calculateProficiencyTP(p), 0);
+
+    const abilities = draft.abilities || {};
+    const getAbility = (key: string | undefined): number =>
+      key ? Number((abilities as Record<string, unknown>)[key] ?? 0) || 0 : 0;
+    const highestAbility = Math.max(
+      ...Object.values(abilities).filter((v): v is number => typeof v === 'number'),
+      0
+    );
+    const archetypeAbility = Math.max(getAbility(draft.pow_abil), getAbility(draft.mart_abil), highestAbility);
+    const limit = getTrainingPointLimit(draft.level || 1, archetypeAbility);
+    return { spent, limit, remaining: limit - spent };
+  }, [draft, powerPartsDb, techniquePartsDb, itemProperties]);
+
   // Filter equipment by type, search, and source (All / Public / My — My = library only)
   const filteredEquipment = useMemo(() => {
     return allEquipment.filter(item => {
@@ -594,19 +628,36 @@ export function EquipmentStep() {
     <div className="max-w-5xl mx-auto">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-text-primary mb-2">Choose Equipment</h2>
+          <div className="flex items-center gap-1 mb-2">
+            <h2 className="text-2xl font-bold text-text-primary">Choose Equipment</h2>
+            <ContextHelpTooltip
+              tooltipKey="characters.new.step.equipment.currencyHelp"
+              scope="page:/characters/new"
+              label="Equipment budget help"
+            />
+          </div>
           <p className="text-text-secondary">
             Select your starting weapons, armor, and gear. Use + and - to adjust quantities.
           </p>
         </div>
         
-        <div className={cn(
-          'px-4 py-2 rounded-xl font-bold text-lg border',
-          remainingCurrency >= 0
-            ? 'bg-tp-light dark:bg-warning-900/30 border-tp-border text-tp-text dark:text-warning-300'
-            : 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-600/50 text-danger-700 dark:text-danger-300'
-        )}>
-          {remainingCurrency} / {startingCurrency}c
+        <div className="flex flex-col items-end gap-2">
+          <div className={cn(
+            'px-4 py-2 rounded-xl font-bold text-lg border',
+            remainingCurrency >= 0
+              ? 'bg-tp-light dark:bg-warning-900/30 border-tp-border text-tp-text dark:text-warning-300'
+              : 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-600/50 text-danger-700 dark:text-danger-300'
+          )}>
+            {remainingCurrency} / {startingCurrency}c
+          </div>
+          <div className={cn(
+            'px-3 py-1.5 rounded-full text-sm font-semibold border',
+            proficiencyTpSummary.remaining >= 0
+              ? 'bg-tp-light dark:bg-warning-900/30 border-tp-border text-tp-text dark:text-warning-300'
+              : 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-600/50 text-danger-700 dark:text-danger-300'
+          )}>
+            Proficiency TP: {proficiencyTpSummary.spent} / {proficiencyTpSummary.limit}
+          </div>
         </div>
       </div>
 

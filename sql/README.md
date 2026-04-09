@@ -36,6 +36,7 @@
 | **supabase-codex-rls-public.sql** | RLS for codex_* and core_rules in public (SELECT TO public) | Run if GET /api/codex returns 500 (permission denied). |
 | **supabase-campaign-members.sql** | campaign_members table | May already exist from consolidation |
 | **supabase-user-profiles-timestamps-default.sql** | user_profiles: set DEFAULT now() on created_at, updated_at | Run if inserts fail with "null value in column updated_at" |
+| **supabase-ui-tooltips.sql** | Adds `user_profiles.show_tooltips`, creates `ui_tooltips` table, RLS policies, and initial seed tooltips | Run once when enabling tooltip system |
 
 **Legacy scripts (do not run on current public-only DB)** are in [sql/archive/](archive/): codex-schema columnar, official-library in codex, user-library in users, multi-schema RLS, idempotent-full, force-drop-codex scripts.
 
@@ -51,6 +52,7 @@ After deploying app code that uses the new columnar or list-column schema, run t
 4. **supabase-encounters-list-columns.sql** — Adds `name`, `type`, `status` to `encounters`; backfills. Optional.
 5. **supabase-characters-list-columns.sql** — Adds list columns to `characters`; backfills. Optional but recommended for list/filter.
 6. **supabase-campaign-rolls-list-columns.sql** — Adds list columns to `campaign_rolls`; backfills. Optional.
+7. **supabase-ui-tooltips.sql** — Adds tooltip data table + preference column and seeds baseline tooltips.
 
 **Back up** before running. Each script is idempotent where possible (ADD COLUMN IF NOT EXISTS, ON CONFLICT, or conditional backfill). See [SUPABASE_SCHEMA.md](../src/docs/SUPABASE_SCHEMA.md) §4 for status and task refs.
 

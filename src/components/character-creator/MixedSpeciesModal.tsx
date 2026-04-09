@@ -68,8 +68,24 @@ export function MixedSpeciesModal({
   if (!isOpen) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Mixed species" size="lg" fullScreenOnMobile>
-      <div className="space-y-4">
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Mixed species"
+      size="lg"
+      fullScreenOnMobile
+      footer={
+        <div className="p-4 flex justify-end gap-2">
+          <Button variant="outline" onClick={handleClose} className="min-h-[44px] min-w-[44px]">
+            Cancel
+          </Button>
+          <Button onClick={handleConfirm} disabled={!canConfirm} className="min-h-[44px] min-w-[44px]">
+            Confirm mixed species
+          </Button>
+        </div>
+      }
+    >
+      <div className="space-y-4 p-4">
         <p className="text-sm text-text-secondary">
           Choose two species to play a mixed version. On the Ancestry step you will set physical traits (averaged), pick one species trait from each species, one ancestry trait, and optionally take a flaw for an extra ancestry trait from that same species.
         </p>
@@ -125,11 +141,6 @@ export function MixedSpeciesModal({
             Mixed: {speciesA.name} / {speciesB.name}
           </p>
         )}
-
-        <div className="flex justify-end gap-2 pt-2">
-          <Button variant="outline" onClick={handleClose}>Cancel</Button>
-          <Button onClick={handleConfirm} disabled={!canConfirm}>Confirm mixed species</Button>
-        </div>
       </div>
     </Modal>
   );

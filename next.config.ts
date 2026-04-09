@@ -25,7 +25,8 @@ const nextConfig: NextConfig = {
       "img-src 'self' data: blob: https:",
       "font-src 'self' data: https://fonts.gstatic.com",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live wss://*.vercel.live",
-      "frame-src 'self'",
+      // Allow embedding the published Core Rulebook Google Doc
+      "frame-src 'self' https://docs.google.com",
     ].join('; ');
 
     return [

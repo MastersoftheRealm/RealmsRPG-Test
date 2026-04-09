@@ -10,7 +10,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { LoginPromptModal, ConfirmActionModal, UnifiedSelectionModal, ItemCard, SkillRow, GridListRow, ListHeader, SourceFilter, AddSkillModal, AddSubSkillModal, InnateToggle, SegmentedControl } from '@/components/shared';
+import { LoginPromptModal, ConfirmActionModal, ContextHelpTooltip, UnifiedSelectionModal, ItemCard, SkillRow, GridListRow, ListHeader, SourceFilter, AddSkillModal, AddSubSkillModal, InnateToggle, SegmentedControl } from '@/components/shared';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { useAuthStore } from '@/stores/auth-store';
 import {
@@ -1004,17 +1004,25 @@ function CreatureCreatorContent() {
       title="Creature Creator"
       description="Design custom creatures, monsters, and NPCs. Configure abilities, defenses, skills, and combat options."
       actions={
-        <CreatorSaveToolbar
-          saveTarget={save.saveTarget}
-          onSaveTargetChange={save.setSaveTarget}
-          onSave={handleSave}
-          onLoad={() => (user ? setShowLoadModal(true) : setShowLoginPrompt(true))}
-          onReset={handleReset}
-          saving={save.saving}
-          saveDisabled={!creature.name.trim()}
-          showPublicPrivate={isAdmin}
-          user={user}
-        />
+        <div className="flex items-center gap-2">
+          <ContextHelpTooltip
+            tooltipKey="creators.creature.headerHelp"
+            scope="page:/creature-creator"
+            label="Creature creator help"
+            placement="left"
+          />
+          <CreatorSaveToolbar
+            saveTarget={save.saveTarget}
+            onSaveTargetChange={save.setSaveTarget}
+            onSave={handleSave}
+            onLoad={() => (user ? setShowLoadModal(true) : setShowLoginPrompt(true))}
+            onReset={handleReset}
+            saving={save.saving}
+            saveDisabled={!creature.name.trim()}
+            showPublicPrivate={isAdmin}
+            user={user}
+          />
+        </div>
       }
       sidebar={
         <div className="self-start sticky top-24 space-y-6">

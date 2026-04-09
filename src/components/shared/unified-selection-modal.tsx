@@ -327,7 +327,7 @@ export function UnifiedSelectionModal({
               size="sm"
             />
           ) : (
-            <div className="space-y-2 min-w-0">
+            <div className="space-y-1 min-w-0">
               {filteredItems.map(item => {
                 const itemIdStr = String(item.id);
                 const isSelected = selectedIds.has(itemIdStr);

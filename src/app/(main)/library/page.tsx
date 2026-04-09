@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { Plus, Wand2, Swords, Shield, Users, LogIn, Sparkles } from 'lucide-react';
 import { useAuth } from '@/hooks';
 import { PageContainer, PageHeader, TabNavigation, Button, useToast } from '@/components/ui';
-import { DeleteConfirmModal, LoginPromptModal, SegmentedControl } from '@/components/shared';
+import { ContextHelpTooltip, DeleteConfirmModal, LoginPromptModal, SegmentedControl } from '@/components/shared';
 import {
   useUserPowers,
   useUserTechniques,
@@ -178,15 +178,23 @@ function LibraryContent() {
         title={isPublic ? 'Realms Library' : 'My Library'}
         description={isPublic ? 'Official Realms content. Add items to My Library to use as-is or customize.' : 'Your custom powers, techniques, armaments, and creatures'}
         actions={
-          !isPublic && !isGuest ? (
-            <Link href={currentTab.createHref}>
-              <Button variant="primary">
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">{currentTab.createLabel}</span>
-                <span className="sm:hidden">New</span>
-              </Button>
-            </Link>
-          ) : undefined
+          <div className="flex items-center gap-2">
+            <ContextHelpTooltip
+              tooltipKey="library.page.modeHelp"
+              scope="page:/library"
+              label="Library mode help"
+              placement="left"
+            />
+            {!isPublic && !isGuest ? (
+              <Link href={currentTab.createHref}>
+                <Button variant="primary">
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">{currentTab.createLabel}</span>
+                  <span className="sm:hidden">New</span>
+                </Button>
+              </Link>
+            ) : null}
+          </div>
         }
       />
 

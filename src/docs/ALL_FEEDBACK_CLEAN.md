@@ -272,6 +272,12 @@ Items below are the only feedback/tasks that remain **not implemented** (or expl
 2/4/2026 16:00 — Powers/Techniques
 - "Powers/techniques/armaments sometimes display incorrect/missing energy or TP values in lists."
 
+(2026-04-09) — Admin → Codex Editor (Feats edit modal / spreadsheet)
+- Priority: High
+- Feedback: "When I try to edit the text of feats like descriptions or names or etc in edit modal in admin page editor, it doesn't actually change the text or let me edit it. It acts like I could but doesn't. Console spam: 'The specified value \"[]\" cannot be parsed, or is out of range.' (also values like '[1]', '[4,3]'.)"
+- Expected behavior: Admin codex feat editing should allow name/description edits and should not spam console errors.
+- References: None (browser console message included above)
+
 (older raw entries omitted for brevity)
 
 2/5/2026 — Login / Auth
@@ -897,7 +903,21 @@ Notes
 - Priority: High
 - Feedback: (1) Add skill modal: In collapsed mode, display abilities as little card things; under Abilities it currently shows the skill name and the ability — format them like the sub skill ability column with a list of abilities attached to the skill in abbreviated form (STR, AGI, etc.). (2) Add modals: Each item in the list needs to be expandable so you know what you're adding (descriptions, properties, parts, etc. as in codex/library). Clicking a collapsed card should not "add" it unless you hit the + part of the card; otherwise it should expand/collapse.
 - Expected: (1) Add skill modal: Abilities column shows abbreviated ability chips (STR, AGI, …); expanded view has Abilities section in same abbreviated list style. (2) Add modals: Row click only expand/collapse; selection only via + button.
+
+**Raw Feedback Log — 2026-04-01 (Character sheet Library edit: remove button wraps)**
+- Date: 2026-04-01
+- Context: Character sheet → Library → Feats (edit mode) list rows (archetype feats + other feats)
+- Priority: High
+- Feedback: In edit mode, the Remove (X) buttons wrap to a second row for some archetype feats and other feats; they should stay right-aligned / right-most like other list items across the site.
+- Expected: Remove (X) action stays pinned to the far-right of the row on a single line; row content truncates/shrinks instead of pushing the action onto a second line.
 - Implemented 2026-02-21: add-skill-modal: getAbilityAbbrList + buildAbilityDisplay; abilities column shows chips (ReactNode); detailSections include Abilities (abbreviated chips). grid-list-row: when selectable, handleRowClick only toggles expansion, never calls onSelect; selection only via SelectionToggle (+). add-skill description updated to "Expand a row to view details. Use the + button to add."
+
+**Raw Feedback Log — 2026-04-01 (Pencil toggle: clearer active editing state)**
+- Date: 2026-04-01
+- Context: Character sheet (and any section using the pencil `EditSectionToggle`)
+- Priority: Medium
+- Feedback: When a section is actively being edited vs not, make the pencil visually indicate the active state more clearly (e.g., a light color-matched background, slight growth), while staying professional/simple and matching the pencil’s theme color (blue/green/red).
+- Expected: Clicking the pencil toggles an obvious “active” state. Active state uses a subtle tinted background + ring (theme-matched) and a small scale change; inactive remains a clean icon with hover affordance.
 
 **Raw Feedback Log — 2026-02-21 (Powers/techniques/armor/weapons modals: source switch + public library, DB usage)**
 - Date: 2026-02-21
@@ -1360,3 +1380,25 @@ Notes
 - Feedback: Move Supabase data architecture toward columnar/relational best practice for scale (D&D Beyond-level), reduce dependence on JSONB blobs, and make official and user table schemas match so rows can translate/copy between them easily.
 - Expected: A practical migration plan and execution path that promotes high-value payload fields to typed columns, keeps backward compatibility during rollout, and aligns official/user table structures.
 - Disposition: Implemented 2026-03-24 via TASK-304. Added `sql/supabase-library-columnar-parity-expansion.sql` (official_* + user_* promoted columns for powers/techniques/items, trigger-based payload->column sync, backfill updates, supporting indexes). Updated `SUPABASE_SCHEMA.md` and `OFFICIAL_LIBRARY_COLUMNAR_PLAN.md` with run order and parity notes.
+
+**Raw Feedback Log — 2026-04-09 (Username change reverts to Player###)**
+- Date: 2026-04-09
+- Context: My Account — Change Username
+- Priority: High
+- Feedback: When changing my username, it usually sticks for a second then changes back into a generated default like "player341421".
+- Expected: After changing username, it stays as the chosen username (UI + stored profile) and is not overwritten by any default-username generator on subsequent auth/profile sync.
+
+**Raw Feedback Log — 2026-04-09 (Tooltips + creator UX feedback batch)**
+- Date: 2026-04-09
+- Context: Tooltip rollout Wave 1, Character Creator (archetype/species/ancestry/skills/feats/equipment/powers), modals, header account menu
+- Priority: High
+- Feedback: Remove the redundant top-of-character-creation tip text now that tooltips cover it. Add Forge-your-own archetype tooltips explaining Power Ability and Martial Ability (using core rulebook language), and ideally ability-by-ability guidance/examples. Add a tooltip next to “Add Sub-Skill” in character creator explaining sub-skills (core rulebook). UX: remove the border on sticky Back/Continue bars in creator steps (floating buttons preferred) and add sticky action buttons in modals (e.g., species “Pick Me”). In species source selector, add a “Make a Species” option that opens the Species Creator in a new tab. In mixed species ancestry, when taking a flaw and unlocking an extra ancestry trait, move the extra trait list below the flaw section (more intuitive). Fix Add Sub-Skill modal where row action buttons wrap to a second line (should match shared modal/list patterns). Feats step: replace the archetype/character toggle button with proper tabs/segmented control for clarity. Character creator Equipment and Powers tabs should show a Proficiency/Training Points (TP) summary like the character sheet (proper proficiency TP calculation). Rename “Powers” to “Powers & Techniques” in the creator flow. Add tooltip toggle to the profile icon hover menu (like theme toggle).
+- Expected: Cleaner creator UI, consistent modal action footers, clearer mixed ancestry flow, clearer feats selection navigation, correct TP summary visibility, and a quick tooltip visibility toggle in the header account dropdown.
+
+**Raw Feedback Log — 2026-04-09 (Sub-skill point spend double-count)**
+- Date: 2026-04-09
+- Context / Page: Character Sheet + Character Creator + Creature Creator — Skills (sub-skills)
+- Priority: High
+- Feedback (paste raw text): "Sub skills error: when increasing the skill value of a sub-skill from 0 to 1, it should automatically make that subskill proficient as well, but proficiency for SUB SKILLS does NOT count agasint total skill points spent, only the 0 to 1 skill value increase (right now increasing skill value from 0 to 1 for sub skill makes it automatically count as 2 spent skill points not 1) this is true across character sheet, creator, and likely creature creator, check."
+- Expected behavior (short): Increasing a sub-skill from 0 → 1 auto-marks it proficient, and **only spends 1 skill point total** (no extra proficiency point beyond that).
+- References (vanilla site, screenshots, notes): None

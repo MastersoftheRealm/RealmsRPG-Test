@@ -6466,7 +6466,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-278
   title: Fix username change — new username replaced by Player### instead of kept
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-02-25
   created_by: owner
   description: |
@@ -6477,7 +6477,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
   acceptance_criteria:
     - After changing username via My Account, the displayed and stored username is the one the user entered, not a generated Player###.
     - No automatic overwrite of username by generateDefaultUsername or similar after a successful change.
-  notes: ""
+  notes: "Done 2026-04-09 (PR: pending): Fixed createUserProfileAction to never overwrite an existing user_profiles.username with a generated default (callback/confirm can call it on later sign-ins). Existing usernames are preserved; generated defaults only apply when username is missing."
 
 - id: TASK-279
   title: Public library columnar as primary (official_* preferred over public_*)

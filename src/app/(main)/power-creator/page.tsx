@@ -19,7 +19,7 @@ import { Plus, Wand2, Zap, Target, Info, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePowerParts, useUserItems, useItemProperties, useAdmin, useCreatorSave, useLoadModalLibrary, type PowerPart } from '@/hooks';
 import { useAuthStore } from '@/stores';
-import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
+import { ContextHelpTooltip, LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { CreatorSaveToolbar, CreatorLayout, WeaponSelector, AdvancedCalculationsPanel } from '@/components/creator';
 import { LoadingState, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
@@ -860,17 +860,25 @@ function PowerCreatorContent() {
       title="Power Creator"
       description="Design custom powers by combining power parts. Each part contributes to the total energy cost and training point requirements."
       actions={
-        <CreatorSaveToolbar
-          saveTarget={save.saveTarget}
-          onSaveTargetChange={save.setSaveTarget}
-          onSave={handleSave}
-          onLoad={() => (user ? load.openLoadModal() : setShowLoginPrompt(true))}
-          onReset={handleReset}
-          saving={save.saving}
-          saveDisabled={!name.trim()}
-          showPublicPrivate={isAdmin}
-          user={user}
-        />
+        <div className="flex items-center gap-2">
+          <ContextHelpTooltip
+            tooltipKey="creators.power.headerHelp"
+            scope="page:/power-creator"
+            label="Power creator help"
+            placement="left"
+          />
+          <CreatorSaveToolbar
+            saveTarget={save.saveTarget}
+            onSaveTargetChange={save.setSaveTarget}
+            onSave={handleSave}
+            onLoad={() => (user ? load.openLoadModal() : setShowLoginPrompt(true))}
+            onReset={handleReset}
+            saving={save.saving}
+            saveDisabled={!name.trim()}
+            showPublicPrivate={isAdmin}
+            user={user}
+          />
+        </div>
       }
       sidebar={
         <div className="self-start sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-6">

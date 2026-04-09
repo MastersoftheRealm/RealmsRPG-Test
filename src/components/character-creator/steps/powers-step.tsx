@@ -12,9 +12,10 @@ import Link from 'next/link';
 import { Plus, Wand2, Swords, X, ExternalLink } from 'lucide-react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
-import { GridListRow, ListHeader, SegmentedControl } from '@/components/shared';
+import { cn } from '@/lib/utils';
+import { ContextHelpTooltip, GridListRow, ListHeader, SegmentedControl } from '@/components/shared';
 import { Button, IconButton, Spinner } from '@/components/ui';
-import { useUserPowers, useUserTechniques, useUserEmpoweredTechniques, usePowerParts, useTechniqueParts, usePublicLibrary, type PowerPart, type TechniquePart } from '@/hooks';
+import { useUserPowers, useUserTechniques, useUserEmpoweredTechniques, usePowerParts, useTechniqueParts, usePublicLibrary, useItemProperties, type PowerPart, type TechniquePart } from '@/hooks';
 import type { UserPower, UserTechnique } from '@/hooks/use-user-library';
 import { SourceFilter, type SourceFilterValue } from '@/components/shared';
 import type { ChipData } from '@/components/shared/grid-list-row';
@@ -24,6 +25,8 @@ import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
 import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
+import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies, getTrainingPointLimit } from '@/lib/proficiencies';
+import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 
 /** Capitalize first letter of each word for display */
 function capitalize(s: string | undefined): string {
@@ -66,6 +69,7 @@ export function PowersStep() {
   const { data: publicEmpoweredTechniques = [], isLoading: publicEmpoweredTechniquesLoading } = usePublicLibrary('empowered-techniques');
   const { data: powerParts } = usePowerParts();
   const { data: techniqueParts } = useTechniqueParts();
+  const { data: itemPropertiesDb = [] } = useItemProperties();
   
   const normalizedPublicPowers = useMemo(() => 
     (publicPowers as Record<string, unknown>[]).map((p) => ({
@@ -112,6 +116,35 @@ export function PowersStep() {
   // Get selected powers and techniques from character draft
   const selectedPowers = draft.powers || [];
   const selectedTechniques = draft.techniques || [];
+
+  const proficiencyTpSummary = useMemo(() => {
+    const inventory = draft.equipment?.inventory || [];
+    const weapons = inventory.filter((item) => item.type === 'weapon');
+    const shields = inventory.filter((item) => item.type === 'shield');
+    const armor = inventory.filter((item) => item.type === 'armor');
+    const required = buildRequiredProficiencies({
+      powers: (draft.powers || []) as CharacterPower[],
+      techniques: (draft.techniques || []) as CharacterTechnique[],
+      weapons: weapons as Item[],
+      shields: shields as Item[],
+      armor: armor as Item[],
+      powerPartsDb: (powerParts ?? []) as PowerPart[],
+      techniquePartsDb: (techniqueParts ?? []) as TechniquePart[],
+      itemPropertiesDb,
+    });
+    const spent = dedupeHighestProficiencies(required).reduce((sum, p) => sum + calculateProficiencyTP(p), 0);
+
+    const abilities = draft.abilities || {};
+    const getAbility = (key: string | undefined): number =>
+      key ? Number((abilities as Record<string, unknown>)[key] ?? 0) || 0 : 0;
+    const highestAbility = Math.max(
+      ...Object.values(abilities).filter((v): v is number => typeof v === 'number'),
+      0
+    );
+    const archetypeAbility = Math.max(getAbility(draft.pow_abil), getAbility(draft.mart_abil), highestAbility);
+    const limit = getTrainingPointLimit(draft.level || 1, archetypeAbility);
+    return { spent, limit, remaining: limit - spent };
+  }, [draft, powerParts, techniqueParts, itemPropertiesDb]);
   
   const selectedPowerIds = useMemo(
     () => new Set(selectedPowers.map((p: { id: string | number }) => String(p.id))), 
@@ -564,12 +597,29 @@ export function PowersStep() {
     <div className="max-w-4xl mx-auto">
       {/* Header */}
       <div className="text-center mb-8">
+        <div className="flex items-center justify-center gap-1 mb-2">
             <h2 className="text-2xl font-bold text-text-primary mb-2">
               Powers & Techniques
             </h2>
+          <ContextHelpTooltip
+            tooltipKey="characters.new.step.powers.selectionHelp"
+            scope="page:/characters/new"
+            label="Powers and techniques selection help"
+          />
+        </div>
         <p className="text-text-muted dark:text-text-secondary">
           Select powers and techniques from your library for your character to know.
         </p>
+        <div className="mt-4 flex items-center justify-center">
+          <div className={cn(
+            'inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold border',
+            proficiencyTpSummary.remaining >= 0
+              ? 'bg-tp-light dark:bg-warning-900/30 border-tp-border text-tp-text dark:text-warning-300'
+              : 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-600/50 text-danger-700 dark:text-danger-300'
+          )}>
+            Proficiency TP: {proficiencyTpSummary.spent} / {proficiencyTpSummary.limit}
+          </div>
+        </div>
       </div>
 
       {pathRecommendationsLoading && (

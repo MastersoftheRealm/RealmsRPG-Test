@@ -18,7 +18,7 @@ import { X, Plus, ChevronDown, ChevronUp, Swords, Zap, Target, Info } from 'luci
 import { cn } from '@/lib/utils';
 import { useTechniqueParts, useUserItems, useItemProperties, useAdmin, useCreatorSave, useLoadModalLibrary, type TechniquePart } from '@/hooks';
 import { useAuthStore } from '@/stores';
-import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
+import { ContextHelpTooltip, LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
 import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout, CollapsibleSection, WeaponSelector, AdvancedCalculationsPanel } from '@/components/creator';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
@@ -791,17 +791,25 @@ function TechniqueCreatorContent() {
       title="Technique Creator"
       description="Design custom martial techniques by combining technique parts. Each part contributes to the total energy cost and training point requirements."
       actions={
-        <CreatorSaveToolbar
-          saveTarget={save.saveTarget}
-          onSaveTargetChange={save.setSaveTarget}
-          onSave={handleSave}
-          onLoad={() => (user ? load.openLoadModal() : setShowLoginPrompt(true))}
-          onReset={handleReset}
-          saving={save.saving}
-          saveDisabled={!name.trim()}
-          showPublicPrivate={isAdmin}
-          user={user}
-        />
+        <div className="flex items-center gap-2">
+          <ContextHelpTooltip
+            tooltipKey="creators.technique.headerHelp"
+            scope="page:/technique-creator"
+            label="Technique creator help"
+            placement="left"
+          />
+          <CreatorSaveToolbar
+            saveTarget={save.saveTarget}
+            onSaveTargetChange={save.setSaveTarget}
+            onSave={handleSave}
+            onLoad={() => (user ? load.openLoadModal() : setShowLoginPrompt(true))}
+            onReset={handleReset}
+            saving={save.saving}
+            saveDisabled={!name.trim()}
+            showPublicPrivate={isAdmin}
+            user={user}
+          />
+        </div>
       }
       sidebar={
         <div className="self-start sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-6">

@@ -22,9 +22,23 @@ export const SCALAR_KEYS: Record<ColumnarLibraryType, string[]> = {
     'rangeSteps', 'durationType', 'durationValue', 'damage',
   ],
   items: [
-    'name', 'description', 'type', 'rarity', 'armorValue', 'damageReduction',
-    'rangeSteps', 'isTwoHanded', 'abilityRequirement', 'costs', 'damage', 'properties',
-    'agilityReduction', 'criticalRangeIncrease', 'shieldDR', 'shieldDamage',
+    'name',
+    'description',
+    'type',
+    'rarity',
+    'armorValue',
+    'damageReduction',
+    // Armament mechanics (now columnar in Supabase)
+    'rangeSteps',
+    'isTwoHanded',
+    'abilityRequirement',
+    'costs',
+    'damage',
+    'properties',
+    'agilityReduction',
+    'criticalRangeIncrease',
+    'shieldDR',
+    'shieldDamage',
   ],
   creatures: ['name', 'description', 'level', 'type', 'size', 'hitPoints', 'energyPoints'],
 };
@@ -96,17 +110,21 @@ export function rowToItem(
   source?: 'official' | 'user'
 ): Record<string, unknown> {
   const payload = (row.payload as Record<string, unknown>) || {};
-  const base: Record<string, unknown> = {
-    id: row.id,
-    docId: row.id,
-    name: row.name,
-    description: row.description,
+  const base: Record<string, unknown> = {};
+  const assignIfPresent = (key: string, val: unknown) => {
+    if (val !== undefined && val !== null) base[key] = val;
   };
+
+  // Identity always present (even if nullish, but keep stable)
+  base.id = row.id;
+  base.docId = row.id;
+  if (row.name !== undefined && row.name !== null) base.name = row.name;
+  if (row.description !== undefined && row.description !== null) base.description = row.description;
   if (source) base._source = source;
   if (type === 'powers') {
-    base.actionType = v(row, 'actionType', 'action_type');
-    base.isReaction = v(row, 'isReaction', 'is_reaction');
-    base.innate = v(row, 'innate');
+    assignIfPresent('actionType', v(row, 'actionType', 'action_type'));
+    assignIfPresent('isReaction', v(row, 'isReaction', 'is_reaction'));
+    assignIfPresent('innate', v(row, 'innate'));
     const rangeSteps = v(row, 'rangeSteps', 'range_steps') as number | undefined | null;
     const durationType = v(row, 'durationType', 'duration_type') as string | undefined | null;
     const durationValue = v(row, 'durationValue', 'duration_value') as number | undefined | null;
@@ -124,9 +142,9 @@ export function rowToItem(
     if (damageCol != null && Array.isArray(damageCol)) base.damage = damageCol;
   }
   if (type === 'techniques' || type === 'empowered-techniques') {
-    base.actionType = v(row, 'actionType', 'action_type');
+    assignIfPresent('actionType', v(row, 'actionType', 'action_type'));
     const weaponName = v(row, 'weaponName', 'weapon_name');
-    base.weaponName = weaponName;
+    assignIfPresent('weaponName', weaponName);
     if (weaponName && !payload.weapon) base.weapon = { name: weaponName };
     const rangeSteps = v(row, 'rangeSteps', 'range_steps') as number | undefined | null;
     const durationType = v(row, 'durationType', 'duration_type') as string | undefined | null;
@@ -145,30 +163,62 @@ export function rowToItem(
     if (damageCol != null && Array.isArray(damageCol)) base.damage = damageCol;
   }
   if (type === 'items') {
-    base.type = v(row, 'type');
-    base.rarity = v(row, 'rarity');
-    base.armorValue = v(row, 'armorValue', 'armor_value');
-    base.damageReduction = v(row, 'damageReduction', 'damage_reduction');
-    base.rangeLevel = v(row, 'rangeSteps', 'range_steps');
-    base.isTwoHanded = v(row, 'isTwoHanded', 'is_two_handed');
-    base.abilityRequirement = v(row, 'abilityRequirement', 'ability_requirement');
-    base.costs = v(row, 'costs');
-    base.damage = v(row, 'damage');
-    base.properties = v(row, 'properties');
-    base.agilityReduction = v(row, 'agilityReduction', 'agility_reduction');
-    base.criticalRangeIncrease = v(row, 'criticalRangeIncrease', 'critical_range_increase');
-    base.shieldDR = v(row, 'shieldDR', 'shield_dr');
-    base.shieldDamage = v(row, 'shieldDamage', 'shield_damage');
+    // IMPORTANT: Only assign scalar-backed fields when present on the row.
+    // If the column doesn't exist (or is omitted), we must not overwrite payload values.
+    assignIfPresent('type', v(row, 'type'));
+    assignIfPresent('rarity', v(row, 'rarity'));
+    assignIfPresent('armorValue', v(row, 'armorValue', 'armor_value'));
+    assignIfPresent('damageReduction', v(row, 'damageReduction', 'damage_reduction'));
+    assignIfPresent('rangeLevel', v(row, 'rangeSteps', 'range_steps'));
+    assignIfPresent('isTwoHanded', v(row, 'isTwoHanded', 'is_two_handed'));
+    assignIfPresent('abilityRequirement', v(row, 'abilityRequirement', 'ability_requirement'));
+    assignIfPresent('agilityReduction', v(row, 'agilityReduction', 'agility_reduction'));
+    assignIfPresent('criticalRangeIncrease', v(row, 'criticalRangeIncrease', 'critical_range_increase'));
+    assignIfPresent('shieldDR', v(row, 'shieldDR', 'shield_dr'));
+    assignIfPresent('shieldDamage', v(row, 'shieldDamage', 'shield_damage'));
+
+    // Transition hardening:
+    // If columns exist but are still default/empty (e.g. `damage = []`, `properties = []`)
+    // while payload contains the real saved data, prefer the payload so UI doesn't go blank.
+    const payloadCosts = payload.costs;
+    const payloadDamage = payload.damage;
+    const payloadProps = payload.properties;
+    const costsCol = v(row, 'costs') as unknown;
+    const damageCol = v(row, 'damage') as unknown;
+    const propertiesCol = v(row, 'properties') as unknown;
+
+    // costs: keep scalar if it's a non-empty object; otherwise fall back to payload.
+    const costsIsNonEmptyObject =
+      costsCol != null && typeof costsCol === 'object' && !Array.isArray(costsCol) && Object.keys(costsCol as Record<string, unknown>).length > 0;
+    if (costsIsNonEmptyObject) {
+      base.costs = costsCol;
+    } else if (payloadCosts !== undefined && payloadCosts !== null) {
+      // no-op: payload will supply it
+    }
+
+    // damage/properties: only override payload when the column array is non-empty.
+    const damageIsNonEmptyArray = Array.isArray(damageCol) && damageCol.length > 0;
+    const payloadDamageIsArray = Array.isArray(payloadDamage) && payloadDamage.length > 0;
+    if (damageIsNonEmptyArray || (!payloadDamageIsArray && Array.isArray(damageCol))) {
+      // If payload has no damage, allow empty column to be authoritative.
+      base.damage = damageCol;
+    }
+
+    const propsIsNonEmptyArray = Array.isArray(propertiesCol) && propertiesCol.length > 0;
+    const payloadPropsIsArray = Array.isArray(payloadProps) && payloadProps.length > 0;
+    if (propsIsNonEmptyArray || (!payloadPropsIsArray && Array.isArray(propertiesCol))) {
+      base.properties = propertiesCol;
+    }
   }
   if (type === 'creatures') {
-    base.level = v(row, 'level');
-    base.type = v(row, 'type');
-    base.size = v(row, 'size');
-    base.hitPoints = v(row, 'hitPoints', 'hit_points');
-    base.energyPoints = v(row, 'energyPoints', 'energy_points');
+    assignIfPresent('level', v(row, 'level'));
+    assignIfPresent('type', v(row, 'type'));
+    assignIfPresent('size', v(row, 'size'));
+    assignIfPresent('hitPoints', v(row, 'hitPoints', 'hit_points'));
+    assignIfPresent('energyPoints', v(row, 'energyPoints', 'energy_points'));
   }
-  base.createdAt = v(row, 'createdAt', 'created_at');
-  base.updatedAt = v(row, 'updatedAt', 'updated_at');
+  assignIfPresent('createdAt', v(row, 'createdAt', 'created_at'));
+  assignIfPresent('updatedAt', v(row, 'updatedAt', 'updated_at'));
   // Payload first, then explicit columns override overlapping keys.
   return { ...payload, ...base };
 }
@@ -215,6 +265,7 @@ export function bodyToColumnar(
   }
 
   if (type === 'items') {
+    // Prefer columnar fields when present in request body (current schema includes these columns).
     if (body.rangeLevel != null) scalars.rangeSteps = body.rangeLevel;
     if (body.rangeSteps != null) scalars.rangeSteps = body.rangeSteps;
     if (body.isTwoHanded != null) scalars.isTwoHanded = body.isTwoHanded;
@@ -233,8 +284,18 @@ export function bodyToColumnar(
     ...((type === 'techniques' || type === 'empowered-techniques') ? ['range', 'duration', 'damage'] : []),
     ...(type === 'items'
       ? [
-          'rangeLevel', 'rangeSteps', 'isTwoHanded', 'abilityRequirement', 'costs', 'damage', 'properties',
-          'agilityReduction', 'criticalRangeIncrease', 'shieldDR', 'shieldDamage',
+          // Stored in scalar columns (rangeSteps/isTwoHanded/etc.) via the block above.
+          'rangeLevel',
+          'rangeSteps',
+          'isTwoHanded',
+          'abilityRequirement',
+          'costs',
+          'damage',
+          'properties',
+          'agilityReduction',
+          'criticalRangeIncrease',
+          'shieldDR',
+          'shieldDamage',
         ]
       : []),
   ]);

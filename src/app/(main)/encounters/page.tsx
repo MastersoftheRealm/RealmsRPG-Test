@@ -33,7 +33,7 @@ import {
   SearchInput,
   useToast,
 } from '@/components/ui';
-import { DeleteConfirmModal, HubListRow } from '@/components/shared';
+import { ContextHelpTooltip, DeleteConfirmModal, HubListRow } from '@/components/shared';
 import { useEncounters, useCreateEncounter, useDeleteEncounter, useAuth } from '@/hooks';
 import { createDefaultEncounter } from '@/types/encounter';
 import type { EncounterType, EncounterStatus, EncounterSummary } from '@/types/encounter';
@@ -182,10 +182,24 @@ function EncountersContent() {
         title="Encounters"
         description="Create and manage combat, skill, and mixed encounters for your sessions."
         actions={
-          <Button onClick={() => setCreateModalOpen(true)}>
-            <Plus className="w-4 h-4" />
-            Create Encounter
-          </Button>
+          <div className="flex items-center gap-2">
+            <ContextHelpTooltip
+              tooltipKey="encounters.page.help"
+              scope="page:/encounters"
+              label="Encounter types help"
+              placement="left"
+            />
+            <ContextHelpTooltip
+              tooltipKey="encounters.page.createHelp"
+              scope="page:/encounters"
+              label="Create encounter help"
+              placement="left"
+            />
+            <Button onClick={() => setCreateModalOpen(true)}>
+              <Plus className="w-4 h-4" />
+              Create Encounter
+            </Button>
+          </div>
         }
       />
 
