@@ -1172,6 +1172,9 @@ Append-only log. Add an entry per PR/merge. **For current context, recent entrie
 - 2026-04-09 | agent:gpt-5.2 | Fix sub-skill spent point double-count | files: src/app/(main)/characters/[id]/page.tsx, src/docs/ALL_FEEDBACK_CLEAN.md | TASK: feedback-direct | pr_link: (pending) | merged_at: (pending) | Summary:
   Fixed skill point spending math on the character sheet by treating sub-skills as sub-skills when they only have `baseSkillId`/`selectedBaseSkillId` (even if `baseSkill` name is missing). This prevents a sub-skill’s 0→1 increase (which also marks it proficient) from being incorrectly counted as 2 points spent.
 
+- 2026-04-09 | agent:gpt-5.2 | Email/password onboarding: confirmation UX + redirect hygiene | files: src/app/(auth)/register/page.tsx, src/app/(auth)/login/page.tsx, src/app/(auth)/forgot-password/page.tsx, src/docs/ai/AI_TASK_QUEUE.md, src/docs/ALL_FEEDBACK_CLEAN.md | TASK: TASK-305 | pr_link: (pending) | merged_at: (pending) | Summary:
+  Register now passes `emailRedirectTo` to `/auth/confirm?next=...` and shows a “Check your email” success state when confirmation is required (no session returned), including a resend-confirmation button. Login now understands both `redirect` and `returnTo`, normalizes unsafe redirect values, surfaces confirm/callback errors via `?error=...`, and supports resending confirmation when the user hasn’t confirmed yet. Forgot-password redirect now routes through `/auth/confirm` instead of the OAuth callback route.
+
 - YYYY-MM-DD | agent-id | short summary | files: [comma-separated] | PR: <link-or-commit> | TASK: TASK-### | merged_at: YYYY-MM-DD
 
 Policy: `pr_link` and `merged_at` must be present in the changelog entry and the corresponding `AI_TASK_QUEUE.md` task before marking a task `done`.

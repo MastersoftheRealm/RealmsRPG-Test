@@ -7157,3 +7157,29 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Updated SUPABASE_SCHEMA.md and OFFICIAL_LIBRARY_COLUMNAR_PLAN.md with parity migration details.
     - App mapping follow-up 2026-03-24: updated shared `library-columnar.ts` and `api/official/[type]` to explicitly write/read promoted power/technique/item columns (column-first reads with payload fallback; official route now uses shared mapper like public/user routes).
     - Power creator: added `tpRaw` to `PowerCostResult` / `calculatePowerCosts` and advanced calc rows (matches prior UI expectation; `npm run build` passes).
+
+- id: TASK-305
+  title: Fix email/password onboarding (verification + redirects + resend)
+  priority: high
+  status: in-progress
+  created_at: 2026-04-09
+  created_by: owner
+  description: |
+    Email/password sign-up should be intuitive and align with Supabase Auth best practices.
+    When email confirmation is required, users must see a clear “Check your email” state instead of being redirected into authenticated pages.
+    Redirect params should be consistent across the app (`redirect` vs `returnTo`), and users should be able to resend confirmation from login/register.
+    Password reset redirects must use the OTP confirm flow (`/auth/confirm`) rather than OAuth callback.
+  related_files:
+    - src/app/(auth)/register/page.tsx
+    - src/app/(auth)/login/page.tsx
+    - src/app/(auth)/forgot-password/page.tsx
+    - src/app/auth/confirm/route.ts
+  acceptance_criteria:
+    - Register uses `emailRedirectTo` pointing to `/auth/confirm?next=...`
+    - If `signUp()` returns no session, Register shows a “Check your email” success screen and does not redirect into the app
+    - Login supports both `redirect` and `returnTo` and safely normalizes redirect paths
+    - Login surfaces clear “confirm your email” messaging and allows resending confirmation
+    - Forgot password uses `/auth/confirm?next=/login` redirect
+    - `npm run build` passes
+  notes: |
+    In progress 2026-04-09: Implemented confirm-aware signup success UI + resend confirmation; normalized redirect params (`redirect` + `returnTo` + sessionStorage fallback) on login/register; login shows confirm errors and supports resend; forgot-password redirectTo now uses /auth/confirm. PR link pending.

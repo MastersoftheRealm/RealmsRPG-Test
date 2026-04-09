@@ -1402,3 +1402,10 @@ Notes
 - Feedback (paste raw text): "Sub skills error: when increasing the skill value of a sub-skill from 0 to 1, it should automatically make that subskill proficient as well, but proficiency for SUB SKILLS does NOT count agasint total skill points spent, only the 0 to 1 skill value increase (right now increasing skill value from 0 to 1 for sub skill makes it automatically count as 2 spent skill points not 1) this is true across character sheet, creator, and likely creature creator, check."
 - Expected behavior (short): Increasing a sub-skill from 0 → 1 auto-marks it proficient, and **only spends 1 skill point total** (no extra proficiency point beyond that).
 - References (vanilla site, screenshots, notes): None
+
+**Raw Feedback Log — 2026-04-09 (Email/password onboarding + verification confusion)**
+- Date: 2026-04-09
+- Context: Auth — email/password signup + verification + redirects
+- Priority: High
+- Feedback: The email/password signup flow is confusing and likely misconfigured. Email verification isn’t clear; user may feel like they have to sign up, then verify email, then re-enter email/password again or “do it twice”. Redirection/direction after sign up and verification is unclear.
+- Expected: Clear post-signup messaging (“check your email”), proper Supabase best-practice confirmation handling, and consistent redirect back to the intended page after confirming or signing in.

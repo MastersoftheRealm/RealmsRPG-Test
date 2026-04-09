@@ -24,15 +24,19 @@ function RegisterContent() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsEmailConfirm, setNeedsEmailConfirm] = useState(false);
+  const [signupEmail, setSignupEmail] = useState<string>('');
+  const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
 
   const getRedirectPath = () => {
-    const urlRedirect = searchParams.get('redirect');
+    const urlRedirect = searchParams.get('redirect') ?? searchParams.get('returnTo');
     const sessionRedirect = typeof window !== 'undefined' ? sessionStorage.getItem('loginRedirect') : null;
     const raw = urlRedirect || sessionRedirect || '/';
-    if (raw === '/login' || raw === '/register' || raw === '/forgot-password' || raw === '/forgot-username') {
+    const normalized = raw.startsWith('/') ? raw : '/';
+    if (normalized === '/login' || normalized === '/register' || normalized === '/forgot-password' || normalized === '/forgot-username') {
       return '/';
     }
-    return raw;
+    return normalized;
   };
 
   const {
@@ -46,14 +50,29 @@ function RegisterContent() {
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
     setError(null);
+    setNeedsEmailConfirm(false);
+    setResendStatus('idle');
+    setSignupEmail(data.email);
 
     try {
       const supabase = createClient();
+      const redirectPath = getRedirectPath();
       const { data: authData, error: err } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(redirectPath)}`,
+        },
       });
       if (err) throw err;
+
+      // If email confirmation is enabled, Supabase may return a user but no session.
+      // In that case, show a "Check your email" state instead of redirecting into the app.
+      if (!authData.session) {
+        setNeedsEmailConfirm(true);
+        return;
+      }
+
       if (authData.user) {
         const chosenUsername = data.username?.trim();
         await createUserProfileAction({
@@ -63,12 +82,32 @@ function RegisterContent() {
           displayName: undefined,
         });
       }
+
       sessionStorage.removeItem('loginRedirect');
-      router.push(getRedirectPath());
+      router.push(redirectPath);
     } catch (err) {
       setError(getAuthErrorMessage(err));
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    const email = signupEmail.trim();
+    if (!email) {
+      setError('Missing email. Please try signing up again.');
+      return;
+    }
+    setResendStatus('sending');
+    setError(null);
+    try {
+      const supabase = createClient();
+      const { error: resendError } = await supabase.auth.resend({ type: 'signup', email });
+      if (resendError) throw resendError;
+      setResendStatus('sent');
+    } catch (e) {
+      setResendStatus('idle');
+      setError(getAuthErrorMessage(e));
     }
   };
 
@@ -97,6 +136,56 @@ function RegisterContent() {
   const handleAppleSignIn = () => {
     setError('Apple Sign-In coming soon!');
   };
+
+  if (needsEmailConfirm) {
+    return (
+      <AuthCard title="Check Your Email" subtitle="Confirm your account to continue">
+        {error ? (
+          <Alert variant="danger" className="mb-6">
+            {error}
+          </Alert>
+        ) : null}
+
+        <div className="text-center space-y-6">
+          <div className="w-16 h-16 mx-auto rounded-full bg-green-500/10 flex items-center justify-center">
+            <CheckIcon className="w-8 h-8 text-green-400" />
+          </div>
+
+          <p className="text-gray-300">
+            We sent a confirmation link to{' '}
+            <span className="font-semibold text-gray-100">{signupEmail || 'your email'}</span>.
+            Open it to finish creating your account.
+          </p>
+
+          <p className="text-sm text-gray-300">
+            Didn&apos;t get an email? Check spam, or resend the confirmation.
+          </p>
+
+          <div className="space-y-3">
+            <Button
+              type="button"
+              className="w-full"
+              disabled={resendStatus === 'sending'}
+              onClick={handleResendConfirmation}
+            >
+              {resendStatus === 'sending'
+                ? 'Sending...'
+                : resendStatus === 'sent'
+                  ? 'Confirmation email sent'
+                  : 'Resend confirmation email'}
+            </Button>
+
+            <Link
+              href={`/login?redirect=${encodeURIComponent(getRedirectPath())}`}
+              className="inline-block text-primary-400 hover:text-primary-300 transition-colors font-medium"
+            >
+              Back to Sign In
+            </Link>
+          </div>
+        </div>
+      </AuthCard>
+    );
+  }
 
   return (
     <AuthCard title="Create Account" subtitle="Join the adventure">
@@ -217,4 +306,19 @@ function getAuthErrorMessage(error: unknown): string {
   if (msg.includes('invalid') || msg.includes('email')) return 'Invalid email address.';
   if (msg.includes('network') || msg.includes('fetch')) return 'Network error. Please check your connection.';
   return e.message ?? 'An error occurred during registration. Please try again.';
+}
+
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={2}
+      stroke="currentColor"
+      className={className}
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+    </svg>
+  );
 }

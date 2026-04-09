@@ -24,16 +24,28 @@ function LoginContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ready, setReady] = useState(true);
+  const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
+  const [lastAttemptEmail, setLastAttemptEmail] = useState<string>('');
 
   const getRedirectPath = () => {
-    const urlRedirect = searchParams.get('redirect');
+    const urlRedirect = searchParams.get('redirect') ?? searchParams.get('returnTo');
     const sessionRedirect = typeof window !== 'undefined' ? sessionStorage.getItem('loginRedirect') : null;
     const raw = urlRedirect || sessionRedirect || '/';
-    if (raw === '/login' || raw === '/register' || raw === '/forgot-password' || raw === '/forgot-username') {
+    const normalized = raw.startsWith('/') ? raw : '/';
+    if (normalized === '/login' || normalized === '/register' || normalized === '/forgot-password' || normalized === '/forgot-username') {
       return '/';
     }
-    return raw;
+    return normalized;
   };
+
+  useEffect(() => {
+    const e = searchParams.get('error');
+    if (e === 'confirm') {
+      setError('Email confirmation failed or expired. Please sign in again, or request a new confirmation email.');
+    } else if (e === 'auth_callback') {
+      setError('Sign-in failed. Please try again.');
+    }
+  }, [searchParams]);
 
   const {
     register,
@@ -46,6 +58,8 @@ function LoginContent() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     setError(null);
+    setResendStatus('idle');
+    setLastAttemptEmail(data.email);
 
     try {
       const supabase = createClient();
@@ -57,6 +71,25 @@ function LoginContent() {
       setError(getAuthErrorMessage(err));
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    const email = lastAttemptEmail.trim();
+    if (!email) {
+      setError('Enter your email above, then try again.');
+      return;
+    }
+    setResendStatus('sending');
+    setError(null);
+    try {
+      const supabase = createClient();
+      const { error: resendError } = await supabase.auth.resend({ type: 'signup', email });
+      if (resendError) throw resendError;
+      setResendStatus('sent');
+    } catch (e) {
+      setResendStatus('idle');
+      setError(getAuthErrorMessage(e));
     }
   };
 
@@ -142,6 +175,24 @@ function LoginContent() {
         </Button>
       </form>
 
+      {error && error.toLowerCase().includes('confirm your email') ? (
+        <div className="mt-4">
+          <Button
+            type="button"
+            variant="secondary"
+            className="w-full"
+            onClick={handleResendConfirmation}
+            disabled={resendStatus === 'sending'}
+          >
+            {resendStatus === 'sending'
+              ? 'Sending...'
+              : resendStatus === 'sent'
+                ? 'Confirmation email sent'
+                : 'Resend confirmation email'}
+          </Button>
+        </div>
+      ) : null}
+
       <div className="my-6 flex items-center gap-4">
         <div className="flex-1 h-px bg-gray-600" />
         <span className="text-gray-300 text-sm">or</span>
@@ -193,6 +244,9 @@ export default function LoginPage() {
 function getAuthErrorMessage(error: unknown): string {
   const e = error as { message?: string; code?: string };
   const msg = (e.message ?? '').toLowerCase();
+  if (msg.includes('not confirmed') || msg.includes('email not confirmed')) {
+    return 'Please confirm your email before signing in.';
+  }
   if (msg.includes('invalid') || msg.includes('credentials')) return 'Invalid email or password';
   if (msg.includes('too many') || msg.includes('rate')) return 'Too many failed attempts. Please try again later.';
   if (msg.includes('network') || msg.includes('fetch')) return 'Network error. Please check your connection.';
