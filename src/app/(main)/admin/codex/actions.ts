@@ -44,6 +44,23 @@ function snakeToCamel(s: string): string {
   return s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
 }
 
+/**
+ * Admin payloads use snake_case like `op_1_desc`. COLUMNAR_FIELDS use `op1Desc` (digit in the
+ * camel segment). Plain snakeToCamel leaves `op_1Desc`, which fails the allowlist and drops
+ * option fields on insert/update.
+ */
+function columnarSourceKeyToCamel(collection: CodexCollection, key: string): string {
+  if ((collection === 'codex_properties' || collection === 'codex_parts') && /^op_\d+_/.test(key)) {
+    const m = key.match(/^op_(\d+)_(.+)$/);
+    if (m) {
+      const restCamel = snakeToCamel(m[2]);
+      if (!restCamel) return snakeToCamel(key);
+      return `op${m[1]}${restCamel.charAt(0).toUpperCase()}${restCamel.slice(1)}`;
+    }
+  }
+  return snakeToCamel(key);
+}
+
 function camelToSnake(s: string): string {
   return s
     .replace(/([a-zA-Z])(\d)/g, '$1_$2')
@@ -98,7 +115,7 @@ function toColumnarPayload(collection: CodexCollection, data: Record<string, unk
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(data)) {
     if (key === 'id' || key === 'data') continue;
-    const camel = snakeToCamel(key);
+    const camel = columnarSourceKeyToCamel(collection, key);
     if (allowed.size > 0 && !allowed.has(camel)) continue;
     out[camel] = toColumnValue(value);
   }
