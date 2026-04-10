@@ -117,11 +117,9 @@ export function AdminCreatureFeatsTab() {
       mechanic: form.mechanic,
     };
 
-    const id = form.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '').slice(0, 100) || `cf_${Date.now()}`;
-
     const result = editing
       ? await updateCodexDoc('codex_creature_feats', editing.id, data)
-      : await createCodexDoc('codex_creature_feats', id, data);
+      : await createCodexDoc('codex_creature_feats', undefined, data);
 
     setSaving(false);
     if (result.success) {
@@ -207,8 +205,8 @@ export function AdminCreatureFeatsTab() {
                 gridColumns="1.5fr 0.5fr 0.5fr 0.5fr 40px"
                 columns={[
                   { key: 'Pts', value: String(f.points ?? '-') },
-                  { key: 'Feat Lvl', value: f.feat_lvl != null && f.feat_lvl > 0 ? String(f.feat_lvl) : '-' },
-                  { key: 'Req. Lvl', value: f.lvl_req != null && f.lvl_req > 0 ? String(f.lvl_req) : '-' },
+                  { key: 'Feat Lvl', value: f.feat_lvl != null ? String(f.feat_lvl) : '-' },
+                  { key: 'Req. Lvl', value: f.lvl_req != null ? String(f.lvl_req) : '-' },
                 ]}
                 rightSlot={
                   <div className="flex items-center gap-1 pr-2">

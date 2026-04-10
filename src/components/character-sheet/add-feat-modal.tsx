@@ -8,12 +8,44 @@
 import { useState, useEffect, useMemo, useCallback, useId } from 'react';
 import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
 import { getSkillBonusForFeatRequirement } from '@/lib/game/formulas';
+import { calculateDefenses } from '@/lib/game/calculations';
 import { buildFeatLevelChips, getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
 import { Alert } from '@/components/ui';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
 import type { ChipData } from '@/components/shared/grid-list-row';
 import type { Character } from '@/types';
 import { formatListCellLabel } from '@/lib/utils';
+import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
+
+function normalizeReqKey(input: string): string {
+  return String(input ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, '');
+}
+
+function isAbilityReqKey(key: string): key is keyof Character['abilities'] {
+  return (
+    key === 'strength' ||
+    key === 'vitality' ||
+    key === 'agility' ||
+    key === 'acuity' ||
+    key === 'intelligence' ||
+    key === 'charisma'
+  );
+}
+
+type DefenseReqKey = 'might' | 'fortitude' | 'reflex' | 'discernment' | 'mentalFortitude' | 'resolve';
+
+function toDefenseReqKey(key: string): DefenseReqKey | null {
+  if (key === 'might') return 'might';
+  if (key === 'fortitude') return 'fortitude';
+  if (key === 'reflex' || key === 'reflexes') return 'reflex';
+  if (key === 'discernment') return 'discernment';
+  if (key === 'mentalfortitude') return 'mentalFortitude';
+  if (key === 'resolve') return 'resolve';
+  return null;
+}
 
 interface FeatModal extends Feat {
   effect?: string;
@@ -153,9 +185,21 @@ export function AddFeatModal({
     if (feat.lvl_req && character.level < feat.lvl_req) warnings.push(`Requires level ${feat.lvl_req}`);
     if (feat.ability_req && feat.abil_req_val) {
       const abilities = character.abilities || {};
+      const defenseVals = {
+        ...DEFAULT_DEFENSE_SKILLS,
+        ...(character.defenseSkills || {}),
+        ...(character.defenseVals || {}),
+      };
+      const { defenseBonuses } = calculateDefenses(abilities, defenseVals);
       feat.ability_req.forEach((abil, idx) => {
         const required = feat.abil_req_val?.[idx] ?? 0;
-        const current = abilities[abil.toLowerCase() as keyof typeof abilities] ?? 0;
+        const key = normalizeReqKey(abil);
+        const defenseKey = toDefenseReqKey(key);
+        const current = isAbilityReqKey(key)
+          ? (abilities[key] ?? 0)
+          : defenseKey
+            ? (defenseBonuses[defenseKey] ?? 0)
+            : 0;
         if (current < required) warnings.push(`Requires ${abil} ${required}+`);
       });
     }

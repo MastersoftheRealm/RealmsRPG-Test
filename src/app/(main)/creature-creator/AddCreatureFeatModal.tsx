@@ -37,6 +37,25 @@ import type { CreatureState } from './creature-creator-types';
 
 type FeatSourceTab = 'creature' | 'library' | 'species';
 
+function normalizeReqKey(input: string): string {
+  return String(input ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, '');
+}
+
+type DefenseReqKey = 'might' | 'fortitude' | 'reflex' | 'discernment' | 'mentalFortitude' | 'resolve';
+
+function toDefenseReqKey(key: string): DefenseReqKey | null {
+  if (key === 'might') return 'might';
+  if (key === 'fortitude') return 'fortitude';
+  if (key === 'reflex' || key === 'reflexes') return 'reflex';
+  if (key === 'discernment') return 'discernment';
+  if (key === 'mentalfortitude') return 'mentalFortitude';
+  if (key === 'resolve') return 'resolve';
+  return null;
+}
+
 interface FeatModal extends Feat {
   effect?: string;
   max_uses?: number;
@@ -225,7 +244,9 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
         const abilities = pseudoCharacter.abilities || {};
         feat.ability_req.forEach((abil, idx) => {
           const required = feat.abil_req_val?.[idx] ?? 0;
-          const current = abilities[abil.toLowerCase() as keyof typeof abilities] ?? 0;
+          const key = normalizeReqKey(abil);
+          const defenseKey = toDefenseReqKey(key);
+          const current = defenseKey ? (creature.defenses?.[defenseKey] ?? 0) : (abilities[key as keyof typeof abilities] ?? 0);
           if (current < required) warnings.push(`Requires ${abil} ${required}+`);
         });
       }

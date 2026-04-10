@@ -89,7 +89,7 @@ export function CodexTraitsTab({ codexMode = 'public' }: { codexMode?: 'public' 
                 description={t.description || ''}
                 gridColumns={TRAIT_GRID_COLUMNS}
                 columns={[
-                  { key: 'Uses', value: t.uses_per_rec != null && t.uses_per_rec > 0 ? String(t.uses_per_rec) : '-' },
+                  { key: 'Uses', value: t.uses_per_rec != null ? String(t.uses_per_rec) : '-' },
                   { key: 'Recovery', value: t.rec_period || '-' },
                 ]}
               />

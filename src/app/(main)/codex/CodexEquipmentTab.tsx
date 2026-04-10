@@ -87,7 +87,11 @@ function EquipmentCard({ item, propertiesDb = [] }: { item: Equipment; propertie
       gridColumns={EQUIPMENT_GRID_COLUMNS}
       columns={[
         { key: 'Category', value: formatListCellLabel(item.category) },
-        { key: 'Cost', value: cost > 0 ? `${cost}c` : '-', highlight: true },
+        {
+          key: 'Cost',
+          value: typeof cost === 'number' && !Number.isNaN(cost) ? `${cost}c` : '-',
+          highlight: true,
+        },
         { key: 'Rarity', value: formatListCellLabel(item.rarity) },
       ]}
       detailSections={detailSections.length > 0 ? detailSections : undefined}

@@ -91,8 +91,8 @@ export function CodexCreatureFeatsTab({ codexMode = 'public' }: { codexMode?: 'p
                 gridColumns={CREATURE_FEAT_GRID_COLUMNS}
                 columns={[
                   { key: 'Pts', value: String(f.points ?? '-') },
-                  { key: 'Feat Lvl', value: f.feat_lvl != null && f.feat_lvl > 0 ? String(f.feat_lvl) : '-' },
-                  { key: 'Req. Lvl', value: f.lvl_req != null && f.lvl_req > 0 ? String(f.lvl_req) : '-' },
+                  { key: 'Feat Lvl', value: f.feat_lvl != null ? String(f.feat_lvl) : '-' },
+                  { key: 'Req. Lvl', value: f.lvl_req != null ? String(f.lvl_req) : '-' },
                 ]}
               />
             ))

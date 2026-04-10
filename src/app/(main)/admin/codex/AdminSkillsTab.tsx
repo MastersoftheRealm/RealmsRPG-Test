@@ -288,11 +288,9 @@ export function AdminSkillsTab() {
       craft_failure_desc: form.craft_failure_desc.trim() || undefined,
     };
 
-    const id = form.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '').slice(0, 100) || `skill_${Date.now()}`;
-
     const result = editing
       ? await updateCodexDoc('codex_skills', editing.id, data)
-      : await createCodexDoc('codex_skills', id, data);
+      : await createCodexDoc('codex_skills', undefined, data);
 
     setSaving(false);
     if (result.success) {

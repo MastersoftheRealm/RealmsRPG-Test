@@ -1187,6 +1187,9 @@ Append-only log. Add an entry per PR/merge. **For current context, recent entrie
 - 2026-04-09 | agent:gpt-5.2 | Email/password onboarding: confirmation UX + redirect hygiene | files: src/app/(auth)/register/page.tsx, src/app/(auth)/login/page.tsx, src/app/(auth)/forgot-password/page.tsx, src/docs/ai/AI_TASK_QUEUE.md, src/docs/ALL_FEEDBACK_CLEAN.md | TASK: TASK-305 | pr_link: (pending) | merged_at: (pending) | Summary:
   Register now passes `emailRedirectTo` to `/auth/confirm?next=...` and shows a “Check your email” success state when confirmation is required (no session returned), including a resend-confirmation button. Login now understands both `redirect` and `returnTo`, normalizes unsafe redirect values, surfaces confirm/callback errors via `?error=...`, and supports resending confirmation when the user hasn’t confirmed yet. Forgot-password redirect now routes through `/auth/confirm` instead of the OAuth callback route.
 
+- 2026-04-10 | agent:gpt-5.2 | Feat requirement filtering: treat defenses as requirements correctly | files: src/components/character-sheet/add-feat-modal.tsx, src/components/character-creator/steps/feats-step.tsx, src/app/(main)/creature-creator/AddCreatureFeatModal.tsx, src/docs/ALL_FEEDBACK_CLEAN.md | TASK: feedback-direct | pr_link: (pending) | merged_at: (pending) | Summary:
+  Fixed feat requirement gating so Defense requirements like Might/Fortitude/Reflexes/Discernment/Mental Fortitude/Resolve are evaluated against defense bonuses (or creature defense values) instead of being incorrectly treated as core Abilities and filtered out.
+
 - YYYY-MM-DD | agent-id | short summary | files: [comma-separated] | PR: <link-or-commit> | TASK: TASK-### | merged_at: YYYY-MM-DD
 
 Policy: `pr_link` and `merged_at` must be present in the changelog entry and the corresponding `AI_TASK_QUEUE.md` task before marking a task `done`.

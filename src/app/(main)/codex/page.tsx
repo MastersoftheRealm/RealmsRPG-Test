@@ -89,18 +89,6 @@ export default function CodexPage() {
             label="Codex usage help"
             placement="left"
           />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleAdvanced}
-            className={cn(
-              'gap-1.5',
-              showAdvanced && 'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700'
-            )}
-          >
-            {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            Advanced
-          </Button>
         </div>
       </div>
 
@@ -118,12 +106,29 @@ export default function CodexPage() {
       </div>
 
       <div className="min-w-0 mb-6">
-        <TabNavigation
-          tabs={tabs}
-          activeTab={activeTab}
-          onTabChange={onTabChange}
-          variant="underline"
-        />
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="flex-1 min-w-0">
+            <TabNavigation
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={onTabChange}
+              variant="underline"
+            />
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleAdvanced}
+            className={cn(
+              'gap-1.5 flex-shrink-0 min-h-[44px]',
+              showAdvanced && 'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700'
+            )}
+            aria-pressed={showAdvanced}
+          >
+            {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            Advanced
+          </Button>
+        </div>
       </div>
 
       {isPublic && (

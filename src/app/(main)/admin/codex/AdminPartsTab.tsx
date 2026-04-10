@@ -314,15 +314,20 @@ export function AdminPartsTab() {
       op_3_tp: form.op_3_desc.trim() ? (form.op_3_tp ?? undefined) : undefined,
     };
 
-    const id = form.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '').slice(0, 100) || `part_${Date.now()}`;
-
-    const result = editing ? await updateCodexDoc('codex_parts', editing.id, data) : await createCodexDoc('codex_parts', id, data);
+    const result = editing
+      ? await updateCodexDoc('codex_parts', editing.id, data)
+      : await createCodexDoc('codex_parts', undefined, data);
 
     setSaving(false);
     if (result.success) {
       // Update cached codex immediately so the admin list reflects the save
       // even if the codex refetch is delayed (staleTime is long).
-      const savedId = editing?.id ?? id;
+      const savedId = editing ? editing.id : (result as { id?: string }).id;
+      if (!savedId) {
+        alert('Save succeeded but no ID was returned. Please refresh.');
+        closeModal();
+        return;
+      }
       const savedPart: Part = {
         id: savedId,
         name: String(data.name ?? ''),
@@ -462,24 +467,46 @@ export function AdminPartsTab() {
             />
           ) : (
             filteredParts.map((p: Part) => {
+              const formatEnergyCostAllowZero = (en: number | undefined): string | null => {
+                if (en === undefined || Number.isNaN(en)) return null;
+                if (p.percentage) {
+                  const percentChange = (en - 1) * 100;
+                  const sign = percentChange >= 0 ? '+' : '';
+                  return `${sign}${formatDecimalPreserve(percentChange)}%`;
+                }
+                return formatDecimalPreserve(en);
+              };
+
               const optionChips: { name: string; description?: string; category?: 'default' }[] = [];
               if (p.op_1_desc) {
+                const parts: string[] = [];
+                const enStr = formatEnergyCostAllowZero(p.op_1_en);
+                if (enStr != null) parts.push(`EN: ${enStr}`);
+                if (p.op_1_tp !== undefined && !Number.isNaN(p.op_1_tp)) parts.push(`TP: ${formatDecimalPreserve(p.op_1_tp)}`);
                 optionChips.push({
-                  name: 'Option 1',
+                  name: parts.length ? `Option 1 (${parts.join(', ')})` : 'Option 1',
                   description: p.op_1_desc,
                   category: 'default',
                 });
               }
               if (p.op_2_desc) {
+                const parts: string[] = [];
+                const enStr = formatEnergyCostAllowZero(p.op_2_en);
+                if (enStr != null) parts.push(`EN: ${enStr}`);
+                if (p.op_2_tp !== undefined && !Number.isNaN(p.op_2_tp)) parts.push(`TP: ${formatDecimalPreserve(p.op_2_tp)}`);
                 optionChips.push({
-                  name: 'Option 2',
+                  name: parts.length ? `Option 2 (${parts.join(', ')})` : 'Option 2',
                   description: p.op_2_desc,
                   category: 'default',
                 });
               }
               if (p.op_3_desc) {
+                const parts: string[] = [];
+                const enStr = formatEnergyCostAllowZero(p.op_3_en);
+                if (enStr != null) parts.push(`EN: ${enStr}`);
+                if (p.op_3_tp !== undefined && !Number.isNaN(p.op_3_tp)) parts.push(`TP: ${formatDecimalPreserve(p.op_3_tp)}`);
                 optionChips.push({
-                  name: 'Option 3',
+                  name: parts.length ? `Option 3 (${parts.join(', ')})` : 'Option 3',
                   description: p.op_3_desc,
                   category: 'default',
                 });
@@ -693,7 +720,10 @@ export function AdminPartsTab() {
             <ChipSelect
               label=""
               placeholder="Choose defenses this part targets"
-              options={DEFENSES.map((d) => ({ value: d, label: d }))}
+              options={DEFENSES.map((d) => ({
+                value: d,
+                label: String(d).toLowerCase() === 'evasion' ? 'Evasion' : d,
+              }))}
               selectedValues={form.defense}
               onSelect={(v) => setForm((f) => ({ ...f, defense: [...f.defense, v] }))}
               onRemove={(v) => setForm((f) => ({ ...f, defense: f.defense.filter((x) => x !== v) }))}

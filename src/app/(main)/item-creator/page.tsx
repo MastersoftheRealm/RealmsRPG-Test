@@ -549,23 +549,13 @@ function ItemCreatorContent() {
     
     // Restore properties
     if (itemToEdit.properties && itemToEdit.properties.length > 0) {
-      const restoredProps: SelectedProperty[] = [];
-      for (const savedProp of itemToEdit.properties) {
-        const propId = typeof savedProp === 'string' ? null : savedProp.id;
-        const propName = typeof savedProp === 'string' ? savedProp : savedProp.name;
-        
-        const foundProp = propId
-          ? itemProperties.find((p: { id: string }) => String(p.id) === String(propId))
-          : itemProperties.find((p: { name?: string }) => p.name?.toLowerCase() === propName?.toLowerCase());
-        
-        if (foundProp) {
-          restoredProps.push({
-            property: foundProp,
-            op_1_lvl: typeof savedProp === 'object' ? (savedProp.op_1_lvl || 0) : 0,
-          });
-        }
-      }
-      setSelectedProperties(restoredProps);
+      // Only non-mechanic properties belong in the selectable list; mechanic properties are driven
+      // by dedicated UI fields (damage, rangeLevel, DR, etc.) and should never be duplicated here.
+      const loadedProperties = filterSavedItemPropertiesForList(
+        itemToEdit.properties as Array<{ id?: number | string; name?: string; op_1_lvl?: number }>,
+        itemProperties
+      );
+      setSelectedProperties(loadedProperties);
     }
     
     // Clear localStorage cache when loading for edit (don't want to mix with cached data)

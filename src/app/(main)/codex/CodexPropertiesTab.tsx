@@ -46,9 +46,10 @@ function PropertyCard({ property }: { property: ItemProperty }) {
   const optionChips: Array<{ name: string; description?: string; category: 'cost' | 'default' }> = [];
   if (property.op_1_desc) {
     const parts: string[] = [];
-    if (property.op_1_ip !== undefined && property.op_1_ip !== 0) parts.push(`+${property.op_1_ip} IP`);
-    if (property.op_1_tp !== undefined && property.op_1_tp !== 0) parts.push(`+${property.op_1_tp} TP`);
-    if (property.op_1_c !== undefined && property.op_1_c !== 0) parts.push(`×${property.op_1_c}`);
+    // Include explicit 0 values so the user can tell the option was saved as 0 (not missing).
+    if (property.op_1_ip !== undefined) parts.push(`IP ${property.op_1_ip}`);
+    if (property.op_1_tp !== undefined) parts.push(`TP ${property.op_1_tp}`);
+    if (property.op_1_c !== undefined) parts.push(`C ${property.op_1_c}`);
     optionChips.push({
       name: parts.length ? `Option (${parts.join(', ')})` : 'Option',
       description: property.op_1_desc,
@@ -67,9 +68,21 @@ function PropertyCard({ property }: { property: ItemProperty }) {
       gridColumns={PROPERTY_GRID_COLUMNS}
       columns={[
         { key: 'Type', value: formatListCellLabel(property.type || 'general') },
-        { key: 'IP', value: ip > 0 ? ip : '-', className: 'text-blue-600' },
-        { key: 'TP', value: tp > 0 ? tp : '-', className: 'text-tp' },
-        { key: 'Cost', value: cost > 0 ? `×${cost}` : '-', highlight: true },
+        {
+          key: 'IP',
+          value: typeof ip === 'number' && !Number.isNaN(ip) ? String(ip) : '-',
+          className: 'text-blue-600',
+        },
+        {
+          key: 'TP',
+          value: typeof tp === 'number' && !Number.isNaN(tp) ? String(tp) : '-',
+          className: 'text-tp',
+        },
+        {
+          key: 'Cost',
+          value: typeof cost === 'number' && !Number.isNaN(cost) ? `×${cost}` : '-',
+          highlight: true,
+        },
       ]}
       detailSections={detailSections.length > 0 ? detailSections : undefined}
     />

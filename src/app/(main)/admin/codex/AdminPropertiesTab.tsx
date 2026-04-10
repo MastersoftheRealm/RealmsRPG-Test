@@ -210,15 +210,20 @@ export function AdminPropertiesTab() {
       mechanic: form.mechanic,
     };
 
-    const id = form.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '').slice(0, 100) || `prop_${Date.now()}`;
-
-    const result = editing ? await updateCodexDoc('codex_properties', editing.id, data) : await createCodexDoc('codex_properties', id, data);
+    const result = editing
+      ? await updateCodexDoc('codex_properties', editing.id, data)
+      : await createCodexDoc('codex_properties', undefined, data);
 
     setSaving(false);
     if (result.success) {
       // Update the cached codex immediately so the admin list reflects the save
       // even if the codex refetch is delayed (staleTime is long) or the network is slow.
-      const savedId = editing?.id ?? id;
+      const savedId = editing ? editing.id : (result as { id?: string }).id;
+      if (!savedId) {
+        alert('Save succeeded but no ID was returned. Please refresh.');
+        closeModal();
+        return;
+      }
       const rawType = String(data.type ?? '').toLowerCase();
       const savedType =
         rawType === 'general' || rawType === 'armor' || rawType === 'weapon' || rawType === 'shield'
@@ -358,7 +363,14 @@ export function AdminPropertiesTab() {
                 p.op_1_desc && p.op_1_desc.length > 0
                   ? [
                       {
-                        name: 'Option',
+                        name: (() => {
+                          const parts: string[] = [];
+                          // Include explicit 0 values so "0" is distinguishable from "unset".
+                          if ((p as any).op_1_ip !== undefined) parts.push(`IP ${(p as any).op_1_ip}`);
+                          if ((p as any).op_1_tp !== undefined) parts.push(`TP ${(p as any).op_1_tp}`);
+                          if ((p as any).op_1_c !== undefined) parts.push(`C ${(p as any).op_1_c}`);
+                          return parts.length ? `Option (${parts.join(', ')})` : 'Option';
+                        })(),
                         description: p.op_1_desc,
                         category: 'default' as const,
                       },

@@ -40,6 +40,35 @@ function sanitizeId(id: string): string {
   return id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 150);
 }
 
+function parseNumericId(id: unknown): number | null {
+  if (typeof id !== 'string') return null;
+  if (!/^\d+$/.test(id)) return null;
+  const n = Number(id);
+  if (!Number.isSafeInteger(n) || n <= 0) return null;
+  return n;
+}
+
+async function allocateLowestUnusedNumericId(collection: CodexCollection): Promise<string> {
+  const supabase = getSupabaseAdmin();
+  const table = getTableName(collection);
+  const { data, error } = await supabase.from(table).select('id');
+  if (error) throw new Error(error.message);
+
+  const used = new Set<number>();
+  let max = 0;
+  for (const row of (data ?? []) as Array<{ id?: unknown }>) {
+    const n = parseNumericId(row.id);
+    if (n == null) continue;
+    used.add(n);
+    if (n > max) max = n;
+  }
+
+  for (let i = 1; i <= max + 1; i++) {
+    if (!used.has(i)) return String(i);
+  }
+  return String(max + 1);
+}
+
 function snakeToCamel(s: string): string {
   // Handle common codex column patterns like op_1_desc -> op1Desc
   // so option fields survive the allowed-field filter.
@@ -158,18 +187,29 @@ function getSupabaseAdmin() {
 
 export async function createCodexDoc(
   collection: CodexCollection,
-  id: string,
+  id: string | undefined,
   data: Record<string, unknown>
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; id?: string; error?: string }> {
   try {
     await requireAdmin();
-    const docId = sanitizeId(id) || `doc_${Date.now()}`;
     const supabase = getSupabaseAdmin();
     const table = getTableName(collection);
 
-    const { data: existing } = await supabase.from(table).select('id').eq('id', docId).maybeSingle();
-    if (existing) {
-      return { success: false, error: `Document ${docId} already exists` };
+    const shouldAllocateNumeric = COLUMNAR_COLLECTIONS.includes(collection) && collection !== 'core_rules';
+    // Prefer numeric IDs for codex reference data so renaming doesn't imply ID changes.
+    let docId = sanitizeId(id ?? '');
+    if (!docId && shouldAllocateNumeric) {
+      docId = await allocateLowestUnusedNumericId(collection);
+    }
+    docId = docId || `doc_${Date.now()}`;
+
+    // Small retry loop for rare concurrency collisions.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const { data: existing } = await supabase.from(table).select('id').eq('id', docId).maybeSingle();
+      if (!existing) break;
+      if (!shouldAllocateNumeric) return { success: false, error: `Document ${docId} already exists` };
+      const n = parseNumericId(docId);
+      docId = n != null ? String(n + 1) : await allocateLowestUnusedNumericId(collection);
     }
 
     if (COLUMNAR_COLLECTIONS.includes(collection)) {
@@ -184,7 +224,7 @@ export async function createCodexDoc(
 
     revalidatePath('/admin/codex');
     revalidatePath('/codex');
-    return { success: true };
+    return { success: true, id: docId };
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : 'Failed to create' };
   }
@@ -293,7 +333,7 @@ export async function saveArchetypeWithPath(
   try {
     await requireAdmin();
     const supabase = getSupabaseAdmin();
-    const id = payload.id ? sanitizeId(payload.id) : sanitizeId(payload.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '').slice(0, 100) || `arch_${Date.now()}`);
+    const id = payload.id ? sanitizeId(payload.id) : await allocateLowestUnusedNumericId('codex_archetypes');
 
     const archetypeRow = {
       id,

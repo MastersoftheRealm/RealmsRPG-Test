@@ -251,9 +251,9 @@ export function AdminSpeciesTab() {
       languages,
     };
 
-    const id = form.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '').slice(0, 100) || `species_${Date.now()}`;
-
-    const result = editing ? await updateCodexDoc('codex_species', editing.id, data) : await createCodexDoc('codex_species', id, data);
+    const result = editing
+      ? await updateCodexDoc('codex_species', editing.id, data)
+      : await createCodexDoc('codex_species', undefined, data);
 
     setSaving(false);
     if (result.success) {

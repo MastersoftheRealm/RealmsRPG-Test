@@ -29,11 +29,45 @@ import {
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
 import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
+import { calculateDefenses } from '@/lib/game/calculations';
 import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats, getSkillBonusForFeatRequirement } from '@/lib/game/formulas';
 import { formatAbilityList, formatListCellLabel } from '@/lib/utils';
 import { buildFeatLevelChips, getFeatFamilyId, getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
-import type { ArchetypeCategory } from '@/types';
+import type { Abilities, ArchetypeCategory } from '@/types';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
+import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
+
+function normalizeReqKey(input: string): string {
+  return String(input ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, '');
+}
+
+function isAbilityReqKey(
+  key: string
+): key is 'strength' | 'vitality' | 'agility' | 'acuity' | 'intelligence' | 'charisma' {
+  return (
+    key === 'strength' ||
+    key === 'vitality' ||
+    key === 'agility' ||
+    key === 'acuity' ||
+    key === 'intelligence' ||
+    key === 'charisma'
+  );
+}
+
+type DefenseReqKey = 'might' | 'fortitude' | 'reflex' | 'discernment' | 'mentalFortitude' | 'resolve';
+
+function toDefenseReqKey(key: string): DefenseReqKey | null {
+  if (key === 'might') return 'might';
+  if (key === 'fortitude') return 'fortitude';
+  if (key === 'reflex' || key === 'reflexes') return 'reflex';
+  if (key === 'discernment') return 'discernment';
+  if (key === 'mentalfortitude') return 'mentalFortitude';
+  if (key === 'resolve') return 'resolve';
+  return null;
+}
 
 function getPreviousLevelFeatId(feat: Feat, allFeats: Feat[]): string | null {
   const level = getFeatLevel(feat);
@@ -158,8 +192,13 @@ export function FeatsStep() {
 
   // Check if character meets feat requirements
   const checkRequirements = useCallback((feat: Feat): { met: boolean; reason?: string } => {
-    const abilities = draft.abilities || {};
+    const abilities = (draft.abilities || {}) as Partial<Abilities>;
     const skills = draft.skills || {};
+    const defenseVals = (draft.defenseVals || (draft as unknown as { defenseSkills?: unknown }).defenseSkills || {}) as Record<
+      string,
+      number
+    >;
+    const { defenseBonuses } = calculateDefenses(abilities, { ...DEFAULT_DEFENSE_SKILLS, ...defenseVals });
     
     // Check level requirement
     if (feat.lvl_req > (draft.level || 1)) {
@@ -168,9 +207,14 @@ export function FeatsStep() {
     
     // Check ability requirements
     for (let i = 0; i < feat.ability_req.length; i++) {
-      const reqAbility = feat.ability_req[i].toLowerCase() as keyof typeof abilities;
+      const reqKey = normalizeReqKey(feat.ability_req[i]);
       const reqValue = feat.abil_req_val[i] || 0;
-      const charValue = abilities[reqAbility] || 0;
+      const defenseKey = toDefenseReqKey(reqKey);
+      const charValue = isAbilityReqKey(reqKey)
+        ? (abilities[reqKey] || 0)
+        : defenseKey
+          ? (defenseBonuses[defenseKey] || 0)
+          : 0;
       
       if (charValue < reqValue) {
         return { met: false, reason: `Requires ${feat.ability_req[i]} ${reqValue}+` };

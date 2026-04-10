@@ -166,9 +166,9 @@ export function AdminEquipmentTab() {
       rarity: form.rarity.trim() || undefined,
     };
 
-    const id = form.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '').slice(0, 100) || `equip_${Date.now()}`;
-
-    const result = editing ? await updateCodexDoc('codex_equipment', editing.id, data) : await createCodexDoc('codex_equipment', id, data);
+    const result = editing
+      ? await updateCodexDoc('codex_equipment', editing.id, data)
+      : await createCodexDoc('codex_equipment', undefined, data);
 
     setSaving(false);
     if (result.success) {
@@ -277,7 +277,11 @@ export function AdminEquipmentTab() {
                 gridColumns={EQUIPMENT_GRID_COLUMNS}
                 columns={[
                   { key: 'Category', value: formatListCellLabel(e.category || 'equipment') },
-                  { key: 'Cost', value: e.cost > 0 ? `${e.cost} c` : '-', highlight: true },
+                  {
+                    key: 'Cost',
+                    value: typeof e.cost === 'number' && !Number.isNaN(e.cost) ? `${e.cost} c` : '-',
+                    highlight: true,
+                  },
                   { key: 'Rarity', value: formatListCellLabel(e.rarity) },
                 ]}
                 rightSlot={

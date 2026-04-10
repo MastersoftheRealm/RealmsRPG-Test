@@ -128,13 +128,17 @@ export function AdminTraitsTab() {
   const handleCreateTraitAndAdd = async () => {
     if (!createTraitForm.name.trim()) return;
     setCreatingTrait(true);
-    const id = createTraitForm.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '').slice(0, 100) || `trait_${Date.now()}`;
-    const result = await createCodexDoc('codex_traits', id, {
+    const result = await createCodexDoc('codex_traits', undefined, {
       name: createTraitForm.name.trim(),
       description: createTraitForm.description.trim(),
     });
     setCreatingTrait(false);
     if (result.success) {
+      const id = result.id;
+      if (!id) {
+        alert('Create succeeded but no ID was returned. Please refresh.');
+        return;
+      }
       queryClient.invalidateQueries({ queryKey: ['codex'] });
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       setForm((f) => ({ ...f, option_trait_ids: [...f.option_trait_ids, id] }));
@@ -160,11 +164,9 @@ export function AdminTraitsTab() {
       option_trait_ids: form.option_trait_ids.length > 0 ? form.option_trait_ids : undefined,
     };
 
-    const id = form.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '').slice(0, 100) || `trait_${Date.now()}`;
-
     const result = editing
       ? await updateCodexDoc('codex_traits', editing.id, data)
-      : await createCodexDoc('codex_traits', id, data);
+      : await createCodexDoc('codex_traits', undefined, data);
 
     setSaving(false);
     if (result.success) {
@@ -243,7 +245,7 @@ export function AdminTraitsTab() {
                 description={t.description || ''}
                 gridColumns="1.5fr 0.6fr 0.6fr 0.6fr 40px"
                 columns={[
-                  { key: 'Uses', value: t.uses_per_rec != null && t.uses_per_rec > 0 ? String(t.uses_per_rec) : '-' },
+                  { key: 'Uses', value: t.uses_per_rec != null ? String(t.uses_per_rec) : '-' },
                   { key: 'Recovery', value: t.rec_period || '-' },
                   { key: 'Choice', value: t.option_trait_ids?.length ? `Yes (${t.option_trait_ids.length})` : '-' },
                 ]}
@@ -420,7 +422,7 @@ export function AdminTraitsTab() {
                       description={t.description || ''}
                       gridColumns={CHOICE_TRAIT_GRID}
                       columns={[
-                        { key: 'Uses', value: t.uses_per_rec != null && t.uses_per_rec > 0 ? String(t.uses_per_rec) : '-' },
+                        { key: 'Uses', value: t.uses_per_rec != null ? String(t.uses_per_rec) : '-' },
                         { key: 'Recovery', value: t.rec_period || '-' },
                       ]}
                       selectable

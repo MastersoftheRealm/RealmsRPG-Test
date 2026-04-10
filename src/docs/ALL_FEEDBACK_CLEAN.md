@@ -1424,3 +1424,24 @@ Notes
 - Feedback: Created and saved a new armament property with an option; the option was not saved; IP appeared negative / did not save; TP and cost were 0 but displayed as 0/-.
 - Expected: Option description and option IP/TP/cost persist to `codex_properties`; list shows saved numeric values including 0 and negatives when set.
 - Disposition: Implemented 2026-04-09 — fixed `toColumnarPayload` key mapping (`op_1_*` → `op1*`) in `admin/codex/actions.ts`; admin list display for IP/TP/cost in `AdminPropertiesTab.tsx`.
+
+**Raw Feedback Log — 2026-04-10 (Armament library edit loads mechanic properties; option zero-cost display)**
+- Date: 2026-04-10
+- Context: Armament Library — load weapon/armament; edit armament in armament library
+- Priority: High
+- Feedback: When loading a weapon/armament or hitting edit in the armament library, it appears to load mechanic properties that are hardwired/dedicated UI fields and incorrectly adds them into the editable armament property list. These mechanic properties should be omitted from the list and handled only in the UI/background. Also: when saving an armament property option with TP 0 or C 0, the UI shows "Option 00" instead of showing the labels like "Option / TP 0 / C 0".
+- Expected: Mechanic-only properties never appear in the editable property list on load/edit; they are restored only into their dedicated UI fields/state. Option display always includes cost labels (TP/C) even when values are 0.
+
+**Raw Feedback Log — 2026-04-10 (Codex armament properties negative values hidden)**
+- Date: 2026-04-10
+- Context: Codex → Armament Properties list
+- Priority: High
+- Feedback: Armament properties with negative values (cost multiplier, IP, TP, etc.) are displayed as "-" in the Codex list instead of showing the actual negative numbers.
+- Expected: Codex property list displays numeric values exactly (including negatives and 0), rather than replacing them with "-".
+
+**Raw Feedback Log — 2026-04-10 (Feat requirements filter treats defenses as abilities)**
+- Date: 2026-04-10
+- Context: Feats — add-feat modal / feat selection sorting & filtering
+- Priority: High
+- Feedback: In feat sorting/filtering (especially when adding feats), some feats with requirements like "Might +3" (and other Defense requirements) get filtered out even when the character’s defense bonus meets/exceeds the requirement. The requirement is stored under "ability requirements" even though it can be a Defense.
+- Expected: Defense requirements (Might/Fortitude/Reflexes/Discernment/Mental Fortitude/Resolve) should be evaluated against the character’s defense bonus (ability + allocated defense increases), not against core abilities, so qualified feats remain visible/sortable.

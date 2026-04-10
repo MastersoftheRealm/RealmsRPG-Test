@@ -1082,11 +1082,9 @@ export function AdminFeatsTab() {
       base_feat_id: form.base_feat_id.trim() || undefined,
     };
 
-    const newId = (form.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '') || `feat_${Date.now()}`).slice(0, 100);
-
     const result = editing
       ? await updateCodexDoc('codex_feats', editId ?? editing.id, data)
-      : await createCodexDoc('codex_feats', newId, data);
+      : await createCodexDoc('codex_feats', undefined, data);
 
     setSaving(false);
     if (result.success) {
