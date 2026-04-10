@@ -76,6 +76,12 @@ function percentToOptionEn(percentStr: string): number | undefined {
   return p / 100;
 }
 
+/** Normalize stored defense tags (e.g. legacy lowercase "evasion") for editor chips. */
+function normalizePartTargetedDefenses(defenses: string[] | undefined): string[] {
+  if (!Array.isArray(defenses)) return [];
+  return defenses.map((d) => (String(d).toLowerCase() === 'evasion' ? 'Evasion' : d));
+}
+
 interface PartFilters {
   search: string;
   categoryFilter: string;
@@ -102,7 +108,11 @@ export function AdminPartsTab() {
   /** Number of option rows to show (0 = none until user clicks +). */
   const [optionSlotCount, setOptionSlotCount] = useState(0);
 
-  const DEFENSES = useMemo(() => ABILITIES_AND_DEFENSES.slice(6), []);
+  /** Six skill defenses plus Evasion (combat stat; allowed for part metadata). */
+  const targetedDefenseOptions = useMemo(
+    () => [...ABILITIES_AND_DEFENSES.slice(6), 'Evasion'],
+    []
+  );
 
   const [form, setForm] = useState<{
     name: string;
@@ -236,7 +246,7 @@ export function AdminPartsTab() {
       mechanic: Boolean((p as any).mechanic),
       percentage: Boolean((p as any).percentage),
       duration: Boolean((p as any).duration),
-      defense: Array.isArray(p.defense) ? [...p.defense] : [],
+      defense: normalizePartTargetedDefenses(p.defense),
       op_1_desc: op1 || '',
       op_1_en: op1 ? raw((p as any).op_1_en) as number | undefined : undefined,
       op_1_tp: op1 ? raw((p as any).op_1_tp) as number | undefined : undefined,
@@ -268,7 +278,7 @@ export function AdminPartsTab() {
       mechanic: Boolean((p as any).mechanic),
       percentage: Boolean((p as any).percentage),
       duration: Boolean((p as any).duration),
-      defense: Array.isArray(p.defense) ? [...p.defense] : [],
+      defense: normalizePartTargetedDefenses(p.defense),
       op_1_desc: op1 || '',
       op_1_en: op1 ? raw((p as any).op_1_en) as number | undefined : undefined,
       op_1_tp: op1 ? raw((p as any).op_1_tp) as number | undefined : undefined,
@@ -720,9 +730,9 @@ export function AdminPartsTab() {
             <ChipSelect
               label=""
               placeholder="Choose defenses this part targets"
-              options={DEFENSES.map((d) => ({
+              options={targetedDefenseOptions.map((d) => ({
                 value: d,
-                label: String(d).toLowerCase() === 'evasion' ? 'Evasion' : d,
+                label: d,
               }))}
               selectedValues={form.defense}
               onSelect={(v) => setForm((f) => ({ ...f, defense: [...f.defense, v] }))}
