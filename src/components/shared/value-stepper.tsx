@@ -5,8 +5,8 @@
  * Replaces various inline +/- button patterns with a consistent component.
  * 
  * Features:
- * - Hold-to-repeat with exponential acceleration (200ms → 50ms)
- * - Touch support for mobile devices
+ * - Hold-to-repeat with exponential acceleration (uses Pointer Events so touch does not double-fire with synthetic mouse events)
+ * - Touch support via pointer events (single stream vs touch + mouse)
  * - Color variants for different contexts (health, energy, neutral)
  * - Consistent styling across all pages
  * 
@@ -44,16 +44,16 @@ import { cn } from '@/lib/utils/cn';
 
 /**
  * Hook for handling hold-to-repeat with exponential acceleration.
- * On touch: single tap = one step (delay before repeat); hold = repeat after initial delay.
- * Starts at maxDelay (default 200ms), decreases to minDelay (default 50ms) as you hold.
+ * Single tap = one step (initial delay before repeat). Hold = repeat after delay, then accelerating intervals.
  */
 function useHoldRepeat(
   callback: () => void,
   enabled: boolean = true,
-  minDelay = 50,
-  maxDelay = 200,
-  /** Delay (ms) before first repeat so a quick tap only fires once. Default 400ms. */
-  initialDelay = 400
+  /** Fastest interval between repeats (ms). Kept ≥80 so mobile hold stays one step at a time. */
+  minDelay = 80,
+  maxDelay = 220,
+  /** Delay (ms) before first repeat so a quick tap only fires once. Default 450ms. */
+  initialDelay = 450
 ) {
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -79,7 +79,7 @@ function useHoldRepeat(
       const repeat = () => {
         if (!isHoldingRef.current) return;
         callbackRef.current();
-        delayRef.current = Math.max(minDelay, delayRef.current * 0.85);
+        delayRef.current = Math.max(minDelay, delayRef.current * 0.88);
         intervalRef.current = setTimeout(repeat, delayRef.current);
       };
       intervalRef.current = setTimeout(repeat, maxDelay);
@@ -116,7 +116,8 @@ function useHoldRepeat(
 
 const stepperButtonVariants = cva(
   // Base: 44px min on touch viewports (below md), compact on desktop per MOBILE_UX.md
-  'flex items-center justify-center font-bold rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed select-none min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] md:min-w-0 md:min-h-0',
+  // touch-manipulation: avoid 300ms delay and reduce accidental double-tap zoom on hold buttons
+  'touch-manipulation flex items-center justify-center font-bold rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed select-none min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] md:min-w-0 md:min-h-0',
   {
     variants: {
       size: {
@@ -293,11 +294,41 @@ export function ValueStepper({
       <button
         type="button"
         onClick={enableHoldRepeat ? undefined : handleDecrement}
-        onMouseDown={enableHoldRepeat ? decrementHold.start : undefined}
-        onMouseUp={enableHoldRepeat ? decrementHold.stop : undefined}
-        onMouseLeave={enableHoldRepeat ? decrementHold.stop : undefined}
-        onTouchStart={enableHoldRepeat ? decrementHold.start : undefined}
-        onTouchEnd={enableHoldRepeat ? decrementHold.stop : undefined}
+        onPointerDown={
+          enableHoldRepeat
+            ? (e) => {
+                if (!canDecrement) return;
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                e.currentTarget.setPointerCapture(e.pointerId);
+                decrementHold.start();
+              }
+            : undefined
+        }
+        onPointerUp={
+          enableHoldRepeat
+            ? (e) => {
+                try {
+                  e.currentTarget.releasePointerCapture(e.pointerId);
+                } catch {
+                  /* not captured */
+                }
+                decrementHold.stop();
+              }
+            : undefined
+        }
+        onPointerCancel={
+          enableHoldRepeat
+            ? (e) => {
+                try {
+                  e.currentTarget.releasePointerCapture(e.pointerId);
+                } catch {
+                  /* not captured */
+                }
+                decrementHold.stop();
+              }
+            : undefined
+        }
+        onLostPointerCapture={enableHoldRepeat ? () => decrementHold.stop() : undefined}
         disabled={!canDecrement}
         title={decrementTitle}
         aria-label={decrementTitle}
@@ -320,11 +351,41 @@ export function ValueStepper({
       <button
         type="button"
         onClick={enableHoldRepeat ? undefined : handleIncrement}
-        onMouseDown={enableHoldRepeat ? incrementHold.start : undefined}
-        onMouseUp={enableHoldRepeat ? incrementHold.stop : undefined}
-        onMouseLeave={enableHoldRepeat ? incrementHold.stop : undefined}
-        onTouchStart={enableHoldRepeat ? incrementHold.start : undefined}
-        onTouchEnd={enableHoldRepeat ? incrementHold.stop : undefined}
+        onPointerDown={
+          enableHoldRepeat
+            ? (e) => {
+                if (!canIncrement) return;
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                e.currentTarget.setPointerCapture(e.pointerId);
+                incrementHold.start();
+              }
+            : undefined
+        }
+        onPointerUp={
+          enableHoldRepeat
+            ? (e) => {
+                try {
+                  e.currentTarget.releasePointerCapture(e.pointerId);
+                } catch {
+                  /* not captured */
+                }
+                incrementHold.stop();
+              }
+            : undefined
+        }
+        onPointerCancel={
+          enableHoldRepeat
+            ? (e) => {
+                try {
+                  e.currentTarget.releasePointerCapture(e.pointerId);
+                } catch {
+                  /* not captured */
+                }
+                incrementHold.stop();
+              }
+            : undefined
+        }
+        onLostPointerCapture={enableHoldRepeat ? () => incrementHold.stop() : undefined}
         disabled={!canIncrement}
         title={incrementTitle}
         aria-label={incrementTitle}
@@ -378,11 +439,41 @@ export function DecrementButton({
     <button
       type="button"
       onClick={enableHoldRepeat ? undefined : onClick}
-      onMouseDown={enableHoldRepeat ? holdRepeat.start : undefined}
-      onMouseUp={enableHoldRepeat ? holdRepeat.stop : undefined}
-      onMouseLeave={enableHoldRepeat ? holdRepeat.stop : undefined}
-      onTouchStart={enableHoldRepeat ? holdRepeat.start : undefined}
-      onTouchEnd={enableHoldRepeat ? holdRepeat.stop : undefined}
+      onPointerDown={
+        enableHoldRepeat
+          ? (e) => {
+              if (disabled) return;
+              if (e.pointerType === 'mouse' && e.button !== 0) return;
+              e.currentTarget.setPointerCapture(e.pointerId);
+              holdRepeat.start();
+            }
+          : undefined
+      }
+      onPointerUp={
+        enableHoldRepeat
+          ? (e) => {
+              try {
+                e.currentTarget.releasePointerCapture(e.pointerId);
+              } catch {
+                /* not captured */
+              }
+              holdRepeat.stop();
+            }
+          : undefined
+      }
+      onPointerCancel={
+        enableHoldRepeat
+          ? (e) => {
+              try {
+                e.currentTarget.releasePointerCapture(e.pointerId);
+              } catch {
+                /* not captured */
+              }
+              holdRepeat.stop();
+            }
+          : undefined
+      }
+      onLostPointerCapture={enableHoldRepeat ? () => holdRepeat.stop() : undefined}
       disabled={disabled}
       title={title}
       aria-label={title}
@@ -415,11 +506,41 @@ export function IncrementButton({
     <button
       type="button"
       onClick={enableHoldRepeat ? undefined : onClick}
-      onMouseDown={enableHoldRepeat ? holdRepeat.start : undefined}
-      onMouseUp={enableHoldRepeat ? holdRepeat.stop : undefined}
-      onMouseLeave={enableHoldRepeat ? holdRepeat.stop : undefined}
-      onTouchStart={enableHoldRepeat ? holdRepeat.start : undefined}
-      onTouchEnd={enableHoldRepeat ? holdRepeat.stop : undefined}
+      onPointerDown={
+        enableHoldRepeat
+          ? (e) => {
+              if (disabled) return;
+              if (e.pointerType === 'mouse' && e.button !== 0) return;
+              e.currentTarget.setPointerCapture(e.pointerId);
+              holdRepeat.start();
+            }
+          : undefined
+      }
+      onPointerUp={
+        enableHoldRepeat
+          ? (e) => {
+              try {
+                e.currentTarget.releasePointerCapture(e.pointerId);
+              } catch {
+                /* not captured */
+              }
+              holdRepeat.stop();
+            }
+          : undefined
+      }
+      onPointerCancel={
+        enableHoldRepeat
+          ? (e) => {
+              try {
+                e.currentTarget.releasePointerCapture(e.pointerId);
+              } catch {
+                /* not captured */
+              }
+              holdRepeat.stop();
+            }
+          : undefined
+      }
+      onLostPointerCapture={enableHoldRepeat ? () => holdRepeat.stop() : undefined}
       disabled={disabled}
       title={title}
       aria-label={title}

@@ -1416,3 +1416,11 @@ Notes
 - Priority: High
 - Feedback: Allow capital letters in usernames while keeping uniqueness sane. Add user-management controls to manage what each role can do and the quotas per role (campaign count, users in campaigns, created characters, custom library limits for powers/techniques/armaments/creatures, and similar permissions), likely with a new DB table.
 - Expected: Usernames preserve entered casing (case-insensitive uniqueness), and admins can view/edit role-level permissions and quotas from the app with those limits enforced in create flows.
+
+**Raw Feedback Log — 2026-04-09 (Admin codex — new armament property + option not saving)**
+- Date: 2026-04-09
+- Context: Admin Codex → Armament Properties — create/save with option
+- Priority: High
+- Feedback: Created and saved a new armament property with an option; the option was not saved; IP appeared negative / did not save; TP and cost were 0 but displayed as 0/-.
+- Expected: Option description and option IP/TP/cost persist to `codex_properties`; list shows saved numeric values including 0 and negatives when set.
+- Disposition: Implemented 2026-04-09 — fixed `toColumnarPayload` key mapping (`op_1_*` → `op1*`) in `admin/codex/actions.ts`; admin list display for IP/TP/cost in `AdminPropertiesTab.tsx`.
