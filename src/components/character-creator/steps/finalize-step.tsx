@@ -308,7 +308,7 @@ function PortraitUpload() {
       </label>
 
       <div className="flex items-start gap-4">
-        <div className="relative w-24 h-32 rounded-lg overflow-hidden bg-surface-alt border-2 border-dashed border-border-light flex items-center justify-center">
+        <div className="relative w-28 h-28 rounded-lg overflow-hidden bg-surface-alt border-2 border-dashed border-border-light flex items-center justify-center">
           {draft.portrait ? (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -368,7 +368,7 @@ function PortraitUpload() {
         onClose={() => { setShowModal(false); setError(null); }}
         onConfirm={handleCropped}
         cropShape="rect"
-        aspect={3 / 4}
+        aspect={1}
         title="Character Portrait"
       />
     </div>

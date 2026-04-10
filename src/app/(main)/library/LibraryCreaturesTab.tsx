@@ -22,6 +22,7 @@ import { useSort } from '@/hooks/use-sort';
 import { useUserCreatures, useDuplicateCreature } from '@/hooks';
 import { Button, useToast } from '@/components/ui';
 import type { DisplayItem } from '@/types';
+import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
 
 const CREATURE_GRID_COLUMNS = '1.8fr 0.6fr 0.8fr 1fr 1fr 0.6fr 0.6fr';
 const CREATURE_HEADER_COLUMNS = [
@@ -61,14 +62,18 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
         const power = c.powerProficiency ?? 0;
         const martial = c.martialProficiency ?? 0;
         const archetype = power > 0 && martial > 0 ? 'Powered-Martial' : power > 0 ? 'Power' : martial > 0 ? 'Martial' : 'None';
+        const level = c.level ?? 1;
+        const abil = c.abilities || {};
+        const hpAlloc = c.hitPoints ?? c.hp ?? 0;
+        const enAlloc = c.energyPoints ?? 0;
         return {
           ...c,
           name: c.name || '',
           level: c.level ?? 0,
           size: c.size ?? '',
           type: c.type ?? '',
-          hp: c.hitPoints ?? c.hp ?? 0,
-          en: c.energyPoints ?? 0,
+          hp: calculateCreatureMaxHealth(level, abil, hpAlloc),
+          en: calculateCreatureMaxEnergy(level, abil, enAlloc),
           archetype,
         };
       })

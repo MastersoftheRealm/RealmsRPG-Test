@@ -219,7 +219,7 @@ export function AdminPropertiesTab() {
       // Update the cached codex immediately so the admin list reflects the save
       // even if the codex refetch is delayed (staleTime is long) or the network is slow.
       const savedId = editing?.id ?? id;
-      const rawType = data.type;
+      const rawType = String(data.type ?? '').toLowerCase();
       const savedType =
         rawType === 'general' || rawType === 'armor' || rawType === 'weapon' || rawType === 'shield'
           ? rawType
@@ -386,17 +386,26 @@ export function AdminPropertiesTab() {
                     { key: 'Type', value: typeLabel },
                     {
                       key: 'IP',
-                      value: p.base_ip && p.base_ip > 0 ? String(p.base_ip) : '-',
+                      value:
+                        typeof p.base_ip === 'number' && !Number.isNaN(p.base_ip)
+                          ? String(p.base_ip)
+                          : '-',
                       className: 'text-blue-600',
                     },
                     {
                       key: 'TP',
-                      value: (p.base_tp ?? p.tp_cost ?? 0) > 0 ? String(p.base_tp ?? p.tp_cost ?? 0) : '-',
+                      value: (() => {
+                        const v = p.base_tp ?? p.tp_cost;
+                        return typeof v === 'number' && !Number.isNaN(v) ? String(v) : '-';
+                      })(),
                       className: 'text-tp',
                     },
                     {
                       key: 'Cost',
-                      value: (p.base_c ?? p.gold_cost ?? 0) > 0 ? `×${p.base_c ?? p.gold_cost ?? 0}` : '-',
+                      value: (() => {
+                        const v = p.base_c ?? p.gold_cost;
+                        return typeof v === 'number' && !Number.isNaN(v) ? `×${v}` : '-';
+                      })(),
                     },
                   ]}
                   detailSections={detailSections}

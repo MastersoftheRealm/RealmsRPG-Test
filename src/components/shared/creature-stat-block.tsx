@@ -24,6 +24,7 @@ import {
   calculateSkillBonusWithProficiency,
   calculateSubSkillBonusWithProficiency,
 } from '@/lib/game/formulas';
+import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
 import { formatDamageDisplay, formatListCellLabel, normalizeRangeDisplay } from '@/lib/utils';
 import { ChevronDown } from 'lucide-react';
 
@@ -361,8 +362,12 @@ export function CreatureStatBlock({
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
   const { data: itemPropertiesDb = [] } = useItemProperties();
-  const hp = creature.hitPoints ?? creature.hp ?? 0;
-  const ep = creature.energyPoints ?? 0;
+  const level = creature.level ?? 1;
+  const abilitiesRecord = creature.abilities ?? {};
+  const hpAlloc = creature.hitPoints ?? creature.hp ?? 0;
+  const enAlloc = creature.energyPoints ?? 0;
+  const maxHpDisplay = calculateCreatureMaxHealth(level, abilitiesRecord, hpAlloc);
+  const maxEnDisplay = calculateCreatureMaxEnergy(level, abilitiesRecord, enAlloc);
   const archetype = formatArchetype(creature.powerProficiency, creature.martialProficiency);
   const subline = `Level ${creature.level ?? 1} ${creature.size ? formatListCellLabel(creature.size) : 'Medium'} ${formatListCellLabel(creature.type ?? 'creature')}`;
 
@@ -461,8 +466,8 @@ export function CreatureStatBlock({
               ? 'text-power-dark'
               : undefined,
     },
-    { key: 'hp', value: hp, align: 'center', highlight: true },
-    { key: 'en', value: ep, align: 'center' },
+    { key: 'hp', value: maxHpDisplay, align: 'center', highlight: true },
+    { key: 'en', value: maxEnDisplay, align: 'center' },
   ];
 
   const skillRows = useMemo(() => {
@@ -584,11 +589,11 @@ export function CreatureStatBlock({
                   </div>
                   <div className="flex flex-col p-3 rounded-lg border bg-success-50 dark:bg-surface border-success-200 dark:border-success-800/50 min-w-[92px]">
                   <span className="text-xs font-semibold uppercase tracking-wide text-success-700 dark:text-success-400">Health</span>
-                  <span className="text-lg font-bold text-success-800 dark:text-success-300">{hp}</span>
+                  <span className="text-lg font-bold text-success-800 dark:text-success-300">{maxHpDisplay}</span>
                   </div>
                   <div className="flex flex-col p-3 rounded-lg border bg-info-50 dark:bg-surface border-info-200 dark:border-info-800/50 min-w-[92px]">
                   <span className="text-xs font-semibold uppercase tracking-wide text-info-700 dark:text-info-400">Energy</span>
-                  <span className="text-lg font-bold text-info-800 dark:text-info-300">{ep}</span>
+                  <span className="text-lg font-bold text-info-800 dark:text-info-300">{maxEnDisplay}</span>
                   </div>
                 </div>
               </div>
