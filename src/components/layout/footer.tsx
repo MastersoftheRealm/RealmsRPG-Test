@@ -23,7 +23,7 @@ export function Footer() {
           <Link href="/terms" prefetch={false} className="font-semibold text-sm sm:text-base text-neutral-900 dark:text-white hover:text-primary-700 dark:hover:text-primary-300 transition-colors whitespace-nowrap min-h-[44px] flex items-center justify-center">Terms</Link>
           <Link href="/privacy" prefetch={false} className="font-semibold text-sm sm:text-base text-neutral-900 dark:text-white hover:text-primary-700 dark:hover:text-primary-300 transition-colors whitespace-nowrap min-h-[44px] flex items-center justify-center">Privacy</Link>
           <a href="mailto:RealmsRoleplayGame@gmail.com" className="font-semibold text-sm sm:text-base text-neutral-900 dark:text-white hover:text-primary-700 dark:hover:text-primary-300 transition-colors whitespace-nowrap min-h-[44px] flex items-center justify-center">Contact</a>
-          <a href="https://discord.com/invite/WW7uVEEdpk" target="_blank" rel="noopener noreferrer" className="font-semibold text-sm sm:text-base text-neutral-900 dark:text-white hover:text-primary-700 dark:hover:text-primary-300 transition-colors whitespace-nowrap min-h-[44px] flex items-center justify-center" aria-label="Join the community on Discord">Join the Community</a>
+          <a href="https://discord.gg/XbX4nFbxga" target="_blank" rel="noopener noreferrer" className="font-semibold text-sm sm:text-base text-neutral-900 dark:text-white hover:text-primary-700 dark:hover:text-primary-300 transition-colors whitespace-nowrap min-h-[44px] flex items-center justify-center" aria-label="Join the community on Discord">Join the Community</a>
         </nav>
       </div>
     </footer>

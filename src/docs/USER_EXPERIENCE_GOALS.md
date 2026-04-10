@@ -72,7 +72,7 @@ Future **Archetypes** (ready-to-play character builds) will live in Realms Libra
 
 ### 2.5 Community and campaigns
 
-- **Discord:** “Join the Community” link in header nav, footer, About page, and home CTAs. Single invite URL (e.g. `https://discord.com/invite/WW7uVEEdpk`) used everywhere.
+- **Discord:** “Join the Community” link in header nav, footer, About page, and home CTAs. Single invite URL (e.g. `https://discord.gg/XbX4nFbxga`) used everywhere.
 - **Campaigns:** Gated; after login, Campaigns page is the hub for “Run a campaign” / “Join campaign.” Optional future “Find a group” linking to Discord or LFG.
 
 ### 2.6 Progression and tone

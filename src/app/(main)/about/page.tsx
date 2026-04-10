@@ -16,7 +16,7 @@ import { Swords, Sparkles, BookOpen, Users, Wand2, Shield, Skull, Sword, Zap, Me
 import { REALMS_MOTTO } from '@/lib/constants/site-copy';
 
 // Discord link (same as home/footer)
-const DISCORD_URL = 'https://discord.com/invite/WW7uVEEdpk';
+const DISCORD_URL = 'https://discord.gg/XbX4nFbxga';
 
 // Order: d10, d12, d20, d4(center on load), d6, d8, d10 — 7 dice; selected always centered; cycling wraps (leftmost moves to right)
 const DICE_IMAGES = [

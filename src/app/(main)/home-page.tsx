@@ -18,7 +18,7 @@ import { OnboardingTour } from '@/components/shared';
 import { REALMS_MOTTO } from '@/lib/constants/site-copy';
 
 // Discord / community link (same as About page)
-const DISCORD_URL = 'https://discord.com/invite/WW7uVEEdpk';
+const DISCORD_URL = 'https://discord.gg/XbX4nFbxga';
 
 // Reviews data - quote can include inline links for CTAs
 const reviews: Array<{ quote: ReactNode; author: string }> = [
