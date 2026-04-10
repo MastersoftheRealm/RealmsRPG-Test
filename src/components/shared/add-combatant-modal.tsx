@@ -98,10 +98,9 @@ function CreatureLibraryTab({
 
     const level = selected.level || 1;
     const abilities = selected.abilities || {};
-    const vitality = abilities.vitality ?? abilities.vit ?? 0;
     const agility = abilities.agility ?? abilities.agi ?? 0;
     const acuity = abilities.acuity ?? abilities.acu ?? 0;
-    const maxHealth = calculateCreatureMaxHealth(level, vitality, selected.hitPoints ?? 0);
+    const maxHealth = calculateCreatureMaxHealth(level, abilities, selected.hitPoints ?? 0);
     const maxEnergy = calculateCreatureMaxEnergy(level, abilities, selected.energyPoints ?? 0);
     const evasion = 10 + agility;
 
@@ -186,7 +185,7 @@ function CreatureLibraryTab({
                 {creature.type && <span className="text-xs text-text-muted ml-1">({creature.type})</span>}
               </div>
               <div className="text-xs text-text-muted">
-                HP {calculateCreatureMaxHealth(creature.level || 1, creature.abilities?.vitality ?? 0, creature.hitPoints ?? 0)}
+                HP {calculateCreatureMaxHealth(creature.level || 1, creature.abilities || {}, creature.hitPoints ?? 0)}
                 {' / '}
                 EN {calculateCreatureMaxEnergy(creature.level || 1, creature.abilities || {}, creature.energyPoints ?? 0)}
               </div>

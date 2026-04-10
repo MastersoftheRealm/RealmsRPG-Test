@@ -66,6 +66,7 @@ import {
   calculateSkillBonusWithProficiency,
   calculateSubSkillBonusWithProficiency,
 } from '@/lib/game/formulas';
+import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
 import { useSort } from '@/hooks/use-sort';
 import { Button, Input, Select, Textarea, IconButton } from '@/components/ui';
 import { Skull, X } from 'lucide-react';
@@ -724,15 +725,10 @@ function CreatureCreatorContent() {
       0
     );
     
-    // Health = 8 + (vitality contribution) + hitPoints
-    // Negative vitality only applies at level 1, not multiplied by level
-    const vitalityContribution = abilities.vitality >= 0 
-      ? abilities.vitality * Math.max(1, level) 
-      : abilities.vitality; // Negative vitality only applies once (at level 1)
-    const maxHealth = 8 + vitalityContribution + creature.hitPoints;
-    // Energy minimum = highest non-vitality ability * level
+    // Max HP / EN — shared with encounter tracker & library (encounter-utils)
+    const maxHealth = calculateCreatureMaxHealth(level, abilities, creature.hitPoints);
     const minEnergy = highestNonVitality * Math.max(1, level);
-    const maxEnergy = minEnergy + creature.energyPoints;
+    const maxEnergy = calculateCreatureMaxEnergy(level, abilities, creature.energyPoints);
     
     // Speed = 6 + ceil(agility / 2) + size modifier
     const sizeData = CREATURE_SIZES.find(s => s.value === creature.size);

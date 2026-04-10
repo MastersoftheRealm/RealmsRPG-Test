@@ -2,7 +2,11 @@
  * Encounter Utility Functions
  * ============================
  * Helper calculations for encounters — creature HP/EN from library data.
- * Based on formulas from GAME_RULES.md and formulas.ts.
+ *
+ * Max HP / Max Energy must match `creature-creator/page.tsx` derived stats:
+ * - maxHealth = 8 + vitalityContribution + hitPoints (pool allocation)
+ * - vitalityContribution = vitality × max(1, level) if vitality ≥ 0, else vitality once
+ * - maxEnergy = highestNonVitality × max(1, level) + energyPoints
  */
 
 /**
@@ -18,47 +22,89 @@ export function computeSkillRollResult(roll: number, ds: number): { successes: n
   return { successes: 0, failures };
 }
 
-import { calculateHealthEnergyPool } from './formulas';
-import { CREATURE_CONSTANTS } from './constants';
+// =============================================================================
+// Creature abilities — align with creature-stat-block / creator
+// =============================================================================
 
-/**
- * Calculate a creature's max health.
- *
- * Max Health = pool base (level-based for creatures) + vitality + hitPoints allocation
- *
- * The pool base is: 26 + 12*(level-1)
- * Hit points are part of the health-energy split.
- * In the creature creator, `hitPoints` represents the number of pool points
- * allocated to health (each gives +1 max HP).
- */
-export function calculateCreatureMaxHealth(
-  level: number,
-  vitality: number,
-  hitPoints: number
+const PRIMARY_ABILITIES = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'] as const;
+type PrimaryAbility = (typeof PRIMARY_ABILITIES)[number];
+
+/** Read one ability from saved creature JSON (canonical + legacy + common shorthands). */
+export function getCreatureAbilityScore(
+  abilities: Record<string, number | undefined>,
+  key: PrimaryAbility
 ): number {
-  const pool = calculateHealthEnergyPool(level, 'CREATURE');
-  // hitPoints is the allocated portion of the pool; the creature's final HP
-  // is: hitPoints + vitality (vitality adds 1 HP each).
-  // However, if hitPoints=0 and no explicit allocation, default to half pool.
-  const hpAlloc = hitPoints > 0 ? hitPoints : Math.ceil(pool / 2);
-  return hpAlloc + (vitality || 0);
+  const direct = abilities[key];
+  if (typeof direct === 'number' && Number.isFinite(direct)) return direct;
+
+  if (key === 'vitality') {
+    const v = abilities.vit;
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
+  }
+  if (key === 'intelligence') {
+    const v = abilities.intellect;
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
+  }
+  if (key === 'acuity') {
+    const v = abilities.perception;
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
+  }
+  if (key === 'charisma') {
+    const v = abilities.willpower;
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
+  }
+
+  const shorthand: Partial<Record<PrimaryAbility, string>> = {
+    strength: 'str',
+    agility: 'agi',
+    acuity: 'acu',
+    intelligence: 'int',
+    charisma: 'cha',
+  };
+  const sh = shorthand[key];
+  if (sh) {
+    const v = abilities[sh];
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
+  }
+
+  return 0;
+}
+
+export function getCreatureVitality(abilities: Record<string, number | undefined>): number {
+  return getCreatureAbilityScore(abilities, 'vitality');
+}
+
+/** Highest score among non-vitality primaries (matches creature creator TP baseline). */
+export function getCreatureHighestNonVitality(abilities: Record<string, number | undefined>): number {
+  let max = 0;
+  for (const k of PRIMARY_ABILITIES) {
+    if (k === 'vitality') continue;
+    max = Math.max(max, getCreatureAbilityScore(abilities, k));
+  }
+  return max;
 }
 
 /**
- * Calculate a creature's max energy.
- *
- * Max Energy = remaining pool points (pool - hitPoints) + aptitude/resonance bonus
- * In simpler terms: energyPoints + relevant ability.
+ * Max Health — same formula as creature creator summary / HealthEnergyAllocator.
+ */
+export function calculateCreatureMaxHealth(
+  level: number,
+  abilities: Record<string, number | undefined>,
+  hitPoints: number
+): number {
+  const vitality = getCreatureVitality(abilities);
+  const vitalityContribution = vitality >= 0 ? vitality * Math.max(1, level) : vitality;
+  return 8 + vitalityContribution + (hitPoints || 0);
+}
+
+/**
+ * Max Energy — same formula as creature creator (minEnergy + pool allocation).
  */
 export function calculateCreatureMaxEnergy(
   level: number,
   abilities: Record<string, number | undefined>,
   energyPoints: number
 ): number {
-  const pool = calculateHealthEnergyPool(level, 'CREATURE');
-  const enAlloc = energyPoints > 0 ? energyPoints : Math.floor(pool / 2);
-  // Use aptitude or resonance as the energy-boosting ability
-  const aptitude = abilities?.aptitude ?? abilities?.apt ?? 0;
-  const resonance = abilities?.resonance ?? abilities?.res ?? 0;
-  return enAlloc + Math.max(aptitude || 0, resonance || 0);
+  const highest = getCreatureHighestNonVitality(abilities);
+  return highest * Math.max(1, level) + (energyPoints || 0);
 }
