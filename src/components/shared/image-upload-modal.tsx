@@ -4,7 +4,7 @@
  * Modal for uploading and cropping character portraits and profile pictures.
  * Features:
  * - Upload from device, drag and drop
- * - Crop frame (rectangle for portrait, circle for profile)
+ * - Crop frame (square for character sheet portrait, circle for profile)
  * - Drag/pinch to position and scale within frame
  * - Preview before confirming
  * - Accepted formats and size info
@@ -34,7 +34,7 @@ export interface ImageUploadModalProps {
   onConfirm: (blob: Blob) => void | Promise<void>;
   /** Shape of the crop frame */
   cropShape?: CropShape;
-  /** Aspect ratio of the crop (width/height). Default: 3/4 for portrait, 1 for round */
+  /** Aspect ratio of the crop (width/height). Default: 1 (square) for rect; pass e.g. 3/4 for tall portrait. */
   aspect?: number;
   /** Title shown in the modal header */
   title?: string;
@@ -122,7 +122,7 @@ export function ImageUploadModal({
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const effectiveAspect = aspect ?? (cropShape === 'round' ? 1 : 3 / 4);
+  const effectiveAspect = aspect ?? 1;
 
   const resetState = useCallback(() => {
     setImageSrc(null);
@@ -210,10 +210,13 @@ export function ImageUploadModal({
     }
   }, [imageSrc, croppedAreaPixels, onConfirm, handleClose]);
 
-  // Recommended size text
-  const sizeHint = cropShape === 'round'
-    ? 'Recommended: square image, at least 200x200px'
-    : 'Recommended: portrait orientation (3:4), at least 300x400px';
+  // Recommended size text (modal description)
+  const sizeHint =
+    cropShape === 'round'
+      ? 'Recommended: square image, at least 200x200px'
+      : Math.abs(effectiveAspect - 1) < 0.001
+        ? 'Recommended: square crop to match the character sheet portrait frame, at least 300×300px'
+        : 'Recommended: match your chosen aspect ratio; use a high-resolution source image';
 
   return (
     <Modal

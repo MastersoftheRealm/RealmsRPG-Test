@@ -817,7 +817,7 @@ export function SheetHeader({
         onClose={() => setShowUploadModal(false)}
         onConfirm={handleCroppedImage}
         cropShape="rect"
-        aspect={3 / 4}
+        aspect={1}
         title="Upload Character Portrait"
       />
     </div>
