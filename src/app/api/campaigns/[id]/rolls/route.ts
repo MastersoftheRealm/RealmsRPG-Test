@@ -95,11 +95,14 @@ export async function GET(
 
     // Only id + data + created_at: works on DBs that have not run campaign_rolls list-column migration;
     // toEntry() already reads characterId, type, etc. from JSONB `data` when list columns are absent.
+    // Order: newest first. Rows with NULL created_at (legacy inserts) sort last so LIMIT 50 still returns
+    // recent rolls once POST sets created_at; id breaks ties.
     const { data: rows, error: rollsError } = await supabase
       .from('campaign_rolls')
       .select('id, data, created_at')
       .eq('campaign_id', campaignId)
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false, nullsFirst: false })
+      .order('id', { ascending: false })
       .limit(MAX_CAMPAIGN_ROLLS);
 
     if (rollsError) {
@@ -180,10 +183,12 @@ export async function POST(
     };
 
     const rollId = crypto.randomUUID();
+    const createdAt = new Date().toISOString();
     const { error: insertError } = await supabase.from('campaign_rolls').insert({
       id: rollId,
       campaign_id: campaignId,
       data: rollData,
+      created_at: createdAt,
       character_id: characterId,
       user_id: user.uid,
       type: roll.type,
@@ -205,7 +210,8 @@ export async function POST(
         .from('campaign_rolls')
         .select('id')
         .eq('campaign_id', campaignId)
-        .order('created_at', { ascending: true })
+        .order('created_at', { ascending: true, nullsFirst: true })
+        .order('id', { ascending: true })
         .limit((count ?? 0) - MAX_CAMPAIGN_ROLLS);
       const idsToDelete = (oldRows ?? []).map((r: { id: string }) => r.id);
       if (idsToDelete.length) {

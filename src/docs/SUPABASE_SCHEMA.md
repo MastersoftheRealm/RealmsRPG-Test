@@ -114,7 +114,7 @@ Single document in `data`; list columns for list/filter. Realtime: `public.chara
 |-------|--------|-------------|
 | `campaigns` | Scalar + JSONB | id (PK), owner_id, name, description, invite_code, characters (JSONB), memberIds (JSONB), owner_username, created_at, updated_at |
 | `campaign_members` | Columnar | campaign_id (PK), user_id (PK); FK campaign_id → campaigns(id) |
-| `campaign_rolls` | Hybrid | id (PK, required on insert unless DB default), campaign_id (FK), data (JSONB), created_at; list columns: character_id, user_id, type, title |
+| `campaign_rolls` | Hybrid | id (PK, required on insert unless DB default), campaign_id (FK), data (JSONB), **created_at** (app POST sets ISO `now`; optional DB `DEFAULT now()`); list columns: character_id, user_id, type, title |
 
 Membership source of truth: `campaign_members`. Realtime: `public.campaign_rolls`.
 

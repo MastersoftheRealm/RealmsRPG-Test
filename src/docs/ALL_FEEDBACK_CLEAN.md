@@ -1445,3 +1445,11 @@ Notes
 - Priority: High
 - Feedback: In feat sorting/filtering (especially when adding feats), some feats with requirements like "Might +3" (and other Defense requirements) get filtered out even when the character’s defense bonus meets/exceeds the requirement. The requirement is stored under "ability requirements" even though it can be a Defense.
 - Expected: Defense requirements (Might/Fortitude/Reflexes/Discernment/Mental Fortitude/Resolve) should be evaluated against the character’s defense bonus (ability + allocated defense increases), not against core abilities, so qualified feats remain visible/sortable.
+
+**Raw Feedback Log — 2026-04-10 (Campaign roll log not shared / recent rolls missing)**
+- Date: 2026-04-10
+- Context: Campaigns — shared roll log; Supabase `campaign_rolls` export
+- Priority: High
+- Feedback: Campaign roll logs are not taking/shared right; they do not update with each player’s rolls. Recent rolls do not appear to add (CSV export shows empty `created_at`, list columns populated from JSON).
+- Expected: Every member sees the same ordered campaign roll history; newest rolls appear after each player rolls; DB/API list reflects inserts reliably.
+- Disposition: Implemented 2026-04-10 — POST sets `created_at`; GET orders `created_at DESC NULLS LAST` + `id` tie-break; trim-old uses consistent ascending order; optional SQL backfill `sql/supabase-campaign-rolls-created-at-backfill.sql`.
