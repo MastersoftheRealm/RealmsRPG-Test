@@ -32,11 +32,13 @@ import {
   type Species,
   type Skill,
 } from '@/hooks';
+import { useGameRules } from '@/hooks/use-game-rules';
 import {
   calculateArchetypeProgression,
   calculateSkillPointsForEntity,
   resolveParentSkillNameForSubSkill,
 } from '@/lib/game/formulas';
+import { getArchetypeAbilityScore } from '@/lib/game/calculations';
 import type { Character, Item } from '@/types';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
@@ -50,6 +52,7 @@ export default function CampaignCharacterViewPage() {
 }
 
 function CampaignCharacterViewContent() {
+  const { rules } = useGameRules();
   const params = useParams();
   const campaignId = params.id as string;
   const userId = params.userId as string;
@@ -136,7 +139,10 @@ function CampaignCharacterViewContent() {
     fetchCharacter();
   }, [campaignId, userId, characterId]);
 
-  const calculatedStats = character ? calculateStats(character) : null;
+  const calculatedStats = useMemo(
+    () => (character ? calculateStats(character, rules) : null),
+    [character, rules]
+  );
   const powersForEnrich = (libraryForView?.powers as typeof userPowers) ?? userPowers;
   const techniquesForEnrich = (libraryForView?.techniques as typeof userTechniques) ?? userTechniques;
   const itemsForEnrich = (libraryForView?.items as typeof userItems) ?? userItems;
@@ -350,16 +356,16 @@ function CampaignCharacterViewContent() {
                     speciesTraits: character.speciesTraits,
                   }}
                   speciesTraitsFromCodex={[]}
-  archetypeAbility={character.abilities?.[character.pow_abil as keyof typeof character.abilities] || 0}
-  proficiencies={character.proficiencies}
-  onProficienciesChange={() => {}}
-  weight={character.weight}
-  height={character.height}
-  appearance={character.appearance}
-  archetypeDesc={character.archetypeDesc}
-  notes={character.notes}
-  abilities={character.abilities}
-  namedNotes={character.namedNotes}
+                  archetypeAbility={getArchetypeAbilityScore(character)}
+                  proficiencies={character.proficiencies}
+                  onProficienciesChange={() => {}}
+                  weight={character.weight}
+                  height={character.height}
+                  appearance={character.appearance}
+                  archetypeDesc={character.archetypeDesc}
+                  notes={character.notes}
+                  abilities={character.abilities}
+                  namedNotes={character.namedNotes}
                 />
               </div>
             </>

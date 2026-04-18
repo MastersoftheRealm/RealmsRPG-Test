@@ -10,6 +10,7 @@ import { use, useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { getCharacter, saveCharacter, type LibraryForView } from '@/services/character-service';
 import { useAuth, useAutoSave, useCampaignsFull, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useMergedSpecies, useCodexFeats, useCodexSkills, useEquipment, usePublicLibrary, type Species, type Trait, type Skill } from '@/hooks';
+import { useGameRules } from '@/hooks/use-game-rules';
 import { LoadingState } from '@/components/ui';
 import { enrichCharacterData, cleanForSave } from '@/lib/data-enrichment';
 import {
@@ -57,6 +58,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
   const { id } = use(params);
   const { user, loading: authLoading } = useAuth();
   const { showToast } = useToast();
+  const { rules } = useGameRules();
   
   const [character, setCharacter] = useState<Character | null>(null);
   const [libraryForView, setLibraryForView] = useState<LibraryForView | undefined>(undefined);
@@ -293,11 +295,11 @@ export default function CharacterSheetPage({ params }: PageParams) {
   const isOwner = Boolean(character && user && character.userId === user.uid);
   const effectiveEditMode = isEditMode && isOwner;
 
-  // Calculate stats
+  // Calculate stats (pass DB core rules so e.g. baseHealth reflects admin updates)
   const calculatedStats = useMemo(() => {
     if (!character) return null;
-    return calculateStats(character);
-  }, [character]);
+    return calculateStats(character, rules);
+  }, [character, rules]);
 
   // Calculate point budgets for edit mode
   const pointBudgets = useMemo(() => {
@@ -1948,7 +1950,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   }}
                   // Proficiencies tab props
                   level={character.level}
-                  archetypeAbility={character.abilities?.[character.pow_abil as keyof typeof character.abilities] || 0}
+                  archetypeAbility={getArchetypeAbilityScore(character)}
                   powerPartsDb={powerPartsDb}
                   techniquePartsDb={techniquePartsDb}
                   itemPropertiesDb={itemPropertiesDb}
@@ -2102,7 +2104,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                         setCharacter(prev => prev ? { ...prev, namedNotes: (prev.namedNotes || []).filter(note => note.id !== id) } : null);
                       }}
                       level={character.level}
-                      archetypeAbility={character.abilities?.[character.pow_abil as keyof typeof character.abilities] || 0}
+                      archetypeAbility={getArchetypeAbilityScore(character)}
                       powerPartsDb={powerPartsDb}
                       techniquePartsDb={techniquePartsDb}
                       itemPropertiesDb={itemPropertiesDb}

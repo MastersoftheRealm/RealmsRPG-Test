@@ -18,6 +18,7 @@ import {
   calculateMaxArchetypeFeats,
   calculateMaxCharacterFeats,
 } from '@/lib/game/formulas';
+import { getArchetypeAbilityScore } from '@/lib/game/calculations';
 import type { Character, ArchetypeCategory } from '@/types';
 
 interface LevelUpModalProps {
@@ -80,19 +81,8 @@ export function LevelUpModal({
   const currentLevel = character.level || 1;
   const maxLevel = 20; // Max level cap
   
-  // Calculate highest archetype ability for training points
-  const highestAbility = useMemo(() => {
-    const abilities = character.abilities || {};
-    const archAbility = character.archetype?.ability?.toLowerCase();
-    const martialAbility = character.mart_abil?.toLowerCase();
-    const powerAbility = character.pow_abil?.toLowerCase();
-    
-    const relevantAbilities = [archAbility, martialAbility, powerAbility]
-      .filter(Boolean)
-      .map(a => abilities[a as keyof typeof abilities] || 0);
-    
-    return Math.max(...relevantAbilities, 0);
-  }, [character]);
+  // Highest of power + martial archetype ability scores (matches TP formula / sheet)
+  const highestAbility = useMemo(() => getArchetypeAbilityScore(character), [character]);
   
   // Calculate level gains
   const gains = useMemo(() => {
