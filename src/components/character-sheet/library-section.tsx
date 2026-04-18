@@ -10,6 +10,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { cn, formatDamageDisplay, formatActionTypeForDisplay, normalizeRangeDisplay, formatListCellLabel } from '@/lib/utils';
+import { trainingPointsForItemPropertyRef, type ItemPropertyTpRow } from '@/lib/calculators/item-calc';
 import { Plus, X } from 'lucide-react';
 import { useRollsOptional } from './roll-context';
 import { NotesTab, type CharacterNote } from './notes-tab';
@@ -232,41 +233,40 @@ function propertiesToPartData(
   codexProperties: CodexProperty[] = []
 ): PartData[] {
   if (!properties || properties.length === 0) return [];
-  
-  return properties.map(prop => {
+  const db = codexProperties as unknown as ItemPropertyTpRow[];
+
+  return properties.map((prop) => {
     if (typeof prop === 'string') {
-      // String-only property - look up in Codex for description
-      const codexProp = codexProperties.find(p => p.name?.toLowerCase() === prop.toLowerCase());
-      return { 
+      const codexProp = codexProperties.find((p) => p.name?.toLowerCase() === prop.toLowerCase());
+      const tp = trainingPointsForItemPropertyRef(prop, db);
+      return {
         name: prop,
         description: codexProp?.description,
-        tpCost: codexProp?.base_tp ?? codexProp?.tp_cost,
-        category: 'property'
+        tpCost: tp > 0 ? tp : undefined,
+        category: 'property',
       };
     }
-    
-    // Property object - look up in Codex by id or name, include option levels
+
     const propObj = prop as PropertyWithLevel;
     const propId = propObj.id;
     const propName = propObj.name || 'Unknown Property';
-    
-    let codexProp = codexProperties.find(p => propId && String(p.id) === String(propId));
+
+    let codexProp = codexProperties.find((p) => propId && String(p.id) === String(propId));
     if (!codexProp) {
-      codexProp = codexProperties.find(p => p.name?.toLowerCase() === propName.toLowerCase());
+      codexProp = codexProperties.find((p) => p.name?.toLowerCase() === propName.toLowerCase());
     }
-    
-    const baseTp = codexProp?.base_tp ?? codexProp?.tp_cost ?? 0;
-    const optLevel = propObj.op_1_lvl ?? 1;
-    const tpCost = baseTp * optLevel;
-    
-    return { 
+
+    const tp = trainingPointsForItemPropertyRef(propObj, db);
+
+    return {
       name: codexProp?.name || propName,
       description: codexProp?.description,
-      tpCost: tpCost > 0 ? tpCost : undefined,
+      tpCost: tp > 0 ? tp : undefined,
       category: 'property',
-      optionLevels: (propObj.op_1_lvl ?? propObj.op_2_lvl ?? propObj.op_3_lvl) != null
-        ? { opt1: propObj.op_1_lvl, opt2: propObj.op_2_lvl, opt3: propObj.op_3_lvl }
-        : undefined,
+      optionLevels:
+        (propObj.op_1_lvl ?? propObj.op_2_lvl ?? propObj.op_3_lvl) != null
+          ? { opt1: propObj.op_1_lvl, opt2: propObj.op_2_lvl, opt3: propObj.op_3_lvl }
+          : undefined,
     };
   });
 }

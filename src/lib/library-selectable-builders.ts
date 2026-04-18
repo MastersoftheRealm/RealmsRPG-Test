@@ -6,7 +6,11 @@
 import type { ColumnValue, ChipData } from '@/components/shared/grid-list-row';
 import type { SelectableItem } from '@/components/shared/unified-selection-modal';
 import { formatDamageDisplay, formatActionTypeForDisplay, formatListCellLabel } from '@/lib/utils';
-import { deriveShieldAmountFromProperties, deriveShieldDamageFromProperties } from '@/lib/calculators';
+import {
+  deriveShieldAmountFromProperties,
+  deriveShieldDamageFromProperties,
+  trainingPointsForItemPropertyRef,
+} from '@/lib/calculators';
 import { derivePowerDisplay } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
@@ -243,16 +247,15 @@ export function buildSelectableItem(
     const propertyChips: ChipData[] = props.map((prop) => {
       const propName = typeof prop === 'string' ? prop : prop?.name ?? '';
       const dbProp = itemPropertiesDb.find((p) => p.name?.toLowerCase() === String(propName).toLowerCase());
-      const baseTp = dbProp?.base_tp ?? (dbProp as { tp_cost?: number })?.tp_cost ?? 0;
-      const optLevel = typeof prop === 'object' && prop?.op_1_lvl != null ? prop.op_1_lvl : 1;
-      const cost = baseTp * optLevel;
+      const cost = trainingPointsForItemPropertyRef(prop, itemPropertiesDb);
+      const lvl = typeof prop === 'object' && prop?.op_1_lvl != null ? prop.op_1_lvl : 0;
       const baseDesc = dbProp?.description;
       const descWithOpt = baseDesc?.trim()
-        ? optLevel > 1
-          ? `${baseDesc.trim()}\n\nOption 1: Lv.${optLevel}`
+        ? lvl > 1
+          ? `${baseDesc.trim()}\n\nOption 1: Lv.${lvl}`
           : baseDesc.trim()
-        : optLevel > 1
-          ? `Option 1: Lv.${optLevel}`
+        : lvl > 1
+          ? `Option 1: Lv.${lvl}`
           : undefined;
       return {
         name: dbProp?.name || propName,
@@ -260,7 +263,7 @@ export function buildSelectableItem(
         cost: cost > 0 ? cost : undefined,
         costLabel: 'TP',
         category: (cost > 0 ? 'cost' : 'default') as 'cost' | 'default',
-        level: optLevel > 1 ? optLevel : undefined,
+        level: lvl > 1 ? lvl : undefined,
       };
     });
     detailSections =

@@ -5,7 +5,13 @@
  * Provides cost calculation and display helpers for items.
  */
 
-import { PROPERTY_IDS, GENERAL_PROPERTY_IDS, GENERAL_PROPERTY_NAMES, findByIdOrName } from '@/lib/id-constants';
+import {
+  PROPERTY_IDS,
+  GENERAL_PROPERTY_IDS,
+  GENERAL_PROPERTY_NAMES,
+  findByIdOrName,
+  type HasIdAndName,
+} from '@/lib/id-constants';
 import type { ItemProperty } from '@/hooks/use-rtdb';
 
 // Re-export for convenience
@@ -22,6 +28,19 @@ export interface ItemPropertyPayload {
   op_1_lvl?: number;
   property?: ItemProperty;
 }
+
+/** Codex / hook row shape for property TP lookup (IDs may be string or number from API). */
+export type ItemPropertyTpRow = HasIdAndName & {
+  description?: string;
+  base_tp?: number;
+  tp_cost?: number;
+  op_1_tp?: number;
+  base_ip?: number;
+  op_1_ip?: number;
+  base_c?: number;
+  op_1_c?: number;
+  mechanic?: boolean;
+};
 
 export interface ItemCostResult {
   totalIP: number;
@@ -217,33 +236,96 @@ export function calculateCurrencyCostAndRarity(
 // Legacy alias
 export const calculateGoldCostAndRarity = calculateCurrencyCostAndRarity;
 
+/** Normalize API / UI property refs (string name or object with optional id, name, op_1_lvl) for lookups. */
+function normalizeItemPropertyRef(ref: unknown): ItemPropertyPayload {
+  if (typeof ref === 'string') return { name: ref };
+  if (!ref || typeof ref !== 'object') return {};
+  const o = ref as Record<string, unknown>;
+  let id: number | undefined;
+  const idRaw = o.id;
+  if (typeof idRaw === 'number' && !Number.isNaN(idRaw)) id = idRaw;
+  else if (typeof idRaw === 'string') {
+    const n = parseInt(idRaw, 10);
+    if (!Number.isNaN(n)) id = n;
+  }
+  const opRaw = o.op_1_lvl;
+  const op_1_lvl =
+    typeof opRaw === 'number' && !Number.isNaN(opRaw)
+      ? opRaw
+      : typeof opRaw === 'string'
+        ? (() => {
+            const n = parseInt(opRaw, 10);
+            return Number.isNaN(n) ? 0 : n;
+          })()
+        : 0;
+  return {
+    id,
+    name: typeof o.name === 'string' ? o.name : undefined,
+    op_1_lvl,
+  };
+}
+
+/** Resolve codex row for a saved property reference (id, name, or string name). Case-insensitive name fallback. */
+export function resolveItemPropertyCodexRow(
+  ref: unknown,
+  propertiesData: readonly ItemPropertyTpRow[]
+): ItemPropertyTpRow | undefined {
+  const payload = normalizeItemPropertyRef(ref);
+  const rows = [...propertiesData];
+  let data = findByIdOrName(rows, payload);
+  if (!data && payload.name) {
+    const n = String(payload.name).toLowerCase();
+    data = rows.find((p) => String(p.name ?? '').toLowerCase() === n);
+  }
+  return data;
+}
+
+/**
+ * Training points for one property line: base TP (+ legacy tp_cost) + option-1 TP × op_1_lvl.
+ * Matches `calculateItemCosts` per property (used for chips so TP is visible when base is 0 but options cost TP).
+ */
+export function trainingPointsForItemPropertyRef(
+  ref: unknown,
+  propertiesData: readonly ItemPropertyTpRow[]
+): number {
+  const payload = normalizeItemPropertyRef(ref);
+  const data = resolveItemPropertyCodexRow(payload, propertiesData);
+  if (!data) return 0;
+  const lvl = payload.op_1_lvl || 0;
+  const baseTP =
+    (data as unknown as { base_tp?: number }).base_tp ||
+    (data as unknown as { tp_cost?: number }).tp_cost ||
+    0;
+  const op1TP = (data as unknown as { op_1_tp?: number }).op_1_tp || 0;
+  return baseTP + op1TP * lvl;
+}
+
 /**
  * Calculate total IP, TP, and Currency from properties.
  */
 export function calculateItemCosts(
   properties: ItemPropertyPayload[],
-  propertiesData: ItemProperty[]
+  propertiesData: readonly ItemPropertyTpRow[]
 ): ItemCostResult {
   let totalIP = 0;
   let totalTP = 0;
   let totalCurrency = 0;
 
   (properties || []).forEach((ref) => {
-    const data = findByIdOrName(propertiesData, ref);
+    const data = resolveItemPropertyCodexRow(ref, propertiesData);
     if (!data) return;
 
-    const lvl = ref.op_1_lvl || 0;
+    const payload = normalizeItemPropertyRef(ref);
+    const lvl = payload.op_1_lvl || 0;
 
     // Access properties with optional chaining for safety
     const baseIP = (data as unknown as { base_ip?: number }).base_ip || 0;
     const op1IP = (data as unknown as { op_1_ip?: number }).op_1_ip || 0;
-    const baseTP = (data as unknown as { base_tp?: number }).base_tp || 0;
-    const op1TP = (data as unknown as { op_1_tp?: number }).op_1_tp || 0;
     const baseC = (data as unknown as { base_c?: number }).base_c || 0;
     const op1C = (data as unknown as { op_1_c?: number }).op_1_c || 0;
 
     totalIP += baseIP + op1IP * lvl;
-    totalTP += baseTP + op1TP * lvl;
+    totalTP += trainingPointsForItemPropertyRef(ref, propertiesData);
     totalCurrency += baseC + op1C * lvl;
   });
 

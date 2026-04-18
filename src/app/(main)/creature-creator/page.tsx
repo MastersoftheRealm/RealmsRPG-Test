@@ -54,6 +54,7 @@ import { derivePowerDisplay } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
+import { trainingPointsForItemPropertyRef } from '@/lib/calculators';
 import type { ChipData } from '@/components/shared/grid-list-row';
 import { 
   calculateCreatureTrainingPoints, 
@@ -412,20 +413,19 @@ function CreatureCreatorContent() {
       const propertyChips: ChipData[] = props.map((prop) => {
         const propName = typeof prop === 'string' ? prop : (prop?.name ?? '');
         const dbProp = itemPropertiesDb.find((p: { name?: string }) => p.name?.toLowerCase() === String(propName).toLowerCase());
-        const baseTp = dbProp?.base_tp ?? (dbProp as { tp_cost?: number })?.tp_cost ?? 0;
-        const optLevel = typeof prop === 'object' && prop?.op_1_lvl != null ? prop.op_1_lvl : 1;
-        const cost = baseTp * optLevel;
+        const cost = trainingPointsForItemPropertyRef(prop, itemPropertiesDb);
+        const lvl = typeof prop === 'object' && prop?.op_1_lvl != null ? prop.op_1_lvl : 0;
         const baseDesc = dbProp?.description;
         const descWithOpt = baseDesc?.trim()
-          ? (optLevel > 1 ? `${baseDesc.trim()}\n\nOption 1: Lv.${optLevel}` : baseDesc.trim())
-          : (optLevel > 1 ? `Option 1: Lv.${optLevel}` : undefined);
+          ? (lvl > 1 ? `${baseDesc.trim()}\n\nOption 1: Lv.${lvl}` : baseDesc.trim())
+          : (lvl > 1 ? `Option 1: Lv.${lvl}` : undefined);
         return {
           name: dbProp?.name || propName,
           description: descWithOpt,
           cost: cost > 0 ? cost : undefined,
           costLabel: 'TP',
           category: cost > 0 ? ('cost' as const) : ('default' as const),
-          level: optLevel > 1 ? optLevel : undefined,
+          level: lvl > 1 ? lvl : undefined,
         };
       });
       const totalCost = propertyChips.reduce((sum, c) => sum + (c.cost ?? 0), 0) || undefined;

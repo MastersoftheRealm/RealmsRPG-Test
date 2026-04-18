@@ -33,7 +33,12 @@ import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-c
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators/technique-calc';
 import type { ItemPropertyPayload } from '@/lib/calculators/item-calc';
-import { calculateItemCosts, calculateCurrencyCostAndRarity, formatRange as formatItemRange } from '@/lib/calculators/item-calc';
+import {
+  calculateItemCosts,
+  calculateCurrencyCostAndRarity,
+  formatRange as formatItemRange,
+  trainingPointsForItemPropertyRef,
+} from '@/lib/calculators/item-calc';
 import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -435,11 +440,24 @@ function PublicItemsList({ onLoginRequired, readOnly = false }: { onLoginRequire
       const { currencyCost, rarity } = calculateCurrencyCostAndRarity(costs.totalCurrency, costs.totalIP);
       const rangeStr = formatItemRange(props);
       const damageStr = formatDamageDisplay(item.damage) || '';
-      const parts: ChipData[] = ((item.properties as Array<{ id?: unknown; name?: string; op_1_lvl?: number }>) || []).map(prop => ({
-        name: prop.name || '',
-        cost: prop.op_1_lvl ?? 1,
-        costLabel: 'Lvl',
-      }));
+      const parts: ChipData[] = (
+        (item.properties as Array<string | { id?: unknown; name?: string; op_1_lvl?: number }>) || []
+      ).map((prop) => {
+        const propName = typeof prop === 'string' ? prop : (prop.name || '');
+        const dbProp = propertiesDb.find(
+          (p: { name?: string }) => p.name?.toLowerCase() === String(propName).toLowerCase()
+        );
+        const cost = trainingPointsForItemPropertyRef(prop, propertiesDb);
+        const lvl = typeof prop === 'object' && prop && prop.op_1_lvl != null ? prop.op_1_lvl : 0;
+        return {
+          name: dbProp?.name || propName || '',
+          description: dbProp?.description || '',
+          cost: cost > 0 ? cost : undefined,
+          costLabel: 'TP',
+          category: (cost > 0 ? 'cost' : 'default') as 'cost' | 'default',
+          level: lvl > 1 ? lvl : undefined,
+        };
+      });
       return {
         id: String(item.id ?? item.docId ?? ''),
         raw: item,

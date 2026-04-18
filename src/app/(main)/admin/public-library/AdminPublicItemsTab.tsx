@@ -26,6 +26,7 @@ import {
   calculateItemCosts,
   calculateCurrencyCostAndRarity,
   formatRange,
+  trainingPointsForItemPropertyRef,
 } from '@/lib/calculators/item-calc';
 import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { Shield } from 'lucide-react';
@@ -51,11 +52,24 @@ export function AdminPublicItemsTab() {
       const rangeStr = formatRange(props);
       const damageStr = formatDamageDisplay(item.damage) || '';
       const typeStr = formatListCellLabel(item.type);
-      const parts: ChipData[] = ((item.properties as Array<{ id?: unknown; name?: string; op_1_lvl?: number }>) || []).map((prop) => ({
-        name: prop.name || '',
-        cost: prop.op_1_lvl ?? 1,
-        costLabel: 'Lvl',
-      }));
+      const parts: ChipData[] = (
+        (item.properties as Array<string | { id?: unknown; name?: string; op_1_lvl?: number }>) || []
+      ).map((prop) => {
+        const propName = typeof prop === 'string' ? prop : (prop.name || '');
+        const dbProp = propertiesDb.find(
+          (p: { name?: string }) => p.name?.toLowerCase() === String(propName).toLowerCase()
+        );
+        const cost = trainingPointsForItemPropertyRef(prop, propertiesDb);
+        const lvl = typeof prop === 'object' && prop && prop.op_1_lvl != null ? prop.op_1_lvl : 0;
+        return {
+          name: dbProp?.name || propName || '',
+          description: dbProp?.description || '',
+          cost: cost > 0 ? cost : undefined,
+          costLabel: 'TP',
+          category: (cost > 0 ? 'cost' : 'default') as 'cost' | 'default',
+          level: lvl > 1 ? lvl : undefined,
+        };
+      });
       return {
         id: String(item.id ?? item.docId ?? ''),
         raw: item,

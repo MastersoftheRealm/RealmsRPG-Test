@@ -25,6 +25,7 @@ import {
   calculateItemCosts,
   calculateCurrencyCostAndRarity,
   formatRange as formatItemRange,
+  trainingPointsForItemPropertyRef,
 } from '@/lib/calculators/item-calc';
 import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { useUserItems, useItemProperties, useDuplicateItem } from '@/hooks';
@@ -62,16 +63,22 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
       const costs = calculateItemCosts(props, propertiesDb);
       const { currencyCost, rarity } = calculateCurrencyCostAndRarity(costs.totalCurrency, costs.totalIP);
       const rangeStr = formatItemRange(props);
-      const parts: ChipData[] = ((item.properties || []) as Array<{ id?: unknown; name?: string; op_1_lvl?: number }>).map((prop) => {
-        const dbProp = propertiesDb.find((p: { name?: string }) => p.name?.toLowerCase() === (prop.name || '').toLowerCase());
-        const baseTp = dbProp?.base_tp ?? dbProp?.tp_cost ?? 0;
-        const optLevel = prop.op_1_lvl ?? 1;
+      const parts: ChipData[] = (
+        (item.properties || []) as Array<string | { id?: unknown; name?: string; op_1_lvl?: number }>
+      ).map((prop) => {
+        const propName = typeof prop === 'string' ? prop : (prop.name || '');
+        const dbProp = propertiesDb.find(
+          (p: { name?: string }) => p.name?.toLowerCase() === String(propName).toLowerCase()
+        );
+        const cost = trainingPointsForItemPropertyRef(prop, propertiesDb);
+        const lvl = typeof prop === 'object' && prop && prop.op_1_lvl != null ? prop.op_1_lvl : 0;
         return {
-          name: dbProp?.name || prop.name || '',
+          name: dbProp?.name || propName || '',
           description: dbProp?.description || '',
-          cost: baseTp * optLevel,
+          cost: cost > 0 ? cost : undefined,
           costLabel: 'TP',
-          level: optLevel > 1 ? optLevel : undefined,
+          category: (cost > 0 ? 'cost' : 'default') as 'cost' | 'default',
+          level: lvl > 1 ? lvl : undefined,
         };
       });
       const totalTP = parts.reduce((sum, p) => sum + (p.cost || 0), 0);

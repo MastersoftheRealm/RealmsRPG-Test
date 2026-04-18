@@ -15,7 +15,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { cn, formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useEquipment, useUserItems, useItemProperties, usePublicLibrary, usePowerParts, useTechniqueParts } from '@/hooks';
-import { deriveItemDisplay } from '@/lib/calculators/item-calc';
+import { deriveItemDisplay, trainingPointsForItemPropertyRef } from '@/lib/calculators/item-calc';
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 import {
   ContextHelpTooltip,
@@ -1077,11 +1077,21 @@ export function EquipmentStep() {
                     badges.push({ label: 'Path Recommended', color: 'blue' });
                   }
 
-                  // Build property chips
-                  const chips: ChipData[] = item.properties.map((prop) => ({
-                    name: typeof prop === 'string' ? prop : (prop.name || 'Property'),
-                    category: 'tag' as const,
-                  }));
+                  // Build property chips (TP matches item-calc / library)
+                  const chips: ChipData[] = (item.properties || []).map((prop) => {
+                    const propName = typeof prop === 'string' ? prop : (prop.name || 'Property');
+                    const dbProp = itemProperties?.find(
+                      (p) => String(p.name ?? '').toLowerCase() === String(propName).toLowerCase()
+                    );
+                    const tp = trainingPointsForItemPropertyRef(prop, itemProperties ?? []);
+                    return {
+                      name: dbProp?.name || propName,
+                      description: dbProp?.description,
+                      cost: tp > 0 ? tp : undefined,
+                      costLabel: 'TP',
+                      category: (tp > 0 ? 'cost' : 'tag') as 'cost' | 'tag',
+                    };
+                  });
 
                   // Stepper on the right (unified with Library)
                   const maxAffordable = cost > 0 ? quantity + Math.floor(remainingCurrency / cost) : 99;
