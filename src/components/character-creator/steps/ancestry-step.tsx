@@ -15,7 +15,12 @@
 import { useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Chip, Button, Alert } from '@/components/ui';
-import { ContextHelpTooltip, SelectionToggle } from '@/components/shared';
+import { ContextHelpTooltip, SelectionToggle, ChoiceTraitOptionSelect } from '@/components/shared';
+import {
+  getChoiceOptionIds,
+  resolveChoiceOptionTraits,
+  firstSelectedChoiceOptionId,
+} from '@/lib/choice-trait';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useMergedSpecies, useTraits, useCodexSkills, resolveTraitIds, resolveSkillIdsToNames, type Trait, type Species } from '@/hooks';
 import { Heart, AlertTriangle, Sparkles, Star } from 'lucide-react';
@@ -978,13 +983,13 @@ function TraitSection({
       
       <div className="divide-y divide-border-subtle">
         {traits.map(trait => {
-          const isChoiceTrait = (trait as ResolvedTrait & { option_trait_ids?: string[] }).option_trait_ids?.length && allTraits?.length;
-          const optionIds = (trait as ResolvedTrait & { option_trait_ids?: string[] }).option_trait_ids ?? [];
-          const selectedOptionId = optionIds.find(id => selectedIds.includes(id));
+          const optionIds = getChoiceOptionIds(trait);
+          const optionOptions = resolveChoiceOptionTraits(optionIds, allTraits ?? undefined);
+          const isChoiceTrait = optionOptions.length > 0;
+          const selectedOptionId = firstSelectedChoiceOptionId(optionIds, selectedIds);
           const isSelected = isChoiceTrait ? Boolean(selectedOptionId) : selectedIds.includes(trait.id);
-          const optionOptions = isChoiceTrait && allTraits ? optionIds.map(oid => allTraits.find(t => String(t.id) === String(oid))).filter(Boolean) as Trait[] : [];
 
-          if (isChoiceTrait && selectable && optionOptions.length > 0) {
+          if (isChoiceTrait && selectable) {
             return (
               <div
                 key={trait.id}
@@ -998,24 +1003,17 @@ function TraitSection({
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium text-text-primary">{trait.name}</h4>
                     <p className="text-sm text-text-secondary mt-1">{trait.description}</p>
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <label className="text-xs font-medium text-text-secondary">Option:</label>
-                      <select
-                        value={selectedOptionId ?? ''}
-                        onChange={(e) => {
-                          const next = e.target.value;
-                          if (selectedOptionId) onToggle(selectedOptionId);
-                          if (next) onToggle(next);
-                        }}
-                        className="rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-text-primary"
-                        aria-label={`Choose option for ${trait.name}`}
-                      >
-                        <option value="">Select option...</option>
-                        {optionOptions.map(opt => (
-                          <option key={opt.id} value={opt.id}>{opt.name}</option>
-                        ))}
-                      </select>
-                    </div>
+                    <ChoiceTraitOptionSelect
+                      parentTraitName={trait.name}
+                      optionTraits={optionOptions}
+                      value={selectedOptionId ?? ''}
+                      onChange={(next) => {
+                        if (selectedOptionId) onToggle(selectedOptionId);
+                        if (next) onToggle(next);
+                      }}
+                      layout="creator"
+                      emptyOptionLabel="Select option..."
+                    />
                   </div>
                 </div>
               </div>

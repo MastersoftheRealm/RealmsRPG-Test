@@ -10,6 +10,7 @@ import {
   GridListRow,
   ListEmptyState as EmptyState,
 } from '@/components/shared';
+import { traitsByIdMap, choiceTraitOptionIdsToChipData } from '@/lib/choice-trait';
 import { Modal, Button, Input, Textarea } from '@/components/ui';
 import { useTraits, type Trait } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
@@ -79,6 +80,8 @@ export function AdminTraitsTab() {
         t.description?.toLowerCase().includes(search.toLowerCase()),
     ),
   );
+
+  const traitById = useMemo(() => traitsByIdMap(traits || []), [traits]);
 
   const openAdd = () => {
     setEditing(null);
@@ -193,7 +196,7 @@ export function AdminTraitsTab() {
     }
   };
 
-  const handleInlineDelete = async (id: string, name: string) => {
+  const handleInlineDelete = async (id: string) => {
     if (pendingDeleteId !== id) {
       setPendingDeleteId(id);
       return;
@@ -237,7 +240,9 @@ export function AdminTraitsTab() {
               size="sm"
             />
           ) : (
-            filtered.map((t: Trait) => (
+            filtered.map((t: Trait) => {
+              const choiceOptionChips = choiceTraitOptionIdsToChipData(t.option_trait_ids, traitById);
+              return (
               <GridListRow
                 key={t.id}
                 id={t.id}
@@ -249,12 +254,13 @@ export function AdminTraitsTab() {
                   { key: 'Recovery', value: t.rec_period || '-' },
                   { key: 'Choice', value: t.option_trait_ids?.length ? `Yes (${t.option_trait_ids.length})` : '-' },
                 ]}
+                detailSections={choiceOptionChips.length > 0 ? [{ label: 'Choice options', chips: choiceOptionChips }] : undefined}
                 rightSlot={
                   <div className="flex items-center gap-1 pr-2">
                     {pendingDeleteId === t.id ? (
                       <div className="flex items-center gap-1 text-xs">
                         <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
-                        <Button size="sm" variant="danger" onClick={() => handleInlineDelete(t.id, t.name)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
+                        <Button size="sm" variant="danger" onClick={() => handleInlineDelete(t.id)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
                         <Button size="sm" variant="secondary" onClick={() => setPendingDeleteId(null)} className="text-xs px-2 py-0.5 h-6">No</Button>
                       </div>
                     ) : (
@@ -279,7 +285,8 @@ export function AdminTraitsTab() {
                   </div>
                 }
               />
-            ))
+              );
+            })
           )}
         </div>
       )}

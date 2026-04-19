@@ -19,6 +19,7 @@ import {
 import { EmptyState as UiEmptyState } from '@/components/ui';
 import { useTraits, type Trait } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
+import { traitsByIdMap, choiceTraitOptionIdsToChipData } from '@/lib/choice-trait';
 
 const TRAIT_GRID_COLUMNS = '1.5fr 0.6fr 0.6fr 40px';
 const TRAIT_COLUMNS = [
@@ -29,15 +30,6 @@ const TRAIT_COLUMNS = [
 ];
 
 export function CodexTraitsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  if (codexMode === 'my') {
-    return (
-      <UiEmptyState
-        size="lg"
-        title="My Codex: Traits"
-        description="Custom traits are not available yet. For now, use Realms Codex."
-      />
-    );
-  }
   const { data: traits, isLoading, error } = useTraits();
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
@@ -49,11 +41,23 @@ export function CodexTraitsTab({ codexMode = 'public' }: { codexMode?: 'public' 
           (t: Trait) =>
             !search ||
             t.name.toLowerCase().includes(search.toLowerCase()) ||
-            t.description?.toLowerCase().includes(search.toLowerCase())
-        )
+            t.description?.toLowerCase().includes(search.toLowerCase()),
+        ),
       ),
-    [traits, search, sortState, sortItems]
+    [traits, search, sortItems],
   );
+
+  const traitById = useMemo(() => traitsByIdMap(traits || []), [traits]);
+
+  if (codexMode === 'my') {
+    return (
+      <UiEmptyState
+        size="lg"
+        title="My Codex: Traits"
+        description="Custom traits are not available yet. For now, use Realms Codex."
+      />
+    );
+  }
 
   if (error) return <ErrorState message="Failed to load traits" />;
 
@@ -75,25 +79,27 @@ export function CodexTraitsTab({ codexMode = 'public' }: { codexMode?: 'public' 
       ) : (
         <div className="flex flex-col gap-1 mt-2">
           {filtered.length === 0 ? (
-            <EmptyState
-              title="No traits found"
-              description="Try adjusting your search."
-              size="sm"
-            />
+            <EmptyState title="No traits found" description="Try adjusting your search." size="sm" />
           ) : (
-            filtered.map((t: Trait) => (
-              <GridListRow
-                key={t.id}
-                id={t.id}
-                name={t.name}
-                description={t.description || ''}
-                gridColumns={TRAIT_GRID_COLUMNS}
-                columns={[
-                  { key: 'Uses', value: t.uses_per_rec != null ? String(t.uses_per_rec) : '-' },
-                  { key: 'Recovery', value: t.rec_period || '-' },
-                ]}
-              />
-            ))
+            filtered.map((t: Trait) => {
+              const choiceOptionChips = choiceTraitOptionIdsToChipData(t.option_trait_ids, traitById);
+              return (
+                <GridListRow
+                  key={t.id}
+                  id={t.id}
+                  name={t.name}
+                  description={t.description || ''}
+                  gridColumns={TRAIT_GRID_COLUMNS}
+                  columns={[
+                    { key: 'Uses', value: t.uses_per_rec != null ? String(t.uses_per_rec) : '-' },
+                    { key: 'Recovery', value: t.rec_period || '-' },
+                  ]}
+                  detailSections={
+                    choiceOptionChips.length > 0 ? [{ label: 'Choice options', chips: choiceOptionChips }] : undefined
+                  }
+                />
+              );
+            })
           )}
         </div>
       )}

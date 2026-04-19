@@ -43,6 +43,12 @@ export { ConfirmActionModal } from './confirm-action-modal';
 export { GridListRow } from './grid-list-row';
 export type { ColumnValue, ChipData, ChipOptionData, GridListRowProps } from './grid-list-row';
 
+export { ChoiceTraitOptionSelect } from './choice-trait-option-select';
+export type {
+  ChoiceTraitOptionSelectProps,
+  ChoiceTraitOptionSelectLayout,
+} from './choice-trait-option-select';
+
 // SectionCostBadge - EN/TP/IP cost display next to section labels
 export { SectionCostBadge } from './section-cost-badge';
 export type { SectionCostBadgeProps } from './section-cost-badge';

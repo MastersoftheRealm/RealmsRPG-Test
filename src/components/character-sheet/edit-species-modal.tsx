@@ -9,6 +9,12 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Modal, Button, Chip } from '@/components/ui';
+import { ChoiceTraitOptionSelect } from '@/components/shared';
+import {
+  getChoiceOptionIds,
+  resolveChoiceOptionTraits,
+  firstSelectedChoiceOptionId,
+} from '@/lib/choice-trait';
 import { cn } from '@/lib/utils';
 import type { Character, CharacterAncestry } from '@/types';
 import { useMergedSpecies, useTraits, useCodexSkills, useUserSpecies, resolveTraitIds, resolveSkillIdsToNames, type Species, type Trait } from '@/hooks';
@@ -340,28 +346,21 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                     <h4 className="text-sm font-semibold text-text-primary mb-2">Species trait from {nameA}</h4>
                     <div className="flex flex-wrap gap-2 items-start">
                       {speciesTraitsFromA.map((t) => {
-                        const optIds = (t as Trait & { option_trait_ids?: string[] }).option_trait_ids ?? [];
-                        const isChoice = optIds.length > 0 && (allTraits?.length ?? 0) > 0;
-                        const optionTraits = isChoice ? optIds.map((oid) => (allTraits ?? []).find((x) => String(x.id) === String(oid))).filter(Boolean) as Trait[] : [];
-                        if (isChoice && optionTraits.length > 0) {
+                        const optionTraits = resolveChoiceOptionTraits(getChoiceOptionIds(t), allTraits ?? undefined);
+                        if (optionTraits.length > 0) {
                           return (
-                            <div key={t.id} className="flex flex-col gap-1">
-                              <span className="text-xs font-medium text-text-secondary">{t.name}</span>
-                              <select
+                            <div key={t.id}>
+                              <ChoiceTraitOptionSelect
+                                parentTraitName={t.name}
+                                optionTraits={optionTraits}
                                 value={selectedSpeciesTraits?.[0] ?? ''}
-                                onChange={(e) =>
+                                onChange={(next) =>
                                   updateDraft({
-                                    selectedSpeciesTraits: [e.target.value, selectedSpeciesTraits?.[1] ?? ''] as [string, string],
+                                    selectedSpeciesTraits: [next, selectedSpeciesTraits?.[1] ?? ''] as [string, string],
                                   })
                                 }
-                                className="rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-text-primary"
-                                aria-label={`Option for ${t.name}`}
-                              >
-                                <option value="">Select...</option>
-                                {optionTraits.map((o) => (
-                                  <option key={o.id} value={o.id}>{o.name}</option>
-                                ))}
-                              </select>
+                                layout="compact"
+                              />
                             </div>
                           );
                         }
@@ -385,28 +384,21 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                     <h4 className="text-sm font-semibold text-text-primary mb-2">Species trait from {nameB}</h4>
                     <div className="flex flex-wrap gap-2 items-start">
                       {speciesTraitsFromB.map((t) => {
-                        const optIds = (t as Trait & { option_trait_ids?: string[] }).option_trait_ids ?? [];
-                        const isChoice = optIds.length > 0 && (allTraits?.length ?? 0) > 0;
-                        const optionTraits = isChoice ? optIds.map((oid) => (allTraits ?? []).find((x) => String(x.id) === String(oid))).filter(Boolean) as Trait[] : [];
-                        if (isChoice && optionTraits.length > 0) {
+                        const optionTraits = resolveChoiceOptionTraits(getChoiceOptionIds(t), allTraits ?? undefined);
+                        if (optionTraits.length > 0) {
                           return (
-                            <div key={t.id} className="flex flex-col gap-1">
-                              <span className="text-xs font-medium text-text-secondary">{t.name}</span>
-                              <select
+                            <div key={t.id}>
+                              <ChoiceTraitOptionSelect
+                                parentTraitName={t.name}
+                                optionTraits={optionTraits}
                                 value={selectedSpeciesTraits?.[1] ?? ''}
-                                onChange={(e) =>
+                                onChange={(next) =>
                                   updateDraft({
-                                    selectedSpeciesTraits: [selectedSpeciesTraits?.[0] ?? '', e.target.value] as [string, string],
+                                    selectedSpeciesTraits: [selectedSpeciesTraits?.[0] ?? '', next] as [string, string],
                                   })
                                 }
-                                className="rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-text-primary"
-                                aria-label={`Option for ${t.name}`}
-                              >
-                                <option value="">Select...</option>
-                                {optionTraits.map((o) => (
-                                  <option key={o.id} value={o.id}>{o.name}</option>
-                                ))}
-                              </select>
+                                layout="compact"
+                              />
                             </div>
                           );
                         }
@@ -463,9 +455,39 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                   <Star className="w-4 h-4" />
                   Ancestry trait (choose {maxAncestryTraits})
                 </h4>
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-2 items-start">
                   {ancestryTraits.map((t) => {
-                    const sel = selectedTraitIds.includes(t.id);
+                    const optionIds = getChoiceOptionIds(t);
+                    const optionTraits = resolveChoiceOptionTraits(optionIds, allTraits ?? undefined);
+                    const selectedOptionId = firstSelectedChoiceOptionId(optionIds, selectedTraitIds);
+                    const isChoice = optionTraits.length > 0;
+                    const sel = isChoice ? Boolean(selectedOptionId) : selectedTraitIds.includes(t.id);
+
+                    if (isChoice) {
+                      return (
+                        <div key={t.id}>
+                          <ChoiceTraitOptionSelect
+                            parentTraitName={t.name}
+                            optionTraits={optionTraits}
+                            value={selectedOptionId ?? ''}
+                            onChange={(next) => {
+                              let nextTraits = selectedOptionId
+                                ? selectedTraitIds.filter((id) => id !== selectedOptionId)
+                                : [...selectedTraitIds];
+                              if (next) {
+                                nextTraits =
+                                  nextTraits.length >= maxAncestryTraits
+                                    ? [...nextTraits.slice(1), next]
+                                    : [...nextTraits, next];
+                              }
+                              updateDraft({ selectedTraits: nextTraits });
+                            }}
+                            layout="compact"
+                          />
+                        </div>
+                      );
+                    }
+
                     return (
                       <button
                         key={t.id}
@@ -497,10 +519,33 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                   <h4 className="text-sm font-semibold text-text-primary">
                     Ancestry trait (1 from either species{selectedFlaw ? '; 2nd below from flaw species' : ''})
                   </h4>
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-2 items-start">
                     {ancestryTraits.map((t) => {
+                      const optionIds = getChoiceOptionIds(t);
+                      const optionTraits = resolveChoiceOptionTraits(optionIds, allTraits ?? undefined);
                       const base = selectedTraitIds[0];
-                      const sel = base === t.id;
+                      const selectedBaseOptionId = firstSelectedChoiceOptionId(optionIds, base ? [String(base)] : []);
+                      const isChoice = optionTraits.length > 0;
+                      const sel = isChoice ? Boolean(selectedBaseOptionId) : base === t.id;
+
+                      if (isChoice) {
+                        return (
+                          <div key={t.id}>
+                            <ChoiceTraitOptionSelect
+                              parentTraitName={t.name}
+                              optionTraits={optionTraits}
+                              value={selectedBaseOptionId ?? ''}
+                              onChange={(next) =>
+                                updateDraft({
+                                  selectedTraits: [next, selectedTraitIds[1] ?? ''].filter(Boolean),
+                                })
+                              }
+                              layout="compact"
+                            />
+                          </div>
+                        );
+                      }
+
                       return (
                         <button
                           key={t.id}
@@ -524,10 +569,36 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                     <h4 className="text-sm font-semibold text-text-primary">
                       Extra ancestry trait (from {selectedFlawSpeciesId === speciesA?.id ? nameA : nameB} only)
                     </h4>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-2 items-start">
                       {ancestryTraitsFromFlawSpecies.map((t) => {
+                        const optionIds = getChoiceOptionIds(t);
+                        const optionTraits = resolveChoiceOptionTraits(optionIds, allTraits ?? undefined);
                         const extra = selectedTraitIds[1];
-                        const sel = extra === t.id;
+                        const selectedExtraOptionId = firstSelectedChoiceOptionId(
+                          optionIds,
+                          extra ? [String(extra)] : [],
+                        );
+                        const isChoice = optionTraits.length > 0;
+                        const sel = isChoice ? Boolean(selectedExtraOptionId) : extra === t.id;
+
+                        if (isChoice) {
+                          return (
+                            <div key={t.id}>
+                              <ChoiceTraitOptionSelect
+                                parentTraitName={t.name}
+                                optionTraits={optionTraits}
+                                value={selectedExtraOptionId ?? ''}
+                                onChange={(next) =>
+                                  updateDraft({
+                                    selectedTraits: [selectedTraitIds[0] ?? '', next].filter(Boolean),
+                                  })
+                                }
+                                layout="compact"
+                              />
+                            </div>
+                          );
+                        }
+
                         return (
                           <button
                             key={t.id}
@@ -558,32 +629,62 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                   <AlertTriangle className="w-4 h-4" />
                   Flaw (optional, +1 ancestry trait)
                 </h4>
-                <div className="flex flex-wrap gap-1">
-                  {flaws.map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => {
-                        const newFlaw = selectedFlaw === t.id ? null : t.id;
-                        const newMax = newFlaw ? 2 : 1;
-                        const current = selectedTraitIds;
-                        const fromA = isMixed && speciesA && speciesB && (speciesA.flaws || []).includes(t.id);
-                        setDraftAncestry((prev) => {
-                          if (!prev) return null;
-                          return {
-                            ...prev,
-                            selectedFlaw: newFlaw ?? undefined,
-                            selectedTraits: current.length > newMax ? current.slice(0, newMax) : current,
-                            ...(isMixed && speciesA && speciesB && { selectedFlawSpeciesId: fromA ? speciesA.id : speciesB.id }),
-                          };
-                        });
-                      }}
-                    >
-                      <Chip variant={selectedFlaw === t.id ? 'primary' : 'default'} size="sm" interactive>
-                        {t.name}
-                      </Chip>
-                    </button>
-                  ))}
+                <div className="flex flex-wrap gap-2 items-start">
+                  {flaws.map((t) => {
+                    const optionIds = getChoiceOptionIds(t);
+                    const optionTraits = resolveChoiceOptionTraits(optionIds, allTraits ?? undefined);
+                    const selectedFlawOptionId = firstSelectedChoiceOptionId(
+                      optionIds,
+                      selectedFlaw ? [String(selectedFlaw)] : [],
+                    );
+                    const isChoice = optionTraits.length > 0;
+                    const isSelected = isChoice ? Boolean(selectedFlawOptionId) : selectedFlaw === t.id;
+
+                    const setFlaw = (nextFlaw: string | null) => {
+                      const newMax = nextFlaw ? 2 : 1;
+                      const current = selectedTraitIds;
+                      const fromA = isMixed && speciesA && speciesB && (speciesA.flaws || []).includes(t.id);
+                      setDraftAncestry((prev) => {
+                        if (!prev) return null;
+                        return {
+                          ...prev,
+                          selectedFlaw: nextFlaw ?? undefined,
+                          selectedTraits: current.length > newMax ? current.slice(0, newMax) : current,
+                          ...(isMixed &&
+                            speciesA &&
+                            speciesB && {
+                              selectedFlawSpeciesId: nextFlaw ? (fromA ? speciesA.id : speciesB.id) : undefined,
+                            }),
+                        };
+                      });
+                    };
+
+                    if (isChoice) {
+                      return (
+                        <div key={t.id}>
+                          <ChoiceTraitOptionSelect
+                            parentTraitName={t.name}
+                            optionTraits={optionTraits}
+                            value={selectedFlawOptionId ?? ''}
+                            onChange={(next) => setFlaw(next || null)}
+                            layout="compact"
+                          />
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setFlaw(isSelected ? null : t.id)}
+                      >
+                        <Chip variant={isSelected ? 'primary' : 'default'} size="sm" interactive>
+                          {t.name}
+                        </Chip>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -594,18 +695,43 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                   <Sparkles className="w-4 h-4" />
                   Characteristic (optional)
                 </h4>
-                <div className="flex flex-wrap gap-1">
-                  {characteristics.map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => updateDraft({ selectedCharacteristic: selectedCharacteristic === t.id ? null : t.id })}
-                    >
-                      <Chip variant={selectedCharacteristic === t.id ? 'primary' : 'default'} size="sm" interactive>
-                        {t.name}
-                      </Chip>
-                    </button>
-                  ))}
+                <div className="flex flex-wrap gap-2 items-start">
+                  {characteristics.map((t) => {
+                    const optionIds = getChoiceOptionIds(t);
+                    const optionTraits = resolveChoiceOptionTraits(optionIds, allTraits ?? undefined);
+                    const selectedCharacteristicOptionId = firstSelectedChoiceOptionId(
+                      optionIds,
+                      selectedCharacteristic ? [String(selectedCharacteristic)] : [],
+                    );
+                    const isChoice = optionTraits.length > 0;
+                    const isSelected = isChoice ? Boolean(selectedCharacteristicOptionId) : selectedCharacteristic === t.id;
+
+                    if (isChoice) {
+                      return (
+                        <div key={t.id}>
+                          <ChoiceTraitOptionSelect
+                            parentTraitName={t.name}
+                            optionTraits={optionTraits}
+                            value={selectedCharacteristicOptionId ?? ''}
+                            onChange={(next) => updateDraft({ selectedCharacteristic: next || null })}
+                            layout="compact"
+                          />
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => updateDraft({ selectedCharacteristic: isSelected ? null : t.id })}
+                      >
+                        <Chip variant={isSelected ? 'primary' : 'default'} size="sm" interactive>
+                          {t.name}
+                        </Chip>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
