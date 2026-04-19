@@ -7,6 +7,7 @@
 
 import type { CharacterDraft, CharacterPower, CharacterTechnique, Item } from '@/types';
 import type { CreatorStep } from '@/stores/character-creator-store';
+import { getChoiceOptionIds } from '@/lib/choice-trait';
 import { calculateAbilityPoints, calculateSkillPointsForEntity, calculateTrainingPoints } from '@/lib/game/formulas';
 import { calculateSimpleSkillPointsSpent } from '@/lib/game/skill-allocation';
 import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies } from '@/lib/proficiencies';
@@ -20,8 +21,15 @@ export interface ValidationIssue {
 }
 
 export interface ValidationContext {
-  allSpecies: Array<{ id: string; name?: string; skills?: (string | number)[] }>;
+  allSpecies: Array<{
+    id: string;
+    name?: string;
+    skills?: (string | number)[];
+    species_traits?: (string | number)[];
+  }>;
   codexSkills: Array<{ id: string; base_skill_id?: number }> | null;
+  /** Used to validate species trait choice picks (option_trait_ids). */
+  allTraits?: Array<{ id: string | number; option_trait_ids?: string[] }> | null;
 }
 
 /**
@@ -79,6 +87,33 @@ export function getValidationIssuesForStep(
             message: "You need to select at least one ancestry trait.",
             severity: 'error',
           });
+        }
+
+        const anc = draft.ancestry;
+        const traitsDb = context.allTraits;
+        if (
+          anc?.id &&
+          anc.mixed !== true &&
+          traitsDb?.length &&
+          !String(anc.id).startsWith('mixed:')
+        ) {
+          const rawSpeciesTraitIds =
+            (species as { species_traits?: (string | number)[] } | undefined)?.species_traits || [];
+          const choices = anc.selectedSpeciesTraitChoices ?? {};
+          for (const tid of rawSpeciesTraitIds) {
+            const trait = traitsDb.find((t) => String(t.id) === String(tid));
+            const opts = getChoiceOptionIds(trait || {});
+            if (opts.length === 0) continue;
+            const picked = choices[String(tid)];
+            if (!picked || !opts.includes(String(picked))) {
+              issues.push({
+                emoji: '🧬',
+                message: 'Choose an option for each species trait that offers variants.',
+                severity: 'error',
+              });
+              break;
+            }
+          }
         }
       }
       break;

@@ -87,7 +87,13 @@ export function SkillsStep() {
   const pathData = useMemo(() => parseArchetypePathData(draft.archetype?.path_data), [draft.archetype?.path_data]);
   const recommendedSkillIds = pathData?.level1?.skills ?? [];
 
-  // Species skill id "0" = "Any" (extra skill point); path-recommended skills also start as proficient (value 0), removable
+  const declinedPathSkillIds = useMemo(
+    () => new Set((draft.declinedPathSkillIds ?? []).map(String)),
+    [draft.declinedPathSkillIds]
+  );
+
+  // Species skill id "0" = "Any" (extra skill point); path-recommended skills default to proficient (value 0)
+  // unless the player removed them (declinedPathSkillIds — otherwise they would be re-injected every render).
   const allocationsWithSpecies = useMemo(() => {
     const next = { ...allocations };
     speciesSkillIds.forEach((id) => {
@@ -97,10 +103,11 @@ export function SkillsStep() {
     recommendedSkillIds.forEach((id) => {
       const key = String(id);
       if (key === '0') return;
-      if (!(key in next)) next[key] = 0; // Path = proficient + value 0 (can remove, counts against points)
+      if (declinedPathSkillIds.has(key)) return;
+      if (!(key in next)) next[key] = 0; // Path default: proficient + value 0 (removable; see declinedPathSkillIds)
     });
     return next;
-  }, [allocations, speciesSkillIds, recommendedSkillIds]);
+  }, [allocations, speciesSkillIds, recommendedSkillIds, declinedPathSkillIds]);
 
   const extraSkillPoints = speciesSkillIds.has('0') ? 1 : 0;
 
@@ -113,9 +120,31 @@ export function SkillsStep() {
 
   const handleAllocationsChange = useCallback(
     (newAllocations: Record<string, number>) => {
-      updateDraft({ skills: newAllocations });
+      const declined = new Set((draft.declinedPathSkillIds ?? []).map(String));
+      let changedDeclined = false;
+      for (const id of recommendedSkillIds) {
+        const key = String(id);
+        if (key === '0') continue;
+        if (!(key in newAllocations)) {
+          if (!declined.has(key)) {
+            declined.add(key);
+            changedDeclined = true;
+          }
+        } else if (declined.has(key)) {
+          declined.delete(key);
+          changedDeclined = true;
+        }
+      }
+      if (changedDeclined) {
+        updateDraft({
+          skills: newAllocations,
+          declinedPathSkillIds: declined.size > 0 ? [...declined] : undefined,
+        });
+      } else {
+        updateDraft({ skills: newAllocations });
+      }
     },
-    [updateDraft]
+    [draft.declinedPathSkillIds, recommendedSkillIds, updateDraft]
   );
 
   const handleDefenseChange = useCallback(
@@ -138,7 +167,7 @@ export function SkillsStep() {
         {pathHelpContent(draft.archetype.name, recommendedSkillNames)}
       </PathHelpCard>
     );
-  }, [draft.creationMode, draft.archetype?.name, recommendedSkillNames]);
+  }, [draft.creationMode, draft.archetype, recommendedSkillNames]);
 
   const handleContinue = () => {
     updateDraft({ skills: allocationsWithSpecies, defenseVals });

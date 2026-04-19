@@ -281,6 +281,11 @@ export interface CharacterDraft extends Partial<Character> {
   isComplete?: boolean;
   /** For multi-ability skills (e.g. Craft): skillId -> chosen ability key */
   skillAbilities?: Record<string, string>;
+  /**
+   * Path creation only: recommended skill IDs the player removed after the default fill.
+   * Prevents re-adding them on every render while still on the Skills step.
+   */
+  declinedPathSkillIds?: string[];
 }
 
 // =============================================================================

@@ -162,6 +162,7 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
             pow_abil: archetype.pow_abil,
             mart_abil: archetype.mart_abil,
             archetypePathId: undefined,
+            declinedPathSkillIds: undefined,
           }
         });
       },
@@ -182,6 +183,8 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
         const primaryAbility = archetype.archetype_ability;
         const fallbackPowerAbility = archetype.pow_abil || archetype.ability || primaryAbility;
         const fallbackMartialAbility = archetype.mart_abil || archetype.ability || primaryAbility;
+        const prevPathId = get().draft.archetypePathId;
+        const pathChanged = prevPathId !== undefined && prevPathId !== archetype.id;
 
         set({
           draft: {
@@ -208,6 +211,7 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
             mart_abil: fallbackMartialAbility,
             pow_prof: pathPowerProf,
             mart_prof: pathMartialProf,
+            ...(pathChanged ? { declinedPathSkillIds: undefined } : {}),
           },
         });
       },
@@ -229,6 +233,7 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
               selectedSpeciesTraits: undefined,
               selectedFlawSpeciesId: undefined,
               mixedPhysical: undefined,
+              selectedSpeciesTraitChoices: undefined,
             } as CharacterDraft['ancestry'],
           }
         });
@@ -252,6 +257,7 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
               selectedFlawSpeciesId: undefined,
               mixedPhysical: undefined,
               selectedSpeciesSkillIds: undefined,
+              selectedSpeciesTraitChoices: undefined,
             } as CharacterDraft['ancestry'],
           }
         });

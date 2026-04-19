@@ -17,10 +17,10 @@ import {
 } from '@/lib/choice-trait';
 import { cn } from '@/lib/utils';
 import type { Character, CharacterAncestry } from '@/types';
-import { useMergedSpecies, useTraits, useCodexSkills, useUserSpecies, resolveTraitIds, resolveSkillIdsToNames, type Species, type Trait } from '@/hooks';
+import { useMergedSpecies, useTraits, useCodexSkills, useUserSpecies, resolveTraitIds, type Species, type Trait } from '@/hooks';
 import { MixedSpeciesModal } from '@/components/character-creator/MixedSpeciesModal';
 import { migrateSkillsAfterSpeciesChange } from '@/lib/species-skill-migration';
-import { AlertTriangle, Sparkles, Star, GitMerge } from 'lucide-react';
+import { AlertTriangle, Sparkles, Star, GitMerge, Heart } from 'lucide-react';
 
 interface ResolvedTrait extends Trait {
   found: boolean;
@@ -57,26 +57,28 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
   // Initialize draft only when the modal opens (not on every `character.ancestry` reference change while open).
   useEffect(() => {
     if (isOpen && !wasOpenRef.current && character?.ancestry) {
-      setDraftAncestry({ ...character.ancestry } as CharacterAncestry);
-      setStep('species');
+      const next = { ...character.ancestry } as CharacterAncestry;
+      queueMicrotask(() => {
+        setDraftAncestry(next);
+        setStep('species');
+      });
     }
     wasOpenRef.current = isOpen;
   }, [isOpen, character?.ancestry, character?.id]);
 
   const isMixed = draftAncestry?.mixed === true;
-  const speciesIds = isMixed ? draftAncestry?.speciesIds : draftAncestry?.id ? [draftAncestry.id] : [];
   const selectedSpecies = useMemo(() => {
-    if (!draftAncestry?.id || (isMixed && draftAncestry.speciesIds?.length === 2)) return null;
+    if (!draftAncestry?.id || (draftAncestry.mixed === true && draftAncestry.speciesIds?.length === 2)) return null;
     return allSpecies.find((s: Species) => String(s.id) === String(draftAncestry.id)) ?? null;
-  }, [draftAncestry?.id, draftAncestry?.speciesIds, isMixed, allSpecies]);
+  }, [draftAncestry, allSpecies]);
   const speciesA = useMemo(() => {
-    if (!isMixed || !draftAncestry?.speciesIds?.[0]) return null;
+    if (draftAncestry?.mixed !== true || !draftAncestry?.speciesIds?.[0]) return null;
     return allSpecies.find((s: Species) => String(s.id) === String(draftAncestry.speciesIds?.[0])) ?? null;
-  }, [allSpecies, isMixed, draftAncestry?.speciesIds]);
+  }, [draftAncestry, allSpecies]);
   const speciesB = useMemo(() => {
-    if (!isMixed || !draftAncestry?.speciesIds?.[1]) return null;
+    if (draftAncestry?.mixed !== true || !draftAncestry?.speciesIds?.[1]) return null;
     return allSpecies.find((s: Species) => String(s.id) === String(draftAncestry.speciesIds?.[1])) ?? null;
-  }, [allSpecies, isMixed, draftAncestry?.speciesIds]);
+  }, [draftAncestry, allSpecies]);
 
   const { speciesTraits, ancestryTraits, flaws, characteristics } = useMemo(() => {
     if (!allTraits) return { speciesTraits: [], ancestryTraits: [], flaws: [], characteristics: [] };
@@ -176,6 +178,7 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
         selectedFlawSpeciesId: undefined,
         mixedPhysical: undefined,
         selectedSpeciesSkillIds: undefined,
+        selectedSpeciesTraitChoices: undefined,
       });
     },
     []
@@ -197,6 +200,7 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
         selectedFlawSpeciesId: undefined,
         mixedPhysical: undefined,
         selectedSpeciesSkillIds: undefined,
+        selectedSpeciesTraitChoices: undefined,
       });
       setShowMixedModal(false);
     },
@@ -222,7 +226,20 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
       : selectedSpeciesSkillIds.length === 2;
 
   const canContinueSpecies = Boolean(draftAncestry?.id && draftAncestry?.name);
-  const canContinueAncestrySingle = selectedTraitIds.length >= 1 || ancestryTraits.length === 0;
+  const speciesChoiceTraitParents = useMemo(
+    () => (!isMixed ? speciesTraits.filter((t) => getChoiceOptionIds(t).length > 0) : []),
+    [isMixed, speciesTraits],
+  );
+  const speciesTraitChoicesMap = draftAncestry?.selectedSpeciesTraitChoices ?? {};
+  const speciesChoicePicksOk =
+    speciesChoiceTraitParents.length === 0 ||
+    speciesChoiceTraitParents.every((t) => {
+      const pid = String(t.id);
+      const picked = speciesTraitChoicesMap[pid];
+      return Boolean(picked && getChoiceOptionIds(t).includes(String(picked)));
+    });
+  const canContinueAncestrySingle =
+    (selectedTraitIds.length >= 1 || ancestryTraits.length === 0) && speciesChoicePicksOk;
   const hasSpeciesTraitA = !!selectedSpeciesTraits?.[0];
   const hasSpeciesTraitB = !!selectedSpeciesTraits?.[1];
   const canContinueAncestryMixed =
@@ -318,9 +335,59 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                   <strong>{nameA}</strong> + <strong>{nameB}</strong>. Set size, one species trait from each, ancestry traits, and choose 2 species skills.
                 </>
               ) : (
-                <>Set ancestry traits and optional flaw/characteristic.</>
+                <>Set species trait options (if any), ancestry traits, and optional flaw/characteristic.</>
               )}
             </p>
+
+            {!isMixed && speciesTraits.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold text-text-primary flex items-center gap-1">
+                  <Heart className="w-4 h-4 text-primary-600" />
+                  Species traits
+                </h4>
+                <p className="text-xs text-text-secondary">
+                  These are automatic. When a trait offers variants, pick one before saving.
+                </p>
+                <div className="space-y-3">
+                  {speciesTraits.map((t) => {
+                    const optionTraits = resolveChoiceOptionTraits(getChoiceOptionIds(t), allTraits ?? undefined);
+                    if (optionTraits.length > 0) {
+                      return (
+                        <div key={t.id} className="rounded-lg border border-border-light p-3 bg-surface-alt">
+                          <p className="text-sm font-medium text-text-primary">{t.name}</p>
+                          {t.description ? (
+                            <p className="text-xs text-text-secondary mt-1 mb-2">{t.description}</p>
+                          ) : null}
+                          <ChoiceTraitOptionSelect
+                            parentTraitName={t.name}
+                            optionTraits={optionTraits}
+                            value={draftAncestry?.selectedSpeciesTraitChoices?.[String(t.id)] ?? ''}
+                            onChange={(next) => {
+                              const prev = draftAncestry?.selectedSpeciesTraitChoices ?? {};
+                              const map = { ...prev };
+                              if (!next) delete map[String(t.id)];
+                              else map[String(t.id)] = next;
+                              updateDraft({ selectedSpeciesTraitChoices: map });
+                            }}
+                            layout="compact"
+                          />
+                        </div>
+                      );
+                    }
+                    return (
+                      <div key={t.id} className="rounded-lg border border-border-subtle p-2 bg-surface-alt">
+                        <Chip variant="default" size="sm">
+                          {t.name}
+                        </Chip>
+                        {t.description ? (
+                          <p className="text-xs text-text-secondary mt-1">{t.description}</p>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {isMixed && speciesA && speciesB && (
               <>

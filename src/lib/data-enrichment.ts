@@ -701,6 +701,9 @@ export function cleanForSave(data: Character): Partial<Character> {
     if (Array.isArray(anc.selectedSpeciesSkillIds) && anc.selectedSpeciesSkillIds.length > 0) {
       leanAnc.selectedSpeciesSkillIds = anc.selectedSpeciesSkillIds;
     }
+    if (anc.selectedSpeciesTraitChoices && typeof anc.selectedSpeciesTraitChoices === 'object') {
+      leanAnc.selectedSpeciesTraitChoices = anc.selectedSpeciesTraitChoices;
+    }
     cleaned.ancestry = leanAnc;
   }
 

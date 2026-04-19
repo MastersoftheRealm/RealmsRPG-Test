@@ -15,6 +15,7 @@ import {
   useCodexSkills,
   useTraits,
   useUserSpecies,
+  useAdmin,
   useCreatorSave,
   type Species,
   type Trait,
@@ -189,6 +190,7 @@ export default function SpeciesCreatorPage() {
   const { data: userSpeciesList = [] } = useUserSpecies();
   const { data: skills = [], isLoading: skillsLoading } = useCodexSkills();
   const { data: traits = [], isLoading: traitsLoading } = useTraits();
+  const { isAdmin } = useAdmin();
 
   // Load draft from localStorage once codex lists are ready (same 30-day window as other creators)
   useEffect(() => {
@@ -201,7 +203,7 @@ export default function SpeciesCreatorPage() {
         const parsed = JSON.parse(raw) as SpeciesCreatorCache;
         if (parsed.timestamp && Date.now() - parsed.timestamp < CACHE_EXPIRY_MS) {
           const merged = mergeCachedSpeciesForm(parsed, traits as Trait[], skills as Skill[]);
-          if (merged) setForm(merged);
+          if (merged) queueMicrotask(() => setForm(merged));
         } else {
           localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
         }
@@ -209,7 +211,7 @@ export default function SpeciesCreatorPage() {
     } catch {
       localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
     }
-    setCacheReady(true);
+    queueMicrotask(() => setCacheReady(true));
   }, [skillsLoading, traitsLoading, traits, skills]);
 
   // Persist draft across refresh (mirrors item/power creator cache pattern)
@@ -270,7 +272,14 @@ export default function SpeciesCreatorPage() {
   const save = useCreatorSave({
     type: 'species',
     getPayload,
+    requirePublishConfirm: true,
+    publishConfirmTitle: 'Publish to Realms Library',
+    publishConfirmDescription: (n, { existingInPublic }) =>
+      existingInPublic
+        ? `Are you sure you want to override "${n}" (species)? The existing Realms Codex species with this name will be replaced.`
+        : `Are you sure you wish to publish this species "${n}" to the Realms Codex? All users will be able to see and use it.`,
     successMessage: 'Species saved to My Codex!',
+    publicSuccessMessage: 'Species saved to Realms Codex!',
     onSaveSuccess: () => {
       try {
         localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
@@ -503,8 +512,8 @@ export default function SpeciesCreatorPage() {
       description="Create custom species. Add traits (species, ancestry, characteristic, flaw), choose base skills and sizes, and set languages. Load from Realms Codex or My Codex; save to My Codex."
       actions={
         <CreatorSaveToolbar
-          saveTarget="private"
-          onSaveTargetChange={() => {}}
+          saveTarget={save.saveTarget}
+          onSaveTargetChange={save.setSaveTarget}
           onSave={handleSave}
           onLoad={() => setShowLoadModal(true)}
           onReset={handleReset}
@@ -516,7 +525,7 @@ export default function SpeciesCreatorPage() {
             form.adulthood_lifespan[0] === '' ||
             form.adulthood_lifespan[1] === ''
           }
-          showPublicPrivate={false}
+          showPublicPrivate={isAdmin}
           user={user}
         />
       }
@@ -542,16 +551,15 @@ export default function SpeciesCreatorPage() {
             description={SPECIES_TRAIT_WARNING}
             confirmLabel="Add anyway"
           />
-          {save.showPublishConfirm && (
-            <ConfirmActionModal
-              isOpen={save.showPublishConfirm}
-              onClose={() => save.setShowPublishConfirm(false)}
-              onConfirm={save.confirmPublish}
-              title={save.publishConfirmTitle}
-              description={save.publishConfirmDescription?.(form.name, { existingInPublic: save.publishExistingInPublic }) ?? ''}
-              confirmLabel="Publish"
-            />
-          )}
+          <ConfirmActionModal
+            isOpen={save.showPublishConfirm}
+            onClose={() => save.setShowPublishConfirm(false)}
+            onConfirm={() => void save.confirmPublish()}
+            title={save.publishConfirmTitle}
+            description={save.publishConfirmDescription?.(form.name.trim(), { existingInPublic: save.publishExistingInPublic }) ?? ''}
+            confirmLabel="Publish"
+            icon="publish"
+          />
 
           <Modal isOpen={showLoadModal} onClose={() => setShowLoadModal(false)} title="Load species" size="lg" fullScreenOnMobile>
             <p className="text-sm text-text-muted mb-4">Load a species from Realms Codex or My Codex to edit and save to your private codex.</p>

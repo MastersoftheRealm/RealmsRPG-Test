@@ -12,7 +12,7 @@
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useCharacterCreatorStore, STEP_ORDER, type CreatorStep } from '@/stores/character-creator-store';
-import { useSpecies, useCodexSkills } from '@/hooks';
+import { useMergedSpecies, useCodexSkills, useTraits } from '@/hooks';
 import { getValidationIssuesForStep, type ValidationIssue } from '@/lib/character-creator-validation';
 import { ConfirmActionModal } from '@/components/shared';
 import { Modal, Button } from '@/components/ui';
@@ -31,14 +31,15 @@ const STEP_LABELS: Record<CreatorStep, string> = {
 
 export function CreatorTabBar() {
   const { draft, currentStep, completedSteps, setStep, canNavigateToStep, markStepComplete, resetCreator } = useCharacterCreatorStore();
-  const { data: allSpecies = [] } = useSpecies();
+  const { data: allSpecies = [] } = useMergedSpecies();
   const { data: codexSkills } = useCodexSkills();
+  const { data: allTraits } = useTraits();
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
   const [pendingStep, setPendingStep] = useState<CreatorStep | null>(null);
 
   const context = useMemo(
-    () => ({ allSpecies, codexSkills: codexSkills ?? null }),
-    [allSpecies, codexSkills]
+    () => ({ allSpecies, codexSkills: codexSkills ?? null, allTraits: allTraits ?? null }),
+    [allSpecies, codexSkills, allTraits]
   );
   const currentStepIssues = useMemo<ValidationIssue[]>(
     () => getValidationIssuesForStep(currentStep, draft, context),

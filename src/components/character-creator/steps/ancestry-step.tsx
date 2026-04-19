@@ -40,7 +40,6 @@ export function AncestryStep() {
   const { data: allSkills } = useCodexSkills();
 
   const isMixed = draft.ancestry?.mixed === true;
-  const speciesIds = isMixed ? draft.ancestry?.speciesIds : (draft.ancestry?.id ? [draft.ancestry.id] : []);
 
   // Single species or mixed: resolve species A and B
   const selectedSpecies = useMemo(() => {
@@ -352,6 +351,25 @@ export function AncestryStep() {
     });
   }, [selectedCharacteristic, draft.ancestry, updateDraft]);
 
+  // Single-species: pick option for each species trait that has option_trait_ids
+  const setSpeciesTraitChoice = useCallback(
+    (parentId: string, optionId: string) => {
+      const prev = draft.ancestry?.selectedSpeciesTraitChoices ?? {};
+      const next = { ...prev };
+      if (!optionId) delete next[String(parentId)];
+      else next[String(parentId)] = String(optionId);
+      updateDraft({
+        ancestry: {
+          ...draft.ancestry,
+          id: draft.ancestry?.id || '',
+          name: draft.ancestry?.name || '',
+          selectedSpeciesTraitChoices: next,
+        },
+      });
+    },
+    [draft.ancestry, updateDraft],
+  );
+
   // Mixed: toggle one of the 2 chosen species skills
   const selectedSpeciesSkillIds = draft.ancestry?.selectedSpeciesSkillIds ?? [];
   const toggleMixedSpeciesSkill = useCallback((skillId: string) => {
@@ -384,8 +402,16 @@ export function AncestryStep() {
     }
   }, [draft.ancestry, updateDraft]);
 
-  // Validation: single species
-  const canContinueSingle = selectedTraitIds.length >= 1 || ancestryTraits.length === 0;
+  // Validation: single species — ancestry picks + each choice-type species trait must have a valid option
+  const speciesTraitChoicesMap = draft.ancestry?.selectedSpeciesTraitChoices ?? {};
+  const speciesChoiceTraitParents = speciesTraits.filter((t) => getChoiceOptionIds(t).length > 0);
+  const speciesChoicePicksComplete = speciesChoiceTraitParents.every((t) => {
+    const pid = String(t.id);
+    const picked = speciesTraitChoicesMap[pid];
+    return Boolean(picked && getChoiceOptionIds(t).includes(String(picked)));
+  });
+  const canContinueSingle =
+    (selectedTraitIds.length >= 1 || ancestryTraits.length === 0) && speciesChoicePicksComplete;
   // Mixed: need 1 species trait from each, 1 ancestry trait (2 if flaw), size chosen, and exactly 2 species skills
   const hasSpeciesTraitA = !!selectedSpeciesTraits?.[0];
   const hasSpeciesTraitB = !!selectedSpeciesTraits?.[1];
@@ -845,12 +871,15 @@ export function AncestryStep() {
       {speciesTraits.length > 0 && (
         <TraitSection
           title="Species Traits"
-          subtitle="These are automatically applied"
+          subtitle="Granted automatically. When a trait offers variants, pick one before continuing."
           icon={<Heart className="w-5 h-5 text-primary-600" />}
           traits={speciesTraits}
           selectable={false}
           selectedIds={[]}
           onToggle={() => {}}
+          allTraits={allTraits ?? undefined}
+          speciesTraitChoices={draft.ancestry?.selectedSpeciesTraitChoices}
+          onSpeciesTraitChoiceChange={setSpeciesTraitChoice}
         />
       )}
 
@@ -933,6 +962,9 @@ interface TraitSectionProps {
   variant?: 'default' | 'ancestry' | 'characteristic' | 'flaw';
   /** When provided, choice traits (option_trait_ids) show a dropdown to pick one option; onToggle(optionId) is used. */
   allTraits?: Trait[] | null;
+  /** Single-species automatic species traits: parent id → chosen option trait id. */
+  speciesTraitChoices?: Record<string, string>;
+  onSpeciesTraitChoiceChange?: (parentTraitId: string, optionId: string) => void;
 }
 
 function TraitSection({
@@ -945,6 +977,8 @@ function TraitSection({
   onToggle,
   variant = 'default',
   allTraits,
+  speciesTraitChoices,
+  onSpeciesTraitChoiceChange,
 }: TraitSectionProps) {
   const variantStyles = {
     default: {
@@ -1011,6 +1045,38 @@ function TraitSection({
                         if (selectedOptionId) onToggle(selectedOptionId);
                         if (next) onToggle(next);
                       }}
+                      layout="creator"
+                      emptyOptionLabel="Select option..."
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          if (isChoiceTrait && !selectable && onSpeciesTraitChoiceChange && allTraits) {
+            const pid = String(trait.id);
+            const value = speciesTraitChoices?.[pid] ?? '';
+            const speciesChoiceSelected = Boolean(value);
+            return (
+              <div
+                key={trait.id}
+                className={cn(
+                  'px-4 py-3 transition-colors',
+                  'hover:bg-surface-alt',
+                  speciesChoiceSelected && styles.selected
+                )}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-text-primary">{trait.name}</h4>
+                    <p className="text-sm text-text-secondary mt-1">{trait.description}</p>
+                    <p className="text-xs text-text-muted mt-1">Choose one variant for this species trait.</p>
+                    <ChoiceTraitOptionSelect
+                      parentTraitName={trait.name}
+                      optionTraits={optionOptions}
+                      value={value}
+                      onChange={(next) => onSpeciesTraitChoiceChange(pid, next)}
                       layout="creator"
                       emptyOptionLabel="Select option..."
                     />

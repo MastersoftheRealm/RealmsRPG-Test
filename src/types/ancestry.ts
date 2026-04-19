@@ -65,4 +65,9 @@ export interface CharacterAncestry {
   };
   /** For mixed: exactly 2 skill IDs the player chose from the combined species skills (not all 4) */
   selectedSpeciesSkillIds?: string[];
+  /**
+   * Single-species: parent species trait id → chosen option trait id for traits with `option_trait_ids`.
+   * (Mixed species stores the resolved id per slot on `selectedSpeciesTraits` instead.)
+   */
+  selectedSpeciesTraitChoices?: Record<string, string>;
 }

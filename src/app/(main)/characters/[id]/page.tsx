@@ -45,8 +45,19 @@ import {
 import { useToast } from '@/components/ui';
 import { ContextHelpTooltip } from '@/components/shared';
 import { createClient } from '@/lib/supabase/client';
-import type { Character, AbilityName, Item, CharacterPower, CharacterTechnique, CharacterFeat, Feat, CharacterProficiency } from '@/types';
+import type {
+  Character,
+  AbilityName,
+  Item,
+  CharacterPower,
+  CharacterTechnique,
+  CharacterFeat,
+  Feat,
+  CharacterProficiency,
+  CharacterAncestry,
+} from '@/types';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
+import { applySpeciesTraitChoiceSelections } from '@/lib/choice-trait';
 import { calculateStats } from './character-sheet-utils';
 import { CharacterSheetModals, type AddModalType, type FeatModalType, type SkillModalType } from './CharacterSheetModals';
 
@@ -193,8 +204,10 @@ export default function CharacterSheetPage({ params }: PageParams) {
     if (!species && speciesName) {
       species = allSpecies.find((s: Species) => String(s.name ?? '').toLowerCase() === String(speciesName ?? '').toLowerCase());
     }
-    return species?.species_traits || [];
-  }, [character, allSpecies]);
+    const raw = species?.species_traits || [];
+    const choices = ancestry?.selectedSpeciesTraitChoices;
+    return applySpeciesTraitChoiceSelections(raw, choices, traitsDb);
+  }, [character, allSpecies, traitsDb]);
 
   // Look up character's species skills (single = one species; mixed = 2 chosen from both, or legacy merge)
   const characterSpeciesSkills = useMemo(() => {
@@ -1487,8 +1500,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
       const currentUses = prev.traitUses?.[traitName] ?? 0;
       // Find the trait in traitsDb to get maxUses
       const traitData = traitsDb.find((t: Trait) => t.name?.toLowerCase() === traitName.toLowerCase());
-      // Codex trait objects may include `uses_per_rec`; cast to any to avoid strict type mismatch
-      const maxUses = (traitData as any)?.uses_per_rec ?? 999;
+      const maxUses = (traitData as Trait & { uses_per_rec?: number })?.uses_per_rec ?? 999;
       const newUses = Math.max(0, Math.min(maxUses, currentUses + delta));
       return {
         ...prev,
@@ -1956,9 +1968,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   itemPropertiesDb={itemPropertiesDb}
                   proficiencies={character.proficiencies}
                   onProficienciesChange={(next: CharacterProficiency[]) => setCharacter(prev => prev ? { ...prev, proficiencies: next } : null)}
-                  // Feats tab props
-                  // Cast ancestry to any to accommodate nullable fields from Codex (selectedFlaw may be null)
-                  ancestry={character.ancestry as any}
+                  // Feats tab props (sheet accepts partial codex-shaped ancestry)
+                  ancestry={character.ancestry as CharacterAncestry}
                   // Vanilla site trait fields (stored at top level)
                   vanillaTraits={{
                     ancestryTraits: character.ancestryTraits,
@@ -2110,7 +2121,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                       itemPropertiesDb={itemPropertiesDb}
                       proficiencies={character.proficiencies}
                       onProficienciesChange={(next: CharacterProficiency[]) => setCharacter(prev => prev ? { ...prev, proficiencies: next } : null)}
-                      ancestry={character.ancestry as any}
+                      ancestry={character.ancestry as CharacterAncestry}
                       vanillaTraits={{
                         ancestryTraits: character.ancestryTraits,
                         flawTrait: character.flawTrait,

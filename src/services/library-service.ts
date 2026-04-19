@@ -51,9 +51,9 @@ export async function findLibraryItemByName(
   return found ? { id: found.id } : null;
 }
 
-/** Fetch official library items (no auth). Uses columnar official_* tables. */
+/** Fetch official library items (no auth). Uses columnar official_* tables; species reads codex_species. */
 export async function fetchOfficialLibrary(
-  type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures'
+  type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species'
 ): Promise<Array<Record<string, unknown>>> {
   const res = await fetch(`/api/official/${type}`, { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch official library');
@@ -65,7 +65,7 @@ export const fetchPublicLibrary = fetchOfficialLibrary;
 
 /** Find an official library item by name (for replace-by-name when publishing). */
 export async function findOfficialLibraryItemByName(
-  type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures',
+  type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species',
   name: string
 ): Promise<{ id: string } | null> {
   const items = await fetchOfficialLibrary(type);
@@ -81,7 +81,7 @@ export const findPublicLibraryItemByName = findOfficialLibraryItemByName;
 
 /** Copy an official library item to the user's library. Strips _source etc. */
 export async function addOfficialItemToLibrary(
-  type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures',
+  type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species',
   officialItem: Record<string, unknown>
 ): Promise<string> {
   const { id: _id, docId: _docId, _source, ...data } = officialItem;
@@ -91,9 +91,9 @@ export async function addOfficialItemToLibrary(
 /** @deprecated Use addOfficialItemToLibrary. */
 export const addPublicItemToLibrary = addOfficialItemToLibrary;
 
-/** Save to official library (admin only). Uses columnar official_* tables. */
+/** Save to official library (admin only). Uses columnar official_* tables; species writes codex_species. */
 export async function saveToOfficialLibrary(
-  type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures',
+  type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species',
   data: Record<string, unknown>,
   options?: { existingId?: string }
 ): Promise<string> {

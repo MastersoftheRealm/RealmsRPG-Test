@@ -109,13 +109,14 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
       const payload = { ...data, createdAt: new Date().toISOString(), updatedAt: new Date() };
       setSaving(true);
       setSaveMessage(null);
-      const effectiveTarget = type === 'species' ? 'private' as const : target;
-      const publicLibraryType = type === 'species' ? null : type;
       try {
-        if (effectiveTarget === 'public' && publicLibraryType) {
-          await saveToOfficialLibrary(publicLibraryType, payload, existingPublicId ? { existingId: existingPublicId } : undefined);
+        if (target === 'public') {
+          await saveToOfficialLibrary(type, payload, existingPublicId ? { existingId: existingPublicId } : undefined);
           // Refetch all matching official-library queries (inactive tabs too) so Library / browse update immediately
           await queryClient.invalidateQueries({ queryKey: [...OFFICIAL_LIBRARY_KEY], refetchType: 'all' });
+          if (type === 'species') {
+            await queryClient.invalidateQueries({ queryKey: ['codex'], refetchType: 'all' });
+          }
           setSaveMessage({ type: 'success', text: publicSuccessMessage });
         } else {
           const existing = await findLibraryItemByName(type, name.trim());
@@ -149,7 +150,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
       setSaveMessage({ type: 'error', text: `Please enter a ${type === 'species' ? 'species' : type.slice(0, -1)} name` });
       return;
     }
-    if (saveTarget === 'public' && requirePublishConfirm && type !== 'species') {
+    if (saveTarget === 'public' && requirePublishConfirm) {
       const existing = await findOfficialLibraryItemByName(type, name.trim());
       setPublishExistingId(existing?.id ?? null);
       setShowPublishConfirmState(true);

@@ -48,3 +48,37 @@ export function choiceTraitOptionIdsToChipData(
     };
   });
 }
+
+/** Trait rows that include `option_trait_ids` (from codex). */
+export type TraitWithChoiceOptions = { id: string | number; option_trait_ids?: string[] };
+
+function traitByIdMapForChoiceOptions(traits: TraitWithChoiceOptions[] | null | undefined): Map<string, TraitWithChoiceOptions> {
+  const map = new Map<string, TraitWithChoiceOptions>();
+  (traits || []).forEach((t) => {
+    map.set(String(t.id), t);
+  });
+  return map;
+}
+
+/**
+ * For each species trait ID from the species definition: if that trait is a choice trait and
+ * `choices[parentId]` is a valid option, use the option ID on the character; otherwise keep the
+ * species-list ID (legacy or pending pick).
+ */
+export function applySpeciesTraitChoiceSelections(
+  speciesTraitIds: (string | number)[] | undefined,
+  choices: Record<string, string> | undefined,
+  allTraits: TraitWithChoiceOptions[] | null | undefined,
+): string[] {
+  if (!speciesTraitIds?.length) return [];
+  const byId = traitByIdMapForChoiceOptions(allTraits ?? []);
+  return speciesTraitIds.map((id) => {
+    const sid = String(id);
+    const trait = byId.get(sid);
+    const optionIds = getChoiceOptionIds(trait || {});
+    if (optionIds.length === 0) return sid;
+    const picked = choices?.[sid];
+    if (picked && optionIds.includes(String(picked))) return String(picked);
+    return sid;
+  });
+}

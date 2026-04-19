@@ -9,7 +9,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createCharacter, saveCharacter } from '@/services/character-service';
-import { useAuth, useCodexSkills, useSpecies, usePowerParts, useTechniqueParts, useItemProperties } from '@/hooks';
+import { useAuth, useCodexSkills, useMergedSpecies, useTraits, usePowerParts, useTechniqueParts, useItemProperties } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { cleanForSave } from '@/lib/data-enrichment';
 import { dataUrlToBlob } from '@/lib/portrait';
@@ -382,7 +382,8 @@ export function FinalizeStep() {
   const { showToast } = useToast();
   const { draft, updateDraft, getCharacter, resetCreator, prevStep } = useCharacterCreatorStore();
   const { data: codexSkills } = useCodexSkills();
-  const { data: allSpecies = [] } = useSpecies();
+  const { data: allSpecies = [] } = useMergedSpecies();
+  const { data: allTraits } = useTraits();
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
   const { data: itemPropertiesDb = [] } = useItemProperties();
@@ -398,8 +399,9 @@ export function FinalizeStep() {
       getAllValidationIssues(draft, {
         allSpecies,
         codexSkills: codexSkills ?? null,
+        allTraits: allTraits ?? null,
       }),
-    [draft, allSpecies, codexSkills]
+    [draft, allSpecies, codexSkills, allTraits]
   );
 
   const proficiencyTpSummary = useMemo(() => {
@@ -501,7 +503,7 @@ export function FinalizeStep() {
           }
         });
         
-        characterData.skills = skillsArray as any;
+        characterData.skills = skillsArray as unknown as Character['skills'];
       }
 
       // Strip to lean schema (feats, powers, techniques, skills, equipment, etc.) so we don't persist
@@ -509,14 +511,14 @@ export function FinalizeStep() {
       const leanData = cleanForSave(characterData as unknown as Character);
       
       // Remove any undefined values (PostgreSQL JSONB rejects undefined)
-      const sanitize = (val: any): any => {
+      const sanitizeForJsonb = (val: unknown): unknown => {
         if (val === undefined) return undefined;
         if (val === null) return null;
-        if (Array.isArray(val)) return val.map(sanitize).filter((v) => v !== undefined);
+        if (Array.isArray(val)) return val.map(sanitizeForJsonb).filter((v) => v !== undefined);
         if (typeof val === 'object') {
-          const out: any = {};
-          Object.entries(val).forEach(([k, v]) => {
-            const s = sanitize(v);
+          const out: Record<string, unknown> = {};
+          Object.entries(val as Record<string, unknown>).forEach(([k, v]) => {
+            const s = sanitizeForJsonb(v);
             if (s !== undefined) out[k] = s;
           });
           return out;
@@ -524,7 +526,7 @@ export function FinalizeStep() {
         return val;
       };
 
-      const sanitizedCharacter = sanitize(leanData);
+      const sanitizedCharacter = sanitizeForJsonb(leanData) as Partial<Character>;
 
       // If portrait is base64, strip it from initial save (will upload to Storage after)
       const hasBase64Portrait = sanitizedCharacter.portrait && 

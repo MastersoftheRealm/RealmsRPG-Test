@@ -15,7 +15,9 @@ const OFFICIAL_LIBRARY_KEYS = {
   byType: (type: string) => ['official-library', type] as const,
 };
 
-export function useOfficialLibrary(type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures') {
+export function useOfficialLibrary(
+  type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species'
+) {
   return useQuery({
     queryKey: OFFICIAL_LIBRARY_KEYS.byType(type),
     queryFn: () => fetchOfficialLibrary(type),
@@ -33,9 +35,12 @@ const USER_LIBRARY_KEY_MAP: Record<string, string> = {
   'empowered-techniques': 'user-empowered-techniques',
   items: 'user-items',
   creatures: 'user-creatures',
+  species: 'user-species',
 };
 
-export function useAddOfficialToLibrary(type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures') {
+export function useAddOfficialToLibrary(
+  type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species'
+) {
   const queryClient = useQueryClient();
 
   return useMutation({

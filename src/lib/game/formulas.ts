@@ -725,7 +725,7 @@ export interface CodexSkillForFeat {
  * skill_req_val is the required SKILL BONUS (not skill value). All skill requirements also require proficiency.
  * @param skillId - Codex skill ID (from feat.skill_req)
  * @param abilities - Character/draft abilities
- * @param skills - Character: Record<id, { prof, val }>; Draft: Record<id, value (number)>
+ * @param skills - Character: Record<id, { prof, val }>; Draft: Record<id, value (number)> where base skills use 0+ as proficient (0 = proficient, no ranks) and sub-skills use 1+ (0 = unproficient / absent)
  * @param codexSkills - Full codex skills to resolve base/sub and ability
  * @returns { bonus, proficient } - bonus is the effective skill bonus; proficient is whether they meet the base proficiency requirement
  */
@@ -745,24 +745,33 @@ export function getSkillBonusForFeatRequirement(
     if (s == null) return 0;
     return typeof s === 'number' ? s : (s?.val ?? 0);
   };
-  const getProf = (key: string): boolean => {
+  /** Draft numeric allocations: base skill proficient if value >= 0; sub-skill if >= 1 (matches SkillsAllocationPage). */
+  const readProficiency = (key: string, allocUsesSubRules: boolean): boolean => {
     const s = skills[key];
     if (s == null) return false;
-    return typeof s === 'number' ? s >= 1 : (s?.prof ?? false);
+    if (typeof s === 'number') {
+      return allocUsesSubRules ? s >= 1 : s >= 0;
+    }
+    return s?.prof ?? false;
   };
+
+  const baseSkillId = codexSkill.base_skill_id != null ? String(codexSkill.base_skill_id) : undefined;
+  const featTargetsSubSkill = Boolean(baseSkillId);
 
   // Resolve key: character may key by id or by name
   const byId = skills[String(skillId)] != null;
   const byName = codexSkill.name && skills[String(codexSkill.name)] != null;
   const skillKey = byId ? String(skillId) : byName ? String(codexSkill.name) : String(skillId);
   const value = getVal(skillKey) || getVal(String(skillId)) || (codexSkill.name ? getVal(String(codexSkill.name)) : 0);
-  const proficient = getProf(skillKey) || getProf(String(skillId)) || (codexSkill.name ? getProf(String(codexSkill.name)) : false);
+  const proficient =
+    readProficiency(skillKey, featTargetsSubSkill) ||
+    readProficiency(String(skillId), featTargetsSubSkill) ||
+    (codexSkill.name ? readProficiency(String(codexSkill.name), featTargetsSubSkill) : false);
 
   const abilityKey = (codexSkill.ability?.split(',')[0]?.trim()?.toLowerCase() || 'strength') as keyof Abilities;
   const abilityMod = abilities[abilityKey] ?? 0;
   const unprofBonus = (a: number) => (a < 0 ? a * 2 : Math.ceil(a / 2));
 
-  const baseSkillId = codexSkill.base_skill_id != null ? String(codexSkill.base_skill_id) : undefined;
   if (baseSkillId) {
     // Sub-skill: need base skill value and proficiency
     const baseCodex = codexSkills.find((s) => String(s.id) === baseSkillId);
@@ -770,7 +779,10 @@ export function getSkillBonusForFeatRequirement(
     const baseKeyByName = baseCodex?.name && skills[String(baseCodex.name)] != null;
     const baseKey = baseKeyById ? baseSkillId : baseKeyByName ? String(baseCodex!.name) : baseSkillId;
     const baseValue = getVal(baseKey) || getVal(baseSkillId) || (baseCodex?.name ? getVal(String(baseCodex.name)) : 0);
-    const baseProficient = getProf(baseKey) || getProf(baseSkillId) || (baseCodex?.name ? getProf(String(baseCodex.name)) : false);
+    const baseProficient =
+      readProficiency(baseKey, false) ||
+      readProficiency(baseSkillId, false) ||
+      (baseCodex?.name ? readProficiency(String(baseCodex.name), false) : false);
     if (!baseProficient) {
       return { bonus: unprofBonus(abilityMod) + baseValue, proficient: false };
     }
