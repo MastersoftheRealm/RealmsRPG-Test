@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Users, Plus, AlertTriangle } from 'lucide-react';
 import { useAuthStore } from '@/stores';
 import {
@@ -20,7 +20,7 @@ import {
   type Trait,
   type Skill,
 } from '@/hooks';
-import { CREATURE_TYPES } from '@/lib/game/creator-constants';
+import { CREATURE_TYPES, CREATOR_CACHE_KEYS, CACHE_EXPIRY_MS } from '@/lib/game/creator-constants';
 import { CreatorLayout, CreatorSaveToolbar, CreatorSummaryPanel, CollapsibleSection } from '@/components/creator';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { Button, Input, Textarea, Modal, LoadingState } from '@/components/ui';
@@ -43,6 +43,8 @@ const MAX_SIZES = 2;
 const MAX_LANGUAGES = 2;
 const DEFAULT_LANGUAGES = ['Universal'];
 const SIZE_OPTIONS = ['Tiny', 'Small', 'Medium', 'Large', 'Huge'];
+
+const SPECIES_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.SPECIES;
 
 const SPECIES_TRAIT_WARNING =
   'Most species only have 2 species traits; the 3rd is almost always used for a type of natural weapon, if any. Are you sure you wish to add this trait?';
@@ -81,6 +83,11 @@ const initialState: SpeciesFormState = {
   adulthood_lifespan: ['', ''],
 };
 
+interface SpeciesCreatorCache {
+  form: SpeciesFormState;
+  timestamp: number;
+}
+
 /** Default speed for species (not user-editable). */
 const DEFAULT_SPECIES_SPEED = 6;
 
@@ -103,6 +110,65 @@ function normalizeSkillIds(ids: (string | number)[] | undefined, allSkills: Skil
   });
 }
 
+function coerceNumberOrEmpty(v: unknown): number | '' {
+  if (v === '' || v == null) return '';
+  const n = Number(v);
+  return Number.isFinite(n) ? n : '';
+}
+
+/** Restore form from localStorage cache; normalizes trait/skill IDs to current codex IDs. */
+function mergeCachedSpeciesForm(
+  cache: unknown,
+  allTraits: Trait[],
+  allSkills: Skill[],
+): SpeciesFormState | null {
+  if (!cache || typeof cache !== 'object') return null;
+  const c = cache as Record<string, unknown>;
+  const form = c.form;
+  if (!form || typeof form !== 'object') return null;
+  const f = form as Record<string, unknown>;
+
+  const sizesRaw = f.sizes;
+  let sizes = Array.isArray(sizesRaw) ? sizesRaw.map(String).filter(Boolean) : [];
+  if (!sizes.length && typeof f.size === 'string' && f.size.trim()) sizes = [f.size.trim()];
+  if (!sizes.length) sizes = [...initialState.sizes];
+  sizes = sizes.slice(0, MAX_SIZES);
+
+  const languagesRaw = f.languages;
+  const languages = Array.isArray(languagesRaw)
+    ? languagesRaw.map(String).filter(Boolean).slice(0, MAX_LANGUAGES)
+    : [...DEFAULT_LANGUAGES];
+
+  const al = f.adulthood_lifespan;
+  let adulthood_lifespan: [number | '', number | ''] = ['', ''];
+  if (Array.isArray(al) && al.length >= 2) {
+    adulthood_lifespan = [coerceNumberOrEmpty(al[0]), coerceNumberOrEmpty(al[1])];
+  }
+
+  const skillIdsRaw = (f.skillIds ?? f.skill_ids) as (string | number)[] | undefined;
+  const speciesTraitsRaw = (f.species_traits ?? f.species_trait_ids) as (string | number)[] | undefined;
+  const ancestryTraitsRaw = (f.ancestry_traits ?? f.ancestry_trait_ids) as (string | number)[] | undefined;
+  const characteristicsRaw = (f.characteristics ?? f.characteristic_ids) as (string | number)[] | undefined;
+  const flawsRaw = (f.flaws ?? f.flaw_ids) as (string | number)[] | undefined;
+
+  return {
+    ...initialState,
+    name: String(f.name ?? ''),
+    description: String(f.description ?? ''),
+    type: String(f.type ?? ''),
+    sizes,
+    skillIds: normalizeSkillIds(skillIdsRaw, allSkills).slice(0, MAX_SKILLS),
+    species_traits: normalizeTraitIds(speciesTraitsRaw, allTraits).slice(0, MAX_SPECIES_TRAITS),
+    ancestry_traits: normalizeTraitIds(ancestryTraitsRaw, allTraits).slice(0, MAX_ANCESTRY_TRAITS),
+    characteristics: normalizeTraitIds(characteristicsRaw, allTraits).slice(0, MAX_CHARACTERISTICS),
+    flaws: normalizeTraitIds(flawsRaw, allTraits).slice(0, MAX_FLAWS),
+    languages: languages.length ? languages : [...DEFAULT_LANGUAGES],
+    ave_height: coerceNumberOrEmpty(f.ave_height),
+    ave_weight: coerceNumberOrEmpty(f.ave_weight),
+    adulthood_lifespan,
+  };
+}
+
 export default function SpeciesCreatorPage() {
   const { user } = useAuthStore();
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
@@ -116,11 +182,46 @@ export default function SpeciesCreatorPage() {
   const [newLanguage, setNewLanguage] = useState('');
 
   const [form, setForm] = useState<SpeciesFormState>(initialState);
+  const cacheBootstrapRef = useRef(false);
+  const [cacheReady, setCacheReady] = useState(false);
 
   const { data: codexSpecies = [], isLoading: codexLoading } = useSpecies();
   const { data: userSpeciesList = [] } = useUserSpecies();
-  const { data: skills = [] } = useCodexSkills();
-  const { data: traits = [] } = useTraits();
+  const { data: skills = [], isLoading: skillsLoading } = useCodexSkills();
+  const { data: traits = [], isLoading: traitsLoading } = useTraits();
+
+  // Load draft from localStorage once codex lists are ready (same 30-day window as other creators)
+  useEffect(() => {
+    if (skillsLoading || traitsLoading) return;
+    if (cacheBootstrapRef.current) return;
+    cacheBootstrapRef.current = true;
+    try {
+      const raw = localStorage.getItem(SPECIES_CREATOR_CACHE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as SpeciesCreatorCache;
+        if (parsed.timestamp && Date.now() - parsed.timestamp < CACHE_EXPIRY_MS) {
+          const merged = mergeCachedSpeciesForm(parsed, traits as Trait[], skills as Skill[]);
+          if (merged) setForm(merged);
+        } else {
+          localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
+        }
+      }
+    } catch {
+      localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
+    }
+    setCacheReady(true);
+  }, [skillsLoading, traitsLoading, traits, skills]);
+
+  // Persist draft across refresh (mirrors item/power creator cache pattern)
+  useEffect(() => {
+    if (!cacheReady) return;
+    try {
+      const cache: SpeciesCreatorCache = { form, timestamp: Date.now() };
+      localStorage.setItem(SPECIES_CREATOR_CACHE_KEY, JSON.stringify(cache));
+    } catch {
+      // ignore quota / private mode
+    }
+  }, [cacheReady, form]);
 
   const traitLimits: Record<TraitCategory, number> = {
     species_traits: MAX_SPECIES_TRAITS,
@@ -170,7 +271,14 @@ export default function SpeciesCreatorPage() {
     type: 'species',
     getPayload,
     successMessage: 'Species saved to My Codex!',
-    onSaveSuccess: () => setForm(initialState),
+    onSaveSuccess: () => {
+      try {
+        localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
+      } catch {
+        // ignore
+      }
+      setForm(initialState);
+    },
   });
 
   const handleSave = useCallback(async () => {
@@ -182,6 +290,11 @@ export default function SpeciesCreatorPage() {
   }, [user, save]);
 
   const handleReset = useCallback(() => {
+    try {
+      localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
+    } catch {
+      // ignore
+    }
     setForm(initialState);
     save.setSaveMessage(null);
   }, [save]);

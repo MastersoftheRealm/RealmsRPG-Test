@@ -259,6 +259,7 @@ export const CREATOR_CACHE_KEYS = {
   EMPOWERED_TECHNIQUE: 'realms-empowered-technique-creator-cache',
   ITEM: 'realms-item-creator-cache',
   CREATURE: 'realms-creature-creator-cache',
+  SPECIES: 'realms-species-creator-cache',
 } as const;
 
 /** Cache expiry time in milliseconds (30 days) */
