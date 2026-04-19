@@ -29,6 +29,7 @@ import {
   useAdmin,
   useCreatorSave,
   usePublicLibrary,
+  useGameRules,
   type CreatureFeat as CodexCreatureFeatRow,
   type UserPower,
   type UserTechnique,
@@ -126,6 +127,7 @@ function normalizeInventoryType(type: string | undefined): Exclude<InventoryTab,
 
 function CreatureCreatorContent() {
   const { user } = useAuthStore();
+  const { rules } = useGameRules();
   const { isAdmin } = useAdmin();
   const { data: creatureFeatsData = [] } = useCreatureFeats();
   const { data: codexFeatsData = [] } = useCodexFeats();
@@ -662,12 +664,12 @@ function CreatureCreatorContent() {
       .map(([, value]) => value);
     const highestNonVitality = Math.max(...nonVitalityAbilities, 0);
     
-    const trainingPoints = calculateCreatureTrainingPoints(level, highestNonVitality);
-    const currency = calculateCreatureCurrency(level);
-    const hePool = calculateHealthEnergyPool(level, 'CREATURE', true);
-    const proficiency = calculateProficiency(level, true);
-    const abilityPoints = calculateAbilityPoints(level, true);
-    const skillPoints = calculateSkillPointsForEntity(Math.max(1, Math.floor(level)), 'creature');
+    const trainingPoints = calculateCreatureTrainingPoints(level, highestNonVitality, rules);
+    const currency = calculateCreatureCurrency(level, rules);
+    const hePool = calculateHealthEnergyPool(level, 'CREATURE', true, rules);
+    const proficiency = calculateProficiency(level, true, rules);
+    const abilityPoints = calculateAbilityPoints(level, true, rules);
+    const skillPoints = calculateSkillPointsForEntity(Math.max(1, Math.floor(level)), 'creature', rules);
     
     // Max archetype proficiency points based on level (vanilla formula)
     // level < 1: ceil(2 * level), else: 2 + floor(level / 5)
@@ -676,7 +678,7 @@ function CreatureCreatorContent() {
     const proficiencyRemaining = maxProficiencyPoints - proficiencySpent;
     
     // Feat points based on level and martial proficiency
-    const featPoints = calculateCreatureFeatPoints(level, creature.martialProficiency);
+    const featPoints = calculateCreatureFeatPoints(level, creature.martialProficiency, rules);
     
     // Calculate mechanical feat points from resistances, immunities, weaknesses, condition immunities
     // Each counts as one instance of that feat, costing/granting its feat points
@@ -788,7 +790,7 @@ function CreatureCreatorContent() {
       weaknessFeatCost,
       conditionImmunityFeatCost,
     };
-  }, [creature, featPointsMap, subSkillNames]);
+  }, [creature, featPointsMap, subSkillNames, rules]);
 
   const getPayload = useCallback(() => ({
     name: creature.name.trim(),

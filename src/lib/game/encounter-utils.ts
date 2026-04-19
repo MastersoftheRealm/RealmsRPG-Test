@@ -4,7 +4,9 @@
  * Helper calculations for encounters — creature HP/EN from library data.
  *
  * Max HP / Max Energy must match `creature-creator/page.tsx` derived stats:
- * - maxHealth = 8 + vitalityContribution + hitPoints (pool allocation)
+ * - Creatures have no character-style base HP (no +8). Pool comes from core rules
+ *   (`calculateHealthEnergyPool` … CREATURE); hitPoints/energyPoints split that pool.
+ * - maxHealth = vitalityContribution + hitPoints
  * - vitalityContribution = vitality × max(1, level) if vitality ≥ 0, else vitality once
  * - maxEnergy = highestNonVitality × max(1, level) + energyPoints
  */
@@ -94,7 +96,7 @@ export function calculateCreatureMaxHealth(
 ): number {
   const vitality = getCreatureVitality(abilities);
   const vitalityContribution = vitality >= 0 ? vitality * Math.max(1, level) : vitality;
-  return 8 + vitalityContribution + (hitPoints || 0);
+  return vitalityContribution + (hitPoints || 0);
 }
 
 /**
