@@ -128,15 +128,6 @@ function FeatCard({
 }
 
 export function CodexFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  if (codexMode === 'my') {
-    return (
-      <EmptyState
-        size="lg"
-        title="My Codex: Feats"
-        description="Custom feats are not available yet. For now, use Realms Codex."
-      />
-    );
-  }
   const { data: feats, isLoading, error } = useCodexFeats();
   const { data: skills = [] } = useCodexSkills();
   const { sortState, handleSort, sortItems } = useSort('name');
@@ -250,6 +241,16 @@ export function CodexFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' |
   }, [feats, filters, sortItems]);
 
   const featFamilies = useMemo(() => groupFeatFamilies(filteredFeats), [filteredFeats]);
+
+  if (codexMode === 'my') {
+    return (
+      <EmptyState
+        size="lg"
+        title="My Codex: Feats"
+        description="Custom feats are not available yet. For now, use Realms Codex."
+      />
+    );
+  }
 
   if (error) {
     return <ErrorState message="Failed to load feats" />;

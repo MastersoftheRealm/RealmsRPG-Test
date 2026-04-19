@@ -105,15 +105,6 @@ function EquipmentCard({ item, propertiesDb = [] }: { item: Equipment; propertie
 }
 
 export function CodexEquipmentTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  if (codexMode === 'my') {
-    return (
-      <EmptyState
-        size="lg"
-        title="My Codex: Equipment"
-        description="Custom equipment lives in Library (My Library). Use Realms Codex for reference."
-      />
-    );
-  }
   const { data: equipment, isLoading, error } = useEquipment();
   const { data: propertiesDb = [] } = useItemProperties();
   const { sortState, handleSort, sortItems } = useSort('name');
@@ -157,6 +148,16 @@ export function CodexEquipmentTab({ codexMode = 'public' }: { codexMode?: 'publi
       rarity: e.rarity || '',
     })));
   }, [equipment, filters, sortItems]);
+
+  if (codexMode === 'my') {
+    return (
+      <EmptyState
+        size="lg"
+        title="My Codex: Equipment"
+        description="Custom equipment lives in Library (My Library). Use Realms Codex for reference."
+      />
+    );
+  }
 
   if (error) return <ErrorState message="Failed to load equipment" />;
 

@@ -67,15 +67,6 @@ function SkillCard({ skill, skillIdToName }: { skill: Skill; skillIdToName: Map<
 }
 
 export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  if (codexMode === 'my') {
-    return (
-      <EmptyState
-        size="lg"
-        title="My Codex: Skills"
-        description="Custom skills are not available yet. For now, use Realms Codex."
-      />
-    );
-  }
   const { data: skills, isLoading, error } = useCodexSkills();
   const { sortState, handleSort, sortItems } = useSort('name');
 
@@ -165,6 +156,16 @@ export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' 
     }
     return sortItems<Skill>(filtered);
   }, [skills, filters, sortItems, skillIdToName]);
+
+  if (codexMode === 'my') {
+    return (
+      <EmptyState
+        size="lg"
+        title="My Codex: Skills"
+        description="Custom skills are not available yet. For now, use Realms Codex."
+      />
+    );
+  }
 
   if (error) return <ErrorState message="Failed to load skills" />;
 

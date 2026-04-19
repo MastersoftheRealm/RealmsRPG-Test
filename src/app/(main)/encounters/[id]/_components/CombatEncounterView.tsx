@@ -37,15 +37,18 @@ export interface CombatEncounterViewProps {
   showRollLog?: boolean;
 }
 
-export default function CombatEncounterView({
+export default function CombatEncounterView(props: CombatEncounterViewProps) {
+  if (props.encounter === null) return null;
+  return <CombatEncounterViewInner {...props} encounter={props.encounter} />;
+}
+
+function CombatEncounterViewInner({
   encounterId,
   encounter,
   setEncounter,
   campaignsFull,
   showRollLog = true,
-}: CombatEncounterViewProps) {
-  if (encounter === null) return null;
-
+}: CombatEncounterViewProps & { encounter: Encounter }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [addingAllChars, setAddingAllChars] = useState(false);
   const [newCombatant, setNewCombatant] = useState(() => ({

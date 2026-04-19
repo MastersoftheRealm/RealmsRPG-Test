@@ -27,6 +27,7 @@ import {
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
 import { formatDamageDisplay, formatListCellLabel, normalizeRangeDisplay } from '@/lib/utils';
 import { ChevronDown } from 'lucide-react';
+import type { Abilities } from '@/types';
 
 // =============================================================================
 // Types
@@ -516,14 +517,14 @@ export function CreatureStatBlock({
             s.value ?? 0,
             parent?.value ?? 0,
             parent ? parent.proficient !== false : false,
-            creature.abilities as any,
+            creature.abilities as Abilities,
             s.proficient !== false,
             chosen
           )
         : calculateSkillBonusWithProficiency(
             linked,
             s.value ?? 0,
-            creature.abilities as any,
+            creature.abilities as Abilities,
             s.proficient !== false,
             chosen
           );

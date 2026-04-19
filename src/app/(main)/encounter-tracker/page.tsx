@@ -133,7 +133,7 @@ function EncounterTrackerContent() {
   // Display combatants in their current order
   // Auto-apply surprise during round 1 (surprised go to end), companions always go last
   const sortedCombatants = useMemo(() => {
-    let combatants = [...encounter.combatants];
+    const combatants = [...encounter.combatants];
     
     // Separate companions (they always go at the end)
     const companions = combatants.filter(c => c.combatantType === 'companion');

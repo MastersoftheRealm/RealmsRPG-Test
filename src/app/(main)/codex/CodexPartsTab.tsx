@@ -122,15 +122,6 @@ interface PartFilters {
 }
 
 export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  if (codexMode === 'my') {
-    return (
-      <EmptyState
-        size="lg"
-        title="My Codex: Parts"
-        description="Custom parts are not available yet. For now, use Realms Codex."
-      />
-    );
-  }
   const { data: parts, isLoading, error } = useParts();
   const { sortState, handleSort } = useSort('name');
   const [filters, setFilters] = useState<PartFilters>({
@@ -179,6 +170,16 @@ export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' |
       return 0;
     });
   }, [parts, filters, sortState]);
+
+  if (codexMode === 'my') {
+    return (
+      <EmptyState
+        size="lg"
+        title="My Codex: Parts"
+        description="Custom parts are not available yet. For now, use Realms Codex."
+      />
+    );
+  }
 
   if (error) return <ErrorState message="Failed to load parts" />;
 

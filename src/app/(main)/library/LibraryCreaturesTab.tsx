@@ -48,7 +48,7 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
 
   const myOnlyCreatures = useMemo(() => {
     if (!creatures.length) return [];
-    let filtered = creatures.filter(c => {
+    const filtered = creatures.filter(c => {
       if (!search) return true;
       const searchLower = search.toLowerCase();
       return (

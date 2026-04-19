@@ -48,15 +48,25 @@ export interface SkillEncounterViewProps {
   isMixedEncounter?: boolean;
 }
 
-export default function SkillEncounterView({
+type EncounterWithSkillEncounter = Encounter & { skillEncounter: SkillEncounterState };
+
+export default function SkillEncounterView(props: SkillEncounterViewProps) {
+  if (props.encounter === null || props.encounter.skillEncounter === undefined) return null;
+  return (
+    <SkillEncounterViewInner
+      {...props}
+      encounter={props.encounter as EncounterWithSkillEncounter}
+    />
+  );
+}
+
+function SkillEncounterViewInner({
   encounter,
   setEncounter,
   campaignsFull,
   showRollLog = true,
   isMixedEncounter = false,
-}: SkillEncounterViewProps) {
-  if (encounter === null || encounter.skillEncounter === undefined) return null;
-
+}: SkillEncounterViewProps & { encounter: EncounterWithSkillEncounter }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newParticipantName, setNewParticipantName] = useState('');
   const [addingAllChars, setAddingAllChars] = useState(false);

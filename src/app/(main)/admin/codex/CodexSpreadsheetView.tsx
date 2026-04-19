@@ -454,6 +454,13 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
     setDirty((prev) => new Set(prev).add(rows.length));
   }, [rows.length]);
 
+  const hasDirty = dirty.size > 0;
+  const dirtyNewCount = useMemo(
+    () => [...dirty].filter((i) => { const r = rows[i] as Record<string, unknown>; const id = String(r?.id ?? ''); return !id || id.startsWith('__new'); }).length,
+    [dirty, rows]
+  );
+  const dirtyUpdateCount = dirty.size - dirtyNewCount;
+
   if (error) {
     return (
       <div className="rounded-lg border border-border bg-surface p-6 text-center text-red-600">
@@ -469,13 +476,6 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
       </div>
     );
   }
-
-  const hasDirty = dirty.size > 0;
-  const dirtyNewCount = useMemo(
-    () => [...dirty].filter((i) => { const r = rows[i] as Record<string, unknown>; const id = String(r?.id ?? ''); return !id || id.startsWith('__new'); }).length,
-    [dirty, rows]
-  );
-  const dirtyUpdateCount = dirty.size - dirtyNewCount;
   const idColIndex = columns.indexOf('id');
   const nameColIndex = columns.indexOf('name');
   const stickyLeftFor = (colKey: string, colIndex: number): number | undefined => {

@@ -15,7 +15,7 @@ interface TooltipProps {
   className?: string;
   contentClassName?: string;
   disabled?: boolean;
-  children: ReactElement<any>;
+  children: ReactElement<{ className?: string }>;
 }
 
 const MOBILE_BREAKPOINT = 768;

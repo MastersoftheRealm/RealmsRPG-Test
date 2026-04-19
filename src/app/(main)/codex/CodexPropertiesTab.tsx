@@ -90,15 +90,6 @@ function PropertyCard({ property }: { property: ItemProperty }) {
 }
 
 export function CodexPropertiesTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  if (codexMode === 'my') {
-    return (
-      <EmptyState
-        size="lg"
-        title="My Codex: Properties"
-        description="Custom properties are not available yet. For now, use Realms Codex."
-      />
-    );
-  }
   const { data: properties, isLoading, error } = useItemProperties();
   const { sortState, handleSort } = useSort('name');
   const [filters, setFilters] = useState<PropertyFilters>({
@@ -134,6 +125,16 @@ export function CodexPropertiesTab({ codexMode = 'public' }: { codexMode?: 'publ
       return 0;
     });
   }, [properties, filters, sortState]);
+
+  if (codexMode === 'my') {
+    return (
+      <EmptyState
+        size="lg"
+        title="My Codex: Properties"
+        description="Custom properties are not available yet. For now, use Realms Codex."
+      />
+    );
+  }
 
   if (error) return <ErrorState message="Failed to load properties" />;
 

@@ -32,7 +32,8 @@ function buildTooltipUrl(options: UseTooltipsOptions): string {
 }
 
 export function useTooltips(options: UseTooltipsOptions = {}) {
-  const url = useMemo(() => buildTooltipUrl(options), [options.scope, options.keys?.join('|')]);
+  const keysKey = options.keys?.join('|');
+  const url = useMemo(() => buildTooltipUrl(options), [options.scope, keysKey]);
   return useQuery<TooltipListResponse, Error>({
     queryKey: ['tooltips', url],
     queryFn: () => apiFetch<TooltipListResponse>(url, { cache: 'no-store' }),

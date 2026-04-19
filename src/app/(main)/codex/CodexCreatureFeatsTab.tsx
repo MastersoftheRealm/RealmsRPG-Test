@@ -30,15 +30,6 @@ const CREATURE_FEAT_COLUMNS = [
 ];
 
 export function CodexCreatureFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  if (codexMode === 'my') {
-    return (
-      <UiEmptyState
-        size="lg"
-        title="My Codex: Creature Feats"
-        description="Custom creature feats are not available yet. For now, use Realms Codex."
-      />
-    );
-  }
   const { data: creatureFeats, isLoading, error } = useCreatureFeats();
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
@@ -55,6 +46,16 @@ export function CodexCreatureFeatsTab({ codexMode = 'public' }: { codexMode?: 'p
       ),
     [creatureFeats, search, sortState, sortItems]
   );
+
+  if (codexMode === 'my') {
+    return (
+      <UiEmptyState
+        size="lg"
+        title="My Codex: Creature Feats"
+        description="Custom creature feats are not available yet. For now, use Realms Codex."
+      />
+    );
+  }
 
   if (error) return <ErrorState message="Failed to load creature feats" />;
 

@@ -149,6 +149,81 @@ function ProgressionPreview({ data }: { data: Record<string, unknown> }) {
 }
 
 // =============================================================================
+// Damage types (needs local state — must not call hooks inside switch cases)
+// =============================================================================
+
+function DamageTypesEditor({
+  data,
+  set,
+}: {
+  data: Record<string, unknown>;
+  set: (key: string, value: unknown) => void;
+}) {
+  const all = (data.all || []) as string[];
+  const exceptions = (data.armorExceptions || []) as string[];
+  const [newType, setNewType] = useState('');
+  return (
+    <>
+      <SectionTitle>All Damage Types ({all.length})</SectionTitle>
+      <div className="flex flex-wrap gap-1.5 mb-3">
+        {all.map((t) => (
+          <span key={t} className={`group px-2 py-0.5 rounded-full text-xs font-medium inline-flex items-center gap-1 ${exceptions.includes(t) ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' : 'bg-surface-alt text-text-secondary'}`}>
+            {t}{exceptions.includes(t) ? ' ⚡' : ''}
+            <button
+              type="button"
+              onClick={() => {
+                set('all', all.filter((x) => x !== t));
+                if (exceptions.includes(t)) set('armorExceptions', exceptions.filter((x) => x !== t));
+              }}
+              className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 ml-0.5"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          </span>
+        ))}
+      </div>
+      <div className="flex items-center gap-2 mb-4">
+        <input value={newType} onChange={(e) => setNewType(e.target.value)} placeholder="New damage type..." className="w-48 px-2 py-1 text-sm rounded border border-border-light bg-surface" />
+        <button
+          type="button"
+          onClick={() => {
+            if (newType.trim() && !all.includes(newType.trim())) {
+              set('all', [...all, newType.trim()]);
+              setNewType('');
+            }
+          }}
+          className="text-xs text-primary-600 hover:text-primary-700 flex items-center gap-1"
+        >
+          <Plus className="w-3.5 h-3.5" /> Add
+        </button>
+      </div>
+
+      <SectionTitle>Armor Exception Types</SectionTitle>
+      <p className="text-sm text-text-muted dark:text-text-secondary mb-2">These damage types bypass armor damage reduction. Click to toggle.</p>
+      <div className="flex flex-wrap gap-1.5">
+        {all.map((t) => (
+          <button
+            type="button"
+            key={t}
+            onClick={() => {
+              if (exceptions.includes(t)) {
+                set('armorExceptions', exceptions.filter((x) => x !== t));
+              } else {
+                set('armorExceptions', [...exceptions, t]);
+              }
+            }}
+            className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${exceptions.includes(t) ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 ring-1 ring-amber-300' : `bg-surface-alt text-text-muted dark:text-text-secondary hover:bg-surface-alt/80`}`}
+          >
+            {t}{exceptions.includes(t) ? ' ⚡' : ''}
+          </button>
+        ))}
+      </div>
+      <FieldRow label="Note"><TextInput wide value={(data.note as string) ?? ''} onChange={(v) => set('note', v)} /></FieldRow>
+    </>
+  );
+}
+
+// =============================================================================
 // Category editor — renders the fields for the active tab's data
 // =============================================================================
 
@@ -568,52 +643,8 @@ function CategoryEditor({
       );
     }
 
-    case 'DAMAGE_TYPES': {
-      const all = (data.all || []) as string[];
-      const exceptions = (data.armorExceptions || []) as string[];
-      const [newType, setNewType] = useState('');
-      return (
-        <>
-          <SectionTitle>All Damage Types ({all.length})</SectionTitle>
-          <div className="flex flex-wrap gap-1.5 mb-3">
-            {all.map(t => (
-              <span key={t} className={`group px-2 py-0.5 rounded-full text-xs font-medium inline-flex items-center gap-1 ${exceptions.includes(t) ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' : 'bg-surface-alt text-text-secondary'}`}>
-                {t}{exceptions.includes(t) ? ' ⚡' : ''}
-                <button onClick={() => {
-                  set('all', all.filter(x => x !== t));
-                  if (exceptions.includes(t)) set('armorExceptions', exceptions.filter(x => x !== t));
-                }} className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 ml-0.5"><Trash2 className="w-3 h-3" /></button>
-              </span>
-            ))}
-          </div>
-          <div className="flex items-center gap-2 mb-4">
-            <input value={newType} onChange={e => setNewType(e.target.value)} placeholder="New damage type..." className="w-48 px-2 py-1 text-sm rounded border border-border-light bg-surface" />
-            <button onClick={() => { if (newType.trim() && !all.includes(newType.trim())) { set('all', [...all, newType.trim()]); setNewType(''); } }} className="text-xs text-primary-600 hover:text-primary-700 flex items-center gap-1"><Plus className="w-3.5 h-3.5" /> Add</button>
-          </div>
-
-          <SectionTitle>Armor Exception Types</SectionTitle>
-          <p className="text-sm text-text-muted dark:text-text-secondary mb-2">These damage types bypass armor damage reduction. Click to toggle.</p>
-          <div className="flex flex-wrap gap-1.5">
-            {all.map(t => (
-              <button
-                key={t}
-                onClick={() => {
-                  if (exceptions.includes(t)) {
-                    set('armorExceptions', exceptions.filter(x => x !== t));
-                  } else {
-                    set('armorExceptions', [...exceptions, t]);
-                  }
-                }}
-                className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${exceptions.includes(t) ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 ring-1 ring-amber-300' : `bg-surface-alt text-text-muted dark:text-text-secondary hover:bg-surface-alt/80`}`}
-              >
-                {t}{exceptions.includes(t) ? ' ⚡' : ''}
-              </button>
-            ))}
-          </div>
-          <FieldRow label="Note"><TextInput wide value={data.note as string ?? ''} onChange={v => set('note', v)} /></FieldRow>
-        </>
-      );
-    }
+    case 'DAMAGE_TYPES':
+      return <DamageTypesEditor data={data} set={set} />;
 
     case 'RECOVERY': {
       const partial = (data.partial || {}) as Record<string, string>;

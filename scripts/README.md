@@ -12,4 +12,6 @@
 
 **Database schema:** See [src/docs/SUPABASE_SCHEMA.md](../src/docs/SUPABASE_SCHEMA.md). SQL run order: [sql/README.md](../sql/README.md).
 
+**Linting:** These Node scripts use CommonJS `require()`. Root `eslint.config.mjs` turns off `@typescript-eslint/no-require-imports` for `scripts/**` so `npm run lint` stays clean without converting seeds to ESM.
+
 **Removed / legacy:** `inject-env-vanilla.js` — removed; no longer in package.json.
