@@ -16,12 +16,31 @@ import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { X, Plus, ChevronDown, ChevronUp, Swords, Zap, Target, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useTechniqueParts, useUserItems, useItemProperties, useAdmin, useCreatorSave, useLoadModalLibrary, type TechniquePart } from '@/hooks';
+import {
+  useTechniqueParts,
+  useUserItems,
+  useItemProperties,
+  useAdmin,
+  useCreatorSave,
+  useLoadModalLibrary,
+  usePublicLibrary,
+  useCreatorWeaponOptions,
+  type TechniquePart,
+  type CreatorWeaponOption,
+} from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { ContextHelpTooltip, LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
-import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout, CollapsibleSection, WeaponSelector, AdvancedCalculationsPanel } from '@/components/creator';
+import {
+  LoadFromLibraryModal,
+  CreatorSaveToolbar,
+  CreatorLayout,
+  CollapsibleSection,
+  CreatorWeaponPicker,
+  AdvancedCalculationsPanel,
+} from '@/components/creator';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
+import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { ValueStepper, SectionCostBadge } from '@/components/shared';
 import { CreatorSummaryPanel } from '@/components/creator';
 import {
@@ -31,8 +50,6 @@ import {
   formatTechniqueDamage,
   type TechniquePartPayload,
 } from '@/lib/calculators';
-import { calculateItemCosts } from '@/lib/calculators/item-calc';
-import type { ItemPropertyPayload } from '@/lib/calculators/item-calc';
 
 // =============================================================================
 // Types
@@ -52,13 +69,6 @@ interface DamageConfig {
   type: string;
 }
 
-interface WeaponConfig {
-  id: number | string;
-  name: string;
-  tp?: number; // Training points for weapon scaling
-  isUserWeapon?: boolean; // Whether this is a user-created weapon
-}
-
 // =============================================================================
 // Shared Constants (imported from central location)
 // =============================================================================
@@ -74,8 +84,8 @@ import {
 const TECHNIQUE_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.TECHNIQUE;
 
 // Default weapon options (always available)
-const DEFAULT_WEAPON_OPTIONS: WeaponConfig[] = [
-  { id: 0, name: 'Unarmed Prowess', tp: 0 },
+const DEFAULT_WEAPON_OPTIONS: CreatorWeaponOption[] = [
+  { id: 0, name: 'Unarmed Prowess', tp: 0, weaponLibrary: 'builtin' },
 ];
 
 // =============================================================================
@@ -364,7 +374,8 @@ function TechniqueCreatorContent() {
   const [actionType, setActionType] = useState('basic');
   const [isReaction, setIsReaction] = useState(false);
   const [damage, setDamage] = useState<DamageConfig>({ amount: 0, size: 6, type: 'none' });
-  const [weapon, setWeapon] = useState<WeaponConfig>(DEFAULT_WEAPON_OPTIONS[0]);
+  const [weapon, setWeapon] = useState<CreatorWeaponOption>(DEFAULT_WEAPON_OPTIONS[0]);
+  const [weaponLibrarySource, setWeaponLibrarySource] = useState<SourceFilterValue>('my');
   const load = useLoadModalLibrary('technique');
 
   // Fetch technique parts
@@ -375,27 +386,15 @@ function TechniqueCreatorContent() {
   // Fetch user's saved items (weapons) and codex properties (for weapon TP calculation)
   const { data: userItems = [] } = useUserItems();
   const { data: itemPropertiesDb = [] } = useItemProperties();
+  const { data: officialItems = [] } = usePublicLibrary('items');
 
-  // Combine default weapons with user's saved weapons; compute each weapon's TP from its properties
-  const allWeaponOptions = useMemo(() => {
-    const userWeapons: WeaponConfig[] = userItems
-      .filter((item) => (item.type || '').toLowerCase() === 'weapon')
-      .map((item) => {
-        const props = (item.properties || []) as ItemPropertyPayload[];
-        const costs = itemPropertiesDb.length
-          ? calculateItemCosts(props, itemPropertiesDb)
-          : { totalTP: 1 };
-        const tp = Math.max(0, Math.round(costs.totalTP));
-        return {
-          id: item.docId,
-          name: item.name,
-          tp: tp || 1, // Minimum 1 TP for non-unarmed weapons so Add Weapon Attack applies
-          isUserWeapon: true,
-        };
-      });
-
-    return [...DEFAULT_WEAPON_OPTIONS, ...userWeapons];
-  }, [userItems, itemPropertiesDb]);
+  const { fullOptions: allWeaponOptions, visibleOptions } = useCreatorWeaponOptions({
+    defaults: DEFAULT_WEAPON_OPTIONS,
+    userItems,
+    officialWeaponItems: officialItems as Record<string, unknown>[],
+    itemPropertiesDb,
+    librarySource: weaponLibrarySource,
+  });
 
   // Load cached state from localStorage on mount (only once when parts are available)
   useEffect(() => {
@@ -907,14 +906,14 @@ function TechniqueCreatorContent() {
             rightSlot={<SectionCostBadge en={combatConfigCost.energyRaw} tp={combatConfigCost.totalTP} />}
           >
             <div className="grid md:grid-cols-2 gap-4">
-              <WeaponSelector
+              <CreatorWeaponPicker
+                librarySource={weaponLibrarySource}
+                onLibrarySourceChange={setWeaponLibrarySource}
+                fullOptions={allWeaponOptions}
+                visibleOptions={visibleOptions}
+                weapon={weapon}
+                onWeaponChange={setWeapon}
                 label="Weapon"
-                value={weapon.id}
-                options={allWeaponOptions}
-                onChange={(selectedId) => {
-                  const selected = allWeaponOptions.find((option) => String(option.id) === selectedId);
-                  if (selected) setWeapon(selected);
-                }}
                 ariaLabel="Weapon"
                 badgeEn={weaponCost.energyRaw}
                 badgeTp={weaponCost.totalTP}

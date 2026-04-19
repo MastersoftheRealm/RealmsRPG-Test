@@ -1,11 +1,14 @@
 'use client';
 
 import { SectionCostBadge } from '@/components/shared';
+import type { CreatorWeaponLibrary } from '@/lib/creator-weapon-options';
 
 export interface WeaponOption {
   id: string | number;
   name: string;
   isUserWeapon?: boolean;
+  /** When set, controls optgroup (General / My Library / Realms Library). */
+  weaponLibrary?: CreatorWeaponLibrary;
 }
 
 interface WeaponSelectorProps {
@@ -27,8 +30,14 @@ export function WeaponSelector({
   badgeEn,
   badgeTp,
 }: WeaponSelectorProps) {
-  const defaultOptions = options.filter((option) => !option.isUserWeapon);
-  const userOptions = options.filter((option) => option.isUserWeapon);
+  const libraryOf = (option: WeaponOption): CreatorWeaponLibrary => {
+    if (option.weaponLibrary) return option.weaponLibrary;
+    return option.isUserWeapon ? 'my' : 'builtin';
+  };
+
+  const generalOptions = options.filter((option) => libraryOf(option) === 'builtin');
+  const myLibraryOptions = options.filter((option) => libraryOf(option) === 'my');
+  const realmsLibraryOptions = options.filter((option) => libraryOf(option) === 'official');
 
   return (
     <div>
@@ -45,15 +54,24 @@ export function WeaponSelector({
         aria-label={ariaLabel}
       >
         <optgroup label="General">
-          {defaultOptions.map((option) => (
+          {generalOptions.map((option) => (
             <option key={String(option.id)} value={String(option.id)}>
               {option.name}
             </option>
           ))}
         </optgroup>
-        {userOptions.length > 0 && (
-          <optgroup label="My Weapons">
-            {userOptions.map((option) => (
+        {myLibraryOptions.length > 0 && (
+          <optgroup label="My Library">
+            {myLibraryOptions.map((option) => (
+              <option key={String(option.id)} value={String(option.id)}>
+                {option.name}
+              </option>
+            ))}
+          </optgroup>
+        )}
+        {realmsLibraryOptions.length > 0 && (
+          <optgroup label="Realms Library">
+            {realmsLibraryOptions.map((option) => (
               <option key={String(option.id)} value={String(option.id)}>
                 {option.name}
               </option>

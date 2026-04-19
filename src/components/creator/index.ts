@@ -21,5 +21,6 @@ export { CreatorSummaryPanel, type CreatorSummaryPanelProps } from './creator-su
 export { CreatorSaveToolbar, type CreatorSaveToolbarProps } from './CreatorSaveToolbar';
 export { CreatorLayout, type CreatorLayoutProps } from './CreatorLayout';
 export { WeaponSelector, type WeaponOption } from './weapon-selector';
+export { CreatorWeaponPicker, type CreatorWeaponPickerProps } from './creator-weapon-picker';
 export { AdvancedCalculationsPanel, type AdvancedCalculationRow } from './advanced-calculations-panel';
 

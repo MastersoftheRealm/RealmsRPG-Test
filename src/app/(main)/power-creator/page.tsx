@@ -17,13 +17,25 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, Wand2, Zap, Target, Info, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { usePowerParts, useUserItems, useItemProperties, useAdmin, useCreatorSave, useLoadModalLibrary, type PowerPart } from '@/hooks';
+import {
+  usePowerParts,
+  useUserItems,
+  useItemProperties,
+  useAdmin,
+  useCreatorSave,
+  useLoadModalLibrary,
+  usePublicLibrary,
+  useCreatorWeaponOptions,
+  type PowerPart,
+  type CreatorWeaponOption,
+} from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { ContextHelpTooltip, LoginPromptModal, ConfirmActionModal } from '@/components/shared';
-import { CreatorSaveToolbar, CreatorLayout, WeaponSelector, AdvancedCalculationsPanel } from '@/components/creator';
+import { CreatorSaveToolbar, CreatorLayout, CreatorWeaponPicker, AdvancedCalculationsPanel } from '@/components/creator';
 import { LoadingState, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
+import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { ValueStepper, SectionCostBadge } from '@/components/shared';
 import { CreatorSummaryPanel, CollapsibleSection } from '@/components/creator';
 import {
@@ -40,8 +52,6 @@ import {
   type DurationConfig,
 } from '@/lib/calculators';
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
-import { calculateItemCosts } from '@/lib/calculators/item-calc';
-import type { ItemPropertyPayload } from '@/lib/calculators/item-calc';
 import {
   ACTION_OPTIONS,
   POWER_DAMAGE_TYPES as DAMAGE_TYPES,
@@ -88,15 +98,8 @@ interface PowerCreatorCache {
   timestamp: number;
 }
 
-interface WeaponConfig {
-  id: number | string;
-  name: string;
-  tp?: number;
-  isUserWeapon?: boolean;
-}
-
-const DEFAULT_WEAPON_OPTIONS: WeaponConfig[] = [
-  { id: 0, name: 'Unarmed Prowess', tp: 0 },
+const DEFAULT_WEAPON_OPTIONS: CreatorWeaponOption[] = [
+  { id: 0, name: 'Unarmed Prowess', tp: 0, weaponLibrary: 'builtin' },
 ];
 
 function PowerCreatorContent() {
@@ -130,30 +133,23 @@ function PowerCreatorContent() {
     endsOnActivation: false,
     sustain: 0,
   });
-  const [weapon, setWeapon] = useState<WeaponConfig>(DEFAULT_WEAPON_OPTIONS[0]);
+  const [weapon, setWeapon] = useState<CreatorWeaponOption>(DEFAULT_WEAPON_OPTIONS[0]);
+  const [weaponLibrarySource, setWeaponLibrarySource] = useState<SourceFilterValue>('my');
   const load = useLoadModalLibrary('power');
 
   // Fetch power parts
   const { data: powerParts = [], isLoading, error } = usePowerParts();
   const { data: userItems = [] } = useUserItems();
   const { data: itemPropertiesDb = [] } = useItemProperties();
+  const { data: officialItems = [] } = usePublicLibrary('items');
 
-  const allWeaponOptions = useMemo(() => {
-    const userWeapons: WeaponConfig[] = userItems
-      .filter((item) => (item.type || '').toLowerCase() === 'weapon')
-      .map((item) => {
-        const props = (item.properties || []) as ItemPropertyPayload[];
-        const costs = itemPropertiesDb.length ? calculateItemCosts(props, itemPropertiesDb) : { totalTP: 1 };
-        const tp = Math.max(0, Math.round(costs.totalTP));
-        return {
-          id: item.docId,
-          name: item.name,
-          tp: tp || 1,
-          isUserWeapon: true,
-        };
-      });
-    return [...DEFAULT_WEAPON_OPTIONS, ...userWeapons];
-  }, [userItems, itemPropertiesDb]);
+  const { fullOptions: allWeaponOptions, visibleOptions } = useCreatorWeaponOptions({
+    defaults: DEFAULT_WEAPON_OPTIONS,
+    userItems,
+    officialWeaponItems: officialItems as Record<string, unknown>[],
+    itemPropertiesDb,
+    librarySource: weaponLibrarySource,
+  });
 
   // Load cached state from localStorage on mount
   useEffect(() => {
@@ -1016,14 +1012,14 @@ function PowerCreatorContent() {
             defaultExpanded={true}
             rightSlot={<SectionCostBadge en={sectionCosts.weapon.energyRaw} tp={sectionCosts.weapon.totalTP} />}
           >
-            <WeaponSelector
+            <CreatorWeaponPicker
+              librarySource={weaponLibrarySource}
+              onLibrarySourceChange={setWeaponLibrarySource}
+              fullOptions={allWeaponOptions}
+              visibleOptions={visibleOptions}
+              weapon={weapon}
+              onWeaponChange={setWeapon}
               label="Weapon"
-              value={weapon.id}
-              options={allWeaponOptions}
-              onChange={(selectedId) => {
-                const selected = allWeaponOptions.find((option) => String(option.id) === selectedId);
-                if (selected) setWeapon(selected);
-              }}
               ariaLabel="Power weapon"
             />
             <p className="mt-2 text-sm text-text-secondary">

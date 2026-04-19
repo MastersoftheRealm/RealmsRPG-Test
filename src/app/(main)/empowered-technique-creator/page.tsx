@@ -17,8 +17,11 @@ import {
   useAdmin,
   useCreatorSave,
   useLoadModalLibrary,
+  usePublicLibrary,
+  useCreatorWeaponOptions,
   type PowerPart,
   type TechniquePart,
+  type CreatorWeaponOption,
 } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { findByIdOrName, PART_IDS } from '@/lib/id-constants';
@@ -26,7 +29,6 @@ import {
   buildMechanicParts,
   calculatePowerCosts,
   calculateTechniqueCosts,
-  calculateItemCosts,
   calculateEmpoweredTechniqueCosts,
   computePowerActionTypeFromSelection,
   deriveRange,
@@ -39,7 +41,6 @@ import {
   type AreaConfig,
   type DurationConfig,
 } from '@/lib/calculators';
-import type { ItemPropertyPayload } from '@/lib/calculators/item-calc';
 import {
   ACTION_OPTIONS,
   AREA_TYPES,
@@ -49,10 +50,19 @@ import {
   DURATION_VALUES,
   POWER_DAMAGE_TYPES,
 } from '@/lib/game/creator-constants';
-import { CreatorLayout, CreatorSaveToolbar, CollapsibleSection, CreatorSummaryPanel, LoadFromLibraryModal, WeaponSelector, AdvancedCalculationsPanel } from '@/components/creator';
+import {
+  CreatorLayout,
+  CreatorSaveToolbar,
+  CollapsibleSection,
+  CreatorSummaryPanel,
+  LoadFromLibraryModal,
+  CreatorWeaponPicker,
+  AdvancedCalculationsPanel,
+} from '@/components/creator';
 import { Button, Checkbox, Input, Textarea, LoadingState, Alert, PageContainer } from '@/components/ui';
 import { ValueStepper, SectionCostBadge } from '@/components/shared';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
+import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { ConfirmActionModal, ContextHelpTooltip, LoginPromptModal } from '@/components/shared';
 import { PowerPartCard } from '@/app/(main)/power-creator/PowerPartCard';
 import { EXCLUDED_PARTS } from '@/app/(main)/power-creator/power-creator-constants';
@@ -66,13 +76,6 @@ interface DamageConfig {
 
 interface RangeConfig {
   steps: number;
-}
-
-interface WeaponConfig {
-  id: number | string;
-  name: string;
-  tp?: number;
-  isUserWeapon?: boolean;
 }
 
 interface SelectedPowerPart {
@@ -110,7 +113,9 @@ interface EmpoweredTechniqueCache {
 }
 
 const CACHE_KEY = CREATOR_CACHE_KEYS.EMPOWERED_TECHNIQUE;
-const DEFAULT_WEAPON_OPTIONS: WeaponConfig[] = [{ id: 0, name: 'Unarmed Prowess', tp: 0 }];
+const DEFAULT_WEAPON_OPTIONS: CreatorWeaponOption[] = [
+  { id: 0, name: 'Unarmed Prowess', tp: 0, weaponLibrary: 'builtin' },
+];
 
 function EmpoweredTechniqueCreatorContent() {
   const { user } = useAuthStore();
@@ -138,7 +143,8 @@ function EmpoweredTechniqueCreatorContent() {
     endsOnActivation: false,
     sustain: 0,
   });
-  const [weapon, setWeapon] = useState<WeaponConfig>(DEFAULT_WEAPON_OPTIONS[0]);
+  const [weapon, setWeapon] = useState<CreatorWeaponOption>(DEFAULT_WEAPON_OPTIONS[0]);
+  const [weaponLibrarySource, setWeaponLibrarySource] = useState<SourceFilterValue>('my');
   const [selectedPowerParts, setSelectedPowerParts] = useState<SelectedPowerPart[]>([]);
   const [selectedPowerAdvancedParts, setSelectedPowerAdvancedParts] = useState<SelectedPowerPart[]>([]);
   const [selectedTechniqueParts, setSelectedTechniqueParts] = useState<SelectedTechniquePart[]>([]);
@@ -147,23 +153,15 @@ function EmpoweredTechniqueCreatorContent() {
   const { data: techniqueParts = [], isLoading: techniquePartsLoading, error: techniquePartsError } = useTechniqueParts();
   const { data: userItems = [] } = useUserItems();
   const { data: itemPropertiesDb = [] } = useItemProperties();
+  const { data: officialItems = [] } = usePublicLibrary('items');
 
-  const allWeaponOptions = useMemo(() => {
-    const userWeapons: WeaponConfig[] = userItems
-      .filter((item) => (item.type || '').toLowerCase() === 'weapon')
-      .map((item) => {
-        const props = (item.properties || []) as ItemPropertyPayload[];
-        const costs = itemPropertiesDb.length ? calculateItemCosts(props, itemPropertiesDb) : { totalTP: 1 };
-        const tp = Math.max(0, Math.round(costs.totalTP));
-        return {
-          id: item.docId,
-          name: item.name,
-          tp: tp || 1,
-          isUserWeapon: true,
-        };
-      });
-    return [...DEFAULT_WEAPON_OPTIONS, ...userWeapons];
-  }, [itemPropertiesDb, userItems]);
+  const { fullOptions: allWeaponOptions, visibleOptions } = useCreatorWeaponOptions({
+    defaults: DEFAULT_WEAPON_OPTIONS,
+    userItems,
+    officialWeaponItems: officialItems as Record<string, unknown>[],
+    itemPropertiesDb,
+    librarySource: weaponLibrarySource,
+  });
 
   const nonMechanicPowerParts = useMemo(
     () => powerParts.filter((part: PowerPart) => !part.mechanic),
@@ -578,7 +576,7 @@ function EmpoweredTechniqueCreatorContent() {
           range?: RangeConfig;
           area?: AreaConfig;
           duration?: DurationConfig;
-          addWeapon?: WeaponConfig | null;
+          addWeapon?: CreatorWeaponOption | null;
         };
         technique?: {
           parts?: Array<{ id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }>;
@@ -998,14 +996,14 @@ function EmpoweredTechniqueCreatorContent() {
               ))}
             </select>
           </div>
-          <WeaponSelector
+          <CreatorWeaponPicker
+            librarySource={weaponLibrarySource}
+            onLibrarySourceChange={setWeaponLibrarySource}
+            fullOptions={allWeaponOptions}
+            visibleOptions={visibleOptions}
+            weapon={weapon}
+            onWeaponChange={setWeapon}
             label="Weapon (Add Weapon to Power)"
-            value={weapon.id}
-            options={allWeaponOptions}
-            onChange={(selectedId) => {
-              const selected = allWeaponOptions.find((option) => String(option.id) === selectedId);
-              if (selected) setWeapon(selected);
-            }}
             ariaLabel="Empowered technique weapon"
           />
         </div>

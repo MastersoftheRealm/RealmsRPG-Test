@@ -13,6 +13,8 @@ export { useCreatorLoad } from './use-creator-load';
 export type { CreatorLoadType, UseCreatorLoadReturn } from './use-creator-load';
 export { useLoadModalLibrary } from './use-load-modal-library';
 export type { LoadModalLibraryType, UseLoadModalLibraryReturn } from './use-load-modal-library';
+export { useCreatorWeaponOptions } from './use-creator-weapon-options';
+export type { CreatorWeaponOption } from '@/lib/creator-weapon-options';
 export { useProfile } from './use-profile';
 export { useTooltips, useTooltipByKey, useTooltipDefaults } from './use-tooltips';
 
@@ -88,6 +90,7 @@ export {
   useCodexArchetypes as useArchetypes,
   prefetchFunctions,
 } from './use-codex';
+export { useGameRules, getGameRulesFallback } from './use-game-rules';
 
 // Codex utilities (trait/skill resolution) — use use-codex types
 export {
