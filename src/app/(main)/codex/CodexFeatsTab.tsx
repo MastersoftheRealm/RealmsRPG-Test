@@ -337,7 +337,7 @@ export function CodexFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' |
               { value: 'character', label: 'Character' },
             ]}
             onChange={(v) => setFilters(f => ({ ...f, featTypeMode: v as 'all' | 'archetype' | 'character' }))}
-            placeholder="All"
+            placeholder={null}
           />
 
           <SelectFilter
@@ -349,7 +349,7 @@ export function CodexFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' |
               { value: 'hide', label: 'Hide State Feats' },
             ]}
             onChange={(v) => setFilters(f => ({ ...f, stateFeatMode: v as 'all' | 'only' | 'hide' }))}
-            placeholder="All Feats"
+            placeholder={null}
           />
         </div>
       </FilterSection>

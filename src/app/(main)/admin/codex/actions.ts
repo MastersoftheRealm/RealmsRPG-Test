@@ -2,6 +2,7 @@
 
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
+import { recordCodexChange } from '@/lib/codex-changelog';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
@@ -185,13 +186,48 @@ function getSupabaseAdmin() {
   return createServiceRoleClient();
 }
 
+async function fetchRowById(table: string, id: string): Promise<Record<string, unknown> | null> {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase.from(table).select('*').eq('id', id).maybeSingle();
+  if (error) throw new Error(error.message);
+  return (data as Record<string, unknown> | null) ?? null;
+}
+
+type ArchetypeSnapshot = {
+  archetype: Record<string, unknown>;
+  levels: Record<string, unknown>[];
+};
+
+async function getArchetypeSnapshot(archetypeId: string): Promise<ArchetypeSnapshot | null> {
+  const supabase = getSupabaseAdmin();
+  const { data: archetype, error: archetypeError } = await supabase
+    .from('codex_archetypes')
+    .select('*')
+    .eq('id', archetypeId)
+    .maybeSingle();
+  if (archetypeError) throw new Error(archetypeError.message);
+  if (!archetype) return null;
+
+  const { data: levels, error: levelsError } = await supabase
+    .from('codex_archetype_levels')
+    .select('*')
+    .eq('archetype_id', archetypeId)
+    .order('level', { ascending: true });
+  if (levelsError) throw new Error(levelsError.message);
+
+  return {
+    archetype: archetype as Record<string, unknown>,
+    levels: ((levels ?? []) as Record<string, unknown>[]),
+  };
+}
+
 export async function createCodexDoc(
   collection: CodexCollection,
   id: string | undefined,
   data: Record<string, unknown>
 ): Promise<{ success: boolean; id?: string; error?: string }> {
   try {
-    await requireAdmin();
+    const changedByUserId = await requireAdmin();
     const supabase = getSupabaseAdmin();
     const table = getTableName(collection);
 
@@ -215,11 +251,27 @@ export async function createCodexDoc(
     if (COLUMNAR_COLLECTIONS.includes(collection)) {
       const payload = toColumnarPayload(collection, data);
       const dbPayload = toDbPayload(collection, { id: docId, ...payload });
-      const { error } = await supabase.from(table).insert(dbPayload);
+      const { data: inserted, error } = await supabase.from(table).insert(dbPayload).select('*').single();
       if (error) throw new Error(error.message);
+      await recordCodexChange({
+        entityType: collection,
+        entityId: docId,
+        operation: 'create',
+        changedByUserId,
+        beforeData: null,
+        afterData: (inserted as Record<string, unknown> | null) ?? null,
+      });
     } else {
-      const { error } = await supabase.from(table).insert({ id: docId, data });
+      const { data: inserted, error } = await supabase.from(table).insert({ id: docId, data }).select('*').single();
       if (error) throw new Error(error.message);
+      await recordCodexChange({
+        entityType: collection,
+        entityId: docId,
+        operation: 'create',
+        changedByUserId,
+        beforeData: null,
+        afterData: (inserted as Record<string, unknown> | null) ?? null,
+      });
     }
 
     revalidatePath('/admin/codex');
@@ -236,26 +288,44 @@ export async function updateCodexDoc(
   data: Record<string, unknown>
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdmin();
+    const changedByUserId = await requireAdmin();
     const supabase = getSupabaseAdmin();
     const table = getTableName(collection);
 
-    const { data: existing } = await supabase.from(table).select('id').eq('id', id).maybeSingle();
-    if (!existing) {
+    const before = await fetchRowById(table, id);
+    if (!before) {
       return { success: false, error: 'Document not found' };
     }
 
     if (COLUMNAR_COLLECTIONS.includes(collection)) {
       const payload = toColumnarPayload(collection, data);
       const dbPayload = toDbPayload(collection, payload);
-      const { error } = await supabase.from(table).update(dbPayload).eq('id', id);
+      const { data: after, error } = await supabase.from(table).update(dbPayload).eq('id', id).select('*').single();
       if (error) throw new Error(error.message);
+      await recordCodexChange({
+        entityType: collection,
+        entityId: id,
+        operation: 'update',
+        changedByUserId,
+        beforeData: before,
+        afterData: (after as Record<string, unknown> | null) ?? null,
+      });
     } else {
-      const { error } = await supabase
+      const { data: after, error } = await supabase
         .from(table)
         .update({ data, updated_at: new Date().toISOString() })
-        .eq('id', id);
+        .eq('id', id)
+        .select('*')
+        .single();
       if (error) throw new Error(error.message);
+      await recordCodexChange({
+        entityType: collection,
+        entityId: id,
+        operation: 'update',
+        changedByUserId,
+        beforeData: before,
+        afterData: (after as Record<string, unknown> | null) ?? null,
+      });
     }
 
     revalidatePath('/admin/codex');
@@ -271,12 +341,24 @@ export async function deleteCodexDoc(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdmin();
+    const changedByUserId = await requireAdmin();
     const supabase = getSupabaseAdmin();
     const table = getTableName(collection);
+    const before = await fetchRowById(table, id);
 
     const { error } = await supabase.from(table).delete().eq('id', id);
     if (error) throw new Error(error.message);
+
+    if (before) {
+      await recordCodexChange({
+        entityType: collection,
+        entityId: id,
+        operation: 'delete',
+        changedByUserId,
+        beforeData: before,
+        afterData: null,
+      });
+    }
 
     revalidatePath('/admin/codex');
     revalidatePath('/codex');
@@ -331,9 +413,10 @@ export async function saveArchetypeWithPath(
   payload: SaveArchetypeWithPathInput
 ): Promise<{ success: boolean; error?: string; id?: string }> {
   try {
-    await requireAdmin();
+    const changedByUserId = await requireAdmin();
     const supabase = getSupabaseAdmin();
     const id = payload.id ? sanitizeId(payload.id) : await allocateLowestUnusedNumericId('codex_archetypes');
+    const beforeSnapshot = await getArchetypeSnapshot(id);
 
     const archetypeRow = {
       id,
@@ -388,6 +471,18 @@ export async function saveArchetypeWithPath(
       const { error: insertLevelsError } = await supabase.from('codex_archetype_levels').insert(cleanLevels);
       if (insertLevelsError) throw new Error(insertLevelsError.message);
     }
+
+    const afterSnapshot = await getArchetypeSnapshot(id);
+    if (!afterSnapshot) throw new Error('Failed to load saved archetype snapshot');
+
+    await recordCodexChange({
+      entityType: 'codex_archetypes',
+      entityId: id,
+      operation: beforeSnapshot ? 'update' : 'create',
+      changedByUserId,
+      beforeData: beforeSnapshot as Record<string, unknown> | null,
+      afterData: afterSnapshot as Record<string, unknown> | null,
+    });
 
     revalidatePath('/admin/codex');
     revalidatePath('/codex');

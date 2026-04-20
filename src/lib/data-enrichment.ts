@@ -55,7 +55,6 @@ export interface EnrichedTechnique extends CharacterTechnique {
     name: string;
     description?: string;
     base_tp?: number;
-    base_stam?: number;
   }>;
   // Original library item for reference
   libraryItem?: UserTechnique;

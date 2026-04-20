@@ -1211,6 +1211,9 @@ Append-only log. Add an entry per PR/merge. **For current context, recent entrie
 - 2026-04-20 | agent:gpt-5.2 | Ancestry choice traits: replace dropdown with expandable option list | files: src/components/character-creator/steps/ancestry-step.tsx, src/components/shared/choice-trait-option-select.tsx, src/components/character-sheet/edit-species-modal.tsx, src/docs/ALL_FEEDBACK_CLEAN.md, src/docs/ai/AI_TASK_QUEUE.md | TASK: TASK-308 | pr_link: (pending) | merged_at: (pending) | Summary:
   Replaced the ancestry-step choice-trait <select> UI with a shared expandable option list picker so users can read option trait descriptions before selecting; edit-species modal now uses the same picker for consistency.
 
+- 2026-04-20 | agent:gpt-5.3-codex | Codex changelog history + admin changelog viewer | files: sql/supabase-codex-change-logs.sql, src/lib/codex-changelog.ts, src/app/(main)/admin/codex/actions.ts, src/app/api/admin/changelogs/route.ts, src/app/(main)/admin/changelogs/page.tsx, src/app/(main)/admin/page.tsx, src/docs/SUPABASE_SCHEMA.md, src/docs/ai/AI_TASK_QUEUE.md | TASK: TASK-309 | pr_link: (pending) | merged_at: (pending) | Summary:
+  Added a new `codex_change_logs` audit table and retention trigger (latest 10 rows per entity), then wired codex/core-rules admin mutation paths to persist before/after snapshots, operation, timestamp, and actor for create/update/delete (including archetype path saves). Added admin-only `GET /api/admin/changelogs` and a new `/admin/changelogs` page with codex-style tabs, newest-first entries, and a details modal for changed-fields + before/after payload review.
+
 - YYYY-MM-DD | agent-id | short summary | files: [comma-separated] | PR: <link-or-commit> | TASK: TASK-### | merged_at: YYYY-MM-DD
 
 Policy: `pr_link` and `merged_at` must be present in the changelog entry and the corresponding `AI_TASK_QUEUE.md` task before marking a task `done`.

@@ -235,7 +235,6 @@ async function fetchCodexFromClient(supabase: ReturnType<typeof createServiceRol
         percentage: r.percentage === true,
         mechanic: r.mechanic === true,
         duration: r.duration === true,
-        base_stam: 0,
         defense: toStrArray(r.defense),
       };
     });

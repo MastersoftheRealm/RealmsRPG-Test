@@ -207,7 +207,7 @@ export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' 
               { value: 'hide', label: 'Hide Sub-Skills' },
             ]}
             onChange={(v) => setFilters(f => ({ ...f, subSkillMode: v as 'all' | 'only' | 'hide' }))}
-            placeholder="All Skills"
+            placeholder={null}
           />
         </div>
       </FilterSection>

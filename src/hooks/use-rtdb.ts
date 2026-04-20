@@ -43,7 +43,6 @@ export interface TechniquePart {
   description: string;
   category: string;
   base_tp: number;
-  base_stam: number;
   base_en?: number;
   op_1_desc?: string;
   op_1_en?: number;

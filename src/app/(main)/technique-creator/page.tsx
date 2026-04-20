@@ -86,6 +86,7 @@ const TECHNIQUE_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.TECHNIQUE;
 // Default weapon options (always available)
 const DEFAULT_WEAPON_OPTIONS: CreatorWeaponOption[] = [
   { id: 0, name: 'Unarmed Prowess', tp: 0, weaponLibrary: 'builtin' },
+  { id: 'no-attack', name: 'No Attack', tp: 0, weaponLibrary: 'builtin' },
 ];
 
 // =============================================================================
@@ -475,16 +476,27 @@ function TechniqueCreatorContent() {
   }, [isInitialized, name, description, selectedParts, actionType, isReaction, damage, weapon]);
 
   // Build mechanic parts from action type, damage, and weapon selections
+  const weaponAttackMode = useMemo(
+    () => (String(weapon.id) === 'no-attack' ? ('no_attack' as const) : ('attack' as const)),
+    [weapon.id]
+  );
+
+  const weaponTPForMechanics = useMemo(() => {
+    if (weaponAttackMode === 'no_attack') return 0;
+    return weapon.tp ?? (weapon.id !== 0 ? 1 : 0); // Use weapon TP if available
+  }, [weapon.id, weapon.tp, weaponAttackMode]);
+
   const mechanicParts = useMemo(
     () => buildMechanicPartPayload({
       actionTypeSelection: actionType,
       reaction: isReaction,
       diceAmt: damage.amount,
       dieSize: damage.size,
-      weaponTP: weapon.tp ?? (weapon.id !== 0 ? 1 : 0), // Use weapon TP if available
+      weaponTP: weaponTPForMechanics,
+      weaponAttackMode,
       partsDb: techniqueParts,
     }),
-    [actionType, isReaction, damage, weapon, techniqueParts]
+    [actionType, isReaction, damage.amount, damage.size, weaponAttackMode, weaponTPForMechanics, techniqueParts]
   );
 
   // Convert selected parts to payload format for calculator
@@ -562,7 +574,7 @@ function TechniqueCreatorContent() {
   }, [mechanicParts, techniqueParts]);
 
   const weaponCost = useMemo(() => {
-    const weaponParts = mechanicParts.filter((mp) => mp.name === 'Add Weapon Attack');
+    const weaponParts = mechanicParts.filter((mp) => mp.name === 'Add Weapon Attack' || mp.name === 'No Attack');
     return calculateTechniqueCosts(weaponParts, techniqueParts);
   }, [mechanicParts, techniqueParts]);
 
@@ -697,6 +709,12 @@ function TechniqueCreatorContent() {
       op_2_lvl?: number;
       op_3_lvl?: number;
     }>;
+
+    // If the saved technique explicitly included the No Attack mechanic part (415),
+    // reflect that in the creator's Weapon selection.
+    const savedHasNoAttack = savedParts.some(
+      (p) => String(p.id) === '415' || String(p.name || '').toLowerCase() === 'no attack'
+    );
     
     const loadedParts: SelectedPart[] = [];
     for (const savedPart of savedParts) {
@@ -725,7 +743,10 @@ function TechniqueCreatorContent() {
     setIsReaction(technique.reaction ?? false);
     
     // Load weapon
-    if (technique.weapon) {
+    if (savedHasNoAttack) {
+      const noAttackOption = allWeaponOptions.find((w) => String(w.id) === 'no-attack');
+      if (noAttackOption) setWeapon(noAttackOption);
+    } else if (technique.weapon) {
       const weaponMatch = allWeaponOptions.find(
         (w) => String(w.id) === String(technique.weapon.id) || w.name === technique.weapon.name
       );

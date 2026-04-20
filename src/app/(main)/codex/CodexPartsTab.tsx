@@ -208,7 +208,7 @@ export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' |
               { value: 'technique', label: 'Technique' },
             ]}
             onChange={(v) => setFilters(f => ({ ...f, typeFilter: v as 'all' | 'power' | 'technique' }))}
-            placeholder="All"
+            placeholder={null}
           />
 
           <SelectFilter

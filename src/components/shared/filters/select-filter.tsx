@@ -15,7 +15,11 @@ interface SelectFilterProps {
   value: string;
   options: { value: string; label: string }[];
   onChange: (value: string) => void;
-  placeholder?: string;
+  /**
+   * Optional top option with `value=""` to represent an "unfiltered" state.
+   * Pass `null` to omit the placeholder option entirely.
+   */
+  placeholder?: string | null;
   className?: string;
 }
 
@@ -39,7 +43,7 @@ export function SelectFilter({
         onChange={(e) => onChange(e.target.value)}
         className="w-full px-3 py-2 border border-border-light rounded-md bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
       >
-        <option value="">{placeholder}</option>
+        {placeholder != null && <option value="">{placeholder}</option>}
         {options.map(opt => (
           <option key={opt.value} value={opt.value}>
             {opt.label}

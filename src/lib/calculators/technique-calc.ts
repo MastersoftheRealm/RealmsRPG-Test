@@ -68,6 +68,7 @@ export interface MechanicContext {
   actionTypeSelection?: string;
   reaction?: boolean;
   weaponTP?: number;
+  weaponAttackMode?: 'attack' | 'no_attack';
   diceAmt?: number;
   dieSize?: number;
   partsDb?: TechniquePart[];
@@ -183,6 +184,7 @@ export function buildMechanicPartPayload(
     actionTypeSelection = 'basic',
     reaction = false,
     weaponTP = 0,
+    weaponAttackMode = 'attack',
     diceAmt = 0,
     dieSize = 0,
     partsDb = [],
@@ -223,7 +225,9 @@ export function buildMechanicPartPayload(
   }
 
   // Weapon Attack scaling
-  if (weaponTP >= 1) {
+  if (weaponAttackMode === 'no_attack') {
+    pushIf(PART_IDS.NO_ATTACK, 'No Attack', 0);
+  } else if (weaponTP >= 1) {
     pushIf(PART_IDS.ADD_WEAPON_ATTACK, 'Add Weapon Attack', weaponTP - 1);
   }
 

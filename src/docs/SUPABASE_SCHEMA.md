@@ -257,6 +257,20 @@ Stores role-level quotas and permission flags used by campaign, character, libra
 
 ---
 
+### 2.14 Codex edit changelogs (admin audit trail)
+
+| Table | Shape | Key columns |
+|-------|--------|-------------|
+| `codex_change_logs` | Append-only JSONB snapshots | id (PK), entity_type, entity_id, operation (`create`/`update`/`delete`), changed_at, changed_by_user_id (FK auth.users), before_data (JSONB), after_data (JSONB), changed_fields (JSONB) |
+
+Stores short-term admin edit history for codex/core-rules entities. Each change stores before/after snapshots plus actor and timestamp.
+
+Retention rule: DB trigger keeps only the latest 10 rows per `(entity_type, entity_id)`.
+
+**Migration:** `sql/supabase-codex-change-logs.sql`
+
+---
+
 ## 3. Enums
 
 | Name | Values |
@@ -313,6 +327,7 @@ See `AI_TASK_QUEUE.md` for TASK-279–TASK-283 and TASK-304. Rationale and colum
 | Campaigns | campaigns, campaign_members, campaign_rolls |
 | Encounters | encounters |
 | GET/PATCH /api/admin/role-policies | role_policies, user_profiles.role (admin check) |
+| GET /api/admin/changelogs | codex_change_logs, user_profiles (admin check) |
 | Auth / profile | user_profiles, usernames, role_policies |
 
 ---

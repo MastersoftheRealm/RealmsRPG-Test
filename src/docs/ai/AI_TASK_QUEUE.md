@@ -7267,3 +7267,39 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Added `ChoiceTraitOptionListPicker` (expandable options with descriptions + select button)
     - Wired into creator `ancestry-step` and sheet `edit-species-modal`
     - Verification: `npm run build` passes
+
+- id: TASK-309
+  title: Add codex edit changelog history and admin changelog viewer
+  created_at: 2026-04-20
+  created_by: agent
+  priority: high
+  status: done
+  related_files:
+    - sql/supabase-codex-change-logs.sql
+    - src/lib/codex-changelog.ts
+    - src/app/(main)/admin/codex/actions.ts
+    - src/app/api/admin/changelogs/route.ts
+    - src/app/(main)/admin/changelogs/page.tsx
+    - src/app/(main)/admin/page.tsx
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/docs/ai/AI_CHANGELOG.md
+  pr_link: (pending)
+  merged_at: (pending)
+  description: |
+    Add short-term codex/core-rules edit history for alpha operations so admins can review what changed,
+    when, and by whom without relying on full database backups for recent edits.
+    Persist before/after snapshots with actor + timestamp and expose an admin changelog UI grouped by codex tab.
+  acceptance_criteria:
+    - A Supabase table stores codex/core-rules create/update/delete entries with before_data, after_data, changed_at, and changed_by_user_id.
+    - Database retention hard-caps history to latest 10 rows per entity (entity_type + entity_id).
+    - Codex admin write actions log create/update/delete events, including archetype path saves.
+    - Admin `/admin/changelogs` page lists entries date-desc by selected codex-style tab and supports viewing before/after details.
+    - Admin dashboard has a Changelogs link.
+    - `npm run build` passes.
+  notes: |
+    Implemented 2026-04-20:
+    - Added `codex_change_logs` migration with indexes, admin-read RLS policy, and DB trigger retention (latest 10 per entity).
+    - Added `recordCodexChange` helper and wired logging into `createCodexDoc`, `updateCodexDoc`, `deleteCodexDoc`, and `saveArchetypeWithPath`.
+    - Added admin API `GET /api/admin/changelogs` (admin-gated, entity-type filter, actor profile enrichment).
+    - Added `/admin/changelogs` UI with codex-style tabs, date-ordered entries, and before/after detail modal.
+    - Added Admin dashboard card linking to `/admin/changelogs`.

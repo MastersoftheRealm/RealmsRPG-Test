@@ -83,6 +83,9 @@ export const PART_IDS = {
 
   // Power Split Damage Dice
   POWER_SPLIT_DAMAGE_DICE: 414,
+
+  // Technique mechanics
+  NO_ATTACK: 415,
 } as const;
 
 // =============================================================================
