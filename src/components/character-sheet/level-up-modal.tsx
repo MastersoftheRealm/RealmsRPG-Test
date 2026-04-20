@@ -7,7 +7,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ArrowUp, Star, Heart, Zap, Shield, Sword, Plus, Check } from 'lucide-react';
+import { ArrowUp, ArrowDown, Star, Heart, Shield, Sword, Check } from 'lucide-react';
 import { Modal, Button } from '@/components/ui';
 import {
   calculateAbilityPoints,
@@ -36,6 +36,10 @@ interface ProgressionDelta {
   proficiency: number;
   archetypeFeats: number;
   characterFeats: number;
+}
+
+function formatDelta(value: number) {
+  return value >= 0 ? `+${value}` : `${value}`;
 }
 
 function calculateLevelGains(
@@ -76,10 +80,13 @@ export function LevelUpModal({
   character,
   onConfirm,
 }: LevelUpModalProps) {
-  const [targetLevel, setTargetLevel] = useState((character.level || 1) + 1);
-  
   const currentLevel = character.level || 1;
   const maxLevel = 20; // Max level cap
+  const [targetLevel, setTargetLevel] = useState(Math.min(maxLevel, currentLevel + 1));
+  
+  const minLevel = 1;
+  const isLevelChange = targetLevel !== currentLevel;
+  const isLevelDown = targetLevel < currentLevel;
   
   // Highest of power + martial archetype ability scores (matches TP formula / sheet)
   const highestAbility = useMemo(() => getArchetypeAbilityScore(character), [character]);
@@ -108,6 +115,7 @@ export function LevelUpModal({
   };
   
   const handleConfirm = () => {
+    if (!isLevelChange) return;
     onConfirm(targetLevel);
     onClose();
   };
@@ -115,7 +123,7 @@ export function LevelUpModal({
   const milestones = getMilestones();
   
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Level Up!" fullScreenOnMobile>
+    <Modal isOpen={isOpen} onClose={onClose} title="Adjust Level" fullScreenOnMobile>
       <div className="space-y-6">
         {/* Level Selector */}
         <div className="text-center">
@@ -124,8 +132,8 @@ export function LevelUpModal({
           </p>
           <div className="flex items-center justify-center gap-4">
             <button
-              onClick={() => setTargetLevel(Math.max(currentLevel + 1, targetLevel - 1))}
-              disabled={targetLevel <= currentLevel + 1}
+              onClick={() => setTargetLevel(Math.max(minLevel, targetLevel - 1))}
+              disabled={targetLevel <= minLevel}
               className="w-10 h-10 rounded-full bg-surface-alt text-text-secondary hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               -
@@ -145,7 +153,7 @@ export function LevelUpModal({
         </div>
         
         {/* Milestones */}
-        {milestones.length > 0 && (
+        {milestones.length > 0 && !isLevelDown && (
           <div className="bg-tp-light dark:bg-warning-900/30 border border-tp-border dark:border-warning-800/50 rounded-lg p-4">
             <div className="flex items-center gap-2 text-tp-text dark:text-warning-200 font-medium mb-2">
               <Star className="w-5 h-5" />
@@ -167,25 +175,25 @@ export function LevelUpModal({
           <GainCard
             icon={<Heart className="w-5 h-5 text-danger-500" />}
             label="Health & Energy"
-            value={`+${gains.healthEnergy}`}
-            description="Hit points"
+            value={formatDelta(gains.healthEnergy)}
+            description="Pool points"
           />
           <GainCard
             icon={<Sword className="w-5 h-5 text-orange-500" />}
             label="Training Points"
-            value={`+${gains.trainingPoints}`}
+            value={formatDelta(gains.trainingPoints)}
             description="For powers/techniques"
           />
           <GainCard
             icon={<Shield className="w-5 h-5 text-primary-500" />}
             label="Skill Points"
-            value={`+${gains.skillPoints}`}
+            value={formatDelta(gains.skillPoints)}
             description="For skills"
           />
           <GainCard
             icon={<Star className="w-5 h-5 text-power-dark dark:text-power-300" />}
             label="Feats"
-            value={`+${gains.archetypeFeats}`}
+            value={formatDelta(gains.archetypeFeats)}
             description="Archetype & Character"
           />
         </div>
@@ -202,9 +210,10 @@ export function LevelUpModal({
           <Button
             className="flex-1"
             onClick={handleConfirm}
+            disabled={!isLevelChange}
           >
-            <ArrowUp className="w-5 h-5" />
-            Level Up to {targetLevel}!
+            {isLevelDown ? <ArrowDown className="w-5 h-5" /> : <ArrowUp className="w-5 h-5" />}
+            Set Level to {targetLevel}
           </Button>
         </div>
       </div>

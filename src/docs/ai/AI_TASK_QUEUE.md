@@ -7183,3 +7183,31 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - `npm run build` passes
   notes: |
     In progress 2026-04-09: Implemented confirm-aware signup success UI + resend confirmation; normalized redirect params (`redirect` + `returnTo` + sessionStorage fallback) on login/register; login shows confirm errors and supports resend; forgot-password redirectTo now uses /auth/confirm. PR link pending.
+
+- id: TASK-306
+  title: Allow leveling down in Level Up modal
+  created_at: 2026-04-20
+  created_by: owner
+  priority: high
+  status: in-progress
+  related_files:
+    - src/components/character-sheet/level-up-modal.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+  pr_link: (pending)
+  merged_at: (pending)
+  description: |
+    The character sheet Level Up modal currently only supports increasing level. It should also allow
+    decreasing level(s) (for manual adjustment and testing), with the preview panel showing negative
+    deltas correctly before applying the change.
+  acceptance_criteria:
+    - The level selector supports decrementing below current level (down to level 1)
+    - The gains preview displays negative deltas correctly (no "+-12" formatting)
+    - Confirm is disabled when target level equals current level
+    - `npm run build` passes
+  notes: |
+    Owner feedback 2026-04-20: "the levle up modal should also let you go down level(s) not just up"
+    Implemented locally 2026-04-20:
+    - Level selector now allows decrementing down to level 1 (not just current+1..max)
+    - Preview deltas render with correct sign formatting (no "+-")
+    - Confirm disabled unless target differs from current level
+    - Verification: `npm run build` passes

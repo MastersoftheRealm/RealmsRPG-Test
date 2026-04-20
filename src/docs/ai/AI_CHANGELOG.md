@@ -1202,6 +1202,9 @@ Append-only log. Add an entry per PR/merge. **For current context, recent entrie
 - 2026-04-10 | agent:gpt-5.2 | Feat requirement filtering: treat defenses as requirements correctly | files: src/components/character-sheet/add-feat-modal.tsx, src/components/character-creator/steps/feats-step.tsx, src/app/(main)/creature-creator/AddCreatureFeatModal.tsx, src/docs/ALL_FEEDBACK_CLEAN.md | TASK: feedback-direct | pr_link: (pending) | merged_at: (pending) | Summary:
   Fixed feat requirement gating so Defense requirements like Might/Fortitude/Reflexes/Discernment/Mental Fortitude/Resolve are evaluated against defense bonuses (or creature defense values) instead of being incorrectly treated as core Abilities and filtered out.
 
+- 2026-04-20 | agent:gpt-5.2 | Level Up modal: allow leveling down | files: src/components/character-sheet/level-up-modal.tsx, src/docs/ALL_FEEDBACK_CLEAN.md, src/docs/ai/AI_TASK_QUEUE.md | TASK: TASK-306 | pr_link: (pending) | merged_at: (pending) | Summary:
+  Updated the character sheet Level Up modal so its level selector can decrement down to level 1, the preview grid correctly displays negative deltas, and confirm is disabled unless the target differs from the current level.
+
 - YYYY-MM-DD | agent-id | short summary | files: [comma-separated] | PR: <link-or-commit> | TASK: TASK-### | merged_at: YYYY-MM-DD
 
 Policy: `pr_link` and `merged_at` must be present in the changelog entry and the corresponding `AI_TASK_QUEUE.md` task before marking a task `done`.

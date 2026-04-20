@@ -1453,3 +1453,10 @@ Notes
 - Feedback: Campaign roll logs are not taking/shared right; they do not update with each player’s rolls. Recent rolls do not appear to add (CSV export shows empty `created_at`, list columns populated from JSON).
 - Expected: Every member sees the same ordered campaign roll history; newest rolls appear after each player rolls; DB/API list reflects inserts reliably.
 - Disposition: Implemented 2026-04-10 — POST sets `created_at`; GET orders `created_at DESC NULLS LAST` + `id` tie-break; trim-old uses consistent ascending order; optional SQL backfill `sql/supabase-campaign-rolls-created-at-backfill.sql`.
+
+**Raw Feedback Log — 2026-04-20 (Level Up modal should allow leveling down)**
+- Date: 2026-04-20
+- Context: Character Sheet — Level Up modal
+- Priority: High
+- Feedback: The level up modal should also let you go down level(s), not just up.
+- Expected: The modal allows selecting a lower level (down to level 1) and correctly previews negative deltas before applying the change.
