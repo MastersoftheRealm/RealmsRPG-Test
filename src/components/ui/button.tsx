@@ -61,14 +61,44 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, isLoading, asChild = false, children, disabled, ...props }, ref) => {
+  ({ className, variant, size, isLoading, asChild = false, children, disabled, onClick, ...props }, ref) => {
     const Comp = asChild ? Slot : 'button';
+
+    // IMPORTANT (Next.js RSC): Only pass an `onClick` prop when one was provided.
+    // If we always pass a handler wrapper, server components that render <Button /> would fail prerendering.
+    const wrappedOnClick = onClick
+      ? ((e: React.MouseEvent<HTMLButtonElement>) => {
+          if (process.env.NODE_ENV !== 'production' && typeof performance !== 'undefined') {
+            const t0 = performance.now();
+            onClick(e);
+            const dt = performance.now() - t0;
+            // INP is about main-thread blocking sync work; only log slow synchronous handlers.
+            if (dt > 50) {
+              const label =
+                typeof children === 'string'
+                  ? children
+                  : (e.currentTarget.getAttribute('aria-label') ?? e.currentTarget.textContent?.trim() ?? '(unlabeled)');
+              const stack = new Error().stack;
+              // eslint-disable-next-line no-console
+              console.warn(`[INP] Slow Button onClick: ${Math.round(dt)}ms`, {
+                label,
+                variant,
+                size,
+                stack,
+              });
+            }
+          } else {
+            onClick(e);
+          }
+        })
+      : undefined;
     
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         disabled={disabled || isLoading}
+        onClick={wrappedOnClick}
         {...props}
       >
         {isLoading ? (

@@ -7211,3 +7211,59 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Preview deltas render with correct sign formatting (no "+-")
     - Confirm disabled unless target differs from current level
     - Verification: `npm run build` passes
+
+- id: TASK-307
+  title: Species preview modal should expand multi-choice traits
+  created_at: 2026-04-20
+  created_by: owner
+  priority: medium
+  status: in-progress
+  related_files:
+    - src/components/character-creator/species-modal.tsx
+    - src/components/character-creator/steps/species-step.tsx
+    - src/lib/choice-trait.ts
+  pr_link: (pending)
+  merged_at: (pending)
+  description: |
+    In the Species step preview modal (opened before selecting a species), traits that have multiple
+    choice options (via `option_trait_ids`) should be expandable so users can view the available
+    options before picking the species.
+  acceptance_criteria:
+    - In the species preview modal, choice traits render with an expand/collapse UI
+    - Expanding shows all option traits (name + description)
+    - Non-choice traits render as before
+    - `npm run build` passes
+  notes: |
+    Owner feedback 2026-04-20: expand multi-choice traits in species preview modal.
+    Implemented locally 2026-04-20:
+    - SpeciesModal renders traits with `option_trait_ids` as expandable rows (shows option list)
+    - Build verified: `npm run build` passes
+
+- id: TASK-308
+  title: Ancestry step choice traits should use expandable option list (not dropdown)
+  created_at: 2026-04-20
+  created_by: owner
+  priority: high
+  status: in-progress
+  related_files:
+    - src/components/character-creator/steps/ancestry-step.tsx
+    - src/components/shared/choice-trait-option-select.tsx
+    - src/components/shared/index.ts
+    - src/components/character-sheet/edit-species-modal.tsx
+  pr_link: (pending)
+  merged_at: (pending)
+  description: |
+    The ancestry-step (and matching edit-species flow) currently uses a <select> for choice traits
+    (traits with `option_trait_ids`). This prevents users from reading the full option descriptions
+    before selecting.
+  acceptance_criteria:
+    - Choice traits render an expandable list of options (name + description) with a clear selected state
+    - Users can select/unselect an option from the list (tap targets ≥ 44px)
+    - Creator Ancestry step and sheet Edit Species modal both use the same pattern
+    - `npm run build` passes
+  notes: |
+    Owner feedback 2026-04-20: replace dropdown choice-trait UI with expandable list picker.
+    Implemented locally 2026-04-20:
+    - Added `ChoiceTraitOptionListPicker` (expandable options with descriptions + select button)
+    - Wired into creator `ancestry-step` and sheet `edit-species-modal`
+    - Verification: `npm run build` passes

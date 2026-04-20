@@ -43,7 +43,7 @@ export { ConfirmActionModal } from './confirm-action-modal';
 export { GridListRow } from './grid-list-row';
 export type { ColumnValue, ChipData, ChipOptionData, GridListRowProps } from './grid-list-row';
 
-export { ChoiceTraitOptionSelect } from './choice-trait-option-select';
+export { ChoiceTraitOptionSelect, ChoiceTraitOptionListPicker } from './choice-trait-option-select';
 export type {
   ChoiceTraitOptionSelectProps,
   ChoiceTraitOptionSelectLayout,

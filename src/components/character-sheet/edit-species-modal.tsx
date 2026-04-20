@@ -9,7 +9,7 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Modal, Button, Chip } from '@/components/ui';
-import { ChoiceTraitOptionSelect } from '@/components/shared';
+import { ChoiceTraitOptionListPicker } from '@/components/shared';
 import {
   getChoiceOptionIds,
   resolveChoiceOptionTraits,
@@ -358,7 +358,7 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                           {t.description ? (
                             <p className="text-xs text-text-secondary mt-1 mb-2">{t.description}</p>
                           ) : null}
-                          <ChoiceTraitOptionSelect
+                          <ChoiceTraitOptionListPicker
                             parentTraitName={t.name}
                             optionTraits={optionTraits}
                             value={draftAncestry?.selectedSpeciesTraitChoices?.[String(t.id)] ?? ''}
@@ -369,7 +369,6 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                               else map[String(t.id)] = next;
                               updateDraft({ selectedSpeciesTraitChoices: map });
                             }}
-                            layout="compact"
                           />
                         </div>
                       );
@@ -416,8 +415,8 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                         const optionTraits = resolveChoiceOptionTraits(getChoiceOptionIds(t), allTraits ?? undefined);
                         if (optionTraits.length > 0) {
                           return (
-                            <div key={t.id}>
-                              <ChoiceTraitOptionSelect
+                            <div key={t.id} className="w-full">
+                              <ChoiceTraitOptionListPicker
                                 parentTraitName={t.name}
                                 optionTraits={optionTraits}
                                 value={selectedSpeciesTraits?.[0] ?? ''}
@@ -426,7 +425,6 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                                     selectedSpeciesTraits: [next, selectedSpeciesTraits?.[1] ?? ''] as [string, string],
                                   })
                                 }
-                                layout="compact"
                               />
                             </div>
                           );
@@ -454,8 +452,8 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                         const optionTraits = resolveChoiceOptionTraits(getChoiceOptionIds(t), allTraits ?? undefined);
                         if (optionTraits.length > 0) {
                           return (
-                            <div key={t.id}>
-                              <ChoiceTraitOptionSelect
+                            <div key={t.id} className="w-full">
+                              <ChoiceTraitOptionListPicker
                                 parentTraitName={t.name}
                                 optionTraits={optionTraits}
                                 value={selectedSpeciesTraits?.[1] ?? ''}
@@ -464,7 +462,6 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                                     selectedSpeciesTraits: [selectedSpeciesTraits?.[0] ?? '', next] as [string, string],
                                   })
                                 }
-                                layout="compact"
                               />
                             </div>
                           );
@@ -533,7 +530,7 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                     if (isChoice) {
                       return (
                         <div key={t.id}>
-                          <ChoiceTraitOptionSelect
+                          <ChoiceTraitOptionListPicker
                             parentTraitName={t.name}
                             optionTraits={optionTraits}
                             value={selectedOptionId ?? ''}
@@ -549,7 +546,6 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                               }
                               updateDraft({ selectedTraits: nextTraits });
                             }}
-                            layout="compact"
                           />
                         </div>
                       );
@@ -598,7 +594,7 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                       if (isChoice) {
                         return (
                           <div key={t.id}>
-                            <ChoiceTraitOptionSelect
+                            <ChoiceTraitOptionListPicker
                               parentTraitName={t.name}
                               optionTraits={optionTraits}
                               value={selectedBaseOptionId ?? ''}
@@ -607,7 +603,6 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                                   selectedTraits: [next, selectedTraitIds[1] ?? ''].filter(Boolean),
                                 })
                               }
-                              layout="compact"
                             />
                           </div>
                         );
@@ -651,7 +646,7 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                         if (isChoice) {
                           return (
                             <div key={t.id}>
-                              <ChoiceTraitOptionSelect
+                              <ChoiceTraitOptionListPicker
                                 parentTraitName={t.name}
                                 optionTraits={optionTraits}
                                 value={selectedExtraOptionId ?? ''}
@@ -660,7 +655,6 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                                     selectedTraits: [selectedTraitIds[0] ?? '', next].filter(Boolean),
                                   })
                                 }
-                                layout="compact"
                               />
                             </div>
                           );
@@ -729,12 +723,11 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                     if (isChoice) {
                       return (
                         <div key={t.id}>
-                          <ChoiceTraitOptionSelect
+                          <ChoiceTraitOptionListPicker
                             parentTraitName={t.name}
                             optionTraits={optionTraits}
                             value={selectedFlawOptionId ?? ''}
                             onChange={(next) => setFlaw(next || null)}
-                            layout="compact"
                           />
                         </div>
                       );
@@ -776,12 +769,11 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                     if (isChoice) {
                       return (
                         <div key={t.id}>
-                          <ChoiceTraitOptionSelect
+                          <ChoiceTraitOptionListPicker
                             parentTraitName={t.name}
                             optionTraits={optionTraits}
                             value={selectedCharacteristicOptionId ?? ''}
                             onChange={(next) => updateDraft({ selectedCharacteristic: next || null })}
-                            layout="compact"
                           />
                         </div>
                       );

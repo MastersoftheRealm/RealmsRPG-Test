@@ -1205,6 +1205,12 @@ Append-only log. Add an entry per PR/merge. **For current context, recent entrie
 - 2026-04-20 | agent:gpt-5.2 | Level Up modal: allow leveling down | files: src/components/character-sheet/level-up-modal.tsx, src/docs/ALL_FEEDBACK_CLEAN.md, src/docs/ai/AI_TASK_QUEUE.md | TASK: TASK-306 | pr_link: (pending) | merged_at: (pending) | Summary:
   Updated the character sheet Level Up modal so its level selector can decrement down to level 1, the preview grid correctly displays negative deltas, and confirm is disabled unless the target differs from the current level.
 
+- 2026-04-20 | agent:gpt-5.2 | Species preview modal: expand multi-choice traits | files: src/components/character-creator/species-modal.tsx, src/docs/ALL_FEEDBACK_CLEAN.md, src/docs/ai/AI_TASK_QUEUE.md | TASK: TASK-307 | pr_link: (pending) | merged_at: (pending) | Summary:
+  In the Species step preview modal, traits with `option_trait_ids` now render as expandable rows so users can view the list of option traits (name + description) before selecting a species.
+
+- 2026-04-20 | agent:gpt-5.2 | Ancestry choice traits: replace dropdown with expandable option list | files: src/components/character-creator/steps/ancestry-step.tsx, src/components/shared/choice-trait-option-select.tsx, src/components/character-sheet/edit-species-modal.tsx, src/docs/ALL_FEEDBACK_CLEAN.md, src/docs/ai/AI_TASK_QUEUE.md | TASK: TASK-308 | pr_link: (pending) | merged_at: (pending) | Summary:
+  Replaced the ancestry-step choice-trait <select> UI with a shared expandable option list picker so users can read option trait descriptions before selecting; edit-species modal now uses the same picker for consistency.
+
 - YYYY-MM-DD | agent-id | short summary | files: [comma-separated] | PR: <link-or-commit> | TASK: TASK-### | merged_at: YYYY-MM-DD
 
 Policy: `pr_link` and `merged_at` must be present in the changelog entry and the corresponding `AI_TASK_QUEUE.md` task before marking a task `done`.

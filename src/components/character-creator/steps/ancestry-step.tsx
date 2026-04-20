@@ -15,7 +15,7 @@
 import { useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Chip, Button, Alert } from '@/components/ui';
-import { ContextHelpTooltip, SelectionToggle, ChoiceTraitOptionSelect } from '@/components/shared';
+import { ContextHelpTooltip, SelectionToggle, ChoiceTraitOptionListPicker } from '@/components/shared';
 import {
   getChoiceOptionIds,
   resolveChoiceOptionTraits,
@@ -1037,7 +1037,7 @@ function TraitSection({
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium text-text-primary">{trait.name}</h4>
                     <p className="text-sm text-text-secondary mt-1">{trait.description}</p>
-                    <ChoiceTraitOptionSelect
+                    <ChoiceTraitOptionListPicker
                       parentTraitName={trait.name}
                       optionTraits={optionOptions}
                       value={selectedOptionId ?? ''}
@@ -1045,8 +1045,7 @@ function TraitSection({
                         if (selectedOptionId) onToggle(selectedOptionId);
                         if (next) onToggle(next);
                       }}
-                      layout="creator"
-                      emptyOptionLabel="Select option..."
+                      emptyLabel="Choose one option (expand to read)"
                     />
                   </div>
                 </div>
@@ -1072,13 +1071,12 @@ function TraitSection({
                     <h4 className="font-medium text-text-primary">{trait.name}</h4>
                     <p className="text-sm text-text-secondary mt-1">{trait.description}</p>
                     <p className="text-xs text-text-muted mt-1">Choose one variant for this species trait.</p>
-                    <ChoiceTraitOptionSelect
+                    <ChoiceTraitOptionListPicker
                       parentTraitName={trait.name}
                       optionTraits={optionOptions}
                       value={value}
                       onChange={(next) => onSpeciesTraitChoiceChange(pid, next)}
-                      layout="creator"
-                      emptyOptionLabel="Select option..."
+                      emptyLabel="Choose one option (expand to read)"
                     />
                   </div>
                 </div>

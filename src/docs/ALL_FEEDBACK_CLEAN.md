@@ -1460,3 +1460,17 @@ Notes
 - Priority: High
 - Feedback: The level up modal should also let you go down level(s), not just up.
 - Expected: The modal allows selecting a lower level (down to level 1) and correctly previews negative deltas before applying the change.
+
+**Raw Feedback Log — 2026-04-20 (Species preview modal multi-choice traits)**
+- Date: 2026-04-20
+- Context: Character Creator — Species step preview modal
+- Priority: Medium
+- Feedback: For multi choice traits in the preview modal in the species page, it needs to allow the multichoice traits to expand so you can see the multi-choices before picking a species.
+- Expected: In the species preview modal, any trait with multiple options can expand/collapse to show the list of option traits (name + description) before selecting the species.
+
+**Raw Feedback Log — 2026-04-20 (Ancestry choice-trait picker should be expandable list)**
+- Date: 2026-04-20
+- Context: Character Creator — Ancestry step (species/ancestry/flaw/characteristic choice traits)
+- Priority: High
+- Feedback: For the multi-choice trait selection on ancestry tab, a simple dropdown with trait choices doesn't work; it needs to let you pick from list items which expand and collapse so users can read each option's description before choosing.
+- Expected: Choice traits render an expandable option list with descriptions, and selection happens from that list (no plain dropdown).

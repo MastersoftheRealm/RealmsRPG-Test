@@ -6,6 +6,8 @@ import { Modal, Chip, Button } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { useCodexSkills, resolveSkillIdsToNames } from '@/hooks';
 import type { Species, Trait, Skill } from '@/hooks';
+import { getChoiceOptionIds, resolveChoiceOptionTraits } from '@/lib/choice-trait';
+import { ChevronDown } from 'lucide-react';
 
 interface SpeciesModalProps {
   species: Species | null;
@@ -20,6 +22,7 @@ interface ResolvedTrait {
   name: string;
   description: string;
   found: boolean;
+  optionTraits?: Array<Pick<Trait, 'id' | 'name' | 'description'>>;
 }
 
 /**
@@ -42,11 +45,14 @@ function resolveTraits(traitIds: (string | number)[], allTraits: Trait[]): Resol
     }
     
     if (trait) {
+      const optionIds = getChoiceOptionIds(trait);
+      const optionTraits = resolveChoiceOptionTraits(optionIds, allTraits);
       return { 
         id: trait.id, 
         name: trait.name, 
         description: trait.description || 'No description available.',
-        found: true 
+        found: true,
+        optionTraits: optionTraits.map((t) => ({ id: t.id, name: t.name, description: t.description })),
       };
     }
     
@@ -76,25 +82,67 @@ function TraitSection({ title, traits, isFlaw = false, selectable = false }: Tra
         {title}
       </h3>
       <div className="space-y-2">
-        {traits.map((trait, index) => (
-          <div 
-            key={`${trait.id}-${index}`}
-            className={cn(
-              'p-3 rounded-lg border bg-surface-alt border-border-light',
-              selectable && 'cursor-pointer hover:border-primary-400 hover:bg-primary-50 transition-colors',
-              !trait.found && 'opacity-60'
-            )}
-          >
-            <div className="flex items-start gap-2">
-              <span className="font-medium text-sm text-text-primary">
-                {trait.name}
-              </span>
+        {traits.map((trait, index) => {
+          const optionTraits = trait.optionTraits ?? [];
+          const hasOptions = optionTraits.length > 0;
+
+          return (
+            <div
+              key={`${trait.id}-${index}`}
+              className={cn(
+                'rounded-lg border bg-surface-alt border-border-light',
+                selectable && 'cursor-pointer hover:border-primary-400 hover:bg-primary-50 transition-colors',
+                !trait.found && 'opacity-60'
+              )}
+            >
+              {!hasOptions ? (
+                <div className="p-3">
+                  <div className="flex items-start gap-2">
+                    <span className="font-medium text-sm text-text-primary">{trait.name}</span>
+                  </div>
+                  <p className="text-xs mt-1 text-text-secondary">{trait.description}</p>
+                </div>
+              ) : (
+                <details className="group">
+                  <summary className="list-none cursor-pointer p-3 flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm text-text-primary">{trait.name}</span>
+                        <Chip variant="info" size="sm">
+                          {optionTraits.length} options
+                        </Chip>
+                      </div>
+                      <p className="text-xs mt-1 text-text-secondary">{trait.description}</p>
+                    </div>
+                    <ChevronDown
+                      className="w-4 h-4 text-text-muted dark:text-text-secondary shrink-0 mt-0.5 transition-transform group-open:rotate-180"
+                      aria-hidden="true"
+                    />
+                  </summary>
+                  <div className="px-3 pb-3">
+                    <div className="mt-2 rounded-lg border border-border-light bg-background/60">
+                      <div className="px-3 py-2 border-b border-border-light">
+                        <p className="text-xs font-semibold text-text-secondary uppercase tracking-wide">
+                          Options
+                        </p>
+                      </div>
+                      <div className="p-3 space-y-2">
+                        {optionTraits.map((opt) => (
+                          <div key={String(opt.id)} className="rounded-md border border-border-light bg-surface p-2">
+                            <p className="text-sm font-medium text-text-primary">{opt.name}</p>
+                            {opt.description ? (
+                              <p className="text-xs text-text-secondary mt-1">{opt.description}</p>
+                            ) : null}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </details>
+              )}
             </div>
-            <p className="text-xs mt-1 text-text-secondary">
-              {trait.description}
-            </p>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
