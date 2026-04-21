@@ -70,6 +70,61 @@ type FeatFormState = {
   base_feat_id: string;
 };
 
+function toOptNum(v: unknown): number | undefined {
+  if (v == null || v === '') return undefined;
+  const n = Number(v);
+  return Number.isNaN(n) ? undefined : n;
+}
+
+function featToFormState(feat: Feat): FeatFormState {
+  const ext = feat as unknown as Record<string, unknown>;
+  const abilityArr = Array.isArray(feat.ability) ? feat.ability : feat.ability ? [String(feat.ability)] : [];
+  return {
+    name: feat.name,
+    description: feat.description || '',
+    req_desc: String(ext.req_desc || ''),
+    category: feat.category || '',
+    ability: abilityArr,
+    ability_req: feat.ability_req || [],
+    abil_req_val: feat.abil_req_val || [],
+    tags: feat.tags || [],
+    skill_req: feat.skill_req || [],
+    skill_req_val: feat.skill_req_val || [],
+    feat_cat_req: String(ext.feat_cat_req || ''),
+    pow_abil_req: toOptNum(ext.pow_abil_req),
+    mart_abil_req: toOptNum(ext.mart_abil_req),
+    pow_prof_req: toOptNum(ext.pow_prof_req),
+    mart_prof_req: toOptNum(ext.mart_prof_req),
+    speed_req: toOptNum(ext.speed_req),
+    feat_lvl: toOptNum(ext.feat_lvl),
+    lvl_req: toOptNum(feat.lvl_req),
+    uses_per_rec: toOptNum(feat.uses_per_rec),
+    rec_period: feat.rec_period || '',
+    char_feat: feat.char_feat ?? false,
+    state_feat: feat.state_feat ?? false,
+    base_feat_id: String((feat as { base_feat_id?: string }).base_feat_id ?? ''),
+  };
+}
+
+/** Next feat level = current + 1; base_feat_id points at level-1; lvl_req defaults to newLevel*2, or stays at least as strict as the source when it exceeded the simple curve. */
+function computeNextLevelFormState(sourceForm: FeatFormState, sourceDbFeatId: string): FeatFormState {
+  const curLvl = sourceForm.feat_lvl != null && sourceForm.feat_lvl > 0 ? sourceForm.feat_lvl : 1;
+  const newLvl = curLvl + 1;
+  const baseId = sourceForm.base_feat_id.trim() || sourceDbFeatId;
+  const defaultReq = newLvl * 2;
+  const prevReq = sourceForm.lvl_req;
+  const prevExpected = curLvl * 2;
+  const lvl_req =
+    prevReq != null && prevReq > prevExpected ? Math.max(defaultReq, prevReq) : defaultReq;
+
+  return {
+    ...sourceForm,
+    feat_lvl: newLvl,
+    lvl_req,
+    base_feat_id: baseId,
+  };
+}
+
 function AdminFeatEditModal({
   isOpen,
   onClose,
@@ -90,6 +145,8 @@ function AdminFeatEditModal({
   initialForm,
   initialEditId,
   sessionKey,
+  enableAddLevel,
+  onAddLevel,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -111,6 +168,8 @@ function AdminFeatEditModal({
   initialForm: FeatFormState;
   initialEditId: string | null;
   sessionKey: number;
+  enableAddLevel: boolean;
+  onAddLevel?: (form: FeatFormState, sourceDbFeatId: string) => void;
 }) {
   const [form, setForm] = useState<FeatFormState>(initialForm);
   const [selectedEditId, setSelectedEditId] = useState<string | null>(initialEditId);
@@ -212,39 +271,7 @@ function AdminFeatEditModal({
     const match = levelFeats.find((f) => String(f.id) === String(nextId));
     if (!match) return;
 
-    const ext = match as unknown as Record<string, unknown>;
-    const abilityArr = Array.isArray(match.ability) ? match.ability : (match.ability ? [String(match.ability)] : []);
-    const toOptNum = (v: unknown): number | undefined => {
-      if (v == null || v === '') return undefined;
-      const n = Number(v);
-      return Number.isNaN(n) ? undefined : n;
-    };
-
-    const nextForm: FeatFormState = {
-      name: match.name,
-      description: match.description || '',
-      req_desc: String(ext.req_desc || ''),
-      category: match.category || '',
-      ability: abilityArr,
-      ability_req: match.ability_req || [],
-      abil_req_val: match.abil_req_val || [],
-      tags: match.tags || [],
-      skill_req: match.skill_req || [],
-      skill_req_val: match.skill_req_val || [],
-      feat_cat_req: String(ext.feat_cat_req || ''),
-      pow_abil_req: toOptNum(ext.pow_abil_req),
-      mart_abil_req: toOptNum(ext.mart_abil_req),
-      pow_prof_req: toOptNum(ext.pow_prof_req),
-      mart_prof_req: toOptNum(ext.mart_prof_req),
-      speed_req: toOptNum(ext.speed_req),
-      feat_lvl: toOptNum(ext.feat_lvl),
-      lvl_req: toOptNum(match.lvl_req),
-      uses_per_rec: toOptNum(match.uses_per_rec),
-      rec_period: match.rec_period || '',
-      char_feat: match.char_feat ?? false,
-      state_feat: match.state_feat ?? false,
-      base_feat_id: String((match as { base_feat_id?: string }).base_feat_id ?? ''),
-    };
+    const nextForm = featToFormState(match);
     setForm(nextForm);
     setDraftsById((d) => ({ ...d, [nextId]: nextForm }));
   };
@@ -302,7 +329,7 @@ function AdminFeatEditModal({
         {hasLevels && (
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Editing level</label>
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
               <select
                 value={selectedEditId ?? ''}
                 onChange={(e) => handleSelectLevel(e.target.value)}
@@ -313,6 +340,24 @@ function AdminFeatEditModal({
                   <option key={opt.id} value={opt.id}>{opt.label}</option>
                 ))}
               </select>
+              {enableAddLevel && onAddLevel && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                  disabled={saving || !selectedEditId}
+                  onClick={() => {
+                    if (!selectedEditId || !onAddLevel) return;
+                    onAddLevel(form, selectedEditId);
+                  }}
+                >
+                  <span className="inline-flex items-center gap-1.5">
+                    <Layers className="w-4 h-4" aria-hidden />
+                    Add Level
+                  </span>
+                </Button>
+              )}
               {dirtyLevelLabels.length > 0 && (
                 <div className="text-xs text-text-muted dark:text-text-secondary">
                   <span className="font-medium text-text-secondary dark:text-text-secondary">Unsaved:</span> {dirtyLevelLabels.join(', ')}
@@ -322,6 +367,29 @@ function AdminFeatEditModal({
             <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
               This feat has multiple levels. Select which level you want to edit.
             </p>
+          </div>
+        )}
+        {!hasLevels && enableAddLevel && onAddLevel && (
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-md border border-border-light bg-surface-alt px-3 py-2">
+            <p className="text-xs text-text-muted dark:text-text-secondary">
+              Save a new row for the next feat tier. Level and character level required are filled from the current feat.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              disabled={saving || !initialEditId}
+              onClick={() => {
+                if (!initialEditId || !onAddLevel) return;
+                onAddLevel(form, initialEditId);
+              }}
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <Layers className="w-4 h-4" aria-hidden />
+                Add Level
+              </span>
+            </Button>
           </div>
         )}
         {copySourceName && (
@@ -922,40 +990,12 @@ export function AdminFeatsTab() {
     setModalOpen(true);
   };
 
-  const toOptNum = (v: unknown): number | undefined => {
-    if (v == null || v === '') return undefined;
-    const n = Number(v);
-    return Number.isNaN(n) ? undefined : n;
-  };
   const openDuplicate = (feat: Feat) => {
     setEditing(null);
     setCopySourceName(feat.name);
-    const ext = feat as unknown as Record<string, unknown>;
-    const abilityArr = Array.isArray(feat.ability) ? feat.ability : (feat.ability ? [String(feat.ability)] : []);
     setModalInitialForm({
+      ...featToFormState(feat),
       name: (feat.name || '').trim() + COPY_NAME_SUFFIX,
-      description: feat.description || '',
-      req_desc: String(ext.req_desc || ''),
-      category: feat.category || '',
-      ability: abilityArr,
-      ability_req: feat.ability_req || [],
-      abil_req_val: feat.abil_req_val || [],
-      tags: feat.tags || [],
-      skill_req: feat.skill_req || [],
-      skill_req_val: feat.skill_req_val || [],
-      feat_cat_req: String(ext.feat_cat_req || ''),
-      pow_abil_req: toOptNum(ext.pow_abil_req),
-      mart_abil_req: toOptNum(ext.mart_abil_req),
-      pow_prof_req: toOptNum(ext.pow_prof_req),
-      mart_prof_req: toOptNum(ext.mart_prof_req),
-      speed_req: toOptNum(ext.speed_req),
-      feat_lvl: toOptNum(ext.feat_lvl),
-      lvl_req: toOptNum(feat.lvl_req),
-      uses_per_rec: toOptNum(feat.uses_per_rec),
-      rec_period: feat.rec_period || '',
-      char_feat: feat.char_feat ?? false,
-      state_feat: feat.state_feat ?? false,
-      base_feat_id: String((feat as { base_feat_id?: string }).base_feat_id ?? ''),
     });
     setModalInitialEditId(null);
     setModalLevelFeats([]);
@@ -966,33 +1006,7 @@ export function AdminFeatsTab() {
   const openEdit = (feat: Feat) => {
     setEditing(feat);
     setCopySourceName(null);
-    const ext = feat as unknown as Record<string, unknown>;
-    const abilityArr = Array.isArray(feat.ability) ? feat.ability : (feat.ability ? [String(feat.ability)] : []);
-    setModalInitialForm({
-      name: feat.name,
-      description: feat.description || '',
-      req_desc: String(ext.req_desc || ''),
-      category: feat.category || '',
-      ability: abilityArr,
-      ability_req: feat.ability_req || [],
-      abil_req_val: feat.abil_req_val || [],
-      tags: feat.tags || [],
-      skill_req: feat.skill_req || [],
-      skill_req_val: feat.skill_req_val || [],
-      feat_cat_req: String(ext.feat_cat_req || ''),
-      pow_abil_req: toOptNum(ext.pow_abil_req),
-      mart_abil_req: toOptNum(ext.mart_abil_req),
-      pow_prof_req: toOptNum(ext.pow_prof_req),
-      mart_prof_req: toOptNum(ext.mart_prof_req),
-      speed_req: toOptNum(ext.speed_req),
-      feat_lvl: toOptNum(ext.feat_lvl),
-      lvl_req: toOptNum(feat.lvl_req),
-      uses_per_rec: toOptNum(feat.uses_per_rec),
-      rec_period: feat.rec_period || '',
-      char_feat: feat.char_feat ?? false,
-      state_feat: feat.state_feat ?? false,
-      base_feat_id: String((feat as { base_feat_id?: string }).base_feat_id ?? ''),
-    });
+    setModalInitialForm(featToFormState(feat));
     setModalInitialEditId(String(feat.id));
     // If this feat belongs to a leveled family, allow selecting other levels in the modal.
     const familyId = getFeatFamilyId(feat);
@@ -1003,48 +1017,25 @@ export function AdminFeatsTab() {
     setModalOpen(true);
   };
 
-  /** Open add modal pre-filled to add the next level of this feat (level-1 base). */
-  const openAddLevel = (baseFeat: Feat) => {
+  /** Open add modal pre-filled with the next feat level after the given feat (same family / base id). */
+  const openAddLevel = (sourceFeat: Feat) => {
     setEditing(null);
     setCopySourceName(null);
-    const ext = baseFeat as unknown as Record<string, unknown>;
-    const abilityArr = Array.isArray(baseFeat.ability) ? baseFeat.ability : (baseFeat.ability ? [String(baseFeat.ability)] : []);
-    const baseFamilyId = getFeatFamilyId(baseFeat);
-    const highestExistingLevel = (feats ?? []).reduce((maxLevel, feat) => {
-      if (getFeatFamilyId(feat) !== baseFamilyId) return maxLevel;
-      return Math.max(maxLevel, getFeatLevel(feat));
-    }, getFeatLevel(baseFeat));
-    const nextLevel = highestExistingLevel + 1;
-    setModalInitialForm({
-      name: (baseFeat.name || '').trim(),
-      description: baseFeat.description || '',
-      req_desc: String(ext.req_desc || ''),
-      category: baseFeat.category || '',
-      ability: abilityArr,
-      ability_req: baseFeat.ability_req || [],
-      abil_req_val: baseFeat.abil_req_val || [],
-      tags: baseFeat.tags || [],
-      skill_req: baseFeat.skill_req || [],
-      skill_req_val: baseFeat.skill_req_val || [],
-      feat_cat_req: String(ext.feat_cat_req || ''),
-      pow_abil_req: toOptNum(ext.pow_abil_req),
-      mart_abil_req: toOptNum(ext.mart_abil_req),
-      pow_prof_req: toOptNum(ext.pow_prof_req),
-      mart_prof_req: toOptNum(ext.mart_prof_req),
-      speed_req: toOptNum(ext.speed_req),
-      feat_lvl: nextLevel,
-      lvl_req: toOptNum(baseFeat.lvl_req),
-      uses_per_rec: toOptNum(baseFeat.uses_per_rec),
-      rec_period: baseFeat.rec_period || '',
-      char_feat: baseFeat.char_feat ?? false,
-      state_feat: baseFeat.state_feat ?? false,
-      base_feat_id: String(baseFeat.id),
-    });
+    setModalInitialForm(computeNextLevelFormState(featToFormState(sourceFeat), String(sourceFeat.id)));
     setModalInitialEditId(null);
     setModalLevelFeats([]);
     setModalSessionKey((k) => k + 1);
     setModalOpen(true);
   };
+
+  const openAddLevelFromEditModal = useCallback((sourceForm: FeatFormState, sourceDbFeatId: string) => {
+    setEditing(null);
+    setCopySourceName(null);
+    setModalInitialForm(computeNextLevelFormState(sourceForm, sourceDbFeatId));
+    setModalInitialEditId(null);
+    setModalLevelFeats([]);
+    setModalSessionKey((k) => k + 1);
+  }, []);
 
   const closeModal = () => {
     setModalOpen(false);
@@ -1380,6 +1371,8 @@ export function AdminFeatsTab() {
         initialForm={modalInitialForm}
         initialEditId={modalInitialEditId}
         sessionKey={modalSessionKey}
+        enableAddLevel={!!editing}
+        onAddLevel={openAddLevelFromEditModal}
       />
     </div>
   );
