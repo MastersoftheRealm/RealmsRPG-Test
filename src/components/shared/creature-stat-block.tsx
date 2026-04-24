@@ -19,13 +19,23 @@ import { SectionHeader } from './section-header';
 import { ListHeader, type ListColumn } from './list-header';
 import { RollButton } from './roll-button';
 import { useRollsOptional } from '@/components/character-sheet/roll-context';
-import { useCodexSkills, usePowerParts, useTechniqueParts, useItemProperties } from '@/hooks';
+import {
+  useCodexSkills,
+  usePowerParts,
+  useTechniqueParts,
+  useItemProperties,
+  useOfficialLibrary,
+  useUserPowers,
+  useUserTechniques,
+} from '@/hooks';
+import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
+import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import {
   calculateSkillBonusWithProficiency,
   calculateSubSkillBonusWithProficiency,
 } from '@/lib/game/formulas';
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
-import { formatDamageDisplay, formatListCellLabel, normalizeRangeDisplay } from '@/lib/utils';
+import { formatListCellLabel, normalizeRangeDisplay } from '@/lib/utils';
 import { ChevronDown } from 'lucide-react';
 import type { Abilities } from '@/types';
 
@@ -83,6 +93,7 @@ export interface CreatureData {
   languages?: string[];
   skills?: Array<{ id?: string; name: string; value: number; proficient?: boolean; baseSkillId?: string; isSubSkill?: boolean }> | Record<string, number>;
   powers?: Array<{
+    id?: string;
     name: string;
     description?: string;
     energy?: number;
@@ -95,6 +106,7 @@ export interface CreatureData {
     parts?: Array<string | { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }>;
   }>;
   techniques?: Array<{
+    id?: string;
     name: string;
     description?: string;
     energy?: number;
@@ -208,18 +220,6 @@ function getAbilityValue(abilities: CreatureAbilities, key: (typeof REALMS_ABILI
 function compactLine(label: string, items?: string[]): string | null {
   if (!items || items.length === 0) return null;
   return `${label} ${items.join(', ')}`;
-}
-
-function splitDamageDiceAndType(damage: unknown): { dice: string; type: string; rollStr: string } {
-  if (!damage) return { dice: '-', type: '', rollStr: '-' };
-  if (typeof damage === 'string') {
-    const str = damage.trim();
-    const match = str.match(/^([\dd+\-\s]+)(?:\s+(.+))?$/);
-    if (!match) return { dice: str, type: '', rollStr: str };
-    return { dice: match[1].trim(), type: (match[2] ?? '').trim(), rollStr: str };
-  }
-  const formatted = formatDamageDisplay(damage as never);
-  return { dice: formatted ? String(formatted) : '-', type: '', rollStr: formatted ? String(formatted) : '-' };
 }
 
 type CodexPart = {
@@ -363,6 +363,10 @@ export function CreatureStatBlock({
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
   const { data: itemPropertiesDb = [] } = useItemProperties();
+  const { data: userPowers = [] } = useUserPowers();
+  const { data: officialPowers = [] } = useOfficialLibrary('powers');
+  const { data: userTechniques = [] } = useUserTechniques();
+  const { data: officialTechniques = [] } = useOfficialLibrary('techniques');
   const level = creature.level ?? 1;
   const abilitiesRecord = creature.abilities ?? {};
   const hpAlloc = creature.hitPoints ?? creature.hp ?? 0;
@@ -431,6 +435,188 @@ export function CreatureStatBlock({
   const hasPowers = (creature.powers ?? []).length > 0;
   const hasTechniques = (creature.techniques ?? []).length > 0;
   const hasEquipment = equipment.length > 0;
+
+  const powersForDisplay = useMemo(() => {
+    const refs = Array.isArray(creature.powers) ? creature.powers : [];
+    if (refs.length === 0) return [] as EntityPowerRow[];
+
+    // Build quick lookup maps for enrichment.
+    const userById = new Map<string, (typeof userPowers)[number]>();
+    const userByName = new Map<string, (typeof userPowers)[number]>();
+    userPowers.forEach((p) => {
+      if (p.docId) userById.set(String(p.docId), p);
+      if (p.id) userById.set(String(p.id), p);
+      if (p.name) userByName.set(p.name.trim().toLowerCase(), p);
+    });
+
+    const officialById = new Map<string, Record<string, unknown>>();
+    const officialByName = new Map<string, Record<string, unknown>>();
+    (officialPowers as Array<Record<string, unknown>>).forEach((p) => {
+      const id = p.id != null ? String(p.id) : '';
+      const name = p.name != null ? String(p.name) : '';
+      if (id) officialById.set(id, p);
+      if (name) officialByName.set(name.trim().toLowerCase(), p);
+    });
+
+    return refs.map((ref, idx): EntityPowerRow => {
+      const refId = (ref as { id?: string }).id;
+      const refName = ref.name;
+
+      const userMatch =
+        (refId ? userById.get(String(refId)) : undefined) ??
+        (refName ? userByName.get(String(refName).trim().toLowerCase()) : undefined);
+
+      const officialMatch =
+        (refId ? officialById.get(String(refId)) : undefined) ??
+        (refName ? officialByName.get(String(refName).trim().toLowerCase()) : undefined);
+
+      // Prefer user library match (user-customized overrides official).
+      const enriched = userMatch
+        ? {
+            name: userMatch.name,
+            description: userMatch.description,
+            parts: userMatch.parts || [],
+            damage: userMatch.damage,
+            actionType: userMatch.actionType,
+            range: userMatch.range,
+            area: userMatch.area,
+            duration: userMatch.duration,
+          }
+        : officialMatch
+          ? {
+              name: String(officialMatch.name ?? refName),
+              description: officialMatch.description != null ? String(officialMatch.description) : undefined,
+              parts: ((officialMatch.parts ?? (officialMatch.payload as Record<string, unknown> | undefined)?.parts) as unknown[]) ?? [],
+              damage: (officialMatch.damage ?? (officialMatch.payload as Record<string, unknown> | undefined)?.damage) as unknown,
+              actionType: (officialMatch.actionType ?? (officialMatch.payload as Record<string, unknown> | undefined)?.actionType) as unknown,
+              range: (officialMatch.range ?? (officialMatch.payload as Record<string, unknown> | undefined)?.range) as unknown,
+              area: (officialMatch.area ?? (officialMatch.payload as Record<string, unknown> | undefined)?.area) as unknown,
+              duration: (officialMatch.duration ?? (officialMatch.payload as Record<string, unknown> | undefined)?.duration) as unknown,
+            }
+          : null;
+
+      const baseName = enriched?.name || refName;
+      const baseDescription = enriched?.description ?? ref.description;
+      const parts = (enriched?.parts as unknown as Array<string | { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }>) ?? ref.parts ?? [];
+      const damage = (enriched?.damage as unknown) ?? ref.damage;
+
+      const derived = derivePowerDisplay(
+        {
+          name: baseName,
+          description: baseDescription,
+          parts: parts as never,
+          damage: Array.isArray(damage) ? (damage as never) : undefined,
+        },
+        powerPartsDb as never
+      );
+
+      const partsChips = partsToChips(parts, powerPartsDb as unknown as CodexPart[]);
+      const damageStr = formatPowerDamage(Array.isArray(damage) ? (damage as never) : undefined) || (typeof ref.damage === 'string' ? ref.damage : undefined);
+
+      return {
+        id: `${creature.id}-power-${refId ?? idx}`,
+        name: baseName,
+        description: baseDescription,
+        actionType: derived.actionType || ref.action,
+        damage: damageStr,
+        area: derived.area || ref.area,
+        duration: derived.duration || ref.duration,
+        energyCost: typeof derived.energy === 'number' ? derived.energy : ref.energy,
+        innate: ref.innate,
+        partsChips,
+        totalTp: partsChips.reduce((sum, chip) => sum + (chip.cost ?? 0), 0),
+        requirements: derived.range && derived.range !== '-' ? (
+          <div className="text-sm text-text-secondary">
+            <span className="font-medium">Range:</span> {normalizeRangeDisplay(derived.range)}
+          </div>
+        ) : ref.range ? (
+          <div className="text-sm text-text-secondary">
+            <span className="font-medium">Range:</span> {normalizeRangeDisplay(ref.range)}
+          </div>
+        ) : undefined,
+      };
+    });
+  }, [creature.id, creature.powers, officialPowers, powerPartsDb, userPowers]);
+
+  const techniquesForDisplay = useMemo(() => {
+    const refs = Array.isArray(creature.techniques) ? creature.techniques : [];
+    if (refs.length === 0) return [] as EntityTechniqueRow[];
+
+    const userById = new Map<string, (typeof userTechniques)[number]>();
+    const userByName = new Map<string, (typeof userTechniques)[number]>();
+    userTechniques.forEach((t) => {
+      if (t.docId) userById.set(String(t.docId), t);
+      if (t.id) userById.set(String(t.id), t);
+      if (t.name) userByName.set(t.name.trim().toLowerCase(), t);
+    });
+
+    const officialById = new Map<string, Record<string, unknown>>();
+    const officialByName = new Map<string, Record<string, unknown>>();
+    (officialTechniques as Array<Record<string, unknown>>).forEach((t) => {
+      const id = t.id != null ? String(t.id) : '';
+      const name = t.name != null ? String(t.name) : '';
+      if (id) officialById.set(id, t);
+      if (name) officialByName.set(name.trim().toLowerCase(), t);
+    });
+
+    return refs.map((ref, idx): EntityTechniqueRow => {
+      const refId = (ref as { id?: string }).id;
+      const refName = ref.name;
+
+      const userMatch =
+        (refId ? userById.get(String(refId)) : undefined) ??
+        (refName ? userByName.get(String(refName).trim().toLowerCase()) : undefined);
+      const officialMatch =
+        (refId ? officialById.get(String(refId)) : undefined) ??
+        (refName ? officialByName.get(String(refName).trim().toLowerCase()) : undefined);
+
+      const enriched = userMatch
+        ? {
+            name: userMatch.name,
+            description: userMatch.description,
+            parts: userMatch.parts || [],
+            damage: userMatch.damage,
+            weapon: userMatch.weapon,
+          }
+        : officialMatch
+          ? {
+              name: String(officialMatch.name ?? refName),
+              description: officialMatch.description != null ? String(officialMatch.description) : undefined,
+              parts: ((officialMatch.parts ?? (officialMatch.payload as Record<string, unknown> | undefined)?.parts) as unknown[]) ?? [],
+              damage: (officialMatch.damage ?? (officialMatch.payload as Record<string, unknown> | undefined)?.damage) as unknown,
+              weapon: (officialMatch.weapon ?? (officialMatch.payload as Record<string, unknown> | undefined)?.weapon) as unknown,
+            }
+          : null;
+
+      const baseName = enriched?.name || refName;
+      const baseDescription = enriched?.description ?? ref.description;
+      const parts = (enriched?.parts as unknown as Array<string | { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }>) ?? ref.parts ?? [];
+      const damage = enriched?.damage ?? ref.damage;
+
+      const derived = deriveTechniqueDisplay(
+        {
+          name: baseName,
+          description: baseDescription,
+          parts: parts as never,
+          damage: Array.isArray(damage) ? (damage as never)[0] : undefined,
+          weapon: (enriched?.weapon as never) ?? undefined,
+        },
+        techniquePartsDb as never
+      );
+
+      const partsChips = partsToChips(parts, techniquePartsDb as unknown as CodexPart[]);
+      return {
+        id: `${creature.id}-tech-${refId ?? idx}`,
+        name: baseName,
+        description: baseDescription,
+        energyCost: typeof derived.energy === 'number' ? derived.energy : ref.energy,
+        weaponName: derived.weaponName || ref.weapon,
+        tp: derived.tp ?? ref.tp,
+        partsChips,
+        totalTp: partsChips.reduce((sum, chip) => sum + (chip.cost ?? 0), 0),
+      };
+    });
+  }, [creature.id, creature.techniques, officialTechniques, techniquePartsDb, userTechniques]);
 
   const damageReduction = useMemo(() => {
     return armaments.reduce((sum, item) => {
@@ -851,29 +1037,7 @@ export function CreatureStatBlock({
               {hasPowers && (
                 <StatBlockSection title="Powers" defaultExpanded>
                   <PowersListSection
-                    items={(creature.powers ?? []).map(
-                      (p, idx): EntityPowerRow => {
-                        const partsChips = partsToChips(p.parts, powerPartsDb as unknown as CodexPart[]);
-                        return {
-                          id: `${creature.id}-power-${idx}`,
-                          name: p.name,
-                          description: p.description,
-                          actionType: p.action,
-                          damage: p.damage,
-                          area: p.area,
-                          duration: p.duration,
-                          energyCost: p.energy,
-                          innate: p.innate,
-                          partsChips,
-                          totalTp: partsChips.reduce((sum, chip) => sum + (chip.cost ?? 0), 0),
-                          requirements: p.range ? (
-                            <div className="text-sm text-text-secondary">
-                              <span className="font-medium">Range:</span> {normalizeRangeDisplay(p.range)}
-                            </div>
-                          ) : undefined,
-                        };
-                      }
-                    )}
+                    items={powersForDisplay}
                     showListHeader
                     compactRows
                     includeEnergyColumn
@@ -885,21 +1049,7 @@ export function CreatureStatBlock({
               {hasTechniques && (
                 <StatBlockSection title="Techniques" defaultExpanded>
                   <TechniquesListSection
-                    items={(creature.techniques ?? []).map(
-                      (t, idx): EntityTechniqueRow => {
-                        const partsChips = partsToChips(t.parts, techniquePartsDb as unknown as CodexPart[]);
-                        return {
-                          id: `${creature.id}-tech-${idx}`,
-                          name: t.name,
-                          description: t.description,
-                          energyCost: t.energy,
-                          weaponName: t.weapon,
-                          tp: t.tp,
-                          partsChips,
-                          totalTp: partsChips.reduce((sum, chip) => sum + (chip.cost ?? 0), 0),
-                        };
-                      }
-                    )}
+                    items={techniquesForDisplay}
                     showListHeader
                     compactRows
                     showTitle={false}
