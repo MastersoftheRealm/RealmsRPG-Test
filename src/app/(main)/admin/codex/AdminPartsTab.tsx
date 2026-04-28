@@ -108,6 +108,46 @@ export function AdminPartsTab() {
   /** Number of option rows to show (0 = none until user clicks +). */
   const [optionSlotCount, setOptionSlotCount] = useState(0);
 
+  type PartOption = { desc: string; en?: number; tp?: number };
+
+  const readOptionsFromForm = (): PartOption[] => {
+    const opts: PartOption[] = [];
+    const op1Desc = form.op_1_desc.trim();
+    const op2Desc = form.op_2_desc.trim();
+    const op3Desc = form.op_3_desc.trim();
+    if (optionSlotCount >= 1) opts.push({ desc: op1Desc, en: form.op_1_en, tp: form.op_1_tp });
+    if (optionSlotCount >= 2) opts.push({ desc: op2Desc, en: form.op_2_en, tp: form.op_2_tp });
+    if (optionSlotCount >= 3) opts.push({ desc: op3Desc, en: form.op_3_en, tp: form.op_3_tp });
+    return opts;
+  };
+
+  const writeOptionsToForm = (opts: PartOption[]) => {
+    const o1 = opts[0];
+    const o2 = opts[1];
+    const o3 = opts[2];
+    setForm((f) => ({
+      ...f,
+      op_1_desc: o1?.desc ?? '',
+      op_1_en: o1?.desc ? o1.en : undefined,
+      op_1_tp: o1?.desc ? o1.tp : undefined,
+      op_2_desc: o2?.desc ?? '',
+      op_2_en: o2?.desc ? o2.en : undefined,
+      op_2_tp: o2?.desc ? o2.tp : undefined,
+      op_3_desc: o3?.desc ?? '',
+      op_3_en: o3?.desc ? o3.en : undefined,
+      op_3_tp: o3?.desc ? o3.tp : undefined,
+    }));
+    setOptionSlotCount(Math.min(3, Math.max(0, opts.length)));
+  };
+
+  const deleteOptionAndCompact = (index1Based: 1 | 2 | 3) => {
+    const opts = readOptionsFromForm();
+    const idx = index1Based - 1;
+    if (idx < 0 || idx >= opts.length) return;
+    const next = opts.filter((_, i) => i !== idx);
+    writeOptionsToForm(next);
+  };
+
   /** Six skill defenses plus Evasion (combat stat; allowed for part metadata). */
   const targetedDefenseOptions = useMemo(
     () => [...ABILITIES_AND_DEFENSES.slice(6), 'Evasion'],
@@ -762,17 +802,15 @@ export function AdminPartsTab() {
                   <div key={n} className="rounded-lg border border-border-light bg-surface-alt/50 p-3 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-text-secondary">Option {n}</span>
-                      {n === optionSlotCount && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-text-muted hover:text-danger"
-                          onClick={() => setOptionSlotCount((prev) => Math.max(0, prev - 1))}
-                          aria-label={`Remove option ${n}`}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-text-muted hover:text-danger"
+                        onClick={() => deleteOptionAndCompact(n as 1 | 2 | 3)}
+                        aria-label={`Remove option ${n}`}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>

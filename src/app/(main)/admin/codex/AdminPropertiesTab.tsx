@@ -45,6 +45,17 @@ export function AdminPropertiesTab() {
   const [copySourceName, setCopySourceName] = useState<string | null>(null);
   const [optionSlotCount, setOptionSlotCount] = useState(0);
 
+  const clearOption = () => {
+    setForm((f) => ({
+      ...f,
+      op_1_desc: '',
+      op_1_ip: undefined,
+      op_1_tp: undefined,
+      op_1_c: undefined,
+    }));
+    setOptionSlotCount(0);
+  };
+
   const [form, setForm] = useState<{
     name: string;
     description: string;
@@ -579,7 +590,7 @@ export function AdminPropertiesTab() {
                     variant="ghost"
                     size="sm"
                     className="text-text-muted hover:text-danger"
-                    onClick={() => setOptionSlotCount(0)}
+                    onClick={clearOption}
                     aria-label="Remove option"
                   >
                     <X className="w-4 h-4" />

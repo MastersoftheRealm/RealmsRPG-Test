@@ -1474,3 +1474,10 @@ Notes
 - Priority: High
 - Feedback: For the multi-choice trait selection on ancestry tab, a simple dropdown with trait choices doesn't work; it needs to let you pick from list items which expand and collapse so users can read each option's description before choosing.
 - Expected: Choice traits render an expandable option list with descriptions, and selection happens from that list (no plain dropdown).
+
+**Raw Feedback Log — 2026-04-28 (Codex editor — deleting part/property option doesn’t persist; reindex options)**
+- Date: 2026-04-28
+- Context: Admin Codex editor — edit modal for parts/properties/options (e.g., power parts)
+- Priority: High
+- Feedback: In the edit modal, deleting an option (e.g., delete Op 2) does not actually remove it. Also: when an earlier option is deleted, later options should shift down (delete Op 2 when Op 3 exists → Op 3 becomes Op 2; delete Op 1 when Op 2/3 exist → Op 2→1, Op 3→2, etc.) for maintainable compact option sets.
+- Expected: Deleting an option truly clears it in persisted state, and option indices are compacted so there are no gaps (op1/op2/op3 stay contiguous).
