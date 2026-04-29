@@ -342,6 +342,11 @@ export function AdminPartsTab() {
   const handleSave = async () => {
     if (!form.name.trim()) return;
     setSaving(true);
+    // Use explicit `null` for cleared option columns. Server actions serialize args as JSON,
+    // which omits `undefined` keys — so omitted fields would not UPDATE and old DB values would remain.
+    const op1 = form.op_1_desc.trim();
+    const op2 = form.op_2_desc.trim();
+    const op3 = form.op_3_desc.trim();
     const data: Record<string, unknown> = {
       name: form.name.trim(),
       description: form.description.trim(),
@@ -353,15 +358,15 @@ export function AdminPartsTab() {
       percentage: form.percentage,
       duration: form.duration,
       defense: form.defense.length > 0 ? form.defense : undefined,
-      op_1_desc: form.op_1_desc.trim() || undefined,
-      op_1_en: form.op_1_desc.trim() ? (form.op_1_en ?? undefined) : undefined,
-      op_1_tp: form.op_1_desc.trim() ? (form.op_1_tp ?? undefined) : undefined,
-      op_2_desc: form.op_2_desc.trim() || undefined,
-      op_2_en: form.op_2_desc.trim() ? (form.op_2_en ?? undefined) : undefined,
-      op_2_tp: form.op_2_desc.trim() ? (form.op_2_tp ?? undefined) : undefined,
-      op_3_desc: form.op_3_desc.trim() || undefined,
-      op_3_en: form.op_3_desc.trim() ? (form.op_3_en ?? undefined) : undefined,
-      op_3_tp: form.op_3_desc.trim() ? (form.op_3_tp ?? undefined) : undefined,
+      op_1_desc: op1 || null,
+      op_1_en: op1 ? (form.op_1_en ?? null) : null,
+      op_1_tp: op1 ? (form.op_1_tp ?? null) : null,
+      op_2_desc: op2 || null,
+      op_2_en: op2 ? (form.op_2_en ?? null) : null,
+      op_2_tp: op2 ? (form.op_2_tp ?? null) : null,
+      op_3_desc: op3 || null,
+      op_3_en: op3 ? (form.op_3_en ?? null) : null,
+      op_3_tp: op3 ? (form.op_3_tp ?? null) : null,
     };
 
     const result = editing
@@ -386,15 +391,15 @@ export function AdminPartsTab() {
         type: (data.type === 'technique' ? 'technique' : 'power') as 'power' | 'technique',
         base_en: (data.base_en as number | undefined) ?? 0,
         base_tp: (data.base_tp as number | undefined) ?? 0,
-        op_1_desc: (data.op_1_desc as string | undefined) ?? undefined,
-        op_1_en: (data.op_1_en as number | undefined) ?? undefined,
-        op_1_tp: (data.op_1_tp as number | undefined) ?? undefined,
-        op_2_desc: (data.op_2_desc as string | undefined) ?? undefined,
-        op_2_en: (data.op_2_en as number | undefined) ?? undefined,
-        op_2_tp: (data.op_2_tp as number | undefined) ?? undefined,
-        op_3_desc: (data.op_3_desc as string | undefined) ?? undefined,
-        op_3_en: (data.op_3_en as number | undefined) ?? undefined,
-        op_3_tp: (data.op_3_tp as number | undefined) ?? undefined,
+        op_1_desc: data.op_1_desc == null || data.op_1_desc === '' ? undefined : String(data.op_1_desc),
+        op_1_en: data.op_1_en == null ? undefined : (data.op_1_en as number),
+        op_1_tp: data.op_1_tp == null ? undefined : (data.op_1_tp as number),
+        op_2_desc: data.op_2_desc == null || data.op_2_desc === '' ? undefined : String(data.op_2_desc),
+        op_2_en: data.op_2_en == null ? undefined : (data.op_2_en as number),
+        op_2_tp: data.op_2_tp == null ? undefined : (data.op_2_tp as number),
+        op_3_desc: data.op_3_desc == null || data.op_3_desc === '' ? undefined : String(data.op_3_desc),
+        op_3_en: data.op_3_en == null ? undefined : (data.op_3_en as number),
+        op_3_tp: data.op_3_tp == null ? undefined : (data.op_3_tp as number),
         duration: Boolean(data.duration),
         percentage: Boolean(data.percentage),
         mechanic: Boolean(data.mechanic),

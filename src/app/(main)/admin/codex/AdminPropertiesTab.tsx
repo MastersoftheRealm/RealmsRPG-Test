@@ -207,6 +207,8 @@ export function AdminPropertiesTab() {
   const handleSave = async () => {
     if (!form.name.trim()) return;
     setSaving(true);
+    // Explicit `null` for cleared option fields — JSON serialization for server actions drops `undefined` keys.
+    const op1 = form.op_1_desc.trim();
     const data: Record<string, unknown> = {
       name: form.name.trim(),
       description: form.description.trim(),
@@ -214,10 +216,10 @@ export function AdminPropertiesTab() {
       base_ip: form.base_ip ?? undefined,
       base_tp: form.base_tp ?? undefined,
       base_c: form.base_c ?? undefined,
-      op_1_desc: form.op_1_desc.trim() || undefined,
-      op_1_ip: form.op_1_desc.trim() ? (form.op_1_ip ?? undefined) : undefined,
-      op_1_tp: form.op_1_desc.trim() ? (form.op_1_tp ?? undefined) : undefined,
-      op_1_c: form.op_1_desc.trim() ? (form.op_1_c ?? undefined) : undefined,
+      op_1_desc: op1 || null,
+      op_1_ip: op1 ? (form.op_1_ip ?? null) : null,
+      op_1_tp: op1 ? (form.op_1_tp ?? null) : null,
+      op_1_c: op1 ? (form.op_1_c ?? null) : null,
       mechanic: form.mechanic,
     };
 
@@ -250,10 +252,10 @@ export function AdminPropertiesTab() {
         base_ip: (data.base_ip as number | undefined) ?? undefined,
         base_tp: (data.base_tp as number | undefined) ?? undefined,
         base_c: (data.base_c as number | undefined) ?? undefined,
-        op_1_desc: (data.op_1_desc as string | undefined) ?? undefined,
-        op_1_ip: (data.op_1_ip as number | undefined) ?? undefined,
-        op_1_tp: (data.op_1_tp as number | undefined) ?? undefined,
-        op_1_c: (data.op_1_c as number | undefined) ?? undefined,
+        op_1_desc: data.op_1_desc == null || data.op_1_desc === '' ? undefined : String(data.op_1_desc),
+        op_1_ip: data.op_1_ip == null ? undefined : (data.op_1_ip as number),
+        op_1_tp: data.op_1_tp == null ? undefined : (data.op_1_tp as number),
+        op_1_c: data.op_1_c == null ? undefined : (data.op_1_c as number),
         mechanic: Boolean(data.mechanic),
       };
 
