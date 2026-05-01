@@ -1481,3 +1481,10 @@ Notes
 - Priority: High
 - Feedback: In the edit modal, deleting an option (e.g., delete Op 2) does not actually remove it. Also: when an earlier option is deleted, later options should shift down (delete Op 2 when Op 3 exists → Op 3 becomes Op 2; delete Op 1 when Op 2/3 exist → Op 2→1, Op 3→2, etc.) for maintainable compact option sets.
 - Expected: Deleting an option truly clears it in persisted state, and option indices are compacted so there are no gaps (op1/op2/op3 stay contiguous).
+
+**Raw Feedback Log — 2026-05-01 (Library dependency safety + sync with current patch)**
+- Date: 2026-05-01
+- Context: Official and personal library dependency handling; character sheet live data behavior
+- Priority: High
+- Feedback: Editing shared parts/mechanics/options can break legacy powers/techniques/empowered techniques/armaments/species/creatures. Missing referenced options should be null-safe (ignore-and-continue). For personal libraries, detect rule drift and provide a `Sync with current patch` workflow (global and per-item). Character sheets should reflect latest codex/feat/trait/library data in line with sync state without overcomplicating flow.
+- Expected: Graceful null-safe fallback for removed refs/options, drift visibility, explicit sync controls in My Library, and character sheets that stay up to date with current codex/library resolution.

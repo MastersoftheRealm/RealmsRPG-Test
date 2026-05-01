@@ -135,6 +135,9 @@ export interface CreatureStatBlockProps {
   onEdit?: () => void;
   onDelete?: () => void;
   onDuplicate?: () => void;
+  rightSlot?: React.ReactNode;
+  warningMessage?: string;
+  badges?: Array<{ label: string; color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' }>;
   showActions?: boolean;
   expanded?: boolean;
   compact?: boolean;
@@ -353,6 +356,9 @@ export function CreatureStatBlock({
   onEdit,
   onDelete,
   onDuplicate,
+  rightSlot,
+  warningMessage,
+  badges,
   showActions = true,
   expanded: initialExpanded = false,
   compact = false,
@@ -736,6 +742,9 @@ export function CreatureStatBlock({
       onEdit={showActions ? onEdit : undefined}
       onDelete={showActions ? onDelete : undefined}
       onDuplicate={showActions ? onDuplicate : undefined}
+      rightSlot={rightSlot}
+      warningMessage={warningMessage}
+      badges={badges}
       defaultExpanded={initialExpanded}
       className={cn('border-border-light', className)}
       expandedContent={

@@ -9,7 +9,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Plus, Shield } from 'lucide-react';
+import { Plus, RefreshCw, Shield } from 'lucide-react';
 import {
   GridListRow,
   SearchInput,
@@ -29,8 +29,10 @@ import {
 } from '@/lib/calculators/item-calc';
 import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { useUserItems, useItemProperties, useDuplicateItem } from '@/hooks';
-import { Button, useToast } from '@/components/ui';
+import { Button, IconButton, useToast } from '@/components/ui';
 import type { DisplayItem } from '@/types';
+import { getItemSyncResult, sanitizeItemForSync } from '@/lib/library-sync';
+import { saveToLibrary } from '@/services/library-service';
 
 const ARMAMENT_GRID_COLUMNS = '1.5fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr 40px';
 const ARMAMENT_HEADER_COLUMNS = [
@@ -51,16 +53,19 @@ interface LibraryItemsTabProps {
 export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
   const router = useRouter();
   const { showToast } = useToast();
-  const { data: items = [], isLoading, error } = useUserItems();
+  const { data: items = [], isLoading, error, refetch } = useUserItems();
   const { data: propertiesDb = [] } = useItemProperties();
   const duplicateItem = useDuplicateItem();
   const [search, setSearch] = useState('');
+  const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set());
+  const [syncingAll, setSyncingAll] = useState(false);
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const cardData = useMemo(() => {
     return (items || []).map(item => {
       const props = (Array.isArray(item.properties) ? item.properties : []) as ItemPropertyPayload[];
       const costs = calculateItemCosts(props, propertiesDb);
+      const syncResult = getItemSyncResult(item, propertiesDb);
       const { currencyCost, rarity } = calculateCurrencyCostAndRarity(costs.totalCurrency, costs.totalIP);
       const rangeStr = formatItemRange(props);
       const parts: ChipData[] = (
@@ -84,6 +89,7 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
       const totalTP = parts.reduce((sum, p) => sum + (p.cost || 0), 0);
       return {
         id: String(item.docId ?? item.id ?? ''),
+        source: item,
         name: String(item.name ?? ''),
         description: String(item.description ?? ''),
         type: formatListCellLabel(item.type),
@@ -93,9 +99,62 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
         range: rangeStr || '-',
         damage: formatDamageDisplay(item.damage) || '-',
         parts,
+        hasDrift: syncResult.hasDrift,
+        syncIssues: syncResult.issues,
       };
     });
   }, [items, propertiesDb]);
+
+  const driftedItems = useMemo(() => cardData.filter((item) => item.hasDrift), [cardData]);
+
+  const handleSyncOne = async (itemId: string) => {
+    const source = items.find((i) => String(i.docId ?? i.id ?? '') === itemId);
+    if (!source) return;
+    const sanitized = sanitizeItemForSync(source, propertiesDb);
+    if (!sanitized.hasDrift || !sanitized.changed) return;
+
+    setSyncingIds((prev) => new Set(prev).add(itemId));
+    try {
+      await saveToLibrary('items', sanitized.value as unknown as Record<string, unknown>, { existingId: itemId });
+      await refetch();
+      showToast(`Synced "${source.name}" to current patch rules.`, 'success');
+    } catch (e) {
+      showToast((e as Error)?.message ?? 'Failed to sync armament', 'error');
+    } finally {
+      setSyncingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(itemId);
+        return next;
+      });
+    }
+  };
+
+  const handleSyncAll = async () => {
+    if (driftedItems.length === 0) return;
+    setSyncingAll(true);
+    let syncedCount = 0;
+    try {
+      for (const item of driftedItems) {
+        const source = items.find((i) => String(i.docId ?? i.id ?? '') === item.id);
+        if (!source) continue;
+        const sanitized = sanitizeItemForSync(source, propertiesDb);
+        if (!sanitized.hasDrift || !sanitized.changed) continue;
+        await saveToLibrary('items', sanitized.value as unknown as Record<string, unknown>, { existingId: item.id });
+        syncedCount += 1;
+      }
+      await refetch();
+      showToast(
+        syncedCount > 0
+          ? `Synced ${syncedCount} armament${syncedCount === 1 ? '' : 's'} with current patch.`
+          : 'All armaments are already in sync.',
+        'success'
+      );
+    } catch (e) {
+      showToast((e as Error)?.message ?? 'Failed to sync all armaments', 'error');
+    } finally {
+      setSyncingAll(false);
+    }
+  };
 
   const filteredData = useMemo(() => {
     let result = cardData;
@@ -134,12 +193,22 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
 
   return (
     <div>
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <SearchInput
           value={search}
           onChange={setSearch}
           placeholder="Search armaments..."
         />
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={handleSyncAll}
+          disabled={driftedItems.length === 0 || syncingAll}
+        >
+          <RefreshCw className={`w-4 h-4 ${syncingAll ? 'animate-spin' : ''}`} />
+          Sync with current patch
+          {driftedItems.length > 0 ? ` (${driftedItems.length})` : ''}
+        </Button>
       </div>
 
       <ListHeader
@@ -174,6 +243,22 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
               chipsLabel="Properties & Proficiencies"
               totalCost={item.tp}
               costLabel="TP"
+              badges={item.hasDrift ? [{ label: 'Needs sync', color: 'amber' }] : []}
+              warningMessage={item.syncIssues[0]?.message}
+              rightSlot={item.hasDrift ? (
+                <IconButton
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void handleSyncOne(item.id);
+                  }}
+                  label="Sync with current patch"
+                  className="text-warning-700 hover:text-warning-700 dark:text-warning-400"
+                >
+                  <RefreshCw className={`w-4 h-4 ${syncingIds.has(item.id) ? 'animate-spin' : ''}`} />
+                </IconButton>
+              ) : undefined}
               onEdit={() => router.push(`/item-creator?edit=${item.id}`)}
               onDelete={() => onDelete({ id: item.id, name: item.name } as DisplayItem)}
               onDuplicate={() => duplicateItem.mutate(item.id, { onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error') })}

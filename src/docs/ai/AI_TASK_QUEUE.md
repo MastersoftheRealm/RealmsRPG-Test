@@ -7303,3 +7303,38 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Added admin API `GET /api/admin/changelogs` (admin-gated, entity-type filter, actor profile enrichment).
     - Added `/admin/changelogs` UI with codex-style tabs, date-ordered entries, and before/after detail modal.
     - Added Admin dashboard card linking to `/admin/changelogs`.
+
+- id: TASK-310
+  title: User library drift detection + patch sync controls (powers/techniques/armaments)
+  created_at: 2026-05-01
+  created_by: agent
+  priority: high
+  status: in-progress
+  related_files:
+    - src/lib/library-sync.ts
+    - src/app/(main)/library/LibraryPowersTab.tsx
+    - src/app/(main)/library/LibraryTechniquesTab.tsx
+    - src/app/(main)/library/LibraryItemsTab.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - src/docs/ai/AI_CHANGELOG.md
+  pr_link: (pending)
+  merged_at: (pending)
+  description: |
+    Add a lightweight dependency-safety workflow for user libraries:
+    detect unresolved/deleted parts/options/properties against current codex rules, show non-blocking
+    drift warnings, and allow explicit per-item and global “Sync with current patch” updates.
+    Keep character-sheet enrichment live with latest available technique sources (including empowered techniques).
+  acceptance_criteria:
+    - Shared drift/sanitize utility exists for powers, techniques, and armaments (missing ref + missing option detection).
+    - My Library powers/techniques/armaments lists show drift state and non-blocking warning context.
+    - Per-item sync action updates only the selected drifted entry to sanitized current-rule payload.
+    - Global sync action updates all drifted entries in the active tab.
+    - Character sheet enrichment includes empowered-technique libraries in technique resolution fallback.
+    - `npm run build` passes.
+  notes: |
+    In progress 2026-05-01:
+    - Added shared resolver/sanitizer in `src/lib/library-sync.ts` with null-safe option handling and missing-ref detection.
+    - Added per-item + global sync controls and drift badges/warnings to powers, techniques (standard + empowered), and armaments tabs.
+    - Updated character sheet data sources to include user/public empowered techniques in technique enrichment fallback.
+    - Verification: `npm run build` passes.

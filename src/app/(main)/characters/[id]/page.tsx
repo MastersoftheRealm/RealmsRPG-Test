@@ -9,7 +9,7 @@
 import { use, useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { getCharacter, saveCharacter, type LibraryForView } from '@/services/character-service';
-import { useAuth, useAutoSave, useCampaignsFull, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useMergedSpecies, useCodexFeats, useCodexSkills, useEquipment, usePublicLibrary, type Species, type Trait, type Skill } from '@/hooks';
+import { useAuth, useAutoSave, useCampaignsFull, useUserPowers, useUserTechniques, useUserEmpoweredTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useMergedSpecies, useCodexFeats, useCodexSkills, useEquipment, usePublicLibrary, type Species, type Trait, type Skill } from '@/hooks';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { LoadingState } from '@/components/ui';
 import { enrichCharacterData, cleanForSave } from '@/lib/data-enrichment';
@@ -92,6 +92,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
   // Fetch user's library for data enrichment
   const { data: userPowers = [] } = useUserPowers();
   const { data: userTechniques = [] } = useUserTechniques();
+  const { data: userEmpoweredTechniques = [] } = useUserEmpoweredTechniques();
   const { data: userItems = [] } = useUserItems();
   const { data: traitsDb = [] } = useTraits();
   const { data: featsDb = [] } = useCodexFeats();
@@ -107,6 +108,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
   // Public library for enrichment fallback (character can reference public items without copying to user library)
   const { data: publicPowersRaw = [] } = usePublicLibrary('powers');
   const { data: publicTechniquesRaw = [] } = usePublicLibrary('techniques');
+  const { data: publicEmpoweredTechniquesRaw = [] } = usePublicLibrary('empowered-techniques');
   const { data: publicItemsRaw = [] } = usePublicLibrary('items');
   const publicLibraries = useMemo(() => {
     const powers = (publicPowersRaw as Record<string, unknown>[]).map((p) => ({
@@ -122,7 +124,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
       duration: p.duration,
       damage: p.damage,
     }));
-    const techniques = (publicTechniquesRaw as Record<string, unknown>[]).map((t) => ({
+    const techniques = [...(publicTechniquesRaw as Record<string, unknown>[]), ...(publicEmpoweredTechniquesRaw as Record<string, unknown>[])].map((t) => ({
       id: String(t.id ?? t.docId ?? ''),
       docId: String(t.id ?? t.docId ?? ''),
       name: String(t.name ?? ''),
@@ -142,7 +144,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
       armorValue: i.armorValue,
     }));
     return { powers, techniques, items } as { powers: import('@/hooks/use-user-library').UserPower[]; techniques: import('@/hooks/use-user-library').UserTechnique[]; items: import('@/hooks/use-user-library').UserItem[] };
-  }, [publicPowersRaw, publicTechniquesRaw, publicItemsRaw]);
+  }, [publicPowersRaw, publicTechniquesRaw, publicEmpoweredTechniquesRaw, publicItemsRaw]);
   
   // Fetch all species data to look up species traits
   const { data: allSpecies = [] } = useMergedSpecies();
@@ -180,10 +182,11 @@ export default function CharacterSheetPage({ params }: PageParams) {
   const enrichedData = useMemo(() => {
     if (!character) return null;
     const powers = libraryForView ? (libraryForView.powers as unknown as typeof userPowers) : userPowers;
-    const techniques = libraryForView ? (libraryForView.techniques as unknown as typeof userTechniques) : userTechniques;
+    const baseTechniques = libraryForView ? (libraryForView.techniques as unknown as typeof userTechniques) : userTechniques;
+    const techniques = libraryForView ? baseTechniques : [...baseTechniques, ...userEmpoweredTechniques];
     const items = libraryForView ? (libraryForView.items as unknown as typeof userItems) : userItems;
     return enrichCharacterData(character, powers, techniques, items, codexEquipment, powerPartsDb, techniquePartsDb, publicLibraries);
-  }, [character, libraryForView, userPowers, userTechniques, userItems, codexEquipment, powerPartsDb, techniquePartsDb, publicLibraries]);
+  }, [character, libraryForView, userPowers, userTechniques, userEmpoweredTechniques, userItems, codexEquipment, powerPartsDb, techniquePartsDb, publicLibraries]);
   
   // Look up character's species traits (single = full species_traits; mixed = selected one from each)
   const characterSpeciesTraits = useMemo(() => {
