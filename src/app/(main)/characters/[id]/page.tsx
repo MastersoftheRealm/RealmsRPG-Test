@@ -15,6 +15,7 @@ import { LoadingState } from '@/components/ui';
 import { enrichCharacterData, cleanForSave } from '@/lib/data-enrichment';
 import {
   calculateAbilityPoints,
+  calculateAbilityScoreCost,
   calculateArchetypeProgression,
   calculateSkillPointsForEntity,
   calculateMaxArchetypeFeats,
@@ -327,19 +328,10 @@ export default function CharacterSheetPage({ params }: PageParams) {
     
     const totalAbilityPoints = calculateAbilityPoints(level, false, rules);
     
-    // Calculate spent ability points (with 2-point cost for 4+)
-    let spentAbilityPoints = 0;
-    Object.values(abilities).forEach((value) => {
-      const val = value || 0;
-      if (val > 0) {
-        for (let i = 1; i <= val; i++) {
-          spentAbilityPoints += i >= 4 ? 2 : 1;
-        }
-      } else if (val < 0) {
-        // Negative values refund 1 point each
-        spentAbilityPoints += val;
-      }
-    });
+    const spentAbilityPoints = Object.values(abilities).reduce(
+      (sum, value) => sum + calculateAbilityScoreCost(value || 0, rules),
+      0
+    );
     
     // Skill points: 2 + (level * 3). Species skills consume points; id "0" = "Any" gives +1 point
     const rawTotalSkillPoints = 2 + (level * 3);
@@ -407,7 +399,10 @@ export default function CharacterSheetPage({ params }: PageParams) {
     
     const totalAbilityPoints = calculateAbilityPoints(level, false, rules);
     const currentAbilities = character.abilities || {};
-    const spentAbilityPoints = Object.values(currentAbilities).reduce((sum, val) => sum + (val || 0), 0);
+    const spentAbilityPoints = Object.values(currentAbilities).reduce(
+      (sum, val) => sum + calculateAbilityScoreCost(val || 0, rules),
+      0
+    );
     const abilityPointsRemaining = totalAbilityPoints - spentAbilityPoints;
     
     // Calculate health/energy pool: 18 + 12 * (level - 1)

@@ -218,7 +218,8 @@ export function calculateMaxCharacterFeats(level: number): number {
 // =============================================================================
 
 /**
- * Get the cost to increase an ability score.
+ * Get the cost to increase an ability score by 1 from currentValue.
+ * e.g. 3→4 costs 1; 4→5 and above cost 2 (when threshold is 4).
  */
 export function getAbilityIncreaseCost(currentValue: number, rules?: Rules): number {
   const threshold = rules?.ABILITY_RULES?.costIncreaseThreshold ?? ABILITY_LIMITS.COST_INCREASE_THRESHOLD;
@@ -226,6 +227,21 @@ export function getAbilityIncreaseCost(currentValue: number, rules?: Rules): num
   const normalCost = rules?.ABILITY_RULES?.normalCost ?? 1;
   if (currentValue >= threshold) return increasedCost;
   return normalCost;
+}
+
+/**
+ * Total ability points spent to reach a score (negative scores refund 1 per point).
+ */
+export function calculateAbilityScoreCost(value: number, rules?: Rules): number {
+  if (value <= 0) return value;
+  const threshold = rules?.ABILITY_RULES?.costIncreaseThreshold ?? ABILITY_LIMITS.COST_INCREASE_THRESHOLD;
+  const increasedCost = rules?.ABILITY_RULES?.increasedCost ?? 2;
+  const normalCost = rules?.ABILITY_RULES?.normalCost ?? 1;
+  let spent = 0;
+  for (let target = 1; target <= value; target++) {
+    spent += target > threshold ? increasedCost : normalCost;
+  }
+  return spent;
 }
 
 /**

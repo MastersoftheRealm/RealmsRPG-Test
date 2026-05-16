@@ -5,8 +5,8 @@
  * Used in character creator, character sheet (edit mode), and creature creator.
  * 
  * Point Costs:
- * - Abilities 1-3: 1 point each
- * - Abilities 4+: 2 points each (so +4 costs 5 total, +5 costs 7, +6 costs 9, etc.)
+ * - Increases to +4 and below: 1 point each (0→1 … 3→4)
+ * - Increases from +4 to +5 and above: 2 points each (+4 total = 4 pts, +5 = 6, +6 = 8, etc.)
  * - Negative abilities give points back (1 per point)
  * 
  * Constraints vary by context:
@@ -21,6 +21,7 @@ import { useMemo } from 'react';
 import { cn, formatBonus } from '@/lib/utils';
 import { PointStatus, DecrementButton, IncrementButton } from '@/components/shared';
 import type { AbilityName, Abilities } from '@/types';
+import { calculateAbilityScoreCost, getAbilityIncreaseCost } from '@/lib/game/formulas';
 
 export interface AbilityScoreEditorProps {
   /** Current ability values */
@@ -62,29 +63,6 @@ const ABILITY_INFO: Record<AbilityName, { name: string; shortName: string; descr
   charisma: { name: 'Charisma', shortName: 'CHA', description: 'Social influence and presence' },
 };
 
-/**
- * Calculate total point cost for an ability value.
- * 1-3 cost 1 point each, 4+ cost 2 points each.
- * Negative values give points back (1 per point).
- */
-function calculateAbilityCost(value: number, useHighCost: boolean): number {
-  if (value <= 0) return value; // Negative = gives points back
-  if (!useHighCost) return value; // Simple mode: 1 point per value
-  
-  // 1-3: 1 point each = 1, 2, 3
-  // 4+: 2 points each = 3 + 2*(value-3)
-  if (value <= 3) return value;
-  return 3 + 2 * (value - 3); // 4=5, 5=7, 6=9, 7=11, etc.
-}
-
-/**
- * Calculate the cost to increase an ability by 1.
- */
-function getIncreaseCost(currentValue: number, useHighCost: boolean): number {
-  if (!useHighCost) return 1;
-  return currentValue >= 3 ? 2 : 1;
-}
-
 export function AbilityScoreEditor({
   abilities,
   totalPoints,
@@ -104,7 +82,7 @@ export function AbilityScoreEditor({
   const spentPoints = useMemo(() => {
     return ABILITY_ORDER.reduce((sum, ability) => {
       const value = abilities[ability] || 0;
-      return sum + calculateAbilityCost(value, useHighAbilityCost);
+      return sum + (useHighAbilityCost ? calculateAbilityScoreCost(value) : value);
     }, 0);
   }, [abilities, useHighAbilityCost]);
 
@@ -124,7 +102,7 @@ export function AbilityScoreEditor({
     if (!isEditMode) return false;
     const current = abilities[ability] || 0;
     if (current >= maxAbility) return false;
-    const cost = getIncreaseCost(current, useHighAbilityCost);
+    const cost = useHighAbilityCost ? getAbilityIncreaseCost(current) : 1;
     return remainingPoints >= cost;
   };
 
@@ -163,7 +141,7 @@ export function AbilityScoreEditor({
           const isMartialAbility = martialAbility === ability;
           // Fallback for deprecated highlightedAbilities prop
           const isLegacyHighlight = !powerAbility && !martialAbility && highlightedAbilities.includes(ability);
-          const increaseCost = getIncreaseCost(value, useHighAbilityCost);
+          const increaseCost = useHighAbilityCost ? getAbilityIncreaseCost(value) : 1;
           const canInc = canIncrease(ability);
           const canDec = canDecrease(ability);
 
@@ -235,7 +213,7 @@ export function AbilityScoreEditor({
                 {isEditMode && useHighAbilityCost && (
                   <p className={cn(
                     "text-[10px] font-medium text-center mt-1",
-                    value >= 3 && canInc ? "text-warning-600 dark:text-warning-400" : "invisible"
+                    increaseCost > 1 && canInc ? "text-warning-600 dark:text-warning-400" : "invisible"
                   )}>
                     Next: {increaseCost} Points
                   </p>

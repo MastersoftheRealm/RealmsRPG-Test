@@ -16,6 +16,7 @@ import { cn, formatBonus } from '@/lib/utils';
 import { useRollsOptional } from './roll-context';
 import { RollButton, PointStatus, EditSectionToggle, DecrementButton, IncrementButton } from '@/components/shared';
 import { DEFENSE_INCREASE_COST } from '@/lib/game/skill-allocation';
+import { calculateAbilityScoreCost, getAbilityIncreaseCost } from '@/lib/game/formulas';
 import type { Abilities, AbilityName, DefenseSkills } from '@/types';
 
 // =============================================================================
@@ -85,11 +86,6 @@ const ABILITY_CONSTRAINTS = {
 // Helper Functions
 // =============================================================================
 
-/** Cost to go from currentValue to currentValue+1 (abilities 4+ cost 2 points) */
-function getAbilityIncreaseCost(currentValue: number): number {
-  return currentValue >= 3 ? 2 : 1;
-}
-
 function canDecreaseAbility(abilities: Abilities, abilityName: AbilityName): boolean {
   const currentValue = abilities[abilityName] ?? 0;
   const newValue = currentValue - 1;
@@ -151,18 +147,10 @@ export function AbilitiesSection({
   
   // Calculate ability points spent
   const calculatedSpentAbilityPoints = useMemo(() => {
-    let spent = 0;
-    ABILITY_ORDER.forEach(ability => {
-      const value = abilities[ability] ?? 0;
-      if (value > 0) {
-        for (let i = 1; i <= value; i++) {
-          spent += i >= 4 ? 2 : 1;
-        }
-      } else if (value < 0) {
-        spent += value;
-      }
-    });
-    return spent;
+    return ABILITY_ORDER.reduce(
+      (sum, ability) => sum + calculateAbilityScoreCost(abilities[ability] ?? 0),
+      0
+    );
   }, [abilities]);
   
   // Defense allocation cost: DEFENSE_INCREASE_COST skill points per +1 (core rules: 2)
@@ -309,7 +297,7 @@ export function AbilitiesSection({
               ) : null}
               
               {/* Cost indicator in edit mode - only show if next point costs 2 */}
-              {showEditControls && value >= 3 && canIncrease && (
+              {showEditControls && cost > 1 && canIncrease && (
                 <span className="text-[10px] text-warning-600 dark:text-warning-400 font-medium mt-1">
                   Next: {cost} Points
                 </span>

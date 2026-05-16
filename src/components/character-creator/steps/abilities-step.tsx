@@ -12,7 +12,7 @@ import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { AbilityScoreEditor } from '@/components/creator';
 import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
 import { Button, HelpTooltip } from '@/components/ui';
-import { calculateAbilityPoints } from '@/lib/game/formulas';
+import { calculateAbilityPoints, calculateAbilityScoreCost } from '@/lib/game/formulas';
 import { useTooltipByKey } from '@/hooks';
 import type { AbilityName } from '@/types';
 
@@ -31,9 +31,8 @@ export function AbilitiesStep() {
   // Calculate total points available (vanilla formula)
   const totalPoints = useMemo(() => calculateAbilityPoints(level), [level]);
   
-  // Sum of all ability values for validation
   const spentPoints = useMemo(() => {
-    return Object.values(abilities).reduce((sum, val) => sum + (val || 0), 0);
+    return Object.values(abilities).reduce((sum, val) => sum + calculateAbilityScoreCost(val || 0), 0);
   }, [abilities]);
   
   const remainingPoints = totalPoints - spentPoints;

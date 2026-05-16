@@ -8,7 +8,7 @@
 import type { CharacterDraft, CharacterPower, CharacterTechnique, Item } from '@/types';
 import type { CreatorStep } from '@/stores/character-creator-store';
 import { getChoiceOptionIds } from '@/lib/choice-trait';
-import { calculateAbilityPoints, calculateSkillPointsForEntity, calculateTrainingPoints } from '@/lib/game/formulas';
+import { calculateAbilityPoints, calculateAbilityScoreCost, calculateSkillPointsForEntity, calculateTrainingPoints } from '@/lib/game/formulas';
 import { calculateSimpleSkillPointsSpent } from '@/lib/game/skill-allocation';
 import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies } from '@/lib/proficiencies';
 
@@ -121,7 +121,7 @@ export function getValidationIssuesForStep(
     case 'abilities': {
       const maxAbilityPoints = calculateAbilityPoints(level);
       const usedAbilityPoints = draft.abilities
-        ? Object.values(draft.abilities).reduce((sum, val) => sum + (val || 0), 0)
+        ? Object.values(draft.abilities).reduce((sum, val) => sum + calculateAbilityScoreCost(val || 0), 0)
         : 0;
       const remainingAbilityPoints = maxAbilityPoints - usedAbilityPoints;
       if (remainingAbilityPoints > 0) {

@@ -730,6 +730,45 @@ export function LibrarySection({
     });
   }, [onTabVisibilityChange, resolvedTabVisibility]);
 
+  const navigationTabs = useMemo(() => {
+    const source = isEditMode ? tabs : visibleTabs;
+    return source.map((tab) => {
+      const visibleOutsideEdit = resolvedTabVisibility[tab.id] !== false;
+      return {
+        id: tab.id,
+        label: tab.label,
+        dimmed: isEditMode && !visibleOutsideEdit,
+        suffix:
+          isEditMode && onTabVisibilityChange ? (
+            <IconButton
+              variant="ghost"
+              size="sm"
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToggleTabVisibility(tab.id);
+              }}
+              label={`${visibleOutsideEdit ? 'Hide' : 'Show'} ${tab.label} tab when not editing`}
+              className="min-h-[44px] min-w-[44px] shrink-0 -mr-1"
+            >
+              {visibleOutsideEdit ? (
+                <Eye className="w-4 h-4" />
+              ) : (
+                <EyeOff className="w-4 h-4 text-text-muted dark:text-text-secondary" />
+              )}
+            </IconButton>
+          ) : undefined,
+      };
+    });
+  }, [
+    isEditMode,
+    tabs,
+    visibleTabs,
+    resolvedTabVisibility,
+    onTabVisibilityChange,
+    handleToggleTabVisibility,
+  ]);
+
   const handleCurrencyBlur = () => {
     const value = parseInt(currencyInput) || 0;
     if (value !== currency && onCurrencyChange) {
@@ -759,33 +798,13 @@ export function LibrarySection({
       
       {/* Tabs */}
       <TabNavigation
-        tabs={visibleTabs.map(t => ({ id: t.id, label: t.label }))}
+        tabs={navigationTabs}
         activeTab={activeTab}
         onTabChange={(tabId) => setActiveTab(tabId as TabType)}
         variant="underline"
         size="md"
         className="mb-4"
       />
-
-      {isEditMode && (
-        <div className="mb-4 flex flex-wrap gap-2">
-          {tabs.map((tab) => {
-            const visibleOutsideEdit = resolvedTabVisibility[tab.id] !== false;
-            return (
-              <IconButton
-                key={`library-tab-visibility-${tab.id}`}
-                variant="ghost"
-                size="sm"
-                onClick={() => handleToggleTabVisibility(tab.id)}
-                label={`${visibleOutsideEdit ? 'Hide' : 'Show'} ${tab.label} tab outside edit mode`}
-                className="min-h-[44px] min-w-[44px]"
-              >
-                {visibleOutsideEdit ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 text-text-muted dark:text-text-secondary" />}
-              </IconButton>
-            );
-          })}
-        </div>
-      )}
 
       {/* Content */}
       <div className="space-y-2 flex-1 min-h-0 overflow-y-auto">
