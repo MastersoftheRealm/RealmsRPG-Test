@@ -7338,3 +7338,8 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Added per-item + global sync controls and drift badges/warnings to powers, techniques (standard + empowered), and armaments tabs.
     - Updated character sheet data sources to include user/public empowered techniques in technique enrichment fallback.
     - Verification: `npm run build` passes.
+    Follow-up 2026-05-16:
+    - Fixed drift detection blind spot where edited part/property definitions did not trigger sync state.
+    - Added dependency fingerprint metadata and comparison logic (`syncMeta.dependencyFingerprint`) for powers/techniques/items/creatures.
+    - Legacy entries without fingerprint metadata now surface as drifted once ("needs bootstrap sync"), then store fingerprint on sync.
+    - Verification: `npm run build` passes.

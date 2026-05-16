@@ -1488,3 +1488,10 @@ Notes
 - Priority: High
 - Feedback: Editing shared parts/mechanics/options can break legacy powers/techniques/empowered techniques/armaments/species/creatures. Missing referenced options should be null-safe (ignore-and-continue). For personal libraries, detect rule drift and provide a `Sync with current patch` workflow (global and per-item). Character sheets should reflect latest codex/feat/trait/library data in line with sync state without overcomplicating flow.
 - Expected: Graceful null-safe fallback for removed refs/options, drift visibility, explicit sync controls in My Library, and character sheets that stay up to date with current codex/library resolution.
+
+**Raw Feedback Log — 2026-05-16 (Library sync button disabled after part edits)**
+- Date: 2026-05-16
+- Context: My Library powers tab — sync with current patch drift detection
+- Priority: High
+- Feedback: Sync button stays greyed out as "already in sync" even after many referenced power parts were edited in codex.
+- Expected: Part definition edits (not only deleted parts/options) should trigger drift so the per-item and global sync actions enable correctly.

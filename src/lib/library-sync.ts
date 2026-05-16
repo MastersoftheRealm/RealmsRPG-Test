@@ -29,7 +29,9 @@ export type SyncIssueCode =
   | 'missing_property'
   | 'missing_option_1'
   | 'missing_option_2'
-  | 'missing_option_3';
+  | 'missing_option_3'
+  | 'definitions_changed'
+  | 'never_synced';
 
 export interface SyncIssue {
   code: SyncIssueCode;
@@ -49,6 +51,13 @@ export interface SyncResult<T> {
 interface SyncOptions {
   dropMissingRefs?: boolean;
 }
+
+type SyncMetaCarrier = {
+  syncMeta?: {
+    dependencyFingerprint?: string;
+    syncedAt?: string;
+  };
+};
 
 function hasValue(value: unknown): boolean {
   if (value == null) return false;
@@ -78,6 +87,97 @@ function partDisplayName(part: SavedPart): string {
 
 function propertyDisplayName(property: SavedProperty): string {
   return String(property.name ?? property.id ?? 'Unknown property');
+}
+
+function normalizeForFingerprint(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(normalizeForFingerprint);
+  if (value && typeof value === 'object') {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([k, v]) => [k, normalizeForFingerprint(v)]);
+    return Object.fromEntries(entries);
+  }
+  return value;
+}
+
+function stableFingerprint(value: unknown): string {
+  return JSON.stringify(normalizeForFingerprint(value));
+}
+
+function getStoredFingerprint(item: unknown): string | undefined {
+  if (!item || typeof item !== 'object') return undefined;
+  const carrier = item as SyncMetaCarrier;
+  const fromMeta = carrier.syncMeta?.dependencyFingerprint;
+  return typeof fromMeta === 'string' && fromMeta.trim().length > 0 ? fromMeta : undefined;
+}
+
+function withSyncMeta<T extends object>(value: T, dependencyFingerprint: string): T & SyncMetaCarrier {
+  const now = new Date().toISOString();
+  const prev = (value as SyncMetaCarrier).syncMeta ?? {};
+  return {
+    ...value,
+    syncMeta: {
+      ...prev,
+      dependencyFingerprint,
+      syncedAt: now,
+    },
+  };
+}
+
+function buildPowerPartFingerprint(parts: SavedPart[] = [], partsDb: PartLike[] = []): string {
+  const refs = parts.map((part) => {
+    const def = findByIdOrName(partsDb, { id: part.id, name: part.name });
+    return {
+      ref: {
+        id: part.id ?? null,
+        name: part.name ?? null,
+        op_1_lvl: part.op_1_lvl ?? 0,
+        op_2_lvl: part.op_2_lvl ?? 0,
+        op_3_lvl: part.op_3_lvl ?? 0,
+        applyDuration: part.applyDuration ?? false,
+      },
+      def: def
+        ? {
+            id: def.id ?? null,
+            name: def.name ?? null,
+            op_1_desc: def.op_1_desc ?? null,
+            op_2_desc: def.op_2_desc ?? null,
+            op_3_desc: def.op_3_desc ?? null,
+            op_1_en: def.op_1_en ?? null,
+            op_2_en: def.op_2_en ?? null,
+            op_3_en: def.op_3_en ?? null,
+            op_1_tp: def.op_1_tp ?? null,
+            op_2_tp: def.op_2_tp ?? null,
+            op_3_tp: def.op_3_tp ?? null,
+          }
+        : null,
+    };
+  });
+  return stableFingerprint(refs);
+}
+
+function buildItemPropertyFingerprint(properties: SavedProperty[] = [], propertiesDb: PropertyLike[] = []): string {
+  const refs = properties.map((property) => {
+    const def = findByIdOrName(propertiesDb, { id: property.id, name: property.name });
+    return {
+      ref: {
+        id: property.id ?? null,
+        name: property.name ?? null,
+        op_1_lvl: property.op_1_lvl ?? 0,
+      },
+      def: def
+        ? {
+            id: def.id ?? null,
+            name: def.name ?? null,
+            op_1_desc: def.op_1_desc ?? null,
+            op_1_ip: def.op_1_ip ?? null,
+            op_1_tp: def.op_1_tp ?? null,
+            op_1_c: def.op_1_c ?? null,
+          }
+        : null,
+    };
+  });
+  return stableFingerprint(refs);
 }
 
 export function syncPowerParts(
@@ -219,61 +319,136 @@ export function syncItemProperties(
 
 export function getPowerSyncResult(power: UserPower, partsDb: PartLike[]): SyncResult<UserPower> {
   const partsResult = syncPowerParts(power.name ?? 'Power', power.parts ?? [], partsDb);
+  const currentFingerprint = buildPowerPartFingerprint(power.parts ?? [], partsDb);
+  const storedFingerprint = getStoredFingerprint(power);
+  const hasRefs = (power.parts?.length ?? 0) > 0;
+  const definitionsChanged = hasRefs && !!storedFingerprint && storedFingerprint !== currentFingerprint;
+  const neverSynced = hasRefs && !storedFingerprint;
+  const extraIssues: SyncIssue[] = [];
+  if (definitionsChanged) {
+    extraIssues.push({
+      code: 'definitions_changed',
+      itemName: power.name,
+      message: 'Referenced part definitions were updated in the current patch.',
+    });
+  } else if (neverSynced) {
+    extraIssues.push({
+      code: 'never_synced',
+      itemName: power.name,
+      message: 'This item has not been synced to the current patch metadata yet.',
+    });
+  }
   return {
     value: { ...power, parts: partsResult.value },
-    issues: partsResult.issues,
-    hasDrift: partsResult.hasDrift,
-    changed: partsResult.changed,
+    issues: [...partsResult.issues, ...extraIssues],
+    hasDrift: partsResult.hasDrift || definitionsChanged || neverSynced,
+    changed: partsResult.changed || definitionsChanged || neverSynced,
   };
 }
 
 export function getTechniqueSyncResult(technique: UserTechnique, partsDb: PartLike[]): SyncResult<UserTechnique> {
   const partsResult = syncTechniqueParts(technique.name ?? 'Technique', technique.parts ?? [], partsDb);
+  const currentFingerprint = buildPowerPartFingerprint(technique.parts ?? [], partsDb);
+  const storedFingerprint = getStoredFingerprint(technique);
+  const hasRefs = (technique.parts?.length ?? 0) > 0;
+  const definitionsChanged = hasRefs && !!storedFingerprint && storedFingerprint !== currentFingerprint;
+  const neverSynced = hasRefs && !storedFingerprint;
+  const extraIssues: SyncIssue[] = [];
+  if (definitionsChanged) {
+    extraIssues.push({
+      code: 'definitions_changed',
+      itemName: technique.name,
+      message: 'Referenced part definitions were updated in the current patch.',
+    });
+  } else if (neverSynced) {
+    extraIssues.push({
+      code: 'never_synced',
+      itemName: technique.name,
+      message: 'This item has not been synced to the current patch metadata yet.',
+    });
+  }
   return {
     value: { ...technique, parts: partsResult.value },
-    issues: partsResult.issues,
-    hasDrift: partsResult.hasDrift,
-    changed: partsResult.changed,
+    issues: [...partsResult.issues, ...extraIssues],
+    hasDrift: partsResult.hasDrift || definitionsChanged || neverSynced,
+    changed: partsResult.changed || definitionsChanged || neverSynced,
   };
 }
 
 export function getItemSyncResult(item: UserItem, propertiesDb: PropertyLike[]): SyncResult<UserItem> {
   const propsResult = syncItemProperties(item.name ?? 'Item', item.properties ?? [], propertiesDb);
+  const currentFingerprint = buildItemPropertyFingerprint(item.properties ?? [], propertiesDb);
+  const storedFingerprint = getStoredFingerprint(item);
+  const hasRefs = (item.properties?.length ?? 0) > 0;
+  const definitionsChanged = hasRefs && !!storedFingerprint && storedFingerprint !== currentFingerprint;
+  const neverSynced = hasRefs && !storedFingerprint;
+  const extraIssues: SyncIssue[] = [];
+  if (definitionsChanged) {
+    extraIssues.push({
+      code: 'definitions_changed',
+      itemName: item.name,
+      message: 'Referenced property definitions were updated in the current patch.',
+    });
+  } else if (neverSynced) {
+    extraIssues.push({
+      code: 'never_synced',
+      itemName: item.name,
+      message: 'This item has not been synced to the current patch metadata yet.',
+    });
+  }
   return {
     value: { ...item, properties: propsResult.value },
-    issues: propsResult.issues,
-    hasDrift: propsResult.hasDrift,
-    changed: propsResult.changed,
+    issues: [...propsResult.issues, ...extraIssues],
+    hasDrift: propsResult.hasDrift || definitionsChanged || neverSynced,
+    changed: propsResult.changed || definitionsChanged || neverSynced,
   };
 }
 
 export function sanitizePowerForSync(power: UserPower, partsDb: PartLike[]): SyncResult<UserPower> {
   const partsResult = syncPowerParts(power.name ?? 'Power', power.parts ?? [], partsDb, { dropMissingRefs: true });
+  const currentFingerprint = buildPowerPartFingerprint(partsResult.value, partsDb);
+  const storedFingerprint = getStoredFingerprint(power);
+  const hasRefs = (power.parts?.length ?? 0) > 0;
+  const metaDrift = hasRefs && (!storedFingerprint || storedFingerprint !== currentFingerprint);
+  const nextValue = withSyncMeta({ ...power, parts: partsResult.value }, currentFingerprint);
+  const changed = JSON.stringify(power) !== JSON.stringify(nextValue);
   return {
-    value: { ...power, parts: partsResult.value },
+    value: nextValue,
     issues: partsResult.issues,
-    hasDrift: partsResult.hasDrift,
-    changed: partsResult.changed,
+    hasDrift: partsResult.hasDrift || metaDrift,
+    changed: partsResult.changed || changed,
   };
 }
 
 export function sanitizeTechniqueForSync(technique: UserTechnique, partsDb: PartLike[]): SyncResult<UserTechnique> {
   const partsResult = syncTechniqueParts(technique.name ?? 'Technique', technique.parts ?? [], partsDb, { dropMissingRefs: true });
+  const currentFingerprint = buildPowerPartFingerprint(partsResult.value, partsDb);
+  const storedFingerprint = getStoredFingerprint(technique);
+  const hasRefs = (technique.parts?.length ?? 0) > 0;
+  const metaDrift = hasRefs && (!storedFingerprint || storedFingerprint !== currentFingerprint);
+  const nextValue = withSyncMeta({ ...technique, parts: partsResult.value }, currentFingerprint);
+  const changed = JSON.stringify(technique) !== JSON.stringify(nextValue);
   return {
-    value: { ...technique, parts: partsResult.value },
+    value: nextValue,
     issues: partsResult.issues,
-    hasDrift: partsResult.hasDrift,
-    changed: partsResult.changed,
+    hasDrift: partsResult.hasDrift || metaDrift,
+    changed: partsResult.changed || changed,
   };
 }
 
 export function sanitizeItemForSync(item: UserItem, propertiesDb: PropertyLike[]): SyncResult<UserItem> {
   const propsResult = syncItemProperties(item.name ?? 'Item', item.properties ?? [], propertiesDb, { dropMissingRefs: true });
+  const currentFingerprint = buildItemPropertyFingerprint(propsResult.value, propertiesDb);
+  const storedFingerprint = getStoredFingerprint(item);
+  const hasRefs = (item.properties?.length ?? 0) > 0;
+  const metaDrift = hasRefs && (!storedFingerprint || storedFingerprint !== currentFingerprint);
+  const nextValue = withSyncMeta({ ...item, properties: propsResult.value }, currentFingerprint);
+  const changed = JSON.stringify(item) !== JSON.stringify(nextValue);
   return {
-    value: { ...item, properties: propsResult.value },
+    value: nextValue,
     issues: propsResult.issues,
-    hasDrift: propsResult.hasDrift,
-    changed: propsResult.changed,
+    hasDrift: propsResult.hasDrift || metaDrift,
+    changed: propsResult.changed || changed,
   };
 }
 
@@ -334,8 +509,33 @@ export function getCreatureSyncResult(
     ...(creature.techniques ? { techniques: nextTechniques } : {}),
     ...(creature.armaments ? { armaments: nextArmaments } : {}),
   };
+  const currentFingerprint = stableFingerprint({
+    powers: nextPowers.map((p) => ({ name: p.name, fp: buildPowerPartFingerprint(p.parts ?? [], powerPartsDb) })),
+    techniques: nextTechniques.map((t) => ({ name: t.name, fp: buildPowerPartFingerprint(t.parts ?? [], techniquePartsDb) })),
+    armaments: nextArmaments.map((a) => ({ name: a.name, fp: buildItemPropertyFingerprint(a.properties ?? [], itemPropertiesDb) })),
+  });
+  const storedFingerprint = getStoredFingerprint(creature);
+  const hasRefs =
+    (creature.powers?.some((p) => (p.parts?.length ?? 0) > 0) ?? false) ||
+    (creature.techniques?.some((t) => (t.parts?.length ?? 0) > 0) ?? false) ||
+    (creature.armaments?.some((a) => (a.properties?.length ?? 0) > 0) ?? false);
+  const definitionsChanged = hasRefs && !!storedFingerprint && storedFingerprint !== currentFingerprint;
+  const neverSynced = hasRefs && !storedFingerprint;
+  if (definitionsChanged) {
+    issues.push({
+      code: 'definitions_changed',
+      itemName: creature.name,
+      message: 'Referenced creature dependency definitions were updated in the current patch.',
+    });
+  } else if (neverSynced) {
+    issues.push({
+      code: 'never_synced',
+      itemName: creature.name,
+      message: 'This creature has not been synced to the current patch metadata yet.',
+    });
+  }
 
-  return { value: next, issues, hasDrift: issues.length > 0, changed };
+  return { value: next, issues, hasDrift: issues.length > 0, changed: changed || definitionsChanged || neverSynced };
 }
 
 export function sanitizeCreatureForSync(
@@ -374,6 +574,24 @@ export function sanitizeCreatureForSync(
     ...(creature.techniques ? { techniques: nextTechniques } : {}),
     ...(creature.armaments ? { armaments: nextArmaments } : {}),
   };
-
-  return { value: next, issues, hasDrift: issues.length > 0, changed };
+  const currentFingerprint = stableFingerprint({
+    powers: nextPowers.map((p) => ({ name: p.name, fp: buildPowerPartFingerprint(p.parts ?? [], powerPartsDb) })),
+    techniques: nextTechniques.map((t) => ({ name: t.name, fp: buildPowerPartFingerprint(t.parts ?? [], techniquePartsDb) })),
+    armaments: nextArmaments.map((a) => ({ name: a.name, fp: buildItemPropertyFingerprint(a.properties ?? [], itemPropertiesDb) })),
+  });
+  const storedFingerprint = getStoredFingerprint(creature);
+  const hasRefs =
+    (creature.powers?.some((p) => (p.parts?.length ?? 0) > 0) ?? false) ||
+    (creature.techniques?.some((t) => (t.parts?.length ?? 0) > 0) ?? false) ||
+    (creature.armaments?.some((a) => (a.properties?.length ?? 0) > 0) ?? false);
+  const metaDrift = hasRefs && (!storedFingerprint || storedFingerprint !== currentFingerprint);
+  const withMeta = withSyncMeta(next as object, currentFingerprint) as CreatureLike;
+  const before = JSON.stringify(creature);
+  const after = JSON.stringify(withMeta);
+  return {
+    value: withMeta,
+    issues,
+    hasDrift: issues.length > 0 || metaDrift,
+    changed: changed || before !== after,
+  };
 }
