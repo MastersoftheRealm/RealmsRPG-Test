@@ -13,7 +13,8 @@ import { Plus, Wand2, Swords, X, ExternalLink } from 'lucide-react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
 import { cn } from '@/lib/utils';
-import { ContextHelpTooltip, GridListRow, ListHeader, SegmentedControl } from '@/components/shared';
+import { ContextHelpTooltip, GridListRow, InnateToggle, ListHeader, SegmentedControl } from '@/components/shared';
+import { calculateArchetypeProgression } from '@/lib/game/formulas';
 import { Button, IconButton, Spinner } from '@/components/ui';
 import { useUserPowers, useUserTechniques, useUserEmpoweredTechniques, usePowerParts, useTechniqueParts, usePublicLibrary, useItemProperties, type PowerPart, type TechniquePart } from '@/hooks';
 import type { UserPower, UserTechnique } from '@/hooks/use-user-library';
@@ -116,6 +117,23 @@ export function PowersStep() {
   // Get selected powers and techniques from character draft
   const selectedPowers = draft.powers || [];
   const selectedTechniques = draft.techniques || [];
+
+  const archetypeProgression = useMemo(() => {
+    const archType = draft.archetype?.type;
+    const martProf =
+      draft.mart_prof ??
+      (archType === 'martial' ? 2 : archType === 'powered-martial' ? 1 : 0);
+    const powProf =
+      draft.pow_prof ??
+      (archType === 'power' ? 2 : archType === 'powered-martial' ? 1 : 0);
+    return calculateArchetypeProgression(
+      draft.level || 1,
+      martProf,
+      powProf,
+      draft.archetypeChoices ?? {}
+    );
+  }, [draft.level, draft.mart_prof, draft.pow_prof, draft.archetype?.type, draft.archetypeChoices]);
+  const showInnateControls = archetypeProgression.innateEnergy > 0;
 
   const proficiencyTpSummary = useMemo(() => {
     const inventory = draft.equipment?.inventory || [];
@@ -488,6 +506,7 @@ export function PowersStep() {
       (p: { id: string | number }) => !availablePowerIds.has(String(p.id))
     );
     const fromModal = selectedItems.map(item => {
+      const existing = (draft.powers || []).find((p: { id: string | number }) => String(p.id) === String(item.id));
       const userPower = (item.data as UserPower | undefined) ?? userPowers.find((p: UserPower) => p.docId === item.id) ?? normalizedPublicPowers.find((p: UserPower) => p.docId === item.id);
       const partsWithTP = (userPower?.parts || []).map((savedPart: { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }) => {
         const codexPart = powerParts?.find((rp: PowerPart) =>
@@ -511,6 +530,7 @@ export function PowersStep() {
         name: item.name,
         description: userPower?.description,
         parts: partsWithTP,
+        ...(existing?.innate ? { innate: true } : {}),
       };
     });
     updateDraft({ powers: [...keptFromDraft, ...fromModal] });
@@ -521,6 +541,7 @@ export function PowersStep() {
       (power: { id: string | number }) => !availableEmpoweredIds.has(String(power.id))
     );
     const fromModal = selectedItems.map((item) => {
+      const existing = (draft.powers || []).find((p: { id: string | number }) => String(p.id) === String(item.id));
       const technique = item.data as UserTechnique;
       const raw = technique as unknown as Record<string, unknown>;
       const powerData = (raw.power as Record<string, unknown> | undefined) ?? {};
@@ -538,6 +559,7 @@ export function PowersStep() {
           op_3_lvl: part.op_3_lvl,
           applyDuration: part.applyDuration,
         })),
+        ...(existing?.innate ? { innate: true } : {}),
       };
     });
     updateDraft({ powers: [...keptFromDraft, ...fromModal] });
@@ -579,6 +601,16 @@ export function PowersStep() {
     setShowTechniqueModal(false);
   }, [draft.techniques, availableTechniqueIds, updateDraft, userTechniques, normalizedPublicTechniques, techniqueParts]);
   
+  const togglePowerInnate = useCallback(
+    (powerId: string, isInnate: boolean) => {
+      const newPowers = (draft.powers || []).map((p) =>
+        String(p.id) === powerId ? { ...p, innate: isInnate } : p
+      ) as CharacterPower[];
+      updateDraft({ powers: newPowers });
+    },
+    [draft.powers, updateDraft]
+  );
+
   // Remove a power
   const removePower = useCallback((powerId: string) => {
     const newPowers = selectedPowers.filter((p: { id: string | number }) => String(p.id) !== powerId);
@@ -709,6 +741,9 @@ export function PowersStep() {
                 <h3 className="text-lg font-semibold text-text-primary">Powers</h3>
                 <p className="text-sm text-text-muted dark:text-text-secondary">
                   {selectedPowers.length} power{selectedPowers.length !== 1 ? 's' : ''} selected
+                  {showInnateControls && (
+                    <> · Tap ☆ to mark innate (up to {archetypeProgression.innateThreshold} EN, {archetypeProgression.innatePools} pool{archetypeProgression.innatePools !== 1 ? 's' : ''})</>
+                  )}
                 </p>
               </div>
             </div>
@@ -727,10 +762,13 @@ export function PowersStep() {
                 columns={POWER_MODAL_COLUMNS.map(({ key, label }) => ({ key, label, width: key === 'name' ? '1.4fr' : '0.7fr', align: (key === 'name' ? 'left' : 'center') as 'left' | 'center' | 'right' }))}
                 gridColumns={POWER_GRID_COLUMNS}
                 compact
+                rowChrome={{ leftSlot: showInnateControls }}
               />
               <div className="space-y-1">
                 {selectedPowerItems.map(power => {
                   const idStr = String(power.id);
+                  const draftPower = selectedPowers.find((p: { id: string | number }) => String(p.id) === idStr);
+                  const isInnate = draftPower?.innate === true;
                   const isPathRec =
                     recommendedPowerRefs.has(idStr.toLowerCase()) ||
                     recommendedPowerRefs.has(String(power.name).toLowerCase());
@@ -747,6 +785,16 @@ export function PowersStep() {
                     totalCost={power.totalCost}
                     costLabel={power.costLabel}
                     badges={isPathRec ? undefined : power.badges}
+                    innate={isInnate}
+                    hideInnateBadge
+                    leftSlot={
+                      showInnateControls ? (
+                        <InnateToggle
+                          isInnate={isInnate}
+                          onToggle={() => togglePowerInnate(idStr, !isInnate)}
+                        />
+                      ) : undefined
+                    }
                     rightSlot={
                       <IconButton
                         variant="danger"

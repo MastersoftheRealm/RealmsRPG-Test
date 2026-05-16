@@ -2,9 +2,9 @@
  * Creator Tab Bar
  * ===============
  * Navigation tabs for character creation wizard.
- * Moving to another step = treat as Continue (mark current complete and go),
+ * Moving forward to another step = treat as Continue (mark current complete and go),
  * unless the current step has missing requirements — then show what's missing
- * and offer "Continue anyway" / "Stay".
+ * and offer "Continue anyway" / "Stay". Going back to a previous step never shows that warning.
  */
 
 'use client';
@@ -50,7 +50,13 @@ export function CreatorTabBar() {
     if (step === currentStep) return;
     if (!canNavigateToStep(step)) return;
 
-    if (currentStepIssues.length > 0) {
+    const currentIndex = STEP_ORDER.indexOf(currentStep);
+    const targetIndex = STEP_ORDER.indexOf(step);
+    const isGoingBack = targetIndex < currentIndex;
+
+    // Only warn when advancing to a later step with unfinished requirements.
+    // Going back to edit a previous step should not block navigation.
+    if (currentStepIssues.length > 0 && !isGoingBack) {
       setPendingStep(step);
       return;
     }
