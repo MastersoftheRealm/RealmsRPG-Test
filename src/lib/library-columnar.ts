@@ -146,6 +146,18 @@ export function rowToItem(
     const weaponName = v(row, 'weaponName', 'weapon_name');
     assignIfPresent('weaponName', weaponName);
     if (weaponName && !payload.weapon) base.weapon = { name: weaponName };
+    if (
+      type === 'empowered-techniques' &&
+      weaponName &&
+      payload.power &&
+      typeof payload.power === 'object' &&
+      !(payload.power as Record<string, unknown>).addWeapon
+    ) {
+      base.power = {
+        ...(payload.power as Record<string, unknown>),
+        addWeapon: { name: weaponName },
+      };
+    }
     const rangeSteps = v(row, 'rangeSteps', 'range_steps') as number | undefined | null;
     const durationType = v(row, 'durationType', 'duration_type') as string | undefined | null;
     const durationValue = v(row, 'durationValue', 'duration_value') as number | undefined | null;
@@ -249,6 +261,15 @@ export function bodyToColumnar(
   }
 
   if (type === 'techniques' || type === 'empowered-techniques') {
+    const weaponRef = (
+      body.weapon ??
+      ((body.power as Record<string, unknown> | undefined)?.addWeapon)
+    ) as Record<string, unknown> | undefined;
+    if (typeof body.weaponName === 'string' && body.weaponName.trim()) {
+      scalars.weaponName = body.weaponName.trim();
+    } else if (weaponRef && typeof weaponRef.name === 'string' && weaponRef.name.trim()) {
+      scalars.weaponName = weaponRef.name.trim();
+    }
     const range = (body.range ?? (body.power as Record<string, unknown> | undefined)?.range) as
       | Record<string, unknown>
       | undefined;

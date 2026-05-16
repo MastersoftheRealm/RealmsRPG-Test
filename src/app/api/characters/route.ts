@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { ensureUserProfile } from '@/lib/ensure-user-profile';
 import { getRolePolicyForUser } from '@/lib/role-policy';
+import { buildRoleQuotaExceededResponse } from '@/lib/role-quota-messages';
 import { removeUndefined } from '@/lib/utils/object';
 import { validateJson, characterCreateSchema } from '@/lib/api-validation';
 import { standardLimiter } from '@/lib/rate-limit';
@@ -113,7 +114,12 @@ export async function POST(request: NextRequest) {
     if (countError) throw countError;
     if ((characterCount ?? 0) >= rolePolicy.maxCharacters) {
       return NextResponse.json(
-        { error: `Your role allows up to ${rolePolicy.maxCharacters} character(s).` },
+        buildRoleQuotaExceededResponse({
+          role: rolePolicy.role,
+          resource: 'characters',
+          currentCount: characterCount ?? 0,
+          maxAllowed: rolePolicy.maxCharacters,
+        }),
         { status: 403 }
       );
     }

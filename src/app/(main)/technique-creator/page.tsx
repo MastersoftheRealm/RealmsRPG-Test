@@ -50,6 +50,10 @@ import {
   formatTechniqueDamage,
   type TechniquePartPayload,
 } from '@/lib/calculators';
+import {
+  inferTechniqueWeaponTpFromSavedParts,
+  shouldPersistCreatorWeaponId,
+} from '@/lib/creator-weapon-persistence';
 
 // =============================================================================
 // Types
@@ -486,6 +490,15 @@ function TechniqueCreatorContent() {
     return weapon.tp ?? (weapon.id !== 0 ? 1 : 0); // Use weapon TP if available
   }, [weapon.id, weapon.tp, weaponAttackMode]);
 
+  const shouldPersistSelectedWeapon = useMemo(
+    () =>
+      shouldPersistCreatorWeaponId({
+        weaponId: weapon.id,
+        allowNoAttack: false,
+      }),
+    [weapon.id]
+  );
+
   const mechanicParts = useMemo(
     () => buildMechanicPartPayload({
       actionTypeSelection: actionType,
@@ -640,12 +653,12 @@ function TechniqueCreatorContent() {
         description: description.trim(),
         parts: partsToSave,
         damage: damageToSave,
-        weapon: Number(weapon.id) > 0 ? weapon : null,
+        weapon: shouldPersistSelectedWeapon ? weapon : null,
         actionType,
         isReaction,
       },
     };
-  }, [name, description, selectedParts, mechanicParts, damage, weapon, actionType, isReaction]);
+  }, [name, description, selectedParts, mechanicParts, damage, shouldPersistSelectedWeapon, weapon, actionType, isReaction]);
 
   const save = useCreatorSave({
     type: 'techniques',
@@ -715,6 +728,7 @@ function TechniqueCreatorContent() {
     const savedHasNoAttack = savedParts.some(
       (p) => String(p.id) === '415' || String(p.name || '').toLowerCase() === 'no attack'
     );
+    const requiredWeaponTPFromParts = inferTechniqueWeaponTpFromSavedParts(savedParts);
     
     const loadedParts: SelectedPart[] = [];
     for (const savedPart of savedParts) {
@@ -752,7 +766,15 @@ function TechniqueCreatorContent() {
       );
       if (weaponMatch) {
         setWeapon(weaponMatch);
+      } else if (requiredWeaponTPFromParts > 0) {
+        const tpMatch = allWeaponOptions.find((option) => (option.tp ?? 0) === requiredWeaponTPFromParts);
+        setWeapon(tpMatch || DEFAULT_WEAPON_OPTIONS[0]);
       }
+    } else if (requiredWeaponTPFromParts > 0) {
+      const tpMatch = allWeaponOptions.find((option) => (option.tp ?? 0) === requiredWeaponTPFromParts);
+      setWeapon(tpMatch || DEFAULT_WEAPON_OPTIONS[0]);
+    } else {
+      setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
     }
     
     // Load damage

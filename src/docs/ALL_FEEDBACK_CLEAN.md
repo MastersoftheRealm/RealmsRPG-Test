@@ -1495,3 +1495,11 @@ Notes
 - Priority: High
 - Feedback: Sync button stays greyed out as "already in sync" even after many referenced power parts were edited in codex.
 - Expected: Part definition edits (not only deleted parts/options) should trigger drift so the per-item and global sync actions enable correctly.
+
+**Raw Feedback Log — 2026-05-16 (Technique Add Weapon TP scaling + weapon persistence across private/public libraries)**
+- Date: 2026-05-16
+- Context: Technique Creator, Empowered Technique Creator, Power Creator, user/public/official library load-save mapping
+- Priority: High
+- Feedback: When adding a weapon to a technique, the Add Weapon part does not appear to increase based on weapon TP, and the selected weapon is not reliably saved/loaded. This impacts both private and public library behavior, and empowered/power add-weapon flows should follow the same best-practice implementation.
+- Expected: Weapon references persist for custom and official techniques/powers/empowered techniques; TP scaling reflects selected weapon TP (or saved Add Weapon part level fallback for older official entries); load behavior remains consistent across My Library and Realms Library.
+- Disposition: Implemented 2026-05-16. Fixed UUID weapon save conditions in creators, added Add Weapon level fallback reconstruction on load for technique/empowered flows, and updated shared columnar mapping to persist/rehydrate weaponName from nested payload weapon fields.

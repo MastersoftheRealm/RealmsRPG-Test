@@ -57,7 +57,7 @@ export interface TechniqueDocument {
   description?: string;
   parts?: TechniquePartPayload[];
   damage?: { amount?: number | string; size?: number | string; type?: string };
-  weapon?: { id?: number; name?: string };
+  weapon?: { id?: string | number; name?: string };
   /** Saved action type (basic, full, bonus, etc.) — used to avoid recalculation */
   actionType?: string;
   /** Whether the technique can be used as a reaction */

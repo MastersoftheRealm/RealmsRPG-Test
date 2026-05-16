@@ -64,14 +64,19 @@ function normalizePublicPower(p: Record<string, unknown>): UserPower {
 
 function normalizePublicTechnique(t: Record<string, unknown>): UserTechnique {
   const id = String(t.id ?? t.docId ?? '');
+  const weaponFromPayload = t.weapon as UserTechnique['weapon'] | undefined;
+  const weaponName = typeof t.weaponName === 'string' ? t.weaponName : undefined;
   return {
+    ...(t as Record<string, unknown>),
     id,
     docId: id,
     name: String(t.name ?? ''),
     description: String(t.description ?? ''),
     parts: (t.parts ?? []) as UserTechnique['parts'],
-    weapon: t.weapon as UserTechnique['weapon'],
+    weapon: weaponFromPayload ?? (weaponName ? { name: weaponName } : undefined),
     damage: t.damage as UserTechnique['damage'],
+    actionType: t.actionType as string | undefined,
+    isReaction: (t.isReaction as boolean | undefined) ?? false,
   } as UserTechnique;
 }
 

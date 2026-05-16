@@ -66,6 +66,10 @@ import type { SourceFilterValue } from '@/components/shared/filters/source-filte
 import { ConfirmActionModal, ContextHelpTooltip, LoginPromptModal } from '@/components/shared';
 import { PowerPartCard } from '@/app/(main)/power-creator/PowerPartCard';
 import { EXCLUDED_PARTS } from '@/app/(main)/power-creator/power-creator-constants';
+import {
+  inferEmpoweredWeaponTpFromPowerPayload,
+  shouldPersistCreatorWeaponId,
+} from '@/lib/creator-weapon-persistence';
 
 interface DamageConfig {
   amount: number;
@@ -503,7 +507,13 @@ function EmpoweredTechniqueCreatorContent() {
           range,
           area,
           duration,
-          addWeapon: weapon.id === 0 ? null : weapon,
+          addWeapon:
+            shouldPersistCreatorWeaponId({
+              weaponId: weapon.id,
+              allowNoAttack: true,
+            })
+              ? weapon
+              : null,
           addWeaponPowerPart: addWeaponToPowerPart,
         },
         technique: {
@@ -572,11 +582,13 @@ function EmpoweredTechniqueCreatorContent() {
         power?: {
           parts?: Array<{ id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number; applyDuration?: boolean }>;
           mechanics?: Array<{ id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number; applyDuration?: boolean }>;
+          autoMechanics?: Array<{ id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number; applyDuration?: boolean }>;
           damage?: DamageConfig[];
           range?: RangeConfig;
           area?: AreaConfig;
           duration?: DurationConfig;
           addWeapon?: CreatorWeaponOption | null;
+          addWeaponPowerPart?: { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number } | null;
         };
         technique?: {
           parts?: Array<{ id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }>;
@@ -616,6 +628,12 @@ function EmpoweredTechniqueCreatorContent() {
           (option) => String(option.id) === String(data.power?.addWeapon?.id) || option.name === data.power?.addWeapon?.name
         );
         if (foundWeapon) setWeapon(foundWeapon);
+      } else {
+        const requiredWeaponTp = inferEmpoweredWeaponTpFromPowerPayload(data.power);
+        if (requiredWeaponTp > 0) {
+          const tpMatch = allWeaponOptions.find((option) => (option.tp ?? 0) === requiredWeaponTp);
+          if (tpMatch) setWeapon(tpMatch);
+        }
       }
 
       const loadedPowerParts = (data.power?.parts || []).map((part) => {

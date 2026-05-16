@@ -3,12 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-  "node": "24.x"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "next dev",
     "build": "next build --webpack",
     "start": "next start",
+    "test": "vitest run",
     "lint": "eslint",
     "db:seed": "node scripts/seed-to-supabase.js",
     "db:seed:reset": "node scripts/seed-to-supabase.js --reset",
@@ -47,6 +48,7 @@
     "prettier": "^3.7.4",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.6"
   }
 }

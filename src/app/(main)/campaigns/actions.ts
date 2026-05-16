@@ -13,6 +13,7 @@ import { ensureUserProfile } from '@/lib/ensure-user-profile';
 import { getCharacterListColumns } from '@/lib/character-list-columns';
 import { normalizeInviteCodeInput, isValidInviteCodeFormat, visibilityForCampaignMembership } from '@/lib/campaign-invite';
 import { getRolePolicyForUser } from '@/lib/role-policy';
+import { formatRoleQuotaExceededMessage } from '@/lib/role-quota-messages';
 import type { Campaign, CampaignCharacter, ArchetypeDisplayName } from '@/types/campaign';
 import { MAX_CAMPAIGN_CHARACTERS, OWNER_MAX_CHARACTERS } from './constants';
 
@@ -73,7 +74,12 @@ export async function createCampaignAction(data: { name: string; description?: s
     if ((campaignCount ?? 0) >= rolePolicy.maxCampaigns) {
       return {
         success: false,
-        error: `Your role allows up to ${rolePolicy.maxCampaigns} campaign(s).`,
+        error: formatRoleQuotaExceededMessage({
+          role: rolePolicy.role,
+          resource: 'campaigns',
+          currentCount: campaignCount ?? 0,
+          maxAllowed: rolePolicy.maxCampaigns,
+        }),
       };
     }
 

@@ -598,7 +598,11 @@ export function FinalizeStep() {
       }
     } catch (err) {
       console.error('Error saving character:', err);
-      setError('Failed to save character. Please try again.');
+      const message =
+        err instanceof Error && err.message.trim()
+          ? err.message
+          : 'Failed to save character. Please try again.';
+      setError(message);
     } finally {
       setSaving(false);
     }

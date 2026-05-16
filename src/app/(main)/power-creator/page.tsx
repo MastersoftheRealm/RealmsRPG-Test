@@ -64,6 +64,7 @@ import { formatDurationFromTypeAndValue } from '@/lib/utils/duration';
 import type { SelectedPart, AdvancedPart, DamageConfig, RangeConfig } from './power-creator-types';
 import { POWER_CREATOR_CACHE_KEY, ADVANCED_CATEGORIES, EXCLUDED_PARTS } from './power-creator-constants';
 import { PowerPartCard } from './PowerPartCard';
+import { shouldPersistCreatorWeaponId } from '@/lib/creator-weapon-persistence';
 
 // =============================================================================
 // Main Component
@@ -334,6 +335,15 @@ function PowerCreatorContent() {
     };
   }, [weapon.tp, powerParts]);
 
+  const shouldPersistSelectedWeapon = useMemo(
+    () =>
+      shouldPersistCreatorWeaponId({
+        weaponId: weapon.id,
+        allowNoAttack: true,
+      }),
+    [weapon.id]
+  );
+
   // Convert selected parts to payload format for calculator
   const partsPayload: PowerPartPayload[] = useMemo(
     () => [
@@ -574,10 +584,10 @@ function PowerCreatorContent() {
         range,
         area,
         duration,
-        weapon: Number(weapon.id) > 0 ? weapon : null,
+        weapon: shouldPersistSelectedWeapon ? weapon : null,
       },
     };
-  }, [name, description, selectedParts, selectedAdvancedParts, mechanicParts, addWeaponToPowerPart, damages, actionType, isReaction, range, area, duration, weapon]);
+  }, [name, description, selectedParts, selectedAdvancedParts, mechanicParts, addWeaponToPowerPart, damages, actionType, isReaction, range, area, duration, shouldPersistSelectedWeapon, weapon]);
 
   const save = useCreatorSave({
     type: 'powers',
