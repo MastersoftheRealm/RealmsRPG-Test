@@ -8,6 +8,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Plus, RefreshCw, Swords } from 'lucide-react';
 import {
   GridListRow,
@@ -52,6 +53,7 @@ function getEmpoweredTotals(technique: unknown): { energy?: number; tp?: number 
 }
 
 export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTechniquesTabProps) {
+  const router = useRouter();
   const { showToast } = useToast();
   const standardTechniquesQuery = useUserTechniques();
   const empoweredTechniquesQuery = useUserEmpoweredTechniques();
@@ -270,7 +272,10 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
                   <RefreshCw className={`w-4 h-4 ${syncingIds.has(tech.id) ? 'animate-spin' : ''}`} />
                 </IconButton>
               ) : undefined}
-              onEdit={() => window.open(`${mode === 'empowered' ? '/empowered-technique-creator' : '/technique-creator'}?edit=${tech.id}`, '_blank')}
+              onEdit={() => {
+                const creator = mode === 'empowered' ? '/empowered-technique-creator' : '/technique-creator';
+                router.push(`${creator}?edit=${encodeURIComponent(tech.id)}`);
+              }}
               onDelete={() => onDelete({ id: tech.id, name: tech.name } as DisplayItem)}
               onDuplicate={() =>
                 (mode === 'empowered' ? duplicateEmpoweredTechnique : duplicateTechnique).mutate(tech.id, {

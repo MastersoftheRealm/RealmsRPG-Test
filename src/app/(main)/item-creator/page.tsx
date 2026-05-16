@@ -13,7 +13,7 @@
 
 'use client';
 
-import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { X, Plus, ChevronDown, ChevronUp, Shield, Sword, Target, Info, Coins } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -359,6 +359,7 @@ function ItemCreatorContent() {
   const { isAdmin } = useAdmin();
   const searchParams = useSearchParams();
   const editItemId = searchParams.get('edit');
+  const editLoadedRef = useRef(false);
   
   // State
   const [isInitialized, setIsInitialized] = useState(false);
@@ -392,7 +393,7 @@ function ItemCreatorContent() {
   // Load cached state from localStorage on mount
   useEffect(() => {
     // Prevent re-running after initial load to avoid overwriting user input
-    if (isInitialized || itemProperties.length === 0) return;
+    if (isInitialized || itemProperties.length === 0 || editItemId) return;
     
     try {
       const cached = localStorage.getItem(ITEM_CREATOR_CACHE_KEY);
@@ -437,7 +438,7 @@ function ItemCreatorContent() {
       console.error('Failed to load item creator cache:', e);
     }
     setIsInitialized(true);
-  }, [itemProperties, isInitialized]);
+  }, [itemProperties, isInitialized, editItemId]);
 
   // Auto-save to localStorage when state changes
   useEffect(() => {
@@ -487,10 +488,11 @@ function ItemCreatorContent() {
 
   // Load item for editing from URL parameter
   useEffect(() => {
-    if (!editItemId || !load.rawItems.length || !itemProperties.length || isInitialized) return;
+    if (!editItemId || !load.rawItems.length || !itemProperties.length || editLoadedRef.current) return;
     const itemToEdit = (load.rawItems as UserItem[]).find(
       (item: UserItem) => String(item.docId) === editItemId || String(item.id) === editItemId
     );
+    editLoadedRef.current = true;
     if (!itemToEdit) {
       console.warn(`Item with ID ${editItemId} not found in library`);
       setIsInitialized(true);
@@ -562,7 +564,7 @@ function ItemCreatorContent() {
     localStorage.removeItem(ITEM_CREATOR_CACHE_KEY);
     
     setIsInitialized(true);
-  }, [editItemId, load.rawItems, itemProperties, isInitialized]);
+  }, [editItemId, load.rawItems, itemProperties]);
 
   // Range display string
   const rangeDisplay = useMemo(() => {

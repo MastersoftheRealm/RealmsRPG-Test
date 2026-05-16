@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { LoginPromptModal, ConfirmActionModal, ContextHelpTooltip, UnifiedSelectionModal, ItemCard, SkillRow, GridListRow, ListHeader, SourceFilter, AddSkillModal, AddSubSkillModal, InnateToggle, SegmentedControl } from '@/components/shared';
@@ -168,6 +168,7 @@ function CreatureCreatorContent() {
   const { data: userCreatures = [] } = useUserCreatures();
   const searchParams = useSearchParams();
   const editCreatureId = searchParams.get('edit');
+  const editLoadedRef = useRef(false);
   
   const [isInitialized, setIsInitialized] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
@@ -448,8 +449,9 @@ function CreatureCreatorContent() {
     return normalizeInventoryType(sourceData?.type) === inventoryTab;
   }, [inventoryTab]);
 
-  // Load cached state from localStorage on mount
+  // Load cached state from localStorage on mount (skip when ?edit= will load from library)
   useEffect(() => {
+    if (editCreatureId) return;
     try {
       const cached = localStorage.getItem(CREATURE_CREATOR_CACHE_KEY);
       if (cached) {
@@ -466,7 +468,7 @@ function CreatureCreatorContent() {
       console.error('Failed to load creature creator cache:', e);
     }
     setIsInitialized(true);
-  }, []);
+  }, [editCreatureId]);
 
   // Auto-save to localStorage when creature changes
   useEffect(() => {
@@ -847,12 +849,13 @@ function CreatureCreatorContent() {
     return [...user, ...pub];
   }, [userCreatures, publicCreatures]);
 
-  // Load creature for editing from URL (?edit=<id>) when coming from admin public library
+  // Load creature for editing from URL (?edit=<id>)
   useEffect(() => {
-    if (!editCreatureId || !mergedCreaturesForEdit.length || isInitialized) return;
+    if (!editCreatureId || !mergedCreaturesForEdit.length || editLoadedRef.current) return;
     const c = mergedCreaturesForEdit.find(
       (x) => String((x as { id?: string; docId?: string }).id) === editCreatureId || String((x as { id?: string; docId?: string }).docId) === editCreatureId
     ) as Record<string, unknown> | undefined;
+    editLoadedRef.current = true;
     if (!c) {
       setIsInitialized(true);
       return;
@@ -895,7 +898,7 @@ function CreatureCreatorContent() {
     save.setSaveMessage({ type: 'success', text: 'Creature loaded from Realms Library.' });
     setTimeout(() => save.setSaveMessage(null), 2000);
     setIsInitialized(true);
-  }, [editCreatureId, mergedCreaturesForEdit, isInitialized, save]);
+  }, [editCreatureId, mergedCreaturesForEdit, save]);
 
   const handleSave = useCallback(async () => {
     if (!user) {

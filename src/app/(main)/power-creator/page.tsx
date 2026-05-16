@@ -12,7 +12,7 @@
 
 'use client';
 
-import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, Wand2, Zap, Target, Info, Trash2 } from 'lucide-react';
@@ -108,6 +108,7 @@ function PowerCreatorContent() {
   const { isAdmin } = useAdmin();
   const searchParams = useSearchParams();
   const editPowerId = searchParams.get('edit');
+  const editLoadedRef = useRef(false);
   
   // State
   const [isInitialized, setIsInitialized] = useState(false);
@@ -155,7 +156,7 @@ function PowerCreatorContent() {
   // Load cached state from localStorage on mount
   useEffect(() => {
     // Prevent re-running after initial load to avoid overwriting user input
-    if (isInitialized || powerParts.length === 0) return;
+    if (isInitialized || powerParts.length === 0 || editPowerId) return;
     
     try {
       const cached = localStorage.getItem(POWER_CREATOR_CACHE_KEY);
@@ -237,7 +238,7 @@ function PowerCreatorContent() {
       console.error('Failed to load power creator cache:', e);
     }
     setIsInitialized(true);
-  }, [powerParts, allWeaponOptions, isInitialized]);
+  }, [powerParts, allWeaponOptions, isInitialized, editPowerId]);
 
   // Auto-save to localStorage when state changes
   useEffect(() => {
@@ -828,10 +829,11 @@ function PowerCreatorContent() {
 
   // Load power for editing from URL parameter (?edit=<id>)
   useEffect(() => {
-    if (!editPowerId || !load.rawItems.length || powerParts.length === 0 || isInitialized) return;
+    if (!editPowerId || !load.rawItems.length || powerParts.length === 0 || editLoadedRef.current) return;
     const powerToEdit = load.rawItems.find(
       (p: { docId?: string; id?: string }) => String(p.docId) === editPowerId || String(p.id) === editPowerId
     ) as Parameters<typeof handleLoadPower>[0] | undefined;
+    editLoadedRef.current = true;
     if (!powerToEdit) {
       console.warn(`Power with ID ${editPowerId} not found in library`);
       setIsInitialized(true);
@@ -840,7 +842,7 @@ function PowerCreatorContent() {
     handleLoadPower(powerToEdit);
     localStorage.removeItem(POWER_CREATOR_CACHE_KEY);
     setIsInitialized(true);
-  }, [editPowerId, load.rawItems, powerParts, isInitialized, handleLoadPower]);
+  }, [editPowerId, load.rawItems, powerParts, handleLoadPower]);
 
   if (isLoading) {
     return (

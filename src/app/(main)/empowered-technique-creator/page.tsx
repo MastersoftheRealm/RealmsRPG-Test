@@ -6,7 +6,7 @@
 
 'use client';
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Plus, Wand2, Zap, Target, Info } from 'lucide-react';
 import {
@@ -126,6 +126,7 @@ function EmpoweredTechniqueCreatorContent() {
   const { isAdmin } = useAdmin();
   const searchParams = useSearchParams();
   const editId = searchParams.get('edit');
+  const editLoadedRef = useRef(false);
   const load = useLoadModalLibrary('empowered-technique');
 
   const [isInitialized, setIsInitialized] = useState(false);
@@ -681,7 +682,7 @@ function EmpoweredTechniqueCreatorContent() {
   );
 
   useEffect(() => {
-    if (isInitialized || powerParts.length === 0 || techniqueParts.length === 0) return;
+    if (isInitialized || powerParts.length === 0 || techniqueParts.length === 0 || editId) return;
     try {
       const raw = localStorage.getItem(CACHE_KEY);
       if (raw) {
@@ -764,7 +765,7 @@ function EmpoweredTechniqueCreatorContent() {
     } finally {
       setIsInitialized(true);
     }
-  }, [allWeaponOptions, isInitialized, powerParts, techniqueParts]);
+  }, [allWeaponOptions, editId, isInitialized, powerParts, techniqueParts]);
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -823,12 +824,17 @@ function EmpoweredTechniqueCreatorContent() {
   ]);
 
   useEffect(() => {
-    if (!editId || !load.rawItems.length || !isInitialized) return;
+    if (!editId || !load.rawItems.length || powerParts.length === 0 || techniqueParts.length === 0 || editLoadedRef.current) return;
     const match = load.rawItems.find((item: { docId?: string; id?: string }) => String(item.docId) === editId || String(item.id) === editId);
-    if (!match) return;
+    editLoadedRef.current = true;
+    if (!match) {
+      setIsInitialized(true);
+      return;
+    }
     handleLoadEmpoweredTechnique(match);
     localStorage.removeItem(CACHE_KEY);
-  }, [editId, handleLoadEmpoweredTechnique, isInitialized, load.rawItems]);
+    setIsInitialized(true);
+  }, [editId, handleLoadEmpoweredTechnique, load.rawItems, powerParts.length, techniqueParts.length]);
 
   const addPowerPart = useCallback(() => {
     if (nonMechanicPowerParts.length === 0) return;

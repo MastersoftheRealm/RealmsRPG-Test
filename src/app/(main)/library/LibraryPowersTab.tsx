@@ -8,6 +8,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Plus, RefreshCw, Wand2 } from 'lucide-react';
 import {
   GridListRow,
@@ -44,6 +45,7 @@ interface LibraryPowersTabProps {
 }
 
 export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
+  const router = useRouter();
   const { showToast } = useToast();
   const { data: powers = [], isLoading, error, refetch } = useUserPowers();
   const { data: partsDb = [] } = usePowerParts();
@@ -249,7 +251,7 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
                   <RefreshCw className={`w-4 h-4 ${syncingIds.has(power.id) ? 'animate-spin' : ''}`} />
                 </IconButton>
               ) : undefined}
-              onEdit={() => window.open(`/power-creator?edit=${power.id}`, '_blank')}
+              onEdit={() => router.push(`/power-creator?edit=${encodeURIComponent(power.id)}`)}
               onDelete={() => onDelete({ id: power.id, name: power.name } as DisplayItem)}
               onDuplicate={() => duplicatePower.mutate(power.id, { onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error') })}
             />

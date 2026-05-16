@@ -8,6 +8,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Plus, RefreshCw, Users } from 'lucide-react';
 import {
   CreatureStatBlock,
@@ -42,6 +43,7 @@ interface LibraryCreaturesTabProps {
 }
 
 export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
+  const router = useRouter();
   const { showToast } = useToast();
   const { data: creatures = [], isLoading, error, refetch } = useUserCreatures();
   const duplicateCreature = useDuplicateCreature();
@@ -247,7 +249,10 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
                     <RefreshCw className={`w-4 h-4 ${syncingIds.has(String(creature.docId)) ? 'animate-spin' : ''}`} />
                   </IconButton>
                 ) : undefined}
-                onEdit={() => window.open(`/creature-creator?edit=${creature.docId}`, '_blank')}
+                onEdit={() => {
+                  const id = creature.docId ?? creature.id;
+                  router.push(`/creature-creator?edit=${encodeURIComponent(String(id))}`);
+                }}
                 onDelete={() => onDelete({ id: creature.docId, name: creature.name } as DisplayItem)}
                 onDuplicate={() => duplicateCreature.mutate(creature.docId, { onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error') })}
               />

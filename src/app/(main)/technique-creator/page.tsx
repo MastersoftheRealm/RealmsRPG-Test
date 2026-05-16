@@ -12,7 +12,7 @@
 
 'use client';
 
-import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { X, Plus, ChevronDown, ChevronUp, Swords, Zap, Target, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -369,6 +369,7 @@ function TechniqueCreatorContent() {
   const { isAdmin } = useAdmin();
   const searchParams = useSearchParams();
   const editTechniqueId = searchParams.get('edit');
+  const editLoadedRef = useRef(false);
   
   // State
   const [isInitialized, setIsInitialized] = useState(false);
@@ -404,7 +405,7 @@ function TechniqueCreatorContent() {
   // Load cached state from localStorage on mount (only once when parts are available)
   useEffect(() => {
     // Only load once - when we have parts and haven't initialized yet
-    if (isInitialized || techniqueParts.length === 0) return;
+    if (isInitialized || techniqueParts.length === 0 || editTechniqueId) return;
     
     try {
       const cached = localStorage.getItem(TECHNIQUE_CREATOR_CACHE_KEY);
@@ -450,7 +451,7 @@ function TechniqueCreatorContent() {
       console.error('Failed to load technique creator cache:', e);
     }
     setIsInitialized(true);
-  }, [techniqueParts, allWeaponOptions, isInitialized]);
+  }, [techniqueParts, allWeaponOptions, isInitialized, editTechniqueId]);
 
   // Auto-save to localStorage when state changes
   useEffect(() => {
@@ -795,10 +796,11 @@ function TechniqueCreatorContent() {
 
   // Load technique for editing from URL parameter (?edit=<id>)
   useEffect(() => {
-    if (!editTechniqueId || !load.rawItems.length || techniqueParts.length === 0 || isInitialized) return;
+    if (!editTechniqueId || !load.rawItems.length || techniqueParts.length === 0 || editLoadedRef.current) return;
     const techniqueToEdit = load.rawItems.find(
       (t: { docId?: string; id?: string }) => String(t.docId) === editTechniqueId || String(t.id) === editTechniqueId
     );
+    editLoadedRef.current = true;
     if (!techniqueToEdit) {
       console.warn(`Technique with ID ${editTechniqueId} not found in library`);
       setIsInitialized(true);
@@ -807,7 +809,7 @@ function TechniqueCreatorContent() {
     handleLoadTechnique(techniqueToEdit);
     localStorage.removeItem(TECHNIQUE_CREATOR_CACHE_KEY);
     setIsInitialized(true);
-  }, [editTechniqueId, load.rawItems, techniqueParts, isInitialized, handleLoadTechnique]);
+  }, [editTechniqueId, load.rawItems, techniqueParts, handleLoadTechnique]);
 
   if (isLoading) {
     return (
