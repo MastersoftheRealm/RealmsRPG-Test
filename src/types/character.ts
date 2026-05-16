@@ -29,6 +29,14 @@ export interface CharacterProficiency {
   custom?: boolean;
 }
 
+export type CharacterLibraryTabId =
+  | 'powers'
+  | 'techniques'
+  | 'inventory'
+  | 'feats'
+  | 'proficiencies'
+  | 'notes';
+
 /** Character creation status */
 export type CharacterStatus = 'draft' | 'complete' | 'playing';
 
@@ -244,6 +252,9 @@ export interface Character {
 
   /** How to display speed: spaces (default), feet (1 space = 5 ft), or meters (1 space = 1.5 m). Edit is always in spaces. */
   speedDisplayUnit?: 'spaces' | 'feet' | 'meters';
+
+  /** Character-sheet library tab visibility preferences (applied outside edit mode). */
+  libraryTabVisibility?: Partial<Record<CharacterLibraryTabId, boolean>>;
 
   // Legacy fields for backward compatibility (vanilla site format)
   /** @deprecated Display-only computed field. Not saved. */

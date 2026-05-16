@@ -61,8 +61,10 @@ interface ProficienciesTabProps {
   techniquePartsDb?: CodexPart[];
   itemPropertiesDb?: CodexProperty[];
   proficiencies?: CharacterProficiency[];
+  unarmedProwess?: number;
   isEditMode?: boolean;
   onProficienciesChange?: (next: CharacterProficiency[]) => void;
+  onUnarmedProwessChange?: (level: number) => void;
 }
 
 function profChipLabel(p: CharacterProficiency): string {
@@ -73,12 +75,44 @@ function profChipLabel(p: CharacterProficiency): string {
   return `${p.name}${damageType}${levels}`;
 }
 
-type ProficiencyCategory = 'power' | 'technique' | 'armor' | 'weapon' | 'custom';
+type ProficiencyCategory = 'power' | 'technique' | 'armor' | 'weapon' | 'builtin' | 'custom';
+
+const UNARMED_PROWESS_BASE_TP = 10;
+const UNARMED_PROWESS_UPGRADE_TP = 6;
+const BUILTIN_UNARMED_PROFICIENCY_ID = 'builtin_unarmed_prowess';
+
+function getUnarmedProwessLabel(level: number): string {
+  if (level <= 1) return 'Unarmed Prowess';
+  const suffix = ['I', 'II', 'III', 'IV', 'V'][Math.min(level, 5) - 1] ?? `${level}`;
+  return `Unarmed Prowess ${suffix}`;
+}
+
+function toBuiltinUnarmedProficiency(level: number): CharacterProficiency | null {
+  if (level <= 0) return null;
+  return {
+    id: BUILTIN_UNARMED_PROFICIENCY_ID,
+    kind: 'custom',
+    custom: true,
+    name: getUnarmedProwessLabel(level),
+    baseTP: UNARMED_PROWESS_BASE_TP + (Math.max(1, level) - 1) * UNARMED_PROWESS_UPGRADE_TP,
+    op1Level: 0,
+    op2Level: 0,
+    op3Level: 0,
+    op1TP: 0,
+    op2TP: 0,
+    op3TP: 0,
+  };
+}
+
+function isBuiltinUnarmedProficiency(prof: CharacterProficiency): boolean {
+  return prof.id === BUILTIN_UNARMED_PROFICIENCY_ID;
+}
 
 function getProficiencyCategory(
   p: CharacterProficiency,
   itemPropertiesDb: CodexProperty[]
 ): ProficiencyCategory {
+  if (isBuiltinUnarmedProficiency(p)) return 'builtin';
   if (p.kind === 'power_part') return 'power';
   if (p.kind === 'technique_part') return 'technique';
   if (isCustomProficiency(p)) return 'custom';
@@ -161,8 +195,10 @@ export function ProficienciesTab({
   techniquePartsDb = [],
   itemPropertiesDb = [],
   proficiencies = [],
+  unarmedProwess = 0,
   isEditMode = false,
   onProficienciesChange,
+  onUnarmedProwessChange,
 }: ProficienciesTabProps) {
   const [customName, setCustomName] = useState('');
   const [customTp, setCustomTp] = useState(1);
@@ -184,9 +220,14 @@ export function ProficienciesTab({
     [powers, techniques, weapons, shields, armor, powerPartsDb, techniquePartsDb, itemPropertiesDb]
   );
 
-  const owned = useMemo(
+  const persistedOwned = useMemo(
     () => filterZeroCostProficiencies(dedupeHighestProficiencies(proficiencies)),
     [proficiencies]
+  );
+  const builtInUnarmed = useMemo(() => toBuiltinUnarmedProficiency(unarmedProwess), [unarmedProwess]);
+  const owned = useMemo(
+    () => (builtInUnarmed ? [...persistedOwned, builtInUnarmed] : persistedOwned),
+    [persistedOwned, builtInUnarmed]
   );
   const missing = useMemo(() => getMissingRequiredProficiencies(required, owned), [required, owned]);
 
@@ -196,7 +237,8 @@ export function ProficienciesTab({
 
   const persistProficiencies = (next: CharacterProficiency[]) => {
     if (!onProficienciesChange) return;
-    onProficienciesChange(filterZeroCostProficiencies(dedupeHighestProficiencies(next)));
+    const withoutBuiltins = next.filter((p) => !isBuiltinUnarmedProficiency(p));
+    onProficienciesChange(filterZeroCostProficiencies(dedupeHighestProficiencies(withoutBuiltins)));
   };
 
   const addAllMissing = () => {
@@ -214,8 +256,16 @@ export function ProficienciesTab({
   };
 
   const removeProf = (id: string) => {
+    if (id === BUILTIN_UNARMED_PROFICIENCY_ID) {
+      onUnarmedProwessChange?.(0);
+      return;
+    }
     if (!onProficienciesChange) return;
     persistProficiencies(owned.filter((p) => p.id !== id));
+  };
+
+  const addUnarmedProwess = () => {
+    onUnarmedProwessChange?.(1);
   };
 
   const addCustom = () => {
@@ -320,6 +370,14 @@ export function ProficienciesTab({
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={addUnarmedProwess}
+              disabled={unarmedProwess > 0 || !onUnarmedProwessChange}
+            >
+              <Plus className="w-4 h-4" /> {unarmedProwess > 0 ? 'Unarmed Prowess Added' : 'Add Unarmed Prowess'}
+            </Button>
             <Button size="sm" variant="secondary" onClick={() => setAddProficiencyVariant('power_part')}>
               <Plus className="w-4 h-4" /> Add Power Part
             </Button>
@@ -368,7 +426,7 @@ export function ProficienciesTab({
             <p className="text-sm text-text-muted italic text-center py-2">No proficiencies saved.</p>
           ) : (
             <>
-              {(['power', 'technique', 'weapon', 'armor', 'custom'] as ProficiencyCategory[]).map((cat) => {
+              {(['power', 'technique', 'weapon', 'armor', 'builtin', 'custom'] as ProficiencyCategory[]).map((cat) => {
                 const list = ownedByCategory.get(cat) ?? [];
                 if (list.length === 0) return null;
                 const sectionTitle =
@@ -380,6 +438,8 @@ export function ProficienciesTab({
                         ? 'Weapon / shield properties'
                         : cat === 'armor'
                           ? 'Armor properties'
+                          : cat === 'builtin'
+                            ? 'Built-in'
                           : 'Custom';
                 return (
                   <div key={cat}>

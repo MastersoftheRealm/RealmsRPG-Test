@@ -67,6 +67,7 @@ export type {
   EntityType,
   CharacterPower,
   CharacterTechnique,
+  CharacterLibraryTabId,
   ProficiencyKind,
   CharacterProficiency,
   CharacterCondition,

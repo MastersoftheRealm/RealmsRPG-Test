@@ -8,10 +8,10 @@
 
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { cn, formatDamageDisplay, formatActionTypeForDisplay, normalizeRangeDisplay, formatListCellLabel } from '@/lib/utils';
 import { trainingPointsForItemPropertyRef, type ItemPropertyTpRow } from '@/lib/calculators/item-calc';
-import { Plus, X } from 'lucide-react';
+import { Eye, EyeOff, Plus, X } from 'lucide-react';
 import { useRollsOptional } from './roll-context';
 import { NotesTab, type CharacterNote } from './notes-tab';
 import { ProficienciesTab } from './proficiencies-tab';
@@ -42,7 +42,14 @@ import { Button, IconButton } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
 import { calculateArmamentProficiency } from '@/lib/game/formulas';
 import { formatRange } from '@/lib/calculators/item-calc';
-import type { CharacterPower, CharacterTechnique, Item, Abilities, CharacterProficiency } from '@/types';
+import type {
+  CharacterPower,
+  CharacterTechnique,
+  Item,
+  Abilities,
+  CharacterProficiency,
+  CharacterLibraryTabId,
+} from '@/types';
 import { buildRequiredProficiencies, getMissingRequiredProficiencies } from '@/lib/proficiencies';
 
 /** Codex part data for enrichment */
@@ -368,6 +375,10 @@ interface LibrarySectionProps {
   itemPropertiesDb?: Array<{ id: string | number; name: string; description?: string; base_tp?: number; tp_cost?: number }>;
   proficiencies?: CharacterProficiency[];
   onProficienciesChange?: (next: CharacterProficiency[]) => void;
+  unarmedProwess?: number;
+  onUnarmedProwessChange?: (level: number) => void;
+  tabVisibility?: Partial<Record<TabType, boolean>>;
+  onTabVisibilityChange?: (next: Partial<Record<TabType, boolean>>) => void;
   // Feats tab props
   ancestry?: {
     selectedTraits?: string[];
@@ -435,7 +446,16 @@ interface LibrarySectionProps {
   className?: string;
 }
 
-type TabType = 'powers' | 'techniques' | 'inventory' | 'feats' | 'proficiencies' | 'notes';
+type TabType = CharacterLibraryTabId;
+
+const DEFAULT_TAB_VISIBILITY: Record<TabType, boolean> = {
+  feats: true,
+  powers: true,
+  techniques: true,
+  inventory: true,
+  proficiencies: true,
+  notes: true,
+};
 
 // =============================================================================
 // Column Definitions for ListHeader
@@ -571,6 +591,10 @@ export function LibrarySection({
   itemPropertiesDb = [],
   proficiencies = [],
   onProficienciesChange,
+  unarmedProwess = 0,
+  onUnarmedProwessChange,
+  tabVisibility,
+  onTabVisibilityChange,
   // Feats props
   ancestry,
   vanillaTraits,
@@ -669,7 +693,42 @@ export function LibrarySection({
     { id: 'notes', label: 'Notes' },
   ];
 
-  const activeTabData = tabs.find(t => t.id === activeTab);
+  const resolvedTabVisibility = useMemo<Record<TabType, boolean>>(
+    () => ({ ...DEFAULT_TAB_VISIBILITY, ...(tabVisibility ?? {}) }),
+    [tabVisibility]
+  );
+
+  const visibleTabs = useMemo(
+    () => (isEditMode ? tabs : tabs.filter((tab) => resolvedTabVisibility[tab.id] !== false)),
+    [isEditMode, tabs, resolvedTabVisibility]
+  );
+
+  useEffect(() => {
+    if (isEditMode) {
+      setIsSectionEditing(true);
+      return;
+    }
+    setIsSectionEditing(false);
+  }, [isEditMode]);
+
+  useEffect(() => {
+    if (visibleTabs.some((tab) => tab.id === activeTab)) return;
+    const fallback = visibleTabs[0]?.id ?? 'feats';
+    setActiveTab(fallback);
+  }, [activeTab, visibleTabs]);
+
+  const handleToggleTabVisibility = useCallback((tabId: TabType) => {
+    if (!onTabVisibilityChange) return;
+    const current = resolvedTabVisibility[tabId] !== false;
+    if (current) {
+      const currentlyVisibleCount = Object.values(resolvedTabVisibility).filter((v) => v !== false).length;
+      if (currentlyVisibleCount <= 1) return;
+    }
+    onTabVisibilityChange({
+      ...resolvedTabVisibility,
+      [tabId]: !current,
+    });
+  }, [onTabVisibilityChange, resolvedTabVisibility]);
 
   const handleCurrencyBlur = () => {
     const value = parseInt(currencyInput) || 0;
@@ -700,13 +759,33 @@ export function LibrarySection({
       
       {/* Tabs */}
       <TabNavigation
-        tabs={tabs.map(t => ({ id: t.id, label: t.label }))}
+        tabs={visibleTabs.map(t => ({ id: t.id, label: t.label }))}
         activeTab={activeTab}
         onTabChange={(tabId) => setActiveTab(tabId as TabType)}
         variant="underline"
         size="md"
         className="mb-4"
       />
+
+      {isEditMode && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {tabs.map((tab) => {
+            const visibleOutsideEdit = resolvedTabVisibility[tab.id] !== false;
+            return (
+              <IconButton
+                key={`library-tab-visibility-${tab.id}`}
+                variant="ghost"
+                size="sm"
+                onClick={() => handleToggleTabVisibility(tab.id)}
+                label={`${visibleOutsideEdit ? 'Hide' : 'Show'} ${tab.label} tab outside edit mode`}
+                className="min-h-[44px] min-w-[44px]"
+              >
+                {visibleOutsideEdit ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 text-text-muted dark:text-text-secondary" />}
+              </IconButton>
+            );
+          })}
+        </div>
+      )}
 
       {/* Content */}
       <div className="space-y-2 flex-1 min-h-0 overflow-y-auto">
@@ -1610,6 +1689,8 @@ export function LibrarySection({
             proficiencies={proficiencies}
             isEditMode={isEditMode}
             onProficienciesChange={onProficienciesChange}
+            unarmedProwess={unarmedProwess}
+            onUnarmedProwessChange={onUnarmedProwessChange}
           />
         )}
 

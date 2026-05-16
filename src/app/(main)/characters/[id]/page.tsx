@@ -14,6 +14,7 @@ import { useGameRules } from '@/hooks/use-game-rules';
 import { LoadingState } from '@/components/ui';
 import { enrichCharacterData, cleanForSave } from '@/lib/data-enrichment';
 import {
+  calculateAbilityPoints,
   calculateArchetypeProgression,
   calculateSkillPointsForEntity,
   calculateMaxArchetypeFeats,
@@ -324,10 +325,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
     const level = character.level || 1;
     const abilities = character.abilities || {};
     
-    // Total ability points: 7 base, +1 every 3 levels starting at level 3
-    // Formula: 7 + floor((level - 1) / 3)
-    const bonusPoints = level < 3 ? 0 : Math.floor((level - 1) / 3);
-    const totalAbilityPoints = 7 + bonusPoints;
+    const totalAbilityPoints = calculateAbilityPoints(level, false, rules);
     
     // Calculate spent ability points (with 2-point cost for 4+)
     let spentAbilityPoints = 0;
@@ -386,7 +384,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
       spentSkillPoints,
       availableSkillPoints: totalSkillPoints - spentSkillPoints,
     };
-  }, [character, characterSpeciesSkills]);
+  }, [character, characterSpeciesSkills, rules]);
   
   // Calculate archetype progression (innate energy, threshold, pools, bonus feats)
   const archetypeProgression = useMemo(() => {
@@ -407,9 +405,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
     const xp = character.experience ?? 0;
     const canLevelUp = xp >= (level * 4);
     
-    // Calculate ability points: 7 base, +1 every 3 levels starting at level 3
-    const bonusAbilityPoints = level < 3 ? 0 : Math.floor((level - 1) / 3);
-    const totalAbilityPoints = 7 + bonusAbilityPoints;
+    const totalAbilityPoints = calculateAbilityPoints(level, false, rules);
     const currentAbilities = character.abilities || {};
     const spentAbilityPoints = Object.values(currentAbilities).reduce((sum, val) => sum + (val || 0), 0);
     const abilityPointsRemaining = totalAbilityPoints - spentAbilityPoints;
@@ -476,7 +472,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
       archetypeFeatsRemaining > 0 ||
       characterFeatsRemaining > 0
     );
-  }, [character, characterSpeciesSkills, featsDb]);
+  }, [character, characterSpeciesSkills, featsDb, rules]);
   
   // Auto-save with debounce — enabled for **owners in any mode**.
   // HP / energy / AP (and XP) can be changed while *not* in sheet edit mode; previously `enabled: effectiveEditMode`
@@ -1971,6 +1967,10 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   itemPropertiesDb={itemPropertiesDb}
                   proficiencies={character.proficiencies}
                   onProficienciesChange={(next: CharacterProficiency[]) => setCharacter(prev => prev ? { ...prev, proficiencies: next } : null)}
+                  unarmedProwess={character.unarmedProwess ?? 0}
+                  onUnarmedProwessChange={(level) => setCharacter(prev => prev ? { ...prev, unarmedProwess: level } : null)}
+                  tabVisibility={character.libraryTabVisibility}
+                  onTabVisibilityChange={(next) => setCharacter(prev => prev ? { ...prev, libraryTabVisibility: next } : null)}
                   // Feats tab props (sheet accepts partial codex-shaped ancestry)
                   ancestry={character.ancestry as CharacterAncestry}
                   // Vanilla site trait fields (stored at top level)
@@ -2124,6 +2124,10 @@ export default function CharacterSheetPage({ params }: PageParams) {
                       itemPropertiesDb={itemPropertiesDb}
                       proficiencies={character.proficiencies}
                       onProficienciesChange={(next: CharacterProficiency[]) => setCharacter(prev => prev ? { ...prev, proficiencies: next } : null)}
+                      unarmedProwess={character.unarmedProwess ?? 0}
+                      onUnarmedProwessChange={(level) => setCharacter(prev => prev ? { ...prev, unarmedProwess: level } : null)}
+                      tabVisibility={character.libraryTabVisibility}
+                      onTabVisibilityChange={(next) => setCharacter(prev => prev ? { ...prev, libraryTabVisibility: next } : null)}
                       ancestry={character.ancestry as CharacterAncestry}
                       vanillaTraits={{
                         ancestryTraits: character.ancestryTraits,

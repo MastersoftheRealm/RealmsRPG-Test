@@ -588,6 +588,8 @@ const SAVEABLE_FIELDS = [
   'visibility',
   // Display preferences (speed shown as spaces, feet, or meters)
   'speedDisplayUnit',
+  // Character-sheet library tab visibility preferences
+  'libraryTabVisibility',
   // Ancestry/Species data (lean: { id, name, selectedTraits, selectedFlaw, selectedCharacteristic })
   'ancestry',
   // Conditions
