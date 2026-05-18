@@ -225,7 +225,7 @@ export function ArchetypeStep() {
             setCreationMode('path');
           }}
           className={cn(
-            'selection-card text-left min-h-[160px] flex-1',
+            'selection-card text-left min-h-40 flex-1',
             creationChoice === 'path' && 'selection-card--selected'
           )}
         >
@@ -243,7 +243,7 @@ export function ArchetypeStep() {
             setSelectedPathId(null);
           }}
           className={cn(
-            'selection-card text-left min-h-[160px] flex-1',
+            'selection-card text-left min-h-40 flex-1',
             creationChoice === 'forge' && 'selection-card--selected'
           )}
         >

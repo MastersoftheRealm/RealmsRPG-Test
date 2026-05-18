@@ -85,7 +85,7 @@ export function CreatorTabBar() {
             onClick={() => handleTabClick(step)}
             disabled={!canNavigate}
             className={cn(
-              'px-3 py-2 rounded-lg text-sm font-medium transition-all flex-shrink-0',
+              'px-3 py-2 rounded-lg text-sm font-medium transition-all shrink-0',
               isActive && 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white shadow-md',
               !isActive && isComplete && 'bg-success-light text-success-700 hover:bg-success-200/80 dark:bg-success-900/30 dark:text-success-300 dark:hover:bg-success-800/40',
               !isActive && !isComplete && canNavigate && 'bg-surface text-text-secondary hover:bg-surface-alt',
@@ -100,7 +100,7 @@ export function CreatorTabBar() {
       
       <button
         onClick={() => setShowRestartConfirm(true)}
-        className="ml-auto flex-shrink-0 px-3 py-2 rounded-lg text-sm font-medium bg-danger-light text-danger-700 hover:bg-danger-200/80 dark:bg-danger-900/30 dark:text-danger-300 dark:hover:bg-danger-800/40 transition-colors"
+        className="ml-auto shrink-0 px-3 py-2 rounded-lg text-sm font-medium bg-danger-light text-danger-700 hover:bg-danger-200/80 dark:bg-danger-900/30 dark:text-danger-300 dark:hover:bg-danger-800/40 transition-colors"
       >
         Restart
       </button>
@@ -150,7 +150,7 @@ export function CreatorTabBar() {
                   issue.severity === 'error' ? 'bg-red-50 dark:bg-red-900/30' : 'bg-amber-50 dark:bg-amber-900/30'
                 )}
               >
-                <span className="text-xl flex-shrink-0">{issue.emoji}</span>
+                <span className="text-xl shrink-0">{issue.emoji}</span>
                 <p className="text-text-secondary">{issue.message}</p>
               </div>
             ))}
