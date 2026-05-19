@@ -2,6 +2,10 @@
 
 **Stack:** Next.js, React, Tailwind, Supabase (PostgreSQL, Auth, Storage), Vercel. No Prisma.
 
+## For New Developers
+
+Start here: **[ENGINEERING_ONBOARDING.md](./ENGINEERING_ONBOARDING.md)** — architecture, directory map, data layer, state/persistence, gotchas, and a safe-edit ramp path. Use **ARCHITECTURE.md** and **DATA_HANDLING.md** as deeper references after that.
+
 ## For AI Agents (Cursor)
 
 1. **AGENT_GUIDE.md** (`ai/`) — Component locations, key files, hooks, recording progress.
