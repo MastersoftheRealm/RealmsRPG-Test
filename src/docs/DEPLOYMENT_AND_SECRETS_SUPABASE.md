@@ -36,7 +36,31 @@ In Vercel → Project → Settings → Environment Variables, add:
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` | All | Anon/public key (safe for client) |
 | `SUPABASE_SERVICE_ROLE_KEY` | All | **Server-only** — never expose to client |
 
-**Never** use `NEXT_PUBLIC_` prefix for `SUPABASE_SERVICE_ROLE_KEY`. `DATABASE_URL` / `DIRECT_URL` are optional (only for external migration tools); the app uses the Supabase client only.
+**Never** use `NEXT_PUBLIC_` prefix for `SUPABASE_SERVICE_ROLE_KEY`. `DATABASE_URL` / `DIRECT_URL` are optional for the Next.js app; they are **required for local full-database backups** (`npm run db:backup`).
+
+### Local database backup
+
+From the project root, with `DATABASE_URL` (and preferably `DIRECT_URL`, port 5432) in `.env.local` or `.env`:
+
+```bash
+npm run db:backup
+```
+
+Writes `backups/supabase-<timestamp>/` (`roles.sql`, `schema.sql`, `data.sql`). **Postgres client tools** (`pg_dump` on PATH) or **Supabase CLI** (+ Docker for CLI dumps) must be installed. This backs up the database only — not Storage. See [scripts/README.md](../../scripts/README.md).
+
+### Local Storage backup (files)
+
+```bash
+npm run storage:backup
+```
+
+Downloads all objects from `portraits` and `profile-pictures` to `backups/storage-<timestamp>/` (plus `manifest.json`). Requires `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in `.env.local` or `.env`. Override buckets: `STORAGE_BACKUP_BUCKETS=portraits,profile-pictures`.
+
+**Full local backup (database + files):**
+
+```bash
+npm run backup:all
+```
 
 All app tables live in the **public** schema. **Schema reference:** [SUPABASE_SCHEMA.md](SUPABASE_SCHEMA.md). **Which SQL to run and in what order:** [sql/README.md](../../sql/README.md). Run SQL in Supabase Dashboard → SQL Editor.
 
