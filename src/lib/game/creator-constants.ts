@@ -48,7 +48,7 @@ export const WEAPON_DAMAGE_TYPES = [
   'bludgeoning',
 ] as const;
 
-/** Power damage types (all non-physical damage types — includes 'none' for non-damaging powers) */
+/** Power damage types (includes physical — Bludgeoning, Piercing, Slashing map to Physical Damage part) */
 export const POWER_DAMAGE_TYPES = [
   'none',
   'magic',
@@ -62,6 +62,9 @@ export const POWER_DAMAGE_TYPES = [
   'poison',
   'sonic',
   'acid',
+  'bludgeoning',
+  'piercing',
+  'slashing',
 ] as const;
 
 /** All damage types (used by creatures and items with mixed damage) */
