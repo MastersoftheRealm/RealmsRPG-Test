@@ -22,14 +22,6 @@
 
 Tables are listed in dependency-friendly order. **Columnar** = proper columns; **JSONB** = table stores mainly `id` + `data` (or similar) blob.
 
-### 2.1 Legacy / optional removal
-
-| Table | Shape | Notes |
-|-------|--------|--------|
-| `_prisma_migrations` | Prisma metadata columns | **Legacy.** Prisma was removed; this table is unused. Safe to drop if present: `DROP TABLE IF EXISTS public._prisma_migrations;` |
-
----
-
 ### 2.2 Auth & profile
 
 | Table | Shape | Key columns |
@@ -59,21 +51,21 @@ All codex tables are **columnar** and live in **public** (no `codex` schema). Ar
 
 ---
 
-### 2.4 Public library (admin-curated, browse by all)
+### 2.4 Official library (admin-curated Realms content, browse by all)
 
-Legacy `public_*` tables remain **id + data (JSONB)** for backward compatibility. The active write path is `official_*` (columnar, scalars + payload).
+All **columnar** (scalars + `payload` JSONB). Legacy `public_*` JSONB tables (`public_powers`, `public_techniques`, etc.) were **dropped** after migration to `official_*`; they are not present in production.
 
 | Table | Shape | Key columns |
 |-------|--------|-------------|
-| `public_powers` | JSONB | id (PK), data (JSONB), created_at, updated_at |
-| `public_techniques` | JSONB | id (PK), data (JSONB), created_at, updated_at |
-| `public_empowered_techniques` | JSONB | id (PK), data (JSONB), created_at, updated_at (legacy/fallback only) |
-| `public_items` | JSONB | id (PK), data (JSONB), created_at, updated_at |
-| `public_creatures` | JSONB | id (PK), data (JSONB), created_at, updated_at |
+| `official_powers` | Columnar | id (PK), name, description, action_type, is_reaction, innate, range/duration/area/damage columns, payload (JSONB), created_at, updated_at |
+| `official_techniques` | Columnar | id (PK), name, description, action_type, weapon_name, promoted columns, payload (JSONB), created_at, updated_at |
+| `official_empowered_techniques` | Columnar | Same shape as official_techniques |
+| `official_items` | Columnar | id (PK), name, description, type, rarity, armor_value, damage_reduction, promoted columns, payload (JSONB), created_at, updated_at |
+| `official_creatures` | Columnar | id (PK), name, description, level, type, size, hit_points, energy_points, payload (JSONB), created_at, updated_at |
 
-**API:** `GET /api/public/[type]` reads these tables; falls back to `official_*` in public if present (columnar), including `official_empowered_techniques`. POST/DELETE require admin.
+**API:** `GET /api/public/[type]` reads `official_*` only. `POST`/`DELETE` require admin and write to `official_*`. The route still tolerates missing `public_*` tables (returns `[]`) for older environments.
 
-**Official columnar parity expansion:** `sql/supabase-library-columnar-parity-expansion.sql` promotes frequently queried payload fields into columns on both official_* and user_* tables (powers/techniques/items) and keeps them synced from payload via DB triggers.
+**Migrations:** `sql/supabase-official-library-public-schema.sql` (create + RLS), `sql/supabase-official-library-columnar-expansion.sql` (powers columns), `sql/supabase-library-columnar-parity-expansion.sql` (promoted columns + `sync_library_promoted_columns` trigger on official_* and user_*).
 
 ---
 
@@ -229,7 +221,21 @@ CREATE TABLE IF NOT EXISTS public.official_enhanced_items (
 
 CREATE INDEX IF NOT EXISTS idx_official_enhanced_items_rarity ON public.official_enhanced_items(rarity);
 CREATE INDEX IF NOT EXISTS idx_official_enhanced_items_updated_at ON public.official_enhanced_items(updated_at DESC);
+
+ALTER TABLE public.official_enhanced_items ENABLE ROW LEVEL SECURITY;
+GRANT SELECT ON public.official_enhanced_items TO anon, authenticated;
+GRANT ALL ON public.official_enhanced_items TO service_role;
+
+CREATE POLICY "Anyone can read official enhanced items" ON public.official_enhanced_items FOR SELECT TO public USING (true);
+CREATE POLICY "Admin can insert official enhanced items" ON public.official_enhanced_items FOR INSERT TO authenticated
+  WITH CHECK (EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid()::text AND role = 'admin'));
+CREATE POLICY "Admin can update official enhanced items" ON public.official_enhanced_items FOR UPDATE TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid()::text AND role = 'admin'));
+CREATE POLICY "Admin can delete official enhanced items" ON public.official_enhanced_items FOR DELETE TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid()::text AND role = 'admin'));
 ```
+
+**RLS + grants:** Also in `sql/supabase-security-hardening-2026-06.sql` if the table was created without policies.
 
 ---
 
@@ -283,8 +289,6 @@ Used by `user_profiles.role`.
 
 ## 4. Future / migration (optional)
 
-- **Drop `_prisma_migrations`:** If the table exists, run `DROP TABLE IF EXISTS public._prisma_migrations;` in Supabase SQL Editor. No app code uses it.
-
 **Columnar migration status (prefer columns over JSONB where possible):**
 
 | Area | Status | Task / notes |
@@ -293,7 +297,8 @@ Used by `user_profiles.role`.
 | User library (powers, techniques, items, creatures) | Done | user_* columnar (scalars + payload). |
 | Official/user column parity expansion | Done | **TASK-304:** promoted columns for powers/techniques/items on both official_* + user_*; trigger-based payload sync (`sql/supabase-library-columnar-parity-expansion.sql`). |
 | User library (species) | Done | **TASK-280:** user_species columnar (codex_species + user_id + payload); SQL + API. |
-| Public/official library | Done | **TASK-279:** official_* in public; GET /api/public prefers official_*; POST/DELETE columnar. |
+| Public/official library | Done | **TASK-279:** official_* in public; legacy `public_*` JSONB tables dropped; GET /api/public reads official_* only. |
+| Legacy `_prisma_migrations` | Done | Dropped via `sql/supabase-security-hardening-2026-06.sql`. |
 | Campaign members | Done | campaign_members table; memberIds deprecated. |
 | Encounters list | Done | **TASK-281:** name, type, status columns; backfill + API. |
 | Characters list | Done | **TASK-282:** name, level, archetype_name, ancestry_name, status, visibility; backfill + API. |
@@ -319,7 +324,8 @@ See `AI_TASK_QUEUE.md` for TASK-279–TASK-283 and TASK-304. Rationale and colum
 | API or feature | Tables (public) |
 |----------------|-----------------|
 | GET /api/codex | codex_feats, codex_skills, codex_species, codex_traits, codex_parts, codex_properties, codex_equipment, codex_archetypes, codex_creature_feats, core_rules |
-| GET /api/public/[type] | public_powers, public_techniques, public_empowered_techniques, public_items, public_creatures (or official_* if present) |
+| GET /api/public/[type] | official_powers, official_techniques, official_empowered_techniques, official_items, official_creatures |
+| GET/POST/PATCH/DELETE /api/official/enhanced-items | official_enhanced_items (admin) |
 | GET/POST/PATCH/DELETE /api/user/library/[type] | user_powers, user_techniques, user_empowered_techniques, user_items, user_creatures, user_species |
 | GET/POST/PATCH/DELETE /api/tooltips | ui_tooltips (admin write, audience-filtered read) |
 | GET/PATCH /api/user/settings/tooltips | user_profiles.show_tooltips |
@@ -339,7 +345,7 @@ Supabase Dashboard → Logs shows **PostgREST** requests. Our app uses the **pub
 **Expected when codex or library loads:**
 
 - **GET /rest/v1/codex_feats**, **codex_skills**, **codex_species**, **codex_traits**, **codex_parts**, **codex_properties**, **codex_equipment**, **codex_archetypes**, **codex_creature_feats**, **core_rules** — One browser request to `GET /api/codex` triggers these 10 parallel server-side queries. This is expected; the browser still only makes one call to our API.
-- **GET /rest/v1/official_techniques** (or other official_* / public_*) — When the public or official library tab is loaded, the API queries the corresponding table(s). Again expected.
+- **GET /rest/v1/official_techniques** (or other `official_*`) — When the Realms library tab is loaded, the API queries the corresponding official table. Again expected.
 
 **Other schemas (reference only):**
 

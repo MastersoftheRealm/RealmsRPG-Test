@@ -59,15 +59,15 @@ export function PowersStep() {
   const [showPowerModal, setShowPowerModal] = useState(false);
   const [showTechniqueModal, setShowTechniqueModal] = useState(false);
   const [powerModalTab, setPowerModalTab] = useState<PowerModalTab>('powers');
-  const [source, setSource] = useState<SourceFilterValue>('public');
+  const [source, setSource] = useState<SourceFilterValue>('all');
   
-  // Fetch user's library and public library
+  // Fetch user's library and official library (same merge + displayFilter pattern as character sheet add-library-item modal)
   const { data: userPowers = [], isLoading: powersLoading } = useUserPowers();
   const { data: userTechniques = [], isLoading: techniquesLoading } = useUserTechniques();
   const { data: userEmpoweredTechniques = [], isLoading: empoweredTechniquesLoading } = useUserEmpoweredTechniques();
-  const { data: publicPowers = [], isLoading: publicPowersLoading } = usePublicLibrary('powers');
-  const { data: publicTechniques = [], isLoading: publicTechniquesLoading } = usePublicLibrary('techniques');
-  const { data: publicEmpoweredTechniques = [], isLoading: publicEmpoweredTechniquesLoading } = usePublicLibrary('empowered-techniques');
+  const { data: publicPowers = [], isLoading: publicPowersLoading, isError: publicPowersError } = usePublicLibrary('powers');
+  const { data: publicTechniques = [], isLoading: publicTechniquesLoading, isError: publicTechniquesError } = usePublicLibrary('techniques');
+  const { data: publicEmpoweredTechniques = [], isLoading: publicEmpoweredTechniquesLoading, isError: publicEmpoweredTechniquesError } = usePublicLibrary('empowered-techniques');
   const { data: powerParts } = usePowerParts();
   const { data: techniqueParts } = useTechniqueParts();
   const { data: itemPropertiesDb = [] } = useItemProperties();
@@ -181,19 +181,21 @@ export function PowersStep() {
   const pathMergeKey = draft.creationMode === 'path' ? draft.archetype?.id ?? 'path' : '';
   const hasMergedPathRef = useRef<string | null>(null);
 
-  const powersForList = useMemo(() => {
-    const my = (source === 'my' || source === 'all') ? userPowers : [];
-    const pub = (source === 'public' || source === 'all') ? normalizedPublicPowers : [];
+  type WithSource<T> = T & { _source: 'my' | 'public' };
+
+  const allPowersRaw = useMemo((): WithSource<UserPower>[] => {
+    const my = userPowers.map((p) => ({ ...p, _source: 'my' as const }));
+    const pub = normalizedPublicPowers.map((p) => ({ ...p, _source: 'public' as const }));
     return [...my, ...pub];
-  }, [source, userPowers, normalizedPublicPowers]);
-  const techniquesForList = useMemo(() => {
-    const my = (source === 'my' || source === 'all') ? userTechniques : [];
-    const pub = (source === 'public' || source === 'all') ? normalizedPublicTechniques : [];
+  }, [userPowers, normalizedPublicPowers]);
+  const allTechniquesRaw = useMemo((): WithSource<UserTechnique>[] => {
+    const my = userTechniques.map((t) => ({ ...t, _source: 'my' as const }));
+    const pub = normalizedPublicTechniques.map((t) => ({ ...t, _source: 'public' as const }));
     return [...my, ...pub];
-  }, [source, userTechniques, normalizedPublicTechniques]);
-  const empoweredTechniquesForList = useMemo(() => {
-    const my = (source === 'my' || source === 'all') ? userEmpoweredTechniques : [];
-    const pub = (source === 'public' || source === 'all') ? normalizedPublicEmpoweredTechniques : [];
+  }, [userTechniques, normalizedPublicTechniques]);
+  const allEmpoweredTechniquesRaw = useMemo((): WithSource<UserTechnique>[] => {
+    const my = userEmpoweredTechniques.map((t) => ({ ...t, _source: 'my' as const }));
+    const pub = normalizedPublicEmpoweredTechniques.map((t) => ({ ...t, _source: 'public' as const }));
     const merged = [...my, ...pub];
     const seen = new Set<string>();
     return merged.filter((technique) => {
@@ -202,7 +204,21 @@ export function PowersStep() {
       seen.add(id);
       return true;
     });
-  }, [source, userEmpoweredTechniques, normalizedPublicEmpoweredTechniques]);
+  }, [userEmpoweredTechniques, normalizedPublicEmpoweredTechniques]);
+
+  const displayFilterFn = useMemo(
+    () => (item: SelectableItem) =>
+      source === 'all' || (item.data as { _source?: 'my' | 'public' })?._source === source,
+    [source]
+  );
+
+  const powersModalLoading =
+    (source !== 'public' && powersLoading) || (source !== 'my' && publicPowersLoading);
+  const techniquesModalLoading =
+    (source !== 'public' && techniquesLoading) || (source !== 'my' && publicTechniquesLoading);
+  const empoweredModalLoading =
+    (source !== 'public' && empoweredTechniquesLoading) ||
+    (source !== 'my' && publicEmpoweredTechniquesLoading);
 
   // Merged pool (user + public, deduped) for looking up selected items so they persist when switching tabs/source
   const allPowersForLookup = useMemo(() => {
@@ -291,8 +307,10 @@ export function PowersStep() {
   // Transform powers to SelectableItems — match add-library-item: columns, detailSections, totalCost for expanded view
   // options.selectedIds + pathName: show (PathName) badge in modal only for selected path-recommended items
   const powerListToSelectable = useCallback(
-    (list: UserPower[], options?: { selectedIds?: Set<string>; pathName?: string }): SelectableItem[] => {
-      return list.map((power: UserPower) => {
+    (list: WithSource<UserPower>[], options?: { selectedIds?: Set<string>; pathName?: string }): SelectableItem[] => {
+      return list.flatMap((power: WithSource<UserPower>) => {
+        const itemId = String(power.docId ?? power.id ?? '');
+        if (!itemId) return [];
         const doc: PowerDocument = {
           name: String(power.name ?? ''),
           description: String(power.description ?? ''),
@@ -315,15 +333,15 @@ export function PowersStep() {
           ? power.damage.map((d: { type?: string }) => capitalize(d.type)).join(', ')
           : '-';
         const isRecommended =
-          recommendedPowerRefs.has(String(power.docId).toLowerCase()) ||
+          recommendedPowerRefs.has(itemId.toLowerCase()) ||
           recommendedPowerRefs.has(String(power.name).toLowerCase());
         const showPathBadge =
           isRecommended &&
           options?.pathName &&
           options?.selectedIds &&
-          options.selectedIds.has(String(power.docId));
-        return {
-          id: power.docId,
+          options.selectedIds.has(itemId);
+        return [{
+          id: itemId,
           name: power.name,
           description: power.description,
           columns: [
@@ -337,7 +355,7 @@ export function PowersStep() {
           costLabel: display.tp > 0 ? 'TP' : undefined,
           badges: showPathBadge ? [{ label: `(${options!.pathName})`, color: 'gray' as const }] : undefined,
           data: power,
-        };
+        }];
       });
     },
     [powerParts, recommendedPowerRefs]
@@ -348,17 +366,25 @@ export function PowersStep() {
     () => (pathName ? { selectedIds: selectedPowerIdsSet, pathName } : undefined),
     [pathName, selectedPowerIdsSet]
   );
-  const availablePowers = useMemo(
-    () => powerListToSelectable(powersForList, powerSelectableOpts),
-    [powersForList, powerListToSelectable, powerSelectableOpts]
+  const allPowerSelectableItems = useMemo(
+    () => powerListToSelectable(allPowersRaw, powerSelectableOpts),
+    [allPowersRaw, powerListToSelectable, powerSelectableOpts]
   );
-  const allPowersSelectable = useMemo(
-    () => powerListToSelectable(allPowersForLookup, powerSelectableOpts),
-    [allPowersForLookup, powerListToSelectable, powerSelectableOpts]
-  );
+  const allPowersSelectable = useMemo(() => {
+    const seen = new Set<string>();
+    const deduped = allPowersRaw.filter((p) => {
+      const id = String(p.docId ?? p.id ?? '');
+      if (!id || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+    return powerListToSelectable(deduped, powerSelectableOpts);
+  }, [allPowersRaw, powerListToSelectable, powerSelectableOpts]);
   const empoweredTechniqueToPowerSelectable = useCallback(
-    (list: UserTechnique[]): SelectableItem[] =>
-      list.map((technique) => {
+    (list: WithSource<UserTechnique>[]): SelectableItem[] =>
+      list.flatMap((technique) => {
+        const itemId = String(technique.docId ?? technique.id ?? '');
+        if (!itemId) return [];
         const raw = technique as unknown as Record<string, unknown>;
         const powerData = (raw.power as Record<string, unknown> | undefined) ?? {};
         const totals = (raw.totals as Record<string, unknown> | undefined) ?? {};
@@ -378,8 +404,8 @@ export function PowersStep() {
           : '-';
         const energy = Number(totals.energy ?? 0);
         const tp = Number(totals.trainingPoints ?? 0);
-        return {
-          id: technique.docId,
+        return [{
+          id: itemId,
           name: technique.name,
           description: technique.description,
           columns: [
@@ -390,24 +416,26 @@ export function PowersStep() {
           ],
           badges: [{ label: 'Empowered', color: 'gray' as const }],
           data: technique,
-        };
+        }];
       }),
     []
   );
-  const empoweredSelectableItems = useMemo(
-    () => empoweredTechniqueToPowerSelectable(empoweredTechniquesForList),
-    [empoweredTechniqueToPowerSelectable, empoweredTechniquesForList]
+  const allEmpoweredSelectableItems = useMemo(
+    () => empoweredTechniqueToPowerSelectable(allEmpoweredTechniquesRaw),
+    [empoweredTechniqueToPowerSelectable, allEmpoweredTechniquesRaw]
   );
   const allEmpoweredSelectable = useMemo(
-    () => empoweredTechniqueToPowerSelectable(allEmpoweredTechniquesForLookup),
-    [empoweredTechniqueToPowerSelectable, allEmpoweredTechniquesForLookup]
+    () => empoweredTechniqueToPowerSelectable(allEmpoweredTechniquesRaw),
+    [empoweredTechniqueToPowerSelectable, allEmpoweredTechniquesRaw]
   );
 
   // Transform techniques to SelectableItems — match add-library-item: detailSections, totalCost for expanded view
   // options.selectedIds + pathName: show (PathName) badge in modal only for selected path-recommended items
   const techniqueListToSelectable = useCallback(
-    (list: UserTechnique[], options?: { selectedIds?: Set<string>; pathName?: string }): SelectableItem[] => {
-      return list.map((tech: UserTechnique) => {
+    (list: WithSource<UserTechnique>[], options?: { selectedIds?: Set<string>; pathName?: string }): SelectableItem[] => {
+      return list.flatMap((tech: WithSource<UserTechnique>) => {
+        const itemId = String(tech.docId ?? tech.id ?? '');
+        if (!itemId) return [];
         const doc: TechniqueDocument = {
           name: String(tech.name ?? ''),
           description: String(tech.description ?? ''),
@@ -423,15 +451,15 @@ export function PowersStep() {
           costLabel: 'TP',
         }));
         const isRecommended =
-          recommendedTechniqueRefs.has(String(tech.docId).toLowerCase()) ||
+          recommendedTechniqueRefs.has(itemId.toLowerCase()) ||
           recommendedTechniqueRefs.has(String(tech.name).toLowerCase());
         const showPathBadge =
           isRecommended &&
           options?.pathName &&
           options?.selectedIds &&
-          options.selectedIds.has(String(tech.docId));
-        return {
-          id: tech.docId,
+          options.selectedIds.has(itemId);
+        return [{
+          id: itemId,
           name: tech.name,
           description: tech.description,
           columns: [
@@ -444,7 +472,7 @@ export function PowersStep() {
           costLabel: typeof display.tp === 'number' && display.tp > 0 ? 'TP' : undefined,
           badges: showPathBadge ? [{ label: `(${options!.pathName})`, color: 'gray' as const }] : undefined,
           data: tech,
-        };
+        }];
       });
     },
     [techniqueParts, recommendedTechniqueRefs]
@@ -455,14 +483,20 @@ export function PowersStep() {
     () => (pathName ? { selectedIds: selectedTechniqueIdsSet, pathName } : undefined),
     [pathName, selectedTechniqueIdsSet]
   );
-  const availableTechniques = useMemo(
-    () => techniqueListToSelectable(techniquesForList, techniqueSelectableOpts),
-    [techniquesForList, techniqueListToSelectable, techniqueSelectableOpts]
+  const allTechniqueSelectableItems = useMemo(
+    () => techniqueListToSelectable(allTechniquesRaw, techniqueSelectableOpts),
+    [allTechniquesRaw, techniqueListToSelectable, techniqueSelectableOpts]
   );
-  const allTechniquesSelectable = useMemo(
-    () => techniqueListToSelectable(allTechniquesForLookup, techniqueSelectableOpts),
-    [allTechniquesForLookup, techniqueListToSelectable, techniqueSelectableOpts]
-  );
+  const allTechniquesSelectable = useMemo(() => {
+    const seen = new Set<string>();
+    const deduped = allTechniquesRaw.filter((t) => {
+      const id = String(t.docId ?? t.id ?? '');
+      if (!id || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+    return techniqueListToSelectable(deduped, techniqueSelectableOpts);
+  }, [allTechniquesRaw, techniqueListToSelectable, techniqueSelectableOpts]);
   
   // Display items for selected powers/techniques — lookup from full pool so selection persists when switching tabs/source
   const selectedPowerItems = useMemo((): SelectableItem[] => {
@@ -495,10 +529,62 @@ export function PowersStep() {
     });
   }, [selectedTechniques, allTechniquesSelectable]);
   
-  // Ids of items currently in the modal list (depends on source filter: my/public/all)
-  const availablePowerIds = useMemo(() => new Set(availablePowers.map((p) => p.id)), [availablePowers]);
-  const availableEmpoweredIds = useMemo(() => new Set(empoweredSelectableItems.map((p) => p.id)), [empoweredSelectableItems]);
-  const availableTechniqueIds = useMemo(() => new Set(availableTechniques.map((t) => t.id)), [availableTechniques]);
+  // Ids visible in the modal for the active source filter (merge keeps draft items from other sources)
+  const availablePowerIds = useMemo(
+    () => new Set(allPowerSelectableItems.filter(displayFilterFn).map((p) => p.id)),
+    [allPowerSelectableItems, displayFilterFn]
+  );
+  const availableEmpoweredIds = useMemo(
+    () => new Set(allEmpoweredSelectableItems.filter(displayFilterFn).map((p) => p.id)),
+    [allEmpoweredSelectableItems, displayFilterFn]
+  );
+  const availableTechniqueIds = useMemo(
+    () => new Set(allTechniqueSelectableItems.filter(displayFilterFn).map((t) => t.id)),
+    [allTechniqueSelectableItems, displayFilterFn]
+  );
+
+  const powerModalEmptyMessage = useMemo(() => {
+    const count = allPowerSelectableItems.filter(displayFilterFn).length;
+    if (count > 0) return undefined;
+    return source === 'public'
+      ? 'No powers in the Realms Library'
+      : source === 'my'
+        ? 'No powers in your library'
+        : 'No powers found';
+  }, [allPowerSelectableItems, displayFilterFn, source]);
+  const powerModalEmptySubMessage = useMemo(() => {
+    if (allPowerSelectableItems.filter(displayFilterFn).length > 0) return undefined;
+    if (source === 'public' && publicPowersError) {
+      return 'Failed to load Realms Library. Check your connection and try again.';
+    }
+    if (source === 'public') {
+      return 'Official content is added via Admin → Realms Library Editor.';
+    }
+    if (source === 'my') {
+      return 'Create powers in the Power Creator, then return here.';
+    }
+    return undefined;
+  }, [allPowerSelectableItems, displayFilterFn, source, publicPowersError]);
+
+  const techniqueModalEmptyMessage = useMemo(() => {
+    const count = allTechniqueSelectableItems.filter(displayFilterFn).length;
+    if (count > 0) return undefined;
+    return source === 'public'
+      ? 'No techniques in the Realms Library'
+      : source === 'my'
+        ? 'No techniques in your library'
+        : 'No techniques found';
+  }, [allTechniqueSelectableItems, displayFilterFn, source]);
+  const techniqueModalEmptySubMessage = useMemo(() => {
+    if (allTechniqueSelectableItems.filter(displayFilterFn).length > 0) return undefined;
+    if (source === 'public' && publicTechniquesError) {
+      return 'Failed to load Realms Library. Check your connection and try again.';
+    }
+    if (source === 'my') {
+      return 'Create techniques in the Technique Creator, then return here.';
+    }
+    return undefined;
+  }, [allTechniqueSelectableItems, displayFilterFn, source, publicTechniquesError]);
 
   // Handle power selection - merge: keep draft powers not in current list, replace with modal selection for those in list
   const handlePowerSelect = useCallback((selectedItems: SelectableItem[]) => {
@@ -507,7 +593,9 @@ export function PowersStep() {
     );
     const fromModal = selectedItems.map(item => {
       const existing = (draft.powers || []).find((p: { id: string | number }) => String(p.id) === String(item.id));
-      const userPower = (item.data as UserPower | undefined) ?? userPowers.find((p: UserPower) => p.docId === item.id) ?? normalizedPublicPowers.find((p: UserPower) => p.docId === item.id);
+      const userPower = (item.data as UserPower | undefined)
+        ?? userPowers.find((p: UserPower) => String(p.docId ?? p.id) === String(item.id))
+        ?? normalizedPublicPowers.find((p: UserPower) => String(p.docId ?? p.id) === String(item.id));
       const partsWithTP = (userPower?.parts || []).map((savedPart: { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }) => {
         const codexPart = powerParts?.find((rp: PowerPart) =>
           String(rp.id) === String(savedPart.id) ||
@@ -572,7 +660,9 @@ export function PowersStep() {
       (t: { id: string | number }) => !availableTechniqueIds.has(String(t.id))
     );
     const fromModal = selectedItems.map(item => {
-      const userTech = (item.data as UserTechnique | undefined) ?? userTechniques.find((t: UserTechnique) => t.docId === item.id) ?? normalizedPublicTechniques.find((t: UserTechnique) => t.docId === item.id);
+      const userTech = (item.data as UserTechnique | undefined)
+        ?? userTechniques.find((t: UserTechnique) => String(t.docId ?? t.id) === String(item.id))
+        ?? normalizedPublicTechniques.find((t: UserTechnique) => String(t.docId ?? t.id) === String(item.id));
       const partsWithTP = (userTech?.parts || []).map((savedPart: { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }) => {
         const codexPart = techniqueParts?.find((rp: TechniquePart) =>
           String(rp.id) === String(savedPart.id) ||
@@ -623,7 +713,9 @@ export function PowersStep() {
     updateDraft({ techniques: newTechniques });
   }, [selectedTechniques, updateDraft]);
   
-  const hasContent = powersForList.length > 0 || techniquesForList.length > 0;
+  const hasPowersAvailable = allPowersRaw.length > 0 || allEmpoweredTechniquesRaw.length > 0;
+  const hasTechniquesAvailable = allTechniquesRaw.length > 0;
+  const hasContent = hasPowersAvailable || hasTechniquesAvailable;
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -749,7 +841,7 @@ export function PowersStep() {
             </div>
             <Button
               onClick={() => setShowPowerModal(true)}
-              disabled={powersForList.length === 0}
+              disabled={!hasPowersAvailable && !powersLoading && !publicPowersLoading}
             >
               <Plus className="w-4 h-4" />
               Add Powers
@@ -843,7 +935,7 @@ export function PowersStep() {
             </div>
             <Button
               onClick={() => setShowTechniqueModal(true)}
-              disabled={techniquesForList.length === 0}
+              disabled={!hasTechniquesAvailable && !techniquesLoading && !publicTechniquesLoading}
               className="bg-martial-dark hover:bg-martial-text"
             >
               <Plus className="w-4 h-4" />
@@ -943,7 +1035,8 @@ export function PowersStep() {
           </div>
         }
         onConfirm={powerModalTab === 'empowered' ? handleEmpoweredPowerSelect : handlePowerSelect}
-        items={powerModalTab === 'empowered' ? empoweredSelectableItems : availablePowers}
+        items={powerModalTab === 'empowered' ? allEmpoweredSelectableItems : allPowerSelectableItems}
+        displayFilter={displayFilterFn}
         title={powerModalTab === 'empowered' ? 'Select Empowered Techniques' : 'Select Powers'}
         description={powerModalTab === 'empowered'
           ? 'Choose empowered techniques from Realms or My Library and add them to your powers list.'
@@ -951,10 +1044,14 @@ export function PowersStep() {
         initialSelectedIds={selectedPowerIds}
         searchPlaceholder={powerModalTab === 'empowered' ? 'Search empowered techniques...' : 'Search powers...'}
         itemLabel={powerModalTab === 'empowered' ? 'empowered technique' : 'power'}
-        isLoading={
+        isLoading={powerModalTab === 'empowered' ? empoweredModalLoading : powersModalLoading}
+        emptyMessage={powerModalTab === 'empowered' ? undefined : powerModalEmptyMessage}
+        emptySubMessage={
           powerModalTab === 'empowered'
-            ? (empoweredTechniquesLoading || publicEmpoweredTechniquesLoading)
-            : (powersLoading || publicPowersLoading)
+            ? (source === 'public' && publicEmpoweredTechniquesError
+                ? 'Failed to load Realms Library. Check your connection and try again.'
+                : undefined)
+            : powerModalEmptySubMessage
         }
         columns={POWER_MODAL_COLUMNS}
         gridColumns={POWER_GRID_COLUMNS}
@@ -966,13 +1063,16 @@ export function PowersStep() {
         onClose={() => setShowTechniqueModal(false)}
         headerExtra={<SourceFilter value={source} onChange={setSource} />}
         onConfirm={handleTechniqueSelect}
-        items={availableTechniques}
+        items={allTechniqueSelectableItems}
+        displayFilter={displayFilterFn}
         title="Select Techniques"
         description="Choose from Realms Library or your library. Use the source filter to switch. You can also create your own in the Technique Creator."
         initialSelectedIds={selectedTechniqueIds}
         searchPlaceholder="Search techniques..."
         itemLabel="technique"
-        isLoading={techniquesLoading}
+        isLoading={techniquesModalLoading}
+        emptyMessage={techniqueModalEmptyMessage}
+        emptySubMessage={techniqueModalEmptySubMessage}
         columns={TECHNIQUE_MODAL_COLUMNS}
         gridColumns={TECHNIQUE_GRID_COLUMNS}
       />

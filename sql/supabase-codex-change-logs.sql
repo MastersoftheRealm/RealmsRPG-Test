@@ -25,6 +25,7 @@ CREATE INDEX IF NOT EXISTS idx_codex_change_logs_changed_by_changed_at
 CREATE OR REPLACE FUNCTION public.prune_codex_change_logs_to_latest_ten()
 RETURNS TRIGGER
 LANGUAGE plpgsql
+SET search_path = public
 AS $$
 BEGIN
   DELETE FROM public.codex_change_logs c

@@ -1503,3 +1503,11 @@ Notes
 - Feedback: When adding a weapon to a technique, the Add Weapon part does not appear to increase based on weapon TP, and the selected weapon is not reliably saved/loaded. This impacts both private and public library behavior, and empowered/power add-weapon flows should follow the same best-practice implementation.
 - Expected: Weapon references persist for custom and official techniques/powers/empowered techniques; TP scaling reflects selected weapon TP (or saved Add Weapon part level fallback for older official entries); load behavior remains consistent across My Library and Realms Library.
 - Disposition: Implemented 2026-05-16. Fixed UUID weapon save conditions in creators, added Add Weapon level fallback reconstruction on load for technique/empowered flows, and updated shared columnar mapping to persist/rehydrate weaponName from nested payload weapon fields.
+
+**Raw Feedback Log — 2026-05-22 (Character creator — add powers empty on mobile)**
+- Date: 2026-05-22
+- Context: Character creator, Powers & Techniques step, mobile
+- Priority: High
+- Feedback: On mobile, creating a new character and opening Add Powers shows no items from Realms Library, My Library, or All sources despite having content in all libraries.
+- Expected: Add Powers / Add Techniques modals list the same merged library content as the character sheet add-library-item modal, with working source filter and visible rows on mobile.
+- Disposition: Implemented 2026-05-22. Aligned powers-step with add-library-item modal (merge all sources + displayFilter), source-aware loading (My Library no longer blocked on official fetch), stable item ids (docId ?? id), default source All, mobile-friendly modal flex height. `npm run build` passes.

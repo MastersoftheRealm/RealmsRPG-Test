@@ -92,6 +92,7 @@ ALTER TABLE public.user_items
 CREATE OR REPLACE FUNCTION public.sync_library_promoted_columns()
 RETURNS trigger
 LANGUAGE plpgsql
+SET search_path = public
 AS $$
 DECLARE
   payload_doc JSONB := COALESCE(NEW.payload, '{}'::jsonb);

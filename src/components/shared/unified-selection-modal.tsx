@@ -267,7 +267,7 @@ export function UnifiedSelectionModal({
   
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={size} showCloseButton={false} fullScreenOnMobile>
-      <div className={cn('flex flex-col h-[70vh]', className)}>
+      <div className={cn('flex flex-col flex-1 min-h-0 md:max-h-[70vh]', className)}>
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div>

@@ -34,7 +34,8 @@
 | **supabase-campaign-rolls-list-columns.sql** | Campaign rolls: add character_id, user_id, type, title; backfill from data | Hybrid list columns (TASK-283). |
 | **supabase-campaign-rolls-id-default.sql** | `campaign_rolls.id`: optional `DEFAULT gen_random_uuid()` (uuid or text column) | Run only if you want DB-side defaults; **app POST now always sets `id`**. Fixes logs: *null value in column "id"* on insert. |
 | **supabase-campaign-rolls-created-at-backfill.sql** | Backfill `created_at` from `data->>'timestamp'`; epoch for orphans | Run once if existing rows have **NULL** `created_at` (broke `ORDER BY created_at DESC` + `LIMIT` so new rolls disappeared from the API). **POST /rolls** now sets `created_at` on every insert. |
-| **supabase-codex-rls-public.sql** | RLS for codex_* and core_rules in public (SELECT TO public) | Run if GET /api/codex returns 500 (permission denied). |
+| **supabase-codex-rls-public.sql** | RLS for codex_* (incl. `codex_archetype_levels`) and core_rules in public (SELECT TO public) | Run if GET /api/codex returns 500 (permission denied). |
+| **supabase-security-hardening-2026-06.sql** | Drop `_prisma_migrations`; pin `search_path` on trigger functions; RLS for `codex_archetype_levels` + `official_enhanced_items`; revoke `rls_auto_enable` RPC | Run once per environment after security advisor findings. |
 | **supabase-campaign-members.sql** | campaign_members table | May already exist from consolidation |
 | **supabase-user-profiles-timestamps-default.sql** | user_profiles: set DEFAULT now() on created_at, updated_at | Run if inserts fail with "null value in column updated_at" |
 | **supabase-user-profiles-username-display.sql** | user_profiles: add `username_display` and backfill from canonical `username` | Run once to preserve entered username casing in UI while keeping lowercase canonical uniqueness |
