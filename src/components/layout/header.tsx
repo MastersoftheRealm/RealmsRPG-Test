@@ -11,10 +11,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useAuth, useAdmin, useProfile, useTooltipByKey } from '@/hooks';
+import { useAuth, useAdmin, useProfile } from '@/hooks';
 import { ThemeToggle } from '@/components/shared';
-import { HelpTooltip } from '@/components/ui';
+// import { HelpTooltip } from '@/components/ui';
 import { useQueryClient } from '@tanstack/react-query';
+import { navbarLibrary } from '../../../public/tooltip-text';
+import Tippy from '@tippyjs/react';
+import 'tippy.js/dist/tippy.css';
+import { Info } from 'lucide-react'
 
 const navLinks: Array<{ href: string; label: string; external?: boolean } | { label: string; dropdown: { href: string; label: string }[] }> = [
   { href: '/characters', label: 'Characters' },
@@ -56,8 +60,8 @@ export function Header() {
   const { isAdmin } = useAdmin();
   const { profile } = useProfile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const libraryTooltip = useTooltipByKey('global.nav.library', { scope: 'global:nav' });
-  const codexTooltip = useTooltipByKey('global.nav.codex', { scope: 'global:nav' });
+  // const libraryTooltip = useTooltipByKey('global.nav.library', { scope: 'global:nav' });
+  // const codexTooltip = useTooltipByKey('global.nav.codex', { scope: 'global:nav' });
 
   // Handle login click - store current path for redirect after login
   const handleLoginClick = () => {
@@ -125,23 +129,29 @@ export function Header() {
                   >
                     {item.label}
                   </Link>
-                  {item.href === '/library' && libraryTooltip.showTooltips && libraryTooltip.body && (
-                    <HelpTooltip
-                      title={libraryTooltip.title}
-                      content={libraryTooltip.body}
-                      placement="bottom"
-                      label="Library navigation help"
-                      className="align-middle"
-                    />
+                  {item.href === '/library' && (
+                    // <HelpTooltip
+                    //   title={libraryTooltip.title}
+                    //   content={libraryTooltip.body}
+                    //   placement="bottom"
+                    //   label="Library navigation help"
+                    //   className="align-middle"
+                    // />
+                    <>
+                    <Tippy content={navbarLibrary}>
+                      <Info className="w-4 h-4"/>
+                    </Tippy>
+                    </>
                   )}
-                  {item.href === '/codex' && codexTooltip.showTooltips && codexTooltip.body && (
-                    <HelpTooltip
-                      title={codexTooltip.title}
-                      content={codexTooltip.body}
-                      placement="bottom"
-                      label="Codex navigation help"
-                      className="align-middle"
-                    />
+                  {item.href === '/codex' && (
+                    // <HelpTooltip
+                    //   title={codexTooltip.title}
+                    //   content={codexTooltip.body}
+                    //   placement="bottom"
+                    //   label="Codex navigation help"
+                    //   className="align-middle"
+                    // />
+                    <></>
                   )}
                 </span>
               )
