@@ -13,9 +13,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth, useAdmin, useProfile } from '@/hooks';
 import { ThemeToggle } from '@/components/shared';
-// import { HelpTooltip } from '@/components/ui';
 import { useQueryClient } from '@tanstack/react-query';
-import { navbarLibrary } from '../../../public/tooltip-text';
+import { navbarCodex, navbarLibrary } from '../../../public/tooltip-text';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 import { Info } from 'lucide-react'
@@ -60,8 +59,6 @@ export function Header() {
   const { isAdmin } = useAdmin();
   const { profile } = useProfile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  // const libraryTooltip = useTooltipByKey('global.nav.library', { scope: 'global:nav' });
-  // const codexTooltip = useTooltipByKey('global.nav.codex', { scope: 'global:nav' });
 
   // Handle login click - store current path for redirect after login
   const handleLoginClick = () => {
@@ -74,10 +71,10 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-surface-secondary border-b border-divider h-20">
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-24">
+      <div className="max-w-360 mx-auto px-4 sm:px-6 lg:px-24">
         <div className="flex items-center justify-between h-20 gap-14">
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0">
+          <Link href="/" className="shrink-0">
             <Image
               src="/images/LogoSmall.png"
               alt="Realms RPG"
@@ -130,28 +127,14 @@ export function Header() {
                     {item.label}
                   </Link>
                   {item.href === '/library' && (
-                    // <HelpTooltip
-                    //   title={libraryTooltip.title}
-                    //   content={libraryTooltip.body}
-                    //   placement="bottom"
-                    //   label="Library navigation help"
-                    //   className="align-middle"
-                    // />
-                    <>
                     <Tippy content={navbarLibrary}>
-                      <Info className="w-4 h-4"/>
+                      <Info className="w-4 h-4 text-primary-700"/>
                     </Tippy>
-                    </>
                   )}
                   {item.href === '/codex' && (
-                    // <HelpTooltip
-                    //   title={codexTooltip.title}
-                    //   content={codexTooltip.body}
-                    //   placement="bottom"
-                    //   label="Codex navigation help"
-                    //   className="align-middle"
-                    // />
-                    <></>
+                    <Tippy content={navbarCodex}>
+                      <Info className="w-4 h-4 text-primary-700"/>
+                    </Tippy>
                   )}
                 </span>
               )
@@ -197,7 +180,7 @@ export function Header() {
             {isAdmin && (
               <Link
                 href="/admin"
-                className="block py-3 text-lg font-semibold text-primary-700 dark:text-primary-300 min-h-[44px] flex items-center"
+                className="py-3 text-lg font-semibold text-primary-700 dark:text-primary-300 min-h-11 flex items-center"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Admin
@@ -212,7 +195,7 @@ export function Header() {
                   href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block py-3 text-lg font-semibold text-primary-700 dark:text-primary-300 min-h-[44px] flex items-center"
+                  className="py-3 text-lg font-semibold text-primary-700 dark:text-primary-300 min-h-11 flex items-center"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {item.label}
@@ -221,7 +204,7 @@ export function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="block py-3 text-lg font-semibold text-primary-700 dark:text-primary-300 min-h-[44px] flex items-center"
+                  className="py-3 text-lg font-semibold text-primary-700 dark:text-primary-300 min-h-11 flex items-center"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {item.label}
@@ -246,16 +229,13 @@ function AccountDropdown({
   profile,
   signOut,
 }: {
-  profile: { username?: string | null; showTooltips?: boolean | null } | null;
+  profile: { username?: string | null; } | null;
   signOut: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [showTooltips, setShowTooltips] = useState<boolean>(profile?.showTooltips ?? true);
+  // const [showTooltips, setShowTooltips] = useState<boolean>(profile?.showTooltips ?? true);
   const queryClient = useQueryClient();
   const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    setShowTooltips(profile?.showTooltips ?? true);
-  }, [profile?.showTooltips]);
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
@@ -269,7 +249,7 @@ function AccountDropdown({
         type="button"
         aria-label="Account menu"
         aria-expanded={open}
-        className="flex items-center gap-2 min-h-[44px] min-w-[44px]"
+        className="flex items-center gap-2 min-h-11 min-w-11"
         onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
       >
         <div className="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center text-white font-bold">
@@ -279,47 +259,16 @@ function AccountDropdown({
       {open && (
         <div className="absolute right-0 top-full pt-2 z-50">
           <div className="w-56 bg-surface rounded-lg shadow-lg border border-border-light py-2">
-            <Link href="/my-account" className="block px-4 py-2.5 text-text-secondary hover:bg-surface-alt min-h-[44px] flex items-center" onClick={() => setOpen(false)}>
+            <Link href="/my-account" className="px-4 py-2.5 text-text-secondary hover:bg-surface-alt min-h-11 flex items-center" onClick={() => setOpen(false)}>
               My Account
             </Link>
             <div className="border-t border-border-light my-1" />
             <ThemeToggle />
-            <button
-              type="button"
-              onClick={async () => {
-                const next = !showTooltips;
-                setShowTooltips(next);
-                try {
-                  const res = await fetch('/api/user/settings/tooltips', {
-                    method: 'PATCH',
-                    headers: { 'content-type': 'application/json' },
-                    body: JSON.stringify({ showTooltips: next }),
-                  });
-                  if (!res.ok) throw new Error('Failed to update tooltip preference');
-                  // Immediately re-render any tooltip anchors by invalidating the cached /api/tooltips response(s).
-                  queryClient.invalidateQueries({ queryKey: ['tooltips'] });
-                } catch {
-                  setShowTooltips((prev) => !prev);
-                }
-              }}
-              className="w-full text-left px-4 py-2.5 text-text-secondary hover:bg-surface-alt min-h-[44px] flex items-center justify-between gap-3"
-              aria-label="Toggle help tooltips"
-            >
-              <span>Help tooltips</span>
-              <span className={cn(
-                'text-xs font-semibold px-2 py-1 rounded-full',
-                showTooltips
-                  ? 'bg-success-100 dark:bg-success-900/40 text-success-700 dark:text-success-300'
-                  : 'bg-surface-alt text-text-secondary'
-              )}>
-                {showTooltips ? 'On' : 'Off'}
-              </span>
-            </button>
             <div className="border-t border-border-light my-1" />
             <button
               type="button"
               onClick={() => { signOut(); setOpen(false); }}
-              className="w-full text-left px-4 py-2.5 text-text-secondary hover:bg-surface-alt min-h-[44px]"
+              className="w-full text-left px-4 py-2.5 text-text-secondary hover:bg-surface-alt min-h-11"
             >
               Sign Out
             </button>
@@ -346,7 +295,7 @@ function NavDropdown({ item, pathname }: { item: DropdownItem; pathname: string 
         type="button"
         aria-label={`${item.label} menu`}
         aria-expanded={open}
-        className="font-semibold text-lg text-primary-700 dark:text-primary-300 hover:text-primary-500 dark:hover:text-primary-200 transition-colors flex items-center gap-1 whitespace-nowrap min-h-[44px] items-center"
+        className="font-semibold text-lg text-primary-700 dark:text-primary-300 hover:text-primary-500 dark:hover:text-primary-200 transition-colors flex items-center gap-1 whitespace-nowrap min-h-11"
         onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
       >
         {item.label}
@@ -361,7 +310,7 @@ function NavDropdown({ item, pathname }: { item: DropdownItem; pathname: string 
                 href={subItem.href}
                 prefetch={false}
                 className={cn(
-                  'block px-5 py-3 text-primary-700 dark:text-primary-300 hover:bg-surface hover:text-primary-500 dark:hover:text-primary-200 transition-colors min-h-[44px] flex items-center',
+                  'px-5 py-3 text-primary-700 dark:text-primary-300 hover:bg-surface hover:text-primary-500 dark:hover:text-primary-200 transition-colors min-h-11 flex items-center',
                   pathname === subItem.href ? 'bg-surface-alt text-primary-500 dark:text-primary-400' : ''
                 )}
                 onClick={() => setOpen(false)}
@@ -385,7 +334,7 @@ function MobileDropdown({ item, pathname, onLinkClick }: { item: DropdownItem; p
         type="button"
         aria-expanded={open}
         aria-label={`${item.label} menu`}
-        className="flex items-center justify-between w-full py-3 text-lg font-semibold text-primary-700 dark:text-primary-300 min-h-[44px]"
+        className="flex items-center justify-between w-full py-3 text-lg font-semibold text-primary-700 dark:text-primary-300 min-h-11"
         onClick={() => setOpen(!open)}
       >
         {item.label}
@@ -399,7 +348,7 @@ function MobileDropdown({ item, pathname, onLinkClick }: { item: DropdownItem; p
               href={subItem.href}
               prefetch={false}
               className={cn(
-                'block py-3 text-primary-700 dark:text-primary-300 min-h-[44px] flex items-center',
+                'py-3 text-primary-700 dark:text-primary-300 min-h-11 flex items-center',
                 pathname === subItem.href ? 'text-primary-500 dark:text-primary-400' : ''
               )}
               onClick={onLinkClick}
