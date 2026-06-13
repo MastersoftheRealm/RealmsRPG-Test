@@ -1,6 +1,6 @@
 # Agent Guide — Sources of Truth
 
-Single reference for component locations, patterns, and where to record work. Verified against codebase (Feb 2026).
+Single reference for component locations, patterns, and where to record work. Verified against codebase (Jun 2026).
 
 > **First stop before building anything new:** [`FEATURE_INDEX.md`](FEATURE_INDEX.md) — feature/component/hook/service map to confirm it doesn't already exist. The full canonical "for X, read Y" map is in the root `AGENTS.md` (Source-of-Truth Map).
 >
@@ -66,6 +66,24 @@ Task queue `related_files` may reference outdated paths. When implementing, pref
 
 See `UI_COMPONENT_REFERENCE.md` for full component details.
 
+## Unified patterns (verified Jun 2026)
+
+Goal: "Learn once, use forever" — consistent UI across Library, Codex, Character Sheet, Creators. List/sort headers use **ListHeader** (single source of truth).
+
+| Pattern | Where used |
+|---------|------------|
+| GridListRow | Library, Codex, add-feat-modal, add-library-item-modal, add-skill-modal, equipment-step, feats-tab, library-section, creature-creator |
+| SkillRow | skills-section, skills-step, creature-creator |
+| ValueStepper | abilities-section, sheet-header, health-energy-allocator, dice-roller, all creators, encounter-tracker |
+| SectionHeader | feats-tab, proficiencies-tab, notes-tab, archetype-section, crafting pages |
+| ListHeader | All Codex/Library/Admin list views, feats-step, UnifiedSelectionModal |
+| UnifiedSelectionModal | AddFeatModal, AddSkillModal, AddLibraryItemModal (thin wrappers) |
+| useModalListState | LoadFromLibraryModal, LoadCreatureModal |
+
+**Intentional exceptions:** Auth pages use `gray-*`; AddSubSkillModal uses SelectionToggle (not GridListRow); footer uses `bg-neutral-400`; RollButton gradients use neutral tokens.
+
+Quick reference: `.cursor/rules/realms-unification.mdc`, `DESIGN_SYSTEM.md`.
+
 ## Key Files
 
 | Purpose | File |
@@ -83,7 +101,7 @@ See `UI_COMPONENT_REFERENCE.md` for full component details.
 | **User experience goals** | `src/docs/USER_EXPERIENCE_GOALS.md` — UX goals, terminology (Realms Codex/Library, My Library), what’s implemented vs backlog, and AI checklist for onboarding/retention/copy. Read when changing landing, creator, library, or onboarding flows. |
 | Architecture | `src/docs/ARCHITECTURE.md` |
 | **Codex/library data** | `src/docs/DATA_HANDLING.md` — single codex fetch, query keys, cache headers, prefetch; read when adding or changing codex/library hooks or APIs |
-| **Character/creature math** | `src/lib/formulas.ts`, `src/lib/calculations.ts`, `src/lib/skill-allocation.ts` — all ability, defense, skill, and derived stats |
+| **Character/creature math** | `src/lib/game/formulas.ts`, `src/lib/game/calculations.ts`, `src/lib/game/skill-allocation.ts` — all ability, defense, skill, and derived stats |
 | **Power/technique/item cost and display** | `src/lib/calculators/` — part costs, derive*Display helpers, filterSavedItemPropertiesForList; use for creator preview and library/codex display |
 | **Crafting requirements and outcome** | `src/lib/game/crafting-utils.ts` — getCraftingRequirements, getUpgradeRequirements, getEnhancedCraftingRequirements, calculateCraftingOutcome, optional modifiers; `src/types/crafting.ts` — session and enhanced item types |
 
@@ -143,7 +161,7 @@ When loading a saved item/power/technique into a creator, follow this **three-st
 
 **Rule:** Mechanic-only entries (parts/properties driven by dedicated UI) are restored from dedicated state only. Never restore them into the user-selectable list.
 
-**Load modal state and data:** Use `useCreatorLoad('powers' | 'techniques' | 'items')` from `@/hooks` for load-modal visibility and library items. Returns `showLoadModal`, `setShowLoadModal`, `openLoadModal`, `closeLoadModal`, `items`, `isLoading`, `error`. Type-specific `handleLoad*` (reset → restore mechanics → restore filtered list) stays in each creator.
+**Load modal state and data:** Use `useLoadModalLibrary('powers' | 'techniques' | 'items' | 'empowered-technique')` from `@/hooks` for load-modal visibility and library items. Returns `showLoadModal`, `setShowLoadModal`, `openLoadModal`, `closeLoadModal`, `selectableItems`, `rawItems`, `isLoading`, `error`, plus source-filter state. Type-specific `handleLoad*` (reset → restore mechanics → restore filtered list) stays in each creator.
 
 ## Creator layout
 
@@ -176,7 +194,7 @@ Use design tokens for colors; avoid raw `blue-*` / `green-*` outside auth.
 | Codebase audit (historical) | `src/docs/ai/archive/CODEBASE_AUDIT_2026-02-13.md` — 98-finding audit with 6-phase fix plan |
 | Unification audit (historical) | `src/docs/ai/archive/UNIFICATION_AUDIT_2026-02-20.md` — shared logic, creators, libraries, allocation, centralized sources of truth |
 | Modal unification audit (historical) | `src/docs/ai/archive/MODAL_UNIFICATION_AUDIT_2026-02-20.md` — list modals (add-X, load, selection): logic, styles, EmptyState/LoadingState, FilterSection, alignment with Codex/Library. See TASK-264. |
-| **CDN & query audit** | `src/docs/ai/CDN_QUERY_AUDIT_2026-02-24.md` — Vercel Fast Data Transfer, Fast Origin Transfer, Edge Requests, Edge CPU; proxy matcher, cache headers, refetch/polling, images; checklist for new public APIs and hooks. |
+| **Performance & edge usage** | `src/docs/PERFORMANCE_AND_EDGE.md` — Vercel CDN/edge requests, proxy matcher, cache headers, prefetch, polling; checklist for new public APIs and hooks. |
 | **Mobile UX** | `src/docs/MOBILE_UX.md` — breakpoints, touch targets, full-screen modals, dense-layout strategy (side-scroll vs collapse). When adding a new page or modal, follow MOBILE_UX.md and the Agent checklist there. |
 | **User experience goals** | `src/docs/USER_EXPERIENCE_GOALS.md` — UX goals, terminology (Realms Codex/Library, My Library), implemented vs backlog, AI checklist for onboarding/retention/copy. Update Section 3/4 when completing UX tasks. |
 

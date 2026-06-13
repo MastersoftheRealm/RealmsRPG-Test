@@ -65,7 +65,7 @@ These areas were audited for consistency with the current Supabase implementatio
 | **Character creator** | Characters API; library from `useUserPowers` etc. and `useOfficialLibrary` for add-power/technique modals. | Adding a public item to character stores `{ id, name }` only; enrichment resolves from user library then public (official) library by id. |
 | **Character sheet** | `enrichCharacterData(character, userPowers, userTechniques, userItems, …, publicLibraries)`. Character load returns `libraryForView` for non-owner view. | Powers/techniques/items must be resolvable by id (or name fallback) in user library or publicLibraries. Public library comes from `useOfficialLibrary` (GET /api/official). |
 | **Library page** | User: `GET /api/user/library/[type]`. Official: `GET /api/official/[type]`. | Both return client shape from `rowToItem` (id, docId, name, description, parts, range, duration, area, damage in payload for powers). |
-| **Enrichment** | `enrichPowers`, `enrichTechniques`, `enrichItems` take optional `publicPowerLibrary` etc. for character-referenced official items. | Character page builds `publicLibraries` from `usePublicLibrary` (official) and passes to `enrichCharacterData`. |
+| **Enrichment** | `enrichPowers`, `enrichTechniques`, `enrichItems` take optional `publicPowerLibrary` etc. for character-referenced official items. | Character page builds `publicLibraries` from `useOfficialLibrary` and passes to `enrichCharacterData`. |
 | **User species** | `GET /api/user/library/species` → `user_species` columnar or legacy `r.data`. | `rowToItemSpecies` returns codex-like shape (sizes, skills, species_traits, etc. as arrays). Character creator and hooks expect that shape. |
 
 **If something doesn’t load or display after a change:**

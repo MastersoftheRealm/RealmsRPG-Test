@@ -6,7 +6,7 @@
 
 ## When to use
 
-- **New project / fresh DB:** Use the operator guide ([SUPABASE_PATH_C_OPERATOR_GUIDE.md](../src/docs/SUPABASE_PATH_C_OPERATOR_GUIDE.md)) for run order. Schema is consolidated to `public` via the path-c-phase0-* scripts (one-time).
+- **New project / fresh DB:** For one-time Path C consolidation (historical), see [ai/archive/SUPABASE_PATH_C_OPERATOR_GUIDE.md](../src/docs/ai/archive/SUPABASE_PATH_C_OPERATOR_GUIDE.md). Current schema is already in `public`; see [SUPABASE_SCHEMA.md](../src/docs/SUPABASE_SCHEMA.md).
 - **Existing project:** Schema is already in `public`. Run only scripts that match your target (e.g. Storage RLS, optional cleanup like dropping `_prisma_migrations`).
 
 ---
@@ -24,7 +24,7 @@
 | **create-public-core-rules.sql** | Create `public.core_rules` (id, data, updated_at) | Run after Part 2 if core_rules was dropped |
 | **supabase-storage-policies.sql** | RLS for Storage buckets (portraits, profile-pictures) | Run once per project |
 | **supabase-official-library-public-schema.sql** | Official library in **public** (columnar) + backfill from public_* | Run to create official_* in public and backfill from public_* (id+data). GET /api/public prefers official_*. |
-| **supabase-official-library-columnar-expansion.sql** | Official powers: add range_steps, duration_*, area_*, damage columns; backfill from payload | Run after official-library-public-schema; see [OFFICIAL_LIBRARY_COLUMNAR_PLAN.md](../src/docs/OFFICIAL_LIBRARY_COLUMNAR_PLAN.md). |
+| **supabase-official-library-columnar-expansion.sql** | Official powers: add range_steps, duration_*, area_*, damage columns; backfill from payload | Run after official-library-public-schema; see [SUPABASE_SCHEMA.md](../src/docs/SUPABASE_SCHEMA.md) official_* tables. |
 | **supabase-user-species-columnar.sql** | user_species columnar (codex_species columns + user_id + payload) | Run once; backfill from data, then drop data. |
 | **supabase-user-species-grants-rls.sql** | `GRANT` + RLS on `user_species` for `authenticated` | Run if logs show **permission denied for table user_species** (missing table privileges after manual SQL). |
 | **supabase-campaign-members-grants.sql** | `GRANT` on `public.campaign_members` for `authenticated` (+ service_role) | Run if logs show **permission denied for table campaign_members** (join/upsert/member list fails). |

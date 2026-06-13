@@ -315,18 +315,17 @@ Used by `user_profiles.role`.
 | Encounters list | Done | **TASK-281:** name, type, status columns; backfill + API. |
 | Characters list | Done | **TASK-282:** name, level, archetype_name, ancestry_name, status, visibility; backfill + API. |
 | Campaign rolls list | Done | **TASK-283:** character_id, user_id, type, title; backfill + API. |
-| Core rules | Keep JSONB | Per DATABASE_SCALABILITY_AUDIT: category-specific shapes; no columnar migration planned. |
+| Core rules | Keep JSONB | Category-specific shapes; no columnar migration planned. |
 | UI tooltips | Done | `ui_tooltips` table + `user_profiles.show_tooltips` preference via `sql/supabase-ui-tooltips.sql`. |
 
-See `AI_TASK_QUEUE.md` for TASK-279–TASK-283 and TASK-304. Rationale and column sets: `DATABASE_SCALABILITY_AUDIT.md`.
+See `AI_TASK_QUEUE.md` for TASK-279–TASK-283 and TASK-304. Historical rationale: `src/docs/ai/archive/DATABASE_SCALABILITY_AUDIT.md`.
 
 ---
 
 ## 5. What to change elsewhere
 
 - **Do not** duplicate this table list in other docs. Point to **this file** for “how is the DB organized?”
-- **Path C docs** (in `src/docs/ai/archive/`): PATH_C_MIGRATION_PLAN, PATH_C_AUDIT_FULFILLMENT — historical; for current schema use this doc.
-- **DATABASE_CODEX_AUDIT** / **DATABASE_SCALABILITY_AUDIT**: Use for **rationale** and **future** columnar/rename ideas; not as the schema source of truth.
+- **Path C / DB rationale docs** (in `src/docs/ai/archive/`): PATH_C_MIGRATION_PLAN, PATH_C_AUDIT_FULFILLMENT, DATABASE_CODEX_AUDIT, DATABASE_SCALABILITY_AUDIT — historical only; for current schema use this doc.
 - **CODEX_SCHEMA_REFERENCE**: Defines **fields** (meaning, types, use) for codex entities; this doc defines **tables and columns** in Supabase.
 
 ---

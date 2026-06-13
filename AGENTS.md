@@ -22,13 +22,15 @@ Check the canonical source for the topic instead of trusting scattered/stale doc
 | DB tables / columns | `src/docs/SUPABASE_SCHEMA.md` (only) |
 | Game formulas, terminology, caps, display | `src/docs/GAME_RULES.md` |
 | Data flow, enrichment, hooks/services | `src/docs/ARCHITECTURE.md` |
-| Shared UI components & usage | `.cursor/rules/realms-unification.mdc` + `src/components/shared/index.ts` |
+| Shared UI components & usage | `.cursor/rules/realms-unification.mdc` + `src/docs/ai/AGENT_GUIDE.md` (Unified patterns section) |
 | Design tokens / colors | `src/docs/DESIGN_SYSTEM.md` |
 | Mobile patterns | `src/docs/MOBILE_UX.md` |
 | Accessibility / contrast | `src/docs/ACCESSIBILITY.md` |
 | Open tasks / task history | `src/docs/ai/AI_TASK_QUEUE.md` / `src/docs/ai/archive/TASK_QUEUE_DONE.md` |
 | Current audit & known issues | `src/docs/ai/FULL_AUDIT_2026-06.md` |
 | Deploy / secrets | `src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md` |
+| Edge / CDN performance | `src/docs/PERFORMANCE_AND_EDGE.md` |
+| DB ops runbook | `src/docs/DATABASE_CONSISTENCY_CHECKLIST.md` |
 | Owner feedback log | `src/docs/ALL_FEEDBACK_CLEAN.md` |
 
 > Rules in `.cursor/rules/` are terse pointers into these authorities — they don't duplicate the full content. If a rule and an authority disagree, trust the authority and fix the rule.

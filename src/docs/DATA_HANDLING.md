@@ -2,14 +2,14 @@
 
 > **Purpose:** How we fetch, cache, and invalidate codex and library data. For AI agents and engineers.
 
-**Last updated:** Feb 2026
+**Last updated:** Jun 2026
 
 ---
 
 ## Principles
 
 1. **Single source for codex** — One network request for the full codex; all consumers share it via React Query `queryKey: ['codex']` and `select` for slices.
-2. **Cache aggressively** — Codex and public library change rarely (admin-only). Use long `staleTime`, HTTP `Cache-Control` on APIs, and avoid duplicate fetches.
+2. **Cache aggressively** — Codex and official library change rarely (admin-only). Use long `staleTime`, HTTP `Cache-Control` on APIs, and avoid duplicate fetches.
 3. **Unify, don’t duplicate** — Any new consumer of codex data should use the shared `['codex']` query (or a `useCodex*` hook), not a new endpoint or query key that re-fetches the full payload.
 
 ---
@@ -38,25 +38,27 @@
 
 ---
 
-## Library (user + public)
+## Library (user + official)
 
 ### User library
 
-- **Endpoints:** `GET/POST/PATCH/DELETE /api/user/library/{type}` — `type` = powers, techniques, items, creatures, species.
+- **Endpoints:** `GET/POST/PATCH/DELETE /api/user/library/{type}` — `type` = powers, techniques, items, creatures, species, empowered-techniques, enhanced-items.
 - **Query keys:** `['user-powers', userId]`, `['user-techniques', userId]`, etc. — per-type, per-user.
-- **Hooks:** `useUserPowers`, `useUserTechniques`, `useUserItems`, `useUserCreatures`, `useUserSpecies`.
+- **Hooks:** `useUserPowers`, `useUserTechniques`, `useUserItems`, `useUserCreatures`, `useUserSpecies`, etc.
 - **Stale time:** 2 min; user library changes when the user saves from creators or add-to-library.
 
-### Public library
+### Official library (Realms Library)
 
-- **Endpoint:** `GET /api/public/{type}` — type = powers, techniques, items, creatures. No auth.
+- **Endpoint:** `GET /api/official/{type}` — type = powers, techniques, empowered-techniques, items, creatures, species. No auth.
+- **Legacy:** `GET /api/public/{type}` still exists but is deprecated; migrate to `/api/official` (see TASK-315).
 - **Cache:** `Cache-Control: public, max-age=300, s-maxage=600, stale-while-revalidate=300`.
-- **Query keys:** `['public-library', type]`.
-- **Hooks:** `usePublicLibrary(type)`, `useAddPublicToLibrary(type)`.
+- **Query keys:** `['official-library', type]`.
+- **Hooks:** `useOfficialLibrary(type)`, `useAddOfficialToLibrary(type)`.
+- **Deprecated aliases:** `usePublicLibrary`, `useAddPublicToLibrary` — same implementations; prefer official names in new code.
 
 ### Invalidation
 
-- After adding from public to user library: invalidate both `['public-library', type]` and the corresponding user library key.
+- After adding from official to user library: invalidate both `['official-library', type]` and the corresponding user library key.
 
 ---
 
@@ -66,7 +68,7 @@
 |----------------|-----------------------------|----------------------------|
 | Full codex     | `['codex']`                 | All codex hooks, useGameRules |
 | User library   | `['user-powers', userId]`    | useUserPowers              |
-| Public library | `['public-library', type]`  | usePublicLibrary('powers') |
+| Official library | `['official-library', type]` | `useOfficialLibrary('powers')` |
 | Campaign rolls  | `['campaign-rolls', campaignId]` | useCampaignRolls       |
 
 ---
@@ -75,7 +77,7 @@
 
 - **New codex fetches with a different query key** — e.g. a `['core-rules']` or `['gameData', 'archetypes']` that calls `/api/codex` again. Use `['codex']` and `select` instead.
 - **Prefetch that fetches full codex per slice** — Use the shared `prefetchFunctions` (they share one fetch) or `queryClient.prefetchQuery({ queryKey: ['codex'], queryFn: fetchCodex })`.
-- **Public APIs without cache headers** — High-volume, read-only GETs (codex, public library) should set `Cache-Control` to reduce transfer and load (see `DEPLOYMENT_AND_SECRETS_SUPABASE.md` → Vercel free tier usage).
+- **Read-only GETs without cache headers** — High-volume GETs (codex, official library) should set `Cache-Control` to reduce transfer and load (see `PERFORMANCE_AND_EDGE.md` and `DEPLOYMENT_AND_SECRETS_SUPABASE.md`).
 
 ---
 
@@ -104,7 +106,8 @@ Spreadsheet and list edit modes in the Codex Editor persist via `createCodexDoc`
 | Codex fetch       | `src/lib/api-client.ts` (`fetchCodex`) |
 | Game rules (codex slice) | `src/hooks/use-game-rules.ts` |
 | User library hooks | `src/hooks/use-user-library.ts` |
-| Public library    | `src/hooks/use-public-library.ts`, `src/app/api/public/[type]/route.ts` |
+| Official library hooks | `src/hooks/use-public-library.ts` (`useOfficialLibrary`), `src/app/api/official/[type]/route.ts` |
+| Legacy public API (deprecated) | `src/app/api/public/[type]/route.ts` |
 | Library service   | `src/services/library-service.ts` |
 | Admin codex actions | `src/app/(main)/admin/codex/actions.ts` — create/update/delete codex + core_rules |
 | Admin official library | `src/app/(main)/admin/public-library/` — uses /api/official (official_* tables) |

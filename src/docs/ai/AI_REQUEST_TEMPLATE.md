@@ -50,4 +50,4 @@ Example:
     - Run `npm run build` successfully
     - Manual verification: create character, add skill, save, reload
   notes: |
-    Reference UNIFICATION_STATUS.md and DESIGN_SYSTEM.md for component patterns.
+    Reference AGENT_GUIDE.md (Unified patterns) and DESIGN_SYSTEM.md for component patterns.
