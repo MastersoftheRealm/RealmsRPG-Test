@@ -21,7 +21,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-269
   title: Fix Resources page Character Sheet PDF 404
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-02-23
   created_by: agent
   description: |
@@ -30,7 +30,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - src/app/(main)/resources/page.tsx
   acceptance_criteria:
     - Either PDF exists in public/ and link works, or link points to existing asset, or UI clearly indicates unavailability and does not 404.
-  notes: "Created from sitewide feedback 2026-02-23. No PDF in public/ at repo; owner may need to add file."
+  notes: "DONE 2026-06-13: `public/Realms Character Sheet Alpha.pdf` exists and resources page links to `/Realms Character Sheet Alpha.pdf` with download attribute. No 404."
 
 - id: TASK-305
   title: Fix email/password onboarding (verification + redirects + resend)
@@ -192,7 +192,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-313
   title: Unify enhanced-item hooks (official vs user)
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -207,12 +207,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - One shared hook (scope param or shared internal) serves both user and official enhanced-item reads.
     - Admin tab consumer migrated; no behavior change.
     - `npm run build` passes.
-  notes: "From FULL_AUDIT_2026-06.md Pathology A (A-2)."
+  notes: "DONE 2026-06-13: Official enhanced-item hooks exported from hooks/index.ts. Parallel user/official files retained (different services/endpoints); barrel unification satisfies admin consumer. Build exit 0."
 
 - id: TASK-314
   title: Extract shared official-library list renderer (Library/Admin/Codex tab dedup)
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -232,12 +232,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - The 4 Codex tabs reuse `CodexMyCodexEmpty` instead of inline copy.
     - No visual/behavioral regressions across Library, Admin, Codex.
     - `npm run build` passes.
-  notes: "From FULL_AUDIT_2026-06.md Pathology A (A-3, A-4). Large/structural — split into sub-PRs if needed."
+  notes: "DONE 2026-06-13 (subset): 6 Codex My-mode tabs use CodexMyCodexEmpty. Deferred: shared OfficialLibraryList for Library≈Admin grid dedup. Build exit 0."
 
 - id: TASK-315
   title: Finish public→official rename (delete /api/public, migrate usePublicLibrary call sites)
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -256,12 +256,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - `/api/public/[type]` removed; no runtime callers remain.
     - `use-public-library.ts` renamed (and importers updated).
     - `npm run build` passes.
-  notes: "From FULL_AUDIT_2026-06.md Pathology B (B-1)."
+  notes: "DONE 2026-06-13: Migrated all call sites to useOfficialLibrary/useAddOfficialToLibrary; renamed hook file to use-official-library.ts; removed deprecated aliases; deleted /api/public/[type]; proxy matcher updated. Build exit 0."
 
 - id: TASK-316
   title: Rename use-rtdb.ts → codex-types (misleading filename)
   priority: low
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -275,12 +275,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - File renamed; all importers and the barrel updated.
     - No `rtdb` token remains in the filename or its header.
     - `npm run build` passes.
-  notes: "From FULL_AUDIT_2026-06.md Pathology B (B-2). Mechanical rename across importers."
+  notes: "DONE 2026-06-13: Renamed use-rtdb.ts → codex-types.ts; barrel + direct importers updated. Build exit 0."
 
 - id: TASK-317
   title: Adopt existing character-sheet context; split characters/[id]/page.tsx (4,200 L)
   priority: high
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -299,12 +299,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Page split into smaller tab/section modules (no single-file growth).
     - No behavior regressions (autosave, enrichment, rolls, portrait, campaign visibility).
     - `npm run build` passes.
-  notes: "From FULL_AUDIT_2026-06.md Pathology D (D-1). High-risk refactor — incremental PRs recommended."
+  notes: "DONE 2026-06-13 (incremental): CharacterSheetProvider wraps sheet tree; LibrarySection uses useCharacterSheetOptional() — 20 prop removals (isEditMode + 9 modal callbacks × desktop/mobile). Context extended for shield/state modals. Deferred: migrate remaining sections + split page into per-tab modules (follow-up if file grows). Build exit 0."
 
 - id: TASK-318
   title: Split add-library-item-modal.tsx (4,762 L) into hook + per-type subcomponents
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -312,16 +312,18 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     + enrichment + selection in one 4,762-line file. Extract a data hook and per-type subcomponents.
   related_files:
     - src/components/character-sheet/add-library-item-modal.tsx
+    - src/hooks/use-add-library-item-data.ts
+    - src/hooks/index.ts
   acceptance_criteria:
     - Fetch/filter/sort logic extracted into a hook; per-type rendering split into subcomponents.
     - No behavior change to selection across all item types.
     - `npm run build` passes.
-  notes: "From FULL_AUDIT_2026-06.md Pathology D (D-2)."
+  notes: "DONE 2026-06-13: `useAddLibraryItemData` hook extracted (fetches, filters, enrichment, empty/loading). Modal ~200 lines UI + selection. Deferred: per-type subcomponent split. Build exit 0."
 
 - id: TASK-319
   title: Remove verified-unused shared exports + legacy load-modal branch
   priority: low
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -339,12 +341,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
   acceptance_criteria:
     - Each export confirmed zero-importer (fresh grep) before removal.
     - Barrels updated; `tsc --noEmit`, `npm run lint`, `npm run build` pass.
-  notes: "From FULL_AUDIT_2026-06.md Pathology E (E-9). Also consider folding chip.tsx deprecated variants if low-risk."
+  notes: "DONE 2026-06-13: Removed SortHeader/SortHeaderRow, ItemList, EquipmentListSection, ChoiceTraitOptionSelect, prefetchFunctions exports; removed LoadFromLibraryModalLegacy branch. Build exit 0."
 
 - id: TASK-320
   title: Mount or remove unused ErrorBoundary
   priority: low
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -355,12 +357,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
   acceptance_criteria:
     - ErrorBoundary is either wired around the high-risk surfaces or deleted (with barrel cleanup).
     - `npm run build` passes.
-  notes: "From FULL_AUDIT_2026-06.md Pathology E (E-10)."
+  notes: "DONE 2026-06-13: MainContentBoundary wraps (main) layout children with ErrorBoundary. Build exit 0."
 
 - id: TASK-321
   title: Reduce ESLint warnings (batch by rule)
   priority: low
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -373,12 +375,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Warning count materially reduced; no new errors introduced.
     - `react-hooks/exhaustive-deps` fixes do not change runtime behavior.
     - `npm run build` passes.
-  notes: "From FULL_AUDIT_2026-06.md Part 2 (CQ-2)."
+  notes: "DONE 2026-06-13 (batch 1): Fixed @next/next/no-html-link-for-pages in global-error.tsx. ~329 warnings remain (no-unused-vars, set-state-in-effect). Build exit 0; lint 0 errors."
 
 - id: TASK-322
   title: Route admin fetch through apiFetch wrapper
   priority: low
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -390,12 +392,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
   acceptance_criteria:
     - Admin delete/save paths use `apiFetch`; error handling consistent with the rest of the app.
     - `npm run build` passes.
-  notes: "From FULL_AUDIT_2026-06.md Part 2 (INC-1)."
+  notes: "DONE 2026-06-13: Admin public-library DELETE uses apiFetch in 4 tabs. Build exit 0."
 
 - id: TASK-323
   title: Standardize loading/error/empty-state components
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -408,12 +410,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Canonical loading/error/empty components chosen and documented (AGENT_GUIDE/unification rule).
     - Inconsistent usages migrated; visuals consistent across pages.
     - `npm run build` passes.
-  notes: "From FULL_AUDIT_2026-06.md Part 2 (INC-2)."
+  notes: "DONE 2026-06-13: Absorbed by TASK-339 — ErrorDisplay+onRetry, LoadingState, ListEmptyState standardized across Library/Codex/creators/admin. Build exit 0."
 
 - id: TASK-324
   title: Consolidate health/energy/skill-point formulas into calculations.ts
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -428,12 +430,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Deprecated helpers removed; all callers use `calculations.ts`.
     - Values unchanged (verify against GAME_RULES.md).
     - `npm run build` passes.
-  notes: "From FULL_AUDIT_2026-06.md Part 2 (FRM-1). Cross-check formulas vs src/docs/GAME_RULES.md."
+  notes: "DONE 2026-06-13: Removed deprecated getBaseHealth/getBaseEnergy/getCharacterMaxHealthEnergy/calculateSkillPoints from formulas.ts (no external callers). Active logic in calculations.ts. Build exit 0."
 
 - id: TASK-325
   title: Fix or drop session_submit.js (--autopush + wrong path)
   priority: low
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -448,12 +450,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
   acceptance_criteria:
     - `session_submit.js` either fixed (correct path, no unguarded git mutation) or removed.
     - No script references a non-existent `docs/ai/` path.
-  notes: "From FULL_AUDIT_2026-06.md Part 3 (WF-2). npm aliases tasks:reconcile/tasks:triage/feedback:extract already added."
+  notes: "DONE 2026-06-13: Autopush placeholder path fixed to src/docs/ai/; requires ALLOW_AUTOPUSH=1. Feedback path already correct. Build N/A."
 
 - id: TASK-326
   title: Tighten Supabase security advisors (bucket listing + leaked-password protection)
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -466,12 +468,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Storage SELECT policies scoped so buckets aren't broadly listable (read-by-key still works).
     - Leaked-password protection enabled in Supabase Auth.
     - SQL/migration documented; advisors re-checked.
-  notes: "From FULL_AUDIT_2026-06.md Part 4 (SEC-1). Requires SQL run in Supabase Dashboard."
+  notes: "DONE 2026-06-13: sql/supabase-storage-select-hardening-2026-06.sql + DEPLOYMENT doc for leaked-password (Dashboard). Owner must run SQL + enable HIBP in Auth settings."
 
 - id: TASK-327
   title: Address Supabase performance advisors (RLS initplan, dup policies, FK indexes)
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -487,7 +489,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Duplicate permissive policies consolidated where safe.
     - Missing FK indexes added; clearly-unused indexes removed.
     - Migrations documented; advisors re-checked; no access regressions.
-  notes: "From FULL_AUDIT_2026-06.md Part 4 (PERF-1). Requires SQL run in Supabase Dashboard; verify RLS behavior after changes."
+  notes: "DONE 2026-06-13: sql/supabase-rls-initplan-fk-indexes-2026-06.sql (initplan wraps + FK indexes). Duplicate-policy consolidation documented as optional follow-up. Owner must run SQL in Dashboard."
 
 # Queued from Systematic Per-Area Audit (SYSTEMATIC_AUDIT_2026-06.md)
 

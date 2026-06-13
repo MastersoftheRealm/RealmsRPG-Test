@@ -25,7 +25,7 @@ import {
   useDeleteEmpoweredTechnique,
   useDeleteItem,
   useDeleteCreature,
-  usePublicLibrary,
+  useOfficialLibrary,
   useEnhancedItems,
   useDeleteEnhancedItem,
 } from '@/hooks';
@@ -93,11 +93,11 @@ function LibraryContent() {
   const { data: items = [] } = useUserItems();
   const { data: creatures = [] } = useUserCreatures();
 
-  const { data: publicPowers = [] } = usePublicLibrary('powers');
-  const { data: publicTechniques = [] } = usePublicLibrary('techniques');
-  const { data: publicEmpoweredTechniques = [] } = usePublicLibrary('empowered-techniques');
-  const { data: publicItems = [] } = usePublicLibrary('items');
-  const { data: publicCreatures = [] } = usePublicLibrary('creatures');
+  const { data: publicPowers = [] } = useOfficialLibrary('powers');
+  const { data: publicTechniques = [] } = useOfficialLibrary('techniques');
+  const { data: publicEmpoweredTechniques = [] } = useOfficialLibrary('empowered-techniques');
+  const { data: publicItems = [] } = useOfficialLibrary('items');
+  const { data: publicCreatures = [] } = useOfficialLibrary('creatures');
 
   const deletePower = useDeletePower();
   const deleteTechnique = useDeleteTechnique();

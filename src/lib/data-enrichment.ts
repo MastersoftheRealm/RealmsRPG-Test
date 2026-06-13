@@ -8,7 +8,7 @@
 import type { CharacterPower, CharacterTechnique, Character } from '@/types';
 import { computeMaxHealthEnergy } from '@/lib/game/calculations';
 import type { UserPower, UserTechnique, UserItem, SavedDamage } from '@/hooks/use-user-library';
-import type { PowerPart, TechniquePart } from '@/hooks/use-rtdb';
+import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import { derivePowerDisplay, deriveTechniqueDisplay, formatPowerDamage, formatTechniqueDamage, formatRange, deriveShieldAmountFromProperties, deriveShieldDamageFromProperties, deriveDamageReductionFromProperties } from '@/lib/calculators';
 
 // =============================================================================

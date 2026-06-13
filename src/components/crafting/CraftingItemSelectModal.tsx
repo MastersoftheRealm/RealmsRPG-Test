@@ -9,7 +9,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useUserItems, useEquipment, useItemProperties, usePublicLibrary } from '@/hooks';
+import { useUserItems, useEquipment, useItemProperties, useOfficialLibrary } from '@/hooks';
 import { SourceFilter, type SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
 import { TabNavigation } from '@/components/ui/tab-navigation';
@@ -20,7 +20,7 @@ import {
   type LibraryItemLike,
 } from '@/components/crafting/get-crafting-market-price';
 import type { UserItem } from '@/hooks/use-user-library';
-import type { ItemProperty } from '@/hooks/use-rtdb';
+import type { ItemProperty } from '@/hooks/codex-types';
 
 export type CraftingSelectedItem = {
   source: 'library' | 'codex' | 'public';
@@ -53,7 +53,7 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
   const { data: userItems = [], isLoading: userLoading } = useUserItems();
   const { data: codexEquipment = [], isLoading: codexLoading } = useEquipment();
   const { data: itemProperties = [] } = useItemProperties();
-  const { data: publicItems = [], isLoading: publicLoading } = usePublicLibrary('items');
+  const { data: publicItems = [], isLoading: publicLoading } = useOfficialLibrary('items');
 
   const propertiesDb = itemProperties as ItemProperty[];
 

@@ -50,20 +50,6 @@ export function calculateAbilityPoints(level: number, allowSubLevel = false, rul
 }
 
 /**
- * @deprecated Use calculateSkillPointsForEntity() instead.
- */
-export function calculateSkillPoints(level: number, allowSubLevel = false): number {
-  const parsedLevel = parseFloat(String(level)) || 1;
-  
-  if (allowSubLevel && parsedLevel < 1) {
-    return Math.ceil(5 * parsedLevel);
-  }
-  
-  return SHARED_CONSTANTS.BASE_SKILL_POINTS + 
-         (SHARED_CONSTANTS.SKILL_POINTS_PER_LEVEL * Math.floor(parsedLevel));
-}
-
-/**
  * Skill points: characters 3/level. Creatures 5 at L1 + 3/level.
  */
 export function calculateSkillPointsForEntity(
@@ -497,68 +483,6 @@ export function getArchetypeAbility(
   
   const abilityKey = (archetype.pow_abil || archetype.mart_abil)?.toLowerCase() as keyof Abilities;
   return abilityKey ? (abilities[abilityKey] || 0) : 0;
-}
-
-/**
- * @deprecated Use calculateMaxHealth() from @/lib/game/calculations instead.
- */
-export function getBaseHealth(
-  archetype: { type?: string; pow_abil?: string; mart_abil?: string } | undefined,
-  abilities: Partial<Abilities>,
-  rules?: Rules
-): number {
-  const baseHealth = rules?.PROGRESSION_PLAYER?.baseHealth ?? 8;
-  const vitality = abilities.vitality || 0;
-  
-  const isVitalityArchetype = 
-    archetype?.pow_abil?.toLowerCase() === 'vitality' ||
-    archetype?.mart_abil?.toLowerCase() === 'vitality';
-  
-  if (isVitalityArchetype) {
-    return baseHealth + (abilities.strength || 0);
-  }
-  
-  return baseHealth + vitality;
-}
-
-/**
- * @deprecated Use calculateMaxEnergy() from @/lib/game/calculations instead.
- */
-export function getBaseEnergy(
-  archetype: { type?: string; pow_abil?: string; mart_abil?: string } | undefined,
-  abilities: Partial<Abilities>
-): number {
-  return getArchetypeAbility(archetype, abilities);
-}
-
-/**
- * @deprecated Use computeMaxHealthEnergy() from @/lib/game/calculations instead.
- */
-export function getCharacterMaxHealthEnergy(charData: Record<string, unknown>): {
-  maxHealth: number;
-  maxEnergy: number;
-} {
-  const rawAbilities = (charData.abilities || {}) as Record<string, number>;
-  const abilities: Partial<Abilities> = {
-    ...rawAbilities,
-    acuity: rawAbilities.acuity ?? rawAbilities.acu ?? 0,
-    agility: rawAbilities.agility ?? rawAbilities.agi ?? 0,
-  };
-  const level = (charData.level as number) ?? 1;
-  const healthPoints = (charData.healthPoints as number) ?? 0;
-  const energyPoints = (charData.energyPoints as number) ?? 0;
-  const archetype = charData.archetype as { type?: string; pow_abil?: string; mart_abil?: string } | undefined;
-
-  const baseHealth = getBaseHealth(archetype, abilities);
-  const healthAbility = baseHealth - 8;
-  const maxHealth = healthAbility < 0
-    ? 8 + healthAbility + healthPoints
-    : 8 + healthAbility * level + healthPoints;
-
-  const archetypeAbilityValue = getArchetypeAbility(archetype, abilities);
-  const maxEnergy = archetypeAbilityValue * level + energyPoints;
-
-  return { maxHealth, maxEnergy };
 }
 
 // =============================================================================

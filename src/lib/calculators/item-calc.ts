@@ -12,7 +12,7 @@ import {
   findByIdOrName,
   type HasIdAndName,
 } from '@/lib/id-constants';
-import type { ItemProperty } from '@/hooks/use-rtdb';
+import type { ItemProperty } from '@/hooks/codex-types';
 
 // Re-export for convenience
 export { PROPERTY_IDS, GENERAL_PROPERTY_IDS, GENERAL_PROPERTY_NAMES };

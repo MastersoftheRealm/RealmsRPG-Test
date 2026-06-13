@@ -9,7 +9,7 @@
 import { use, useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { getCharacter, saveCharacter, type LibraryForView } from '@/services/character-service';
-import { useAuth, useAutoSave, useCampaignsFull, useUserPowers, useUserTechniques, useUserEmpoweredTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useMergedSpecies, useCodexFeats, useCodexSkills, useEquipment, usePublicLibrary, type Species, type Trait, type Skill } from '@/hooks';
+import { useAuth, useAutoSave, useCampaignsFull, useUserPowers, useUserTechniques, useUserEmpoweredTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useMergedSpecies, useCodexFeats, useCodexSkills, useEquipment, useOfficialLibrary, type Species, type Trait, type Skill } from '@/hooks';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { LoadingState } from '@/components/ui';
 import { enrichCharacterData, cleanForSave } from '@/lib/data-enrichment';
@@ -108,10 +108,10 @@ export default function CharacterSheetPage({ params }: PageParams) {
   const { data: codexEquipment = [] } = useEquipment();
   
   // Public library for enrichment fallback (character can reference public items without copying to user library)
-  const { data: publicPowersRaw = [] } = usePublicLibrary('powers');
-  const { data: publicTechniquesRaw = [] } = usePublicLibrary('techniques');
-  const { data: publicEmpoweredTechniquesRaw = [] } = usePublicLibrary('empowered-techniques');
-  const { data: publicItemsRaw = [] } = usePublicLibrary('items');
+  const { data: publicPowersRaw = [] } = useOfficialLibrary('powers');
+  const { data: publicTechniquesRaw = [] } = useOfficialLibrary('techniques');
+  const { data: publicEmpoweredTechniquesRaw = [] } = useOfficialLibrary('empowered-techniques');
+  const { data: publicItemsRaw = [] } = useOfficialLibrary('items');
   const publicLibraries = useMemo(() => {
     const powers = (publicPowersRaw as Record<string, unknown>[]).map((p) => ({
       id: String(p.id ?? p.docId ?? ''),
@@ -1893,24 +1893,17 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   innatePools={archetypeProgression?.innatePools || 0}
                   currentEnergy={character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy}
                   martialProficiency={character.mart_prof}
-                  isEditMode={effectiveEditMode}
-                  onAddPower={() => setAddModalType('power')}
                   onRemovePower={handleRemovePower}
                   onTogglePowerInnate={handleTogglePowerInnate}
                   onUsePower={handleUsePower}
-                  onAddTechnique={() => setAddModalType('technique')}
                   onRemoveTechnique={handleRemoveTechnique}
                   onUseTechnique={handleUseTechnique}
-                  onAddWeapon={() => setAddModalType('weapon')}
                   onRemoveWeapon={handleRemoveWeapon}
                   onToggleEquipWeapon={handleToggleEquipWeapon}
-                  onAddShield={() => setAddModalType('shield')}
                   onRemoveShield={handleRemoveShield}
                   onToggleEquipShield={handleToggleEquipShield}
-                  onAddArmor={() => setAddModalType('armor')}
                   onRemoveArmor={handleRemoveArmor}
                   onToggleEquipArmor={handleToggleEquipArmor}
-                  onAddEquipment={() => setAddModalType('equipment')}
                   onRemoveEquipment={handleRemoveEquipment}
                   onEquipmentQuantityChange={handleEquipmentQuantityChange}
                   onCurrencyChange={handleCurrencyChange}
@@ -1989,9 +1982,6 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   maxArchetypeFeats={calculateMaxArchetypeFeats(character.level || 1, (character.archetype?.type || 'power') as 'power' | 'martial' | 'powered-martial')}
                   maxCharacterFeats={calculateMaxCharacterFeats(character.level || 1)}
                   onFeatUsesChange={handleFeatUsesChange}
-                  onAddArchetypeFeat={() => setFeatModalType('archetype')}
-                  onAddCharacterFeat={() => setFeatModalType('character')}
-                  onAddStateFeat={() => setFeatModalType('state')}
                   onRemoveFeat={handleRequestRemoveFeat}
                   // Traits enrichment props
                   traitsDb={traitsDb}
@@ -2068,24 +2058,17 @@ export default function CharacterSheetPage({ params }: PageParams) {
                       innatePools={archetypeProgression?.innatePools || 0}
                       currentEnergy={character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy}
                       martialProficiency={character.mart_prof}
-                      isEditMode={effectiveEditMode}
-                      onAddPower={() => setAddModalType('power')}
                       onRemovePower={handleRemovePower}
                       onTogglePowerInnate={handleTogglePowerInnate}
                       onUsePower={handleUsePower}
-                      onAddTechnique={() => setAddModalType('technique')}
                       onRemoveTechnique={handleRemoveTechnique}
                       onUseTechnique={handleUseTechnique}
-                      onAddWeapon={() => setAddModalType('weapon')}
                       onRemoveWeapon={handleRemoveWeapon}
                       onToggleEquipWeapon={handleToggleEquipWeapon}
-                      onAddShield={() => setAddModalType('shield')}
                       onRemoveShield={handleRemoveShield}
                       onToggleEquipShield={handleToggleEquipShield}
-                      onAddArmor={() => setAddModalType('armor')}
                       onRemoveArmor={handleRemoveArmor}
                       onToggleEquipArmor={handleToggleEquipArmor}
-                      onAddEquipment={() => setAddModalType('equipment')}
                       onRemoveEquipment={handleRemoveEquipment}
                       onEquipmentQuantityChange={handleEquipmentQuantityChange}
                       onCurrencyChange={handleCurrencyChange}
@@ -2143,9 +2126,6 @@ export default function CharacterSheetPage({ params }: PageParams) {
                       maxArchetypeFeats={calculateMaxArchetypeFeats(character.level || 1, (character.archetype?.type || 'power') as 'power' | 'martial' | 'powered-martial')}
                       maxCharacterFeats={calculateMaxCharacterFeats(character.level || 1)}
                       onFeatUsesChange={handleFeatUsesChange}
-                      onAddArchetypeFeat={() => setFeatModalType('archetype')}
-                      onAddCharacterFeat={() => setFeatModalType('character')}
-                      onAddStateFeat={() => setFeatModalType('state')}
                       onRemoveFeat={handleRequestRemoveFeat}
                       traitsDb={traitsDb}
                       featsDb={featsDb}

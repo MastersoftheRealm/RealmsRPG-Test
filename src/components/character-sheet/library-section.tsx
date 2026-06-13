@@ -51,6 +51,7 @@ import type {
   CharacterLibraryTabId,
 } from '@/types';
 import { buildRequiredProficiencies, getMissingRequiredProficiencies } from '@/lib/proficiencies';
+import { useCharacterSheetOptional } from './character-sheet-context';
 
 /** Codex part data for enrichment */
 interface CodexPart {
@@ -541,24 +542,24 @@ export function LibrarySection({
   innatePools = 0,
   currentInnateEnergy,
   currentEnergy = 0,
-  isEditMode = false,
-  onAddPower,
+  isEditMode: isEditModeProp = false,
+  onAddPower: onAddPowerProp,
   onRemovePower,
   onTogglePowerInnate,
   onUsePower,
-  onAddTechnique,
+  onAddTechnique: onAddTechniqueProp,
   onRemoveTechnique,
   onUseTechnique,
-  onAddWeapon,
+  onAddWeapon: onAddWeaponProp,
   onRemoveWeapon,
   onToggleEquipWeapon,
-  onAddShield,
+  onAddShield: onAddShieldProp,
   onRemoveShield,
   onToggleEquipShield,
-  onAddArmor,
+  onAddArmor: onAddArmorProp,
   onRemoveArmor,
   onToggleEquipArmor,
-  onAddEquipment,
+  onAddEquipment: onAddEquipmentProp,
   onRemoveEquipment,
   onEquipmentQuantityChange,
   onCurrencyChange,
@@ -606,9 +607,9 @@ export function LibrarySection({
   characterFeats = [],
   onFeatUsesChange,
   onTraitUsesChange,
-  onAddArchetypeFeat,
-  onAddCharacterFeat,
-  onAddStateFeat,
+  onAddArchetypeFeat: onAddArchetypeFeatProp,
+  onAddCharacterFeat: onAddCharacterFeatProp,
+  onAddStateFeat: onAddStateFeatProp,
   onRemoveFeat,
   stateFeats = [],
   stateUsesCurrent,
@@ -619,6 +620,18 @@ export function LibrarySection({
   maxCharacterFeats,
   className,
 }: LibrarySectionProps) {
+  const ctx = useCharacterSheetOptional();
+  const isEditMode = ctx?.isEditMode ?? isEditModeProp;
+  const onAddPower = onAddPowerProp ?? (ctx ? () => ctx.setAddModalType('power') : undefined);
+  const onAddTechnique = onAddTechniqueProp ?? (ctx ? () => ctx.setAddModalType('technique') : undefined);
+  const onAddWeapon = onAddWeaponProp ?? (ctx ? () => ctx.setAddModalType('weapon') : undefined);
+  const onAddShield = onAddShieldProp ?? (ctx ? () => ctx.setAddModalType('shield') : undefined);
+  const onAddArmor = onAddArmorProp ?? (ctx ? () => ctx.setAddModalType('armor') : undefined);
+  const onAddEquipment = onAddEquipmentProp ?? (ctx ? () => ctx.setAddModalType('equipment') : undefined);
+  const onAddArchetypeFeat = onAddArchetypeFeatProp ?? (ctx ? () => ctx.setFeatModalType('archetype') : undefined);
+  const onAddCharacterFeat = onAddCharacterFeatProp ?? (ctx ? () => ctx.setFeatModalType('character') : undefined);
+  const onAddStateFeat = onAddStateFeatProp ?? (ctx ? () => ctx.setFeatModalType('state') : undefined);
+
   const [activeTab, setActiveTab] = useState<TabType>('feats');
   const [isSectionEditing, setIsSectionEditing] = useState(false);
   const [currencyInput, setCurrencyInput] = useState(currency.toString());

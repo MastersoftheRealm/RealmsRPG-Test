@@ -11,6 +11,14 @@ export { useCreatorSave } from './use-creator-save';
 export type { CreatorLibraryType, CreatorSavePayload, UseCreatorSaveOptions, UseCreatorSaveReturn } from './use-creator-save';
 export { useLoadModalLibrary } from './use-load-modal-library';
 export type { LoadModalLibraryType, UseLoadModalLibraryReturn } from './use-load-modal-library';
+export { useAddLibraryItemData } from './use-add-library-item-data';
+export type {
+  AddLibraryItemType,
+  EqItem,
+  PowerSelectionMode,
+  UseAddLibraryItemDataOptions,
+  UseAddLibraryItemDataReturn,
+} from './use-add-library-item-data';
 export { useCreatorWeaponOptions } from './use-creator-weapon-options';
 export type { CreatorWeaponOption } from '@/lib/creator-weapon-options';
 export { useProfile } from './use-profile';
@@ -86,7 +94,6 @@ export {
   useCodexCreatureFeats as useCreatureFeats,
   useCodexArchetypes,
   useCodexArchetypes as useArchetypes,
-  prefetchFunctions,
 } from './use-codex';
 export { useGameRules, getGameRulesFallback } from './use-game-rules';
 
@@ -109,10 +116,17 @@ export {
   type ItemProperty,
   type EquipmentItem,
   type CreatureFeat,
-} from './use-rtdb';
+} from './codex-types';
 
-// Public Library (browse, add to my library)
-export { useOfficialLibrary, useAddOfficialToLibrary, usePublicLibrary, useAddPublicToLibrary } from './use-public-library';
+// Official Library (browse, add to my library)
+export { useOfficialLibrary, useAddOfficialToLibrary } from './use-official-library';
+export {
+  useOfficialEnhancedItems,
+  useCreateOfficialEnhancedItem,
+  useDeleteOfficialEnhancedItem,
+  useUpdateOfficialEnhancedItem,
+  type OfficialEnhancedItem,
+} from './use-official-enhanced-items';
 
 // User Library (user-specific content)
 export {

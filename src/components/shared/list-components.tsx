@@ -9,8 +9,8 @@
  * NOTE: SearchInput is re-exported from ui/search-input.tsx for backward compatibility
  */
 
-import { useState, type ReactNode } from 'react';
-import { ChevronDown, Filter, RotateCw } from 'lucide-react';
+import { useState } from 'react';
+import { Filter, RotateCw, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -24,87 +24,6 @@ export interface SearchInputProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
-}
-
-// =============================================================================
-// Sort Header Row — Unified container for sortable list headers
-// =============================================================================
-// Use this wrapper so all list views (Codex, Library, Admin, modals) share the
-// same header row styling as ListHeader: background, padding, dark mode.
-// Pass gridTemplateColumns to match your GridListRow columns.
-
-export interface SortHeaderRowProps {
-  children: ReactNode;
-  /** Grid template columns CSS (e.g. '1fr 0.8fr 0.8fr') — should match list rows */
-  gridTemplateColumns?: string;
-  className?: string;
-}
-
-// Align with ListHeader/GridListRow: px-4 only (no mx-1) so column content lines up with row content
-const SORT_HEADER_ROW_CLASS =
-  'hidden lg:grid gap-2 px-4 py-2 bg-primary-50 dark:bg-primary-900/30 rounded-lg mb-2 text-xs font-semibold text-primary-700 dark:text-primary-300 uppercase tracking-wide';
-
-export function SortHeaderRow({ children, gridTemplateColumns, className }: SortHeaderRowProps) {
-  return (
-    <div
-      className={cn(SORT_HEADER_ROW_CLASS, className)}
-      style={gridTemplateColumns ? { gridTemplateColumns } : undefined}
-    >
-      {children}
-    </div>
-  );
-}
-
-// =============================================================================
-// Sort Header
-// =============================================================================
-
-// SortState re-exported from list-header.tsx (canonical location)
-import type { SortState } from './list-header';
-export type { SortState } from './list-header';
-
-export interface SortHeaderProps {
-  label: string;
-  col: string;
-  sortState: SortState;
-  onSort: (col: string) => void;
-  /** Text alignment. Defaults to name-left, others centered. */
-  align?: 'left' | 'center' | 'right';
-  className?: string;
-}
-
-export function SortHeader({ 
-  label, 
-  col, 
-  sortState, 
-  onSort,
-  align,
-  className,
-}: SortHeaderProps) {
-  const isActive = sortState.col === col;
-  const normalizedLabel = label.trim().toLowerCase();
-  const normalizedCol = col.trim().toLowerCase();
-  const resolvedAlign =
-    align ?? (normalizedCol === 'name' || normalizedLabel === 'name' ? 'left' : 'center');
-  
-  return (
-    <button
-      onClick={() => onSort(col)}
-      className={cn(
-        'flex items-center gap-1 text-text-secondary hover:text-primary-800 dark:hover:text-primary-200 transition-colors',
-        className,
-        resolvedAlign === 'left' && 'justify-start text-left',
-        resolvedAlign === 'right' && 'justify-end text-right',
-        resolvedAlign === 'center' && 'justify-center text-center',
-        isActive && 'text-primary-800 dark:text-primary-200',
-      )}
-    >
-      {label.toUpperCase()}
-      {isActive && (
-        <ChevronDown className={cn('w-3 h-3 transition-transform', sortState.dir === 1 && 'rotate-180')} />
-      )}
-    </button>
-  );
 }
 
 // =============================================================================

@@ -5,7 +5,7 @@ import { SectionHeader, SearchInput, LoadingState, ErrorDisplay as ErrorState, G
 import { Modal, Button, Input, IconButton, useToast } from '@/components/ui';
 import { ChipSelect } from '@/components/shared';
 import { useCodexArchetypes, useCodexEquipment, useCodexFeats, useCodexSkills } from '@/hooks/use-codex';
-import { useOfficialLibrary } from '@/hooks/use-public-library';
+import { useOfficialLibrary } from '@/hooks/use-official-library';
 import { useQueryClient } from '@tanstack/react-query';
 import { deleteCodexDoc, saveArchetypeWithPath } from './actions';
 import { Pencil, Copy, X } from 'lucide-react';

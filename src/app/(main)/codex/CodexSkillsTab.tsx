@@ -19,8 +19,8 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/shared';
-import { EmptyState } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
+import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { useCodexSkills, type Skill } from '@/hooks';
 import { getSkillExtraDescriptionDetailSections } from '@/lib/skill-extra-descriptions';
 
@@ -158,13 +158,7 @@ export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' 
   }, [skills, filters, sortItems, skillIdToName]);
 
   if (codexMode === 'my') {
-    return (
-      <EmptyState
-        size="lg"
-        title="My Codex: Skills"
-        description="Custom skills are not available yet. For now, use Realms Codex."
-      />
-    );
+    return <CodexMyCodexEmpty />;
   }
 
   if (error) return <ErrorState message="Failed to load skills" onRetry={() => refetch()} />;

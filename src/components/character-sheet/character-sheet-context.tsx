@@ -16,9 +16,9 @@ export interface CharacterSheetContextValue {
   setCharacter: React.Dispatch<React.SetStateAction<Character | null>>;
   isEditMode: boolean;
   isOwner: boolean;
-  /** Open add power/technique/weapon/armor/equipment modal */
-  setAddModalType: (type: 'power' | 'technique' | 'weapon' | 'armor' | 'equipment' | null) => void;
-  setFeatModalType: (type: 'archetype' | 'character' | null) => void;
+  /** Open add power/technique/weapon/shield/armor/equipment modal */
+  setAddModalType: (type: 'power' | 'technique' | 'weapon' | 'shield' | 'armor' | 'equipment' | null) => void;
+  setFeatModalType: (type: 'archetype' | 'character' | 'state' | null) => void;
   setSkillModalType: (type: 'skill' | null) => void;
 }
 

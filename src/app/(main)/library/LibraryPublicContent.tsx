@@ -22,8 +22,8 @@ import {
 import { useToast, IconButton } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
 import {
-  usePublicLibrary,
-  useAddPublicToLibrary,
+  useOfficialLibrary,
+  useAddOfficialToLibrary,
   usePowerParts,
   useTechniqueParts,
   useItemProperties,
@@ -77,9 +77,9 @@ function getEmpoweredTotals(item: unknown): { energy?: number; tp?: number } {
 function PublicPowersList({ onLoginRequired, readOnly = false }: { onLoginRequired: () => void; readOnly?: boolean }) {
   const { user } = useAuthStore();
   const { showToast } = useToast();
-  const { data: items = [], isLoading, error, refetch } = usePublicLibrary('powers');
+  const { data: items = [], isLoading, error, refetch } = useOfficialLibrary('powers');
   const { data: partsDb = [] } = usePowerParts();
-  const addMutation = useAddPublicToLibrary('powers');
+  const addMutation = useAddOfficialToLibrary('powers');
   const [search, setSearch] = useState('');
   const [addConfirm, setAddConfirm] = useState<{ name: string; raw: Record<string, unknown> } | null>(null);
   const { sortState, handleSort, sortItems } = useSort('name');
@@ -243,9 +243,9 @@ function PublicTechniquesList({
 }) {
   const { user } = useAuthStore();
   const { showToast } = useToast();
-  const { data: items = [], isLoading, error, refetch } = usePublicLibrary(mode === 'empowered' ? 'empowered-techniques' : 'techniques');
+  const { data: items = [], isLoading, error, refetch } = useOfficialLibrary(mode === 'empowered' ? 'empowered-techniques' : 'techniques');
   const { data: partsDb = [] } = useTechniqueParts();
-  const addMutation = useAddPublicToLibrary(mode === 'empowered' ? 'empowered-techniques' : 'techniques');
+  const addMutation = useAddOfficialToLibrary(mode === 'empowered' ? 'empowered-techniques' : 'techniques');
   const [search, setSearch] = useState('');
   const [addConfirm, setAddConfirm] = useState<{ name: string; raw: Record<string, unknown> } | null>(null);
   const { sortState, handleSort, sortItems } = useSort('name');
@@ -405,9 +405,9 @@ function PublicTechniquesList({
 function PublicItemsList({ onLoginRequired, readOnly = false }: { onLoginRequired: () => void; readOnly?: boolean }) {
   const { user } = useAuthStore();
   const { showToast } = useToast();
-  const { data: items = [], isLoading, error, refetch } = usePublicLibrary('items');
+  const { data: items = [], isLoading, error, refetch } = useOfficialLibrary('items');
   const { data: propertiesDb = [] } = useItemProperties();
-  const addMutation = useAddPublicToLibrary('items');
+  const addMutation = useAddOfficialToLibrary('items');
   const [search, setSearch] = useState('');
   const [addConfirm, setAddConfirm] = useState<{ name: string; raw: Record<string, unknown> } | null>(null);
   const { sortState, handleSort, sortItems } = useSort('name');
@@ -566,8 +566,8 @@ function PublicItemsList({ onLoginRequired, readOnly = false }: { onLoginRequire
 function PublicCreaturesList({ onLoginRequired, readOnly = false }: { onLoginRequired: () => void; readOnly?: boolean }) {
   const { user } = useAuthStore();
   const { showToast } = useToast();
-  const { data: items = [], isLoading, error, refetch } = usePublicLibrary('creatures');
-  const addMutation = useAddPublicToLibrary('creatures');
+  const { data: items = [], isLoading, error, refetch } = useOfficialLibrary('creatures');
+  const addMutation = useAddOfficialToLibrary('creatures');
   const [search, setSearch] = useState('');
   const [addConfirm, setAddConfirm] = useState<{ name: string; raw: Record<string, unknown> } | null>(null);
   const { sortState, handleSort, sortItems } = useSort('name');

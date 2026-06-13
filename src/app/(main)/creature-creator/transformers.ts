@@ -7,7 +7,7 @@
 
 import type { DisplayItem, ItemStat } from '@/types/items';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
-import type { CreatureFeat as CodexCreatureFeat, ItemProperty } from '@/hooks/use-rtdb';
+import type { CreatureFeat as CodexCreatureFeat, ItemProperty } from '@/hooks/codex-types';
 import type { PowerPart, TechniquePart } from '@/hooks';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';

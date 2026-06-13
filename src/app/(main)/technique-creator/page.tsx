@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Technique Creator Page
  * ======================
  * Tool for creating custom martial techniques using the technique parts system.
@@ -23,7 +23,7 @@ import {
   useAdmin,
   useCreatorSave,
   useLoadModalLibrary,
-  usePublicLibrary,
+  useOfficialLibrary,
   useCreatorWeaponOptions,
   type TechniquePart,
   type CreatorWeaponOption,
@@ -159,7 +159,7 @@ function TechniqueCreatorContent() {
   // Fetch user's saved items (weapons) and codex properties (for weapon TP calculation)
   const { data: userItems = [] } = useUserItems();
   const { data: itemPropertiesDb = [] } = useItemProperties();
-  const { data: officialItems = [] } = usePublicLibrary('items');
+  const { data: officialItems = [] } = useOfficialLibrary('items');
 
   const { fullOptions: allWeaponOptions, visibleOptions } = useCreatorWeaponOptions({
     defaults: DEFAULT_WEAPON_OPTIONS,
@@ -321,7 +321,7 @@ function TechniqueCreatorContent() {
 
   // Collapsed summaries for collapsible sections
   const combatConfigSummary = useMemo(
-    () => `${weapon.name} â€¢ ${actionTypeDisplay}`,
+    () => `${weapon.name} • ${actionTypeDisplay}`,
     [weapon.name, actionTypeDisplay]
   );
   const techniquePartsSummary = useMemo(() => {

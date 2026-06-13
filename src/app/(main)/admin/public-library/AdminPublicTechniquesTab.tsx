@@ -22,6 +22,7 @@ import { useToast } from '@/components/ui';
 import { useOfficialLibrary, useTechniqueParts } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSort } from '@/hooks/use-sort';
+import { apiFetch } from '@/lib/api-client';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators/technique-calc';
 import { Swords } from 'lucide-react';
@@ -90,13 +91,9 @@ export function AdminPublicTechniquesTab({ mode = 'standard' }: { mode?: 'standa
   const handleDeleteFromListLegacy = async () => {
     if (!deleteConfirm) return;
     try {
-      const res = await fetch(`/api/official/${libraryType}?id=${encodeURIComponent(deleteConfirm.id)}`, {
+      await apiFetch(`/api/official/${libraryType}?id=${encodeURIComponent(deleteConfirm.id)}`, {
         method: 'DELETE',
       });
-      if (!res.ok) {
-        const msg = res.status === 404 ? 'Item not found or already deleted.' : res.statusText;
-        throw new Error(msg);
-      }
       queryClient.invalidateQueries({ queryKey });
       await queryClient.refetchQueries({ queryKey });
       setDeleteConfirm(null);

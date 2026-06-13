@@ -19,6 +19,6 @@ export const config = {
   matcher: [
     // Exclude: static assets, auth callbacks, images (incl. /images/ e.g. placeholder-portrait.png), high-volume APIs, bot paths.
     // /images/ is requested heavily (placeholder on every character card/sheet); exclude so proxy never runs for it.
-    '/((?!_next/static|_next/image|images/|favicon\\.ico|robots\\.txt(?:/|$)|sitemap\\.xml(?:/|$)|auth/callback|auth/confirm|api/codex(?:/|$)|api/public(?:/|$)|api/official(?:/|$)|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|ttf|eot)$).*)',
+    '/((?!_next/static|_next/image|images/|favicon\\.ico|robots\\.txt(?:/|$)|sitemap\\.xml(?:/|$)|auth/callback|auth/confirm|api/codex(?:/|$)|api/official(?:/|$)|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|ttf|eot)$).*)',
   ],
 };

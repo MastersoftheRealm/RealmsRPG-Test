@@ -5,7 +5,7 @@
  * Provides cost calculation and display helpers for powers.
  */
 
-import type { PowerPart } from '@/hooks/use-rtdb';
+import type { PowerPart } from '@/hooks/codex-types';
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
 import { formatDurationFromTypeAndValue, formatDurationWithModifiers } from '@/lib/utils/duration';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';

@@ -44,6 +44,8 @@
 | **supabase-user-profiles-username-display.sql** | user_profiles: add `username_display` and backfill from canonical `username` | Run once to preserve entered username casing in UI while keeping lowercase canonical uniqueness |
 | **supabase-role-policies.sql** | Create `role_policies` table + seed defaults + RLS for admin-managed role quotas/permissions | Run once before enabling `/admin/roles` and quota enforcement |
 | **supabase-ui-tooltips.sql** | Adds `user_profiles.show_tooltips`, creates `ui_tooltips` table, RLS policies, and initial seed tooltips | Run once when enabling tooltip system |
+| **supabase-storage-select-hardening-2026-06.sql** | TASK-326 (SEC-1): drop bucket-wide public Storage SELECT on `portraits` / `profile-pictures`; scope SELECT to own path; initplan wraps on writes | Run once after `supabase-storage-policies.sql`; buckets must stay **Public bucket** for CDN read-by-key |
+| **supabase-rls-initplan-fk-indexes-2026-06.sql** | TASK-327 (PERF-1): wrap `auth.uid()` as `(select auth.uid())` on admin/campaign-roll RLS; add FK indexes on `role_policies.updated_by`, `ui_tooltips.updated_by`, `usernames.user_id` | Run once per environment; duplicate-policy consolidation is optional follow-up (see script header) |
 
 **Legacy scripts (do not run on current public-only DB)** are in [sql/archive/](archive/): codex-schema columnar, official-library in codex, user-library in users, multi-schema RLS, idempotent-full, force-drop-codex scripts.
 

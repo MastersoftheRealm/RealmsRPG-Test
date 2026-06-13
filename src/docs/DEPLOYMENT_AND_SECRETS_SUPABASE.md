@@ -79,10 +79,12 @@ The app uses two buckets for image uploads. **Create these in Supabase Dashboard
 
 Enable RLS on each bucket. The app needs **SELECT, INSERT, UPDATE, and DELETE** for portrait uploads (list existing, remove old file, then upload/upsert). The canonical policy set is in **`sql/supabase-storage-policies.sql`** — run that file in Supabase Dashboard → SQL Editor.
 
-- **Read (SELECT):** Public or own path
+- **Read (SELECT):** Authenticated users may list/read only their own path (not bucket-wide). Public **read-by-key** (images in the UI) uses **Public bucket** CDN URLs from `getPublicUrl`, not bucket-wide Storage SELECT.
 - **Insert/Update/Delete:** Only the user’s own path (`portraits`: first folder = `auth.uid()`; `profile-pictures`: filename prefix = `auth.uid()`)
 
 **Create buckets:** In Supabase Dashboard → Storage → New bucket, create `portraits` and `profile-pictures`. Enable public access if you want public URLs (the app uses `getPublicUrl`). Then run **`sql/supabase-storage-policies.sql`** in the SQL Editor.
+
+**Security hardening (TASK-326):** After the base storage policies, run **`sql/supabase-storage-select-hardening-2026-06.sql`** to remove bucket-wide public SELECT (prevents Storage API listing). Keep both buckets marked **Public bucket** so direct object URLs still load in the app.
 
 **Portrait upload fails with "new row violates row-level security policy"?**  
 Run `sql/supabase-storage-policies.sql`. If you previously only added INSERT + SELECT (e.g. from an older snippet), add the UPDATE and DELETE policies for the `portraits` bucket from that file.
@@ -98,6 +100,18 @@ Run `sql/supabase-storage-policies.sql`. If you previously only added INSERT + S
 - **Supabase Auth** handles sessions via `@supabase/ssr` (cookies).
 - Middleware refreshes sessions automatically.
 - No Firebase Admin SDK or custom session API.
+
+---
+
+## Auth: Leaked-password protection (TASK-326)
+
+Supabase security advisors flag **Leaked password protection** when disabled. This is **not** configured via SQL — enable it in the Dashboard:
+
+1. **Supabase Dashboard** → **Authentication** → **Providers** (or **Auth** settings, depending on UI version).
+2. Find **Leaked password protection** (Have I Been Pwned / HIBP check).
+3. **Enable** it so new passwords and password changes are rejected if they appear in known breach lists.
+
+Applies to email/password sign-up and password updates (including **My Account** password change). OAuth-only users are unaffected. Re-check **Dashboard → Advisors → Security** after enabling.
 
 ---
 

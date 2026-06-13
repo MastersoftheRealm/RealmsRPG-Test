@@ -24,7 +24,7 @@ import {
   useAdmin,
   useCreatorSave,
   useLoadModalLibrary,
-  usePublicLibrary,
+  useOfficialLibrary,
   useCreatorWeaponOptions,
   type PowerPart,
   type CreatorWeaponOption,
@@ -143,7 +143,7 @@ function PowerCreatorContent() {
   const { data: powerParts = [], isLoading, error, refetch } = usePowerParts();
   const { data: userItems = [] } = useUserItems();
   const { data: itemPropertiesDb = [] } = useItemProperties();
-  const { data: officialItems = [] } = usePublicLibrary('items');
+  const { data: officialItems = [] } = useOfficialLibrary('items');
 
   const { fullOptions: allWeaponOptions, visibleOptions } = useCreatorWeaponOptions({
     defaults: DEFAULT_WEAPON_OPTIONS,

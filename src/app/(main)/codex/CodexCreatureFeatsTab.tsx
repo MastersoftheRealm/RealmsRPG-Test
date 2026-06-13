@@ -16,9 +16,9 @@ import {
   GridListRow,
   ListEmptyState as EmptyState,
 } from '@/components/shared';
-import { EmptyState as UiEmptyState } from '@/components/ui';
 import { useCreatureFeats, type CreatureFeat } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
+import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 
 const CREATURE_FEAT_GRID_COLUMNS = '1.5fr 0.5fr 0.5fr 0.5fr 40px';
 const CREATURE_FEAT_COLUMNS = [
@@ -48,13 +48,7 @@ export function CodexCreatureFeatsTab({ codexMode = 'public' }: { codexMode?: 'p
   );
 
   if (codexMode === 'my') {
-    return (
-      <UiEmptyState
-        size="lg"
-        title="My Codex: Creature Feats"
-        description="Custom creature feats are not available yet. For now, use Realms Codex."
-      />
-    );
+    return <CodexMyCodexEmpty />;
   }
 
   if (error) return <ErrorState message="Failed to load creature feats" onRetry={() => refetch()} />;

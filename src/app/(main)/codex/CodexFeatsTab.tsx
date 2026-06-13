@@ -23,8 +23,8 @@ import {
   GridListRow,
 } from '@/components/shared';
 import type { ChipData } from '@/components/shared/grid-list-row';
-import { EmptyState } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
+import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { Input } from '@/components/ui';
 import { useCodexFeats, useCodexSkills, useCharacter, type Feat, type Skill } from '@/hooks';
 import { formatAbilityList, formatListCellLabel, cn } from '@/lib/utils';
@@ -271,13 +271,7 @@ export function CodexFeatsTab({
   const featFamilies = useMemo(() => groupFeatFamilies(filteredFeats), [filteredFeats]);
 
   if (codexMode === 'my') {
-    return (
-      <EmptyState
-        size="lg"
-        title="My Codex: Feats"
-        description="Custom feats are not available yet. For now, use Realms Codex."
-      />
-    );
+    return <CodexMyCodexEmpty />;
   }
 
   if (error) {

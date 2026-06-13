@@ -124,26 +124,3 @@ export function useCodexCreatureFeats(): UseQueryResult<Awaited<ReturnType<typeo
     ...DEFAULT_OPTIONS,
   });
 }
-
-// Single shared codex fetch for prefetch — avoids N full fetches when multiple slices are prefetched
-let codexPrefetchPromise: Promise<Record<string, unknown>> | null = null;
-function getCodexOnce(): Promise<Record<string, unknown>> {
-  if (!codexPrefetchPromise) {
-    codexPrefetchPromise = fetch('/api/codex').then((r) => r.json());
-  }
-  return codexPrefetchPromise;
-}
-
-/** Prefetch helpers (e.g. for loaders). All share one codex fetch — call multiple; only one request. */
-export const prefetchFunctions = {
-  feats: () => getCodexOnce().then((d) => (d.feats ?? []) as unknown[]),
-  skills: () => getCodexOnce().then((d) => (d.skills ?? []) as unknown[]),
-  species: () => getCodexOnce().then((d) => (d.species ?? []) as unknown[]),
-  traits: () => getCodexOnce().then((d) => (d.traits ?? []) as unknown[]),
-  powerParts: () => getCodexOnce().then((d) => (d.powerParts ?? []) as unknown[]),
-  techniqueParts: () => getCodexOnce().then((d) => (d.techniqueParts ?? []) as unknown[]),
-  parts: () => getCodexOnce().then((d) => (d.parts ?? []) as unknown[]),
-  itemProperties: () => getCodexOnce().then((d) => (d.itemProperties ?? []) as unknown[]),
-  equipment: () => getCodexOnce().then((d) => (d.equipment ?? []) as unknown[]),
-  creatureFeats: () => getCodexOnce().then((d) => (d.creatureFeats ?? []) as unknown[]),
-};

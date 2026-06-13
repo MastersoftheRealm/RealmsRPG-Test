@@ -7,6 +7,7 @@
  */
 
 import { useEffect } from 'react';
+import Link from 'next/link';
 
 interface GlobalErrorProps {
   error: Error & { digest?: string };
@@ -34,12 +35,12 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
             >
               Try Again
             </button>
-            <a
+            <Link
               href="/"
               className="min-h-[44px] inline-flex items-center px-4 py-2 rounded-lg border border-border-light bg-surface-alt text-text-primary font-semibold hover:bg-surface transition-colors"
             >
               Home
-            </a>
+            </Link>
           </div>
         </main>
       </body>

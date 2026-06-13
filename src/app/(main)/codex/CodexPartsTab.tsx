@@ -20,8 +20,8 @@ import {
   GridListRow,
   type ChipData,
 } from '@/components/shared';
-import { EmptyState } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
+import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { useParts } from '@/hooks';
 
 const PART_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 40px';
@@ -172,13 +172,7 @@ export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' |
   }, [parts, filters, sortState]);
 
   if (codexMode === 'my') {
-    return (
-      <EmptyState
-        size="lg"
-        title="My Codex: Parts"
-        description="Custom parts are not available yet. For now, use Realms Codex."
-      />
-    );
+    return <CodexMyCodexEmpty />;
   }
 
   if (error) return <ErrorState message="Failed to load parts" onRetry={() => refetch()} />;

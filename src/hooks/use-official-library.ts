@@ -29,9 +29,6 @@ export function useOfficialLibrary(
   });
 }
 
-/** @deprecated Use useOfficialLibrary. */
-export const usePublicLibrary = useOfficialLibrary;
-
 const USER_LIBRARY_KEY_MAP: Record<string, string> = {
   powers: 'user-powers',
   techniques: 'user-techniques',
@@ -60,6 +57,3 @@ export function useAddOfficialToLibrary(
     },
   });
 }
-
-/** @deprecated Use useAddOfficialToLibrary. */
-export const useAddPublicToLibrary = useAddOfficialToLibrary;

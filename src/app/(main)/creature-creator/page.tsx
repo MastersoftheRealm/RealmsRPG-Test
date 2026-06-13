@@ -28,7 +28,7 @@ import {
   useTraits,
   useAdmin,
   useCreatorSave,
-  usePublicLibrary,
+  useOfficialLibrary,
   useGameRules,
   type CreatureFeat as CodexCreatureFeatRow,
   type UserPower,
@@ -187,13 +187,13 @@ function CreatureCreatorContent() {
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
   const { data: itemPropertiesDb = [] } = useItemProperties();
-  const { data: publicPowers = [] } = usePublicLibrary('powers', { enabled: libraryQueriesEnabled });
-  const { data: publicTechniques = [] } = usePublicLibrary('techniques', { enabled: libraryQueriesEnabled });
-  const { data: publicEmpoweredTechniques = [] } = usePublicLibrary('empowered-techniques', {
+  const { data: publicPowers = [] } = useOfficialLibrary('powers', { enabled: libraryQueriesEnabled });
+  const { data: publicTechniques = [] } = useOfficialLibrary('techniques', { enabled: libraryQueriesEnabled });
+  const { data: publicEmpoweredTechniques = [] } = useOfficialLibrary('empowered-techniques', {
     enabled: libraryQueriesEnabled,
   });
-  const { data: publicItems = [] } = usePublicLibrary('items', { enabled: libraryQueriesEnabled });
-  const { data: publicCreatures = [] } = usePublicLibrary('creatures', { enabled: libraryQueriesEnabled });
+  const { data: publicItems = [] } = useOfficialLibrary('items', { enabled: libraryQueriesEnabled });
+  const { data: publicCreatures = [] } = useOfficialLibrary('creatures', { enabled: libraryQueriesEnabled });
   const { data: userCreatures = [] } = useUserCreatures({ enabled: libraryQueriesEnabled });
   
   // Normalize public API item to UserPower/UserTechnique/UserItem shape (with docId for transformers)

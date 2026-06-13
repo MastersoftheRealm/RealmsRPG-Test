@@ -14,7 +14,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { cn, formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useEquipment, useUserItems, useItemProperties, usePublicLibrary, usePowerParts, useTechniqueParts } from '@/hooks';
+import { useEquipment, useUserItems, useItemProperties, useOfficialLibrary, usePowerParts, useTechniqueParts } from '@/hooks';
 import { deriveItemDisplay, trainingPointsForItemPropertyRef } from '@/lib/calculators/item-calc';
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 import {
@@ -151,7 +151,7 @@ export function EquipmentStep() {
 
   // Resolve path recommendations to full items (depends on allEquipment, so after it's defined)
 
-  const { data: publicItems = [], isLoading: publicItemsLoading } = usePublicLibrary('items');
+  const { data: publicItems = [], isLoading: publicItemsLoading } = useOfficialLibrary('items');
 
   const isLoading = userItemsLoading || codexLoading || publicItemsLoading;
   const error = codexError;

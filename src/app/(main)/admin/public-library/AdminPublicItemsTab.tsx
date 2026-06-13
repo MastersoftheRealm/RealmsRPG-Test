@@ -22,6 +22,7 @@ import { useToast } from '@/components/ui';
 import { useOfficialLibrary, useItemProperties } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSort } from '@/hooks/use-sort';
+import { apiFetch } from '@/lib/api-client';
 import type { ItemPropertyPayload } from '@/lib/calculators/item-calc';
 import {
   calculateItemCosts,
@@ -105,13 +106,9 @@ export function AdminPublicItemsTab() {
   const handleDeleteFromList = async () => {
     if (!deleteConfirm) return;
     try {
-      const res = await fetch(`/api/official/items?id=${encodeURIComponent(deleteConfirm.id)}`, {
+      await apiFetch(`/api/official/items?id=${encodeURIComponent(deleteConfirm.id)}`, {
         method: 'DELETE',
       });
-      if (!res.ok) {
-        const msg = res.status === 404 ? 'Item not found or already deleted.' : res.statusText;
-        throw new Error(msg);
-      }
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       await queryClient.refetchQueries({ queryKey: QUERY_KEY });
       setDeleteConfirm(null);

@@ -1,4 +1,4 @@
-import type { PowerPart, TechniquePart } from '@/hooks/use-rtdb';
+import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import { calculatePowerCosts, type PowerPartPayload } from './power-calc';
 import { calculateTechniqueCosts, type TechniquePartPayload } from './technique-calc';
 import { findByIdOrName } from '@/lib/id-constants';

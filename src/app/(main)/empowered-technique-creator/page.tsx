@@ -17,7 +17,7 @@ import {
   useAdmin,
   useCreatorSave,
   useLoadModalLibrary,
-  usePublicLibrary,
+  useOfficialLibrary,
   useCreatorWeaponOptions,
   type PowerPart,
   type TechniquePart,
@@ -158,7 +158,7 @@ function EmpoweredTechniqueCreatorContent() {
   const { data: techniqueParts = [], isLoading: techniquePartsLoading, error: techniquePartsError, refetch: refetchTechniqueParts } = useTechniqueParts();
   const { data: userItems = [] } = useUserItems();
   const { data: itemPropertiesDb = [] } = useItemProperties();
-  const { data: officialItems = [] } = usePublicLibrary('items');
+  const { data: officialItems = [] } = useOfficialLibrary('items');
 
   const { fullOptions: allWeaponOptions, visibleOptions } = useCreatorWeaponOptions({
     defaults: DEFAULT_WEAPON_OPTIONS,

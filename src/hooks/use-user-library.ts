@@ -11,7 +11,7 @@ import { useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient, UseQueryResult, UseMutationResult } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCodexSpecies } from './use-codex';
-import type { Species } from './use-rtdb';
+import type { Species } from './codex-types';
 
 // =============================================================================
 // Types

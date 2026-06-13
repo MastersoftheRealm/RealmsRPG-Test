@@ -6,7 +6,7 @@
  */
 
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
-import type { TechniquePart } from '@/hooks/use-rtdb';
+import type { TechniquePart } from '@/hooks/codex-types';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
 
 // Re-export for convenience
