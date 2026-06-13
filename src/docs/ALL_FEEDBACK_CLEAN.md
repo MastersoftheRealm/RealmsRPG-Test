@@ -1511,3 +1511,11 @@ Notes
 - Feedback: On mobile, creating a new character and opening Add Powers shows no items from Realms Library, My Library, or All sources despite having content in all libraries.
 - Expected: Add Powers / Add Techniques modals list the same merged library content as the character sheet add-library-item modal, with working source filter and visible rows on mobile.
 - Disposition: Implemented 2026-05-22. Aligned powers-step with add-library-item modal (merge all sources + displayFilter), source-aware loading (My Library no longer blocked on official fetch), stable item ids (docId ?? id), default source All, mobile-friendly modal flex height. `npm run build` passes.
+
+**Raw Feedback Log — 2026-06-12 (Codex "view as character" filter)**
+- Date: 2026-06-12
+- Context: Codex (all tabs; Feats tab specifically)
+- Priority: High
+- Feedback: To the Codex add a filter option you can select (that persists between tabs) that allows you to filter by one of your characters to essentially view or filter the codex with more accuracy. What this means for the Feat Codex Page for instance is that it automatically fills in/filters the list by that specific character's information, ie that character's Speed for filtering out feats whose speed requirement isn't met by the character, same for skill requirements, ability requirements, level requirements, and so on (exactly like how our character creator does this as you make a character, automatically filtering available/visible feats by that character's current statistics/values). Since this will be similar, reuse that same code/module/component if at all possible. Leave the other tabs (other than the character filter itself) alone for now.
+- Expected: A persistent "view as character" selector on the Codex that, on the Feats tab, auto-filters feats by the selected character's stats (level, abilities, skills, speed, prerequisites) reusing the character creator's qualification logic. Other tabs unchanged for now.
+- Disposition: Implemented 2026-06-12 (TASK-311). Extracted creator/sheet feat-requirement logic into shared `src/lib/game/feat-requirements.ts` (now also covers speed); added `CodexCharacterFilter` with page-level + localStorage persistence; wired `CodexFeatsTab` to auto-filter via the shared module with a show/hide-unqualified toggle. `npm run build` passes.

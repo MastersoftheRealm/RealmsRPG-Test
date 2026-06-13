@@ -29,58 +29,13 @@ import {
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
 import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
-import { calculateDefenses } from '@/lib/game/calculations';
-import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats, getSkillBonusForFeatRequirement } from '@/lib/game/formulas';
+import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats } from '@/lib/game/formulas';
+import { checkFeatRequirements, type CharacterForFeatRequirement } from '@/lib/game/feat-requirements';
+import type { CodexSkillForFeat } from '@/lib/game/formulas';
 import { formatAbilityList, formatListCellLabel } from '@/lib/utils';
 import { buildFeatLevelChips, getFeatFamilyId, getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
-import type { Abilities, ArchetypeCategory } from '@/types';
+import type { ArchetypeCategory } from '@/types';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
-import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
-
-function normalizeReqKey(input: string): string {
-  return String(input ?? '')
-    .trim()
-    .toLowerCase()
-    .replace(/[\s_-]+/g, '');
-}
-
-function isAbilityReqKey(
-  key: string
-): key is 'strength' | 'vitality' | 'agility' | 'acuity' | 'intelligence' | 'charisma' {
-  return (
-    key === 'strength' ||
-    key === 'vitality' ||
-    key === 'agility' ||
-    key === 'acuity' ||
-    key === 'intelligence' ||
-    key === 'charisma'
-  );
-}
-
-type DefenseReqKey = 'might' | 'fortitude' | 'reflex' | 'discernment' | 'mentalFortitude' | 'resolve';
-
-function toDefenseReqKey(key: string): DefenseReqKey | null {
-  if (key === 'might') return 'might';
-  if (key === 'fortitude') return 'fortitude';
-  if (key === 'reflex' || key === 'reflexes') return 'reflex';
-  if (key === 'discernment') return 'discernment';
-  if (key === 'mentalfortitude') return 'mentalFortitude';
-  if (key === 'resolve') return 'resolve';
-  return null;
-}
-
-function getPreviousLevelFeatId(feat: Feat, allFeats: Feat[]): string | null {
-  const level = getFeatLevel(feat);
-  if (level <= 1) return null;
-  if (feat.base_feat_id && level === 2) return String(feat.base_feat_id);
-  if (feat.base_feat_id && level >= 3) {
-    const prev = allFeats.find(
-      (f) => f.base_feat_id === feat.base_feat_id && getFeatLevel(f) === level - 1
-    );
-    return prev ? String(prev.id) : null;
-  }
-  return null;
-}
 
 // Grid columns for feat display (Name, Category, Ability, Recovery, Uses, Add) — match Codex
 const FEAT_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 0.8fr 44px';
@@ -190,74 +145,27 @@ export function FeatsStep() {
     return Array.from(abils).sort();
   }, [feats]);
 
-  // Check if character meets feat requirements
+  // Check if character meets feat requirements (shared single source of truth)
   const checkRequirements = useCallback((feat: Feat): { met: boolean; reason?: string } => {
-    const abilities = (draft.abilities || {}) as Partial<Abilities>;
-    const skills = draft.skills || {};
-    const defenseVals = (draft.defenseVals || (draft as unknown as { defenseSkills?: unknown }).defenseSkills || {}) as Record<
-      string,
-      number
-    >;
-    const { defenseBonuses } = calculateDefenses(abilities, { ...DEFAULT_DEFENSE_SKILLS, ...defenseVals });
-    
-    // Check level requirement
-    if (feat.lvl_req > (draft.level || 1)) {
-      return { met: false, reason: `Requires level ${feat.lvl_req}` };
-    }
-    
-    // Check ability requirements
-    for (let i = 0; i < feat.ability_req.length; i++) {
-      const reqKey = normalizeReqKey(feat.ability_req[i]);
-      const reqValue = feat.abil_req_val[i] || 0;
-      const defenseKey = toDefenseReqKey(reqKey);
-      const charValue = isAbilityReqKey(reqKey)
-        ? (abilities[reqKey] || 0)
-        : defenseKey
-          ? (defenseBonuses[defenseKey] || 0)
-          : 0;
-      
-      if (charValue < reqValue) {
-        return { met: false, reason: `Requires ${feat.ability_req[i]} ${reqValue}+` };
-      }
-    }
-    
-    // Skill requirements: skill_req_val = required SKILL BONUS (not value). Proficiency required for all.
-    for (let i = 0; i < feat.skill_req.length; i++) {
-      const skillId = String(feat.skill_req[i]);
-      const reqSkillName = skillIdToName.get(skillId) || skillId;
-      const requiredBonus = feat.skill_req_val?.[i] ?? 1;
-      const { bonus, proficient } = getSkillBonusForFeatRequirement(
-        skillId,
-        abilities,
-        skills as Record<string, number>,
-        skillsDb as import('@/lib/game/formulas').CodexSkillForFeat[]
-      );
-      if (!proficient) {
-        return { met: false, reason: `Requires proficiency in ${reqSkillName}` };
-      }
-      if (bonus < requiredBonus) {
-        return { met: false, reason: `Requires ${reqSkillName} bonus ${requiredBonus}+ (yours: ${bonus})` };
-      }
-    }
-    
-    // Check martial ability requirement
-    if (feat.mart_abil_req && draft.archetype?.mart_abil !== feat.mart_abil_req) {
-      return { met: false, reason: `Requires ${feat.mart_abil_req} martial ability` };
-    }
-
-    // Leveled feat prerequisite: requires previous level by id.
-    const prevLevelId = getPreviousLevelFeatId(feat, feats || []);
-    if (prevLevelId) {
-      const hasPrevious = (draft.feats || []).some((f) => String(f.id) === prevLevelId);
-      if (!hasPrevious) {
-        const prevFeat = (feats || []).find((f) => String(f.id) === prevLevelId);
-        const prevLevel = getFeatLevel(prevFeat);
-        return { met: false, reason: `Requires ${prevFeat?.name ?? 'previous level'} (Level ${prevLevel})` };
-      }
-    }
-    
-    return { met: true };
-  }, [draft.abilities, draft.skills, draft.level, draft.archetype?.mart_abil, draft.feats, skillIdToName, skillsDb, feats]);
+    const character: CharacterForFeatRequirement = {
+      level: draft.level,
+      abilities: draft.abilities,
+      skills: draft.skills as CharacterForFeatRequirement['skills'],
+      defenseVals: draft.defenseVals,
+      defenseSkills: draft.defenseSkills,
+      mart_abil: draft.mart_abil,
+      archetype: draft.archetype ? { mart_abil: draft.archetype.mart_abil } : undefined,
+      speedBase: draft.speedBase,
+      feats: draft.feats,
+    };
+    const { met, reason } = checkFeatRequirements(
+      feat,
+      character,
+      skillsDb as CodexSkillForFeat[],
+      feats || []
+    );
+    return { met, reason };
+  }, [draft.abilities, draft.skills, draft.level, draft.defenseVals, draft.mart_abil, draft.archetype?.mart_abil, draft.speedBase, draft.feats, skillsDb, feats]);
 
   // Filter and sort feats
   const filteredFeats = useMemo(() => {

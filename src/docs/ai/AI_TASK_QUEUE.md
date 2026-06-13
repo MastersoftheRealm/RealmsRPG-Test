@@ -7343,3 +7343,47 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Added dependency fingerprint metadata and comparison logic (`syncMeta.dependencyFingerprint`) for powers/techniques/items/creatures.
     - Legacy entries without fingerprint metadata now surface as drifted once ("needs bootstrap sync"), then store fingerprint on sync.
     - Verification: `npm run build` passes.
+
+- id: TASK-311
+  title: Codex "view as character" filter (persists across tabs); Feats tab auto-filters by character stats
+  created_at: 2026-06-12
+  created_by: agent
+  priority: high
+  status: done
+  related_files:
+    - src/lib/game/feat-requirements.ts
+    - src/components/codex/codex-character-filter.tsx
+    - src/components/codex/index.ts
+    - src/app/(main)/codex/page.tsx
+    - src/app/(main)/codex/CodexFeatsTab.tsx
+    - src/components/character-sheet/add-feat-modal.tsx
+    - src/components/character-creator/steps/feats-step.tsx
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - src/docs/ai/AI_CHANGELOG.md
+  pr_link: (pending)
+  merged_at: (pending)
+  description: |
+    Add a Codex-wide "View as character" filter that lets the user pick one of their characters; the
+    selection persists across all Codex tabs (and across reloads via localStorage). On the Feats tab, the
+    selection auto-filters the list to feats the character qualifies for — using the exact same
+    qualification logic as the character creator (level, ability/defense, skill+proficiency, martial
+    ability, speed, and leveled-feat prerequisites). Other tabs are unaffected for now.
+  acceptance_criteria:
+    - A "View as character" selector appears on the Codex page and persists the chosen character across tab switches and reloads.
+    - The selector lists the user's characters and a "No character (show all)" option; it is hidden when the user has no characters.
+    - With a character selected, the Feats tab hides feats the character does not qualify for by default, with a toggle to show unqualified feats.
+    - Feat qualification reuses a single shared module (`checkFeatRequirements`) — the creator Feats step and character-sheet Add Feat modal use the same module (no duplicated logic).
+    - `npm run build` passes.
+  notes: |
+    Implemented 2026-06-12:
+    - Extracted feat-requirement logic into `src/lib/game/feat-requirements.ts` (single source of truth):
+      level, ability/defense, skill bonus + proficiency, martial ability, speed, and leveled-feat
+      prerequisite checks. Returns `{ met, reason, reasons }`.
+    - Refactored `feats-step.tsx` (creator) and `add-feat-modal.tsx` (sheet) to delegate to the shared
+      module; this also adds speed-requirement filtering to the creator/sheet for parity.
+    - New `CodexCharacterFilter` component (uses `useCharacters`); selection lifted to the Codex page and
+      persisted under `localStorage['codex:characterFilterId']` so it survives tab switches and reloads.
+    - `CodexFeatsTab` now accepts `characterId`, loads the full character via `useCharacter`, and filters
+      via `checkFeatRequirements` with a "Show/Hide unqualified feats" toggle and an active-filter banner.
+    - Other Codex tabs intentionally left unchanged (per request).
+    - Verification: `npm run build` passes.

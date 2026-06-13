@@ -9,8 +9,9 @@
 
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { PageContainer, PageHeader, TabNavigation, Button } from '@/components/ui';
+import { CodexCharacterFilter } from '@/components/codex';
 import { CodexFeatsTab } from './CodexFeatsTab';
 import { CodexSkillsTab } from './CodexSkillsTab';
 import { CodexSpeciesTab } from './CodexSpeciesTab';
@@ -26,6 +27,9 @@ import { ContextHelpTooltip, SegmentedControl } from '@/components/shared';
 type CodexMode = 'public' | 'my';
 
 type TabId = 'feats' | 'skills' | 'species' | 'equipment' | 'properties' | 'parts' | 'traits' | 'creature_feats';
+
+/** localStorage key for the persisted "view as character" selection. */
+const CODEX_CHARACTER_FILTER_KEY = 'codex:characterFilterId';
 
 const MAIN_TAB_IDS: TabId[] = ['feats', 'skills', 'species', 'equipment'];
 const ADVANCED_TAB_IDS: TabId[] = ['parts', 'properties', 'creature_feats', 'traits'];
@@ -45,6 +49,27 @@ export default function CodexPage() {
   const [codexMode, setCodexMode] = useState<CodexMode>('public');
   const [activeTab, setActiveTab] = useState<TabId>('feats');
   const [showAdvanced, setShowAdvanced] = useState(false);
+  // "View as character" selection — shared across all tabs and persisted locally.
+  const [characterFilterId, setCharacterFilterId] = useState('');
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(CODEX_CHARACTER_FILTER_KEY);
+      if (stored) setCharacterFilterId(stored);
+    } catch {
+      // ignore storage access errors (private mode, etc.)
+    }
+  }, []);
+
+  const handleCharacterFilterChange = useCallback((id: string) => {
+    setCharacterFilterId(id);
+    try {
+      if (id) window.localStorage.setItem(CODEX_CHARACTER_FILTER_KEY, id);
+      else window.localStorage.removeItem(CODEX_CHARACTER_FILTER_KEY);
+    } catch {
+      // ignore storage access errors
+    }
+  }, []);
 
   const visibleTabIds = showAdvanced ? [...MAIN_TAB_IDS, ...ADVANCED_TAB_IDS] : MAIN_TAB_IDS;
   const tabs = visibleTabIds
@@ -92,7 +117,7 @@ export default function CodexPage() {
         </div>
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-4 min-w-0">
+      <div className="mb-4 flex flex-wrap items-end gap-4 min-w-0">
         <SegmentedControl
           value={codexMode}
           onChange={setCodexMode}
@@ -102,6 +127,10 @@ export default function CodexPage() {
           ]}
           aria-label="Codex scope"
           className="flex-shrink-0"
+        />
+        <CodexCharacterFilter
+          value={characterFilterId}
+          onChange={handleCharacterFilterChange}
         />
       </div>
 
@@ -133,7 +162,7 @@ export default function CodexPage() {
 
       {isPublic && (
         <>
-          {activeTab === 'feats' && <CodexFeatsTab codexMode="public" />}
+          {activeTab === 'feats' && <CodexFeatsTab codexMode="public" characterId={characterFilterId} />}
           {activeTab === 'skills' && <CodexSkillsTab codexMode="public" />}
           {activeTab === 'species' && <CodexSpeciesTab codexMode="public" />}
           {activeTab === 'equipment' && <CodexEquipmentTab codexMode="public" />}
@@ -145,7 +174,7 @@ export default function CodexPage() {
       )}
       {!isPublic && (
         <>
-          {activeTab === 'feats' && <CodexFeatsTab codexMode="my" />}
+          {activeTab === 'feats' && <CodexFeatsTab codexMode="my" characterId={characterFilterId} />}
           {activeTab === 'skills' && <CodexSkillsTab codexMode="my" />}
           {activeTab === 'species' && <CodexSpeciesTab codexMode="my" />}
           {activeTab === 'equipment' && <CodexEquipmentTab codexMode="my" />}

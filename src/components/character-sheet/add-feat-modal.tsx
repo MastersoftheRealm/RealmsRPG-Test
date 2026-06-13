@@ -7,45 +7,13 @@
 
 import { useState, useEffect, useMemo, useCallback, useId } from 'react';
 import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
-import { getSkillBonusForFeatRequirement } from '@/lib/game/formulas';
-import { calculateDefenses } from '@/lib/game/calculations';
+import { checkFeatRequirements } from '@/lib/game/feat-requirements';
 import { buildFeatLevelChips, getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
 import { Alert } from '@/components/ui';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
 import type { ChipData } from '@/components/shared/grid-list-row';
 import type { Character } from '@/types';
 import { formatListCellLabel } from '@/lib/utils';
-import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
-
-function normalizeReqKey(input: string): string {
-  return String(input ?? '')
-    .trim()
-    .toLowerCase()
-    .replace(/[\s_-]+/g, '');
-}
-
-function isAbilityReqKey(key: string): key is keyof Character['abilities'] {
-  return (
-    key === 'strength' ||
-    key === 'vitality' ||
-    key === 'agility' ||
-    key === 'acuity' ||
-    key === 'intelligence' ||
-    key === 'charisma'
-  );
-}
-
-type DefenseReqKey = 'might' | 'fortitude' | 'reflex' | 'discernment' | 'mentalFortitude' | 'resolve';
-
-function toDefenseReqKey(key: string): DefenseReqKey | null {
-  if (key === 'might') return 'might';
-  if (key === 'fortitude') return 'fortitude';
-  if (key === 'reflex' || key === 'reflexes') return 'reflex';
-  if (key === 'discernment') return 'discernment';
-  if (key === 'mentalfortitude') return 'mentalFortitude';
-  if (key === 'resolve') return 'resolve';
-  return null;
-}
 
 interface FeatModal extends Feat {
   effect?: string;
@@ -59,20 +27,6 @@ interface AddFeatModalProps {
   character: Character;
   existingFeatIds: (string | number)[];
   onAdd: (feats: FeatModal[]) => void;
-}
-
-/** Id of the previous-level feat required to take this feat. Null if level 1 or no base. */
-function getPreviousLevelFeatId(feat: FeatModal, allFeats: FeatModal[]): string | null {
-  const level = getFeatLevel(feat);
-  if (level <= 1) return null;
-  if (feat.base_feat_id && level === 2) return feat.base_feat_id;
-  if (feat.base_feat_id && level >= 3) {
-    const prev = allFeats.find(
-      (f) => f.base_feat_id === feat.base_feat_id && getFeatLevel(f) === level - 1
-    );
-    return prev ? String(prev.id) : null;
-  }
-  return null;
 }
 
 function featToSelectableItem(
@@ -181,68 +135,9 @@ export function AddFeatModal({
   }, [feats, featType]);
 
   const checkRequirements = useCallback((feat: FeatModal): { meets: boolean; warning?: string } => {
-    const warnings: string[] = [];
-    if (feat.lvl_req && character.level < feat.lvl_req) warnings.push(`Requires level ${feat.lvl_req}`);
-    if (feat.ability_req && feat.abil_req_val) {
-      const abilities = character.abilities || {};
-      const defenseVals = {
-        ...DEFAULT_DEFENSE_SKILLS,
-        ...(character.defenseSkills || {}),
-        ...(character.defenseVals || {}),
-      };
-      const { defenseBonuses } = calculateDefenses(abilities, defenseVals);
-      feat.ability_req.forEach((abil, idx) => {
-        const required = feat.abil_req_val?.[idx] ?? 0;
-        const key = normalizeReqKey(abil);
-        const defenseKey = toDefenseReqKey(key);
-        const current = isAbilityReqKey(key)
-          ? (abilities[key] ?? 0)
-          : defenseKey
-            ? (defenseBonuses[defenseKey] ?? 0)
-            : 0;
-        if (current < required) warnings.push(`Requires ${abil} ${required}+`);
-      });
-    }
-    if (feat.skill_req && feat.skill_req_val) {
-      const charSkills = character.skills || {};
-      let skillsForReq: Record<string, { prof?: boolean; val?: number }>;
-      if (Array.isArray(charSkills)) {
-        skillsForReq = {};
-        (charSkills as Array<{ id?: string; name?: string; skill_val?: number; prof?: boolean }>).forEach((s) => {
-          const id = s.id != null ? String(s.id) : '';
-          const name = s.name != null ? String(s.name) : '';
-          const entry = { prof: s.prof ?? false, val: s.skill_val ?? 0 };
-          if (id) skillsForReq[id] = entry;
-          if (name && name !== id) skillsForReq[name] = entry;
-        });
-      } else {
-        skillsForReq = (typeof charSkills === 'object' && charSkills) ? (charSkills as Record<string, { prof?: boolean; val?: number }>) : {};
-      }
-      feat.skill_req.forEach((skillId, idx) => {
-        const requiredBonus = feat.skill_req_val?.[idx] ?? 1;
-        const skillName = skillIdToName.get(String(skillId)) || String(skillId);
-        const { bonus, proficient } = getSkillBonusForFeatRequirement(
-          String(skillId), character.abilities || {}, skillsForReq, codexSkills
-        );
-        if (!proficient) warnings.push(`Requires proficiency in ${skillName}`);
-        else if (bonus < requiredBonus) warnings.push(`Requires ${skillName} bonus ${requiredBonus}+ (yours: ${bonus})`);
-      });
-    }
-    const prevLevelId = getPreviousLevelFeatId(feat, feats);
-    if (prevLevelId) {
-      const allCharFeatIds = [
-        ...(character.archetypeFeats || []).map((f) => String(f.id ?? (f as { name?: string }).name)),
-        ...(character.feats || []).map((f) => String(f.id ?? (f as { name?: string }).name)),
-      ];
-      const hasPrereq = allCharFeatIds.includes(prevLevelId);
-      if (!hasPrereq) {
-        const prevFeat = feats.find((f) => String(f.id) === prevLevelId);
-        const prevLevel = prevFeat?.feat_lvl ?? 1;
-        warnings.push(`Requires ${prevFeat?.name ?? 'previous level'} (Level ${prevLevel})`);
-      }
-    }
-    return { meets: warnings.length === 0, warning: warnings.join(', ') };
-  }, [character, skillIdToName, codexSkills, feats]);
+    const { met, reason } = checkFeatRequirements(feat, character, codexSkills, feats);
+    return { meets: met, warning: reason };
+  }, [character, codexSkills, feats]);
 
   const items = useMemo((): SelectableItem[] => {
     const baseFiltered = feats
