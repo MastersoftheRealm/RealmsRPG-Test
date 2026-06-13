@@ -6,9 +6,11 @@
  */
 
 import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
+import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +23,7 @@ function getSupabaseAdmin() {
   return createSupabaseAdminClient(url, key);
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const { user } = await getSession();
     if (!user?.uid) {
@@ -32,14 +34,28 @@ export async function GET() {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    const rateKey = buildRateLimitKey('admin-users-get', {
+      userId: user.uid,
+      ip: resolveClientIp(request.headers),
+    });
+    const { success: rateOk } = standardLimiter.check(rateKey);
+    if (!rateOk) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+    }
+
     const supabase = getSupabaseAdmin();
     // Cap the result set; the admin table filters client-side. A bounded query
     // avoids unbounded email/PII exposure and runaway payloads (TASK-330).
-    const { data: profiles } = await supabase
+    const { data: profiles, error: profilesError } = await supabase
       .from('user_profiles')
       .select('id, username, username_display, email, display_name, role')
       .order('username')
       .limit(1000);
+
+    if (profilesError) {
+      console.error('[API Error] GET /api/admin/users query:', profilesError);
+      return NextResponse.json({ error: 'Failed to list users' }, { status: 500 });
+    }
 
     const list = (profiles ?? []) as {
       id: string;

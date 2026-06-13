@@ -44,7 +44,7 @@ All codex tables are **columnar** and live in **public** (no `codex` schema). Ar
 | `codex_parts` | Columnar | id (PK), name, description, category, base_en, base_tp, op_1_desc, op_1_en, op_1_tp, op_2_desc, op_2_en, op_2_tp, op_3_desc, op_3_en, op_3_tp, type, mechanic, percentage, duration, defense (TEXT) |
 | `codex_properties` | Columnar | id (PK), name, description, base_ip, base_tp, base_c, op_1_desc, op_1_ip, op_1_tp, op_1_c, type, mechanic |
 | `codex_equipment` | Columnar | id (PK), name, description, category, currency, rarity |
-| `codex_archetypes` | Columnar | id (PK), name, type, description, archetype_ability, secondary_ability, power_prof_start, martial_prof_start, power_prof_level5, martial_prof_level5, level1_feats (TEXT), level1_skills (TEXT), level1_powers (TEXT), level1_techniques (TEXT), level1_armaments (TEXT), level1_equipment (TEXT), level1_recommend_unarmed_prowess (BOOLEAN), level1_remove_feats (TEXT), level1_remove_powers (TEXT), level1_remove_techniques (TEXT), level1_remove_armaments (TEXT), level1_notes |
+| `codex_archetypes` | Columnar | id (PK), name, type, description, archetype_ability, secondary_ability, power_prof_start, martial_prof_start, power_prof_level5, martial_prof_level5, level1_feats (TEXT), level1_skills (TEXT), level1_powers (TEXT), level1_techniques (TEXT), level1_armaments (TEXT), level1_equipment (TEXT), level1_recommend_unarmed_prowess (BOOLEAN), level1_remove_feats (TEXT), level1_remove_powers (TEXT), level1_remove_techniques (TEXT), level1_remove_armaments (TEXT), level1_notes; **legacy:** `path_data` (JSONB, optional — pre-columnar compat; GET /api/codex composes `path_data` from level1 columns + `codex_archetype_levels`) |
 | `codex_archetype_levels` | Columnar | id (PK), archetype_id (FK → codex_archetypes.id), level, feats (TEXT), skills (TEXT), powers (TEXT), techniques (TEXT), armaments (TEXT), equipment (TEXT), remove_feats (TEXT), remove_powers (TEXT), remove_techniques (TEXT), remove_armaments (TEXT), notes |
 | `codex_creature_feats` | Columnar | id (PK), name, description, feat_points, feat_lvl, lvl_req, mechanic |
 | `core_rules` | JSONB | id (PK), data (JSONB), updated_at |
@@ -63,7 +63,7 @@ All **columnar** (scalars + `payload` JSONB). Legacy `public_*` JSONB tables (`p
 | `official_items` | Columnar | id (PK), name, description, type, rarity, armor_value, damage_reduction, promoted columns, payload (JSONB), created_at, updated_at |
 | `official_creatures` | Columnar | id (PK), name, description, level, type, size, hit_points, energy_points, payload (JSONB), created_at, updated_at |
 
-**API:** `GET /api/public/[type]` reads `official_*` only. `POST`/`DELETE` require admin and write to `official_*`. The route still tolerates missing `public_*` tables (returns `[]`) for older environments.
+**API:** `GET /api/public/[type]` reads `official_*` only (returns `[]` if the table is missing). `POST`/`DELETE` require admin and write to `official_*`. Legacy `public_*` JSONB tables were dropped; do not reference them in app code.
 
 **Migrations:** `sql/supabase-official-library-public-schema.sql` (create + RLS), `sql/supabase-official-library-columnar-expansion.sql` (powers columns), `sql/supabase-library-columnar-parity-expansion.sql` (promoted columns + `sync_library_promoted_columns` trigger on official_* and user_*).
 
@@ -128,7 +128,7 @@ If logs show **`permission denied for table campaign_members`**, run **`sql/supa
 
 | Table | Shape | Key columns |
 |-------|--------|-------------|
-| `crafting_sessions` | Hybrid | id (PK), user_id, data (JSONB), created_at, updated_at; list columns: status, item_name, currency_cost |
+| `crafting_sessions` | Hybrid | id (PK), user_id (**UUID** → auth.users), data (JSONB), created_at, updated_at; list columns: status, item_name, currency_cost |
 
 **Migration (run in Supabase SQL Editor):**
 
@@ -161,7 +161,7 @@ CREATE POLICY crafting_sessions_delete ON public.crafting_sessions FOR DELETE US
 
 | Table | Shape | Key columns |
 |-------|--------|-------------|
-| `user_enhanced_items` | Hybrid | id (PK), user_id, data (JSONB), name, created_at, updated_at |
+| `user_enhanced_items` | Hybrid | id (PK), user_id (**UUID** → auth.users), data (JSONB), name, created_at, updated_at |
 
 Stores enhanced equipment (base item + imbued power) saved from crafting. List columns: name for list display.
 
@@ -277,6 +277,18 @@ Retention rule: DB trigger keeps only the latest 10 rows per `(entity_type, enti
 
 ---
 
+### 2.15 Admin role audit (append-only)
+
+| Table | Shape | Key columns |
+|-------|--------|-------------|
+| `admin_role_audit` | Append-only | id (PK), actor_id, target_id, old_role, new_role, created_at |
+
+Records admin role changes from `PATCH /api/admin/users/update-role`. RLS: admins read-only; writes via service role only.
+
+**Migration:** `sql/supabase-admin-role-audit-2026-06.sql`
+
+---
+
 ## 3. Enums
 
 | Name | Values |
@@ -333,8 +345,9 @@ See `AI_TASK_QUEUE.md` for TASK-279–TASK-283 and TASK-304. Rationale and colum
 | Campaigns | campaigns, campaign_members, campaign_rolls |
 | Encounters | encounters |
 | GET/PATCH /api/admin/role-policies | role_policies, user_profiles.role (admin check) |
+| PATCH /api/admin/users/update-role | user_profiles, admin_role_audit |
 | GET /api/admin/changelogs | codex_change_logs, user_profiles (admin check) |
-| Auth / profile | user_profiles, usernames, role_policies |
+| Auth / profile / account delete | user_profiles, usernames, role_policies; delete also clears user_* library, characters, encounters, crafting_sessions, user_enhanced_items, campaign membership |
 
 ---
 

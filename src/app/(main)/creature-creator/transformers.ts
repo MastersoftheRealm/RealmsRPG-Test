@@ -282,13 +282,21 @@ export function transformUserItemToDisplayItem(
   const typeMap: Record<string, 'Armor' | 'Weapon' | 'Shield' | 'Accessory'> = {
     weapon: 'Weapon',
     armor: 'Armor',
+    shield: 'Shield',
     equipment: 'Accessory',
   };
-  
-  // Convert properties to ItemPropertyPayload format
-  const propertyPayloads: ItemPropertyPayload[] = (item.properties || []).map((prop) => ({ 
-    name: typeof prop === 'string' ? prop : prop.name || '' 
-  }));
+
+  // Convert properties to ItemPropertyPayload format (preserve op_1_lvl for TP/range/cost)
+  const propertyPayloads: ItemPropertyPayload[] = (item.properties || []).map((prop) => {
+    if (typeof prop === 'string') {
+      return { name: prop };
+    }
+    return {
+      id: prop.id,
+      name: prop.name || '',
+      op_1_lvl: prop.op_1_lvl,
+    };
+  });
   
   const itemDoc = {
     name: item.name,

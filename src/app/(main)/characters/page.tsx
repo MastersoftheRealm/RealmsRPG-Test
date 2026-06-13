@@ -7,13 +7,14 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { CharacterCard, AddCharacterCard } from '@/components/character';
-import { PageContainer, PageHeader, EmptyState } from '@/components/ui';
+import { PageContainer, PageHeader, EmptyState, useToast } from '@/components/ui';
 import { Alert } from '@/components/ui/alert';
-import { DeleteConfirmModal } from '@/components/shared';
-import { useCharacters, useDeleteCharacter, useAuth } from '@/hooks';
+import { DeleteConfirmModal, SearchInput, ListHeader, ErrorDisplay } from '@/components/shared';
+import { useCharacters, useDeleteCharacter, useDuplicateCharacter, useAuth } from '@/hooks';
+import { useSort } from '@/hooks/use-sort';
 import { UserPlus } from 'lucide-react';
 
 export default function CharactersPage() {
@@ -22,10 +23,15 @@ export default function CharactersPage() {
 
 function CharactersContent() {
   const router = useRouter();
+  const { showToast } = useToast();
   const { user, initialized: authInitialized } = useAuth();
-  const { data: characters = [], isLoading, error } = useCharacters({ enabled: !!user });
+  const { data: characters = [], isLoading, error, refetch } = useCharacters({ enabled: !!user });
   const deleteCharacter = useDeleteCharacter();
+  const duplicateCharacter = useDuplicateCharacter();
+  const [search, setSearch] = useState('');
+  const { sortState, handleSort, sortItems } = useSort('name');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -33,9 +39,29 @@ function CharactersContent() {
     router.push('/characters/new');
   };
 
+  const handleSignIn = () => {
+    router.push('/login?returnTo=/characters');
+  };
+
   const handleDeleteCharacter = (id: string, name: string) => {
     setDeleteTarget({ id, name });
     setDeleteError(null);
+  };
+
+  const handleDuplicateCharacter = (id: string, name: string) => {
+    setDuplicatingId(id);
+    duplicateCharacter.mutate(id, {
+      onSuccess: (newId) => {
+        showToast(`Duplicated "${name}"`, 'success');
+        router.push(`/characters/${newId}`);
+      },
+      onError: (e) => {
+        showToast(e?.message ?? 'Failed to duplicate character', 'error');
+      },
+      onSettled: () => {
+        setDuplicatingId(null);
+      },
+    });
   };
 
   const handleConfirmDelete = async () => {
@@ -51,6 +77,22 @@ function CharactersContent() {
       setDeletingId(null);
     }
   };
+
+  const filteredCharacters = useMemo(() => {
+    let result = characters;
+
+    if (search.trim()) {
+      const searchLower = search.toLowerCase();
+      result = result.filter(
+        (c) =>
+          c.name.toLowerCase().includes(searchLower) ||
+          (c.archetypeName?.toLowerCase().includes(searchLower) ?? false) ||
+          (c.ancestryName?.toLowerCase().includes(searchLower) ?? false)
+      );
+    }
+
+    return sortItems(result);
+  }, [characters, search, sortItems]);
 
   // Show skeleton until auth resolves too, so logged-in users don't briefly
   // see the guest empty state before their characters query is enabled.
@@ -75,20 +117,21 @@ function CharactersContent() {
     return (
       <PageContainer size="xl">
         <PageHeader title="Characters" />
-        <Alert variant="danger" title="Error loading characters">
-          Something went wrong while loading your characters. Please try again.
-        </Alert>
+        <ErrorDisplay
+          message="Error loading characters"
+          subMessage="Something went wrong while loading your characters."
+          onRetry={() => { void refetch(); }}
+        />
       </PageContainer>
     );
   }
 
-  // Check if we have characters to show
-  const hasCharacters = characters && characters.length > 0;
+  const hasCharacters = characters.length > 0;
 
   return (
     <PageContainer size="xl">
       <PageHeader title="Characters" />
-      
+
       {deleteError && (
         <div className="mb-4">
           <Alert variant="danger" title="Delete failed">
@@ -96,33 +139,64 @@ function CharactersContent() {
           </Alert>
         </div>
       )}
-      
+
       {hasCharacters ? (
-        // Grid layout when we have characters
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {characters.map((character) => (
-            <CharacterCard
-              key={character.id}
-              character={character}
-              onDelete={handleDeleteCharacter}
-              isDeleting={deletingId === character.id}
-            />
-          ))}
-          
-          <AddCharacterCard onClick={handleCreateCharacter} />
+        <div className="space-y-4">
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Search characters..."
+          />
+          <ListHeader
+            columns={[
+              { key: 'name', label: 'NAME' },
+              { key: 'level', label: 'LEVEL' },
+              { key: 'updatedAt', label: 'UPDATED' },
+            ]}
+            gridColumns="1fr 0.5fr 0.5fr"
+            sortState={sortState}
+            onSort={handleSort}
+          />
+          {filteredCharacters.length === 0 ? (
+            <p className="py-12 text-center text-text-secondary">No characters match your search.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {filteredCharacters.map((character) => (
+                <CharacterCard
+                  key={character.id}
+                  character={character}
+                  onDelete={handleDeleteCharacter}
+                  onDuplicate={handleDuplicateCharacter}
+                  isDeleting={deletingId === character.id}
+                  isDuplicating={duplicatingId === character.id}
+                />
+              ))}
+
+              <AddCharacterCard onClick={handleCreateCharacter} />
+            </div>
+          )}
         </div>
       ) : (
-        // Empty state when no characters (or guest)
         <EmptyState
           icon={<UserPlus className="w-10 h-10" />}
           title={user ? 'No characters yet' : 'Characters'}
-          description={user
-            ? 'Create your first character to begin your adventure in Realms RPG.'
-            : 'Create a character to try the creator. Sign in to save characters to your account.'}
+          description={
+            user
+              ? 'Create your first character to begin your adventure in Realms RPG.'
+              : 'Create a character to try the creator. Sign in to save characters to your account.'
+          }
           action={{
             label: 'Create Character',
             onClick: handleCreateCharacter,
           }}
+          secondaryAction={
+            !user
+              ? {
+                  label: 'Sign in',
+                  onClick: handleSignIn,
+                }
+              : undefined
+          }
         />
       )}
 

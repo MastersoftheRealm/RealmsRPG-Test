@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { Plus, Wand2, Swords, Shield, Users, LogIn, Sparkles } from 'lucide-react';
 import { useAuth } from '@/hooks';
 import { PageContainer, PageHeader, TabNavigation, Button, useToast } from '@/components/ui';
-import { ContextHelpTooltip, DeleteConfirmModal, LoginPromptModal, SegmentedControl } from '@/components/shared';
+import { ContextHelpTooltip, DeleteConfirmModal, LoginPromptModal, SegmentedControl, LoadingState } from '@/components/shared';
 import {
   useUserPowers,
   useUserTechniques,
@@ -64,17 +64,22 @@ export default function LibraryPage() {
 }
 
 function LibraryContent() {
-  const { user } = useAuth();
+  const { user, initialized: authInitialized } = useAuth();
   const isGuest = !user;
   const { showToast } = useToast();
   const [libraryMode, setLibraryMode] = useState<LibraryMode>('public');
+  const [modeInitialized, setModeInitialized] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>('powers');
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: TabId; item: DisplayItem | UserEnhancedItem } | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   useEffect(() => {
-    if (!isGuest) setLibraryMode('my');
-  }, [isGuest]);
+    if (!authInitialized) return;
+    if (!modeInitialized) {
+      setLibraryMode(user ? 'my' : 'public');
+      setModeInitialized(true);
+    }
+  }, [authInitialized, user, modeInitialized]);
 
   // The Enhanced tab only exists in My Library; if we switch to Realms mode
   // while it's active, fall back to a valid tab so content doesn't go blank.
@@ -166,6 +171,15 @@ function LibraryContent() {
   }));
 
   const isPublic = libraryMode === 'public';
+
+  if (!authInitialized || !modeInitialized) {
+    return (
+      <PageContainer size="xl">
+        <PageHeader title="Library" />
+        <LoadingState message="Loading library..." />
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer size="xl">

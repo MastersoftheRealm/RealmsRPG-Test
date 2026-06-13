@@ -17,6 +17,7 @@ import {
   LoadingState,
   ErrorDisplay,
   ListEmptyState,
+  ConfirmActionModal,
 } from '@/components/shared';
 import { RollLog, RollProvider } from '@/components/character-sheet';
 import { useSort } from '@/hooks/use-sort';
@@ -50,6 +51,8 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
   const [search, setSearch] = useState('');
   const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set());
   const [syncingAll, setSyncingAll] = useState(false);
+  const [duplicateConfirm, setDuplicateConfirm] = useState<{ id: string; name: string } | null>(null);
+  const [showSyncAllConfirm, setShowSyncAllConfirm] = useState(false);
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const { data: powerPartsDb = [] } = usePowerParts();
@@ -183,7 +186,7 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
           <Button
             variant="secondary"
             size="sm"
-            onClick={handleSyncAll}
+            onClick={() => setShowSyncAllConfirm(true)}
             disabled={driftedCount === 0 || syncingAll}
           >
             <RefreshCw className={`w-4 h-4 ${syncingAll ? 'animate-spin' : ''}`} />
@@ -254,12 +257,50 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
                   router.push(`/creature-creator?edit=${encodeURIComponent(String(id))}`);
                 }}
                 onDelete={() => onDelete({ id: creature.docId, name: creature.name } as DisplayItem)}
-                onDuplicate={() => duplicateCreature.mutate(creature.docId, { onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error') })}
+                onDuplicate={() => setDuplicateConfirm({ id: String(creature.docId), name: creature.name })}
               />
             ))}
           </div>
         )}
         <RollLog />
+
+        <ConfirmActionModal
+          isOpen={!!duplicateConfirm}
+          onClose={() => setDuplicateConfirm(null)}
+          onConfirm={() => {
+            if (!duplicateConfirm) return;
+            duplicateCreature.mutate(duplicateConfirm.id, {
+              onSuccess: () => {
+                showToast(`Duplicated "${duplicateConfirm.name}"`, 'success');
+                setDuplicateConfirm(null);
+              },
+              onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error'),
+            });
+          }}
+          title="Duplicate creature?"
+          description={
+            duplicateConfirm
+              ? `Create a copy of "${duplicateConfirm.name}" in your library?`
+              : ''
+          }
+          confirmLabel="Duplicate"
+          loadingLabel="Duplicating..."
+          isLoading={duplicateCreature.isPending}
+        />
+
+        <ConfirmActionModal
+          isOpen={showSyncAllConfirm}
+          onClose={() => setShowSyncAllConfirm(false)}
+          onConfirm={() => {
+            setShowSyncAllConfirm(false);
+            void handleSyncAll();
+          }}
+          title="Sync with current patch?"
+          description={`Sync ${driftedCount} creature${driftedCount === 1 ? '' : 's'} to current patch rules. Parts, techniques, or properties that no longer exist in the codex may be removed.`}
+          confirmLabel="Sync all"
+          loadingLabel="Syncing..."
+          isLoading={syncingAll}
+        />
       </div>
     </RollProvider>
   );

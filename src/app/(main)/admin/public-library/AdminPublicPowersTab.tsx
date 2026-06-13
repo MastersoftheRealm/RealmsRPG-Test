@@ -18,6 +18,7 @@ import {
   DeleteConfirmModal,
   type ChipData,
 } from '@/components/shared';
+import { useToast } from '@/components/ui';
 import { useOfficialLibrary, usePowerParts } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSort } from '@/hooks/use-sort';
@@ -29,9 +30,10 @@ const POWER_GRID = '1.5fr 0.8fr 1fr 1fr 0.8fr 1fr 1fr 40px';
 const QUERY_KEY = ['official-library', 'powers'] as const;
 
 export function AdminPublicPowersTab() {
+  const { showToast } = useToast();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: items = [], isLoading, error } = useOfficialLibrary('powers');
+  const { data: items = [], isLoading, error, refetch } = useOfficialLibrary('powers');
   const { data: partsDb = [] } = usePowerParts();
   const [search, setSearch] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
@@ -103,11 +105,11 @@ export function AdminPublicPowersTab() {
       await queryClient.refetchQueries({ queryKey: QUERY_KEY });
       setDeleteConfirm(null);
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Failed to delete');
+      showToast(e instanceof Error ? e.message : 'Failed to delete', 'error');
     }
   };
 
-  if (error) return <ErrorDisplay message="Failed to load official powers" />;
+  if (error) return <ErrorDisplay message="Failed to load official powers" onRetry={() => { void refetch(); }} />;
 
   return (
     <div>

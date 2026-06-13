@@ -36,6 +36,9 @@
 | **supabase-campaign-rolls-created-at-backfill.sql** | Backfill `created_at` from `data->>'timestamp'`; epoch for orphans | Run once if existing rows have **NULL** `created_at` (broke `ORDER BY created_at DESC` + `LIMIT` so new rolls disappeared from the API). **POST /rolls** now sets `created_at` on every insert. |
 | **supabase-codex-rls-public.sql** | RLS for codex_* (incl. `codex_archetype_levels`) and core_rules in public (SELECT TO public) | Run if GET /api/codex returns 500 (permission denied). |
 | **supabase-security-hardening-2026-06.sql** | Drop `_prisma_migrations`; pin `search_path` on trigger functions; RLS for `codex_archetype_levels` + `official_enhanced_items`; revoke `rls_auto_enable` RPC | Run once per environment after security advisor findings. |
+| **supabase-role-escalation-fix-2026-06.sql** | `BEFORE UPDATE OF role` trigger on `user_profiles` to block self-escalation | Run once; also recorded as migration `prevent_role_self_escalation`. |
+| **supabase-campaign-authz-2026-06.sql** | Harden campaign/roll RLS (no member UPDATE on campaigns; caller-bound roll INSERT) | Run once; also recorded as migration `campaign_authz_hardening`. |
+| **supabase-admin-role-audit-2026-06.sql** | Append-only `admin_role_audit` table + admins-read RLS | Run once; also recorded as migration `admin_role_audit_log`. Required for `/api/admin/users/update-role` audit rows. |
 | **supabase-campaign-members.sql** | campaign_members table | May already exist from consolidation |
 | **supabase-user-profiles-timestamps-default.sql** | user_profiles: set DEFAULT now() on created_at, updated_at | Run if inserts fail with "null value in column updated_at" |
 | **supabase-user-profiles-username-display.sql** | user_profiles: add `username_display` and backfill from canonical `username` | Run once to preserve entered username casing in UI while keeping lowercase canonical uniqueness |

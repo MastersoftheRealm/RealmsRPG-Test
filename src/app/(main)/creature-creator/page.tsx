@@ -151,25 +151,11 @@ function CreatureCreatorContent() {
     }),
     [creatureFeatsData, codexFeatsData, codexTraitsData]
   );
-  
-  // Data for item selection modals
-  const { data: userPowers = [] } = useUserPowers();
-  const { data: userTechniques = [] } = useUserTechniques();
-  const { data: userEmpoweredTechniques = [] } = useUserEmpoweredTechniques();
-  const { data: userItems = [] } = useUserItems();
-  const { data: powerPartsDb = [] } = usePowerParts();
-  const { data: techniquePartsDb = [] } = useTechniqueParts();
-  const { data: itemPropertiesDb = [] } = useItemProperties();
-  const { data: publicPowers = [] } = usePublicLibrary('powers');
-  const { data: publicTechniques = [] } = usePublicLibrary('techniques');
-  const { data: publicEmpoweredTechniques = [] } = usePublicLibrary('empowered-techniques');
-  const { data: publicItems = [] } = usePublicLibrary('items');
-  const { data: publicCreatures = [] } = usePublicLibrary('creatures');
-  const { data: userCreatures = [] } = useUserCreatures();
+
   const searchParams = useSearchParams();
   const editCreatureId = searchParams.get('edit');
   const editLoadedRef = useRef(false);
-  
+
   const [isInitialized, setIsInitialized] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [creature, setCreature] = useState<CreatureState>(initialState);
@@ -184,6 +170,31 @@ function CreatureCreatorContent() {
   const [librarySource, setLibrarySource] = useState<SourceFilterValue>('all');
   const [inventoryTab, setInventoryTab] = useState<InventoryTab>('all');
   const [powerModalTab, setPowerModalTab] = useState<PowerModalTab>('powers');
+
+  /** Defer user/public library fetches until a selection or load modal opens (or edit preload). */
+  const libraryQueriesEnabled =
+    showPowerModal ||
+    showTechniqueModal ||
+    showArmamentModal ||
+    showLoadModal ||
+    !!editCreatureId;
+
+  // Data for item selection modals (lazy-enabled)
+  const { data: userPowers = [] } = useUserPowers({ enabled: libraryQueriesEnabled });
+  const { data: userTechniques = [] } = useUserTechniques({ enabled: libraryQueriesEnabled });
+  const { data: userEmpoweredTechniques = [] } = useUserEmpoweredTechniques({ enabled: libraryQueriesEnabled });
+  const { data: userItems = [] } = useUserItems({ enabled: libraryQueriesEnabled });
+  const { data: powerPartsDb = [] } = usePowerParts();
+  const { data: techniquePartsDb = [] } = useTechniqueParts();
+  const { data: itemPropertiesDb = [] } = useItemProperties();
+  const { data: publicPowers = [] } = usePublicLibrary('powers', { enabled: libraryQueriesEnabled });
+  const { data: publicTechniques = [] } = usePublicLibrary('techniques', { enabled: libraryQueriesEnabled });
+  const { data: publicEmpoweredTechniques = [] } = usePublicLibrary('empowered-techniques', {
+    enabled: libraryQueriesEnabled,
+  });
+  const { data: publicItems = [] } = usePublicLibrary('items', { enabled: libraryQueriesEnabled });
+  const { data: publicCreatures = [] } = usePublicLibrary('creatures', { enabled: libraryQueriesEnabled });
+  const { data: userCreatures = [] } = useUserCreatures({ enabled: libraryQueriesEnabled });
   
   // Normalize public API item to UserPower/UserTechnique/UserItem shape (with docId for transformers)
   const normalizedPublicPowers = useMemo(() => 
@@ -794,6 +805,18 @@ function CreatureCreatorContent() {
     };
   }, [creature, featPointsMap, subSkillNames, rules]);
 
+  const isOverBudget = useMemo(
+    () =>
+      stats.featRemaining < 0 ||
+      stats.trainingRemaining < 0 ||
+      stats.currencyRemaining < 0 ||
+      stats.abilityRemaining < 0 ||
+      stats.heRemaining < 0 ||
+      stats.skillRemaining < 0 ||
+      stats.proficiencyRemaining < 0,
+    [stats]
+  );
+
   const getPayload = useCallback(() => ({
     name: creature.name.trim(),
     data: { ...creature },
@@ -905,8 +928,16 @@ function CreatureCreatorContent() {
       setShowLoginPrompt(true);
       return;
     }
+    if (isOverBudget) {
+      save.setSaveMessage({
+        type: 'error',
+        text: 'Cannot save: creature exceeds one or more point budgets.',
+      });
+      setTimeout(() => save.setSaveMessage(null), 3000);
+      return;
+    }
     await save.handleSave();
-  }, [user, save]);
+  }, [user, save, isOverBudget]);
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
@@ -1019,7 +1050,7 @@ function CreatureCreatorContent() {
             onLoad={() => (user ? setShowLoadModal(true) : setShowLoginPrompt(true))}
             onReset={handleReset}
             saving={save.saving}
-            saveDisabled={!creature.name.trim()}
+            saveDisabled={!creature.name.trim() || isOverBudget}
             showPublicPrivate={isAdmin}
             user={user}
           />

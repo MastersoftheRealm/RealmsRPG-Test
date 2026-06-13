@@ -9,6 +9,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { createUserProfileAction } from '@/app/(auth)/actions';
+import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 
 function getRedirectUrl(request: Request, path: string): string {
   const forwardedHost = request.headers.get('x-forwarded-host');
@@ -24,7 +25,7 @@ function getRedirectUrl(request: Request, path: string): string {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
-  const next = searchParams.get('next') ?? '/';
+  const redirectTo = sanitizeRedirectPath(searchParams.get('next'));
 
   if (code) {
     const supabase = await createClient();
@@ -38,7 +39,6 @@ export async function GET(request: Request) {
         username: undefined,
         displayName: undefined,
       });
-      const redirectTo = next.startsWith('/') ? next : `/${next}`;
       return NextResponse.redirect(getRedirectUrl(request, redirectTo));
     }
     console.error('Auth callback error:', error);

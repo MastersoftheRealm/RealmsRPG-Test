@@ -18,6 +18,8 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function signOutAction() {
+  const supabase = await createServerClient();
+  await supabase.auth.signOut();
   revalidatePath('/', 'layout');
   redirect('/login');
 }
@@ -252,8 +254,12 @@ export async function deleteAccountAction() {
     await supabase.from('characters').delete().eq('user_id', user.uid);
     await supabase.from('user_powers').delete().eq('user_id', user.uid);
     await supabase.from('user_techniques').delete().eq('user_id', user.uid);
+    await supabase.from('user_empowered_techniques').delete().eq('user_id', user.uid);
     await supabase.from('user_items').delete().eq('user_id', user.uid);
     await supabase.from('user_creatures').delete().eq('user_id', user.uid);
+    await supabase.from('user_species').delete().eq('user_id', user.uid);
+    await supabase.from('crafting_sessions').delete().eq('user_id', user.uid);
+    await supabase.from('user_enhanced_items').delete().eq('user_id', user.uid);
     await supabase.from('usernames').delete().eq('user_id', user.uid);
     await supabase.from('encounters').delete().eq('user_id', user.uid);
     await supabase.from('campaigns').delete().eq('owner_id', user.uid);

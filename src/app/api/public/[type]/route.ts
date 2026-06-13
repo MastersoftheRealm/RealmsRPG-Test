@@ -1,8 +1,8 @@
 /**
  * Public Library API
  * ==================
- * GET: Public read, no auth. Prefers official_* (columnar) in public schema;
- * falls back to public_* (id+data) if official_* empty or missing. POST/DELETE: Admin only; write to official_* (columnar).
+ * GET: Public read, no auth. Reads official_* (columnar) in public schema.
+ * POST/DELETE: Admin only; write to official_* (columnar).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -19,14 +19,6 @@ import {
 
 const VALID_TYPES = ['powers', 'techniques', 'empowered-techniques', 'items', 'creatures'] as const;
 type PublicType = (typeof VALID_TYPES)[number];
-
-const PUBLIC_TABLE_MAP: Record<PublicType, string> = {
-  powers: 'public_powers',
-  techniques: 'public_techniques',
-  'empowered-techniques': 'public_empowered_techniques',
-  items: 'public_items',
-  creatures: 'public_creatures',
-};
 
 const OFFICIAL_TABLE_MAP: Record<PublicType, string> = {
   powers: 'official_powers',
@@ -55,41 +47,21 @@ export async function GET(
     const officialTable = OFFICIAL_TABLE_MAP[type as PublicType];
     const result = await supabase.from(officialTable).select('*');
 
-    if (!result.error && result.data && result.data.length > 0) {
-      const items = (result.data as Record<string, unknown>[]).map((r) => {
-        const item = rowToItem(type as ColumnarLibraryType, r, 'official');
-        (item as Record<string, unknown>)._source = 'public';
-        return item;
-      });
-      items.sort((a, b) => {
-        const na = String((a as Record<string, unknown>).name ?? '');
-        const nb = String((b as Record<string, unknown>).name ?? '');
-        return na.localeCompare(nb);
-      });
-      const cacheControl = 'public, max-age=300, s-maxage=600, stale-while-revalidate=300';
-      return NextResponse.json(items, { headers: { 'Cache-Control': cacheControl } });
+    if (result.error) {
+      if (isTableNotFound(result.error)) {
+        return NextResponse.json([]);
+      }
+      throw result.error;
     }
 
-    const table = PUBLIC_TABLE_MAP[type as PublicType];
-    const legacyResult = await supabase.from(table).select('id, data');
-    if (legacyResult.error && isTableNotFound(legacyResult.error)) {
-      return NextResponse.json([]);
-    }
-    if (legacyResult.error) throw legacyResult.error;
-
-    const rows = (legacyResult.data ?? []) as { id: string; data?: unknown }[];
-    const items = rows.map((r) => {
-      const d = (r.data as Record<string, unknown>) ?? {};
-      return {
-        ...d,
-        id: r.id,
-        docId: r.id,
-        _source: 'public' as const,
-      };
+    const items = ((result.data ?? []) as Record<string, unknown>[]).map((r) => {
+      const item = rowToItem(type as ColumnarLibraryType, r, 'official');
+      (item as Record<string, unknown>)._source = 'public';
+      return item;
     });
-    items.sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
-      const na = String(a.name ?? '');
-      const nb = String(b.name ?? '');
+    items.sort((a, b) => {
+      const na = String((a as Record<string, unknown>).name ?? '');
+      const nb = String((b as Record<string, unknown>).name ?? '');
       return na.localeCompare(nb);
     });
     const cacheControl = 'public, max-age=300, s-maxage=600, stale-while-revalidate=300';

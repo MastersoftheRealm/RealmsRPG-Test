@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
+import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 import type { Campaign, CampaignSummary } from '@/types/campaign';
 import { normalizeCampaignRosterCharacters } from '@/lib/campaign-roster';
 
@@ -45,6 +46,15 @@ export async function GET(request: NextRequest) {
     const { user, error } = await getSession();
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const rateKey = buildRateLimitKey('campaigns-get', {
+      userId: user.uid,
+      ip: resolveClientIp(request.headers),
+    });
+    const { success } = standardLimiter.check(rateKey);
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }
 
     const userId = user.uid;

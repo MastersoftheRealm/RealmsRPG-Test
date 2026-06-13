@@ -13,8 +13,8 @@ import { Button, Checkbox, Input } from '@/components/ui';
 import { ValueStepper } from '@/components/shared';
 import type { Combatant, CombatantCondition, CombatantType, TrackedCombatant } from '@/types/encounter';
 import type { Encounter } from '@/types/encounter';
-import { CombatantCard } from '@/app/(main)/encounter-tracker/CombatantCard';
-import { CONDITION_OPTIONS } from '@/app/(main)/encounter-tracker/encounter-tracker-constants';
+import { CombatantCard } from '@/components/encounters/CombatantCard';
+import { CONDITION_OPTIONS } from '@/components/encounters/encounter-constants';
 import { AddCombatantModal } from '@/components/shared/add-combatant-modal';
 import { RollLog } from '@/components/character-sheet';
 import { createClient } from '@/lib/supabase/client';
@@ -27,6 +27,33 @@ export function generateId(): string {
 
 export function rollInitiative(acuity: number): number {
   return Math.floor(Math.random() * 20) + 1 + acuity;
+}
+
+/** Initiative order used for turn tracking and drag-reorder remapping. */
+export function sortCombatantsForTurnOrder(
+  combatants: Combatant[],
+  round: number
+): Combatant[] {
+  const companions = combatants.filter((c) => c.combatantType === 'companion');
+  const nonCompanions = combatants.filter((c) => c.combatantType !== 'companion');
+  if (round === 1) {
+    const notSurprised = nonCompanions.filter((c) => !c.isSurprised);
+    const surprised = nonCompanions.filter((c) => c.isSurprised);
+    return [...notSurprised, ...surprised, ...companions];
+  }
+  return [...nonCompanions, ...companions];
+}
+
+function remapTurnIndexAfterReorder(
+  prevIndex: number,
+  oldSorted: Combatant[],
+  newSorted: Combatant[]
+): number {
+  if (prevIndex < 0) return prevIndex;
+  const currentId = oldSorted[prevIndex]?.id;
+  if (!currentId) return Math.min(prevIndex, Math.max(0, newSorted.length - 1));
+  const nextIndex = newSorted.findIndex((c) => c.id === currentId);
+  return nextIndex >= 0 ? nextIndex : Math.min(prevIndex, Math.max(0, newSorted.length - 1));
 }
 
 export interface CombatEncounterViewProps {
@@ -262,13 +289,20 @@ function CombatEncounterViewInner({
       }
       setEncounter((prev) => {
         if (!prev) return prev;
+        const oldSorted = sortCombatantsForTurnOrder(prev.combatants, prev.round);
         const combatants = [...prev.combatants];
         const draggedIndex = combatants.findIndex((c) => c.id === draggedId);
         const targetIndex = combatants.findIndex((c) => c.id === targetId);
         if (draggedIndex === -1 || targetIndex === -1) return prev;
         const [draggedItem] = combatants.splice(draggedIndex, 1);
         combatants.splice(targetIndex, 0, draggedItem);
-        return { ...prev, combatants };
+        const newSorted = sortCombatantsForTurnOrder(combatants, prev.round);
+        const newTurnIndex = remapTurnIndexAfterReorder(
+          prev.currentTurnIndex,
+          oldSorted,
+          newSorted
+        );
+        return { ...prev, combatants, currentTurnIndex: newTurnIndex };
       });
       setDraggedId(null);
       setDragOverId(null);
@@ -278,15 +312,7 @@ function CombatEncounterViewInner({
 
   const sortedCombatants = useMemo(() => {
     if (!encounter) return [];
-    const combatants = [...encounter.combatants];
-    const companions = combatants.filter((c) => c.combatantType === 'companion');
-    const nonCompanions = combatants.filter((c) => c.combatantType !== 'companion');
-    if (encounter.round === 1) {
-      const notSurprised = nonCompanions.filter((c) => !c.isSurprised);
-      const surprised = nonCompanions.filter((c) => c.isSurprised);
-      return [...notSurprised, ...surprised, ...companions];
-    }
-    return [...nonCompanions, ...companions];
+    return sortCombatantsForTurnOrder(encounter.combatants, encounter.round);
   }, [encounter]);
 
   const addCombatant = () => {
@@ -604,6 +630,20 @@ function CombatEncounterViewInner({
     );
   };
 
+  const markCompleted = () => {
+    setEncounter((prev) =>
+      prev
+        ? {
+            ...prev,
+            round: prev.round > 0 ? prev.round : 0,
+            currentTurnIndex: -1,
+            isActive: false,
+            status: 'completed',
+          }
+        : prev
+    );
+  };
+
   const resetEncounter = () => {
     setEncounter((prev) =>
       prev
@@ -683,7 +723,15 @@ function CombatEncounterViewInner({
                 <Button variant="danger" onClick={endCombat}>
                   End Combat
                 </Button>
+                <Button variant="secondary" onClick={markCompleted}>
+                  Mark Complete
+                </Button>
               </>
+            )}
+            {!encounter.isActive && encounter.status !== 'completed' && (
+              <Button variant="secondary" onClick={markCompleted}>
+                Mark Complete
+              </Button>
             )}
             <label className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer">
               <input

@@ -16,13 +16,16 @@ const OFFICIAL_LIBRARY_KEYS = {
 };
 
 export function useOfficialLibrary(
-  type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species'
+  type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species',
+  options?: { enabled?: boolean }
 ) {
+  const enabled = options?.enabled ?? true;
   return useQuery({
     queryKey: OFFICIAL_LIBRARY_KEYS.byType(type),
     queryFn: () => fetchOfficialLibrary(type),
     staleTime: 5 * 60 * 1000, // 5 min — official library changes rarely; avoid refetch on every add-modal open
     refetchOnMount: true,
+    enabled,
   });
 }
 

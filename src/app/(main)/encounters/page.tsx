@@ -18,6 +18,7 @@ import {
   Trash2,
   ChevronRight,
   Search,
+  CheckCircle2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -33,8 +34,9 @@ import {
   SearchInput,
   useToast,
 } from '@/components/ui';
-import { ContextHelpTooltip, DeleteConfirmModal, HubListRow } from '@/components/shared';
-import { useEncounters, useCreateEncounter, useDeleteEncounter, useAuth } from '@/hooks';
+import { ContextHelpTooltip, DeleteConfirmModal, HubListRow, ErrorDisplay } from '@/components/shared';
+import { IconButton } from '@/components/ui';
+import { useEncounters, useCreateEncounter, useDeleteEncounter, useSaveEncounter, useAuth } from '@/hooks';
 import { createDefaultEncounter } from '@/types/encounter';
 import type { EncounterType, EncounterStatus, EncounterSummary } from '@/types/encounter';
 
@@ -89,9 +91,10 @@ function EncountersContent() {
   const router = useRouter();
   const { user } = useAuth();
   const { showToast } = useToast();
-  const { data: encounters = [], isLoading, error } = useEncounters();
+  const { data: encounters = [], isLoading, error, refetch } = useEncounters();
   const createEncounter = useCreateEncounter();
   const deleteEncounterMutation = useDeleteEncounter();
+  const saveEncounterMutation = useSaveEncounter();
 
   const [activeTab, setActiveTab] = useState<TabId>('all');
   const [search, setSearch] = useState('');
@@ -154,6 +157,20 @@ function EncountersContent() {
     } catch (err) {
       console.error('Failed to delete encounter:', err);
       showToast((err as Error)?.message ?? 'Failed to delete encounter', 'error');
+    }
+  };
+
+  const handleMarkComplete = async (encounter: EncounterSummary) => {
+    if (encounter.status === 'completed') return;
+    try {
+      await saveEncounterMutation.mutateAsync({
+        id: encounter.id,
+        data: { status: 'completed', isActive: false, currentTurnIndex: -1 },
+      });
+      showToast(`"${encounter.name}" marked complete`, 'success');
+    } catch (err) {
+      console.error('Failed to mark encounter complete:', err);
+      showToast((err as Error)?.message ?? 'Failed to mark encounter complete', 'error');
     }
   };
 
@@ -249,9 +266,10 @@ function EncountersContent() {
         {isLoading ? (
           <LoadingState message="Loading encounters..." />
         ) : error ? (
-          <Alert variant="danger" title="Failed to load encounters">
-            {error.message}
-          </Alert>
+          <ErrorDisplay
+            message={error.message || 'Failed to load encounters'}
+            onRetry={() => { void refetch(); }}
+          />
         ) : filteredEncounters.length === 0 ? (
           <EmptyState
             icon={<Swords className="w-10 h-10" />}
@@ -301,6 +319,38 @@ function EncountersContent() {
                 onClick={() => handleOpen(encounter)}
                 onDelete={() => setDeleteTarget(encounter)}
                 deleteAriaLabel={`Delete encounter ${encounter.name}`}
+                rightSlot={
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {encounter.status !== 'completed' && (
+                      <IconButton
+                        variant="ghost"
+                        size="sm"
+                        label={`Mark ${encounter.name} complete`}
+                        title="Mark complete"
+                        className="opacity-0 group-hover:opacity-100 text-text-muted dark:text-text-secondary hover:text-success-700 dark:hover:text-success-400 min-w-[44px] min-h-[44px]"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void handleMarkComplete(encounter);
+                        }}
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                      </IconButton>
+                    )}
+                    <IconButton
+                      variant="ghost"
+                      size="sm"
+                      label={`Delete encounter ${encounter.name}`}
+                      className="opacity-0 group-hover:opacity-100 text-text-muted dark:text-text-secondary hover:text-danger-600 dark:hover:text-danger-400 hover:bg-red-50 dark:hover:bg-danger-900/20 min-w-[44px] min-h-[44px]"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteTarget(encounter);
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </IconButton>
+                    <ChevronRight className="w-5 h-5 text-text-muted shrink-0" aria-hidden />
+                  </div>
+                }
               />
             ))}
           </div>

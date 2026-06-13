@@ -16,6 +16,7 @@ import { Sparkles, Sword, MessageCircle, X } from 'lucide-react';
 import { useAuth } from '@/hooks';
 import { OnboardingTour } from '@/components/shared';
 import { REALMS_MOTTO } from '@/lib/constants/site-copy';
+import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 
 // Discord / community link (same as About page)
 const DISCORD_URL = 'https://discord.gg/XbX4nFbxga';
@@ -86,7 +87,7 @@ function HomeContent() {
   const code = searchParams.get('code');
   useEffect(() => {
     if (code) {
-      const next = searchParams.get('next') ?? '/';
+      const next = sanitizeRedirectPath(searchParams.get('next'));
       router.replace(`/auth/callback?code=${encodeURIComponent(code)}${next !== '/' ? `&next=${encodeURIComponent(next)}` : ''}`);
     }
   }, [code, searchParams, router]);
@@ -109,6 +110,7 @@ function HomeContent() {
 
   return (
     <>
+      <h1 className="sr-only">Realms RPG</h1>
       {/* Hero Banner - constrain on small screens; extra bottom padding so tagline doesn't crowd next section */}
       <section className="relative w-full h-[240px] sm:h-[320px] md:h-[400px] overflow-hidden">
         <Image
@@ -217,7 +219,7 @@ function HomeContent() {
             >
               <Image
                 src="/images/ArrowL.png"
-                alt="Previous"
+                alt=""
                 width={24}
                 height={26}
                 className="object-contain"
@@ -250,7 +252,7 @@ function HomeContent() {
             >
               <Image
                 src="/images/ArrowR.png"
-                alt="Next"
+                alt=""
                 width={24}
                 height={26}
                 className="object-contain"

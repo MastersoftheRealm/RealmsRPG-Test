@@ -25,9 +25,9 @@ export default function MainError({ error, reset }: ErrorProps) {
     <div className="min-h-[60vh] flex items-center justify-center px-4">
       <div className="flex flex-col items-center gap-4 max-w-md text-center">
                 <AlertCircle className="w-12 h-12 text-danger-600 dark:text-danger-400" />
-        <h2 className="text-xl font-semibold text-text-primary">
+        <h1 className="text-xl font-semibold text-text-primary">
           Something went wrong
-        </h2>
+        </h1>
         <p className="text-text-muted dark:text-text-secondary">
           An unexpected error occurred. You can try again, or go back to the
           home page.

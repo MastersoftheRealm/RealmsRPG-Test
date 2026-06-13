@@ -2,7 +2,7 @@
  * Encounter Tracker - Constants
  */
 
-import type { ConditionDef } from './encounter-tracker-types';
+import type { ConditionDef } from './encounter-combatant-types';
 
 export const STORAGE_KEY = 'realms-encounter-tracker';
 

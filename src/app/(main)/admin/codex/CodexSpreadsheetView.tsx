@@ -11,7 +11,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Search, Replace, Copy, Save, Loader2, ChevronUp, ChevronDown } from 'lucide-react';
-import { Button, Spinner, Modal } from '@/components/ui';
+import { Button, Spinner, Modal, useToast } from '@/components/ui';
 import { useCodexFull } from '@/hooks/use-codex';
 import { createCodexDoc, updateCodexDoc } from './actions';
 
@@ -171,6 +171,7 @@ interface CodexSpreadsheetViewProps {
 }
 
 export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
+  const { showToast } = useToast();
   const { data: codex, isLoading, error } = useCodexFull();
   const queryClient = useQueryClient();
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
@@ -376,7 +377,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
       }
     }
     if (errors.length > 0) {
-      alert(errors.slice(0, 5).join('\n') + (errors.length > 5 ? `\n... and ${errors.length - 5} more` : ''));
+      showToast(errors.slice(0, 5).join('; ') + (errors.length > 5 ? `; ... and ${errors.length - 5} more` : ''), 'error');
     } else {
       setDirty(new Set());
       setSaveConfirmOpen(false);
@@ -384,16 +385,16 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
     }
     setSaving(false);
-  }, [collection, dirty, rows, queryClient]);
+  }, [collection, dirty, rows, queryClient, showToast]);
 
   const handleSaveAllClick = useCallback(() => {
     const { valid, invalidDisplayIndices } = validateDirtyRows();
     if (!valid) {
-      alert(`Please add a name for new row(s): ${invalidDisplayIndices.slice(0, 10).join(', ')}${invalidDisplayIndices.length > 10 ? ` and ${invalidDisplayIndices.length - 10} more` : ''}.`);
+      showToast(`Please add a name for new row(s): ${invalidDisplayIndices.slice(0, 10).join(', ')}${invalidDisplayIndices.length > 10 ? ` and ${invalidDisplayIndices.length - 10} more` : ''}.`, 'error');
       return;
     }
     setSaveConfirmOpen(true);
-  }, [validateDirtyRows]);
+  }, [validateDirtyRows, showToast]);
 
   const handleSaveAll = useCallback(() => {
     performSaveAll();
@@ -409,7 +410,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
       if (isNew) {
         const name = row.name;
         if (typeof name !== 'string' || !name.trim()) {
-          alert('New rows must have a name.');
+          showToast('New rows must have a name.', 'error');
           return;
         }
       }
@@ -433,7 +434,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
         if (!result.success) err = result.error ?? null;
       }
       setSavingRowIndex(null);
-      if (err) alert(err);
+      if (err) showToast(err, 'error');
       else {
         setDirty((prev) => {
           const next = new Set(prev);
@@ -444,7 +445,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
         await queryClient.refetchQueries({ queryKey: ['codex'] });
       }
     },
-    [collection, rows, queryClient]
+    [collection, rows, queryClient, showToast]
   );
 
   const addNewRow = useCallback(() => {

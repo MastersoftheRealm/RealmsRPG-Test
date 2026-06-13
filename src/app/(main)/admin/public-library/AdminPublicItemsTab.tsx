@@ -18,6 +18,7 @@ import {
   DeleteConfirmModal,
   type ChipData,
 } from '@/components/shared';
+import { useToast } from '@/components/ui';
 import { useOfficialLibrary, useItemProperties } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSort } from '@/hooks/use-sort';
@@ -35,9 +36,10 @@ const ITEM_GRID = '1.5fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr 40px';
 const QUERY_KEY = ['official-library', 'items'] as const;
 
 export function AdminPublicItemsTab() {
+  const { showToast } = useToast();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: items = [], isLoading, error } = useOfficialLibrary('items');
+  const { data: items = [], isLoading, error, refetch } = useOfficialLibrary('items');
   const { data: propertiesDb = [] } = useItemProperties();
   const [search, setSearch] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
@@ -114,11 +116,11 @@ export function AdminPublicItemsTab() {
       await queryClient.refetchQueries({ queryKey: QUERY_KEY });
       setDeleteConfirm(null);
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Failed to delete');
+      showToast(e instanceof Error ? e.message : 'Failed to delete', 'error');
     }
   };
 
-  if (error) return <ErrorDisplay message="Failed to load official armaments" />;
+  if (error) return <ErrorDisplay message="Failed to load official armaments" onRetry={() => { void refetch(); }} />;
 
   return (
     <div>

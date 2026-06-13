@@ -440,7 +440,7 @@ export default function AboutPage() {
         <div className="relative flex items-center justify-center py-6 px-14 overflow-hidden w-full">
           <button
             onClick={goPrev}
-            className="absolute left-2 md:left-4 p-2 rounded-full hover:bg-primary-50/80 dark:hover:bg-primary-900/30 transition-all hover:scale-110 z-10"
+            className="absolute left-2 md:left-4 p-2 rounded-full hover:bg-primary-50/80 dark:hover:bg-primary-900/30 transition-all hover:scale-110 z-10 min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Previous slide"
           >
             <Image src="/images/ArrowL.png" alt="" width={24} height={26} className="opacity-60 hover:opacity-100 transition-opacity" />
@@ -461,7 +461,7 @@ export default function AboutPage() {
                     key={`${dice.alt}-${diceIndex}-${displayPos}`}
                     onClick={() => goToSlide(diceIndex)}
                     className={cn(
-                      'flex-shrink-0 transition-all duration-300 ease-out rounded-xl p-2',
+                      'flex-shrink-0 transition-all duration-300 ease-out rounded-xl p-2 min-h-[44px] min-w-[44px] flex items-center justify-center',
                       'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                       isSelected ? 'bg-primary-100/60 dark:bg-primary-900/40' : 'hover:bg-surface-alt/80'
                     )}
@@ -476,7 +476,7 @@ export default function AboutPage() {
                   >
                     <Image
                       src={dice.src}
-                      alt={dice.alt}
+                      alt=""
                       width={48}
                       height={48}
                       className={cn('w-10 h-10 md:w-12 md:h-12 object-contain', dice.className)}
@@ -489,7 +489,7 @@ export default function AboutPage() {
 
           <button
             onClick={goNext}
-            className="absolute right-2 md:right-4 p-2 rounded-full hover:bg-primary-50/80 dark:hover:bg-primary-900/30 transition-all hover:scale-110 z-10"
+            className="absolute right-2 md:right-4 p-2 rounded-full hover:bg-primary-50/80 dark:hover:bg-primary-900/30 transition-all hover:scale-110 z-10 min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Next slide"
           >
             <Image src="/images/ArrowR.png" alt="" width={24} height={26} className="opacity-60 hover:opacity-100 transition-opacity" />

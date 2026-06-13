@@ -18,7 +18,7 @@ export default async function AdminLayout({
   const { user } = await getSession();
 
   if (!user) {
-    redirect('/login');
+    redirect('/login?returnTo=/admin');
   }
 
   const admin = await isAdmin(user.uid);

@@ -116,7 +116,7 @@ export const encounterUpdateSchema = z.object({
   combatants: z.array(combatantSchema).optional(),
   round: z.number().int().min(0).optional(),
   currentTurnIndex: z.number().int().optional(),
-  status: z.enum(['preparing', 'active', 'completed']).optional(),
+  status: z.enum(['preparing', 'active', 'paused', 'completed']).optional(),
   isActive: z.boolean().optional(),
   campaignId: z.string().uuid().optional().nullable(),
   applySurprise: z.boolean().optional(),
@@ -312,3 +312,50 @@ export const publicItemSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(1, 'Name is required').max(200).optional(),
 }).passthrough();
+
+// =============================================================================
+// Tooltip Schemas (admin ui_tooltips)
+// =============================================================================
+
+const tooltipPlacementSchema = z.enum(['top', 'bottom', 'left', 'right']);
+const tooltipTriggerSchema = z.enum(['auto', 'hover', 'focus', 'click']);
+const tooltipAudienceSchema = z.enum(['new_player', 'all', 'admin']);
+
+export const tooltipCreateSchema = z.object({
+  key: z.string().trim().min(1, 'key is required').max(200),
+  scope: z.string().trim().min(1, 'scope is required').max(200),
+  title: z.string().trim().max(500).nullable().optional(),
+  bodyMd: z.string().trim().min(1, 'bodyMd is required').max(20000),
+  placement: tooltipPlacementSchema.optional().default('top'),
+  trigger: tooltipTriggerSchema.optional().default('auto'),
+  audience: tooltipAudienceSchema.optional().default('new_player'),
+  enabled: z.boolean().optional().default(true),
+  version: z.number().int().min(1).optional().default(1),
+});
+
+export const tooltipPatchSchema = z
+  .object({
+    id: z.string().trim().min(1, 'id is required'),
+    key: z.string().trim().min(1).max(200).optional(),
+    scope: z.string().trim().min(1).max(200).optional(),
+    title: z.string().trim().max(500).nullable().optional(),
+    bodyMd: z.string().trim().min(1).max(20000).optional(),
+    placement: tooltipPlacementSchema.optional(),
+    trigger: tooltipTriggerSchema.optional(),
+    audience: tooltipAudienceSchema.optional(),
+    enabled: z.boolean().optional(),
+    version: z.number().int().min(1).optional(),
+  })
+  .refine(
+    (value) =>
+      value.key !== undefined ||
+      value.scope !== undefined ||
+      value.title !== undefined ||
+      value.bodyMd !== undefined ||
+      value.placement !== undefined ||
+      value.trigger !== undefined ||
+      value.audience !== undefined ||
+      value.enabled !== undefined ||
+      value.version !== undefined,
+    { message: 'At least one field besides id must be provided.' }
+  );

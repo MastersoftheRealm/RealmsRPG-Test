@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
@@ -49,6 +49,10 @@ const navLinks: Array<{ href: string; label: string; external?: boolean } | { la
   { href: '/about', label: 'About' },
 ];
 
+const MOBILE_NAV_ID = 'mobile-nav-panel';
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export function Header() {
   const pathname = usePathname();
   const router = useRouter();
@@ -58,6 +62,56 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const libraryTooltip = useTooltipByKey('global.nav.library', { scope: 'global:nav' });
   const codexTooltip = useTooltipByKey('global.nav.codex', { scope: 'global:nav' });
+  const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileNavRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const handleEscape = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileMenuOpen(false);
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const node = mobileNavRef.current;
+    if (node) {
+      const firstFocusable = node.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+      (firstFocusable ?? node).focus();
+    }
+    return () => {
+      mobileMenuButtonRef.current?.focus?.();
+    };
+  }, [mobileMenuOpen]);
+
+  const handleMobileNavKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== 'Tab') return;
+    const node = mobileNavRef.current;
+    if (!node) return;
+    const focusables = Array.from(node.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+      (el) => el.offsetParent !== null || el === document.activeElement
+    );
+    if (focusables.length === 0) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
 
   // Handle login click - store current path for redirect after login
   const handleLoginClick = () => {
@@ -149,14 +203,19 @@ export function Header() {
           </nav>
 
           {/* Account Section */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
+            {!user && (
+              <div className="hidden sm:block">
+                <ThemeToggle variant="inline" />
+              </div>
+            )}
             {user ? (
               <AccountDropdown profile={profile} signOut={signOut} />
             ) : (
               <button
                 type="button"
                 onClick={handleLoginClick}
-                className="font-semibold text-lg text-primary-700 dark:text-primary-300 hover:text-primary-500 dark:hover:text-primary-200 transition-colors whitespace-nowrap"
+                className="font-semibold text-lg text-primary-700 dark:text-primary-300 hover:text-primary-500 dark:hover:text-primary-200 transition-colors whitespace-nowrap min-h-[44px] px-2 flex items-center"
               >
                 Login
               </button>
@@ -164,10 +223,12 @@ export function Header() {
 
             {/* Mobile menu button */}
             <button
+              ref={mobileMenuButtonRef}
               type="button"
               aria-expanded={mobileMenuOpen}
+              aria-controls={MOBILE_NAV_ID}
               aria-label="Toggle navigation menu"
-              className="lg:hidden p-2 text-text-secondary"
+              className="lg:hidden p-2 text-text-secondary min-h-[44px] min-w-[44px] flex items-center justify-center"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? (
@@ -182,7 +243,20 @@ export function Header() {
 
       {/* Mobile Navigation */}
       {mobileMenuOpen ? (
-        <div className="lg:hidden border-t border-border-light bg-surface">
+        <div
+          id={MOBILE_NAV_ID}
+          ref={mobileNavRef}
+          tabIndex={-1}
+          role="navigation"
+          aria-label="Mobile navigation"
+          onKeyDown={handleMobileNavKeyDown}
+          className="lg:hidden border-t border-border-light bg-surface outline-none"
+        >
+          {!user && (
+            <div className="px-4 pt-4 sm:hidden">
+              <ThemeToggle variant="inline" className="w-full justify-center" />
+            </div>
+          )}
           <nav className="px-4 py-4 space-y-2">
             {isAdmin && (
               <Link

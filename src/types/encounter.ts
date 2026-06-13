@@ -5,7 +5,7 @@
  * Extends existing Combatant types from encounter-tracker.
  */
 
-import type { Combatant, CombatantCondition, CombatantType, ConditionDef } from '@/app/(main)/encounter-tracker/encounter-tracker-types';
+import type { Combatant, CombatantCondition, CombatantType, ConditionDef } from '@/components/encounters/encounter-combatant-types';
 
 // Re-export shared types for convenience
 export type { Combatant, CombatantCondition, CombatantType, ConditionDef };

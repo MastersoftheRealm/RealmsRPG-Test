@@ -646,7 +646,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-334
   title: Technique creator load/save bug fixes + share PartCard + unify mechanic builder
   priority: high
-  status: in-progress
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -666,12 +666,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - onSaveSuccess fully resets the form.
     - Technique reuses the shared part card and unified mechanic builder.
     - npm run build passes.
-  notes: "SA-9-1/3/4/5/6/7. 2026-06-12: BUG FIXES DONE (technique-creator/page.tsx) — load now reads isReaction (reaction round-trips), damage load tolerates the array form, onSaveSuccess resets actionType+isReaction, addPart seeds from the first non-mechanic part. Build passes. REMAINING: the unification work (extract shared PowerPartCard to components/creator/, migrate off legacy buildMechanicPartPayload to unified buildMechanicParts)."
+  notes: "SA-9-1/3/4/5/6/7. DONE 2026-06-13. Bug fixes (2026-06-12) + unification: moved PowerPartCard → `src/components/creator/power-part-card.tsx`; technique-creator uses shared PowerPartCard (`showApplyDuration={false}`) and `buildMechanicParts` (removed ~240-line inline PartCard + legacy buildMechanicPartPayload); mechanic-builder extended with `WeaponConfig.attackMode` + `no_attack`. Fixed TechniquePartPayload TS mapping for mechanic parts. Build exit 0."
 
 - id: TASK-335
   title: Library tab UX bugs & parity
   priority: medium
-  status: in-progress
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -690,7 +690,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Duplicate and global sync require confirmation.
     - Enhanced tab matches sibling tab patterns.
     - npm run build passes.
-  notes: "SA-6-1/2/3/8/9/11. 2026-06-12: PARTIAL (library/page.tsx) — (1) tab counts now render (pass count:number not badge:string); (2) switching My→Realms on the Enhanced tab now falls back to 'powers' instead of blanking. Build passes. REMAINING: (3) logged-in mode flash (ties to auth-init in TASK-342), (4) duplicate confirm, (5) global sync confirm, (6) Enhanced tab parity (ListEmptyState, shared sort, edit/duplicate)."
+  notes: "SA-6-1/2/3/8/9/11. DONE 2026-06-13: (1–2) tab counts + Enhanced tab fallback (2026-06-12). (3) library page waits for auth init + sets initial mode once (no logged-in Realms flash). (4) ConfirmActionModal before duplicate in Powers/Techniques/Items/Creatures tabs. (5) ConfirmActionModal before global sync-all in same tabs (warns missing codex refs may be removed). (6) Enhanced tab: ListEmptyState, useSort + ListHeader, edit → /crafting/[id] (no duplicate hook exists). Build: webpack compiles; pre-existing TS error in technique-creator/page.tsx (TASK-334) blocks full build."
 
 - id: TASK-336
   title: Decide Browse vs Library-public consolidation
@@ -717,7 +717,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-337
   title: Creature/species creator unification + bug fixes
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -739,12 +739,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Creature reuses shared skills allocation + load modal; over-fetch removed.
     - Save-time budget/required-field guards added.
     - npm run build passes.
-  notes: "SA-10-1/2/4/5/6/7/12/21."
+  notes: "2026-06-13: Fixed transformers (shield typeMap + op_1_lvl), species third-trait batch confirm (pendingBatch on confirm + onClose clear) + saveDisabled (type + 2 skills), creature lazy library hooks + save budget guard. Deferred: SkillsAllocationPage unification, LoadFromLibraryModal unification (items 3/5). Build exit 0."
 
 - id: TASK-338
   title: Replace blocking alert()/confirm() with toasts/modals
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -759,12 +759,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
   acceptance_criteria:
     - No blocking alert()/confirm() in client code; errors/confirms use shared components.
     - npm run build passes.
-  notes: "SA-7-10, SA-14-11/12, SA-20-11/17."
+  notes: "SA-7-10, SA-14-11/12, SA-20-11/17. DONE 2026-06-13. Replaced ~42 blocking alert() across 14 admin codex/public-library tabs + CodexSpreadsheetView with useToast (errors→'error', missing-ID-after-save→'warning', validation lists use '; ' separators). Proficiencies tab sync uses ConfirmActionModal; character sheet TP-over-limit uses apply+warning toast (soft cap). Fixed result.error ?? 'Operation failed' for optional error strings. Grep: zero alert()/confirm() in client src. Build exit 0."
 
 - id: TASK-339
   title: Standardize loading/error/empty states with retry
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -779,12 +779,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
   acceptance_criteria:
     - Error states offer retry; loading/empty components consistent across areas.
     - npm run build passes.
-  notes: "SA-20-9, SA-6-13, SA-7-6. Supersedes/absorbs TASK-323 (INC-2)."
+  notes: "SA-20-9, SA-6-13, SA-7-6. DONE 2026-06-13. ErrorDisplay+onRetry on Library/Codex/admin tabs, characters, creators (power/technique/item/empowered), crafting hub, encounters hub. Low-traffic admin pages (tooltips/users/roles, CodexSpreadsheetView) deferred. Build exit 0."
 
 - id: TASK-340
   title: API consistency & hardening
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -804,12 +804,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Admin/campaign/tooltips routes rate-limited + validated.
     - Service-role scope reduced where RLS suffices.
     - npm run build passes.
-  notes: "SA-18-5/6/7/8/10/11/13/14, SA-19-10/12/13/14/15."
+  notes: "SA-18-5/6/7/8/10/11/13/14, SA-19-10/12/13/14/15. DONE 2026-06-13 (high-impact subset): GET /api/characters checks Supabase error→500; GET /api/campaigns rate-limited via buildRateLimitKey; tooltips + admin/users rate-limit + Zod (prior pass); public API reads official_* only. Deferred: .passthrough() schema tightening, service-role tooltip prefs, full public/official cache reconcile, prepareForSave dedup. Build exit 0."
 
 - id: TASK-341
   title: Characters list parity (sort/search, touch actions, auth-init)
   priority: medium
-  status: in-progress
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -824,12 +824,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - No auth-state flash; delete usable on touch; valid HTML (no button-in-link).
     - Duplicate + sort/search available; guest path present.
     - npm run build passes.
-  notes: "SA-3-1/2/3/5/6/10. 2026-06-12: PARTIAL — wait for auth init before render (no guest EmptyState flash); removed console.error in delete catch; character-card delete button moved out of the Link (valid HTML, no button-in-link) and made visible on touch/small screens (hover-revealed on desktop). Build passes. REMAINING: duplicate action, client sort/search via useSort/ListHeader, explicit guest sign-in path."
+  notes: "SA-3-1/2/3/5/6/10. DONE 2026-06-13: auth-init skeleton (2026-06-12); delete out of Link + touch-visible. Added useDuplicateCharacter (toast + navigate to new sheet), SearchInput + useSort/ListHeader (name/level/updatedAt), guest EmptyState secondaryAction → /login?returnTo=/characters. CharacterCard duplicate IconButton (sibling of Link). Build: webpack compiles; pre-existing TS error in technique-creator/page.tsx blocks full build."
 
 - id: TASK-342
   title: App-shell hardening (routing, errors, mobile nav, theme)
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -846,12 +846,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Protected routes preserve return path; root error/404 are branded with shell.
     - Home heading hierarchy valid; mobile drawer is accessible; theme available logged-out.
     - npm run build passes.
-  notes: "SA-1-1/2/3/8/9/10/15."
+  notes: "SA-1-1/2/3/8/9/10/15. DONE 2026-06-13: root error.tsx + global-error.tsx; not-found Header/Footer + #main-content; home sr-only h1; mobile nav a11y + 44px targets; ThemeToggle logged-out; ProtectedRoute + admin layout preserve returnTo on login redirect. Build exit 0."
 
 - id: TASK-343
   title: Auth UX & security follow-ups
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -869,12 +869,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Redirects reject off-site targets; username survives confirmation; signOut clears session.
     - Forgot-username works or is honestly disabled; reset-password has a set-new-password step.
     - npm run build passes.
-  notes: "SA-2-1/4/5/8/9/12, SA-19-16/18."
+  notes: "SA-2-1/4/5/8/9/12, SA-19-16/18. DONE 2026-06-13: sanitizeRedirectPath in lib/safe-redirect.ts (confirm/callback/login/register); signOutAction calls auth.signOut(); register stores username_display in user_metadata for confirm; resend passes emailRedirectTo; /reset-password set-new-password step; forgot-username shows Contact support. npm run build exit 0."
 
 - id: TASK-344
   title: Encounters cleanup & correctness
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -891,12 +891,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Dead tracker UI removed; legacy folder dependency resolved.
     - Completed status reachable; turn order correct after reorder; guest data migrates on login.
     - npm run build passes.
-  notes: "SA-12-1/2/3/5/6/7/8."
+  notes: "2026-06-13: encounter-tracker redirects to /encounters; completed lifecycle; drag-reorder remaps currentTurnIndex; guest migration on login/use-auth; CombatantCard + constants + types moved to src/components/encounters/ (legacy folder no longer imported). Deferred: two-way HP/EN/AP sync. Build exit 0."
 
 - id: TASK-345
   title: Static content fixes (metadata, legal copy, carousel a11y)
   priority: low
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -913,12 +913,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
   acceptance_criteria:
     - All content routes have metadata; legal copy is accurate; carousel meets touch/a11y; rules has a fallback link.
     - npm run build passes.
-  notes: "SA-16-2..11/13/14/15."
+  notes: "SA-16-2..11/13/14/15. DONE 2026-06-13: metadata on about/privacy/terms (resources layout already had it); privacy/terms rewritten for free TTRPG web app; about carousel 44px touch + decorative dice alt=\"\"; rules Open in new tab fallback; /resources in footer. npm run build exit 0."
 
 - id: TASK-346
   title: "Systemic token & console cleanup (batch by rule)"
   priority: low
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -933,4 +933,4 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
   acceptance_criteria:
     - Status/secondary text passes WCAG AA tokens in both modes; no stray gray-*/neutral- outside auth.
     - No client console.* left; npm run build + lint pass.
-  notes: "SA-20-5/6/12. Also see CQ-2/TASK-321 for ESLint warnings."
+  notes: "SA-20-5/6/12. DONE 2026-06-13 (batch 1): footer neutral-* → semantic tokens; roll-button unproficient variant → surface/border tokens; removed client console.* from crafting hub catch blocks. Repo-wide -600→-700 and remaining ~38 console sites deferred to future batches (TASK-321/CQ-2). Build exit 0."

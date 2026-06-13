@@ -10,18 +10,18 @@ import {
   ListEmptyState as EmptyState,
   ListHeader,
 } from '@/components/shared';
-import { Modal, Button, Input } from '@/components/ui';
+import { Modal, Button, Input, IconButton, useToast } from '@/components/ui';
 import { useCreatureFeats, type CreatureFeat } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Copy, X } from 'lucide-react';
-import { IconButton } from '@/components/ui';
 
 const COPY_NAME_SUFFIX = ' copy';
 
 export function AdminCreatureFeatsTab() {
-  const { data: creatureFeats, isLoading, error } = useCreatureFeats();
+  const { showToast } = useToast();
+  const { data: creatureFeats, isLoading, error, refetch } = useCreatureFeats();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
@@ -127,7 +127,7 @@ export function AdminCreatureFeatsTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
     }
   };
 
@@ -142,7 +142,7 @@ export function AdminCreatureFeatsTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
     }
   };
 
@@ -157,12 +157,12 @@ export function AdminCreatureFeatsTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       setPendingDeleteId(null);
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
       setPendingDeleteId(null);
     }
   };
 
-  if (error) return <ErrorState message="Failed to load creature feats" />;
+  if (error) return <ErrorState message="Failed to load creature feats" onRetry={() => { void refetch(); }} />;
 
   return (
     <div>

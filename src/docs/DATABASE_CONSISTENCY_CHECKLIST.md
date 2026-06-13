@@ -40,6 +40,7 @@ Use this checklist to keep your Supabase database in sync with the app and fix c
 
 - **Drop legacy Prisma table:** `DROP TABLE IF EXISTS public._prisma_migrations;` — safe if you no longer use Prisma (see SUPABASE_SCHEMA.md §4).
 - **Codex RLS:** If GET `/api/codex` returns 500 (permission denied), run **sql/supabase-codex-rls-public.sql** to grant SELECT on codex_* and core_rules.
+- **Account delete orphans:** If users deleted before 2026-06-13, orphaned rows may remain in `user_species`, `user_empowered_techniques`, `crafting_sessions`, or `user_enhanced_items`. Current app `deleteAccountAction` clears all user-owned tables listed in SUPABASE_SCHEMA.md §6.
 
 ---
 

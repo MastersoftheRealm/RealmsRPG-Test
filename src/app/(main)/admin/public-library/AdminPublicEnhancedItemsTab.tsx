@@ -25,7 +25,7 @@ import { Button, Modal, Select, Input } from '@/components/ui';
 const GRID = '1.6fr 1.3fr 1.3fr 0.9fr 0.9fr 0.9fr 40px';
 
 export function AdminPublicEnhancedItemsTab() {
-  const { data: enhanced = [], isLoading, error } = useOfficialEnhancedItems();
+  const { data: enhanced = [], isLoading, error, refetch } = useOfficialEnhancedItems();
   const { data: items = [] } = useOfficialLibrary('items');
   const { data: powers = [] } = useOfficialLibrary('powers');
 
@@ -53,7 +53,7 @@ export function AdminPublicEnhancedItemsTab() {
   }, [enhanced, search, sortItems]);
 
   if (error) {
-    return <ErrorDisplay message="Failed to load official enhanced items" />;
+    return <ErrorDisplay message="Failed to load official enhanced items" onRetry={() => { void refetch(); }} />;
   }
 
   return (

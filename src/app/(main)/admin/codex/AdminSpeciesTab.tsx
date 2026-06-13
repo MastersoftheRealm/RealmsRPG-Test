@@ -11,12 +11,11 @@ import {
   ListEmptyState as EmptyState,
   ListHeader,
 } from '@/components/shared';
-import { Modal, Button, Input, Textarea } from '@/components/ui';
+import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
 import { useSpecies, useCodexSkills, useTraits, type Species, type Trait, type Skill } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Copy, X, Plus } from 'lucide-react';
-import { IconButton } from '@/components/ui';
 import { useModalListState } from '@/hooks/use-modal-list-state';
 import { formatListCellLabel } from '@/lib/utils';
 
@@ -25,7 +24,8 @@ const TRAIT_PICKER_GRID = '1.5fr 0.6fr 0.6fr 60px';
 import { useSort } from '@/hooks/use-sort';
 
 export function AdminSpeciesTab() {
-  const { data: species, isLoading, error } = useSpecies();
+  const { showToast } = useToast();
+  const { data: species, isLoading, error, refetch } = useSpecies();
   const { data: skills = [] } = useCodexSkills();
   const { data: traits = [] } = useTraits();
   const queryClient = useQueryClient();
@@ -261,7 +261,7 @@ export function AdminSpeciesTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
     }
   };
 
@@ -276,7 +276,7 @@ export function AdminSpeciesTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
     }
   };
 
@@ -291,12 +291,12 @@ export function AdminSpeciesTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       setPendingDeleteId(null);
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
       setPendingDeleteId(null);
     }
   };
 
-  if (error) return <ErrorState message="Failed to load species" />;
+  if (error) return <ErrorState message="Failed to load species" onRetry={() => { void refetch(); }} />;
 
   return (
     <div>
