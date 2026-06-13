@@ -106,7 +106,8 @@ interface UnifiedEquipmentItem {
 }
 
 // Starting currency for new characters at level 1 is 200
-const STARTING_CURRENCY = 200;
+import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
+const STARTING_CURRENCY = CHARACTER_STARTING_CURRENCY;
 
 // Selected item type for our internal state with quantity
 interface SelectedItem {

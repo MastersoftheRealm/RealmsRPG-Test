@@ -137,10 +137,6 @@ function RegisterContent() {
     }
   };
 
-  const handleAppleSignIn = () => {
-    setError('Apple Sign-In coming soon!');
-  };
-
   if (needsEmailConfirm) {
     return (
       <AuthCard title="Check Your Email" subtitle="Confirm your account to continue">
@@ -273,7 +269,6 @@ function RegisterContent() {
           onClick={handleGoogleSignIn}
           disabled={isLoading}
         />
-        <SocialButton provider="apple" onClick={handleAppleSignIn} disabled={isLoading} />
       </div>
 
       <p className="mt-6 text-center text-gray-300">

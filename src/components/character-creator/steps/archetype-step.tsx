@@ -79,7 +79,7 @@ function AbilityPickButton({
 }
 
 export function ArchetypeStep() {
-  const { draft, setArchetype, setArchetypePath, setCreationMode, nextStep } = useCharacterCreatorStore();
+  const { draft, setArchetype, setArchetypePath, setCreationMode, nextStep, prevStep, reselectArchetype } = useCharacterCreatorStore();
   const { data: codexArchetypes = [], isLoading } = useCodexArchetypes();
   
   const [selectedType, setSelectedType] = useState<ArchetypeCategory | null>(
@@ -180,25 +180,26 @@ export function ArchetypeStep() {
         </div>
         
         <button
+          type="button"
           onClick={() => {
             setSelectedType(null);
             setSelectedAbility(null);
             setSelectedMartialAbility(null);
-            useCharacterCreatorStore.setState({ 
-              draft: { 
-                ...draft, 
-                archetype: undefined,
-                pow_abil: undefined,
-                mart_abil: undefined,
-                creationMode: undefined,
-                archetypePathId: undefined,
-              }
-            });
+            reselectArchetype();
           }}
-          className="text-text-secondary hover:text-text-primary underline"
+          className="text-text-secondary hover:text-text-primary underline mb-6"
         >
           Choose a different archetype
         </button>
+
+        <div className="flex justify-between">
+          <Button variant="secondary" onClick={prevStep} className="min-h-[44px]">
+            ← Back
+          </Button>
+          <Button onClick={nextStep} className="min-h-[44px]">
+            Continue →
+          </Button>
+        </div>
       </div>
     );
   }

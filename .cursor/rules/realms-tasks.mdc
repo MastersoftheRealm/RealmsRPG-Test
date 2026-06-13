@@ -13,8 +13,9 @@ alwaysApply: true
 4. For UI work: check `src/docs/MOBILE_UX.md`; ensure new/edited modals and pages follow mobile patterns (fullScreenOnMobile, side-scroll or collapse for dense sections, touch targets).
 
 **When implementing:**
-- Update task `status` to `in-progress`, then `done` when merged.
-- Add `notes` with PR link and summary on completion.
+- Update task `status` to `in-progress`, then `done` when all acceptance criteria pass, or `partial` with `completed_work` / `remaining_work` / `follow_up_tasks`.
+- Human-only steps go in `src/docs/ai/DEVELOPER_TASK_QUEUE.md` (required actions + **DEV-V-###** build validation index).
+- For user-facing `done`/`partial`: add granular tests to `src/docs/ai/BUILD_VALIDATION.md`, set `build_validation` + `developer_test_plan` on the task, index suite in `DEVELOPER_TASK_QUEUE.md`.
 - Append entry to `src/docs/ai/AI_CHANGELOG.md`.
 
 **New tasks:** Use format in `src/docs/ai/AI_REQUEST_TEMPLATE.md`. Add to `AI_TASK_QUEUE.md` with next TASK-### ID.

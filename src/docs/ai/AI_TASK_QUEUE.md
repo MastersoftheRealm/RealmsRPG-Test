@@ -2,7 +2,12 @@
 
 Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text may still mention Prisma for historical context; data access is Supabase only. Ignore Firestore/RTDB/Firebase in old task text.
 
-**Focus:** Pick a `status: not-started` (or `in-progress`) task; skip reading `done` tasks. Update `status` and add `notes` on completion. Read `AGENT_GUIDE.md` first; see `AGENTS.md` and `.cursor/rules/`.
+**Focus:** Pick `status: not-started`, `in-progress`, or `partial` (read `remaining_work` / `follow_up_tasks`). Skip `done` unless verifying. Human-only: [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md). Read `AGENT_GUIDE.md` first.
+
+**Status rules:**
+- **`done`** — Every acceptance criterion met.
+- **`partial`** — Set `completed_work`, `remaining_work`, `follow_up_tasks`. Never `done` + "deferred" alone.
+- **`blocked`** — Owner action in DEVELOPER_TASK_QUEUE.
 
 ---
 
@@ -15,7 +20,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 > finish/commit (referencing the TASK id) before marking `done`.
 
 # How to use
-- Pick `priority: high` then `medium`, `status: not-started` (or `in-progress`). Update to `done` when merged; add `notes` with PR/commit link.
+- Pick `priority: high` then `medium`, `status: not-started` / `in-progress` / `partial`. Use `done` only when all acceptance criteria pass.
 - **New tasks:** Use next TASK-### ID (see end of file), `AI_REQUEST_TEMPLATE.md` format. Add when audits or implementation reveal work. Check queue first to avoid duplicates.
 
 - id: TASK-269
@@ -201,18 +206,18 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     Unify into one parametrized hook (scope: user | official) to remove the parallel copy.
   related_files:
     - src/hooks/use-enhanced-items.ts
-    - src/hooks/use-official-enhanced-items.ts
     - src/hooks/index.ts
+    - src/app/(main)/admin/public-library/AdminPublicEnhancedItemsTab.tsx
   acceptance_criteria:
     - One shared hook (scope param or shared internal) serves both user and official enhanced-item reads.
     - Admin tab consumer migrated; no behavior change.
     - `npm run build` passes.
-  notes: "DONE 2026-06-13: Official enhanced-item hooks exported from hooks/index.ts. Parallel user/official files retained (different services/endpoints); barrel unification satisfies admin consumer. Build exit 0."
+  notes: "2026-06-13. Option B: single `use-enhanced-items.ts` with `scope: 'user' | 'official'` for query + CRUD; `OfficialEnhancedItem` type co-located; admin tab uses `useEnhancedItems('official')` + scoped mutations from `@/hooks`; deleted `use-official-enhanced-items.ts`. Thin `useOfficialEnhancedItems` aliases retained. Build exit 0."
 
 - id: TASK-314
   title: Extract shared official-library list renderer (Library/Admin/Codex tab dedup)
   priority: medium
-  status: done
+  status: partial
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -232,7 +237,13 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - The 4 Codex tabs reuse `CodexMyCodexEmpty` instead of inline copy.
     - No visual/behavioral regressions across Library, Admin, Codex.
     - `npm run build` passes.
-  notes: "DONE 2026-06-13 (subset): 6 Codex My-mode tabs use CodexMyCodexEmpty. Deferred: shared OfficialLibraryList for Library≈Admin grid dedup. Build exit 0."
+  completed_work: |
+    - 6 Codex My-mode tabs use CodexMyCodexEmpty.
+  remaining_work: |
+    - Shared OfficialLibraryList for Library≈Admin grid dedup.
+  follow_up_tasks:
+    - TASK-347
+  notes: "2026-06-13 subset."
 
 - id: TASK-315
   title: Finish public→official rename (delete /api/public, migrate usePublicLibrary call sites)
@@ -280,7 +291,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-317
   title: Adopt existing character-sheet context; split characters/[id]/page.tsx (4,200 L)
   priority: high
-  status: done
+  status: partial
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -299,12 +310,19 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Page split into smaller tab/section modules (no single-file growth).
     - No behavior regressions (autosave, enrichment, rolls, portrait, campaign visibility).
     - `npm run build` passes.
-  notes: "DONE 2026-06-13 (incremental): CharacterSheetProvider wraps sheet tree; LibrarySection uses useCharacterSheetOptional() — 20 prop removals (isEditMode + 9 modal callbacks × desktop/mobile). Context extended for shield/state modals. Deferred: migrate remaining sections + split page into per-tab modules (follow-up if file grows). Build exit 0."
+  completed_work: |
+    - CharacterSheetProvider + LibrarySection context (20 prop removals).
+  remaining_work: |
+    - Split page into modules; migrate remaining sections.
+  follow_up_tasks:
+    - TASK-348
+    - TASK-365
+  notes: "2026-06-13 incremental."
 
 - id: TASK-318
   title: Split add-library-item-modal.tsx (4,762 L) into hook + per-type subcomponents
   priority: medium
-  status: done
+  status: partial
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -318,7 +336,13 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Fetch/filter/sort logic extracted into a hook; per-type rendering split into subcomponents.
     - No behavior change to selection across all item types.
     - `npm run build` passes.
-  notes: "DONE 2026-06-13: `useAddLibraryItemData` hook extracted (fetches, filters, enrichment, empty/loading). Modal ~200 lines UI + selection. Deferred: per-type subcomponent split. Build exit 0."
+  completed_work: |
+    - useAddLibraryItemData hook extracted.
+  remaining_work: |
+    - Per-type modal subcomponents.
+  follow_up_tasks:
+    - TASK-349
+  notes: "2026-06-13."
 
 - id: TASK-319
   title: Remove verified-unused shared exports + legacy load-modal branch
@@ -362,7 +386,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-321
   title: Reduce ESLint warnings (batch by rule)
   priority: low
-  status: done
+  status: partial
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -375,7 +399,13 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Warning count materially reduced; no new errors introduced.
     - `react-hooks/exhaustive-deps` fixes do not change runtime behavior.
     - `npm run build` passes.
-  notes: "DONE 2026-06-13 (batch 1): Fixed @next/next/no-html-link-for-pages in global-error.tsx. ~329 warnings remain (no-unused-vars, set-state-in-effect). Build exit 0; lint 0 errors."
+  completed_work: |
+    - Batch 1 lint fix; 0 errors.
+  remaining_work: |
+    - ~329 ESLint warnings remain.
+  follow_up_tasks:
+    - TASK-350
+  notes: "2026-06-13 batch 1."
 
 - id: TASK-322
   title: Route admin fetch through apiFetch wrapper
@@ -455,7 +485,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-326
   title: Tighten Supabase security advisors (bucket listing + leaked-password protection)
   priority: medium
-  status: done
+  status: partial
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -468,12 +498,18 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Storage SELECT policies scoped so buckets aren't broadly listable (read-by-key still works).
     - Leaked-password protection enabled in Supabase Auth.
     - SQL/migration documented; advisors re-checked.
-  notes: "DONE 2026-06-13: sql/supabase-storage-select-hardening-2026-06.sql + DEPLOYMENT doc for leaked-password (Dashboard). Owner must run SQL + enable HIBP in Auth settings."
+  completed_work: |
+    - Storage SELECT hardening applied live (MCP).
+  remaining_work: |
+    - Enable HIBP in Supabase Auth (DEV-001).
+  follow_up_tasks:
+    - TASK-353
+  notes: "2026-06-13. See DEVELOPER_TASK_QUEUE."
 
 - id: TASK-327
   title: Address Supabase performance advisors (RLS initplan, dup policies, FK indexes)
   priority: medium
-  status: done
+  status: partial
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -489,7 +525,13 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Duplicate permissive policies consolidated where safe.
     - Missing FK indexes added; clearly-unused indexes removed.
     - Migrations documented; advisors re-checked; no access regressions.
-  notes: "DONE 2026-06-13: sql/supabase-rls-initplan-fk-indexes-2026-06.sql (initplan wraps + FK indexes). Duplicate-policy consolidation documented as optional follow-up. Owner must run SQL in Dashboard."
+  completed_work: |
+    - FK indexes + batch-1 initplan SQL applied live.
+  remaining_work: |
+    - Consolidate duplicate permissive RLS policies.
+  follow_up_tasks:
+    - TASK-352
+  notes: "2026-06-13 batch 1."
 
 # Queued from Systematic Per-Area Audit (SYSTEMATIC_AUDIT_2026-06.md)
 
@@ -597,7 +639,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-332
   title: Primitive-level a11y & touch targets (high leverage)
   priority: high
-  status: done
+  status: partial
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -619,7 +661,13 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Tab pattern is WAI-ARIA complete; tab counts render.
     - ErrorDisplay supports retry; Library/Codex error states use it.
     - npm run build passes; spot-check no layout regressions.
-  notes: "SA-17-1..8, SA-20-1/2/3/15, SA-6-1. DONE 2026-06-13. (1) Button + IconButton now enforce a 44px min tap target ONLY on coarse pointers via `[@media(pointer:coarse)]:min-h-[44px]/min-w-[44px]` — desktop dense layouts keep compact sizing (verified no desktop change since the variant is touch-only). (2) Modal: added focus trap (Tab/Shift+Tab cycle), initial focus into the dialog on open, and focus restore to the trigger on close/unmount; dialog div is now `tabIndex=-1` focus target; the sr-only custom-header title now uses `titleA11y` instead of the generic 'Dialog'. (3) TabNavigation: roving tabindex (active tab tabIndex 0, others -1) + ArrowLeft/Right/Home/End keyboard nav + stable per-instance `useId` button ids, on all 3 render paths (pill, underline, underline+suffix). Tab counts already render via the `count` prop (TASK-335 fixed the Library caller). NOTE: full aria-controls↔role=tabpanel wiring needs per-page panel ids and is deferred (panels are rendered by callers); keyboard a11y is the main gap and is now closed. (4) ErrorDisplay gained optional `onRetry`/`retryLabel` (renders a secondary Button w/ RotateCw); wired into all 5 Library tabs (Powers/Items/Techniques/Creatures/Enhanced via React Query refetch) and all 8 Codex tabs (Feats/Equipment/Parts/CreatureFeats/Properties/Skills/Traits/Species). Build green, lint clean."
+  completed_work: |
+    - Touch targets, modal focus trap, tab keyboard nav, ErrorDisplay onRetry.
+  remaining_work: |
+    - aria-controls + role=tabpanel on tabbed pages.
+  follow_up_tasks:
+    - TASK-355
+  notes: "2026-06-13. SA-17-1..8 except tabpanel wiring."
 
 - id: TASK-333
   title: Autosave correctness (sheet / encounter / crafting)
@@ -719,7 +767,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-337
   title: Creature/species creator unification + bug fixes
   priority: medium
-  status: done
+  status: partial
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -741,7 +789,13 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Creature reuses shared skills allocation + load modal; over-fetch removed.
     - Save-time budget/required-field guards added.
     - npm run build passes.
-  notes: "2026-06-13: Fixed transformers (shield typeMap + op_1_lvl), species third-trait batch confirm (pendingBatch on confirm + onClose clear) + saveDisabled (type + 2 skills), creature lazy library hooks + save budget guard. Deferred: SkillsAllocationPage unification, LoadFromLibraryModal unification (items 3/5). Build exit 0."
+  completed_work: |
+    - Transformer fixes; species batch; creature lazy hooks + budget guard.
+  remaining_work: |
+    - SkillsAllocationPage + unified load modal.
+  follow_up_tasks:
+    - TASK-357
+  notes: "2026-06-13."
 
 - id: TASK-338
   title: Replace blocking alert()/confirm() with toasts/modals
@@ -766,7 +820,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-339
   title: Standardize loading/error/empty states with retry
   priority: medium
-  status: done
+  status: partial
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -781,12 +835,18 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
   acceptance_criteria:
     - Error states offer retry; loading/empty components consistent across areas.
     - npm run build passes.
-  notes: "SA-20-9, SA-6-13, SA-7-6. DONE 2026-06-13. ErrorDisplay+onRetry on Library/Codex/admin tabs, characters, creators (power/technique/item/empowered), crafting hub, encounters hub. Low-traffic admin pages (tooltips/users/roles, CodexSpreadsheetView) deferred. Build exit 0."
+  completed_work: |
+    - ErrorDisplay+onRetry on Library, Codex, creators, encounters, characters.
+  remaining_work: |
+    - Admin tooltips/users/roles + spreadsheet retry.
+  follow_up_tasks:
+    - TASK-358
+  notes: "2026-06-13. Absorbed TASK-323."
 
 - id: TASK-340
   title: API consistency & hardening
   priority: medium
-  status: done
+  status: partial
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -806,7 +866,13 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Admin/campaign/tooltips routes rate-limited + validated.
     - Service-role scope reduced where RLS suffices.
     - npm run build passes.
-  notes: "SA-18-5/6/7/8/10/11/13/14, SA-19-10/12/13/14/15. DONE 2026-06-13 (high-impact subset): GET /api/characters checks Supabase error→500; GET /api/campaigns rate-limited via buildRateLimitKey; tooltips + admin/users rate-limit + Zod (prior pass); public API reads official_* only. Deferred: .passthrough() schema tightening, service-role tooltip prefs, full public/official cache reconcile, prepareForSave dedup. Build exit 0."
+  completed_work: |
+    - GET characters error handling; campaigns rate limit; admin/tooltips Zod.
+  remaining_work: |
+    - passthrough tightening; cache reconcile; prepareForSave dedup.
+  follow_up_tasks:
+    - TASK-359
+  notes: "2026-06-13 subset."
 
 - id: TASK-341
   title: Characters list parity (sort/search, touch actions, auth-init)
@@ -876,7 +942,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-344
   title: Encounters cleanup & correctness
   priority: medium
-  status: done
+  status: partial
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -893,7 +959,13 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Dead tracker UI removed; legacy folder dependency resolved.
     - Completed status reachable; turn order correct after reorder; guest data migrates on login.
     - npm run build passes.
-  notes: "2026-06-13: encounter-tracker redirects to /encounters; completed lifecycle; drag-reorder remaps currentTurnIndex; guest migration on login/use-auth; CombatantCard + constants + types moved to src/components/encounters/ (legacy folder no longer imported). Deferred: two-way HP/EN/AP sync. Build exit 0."
+  completed_work: |
+    - Dead tracker removed; completed lifecycle; guest migration; module move.
+  remaining_work: |
+    - Two-way HP/EN/AP sync.
+  follow_up_tasks:
+    - TASK-360
+  notes: "2026-06-13."
 
 - id: TASK-345
   title: Static content fixes (metadata, legal copy, carousel a11y)
@@ -920,7 +992,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-346
   title: "Systemic token & console cleanup (batch by rule)"
   priority: low
-  status: done
+  status: partial
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -935,4 +1007,197 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
   acceptance_criteria:
     - Status/secondary text passes WCAG AA tokens in both modes; no stray gray-*/neutral- outside auth.
     - No client console.* left; npm run build + lint pass.
-  notes: "SA-20-5/6/12. DONE 2026-06-13 (batch 1): footer neutral-* → semantic tokens; roll-button unproficient variant → surface/border tokens; removed client console.* from crafting hub catch blocks. Repo-wide -600→-700 and remaining ~38 console sites deferred to future batches (TASK-321/CQ-2). Build exit 0."
+  completed_work: |
+    - Batch 1: footer, roll-button, crafting console.*.
+  remaining_work: |
+    - Repo-wide tokens + ~38 console.* sites.
+  follow_up_tasks:
+    - TASK-351
+  notes: "2026-06-13 batch 1."
+
+# Follow-up tasks (partial parents + orphan audit findings)
+
+- id: TASK-347
+  title: Extract shared OfficialLibraryList (Library + Admin grid dedup)
+  priority: medium
+  status: not-started
+  created_at: 2026-06-13
+  created_by: agent
+  parent_task: TASK-314
+  audit_refs: [SA-6-4, SA-14-8]
+  acceptance_criteria:
+    - Shared list component for Library + Admin official views; build passes.
+
+- id: TASK-348
+  title: Split character sheet page into per-tab modules
+  priority: medium
+  status: not-started
+  created_at: 2026-06-13
+  parent_task: TASK-317
+  acceptance_criteria:
+    - Page slimmed; two+ sections use context; build passes.
+
+- id: TASK-349
+  title: Add-library-item modal per-type subcomponents
+  priority: low
+  status: not-started
+  created_at: 2026-06-13
+  parent_task: TASK-318
+  acceptance_criteria:
+    - Per-type subcomponents; build passes.
+
+- id: TASK-350
+  title: ESLint warning cleanup batch 2
+  priority: low
+  status: not-started
+  created_at: 2026-06-13
+  parent_task: TASK-321
+  acceptance_criteria:
+    - Warnings materially reduced; lint + build pass.
+
+- id: TASK-351
+  title: Token & console cleanup batch 2
+  priority: low
+  status: not-started
+  created_at: 2026-06-13
+  parent_task: TASK-346
+  acceptance_criteria:
+    - Contrast-safe tokens; no client console.*; build passes.
+
+- id: TASK-352
+  title: Consolidate duplicate permissive RLS policies
+  priority: low
+  status: not-started
+  created_at: 2026-06-13
+  parent_task: TASK-327
+  acceptance_criteria:
+    - SQL applied; advisor warnings reduced; spot-test campaigns.
+
+- id: TASK-353
+  title: Enable Supabase leaked-password protection (HIBP)
+  priority: medium
+  status: not-started
+  created_at: 2026-06-13
+  parent_task: TASK-326
+  notes: "Human-only: DEVELOPER_TASK_QUEUE DEV-001."
+
+- id: TASK-354
+  title: RLS initplan batch 2
+  priority: low
+  status: done
+  created_at: 2026-06-13
+  parent_task: TASK-327
+  notes: "2026-06-13: sql/supabase-rls-initplan-batch2-2026-06.sql + campaign_rolls SELECT applied live via MCP."
+
+- id: TASK-355
+  title: TabNavigation aria-controls + tabpanel wiring
+  priority: medium
+  status: not-started
+  created_at: 2026-06-13
+  parent_task: TASK-332
+  audit_refs: [SA-17-4]
+
+- id: TASK-356
+  title: Character creator validation & step guards
+  priority: high
+  status: done
+  created_at: 2026-06-13
+  audit_refs: [SA-5-1, SA-5-2, SA-5-3, SA-5-4, SA-5-5, SA-5-16, SA-5-17]
+  notes: "2026-06-13: step guards, mixed-species validation, 200c currency, archetype downstream reset, Continue gating. Build exit 0."
+  developer_test_plan: |
+    Suite DEV-V-001 (T001–T015) — see BUILD_VALIDATION.md.
+  build_validation:
+    suite: DEV-V-001
+    tests:
+      - DEV-V-001-T001
+      - DEV-V-001-T002
+      - DEV-V-001-T003
+      - DEV-V-001-T004
+      - DEV-V-001-T005
+      - DEV-V-001-T006
+      - DEV-V-001-T007
+      - DEV-V-001-T008
+      - DEV-V-001-T009
+      - DEV-V-001-T010
+      - DEV-V-001-T011
+      - DEV-V-001-T012
+      - DEV-V-001-T013
+      - DEV-V-001-T014
+      - DEV-V-001-T015
+
+- id: TASK-357
+  title: Creature SkillsAllocationPage + unified load modal
+  priority: medium
+  status: not-started
+  created_at: 2026-06-13
+  parent_task: TASK-337
+  audit_refs: [SA-10-3, SA-10-5]
+
+- id: TASK-358
+  title: Admin low-traffic pages error retry
+  priority: low
+  status: not-started
+  created_at: 2026-06-13
+  parent_task: TASK-339
+  audit_refs: [SA-14-14, SA-20-9]
+
+- id: TASK-359
+  title: API hardening remainder
+  priority: medium
+  status: not-started
+  created_at: 2026-06-13
+  parent_task: TASK-340
+  audit_refs: [SA-18-10, SA-18-11, SA-18-13]
+
+- id: TASK-360
+  title: Encounter two-way HP/EN/AP sync
+  priority: low
+  status: not-started
+  created_at: 2026-06-13
+  parent_task: TASK-344
+
+- id: TASK-361
+  title: Auth UX remainder
+  priority: medium
+  status: partial
+  created_at: 2026-06-13
+  completed_work: |
+    - Apple sign-in hidden on login/register (DEV-Q01).
+    - Usernames SELECT restricted to own row (DEV-Q02, sql/supabase-usernames-select-restrict-2026-06.sql).
+  remaining_work: |
+    - Forgot-username AuthCard layout (SA-2-6).
+    - Auth rate limits on forgot-username/resend (SA-2-8).
+    - Register username blocklist parity with changeUsernameAction (SA-2-14).
+  audit_refs: [SA-2-6, SA-2-8, SA-2-14]
+  developer_test_plan: |
+    Suite DEV-V-007 (planned) — see BUILD_VALIDATION.md.
+  notes: "2026-06-13: Apple hidden; username RLS applied live."
+
+- id: TASK-362
+  title: Library/Codex lazy tab queries
+  priority: low
+  status: not-started
+  created_at: 2026-06-13
+  audit_refs: [SA-6-6, SA-6-7, SA-7-4]
+
+- id: TASK-363
+  title: apiFetch migration remainder
+  priority: low
+  status: not-started
+  created_at: 2026-06-13
+  audit_refs: [SA-18-2, SA-18-3]
+
+- id: TASK-364
+  title: Unify FilterSection implementations
+  priority: low
+  status: not-started
+  created_at: 2026-06-13
+  audit_refs: [SA-17-22]
+
+- id: TASK-365
+  title: Character sheet LibrarySection desktop/mobile dedup
+  priority: medium
+  status: not-started
+  created_at: 2026-06-13
+  parent_task: TASK-317
+  audit_refs: [SA-4-4, SA-4-5, SA-4-6]

@@ -56,13 +56,19 @@ export {
   useDeleteCraftingSession,
 } from './use-crafting';
 
-// Enhanced items (from crafting)
+// Enhanced items (user library + official admin)
 export {
   enhancedItemsKeys,
   useEnhancedItems,
+  useOfficialEnhancedItems,
   useCreateEnhancedItem,
+  useCreateOfficialEnhancedItem,
   useDeleteEnhancedItem,
+  useDeleteOfficialEnhancedItem,
   useUpdateEnhancedItem,
+  useUpdateOfficialEnhancedItem,
+  type EnhancedItemsScope,
+  type OfficialEnhancedItem,
 } from './use-enhanced-items';
 
 // Characters
@@ -120,13 +126,6 @@ export {
 
 // Official Library (browse, add to my library)
 export { useOfficialLibrary, useAddOfficialToLibrary } from './use-official-library';
-export {
-  useOfficialEnhancedItems,
-  useCreateOfficialEnhancedItem,
-  useDeleteOfficialEnhancedItem,
-  useUpdateOfficialEnhancedItem,
-  type OfficialEnhancedItem,
-} from './use-official-enhanced-items';
 
 // User Library (user-specific content)
 export {

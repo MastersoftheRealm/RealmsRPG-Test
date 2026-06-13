@@ -12,12 +12,34 @@ Single reference for component locations, patterns, and where to record work. Ve
 
 Before marking a task `done`, verify:
 
-1. **Acceptance criteria** — Every criterion is fully met. Do not mark done if any bullet is incomplete (e.g., "Confirmation dialog before deletion" means a dialog must exist).
-2. **Related files** — Paths in the task's `related_files` match the actual codebase. Use file search or `list_dir` to confirm. Update the task if you correct paths during implementation.
+1. **Acceptance criteria** — Every criterion is fully met. Do not mark `done` if any bullet is incomplete.
+2. **Related files** — Paths in the task's `related_files` match the actual codebase. Update the task if you correct paths.
 3. **Build** — `npm run build` passes.
 4. **Manual check** — For UI changes, spot-check in the browser if feasible.
 
-If a task was marked done but a criterion was missed, create a follow-up task (e.g., TASK-053 for TASK-022's missing confirmation dialog).
+### If work is incomplete
+
+Use **`status: partial`**, not `done` with "deferred" in notes:
+
+- **`completed_work`** — bullets of what shipped
+- **`remaining_work`** — open acceptance criteria
+- **`follow_up_tasks`** — new TASK-### IDs for the remainder (no orphan audit findings)
+
+Human-only steps (Dashboard, prod smoke, product decisions) go in [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md), not buried in notes.
+
+### Build validation (QA how-to)
+
+For **user-facing** tasks (UI, auth, campaigns, sheet, admin, security, DB RLS):
+
+1. Set **`build_validation`** on the task (suite id + test ids) and a short **`developer_test_plan`** pointer.
+2. **Add or update** granular tests in [`BUILD_VALIDATION.md`](BUILD_VALIDATION.md) — **one behavior per DEV-V-###-T### test** (steps + expected + report line).
+3. **Index** the suite in [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Build validation index.
+
+Do **not** write cramped multi-check smoke paragraphs. Split “pick archetype AND check skills AND check feats” into separate tests under one **DEV-V-###** category.
+
+Automated-only tasks (`npm run build`, lint) do not need build validation unless behavior is hard to verify in CI.
+
+If a task was wrongly marked `done`, re-open as `partial` or add/finish follow-up tasks.
 
 ## Common File Path Corrections
 

@@ -36,7 +36,7 @@ export function AbilitiesStep() {
   }, [abilities]);
   
   const remainingPoints = totalPoints - spentPoints;
-  const canContinue = remainingPoints >= 0;
+  const canContinue = remainingPoints === 0;
   const abilitiesTooltip = useTooltipByKey('characters.new.step.abilities.pointsHelp', {
     scope: 'page:/characters/new',
     context: { level },

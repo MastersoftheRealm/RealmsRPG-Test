@@ -122,10 +122,6 @@ function LoginContent() {
     }
   };
 
-  const handleAppleSignIn = () => {
-    setError('Apple Sign-In coming soon!');
-  };
-
   return (
     <AuthCard
       title="Welcome Back"
@@ -210,11 +206,6 @@ function LoginContent() {
         <SocialButton
           provider="google"
           onClick={handleGoogleSignIn}
-          disabled={isLoading || !ready}
-        />
-        <SocialButton
-          provider="apple"
-          onClick={handleAppleSignIn}
           disabled={isLoading || !ready}
         />
       </div>

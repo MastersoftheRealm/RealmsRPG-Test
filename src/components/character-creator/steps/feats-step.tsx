@@ -28,7 +28,8 @@ import {
 } from '@/components/codex';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
-import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
+import { useCodexFeats, useCodexSkills, useMergedSpecies, useTraits, type Feat, type Skill } from '@/hooks';
+import { getValidationIssuesForStep } from '@/lib/character-creator-validation';
 import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats } from '@/lib/game/formulas';
 import { checkFeatRequirements, type CharacterForFeatRequirement } from '@/lib/game/feat-requirements';
 import type { CodexSkillForFeat } from '@/lib/game/formulas';
@@ -70,6 +71,19 @@ export function FeatsStep() {
   const { draft, nextStep, prevStep, updateDraft } = useCharacterCreatorStore();
   const { data: feats, isLoading } = useCodexFeats();
   const { data: skillsDb = [] } = useCodexSkills();
+  const { data: allSpecies = [] } = useMergedSpecies();
+  const { data: codexSkills } = useCodexSkills();
+  const { data: allTraits } = useTraits();
+
+  const validationContext = useMemo(
+    () => ({ allSpecies, codexSkills: codexSkills ?? null, allTraits: allTraits ?? null }),
+    [allSpecies, codexSkills, allTraits]
+  );
+  const stepIssues = useMemo(
+    () => getValidationIssuesForStep('feats', draft, validationContext),
+    [draft, validationContext]
+  );
+  const canContinue = stepIssues.length === 0;
   
   const [expandedSelectedId, setExpandedSelectedId] = useState<string | null>(null);
   const [usePathRecommendations, setUsePathRecommendations] = useState(draft.creationMode === 'path');
@@ -771,6 +785,7 @@ export function FeatsStep() {
         </Button>
         <Button
           onClick={nextStep}
+          disabled={!canContinue}
         >
           Continue →
         </Button>
