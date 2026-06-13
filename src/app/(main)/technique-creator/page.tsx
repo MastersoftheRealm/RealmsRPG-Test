@@ -606,15 +606,18 @@ function TechniqueCreatorContent() {
 
   // Actions
   const addPart = useCallback(() => {
-    if (techniqueParts.length === 0) return;
+    // Seed from the first selectable (non-mechanic) part; mechanic parts are
+    // auto-generated from action/damage/weapon and must not appear as editable rows.
+    const firstSelectable = techniqueParts.find((p) => !p.mechanic);
+    if (!firstSelectable) return;
     setSelectedParts((prev) => [
       ...prev,
       {
-        part: techniqueParts[0],
+        part: firstSelectable,
         op_1_lvl: 0,
         op_2_lvl: 0,
         op_3_lvl: 0,
-        selectedCategory: 'any',
+        selectedCategory: firstSelectable.category || 'any',
       },
     ]);
   }, [techniqueParts]);
@@ -676,6 +679,8 @@ function TechniqueCreatorContent() {
       setName('');
       setDescription('');
       setSelectedParts([]);
+      setActionType('basic');
+      setIsReaction(false);
       setDamage({ amount: 0, size: 6, type: 'none' });
       setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
     },
@@ -753,9 +758,10 @@ function TechniqueCreatorContent() {
     }
     setSelectedParts(loadedParts);
     
-    // Load action type and reaction
+    // Load action type and reaction. Saved payloads persist `isReaction`
+    // (see getPayload); keep `reaction` as a fallback for legacy/enriched shapes.
     setActionType(technique.actionTypeSelection || technique.actionType || 'basic');
-    setIsReaction(technique.reaction ?? false);
+    setIsReaction(technique.isReaction ?? technique.reaction ?? false);
     
     // Load weapon
     if (savedHasNoAttack) {
@@ -778,13 +784,14 @@ function TechniqueCreatorContent() {
       setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
     }
     
-    // Load damage
-    if (technique.damage) {
-      const dmg = technique.damage;
+    // Load damage. getPayload persists damage as an array ([{ amount, size }]);
+    // tolerate both the array form and a legacy single-object form.
+    const rawDamage = Array.isArray(technique.damage) ? technique.damage[0] : technique.damage;
+    if (rawDamage) {
       setDamage({
-        amount: dmg.amount || dmg.dice || 0,
-        size: dmg.size || dmg.sides || 6,
-        type: dmg.type || 'none',
+        amount: rawDamage.amount || rawDamage.dice || 0,
+        size: rawDamage.size || rawDamage.sides || 6,
+        type: rawDamage.type || 'none',
       });
     } else {
       setDamage({ amount: 0, size: 6, type: 'none' });

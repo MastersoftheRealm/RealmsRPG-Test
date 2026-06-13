@@ -4,6 +4,8 @@
 
 **Related:** `SUPABASE_SCHEMA.md` (current schema), `CODEX_SCHEMA_REFERENCE.md` (field definitions), `codex_csv/` or `Codex csv/` (CSV sources), `scripts/seed-to-supabase.js`.
 
+> **Superseded note (2026-06):** Passages below that describe `{ id, data }` JSONB storage reflect the **original** design. Codex tables are now **columnar** (`core_rules` is the only remaining id+data JSONB table). For anything about current storage format, trust `SUPABASE_SCHEMA.md`.
+
 ---
 
 ## 1. Current state (why only two columns?)

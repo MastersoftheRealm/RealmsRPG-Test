@@ -261,7 +261,7 @@ export function EquipmentStep() {
       }
     }
     
-    // Add all equipment from RTDB (weapons, armor, and general equipment)
+    // Add all equipment from the Codex (weapons, armor, and general equipment)
     if (codexEquipment) {
       for (const item of codexEquipment) {
         const equip = item as { category?: string };

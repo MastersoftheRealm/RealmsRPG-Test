@@ -369,7 +369,7 @@ interface LibrarySectionProps {
   level?: number;
   archetypeAbility?: number;
   martialProficiency?: number; // For armament proficiency display
-  // Parts RTDB data for enrichment (descriptions, TP costs)
+  // Codex parts data for enrichment (descriptions, TP costs)
   powerPartsDb?: Array<{ id: string; name: string; description?: string; base_tp?: number; op_1_tp?: number; op_2_tp?: number; op_3_tp?: number }>;
   techniquePartsDb?: Array<{ id: string; name: string; description?: string; base_tp?: number; op_1_tp?: number; op_2_tp?: number; op_3_tp?: number }>;
   itemPropertiesDb?: Array<{ id: string | number; name: string; description?: string; base_tp?: number; tp_cost?: number }>;
@@ -392,7 +392,7 @@ interface LibrarySectionProps {
     characteristicTrait?: string | null;
     speciesTraits?: string[];
   };
-  // Species traits from RTDB species data (automatically granted based on species)
+  // Species traits from Codex species data (automatically granted based on species)
   speciesTraitsFromCodex?: string[];
   traitsDb?: Array<{
     id: string;

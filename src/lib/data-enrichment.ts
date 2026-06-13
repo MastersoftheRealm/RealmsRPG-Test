@@ -551,7 +551,7 @@ export function enrichCharacterData(
 // =============================================================================
 
 /**
- * Fields that should be saved to Prisma (minimal data).
+ * Fields that should be saved to the database (minimal data).
  * Mirrors vanilla site's SAVEABLE_FIELDS in main.js cleanForSave().
  */
 const SAVEABLE_FIELDS = [

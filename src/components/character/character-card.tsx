@@ -28,58 +28,60 @@ export function CharacterCard({ character, onDelete, isDeleting }: CharacterCard
   };
 
   return (
-    <Link
-      href={`/characters/${character.id}`}
+    <div
       className={cn(
-        'group relative block rounded-xl overflow-hidden bg-surface shadow-md',
+        'group relative rounded-xl overflow-hidden bg-surface shadow-md',
         'hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5',
         isDeleting ? 'opacity-50 pointer-events-none' : ''
       )}
     >
-      {/* Portrait */}
-      <div className="relative aspect-[3/4] bg-primary-800">
-        <Image
-          src={getEffectivePortrait(character.portrait)}
-          alt={character.name}
-          fill
-          className="object-cover"
-          unoptimized
-        />
-        
-        {/* Delete button */}
-        {onDelete ? (
-          <IconButton
-            onClick={handleDelete}
-            className="absolute top-2 right-2 bg-danger/80 hover:bg-danger text-white opacity-0 group-hover:opacity-100 transition-opacity"
-            label="Delete character"
-            variant="danger"
-          >
-            <X className="w-5 h-5" />
-          </IconButton>
-        ) : null}
-      </div>
+      <Link href={`/characters/${character.id}`} className="block">
+        {/* Portrait */}
+        <div className="relative aspect-[3/4] bg-primary-800">
+          <Image
+            src={getEffectivePortrait(character.portrait)}
+            alt={character.name}
+            fill
+            className="object-cover"
+            unoptimized
+          />
+        </div>
 
-      {/* Info */}
-      <div className="p-4">
-        <h3 className="font-bold text-lg text-text-primary uppercase truncate">
-          {character.name}
-        </h3>
-        <div className="flex items-center gap-2 mt-1 text-sm text-text-secondary">
-          <span>Level {character.level}</span>
-          {character.archetypeName ? (
-            <>
-              <span>•</span>
-              <span className="truncate">{character.archetypeName}</span>
-            </>
+        {/* Info */}
+        <div className="p-4">
+          <h3 className="font-bold text-lg text-text-primary uppercase truncate">
+            {character.name}
+          </h3>
+          <div className="flex items-center gap-2 mt-1 text-sm text-text-secondary">
+            <span>Level {character.level}</span>
+            {character.archetypeName ? (
+              <>
+                <span>•</span>
+                <span className="truncate">{character.archetypeName}</span>
+              </>
+            ) : null}
+          </div>
+          {character.ancestryName ? (
+            <p className="text-sm text-text-muted mt-1 truncate">
+              {character.ancestryName}
+            </p>
           ) : null}
         </div>
-        {character.ancestryName ? (
-          <p className="text-sm text-text-muted mt-1 truncate">
-            {character.ancestryName}
-          </p>
-        ) : null}
-      </div>
-    </Link>
+      </Link>
+
+      {/* Delete button — sibling of the Link (not nested interactive content).
+          Always visible on touch/small screens; hover-revealed on desktop. */}
+      {onDelete ? (
+        <IconButton
+          onClick={handleDelete}
+          className="absolute top-2 right-2 z-10 bg-danger/80 hover:bg-danger text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+          label="Delete character"
+          variant="danger"
+        >
+          <X className="w-5 h-5" />
+        </IconButton>
+      ) : null}
+    </div>
   );
 }
 

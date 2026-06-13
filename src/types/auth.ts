@@ -1,12 +1,12 @@
 /**
  * Auth Types
  * ===========
- * Unified auth user type for Supabase (replaces Firebase User)
+ * Unified auth user type for Supabase.
  */
 
 export interface AuthUser {
   id: string;
-  uid: string; // Alias for id (Firebase compatibility)
+  uid: string; // Legacy alias for id, still used widely across the API layer
   email?: string | null;
   displayName?: string | null;
   photoURL?: string | null;

@@ -1,7 +1,7 @@
 /**
  * Campaign Service
  * =================
- * Client-side API calls for campaign data. Uses /api/campaigns (Prisma).
+ * Client-side API calls for campaign data. Uses /api/campaigns (Supabase).
  */
 
 import type { Campaign, CampaignSummary } from '@/types/campaign';

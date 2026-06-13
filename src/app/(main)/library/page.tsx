@@ -76,6 +76,12 @@ function LibraryContent() {
     if (!isGuest) setLibraryMode('my');
   }, [isGuest]);
 
+  // The Enhanced tab only exists in My Library; if we switch to Realms mode
+  // while it's active, fall back to a valid tab so content doesn't go blank.
+  useEffect(() => {
+    if (libraryMode === 'public' && activeTab === 'enhanced') setActiveTab('powers');
+  }, [libraryMode, activeTab]);
+
   const { data: powers = [] } = useUserPowers();
   const { data: techniques = [] } = useUserTechniques();
   const { data: empoweredTechniques = [] } = useUserEmpoweredTechniques();
@@ -156,7 +162,7 @@ function LibraryContent() {
     id: tab.id,
     label: tab.label,
     icon: tab.icon,
-    badge: counts[tab.id].toString(),
+    count: counts[tab.id],
   }));
 
   const isPublic = libraryMode === 'public';

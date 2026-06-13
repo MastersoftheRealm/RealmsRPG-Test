@@ -22,7 +22,7 @@ export default function CharactersPage() {
 
 function CharactersContent() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, initialized: authInitialized } = useAuth();
   const { data: characters = [], isLoading, error } = useCharacters({ enabled: !!user });
   const deleteCharacter = useDeleteCharacter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -45,15 +45,16 @@ function CharactersContent() {
     try {
       await deleteCharacter.mutateAsync(deleteTarget.id);
       setDeleteTarget(null);
-    } catch (err) {
-      console.error('Error deleting character:', err);
+    } catch {
       setDeleteError('Failed to delete character. Please try again.');
     } finally {
       setDeletingId(null);
     }
   };
 
-  if (isLoading) {
+  // Show skeleton until auth resolves too, so logged-in users don't briefly
+  // see the guest empty state before their characters query is enabled.
+  if (!authInitialized || isLoading) {
     return (
       <PageContainer size="xl">
         <PageHeader title="Characters" />

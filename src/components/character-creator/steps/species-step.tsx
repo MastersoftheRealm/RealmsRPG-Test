@@ -146,7 +146,7 @@ export function SpeciesStep() {
                   <span className="text-xs px-2 py-0.5 bg-surface-alt text-text-secondary rounded capitalize">
                     {getSizesDisplay(s)}
                   </span>
-                  {/* NO SPEED - species don't have speed values in RTDB */}
+                  {/* NO SPEED - species don't have speed values */}
                   {isSelected && (
                     <span className="text-xs px-2 py-0.5 bg-primary-600 text-white dark:bg-primary-100 dark:text-white rounded">
                       ✓ Selected

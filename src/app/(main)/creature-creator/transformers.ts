@@ -7,7 +7,7 @@
 
 import type { DisplayItem, ItemStat } from '@/types/items';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
-import type { CreatureFeat as RTDBCreatureFeat, ItemProperty } from '@/hooks/use-rtdb';
+import type { CreatureFeat as CodexCreatureFeat, ItemProperty } from '@/hooks/use-rtdb';
 import type { PowerPart, TechniquePart } from '@/hooks';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
@@ -234,7 +234,7 @@ export function displayItemToCreatureTechnique(item: DisplayItem): CreatureTechn
 // =============================================================================
 
 export function transformCreatureFeatToDisplayItem(
-  feat: RTDBCreatureFeat,
+  feat: CodexCreatureFeat,
   selectedIds: Set<string> = new Set(),
   mechanicalFeatIds: Set<number> = new Set()
 ): DisplayItem | null {

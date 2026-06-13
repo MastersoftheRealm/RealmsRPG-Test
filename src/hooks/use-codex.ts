@@ -2,7 +2,6 @@
  * Codex Hooks
  * ============
  * React Query hooks for codex/game reference data from Supabase (via /api/codex).
- * Replaces use-firestore-codex.
  */
 
 'use client';

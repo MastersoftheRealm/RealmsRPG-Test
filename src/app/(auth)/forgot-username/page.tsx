@@ -2,7 +2,7 @@
  * Forgot Username Page
  * ====================
  * Allows users to recover their username by entering their email address.
- * Uses Prisma for lookup. Always shows success for security (don't reveal if email exists).
+ * Uses Supabase for lookup. Always shows success for security (don't reveal if email exists).
  */
 
 'use client';

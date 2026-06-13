@@ -2,7 +2,7 @@
  * My Account Page
  * ===============
  * User profile and account settings page.
- * Uses Supabase Auth, Prisma, and Supabase Storage.
+ * Uses Supabase Auth, Database, and Storage.
  */
 
 'use client';

@@ -18,7 +18,7 @@ Start here: **[ENGINEERING_ONBOARDING.md](./ENGINEERING_ONBOARDING.md)** — arc
 8. **ALL_FEEDBACK_CLEAN.md** — Owner feedback; append new entries here.
 9. **UI_COMPONENT_REFERENCE.md** — Detailed component usage; includes component decision tree.
 10. **DEPLOYMENT_AND_SECRETS_SUPABASE.md** — Vercel/Supabase env vars, deployment, secrets.
-11. **ADMIN_SETUP.md** — Admin access (env vars only).
+11. **ADMIN_SETUP.md** — Admin access (role-based via `user_profiles.role = 'admin'`).
 12. **ai/archive/** — Historical one-off audits and design docs (CODEBASE_AUDIT, UNIFICATION_AUDIT, MODAL_UNIFICATION_AUDIT, etc.). Reference only; active agent docs are AGENT_GUIDE, AI_TASK_QUEUE, AI_CHANGELOG, AI_REQUEST_TEMPLATE.
 
 Root `AGENTS.md` and `.cursor/rules/` provide session-level instructions.

@@ -2,6 +2,8 @@
 
 This file gathers the main UI components, shared utilities, and style conventions used across the site for unification and reuse.
 
+> **Agents:** This is a detailed human reference. For day-to-day work use the shorter canonical sources first: the shared-component table in `.cursor/rules/realms-unification.mdc`, `src/docs/ai/AGENT_GUIDE.md`, and the `src/components/shared/index.ts` / `src/components/ui/index.ts` barrels (which list the real exports). Consult this file only when you need the deeper decision-tree detail.
+
 > Location: `src/components/*` and `src/components/shared/*` (central exports in `src/components/ui/index.ts`).
 
 ---

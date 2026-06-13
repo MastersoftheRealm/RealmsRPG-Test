@@ -236,7 +236,7 @@ export interface PowerMechanicContext {
 }
 
 /**
- * Map damage type string to RTDB part ID
+ * Map damage type string to Codex part ID
  */
 function getDamagePartId(damageType: string): number | null {
   switch (damageType) {
@@ -306,7 +306,7 @@ function getDamagePartName(damageType: string): string {
 
 /**
  * Build mechanic part payloads based on current UI selections.
- * Converts action type and damage selections into RTDB parts for cost calculation.
+ * Converts action type and damage selections into Codex parts for cost calculation.
  */
 export function buildPowerMechanicPartPayload(
   ctx: PowerMechanicContext
