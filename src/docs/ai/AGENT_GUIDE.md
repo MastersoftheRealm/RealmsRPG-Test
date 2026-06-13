@@ -1,6 +1,10 @@
 # Agent Guide — Sources of Truth
 
-Single reference for component locations, patterns, and where to record work. Verified against codebase (Feb 2026).
+Single reference for component locations, patterns, and where to record work. Verified against codebase (Jun 2026).
+
+> **First stop before building anything new:** [`FEATURE_INDEX.md`](FEATURE_INDEX.md) — feature/component/hook/service map to confirm it doesn't already exist. The full canonical "for X, read Y" map is in the root `AGENTS.md` (Source-of-Truth Map).
+>
+> **Known issues / audits:** [`FULL_AUDIT_2026-06.md`](FULL_AUDIT_2026-06.md) (cross-cutting) and [`SYSTEMATIC_AUDIT_2026-06.md`](SYSTEMATIC_AUDIT_2026-06.md) (per-page/area walkthrough). Check these before working in an area so you don't re-discover or re-introduce known problems.
 
 **Note:** When implementing a task, verify `related_files` in AI_TASK_QUEUE against the actual codebase — some entries may have been corrected; paths can become stale (e.g., `header-section.tsx` was replaced by `sheet-action-toolbar.tsx`).
 
@@ -8,12 +12,34 @@ Single reference for component locations, patterns, and where to record work. Ve
 
 Before marking a task `done`, verify:
 
-1. **Acceptance criteria** — Every criterion is fully met. Do not mark done if any bullet is incomplete (e.g., "Confirmation dialog before deletion" means a dialog must exist).
-2. **Related files** — Paths in the task's `related_files` match the actual codebase. Use file search or `list_dir` to confirm. Update the task if you correct paths during implementation.
+1. **Acceptance criteria** — Every criterion is fully met. Do not mark `done` if any bullet is incomplete.
+2. **Related files** — Paths in the task's `related_files` match the actual codebase. Update the task if you correct paths.
 3. **Build** — `npm run build` passes.
 4. **Manual check** — For UI changes, spot-check in the browser if feasible.
 
-If a task was marked done but a criterion was missed, create a follow-up task (e.g., TASK-053 for TASK-022's missing confirmation dialog).
+### If work is incomplete
+
+Use **`status: partial`**, not `done` with "deferred" in notes:
+
+- **`completed_work`** — bullets of what shipped
+- **`remaining_work`** — open acceptance criteria
+- **`follow_up_tasks`** — new TASK-### IDs for the remainder (no orphan audit findings)
+
+Human-only steps (Dashboard, prod smoke, product decisions) go in [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md), not buried in notes.
+
+### Build validation (QA how-to)
+
+For **user-facing** tasks (UI, auth, campaigns, sheet, admin, security, DB RLS):
+
+1. Set **`build_validation`** on the task (suite id + test ids) and a short **`developer_test_plan`** pointer.
+2. **Add or update** granular tests in [`BUILD_VALIDATION.md`](BUILD_VALIDATION.md) — **one behavior per DEV-V-###-T### test** (steps + expected + report line).
+3. **Index** the suite in [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Build validation index.
+
+Do **not** write cramped multi-check smoke paragraphs. Split “pick archetype AND check skills AND check feats” into separate tests under one **DEV-V-###** category.
+
+Automated-only tasks (`npm run build`, lint) do not need build validation unless behavior is hard to verify in CI.
+
+If a task was wrongly marked `done`, re-open as `partial` or add/finish follow-up tasks.
 
 ## Common File Path Corrections
 
@@ -62,6 +88,24 @@ Task queue `related_files` may reference outdated paths. When implementing, pref
 
 See `UI_COMPONENT_REFERENCE.md` for full component details.
 
+## Unified patterns (verified Jun 2026)
+
+Goal: "Learn once, use forever" — consistent UI across Library, Codex, Character Sheet, Creators. List/sort headers use **ListHeader** (single source of truth).
+
+| Pattern | Where used |
+|---------|------------|
+| GridListRow | Library, Codex, add-feat-modal, add-library-item-modal, add-skill-modal, equipment-step, feats-tab, library-section, creature-creator |
+| SkillRow | skills-section, skills-step, creature-creator |
+| ValueStepper | abilities-section, sheet-header, health-energy-allocator, dice-roller, all creators, encounter-tracker |
+| SectionHeader | feats-tab, proficiencies-tab, notes-tab, archetype-section, crafting pages |
+| ListHeader | All Codex/Library/Admin list views, feats-step, UnifiedSelectionModal |
+| UnifiedSelectionModal | AddFeatModal, AddSkillModal, AddLibraryItemModal (thin wrappers) |
+| useModalListState | LoadFromLibraryModal, LoadCreatureModal |
+
+**Intentional exceptions:** Auth pages use `gray-*`; AddSubSkillModal uses SelectionToggle (not GridListRow); footer uses `bg-neutral-400`; RollButton gradients use neutral tokens.
+
+Quick reference: `.cursor/rules/realms-unification.mdc`, `DESIGN_SYSTEM.md`.
+
 ## Key Files
 
 | Purpose | File |
@@ -79,7 +123,7 @@ See `UI_COMPONENT_REFERENCE.md` for full component details.
 | **User experience goals** | `src/docs/USER_EXPERIENCE_GOALS.md` — UX goals, terminology (Realms Codex/Library, My Library), what’s implemented vs backlog, and AI checklist for onboarding/retention/copy. Read when changing landing, creator, library, or onboarding flows. |
 | Architecture | `src/docs/ARCHITECTURE.md` |
 | **Codex/library data** | `src/docs/DATA_HANDLING.md` — single codex fetch, query keys, cache headers, prefetch; read when adding or changing codex/library hooks or APIs |
-| **Character/creature math** | `src/lib/formulas.ts`, `src/lib/calculations.ts`, `src/lib/skill-allocation.ts` — all ability, defense, skill, and derived stats |
+| **Character/creature math** | `src/lib/game/formulas.ts`, `src/lib/game/calculations.ts`, `src/lib/game/skill-allocation.ts` — all ability, defense, skill, and derived stats |
 | **Power/technique/item cost and display** | `src/lib/calculators/` — part costs, derive*Display helpers, filterSavedItemPropertiesForList; use for creator preview and library/codex display |
 | **Crafting requirements and outcome** | `src/lib/game/crafting-utils.ts` — getCraftingRequirements, getUpgradeRequirements, getEnhancedCraftingRequirements, calculateCraftingOutcome, optional modifiers; `src/types/crafting.ts` — session and enhanced item types |
 
@@ -139,7 +183,7 @@ When loading a saved item/power/technique into a creator, follow this **three-st
 
 **Rule:** Mechanic-only entries (parts/properties driven by dedicated UI) are restored from dedicated state only. Never restore them into the user-selectable list.
 
-**Load modal state and data:** Use `useCreatorLoad('powers' | 'techniques' | 'items')` from `@/hooks` for load-modal visibility and library items. Returns `showLoadModal`, `setShowLoadModal`, `openLoadModal`, `closeLoadModal`, `items`, `isLoading`, `error`. Type-specific `handleLoad*` (reset → restore mechanics → restore filtered list) stays in each creator.
+**Load modal state and data:** Use `useLoadModalLibrary('powers' | 'techniques' | 'items' | 'empowered-technique')` from `@/hooks` for load-modal visibility and library items. Returns `showLoadModal`, `setShowLoadModal`, `openLoadModal`, `closeLoadModal`, `selectableItems`, `rawItems`, `isLoading`, `error`, plus source-filter state. Type-specific `handleLoad*` (reset → restore mechanics → restore filtered list) stays in each creator.
 
 ## Creator layout
 
@@ -168,10 +212,11 @@ Use design tokens for colors; avoid raw `blue-*` / `green-*` outside auth.
 | Changelog | `src/docs/ai/AI_CHANGELOG.md` |
 | Raw feedback | `src/docs/ALL_FEEDBACK_CLEAN.md` |
 | Game rules | `src/docs/GAME_RULES.md` — terminology, formulas, display conventions |
-| Codebase audit | `src/docs/ai/CODEBASE_AUDIT_2026-02-13.md` — 98-finding audit with 6-phase fix plan |
-| Unification audit | `src/docs/ai/UNIFICATION_AUDIT_2026-02-20.md` — shared logic, creators, libraries, allocation, centralized sources of truth |
-| **Modal unification audit** | `src/docs/ai/MODAL_UNIFICATION_AUDIT_2026-02-20.md` — list modals (add-X, load, selection): logic, styles, EmptyState/LoadingState, FilterSection, alignment with Codex/Library. See TASK-264. |
-| **CDN & query audit** | `src/docs/ai/CDN_QUERY_AUDIT_2026-02-24.md` — Vercel Fast Data Transfer, Fast Origin Transfer, Edge Requests, Edge CPU; proxy matcher, cache headers, refetch/polling, images; checklist for new public APIs and hooks. |
+| **Full audit (current)** | `src/docs/ai/FULL_AUDIT_2026-06.md` — whole-site + AI-workflow audit organized by AI-agent pathology taxonomy; supersedes the Feb 2026 audits. |
+| Codebase audit (historical) | `src/docs/ai/archive/CODEBASE_AUDIT_2026-02-13.md` — 98-finding audit with 6-phase fix plan |
+| Unification audit (historical) | `src/docs/ai/archive/UNIFICATION_AUDIT_2026-02-20.md` — shared logic, creators, libraries, allocation, centralized sources of truth |
+| Modal unification audit (historical) | `src/docs/ai/archive/MODAL_UNIFICATION_AUDIT_2026-02-20.md` — list modals (add-X, load, selection): logic, styles, EmptyState/LoadingState, FilterSection, alignment with Codex/Library. See TASK-264. |
+| **Performance & edge usage** | `src/docs/PERFORMANCE_AND_EDGE.md` — Vercel CDN/edge requests, proxy matcher, cache headers, prefetch, polling; checklist for new public APIs and hooks. |
 | **Mobile UX** | `src/docs/MOBILE_UX.md` — breakpoints, touch targets, full-screen modals, dense-layout strategy (side-scroll vs collapse). When adding a new page or modal, follow MOBILE_UX.md and the Agent checklist there. |
 | **User experience goals** | `src/docs/USER_EXPERIENCE_GOALS.md` — UX goals, terminology (Realms Codex/Library, My Library), implemented vs backlog, AI checklist for onboarding/retention/copy. Update Section 3/4 when completing UX tasks. |
 

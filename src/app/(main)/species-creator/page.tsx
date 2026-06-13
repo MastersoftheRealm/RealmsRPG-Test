@@ -404,16 +404,29 @@ export default function SpeciesCreatorPage() {
 
   const confirmThirdSpeciesTrait = useCallback(() => {
     if (pendingTraitAdd?.category === 'species_traits') {
-      setForm((prev) => ({
-        ...prev,
-        species_traits: [...prev.species_traits, pendingTraitAdd.traitId],
-      }));
+      setForm((prev) => {
+        const idsToAdd =
+          pendingBatch?.category === 'species_traits'
+            ? pendingBatch.traitIds
+            : [pendingTraitAdd.traitId];
+        const limit = traitLimits.species_traits;
+        const seen = new Set(prev.species_traits);
+        const additions: string[] = [];
+        for (const id of idsToAdd) {
+          if (prev.species_traits.length + additions.length >= limit) break;
+          if (seen.has(id)) continue;
+          seen.add(id);
+          additions.push(id);
+        }
+        if (additions.length === 0) return prev;
+        return { ...prev, species_traits: [...prev.species_traits, ...additions] };
+      });
     }
     setPendingTraitAdd(null);
     setPendingBatch(null);
     setShowThirdSpeciesTraitConfirm(false);
     setShowAddSpeciesAncestryModal(false);
-  }, [pendingTraitAdd]);
+  }, [pendingTraitAdd, pendingBatch, traitLimits]);
 
   const removeTrait = useCallback((category: TraitCategory, traitId: string) => {
     setForm((prev) => ({
@@ -520,6 +533,8 @@ export default function SpeciesCreatorPage() {
           saving={save.saving}
           saveDisabled={
             !form.name.trim() ||
+            !form.type.trim() ||
+            form.skillIds.filter((id) => id !== '').length < MAX_SKILLS ||
             form.ave_height === '' ||
             form.ave_weight === '' ||
             form.adulthood_lifespan[0] === '' ||
@@ -545,7 +560,7 @@ export default function SpeciesCreatorPage() {
           <LoginPromptModal isOpen={showLoginPrompt} onClose={() => setShowLoginPrompt(false)} returnPath="/species-creator" />
           <ConfirmActionModal
             isOpen={showThirdSpeciesTraitConfirm}
-            onClose={() => { setShowThirdSpeciesTraitConfirm(false); setPendingTraitAdd(null); }}
+            onClose={() => { setShowThirdSpeciesTraitConfirm(false); setPendingTraitAdd(null); setPendingBatch(null); }}
             onConfirm={confirmThirdSpeciesTrait}
             title="Third species trait"
             description={SPECIES_TRAIT_WARNING}

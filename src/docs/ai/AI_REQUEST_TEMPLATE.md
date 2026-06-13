@@ -8,7 +8,23 @@ Use this template when converting raw feedback into an actionable request to be 
   created_at: YYYY-MM-DD
   created_by: owner|agent
   priority: critical|high|medium|low
-  status: not-started|in-progress|blocked|done
+  status: not-started|in-progress|blocked|partial|done
+  completed_work: |
+    # Required when status is partial: what was actually finished (bullets).
+  remaining_work: |
+    # Required when status is partial: acceptance criteria still open (bullets).
+  follow_up_tasks:
+    - TASK-###
+  build_validation: |
+    # Required for user-facing UI/API/security when marking done/partial.
+    suite: DEV-V-###   # category in BUILD_VALIDATION.md
+    tests:
+      - DEV-V-###-T001
+      - DEV-V-###-T002
+    # Add full step-by-step entries in src/docs/ai/BUILD_VALIDATION.md (one behavior per test).
+    # Index suite in DEVELOPER_TASK_QUEUE.md → Build validation index.
+  developer_test_plan: |
+    # Short pointer for the task queue, e.g. "Suite DEV-V-001 T001–T015 — see BUILD_VALIDATION.md"
   related_files:
     - path/to/file.tsx
   implemented_by: |
@@ -50,4 +66,4 @@ Example:
     - Run `npm run build` successfully
     - Manual verification: create character, add skill, save, reload
   notes: |
-    Reference UNIFICATION_STATUS.md and DESIGN_SYSTEM.md for component patterns.
+    Reference AGENT_GUIDE.md (Unified patterns) and DESIGN_SYSTEM.md for component patterns.

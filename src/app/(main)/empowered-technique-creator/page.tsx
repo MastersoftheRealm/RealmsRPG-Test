@@ -17,7 +17,7 @@ import {
   useAdmin,
   useCreatorSave,
   useLoadModalLibrary,
-  usePublicLibrary,
+  useOfficialLibrary,
   useCreatorWeaponOptions,
   type PowerPart,
   type TechniquePart,
@@ -63,8 +63,8 @@ import { Button, Checkbox, Input, Textarea, LoadingState, Alert, PageContainer }
 import { ValueStepper, SectionCostBadge } from '@/components/shared';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
-import { ConfirmActionModal, ContextHelpTooltip, LoginPromptModal } from '@/components/shared';
-import { PowerPartCard } from '@/app/(main)/power-creator/PowerPartCard';
+import { ConfirmActionModal, ContextHelpTooltip, LoginPromptModal, ErrorDisplay } from '@/components/shared';
+import { PowerPartCard } from '@/components/creator';
 import { EXCLUDED_PARTS } from '@/app/(main)/power-creator/power-creator-constants';
 import {
   inferEmpoweredWeaponTpFromPowerPayload,
@@ -154,11 +154,11 @@ function EmpoweredTechniqueCreatorContent() {
   const [selectedPowerAdvancedParts, setSelectedPowerAdvancedParts] = useState<SelectedPowerPart[]>([]);
   const [selectedTechniqueParts, setSelectedTechniqueParts] = useState<SelectedTechniquePart[]>([]);
 
-  const { data: powerParts = [], isLoading: powerPartsLoading, error: powerPartsError } = usePowerParts();
-  const { data: techniqueParts = [], isLoading: techniquePartsLoading, error: techniquePartsError } = useTechniqueParts();
+  const { data: powerParts = [], isLoading: powerPartsLoading, error: powerPartsError, refetch: refetchPowerParts } = usePowerParts();
+  const { data: techniqueParts = [], isLoading: techniquePartsLoading, error: techniquePartsError, refetch: refetchTechniqueParts } = useTechniqueParts();
   const { data: userItems = [] } = useUserItems();
   const { data: itemPropertiesDb = [] } = useItemProperties();
-  const { data: officialItems = [] } = usePublicLibrary('items');
+  const { data: officialItems = [] } = useOfficialLibrary('items');
 
   const { fullOptions: allWeaponOptions, visibleOptions } = useCreatorWeaponOptions({
     defaults: DEFAULT_WEAPON_OPTIONS,
@@ -888,11 +888,16 @@ function EmpoweredTechniqueCreatorContent() {
     );
   }
   if (powerPartsError || techniquePartsError) {
+    const loadError = powerPartsError || techniquePartsError;
     return (
       <PageContainer size="xl">
-        <Alert variant="danger">
-          Failed to load creator data: {(powerPartsError || techniquePartsError)?.message}
-        </Alert>
+        <ErrorDisplay
+          message={`Failed to load creator data: ${loadError?.message ?? 'Unknown error'}`}
+          onRetry={() => {
+            void refetchPowerParts();
+            void refetchTechniqueParts();
+          }}
+        />
       </PageContainer>
     );
   }

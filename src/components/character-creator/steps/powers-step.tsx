@@ -16,7 +16,8 @@ import { cn } from '@/lib/utils';
 import { ContextHelpTooltip, GridListRow, InnateToggle, ListHeader, SegmentedControl } from '@/components/shared';
 import { calculateArchetypeProgression } from '@/lib/game/formulas';
 import { Button, IconButton, Spinner } from '@/components/ui';
-import { useUserPowers, useUserTechniques, useUserEmpoweredTechniques, usePowerParts, useTechniqueParts, usePublicLibrary, useItemProperties, type PowerPart, type TechniquePart } from '@/hooks';
+import { useUserPowers, useUserTechniques, useUserEmpoweredTechniques, usePowerParts, useTechniqueParts, useOfficialLibrary, useItemProperties, useMergedSpecies, useCodexSkills, useTraits, type PowerPart, type TechniquePart } from '@/hooks';
+import { getValidationIssuesForStep } from '@/lib/character-creator-validation';
 import type { UserPower, UserTechnique } from '@/hooks/use-user-library';
 import { SourceFilter, type SourceFilterValue } from '@/components/shared';
 import type { ChipData } from '@/components/shared/grid-list-row';
@@ -63,11 +64,23 @@ export function PowersStep() {
   
   // Fetch user's library and official library (same merge + displayFilter pattern as character sheet add-library-item modal)
   const { data: userPowers = [], isLoading: powersLoading } = useUserPowers();
+  const { data: allSpecies = [] } = useMergedSpecies();
+  const { data: codexSkills } = useCodexSkills();
+  const { data: allTraits } = useTraits();
+  const validationContext = useMemo(
+    () => ({ allSpecies, codexSkills: codexSkills ?? null, allTraits: allTraits ?? null }),
+    [allSpecies, codexSkills, allTraits]
+  );
+  const stepIssues = useMemo(
+    () => getValidationIssuesForStep('powers', draft, validationContext),
+    [draft, validationContext]
+  );
+  const canContinue = stepIssues.length === 0;
   const { data: userTechniques = [], isLoading: techniquesLoading } = useUserTechniques();
   const { data: userEmpoweredTechniques = [], isLoading: empoweredTechniquesLoading } = useUserEmpoweredTechniques();
-  const { data: publicPowers = [], isLoading: publicPowersLoading, isError: publicPowersError } = usePublicLibrary('powers');
-  const { data: publicTechniques = [], isLoading: publicTechniquesLoading, isError: publicTechniquesError } = usePublicLibrary('techniques');
-  const { data: publicEmpoweredTechniques = [], isLoading: publicEmpoweredTechniquesLoading, isError: publicEmpoweredTechniquesError } = usePublicLibrary('empowered-techniques');
+  const { data: publicPowers = [], isLoading: publicPowersLoading, isError: publicPowersError } = useOfficialLibrary('powers');
+  const { data: publicTechniques = [], isLoading: publicTechniquesLoading, isError: publicTechniquesError } = useOfficialLibrary('techniques');
+  const { data: publicEmpoweredTechniques = [], isLoading: publicEmpoweredTechniquesLoading, isError: publicEmpoweredTechniquesError } = useOfficialLibrary('empowered-techniques');
   const { data: powerParts } = usePowerParts();
   const { data: techniqueParts } = useTechniqueParts();
   const { data: itemPropertiesDb = [] } = useItemProperties();
@@ -1010,6 +1023,7 @@ export function PowersStep() {
         </Button>
         <Button
           onClick={nextStep}
+          disabled={!canContinue}
         >
           Continue →
         </Button>

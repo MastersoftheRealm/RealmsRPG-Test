@@ -227,7 +227,7 @@ export function SpeciesModal({
           <p className="text-text-secondary mt-1">{species.description}</p>
         </div>
 
-        {/* Stats Grid - NO SPEED (species don't have speed in RTDB) */}
+        {/* Stats Grid - NO SPEED (species don't have speed values) */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-surface-alt rounded-xl mb-6">
           <div className="text-center">
             <span className="block text-xs text-text-muted dark:text-text-secondary uppercase tracking-wide">Size</span>

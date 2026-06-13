@@ -9,8 +9,8 @@ import { GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui';
 import { ValueStepper } from '@/components/shared';
-import { CONDITION_OPTIONS } from './encounter-tracker-constants';
-import type { CombatantCardProps } from './encounter-tracker-types';
+import { CONDITION_OPTIONS } from './encounter-constants';
+import type { CombatantCardProps } from './encounter-combatant-types';
 import type { TrackedCombatant } from '@/types/encounter';
 
 function getHealthBarColor(current: number, max: number): string {

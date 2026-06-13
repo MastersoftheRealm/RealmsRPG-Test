@@ -376,10 +376,22 @@ export async function removeCharacterFromCampaignAction(data: {
     );
     const memberIds = [...new Set(characters.map((c) => c.userId))];
 
-    await supabase.from('campaigns').update({ characters, memberIds }).eq('id', data.campaignId);
+    // Roster mutation runs via the service role after the ownership/self check
+    // above. Members no longer hold a direct `campaigns` UPDATE RLS grant
+    // (TASK-329), so a player removing their own character can't write the row
+    // with the user-scoped client.
+    let dbWrite: ReturnType<typeof createServiceRoleClient>;
+    try {
+      dbWrite = createServiceRoleClient();
+    } catch {
+      console.error('removeCharacterFromCampaignAction: SUPABASE_SERVICE_ROLE_KEY missing');
+      return { success: false, error: 'Server cannot update the campaign right now. Please contact support.' };
+    }
+
+    await dbWrite.from('campaigns').update({ characters, memberIds }).eq('id', data.campaignId);
 
     if (!memberIds.includes(data.userId)) {
-      await supabase
+      await dbWrite
         .from('campaign_members')
         .delete()
         .eq('campaign_id', data.campaignId)

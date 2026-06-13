@@ -23,4 +23,5 @@ export { CreatorLayout, type CreatorLayoutProps } from './CreatorLayout';
 export { WeaponSelector, type WeaponOption } from './weapon-selector';
 export { CreatorWeaponPicker, type CreatorWeaponPickerProps } from './creator-weapon-picker';
 export { AdvancedCalculationsPanel, type AdvancedCalculationRow } from './advanced-calculations-panel';
+export { PowerPartCard, type PowerPartCardProps } from './power-part-card';
 

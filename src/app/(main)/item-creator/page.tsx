@@ -4,11 +4,11 @@
  * Tool for creating custom items (weapons, armor, shields) using the property system.
  * 
  * Features:
- * - Select item properties from RTDB database
+ * - Select item properties from the Codex
  * - Configure option levels for each property
  * - Calculate IP, TP, and currency costs
  * - Automatic rarity calculation
- * - Save to user's library via Cloud Functions
+ * - Save to user's library via the library API
  */
 
 'use client';
@@ -18,7 +18,7 @@ import { useSearchParams } from 'next/navigation';
 import { X, Plus, ChevronDown, ChevronUp, Shield, Sword, Target, Info, Coins } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useItemProperties, useAdmin, useCreatorSave, useLoadModalLibrary, type ItemProperty, type UserItem } from '@/hooks';
-import { ContextHelpTooltip, LoginPromptModal, ConfirmActionModal } from '@/components/shared';
+import { ContextHelpTooltip, LoginPromptModal, ConfirmActionModal, ErrorDisplay } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Alert, PageContainer } from '@/components/ui';
 import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout, CollapsibleSection, AdvancedCalculationsPanel } from '@/components/creator';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
@@ -388,7 +388,7 @@ function ItemCreatorContent() {
   const [abilityRequirement, setAbilityRequirement] = useState<{ id: number; name: string; level: number } | null>(null);
 
   // Fetch item properties
-  const { data: itemProperties = [], isLoading, error } = useItemProperties();
+  const { data: itemProperties = [], isLoading, error, refetch } = useItemProperties();
 
   // Load cached state from localStorage on mount
   useEffect(() => {
@@ -1039,9 +1039,10 @@ function ItemCreatorContent() {
   if (error) {
     return (
       <PageContainer size="xl">
-        <Alert variant="danger">
-          Failed to load item properties: {error.message}
-        </Alert>
+        <ErrorDisplay
+          message={`Failed to load item properties: ${error.message}`}
+          onRetry={() => { void refetch(); }}
+        />
       </PageContainer>
     );
   }

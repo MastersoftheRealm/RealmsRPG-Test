@@ -9,7 +9,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { X, Plus } from 'lucide-react';
+import { X, Plus, Copy } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 import type { CharacterSummary } from '@/types';
 import { getEffectivePortrait } from '@/lib/portrait';
@@ -17,69 +17,95 @@ import { getEffectivePortrait } from '@/lib/portrait';
 interface CharacterCardProps {
   character: CharacterSummary;
   onDelete?: (id: string, name: string) => void;
+  onDuplicate?: (id: string, name: string) => void;
   isDeleting?: boolean;
+  isDuplicating?: boolean;
 }
 
-export function CharacterCard({ character, onDelete, isDeleting }: CharacterCardProps) {
+export function CharacterCard({
+  character,
+  onDelete,
+  onDuplicate,
+  isDeleting,
+  isDuplicating,
+}: CharacterCardProps) {
   const handleDelete = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     onDelete?.(character.id, character.name);
   };
 
+  const handleDuplicate = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onDuplicate?.(character.id, character.name);
+  };
+
   return (
-    <Link
-      href={`/characters/${character.id}`}
+    <div
       className={cn(
-        'group relative block rounded-xl overflow-hidden bg-surface shadow-md',
+        'group relative rounded-xl overflow-hidden bg-surface shadow-md',
         'hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5',
-        isDeleting ? 'opacity-50 pointer-events-none' : ''
+        isDeleting || isDuplicating ? 'opacity-50 pointer-events-none' : ''
       )}
     >
-      {/* Portrait */}
-      <div className="relative aspect-[3/4] bg-primary-800">
-        <Image
-          src={getEffectivePortrait(character.portrait)}
-          alt={character.name}
-          fill
-          className="object-cover"
-          unoptimized
-        />
-        
-        {/* Delete button */}
-        {onDelete ? (
-          <IconButton
-            onClick={handleDelete}
-            className="absolute top-2 right-2 bg-danger/80 hover:bg-danger text-white opacity-0 group-hover:opacity-100 transition-opacity"
-            label="Delete character"
-            variant="danger"
-          >
-            <X className="w-5 h-5" />
-          </IconButton>
-        ) : null}
-      </div>
+      <Link href={`/characters/${character.id}`} className="block">
+        {/* Portrait */}
+        <div className="relative aspect-[3/4] bg-primary-800">
+          <Image
+            src={getEffectivePortrait(character.portrait)}
+            alt={character.name}
+            fill
+            className="object-cover"
+            unoptimized
+          />
+        </div>
 
-      {/* Info */}
-      <div className="p-4">
-        <h3 className="font-bold text-lg text-text-primary uppercase truncate">
-          {character.name}
-        </h3>
-        <div className="flex items-center gap-2 mt-1 text-sm text-text-secondary">
-          <span>Level {character.level}</span>
-          {character.archetypeName ? (
-            <>
-              <span>•</span>
-              <span className="truncate">{character.archetypeName}</span>
-            </>
+        {/* Info */}
+        <div className="p-4">
+          <h3 className="font-bold text-lg text-text-primary uppercase truncate">
+            {character.name}
+          </h3>
+          <div className="flex items-center gap-2 mt-1 text-sm text-text-secondary">
+            <span>Level {character.level}</span>
+            {character.archetypeName ? (
+              <>
+                <span>•</span>
+                <span className="truncate">{character.archetypeName}</span>
+              </>
+            ) : null}
+          </div>
+          {character.ancestryName ? (
+            <p className="text-sm text-text-muted mt-1 truncate">
+              {character.ancestryName}
+            </p>
           ) : null}
         </div>
-        {character.ancestryName ? (
-          <p className="text-sm text-text-muted mt-1 truncate">
-            {character.ancestryName}
-          </p>
-        ) : null}
-      </div>
-    </Link>
+      </Link>
+
+      {/* Action buttons — siblings of the Link (not nested interactive content).
+          Always visible on touch/small screens; hover-revealed on desktop. */}
+      {onDuplicate ? (
+        <IconButton
+          onClick={handleDuplicate}
+          className="absolute top-2 left-2 z-10 bg-surface/90 hover:bg-surface text-text-primary opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+          label="Duplicate character"
+          variant="ghost"
+        >
+          <Copy className="w-5 h-5" />
+        </IconButton>
+      ) : null}
+      {onDelete ? (
+        <IconButton
+          onClick={handleDelete}
+          className="absolute top-2 right-2 z-10 bg-danger/80 hover:bg-danger text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+          label="Delete character"
+          variant="danger"
+        >
+          <X className="w-5 h-5" />
+        </IconButton>
+      ) : null}
+    </div>
   );
 }
 

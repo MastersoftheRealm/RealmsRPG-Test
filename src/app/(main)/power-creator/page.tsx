@@ -24,13 +24,13 @@ import {
   useAdmin,
   useCreatorSave,
   useLoadModalLibrary,
-  usePublicLibrary,
+  useOfficialLibrary,
   useCreatorWeaponOptions,
   type PowerPart,
   type CreatorWeaponOption,
 } from '@/hooks';
 import { useAuthStore } from '@/stores';
-import { ContextHelpTooltip, LoginPromptModal, ConfirmActionModal } from '@/components/shared';
+import { ContextHelpTooltip, LoginPromptModal, ConfirmActionModal, ErrorDisplay } from '@/components/shared';
 import { CreatorSaveToolbar, CreatorLayout, CreatorWeaponPicker, AdvancedCalculationsPanel } from '@/components/creator';
 import { LoadingState, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
@@ -63,7 +63,7 @@ import {
 import { formatDurationFromTypeAndValue } from '@/lib/utils/duration';
 import type { SelectedPart, AdvancedPart, DamageConfig, RangeConfig } from './power-creator-types';
 import { POWER_CREATOR_CACHE_KEY, ADVANCED_CATEGORIES, EXCLUDED_PARTS } from './power-creator-constants';
-import { PowerPartCard } from './PowerPartCard';
+import { PowerPartCard } from '@/components/creator';
 import { shouldPersistCreatorWeaponId } from '@/lib/creator-weapon-persistence';
 
 // =============================================================================
@@ -140,10 +140,10 @@ function PowerCreatorContent() {
   const load = useLoadModalLibrary('power');
 
   // Fetch power parts
-  const { data: powerParts = [], isLoading, error } = usePowerParts();
+  const { data: powerParts = [], isLoading, error, refetch } = usePowerParts();
   const { data: userItems = [] } = useUserItems();
   const { data: itemPropertiesDb = [] } = useItemProperties();
-  const { data: officialItems = [] } = usePublicLibrary('items');
+  const { data: officialItems = [] } = useOfficialLibrary('items');
 
   const { fullOptions: allWeaponOptions, visibleOptions } = useCreatorWeaponOptions({
     defaults: DEFAULT_WEAPON_OPTIONS,
@@ -855,9 +855,10 @@ function PowerCreatorContent() {
   if (error) {
     return (
       <PageContainer size="xl">
-        <Alert variant="danger">
-          Failed to load power parts: {error.message}
-        </Alert>
+        <ErrorDisplay
+          message={`Failed to load power parts: ${error.message}`}
+          onRetry={() => { void refetch(); }}
+        />
       </PageContainer>
     );
   }

@@ -14,7 +14,7 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { X, Plus, ChevronDown, ChevronUp, Swords, Zap, Target, Info } from 'lucide-react';
+import { X, Plus, Swords, Zap, Target, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   useTechniqueParts,
@@ -23,13 +23,13 @@ import {
   useAdmin,
   useCreatorSave,
   useLoadModalLibrary,
-  usePublicLibrary,
+  useOfficialLibrary,
   useCreatorWeaponOptions,
   type TechniquePart,
   type CreatorWeaponOption,
 } from '@/hooks';
 import { useAuthStore } from '@/stores';
-import { ContextHelpTooltip, LoginPromptModal, ConfirmActionModal } from '@/components/shared';
+import { ContextHelpTooltip, LoginPromptModal, ConfirmActionModal, ErrorDisplay } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
 import {
   LoadFromLibraryModal,
@@ -38,6 +38,7 @@ import {
   CollapsibleSection,
   CreatorWeaponPicker,
   AdvancedCalculationsPanel,
+  PowerPartCard,
 } from '@/components/creator';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
@@ -46,7 +47,7 @@ import { CreatorSummaryPanel } from '@/components/creator';
 import {
   calculateTechniqueCosts,
   computeTechniqueActionTypeFromSelection,
-  buildMechanicPartPayload,
+  buildMechanicParts,
   formatTechniqueDamage,
   type TechniquePartPayload,
 } from '@/lib/calculators';
@@ -73,6 +74,22 @@ interface DamageConfig {
   type: string;
 }
 
+function toTechniquePartPayload(part: {
+  id: string | number;
+  name: string;
+  op_1_lvl: number;
+  op_2_lvl: number;
+  op_3_lvl: number;
+}): TechniquePartPayload {
+  return {
+    id: Number(part.id),
+    name: part.name,
+    op_1_lvl: part.op_1_lvl,
+    op_2_lvl: part.op_2_lvl,
+    op_3_lvl: part.op_3_lvl,
+  };
+}
+
 // =============================================================================
 // Shared Constants (imported from central location)
 // =============================================================================
@@ -81,7 +98,6 @@ import {
   ACTION_OPTIONS,
   DIE_SIZES,
   CREATOR_CACHE_KEYS,
-  formatCost,
 } from '@/lib/game/creator-constants';
 
 // LocalStorage key for caching technique creator state
@@ -92,255 +108,6 @@ const DEFAULT_WEAPON_OPTIONS: CreatorWeaponOption[] = [
   { id: 0, name: 'Unarmed Prowess', tp: 0, weaponLibrary: 'builtin' },
   { id: 'no-attack', name: 'No Attack', tp: 0, weaponLibrary: 'builtin' },
 ];
-
-// =============================================================================
-// Subcomponents
-// =============================================================================
-
-function PartCard({
-  selectedPart,
-  _index,
-  onRemove,
-  onUpdate,
-  allParts,
-}: {
-  selectedPart: SelectedPart;
-  _index: number;
-  onRemove: () => void;
-  onUpdate: (updates: Partial<SelectedPart>) => void;
-  allParts: TechniquePart[];
-}) {
-  const [expanded, setExpanded] = useState(true);
-  const { part } = selectedPart;
-
-  // Get categories from all parts
-  const categories = useMemo(() => {
-    const cats = new Set(allParts.map((p) => p.category));
-    return ['any', ...Array.from(cats).sort()];
-  }, [allParts]);
-
-  // Filter parts by selected category
-  const filteredParts = useMemo(() => {
-    const cat = selectedPart.selectedCategory;
-    if (!cat || cat === 'any') return allParts.sort((a, b) => a.name.localeCompare(b.name));
-    return allParts.filter((p) => p.category === cat).sort((a, b) => a.name.localeCompare(b.name));
-  }, [allParts, selectedPart.selectedCategory]);
-
-  // Check which options have content
-  const hasOption = (n: 1 | 2 | 3) => {
-    const desc = part[`op_${n}_desc` as keyof TechniquePart] as string | undefined;
-    const en = part[`op_${n}_en` as keyof TechniquePart] as number | undefined;
-    const tp = part[`op_${n}_tp` as keyof TechniquePart] as number | undefined;
-    return (desc && desc.trim() !== '') || (en !== undefined && en !== 0) || (tp !== undefined && tp !== 0);
-  };
-
-  // Calculate part's individual contribution
-  const partEnergy =
-    (part.base_en || 0) +
-    (part.op_1_en || 0) * selectedPart.op_1_lvl +
-    (part.op_2_en || 0) * selectedPart.op_2_lvl +
-    (part.op_3_en || 0) * selectedPart.op_3_lvl;
-
-  const partTP =
-    (part.base_tp || 0) +
-    (part.op_1_tp || 0) * selectedPart.op_1_lvl +
-    (part.op_2_tp || 0) * selectedPart.op_2_lvl +
-    (part.op_3_tp || 0) * selectedPart.op_3_lvl;
-
-  return (
-    <div className="bg-surface rounded-lg border border-border-light shadow-sm overflow-hidden">
-      {/* Header - entire header clickable except X button */}
-      <div className="bg-surface-alt px-4 py-3 flex items-center justify-between">
-        <button
-          type="button"
-          onClick={() => setExpanded(!expanded)}
-          className="flex items-center gap-2 flex-1 min-w-0 text-left hover:bg-surface-alt/80 -ml-2 pl-2 py-1 rounded transition-colors"
-        >
-          <span className="text-text-muted dark:text-text-secondary">
-            {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-          </span>
-          <span className="font-medium text-text-primary truncate">{part.name}</span>
-          <span className="flex items-center gap-2 text-sm font-semibold flex-shrink-0">
-            <span className="text-energy-text">EN: {formatCost(partEnergy)}</span>
-            <span className="text-tp-text">TP: {formatCost(partTP)}</span>
-          </span>
-        </button>
-        <IconButton
-          onClick={onRemove}
-          label="Remove part"
-          variant="danger"
-          size="sm"
-        >
-          <X className="w-5 h-5" />
-        </IconButton>
-      </div>
-
-      {/* Expanded Content */}
-      {expanded && (
-        <div className="px-4 py-4 space-y-4">
-          {/* Category and Part Selection */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">
-                Category
-              </label>
-              <select
-                value={selectedPart.selectedCategory}
-                onChange={(e) => {
-                  const newCategory = e.target.value;
-                  // Get parts for the new category
-                  const partsInCategory = newCategory === 'any'
-                    ? allParts.sort((a, b) => a.name.localeCompare(b.name))
-                    : allParts.filter((p) => p.category === newCategory).sort((a, b) => a.name.localeCompare(b.name));
-                  // Auto-select first alphabetical part in the new category
-                  const firstPart = partsInCategory[0];
-                  if (firstPart) {
-                    onUpdate({
-                      selectedCategory: newCategory,
-                      part: firstPart,
-                      op_1_lvl: 0,
-                    });
-                  } else {
-                    onUpdate({ selectedCategory: newCategory });
-                  }
-                }}
-                className="w-full px-3 py-2 border border-border-light rounded-lg text-sm text-text-primary bg-surface"
-                aria-label="Technique part category"
-              >
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat === 'any' ? 'All Categories' : cat}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">
-                Part
-              </label>
-              <select
-                value={filteredParts.findIndex((p) => p.id === part.id)}
-                onChange={(e) => {
-                  const idx = parseInt(e.target.value);
-                  const newPart = filteredParts[idx];
-                  if (newPart) {
-                    onUpdate({
-                      part: newPart,
-                      op_1_lvl: 0,
-                      op_2_lvl: 0,
-                      op_3_lvl: 0,
-                    });
-                  }
-                }}
-                className="w-full px-3 py-2 border border-border-light rounded-lg text-sm text-text-primary bg-surface"
-                aria-label="Technique part"
-              >
-                {filteredParts.map((p, idx) => (
-                  <option key={p.id} value={idx}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Description */}
-          <p className="text-base text-text-primary leading-relaxed">{part.description}</p>
-
-          {/* Base Values */}
-          <div className="flex gap-4 text-sm">
-            <span className="text-text-secondary">
-              Base Energy: <strong className="text-energy-text">{formatCost(part.base_en || 0)}</strong>
-            </span>
-            <span className="text-text-secondary">
-              Base TP: <strong className="text-tp-text">{formatCost(part.base_tp || 0)}</strong>
-            </span>
-          </div>
-
-          {/* Options */}
-          {(hasOption(1) || hasOption(2) || hasOption(3)) && (
-            <div className="space-y-3 pt-2 border-t border-border-light">
-              {hasOption(1) && (
-                <div className="bg-energy-light dark:bg-energy-light/10 border border-energy-border rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-energy-text">Option 1</span>
-                      <span className="text-sm font-medium text-energy-text">
-                        EN {(part.op_1_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_en || 0)}
-                      </span>
-                      <span className="text-sm font-medium text-tp-text">
-                        TP {(part.op_1_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_tp || 0)}
-                      </span>
-                    </div>
-                    <ValueStepper
-                      value={selectedPart.op_1_lvl}
-                      onChange={(v) => onUpdate({ op_1_lvl: v })}
-                      label="Level:"
-                      min={0}
-                    />
-                  </div>
-                  {part.op_1_desc && (
-                    <p className="text-sm text-text-primary">{part.op_1_desc}</p>
-                  )}
-                </div>
-              )}
-
-              {hasOption(2) && (
-                <div className="bg-energy-light dark:bg-energy-light/10 border border-energy-border rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-energy-text">Option 2</span>
-                      <span className="text-sm font-medium text-energy-text">
-                        EN {(part.op_2_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_en || 0)}
-                      </span>
-                      <span className="text-sm font-medium text-tp-text">
-                        TP {(part.op_2_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_tp || 0)}
-                      </span>
-                    </div>
-                    <ValueStepper
-                      value={selectedPart.op_2_lvl}
-                      onChange={(v) => onUpdate({ op_2_lvl: v })}
-                      label="Level:"
-                      min={0}
-                    />
-                  </div>
-                  {part.op_2_desc && (
-                    <p className="text-sm text-text-primary">{part.op_2_desc}</p>
-                  )}
-                </div>
-              )}
-
-              {hasOption(3) && (
-                <div className="bg-energy-light dark:bg-energy-light/10 border border-energy-border rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-energy-text">Option 3</span>
-                      <span className="text-sm font-medium text-energy-text">
-                        EN {(part.op_3_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_en || 0)}
-                      </span>
-                      <span className="text-sm font-medium text-tp-text">
-                        TP {(part.op_3_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_tp || 0)}
-                      </span>
-                    </div>
-                    <ValueStepper
-                      value={selectedPart.op_3_lvl}
-                      onChange={(v) => onUpdate({ op_3_lvl: v })}
-                      label="Level:"
-                      min={0}
-                    />
-                  </div>
-                  {part.op_3_desc && (
-                    <p className="text-sm text-text-primary">{part.op_3_desc}</p>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
 
 // =============================================================================
 // Main Component
@@ -385,14 +152,14 @@ function TechniqueCreatorContent() {
   const load = useLoadModalLibrary('technique');
 
   // Fetch technique parts
-  const { data: techniqueParts = [], isLoading, error } = useTechniqueParts();
+  const { data: techniqueParts = [], isLoading, error, refetch } = useTechniqueParts();
   
   // Fetch user's saved techniques for loading (only if user is logged in)
 
   // Fetch user's saved items (weapons) and codex properties (for weapon TP calculation)
   const { data: userItems = [] } = useUserItems();
   const { data: itemPropertiesDb = [] } = useItemProperties();
-  const { data: officialItems = [] } = usePublicLibrary('items');
+  const { data: officialItems = [] } = useOfficialLibrary('items');
 
   const { fullOptions: allWeaponOptions, visibleOptions } = useCreatorWeaponOptions({
     defaults: DEFAULT_WEAPON_OPTIONS,
@@ -501,14 +268,12 @@ function TechniqueCreatorContent() {
   );
 
   const mechanicParts = useMemo(
-    () => buildMechanicPartPayload({
-      actionTypeSelection: actionType,
-      reaction: isReaction,
-      diceAmt: damage.amount,
-      dieSize: damage.size,
-      weaponTP: weaponTPForMechanics,
-      weaponAttackMode,
+    () => buildMechanicParts({
+      creatorType: 'technique',
       partsDb: techniqueParts,
+      action: { type: actionType, isReaction },
+      techniqueDamage: { diceAmount: damage.amount, dieSize: damage.size },
+      weapon: { tp: weaponTPForMechanics, attackMode: weaponAttackMode },
     }),
     [actionType, isReaction, damage.amount, damage.size, weaponAttackMode, weaponTPForMechanics, techniqueParts]
   );
@@ -524,8 +289,7 @@ function TechniqueCreatorContent() {
         op_2_lvl: sp.op_2_lvl,
         op_3_lvl: sp.op_3_lvl,
       })),
-      // Auto-generated mechanic parts from action type / damage / weapon selections
-      ...mechanicParts,
+      ...mechanicParts.map(toTechniquePartPayload),
     ],
     [selectedParts, mechanicParts]
   );
@@ -576,7 +340,7 @@ function TechniqueCreatorContent() {
     const damageParts = mechanicParts.filter(
       (mp) => mp.name === 'Additional Damage' || mp.name === 'Split Damage Dice'
     );
-    return calculateTechniqueCosts(damageParts, techniqueParts);
+    return calculateTechniqueCosts(damageParts.map(toTechniquePartPayload), techniqueParts);
   }, [mechanicParts, techniqueParts]);
 
   // Section cost for Combat Configuration (weapon + action type + reaction)
@@ -584,37 +348,40 @@ function TechniqueCreatorContent() {
     const combatParts = mechanicParts.filter(
       (mp) => mp.name !== 'Additional Damage' && mp.name !== 'Split Damage Dice'
     );
-    return calculateTechniqueCosts(combatParts, techniqueParts);
+    return calculateTechniqueCosts(combatParts.map(toTechniquePartPayload), techniqueParts);
   }, [mechanicParts, techniqueParts]);
 
   const weaponCost = useMemo(() => {
     const weaponParts = mechanicParts.filter((mp) => mp.name === 'Add Weapon Attack' || mp.name === 'No Attack');
-    return calculateTechniqueCosts(weaponParts, techniqueParts);
+    return calculateTechniqueCosts(weaponParts.map(toTechniquePartPayload), techniqueParts);
   }, [mechanicParts, techniqueParts]);
 
   const actionTypeCost = useMemo(() => {
     const actionParts = mechanicParts.filter(
       (mp) => mp.name === 'Quick or Free Action' || mp.name === 'Long Action'
     );
-    return calculateTechniqueCosts(actionParts, techniqueParts);
+    return calculateTechniqueCosts(actionParts.map(toTechniquePartPayload), techniqueParts);
   }, [mechanicParts, techniqueParts]);
 
   const reactionCost = useMemo(() => {
     const reactionParts = mechanicParts.filter((mp) => mp.name === 'Reaction');
-    return calculateTechniqueCosts(reactionParts, techniqueParts);
+    return calculateTechniqueCosts(reactionParts.map(toTechniquePartPayload), techniqueParts);
   }, [mechanicParts, techniqueParts]);
 
   // Actions
   const addPart = useCallback(() => {
-    if (techniqueParts.length === 0) return;
+    // Seed from the first selectable (non-mechanic) part; mechanic parts are
+    // auto-generated from action/damage/weapon and must not appear as editable rows.
+    const firstSelectable = techniqueParts.find((p) => !p.mechanic);
+    if (!firstSelectable) return;
     setSelectedParts((prev) => [
       ...prev,
       {
-        part: techniqueParts[0],
+        part: firstSelectable,
         op_1_lvl: 0,
         op_2_lvl: 0,
         op_3_lvl: 0,
-        selectedCategory: 'any',
+        selectedCategory: firstSelectable.category || 'any',
       },
     ]);
   }, [techniqueParts]);
@@ -676,6 +443,8 @@ function TechniqueCreatorContent() {
       setName('');
       setDescription('');
       setSelectedParts([]);
+      setActionType('basic');
+      setIsReaction(false);
       setDamage({ amount: 0, size: 6, type: 'none' });
       setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
     },
@@ -740,7 +509,7 @@ function TechniqueCreatorContent() {
 
       // Skip mechanic-only parts when loading; these are auto-generated
       // from action / damage / weapon and should not appear as editable rows.
-      // They will be re-created by buildMechanicPartPayload.
+      // They will be re-created by buildMechanicParts.
       if (matchedPart && !matchedPart.mechanic) {
         loadedParts.push({
           part: matchedPart,
@@ -753,9 +522,10 @@ function TechniqueCreatorContent() {
     }
     setSelectedParts(loadedParts);
     
-    // Load action type and reaction
+    // Load action type and reaction. Saved payloads persist `isReaction`
+    // (see getPayload); keep `reaction` as a fallback for legacy/enriched shapes.
     setActionType(technique.actionTypeSelection || technique.actionType || 'basic');
-    setIsReaction(technique.reaction ?? false);
+    setIsReaction(technique.isReaction ?? technique.reaction ?? false);
     
     // Load weapon
     if (savedHasNoAttack) {
@@ -778,13 +548,14 @@ function TechniqueCreatorContent() {
       setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
     }
     
-    // Load damage
-    if (technique.damage) {
-      const dmg = technique.damage;
+    // Load damage. getPayload persists damage as an array ([{ amount, size }]);
+    // tolerate both the array form and a legacy single-object form.
+    const rawDamage = Array.isArray(technique.damage) ? technique.damage[0] : technique.damage;
+    if (rawDamage) {
       setDamage({
-        amount: dmg.amount || dmg.dice || 0,
-        size: dmg.size || dmg.sides || 6,
-        type: dmg.type || 'none',
+        amount: rawDamage.amount || rawDamage.dice || 0,
+        size: rawDamage.size || rawDamage.sides || 6,
+        type: rawDamage.type || 'none',
       });
     } else {
       setDamage({ amount: 0, size: 6, type: 'none' });
@@ -822,9 +593,10 @@ function TechniqueCreatorContent() {
   if (error) {
     return (
       <PageContainer size="xl">
-        <Alert variant="danger">
-          Failed to load technique parts: {error.message}
-        </Alert>
+        <ErrorDisplay
+          message={`Failed to load technique parts: ${error.message}`}
+          onRetry={() => { void refetch(); }}
+        />
       </PageContainer>
     );
   }
@@ -1021,13 +793,14 @@ function TechniqueCreatorContent() {
             ) : (
               <div className="space-y-4">
                 {selectedParts.map((sp, idx) => (
-                  <PartCard
+                  <PowerPartCard
                     key={idx}
                     selectedPart={sp}
                     _index={idx}
                     onRemove={() => removePart(idx)}
                     onUpdate={(updates) => updatePart(idx, updates)}
                     allParts={techniqueParts}
+                    showApplyDuration={false}
                   />
                 ))}
               </div>

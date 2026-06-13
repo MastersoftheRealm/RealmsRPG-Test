@@ -22,8 +22,8 @@ import {
 import { useToast, IconButton } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
 import {
-  usePublicLibrary,
-  useAddPublicToLibrary,
+  useOfficialLibrary,
+  useAddOfficialToLibrary,
   usePowerParts,
   useTechniqueParts,
   useItemProperties,
@@ -77,9 +77,9 @@ function getEmpoweredTotals(item: unknown): { energy?: number; tp?: number } {
 function PublicPowersList({ onLoginRequired, readOnly = false }: { onLoginRequired: () => void; readOnly?: boolean }) {
   const { user } = useAuthStore();
   const { showToast } = useToast();
-  const { data: items = [], isLoading, error } = usePublicLibrary('powers');
+  const { data: items = [], isLoading, error, refetch } = useOfficialLibrary('powers');
   const { data: partsDb = [] } = usePowerParts();
-  const addMutation = useAddPublicToLibrary('powers');
+  const addMutation = useAddOfficialToLibrary('powers');
   const [search, setSearch] = useState('');
   const [addConfirm, setAddConfirm] = useState<{ name: string; raw: Record<string, unknown> } | null>(null);
   const { sortState, handleSort, sortItems } = useSort('name');
@@ -152,7 +152,7 @@ function PublicPowersList({ onLoginRequired, readOnly = false }: { onLoginRequir
     return sortItems(r);
   }, [cardData, search, sortItems]);
 
-  if (error) return <ErrorDisplay message="Failed to load Realms Library powers" />;
+  if (error) return <ErrorDisplay message="Failed to load Realms Library powers" onRetry={() => { void refetch(); }} />;
   if (!isLoading && cardData.length === 0) {
     return <ListEmptyState icon={<Wand2 className="w-8 h-8" />} title="No powers yet" message="Official powers will appear here when added to Realms Library." />;
   }
@@ -243,9 +243,9 @@ function PublicTechniquesList({
 }) {
   const { user } = useAuthStore();
   const { showToast } = useToast();
-  const { data: items = [], isLoading, error } = usePublicLibrary(mode === 'empowered' ? 'empowered-techniques' : 'techniques');
+  const { data: items = [], isLoading, error, refetch } = useOfficialLibrary(mode === 'empowered' ? 'empowered-techniques' : 'techniques');
   const { data: partsDb = [] } = useTechniqueParts();
-  const addMutation = useAddPublicToLibrary(mode === 'empowered' ? 'empowered-techniques' : 'techniques');
+  const addMutation = useAddOfficialToLibrary(mode === 'empowered' ? 'empowered-techniques' : 'techniques');
   const [search, setSearch] = useState('');
   const [addConfirm, setAddConfirm] = useState<{ name: string; raw: Record<string, unknown> } | null>(null);
   const { sortState, handleSort, sortItems } = useSort('name');
@@ -316,7 +316,7 @@ function PublicTechniquesList({
     return sortItems(r);
   }, [cardData, search, sortItems]);
 
-  if (error) return <ErrorDisplay message={`Failed to load Realms Library ${mode === 'empowered' ? 'empowered techniques' : 'techniques'}`} />;
+  if (error) return <ErrorDisplay message={`Failed to load Realms Library ${mode === 'empowered' ? 'empowered techniques' : 'techniques'}`} onRetry={() => { void refetch(); }} />;
   if (!isLoading && cardData.length === 0) {
     return (
       <ListEmptyState
@@ -405,9 +405,9 @@ function PublicTechniquesList({
 function PublicItemsList({ onLoginRequired, readOnly = false }: { onLoginRequired: () => void; readOnly?: boolean }) {
   const { user } = useAuthStore();
   const { showToast } = useToast();
-  const { data: items = [], isLoading, error } = usePublicLibrary('items');
+  const { data: items = [], isLoading, error, refetch } = useOfficialLibrary('items');
   const { data: propertiesDb = [] } = useItemProperties();
-  const addMutation = useAddPublicToLibrary('items');
+  const addMutation = useAddOfficialToLibrary('items');
   const [search, setSearch] = useState('');
   const [addConfirm, setAddConfirm] = useState<{ name: string; raw: Record<string, unknown> } | null>(null);
   const { sortState, handleSort, sortItems } = useSort('name');
@@ -483,7 +483,7 @@ function PublicItemsList({ onLoginRequired, readOnly = false }: { onLoginRequire
     return sortItems(r);
   }, [cardData, search, sortItems]);
 
-  if (error) return <ErrorDisplay message="Failed to load Realms Library armaments" />;
+  if (error) return <ErrorDisplay message="Failed to load Realms Library armaments" onRetry={() => { void refetch(); }} />;
   if (!isLoading && cardData.length === 0) {
     return <ListEmptyState icon={<Shield className="w-8 h-8" />} title="No armaments yet" message="Official armaments will appear here when added to Realms Library." />;
   }
@@ -566,8 +566,8 @@ function PublicItemsList({ onLoginRequired, readOnly = false }: { onLoginRequire
 function PublicCreaturesList({ onLoginRequired, readOnly = false }: { onLoginRequired: () => void; readOnly?: boolean }) {
   const { user } = useAuthStore();
   const { showToast } = useToast();
-  const { data: items = [], isLoading, error } = usePublicLibrary('creatures');
-  const addMutation = useAddPublicToLibrary('creatures');
+  const { data: items = [], isLoading, error, refetch } = useOfficialLibrary('creatures');
+  const addMutation = useAddOfficialToLibrary('creatures');
   const [search, setSearch] = useState('');
   const [addConfirm, setAddConfirm] = useState<{ name: string; raw: Record<string, unknown> } | null>(null);
   const { sortState, handleSort, sortItems } = useSort('name');
@@ -613,7 +613,7 @@ function PublicCreaturesList({ onLoginRequired, readOnly = false }: { onLoginReq
     return sortItems(r);
   }, [cardData, search, sortItems]);
 
-  if (error) return <ErrorDisplay message="Failed to load Realms Library creatures" />;
+  if (error) return <ErrorDisplay message="Failed to load Realms Library creatures" onRetry={() => { void refetch(); }} />;
   if (!isLoading && cardData.length === 0) {
     return <ListEmptyState icon={<Users className="w-8 h-8" />} title="No creatures yet" message="Official creatures will appear here when added to Realms Library." />;
   }

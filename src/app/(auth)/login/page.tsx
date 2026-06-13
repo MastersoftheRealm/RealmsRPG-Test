@@ -12,8 +12,10 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createClient } from '@/lib/supabase/client';
+import { hasGuestEncountersToMigrate, migrateGuestEncountersOnSignIn } from '@/lib/guest-encounter-migration';
 
 import { loginSchema, type LoginFormData } from '@/lib/validation';
+import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { AuthCard, FormInput, PasswordInput, SocialButton } from '@/components/auth';
 import { Spinner } from '@/components/ui';
 import { Button, Alert } from '@/components/ui';
@@ -30,12 +32,7 @@ function LoginContent() {
   const getRedirectPath = () => {
     const urlRedirect = searchParams.get('redirect') ?? searchParams.get('returnTo');
     const sessionRedirect = typeof window !== 'undefined' ? sessionStorage.getItem('loginRedirect') : null;
-    const raw = urlRedirect || sessionRedirect || '/';
-    const normalized = raw.startsWith('/') ? raw : '/';
-    if (normalized === '/login' || normalized === '/register' || normalized === '/forgot-password' || normalized === '/forgot-username') {
-      return '/';
-    }
-    return normalized;
+    return sanitizeRedirectPath(urlRedirect || sessionRedirect || '/');
   };
 
   useEffect(() => {
@@ -65,6 +62,9 @@ function LoginContent() {
       const supabase = createClient();
       const { error: err } = await supabase.auth.signInWithPassword({ email: data.email, password: data.password });
       if (err) throw err;
+      if (hasGuestEncountersToMigrate()) {
+        await migrateGuestEncountersOnSignIn();
+      }
       sessionStorage.removeItem('loginRedirect');
       router.push(getRedirectPath());
     } catch (err) {
@@ -84,7 +84,14 @@ function LoginContent() {
     setError(null);
     try {
       const supabase = createClient();
-      const { error: resendError } = await supabase.auth.resend({ type: 'signup', email });
+      const redirectPath = getRedirectPath();
+      const { error: resendError } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(redirectPath)}`,
+        },
+      });
       if (resendError) throw resendError;
       setResendStatus('sent');
     } catch (e) {
@@ -113,10 +120,6 @@ function LoginContent() {
       setError(getAuthErrorMessage(err));
       setIsLoading(false);
     }
-  };
-
-  const handleAppleSignIn = () => {
-    setError('Apple Sign-In coming soon!');
   };
 
   return (
@@ -203,11 +206,6 @@ function LoginContent() {
         <SocialButton
           provider="google"
           onClick={handleGoogleSignIn}
-          disabled={isLoading || !ready}
-        />
-        <SocialButton
-          provider="apple"
-          onClick={handleAppleSignIn}
           disabled={isLoading || !ready}
         />
       </div>

@@ -28,7 +28,7 @@ import {
   useSpecies,
   useCodexFeats,
   useCodexSkills,
-  usePublicLibrary,
+  useOfficialLibrary,
   type Species,
   type Skill,
 } from '@/hooks';
@@ -72,9 +72,9 @@ function CampaignCharacterViewContent() {
   const { data: techniquePartsDb = [] } = useTechniqueParts();
   const { data: itemPropertiesDb = [] } = useItemProperties();
   const { data: codexEquipment = [] } = useEquipment();
-  const { data: publicPowersRaw = [] } = usePublicLibrary('powers');
-  const { data: publicTechniquesRaw = [] } = usePublicLibrary('techniques');
-  const { data: publicItemsRaw = [] } = usePublicLibrary('items');
+  const { data: publicPowersRaw = [] } = useOfficialLibrary('powers');
+  const { data: publicTechniquesRaw = [] } = useOfficialLibrary('techniques');
+  const { data: publicItemsRaw = [] } = useOfficialLibrary('items');
   const publicLibraries = useMemo(() => {
     const powers = (publicPowersRaw as Record<string, unknown>[]).map((p) => ({
       id: String(p.id ?? p.docId ?? ''),

@@ -34,7 +34,7 @@ interface Skill {
   prof?: boolean;
   baseSkill?: string;
   ability?: string;
-  // Available abilities for this skill (from RTDB)
+  // Available abilities for this skill (from the Codex)
   availableAbilities?: string[];
 }
 

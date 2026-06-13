@@ -105,7 +105,7 @@ function EquipmentCard({ item, propertiesDb = [] }: { item: Equipment; propertie
 }
 
 export function CodexEquipmentTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  const { data: equipment, isLoading, error } = useEquipment();
+  const { data: equipment, isLoading, error, refetch } = useEquipment();
   const { data: propertiesDb = [] } = useItemProperties();
   const { sortState, handleSort, sortItems } = useSort('name');
   const [filters, setFilters] = useState<EquipmentFilters>({
@@ -159,7 +159,7 @@ export function CodexEquipmentTab({ codexMode = 'public' }: { codexMode?: 'publi
     );
   }
 
-  if (error) return <ErrorState message="Failed to load equipment" />;
+  if (error) return <ErrorState message="Failed to load equipment" onRetry={() => refetch()} />;
 
   return (
     <div>

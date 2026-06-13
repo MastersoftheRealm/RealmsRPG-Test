@@ -5,6 +5,7 @@
  */
 
 import { Header, Footer } from '@/components/layout';
+import { MainContentBoundary } from '@/components/layout/main-content-boundary';
 
 export default function MainLayout({
   children,
@@ -15,7 +16,7 @@ export default function MainLayout({
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main id="main-content" className="flex-1">
-        {children}
+        <MainContentBoundary>{children}</MainContentBoundary>
       </main>
       <Footer />
     </div>

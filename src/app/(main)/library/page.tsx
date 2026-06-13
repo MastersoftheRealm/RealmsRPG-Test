@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { Plus, Wand2, Swords, Shield, Users, LogIn, Sparkles } from 'lucide-react';
 import { useAuth } from '@/hooks';
 import { PageContainer, PageHeader, TabNavigation, Button, useToast } from '@/components/ui';
-import { ContextHelpTooltip, DeleteConfirmModal, LoginPromptModal, SegmentedControl } from '@/components/shared';
+import { ContextHelpTooltip, DeleteConfirmModal, LoginPromptModal, SegmentedControl, LoadingState } from '@/components/shared';
 import {
   useUserPowers,
   useUserTechniques,
@@ -25,7 +25,7 @@ import {
   useDeleteEmpoweredTechnique,
   useDeleteItem,
   useDeleteCreature,
-  usePublicLibrary,
+  useOfficialLibrary,
   useEnhancedItems,
   useDeleteEnhancedItem,
 } from '@/hooks';
@@ -64,17 +64,28 @@ export default function LibraryPage() {
 }
 
 function LibraryContent() {
-  const { user } = useAuth();
+  const { user, initialized: authInitialized } = useAuth();
   const isGuest = !user;
   const { showToast } = useToast();
   const [libraryMode, setLibraryMode] = useState<LibraryMode>('public');
+  const [modeInitialized, setModeInitialized] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>('powers');
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: TabId; item: DisplayItem | UserEnhancedItem } | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   useEffect(() => {
-    if (!isGuest) setLibraryMode('my');
-  }, [isGuest]);
+    if (!authInitialized) return;
+    if (!modeInitialized) {
+      setLibraryMode(user ? 'my' : 'public');
+      setModeInitialized(true);
+    }
+  }, [authInitialized, user, modeInitialized]);
+
+  // The Enhanced tab only exists in My Library; if we switch to Realms mode
+  // while it's active, fall back to a valid tab so content doesn't go blank.
+  useEffect(() => {
+    if (libraryMode === 'public' && activeTab === 'enhanced') setActiveTab('powers');
+  }, [libraryMode, activeTab]);
 
   const { data: powers = [] } = useUserPowers();
   const { data: techniques = [] } = useUserTechniques();
@@ -82,11 +93,11 @@ function LibraryContent() {
   const { data: items = [] } = useUserItems();
   const { data: creatures = [] } = useUserCreatures();
 
-  const { data: publicPowers = [] } = usePublicLibrary('powers');
-  const { data: publicTechniques = [] } = usePublicLibrary('techniques');
-  const { data: publicEmpoweredTechniques = [] } = usePublicLibrary('empowered-techniques');
-  const { data: publicItems = [] } = usePublicLibrary('items');
-  const { data: publicCreatures = [] } = usePublicLibrary('creatures');
+  const { data: publicPowers = [] } = useOfficialLibrary('powers');
+  const { data: publicTechniques = [] } = useOfficialLibrary('techniques');
+  const { data: publicEmpoweredTechniques = [] } = useOfficialLibrary('empowered-techniques');
+  const { data: publicItems = [] } = useOfficialLibrary('items');
+  const { data: publicCreatures = [] } = useOfficialLibrary('creatures');
 
   const deletePower = useDeletePower();
   const deleteTechnique = useDeleteTechnique();
@@ -156,10 +167,19 @@ function LibraryContent() {
     id: tab.id,
     label: tab.label,
     icon: tab.icon,
-    badge: counts[tab.id].toString(),
+    count: counts[tab.id],
   }));
 
   const isPublic = libraryMode === 'public';
+
+  if (!authInitialized || !modeInitialized) {
+    return (
+      <PageContainer size="xl">
+        <PageHeader title="Library" />
+        <LoadingState message="Loading library..." />
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer size="xl">

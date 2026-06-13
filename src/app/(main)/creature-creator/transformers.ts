@@ -7,7 +7,7 @@
 
 import type { DisplayItem, ItemStat } from '@/types/items';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
-import type { CreatureFeat as RTDBCreatureFeat, ItemProperty } from '@/hooks/use-rtdb';
+import type { CreatureFeat as CodexCreatureFeat, ItemProperty } from '@/hooks/codex-types';
 import type { PowerPart, TechniquePart } from '@/hooks';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
@@ -234,7 +234,7 @@ export function displayItemToCreatureTechnique(item: DisplayItem): CreatureTechn
 // =============================================================================
 
 export function transformCreatureFeatToDisplayItem(
-  feat: RTDBCreatureFeat,
+  feat: CodexCreatureFeat,
   selectedIds: Set<string> = new Set(),
   mechanicalFeatIds: Set<number> = new Set()
 ): DisplayItem | null {
@@ -282,13 +282,21 @@ export function transformUserItemToDisplayItem(
   const typeMap: Record<string, 'Armor' | 'Weapon' | 'Shield' | 'Accessory'> = {
     weapon: 'Weapon',
     armor: 'Armor',
+    shield: 'Shield',
     equipment: 'Accessory',
   };
-  
-  // Convert properties to ItemPropertyPayload format
-  const propertyPayloads: ItemPropertyPayload[] = (item.properties || []).map((prop) => ({ 
-    name: typeof prop === 'string' ? prop : prop.name || '' 
-  }));
+
+  // Convert properties to ItemPropertyPayload format (preserve op_1_lvl for TP/range/cost)
+  const propertyPayloads: ItemPropertyPayload[] = (item.properties || []).map((prop) => {
+    if (typeof prop === 'string') {
+      return { name: prop };
+    }
+    return {
+      id: prop.id,
+      name: prop.name || '',
+      op_1_lvl: prop.op_1_lvl,
+    };
+  });
   
   const itemDoc = {
     name: item.name,

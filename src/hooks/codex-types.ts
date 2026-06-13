@@ -1,8 +1,7 @@
 /**
  * Codex Utilities & Types
  * ========================
- * Trait/skill resolution and shared types. Data from use-codex (Prisma).
- * Legacy file name (use-rtdb.ts) retained for import compatibility.
+ * Trait/skill resolution and shared Codex entity types (Supabase-backed).
  */
 
 'use client';

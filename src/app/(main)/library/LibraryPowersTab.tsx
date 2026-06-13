@@ -17,6 +17,7 @@ import {
   LoadingState,
   ErrorDisplay,
   ListEmptyState,
+  ConfirmActionModal,
   type ChipData,
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
@@ -53,6 +54,8 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
   const [search, setSearch] = useState('');
   const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set());
   const [syncingAll, setSyncingAll] = useState(false);
+  const [duplicateConfirm, setDuplicateConfirm] = useState<{ id: string; name: string } | null>(null);
+  const [showSyncAllConfirm, setShowSyncAllConfirm] = useState(false);
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const cardData = useMemo(() => {
@@ -162,7 +165,7 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
   }, [cardData, search, sortItems]);
 
   if (error) {
-    return <ErrorDisplay message="Failed to load powers" subMessage="Please try again later" />;
+    return <ErrorDisplay message="Failed to load powers" subMessage="Please try again later" onRetry={() => refetch()} />;
   }
 
   if (!isLoading && cardData.length === 0) {
@@ -194,7 +197,7 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
         <Button
           variant="secondary"
           size="sm"
-          onClick={handleSyncAll}
+          onClick={() => setShowSyncAllConfirm(true)}
           disabled={driftedItems.length === 0 || syncingAll}
         >
           <RefreshCw className={`w-4 h-4 ${syncingAll ? 'animate-spin' : ''}`} />
@@ -253,11 +256,49 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
               ) : undefined}
               onEdit={() => router.push(`/power-creator?edit=${encodeURIComponent(power.id)}`)}
               onDelete={() => onDelete({ id: power.id, name: power.name } as DisplayItem)}
-              onDuplicate={() => duplicatePower.mutate(power.id, { onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error') })}
+              onDuplicate={() => setDuplicateConfirm({ id: power.id, name: power.name })}
             />
           ))
         )}
       </div>
+
+      <ConfirmActionModal
+        isOpen={!!duplicateConfirm}
+        onClose={() => setDuplicateConfirm(null)}
+        onConfirm={() => {
+          if (!duplicateConfirm) return;
+          duplicatePower.mutate(duplicateConfirm.id, {
+            onSuccess: () => {
+              showToast(`Duplicated "${duplicateConfirm.name}"`, 'success');
+              setDuplicateConfirm(null);
+            },
+            onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error'),
+          });
+        }}
+        title="Duplicate power?"
+        description={
+          duplicateConfirm
+            ? `Create a copy of "${duplicateConfirm.name}" in your library?`
+            : ''
+        }
+        confirmLabel="Duplicate"
+        loadingLabel="Duplicating..."
+        isLoading={duplicatePower.isPending}
+      />
+
+      <ConfirmActionModal
+        isOpen={showSyncAllConfirm}
+        onClose={() => setShowSyncAllConfirm(false)}
+        onConfirm={() => {
+          setShowSyncAllConfirm(false);
+          void handleSyncAll();
+        }}
+        title="Sync with current patch?"
+        description={`Sync ${driftedItems.length} power${driftedItems.length === 1 ? '' : 's'} to current patch rules. Parts that no longer exist in the codex may be removed.`}
+        confirmLabel="Sync all"
+        loadingLabel="Syncing..."
+        isLoading={syncingAll}
+      />
     </div>
   );
 }

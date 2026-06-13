@@ -8,7 +8,7 @@
 import type { CharacterPower, CharacterTechnique, Character } from '@/types';
 import { computeMaxHealthEnergy } from '@/lib/game/calculations';
 import type { UserPower, UserTechnique, UserItem, SavedDamage } from '@/hooks/use-user-library';
-import type { PowerPart, TechniquePart } from '@/hooks/use-rtdb';
+import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import { derivePowerDisplay, deriveTechniqueDisplay, formatPowerDamage, formatTechniqueDamage, formatRange, deriveShieldAmountFromProperties, deriveShieldDamageFromProperties, deriveDamageReductionFromProperties } from '@/lib/calculators';
 
 // =============================================================================
@@ -551,7 +551,7 @@ export function enrichCharacterData(
 // =============================================================================
 
 /**
- * Fields that should be saved to Prisma (minimal data).
+ * Fields that should be saved to the database (minimal data).
  * Mirrors vanilla site's SAVEABLE_FIELDS in main.js cleanForSave().
  */
 const SAVEABLE_FIELDS = [

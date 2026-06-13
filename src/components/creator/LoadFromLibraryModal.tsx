@@ -2,20 +2,16 @@
  * Load From Library Modal
  * ========================
  * Reusable modal for loading saved items from library.
- * Two modes:
- * - Unified: pass selectableItems, columns, gridColumns, headerExtra (e.g. SourceFilter).
- *   Same list UX as Add Library Item modal: expandable rows, chips, sortable columns, public/my/all.
- *   Single selection + "Load" button; onSelect(selectedItem) with selectedItem.data = raw item.
- * - Legacy: pass items, itemType for simple name/description list (e.g. backward compat).
+ * Unified list UX: expandable rows, chips, sortable columns, public/my/all via headerExtra.
+ * Single selection + "Load" button; onSelect(selectedItem) with selectedItem.data = raw item.
  */
 
 'use client';
 
 import { useState, useMemo, useEffect, useRef, ReactNode } from 'react';
-import { X, FileText, Zap, Sword, Shield } from 'lucide-react';
+import { X } from 'lucide-react';
 import { SearchInput, IconButton, Alert, Modal, LoadingState, EmptyState, Button } from '@/components/ui';
 import { GridListRow, ListHeader } from '@/components/shared';
-import { useModalListState } from '@/hooks/use-modal-list-state';
 import { useSort } from '@/hooks/use-sort';
 import type { SelectableItem } from '@/components/shared/unified-selection-modal';
 
@@ -28,29 +24,7 @@ export interface LibraryItem {
   description?: string;
 }
 
-// Legacy mode: simple list from raw items
-interface LegacyLoadProps<T extends LibraryItem> {
-  selectableItems?: never;
-  columns?: never;
-  gridColumns?: never;
-  headerExtra?: never;
-  emptyMessage?: never;
-  emptySubMessage?: never;
-  searchPlaceholder?: never;
-  items: T[] | undefined;
-  itemType: LibraryItemType;
-  onSelect: (item: T) => void;
-  isLoading: boolean;
-  error: Error | null;
-  isOpen: boolean;
-  onClose: () => void;
-  title?: string;
-}
-
-// Unified mode: same as add modals (SourceFilter, columns, chips, expandable)
-interface UnifiedLoadProps {
-  items?: never;
-  itemType?: never;
+export interface LoadFromLibraryModalProps {
   selectableItems: SelectableItem[];
   columns: Array<{ key: string; label: string; sortable?: boolean }>;
   gridColumns: string;
@@ -66,147 +40,7 @@ interface UnifiedLoadProps {
   searchPlaceholder?: string;
 }
 
-export type LoadFromLibraryModalProps<T extends LibraryItem> = LegacyLoadProps<T> | UnifiedLoadProps;
-
-function isUnifiedProps<T extends LibraryItem>(
-  props: LoadFromLibraryModalProps<T>
-): props is UnifiedLoadProps {
-  return Array.isArray((props as UnifiedLoadProps).selectableItems);
-}
-
-const TYPE_CONFIG: Record<LibraryItemType, { icon: React.ReactNode; color: string; emptyText: string }> = {
-  power: {
-    icon: <Zap className="w-5 h-5" />,
-    color: 'text-energy',
-    emptyText: 'No saved powers found. Create some powers first!',
-  },
-  technique: {
-    icon: <Sword className="w-5 h-5" />,
-    color: 'text-martial-dark',
-    emptyText: 'No saved techniques found. Create some techniques first!',
-  },
-  item: {
-    icon: <Shield className="w-5 h-5" />,
-    color: 'text-tp',
-    emptyText: 'No saved items found. Create some items first!',
-  },
-  creature: {
-    icon: <FileText className="w-5 h-5" />,
-    color: 'text-success',
-    emptyText: 'No saved creatures found. Create some creatures first!',
-  },
-};
-
-export function LoadFromLibraryModal<T extends LibraryItem>(
-  props: LoadFromLibraryModalProps<T>
-) {
-  if (isUnifiedProps(props)) {
-    return <LoadFromLibraryModalUnified {...props} />;
-  }
-  return <LoadFromLibraryModalLegacy {...props} />;
-}
-
-function LoadFromLibraryModalLegacy<T extends LibraryItem>({
-  isOpen,
-  onClose,
-  onSelect,
-  items,
-  isLoading,
-  error,
-  itemType,
-  title,
-}: LegacyLoadProps<T>) {
-  const config = TYPE_CONFIG[itemType];
-  const displayTitle = title || `Load ${itemType.charAt(0).toUpperCase() + itemType.slice(1)}`;
-
-  const { search, setSearch, sortedItems, sortState, handleSort } = useModalListState({
-    items: items ?? [],
-    searchFields: ['name', 'description'],
-    initialSortKey: 'name',
-  });
-
-  const handleSelect = (item: T) => {
-    onSelect(item);
-    onClose();
-    setSearch('');
-  };
-
-  const modalHeader = (
-    <div className="px-6 py-4 border-b border-border-light flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <span className={config.color}>{config.icon}</span>
-        <h2 className="text-xl font-bold text-text-primary">{displayTitle}</h2>
-      </div>
-      <IconButton label="Close modal" variant="ghost" onClick={onClose}>
-        <X className="w-5 h-5" />
-      </IconButton>
-    </div>
-  );
-
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      size="lg"
-      header={modalHeader}
-      showCloseButton={false}
-      flexLayout
-      fullScreenOnMobile
-      contentClassName=""
-      className="max-h-[80vh]"
-    >
-      <div className="px-6 py-3 border-b border-border-light">
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder={`Search ${itemType}s...`}
-          size="sm"
-        />
-      </div>
-      <div className="flex-1 overflow-y-auto p-4">
-        {isLoading ? (
-          <LoadingState message="Loading..." size="md" padding="md" />
-        ) : error ? (
-          <Alert variant="danger" className="mx-4">
-            Error loading library: {error.message}
-          </Alert>
-        ) : sortedItems.length === 0 ? (
-          <EmptyState
-            title={items?.length === 0 ? config.emptyText : 'No matching items found.'}
-            size="sm"
-          />
-        ) : (
-          <>
-            <ListHeader
-              columns={[{ key: 'name', label: 'Name', width: '1fr' }]}
-              gridColumns="1fr"
-              sortState={sortState}
-              onSort={handleSort}
-              hasSelectionColumn
-              className="mx-0 mb-2"
-            />
-            <div className="space-y-2">
-              {sortedItems.map((item) => (
-                <GridListRow
-                  key={item.id}
-                  id={item.id}
-                  name={item.name}
-                  description={item.description}
-                  compact
-                  selectable
-                  isSelected={false}
-                  onSelect={() => handleSelect(item as T)}
-                />
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-    </Modal>
-  );
-}
-
-function LoadFromLibraryModalUnified({
+export function LoadFromLibraryModal({
   isOpen,
   onClose,
   selectableItems,
@@ -220,7 +54,7 @@ function LoadFromLibraryModalUnified({
   emptyMessage = 'No items found',
   emptySubMessage,
   searchPlaceholder = 'Search...',
-}: UnifiedLoadProps) {
+}: LoadFromLibraryModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { sortState, handleSort, sortItems } = useSort('name');

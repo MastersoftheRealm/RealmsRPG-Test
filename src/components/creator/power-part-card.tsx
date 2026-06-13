@@ -1,5 +1,6 @@
 /**
  * Power Part Card - Expandable part selector with option levels
+ * Shared by Power Creator and Technique Creator.
  */
 
 'use client';
@@ -22,7 +23,7 @@ interface SelectedPartLike {
   selectedCategory: string;
 }
 
-interface PowerPartCardProps {
+export interface PowerPartCardProps {
   selectedPart: SelectedPartLike;
   _index: number;
   onRemove: () => void;

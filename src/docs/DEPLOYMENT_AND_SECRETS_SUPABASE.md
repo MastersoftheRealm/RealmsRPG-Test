@@ -79,10 +79,12 @@ The app uses two buckets for image uploads. **Create these in Supabase Dashboard
 
 Enable RLS on each bucket. The app needs **SELECT, INSERT, UPDATE, and DELETE** for portrait uploads (list existing, remove old file, then upload/upsert). The canonical policy set is in **`sql/supabase-storage-policies.sql`** — run that file in Supabase Dashboard → SQL Editor.
 
-- **Read (SELECT):** Public or own path
+- **Read (SELECT):** Authenticated users may list/read only their own path (not bucket-wide). Public **read-by-key** (images in the UI) uses **Public bucket** CDN URLs from `getPublicUrl`, not bucket-wide Storage SELECT.
 - **Insert/Update/Delete:** Only the user’s own path (`portraits`: first folder = `auth.uid()`; `profile-pictures`: filename prefix = `auth.uid()`)
 
 **Create buckets:** In Supabase Dashboard → Storage → New bucket, create `portraits` and `profile-pictures`. Enable public access if you want public URLs (the app uses `getPublicUrl`). Then run **`sql/supabase-storage-policies.sql`** in the SQL Editor.
+
+**Security hardening (TASK-326):** After the base storage policies, run **`sql/supabase-storage-select-hardening-2026-06.sql`** to remove bucket-wide public SELECT (prevents Storage API listing). Keep both buckets marked **Public bucket** so direct object URLs still load in the app.
 
 **Portrait upload fails with "new row violates row-level security policy"?**  
 Run `sql/supabase-storage-policies.sql`. If you previously only added INSERT + SELECT (e.g. from an older snippet), add the UPDATE and DELETE policies for the `portraits` bucket from that file.
@@ -101,6 +103,18 @@ Run `sql/supabase-storage-policies.sql`. If you previously only added INSERT + S
 
 ---
 
+## Auth: Leaked-password protection (TASK-326)
+
+Supabase security advisors flag **Leaked password protection** when disabled. This is **not** configured via SQL — enable it in the Dashboard:
+
+1. **Supabase Dashboard** → **Authentication** → **Providers** (or **Auth** settings, depending on UI version).
+2. Find **Leaked password protection** (Have I Been Pwned / HIBP check).
+3. **Enable** it so new passwords and password changes are rejected if they appear in known breach lists.
+
+Applies to email/password sign-up and password updates (including **My Account** password change). OAuth-only users are unaffected. Re-check **Dashboard → Advisors → Security** after enabling.
+
+---
+
 ## Admin Setup
 
 Admins are configured in `public.user_profiles`:
@@ -114,7 +128,7 @@ See `ADMIN_SETUP.md` for current implementation.
 
 ## Vercel free tier usage
 
-On the free tier, watch **Edge Requests**, **Fast Data Transfer** (CDN → users), and **Edge Request CPU Duration** (charged when >10ms per request). For a full audit of CDN/query usage and optimization tips, see **`src/docs/ai/CDN_QUERY_AUDIT_2026-02-24.md`**.
+On the free tier, watch **Edge Requests**, **Fast Data Transfer** (CDN → users), and **Edge Request CPU Duration** (charged when >10ms per request). See **`src/docs/PERFORMANCE_AND_EDGE.md`**.
 
 - **Proxy (Edge):** `src/proxy.ts` runs on every *matching* request. We exclude high-volume public APIs (`/api/codex`, `/api/public`) from the matcher so those routes don’t count as Edge Requests or Edge CPU.
 - **Caching:** `/api/codex` and `/api/public/[type]` GET responses use `Cache-Control: public, max-age=300, s-maxage=600, stale-while-revalidate=300` so browsers and CDN cache for 5–10 minutes and repeated requests don’t re-download the same payload (reduces Fast Data Transfer).

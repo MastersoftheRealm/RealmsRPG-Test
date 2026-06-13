@@ -3,7 +3,13 @@
  * ======================
  */
 
+import type { Metadata } from 'next';
 import { PageContainer, PageHeader } from '@/components/ui';
+
+export const metadata: Metadata = {
+  title: 'Terms of Service',
+  description: 'Terms for using RealmsRPG, the free web app for creating characters, running games, and sharing tabletop RPG content.',
+};
 
 export default function TermsPage() {
   return (
@@ -26,27 +32,21 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-text-primary mb-4">2. Use License</h2>
+          <h2 className="text-xl font-semibold text-text-primary mb-4">2. Use of the Service</h2>
           <p className="text-text-secondary mb-3">
-            Permission is granted to temporarily download one copy of the materials (information or software) 
-            on Realms&apos; website for personal, non-commercial transitory viewing only. This is the grant of a 
-            license, not a transfer of title, and under this license you may not:
+            RealmsRPG is a free web app for playing and creating content for the Realms tabletop RPG. By using the site, you agree to use it lawfully and respectfully. You may not:
           </p>
           <ul className="list-disc list-inside text-text-secondary space-y-1">
-            <li>Modify or copy the materials;</li>
-            <li>Use the materials for any commercial purpose, or for any public display (commercial or non-commercial);</li>
-            <li>Attempt to decompile or reverse engineer any software contained on Realms&apos; website;</li>
-            <li>Remove any copyright or other proprietary notations from the materials; or</li>
-            <li>Transfer the materials to another person or &quot;mirror&quot; the materials on any other server.</li>
+            <li>Attempt to gain unauthorized access to accounts, data, or systems</li>
+            <li>Scrape, overload, or interfere with the normal operation of the service</li>
+            <li>Upload malicious code or content that violates applicable law</li>
+            <li>Harass, impersonate, or abuse other users</li>
+            <li>Reverse engineer or misuse the service in ways that harm Realms or other players</li>
           </ul>
           <p className="text-text-secondary mt-3">
-            This license shall automatically terminate if you violate any of these restrictions and may be 
-            terminated by Realms at any time. Upon terminating your viewing of these materials or upon the 
-            termination of this license, you must destroy any downloaded materials in your possession whether 
-            in electronic or printed format.
+            You retain ownership of the characters, powers, techniques, and other content you create. By saving content to RealmsRPG, you grant us the limited rights needed to host, display, back up, and operate the service for you and your invited collaborators (such as campaign members).
           </p>
         </section>
-
         <section>
           <h2 className="text-xl font-semibold text-text-primary mb-4">3. Disclaimer</h2>
           <p className="text-text-secondary">

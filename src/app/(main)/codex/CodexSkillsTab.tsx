@@ -19,8 +19,8 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/shared';
-import { EmptyState } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
+import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { useCodexSkills, type Skill } from '@/hooks';
 import { getSkillExtraDescriptionDetailSections } from '@/lib/skill-extra-descriptions';
 
@@ -67,7 +67,7 @@ function SkillCard({ skill, skillIdToName }: { skill: Skill; skillIdToName: Map<
 }
 
 export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  const { data: skills, isLoading, error } = useCodexSkills();
+  const { data: skills, isLoading, error, refetch } = useCodexSkills();
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const skillIdToName = useMemo((): Map<string, string> => {
@@ -158,16 +158,10 @@ export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' 
   }, [skills, filters, sortItems, skillIdToName]);
 
   if (codexMode === 'my') {
-    return (
-      <EmptyState
-        size="lg"
-        title="My Codex: Skills"
-        description="Custom skills are not available yet. For now, use Realms Codex."
-      />
-    );
+    return <CodexMyCodexEmpty />;
   }
 
-  if (error) return <ErrorState message="Failed to load skills" />;
+  if (error) return <ErrorState message="Failed to load skills" onRetry={() => refetch()} />;
 
   return (
     <div>

@@ -7,7 +7,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/stores';
 import { LoadingState } from '@/components/ui/spinner';
 
@@ -18,13 +18,15 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, loading, initialized } = useAuthStore();
 
   useEffect(() => {
     if (initialized && !loading && !user) {
-      router.push('/login');
+      const returnTo = encodeURIComponent(pathname || '/');
+      router.push(`/login?returnTo=${returnTo}`);
     }
-  }, [user, loading, initialized, router]);
+  }, [user, loading, initialized, router, pathname]);
 
   // Still initializing
   if (!initialized || loading) {

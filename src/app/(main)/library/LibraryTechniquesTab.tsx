@@ -17,6 +17,7 @@ import {
   LoadingState,
   ErrorDisplay,
   ListEmptyState,
+  ConfirmActionModal,
   type ChipData,
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
@@ -65,6 +66,8 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
   const [search, setSearch] = useState('');
   const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set());
   const [syncingAll, setSyncingAll] = useState(false);
+  const [duplicateConfirm, setDuplicateConfirm] = useState<{ id: string; name: string } | null>(null);
+  const [showSyncAllConfirm, setShowSyncAllConfirm] = useState(false);
   const { sortState, handleSort, sortItems } = useSort('name');
   const techniques = mode === 'empowered' ? empoweredTechniques : standardTechniques;
   const isLoading = mode === 'empowered' ? empoweredLoading : standardLoading;
@@ -182,7 +185,16 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
   }, [cardData, search, sortItems]);
 
   if (error) {
-    return <ErrorDisplay message="Failed to load techniques" subMessage="Please try again later" />;
+    return (
+      <ErrorDisplay
+        message="Failed to load techniques"
+        subMessage="Please try again later"
+        onRetry={() => {
+          standardTechniquesQuery.refetch();
+          empoweredTechniquesQuery.refetch();
+        }}
+      />
+    );
   }
 
   if (!isLoading && cardData.length === 0) {
@@ -214,7 +226,7 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
         <Button
           variant="secondary"
           size="sm"
-          onClick={handleSyncAll}
+          onClick={() => setShowSyncAllConfirm(true)}
           disabled={driftedItems.length === 0 || syncingAll}
         >
           <RefreshCw className={`w-4 h-4 ${syncingAll ? 'animate-spin' : ''}`} />
@@ -277,15 +289,52 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
                 router.push(`${creator}?edit=${encodeURIComponent(tech.id)}`);
               }}
               onDelete={() => onDelete({ id: tech.id, name: tech.name } as DisplayItem)}
-              onDuplicate={() =>
-                (mode === 'empowered' ? duplicateEmpoweredTechnique : duplicateTechnique).mutate(tech.id, {
-                  onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error'),
-                })
-              }
+              onDuplicate={() => setDuplicateConfirm({ id: tech.id, name: tech.name })}
             />
           ))
         )}
       </div>
+
+      <ConfirmActionModal
+        isOpen={!!duplicateConfirm}
+        onClose={() => setDuplicateConfirm(null)}
+        onConfirm={() => {
+          if (!duplicateConfirm) return;
+          const duplicateMutation = mode === 'empowered' ? duplicateEmpoweredTechnique : duplicateTechnique;
+          duplicateMutation.mutate(duplicateConfirm.id, {
+            onSuccess: () => {
+              showToast(`Duplicated "${duplicateConfirm.name}"`, 'success');
+              setDuplicateConfirm(null);
+            },
+            onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error'),
+          });
+        }}
+        title={mode === 'empowered' ? 'Duplicate empowered technique?' : 'Duplicate technique?'}
+        description={
+          duplicateConfirm
+            ? `Create a copy of "${duplicateConfirm.name}" in your library?`
+            : ''
+        }
+        confirmLabel="Duplicate"
+        loadingLabel="Duplicating..."
+        isLoading={
+          mode === 'empowered' ? duplicateEmpoweredTechnique.isPending : duplicateTechnique.isPending
+        }
+      />
+
+      <ConfirmActionModal
+        isOpen={showSyncAllConfirm}
+        onClose={() => setShowSyncAllConfirm(false)}
+        onConfirm={() => {
+          setShowSyncAllConfirm(false);
+          void handleSyncAll();
+        }}
+        title="Sync with current patch?"
+        description={`Sync ${driftedItems.length} ${mode === 'empowered' ? 'empowered technique' : 'technique'}${driftedItems.length === 1 ? '' : 's'} to current patch rules. Parts that no longer exist in the codex may be removed.`}
+        confirmLabel="Sync all"
+        loadingLabel="Syncing..."
+        isLoading={syncingAll}
+      />
     </div>
   );
 }

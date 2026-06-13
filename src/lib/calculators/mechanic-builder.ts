@@ -77,7 +77,8 @@ export interface DurationConfig {
 
 /** Weapon configuration (technique only) */
 export interface WeaponConfig {
-  tp: number; // Training points of selected weapon
+  tp: number;
+  attackMode?: 'attack' | 'no_attack';
 }
 
 /** Full context for building mechanic parts */
@@ -395,8 +396,12 @@ export function buildMechanicParts(ctx: MechanicBuilderContext): MechanicPartRes
   }
 
   // ----- Weapon (technique only) -----
-  if (ctx.weapon && ctx.weapon.tp >= 1) {
-    addPart(PART_IDS.ADD_WEAPON_ATTACK, 'Add Weapon Attack', ctx.weapon.tp - 1);
+  if (ctx.weapon) {
+    if (ctx.weapon.attackMode === 'no_attack') {
+      addPart(PART_IDS.NO_ATTACK, 'No Attack', 0);
+    } else if (ctx.weapon.tp >= 1) {
+      addPart(PART_IDS.ADD_WEAPON_ATTACK, 'Add Weapon Attack', ctx.weapon.tp - 1);
+    }
   }
 
   return parts;

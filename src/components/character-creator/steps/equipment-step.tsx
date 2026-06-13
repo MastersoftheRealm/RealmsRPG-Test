@@ -14,7 +14,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { cn, formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useEquipment, useUserItems, useItemProperties, usePublicLibrary, usePowerParts, useTechniqueParts } from '@/hooks';
+import { useEquipment, useUserItems, useItemProperties, useOfficialLibrary, usePowerParts, useTechniqueParts } from '@/hooks';
 import { deriveItemDisplay, trainingPointsForItemPropertyRef } from '@/lib/calculators/item-calc';
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 import {
@@ -106,7 +106,8 @@ interface UnifiedEquipmentItem {
 }
 
 // Starting currency for new characters at level 1 is 200
-const STARTING_CURRENCY = 200;
+import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
+const STARTING_CURRENCY = CHARACTER_STARTING_CURRENCY;
 
 // Selected item type for our internal state with quantity
 interface SelectedItem {
@@ -151,7 +152,7 @@ export function EquipmentStep() {
 
   // Resolve path recommendations to full items (depends on allEquipment, so after it's defined)
 
-  const { data: publicItems = [], isLoading: publicItemsLoading } = usePublicLibrary('items');
+  const { data: publicItems = [], isLoading: publicItemsLoading } = useOfficialLibrary('items');
 
   const isLoading = userItemsLoading || codexLoading || publicItemsLoading;
   const error = codexError;
@@ -261,7 +262,7 @@ export function EquipmentStep() {
       }
     }
     
-    // Add all equipment from RTDB (weapons, armor, and general equipment)
+    // Add all equipment from the Codex (weapons, armor, and general equipment)
     if (codexEquipment) {
       for (const item of codexEquipment) {
         const equip = item as { category?: string };

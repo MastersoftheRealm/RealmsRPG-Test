@@ -1,7 +1,7 @@
 /**
  * Campaign Roll Service
  * ======================
- * Client-side API calls for campaign roll logs. Uses /api/campaigns/[id]/rolls (Prisma).
+ * Client-side API calls for campaign roll logs. Uses /api/campaigns/[id]/rolls (Supabase).
  */
 
 import type { CampaignRollEntry } from '@/types/campaign-roll';

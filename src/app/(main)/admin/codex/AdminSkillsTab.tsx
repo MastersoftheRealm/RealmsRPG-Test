@@ -10,7 +10,7 @@ import {
   ListEmptyState as EmptyState,
   ListHeader,
 } from '@/components/shared';
-import { Modal, Button, Input, Textarea } from '@/components/ui';
+import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
 import { ChipSelect, SelectFilter, FilterSection } from '@/components/codex';
 import { useCodexSkills, type Skill } from '@/hooks';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
@@ -21,8 +21,6 @@ import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Copy, X } from 'lucide-react';
-import { IconButton } from '@/components/ui';
-
 const COPY_NAME_SUFFIX = ' copy';
 
 const SKILL_GRID_COLUMNS = '1.5fr 1fr 1fr 40px';
@@ -35,7 +33,8 @@ interface SkillFilters {
 }
 
 export function AdminSkillsTab() {
-  const { data: skills, isLoading, error } = useCodexSkills();
+  const { showToast } = useToast();
+  const { data: skills, isLoading, error, refetch } = useCodexSkills();
   const queryClient = useQueryClient();
   const { sortState, handleSort, sortItems } = useSort('name');
   const [filters, setFilters] = useState<SkillFilters>({
@@ -298,7 +297,7 @@ export function AdminSkillsTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
     }
   };
 
@@ -313,7 +312,7 @@ export function AdminSkillsTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
     }
   };
 
@@ -328,12 +327,12 @@ export function AdminSkillsTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       setPendingDeleteId(null);
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
       setPendingDeleteId(null);
     }
   };
 
-  if (error) return <ErrorState message="Failed to load skills" />;
+  if (error) return <ErrorState message="Failed to load skills" onRetry={() => { void refetch(); }} />;
 
   return (
     <div>

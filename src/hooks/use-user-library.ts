@@ -11,7 +11,7 @@ import { useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient, UseQueryResult, UseMutationResult } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCodexSpecies } from './use-codex';
-import type { Species } from './use-rtdb';
+import type { Species } from './codex-types';
 
 // =============================================================================
 // Types
@@ -177,66 +177,71 @@ async function fetchLibrary<T>(type: string, userId: string): Promise<T[]> {
 // Hooks
 // =============================================================================
 
-export function useUserPowers(): UseQueryResult<UserPower[], Error> {
+export function useUserPowers(options?: { enabled?: boolean }): UseQueryResult<UserPower[], Error> {
   const { user } = useAuthStore();
   const userId = user?.uid || '';
+  const enabled = (options?.enabled ?? true) && !!userId;
 
   return useQuery({
     queryKey: QUERY_KEYS.userPowers(userId),
     queryFn: () => fetchLibrary<UserPower>('powers', userId),
-    enabled: !!userId,
+    enabled,
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 }
 
-export function useUserTechniques(): UseQueryResult<UserTechnique[], Error> {
+export function useUserTechniques(options?: { enabled?: boolean }): UseQueryResult<UserTechnique[], Error> {
   const { user } = useAuthStore();
   const userId = user?.uid || '';
+  const enabled = (options?.enabled ?? true) && !!userId;
 
   return useQuery({
     queryKey: QUERY_KEYS.userTechniques(userId),
     queryFn: () => fetchLibrary<UserTechnique>('techniques', userId),
-    enabled: !!userId,
+    enabled,
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 }
 
-export function useUserEmpoweredTechniques(): UseQueryResult<UserTechnique[], Error> {
+export function useUserEmpoweredTechniques(options?: { enabled?: boolean }): UseQueryResult<UserTechnique[], Error> {
   const { user } = useAuthStore();
   const userId = user?.uid || '';
+  const enabled = (options?.enabled ?? true) && !!userId;
 
   return useQuery({
     queryKey: QUERY_KEYS.userEmpoweredTechniques(userId),
     queryFn: () => fetchLibrary<UserTechnique>('empowered-techniques', userId),
-    enabled: !!userId,
+    enabled,
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 }
 
-export function useUserItems(): UseQueryResult<UserItem[], Error> {
+export function useUserItems(options?: { enabled?: boolean }): UseQueryResult<UserItem[], Error> {
   const { user } = useAuthStore();
   const userId = user?.uid || '';
+  const enabled = (options?.enabled ?? true) && !!userId;
 
   return useQuery({
     queryKey: QUERY_KEYS.userItems(userId),
     queryFn: () => fetchLibrary<UserItem>('items', userId),
-    enabled: !!userId,
+    enabled,
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 }
 
-export function useUserCreatures(): UseQueryResult<UserCreature[], Error> {
+export function useUserCreatures(options?: { enabled?: boolean }): UseQueryResult<UserCreature[], Error> {
   const { user } = useAuthStore();
   const userId = user?.uid || '';
+  const enabled = (options?.enabled ?? true) && !!userId;
 
   return useQuery({
     queryKey: QUERY_KEYS.userCreatures(userId),
     queryFn: () => fetchLibrary<UserCreature>('creatures', userId),
-    enabled: !!userId,
+    enabled,
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });

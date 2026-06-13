@@ -10,7 +10,7 @@
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, Cloud, CloudOff } from 'lucide-react';
-import { PageContainer, LoadingState, Alert } from '@/components/ui';
+import { PageContainer, LoadingState, Alert, useToast } from '@/components/ui';
 import { ContextHelpTooltip } from '@/components/shared';
 import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
 import { RollProvider } from '@/components/character-sheet';
@@ -83,6 +83,7 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
     if (encounter?.name && !isEditingName) setNameInput(encounter.name);
   }, [encounter?.name, isEditingName]);
 
+  const { showToast } = useToast();
   const { isSaving, hasUnsavedChanges } = useAutoSave({
     data: encounter,
     onSave: async (data) => {
@@ -92,6 +93,10 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
     },
     delay: 1500,
     enabled: isInitialized && !!encounter,
+    onSaveError: (err) => {
+      console.error('Encounter save failed:', err);
+      showToast('Failed to save encounter. Your latest changes may not be stored.', 'error');
+    },
   });
 
   if (isLoading) {

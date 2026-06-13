@@ -10,14 +10,13 @@ import {
   ListEmptyState as EmptyState,
   ListHeader,
 } from '@/components/shared';
-import { Modal, Button, Input, Textarea } from '@/components/ui';
+import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
 import { SelectFilter, FilterSection } from '@/components/codex';
 import { useItemProperties, type ItemProperty } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Copy, X, Plus } from 'lucide-react';
-import { IconButton } from '@/components/ui';
 import { formatListCellLabel } from '@/lib/utils';
 
 const COPY_NAME_SUFFIX = ' copy';
@@ -30,7 +29,8 @@ interface PropertyFilters {
 }
 
 export function AdminPropertiesTab() {
-  const { data: properties, isLoading, error } = useItemProperties();
+  const { showToast } = useToast();
+  const { data: properties, isLoading, error, refetch } = useItemProperties();
   const queryClient = useQueryClient();
   const { sortState, handleSort } = useSort('name');
   const [filters, setFilters] = useState<PropertyFilters>({
@@ -233,7 +233,7 @@ export function AdminPropertiesTab() {
       // even if the codex refetch is delayed (staleTime is long) or the network is slow.
       const savedId = editing ? editing.id : (result as { id?: string }).id;
       if (!savedId) {
-        alert('Save succeeded but no ID was returned. Please refresh.');
+        showToast('Save succeeded but no ID was returned. Please refresh.', 'warning');
         closeModal();
         return;
       }
@@ -272,7 +272,7 @@ export function AdminPropertiesTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
     }
   };
 
@@ -287,7 +287,7 @@ export function AdminPropertiesTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
     }
   };
 
@@ -302,12 +302,12 @@ export function AdminPropertiesTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       setPendingDeleteId(null);
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
       setPendingDeleteId(null);
     }
   };
 
-  if (error) return <ErrorState message="Failed to load properties" />;
+  if (error) return <ErrorState message="Failed to load properties" onRetry={() => { void refetch(); }} />;
 
   return (
     <div>

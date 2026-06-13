@@ -2,7 +2,7 @@
  * My Account Page
  * ===============
  * User profile and account settings page.
- * Uses Supabase Auth, Prisma, and Supabase Storage.
+ * Uses Supabase Auth, Database, and Storage.
  */
 
 'use client';
@@ -215,8 +215,21 @@ function AccountContent() {
     setEmailChanging(true);
     setEmailMessage(null);
 
+    if (!emailPassword) {
+      setEmailMessage({ type: 'error', text: 'Please enter your current password' });
+      setEmailChanging(false);
+      return;
+    }
+
     try {
       const supabase = createClient();
+      // Re-authenticate with the current password before changing the email so a
+      // hijacked session cannot silently take over the account (TASK-331).
+      const { error: reauthError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: emailPassword,
+      });
+      if (reauthError) throw new Error('Current password is incorrect');
       const { error } = await supabase.auth.updateUser({ email: newEmail });
       if (error) throw error;
       setProfile((prev) => (prev ? { ...prev, email: newEmail } : null));
@@ -260,6 +273,12 @@ function AccountContent() {
 
     try {
       const supabase = createClient();
+      // Verify the current password before setting a new one (TASK-331).
+      const { error: reauthError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+      });
+      if (reauthError) throw new Error('Current password is incorrect');
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
       setCurrentPassword('');
@@ -295,7 +314,7 @@ function AccountContent() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!user || !user.email) return;
+    if (!user) return;
     if (deleteConfirmText !== 'DELETE') return;
 
     setDeleting(true);
@@ -303,11 +322,16 @@ function AccountContent() {
 
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: deletePassword,
-      });
-      if (error) throw error;
+      // Password accounts re-authenticate; OAuth-only users (no password) confirm
+      // via the typed DELETE, so they aren't locked out of deleting (TASK-331).
+      if (canChangeEmailPassword) {
+        if (!user.email) throw new Error('Missing account email');
+        const { error } = await supabase.auth.signInWithPassword({
+          email: user.email,
+          password: deletePassword,
+        });
+        if (error) throw error;
+      }
 
       const result = await deleteAccountAction();
       if (!result.success) {
@@ -661,18 +685,22 @@ function AccountContent() {
         ) : (
           <div className="bg-red-50 rounded-lg p-4 space-y-4">
             <p className="text-sm text-red-700 font-medium">
-              To confirm deletion, enter your password and type DELETE below:
+              {canChangeEmailPassword
+                ? 'To confirm deletion, enter your password and type DELETE below:'
+                : 'To confirm deletion, type DELETE below:'}
             </p>
-            <div>
-              <label className="block text-sm font-medium text-red-700 mb-1">Password</label>
-              <Input
-                type="password"
-                value={deletePassword}
-                onChange={(e) => setDeletePassword(e.target.value)}
-                className="border-red-300 focus:ring-red-500"
-                placeholder="Enter your password"
-              />
-            </div>
+            {canChangeEmailPassword && (
+              <div>
+                <label className="block text-sm font-medium text-red-700 mb-1">Password</label>
+                <Input
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  className="border-red-300 focus:ring-red-500"
+                  placeholder="Enter your password"
+                />
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-red-700 mb-1">Type DELETE to confirm</label>
               <Input
@@ -692,7 +720,11 @@ function AccountContent() {
               <Button
                 variant="danger"
                 onClick={handleDeleteAccount}
-                disabled={deleting || deleteConfirmText !== 'DELETE' || !deletePassword}
+                disabled={
+                  deleting ||
+                  deleteConfirmText !== 'DELETE' ||
+                  (canChangeEmailPassword && !deletePassword)
+                }
                 isLoading={deleting}
               >
                 Permanently Delete Account

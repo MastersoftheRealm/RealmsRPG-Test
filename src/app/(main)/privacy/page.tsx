@@ -3,10 +3,15 @@
  * =====================
  */
 
+import type { Metadata } from 'next';
 import { PageContainer, PageHeader } from '@/components/ui';
 
-export default function PrivacyPage() {
-  return (
+export const metadata: Metadata = {
+  title: 'Privacy Policy',
+  description: 'How RealmsRPG collects, uses, and protects your account and game data on our free tabletop RPG web app.',
+};
+
+export default function PrivacyPage() {  return (
     <PageContainer size="prose">
       <PageHeader title="Privacy Policy" />
       
@@ -31,20 +36,18 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-xl font-semibold text-text-primary mb-4">2. How We Use Information</h2>
           <p className="text-text-secondary mb-3">
-            We use the information we collect in various ways, including to:
+            We use the information we collect to operate RealmsRPG as a free tabletop RPG web app, including to:
           </p>
           <ul className="list-disc list-inside text-text-secondary space-y-1">
-            <li>Provide, operate, and maintain our website</li>
-            <li>Improve, personalize, and expand our website</li>
-            <li>Understand and analyze how you use our website</li>
-            <li>Develop new products, services, features, and functionality</li>
-            <li>Communicate with you, either directly or through one of our partners, including for customer service, to provide you with updates and other information relating to the website, and for marketing and promotional purposes</li>
-            <li>Process your transactions and manage your orders</li>
-            <li>Send you emails</li>
-            <li>Find and prevent fraud</li>
+            <li>Provide, operate, and maintain your account, characters, library content, campaigns, and encounters</li>
+            <li>Authenticate you and keep your session secure</li>
+            <li>Improve site performance, usability, and accessibility</li>
+            <li>Understand how features are used so we can fix bugs and improve tools</li>
+            <li>Communicate with you about your account, support requests, or important service updates</li>
+            <li>Send optional emails such as account confirmation or password reset messages</li>
+            <li>Detect, prevent, and address abuse, fraud, or security issues</li>
           </ul>
         </section>
-
         <section>
           <h2 className="text-xl font-semibold text-text-primary mb-4">3. Data Retention</h2>
           <p className="text-text-secondary">

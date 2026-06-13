@@ -44,11 +44,16 @@ export async function GET() {
     }
 
     const supabase = await createClient();
-    const { data: rows } = await supabase
+    const { data: rows, error: dbError } = await supabase
       .from('characters')
       .select('id, user_id, data, name, level, archetype_name, ancestry_name, status, visibility, updated_at')
       .eq('user_id', user.uid)
       .order('updated_at', { ascending: false });
+
+    if (dbError) {
+      console.error('[API Error] GET /api/characters:', dbError);
+      return NextResponse.json({ error: 'Failed to load characters' }, { status: 500 });
+    }
 
     const list = (rows ?? []) as {
       id: string;

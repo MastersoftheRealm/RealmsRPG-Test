@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { getRolePolicyForUser } from '@/lib/role-policy';
-import { validateImageMagicBytes } from '@/lib/validate-image';
+import { detectImageMime, extensionForImageMime } from '@/lib/validate-image';
 import { buildRateLimitKey, resolveClientIp, uploadLimiter } from '@/lib/rate-limit';
 
 const BUCKET = 'profile-pictures';
@@ -51,12 +51,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Image must be less than 5MB' }, { status: 400 });
   }
 
-  const isValidImage = await validateImageMagicBytes(file);
-  if (!isValidImage) {
+  // Derive the extension from the detected content type, not the client
+  // filename/MIME (TASK-331). detectImageMime also doubles as the magic-byte check.
+  const detectedMime = await detectImageMime(file);
+  if (!detectedMime) {
     return NextResponse.json({ error: 'Invalid image file' }, { status: 400 });
   }
-
-  const ext = file.name.split('.').pop() || 'jpg';
+  const ext = extensionForImageMime(detectedMime);
   const path = `${user.uid}.${ext}`;
 
   try {
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
 
     const { error: uploadError } = await supabase.storage
       .from(BUCKET)
-      .upload(path, file, { upsert: true, contentType: file.type });
+      .upload(path, file, { upsert: true, contentType: detectedMime });
 
     if (uploadError) {
       console.error('Profile picture upload error:', uploadError);
@@ -81,9 +82,11 @@ export async function POST(request: NextRequest) {
 
     const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(path);
 
-    const now = new Date().toISOString();
+    // Do NOT set created_at here: upsert would clobber the original signup
+    // timestamp on every upload (TASK-331). created_at is set on first insert
+    // (DB default / ensureUserProfile); we only touch photo_url + updated_at.
     await supabase.from('user_profiles').upsert(
-      { id: user.uid, photo_url: publicUrl, created_at: now, updated_at: now },
+      { id: user.uid, photo_url: publicUrl, updated_at: new Date().toISOString() },
       { onConflict: 'id' }
     );
 

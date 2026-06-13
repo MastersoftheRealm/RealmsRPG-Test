@@ -21,7 +21,7 @@
 | Codex Creature Feats | codex_creature_feats | Modal, Spreadsheet | ✅ Aligned | feat_points; form also sends points (feat_points used) |
 | Official Library | official_* | Creators (Power/Technique/Item/Creature) | ✅ Aligned | Edit via creators; POST/DELETE to API |
 | Core Rules | core_rules | Category editor (tabs) | ✅ Aligned | JSONB data per category |
-| Admin Users | user_profiles | Role dropdown only | ✅ By design | Only role (new_player, playtester, developer); admin via env |
+| Admin Users | user_profiles | Role dropdown only | ✅ By design | Only role (new_player, playtester, developer); admin granted via `user_profiles.role = 'admin'` (see ADMIN_SETUP.md) |
 
 ---
 

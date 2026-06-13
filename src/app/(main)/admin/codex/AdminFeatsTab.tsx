@@ -18,13 +18,12 @@ import {
   GridListRow,
   ListEmptyState as EmptyState,
 } from '@/components/shared';
-import { Modal, Button, Input, Textarea } from '@/components/ui';
+import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
 import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Plus, Copy, X, Layers } from 'lucide-react';
-import { IconButton } from '@/components/ui';
 import type { ChipData } from '@/components/shared/grid-list-row';
 import { buildFeatLevelChips, groupFeatFamilies, formatFeatName, getFeatFamilyId, getFeatLevel } from '@/lib/leveled-feats';
 
@@ -842,7 +841,8 @@ interface FeatFilters {
 }
 
 export function AdminFeatsTab() {
-  const { data: feats, isLoading, error } = useCodexFeats();
+  const { showToast } = useToast();
+  const { data: feats, isLoading, error, refetch } = useCodexFeats();
   const { data: skills = [] } = useCodexSkills();
   const { sortState, handleSort, sortItems } = useSort('name');
   const queryClient = useQueryClient();
@@ -1083,7 +1083,7 @@ export function AdminFeatsTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
     }
   };
 
@@ -1132,7 +1132,7 @@ export function AdminFeatsTab() {
 
     setSaving(false);
     if (errors.length > 0) {
-      alert(errors.slice(0, 6).join('\n') + (errors.length > 6 ? `\n... and ${errors.length - 6} more` : ''));
+      showToast(errors.slice(0, 6).join('; ') + (errors.length > 6 ? `; ... and ${errors.length - 6} more` : ''), 'error');
       return;
     }
 
@@ -1152,7 +1152,7 @@ export function AdminFeatsTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
     }
   };
 
@@ -1167,12 +1167,12 @@ export function AdminFeatsTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       setPendingDeleteId(null);
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
       setPendingDeleteId(null);
     }
   };
 
-  if (error) return <ErrorState message="Failed to load feats" />;
+  if (error) return <ErrorState message="Failed to load feats" onRetry={() => { void refetch(); }} />;
 
   return (
     <div>

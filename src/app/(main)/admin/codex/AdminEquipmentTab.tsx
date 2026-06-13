@@ -10,14 +10,13 @@ import {
   ListEmptyState as EmptyState,
   ListHeader,
 } from '@/components/shared';
-import { Modal, Button, Input, Textarea } from '@/components/ui';
+import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
 import { SelectFilter, FilterSection } from '@/components/codex';
 import { useEquipment } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Copy, X } from 'lucide-react';
-import { IconButton } from '@/components/ui';
 import { formatListCellLabel } from '@/lib/utils';
 
 const COPY_NAME_SUFFIX = ' copy';
@@ -42,7 +41,8 @@ interface EquipmentFilters {
 }
 
 export function AdminEquipmentTab() {
-  const { data: equipment, isLoading, error } = useEquipment();
+  const { showToast } = useToast();
+  const { data: equipment, isLoading, error, refetch } = useEquipment();
   const queryClient = useQueryClient();
   const { sortState, handleSort, sortItems } = useSort('name');
   const [filters, setFilters] = useState<EquipmentFilters>({
@@ -176,7 +176,7 @@ export function AdminEquipmentTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
     }
   };
 
@@ -191,7 +191,7 @@ export function AdminEquipmentTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
     }
   };
 
@@ -206,12 +206,12 @@ export function AdminEquipmentTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       setPendingDeleteId(null);
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
       setPendingDeleteId(null);
     }
   };
 
-  if (error) return <ErrorState message="Failed to load equipment" />;
+  if (error) return <ErrorState message="Failed to load equipment" onRetry={() => { void refetch(); }} />;
 
   return (
     <div>

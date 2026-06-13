@@ -23,12 +23,14 @@ import {
   GridListRow,
 } from '@/components/shared';
 import type { ChipData } from '@/components/shared/grid-list-row';
-import { EmptyState } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
+import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { Input } from '@/components/ui';
-import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
-import { formatAbilityList, formatListCellLabel } from '@/lib/utils';
+import { useCodexFeats, useCodexSkills, useCharacter, type Feat, type Skill } from '@/hooks';
+import { formatAbilityList, formatListCellLabel, cn } from '@/lib/utils';
 import { groupFeatFamilies, buildFeatLevelChips } from '@/lib/leveled-feats';
+import { checkFeatRequirements } from '@/lib/game/feat-requirements';
+import type { CodexSkillForFeat } from '@/lib/game/formulas';
 
 const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 0.8fr 1fr 40px';
 const FEAT_COLUMNS = [
@@ -127,10 +129,22 @@ function FeatCard({
   );
 }
 
-export function CodexFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  const { data: feats, isLoading, error } = useCodexFeats();
+export function CodexFeatsTab({
+  codexMode = 'public',
+  characterId = '',
+}: {
+  codexMode?: 'public' | 'my';
+  /** When set, auto-filter feats to those the given character qualifies for. */
+  characterId?: string;
+}) {
+  const { data: feats, isLoading, error, refetch } = useCodexFeats();
   const { data: skills = [] } = useCodexSkills();
+  const { data: characterResult } = useCharacter(characterId || undefined);
+  const character = characterResult?.character ?? undefined;
   const { sortState, handleSort, sortItems } = useSort('name');
+
+  // When a character is selected, hide feats they don't qualify for by default.
+  const [showUnqualified, setShowUnqualified] = useState(false);
 
   const [filters, setFilters] = useState<FeatFilters>({
     search: '',
@@ -143,6 +157,8 @@ export function CodexFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' |
     featTypeMode: 'all',
     stateFeatMode: 'all',
   });
+
+  const activeCharacter = characterId ? character : undefined;
 
   const filterOptions = useMemo(() => {
     if (!feats) return { levels: [], abilities: [], categories: [], tags: [], abilReqAbilities: [] };
@@ -235,25 +251,31 @@ export function CodexFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' |
         }
       }
 
+      // Character filter: hide feats this character doesn't qualify for
+      // (same level/ability/skill/speed/prereq logic as the character creator).
+      if (activeCharacter && !showUnqualified) {
+        const { met } = checkFeatRequirements(
+          f,
+          activeCharacter,
+          skills as CodexSkillForFeat[],
+          feats
+        );
+        if (!met) return false;
+      }
+
       return true;
     });
     return sortItems<Feat>(filtered);
-  }, [feats, filters, sortItems]);
+  }, [feats, filters, sortItems, activeCharacter, showUnqualified, skills]);
 
   const featFamilies = useMemo(() => groupFeatFamilies(filteredFeats), [filteredFeats]);
 
   if (codexMode === 'my') {
-    return (
-      <EmptyState
-        size="lg"
-        title="My Codex: Feats"
-        description="Custom feats are not available yet. For now, use Realms Codex."
-      />
-    );
+    return <CodexMyCodexEmpty />;
   }
 
   if (error) {
-    return <ErrorState message="Failed to load feats" />;
+    return <ErrorState message="Failed to load feats" onRetry={() => refetch()} />;
   }
 
   return (
@@ -266,6 +288,32 @@ export function CodexFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' |
           placeholder="Search names, tags, descriptions..."
         />
       </div>
+
+      {characterId && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-900/20 px-4 py-3">
+          <p className="text-sm text-text-secondary">
+            Showing feats{' '}
+            <span className="font-semibold text-text-primary">
+              {activeCharacter?.name ?? 'this character'}
+            </span>{' '}
+            {showUnqualified ? 'can take, including those not yet qualified for' : 'qualifies for'} —
+            filtered by level, abilities, skills, and speed.
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowUnqualified((v) => !v)}
+            aria-pressed={showUnqualified}
+            className={cn(
+              'px-3 py-2 rounded-lg border text-sm font-medium transition-colors min-h-[44px] flex-shrink-0',
+              showUnqualified
+                ? 'bg-surface border-border-light text-text-secondary hover:bg-surface-alt'
+                : 'bg-success-50 dark:bg-success-900/30 border-success-300 dark:border-success-600/50 text-success-700 dark:text-success-300'
+            )}
+          >
+            {showUnqualified ? 'Hide unqualified feats' : 'Show unqualified feats'}
+          </button>
+        </div>
+      )}
 
       <FilterSection>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

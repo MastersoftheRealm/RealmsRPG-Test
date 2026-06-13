@@ -10,7 +10,7 @@ import { useMemo, useState } from 'react';
 import { Chip, IconButton, Button, Input } from '@/components/ui';
 import { Plus, X, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { SectionHeader, TabSummarySection, SummaryItem, SummaryRow, ValueStepper, PartChipComponent } from '@/components/shared';
+import { SectionHeader, TabSummarySection, SummaryItem, SummaryRow, ValueStepper, PartChipComponent, ConfirmActionModal } from '@/components/shared';
 import type { PartData } from '@/components/shared/part-chip';
 import { AddProficiencyModal, type AddProficiencyVariant } from './add-proficiency-modal';
 import type { CharacterPower, CharacterTechnique, Item, CharacterProficiency } from '@/types';
@@ -204,6 +204,7 @@ export function ProficienciesTab({
   const [customTp, setCustomTp] = useState(1);
   const [addProficiencyVariant, setAddProficiencyVariant] = useState<AddProficiencyVariant | null>(null);
   const [expandedProfId, setExpandedProfId] = useState<string | null>(null);
+  const [showSyncConfirm, setShowSyncConfirm] = useState(false);
 
   const required = useMemo(
     () =>
@@ -248,11 +249,13 @@ export function ProficienciesTab({
 
   const syncProficiencies = () => {
     if (!onProficienciesChange) return;
-    const message =
-      'Sync will remove proficiencies not needed for your current loadout and add any missing. Custom proficiencies are kept. Continue?';
-    if (!window.confirm(message)) return;
+    setShowSyncConfirm(true);
+  };
+
+  const confirmSyncProficiencies = () => {
     const kept = filterToRequiredAndCustom(owned, required);
     persistProficiencies(mergeOwnedWithRequired(kept, required));
+    setShowSyncConfirm(false);
   };
 
   const removeProf = (id: string) => {
@@ -533,6 +536,16 @@ export function ProficienciesTab({
           onAdd={addProficiency}
         />
       )}
+
+      <ConfirmActionModal
+        isOpen={showSyncConfirm}
+        onClose={() => setShowSyncConfirm(false)}
+        onConfirm={confirmSyncProficiencies}
+        title="Sync proficiencies?"
+        description="Sync will remove proficiencies not needed for your current loadout and add any missing. Custom proficiencies are kept."
+        confirmLabel="Sync"
+        confirmVariant="primary"
+      />
     </div>
   );
 }

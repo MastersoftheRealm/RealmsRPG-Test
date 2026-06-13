@@ -21,7 +21,7 @@ import {
   TabNavigation,
   useToast,
 } from '@/components/ui';
-import { DeleteConfirmModal, HubListRow } from '@/components/shared';
+import { DeleteConfirmModal, HubListRow, ErrorDisplay } from '@/components/shared';
 import {
   useCraftingSessions,
   useDeleteCraftingSession,
@@ -68,7 +68,7 @@ function CraftingHubContent() {
   const router = useRouter();
   const { user } = useAuth();
   const { showToast } = useToast();
-  const { data: sessions = [], isLoading, error } = useCraftingSessions();
+  const { data: sessions = [], isLoading, error, refetch } = useCraftingSessions();
   const deleteMutation = useDeleteCraftingSession();
   const createSession = useCreateCraftingSession();
 
@@ -118,7 +118,6 @@ function CraftingHubContent() {
       });
       router.push(`/crafting/${id}`);
     } catch (err) {
-      console.error('Failed to start crafting session:', err);
       showToast((err as Error)?.message ?? 'Failed to start crafting session', 'error');
     }
   };
@@ -133,7 +132,6 @@ function CraftingHubContent() {
       await deleteMutation.mutateAsync(deleteTarget.id);
       setDeleteTarget(null);
     } catch (err) {
-      console.error('Failed to delete crafting session:', err);
       showToast((err as Error)?.message ?? 'Failed to delete session', 'error');
     }
   };
@@ -192,9 +190,10 @@ function CraftingHubContent() {
         {isLoading ? (
           <LoadingState message="Loading crafting sessions..." />
         ) : error ? (
-          <Alert variant="danger" title="Failed to load crafting sessions">
-            {error.message}
-          </Alert>
+          <ErrorDisplay
+            message={error.message || 'Failed to load crafting sessions'}
+            onRetry={() => { void refetch(); }}
+          />
         ) : filteredSessions.length === 0 ? (
           <EmptyState
             icon={<Hammer className="w-10 h-10" />}

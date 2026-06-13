@@ -14,6 +14,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { createClient } from '@/lib/supabase/client';
 
 import { registerSchema, type RegisterFormData } from '@/lib/validation';
+import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { createUserProfileAction } from '@/app/(auth)/actions';
 import { AuthCard, FormInput, PasswordInput, SocialButton } from '@/components/auth';
 import { Spinner } from '@/components/ui';
@@ -31,12 +32,7 @@ function RegisterContent() {
   const getRedirectPath = () => {
     const urlRedirect = searchParams.get('redirect') ?? searchParams.get('returnTo');
     const sessionRedirect = typeof window !== 'undefined' ? sessionStorage.getItem('loginRedirect') : null;
-    const raw = urlRedirect || sessionRedirect || '/';
-    const normalized = raw.startsWith('/') ? raw : '/';
-    if (normalized === '/login' || normalized === '/register' || normalized === '/forgot-password' || normalized === '/forgot-username') {
-      return '/';
-    }
-    return normalized;
+    return sanitizeRedirectPath(urlRedirect || sessionRedirect || '/');
   };
 
   const {
@@ -57,11 +53,13 @@ function RegisterContent() {
     try {
       const supabase = createClient();
       const redirectPath = getRedirectPath();
+      const chosenUsername = data.username?.trim();
       const { data: authData, error: err } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(redirectPath)}`,
+          data: chosenUsername ? { username_display: chosenUsername } : undefined,
         },
       });
       if (err) throw err;
@@ -74,7 +72,6 @@ function RegisterContent() {
       }
 
       if (authData.user) {
-        const chosenUsername = data.username?.trim();
         await createUserProfileAction({
           uid: authData.user.id,
           email: data.email,
@@ -102,7 +99,14 @@ function RegisterContent() {
     setError(null);
     try {
       const supabase = createClient();
-      const { error: resendError } = await supabase.auth.resend({ type: 'signup', email });
+      const redirectPath = getRedirectPath();
+      const { error: resendError } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(redirectPath)}`,
+        },
+      });
       if (resendError) throw resendError;
       setResendStatus('sent');
     } catch (e) {
@@ -131,10 +135,6 @@ function RegisterContent() {
       setError(getAuthErrorMessage(err));
       setIsLoading(false);
     }
-  };
-
-  const handleAppleSignIn = () => {
-    setError('Apple Sign-In coming soon!');
   };
 
   if (needsEmailConfirm) {
@@ -269,7 +269,6 @@ function RegisterContent() {
           onClick={handleGoogleSignIn}
           disabled={isLoading}
         />
-        <SocialButton provider="apple" onClick={handleAppleSignIn} disabled={isLoading} />
       </div>
 
       <p className="mt-6 text-center text-gray-300">

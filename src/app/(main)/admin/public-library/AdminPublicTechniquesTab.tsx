@@ -18,21 +18,24 @@ import {
   DeleteConfirmModal,
   type ChipData,
 } from '@/components/shared';
+import { useToast } from '@/components/ui';
 import { useOfficialLibrary, useTechniqueParts } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSort } from '@/hooks/use-sort';
+import { apiFetch } from '@/lib/api-client';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators/technique-calc';
 import { Swords } from 'lucide-react';
 
 const TECHNIQUE_GRID = '1.5fr 0.8fr 0.8fr 1fr 1fr 1fr 40px';
 export function AdminPublicTechniquesTab({ mode = 'standard' }: { mode?: 'standard' | 'empowered' }) {
+  const { showToast } = useToast();
   const libraryType = mode === 'empowered' ? 'empowered-techniques' : 'techniques';
   const queryKey = ['official-library', libraryType] as const;
   const creatorPath = mode === 'empowered' ? '/empowered-technique-creator' : '/technique-creator';
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: items = [], isLoading, error } = useOfficialLibrary(libraryType);
+  const { data: items = [], isLoading, error, refetch } = useOfficialLibrary(libraryType);
   const { data: partsDb = [] } = useTechniqueParts();
   const [search, setSearch] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
@@ -88,22 +91,18 @@ export function AdminPublicTechniquesTab({ mode = 'standard' }: { mode?: 'standa
   const handleDeleteFromListLegacy = async () => {
     if (!deleteConfirm) return;
     try {
-      const res = await fetch(`/api/official/${libraryType}?id=${encodeURIComponent(deleteConfirm.id)}`, {
+      await apiFetch(`/api/official/${libraryType}?id=${encodeURIComponent(deleteConfirm.id)}`, {
         method: 'DELETE',
       });
-      if (!res.ok) {
-        const msg = res.status === 404 ? 'Item not found or already deleted.' : res.statusText;
-        throw new Error(msg);
-      }
       queryClient.invalidateQueries({ queryKey });
       await queryClient.refetchQueries({ queryKey });
       setDeleteConfirm(null);
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Failed to delete');
+      showToast(e instanceof Error ? e.message : 'Failed to delete', 'error');
     }
   };
 
-  if (error) return <ErrorDisplay message={`Failed to load official ${mode === 'empowered' ? 'empowered techniques' : 'techniques'}`} />;
+  if (error) return <ErrorDisplay message={`Failed to load official ${mode === 'empowered' ? 'empowered techniques' : 'techniques'}`} onRetry={() => { void refetch(); }} />;
 
   return (
     <div>

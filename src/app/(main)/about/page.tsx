@@ -41,7 +41,7 @@ const CAROUSEL_SLIDES: Array<{
     content: (
       <>
         <p className="text-lg text-text-secondary leading-relaxed mb-4">
-          <strong className="text-text-primary">Equip your party and run the game.</strong> Craft custom <Link prefetch={false} href="/item-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Armaments</Link> and weapons, build <Link prefetch={false} href="/creature-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Creatures</Link> and companions, and manage <Link prefetch={false} href="/encounter-tracker" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Encounters</Link> with ease. Whether you&apos;re a player outfitting your Character or a Realm Master preparing the next challenge, these tools put creation at your fingertips.
+          <strong className="text-text-primary">Equip your party and run the game.</strong> Craft custom <Link prefetch={false} href="/item-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Armaments</Link> and weapons, build <Link prefetch={false} href="/creature-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Creatures</Link> and companions, and manage <Link prefetch={false} href="/encounters" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Encounters</Link> with ease. Whether you&apos;re a player outfitting your Character or a Realm Master preparing the next challenge, these tools put creation at your fingertips.
         </p>
         <p className="text-lg text-text-secondary leading-relaxed mb-4">
           Design the perfect sword, summon a custom creature, or track your party&apos;s progress through Skill and Combat Encounters, all in one place.
@@ -440,7 +440,7 @@ export default function AboutPage() {
         <div className="relative flex items-center justify-center py-6 px-14 overflow-hidden w-full">
           <button
             onClick={goPrev}
-            className="absolute left-2 md:left-4 p-2 rounded-full hover:bg-primary-50/80 dark:hover:bg-primary-900/30 transition-all hover:scale-110 z-10"
+            className="absolute left-2 md:left-4 p-2 rounded-full hover:bg-primary-50/80 dark:hover:bg-primary-900/30 transition-all hover:scale-110 z-10 min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Previous slide"
           >
             <Image src="/images/ArrowL.png" alt="" width={24} height={26} className="opacity-60 hover:opacity-100 transition-opacity" />
@@ -461,7 +461,7 @@ export default function AboutPage() {
                     key={`${dice.alt}-${diceIndex}-${displayPos}`}
                     onClick={() => goToSlide(diceIndex)}
                     className={cn(
-                      'flex-shrink-0 transition-all duration-300 ease-out rounded-xl p-2',
+                      'flex-shrink-0 transition-all duration-300 ease-out rounded-xl p-2 min-h-[44px] min-w-[44px] flex items-center justify-center',
                       'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                       isSelected ? 'bg-primary-100/60 dark:bg-primary-900/40' : 'hover:bg-surface-alt/80'
                     )}
@@ -476,7 +476,7 @@ export default function AboutPage() {
                   >
                     <Image
                       src={dice.src}
-                      alt={dice.alt}
+                      alt=""
                       width={48}
                       height={48}
                       className={cn('w-10 h-10 md:w-12 md:h-12 object-contain', dice.className)}
@@ -489,7 +489,7 @@ export default function AboutPage() {
 
           <button
             onClick={goNext}
-            className="absolute right-2 md:right-4 p-2 rounded-full hover:bg-primary-50/80 dark:hover:bg-primary-900/30 transition-all hover:scale-110 z-10"
+            className="absolute right-2 md:right-4 p-2 rounded-full hover:bg-primary-50/80 dark:hover:bg-primary-900/30 transition-all hover:scale-110 z-10 min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Next slide"
           >
             <Image src="/images/ArrowR.png" alt="" width={24} height={26} className="opacity-60 hover:opacity-100 transition-opacity" />

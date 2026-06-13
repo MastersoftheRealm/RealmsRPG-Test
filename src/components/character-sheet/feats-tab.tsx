@@ -239,7 +239,7 @@ export function FeatsTab({
   const [characterFeatSort, setCharacterFeatSort] = useState<SortState>({ col: 'name', dir: 1 });
   const [stateFeatSort, setStateFeatSort] = useState<SortState>({ col: 'name', dir: 1 });
 
-  // Enrich trait with RTDB data
+  // Enrich trait with Codex data
   const enrichTrait = useCallback((traitNameOrId: string) => {
     let dbTrait = traitsDb.find(t => String(t.name ?? '').toLowerCase() === String(traitNameOrId ?? '').toLowerCase());
     if (!dbTrait) {

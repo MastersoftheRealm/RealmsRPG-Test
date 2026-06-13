@@ -15,7 +15,7 @@ import { derivePowerDisplay } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
-import type { PowerPart, TechniquePart } from '@/hooks/use-rtdb';
+import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
 
 export type LibraryItemType =

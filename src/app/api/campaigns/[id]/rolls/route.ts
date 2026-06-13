@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { validateJson, campaignRollCreateSchema } from '@/lib/api-validation';
 import { MAX_CAMPAIGN_ROLLS } from '@/app/(main)/campaigns/constants';
@@ -133,7 +133,7 @@ export async function POST(
 
     const { data: campaign, error: campaignError } = await supabase
       .from('campaigns')
-      .select('id, owner_id')
+      .select('id, owner_id, characters')
       .eq('id', campaignId)
       .maybeSingle();
     if (campaignError) {
@@ -167,9 +167,25 @@ export async function POST(
     if (!validation.success) return validation.error;
     const { characterId, characterName, roll } = validation.data;
 
+    // Verify the roll is attributed to a character the caller is allowed to
+    // roll for: their own roster entry, or any roster character if they are the
+    // RM (owner). This stops a member spoofing a roll as another player's
+    // character. The displayed name is taken from the roster, not the client.
+    const roster = (campaign.characters as Array<{ userId?: string; characterId?: string; characterName?: string }> | null) ?? [];
+    const ownEntry = roster.find((c) => c.userId === user.uid && c.characterId === characterId);
+    const ownerEntry = isOwner ? roster.find((c) => c.characterId === characterId) : undefined;
+    const rosterEntry = ownEntry ?? ownerEntry;
+    if (!rosterEntry) {
+      return NextResponse.json(
+        { error: 'You can only roll for your own character in this campaign.' },
+        { status: 403 }
+      );
+    }
+    const resolvedCharacterName = rosterEntry.characterName ?? characterName;
+
     const rollData = {
       characterId,
-      characterName,
+      characterName: resolvedCharacterName,
       userId: user.uid,
       type: roll.type,
       title: roll.title,
@@ -206,16 +222,28 @@ export async function POST(
       .eq('campaign_id', campaignId);
 
     if ((count ?? 0) > MAX_CAMPAIGN_ROLLS) {
-      const { data: oldRows } = await supabase
-        .from('campaign_rolls')
-        .select('id')
-        .eq('campaign_id', campaignId)
-        .order('created_at', { ascending: true, nullsFirst: true })
-        .order('id', { ascending: true })
-        .limit((count ?? 0) - MAX_CAMPAIGN_ROLLS);
-      const idsToDelete = (oldRows ?? []).map((r: { id: string }) => r.id);
-      if (idsToDelete.length) {
-        await supabase.from('campaign_rolls').delete().in('id', idsToDelete);
+      // The trim deletes the oldest rolls regardless of who authored them, so it
+      // must run with the service role (players can now only delete their own
+      // rolls via RLS — TASK-329). If the key is unavailable, skip the trim
+      // rather than fail the roll.
+      let dbAdmin: ReturnType<typeof createServiceRoleClient> | null = null;
+      try {
+        dbAdmin = createServiceRoleClient();
+      } catch {
+        dbAdmin = null;
+      }
+      if (dbAdmin) {
+        const { data: oldRows } = await dbAdmin
+          .from('campaign_rolls')
+          .select('id')
+          .eq('campaign_id', campaignId)
+          .order('created_at', { ascending: true, nullsFirst: true })
+          .order('id', { ascending: true })
+          .limit((count ?? 0) - MAX_CAMPAIGN_ROLLS);
+        const idsToDelete = (oldRows ?? []).map((r: { id: string }) => r.id);
+        if (idsToDelete.length) {
+          await dbAdmin.from('campaign_rolls').delete().in('id', idsToDelete);
+        }
       }
     }
 

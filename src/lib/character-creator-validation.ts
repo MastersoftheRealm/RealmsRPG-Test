@@ -91,7 +91,30 @@ export function getValidationIssuesForStep(
 
         const anc = draft.ancestry;
         const traitsDb = context.allTraits;
-        if (
+        if (anc?.mixed === true && anc.speciesIds?.length === 2) {
+          if (!anc.selectedSize) {
+            issues.push({
+              emoji: '📏',
+              message: 'Choose a size for your mixed species.',
+              severity: 'error',
+            });
+          }
+          if (!anc.selectedSpeciesSkillIds || anc.selectedSpeciesSkillIds.length !== 2) {
+            issues.push({
+              emoji: '📚',
+              message: 'Select one base skill from each parent species.',
+              severity: 'error',
+            });
+          }
+          const speciesTraits = anc.selectedSpeciesTraits;
+          if (!speciesTraits?.[0] || !speciesTraits?.[1]) {
+            issues.push({
+              emoji: '🧬',
+              message: 'Select one species trait from each parent species.',
+              severity: 'error',
+            });
+          }
+        } else if (
           anc?.id &&
           anc.mixed !== true &&
           traitsDb?.length &&

@@ -14,6 +14,9 @@
     "db:seed": "node scripts/seed-to-supabase.js",
     "db:seed:reset": "node scripts/seed-to-supabase.js --reset",
     "db:migrate": "echo Run SQL in Supabase Dashboard. See sql/README.md and src/docs/SUPABASE_SCHEMA.md.",
+    "tasks:reconcile": "node scripts/reconcile_tasks.js",
+    "tasks:triage": "node scripts/triage_tasks.js",
+    "feedback:extract": "node scripts/extract_feedback.js",
     "db:backup": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/supabase-backup.ps1",
     "storage:backup": "node scripts/supabase-storage-backup.js",
     "backup:all": "npm run db:backup && npm run storage:backup"

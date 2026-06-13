@@ -8,7 +8,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { useUserPowers, useUserTechniques, useUserEmpoweredTechniques, useUserItems } from './use-user-library';
-import { usePublicLibrary } from './use-public-library';
+import { useOfficialLibrary } from './use-official-library';
 import {
   useCodexPowerParts,
   useCodexTechniqueParts,
@@ -109,12 +109,12 @@ export function useLoadModalLibrary(type: LoadModalLibraryType): UseLoadModalLib
   const { data: userEmpoweredTechniques = [], isLoading: empoweredTechniquesLoading } = useUserEmpoweredTechniques();
   const { data: userItems = [], isLoading: itemsLoading } = useUserItems();
 
-  const { data: publicPowers = [], isLoading: publicPowersLoading, isError: publicPowersError } = usePublicLibrary('powers');
+  const { data: publicPowers = [], isLoading: publicPowersLoading, isError: publicPowersError } = useOfficialLibrary('powers');
   const { data: publicTechniques = [], isLoading: publicTechniquesLoading, isError: publicTechniquesError } =
-    usePublicLibrary('techniques');
+    useOfficialLibrary('techniques');
   const { data: publicEmpoweredTechniques = [], isLoading: publicEmpoweredTechniquesLoading, isError: publicEmpoweredTechniquesError } =
-    usePublicLibrary('empowered-techniques');
-  const { data: publicItems = [], isLoading: publicItemsLoading, isError: publicItemsError } = usePublicLibrary('items');
+    useOfficialLibrary('empowered-techniques');
+  const { data: publicItems = [], isLoading: publicItemsLoading, isError: publicItemsError } = useOfficialLibrary('items');
 
   const { data: powerPartsDb = [] } = useCodexPowerParts();
   const { data: techniquePartsDb = [] } = useCodexTechniqueParts();

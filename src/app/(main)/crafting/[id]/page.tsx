@@ -156,6 +156,16 @@ export default function CraftingToolPage() {
   const [upgradePotencyValue, setUpgradePotencyValue] = useState('');
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const updateData = useCallback(
+    (updates: Partial<CraftingSessionType['data']>) => {
+      setSession((prev) => {
+        if (!prev) return prev;
+        return { ...prev, data: { ...prev.data, ...updates } };
+      });
+    },
+    []
+  );
+
   const { data: codexSkills = [] } = useCodexSkills();
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: userPowers = [] } = useUserPowers();
@@ -180,16 +190,6 @@ export default function CraftingToolPage() {
     updateData({ usesType, usesCount });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.data.multipleUseTableIndex, rulesData]);
-
-  const updateData = useCallback(
-    (updates: Partial<CraftingSessionType['data']>) => {
-      setSession((prev) => {
-        if (!prev) return prev;
-        return { ...prev, data: { ...prev.data, ...updates } };
-      });
-    },
-    []
-  );
 
   // Autosave: debounced 2s after any change
   useEffect(() => {

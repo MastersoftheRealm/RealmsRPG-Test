@@ -60,9 +60,6 @@ export async function fetchOfficialLibrary(
   return (await res.json()) as Array<Record<string, unknown>>;
 }
 
-/** @deprecated Use fetchOfficialLibrary. Fetches official library (same data). */
-export const fetchPublicLibrary = fetchOfficialLibrary;
-
 /** Find an official library item by name (for replace-by-name when publishing). */
 export async function findOfficialLibraryItemByName(
   type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species',
@@ -76,9 +73,6 @@ export async function findOfficialLibraryItemByName(
   return found ? { id: found.id } : null;
 }
 
-/** @deprecated Use findOfficialLibraryItemByName. */
-export const findPublicLibraryItemByName = findOfficialLibraryItemByName;
-
 /** Copy an official library item to the user's library. Strips _source etc. */
 export async function addOfficialItemToLibrary(
   type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species',
@@ -87,9 +81,6 @@ export async function addOfficialItemToLibrary(
   const { id: _id, docId: _docId, _source, ...data } = officialItem;
   return saveToLibrary(type, { ...data, createdAt: new Date().toISOString() });
 }
-
-/** @deprecated Use addOfficialItemToLibrary. */
-export const addPublicItemToLibrary = addOfficialItemToLibrary;
 
 /** Save to official library (admin only). Uses columnar official_* tables; species writes codex_species. */
 export async function saveToOfficialLibrary(
@@ -111,6 +102,3 @@ export async function saveToOfficialLibrary(
   const result = (await res.json()) as { id: string };
   return result.id;
 }
-
-/** @deprecated Use saveToOfficialLibrary. */
-export const saveToPublicLibrary = saveToOfficialLibrary;

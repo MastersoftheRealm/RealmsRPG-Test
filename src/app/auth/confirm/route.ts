@@ -5,10 +5,18 @@
  * Supabase redirects here with token_hash and type.
  */
 
-import type { EmailOtpType } from '@supabase/supabase-js';
+import type { EmailOtpType, User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { createUserProfileAction } from '@/app/(auth)/actions';
+import { sanitizeRedirectPath } from '@/lib/safe-redirect';
+
+function getUsernameFromUser(user: User): string | undefined {
+  const meta = user.user_metadata ?? {};
+  const display = meta.username_display ?? meta.username;
+  if (typeof display === 'string' && display.trim()) return display.trim();
+  return undefined;
+}
 
 function getRedirectUrl(request: Request, path: string): string {
   const forwardedHost = request.headers.get('x-forwarded-host');
@@ -25,9 +33,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const token_hash = searchParams.get('token_hash');
   const type = searchParams.get('type') as EmailOtpType | null;
-  const next = searchParams.get('next') ?? '/';
-
-  const redirectTo = next.startsWith('/') ? next : `/${next}`;
+  const redirectTo = sanitizeRedirectPath(searchParams.get('next'));
 
   if (token_hash && type) {
     const supabase = await createClient();
@@ -43,7 +49,7 @@ export async function GET(request: Request) {
       await createUserProfileAction({
         uid: u.id,
         email,
-        username: undefined,
+        username: getUsernameFromUser(u),
         displayName: undefined,
       });
       return NextResponse.redirect(getRedirectUrl(request, redirectTo));

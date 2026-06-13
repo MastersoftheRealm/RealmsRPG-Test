@@ -12,6 +12,3 @@ export * from './formulas';
 
 // Calculations
 export * from './calculations';
-
-// Progression
-export * from './progression';

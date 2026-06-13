@@ -44,9 +44,9 @@ const rollButtonVariants = cva(
         
         // Unproficient/disadvantage - solid gray; dark mode for contrast
         unproficient: [
-          'text-white',
-          'bg-neutral-500 hover:bg-neutral-600 focus-visible:ring-neutral-400',
-          'dark:bg-neutral-600 dark:hover:bg-neutral-500 dark:text-white',
+          'text-text-primary',
+          'bg-surface-alt hover:bg-border-light focus-visible:ring-border-strong border border-border-light',
+          'dark:bg-surface dark:hover:bg-surface-alt dark:text-text-primary',
           'hover:scale-105 active:scale-95',
         ].join(' '),
         

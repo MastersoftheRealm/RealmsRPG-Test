@@ -64,7 +64,7 @@ function generateRollId(): string {
   return `roll-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
-/** Normalize roll timestamp from API (Date serialized as ISO string), Firestore ({ seconds }), or Date to a Date. */
+/** Normalize roll timestamp from API (Date serialized as ISO string), legacy ({ seconds }), or Date to a Date. */
 function normalizeRollTimestamp(
   timestamp: Date | string | { seconds: number; nanoseconds?: number } | unknown
 ): Date {
