@@ -11,6 +11,18 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // /browse was a redundant duplicate of the Library page's public (Realms) mode,
+  // which already shows official content to guests (My-Library toggle and "Add to
+  // library" are hidden when logged out). Consolidated into /library (TASK-336).
+  async redirects() {
+    return [
+      {
+        source: '/browse',
+        destination: '/library',
+        permanent: false,
+      },
+    ];
+  },
   // Security headers for all responses; long cache for static images to cut edge requests (e.g. placeholder-portrait.png)
   async headers() {
     const csp = [

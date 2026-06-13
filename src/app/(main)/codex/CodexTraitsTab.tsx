@@ -30,7 +30,7 @@ const TRAIT_COLUMNS = [
 ];
 
 export function CodexTraitsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  const { data: traits, isLoading, error } = useTraits();
+  const { data: traits, isLoading, error, refetch } = useTraits();
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
 
@@ -59,7 +59,7 @@ export function CodexTraitsTab({ codexMode = 'public' }: { codexMode?: 'public' 
     );
   }
 
-  if (error) return <ErrorState message="Failed to load traits" />;
+  if (error) return <ErrorState message="Failed to load traits" onRetry={() => refetch()} />;
 
   return (
     <div>

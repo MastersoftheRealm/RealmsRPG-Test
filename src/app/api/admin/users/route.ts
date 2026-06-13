@@ -33,10 +33,13 @@ export async function GET() {
     }
 
     const supabase = getSupabaseAdmin();
+    // Cap the result set; the admin table filters client-side. A bounded query
+    // avoids unbounded email/PII exposure and runaway payloads (TASK-330).
     const { data: profiles } = await supabase
       .from('user_profiles')
       .select('id, username, username_display, email, display_name, role')
-      .order('username');
+      .order('username')
+      .limit(1000);
 
     const list = (profiles ?? []) as {
       id: string;

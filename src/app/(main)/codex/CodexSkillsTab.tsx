@@ -67,7 +67,7 @@ function SkillCard({ skill, skillIdToName }: { skill: Skill; skillIdToName: Map<
 }
 
 export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  const { data: skills, isLoading, error } = useCodexSkills();
+  const { data: skills, isLoading, error, refetch } = useCodexSkills();
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const skillIdToName = useMemo((): Map<string, string> => {
@@ -167,7 +167,7 @@ export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' 
     );
   }
 
-  if (error) return <ErrorState message="Failed to load skills" />;
+  if (error) return <ErrorState message="Failed to load skills" onRetry={() => refetch()} />;
 
   return (
     <div>

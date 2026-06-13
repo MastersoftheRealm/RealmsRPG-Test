@@ -13,6 +13,7 @@ import { buildRateLimitKey, resolveClientIp, uploadLimiter } from '@/lib/rate-li
 
 const BUCKET = 'portraits';
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function POST(request: NextRequest) {
   const { user, error } = await getSession();
@@ -37,6 +38,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'File and characterId required' }, { status: 400 });
   }
 
+  const charId = characterId.trim();
+  // Validate the id is a real UUID before it is ever embedded in a storage path.
+  if (!UUID_RE.test(charId)) {
+    return NextResponse.json({ error: 'Invalid characterId' }, { status: 400 });
+  }
+
   if (!file.type.startsWith('image/')) {
     return NextResponse.json({ error: 'Must be an image file' }, { status: 400 });
   }
@@ -52,16 +59,31 @@ export async function POST(request: NextRequest) {
   }
 
   // Always use .jpg for consistency (cropped images are JPEG); removes old portrait if different extension
-  const path = `${user.uid}/${characterId.trim()}.jpg`;
+  const path = `${user.uid}/${charId}.jpg`;
 
   try {
     const supabase = await createClient();
+
+    // Verify the character belongs to the caller before writing a portrait for it.
+    const { data: ownedChar, error: ownErr } = await supabase
+      .from('characters')
+      .select('id')
+      .eq('id', charId)
+      .eq('user_id', user.uid)
+      .maybeSingle();
+    if (ownErr) {
+      console.error('Portrait upload ownership check error:', ownErr);
+      return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    }
+    if (!ownedChar) {
+      return NextResponse.json({ error: 'Character not found' }, { status: 404 });
+    }
 
     // Delete any existing portrait for this character (different extensions)
     const { data: existing } = await supabase.storage.from(BUCKET).list(user.uid);
     if (existing?.length) {
       const toRemove = existing
-        .filter((f) => f.name?.startsWith(`${characterId.trim()}.`))
+        .filter((f) => f.name?.startsWith(`${charId}.`))
         .map((f) => `${user.uid}/${f.name}`);
       if (toRemove.length) {
         await supabase.storage.from(BUCKET).remove(toRemove);

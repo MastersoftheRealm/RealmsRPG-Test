@@ -9,6 +9,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { PageContainer, PageHeader, Button, Spinner, Alert, Input } from '@/components/ui';
+import { ConfirmActionModal } from '@/components/shared';
 
 type UserRole = 'new_player' | 'playtester' | 'developer' | 'admin';
 
@@ -48,6 +49,9 @@ export default function AdminUsersPage() {
   const [updating, setUpdating] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [pendingChange, setPendingChange] = useState<
+    { userId: string; label: string; oldRole: UserRole; newRole: UserRole } | null
+  >(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -189,7 +193,16 @@ export default function AdminUsersPage() {
                   <td className="py-3 px-4">
                     <select
                       value={u.role}
-                      onChange={(e) => handleRoleChange(u.id, e.target.value as UserRole)}
+                      onChange={(e) => {
+                        const newRole = e.target.value as UserRole;
+                        if (newRole === u.role) return;
+                        setPendingChange({
+                          userId: u.id,
+                          label: u.usernameDisplay || u.username || 'user',
+                          oldRole: u.role,
+                          newRole,
+                        });
+                      }}
                       disabled={updating === u.id}
                       className="rounded border border-border bg-background px-2 py-1 text-sm"
                       aria-label={`Role for ${u.usernameDisplay || u.username || 'user'}`}
@@ -206,6 +219,48 @@ export default function AdminUsersPage() {
           </table>
         </div>
       )}
+
+      <ConfirmActionModal
+        isOpen={!!pendingChange}
+        onClose={() => setPendingChange(null)}
+        onConfirm={async () => {
+          if (!pendingChange) return;
+          const { userId, newRole } = pendingChange;
+          await handleRoleChange(userId, newRole);
+          setPendingChange(null);
+        }}
+        title={
+          pendingChange?.newRole === 'admin'
+            ? 'Grant admin access?'
+            : pendingChange?.oldRole === 'admin'
+              ? 'Revoke admin access?'
+              : 'Change user role?'
+        }
+        description={
+          pendingChange
+            ? `Change ${pendingChange.label} from ${ROLE_LABELS[pendingChange.oldRole]} to ${ROLE_LABELS[pendingChange.newRole]}?` +
+              (pendingChange.newRole === 'admin'
+                ? ' Admins have full access to user management and all content.'
+                : pendingChange.oldRole === 'admin'
+                  ? ' They will lose access to the admin tools.'
+                  : '')
+            : ''
+        }
+        confirmLabel={
+          pendingChange?.newRole === 'admin'
+            ? 'Grant admin'
+            : pendingChange?.oldRole === 'admin'
+              ? 'Revoke admin'
+              : 'Change role'
+        }
+        confirmVariant={
+          pendingChange && (pendingChange.newRole === 'admin' || pendingChange.oldRole === 'admin')
+            ? 'danger'
+            : 'primary'
+        }
+        isLoading={!!pendingChange && updating === pendingChange.userId}
+        loadingLabel="Updating..."
+      />
     </PageContainer>
   );
 }

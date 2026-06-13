@@ -162,7 +162,7 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
   }, [cardData, search, sortItems]);
 
   if (error) {
-    return <ErrorDisplay message="Failed to load powers" subMessage="Please try again later" />;
+    return <ErrorDisplay message="Failed to load powers" subMessage="Please try again later" onRetry={() => refetch()} />;
   }
 
   if (!isLoading && cardData.length === 0) {

@@ -22,7 +22,7 @@ type CampaignRow = {
   updated_at: string | null;
 };
 
-function rowToCampaign(row: CampaignRow, memberIds: string[]): Campaign {
+function rowToCampaign(row: CampaignRow, memberIds: string[], isOwner: boolean): Campaign {
   const characters = normalizeCampaignRosterCharacters(row.characters);
   return {
     id: row.id,
@@ -30,7 +30,8 @@ function rowToCampaign(row: CampaignRow, memberIds: string[]): Campaign {
     description: row.description ?? undefined,
     ownerId: row.owner_id,
     ownerUsername: row.owner_username ?? undefined,
-    inviteCode: row.invite_code,
+    // Only the Realm Master (owner) should see/share the invite code (TASK-329).
+    inviteCode: isOwner ? row.invite_code : '',
     characters,
     memberIds,
     createdAt: row.created_at ?? undefined,
@@ -69,11 +70,12 @@ export async function GET(
     .eq('campaign_id', row.id);
   const memberIds = (members ?? []).map((m: { user_id: string }) => m.user_id);
 
-  const isMember = row.owner_id === user.uid || memberIds.includes(user.uid);
+  const isOwner = row.owner_id === user.uid;
+  const isMember = isOwner || memberIds.includes(user.uid);
   if (!isMember) {
     return NextResponse.json(null, { status: 404 });
   }
 
-  const campaign = rowToCampaign(row as CampaignRow, memberIds);
+  const campaign = rowToCampaign(row as CampaignRow, memberIds, isOwner);
   return NextResponse.json(campaign);
 }

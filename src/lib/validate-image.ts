@@ -24,14 +24,23 @@ const IMAGE_SIGNATURES: { mime: string; bytes: number[] }[] = [
 /** Maximum bytes needed to identify any supported image format */
 const MAX_HEADER_SIZE = 12;
 
+/** Map a detected image MIME type to a safe file extension. */
+const MIME_TO_EXT: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/gif': 'gif',
+  'image/webp': 'webp',
+  'image/bmp': 'bmp',
+};
+
 /**
- * Validate that a file's content matches a known image format by inspecting
- * its magic bytes. This prevents spoofed MIME types from bypassing validation.
+ * Detect a file's true image MIME type by inspecting its magic bytes, ignoring
+ * the (client-controlled) declared type and filename.
  *
  * @param file - The uploaded File object
- * @returns `true` if the file signature matches a known image format
+ * @returns the detected MIME string, or `null` if it isn't a known image format
  */
-export async function validateImageMagicBytes(file: File): Promise<boolean> {
+export async function detectImageMime(file: File): Promise<string | null> {
   const headerSlice = file.slice(0, MAX_HEADER_SIZE);
   const buffer = await headerSlice.arrayBuffer();
   const header = new Uint8Array(buffer);
@@ -48,13 +57,29 @@ export async function validateImageMagicBytes(file: File): Promise<boolean> {
         header[9] === 0x45 && // E
         header[10] === 0x42 && // B
         header[11] === 0x50; // P
-      if (riffMatch && webpMatch) return true;
+      if (riffMatch && webpMatch) return sig.mime;
       continue;
     }
 
     const match = sig.bytes.every((b, i) => header[i] === b);
-    if (match) return true;
+    if (match) return sig.mime;
   }
 
-  return false;
+  return null;
+}
+
+/** Safe file extension for a detected image MIME (defaults to `jpg`). */
+export function extensionForImageMime(mime: string | null): string {
+  return (mime && MIME_TO_EXT[mime]) || 'jpg';
+}
+
+/**
+ * Validate that a file's content matches a known image format by inspecting
+ * its magic bytes. This prevents spoofed MIME types from bypassing validation.
+ *
+ * @param file - The uploaded File object
+ * @returns `true` if the file signature matches a known image format
+ */
+export async function validateImageMagicBytes(file: File): Promise<boolean> {
+  return (await detectImageMime(file)) !== null;
 }

@@ -30,7 +30,7 @@ const CREATURE_FEAT_COLUMNS = [
 ];
 
 export function CodexCreatureFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  const { data: creatureFeats, isLoading, error } = useCreatureFeats();
+  const { data: creatureFeats, isLoading, error, refetch } = useCreatureFeats();
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
 
@@ -57,7 +57,7 @@ export function CodexCreatureFeatsTab({ codexMode = 'public' }: { codexMode?: 'p
     );
   }
 
-  if (error) return <ErrorState message="Failed to load creature feats" />;
+  if (error) return <ErrorState message="Failed to load creature feats" onRetry={() => refetch()} />;
 
   return (
     <div>

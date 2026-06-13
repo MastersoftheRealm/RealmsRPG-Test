@@ -36,7 +36,7 @@ export function LibraryEnhancedTab({
 }: {
   onDelete: (item: UserEnhancedItem) => void;
 }) {
-  const { data: items = [], isLoading, error } = useEnhancedItems();
+  const { data: items = [], isLoading, error, refetch } = useEnhancedItems();
   const [search, setSearch] = useState('');
   const [sortState, setSortState] = useState<SortState>({ col: 'name', dir: 1 });
 
@@ -90,6 +90,7 @@ export function LibraryEnhancedTab({
       <ErrorDisplay
         message="Failed to load enhanced items"
         subMessage={error.message}
+        onRetry={() => refetch()}
       />
     );
   }

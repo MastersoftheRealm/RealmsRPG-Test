@@ -154,7 +154,7 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
   };
 
   if (error) {
-    return <ErrorDisplay message="Failed to load creatures" subMessage="Please try again later" />;
+    return <ErrorDisplay message="Failed to load creatures" subMessage="Please try again later" onRetry={() => refetch()} />;
   }
 
   if (!isLoading && (!creatures || creatures.length === 0)) {

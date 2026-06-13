@@ -521,7 +521,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-329
   title: Campaign & roll authorization hardening (RLS + API)
   priority: high
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -543,12 +543,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Roll POST derives attribution from verified ownership, not client fields.
     - Invite-code lookup requires auth or is otherwise hardened against enumeration.
     - Invite code visible to RM only.
-  notes: "SA-13-1/2/3/5/6/7, SA-19-2..5/17. Requires SQL in Supabase Dashboard + API changes."
+  notes: "SA-13-1/2/3/5/6/7, SA-19-2..5/17. DONE 2026-06-13. Migration sql/supabase-campaign-authz-2026-06.sql APPLIED to prod (lbqhiwudvifmkjtkccdg, name: campaign_authz_hardening): dropped member UPDATE on campaigns (owner ALL policy remains); campaign_rolls now has caller-bound INSERT (user_id=auth.uid + participant) + owner-or-author DELETE + no UPDATE. Verified live in a rolled-back tx: member UPDATE campaigns=0 rows, spoofed roll INSERT=BLOCKED, own roll INSERT=ALLOWED. Code: removeCharacterFromCampaignAction now writes via service role; rolls POST verifies characterId against the roster (owner may roll any roster char) and derives the displayed name from the roster, trim runs via service role; invite/[code] GET now requires auth (+ existing rate-limit); GET /api/campaigns/[id] and list endpoint withhold invite_code from non-owners; campaign detail page shows the Invite Code section to the RM only."
 
 - id: TASK-330
   title: Admin role-management hardening
   priority: high
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -566,12 +566,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Role changes require explicit confirm; admin grant/revoke is logged; cannot remove the last admin.
     - role-policies validates permission keys against an allowlist (Zod).
     - Admin user list is paginated / email exposure minimized.
-  notes: "SA-14-1/2/3/4/7, SA-19-6/7/20."
+  notes: "SA-14-1/2/3/4/7, SA-19-6/7/20. DONE 2026-06-13. update-role now: reads the target's current role, returns 500 on a failed DB update (no more silent success), enforces a last-admin guard (409 when demoting the only admin), and writes an append-only audit row. Migration sql/supabase-admin-role-audit-2026-06.sql APPLIED to prod (name: admin_role_audit_log): admin_role_audit table, admins-read RLS, service-role-only writes. role-policies PATCH now persists only the allowlisted permission key (can_upload_profile_picture) instead of spreading arbitrary client keys. /api/admin/users capped at 1000. Admin users page now requires a confirmation modal (ConfirmActionModal) before any role change, with a stronger danger-variant warning for admin grant/revoke (no more one-click <select>)."
 
 - id: TASK-331
   title: Upload & account auth hardening
   priority: high
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -590,12 +590,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Email/password change re-authenticates with the provided current password.
     - OAuth-only users can delete their account.
     - Upload upsert no longer clobbers created_at.
-  notes: "SA-15-2..7/10, SA-18-18, SA-19-9. (Bucket listing + leaked-password = TASK-326.)"
+  notes: "SA-15-2..7/10, SA-18-18, SA-19-9. (Bucket listing + leaked-password = TASK-326.) DONE 2026-06-13 (code-only, no migration). Portrait upload: characterId must match a UUID and be owned by the caller (characters.user_id) before it is written; both callers (finalize step, character sheet) upload only after the character is saved, so this is safe. Profile picture: extension now derived from the detected magic-byte MIME (new detectImageMime/extensionForImageMime in lib/validate-image.ts), not the client filename; upsert no longer writes created_at (only photo_url + updated_at), so signup timestamp is preserved. my-account: email + password changes now re-authenticate with the current password via signInWithPassword before updateUser; account delete now skips password re-auth for OAuth-only users (canChangeEmailPassword=false) and confirms via the typed DELETE, with the password field hidden for them."
 
 - id: TASK-332
   title: Primitive-level a11y & touch targets (high leverage)
   priority: high
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -617,12 +617,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Tab pattern is WAI-ARIA complete; tab counts render.
     - ErrorDisplay supports retry; Library/Codex error states use it.
     - npm run build passes; spot-check no layout regressions.
-  notes: "SA-17-1..8, SA-20-1/2/3/15, SA-6-1. Highest-leverage UX/a11y fix."
+  notes: "SA-17-1..8, SA-20-1/2/3/15, SA-6-1. DONE 2026-06-13. (1) Button + IconButton now enforce a 44px min tap target ONLY on coarse pointers via `[@media(pointer:coarse)]:min-h-[44px]/min-w-[44px]` — desktop dense layouts keep compact sizing (verified no desktop change since the variant is touch-only). (2) Modal: added focus trap (Tab/Shift+Tab cycle), initial focus into the dialog on open, and focus restore to the trigger on close/unmount; dialog div is now `tabIndex=-1` focus target; the sr-only custom-header title now uses `titleA11y` instead of the generic 'Dialog'. (3) TabNavigation: roving tabindex (active tab tabIndex 0, others -1) + ArrowLeft/Right/Home/End keyboard nav + stable per-instance `useId` button ids, on all 3 render paths (pill, underline, underline+suffix). Tab counts already render via the `count` prop (TASK-335 fixed the Library caller). NOTE: full aria-controls↔role=tabpanel wiring needs per-page panel ids and is deferred (panels are rendered by callers); keyboard a11y is the main gap and is now closed. (4) ErrorDisplay gained optional `onRetry`/`retryLabel` (renders a secondary Button w/ RotateCw); wired into all 5 Library tabs (Powers/Items/Techniques/Creatures/Enhanced via React Query refetch) and all 8 Codex tabs (Feats/Equipment/Parts/CreatureFeats/Properties/Skills/Traits/Species). Build green, lint clean."
 
 - id: TASK-333
   title: Autosave correctness (sheet / encounter / crafting)
   priority: high
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -641,7 +641,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Edits during an in-flight save are not lost.
     - Autosave failures show a non-blocking error to the user.
     - npm run build passes.
-  notes: "SA-4-7/8/9, SA-11-1/2, SA-12-4."
+  notes: "SA-4-7/8/9, SA-11-1/2, SA-12-4. DONE 2026-06-13. Hook (use-auto-save.ts): (a) baseline-reset-on-enable — when `enabled` flips false→true (which is exactly when data finishes loading in every caller: sheet `enabled:isOwner` is false until the character loads; encounters `enabled:isInitialized && !!encounter`), the current data is adopted as the saved baseline and NO save fires; while disabled the baseline tracks data so re-enabling never sees a phantom diff. (b) queued re-save — a save arriving while one is in-flight sets pendingResaveRef; on completion the latest snapshot is re-saved (via performSaveRef to avoid self-reference), so edits during a save are never dropped; dirty flag only clears if no newer edits arrived. (c) data-returns-to-baseline now cancels the pending timeout and clears the dirty flag. Callers: character sheet already toasted onSaveError; added useToast + failure toasts to all 3 encounter pages (combat/skill/mixed) so save failures are surfaced. NOTE: crafting/[id] does NOT use useAutoSave (manual save), so it was out of scope. Build green, lint clean."
 
 - id: TASK-334
   title: Technique creator load/save bug fixes + share PartCard + unify mechanic builder
@@ -695,7 +695,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-336
   title: Decide Browse vs Library-public consolidation
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -712,7 +712,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
   acceptance_criteria:
     - A clear decision is implemented; no orphaned/duplicated route.
     - If kept, Browse reaches parity (tabs, readOnly, metadata, nav links).
-  notes: "SA-8-1..4/11/13."
+  notes: "SA-8-1..4/11/13. DONE 2026-06-12 per owner intent: guests should view Realms content on the Library page (no My-Library tab / no Add). The Library page already does exactly this (SegmentedControl + create button hidden for guests; LibraryPublicContent readOnly={isGuest}). /browse was a redundant, nav-orphaned duplicate, so DELETED src/app/(main)/browse/page.tsx and added a /browse->/library redirect in next.config.ts. Updated USER_EXPERIENCE_GOALS.md (also fixed a stale claim that the Library page was ProtectedRoute-gated) and FEATURE_INDEX.md."
 
 - id: TASK-337
   title: Creature/species creator unification + bug fixes

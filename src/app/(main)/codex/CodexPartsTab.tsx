@@ -122,7 +122,7 @@ interface PartFilters {
 }
 
 export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  const { data: parts, isLoading, error } = useParts();
+  const { data: parts, isLoading, error, refetch } = useParts();
   const { sortState, handleSort } = useSort('name');
   const [filters, setFilters] = useState<PartFilters>({
     search: '',
@@ -181,7 +181,7 @@ export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' |
     );
   }
 
-  if (error) return <ErrorState message="Failed to load parts" />;
+  if (error) return <ErrorState message="Failed to load parts" onRetry={() => refetch()} />;
 
   return (
     <div>

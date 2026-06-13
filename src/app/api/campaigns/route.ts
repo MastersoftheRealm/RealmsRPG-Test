@@ -23,7 +23,7 @@ type CampaignRow = {
   updated_at: string | null;
 };
 
-function rowToCampaign(row: CampaignRow, memberIds: string[]): Campaign {
+function rowToCampaign(row: CampaignRow, memberIds: string[], isOwner: boolean): Campaign {
   const characters = normalizeCampaignRosterCharacters(row.characters);
   return {
     id: row.id,
@@ -31,7 +31,8 @@ function rowToCampaign(row: CampaignRow, memberIds: string[]): Campaign {
     description: row.description ?? undefined,
     ownerId: row.owner_id,
     ownerUsername: row.owner_username ?? undefined,
-    inviteCode: row.invite_code,
+    // Only the Realm Master (owner) should see/share the invite code (TASK-329).
+    inviteCode: isOwner ? row.invite_code : '',
     characters,
     memberIds,
     createdAt: row.created_at ?? undefined,
@@ -85,7 +86,7 @@ export async function GET(request: NextRequest) {
     const campaigns: Campaign[] = (campaignRows ?? []).map((row) => {
       const r = row as CampaignRow;
       const memberIds = membersByCampaignId.get(r.id) ?? [];
-      return rowToCampaign(r, memberIds);
+      return rowToCampaign(r, memberIds, r.owner_id === userId);
     });
 
     if (full) {

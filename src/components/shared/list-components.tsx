@@ -10,8 +10,9 @@
  */
 
 import { useState, type ReactNode } from 'react';
-import { ChevronDown, Filter } from 'lucide-react';
+import { ChevronDown, Filter, RotateCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 // Re-export SearchInput from UI for backward compatibility
 // Use the fully-featured version from ui/search-input
@@ -164,9 +165,13 @@ export { LoadingState } from '@/components/ui/spinner';
 export interface ErrorDisplayProps {
   message: string;
   subMessage?: string;
+  /** When provided, shows a retry button that calls this handler. */
+  onRetry?: () => void;
+  /** Label for the retry button (default: "Try again"). */
+  retryLabel?: string;
 }
 
-export function ErrorDisplay({ message, subMessage }: ErrorDisplayProps) {
+export function ErrorDisplay({ message, subMessage, onRetry, retryLabel = 'Try again' }: ErrorDisplayProps) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="w-12 h-12 mb-4 text-danger">
@@ -177,6 +182,12 @@ export function ErrorDisplay({ message, subMessage }: ErrorDisplayProps) {
       <p className="text-danger font-medium">{message}</p>
       {subMessage && (
         <p className="text-text-muted text-sm mt-1">{subMessage}</p>
+      )}
+      {onRetry && (
+        <Button variant="secondary" size="sm" onClick={onRetry} className="mt-4">
+          <RotateCw className="w-4 h-4" />
+          {retryLabel}
+        </Button>
       )}
     </div>
   );

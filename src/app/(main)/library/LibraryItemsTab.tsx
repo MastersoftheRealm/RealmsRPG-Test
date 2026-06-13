@@ -170,7 +170,7 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
   }, [cardData, search, sortItems]);
 
   if (error) {
-    return <ErrorDisplay message="Failed to load armaments" subMessage="Please try again later" />;
+    return <ErrorDisplay message="Failed to load armaments" subMessage="Please try again later" onRetry={() => refetch()} />;
   }
 
   if (!isLoading && cardData.length === 0) {

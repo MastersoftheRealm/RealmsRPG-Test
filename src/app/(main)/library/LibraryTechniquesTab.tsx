@@ -182,7 +182,16 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
   }, [cardData, search, sortItems]);
 
   if (error) {
-    return <ErrorDisplay message="Failed to load techniques" subMessage="Please try again later" />;
+    return (
+      <ErrorDisplay
+        message="Failed to load techniques"
+        subMessage="Please try again later"
+        onRetry={() => {
+          standardTechniquesQuery.refetch();
+          empoweredTechniquesQuery.refetch();
+        }}
+      />
+    );
   }
 
   if (!isLoading && cardData.length === 0) {

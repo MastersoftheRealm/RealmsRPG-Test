@@ -90,7 +90,7 @@ function PropertyCard({ property }: { property: ItemProperty }) {
 }
 
 export function CodexPropertiesTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  const { data: properties, isLoading, error } = useItemProperties();
+  const { data: properties, isLoading, error, refetch } = useItemProperties();
   const { sortState, handleSort } = useSort('name');
   const [filters, setFilters] = useState<PropertyFilters>({
     search: '',
@@ -136,7 +136,7 @@ export function CodexPropertiesTab({ codexMode = 'public' }: { codexMode?: 'publ
     );
   }
 
-  if (error) return <ErrorState message="Failed to load properties" />;
+  if (error) return <ErrorState message="Failed to load properties" onRetry={() => refetch()} />;
 
   return (
     <div>

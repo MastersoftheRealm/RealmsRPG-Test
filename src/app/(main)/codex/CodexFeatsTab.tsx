@@ -137,7 +137,7 @@ export function CodexFeatsTab({
   /** When set, auto-filter feats to those the given character qualifies for. */
   characterId?: string;
 }) {
-  const { data: feats, isLoading, error } = useCodexFeats();
+  const { data: feats, isLoading, error, refetch } = useCodexFeats();
   const { data: skills = [] } = useCodexSkills();
   const { data: characterResult } = useCharacter(characterId || undefined);
   const character = characterResult?.character ?? undefined;
@@ -281,7 +281,7 @@ export function CodexFeatsTab({
   }
 
   if (error) {
-    return <ErrorState message="Failed to load feats" />;
+    return <ErrorState message="Failed to load feats" onRetry={() => refetch()} />;
   }
 
   return (

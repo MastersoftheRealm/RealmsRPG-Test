@@ -845,11 +845,13 @@ export default function CharacterSheetPage({ params }: PageParams) {
     const overLimit = newSpent > max;
     const thisActionAddedTp = newSpent > currentSpent;
     if (overLimit && thisActionAddedTp) {
-      const ok = window.confirm(
-        `${reason} will put this character over their proficiency TP limit (${newSpent}/${max}). Continue anyway?`
+      // Soft cap: the TP limit is visibly flagged on the sheet and recoverable in
+      // the Proficiencies tab, so we apply the change and warn rather than block
+      // with a modal/confirm (TASK-338).
+      showToast(
+        `${reason} puts proficiency TP over the limit (${newSpent}/${max}). Adjust in the Proficiencies tab.`,
+        'warning'
       );
-      if (!ok) return null;
-      showToast(`Proficiency TP is over limit: ${newSpent}/${max}`, 'warning');
     }
     return { ...next, proficiencies: deduped };
   }, [buildRequiredForCharacter, showToast]);

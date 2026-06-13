@@ -48,17 +48,45 @@ export function TabNavigation({
   className,
   fullWidth = false,
 }: TabNavigationProps) {
+  const baseId = React.useId();
+  const tabButtonId = (tabId: string) => `${baseId}-tab-${tabId}`;
+
+  // Roving-tabindex keyboard support (WAI-ARIA tabs): arrow keys move between
+  // tabs, Home/End jump to the ends (TASK-332).
+  const handleTabKeyDown = (e: React.KeyboardEvent, currentId: string) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+    const focusable = tabs.filter((t) => !t.disabled);
+    if (focusable.length === 0) return;
+    e.preventDefault();
+    const idx = focusable.findIndex((t) => t.id === currentId);
+    if (idx === -1) return;
+    let nextIdx = idx;
+    if (e.key === 'ArrowRight') nextIdx = (idx + 1) % focusable.length;
+    else if (e.key === 'ArrowLeft') nextIdx = (idx - 1 + focusable.length) % focusable.length;
+    else if (e.key === 'Home') nextIdx = 0;
+    else if (e.key === 'End') nextIdx = focusable.length - 1;
+    const next = focusable[nextIdx];
+    if (!next) return;
+    onTabChange(next.id);
+    requestAnimationFrame(() => {
+      document.getElementById(tabButtonId(next.id))?.focus();
+    });
+  };
+
   if (variant === 'pill') {
     return (
       <div className={cn('tab-pill-list', fullWidth && 'w-full', className)} role="tablist">
         {tabs.map((tab) => (
           <button
             key={tab.id}
+            id={tabButtonId(tab.id)}
             type="button"
             role="tab"
             aria-selected={activeTab === tab.id}
             aria-disabled={tab.disabled}
+            tabIndex={activeTab === tab.id ? 0 : -1}
             onClick={() => !tab.disabled && onTabChange(tab.id)}
+            onKeyDown={(e) => handleTabKeyDown(e, tab.id)}
             className={cn(
               'tab-pill-trigger',
               fullWidth && 'flex-1',
@@ -128,11 +156,14 @@ export function TabNavigation({
                 )}
               >
                 <button
+                  id={tabButtonId(tab.id)}
                   type="button"
                   role="tab"
                   aria-selected={isActive}
                   aria-disabled={tab.disabled}
+                  tabIndex={isActive ? 0 : -1}
                   onClick={() => !tab.disabled && onTabChange(tab.id)}
+                  onKeyDown={(e) => handleTabKeyDown(e, tab.id)}
                   className={cn(triggerClass(tab), 'border-b-0')}
                 >
                   <span className="flex items-center gap-2">{renderTabLabel(tab)}</span>
@@ -144,11 +175,14 @@ export function TabNavigation({
           return (
             <button
               key={tab.id}
+              id={tabButtonId(tab.id)}
               type="button"
               role="tab"
               aria-selected={isActive}
               aria-disabled={tab.disabled}
+              tabIndex={isActive ? 0 : -1}
               onClick={() => !tab.disabled && onTabChange(tab.id)}
+              onKeyDown={(e) => handleTabKeyDown(e, tab.id)}
               className={triggerClass(tab)}
             >
               <span className="flex items-center gap-2">{renderTabLabel(tab)}</span>

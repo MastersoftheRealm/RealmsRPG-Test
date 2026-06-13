@@ -179,8 +179,8 @@ function SpeciesCard({ species, allTraits, skillIdToName }: { species: Species; 
 }
 
 export function CodexSpeciesTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  const { data: codexSpecies = [], isLoading: codexLoading, error: codexError } = useSpecies();
-  const { data: userSpeciesRaw = [], isLoading: userLoading, error: userError } = useUserSpecies();
+  const { data: codexSpecies = [], isLoading: codexLoading, error: codexError, refetch: refetchCodex } = useSpecies();
+  const { data: userSpeciesRaw = [], isLoading: userLoading, error: userError, refetch: refetchUser } = useUserSpecies();
 
   const species = useMemo(() => {
     if (codexMode === 'my') {
@@ -265,7 +265,7 @@ export function CodexSpeciesTab({ codexMode = 'public' }: { codexMode?: 'public'
     return sortByColumn(filtered, sortState);
   }, [species, filters, sortState]);
 
-  if (error) return <ErrorState message="Failed to load species" />;
+  if (error) return <ErrorState message="Failed to load species" onRetry={() => { refetchCodex(); refetchUser(); }} />;
 
   return (
     <div>
