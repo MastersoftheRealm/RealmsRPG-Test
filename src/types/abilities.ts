@@ -13,6 +13,15 @@ export type AbilityName =
   | 'intelligence'
   | 'charisma';
 
+  export const ABILITIES = {
+    strength: 'strength',
+    vitality: 'vitality',
+    agility: 'agility',
+    acuity: 'acuity',
+    intelligence: 'intelligence',
+    charisma: 'charisma'
+}
+
 /** Ability scores object */
 export interface Abilities {
   strength: number;
