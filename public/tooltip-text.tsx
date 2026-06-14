@@ -41,3 +41,16 @@ effectiveness, and Training Points used for crafting powers. Common choices incl
 
 export const martialAbility = `Your Martial Ability reflects your combat style and approach to challenges. It influences Energy and Training
 Points for Techniques and proficiencies. Common picks include Strength, Vitality, Agility, or Acuity depending on your concept.`
+
+export const chooseYourSpecies = (
+    <div>
+        <div>Species Sources</div>
+        <strong>Choose Your Species</strong>
+        <br />
+        Your species defines your character&apos;s physical traits and inherent abilities.
+        <ul>
+            <li><strong>Public species</strong> are official Realms options.</li>
+            <li><strong>My species</strong> are custom species you created.</li>
+        </ul>
+    </div>
+)
