@@ -28,6 +28,7 @@ import {
 } from '@/components/character-sheet';
 import { useToast } from '@/components/ui';
 import { createClient } from '@/lib/supabase/client';
+import { mergeResourceUpdatesIntoCharacter } from '@/lib/encounter/character-resource-sync';
 import type {
   Character,
   CharacterLibraryTabId,
@@ -231,22 +232,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
           if (!data) return;
           setCharacter(prev => {
             if (!prev || prev.id !== payload.new.id) return prev;
-            const updates: Partial<Character> = {};
-            if (typeof data.currentHealth === 'number') updates.currentHealth = data.currentHealth;
-            if (typeof data.currentEnergy === 'number') updates.currentEnergy = data.currentEnergy;
-            if (typeof data.actionPoints === 'number') updates.actionPoints = data.actionPoints;
-            const health = data.health as { current?: number; max?: number } | undefined;
-            const energy = data.energy as { current?: number; max?: number } | undefined;
-            if (health && typeof health.current === 'number') {
-              updates.currentHealth = health.current;
-              if (typeof health.max === 'number') updates.health = { ...prev.health, current: health.current, max: health.max } as Character['health'];
-            }
-            if (energy && typeof energy.current === 'number') {
-              updates.currentEnergy = energy.current;
-              if (typeof energy.max === 'number') updates.energy = { ...prev.energy, current: energy.current, max: energy.max } as Character['energy'];
-            }
-            if (Object.keys(updates).length === 0) return prev;
-            return { ...prev, ...updates };
+            return mergeResourceUpdatesIntoCharacter(prev, data) ?? prev;
           });
         }
       )

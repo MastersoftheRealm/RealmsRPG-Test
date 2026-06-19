@@ -1527,3 +1527,11 @@ Notes
 - Feedback: Smoke tests are too convoluted/cramped — missing context; each validation point should be its own step-by-step test under a category (e.g. DEV-V-001 Character creator step guards → 1. Archetype → Test-001 Choose a Path selectable). Need fool-proof How-To for QA to report PASS/FAIL per test after each build. Write into AI workflow as Build Validation tasks.
 - Expected: Granular DEV-V-### suites in BUILD_VALIDATION.md; agents add one-behavior-per-test on user-facing done/partial; DEVELOPER_TASK_QUEUE indexes suites only.
 - Disposition: Implemented 2026-06-13. Created `BUILD_VALIDATION.md` with DEV-V-001 (15 tests); updated AGENT_GUIDE, AI_REQUEST_TEMPLATE, realms-tasks, AGENTS.md, DEVELOPER_TASK_QUEUE index; TASK-356 `build_validation` field.
+
+**Raw Feedback Log — 2026-06-19 (Prod — RLS recursion + tooltips column)**
+- Date: 2026-06-19
+- Context: Production realmsrpg.com — GET /api/characters, /api/tooltips; Supabase logs
+- Priority: Critical
+- Feedback: After TASK-352 RLS consolidation, `/api/characters` returns 500 with `42P17 infinite recursion detected in policy for relation "campaign_members"`. `/api/tooltips` fails with `column user_profiles.show_tooltips does not exist`. Auth refresh "session missing" on manifest (likely unauthenticated asset requests).
+- Expected: Characters list loads for signed-in users; tooltips API works; no RLS recursion between campaigns and campaign_members.
+- Disposition: Hotfix applied 2026-06-19 (`rls_fix_campaign_members_recursion_2026_06`): SECURITY DEFINER helpers `auth_is_campaign_owner` / `auth_is_campaign_participant`; campaigns SELECT uses owner_id + memberIds only; added `user_profiles.show_tooltips` column. See `sql/supabase-rls-fix-campaign-recursion-2026-06.sql`.

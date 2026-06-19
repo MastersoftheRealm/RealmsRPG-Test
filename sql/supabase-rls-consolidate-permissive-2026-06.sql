@@ -15,6 +15,10 @@
 --
 -- Run via Supabase Dashboard SQL Editor or MCP apply_migration.
 -- Re-check performance advisors after apply; spot-test campaign join + sheet cross-read.
+--
+-- IMPORTANT: After this script, run sql/supabase-rls-fix-campaign-recursion-2026-06.sql
+-- (or use the merged version below). Cross-table campaign_members ↔ campaigns checks
+-- must use SECURITY DEFINER helpers to avoid 42P17 infinite RLS recursion.
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------

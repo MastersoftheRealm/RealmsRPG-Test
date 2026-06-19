@@ -14,6 +14,93 @@ export type CharacterResourcePatch = Pick<
 const DEBOUNCE_MS = 400;
 const pendingTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
+/** Read HP/EN/AP from character `data` JSON. Top-level fields win over nested health/energy.current. */
+export function readResourcesFromCharacterData(data: Record<string, unknown>): {
+  currentHealth?: number;
+  currentEnergy?: number;
+  actionPoints?: number;
+  healthMax?: number;
+  energyMax?: number;
+} {
+  const health = data.health as { current?: number; max?: number } | undefined;
+  const energy = data.energy as { current?: number; max?: number } | undefined;
+
+  return {
+    currentHealth:
+      typeof data.currentHealth === 'number' ? data.currentHealth : health?.current,
+    currentEnergy:
+      typeof data.currentEnergy === 'number' ? data.currentEnergy : energy?.current,
+    actionPoints: typeof data.actionPoints === 'number' ? data.actionPoints : undefined,
+    healthMax: typeof health?.max === 'number' ? health.max : undefined,
+    energyMax: typeof energy?.max === 'number' ? energy.max : undefined,
+  };
+}
+
+/** Apply resource fields from DB/realtime payload onto local character state (consistent nested objects). */
+export function mergeResourceUpdatesIntoCharacter(
+  prev: Character,
+  data: Record<string, unknown>
+): Character | null {
+  const r = readResourcesFromCharacterData(data);
+  if (
+    r.currentHealth === undefined &&
+    r.currentEnergy === undefined &&
+    r.actionPoints === undefined
+  ) {
+    return null;
+  }
+
+  const updates: Partial<Character> = {};
+  if (r.currentHealth !== undefined) updates.currentHealth = r.currentHealth;
+  if (r.currentEnergy !== undefined) updates.currentEnergy = r.currentEnergy;
+  if (r.actionPoints !== undefined) updates.actionPoints = r.actionPoints;
+
+  if (r.currentHealth !== undefined && (r.healthMax !== undefined || prev.health?.max !== undefined)) {
+    updates.health = {
+      ...(prev.health ?? {}),
+      current: r.currentHealth,
+      max: r.healthMax ?? prev.health?.max ?? 0,
+    } as Character['health'];
+  } else if (r.healthMax !== undefined && prev.health) {
+    updates.health = { ...prev.health, max: r.healthMax } as Character['health'];
+  }
+
+  if (r.currentEnergy !== undefined && (r.energyMax !== undefined || prev.energy?.max !== undefined)) {
+    updates.energy = {
+      ...(prev.energy ?? {}),
+      current: r.currentEnergy,
+      max: r.energyMax ?? prev.energy?.max ?? 0,
+    } as Character['energy'];
+  } else if (r.energyMax !== undefined && prev.energy) {
+    updates.energy = { ...prev.energy, max: r.energyMax } as Character['energy'];
+  }
+
+  return { ...prev, ...updates };
+}
+
+export function withSyncedResourceFields(
+  prev: Character,
+  patch: { currentHealth?: number; currentEnergy?: number; actionPoints?: number }
+): Character {
+  const next = { ...prev, ...patch };
+  if (patch.currentHealth !== undefined) {
+    next.currentHealth = patch.currentHealth;
+    if (prev.health?.max !== undefined) {
+      next.health = { ...prev.health, current: patch.currentHealth, max: prev.health.max };
+    }
+  }
+  if (patch.currentEnergy !== undefined) {
+    next.currentEnergy = patch.currentEnergy;
+    if (prev.energy?.max !== undefined) {
+      next.energy = { ...prev.energy, current: patch.currentEnergy, max: prev.energy.max };
+    }
+  }
+  if (patch.actionPoints !== undefined) {
+    next.actionPoints = patch.actionPoints;
+  }
+  return next;
+}
+
 export function buildResourcePatchFromCombatant(combatant: {
   currentHealth: number;
   currentEnergy: number;
@@ -86,17 +173,19 @@ export function buildResourcePatchFromCharacter(character: {
     ...(currentHealth !== undefined && { currentHealth }),
     ...(currentEnergy !== undefined && { currentEnergy }),
     ...(actionPoints !== undefined && { actionPoints }),
-    ...(character.health?.max !== undefined && {
-      health: {
-        current: character.health.current ?? currentHealth ?? 0,
-        max: character.health.max,
-      },
-    }),
-    ...(character.energy?.max !== undefined && {
-      energy: {
-        current: character.energy.current ?? currentEnergy ?? 0,
-        max: character.energy.max,
-      },
-    }),
+    ...(character.health?.max !== undefined &&
+      currentHealth !== undefined && {
+        health: {
+          current: currentHealth,
+          max: character.health.max,
+        },
+      }),
+    ...(character.energy?.max !== undefined &&
+      currentEnergy !== undefined && {
+        energy: {
+          current: currentEnergy,
+          max: character.energy.max,
+        },
+      }),
   };
 }

@@ -23,6 +23,7 @@ import { createClient } from '@/lib/supabase/client';
 import { computeMaxHealthEnergy } from '@/lib/game/calculations';
 import {
   isOwnedLinkedCombatant,
+  readResourcesFromCharacterData,
   scheduleCharacterResourceSyncFromCombatant,
 } from '@/lib/encounter/character-resource-sync';
 import type { Campaign, CampaignCharacterEncounterData } from '@/types/campaign';
@@ -127,18 +128,13 @@ function CombatEncounterViewInner({
       const nextCombatants = prev.combatants.map((c) => {
         const result = results.find((r) => r && r.combatantId === c.id);
         if (!result?.data) return c;
-        const d = result.data as {
-          currentHealth?: number;
-          currentEnergy?: number;
-          actionPoints?: number;
-          health?: { current?: number; max?: number };
-          energy?: { current?: number; max?: number };
-        };
-        const currentHp = d.currentHealth ?? d.health?.current;
-        const currentEn = d.currentEnergy ?? d.energy?.current;
-        const maxHp = d.health?.max;
-        const maxEn = d.energy?.max;
-        const ap = d.actionPoints;
+        const d = result.data as Record<string, unknown>;
+        const resources = readResourcesFromCharacterData(d);
+        const currentHp = resources.currentHealth;
+        const currentEn = resources.currentEnergy;
+        const maxHp = resources.healthMax;
+        const maxEn = resources.energyMax;
+        const ap = resources.actionPoints;
         if (
           currentHp === undefined &&
           currentEn === undefined &&
@@ -235,12 +231,11 @@ function CombatEncounterViewInner({
           const charId = row.id;
           const raw = row.data;
           const data = (typeof raw === 'object' && raw !== null ? raw : {}) as Record<string, unknown>;
-          const health = data.health as { current?: number; max?: number } | undefined;
-          const energy = data.energy as { current?: number; max?: number } | undefined;
-          const currentHp = (data.currentHealth as number) ?? health?.current;
-          const currentEn = (data.currentEnergy as number) ?? energy?.current;
-          const ap = data.actionPoints as number | undefined;
+          const resources = readResourcesFromCharacterData(data);
           const { maxHealth: computedMaxHp, maxEnergy: computedMaxEn } = computeMaxHealthEnergy(data);
+          const currentHp = resources.currentHealth;
+          const currentEn = resources.currentEnergy;
+          const ap = resources.actionPoints;
           setEncounter((prev) => {
             if (!prev) return prev;
             const hasMatch = prev.combatants.some((c) => (c as TrackedCombatant).sourceId === charId);
@@ -251,9 +246,9 @@ function CombatEncounterViewInner({
                 if ((c as TrackedCombatant).sourceId !== charId) return c;
                 const updates: Partial<TrackedCombatant> = { ...c };
                 if (currentHp !== undefined) updates.currentHealth = currentHp;
-                updates.maxHealth = computedMaxHp;
+                updates.maxHealth = resources.healthMax ?? computedMaxHp;
                 if (currentEn !== undefined) updates.currentEnergy = currentEn;
-                updates.maxEnergy = computedMaxEn;
+                updates.maxEnergy = resources.energyMax ?? computedMaxEn;
                 if (ap !== undefined) updates.ap = ap;
                 return { ...c, ...updates };
               }),

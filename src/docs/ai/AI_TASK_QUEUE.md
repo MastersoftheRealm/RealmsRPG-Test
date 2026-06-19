@@ -1114,7 +1114,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - sql/supabase-rls-consolidate-permissive-2026-06.sql
   acceptance_criteria:
     - SQL applied; advisor warnings reduced; spot-test campaigns.
-  notes: "Done 2026-06-18. Applied migration rls_consolidate_permissive_policies_2026_06 on lbqhiwudvifmkjtkccdg. Merged campaign_members/campaigns/characters SELECT+write dupes; split role_policies admin ALL into INSERT/UPDATE/DELETE; campaigns SELECT now includes campaign_members EXISTS; characters campaign roster match fixed (characters.id). Performance advisor: zero multiple_permissive_policies. Human spot-test: DEV-V-005 T001–T003."
+  notes: "Done 2026-06-18. Applied migration rls_consolidate_permissive_policies_2026_06 on lbqhiwudvifmkjtkccdg. Hotfix 2026-06-19: rls_fix_campaign_members_recursion_2026_06 (42P17 cycle — SECURITY DEFINER helpers). Merged dup policies; campaigns SELECT owner+memberIds; characters campaign roster uses characters.id. Performance advisor: zero multiple_permissive_policies. Human spot-test: DEV-V-005 T001–T003."
   build_validation:
     suite: DEV-V-005
     tests:

@@ -47,7 +47,8 @@
 | **supabase-storage-select-hardening-2026-06.sql** | TASK-326 (SEC-1): drop bucket-wide public Storage SELECT on `portraits` / `profile-pictures`; scope SELECT to own path; initplan wraps on writes | Run once after `supabase-storage-policies.sql`; buckets must stay **Public bucket** for CDN read-by-key |
 | **supabase-rls-initplan-fk-indexes-2026-06.sql** | TASK-327 (PERF-1): wrap `auth.uid()` as `(select auth.uid())` on admin/campaign-roll RLS; add FK indexes on `role_policies.updated_by`, `ui_tooltips.updated_by`, `usernames.user_id` | Run once per environment |
 | **supabase-rls-initplan-batch2-2026-06.sql** | TASK-354: initplan wraps on crafting_sessions, user_enhanced_items, campaigns INSERT, campaign_members self policies | Applied live 2026-06-13 |
-| **supabase-rls-consolidate-permissive-2026-06.sql** | TASK-352: merge duplicate permissive RLS on `campaign_members`, `campaigns`, `characters`, `role_policies`; split admin ALL into write-only policies | Applied live 2026-06-18 as migration `rls_consolidate_permissive_policies_2026_06`; spot-test campaign join + sheet cross-read after apply |
+| **supabase-rls-consolidate-permissive-2026-06.sql** | TASK-352: merge duplicate permissive RLS on `campaign_members`, `campaigns`, `characters`, `role_policies` | Applied live 2026-06-18; **must** follow with recursion hotfix below |
+| **supabase-rls-fix-campaign-recursion-2026-06.sql** | Hotfix TASK-352 regression: `auth_is_campaign_owner` / `auth_is_campaign_participant` SECURITY DEFINER helpers; breaks 42P17 RLS cycle; adds `user_profiles.show_tooltips` if missing | Applied live 2026-06-19 as `rls_fix_campaign_members_recursion_2026_06` |
 
 **Legacy scripts (do not run on current public-only DB)** are in [sql/archive/](archive/): codex-schema columnar, official-library in codex, user-library in users, multi-schema RLS, idempotent-full, force-drop-codex scripts.
 

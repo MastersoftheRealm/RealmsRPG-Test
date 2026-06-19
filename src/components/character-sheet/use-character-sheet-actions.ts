@@ -13,6 +13,7 @@ import {
   getTrainingPointLimit,
 } from '@/lib/proficiencies';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
+import { withSyncedResourceFields } from '@/lib/encounter/character-resource-sync';
 import type {
   AbilityName,
   Archetype,
@@ -84,18 +85,16 @@ export function useCharacterSheetActions(args: UseCharacterSheetActionsArgs) {
 
 const handleHealthChange = useCallback((value: number) => {
   if (!character) return;
-  setCharacter(prev => prev ? {
-    ...prev,
-    currentHealth: value,
-  } : null);
+  setCharacter(prev =>
+    prev ? withSyncedResourceFields(prev, { currentHealth: value }) : null
+  );
 }, [character]);
 
 const handleEnergyChange = useCallback((value: number) => {
   if (!character) return;
-  setCharacter(prev => prev ? {
-    ...prev,
-    currentEnergy: value,
-  } : null);
+  setCharacter(prev =>
+    prev ? withSyncedResourceFields(prev, { currentEnergy: value }) : null
+  );
 }, [character]);
 
 const handleActionPointsChange = useCallback((value: number) => {
@@ -202,11 +201,10 @@ const handleHealthPointsChange = useCallback((value: number) => {
     const currentHP = prev.currentHealth ?? prev.health?.current ?? oldMax;
     const shouldBump = currentHP >= oldMax;
     const newCurrent = shouldBump ? currentHP + delta : currentHP;
-    return {
-      ...prev,
-      healthPoints: newPoints,
-      currentHealth: newCurrent,
-    };
+    return withSyncedResourceFields(
+      { ...prev, healthPoints: newPoints },
+      { currentHealth: newCurrent }
+    );
   });
 }, [character]);
 
@@ -228,11 +226,10 @@ const handleEnergyPointsChange = useCallback((value: number) => {
     const currentEN = prev.currentEnergy ?? prev.energy?.current ?? oldMax;
     const shouldBump = currentEN >= oldMax;
     const newCurrent = shouldBump ? currentEN + delta : currentEN;
-    return {
-      ...prev,
-      energyPoints: newPoints,
-      currentEnergy: newCurrent,
-    };
+    return withSyncedResourceFields(
+      { ...prev, energyPoints: newPoints },
+      { currentEnergy: newCurrent }
+    );
   });
 }, [character]);
 
@@ -290,16 +287,24 @@ const handleFullRecovery = useCallback(() => {
   }
   
   const stateUsesMaxRec = calculateProficiency(character.level || 1);
-  setCharacter(prev => prev ? {
-    ...prev,
-    currentHealth: calculatedStats.maxHealth,
-    currentEnergy: calculatedStats.maxEnergy,
-    conditions: [], // Clear all conditions
-    archetypeFeats: resetArchetypeFeats,
-    feats: resetCharacterFeats,
-    traitUses: { ...(prev.traitUses || {}), ...resetTraitUses },
-    stateUsesCurrent: stateUsesMaxRec,
-  } : null);
+  setCharacter(prev =>
+    prev
+      ? withSyncedResourceFields(
+          {
+            ...prev,
+            conditions: [],
+            archetypeFeats: resetArchetypeFeats,
+            feats: resetCharacterFeats,
+            traitUses: { ...(prev.traitUses || {}), ...resetTraitUses },
+            stateUsesCurrent: stateUsesMaxRec,
+          },
+          {
+            currentHealth: calculatedStats.maxHealth,
+            currentEnergy: calculatedStats.maxEnergy,
+          }
+        )
+      : null
+  );
   
   showToast('Full recovery complete!', 'success');
 }, [character, calculatedStats, traitsDb, featsDb, showToast]);
@@ -354,14 +359,22 @@ const handlePartialRecovery = useCallback((hpRestored: number, enRestored: numbe
     });
   }
   
-  setCharacter(prev => prev ? {
-    ...prev,
-    currentHealth: Math.min(currentHP + hpRestored, calculatedStats.maxHealth),
-    currentEnergy: Math.min(currentEN + enRestored, calculatedStats.maxEnergy),
-    archetypeFeats: resetArchetypeFeats,
-    feats: resetCharacterFeats,
-    traitUses: { ...(prev.traitUses || {}), ...resetTraitUses },
-  } : null);
+  setCharacter(prev =>
+    prev
+      ? withSyncedResourceFields(
+          {
+            ...prev,
+            archetypeFeats: resetArchetypeFeats,
+            feats: resetCharacterFeats,
+            traitUses: { ...(prev.traitUses || {}), ...resetTraitUses },
+          },
+          {
+            currentHealth: Math.min(currentHP + hpRestored, calculatedStats.maxHealth),
+            currentEnergy: Math.min(currentEN + enRestored, calculatedStats.maxEnergy),
+          }
+        )
+      : null
+  );
   
   showToast(`Recovered ${hpRestored} HP and ${enRestored} EN`, 'success');
 }, [character, calculatedStats, traitsDb, featsDb, showToast]);
