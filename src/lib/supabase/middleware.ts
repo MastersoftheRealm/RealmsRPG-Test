@@ -12,6 +12,12 @@ function isOAuthCallbackInProgress(request: NextRequest): boolean {
   return request.nextUrl.searchParams.has('code');
 }
 
+/** Anonymous/static requests have no session — not an operational error. */
+function isExpectedAnonymousAuthError(message: string): boolean {
+  const lower = message.toLowerCase();
+  return lower.includes('auth session missing') || lower.includes('session missing');
+}
+
 export async function updateSession(request: NextRequest) {
   // Never refresh session during OAuth PKCE exchange — stale refresh attempts can
   // clear PKCE cookies and cause flow_state_not_found on /auth/callback.
@@ -55,11 +61,14 @@ export async function updateSession(request: NextRequest) {
     if (error?.code === 'refresh_token_not_found') {
       // Clear stale session cookies so we stop retrying invalid refresh tokens.
       await supabase.auth.signOut();
-    } else if (error) {
+    } else if (error && !isExpectedAnonymousAuthError(error.message)) {
       console.error('[Supabase] Auth refresh failed:', error.message);
     }
   } catch (err) {
-    console.error('[Supabase] Auth refresh failed:', err);
+    const message = err instanceof Error ? err.message : String(err);
+    if (!isExpectedAnonymousAuthError(message)) {
+      console.error('[Supabase] Auth refresh failed:', err);
+    }
     // Pass through — don't block the request; auth-required routes will handle 401
   }
 
