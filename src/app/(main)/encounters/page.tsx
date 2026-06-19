@@ -31,10 +31,12 @@ import {
   Modal,
   Input,
   TabNavigation,
+  TabContentPanel,
+  useTabGroup,
   SearchInput,
   useToast,
 } from '@/components/ui';
-import { ContextHelpTooltip, DeleteConfirmModal, HubListRow, ErrorDisplay } from '@/components/shared';
+import { DeleteConfirmModal, HubListRow, ErrorDisplay } from '@/components/shared';
 import { IconButton } from '@/components/ui';
 import { useEncounters, useCreateEncounter, useDeleteEncounter, useSaveEncounter, useAuth } from '@/hooks';
 import { createDefaultEncounter } from '@/types/encounter';
@@ -88,6 +90,7 @@ export default function EncountersPage() {
 }
 
 function EncountersContent() {
+  const { tabGroupId, sharedPanelId } = useTabGroup();
   const router = useRouter();
   const { user } = useAuth();
   const { showToast } = useToast();
@@ -144,7 +147,6 @@ function EncountersContent() {
       const typePath = type;
       router.push(`/encounters/${id}/${typePath}`);
     } catch (err) {
-      console.error('Failed to create encounter:', err);
       showToast((err as Error)?.message ?? 'Failed to create encounter', 'error');
     }
   };
@@ -155,7 +157,6 @@ function EncountersContent() {
       await deleteEncounterMutation.mutateAsync(deleteTarget.id);
       setDeleteTarget(null);
     } catch (err) {
-      console.error('Failed to delete encounter:', err);
       showToast((err as Error)?.message ?? 'Failed to delete encounter', 'error');
     }
   };
@@ -169,7 +170,6 @@ function EncountersContent() {
       });
       showToast(`"${encounter.name}" marked complete`, 'success');
     } catch (err) {
-      console.error('Failed to mark encounter complete:', err);
       showToast((err as Error)?.message ?? 'Failed to mark encounter complete', 'error');
     }
   };
@@ -200,18 +200,6 @@ function EncountersContent() {
         description="Create and manage combat, skill, and mixed encounters for your sessions."
         actions={
           <div className="flex items-center gap-2">
-            <ContextHelpTooltip
-              tooltipKey="encounters.page.help"
-              scope="page:/encounters"
-              label="Encounter types help"
-              placement="left"
-            />
-            <ContextHelpTooltip
-              tooltipKey="encounters.page.createHelp"
-              scope="page:/encounters"
-              label="Create encounter help"
-              placement="left"
-            />
             <Button onClick={() => setCreateModalOpen(true)}>
               <Plus className="w-4 h-4" />
               Create Encounter
@@ -232,9 +220,11 @@ function EncountersContent() {
         }))}
         activeTab={activeTab}
         onTabChange={(id) => setActiveTab(id as TabId)}
+        tabGroupId={tabGroupId}
+        sharedTabPanelId={sharedPanelId}
       />
 
-      <div className="mt-6">
+      <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab} className="mt-6">
         {/* Search & Filters */}
         <div className="flex flex-wrap items-center gap-3 mb-4 min-w-0">
           <div className="flex-1 min-w-[200px]">
@@ -355,7 +345,7 @@ function EncountersContent() {
             ))}
           </div>
         )}
-      </div>
+      </TabContentPanel>
 
       {/* Create Encounter Modal */}
       {createModalOpen && (

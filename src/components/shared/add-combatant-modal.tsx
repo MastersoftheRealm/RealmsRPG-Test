@@ -10,6 +10,7 @@
 
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
+import { apiFetchOrNull } from '@/lib/api-client';
 import { BookOpen, Users, Search, Plus, Minus } from 'lucide-react';
 import { Modal, Button, Input, SearchInput } from '@/components/ui';
 import { SegmentedControl } from '@/components/shared';
@@ -17,7 +18,7 @@ import { ValueStepper } from '@/components/shared/value-stepper';
 import { useUserCreatures, useCampaignsFull, type UserCreature } from '@/hooks';
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
 import type { TrackedCombatant, CombatantType, SkillParticipant } from '@/types/encounter';
-import type { Campaign, CampaignCharacter } from '@/types/campaign';
+import type { Campaign, CampaignCharacter, CampaignCharacterEncounterData } from '@/types/campaign';
 
 type TabId = 'library' | 'campaign';
 
@@ -278,11 +279,11 @@ function CampaignCharactersTab({
       const results = await Promise.all(
         chars.map(async (c) => {
           try {
-            const res = await fetch(
+            const data = await apiFetchOrNull<CampaignCharacterEncounterData>(
               `/api/campaigns/${selectedCampaign.id}/characters/${c.userId}/${c.characterId}?scope=encounter`
             );
-            if (!res.ok) return null;
-            return { charMeta: c, data: await res.json() };
+            if (!data) return null;
+            return { charMeta: c, data };
           } catch {
             return null;
           }
@@ -336,8 +337,7 @@ function CampaignCharactersTab({
 
       onAdd(combatants);
       onClose();
-    } catch (err) {
-      console.error('Failed to fetch campaign characters:', err);
+    } catch {
     } finally {
       setLoading(false);
     }

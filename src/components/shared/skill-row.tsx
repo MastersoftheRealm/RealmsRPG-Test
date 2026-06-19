@@ -225,7 +225,7 @@ export const SkillRow = memo(function SkillRow({
           {isEditing || !showRollButton ? (
             <span className={cn(
               'inline-block min-w-[40px] font-bold',
-              bonus > 0 ? 'text-success-700 dark:text-success-400' : bonus < 0 ? 'text-danger-600 dark:text-danger-400' : 'text-text-secondary'
+              bonus > 0 ? 'text-success-700 dark:text-success-400' : bonus < 0 ? 'text-danger-700 dark:text-danger-400' : 'text-text-secondary'
             )}>
               {formatBonus(bonus)}
             </span>
@@ -365,7 +365,7 @@ export const SkillRow = memo(function SkillRow({
                 {/* Bonus display */}
                 <span className={cn(
                   'w-12 text-right font-bold',
-                  bonus > 0 ? 'text-success-700 dark:text-success-400' : bonus < 0 ? 'text-danger-600 dark:text-danger-400' : 'text-text-muted dark:text-text-secondary'
+                  bonus > 0 ? 'text-success-700 dark:text-success-400' : bonus < 0 ? 'text-danger-700 dark:text-danger-400' : 'text-text-muted dark:text-text-secondary'
                 )}>
                   {formatBonus(bonus)}
                 </span>

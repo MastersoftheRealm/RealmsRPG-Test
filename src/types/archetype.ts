@@ -87,7 +87,9 @@ export interface Archetype {
   pow_abil?: AbilityName;
   mart_abil?: AbilityName;
   ability?: AbilityName; // Legacy field
+  /** @deprecated Not loaded from codex_archetypes; path picks use path_data level rows instead. */
   feats?: ArchetypeFeat[];
+  /** @deprecated Not loaded from codex_archetypes; unused in player UX. */
   traits?: ArchetypeTrait[];
 }
 

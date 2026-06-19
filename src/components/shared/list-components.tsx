@@ -9,8 +9,7 @@
  * NOTE: SearchInput is re-exported from ui/search-input.tsx for backward compatibility
  */
 
-import { useState } from 'react';
-import { Filter, RotateCw, ChevronDown } from 'lucide-react';
+import { RotateCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -30,38 +29,7 @@ export interface SearchInputProps {
 // Filter Section
 // =============================================================================
 
-export interface FilterSectionProps {
-  children: React.ReactNode;
-  defaultExpanded?: boolean;
-  className?: string;
-}
-
-export function FilterSection({
-  children,
-  defaultExpanded = true,
-  className,
-}: FilterSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
-
-  return (
-    <div className={cn('mb-6', className)}>
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary mb-4 transition-colors"
-      >
-        <Filter className="w-4 h-4" />
-        {isExpanded ? <span>Hide Filters</span> : <span>Show Filters</span>}
-        <ChevronDown className={cn('w-4 h-4 transition-transform', isExpanded && 'rotate-180')} />
-      </button>
-
-      {isExpanded && (
-        <div className="p-4 bg-surface-secondary rounded-lg border border-border-light">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-}
+export { FilterSection, type FilterSectionProps } from './filters/filter-section';
 
 // =============================================================================
 // Empty State - Re-export from ui/ for backward compatibility

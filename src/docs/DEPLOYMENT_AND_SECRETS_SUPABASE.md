@@ -177,7 +177,9 @@ On the free tier, watch **Edge Requests**, **Fast Data Transfer** (CDN → users
      - Local: `http://localhost:3000/auth/callback`, `http://localhost:3000/auth/confirm`
      - Production (Vercel): `https://your-app.vercel.app/auth/callback`, `https://your-app.vercel.app/auth/confirm`
      - Production (custom domain): `https://realmsrpg.com/auth/callback`, `https://realmsrpg.com/auth/confirm` (and `https://www.realmsrpg.com/...` if you use www)
-   - If Redirect URLs are missing, Supabase may redirect to Site URL with `?code=...`; the app will redirect to `/auth/callback` as a fallback.
+   - If Redirect URLs are missing, Supabase may redirect to Site URL with `?code=...`; the app redirects to `/auth/callback` as a fallback.
+   - **Site URL must use HTTPS** in production (e.g. `https://realmsrpg.com`, not `http://`). HTTP Site URLs break OAuth PKCE cookie scope and cause `flow_state_not_found` on Google sign-in.
+   - Ensure `https://realmsrpg.com/auth/callback` (and `/auth/confirm`) are in **Redirect URLs**, not only the Vercel preview URL.
 2. **Google OAuth (if used):** In Google Cloud Console → APIs & Services → Credentials → your OAuth client → Authorized redirect URIs, add:
    - `https://realmsrpg.com/auth/callback` (and `https://www.realmsrpg.com/auth/callback` if you use www)
    - Your Vercel URL redirect if you still use it.

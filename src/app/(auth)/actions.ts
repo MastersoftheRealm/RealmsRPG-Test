@@ -13,6 +13,7 @@ import { requireAuth, getSession } from '@/lib/supabase/session';
 import { createClient as createServerClient } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/admin';
 import { getRolePolicyForUser } from '@/lib/role-policy';
+import { validateUsername } from '@/lib/username-rules';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -55,6 +56,12 @@ export async function createUserProfileAction(data: {
     const existingUsernameDisplay = ((existing as { username_display?: string | null } | null)?.username_display ?? null)?.toString().trim() || null;
 
     let usernameDisplay = data.username?.trim();
+    if (usernameDisplay) {
+      const usernameCheck = validateUsername(usernameDisplay);
+      if (!usernameCheck.ok) {
+        return { success: false, error: usernameCheck.error };
+      }
+    }
     if (!usernameDisplay) {
       // Critical: never overwrite a user's chosen username with a generated default.
       // This action can be called from auth callback/confirm routes on subsequent logins.
@@ -164,12 +171,6 @@ export async function checkUsernameAvailableAction(username: string) {
   }
 }
 
-const USERNAME_BLOCKLIST = [
-  'admin', 'moderator', 'support', 'realmsrpg', 'realms', 'official',
-  'null', 'undefined', 'delete', 'remove', 'system', 'root',
-];
-const USERNAME_MIN_LEN = 3;
-const USERNAME_MAX_LEN = 24;
 const RATE_LIMIT_DAYS = 7;
 
 export async function changeUsernameAction(newUsername: string) {
@@ -179,14 +180,9 @@ export async function changeUsernameAction(newUsername: string) {
     const normalized = trimmed.toLowerCase();
     const admin = await isAdmin(user.uid);
 
-    if (admin) {
-      if (trimmed.length === 0) return { success: false, error: 'Username cannot be empty' };
-    } else {
-      if (trimmed.length < USERNAME_MIN_LEN) return { success: false, error: `Username must be at least ${USERNAME_MIN_LEN} characters` };
-      if (trimmed.length > USERNAME_MAX_LEN) return { success: false, error: `Username must be at most ${USERNAME_MAX_LEN} characters` };
-      if (!/^[a-zA-Z0-9_-]+$/.test(trimmed)) return { success: false, error: 'Username can only contain letters, numbers, underscores, and hyphens' };
-      const blocked = USERNAME_BLOCKLIST.some((w) => normalized.includes(w));
-      if (blocked) return { success: false, error: 'This username is not allowed' };
+    const usernameCheck = validateUsername(trimmed, { isAdmin: admin, allowEmpty: admin });
+    if (!usernameCheck.ok) {
+      return { success: false, error: usernameCheck.error };
     }
 
     const supabase = await createServerClient();

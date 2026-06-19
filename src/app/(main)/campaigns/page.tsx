@@ -23,6 +23,8 @@ import {
   PageContainer,
   PageHeader,
   TabNavigation,
+  TabContentPanel,
+  useTabGroup,
   Button,
   Input,
   Textarea,
@@ -84,6 +86,7 @@ export default function CampaignsPage() {
 }
 
 function CampaignsContent() {
+  const { tabGroupId, sharedPanelId } = useTabGroup();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabId>('my-campaigns');
@@ -122,10 +125,12 @@ function CampaignsContent() {
           }))}
           activeTab={activeTab}
           onTabChange={(id) => setActiveTab(id as TabId)}
+          tabGroupId={tabGroupId}
+          sharedTabPanelId={sharedPanelId}
         />
       </div>
 
-      <div className="mt-6 min-w-0">
+      <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab} className="mt-6 min-w-0">
         {activeTab === 'my-campaigns' && (
           <MyCampaignsTab
             campaigns={campaigns}
@@ -155,7 +160,7 @@ function CampaignsContent() {
             }}
           />
         )}
-      </div>
+      </TabContentPanel>
     </PageContainer>
   );
 }
@@ -437,11 +442,6 @@ function JoinCampaignTab({
           <label className="block text-sm font-medium text-text-secondary">
             Invite Code
           </label>
-          <ContextHelpTooltip
-            tooltipKey="campaigns.page.inviteHelp"
-            scope="page:/campaigns"
-            label="Invite code help"
-          />
         </div>
         <Input
           value={inviteCode}

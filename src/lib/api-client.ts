@@ -9,6 +9,14 @@
  *   const data = await apiFetch<MyType>('/api/endpoint', { method: 'POST', body: JSON.stringify(payload) });
  */
 
+function parseApiErrorBody(err: unknown, fallback: string): string {
+  const payload = err as { error?: string; details?: string };
+  if (payload.details) {
+    return `${payload.error ?? fallback}: ${payload.details}`;
+  }
+  return payload.error ?? fallback;
+}
+
 export async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, {
     ...options,
@@ -20,7 +28,27 @@ export async function apiFetch<T>(url: string, options?: RequestInit): Promise<T
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error((err as { error?: string }).error ?? 'Request failed');
+    throw new Error(parseApiErrorBody(err, 'Request failed'));
+  }
+
+  if (res.status === 204) return undefined as T;
+  return res.json();
+}
+
+/** Like apiFetch but returns null on 404 instead of throwing. */
+export async function apiFetchOrNull<T>(url: string, options?: RequestInit): Promise<T | null> {
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(parseApiErrorBody(err, 'Request failed'));
   }
 
   if (res.status === 204) return undefined as T;

@@ -16,6 +16,7 @@ import { useAuthStore } from '@/stores';
 import { useAdmin } from '@/hooks';
 import { ProtectedRoute } from '@/components/layout';
 import { cn } from '@/lib/utils';
+import { apiFetch } from '@/lib/api-client';
 import { LoadingState, Button, Input, Alert, PageContainer, Spinner } from '@/components/ui';
 import { ImageUploadModal } from '@/components/shared';
 import { User as UserIcon, Mail, Lock, Trash2, AlertTriangle, AtSign, Camera } from 'lucide-react';
@@ -118,8 +119,7 @@ function AccountContent() {
             showTooltips: true,
           });
         }
-      } catch (err) {
-        console.error('Error loading profile:', err);
+      } catch {
       } finally {
         setLoading(false);
       }
@@ -155,7 +155,6 @@ function AccountContent() {
       const supabase = createClient();
       await supabase.auth.updateUser({ data: { avatar_url: url } });
     } catch (err) {
-      console.error('Profile picture upload error:', err);
       setPictureMessage({ type: 'error', text: 'Failed to upload profile picture' });
     } finally {
       setUploadingPicture(false);
@@ -166,16 +165,10 @@ function AccountContent() {
     setTooltipPrefSaving(true);
     setTooltipPrefMessage(null);
     try {
-      const response = await fetch('/api/user/settings/tooltips', {
+      await apiFetch('/api/user/settings/tooltips', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ showTooltips: nextValue }),
       });
-
-      const payload = (await response.json().catch(() => ({}))) as { error?: string };
-      if (!response.ok) {
-        throw new Error(payload.error ?? 'Failed to update tooltip setting');
-      }
 
       setProfile((prev) => (prev ? { ...prev, showTooltips: nextValue } : prev));
       setTooltipPrefMessage({ type: 'success', text: 'Tooltip preference updated.' });

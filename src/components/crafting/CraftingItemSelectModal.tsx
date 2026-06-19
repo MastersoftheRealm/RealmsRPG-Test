@@ -12,7 +12,7 @@ import { useMemo, useState } from 'react';
 import { useUserItems, useEquipment, useItemProperties, useOfficialLibrary } from '@/hooks';
 import { SourceFilter, type SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
-import { TabNavigation } from '@/components/ui/tab-navigation';
+import { TabNavigation, useTabGroup } from '@/components/ui/tab-navigation';
 import {
   getCodexEquipmentMarketPrice,
   getLibraryItemMarketPrice,
@@ -47,6 +47,7 @@ function isEquipmentType(type: string | undefined): boolean {
 }
 
 export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingItemSelectModalProps) {
+  const { tabGroupId, sharedPanelId } = useTabGroup();
   const [activeTab, setActiveTab] = useState<CraftingTabId>('armaments');
   const [source, setSource] = useState<SourceFilterValue>('all');
 
@@ -202,6 +203,8 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
             variant="pill"
             fullWidth
             className="w-full sm:w-auto"
+            tabGroupId={tabGroupId}
+            sharedTabPanelId={sharedPanelId}
           />
           <SourceFilter value={source} onChange={setSource} />
         </div>
@@ -219,6 +222,7 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
       searchPlaceholder="Search items..."
       size="lg"
       className="h-[70vh]"
+      tabPanelA11y={{ tabGroupId, id: sharedPanelId, activeTab }}
     />
   );
 }

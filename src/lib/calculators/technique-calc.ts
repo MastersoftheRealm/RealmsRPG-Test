@@ -6,6 +6,7 @@
  */
 
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
+import { computePartTrainingPoints } from '@/lib/library/part-display';
 import type { TechniquePart } from '@/hooks/codex-types';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
 
@@ -316,16 +317,7 @@ export function formatTechniquePartChip(
   const l2 = pl.op_2_lvl || 0;
   const l3 = pl.op_3_lvl || 0;
 
-  let opt1TPRaw = (def.op_1_tp || 0) * l1;
-  const defId = typeof def.id === 'string' ? parseInt(def.id, 10) : def.id;
-  if (defId === PART_IDS.ADDITIONAL_DAMAGE || def.name === 'Additional Damage') {
-    opt1TPRaw = Math.floor(opt1TPRaw);
-  }
-
-  const rawTP =
-    (def.base_tp || 0) + opt1TPRaw + (def.op_2_tp || 0) * l2 + (def.op_3_tp || 0) * l3;
-
-  const finalTP = Math.floor(rawTP);
+  const finalTP = computePartTrainingPoints(def, pl, 'technique');
   let text = def.name || '';
   if (l1 > 0) text += ` (Opt1 ${l1})`;
   if (l2 > 0) text += ` (Opt2 ${l2})`;

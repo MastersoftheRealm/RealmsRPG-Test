@@ -5,7 +5,7 @@
  */
 
 import type { Campaign, CampaignSummary } from '@/types/campaign';
-import { apiFetch } from '@/lib/api-client';
+import { apiFetch, apiFetchOrNull } from '@/lib/api-client';
 import { normalizeInviteCodeInput, isValidInviteCodeFormat } from '@/lib/campaign-invite';
 
 const API_BASE = '/api/campaigns';
@@ -28,13 +28,7 @@ export async function getMyCampaigns(): Promise<CampaignSummary[]> {
  * Get a single campaign by ID.
  */
 export async function getCampaign(campaignId: string): Promise<Campaign | null> {
-  const res = await fetch(`${API_BASE}/${encodeURIComponent(campaignId)}`);
-  if (res.status === 404) return null;
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error((err as { error?: string }).error ?? 'Request failed');
-  }
-  return res.json();
+  return apiFetchOrNull<Campaign>(`${API_BASE}/${encodeURIComponent(campaignId)}`);
 }
 
 /**
@@ -43,11 +37,7 @@ export async function getCampaign(campaignId: string): Promise<Campaign | null> 
 export async function getCampaignByInviteCode(inviteCode: string): Promise<{ id: string; name: string } | null> {
   const code = normalizeInviteCodeInput(inviteCode);
   if (!isValidInviteCodeFormat(code)) return null;
-  const res = await fetch(`${API_BASE}/invite/${encodeURIComponent(code)}`);
-  if (res.status === 404) return null;
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error((err as { error?: string }).error ?? 'Request failed');
-  }
-  return res.json();
+  return apiFetchOrNull<{ id: string; name: string }>(
+    `${API_BASE}/invite/${encodeURIComponent(code)}`
+  );
 }

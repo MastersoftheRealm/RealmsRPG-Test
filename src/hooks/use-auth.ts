@@ -57,9 +57,7 @@ export function useAuth() {
         setUser(toAuthUser(session?.user ?? null));
         setInitialized(true);
         if (event === 'SIGNED_IN' && session?.user && hasGuestEncountersToMigrate()) {
-          migrateGuestEncountersOnSignIn().catch((err) => {
-            console.error('[guest-encounter-migration]', err);
-          });
+          migrateGuestEncountersOnSignIn().catch(() => {});
         }
       }
     });
@@ -70,9 +68,8 @@ export function useAuth() {
         setUser(toAuthUser(u));
         setInitialized(true);
       }
-    }).catch((err) => {
+    }).catch(() => {
       if (mountedRef.current) {
-        console.error('Auth init error:', err);
         setError('Failed to initialize auth');
         setInitialized(true);
       }

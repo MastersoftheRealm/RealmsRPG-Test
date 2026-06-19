@@ -9,10 +9,35 @@
  * within free tier.
  */
 
+import { NextResponse, type NextRequest } from 'next/server';
+import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { updateSession } from '@/lib/supabase/middleware';
 
+/**
+ * When Supabase Site URL is `/`, OAuth returns `/?code=...`. Session refresh on that
+ * request can invalidate PKCE state before the code is exchanged — redirect server-side
+ * before any auth refresh (see proxy matcher: auth/callback is excluded separately).
+ */
+function redirectOAuthCodeToCallback(request: NextRequest): NextResponse | null {
+  const code = request.nextUrl.searchParams.get('code');
+  if (!code) return null;
+
+  const callbackUrl = request.nextUrl.clone();
+  callbackUrl.pathname = '/auth/callback';
+  callbackUrl.searchParams.set('code', code);
+  callbackUrl.searchParams.set(
+    'next',
+    sanitizeRedirectPath(request.nextUrl.searchParams.get('next')),
+  );
+  return NextResponse.redirect(callbackUrl);
+}
+
 export async function proxy(request: Request) {
-  return await updateSession(request as import('next/server').NextRequest);
+  const nextRequest = request as NextRequest;
+  const oauthRedirect = redirectOAuthCodeToCallback(nextRequest);
+  if (oauthRedirect) return oauthRedirect;
+
+  return await updateSession(nextRequest);
 }
 
 export const config = {

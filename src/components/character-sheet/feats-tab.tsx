@@ -1,31 +1,21 @@
 /**
- * Feats Tab Component - Refactored
- * =================================
+ * Feats Tab Component
+ * ===================
  * Combined view of traits and feats for the character sheet.
- * Uses unified components: SectionHeader, ListHeader, GridListRow
- * 
- * Sections:
- * - Traits (no + button - species/ancestry granted)
- * - Archetype Feats (+)
- * - Character Feats (+)
- * - State Feats (+) - only shown if character has any
- * 
- * List Headers: Name, Description (truncated), Uses, Recovery
+ * List rendering via FeatsTraitsListSection (entity-library-sections).
  */
 
 'use client';
 
-import { useMemo, useState, useCallback } from 'react';
-import { SectionHeader, ListHeader, GridListRow, DecrementButton, IncrementButton } from '@/components/shared';
+import { useMemo, useState, useCallback, type ReactNode } from 'react';
+import { FeatsTraitsListSection } from '@/components/shared';
 import type { ChipData } from '@/components/shared/grid-list-row';
-import type { SortState, ListColumn } from '@/components/shared';
+import type { SortState } from '@/components/shared';
+import { DecrementButton, IncrementButton } from '@/components/shared';
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 import { cn } from '@/lib/utils';
 import { buildFeatLevelChips, getFeatFamilyId, getFeatLevel, formatFeatName } from '@/lib/leveled-feats';
-
-// =============================================================================
-// Types
-// =============================================================================
+import { mapTraitRows, mapFeatRows, type FeatRowContext } from './library-feat-rows';
 
 interface TraitData {
   name: string;
@@ -34,7 +24,6 @@ interface TraitData {
   recoveryPeriod?: string;
 }
 
-/** Codex trait shape for FeatsTab */
 interface CodexTrait {
   id: string;
   name: string;
@@ -43,17 +32,16 @@ interface CodexTrait {
   rec_period?: string;
 }
 
-/** Codex feat shape for FeatsTab */
 interface CodexFeat {
   id: string;
   name: string;
   description?: string;
   effect?: string;
   max_uses?: number;
-  uses_per_rec?: number; // Canonical field from API
+  uses_per_rec?: number;
   rec_period?: string;
   category?: string;
-  feat_lvl?: number; // Level of feat (1, 2, 3…); used for "Name (Level N)" display
+  feat_lvl?: number;
   base_feat_id?: string;
 }
 
@@ -91,13 +79,11 @@ interface FeatsTabProps {
   archetypeFeats?: FeatData[];
   characterFeats?: FeatData[];
   stateFeats?: FeatData[];
-  /** State uses: current remaining this recovery (max = proficiency); restored on full recovery */
   stateUsesCurrent?: number;
   stateUsesMax?: number;
   onStateUsesChange?: (delta: number) => void;
   onEnterState?: () => void;
   isEditMode?: boolean;
-  /** When true, show add/remove and current/max; when false, hide add/remove (library not in edit) */
   showEditControls?: boolean;
   maxArchetypeFeats?: number;
   maxCharacterFeats?: number;
@@ -108,68 +94,6 @@ interface FeatsTabProps {
   onAddStateFeat?: () => void;
   onRemoveFeat?: (featId: string, featName?: string) => void;
 }
-
-// =============================================================================
-// Column Definitions
-// =============================================================================
-
-const TRAIT_COLUMNS: ListColumn[] = [
-  { key: 'name', label: 'Name', width: 'minmax(140px, 1.6fr)' },
-  { key: 'description', label: 'Description', width: '2.5fr', sortable: false },
-  { key: 'uses', label: 'Uses', width: '5rem', align: 'center' },
-  { key: 'recovery', label: 'Recovery', width: '4rem', align: 'center' },
-];
-
-const TRAIT_GRID = 'minmax(140px, 1.6fr) 2.5fr 5rem 4rem';
-/** When uses/recovery are null, description spans Description+Uses+Recovery columns (same grid, one cell spans 3) */
-const DESCRIPTION_EXTENDED_TRUNCATE = 220;
-
-const FEAT_COLUMNS: ListColumn[] = [
-  { key: 'name', label: 'Name', width: 'minmax(140px, 1.6fr)' },
-  { key: 'description', label: 'Description', width: '2.5fr', sortable: false },
-  { key: 'uses', label: 'Uses', width: '5rem', align: 'center' },
-  { key: 'recovery', label: 'Recovery', width: '4rem', align: 'center' },
-];
-
-const FEAT_GRID = 'minmax(140px, 1.6fr) 2.5fr 5rem 4rem';
-
-// =============================================================================
-// Helper: Truncate description for collapsed view
-// =============================================================================
-
-function truncateText(text: string | undefined, maxLength: number = 80): string {
-  if (!text) return '';
-  if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength).trim() + '...';
-}
-
-// =============================================================================
-// Helper: Format recovery period abbreviation (PR = Partial, FR = Full)
-// =============================================================================
-
-function formatRecoveryAbbrev(recovery: string | undefined): string {
-  if (!recovery) return '';
-  const lower = recovery.toLowerCase();
-  if (lower.includes('partial')) return 'PR';
-  if (lower.includes('full')) return 'FR';
-  if (lower.includes('short')) return 'SR';
-  if (lower.includes('long')) return 'LR';
-  return '';
-}
-
-// Helper: Format uses with recovery suffix (e.g., "2/3 PR" or empty if no uses)
-function formatUsesWithRecovery(
-  uses: { current: number; max: number } | undefined,
-  recovery: string | undefined
-): string {
-  if (!uses || uses.max === 0) return '';
-  const recAbbrev = formatRecoveryAbbrev(recovery);
-  return recAbbrev ? `${uses.current}/${uses.max} ${recAbbrev}` : `${uses.current}/${uses.max}`;
-}
-
-// =============================================================================
-// Main Component
-// =============================================================================
 
 export function FeatsTab({
   ancestry,
@@ -186,7 +110,7 @@ export function FeatsTab({
   stateUsesMax = 0,
   onStateUsesChange,
   onEnterState,
-  isEditMode = false,
+  isEditMode: _isEditMode = false,
   showEditControls = false,
   maxArchetypeFeats,
   maxCharacterFeats,
@@ -197,22 +121,24 @@ export function FeatsTab({
   onAddStateFeat,
   onRemoveFeat,
 }: FeatsTabProps) {
-  const archetypeCount = archetypeFeats.length;
-  const characterCount = characterFeats.length;
-  const getFeatLevel = useCallback((feat: FeatData): number => {
-    const dbFeat = featsDb.find(f => String(f.id) === String(feat.id));
-    return dbFeat?.feat_lvl != null && dbFeat.feat_lvl > 0 ? dbFeat.feat_lvl : 1;
-  }, [featsDb]);
+  const getFeatLevelForCharacter = useCallback(
+    (feat: FeatData): number => {
+      const dbFeat = featsDb.find((f) => String(f.id) === String(feat.id));
+      return dbFeat?.feat_lvl != null && dbFeat.feat_lvl > 0 ? dbFeat.feat_lvl : 1;
+    },
+    [featsDb]
+  );
   const usedArchetypeSlots = useMemo(
-    () => archetypeFeats.reduce((sum, feat) => sum + getFeatLevel(feat), 0),
-    [archetypeFeats, getFeatLevel]
+    () => archetypeFeats.reduce((sum, feat) => sum + getFeatLevelForCharacter(feat), 0),
+    [archetypeFeats, getFeatLevelForCharacter]
   );
   const usedCharacterSlots = useMemo(
-    () => characterFeats.reduce((sum, feat) => sum + getFeatLevel(feat), 0),
-    [characterFeats, getFeatLevel]
+    () => characterFeats.reduce((sum, feat) => sum + getFeatLevelForCharacter(feat), 0),
+    [characterFeats, getFeatLevelForCharacter]
   );
   const archetypeOver = maxArchetypeFeats !== undefined && usedArchetypeSlots > maxArchetypeFeats;
   const characterOver = maxCharacterFeats !== undefined && usedCharacterSlots > maxCharacterFeats;
+
   const featLevelsByFamily = useMemo(() => {
     const map = new Map<string, CodexFeat[]>();
     featsDb.forEach((feat) => {
@@ -224,121 +150,103 @@ export function FeatsTab({
     return map;
   }, [featsDb]);
 
-  const getFeatLevelDetailSections = useCallback((featId: string | number) => {
-    const feat = featsDb.find((f) => String(f.id) === String(featId));
-    if (!feat) return undefined;
-    const family = featLevelsByFamily.get(getFeatFamilyId(feat)) || [];
-    const chips = buildFeatLevelChips(family, feat.id);
-    if (chips.length === 0) return undefined;
-    return [{ label: 'Feat Levels', chips }] as Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }>;
-  }, [featsDb, featLevelsByFamily]);
+  const getFeatLevelDetailSections = useCallback(
+    (featId: string | number) => {
+      const feat = featsDb.find((f) => String(f.id) === String(featId));
+      if (!feat) return undefined;
+      const family = featLevelsByFamily.get(getFeatFamilyId(feat)) || [];
+      const chips = buildFeatLevelChips(family, feat.id);
+      if (chips.length === 0) return undefined;
+      return [{ label: 'Feat Levels', chips }] as Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }>;
+    },
+    [featsDb, featLevelsByFamily]
+  );
 
-  // Sort state for each section
   const [traitSort, setTraitSort] = useState<SortState>({ col: 'name', dir: 1 });
   const [archetypeFeatSort, setArchetypeFeatSort] = useState<SortState>({ col: 'name', dir: 1 });
   const [characterFeatSort, setCharacterFeatSort] = useState<SortState>({ col: 'name', dir: 1 });
   const [stateFeatSort, setStateFeatSort] = useState<SortState>({ col: 'name', dir: 1 });
 
-  // Enrich trait with Codex data
-  const enrichTrait = useCallback((traitNameOrId: string) => {
-    let dbTrait = traitsDb.find(t => String(t.name ?? '').toLowerCase() === String(traitNameOrId ?? '').toLowerCase());
-    if (!dbTrait) {
-      dbTrait = traitsDb.find(t => t.id === traitNameOrId);
-    }
-    return {
-      name: dbTrait?.name || traitNameOrId,
-      description: dbTrait?.description,
-      maxUses: dbTrait?.uses_per_rec ?? 0,
-      recoveryPeriod: dbTrait?.rec_period,
-    };
-  }, [traitsDb]);
+  const enrichTrait = useCallback(
+    (traitNameOrId: string) => {
+      let dbTrait = traitsDb.find(
+        (t) => String(t.name ?? '').toLowerCase() === String(traitNameOrId ?? '').toLowerCase()
+      );
+      if (!dbTrait) {
+        dbTrait = traitsDb.find((t) => t.id === traitNameOrId);
+      }
+      return {
+        name: dbTrait?.name || traitNameOrId,
+        description: dbTrait?.description,
+        maxUses: dbTrait?.uses_per_rec ?? 0,
+        recoveryPeriod: dbTrait?.rec_period,
+      };
+    },
+    [traitsDb]
+  );
 
-  // Enrich feat with codex data — derive name/description/maxUses/recovery/feat_lvl when not on character
-  const enrichFeat = useCallback((feat: FeatData) => {
-    let dbFeat = featsDb.find(f => f.id === String(feat.id));
-    if (!dbFeat) {
-      dbFeat = featsDb.find(f => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
-    }
-    const featLvl = dbFeat?.feat_lvl;
-    const name = feat.name || dbFeat?.name || String(feat.id);
-    const displayName = featLvl != null && featLvl > 1
-      ? formatFeatName({ id: String(feat.id ?? name), name, feat_lvl: featLvl })
-      : name;
-    return {
-      ...feat,
-      name: displayName,
-      description: feat.description || dbFeat?.description || dbFeat?.effect,
-      maxUses: feat.maxUses ?? dbFeat?.uses_per_rec ?? dbFeat?.max_uses ?? 0,
-      recovery: feat.recovery || dbFeat?.rec_period,
-    };
-  }, [featsDb]);
+  const enrichFeat = useCallback(
+    (feat: FeatData) => {
+      let dbFeat = featsDb.find((f) => f.id === String(feat.id));
+      if (!dbFeat) {
+        dbFeat = featsDb.find((f) => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
+      }
+      const featLvl = dbFeat?.feat_lvl;
+      const name = feat.name || dbFeat?.name || String(feat.id);
+      const displayName =
+        featLvl != null && featLvl > 1
+          ? formatFeatName({ id: String(feat.id ?? name), name, feat_lvl: featLvl })
+          : name;
+      return {
+        ...feat,
+        name: displayName,
+        description: feat.description || dbFeat?.description || dbFeat?.effect,
+        maxUses: feat.maxUses ?? dbFeat?.uses_per_rec ?? dbFeat?.max_uses ?? 0,
+        recovery: feat.recovery || dbFeat?.rec_period,
+      };
+    },
+    [featsDb]
+  );
 
-  // Category label for traits
-  const getCategoryLabel = (category: string) => {
-    if (category === 'species') return '';
-    return category.charAt(0).toUpperCase() + category.slice(1);
-  };
-
-  // Collect all traits with categories
   const allTraitsWithCategories = useMemo(() => {
     const result: { name: string; category: 'ancestry' | 'flaw' | 'characteristic' | 'species' }[] = [];
-    
-    // Species traits
+
     if (speciesTraitsFromCodex?.length) {
-      speciesTraitsFromCodex.forEach(name => {
-        result.push({ name, category: 'species' });
-      });
+      speciesTraitsFromCodex.forEach((name) => result.push({ name, category: 'species' }));
     } else if (vanillaTraits?.speciesTraits?.length) {
-      vanillaTraits.speciesTraits.forEach(name => {
-        result.push({ name, category: 'species' });
-      });
+      vanillaTraits.speciesTraits.forEach((name) => result.push({ name, category: 'species' }));
     }
-    
-    // Selected traits from new format
+
     if (ancestry?.selectedTraits?.length) {
-      ancestry.selectedTraits.forEach(name => {
-        result.push({ name, category: 'ancestry' });
-      });
+      ancestry.selectedTraits.forEach((name) => result.push({ name, category: 'ancestry' }));
     }
-    if (ancestry?.selectedFlaw) {
-      result.push({ name: ancestry.selectedFlaw, category: 'flaw' });
-    }
+    if (ancestry?.selectedFlaw) result.push({ name: ancestry.selectedFlaw, category: 'flaw' });
     if (ancestry?.selectedCharacteristic) {
       result.push({ name: ancestry.selectedCharacteristic, category: 'characteristic' });
     }
-    
-    // Vanilla format fallback
-    const hasNewFormat = 
-      (ancestry?.selectedTraits?.length ?? 0) > 0 ||
-      ancestry?.selectedFlaw ||
-      ancestry?.selectedCharacteristic;
-    
+
+    const hasNewFormat =
+      (ancestry?.selectedTraits?.length ?? 0) > 0 || ancestry?.selectedFlaw || ancestry?.selectedCharacteristic;
+
     if (!hasNewFormat && vanillaTraits) {
-      if (vanillaTraits.flawTrait) {
-        result.push({ name: vanillaTraits.flawTrait, category: 'flaw' });
-      }
+      if (vanillaTraits.flawTrait) result.push({ name: vanillaTraits.flawTrait, category: 'flaw' });
       if (vanillaTraits.characteristicTrait) {
         result.push({ name: vanillaTraits.characteristicTrait, category: 'characteristic' });
       }
       if (vanillaTraits.ancestryTraits?.length) {
-        vanillaTraits.ancestryTraits.forEach(name => {
-          result.push({ name, category: 'ancestry' });
-        });
+        vanillaTraits.ancestryTraits.forEach((name) => result.push({ name, category: 'ancestry' }));
       }
     }
-    
+
     return result;
   }, [ancestry, vanillaTraits, speciesTraitsFromCodex]);
 
-  // Process and sort traits
   const processedTraits = useMemo(() => {
-    const enriched = allTraitsWithCategories.map(t => ({
+    const enriched = allTraitsWithCategories.map((t) => ({
       ...t,
       ...enrichTrait(t.name),
     }));
-    
-    // Add legacy traits
-    traits.forEach(trait => {
+    traits.forEach((trait) => {
       const e = enrichTrait(trait.name);
       enriched.push({
         name: e.name,
@@ -348,405 +256,192 @@ export function FeatsTab({
         category: 'species' as const,
       });
     });
-    
     return sortByColumn(enriched, traitSort);
   }, [allTraitsWithCategories, traits, enrichTrait, traitSort]);
 
-  // Process and sort archetype feats
-  const processedArchetypeFeats = useMemo(() => {
-    const enriched = archetypeFeats.map(enrichFeat);
-    return sortByColumn(enriched, archetypeFeatSort);
-  }, [archetypeFeats, enrichFeat, archetypeFeatSort]);
+  const processedArchetypeFeats = useMemo(
+    () => sortByColumn(archetypeFeats.map(enrichFeat), archetypeFeatSort),
+    [archetypeFeats, enrichFeat, archetypeFeatSort]
+  );
+  const processedCharacterFeats = useMemo(
+    () => sortByColumn(characterFeats.map(enrichFeat), characterFeatSort),
+    [characterFeats, enrichFeat, characterFeatSort]
+  );
+  const processedStateFeats = useMemo(
+    () =>
+      sortByColumn(
+        stateFeats.map((f) => ({ ...enrichFeat(f), stateType: f.type || 'character' })),
+        stateFeatSort
+      ),
+    [stateFeats, enrichFeat, stateFeatSort]
+  );
 
-  // Process and sort character feats
-  const processedCharacterFeats = useMemo(() => {
-    const enriched = characterFeats.map(enrichFeat);
-    return sortByColumn(enriched, characterFeatSort);
-  }, [characterFeats, enrichFeat, characterFeatSort]);
+  const featRowContext = useMemo<FeatRowContext>(
+    () => ({
+      showEditControls,
+      traitUses,
+      onTraitUsesChange,
+      onFeatUsesChange,
+      onRemoveFeat,
+      getFeatLevelDetailSections,
+    }),
+    [showEditControls, traitUses, onTraitUsesChange, onFeatUsesChange, onRemoveFeat, getFeatLevelDetailSections]
+  );
 
-  // Process and sort state feats
-  const processedStateFeats = useMemo(() => {
-    const enriched = stateFeats.map(f => ({
-      ...enrichFeat(f),
-      stateType: f.type || 'character',
-    }));
-    return sortByColumn(enriched, stateFeatSort);
-  }, [stateFeats, enrichFeat, stateFeatSort]);
+  const traitRows = useMemo(() => mapTraitRows(processedTraits, featRowContext), [processedTraits, featRowContext]);
+  const archetypeFeatRows = useMemo(
+    () => mapFeatRows(processedArchetypeFeats, featRowContext),
+    [processedArchetypeFeats, featRowContext]
+  );
+  const characterFeatRows = useMemo(
+    () => mapFeatRows(processedCharacterFeats, featRowContext),
+    [processedCharacterFeats, featRowContext]
+  );
+  const stateFeatRows = useMemo(
+    () =>
+      mapFeatRows(
+        processedStateFeats.map(({ stateType, ...feat }) => feat),
+        featRowContext
+      ).map((row, index) => ({
+        ...row,
+        badges: [
+          {
+            label: processedStateFeats[index]?.stateType === 'archetype' ? 'Archetype' : 'Character',
+            color: 'blue' as const,
+          },
+        ],
+      })),
+    [processedStateFeats, featRowContext]
+  );
 
-  const hasTraits = processedTraits.length > 0;
-  const hasArchetypeFeats = processedArchetypeFeats.length > 0;
-  const hasCharacterFeats = processedCharacterFeats.length > 0;
-  const hasStateFeats = processedStateFeats.length > 0;
+  const hasTraits = traitRows.length > 0;
+  const hasArchetypeFeats = archetypeFeatRows.length > 0;
+  const hasCharacterFeats = characterFeatRows.length > 0;
+  const hasStateFeats = stateFeatRows.length > 0;
+
+  const stateHeaderRight: ReactNode =
+    stateUsesMax > 0 ? (
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1">
+          {onStateUsesChange ? (
+            <>
+              <DecrementButton
+                onClick={() => onStateUsesChange(-1)}
+                disabled={(stateUsesCurrent ?? stateUsesMax) <= 0}
+                size="sm"
+              />
+              <span className="min-w-[2.5rem] text-center text-sm font-medium tabular-nums">
+                {stateUsesCurrent ?? stateUsesMax}/{stateUsesMax}
+              </span>
+              <IncrementButton
+                onClick={() => onStateUsesChange(1)}
+                disabled={(stateUsesCurrent ?? stateUsesMax) >= stateUsesMax}
+                size="sm"
+              />
+            </>
+          ) : (
+            <span className="text-sm font-medium tabular-nums">
+              {stateUsesCurrent ?? stateUsesMax}/{stateUsesMax}
+            </span>
+          )}
+        </div>
+        {onEnterState && (
+          <button
+            type="button"
+            onClick={onEnterState}
+            disabled={(stateUsesCurrent ?? stateUsesMax) <= 0}
+            className={cn(
+              'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+              (stateUsesCurrent ?? stateUsesMax) > 0
+                ? 'bg-primary-600 text-white hover:bg-primary-700 dark:bg-primary-100 dark:text-white dark:hover:bg-primary-50'
+                : 'bg-surface-alt text-text-muted dark:text-text-secondary cursor-not-allowed'
+            )}
+          >
+            Enter State
+          </button>
+        )}
+      </div>
+    ) : undefined;
 
   return (
     <div className="space-y-6">
-      {/* Traits Section */}
-      <div>
-        <SectionHeader title="Traits" />
-        {hasTraits && (
-          <ListHeader
-            columns={TRAIT_COLUMNS}
-            gridColumns={TRAIT_GRID}
-            sortState={traitSort}
-            onSort={(col) => setTraitSort(toggleSort(traitSort, col))}
-          />
-        )}
-        {hasTraits ? (
-          <div className="space-y-1">
-            {processedTraits.map((trait, index) => {
-              const uses = trait.maxUses > 0 ? {
-                current: traitUses[trait.name] ?? trait.maxUses,
-                max: trait.maxUses,
-              } : undefined;
-              const categoryLabel = trait.category ? getCategoryLabel(trait.category) : undefined;
-              const usesStepper = uses && onTraitUsesChange ? (
-                <div className="flex items-center justify-center gap-1">
-                  <DecrementButton
-                    onClick={() => onTraitUsesChange(trait.name, -1)}
-                    disabled={uses.current <= 0}
-                    size="sm"
-                  />
-                  <span className="min-w-[2.5rem] text-center text-sm font-medium tabular-nums">
-                    {uses.current}/{uses.max}
-                  </span>
-                  <IncrementButton
-                    onClick={() => onTraitUsesChange(trait.name, 1)}
-                    disabled={uses.current >= uses.max}
-                    size="sm"
-                  />
-                </div>
-              ) : uses ? (
-                <span className="text-sm text-text-secondary">{uses.current}/{uses.max}</span>
-              ) : '-';
-              const recoveryDisplay = formatRecoveryAbbrev(trait.recoveryPeriod) || '-';
-              const noUsesOrRecovery = !uses && recoveryDisplay === '-';
-              return (
-                <GridListRow
-                  key={`${trait.category}-${index}`}
-                  id={`${trait.category}-${index}`}
-                  name={trait.name}
-                  description={trait.description}
-                  gridColumns={TRAIT_GRID}
-                  columns={noUsesOrRecovery
-                    ? [{ key: 'description', value: truncateText(trait.description, DESCRIPTION_EXTENDED_TRUNCATE), hideOnMobile: true }]
-                    : [
-                        { key: 'description', value: truncateText(trait.description, uses ? 60 : 100), hideOnMobile: true },
-                        { key: 'uses', value: usesStepper ?? '-', align: 'center' },
-                        { key: 'recovery', value: recoveryDisplay, align: 'center' },
-                      ]}
-                  columnSpans={noUsesOrRecovery ? [3] : undefined}
-                  badges={categoryLabel ? [{ label: categoryLabel, color: 'gray' }] : undefined}
-                  uses={uses}
-                  hideUsesInName={!!(uses && onTraitUsesChange)}
-                  onQuantityChange={undefined}
-                  compact
-                />
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">
-            No traits
-          </p>
-        )}
-      </div>
+      <FeatsTraitsListSection
+        title="Traits"
+        items={traitRows}
+        sortState={traitSort}
+        onSort={(col) => setTraitSort(toggleSort(traitSort, col))}
+        emptyMessage="No traits"
+      />
 
-      {/* Archetype Feats Section */}
-      <div>
-        <SectionHeader 
-          title="Archetype Feats" 
-          onAdd={showEditControls ? onAddArchetypeFeat : undefined}
-          addLabel="Add archetype feat"
-          rightContent={showEditControls && maxArchetypeFeats !== undefined ? (
-            <span className={cn('tabular-nums text-sm font-medium', archetypeOver && 'text-danger-600 dark:text-danger-400')}>
+      <FeatsTraitsListSection
+        title="Archetype Feats"
+        items={archetypeFeatRows}
+        onAdd={showEditControls ? onAddArchetypeFeat : undefined}
+        addLabel="Add archetype feat"
+        headerRightContent={
+          showEditControls && maxArchetypeFeats !== undefined ? (
+            <span
+              className={cn(
+                'tabular-nums text-sm font-medium',
+                archetypeOver && 'text-danger-600 dark:text-danger-400'
+              )}
+            >
               {usedArchetypeSlots}/{maxArchetypeFeats}
             </span>
-          ) : undefined}
-          addButtonClassName={archetypeOver ? 'text-danger-600 dark:text-danger-400 hover:text-danger-700 dark:hover:text-danger-300 hover:bg-danger-50 dark:hover:bg-danger-900/30' : undefined}
-        />
-        {hasArchetypeFeats && (
-          <ListHeader
-            columns={FEAT_COLUMNS}
-            gridColumns={FEAT_GRID}
-            rowChrome={{
-              delete: !!(showEditControls && onRemoveFeat),
-            }}
-            sortState={archetypeFeatSort}
-            onSort={(col) => setArchetypeFeatSort(toggleSort(archetypeFeatSort, col))}
-          />
-        )}
-        {hasArchetypeFeats ? (
-          <div className="space-y-1">
-            {processedArchetypeFeats.map((feat, index) => {
-              const uses = feat.maxUses > 0 ? {
-                current: feat.currentUses ?? feat.maxUses,
-                max: feat.maxUses,
-              } : undefined;
-              const featId = String(feat.id || index);
-              const usesStepper = uses && onFeatUsesChange ? (
-                <div className="flex items-center justify-center gap-1">
-                  <DecrementButton
-                    onClick={() => onFeatUsesChange(featId, -1)}
-                    disabled={uses.current <= 0}
-                    size="sm"
-                  />
-                  <span className="min-w-[2.5rem] text-center text-sm font-medium tabular-nums">
-                    {uses.current}/{uses.max}
-                  </span>
-                  <IncrementButton
-                    onClick={() => onFeatUsesChange(featId, 1)}
-                    disabled={uses.current >= uses.max}
-                    size="sm"
-                  />
-                </div>
-              ) : uses ? (
-                <span className="text-sm text-text-secondary">{uses.current}/{uses.max}</span>
-              ) : '-';
-              const recoveryDisplay = formatRecoveryAbbrev(feat.recovery) || '-';
-              const noUsesOrRecovery = !uses && recoveryDisplay === '-';
-              return (
-                <GridListRow
-                  key={feat.id || index}
-                  id={featId}
-                  name={feat.name}
-                  description={feat.description}
-                  gridColumns={FEAT_GRID}
-                  columns={noUsesOrRecovery
-                    ? [{ key: 'description', value: truncateText(feat.description, DESCRIPTION_EXTENDED_TRUNCATE), hideOnMobile: true }]
-                    : [
-                        { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
-                        { key: 'uses', value: usesStepper ?? '-', align: 'center' },
-                        { key: 'recovery', value: recoveryDisplay, align: 'center' },
-                      ]}
-                  columnSpans={noUsesOrRecovery ? [3] : undefined}
-                  detailSections={getFeatLevelDetailSections(featId)}
-                  uses={uses}
-                  hideUsesInName={!!(uses && onFeatUsesChange)}
-                  onQuantityChange={undefined}
-                  onDelete={showEditControls && onRemoveFeat 
-                    ? () => onRemoveFeat(featId, feat.name) 
-                    : undefined}
-                  compact
-                />
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">
-            No archetype feats selected
-          </p>
-        )}
-      </div>
+          ) : undefined
+        }
+        addButtonClassName={
+          archetypeOver
+            ? 'text-danger-600 dark:text-danger-400 hover:text-danger-700 dark:hover:text-danger-300 hover:bg-danger-50 dark:hover:bg-danger-900/30'
+            : undefined
+        }
+        sortState={archetypeFeatSort}
+        onSort={(col) => setArchetypeFeatSort(toggleSort(archetypeFeatSort, col))}
+        rowChrome={{ delete: !!(showEditControls && onRemoveFeat) }}
+        emptyMessage="No archetype feats selected"
+      />
 
-      {/* Character Feats Section */}
-      <div>
-        <SectionHeader 
-          title="Character Feats" 
-          onAdd={showEditControls ? onAddCharacterFeat : undefined}
-          addLabel="Add character feat"
-          rightContent={showEditControls && maxCharacterFeats !== undefined ? (
-            <span className={cn('tabular-nums text-sm font-medium', characterOver && 'text-danger-600 dark:text-danger-400')}>
+      <FeatsTraitsListSection
+        title="Character Feats"
+        items={characterFeatRows}
+        onAdd={showEditControls ? onAddCharacterFeat : undefined}
+        addLabel="Add character feat"
+        headerRightContent={
+          showEditControls && maxCharacterFeats !== undefined ? (
+            <span
+              className={cn(
+                'tabular-nums text-sm font-medium',
+                characterOver && 'text-danger-600 dark:text-danger-400'
+              )}
+            >
               {usedCharacterSlots}/{maxCharacterFeats}
             </span>
-          ) : undefined}
-          addButtonClassName={characterOver ? 'text-danger-600 dark:text-danger-400 hover:text-danger-700 dark:hover:text-danger-300 hover:bg-danger-50 dark:hover:bg-danger-900/30' : undefined}
-        />
-        {hasCharacterFeats && (
-          <ListHeader
-            columns={FEAT_COLUMNS}
-            gridColumns={FEAT_GRID}
-            rowChrome={{
-              delete: !!(showEditControls && onRemoveFeat),
-            }}
-            sortState={characterFeatSort}
-            onSort={(col) => setCharacterFeatSort(toggleSort(characterFeatSort, col))}
-          />
-        )}
-        {hasCharacterFeats ? (
-          <div className="space-y-1">
-            {processedCharacterFeats.map((feat, index) => {
-              const uses = feat.maxUses > 0 ? {
-                current: feat.currentUses ?? feat.maxUses,
-                max: feat.maxUses,
-              } : undefined;
-              const featId = String(feat.id || index);
-              const usesStepper = uses && onFeatUsesChange ? (
-                <div className="flex items-center justify-center gap-1">
-                  <DecrementButton
-                    onClick={() => onFeatUsesChange(featId, -1)}
-                    disabled={uses.current <= 0}
-                    size="sm"
-                  />
-                  <span className="min-w-[2.5rem] text-center text-sm font-medium tabular-nums">
-                    {uses.current}/{uses.max}
-                  </span>
-                  <IncrementButton
-                    onClick={() => onFeatUsesChange(featId, 1)}
-                    disabled={uses.current >= uses.max}
-                    size="sm"
-                  />
-                </div>
-              ) : uses ? (
-                <span className="text-sm text-text-secondary">{uses.current}/{uses.max}</span>
-              ) : '-';
-              const recoveryDisplay = formatRecoveryAbbrev(feat.recovery) || '-';
-              const noUsesOrRecovery = !uses && recoveryDisplay === '-';
-              return (
-                <GridListRow
-                  key={feat.id || index}
-                  id={featId}
-                  name={feat.name}
-                  description={feat.description}
-                  gridColumns={FEAT_GRID}
-                  columns={noUsesOrRecovery
-                    ? [{ key: 'description', value: truncateText(feat.description, DESCRIPTION_EXTENDED_TRUNCATE), hideOnMobile: true }]
-                    : [
-                        { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
-                        { key: 'uses', value: usesStepper ?? '-', align: 'center' },
-                        { key: 'recovery', value: recoveryDisplay, align: 'center' },
-                      ]}
-                  columnSpans={noUsesOrRecovery ? [3] : undefined}
-                  detailSections={getFeatLevelDetailSections(featId)}
-                  uses={uses}
-                  hideUsesInName={!!(uses && onFeatUsesChange)}
-                  onQuantityChange={undefined}
-                  onDelete={showEditControls && onRemoveFeat 
-                    ? () => onRemoveFeat(featId, feat.name) 
-                    : undefined}
-                  compact
-                />
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">
-            No character feats selected
-          </p>
-        )}
-      </div>
+          ) : undefined
+        }
+        addButtonClassName={
+          characterOver
+            ? 'text-danger-600 dark:text-danger-400 hover:text-danger-700 dark:hover:text-danger-300 hover:bg-danger-50 dark:hover:bg-danger-900/30'
+            : undefined
+        }
+        sortState={characterFeatSort}
+        onSort={(col) => setCharacterFeatSort(toggleSort(characterFeatSort, col))}
+        rowChrome={{ delete: !!(showEditControls && onRemoveFeat) }}
+        emptyMessage="No character feats selected"
+      />
 
-      {/* State Feats Section - only show if any exist */}
       {hasStateFeats && (
-        <div>
-          <SectionHeader 
-            title="State Feats" 
-            onAdd={showEditControls ? onAddStateFeat : undefined}
-            addLabel="Add state feat"
-            rightContent={
-              stateUsesMax > 0 ? (
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1">
-                    {onStateUsesChange ? (
-                      <>
-                        <DecrementButton
-                          onClick={() => onStateUsesChange(-1)}
-                          disabled={(stateUsesCurrent ?? stateUsesMax) <= 0}
-                          size="sm"
-                        />
-                        <span className="min-w-[2.5rem] text-center text-sm font-medium tabular-nums">
-                          {stateUsesCurrent ?? stateUsesMax}/{stateUsesMax}
-                        </span>
-                        <IncrementButton
-                          onClick={() => onStateUsesChange(1)}
-                          disabled={(stateUsesCurrent ?? stateUsesMax) >= stateUsesMax}
-                          size="sm"
-                        />
-                      </>
-                    ) : (
-                      <span className="text-sm font-medium tabular-nums">
-                        {stateUsesCurrent ?? stateUsesMax}/{stateUsesMax}
-                      </span>
-                    )}
-                  </div>
-                  {onEnterState && (
-                    <button
-                      type="button"
-                      onClick={onEnterState}
-                      disabled={(stateUsesCurrent ?? stateUsesMax) <= 0}
-                      className={cn(
-                        'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
-                        (stateUsesCurrent ?? stateUsesMax) > 0
-                          ? 'bg-primary-600 text-white hover:bg-primary-700 dark:bg-primary-100 dark:text-white dark:hover:bg-primary-50'
-                          : 'bg-surface-alt text-text-muted dark:text-text-secondary cursor-not-allowed'
-                      )}
-                    >
-                      Enter State
-                    </button>
-                  )}
-                </div>
-              ) : undefined
-            }
-          />
-          <ListHeader
-            columns={FEAT_COLUMNS}
-            gridColumns={FEAT_GRID}
-            rowChrome={{
-              delete: !!(showEditControls && onRemoveFeat),
-            }}
-            sortState={stateFeatSort}
-            onSort={(col) => setStateFeatSort(toggleSort(stateFeatSort, col))}
-          />
-          <div className="space-y-1">
-            {processedStateFeats.map((feat, index) => {
-              const uses = feat.maxUses > 0 ? {
-                current: feat.currentUses ?? feat.maxUses,
-                max: feat.maxUses,
-              } : undefined;
-              const featId = String(feat.id || index);
-              const typeLabel = feat.stateType === 'archetype' ? 'Archetype' : 'Character';
-              const usesStepper = uses && onFeatUsesChange ? (
-                <div className="flex items-center justify-center gap-1">
-                  <DecrementButton
-                    onClick={() => onFeatUsesChange(featId, -1)}
-                    disabled={uses.current <= 0}
-                    size="sm"
-                  />
-                  <span className="min-w-[2.5rem] text-center text-sm font-medium tabular-nums">
-                    {uses.current}/{uses.max}
-                  </span>
-                  <IncrementButton
-                    onClick={() => onFeatUsesChange(featId, 1)}
-                    disabled={uses.current >= uses.max}
-                    size="sm"
-                  />
-                </div>
-              ) : uses ? (
-                <span className="text-sm text-text-secondary">{uses.current}/{uses.max}</span>
-              ) : '-';
-              const recoveryDisplay = formatRecoveryAbbrev(feat.recovery) || '-';
-              const noUsesOrRecovery = !uses && recoveryDisplay === '-';
-              return (
-                <GridListRow
-                  key={feat.id || index}
-                  id={featId}
-                  name={feat.name}
-                  description={feat.description}
-                  gridColumns={FEAT_GRID}
-                  columns={noUsesOrRecovery
-                    ? [{ key: 'description', value: truncateText(feat.description, DESCRIPTION_EXTENDED_TRUNCATE), hideOnMobile: true }]
-                    : [
-                        { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
-                        { key: 'uses', value: usesStepper ?? '-', align: 'center' },
-                        { key: 'recovery', value: recoveryDisplay, align: 'center' },
-                      ]}
-                  columnSpans={noUsesOrRecovery ? [3] : undefined}
-                  badges={[{ label: typeLabel, color: 'blue' }]}
-                  detailSections={getFeatLevelDetailSections(featId)}
-                  uses={uses}
-                  hideUsesInName={!!(uses && onFeatUsesChange)}
-                  onQuantityChange={undefined}
-                  onDelete={showEditControls && onRemoveFeat 
-                    ? () => onRemoveFeat(featId, feat.name) 
-                    : undefined}
-                  compact
-                />
-              );
-            })}
-          </div>
-        </div>
+        <FeatsTraitsListSection
+          title="State Feats"
+          items={stateFeatRows}
+          onAdd={showEditControls ? onAddStateFeat : undefined}
+          addLabel="Add state feat"
+          headerRightContent={stateHeaderRight}
+          sortState={stateFeatSort}
+          onSort={(col) => setStateFeatSort(toggleSort(stateFeatSort, col))}
+          rowChrome={{ delete: !!(showEditControls && onRemoveFeat) }}
+        />
       )}
 
-      {/* Empty state */}
       {!hasTraits && !hasArchetypeFeats && !hasCharacterFeats && !hasStateFeats && (
         <div className="text-center py-8 text-text-muted dark:text-text-secondary">
           <p className="text-sm italic">No traits or feats to display</p>

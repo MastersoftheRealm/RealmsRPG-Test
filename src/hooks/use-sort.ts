@@ -8,7 +8,7 @@
  * Use toggleSort() and sortByColumn() for non-hook contexts.
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import type { SortState } from '@/components/shared/list-header';
 
 /**

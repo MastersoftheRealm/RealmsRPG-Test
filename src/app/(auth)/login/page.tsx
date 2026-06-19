@@ -16,6 +16,7 @@ import { hasGuestEncountersToMigrate, migrateGuestEncountersOnSignIn } from '@/l
 
 import { loginSchema, type LoginFormData } from '@/lib/validation';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
+import { resendConfirmationAction } from '@/app/(auth)/auth-actions';
 import { AuthCard, FormInput, PasswordInput, SocialButton } from '@/components/auth';
 import { Spinner } from '@/components/ui';
 import { Button, Alert } from '@/components/ui';
@@ -83,16 +84,9 @@ function LoginContent() {
     setResendStatus('sending');
     setError(null);
     try {
-      const supabase = createClient();
       const redirectPath = getRedirectPath();
-      const { error: resendError } = await supabase.auth.resend({
-        type: 'signup',
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(redirectPath)}`,
-        },
-      });
-      if (resendError) throw resendError;
+      const result = await resendConfirmationAction(email, redirectPath);
+      if (!result.success) throw new Error(result.error);
       setResendStatus('sent');
     } catch (e) {
       setResendStatus('idle');

@@ -148,7 +148,7 @@ export function RollProvider({
             // Own roll: Realtime can lag or not fire for the writer; refetch so Campaign tab updates immediately.
             void queryClient.invalidateQueries({ queryKey: ['campaign-rolls', cid] });
           })
-          .catch((err) => console.error('Failed to add campaign roll:', err));
+          .catch(() => {});
       });
     }
   }, [maxHistory, campaignContext, canRoll, queryClient]);
@@ -232,7 +232,6 @@ export function RollProvider({
     if (!canRoll) return;
     // Validate input is a string
     if (typeof damageStr !== 'string') {
-      console.warn('rollDamage called with non-string:', damageStr);
       return;
     }
     

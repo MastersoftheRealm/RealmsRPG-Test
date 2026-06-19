@@ -69,4 +69,6 @@ export interface CombatantCardProps {
   onDrop: (e: DragEvent<HTMLDivElement>) => void;
   /** Compact/quick-reference mode: ResourceInput-style HP/EN, no damage/heal buttons, larger AP */
   variant?: 'full' | 'compact';
+  /** When true, the logged-in user owns this linked character and may edit HP/EN/AP on the encounter card. */
+  canEditLinkedResources?: boolean;
 }

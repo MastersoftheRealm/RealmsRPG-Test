@@ -19,6 +19,8 @@ import {
   Alert,
   SearchInput,
   TabNavigation,
+  TabContentPanel,
+  useTabGroup,
   useToast,
 } from '@/components/ui';
 import { DeleteConfirmModal, HubListRow, ErrorDisplay } from '@/components/shared';
@@ -65,6 +67,7 @@ export default function CraftingHubPage() {
 }
 
 function CraftingHubContent() {
+  const { tabGroupId, sharedPanelId } = useTabGroup();
   const router = useRouter();
   const { user } = useAuth();
   const { showToast } = useToast();
@@ -174,9 +177,11 @@ function CraftingHubContent() {
         }))}
         activeTab={activeTab}
         onTabChange={(id) => setActiveTab(id as TabId)}
+        tabGroupId={tabGroupId}
+        sharedTabPanelId={sharedPanelId}
       />
 
-      <div className="mt-6">
+      <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab} className="mt-6">
         <div className="flex flex-wrap items-center gap-3 mb-4 min-w-0">
           <div className="flex-1 min-w-[200px]">
             <SearchInput
@@ -246,7 +251,7 @@ function CraftingHubContent() {
             ))}
           </div>
         )}
-      </div>
+      </TabContentPanel>
 
       {deleteTarget && (
         <DeleteConfirmModal

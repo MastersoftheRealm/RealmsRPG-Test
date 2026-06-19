@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, Cloud, CloudOff, Swords, Brain } from 'lucide-react';
 import { PageContainer, LoadingState, Alert, useToast } from '@/components/ui';
-import { ContextHelpTooltip, SegmentedControl } from '@/components/shared';
+import { SegmentedControl } from '@/components/shared';
 import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
 import { RollProvider, RollLog } from '@/components/character-sheet';
 import type { Encounter } from '@/types/encounter';
@@ -78,8 +78,7 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
     },
     delay: 1500,
     enabled: isInitialized && !!encounter,
-    onSaveError: (err) => {
-      console.error('Encounter save failed:', err);
+    onSaveError: () => {
       showToast('Failed to save encounter. Your latest changes may not be stored.', 'error');
     },
   });
@@ -127,11 +126,6 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
             <div>
               <h1 className="text-3xl font-bold text-text-primary">{encounter.name}</h1>
               <div className="mt-1">
-                <ContextHelpTooltip
-                  tooltipKey="encounters.mixed.headerHelp"
-                  scope="page:/encounters/[id]/mixed"
-                  label="Mixed encounter help"
-                />
               </div>
               <p className="text-text-secondary">
                 Mixed Encounter{encounter.description ? ` \u2014 ${encounter.description}` : ''}

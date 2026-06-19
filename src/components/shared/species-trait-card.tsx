@@ -237,7 +237,7 @@ export function SpeciesTraitCard({
                 )}
                 <span className={cn(
                   'text-xs font-medium min-w-[36px] text-center',
-                  usesRemaining === 0 ? 'text-danger-600 dark:text-danger-400' : 'text-text-secondary'
+                  usesRemaining === 0 ? 'text-danger-700 dark:text-danger-400' : 'text-text-secondary'
                 )}>
                   {usesRemaining}/{maxUses}
                 </span>

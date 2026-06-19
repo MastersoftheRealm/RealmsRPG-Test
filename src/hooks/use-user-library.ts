@@ -10,6 +10,7 @@
 import { useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient, UseQueryResult, UseMutationResult } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth-store';
+import { apiFetch } from '@/lib/api-client';
 import { useCodexSpecies } from './use-codex';
 import type { Species } from './codex-types';
 
@@ -168,9 +169,21 @@ const API_BASE = '/api/user/library';
 
 async function fetchLibrary<T>(type: string, userId: string): Promise<T[]> {
   if (!userId) return [];
-  const res = await fetch(`${API_BASE}/${type}`);
-  if (!res.ok) throw new Error('Failed to fetch');
-  return res.json();
+  return apiFetch<T[]>(`${API_BASE}/${type}`);
+}
+
+async function deleteLibraryItem(type: string, docId: string): Promise<void> {
+  await apiFetch(`${API_BASE}/${type}/${encodeURIComponent(docId)}`, {
+    method: 'DELETE',
+  });
+}
+
+async function duplicateLibraryItem(type: string, docId: string): Promise<string> {
+  const result = await apiFetch<{ id: string }>(`${API_BASE}/${type}`, {
+    method: 'POST',
+    body: JSON.stringify({ duplicateOf: docId }),
+  });
+  return result.id;
 }
 
 // =============================================================================
@@ -247,14 +260,15 @@ export function useUserCreatures(options?: { enabled?: boolean }): UseQueryResul
   });
 }
 
-export function useUserSpecies(): UseQueryResult<UserSpecies[], Error> {
+export function useUserSpecies(options?: { enabled?: boolean }): UseQueryResult<UserSpecies[], Error> {
   const { user } = useAuthStore();
   const userId = user?.uid || '';
+  const enabled = options?.enabled ?? true;
 
   return useQuery({
     queryKey: QUERY_KEYS.userSpecies(userId),
     queryFn: () => fetchLibrary<UserSpecies>('species', userId),
-    enabled: !!userId,
+    enabled: enabled && !!userId,
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
@@ -328,34 +342,6 @@ export function useMergedSpecies(): UseQueryResult<Species[], Error> {
       }) as unknown as UseQueryResult<Species[], Error>,
     [merged, isLoading, error, refetch]
   );
-}
-
-// =============================================================================
-// Mutations
-// =============================================================================
-
-async function deleteLibraryItem(type: string, docId: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/${type}/${encodeURIComponent(docId)}`, {
-    method: 'DELETE',
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error((err as { error?: string }).error ?? 'Delete failed');
-  }
-}
-
-async function duplicateLibraryItem(type: string, docId: string): Promise<string> {
-  const res = await fetch(`${API_BASE}/${type}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ duplicateOf: docId }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error((err as { error?: string }).error ?? 'Duplicate failed');
-  }
-  const result = await res.json();
-  return (result as { id: string }).id;
 }
 
 // =============================================================================

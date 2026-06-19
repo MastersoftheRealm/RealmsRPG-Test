@@ -9,26 +9,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
-import { removeUndefined } from '@/lib/utils/object';
 import { validateJson, characterUpdateSchema } from '@/lib/api-validation';
+import { prepareCharacterForSave } from '@/lib/character-save';
 import { standardLimiter } from '@/lib/rate-limit';
 import { getOwnerLibraryForView } from '@/lib/owner-library-for-view';
 import { getCharacterListColumns } from '@/lib/character-list-columns';
+import { fetchArchetypeNameMap } from '@/lib/game/archetype-display';
 import type { Character, CharacterVisibility } from '@/types';
-
-function prepareForSave(data: Partial<Character>): Record<string, unknown> {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { id, createdAt, updatedAt, ...dataToSave } = data;
-
-  const cleaned = { ...dataToSave } as Record<string, unknown>;
-  delete cleaned._displayFeats;
-  delete cleaned.allTraits;
-  delete cleaned.defenses;
-  delete cleaned.defenseBonuses;
-
-  cleaned.updatedAt = new Date().toISOString();
-  return removeUndefined(cleaned);
-}
 
 type CharRow = { id: string; user_id: string; data: unknown; created_at: string | null; updated_at: string | null };
 
@@ -141,7 +128,7 @@ export async function PATCH(
     const validation = await validateJson(request, characterUpdateSchema);
     if (!validation.success) return validation.error;
     const data = validation.data as Partial<Character>;
-    const cleanedData = prepareForSave(data);
+    const cleanedData = prepareCharacterForSave(data);
 
     const supabase = await createClient();
     const { data: existing } = await supabase
@@ -157,7 +144,8 @@ export async function PATCH(
 
     const currentData = (existing.data as Record<string, unknown>) ?? {};
     const mergedData = { ...currentData, ...cleanedData };
-    const listCols = getCharacterListColumns(mergedData);
+    const archetypeNameById = await fetchArchetypeNameMap(supabase);
+    const listCols = getCharacterListColumns(mergedData, { archetypeNameById });
 
     const { error: updateErr } = await supabase
       .from('characters')

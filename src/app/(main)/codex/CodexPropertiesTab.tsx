@@ -90,7 +90,8 @@ function PropertyCard({ property }: { property: ItemProperty }) {
 }
 
 export function CodexPropertiesTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  const { data: properties, isLoading, error, refetch } = useItemProperties();
+  const loadPublicCodex = codexMode === 'public';
+  const { data: properties, isLoading, error, refetch } = useItemProperties({ enabled: loadPublicCodex });
   const { sortState, handleSort } = useSort('name');
   const [filters, setFilters] = useState<PropertyFilters>({
     search: '',

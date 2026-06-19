@@ -413,6 +413,383 @@ Use **Forge Your Own** for tab-guard and validation tests unless the test title 
 
 ---
 
+## DEV-V-008 — Archetype path completion (TASK-366–374)
+
+Path-created characters: hydration, level-up guidance, sheet identity, public codex, creator apply actions, admin visibility. **Needs:** logged-in account; at least one codex archetype path with level-1 add recommendations and (optional) level-2+ row in admin.
+
+#### DEV-V-008-T001 — Sheet shows codex path name after reload
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Character sheet header |
+| **Related task** | TASK-366 |
+| **Where** | `/characters/[id]` |
+| **Needs** | Saved path character (`creationMode: path` or `archetypePathId` set) |
+
+**Steps**
+1. Open a path-created character sheet (header shows path name, not generic "Power"/"Martial" only).
+2. Hard refresh the page (F5).
+
+**Expected**
+- Header still shows the **codex path name** and **Archetype Path** badge after reload.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-008-T002 — Characters list shows path name column
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Characters list |
+| **Related task** | TASK-366 |
+| **Where** | `/characters` |
+| **Needs** | Same path character as T001 |
+
+**Steps**
+1. Go to **Characters**.
+2. Find the path character in the list.
+
+**Expected**
+- List **archetype** column shows the **path name** (not only generic type label).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-008-T003 — Level-up modal shows path progression guidance
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Level-up |
+| **Related task** | TASK-367 |
+| **Where** | Character sheet → adjust level up |
+| **Needs** | Path character; codex path has a `codex_archetype_levels` row for target level (e.g. level 2) |
+
+**Steps**
+1. Open path character sheet; open **Adjust Level** / level-up modal.
+2. Increase level to one that has progression data in admin (e.g. 1 → 2).
+
+**Expected**
+- Modal shows **path guidance** block with resolved recommendation names and/or admin notes for that level.
+- If no row exists for target level, shows graceful empty message (not an error).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-008-T004 — Level-up to 5 applies path proficiency floor
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Level-up proficiency |
+| **Related task** | TASK-368 |
+| **Where** | Character sheet → level-up |
+| **Needs** | Path with `power_prof_level5` and/or `martial_prof_level5` set in admin; character level 4 |
+
+**Steps**
+1. Note current Power/Martial prof on sheet.
+2. Level up from **4 → 5** via level-up modal.
+
+**Expected**
+- Prof values increase to at least admin level-5 targets (never reduced).
+- Success toast mentions path proficiency update when values change.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-008-T012 — Level ≥5 path character loads with prof floor applied
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Sheet load |
+| **Related task** | TASK-368 |
+| **Where** | `/characters/[id]` |
+| **Needs** | Path character already level ≥5 saved with prof below admin level-5 floor |
+
+**Steps**
+1. Open the character sheet (fresh load).
+
+**Expected**
+- Power/Martial prof on sheet are at least admin level-5 targets without requiring another level-up.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-008-T005 — Sheet path identity and admin notes (not player archetype desc)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Sheet header guidance |
+| **Related task** | TASK-369 |
+| **Where** | `/characters/[id]` |
+| **Needs** | Path with description and/or `level1_notes` in admin |
+
+**Steps**
+1. Open path character sheet header.
+2. Open **Notes** tab; check **Archetype** description field (player text).
+
+**Expected**
+- Header shows path description snippet and read-only **admin guidance** (level 1 / per-level notes).
+- Player **archetype description** in Notes tab remains separate and editable.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-008-T006 — Realms Codex Archetypes tab
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Public codex |
+| **Related task** | TASK-370 |
+| **Where** | `/codex` → **Archetypes** tab |
+| **Needs** | At least one visible path in codex |
+
+**Steps**
+1. Open **Realms Codex**.
+2. Select **Archetypes** tab.
+3. Expand a path row.
+
+**Expected**
+- Searchable list of paths with type and abilities columns.
+- Expanded row shows level 1 recommendations and level 2+ progression summaries.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-008-T007 — Optional remove lists in level-up and sheet guidance
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Remove guidance |
+| **Related task** | TASK-371 |
+| **Where** | Level-up modal + sheet header |
+| **Needs** | Path with `remove_*` lists for current or target level in admin |
+
+**Steps**
+1. Level up to a level with remove lists (or view sheet at that level).
+2. Read copy near remove lists.
+
+**Expected**
+- **Consider replacing or removing** section lists resolved names.
+- Copy states guidance is optional (nothing auto-removed).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-008-T008 — Edit Archetype modal path awareness
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Edit archetype |
+| **Related task** | TASK-372 |
+| **Where** | Sheet edit mode → edit archetype |
+| **Needs** | Path character; edit mode enabled |
+
+**Steps**
+1. Enable edit mode; open **Edit Archetype & Ability**.
+2. Observe path view (read-only identity).
+3. Click **Switch to Forge Your Own** or **Choose a Different Path**.
+
+**Expected**
+- Path characters see read-only path card (not forge type picker first).
+- Switch actions show **ConfirmActionModal** with data-loss warning before proceeding.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-008-T009 — Creator Apply recommended skills
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Creator skills |
+| **Related task** | TASK-373 |
+| **Where** | `/characters/new` → **5. Skills** (path mode) |
+| **Needs** | Path with level-1 skill recommendations |
+
+**Steps**
+1. Create path character through to **5. Skills**.
+2. Remove a recommended path skill if present.
+3. Click **Apply recommended skills**.
+
+**Expected**
+- Removed path skills are re-added as proficient (value 0).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-008-T010 — Creator auto/manual apply recommended feats
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Creator feats |
+| **Related task** | TASK-373 |
+| **Where** | `/characters/new` → **6. Feats** (path mode) |
+| **Needs** | Path with level-1 feat recommendations character qualifies for |
+
+**Steps**
+1. Reach **6. Feats** on a new path character.
+2. Confirm recommended feats appear selected when requirements met (first visit).
+3. Deselect one; click **Apply recommended feats**.
+
+**Expected**
+- Qualified recommended feats are selected again without blocking manual changes afterward.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-008-T011 — Admin warning for hidden path (notes-only level 1)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Admin codex |
+| **Related task** | TASK-374 |
+| **Where** | `/admin/codex` → Archetypes |
+| **Needs** | Admin account |
+
+**Steps**
+1. Edit or create an archetype path with **level 1 notes only** (no feats/skills/powers/techniques/armaments/equipment).
+2. Save.
+
+**Expected**
+- Warning toast: path will **not appear** in creator picker or public codex path list until add recommendations exist.
+- Save still succeeds.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375)
+
+Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats.
+
+#### DEV-V-009-T001 — Single library panel on mobile side-scroll
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-317, TASK-365 |
+| **Where** | `/characters/[id]` at ~360px width |
+| **Steps** | 1. Open character sheet on narrow viewport. 2. Swipe horizontally through Abilities → Skills → Archetype → Library. 3. Switch library tabs (Powers, Techniques, Inventory, Feats). |
+| **Expected** | One Library panel (not duplicated); tab choice persists when scrolling away and back; library tabs render lists. |
+| **Report** | DEV-V-009-T001: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T002 — Library edit controls (powers/techniques)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 |
+| **Task** | TASK-317 |
+| **Where** | `/characters/[id]` → Edit mode → Library → Powers or Techniques |
+| **Steps** | 1. Toggle edit mode. 2. Expand a power row. 3. Use Use button (if energy allows) or edit/delete if present. |
+| **Expected** | Action columns, part chips, use/innate/edit controls behave as before refactor. |
+| **Report** | DEV-V-009-T002: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T003 — Feats tab sections and slot counts
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 |
+| **Task** | TASK-317 |
+| **Where** | `/characters/[id]` → Library → Feats |
+| **Steps** | 1. View Traits, Archetype Feats, Character Feats sections. 2. In edit mode, confirm slot counts (e.g. 3/5). 3. If character has state feats, confirm Enter State + state uses in header. |
+| **Expected** | Four sections render via unified list rows; uses steppers on traits/feats with uses; over-budget slots show danger styling on add button. |
+| **Report** | DEV-V-009-T003: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T004 — Part/property chips show TP and option levels
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 |
+| **Task** | TASK-375 |
+| **Where** | `/characters/[id]` → Library → Powers or Techniques (expand row) |
+| **Steps** | 1. Expand a power/technique with leveled parts. 2. Check part chips for TP cost and Lv.X badge. 3. Compare TP total to add-library-item modal for same item if available. |
+| **Expected** | Part chips show description, TP, and max option level; technique Additional Damage TP matches calculator rules. |
+| **Report** | DEV-V-009-T004: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T005 — Context-driven sections (no prop-drill regression)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 |
+| **Task** | TASK-348 |
+| **Where** | `/characters/[id]` desktop layout |
+| **Steps** | 1. Edit abilities, skills, archetype proficiencies. 2. Save/reload page. 3. Confirm autosave indicator and values persist. |
+| **Expected** | Abilities/Skills/Archetype panels work via context; autosave and enrichment unchanged. |
+| **Report** | DEV-V-009-T005: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T006 — Add library item modal (all types)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 |
+| **Task** | TASK-318, TASK-349 |
+| **Where** | `/characters/[id]` → Edit → Library → Add on Powers, Techniques, Inventory |
+| **Steps** | 1. Open add modal for each type. 2. Toggle My Library / Realms Library source. 3. For powers, switch Powers vs Empowered mode. 4. Select item(s) and confirm Add Selected. |
+| **Expected** | Modal loads items, filters/sorts work, selection adds to sheet without duplicate IDs blocked; empowered powers use separate columns when in empowered mode. |
+| **Report** | DEV-V-009-T006: PASS / FAIL / SKIP — |
+
+---
+
+## DEV-V-005 — RLS policy consolidation (TASK-352, TASK-327)
+
+Manual QA after `sql/supabase-rls-consolidate-permissive-2026-06.sql`. **Needs:** two accounts (campaign owner + member), one campaign-visible character.
+
+#### DEV-V-005-T001 — Campaign join and member read
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-005 — RLS / DB migrations |
+| **Task** | TASK-352 |
+| **Where** | `/campaigns` · invite link or code |
+| **Steps** | 1. As member, join campaign via invite. 2. Confirm campaign appears in list. 3. Open campaign detail; confirm rolls and roster load. |
+| **Expected** | Join succeeds; member can read campaign row via consolidated SELECT (memberIds or campaign_members). |
+| **Report** | DEV-V-005-T001: PASS / FAIL / SKIP — |
+
+#### DEV-V-005-T002 — Campaign-shared character cross-read
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-005 |
+| **Task** | TASK-352 |
+| **Where** | `/campaigns/[id]/view/[userId]/[characterId]` or sheet link from campaign roster |
+| **Steps** | 1. Add character to campaign with visibility **campaign**. 2. As another campaign member, open that character sheet. |
+| **Expected** | Sheet loads (not 404); consolidated `characters_select_authenticated` allows read when on roster. |
+| **Report** | DEV-V-005-T002: PASS / FAIL / SKIP — |
+
+#### DEV-V-005-T003 — Admin role policies still editable
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-005 |
+| **Task** | TASK-352 |
+| **Where** | `/admin/roles` · **Needs:** admin account |
+| **Steps** | 1. Open admin roles page. 2. Change a quota for a non-admin role. 3. Save and reload page. |
+| **Expected** | Read works for all authenticated; admin INSERT/UPDATE/DELETE policies allow save without RLS error. |
+| **Report** | DEV-V-005-T003: PASS / FAIL / SKIP — |
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |

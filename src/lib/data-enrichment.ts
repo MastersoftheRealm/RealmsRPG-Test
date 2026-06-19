@@ -9,7 +9,7 @@ import type { CharacterPower, CharacterTechnique, Character } from '@/types';
 import { computeMaxHealthEnergy } from '@/lib/game/calculations';
 import type { UserPower, UserTechnique, UserItem, SavedDamage } from '@/hooks/use-user-library';
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
-import { derivePowerDisplay, deriveTechniqueDisplay, formatPowerDamage, formatTechniqueDamage, formatRange, deriveShieldAmountFromProperties, deriveShieldDamageFromProperties, deriveDamageReductionFromProperties } from '@/lib/calculators';
+import { derivePowerDisplay, deriveTechniqueDisplay, formatPowerDamage, formatRange, deriveShieldAmountFromProperties, deriveShieldDamageFromProperties, deriveDamageReductionFromProperties } from '@/lib/calculators';
 
 // =============================================================================
 // Types for Enriched Data
@@ -152,14 +152,6 @@ function deriveAbilityRequirementFromProperties(
     if (name.includes('Charisma Requirement')) return { name: 'Charisma', level };
   }
   return undefined;
-}
-
-/**
- * Get the name from a power/technique reference
- */
-function getReferenceName(ref: string | { name?: string; id?: string | number }): string {
-  if (typeof ref === 'string') return ref;
-  return ref?.name || String(ref?.id || '');
 }
 
 // =============================================================================

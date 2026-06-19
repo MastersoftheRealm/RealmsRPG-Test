@@ -10,11 +10,9 @@
 --   BAD:   user_id = auth.uid()::text
 --   BAD:   user_id = (auth.uid())::text   -- still per-row without outer SELECT
 --
--- OPTIONAL FOLLOW-UP (not applied here): advisor `multiple_permissive_policies`
--- on public.campaign_members, public.campaigns, public.characters, and
--- public.role_policies — consolidate overlapping permissive policies where
--- semantics are identical. Test campaign join, sheet cross-read, and admin
--- role-policy edits after any merge.
+-- FOLLOW-UP (TASK-352, applied 2026-06-18): duplicate permissive policies on
+-- campaign_members, campaigns, characters, role_policies — see
+-- sql/supabase-rls-consolidate-permissive-2026-06.sql
 --
 -- Unused indexes on empty official_enhanced_items are intentionally left alone;
 -- revisit after that table has production data.

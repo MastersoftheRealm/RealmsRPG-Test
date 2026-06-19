@@ -6,9 +6,10 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ArrowUp, ArrowDown, Star, Heart, Shield, Sword, Check } from 'lucide-react';
 import { Modal, Button } from '@/components/ui';
+import { PathLevelGuidance } from '@/components/character-sheet/path-level-guidance';
 import {
   calculateAbilityPoints,
   calculateSkillPointsForEntity,
@@ -25,6 +26,8 @@ interface LevelUpModalProps {
   isOpen: boolean;
   onClose: () => void;
   character: Character;
+  /** Codex-hydrated character for path guidance (name + path_data). Falls back to `character`. */
+  displayCharacter?: Character;
   onConfirm: (newLevel: number) => void;
 }
 
@@ -78,11 +81,18 @@ export function LevelUpModal({
   isOpen,
   onClose,
   character,
+  displayCharacter,
   onConfirm,
 }: LevelUpModalProps) {
   const currentLevel = character.level || 1;
   const maxLevel = 20; // Max level cap
   const [targetLevel, setTargetLevel] = useState(Math.min(maxLevel, currentLevel + 1));
+
+  useEffect(() => {
+    if (isOpen) {
+      setTargetLevel(Math.min(maxLevel, Math.max(1, currentLevel + 1)));
+    }
+  }, [isOpen, currentLevel, maxLevel]);
   
   const minLevel = 1;
   const isLevelChange = targetLevel !== currentLevel;
@@ -121,7 +131,14 @@ export function LevelUpModal({
   };
   
   const milestones = getMilestones();
-  
+
+  const pathCharacter = displayCharacter ?? character;
+  const showPathGuidance =
+    !isLevelDown &&
+    isLevelChange &&
+    (pathCharacter.creationMode === 'path' || Boolean(pathCharacter.archetypePathId)) &&
+    pathCharacter.archetype;
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Adjust Level" fullScreenOnMobile>
       <div className="space-y-6">
@@ -197,6 +214,14 @@ export function LevelUpModal({
             description="Archetype & Character"
           />
         </div>
+
+        {showPathGuidance && pathCharacter.archetype && (
+          <PathLevelGuidance
+            archetype={pathCharacter.archetype}
+            pathName={pathCharacter.archetype.name}
+            targetLevel={targetLevel}
+          />
+        )}
         
         {/* Confirm Button */}
         <div className="flex gap-3">

@@ -18,7 +18,7 @@ import { useSearchParams } from 'next/navigation';
 import { X, Plus, ChevronDown, ChevronUp, Shield, Sword, Target, Info, Coins } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useItemProperties, useAdmin, useCreatorSave, useLoadModalLibrary, type ItemProperty, type UserItem } from '@/hooks';
-import { ContextHelpTooltip, LoginPromptModal, ConfirmActionModal, ErrorDisplay } from '@/components/shared';
+import { LoginPromptModal, ConfirmActionModal, ErrorDisplay } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Alert, PageContainer } from '@/components/ui';
 import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout, CollapsibleSection, AdvancedCalculationsPanel } from '@/components/creator';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
@@ -248,7 +248,7 @@ function PropertyCard({
 // =============================================================================
 
 const RARITY_REFERENCE = [
-  { name: 'Common', ipRange: '0 – 4', baseCost: 25, color: 'text-text-primary bg-neutral-200 dark:bg-neutral-600 dark:text-neutral-100' },
+  { name: 'Common', ipRange: '0 – 4', baseCost: 25, color: 'text-text-primary bg-surface-alt dark:bg-surface-alt dark:text-text-primary' },
   { name: 'Uncommon', ipRange: '4 – 6', baseCost: 100, color: 'text-green-700 bg-green-100 dark:text-green-300 dark:bg-green-900/40' },
   { name: 'Rare', ipRange: '6 – 8', baseCost: 500, color: 'text-blue-700 bg-blue-100 dark:text-blue-300 dark:bg-blue-900/40' },
   { name: 'Epic', ipRange: '8 – 11', baseCost: 2500, color: 'text-power-text bg-power-light' },
@@ -434,8 +434,7 @@ function ItemCreatorContent() {
           localStorage.removeItem(ITEM_CREATOR_CACHE_KEY);
         }
       }
-    } catch (e) {
-      console.error('Failed to load item creator cache:', e);
+    } catch {
     }
     setIsInitialized(true);
   }, [itemProperties, isInitialized, editItemId]);
@@ -466,8 +465,7 @@ function ItemCreatorContent() {
         timestamp: Date.now(),
       };
       localStorage.setItem(ITEM_CREATOR_CACHE_KEY, JSON.stringify(cache));
-    } catch (e) {
-      console.error('Failed to save item creator cache:', e);
+    } catch {
     }
   }, [isInitialized, name, description, armamentType, selectedProperties, damage, isTwoHanded, rangeLevel, damageReduction, agilityReduction, criticalRangeIncrease, shieldDR, hasShieldDamage, shieldDamage, abilityRequirement]);
 
@@ -494,7 +492,6 @@ function ItemCreatorContent() {
     );
     editLoadedRef.current = true;
     if (!itemToEdit) {
-      console.warn(`Item with ID ${editItemId} not found in library`);
       setIsInitialized(true);
       return;
     }
@@ -929,8 +926,7 @@ function ItemCreatorContent() {
     // Clear localStorage cache
     try {
       localStorage.removeItem(ITEM_CREATOR_CACHE_KEY);
-    } catch (e) {
-      console.error('Failed to clear item creator cache:', e);
+    } catch {
     }
   }, [save]);
 
@@ -1054,12 +1050,6 @@ function ItemCreatorContent() {
       description="Design custom weapons, armor, and shields by combining item properties. Properties determine the item's rarity and cost."
       actions={
         <div className="flex items-center gap-2">
-          <ContextHelpTooltip
-            tooltipKey="creators.armament.headerHelp"
-            scope="page:/item-creator"
-            label="Armament creator help"
-            placement="left"
-          />
           <CreatorSaveToolbar
             saveTarget={save.saveTarget}
             onSaveTargetChange={save.setSaveTarget}

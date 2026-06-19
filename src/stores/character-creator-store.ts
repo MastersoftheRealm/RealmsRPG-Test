@@ -418,10 +418,18 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           // The feats step stores them with type: 'archetype' | 'character'
           archetypeFeats: (draft.feats || [])
             .filter((f: { type?: string }) => f.type !== 'character')
-            .map(({ type, ...rest }) => rest), // Remove the type field
+            .map((f) => {
+              const rest = { ...f };
+              delete (rest as { type?: string }).type;
+              return rest;
+            }),
           feats: (draft.feats || [])
             .filter((f: { type?: string }) => f.type === 'character')
-            .map(({ type, ...rest }) => rest), // Remove the type field
+            .map((f) => {
+              const rest = { ...f };
+              delete (rest as { type?: string }).type;
+              return rest;
+            }),
           powers: draft.powers || [],
           techniques: draft.techniques || [],
           equipment: equipment,

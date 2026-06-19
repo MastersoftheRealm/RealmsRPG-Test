@@ -10,7 +10,8 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { LoginPromptModal, ConfirmActionModal, ContextHelpTooltip, UnifiedSelectionModal, ItemCard, SkillRow, GridListRow, ListHeader, SourceFilter, AddSkillModal, AddSubSkillModal, InnateToggle, SegmentedControl } from '@/components/shared';
+import { LoginPromptModal, ConfirmActionModal, UnifiedSelectionModal, ItemCard, GridListRow, ListHeader, SourceFilter, InnateToggle, SegmentedControl, SkillsAllocationPage } from '@/components/shared';
+import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { useAuthStore } from '@/stores/auth-store';
 import {
@@ -104,14 +105,20 @@ import {
   ChipList,
   ExpandableChipList,
   AddItemDropdown,
-  DefenseBlock,
   displayItemToSelectableItem,
 } from './CreatureCreatorHelpers';
+import {
+  allocationsToCreatureSkills,
+  buildCreatureSelectableItem,
+  creatureSkillsToAllocations,
+  rawRecordToCreatureState,
+} from './creature-skill-utils';
 import type { SelectableItem } from '@/components/shared';
-import { LoadCreatureModal } from './LoadCreatureModal';
 
 type InventoryTab = 'all' | 'weapon' | 'armor' | 'shield' | 'equipment';
 type PowerModalTab = 'powers' | 'empowered';
+
+const EMPTY_SPECIES_SKILL_IDS = new Set<string>();
 
 function normalizeInventoryType(type: string | undefined): Exclude<InventoryTab, 'all'> {
   const normalized = String(type ?? '').toLowerCase().trim();
@@ -164,8 +171,7 @@ function CreatureCreatorContent() {
   const [showFeatModal, setShowFeatModal] = useState(false);
   const [showArmamentModal, setShowArmamentModal] = useState(false);
   const [showLoadModal, setShowLoadModal] = useState(false);
-  const [showAddSkillModal, setShowAddSkillModal] = useState(false);
-  const [showAddSubSkillModal, setShowAddSubSkillModal] = useState(false);
+  const [loadSource, setLoadSource] = useState<SourceFilterValue>('all');
   const [newLanguage, setNewLanguage] = useState('');
   const [librarySource, setLibrarySource] = useState<SourceFilterValue>('all');
   const [inventoryTab, setInventoryTab] = useState<InventoryTab>('all');
@@ -193,9 +199,47 @@ function CreatureCreatorContent() {
     enabled: libraryQueriesEnabled,
   });
   const { data: publicItems = [] } = useOfficialLibrary('items', { enabled: libraryQueriesEnabled });
-  const { data: publicCreatures = [] } = useOfficialLibrary('creatures', { enabled: libraryQueriesEnabled });
-  const { data: userCreatures = [] } = useUserCreatures({ enabled: libraryQueriesEnabled });
+  const { data: publicCreatures = [], isLoading: publicCreaturesLoading, isError: publicCreaturesError } = useOfficialLibrary('creatures', { enabled: libraryQueriesEnabled });
+  const { data: userCreatures = [], isLoading: userCreaturesLoading } = useUserCreatures({ enabled: libraryQueriesEnabled });
   
+  const creatureLoadItems = useMemo((): SelectableItem[] => {
+    const my =
+      loadSource === 'my' || loadSource === 'all'
+        ? userCreatures
+        : [];
+    const pub =
+      loadSource === 'public' || loadSource === 'all'
+        ? (publicCreatures as Array<Record<string, unknown>>).map((c) => ({
+            ...c,
+            id: String(c.id ?? c.docId ?? ''),
+            docId: String(c.id ?? c.docId ?? ''),
+          }))
+        : [];
+    return [...my, ...pub].map((c) => buildCreatureSelectableItem(c));
+  }, [loadSource, userCreatures, publicCreatures]);
+
+  const creatureLoadLoading =
+    (loadSource !== 'public' && userCreaturesLoading) ||
+    (loadSource !== 'my' && publicCreaturesLoading);
+
+  const creatureLoadEmptyMessage =
+    creatureLoadItems.length === 0
+      ? loadSource === 'public'
+        ? 'No public creatures in the Realms Library'
+        : loadSource === 'my'
+          ? 'No creatures in your library'
+          : 'No creatures found'
+      : 'No matching creatures';
+
+  const creatureLoadEmptySubMessage =
+    creatureLoadItems.length === 0 && loadSource === 'public' && publicCreaturesError
+      ? 'Failed to load Realms Library. Try again later.'
+      : creatureLoadItems.length === 0 && loadSource === 'public'
+        ? 'Official creatures can be added by admins via Admin → Realms Library Editor.'
+        : creatureLoadItems.length === 0 && loadSource !== 'public'
+          ? 'Create a creature and save it to your library first.'
+          : undefined;
+
   // Normalize public API item to UserPower/UserTechnique/UserItem shape (with docId for transformers)
   const normalizedPublicPowers = useMemo(() => 
     (publicPowers as Record<string, unknown>[]).map((p) => ({
@@ -475,8 +519,7 @@ function CreatureCreatorContent() {
           localStorage.removeItem(CREATURE_CREATOR_CACHE_KEY);
         }
       }
-    } catch (e) {
-      console.error('Failed to load creature creator cache:', e);
+    } catch {
     }
     setIsInitialized(true);
   }, [editCreatureId]);
@@ -491,8 +534,7 @@ function CreatureCreatorContent() {
         timestamp: Date.now(),
       };
       localStorage.setItem(CREATURE_CREATOR_CACHE_KEY, JSON.stringify(cache));
-    } catch (e) {
-      console.error('Failed to save creature creator cache:', e);
+    } catch {
     }
   }, [isInitialized, creature]);
   
@@ -641,13 +683,6 @@ function CreatureCreatorContent() {
     setCreature(prev => ({
       ...prev,
       abilities: { ...prev.abilities, [ability]: value }
-    }));
-  }, []);
-
-  const updateDefense = useCallback((defense: keyof CreatureState['defenses'], value: number) => {
-    setCreature(prev => ({
-      ...prev,
-      defenses: { ...prev.defenses, [defense]: value }
     }));
   }, []);
 
@@ -861,6 +896,47 @@ function CreatureCreatorContent() {
     publicSuccessMessage: 'Creature saved to Realms Library!',
   });
 
+  const skillAllocations = useMemo(
+    () => creatureSkillsToAllocations(creature.skills, skillsData),
+    [creature.skills, skillsData]
+  );
+
+  const abilityDefenseBonuses = useMemo(
+    () => ({
+      might: creature.abilities.strength,
+      fortitude: creature.abilities.vitality,
+      reflex: creature.abilities.agility,
+      discernment: creature.abilities.acuity,
+      mentalFortitude: creature.abilities.intelligence,
+      resolve: creature.abilities.charisma,
+    }),
+    [creature.abilities]
+  );
+
+  const handleSkillAllocationsChange = useCallback(
+    (next: Record<string, number>) => {
+      setCreature((prev) => ({
+        ...prev,
+        skills: allocationsToCreatureSkills(next, skillsData),
+      }));
+    },
+    [skillsData]
+  );
+
+  const handleDefenseSkillsChange = useCallback((defense: CreatureState['defenses']) => {
+    setCreature((prev) => ({ ...prev, defenses: defense }));
+  }, []);
+
+  const handleLoadCreature = useCallback((item: SelectableItem) => {
+    setCreature(rawRecordToCreatureState(item.data as Record<string, unknown>));
+    setLoadSource('all');
+  }, []);
+
+  const closeLoadModal = useCallback(() => {
+    setShowLoadModal(false);
+    setLoadSource('all');
+  }, []);
+
   // Merged creatures (user + public) for ?edit= load from admin public library
   const mergedCreaturesForEdit = useMemo(() => {
     const user = (userCreatures ?? []) as unknown as Array<Record<string, unknown> & { id?: string; docId?: string }>;
@@ -883,35 +959,7 @@ function CreatureCreatorContent() {
       setIsInitialized(true);
       return;
     }
-    const loaded: CreatureState = {
-      name: String(c.name ?? ''),
-      level: Number(c.level ?? 1),
-      type: String(c.type ?? 'Humanoid'),
-      size: String(c.size ?? 'medium'),
-      description: String(c.description ?? ''),
-      archetypeType: (c.archetypeType as CreatureState['archetypeType']) ?? 'power',
-      abilities: (c.abilities as CreatureState['abilities']) ?? initialState.abilities,
-      defenses: (c.defenses as CreatureState['defenses']) ?? initialState.defenses,
-      hitPoints: Number(c.hitPoints ?? 0),
-      energyPoints: Number(c.energyPoints ?? 0),
-      powerProficiency: Number(c.powerProficiency ?? 0),
-      martialProficiency: Number(c.martialProficiency ?? 0),
-      enablePowers: (c.enablePowers as boolean) ?? Boolean((c.powers as unknown[])?.length),
-      enableTechniques: (c.enableTechniques as boolean) ?? Boolean((c.techniques as unknown[])?.length),
-      enableArmaments: (c.enableArmaments as boolean) ?? Boolean((c.armaments as unknown[])?.length),
-      resistances: (c.resistances as string[]) ?? [],
-      weaknesses: (c.weaknesses as string[]) ?? [],
-      immunities: (c.immunities as string[]) ?? [],
-      conditionImmunities: (c.conditionImmunities as string[]) ?? [],
-      senses: (c.senses as string[]) ?? [],
-      movementTypes: (c.movementTypes as string[]) ?? [],
-      languages: (c.languages as string[]) ?? [],
-      skills: (c.skills as CreatureSkill[]) ?? [],
-      powers: (c.powers as CreatureState['powers']) ?? [],
-      techniques: (c.techniques as CreatureState['techniques']) ?? [],
-      feats: (c.feats as CreatureState['feats']) ?? [],
-      armaments: (c.armaments as CreatureState['armaments']) ?? [],
-    };
+    const loaded = rawRecordToCreatureState(c);
     setCreature(loaded);
     try {
       localStorage.removeItem(CREATURE_CREATOR_CACHE_KEY);
@@ -952,84 +1000,6 @@ function CreatureCreatorContent() {
     }
   };
 
-  const handleAddSkills = useCallback((skills: Skill[]) => {
-    setCreature(prev => {
-      const existing = new Set(prev.skills.map((s: CreatureSkill) => s.name.toLowerCase()));
-      const toAdd = skills.filter((s: Skill) => !existing.has(String(s.name ?? '').toLowerCase()));
-      if (toAdd.length === 0) return prev;
-      const newSkills: CreatureSkill[] = toAdd.map((s: Skill) => ({
-        id: String(s.id ?? ''),
-        name: String(s.name ?? ''),
-        value: 0,
-        proficient: true,
-        isSubSkill: false,
-      }));
-      return { ...prev, skills: [...prev.skills, ...newSkills] };
-    });
-    setShowAddSkillModal(false);
-  }, []);
-
-  const handleAddSubSkills = useCallback((skills: Array<Skill & { selectedBaseSkillId?: string; autoAddBaseSkill?: Skill }>) => {
-    setCreature(prev => {
-      const existing = new Set(prev.skills.map((s: CreatureSkill) => s.name.toLowerCase()));
-      const next = [...prev.skills];
-      skills.forEach((s: Skill & { autoAddBaseSkill?: Skill }) => {
-        if (s.autoAddBaseSkill) {
-          const baseName = String(s.autoAddBaseSkill.name ?? '');
-          if (baseName && !existing.has(baseName.toLowerCase())) {
-            next.push({
-              id: String(s.autoAddBaseSkill.id ?? ''),
-              name: baseName,
-              value: 0,
-              proficient: true,
-              isSubSkill: false,
-            });
-            existing.add(baseName.toLowerCase());
-          }
-        }
-        const name = String(s.name ?? '');
-        if (name && !existing.has(name.toLowerCase())) {
-          next.push({
-            id: String(s.id ?? ''),
-            baseSkillId: s.base_skill_id !== undefined ? String(s.base_skill_id) : undefined,
-            isSubSkill: true,
-            name,
-            value: 1,
-            proficient: true,
-          });
-          existing.add(name.toLowerCase());
-        }
-      });
-      return { ...prev, skills: next };
-    });
-    setShowAddSubSkillModal(false);
-  }, []);
-
-  const updateSkill = (skillName: string, updates: Partial<CreatureSkill>) => {
-    setCreature(prev => ({
-      ...prev,
-      skills: prev.skills.map((s: CreatureSkill) => {
-        if (s.name === skillName) {
-          const newSkill = { ...s, ...updates };
-          // For creatures, proficiency cannot be removed once added
-          // If trying to remove proficiency, also reset skill value to 0
-          if ('proficient' in updates && !updates.proficient) {
-            return { ...newSkill, proficient: true, value: 0 };
-          }
-          return newSkill;
-        }
-        return s;
-      })
-    }));
-  };
-
-  const removeSkill = (skillName: string) => {
-    setCreature(prev => ({
-      ...prev,
-      skills: prev.skills.filter((s: CreatureSkill) => s.name !== skillName)
-    }));
-  };
-
   return (
     <CreatorLayout
       icon={<Skull className="w-8 h-8 text-primary-600" />}
@@ -1037,12 +1007,6 @@ function CreatureCreatorContent() {
       description="Design custom creatures, monsters, and NPCs. Configure abilities, defenses, skills, and combat options."
       actions={
         <div className="flex items-center gap-2">
-          <ContextHelpTooltip
-            tooltipKey="creators.creature.headerHelp"
-            scope="page:/creature-creator"
-            label="Creature creator help"
-            placement="left"
-          />
           <CreatorSaveToolbar
             saveTarget={save.saveTarget}
             onSaveTargetChange={save.setSaveTarget}
@@ -1217,23 +1181,23 @@ function CreatureCreatorContent() {
             size="xl"
             className="min-h-0"
           />
-          <AddSkillModal
-            isOpen={showAddSkillModal}
-            onClose={() => setShowAddSkillModal(false)}
-            existingSkillNames={creature.skills.map((s: CreatureSkill) => s.name)}
-            onAdd={handleAddSkills}
-          />
-          <AddSubSkillModal
-            isOpen={showAddSubSkillModal}
-            onClose={() => setShowAddSubSkillModal(false)}
-            characterSkills={creature.skills.map((s: CreatureSkill) => ({ id: s.name, name: s.name, prof: s.proficient }))}
-            existingSkillNames={creature.skills.map((s: CreatureSkill) => s.name)}
-            onAdd={handleAddSubSkills}
-          />
-          <LoadCreatureModal
+          <LoadFromLibraryModal
             isOpen={showLoadModal}
-            onClose={() => setShowLoadModal(false)}
-            onSelect={(loadedCreature) => setCreature(loadedCreature)}
+            onClose={closeLoadModal}
+            selectableItems={creatureLoadItems}
+            columns={[
+              { key: 'name', label: 'Name', sortable: true },
+              { key: 'level', label: 'Level', sortable: true },
+              { key: 'type', label: 'Type', sortable: true },
+            ]}
+            gridColumns="1.5fr 0.5fr 1fr"
+            onSelect={handleLoadCreature}
+            isLoading={creatureLoadLoading}
+            title="Load Creature"
+            headerExtra={<SourceFilter value={loadSource} onChange={setLoadSource} />}
+            searchPlaceholder="Search creatures by name, type, or level..."
+            emptyMessage={creatureLoadEmptyMessage}
+            emptySubMessage={creatureLoadEmptySubMessage}
           />
           <LoginPromptModal
             isOpen={showLoginPrompt}
@@ -1248,8 +1212,7 @@ function CreatureCreatorContent() {
               setCreature(initialState);
               try {
                 localStorage.removeItem(CREATURE_CREATOR_CACHE_KEY);
-              } catch (e) {
-                console.error('Failed to clear creature creator cache:', e);
+              } catch {
               }
               setShowResetConfirm(false);
             }}
@@ -1362,48 +1325,19 @@ function CreatureCreatorContent() {
             />
           </div>
 
-          {/* Defenses */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
-            <h2 className="text-lg font-bold text-text-primary mb-4">Defenses</h2>
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-              <DefenseBlock
-                name="Might"
-                baseValue={creature.abilities.strength}
-                bonusValue={creature.defenses.might}
-                onChange={(val) => updateDefense('might', val)}
-              />
-              <DefenseBlock
-                name="Fortitude"
-                baseValue={creature.abilities.vitality}
-                bonusValue={creature.defenses.fortitude}
-                onChange={(val) => updateDefense('fortitude', val)}
-              />
-              <DefenseBlock
-                name="Reflexes"
-                baseValue={creature.abilities.agility}
-                bonusValue={creature.defenses.reflex}
-                onChange={(val) => updateDefense('reflex', val)}
-              />
-              <DefenseBlock
-                name="Discernment"
-                baseValue={creature.abilities.acuity}
-                bonusValue={creature.defenses.discernment}
-                onChange={(val) => updateDefense('discernment', val)}
-              />
-              <DefenseBlock
-                name="Mental Fort"
-                baseValue={creature.abilities.intelligence}
-                bonusValue={creature.defenses.mentalFortitude}
-                onChange={(val) => updateDefense('mentalFortitude', val)}
-              />
-              <DefenseBlock
-                name="Resolve"
-                baseValue={creature.abilities.charisma}
-                bonusValue={creature.defenses.resolve}
-                onChange={(val) => updateDefense('resolve', val)}
-              />
-            </div>
-          </div>
+          {/* Skills & defense bonuses (shared SkillsAllocationPage) */}
+          <SkillsAllocationPage
+            entityType="creature"
+            level={Math.max(1, Math.floor(creature.level))}
+            abilities={creature.abilities}
+            allocations={skillAllocations}
+            defenseSkills={creature.defenses}
+            speciesSkillIds={EMPTY_SPECIES_SKILL_IDS}
+            onAllocationsChange={handleSkillAllocationsChange}
+            onDefenseChange={handleDefenseSkillsChange}
+            abilityDefenseBonuses={abilityDefenseBonuses}
+            className="max-w-none"
+          />
 
           {/* Resistances, Weaknesses, Immunities */}
           <div className="bg-surface rounded-xl shadow-md p-6">
@@ -1534,70 +1468,6 @@ function CreatureCreatorContent() {
               sectionCostLabel={`+${stats.conditionImmunityFeatCost} pt each`}
               costForOption={() => stats.conditionImmunityFeatCost}
             />
-          </div>
-
-          {/* Skills */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-text-primary">Skills</h2>
-              <div className="flex items-center gap-3">
-                <span className={cn(
-                  'px-3 py-1 rounded-full text-sm font-medium',
-                  stats.skillRemaining < 0 
-                    ? 'bg-red-100 text-red-700 dark:bg-danger-900/30 dark:text-danger-300' 
-                    : stats.skillRemaining === 0
-                    ? 'bg-green-100 text-green-700 dark:bg-success-900/30 dark:text-success-300'
-                    : 'bg-surface-alt text-text-secondary'
-                )}>
-                  {stats.skillRemaining} remaining
-                </span>
-              </div>
-            </div>
-            
-            {creature.skills.length === 0 ? (
-              <p className="text-sm text-text-muted dark:text-text-secondary italic py-4 text-center">No skills added. Use Add Skill or Add Sub Skill to add from the codex.</p>
-            ) : (
-              <div className="space-y-2 mb-4">
-                {creature.skills.map(skill => {
-                  const bonus = getCreatureSkillBonus(skill);
-                  const ability = skillAbilityMap.get(skill.name);
-                  return (
-                    <SkillRow
-                      key={skill.name}
-                      id={skill.name}
-                      name={skill.name}
-                      proficient={true} // All creature skills are proficient
-                      value={skill.value}
-                      bonus={bonus}
-                      ability={ability}
-                      onValueChange={(delta) => updateSkill(skill.name, { value: skill.value + delta })}
-                      canIncrease={stats.skillRemaining > 0}
-                      onRemove={() => removeSkill(skill.name)}
-                      variant="card"
-                    />
-                  );
-                })}
-              </div>
-            )}
-            <div className="flex flex-wrap gap-2 mt-2">
-              <Button
-                size="sm"
-                onClick={() => setShowAddSkillModal(true)}
-                disabled={stats.skillRemaining < 1}
-                title={stats.skillRemaining < 1 ? 'No skill points remaining' : 'Add base skill from codex'}
-              >
-                Add Skill
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => setShowAddSubSkillModal(true)}
-                disabled={stats.skillRemaining < 1}
-                title={stats.skillRemaining < 1 ? 'No skill points remaining' : 'Add sub-skill from codex'}
-              >
-                Add Sub Skill
-              </Button>
-            </div>
           </div>
 
           {/* Languages */}

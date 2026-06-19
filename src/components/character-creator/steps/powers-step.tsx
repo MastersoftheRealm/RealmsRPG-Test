@@ -13,7 +13,7 @@ import { Plus, Wand2, Swords, X, ExternalLink } from 'lucide-react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
 import { cn } from '@/lib/utils';
-import { ContextHelpTooltip, GridListRow, InnateToggle, ListHeader, SegmentedControl } from '@/components/shared';
+import { GridListRow, InnateToggle, ListHeader, SegmentedControl } from '@/components/shared';
 import { calculateArchetypeProgression } from '@/lib/game/formulas';
 import { Button, IconButton, Spinner } from '@/components/ui';
 import { useUserPowers, useUserTechniques, useUserEmpoweredTechniques, usePowerParts, useTechniqueParts, useOfficialLibrary, useItemProperties, useMergedSpecies, useCodexSkills, useTraits, type PowerPart, type TechniquePart } from '@/hooks';
@@ -738,11 +738,6 @@ export function PowersStep() {
             <h2 className="text-2xl font-bold text-text-primary mb-2">
               Powers & Techniques
             </h2>
-          <ContextHelpTooltip
-            tooltipKey="characters.new.step.powers.selectionHelp"
-            scope="page:/characters/new"
-            label="Powers and techniques selection help"
-          />
         </div>
         <p className="text-text-muted dark:text-text-secondary">
           Select powers and techniques from your library for your character to know.

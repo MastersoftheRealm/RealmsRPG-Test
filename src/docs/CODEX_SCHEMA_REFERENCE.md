@@ -138,13 +138,54 @@ Item properties (armor, weapon, etc.).
 
 ---
 
-## Archetypes (codex_archetypes)
+## Archetypes (codex_archetypes + codex_archetype_levels)
 
-| Field | Type | Description | Use | Valid Values | Example |
-|-------|------|-------------|-----|--------------|---------|
-| `name` | string | Archetype name | Display name for the archetype in creators, Codex, and character sheets. | | "Power" |
-| `type` | string | Archetype type | Determines whether the archetype is power-focused, martial-focused, or powered-martial. | "power", "martial", "powered-martial" | "power" |
-| `description` | string | Full description | Rules/lore description for the archetype. | | |
+Official **archetype paths** for character creator “Choose a Path” mode. Forge-your-own uses generic ids (`power`, `martial`, `powered-martial`) and does not require a codex row.
+
+### Path visibility (player-facing)
+
+A path appears in the **character creator picker**, **public Realms Codex → Archetypes**, and **sheet path switcher** only when level 1 has at least one **add** recommendation:
+
+- `feats`, `skills`, `powers`, `techniques`, `armaments`, or `equipment`
+
+Level 1 rows with **only** `notes`, **remove_** lists, or `recommend_unarmed_prowess` (and no add lists) are saved in admin but **hidden** from those pickers. Admin save shows a warning when this happens. Implementation: `pathHasPlayerVisibleLevel1()` in `src/lib/game/archetype-path.ts`.
+
+Saved characters store lean `archetype: { id, type }` plus `archetypePathId` and `creationMode`; display name, description, and `path_data` are hydrated from codex at runtime.
+
+### codex_archetypes columns
+
+| Field | Type | Player UX | Description |
+|-------|------|-----------|-------------|
+| `id` | string | Stored on character | Path id; also `archetypePathId` on save |
+| `name` | string | Display | Path name in creator, sheet, codex |
+| `type` | string | Display + rules | `power`, `martial`, `powered-martial` |
+| `description` | string | Display | Path summary; sheet header + codex |
+| `archetype_ability` | string | Creator + sheet | Primary ability emphasis (power or single ability) |
+| `secondary_ability` | string | Creator + sheet | Powered-martial secondary ability |
+| `power_prof_start` | number | Creator | Starting power proficiency for path |
+| `martial_prof_start` | number | Creator | Starting martial proficiency for path |
+| `power_prof_level5` | number | Level-up / sheet | Minimum power prof floor at level ≥5 |
+| `martial_prof_level5` | number | Level-up / sheet | Minimum martial prof floor at level ≥5 |
+| `level1_*` | CSV / JSON | Level 1 guidance | Level 1 recommendations (see below); preferred over legacy `path_data.level1` |
+| `level1_notes` | string | Guidance only | Admin notes; sheet + level-up; not player `archetypeDesc` |
+| `level1_recommend_unarmed_prowess` | boolean | Equipment step | Simplifies equipment UI when true |
+| `level1_remove_*` | CSV | Guidance | Optional “consider removing” lists (feats/powers/techniques/armaments) |
+| `path_data` | JSONB | Composed | Legacy blob; API merges column fields + `codex_archetype_levels` into `path_data` for clients |
+
+**Legacy / stored-only:** `path_data.level1.proficiency` JSON is not used by current player UX (proficiency comes from `power_prof_start` / `martial_prof_start` columns). TypeScript `Archetype.feats` / `Archetype.traits` are deprecated shapes not loaded from DB.
+
+### codex_archetype_levels columns
+
+One row per `(archetype_id, level)` for level 2+ progression. Same recommendation shape as level 1:
+
+| Field | Type | Player UX |
+|-------|------|-----------|
+| `level` | number | Level-up guidance target level |
+| `feats`, `skills`, `powers`, `techniques`, `armaments`, `equipment` | CSV ids | Add recommendations |
+| `remove_feats`, `remove_powers`, `remove_techniques`, `remove_armaments` | CSV ids | Optional remove guidance |
+| `notes` | string | Admin notes at that level |
+
+Armaments/equipment values may use `id:qty` (quantity default 1). Feat/skill/power/technique refs match codex ids or official library doc ids.
 
 ---
 

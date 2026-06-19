@@ -9,39 +9,29 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { cn, formatDamageDisplay, formatActionTypeForDisplay, normalizeRangeDisplay, formatListCellLabel } from '@/lib/utils';
-import { trainingPointsForItemPropertyRef, type ItemPropertyTpRow } from '@/lib/calculators/item-calc';
-import { Eye, EyeOff, Plus, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Eye, EyeOff } from 'lucide-react';
 import { useRollsOptional } from './roll-context';
 import { NotesTab, type CharacterNote } from './notes-tab';
 import { ProficienciesTab } from './proficiencies-tab';
 import { FeatsTab } from './feats-tab';
-import { 
-  PartChipList, 
-  type PartData, 
-  EditSectionToggle, 
-  RollButton, 
-  SectionHeader, 
-  QuantitySelector, 
-  QuantityBadge, 
-  GridListRow, 
-  SelectionToggle, 
-  EquipToggle,
-  type ColumnValue, 
-  type ChipData,
+import {
+  EditSectionToggle,
   TabSummarySection,
   SummaryItem,
   SummaryRow,
-  ListHeader,
-  type ListColumn,
+  PowersListSection,
+  TechniquesListSection,
+  WeaponsListSection,
+  ShieldsListSection,
+  ArmorListSection,
+  EquipmentListSection,
   type SortState,
-  InnateToggle,
 } from '@/components/shared';
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
-import { Button, IconButton } from '@/components/ui';
+import { IconButton } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
 import { calculateArmamentProficiency } from '@/lib/game/formulas';
-import { formatRange } from '@/lib/calculators/item-calc';
 import type {
   CharacterPower,
   CharacterTechnique,
@@ -52,265 +42,18 @@ import type {
 } from '@/types';
 import { buildRequiredProficiencies, getMissingRequiredProficiencies } from '@/lib/proficiencies';
 import { useCharacterSheetOptional } from './character-sheet-context';
+import {
+  mapPowerRows,
+  mapTechniqueRows,
+  mapWeaponRows,
+  mapShieldRows,
+  mapArmorRows,
+  mapEquipmentRows,
+  type LibraryEntityRowContext,
+} from './library-entity-rows';
 
-/** Codex part data for enrichment */
-interface CodexPart {
-  id: string;
-  name: string;
-  description?: string;
-  base_tp?: number;
-  op_1_tp?: number;
-  op_2_tp?: number;
-  op_3_tp?: number;
-  op_1_desc?: string;
-  op_2_desc?: string;
-  op_3_desc?: string;
-}
 
-// Helper to convert power/technique parts to PartData format, with Codex enrichment
-// The saved part data only has option levels - TP costs come from Codex
-function partsToPartData(
-  parts?: CharacterPower['parts'] | CharacterTechnique['parts'],
-  codexParts: CodexPart[] = []
-): PartData[] {
-  if (!parts || parts.length === 0) return [];
-  
-  return parts.map(part => {
-    if (typeof part === 'string') {
-      // String-only part - look up in Codex for description and TP
-      const codexPart = codexParts.find(p => p.name?.toLowerCase() === part.toLowerCase());
-      return { 
-        name: part,
-        description: codexPart?.description,
-        tpCost: codexPart?.base_tp,
-      };
-    }
-    
-    // Full part data - look up TP costs from Codex by id or name
-    const partName = part.name || part.id || 'Unknown Part';
-    const partId = part.id;
-    
-    // Try to find Codex part by id first, then by name
-    let codexPart = codexParts.find(p => partId && String(p.id) === String(partId));
-    if (!codexPart) {
-      codexPart = codexParts.find(p => p.name?.toLowerCase() === partName.toLowerCase());
-    }
-    
-    // Calculate TP cost using Codex values + saved option levels
-    const base_tp = codexPart?.base_tp ?? 0;
-    const op_1_tp = codexPart?.op_1_tp ?? 0;
-    const op_2_tp = codexPart?.op_2_tp ?? 0;
-    const op_3_tp = codexPart?.op_3_tp ?? 0;
-    
-    const tpCost = base_tp + 
-                   op_1_tp * (part.op_1_lvl ?? 0) + 
-                   op_2_tp * (part.op_2_lvl ?? 0) + 
-                   op_3_tp * (part.op_3_lvl ?? 0);
-    
-    const opt1 = part.op_1_lvl ?? 0;
-    const opt2 = part.op_2_lvl ?? 0;
-    const opt3 = part.op_3_lvl ?? 0;
-    const options: Array<{ label: string; description?: string; level: number }> = [];
-    if (opt1 > 0) options.push({ label: 'Option 1', description: codexPart?.op_1_desc, level: opt1 });
-    if (opt2 > 0) options.push({ label: 'Option 2', description: codexPart?.op_2_desc, level: opt2 });
-    if (opt3 > 0) options.push({ label: 'Option 3', description: codexPart?.op_3_desc, level: opt3 });
-    
-    return {
-      name: codexPart?.name || partName,
-      description: codexPart?.description,
-      tpCost: tpCost > 0 ? tpCost : undefined,
-      optionLevels: {
-        opt1: part.op_1_lvl,
-        opt2: part.op_2_lvl,
-        opt3: part.op_3_lvl,
-      },
-      options: options.length > 0 ? options : undefined,
-    };
-  });
-}
-
-/** Codex property data for enrichment */
-interface CodexProperty {
-  id: string | number;
-  name: string;
-  description?: string;
-  base_tp?: number;
-  tp_cost?: number;
-}
-
-/** Build full chip description: base description + option level line when present (for expandable chip body) */
-function chipDescriptionWithOptionLevels(
-  baseDescription: string | undefined,
-  optionLevels: PartData['optionLevels']
-): string | undefined {
-  const parts: string[] = [];
-  if (baseDescription?.trim()) parts.push(baseDescription.trim());
-  if (optionLevels) {
-    const opts: string[] = [];
-    if ((optionLevels.opt1 ?? 0) > 0) opts.push(`Option 1: Lv.${optionLevels.opt1}`);
-    if ((optionLevels.opt2 ?? 0) > 0) opts.push(`Option 2: Lv.${optionLevels.opt2}`);
-    if ((optionLevels.opt3 ?? 0) > 0) opts.push(`Option 3: Lv.${optionLevels.opt3}`);
-    if (opts.length > 0) parts.push(opts.join('; '));
-  }
-  return parts.length > 0 ? parts.join('\n\n') : undefined;
-}
-
-// =============================================================================
-// Power/Technique Display Formatters
-// =============================================================================
-
-/** Capitalize first letter of each word in a string */
-function capitalizeWords(str: string): string {
-  return str.replace(/\b\w/g, c => c.toUpperCase());
-}
-
-/** Format area/target display: "1 target" → "Target", capitalize others */
-function formatArea(area: string | undefined): string {
-  if (!area) return '-';
-  const lower = area.toLowerCase().trim();
-  if (lower === '1 target' || lower === 'single target' || lower === 'target') return 'Target';
-  return capitalizeWords(area);
-}
-
-/** Format duration display: abbreviate and capitalize, strip focus/sustain details */
-function formatDuration(duration: string | undefined): string {
-  if (!duration) return '-';
-  const lower = duration.toLowerCase().trim();
-  
-  // Strip parenthetical details like (Focus), (Sustain) for overview
-  const withoutParens = lower.replace(/\s*\(.*?\)\s*/g, '').trim();
-  
-  // Instant/Instantaneous
-  if (withoutParens === 'instant' || withoutParens === 'instantaneous') return 'Instant';
-  
-  // Concentration
-  if (withoutParens === 'concentration') return 'Conc.';
-  
-  // Minutes
-  const minMatch = withoutParens.match(/^(\d+)\s*min(ute)?s?$/);
-  if (minMatch) return `${minMatch[1]} MIN`;
-  
-  // Rounds
-  const rndMatch = withoutParens.match(/^(\d+)\s*rounds?$/);
-  if (rndMatch) return rndMatch[1] === '1' ? '1 RND' : `${rndMatch[1]} RNDS`;
-  
-  // Hours
-  const hrMatch = withoutParens.match(/^(\d+)\s*hours?$/);
-  if (hrMatch) return hrMatch[1] === '1' ? '1 HR' : `${hrMatch[1]} HRS`;
-
-  // Days
-  const dayMatch = withoutParens.match(/^(\d+)\s*days?$/);
-  if (dayMatch) return dayMatch[1] === '1' ? '1 Day' : `${dayMatch[1]} Days`;
-
-  // Permanent
-  if (withoutParens === 'permanent') return 'Permanent';
-
-  // Capitalize whatever remains (e.g. "1 Minute" → "1 Minute")
-  return capitalizeWords(withoutParens);
-}
-
-/** Format damage type: capitalize */
-function formatDamageType(damage: string | undefined): string {
-  if (!damage) return '-';
-  return capitalizeWords(damage);
-}
-
-/** Property object may have option levels */
-interface PropertyWithLevel {
-  id?: string | number;
-  name?: string;
-  op_1_lvl?: number;
-  op_2_lvl?: number;
-  op_3_lvl?: number;
-}
-
-/** Enriched armaments set `properties` to name-only strings; full payloads live on `libraryItem` (same as My Library). */
-type ItemWithLibrarySource = Item & {
-  libraryItem?: { properties?: Item['properties'] };
-};
-
-function resolveItemProperties(item: ItemWithLibrarySource): Item['properties'] | undefined {
-  const fromLib = item.libraryItem?.properties;
-  if (fromLib && fromLib.length > 0) return fromLib as Item['properties'];
-  return item.properties;
-}
-
-// Helper to convert item properties to PartData format, with Codex enrichment (includes option levels for chip display)
-function propertiesToPartData(
-  properties?: Item['properties'],
-  codexProperties: CodexProperty[] = []
-): PartData[] {
-  if (!properties || properties.length === 0) return [];
-  const db = codexProperties as unknown as ItemPropertyTpRow[];
-
-  return properties.map((prop) => {
-    if (typeof prop === 'string') {
-      const codexProp = codexProperties.find((p) => p.name?.toLowerCase() === prop.toLowerCase());
-      const tp = trainingPointsForItemPropertyRef(prop, db);
-      return {
-        name: prop,
-        description: codexProp?.description,
-        tpCost: tp > 0 ? tp : undefined,
-        category: 'property',
-      };
-    }
-
-    const propObj = prop as PropertyWithLevel;
-    const propId = propObj.id;
-    const propName = propObj.name || 'Unknown Property';
-
-    let codexProp = codexProperties.find((p) => propId && String(p.id) === String(propId));
-    if (!codexProp) {
-      codexProp = codexProperties.find((p) => p.name?.toLowerCase() === propName.toLowerCase());
-    }
-
-    const tp = trainingPointsForItemPropertyRef(propObj, db);
-
-    return {
-      name: codexProp?.name || propName,
-      description: codexProp?.description,
-      tpCost: tp > 0 ? tp : undefined,
-      category: 'property',
-      optionLevels:
-        (propObj.op_1_lvl ?? propObj.op_2_lvl ?? propObj.op_3_lvl) != null
-          ? { opt1: propObj.op_1_lvl, opt2: propObj.op_2_lvl, opt3: propObj.op_3_lvl }
-          : undefined,
-    };
-  });
-}
-
-/**
- * Calculate weapon attack bonus based on weapon properties (same as archetype-section).
- * Ability + martial proficiency. Finesse → Agility; Range > melee → Acuity; else Strength.
- */
-function getWeaponAttackBonus(
-  weapon: Item,
-  abilities?: Abilities,
-  martialProficiency?: number
-): { bonus: number; abilityName: string } {
-  const prof = martialProficiency ?? 0;
-  if (!abilities) return { bonus: prof, abilityName: 'Strength' };
-  
-  const props = (weapon.properties || []).map(p =>
-    typeof p === 'string' ? p : (p as { name?: string }).name || ''
-  );
-
-  // Finesse uses agility
-  if (props.some(p => p.toLowerCase() === 'finesse')) {
-    return { bonus: (abilities.agility ?? 0) + prof, abilityName: 'Agility' };
-  }
-
-  // Range > melee uses acuity
-  const rangeStr = formatRange((weapon.properties || []) as { id?: number; name?: string; op_1_lvl?: number }[]);
-  if (rangeStr.toLowerCase() !== 'melee') {
-    return { bonus: (abilities.acuity ?? 0) + prof, abilityName: 'Acuity' };
-  }
-
-  // Default to strength
-  return { bonus: (abilities.strength ?? 0) + prof, abilityName: 'Strength' };
-}
-
-interface LibrarySectionProps {
+export interface LibrarySectionProps {
   powers: CharacterPower[];
   techniques: CharacterTechnique[];
   weapons: Item[];
@@ -444,6 +187,9 @@ interface LibrarySectionProps {
   maxArchetypeFeats?: number;
   /** Max character feats (for overspend indicator and current/max display) */
   maxCharacterFeats?: number;
+  /** Controlled tab (optional; page context owns tab when provided) */
+  activeTab?: TabType;
+  onActiveTabChange?: (tab: TabType) => void;
   className?: string;
 }
 
@@ -457,77 +203,6 @@ const DEFAULT_TAB_VISIBILITY: Record<TabType, boolean> = {
   proficiencies: true,
   notes: true,
 };
-
-// =============================================================================
-// Column Definitions for ListHeader
-// =============================================================================
-
-const POWER_COLUMNS: ListColumn[] = [
-  { key: 'name', label: 'Name', width: '1.4fr' },
-  { key: 'action', label: 'Action', width: '1fr', align: 'center' },
-  { key: 'damage', label: 'Damage', width: '1fr', align: 'center' },
-  { key: 'area', label: 'Area', width: '0.7fr', align: 'center' },
-  { key: 'duration', label: 'Duration', width: '0.7fr', align: 'center' },
-];
-const POWER_GRID = '1.4fr 1fr 1fr 0.7fr 0.7fr';
-
-const TECHNIQUE_COLUMNS: ListColumn[] = [
-  { key: 'name', label: 'Name', width: '1.4fr' },
-  { key: 'action', label: 'Action', width: '1fr', align: 'center' },
-  { key: 'energy', label: 'Energy', width: '0.7fr', align: 'center' },
-  { key: 'weapon', label: 'Weapon', width: '1fr', align: 'center' },
-  { key: 'tp', label: 'Training Pts', width: '0.8fr', align: 'center' },
-];
-const TECHNIQUE_GRID = '1.4fr 1fr 0.7fr 1fr 0.8fr';
-
-const WEAPON_COLUMNS: ListColumn[] = [
-  // Expected maxes:
-  // - Name: "Scalebreaker Hammer"
-  // - Range: "32 Spaces"
-  // - Attack: "+10"
-  // - Damage: "2d12" with "Slashing" subtext
-  { key: 'name', label: 'Name', width: 'minmax(180px, 0.9fr)' },
-  { key: 'range', label: 'Range', width: 'minmax(88px, 7rem)', align: 'center' },
-  { key: 'attack', label: 'Attack', width: 'minmax(60px, 4rem)', align: 'center' },
-  { key: 'damage', label: 'Damage', width: 'minmax(110px, 8rem)', align: 'center' },
-];
-// Keep Range close to Name; give Damage more room than Attack.
-const WEAPON_GRID = 'minmax(180px, 0.9fr) minmax(88px, 7rem) minmax(60px, 4rem) minmax(110px, 8rem)';
-
-function splitDamageDiceAndType(damage: unknown): { dice: string; type: string; rollStr: string } {
-  if (!damage) return { dice: '-', type: '', rollStr: '-' };
-  if (typeof damage === 'string') {
-    const str = damage.trim();
-    const match = str.match(/^([\dd+\-\s]+)(?:\s+(.+))?$/);
-    if (!match) return { dice: str, type: '', rollStr: str };
-    return { dice: match[1].trim(), type: (match[2] ?? '').trim(), rollStr: str };
-  }
-  const formatted = formatDamageDisplay(damage as never);
-  return { dice: formatted ? String(formatted) : '-', type: '', rollStr: formatted ? String(formatted) : '-' };
-}
-
-const SHIELD_COLUMNS: ListColumn[] = [
-  { key: 'name', label: 'Name', width: 'minmax(160px, 1fr)' },
-  { key: 'range', label: 'Range', width: 'minmax(64px, 0.6fr)', align: 'center' },
-  { key: 'attack', label: 'Attack', width: 'minmax(64px, 4.5rem)', align: 'center' },
-  { key: 'damage', label: 'Damage', width: 'minmax(64px, 4.5rem)', align: 'center' },
-  { key: 'block', label: 'Block', width: 'minmax(64px, 0.7fr)', align: 'center' },
-];
-const SHIELD_GRID = 'minmax(160px, 1fr) minmax(64px, 0.6fr) minmax(64px, 4.5rem) minmax(64px, 4.5rem) minmax(64px, 0.7fr)';
-
-const ARMOR_COLUMNS: ListColumn[] = [
-  { key: 'name', label: 'Name', width: '1fr' },
-  { key: 'dr', label: 'Dmg. Red.', width: '0.6fr', align: 'center' as const },
-  { key: 'crit', label: 'Crit Range', width: '0.6fr', align: 'center' as const },
-];
-const ARMOR_ROW_GRID = '1fr 0.6fr 0.6fr'; // row content only (leftSlot is separate)
-
-const EQUIPMENT_COLUMNS: ListColumn[] = [
-  { key: 'name', label: 'Name', width: '1fr' },
-  { key: 'type', label: 'Type', width: '0.6fr', align: 'center' },
-  { key: 'quantity', label: 'Qty', width: '4rem', align: 'center' },
-];
-const EQUIPMENT_GRID = '1fr 0.6fr 4rem';
 
 export function LibrarySection({
   powers,
@@ -618,6 +293,8 @@ export function LibrarySection({
   onEnterState,
   maxArchetypeFeats,
   maxCharacterFeats,
+  activeTab: activeTabProp,
+  onActiveTabChange,
   className,
 }: LibrarySectionProps) {
   const ctx = useCharacterSheetOptional();
@@ -632,7 +309,17 @@ export function LibrarySection({
   const onAddCharacterFeat = onAddCharacterFeatProp ?? (ctx ? () => ctx.setFeatModalType('character') : undefined);
   const onAddStateFeat = onAddStateFeatProp ?? (ctx ? () => ctx.setFeatModalType('state') : undefined);
 
-  const [activeTab, setActiveTab] = useState<TabType>('feats');
+  const [internalActiveTab, setInternalActiveTab] = useState<TabType>('feats');
+  const activeTab = activeTabProp ?? internalActiveTab;
+  const setActiveTab = useCallback(
+    (tab: TabType) => {
+      onActiveTabChange?.(tab);
+      if (activeTabProp === undefined) {
+        setInternalActiveTab(tab);
+      }
+    },
+    [activeTabProp, onActiveTabChange]
+  );
   const [isSectionEditing, setIsSectionEditing] = useState(false);
   const [currencyInput, setCurrencyInput] = useState(currency.toString());
   const rollContext = useRollsOptional();
@@ -694,6 +381,95 @@ export function LibrarySection({
     });
     return getMissingRequiredProficiencies(requiredForEntry, proficiencies).length > 0;
   }, [powerPartsDb, techniquePartsDb, itemPropertiesDb, proficiencies]);
+
+  const entityRowContext = useMemo<LibraryEntityRowContext>(
+    () => ({
+      powerPartsDb,
+      techniquePartsDb,
+      itemPropertiesDb,
+      abilities,
+      martialProficiency,
+      currentEnergy,
+      showLibraryEditControls,
+      rollContext,
+      hasMissingForEntry,
+      onUsePower,
+      onRemovePower,
+      onTogglePowerInnate,
+      onUseTechnique,
+      onRemoveTechnique,
+      onRemoveWeapon,
+      onToggleEquipWeapon,
+      onRemoveShield,
+      onToggleEquipShield,
+      onRemoveArmor,
+      onToggleEquipArmor,
+      onRemoveEquipment,
+      onEquipmentQuantityChange,
+    }),
+    [
+      powerPartsDb,
+      techniquePartsDb,
+      itemPropertiesDb,
+      abilities,
+      martialProficiency,
+      currentEnergy,
+      showLibraryEditControls,
+      rollContext,
+      hasMissingForEntry,
+      onUsePower,
+      onRemovePower,
+      onTogglePowerInnate,
+      onUseTechnique,
+      onRemoveTechnique,
+      onRemoveWeapon,
+      onToggleEquipWeapon,
+      onRemoveShield,
+      onToggleEquipShield,
+      onRemoveArmor,
+      onToggleEquipArmor,
+      onRemoveEquipment,
+      onEquipmentQuantityChange,
+    ]
+  );
+
+  const powerRowChrome = useMemo(
+    () => ({
+      leftSlot: !!(showLibraryEditControls && onTogglePowerInnate),
+      rightSlot: true,
+      delete: !!(showLibraryEditControls && onRemovePower),
+    }),
+    [showLibraryEditControls, onTogglePowerInnate, onRemovePower]
+  );
+
+  const innatePowerRows = useMemo(
+    () => mapPowerRows(sortedInnatePowers, entityRowContext),
+    [sortedInnatePowers, entityRowContext]
+  );
+  const regularPowerRows = useMemo(
+    () => mapPowerRows(sortedRegularPowers, entityRowContext),
+    [sortedRegularPowers, entityRowContext]
+  );
+  const techniqueRows = useMemo(
+    () => mapTechniqueRows(sortedTechniques, entityRowContext),
+    [sortedTechniques, entityRowContext]
+  );
+  const weaponRows = useMemo(
+    () => mapWeaponRows(sortedWeapons, entityRowContext),
+    [sortedWeapons, entityRowContext]
+  );
+  const shieldRows = useMemo(
+    () => mapShieldRows(sortedShields, entityRowContext),
+    [sortedShields, entityRowContext]
+  );
+  const armorRows = useMemo(
+    () => mapArmorRows(sortedArmor, entityRowContext),
+    [sortedArmor, entityRowContext]
+  );
+  const equipmentRows = useMemo(
+    () => mapEquipmentRows(sortedEquipment, entityRowContext),
+    [sortedEquipment, entityRowContext]
+  );
 
   // NOTE: Unarmed Prowess is now shown in the Archetype section, not here
 
@@ -849,341 +625,47 @@ export function LibrarySection({
               </TabSummarySection>
             )}
 
-            {/* Innate Powers Section */}
-            <div className="mb-4">
-              <SectionHeader 
-                title="Innate Powers" 
+                        <div className="mb-4">
+              <PowersListSection
+                title="Innate Powers"
+                items={innatePowerRows}
                 onAdd={onAddPower}
                 addLabel="Add innate power"
+                sortState={powerSort}
+                onSort={(col) => setPowerSort(toggleSort(powerSort, col))}
+                rowChrome={powerRowChrome}
+                emptyMessage="No innate powers. Enter edit mode (click the pencil) to mark powers as innate."
               />
-              {sortedInnatePowers.length > 0 && (
-                <ListHeader
-                  columns={POWER_COLUMNS}
-                  gridColumns={POWER_GRID}
-                  rowChrome={{
-                    leftSlot: !!(showLibraryEditControls && onTogglePowerInnate),
-                    rightSlot: true,
-                    delete: !!(showLibraryEditControls && onRemovePower),
-                  }}
-                  sortState={powerSort}
-                  onSort={(col) => setPowerSort(toggleSort(powerSort, col))}
-                />
-              )}
-              {sortedInnatePowers.length > 0 ? (
-                <div className="space-y-1">
-                  {sortedInnatePowers
-                    .map((power, i) => {
-                      const isInnate = power.innate === true;
-                      const energyCost = power.cost ?? 0;
-                      const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
-                      const partChips = partsToPartData(power.parts, powerPartsDb).map(p => ({
-                        name: p.name,
-                        description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
-                        cost: p.tpCost,
-                        costLabel: 'TP',
-                        category: p.tpCost && p.tpCost > 0 ? ('cost' as const) : ('default' as const),
-                        level: p.optionLevels ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) || undefined : undefined,
-                        options: p.options,
-                      }));
-                      const powerTotalTP = partChips.reduce((sum, p) => sum + (p.cost ?? 0), 0);
-                      const hasMissingProf = hasMissingForEntry({ powers: [power] });
-                      const rowBadges = hasMissingProf ? [{ label: 'Needs Proficiency', color: 'red' as const }] : undefined;
-                      
-                      const damageCell = power.damage && rollContext?.rollDamage ? (
-                        <RollButton
-                          value={0}
-                          displayValue={formatDamageType(power.damage)}
-                          variant="danger"
-                          size="sm"
-                          onClick={() => rollContext.rollDamage(power.damage as string)}
-                          title="Roll damage"
-                        />
-                      ) : formatDamageType(power.damage);
-                      const columns: ColumnValue[] = [
-                        { key: 'action', value: power.actionType || '-', align: 'center' },
-                        { key: 'damage', value: damageCell, align: 'center' },
-                        { key: 'area', value: formatArea(power.area), align: 'center' },
-                        { key: 'duration', value: formatDuration(power.duration), align: 'center' },
-                      ];
-                      
-                      // Energy button in rightmost column - styled like roll button
-                      const energyButton = onUsePower && energyCost > 0 ? (
-                        <RollButton
-                          value={energyCost}
-                          displayValue={String(energyCost)}
-                          onClick={() => onUsePower(power.id || String(i), energyCost)}
-                          disabled={!canUse}
-                          variant="primary"
-                          size="sm"
-                          title={canUse ? `Use power (costs ${energyCost} EP)` : 'Not enough energy'}
-                        />
-                      ) : energyCost > 0 ? (
-                        <span className="text-sm font-medium text-text-secondary">{energyCost}</span>
-                      ) : null;
-                      
-                      const innateToggle = showLibraryEditControls && onTogglePowerInnate ? (
-                        <InnateToggle
-                          isInnate={isInnate}
-                          onToggle={() => onTogglePowerInnate(power.id || String(i), !isInnate)}
-                          size="md"
-                        />
-                      ) : undefined;
-                      
-                      return (
-                        <GridListRow
-                          key={power.id || `innate-${i}`}
-                          id={String(power.id || i)}
-                          name={power.name}
-                          description={power.description}
-                          columns={columns}
-                          gridColumns={POWER_GRID}
-                          chips={partChips}
-                          chipsLabel="Parts"
-                          badges={rowBadges}
-                          totalCost={powerTotalTP > 0 ? powerTotalTP : undefined}
-                          costLabel="TP"
-                          requirements={power.range ? (
-                            <div className="text-sm text-text-secondary">
-                              <span className="font-medium">Range:</span> {normalizeRangeDisplay(power.range)}
-                            </div>
-                          ) : undefined}
-                          innate={isInnate}
-                          hideInnateBadge
-                          leftSlot={innateToggle}
-                          rightSlot={energyButton}
-                          onDelete={showLibraryEditControls && onRemovePower ? () => onRemovePower(power.id || String(i)) : undefined}
-                          compact
-                        />
-                      );
-                    })}
-                </div>
-              ) : (
-                <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">
-                  No innate powers. Enter edit mode (click the pencil) to mark powers as innate.
-                </p>
-              )}
             </div>
 
-            {/* Regular Powers Section */}
-            <div>
-              <SectionHeader 
-                title="Powers" 
-                onAdd={onAddPower}
-                addLabel="Add power"
-              />
-              {sortedRegularPowers.length > 0 && (
-                <ListHeader
-                  columns={POWER_COLUMNS}
-                  gridColumns={POWER_GRID}
-                  rowChrome={{
-                    leftSlot: !!(showLibraryEditControls && onTogglePowerInnate),
-                    rightSlot: true,
-                    delete: !!(showLibraryEditControls && onRemovePower),
-                  }}
-                  sortState={powerSort}
-                  onSort={(col) => setPowerSort(toggleSort(powerSort, col))}
-                />
-              )}
-              {sortedRegularPowers.length > 0 ? (
-                <div className="space-y-1">
-                  {sortedRegularPowers
-                    .map((power, i) => {
-                      const isInnate = power.innate === true;
-                      const energyCost = power.cost ?? 0;
-                      const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
-                      const partChips = partsToPartData(power.parts, powerPartsDb).map(p => ({
-                        name: p.name,
-                        description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
-                        cost: p.tpCost,
-                        costLabel: 'TP',
-                        category: p.tpCost && p.tpCost > 0 ? ('cost' as const) : ('default' as const),
-                        level: p.optionLevels ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) || undefined : undefined,
-                        options: p.options,
-                      }));
-                      const powerTotalTP = partChips.reduce((sum, p) => sum + (p.cost ?? 0), 0);
-                      const hasMissingProf = hasMissingForEntry({ powers: [power] });
-                      const rowBadges = hasMissingProf ? [{ label: 'Needs Proficiency', color: 'red' as const }] : undefined;
-                      
-                      const damageCellRegular = power.damage && rollContext?.rollDamage ? (
-                        <RollButton
-                          value={0}
-                          displayValue={formatDamageType(power.damage)}
-                          variant="danger"
-                          size="sm"
-                          onClick={() => rollContext.rollDamage(power.damage as string)}
-                          title="Roll damage"
-                        />
-                      ) : formatDamageType(power.damage);
-                      const columnsRegular: ColumnValue[] = [
-                        { key: 'action', value: power.actionType || '-', align: 'center' },
-                        { key: 'damage', value: damageCellRegular, align: 'center' },
-                        { key: 'area', value: formatArea(power.area), align: 'center' },
-                        { key: 'duration', value: formatDuration(power.duration), align: 'center' },
-                      ];
-                      
-                      // Energy button in rightmost column - styled like roll button
-                      const energyButtonRegular = onUsePower && energyCost > 0 ? (
-                        <RollButton
-                          value={energyCost}
-                          displayValue={String(energyCost)}
-                          onClick={() => onUsePower(power.id || String(i), energyCost)}
-                          disabled={!canUse}
-                          variant="primary"
-                          size="sm"
-                          title={canUse ? `Use power (costs ${energyCost} EP)` : 'Not enough energy'}
-                        />
-                      ) : energyCost > 0 ? (
-                        <span className="text-sm font-medium text-text-secondary">{energyCost}</span>
-                      ) : null;
-                      
-                      const innateToggleRegular = showLibraryEditControls && onTogglePowerInnate ? (
-                        <InnateToggle
-                          isInnate={isInnate}
-                          onToggle={() => onTogglePowerInnate(power.id || String(i), !isInnate)}
-                          size="md"
-                        />
-                      ) : undefined;
-                      
-                      return (
-                        <GridListRow
-                          key={power.id || `regular-${i}`}
-                          id={String(power.id || i)}
-                          name={power.name}
-                          description={power.description}
-                          columns={columnsRegular}
-                          gridColumns={POWER_GRID}
-                          chips={partChips}
-                          chipsLabel="Parts"
-                          badges={rowBadges}
-                          totalCost={powerTotalTP > 0 ? powerTotalTP : undefined}
-                          costLabel="TP"
-                          requirements={power.range ? (
-                            <div className="text-sm text-text-secondary">
-                              <span className="font-medium">Range:</span> {normalizeRangeDisplay(power.range)}
-                            </div>
-                          ) : undefined}
-                          innate={isInnate}
-                          leftSlot={innateToggleRegular}
-                          rightSlot={energyButtonRegular}
-                          onDelete={showLibraryEditControls && onRemovePower ? () => onRemovePower(power.id || String(i)) : undefined}
-                          compact
-                        />
-                      );
-                    })}
-                </div>
-              ) : (
-                <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">
-                  No powers learned
-                </p>
-              )}
-            </div>
+            <PowersListSection
+              title="Powers"
+              items={regularPowerRows}
+              onAdd={onAddPower}
+              addLabel="Add power"
+              sortState={powerSort}
+              onSort={(col) => setPowerSort(toggleSort(powerSort, col))}
+              rowChrome={powerRowChrome}
+              emptyMessage="No powers learned"
+            />
           </>
         )}
 
         {activeTab === 'techniques' && (
           <>
-            {/* Techniques Section */}
-            <div>
-              <SectionHeader 
-                title="Techniques" 
-                onAdd={onAddTechnique}
-                addLabel="Add technique"
-              />
-              {sortedTechniques.length > 0 && (
-                <ListHeader
-                  columns={TECHNIQUE_COLUMNS}
-                  gridColumns={TECHNIQUE_GRID}
-                  rowChrome={{
-                    rightSlot: true,
-                    delete: !!(showLibraryEditControls && onRemoveTechnique),
-                  }}
-                  sortState={techniqueSort}
-                  onSort={(col) => setTechniqueSort(toggleSort(techniqueSort, col))}
-                />
-              )}
-              {sortedTechniques.length > 0 ? (
-                <div className="space-y-1">
-                  {sortedTechniques.map((tech, i) => {
-                    const energyCost = tech.cost ?? 0;
-                    const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
-                    const partChips = partsToPartData(tech.parts, techniquePartsDb).map(p => ({
-                      name: p.name,
-                      description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
-                      cost: p.tpCost,
-                      costLabel: 'TP',
-                      category: p.tpCost && p.tpCost > 0 ? ('cost' as const) : ('default' as const),
-                      level: p.optionLevels ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) || undefined : undefined,
-                      options: p.options,
-                    }));
-                    const techTP = (tech as { tp?: number }).tp;
-                    const totalTP = typeof techTP === 'number' ? techTP : (typeof techTP === 'string' ? parseFloat(techTP) : undefined);
-                    const hasMissingProf = hasMissingForEntry({ techniques: [tech] });
-                    const rowBadges = hasMissingProf ? [{ label: 'Needs Proficiency', color: 'red' as const }] : undefined;
-                    
-                    const columns: ColumnValue[] = [
-                      {
-                        key: 'action',
-                        value: formatActionTypeForDisplay(tech.actionType ?? ''),
-                        align: 'center',
-                      },
-                      { key: 'energy', value: energyCost, align: 'center' },
-                      { key: 'weapon', value: tech.weaponName || '-', highlight: tech.weaponName !== undefined, align: 'center' },
-                      { key: 'tp', value: techTP ?? '-', align: 'center' },
-                    ];
-                    
-                    // Energy button in rightmost column - styled like roll button
-                    const energyButton = onUseTechnique && energyCost > 0 ? (
-                      <RollButton
-                        value={energyCost}
-                        displayValue={String(energyCost)}
-                        onClick={() => onUseTechnique(tech.id || String(i), energyCost)}
-                        disabled={!canUse}
-                        variant="success"
-                        size="sm"
-                        title={canUse ? `Use technique (costs ${energyCost} EP)` : 'Not enough energy'}
-                      />
-                    ) : energyCost > 0 ? (
-                      <span className="text-sm font-medium text-text-secondary">{energyCost}</span>
-                    ) : null;
-                    
-                    const rangeOrDamage = (tech.range || tech.damage) && (
-                      <div className="flex flex-wrap gap-3 text-sm text-text-secondary">
-                        {tech.range && (
-                          <span><span className="font-medium">Range:</span> {normalizeRangeDisplay(tech.range)}</span>
-                        )}
-                        {tech.damage && (
-                          <span><span className="font-medium">Damage:</span> {tech.damage}</span>
-                        )}
-                      </div>
-                    );
-                    
-                    return (
-                      <GridListRow
-                        key={tech.id || i}
-                        id={String(tech.id || i)}
-                        name={tech.name}
-                        description={tech.description}
-                        columns={columns}
-                        gridColumns={TECHNIQUE_GRID}
-                        chips={partChips}
-                        chipsLabel="Parts"
-                        badges={rowBadges}
-                        totalCost={totalTP && totalTP > 0 ? totalTP : undefined}
-                        costLabel="TP"
-                        requirements={rangeOrDamage}
-                        rightSlot={energyButton}
-                        onDelete={showLibraryEditControls && onRemoveTechnique ? () => onRemoveTechnique(tech.id || String(i)) : undefined}
-                        compact
-                      />
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">
-                  No techniques learned
-                </p>
-              )}
-            </div>
+            <TechniquesListSection
+              items={techniqueRows}
+              onAdd={onAddTechnique}
+              addLabel="Add technique"
+              includeActionColumn
+              sortState={techniqueSort}
+              onSort={(col) => setTechniqueSort(toggleSort(techniqueSort, col))}
+              rowChrome={{
+                rightSlot: true,
+                delete: !!(showLibraryEditControls && onRemoveTechnique),
+              }}
+              emptyMessage="No techniques learned"
+            />
           </>
         )}
 
@@ -1233,448 +715,58 @@ export function LibrarySection({
               )}
             </TabSummarySection>
 
-            {/* Weapons Section */}
-            <div>
-              <SectionHeader 
-                title="Weapons" 
-                onAdd={onAddWeapon}
-                addLabel="Add weapon"
-              />
-              {sortedWeapons.length > 0 && (
-                <ListHeader
-                  columns={WEAPON_COLUMNS}
-                  gridColumns={WEAPON_GRID}
-                  rowChrome={{
-                    leftSlot: true,
-                    delete: !!(showLibraryEditControls && onRemoveWeapon),
-                  }}
-                  sortState={weaponSort}
-                  onSort={(col) => setWeaponSort(toggleSort(weaponSort, col))}
-                />
-              )}
-              {sortedWeapons.length > 0 ? (
-                <div className="space-y-1">
-                  {sortedWeapons.map((item, i) => {
-                    // Attack bonus = ability + martial proficiency (same as character sheet weapon section)
-                    const { bonus: attackBonus, abilityName } = getWeaponAttackBonus(item, abilities, martialProficiency);
-                    const propertyChips = propertiesToPartData(resolveItemProperties(item), itemPropertiesDb).map(p => ({
-                      name: p.name,
-                      description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
-                      cost: p.tpCost,
-                      costLabel: 'TP',
-                      category: p.tpCost && p.tpCost > 0 ? ('cost' as const) : ('default' as const),
-                      level: p.optionLevels ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) || undefined : undefined,
-                    }));
-                    const hasMissingProf = hasMissingForEntry({ weapons: [item] });
-                    const rowBadges = hasMissingProf ? [{ label: 'Needs Proficiency', color: 'red' as const }] : undefined;
-                    const rangeValue = normalizeRangeDisplay((item as Item & { range?: string }).range) || 'Melee';
-                    const { dice: damageDice, type: damageType, rollStr: damageRollStr } = splitDamageDiceAndType(item.damage);
-                    const attackButton = rollContext?.canRoll !== false && rollContext ? (
-                      <RollButton
-                        value={attackBonus}
-                        onClick={() => rollContext.rollAttack(item.name, attackBonus)}
-                        size="sm"
-                        title={`Roll attack (${abilityName})`}
-                      />
-                    ) : (
-                      <span className="text-sm font-medium text-text-muted dark:text-text-secondary">
-                        {attackBonus >= 0 ? '+' : ''}{attackBonus}
-                      </span>
-                    );
-                    const damageButton = rollContext?.canRoll !== false && rollContext && damageRollStr !== '-' ? (
-                      <div className="flex flex-col items-center gap-0.5">
-                        <RollButton
-                          value={0}
-                          displayValue={damageDice}
-                          variant="danger"
-                          onClick={() => rollContext.rollDamage(String(damageRollStr))}
-                          size="sm"
-                          title="Roll damage"
-                        />
-                        {damageType && (
-                          <span className="text-[10px] text-text-muted dark:text-text-secondary leading-none">
-                            {damageType}
-                          </span>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center gap-0.5">
-                        <span className="text-sm font-medium text-text-muted dark:text-text-secondary">
-                          {damageDice}
-                        </span>
-                        {damageType && (
-                          <span className="text-[10px] text-text-muted dark:text-text-secondary leading-none">
-                            {damageType}
-                          </span>
-                        )}
-                      </div>
-                    );
-                    const columns: ColumnValue[] = [
-                      { key: 'range', value: rangeValue, align: 'center' },
-                      { key: 'attack', value: attackButton, align: 'center' },
-                      { key: 'damage', value: damageButton, align: 'center' },
-                    ];
-                    
-                    return (
-                      <GridListRow
-                        key={item.id || i}
-                        id={String(item.id || i)}
-                        name={item.name}
-                        columns={columns}
-                        gridColumns={WEAPON_GRID}
-                        chips={propertyChips}
-                        chipsLabel="Properties"
-                        badges={rowBadges}
-                        description={item.description}
-                        equipped={item.equipped}
-                        leftSlot={onToggleEquipWeapon && (
-                          <EquipToggle
-                            isEquipped={item.equipped || false}
-                            onToggle={() => onToggleEquipWeapon(item.id ?? item.name ?? i)}
-                            label={item.equipped ? 'Unequip' : 'Equip'}
-                          />
-                        )}
-                        rightSlot={undefined}
-                        onDelete={showLibraryEditControls && onRemoveWeapon ? () => onRemoveWeapon(item.id ?? item.name ?? i) : undefined}
-                      />
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">No weapons (see Unarmed Prowess in Archetype section)</p>
-              )}
-            </div>
+            <WeaponsListSection
+              layout="characterSheet"
+              items={weaponRows}
+              onAdd={onAddWeapon}
+              addLabel="Add weapon"
+              sortState={weaponSort}
+              onSort={(col) => setWeaponSort(toggleSort(weaponSort, col))}
+              rowChrome={{
+                leftSlot: true,
+                delete: !!(showLibraryEditControls && onRemoveWeapon),
+              }}
+              emptyMessage="No weapons (see Unarmed Prowess in Archetype section)"
+            />
 
-            {/* Shields Section — below weapons, above armor */}
-            <div>
-              <SectionHeader 
-                title="Shields" 
-                onAdd={onAddShield}
-                addLabel="Add shield"
-              />
-              {sortedShields.length > 0 && (
-                <ListHeader
-                  columns={SHIELD_COLUMNS}
-                  gridColumns={SHIELD_GRID}
-                  rowChrome={{
-                    leftSlot: true,
-                    delete: !!(showLibraryEditControls && onRemoveShield),
-                  }}
-                  sortState={shieldSort}
-                  onSort={(col) => setShieldSort(toggleSort(shieldSort, col))}
-                />
-              )}
-              {sortedShields.length > 0 ? (
-                <div className="space-y-1">
-                  {sortedShields.map((item, i) => {
-                    const enriched = item as Item & { shieldAmount?: string; shieldDamage?: string | null };
-                    const shieldBlock = enriched.shieldAmount ?? '-';
-                    const shieldDamageStr = enriched.shieldDamage ?? (item.damage ? formatDamageDisplay(item.damage) : '-');
-                    const { bonus: attackBonus } = getWeaponAttackBonus(item, abilities, martialProficiency);
-                    const rangeValue = normalizeRangeDisplay((item as Item & { range?: string }).range) || 'Melee';
-                    const { dice: shieldDamageDice, type: shieldDamageType, rollStr: shieldDamageRollStr } = splitDamageDiceAndType(
-                      // Prefer enriched shield damage string when present
-                      shieldDamageStr !== '-' ? String(shieldDamageStr) : item.damage
-                    );
-                    const propertyChips = propertiesToPartData(resolveItemProperties(item), itemPropertiesDb).map(p => ({
-                      name: p.name,
-                      description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
-                      cost: p.tpCost,
-                      costLabel: 'TP',
-                      category: p.tpCost && p.tpCost > 0 ? ('cost' as const) : ('default' as const),
-                      level: p.optionLevels ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) || undefined : undefined,
-                    }));
-                    const hasMissingProf = hasMissingForEntry({ shields: [item] });
-                    const rowBadges = hasMissingProf ? [{ label: 'Needs Proficiency', color: 'red' as const }] : undefined;
-                    
-                    const attackCell = shieldDamageStr !== '-' && rollContext?.canRoll !== false && rollContext ? (
-                      <div className="flex justify-center">
-                        <RollButton
-                          value={attackBonus}
-                          onClick={() => rollContext.rollAttack(item.name, attackBonus)}
-                          size="sm"
-                          title="Roll attack"
-                        />
-                      </div>
-                    ) : (
-                      shieldDamageStr !== '-' ? (attackBonus >= 0 ? '+' : '') + attackBonus : '-'
-                    );
-                    
-                    const damageCell = shieldDamageRollStr !== '-' && rollContext?.canRoll !== false && rollContext ? (
-                      <div className="flex flex-col items-center gap-0.5">
-                        <RollButton
-                          value={0}
-                          displayValue={shieldDamageDice}
-                          variant="danger"
-                          onClick={() => rollContext.rollDamage(String(shieldDamageRollStr))}
-                          size="sm"
-                          title="Roll damage"
-                        />
-                        {shieldDamageType && (
-                          <span className="text-[10px] text-text-muted dark:text-text-secondary leading-none">
-                            {shieldDamageType}
-                          </span>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center gap-0.5">
-                        <span className="text-sm font-medium text-text-muted dark:text-text-secondary">
-                          {shieldDamageDice}
-                        </span>
-                        {shieldDamageType && (
-                          <span className="text-[10px] text-text-muted dark:text-text-secondary leading-none">
-                            {shieldDamageType}
-                          </span>
-                        )}
-                      </div>
-                    );
-                    const columns: ColumnValue[] = [
-                      { key: 'range', value: rangeValue, align: 'center' },
-                      { key: 'attack', value: attackCell, align: 'center' },
-                      { key: 'damage', value: damageCell, align: 'center' },
-                      {
-                        key: 'block',
-                        value:
-                          shieldBlock !== '-' && rollContext?.canRoll !== false && rollContext ? (
-                            <div className="flex justify-center">
-                              <RollButton
-                                value={0}
-                                displayValue={String(shieldBlock)}
-                                variant="primary"
-                                onClick={() => rollContext.rollDamage(String(shieldBlock) + ' Bludgeoning', 0, 'Shield block')}
-                                size="sm"
-                                title="Roll shield block amount"
-                              />
-                            </div>
-                          ) : (
-                            shieldBlock
-                          ),
-                        className: 'text-primary-600 dark:text-primary-400 font-medium',
-                        align: 'center',
-                      },
-                    ];
-                    return (
-                      <GridListRow
-                        key={item.id || i}
-                        id={String(item.id || i)}
-                        name={item.name}
-                        columns={columns}
-                        gridColumns={SHIELD_GRID}
-                        chips={propertyChips}
-                        chipsLabel="Properties"
-                        badges={rowBadges}
-                        description={item.description}
-                        equipped={item.equipped}
-                        leftSlot={onToggleEquipShield && (
-                          <EquipToggle
-                            isEquipped={item.equipped || false}
-                            onToggle={() => onToggleEquipShield(item.id ?? item.name ?? i)}
-                            label={item.equipped ? 'Unequip' : 'Equip'}
-                          />
-                        )}
-                        rightSlot={undefined}
-                        onDelete={showLibraryEditControls && onRemoveShield ? () => onRemoveShield(item.id ?? item.name ?? i) : undefined}
-                      />
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">No shields</p>
-              )}
-            </div>
-            
-            {/* Armor Section */}
-            <div>
-              <SectionHeader 
-                title="Armor" 
-                onAdd={onAddArmor}
-                addLabel="Add armor"
-              />
-              {sortedArmor.length > 0 && (
-                <ListHeader
-                  columns={ARMOR_COLUMNS}
-                  gridColumns={ARMOR_ROW_GRID}
-                  rowChrome={{
-                    leftSlot: true,
-                    delete: !!(showLibraryEditControls && onRemoveArmor),
-                  }}
-                  sortState={armorSort}
-                  onSort={(col) => setArmorSort(toggleSort(armorSort, col))}
-                />
-              )}
-              {sortedArmor.length > 0 ? (
-                <div className="space-y-1">
-                  {sortedArmor.map((item, i) => {
-                    const propertyChips = propertiesToPartData(resolveItemProperties(item), itemPropertiesDb).map(p => ({
-                      name: p.name,
-                      description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
-                      cost: p.tpCost,
-                      costLabel: 'TP',
-                      category: p.tpCost && p.tpCost > 0 ? ('cost' as const) : ('default' as const),
-                      level: p.optionLevels ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) || undefined : undefined,
-                    }));
-                    const hasMissingProf = hasMissingForEntry({ armor: [item] });
-                    const rowBadges = hasMissingProf ? [{ label: 'Needs Proficiency', color: 'red' as const }] : undefined;
-                    // Get ability requirement from enriched data
-                    const abilityReq = (item as Item & { abilityRequirement?: { name?: string; level?: number } }).abilityRequirement;
-                    const agilityRed = (item as Item & { agilityReduction?: number }).agilityReduction;
-                    
-                    // Damage reduction: 1 (base) + 1 per op_1_lvl. Use enriched armorValue when present, else derive from properties.
-                    const itemWithArmor = item as { armorValue?: number; armor?: number };
-                    let damageReduction = itemWithArmor.armorValue ?? itemWithArmor.armor ?? 0;
-                    let critRangeBonus = 0;
-                    const armorProps = resolveItemProperties(item as ItemWithLibrarySource);
-                    if (armorProps) {
-                      for (const prop of armorProps) {
-                        if (!prop) continue;
-                        const propName = typeof prop === 'string' ? prop : prop.name || '';
-                        const op1Lvl = typeof prop === 'object' && 'op_1_lvl' in prop ? Number((prop as Record<string, unknown>).op_1_lvl) || 0 : 0;
-                        if (propName === 'Damage Reduction' && damageReduction === 0) {
-                          damageReduction = 1 + op1Lvl;
-                        }
-                        if (propName === 'Critical Range +1') {
-                          critRangeBonus = 1 + op1Lvl;
-                        }
-                      }
-                    }
-                    // Critical range = base evasion + 10 + bonus (per game rules)
-                    const agility = abilities?.agility ?? 0;
-                    const baseEvasion = 10 + agility;
-                    const critThreshold = critRangeBonus > 0 ? baseEvasion + 10 + critRangeBonus : undefined;
-                    
-                    const columns: ColumnValue[] = [
-                      { key: 'dr', value: damageReduction > 0 ? String(damageReduction) : '-', className: 'text-primary-600 dark:text-primary-400 font-medium', align: 'center' },
-                      { key: 'crit', value: critThreshold ?? '-', align: 'center' },
-                    ];
-                    
-                    // Requirements line for expanded view (ability req, agility reduction)
-                    const armorRequirements = (abilityReq?.name && abilityReq?.level) || (agilityRed && agilityRed > 0) ? (
-                      <div className="space-y-1 text-sm text-text-secondary">
-                        {abilityReq?.name && abilityReq?.level && (
-                          <p><span className="font-medium">Requires:</span> {abilityReq.name} {abilityReq.level}+</p>
-                        )}
-                        {agilityRed && agilityRed > 0 && (
-                          <p><span className="font-medium">Agility Reduction:</span> -{agilityRed}</p>
-                        )}
-                      </div>
-                    ) : undefined;
-                    
-                    return (
-                      <GridListRow
-                        key={item.id || i}
-                        id={String(item.id || i)}
-                        name={item.name}
-                        description={item.description}
-                        columns={columns}
-                        gridColumns={ARMOR_ROW_GRID}
-                        chips={propertyChips}
-                        chipsLabel="Properties"
-                        badges={rowBadges}
-                        requirements={armorRequirements}
-                        equipped={item.equipped}
-                        leftSlot={onToggleEquipArmor && (
-                          <EquipToggle
-                            isEquipped={item.equipped || false}
-                            onToggle={() => onToggleEquipArmor(item.id ?? item.name ?? i)}
-                            label={item.equipped ? 'Unequip' : 'Equip'}
-                          />
-                        )}
-                        onDelete={showLibraryEditControls && onRemoveArmor ? () => onRemoveArmor(item.id ?? item.name ?? i) : undefined}
-                      />
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">No armor</p>
-              )}
-            </div>
-            
-            {/* Equipment Section */}
-            <div>
-              <SectionHeader 
-                title="Equipment" 
-                onAdd={onAddEquipment}
-                addLabel="Add equipment"
-              />
-              {sortedEquipment.length > 0 && (
-                <ListHeader
-                  columns={EQUIPMENT_COLUMNS}
-                  gridColumns={EQUIPMENT_GRID}
-                  rowChrome={{
-                    delete: !!(showLibraryEditControls && onRemoveEquipment),
-                  }}
-                  sortState={equipmentSort}
-                  onSort={(col) => setEquipmentSort(toggleSort(equipmentSort, col))}
-                />
-              )}
-              {sortedEquipment.length > 0 ? (
-                <div className="space-y-1">
-                  {sortedEquipment.map((item, i) => {
-                    const propertyChips = propertiesToPartData(resolveItemProperties(item), itemPropertiesDb).map(p => ({
-                      name: p.name,
-                      description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
-                      cost: p.tpCost,
-                      costLabel: 'TP',
-                      category: p.tpCost && p.tpCost > 0 ? ('cost' as const) : ('default' as const),
-                      level: p.optionLevels ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) || undefined : undefined,
-                    }));
-                    
-                    // Capitalize item type for display
-                    const itemType = formatListCellLabel(item.type);
-                    
-                    // Qty column: universal stepper (same pattern as feats Uses column). Editable outside edit mode; going to 0 removes the item.
-                    const itemId = item.id ?? item.name ?? i;
-                    const qty = item.quantity ?? 1;
-                    const quantityStepper = onEquipmentQuantityChange ? (
-                      <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-                        <QuantitySelector
-                          quantity={qty}
-                          min={0}
-                          max={99}
-                          size="sm"
-                          onChange={(newVal) => onEquipmentQuantityChange(itemId, newVal - qty)}
-                        />
-                      </div>
-                    ) : (
-                      qty
-                    );
-                    
-                    const columns: ColumnValue[] = [
-                      { key: 'type', value: itemType, align: 'center' },
-                      { key: 'quantity', value: quantityStepper, align: 'center' },
-                    ];
-                    
-                    // Build badges from item metadata
-                    const badges: Array<{ label: string; color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' }> = [];
-                    if (item.rarity && item.rarity !== 'common') {
-                      const rarityColor = item.rarity === 'legendary' ? 'amber' : item.rarity === 'epic' ? 'purple' : item.rarity === 'rare' ? 'blue' : 'green';
-                      badges.push({ label: item.rarity.charAt(0).toUpperCase() + item.rarity.slice(1), color: rarityColor });
-                    }
-                    if (item.cost !== undefined && item.cost > 0) {
-                      badges.push({ label: `${item.cost}g`, color: 'amber' });
-                    }
-                    
-                    return (
-                      <GridListRow
-                        key={item.id || i}
-                        id={String(item.id || i)}
-                        name={item.name}
-                        description={item.description}
-                        columns={columns}
-                        gridColumns={EQUIPMENT_GRID}
-                        chips={propertyChips}
-                        chipsLabel="Properties"
-                        badges={badges}
-                        onDelete={showLibraryEditControls && onRemoveEquipment ? () => onRemoveEquipment(itemId) : undefined}
-                        compact
-                      />
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">No equipment</p>
-              )}
-            </div>
+            <ShieldsListSection
+              layout="characterSheet"
+              items={shieldRows}
+              onAdd={onAddShield}
+              addLabel="Add shield"
+              sortState={shieldSort}
+              onSort={(col) => setShieldSort(toggleSort(shieldSort, col))}
+              rowChrome={{
+                leftSlot: true,
+                delete: !!(showLibraryEditControls && onRemoveShield),
+              }}
+            />
+
+            <ArmorListSection
+              layout="characterSheet"
+              items={armorRows}
+              onAdd={onAddArmor}
+              addLabel="Add armor"
+              sortState={armorSort}
+              onSort={(col) => setArmorSort(toggleSort(armorSort, col))}
+              rowChrome={{
+                leftSlot: true,
+                delete: !!(showLibraryEditControls && onRemoveArmor),
+              }}
+            />
+
+            <EquipmentListSection
+              layout="characterSheet"
+              items={equipmentRows}
+              onAdd={onAddEquipment}
+              addLabel="Add equipment"
+              sortState={equipmentSort}
+              onSort={(col) => setEquipmentSort(toggleSort(equipmentSort, col))}
+              rowChrome={{
+                delete: !!(showLibraryEditControls && onRemoveEquipment),
+              }}
+            />
+
           </div>
         )}
 

@@ -217,7 +217,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-314
   title: Extract shared official-library list renderer (Library/Admin/Codex tab dedup)
   priority: medium
-  status: partial
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -228,22 +228,22 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     copy in `CodexFeatsTab`/`CodexPartsTab`/`CodexPropertiesTab`/`CodexCreatureFeatsTab` with the
     existing `CodexMyCodexEmpty` component.
   related_files:
-    - src/app/(main)/library/LibraryPowersTab.tsx
-    - src/app/(main)/admin/AdminPublicPowersTab.tsx
+    - src/lib/codex/feat-list.ts
+    - src/lib/codex/skill-list.ts
+    - src/components/codex/codex-feat-row.tsx
+    - src/components/codex/codex-skill-row.tsx
     - src/app/(main)/codex/CodexFeatsTab.tsx
-    - src/app/(main)/admin/AdminFeatsTab.tsx
+    - src/app/(main)/codex/CodexSkillsTab.tsx
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
   acceptance_criteria:
     - A shared list renderer collapses the duplicated grid/display logic between Library and Admin (and Codex where applicable).
     - The 4 Codex tabs reuse `CodexMyCodexEmpty` instead of inline copy.
     - No visual/behavioral regressions across Library, Admin, Codex.
     - `npm run build` passes.
-  completed_work: |
-    - 6 Codex My-mode tabs use CodexMyCodexEmpty.
-  remaining_work: |
-    - Shared OfficialLibraryList for Library≈Admin grid dedup.
-  follow_up_tasks:
-    - TASK-347
-  notes: "2026-06-13 subset."
+  notes: |
+    Done 2026-06-18. Official library lists via TASK-347; Codex≈Admin feats/skills dedup via
+    lib/codex/*-list.ts + CodexFeatRow/CodexSkillRow. CodexMyCodexEmpty on 6 My-mode tabs. Build exit 0.
 
 - id: TASK-315
   title: Finish public→official rename (delete /api/public, migrate usePublicLibrary call sites)
@@ -291,7 +291,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-317
   title: Adopt existing character-sheet context; split characters/[id]/page.tsx (4,200 L)
   priority: high
-  status: partial
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -312,17 +312,32 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - `npm run build` passes.
   completed_work: |
     - CharacterSheetProvider + LibrarySection context (20 prop removals).
+    - TASK-348: CharacterSheetBody + useCharacterSheetDerived; four main sections on context.
+    - useCharacterSheetActions: all sheet mutation handlers extracted from page.
+    - LibrarySection uses entity-library-sections (*ListSection) via library-entity-rows mappers; library-section ~1783→~820 lines.
+    - Single LibrarySection DOM mount in CharacterSheetBody (responsive flex/grid).
+    - FeatsTab uses FeatsTraitsListSection + library-feat-rows (~760→~454 L).
+    - TASK-375: shared part-display.ts for PartData + calculator TP alignment.
   remaining_work: |
-    - Split page into modules; migrate remaining sections.
-  follow_up_tasks:
-    - TASK-348
-    - TASK-365
-  notes: "2026-06-13 incremental."
+    - (none)
+  notes: |
+    Done 2026-06-18 (continued): FeatsTab wired through FeatsTraitsListSection + library-feat-rows mappers (~760→~454 L). TASK-375 partsToPartData dedupe done. Build exit 0.
+    2026-06-13 incremental. 2026-06-18: page ~639 L; entity-library-sections migration + single library mount. Build exit 0 (webpack).
+  developer_test_plan: |
+    Suite DEV-V-009 T001–T005 — see BUILD_VALIDATION.md.
+  build_validation:
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T001
+      - DEV-V-009-T002
+      - DEV-V-009-T003
+      - DEV-V-009-T004
+      - DEV-V-009-T005
 
 - id: TASK-318
   title: Split add-library-item-modal.tsx (4,762 L) into hook + per-type subcomponents
   priority: medium
-  status: partial
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -330,19 +345,21 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     + enrichment + selection in one 4,762-line file. Extract a data hook and per-type subcomponents.
   related_files:
     - src/components/character-sheet/add-library-item-modal.tsx
+    - src/components/character-sheet/add-library-item/modal-config.ts
+    - src/components/character-sheet/add-library-item/map-selection.ts
+    - src/components/character-sheet/add-library-item/power-header-extra.tsx
+    - src/hooks/add-library-item/
     - src/hooks/use-add-library-item-data.ts
     - src/hooks/index.ts
   acceptance_criteria:
     - Fetch/filter/sort logic extracted into a hook; per-type rendering split into subcomponents.
     - No behavior change to selection across all item types.
     - `npm run build` passes.
-  completed_work: |
-    - useAddLibraryItemData hook extracted.
-  remaining_work: |
-    - Per-type modal subcomponents.
-  follow_up_tasks:
-    - TASK-349
-  notes: "2026-06-13."
+  notes: Done 2026-06-18. Modal ~90 lines; `hooks/add-library-item/` per-type builders + load/normalize; modal-config/map-selection/header-extra. Build exit 0.
+  build_validation:
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T006
 
 - id: TASK-319
   title: Remove verified-unused shared exports + legacy load-modal branch
@@ -401,8 +418,9 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - `npm run build` passes.
   completed_work: |
     - Batch 1 lint fix; 0 errors.
+    - Batch 2 (TASK-350): lib/hooks no-unused-vars; character sheet page destructuring; ESLint 393→339 warnings.
   remaining_work: |
-    - ~329 ESLint warnings remain.
+    - ~339 ESLint warnings remain (mostly exhaustive-deps, set-state-in-effect, admin any).
   follow_up_tasks:
     - TASK-350
   notes: "2026-06-13 batch 1."
@@ -509,7 +527,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-327
   title: Address Supabase performance advisors (RLS initplan, dup policies, FK indexes)
   priority: medium
-  status: partial
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -520,18 +538,15 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     `usernames.user_id`); and several unused indexes (mostly on empty `official_enhanced_items`).
   related_files:
     - src/docs/SUPABASE_SCHEMA.md
+    - sql/supabase-rls-initplan-fk-indexes-2026-06.sql
+    - sql/supabase-rls-initplan-batch2-2026-06.sql
+    - sql/supabase-rls-consolidate-permissive-2026-06.sql
   acceptance_criteria:
     - RLS policies wrap `auth.*()` in a scalar subquery.
     - Duplicate permissive policies consolidated where safe.
     - Missing FK indexes added; clearly-unused indexes removed.
     - Migrations documented; advisors re-checked; no access regressions.
-  completed_work: |
-    - FK indexes + batch-1 initplan SQL applied live.
-  remaining_work: |
-    - Consolidate duplicate permissive RLS policies.
-  follow_up_tasks:
-    - TASK-352
-  notes: "2026-06-13 batch 1."
+  notes: "Done 2026-06-18. Batch 1 initplan + FK indexes (2026-06-13), batch 2 (TASK-354), duplicate-policy consolidation (TASK-352). Performance advisor: no multiple_permissive_policies; unused_index INFO only on empty/low-traffic tables."
 
 # Queued from Systematic Per-Area Audit (SYSTEMATIC_AUDIT_2026-06.md)
 
@@ -639,7 +654,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-332
   title: Primitive-level a11y & touch targets (high leverage)
   priority: high
-  status: partial
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -664,10 +679,9 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
   completed_work: |
     - Touch targets, modal focus trap, tab keyboard nav, ErrorDisplay onRetry.
   remaining_work: |
-    - aria-controls + role=tabpanel on tabbed pages.
-  follow_up_tasks:
-    - TASK-355
-  notes: "2026-06-13. SA-17-1..8 except tabpanel wiring."
+    - (none — completed via TASK-355)
+  follow_up_tasks: []
+  notes: "2026-06-13. SA-17-1..8. Tabpanel wiring finished 2026-06-18 (TASK-355). Build exit 0."
 
 - id: TASK-333
   title: Autosave correctness (sheet / encounter / crafting)
@@ -767,7 +781,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-337
   title: Creature/species creator unification + bug fixes
   priority: medium
-  status: partial
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -791,11 +805,12 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - npm run build passes.
   completed_work: |
     - Transformer fixes; species batch; creature lazy hooks + budget guard.
-  remaining_work: |
-    - SkillsAllocationPage + unified load modal.
-  follow_up_tasks:
-    - TASK-357
-  notes: "2026-06-13."
+    - SkillsAllocationPage + LoadFromLibraryModal (TASK-357).
+    - Species LoadFromLibraryModal + SourceFilter; lazy user/official species fetch on modal open.
+    - isSpeciesFormSaveReady guard on toolbar + handleSave.
+  remaining_work: []
+  follow_up_tasks: []
+  notes: "2026-06-13. Skills/load unified 2026-06-18 (TASK-357). Species load/save guards 2026-06-18."
 
 - id: TASK-338
   title: Replace blocking alert()/confirm() with toasts/modals
@@ -820,7 +835,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-339
   title: Standardize loading/error/empty states with retry
   priority: medium
-  status: partial
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -837,16 +852,16 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - npm run build passes.
   completed_work: |
     - ErrorDisplay+onRetry on Library, Codex, creators, encounters, characters.
-  remaining_work: |
-    - Admin tooltips/users/roles + spreadsheet retry.
-  follow_up_tasks:
-    - TASK-358
-  notes: "2026-06-13. Absorbed TASK-323."
+    - TASK-358: admin tooltips/users/roles/changelogs retry.
+    - CodexSpreadsheetView ErrorDisplay+refetch (2026-06-18 audit pass).
+  remaining_work: []
+  follow_up_tasks: []
+  notes: "2026-06-13. Absorbed TASK-323. Closed 2026-06-18 via TASK-358 + spreadsheet retry."
 
 - id: TASK-340
   title: API consistency & hardening
   priority: medium
-  status: partial
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -868,11 +883,11 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - npm run build passes.
   completed_work: |
     - GET characters error handling; campaigns rate limit; admin/tooltips Zod.
+    - TASK-359: withSafeJsonBlob, strict encounter create, character-save dedup, codex cache align.
   remaining_work: |
-    - passthrough tightening; cache reconcile; prepareForSave dedup.
-  follow_up_tasks:
-    - TASK-359
-  notes: "2026-06-13 subset."
+    - Crafting session schemas still use passthrough on nested refs (lower priority).
+  follow_up_tasks: []
+  notes: "2026-06-13 subset. TASK-359 closed passthrough/cache/dedup remainder 2026-06-18."
 
 - id: TASK-341
   title: Characters list parity (sort/search, touch actions, auth-init)
@@ -942,7 +957,7 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-344
   title: Encounters cleanup & correctness
   priority: medium
-  status: partial
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -955,17 +970,15 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - src/app/(main)/encounters/[id]/_components/CombatEncounterView.tsx
     - src/hooks/use-encounters.ts
     - src/lib/guest-encounter-storage.ts
+    - src/lib/encounter/character-resource-sync.ts
   acceptance_criteria:
     - Dead tracker UI removed; legacy folder dependency resolved.
     - Completed status reachable; turn order correct after reorder; guest data migrates on login.
     - npm run build passes.
   completed_work: |
     - Dead tracker removed; completed lifecycle; guest migration; module move.
-  remaining_work: |
-    - Two-way HP/EN/AP sync.
-  follow_up_tasks:
-    - TASK-360
-  notes: "2026-06-13."
+    - Two-way HP/EN/AP sync via TASK-360.
+  notes: Done 2026-06-18 (TASK-360 closed remaining sync gap). Build exit 0.
 
 - id: TASK-345
   title: Static content fixes (metadata, legal copy, carousel a11y)
@@ -1009,8 +1022,9 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - No client console.* left; npm run build + lint pass.
   completed_work: |
     - Batch 1: footer, roll-button, crafting console.*.
+    - Batch 2 (TASK-351): ~38 client console.* removed; home-page/item-creator neutral→semantic; shared status text -600→-700.
   remaining_work: |
-    - Repo-wide tokens + ~38 console.* sites.
+    - Residual status -600 on hover/button backgrounds (intentional); some admin/codex body text.
   follow_up_tasks:
     - TASK-351
   notes: "2026-06-13 batch 1."
@@ -1020,58 +1034,93 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-347
   title: Extract shared OfficialLibraryList (Library + Admin grid dedup)
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-06-13
   created_by: agent
   parent_task: TASK-314
   audit_refs: [SA-6-4, SA-14-8]
+  related_files:
+    - src/components/shared/official-power-list.tsx
+    - src/components/shared/official-technique-list.tsx
+    - src/components/shared/official-item-list.tsx
+    - src/components/shared/official-creature-list.tsx
+    - src/lib/library/official-power-list.ts
+    - src/lib/library/official-technique-list.ts
+    - src/lib/library/official-item-list.ts
+    - src/lib/library/official-creature-list.ts
+    - src/app/(main)/library/LibraryPublicContent.tsx
+    - src/app/(main)/admin/public-library/AdminPublic*.tsx
   acceptance_criteria:
     - Shared list component for Library + Admin official views; build passes.
+  notes: Done 2026-06-18. OfficialPower/Technique/Item/CreatureList shared by Library PublicContent + Admin public-library tabs. LibraryPublicContent ~580→~220 lines. Build exit 0.
 
 - id: TASK-348
   title: Split character sheet page into per-tab modules
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-06-13
   parent_task: TASK-317
+  related_files:
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/components/character-sheet/character-sheet-body.tsx
+    - src/components/character-sheet/character-sheet-context.tsx
+    - src/components/character-sheet/use-character-sheet-derived.ts
   acceptance_criteria:
     - Page slimmed; two+ sections use context; build passes.
+  notes: |
+    Done 2026-06-18. useCharacterSheetDerived + buildCharacterSheetLibraryProps; CharacterSheetBody with context-connected Abilities/Skills/Archetype/Library panels; expanded CharacterSheetProvider. page.tsx ~2130→~639 lines (with useCharacterSheetActions). Build exit 0.
 
 - id: TASK-349
   title: Add-library-item modal per-type subcomponents
   priority: low
-  status: not-started
+  status: done
   created_at: 2026-06-13
   parent_task: TASK-318
   acceptance_criteria:
     - Per-type subcomponents; build passes.
+  notes: Done 2026-06-18. Per-type selectable builders (power/technique/empowered/equipment), load-raw-items, modal-config, map-selection, power-header-extra. Build exit 0.
+  build_validation:
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T006
 
 - id: TASK-350
   title: ESLint warning cleanup batch 2
   priority: low
-  status: not-started
+  status: done
   created_at: 2026-06-13
   parent_task: TASK-321
   acceptance_criteria:
     - Warnings materially reduced; lint + build pass.
+  notes: Done 2026-06-18. ESLint src 393→334 warnings, 0 errors (fixed conditional useMemo in FeatsTraitsListSection during audit). no-unused-vars batch across lib/hooks + character sheet page. Build exit 0.
 
 - id: TASK-351
   title: Token & console cleanup batch 2
   priority: low
-  status: not-started
+  status: done
   created_at: 2026-06-13
   parent_task: TASK-346
   acceptance_criteria:
     - Contrast-safe tokens; no client console.*; build passes.
+  notes: Done 2026-06-18. Removed ~38 client console.*; home-page neutral→semantic; shared status body text -700 tokens. Server/API/error-boundary logging retained. Build exit 0.
 
 - id: TASK-352
   title: Consolidate duplicate permissive RLS policies
   priority: low
-  status: not-started
+  status: done
   created_at: 2026-06-13
   parent_task: TASK-327
+  related_files:
+    - sql/supabase-rls-consolidate-permissive-2026-06.sql
   acceptance_criteria:
     - SQL applied; advisor warnings reduced; spot-test campaigns.
+  notes: "Done 2026-06-18. Applied migration rls_consolidate_permissive_policies_2026_06 on lbqhiwudvifmkjtkccdg. Merged campaign_members/campaigns/characters SELECT+write dupes; split role_policies admin ALL into INSERT/UPDATE/DELETE; campaigns SELECT now includes campaign_members EXISTS; characters campaign roster match fixed (characters.id). Performance advisor: zero multiple_permissive_policies. Human spot-test: DEV-V-005 T001–T003."
+  build_validation:
+    suite: DEV-V-005
+    tests:
+      - DEV-V-005-T001
+      - DEV-V-005-T002
+      - DEV-V-005-T003
 
 - id: TASK-353
   title: Enable Supabase leaked-password protection (HIBP)
@@ -1092,10 +1141,39 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-355
   title: TabNavigation aria-controls + tabpanel wiring
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-06-13
   parent_task: TASK-332
   audit_refs: [SA-17-4]
+  related_files:
+    - src/components/ui/tab-navigation.tsx
+    - src/components/ui/index.ts
+    - src/app/(main)/codex/page.tsx
+    - src/app/(main)/library/page.tsx
+    - src/app/(main)/encounters/page.tsx
+    - src/app/(main)/campaigns/page.tsx
+    - src/app/(main)/crafting/page.tsx
+    - src/app/(main)/admin/codex/page.tsx
+    - src/app/(main)/admin/public-library/page.tsx
+    - src/app/(main)/admin/changelogs/page.tsx
+    - src/app/(main)/admin/core-rules/page.tsx
+    - src/components/character-sheet/library-section.tsx
+    - src/components/character-creator/steps/equipment-step.tsx
+    - src/components/crafting/CraftingItemSelectModal.tsx
+  description: |
+    Complete WAI-ARIA tabs pattern: tab buttons get aria-controls; tab content gets role="tabpanel"
+    with matching id and aria-labelledby. Export useTabGroup + TabContentPanel helpers for shared-panel
+    pages that conditionally render tab content.
+  acceptance_criteria:
+    - TabNavigation sets aria-controls on every tab button.
+    - Tab panels use role="tabpanel" with stable ids and aria-labelledby.
+    - Codex, Library, and other TabNavigation call sites wired.
+    - npm run build passes.
+  notes: |
+    Done 2026-06-18: tab-navigation.tsx — useTabGroup, TabContentPanel, TabPanel, tabButtonId,
+    tabPanelIdForTab; sharedTabPanelId + tabGroupId on TabNavigation. Wired on Codex, Library,
+    Encounters, Campaigns, Crafting, admin codex/public-library/changelogs/core-rules, sheet
+    library-section, creator equipment-step, CraftingItemSelectModal (tabPanelA11y). Build exit 0.
 
 - id: TASK-356
   title: Character creator validation & step guards
@@ -1128,76 +1206,482 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - id: TASK-357
   title: Creature SkillsAllocationPage + unified load modal
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-06-13
   parent_task: TASK-337
   audit_refs: [SA-10-3, SA-10-5]
+  related_files:
+    - src/app/(main)/creature-creator/page.tsx
+    - src/app/(main)/creature-creator/creature-skill-utils.ts
+    - src/components/shared/skills-allocation-page.tsx
+    - src/components/creator/LoadFromLibraryModal.tsx
+  description: |
+    Replace bespoke creature skills UI and LoadCreatureModal with shared SkillsAllocationPage
+    (Add Skill/Sub-Skill modals, defense bonus allocation with point costs) and LoadFromLibraryModal
+    with SourceFilter (My / Realms / All) matching power/technique/item creators.
+  acceptance_criteria:
+    - Creature creator uses SkillsAllocationPage for skills + defense skill-point allocation.
+    - Load uses LoadFromLibraryModal with SourceFilter for user + official creatures.
+    - LoadCreatureModal removed; build passes.
+  notes: |
+    Done 2026-06-18: creature-skill-utils.ts (allocations ↔ CreatureSkill[], rawRecordToCreatureState,
+    buildCreatureSelectableItem). Page uses SkillsAllocationPage; removed DefenseBlock duplicate section.
+    LoadFromLibraryModal + loadSource. Deleted LoadCreatureModal.tsx. Build exit 0.
 
 - id: TASK-358
   title: Admin low-traffic pages error retry
   priority: low
-  status: not-started
+  status: done
   created_at: 2026-06-13
   parent_task: TASK-339
   audit_refs: [SA-14-14, SA-20-9]
+  related_files:
+    - src/app/(main)/admin/tooltips/page.tsx
+    - src/app/(main)/admin/users/page.tsx
+    - src/app/(main)/admin/roles/page.tsx
+    - src/app/(main)/admin/changelogs/page.tsx
+  acceptance_criteria:
+    - Load failures on tooltips, users, roles, and changelogs show ErrorDisplay with retry.
+    - npm run build passes.
+  notes: Done 2026-06-18. ErrorDisplay + refetch/reloadToken on all four pages. Build exit 0.
 
 - id: TASK-359
   title: API hardening remainder
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-06-13
   parent_task: TASK-340
   audit_refs: [SA-18-10, SA-18-11, SA-18-13]
+  related_files:
+    - src/lib/api-validation.ts
+    - src/lib/character-save.ts
+    - src/app/api/characters/route.ts
+    - src/app/api/characters/[id]/route.ts
+    - src/hooks/use-codex.ts
+  description: |
+    (1) Tighten `.passthrough()` on character/library/encounter/public mutation schemas;
+    (2) reconcile codex client cache with server must-revalidate; (3) dedup prepareForSave.
+  acceptance_criteria:
+    - Character/library/public blobs use catchall + key bounds; encounter create uses explicit strict schema.
+    - prepareForSave lives in shared lib; both character routes import it.
+    - useCodex staleTime aligned with official library (5 min) + refetchOnMount.
+    - npm run build passes.
+  notes: |
+    Done 2026-06-18: `withSafeJsonBlob` helper (max 500 keys, blocks __proto__/constructor);
+    encounterCreateSchema strict with full default payload fields; `character-save.ts` shared module;
+    use-codex staleTime 30m→5m. Build exit 0.
 
 - id: TASK-360
   title: Encounter two-way HP/EN/AP sync
   priority: low
-  status: not-started
+  status: done
   created_at: 2026-06-13
   parent_task: TASK-344
+  related_files:
+    - src/lib/encounter/character-resource-sync.ts
+    - src/hooks/use-character-resource-sync.ts
+    - src/app/(main)/encounters/[id]/_components/CombatEncounterView.tsx
+    - src/components/encounters/CombatantCard.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+  acceptance_criteria:
+    - Character sheet HP/EN/AP changes sync to linked encounter combatants (realtime + fast PATCH).
+    - Character owner can edit HP/EN/AP on their linked encounter card; changes PATCH back to character.
+    - Other players' linked combatants stay read-only on encounter.
+    - npm run build passes.
+  notes: Done 2026-06-18. scheduleCharacterResourceSync (400ms debounce) + useCharacterResourceSync on sheet; owned linked combatants editable on encounter. Build exit 0.
 
 - id: TASK-361
   title: Auth UX remainder
   priority: medium
-  status: partial
+  status: done
   created_at: 2026-06-13
   completed_work: |
     - Apple sign-in hidden on login/register (DEV-Q01).
     - Usernames SELECT restricted to own row (DEV-Q02, sql/supabase-usernames-select-restrict-2026-06.sql).
-  remaining_work: |
-    - Forgot-username AuthCard layout (SA-2-6).
-    - Auth rate limits on forgot-username/resend (SA-2-8).
-    - Register username blocklist parity with changeUsernameAction (SA-2-14).
+    - Forgot-username uses AuthCard + semantic tokens (SA-2-6/7).
+    - Server rate limits on resend + forgot-username stub via authActionLimiter (SA-2-8).
+    - Shared username-rules.ts; register schema + createUserProfileAction blocklist parity (SA-2-14).
+  remaining_work: []
   audit_refs: [SA-2-6, SA-2-8, SA-2-14]
-  developer_test_plan: |
-    Suite DEV-V-007 (planned) — see BUILD_VALIDATION.md.
-  notes: "2026-06-13: Apple hidden; username RLS applied live."
+  related_files:
+    - src/lib/username-rules.ts
+    - src/app/(auth)/auth-actions.ts
+    - src/app/(auth)/forgot-username/page.tsx
+    - src/lib/validation/schemas.ts
+    - src/app/(auth)/login/page.tsx
+    - src/app/(auth)/register/page.tsx
+  notes: "Done 2026-06-18. resendConfirmationAction on login/register. Build exit 0."
 
 - id: TASK-362
   title: Library/Codex lazy tab queries
   priority: low
-  status: not-started
+  status: done
   created_at: 2026-06-13
   audit_refs: [SA-6-6, SA-6-7, SA-7-4]
+  related_files:
+    - src/app/(main)/library/page.tsx
+    - src/app/(main)/library/LibraryTechniquesTab.tsx
+    - src/hooks/use-codex.ts
+    - src/hooks/use-enhanced-items.ts
+    - src/app/(main)/codex/*.tsx
+  acceptance_criteria:
+    - Library page fetches my vs public counts only for active mode.
+    - LibraryTechniquesTab runs one user query per mode.
+    - Codex my-mode empty tabs skip codex fetch via enabled flags.
+    - npm run build passes.
+  notes: Done 2026-06-18. useCodex* + useEnhancedItems accept enabled; library/codex tabs gated. Build exit 0.
 
 - id: TASK-363
   title: apiFetch migration remainder
   priority: low
-  status: not-started
+  status: done
   created_at: 2026-06-13
   audit_refs: [SA-18-2, SA-18-3]
+  related_files:
+    - src/lib/api-client.ts
+    - src/services/character-service.ts
+    - src/services/crafting-service.ts
+    - src/services/encounter-service.ts
+    - src/services/library-service.ts
+    - src/services/campaign-service.ts
+    - src/services/campaign-roll-service.ts
+    - src/hooks/use-user-library.ts
+    - src/hooks/use-admin.ts
+    - src/components/layout/header.tsx
+    - src/app/(main)/my-account/page.tsx
+    - src/app/(main)/encounters/[id]/_components/CombatEncounterView.tsx
+    - src/components/shared/add-combatant-modal.tsx
+    - src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx
+  acceptance_criteria:
+    - JSON API calls use apiFetch/apiFetchOrNull except FormData uploads.
+    - npm run build passes.
+  notes: |
+    Done 2026-06-18. Services + hooks + header/my-account tooltip PATCH + encounter campaign character fetches migrated.
+    Upload routes (portrait/profile-picture) intentionally remain raw fetch (FormData). Added apiFetchOrNull + CampaignCharacterEncounterData type. Build exit 0.
 
 - id: TASK-364
   title: Unify FilterSection implementations
   priority: low
-  status: not-started
+  status: done
   created_at: 2026-06-13
-  audit_refs: [SA-17-22]
+  audit_refs: [SA-17-22, SA-17-23]
+  related_files:
+    - src/components/shared/filters/filter-section.tsx
+    - src/components/shared/list-components.tsx
+    - src/components/shared/index.ts
+  acceptance_criteria:
+    - Single FilterSection implementation used site-wide.
+    - Toggle has type="button" and aria-expanded.
+    - npm run build passes.
+  notes: Done 2026-06-18. list-components re-exports canonical filters/filter-section; removed duplicate impl + SharedFilterSection alias. Build exit 0.
 
 - id: TASK-365
   title: Character sheet LibrarySection desktop/mobile dedup
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-06-13
   parent_task: TASK-317
   audit_refs: [SA-4-4, SA-4-5, SA-4-6]
+  related_files:
+    - src/app/(main)/characters/[id]/library-section-props.ts
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/components/character-sheet/library-section.tsx
+  acceptance_criteria:
+    - Desktop/mobile LibrarySection share one props builder (no ~120-line duplicate).
+    - Active library tab synced between desktop and mobile instances.
+    - npm run build passes.
+  notes: |
+    Done 2026-06-18: buildLibrarySectionProps + controlled activeTab/onActiveTabChange.
+    Single LibrarySection DOM mount completed in CharacterSheetBody (TASK-317, 2026-06-18). Build exit 0.
+  developer_test_plan: |
+    Suite DEV-V-009 T001–T002 — see BUILD_VALIDATION.md.
+  build_validation:
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T001
+      - DEV-V-009-T002
+
+---
+
+## Archetype path completion (TASK-366–374) — **complete** (QA: DEV-V-008)
+
+Gap analysis 2026-06-18 (resolved): admin `codex_archetypes` + `codex_archetype_levels` now drive creator, sheet hydration, level-up guidance, codex tab, and edit modal. Manual QA: **DEV-V-008** in `BUILD_VALIDATION.md`.
+
+- id: TASK-366
+  title: Archetype path hydration on load + list column fix
+  priority: high
+  status: done
+  created_at: 2026-06-18
+  created_by: agent
+  related_files:
+    - src/lib/game/archetype-display.ts
+    - src/lib/character-list-columns.ts
+    - src/app/api/characters/route.ts
+    - src/app/api/characters/[id]/route.ts
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/app/(main)/browse/page.tsx
+  description: |
+    Saved characters store lean `archetype: { id, type }` plus `archetypePathId`, but the sheet and character list never resolve the codex path name/description/path_data after reload. Implement shared hydration via codex lookup and fix `archetype_name` list column on create/update so path characters show their path name (not generic "Power"/"Martial").
+  acceptance_criteria:
+    - Character sheet header shows codex path name when `archetypePathId` (or non-generic archetype id) is set, after reload
+    - GET /api/characters returns correct `archetypeName` for path characters (codex lookup on list column or at read time)
+    - POST/PATCH set `archetype_name` from codex when path id is present
+    - Saved JSONB still stores lean archetype `{ id, type }` only (display fields not persisted)
+    - `npm run build` passes
+  notes: |
+    Done 2026-06-18: `archetype-display.ts`, list column + API name map, sheet `characterForDisplay` hydration. Restored `/browse` redirect page for Next route types. Build exit 0.
+  developer_test_plan: |
+    Suite DEV-V-008 T001–T002 — see BUILD_VALIDATION.md.
+  build_validation:
+    suite: DEV-V-008
+    tests:
+      - DEV-V-008-T001
+      - DEV-V-008-T002
+
+- id: TASK-367
+  title: Level-up path progression guide (levels 2+)
+  priority: high
+  status: done
+  created_at: 2026-06-18
+  created_by: agent
+  related_files:
+    - src/lib/game/archetype-path.ts
+    - src/components/character-sheet/path-level-guidance.tsx
+    - src/components/character-sheet/level-up-modal.tsx
+    - src/app/(main)/characters/[id]/CharacterSheetModals.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+  description: |
+    Wire `getPathRecommendationsForLevel` into level-up and/or a sheet "Path progression" panel. When a character has `archetypePathId` and the target level has rows in `codex_archetype_levels`, show recommended add lists (feats, skills, powers, techniques, armaments, equipment) and admin notes. Optional quick-add flows for powers/techniques/feats where library patterns exist.
+  acceptance_criteria:
+    - Level-up modal (or adjacent panel) shows path recommendations for the new level when `path_data.levels` has a matching entry
+    - Level 1 path data is not duplicated incorrectly (use level1 vs levels by level number)
+    - Path characters with no level-N row show graceful empty state, not errors
+    - Mobile: recommendations scroll/collapse per MOBILE_UX.md; modal keeps fullScreenOnMobile
+    - `npm run build` passes
+  notes: |
+    Done 2026-06-18: `PathLevelGuidance` in level-up modal; resolves codex/library names; shows add + remove lists and notes; uses hydrated `displayCharacter`. Empty state when no row for target level. Build exit 0.
+  developer_test_plan: |
+    Suite DEV-V-008 T003 — see BUILD_VALIDATION.md.
+  build_validation:
+    suite: DEV-V-008
+    tests:
+      - DEV-V-008-T003
+
+- id: TASK-368
+  title: Apply path level-5 proficiency from admin config
+  priority: high
+  status: done
+  created_at: 2026-06-18
+  created_by: agent
+  description: |
+    Admin can set `power_prof_level5` and `martial_prof_level5` on archetype paths; values are copied into creator draft but never applied when a character reaches level 5. On level-up crossing level 5 (or when loading a level ≥5 path character), apply configured prof deltas or set absolute values per game rules, with edit-mode override on sheet.
+  related_files:
+    - src/lib/game/archetype-display.ts
+    - src/app/(main)/characters/[id]/page.tsx
+  acceptance_criteria:
+    - Path character leveling from 4→5 applies admin level-5 prof config when set (document behavior in task notes if additive vs absolute)
+    - Forge characters and paths without level-5 fields unchanged
+    - Sheet prof slider reflects applied values; user can adjust in edit mode
+    - `npm run build` passes
+  notes: |
+    Done 2026-06-18: `applyPathProficiencyForLevel` on level-up 4→5+ and on sheet load for level ≥5 path characters (floor, never reduces). Toast on level-up apply. Build exit 0.
+  developer_test_plan: |
+    Suite DEV-V-008 T004, T012 — see BUILD_VALIDATION.md.
+  build_validation:
+    suite: DEV-V-008
+    tests:
+      - DEV-V-008-T004
+      - DEV-V-008-T012
+
+- id: TASK-369
+  title: Character sheet path identity and admin notes
+  priority: medium
+  status: done
+  created_at: 2026-06-18
+  created_by: agent
+  follow_up_tasks:
+    - TASK-366
+  description: |
+    Surface path metadata on the sheet for path-created characters: "Archetype Path" badge, path description snippet, `creationMode`, and admin `level1_notes` / per-level notes (read-only guidance, distinct from player `archetypeDesc`). Reuse PathHelpCard or equivalent shared pattern.
+  related_files:
+    - src/components/character-sheet/archetype-path-identity.tsx
+    - src/components/character-sheet/sheet-header.tsx
+    - src/components/character-creator/PathHelpCard.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+  acceptance_criteria:
+    - Path characters show path name + badge; forge characters show forge-style label
+    - Admin path notes visible in a guidance region (not editable as archetypeDesc)
+    - Accessible labels and contrast-safe tokens
+    - `npm run build` passes
+  notes: |
+    Done 2026-06-18: `ArchetypeCreationBadge` + `ArchetypePathGuidance` in sheet header; path description + level1/per-level admin notes via PathHelpCard pattern; forge badge when creationMode forge. Build exit 0.
+  developer_test_plan: |
+    Suite DEV-V-008 T005 — see BUILD_VALIDATION.md.
+  build_validation:
+    suite: DEV-V-008
+    tests:
+      - DEV-V-008-T005
+
+- id: TASK-370
+  title: Public Codex archetypes tab
+  priority: medium
+  status: done
+  created_at: 2026-06-18
+  created_by: agent
+  description: |
+    Add a player-facing Realms Codex tab to browse official archetype paths: name, type, description, ability emphasis, and level 1 / progression summaries (read-only). Admin editing stays in admin codex; public tab uses `useCodexArchetypes` + existing list row patterns.
+  related_files:
+    - src/app/(main)/codex/page.tsx
+    - src/app/(main)/codex/CodexArchetypesTab.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+  acceptance_criteria:
+    - New Codex tab "Archetypes" in Realms Codex (main or Advanced section per UX)
+    - Expandable rows show level 1 recommendations and level 2+ progression summary
+    - Mobile-friendly list; touch targets ≥44px
+    - `npm run build` passes
+  notes: |
+    Done 2026-06-18: Main Realms Codex tab "Archetypes" with `CodexArchetypesTab` — searchable GridListRow list, expandable level 1 + level-up progression summaries with resolved codex/library names. Build exit 0.
+  developer_test_plan: |
+    Suite DEV-V-008 T006 — see BUILD_VALIDATION.md.
+  build_validation:
+    suite: DEV-V-008
+    tests:
+      - DEV-V-008-T006
+
+- id: TASK-371
+  title: Path remove lists in guidance flows
+  priority: medium
+  status: done
+  created_at: 2026-06-18
+  created_by: agent
+  follow_up_tasks:
+    - TASK-367
+  description: |
+    Admin path rows include remove_feats, remove_powers, remove_techniques, remove_armaments at level 1 and per level. Expose these in level-up path guidance and/or sheet path panel as "consider removing" suggestions (no forced deletion).
+  related_files:
+    - src/lib/game/archetype-path.ts
+    - src/components/character-sheet/level-up-modal.tsx
+    - src/components/character-sheet/path-level-guidance.tsx
+  acceptance_criteria:
+    - Remove lists render when present in path_data for the relevant level
+    - Copy clearly indicates optional guidance, not automatic removal
+    - `npm run build` passes
+  notes: |
+    Done 2026-06-18: `PathLevelGuidance` in level-up modal; `PathRemoveGuidance` on sheet header for current level remove lists. Optional copy; danger-styled lists. Build exit 0.
+  developer_test_plan: |
+    Suite DEV-V-008 T007 — see BUILD_VALIDATION.md.
+  build_validation:
+    suite: DEV-V-008
+    tests:
+      - DEV-V-008-T007
+
+- id: TASK-372
+  title: EditArchetypeModal path awareness
+  priority: medium
+  status: done
+  created_at: 2026-06-18
+  created_by: agent
+  follow_up_tasks:
+    - TASK-366
+  description: |
+    Edit Archetype modal currently only supports forge-style type + ability picks. Show current path name (read-only) for path characters; optionally allow switching to forge or another path with confirmation and downstream warnings (feats/powers may no longer match).
+  related_files:
+    - src/components/character-sheet/edit-archetype-modal.tsx
+    - src/app/(main)/characters/[id]/CharacterSheetModals.tsx
+  acceptance_criteria:
+    - Path characters see path identity in modal; forge flow unchanged for forge characters
+    - Any path switch requires ConfirmActionModal with clear data-loss warning
+    - `npm run build` passes
+  notes: |
+    Done 2026-06-18: Path view with read-only identity; switch to forge or pick another path via ConfirmActionModal; forge editor unchanged for forge characters. Saves creationMode/archetypePathId. Build exit 0.
+  developer_test_plan: |
+    Suite DEV-V-008 T008 — see BUILD_VALIDATION.md.
+  build_validation:
+    suite: DEV-V-008
+    tests:
+      - DEV-V-008-T008
+
+- id: TASK-373
+  title: Creator path polish — apply recommended skills and feats
+  priority: medium
+  status: done
+  created_at: 2026-06-18
+  created_by: agent
+  description: |
+    Path mode highlights recommended skills and filters feats but does not one-click apply them (unlike powers/techniques auto-merge and equipment "add all"). Add optional "Apply recommended skills" and mirror feat pre-select where requirements pass, keeping manual override.
+  related_files:
+    - src/components/character-creator/steps/skills-step.tsx
+    - src/components/character-creator/steps/feats-step.tsx
+    - src/components/shared/skills-allocation-page.tsx
+  acceptance_criteria:
+    - Skills step offers apply-recommended action that allocates path skill ids per existing allocation rules
+    - Feats step can pre-select recommended archetype/character feats when qualified (toggle or first visit)
+    - User can still change selections afterward
+    - `npm run build` passes
+  notes: |
+    Done 2026-06-18: Skills step "Apply recommended skills" button (re-adds declined path skills). Feats step auto-applies qualified path feats on first visit + manual "Apply recommended feats" button. Build exit 0.
+  developer_test_plan: |
+    Suite DEV-V-008 T009–T010 — see BUILD_VALIDATION.md.
+  build_validation:
+    suite: DEV-V-008
+    tests:
+      - DEV-V-008-T009
+      - DEV-V-008-T010
+
+- id: TASK-374
+  title: Admin path visibility rules and CODEX schema docs
+  priority: low
+  status: done
+  created_at: 2026-06-18
+  created_by: agent
+  description: |
+    Path picker hides archetypes with only notes/remove lists (requires positive level-1 recommendation). Either widen visibility rules or validate in admin save. Extend CODEX_SCHEMA_REFERENCE.md for all archetype/path columns with player-facing vs stored-only labels. Hide or document unused fields (legacy path_data.proficiency JSON, dead Archetype.feats types).
+  related_files:
+    - src/components/character-creator/steps/archetype-step.tsx
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/docs/CODEX_SCHEMA_REFERENCE.md
+    - src/types/archetype.ts
+  acceptance_criteria:
+    - Admin and docs agree on which fields affect player UX
+    - Path visibility behavior documented and consistent (picker and/or admin warning)
+    - `npm run build` passes
+  notes: |
+    Done 2026-06-18: Shared `pathHasPlayerVisibleLevel1` / `pathHiddenFromPlayerPicker` in archetype-path.ts; used in creator, codex, sheet path switcher. Admin save warning when level 1 has no add recommendations. CODEX_SCHEMA_REFERENCE archetype/path columns expanded. Deprecated Archetype.feats/traits documented. Build exit 0.
+  developer_test_plan: |
+    Suite DEV-V-008 T011 — see BUILD_VALIDATION.md.
+  build_validation:
+    suite: DEV-V-008
+    tests:
+      - DEV-V-008-T011
+
+- id: TASK-375
+  title: Dedupe partsToPartData with shared enrichment (SA-4-17)
+  priority: medium
+  status: done
+  created_at: 2026-06-18
+  created_by: agent
+  parent_task: TASK-317
+  audit_refs: [SA-4-17]
+  description: |
+    `library-list-helpers.ts` re-implements part/property → PartData/chip enrichment that overlaps
+    `derivePowerDisplay` / `deriveTechniqueDisplay` and calculator chip formatters. Consolidate so
+    library row mappers and add-library-item flows share one source of truth for part levels, TP, and descriptions.
+  related_files:
+    - src/lib/library/part-display.ts
+    - src/components/character-sheet/library-list-helpers.ts
+    - src/components/character-sheet/library-entity-rows.tsx
+    - src/lib/calculators/power-calc.ts
+    - src/lib/calculators/technique-calc.ts
+  acceptance_criteria:
+    - Single shared helper (or calculator export) replaces duplicate `partsToPartData` / property mapping logic.
+    - Character sheet library rows and selection modals show identical part chips (level, TP, description).
+    - No behavior regressions for powers, techniques, or inventory property chips.
+    - `npm run build` passes.
+  notes: |
+    Done 2026-06-18: `lib/library/part-display.ts` with computePartTrainingPoints, characterPartsToPartData, itemPropertiesToPartData; library-list-helpers re-exports; formatPowerPartChip/formatTechniquePartChip use shared TP math; technique rows pass variant. Build exit 0.
+  developer_test_plan: |
+    Suite DEV-V-009 T004 — see BUILD_VALIDATION.md.
+  build_validation:
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T004

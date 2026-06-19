@@ -11,6 +11,7 @@ import { deleteCodexDoc, saveArchetypeWithPath } from './actions';
 import { Pencil, Copy, X } from 'lucide-react';
 import { getFeatLevel, formatFeatName } from '@/lib/leveled-feats';
 import { formatListCellLabel } from '@/lib/utils';
+import { parseArchetypePathData, pathHiddenFromPlayerPicker } from '@/lib/game/archetype-path';
 
 const COPY_NAME_SUFFIX = ' copy';
 const ABILITY_OPTIONS = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'] as const;
@@ -564,6 +565,14 @@ export function AdminArchetypesTab() {
       structuredPathData = {};
       if (Object.keys(level1Payload).length > 0) structuredPathData.level1 = level1Payload;
       if (levelsPayload.length > 0) structuredPathData.levels = levelsPayload;
+    }
+
+    if (structuredPathData && pathHiddenFromPlayerPicker(parseArchetypePathData(structuredPathData))) {
+      showToast(
+        'Level 1 has notes, remove lists, or Unarmed Prowess only — no add recommendations. ' +
+          'This path will not appear in the character creator picker or public codex path list until you add level 1 feats, skills, powers, techniques, armaments, or equipment.',
+        'warning'
+      );
     }
 
     let level1Override: Record<string, unknown> | undefined;

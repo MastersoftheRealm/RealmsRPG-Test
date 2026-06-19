@@ -4,12 +4,12 @@
  * Main character data structure
  */
 
-import type { Abilities, AbilityName, DefenseBonuses } from './abilities';
+import type { Abilities, AbilityName } from './abilities';
 import type { CharacterArchetype } from './archetype';
 import type { CharacterAncestry } from './ancestry';
 import type { CharacterSkills, DefenseSkills } from './skills';
 import type { CharacterFeat } from './feats';
-import type { CharacterEquipment, Item } from './equipment';
+import type { CharacterEquipment } from './equipment';
 
 export type ProficiencyKind = 'power_part' | 'technique_part' | 'item_property' | 'custom';
 

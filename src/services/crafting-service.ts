@@ -9,7 +9,7 @@ import type {
   CraftingSessionSummary,
   CraftingSessionData,
 } from '@/types/crafting';
-import { apiFetch } from '@/lib/api-client';
+import { apiFetch, apiFetchOrNull } from '@/lib/api-client';
 
 const API_BASE = '/api/crafting';
 
@@ -18,13 +18,7 @@ export async function getCraftingSessions(): Promise<CraftingSessionSummary[]> {
 }
 
 export async function getCraftingSession(sessionId: string): Promise<CraftingSession | null> {
-  const res = await fetch(`${API_BASE}/${encodeURIComponent(sessionId)}`);
-  if (res.status === 404) return null;
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error((err as { error?: string }).error ?? 'Request failed');
-  }
-  return res.json();
+  return apiFetchOrNull<CraftingSession>(`${API_BASE}/${encodeURIComponent(sessionId)}`);
 }
 
 export async function createCraftingSession(

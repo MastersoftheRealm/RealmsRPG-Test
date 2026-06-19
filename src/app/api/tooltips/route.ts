@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/supabase/session';
-import { createServiceRoleClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/admin';
 import {
   buildRateLimitKey,
@@ -61,7 +61,7 @@ async function getRoleAndTooltipSetting(userId: string | undefined) {
     return { role: null, showTooltips: true };
   }
 
-  const supabase = createServiceRoleClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('user_profiles')
     .select('role, show_tooltips')
@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { role, showTooltips } = await getRoleAndTooltipSetting(userId);
-    const supabase = createServiceRoleClient();
+    const supabase = await createClient();
     let query = supabase
       .from('ui_tooltips')
       .select('id, key, scope, title, body_md, placement, trigger, audience, enabled, version, updated_at, updated_by')

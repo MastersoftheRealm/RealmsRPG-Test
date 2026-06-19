@@ -11,7 +11,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { ChevronLeft, Plus, Trash2 } from 'lucide-react';
-import { PageContainer, PageHeader, Button, TabNavigation, Alert, Spinner } from '@/components/ui';
+import { PageContainer, PageHeader, Button, TabNavigation, TabContentPanel, useTabGroup, Alert, Spinner } from '@/components/ui';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { updateCodexDoc, createCodexDoc } from '../codex/actions';
 import type { CoreRulesMap, ProgressionCreatureRules } from '@/types/core-rules';
@@ -838,6 +838,7 @@ function CategoryEditor({
 // =============================================================================
 
 export default function AdminCoreRulesPage() {
+  const { tabGroupId, sharedPanelId } = useTabGroup();
   const { rules, isLoading } = useGameRules();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState(TABS[0].id);
@@ -946,9 +947,11 @@ export default function AdminCoreRulesPage() {
         tabs={TABS.map(t => ({ id: t.id, label: t.label }))}
         activeTab={activeTab}
         onTabChange={setActiveTab}
+        tabGroupId={tabGroupId}
+        sharedTabPanelId={sharedPanelId}
       />
 
-      <div className="mt-4 rounded-lg border border-border bg-surface p-6">
+      <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab} className="mt-4 rounded-lg border border-border bg-surface p-6">
         {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
         {success && <Alert variant="success" className="mb-4">{success}</Alert>}
 
@@ -969,7 +972,7 @@ export default function AdminCoreRulesPage() {
           </Button>
           {dirty && <span className="text-xs text-amber-600 dark:text-amber-400">Unsaved changes</span>}
         </div>
-      </div>
+      </TabContentPanel>
     </PageContainer>
   );
 }

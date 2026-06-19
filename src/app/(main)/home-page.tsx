@@ -180,7 +180,7 @@ function HomeContent() {
       <OnboardingTour isOpen={showTour} onClose={() => setShowTour(false)} />
 
       {/* Features Section - linked cards; more top padding for breathing room from hero */}
-      <section className="bg-neutral-300 dark:bg-neutral-800 pt-10 sm:pt-14 pb-8 sm:pb-14 px-4 sm:px-6 lg:px-24 shadow-md">
+      <section className="bg-surface-secondary dark:bg-surface-secondary pt-10 sm:pt-14 pb-8 sm:pb-14 px-4 sm:px-6 lg:px-24 shadow-md">
         <div className="max-w-[1440px] mx-auto flex flex-col lg:flex-row justify-between items-stretch lg:items-start gap-8 lg:gap-[116px]">
           <FeatureCard
             href="/characters/new"
@@ -188,14 +188,14 @@ function HomeContent() {
             description="Limitless options allow any dream character to come to life. Choose species, feats, powers, and more from the game, or build your own."
             icon={<Sparkles className="w-6 h-6" suppressHydrationWarning />}
           />
-          <div className="hidden lg:block w-px h-[106px] bg-neutral-400 dark:bg-neutral-600 flex-shrink-0" />
+          <div className="hidden lg:block w-px h-[106px] bg-border dark:bg-border flex-shrink-0" />
           <FeatureCard
             href="/power-creator"
             title="CREATE A POWER"
             description="Design custom powers with infinite combinations of parts and effects. Build your character's unique toolset or content for your table."
             icon={<Sword className="w-6 h-6" suppressHydrationWarning />}
           />
-          <div className="hidden lg:block w-px h-[106px] bg-neutral-400 dark:bg-neutral-600 flex-shrink-0" />
+          <div className="hidden lg:block w-px h-[106px] bg-border dark:bg-border flex-shrink-0" />
           <FeatureCard
             href={DISCORD_URL}
             title="JOIN DISCORD"

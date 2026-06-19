@@ -10,6 +10,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
+import { apiFetch } from '@/lib/api-client';
 import { ProtectedRoute } from '@/components/layout';
 import { LoadingState, Alert } from '@/components/ui';
 import { SheetHeader, AbilitiesSection, SkillsSection, ArchetypeSection, LibrarySection, RollLog } from '@/components/character-sheet';
@@ -119,16 +120,18 @@ function CampaignCharacterViewContent() {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(
-          `/api/campaigns/${campaignId}/characters/${userId}/${characterId}`
-        );
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || `Failed to load (${res.status})`);
-        }
-        const data = await res.json();
+        const data = await apiFetch<
+          Character & {
+            libraryForView?: {
+              powers: unknown[];
+              techniques: unknown[];
+              items: unknown[];
+              creatures: unknown[];
+            };
+          }
+        >(`/api/campaigns/${campaignId}/characters/${userId}/${characterId}`);
         const { libraryForView: lib, ...charData } = data;
-        setCharacter({ id: charData.id, ...charData });
+        setCharacter(charData);
         setLibraryForView(lib);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load character');

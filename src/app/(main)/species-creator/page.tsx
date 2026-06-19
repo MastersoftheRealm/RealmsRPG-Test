@@ -15,6 +15,7 @@ import {
   useCodexSkills,
   useTraits,
   useUserSpecies,
+  useOfficialLibrary,
   useAdmin,
   useCreatorSave,
   type Species,
@@ -23,6 +24,9 @@ import {
 } from '@/hooks';
 import { CREATURE_TYPES, CREATOR_CACHE_KEYS, CACHE_EXPIRY_MS } from '@/lib/game/creator-constants';
 import { CreatorLayout, CreatorSaveToolbar, CreatorSummaryPanel, CollapsibleSection } from '@/components/creator';
+import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
+import { SourceFilter, type SourceFilterValue } from '@/components/shared/filters/source-filter';
+import type { SelectableItem } from '@/components/shared/unified-selection-modal';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { Button, Input, Textarea, Modal, LoadingState } from '@/components/ui';
 import {
@@ -49,6 +53,31 @@ const SPECIES_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.SPECIES;
 
 const SPECIES_TRAIT_WARNING =
   'Most species only have 2 species traits; the 3rd is almost always used for a type of natural weapon, if any. Are you sure you wish to add this trait?';
+
+function isSpeciesFormSaveReady(form: SpeciesFormState): boolean {
+  return (
+    !!form.name.trim() &&
+    !!form.type.trim() &&
+    form.skillIds.filter((id) => id !== '').length >= MAX_SKILLS &&
+    form.ave_height !== '' &&
+    form.ave_weight !== '' &&
+    form.adulthood_lifespan[0] !== '' &&
+    form.adulthood_lifespan[1] !== ''
+  );
+}
+
+function buildSpeciesSelectableItem(record: Record<string, unknown>, source: 'my' | 'public'): SelectableItem {
+  const id = String(record.id ?? record.docId ?? '');
+  const name = String(record.name ?? 'Unnamed');
+  const type = String(record.type ?? '');
+  return {
+    id,
+    name,
+    description: String(record.description ?? ''),
+    columns: type ? [{ key: 'Type', value: type }] : undefined,
+    data: { source, raw: record },
+  };
+}
 
 type TraitCategory = 'species_traits' | 'ancestry_traits' | 'characteristics' | 'flaws';
 
@@ -174,6 +203,7 @@ export default function SpeciesCreatorPage() {
   const { user } = useAuthStore();
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [showLoadModal, setShowLoadModal] = useState(false);
+  const [loadSource, setLoadSource] = useState<SourceFilterValue>('all');
   const [showAddSpeciesAncestryModal, setShowAddSpeciesAncestryModal] = useState(false);
   const [showAddFlawModal, setShowAddFlawModal] = useState(false);
   const [showAddCharacteristicModal, setShowAddCharacteristicModal] = useState(false);
@@ -186,8 +216,16 @@ export default function SpeciesCreatorPage() {
   const cacheBootstrapRef = useRef(false);
   const [cacheReady, setCacheReady] = useState(false);
 
-  const { data: codexSpecies = [], isLoading: codexLoading } = useSpecies();
-  const { data: userSpeciesList = [] } = useUserSpecies();
+  const { data: codexSpecies = [] } = useSpecies();
+  const loadQueriesEnabled = showLoadModal;
+  const { data: userSpeciesList = [], isLoading: userSpeciesLoading } = useUserSpecies({
+    enabled: loadQueriesEnabled,
+  });
+  const {
+    data: publicSpecies = [],
+    isLoading: publicSpeciesLoading,
+    isError: publicSpeciesError,
+  } = useOfficialLibrary('species', { enabled: loadQueriesEnabled });
   const { data: skills = [], isLoading: skillsLoading } = useCodexSkills();
   const { data: traits = [], isLoading: traitsLoading } = useTraits();
   const { isAdmin } = useAdmin();
@@ -295,8 +333,11 @@ export default function SpeciesCreatorPage() {
       setShowLoginPrompt(true);
       return;
     }
+    if (!isSpeciesFormSaveReady(form)) {
+      return;
+    }
     await save.handleSave();
-  }, [user, save]);
+  }, [user, save, form]);
 
   const handleReset = useCallback(() => {
     try {
@@ -344,6 +385,55 @@ export default function SpeciesCreatorPage() {
     },
     [traits, skills]
   );
+
+  const speciesLoadItems = useMemo((): SelectableItem[] => {
+    const items: SelectableItem[] = [];
+    if (loadSource === 'my' || loadSource === 'all') {
+      userSpeciesList.forEach((s) =>
+        items.push(buildSpeciesSelectableItem(s as unknown as Record<string, unknown>, 'my'))
+      );
+    }
+    if (loadSource === 'public' || loadSource === 'all') {
+      (publicSpecies as Record<string, unknown>[]).forEach((s) =>
+        items.push(
+          buildSpeciesSelectableItem(
+            { ...s, id: String(s.id ?? s.docId ?? '') },
+            'public'
+          )
+        )
+      );
+      (codexSpecies as Species[]).forEach((s) =>
+        items.push(buildSpeciesSelectableItem(s as unknown as Record<string, unknown>, 'public'))
+      );
+    }
+    const seen = new Set<string>();
+    return items.filter((item) => {
+      const key = `${item.name}:${item.id}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [loadSource, userSpeciesList, publicSpecies, codexSpecies]);
+
+  const speciesLoadLoading =
+    (loadSource !== 'public' && userSpeciesLoading) ||
+    (loadSource !== 'my' && publicSpeciesLoading);
+
+  const speciesLoadEmptyMessage =
+    speciesLoadItems.length === 0
+      ? loadSource === 'public'
+        ? 'No species in the Realms Library'
+        : loadSource === 'my'
+          ? 'No species in your library'
+          : 'No species found'
+      : 'No matching species';
+
+  const speciesLoadEmptySubMessage =
+    speciesLoadItems.length === 0 && loadSource === 'public' && publicSpeciesError
+      ? 'Failed to load Realms Library. Try again later.'
+      : speciesLoadItems.length === 0 && loadSource === 'my'
+        ? 'Save a species to My Codex first.'
+        : undefined;
 
   const addTraitToCategory = useCallback(
     (traitId: string, category: TraitCategory) => {
@@ -531,15 +621,7 @@ export default function SpeciesCreatorPage() {
           onLoad={() => setShowLoadModal(true)}
           onReset={handleReset}
           saving={save.saving}
-          saveDisabled={
-            !form.name.trim() ||
-            !form.type.trim() ||
-            form.skillIds.filter((id) => id !== '').length < MAX_SKILLS ||
-            form.ave_height === '' ||
-            form.ave_weight === '' ||
-            form.adulthood_lifespan[0] === '' ||
-            form.adulthood_lifespan[1] === ''
-          }
+          saveDisabled={!isSpeciesFormSaveReady(form)}
           showPublicPrivate={isAdmin}
           user={user}
         />
@@ -576,49 +658,26 @@ export default function SpeciesCreatorPage() {
             icon="publish"
           />
 
-          <Modal isOpen={showLoadModal} onClose={() => setShowLoadModal(false)} title="Load species" size="lg" fullScreenOnMobile>
-            <p className="text-sm text-text-muted mb-4">Load a species from Realms Codex or My Codex to edit and save to your private codex.</p>
-            {codexLoading ? (
-              <LoadingState />
-            ) : (
-              <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-                {userSpeciesList.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold text-text-primary mb-2">My Codex</h3>
-                    <ul className="space-y-1">
-                      {userSpeciesList.map((s) => (
-                        <li key={s.id}>
-                          <button
-                            type="button"
-                            className="text-left w-full px-3 py-2 rounded-lg hover:bg-surface-alt text-primary-700 dark:text-primary-300 dark:hover:bg-surface"
-                            onClick={() => loadSpeciesIntoForm(s)}
-                          >
-                            {s.name}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                <div>
-                  <h3 className="font-semibold text-text-primary mb-2">Realms Codex</h3>
-                  <ul className="space-y-1">
-                    {(codexSpecies as Species[]).map((s) => (
-                      <li key={s.id}>
-                        <button
-                          type="button"
-                          className="text-left w-full px-3 py-2 rounded-lg hover:bg-surface-alt text-primary-700 dark:text-primary-300 dark:hover:bg-surface"
-                          onClick={() => loadSpeciesIntoForm(s)}
-                        >
-                          {s.name} {s.type ? `(${s.type})` : ''}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            )}
-          </Modal>
+          <LoadFromLibraryModal
+            isOpen={showLoadModal}
+            onClose={() => setShowLoadModal(false)}
+            title="Load species"
+            selectableItems={speciesLoadItems}
+            columns={[
+              { key: 'name', label: 'Name' },
+              { key: 'Type', label: 'Type', sortable: true },
+            ]}
+            gridColumns="1.4fr 0.8fr"
+            isLoading={speciesLoadLoading}
+            headerExtra={<SourceFilter value={loadSource} onChange={setLoadSource} />}
+            emptyMessage={speciesLoadEmptyMessage}
+            emptySubMessage={speciesLoadEmptySubMessage}
+            searchPlaceholder="Search species..."
+            onSelect={(item) => {
+              const raw = (item.data as { raw?: Species | Record<string, unknown> })?.raw;
+              if (raw) loadSpeciesIntoForm(raw as Species);
+            }}
+          />
 
           <Modal isOpen={showAddSpeciesAncestryModal} onClose={() => setShowAddSpeciesAncestryModal(false)} title="Add species or ancestry trait" size="lg" fullScreenOnMobile>
             <TraitListModal

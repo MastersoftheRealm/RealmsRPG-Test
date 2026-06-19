@@ -112,7 +112,7 @@ function getVariantClasses(variant: SummaryItem['variant'], remaining: number | 
     case 'warning':
       return 'bg-warning-light text-warning-700 dark:text-warning-300';
     case 'info':
-      return 'bg-info-light text-info-600 dark:text-info-400';
+      return 'bg-info-light text-info-700 dark:text-info-400';
     default:
       return 'bg-surface-alt text-secondary';
   }

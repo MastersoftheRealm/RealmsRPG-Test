@@ -29,7 +29,7 @@ import {
   type CreatorWeaponOption,
 } from '@/hooks';
 import { useAuthStore } from '@/stores';
-import { ContextHelpTooltip, LoginPromptModal, ConfirmActionModal, ErrorDisplay } from '@/components/shared';
+import { LoginPromptModal, ConfirmActionModal, ErrorDisplay } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
 import {
   LoadFromLibraryModal,
@@ -214,8 +214,7 @@ function TechniqueCreatorContent() {
           localStorage.removeItem(TECHNIQUE_CREATOR_CACHE_KEY);
         }
       }
-    } catch (e) {
-      console.error('Failed to load technique creator cache:', e);
+    } catch {
     }
     setIsInitialized(true);
   }, [techniqueParts, allWeaponOptions, isInitialized, editTechniqueId]);
@@ -242,8 +241,7 @@ function TechniqueCreatorContent() {
         timestamp: Date.now(),
       };
       localStorage.setItem(TECHNIQUE_CREATOR_CACHE_KEY, JSON.stringify(cache));
-    } catch (e) {
-      console.error('Failed to save technique creator cache:', e);
+    } catch {
     }
   }, [isInitialized, name, description, selectedParts, actionType, isReaction, damage, weapon]);
 
@@ -470,8 +468,7 @@ function TechniqueCreatorContent() {
     // Clear localStorage cache
     try {
       localStorage.removeItem(TECHNIQUE_CREATOR_CACHE_KEY);
-    } catch (e) {
-      console.error('Failed to clear technique creator cache:', e);
+    } catch {
     }
   }, [save]);
 
@@ -573,7 +570,6 @@ function TechniqueCreatorContent() {
     );
     editLoadedRef.current = true;
     if (!techniqueToEdit) {
-      console.warn(`Technique with ID ${editTechniqueId} not found in library`);
       setIsInitialized(true);
       return;
     }
@@ -608,12 +604,6 @@ function TechniqueCreatorContent() {
       description="Design custom martial techniques by combining technique parts. Each part contributes to the total energy cost and training point requirements."
       actions={
         <div className="flex items-center gap-2">
-          <ContextHelpTooltip
-            tooltipKey="creators.technique.headerHelp"
-            scope="page:/technique-creator"
-            label="Technique creator help"
-            placement="left"
-          />
           <CreatorSaveToolbar
             saveTarget={save.saveTarget}
             onSaveTargetChange={save.setSaveTarget}

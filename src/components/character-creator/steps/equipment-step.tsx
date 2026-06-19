@@ -31,7 +31,7 @@ import {
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { FilterSection } from '@/components/codex';
 import { Spinner, Button, EmptyState } from '@/components/ui';
-import { TabNavigation } from '@/components/ui/tab-navigation';
+import { TabNavigation, TabContentPanel, useTabGroup } from '@/components/ui/tab-navigation';
 import { AlertCircle, Swords, Check, X, ShoppingBag, ChevronLeft } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 import type { Item } from '@/types';
@@ -122,6 +122,7 @@ interface SelectedItem {
 }
 
 export function EquipmentStep() {
+  const { tabGroupId, sharedPanelId } = useTabGroup();
   const { draft, nextStep, prevStep, updateDraft } = useCharacterCreatorStore();
   // Fetch user's item library (weapons/armor) from API
   const { data: userItems, isLoading: userItemsLoading } = useUserItems();
@@ -631,11 +632,6 @@ export function EquipmentStep() {
         <div>
           <div className="flex items-center gap-1 mb-2">
             <h2 className="text-2xl font-bold text-text-primary">Choose Equipment</h2>
-            <ContextHelpTooltip
-              tooltipKey="characters.new.step.equipment.currencyHelp"
-              scope="page:/characters/new"
-              label="Equipment budget help"
-            />
           </div>
           <p className="text-text-secondary">
             Select your starting weapons, armor, and gear. Use + and - to adjust quantities.
@@ -894,8 +890,11 @@ export function EquipmentStep() {
         onTabChange={(tabId) => setActiveTab(tabId as EquipmentTabId)}
         variant="pill"
         className="mb-4"
+        tabGroupId={tabGroupId}
+        sharedTabPanelId={sharedPanelId}
       />
 
+      <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab}>
       {/* Unarmed Prowess Tab Content */}
       {activeTab === 'unarmed' ? (
         <div className="border border-border-light rounded-lg mb-8 p-6 bg-surface">
@@ -1189,6 +1188,7 @@ export function EquipmentStep() {
           </div>
         </>
       )}
+      </TabContentPanel>
       </>
       )}
       

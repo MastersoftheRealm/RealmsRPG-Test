@@ -19,7 +19,7 @@ import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { getAllValidationIssues, type ValidationIssue } from '@/lib/character-creator-validation';
 import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
 import { ABILITY_DISPLAY_NAMES } from '@/lib/game/constants';
-import { ContextHelpTooltip, LoginPromptModal, ImageUploadModal } from '@/components/shared';
+import { LoginPromptModal, ImageUploadModal } from '@/components/shared';
 import { HealthEnergyAllocator } from '@/components/creator';
 import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies, getTrainingPointLimit } from '@/lib/proficiencies';
 import { derivePowerDisplay } from '@/lib/calculators/power-calc';
@@ -561,7 +561,6 @@ export function FinalizeStep() {
 
           if (!uploadRes.ok) {
             const errBody = (await uploadRes.json().catch(() => ({}))) as { error?: string };
-            console.error('Portrait upload failed:', errBody.error ?? uploadRes.status);
             showToast(
               errBody.error
                 ? `Portrait not saved: ${errBody.error}. Add one from your character sheet.`
@@ -576,8 +575,7 @@ export function FinalizeStep() {
               showToast('Portrait upload returned no URL. Add a portrait from your character sheet.', 'error');
             }
           }
-        } catch (uploadErr) {
-          console.error('Portrait upload failed (character still saved):', uploadErr);
+        } catch {
           showToast(
             'Could not process or upload your portrait. Your character was created. Add a portrait from the sheet.',
             'error'
@@ -597,7 +595,6 @@ export function FinalizeStep() {
         router.push(`/characters/${characterId}`);
       }
     } catch (err) {
-      console.error('Error saving character:', err);
       const message =
         err instanceof Error && err.message.trim()
           ? err.message
@@ -612,11 +609,6 @@ export function FinalizeStep() {
     <div className="max-w-2xl mx-auto">
       <div className="flex items-center gap-1 mb-2">
         <h2 className="text-2xl font-bold text-text-primary">Finalize Your Character</h2>
-        <ContextHelpTooltip
-          tooltipKey="characters.new.step.finalize.summaryHelp"
-          scope="page:/characters/new"
-          label="Finalize character help"
-        />
       </div>
       <p className="text-text-secondary mb-6">
         Add the final details to bring your character to life.
@@ -744,7 +736,7 @@ export function FinalizeStep() {
                         className={cn(
                           'text-lg font-bold mt-0.5',
                           value > 0 && 'text-success-700 dark:text-success-400',
-                          value < 0 && 'text-danger-600 dark:text-danger-400',
+                          value < 0 && 'text-danger-700 dark:text-danger-400',
                           value === 0 && 'text-text-secondary'
                         )}
                       >

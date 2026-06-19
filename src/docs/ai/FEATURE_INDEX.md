@@ -13,7 +13,7 @@
 | Feature | Route / page |
 |---------|--------------|
 | Character list / dashboard | `characters/page.tsx` |
-| Character sheet (view + edit) | `characters/[id]/page.tsx` |
+| Character sheet (view + edit) | `characters/[id]/page.tsx` — layout `CharacterSheetBody` (single library mount); derived `useCharacterSheetDerived`; handlers `useCharacterSheetActions`; library lists via `entity-library-sections` + `library-entity-rows`; feats tab via `FeatsTraitsListSection` + `library-feat-rows` |
 | Character creator | `character-creator/` (wizard steps under `components/character-creator/steps/`) |
 | Library (user + official content browse) | `library/page.tsx` |
 | Codex (rules data browser) | `codex/page.tsx` |
@@ -23,7 +23,7 @@
 | Empowered technique creator | `empowered-technique-creator/page.tsx` |
 | Item creator | `item-creator/page.tsx` |
 | Species creator | `species-creator/page.tsx` |
-| Creature creator | `creature-creator/page.tsx` |
+| Creature creator | `creature-creator/page.tsx`, `creature-skill-utils.ts` (skills ↔ allocations, load mapping) |
 | Crafting (sessions + enhanced items) | `crafting/page.tsx`, `crafting/[id]/page.tsx` |
 | Encounters / encounter tracker | `encounters/page.tsx`, `encounter-tracker/page.tsx` |
 | Campaigns | `campaigns/page.tsx` |
@@ -70,8 +70,8 @@
 | Skill row / allocation | `SkillRow`, `SkillsAllocationPage`, `AddSkillModal`, `AddSubSkillModal` |
 | Tab summary header section | `TabSummarySection`, `SummaryItem`, `SummaryRow` |
 | Part/property chips | `PartChipComponent`, `PartChipList`, `PropertyChipList` |
+| Part/property → PartData (library rows) | `lib/library/part-display.ts` — `computePartTrainingPoints`, `characterPartsToPartData`, `itemPropertiesToPartData` |
 | Entity list sections (powers/techniques/weapons/armor/etc.) | `*ListSection` from `entity-library-sections` |
-| Quick armaments tables | `QuickWeaponsTable`, `QuickShieldsTable`, `QuickArmorTable` |
 | Species trait cards | `SpeciesTraitCard`, `TraitGroup` |
 | Creature stat block | `CreatureStatBlock` |
 | Filters | `ChipSelect`, `TagFilter`, `CheckboxFilter`, `SelectFilter`, `AbilityRequirementFilter` |
@@ -90,7 +90,7 @@
 | Health/skill/derived calculations (current source) | `lib/game/calculations.ts` |
 | Game constants / formulas | `lib/game/constants.ts`, `lib/game/formulas.ts` |
 | Skill allocation | `lib/game/skill-allocation.ts` |
-| Archetype path / progression | `lib/game/archetype-path.ts` |
+| Archetype path / progression | `lib/game/archetype-path.ts` (incl. `pathHasPlayerVisibleLevel1`, `pathHiddenFromPlayerPicker`), `lib/game/archetype-display.ts`, `components/character-sheet/path-level-guidance.tsx`, `components/character-sheet/archetype-path-identity.tsx`, `components/character-sheet/edit-archetype-modal.tsx`, `app/(main)/codex/CodexArchetypesTab.tsx`, creator `skills-step` / `feats-step` apply actions |
 | Crafting / encounter helpers | `lib/game/crafting-utils.ts`, `lib/game/encounter-utils.ts` |
 | Power / technique / item / empowered calc | `lib/calculators/*-calc.ts`, `mechanic-builder.ts` |
 | Data enrichment (minimal stored → full display) | `lib/data-enrichment.ts` |

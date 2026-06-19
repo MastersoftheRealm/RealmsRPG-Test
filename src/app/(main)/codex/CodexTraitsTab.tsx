@@ -30,7 +30,8 @@ const TRAIT_COLUMNS = [
 ];
 
 export function CodexTraitsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  const { data: traits, isLoading, error, refetch } = useTraits();
+  const loadPublicCodex = codexMode === 'public';
+  const { data: traits, isLoading, error, refetch } = useTraits({ enabled: loadPublicCodex });
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
 

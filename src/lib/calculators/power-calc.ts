@@ -7,6 +7,7 @@
 
 import type { PowerPart } from '@/hooks/codex-types';
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
+import { computePartTrainingPoints } from '@/lib/library/part-display';
 import { formatDurationFromTypeAndValue, formatDurationWithModifiers } from '@/lib/utils/duration';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
 
@@ -370,7 +371,7 @@ export function buildPowerMechanicPartPayload(
  */
 export function deriveRange(
   partsPayload: PowerPartPayload[] = [],
-  partsDb: PowerPart[] = []
+  _partsDb?: unknown
 ): string {
   const pr = partsPayload.find((p) => {
     const partId = p.part?.id ?? p.id;
@@ -436,7 +437,7 @@ export function formatAreaForDisplay(areaType: string, areaLevel: number): strin
  */
 export function deriveArea(
   partsPayload: PowerPartPayload[] = [],
-  _partsDb: PowerPart[] = []
+  _partsDb?: unknown
 ): string {
   const areaPartIds = [
     PART_IDS.SPHERE_OF_EFFECT,
@@ -465,7 +466,7 @@ export function deriveArea(
  */
 export function deriveDuration(
   partsPayload: PowerPartPayload[] = [],
-  _partsDb: PowerPart[] = []
+  _partsDb?: unknown
 ): string {
   const findPartById = (partId: number, fallbackName: string) =>
     partsPayload.find((p) => {
@@ -526,13 +527,7 @@ export function formatPowerPartChip(
   const l2 = pl.op_2_lvl || 0;
   const l3 = pl.op_3_lvl || 0;
 
-  const rawTP =
-    (def.base_tp || 0) +
-    (def.op_1_tp || 0) * l1 +
-    (def.op_2_tp || 0) * l2 +
-    (def.op_3_tp || 0) * l3;
-
-  const finalTP = Math.floor(rawTP);
+  const finalTP = computePartTrainingPoints(def, pl, 'power');
   let text = def.name;
   if (l1 > 0) text += ` (Opt1 ${l1})`;
   if (l2 > 0) text += ` (Opt2 ${l2})`;
@@ -624,7 +619,7 @@ export function derivePowerDisplay(
     const spaces = 3 + 3 * powerDoc.range.steps;
     rangeStr = `${spaces} ${spaces > 1 ? 'spaces' : 'space'}`;
   } else {
-    rangeStr = deriveRange(partsPayload, partsDb);
+    rangeStr = deriveRange(partsPayload);
   }
   
   // Use directly saved area if available, otherwise derive from parts
@@ -642,7 +637,7 @@ export function derivePowerDisplay(
       areaStr += ` ${powerDoc.area.level}`;
     }
   } else {
-    areaStr = deriveArea(partsPayload, partsDb);
+    areaStr = deriveArea(partsPayload);
   }
   
   // Use directly saved duration if available, otherwise derive from parts
@@ -655,7 +650,7 @@ export function derivePowerDisplay(
       sustain: powerDoc.duration.sustain,
     });
   } else {
-    durationStr = deriveDuration(partsPayload, partsDb);
+    durationStr = deriveDuration(partsPayload);
   }
 
   // Build part chips

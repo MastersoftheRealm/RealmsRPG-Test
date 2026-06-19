@@ -13,120 +13,33 @@ import {
   TagFilter,
   SelectFilter,
   FilterSection,
-  type AbilityRequirement,
+  CodexFeatRow,
 } from '@/components/codex';
 import {
   SearchInput,
   ListHeader,
   LoadingState,
   ErrorDisplay as ErrorState,
-  GridListRow,
 } from '@/components/shared';
-import type { ChipData } from '@/components/shared/grid-list-row';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { Input } from '@/components/ui';
 import { useCodexFeats, useCodexSkills, useCharacter, type Feat, type Skill } from '@/hooks';
-import { formatAbilityList, formatListCellLabel, cn } from '@/lib/utils';
-import { groupFeatFamilies, buildFeatLevelChips } from '@/lib/leveled-feats';
-import { checkFeatRequirements } from '@/lib/game/feat-requirements';
+import { cn } from '@/lib/utils';
+import { groupFeatFamilies } from '@/lib/leveled-feats';
+import {
+  CODEX_FEAT_HEADER_COLUMNS,
+  FEAT_GRID_COLUMNS,
+  buildFeatFilterOptions,
+  buildSkillIdToName,
+  filterFeats,
+  type FeatListFilters,
+} from '@/lib/codex/feat-list';
 import type { CodexSkillForFeat } from '@/lib/game/formulas';
 
-const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 0.8fr 1fr 40px';
-const FEAT_COLUMNS = [
-  { key: 'name', label: 'NAME' },
-  { key: 'lvl_req', label: 'REQ. LEVEL' },
-  { key: 'category', label: 'CATEGORY' },
-  { key: 'ability', label: 'ABILITY' },
-  { key: 'uses_per_rec', label: 'USES' },
-  { key: 'rec_period', label: 'RECOVERY' },
-  { key: '_actions', label: '', sortable: false as const },
-];
-
-interface FeatFilters {
-  search: string;
-  maxLevel: number | null;
-  abilityRequirements: AbilityRequirement[];
-  categories: string[];
-  abilities: string[];
-  tags: string[];
-  tagMode: 'any' | 'all';
+interface FeatFilters extends FeatListFilters {
   featTypeMode: 'all' | 'archetype' | 'character';
   stateFeatMode: 'all' | 'only' | 'hide';
-}
-
-function FeatCard({
-  feat,
-  skillIdToName,
-  familyLevels = [],
-}: {
-  feat: Feat;
-  skillIdToName: Map<string, string>;
-  familyLevels?: Feat[];
-}) {
-  const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> = [];
-
-  const typeChips: ChipData[] = [];
-  if (feat.char_feat) typeChips.push({ name: 'Character Feat', category: 'skill' });
-  else typeChips.push({ name: 'Archetype Feat', category: 'archetype' });
-  if (feat.state_feat) typeChips.push({ name: 'State Feat', category: 'archetype' });
-  if (typeChips.length > 0) {
-    detailSections.push({ label: 'Type', chips: typeChips, hideLabelIfSingle: true });
-  }
-
-  if (feat.category) {
-    detailSections.push({ label: 'Category', chips: [{ name: formatListCellLabel(feat.category), category: 'default' }], hideLabelIfSingle: true });
-  }
-
-  const tagChips = feat.tags?.map(tag => ({ name: tag, category: 'tag' as const })) || [];
-  if (tagChips.length > 0) {
-    detailSections.push({ label: 'Tags', chips: tagChips, hideLabelIfSingle: true });
-  }
-
-  const abilityReqChips = (feat.ability_req || []).map((a, i) => {
-    const val = feat.abil_req_val?.[i];
-    return { name: `${a}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'default' as const };
-  });
-  if (abilityReqChips.length > 0) {
-    detailSections.push({ label: 'Ability Requirements', chips: abilityReqChips });
-  }
-
-  const skillReqChips = (feat.skill_req || []).map((id, i) => {
-    const label = skillIdToName.get(String(id)) || String(id);
-    const val = feat.skill_req_val?.[i];
-    return { name: `${label}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'skill' as const };
-  });
-  if (skillReqChips.length > 0) {
-    detailSections.push({ label: 'Skill Requirements', chips: skillReqChips });
-  }
-
-  const levelChips = buildFeatLevelChips(familyLevels, feat.id);
-  if (levelChips.length > 0) {
-    detailSections.push({
-      label: 'Feat Levels',
-      chips: levelChips,
-    });
-  }
-
-  return (
-    <GridListRow
-      id={feat.id}
-      name={feat.name}
-      description={feat.description}
-      gridColumns={FEAT_GRID_COLUMNS}
-      columns={[
-        { key: 'Req. Level', value: feat.lvl_req || '-' },
-        { key: 'Category', value: formatListCellLabel(feat.category) },
-        {
-          key: 'Ability',
-          value: formatAbilityList(feat.ability),
-        },
-        { key: 'Uses', value: (feat.uses_per_rec != null && feat.uses_per_rec > 0) ? String(feat.uses_per_rec) : '-' },
-        { key: 'Recovery', value: formatListCellLabel(feat.rec_period) },
-      ]}
-      detailSections={detailSections.length > 0 ? detailSections : undefined}
-    />
-  );
 }
 
 export function CodexFeatsTab({
@@ -137,9 +50,10 @@ export function CodexFeatsTab({
   /** When set, auto-filter feats to those the given character qualifies for. */
   characterId?: string;
 }) {
-  const { data: feats, isLoading, error, refetch } = useCodexFeats();
-  const { data: skills = [] } = useCodexSkills();
-  const { data: characterResult } = useCharacter(characterId || undefined);
+  const loadPublicCodex = codexMode === 'public';
+  const { data: feats, isLoading, error, refetch } = useCodexFeats({ enabled: loadPublicCodex });
+  const { data: skills = [] } = useCodexSkills({ enabled: loadPublicCodex });
+  const { data: characterResult } = useCharacter(loadPublicCodex ? characterId || undefined : undefined);
   const character = characterResult?.character ?? undefined;
   const { sortState, handleSort, sortItems } = useSort('name');
 
@@ -160,110 +74,17 @@ export function CodexFeatsTab({
 
   const activeCharacter = characterId ? character : undefined;
 
-  const filterOptions = useMemo(() => {
-    if (!feats) return { levels: [], abilities: [], categories: [], tags: [], abilReqAbilities: [] };
+  const filterOptions = useMemo(() => buildFeatFilterOptions(feats), [feats]);
 
-    const levels = new Set<number>();
-    const abilities = new Set<string>();
-    const categories = new Set<string>();
-    const tags = new Set<string>();
-    const abilReqAbilities = new Set<string>();
-
-    feats.forEach((f: Feat) => {
-      if (f.lvl_req > 0) levels.add(f.lvl_req);
-      if (Array.isArray(f.ability)) {
-        f.ability.forEach((a: string) => abilities.add(a));
-      } else if (f.ability) {
-        abilities.add(f.ability);
-      }
-      if (f.category) categories.add(f.category);
-      f.tags?.forEach((t: string) => tags.add(t));
-      f.ability_req?.forEach((a: string) => abilReqAbilities.add(a));
-    });
-
-    return {
-      levels: Array.from(levels).sort((a, b) => a - b),
-      abilities: Array.from(abilities).sort(),
-      categories: Array.from(categories).sort(),
-      tags: Array.from(tags).sort(),
-      abilReqAbilities: Array.from(abilReqAbilities).sort(),
-    };
-  }, [feats]);
-
-  const skillIdToName = useMemo(() => {
-    const map = new Map<string, string>();
-    (skills as Skill[]).forEach((s) => {
-      map.set(String(s.id), s.name);
-    });
-    return map;
-  }, [skills]);
+  const skillIdToName = useMemo(() => buildSkillIdToName(skills as Skill[]), [skills]);
 
   const filteredFeats = useMemo(() => {
     if (!feats) return [];
-    const filtered = feats.filter((f: Feat) => {
-      if (filters.search) {
-        const searchLower = filters.search.toLowerCase();
-        const matchesSearch =
-          f.name.toLowerCase().includes(searchLower) ||
-          f.description?.toLowerCase().includes(searchLower) ||
-          f.tags?.some(t => t.toLowerCase().includes(searchLower));
-        if (!matchesSearch) return false;
-      }
-
-      if (filters.maxLevel !== null && f.lvl_req > filters.maxLevel) {
-        return false;
-      }
-
-      if (filters.featTypeMode === 'archetype' && f.char_feat) return false;
-      if (filters.featTypeMode === 'character' && !f.char_feat) return false;
-
-      if (filters.stateFeatMode === 'only' && !f.state_feat) return false;
-      if (filters.stateFeatMode === 'hide' && f.state_feat) return false;
-
-      for (const req of filters.abilityRequirements) {
-        const index = f.ability_req?.indexOf(req.ability) ?? -1;
-        if (index !== -1) {
-          const val = f.abil_req_val?.[index];
-          if (typeof val === 'number' && val > req.maxValue) return false;
-        }
-      }
-
-      if (filters.categories.length > 0 && !filters.categories.includes(f.category)) {
-        return false;
-      }
-
-      if (filters.abilities.length > 0) {
-        const featAbilities = Array.isArray(f.ability)
-          ? f.ability
-          : f.ability
-            ? [f.ability]
-            : [];
-        if (!featAbilities.some(a => filters.abilities.includes(a))) {
-          return false;
-        }
-      }
-
-      if (filters.tags.length > 0) {
-        if (filters.tagMode === 'all') {
-          if (!filters.tags.every(t => f.tags?.includes(t))) return false;
-        } else {
-          if (!filters.tags.some(t => f.tags?.includes(t))) return false;
-        }
-      }
-
-      // Character filter: hide feats this character doesn't qualify for
-      // (same level/ability/skill/speed/prereq logic as the character creator).
-      if (activeCharacter && !showUnqualified) {
-        const { met } = checkFeatRequirements(
-          f,
-          activeCharacter,
-          skills as CodexSkillForFeat[],
-          feats
-        );
-        if (!met) return false;
-      }
-
-      return true;
+    const filtered = filterFeats(feats, filters, {
+      character: activeCharacter,
+      showUnqualified,
+      skills: skills as CodexSkillForFeat[],
+      allFeats: feats,
     });
     return sortItems<Feat>(filtered);
   }, [feats, filters, sortItems, activeCharacter, showUnqualified, skills]);
@@ -403,7 +224,7 @@ export function CodexFeatsTab({
       </FilterSection>
 
       <ListHeader
-        columns={FEAT_COLUMNS}
+        columns={CODEX_FEAT_HEADER_COLUMNS}
         gridColumns={FEAT_GRID_COLUMNS}
         sortState={sortState}
         onSort={handleSort}
@@ -416,7 +237,7 @@ export function CodexFeatsTab({
           <div className="p-8 text-center text-text-muted dark:text-text-secondary">No feats match your filters.</div>
         ) : (
           featFamilies.map(({ main, levels }) => (
-            <FeatCard
+            <CodexFeatRow
               key={main.id}
               feat={main}
               skillIdToName={skillIdToName}

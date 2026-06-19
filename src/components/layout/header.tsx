@@ -11,6 +11,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { apiFetch } from '@/lib/api-client';
 import { useAuth, useAdmin, useProfile, useTooltipByKey } from '@/hooks';
 import { ThemeToggle } from '@/components/shared';
 import { HelpTooltip } from '@/components/ui';
@@ -354,13 +355,10 @@ function AccountDropdown({
                 const next = !showTooltips;
                 setShowTooltips(next);
                 try {
-                  const res = await fetch('/api/user/settings/tooltips', {
+                  await apiFetch('/api/user/settings/tooltips', {
                     method: 'PATCH',
-                    headers: { 'content-type': 'application/json' },
                     body: JSON.stringify({ showTooltips: next }),
                   });
-                  if (!res.ok) throw new Error('Failed to update tooltip preference');
-                  // Immediately re-render any tooltip anchors by invalidating the cached /api/tooltips response(s).
                   queryClient.invalidateQueries({ queryKey: ['tooltips'] });
                 } catch {
                   setShowTooltips((prev) => !prev);

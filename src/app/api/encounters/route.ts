@@ -10,7 +10,7 @@ import { getSession } from '@/lib/supabase/session';
 import { removeUndefined } from '@/lib/utils/object';
 import { validateJson, encounterCreateSchema } from '@/lib/api-validation';
 import { standardLimiter } from '@/lib/rate-limit';
-import type { Encounter, EncounterSummary } from '@/types/encounter';
+import type { EncounterSummary } from '@/types/encounter';
 
 type Row = {
   id: string;
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
 
     const validation = await validateJson(request, encounterCreateSchema);
     if (!validation.success) return validation.error;
-    const data = validation.data as Omit<Encounter, 'id' | 'createdAt' | 'updatedAt'>;
+    const data = validation.data;
 
     const now = new Date().toISOString();
     const cleaned = removeUndefined({

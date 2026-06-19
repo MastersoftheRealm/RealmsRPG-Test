@@ -11,7 +11,6 @@ import type {
   SuccessesTableRow,
   EnhancedCraftingTableRow,
   ConsumableEnhancedTableRow,
-  MultipleUseEnergyRow,
 } from '@/types/core-rules';
 
 /**

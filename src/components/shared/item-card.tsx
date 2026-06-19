@@ -220,7 +220,7 @@ export const ItemCard = memo(function ItemCard({
       
       {/* Disabled reason */}
       {item.isDisabled && item.disabledReason && (
-        <div className="flex items-center gap-1.5 mt-2 text-xs text-danger-600 dark:text-danger-400">
+        <div className="flex items-center gap-1.5 mt-2 text-xs text-danger-700 dark:text-danger-400">
           <AlertCircle className="w-3 h-3 flex-shrink-0" />
           <span>{item.disabledReason}</span>
         </div>
@@ -255,7 +255,7 @@ export const ItemCard = memo(function ItemCard({
                 {item.requirements.map((req, i) => (
                   <span 
                     key={i}
-                    className={cn(req.met ? 'text-success-700 dark:text-success-400' : 'text-danger-600 dark:text-danger-400')}
+                    className={cn(req.met ? 'text-success-700 dark:text-success-400' : 'text-danger-700 dark:text-danger-400')}
                   >
                     {req.name} {req.value}
                     {i < item.requirements!.length - 1 ? ', ' : ''}

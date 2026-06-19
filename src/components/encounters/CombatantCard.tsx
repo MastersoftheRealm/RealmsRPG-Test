@@ -43,6 +43,7 @@ export const CombatantCard = memo(function CombatantCard({
   onDragLeave,
   onDrop,
   variant = 'full',
+  canEditLinkedResources = false,
 }: CombatantCardProps) {
   const [damageInput, setDamageInput] = useState('');
   const [healInput, setHealInput] = useState('');
@@ -62,6 +63,10 @@ export const CombatantCard = memo(function CombatantCard({
   }, [isEditingInitiative]);
 
   const isLinkedToCharacter = (combatant as TrackedCombatant).sourceType === 'campaign-character';
+  const linkedResourcesReadOnly = isLinkedToCharacter && !canEditLinkedResources;
+  const linkedResourcesTitle = canEditLinkedResources
+    ? 'Synced with your character sheet'
+    : 'Synced from character sheet';
   const healthPercent = combatant.maxHealth > 0 ? (combatant.currentHealth / combatant.maxHealth) * 100 : 0;
   const energyPercent = combatant.maxEnergy > 0 ? (combatant.currentEnergy / combatant.maxEnergy) * 100 : 0;
   const isDead = combatant.currentHealth <= 0 && combatant.combatantType === 'enemy';
@@ -245,8 +250,8 @@ export const CombatantCard = memo(function CombatantCard({
 
             <div className={cn('flex items-center gap-1 ml-auto', variant === 'compact' && 'gap-2')}>
               <span className={cn('text-text-muted dark:text-text-secondary', variant === 'compact' ? 'text-sm font-medium' : 'text-xs')}>AP:</span>
-              {isLinkedToCharacter ? (
-                <span className={cn('font-medium', variant === 'compact' ? 'text-sm' : 'text-xs')} title="Synced from character sheet">{combatant.ap}</span>
+              {linkedResourcesReadOnly ? (
+                <span className={cn('font-medium', variant === 'compact' ? 'text-sm' : 'text-xs')} title={linkedResourcesTitle}>{combatant.ap}</span>
               ) : (
                 <ValueStepper
                   value={combatant.ap}
@@ -265,8 +270,8 @@ export const CombatantCard = memo(function CombatantCard({
               <div className={cn('flex flex-col flex-1 min-w-0 p-2 rounded-lg border', 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900/50')}>
                 <span className="text-[10px] font-semibold uppercase tracking-wide text-red-700 dark:text-red-400 mb-0.5">Health</span>
                 <div className="flex items-center gap-1">
-                  {isLinkedToCharacter ? (
-                    <span className="text-sm font-bold text-red-800 dark:text-red-300" title="Synced from character sheet">{combatant.currentHealth} / {combatant.maxHealth}</span>
+                  {linkedResourcesReadOnly ? (
+                    <span className="text-sm font-bold text-red-800 dark:text-red-300" title={linkedResourcesTitle}>{combatant.currentHealth} / {combatant.maxHealth}</span>
                   ) : (
                     <>
                       <input
@@ -302,8 +307,8 @@ export const CombatantCard = memo(function CombatantCard({
               <div className={cn('flex flex-col flex-1 min-w-0 p-2 rounded-lg border', 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-900/50')}>
                 <span className="text-[10px] font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400 mb-0.5">Energy</span>
                 <div className="flex items-center gap-1">
-                  {isLinkedToCharacter ? (
-                    <span className="text-sm font-bold text-blue-800 dark:text-blue-300" title="Synced from character sheet">{combatant.currentEnergy} / {combatant.maxEnergy}</span>
+                  {linkedResourcesReadOnly ? (
+                    <span className="text-sm font-bold text-blue-800 dark:text-blue-300" title={linkedResourcesTitle}>{combatant.currentEnergy} / {combatant.maxEnergy}</span>
                   ) : (
                     <>
                       <input
@@ -338,8 +343,8 @@ export const CombatantCard = memo(function CombatantCard({
             <div className="flex items-center gap-3 mb-2">
               <div className="flex items-center gap-1 flex-1">
                 <span className="text-xs text-red-600 dark:text-red-400 font-medium w-6">HP</span>
-                {isLinkedToCharacter ? (
-                  <span className="text-xs font-medium" title="Synced from character sheet">{combatant.currentHealth} / {combatant.maxHealth}</span>
+                {linkedResourcesReadOnly ? (
+                  <span className="text-xs font-medium" title={linkedResourcesTitle}>{combatant.currentHealth} / {combatant.maxHealth}</span>
                 ) : (
                   <>
                     <input
@@ -370,8 +375,8 @@ export const CombatantCard = memo(function CombatantCard({
 
               <div className="flex items-center gap-1 flex-1">
                 <span className="text-xs text-blue-600 dark:text-blue-400 font-medium w-6">EN</span>
-                {isLinkedToCharacter ? (
-                  <span className="text-xs font-medium" title="Synced from character sheet">{combatant.currentEnergy} / {combatant.maxEnergy}</span>
+                {linkedResourcesReadOnly ? (
+                  <span className="text-xs font-medium" title={linkedResourcesTitle}>{combatant.currentEnergy} / {combatant.maxEnergy}</span>
                 ) : (
                   <>
                     <input

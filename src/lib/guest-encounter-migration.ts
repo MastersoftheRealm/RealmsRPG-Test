@@ -42,8 +42,7 @@ export async function migrateGuestEncountersOnSignIn(): Promise<number> {
       await createEncounter(payload);
       deleteGuestEncounter(summary.id);
       migrated += 1;
-    } catch (err) {
-      console.error('[guest-encounter-migration] Failed to migrate', summary.id, err);
+    } catch {
     }
   }
 
@@ -56,6 +55,8 @@ export async function migrateGuestEncountersOnSignIn(): Promise<number> {
 function guestEncounterToCreatePayload(
   guest: Encounter
 ): Omit<Encounter, 'id' | 'createdAt' | 'updatedAt'> {
-  const { id: _id, createdAt: _ca, updatedAt: _ua, ...rest } = guest;
+  /* eslint-disable @typescript-eslint/no-unused-vars -- strip server fields for create payload */
+  const { id, createdAt, updatedAt, ...rest } = guest;
+  /* eslint-enable @typescript-eslint/no-unused-vars */
   return rest;
 }

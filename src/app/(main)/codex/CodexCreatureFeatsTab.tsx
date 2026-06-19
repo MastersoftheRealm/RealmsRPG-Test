@@ -30,7 +30,8 @@ const CREATURE_FEAT_COLUMNS = [
 ];
 
 export function CodexCreatureFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  const { data: creatureFeats, isLoading, error, refetch } = useCreatureFeats();
+  const loadPublicCodex = codexMode === 'public';
+  const { data: creatureFeats, isLoading, error, refetch } = useCreatureFeats({ enabled: loadPublicCodex });
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
 

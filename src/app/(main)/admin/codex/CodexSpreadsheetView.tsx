@@ -12,6 +12,7 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Search, Replace, Copy, Save, Loader2, ChevronUp, ChevronDown } from 'lucide-react';
 import { Button, Spinner, Modal, useToast } from '@/components/ui';
+import { ErrorDisplay } from '@/components/shared';
 import { useCodexFull } from '@/hooks/use-codex';
 import { createCodexDoc, updateCodexDoc } from './actions';
 
@@ -172,7 +173,7 @@ interface CodexSpreadsheetViewProps {
 
 export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
   const { showToast } = useToast();
-  const { data: codex, isLoading, error } = useCodexFull();
+  const { data: codex, isLoading, error, refetch } = useCodexFull();
   const queryClient = useQueryClient();
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
   const [dirty, setDirty] = useState<Set<number>>(new Set());
@@ -464,9 +465,11 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
 
   if (error) {
     return (
-      <div className="rounded-lg border border-border bg-surface p-6 text-center text-red-600">
-        Failed to load codex. Check console for details.
-      </div>
+      <ErrorDisplay
+        message="Failed to load codex"
+        subMessage={error.message}
+        onRetry={() => { void refetch(); }}
+      />
     );
   }
 

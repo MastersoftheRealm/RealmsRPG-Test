@@ -11,7 +11,7 @@
 
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Spinner, Button } from '@/components/ui';
 import { 
@@ -301,6 +301,88 @@ export function FeatsStep() {
       .filter((entry): entry is { displayFeat: Feat; familyLevels: Feat[] } => entry !== null);
   }, [feats, recommendedFeatRefs]);
 
+  const applyRecommendedPathFeats = useCallback(() => {
+    if (!feats || recommendedFeatRefs.size === 0) return;
+
+    let workingFeats = [...(draft.feats || [])];
+
+    const addFeatIfPossible = (feat: Feat, isCharacterFeat: boolean) => {
+      const featType = isCharacterFeat ? 'character' : 'archetype';
+      if (workingFeats.some((f) => f.id === feat.id)) return;
+
+      const selectedList = workingFeats.filter((f) =>
+        isCharacterFeat ? f.type === 'character' : f.type !== 'character'
+      );
+      const maxForType = isCharacterFeat ? maxCharacterFeats : maxArchetypeFeats;
+      const requirements = checkRequirements(feat);
+      if (!requirements.met) return;
+
+      const selectedWeight = selectedList.reduce((sum, selected) => {
+        const selectedFeat = featById.get(String(selected.id));
+        return sum + getFeatLevel(selectedFeat);
+      }, 0);
+      const targetFamily = getFeatFamilyId(feat);
+      const targetLevel = getFeatLevel(feat);
+      const sameFamilyToReplace = selectedList.filter((selected) => {
+        const selectedFeat = featById.get(String(selected.id));
+        if (!selectedFeat) return false;
+        if (getFeatFamilyId(selectedFeat) !== targetFamily) return false;
+        return getFeatLevel(selectedFeat) < targetLevel;
+      });
+      const replacedWeight = sameFamilyToReplace.reduce((sum, selected) => {
+        const selectedFeat = featById.get(String(selected.id));
+        return sum + getFeatLevel(selectedFeat);
+      }, 0);
+      const nextWeight = selectedWeight - replacedWeight + targetLevel;
+      if (nextWeight > maxForType) return;
+
+      const replacementIds = new Set(sameFamilyToReplace.map((f) => String(f.id)));
+      workingFeats = [
+        ...workingFeats.filter((f) => !replacementIds.has(String(f.id))),
+        {
+          id: feat.id,
+          name: feat.name,
+          description: feat.description,
+          type: featType,
+        },
+      ];
+    };
+
+    for (const { displayFeat } of pathModeArchetypeFeats) {
+      addFeatIfPossible(displayFeat, false);
+    }
+    for (const { displayFeat } of pathModeCharacterFeats) {
+      addFeatIfPossible(displayFeat, true);
+    }
+
+    const prevIds = (draft.feats ?? []).map((f) => String(f.id)).sort().join(',');
+    const nextIds = workingFeats.map((f) => String(f.id)).sort().join(',');
+    if (prevIds !== nextIds) {
+      updateDraft({ feats: workingFeats });
+    }
+  }, [
+    feats,
+    recommendedFeatRefs.size,
+    draft.feats,
+    pathModeArchetypeFeats,
+    pathModeCharacterFeats,
+    maxArchetypeFeats,
+    maxCharacterFeats,
+    featById,
+    checkRequirements,
+    updateDraft,
+  ]);
+
+  const pathFeatMergeKey = draft.creationMode === 'path' ? String(draft.archetypePathId ?? '') : '';
+  const hasAppliedPathFeatsRef = useRef('');
+
+  useEffect(() => {
+    if (!pathFeatMergeKey || recommendedFeatRefs.size === 0 || isLoading) return;
+    if (hasAppliedPathFeatsRef.current === pathFeatMergeKey) return;
+    applyRecommendedPathFeats();
+    hasAppliedPathFeatsRef.current = pathFeatMergeKey;
+  }, [pathFeatMergeKey, recommendedFeatRefs.size, isLoading, applyRecommendedPathFeats]);
+
   const toggleFeat = useCallback((feat: Feat, isCharacterFeat: boolean) => {
     const featType = isCharacterFeat ? 'character' : 'archetype';
     const selectedList = isCharacterFeat ? selectedCharacterFeats : selectedArchetypeFeats;
@@ -467,11 +549,6 @@ export function FeatsStep() {
         <div>
           <div className="flex items-center gap-1 mb-2">
             <h2 className="text-2xl font-bold text-text-primary">Select Feats</h2>
-            <ContextHelpTooltip
-              tooltipKey="characters.new.step.feats.selectionHelp"
-              scope="page:/characters/new"
-              label="Feat selection help"
-            />
           </div>
           <p className="text-text-secondary">
             Choose feats that grant special abilities and bonuses. Your archetype 
@@ -607,12 +684,12 @@ export function FeatsStep() {
       {/* Toggle row: path toggle (left), archetype/character toggle (right, only when showing all feats) */}
       <div className="flex flex-wrap items-center gap-3 gap-y-1 mb-4">
         {draft.creationMode === 'path' && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => setUsePathRecommendations((value) => !value)}
               className={cn(
-                'px-4 py-2 rounded-lg border text-sm font-semibold transition-colors',
+                'px-4 py-2 rounded-lg border text-sm font-semibold transition-colors min-h-[44px]',
                 usePathRecommendations
                   ? 'bg-success-50 dark:bg-success-900/30 border-success-300 dark:border-success-600/50 text-success-700 dark:text-success-300'
                   : 'bg-surface border-border-light text-text-secondary hover:bg-surface-alt'
@@ -622,6 +699,18 @@ export function FeatsStep() {
                 ? `Showing ${draft.archetype?.name ?? 'Path'} Feats`
                 : 'Choose My Own Feats'}
             </button>
+            {recommendedFeatRefs.size > 0 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={applyRecommendedPathFeats}
+                className="min-h-[44px]"
+                aria-label="Apply recommended path feats"
+              >
+                Apply recommended feats
+              </Button>
+            )}
             <span className="text-xs text-text-muted dark:text-text-secondary">
               {usePathRecommendations ? 'Click to show all feats' : 'Click to show path feats'}
             </span>

@@ -7,6 +7,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { apiFetch } from '@/lib/api-client';
 import { useAuth } from './use-auth';
 
 export function useAdmin() {
@@ -15,8 +16,7 @@ export function useAdmin() {
   const { data, isLoading } = useQuery({
     queryKey: ['admin', user?.uid],
     queryFn: async () => {
-      const res = await fetch('/api/admin/check');
-      const json = await res.json();
+      const json = await apiFetch<{ isAdmin?: boolean }>('/api/admin/check');
       return json.isAdmin === true;
     },
     enabled: !!user?.uid,

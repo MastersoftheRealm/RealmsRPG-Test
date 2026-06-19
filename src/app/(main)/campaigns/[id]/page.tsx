@@ -33,7 +33,7 @@ import {
   IconButton,
   useToast,
 } from '@/components/ui';
-import { ContextHelpTooltip, DeleteConfirmModal } from '@/components/shared';
+import { DeleteConfirmModal } from '@/components/shared';
 import { RollEntryCard } from '@/components/character-sheet';
 import { useCampaign, useCharacters, useInvalidateCampaigns, useAuth, useCampaignRolls } from '@/hooks';
 import { addCharacterToCampaignAction, removeCharacterFromCampaignAction, deleteCampaignAction, updateCampaignAction } from '../actions';
@@ -301,11 +301,6 @@ function CampaignDetailContent() {
             ) : (
               <h1 className="text-2xl md:text-3xl font-bold text-text-primary flex items-center gap-2">
                 {campaign.name}
-                <ContextHelpTooltip
-                  tooltipKey="campaigns.page.help"
-                  scope="page:/campaigns"
-                  label="Campaign detail help"
-                />
                 {isRealmMaster && (
                   <button
                     type="button"
@@ -392,11 +387,6 @@ function CampaignDetailContent() {
         <div className="rounded-xl border border-border-light bg-surface p-6 mb-6">
           <h2 className="font-semibold text-text-primary mb-2 flex items-center gap-1">
             Invite Code
-            <ContextHelpTooltip
-              tooltipKey="campaigns.page.inviteHelp"
-              scope="page:/campaigns"
-              label="Campaign invite code help"
-            />
           </h2>
           <p className="text-sm text-text-secondary mb-3">
             Share this code with players so they can join your campaign.

@@ -132,7 +132,6 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
           onSaveSuccess?.();
         }, 2000);
       } catch (err) {
-        console.error(`Error saving ${type}:`, err);
         setSaveMessage({
           type: 'error',
           text: `Failed to save: ${(err as Error).message}`,

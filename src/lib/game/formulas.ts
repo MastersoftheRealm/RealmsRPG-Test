@@ -8,7 +8,7 @@
  * When provided, DB-stored values are used. Otherwise, constants.ts fallbacks apply.
  */
 
-import type { EntityType, Abilities, ArchetypeCategory, Character } from '@/types';
+import type { EntityType, Abilities, ArchetypeCategory } from '@/types';
 import type { CoreRulesMap, ArchetypeConfigRules } from '@/types/core-rules';
 import { 
   SHARED_CONSTANTS, 

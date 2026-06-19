@@ -142,5 +142,8 @@ export const strictLimiter = rateLimit({ interval: 60_000, limit: 10 });
 /** Invite code lookup: 5 per minute (prevent brute-force) */
 export const inviteCodeLimiter = rateLimit({ interval: 60_000, limit: 5 });
 
+/** Auth-adjacent actions (resend, forgot-username stub): 5 per minute per IP/email key */
+export const authActionLimiter = rateLimit({ interval: 60_000, limit: 5 });
+
 /** Upload limiter: 12 uploads per minute */
 export const uploadLimiter = rateLimit({ interval: 60_000, limit: 12 });

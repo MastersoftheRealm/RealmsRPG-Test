@@ -72,6 +72,8 @@ Task queue `related_files` may reference outdated paths. When implementing, pref
 | Feat source / other modal sub-modes needing `role="tab"` | **SegmentedControl** with `tabs` + `tabPanelId` | A11y tablist when acting as tabs |
 | Powers / Techniques / … primary navigation | **TabNavigation** (`variant="underline"`) | Long tab sets; keep underline tabs, do not swap for SegmentedControl |
 
+**Tab a11y (TASK-355):** Call `useTabGroup()` in the page, pass `tabGroupId` + `sharedTabPanelId` to `TabNavigation`, wrap tab content in `<TabContentPanel tabGroupId={…} id={sharedPanelId} activeTab={…}>`. For per-tab panels in DOM, use `TabPanel` instead.
+
 ## Component Decision Tree (List/Selection UI)
 
 | Use Case | Component | Notes |
@@ -100,7 +102,7 @@ Goal: "Learn once, use forever" — consistent UI across Library, Codex, Charact
 | SectionHeader | feats-tab, proficiencies-tab, notes-tab, archetype-section, crafting pages |
 | ListHeader | All Codex/Library/Admin list views, feats-step, UnifiedSelectionModal |
 | UnifiedSelectionModal | AddFeatModal, AddSkillModal, AddLibraryItemModal (thin wrappers) |
-| useModalListState | LoadFromLibraryModal, LoadCreatureModal |
+| useModalListState | LoadFromLibraryModal |
 
 **Intentional exceptions:** Auth pages use `gray-*`; AddSubSkillModal uses SelectionToggle (not GridListRow); footer uses `bg-neutral-400`; RollButton gradients use neutral tokens.
 

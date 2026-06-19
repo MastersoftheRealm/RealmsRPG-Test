@@ -89,9 +89,9 @@ export function HealthEnergyAllocator({
           </span>
           <span className={cn(
             'text-xs font-bold',
-            isOverspent ? 'text-danger-600 dark:text-danger-400' : 
+            isOverspent ? 'text-danger-700 dark:text-danger-400' : 
             isComplete ? 'text-success-700 dark:text-success-400' : 
-            'text-info-600 dark:text-info-400'
+            'text-info-700 dark:text-info-400'
           )}>
             {spent} / {poolTotal}
             {isOverspent && <span className="ml-1">({remaining})</span>}

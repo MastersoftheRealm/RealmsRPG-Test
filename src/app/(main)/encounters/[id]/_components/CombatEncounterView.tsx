@@ -9,6 +9,7 @@
 
 import { useState, useCallback, useMemo, useEffect, useRef, DragEvent } from 'react';
 import { cn } from '@/lib/utils';
+import { apiFetchOrNull } from '@/lib/api-client';
 import { Button, Checkbox, Input } from '@/components/ui';
 import { ValueStepper } from '@/components/shared';
 import type { Combatant, CombatantCondition, CombatantType, TrackedCombatant } from '@/types/encounter';
@@ -17,9 +18,14 @@ import { CombatantCard } from '@/components/encounters/CombatantCard';
 import { CONDITION_OPTIONS } from '@/components/encounters/encounter-constants';
 import { AddCombatantModal } from '@/components/shared/add-combatant-modal';
 import { RollLog } from '@/components/character-sheet';
+import { useAuth } from '@/hooks';
 import { createClient } from '@/lib/supabase/client';
 import { computeMaxHealthEnergy } from '@/lib/game/calculations';
-import type { Campaign } from '@/types/campaign';
+import {
+  isOwnedLinkedCombatant,
+  scheduleCharacterResourceSyncFromCombatant,
+} from '@/lib/encounter/character-resource-sync';
+import type { Campaign, CampaignCharacterEncounterData } from '@/types/campaign';
 
 export function generateId(): string {
   return Math.random().toString(36).substring(2, 9);
@@ -76,6 +82,7 @@ function CombatEncounterViewInner({
   campaignsFull,
   showRollLog = true,
 }: CombatEncounterViewProps & { encounter: Encounter }) {
+  const { user } = useAuth();
   const [showAddModal, setShowAddModal] = useState(false);
   const [addingAllChars, setAddingAllChars] = useState(false);
   const [newCombatant, setNewCombatant] = useState(() => ({
@@ -104,11 +111,11 @@ function CombatEncounterViewInner({
     const results = await Promise.all(
       linked.map(async (c) => {
         try {
-          const res = await fetch(
+          const data = await apiFetchOrNull<CampaignCharacterEncounterData>(
             `/api/campaigns/${encounter!.campaignId}/characters/${c.sourceUserId}/${c.sourceId}?scope=encounter`
           );
-          if (!res.ok) return null;
-          return { combatantId: c.id, data: await res.json() };
+          if (!data) return null;
+          return { combatantId: c.id, data };
         } catch {
           return null;
         }
@@ -374,11 +381,11 @@ function CombatEncounterViewInner({
         linkedCampaign.characters.map(
           async (c: { userId: string; characterId: string; characterName: string }) => {
             try {
-              const res = await fetch(
+              const data = await apiFetchOrNull<CampaignCharacterEncounterData>(
                 `/api/campaigns/${encounter.campaignId}/characters/${c.userId}/${c.characterId}?scope=encounter`
               );
-              if (!res.ok) return null;
-              return { charMeta: c, data: await res.json() };
+              if (!data) return null;
+              return { charMeta: c, data };
             } catch {
               return null;
             }
@@ -416,8 +423,7 @@ function CombatEncounterViewInner({
           };
         });
       setEncounter((prev) => (prev ? { ...prev, combatants: [...prev.combatants, ...combatants] } : prev));
-    } catch (err) {
-      console.error('Failed to add campaign characters:', err);
+    } catch {
     } finally {
       setAddingAllChars(false);
     }
@@ -492,14 +498,26 @@ function CombatEncounterViewInner({
     setEncounter((prev) => {
       if (!prev) return prev;
       const combatant = prev.combatants.find((c) => c.id === id) as TrackedCombatant | undefined;
+      const owned = isOwnedLinkedCombatant(combatant, user?.uid);
       const isLinked = combatant?.sourceType === 'campaign-character';
       const resourceKeys = ['currentHealth', 'maxHealth', 'currentEnergy', 'maxEnergy', 'ap'] as const;
-      const applied: Partial<Combatant> = isLinked
-        ? Object.fromEntries(
-            Object.entries(updates).filter(([k]) => !resourceKeys.includes(k as (typeof resourceKeys)[number]))
+      let applied: Partial<Combatant> = updates;
+      if (isLinked && !owned) {
+        applied = Object.fromEntries(
+          Object.entries(updates).filter(
+            ([k]) => !resourceKeys.includes(k as (typeof resourceKeys)[number])
           )
-        : updates;
+        ) as Partial<Combatant>;
+      } else if (isLinked && owned) {
+        applied = Object.fromEntries(
+          Object.entries(updates).filter(([k]) => k !== 'maxHealth' && k !== 'maxEnergy')
+        ) as Partial<Combatant>;
+      }
       const next = prev.combatants.map((c) => (c.id === id ? { ...c, ...applied } : c));
+      const updated = next.find((c) => c.id === id) as TrackedCombatant | undefined;
+      if (owned && updated && resourceKeys.some((k) => k in updates)) {
+        scheduleCharacterResourceSyncFromCombatant(updated);
+      }
       return { ...prev, combatants: next };
     });
   };
@@ -559,10 +577,15 @@ function CombatEncounterViewInner({
     setEncounter((prev) => {
       if (!prev) return prev;
       const combatant = prev.combatants.find((c) => c.id === id) as TrackedCombatant | undefined;
-      if (combatant?.sourceType === 'campaign-character') return prev;
+      const owned = isOwnedLinkedCombatant(combatant, user?.uid);
+      if (combatant?.sourceType === 'campaign-character' && !owned) return prev;
       const next = prev.combatants.map((c) =>
         c.id === id ? { ...c, ap: Math.max(0, Math.min(10, c.ap + delta)) } : c
       );
+      const updated = next.find((c) => c.id === id) as TrackedCombatant | undefined;
+      if (owned && updated) {
+        scheduleCharacterResourceSyncFromCombatant(updated);
+      }
       return { ...prev, combatants: next };
     });
   };
@@ -771,6 +794,7 @@ function CombatEncounterViewInner({
                 <CombatantCard
                   key={combatant.id}
                   combatant={combatant}
+                  canEditLinkedResources={isOwnedLinkedCombatant(combatant as TrackedCombatant, user?.uid)}
                   isCurrentTurn={encounter.isActive && index === encounter.currentTurnIndex}
                   isDragOver={dragOverId === combatant.id}
                   isDragging={draggedId === combatant.id}

@@ -5,7 +5,7 @@
  */
 
 import type { Encounter, EncounterSummary } from '@/types/encounter';
-import { apiFetch } from '@/lib/api-client';
+import { apiFetch, apiFetchOrNull } from '@/lib/api-client';
 
 const API_BASE = '/api/encounters';
 
@@ -20,13 +20,7 @@ export async function getEncounters(): Promise<EncounterSummary[]> {
  * Get a single encounter by ID.
  */
 export async function getEncounter(encounterId: string): Promise<Encounter | null> {
-  const res = await fetch(`${API_BASE}/${encodeURIComponent(encounterId)}`);
-  if (res.status === 404) return null;
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error((err as { error?: string }).error ?? 'Request failed');
-  }
-  return res.json();
+  return apiFetchOrNull<Encounter>(`${API_BASE}/${encodeURIComponent(encounterId)}`);
 }
 
 /**

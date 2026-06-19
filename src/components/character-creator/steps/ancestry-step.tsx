@@ -15,7 +15,7 @@
 import { useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Chip, Button, Alert } from '@/components/ui';
-import { ContextHelpTooltip, SelectionToggle, ChoiceTraitOptionListPicker } from '@/components/shared';
+import { SelectionToggle, ChoiceTraitOptionListPicker } from '@/components/shared';
 import {
   getChoiceOptionIds,
   resolveChoiceOptionTraits,
@@ -433,11 +433,6 @@ export function AncestryStep() {
       <div className="max-w-2xl mx-auto text-center">
         <div className="flex items-center justify-center gap-1 mb-2">
           <h2 className="text-2xl font-bold text-text-primary">Choose Your Ancestry Traits</h2>
-          <ContextHelpTooltip
-            tooltipKey="characters.new.step.ancestry.rulesHelp"
-            scope="page:/characters/new"
-            label="Ancestry trait rules help"
-          />
         </div>
         <p className="text-text-secondary mb-6">
           Customize your character with ancestry traits and an optional flaw.
@@ -481,11 +476,6 @@ export function AncestryStep() {
           <div>
             <div className="flex items-center gap-1 mb-2">
               <h2 className="text-2xl font-bold text-text-primary">Mixed Species: Ancestry</h2>
-              <ContextHelpTooltip
-                tooltipKey="characters.new.step.ancestry.rulesHelp"
-                scope="page:/characters/new"
-                label="Mixed ancestry rules help"
-              />
             </div>
             <p className="text-text-secondary">
               <strong>{nameA}</strong> + <strong>{nameB}</strong>. Set physical traits and choose one species trait from each, then ancestry and optional flaw.
@@ -711,11 +701,6 @@ export function AncestryStep() {
         <div>
           <div className="flex items-center gap-1 mb-2">
             <h2 className="text-2xl font-bold text-text-primary">Choose Your Ancestry Traits</h2>
-            <ContextHelpTooltip
-              tooltipKey="characters.new.step.ancestry.rulesHelp"
-              scope="page:/characters/new"
-              label="Ancestry trait selection help"
-            />
           </div>
           <p className="text-text-secondary">
             As a <strong>{selectedSpecies.name}</strong>, customize your heritage with traits and abilities.

@@ -63,7 +63,7 @@ import { Button, Checkbox, Input, Textarea, LoadingState, Alert, PageContainer }
 import { ValueStepper, SectionCostBadge } from '@/components/shared';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
-import { ConfirmActionModal, ContextHelpTooltip, LoginPromptModal, ErrorDisplay } from '@/components/shared';
+import { ConfirmActionModal, LoginPromptModal, ErrorDisplay } from '@/components/shared';
 import { PowerPartCard } from '@/components/creator';
 import { EXCLUDED_PARTS } from '@/app/(main)/power-creator/power-creator-constants';
 import {
@@ -426,9 +426,9 @@ function EmpoweredTechniqueCreatorContent() {
     () => computePowerActionTypeFromSelection(actionType, isReaction),
     [actionType, isReaction]
   );
-  const rangeDisplay = useMemo(() => deriveRange(powerPayload, powerParts), [powerParts, powerPayload]);
-  const areaDisplay = useMemo(() => deriveArea(powerPayload, powerParts), [powerParts, powerPayload]);
-  const durationDisplay = useMemo(() => deriveDuration(powerPayload, powerParts), [powerParts, powerPayload]);
+  const rangeDisplay = useMemo(() => deriveRange(powerPayload), [powerPayload]);
+  const areaDisplay = useMemo(() => deriveArea(powerPayload), [powerPayload]);
+  const durationDisplay = useMemo(() => deriveDuration(powerPayload), [powerPayload]);
 
   const powerDamageSummary = useMemo(() => {
     const rows = powerDamages.filter((damage) => damage.type !== 'none' && damage.amount > 0);
@@ -760,8 +760,7 @@ function EmpoweredTechniqueCreatorContent() {
           localStorage.removeItem(CACHE_KEY);
         }
       }
-    } catch (error) {
-      console.error('Failed to restore empowered technique cache:', error);
+    } catch {
     } finally {
       setIsInitialized(true);
     }
@@ -909,12 +908,6 @@ function EmpoweredTechniqueCreatorContent() {
       description="Build an empowered technique by combining power and technique parts in one shared action profile."
       actions={
         <div className="flex items-center gap-2">
-          <ContextHelpTooltip
-            tooltipKey="creators.empowered.headerHelp"
-            scope="page:/empowered-technique-creator"
-            label="Empowered technique creator help"
-            placement="left"
-          />
           <CreatorSaveToolbar
             saveTarget={save.saveTarget}
             onSaveTargetChange={save.setSaveTarget}

@@ -5,6 +5,8 @@
  * Used by creators (power, technique, item, creature).
  */
 
+import { apiFetch } from '@/lib/api-client';
+
 const API_BASE = '/api/user/library';
 
 export type LibraryType = 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species';
@@ -15,28 +17,17 @@ export async function saveToLibrary(
   options?: { existingId?: string }
 ): Promise<string> {
   if (options?.existingId) {
-    const res = await fetch(`${API_BASE}/${type}/${encodeURIComponent(options.existingId)}`, {
+    await apiFetch<void>(`${API_BASE}/${type}/${encodeURIComponent(options.existingId)}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ error: res.statusText }));
-      throw new Error((err as { error?: string }).error ?? 'Save failed');
-    }
     return options.existingId;
   }
 
-  const res = await fetch(`${API_BASE}/${type}`, {
+  const result = await apiFetch<{ id: string }>(`${API_BASE}/${type}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error((err as { error?: string }).error ?? 'Save failed');
-  }
-  const result = (await res.json()) as { id: string };
   return result.id;
 }
 
@@ -44,20 +35,22 @@ export async function findLibraryItemByName(
   type: LibraryType,
   name: string
 ): Promise<{ id: string } | null> {
-  const res = await fetch(`${API_BASE}/${type}`);
-  if (!res.ok) return null;
-  const items = (await res.json()) as Array<{ id: string; name?: string }>;
-  const found = items.find((i) => (i.name || '').trim().toLowerCase() === (name || '').trim().toLowerCase());
-  return found ? { id: found.id } : null;
+  try {
+    const items = await apiFetch<Array<{ id: string; name?: string }>>(`${API_BASE}/${type}`);
+    const found = items.find(
+      (i) => (i.name || '').trim().toLowerCase() === (name || '').trim().toLowerCase()
+    );
+    return found ? { id: found.id } : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Fetch official library items (no auth). Uses columnar official_* tables; species reads codex_species. */
 export async function fetchOfficialLibrary(
   type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species'
 ): Promise<Array<Record<string, unknown>>> {
-  const res = await fetch(`/api/official/${type}`, { cache: 'no-store' });
-  if (!res.ok) throw new Error('Failed to fetch official library');
-  return (await res.json()) as Array<Record<string, unknown>>;
+  return apiFetch<Array<Record<string, unknown>>>(`/api/official/${type}`, { cache: 'no-store' });
 }
 
 /** Find an official library item by name (for replace-by-name when publishing). */
@@ -68,7 +61,7 @@ export async function findOfficialLibraryItemByName(
   const items = await fetchOfficialLibrary(type);
   const normalized = (name || '').trim().toLowerCase();
   const found = items.find(
-    (i) => (String((i as Record<string, unknown>).name ?? '').trim().toLowerCase() === normalized)
+    (i) => String((i as Record<string, unknown>).name ?? '').trim().toLowerCase() === normalized
   ) as { id: string } | undefined;
   return found ? { id: found.id } : null;
 }
@@ -78,7 +71,13 @@ export async function addOfficialItemToLibrary(
   type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species',
   officialItem: Record<string, unknown>
 ): Promise<string> {
-  const { id: _id, docId: _docId, _source, ...data } = officialItem;
+  /* eslint-disable @typescript-eslint/no-unused-vars -- strip official-library metadata before copy */
+  const { id, docId, _source, ...data } = officialItem as Record<string, unknown> & {
+    id?: unknown;
+    docId?: unknown;
+    _source?: unknown;
+  };
+  /* eslint-enable @typescript-eslint/no-unused-vars */
   return saveToLibrary(type, { ...data, createdAt: new Date().toISOString() });
 }
 
@@ -89,16 +88,9 @@ export async function saveToOfficialLibrary(
   options?: { existingId?: string }
 ): Promise<string> {
   const body = options?.existingId ? { ...data, id: options.existingId } : data;
-  const res = await fetch(`/api/official/${type}`, {
+  const result = await apiFetch<{ id: string }>(`/api/official/${type}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  if (!res.ok) {
-    const err = (await res.json().catch(() => ({ error: res.statusText }))) as { error?: string; details?: string };
-    const msg = err.details ? `${err.error ?? 'Save failed'}: ${err.details}` : (err.error ?? 'Save to official library failed');
-    throw new Error(msg);
-  }
-  const result = (await res.json()) as { id: string };
   return result.id;
 }

@@ -11,7 +11,6 @@ import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, Cloud, CloudOff } from 'lucide-react';
 import { PageContainer, LoadingState, Alert, useToast } from '@/components/ui';
-import { ContextHelpTooltip } from '@/components/shared';
 import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
 import { RollProvider } from '@/components/character-sheet';
 import type { Encounter, SkillParticipant } from '@/types/encounter';
@@ -93,8 +92,7 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
     },
     delay: 1500,
     enabled: isInitialized && !!encounter,
-    onSaveError: (err) => {
-      console.error('Encounter save failed:', err);
+    onSaveError: () => {
       showToast('Failed to save encounter. Your latest changes may not be stored.', 'error');
     },
   });
@@ -179,11 +177,6 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
                     {encounter.name}
                   </h1>
                   <div className="mt-1">
-                    <ContextHelpTooltip
-                      tooltipKey="encounters.skill.headerHelp"
-                      scope="page:/encounters/[id]/skill"
-                      label="Skill encounter help"
-                    />
                   </div>
                 </>
               )}

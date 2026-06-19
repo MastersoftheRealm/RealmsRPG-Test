@@ -8,7 +8,17 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+function isOAuthCallbackInProgress(request: NextRequest): boolean {
+  return request.nextUrl.searchParams.has('code');
+}
+
 export async function updateSession(request: NextRequest) {
+  // Never refresh session during OAuth PKCE exchange — stale refresh attempts can
+  // clear PKCE cookies and cause flow_state_not_found on /auth/callback.
+  if (isOAuthCallbackInProgress(request)) {
+    return NextResponse.next({ request });
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 
@@ -41,7 +51,13 @@ export async function updateSession(request: NextRequest) {
 
   try {
     // Must call getUser() to refresh token — prevents random logouts
-    await supabase.auth.getUser();
+    const { error } = await supabase.auth.getUser();
+    if (error?.code === 'refresh_token_not_found') {
+      // Clear stale session cookies so we stop retrying invalid refresh tokens.
+      await supabase.auth.signOut();
+    } else if (error) {
+      console.error('[Supabase] Auth refresh failed:', error.message);
+    }
   } catch (err) {
     console.error('[Supabase] Auth refresh failed:', err);
     // Pass through — don't block the request; auth-required routes will handle 401

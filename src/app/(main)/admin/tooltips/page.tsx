@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, Input, Modal, PageContainer, PageHeader, Spinner, Textarea, Alert } from '@/components/ui';
+import { ErrorDisplay } from '@/components/shared';
 import { apiFetch } from '@/lib/api-client';
 import { interpolateTooltipTemplate } from '@/lib/tooltips/interpolate';
 import { renderMarkdownLite } from '@/lib/tooltips/markdown-lite';
@@ -229,7 +230,7 @@ export default function AdminTooltipsPage() {
           <Spinner size="lg" />
         </div>
       ) : query.error ? (
-        <Alert variant="danger">{query.error.message}</Alert>
+        <ErrorDisplay message={query.error.message || 'Failed to load tooltips'} onRetry={() => { void query.refetch(); }} />
       ) : (
         <div className="rounded-lg border border-border bg-surface overflow-x-auto">
           <table className="w-full text-sm">

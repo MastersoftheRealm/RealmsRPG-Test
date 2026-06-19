@@ -73,7 +73,7 @@ export function getSkillValueIncreaseCost(
  * Cost to gain proficiency in a skill.
  * Base skill: 1 pt. Sub-skill: 1 pt (and grants +1 skill value).
  */
-export function getProficiencyCost(_isSubSkill: boolean): number {
+export function getProficiencyCost(): number {
   return 1;
 }
 
@@ -82,8 +82,7 @@ export function getProficiencyCost(_isSubSkill: boolean): number {
  * Decreasing from 1 to 0 for a proficient skill = remove proficiency (refunds 1 pt).
  */
 export function getSkillValueDecreaseRefund(
-  currentValue: number,
-  isSubSkill: boolean
+  currentValue: number
 ): number {
   if (currentValue <= 1) return 1; // Removing proficiency
   return 1; // Decreasing value
@@ -162,8 +161,7 @@ export function calculateSkillPointsSpent(
     id: string;
     isSubSkill: boolean;
     baseSkillId?: string;
-  }[],
-  getBaseSkillValue: (baseSkillId: string) => number
+  }[]
 ): number {
   let spent = 0;
 

@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Alert, Button, Modal, PageContainer, PageHeader, Spinner, TabNavigation } from '@/components/ui';
+import { Button, Modal, PageContainer, PageHeader, Spinner, TabNavigation, TabContentPanel, useTabGroup } from '@/components/ui';
+import { ErrorDisplay } from '@/components/shared';
+import { apiFetch } from '@/lib/api-client';
 
 type TabId =
   | 'codex_feats'
@@ -75,23 +77,22 @@ function readActorLabel(entry: ChangeLogEntry): string {
 }
 
 export default function AdminChangelogsPage() {
+  const { tabGroupId, sharedPanelId } = useTabGroup();
   const [activeTab, setActiveTab] = useState<TabId>('codex_feats');
   const [rows, setRows] = useState<ChangeLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<ChangeLogEntry | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
 
-    fetch(`/api/admin/changelogs?entityType=${encodeURIComponent(activeTab)}&limit=200`)
-      .then(async (res) => {
-        const payload = (await res.json().catch(() => ({}))) as { error?: string };
-        if (!res.ok) throw new Error(payload.error ?? (res.status === 403 ? 'Forbidden' : 'Failed to load changelogs'));
-        return payload as unknown as ChangeLogEntry[];
-      })
+    apiFetch<ChangeLogEntry[]>(
+      `/api/admin/changelogs?entityType=${encodeURIComponent(activeTab)}&limit=200`
+    )
       .then((data) => {
         if (!cancelled) setRows(Array.isArray(data) ? data : []);
       })
@@ -105,7 +106,7 @@ export default function AdminChangelogsPage() {
     return () => {
       cancelled = true;
     };
-  }, [activeTab]);
+  }, [activeTab, reloadToken]);
 
   const tabs = useMemo(
     () =>
@@ -139,14 +140,17 @@ export default function AdminChangelogsPage() {
         }}
         variant="underline"
         className="mb-6"
+        tabGroupId={tabGroupId}
+        sharedTabPanelId={sharedPanelId}
       />
 
+      <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab}>
       {loading ? (
         <div className="flex justify-center py-12">
           <Spinner size="lg" />
         </div>
       ) : error ? (
-        <Alert variant="danger">{error}</Alert>
+        <ErrorDisplay message={error} onRetry={() => setReloadToken((token) => token + 1)} />
       ) : rows.length === 0 ? (
         <p className="text-text-muted dark:text-text-secondary italic">No changelog entries yet for this tab.</p>
       ) : (
@@ -184,6 +188,7 @@ export default function AdminChangelogsPage() {
           ))}
         </div>
       )}
+      </TabContentPanel>
 
       <Modal
         isOpen={selectedEntry !== null}

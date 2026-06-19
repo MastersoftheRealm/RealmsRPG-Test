@@ -8,7 +8,7 @@
 'use client';
 
 import { useState } from 'react';
-import { PageContainer, PageHeader, TabNavigation, Button } from '@/components/ui';
+import { PageContainer, PageHeader, TabNavigation, TabContentPanel, useTabGroup, Button } from '@/components/ui';
 import { AdminFeatsTab } from './AdminFeatsTab';
 import { AdminTraitsTab } from './AdminTraitsTab';
 import { AdminSpeciesTab } from './AdminSpeciesTab';
@@ -47,6 +47,7 @@ const TABS: { id: TabId; label: string; labelMobile?: string }[] = [
 ];
 
 export default function AdminCodexPage() {
+  const { tabGroupId, sharedPanelId } = useTabGroup();
   const [activeTab, setActiveTab] = useState<TabId>('feats');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
 
@@ -89,8 +90,11 @@ export default function AdminCodexPage() {
         onTabChange={(tabId) => setActiveTab(tabId as TabId)}
         variant="underline"
         className="mb-6"
+        tabGroupId={tabGroupId}
+        sharedTabPanelId={sharedPanelId}
       />
 
+      <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab}>
       {viewMode === 'spreadsheet' ? (
         <CodexSpreadsheetView activeTab={activeTab} />
       ) : (
@@ -106,6 +110,7 @@ export default function AdminCodexPage() {
           {activeTab === 'creature_feats' && <AdminCreatureFeatsTab />}
         </>
       )}
+      </TabContentPanel>
     </PageContainer>
   );
 }

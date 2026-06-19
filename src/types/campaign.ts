@@ -50,3 +50,14 @@ export interface CampaignSummary {
   isOwner: boolean;
   updatedAt?: Date | string;
 }
+
+/** Minimal character payload from GET ?scope=encounter (combatant add / HP sync). */
+export interface CampaignCharacterEncounterData {
+  currentHealth?: number;
+  currentEnergy?: number;
+  actionPoints?: number;
+  health?: { current?: number; max?: number };
+  energy?: { current?: number; max?: number };
+  abilities?: { acuity?: number; agility?: number };
+  evasion?: number;
+}

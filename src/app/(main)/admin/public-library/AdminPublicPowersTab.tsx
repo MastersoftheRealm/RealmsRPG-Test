@@ -5,29 +5,15 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  SectionHeader,
-  SearchInput,
-  ListHeader,
-  LoadingState,
-  ErrorDisplay,
-  GridListRow,
-  ListEmptyState,
-  DeleteConfirmModal,
-  type ChipData,
-} from '@/components/shared';
+import { DeleteConfirmModal, OfficialPowerList } from '@/components/shared';
 import { useToast } from '@/components/ui';
 import { useOfficialLibrary, usePowerParts } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
-import { useSort } from '@/hooks/use-sort';
 import { apiFetch } from '@/lib/api-client';
-import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
-import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { Wand2 } from 'lucide-react';
 
-const POWER_GRID = '1.5fr 0.8fr 1fr 1fr 0.8fr 1fr 1fr 40px';
 const QUERY_KEY = ['official-library', 'powers'] as const;
 
 export function AdminPublicPowersTab() {
@@ -36,61 +22,7 @@ export function AdminPublicPowersTab() {
   const queryClient = useQueryClient();
   const { data: items = [], isLoading, error, refetch } = useOfficialLibrary('powers');
   const { data: partsDb = [] } = usePowerParts();
-  const [search, setSearch] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
-
-  const { sortState, handleSort, sortItems } = useSort('name');
-
-  const cardData = useMemo(() => {
-    return (items as Array<Record<string, unknown>>).map((p) => {
-      const doc: PowerDocument = {
-        name: String(p.name ?? ''),
-        description: String(p.description ?? ''),
-        parts: Array.isArray(p.parts) ? (p.parts as PowerDocument['parts']) : [],
-        damage: p.damage as PowerDocument['damage'],
-        actionType: p.actionType as string | undefined,
-        isReaction: p.isReaction as boolean | undefined,
-        range: p.range as PowerDocument['range'],
-        area: p.area as PowerDocument['area'],
-        duration: p.duration as PowerDocument['duration'],
-      };
-      const display = derivePowerDisplay(doc, partsDb);
-      const damageStr = formatPowerDamage(doc.damage);
-      const parts: ChipData[] = display.partChips.map((chip) => ({
-        name: chip.text.split(' | TP:')[0].replace(/\s*\(Opt\d+ \d+\)/g, '').trim(),
-        description: chip.description,
-        cost: chip.finalTP,
-        costLabel: 'TP',
-      }));
-      return {
-        id: String(p.id ?? p.docId ?? ''),
-        raw: p,
-        name: display.name,
-        description: display.description,
-        energy: display.energy,
-        action: display.actionType,
-        duration: display.duration,
-        range: display.range,
-        area: display.area,
-        damage: damageStr,
-        tp: display.tp,
-        parts,
-      };
-    });
-  }, [items, partsDb]);
-
-  const filtered = useMemo(() => {
-    let r = cardData;
-    if (search) {
-      const s = search.toLowerCase();
-      r = r.filter(
-        (x) =>
-          String(x.name ?? '').toLowerCase().includes(s) ||
-          String(x.description ?? '').toLowerCase().includes(s)
-      );
-    }
-    return sortItems(r);
-  }, [cardData, search, sortItems]);
 
   const handleDeleteFromList = async () => {
     if (!deleteConfirm) return;
@@ -106,64 +38,23 @@ export function AdminPublicPowersTab() {
     }
   };
 
-  if (error) return <ErrorDisplay message="Failed to load official powers" onRetry={() => { void refetch(); }} />;
-
   return (
-    <div>
-      <SectionHeader title="Official Powers" size="md" />
-      <div className="mb-4">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search powers..." />
-      </div>
-      <ListHeader
-        columns={[
-          { key: 'name', label: 'NAME' },
-          { key: 'energy', label: 'ENERGY' },
-          { key: 'action', label: 'ACTION' },
-          { key: 'duration', label: 'DURATION' },
-          { key: 'range', label: 'RANGE' },
-          { key: 'area', label: 'AREA' },
-          { key: 'damage', label: 'DAMAGE' },
-          { key: '_actions', label: '', sortable: false as const },
-        ]}
-        gridColumns={POWER_GRID}
-        sortState={sortState}
-        onSort={handleSort}
+    <>
+      <OfficialPowerList
+        items={items as Array<Record<string, unknown>>}
+        partsDb={partsDb}
+        isLoading={isLoading}
+        error={error}
+        onRetry={() => { void refetch(); }}
+        errorMessage="Failed to load official powers"
+        sectionTitle="Official Powers"
+        emptyIcon={<Wand2 className="w-8 h-8" />}
+        emptyTitle="No official powers"
+        emptyMessage="Add one from the header or publish from a creator."
+        variant="admin"
+        onEdit={(id) => router.push(`/power-creator?edit=${encodeURIComponent(id)}`)}
+        onDelete={(id, name) => setDeleteConfirm({ id, name })}
       />
-      <div className="flex flex-col gap-1 mt-2">
-        {isLoading ? (
-          <LoadingState />
-        ) : filtered.length === 0 ? (
-          <ListEmptyState
-            icon={<Wand2 className="w-8 h-8" />}
-            title="No official powers"
-            message="Add one from the header or publish from a creator."
-          />
-        ) : (
-          filtered.map((p) => (
-            <GridListRow
-              key={p.id}
-              id={p.id}
-              name={p.name}
-              description={p.description}
-              gridColumns={POWER_GRID}
-              columns={[
-                { key: 'Energy', value: p.energy, highlight: true },
-                { key: 'Action', value: p.action },
-                { key: 'Duration', value: p.duration },
-                { key: 'Range', value: p.range },
-                { key: 'Area', value: p.area },
-                { key: 'Damage', value: p.damage },
-              ]}
-              chips={p.parts}
-              chipsLabel="Parts"
-              totalCost={p.tp}
-              costLabel="TP"
-              onEdit={() => router.push(`/power-creator?edit=${encodeURIComponent(p.id)}`)}
-              onDelete={() => setDeleteConfirm({ id: p.id, name: p.name })}
-            />
-          ))
-        )}
-      </div>
 
       {deleteConfirm && (
         <DeleteConfirmModal
@@ -176,6 +67,6 @@ export function AdminPublicPowersTab() {
           onClose={() => setDeleteConfirm(null)}
         />
       )}
-    </div>
+    </>
   );
 }

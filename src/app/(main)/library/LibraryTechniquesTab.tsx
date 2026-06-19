@@ -56,8 +56,8 @@ function getEmpoweredTotals(technique: unknown): { energy?: number; tp?: number 
 export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTechniquesTabProps) {
   const router = useRouter();
   const { showToast } = useToast();
-  const standardTechniquesQuery = useUserTechniques();
-  const empoweredTechniquesQuery = useUserEmpoweredTechniques();
+  const standardTechniquesQuery = useUserTechniques({ enabled: mode === 'standard' });
+  const empoweredTechniquesQuery = useUserEmpoweredTechniques({ enabled: mode === 'empowered' });
   const { data: standardTechniques = [], isLoading: standardLoading, error: standardError } = standardTechniquesQuery;
   const { data: empoweredTechniques = [], isLoading: empoweredLoading, error: empoweredError } = empoweredTechniquesQuery;
   const { data: partsDb = [] } = useTechniqueParts();

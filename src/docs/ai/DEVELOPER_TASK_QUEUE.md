@@ -6,7 +6,7 @@ What **you** need to do that AI cannot (Dashboard, prod validation, decisions). 
 
 **Agents:** When you finish a user-facing task (`done` or `partial`), add granular tests to `BUILD_VALIDATION.md` and index the suite below. See [`AGENT_GUIDE.md`](AGENT_GUIDE.md).
 
-**Last updated:** 2026-06-13
+**Last updated:** 2026-06-18
 
 ---
 
@@ -25,10 +25,12 @@ Each suite is a **category** of step-by-step tests. Full steps live in [`BUILD_V
 | Suite | Category | Related task(s) | Tests | Status |
 |-------|----------|-----------------|-------|--------|
 | **DEV-V-001** | Character creator step guards | TASK-356 | T001–T015 (15) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-001--character-creator-step-guards) |
+| **DEV-V-008** | Archetype path completion | TASK-366–374 | T001–T012 (12) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-008--archetype-path-completion-task-366374) |
+| **DEV-V-009** | Character sheet refactor | TASK-317, TASK-348, TASK-365, TASK-375, TASK-318, TASK-349 | T001–T006 (6) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-009--character-sheet-refactor-task-317-task-348-task-365-task-375) |
+| **DEV-V-005** | RLS / DB migrations | TASK-352, TASK-327, TASK-354 | T001–T003 (3) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-005--rls-policy-consolidation-task-352-task-327) |
 | DEV-V-002 | Campaign & rolls security | TASK-329 | — | Planned (legacy DEV-T-002) |
 | DEV-V-003 | Admin role change safety | TASK-330 | — | Planned |
 | DEV-V-004 | Storage & account security | TASK-326, TASK-331 | — | Planned |
-| DEV-V-005 | RLS / DB migrations | TASK-354, username RLS | — | Planned |
 | DEV-V-006 | Resources PDF | TASK-269 | — | Planned |
 | DEV-V-007 | Auth UI (Google only) | TASK-361 | — | Planned |
 

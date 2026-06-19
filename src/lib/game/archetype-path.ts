@@ -1,4 +1,4 @@
-import type { Archetype, ArchetypePathData, ArchetypePathRecommendations, PathItemRecommendation } from '@/types/archetype';
+import type { ArchetypePathData, ArchetypePathRecommendations, PathItemRecommendation } from '@/types/archetype';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -112,10 +112,50 @@ export function parseArchetypePathData(value: unknown): ArchetypePathData | unde
 }
 
 export function getPathRecommendationsForLevel(
-  archetype: Archetype | undefined,
+  archetype: { path_data?: ArchetypePathData } | undefined,
   level: number
 ): ArchetypePathRecommendations | undefined {
   if (!archetype?.path_data) return undefined;
   if (level <= 1) return archetype.path_data.level1;
   return archetype.path_data.levels?.find((entry) => entry.level === level);
+}
+
+/** Level 1 has at least one add recommendation (feat/skill/power/technique/armament/equipment). */
+export function pathLevel1HasAddRecommendations(
+  level1: ArchetypePathRecommendations | undefined
+): boolean {
+  if (!level1) return false;
+  return Boolean(
+    level1.feats?.length ||
+      level1.skills?.length ||
+      level1.powers?.length ||
+      level1.techniques?.length ||
+      level1.armaments?.length ||
+      level1.equipment?.length
+  );
+}
+
+/** Paths shown in character creator picker, public codex list, and path switcher. */
+export function pathHasPlayerVisibleLevel1(pathData: ArchetypePathData | undefined): boolean {
+  return pathLevel1HasAddRecommendations(pathData?.level1);
+}
+
+/** Level 1 has notes, remove lists, or unarmed prowess but no add recommendations. */
+export function pathLevel1HasNonPickerContent(
+  level1: ArchetypePathRecommendations | undefined
+): boolean {
+  if (!level1) return false;
+  return Boolean(
+    level1.notes?.trim() ||
+      level1.recommendUnarmedProwess ||
+      level1.removeFeats?.length ||
+      level1.removePowers?.length ||
+      level1.removeTechniques?.length ||
+      level1.removeArmaments?.length
+  );
+}
+
+/** Admin-only paths: saved in codex but hidden from player path pickers. */
+export function pathHiddenFromPlayerPicker(pathData: ArchetypePathData | undefined): boolean {
+  return pathLevel1HasNonPickerContent(pathData?.level1) && !pathHasPlayerVisibleLevel1(pathData);
 }

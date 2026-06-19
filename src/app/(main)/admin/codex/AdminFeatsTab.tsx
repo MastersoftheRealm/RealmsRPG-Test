@@ -8,6 +8,7 @@ import {
   SelectFilter,
   FilterSection,
   type AbilityRequirement,
+  CodexFeatRow,
 } from '@/components/codex';
 import {
   SectionHeader,
@@ -15,7 +16,6 @@ import {
   ListHeader,
   LoadingState,
   ErrorDisplay as ErrorState,
-  GridListRow,
   ListEmptyState as EmptyState,
 } from '@/components/shared';
 import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
@@ -24,23 +24,18 @@ import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Plus, Copy, X, Layers } from 'lucide-react';
-import type { ChipData } from '@/components/shared/grid-list-row';
-import { buildFeatLevelChips, groupFeatFamilies, formatFeatName, getFeatFamilyId, getFeatLevel } from '@/lib/leveled-feats';
+import { groupFeatFamilies, formatFeatName, getFeatFamilyId, getFeatLevel } from '@/lib/leveled-feats';
+import {
+  ADMIN_FEAT_HEADER_COLUMNS,
+  FEAT_GRID_COLUMNS,
+  buildFeatFilterOptions,
+  buildSkillIdToName,
+  filterFeats,
+  type FeatListFilters,
+} from '@/lib/codex/feat-list';
 
 const COPY_NAME_SUFFIX = ' copy';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
-import { formatAbilityList, formatListCellLabel } from '@/lib/utils';
-
-const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 0.8fr 1fr 40px';
-const ADMIN_FEAT_COLUMNS = [
-  { key: 'name', label: 'NAME' },
-  { key: 'lvl_req', label: 'REQ. LEVEL' },
-  { key: 'category', label: 'CATEGORY' },
-  { key: 'ability', label: 'ABILITY' },
-  { key: 'rec_period', label: 'RECOVERY' },
-  { key: 'uses_per_rec', label: 'USES' },
-  { key: '_actions', label: '', sortable: false as const },
-];
 
 type FeatFormState = {
   name: string;
@@ -828,14 +823,7 @@ function AdminFeatEditModal({
   );
 }
 
-interface FeatFilters {
-  search: string;
-  maxLevel: number | null;
-  abilityRequirements: AbilityRequirement[];
-  categories: string[];
-  abilities: string[];
-  tags: string[];
-  tagMode: 'any' | 'all';
+interface FeatFilters extends FeatListFilters {
   featTypeMode: '' | 'archetype' | 'character';
   stateFeatMode: '' | 'only' | 'hide';
 }
@@ -864,74 +852,11 @@ export function AdminFeatsTab() {
     stateFeatMode: '',
   });
 
-  const filterOptions = useMemo(() => {
-    if (!feats) return { levels: [], abilities: [], categories: [], tags: [], abilReqAbilities: [] };
-    const levels = new Set<number>();
-    const abilities = new Set<string>();
-    const categories = new Set<string>();
-    const tags = new Set<string>();
-    const abilReqAbilities = new Set<string>();
-    feats.forEach((f: Feat) => {
-      if (f.lvl_req && f.lvl_req > 0) levels.add(f.lvl_req);
-      if (Array.isArray(f.ability)) {
-        f.ability.forEach((a: string) => abilities.add(a));
-      } else if (f.ability) {
-        abilities.add(f.ability);
-      }
-      if (f.category) categories.add(f.category);
-      f.tags?.forEach((t: string) => tags.add(t));
-      f.ability_req?.forEach((a: string) => abilReqAbilities.add(a));
-    });
-    return {
-      levels: Array.from(levels).sort((a, b) => a - b),
-      abilities: Array.from(abilities).sort(),
-      categories: Array.from(categories).sort(),
-      tags: Array.from(tags).sort(),
-      abilReqAbilities: Array.from(abilReqAbilities).sort(),
-    };
-  }, [feats]);
+  const filterOptions = useMemo(() => buildFeatFilterOptions(feats), [feats]);
 
   const filteredFeats = useMemo(() => {
     if (!feats) return [];
-    const filtered = feats.filter((f: Feat) => {
-      if (filters.search) {
-        const searchLower = filters.search.toLowerCase();
-        const matchesSearch =
-          f.name.toLowerCase().includes(searchLower) ||
-          f.description?.toLowerCase().includes(searchLower) ||
-          f.tags?.some(t => t.toLowerCase().includes(searchLower));
-        if (!matchesSearch) return false;
-      }
-      if (filters.maxLevel !== null && (f.lvl_req ?? 0) > filters.maxLevel) return false;
-      if (filters.featTypeMode === 'archetype' && f.char_feat) return false;
-      if (filters.featTypeMode === 'character' && !f.char_feat) return false;
-      if (filters.stateFeatMode === 'only' && !f.state_feat) return false;
-      if (filters.stateFeatMode === 'hide' && f.state_feat) return false;
-      for (const req of filters.abilityRequirements) {
-        const index = f.ability_req?.indexOf(req.ability) ?? -1;
-        if (index !== -1) {
-          const val = f.abil_req_val?.[index];
-          if (typeof val === 'number' && val > req.maxValue) return false;
-        }
-      }
-      if (filters.categories.length > 0 && !filters.categories.includes(f.category || '')) return false;
-      if (filters.abilities.length > 0) {
-        const featAbilities = Array.isArray(f.ability)
-          ? f.ability
-          : f.ability
-            ? [f.ability]
-            : [];
-        if (!featAbilities.some(a => filters.abilities.includes(a))) return false;
-      }
-      if (filters.tags.length > 0) {
-        if (filters.tagMode === 'all') {
-          if (!filters.tags.every(t => f.tags?.includes(t))) return false;
-        } else {
-          if (!filters.tags.some(t => f.tags?.includes(t))) return false;
-        }
-      }
-      return true;
-    });
+    const filtered = filterFeats(feats, filters);
     return sortItems<Feat>(filtered);
   }, [feats, filters, sortItems]);
 
@@ -971,14 +896,7 @@ export function AdminFeatsTab() {
   const [modalLevelFeats, setModalLevelFeats] = useState<Feat[]>([]);
   const [modalSessionKey, setModalSessionKey] = useState(0);
 
-  // Map skill ID -> name for display
-  const skillIdToName = useMemo(() => {
-    const map = new Map<string, string>();
-    (skills as Skill[]).forEach((s) => {
-      map.set(String(s.id), s.name);
-    });
-    return map;
-  }, [skills]);
+  const skillIdToName = useMemo(() => buildSkillIdToName(skills as Skill[]), [skills]);
 
   const openAdd = () => {
     setEditing(null);
@@ -1256,7 +1174,7 @@ export function AdminFeatsTab() {
       </FilterSection>
 
       <ListHeader
-        columns={ADMIN_FEAT_COLUMNS}
+        columns={ADMIN_FEAT_HEADER_COLUMNS}
         gridColumns={FEAT_GRID_COLUMNS}
         sortState={sortState}
         onSort={handleSort}
@@ -1273,81 +1191,50 @@ export function AdminFeatsTab() {
             size="sm"
           />
         ) : (
-          groupedFeats.map(({ main: feat, levels: familyLevels }) => {
-            const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> = [];
-            const typeChips: ChipData[] = [];
-            if (feat.char_feat) typeChips.push({ name: 'Character Feat', category: 'skill' });
-            else typeChips.push({ name: 'Archetype Feat', category: 'archetype' });
-            if (feat.state_feat) typeChips.push({ name: 'State Feat', category: 'archetype' });
-            if (typeChips.length > 0) detailSections.push({ label: 'Type', chips: typeChips, hideLabelIfSingle: true });
-            if (feat.category) detailSections.push({ label: 'Category', chips: [{ name: feat.category, category: 'default' }], hideLabelIfSingle: true });
-            const tagChips = feat.tags?.map(tag => ({ name: tag, category: 'tag' as const })) || [];
-            if (tagChips.length > 0) detailSections.push({ label: 'Tags', chips: tagChips, hideLabelIfSingle: true });
-            const abilityReqChips = (feat.ability_req || []).map((a, i) => {
-              const val = feat.abil_req_val?.[i];
-              return { name: `${a}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'default' as const };
-            });
-            if (abilityReqChips.length > 0) detailSections.push({ label: 'Ability Requirements', chips: abilityReqChips });
-            const skillReqChips = (feat.skill_req || []).map((id, i) => {
-              const label = skillIdToName.get(String(id)) || String(id);
-              const val = feat.skill_req_val?.[i];
-              return { name: `${label}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'skill' as const };
-            });
-            if (skillReqChips.length > 0) detailSections.push({ label: 'Skill Requirements', chips: skillReqChips });
-            const levelChips = buildFeatLevelChips(familyLevels, feat.id);
-            if (levelChips.length > 0) detailSections.push({ label: 'Feat Levels', chips: levelChips });
-            return (
-              <GridListRow
-                key={feat.id}
-                id={feat.id}
-                name={formatFeatName(feat)}
-                description={feat.description}
-                gridColumns={FEAT_GRID_COLUMNS}
-                columns={[
-                  { key: 'Req. Level', value: (feat.lvl_req === 0 || feat.lvl_req == null) ? '-' : String(feat.lvl_req) },
-                  { key: 'Category', value: formatListCellLabel(feat.category) },
-                  { key: 'Ability', value: formatAbilityList(feat.ability) },
-                  { key: 'Recovery', value: formatListCellLabel(feat.rec_period) },
-                  { key: 'Uses', value: (feat.uses_per_rec === 0 || feat.uses_per_rec == null) ? '-' : String(feat.uses_per_rec) },
-                ]}
-                detailSections={detailSections.length > 0 ? detailSections : undefined}
-                rightSlot={
-                  <div className="flex items-center gap-1 pr-2">
-                    {pendingDeleteId === feat.id ? (
-                      <div className="flex items-center gap-1 text-xs">
-                        <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
-                        <Button size="sm" variant="danger" onClick={() => handleInlineDelete(feat.id, feat.name)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
-                        <Button size="sm" variant="secondary" onClick={() => setPendingDeleteId(null)} className="text-xs px-2 py-0.5 h-6">No</Button>
-                      </div>
-                    ) : (
-                      <>
-                        {!(feat as Feat & { base_feat_id?: string }).base_feat_id && (feat.feat_lvl == null || feat.feat_lvl === 1) && (
-                          <IconButton variant="ghost" size="sm" onClick={() => openAddLevel(feat)} label="Add level" aria-label="Add level">
-                            <Layers className="w-4 h-4" />
-                          </IconButton>
-                        )}
-                        <IconButton variant="ghost" size="sm" onClick={() => openEdit(feat)} label="Edit" aria-label="Edit">
-                          <Pencil className="w-4 h-4" />
+          groupedFeats.map(({ main: feat, levels: familyLevels }) => (
+            <CodexFeatRow
+              key={feat.id}
+              feat={feat}
+              name={formatFeatName(feat)}
+              skillIdToName={skillIdToName}
+              familyLevels={familyLevels}
+              variant="admin"
+              rightSlot={
+                <div className="flex items-center gap-1 pr-2">
+                  {pendingDeleteId === feat.id ? (
+                    <div className="flex items-center gap-1 text-xs">
+                      <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
+                      <Button size="sm" variant="danger" onClick={() => handleInlineDelete(feat.id, feat.name)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
+                      <Button size="sm" variant="secondary" onClick={() => setPendingDeleteId(null)} className="text-xs px-2 py-0.5 h-6">No</Button>
+                    </div>
+                  ) : (
+                    <>
+                      {!(feat as Feat & { base_feat_id?: string }).base_feat_id && (feat.feat_lvl == null || feat.feat_lvl === 1) && (
+                        <IconButton variant="ghost" size="sm" onClick={() => openAddLevel(feat)} label="Add level" aria-label="Add level">
+                          <Layers className="w-4 h-4" />
                         </IconButton>
-                        <IconButton variant="ghost" size="sm" onClick={() => openDuplicate(feat)} label="Duplicate" aria-label="Duplicate">
-                          <Copy className="w-4 h-4" />
-                        </IconButton>
-                        <IconButton
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setPendingDeleteId(feat.id)}
-                          label="Delete"
-                          className="text-danger dark:text-danger-400 hover:text-danger-600 dark:hover:text-danger-300 hover:bg-transparent"
-                        >
-                          <X className="w-4 h-4" />
-                        </IconButton>
-                      </>
-                    )}
-                  </div>
-                }
-              />
-            );
-          })
+                      )}
+                      <IconButton variant="ghost" size="sm" onClick={() => openEdit(feat)} label="Edit" aria-label="Edit">
+                        <Pencil className="w-4 h-4" />
+                      </IconButton>
+                      <IconButton variant="ghost" size="sm" onClick={() => openDuplicate(feat)} label="Duplicate" aria-label="Duplicate">
+                        <Copy className="w-4 h-4" />
+                      </IconButton>
+                      <IconButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setPendingDeleteId(feat.id)}
+                        label="Delete"
+                        className="text-danger dark:text-danger-400 hover:text-danger-600 dark:hover:text-danger-300 hover:bg-transparent"
+                      >
+                        <X className="w-4 h-4" />
+                      </IconButton>
+                    </>
+                  )}
+                </div>
+              }
+            />
+          ))
         )}
       </div>
 

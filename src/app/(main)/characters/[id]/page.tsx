@@ -6,61 +6,32 @@
 
 'use client';
 
-import { use, useState, useEffect, useCallback, useMemo } from 'react';
+import { use, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { getCharacter, saveCharacter, type LibraryForView } from '@/services/character-service';
-import { useAuth, useAutoSave, useCampaignsFull, useUserPowers, useUserTechniques, useUserEmpoweredTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useMergedSpecies, useCodexFeats, useCodexSkills, useEquipment, useOfficialLibrary, type Species, type Trait, type Skill } from '@/hooks';
+import { useAuth, useAutoSave, useCampaignsFull, useCharacterResourceSync, useUserPowers, useUserTechniques, useUserEmpoweredTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useMergedSpecies, useCodexFeats, useCodexSkills, useCodexArchetypes, useEquipment, useOfficialLibrary } from '@/hooks';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { LoadingState } from '@/components/ui';
-import { enrichCharacterData, cleanForSave } from '@/lib/data-enrichment';
-import {
-  calculateAbilityPoints,
-  calculateAbilityScoreCost,
-  calculateArchetypeProgression,
-  calculateSkillPointsForEntity,
-  calculateMaxArchetypeFeats,
-  calculateMaxCharacterFeats,
-  calculateProficiency,
-  resolveParentSkillNameForSubSkill,
-} from '@/lib/game/formulas';
-import { getArchetypeAbilityScore } from '@/lib/game/calculations';
-import { DEFENSE_INCREASE_COST } from '@/lib/game/skill-allocation';
-import {
-  buildRequiredProficiencies,
-  dedupeHighestProficiencies,
-  mergeOwnedWithRequired,
-  calculateProficiencyTP,
-  getTrainingPointLimit,
-} from '@/lib/proficiencies';
+import { cleanForSave } from '@/lib/data-enrichment';
+import { getArchetypeCodexLookupId, applyPathProficiencyForLevel } from '@/lib/game/archetype-display';
 import {
   SheetHeader,
-  AbilitiesSection,
-  SkillsSection,
-  ArchetypeSection,
-  LibrarySection,
   RollLog,
   RollProvider,
   SheetActionToolbar,
   CharacterSheetProvider,
   CharacterSheetSettingsModal,
+  CharacterSheetBody,
+  useCharacterSheetDerived,
+  buildCharacterSheetLibraryProps,
+  useCharacterSheetActions,
 } from '@/components/character-sheet';
 import { useToast } from '@/components/ui';
-import { ContextHelpTooltip } from '@/components/shared';
 import { createClient } from '@/lib/supabase/client';
 import type {
   Character,
-  AbilityName,
-  Item,
-  CharacterPower,
-  CharacterTechnique,
-  CharacterFeat,
-  Feat,
-  CharacterProficiency,
-  CharacterAncestry,
+  CharacterLibraryTabId,
 } from '@/types';
-import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
-import { applySpeciesTraitChoiceSelections } from '@/lib/choice-trait';
-import { calculateStats } from './character-sheet-utils';
 import { CharacterSheetModals, type AddModalType, type FeatModalType, type SkillModalType } from './CharacterSheetModals';
 
 interface PageParams {
@@ -78,11 +49,11 @@ export default function CharacterSheetPage({ params }: PageParams) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [showLevelUpModal, setShowLevelUpModal] = useState(false);
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [addModalType, setAddModalType] = useState<AddModalType>(null);
+  const [libraryActiveTab, setLibraryActiveTab] = useState<CharacterLibraryTabId>('feats');
   const [featModalType, setFeatModalType] = useState<FeatModalType>(null);
   const [skillModalType, setSkillModalType] = useState<SkillModalType>(null);
   const [featToRemove, setFeatToRemove] = useState<{ id: string; name: string } | null>(null);
@@ -153,6 +124,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
   
   // Fetch all Codex skills to get ability options for each skill
   const { data: codexSkills = [] } = useCodexSkills();
+  const { data: codexArchetypes = [] } = useCodexArchetypes();
 
   // Campaigns (for roll log context when character is in a campaign)
   const { data: campaignsFull = [] } = useCampaignsFull();
@@ -179,66 +151,41 @@ export default function CharacterSheetPage({ params }: PageParams) {
       ),
     [character, campaignsFull]
   );
-  
-  // Enrich character data: use owner's library when viewing another user's character, else current user's library. Public library used as fallback so character-referenced public items display correctly.
-  const enrichedData = useMemo(() => {
-    if (!character) return null;
-    const powers = libraryForView ? (libraryForView.powers as unknown as typeof userPowers) : userPowers;
-    const baseTechniques = libraryForView ? (libraryForView.techniques as unknown as typeof userTechniques) : userTechniques;
-    const techniques = libraryForView ? baseTechniques : [...baseTechniques, ...userEmpoweredTechniques];
-    const items = libraryForView ? (libraryForView.items as unknown as typeof userItems) : userItems;
-    return enrichCharacterData(character, powers, techniques, items, codexEquipment, powerPartsDb, techniquePartsDb, publicLibraries);
-  }, [character, libraryForView, userPowers, userTechniques, userEmpoweredTechniques, userItems, codexEquipment, powerPartsDb, techniquePartsDb, publicLibraries]);
-  
-  // Look up character's species traits (single = full species_traits; mixed = selected one from each)
-  const characterSpeciesTraits = useMemo(() => {
-    if (!character || !allSpecies.length) return [];
-    const ancestry = character.ancestry;
 
-    // Mixed: use saved trait IDs (always persist as [a, b] — see edit-species-modal). Accept 1+ IDs for legacy saves.
-    if (ancestry?.mixed === true && Array.isArray(ancestry.selectedSpeciesTraits)) {
-      const ids = ancestry.selectedSpeciesTraits
-        .map((id) => (id != null ? String(id).trim() : ''))
-        .filter((id) => id.length > 0);
-      if (ids.length > 0) return ids;
-    }
-
-    const speciesId = ancestry?.id;
-    const speciesName = ancestry?.name || character.species;
-    let species = allSpecies.find((s: Species) => String(s.id) === String(speciesId));
-    if (!species && speciesName) {
-      species = allSpecies.find((s: Species) => String(s.name ?? '').toLowerCase() === String(speciesName ?? '').toLowerCase());
-    }
-    const raw = species?.species_traits || [];
-    const choices = ancestry?.selectedSpeciesTraitChoices;
-    return applySpeciesTraitChoiceSelections(raw, choices, traitsDb);
-  }, [character, allSpecies, traitsDb]);
-
-  // Look up character's species skills (single = one species; mixed = 2 chosen from both, or legacy merge)
-  const characterSpeciesSkills = useMemo(() => {
-    if (!character || !allSpecies.length) return [] as string[];
-    const ancestry = character.ancestry;
-
-    if (ancestry?.mixed === true && ancestry?.speciesIds?.length === 2) {
-      if (ancestry.selectedSpeciesSkillIds?.length === 2) {
-        return ancestry.selectedSpeciesSkillIds;
-      }
-      const a = allSpecies.find((s: Species) => s.id === ancestry.speciesIds![0]);
-      const b = allSpecies.find((s: Species) => s.id === ancestry.speciesIds![1]);
-      const ids = new Set<string>();
-      (a?.skills || []).forEach((id: string | number) => ids.add(String(id)));
-      (b?.skills || []).forEach((id: string | number) => ids.add(String(id)));
-      return Array.from(ids);
-    }
-
-    const speciesId = ancestry?.id;
-    const speciesName = ancestry?.name || character.species;
-    let species = allSpecies.find((s: Species) => String(s.id) === String(speciesId));
-    if (!species && speciesName) {
-      species = allSpecies.find((s: Species) => String(s.name ?? '').toLowerCase() === String(speciesName ?? '').toLowerCase());
-    }
-    return (species?.skills || []) as string[];
-  }, [character, allSpecies]);
+  const {
+    enrichedData,
+    characterSpeciesTraits,
+    characterSpeciesSkills,
+    characterForDisplay,
+    calculatedStats,
+    pointBudgets,
+    archetypeProgression,
+    hasUnappliedPoints,
+    skills,
+    stateFeatsList,
+    stateUsesMax,
+    stateUsesCurrent,
+    archetypeFeatsForDisplay,
+    characterFeatsForDisplay,
+  } = useCharacterSheetDerived({
+    character,
+    libraryForView,
+    userPowers,
+    userTechniques,
+    userEmpoweredTechniques,
+    userItems,
+    codexEquipment,
+    powerPartsDb,
+    techniquePartsDb,
+    itemPropertiesDb,
+    publicLibraries,
+    allSpecies,
+    traitsDb,
+    codexSkills,
+    codexArchetypes,
+    featsDb,
+    rules,
+  });
   
   // Load character data (works for owner, public link, or campaign view)
   useEffect(() => {
@@ -256,7 +203,6 @@ export default function CharacterSheetPage({ params }: PageParams) {
         setCharacter(data.character);
         setLibraryForView(data.libraryForView);
       } catch (err) {
-        console.error('Error loading character:', err);
         setError('Failed to load character');
       } finally {
         setLoading(false);
@@ -313,186 +259,43 @@ export default function CharacterSheetPage({ params }: PageParams) {
   const isOwner = Boolean(character && user && character.userId === user.uid);
   const effectiveEditMode = isEditMode && isOwner;
 
-  // Calculate stats (pass DB core rules so e.g. baseHealth reflects admin updates)
-  const calculatedStats = useMemo(() => {
-    if (!character) return null;
-    return calculateStats(character, rules);
-  }, [character, rules]);
+  useCharacterResourceSync(character, isOwner);
 
-  // Calculate point budgets for edit mode
-  const pointBudgets = useMemo(() => {
-    if (!character) return null;
-    
-    const level = character.level || 1;
-    const abilities = character.abilities || {};
-    
-    const totalAbilityPoints = calculateAbilityPoints(level, false, rules);
-    
-    const spentAbilityPoints = Object.values(abilities).reduce(
-      (sum, value) => sum + calculateAbilityScoreCost(value || 0, rules),
-      0
-    );
-    
-    // Skill points: 2 + (level * 3). Species skills consume points; id "0" = "Any" gives +1 point
-    const rawTotalSkillPoints = 2 + (level * 3);
-    const speciesSkillCount = characterSpeciesSkills.filter((id) => id !== '0').length;
-    const hasAnySpeciesSkill = characterSpeciesSkills.some((id) => id === '0');
-    const totalSkillPoints = rawTotalSkillPoints - speciesSkillCount + (hasAnySpeciesSkill ? 1 : 0);
-    
-    // Calculate spent skill points (exclude species skill proficiency costs)
-    const skills = (character.skills || []) as Array<{
-      skill_val?: number;
-      prof?: boolean;
-      baseSkill?: string;
-      baseSkillId?: number;
-      selectedBaseSkillId?: string;
-      name?: string;
-      id?: string;
-    }>;
-    let spentSkillPoints = skills.reduce((sum, skill) => {
-      let cost = skill.skill_val || 0;
-      // Proficiency costs 1 for base skills, but species skills are free
-      const isSubSkill = Boolean(skill.baseSkill) || skill.baseSkillId != null || skill.selectedBaseSkillId != null;
-      if (skill.prof && !isSubSkill) {
-        const isSpecies = characterSpeciesSkills.some(ss => 
-          String(ss).toLowerCase() === String(skill.name || '').toLowerCase() ||
-          String(ss) === String(skill.id || '')
-        );
-        if (!isSpecies) cost += 1;
-      }
-      return sum + cost;
-    }, 0);
-    
-    // Defense vals: DEFENSE_INCREASE_COST skill points per +1 (core rules: 2)
-    const defVals = character.defenseVals || character.defenseSkills || {};
-    const spentDefensePoints = Object.values(defVals).reduce((sum: number, val) => sum + ((val as number || 0) * DEFENSE_INCREASE_COST), 0);
-    spentSkillPoints += spentDefensePoints;
-    
-    return {
-      totalAbilityPoints,
-      spentAbilityPoints,
-      availableAbilityPoints: totalAbilityPoints - spentAbilityPoints,
-      totalSkillPoints,
-      spentSkillPoints,
-      availableSkillPoints: totalSkillPoints - spentSkillPoints,
-    };
-  }, [character, characterSpeciesSkills, rules]);
-  
-  // Calculate archetype progression (innate energy, threshold, pools, bonus feats)
-  const archetypeProgression = useMemo(() => {
-    if (!character) return null;
-    return calculateArchetypeProgression(
-      character.level || 1,
-      character.mart_prof || 0,
-      character.pow_prof || 0,
-      character.archetypeChoices || {}
-    );
-  }, [character]);
-  
-  // Calculate if character has unapplied points (for notification dot)
-  const hasUnappliedPoints = useMemo(() => {
-    if (!character) return false;
-    
-    const level = character.level || 1;
-    const xp = character.experience ?? 0;
-    const canLevelUp = xp >= (level * 4);
-    
-    const totalAbilityPoints = calculateAbilityPoints(level, false, rules);
-    const currentAbilities = character.abilities || {};
-    const spentAbilityPoints = Object.values(currentAbilities).reduce(
-      (sum, val) => sum + calculateAbilityScoreCost(val || 0, rules),
-      0
-    );
-    const abilityPointsRemaining = totalAbilityPoints - spentAbilityPoints;
-    
-    // Calculate health/energy pool: 18 + 12 * (level - 1)
-    const totalHEPoints = 18 + 12 * (level - 1);
-    const spentHEPoints = (character.healthPoints || 0) + (character.energyPoints || 0);
-    const hePointsRemaining = totalHEPoints - spentHEPoints;
-    
-    // Calculate skill points: 2 + (level * 3) minus species skills; id "0" = Any adds 1 point
-    const rawTotalSkillPoints = 2 + (level * 3);
-    const speciesCount = characterSpeciesSkills.filter((id) => id !== '0').length;
-    const hasAnySpeciesSkill = characterSpeciesSkills.some((id) => id === '0');
-    const totalSkillPoints = rawTotalSkillPoints - speciesCount + (hasAnySpeciesSkill ? 1 : 0);
-    const skills = (character.skills || []) as Array<{
-      skill_val?: number;
-      prof?: boolean;
-      baseSkill?: string;
-      baseSkillId?: number;
-      selectedBaseSkillId?: string;
-      name?: string;
-      id?: string;
-    }>;
-    const spentSkillPoints = skills.reduce((sum, skill) => {
-      let cost = skill.skill_val || 0;
-      const isSubSkill = Boolean(skill.baseSkill) || skill.baseSkillId != null || skill.selectedBaseSkillId != null;
-      if (skill.prof && !isSubSkill) {
-        const isSpecies = characterSpeciesSkills.some(ss => 
-          String(ss).toLowerCase() === String(skill.name || '').toLowerCase() ||
-          String(ss) === String(skill.id || '')
-        );
-        if (!isSpecies) cost += 1;
-      }
-      return sum + cost;
-    }, 0);
-    // Defense vals: DEFENSE_INCREASE_COST skill points per +1
-    const defVals2 = character.defenseVals || character.defenseSkills || {};
-    const spentDefensePoints = Object.values(defVals2).reduce((sum: number, val) => sum + ((val as number || 0) * DEFENSE_INCREASE_COST), 0);
-    const skillPointsRemaining = totalSkillPoints - spentSkillPoints - spentDefensePoints;
-    
-    // Calculate feat slots using correct formulas
-    const archetypeType = character.archetype?.type || 'power';
-    const archetypeFeatSlots = calculateMaxArchetypeFeats(level, archetypeType);
-    const characterFeatSlots = calculateMaxCharacterFeats(level);
-    const featLevelById = new Map<string, number>();
-    (featsDb || []).forEach((f) => {
-      const lvl = f.feat_lvl != null && f.feat_lvl > 0 ? f.feat_lvl : 1;
-      featLevelById.set(String(f.id), lvl);
-    });
-    const usedArchetypeFeats = (character.archetypeFeats || []).reduce((sum, feat) => {
-      return sum + (featLevelById.get(String(feat.id)) ?? 1);
-    }, 0);
-    const usedCharacterFeats = (character.feats || []).reduce((sum, feat) => {
-      return sum + (featLevelById.get(String(feat.id)) ?? 1);
-    }, 0);
-    const archetypeFeatsRemaining = archetypeFeatSlots - usedArchetypeFeats;
-    const characterFeatsRemaining = characterFeatSlots - usedCharacterFeats;
-    
-    return (
-      canLevelUp ||
-      abilityPointsRemaining > 0 ||
-      hePointsRemaining > 0 ||
-      skillPointsRemaining > 0 ||
-      archetypeFeatsRemaining > 0 ||
-      characterFeatsRemaining > 0
-    );
-  }, [character, characterSpeciesSkills, featsDb, rules]);
-  
+  /** Apply path level-5 proficiency floor when loading an existing path character (TASK-368). */
+  const pathProfAppliedKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!character || codexArchetypes.length === 0) return;
+    const level = character.level ?? 1;
+    if (level < 5) return;
+    const applyKey = `${character.id}:${level}:${character.pow_prof ?? 0}:${character.mart_prof ?? 0}`;
+    if (pathProfAppliedKeyRef.current === applyKey) return;
+
+    const lookupId = getArchetypeCodexLookupId(character);
+    if (!lookupId) return;
+    const pathArch = codexArchetypes.find((a) => a.id === lookupId) as Character['archetype'] | undefined;
+    const profUpdate = applyPathProficiencyForLevel(character, level, pathArch ?? character.archetype);
+    if (!profUpdate) {
+      pathProfAppliedKeyRef.current = applyKey;
+      return;
+    }
+
+    pathProfAppliedKeyRef.current = applyKey;
+    setCharacter((prev) => (prev ? { ...prev, ...profUpdate } : null));
+  }, [character, codexArchetypes]);
+
   // Auto-save with debounce — enabled for **owners in any mode**.
   // HP / energy / AP (and XP) can be changed while *not* in sheet edit mode; previously `enabled: effectiveEditMode`
   // blocked autosave, so current HP appeared to work until refresh.
-  const { hasUnsavedChanges, isSaving, lastSaved, saveNow } = useAutoSave({
+  const { hasUnsavedChanges, saveNow } = useAutoSave({
     data: character,
     onSave: async (data) => {
       if (!user || !data) return;
-      setSaving(true);
-      try {
-        const cleanedData = cleanForSave(data);
-        await saveCharacter(id, cleanedData);
-      } finally {
-        setSaving(false);
-      }
+      const cleanedData = cleanForSave(data);
+      await saveCharacter(id, cleanedData);
     },
     delay: 2000,
     enabled: isOwner,
-    onSaveStart: () => setSaving(true),
-    onSaveComplete: () => {
-      setSaving(false);
-    },
-    onSaveError: (err) => {
-      console.error('Auto-save failed:', err);
-      setSaving(false);
+    onSaveError: () => {
       showToast('Failed to save character', 'error');
     },
   });
@@ -505,1193 +308,97 @@ export default function CharacterSheetPage({ params }: PageParams) {
     setIsEditMode(!isEditMode);
   }, [isEditMode, hasUnsavedChanges, saveNow]);
   
-  // Update handlers
-  const handleHealthChange = useCallback((value: number) => {
-    if (!character) return;
-    setCharacter(prev => prev ? {
-      ...prev,
-      currentHealth: value,
-    } : null);
-  }, [character]);
-  
-  const handleEnergyChange = useCallback((value: number) => {
-    if (!character) return;
-    setCharacter(prev => prev ? {
-      ...prev,
-      currentEnergy: value,
-    } : null);
-  }, [character]);
+  const {
+    handleHealthChange,
+    handleEnergyChange,
+    handleActionPointsChange,
+    handleExperienceChange,
+    handleNameChange,
+    handlePortraitChange,
+    handleAbilityChange,
+    handleDefenseChange,
+    handleHealthPointsChange,
+    handleEnergyPointsChange,
+    handleFullRecovery,
+    handlePartialRecovery,
+    handleLevelUp,
+    existingIds,
+    handleAddFeats,
+    handleConfirmRemoveFeat,
+    handleAddSkills,
+    handleRemoveSkill,
+    handleSkillChange,
+    handleMartialProfChange,
+    handlePowerProfChange,
+    handleArchetypeSave,
+    handleEditSpeciesSave,
+    handleMilestoneChoiceChange,
+    handleModalAdd,
+    libraryHandlers,
+  } = useCharacterSheetActions({
+    character,
+    setCharacter,
+    calculatedStats,
+    featsDb,
+    traitsDb,
+    codexArchetypes,
+    powerPartsDb,
+    techniquePartsDb,
+    itemPropertiesDb,
+    showToast,
+    user,
+    addModalType,
+    setFeatModalType,
+    setSkillModalType,
+    setFeatToRemove,
+    featToRemove,
+    setError,
+    setUploadingPortrait,
+    setPortraitRefreshKey,
+    setShowEditArchetypeModal,
+    setShowEditSpeciesModal,
+    stateFeatsList,
+    stateUsesMax,
+  });
 
-  const handleActionPointsChange = useCallback((value: number) => {
-    if (!character) return;
-    setCharacter(prev => prev ? {
-      ...prev,
-      actionPoints: Math.max(0, Math.min(10, value)),
-    } : null);
-  }, [character]);
-  
-  // Experience change handler (always available)
-  const handleExperienceChange = useCallback((value: number) => {
-    if (!character) return;
-    setCharacter(prev => prev ? { ...prev, experience: value } : null);
-  }, [character]);
-  
-  // Name change handler (always available)
-  const handleNameChange = useCallback((name: string) => {
-    if (!character) return;
-    setCharacter(prev => prev ? { ...prev, name } : null);
-  }, [character]);
-  
-  // Portrait upload handler (Supabase Storage via API)
-  const handlePortraitChange = useCallback(async (file: File) => {
-    if (!character || !user) return;
-
-    if (!file.type.startsWith('image/')) {
-      setError('Please select an image file');
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Image must be less than 5MB');
-      return;
-    }
-
-    try {
-      setUploadingPortrait(true);
-      setError(null);
-
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('characterId', character.id);
-
-      const res = await fetch('/api/upload/portrait', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: res.statusText }));
-        throw new Error((err as { error?: string }).error ?? 'Upload failed');
-      }
-
-      const { url } = (await res.json()) as { url: string };
-
-      setCharacter(prev => prev ? { ...prev, portrait: url } : null);
-      setPortraitRefreshKey(Date.now());
-      await saveCharacter(character.id, { portrait: url });
-    } catch (err) {
-      console.error('Portrait upload error:', err);
-      setError('Failed to upload portrait');
-    } finally {
-      setUploadingPortrait(false);
-    }
-  }, [character, user]);
-  
-  const handleAbilityChange = useCallback((ability: AbilityName, value: number) => {
-    if (!character) return;
-    setCharacter(prev => prev ? {
-      ...prev,
-      abilities: { ...prev.abilities, [ability]: value }
-    } : null);
-  }, [character]);
-  
-  // Defense skill change handler
-  const handleDefenseChange = useCallback((defense: string, value: number) => {
-    if (!character) return;
-    setCharacter(prev => prev ? {
-      ...prev,
-      defenseVals: { 
-        ...DEFAULT_DEFENSE_SKILLS,
-        ...(prev.defenseVals || prev.defenseSkills || {}), 
-        [defense]: Math.max(0, value) 
-      }
-    } : null);
-  }, [character]);
-  
-  // Health points allocation handler — when increasing max, bump current if at full
-  const handleHealthPointsChange = useCallback((value: number) => {
-    if (!character) return;
-    setCharacter(prev => {
-      if (!prev) return null;
-      const oldPoints = prev.healthPoints ?? 0;
-      const delta = value - oldPoints;
-      const newPoints = Math.max(0, value);
-      if (delta <= 0) {
-        return { ...prev, healthPoints: newPoints };
-      }
-      const level = prev.level || 1;
-      const vitality = prev.abilities?.vitality ?? 0;
-      const oldMax = vitality < 0
-        ? 8 + vitality + oldPoints
-        : 8 + (vitality * level) + oldPoints;
-      const currentHP = prev.currentHealth ?? prev.health?.current ?? oldMax;
-      const shouldBump = currentHP >= oldMax;
-      const newCurrent = shouldBump ? currentHP + delta : currentHP;
-      return {
-        ...prev,
-        healthPoints: newPoints,
-        currentHealth: newCurrent,
-      };
-    });
-  }, [character]);
-  
-  // Energy points allocation handler — when increasing max, bump current if at full
-  const handleEnergyPointsChange = useCallback((value: number) => {
-    if (!character) return;
-    setCharacter(prev => {
-      if (!prev) return null;
-      const oldPoints = prev.energyPoints ?? 0;
-      const delta = value - oldPoints;
-      const newPoints = Math.max(0, value);
-      if (delta <= 0) {
-        return { ...prev, energyPoints: newPoints };
-      }
-      const level = prev.level || 1;
-      const powerAbil = prev.pow_abil?.toLowerCase() as AbilityName | undefined;
-      const powerVal = powerAbil ? (prev.abilities?.[powerAbil] ?? 0) : 0;
-      const oldMax = (powerVal * level) + oldPoints;
-      const currentEN = prev.currentEnergy ?? prev.energy?.current ?? oldMax;
-      const shouldBump = currentEN >= oldMax;
-      const newCurrent = shouldBump ? currentEN + delta : currentEN;
-      return {
-        ...prev,
-        energyPoints: newPoints,
-        currentEnergy: newCurrent,
-      };
-    });
-  }, [character]);
-  
-  // Full recovery handler - restores HP, EN, and feat/trait uses with "Full" or "Partial" recovery
-  // Per game rules: one-time-use feats (no recovery period) are NOT reset
-  const handleFullRecovery = useCallback(() => {
-    if (!character || !calculatedStats) return;
-    
-    const hasFullOrPartialRecovery = (r?: string) => {
-      const lower = (r || '').toLowerCase();
-      return lower.includes('full') || lower.includes('partial');
-    };
-
-    // Lookup codex data for a feat (maxUses, recovery period)
-    const getCodexFeat = (feat: CharacterFeat) => {
-      let dbFeat = featsDb.find((f: Feat) => f.id === String(feat.id));
-      if (!dbFeat && feat.name) dbFeat = featsDb.find((f: Feat) => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
-      return dbFeat as Feat | undefined;
-    };
-    
-    // Reset feat uses only when recovery type is Full or Partial (not one-time-use)
-    const resetArchetypeFeats = (character.archetypeFeats || []).map(feat => {
-      const codex = getCodexFeat(feat);
-      const maxUses = feat.maxUses ?? codex?.uses_per_rec;
-      const recovery = feat.recovery || codex?.rec_period;
-      return {
-        ...feat,
-        currentUses: hasFullOrPartialRecovery(recovery) && maxUses != null
-          ? maxUses
-          : feat.currentUses,
-      };
-    });
-    
-    const resetCharacterFeats = (character.feats || []).map(feat => {
-      const codex = getCodexFeat(feat);
-      const maxUses = feat.maxUses ?? codex?.uses_per_rec;
-      const recovery = feat.recovery || codex?.rec_period;
-      return {
-        ...feat,
-        currentUses: hasFullOrPartialRecovery(recovery) && maxUses != null
-          ? maxUses
-          : feat.currentUses,
-      };
-    });
-    
-    // Reset trait uses to max (traits with uses_per_rec have a recovery period)
-    const resetTraitUses: Record<string, number> = {};
-    if (character.traitUses) {
-      Object.keys(character.traitUses).forEach(traitName => {
-        const trait = traitsDb.find((t: Trait) => t.name === traitName);
-        if (trait?.uses_per_rec) {
-          resetTraitUses[traitName] = trait.uses_per_rec;
-        }
-      });
-    }
-    
-    const stateUsesMaxRec = calculateProficiency(character.level || 1);
-    setCharacter(prev => prev ? {
-      ...prev,
-      currentHealth: calculatedStats.maxHealth,
-      currentEnergy: calculatedStats.maxEnergy,
-      conditions: [], // Clear all conditions
-      archetypeFeats: resetArchetypeFeats,
-      feats: resetCharacterFeats,
-      traitUses: { ...(prev.traitUses || {}), ...resetTraitUses },
-      stateUsesCurrent: stateUsesMaxRec,
-    } : null);
-    
-    showToast('Full recovery complete!', 'success');
-  }, [character, calculatedStats, traitsDb, featsDb, showToast]);
-  
-  // Partial recovery handler - restores specified HP/EN and resets partial-recovery feats/traits
-  const handlePartialRecovery = useCallback((hpRestored: number, enRestored: number, resetPartialFeats: boolean) => {
-    if (!character || !calculatedStats) return;
-    
-    const currentHP = character.currentHealth ?? character.health?.current ?? calculatedStats.maxHealth;
-    const currentEN = character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy;
-    
-    // Lookup codex data for a feat (maxUses, recovery period)
-    const getCodexFeat = (feat: CharacterFeat) => {
-      let dbFeat = featsDb.find((f: Feat) => f.id === String(feat.id));
-      if (!dbFeat && feat.name) dbFeat = featsDb.find((f: Feat) => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
-      return dbFeat as Feat | undefined;
-    };
-
-    // Reset feats with "Partial" recovery to max uses
-    const resetArchetypeFeats = (character.archetypeFeats || []).map(feat => {
-      const codex = getCodexFeat(feat);
-      const maxUses = feat.maxUses ?? codex?.uses_per_rec;
-      const recovery = feat.recovery || codex?.rec_period;
-      return {
-        ...feat,
-        currentUses: resetPartialFeats && recovery?.toLowerCase().includes('partial')
-          ? maxUses || feat.currentUses
-          : feat.currentUses,
-      };
-    });
-    
-    const resetCharacterFeats = (character.feats || []).map(feat => {
-      const codex = getCodexFeat(feat);
-      const maxUses = feat.maxUses ?? codex?.uses_per_rec;
-      const recovery = feat.recovery || codex?.rec_period;
-      return {
-        ...feat,
-        currentUses: resetPartialFeats && recovery?.toLowerCase().includes('partial')
-          ? maxUses || feat.currentUses
-          : feat.currentUses,
-      };
-    });
-    
-    // Reset trait uses for "Partial" recovery traits
-    const resetTraitUses: Record<string, number> = {};
-    if (character.traitUses && resetPartialFeats) {
-      Object.keys(character.traitUses).forEach(traitName => {
-        const trait = traitsDb.find((t: Trait) => t.name === traitName);
-        if (trait?.uses_per_rec && trait.rec_period?.toLowerCase().includes('partial')) {
-          resetTraitUses[traitName] = trait.uses_per_rec;
-        }
-      });
-    }
-    
-    setCharacter(prev => prev ? {
-      ...prev,
-      currentHealth: Math.min(currentHP + hpRestored, calculatedStats.maxHealth),
-      currentEnergy: Math.min(currentEN + enRestored, calculatedStats.maxEnergy),
-      archetypeFeats: resetArchetypeFeats,
-      feats: resetCharacterFeats,
-      traitUses: { ...(prev.traitUses || {}), ...resetTraitUses },
-    } : null);
-    
-    showToast(`Recovered ${hpRestored} HP and ${enRestored} EN`, 'success');
-  }, [character, calculatedStats, traitsDb, featsDb, showToast]);
-  
-  // Level up handler
-  const handleLevelUp = useCallback((newLevel: number) => {
-    if (!character) return;
-    setCharacter(prev => prev ? {
-      ...prev,
-      level: newLevel
-    } : null);
-  }, [character]);
-  
-  // Get existing item IDs for the modal (skip empty string so we don't filter out library items)
-  const existingIds = useMemo(() => {
-    if (!character) return new Set<string>();
-    const ids = new Set<string>();
-    const add = (id: string | number | undefined) => {
-      const s = String(id ?? '');
-      if (s) ids.add(s);
-    };
-    character.powers?.forEach(p => add(p.id));
-    character.techniques?.forEach(t => add(t.id));
-    (character.equipment?.weapons as Item[] || []).forEach(w => add(w.id));
-    (character.equipment?.shields as Item[] || []).forEach(s => add(s.id));
-    (character.equipment?.armor as Item[] || []).forEach(a => add(a.id));
-    (character.equipment?.items as Item[] || []).forEach(e => add(e.id));
-    return ids;
-  }, [character]);
-
-  const buildRequiredForCharacter = useCallback((c: Character) => {
-    const weapons = ((c.equipment?.weapons as Item[]) || []);
-    const shields = ((c.equipment?.shields as Item[]) || []);
-    const armor = ((c.equipment?.armor as Item[]) || []);
-    return buildRequiredProficiencies({
-      powers: c.powers || [],
-      techniques: c.techniques || [],
-      weapons,
-      shields,
-      armor,
+  const librarySectionProps = useMemo(() => {
+    if (!character || !calculatedStats) return null;
+    return buildCharacterSheetLibraryProps({
+      character,
+      enrichedData,
+      archetypeProgression,
+      calculatedMaxEnergy: calculatedStats.maxEnergy,
       powerPartsDb,
       techniquePartsDb,
       itemPropertiesDb,
+      traitsDb,
+      featsDb,
+      characterSpeciesTraits,
+      archetypeFeatsForDisplay,
+      characterFeatsForDisplay,
+      stateFeatsList,
+      stateUsesCurrent,
+      stateUsesMax,
+      handlers: libraryHandlers,
     });
-  }, [powerPartsDb, techniquePartsDb, itemPropertiesDb]);
-
-  const applyAutoProficiencies = useCallback((next: Character, reason: string): Character | null => {
-    const required = buildRequiredForCharacter(next);
-    const merged = mergeOwnedWithRequired(next.proficiencies || [], required);
-    const deduped = dedupeHighestProficiencies(merged);
-    const newSpent = deduped.reduce((sum, p) => sum + calculateProficiencyTP(p), 0);
-    const currentDeduped = dedupeHighestProficiencies(next.proficiencies || []);
-    const currentSpent = currentDeduped.reduce((sum, p) => sum + calculateProficiencyTP(p), 0);
-    const ability = getArchetypeAbilityScore(next);
-    const max = getTrainingPointLimit(next.level || 1, ability);
-    const overLimit = newSpent > max;
-    const thisActionAddedTp = newSpent > currentSpent;
-    if (overLimit && thisActionAddedTp) {
-      // Soft cap: the TP limit is visibly flagged on the sheet and recoverable in
-      // the Proficiencies tab, so we apply the change and warn rather than block
-      // with a modal/confirm (TASK-338).
-      showToast(
-        `${reason} puts proficiency TP over the limit (${newSpent}/${max}). Adjust in the Proficiencies tab.`,
-        'warning'
-      );
-    }
-    return { ...next, proficiencies: deduped };
-  }, [buildRequiredForCharacter, showToast]);
-
-  useEffect(() => {
-    if (!character) return;
-    if ((character.proficiencies || []).length > 0) return;
-    if (!powerPartsDb.length && !techniquePartsDb.length && !itemPropertiesDb.length) return;
-    const required = buildRequiredForCharacter(character);
-    if (required.length === 0) return;
-    setCharacter((prev) => (prev ? { ...prev, proficiencies: required } : prev));
-  }, [character, powerPartsDb.length, techniquePartsDb.length, itemPropertiesDb.length, buildRequiredForCharacter]);
-  
-  // Add power handler
-  const handleAddPowers = useCallback((powers: CharacterPower[]) => {
-    if (!character) return;
-    const candidate: Character = {
-      ...character,
-      powers: [...(character.powers || []), ...powers],
-    };
-    const next = applyAutoProficiencies(candidate, 'Adding powers');
-    if (!next) return;
-    setCharacter(next);
-  }, [character, applyAutoProficiencies]);
-  
-  // Remove power handler
-  const handleRemovePower = useCallback((powerId: string | number) => {
-    if (!character) return;
-    setCharacter(prev => prev ? {
-      ...prev,
-      powers: (prev.powers || []).filter(p => p.id !== powerId && String(p.id) !== String(powerId))
-    } : null);
-  }, [character]);
-  
-  // Toggle power innate handler
-  const handleTogglePowerInnate = useCallback((powerId: string | number, isInnate: boolean) => {
-    if (!character) return;
-    setCharacter(prev => prev ? {
-      ...prev,
-      powers: (prev.powers || []).map(p => 
-        (p.id === powerId || String(p.id) === String(powerId)) 
-          ? { ...p, innate: isInnate } 
-          : p
-      )
-    } : null);
-  }, [character]);
-  
-  // Use power handler (deducts energy)
-  const handleUsePower = useCallback((powerId: string | number, energyCost: number) => {
-    if (!character || !calculatedStats) return;
-    const curEnergy = character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy;
-    if (curEnergy < energyCost) return;
-    
-    setCharacter(prev => prev ? {
-      ...prev,
-      currentEnergy: curEnergy - energyCost,
-    } : null);
-  }, [character, calculatedStats]);
-  
-  // Add technique handler
-  const handleAddTechniques = useCallback((techniques: CharacterTechnique[]) => {
-    if (!character) return;
-    const candidate: Character = {
-      ...character,
-      techniques: [...(character.techniques || []), ...techniques],
-    };
-    const next = applyAutoProficiencies(candidate, 'Adding techniques');
-    if (!next) return;
-    setCharacter(next);
-  }, [character, applyAutoProficiencies]);
-  
-  // Remove technique handler
-  const handleRemoveTechnique = useCallback((techId: string | number) => {
-    if (!character) return;
-    setCharacter(prev => prev ? {
-      ...prev,
-      techniques: (prev.techniques || []).filter(t => t.id !== techId && String(t.id) !== String(techId))
-    } : null);
-  }, [character]);
-  
-  // Use technique handler (deducts energy)
-  const handleUseTechnique = useCallback((techId: string | number, energyCost: number) => {
-    if (!character || !calculatedStats) return;
-    const curEnergy = character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy;
-    if (curEnergy < energyCost) return;
-    
-    setCharacter(prev => prev ? {
-      ...prev,
-      currentEnergy: curEnergy - energyCost,
-    } : null);
-  }, [character, calculatedStats]);
-  
-  // Add weapon handler
-  const handleAddWeapons = useCallback((items: Item[]) => {
-    if (!character) return;
-    const candidate: Character = {
-      ...character,
-      equipment: {
-        ...character.equipment,
-        weapons: [...((character.equipment?.weapons as Item[]) || []), ...items],
-      },
-    };
-    const next = applyAutoProficiencies(candidate, 'Adding weapons');
-    if (!next) return;
-    setCharacter(next);
-  }, [character, applyAutoProficiencies]);
-  
-  // Remove weapon handler
-  // Note: Match by ID, name, or index (when passed as number) since equipment may be stored as {name, equipped} without ID
-  const handleRemoveWeapon = useCallback((itemId: string | number) => {
-    if (!character) return;
-    const idStr = String(itemId);
-    setCharacter(prev => prev ? {
-      ...prev,
-      equipment: {
-        ...prev.equipment,
-        weapons: ((prev.equipment?.weapons as Item[]) || []).filter((w, idx) => {
-          const matches = w.id === itemId || 
-                         String(w.id) === idStr || 
-                         w.name === idStr || 
-                         w.name?.toLowerCase() === idStr.toLowerCase() ||
-                         (typeof itemId === 'number' && idx === itemId);
-          return !matches;
-        })
-      }
-    } : null);
-  }, [character]);
-  
-  // Toggle equip weapon handler
-  // Note: Match by ID, name, or index (when passed as number) since equipment may be stored as {name, equipped} without ID
-  const handleToggleEquipWeapon = useCallback((itemId: string | number) => {
-    if (!character) return;
-    const idStr = String(itemId);
-    setCharacter(prev => prev ? {
-      ...prev,
-      equipment: {
-        ...prev.equipment,
-        weapons: ((prev.equipment?.weapons as Item[]) || []).map((w, idx) => {
-          const matches = w.id === itemId || 
-                         String(w.id) === idStr || 
-                         w.name === idStr || 
-                         w.name?.toLowerCase() === idStr.toLowerCase() ||
-                         (typeof itemId === 'number' && idx === itemId);
-          return matches ? { ...w, equipped: !w.equipped } : w;
-        })
-      }
-    } : null);
-  }, [character]);
-  
-  // Add armor handler
-  const handleAddArmor = useCallback((items: Item[]) => {
-    if (!character) return;
-    const candidate: Character = {
-      ...character,
-      equipment: {
-        ...character.equipment,
-        armor: [...((character.equipment?.armor as Item[]) || []), ...items],
-      },
-    };
-    const next = applyAutoProficiencies(candidate, 'Adding armor');
-    if (!next) return;
-    setCharacter(next);
-  }, [character, applyAutoProficiencies]);
-  
-  // Remove armor handler
-  // Note: Match by ID, name, or index (when passed as number) since equipment may be stored as {name, equipped} without ID
-  const handleRemoveArmor = useCallback((itemId: string | number) => {
-    if (!character) return;
-    const idStr = String(itemId);
-    setCharacter(prev => prev ? {
-      ...prev,
-      equipment: {
-        ...prev.equipment,
-        armor: ((prev.equipment?.armor as Item[]) || []).filter((a, idx) => {
-          const matches = a.id === itemId || 
-                         String(a.id) === idStr || 
-                         a.name === idStr || 
-                         a.name?.toLowerCase() === idStr.toLowerCase() ||
-                         (typeof itemId === 'number' && idx === itemId);
-          return !matches;
-        })
-      }
-    } : null);
-  }, [character]);
-  
-  // Toggle equip armor handler
-  // Note: Match by ID, name, or index (when passed as number) since equipment may be stored as {name, equipped} without ID
-  const handleToggleEquipArmor = useCallback((itemId: string | number) => {
-    if (!character) return;
-    const idStr = String(itemId);
-    setCharacter(prev => prev ? {
-      ...prev,
-      equipment: {
-        ...prev.equipment,
-        armor: ((prev.equipment?.armor as Item[]) || []).map((a, idx) => {
-          const matches = a.id === itemId || 
-                         String(a.id) === idStr || 
-                         a.name === idStr || 
-                         a.name?.toLowerCase() === idStr.toLowerCase() ||
-                         (typeof itemId === 'number' && idx === itemId);
-          return matches ? { ...a, equipped: !a.equipped } : a;
-        })
-      }
-    } : null);
-  }, [character]);
-
-  // Add shield handler
-  const handleAddShields = useCallback((items: Item[]) => {
-    if (!character) return;
-    const candidate: Character = {
-      ...character,
-      equipment: {
-        ...character.equipment,
-        shields: [...((character.equipment?.shields as Item[]) || []), ...items],
-      },
-    };
-    const next = applyAutoProficiencies(candidate, 'Adding shields');
-    if (!next) return;
-    setCharacter(next);
-  }, [character, applyAutoProficiencies]);
-
-  // Remove shield handler
-  const handleRemoveShield = useCallback((itemId: string | number) => {
-    if (!character) return;
-    const idStr = String(itemId);
-    setCharacter(prev => prev ? {
-      ...prev,
-      equipment: {
-        ...prev.equipment,
-        shields: ((prev.equipment?.shields as Item[]) || []).filter((s, idx) => {
-          const matches = s.id === itemId || 
-                         String(s.id) === idStr || 
-                         s.name === idStr || 
-                         s.name?.toLowerCase() === idStr.toLowerCase() ||
-                         (typeof itemId === 'number' && idx === itemId);
-          return !matches;
-        })
-      }
-    } : null);
-  }, [character]);
-
-  // Toggle equip shield handler
-  const handleToggleEquipShield = useCallback((itemId: string | number) => {
-    if (!character) return;
-    const idStr = String(itemId);
-    setCharacter(prev => prev ? {
-      ...prev,
-      equipment: {
-        ...prev.equipment,
-        shields: ((prev.equipment?.shields as Item[]) || []).map((s, idx) => {
-          const matches = s.id === itemId || 
-                         String(s.id) === idStr || 
-                         s.name === idStr || 
-                         s.name?.toLowerCase() === idStr.toLowerCase() ||
-                         (typeof itemId === 'number' && idx === itemId);
-          return matches ? { ...s, equipped: !s.equipped } : s;
-        })
-      }
-    } : null);
-  }, [character]);
-  
-  // Add equipment handler
-  const handleAddEquipment = useCallback((items: Item[]) => {
-    if (!character) return;
-    const candidate: Character = {
-      ...character,
-      equipment: {
-        ...character.equipment,
-        items: [...((character.equipment?.items as Item[]) || []), ...items],
-      },
-    };
-    const next = applyAutoProficiencies(candidate, 'Adding equipment');
-    if (!next) return;
-    setCharacter(next);
-  }, [character, applyAutoProficiencies]);
-  
-  // Remove equipment handler
-  // Note: Match by ID, name, or index (when passed as number) since equipment may be stored as {name} without ID
-  const handleRemoveEquipment = useCallback((itemId: string | number) => {
-    if (!character) return;
-    const idStr = String(itemId);
-    setCharacter(prev => prev ? {
-      ...prev,
-      equipment: {
-        ...prev.equipment,
-        items: ((prev.equipment?.items as Item[]) || []).filter((e, idx) => {
-          const matches = e.id === itemId || 
-                         String(e.id) === idStr || 
-                         e.name === idStr || 
-                         e.name?.toLowerCase() === idStr.toLowerCase() ||
-                         (typeof itemId === 'number' && idx === itemId);
-          return !matches;
-        })
-      }
-    } : null);
-  }, [character]);
-  
-  // Equipment quantity change handler (+/-). If quantity goes below 1, remove the item.
-  const handleEquipmentQuantityChange = useCallback((itemId: string | number, delta: number) => {
-    if (!character) return;
-    const idStr = String(itemId);
-    setCharacter(prev => {
-      if (!prev) return null;
-      const currentItems = (prev.equipment?.items as Item[]) || [];
-      const items = currentItems.flatMap((item, idx) => {
-        const matches = item.id === itemId ||
-                       String(item.id) === idStr ||
-                       item.name === idStr ||
-                       item.name?.toLowerCase() === idStr.toLowerCase() ||
-                       (typeof itemId === 'number' && idx === itemId);
-        if (!matches) return [item];
-        const newQty = (item.quantity ?? 1) + delta;
-        if (newQty < 1) return []; // remove item
-        return [{ ...item, quantity: newQty }];
-      });
-      return {
-        ...prev,
-        equipment: { ...prev.equipment, items }
-      };
-    });
-  }, [character]);
-  
-  // Currency change handler
-  const handleCurrencyChange = useCallback((value: number) => {
-    if (!character) return;
-    setCharacter(prev => prev ? {
-      ...prev,
-      currency: value
-    } : null);
-  }, [character]);
-  
-  // Add feats handler — saves lean: { id, name, currentUses }
-  // description/maxUses/recovery derived from codex on display
-  // When type is 'state', each feat is added to archetype or character based on codex char_feat
-  const handleAddFeats = useCallback((feats: { id: string; name: string; description?: string; effect?: string; max_uses?: number }[], type: 'archetype' | 'character' | 'state') => {
-    if (!character) return;
-    const newFeats: CharacterFeat[] = feats.map(f => ({
-      id: f.id,
-      name: f.name,
-      currentUses: f.max_uses, // Start at max uses; maxUses itself derived from codex
-    }));
-    
-    if (type === 'state') {
-      const db = featsDb as Array<Feat & { char_feat?: boolean }>;
-      const toArchetype: CharacterFeat[] = [];
-      const toCharacter: CharacterFeat[] = [];
-      newFeats.forEach(f => {
-        const codex = db.find(x => x.id === f.id || String(x.name ?? '').toLowerCase() === String(f.name ?? '').toLowerCase());
-        if (codex?.char_feat) toCharacter.push(f);
-        else toArchetype.push(f);
-      });
-      setCharacter(prev => prev ? {
-        ...prev,
-        archetypeFeats: [...(prev.archetypeFeats || []), ...toArchetype],
-        feats: [...(prev.feats || []), ...toCharacter],
-      } : null);
-    } else if (type === 'archetype') {
-      type LeveledFeat = Feat & { base_feat_id?: string; feat_lvl?: number };
-      const db = featsDb as LeveledFeat[];
-      const byId = new Map<string, LeveledFeat>(db.map((f) => [String(f.id), f]));
-      const getLevel = (f: LeveledFeat | undefined) => (f?.feat_lvl != null && f.feat_lvl > 0 ? f.feat_lvl : 1);
-      const getFamily = (f: LeveledFeat | undefined) => (f?.base_feat_id ? String(f.base_feat_id) : String(f?.id ?? ''));
-      setCharacter(prev => prev ? {
-        ...prev,
-        archetypeFeats: newFeats.reduce<CharacterFeat[]>((acc, nextFeat) => {
-          const nextDef = byId.get(String(nextFeat.id));
-          const nextFamily = getFamily(nextDef);
-          const nextLevel = getLevel(nextDef);
-          const filtered = acc.filter((existing) => {
-            const existingDef = byId.get(String(existing.id));
-            if (!existingDef || !nextFamily) return true;
-            if (getFamily(existingDef) !== nextFamily) return true;
-            return getLevel(existingDef) >= nextLevel;
-          });
-          return [...filtered, nextFeat];
-        }, [...(prev.archetypeFeats || [])])
-      } : null);
-    } else {
-      type LeveledFeat = Feat & { base_feat_id?: string; feat_lvl?: number };
-      const db = featsDb as LeveledFeat[];
-      const byId = new Map<string, LeveledFeat>(db.map((f) => [String(f.id), f]));
-      const getLevel = (f: LeveledFeat | undefined) => (f?.feat_lvl != null && f.feat_lvl > 0 ? f.feat_lvl : 1);
-      const getFamily = (f: LeveledFeat | undefined) => (f?.base_feat_id ? String(f.base_feat_id) : String(f?.id ?? ''));
-      setCharacter(prev => prev ? {
-        ...prev,
-        feats: newFeats.reduce<CharacterFeat[]>((acc, nextFeat) => {
-          const nextDef = byId.get(String(nextFeat.id));
-          const nextFamily = getFamily(nextDef);
-          const nextLevel = getLevel(nextDef);
-          const filtered = acc.filter((existing) => {
-            const existingDef = byId.get(String(existing.id));
-            if (!existingDef || !nextFamily) return true;
-            if (getFamily(existingDef) !== nextFamily) return true;
-            return getLevel(existingDef) >= nextLevel;
-          });
-          return [...filtered, nextFeat];
-        }, [...(prev.feats || [])])
-      } : null);
-    }
-    setFeatModalType(null);
-  }, [character, featsDb]);
-
-  // Remove feat handler (called after confirmation)
-  const handleRemoveFeat = useCallback((featId: string) => {
-    if (!character) return;
-    setCharacter(prev => {
-      if (!prev) return null;
-      // Try removing from archetype feats first
-      const archetypeFeats = prev.archetypeFeats || [];
-      const archetypeIdx = archetypeFeats.findIndex(f => String(f.id) === featId || f.name === featId);
-      if (archetypeIdx !== -1) {
-        return {
-          ...prev,
-          archetypeFeats: archetypeFeats.filter((_, i) => i !== archetypeIdx),
-        };
-      }
-      // Then try character feats
-      const charFeats = prev.feats || [];
-      const charIdx = charFeats.findIndex(f => String(f.id) === featId || f.name === featId);
-      if (charIdx !== -1) {
-        return {
-          ...prev,
-          feats: charFeats.filter((_, i) => i !== charIdx),
-        };
-      }
-      return prev;
-    });
-  }, [character]);
-
-  // Request feat removal (opens confirmation modal)
-  const handleRequestRemoveFeat = useCallback((featId: string, featName?: string) => {
-    setFeatToRemove({ id: featId, name: featName || featId });
-  }, []);
-
-  // Confirm feat removal (called from modal)
-  const handleConfirmRemoveFeat = useCallback(() => {
-    if (featToRemove) {
-      handleRemoveFeat(featToRemove.id);
-      setFeatToRemove(null);
-    }
-  }, [featToRemove, handleRemoveFeat]);
-  
-  // Add skills handler - accepts skills from add-skill or add-sub-skill modals
-  const handleAddSkills = useCallback((newSkills: Array<{ 
-    id: string; 
-    name: string; 
-    ability?: string; 
-    base_skill_id?: number;
-    selectedBaseSkillId?: string;
-  }>) => {
-    if (!character) return;
-    const skillsToAdd = newSkills.map(s => {
-      // Parse available abilities from comma-separated string
-      const availableAbilities = typeof s.ability === 'string' 
-        ? s.ability.split(',').map(a => a.trim().toLowerCase()).filter(Boolean)
-        : [];
-      
-      // Default to the first available ability, not just 'strength'
-      const defaultAbility = availableAbilities[0] || 'strength';
-      
-      const skill: {
-        id: string;
-        name: string;
-        category: string;
-        skill_val: number;
-        prof: boolean;
-        ability?: string;
-        availableAbilities?: string[];
-        baseSkillId?: number;
-        selectedBaseSkillId?: string;
-      } = {
-        id: s.id,
-        name: s.name,
-        category: defaultAbility,
-        skill_val: 0,
-        prof: false,
-      };
-      // Store the selected ability (defaults to first available)
-      skill.ability = defaultAbility;
-      // Store all available abilities for the dropdown
-      if (availableAbilities.length > 0) {
-        skill.availableAbilities = availableAbilities;
-      }
-      if (s.base_skill_id !== undefined) skill.baseSkillId = s.base_skill_id;
-      if (s.selectedBaseSkillId) skill.selectedBaseSkillId = s.selectedBaseSkillId;
-      return skill;
-    });
-    
-    // Skills are stored as array of objects at runtime, but typed as Record
-    // Cast to handle the type mismatch
-    setCharacter(prev => {
-      if (!prev) return null;
-      const currentSkills = (prev.skills || []) as unknown as typeof skillsToAdd;
-      return {
-        ...prev,
-        skills: [...currentSkills, ...skillsToAdd] as unknown as typeof prev.skills
-      };
-    });
-    setSkillModalType(null);
-  }, [character]);
-  
-  // Remove skill handler
-  const handleRemoveSkill = useCallback((skillId: string) => {
-    if (!character) return;
-    setCharacter(prev => {
-      if (!prev) return null;
-      const currentSkills = (prev.skills || []) as unknown as Array<{ id: string }>;
-      return {
-        ...prev,
-        skills: currentSkills.filter(s => s.id !== skillId) as unknown as typeof prev.skills
-      };
-    });
-  }, [character]);
-  
-  // Skill change handler (for editing skill values, proficiency, ability)
-  const handleSkillChange = useCallback((skillId: string, updates: Partial<{ skill_val: number; prof: boolean; ability: string }>) => {
-    if (!character) return;
-    setCharacter(prev => {
-      if (!prev) return null;
-      const currentSkills = (prev.skills || []) as unknown as Array<{ id: string; skill_val?: number; prof?: boolean; ability?: string }>;
-      const updatedSkills = currentSkills.map(skill => {
-        if (skill.id === skillId) {
-          return { ...skill, ...updates };
-        }
-        return skill;
-      });
-      return {
-        ...prev,
-        skills: updatedSkills as unknown as typeof prev.skills
-      };
-    });
-  }, [character]);
-  
-  // Martial proficiency change handler
-  const handleMartialProfChange = useCallback((value: number) => {
-    if (!character) return;
-    setCharacter(prev => prev ? {
-      ...prev,
-      mart_prof: Math.max(0, Math.min(6, value)),
-      martialProficiency: Math.max(0, Math.min(6, value)),
-    } : null);
-  }, [character]);
-  
-  // Power proficiency change handler
-  const handlePowerProfChange = useCallback((value: number) => {
-    if (!character) return;
-    setCharacter(prev => prev ? {
-      ...prev,
-      pow_prof: Math.max(0, Math.min(6, value)),
-      powerProficiency: Math.max(0, Math.min(6, value)),
-    } : null);
-  }, [character]);
-  
-  // Edit archetype modal save: update archetype, abilities, and proficiencies
-  const handleArchetypeSave = useCallback((result: { archetype: { id: string; type: string }; pow_abil?: AbilityName; mart_abil?: AbilityName; mart_prof: number; pow_prof: number }) => {
-    if (!character) return;
-    setCharacter(prev => prev ? {
-      ...prev,
-      archetype: { id: result.archetype.id, type: result.archetype.type as 'power' | 'martial' | 'powered-martial' },
-      pow_abil: result.pow_abil,
-      mart_abil: result.mart_abil,
-      mart_prof: result.mart_prof,
-      pow_prof: result.pow_prof,
-      martialProficiency: result.mart_prof,
-      powerProficiency: result.pow_prof,
-    } : null);
-    setShowEditArchetypeModal(false);
-  }, [character]);
-
-  // Edit species modal save: update ancestry and migrate skills
-  const handleEditSpeciesSave = useCallback((updates: { ancestry: Character['ancestry']; skills: unknown }) => {
-    if (!character) return;
-    let ancestry = updates.ancestry;
-    if (ancestry?.mixed === true && Array.isArray(ancestry.selectedSpeciesTraits)) {
-      const st = ancestry.selectedSpeciesTraits;
-      ancestry = {
-        ...ancestry,
-        selectedSpeciesTraits: [String(st[0] ?? '').trim(), String(st[1] ?? '').trim()] as [string, string],
-      };
-    }
-    setCharacter((prev) =>
-      prev ? { ...prev, ancestry, skills: updates.skills as Character['skills'] } : null
-    );
-    setShowEditSpeciesModal(false);
-  }, [character]);
-
-  // Mixed archetype milestone choice handler
-  const handleMilestoneChoiceChange = useCallback((level: number, choice: 'innate' | 'feat') => {
-    if (!character) return;
-    setCharacter(prev => prev ? {
-      ...prev,
-      archetypeChoices: {
-        ...(prev.archetypeChoices || {}),
-        [level]: choice,
-      },
-    } : null);
-  }, [character]);
-  
-  // Feat uses change handler (+/- buttons for feat tracking)
-  // maxUses derived from codex, with saved feat.maxUses as backward compat fallback
-  const handleFeatUsesChange = useCallback((featId: string, delta: number) => {
-    if (!character) return;
-    const codexFeat = featsDb.find((f: Feat) => f.id === featId) as Feat | undefined;
-    setCharacter(prev => {
-      if (!prev) return null;
-      
-      // Update archetype feats
-      const updatedArchetypeFeats = (prev.archetypeFeats || []).map(feat => {
-        const maxUses = feat.maxUses ?? codexFeat?.uses_per_rec;
-        if (String(feat.id) === featId && maxUses) {
-          const currentUses = feat.currentUses ?? maxUses;
-          const newUses = Math.max(0, Math.min(maxUses, currentUses + delta));
-          return { ...feat, currentUses: newUses };
-        }
-        return feat;
-      });
-      
-      // Update character feats
-      const updatedCharFeats = (prev.feats || []).map(feat => {
-        const maxUses = feat.maxUses ?? codexFeat?.uses_per_rec;
-        if (String(feat.id) === featId && maxUses) {
-          const currentUses = feat.currentUses ?? maxUses;
-          const newUses = Math.max(0, Math.min(maxUses, currentUses + delta));
-          return { ...feat, currentUses: newUses };
-        }
-        return feat;
-      });
-      
-      return {
-        ...prev,
-        archetypeFeats: updatedArchetypeFeats,
-        feats: updatedCharFeats,
-      };
-    });
-  }, [character, featsDb]);
-  
-  // Trait uses change handler (+/- buttons for trait tracking)
-  const handleTraitUsesChange = useCallback((traitName: string, delta: number) => {
-    if (!character) return;
-    setCharacter(prev => {
-      if (!prev) return null;
-      const currentUses = prev.traitUses?.[traitName] ?? 0;
-      // Find the trait in traitsDb to get maxUses
-      const traitData = traitsDb.find((t: Trait) => t.name?.toLowerCase() === traitName.toLowerCase());
-      const maxUses = (traitData as Trait & { uses_per_rec?: number })?.uses_per_rec ?? 999;
-      const newUses = Math.max(0, Math.min(maxUses, currentUses + delta));
-      return {
-        ...prev,
-        traitUses: {
-          ...(prev.traitUses || {}),
-          [traitName]: newUses,
-        },
-      };
-    });
-  }, [character, traitsDb]);
-  
-  // Split feats for display: state feats go only in State Feats section; others stay in Archetype/Character
-  const { archetypeFeatsForDisplay, characterFeatsForDisplay, stateFeatsList } = useMemo(() => {
-    const arch = character?.archetypeFeats || [];
-    const char = character?.feats || [];
-    const db = featsDb as Array<Feat & { state_feat?: boolean }>;
-    const isStateFeat = (feat: CharacterFeat) => {
-      const codex = db.find(f => f.id === String(feat.id)) ?? db.find(f => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
-      return !!(codex?.state_feat);
-    };
-    const archNonState = arch.filter(f => !isStateFeat(f));
-    const charNonState = char.filter(f => !isStateFeat(f));
-    const stateFeats: Array<CharacterFeat & { type: 'archetype' | 'character' }> = [
-      ...arch.filter(isStateFeat).map(f => ({ ...f, type: 'archetype' as const })),
-      ...char.filter(isStateFeat).map(f => ({ ...f, type: 'character' as const })),
-    ];
-    return {
-      archetypeFeatsForDisplay: archNonState,
-      characterFeatsForDisplay: charNonState,
-      stateFeatsList: stateFeats,
-    };
-  }, [character?.archetypeFeats, character?.feats, featsDb]);
-  
-  const stateUsesMax = character ? calculateProficiency(character.level || 1) : 0;
-  const stateUsesCurrent = character != null ? (character.stateUsesCurrent ?? stateUsesMax) : 0;
-  
-  const handleStateUsesChange = useCallback((delta: number) => {
-    if (!character || stateUsesMax <= 0) return;
-    setCharacter(prev => {
-      if (!prev) return null;
-      const current = prev.stateUsesCurrent ?? stateUsesMax;
-      const next = Math.max(0, Math.min(stateUsesMax, current + delta));
-      return { ...prev, stateUsesCurrent: next };
-    });
-  }, [character, stateUsesMax]);
-  
-  const handleEnterState = useCallback(() => {
-    if (!character || stateUsesMax <= 0) return;
-    const current = character.stateUsesCurrent ?? stateUsesMax;
-    if (current <= 0) return;
-    setCharacter(prev => {
-      if (!prev) return null;
-      const db = featsDb as Array<Feat & { state_feat?: boolean; uses_per_rec?: number }>;
-      const isStateFeat = (feat: CharacterFeat) => {
-        const codex = db.find(f => f.id === String(feat.id)) ?? db.find(f => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
-        return !!(codex?.state_feat);
-      };
-      const getMaxUses = (feat: CharacterFeat) => {
-        const codex = db.find(f => f.id === String(feat.id)) ?? db.find(f => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
-        return feat.maxUses ?? codex?.uses_per_rec ?? 0;
-      };
-      let nextArch = prev.archetypeFeats || [];
-      let nextChar = prev.feats || [];
-      stateFeatsList.forEach(sf => {
-        const maxUses = getMaxUses(sf);
-        if (maxUses <= 0) return;
-        if (sf.type === 'archetype') {
-          nextArch = nextArch.map(f => {
-            if (String(f.id) !== String(sf.id) && f.name !== sf.name) return f;
-            const cur = f.currentUses ?? maxUses;
-            return { ...f, currentUses: Math.max(0, cur - 1) };
-          });
-        } else {
-          nextChar = nextChar.map(f => {
-            if (String(f.id) !== String(sf.id) && f.name !== sf.name) return f;
-            const cur = f.currentUses ?? maxUses;
-            return { ...f, currentUses: Math.max(0, cur - 1) };
-          });
-        }
-      });
-      return {
-        ...prev,
-        stateUsesCurrent: (prev.stateUsesCurrent ?? stateUsesMax) - 1,
-        archetypeFeats: nextArch,
-        feats: nextChar,
-      };
-    });
-  }, [character, stateUsesMax, featsDb, stateFeatsList]);
-  
-  // Handle modal item add based on type
-  const handleModalAdd = useCallback((items: CharacterPower[] | CharacterTechnique[] | Item[]) => {
-    if (!addModalType) return;
-    
-    switch (addModalType) {
-      case 'power':
-        handleAddPowers(items as CharacterPower[]);
-        break;
-      case 'technique':
-        handleAddTechniques(items as CharacterTechnique[]);
-        break;
-      case 'weapon':
-        handleAddWeapons(items as Item[]);
-        break;
-      case 'armor':
-        handleAddArmor(items as Item[]);
-        break;
-      case 'shield':
-        handleAddShields(items as Item[]);
-        break;
-      case 'equipment':
-        handleAddEquipment(items as Item[]);
-        break;
-    }
-  }, [addModalType, handleAddPowers, handleAddTechniques, handleAddWeapons, handleAddArmor, handleAddShields, handleAddEquipment]);
-  
-  // Enrich skills with availableAbilities from Codex; merge in species skills if missing
-  // Species skills are auto-granted proficiencies—ensure they appear even if not in character.skills
-  // NOTE: This useMemo must be before any early returns to follow React's Rules of Hooks
-  const skills = useMemo(() => {
-    if (!character) return [];
-    
-    const rawSkills = (character.skills || []) as Array<{
-      id: string;
-      name: string;
-      category?: string;
-      skill_val: number;
-      prof?: boolean;
-      baseSkill?: string;
-      selectedBaseSkillId?: string;
-      ability?: string;
-      availableAbilities?: string[];
-    }>;
-    
-    // Merge species skills that aren't already in rawSkills (match by id or name)
-    const rawSkillIds = new Set(rawSkills.map(s => String(s.id).toLowerCase()));
-    const rawSkillNames = new Set(rawSkills.map(s => String(s.name ?? '').toLowerCase()));
-    const merged: typeof rawSkills = [...rawSkills];
-    for (const ss of characterSpeciesSkills) {
-      const ssId = String(ss);
-      const ssLower = ssId.toLowerCase();
-      if (rawSkillIds.has(ssLower) || rawSkillNames.has(ssLower)) continue;
-      const codexSkill = codexSkills.find(
-        (s: Skill) => String(s.id).toLowerCase() === ssLower || String(s.name ?? '').toLowerCase() === ssLower
-      );
-      if (codexSkill) {
-        const abilities = (codexSkill.ability ?? 'strength').split(',').map((a: string) => a.trim().toLowerCase()).filter(Boolean);
-        merged.push({
-          id: codexSkill.id,
-          name: codexSkill.name ?? ssId,
-          skill_val: 0, // Species skills: proficient with value 0 (per feedback / GAME_RULES)
-          prof: true,
-          ability: abilities[0] ?? 'strength',
-          availableAbilities: abilities.length ? abilities : ['strength'],
-        });
-      }
-    }
-    
-    // If no Codex skills loaded yet, return merged (species skills may not resolve)
-    if (codexSkills.length === 0) return merged;
-    
-    return merged.map((skill) => {
-      const codexSkill = codexSkills.find(
-        (rs: Skill) =>
-          String(rs.id) === String(skill.id) ||
-          String(rs.name ?? '').toLowerCase() === String(skill.name ?? '').toLowerCase()
-      );
-
-      const parentName =
-        skill.baseSkill ?? resolveParentSkillNameForSubSkill(skill, codexSkill, codexSkills);
-
-      let availableAbilities = skill.availableAbilities;
-      let ability = skill.ability;
-      if (codexSkill?.ability) {
-        const fromCodex = codexSkill.ability
-          .split(',')
-          .map((a: string) => a.trim().toLowerCase())
-          .filter(Boolean);
-        if (fromCodex.length > 0) {
-          if (!availableAbilities?.length) {
-            availableAbilities = fromCodex;
-          }
-          if (!ability || !fromCodex.includes(ability.toLowerCase())) {
-            ability = fromCodex[0] || 'strength';
-          }
-        }
-      }
-
-      return {
-        ...skill,
-        ability: ability ?? skill.ability ?? 'strength',
-        ...(availableAbilities?.length ? { availableAbilities } : {}),
-        ...(parentName ? { baseSkill: parentName } : {}),
-      };
-    });
-  }, [character, codexSkills, characterSpeciesSkills]);
+  }, [
+    character,
+    calculatedStats,
+    enrichedData,
+    archetypeProgression,
+    powerPartsDb,
+    techniquePartsDb,
+    itemPropertiesDb,
+    traitsDb,
+    featsDb,
+    characterSpeciesTraits,
+    archetypeFeatsForDisplay,
+    characterFeatsForDisplay,
+    stateFeatsList,
+    stateUsesCurrent,
+    stateUsesMax,
+    libraryHandlers,
+  ]);
   
   // Sheet context for CharacterSheetProvider. Must be before any early return so hook count is stable (React #310).
   const sheetContextValue = useMemo(
@@ -1705,9 +412,53 @@ export default function CharacterSheetPage({ params }: PageParams) {
             setAddModalType,
             setFeatModalType,
             setSkillModalType,
+            skills,
+            pointBudgets,
+            enrichedData,
+            librarySectionProps,
+            characterSpeciesSkills,
+            libraryActiveTab,
+            setLibraryActiveTab,
+            onAbilityChange: handleAbilityChange,
+            onDefenseChange: handleDefenseChange,
+            onSkillChange: handleSkillChange,
+            onRemoveSkill: handleRemoveSkill,
+            onAddSkill: () => setSkillModalType('skill'),
+            onAddSubSkill: () => setSkillModalType('subskill'),
+            onMartialProfChange: handleMartialProfChange,
+            onPowerProfChange: handlePowerProfChange,
+            onMilestoneChoiceChange: handleMilestoneChoiceChange,
+            onEditArchetype: () => {
+              if (effectiveEditMode) setShowEditArchetypeModal(true);
+            },
+            onEditSpecies: () => {
+              if (effectiveEditMode) setShowEditSpeciesModal(true);
+            },
           }
         : null,
-    [character, effectiveEditMode, isOwner, setAddModalType, setFeatModalType, setSkillModalType]
+    [
+      character,
+      effectiveEditMode,
+      isOwner,
+      skills,
+      pointBudgets,
+      enrichedData,
+      librarySectionProps,
+      characterSpeciesSkills,
+      libraryActiveTab,
+      setAddModalType,
+      setFeatModalType,
+      setSkillModalType,
+      setLibraryActiveTab,
+      handleAbilityChange,
+      handleDefenseChange,
+      handleSkillChange,
+      handleRemoveSkill,
+      handleMartialProfChange,
+      handlePowerProfChange,
+      handleMilestoneChoiceChange,
+      setCharacter,
+    ]
   );
   
   // Note: No auth redirect — this page supports public/campaign character viewing.
@@ -1793,17 +544,11 @@ export default function CharacterSheetPage({ params }: PageParams) {
         {/* Character Sheet Content */}
         <div className="max-w-[1600px] mx-auto px-4 pt-4">
           <div className="mb-2 flex justify-end">
-            <ContextHelpTooltip
-              tooltipKey="characters.sheet.help"
-              scope="page:/characters/[id]"
-              label="Character sheet usage help"
-              placement="left"
-            />
           </div>
           {calculatedStats && (
             <>
               <SheetHeader
-                character={character}
+                character={characterForDisplay ?? character}
                 calculatedStats={calculatedStats}
                 isEditMode={effectiveEditMode}
                 onHealthChange={handleHealthChange}
@@ -1827,314 +572,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 onEditSpecies={effectiveEditMode ? () => setShowEditSpeciesModal(true) : undefined}
               />
               
-              {/* Desktop: Abilities + 3-column grid (Skills | Archetype | Library) */}
-              <div className="hidden md:block">
-              <AbilitiesSection
-                abilities={character.abilities}
-                defenseSkills={character.defenseVals || character.defenseSkills}
-                level={character.level || 1}
-                archetypeAbility={(character.pow_abil || character.archetype?.ability) as AbilityName}
-                martialAbility={character.mart_abil}
-                powerAbility={character.pow_abil}
-                isEditMode={effectiveEditMode}
-                totalAbilityPoints={pointBudgets?.totalAbilityPoints}
-                spentAbilityPoints={pointBudgets?.spentAbilityPoints}
-                totalSkillPoints={pointBudgets?.totalSkillPoints}
-                spentSkillPoints={pointBudgets?.spentSkillPoints}
-                onAbilityChange={handleAbilityChange}
-                onDefenseChange={handleDefenseChange}
-              />
-            
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_2fr] gap-4 items-stretch">
-              <div className="flex flex-col min-h-[400px]">
-                <SkillsSection
-                  skills={skills}
-                  abilities={character.abilities}
-                  isEditMode={effectiveEditMode}
-                  totalSkillPoints={pointBudgets?.totalSkillPoints ?? calculateSkillPointsForEntity(character.level || 1, 'character')}
-                  spentSkillPoints={pointBudgets?.spentSkillPoints}
-                  speciesSkills={characterSpeciesSkills}
-                  onSkillChange={handleSkillChange}
-                  onRemoveSkill={handleRemoveSkill}
-                  onAddSkill={() => setSkillModalType('skill')}
-                  onAddSubSkill={() => setSkillModalType('subskill')}
-                  className="flex-1"
-                />
-              </div>
-              
-              <div className="flex flex-col min-h-[400px]">
-                <ArchetypeSection
-                  character={character}
-                  isEditMode={effectiveEditMode}
-                  onMartialProfChange={handleMartialProfChange}
-                  onPowerProfChange={handlePowerProfChange}
-                  onMilestoneChoiceChange={handleMilestoneChoiceChange}
-                  unarmedProwess={character.unarmedProwess}
-                  onUnarmedProwessChange={(level) => setCharacter(prev => prev ? { ...prev, unarmedProwess: level } : null)}
-                  enrichedWeapons={enrichedData?.weapons}
-                  enrichedShields={enrichedData?.shields}
-                  enrichedArmor={enrichedData?.armor}
-                  className="flex-1"
-                />
-              </div>
-              
-              <div className="flex flex-col min-h-[400px]">
-                <LibrarySection
-                  className="flex-1"
-                  powers={enrichedData?.powers || character.powers || []}
-                  techniques={enrichedData?.techniques || character.techniques || []}
-                  weapons={(enrichedData?.weapons || (character.equipment?.weapons || [])) as Item[]}
-                  shields={(enrichedData?.shields || (character.equipment?.shields || [])) as Item[]}
-                  armor={(enrichedData?.armor || (character.equipment?.armor || [])) as Item[]}
-                  equipment={(enrichedData?.equipment || (character.equipment?.items || [])) as Item[]}
-                  currency={character.currency}
-                  innateEnergy={archetypeProgression?.innateEnergy || 0}
-                  innateThreshold={archetypeProgression?.innateThreshold || 0}
-                  innatePools={archetypeProgression?.innatePools || 0}
-                  currentEnergy={character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy}
-                  martialProficiency={character.mart_prof}
-                  onRemovePower={handleRemovePower}
-                  onTogglePowerInnate={handleTogglePowerInnate}
-                  onUsePower={handleUsePower}
-                  onRemoveTechnique={handleRemoveTechnique}
-                  onUseTechnique={handleUseTechnique}
-                  onRemoveWeapon={handleRemoveWeapon}
-                  onToggleEquipWeapon={handleToggleEquipWeapon}
-                  onRemoveShield={handleRemoveShield}
-                  onToggleEquipShield={handleToggleEquipShield}
-                  onRemoveArmor={handleRemoveArmor}
-                  onToggleEquipArmor={handleToggleEquipArmor}
-                  onRemoveEquipment={handleRemoveEquipment}
-                  onEquipmentQuantityChange={handleEquipmentQuantityChange}
-                  onCurrencyChange={handleCurrencyChange}
-                  // Notes tab props
-                  weight={character.weight}
-                  height={character.height}
-                  appearance={character.appearance}
-                  archetypeDesc={character.archetypeDesc}
-                  notes={character.notes}
-                  abilities={character.abilities}
-                  onWeightChange={(v) => setCharacter(prev => prev ? { ...prev, weight: v } : null)}
-                  onHeightChange={(v) => setCharacter(prev => prev ? { ...prev, height: v } : null)}
-                  visibility={character.visibility}
-                  onVisibilityChange={(v) => setCharacter(prev => prev ? { ...prev, visibility: v } : null)}
-                  speedDisplayUnit={character.speedDisplayUnit ?? 'spaces'}
-                  onAppearanceChange={(v) => setCharacter(prev => prev ? { ...prev, appearance: v } : null)}
-                  onArchetypeDescChange={(v) => setCharacter(prev => prev ? { ...prev, archetypeDesc: v } : null)}
-                  onNotesChange={(v) => setCharacter(prev => prev ? { ...prev, notes: v } : null)}
-                  // Custom notes props
-                  namedNotes={character.namedNotes}
-                  onAddNote={() => {
-                    const newNote = {
-                      id: `note_${Date.now()}`,
-                      name: 'New Note',
-                      content: '',
-                    };
-                    setCharacter(prev => prev ? {
-                      ...prev,
-                      namedNotes: [...(prev.namedNotes || []), newNote],
-                    } : null);
-                  }}
-                  onUpdateNote={(id, updates) => {
-                    setCharacter(prev => prev ? {
-                      ...prev,
-                      namedNotes: (prev.namedNotes || []).map(note =>
-                        note.id === id ? { ...note, ...updates } : note
-                      ),
-                    } : null);
-                  }}
-                  onDeleteNote={(id) => {
-                    setCharacter(prev => prev ? {
-                      ...prev,
-                      namedNotes: (prev.namedNotes || []).filter(note => note.id !== id),
-                    } : null);
-                  }}
-                  // Proficiencies tab props
-                  level={character.level}
-                  archetypeAbility={getArchetypeAbilityScore(character)}
-                  powerPartsDb={powerPartsDb}
-                  techniquePartsDb={techniquePartsDb}
-                  itemPropertiesDb={itemPropertiesDb}
-                  proficiencies={character.proficiencies}
-                  onProficienciesChange={(next: CharacterProficiency[]) => setCharacter(prev => prev ? { ...prev, proficiencies: next } : null)}
-                  unarmedProwess={character.unarmedProwess ?? 0}
-                  onUnarmedProwessChange={(level) => setCharacter(prev => prev ? { ...prev, unarmedProwess: level } : null)}
-                  tabVisibility={character.libraryTabVisibility}
-                  onTabVisibilityChange={(next) => setCharacter(prev => prev ? { ...prev, libraryTabVisibility: next } : null)}
-                  // Feats tab props (sheet accepts partial codex-shaped ancestry)
-                  ancestry={character.ancestry as CharacterAncestry}
-                  // Vanilla site trait fields (stored at top level)
-                  vanillaTraits={{
-                    ancestryTraits: character.ancestryTraits,
-                    flawTrait: character.flawTrait,
-                    characteristicTrait: character.characteristicTrait,
-                    speciesTraits: character.speciesTraits,
-                  }}
-                  // Species traits from Codex (automatically granted to all characters of this species)
-                  speciesTraitsFromCodex={characterSpeciesTraits}
-                  archetypeFeats={archetypeFeatsForDisplay}
-                  characterFeats={characterFeatsForDisplay}
-                  stateFeats={stateFeatsList}
-                  stateUsesCurrent={stateUsesCurrent}
-                  stateUsesMax={stateUsesMax}
-                  onStateUsesChange={handleStateUsesChange}
-                  onEnterState={handleEnterState}
-                  maxArchetypeFeats={calculateMaxArchetypeFeats(character.level || 1, (character.archetype?.type || 'power') as 'power' | 'martial' | 'powered-martial')}
-                  maxCharacterFeats={calculateMaxCharacterFeats(character.level || 1)}
-                  onFeatUsesChange={handleFeatUsesChange}
-                  onRemoveFeat={handleRequestRemoveFeat}
-                  // Traits enrichment props
-                  traitsDb={traitsDb}
-                  featsDb={featsDb}
-                  traitUses={character.traitUses}
-                  onTraitUsesChange={handleTraitUsesChange}
-                />
-              </div>
-            </div>
-              </div>
-
-              {/* Mobile: horizontal side-scroll panels — one full panel in frame, no bleed (no px on scroll so each section fills viewport) */}
-              <div className="md:hidden overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth -mx-4 pb-4 touch-pan-x" style={{ WebkitOverflowScrolling: 'touch' }}>
-                <div className="flex flex-nowrap gap-0 min-h-[60vh]">
-                  <section aria-label="Abilities & Defenses" className="flex-shrink-0 w-full min-w-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden px-4 box-border">
-                    <AbilitiesSection
-                      abilities={character.abilities}
-                      defenseSkills={character.defenseVals || character.defenseSkills}
-                      level={character.level || 1}
-                      archetypeAbility={(character.pow_abil || character.archetype?.ability) as AbilityName}
-                      martialAbility={character.mart_abil}
-                      powerAbility={character.pow_abil}
-                      isEditMode={effectiveEditMode}
-                      totalAbilityPoints={pointBudgets?.totalAbilityPoints}
-                      spentAbilityPoints={pointBudgets?.spentAbilityPoints}
-                      totalSkillPoints={pointBudgets?.totalSkillPoints}
-                      spentSkillPoints={pointBudgets?.spentSkillPoints}
-                      onAbilityChange={handleAbilityChange}
-                      onDefenseChange={handleDefenseChange}
-                    />
-                  </section>
-                  <section aria-label="Skills" className="flex-shrink-0 w-full min-w-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden px-4 box-border">
-                    <SkillsSection
-                      skills={skills}
-                      abilities={character.abilities}
-                      isEditMode={effectiveEditMode}
-                      totalSkillPoints={pointBudgets?.totalSkillPoints ?? calculateSkillPointsForEntity(character.level || 1, 'character')}
-                      spentSkillPoints={pointBudgets?.spentSkillPoints}
-                      speciesSkills={characterSpeciesSkills}
-                      onSkillChange={handleSkillChange}
-                      onRemoveSkill={handleRemoveSkill}
-                      onAddSkill={() => setSkillModalType('skill')}
-                      onAddSubSkill={() => setSkillModalType('subskill')}
-                      className="min-h-0"
-                    />
-                  </section>
-                  <section aria-label="Archetype & Attacks" className="flex-shrink-0 w-full min-w-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden px-4 box-border">
-                    <ArchetypeSection
-                      character={character}
-                      isEditMode={effectiveEditMode}
-                      onMartialProfChange={handleMartialProfChange}
-                      onPowerProfChange={handlePowerProfChange}
-                      onMilestoneChoiceChange={handleMilestoneChoiceChange}
-                      unarmedProwess={character.unarmedProwess}
-                      onUnarmedProwessChange={(level) => setCharacter(prev => prev ? { ...prev, unarmedProwess: level } : null)}
-                      enrichedWeapons={enrichedData?.weapons}
-                      enrichedShields={enrichedData?.shields}
-                      enrichedArmor={enrichedData?.armor}
-                      className="min-h-0"
-                    />
-                  </section>
-                  <section aria-label="Library" className="flex-shrink-0 w-full min-w-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden px-4 box-border">
-                    <LibrarySection
-                      className="min-h-0"
-                      powers={enrichedData?.powers || character.powers || []}
-                      techniques={enrichedData?.techniques || character.techniques || []}
-                      weapons={(enrichedData?.weapons || (character.equipment?.weapons || [])) as Item[]}
-                      shields={(enrichedData?.shields || (character.equipment?.shields || [])) as Item[]}
-                      armor={(enrichedData?.armor || (character.equipment?.armor || [])) as Item[]}
-                      equipment={(enrichedData?.equipment || (character.equipment?.items || [])) as Item[]}
-                      currency={character.currency}
-                      innateEnergy={archetypeProgression?.innateEnergy || 0}
-                      innateThreshold={archetypeProgression?.innateThreshold || 0}
-                      innatePools={archetypeProgression?.innatePools || 0}
-                      currentEnergy={character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy}
-                      martialProficiency={character.mart_prof}
-                      onRemovePower={handleRemovePower}
-                      onTogglePowerInnate={handleTogglePowerInnate}
-                      onUsePower={handleUsePower}
-                      onRemoveTechnique={handleRemoveTechnique}
-                      onUseTechnique={handleUseTechnique}
-                      onRemoveWeapon={handleRemoveWeapon}
-                      onToggleEquipWeapon={handleToggleEquipWeapon}
-                      onRemoveShield={handleRemoveShield}
-                      onToggleEquipShield={handleToggleEquipShield}
-                      onRemoveArmor={handleRemoveArmor}
-                      onToggleEquipArmor={handleToggleEquipArmor}
-                      onRemoveEquipment={handleRemoveEquipment}
-                      onEquipmentQuantityChange={handleEquipmentQuantityChange}
-                      onCurrencyChange={handleCurrencyChange}
-                      weight={character.weight}
-                      height={character.height}
-                      appearance={character.appearance}
-                      archetypeDesc={character.archetypeDesc}
-                      notes={character.notes}
-                      abilities={character.abilities}
-                      onWeightChange={(v) => setCharacter(prev => prev ? { ...prev, weight: v } : null)}
-                      onHeightChange={(v) => setCharacter(prev => prev ? { ...prev, height: v } : null)}
-                      visibility={character.visibility}
-                      onVisibilityChange={(v) => setCharacter(prev => prev ? { ...prev, visibility: v } : null)}
-                      speedDisplayUnit={character.speedDisplayUnit ?? 'spaces'}
-                      onAppearanceChange={(v) => setCharacter(prev => prev ? { ...prev, appearance: v } : null)}
-                      onArchetypeDescChange={(v) => setCharacter(prev => prev ? { ...prev, archetypeDesc: v } : null)}
-                      onNotesChange={(v) => setCharacter(prev => prev ? { ...prev, notes: v } : null)}
-                      namedNotes={character.namedNotes}
-                      onAddNote={() => {
-                        const newNote = { id: `note_${Date.now()}`, name: 'New Note', content: '' };
-                        setCharacter(prev => prev ? { ...prev, namedNotes: [...(prev.namedNotes || []), newNote] } : null);
-                      }}
-                      onUpdateNote={(id, updates) => {
-                        setCharacter(prev => prev ? { ...prev, namedNotes: (prev.namedNotes || []).map(note => note.id === id ? { ...note, ...updates } : note) } : null);
-                      }}
-                      onDeleteNote={(id) => {
-                        setCharacter(prev => prev ? { ...prev, namedNotes: (prev.namedNotes || []).filter(note => note.id !== id) } : null);
-                      }}
-                      level={character.level}
-                      archetypeAbility={getArchetypeAbilityScore(character)}
-                      powerPartsDb={powerPartsDb}
-                      techniquePartsDb={techniquePartsDb}
-                      itemPropertiesDb={itemPropertiesDb}
-                      proficiencies={character.proficiencies}
-                      onProficienciesChange={(next: CharacterProficiency[]) => setCharacter(prev => prev ? { ...prev, proficiencies: next } : null)}
-                      unarmedProwess={character.unarmedProwess ?? 0}
-                      onUnarmedProwessChange={(level) => setCharacter(prev => prev ? { ...prev, unarmedProwess: level } : null)}
-                      tabVisibility={character.libraryTabVisibility}
-                      onTabVisibilityChange={(next) => setCharacter(prev => prev ? { ...prev, libraryTabVisibility: next } : null)}
-                      ancestry={character.ancestry as CharacterAncestry}
-                      vanillaTraits={{
-                        ancestryTraits: character.ancestryTraits,
-                        flawTrait: character.flawTrait,
-                        characteristicTrait: character.characteristicTrait,
-                        speciesTraits: character.speciesTraits,
-                      }}
-                      speciesTraitsFromCodex={characterSpeciesTraits}
-                      archetypeFeats={archetypeFeatsForDisplay}
-                      characterFeats={characterFeatsForDisplay}
-                      stateFeats={stateFeatsList}
-                      stateUsesCurrent={stateUsesCurrent}
-                      stateUsesMax={stateUsesMax}
-                      onStateUsesChange={handleStateUsesChange}
-                      onEnterState={handleEnterState}
-                      maxArchetypeFeats={calculateMaxArchetypeFeats(character.level || 1, (character.archetype?.type || 'power') as 'power' | 'martial' | 'powered-martial')}
-                      maxCharacterFeats={calculateMaxCharacterFeats(character.level || 1)}
-                      onFeatUsesChange={handleFeatUsesChange}
-                      onRemoveFeat={handleRequestRemoveFeat}
-                      traitsDb={traitsDb}
-                      featsDb={featsDb}
-                      traitUses={character.traitUses}
-                      onTraitUsesChange={handleTraitUsesChange}
-                    />
-                  </section>
-                </div>
-              </div>
+              <CharacterSheetBody />
           </>
         )}
         </div>
@@ -2153,6 +591,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
           showRecoveryModal={showRecoveryModal}
           setShowRecoveryModal={setShowRecoveryModal}
           character={character}
+          displayCharacter={characterForDisplay}
           calculatedStats={calculatedStats}
           existingIds={existingIds}
           skills={skills}

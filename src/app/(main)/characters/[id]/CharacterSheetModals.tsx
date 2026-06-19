@@ -61,6 +61,8 @@ interface CharacterSheetModalsProps {
   showRecoveryModal: boolean;
   setShowRecoveryModal: (v: boolean) => void;
   character: Character | null;
+  /** Codex-hydrated character for path-aware modals (optional). */
+  displayCharacter?: Character | null;
   calculatedStats: CharacterSheetStats | null;
   existingIds: Set<string>;
   skills: SkillForModal[];
@@ -94,6 +96,7 @@ export function CharacterSheetModals({
   showRecoveryModal,
   setShowRecoveryModal,
   character,
+  displayCharacter,
   calculatedStats,
   existingIds,
   skills,
@@ -119,6 +122,7 @@ export function CharacterSheetModals({
           isOpen={showEditArchetypeModal}
           onClose={() => setShowEditArchetypeModal(false)}
           character={character}
+          displayCharacter={displayCharacter ?? character}
           onSave={onArchetypeSave}
         />
       )}
@@ -191,6 +195,7 @@ export function CharacterSheetModals({
           isOpen={showLevelUpModal}
           onClose={() => setShowLevelUpModal(false)}
           character={character}
+          displayCharacter={displayCharacter ?? character}
           onConfirm={onLevelUp}
         />
       )}

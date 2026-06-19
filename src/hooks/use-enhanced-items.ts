@@ -52,12 +52,19 @@ async function fetchEnhancedItems(scope: EnhancedItemsScope) {
   return apiFetch<OfficialEnhancedItem[]>(OFFICIAL_API);
 }
 
-export function useEnhancedItems(scope?: 'user'): UseQueryResult<UserEnhancedItem[], Error>;
-export function useEnhancedItems(scope: 'official'): UseQueryResult<OfficialEnhancedItem[], Error>;
-export function useEnhancedItems(scope: EnhancedItemsScope = 'user') {
+export function useEnhancedItems(
+  scope?: 'user',
+  options?: { enabled?: boolean }
+): UseQueryResult<UserEnhancedItem[], Error>;
+export function useEnhancedItems(
+  scope: 'official',
+  options?: { enabled?: boolean }
+): UseQueryResult<OfficialEnhancedItem[], Error>;
+export function useEnhancedItems(scope: EnhancedItemsScope = 'user', options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: enhancedItemsKeys.list(scope),
     queryFn: () => fetchEnhancedItems(scope),
+    enabled: options?.enabled ?? true,
   });
 }
 

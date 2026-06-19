@@ -9,7 +9,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { PageContainer, PageHeader, Button, Spinner, Alert, Input } from '@/components/ui';
-import { ConfirmActionModal } from '@/components/shared';
+import { ConfirmActionModal, ErrorDisplay } from '@/components/shared';
+import { apiFetch } from '@/lib/api-client';
 
 type UserRole = 'new_player' | 'playtester' | 'developer' | 'admin';
 
@@ -52,22 +53,15 @@ export default function AdminUsersPage() {
   const [pendingChange, setPendingChange] = useState<
     { userId: string; label: string; oldRole: UserRole; newRole: UserRole } | null
   >(null);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
     Promise.all([
-      fetch('/api/admin/users').then(async (res) => {
-        const payload = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error((payload as { error?: string }).error ?? (res.status === 403 ? 'Forbidden' : 'Failed to load users'));
-        return payload as UserRow[];
-      }),
-      fetch('/api/admin/role-policies').then(async (res) => {
-        const payload = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error((payload as { error?: string }).error ?? (res.status === 403 ? 'Forbidden' : 'Failed to load role policies'));
-        return payload as RolePolicyRow[];
-      }),
+      apiFetch<UserRow[]>('/api/admin/users'),
+      apiFetch<RolePolicyRow[]>('/api/admin/role-policies'),
     ])
       .then(([userData, policyData]) => {
         if (cancelled) return;
@@ -88,7 +82,7 @@ export default function AdminUsersPage() {
         if (!cancelled) setLoading(false);
       });
     return () => { cancelled = true; };
-  }, []);
+  }, [reloadToken]);
 
   const filteredUsers = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -109,13 +103,10 @@ export default function AdminUsersPage() {
     setUpdating(userId);
     setMessage(null);
     try {
-      const res = await fetch('/api/admin/users/update-role', {
+      await apiFetch('/api/admin/users/update-role', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, role: newRole }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'Failed to update');
       setUsers((prev) =>
         prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
       );
@@ -164,7 +155,7 @@ export default function AdminUsersPage() {
           <Spinner size="lg" />
         </div>
       ) : error ? (
-        <Alert variant="danger">{error}</Alert>
+        <ErrorDisplay message={error} onRetry={() => setReloadToken((token) => token + 1)} />
       ) : filteredUsers.length === 0 ? (
         <p className="text-text-muted dark:text-text-secondary italic">No users found.</p>
       ) : (

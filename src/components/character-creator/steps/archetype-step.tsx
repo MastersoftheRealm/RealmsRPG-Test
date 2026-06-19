@@ -9,10 +9,9 @@
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Chip, Button, Spinner, HelpTooltip, Tooltip } from '@/components/ui';
-import { ContextHelpTooltip } from '@/components/shared';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useCodexArchetypes, useTooltipByKey } from '@/hooks';
-import { parseArchetypePathData } from '@/lib/game/archetype-path';
+import { parseArchetypePathData, pathHasPlayerVisibleLevel1 } from '@/lib/game/archetype-path';
 import type { Archetype, ArchetypeCategory, AbilityName } from '@/types';
 
 const ABILITIES: AbilityName[] = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'];
@@ -103,17 +102,7 @@ export function ArchetypeStep() {
         ...archetype,
         path_data: parseArchetypePathData(archetype.path_data),
       }))
-      .filter((archetype) => {
-        const hasLevelOne =
-          !!archetype.path_data?.level1 &&
-          (archetype.path_data.level1.feats?.length ||
-            archetype.path_data.level1.skills?.length ||
-            archetype.path_data.level1.powers?.length ||
-            archetype.path_data.level1.techniques?.length ||
-            archetype.path_data.level1.armaments?.length ||
-            archetype.path_data.level1.equipment?.length);
-        return hasLevelOne;
-      });
+      .filter((archetype) => pathHasPlayerVisibleLevel1(archetype.path_data));
   }, [codexArchetypes]);
 
   const selectedPath = useMemo(
@@ -349,12 +338,6 @@ export function ArchetypeStep() {
                   <div>
                     <div className="flex items-center gap-1 mb-2">
                       <h4 className="text-sm font-medium text-violet-600 dark:text-violet-300">Power Ability</h4>
-                      <ContextHelpTooltip
-                        tooltipKey="characters.new.step.archetype.powerAbilityHelp"
-                        scope="page:/characters/new"
-                        label="Power Ability help"
-                        placement="top"
-                      />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       {ABILITIES.map((ability) => (
@@ -373,12 +356,6 @@ export function ArchetypeStep() {
                   <div>
                     <div className="flex items-center gap-1 mb-2">
                       <h4 className="text-sm font-medium text-red-700 dark:text-red-300">Martial Ability</h4>
-                      <ContextHelpTooltip
-                        tooltipKey="characters.new.step.archetype.martialAbilityHelp"
-                        scope="page:/characters/new"
-                        label="Martial Ability help"
-                        placement="top"
-                      />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       {ABILITIES.map((ability) => (

@@ -11,7 +11,7 @@
 import React, { useMemo, useCallback } from 'react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useMergedSpecies, useCodexSkills, useTooltipByKey, type Species, type Skill } from '@/hooks';
-import { ContextHelpTooltip, SkillsAllocationPage } from '@/components/shared';
+import { SkillsAllocationPage, ContextHelpTooltip } from '@/components/shared';
 import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
 import { Button, HelpTooltip } from '@/components/ui';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
@@ -169,6 +169,62 @@ export function SkillsStep() {
     );
   }, [draft.creationMode, draft.archetype, recommendedSkillNames]);
 
+  const hasMissingRecommendedSkills = useMemo(() => {
+    return recommendedSkillIds.some((id) => {
+      const key = String(id);
+      if (key === '0') return false;
+      return declinedPathSkillIds.has(key) || !(key in allocations);
+    });
+  }, [recommendedSkillIds, declinedPathSkillIds, allocations]);
+
+  const handleApplyRecommendedSkills = useCallback(() => {
+    const next = { ...allocations };
+    speciesSkillIds.forEach((id) => {
+      if (id === '0') return;
+      if (!(id in next)) next[id] = 0;
+    });
+    recommendedSkillIds.forEach((id) => {
+      const key = String(id);
+      if (key === '0') return;
+      next[key] = next[key] ?? 0;
+    });
+    updateDraft({
+      skills: next,
+      declinedPathSkillIds: undefined,
+    });
+  }, [allocations, speciesSkillIds, recommendedSkillIds, updateDraft]);
+
+  const pathSkillsAction = useMemo(() => {
+    if (draft.creationMode !== 'path' || recommendedSkillIds.length === 0) return null;
+    return (
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleApplyRecommendedSkills}
+          className="min-h-[44px]"
+          aria-label="Apply recommended path skills"
+        >
+          Apply recommended skills
+        </Button>
+        {hasMissingRecommendedSkills ? (
+          <span className="text-sm text-text-secondary">
+            Re-adds path skill proficiencies you removed.
+          </span>
+        ) : (
+          <span className="text-sm text-text-secondary">
+            Path skills are added as proficient (0 bonus) by default.
+          </span>
+        )}
+      </div>
+    );
+  }, [
+    draft.creationMode,
+    recommendedSkillIds.length,
+    handleApplyRecommendedSkills,
+    hasMissingRecommendedSkills,
+  ]);
+
   const handleContinue = () => {
     updateDraft({ skills: allocationsWithSpecies, defenseVals });
     nextStep();
@@ -194,6 +250,7 @@ export function SkillsStep() {
 
   return (
     <div className="space-y-4">
+      {pathSkillsAction}
       <SkillsAllocationPage
         entityType="character"
         level={level}

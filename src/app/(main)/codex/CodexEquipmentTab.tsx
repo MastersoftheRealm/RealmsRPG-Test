@@ -105,8 +105,9 @@ function EquipmentCard({ item, propertiesDb = [] }: { item: Equipment; propertie
 }
 
 export function CodexEquipmentTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  const { data: equipment, isLoading, error, refetch } = useEquipment();
-  const { data: propertiesDb = [] } = useItemProperties();
+  const loadPublicCodex = codexMode === 'public';
+  const { data: equipment, isLoading, error, refetch } = useEquipment({ enabled: loadPublicCodex });
+  const { data: propertiesDb = [] } = useItemProperties({ enabled: loadPublicCodex });
   const { sortState, handleSort, sortItems } = useSort('name');
   const [filters, setFilters] = useState<EquipmentFilters>({
     search: '',

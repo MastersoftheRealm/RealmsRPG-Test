@@ -179,8 +179,10 @@ function SpeciesCard({ species, allTraits, skillIdToName }: { species: Species; 
 }
 
 export function CodexSpeciesTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  const { data: codexSpecies = [], isLoading: codexLoading, error: codexError, refetch: refetchCodex } = useSpecies();
-  const { data: userSpeciesRaw = [], isLoading: userLoading, error: userError, refetch: refetchUser } = useUserSpecies();
+  const isPublic = codexMode === 'public';
+  const isMy = codexMode === 'my';
+  const { data: codexSpecies = [], isLoading: codexLoading, error: codexError, refetch: refetchCodex } = useSpecies({ enabled: isPublic });
+  const { data: userSpeciesRaw = [], isLoading: userLoading, error: userError, refetch: refetchUser } = useUserSpecies({ enabled: isMy });
 
   const species = useMemo(() => {
     if (codexMode === 'my') {
@@ -191,8 +193,8 @@ export function CodexSpeciesTab({ codexMode = 'public' }: { codexMode?: 'public'
 
   const isLoading = codexMode === 'my' ? userLoading : codexLoading;
   const error = codexMode === 'my' ? userError : codexError;
-  const { data: allTraits } = useTraits();
-  const { data: allSkills } = useCodexSkills();
+  const { data: allTraits } = useTraits({ enabled: isPublic || isMy });
+  const { data: allSkills } = useCodexSkills({ enabled: isPublic || isMy });
   const { sortState, handleSort } = useSort('name');
 
   const skillIdToName = useMemo((): Map<string, string> => {

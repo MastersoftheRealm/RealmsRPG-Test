@@ -1,4 +1,4 @@
-﻿/**
+/**
  * UI Components Index
  * ====================
  * Central export point for all UI components
@@ -23,7 +23,17 @@ export { Chip, chipVariants, type ChipProps } from './chip';
 export { ExpandableChip, ChipGroup, type ExpandableChipProps, type ChipGroupProps } from './expandable-chip';
 
 // Navigation components
-export { TabNavigation, type Tab } from './tab-navigation';
+export {
+  TabNavigation,
+  TabContentPanel,
+  TabPanel,
+  useTabGroup,
+  tabButtonId,
+  tabPanelIdForTab,
+  type Tab,
+  type TabContentPanelProps,
+  type TabPanelProps,
+} from './tab-navigation';
 // Note: tabs.tsx (Tabs, TabsList, TabsTrigger, TabsContent) was removed - use TabNavigation instead
 
 // Feedback components

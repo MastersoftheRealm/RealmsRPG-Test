@@ -30,7 +30,7 @@ import {
   type CreatorWeaponOption,
 } from '@/hooks';
 import { useAuthStore } from '@/stores';
-import { ContextHelpTooltip, LoginPromptModal, ConfirmActionModal, ErrorDisplay } from '@/components/shared';
+import { LoginPromptModal, ConfirmActionModal, ErrorDisplay } from '@/components/shared';
 import { CreatorSaveToolbar, CreatorLayout, CreatorWeaponPicker, AdvancedCalculationsPanel } from '@/components/creator';
 import { LoadingState, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
@@ -234,8 +234,7 @@ function PowerCreatorContent() {
           localStorage.removeItem(POWER_CREATOR_CACHE_KEY);
         }
       }
-    } catch (e) {
-      console.error('Failed to load power creator cache:', e);
+    } catch {
     }
     setIsInitialized(true);
   }, [powerParts, allWeaponOptions, isInitialized, editPowerId]);
@@ -273,8 +272,7 @@ function PowerCreatorContent() {
         timestamp: Date.now(),
       };
       localStorage.setItem(POWER_CREATOR_CACHE_KEY, JSON.stringify(cache));
-    } catch (e) {
-      console.error('Failed to save power creator cache:', e);
+    } catch {
     }
   }, [isInitialized, name, description, selectedParts, selectedAdvancedParts, actionType, isReaction, damages, range, area, duration, weapon.id]);
 
@@ -392,9 +390,9 @@ function PowerCreatorContent() {
     [actionType, isReaction]
   );
 
-  const rangeDisplay = useMemo(() => deriveRange(partsPayload, powerParts), [partsPayload, powerParts]);
-  const areaDisplay = useMemo(() => deriveArea(partsPayload, powerParts), [partsPayload, powerParts]);
-  const durationDisplay = useMemo(() => deriveDuration(partsPayload, powerParts), [partsPayload, powerParts]);
+  const rangeDisplay = useMemo(() => deriveRange(partsPayload), [partsPayload]);
+  const areaDisplay = useMemo(() => deriveArea(partsPayload), [partsPayload]);
+  const durationDisplay = useMemo(() => deriveDuration(partsPayload), [partsPayload]);
 
   // Format range for collapsed summary (from UI state)
   const rangeSummary = useMemo(() => {
@@ -656,8 +654,7 @@ function PowerCreatorContent() {
     // Clear localStorage cache
     try {
       localStorage.removeItem(POWER_CREATOR_CACHE_KEY);
-    } catch (e) {
-      console.error('Failed to clear power creator cache:', e);
+    } catch {
     }
   }, [save]);
 
@@ -835,7 +832,6 @@ function PowerCreatorContent() {
     ) as Parameters<typeof handleLoadPower>[0] | undefined;
     editLoadedRef.current = true;
     if (!powerToEdit) {
-      console.warn(`Power with ID ${editPowerId} not found in library`);
       setIsInitialized(true);
       return;
     }
@@ -870,12 +866,6 @@ function PowerCreatorContent() {
       description="Design custom powers by combining power parts. Each part contributes to the total energy cost and training point requirements."
       actions={
         <div className="flex items-center gap-2">
-          <ContextHelpTooltip
-            tooltipKey="creators.power.headerHelp"
-            scope="page:/power-creator"
-            label="Power creator help"
-            placement="left"
-          />
           <CreatorSaveToolbar
             saveTarget={save.saveTarget}
             onSaveTargetChange={save.setSaveTarget}

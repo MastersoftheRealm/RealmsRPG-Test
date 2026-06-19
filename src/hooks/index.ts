@@ -158,6 +158,7 @@ export {
 
 // Auto-save
 export { useAutoSave } from './use-auto-save';
+export { useCharacterResourceSync } from './use-character-resource-sync';
 
 // Sort (shared list sorting logic)
 export { useSort, toggleSort, sortByColumn } from './use-sort';

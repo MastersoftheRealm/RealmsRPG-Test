@@ -122,7 +122,8 @@ interface PartFilters {
 }
 
 export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  const { data: parts, isLoading, error, refetch } = useParts();
+  const loadPublicCodex = codexMode === 'public';
+  const { data: parts, isLoading, error, refetch } = useParts({ enabled: loadPublicCodex });
   const { sortState, handleSort } = useSort('name');
   const [filters, setFilters] = useState<PartFilters>({
     search: '',

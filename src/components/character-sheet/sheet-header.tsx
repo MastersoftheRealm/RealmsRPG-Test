@@ -23,6 +23,8 @@ import { ValueStepper, ImageUploadModal, EditSectionToggle } from '@/components/
 import { useCharacterSheetOptional } from './character-sheet-context';
 import type { Character } from '@/types';
 import { getEffectivePortrait, FALLBACK_PORTRAIT_DATA_URL } from '@/lib/portrait';
+import { resolveArchetypeDisplayName } from '@/lib/game/archetype-display';
+import { ArchetypeCreationBadge, ArchetypePathGuidance } from './archetype-path-identity';
 
 interface CalculatedStats {
   maxHealth: number;
@@ -368,7 +370,7 @@ function LargeStatBlock({
           </button>
           <span className={cn(
             'text-xs min-w-[3rem] text-center',
-            pencilState === 'over-budget' ? 'text-danger-600 dark:text-danger-400 font-bold' :
+            pencilState === 'over-budget' ? 'text-danger-700 dark:text-danger-400 font-bold' :
             pencilState === 'has-points' ? 'text-success-700 dark:text-success-400 font-bold' : 'text-text-muted dark:text-text-secondary'
           )}>
             Base: {baseValue}
@@ -635,29 +637,40 @@ export function SheetHeader({
               )}
             </p>
             
-            {/* Archetype: Abilities */}
-            <p className="text-base text-text-primary flex items-center gap-2">
-              <span>
-                {character.archetype?.name || (character.archetype?.type ? character.archetype.type.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : 'No Archetype')}
-                {(showPowerAbility || showMartialAbility) && ': '}
-                {showPowerAbility && (
-                  <span className="text-category-power dark:text-violet-300 capitalize">{character.pow_abil}</span>
+            {/* Archetype: name, creation badge, abilities */}
+            <div className="text-base text-text-primary">
+              <p className="flex flex-wrap items-center gap-2">
+                <span>
+                  {resolveArchetypeDisplayName(character) ||
+                    (character.archetype?.type
+                      ? character.archetype.type
+                          .split('-')
+                          .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
+                          .join(' ')
+                      : 'No Archetype')}
+                  {(showPowerAbility || showMartialAbility) && ': '}
+                  {showPowerAbility && (
+                    <span className="text-power-dark dark:text-violet-300 capitalize">{character.pow_abil}</span>
+                  )}
+                  {showPowerAbility && showMartialAbility && ' / '}
+                  {showMartialAbility && (
+                    <span className="text-martial-dark dark:text-orange-300 capitalize">{character.mart_abil}</span>
+                  )}
+                </span>
+                <ArchetypeCreationBadge character={character} />
+                {onEditArchetype && (
+                  <button
+                    onClick={onEditArchetype}
+                    className="text-primary-500 hover:text-primary-600 transition-colors hover:scale-110 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+                    title="Edit archetype and ability"
+                    aria-label="Edit archetype and ability"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
                 )}
-                {showPowerAbility && showMartialAbility && ' / '}
-                {showMartialAbility && (
-                  <span className="text-category-technique dark:text-orange-300 capitalize">{character.mart_abil}</span>
-                )}
-              </span>
-              {onEditArchetype && (
-                <button
-                  onClick={onEditArchetype}
-                  className="text-primary-500 hover:text-primary-600 transition-colors hover:scale-110"
-                  title="Edit archetype and ability"
-                >
-                  <Pencil className="w-4 h-4" />
-                </button>
-              )}
-            </p>
+              </p>
+              <ArchetypePathGuidance character={character} />
+            </div>
             
             {/* XP Display - Always editable with pencil icon */}
             <div className="text-base text-text-primary flex items-center gap-2">
