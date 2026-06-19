@@ -54,3 +54,18 @@ export const chooseYourSpecies = (
         </ul>
     </div>
 )
+
+export const chooseYourAncestryTraits = (
+    <div>
+        <div>Ancestry Trait Rules</div>
+        <div>
+            Default selection is <strong>1 ancestry trait.</strong>
+        </div>
+        <div>
+            Taking a flaw grants <strong>+1 extra ancestry trait</strong> (for 2 total).
+        </div>
+        <div>
+            In mixed species, choose one species trait from each side before finalizing ancestry
+        </div>
+    </div>
+)
