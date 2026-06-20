@@ -84,13 +84,15 @@ export function calculateMaxHealth(
   healthPoints: number,
   vitality: number,
   level: number,
-  archetypeAbility: AbilityName | string | undefined,
+  powAbil: AbilityName | string | undefined,
   abilities: Partial<Abilities>,
-  rules?: Rules
+  rules?: Rules,
+  martAbil?: AbilityName | string | undefined
 ): number {
   const baseHealth = rules?.PROGRESSION_PLAYER?.baseHealth ?? 8;
-  const useStrength = archetypeAbility?.toLowerCase() === 'vitality';
-  const abilityMod = useStrength ? (abilities?.strength || 0) : vitality;
+  const vitalityIsArchetype =
+    powAbil?.toLowerCase() === 'vitality' || martAbil?.toLowerCase() === 'vitality';
+  const abilityMod = vitalityIsArchetype ? (abilities?.strength || 0) : vitality;
   
   if (abilityMod < 0) {
     return baseHealth + abilityMod + healthPoints;
@@ -274,7 +276,15 @@ export function calculateAllStats(character: Partial<Character>, rules?: Rules):
   const powAbil = character.pow_abil || archetype?.pow_abil || archetype?.ability;
   const martAbil = character.mart_abil || archetype?.mart_abil;
 
-  const maxHealth = calculateMaxHealth(healthPoints, abilities.vitality || 0, level, powAbil, abilities, rules);
+  const maxHealth = calculateMaxHealth(
+    healthPoints,
+    abilities.vitality || 0,
+    level,
+    powAbil,
+    abilities,
+    rules,
+    martAbil
+  );
   const maxEnergy = calculateMaxEnergy(energyPoints, powAbil || martAbil, abilities, level);
 
   const terminal = calculateTerminal(maxHealth);
@@ -310,9 +320,17 @@ export function computeMaxHealthEnergy(charData: Record<string, unknown>, rules?
   const archetype = charData.archetype as { type?: string; pow_abil?: string; mart_abil?: string; ability?: string } | undefined;
   // Match calculateAllStats: top-level pow_abil / archetype.pow_abil / archetype.ability
   const powAbil = (charData.pow_abil as string) || archetype?.pow_abil || archetype?.ability;
-  const martAbil = archetype?.mart_abil;
+  const martAbil = (charData.mart_abil as string) || archetype?.mart_abil;
 
-  const maxHealth = calculateMaxHealth(healthPoints, abilities.vitality || 0, level, powAbil, abilities, rules);
+  const maxHealth = calculateMaxHealth(
+    healthPoints,
+    abilities.vitality || 0,
+    level,
+    powAbil,
+    abilities,
+    rules,
+    martAbil
+  );
   const maxEnergy = calculateMaxEnergy(energyPoints, powAbil || martAbil, abilities, level);
 
   return { maxHealth, maxEnergy };

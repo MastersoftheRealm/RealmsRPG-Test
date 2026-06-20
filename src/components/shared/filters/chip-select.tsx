@@ -7,9 +7,10 @@
 
 'use client';
 
-import { useId } from 'react';
+import { useId, useMemo } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { dedupeSelectOptions } from './filter-utils';
 
 interface ChipSelectProps {
   label: string;
@@ -31,7 +32,8 @@ export function ChipSelect({
   className = '',
 }: ChipSelectProps) {
   const id = useId();
-  const availableOptions = options.filter(opt => !selectedValues.includes(opt.value));
+  const uniqueOptions = useMemo(() => dedupeSelectOptions(options), [options]);
+  const availableOptions = uniqueOptions.filter(opt => !selectedValues.includes(opt.value));
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
@@ -62,7 +64,7 @@ export function ChipSelect({
       {selectedValues.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-2">
           {selectedValues.map(value => {
-            const option = options.find(o => o.value === value);
+            const option = uniqueOptions.find(o => o.value === value);
             return (
               <span
                 key={value}

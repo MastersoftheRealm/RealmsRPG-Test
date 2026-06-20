@@ -9,7 +9,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createCharacter, saveCharacter } from '@/services/character-service';
-import { useAuth, useCodexSkills, useMergedSpecies, useTraits, usePowerParts, useTechniqueParts, useItemProperties } from '@/hooks';
+import { useAuth, useCodexSkills, useMergedSpecies, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useGameRules } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { cleanForSave } from '@/lib/data-enrichment';
 import { dataUrlToBlob } from '@/lib/portrait';
@@ -18,6 +18,7 @@ import { Spinner, Button, Alert, Modal, Textarea, useToast } from '@/components/
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { getAllValidationIssues, type ValidationIssue } from '@/lib/character-creator-validation';
 import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
+import { calculateHealthEnergyPool } from '@/lib/game/formulas';
 import { ABILITY_DISPLAY_NAMES } from '@/lib/game/constants';
 import { LoginPromptModal, ImageUploadModal } from '@/components/shared';
 import { HealthEnergyAllocator } from '@/components/creator';
@@ -26,9 +27,6 @@ import { derivePowerDisplay } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
-
-// Health-Energy pool for new characters (18 at level 1, +2 per level)
-const BASE_HE_POOL = 18;
 
 function ValidationModal({ 
   isOpen, 
@@ -137,6 +135,7 @@ function ValidationModal({
  */
 function HealthEnergyAllocationSection() {
   const { draft, updateDraft } = useCharacterCreatorStore();
+  const { rules } = useGameRules();
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
   
@@ -147,18 +146,17 @@ function HealthEnergyAllocationSection() {
   const martAbil = draft.mart_abil || draft.archetype?.mart_abil;
   
   // Base = max with 0 allocation; used for display
-  const baseHealth = calculateMaxHealth(0, abilities.vitality || 0, level, powAbil, abilities);
+  const baseHealth = calculateMaxHealth(0, abilities.vitality || 0, level, powAbil, abilities, rules, martAbil);
   const baseEnergy = calculateMaxEnergy(0, powAbil || martAbil, abilities, level);
   
-  // HE pool is 18 at level 1, +2 per level
-  const hePool = BASE_HE_POOL + (level - 1) * 2;
+  const hePool = calculateHealthEnergyPool(level, 'PLAYER', false, rules);
   
   // Now using bonus values (stored directly)
   const hpBonus = draft.healthPoints || 0;
   const enBonus = draft.energyPoints || 0;
   
   // Calculated max values for display
-  const maxHp = calculateMaxHealth(hpBonus, abilities.vitality || 0, level, powAbil, abilities);
+  const maxHp = calculateMaxHealth(hpBonus, abilities.vitality || 0, level, powAbil, abilities, rules, martAbil);
   const maxEnergy = calculateMaxEnergy(enBonus, powAbil || martAbil, abilities, level);
   
   // Highest energy cost among powers and techniques (for auto-allocate)
@@ -379,6 +377,7 @@ export function FinalizeStep() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useAuth();
+  const { rules } = useGameRules();
   const { showToast } = useToast();
   const { draft, updateDraft, getCharacter, resetCreator, prevStep } = useCharacterCreatorStore();
   const { data: codexSkills } = useCodexSkills();
@@ -400,8 +399,8 @@ export function FinalizeStep() {
         allSpecies,
         codexSkills: codexSkills ?? null,
         allTraits: allTraits ?? null,
-      }),
-    [draft, allSpecies, codexSkills, allTraits]
+      }, rules),
+    [draft, allSpecies, codexSkills, allTraits, rules]
   );
 
   const proficiencyTpSummary = useMemo(() => {
@@ -458,6 +457,7 @@ export function FinalizeStep() {
         powerPartsDb,
         techniquePartsDb,
         itemPropertiesDb,
+        rules,
       });
       
       // Convert skills from Record<string, number> to array format

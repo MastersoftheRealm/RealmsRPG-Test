@@ -769,21 +769,13 @@ export function PowersStep() {
       )}
       {!pathRecommendationsLoading && draft.creationMode === 'path' && draft.archetype?.name && (hasPathPowerRecs || hasPathTechniqueRecs) && (
         <PathHelpCard pathName={draft.archetype.name}>
-          {(() => {
-            const name = draft.archetype?.name ?? 'Path';
-            const hasPowers = hasPathPowerRecs;
-            const hasTechniques = hasPathTechniqueRecs;
-            const phrase = hasPowers && hasTechniques
-              ? 'recommended powers and techniques'
-              : hasPowers
-                ? 'recommended powers'
-                : 'recommended techniques';
-            return (
-              <>
-                As a {name}, some {phrase} have been added to your list. Look through them and keep the ones you&apos;d like.
-              </>
-            );
-          })()}
+          some{' '}
+          {hasPathPowerRecs && hasPathTechniqueRecs
+            ? 'recommended powers and techniques'
+            : hasPathPowerRecs
+              ? 'recommended powers'
+              : 'recommended techniques'}{' '}
+          have been added to your list. Look through them and keep the ones you&apos;d like.
         </PathHelpCard>
       )}
       

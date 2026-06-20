@@ -21,6 +21,7 @@ import { RollLog } from '@/components/character-sheet';
 import { useAuth } from '@/hooks';
 import { createClient } from '@/lib/supabase/client';
 import { computeMaxHealthEnergy } from '@/lib/game/calculations';
+import { useGameRules } from '@/hooks';
 import {
   isOwnedLinkedCombatant,
   readResourcesFromCharacterData,
@@ -84,6 +85,7 @@ function CombatEncounterViewInner({
   showRollLog = true,
 }: CombatEncounterViewProps & { encounter: Encounter }) {
   const { user } = useAuth();
+  const { rules } = useGameRules();
   const [showAddModal, setShowAddModal] = useState(false);
   const [addingAllChars, setAddingAllChars] = useState(false);
   const [newCombatant, setNewCombatant] = useState(() => ({
@@ -232,7 +234,7 @@ function CombatEncounterViewInner({
           const raw = row.data;
           const data = (typeof raw === 'object' && raw !== null ? raw : {}) as Record<string, unknown>;
           const resources = readResourcesFromCharacterData(data);
-          const { maxHealth: computedMaxHp, maxEnergy: computedMaxEn } = computeMaxHealthEnergy(data);
+          const { maxHealth: computedMaxHp, maxEnergy: computedMaxEn } = computeMaxHealthEnergy(data, rules);
           const currentHp = resources.currentHealth;
           const currentEn = resources.currentEnergy;
           const ap = resources.actionPoints;
@@ -260,7 +262,7 @@ function CombatEncounterViewInner({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [encounterId, characterIdsForSync.join(','), setEncounter]);
+  }, [encounterId, characterIdsForSync.join(','), setEncounter, rules]);
 
   const handleDragStart = useCallback((e: DragEvent<HTMLDivElement>, id: string) => {
     setDraggedId(id);

@@ -7,12 +7,11 @@
 
 import type { CharacterDraft, CharacterPower, CharacterTechnique, Item } from '@/types';
 import type { CreatorStep } from '@/stores/character-creator-store';
+import type { CoreRulesMap } from '@/types/core-rules';
 import { getChoiceOptionIds } from '@/lib/choice-trait';
-import { calculateAbilityPoints, calculateAbilityScoreCost, calculateSkillPointsForEntity, calculateTrainingPoints } from '@/lib/game/formulas';
+import { calculateAbilityPoints, calculateAbilityScoreCost, calculateHealthEnergyPool, calculateSkillPointsForEntity, calculateTrainingPoints } from '@/lib/game/formulas';
 import { calculateSimpleSkillPointsSpent } from '@/lib/game/skill-allocation';
 import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies } from '@/lib/proficiencies';
-
-const BASE_HE_POOL = 18; // 18 at level 1, +2 per level
 
 export interface ValidationIssue {
   emoji: string;
@@ -302,7 +301,11 @@ export function getValidationIssuesForStep(
  * Returns all validation issues across every step (for Finalize "Review & Create").
  * Name and HE allocation are finalize-specific.
  */
-export function getAllValidationIssues(draft: CharacterDraft, context: ValidationContext): ValidationIssue[] {
+export function getAllValidationIssues(
+  draft: CharacterDraft,
+  context: ValidationContext,
+  rules?: Partial<CoreRulesMap>
+): ValidationIssue[] {
   const steps: CreatorStep[] = [
     'archetype',
     'species',
@@ -330,7 +333,7 @@ export function getAllValidationIssues(draft: CharacterDraft, context: Validatio
 
   // Health/Energy allocation (abilities/finalize)
   const level = draft.level || 1;
-  const hePool = BASE_HE_POOL + (level - 1) * 2;
+  const hePool = calculateHealthEnergyPool(level, 'PLAYER', false, rules);
   const healthAllocation = draft.healthPoints || 0;
   const energyAllocation = draft.energyPoints || 0;
   const usedHEPoints = healthAllocation + energyAllocation;

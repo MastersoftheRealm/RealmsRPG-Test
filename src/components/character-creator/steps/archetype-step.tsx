@@ -272,7 +272,14 @@ export function ArchetypeStep() {
                           )}
                         >
                           <h4 className="font-semibold text-text-primary mb-1">{option.name}</h4>
-                          <p className="text-sm text-text-secondary mb-2 line-clamp-2">{option.description || 'No description provided.'}</p>
+                          <p
+                            className={cn(
+                              'text-sm text-text-secondary mb-2',
+                              selectedPathId !== option.id && 'line-clamp-2'
+                            )}
+                          >
+                            {option.description || 'No description provided.'}
+                          </p>
                           {(option.archetype_ability || option.secondary_ability) && (
                             <div className="flex flex-wrap gap-1">
                               {option.archetype_ability && (
@@ -293,6 +300,36 @@ export function ArchetypeStep() {
                   </section>
                 );
               })}
+            </div>
+          )}
+
+          {selectedPath && (
+            <div
+              className="mt-5 rounded-xl border border-primary-200 dark:border-primary-800/50 bg-primary-50 dark:bg-primary-900/20 p-4"
+              aria-live="polite"
+            >
+              <h4 className="font-semibold text-text-primary mb-2">{selectedPath.name}</h4>
+              <p className="text-sm text-text-secondary whitespace-pre-wrap">
+                {selectedPath.description || 'No description provided.'}
+              </p>
+              {(selectedPath.archetype_ability || selectedPath.secondary_ability) && (
+                <div className="flex flex-wrap gap-1 mt-3">
+                  {selectedPath.archetype_ability && (
+                    <Chip variant="power" size="sm">
+                      Primary Ability:{' '}
+                      {selectedPath.archetype_ability.charAt(0).toUpperCase() +
+                        selectedPath.archetype_ability.slice(1)}
+                    </Chip>
+                  )}
+                  {selectedPath.secondary_ability && (
+                    <Chip variant="technique" size="sm">
+                      Secondary Ability:{' '}
+                      {selectedPath.secondary_ability.charAt(0).toUpperCase() +
+                        selectedPath.secondary_ability.slice(1)}
+                    </Chip>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

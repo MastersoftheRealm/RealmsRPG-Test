@@ -20,6 +20,8 @@ import { formatSpeedForDisplay } from '@/lib/utils/number';
 import { Spinner } from '@/components/ui/spinner';
 import { HealthEnergyAllocator } from '@/components/creator';
 import { ValueStepper, ImageUploadModal, EditSectionToggle } from '@/components/shared';
+import { useGameRules } from '@/hooks';
+import { calculateHealthEnergyPool } from '@/lib/game/formulas';
 import { useCharacterSheetOptional } from './character-sheet-context';
 import type { Character } from '@/types';
 import { getEffectivePortrait, FALLBACK_PORTRAIT_DATA_URL } from '@/lib/portrait';
@@ -462,6 +464,7 @@ export function SheetHeader({
   onEditArchetype,
   onEditSpecies,
 }: SheetHeaderProps) {
+  const { rules } = useGameRules();
   const ctx = useCharacterSheetOptional();
   const character = (ctx?.character ?? characterProp) as Character;
   const isEditMode = ctx?.isEditMode ?? isEditModeProp;
@@ -491,8 +494,7 @@ export function SheetHeader({
     setIsEditingXP(false);
   };
 
-  // Calculate H/E pool (vanilla formula: 18 + 12*(level-1))
-  const totalHEPool = 18 + 12 * (level - 1);
+  const totalHEPool = calculateHealthEnergyPool(level, 'PLAYER', false, rules);
   const healthPoints = character.healthPoints ?? 0;
   const energyPoints = character.energyPoints ?? 0;
 

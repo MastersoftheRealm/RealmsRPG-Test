@@ -215,7 +215,7 @@ export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' |
               { value: 'hide', label: 'Hide Mechanics' },
             ]}
             onChange={(v) => setFilters(f => ({ ...f, mechanicMode: v as 'all' | 'only' | 'hide' }))}
-            placeholder="Hide Mechanics"
+            placeholder={null}
           />
         </div>
       </FilterSection>

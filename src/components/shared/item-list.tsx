@@ -11,6 +11,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { SortAsc, SortDesc, Filter, Grid, List, X } from 'lucide-react';
 import { Spinner, Button, IconButton, SearchInput } from '@/components/ui';
+import { dedupeSelectOptions, shouldShowSelectPlaceholder } from '@/components/shared/filters/filter-utils';
 import { ItemCard } from './item-card';
 import type { DisplayItem, ListMode, ItemActions, FilterOption, SortOption, FilterState, ItemSortState } from '@/types/items';
 
@@ -357,10 +358,18 @@ export function ItemList({
                       className="px-3 py-1.5 rounded border border-border bg-background text-sm min-w-[140px]"
                       aria-label={filter.label ? `Filter by ${filter.label}` : 'Filter'}
                     >
-                      <option value="">All</option>
-                      {filter.options.map(opt => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
+                      {(() => {
+                        const uniqueOptions = dedupeSelectOptions(filter.options ?? []);
+                        const showAllOption = shouldShowSelectPlaceholder('All', uniqueOptions);
+                        return (
+                          <>
+                            {showAllOption && <option value="">All</option>}
+                            {uniqueOptions.map(opt => (
+                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                          </>
+                        );
+                      })()}
                     </select>
                   )}
                   {filter.type === 'checkbox' && (

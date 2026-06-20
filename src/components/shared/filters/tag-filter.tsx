@@ -7,9 +7,10 @@
 
 'use client';
 
-import { useId } from 'react';
+import { useId, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Chip } from '@/components/ui';
+import { dedupeStrings } from './filter-utils';
 
 interface TagFilterProps {
   label?: string;
@@ -35,7 +36,8 @@ export function TagFilter({
   className = '',
 }: TagFilterProps) {
   const id = useId();
-  const availableTags = tags.filter(t => !selectedTags.includes(t));
+  const uniqueTags = useMemo(() => dedupeStrings(tags), [tags]);
+  const availableTags = uniqueTags.filter(t => !selectedTags.includes(t));
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;

@@ -1535,3 +1535,35 @@ Notes
 - Feedback: After TASK-352 RLS consolidation, `/api/characters` returns 500 with `42P17 infinite recursion detected in policy for relation "campaign_members"`. `/api/tooltips` fails with `column user_profiles.show_tooltips does not exist`. Auth refresh "session missing" on manifest (likely unauthenticated asset requests).
 - Expected: Characters list loads for signed-in users; tooltips API works; no RLS recursion between campaigns and campaign_members.
 - Disposition: Hotfix applied 2026-06-19 (`rls_fix_campaign_members_recursion_2026_06`): SECURITY DEFINER helpers `auth_is_campaign_owner` / `auth_is_campaign_participant`; campaigns SELECT uses owner_id + memberIds only; added `user_profiles.show_tooltips` column. See `sql/supabase-rls-fix-campaign-recursion-2026-06.sql`.
+
+**Raw Feedback Log — 2026-06-20 (Character creator — path descriptions truncated)**
+- Date: 2026-06-20
+- Context: Character creator → Archetype step → Choose a Path
+- Priority: High
+- Feedback: Path cards show truncated descriptions (`line-clamp-2`); selecting a path does not reveal full text. Users must Confirm, advance to Species, then navigate back to Archetype to read full descriptions.
+- Expected: Selecting a path shows the complete description before confirming; no workaround required.
+- Disposition: Implemented 2026-06-20. Selected path expands in-card; full description panel appears below path grid on selection. Edit Archetype path picker also shows full descriptions (no line-clamp).
+
+**Raw Feedback Log — 2026-06-20 (Character creator vs sheet max HP mismatch)**
+- Date: 2026-06-20
+- Context: Character creator Finalize vs character sheet — max HP / HP-EN pool
+- Priority: High
+- Feedback: Max HP during character creation differs from character sheet; unclear if both use admin core rules (`baseHealth`, HP/EN pool).
+- Expected: Creator and sheet use same `calculateMaxHealth` + `calculateHealthEnergyPool` with core rules from `useGameRules()`.
+- Disposition: Implemented 2026-06-20. Creator finalize/validation/store wired to `useGameRules()`; sheet header + derived hooks use `calculateHealthEnergyPool` with rules; `mart_abil` vitality check in `calculateMaxHealth`; save path always recomputes `health.max`/`energy.max` (no stale persisted max). Server/API still uses formula fallbacks when DB rules unavailable.
+
+**Raw Feedback Log — 2026-06-20 (Filter dropdown duplicate options)**
+- Date: 2026-06-20
+- Context: Codex/Library list filters — SelectFilter dropdowns
+- Priority: Medium
+- Feedback: Filter dropdowns show duplicate entries for "All", current selection, or placeholder labels (e.g. Mechanics filter showed "Hide Mechanics" twice).
+- Expected: One option per filter value in every filter dropdown.
+- Disposition: Implemented 2026-06-20. Central dedupe in `SelectFilter`, `ChipSelect`, `TagFilter`, `ItemList`; shared `filter-utils.ts`.
+
+**Raw Feedback Log — 2026-06-20 (PathHelpCard duplicate prefix on Powers step)**
+- Date: 2026-06-20
+- Context: Character creator → Powers & Techniques step (path mode)
+- Priority: Medium
+- Feedback: Message reads "As a Necromancer, As a Necromancer, some recommended techniques…" — duplicated path prefix.
+- Expected: Single "As a {pathName}," prefix from `PathHelpCard` only.
+- Disposition: Implemented 2026-06-20. Powers step children text is continuation-only (matches Feats/Equipment/Skills steps).

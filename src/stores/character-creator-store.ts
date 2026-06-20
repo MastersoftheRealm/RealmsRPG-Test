@@ -16,6 +16,7 @@ import type {
 } from '@/types';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
 import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
+import type { CoreRulesMap } from '@/types/core-rules';
 import { buildRequiredProficiencies } from '@/lib/proficiencies';
 
 export const CHARACTER_STARTING_CURRENCY = 200;
@@ -102,6 +103,7 @@ interface CharacterCreatorState {
     powerPartsDb?: Array<{ id?: string | number; name?: string; base_tp?: number; op_1_tp?: number; op_2_tp?: number; op_3_tp?: number }>;
     techniquePartsDb?: Array<{ id?: string | number; name?: string; base_tp?: number; op_1_tp?: number; op_2_tp?: number; op_3_tp?: number }>;
     itemPropertiesDb?: Array<{ id?: string | number; name?: string; base_tp?: number; op_1_tp?: number }>;
+    rules?: Partial<CoreRulesMap>;
   }) => Partial<Character>;
 }
 
@@ -351,7 +353,15 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
         const powAbil = draft.pow_abil || draft.archetype?.pow_abil || draft.archetype?.ability;
         const martAbil = draft.mart_abil || draft.archetype?.mart_abil;
         
-        const maxHealth = calculateMaxHealth(allocatedHealth, abilities.vitality || 0, level, powAbil, abilities);
+        const maxHealth = calculateMaxHealth(
+          allocatedHealth,
+          abilities.vitality || 0,
+          level,
+          powAbil,
+          abilities,
+          options?.rules,
+          martAbil
+        );
         const maxEnergy = calculateMaxEnergy(allocatedEnergy, powAbil || martAbil, abilities, level);
         
         // Save lean archetype — just id + type. Name/description derived from codex on load.

@@ -386,7 +386,7 @@ export function EditArchetypeModal({
                           >
                             <span className="font-semibold text-text-primary block mb-1">{option.name}</span>
                             {option.description ? (
-                              <span className="text-sm text-text-secondary line-clamp-2 block">
+                              <span className="text-sm text-text-secondary whitespace-pre-wrap block">
                                 {option.description}
                               </span>
                             ) : null}

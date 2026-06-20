@@ -20,6 +20,8 @@ import {
   calculateMaxCharacterFeats,
 } from '@/lib/game/formulas';
 import { getArchetypeAbilityScore } from '@/lib/game/calculations';
+import { useGameRules } from '@/hooks';
+import type { CoreRulesMap } from '@/types/core-rules';
 import type { Character, ArchetypeCategory } from '@/types';
 
 interface LevelUpModalProps {
@@ -49,22 +51,23 @@ function calculateLevelGains(
   currentLevel: number, 
   newLevel: number, 
   highestAbility: number = 0,
-  archetypeType?: ArchetypeCategory
+  archetypeType?: ArchetypeCategory,
+  rules?: Partial<CoreRulesMap>
 ): ProgressionDelta {
-  const currentHE = calculateHealthEnergyPool(currentLevel, 'PLAYER');
-  const newHE = calculateHealthEnergyPool(newLevel, 'PLAYER');
+  const currentHE = calculateHealthEnergyPool(currentLevel, 'PLAYER', false, rules);
+  const newHE = calculateHealthEnergyPool(newLevel, 'PLAYER', false, rules);
   
-  const currentAP = calculateAbilityPoints(currentLevel);
-  const newAP = calculateAbilityPoints(newLevel);
+  const currentAP = calculateAbilityPoints(currentLevel, false, rules);
+  const newAP = calculateAbilityPoints(newLevel, false, rules);
   
-  const currentSP = calculateSkillPointsForEntity(currentLevel, 'character');
-  const newSP = calculateSkillPointsForEntity(newLevel, 'character');
+  const currentSP = calculateSkillPointsForEntity(currentLevel, 'character', rules);
+  const newSP = calculateSkillPointsForEntity(newLevel, 'character', rules);
   
-  const currentTP = calculateTrainingPoints(currentLevel, highestAbility);
-  const newTP = calculateTrainingPoints(newLevel, highestAbility);
+  const currentTP = calculateTrainingPoints(currentLevel, highestAbility, rules);
+  const newTP = calculateTrainingPoints(newLevel, highestAbility, rules);
   
-  const currentProf = calculateProficiency(currentLevel);
-  const newProf = calculateProficiency(newLevel);
+  const currentProf = calculateProficiency(currentLevel, false, rules);
+  const newProf = calculateProficiency(newLevel, false, rules);
   
   return {
     healthEnergy: newHE - currentHE,
@@ -84,6 +87,7 @@ export function LevelUpModal({
   displayCharacter,
   onConfirm,
 }: LevelUpModalProps) {
+  const { rules } = useGameRules();
   const currentLevel = character.level || 1;
   const maxLevel = 20; // Max level cap
   const [targetLevel, setTargetLevel] = useState(Math.min(maxLevel, currentLevel + 1));
@@ -104,8 +108,8 @@ export function LevelUpModal({
   // Calculate level gains
   const gains = useMemo(() => {
     const archType = (character.archetype?.type || 'power') as ArchetypeCategory;
-    return calculateLevelGains(currentLevel, targetLevel, highestAbility, archType);
-  }, [currentLevel, targetLevel, highestAbility, character]);
+    return calculateLevelGains(currentLevel, targetLevel, highestAbility, archType, rules);
+  }, [currentLevel, targetLevel, highestAbility, character, rules]);
   
   // Get milestone info
   const getMilestones = () => {

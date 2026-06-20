@@ -167,3 +167,5 @@ Append-only log. Add an entry per PR/merge. **For current context, recent entrie
 - YYYY-MM-DD | agent-id | short summary | files: [comma-separated] | PR: <link-or-commit> | TASK: TASK-### | merged_at: YYYY-MM-DD
 
 Policy: `pr_link` and `merged_at` must be present in the changelog entry and the corresponding `AI_TASK_QUEUE.md` task before marking a task `done`.
+
+- 2026-06-20 | agent | Session bug-fix audit — paths, HP rules, filters, PathHelpCard | files: `archetype-step.tsx`, `edit-archetype-modal.tsx`, `finalize-step.tsx`, `character-creator-store.ts`, `character-creator-validation.ts`, `calculations.ts`, `sheet-header.tsx`, `use-character-sheet-derived.ts`, `level-up-modal.tsx`, `data-enrichment.ts`, `CombatEncounterView.tsx`, `filters/*`, `item-list.tsx`, `CodexPartsTab.tsx`, `powers-step.tsx`, `ALL_FEEDBACK_CLEAN.md` | Summary: (1) Path descriptions: detail panel + edit-archetype full text. (2) HP: creator/sheet/level-up use core rules via shared formulas; save recomputes max. (3) Filter dropdown dedupe centralized. (4) PathHelpCard duplicate prefix removed on powers step.

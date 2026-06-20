@@ -648,17 +648,19 @@ export function cleanForSave(data: Character): Partial<Character> {
   const dataEnergy = data.energy as { current?: number; max?: number } | undefined;
   const healthCurrent = (cleaned.currentHealth as number) ?? dataHealth?.current;
   const energyCurrent = (cleaned.currentEnergy as number) ?? dataEnergy?.current;
-  const { maxHealth: computedMaxHealth, maxEnergy: computedMaxEnergy } = computeMaxHealthEnergy(data as unknown as Record<string, unknown>);
+  const { maxHealth: computedMaxHealth, maxEnergy: computedMaxEnergy } = computeMaxHealthEnergy(
+    data as unknown as Record<string, unknown>
+  );
   if (typeof healthCurrent === 'number') {
     cleaned.health = {
       current: healthCurrent,
-      max: typeof dataHealth?.max === 'number' ? dataHealth.max : (data as Character).health?.max ?? computedMaxHealth,
+      max: computedMaxHealth,
     };
   }
   if (typeof energyCurrent === 'number') {
     cleaned.energy = {
       current: energyCurrent,
-      max: typeof dataEnergy?.max === 'number' ? dataEnergy.max : (data as Character).energy?.max ?? computedMaxEnergy,
+      max: computedMaxEnergy,
     };
   }
 

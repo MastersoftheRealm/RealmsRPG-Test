@@ -7,8 +7,9 @@
 
 'use client';
 
-import { useId } from 'react';
+import { useId, useMemo } from 'react';
 import { cn } from '@/lib/utils';
+import { dedupeSelectOptions, shouldShowSelectPlaceholder } from './filter-utils';
 
 interface SelectFilterProps {
   label: string;
@@ -32,6 +33,9 @@ export function SelectFilter({
   className = '',
 }: SelectFilterProps) {
   const id = useId();
+  const uniqueOptions = useMemo(() => dedupeSelectOptions(options), [options]);
+  const showPlaceholder = shouldShowSelectPlaceholder(placeholder, uniqueOptions);
+
   return (
     <div className={cn('filter-group', className)}>
       <label htmlFor={id} className="block text-sm font-medium text-text-secondary mb-1">
@@ -43,8 +47,8 @@ export function SelectFilter({
         onChange={(e) => onChange(e.target.value)}
         className="w-full px-3 py-2 border border-border-light rounded-md bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
       >
-        {placeholder != null && <option value="">{placeholder}</option>}
-        {options.map(opt => (
+        {showPlaceholder && <option value="">{placeholder}</option>}
+        {uniqueOptions.map(opt => (
           <option key={opt.value} value={opt.value}>
             {opt.label}
           </option>

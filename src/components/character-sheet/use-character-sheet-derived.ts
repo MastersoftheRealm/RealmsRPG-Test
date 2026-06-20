@@ -13,6 +13,7 @@ import {
   calculateAbilityPoints,
   calculateAbilityScoreCost,
   calculateArchetypeProgression,
+  calculateHealthEnergyPool,
   calculateMaxArchetypeFeats,
   calculateMaxCharacterFeats,
   calculateProficiency,
@@ -365,7 +366,7 @@ export function useCharacterSheetDerived({
     );
     const abilityPointsRemaining = totalAbilityPoints - spentAbilityPoints;
 
-    const totalHEPoints = 18 + 12 * (level - 1);
+    const totalHEPoints = calculateHealthEnergyPool(level, 'PLAYER', false, rules);
     const spentHEPoints = (character.healthPoints || 0) + (character.energyPoints || 0);
     const hePointsRemaining = totalHEPoints - spentHEPoints;
 
