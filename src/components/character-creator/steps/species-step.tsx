@@ -14,7 +14,9 @@ import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useMergedSpecies, useUserSpecies, useTraits, type Species } from '@/hooks';
 import { SpeciesModal } from '../species-modal';
 import { MixedSpeciesModal } from '../MixedSpeciesModal';
-import { GitMerge } from 'lucide-react';
+import { GitMerge, Info } from 'lucide-react';
+import Tippy from '@tippyjs/react';
+import { chooseYourSpecies } from '../../../../public/tooltip-text';
 
 type SourceFilterValue = 'all' | 'public' | 'my' | 'make';
 
@@ -75,6 +77,9 @@ export function SpeciesStep() {
     <div className="max-w-4xl mx-auto">
       <div className="flex items-center gap-1 mb-2">
         <h2 className="text-2xl font-bold text-text-primary">Choose Your Species</h2>
+        <Tippy content={chooseYourSpecies} allowHTML={true}>
+          <Info className="w-4 h-4 text-primary-700" aria-hidden />
+        </Tippy>
       </div>
       <p className="text-text-secondary mb-4">
         Your species defines your character&apos;s physical traits and inherent abilities.
@@ -111,7 +116,7 @@ export function SpeciesStep() {
         <div
           onClick={() => setShowMixedModal(true)}
           className={cn(
-            'selection-card flex flex-col items-center justify-center min-h-[140px] border-2 border-dashed',
+            'selection-card flex flex-col items-center justify-center min-h-35 border-2 border-dashed',
             isMixedSelected ? 'selection-card--selected border-primary-500' : 'border-border hover:border-primary-400'
           )}
         >
@@ -184,9 +189,9 @@ export function SpeciesStep() {
       )}
 
       {/* Sticky footer so Continue is always visible (TASK-285) */}
-      <div className="sticky bottom-3 left-0 right-0 mt-8 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:-mx-0 md:px-0">
-        <Button variant="secondary" onClick={prevStep} className="min-h-[44px] min-w-[44px]">← Back</Button>
-        <Button onClick={nextStep} disabled={!canContinue} className="min-h-[44px] min-w-[44px]">Continue →</Button>
+      <div className="sticky bottom-3 left-0 right-0 mt-8 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:mx-0 md:px-0">
+        <Button variant="secondary" onClick={prevStep} className="min-h-11 min-w-11">← Back</Button>
+        <Button onClick={nextStep} disabled={!canContinue} className="min-h-11 min-w-11">Continue →</Button>
       </div>
 
       <MixedSpeciesModal

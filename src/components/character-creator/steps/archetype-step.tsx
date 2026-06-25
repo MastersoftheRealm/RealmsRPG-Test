@@ -8,11 +8,14 @@
 
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Chip, Button, Spinner, HelpTooltip, Tooltip } from '@/components/ui';
+import { Chip, Button, Spinner } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useCodexArchetypes, useTooltipByKey } from '@/hooks';
+import { useCodexArchetypes } from '@/hooks';
 import { parseArchetypePathData, pathHasPlayerVisibleLevel1 } from '@/lib/game/archetype-path';
 import type { Archetype, ArchetypeCategory, AbilityName } from '@/types';
+import Tippy from '@tippyjs/react';
+import { chooseCharacterCreationStyle, getTooltipTextByPowerAbility, martialAbility, powerAbility } from '../../../../public/tooltip-text';
+import { Info } from 'lucide-react';
 
 const ABILITIES: AbilityName[] = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'];
 
@@ -44,9 +47,6 @@ function AbilityPickButton({
   disabled: boolean;
   onPick: () => void;
 }) {
-  const tooltip = useTooltipByKey(`characters.new.step.archetype.ability.${ability}`, {
-    scope: 'page:/characters/new',
-  });
 
   const button = (
     <button
@@ -68,12 +68,11 @@ function AbilityPickButton({
     </button>
   );
 
-  if (!tooltip.showTooltips || !tooltip.body) return button;
 
   return (
-    <Tooltip content={tooltip.body} placement="top" trigger="hover">
-      {button}
-    </Tooltip>
+    <Tippy content={getTooltipTextByPowerAbility(ability)}>
+        {button}
+    </Tippy>
   );
 }
 
@@ -92,9 +91,6 @@ export function ArchetypeStep() {
   );
   const [selectedPathId, setSelectedPathId] = useState<string | null>(draft.archetypePathId || null);
   const [creationChoice, setCreationChoice] = useState<'forge' | 'path' | null>(draft.creationMode || null);
-  const archetypeTooltip = useTooltipByKey('characters.new.step.archetype.pathHelp', {
-    scope: 'page:/characters/new',
-  });
   
   const archetypePathOptions = useMemo(() => {
     return (codexArchetypes as Archetype[])
@@ -197,13 +193,9 @@ export function ArchetypeStep() {
     <div className="max-w-4xl mx-auto">
       <div className="flex items-center gap-1 mb-2">
         <h2 className="text-2xl font-bold text-text-primary">Choose Character Creation Style</h2>
-        {archetypeTooltip.showTooltips && archetypeTooltip.body && (
-          <HelpTooltip
-            title={archetypeTooltip.title}
-            content={archetypeTooltip.body}
-            label="Archetype style help"
-          />
-        )}
+          <Tippy content={chooseCharacterCreationStyle}>
+              <Info className="w-4 h-4 text-primary-700"/>
+          </Tippy>
       </div>
       <p className="text-text-secondary mb-6">Pick a fully custom creation flow or an archetype-guided path with curated recommendations.</p>
 
@@ -215,7 +207,7 @@ export function ArchetypeStep() {
             setCreationMode('path');
           }}
           className={cn(
-            'selection-card text-left min-h-[160px] flex-1',
+            'selection-card text-left min-h-40 flex-1',
             creationChoice === 'path' && 'selection-card--selected'
           )}
         >
@@ -233,7 +225,7 @@ export function ArchetypeStep() {
             setSelectedPathId(null);
           }}
           className={cn(
-            'selection-card text-left min-h-[160px] flex-1',
+            'selection-card text-left min-h-40 flex-1',
             creationChoice === 'forge' && 'selection-card--selected'
           )}
         >
@@ -375,6 +367,9 @@ export function ArchetypeStep() {
                   <div>
                     <div className="flex items-center gap-1 mb-2">
                       <h4 className="text-sm font-medium text-violet-600 dark:text-violet-300">Power Ability</h4>
+                      <Tippy content={powerAbility}>
+                        <Info className="w-4 h-4 text-primary-700" aria-hidden />
+                      </Tippy>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       {ABILITIES.map((ability) => (
@@ -393,6 +388,9 @@ export function ArchetypeStep() {
                   <div>
                     <div className="flex items-center gap-1 mb-2">
                       <h4 className="text-sm font-medium text-red-700 dark:text-red-300">Martial Ability</h4>
+                      <Tippy content={martialAbility}>
+                        <Info className="w-4 h-4 text-primary-700" aria-hidden />
+                      </Tippy>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       {ABILITIES.map((ability) => (

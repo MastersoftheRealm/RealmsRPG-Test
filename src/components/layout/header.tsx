@@ -12,10 +12,13 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { apiFetch } from '@/lib/api-client';
-import { useAuth, useAdmin, useProfile, useTooltipByKey } from '@/hooks';
+import { useAuth, useAdmin, useProfile } from '@/hooks';
 import { ThemeToggle } from '@/components/shared';
-import { HelpTooltip } from '@/components/ui';
 import { useQueryClient } from '@tanstack/react-query';
+import { navbarCodex, navbarLibrary } from '../../../public/tooltip-text';
+import Tippy from '@tippyjs/react';
+import 'tippy.js/dist/tippy.css';
+import { Info } from 'lucide-react'
 
 const navLinks: Array<{ href: string; label: string; external?: boolean } | { label: string; dropdown: { href: string; label: string }[] }> = [
   { href: '/characters', label: 'Characters' },
@@ -61,8 +64,6 @@ export function Header() {
   const { isAdmin } = useAdmin();
   const { profile } = useProfile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const libraryTooltip = useTooltipByKey('global.nav.library', { scope: 'global:nav' });
-  const codexTooltip = useTooltipByKey('global.nav.codex', { scope: 'global:nav' });
   const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
   const mobileNavRef = useRef<HTMLDivElement>(null);
 
@@ -125,10 +126,10 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-surface-secondary border-b border-divider h-20">
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-24">
+      <div className="max-w-360 mx-auto px-4 sm:px-6 lg:px-24">
         <div className="flex items-center justify-between h-20 gap-14">
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0">
+          <Link href="/" className="shrink-0">
             <Image
               src="/images/LogoSmall.png"
               alt="Realms RPG"
@@ -180,23 +181,15 @@ export function Header() {
                   >
                     {item.label}
                   </Link>
-                  {item.href === '/library' && libraryTooltip.showTooltips && libraryTooltip.body && (
-                    <HelpTooltip
-                      title={libraryTooltip.title}
-                      content={libraryTooltip.body}
-                      placement="bottom"
-                      label="Library navigation help"
-                      className="align-middle"
-                    />
+                  {item.href === '/library' && (
+                    <Tippy content={navbarLibrary}>
+                      <Info className="w-4 h-4 text-primary-700"/>
+                    </Tippy>
                   )}
-                  {item.href === '/codex' && codexTooltip.showTooltips && codexTooltip.body && (
-                    <HelpTooltip
-                      title={codexTooltip.title}
-                      content={codexTooltip.body}
-                      placement="bottom"
-                      label="Codex navigation help"
-                      className="align-middle"
-                    />
+                  {item.href === '/codex' && (
+                    <Tippy content={navbarCodex}>
+                      <Info className="w-4 h-4 text-primary-700"/>
+                    </Tippy>
                   )}
                 </span>
               )
@@ -262,7 +255,7 @@ export function Header() {
             {isAdmin && (
               <Link
                 href="/admin"
-                className="block py-3 text-lg font-semibold text-primary-700 dark:text-primary-300 min-h-[44px] flex items-center"
+                className="py-3 text-lg font-semibold text-primary-700 dark:text-primary-300 min-h-11 flex items-center"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Admin
@@ -277,7 +270,7 @@ export function Header() {
                   href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block py-3 text-lg font-semibold text-primary-700 dark:text-primary-300 min-h-[44px] flex items-center"
+                  className="py-3 text-lg font-semibold text-primary-700 dark:text-primary-300 min-h-11 flex items-center"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {item.label}
@@ -286,7 +279,7 @@ export function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="block py-3 text-lg font-semibold text-primary-700 dark:text-primary-300 min-h-[44px] flex items-center"
+                  className="py-3 text-lg font-semibold text-primary-700 dark:text-primary-300 min-h-11 flex items-center"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {item.label}
@@ -334,7 +327,7 @@ function AccountDropdown({
         type="button"
         aria-label="Account menu"
         aria-expanded={open}
-        className="flex items-center gap-2 min-h-[44px] min-w-[44px]"
+        className="flex items-center gap-2 min-h-11 min-w-11"
         onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
       >
         <div className="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center text-white font-bold">
@@ -344,7 +337,7 @@ function AccountDropdown({
       {open && (
         <div className="absolute right-0 top-full pt-2 z-50">
           <div className="w-56 bg-surface rounded-lg shadow-lg border border-border-light py-2">
-            <Link href="/my-account" className="block px-4 py-2.5 text-text-secondary hover:bg-surface-alt min-h-[44px] flex items-center" onClick={() => setOpen(false)}>
+            <Link href="/my-account" className="px-4 py-2.5 text-text-secondary hover:bg-surface-alt min-h-11 flex items-center" onClick={() => setOpen(false)}>
               My Account
             </Link>
             <div className="border-t border-border-light my-1" />
@@ -381,7 +374,7 @@ function AccountDropdown({
             <button
               type="button"
               onClick={() => { signOut(); setOpen(false); }}
-              className="w-full text-left px-4 py-2.5 text-text-secondary hover:bg-surface-alt min-h-[44px]"
+              className="w-full text-left px-4 py-2.5 text-text-secondary hover:bg-surface-alt min-h-11"
             >
               Sign Out
             </button>
@@ -408,7 +401,7 @@ function NavDropdown({ item, pathname }: { item: DropdownItem; pathname: string 
         type="button"
         aria-label={`${item.label} menu`}
         aria-expanded={open}
-        className="font-semibold text-lg text-primary-700 dark:text-primary-300 hover:text-primary-500 dark:hover:text-primary-200 transition-colors flex items-center gap-1 whitespace-nowrap min-h-[44px] items-center"
+        className="font-semibold text-lg text-primary-700 dark:text-primary-300 hover:text-primary-500 dark:hover:text-primary-200 transition-colors flex items-center gap-1 whitespace-nowrap min-h-11"
         onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
       >
         {item.label}
@@ -423,7 +416,7 @@ function NavDropdown({ item, pathname }: { item: DropdownItem; pathname: string 
                 href={subItem.href}
                 prefetch={false}
                 className={cn(
-                  'block px-5 py-3 text-primary-700 dark:text-primary-300 hover:bg-surface hover:text-primary-500 dark:hover:text-primary-200 transition-colors min-h-[44px] flex items-center',
+                  'px-5 py-3 text-primary-700 dark:text-primary-300 hover:bg-surface hover:text-primary-500 dark:hover:text-primary-200 transition-colors min-h-11 flex items-center',
                   pathname === subItem.href ? 'bg-surface-alt text-primary-500 dark:text-primary-400' : ''
                 )}
                 onClick={() => setOpen(false)}
@@ -447,7 +440,7 @@ function MobileDropdown({ item, pathname, onLinkClick }: { item: DropdownItem; p
         type="button"
         aria-expanded={open}
         aria-label={`${item.label} menu`}
-        className="flex items-center justify-between w-full py-3 text-lg font-semibold text-primary-700 dark:text-primary-300 min-h-[44px]"
+        className="flex items-center justify-between w-full py-3 text-lg font-semibold text-primary-700 dark:text-primary-300 min-h-11"
         onClick={() => setOpen(!open)}
       >
         {item.label}
@@ -461,7 +454,7 @@ function MobileDropdown({ item, pathname, onLinkClick }: { item: DropdownItem; p
               href={subItem.href}
               prefetch={false}
               className={cn(
-                'block py-3 text-primary-700 dark:text-primary-300 min-h-[44px] flex items-center',
+                'py-3 text-primary-700 dark:text-primary-300 min-h-11 flex items-center',
                 pathname === subItem.href ? 'text-primary-500 dark:text-primary-400' : ''
               )}
               onClick={onLinkClick}

@@ -23,7 +23,9 @@ import {
 } from '@/lib/choice-trait';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useMergedSpecies, useTraits, useCodexSkills, resolveTraitIds, resolveSkillIdsToNames, type Trait, type Species } from '@/hooks';
-import { Heart, AlertTriangle, Sparkles, Star } from 'lucide-react';
+import { Heart, AlertTriangle, Sparkles, Star, Info } from 'lucide-react';
+import Tippy from '@tippyjs/react';
+import { chooseYourAncestryTraits } from '../../../../public/tooltip-text';
 
 interface ResolvedTrait extends Trait {
   found: boolean;
@@ -433,6 +435,9 @@ export function AncestryStep() {
       <div className="max-w-2xl mx-auto text-center">
         <div className="flex items-center justify-center gap-1 mb-2">
           <h2 className="text-2xl font-bold text-text-primary">Choose Your Ancestry Traits</h2>
+          <Tippy content={chooseYourAncestryTraits} allowHTML={true}>
+            <Info className="w-4 h-4 text-primary-700" aria-hidden />
+          </Tippy>
         </div>
         <p className="text-text-secondary mb-6">
           Customize your character with ancestry traits and an optional flaw.
@@ -451,9 +456,9 @@ export function AncestryStep() {
           </div>
         </Alert>
         {/* Sticky footer (TASK-285) */}
-        <div className="sticky bottom-3 left-0 right-0 mt-8 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:-mx-0 md:px-0">
-          <Button variant="secondary" onClick={prevStep} className="min-h-[44px] min-w-[44px]">← Back</Button>
-          <Button disabled className="min-h-[44px] min-w-[44px]">Continue →</Button>
+        <div className="sticky bottom-3 left-0 right-0 mt-8 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:mx-0 md:px-0">
+          <Button variant="secondary" onClick={prevStep} className="min-h-11 min-w-11">← Back</Button>
+          <Button disabled className="min-h-11 min-w-11">Continue →</Button>
         </div>
       </div>
     );
@@ -476,6 +481,9 @@ export function AncestryStep() {
           <div>
             <div className="flex items-center gap-1 mb-2">
               <h2 className="text-2xl font-bold text-text-primary">Mixed Species: Ancestry</h2>
+              <Tippy content={chooseYourAncestryTraits} allowHTML={true}>
+                <Info className="w-4 h-4 text-primary-700" aria-hidden />
+              </Tippy>
             </div>
             <p className="text-text-secondary">
               <strong>{nameA}</strong> + <strong>{nameB}</strong>. Set physical traits and choose one species trait from each, then ancestry and optional flaw.
@@ -666,9 +674,9 @@ export function AncestryStep() {
         )}
 
         {/* Sticky footer (TASK-285) */}
-        <div className="sticky bottom-3 left-0 right-0 mt-8 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:-mx-0 md:px-0">
-          <Button variant="secondary" onClick={prevStep} className="min-h-[44px] min-w-[44px]">← Back</Button>
-          <Button onClick={nextStep} disabled={!canContinue} className="min-h-[44px] min-w-[44px]">Continue →</Button>
+        <div className="sticky bottom-3 left-0 right-0 mt-8 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:mx-0 md:px-0">
+          <Button variant="secondary" onClick={prevStep} className="min-h-11 min-w-11">← Back</Button>
+          <Button onClick={nextStep} disabled={!canContinue} className="min-h-11 min-w-11">Continue →</Button>
         </div>
       </div>
     );
@@ -682,9 +690,9 @@ export function AncestryStep() {
           Species data could not be loaded. Try changing species.
         </Alert>
         {/* Sticky footer (TASK-285) */}
-        <div className="sticky bottom-3 left-0 right-0 mt-8 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:-mx-0 md:px-0">
-          <Button variant="secondary" onClick={prevStep} className="min-h-[44px] min-w-[44px]">← Back</Button>
-          <Button onClick={() => setStep('species')} className="min-h-[44px] min-w-[44px]">Change Species</Button>
+        <div className="sticky bottom-3 left-0 right-0 mt-8 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:mx-0 md:px-0">
+          <Button variant="secondary" onClick={prevStep} className="min-h-11 min-w-11">← Back</Button>
+          <Button onClick={() => setStep('species')} className="min-h-11 min-w-11">Change Species</Button>
         </div>
       </div>
     );
@@ -701,6 +709,9 @@ export function AncestryStep() {
         <div>
           <div className="flex items-center gap-1 mb-2">
             <h2 className="text-2xl font-bold text-text-primary">Choose Your Ancestry Traits</h2>
+            <Tippy content={chooseYourAncestryTraits} allowHTML={true}>
+              <Info className="w-4 h-4 text-primary-700" aria-hidden />
+            </Tippy>
           </div>
           <p className="text-text-secondary">
             As a <strong>{selectedSpecies.name}</strong>, customize your heritage with traits and abilities.
@@ -924,9 +935,9 @@ export function AncestryStep() {
       )}
 
       {/* Sticky footer (TASK-285) */}
-      <div className="sticky bottom-3 left-0 right-0 mt-8 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:-mx-0 md:px-0">
-        <Button variant="secondary" onClick={prevStep} className="min-h-[44px] min-w-[44px]">← Back</Button>
-        <Button onClick={nextStep} disabled={!canContinue} className="min-h-[44px] min-w-[44px]">Continue →</Button>
+      <div className="sticky bottom-3 left-0 right-0 mt-8 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:mx-0 md:px-0">
+        <Button variant="secondary" onClick={prevStep} className="min-h-11 min-w-11">← Back</Button>
+        <Button onClick={nextStep} disabled={!canContinue} className="min-h-11 min-w-11">Continue →</Button>
       </div>
     </div>
   );
@@ -1080,7 +1091,7 @@ function TraitSection({
             >
               <div className="flex items-start gap-3">
                 {selectable && (
-                  <div className="flex-shrink-0 self-center">
+                  <div className="shrink-0 self-center">
                     <SelectionToggle
                       isSelected={isSelected}
                       onToggle={() => onToggle(trait.id)}
