@@ -4,6 +4,12 @@ Append-only log. Add an entry per PR/merge. **For current context, recent entrie
 
 > Older entries (before 2026-04-01) moved to [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
 
+- 2026-06-25 | agent | Session: TASK-376 assigned to Collin (AI skip) | files: `AI_TASK_QUEUE.md`, `DEVELOPER_TASK_QUEUE.md`, `AGENT_GUIDE.md`, `FEATURE_INDEX.md`, `AGENTS.md`, `realms-tasks.mdc`, `ALL_FEEDBACK_CLEAN.md` | Summary: TASK-376 status blocked, assignee Collin Morrison; COLLIN-001 in developer queue; agents instructed not to implement tooltip migration.
+
+- 2026-06-25 | agent | Session: Collin tooltip policy + TASK-376 | files: `AGENT_GUIDE.md`, `FEATURE_INDEX.md`, `FULL_AUDIT_2026-06.md`, `ALL_FEEDBACK_CLEAN.md`, `AI_TASK_QUEUE.md` | Summary: Owner confirmed Collin's Tippy + `public/tooltip-text.tsx` replaces DB tooltip stack. Documented canonical pattern; added TASK-376 for full retirement of `useTooltipByKey` / `ContextHelpTooltip` / admin tooltips.
+
+- 2026-06-25 | agent | Session: Merge Collin tooltip branches into master | files: `package.json`, `public/tooltip-text.tsx`, `header.tsx`, creator steps, `abilities.ts`, `css.d.ts` | Summary: Merged `Collin-tooltipExperimentation` (Tippy navbar + creator tooltips, Tailwind `shrink-0` cleanup). Preserved master mobile nav a11y and ability-step validation. Build exit 0.
+
 - 2026-06-18 | agent | Session: TASK-375 part-display dedupe (SA-4-17) | files: `lib/library/part-display.ts`, `library-list-helpers.ts`, `library-entity-rows.tsx`, `power-calc.ts`, `technique-calc.ts`, `AI_TASK_QUEUE.md`, `BUILD_VALIDATION.md` | Summary: Shared computePartTrainingPoints + characterPartsToPartData/itemPropertiesToPartData; calculator chip formatters aligned; technique rows use technique TP variant. DEV-V-009 suite added for sheet refactor QA. Build exit 0.
 
 - 2026-06-18 | agent | Session: FeatsTab → FeatsTraitsListSection | files: `feats-tab.tsx`, `library-feat-rows.tsx`, `entity-library-sections.tsx`, `AI_TASK_QUEUE.md` | Summary: Feats/traits tab list rendering via shared FeatsTraitsListSection + row mappers (uses steppers, feat level detail sections, slot counts, state Enter State header). feats-tab ~760→~454 L. Build exit 0.

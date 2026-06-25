@@ -48,7 +48,8 @@
 | Save a creator's output | `useCreatorSave`; load into a modal: `useLoadModalLibrary` |
 | Autosave (debounced) | `useAutoSave` |
 | List sorting / modal list state | `useSort`, `sortByColumn`, `useModalListState` |
-| Tooltips | `useTooltips`, `useTooltipByKey` |
+| Tooltips (canonical) | `public/tooltip-text.tsx` + `@tippyjs/react` — see `AGENT_GUIDE.md` § Tooltips |
+| Tooltips (legacy — do not extend) | `useTooltips`, `useTooltipByKey`, `ContextHelpTooltip` — **TASK-376 (Collin only; AI skip)** |
 
 > There is **one** codex fetch shared by all `useCodex*` and `useGameRules` (see `use-codex.ts`). Do not add a parallel codex fetch.
 
@@ -79,7 +80,8 @@
 | Search box | `SearchInput` |
 | Confirm/delete/login modals | `ConfirmActionModal`, `DeleteConfirmModal`, `LoginPromptModal` |
 | Image upload + crop | `ImageUploadModal` |
-| Theme switch / help tooltip / onboarding | `ThemeToggle`, `ContextHelpTooltip`, `OnboardingTour` |
+| Theme switch / onboarding | `ThemeToggle`, `OnboardingTour` |
+| Help tooltips (legacy — Collin/TASK-376) | `ContextHelpTooltip` — **AI agents do not migrate**; Collin owns TASK-376 |
 
 > UI primitives (Modal, Button, Chip, PageContainer, PageHeader, TabNavigation, SearchInput) live in `@/components/ui`.
 

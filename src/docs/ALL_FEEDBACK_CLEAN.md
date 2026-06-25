@@ -14,6 +14,13 @@ How to use
 
 ---
 
+### Tooltips (canonical standard — Collin)
+- **Collin's Tippy approach is law:** static copy in `public/tooltip-text.tsx`, `@tippyjs/react`, `Info` icon triggers. Replaces the legacy DB tooltip system (`ui_tooltips`, `useTooltipByKey`, `ContextHelpTooltip`, `HelpTooltip`).
+- Do **not** extend the DB tooltip stack or add new `ContextHelpTooltip` usage. Full migration is **TASK-376 — Collin Morrison only; AI agents must not implement.**
+- When merging Collin's branches, prefer his tooltip code over master/AI patterns.
+
+---
+
 ## Core Principles
 - Primary role: act as a senior front-end architect for a React / Next.js / Tailwind codebase.
 - Secondary goal: unify components, styles, and logic while preserving behavior and UX.
@@ -1567,3 +1574,11 @@ Notes
 - Feedback: Message reads "As a Necromancer, As a Necromancer, some recommended techniques…" — duplicated path prefix.
 - Expected: Single "As a {pathName}," prefix from `PathHelpCard` only.
 - Disposition: Implemented 2026-06-20. Powers step children text is continuation-only (matches Feats/Equipment/Skills steps).
+
+**Raw Feedback Log — 2026-06-25 (Tooltips: Collin's Tippy is canonical)**
+- Date: 2026-06-25
+- Context: Collin tooltip branches merged into master; long-term tooltip direction
+- Priority: High
+- Feedback: We will eventually FULLY align to only Collin's approach to tooltips, which replaces the current tooltip DB system completely. His code is law; master/Kadin AI-written tooltip code is flawed and inconsistent.
+- Expected: All contextual help uses Tippy + `public/tooltip-text.tsx`; retire `useTooltipByKey`, `ContextHelpTooltip`, `HelpTooltip`, admin tooltips DB/API, and user show-tooltips preference. New work follows Collin's pattern only.
+- Disposition: Policy documented in `AGENT_GUIDE.md` § Tooltips, `FEATURE_INDEX.md`, `FULL_AUDIT_2026-06.md` INC-3. **TASK-376** blocked, assignee **Collin Morrison** — AI agents skip; see `DEVELOPER_TASK_QUEUE.md` **COLLIN-001**.

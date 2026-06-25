@@ -129,7 +129,7 @@ Top files by line count (verified census; bracketed route files measured separat
 ### Inconsistency
 - **INC-1 [QUEUED → TASK-322]** Data fetching mixes `apiFetch` wrapper with raw `fetch` (admin public-library delete/save use raw `fetch`).
 - **INC-2 [QUEUED → TASK-323]** Loading/error UI: `LoadingState` vs `Spinner`, `ErrorDisplay` vs `Alert`, `EmptyState` vs `ListEmptyState` used inconsistently.
-- **INC-3 [NOTE]** Tooltip-system divergence: a side branch introduced `@tippyjs/react` alongside the existing `use-tooltips` hook. If merged, this is two tooltip systems — pick one. (Not on the audited branch's `src/`; flagged for awareness.)
+- **INC-3 [RESOLVED 2026-06-25]** Tooltip-system divergence: **Collin's `@tippyjs/react` + `public/tooltip-text.tsx` is canonical.** Legacy DB stack is retired by **TASK-376 (Collin Morrison only — AI agents skip)**. See `AGENT_GUIDE.md` § Tooltips. Do not add new DB tooltip usage.
 
 ### Formula duplication
 - **FRM-1 [QUEUED → TASK-324]** Health/energy/skill-point logic lives in both `lib/game/formulas.ts` (deprecated `getBaseHealth`/`getBaseEnergy`/`getCharacterMaxHealthEnergy`/`calculateSkillPoints`) and `lib/game/calculations.ts` (active). Remove the deprecated helpers, single-source in `calculations.ts`.

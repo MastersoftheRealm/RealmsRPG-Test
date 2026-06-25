@@ -2,7 +2,7 @@
 
 Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text may still mention Prisma for historical context; data access is Supabase only. Ignore Firestore/RTDB/Firebase in old task text.
 
-**Focus:** Pick `status: not-started`, `in-progress`, or `partial` (read `remaining_work` / `follow_up_tasks`). Skip `done` unless verifying. Human-only: [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md). Read `AGENT_GUIDE.md` first.
+**Focus:** Pick `status: not-started`, `in-progress`, or `partial` (read `remaining_work` / `follow_up_tasks`). **Skip `blocked`** and any task with **`assignee:` set to a human developer** (e.g. Collin) — those are not for AI agents. Human-only: [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md). Read `AGENT_GUIDE.md` first.
 
 **Status rules:**
 - **`done`** — Every acceptance criterion met.
@@ -1685,3 +1685,55 @@ Gap analysis 2026-06-18 (resolved): admin `codex_archetypes` + `codex_archetype_
     suite: DEV-V-009
     tests:
       - DEV-V-009-T004
+
+- id: TASK-376
+  title: Retire DB tooltips — full migration to Collin Tippy + tooltip-text.tsx
+  priority: high
+  status: blocked
+  assignee: Collin Morrison
+  created_at: 2026-06-25
+  created_by: owner
+  description: |
+    Owner decision: Collin's `@tippyjs/react` + `public/tooltip-text.tsx` is the only tooltip standard.
+    The legacy stack (Supabase `ui_tooltips`, `useTooltipByKey`, `ContextHelpTooltip`, `HelpTooltip`,
+    `/api/tooltips`, `/admin/tooltips`, account "Help tooltips" toggle) must be fully removed.
+
+    **AI agents: do not implement this task.** Collin owns the Tippy migration end-to-end. Continue on
+    `Collin-tooltipExperimentation` (or successor branches). Agents may merge Collin's PRs when asked,
+    but must not replace his tooltip work with DB/HelpTooltip patterns or finish migration themselves.
+
+  related_files:
+    - public/tooltip-text.tsx
+    - src/components/layout/header.tsx
+    - src/components/character-creator/steps/skills-step.tsx
+    - src/components/character-creator/steps/feats-step.tsx
+    - src/components/character-creator/steps/equipment-step.tsx
+    - src/components/character-creator/steps/powers-step.tsx
+    - src/components/character-creator/steps/finalize-step.tsx
+    - src/app/(main)/campaigns/page.tsx
+    - src/components/shared/context-help-tooltip.tsx
+    - src/hooks/use-tooltips.ts
+    - src/components/ui/tooltip.tsx
+    - src/app/api/tooltips/route.ts
+    - src/app/(main)/admin/tooltips/page.tsx
+    - src/lib/tooltips/default-tooltips.ts
+  acceptance_criteria:
+    - All remaining contextual help uses Tippy + copy from `public/tooltip-text.tsx` (match Collin's Info icon + `allowHTML` pattern)
+    - Creator steps skills/feats/equipment/powers/finalize migrated; dead `ContextHelpTooltip` imports removed
+    - Campaigns and any other pages with `ContextHelpTooltip` migrated
+    - Account menu "Help tooltips" toggle removed; `show_tooltips` user pref no longer required for help UI
+    - `useTooltipByKey`, `ContextHelpTooltip`, and DB tooltip API/admin UI deleted from codebase (or clearly deprecated with zero call sites)
+    - `AGENT_GUIDE.md` / `FEATURE_INDEX.md` remain accurate; systematic audit notes referencing "add ContextHelpTooltip" treated as obsolete
+    - Human-only follow-up in DEVELOPER_TASK_QUEUE for `ui_tooltips` table deprecation SQL if still in Supabase
+    - `npm run build` passes
+  notes: |
+    **ASSIGNED TO COLLIN — NOT FOR AI AGENTS.**
+
+    Partial migration landed 2026-06-25 (Collin branches merged to master): navbar + creator
+    archetype/species/ancestry/abilities + `/characters/new` header.
+
+    Collin continues: skills/feats/equipment/powers/finalize steps, campaigns page, legacy stack removal.
+    See `DEVELOPER_TASK_QUEUE.md` → **COLLIN-001**.
+
+    Agents: do not extend legacy tooltip code; do not implement TASK-376. When touching nearby files,
+    leave tooltip migration untouched unless merging Collin's branch or owner explicitly assigns his PR.

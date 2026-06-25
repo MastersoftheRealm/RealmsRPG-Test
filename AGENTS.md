@@ -7,7 +7,7 @@ You are working on RealmsRPG, a D&D Beyond–like TTRPG web app built with Next.
 
 ## Session Start
 
-1. **Read** `src/docs/ai/AI_TASK_QUEUE.md` — focus on `not-started` / `in-progress` / `partial`; human-only items in `DEVELOPER_TASK_QUEUE.md`.
+1. **Read** `src/docs/ai/AI_TASK_QUEUE.md` — focus on `not-started` / `in-progress` / `partial`; **skip `blocked` and human-assigned tasks** (e.g. TASK-376 / Collin tooltip migration); human-only items in `DEVELOPER_TASK_QUEUE.md`.
 2. **Read** `src/docs/ai/AGENT_GUIDE.md` — component locations, patterns, sources of truth.
 3. **When owner gives feedback:** Log it in `src/docs/ALL_FEEDBACK_CLEAN.md` (Raw Feedback Log) and process per `.cursor/rules/realms-tasks.mdc` (extract, cross-ref queue, add tasks or implement).
 4. **Reference when needed:** see the Source-of-Truth Map below.
@@ -27,6 +27,7 @@ Check the canonical source for the topic instead of trusting scattered/stale doc
 | Mobile patterns | `src/docs/MOBILE_UX.md` |
 | Accessibility / contrast | `src/docs/ACCESSIBILITY.md` |
 | Open tasks / task history | `src/docs/ai/AI_TASK_QUEUE.md` / `src/docs/ai/DEVELOPER_TASK_QUEUE.md` / `archive/TASK_QUEUE_DONE.md` |
+| Contextual help tooltips | `AGENT_GUIDE.md` § Tooltips — Collin/Tippy + `public/tooltip-text.tsx`; **TASK-376 = Collin only (AI skip)** |
 | QA build validation (step-by-step) | `src/docs/ai/BUILD_VALIDATION.md` |
 | Current audit & known issues | `src/docs/ai/FULL_AUDIT_2026-06.md` |
 | Deploy / secrets | `src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md` |

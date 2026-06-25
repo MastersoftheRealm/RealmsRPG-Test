@@ -6,7 +6,17 @@ What **you** need to do that AI cannot (Dashboard, prod validation, decisions). 
 
 **Agents:** When you finish a user-facing task (`done` or `partial`), add granular tests to `BUILD_VALIDATION.md` and index the suite below. See [`AGENT_GUIDE.md`](AGENT_GUIDE.md).
 
-**Last updated:** 2026-06-18
+**Last updated:** 2026-06-25
+
+---
+
+## Human developer tasks (not for AI agents)
+
+| ID | Task | Assignee | What to do |
+|----|------|----------|------------|
+| **COLLIN-001** | [TASK-376](AI_TASK_QUEUE.md) — Tippy tooltip migration | **Collin Morrison** | Finish retiring the DB tooltip stack; extend `public/tooltip-text.tsx` + `@tippyjs/react` per Collin's existing branches (`Collin-tooltipExperimentation`). Remaining: creator skills/feats/equipment/powers/finalize, campaigns page, remove `useTooltipByKey` / `ContextHelpTooltip` / admin tooltips API, account toggle. Optional SQL: deprecate `ui_tooltips` after code removal. |
+
+**AI agents:** Do **not** pick up TASK-376 or implement tooltip migration work. Merge Collin's PRs when the owner asks; do not substitute HelpTooltip/DB patterns.
 
 ---
 
