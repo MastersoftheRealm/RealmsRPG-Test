@@ -606,12 +606,11 @@ export function derivePowerDisplay(
   const calc = calculatePowerCosts(partsPayload, partsDb);
   
   // Use directly saved actionType if available, otherwise derive from parts; format for display (e.g. Long (3 AP))
-  let actionType: string;
-  if (powerDoc.actionType) {
-    actionType = powerDoc.isReaction ? 'Reaction' : formatActionTypeForDisplay(powerDoc.actionType);
-  } else {
-    actionType = formatActionTypeForDisplay(computeActionType(partsPayload, partsDb));
-  }
+  const derivedAction = computeActionType(partsPayload, partsDb);
+  const savedAction = powerDoc.actionType
+    ? computeActionTypeFromSelection(powerDoc.actionType, !!powerDoc.isReaction)
+    : null;
+  const actionType = formatActionTypeForDisplay(savedAction || derivedAction);
   
   // Use directly saved range if available, otherwise derive from parts
   let rangeStr: string;

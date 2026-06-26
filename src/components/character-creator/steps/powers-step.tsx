@@ -27,6 +27,7 @@ import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
 import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
+import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
 import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies, getTrainingPointLimit } from '@/lib/proficiencies';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 
@@ -1000,21 +1001,7 @@ export function PowersStep() {
         </section>
       )}
       
-      {/* Navigation */}
-      <div className="flex justify-between pt-6 border-t border-border">
-        <Button
-          variant="secondary"
-          onClick={prevStep}
-        >
-          ← Back
-        </Button>
-        <Button
-          onClick={nextStep}
-          disabled={!canContinue}
-        >
-          Continue →
-        </Button>
-      </div>
+      <CreatorStepFooter onBack={prevStep} onContinue={nextStep} continueDisabled={!canContinue} />
       
       {/* Power Selection Modal — same column headers/layout as character sheet add-library-item */}
       <UnifiedSelectionModal

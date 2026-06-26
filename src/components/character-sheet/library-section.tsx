@@ -99,6 +99,8 @@ export interface LibrarySectionProps {
   archetypeDesc?: string;
   notes?: string;
   abilities?: Abilities;
+  /** Power Attack Bonus (power ability + power proficiency) for power damage rolls */
+  powerAttackBonus?: number;
   onWeightChange?: (value: number) => void;
   onHeightChange?: (value: number) => void;
   onAppearanceChange?: (value: string) => void;
@@ -248,6 +250,7 @@ export function LibrarySection({
   archetypeDesc = '',
   notes = '',
   abilities,
+  powerAttackBonus,
   onWeightChange,
   onHeightChange,
   onAppearanceChange,
@@ -388,6 +391,7 @@ export function LibrarySection({
       techniquePartsDb,
       itemPropertiesDb,
       abilities,
+      powerAttackBonus,
       martialProficiency,
       currentEnergy,
       showLibraryEditControls,
@@ -412,6 +416,7 @@ export function LibrarySection({
       techniquePartsDb,
       itemPropertiesDb,
       abilities,
+      powerAttackBonus,
       martialProficiency,
       currentEnergy,
       showLibraryEditControls,

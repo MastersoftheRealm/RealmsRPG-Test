@@ -28,9 +28,15 @@ export function creatureSkillsToFeatReqRecord(
   return out;
 }
 
+export function effectiveCreatureLevelForFeatReq(level: number | undefined | null): number {
+  const n = Number(level);
+  if (!Number.isFinite(n)) return 1;
+  return Math.max(1, Math.floor(n));
+}
+
 export function creatureToFeatRequirementCharacter(creature: CreatureState): CharacterForFeatRequirement {
   return {
-    level: Number(creature.level) || 1,
+    level: effectiveCreatureLevelForFeatReq(creature.level),
     abilities: creature.abilities,
     defenseVals: creature.defenses,
     skills: creatureSkillsToFeatReqRecord(creature.skills),

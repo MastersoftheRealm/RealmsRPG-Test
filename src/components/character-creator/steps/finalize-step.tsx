@@ -13,6 +13,7 @@ import { useAuth, useCodexSkills, useMergedSpecies, useTraits, usePowerParts, us
 import { cn } from '@/lib/utils';
 import { cleanForSave } from '@/lib/data-enrichment';
 import { dataUrlToBlob } from '@/lib/portrait';
+import { apiUpload } from '@/lib/api-client';
 import type { Character, CharacterPower, CharacterTechnique, Item } from '@/types';
 import { Spinner, Button, Alert, Modal, Textarea, useToast } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
@@ -21,6 +22,7 @@ import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations'
 import { calculateHealthEnergyPool } from '@/lib/game/formulas';
 import { ABILITY_DISPLAY_NAMES } from '@/lib/game/constants';
 import { LoginPromptModal, ImageUploadModal } from '@/components/shared';
+import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
 import { HealthEnergyAllocator } from '@/components/creator';
 import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies, getTrainingPointLimit } from '@/lib/proficiencies';
 import { derivePowerDisplay } from '@/lib/calculators/power-calc';
@@ -61,7 +63,7 @@ function ValidationModal({
 
   // Custom footer for Modal
   const modalFooter = (
-    <div className="p-4 border-t flex justify-end gap-3">
+    <div className="shrink-0 border-t border-border-light p-4 flex justify-end gap-3">
       <Button
         variant="secondary"
         onClick={onClose}
@@ -97,11 +99,12 @@ function ValidationModal({
       isOpen={isOpen}
       onClose={onClose}
       size="lg"
+      flexLayout
+      fullScreenOnMobile
       header={modalHeader}
       footer={modalFooter}
       showCloseButton={false}
-      contentClassName="p-4 overflow-y-auto max-h-[50vh]"
-      fullScreenOnMobile
+      contentClassName="p-4 overflow-y-auto"
     >
       {isValid ? (
         <p className="text-text-secondary text-center py-8">
@@ -316,9 +319,10 @@ function PortraitUpload() {
                 className="w-full h-full object-cover"
               />
               <button
+                type="button"
                 onClick={handleRemove}
-                className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs hover:bg-red-600"
-                title="Remove portrait"
+                aria-label="Remove portrait"
+                className="absolute top-1 right-1 min-h-11 min-w-11 rounded-full bg-red-500 text-white flex items-center justify-center text-sm hover:bg-red-600"
               >
                 ×
               </button>
@@ -391,6 +395,11 @@ export function FinalizeStep() {
   const [error, setError] = useState<string | null>(null);
   const [showValidation, setShowValidation] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+
+  const creatorReturnPath = useMemo(() => {
+    const qs = searchParams.toString();
+    return qs ? `/characters/new?${qs}` : '/characters/new';
+  }, [searchParams]);
 
   // Validation from shared lib (same messages as tab-bar "things left to do" modal)
   const validationIssues = useMemo(
@@ -554,26 +563,12 @@ export function FinalizeStep() {
           formData.append('file', file);
           formData.append('characterId', characterId);
 
-          const uploadRes = await fetch('/api/upload/portrait', {
-            method: 'POST',
-            body: formData,
-          });
+          const uploadRes = await apiUpload<{ url: string }>('/api/upload/portrait', formData);
 
-          if (!uploadRes.ok) {
-            const errBody = (await uploadRes.json().catch(() => ({}))) as { error?: string };
-            showToast(
-              errBody.error
-                ? `Portrait not saved: ${errBody.error}. Add one from your character sheet.`
-                : 'Portrait upload failed. You can add one from your character sheet.',
-              'error'
-            );
+          if (!uploadRes.url) {
+            showToast('Portrait upload returned no URL. Add a portrait from your character sheet.', 'error');
           } else {
-            const { url } = (await uploadRes.json()) as { url: string };
-            if (url) {
-              await saveCharacter(characterId, { portrait: url });
-            } else {
-              showToast('Portrait upload returned no URL. Add a portrait from your character sheet.', 'error');
-            }
+            await saveCharacter(characterId, { portrait: uploadRes.url });
           }
         } catch {
           showToast(
@@ -906,36 +901,31 @@ export function FinalizeStep() {
         </div>
       )}
       
-      {/* Navigation */}
-      <div className="flex flex-col items-end gap-2">
-        {!user && (
-          <p className="text-sm text-text-muted dark:text-text-secondary">
-            Create an account to save your character. Your progress is stored locally until you sign in.
-          </p>
-        )}
-        <div className="flex justify-between w-full">
-        <Button
-          variant="secondary"
-          onClick={prevStep}
-          disabled={saving}
-        >
-          ← Back
-        </Button>
-        
-        <Button
-          onClick={handleValidateAndSave}
-          disabled={saving}
-          isLoading={saving}
-          variant={validationIssues.some(i => i.severity === 'error') ? 'secondary' : 'primary'}
-          className={cn(
-            'px-8 py-3',
-            !saving && validationIssues.some(i => i.severity === 'error') && 'bg-warning-500 hover:bg-warning-600 text-white'
-          )}
-        >
-          {validationIssues.length > 0 ? '📋 Review & Create' : '✓ Create Character'}
-        </Button>
-        </div>
-      </div>
+      {!user && (
+        <p className="text-sm text-text-muted dark:text-text-secondary text-right mb-2">
+          Create an account to save your character. Your progress is stored locally until you sign in.
+        </p>
+      )}
+      <CreatorStepFooter
+        onBack={prevStep}
+        backDisabled={saving}
+        primaryAction={
+          <Button
+            onClick={handleValidateAndSave}
+            disabled={saving}
+            isLoading={saving}
+            variant={validationIssues.some((i) => i.severity === 'error') ? 'secondary' : 'primary'}
+            className={cn(
+              'min-h-11 min-w-11 px-8',
+              !saving &&
+                validationIssues.some((i) => i.severity === 'error') &&
+                'bg-warning-500 hover:bg-warning-600 text-white'
+            )}
+          >
+            {validationIssues.length > 0 ? '📋 Review & Create' : '✓ Create Character'}
+          </Button>
+        }
+      />
       
       {/* Validation Modal */}
       <ValidationModal
@@ -951,7 +941,7 @@ export function FinalizeStep() {
       <LoginPromptModal
         isOpen={showLoginPrompt}
         onClose={() => setShowLoginPrompt(false)}
-        returnPath="/characters/new"
+        returnPath={creatorReturnPath}
         contentType="character"
       />
     </div>

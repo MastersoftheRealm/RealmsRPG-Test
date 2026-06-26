@@ -4,7 +4,15 @@ Append-only log. Add an entry per PR/merge. **For current context, recent entrie
 
 > Older entries (before 2026-04-01) moved to [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
 
-- 2026-06-26 | agent | Session: Creature creator leveled feat stepper | files: `page.tsx`, `creature-feat-utils.ts`, `leveled-feats.ts`, `AddCreatureFeatModal.tsx` | Summary: LVL column ValueStepper on added character/archetype feats; shared `buildFeatLevelsByFamily` + requirement checks cap max level; merge on add replaces lower family levels. Build exit 0.
+- 2026-06-26 | agent | Session: Character sheet power rolls + reaction action labels | files: `calculations.ts`, `library-entity-rows.tsx`, `library-section-props.ts`, `action-type.ts`, `power-calc.ts`, `creature-stat-block.tsx`, campaign view | Summary: Power damage rolls include Power Attack Bonus; action column shows full reaction type (Free/Basic Reaction) via `formatSavedActionTypeForDisplay`; fixed `derivePowerDisplay` collapsing reactions. Build exit 0.
+
+- 2026-06-26 | agent | Session: Character sheet auto-proficiency on add power/technique | files: `map-selection.ts`, `add-library-item-modal.tsx`, `use-character-sheet-actions.ts`, `use-add-library-item-data.ts` | Summary: Enrich parts with codex TP on add; sync missing proficiencies when codex loads; fix add handlers to use setCharacter updater. Build exit 0.
+
+- 2026-06-26 | agent | Session: Character creator audit verification | files: `skills-step.tsx`, `equipment-step.tsx`, `character-creator-validation.ts`, `CHARACTER_CREATOR_AUDIT_2026-06-26.md`, `SYSTEMATIC_AUDIT_2026-06.md` | Summary: Re-audit found Skills/Equipment missing Continue gating and HE validation wrongly on abilities step; fixed. Build exit 0.
+
+- 2026-06-26 | agent | Session: Character creator audit implementation | files: `archetype-step.tsx`, `species-step.tsx`, `species-modal.tsx`, `feats-step.tsx`, `ancestry-step.tsx`, `creator-tab-bar.tsx`, `finalize-step.tsx`, `character-creator-store.ts`, `character-creator-validation.ts`, `api-client.ts`, `CHARACTER_CREATOR_AUDIT_2026-06-26.md` | Summary: Completed all CC-26 audit items — sticky archetype confirm, a11y/touch targets, HE overspend validation, persist schema version, apiUpload portrait, login return path with query params, cloneInitialDraft on reset. Build exit 0.
+
+- 2026-06-26 | agent | Session: Character creator sticky footers + localized audit | files: `creator-step-footer.tsx`, all creator steps, `species-modal.tsx`, `skills-allocation-page.tsx`, `CHARACTER_CREATOR_AUDIT_2026-06-26.md` | Summary: Shared CreatorStepFooter on all steps; SpeciesModal flexLayout sticky footer with Pick Me on right; skills allocation sticky footer; localized 10-lens audit doc. Build exit 0.
 
 - 2026-06-26 | agent | Session: Creature creator feat requirement filter | files: `AddCreatureFeatModal.tsx`, `feat-requirements.ts`, `ALL_FEEDBACK_CLEAN.md` | Summary: Replaced duplicate requirement logic in creature add-feat modal with shared `checkFeatRequirements`; maps creature `defenses` → `defenseVals` so defense bonuses compute correctly. Build exit 0.
 

@@ -107,21 +107,26 @@ interface CharacterCreatorState {
   }) => Partial<Character>;
 }
 
-const initialDraft: CharacterDraft = {
-  name: '',
-  level: 1,
-  abilities: { ...DEFAULT_ABILITIES },
-  step: 0,
-  isComplete: false,
-  currency: CHARACTER_STARTING_CURRENCY,
-};
+function cloneInitialDraft(): CharacterDraft {
+  return {
+    name: '',
+    level: 1,
+    abilities: { ...DEFAULT_ABILITIES },
+    step: 0,
+    isComplete: false,
+    currency: CHARACTER_STARTING_CURRENCY,
+  };
+}
+
+/** Bump when persisted draft shape or defaults change; old versions reset to a fresh draft. */
+const CREATOR_STORE_SCHEMA_VERSION = 1;
 
 export const useCharacterCreatorStore = create<CharacterCreatorState>()(
   persist(
     (set, get) => ({
       currentStep: 'archetype',
       completedSteps: [],
-      draft: initialDraft,
+      draft: cloneInitialDraft(),
       
       setStep: (step) => {
         if (get().canNavigateToStep(step)) {
@@ -337,7 +342,7 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
         set({
           currentStep: 'archetype',
           completedSteps: [],
-          draft: initialDraft,
+          draft: cloneInitialDraft(),
         });
       },
       
@@ -459,7 +464,18 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
     }),
     {
       name: 'character-creator-storage',
+      version: CREATOR_STORE_SCHEMA_VERSION,
       storage: createJSONStorage(() => localStorage),
+      migrate: (persistedState, version) => {
+        if (version < CREATOR_STORE_SCHEMA_VERSION) {
+          return {
+            currentStep: 'archetype' as CreatorStep,
+            completedSteps: [] as CreatorStep[],
+            draft: cloneInitialDraft(),
+          };
+        }
+        return persistedState as Pick<CharacterCreatorState, 'currentStep' | 'completedSteps' | 'draft'>;
+      },
       partialize: (state) => ({
         currentStep: state.currentStep,
         completedSteps: state.completedSteps,

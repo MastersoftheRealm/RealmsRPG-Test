@@ -7,6 +7,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import type { KeyboardEvent } from 'react';
 import { cn } from '@/lib/utils';
 import { Chip, Button, Alert, Spinner } from '@/components/ui';
 import { SegmentedControl } from '@/components/shared';
@@ -14,11 +15,19 @@ import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useMergedSpecies, useUserSpecies, useTraits, type Species } from '@/hooks';
 import { SpeciesModal } from '../species-modal';
 import { MixedSpeciesModal } from '../MixedSpeciesModal';
+import { CreatorStepFooter } from '../creator-step-footer';
 import { GitMerge, Info } from 'lucide-react';
 import Tippy from '@tippyjs/react';
 import { chooseYourSpecies } from '../../../../public/tooltip-text';
 
 type SourceFilterValue = 'all' | 'public' | 'my' | 'make';
+
+function activateOnEnterOrSpace(e: KeyboardEvent, action: () => void) {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    action();
+  }
+}
 
 export function SpeciesStep() {
   const { draft, nextStep, prevStep, setSpecies, setMixedSpecies } = useCharacterCreatorStore();
@@ -114,7 +123,10 @@ export function SpeciesStep() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         {/* Mixed species option */}
         <div
+          role="button"
+          tabIndex={0}
           onClick={() => setShowMixedModal(true)}
+          onKeyDown={(e) => activateOnEnterOrSpace(e, () => setShowMixedModal(true))}
           className={cn(
             'selection-card flex flex-col items-center justify-center min-h-35 border-2 border-dashed',
             isMixedSelected ? 'selection-card--selected border-primary-500' : 'border-border hover:border-primary-400'
@@ -134,7 +146,10 @@ export function SpeciesStep() {
           return (
             <div
               key={s.id}
+              role="button"
+              tabIndex={0}
               onClick={() => handleCardClick(s)}
+              onKeyDown={(e) => activateOnEnterOrSpace(e, () => handleCardClick(s))}
               className={cn(
                 'selection-card',
                 isSelected && 'selection-card--selected'
@@ -188,11 +203,7 @@ export function SpeciesStep() {
         </Alert>
       )}
 
-      {/* Sticky footer so Continue is always visible (TASK-285) */}
-      <div className="sticky bottom-3 left-0 right-0 mt-8 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:mx-0 md:px-0">
-        <Button variant="secondary" onClick={prevStep} className="min-h-11 min-w-11">← Back</Button>
-        <Button onClick={nextStep} disabled={!canContinue} className="min-h-11 min-w-11">Continue →</Button>
-      </div>
+      <CreatorStepFooter onBack={prevStep} onContinue={nextStep} continueDisabled={!canContinue} />
 
       <MixedSpeciesModal
         isOpen={showMixedModal}

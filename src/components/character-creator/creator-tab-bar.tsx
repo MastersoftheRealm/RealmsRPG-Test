@@ -82,10 +82,12 @@ export function CreatorTabBar() {
         return (
           <button
             key={step}
+            type="button"
             onClick={() => handleTabClick(step)}
             disabled={!canNavigate}
+            aria-current={isActive ? 'step' : undefined}
             className={cn(
-              'px-3 py-2 rounded-lg text-sm font-medium transition-all shrink-0',
+              'px-3 py-2 min-h-11 min-w-11 rounded-lg text-sm font-medium transition-all shrink-0',
               isActive && 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white shadow-md',
               !isActive && isComplete && 'bg-success-light text-success-700 hover:bg-success-200/80 dark:bg-success-900/30 dark:text-success-300 dark:hover:bg-success-800/40',
               !isActive && !isComplete && canNavigate && 'bg-surface text-text-secondary hover:bg-surface-alt',
@@ -99,8 +101,9 @@ export function CreatorTabBar() {
       })}
       
       <button
+        type="button"
         onClick={() => setShowRestartConfirm(true)}
-        className="ml-auto shrink-0 px-3 py-2 rounded-lg text-sm font-medium bg-danger-light text-danger-700 hover:bg-danger-200/80 dark:bg-danger-900/30 dark:text-danger-300 dark:hover:bg-danger-800/40 transition-colors"
+        className="ml-auto shrink-0 px-3 py-2 min-h-11 min-w-11 rounded-lg text-sm font-medium bg-danger-light text-danger-700 hover:bg-danger-200/80 dark:bg-danger-900/30 dark:text-danger-300 dark:hover:bg-danger-800/40 transition-colors"
       >
         Restart
       </button>
@@ -123,11 +126,12 @@ export function CreatorTabBar() {
         onClose={() => setPendingStep(null)}
         size="lg"
         fullScreenOnMobile
+        flexLayout
         title={`${STEP_LABELS[currentStep]}: things left to do`}
         showCloseButton={true}
-        contentClassName="p-4 overflow-y-auto max-h-[50vh]"
+        contentClassName="p-4 overflow-y-auto"
         footer={
-          <div className="p-4 border-t border-border-light flex justify-end gap-3">
+          <div className="shrink-0 border-t border-border-light p-4 flex justify-end gap-3">
             <Button variant="secondary" onClick={() => setPendingStep(null)}>
               Stay & fix
             </Button>

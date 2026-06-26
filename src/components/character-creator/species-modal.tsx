@@ -209,13 +209,15 @@ export function SpeciesModal({
       size="2xl"
       title={species.name}
       fullScreenOnMobile
+      flexLayout
+      contentClassName="p-0"
       footer={
-        <div className="p-4 flex gap-3">
-          <Button onClick={onSelect} className="flex-1 min-h-[44px] min-w-[44px]">
-            Pick Me!
-          </Button>
+        <div className="shrink-0 border-t border-border-light p-4 flex justify-between gap-3">
           <Button variant="secondary" onClick={onClose} className="flex-1 min-h-[44px] min-w-[44px]">
             Nah...
+          </Button>
+          <Button onClick={onSelect} className="flex-1 min-h-[44px] min-w-[44px]">
+            Pick Me!
           </Button>
         </div>
       }
@@ -223,8 +225,7 @@ export function SpeciesModal({
       <div className="p-6">
         {/* Header */}
         <div className="mb-4">
-          <h2 className="text-2xl font-bold text-text-primary">{species.name}</h2>
-          <p className="text-text-secondary mt-1">{species.description}</p>
+          <p className="text-text-secondary">{species.description}</p>
         </div>
 
         {/* Stats Grid - NO SPEED (species don't have speed values) */}
@@ -296,6 +297,7 @@ export function SpeciesModal({
                       variant="ghost"
                       size="sm"
                       onClick={() => setSelectedSkill(null)}
+                      aria-label="Dismiss skill description"
                       className="text-info-600 dark:text-info-400 hover:text-info-800 dark:hover:text-info-300 h-auto py-0 px-1 min-w-0"
                     >
                       ✕

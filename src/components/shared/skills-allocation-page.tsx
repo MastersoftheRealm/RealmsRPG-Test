@@ -487,7 +487,11 @@ export function SkillsAllocationPage({
         </Alert>
       )}
 
-      {footer && <div className="flex justify-between mt-6">{footer}</div>}
+      {footer && (
+        <div className="sticky bottom-3 left-0 right-0 z-10 mt-6 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:mx-0">
+          {footer}
+        </div>
+      )}
 
       <AddSkillModal
         isOpen={addSkillModalOpen}

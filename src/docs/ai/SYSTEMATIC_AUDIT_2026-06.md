@@ -42,7 +42,7 @@ Site surface: **43 pages · 28 API routes · ~140 components · 17 layouts.** Re
 | 2 | Auth | `(auth)/login\|register\|forgot-password\|forgot-username`, `app/auth/confirm/route.ts`, `components/auth/*` | not-started |
 | 3 | Characters list & cards | `(main)/characters/page.tsx`, `characters/new`, `components/character/*` | not-started |
 | 4 | Character sheet | `(main)/characters/[id]/page.tsx`, `components/character-sheet/*` | not-started |
-| 5 | Character creator | `components/character-creator/*` (+ steps), creation flow | not-started |
+| 5 | Character creator | `components/character-creator/*` (+ steps), creation flow | reviewed 2026-06-26 — see `CHARACTER_CREATOR_AUDIT_2026-06-26.md` |
 | 6 | Library | `(main)/library/*` (page + `Library*Tab`) | not-started |
 | 7 | Codex | `(main)/codex/*` (page + `Codex*Tab`), `components/codex/*` | not-started |
 | 8 | Browse | `(main)/browse/page.tsx` | not-started |
@@ -174,11 +174,11 @@ Site surface: **43 pages · 28 API routes · ~140 components · 17 layouts.** Re
 
 ### Area 5 — Character creator
 
-- SA-5-1 [QUEUED] — Tab bar lets users skip Ancestry: after Species, `ancestry.id` is set so `canNavigateToStep('skills')` passes (`src/stores/character-creator-store.ts:131`).
-- SA-5-2 [QUEUED] — Step guards check `draft.ancestry?.id` (set immediately by Species), not `completedSteps`/trait completion (`src/stores/character-creator-store.ts:123`).
-- SA-5-3 [QUEUED] — Mixed-species ancestry under-validated: skips choice-trait checks when `mixed`, never validates size/two species-skills/one trait per parent (`src/lib/character-creator-validation.ts:92`).
-- SA-5-4 [QUEUED] — **Currency mismatch**: equipment allocates from 200c but saved `currency` defaults to 500 when unset (`src/components/character-creator/steps/equipment-step.tsx:108`, `src/stores/character-creator-store.ts:369`).
-- SA-5-5 [QUEUED] — Changing archetype clears only archetype fields; downstream species/skills/feats/equipment/powers left intact (`src/components/character-creator/steps/archetype-step.tsx:182`).
+- SA-5-1 [SAFE-FIX] — Tab skip fixed: `canNavigateToStep` uses `completedSteps`, not `ancestry.id` alone (`character-creator-store.ts`). Verified 2026-06-26.
+- SA-5-2 [SAFE-FIX] — Step guards require prior steps in `completedSteps` (`character-creator-store.ts`). Verified 2026-06-26.
+- SA-5-3 [SAFE-FIX] — Mixed-species validation: size, 2 skills, traits per parent, choice traits (`character-creator-validation.ts`). Verified 2026-06-26.
+- SA-5-4 [SAFE-FIX] — Currency 200c via `CHARACTER_STARTING_CURRENCY` in store, equipment step, validation (`character-creator-store.ts`, `equipment-step.tsx`). Verified 2026-06-26.
+- SA-5-5 [SAFE-FIX] — Archetype change clears downstream via `downstreamDraftReset()` on `setArchetype`, `setArchetypePath`, `reselectArchetype` (`character-creator-store.ts`). Verified 2026-06-26.
 - SA-5-6 [SAFE-FIX] — Species/mixed cards are clickable `<div>`s without `role="button"`/`tabIndex`/keyboard (`src/components/character-creator/steps/species-step.tsx:116`).
 - SA-5-7 [SAFE-FIX] — `SpeciesModal` duplicates species name: Modal `title` + inner `<h2>` (`src/components/character-creator/species-modal.tsx:210`,`226`).
 - SA-5-8 [SAFE-FIX] — Creator tab buttons `py-2` (~40px) and lack `aria-current="step"` (`src/components/character-creator/creator-tab-bar.tsx:83`).
@@ -188,17 +188,17 @@ Site surface: **43 pages · 28 API routes · ~140 components · 17 layouts.** Re
 - SA-5-12 [SAFE-FIX] — `LoginPromptModal` hardcodes `returnPath="/characters/new"`, dropping `?returnTo=` (`finalize-step.tsx:959`).
 - SA-5-13 [SAFE-FIX] — Sticky 44px footers only on Species/Ancestry; other steps omit `min-h-[44px]` nav (`abilities-step.tsx:100`, `feats-step.tsx:765`).
 - SA-5-14 [SAFE-FIX] — Feats step selected cards use raw `bg-white` instead of `bg-surface` (`feats-step.tsx:506`).
-- SA-5-15 [SAFE-FIX→TASK-322] — Finalize portrait upload uses raw `fetch` (`finalize-step.tsx:557`).
-- SA-5-16 [QUEUED] — Persisted archetype "locked" view has no Back/Continue footer (`archetype-step.tsx:154`).
-- SA-5-17 [QUEUED] — Step Continue buttons don't enforce requirements (Feats/Powers always enabled; Abilities allows unspent) (`feats-step.tsx:772`, `abilities-step.tsx:39`).
+- SA-5-15 [SAFE-FIX] — Finalize portrait upload uses shared `apiUpload` (`api-client.ts`, `finalize-step.tsx`). Verified 2026-06-26.
+- SA-5-16 [SAFE-FIX] — Locked archetype view has `CreatorStepFooter` Back/Continue (`archetype-step.tsx`). Verified 2026-06-26.
+- SA-5-17 [SAFE-FIX] — Continue gating on Abilities, Skills, Feats, Equipment; Powers optional (`abilities-step.tsx`, `skills-step.tsx`, `feats-step.tsx`, `equipment-step.tsx`, `powers-step.tsx`). Verified 2026-06-26.
 - SA-5-18 [NOTE] — TASK-307 acceptance **met** in code (expandable choice traits) — normalize to done (`species-modal.tsx:106`).
 - SA-5-19 [NOTE] — TASK-308 acceptance **met** in code (`ChoiceTraitOptionListPicker` wired) — normalize to done (`ancestry-step.tsx:1040`).
 - SA-5-20 [NOTE] — Good reuse: `AbilityScoreEditor`, `SkillsAllocationPage`, `fullScreenOnMobile` modals.
 - SA-5-21 [NOTE] — Guest vs authed intentional: Zustand `persist`; login required only on save.
-- SA-5-22 [NOTE] — No persist schema version/migration; stale drafts may survive codex/draft-shape changes (`character-creator-store.ts:399`).
-- SA-5-23 [NOTE] — `resetCreator()` reuses same `initialDraft` reference rather than cloning.
+- SA-5-22 [SAFE-FIX] — Persist schema version `CREATOR_STORE_SCHEMA_VERSION` + migrate (`character-creator-store.ts`). Verified 2026-06-26.
+- SA-5-23 [SAFE-FIX] — `resetCreator()` uses `cloneInitialDraft()` (`character-creator-store.ts`). Verified 2026-06-26.
 - SA-5-24 [NOTE] — Creator mounted at `characters/new`; no separate `/character-creator` route.
-- SA-5-25 [NOTE] — HE overspend not flagged (only under-spend warns) (`character-creator-validation.ts:308`).
+- SA-5-25 [SAFE-FIX] — HE overspend flagged on finalize step + aggregate validation (`character-creator-validation.ts`). Verified 2026-06-26.
 
 ### Area 6 — Library
 

@@ -35,6 +35,18 @@ export async function apiFetch<T>(url: string, options?: RequestInit): Promise<T
   return res.json();
 }
 
+/** Multipart upload (FormData) — does not set Content-Type (browser sets boundary). */
+export async function apiUpload<T>(url: string, formData: FormData): Promise<T> {
+  const res = await fetch(url, { method: 'POST', body: formData });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(parseApiErrorBody(err, 'Upload failed'));
+  }
+
+  return res.json();
+}
+
 /** Like apiFetch but returns null on 404 instead of throwing. */
 export async function apiFetchOrNull<T>(url: string, options?: RequestInit): Promise<T | null> {
   const res = await fetch(url, {

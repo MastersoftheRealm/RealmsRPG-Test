@@ -1,6 +1,6 @@
 import type { ColumnValue } from '@/components/shared/grid-list-row';
 import type { UserItem, UserPower, UserTechnique } from '../use-user-library';
-import { formatDamageDisplay, formatActionTypeForDisplay } from '@/lib/utils';
+import { formatDamageDisplay, formatActionTypeForDisplay, formatSavedActionTypeForDisplay } from '@/lib/utils';
 import { deriveShieldAmountFromProperties, deriveShieldDamageFromProperties } from '@/lib/calculators';
 import type { AddLibraryItemType, EqItem } from './types';
 
@@ -19,7 +19,7 @@ export function getItemColumns(
     const damageStr = power.damage?.length ? power.damage.map((d) => capitalize(d.type)).join(', ') : '-';
     const areaStr = power.area?.type ? capitalize(power.area.type) : '-';
     return [
-      { key: 'Action', value: formatActionTypeForDisplay(power.actionType ?? ''), align: 'center' as const },
+      { key: 'Action', value: formatSavedActionTypeForDisplay(power.actionType, power.isReaction), align: 'center' as const },
       { key: 'Damage', value: damageStr, align: 'center' as const },
       { key: 'Area', value: areaStr, align: 'center' as const },
     ];

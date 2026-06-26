@@ -28,6 +28,7 @@ import {
 } from '@/components/codex';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
+import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
 import { useCodexFeats, useCodexSkills, useMergedSpecies, useTraits, type Feat, type Skill } from '@/hooks';
 import { getValidationIssuesForStep } from '@/lib/character-creator-validation';
 import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats } from '@/lib/game/formulas';
@@ -594,7 +595,7 @@ export function FeatsStep() {
                 const fullFeat = feats?.find(f => String(f.id) === String(feat.id));
                 const displayName = fullFeat ? formatFeatName(fullFeat) : feat.name;
                 return (
-                  <div key={feat.id} className="rounded-lg border border-amber-200 bg-white overflow-hidden max-w-md">
+                  <div key={feat.id} className="rounded-lg border border-amber-200 bg-surface overflow-hidden max-w-md">
                     <div className="px-3 py-1.5 flex items-center gap-2">
                       <button
                         type="button"
@@ -651,7 +652,7 @@ export function FeatsStep() {
                 const fullFeat = feats?.find(f => String(f.id) === String(feat.id));
                 const displayName = fullFeat ? formatFeatName(fullFeat) : feat.name;
                 return (
-                  <div key={feat.id} className="rounded-lg border border-blue-200 dark:border-blue-800 bg-white dark:bg-surface-alt overflow-hidden max-w-md">
+                  <div key={feat.id} className="rounded-lg border border-blue-200 dark:border-blue-800 bg-surface dark:bg-surface-alt overflow-hidden max-w-md">
                     <div className="px-3 py-1.5 flex items-center gap-2">
                       <button
                         type="button"
@@ -865,20 +866,7 @@ export function FeatsStep() {
         </>
       )}
       
-      <div className="flex justify-between">
-        <Button
-          variant="secondary"
-          onClick={prevStep}
-        >
-          ← Back
-        </Button>
-        <Button
-          onClick={nextStep}
-          disabled={!canContinue}
-        >
-          Continue →
-        </Button>
-      </div>
+      <CreatorStepFooter onBack={prevStep} onContinue={nextStep} continueDisabled={!canContinue} />
     </div>
   );
 }

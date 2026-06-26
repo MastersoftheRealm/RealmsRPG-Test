@@ -14,7 +14,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { cn, formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useEquipment, useUserItems, useItemProperties, useOfficialLibrary, usePowerParts, useTechniqueParts } from '@/hooks';
+import { useEquipment, useUserItems, useItemProperties, useOfficialLibrary, usePowerParts, useTechniqueParts, useMergedSpecies, useCodexSkills, useTraits } from '@/hooks';
 import { deriveItemDisplay, trainingPointsForItemPropertyRef } from '@/lib/calculators/item-calc';
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 import {
@@ -38,6 +38,8 @@ import type { Item } from '@/types';
 import type { CharacterPower, CharacterTechnique } from '@/types';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
 import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
+import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
+import { getValidationIssuesForStep } from '@/lib/character-creator-validation';
 import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies, getTrainingPointLimit } from '@/lib/proficiencies';
 
 // List column definitions and grid (unified with Library/Codex); name column wider for readability
@@ -124,6 +126,18 @@ interface SelectedItem {
 export function EquipmentStep() {
   const { tabGroupId, sharedPanelId } = useTabGroup();
   const { draft, nextStep, prevStep, updateDraft } = useCharacterCreatorStore();
+  const { data: allSpecies = [] } = useMergedSpecies();
+  const { data: codexSkills } = useCodexSkills();
+  const { data: allTraits } = useTraits();
+  const validationContext = useMemo(
+    () => ({ allSpecies, codexSkills: codexSkills ?? null, allTraits: allTraits ?? null }),
+    [allSpecies, codexSkills, allTraits]
+  );
+  const stepIssues = useMemo(
+    () => getValidationIssuesForStep('equipment', draft, validationContext),
+    [draft, validationContext]
+  );
+  const canContinue = !stepIssues.some((i) => i.severity === 'error');
   // Fetch user's item library (weapons/armor) from API
   const { data: userItems, isLoading: userItemsLoading } = useUserItems();
   // Fetch general equipment from Codex
@@ -1192,19 +1206,7 @@ export function EquipmentStep() {
       </>
       )}
       
-      <div className="flex justify-between">
-        <Button
-          variant="secondary"
-          onClick={prevStep}
-        >
-          ← Back
-        </Button>
-        <Button
-          onClick={handleContinue}
-        >
-          Continue →
-        </Button>
-      </div>
+      <CreatorStepFooter onBack={prevStep} onContinue={handleContinue} continueDisabled={!canContinue} />
     </div>
   );
 }

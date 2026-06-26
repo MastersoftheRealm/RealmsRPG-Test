@@ -19,3 +19,32 @@ export function formatActionTypeForDisplay(raw: string): string {
   if (lower === 'free') return 'Free';
   return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 }
+
+/**
+ * Format action from persisted selector fields (actionType + isReaction).
+ * e.g. actionType "free" + isReaction → "Free Reaction"; not just "Reaction".
+ */
+export function formatSavedActionTypeForDisplay(
+  actionType?: string | null,
+  isReaction?: boolean
+): string {
+  const raw = String(actionType ?? '').trim();
+  if (!raw) {
+    return isReaction ? 'Reaction' : '-';
+  }
+  const lower = raw.toLowerCase();
+  if (/\b(action|reaction)\b/i.test(raw)) {
+    return formatActionTypeForDisplay(raw);
+  }
+  let base = 'Basic';
+  if (lower === 'quick') base = 'Quick';
+  else if (lower === 'free') base = 'Free';
+  else if (lower === 'long3' || lower === 'long (3)') base = 'Long (3)';
+  else if (lower === 'long4' || lower === 'long (4)') base = 'Long (4)';
+  else if (lower === 'basic') base = 'Basic';
+  else {
+    base = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+  }
+  const combined = isReaction ? `${base} Reaction` : `${base} Action`;
+  return formatActionTypeForDisplay(combined);
+}

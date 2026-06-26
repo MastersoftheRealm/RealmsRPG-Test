@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { Chip, Button, Spinner } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useCodexArchetypes } from '@/hooks';
+import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
 import { parseArchetypePathData, pathHasPlayerVisibleLevel1 } from '@/lib/game/archetype-path';
 import type { Archetype, ArchetypeCategory, AbilityName } from '@/types';
 import Tippy from '@tippyjs/react';
@@ -54,7 +55,7 @@ function AbilityPickButton({
       onClick={onPick}
       disabled={disabled}
       className={cn(
-        'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+        'px-3 py-2 min-h-11 min-w-11 rounded-lg text-sm font-medium transition-colors',
         selected
           ? variant === 'power'
             ? 'bg-violet-500 text-white dark:bg-violet-600 dark:text-white'
@@ -177,14 +178,7 @@ export function ArchetypeStep() {
           Choose a different archetype
         </button>
 
-        <div className="flex justify-between">
-          <Button variant="secondary" onClick={prevStep} className="min-h-[44px]">
-            ← Back
-          </Button>
-          <Button onClick={nextStep} className="min-h-[44px]">
-            Continue →
-          </Button>
-        </div>
+        <CreatorStepFooter onBack={prevStep} onContinue={nextStep} />
       </div>
     );
   }
@@ -425,14 +419,14 @@ export function ArchetypeStep() {
         </>
       )}
       
-      {/* Confirm Button */}
-      <Button
-        onClick={handleConfirm}
-        disabled={!canConfirm}
-        className="w-full"
-      >
-        {creationChoice === 'path' ? 'Confirm Archetype Path' : 'Confirm Archetype'}
-      </Button>
+      {/* Confirm Archetype */}
+      <CreatorStepFooter
+        primaryAction={
+          <Button onClick={handleConfirm} disabled={!canConfirm} className="min-h-11 min-w-11">
+            {creationChoice === 'path' ? 'Confirm Archetype Path' : 'Confirm Archetype'}
+          </Button>
+        }
+      />
     </div>
   );
 }

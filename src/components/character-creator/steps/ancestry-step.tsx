@@ -22,6 +22,7 @@ import {
   firstSelectedChoiceOptionId,
 } from '@/lib/choice-trait';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
+import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
 import { useMergedSpecies, useTraits, useCodexSkills, resolveTraitIds, resolveSkillIdsToNames, type Trait, type Species } from '@/hooks';
 import { Heart, AlertTriangle, Sparkles, Star, Info } from 'lucide-react';
 import Tippy from '@tippyjs/react';
@@ -455,11 +456,12 @@ export function AncestryStep() {
             </Button>
           </div>
         </Alert>
-        {/* Sticky footer (TASK-285) */}
-        <div className="sticky bottom-3 left-0 right-0 mt-8 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:mx-0 md:px-0">
-          <Button variant="secondary" onClick={prevStep} className="min-h-11 min-w-11">← Back</Button>
-          <Button disabled className="min-h-11 min-w-11">Continue →</Button>
-        </div>
+        <CreatorStepFooter
+          onBack={prevStep}
+          primaryAction={
+            <Button disabled className="min-h-11 min-w-11">Continue →</Button>
+          }
+        />
       </div>
     );
   }
@@ -550,7 +552,7 @@ export function AncestryStep() {
                     type="button"
                     onClick={() => toggleMixedSpeciesSkill(opt.id)}
                     className={cn(
-                      'px-3 py-1.5 rounded-full text-sm font-medium border transition-colors',
+                      'px-3 py-2 min-h-11 rounded-full text-sm font-medium border transition-colors',
                       selected
                         ? 'bg-primary-100 dark:bg-primary-900/40 border-primary-400 dark:border-primary-600 text-primary-800 dark:text-primary-200'
                         : 'bg-surface border-border-light text-text-secondary hover:bg-surface-alt hover:border-primary-300 dark:hover:border-primary-600'
@@ -673,11 +675,7 @@ export function AncestryStep() {
           />
         )}
 
-        {/* Sticky footer (TASK-285) */}
-        <div className="sticky bottom-3 left-0 right-0 mt-8 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:mx-0 md:px-0">
-          <Button variant="secondary" onClick={prevStep} className="min-h-11 min-w-11">← Back</Button>
-          <Button onClick={nextStep} disabled={!canContinue} className="min-h-11 min-w-11">Continue →</Button>
-        </div>
+        <CreatorStepFooter onBack={prevStep} onContinue={nextStep} continueDisabled={!canContinue} />
       </div>
     );
   }
@@ -689,11 +687,11 @@ export function AncestryStep() {
         <Alert variant="warning" className="mb-8">
           Species data could not be loaded. Try changing species.
         </Alert>
-        {/* Sticky footer (TASK-285) */}
-        <div className="sticky bottom-3 left-0 right-0 mt-8 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:mx-0 md:px-0">
-          <Button variant="secondary" onClick={prevStep} className="min-h-11 min-w-11">← Back</Button>
-          <Button onClick={() => setStep('species')} className="min-h-11 min-w-11">Change Species</Button>
-        </div>
+        <CreatorStepFooter
+          onBack={prevStep}
+          continueLabel="Change Species"
+          onContinue={() => setStep('species')}
+        />
       </div>
     );
   }
@@ -934,11 +932,7 @@ export function AncestryStep() {
         </div>
       )}
 
-      {/* Sticky footer (TASK-285) */}
-      <div className="sticky bottom-3 left-0 right-0 mt-8 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:mx-0 md:px-0">
-        <Button variant="secondary" onClick={prevStep} className="min-h-11 min-w-11">← Back</Button>
-        <Button onClick={nextStep} disabled={!canContinue} className="min-h-11 min-w-11">Continue →</Button>
-      </div>
+      <CreatorStepFooter onBack={prevStep} onContinue={nextStep} continueDisabled={!canContinue} />
     </div>
   );
 }

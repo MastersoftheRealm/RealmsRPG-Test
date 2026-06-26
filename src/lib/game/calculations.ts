@@ -191,6 +191,20 @@ export function calculateBonuses(
   };
 }
 
+/** Power Attack Bonus = Power Ability + Power Proficiency (GAME_RULES). */
+export function calculatePowerAttackBonus(charData: Partial<Character>): number {
+  const abilities = charData.abilities ?? {};
+  const powProf = charData.pow_prof ?? charData.powerProficiency ?? 0;
+  const powAbil =
+    charData.pow_abil ?? charData.archetype?.pow_abil ?? charData.archetype?.ability;
+  return calculateBonuses(
+    charData.mart_prof ?? charData.martialProficiency ?? 0,
+    powProf,
+    abilities,
+    powAbil
+  ).powerAttack.prof;
+}
+
 // =============================================================================
 // Helper Functions
 // =============================================================================

@@ -11,6 +11,7 @@ import { useMemo } from 'react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { AbilityScoreEditor } from '@/components/creator';
 import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
+import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
 import { Button } from '@/components/ui';
 import { calculateAbilityPoints, calculateAbilityScoreCost } from '@/lib/game/formulas';
 import type { AbilityName } from '@/types';
@@ -90,22 +91,7 @@ export function AbilitiesStep() {
         />
       </div>
       
-      {/* Navigation */}
-      <div className="flex justify-between">
-        <Button
-          variant="secondary"
-          onClick={prevStep}
-        >
-          ← Back
-        </Button>
-        
-        <Button
-          onClick={nextStep}
-          disabled={!canContinue}
-        >
-          Continue →
-        </Button>
-      </div>
+      <CreatorStepFooter onBack={prevStep} onContinue={nextStep} continueDisabled={!canContinue} />
     </div>
   );
 }

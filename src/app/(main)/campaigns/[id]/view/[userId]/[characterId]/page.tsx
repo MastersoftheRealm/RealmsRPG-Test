@@ -39,7 +39,7 @@ import {
   calculateSkillPointsForEntity,
   resolveParentSkillNameForSubSkill,
 } from '@/lib/game/formulas';
-import { getArchetypeAbilityScore } from '@/lib/game/calculations';
+import { getArchetypeAbilityScore, calculatePowerAttackBonus } from '@/lib/game/calculations';
 import type { Character, Item } from '@/types';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
@@ -315,6 +315,7 @@ function CampaignCharacterViewContent() {
                   innatePools={archetypeProgression?.innatePools || 0}
                   currentEnergy={character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy}
                   martialProficiency={character.mart_prof ?? 0}
+                  powerAttackBonus={calculatePowerAttackBonus(character)}
                   speedDisplayUnit={character.speedDisplayUnit ?? 'spaces'}
                   isEditMode={false}
                   onAddPower={() => {}}

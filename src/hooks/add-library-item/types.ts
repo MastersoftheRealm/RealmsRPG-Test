@@ -30,6 +30,7 @@ export interface UseAddLibraryItemDataReturn {
   displayFilterFn: (item: SelectableItem) => boolean;
   emptyTitle: string;
   emptyDesc: string | undefined;
+  dbs: CodexDbRefs;
 }
 
 export interface CodexDbRefs {

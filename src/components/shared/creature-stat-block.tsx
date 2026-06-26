@@ -484,6 +484,7 @@ export function CreatureStatBlock({
             parts: userMatch.parts || [],
             damage: userMatch.damage,
             actionType: userMatch.actionType,
+            isReaction: userMatch.isReaction,
             range: userMatch.range,
             area: userMatch.area,
             duration: userMatch.duration,
@@ -494,7 +495,8 @@ export function CreatureStatBlock({
               description: officialMatch.description != null ? String(officialMatch.description) : undefined,
               parts: ((officialMatch.parts ?? (officialMatch.payload as Record<string, unknown> | undefined)?.parts) as unknown[]) ?? [],
               damage: (officialMatch.damage ?? (officialMatch.payload as Record<string, unknown> | undefined)?.damage) as unknown,
-              actionType: (officialMatch.actionType ?? (officialMatch.payload as Record<string, unknown> | undefined)?.actionType) as unknown,
+              actionType: (officialMatch.actionType ?? (officialMatch.payload as Record<string, unknown> | undefined)?.actionType) as string | undefined,
+              isReaction: (officialMatch.isReaction ?? (officialMatch.payload as Record<string, unknown> | undefined)?.isReaction) as boolean | undefined,
               range: (officialMatch.range ?? (officialMatch.payload as Record<string, unknown> | undefined)?.range) as unknown,
               area: (officialMatch.area ?? (officialMatch.payload as Record<string, unknown> | undefined)?.area) as unknown,
               duration: (officialMatch.duration ?? (officialMatch.payload as Record<string, unknown> | undefined)?.duration) as unknown,
@@ -512,6 +514,8 @@ export function CreatureStatBlock({
           description: baseDescription,
           parts: parts as never,
           damage: Array.isArray(damage) ? (damage as never) : undefined,
+          actionType: enriched?.actionType as string | undefined,
+          isReaction: enriched?.isReaction as boolean | undefined,
         },
         powerPartsDb as never
       );
@@ -583,6 +587,8 @@ export function CreatureStatBlock({
             parts: userMatch.parts || [],
             damage: userMatch.damage,
             weapon: userMatch.weapon,
+            actionType: userMatch.actionType,
+            isReaction: userMatch.isReaction,
           }
         : officialMatch
           ? {
@@ -591,6 +597,8 @@ export function CreatureStatBlock({
               parts: ((officialMatch.parts ?? (officialMatch.payload as Record<string, unknown> | undefined)?.parts) as unknown[]) ?? [],
               damage: (officialMatch.damage ?? (officialMatch.payload as Record<string, unknown> | undefined)?.damage) as unknown,
               weapon: (officialMatch.weapon ?? (officialMatch.payload as Record<string, unknown> | undefined)?.weapon) as unknown,
+              actionType: (officialMatch.actionType ?? (officialMatch.payload as Record<string, unknown> | undefined)?.actionType) as string | undefined,
+              isReaction: (officialMatch.isReaction ?? (officialMatch.payload as Record<string, unknown> | undefined)?.isReaction) as boolean | undefined,
             }
           : null;
 
@@ -606,6 +614,8 @@ export function CreatureStatBlock({
           parts: parts as never,
           damage: Array.isArray(damage) ? (damage as never)[0] : undefined,
           weapon: (enriched?.weapon as never) ?? undefined,
+          actionType: enriched?.actionType as string | undefined,
+          isReaction: enriched?.isReaction as boolean | undefined,
         },
         techniquePartsDb as never
       );

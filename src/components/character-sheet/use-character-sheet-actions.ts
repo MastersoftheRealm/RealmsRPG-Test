@@ -11,6 +11,7 @@ import {
   mergeOwnedWithRequired,
   calculateProficiencyTP,
   getTrainingPointLimit,
+  getMissingRequiredProficiencies,
 } from '@/lib/proficiencies';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 import { withSyncedResourceFields } from '@/lib/encounter/character-resource-sync';
@@ -463,24 +464,38 @@ const applyAutoProficiencies = useCallback((next: Character, reason: string): Ch
 
 useEffect(() => {
   if (!character) return;
-  if ((character.proficiencies || []).length > 0) return;
   if (!powerPartsDb?.length && !techniquePartsDb?.length && !itemPropertiesDb?.length) return;
   const required = buildRequiredForCharacter(character);
-  if (required.length === 0) return;
-  setCharacter((prev) => (prev ? { ...prev, proficiencies: required } : prev));
-}, [character, powerPartsDb?.length, techniquePartsDb?.length, itemPropertiesDb?.length, buildRequiredForCharacter]);
+  const missing = getMissingRequiredProficiencies(required, character.proficiencies || []);
+  if (missing.length === 0) return;
+  setCharacter((prev) => {
+    if (!prev) return prev;
+    return applyAutoProficiencies(prev, 'Sync proficiencies');
+  });
+}, [
+  character?.id,
+  character?.powers,
+  character?.techniques,
+  character?.equipment,
+  character?.proficiencies,
+  powerPartsDb,
+  techniquePartsDb,
+  itemPropertiesDb,
+  buildRequiredForCharacter,
+  applyAutoProficiencies,
+]);
 
 // Add power handler
 const handleAddPowers = useCallback((powers: CharacterPower[]) => {
-  if (!character) return;
-  const candidate: Character = {
-    ...character,
-    powers: [...(character.powers || []), ...powers],
-  };
-  const next = applyAutoProficiencies(candidate, 'Adding powers');
-  if (!next) return;
-  setCharacter(next);
-}, [character, applyAutoProficiencies]);
+  setCharacter((prev) => {
+    if (!prev) return prev;
+    const candidate: Character = {
+      ...prev,
+      powers: [...(prev.powers || []), ...powers],
+    };
+    return applyAutoProficiencies(candidate, 'Adding powers');
+  });
+}, [applyAutoProficiencies]);
 
 // Remove power handler
 const handleRemovePower = useCallback((powerId: string | number) => {
@@ -517,15 +532,15 @@ const handleUsePower = useCallback((powerId: string | number, energyCost: number
 
 // Add technique handler
 const handleAddTechniques = useCallback((techniques: CharacterTechnique[]) => {
-  if (!character) return;
-  const candidate: Character = {
-    ...character,
-    techniques: [...(character.techniques || []), ...techniques],
-  };
-  const next = applyAutoProficiencies(candidate, 'Adding techniques');
-  if (!next) return;
-  setCharacter(next);
-}, [character, applyAutoProficiencies]);
+  setCharacter((prev) => {
+    if (!prev) return prev;
+    const candidate: Character = {
+      ...prev,
+      techniques: [...(prev.techniques || []), ...techniques],
+    };
+    return applyAutoProficiencies(candidate, 'Adding techniques');
+  });
+}, [applyAutoProficiencies]);
 
 // Remove technique handler
 const handleRemoveTechnique = useCallback((techId: string | number) => {

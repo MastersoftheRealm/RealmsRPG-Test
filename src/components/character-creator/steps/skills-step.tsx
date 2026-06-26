@@ -10,9 +10,11 @@
 
 import React, { useMemo, useCallback } from 'react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useMergedSpecies, useCodexSkills, useTooltipByKey, type Species, type Skill } from '@/hooks';
+import { useMergedSpecies, useCodexSkills, useTraits, useTooltipByKey, type Species, type Skill } from '@/hooks';
 import { SkillsAllocationPage, ContextHelpTooltip } from '@/components/shared';
 import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
+import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
+import { getValidationIssuesForStep } from '@/lib/character-creator-validation';
 import { Button, HelpTooltip } from '@/components/ui';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
@@ -45,6 +47,17 @@ export function SkillsStep() {
   const { draft, nextStep, prevStep, updateDraft } = useCharacterCreatorStore();
   const { data: allSpecies = [] } = useMergedSpecies();
   const { data: codexSkills = [] } = useCodexSkills();
+  const { data: allTraits } = useTraits();
+
+  const validationContext = useMemo(
+    () => ({ allSpecies, codexSkills: codexSkills ?? null, allTraits: allTraits ?? null }),
+    [allSpecies, codexSkills, allTraits]
+  );
+  const stepIssues = useMemo(
+    () => getValidationIssuesForStep('skills', draft, validationContext),
+    [draft, validationContext]
+  );
+  const canContinue = stepIssues.length === 0;
 
   const speciesSkillIds = useMemo(() => {
     const isMixed = draft.ancestry?.mixed === true;
@@ -240,12 +253,7 @@ export function SkillsStep() {
   }), [abilities]);
 
   const footer = (
-    <>
-      <Button variant="secondary" onClick={prevStep}>
-        ← Back
-      </Button>
-      <Button onClick={handleContinue}>Continue →</Button>
-    </>
+    <CreatorStepFooter variant="inline" onBack={prevStep} onContinue={handleContinue} continueDisabled={!canContinue} />
   );
 
   return (

@@ -6,7 +6,7 @@
 
 import type { ReactNode } from 'react';
 import {
-  formatActionTypeForDisplay,
+  formatSavedActionTypeForDisplay,
   formatListCellLabel,
   normalizeRangeDisplay,
 } from '@/lib/utils';
@@ -55,6 +55,7 @@ export type LibraryEntityRowContext = {
   itemPropertiesDb: CodexProperty[];
   abilities?: Abilities;
   martialProficiency?: number;
+  powerAttackBonus?: number;
   currentEnergy?: number;
   showLibraryEditControls: boolean;
   rollContext: RollContext;
@@ -127,19 +128,27 @@ export function mapPowerRows(powers: CharacterPower[], ctx: LibraryEntityRowCont
     const damageCell =
       power.damage && ctx.rollContext?.rollDamage ? (
         <RollButton
-          value={0}
+          value={ctx.powerAttackBonus ?? 0}
           displayValue={formatDamageType(power.damage)}
           variant="danger"
           size="sm"
-          onClick={() => ctx.rollContext!.rollDamage(power.damage as string)}
-          title="Roll damage"
+          onClick={() =>
+            ctx.rollContext!.rollDamage(
+              power.damage as string,
+              ctx.powerAttackBonus ?? 0
+            )
+          }
+          title="Roll damage (includes Power Bonus)"
         />
       ) : (
         formatDamageType(power.damage)
       );
 
+    const powerIsReaction = (power as CharacterPower & { isReaction?: boolean }).isReaction;
+    const actionDisplay = formatSavedActionTypeForDisplay(power.actionType, powerIsReaction);
+
     const columns: ColumnValue[] = [
-      { key: 'action', value: power.actionType || '-', align: 'center' },
+      { key: 'action', value: actionDisplay, align: 'center' },
       { key: 'damage', value: damageCell, align: 'center' },
       { key: 'area', value: formatArea(power.area), align: 'center' },
       { key: 'duration', value: formatDuration(power.duration), align: 'center' },
@@ -207,13 +216,16 @@ export function mapTechniqueRows(
       </div>
     );
 
+    const techIsReaction = (tech as CharacterTechnique & { isReaction?: boolean }).isReaction;
+    const actionDisplay = formatSavedActionTypeForDisplay(tech.actionType, techIsReaction);
+
     return {
       id,
       name: tech.name,
       description: tech.description,
-      actionType: formatActionTypeForDisplay(tech.actionType ?? ''),
+      actionType: actionDisplay,
       columns: [
-        { key: 'action', value: formatActionTypeForDisplay(tech.actionType ?? ''), align: 'center' },
+        { key: 'action', value: actionDisplay, align: 'center' },
         { key: 'energy', value: energyCost, align: 'center' },
         {
           key: 'weapon',

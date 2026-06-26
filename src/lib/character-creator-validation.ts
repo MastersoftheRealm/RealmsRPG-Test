@@ -10,6 +10,7 @@ import type { CreatorStep } from '@/stores/character-creator-store';
 import type { CoreRulesMap } from '@/types/core-rules';
 import { getChoiceOptionIds } from '@/lib/choice-trait';
 import { calculateAbilityPoints, calculateAbilityScoreCost, calculateHealthEnergyPool, calculateSkillPointsForEntity, calculateTrainingPoints } from '@/lib/game/formulas';
+import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
 import { calculateSimpleSkillPointsSpent } from '@/lib/game/skill-allocation';
 import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies } from '@/lib/proficiencies';
 
@@ -272,7 +273,7 @@ export function getValidationIssuesForStep(
           severity: 'warning',
         });
       }
-      const baseCurrency = 200;
+      const baseCurrency = CHARACTER_STARTING_CURRENCY;
       const equipmentItems = draft.equipment?.items || draft.equipment?.inventory || [];
       const spentCurrency = equipmentItems.reduce((sum: number, item: { cost?: number }) => sum + (item.cost || 0), 0);
       if (spentCurrency > baseCurrency) {
@@ -289,9 +290,34 @@ export function getValidationIssuesForStep(
       // Optional step; no hard requirements. Could add "must have at least one power" if needed.
       break;
 
-    case 'finalize':
-      // Name is only required on finalize; we don't validate name when leaving other steps.
+    case 'finalize': {
+      if (!draft.name?.trim()) {
+        issues.push({
+          emoji: '📝',
+          message: "Your hero needs a name! Give them something legendary.",
+          severity: 'error',
+        });
+      }
+      const hePool = calculateHealthEnergyPool(level, 'PLAYER', false);
+      const healthAllocation = draft.healthPoints || 0;
+      const energyAllocation = draft.energyPoints || 0;
+      const usedHEPoints = healthAllocation + energyAllocation;
+      const remainingHEPoints = hePool - usedHEPoints;
+      if (remainingHEPoints > 0) {
+        issues.push({
+          emoji: '❤️',
+          message: `You have ${remainingHEPoints} Health-Energy point${remainingHEPoints === 1 ? '' : 's'} to allocate.`,
+          severity: 'warning',
+        });
+      } else if (remainingHEPoints < 0) {
+        issues.push({
+          emoji: '❤️',
+          message: `You've overspent Health-Energy by ${Math.abs(remainingHEPoints)} point${Math.abs(remainingHEPoints) === 1 ? '' : 's'}.`,
+          severity: 'error',
+        });
+      }
       break;
+    }
   }
 
   return issues;
@@ -343,6 +369,12 @@ export function getAllValidationIssues(
       emoji: '❤️',
       message: `You have ${remainingHEPoints} Health-Energy point${remainingHEPoints === 1 ? '' : 's'} to allocate.`,
       severity: 'warning',
+    });
+  } else if (remainingHEPoints < 0) {
+    issues.push({
+      emoji: '❤️',
+      message: `You've overspent Health-Energy by ${Math.abs(remainingHEPoints)} point${Math.abs(remainingHEPoints) === 1 ? '' : 's'}.`,
+      severity: 'error',
     });
   }
 

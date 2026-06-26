@@ -8,7 +8,7 @@ import {
   calculateMaxArchetypeFeats,
   calculateMaxCharacterFeats,
 } from '@/lib/game/formulas';
-import { getArchetypeAbilityScore } from '@/lib/game/calculations';
+import { getArchetypeAbilityScore, calculatePowerAttackBonus } from '@/lib/game/calculations';
 
 type EnrichedSheetData = {
   powers?: Character['powers'];
@@ -113,6 +113,7 @@ export function buildLibrarySectionProps({
     innatePools: archetypeProgression?.innatePools || 0,
     currentEnergy: character.currentEnergy ?? character.energy?.current ?? calculatedMaxEnergy,
     martialProficiency: character.mart_prof,
+    powerAttackBonus: calculatePowerAttackBonus(character),
     onRemovePower: handleRemovePower,
     onTogglePowerInnate: handleTogglePowerInnate,
     onUsePower: handleUsePower,

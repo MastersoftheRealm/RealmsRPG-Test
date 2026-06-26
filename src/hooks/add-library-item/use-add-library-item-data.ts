@@ -163,6 +163,7 @@ export function useAddLibraryItemData({
     displayFilterFn,
     emptyTitle,
     emptyDesc,
+    dbs,
   };
 }
 

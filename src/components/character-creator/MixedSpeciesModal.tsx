@@ -74,8 +74,10 @@ export function MixedSpeciesModal({
       title="Mixed species"
       size="lg"
       fullScreenOnMobile
+      flexLayout
+      contentClassName="p-0"
       footer={
-        <div className="p-4 flex justify-end gap-2">
+        <div className="shrink-0 border-t border-border-light p-4 flex justify-end gap-2">
           <Button variant="outline" onClick={handleClose} className="min-h-[44px] min-w-[44px]">
             Cancel
           </Button>

@@ -43,10 +43,11 @@ export function AddLibraryItemModal({
     displayFilterFn,
     emptyTitle,
     emptyDesc,
+    dbs,
   } = useAddLibraryItemData({ itemType, existingIds });
 
   const handleConfirm = (selected: SelectableItem[]) => {
-    onAdd(mapSelectedToCharacterItems(itemType, selected, powerSelectionMode));
+    onAdd(mapSelectedToCharacterItems(itemType, selected, powerSelectionMode, dbs));
   };
 
   const columns =

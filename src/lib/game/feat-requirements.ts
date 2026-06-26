@@ -19,7 +19,7 @@ import type { Abilities } from '@/types/abilities';
 import type { DefenseSkills } from '@/types/skills';
 import { calculateDefenses, calculateSpeed } from './calculations';
 import { getSkillBonusForFeatRequirement, type CodexSkillForFeat } from './formulas';
-import { getFeatLevel } from '@/lib/leveled-feats';
+import { getFeatFamilyId, getFeatLevel } from '@/lib/leveled-feats';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 
 /** Minimal feat shape needed for requirement checks (structurally compatible with codex Feat). */
@@ -108,13 +108,25 @@ export function getPreviousLevelFeatId(
 ): string | null {
   const level = getFeatLevel(feat);
   if (level <= 1) return null;
-  if (feat.base_feat_id && level === 2) return String(feat.base_feat_id);
-  if (feat.base_feat_id && level >= 3) {
-    const prev = allFeats.find(
-      (f) => f.base_feat_id === feat.base_feat_id && getFeatLevel(f) === level - 1
+
+  const familyId = getFeatFamilyId(feat);
+  const byFamily = allFeats.find(
+    (f) => getFeatFamilyId(f) === familyId && getFeatLevel(f) === level - 1
+  );
+  if (byFamily) return String(byFamily.id);
+
+  if (feat.base_feat_id) {
+    const byBaseId = allFeats.find(
+      (f) => String(f.id) === String(feat.base_feat_id) && getFeatLevel(f) === level - 1
     );
-    return prev ? String(prev.id) : null;
+    if (byBaseId) return String(byBaseId.id);
+    // Legacy: level-2 rows stored the level-1 feat id in base_feat_id
+    if (level === 2) {
+      const legacy = allFeats.find((f) => String(f.id) === String(feat.base_feat_id));
+      if (legacy && getFeatLevel(legacy) === 1) return String(legacy.id);
+    }
   }
+
   return null;
 }
 
