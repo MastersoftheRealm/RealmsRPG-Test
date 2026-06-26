@@ -75,7 +75,7 @@ CREATE POLICY "Owner or author deletes rolls" ON public.campaign_rolls
   USING (auth_is_campaign_owner(campaign_id) OR (user_id = (select auth.uid())::text AND auth_is_campaign_participant(campaign_id)));
 
 -- ======================= PART B (destructive) =======================
--- Apply ONLY after the Part A application build is deployed (migration name:
--- be02_membership_single_source_part_b):
---
--- ALTER TABLE public.campaigns DROP COLUMN IF EXISTS "memberIds";
+-- Applied after the Part A application build (commit ee82dac9) reached production,
+-- so no deployed code reads/writes the column (migration name:
+-- be02_membership_single_source_part_b).
+ALTER TABLE public.campaigns DROP COLUMN IF EXISTS "memberIds";
