@@ -1,0 +1,27 @@
+-- BE-05: Promoted/denormalized columns — designated single write path (DOCUMENTATION)
+-- ====================================================================================
+-- characters (data jsonb -> name/level/archetype_name/ancestry_name/status/visibility),
+-- user_creatures (payload jsonb -> name/description/level/type/size/hit_points/energy_points),
+-- user_species (payload jsonb -> sizes/skills/.../languages text columns) and
+-- campaigns (characters/memberIds jsonb -> owner_username) all maintain denormalized
+-- columns used for list/filter/sort.
+--
+-- DECISION: do NOT add database sync triggers for these tables. The library tables
+-- (official_*/user_powers/techniques/items) intentionally STRIP the scalar keys out
+-- of `payload` in src/lib/library-columnar.ts (bodyToColumnar), and creatures/species
+-- do the same. A payload-derived trigger would therefore have nothing to read from and
+-- would either be a no-op or write incorrect values. The existing
+-- public.sync_library_promoted_columns() trigger on the library tables is itself only a
+-- defensive COALESCE fallback for hypothetical raw inserts that carry a full payload.
+--
+-- SINGLE AUTHORITATIVE WRITE PATH (source of truth for promoted columns):
+--   * characters       -> src/app/api/characters/route.ts (+ characters/[id])
+--   * user library     -> src/app/api/user/library/[type]/route.ts via library-columnar.ts
+--   * user_creatures   -> same columnar path (type 'creatures')
+--   * user_species     -> bodyToColumnarSpecies in library-columnar.ts
+--   * campaigns         -> src/app/(main)/campaigns/actions.ts + src/app/api/campaigns/*
+-- All inserts/updates MUST go through these routes/helpers so columns and JSONB stay
+-- in sync. There is no raw client write path (RLS forbids anon/other-user writes).
+--
+-- This file is intentionally a no-op (documentation only); there is nothing to apply.
+SELECT 1;

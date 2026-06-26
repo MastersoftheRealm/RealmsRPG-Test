@@ -152,12 +152,19 @@ export function filterFeats(feats: Feat[], filters: FeatListFilters, options?: F
 export function buildFeatDetailSections(
   feat: Feat,
   skillIdToName: Map<string, string>,
-  familyLevels: Feat[] = []
+  familyLevels: Feat[] = [],
+  /**
+   * Optional overrides. `isCharacterFeat` lets selection UIs (character creator)
+   * drive the Type chip from their own character/archetype split instead of
+   * `feat.char_feat`.
+   */
+  opts?: { isCharacterFeat?: boolean }
 ): Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> {
   const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> = [];
 
+  const isCharacterFeat = opts?.isCharacterFeat ?? feat.char_feat;
   const typeChips: ChipData[] = [];
-  if (feat.char_feat) typeChips.push({ name: 'Character Feat', category: 'skill' });
+  if (isCharacterFeat) typeChips.push({ name: 'Character Feat', category: 'skill' });
   else typeChips.push({ name: 'Archetype Feat', category: 'archetype' });
   if (feat.state_feat) typeChips.push({ name: 'State Feat', category: 'archetype' });
   if (typeChips.length > 0) {

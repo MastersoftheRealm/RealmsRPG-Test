@@ -5,55 +5,33 @@
  */
 
 import type { Encounter, EncounterSummary } from '@/types/encounter';
-import { apiFetch, apiFetchOrNull } from '@/lib/api-client';
+import { createResourceClient } from './resource-client';
 
-const API_BASE = '/api/encounters';
+const client = createResourceClient<
+  Encounter,
+  EncounterSummary,
+  Omit<Encounter, 'id' | 'createdAt' | 'updatedAt'>,
+  Partial<Omit<Encounter, 'id' | 'createdAt'>>
+>('/api/encounters');
 
-/**
- * Get all encounters for the current user.
- */
-export async function getEncounters(): Promise<EncounterSummary[]> {
-  return apiFetch<EncounterSummary[]>(API_BASE);
-}
+/** Get all encounters for the current user. */
+export const getEncounters = (): Promise<EncounterSummary[]> => client.list();
 
-/**
- * Get a single encounter by ID.
- */
-export async function getEncounter(encounterId: string): Promise<Encounter | null> {
-  return apiFetchOrNull<Encounter>(`${API_BASE}/${encodeURIComponent(encounterId)}`);
-}
+/** Get a single encounter by ID. */
+export const getEncounter = (encounterId: string): Promise<Encounter | null> =>
+  client.get(encounterId);
 
-/**
- * Create a new encounter. Returns the new encounter ID.
- */
-export async function createEncounter(
+/** Create a new encounter. Returns the new encounter ID. */
+export const createEncounter = (
   data: Omit<Encounter, 'id' | 'createdAt' | 'updatedAt'>
-): Promise<string> {
-  const result = await apiFetch<{ id: string }>(API_BASE, {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
-  return result.id;
-}
+): Promise<string> => client.create(data);
 
-/**
- * Save (update) an existing encounter.
- */
-export async function saveEncounter(
+/** Save (update) an existing encounter. */
+export const saveEncounter = (
   encounterId: string,
   data: Partial<Omit<Encounter, 'id' | 'createdAt'>>
-): Promise<void> {
-  await apiFetch<void>(`${API_BASE}/${encodeURIComponent(encounterId)}`, {
-    method: 'PATCH',
-    body: JSON.stringify(data),
-  });
-}
+): Promise<void> => client.save(encounterId, data);
 
-/**
- * Delete an encounter.
- */
-export async function deleteEncounter(encounterId: string): Promise<void> {
-  await apiFetch<void>(`${API_BASE}/${encodeURIComponent(encounterId)}`, {
-    method: 'DELETE',
-  });
-}
+/** Delete an encounter. */
+export const deleteEncounter = (encounterId: string): Promise<void> =>
+  client.remove(encounterId);

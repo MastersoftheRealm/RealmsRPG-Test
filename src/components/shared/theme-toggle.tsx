@@ -54,6 +54,8 @@ export function ThemeToggle({ variant = 'dropdown', className }: ThemeToggleProp
                 : 'text-text-secondary hover:text-text-primary hover:bg-surface'
             )}
             title={label}
+            aria-label={`${label} theme`}
+            aria-pressed={theme === value}
           >
             <Icon className="w-4 h-4" />
           </button>

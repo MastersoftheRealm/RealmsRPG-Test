@@ -9,11 +9,13 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
+import { headers } from 'next/headers';
 import { requireAuth, getSession } from '@/lib/supabase/session';
 import { createClient as createServerClient } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/admin';
 import { getRolePolicyForUser } from '@/lib/role-policy';
 import { validateUsername } from '@/lib/username-rules';
+import { buildRateLimitKey, resolveClientIp, strictLimiter } from '@/lib/rate-limit';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -38,18 +40,28 @@ async function generateDefaultUsername(): Promise<string> {
 }
 
 export async function createUserProfileAction(data: {
-  uid: string;
-  email: string;
+  uid?: string;
+  email?: string;
   username?: string;
   displayName?: string;
 }) {
   try {
+    // SEC-02: bind identity to the verified session, never the client-supplied
+    // uid/email. All callers (auth callback/confirm, register) establish the
+    // session before invoking this action.
+    const { user: sessionUser } = await getSession();
+    if (!sessionUser?.uid) {
+      return { success: false, error: 'Not authenticated' };
+    }
+    const uid = sessionUser.uid;
+    const email = (data.email ?? sessionUser.email ?? '').toString();
+
     const supabase = await createServerClient();
     const now = new Date().toISOString();
     const { data: existing } = await supabase
       .from('user_profiles')
       .select('id, username, username_display')
-      .eq('id', data.uid)
+      .eq('id', uid)
       .maybeSingle();
 
     const existingUsername = ((existing as { username?: string | null } | null)?.username ?? null)?.toString().trim() || null;
@@ -71,7 +83,7 @@ export async function createUserProfileAction(data: {
 
     if (existing) {
       const updates: Record<string, unknown> = {
-        email: data.email,
+        email,
         display_name: data.displayName ?? null,
         updated_at: now,
       };
@@ -80,11 +92,11 @@ export async function createUserProfileAction(data: {
         updates.username_display = usernameDisplay;
         updates.last_username_change = null;
       }
-      await supabase.from('user_profiles').update(updates).eq('id', data.uid);
+      await supabase.from('user_profiles').update(updates).eq('id', uid);
     } else {
       await supabase.from('user_profiles').insert({
-        id: data.uid,
-        email: data.email,
+        id: uid,
+        email,
         display_name: data.displayName ?? null,
         username: normalized,
         username_display: usernameDisplay,
@@ -94,7 +106,7 @@ export async function createUserProfileAction(data: {
       });
     }
     await supabase.from('usernames').upsert(
-      { username: normalized, user_id: data.uid },
+      { username: normalized, user_id: uid },
       { onConflict: 'username' }
     );
     return { success: true };
@@ -107,15 +119,16 @@ export async function createUserProfileAction(data: {
 export async function updateUserProfileAction(data: { displayName?: string; username?: string }) {
   try {
     const user = await requireAuth();
-    const supabase = await createServerClient();
-    const updates: Record<string, unknown> = {};
-    if (data.displayName !== undefined) updates.display_name = data.displayName;
+    // SEC-03: never write a username without validation, uniqueness, and the
+    // rate-limit/usernames-table sync — delegate to the canonical path.
     if (data.username !== undefined) {
-      updates.username = data.username.toLowerCase().trim();
-      updates.username_display = data.username.trim();
-      updates.last_username_change = new Date().toISOString();
+      const res = await changeUsernameAction(data.username);
+      if (!res.success) return res;
     }
-    await supabase.from('user_profiles').update(updates).eq('id', user.uid);
+    if (data.displayName !== undefined) {
+      const supabase = await createServerClient();
+      await supabase.from('user_profiles').update({ display_name: data.displayName }).eq('id', user.uid);
+    }
     revalidatePath('/my-account');
     return { success: true };
   } catch (error) {
@@ -161,6 +174,17 @@ export async function getUserProfileAction() {
 
 export async function checkUsernameAvailableAction(username: string) {
   try {
+    // SEC-07: this endpoint is a username-existence oracle. Require an
+    // authenticated session and rate-limit per user/IP to prevent enumeration.
+    const { user } = await getSession();
+    if (!user?.uid) {
+      return { available: false, error: 'Not authenticated' };
+    }
+    const ip = resolveClientIp(await headers());
+    const { success } = strictLimiter.check(buildRateLimitKey('username-check', { userId: user.uid, ip }));
+    if (!success) {
+      return { available: false, error: 'Too many requests' };
+    }
     const normalized = username.toLowerCase().trim();
     const supabase = await createServerClient();
     const { data } = await supabase.from('user_profiles').select('id').eq('username', normalized).maybeSingle();
@@ -237,13 +261,14 @@ export async function deleteAccountAction() {
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
     const supabase = await createServerClient();
 
+    // BE-02/06: membership is tracked solely in campaign_members; strip this
+    // user's characters from each campaign roster, then drop their memberships.
     const { data: memberRows } = await supabase.from('campaign_members').select('campaign_id').eq('user_id', user.uid);
     for (const { campaign_id: campaignId } of memberRows ?? []) {
-      const { data: c } = await supabase.from('campaigns').select('memberIds, characters').eq('id', campaignId).maybeSingle();
+      const { data: c } = await supabase.from('campaigns').select('characters').eq('id', campaignId).maybeSingle();
       if (!c) continue;
-      const members = ((c.memberIds as string[]) || []).filter((id) => id !== user.uid);
       const chars = ((c.characters as Array<{ userId: string; characterId: string }>) || []).filter((cc) => cc.userId !== user.uid);
-      await supabase.from('campaigns').update({ memberIds: members, characters: chars }).eq('id', campaignId);
+      await supabase.from('campaigns').update({ characters: chars }).eq('id', campaignId);
     }
     await supabase.from('campaign_members').delete().eq('user_id', user.uid);
 

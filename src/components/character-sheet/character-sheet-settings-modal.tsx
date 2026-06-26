@@ -112,6 +112,7 @@ export function CharacterSheetSettingsModal({
           </p>
           {canEdit && onSpeedDisplayUnitChange ? (
             <Select
+              aria-label="Speed display unit"
               options={SPEED_DISPLAY_OPTIONS}
               value={selectedSpeedUnit}
               onChange={(e) => setSelectedSpeedUnit(e.target.value as SpeedDisplayUnit)}
@@ -134,6 +135,7 @@ export function CharacterSheetSettingsModal({
           )}
           {canEdit && onVisibilityChange ? (
             <Select
+              aria-label="Character visibility"
               options={visibilityOptions}
               value={selectedVisibility}
               onChange={(e) => setSelectedVisibility(e.target.value as CharacterVisibility)}

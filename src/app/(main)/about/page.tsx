@@ -55,7 +55,7 @@ const CAROUSEL_SLIDES: Array<{
             <Skull className="w-5 h-5" />
             Creature Creator
           </Link>
-          <Link prefetch={false} href="/encounter-tracker" className="btn-outline-clean">
+          <Link prefetch={false} href="/encounters" className="btn-outline-clean">
             <Users className="w-5 h-5" />
             Encounter Tracker
           </Link>
@@ -76,7 +76,7 @@ const CAROUSEL_SLIDES: Array<{
             <Skull className="w-4 h-4" />
             Creatures
           </Link>
-          <Link prefetch={false} href="/encounter-tracker" className="btn-outline-clean text-sm">
+          <Link prefetch={false} href="/encounters" className="btn-outline-clean text-sm">
             <Users className="w-4 h-4" />
             Encounters
           </Link>
@@ -179,7 +179,7 @@ const CAROUSEL_SLIDES: Array<{
           </li>
           <li className="flex items-start gap-3">
             <Users className="w-5 h-5 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5" />
-            <span><strong className="text-text-primary"><Link prefetch={false} href="/encounter-tracker" className="text-primary-600 dark:text-primary-400 hover:underline">Encounter Tracker</Link></strong>: Run Skill and Combat Encounters with ease.</span>
+            <span><strong className="text-text-primary"><Link prefetch={false} href="/encounters" className="text-primary-600 dark:text-primary-400 hover:underline">Encounter Tracker</Link></strong>: Run Skill and Combat Encounters with ease.</span>
           </li>
         </ul>
       </>
@@ -204,7 +204,7 @@ const CAROUSEL_SLIDES: Array<{
           </li>
           <li className="flex items-start gap-2">
             <Skull className="w-4 h-4 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5" />
-            <span><Link prefetch={false} href="/creature-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Creatures</Link> & <Link prefetch={false} href="/encounter-tracker" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Encounters</Link>.</span>
+            <span><Link prefetch={false} href="/creature-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Creatures</Link> & <Link prefetch={false} href="/encounters" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Encounters</Link>.</span>
           </li>
         </ul>
       </>

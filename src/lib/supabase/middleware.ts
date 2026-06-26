@@ -18,6 +18,19 @@ function isExpectedAnonymousAuthError(message: string): boolean {
   return lower.includes('auth session missing') || lower.includes('session missing');
 }
 
+/**
+ * Hard-protected page routes (AUTH-01): require a signed-in user. Enforced
+ * server-side at the edge instead of relying solely on the client-side
+ * `ProtectedRoute`. Guest-soft routes (characters, creators, library, codex, the
+ * `/campaigns` list, …) are intentionally NOT listed and stay open to guests.
+ */
+function isHardProtectedPath(pathname: string): boolean {
+  if (pathname === '/my-account' || pathname.startsWith('/my-account/')) return true;
+  // Campaign detail/view routes require auth; the bare `/campaigns` list is guest-soft.
+  if (pathname.startsWith('/campaigns/')) return true;
+  return false;
+}
+
 export async function updateSession(request: NextRequest) {
   // Never refresh session during OAuth PKCE exchange — stale refresh attempts can
   // clear PKCE cookies and cause flow_state_not_found on /auth/callback.
@@ -55,9 +68,11 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
+  let user = null;
   try {
     // Must call getUser() to refresh token — prevents random logouts
-    const { error } = await supabase.auth.getUser();
+    const { data, error } = await supabase.auth.getUser();
+    user = data?.user ?? null;
     if (error?.code === 'refresh_token_not_found') {
       // Clear stale session cookies so we stop retrying invalid refresh tokens.
       await supabase.auth.signOut();
@@ -70,6 +85,17 @@ export async function updateSession(request: NextRequest) {
       console.error('[Supabase] Auth refresh failed:', err);
     }
     // Pass through — don't block the request; auth-required routes will handle 401
+  }
+
+  // AUTH-01: centralized hard gate. Unauthenticated requests to protected pages are
+  // redirected to login (preserving the destination) at the edge — no protected
+  // content is ever sent to the client. `ProtectedRoute` remains as defense-in-depth.
+  if (!user && isHardProtectedPath(request.nextUrl.pathname)) {
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = '/login';
+    loginUrl.search = '';
+    loginUrl.searchParams.set('returnTo', request.nextUrl.pathname + request.nextUrl.search);
+    return NextResponse.redirect(loginUrl);
   }
 
   return supabaseResponse;

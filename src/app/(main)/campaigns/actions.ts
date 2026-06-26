@@ -12,9 +12,10 @@ import { requireAuth } from '@/lib/supabase/session';
 import { ensureUserProfile } from '@/lib/ensure-user-profile';
 import { getCharacterListColumns } from '@/lib/character-list-columns';
 import { normalizeInviteCodeInput, isValidInviteCodeFormat, visibilityForCampaignMembership } from '@/lib/campaign-invite';
+import { buildRosterFieldsFromCharacterData } from '@/lib/campaign-roster';
 import { getRolePolicyForUser } from '@/lib/role-policy';
 import { formatRoleQuotaExceededMessage } from '@/lib/role-quota-messages';
-import type { Campaign, CampaignCharacter, ArchetypeDisplayName } from '@/types/campaign';
+import type { Campaign, CampaignCharacter } from '@/types/campaign';
 import { MAX_CAMPAIGN_CHARACTERS, OWNER_MAX_CHARACTERS } from './constants';
 
 const INVITE_CODE_LENGTH = 8;
@@ -42,15 +43,6 @@ async function ensureUniqueInviteCode(): Promise<string> {
     if (!existing) return code;
   }
   throw new Error('Failed to generate unique invite code');
-}
-
-function getArchetypeDisplayName(archetypeType?: string): ArchetypeDisplayName | undefined {
-  if (!archetypeType) return undefined;
-  const lower = archetypeType.toLowerCase();
-  if (lower === 'power') return 'Power';
-  if (lower === 'martial') return 'Martial';
-  if (lower === 'powered-martial' || lower === 'poweredmartial') return 'Powered-Martial';
-  return undefined;
 }
 
 export async function createCampaignAction(data: { name: string; description?: string }) {
@@ -94,7 +86,6 @@ export async function createCampaignAction(data: { name: string; description?: s
         owner_username: ownerUsername || user.name || 'Realm Master',
         invite_code: inviteCode,
         characters: [],
-        memberIds: [],
       })
       .select('id')
       .single();
@@ -158,10 +149,13 @@ export async function joinCampaignAction(data: {
     if (!charRow) {
       return { success: false, error: 'Character not found. You can only add your own characters.' };
     }
+    // SEC-06: trust the stored character row for roster fields, not the client args.
+    const charData = (charRow.data as Record<string, unknown>) ?? {};
+    const rosterFields = buildRosterFieldsFromCharacterData(charData);
 
     const { data: campaignRow, error: campErr } = await dbService
       .from('campaigns')
-      .select('id, owner_id, characters, memberIds')
+      .select('id, owner_id, characters')
       .eq('invite_code', code)
       .maybeSingle();
     if (campErr) {
@@ -217,17 +211,13 @@ export async function joinCampaignAction(data: {
     const newChar: CampaignCharacter = {
       userId: user.uid,
       characterId: data.characterId,
-      characterName: data.characterName,
-      portrait: data.portrait,
-      level: data.level,
-      species: data.species,
-      archetype: getArchetypeDisplayName(data.archetypeType),
+      ...rosterFields,
       ownerUsername: ownerUsername || user.name || undefined,
     };
 
     const characters = [...(campaignData || []), newChar];
-    const newMemberIds = [...new Set([...memberIds, user.uid])];
 
+    // BE-02/06: campaign_members is the single source of truth for membership.
     const { error: memErr } = await dbService.from('campaign_members').upsert(
       { campaign_id: campaignId, user_id: user.uid },
       { onConflict: 'campaign_id,user_id' }
@@ -239,14 +229,13 @@ export async function joinCampaignAction(data: {
 
     const { error: updErr } = await dbService
       .from('campaigns')
-      .update({ characters, memberIds: newMemberIds })
+      .update({ characters })
       .eq('id', campaignId);
     if (updErr) {
       console.error('joinCampaignAction campaigns update:', updErr);
       return { success: false, error: 'Failed to join campaign' };
     }
 
-    const charData = (charRow.data as Record<string, unknown>) ?? {};
     const { visibility, visibilityUpdated } = visibilityForCampaignMembership(charData.visibility);
     const merged = { ...charData, visibility, updatedAt: new Date().toISOString() };
     const listCols = getCharacterListColumns(merged);
@@ -293,6 +282,9 @@ export async function addCharacterToCampaignAction(data: {
     if (!charRow) {
       return { success: false, error: 'Character not found' };
     }
+    // SEC-06: roster fields come from the stored character, not client args.
+    const charData = (charRow.data as Record<string, unknown>) ?? {};
+    const rosterFields = buildRosterFieldsFromCharacterData(charData);
 
     const campaignData = (campaignRow.characters as CampaignCharacter[]) ?? [];
     if (campaignData.length >= MAX_CAMPAIGN_CHARACTERS) {
@@ -307,32 +299,22 @@ export async function addCharacterToCampaignAction(data: {
       return { success: false, error: 'This character is already in the campaign.' };
     }
 
-    const { data: memberRows } = await supabase
-      .from('campaign_members')
-      .select('user_id')
-      .eq('campaign_id', data.campaignId);
-    const currentMemberIds = (memberRows ?? []).map((m: { user_id: string }) => m.user_id);
     const ownerUsername = await getUsernameByUid(user.uid);
     const newChar: CampaignCharacter = {
       userId: user.uid,
       characterId: data.characterId,
-      characterName: data.characterName,
-      portrait: data.portrait,
-      level: data.level,
-      species: data.species,
-      archetype: getArchetypeDisplayName(data.archetypeType),
+      ...rosterFields,
       ownerUsername: ownerUsername || undefined,
     };
     const characters = [...campaignData, newChar];
-    const memberIds = [...new Set([...currentMemberIds, user.uid])];
 
+    // BE-02/06: campaign_members is the single source of truth for membership.
     await supabase.from('campaign_members').upsert(
       { campaign_id: data.campaignId, user_id: user.uid },
       { onConflict: 'campaign_id,user_id' }
     );
-    await supabase.from('campaigns').update({ characters, memberIds }).eq('id', data.campaignId);
+    await supabase.from('campaigns').update({ characters }).eq('id', data.campaignId);
 
-    const charData = (charRow.data as Record<string, unknown>) ?? {};
     const { visibility, visibilityUpdated } = visibilityForCampaignMembership(charData.visibility);
     const merged = { ...charData, visibility, updatedAt: new Date().toISOString() };
     const listCols = getCharacterListColumns(merged);
@@ -374,7 +356,9 @@ export async function removeCharacterFromCampaignAction(data: {
     const characters = (campaignData || []).filter(
       (c) => !(c.userId === data.userId && c.characterId === data.characterId)
     );
-    const memberIds = [...new Set(characters.map((c) => c.userId))];
+    // BE-02/06: membership lives in campaign_members; derive remaining roster
+    // owners to decide whether the removed user keeps any characters here.
+    const remainingUserIds = new Set(characters.map((c) => c.userId));
 
     // Roster mutation runs via the service role after the ownership/self check
     // above. Members no longer hold a direct `campaigns` UPDATE RLS grant
@@ -388,9 +372,9 @@ export async function removeCharacterFromCampaignAction(data: {
       return { success: false, error: 'Server cannot update the campaign right now. Please contact support.' };
     }
 
-    await dbWrite.from('campaigns').update({ characters, memberIds }).eq('id', data.campaignId);
+    await dbWrite.from('campaigns').update({ characters }).eq('id', data.campaignId);
 
-    if (!memberIds.includes(data.userId)) {
+    if (!remainingUserIds.has(data.userId)) {
       await dbWrite
         .from('campaign_members')
         .delete()

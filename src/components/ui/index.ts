@@ -43,9 +43,6 @@ export { Alert, type AlertProps } from './alert';
 export { Tooltip, HelpTooltip } from './tooltip';
 // Note: alert-enhanced.tsx was removed - use Alert instead
 
-// Collapsible components
-export { Collapsible, CollapsibleGroup, type CollapsibleProps, type CollapsibleGroupProps } from './collapsible';
-
 // Loading states
 export { Spinner, LoadingOverlay, LoadingState } from './spinner';
 

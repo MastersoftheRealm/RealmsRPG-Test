@@ -665,7 +665,7 @@ export const GridListRow = memo(function GridListRow({
               
               {/* Warning message */}
               {warningMessage && (
-                <p className="text-xs text-warning-600 dark:text-warning-400 mb-3 flex items-center gap-1">
+                <p className="text-xs text-warning-700 dark:text-warning-400 mb-3 flex items-center gap-1">
                   <AlertCircle className="w-3 h-3" />
                   {warningMessage}
                 </p>

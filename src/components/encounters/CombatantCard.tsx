@@ -438,6 +438,7 @@ export const CombatantCard = memo(function CombatantCard({
                       onClick={() => isLeveled ? onUpdateConditionLevel(cond.name, -1) : onRemoveCondition(cond.name)}
                       className="hover:text-red-600 dark:hover:text-red-400 font-bold"
                       title={isLeveled ? 'Decrease level (removes at 0)' : 'Remove condition'}
+                      aria-label={isLeveled ? `Decrease ${cond.name} level` : `Remove ${cond.name} condition`}
                     >
                       ×
                     </button>
@@ -535,6 +536,7 @@ export const CombatantCard = memo(function CombatantCard({
                 onClick={onDuplicate}
                 className="px-2 py-0.5 text-xs bg-surface-alt text-text-secondary rounded hover:bg-surface"
                 title="Duplicate this combatant"
+                aria-label={`Duplicate ${combatant.name}`}
               >
                 📋
               </button>
@@ -542,6 +544,7 @@ export const CombatantCard = memo(function CombatantCard({
                 onClick={onRemove}
                 className="px-2 py-0.5 text-xs bg-surface-alt text-text-secondary rounded hover:bg-red-100 dark:hover:bg-red-900/40 hover:text-red-700 dark:hover:text-red-300"
                 title="Remove combatant"
+                aria-label={`Remove ${combatant.name}`}
               >
                 ✕
               </button>
@@ -584,6 +587,7 @@ export const CombatantCard = memo(function CombatantCard({
                   value={customCondition}
                   onChange={(e) => setCustomCondition(e.target.value)}
                   placeholder="Custom condition..."
+                  aria-label="Custom condition name"
                   className="flex-1 px-3 py-1 text-sm border border-border-light rounded"
                   onKeyDown={(e) => e.key === 'Enter' && handleAddCustomCondition()}
                   maxLength={30}

@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { createServiceRoleClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { validateJson, publicItemSchema } from '@/lib/api-validation';
@@ -111,7 +111,9 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
     }
 
-    const supabase = createServiceRoleClient();
+    // Public read via the anon (RLS-backed) client; "Anyone can read official_*"
+    // / codex_species policies apply. Service role is reserved for admin writes (SEC-01).
+    const supabase = await createClient();
 
     if (type === 'species') {
       const { data: rows, error } = await supabase.from(SPECIES_TABLE).select('*');

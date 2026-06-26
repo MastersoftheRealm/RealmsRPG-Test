@@ -28,6 +28,18 @@ const enhancedBodySchema = z
   })
   .passthrough();
 
+// SEC-04: validate the PATCH body instead of writing raw client JSON to columns.
+const enhancedPatchBodySchema = z
+  .object({
+    name: z.string().min(1).max(200).optional(),
+    description: z.string().max(5000).nullable().optional(),
+    usesType: z.enum(['full', 'partial', 'permanent']).optional(),
+    usesCount: z.number().int().min(0).nullable().optional(),
+    payload: z.record(z.string(), z.unknown()).optional(),
+  })
+  .strict()
+  .refine((v) => Object.keys(v).length > 0, { message: 'No fields to update' });
+
 function getMultipleUseIndex(
   rules: ReturnType<typeof getGameRulesFallback>['CRAFTING'],
   usesType: 'full' | 'partial' | 'permanent',
@@ -185,16 +197,31 @@ export async function PATCH(req: NextRequest) {
     }
 
     const json = await req.json();
+    const parsed = enhancedPatchBodySchema.safeParse(json);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`) },
+        { status: 400 }
+      );
+    }
+    const body = parsed.data;
+
+    // Build the update from only the validated, provided fields.
+    const updates: Record<string, unknown> = {};
+    if (body.name !== undefined) updates.name = body.name;
+    if (body.description !== undefined) updates.description = body.description;
+    if (body.usesType !== undefined) {
+      updates.uses_type = body.usesType;
+      updates.uses_count = body.usesType === 'permanent' ? null : body.usesCount ?? null;
+    } else if (body.usesCount !== undefined) {
+      updates.uses_count = body.usesCount;
+    }
+    if (body.payload !== undefined) updates.payload = body.payload;
+
     const supabase = await createClient();
     const { error } = await supabase
       .from('official_enhanced_items')
-      .update({
-        name: json.name,
-        description: json.description,
-        uses_type: json.usesType,
-        uses_count: json.usesType === 'permanent' ? null : json.usesCount ?? null,
-        payload: json.payload,
-      })
+      .update(updates)
       .eq('id', id);
 
     if (error) throw error;

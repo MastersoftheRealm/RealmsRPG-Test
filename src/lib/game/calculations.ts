@@ -15,6 +15,7 @@ import type { Abilities, DefenseBonuses, DefenseSkills, Character, AbilityName, 
 import type { CoreRulesMap } from '@/types/core-rules';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 import { COMBAT_DEFAULTS } from './constants';
+import { unproficientBonus } from './formulas';
 
 type Rules = Partial<CoreRulesMap>;
 
@@ -165,28 +166,24 @@ export function calculateBonuses(
     ? (abilities?.[powAbil.toLowerCase() as keyof Abilities] || 0) 
     : (abilities?.charisma || 0);
   
-  const unprofBonus = (abilityValue: number): number => {
-    return abilityValue < 0 ? abilityValue * 2 : Math.ceil(abilityValue / 2);
-  };
-  
   return {
     martial: mart,
     power: pow,
     strength: {
       prof: mart + (abilities?.strength || 0),
-      unprof: unprofBonus(abilities?.strength || 0),
+      unprof: unproficientBonus(abilities?.strength || 0),
     },
     agility: {
       prof: mart + (abilities?.agility || 0),
-      unprof: unprofBonus(abilities?.agility || 0),
+      unprof: unproficientBonus(abilities?.agility || 0),
     },
     acuity: {
       prof: mart + (abilities?.acuity || 0),
-      unprof: unprofBonus(abilities?.acuity || 0),
+      unprof: unproficientBonus(abilities?.acuity || 0),
     },
     powerAttack: {
       prof: pow + powerAbilityValue,
-      unprof: unprofBonus(powerAbilityValue),
+      unprof: unproficientBonus(powerAbilityValue),
     },
   };
 }

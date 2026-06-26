@@ -10,6 +10,7 @@ import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
 import { computePartTrainingPoints } from '@/lib/library/part-display';
 import { formatDurationFromTypeAndValue, formatDurationWithModifiers } from '@/lib/utils/duration';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
+import { deriveActionType, actionTypeFromSelection } from './action-type';
 
 // Re-export for backwards compatibility
 export { PART_IDS, findByIdOrName };
@@ -177,11 +178,7 @@ export function computeActionType(
   partsPayload: PowerPartPayload[] = [],
   partsDb: PowerPart[] = []
 ): string {
-  let actionType = 'Basic';
-  let isReaction = false;
-
-  partsPayload.forEach((p) => {
-    // Get part ID
+  const resolved = partsPayload.map((p) => {
     let partId: number | undefined;
     if (p.part?.id !== undefined) {
       partId = Number(p.part.id);
@@ -192,36 +189,20 @@ export function computeActionType(
       const def = findByIdOrName(partsDb, { name: name! });
       partId = def ? Number(def.id) : undefined;
     }
-
-    const l1 = getOptionLevel(p, 1);
-
-    if (partId === PART_IDS.POWER_REACTION) isReaction = true;
-    else if (partId === PART_IDS.POWER_QUICK_OR_FREE_ACTION) {
-      if (l1 === 0) actionType = 'Quick';
-      else if (l1 === 1) actionType = 'Free';
-    } else if (partId === PART_IDS.POWER_LONG_ACTION) {
-      if (l1 === 0) actionType = 'Long (3)';
-      else if (l1 === 1) actionType = 'Long (4)';
-    }
+    return { partId, level: getOptionLevel(p, 1) };
   });
 
-  return isReaction ? `${actionType} Reaction` : `${actionType} Action`;
+  return deriveActionType(resolved, {
+    reaction: PART_IDS.POWER_REACTION,
+    quickOrFree: PART_IDS.POWER_QUICK_OR_FREE_ACTION,
+    longAction: PART_IDS.POWER_LONG_ACTION,
+  });
 }
 
 /**
  * Helper when UI stores selector value
  */
-export function computeActionTypeFromSelection(
-  selection: string,
-  reactionFlag: boolean
-): string {
-  let base = 'Basic';
-  if (selection === 'quick') base = 'Quick';
-  else if (selection === 'free') base = 'Free';
-  else if (selection === 'long3') base = 'Long (3)';
-  else if (selection === 'long4') base = 'Long (4)';
-  return reactionFlag ? `${base} Reaction` : `${base} Action`;
-}
+export const computeActionTypeFromSelection = actionTypeFromSelection;
 
 // =============================================================================
 // Mechanic Part Assembly

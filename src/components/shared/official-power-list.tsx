@@ -1,22 +1,13 @@
 /**
- * OfficialPowerList — shared grid list for Realms Library powers (browse + admin).
+ * OfficialPowerList — Realms Library powers (browse + admin).
+ * Thin wrapper over the generic OfficialEntityList. (DUP-09)
  */
 
 'use client';
 
-import { useMemo, useState, type ReactNode } from 'react';
-import { Plus, Wand2 } from 'lucide-react';
-import {
-  GridListRow,
-  SearchInput,
-  ListHeader,
-  LoadingState,
-  ErrorDisplay,
-  ListEmptyState,
-  SectionHeader,
-} from '@/components/shared';
-import { IconButton } from '@/components/ui';
-import { useSort } from '@/hooks/use-sort';
+import { type ReactNode } from 'react';
+import { Wand2 } from 'lucide-react';
+import { OfficialEntityList } from '@/components/shared/official-entity-list';
 import type { PowerPart } from '@/hooks/codex-types';
 import {
   buildOfficialPowerRows,
@@ -34,16 +25,13 @@ export interface OfficialPowerListProps {
   isLoading: boolean;
   error: Error | null;
   onRetry: () => void;
-  /** Shown when the query fails */
   errorMessage?: string;
-  /** Admin tab title; omitted in library browse mode */
   sectionTitle?: string;
   searchPlaceholder?: string;
   emptyIcon?: ReactNode;
   emptyTitle: string;
   emptyMessage: string;
   searchEmptyMessage?: string;
-  /** Library browse: show Realms badge + add control */
   variant: 'library' | 'admin';
   readOnly?: boolean;
   onAddRequest?: (row: OfficialPowerRow) => void;
@@ -70,96 +58,40 @@ export function OfficialPowerList({
   onEdit,
   onDelete,
 }: OfficialPowerListProps) {
-  const [search, setSearch] = useState('');
-  const { sortState, handleSort, sortItems } = useSort('name');
-
-  const cardData = useMemo(
-    () => buildOfficialPowerRows(items, partsDb),
-    [items, partsDb]
-  );
-
-  const filtered = useMemo(
-    () => filterOfficialPowerRows(cardData, search, sortItems),
-    [cardData, search, sortItems]
-  );
-
-  if (error) {
-    return <ErrorDisplay message={errorMessage} onRetry={onRetry} />;
-  }
-
-  if (!isLoading && cardData.length === 0) {
-    return (
-      <ListEmptyState icon={emptyIcon} title={emptyTitle} message={emptyMessage} />
-    );
-  }
-
   return (
-    <div>
-      {sectionTitle ? <SectionHeader title={sectionTitle} size="md" /> : null}
-      <div className="mb-4">
-        <SearchInput value={search} onChange={setSearch} placeholder={searchPlaceholder} />
-      </div>
-      <ListHeader
-        columns={OFFICIAL_POWER_HEADER_COLUMNS}
-        gridColumns={OFFICIAL_POWER_GRID}
-        sortState={sortState}
-        onSort={handleSort}
-      />
-      <div className="flex flex-col gap-1 mt-2">
-        {isLoading ? (
-          <LoadingState />
-        ) : filtered.length === 0 ? (
-          <div className="py-12 text-center text-text-secondary">{searchEmptyMessage}</div>
-        ) : (
-          filtered.map((p) => (
-            <GridListRow
-              key={p.id}
-              id={p.id}
-              name={p.name}
-              description={p.description}
-              gridColumns={OFFICIAL_POWER_GRID}
-              columns={[
-                { key: 'Energy', value: p.energy, highlight: true, align: 'center' },
-                { key: 'Action', value: p.action, align: 'center' },
-                { key: 'Duration', value: p.duration, align: 'center' },
-                { key: 'Range', value: p.range, align: 'center' },
-                { key: 'Area', value: p.area, align: 'center' },
-                { key: 'Damage', value: p.damage, align: 'center' },
-              ]}
-              chips={p.parts}
-              chipsLabel="Parts"
-              totalCost={p.tp}
-              costLabel="TP"
-              badges={variant === 'library' ? [{ label: 'Realms', color: 'blue' }] : undefined}
-              rightSlot={
-                variant === 'library' && !readOnly && onAddRequest ? (
-                  <IconButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAddRequest(p);
-                    }}
-                    label="Add to my library"
-                    className="text-primary-600 hover:text-primary-700 hover:bg-primary-50"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </IconButton>
-                ) : undefined
-              }
-              onAddToLibrary={
-                variant === 'library' && !readOnly && onAddRequest
-                  ? () => onAddRequest(p)
-                  : undefined
-              }
-              onEdit={variant === 'admin' && onEdit ? () => onEdit(p.id) : undefined}
-              onDelete={
-                variant === 'admin' && onDelete ? () => onDelete(p.id, p.name) : undefined
-              }
-            />
-          ))
-        )}
-      </div>
-    </div>
+    <OfficialEntityList<OfficialPowerRow>
+      items={items}
+      isLoading={isLoading}
+      error={error}
+      onRetry={onRetry}
+      buildRows={(raw) => buildOfficialPowerRows(raw, partsDb)}
+      filterRows={filterOfficialPowerRows}
+      gridColumns={OFFICIAL_POWER_GRID}
+      headerColumns={OFFICIAL_POWER_HEADER_COLUMNS}
+      getColumns={(p) => [
+        { key: 'Energy', value: p.energy, highlight: true, align: 'center' },
+        { key: 'Action', value: p.action, align: 'center' },
+        { key: 'Duration', value: p.duration, align: 'center' },
+        { key: 'Range', value: p.range, align: 'center' },
+        { key: 'Area', value: p.area, align: 'center' },
+        { key: 'Damage', value: p.damage, align: 'center' },
+      ]}
+      getChips={(p) => p.parts}
+      chipsLabel="Parts"
+      getTotalCost={(p) => p.tp}
+      costLabel="TP"
+      errorMessage={errorMessage}
+      sectionTitle={sectionTitle}
+      searchPlaceholder={searchPlaceholder}
+      emptyIcon={emptyIcon}
+      emptyTitle={emptyTitle}
+      emptyMessage={emptyMessage}
+      searchEmptyMessage={searchEmptyMessage}
+      variant={variant}
+      readOnly={readOnly}
+      onAddRequest={onAddRequest}
+      onEdit={onEdit}
+      onDelete={onDelete}
+    />
   );
 }

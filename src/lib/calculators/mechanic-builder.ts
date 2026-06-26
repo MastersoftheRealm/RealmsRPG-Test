@@ -8,6 +8,9 @@
  */
 
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
+import { computeSplits } from './dice-splits';
+
+export { computeSplits };
 
 // =============================================================================
 // Types
@@ -199,28 +202,6 @@ export function calculateTechniqueDamageLevel(diceAmount: number, dieSize: numbe
   // So 1d4 -> 0, 1d6 -> 1, 1d8 -> 2, etc.
   const totalDamage = diceAmount * dieSize;
   return Math.max(0, Math.floor((totalDamage - 4) / 2));
-}
-
-/**
- * Calculate split damage dice using proper formula
- * Same as vanilla site: splits = max(0, diceAmt - ceil(total / 12))
- * where total = diceAmt * dieSize
- */
-export function computeSplits(diceAmt: number, dieSize: number): number {
-  const validSizes = [4, 6, 8, 10, 12];
-  if (!validSizes.includes(dieSize) || diceAmt <= 1) return 0;
-  const total = diceAmt * dieSize;
-  const minDiceUsingD12 = Math.ceil(total / 12);
-  return Math.max(0, diceAmt - minDiceUsingD12);
-}
-
-/**
- * Calculate technique split damage dice level
- * @deprecated Use computeSplits(diceAmt, dieSize) instead for accurate calculation
- */
-export function calculateSplitDiceLevel(diceAmount: number): number {
-  // 1 die = 0 splits, 2 dice = 1 split (level 0), 3 dice = 2 splits (level 1), etc.
-  return Math.max(0, diceAmount - 1);
 }
 
 // =============================================================================

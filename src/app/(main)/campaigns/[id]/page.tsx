@@ -321,6 +321,7 @@ function CampaignDetailContent() {
             {isRealmMaster && editingDescription ? (
               <div className="mt-2">
                 <textarea
+                  aria-label="Campaign description"
                   value={descriptionInput}
                   onChange={(e) => setDescriptionInput(e.target.value)}
                   onBlur={handleSaveDescription}

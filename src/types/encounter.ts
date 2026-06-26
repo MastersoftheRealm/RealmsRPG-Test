@@ -5,10 +5,40 @@
  * Extends existing Combatant types from encounter-tracker.
  */
 
-import type { Combatant, CombatantCondition, CombatantType, ConditionDef } from '@/components/encounters/encounter-combatant-types';
+// ARCH-01: combatant domain types live here (in src/types), not in a component.
+// The encounter-tracker component re-exports these for its own imports.
 
-// Re-export shared types for convenience
-export type { Combatant, CombatantCondition, CombatantType, ConditionDef };
+export type CombatantType = 'ally' | 'enemy' | 'companion';
+
+export interface CombatantCondition {
+  name: string;
+  level: number;
+}
+
+export interface Combatant {
+  id: string;
+  name: string;
+  initiative: number;
+  acuity: number;
+  maxHealth: number;
+  currentHealth: number;
+  maxEnergy: number;
+  currentEnergy: number;
+  armor: number;
+  evasion: number;
+  ap: number;
+  conditions: CombatantCondition[];
+  notes: string;
+  combatantType: CombatantType;
+  isAlly: boolean;
+  isSurprised: boolean;
+}
+
+export interface ConditionDef {
+  name: string;
+  leveled: boolean;
+  description: string;
+}
 
 /** Type of encounter */
 export type EncounterType = 'combat' | 'skill' | 'mixed';

@@ -25,6 +25,19 @@ import {
 type Rules = Partial<CoreRulesMap>;
 
 // =============================================================================
+// Shared ability helpers
+// =============================================================================
+
+/**
+ * Unproficient attribute bonus: a negative modifier is doubled (penalty), a
+ * non-negative modifier is halved (rounded up). Single source of truth shared
+ * by skill, sub-skill and attack-bonus calculations. (DUP-04)
+ */
+export function unproficientBonus(abilityMod: number): number {
+  return abilityMod < 0 ? abilityMod * 2 : Math.ceil(abilityMod / 2);
+}
+
+// =============================================================================
 // Level Progression Calculations
 // =============================================================================
 
@@ -481,27 +494,6 @@ export function calculateRemainingInnateEnergy(
   return maxInnateEnergy - sumInnatePowerEnergyCosts(powers);
 }
 
-/**
- * Get the archetype ability score.
- */
-export function getArchetypeAbility(
-  archetype: { type?: string; pow_abil?: string; mart_abil?: string } | undefined,
-  abilities: Partial<Abilities>
-): number {
-  if (!archetype?.type) return 0;
-  
-  if (archetype.type === 'powered-martial') {
-    const pow = archetype.pow_abil?.toLowerCase() as keyof Abilities;
-    const mar = archetype.mart_abil?.toLowerCase() as keyof Abilities;
-    const powVal = pow ? (abilities[pow] || 0) : 0;
-    const marVal = mar ? (abilities[mar] || 0) : 0;
-    return Math.max(powVal, marVal);
-  }
-  
-  const abilityKey = (archetype.pow_abil || archetype.mart_abil)?.toLowerCase() as keyof Abilities;
-  return abilityKey ? (abilities[abilityKey] || 0) : 0;
-}
-
 // =============================================================================
 // Skill Helpers
 // =============================================================================
@@ -658,10 +650,9 @@ export function calculateSubSkillBonusWithProficiency(
   chosenAbilityKey?: string
 ): number {
   const abilityMod = getLinkedAbilityMod(linkedAbilities, abilities, chosenAbilityKey);
-  const unprofBonus = (a: number) => (a < 0 ? a * 2 : Math.ceil(a / 2));
 
   if (!baseSkillProficient) {
-    return unprofBonus(abilityMod) + baseSkillValue;
+    return unproficientBonus(abilityMod) + baseSkillValue;
   }
   if (isProficient) {
     return abilityMod + baseSkillValue + subSkillValue;
@@ -727,7 +718,6 @@ export function getSkillBonusForFeatRequirement(
 
   const abilityKey = (codexSkill.ability?.split(',')[0]?.trim()?.toLowerCase() || 'strength') as keyof Abilities;
   const abilityMod = abilities[abilityKey] ?? 0;
-  const unprofBonus = (a: number) => (a < 0 ? a * 2 : Math.ceil(a / 2));
 
   if (baseSkillId) {
     // Sub-skill: need base skill value and proficiency
@@ -741,7 +731,7 @@ export function getSkillBonusForFeatRequirement(
       readProficiency(baseSkillId, false) ||
       (baseCodex?.name ? readProficiency(String(baseCodex.name), false) : false);
     if (!baseProficient) {
-      return { bonus: unprofBonus(abilityMod) + baseValue, proficient: false };
+      return { bonus: unproficientBonus(abilityMod) + baseValue, proficient: false };
     }
     const bonus = abilityMod + baseValue + value;
     return { bonus, proficient: proficient && value >= 1 };
@@ -749,7 +739,7 @@ export function getSkillBonusForFeatRequirement(
 
   // Base skill
   if (!proficient) {
-    return { bonus: unprofBonus(abilityMod), proficient: false };
+    return { bonus: unproficientBonus(abilityMod), proficient: false };
   }
   return { bonus: abilityMod + value, proficient: true };
 }

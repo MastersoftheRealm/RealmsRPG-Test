@@ -12,7 +12,7 @@ import { ensureUserProfile } from '@/lib/ensure-user-profile';
 import { getRolePolicyForUser } from '@/lib/role-policy';
 import { buildRoleQuotaExceededResponse } from '@/lib/role-quota-messages';
 import { validateJson, libraryItemCreateSchema } from '@/lib/api-validation';
-import { standardLimiter } from '@/lib/rate-limit';
+import { standardLimiter, buildRateLimitKey, resolveClientIp } from '@/lib/rate-limit';
 import {
   COLUMNAR_LIBRARY_TYPES,
   rowToItem,
@@ -39,7 +39,7 @@ const TABLE: Record<ColumnarLibraryType, string> = {
 };
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ type: string }> }
 ) {
   try {
@@ -54,6 +54,42 @@ export async function GET(
     }
 
     const supabase = await createClient();
+
+    // PERF-01: lightweight server-side name lookup for save-dedupe. Returns only
+    // `{ id, name }` for matching rows instead of downloading the whole library.
+    const nameFilter = request.nextUrl.searchParams.get('name')?.trim();
+    if (nameFilter) {
+      const target = nameFilter.toLowerCase();
+      if (isColumnar(type)) {
+        // ilike narrows server-side (escape LIKE metacharacters); strict match in JS.
+        const pattern = nameFilter.replace(/[%_\\]/g, (c) => `\\${c}`);
+        const { data: rows } = await supabase
+          .from(TABLE[type])
+          .select('id, name')
+          .eq('user_id', user.uid)
+          .ilike('name', pattern);
+        const matches = ((rows ?? []) as Array<Record<string, unknown>>)
+          .map((r) => ({ id: String(r.id), name: String(r.name ?? '') }))
+          .filter((r) => r.name.trim().toLowerCase() === target);
+        return NextResponse.json(matches);
+      }
+      // Species: legacy rows keep the name inside `data`, so scan the (small)
+      // species set and match the column or the JSON name.
+      const { data: rows } = await supabase
+        .from('user_species')
+        .select('id, name, data')
+        .eq('user_id', user.uid);
+      const matches = ((rows ?? []) as Array<Record<string, unknown>>)
+        .map((r) => {
+          const name =
+            r.name != null
+              ? String(r.name)
+              : String(((r.data as Record<string, unknown>)?.name as string) ?? '');
+          return { id: String(r.id), name };
+        })
+        .filter((r) => r.name.trim().toLowerCase() === target);
+      return NextResponse.json(matches);
+    }
 
     if (isColumnar(type)) {
       const { data: rows } = await supabase
@@ -96,15 +132,16 @@ export async function POST(
   { params }: { params: Promise<{ type: string }> }
 ) {
   try {
-    const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = standardLimiter.check(`lib-post:${ip}`);
-    if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
-    }
-
     const { user, error } = await getSession();
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { success } = standardLimiter.check(
+      buildRateLimitKey('lib-post', { userId: user.uid, ip: resolveClientIp(request.headers) })
+    );
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }
 
     const { type } = await params;

@@ -83,7 +83,7 @@ export {
 } from './use-characters';
 
 // Game Data (useArchetype for single archetype by id; useArchetypes = useCodexArchetypes)
-export { gameDataKeys, useArchetype } from './use-game-data';
+export { useArchetype } from './use-game-data';
 
 // Codex Data (Supabase via API) — single codex fetch shared by all useCodex* and useGameRules
 export {
@@ -129,6 +129,7 @@ export { useOfficialLibrary, useAddOfficialToLibrary } from './use-official-libr
 
 // User Library (user-specific content)
 export {
+  useUserLibrary,
   useUserPowers,
   useUserTechniques,
   useUserEmpoweredTechniques,
@@ -142,11 +143,13 @@ export {
   useDeleteEmpoweredTechnique,
   useDeleteItem,
   useDeleteCreature,
+  useDeleteSpecies,
   useDuplicatePower,
   useDuplicateTechnique,
   useDuplicateEmpoweredTechnique,
   useDuplicateItem,
   useDuplicateCreature,
+  useDuplicateSpecies,
   type UserPower,
   type UserTechnique,
   type UserItem,

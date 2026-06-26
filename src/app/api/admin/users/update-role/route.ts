@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
+import { strictLimiter, buildRateLimitKey, resolveClientIp } from '@/lib/rate-limit';
 
 const ALLOWED_ROLES = ['new_player', 'playtester', 'developer', 'admin'] as const;
 
@@ -31,6 +32,14 @@ export async function PATCH(request: NextRequest) {
     const admin = await isAdmin(user.uid);
     if (!admin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    // SEC-05: limit sensitive role mutations per admin/IP.
+    const { success } = strictLimiter.check(
+      buildRateLimitKey('admin-update-role', { userId: user.uid, ip: resolveClientIp(request.headers) })
+    );
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }
 
     const body = await request.json();

@@ -44,6 +44,7 @@ export function DeleteConfirmModal({
       fullScreenOnMobile
       size="sm"
       showCloseButton={false}
+      titleA11y={`Delete ${itemName}?`}
     >
       <div className="flex flex-col items-center text-center">
         <div className="w-12 h-12 rounded-full bg-danger-light flex items-center justify-center mb-4">

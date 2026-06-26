@@ -1,40 +1,15 @@
 /**
  * Encounter Tracker - Shared Types
+ *
+ * Domain combatant types now live in `@/types/encounter` (ARCH-01); this module
+ * re-exports them for the encounter-tracker component and adds component-only
+ * props that depend on React.
  */
 
 import type { DragEvent } from 'react';
+import type { Combatant, CombatantCondition, CombatantType, ConditionDef } from '@/types/encounter';
 
-export type CombatantType = 'ally' | 'enemy' | 'companion';
-
-export interface CombatantCondition {
-  name: string;
-  level: number;
-}
-
-export interface Combatant {
-  id: string;
-  name: string;
-  initiative: number;
-  acuity: number;
-  maxHealth: number;
-  currentHealth: number;
-  maxEnergy: number;
-  currentEnergy: number;
-  armor: number;
-  evasion: number;
-  ap: number;
-  conditions: CombatantCondition[];
-  notes: string;
-  combatantType: CombatantType;
-  isAlly: boolean;
-  isSurprised: boolean;
-}
-
-export interface ConditionDef {
-  name: string;
-  leveled: boolean;
-  description: string;
-}
+export type { Combatant, CombatantCondition, CombatantType, ConditionDef };
 
 export interface EncounterState {
   name: string;

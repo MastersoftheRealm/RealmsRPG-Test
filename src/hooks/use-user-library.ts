@@ -152,14 +152,10 @@ export interface UserCreature {
 // Query Keys
 // =============================================================================
 
-const QUERY_KEYS = {
-  userPowers: (userId: string) => ['user-powers', userId] as const,
-  userTechniques: (userId: string) => ['user-techniques', userId] as const,
-  userEmpoweredTechniques: (userId: string) => ['user-empowered-techniques', userId] as const,
-  userItems: (userId: string) => ['user-items', userId] as const,
-  userCreatures: (userId: string) => ['user-creatures', userId] as const,
-  userSpecies: (userId: string) => ['user-species', userId] as const,
-};
+type LibraryType = 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species';
+
+/** One canonical query key per library type, keyed by user id. */
+const libraryQueryKey = (type: LibraryType, userId: string) => [`user-${type}`, userId] as const;
 
 // =============================================================================
 // Fetch Functions
@@ -190,89 +186,44 @@ async function duplicateLibraryItem(type: string, docId: string): Promise<string
 // Hooks
 // =============================================================================
 
-export function useUserPowers(options?: { enabled?: boolean }): UseQueryResult<UserPower[], Error> {
+/**
+ * Generic user-library query hook. The six named hooks below are thin,
+ * type-bound wrappers over this factory (previously six copy-paste hooks). (DUP-06)
+ */
+export function useUserLibrary<T>(
+  type: LibraryType,
+  options?: { enabled?: boolean }
+): UseQueryResult<T[], Error> {
   const { user } = useAuthStore();
   const userId = user?.uid || '';
   const enabled = (options?.enabled ?? true) && !!userId;
 
   return useQuery({
-    queryKey: QUERY_KEYS.userPowers(userId),
-    queryFn: () => fetchLibrary<UserPower>('powers', userId),
+    queryKey: libraryQueryKey(type, userId),
+    queryFn: () => fetchLibrary<T>(type, userId),
     enabled,
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 }
 
-export function useUserTechniques(options?: { enabled?: boolean }): UseQueryResult<UserTechnique[], Error> {
-  const { user } = useAuthStore();
-  const userId = user?.uid || '';
-  const enabled = (options?.enabled ?? true) && !!userId;
+export const useUserPowers = (options?: { enabled?: boolean }) =>
+  useUserLibrary<UserPower>('powers', options);
 
-  return useQuery({
-    queryKey: QUERY_KEYS.userTechniques(userId),
-    queryFn: () => fetchLibrary<UserTechnique>('techniques', userId),
-    enabled,
-    staleTime: 2 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
-}
+export const useUserTechniques = (options?: { enabled?: boolean }) =>
+  useUserLibrary<UserTechnique>('techniques', options);
 
-export function useUserEmpoweredTechniques(options?: { enabled?: boolean }): UseQueryResult<UserTechnique[], Error> {
-  const { user } = useAuthStore();
-  const userId = user?.uid || '';
-  const enabled = (options?.enabled ?? true) && !!userId;
+export const useUserEmpoweredTechniques = (options?: { enabled?: boolean }) =>
+  useUserLibrary<UserTechnique>('empowered-techniques', options);
 
-  return useQuery({
-    queryKey: QUERY_KEYS.userEmpoweredTechniques(userId),
-    queryFn: () => fetchLibrary<UserTechnique>('empowered-techniques', userId),
-    enabled,
-    staleTime: 2 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
-}
+export const useUserItems = (options?: { enabled?: boolean }) =>
+  useUserLibrary<UserItem>('items', options);
 
-export function useUserItems(options?: { enabled?: boolean }): UseQueryResult<UserItem[], Error> {
-  const { user } = useAuthStore();
-  const userId = user?.uid || '';
-  const enabled = (options?.enabled ?? true) && !!userId;
+export const useUserCreatures = (options?: { enabled?: boolean }) =>
+  useUserLibrary<UserCreature>('creatures', options);
 
-  return useQuery({
-    queryKey: QUERY_KEYS.userItems(userId),
-    queryFn: () => fetchLibrary<UserItem>('items', userId),
-    enabled,
-    staleTime: 2 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
-}
-
-export function useUserCreatures(options?: { enabled?: boolean }): UseQueryResult<UserCreature[], Error> {
-  const { user } = useAuthStore();
-  const userId = user?.uid || '';
-  const enabled = (options?.enabled ?? true) && !!userId;
-
-  return useQuery({
-    queryKey: QUERY_KEYS.userCreatures(userId),
-    queryFn: () => fetchLibrary<UserCreature>('creatures', userId),
-    enabled,
-    staleTime: 2 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
-}
-
-export function useUserSpecies(options?: { enabled?: boolean }): UseQueryResult<UserSpecies[], Error> {
-  const { user } = useAuthStore();
-  const userId = user?.uid || '';
-  const enabled = options?.enabled ?? true;
-
-  return useQuery({
-    queryKey: QUERY_KEYS.userSpecies(userId),
-    queryFn: () => fetchLibrary<UserSpecies>('species', userId),
-    enabled: enabled && !!userId,
-    staleTime: 2 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
-}
+export const useUserSpecies = (options?: { enabled?: boolean }) =>
+  useUserLibrary<UserSpecies>('species', options);
 
 /** Normalize user species to Species shape for use in character creator, sheet, and codex. */
 export function userSpeciesToSpecies(u: UserSpecies): Species {
@@ -348,17 +299,6 @@ export function useMergedSpecies(): UseQueryResult<Species[], Error> {
 // Generic Mutation Factories
 // =============================================================================
 
-type LibraryType = 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species';
-
-const TYPE_QUERY_KEYS: Record<LibraryType, (uid: string) => readonly string[]> = {
-  powers: QUERY_KEYS.userPowers,
-  techniques: QUERY_KEYS.userTechniques,
-  'empowered-techniques': QUERY_KEYS.userEmpoweredTechniques,
-  items: QUERY_KEYS.userItems,
-  creatures: QUERY_KEYS.userCreatures,
-  species: QUERY_KEYS.userSpecies,
-};
-
 /** Generic delete mutation for any library type */
 function useDeleteLibraryItem(type: LibraryType): UseMutationResult<void, Error, string> {
   const { user } = useAuthStore();
@@ -367,7 +307,8 @@ function useDeleteLibraryItem(type: LibraryType): UseMutationResult<void, Error,
   return useMutation({
     mutationFn: (docId: string) => deleteLibraryItem(type, docId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: TYPE_QUERY_KEYS[type](user?.uid || '') });
+      const uid = user?.uid;
+      if (uid) queryClient.invalidateQueries({ queryKey: libraryQueryKey(type, uid) });
     },
   });
 }
@@ -380,7 +321,8 @@ function useDuplicateLibraryItem(type: LibraryType): UseMutationResult<string, E
   return useMutation({
     mutationFn: (docId: string) => duplicateLibraryItem(type, docId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: TYPE_QUERY_KEYS[type](user?.uid || '') });
+      const uid = user?.uid;
+      if (uid) queryClient.invalidateQueries({ queryKey: libraryQueryKey(type, uid) });
     },
   });
 }
@@ -391,9 +333,11 @@ export const useDeleteTechnique = () => useDeleteLibraryItem('techniques');
 export const useDeleteEmpoweredTechnique = () => useDeleteLibraryItem('empowered-techniques');
 export const useDeleteItem = () => useDeleteLibraryItem('items');
 export const useDeleteCreature = () => useDeleteLibraryItem('creatures');
+export const useDeleteSpecies = () => useDeleteLibraryItem('species');
 
 export const useDuplicatePower = () => useDuplicateLibraryItem('powers');
 export const useDuplicateTechnique = () => useDuplicateLibraryItem('techniques');
 export const useDuplicateEmpoweredTechnique = () => useDuplicateLibraryItem('empowered-techniques');
 export const useDuplicateItem = () => useDuplicateLibraryItem('items');
 export const useDuplicateCreature = () => useDuplicateLibraryItem('creatures');
+export const useDuplicateSpecies = () => useDuplicateLibraryItem('species');

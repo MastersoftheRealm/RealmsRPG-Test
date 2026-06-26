@@ -192,16 +192,7 @@ export function filterSavedItemPropertiesForList(
   return result;
 }
 
-/**
- * Compute number of damage dice splits needed.
- */
-export function computeSplits(diceAmt: number, dieSize: number): number {
-  const valid = [4, 6, 8, 10, 12];
-  if (!valid.includes(dieSize) || diceAmt <= 1) return 0;
-  const total = diceAmt * dieSize;
-  const minDiceUsingD12 = Math.ceil(total / 12);
-  return Math.max(0, diceAmt - minDiceUsingD12);
-}
+export { computeSplits } from './dice-splits';
 
 // =============================================================================
 // Core Calculations

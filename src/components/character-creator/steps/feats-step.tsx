@@ -20,7 +20,6 @@ import {
   ListHeader,
   ContextHelpTooltip,
   SegmentedControl,
-  type ChipData 
 } from '@/components/shared';
 import { 
   FilterSection, 
@@ -35,7 +34,8 @@ import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats } from '@/lib/ga
 import { checkFeatRequirements, type CharacterForFeatRequirement } from '@/lib/game/feat-requirements';
 import type { CodexSkillForFeat } from '@/lib/game/formulas';
 import { formatAbilityList, formatListCellLabel } from '@/lib/utils';
-import { buildFeatLevelChips, getFeatFamilyId, getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
+import { getFeatFamilyId, getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
+import { buildFeatDetailSections } from '@/lib/codex/feat-list';
 import type { ArchetypeCategory } from '@/types';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
 
@@ -467,51 +467,8 @@ export function FeatsStep() {
     const nextWeight = selectedWeight - replacedWeight + targetLevel;
     const canSelect = (nextWeight <= maxForType || isSelected) && requirements.met;
     
-    // Build detail sections (Type, Category, Tags, Requirements) - consistent header+chips format
-    const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> = [];
-    
-    // Type: Character/Archetype, State
-    const typeChips: ChipData[] = [];
-    if (isCharacterFeat) typeChips.push({ name: 'Character Feat', category: 'skill' });
-    else typeChips.push({ name: 'Archetype Feat', category: 'archetype' });
-    if (feat.state_feat) typeChips.push({ name: 'State Feat', category: 'archetype' });
-    if (typeChips.length > 0) {
-      detailSections.push({ label: 'Type', chips: typeChips, hideLabelIfSingle: true });
-    }
-    
-    // Category
-    if (feat.category) {
-      detailSections.push({ label: 'Category', chips: [{ name: feat.category, category: 'default' }], hideLabelIfSingle: true });
-    }
-    
-    // Tags
-    const tagChips: ChipData[] = feat.tags?.map(tag => ({ name: tag, category: 'tag' as const })) || [];
-    if (tagChips.length > 0) {
-      detailSections.push({ label: 'Tags', chips: tagChips, hideLabelIfSingle: true });
-    }
-    
-    // Ability Requirements
-    const abilityReqChips: ChipData[] = (feat.ability_req || []).map((a, i) => {
-      const val = feat.abil_req_val?.[i];
-      return { name: `${a}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'default' as const };
-    });
-    if (abilityReqChips.length > 0) {
-      detailSections.push({ label: 'Ability Requirements', chips: abilityReqChips });
-    }
-    
-    // Skill Requirements
-    const skillReqChips: ChipData[] = (feat.skill_req || []).map((id, i) => {
-      const label = skillIdToName.get(String(id)) || String(id);
-      const val = feat.skill_req_val?.[i];
-      return { name: `${label}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'skill' as const };
-    });
-    if (skillReqChips.length > 0) {
-      detailSections.push({ label: 'Skill Requirements', chips: skillReqChips });
-    }
-    const levelChips = buildFeatLevelChips(familyLevels, feat.id);
-    if (levelChips.length > 0) {
-      detailSections.push({ label: 'Feat Levels', chips: levelChips });
-    }
+    // Build detail sections (Type, Category, Tags, Requirements) — shared builder. (DUP-10)
+    const detailSections = buildFeatDetailSections(feat, skillIdToName, familyLevels, { isCharacterFeat });
 
     return (
       <GridListRow

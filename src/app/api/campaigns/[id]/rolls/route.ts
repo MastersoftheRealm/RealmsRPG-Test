@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { validateJson, campaignRollCreateSchema } from '@/lib/api-validation';
+import { standardLimiter, buildRateLimitKey, resolveClientIp } from '@/lib/rate-limit';
 import { MAX_CAMPAIGN_ROLLS } from '@/app/(main)/campaigns/constants';
 import type { CampaignRollEntry } from '@/types/campaign-roll';
 
@@ -126,6 +127,15 @@ export async function POST(
     const { user, error } = await getSession();
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // SEC-05: rate-limit roll submissions per user/IP (realtime fan-out makes
+    // this endpoint abuse-prone).
+    const { success } = standardLimiter.check(
+      buildRateLimitKey('campaign-roll', { userId: user.uid, ip: resolveClientIp(request.headers) })
+    );
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }
 
     const { id: campaignId } = await params;

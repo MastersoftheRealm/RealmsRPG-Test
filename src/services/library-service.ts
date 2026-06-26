@@ -36,10 +36,12 @@ export async function findLibraryItemByName(
   name: string
 ): Promise<{ id: string } | null> {
   try {
-    const items = await apiFetch<Array<{ id: string; name?: string }>>(`${API_BASE}/${type}`);
-    const found = items.find(
-      (i) => (i.name || '').trim().toLowerCase() === (name || '').trim().toLowerCase()
+    // PERF-01: server-side name lookup returns only matching `{ id, name }`
+    // rows instead of the whole library.
+    const matches = await apiFetch<Array<{ id: string; name?: string }>>(
+      `${API_BASE}/${type}?name=${encodeURIComponent(name.trim())}`
     );
+    const found = matches[0];
     return found ? { id: found.id } : null;
   } catch {
     return null;

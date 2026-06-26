@@ -122,6 +122,7 @@ export function OnboardingTour({ isOpen, onClose }: OnboardingTourProps) {
       title={`${current.title} (${step + 1} of ${TOUR_STEPS.length})`}
       titleA11y="Guided tour"
       size="md"
+      fullScreenOnMobile
       showCloseButton={true}
       footer={
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 p-4 border-t border-border-light bg-surface-alt/50">

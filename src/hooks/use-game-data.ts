@@ -11,13 +11,6 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchCodex } from '@/lib/api-client';
 import type { Archetype } from '@/types';
 
-/** Query keys for game data */
-export const gameDataKeys = {
-  all: ['gameData'] as const,
-  archetypes: () => [...gameDataKeys.all, 'archetypes'] as const,
-  archetype: (id: string) => [...gameDataKeys.all, 'archetype', id] as const,
-};
-
 // =============================================================================
 // Single archetype by id — shares codex fetch so no duplicate full codex request
 // =============================================================================

@@ -1,22 +1,13 @@
 /**
- * OfficialCreatureList — shared grid list for Realms Library creatures (browse + admin).
+ * OfficialCreatureList — Realms Library creatures (browse + admin).
+ * Thin wrapper over the generic OfficialEntityList. (DUP-09)
  */
 
 'use client';
 
-import { useMemo, useState, type ReactNode } from 'react';
-import { Plus, Users } from 'lucide-react';
-import {
-  GridListRow,
-  SearchInput,
-  ListHeader,
-  LoadingState,
-  ErrorDisplay,
-  ListEmptyState,
-  SectionHeader,
-} from '@/components/shared';
-import { IconButton } from '@/components/ui';
-import { useSort } from '@/hooks/use-sort';
+import { type ReactNode } from 'react';
+import { Users } from 'lucide-react';
+import { OfficialEntityList } from '@/components/shared/official-entity-list';
 import {
   buildOfficialCreatureRows,
   filterOfficialCreatureRows,
@@ -65,81 +56,32 @@ export function OfficialCreatureList({
   onEdit,
   onDelete,
 }: OfficialCreatureListProps) {
-  const [search, setSearch] = useState('');
-  const { sortState, handleSort, sortItems } = useSort('name');
-
-  const cardData = useMemo(() => buildOfficialCreatureRows(items), [items]);
-
-  const filtered = useMemo(
-    () => filterOfficialCreatureRows(cardData, search, sortItems),
-    [cardData, search, sortItems]
-  );
-
-  if (error) {
-    return <ErrorDisplay message={errorMessage} onRetry={onRetry} />;
-  }
-
-  if (!isLoading && cardData.length === 0) {
-    return <ListEmptyState icon={emptyIcon} title={emptyTitle} message={emptyMessage} />;
-  }
-
   return (
-    <div>
-      {sectionTitle ? <SectionHeader title={sectionTitle} size="md" /> : null}
-      <div className="mb-4">
-        <SearchInput value={search} onChange={setSearch} placeholder={searchPlaceholder} />
-      </div>
-      <ListHeader
-        columns={OFFICIAL_CREATURE_HEADER_COLUMNS}
-        gridColumns={OFFICIAL_CREATURE_GRID}
-        sortState={sortState}
-        onSort={handleSort}
-      />
-      <div className="flex flex-col gap-1 mt-2">
-        {isLoading ? (
-          <LoadingState />
-        ) : filtered.length === 0 ? (
-          <div className="py-12 text-center text-text-secondary">{searchEmptyMessage}</div>
-        ) : (
-          filtered.map((c) => (
-            <GridListRow
-              key={c.id}
-              id={c.id}
-              name={c.name}
-              description={c.description}
-              gridColumns={OFFICIAL_CREATURE_GRID}
-              columns={[
-                { key: 'Level', value: c.level, highlight: true, align: 'center' },
-                { key: 'Type', value: formatOfficialCreatureType(c.type), align: 'center' },
-              ]}
-              badges={variant === 'library' ? [{ label: 'Realms', color: 'blue' }] : undefined}
-              rightSlot={
-                variant === 'library' && !readOnly && onAddRequest ? (
-                  <IconButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAddRequest(c);
-                    }}
-                    label="Add to my library"
-                    className="text-primary-600 hover:text-primary-700 hover:bg-primary-50"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </IconButton>
-                ) : undefined
-              }
-              onAddToLibrary={
-                variant === 'library' && !readOnly && onAddRequest
-                  ? () => onAddRequest(c)
-                  : undefined
-              }
-              onEdit={variant === 'admin' && onEdit ? () => onEdit(c.id) : undefined}
-              onDelete={variant === 'admin' && onDelete ? () => onDelete(c.id, c.name) : undefined}
-            />
-          ))
-        )}
-      </div>
-    </div>
+    <OfficialEntityList<OfficialCreatureRow>
+      items={items}
+      isLoading={isLoading}
+      error={error}
+      onRetry={onRetry}
+      buildRows={buildOfficialCreatureRows}
+      filterRows={filterOfficialCreatureRows}
+      gridColumns={OFFICIAL_CREATURE_GRID}
+      headerColumns={OFFICIAL_CREATURE_HEADER_COLUMNS}
+      getColumns={(c) => [
+        { key: 'Level', value: c.level, highlight: true, align: 'center' },
+        { key: 'Type', value: formatOfficialCreatureType(c.type), align: 'center' },
+      ]}
+      errorMessage={errorMessage}
+      sectionTitle={sectionTitle}
+      searchPlaceholder={searchPlaceholder}
+      emptyIcon={emptyIcon}
+      emptyTitle={emptyTitle}
+      emptyMessage={emptyMessage}
+      searchEmptyMessage={searchEmptyMessage}
+      variant={variant}
+      readOnly={readOnly}
+      onAddRequest={onAddRequest}
+      onEdit={onEdit}
+      onDelete={onDelete}
+    />
   );
 }
