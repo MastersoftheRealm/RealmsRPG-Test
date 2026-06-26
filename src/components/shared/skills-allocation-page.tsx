@@ -16,7 +16,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { Plus } from 'lucide-react';
+import { Info, Plus } from 'lucide-react';
 import { useCodexSkills, type Skill } from '@/hooks';
 import {
   calculateSkillBonusWithProficiency,
@@ -38,6 +38,8 @@ import { PointStatus } from '@/components/shared';
 import { AddSkillModal, AddSubSkillModal } from '@/components/shared';
 import type { Abilities, DefenseSkills } from '@/types';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types';
+import Tippy from '@tippyjs/react';
+import { addSubSkill, allocateSkills } from '../../../public/tooltip-text';
 
 const DEFENSE_KEYS: (keyof DefenseSkills)[] = [
   'might',
@@ -115,8 +117,6 @@ export function SkillsAllocationPage({
   onSkillAbilityChange,
   footer,
   afterDescription,
-  headingAddon,
-  addSubSkillAddon,
   hideDefenseBonuses = false,
   className,
 }: SkillsAllocationPageProps) {
@@ -315,7 +315,9 @@ export function SkillsAllocationPage({
         <div className="min-w-0">
           <div className="flex items-center gap-1 mb-2">
             <h1 className="text-2xl font-bold text-text-primary">Allocate Skills</h1>
-            {headingAddon}
+            <Tippy content={allocateSkills} allowHTML={true}>
+              <Info className="w-4 h-4 text-primary-700"/>
+            </Tippy>
           </div>
           <p className="text-text-secondary">
             Spend Skill points to gain proficiency, increase Skill values, or boost defenses.
@@ -324,7 +326,7 @@ export function SkillsAllocationPage({
           </p>
           {afterDescription != null && <div className="mt-4">{afterDescription}</div>}
         </div>
-        <span className="flex-shrink-0 whitespace-nowrap">
+        <span className="shrink-0 whitespace-nowrap">
           <PointStatus total={totalPoints} spent={spentPoints} variant="compact" />
         </span>
       </div>
@@ -352,7 +354,9 @@ export function SkillsAllocationPage({
             <Plus size={14} />
             Add Sub-Skill
           </Button>
-          {addSubSkillAddon}
+          <Tippy content={addSubSkill} allowHTML={true}>
+              <Info className="w-4 h-4 text-primary-700"/>
+          </Tippy>
         </span>
       </div>
 
@@ -457,7 +461,7 @@ export function SkillsAllocationPage({
                   >
                     −
                   </button>
-                  <span className="text-sm font-bold min-w-[36px] text-center text-primary-600 dark:text-primary-400">
+                  <span className="text-sm font-bold min-w-9 text-center text-primary-600 dark:text-primary-400">
                     {formatBonus(totalBonus)}
                   </span>
                   <button

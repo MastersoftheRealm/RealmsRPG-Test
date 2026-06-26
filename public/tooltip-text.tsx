@@ -86,3 +86,41 @@ export const assignAbilities = (
         </div>
     </div>
 )
+
+export const allocateSkills = (
+    <div>
+        <div>
+            Skill Point Rules
+        </div>
+        <div>
+            At level <strong>1</strong>, you have <strong>3 Skill Points</strong>.
+        </div>
+        <div>
+            Base skill cap is <strong>3</strong>.
+        </div>
+        <div>
+            Past-cap cost: base <strong>3</strong>, sub-skill <strong>2</strong>.
+        </div>
+    </div>
+    
+)
+
+export const addSubSkill = (
+    <div>
+        <div>
+            Sub-Skills
+        </div>
+        <br />
+        <div>
+            Sub-skills are <strong>specialized skills</strong> that build on a broader base skill (example: <i>Lockpicking</i> under <i>Sleight of Hand</i> ).
+        </div>
+        <br />
+        <div>
+            You <strong>can't gain proficiency</strong> in a sub-skill until you have proficiency in its <strong>base skill</strong>.
+        </div>
+        <br />
+        <div>
+            When you add a sub-skill here, the base skill will be added automatically if needed.
+        </div>
+    </div>
+)
