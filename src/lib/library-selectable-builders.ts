@@ -5,7 +5,7 @@
 
 import type { ColumnValue, ChipData } from '@/components/shared/grid-list-row';
 import type { SelectableItem } from '@/components/shared/unified-selection-modal';
-import { formatDamageDisplay, formatActionTypeForDisplay, formatSavedActionTypeForDisplay, formatListCellLabel } from '@/lib/utils';
+import { formatDamageDisplay, formatSavedActionTypeForDisplay, formatListCellLabel } from '@/lib/utils';
 import {
   deriveShieldAmountFromProperties,
   deriveShieldDamageFromProperties,
