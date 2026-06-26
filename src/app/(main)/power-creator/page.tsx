@@ -45,6 +45,7 @@ import {
   deriveRange,
   deriveArea,
   deriveDuration,
+  formatPowerRangeFromSteps,
   getAreaPartForDisplay,
   formatAreaForDisplay,
   type PowerPartPayload,
@@ -397,8 +398,8 @@ function PowerCreatorContent() {
   // Format range for collapsed summary (from UI state)
   const rangeSummary = useMemo(() => {
     if (range.steps === 0) return '1 Space / Melee';
-    const spaces = 3 + 3 * (range.steps - 1);
-    return `${spaces} ${spaces > 1 ? 'Spaces' : 'Space'}`;
+    const formatted = formatPowerRangeFromSteps(range.steps);
+    return formatted.replace(/\bspaces\b/, 'Spaces').replace(/\bspace\b/, 'Space');
   }, [range.steps]);
 
   // Area part for description display when area is selected

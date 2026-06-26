@@ -24,6 +24,8 @@ interface AddLibraryItemModalProps {
   itemType: AddLibraryItemType;
   existingIds: Set<string>;
   onAdd: (items: CharacterPower[] | CharacterTechnique[] | Item[]) => void;
+  /** Optional modal title (e.g. innate power add flow) */
+  titleOverride?: string;
 }
 
 export function AddLibraryItemModal({
@@ -32,6 +34,7 @@ export function AddLibraryItemModal({
   itemType,
   existingIds,
   onAdd,
+  titleOverride,
 }: AddLibraryItemModalProps) {
   const {
     source,
@@ -59,7 +62,7 @@ export function AddLibraryItemModal({
     <UnifiedSelectionModal
       isOpen={isOpen}
       onClose={onClose}
-      title={getAddLibraryItemTitle(itemType)}
+      title={titleOverride ?? getAddLibraryItemTitle(itemType)}
       description="Click a row (or the + button) to select, then click Add Selected."
       headerExtra={
         <AddLibraryItemHeaderExtra

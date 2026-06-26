@@ -5,10 +5,10 @@
  */
 
 import type { ReactNode } from 'react';
-import { DecrementButton, IncrementButton, type ColumnValue } from '@/components/shared';
+import { DecrementButton, IncrementButton, ValueStepper, type ColumnValue } from '@/components/shared';
 import type { ChipData } from '@/components/shared/grid-list-row';
 import type { EntityFeatRow } from '@/components/shared/entity-library-sections';
-import { FEAT_GRID } from '@/components/shared/entity-library-sections';
+import { FEAT_GRID, FEAT_GRID_WITH_LEVEL } from '@/components/shared/entity-library-sections';
 
 const DESCRIPTION_EXTENDED_TRUNCATE = 220;
 
@@ -45,15 +45,24 @@ export type FeatRowInput = {
   recovery?: string;
 };
 
+export type FeatLevelMeta = {
+  currentLevel: number;
+  minLevel: number;
+  maxQualified: number;
+  featName?: string;
+};
+
 export type FeatRowContext = {
   showEditControls: boolean;
   traitUses: Record<string, number>;
   onTraitUsesChange?: (traitName: string, delta: number) => void;
   onFeatUsesChange?: (featId: string, delta: number) => void;
+  onFeatLevelChange?: (featId: string, targetLevel: number) => void;
   onRemoveFeat?: (featId: string, featName?: string) => void;
   getFeatLevelDetailSections?: (
     featId: string | number
   ) => Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> | undefined;
+  getFeatLevelMeta?: (featId: string | number) => FeatLevelMeta | undefined;
 };
 
 function buildUsesStepper(
@@ -82,10 +91,32 @@ function buildFeatTraitColumns(
   description: string | undefined,
   uses: { current: number; max: number } | undefined,
   recovery: string | undefined,
-  usesStepper: ReactNode
-): { columns: ColumnValue[]; columnSpans?: (number | undefined)[] } {
+  usesStepper: ReactNode,
+  levelStepper?: ReactNode
+): { columns: ColumnValue[]; columnSpans?: (number | undefined)[]; gridColumns?: string } {
   const recoveryDisplay = formatRecoveryAbbrev(recovery) || '-';
   const noUsesOrRecovery = !uses && recoveryDisplay === '-';
+  if (levelStepper) {
+    if (noUsesOrRecovery) {
+      return {
+        columns: [
+          { key: 'description', value: truncateText(description, DESCRIPTION_EXTENDED_TRUNCATE), hideOnMobile: true },
+          { key: 'level', value: levelStepper, align: 'center' },
+        ],
+        columnSpans: [2, 1],
+        gridColumns: FEAT_GRID_WITH_LEVEL,
+      };
+    }
+    return {
+      columns: [
+        { key: 'description', value: truncateText(description, uses ? 60 : 100), hideOnMobile: true },
+        { key: 'level', value: levelStepper, align: 'center' },
+        { key: 'uses', value: usesStepper, align: 'center' },
+        { key: 'recovery', value: recoveryDisplay, align: 'center' },
+      ],
+      gridColumns: FEAT_GRID_WITH_LEVEL,
+    };
+  }
   if (noUsesOrRecovery) {
     return {
       columns: [{ key: 'description', value: truncateText(description, DESCRIPTION_EXTENDED_TRUNCATE), hideOnMobile: true }],
@@ -161,13 +192,35 @@ export function mapFeatRows(
       uses && ctx.onFeatUsesChange ? () => ctx.onFeatUsesChange!(featId, -1) : undefined,
       uses && ctx.onFeatUsesChange ? () => ctx.onFeatUsesChange!(featId, 1) : undefined
     );
-    const { columns, columnSpans } = buildFeatTraitColumns(feat.description, uses, feat.recovery, usesStepper);
+    const levelMeta = ctx.getFeatLevelMeta?.(featId);
+    const levelStepper =
+      levelMeta && ctx.showEditControls && ctx.onFeatLevelChange
+        ? (
+            <ValueStepper
+              value={levelMeta.currentLevel}
+              onChange={(level) => ctx.onFeatLevelChange!(featId, level)}
+              min={levelMeta.minLevel}
+              max={levelMeta.maxQualified}
+              size="sm"
+              variant="inline"
+              decrementTitle={`Decrease ${levelMeta.featName ?? feat.name} level`}
+              incrementTitle={`Increase ${levelMeta.featName ?? feat.name} level`}
+            />
+          )
+        : undefined;
+    const { columns, columnSpans, gridColumns } = buildFeatTraitColumns(
+      feat.description,
+      uses,
+      feat.recovery,
+      usesStepper,
+      levelStepper
+    );
 
     return {
       id: featId,
       name: feat.name,
       description: feat.description,
-      gridColumns: FEAT_GRID,
+      gridColumns: gridColumns ?? FEAT_GRID,
       columns,
       columnSpans,
       badges: options?.badge ? [options.badge] : undefined,

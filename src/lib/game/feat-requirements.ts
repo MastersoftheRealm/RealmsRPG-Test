@@ -248,3 +248,49 @@ export function checkFeatRequirements(
     reasons,
   };
 }
+
+/** Map a saved character to the shape used by feat requirement checks. */
+export function characterToFeatRequirementCharacter(
+  character: import('@/types').Character
+): CharacterForFeatRequirement {
+  const skillsRecord: Record<string, { prof?: boolean; val?: number }> = {};
+  const rawSkills = character.skills as
+    | Record<string, number | { prof?: boolean; val?: number }>
+    | undefined;
+  if (rawSkills) {
+    Object.entries(rawSkills).forEach(([key, sk]) => {
+      if (sk && typeof sk === 'object' && 'val' in sk) {
+        skillsRecord[key] = { prof: sk.prof, val: sk.val };
+      } else if (typeof sk === 'number') {
+        skillsRecord[key] = { val: sk };
+      }
+    });
+  }
+  return {
+    level: character.level,
+    abilities: character.abilities,
+    defenseVals: character.defenseVals ?? character.defenseSkills,
+    skills: skillsRecord,
+    mart_abil: character.mart_abil ?? character.archetype?.mart_abil,
+    speedBase: character.speedBase,
+    archetype: character.archetype,
+    feats: character.feats,
+    archetypeFeats: character.archetypeFeats,
+  };
+}
+
+/** Highest feat level in a family the character currently qualifies for. */
+export function getMaxQualifiedFeatLevel(
+  character: CharacterForFeatRequirement,
+  family: FeatForRequirement[],
+  codexSkills: CodexSkillForFeat[],
+  allFeats: FeatForRequirement[]
+): number {
+  let max = 1;
+  family.forEach((feat) => {
+    const level = getFeatLevel(feat);
+    const { met } = checkFeatRequirements(feat, character, codexSkills, allFeats);
+    if (met) max = Math.max(max, level);
+  });
+  return max;
+}

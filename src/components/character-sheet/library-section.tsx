@@ -31,7 +31,7 @@ import {
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 import { IconButton } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
-import { calculateArmamentProficiency } from '@/lib/game/formulas';
+import { calculateArmamentProficiency, calculateRemainingInnateEnergy } from '@/lib/game/formulas';
 import type {
   CharacterPower,
   CharacterTechnique,
@@ -64,7 +64,7 @@ export interface LibrarySectionProps {
   innateEnergy?: number;
   innateThreshold?: number; // Innate energy threshold per pool
   innatePools?: number; // Number of innate pools
-  currentInnateEnergy?: number; // Current innate energy (if tracked separately)
+  currentInnateEnergy?: number; // Optional override; default = max minus innate power costs
   currentEnergy?: number; // Current energy for use button validation
   isEditMode?: boolean;
   // Power/Technique/Equipment callbacks
@@ -174,6 +174,8 @@ export interface LibrarySectionProps {
     category?: string;
   }>;
   onFeatUsesChange?: (featId: string, delta: number) => void;
+  onFeatLevelChange?: (featId: string, targetLevel: number, listType: 'archetype' | 'character') => void;
+  featRequirementCharacter?: import('@/lib/game/feat-requirements').CharacterForFeatRequirement;
   onTraitUsesChange?: (traitName: string, delta: number) => void;
   onAddArchetypeFeat?: () => void;
   onAddCharacterFeat?: () => void;
@@ -284,6 +286,8 @@ export function LibrarySection({
   archetypeFeats = [],
   characterFeats = [],
   onFeatUsesChange,
+  onFeatLevelChange,
+  featRequirementCharacter,
   onTraitUsesChange,
   onAddArchetypeFeat: onAddArchetypeFeatProp,
   onAddCharacterFeat: onAddCharacterFeatProp,
@@ -303,6 +307,7 @@ export function LibrarySection({
   const ctx = useCharacterSheetOptional();
   const isEditMode = ctx?.isEditMode ?? isEditModeProp;
   const onAddPower = onAddPowerProp ?? (ctx ? () => ctx.setAddModalType('power') : undefined);
+  const onAddInnatePower = ctx ? () => ctx.setAddModalType('innate-power') : undefined;
   const onAddTechnique = onAddTechniqueProp ?? (ctx ? () => ctx.setAddModalType('technique') : undefined);
   const onAddWeapon = onAddWeaponProp ?? (ctx ? () => ctx.setAddModalType('weapon') : undefined);
   const onAddShield = onAddShieldProp ?? (ctx ? () => ctx.setAddModalType('shield') : undefined);
@@ -451,6 +456,14 @@ export function LibrarySection({
     () => mapPowerRows(sortedInnatePowers, entityRowContext),
     [sortedInnatePowers, entityRowContext]
   );
+  const displayedCurrentInnateEnergy = useMemo(
+    () =>
+      currentInnateEnergy !== undefined
+        ? currentInnateEnergy
+        : calculateRemainingInnateEnergy(innateEnergy, powers),
+    [currentInnateEnergy, innateEnergy, powers]
+  );
+  const innateEnergyOverBudget = displayedCurrentInnateEnergy < 0;
   const regularPowerRows = useMemo(
     () => mapPowerRows(sortedRegularPowers, entityRowContext),
     [sortedRegularPowers, entityRowContext]
@@ -611,9 +624,9 @@ export function LibrarySection({
                   <SummaryItem 
                     icon="✨" 
                     label="Innate Energy" 
-                    value={`${currentInnateEnergy !== undefined ? currentInnateEnergy : innateEnergy} / ${innateEnergy}`}
+                    value={`${displayedCurrentInnateEnergy} / ${innateEnergy}`}
                     highlight
-                    highlightColor="power"
+                    highlightColor={innateEnergyOverBudget ? 'danger' : 'power'}
                   />
                   <SummaryItem 
                     label="Threshold" 
@@ -634,7 +647,7 @@ export function LibrarySection({
               <PowersListSection
                 title="Innate Powers"
                 items={innatePowerRows}
-                onAdd={onAddPower}
+                onAdd={onAddInnatePower}
                 addLabel="Add innate power"
                 sortState={powerSort}
                 onSort={(col) => setPowerSort(toggleSort(powerSort, col))}
@@ -795,6 +808,8 @@ export function LibrarySection({
             maxArchetypeFeats={maxArchetypeFeats}
             maxCharacterFeats={maxCharacterFeats}
             onFeatUsesChange={onFeatUsesChange}
+            onFeatLevelChange={onFeatLevelChange}
+            featRequirementCharacter={featRequirementCharacter}
             onTraitUsesChange={onTraitUsesChange}
             onAddArchetypeFeat={onAddArchetypeFeat}
             onAddCharacterFeat={onAddCharacterFeat}

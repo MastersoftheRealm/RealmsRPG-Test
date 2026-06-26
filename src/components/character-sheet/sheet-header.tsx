@@ -184,27 +184,28 @@ function ResourceInput({
     setInputValue(e.target.value);
   };
   
-  // Stepper uses the pending value if editing, otherwise modifies current
+  // Stepper: apply +/- one step to current, or to a typed draft value if the field is focused
   const handleStepperChange = (newValue: number) => {
     if (!onChange) return;
-    
-    if (isEditing && inputValue.trim() !== String(current)) {
-      // User typed a number but didn't press Enter - use that as the delta base
-      const typedNum = parseInt(inputValue.trim(), 10);
-      if (!isNaN(typedNum)) {
-        // Calculate the delta from current to newValue (stepper clicked)
-        const stepperDelta = newValue - current;
-        // Apply that delta to the typed number - allow above max
-        const result = Math.max(0, current + (stepperDelta * typedNum));
-        onChange(result);
-        setInputValue(String(result));
-        setIsEditing(false);
-        return;
+
+    const stepperDelta = newValue - current;
+    let result = newValue;
+
+    if (isEditing) {
+      const trimmed = inputValue.trim();
+      if (trimmed.startsWith('+') || trimmed.startsWith('-')) {
+        result = newValue;
+      } else {
+        const parsed = parseInt(trimmed, 10);
+        if (!isNaN(parsed)) {
+          result = Math.max(0, parsed + stepperDelta);
+        }
       }
     }
-    
-    onChange(newValue);
-    setInputValue(String(newValue));
+
+    onChange(result);
+    setInputValue(String(result));
+    setIsEditing(false);
   };
   
   // Color classes: light = tinted panel; dark = same surface as UI, subtle colored border (no bright green/blue background)

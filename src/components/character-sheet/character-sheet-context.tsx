@@ -17,6 +17,7 @@ import type { CharacterSheetPointBudgets } from './use-character-sheet-derived';
 export type SkillModalType = 'skill' | 'subskill' | null;
 export type AddModalType =
   | 'power'
+  | 'innate-power'
   | 'technique'
   | 'weapon'
   | 'shield'

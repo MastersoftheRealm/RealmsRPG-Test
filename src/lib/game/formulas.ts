@@ -464,6 +464,23 @@ export function getInnateEnergyMax(archetype: ArchetypeCategory | { type?: Arche
   return getArchetypeConfig(type || 'power', rules).innateEnergy;
 }
 
+/** Sum energy costs of powers marked innate (innate energy budget spent). */
+export function sumInnatePowerEnergyCosts(
+  powers: Array<{ innate?: boolean; cost?: number }> = []
+): number {
+  return powers
+    .filter((p) => p.innate === true)
+    .reduce((sum, p) => sum + (p.cost ?? 0), 0);
+}
+
+/** Remaining innate energy budget after innate power costs. */
+export function calculateRemainingInnateEnergy(
+  maxInnateEnergy: number,
+  powers: Array<{ innate?: boolean; cost?: number }> = []
+): number {
+  return maxInnateEnergy - sumInnatePowerEnergyCosts(powers);
+}
+
 /**
  * Get the archetype ability score.
  */

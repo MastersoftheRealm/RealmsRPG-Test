@@ -36,6 +36,7 @@ export {
   computeActionType as computePowerActionType,
   computeActionTypeFromSelection as computePowerActionTypeFromSelection,
   buildPowerMechanicPartPayload,
+  formatPowerRangeFromSteps,
   deriveRange,
   deriveArea,
   deriveDuration,

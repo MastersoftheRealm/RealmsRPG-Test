@@ -13,9 +13,14 @@ import type { ChipData } from '@/components/shared/grid-list-row';
 import type { SortState } from '@/components/shared';
 import { DecrementButton, IncrementButton } from '@/components/shared';
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
+import { useCodexSkills } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { buildFeatLevelChips, getFeatFamilyId, getFeatLevel, formatFeatName } from '@/lib/leveled-feats';
-import { mapTraitRows, mapFeatRows, type FeatRowContext } from './library-feat-rows';
+import {
+  getMaxQualifiedFeatLevel,
+  type CharacterForFeatRequirement,
+} from '@/lib/game/feat-requirements';
+import { mapTraitRows, mapFeatRows, type FeatRowContext, type FeatLevelMeta } from './library-feat-rows';
 
 interface TraitData {
   name: string;
@@ -88,6 +93,8 @@ interface FeatsTabProps {
   maxArchetypeFeats?: number;
   maxCharacterFeats?: number;
   onFeatUsesChange?: (featId: string, delta: number) => void;
+  onFeatLevelChange?: (featId: string, targetLevel: number, listType: 'archetype' | 'character') => void;
+  featRequirementCharacter?: CharacterForFeatRequirement;
   onTraitUsesChange?: (traitName: string, delta: number) => void;
   onAddArchetypeFeat?: () => void;
   onAddCharacterFeat?: () => void;
@@ -115,12 +122,16 @@ export function FeatsTab({
   maxArchetypeFeats,
   maxCharacterFeats,
   onFeatUsesChange,
+  onFeatLevelChange,
+  featRequirementCharacter,
   onTraitUsesChange,
   onAddArchetypeFeat,
   onAddCharacterFeat,
   onAddStateFeat,
   onRemoveFeat,
 }: FeatsTabProps) {
+  const { data: codexSkills = [] } = useCodexSkills();
+
   const getFeatLevelForCharacter = useCallback(
     (feat: FeatData): number => {
       const dbFeat = featsDb.find((f) => String(f.id) === String(feat.id));
@@ -149,6 +160,35 @@ export function FeatsTab({
     map.forEach((levels) => levels.sort((a, b) => getFeatLevel(a) - getFeatLevel(b)));
     return map;
   }, [featsDb]);
+
+  const getFeatLevelMeta = useCallback(
+    (featId: string | number): FeatLevelMeta | undefined => {
+      if (!showEditControls || !featRequirementCharacter) return undefined;
+      const feat = featsDb.find((f) => String(f.id) === String(featId));
+      if (!feat) return undefined;
+      const family = featLevelsByFamily.get(getFeatFamilyId(feat)) ?? [];
+      if (family.length <= 1) return undefined;
+      return {
+        currentLevel: getFeatLevel(feat),
+        minLevel: getFeatLevel(family[0]),
+        maxQualified: getMaxQualifiedFeatLevel(
+          featRequirementCharacter,
+          family,
+          codexSkills,
+          featsDb
+        ),
+        featName: feat.name ?? String(featId),
+      };
+    },
+    [showEditControls, featRequirementCharacter, featsDb, featLevelsByFamily, codexSkills]
+  );
+
+  const includeLevelColumn = useMemo(
+    () =>
+      showEditControls &&
+      [...archetypeFeats, ...characterFeats].some((f) => getFeatLevelMeta(f.id ?? f.name) != null),
+    [showEditControls, archetypeFeats, characterFeats, getFeatLevelMeta]
+  );
 
   const getFeatLevelDetailSections = useCallback(
     (featId: string | number) => {
@@ -284,18 +324,47 @@ export function FeatsTab({
       onFeatUsesChange,
       onRemoveFeat,
       getFeatLevelDetailSections,
+      getFeatLevelMeta,
     }),
-    [showEditControls, traitUses, onTraitUsesChange, onFeatUsesChange, onRemoveFeat, getFeatLevelDetailSections]
+    [
+      showEditControls,
+      traitUses,
+      onTraitUsesChange,
+      onFeatUsesChange,
+      onRemoveFeat,
+      getFeatLevelDetailSections,
+      getFeatLevelMeta,
+    ]
+  );
+
+  const archetypeFeatRowContext = useMemo<FeatRowContext>(
+    () => ({
+      ...featRowContext,
+      onFeatLevelChange: onFeatLevelChange
+        ? (featId, targetLevel) => onFeatLevelChange(featId, targetLevel, 'archetype')
+        : undefined,
+    }),
+    [featRowContext, onFeatLevelChange]
+  );
+
+  const characterFeatRowContext = useMemo<FeatRowContext>(
+    () => ({
+      ...featRowContext,
+      onFeatLevelChange: onFeatLevelChange
+        ? (featId, targetLevel) => onFeatLevelChange(featId, targetLevel, 'character')
+        : undefined,
+    }),
+    [featRowContext, onFeatLevelChange]
   );
 
   const traitRows = useMemo(() => mapTraitRows(processedTraits, featRowContext), [processedTraits, featRowContext]);
   const archetypeFeatRows = useMemo(
-    () => mapFeatRows(processedArchetypeFeats, featRowContext),
-    [processedArchetypeFeats, featRowContext]
+    () => mapFeatRows(processedArchetypeFeats, archetypeFeatRowContext),
+    [processedArchetypeFeats, archetypeFeatRowContext]
   );
   const characterFeatRows = useMemo(
-    () => mapFeatRows(processedCharacterFeats, featRowContext),
-    [processedCharacterFeats, featRowContext]
+    () => mapFeatRows(processedCharacterFeats, characterFeatRowContext),
+    [processedCharacterFeats, characterFeatRowContext]
   );
   const stateFeatRows = useMemo(
     () =>
@@ -376,6 +445,7 @@ export function FeatsTab({
       <FeatsTraitsListSection
         title="Archetype Feats"
         items={archetypeFeatRows}
+        includeLevelColumn={includeLevelColumn}
         onAdd={showEditControls ? onAddArchetypeFeat : undefined}
         addLabel="Add archetype feat"
         headerRightContent={
@@ -404,6 +474,7 @@ export function FeatsTab({
       <FeatsTraitsListSection
         title="Character Feats"
         items={characterFeatRows}
+        includeLevelColumn={includeLevelColumn}
         onAdd={showEditControls ? onAddCharacterFeat : undefined}
         addLabel="Add character feat"
         headerRightContent={

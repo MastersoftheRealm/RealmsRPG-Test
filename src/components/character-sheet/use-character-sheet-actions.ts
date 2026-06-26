@@ -14,7 +14,10 @@ import {
   getMissingRequiredProficiencies,
 } from '@/lib/proficiencies';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
-import { withSyncedResourceFields } from '@/lib/encounter/character-resource-sync';
+import {
+  withSyncedResourceFields,
+  notifyLocalResourceEdit,
+} from '@/lib/encounter/character-resource-sync';
 import type {
   AbilityName,
   Archetype,
@@ -26,6 +29,12 @@ import type {
   Item,
 } from '@/types';
 import type { Trait } from '@/hooks/codex-types';
+import type { Skill } from '@/hooks/codex-types';
+import {
+  checkFeatRequirements,
+  characterToFeatRequirementCharacter,
+} from '@/lib/game/feat-requirements';
+import { getFeatFamilyId, getFeatLevel, formatFeatName } from '@/lib/leveled-feats';
 import type { CharacterSheetStats, CharacterSheetDerivedHandlers } from './use-character-sheet-derived';
 import type { EditArchetypeResult } from './edit-archetype-modal';
 import type { AddModalType, FeatModalType, SkillModalType } from './character-sheet-context';
@@ -36,6 +45,7 @@ export interface UseCharacterSheetActionsArgs {
   setCharacter: React.Dispatch<React.SetStateAction<Character | null>>;
   calculatedStats: CharacterSheetStats | null;
   featsDb: Feat[];
+  codexSkills: Skill[];
   traitsDb: Trait[];
   codexArchetypes: Archetype[];
   powerPartsDb: LibrarySectionProps['powerPartsDb'];
@@ -63,6 +73,7 @@ export function useCharacterSheetActions(args: UseCharacterSheetActionsArgs) {
     setCharacter,
     calculatedStats,
     featsDb,
+    codexSkills,
     traitsDb,
     codexArchetypes,
     powerPartsDb,
@@ -85,26 +96,31 @@ export function useCharacterSheetActions(args: UseCharacterSheetActionsArgs) {
   } = args;
 
 const handleHealthChange = useCallback((value: number) => {
-  if (!character) return;
-  setCharacter(prev =>
-    prev ? withSyncedResourceFields(prev, { currentHealth: value }) : null
-  );
-}, [character]);
+  setCharacter(prev => {
+    if (!prev) return null;
+    notifyLocalResourceEdit(prev.id);
+    return withSyncedResourceFields(prev, { currentHealth: value });
+  });
+}, [setCharacter]);
 
 const handleEnergyChange = useCallback((value: number) => {
-  if (!character) return;
-  setCharacter(prev =>
-    prev ? withSyncedResourceFields(prev, { currentEnergy: value }) : null
-  );
-}, [character]);
+  setCharacter(prev => {
+    if (!prev) return null;
+    notifyLocalResourceEdit(prev.id);
+    return withSyncedResourceFields(prev, { currentEnergy: value });
+  });
+}, [setCharacter]);
 
 const handleActionPointsChange = useCallback((value: number) => {
-  if (!character) return;
-  setCharacter(prev => prev ? {
-    ...prev,
-    actionPoints: Math.max(0, Math.min(10, value)),
-  } : null);
-}, [character]);
+  setCharacter(prev => {
+    if (!prev) return null;
+    notifyLocalResourceEdit(prev.id);
+    return {
+      ...prev,
+      actionPoints: Math.max(0, Math.min(10, value)),
+    };
+  });
+}, [setCharacter]);
 
 // Experience change handler (always available)
 const handleExperienceChange = useCallback((value: number) => {
@@ -486,12 +502,13 @@ useEffect(() => {
 ]);
 
 // Add power handler
-const handleAddPowers = useCallback((powers: CharacterPower[]) => {
+const handleAddPowers = useCallback((powers: CharacterPower[], asInnate = false) => {
   setCharacter((prev) => {
     if (!prev) return prev;
+    const toAdd = asInnate ? powers.map((p) => ({ ...p, innate: true })) : powers;
     const candidate: Character = {
       ...prev,
-      powers: [...(prev.powers || []), ...powers],
+      powers: [...(prev.powers || []), ...toAdd],
     };
     return applyAutoProficiencies(candidate, 'Adding powers');
   });
@@ -872,6 +889,52 @@ const handleAddFeats = useCallback((feats: { id: string; name: string; descripti
   setFeatModalType(null);
 }, [character, featsDb]);
 
+// Change leveled feat tier (archetype or character list) — same family swap as creature creator
+const handleFeatLevelChange = useCallback(
+  (featId: string, targetLevel: number, listType: 'archetype' | 'character') => {
+    if (!character) return;
+    type LeveledFeat = Feat & { base_feat_id?: string; feat_lvl?: number; uses_per_rec?: number; max_uses?: number };
+    const db = featsDb as LeveledFeat[];
+    const codexFeat = db.find((f) => String(f.id) === String(featId));
+    if (!codexFeat) return;
+
+    const family = db
+      .filter((f) => getFeatFamilyId(f) === getFeatFamilyId(codexFeat))
+      .sort((a, b) => getFeatLevel(a) - getFeatLevel(b));
+    if (family.length <= 1) return;
+
+    const targetCodex = family.find((f) => getFeatLevel(f) === targetLevel);
+    if (!targetCodex || String(targetCodex.id) === String(featId)) return;
+
+    const requirementCharacter = characterToFeatRequirementCharacter(character);
+    const { met } = checkFeatRequirements(targetCodex, requirementCharacter, codexSkills, db);
+    if (!met) return;
+
+    const newFeat: CharacterFeat = {
+      id: String(targetCodex.id),
+      name: formatFeatName(targetCodex),
+      currentUses: targetCodex.uses_per_rec ?? targetCodex.max_uses,
+    };
+
+    setCharacter((prev) => {
+      if (!prev) return null;
+      if (listType === 'archetype') {
+        return {
+          ...prev,
+          archetypeFeats: (prev.archetypeFeats || []).map((f) =>
+            String(f.id) === String(featId) ? newFeat : f
+          ),
+        };
+      }
+      return {
+        ...prev,
+        feats: (prev.feats || []).map((f) => (String(f.id) === String(featId) ? newFeat : f)),
+      };
+    });
+  },
+  [character, featsDb, codexSkills, setCharacter]
+);
+
 // Remove feat handler (called after confirmation)
 const handleRemoveFeat = useCallback((featId: string) => {
   if (!character) return;
@@ -1191,6 +1254,9 @@ const handleModalAdd = useCallback((items: CharacterPower[] | CharacterTechnique
     case 'power':
       handleAddPowers(items as CharacterPower[]);
       break;
+    case 'innate-power':
+      handleAddPowers(items as CharacterPower[], true);
+      break;
     case 'technique':
       handleAddTechniques(items as CharacterTechnique[]);
       break;
@@ -1228,6 +1294,7 @@ const handleModalAdd = useCallback((items: CharacterPower[] | CharacterTechnique
       handleStateUsesChange,
       handleEnterState,
       handleFeatUsesChange,
+      handleFeatLevelChange,
       handleRequestRemoveFeat,
       handleTraitUsesChange,
     }),
@@ -1250,6 +1317,7 @@ const handleModalAdd = useCallback((items: CharacterPower[] | CharacterTechnique
       handleStateUsesChange,
       handleEnterState,
       handleFeatUsesChange,
+      handleFeatLevelChange,
       handleRequestRemoveFeat,
       handleTraitUsesChange,
     ]
@@ -1303,6 +1371,7 @@ const handleModalAdd = useCallback((items: CharacterPower[] | CharacterTechnique
     handleEditSpeciesSave,
     handleMilestoneChoiceChange,
     handleFeatUsesChange,
+    handleFeatLevelChange,
     handleTraitUsesChange,
     handleStateUsesChange,
     handleEnterState,

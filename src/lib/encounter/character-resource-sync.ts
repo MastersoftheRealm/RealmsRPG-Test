@@ -12,7 +12,24 @@ export type CharacterResourcePatch = Pick<
 >;
 
 const DEBOUNCE_MS = 400;
+const REMOTE_SUPPRESS_MS = DEBOUNCE_MS + 1200;
 const pendingTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const lastLocalResourceEditAt = new Map<string, number>();
+
+/** Mark that HP/EN/AP were edited locally — suppress stale realtime echoes briefly. */
+export function notifyLocalResourceEdit(characterId: string): void {
+  lastLocalResourceEditAt.set(characterId, Date.now());
+}
+
+export function shouldSuppressRemoteResourceMerge(characterId: string): boolean {
+  const t = lastLocalResourceEditAt.get(characterId);
+  if (!t) return false;
+  if (Date.now() - t > REMOTE_SUPPRESS_MS) {
+    lastLocalResourceEditAt.delete(characterId);
+    return false;
+  }
+  return true;
+}
 
 /** Read HP/EN/AP from character `data` JSON. Top-level fields win over nested health/energy.current. */
 export function readResourcesFromCharacterData(data: Record<string, unknown>): {
@@ -133,6 +150,7 @@ export function scheduleCharacterResourceSync(
   characterId: string,
   patch: CharacterResourcePatch
 ): void {
+  notifyLocalResourceEdit(characterId);
   const existing = pendingTimers.get(characterId);
   if (existing) clearTimeout(existing);
 

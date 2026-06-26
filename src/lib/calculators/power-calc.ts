@@ -367,6 +367,15 @@ export function buildPowerMechanicPartPayload(
 // =============================================================================
 
 /**
+ * Convert power creator `range.steps` to a display string (steps 1 → "3 spaces").
+ * steps 0 is melee — handle that case separately.
+ */
+export function formatPowerRangeFromSteps(steps: number): string {
+  const spaces = 3 + 3 * (steps - 1);
+  return `${spaces} ${spaces > 1 ? 'spaces' : 'space'}`;
+}
+
+/**
  * Derive range string from parts
  */
 export function deriveRange(
@@ -615,8 +624,7 @@ export function derivePowerDisplay(
   // Use directly saved range if available, otherwise derive from parts
   let rangeStr: string;
   if (powerDoc.range && powerDoc.range.steps !== undefined && powerDoc.range.steps > 0) {
-    const spaces = 3 + 3 * powerDoc.range.steps;
-    rangeStr = `${spaces} ${spaces > 1 ? 'spaces' : 'space'}`;
+    rangeStr = formatPowerRangeFromSteps(powerDoc.range.steps);
   } else {
     rangeStr = deriveRange(partsPayload);
   }

@@ -8,7 +8,7 @@
 import { useState, useEffect, useMemo, useCallback, useId } from 'react';
 import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
 import { checkFeatRequirements } from '@/lib/game/feat-requirements';
-import { buildFeatLevelChips, getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
+import { buildFeatLevelChips, getFeatFamilyId, getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
 import { Alert } from '@/components/ui';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
 import type { ChipData } from '@/components/shared/grid-list-row';
@@ -93,6 +93,7 @@ export function AddFeatModal({
   const [selectedAbility, setSelectedAbility] = useState<string>('');
   const [showStateFeats, setShowStateFeats] = useState(false);
   const [showBlocked, setShowBlocked] = useState(false);
+  const [showUpgradeableOnly, setShowUpgradeableOnly] = useState(false);
 
   const feats = useMemo((): FeatModal[] => {
     if (!codexFeats || !Array.isArray(codexFeats)) return [];
@@ -110,6 +111,7 @@ export function AddFeatModal({
       setSelectedAbility('');
       setShowStateFeats(false);
       setShowBlocked(false);
+      setShowUpgradeableOnly(false);
     }
   }, [isOpen]);
 
@@ -139,6 +141,15 @@ export function AddFeatModal({
     return { meets: met, warning: reason };
   }, [character, codexSkills, feats]);
 
+  const ownedFamilyIds = useMemo(() => {
+    const families = new Set<string>();
+    existingFeatIds.forEach((id) => {
+      const feat = feats.find((f) => String(f.id) === String(id));
+      if (feat) families.add(getFeatFamilyId(feat));
+    });
+    return families;
+  }, [existingFeatIds, feats]);
+
   const items = useMemo((): SelectableItem[] => {
     const baseFiltered = feats
       .filter(feat => {
@@ -160,7 +171,8 @@ export function AddFeatModal({
     const existingFeatIdSet = new Set(existingFeatIds.map((id) => String(id)));
 
     return families
-      .map(({ levels }) => {
+      .map(({ familyId, levels }) => {
+        if (showUpgradeableOnly && !ownedFamilyIds.has(familyId)) return null;
         const selectableLevels = levels
           .filter((levelFeat) => !existingFeatIdSet.has(String(levelFeat.id)))
           .slice()
@@ -171,7 +183,7 @@ export function AddFeatModal({
         return featToSelectableItem(displayFeat, levels, !meets && !showBlocked, warning, skillIdToName);
       })
       .filter((item): item is SelectableItem => item !== null);
-  }, [feats, featType, existingFeatIds, showStateFeats, showBlocked, selectedCategory, selectedAbility, checkRequirements, skillIdToName]);
+  }, [feats, featType, existingFeatIds, showStateFeats, showBlocked, showUpgradeableOnly, ownedFamilyIds, selectedCategory, selectedAbility, checkRequirements, skillIdToName]);
 
   const error = queryError ? `Failed to load feats: ${queryError.message}` : null;
 
@@ -219,6 +231,17 @@ export function AddFeatModal({
         />
         Show blocked
       </label>
+      {featType !== 'state' && (
+        <label className="flex items-center gap-2 text-sm text-text-muted dark:text-text-secondary">
+          <input
+            type="checkbox"
+            checked={showUpgradeableOnly}
+            onChange={(e) => setShowUpgradeableOnly(e.target.checked)}
+            className="rounded border-border-light"
+          />
+          Owned feats (can level up)
+        </label>
+      )}
     </div>
   );
 

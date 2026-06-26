@@ -28,7 +28,10 @@ import {
 } from '@/components/character-sheet';
 import { useToast } from '@/components/ui';
 import { createClient } from '@/lib/supabase/client';
-import { mergeResourceUpdatesIntoCharacter } from '@/lib/encounter/character-resource-sync';
+import {
+  mergeResourceUpdatesIntoCharacter,
+  shouldSuppressRemoteResourceMerge,
+} from '@/lib/encounter/character-resource-sync';
 import type {
   Character,
   CharacterLibraryTabId,
@@ -230,8 +233,10 @@ export default function CharacterSheetPage({ params }: PageParams) {
         (payload: { new: { id: string; data?: Record<string, unknown> } }) => {
           const data = payload.new?.data;
           if (!data) return;
+          const charId = payload.new.id;
+          if (shouldSuppressRemoteResourceMerge(charId)) return;
           setCharacter(prev => {
-            if (!prev || prev.id !== payload.new.id) return prev;
+            if (!prev || prev.id !== charId) return prev;
             return mergeResourceUpdatesIntoCharacter(prev, data) ?? prev;
           });
         }
@@ -326,6 +331,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
     setCharacter,
     calculatedStats,
     featsDb,
+    codexSkills,
     traitsDb,
     codexArchetypes,
     powerPartsDb,

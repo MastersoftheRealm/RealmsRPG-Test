@@ -4,6 +4,7 @@
 
 import type { LibrarySectionProps } from '@/components/character-sheet/library-section';
 import type { CharacterProficiency, Item, Character, CharacterAncestry } from '@/types';
+import { characterToFeatRequirementCharacter } from '@/lib/game/feat-requirements';
 import {
   calculateMaxArchetypeFeats,
   calculateMaxCharacterFeats,
@@ -59,6 +60,7 @@ export type BuildLibrarySectionPropsArgs = {
   handleStateUsesChange: NonNullable<LibrarySectionProps['onStateUsesChange']>;
   handleEnterState: NonNullable<LibrarySectionProps['onEnterState']>;
   handleFeatUsesChange: NonNullable<LibrarySectionProps['onFeatUsesChange']>;
+  handleFeatLevelChange: NonNullable<LibrarySectionProps['onFeatLevelChange']>;
   handleRequestRemoveFeat: NonNullable<LibrarySectionProps['onRemoveFeat']>;
   handleTraitUsesChange: NonNullable<LibrarySectionProps['onTraitUsesChange']>;
 };
@@ -97,6 +99,7 @@ export function buildLibrarySectionProps({
   handleStateUsesChange,
   handleEnterState,
   handleFeatUsesChange,
+  handleFeatLevelChange,
   handleRequestRemoveFeat,
   handleTraitUsesChange,
 }: BuildLibrarySectionPropsArgs): Omit<LibrarySectionProps, 'className' | 'activeTab' | 'onActiveTabChange'> {
@@ -203,6 +206,8 @@ export function buildLibrarySectionProps({
     ),
     maxCharacterFeats: calculateMaxCharacterFeats(character.level || 1),
     onFeatUsesChange: handleFeatUsesChange,
+    onFeatLevelChange: handleFeatLevelChange,
+    featRequirementCharacter: characterToFeatRequirementCharacter(character),
     onRemoveFeat: handleRequestRemoveFeat,
     traitsDb,
     featsDb,

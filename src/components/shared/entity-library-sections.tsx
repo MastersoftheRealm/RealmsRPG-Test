@@ -160,7 +160,16 @@ const FEAT_COLUMNS: ListColumn[] = [
 ];
 const FEAT_GRID = 'minmax(140px, 1.6fr) 2.5fr 5rem 4rem';
 
-export { FEAT_COLUMNS, FEAT_GRID };
+const FEAT_COLUMNS_WITH_LEVEL: ListColumn[] = [
+  { key: 'name', label: 'Name', width: 'minmax(140px, 1.6fr)' },
+  { key: 'description', label: 'Description', width: '2fr', sortable: false },
+  { key: 'level', label: 'Lvl', width: '3.5rem', align: 'center' },
+  { key: 'uses', label: 'Uses', width: '5rem', align: 'center' },
+  { key: 'recovery', label: 'Recovery', width: '4rem', align: 'center' },
+];
+const FEAT_GRID_WITH_LEVEL = 'minmax(140px, 1.6fr) 2fr 3.5rem 5rem 4rem';
+
+export { FEAT_COLUMNS, FEAT_GRID, FEAT_COLUMNS_WITH_LEVEL, FEAT_GRID_WITH_LEVEL };
 
 function truncateText(text: string | undefined, maxLength: number): string {
   if (!text) return '';
@@ -798,6 +807,7 @@ export function FeatsTraitsListSection({
   showListHeader = true,
   compactRows = true,
   showTitle = true,
+  includeLevelColumn = false,
   sortState,
   onSort,
   rowChrome,
@@ -812,11 +822,15 @@ export function FeatsTraitsListSection({
   showListHeader?: boolean;
   compactRows?: boolean;
   showTitle?: boolean;
+  /** Show Lvl column header when editing leveled feats */
+  includeLevelColumn?: boolean;
   headerRightContent?: ReactNode;
   addButtonClassName?: string;
 } & EntityListControls) {
   const hasAny = items.length > 0;
   const useInteractiveRows = items.some((item) => item.columns != null);
+  const featColumns = includeLevelColumn ? FEAT_COLUMNS_WITH_LEVEL : FEAT_COLUMNS;
+  const featGrid = includeLevelColumn ? FEAT_GRID_WITH_LEVEL : FEAT_GRID;
 
   if (useInteractiveRows) {
     return (
@@ -833,8 +847,8 @@ export function FeatsTraitsListSection({
         )}
         {showListHeader && hasAny && (
           <ListHeader
-            columns={FEAT_COLUMNS}
-            gridColumns={FEAT_GRID}
+            columns={featColumns}
+            gridColumns={featGrid}
             sortState={sortState}
             onSort={onSort}
             rowChrome={rowChrome}
@@ -842,7 +856,7 @@ export function FeatsTraitsListSection({
         )}
         {hasAny ? (
           <div className="space-y-1">
-            {renderInteractiveGridRows(items, FEAT_GRID, () => [], compactRows)}
+            {renderInteractiveGridRows(items, featGrid, () => [], compactRows)}
           </div>
         ) : (
           <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>

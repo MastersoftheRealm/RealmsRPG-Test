@@ -80,6 +80,7 @@ export interface CharacterSheetDerivedHandlers {
   handleStateUsesChange: NonNullable<LibrarySectionProps['onStateUsesChange']>;
   handleEnterState: NonNullable<LibrarySectionProps['onEnterState']>;
   handleFeatUsesChange: NonNullable<LibrarySectionProps['onFeatUsesChange']>;
+  handleFeatLevelChange: NonNullable<LibrarySectionProps['onFeatLevelChange']>;
   handleRequestRemoveFeat: NonNullable<LibrarySectionProps['onRemoveFeat']>;
   handleTraitUsesChange: NonNullable<LibrarySectionProps['onTraitUsesChange']>;
 }
@@ -138,6 +139,7 @@ export function buildCharacterSheetLibraryProps(input: BuildLibrarySectionPropsI
     handleStateUsesChange: input.handlers.handleStateUsesChange,
     handleEnterState: input.handlers.handleEnterState,
     handleFeatUsesChange: input.handlers.handleFeatUsesChange,
+    handleFeatLevelChange: input.handlers.handleFeatLevelChange,
     handleRequestRemoveFeat: input.handlers.handleRequestRemoveFeat,
     handleTraitUsesChange: input.handlers.handleTraitUsesChange,
   });
