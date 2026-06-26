@@ -790,6 +790,56 @@ Manual QA after `sql/supabase-rls-consolidate-permissive-2026-06.sql`. **Needs:*
 
 ---
 
+## DEV-V-010 — Feat/trait custom name + note (TASK-377)
+
+Player rename + note on character sheet feats/traits. **Needs:** logged-in account with one character that has at least one feat and one species/ancestry trait. For T004 also a campaign with that character shared (visibility **campaign**) and a second member account.
+
+#### DEV-V-010-T001 — Rename a feat (italic, codex name preserved)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-010 — Feat/trait custom name + note |
+| **Task** | TASK-377 |
+| **Where** | `/characters/[id]` → Edit → Library → Feats |
+| **Steps** | 1. Enter edit mode. 2. Expand a feat; click **Customize**. 3. Type a **Custom name** with spaces (e.g. `My Honed Strike`). 4. Save/reload. |
+| **Expected** | Feat row title shows the custom name in *italics*; codex name still visible via hover/title; spaces are preserved in the input while typing. |
+| **Report** | DEV-V-010-T001: PASS / FAIL / SKIP — |
+
+#### DEV-V-010-T002 — Add a feat note (expanded-only, persists)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-010 |
+| **Task** | TASK-377 |
+| **Where** | `/characters/[id]` → Edit → Library → Feats |
+| **Steps** | 1. Expand a feat; click **Customize**. 2. Enter a **Player note** (multi-word). 3. Save/reload; collapse and re-expand the row. |
+| **Expected** | Note shows only in the expanded row; the Customize block is collapsed by default; note text persists after reload. |
+| **Report** | DEV-V-010-T002: PASS / FAIL / SKIP — |
+
+#### DEV-V-010-T003 — Trait customization + feat level-swap preserves data
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-010 |
+| **Task** | TASK-377 |
+| **Where** | `/characters/[id]` → Edit → Library → Feats/Traits |
+| **Steps** | 1. Rename a species/ancestry trait and add a note via **Customize**; save/reload. 2. On a multi-level feat with a custom name + note, change its level with the stepper; save/reload. |
+| **Expected** | Trait custom name (italic) + note persist via `traitCustomizations`; after the feat level-swap the custom name and note remain attached to the feat. |
+| **Report** | DEV-V-010-T003: PASS / FAIL / SKIP — |
+
+#### DEV-V-010-T004 — Read-only campaign view shows customizations
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-010 |
+| **Task** | TASK-377 |
+| **Where** | `/campaigns/[id]/view/[userId]/[characterId]` |
+| **Steps** | 1. Share the customized character to a campaign. 2. As another campaign member, open the character view. 3. Expand customized feats/traits. |
+| **Expected** | Custom names show in italics and notes appear in expanded rows; no edit controls (read-only); button reads **View customization**. |
+| **Report** | DEV-V-010-T004: PASS / FAIL / SKIP — |
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |

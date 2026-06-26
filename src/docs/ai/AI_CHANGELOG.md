@@ -4,6 +4,8 @@ Append-only log. Add an entry per PR/merge. **For current context, recent entrie
 
 > Older entries (before 2026-04-01) moved to [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
 
+- 2026-06-26 | agent | Session: Feat/trait customization audit — workflow artifacts | files: `AI_TASK_QUEUE.md`, `BUILD_VALIDATION.md`, `DEVELOPER_TASK_QUEUE.md`, `ALL_FEEDBACK_CLEAN.md` | Summary: Audited today's feat/trait `customName`+`note` work against project rules. Code/types/enrichment/a11y/build all green; closed governance gaps — logged raw feedback, added **TASK-377** (done, with build_validation), new **DEV-V-010** QA suite (T001–T004) indexed in developer queue. No code changes; build still exit 0.
+
 - 2026-06-26 | agent | Session: Character sheet power rolls + reaction action labels | files: `calculations.ts`, `library-entity-rows.tsx`, `library-section-props.ts`, `action-type.ts`, `power-calc.ts`, `creature-stat-block.tsx`, campaign view | Summary: Power damage rolls include Power Attack Bonus; action column shows full reaction type (Free/Basic Reaction) via `formatSavedActionTypeForDisplay`; fixed `derivePowerDisplay` collapsing reactions. Build exit 0.
 
 - 2026-06-26 | agent | Session: Character sheet auto-proficiency on add power/technique | files: `map-selection.ts`, `add-library-item-modal.tsx`, `use-character-sheet-actions.ts`, `use-add-library-item-data.ts` | Summary: Enrich parts with codex TP on add; sync missing proficiencies when codex loads; fix add handlers to use setCharacter updater. Build exit 0.

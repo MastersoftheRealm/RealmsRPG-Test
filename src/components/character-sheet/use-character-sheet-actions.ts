@@ -1189,13 +1189,11 @@ const applyFeatCustomization = (
     if (String(feat.id) !== featId) return feat;
     const next = { ...feat };
     if ('customName' in updates) {
-      const trimmed = updates.customName?.trim();
-      if (trimmed) next.customName = trimmed;
+      if (updates.customName !== undefined && updates.customName !== '') next.customName = updates.customName;
       else delete next.customName;
     }
     if ('note' in updates) {
-      const trimmed = updates.note?.trim();
-      if (trimmed) next.note = trimmed;
+      if (updates.note !== undefined && updates.note !== '') next.note = updates.note;
       else delete next.note;
     }
     return next;
@@ -1230,13 +1228,11 @@ const handleTraitCustomizationChange = useCallback(
       const existing = { ...(prev.traitCustomizations || {}) };
       const current = { ...(existing[traitKey] || {}) };
       if ('customName' in updates) {
-        const trimmed = updates.customName?.trim();
-        if (trimmed) current.customName = trimmed;
+        if (updates.customName !== undefined && updates.customName !== '') current.customName = updates.customName;
         else delete current.customName;
       }
       if ('note' in updates) {
-        const trimmed = updates.note?.trim();
-        if (trimmed) current.note = trimmed;
+        if (updates.note !== undefined && updates.note !== '') current.note = updates.note;
         else delete current.note;
       }
       if (Object.keys(current).length > 0) existing[traitKey] = current;

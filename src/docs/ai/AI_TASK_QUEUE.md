@@ -1737,3 +1737,51 @@ Gap analysis 2026-06-18 (resolved): admin `codex_archetypes` + `codex_archetype_
 
     Agents: do not extend legacy tooltip code; do not implement TASK-376. When touching nearby files,
     leave tooltip migration untouched unless merging Collin's branch or owner explicitly assigns his PR.
+
+- id: TASK-377
+  title: Player feat/trait custom name + note (character sheet)
+  priority: medium
+  status: done
+  created_at: 2026-06-26
+  created_by: owner
+  description: |
+    Let players rename a feat/trait and append a note per character without overwriting codex
+    name/description. Rename shows in italics (edit-mode only); note shows only in the expanded row.
+    Fields live behind a collapsible "Customize" control (collapsed by default). Spaces allowed while
+    typing; values trimmed only on save. Lean save model — no DB migration.
+  related_files:
+    - src/types/feats.ts
+    - src/types/character.ts
+    - src/lib/data-enrichment.ts
+    - src/components/character-sheet/library-feat-rows.tsx
+    - src/components/character-sheet/feats-tab.tsx
+    - src/components/character-sheet/library-section.tsx
+    - src/components/character-sheet/use-character-sheet-actions.ts
+    - src/components/character-sheet/use-character-sheet-derived.ts
+    - src/app/(main)/characters/[id]/library-section-props.ts
+    - src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx
+  acceptance_criteria:
+    - Feat/archetype-feat `customName` + `note` saved on lean entries; trait overrides in `traitCustomizations` map
+    - Custom name displays in italics; codex name preserved and shown via title/tooltip
+    - Note visible only in expanded row; customization fields collapsed behind "Customize" button
+    - `traitCustomizations` persisted (present in `SAVEABLE_FIELDS`); survives feat level-swap
+    - Read-only campaign view shows custom names/notes
+    - Spaces allowed in inputs (trim only on save); a11y labels + 44px touch targets
+    - `npm run build` passes
+  notes: |
+    Done 2026-06-26. `FeatTraitCustomizationBlock` (collapsible) in `library-feat-rows`; `buildCustomizationExtras`
+    yields italic `nameContent` + `supplementalExpandedContent`. Handlers `handleFeatCustomizationChange` /
+    `handleTraitCustomizationChange` in `use-character-sheet-actions`; level-swap merges existing custom data.
+    `data-enrichment` cleans + trims on save and added `traitCustomizations` to `SAVEABLE_FIELDS`. Campaign
+    read-only view passes `traitCustomizations`. No Supabase migration (JSONB `characters.data`). Build exit 0.
+    Deferred: character creator does not yet expose these fields (sheet-only); orphan `traitCustomizations`
+    keys after species change are harmless.
+  developer_test_plan: |
+    Suite DEV-V-010 T001–T004 — see BUILD_VALIDATION.md.
+  build_validation:
+    suite: DEV-V-010
+    tests:
+      - DEV-V-010-T001
+      - DEV-V-010-T002
+      - DEV-V-010-T003
+      - DEV-V-010-T004

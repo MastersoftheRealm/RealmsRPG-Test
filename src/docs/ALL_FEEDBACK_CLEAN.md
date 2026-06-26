@@ -1598,3 +1598,11 @@ Notes
 - Feedback: No way to increase feat level after adding a leveled character/archetype feat; should be easy (step up in feat list).
 - Expected: Level stepper on added library feats; respects requirements and updates feat points.
 - Disposition: Implemented 2026-06-26. LVL column with ValueStepper for multi-level library feats; add-feat merges replace lower levels in same family.
+
+**Raw Feedback Log — 2026-06-26 (Feat/trait custom name + player note)**
+- Date: 2026-06-26
+- Context: Character sheet → Library → Feats/Traits
+- Priority: Medium
+- Feedback: Allow appending a note to a feat/trait and renaming a feat/trait in a character's feat list, without overwriting the codex name/description. Renames are editable only in edit mode and shown in italics; notes are non-invasive and visible only in the expanded row. Later refined: hide the fields behind a small "Customize" button (collapsed by default) and allow spaces in custom names/notes.
+- Expected: Player-defined `customName` (italic display, codex name preserved) and `note` (expanded-only) persist per character; visible in read-only campaign view; survive feat level-swaps.
+- Disposition: Implemented 2026-06-26 (TASK-377). Lean-save `customName`/`note` on `feats`/`archetypeFeats`; `traitCustomizations` map for traits; collapsible `FeatTraitCustomizationBlock`; trimming only on save (spaces allowed while typing). Audit fixes: `traitCustomizations` added to `SAVEABLE_FIELDS`; level-swap preserves customization; campaign read-only view passes trait map. No Supabase migration (JSONB `characters.data`).

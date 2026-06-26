@@ -4,7 +4,7 @@
  * Maps character sheet feats/traits to FeatsTraitsListSection row shapes.
  */
 
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { DecrementButton, IncrementButton, ValueStepper, type ColumnValue } from '@/components/shared';
 import type { ChipData } from '@/components/shared/grid-list-row';
 import type { EntityFeatRow } from '@/components/shared/entity-library-sections';
@@ -68,8 +68,12 @@ function FeatTraitCustomizationBlock({
   onCustomNameChange?: (value: string) => void;
   onNoteChange?: (value: string) => void;
 }) {
+  const [isCustomizationOpen, setIsCustomizationOpen] = useState(false);
   const noteTrimmed = note?.trim();
-  if (!showEditControls && !noteTrimmed) return null;
+  const customNameTrimmed = customName?.trim();
+  const hasSavedCustomization = !!customNameTrimmed || !!noteTrimmed;
+  const canCustomize = showEditControls || hasSavedCustomization;
+  if (!canCustomize) return null;
 
   return (
     <div
@@ -77,31 +81,60 @@ function FeatTraitCustomizationBlock({
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
     >
-      {showEditControls && onCustomNameChange && (
-        <Input
-          label="Custom name"
-          value={customName ?? ''}
-          onChange={(e) => onCustomNameChange(e.target.value)}
-          placeholder={codexName}
-          helperText="Optional flavor name. Shown in italics; codex name stays unchanged."
-        />
-      )}
-      {showEditControls && onNoteChange ? (
-        <Textarea
-          label="Player note"
-          value={note ?? ''}
-          onChange={(e) => onNoteChange(e.target.value)}
-          placeholder="Record choices, reminders, or flavor (e.g. chosen power)…"
-          className="min-h-[72px]"
-        />
-      ) : noteTrimmed ? (
-        <div>
-          <p className="text-xs font-medium text-text-muted dark:text-text-secondary mb-1">Note</p>
-          <p className="text-sm text-text-secondary whitespace-pre-wrap p-3 bg-surface rounded-lg border border-border-light">
-            {noteTrimmed}
-          </p>
-        </div>
-      ) : null}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsCustomizationOpen((prev) => !prev);
+        }}
+        className="inline-flex items-center rounded-md border border-border-light bg-surface px-3 py-2 text-xs font-medium text-text-secondary hover:bg-surface-alt min-h-[44px]"
+        aria-expanded={isCustomizationOpen}
+      >
+        {isCustomizationOpen ? 'Hide customization' : showEditControls ? 'Customize' : 'View customization'}
+      </button>
+
+      {isCustomizationOpen &&
+        (showEditControls ? (
+          <>
+            {onCustomNameChange && (
+              <Input
+                label="Custom name"
+                value={customName ?? ''}
+                onChange={(e) => onCustomNameChange(e.target.value)}
+                placeholder={codexName}
+                helperText="Optional flavor name. Shown in italics; codex name stays unchanged."
+              />
+            )}
+            {onNoteChange && (
+              <Textarea
+                label="Player note"
+                value={note ?? ''}
+                onChange={(e) => onNoteChange(e.target.value)}
+                placeholder="Record choices, reminders, or flavor (e.g. chosen power)…"
+                className="min-h-[72px]"
+              />
+            )}
+          </>
+        ) : (
+          <div className="space-y-2">
+            {customNameTrimmed && (
+              <div>
+                <p className="text-xs font-medium text-text-muted dark:text-text-secondary mb-1">Custom name</p>
+                <p className="text-sm text-text-secondary whitespace-pre-wrap p-3 bg-surface rounded-lg border border-border-light italic">
+                  {customNameTrimmed}
+                </p>
+              </div>
+            )}
+            {noteTrimmed && (
+              <div>
+                <p className="text-xs font-medium text-text-muted dark:text-text-secondary mb-1">Note</p>
+                <p className="text-sm text-text-secondary whitespace-pre-wrap p-3 bg-surface rounded-lg border border-border-light">
+                  {noteTrimmed}
+                </p>
+              </div>
+            )}
+          </div>
+        ))}
     </div>
   );
 }
