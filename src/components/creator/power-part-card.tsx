@@ -8,7 +8,8 @@
 import { useState, useMemo, useId } from 'react';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { formatCost } from '@/lib/game/creator-constants';
-import { IconButton, Checkbox } from '@/components/ui';
+import { partCategoryToChipVariant } from '@/lib/game/part-category';
+import { Chip, IconButton, Checkbox } from '@/components/ui';
 import { ValueStepper } from '@/components/shared';
 import type { PowerPart, TechniquePart } from '@/hooks';
 
@@ -93,10 +94,20 @@ export function PowerPartCard({
           onClick={() => setExpanded(!expanded)}
           className="flex items-center gap-2 flex-1 min-w-0 text-left hover:bg-surface-alt/80 -ml-2 pl-2 py-1 rounded transition-colors"
         >
-          <span className="text-text-muted dark:text-text-secondary">
+          <span className="text-text-muted dark:text-text-secondary shrink-0">
             {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </span>
-          <span className="font-medium text-text-primary truncate">{part.name}</span>
+          {part.category && (
+            <Chip
+              variant={partCategoryToChipVariant(part.category)}
+              size="sm"
+              className="shrink-0 max-w-[7.5rem] truncate font-normal"
+              title={part.category}
+            >
+              {part.category}
+            </Chip>
+          )}
+          <span className="font-medium text-text-primary truncate min-w-0">{part.name}</span>
           <span className="flex items-center gap-2 text-sm font-semibold flex-shrink-0">
             <span className="text-energy-text">EN: {formatCost(partEnergy)}</span>
             <span className="text-tp-text">TP: {formatCost(partTP)}</span>

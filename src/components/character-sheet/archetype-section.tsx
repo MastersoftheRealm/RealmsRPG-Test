@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { calculateProficiency, getArchetypeType, getArchetypeMilestoneLevels } from '@/lib/game/formulas';
 import { useRollsOptional } from './roll-context';
@@ -350,18 +350,24 @@ export function ArchetypeSection({
   
   // Local state for whether this section is actively being edited
   const [isSectionEditing, setIsSectionEditing] = useState(false);
-  // Editable max prof points (steppers below slider); when null, use level-derived value
+  // Optional manual max above level-derived total (homebrew); floor is always level-based
   const [maxProfOverride, setMaxProfOverride] = useState<number | null>(null);
-  
-  // Derived state: is the section actually editable right now?
-  const showEditControls = isEditMode && isSectionEditing;
-  
-  // Calculate proficiency points (effective max = override or level-based)
+
+  // Calculate proficiency points (effective max = level-based, or higher if manually raised)
   const level = character.level || 1;
   const levelBasedMax = calculateProficiency(level);
-  const totalProfPoints = maxProfOverride ?? levelBasedMax;
+  const totalProfPoints = Math.max(levelBasedMax, maxProfOverride ?? levelBasedMax);
+
+  useEffect(() => {
+    if (maxProfOverride !== null && maxProfOverride <= levelBasedMax) {
+      setMaxProfOverride(null);
+    }
+  }, [levelBasedMax, maxProfOverride]);
   const spentProfPoints = martialProf + powerProf;
   const remainingProfPoints = totalProfPoints - spentProfPoints;
+
+  // Derived state: is the section actually editable right now?
+  const showEditControls = isEditMode && isSectionEditing;
   
   // Determine archetype type for milestone UI
   const archetypeType = getArchetypeType(martialProf, powerProf);
@@ -467,18 +473,24 @@ export function ArchetypeSection({
           {/* Proficiency Points Display - steppers change max only; three-state coloring for pencil */}
           <div className="mb-4 flex justify-center items-center gap-2">
             <DecrementButton
-              onClick={() => setMaxProfOverride(prev => Math.max(0, (prev ?? levelBasedMax) - 1))}
-              disabled={totalProfPoints <= 0}
+              onClick={() => {
+                if (totalProfPoints <= levelBasedMax) return;
+                const next = totalProfPoints - 1;
+                setMaxProfOverride(next <= levelBasedMax ? null : next);
+              }}
+              disabled={totalProfPoints <= levelBasedMax}
               size="sm"
-              title="Decrease max prof points"
+              title="Decrease max prof points (cannot go below level-based total)"
             />
             <span className={cn('px-3 py-1 rounded-full text-sm font-medium', getProfPointsColorClass())}>
               {remainingProfPoints} / {totalProfPoints} prof. points
             </span>
             <IncrementButton
-              onClick={() => setMaxProfOverride(prev => Math.min(12, (prev ?? levelBasedMax) + 1))}
+              onClick={() =>
+                setMaxProfOverride(Math.min(12, totalProfPoints + 1))
+              }
               size="sm"
-              title="Increase max prof points"
+              title="Increase max prof points above level-based total"
             />
           </div>
         </>

@@ -22,7 +22,7 @@ import {
   type CodexSkillParentRef,
 } from '@/lib/game/formulas';
 import { getArchetypeCodexLookupId, mergeArchetypeFromCodex } from '@/lib/game/archetype-display';
-import { DEFENSE_INCREASE_COST } from '@/lib/game/skill-allocation';
+import { calculateCharacterSkillPointsSpent } from '@/lib/game/skill-allocation';
 import { applySpeciesTraitChoiceSelections } from '@/lib/choice-trait';
 import type { CoreRulesMap } from '@/types/core-rules';
 import type { LibraryForView } from '@/services/character-service';
@@ -311,27 +311,16 @@ export function useCharacterSheetDerived({
       name?: string;
       id?: string;
     }>;
-    let spentSkillPoints = skillsList.reduce((sum, skill) => {
-      let cost = skill.skill_val || 0;
-      const isSubSkill =
-        Boolean(skill.baseSkill) || skill.baseSkillId != null || skill.selectedBaseSkillId != null;
-      if (skill.prof && !isSubSkill) {
-        const isSpecies = characterSpeciesSkills.some(
-          (ss) =>
-            String(ss).toLowerCase() === String(skill.name || '').toLowerCase() ||
-            String(ss) === String(skill.id || '')
-        );
-        if (!isSpecies) cost += 1;
-      }
-      return sum + cost;
-    }, 0);
-
-    const defVals = character.defenseVals || character.defenseSkills || DEFAULT_DEFENSE_SKILLS;
-    const spentDefensePoints = Object.values(defVals).reduce(
-      (sum: number, val) => sum + ((val as number) || 0) * DEFENSE_INCREASE_COST,
-      0
+    const speciesSkillIdSet = new Set(
+      characterSpeciesSkills.filter((id) => id !== '0').map((id) => String(id))
     );
-    spentSkillPoints += spentDefensePoints;
+    const defVals = character.defenseVals || character.defenseSkills || DEFAULT_DEFENSE_SKILLS;
+    const spentSkillPoints = calculateCharacterSkillPointsSpent(
+      skillsList,
+      speciesSkillIdSet,
+      defVals,
+      rules
+    );
 
     return {
       totalAbilityPoints,
@@ -385,26 +374,17 @@ export function useCharacterSheetDerived({
       name?: string;
       id?: string;
     }>;
-    const spentSkillPoints = skillsList.reduce((sum, skill) => {
-      let cost = skill.skill_val || 0;
-      const isSubSkill =
-        Boolean(skill.baseSkill) || skill.baseSkillId != null || skill.selectedBaseSkillId != null;
-      if (skill.prof && !isSubSkill) {
-        const isSpecies = characterSpeciesSkills.some(
-          (ss) =>
-            String(ss).toLowerCase() === String(skill.name || '').toLowerCase() ||
-            String(ss) === String(skill.id || '')
-        );
-        if (!isSpecies) cost += 1;
-      }
-      return sum + cost;
-    }, 0);
-    const defVals = character.defenseVals || character.defenseSkills || DEFAULT_DEFENSE_SKILLS;
-    const spentDefensePoints = Object.values(defVals).reduce(
-      (sum: number, val) => sum + ((val as number) || 0) * DEFENSE_INCREASE_COST,
-      0
+    const speciesSkillIdSet = new Set(
+      characterSpeciesSkills.filter((id) => id !== '0').map((id) => String(id))
     );
-    const skillPointsRemaining = totalSkillPoints - spentSkillPoints - spentDefensePoints;
+    const defValsForSpend = character.defenseVals || character.defenseSkills || DEFAULT_DEFENSE_SKILLS;
+    const spentSkillPoints = calculateCharacterSkillPointsSpent(
+      skillsList,
+      speciesSkillIdSet,
+      defValsForSpend,
+      rules
+    );
+    const skillPointsRemaining = totalSkillPoints - spentSkillPoints;
 
     const archetypeType = character.archetype?.type || 'power';
     const archetypeFeatSlots = calculateMaxArchetypeFeats(level, archetypeType);

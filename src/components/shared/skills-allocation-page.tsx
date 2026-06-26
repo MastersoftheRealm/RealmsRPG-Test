@@ -30,7 +30,9 @@ import {
   getSkillValueIncreaseCost,
   calculateSimpleSkillPointsSpent,
   canIncreaseDefense,
+  resolveSkillAllocationRules,
 } from '@/lib/game/skill-allocation';
+import { useGameRules } from '@/hooks';
 import { formatBonus } from '@/lib/utils';
 import { SkillRow } from '@/components/shared';
 import { Button, Spinner, Alert } from '@/components/ui';
@@ -121,6 +123,8 @@ export function SkillsAllocationPage({
   className,
 }: SkillsAllocationPageProps) {
   const { data: allSkills = [], isLoading } = useCodexSkills();
+  const { rules } = useGameRules();
+  const skillRules = resolveSkillAllocationRules(rules);
   const [addSkillModalOpen, setAddSkillModalOpen] = useState(false);
   const [addSubSkillModalOpen, setAddSubSkillModalOpen] = useState(false);
 
@@ -140,9 +144,10 @@ export function SkillsAllocationPage({
         allocations,
         speciesSkillIds,
         skillMeta,
-        defenseSkills
+        defenseSkills,
+        skillRules
       ),
-    [allocations, speciesSkillIds, skillMeta, defenseSkills]
+    [allocations, speciesSkillIds, skillMeta, defenseSkills, skillRules]
   );
 
   const remainingPoints = totalPoints - spentPoints;
@@ -215,7 +220,7 @@ export function SkillsAllocationPage({
       const isSpecies = speciesSkillIds.has(skillId);
 
       if (delta > 0) {
-        const cost = getSkillValueIncreaseCost(current, isSubSkill);
+        const cost = getSkillValueIncreaseCost(current, isSubSkill, skillRules);
         if (remainingPoints < cost) return;
         onAllocationsChange({ ...allocations, [skillId]: current + 1 });
       } else {
@@ -230,7 +235,7 @@ export function SkillsAllocationPage({
         }
       }
     },
-    [allocations, allSkills, speciesSkillIds, remainingPoints, onAllocationsChange, handleRemoveSkill]
+    [allocations, allSkills, speciesSkillIds, remainingPoints, onAllocationsChange, handleRemoveSkill, skillRules]
   );
 
   const handleAddSkills = useCallback(
@@ -270,13 +275,13 @@ export function SkillsAllocationPage({
         const abilityBonus = abilityDefenseBonuses[key] ?? 0;
         const totalBonus = current + abilityBonus;
         if (totalBonus >= level) return;
-        if (remainingPoints < 2) return;
+        if (remainingPoints < skillRules.defenseIncreaseCost) return;
         onDefenseChange({ ...defenseSkills, [key]: current + 1 });
       } else if (current > 0) {
         onDefenseChange({ ...defenseSkills, [key]: current - 1 });
       }
     },
-    [defenseSkills, level, remainingPoints, abilityDefenseBonuses, onDefenseChange]
+    [defenseSkills, level, remainingPoints, abilityDefenseBonuses, onDefenseChange, skillRules]
   );
 
   const getSkillBonus = useCallback(
@@ -392,8 +397,15 @@ export function SkillsAllocationPage({
                   ? getSubSkillBonus(skill, effectiveValue, baseValue, baseProficient, proficient, chosenAbilityKey)
                   : getSkillBonus(skill, effectiveValue, proficient, chosenAbilityKey);
                 const canInc = isSubSkill
-                  ? baseProficient && remainingPoints >= (effectiveValue === 0 ? 1 : getSkillValueIncreaseCost(effectiveValue, true))
-                  : remainingPoints >= (effectiveValue === 0 ? 1 : getSkillValueIncreaseCost(effectiveValue, false));
+                  ? baseProficient &&
+                    remainingPoints >=
+                      (effectiveValue === 0
+                        ? skillRules.gainProficiencyCost
+                        : getSkillValueIncreaseCost(effectiveValue, true, skillRules))
+                  : remainingPoints >=
+                      (effectiveValue === 0
+                        ? skillRules.gainProficiencyCost
+                        : getSkillValueIncreaseCost(effectiveValue, false, skillRules));
                 const hasMultipleAbilities = linkedKeys.length > 1;
                 return (
                   <SkillRow
@@ -435,14 +447,14 @@ export function SkillsAllocationPage({
       <div className="bg-surface rounded-xl shadow-md p-4 mb-8">
         <h2 className="text-lg font-semibold text-text-primary mb-2 uppercase tracking-wide">Defense Bonuses</h2>
         <p className="text-sm text-text-muted dark:text-text-secondary mb-4">
-          Spend 2 Skill points to increase a defense bonus by 1. Defense bonus from Skill points cannot exceed your level.
+          Spend {skillRules.defenseIncreaseCost} Skill points to increase a defense bonus by 1. Defense bonus from Skill points cannot exceed your level.
         </p>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {DEFENSE_KEYS.map((key) => {
             const current = defenseSkills[key] ?? 0;
             const abilityBonus = abilityDefenseBonuses[key] ?? 0;
             const totalBonus = abilityBonus + current;
-            const canInc = canIncreaseDefense(current, level, abilityBonus, remainingPoints);
+            const canInc = canIncreaseDefense(current, level, abilityBonus, remainingPoints, skillRules);
             return (
               <div
                 key={key}
@@ -464,14 +476,14 @@ export function SkillsAllocationPage({
                     onClick={() => handleDefenseChange(key, 1)}
                     disabled={!canInc}
                     className="w-6 h-6 rounded flex items-center justify-center text-sm font-bold bg-surface hover:bg-surface-alt disabled:opacity-50"
-                    title={canInc ? 'Cost: 2 Skill points' : `Max at level ${level}`}
+                    title={canInc ? `Cost: ${skillRules.defenseIncreaseCost} Skill points` : `Max at level ${level}`}
                   >
                     +
                   </button>
                 </div>
                 {current > 0 && (
                   <span className="text-[9px] text-primary-600 dark:text-primary-400 font-medium mt-0.5">
-                    +{current} ({current * 2}sp)
+                    +{current} ({current * skillRules.defenseIncreaseCost}sp)
                   </span>
                 )}
             </div>

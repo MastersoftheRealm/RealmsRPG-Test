@@ -425,9 +425,9 @@ function CategoryEditor({
       return (
         <>
           <SectionTitle>Skill Rules</SectionTitle>
-          <FieldRow label="Max Skill Value"><NumInput value={data.maxSkillValue as number ?? 3} onChange={v => set('maxSkillValue', v)} /></FieldRow>
-          <FieldRow label="Base Skill Past Cap Cost"><NumInput value={data.baseSkillPastCapCost as number ?? 3} onChange={v => set('baseSkillPastCapCost', v)} /></FieldRow>
-          <FieldRow label="Sub-Skill Past Cap Cost"><NumInput value={data.subSkillPastCapCost as number ?? 2} onChange={v => set('subSkillPastCapCost', v)} /></FieldRow>
+          <FieldRow label="Skill Value Soft Cap"><NumInput value={data.maxSkillValue as number ?? 3} onChange={v => set('maxSkillValue', v)} /></FieldRow>
+          <FieldRow label="Base Skill Cost Past Soft Cap"><NumInput value={data.baseSkillPastCapCost as number ?? 3} onChange={v => set('baseSkillPastCapCost', v)} /></FieldRow>
+          <FieldRow label="Sub-Skill Cost Past Soft Cap"><NumInput value={data.subSkillPastCapCost as number ?? 2} onChange={v => set('subSkillPastCapCost', v)} /></FieldRow>
           <FieldRow label="Defense Increase Cost"><NumInput value={data.defenseIncreaseCost as number ?? 2} onChange={v => set('defenseIncreaseCost', v)} /></FieldRow>
           <FieldRow label="Species Skill Count"><NumInput value={data.speciesSkillCount as number ?? 2} onChange={v => set('speciesSkillCount', v)} /></FieldRow>
           <FieldRow label="Gain Proficiency Cost"><NumInput value={data.gainProficiencyCost as number ?? 1} onChange={v => set('gainProficiencyCost', v)} /></FieldRow>

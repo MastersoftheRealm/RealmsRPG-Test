@@ -351,27 +351,37 @@ export function ProficienciesTab({
         </SummaryRow>
       </TabSummarySection>
 
+      {onProficienciesChange && (
+        <div className="rounded-lg border border-border bg-surface-alt/50 px-3 py-2">
+          <p className="text-xs font-medium text-text-muted mb-2">
+            Catch-all: add every proficiency required by your current loadout
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={addAllMissing}
+              disabled={missing.length === 0}
+            >
+              <Plus className="w-4 h-4" /> Add All Missing Proficiencies
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={syncProficiencies}
+              aria-label="Sync proficiencies with current loadout (removes unused, adds missing)"
+            >
+              <RefreshCw className="w-4 h-4" /> Sync Proficiencies
+            </Button>
+          </div>
+          <p className="text-xs text-text-muted mt-2">
+            Sync removes proficiencies no longer needed for your current powers/techniques/equipment and adds any missing. Custom proficiencies are kept.
+          </p>
+        </div>
+      )}
+
       {isEditMode && (
         <div className="space-y-4">
-          <div className="rounded-lg border border-border bg-surface-alt/50 px-3 py-2">
-            <p className="text-xs font-medium text-text-muted mb-2">Catch-all: add every proficiency required by your current loadout</p>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button size="sm" variant="secondary" onClick={addAllMissing} disabled={missing.length === 0}>
-                <Plus className="w-4 h-4" /> Add All Missing Proficiencies
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={syncProficiencies}
-                aria-label="Sync proficiencies with current loadout (removes unused, adds missing)"
-              >
-                <RefreshCw className="w-4 h-4" /> Sync Proficiencies
-              </Button>
-            </div>
-            <p className="text-xs text-text-muted mt-2">
-              Sync removes proficiencies no longer needed for your current powers/techniques/equipment and adds any missing. Custom proficiencies are kept.
-            </p>
-          </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button
               size="sm"
