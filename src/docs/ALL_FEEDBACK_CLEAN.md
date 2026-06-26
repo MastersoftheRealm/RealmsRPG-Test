@@ -1582,3 +1582,11 @@ Notes
 - Feedback: We will eventually FULLY align to only Collin's approach to tooltips, which replaces the current tooltip DB system completely. His code is law; master/Kadin AI-written tooltip code is flawed and inconsistent.
 - Expected: All contextual help uses Tippy + `public/tooltip-text.tsx`; retire `useTooltipByKey`, `ContextHelpTooltip`, `HelpTooltip`, admin tooltips DB/API, and user show-tooltips preference. New work follows Collin's pattern only.
 - Disposition: Policy documented in `AGENT_GUIDE.md` § Tooltips, `FEATURE_INDEX.md`, `FULL_AUDIT_2026-06.md` INC-3. **TASK-376** blocked, assignee **Collin Morrison** — AI agents skip; see `DEVELOPER_TASK_QUEUE.md` **COLLIN-001**.
+
+**Raw Feedback Log — 2026-06-26 (Creature creator feat requirement filter)**
+- Date: 2026-06-26
+- Context: Creature creator → Add feat modal → Character & archetype tab
+- Priority: High
+- Feedback: Feat list filters out feats whose requirements appear met (skill bonus, defense bonus) but still hides them as unavailable.
+- Expected: Same feat requirement logic as character sheet/creator (`checkFeatRequirements`).
+- Disposition: Implemented 2026-06-26. `AddCreatureFeatModal` now uses shared `checkFeatRequirements` with `defenseVals` from creature defenses (was comparing raw allocation vs required bonus).

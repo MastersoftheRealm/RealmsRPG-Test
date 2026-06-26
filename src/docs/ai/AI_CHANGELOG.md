@@ -4,6 +4,8 @@ Append-only log. Add an entry per PR/merge. **For current context, recent entrie
 
 > Older entries (before 2026-04-01) moved to [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
 
+- 2026-06-26 | agent | Session: Creature creator feat requirement filter | files: `AddCreatureFeatModal.tsx`, `feat-requirements.ts`, `ALL_FEEDBACK_CLEAN.md` | Summary: Replaced duplicate requirement logic in creature add-feat modal with shared `checkFeatRequirements`; maps creature `defenses` → `defenseVals` so defense bonuses compute correctly. Build exit 0.
+
 - 2026-06-25 | agent | Session: TASK-376 assigned to Collin (AI skip) | files: `AI_TASK_QUEUE.md`, `DEVELOPER_TASK_QUEUE.md`, `AGENT_GUIDE.md`, `FEATURE_INDEX.md`, `AGENTS.md`, `realms-tasks.mdc`, `ALL_FEEDBACK_CLEAN.md` | Summary: TASK-376 status blocked, assignee Collin Morrison; COLLIN-001 in developer queue; agents instructed not to implement tooltip migration.
 
 - 2026-06-25 | agent | Session: Collin tooltip policy + TASK-376 | files: `AGENT_GUIDE.md`, `FEATURE_INDEX.md`, `FULL_AUDIT_2026-06.md`, `ALL_FEEDBACK_CLEAN.md`, `AI_TASK_QUEUE.md` | Summary: Owner confirmed Collin's Tippy + `public/tooltip-text.tsx` replaces DB tooltip stack. Documented canonical pattern; added TASK-376 for full retirement of `useTooltipByKey` / `ContextHelpTooltip` / admin tooltips.

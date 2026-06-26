@@ -8,6 +8,7 @@
  * Used by:
  * - Character creator Feats step (`feats-step.tsx`)
  * - Character sheet Add Feat modal (`add-feat-modal.tsx`)
+ * - Creature creator Add Feat modal (`AddCreatureFeatModal.tsx`)
  * - Codex feats tab character filter (`CodexFeatsTab.tsx`)
  *
  * Keep all feat-qualification logic here so the creator, sheet, and codex stay
