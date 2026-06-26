@@ -4,6 +4,8 @@ Append-only log. Add an entry per PR/merge. **For current context, recent entrie
 
 > Older entries (before 2026-04-01) moved to [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
 
+- 2026-06-26 | agent | Session: Creature creator leveled feat stepper | files: `page.tsx`, `creature-feat-utils.ts`, `leveled-feats.ts`, `AddCreatureFeatModal.tsx` | Summary: LVL column ValueStepper on added character/archetype feats; shared `buildFeatLevelsByFamily` + requirement checks cap max level; merge on add replaces lower family levels. Build exit 0.
+
 - 2026-06-26 | agent | Session: Creature creator feat requirement filter | files: `AddCreatureFeatModal.tsx`, `feat-requirements.ts`, `ALL_FEEDBACK_CLEAN.md` | Summary: Replaced duplicate requirement logic in creature add-feat modal with shared `checkFeatRequirements`; maps creature `defenses` → `defenseVals` so defense bonuses compute correctly. Build exit 0.
 
 - 2026-06-25 | agent | Session: TASK-376 assigned to Collin (AI skip) | files: `AI_TASK_QUEUE.md`, `DEVELOPER_TASK_QUEUE.md`, `AGENT_GUIDE.md`, `FEATURE_INDEX.md`, `AGENTS.md`, `realms-tasks.mdc`, `ALL_FEEDBACK_CLEAN.md` | Summary: TASK-376 status blocked, assignee Collin Morrison; COLLIN-001 in developer queue; agents instructed not to implement tooltip migration.

@@ -1590,3 +1590,11 @@ Notes
 - Feedback: Feat list filters out feats whose requirements appear met (skill bonus, defense bonus) but still hides them as unavailable.
 - Expected: Same feat requirement logic as character sheet/creator (`checkFeatRequirements`).
 - Disposition: Implemented 2026-06-26. `AddCreatureFeatModal` now uses shared `checkFeatRequirements` with `defenseVals` from creature defenses (was comparing raw allocation vs required bonus).
+
+**Raw Feedback Log — 2026-06-26 (Creature creator leveled feat stepper)**
+- Date: 2026-06-26
+- Context: Creature creator → Feats list
+- Priority: Medium
+- Feedback: No way to increase feat level after adding a leveled character/archetype feat; should be easy (step up in feat list).
+- Expected: Level stepper on added library feats; respects requirements and updates feat points.
+- Disposition: Implemented 2026-06-26. LVL column with ValueStepper for multi-level library feats; add-feat merges replace lower levels in same family.

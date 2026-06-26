@@ -10,7 +10,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { LoginPromptModal, ConfirmActionModal, UnifiedSelectionModal, ItemCard, GridListRow, ListHeader, SourceFilter, InnateToggle, SegmentedControl, SkillsAllocationPage } from '@/components/shared';
+import { LoginPromptModal, ConfirmActionModal, UnifiedSelectionModal, ItemCard, GridListRow, ListHeader, SourceFilter, InnateToggle, SegmentedControl, SkillsAllocationPage, ValueStepper } from '@/components/shared';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { useAuthStore } from '@/stores/auth-store';
@@ -113,7 +113,17 @@ import {
   creatureSkillsToAllocations,
   rawRecordToCreatureState,
 } from './creature-skill-utils';
+import {
+  codexFeatToCreatureFeat,
+  creatureToFeatRequirementCharacter,
+  getMaxQualifiedFeatLevel,
+  mergeCreatureFeatsOnAdd,
+} from './creature-feat-utils';
+import { checkFeatRequirements } from '@/lib/game/feat-requirements';
+import { buildFeatLevelChips, buildFeatLevelsByFamily, getFeatFamilyId, getFeatLevel } from '@/lib/leveled-feats';
 import type { SelectableItem } from '@/components/shared';
+
+const CREATURE_FEAT_LIST_GRID = '1.15fr 0.58fr 0.52fr 0.4fr 40px';
 
 type InventoryTab = 'all' | 'weapon' | 'armor' | 'shield' | 'equipment';
 type PowerModalTab = 'powers' | 'empowered';
@@ -599,6 +609,16 @@ function CreatureCreatorContent() {
     return map;
   }, []);
   
+  const featLevelsByFamily = useMemo(
+    () => buildFeatLevelsByFamily(codexFeatsData as Feat[]),
+    [codexFeatsData]
+  );
+
+  const codexFeatsById = useMemo(
+    () => new Map((codexFeatsData as Feat[]).map((f) => [String(f.id), f])),
+    [codexFeatsData]
+  );
+
   // Sort state for added feats and armaments (GridListRow-backed lists)
   const {
     sortState: featSort,
@@ -615,9 +635,66 @@ function CreatureCreatorContent() {
     () =>
       creature.feats.map((f) => {
         const src = f.featSourceType ?? inferCreatureFeatSource(f, creatureFeatSourceLookup);
-        return { ...f, typeLabel: labelCreatureFeatSource(src) };
+        const codexFeat = codexFeatsById.get(String(f.id));
+        const isLibraryFeat = src === 'character' || src === 'archetype';
+        let levelMeta:
+          | {
+              currentLevel: number;
+              minLevel: number;
+              maxQualified: number;
+              family: Feat[];
+            }
+          | undefined;
+        if (isLibraryFeat && codexFeat) {
+          const family = featLevelsByFamily.get(getFeatFamilyId(codexFeat)) ?? [];
+          if (family.length > 1) {
+            levelMeta = {
+              currentLevel: getFeatLevel(codexFeat),
+              minLevel: getFeatLevel(family[0]),
+              maxQualified: getMaxQualifiedFeatLevel(creature, family, skillsData, codexFeatsData as Feat[]),
+              family,
+            };
+          }
+        }
+        return { ...f, typeLabel: labelCreatureFeatSource(src), levelMeta };
       }),
-    [creature.feats, creatureFeatSourceLookup]
+    [creature, creatureFeatSourceLookup, codexFeatsById, featLevelsByFamily, skillsData, codexFeatsData]
+  );
+
+  const handleCreatureFeatLevelChange = useCallback(
+    (featId: string, targetLevel: number) => {
+      setCreature((prev) => {
+        const idx = prev.feats.findIndex((f) => f.id === featId);
+        if (idx === -1) return prev;
+
+        const current = prev.feats[idx];
+        const src = current.featSourceType ?? inferCreatureFeatSource(current, creatureFeatSourceLookup);
+        if (src !== 'character' && src !== 'archetype') return prev;
+
+        const codexFeat = codexFeatsById.get(String(featId));
+        if (!codexFeat) return prev;
+
+        const family = featLevelsByFamily.get(getFeatFamilyId(codexFeat));
+        if (!family || family.length <= 1) return prev;
+
+        const targetCodex = family.find((f) => getFeatLevel(f) === targetLevel);
+        if (!targetCodex || String(targetCodex.id) === String(featId)) return prev;
+
+        const requirementCharacter = creatureToFeatRequirementCharacter(prev);
+        const { met } = checkFeatRequirements(
+          targetCodex,
+          requirementCharacter,
+          skillsData,
+          codexFeatsData as Feat[]
+        );
+        if (!met) return prev;
+
+        const nextFeats = [...prev.feats];
+        nextFeats[idx] = codexFeatToCreatureFeat(targetCodex);
+        return { ...prev, feats: nextFeats };
+      });
+    },
+    [codexFeatsById, featLevelsByFamily, creatureFeatSourceLookup, skillsData, codexFeatsData]
   );
 
   const sortedFeats = useMemo(
@@ -1141,7 +1218,12 @@ function CreatureCreatorContent() {
             isOpen={showFeatModal}
             onClose={() => setShowFeatModal(false)}
             creature={creature}
-            onAdd={(feats) => setCreature((prev) => ({ ...prev, feats: [...prev.feats, ...feats] }))}
+            onAdd={(feats) =>
+              setCreature((prev) => ({
+                ...prev,
+                feats: mergeCreatureFeatsOnAdd(prev.feats, feats, codexFeatsById),
+              }))
+            }
           />
           <UnifiedSelectionModal
             isOpen={showArmamentModal}
@@ -1514,26 +1596,55 @@ function CreatureCreatorContent() {
                 <ListHeader
                   columns={[
                     { key: 'name', label: 'NAME' },
-                    { key: 'typeLabel', label: 'TYPE', width: '0.65fr', align: 'center' },
-                    { key: 'points', label: 'PTS', width: '0.45fr', align: 'center' },
+                    { key: 'typeLabel', label: 'TYPE', width: '0.58fr', align: 'center' },
+                    { key: 'level', label: 'LVL', width: '0.52fr', align: 'center' },
+                    { key: 'points', label: 'PTS', width: '0.4fr', align: 'center' },
                     { key: '_actions', label: '', sortable: false as const },
                   ]}
-                  gridColumns="1.25fr 0.65fr 0.45fr 40px"
+                  gridColumns={CREATURE_FEAT_LIST_GRID}
                   sortState={featSort}
                   onSort={handleFeatSort}
                 />
                 <div className="space-y-1">
-                  {sortedFeats.map((feat) => (
+                  {sortedFeats.map((feat) => {
+                    const levelChips =
+                      feat.levelMeta && feat.levelMeta.family.length > 1
+                        ? buildFeatLevelChips(feat.levelMeta.family, feat.id)
+                        : [];
+                    return (
                     <GridListRow
                       key={feat.id}
                       id={feat.id}
                       name={feat.name}
                       description={feat.description}
-                      gridColumns="1.25fr 0.65fr 0.45fr 40px"
+                      gridColumns={CREATURE_FEAT_LIST_GRID}
+                      detailSections={
+                        levelChips.length > 0
+                          ? [{ label: 'Other feat levels', chips: levelChips }]
+                          : undefined
+                      }
                       columns={[
                         {
                           key: 'typeLabel',
                           value: formatListCellLabel(feat.typeLabel),
+                          align: 'center',
+                        },
+                        {
+                          key: 'level',
+                          value: feat.levelMeta ? (
+                            <ValueStepper
+                              value={feat.levelMeta.currentLevel}
+                              onChange={(level) => handleCreatureFeatLevelChange(feat.id, level)}
+                              min={feat.levelMeta.minLevel}
+                              max={feat.levelMeta.maxQualified}
+                              size="sm"
+                              variant="inline"
+                              decrementTitle={`Decrease ${feat.name} level`}
+                              incrementTitle={`Increase ${feat.name} level`}
+                            />
+                          ) : (
+                            '-'
+                          ),
                           align: 'center',
                         },
                         {
@@ -1559,7 +1670,8 @@ function CreatureCreatorContent() {
                       }
                       compact
                     />
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}

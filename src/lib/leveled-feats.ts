@@ -49,6 +49,18 @@ export function groupFeatFamilies<T extends LeveledFeatLike>(feats: T[]): FeatFa
   });
 }
 
+/** Map feat family id → sorted levels (level 1 first). Used for feat level steppers and detail chips. */
+export function buildFeatLevelsByFamily<T extends LeveledFeatLike>(feats: T[]): Map<string, T[]> {
+  const map = new Map<string, T[]>();
+  feats.forEach((feat) => {
+    const family = getFeatFamilyId(feat);
+    if (!map.has(family)) map.set(family, []);
+    map.get(family)!.push(feat);
+  });
+  map.forEach((levels) => levels.sort((a, b) => getFeatLevel(a) - getFeatLevel(b)));
+  return map;
+}
+
 export function buildFeatLevelChips<T extends LeveledFeatLike>(
   familyLevels: T[],
   currentId: string | number

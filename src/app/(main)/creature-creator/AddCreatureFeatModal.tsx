@@ -19,9 +19,12 @@ import {
 } from '@/hooks';
 import {
   checkFeatRequirements,
-  type CharacterForFeatRequirement,
 } from '@/lib/game/feat-requirements';
 import { buildFeatLevelChips, getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
+import {
+  creatureToFeatRequirementCharacter,
+  creaturePointsForPlayerFeat,
+} from './creature-feat-utils';
 import { Alert } from '@/components/ui';
 import { SegmentedControl } from '@/components/shared';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
@@ -49,38 +52,9 @@ type ModalRowData =
   | { tab: 'library'; feat: FeatModal; familyLevels: FeatModal[] }
   | { tab: 'species'; trait: Trait };
 
-function creatureSkillsToFeatReqRecord(
-  skills: CreatureState['skills']
-): Record<string, { prof?: boolean; val?: number }> {
-  const out: Record<string, { prof?: boolean; val?: number }> = {};
-  skills.forEach((s) => {
-    const entry = { prof: s.proficient, val: s.value };
-    if (s.id) out[String(s.id)] = entry;
-    if (s.name) out[s.name] = entry;
-  });
-  return out;
-}
-
-function creatureToFeatRequirementCharacter(creature: CreatureState): CharacterForFeatRequirement {
-  return {
-    level: Number(creature.level) || 1,
-    abilities: creature.abilities,
-    defenseVals: creature.defenses,
-    skills: creatureSkillsToFeatReqRecord(creature.skills),
-    feats: creature.feats.map((f) => ({ id: f.id, name: f.name })),
-    archetypeFeats: [],
-  };
-}
-
 function formatFeatPointCost(n: number): string {
   if (Number.isInteger(n)) return String(n);
   return String(n);
-}
-
-/** Archetype: 1 × feat level; character: 0.5 × feat level */
-function creaturePointsForPlayerFeat(feat: FeatModal): number {
-  const lvl = getFeatLevel(feat);
-  return feat.char_feat ? 0.5 * lvl : 1 * lvl;
 }
 
 function creaturePointsForTrait(trait: Trait): number {
