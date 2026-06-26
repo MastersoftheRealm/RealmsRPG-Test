@@ -32,6 +32,14 @@ export interface Feat {
   tags?: string[]; // Tags/categories
 }
 
+/** Player-facing customization for a feat or trait (does not overwrite codex data). */
+export interface FeatTraitCustomization {
+  /** Display name override — shown in italics on the character sheet. */
+  customName?: string;
+  /** Player note — visible only in the expanded row. */
+  note?: string;
+}
+
 /** Character's selected feat */
 export interface CharacterFeat {
   id: number | string;
@@ -44,4 +52,8 @@ export interface CharacterFeat {
   maxUses?: number; // Per-rest uses
   currentUses?: number; // Remaining uses
   recovery?: string; // Recovery period (e.g., 'Full Recovery', 'Short Rest')
+  /** Player display name override (codex name unchanged). */
+  customName?: string;
+  /** Player note appended in expanded view only. */
+  note?: string;
 }

@@ -352,6 +352,7 @@ function CampaignCharacterViewContent() {
                   featsDb={featsDb}
                   traitUses={character.traitUses}
                   onTraitUsesChange={() => {}}
+                  traitCustomizations={character.traitCustomizations}
                   ancestry={character.ancestry as never}
                   vanillaTraits={{
                     ancestryTraits: character.ancestryTraits,

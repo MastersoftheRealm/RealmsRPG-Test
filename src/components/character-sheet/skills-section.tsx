@@ -25,6 +25,7 @@ import {
   calculateCharacterSkillPointsSpent,
   getSkillValueIncreaseCost,
   resolveSkillAllocationRules,
+  buildSpeciesSkillIdSet,
 } from '@/lib/game/skill-allocation';
 import { useGameRules } from '@/hooks';
 import type { Abilities } from '@/types';
@@ -215,24 +216,7 @@ export function SkillsSection({
   
   // Calculate total skill points spent (includes past-cap costs and defenses)
   const speciesSkillIdSet = useMemo(
-    () =>
-      new Set(
-        speciesSkills
-          .filter((ss) => ss !== '0')
-          .flatMap((ss) => {
-            const ssLower = String(ss).toLowerCase();
-            const ids = [String(ss)];
-            skills.forEach((s) => {
-              if (
-                String(s.id).toLowerCase() === ssLower ||
-                String(s.name ?? '').toLowerCase() === ssLower
-              ) {
-                ids.push(String(s.id));
-              }
-            });
-            return ids;
-          })
-      ),
+    () => buildSpeciesSkillIdSet(speciesSkills.filter((ss) => ss !== '0'), skills),
     [speciesSkills, skills]
   );
 

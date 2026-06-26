@@ -566,6 +566,8 @@ const SAVEABLE_FIELDS = [
   'feats', 'archetypeFeats', 'techniques', 'powers', 'traits',
   // Trait uses tracking
   'traitUses',
+  // Player feat/trait display customizations (customName, note)
+  'traitCustomizations',
   // State uses (per recovery, max = proficiency)
   'stateUsesCurrent',
   // Unarmed prowess (allocated by player)
@@ -747,37 +749,58 @@ export function cleanForSave(data: Character): Partial<Character> {
     }).filter(Boolean);
   }
 
-  // Clean up feats — save id + name (compat fallback) + currentUses only.
+  // Clean up feats — save id + name (compat fallback) + currentUses + player customName/note.
   // name/description/maxUses/recovery are derived from codex on load.
+  const cleanFeatEntry = (f: unknown): Record<string, unknown> | null => {
+    if (typeof f === 'string') return { name: f };
+    if (f && typeof f === 'object') {
+      const feat = f as {
+        id?: string | number;
+        name?: string;
+        currentUses?: number;
+        customName?: string;
+        note?: string;
+      };
+      const cleanFeat: Record<string, unknown> = {};
+      if (feat.id) cleanFeat.id = feat.id;
+      if (feat.name) cleanFeat.name = feat.name; // Backward compat lookup key
+      if (typeof feat.currentUses === 'number') cleanFeat.currentUses = feat.currentUses;
+      const customName = feat.customName?.trim();
+      const note = feat.note?.trim();
+      if (customName) cleanFeat.customName = customName;
+      if (note) cleanFeat.note = note;
+      return Object.keys(cleanFeat).length > 0 ? cleanFeat : null;
+    }
+    return null;
+  };
+
   if (Array.isArray(cleaned.feats)) {
-    cleaned.feats = cleaned.feats.map((f: unknown) => {
-      if (typeof f === 'string') return { name: f };
-      if (f && typeof f === 'object') {
-        const feat = f as { id?: string | number; name?: string; currentUses?: number };
-        const cleanFeat: Record<string, unknown> = {};
-        if (feat.id) cleanFeat.id = feat.id;
-        if (feat.name) cleanFeat.name = feat.name; // Backward compat lookup key
-        if (typeof feat.currentUses === 'number') cleanFeat.currentUses = feat.currentUses;
-        return Object.keys(cleanFeat).length > 0 ? cleanFeat : null;
-      }
-      return null;
-    }).filter(Boolean);
+    cleaned.feats = cleaned.feats.map(cleanFeatEntry).filter(Boolean);
   }
 
   // Clean up archetypeFeats — same lean format
   if (Array.isArray(cleaned.archetypeFeats)) {
-    cleaned.archetypeFeats = (cleaned.archetypeFeats as unknown[]).map((f: unknown) => {
-      if (typeof f === 'string') return { name: f };
-      if (f && typeof f === 'object') {
-        const feat = f as { id?: string | number; name?: string; currentUses?: number };
-        const cleanFeat: Record<string, unknown> = {};
-        if (feat.id) cleanFeat.id = feat.id;
-        if (feat.name) cleanFeat.name = feat.name; // Backward compat lookup key
-        if (typeof feat.currentUses === 'number') cleanFeat.currentUses = feat.currentUses;
-        return Object.keys(cleanFeat).length > 0 ? cleanFeat : null;
-      }
-      return null;
-    }).filter(Boolean);
+    cleaned.archetypeFeats = (cleaned.archetypeFeats as unknown[]).map(cleanFeatEntry).filter(Boolean);
+  }
+
+  // Player trait customizations — keyed by trait id
+  if (cleaned.traitCustomizations && typeof cleaned.traitCustomizations === 'object') {
+    const cleanedMap: Record<string, { customName?: string; note?: string }> = {};
+    for (const [key, raw] of Object.entries(cleaned.traitCustomizations as Record<string, unknown>)) {
+      if (!raw || typeof raw !== 'object') continue;
+      const entry = raw as { customName?: string; note?: string };
+      const next: { customName?: string; note?: string } = {};
+      const customName = entry.customName?.trim();
+      const note = entry.note?.trim();
+      if (customName) next.customName = customName;
+      if (note) next.note = note;
+      if (Object.keys(next).length > 0) cleanedMap[key] = next;
+    }
+    if (Object.keys(cleanedMap).length > 0) {
+      cleaned.traitCustomizations = cleanedMap;
+    } else {
+      delete cleaned.traitCustomizations;
+    }
   }
 
   // Clean up powers — save id + name (compat) + innate flag only.

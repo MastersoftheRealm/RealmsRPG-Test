@@ -155,6 +155,8 @@ export interface LibrarySectionProps {
     maxUses?: number;
     currentUses?: number;
     recovery?: string;
+    customName?: string;
+    note?: string;
   }>;
   characterFeats?: Array<{
     id?: string | number;
@@ -163,6 +165,8 @@ export interface LibrarySectionProps {
     maxUses?: number;
     currentUses?: number;
     recovery?: string;
+    customName?: string;
+    note?: string;
   }>;
   featsDb?: Array<{
     id: string;
@@ -181,6 +185,16 @@ export interface LibrarySectionProps {
   onAddCharacterFeat?: () => void;
   onAddStateFeat?: () => void;
   onRemoveFeat?: (featId: string) => void;
+  traitCustomizations?: Record<string, import('@/types/feats').FeatTraitCustomization>;
+  onFeatCustomizationChange?: (
+    featId: string,
+    listType: 'archetype' | 'character',
+    updates: Partial<import('@/types/feats').FeatTraitCustomization>
+  ) => void;
+  onTraitCustomizationChange?: (
+    traitKey: string,
+    updates: Partial<import('@/types/feats').FeatTraitCustomization>
+  ) => void;
   /** State uses (current/max per recovery; max = proficiency). Restored on full recovery. */
   stateFeats?: Array<{ id?: string | number; name: string; description?: string; maxUses?: number; currentUses?: number; recovery?: string; type?: 'archetype' | 'character' }>;
   stateUsesCurrent?: number;
@@ -293,6 +307,9 @@ export function LibrarySection({
   onAddCharacterFeat: onAddCharacterFeatProp,
   onAddStateFeat: onAddStateFeatProp,
   onRemoveFeat,
+  traitCustomizations = {},
+  onFeatCustomizationChange,
+  onTraitCustomizationChange,
   stateFeats = [],
   stateUsesCurrent,
   stateUsesMax,
@@ -815,6 +832,9 @@ export function LibrarySection({
             onAddCharacterFeat={onAddCharacterFeat}
             onAddStateFeat={onAddStateFeat}
             onRemoveFeat={onRemoveFeat}
+            traitCustomizations={traitCustomizations}
+            onFeatCustomizationChange={onFeatCustomizationChange}
+            onTraitCustomizationChange={onTraitCustomizationChange}
           />
         )}
 

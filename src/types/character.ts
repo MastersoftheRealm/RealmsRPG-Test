@@ -8,7 +8,7 @@ import type { Abilities, AbilityName } from './abilities';
 import type { CharacterArchetype } from './archetype';
 import type { CharacterAncestry } from './ancestry';
 import type { CharacterSkills, DefenseSkills } from './skills';
-import type { CharacterFeat } from './feats';
+import type { CharacterFeat, FeatTraitCustomization } from './feats';
 import type { CharacterEquipment } from './equipment';
 
 export type ProficiencyKind = 'power_part' | 'technique_part' | 'item_property' | 'custom';
@@ -234,6 +234,9 @@ export interface Character {
   
   // Trait uses tracking (trait name -> currentUses)
   traitUses?: Record<string, number>;
+
+  /** Player custom names/notes for species/ancestry traits (keyed by trait id). */
+  traitCustomizations?: Record<string, FeatTraitCustomization>;
   
   /** State uses remaining this recovery (max = archetype proficiency; restored on full recovery) */
   stateUsesCurrent?: number;
@@ -346,9 +349,12 @@ export interface CharacterSaveData {
   skills: Record<string, { prof: boolean; val: number; selectedBaseSkillId?: string }>;
   defenseVals: DefenseSkills; // Vals represent 2 skill points spent per 1
 
-  // Feats — just IDs + runtime uses
-  archetypeFeats: Array<{ id: string; currentUses?: number }>;
-  characterFeats: Array<{ id: string; currentUses?: number }>;
+  // Feats — IDs + runtime uses + optional player customName/note
+  archetypeFeats: Array<{ id: string; currentUses?: number; customName?: string; note?: string }>;
+  characterFeats: Array<{ id: string; currentUses?: number; customName?: string; note?: string }>;
+
+  /** Player custom names/notes for traits (keyed by trait id). */
+  traitCustomizations?: Record<string, FeatTraitCustomization>;
 
   // Powers/Techniques — just IDs + innate flag
   powers: Array<{ id: string; innate?: boolean }>;

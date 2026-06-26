@@ -10,7 +10,7 @@
 
 import React, { useMemo, useCallback } from 'react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useMergedSpecies, useCodexSkills, useTraits, useTooltipByKey, type Species, type Skill } from '@/hooks';
+import { useMergedSpecies, useCodexSkills, useTraits, useTooltipByKey, useGameRules, type Species, type Skill } from '@/hooks';
 import { SkillsAllocationPage, ContextHelpTooltip } from '@/components/shared';
 import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
@@ -48,10 +48,11 @@ export function SkillsStep() {
   const { data: allSpecies = [] } = useMergedSpecies();
   const { data: codexSkills = [] } = useCodexSkills();
   const { data: allTraits } = useTraits();
+  const { rules } = useGameRules();
 
   const validationContext = useMemo(
-    () => ({ allSpecies, codexSkills: codexSkills ?? null, allTraits: allTraits ?? null }),
-    [allSpecies, codexSkills, allTraits]
+    () => ({ allSpecies, codexSkills: codexSkills ?? null, allTraits: allTraits ?? null, rules }),
+    [allSpecies, codexSkills, allTraits, rules]
   );
   const stepIssues = useMemo(
     () => getValidationIssuesForStep('skills', draft, validationContext),

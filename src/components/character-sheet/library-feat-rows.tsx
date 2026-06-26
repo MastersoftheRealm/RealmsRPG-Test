@@ -9,6 +9,8 @@ import { DecrementButton, IncrementButton, ValueStepper, type ColumnValue } from
 import type { ChipData } from '@/components/shared/grid-list-row';
 import type { EntityFeatRow } from '@/components/shared/entity-library-sections';
 import { FEAT_GRID, FEAT_GRID_WITH_LEVEL } from '@/components/shared/entity-library-sections';
+import { Input, Textarea } from '@/components/ui';
+import type { FeatTraitCustomization } from '@/types/feats';
 
 const DESCRIPTION_EXTENDED_TRUNCATE = 220;
 
@@ -28,8 +30,88 @@ function formatRecoveryAbbrev(recovery: string | undefined): string {
   return '';
 }
 
+/** Stable trait id for customization lookup (prefers codex id). */
+export function resolveTraitCustomizationKey(
+  traitNameOrId: string,
+  traitsDb: Array<{ id: string; name?: string }>
+): string {
+  const byId = traitsDb.find((t) => t.id === traitNameOrId);
+  if (byId) return byId.id;
+  const byName = traitsDb.find(
+    (t) => String(t.name ?? '').toLowerCase() === String(traitNameOrId ?? '').toLowerCase()
+  );
+  return byName?.id ?? traitNameOrId;
+}
+
+function buildDisplayNameContent(codexName: string, customName?: string): ReactNode | undefined {
+  const trimmed = customName?.trim();
+  if (!trimmed) return undefined;
+  return (
+    <span className="italic" title={`Codex name: ${codexName}`}>
+      {trimmed}
+    </span>
+  );
+}
+
+function FeatTraitCustomizationBlock({
+  showEditControls,
+  codexName,
+  customName,
+  note,
+  onCustomNameChange,
+  onNoteChange,
+}: {
+  showEditControls: boolean;
+  codexName: string;
+  customName?: string;
+  note?: string;
+  onCustomNameChange?: (value: string) => void;
+  onNoteChange?: (value: string) => void;
+}) {
+  const noteTrimmed = note?.trim();
+  if (!showEditControls && !noteTrimmed) return null;
+
+  return (
+    <div
+      className="space-y-3 pt-3 border-t border-border-light"
+      onClick={(e) => e.stopPropagation()}
+      onKeyDown={(e) => e.stopPropagation()}
+    >
+      {showEditControls && onCustomNameChange && (
+        <Input
+          label="Custom name"
+          value={customName ?? ''}
+          onChange={(e) => onCustomNameChange(e.target.value)}
+          placeholder={codexName}
+          helperText="Optional flavor name. Shown in italics; codex name stays unchanged."
+        />
+      )}
+      {showEditControls && onNoteChange ? (
+        <Textarea
+          label="Player note"
+          value={note ?? ''}
+          onChange={(e) => onNoteChange(e.target.value)}
+          placeholder="Record choices, reminders, or flavor (e.g. chosen power)…"
+          className="min-h-[72px]"
+        />
+      ) : noteTrimmed ? (
+        <div>
+          <p className="text-xs font-medium text-text-muted dark:text-text-secondary mb-1">Note</p>
+          <p className="text-sm text-text-secondary whitespace-pre-wrap p-3 bg-surface rounded-lg border border-border-light">
+            {noteTrimmed}
+          </p>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export type TraitRowInput = {
   name: string;
+  codexName?: string;
+  traitKey?: string;
+  customName?: string;
+  note?: string;
   description?: string;
   maxUses?: number;
   recoveryPeriod?: string;
@@ -39,10 +121,15 @@ export type TraitRowInput = {
 export type FeatRowInput = {
   id?: string | number;
   name: string;
+  codexName?: string;
+  customName?: string;
+  note?: string;
   description?: string;
   maxUses?: number;
   currentUses?: number;
   recovery?: string;
+  /** For state feats — which list to update when customizing. */
+  listType?: 'archetype' | 'character';
 };
 
 export type FeatLevelMeta = {
@@ -63,6 +150,13 @@ export type FeatRowContext = {
     featId: string | number
   ) => Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> | undefined;
   getFeatLevelMeta?: (featId: string | number) => FeatLevelMeta | undefined;
+  featListType?: 'archetype' | 'character';
+  onFeatCustomizationChange?: (
+    featId: string,
+    listType: 'archetype' | 'character',
+    updates: Partial<FeatTraitCustomization>
+  ) => void;
+  onTraitCustomizationChange?: (traitKey: string, updates: Partial<FeatTraitCustomization>) => void;
 };
 
 function buildUsesStepper(
@@ -132,8 +226,35 @@ function buildFeatTraitColumns(
   };
 }
 
+function buildCustomizationExtras(
+  showEditControls: boolean,
+  codexName: string,
+  customName: string | undefined,
+  note: string | undefined,
+  handlers: {
+    onCustomName?: (value: string) => void;
+    onNote?: (value: string) => void;
+  }
+): Pick<EntityFeatRow, 'nameContent' | 'supplementalExpandedContent'> {
+  return {
+    nameContent: buildDisplayNameContent(codexName, customName),
+    supplementalExpandedContent:
+      showEditControls || note?.trim() ? (
+        <FeatTraitCustomizationBlock
+          showEditControls={showEditControls}
+          codexName={codexName}
+          customName={customName}
+          note={note}
+          onCustomNameChange={showEditControls ? handlers.onCustomName : undefined}
+          onNoteChange={showEditControls ? handlers.onNote : undefined}
+        />
+      ) : undefined,
+  };
+}
+
 export function mapTraitRows(traits: TraitRowInput[], ctx: FeatRowContext): EntityFeatRow[] {
   return traits.map((trait, index) => {
+    const codexName = trait.codexName ?? trait.name;
     const uses =
       (trait.maxUses ?? 0) > 0
         ? {
@@ -157,9 +278,25 @@ export function mapTraitRows(traits: TraitRowInput[], ctx: FeatRowContext): Enti
         ? trait.category.charAt(0).toUpperCase() + trait.category.slice(1)
         : undefined;
 
+    const traitKey = trait.traitKey ?? trait.name;
+    const customizationExtras = buildCustomizationExtras(
+      ctx.showEditControls,
+      codexName,
+      trait.customName,
+      trait.note,
+      {
+        onCustomName: ctx.onTraitCustomizationChange
+          ? (value) => ctx.onTraitCustomizationChange!(traitKey, { customName: value })
+          : undefined,
+        onNote: ctx.onTraitCustomizationChange
+          ? (value) => ctx.onTraitCustomizationChange!(traitKey, { note: value })
+          : undefined,
+      }
+    );
+
     return {
       id: `${trait.category ?? 'trait'}-${index}`,
-      name: trait.name,
+      name: trait.customName?.trim() || codexName,
       description: trait.description,
       gridColumns: FEAT_GRID,
       columns,
@@ -167,6 +304,7 @@ export function mapTraitRows(traits: TraitRowInput[], ctx: FeatRowContext): Enti
       badges: categoryLabel ? [{ label: categoryLabel, color: 'gray' }] : undefined,
       uses,
       hideUsesInName: !!(uses && ctx.onTraitUsesChange),
+      ...customizationExtras,
     };
   });
 }
@@ -180,6 +318,8 @@ export function mapFeatRows(
 ): EntityFeatRow[] {
   return feats.map((feat, index) => {
     const featId = String(feat.id ?? index);
+    const codexName = feat.codexName ?? feat.name;
+    const listType = feat.listType ?? ctx.featListType ?? 'character';
     const uses =
       (feat.maxUses ?? 0) > 0
         ? {
@@ -203,8 +343,8 @@ export function mapFeatRows(
               max={levelMeta.maxQualified}
               size="sm"
               variant="inline"
-              decrementTitle={`Decrease ${levelMeta.featName ?? feat.name} level`}
-              incrementTitle={`Increase ${levelMeta.featName ?? feat.name} level`}
+              decrementTitle={`Decrease ${levelMeta.featName ?? codexName} level`}
+              incrementTitle={`Increase ${levelMeta.featName ?? codexName} level`}
             />
           )
         : undefined;
@@ -216,9 +356,24 @@ export function mapFeatRows(
       levelStepper
     );
 
+    const customizationExtras = buildCustomizationExtras(
+      ctx.showEditControls,
+      codexName,
+      feat.customName,
+      feat.note,
+      {
+        onCustomName: ctx.onFeatCustomizationChange
+          ? (value) => ctx.onFeatCustomizationChange!(featId, listType, { customName: value })
+          : undefined,
+        onNote: ctx.onFeatCustomizationChange
+          ? (value) => ctx.onFeatCustomizationChange!(featId, listType, { note: value })
+          : undefined,
+      }
+    );
+
     return {
       id: featId,
-      name: feat.name,
+      name: feat.customName?.trim() || codexName,
       description: feat.description,
       gridColumns: gridColumns ?? FEAT_GRID,
       columns,
@@ -228,7 +383,8 @@ export function mapFeatRows(
       uses,
       hideUsesInName: !!(uses && ctx.onFeatUsesChange),
       onDelete:
-        ctx.showEditControls && ctx.onRemoveFeat ? () => ctx.onRemoveFeat!(featId, feat.name) : undefined,
+        ctx.showEditControls && ctx.onRemoveFeat ? () => ctx.onRemoveFeat!(featId, codexName) : undefined,
+      ...customizationExtras,
     };
   });
 }

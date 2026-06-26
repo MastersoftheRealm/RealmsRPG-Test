@@ -8,7 +8,9 @@
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
 import { useAddLibraryItemData, type AddLibraryItemType } from '@/hooks/use-add-library-item-data';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
+import type { ReactNode } from 'react';
 import { AddLibraryItemHeaderExtra } from './add-library-item/power-header-extra';
+import { AddCustomEquipmentForm } from './add-library-item/add-custom-equipment-form';
 import { mapSelectedToCharacterItems } from './add-library-item/map-selection';
 import {
   EMPOWERED_POWER_COLUMNS,
@@ -53,6 +55,26 @@ export function AddLibraryItemModal({
     onAdd(mapSelectedToCharacterItems(itemType, selected, powerSelectionMode, dbs));
   };
 
+  const headerExtraContent: ReactNode = (
+    <div className="space-y-3">
+      <AddLibraryItemHeaderExtra
+        source={source}
+        onSourceChange={setSource}
+        itemType={itemType}
+        powerSelectionMode={powerSelectionMode}
+        onPowerSelectionModeChange={setPowerSelectionMode}
+      />
+      {itemType === 'equipment' && (
+        <AddCustomEquipmentForm
+          onAdd={(item) => {
+            onAdd([item]);
+            onClose();
+          }}
+        />
+      )}
+    </div>
+  );
+
   const columns =
     itemType === 'power' && powerSelectionMode === 'empowered'
       ? EMPOWERED_POWER_COLUMNS
@@ -63,16 +85,12 @@ export function AddLibraryItemModal({
       isOpen={isOpen}
       onClose={onClose}
       title={titleOverride ?? getAddLibraryItemTitle(itemType)}
-      description="Click a row (or the + button) to select, then click Add Selected."
-      headerExtra={
-        <AddLibraryItemHeaderExtra
-          source={source}
-          onSourceChange={setSource}
-          itemType={itemType}
-          powerSelectionMode={powerSelectionMode}
-          onPowerSelectionModeChange={setPowerSelectionMode}
-        />
+      description={
+        itemType === 'equipment'
+          ? 'Pick from your library below, or add a custom item by name.'
+          : 'Click a row (or the + button) to select, then click Add Selected.'
       }
+      headerExtra={headerExtraContent}
       items={items}
       isLoading={isLoading}
       onConfirm={handleConfirm}

@@ -127,6 +127,8 @@ export interface GridListRowProps {
   id: string;
   /** Display name (first column) */
   name: string;
+  /** Optional rich name content (overrides plain name text when set) */
+  nameContent?: ReactNode;
   /** Item description (shown in default expanded view) */
   description?: string;
   /** Column values to display in collapsed row */
@@ -153,6 +155,8 @@ export interface GridListRowProps {
   requirements?: ReactNode;
   /** Custom expanded content (replaces default slots) */
   expandedContent?: ReactNode;
+  /** Extra content appended after the default expanded body (description, chips, etc.) */
+  supplementalExpandedContent?: ReactNode;
   
   // ===== Selection Mode (for modals) =====
   /** Enable selection mode */
@@ -239,6 +243,7 @@ const CHIP_STYLES: Record<string, string> = {
 export const GridListRow = memo(function GridListRow({
   id,
   name,
+  nameContent,
   description,
   columns = [],
   columnSpans,
@@ -251,6 +256,7 @@ export const GridListRow = memo(function GridListRow({
   badges = [],
   requirements,
   expandedContent,
+  supplementalExpandedContent,
   selectable = false,
   isSelected = false,
   onSelect,
@@ -296,7 +302,13 @@ export const GridListRow = memo(function GridListRow({
   const hasChips = chips.length > 0 && !hasDetailSections;
   const descTrimmed = typeof description === 'string' ? description.trim() : '';
   const hasBodyContent =
-    !!descTrimmed || hasChips || hasDetailSections || badges.length > 0 || !!requirements || !!expandedContent;
+    !!descTrimmed ||
+    hasChips ||
+    hasDetailSections ||
+    badges.length > 0 ||
+    !!requirements ||
+    !!expandedContent ||
+    !!supplementalExpandedContent;
   const showActions = onEdit || onDuplicate || onAddToLibrary; // Delete is now inline X, not in expanded actions
   /** Must match what we actually render when expanded (incl. total cost row and action buttons). */
   const hasDetails =
@@ -419,7 +431,7 @@ export const GridListRow = memo(function GridListRow({
               useFlex && 'flex-1'
             )}
           >
-            <span className="break-words lg:truncate">{name}</span>
+            <span className="break-words lg:truncate">{nameContent ?? name}</span>
             {/* Innate indicator (hidden when already in innate section) */}
             {innate && !hideInnateBadge && (
               <span className="text-[10px] px-1 py-0.5 rounded bg-violet-200 dark:bg-violet-800/50 text-violet-600 dark:text-violet-300 flex-shrink-0">★</span>
@@ -862,6 +874,8 @@ export const GridListRow = memo(function GridListRow({
                   </div>
                 </div>
               )}
+
+              {supplementalExpandedContent}
 
               {/* Action Buttons (Edit, Duplicate, Add to library - Delete is inline X in row) */}
               {showActions && (

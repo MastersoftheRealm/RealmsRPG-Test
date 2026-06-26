@@ -13,7 +13,7 @@
 | Feature | Route / page |
 |---------|--------------|
 | Character list / dashboard | `characters/page.tsx` |
-| Character sheet (view + edit) | `characters/[id]/page.tsx` — layout `CharacterSheetBody` (single library mount); derived `useCharacterSheetDerived`; handlers `useCharacterSheetActions`; library lists via `entity-library-sections` + `library-entity-rows`; feats tab via `FeatsTraitsListSection` + `library-feat-rows` |
+| Character sheet (view + edit) | `characters/[id]/page.tsx` — layout `CharacterSheetBody` (single library mount); derived `useCharacterSheetDerived`; handlers `useCharacterSheetActions`; library lists via `entity-library-sections` + `library-entity-rows`; feats tab via `FeatsTraitsListSection` + `library-feat-rows` (player feat/trait `customName` + `note` on save; trait map `traitCustomizations`) |
 | Character creator | `character-creator/` (wizard steps under `components/character-creator/steps/`) |
 | Library (user + official content browse) | `library/page.tsx` |
 | Codex (rules data browser) | `codex/page.tsx` |

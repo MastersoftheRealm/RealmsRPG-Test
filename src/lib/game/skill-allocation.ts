@@ -10,6 +10,7 @@
  */
 
 import type { DefenseSkills } from '@/types';
+import type { Item } from '@/types/equipment';
 import type { CoreRulesMap, SkillsAndDefensesRules } from '@/types/core-rules';
 
 // =============================================================================
@@ -40,6 +41,53 @@ export const SKILL_POINTS_PER_LEVEL = {
 
 /** Species grants 2 permanent skills (don't cost points) */
 export const SPECIES_SKILL_COUNT = 2;
+
+/** Match species skill refs (codex id or name) to skill row ids on the character sheet. */
+export function buildSpeciesSkillIdSet(
+  speciesSkillRefs: string[],
+  skills: Array<{ id?: string; name?: string }>
+): Set<string> {
+  const set = new Set<string>();
+  for (const ref of speciesSkillRefs.filter((id) => id !== '0')) {
+    const refLower = String(ref).toLowerCase();
+    set.add(String(ref));
+    for (const skill of skills) {
+      const id = String(skill.id ?? '');
+      const name = String(skill.name ?? '').toLowerCase();
+      if (id.toLowerCase() === refLower || name === refLower) {
+        if (id) set.add(id);
+      }
+    }
+  }
+  return set;
+}
+
+/** Merge equipment rows; stacks quantity when id or name (case-insensitive) matches. */
+export function mergeEquipmentIntoInventory(existing: Item[], incoming: Item[]): Item[] {
+  const next = [...existing];
+  for (const item of incoming) {
+    const nameKey = String(item.name ?? '').trim().toLowerCase();
+    const idx = next.findIndex(
+      (e) =>
+        String(e.id) === String(item.id) ||
+        (nameKey &&
+          String(e.name ?? '')
+            .trim()
+            .toLowerCase() === nameKey)
+    );
+    if (idx >= 0) {
+      const addQty = item.quantity ?? 1;
+      next[idx] = {
+        ...next[idx],
+        ...item,
+        quantity: (next[idx].quantity ?? 1) + addQty,
+      };
+    } else {
+      next.push({ ...item, quantity: item.quantity ?? 1 });
+    }
+  }
+  return next;
+}
 
 // =============================================================================
 // Core rules resolution
@@ -268,7 +316,9 @@ export function calculateSkillPointsSpent(
 
     const isSpecies = speciesSkillIds.has(skill.id);
     if (isSpecies) {
-      spent += Math.max(0, value);
+      for (let v = 1; v <= value; v++) {
+        spent += getSkillValueIncreaseCost(v - 1, skill.isSubSkill, r);
+      }
       continue;
     }
 
@@ -314,7 +364,9 @@ export function calculateSimpleSkillPointsSpent(
     const isSpecies = speciesSkillIds.has(skillId);
 
     if (isSpecies) {
-      spent += Math.max(0, value);
+      for (let v = 1; v <= value; v++) {
+        spent += getSkillValueIncreaseCost(v - 1, meta.isSubSkill, r);
+      }
     } else if (meta.isSubSkill) {
       spent += r.gainProficiencyCost;
       for (let v = 2; v <= value; v++) {

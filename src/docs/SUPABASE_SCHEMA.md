@@ -96,6 +96,8 @@ If Supabase logs show **`permission denied for table user_species`**, the `authe
 
 Single document in `data`; list columns for list/filter. Realtime: `public.characters`.
 
+**Character `data` JSON (app-owned, no DB migration for new keys):** Feats are lean entries `{ id, currentUses?, customName?, note? }` on `feats` / `archetypeFeats`; trait player labels live in `traitCustomizations` (map of trait id → `{ customName?, note? }`). Codex names/descriptions are enriched on load, not stored on save.
+
 **Cross-user read (campaign / public):** `/api/characters/[id]` applies visibility in app code, but Supabase RLS runs first. If the only SELECT policy is “own rows,” other users get no row → “Character not found.” Run **`sql/supabase-characters-rls-cross-read.sql`** to add SELECT policies for `data.visibility = 'public'` and for `campaign` when the reader is the campaign owner or in `campaign_members` and the character appears on that campaign’s `characters` JSON roster (`userId`/`characterId` or snake_case).
 
 ---

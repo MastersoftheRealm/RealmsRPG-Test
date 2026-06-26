@@ -22,7 +22,7 @@ import {
   type CodexSkillParentRef,
 } from '@/lib/game/formulas';
 import { getArchetypeCodexLookupId, mergeArchetypeFromCodex } from '@/lib/game/archetype-display';
-import { calculateCharacterSkillPointsSpent } from '@/lib/game/skill-allocation';
+import { calculateCharacterSkillPointsSpent, buildSpeciesSkillIdSet } from '@/lib/game/skill-allocation';
 import { applySpeciesTraitChoiceSelections } from '@/lib/choice-trait';
 import type { CoreRulesMap } from '@/types/core-rules';
 import type { LibraryForView } from '@/services/character-service';
@@ -83,6 +83,8 @@ export interface CharacterSheetDerivedHandlers {
   handleFeatLevelChange: NonNullable<LibrarySectionProps['onFeatLevelChange']>;
   handleRequestRemoveFeat: NonNullable<LibrarySectionProps['onRemoveFeat']>;
   handleTraitUsesChange: NonNullable<LibrarySectionProps['onTraitUsesChange']>;
+  handleFeatCustomizationChange: NonNullable<LibrarySectionProps['onFeatCustomizationChange']>;
+  handleTraitCustomizationChange: NonNullable<LibrarySectionProps['onTraitCustomizationChange']>;
 }
 
 export interface BuildLibrarySectionPropsInput {
@@ -142,6 +144,8 @@ export function buildCharacterSheetLibraryProps(input: BuildLibrarySectionPropsI
     handleFeatLevelChange: input.handlers.handleFeatLevelChange,
     handleRequestRemoveFeat: input.handlers.handleRequestRemoveFeat,
     handleTraitUsesChange: input.handlers.handleTraitUsesChange,
+    handleFeatCustomizationChange: input.handlers.handleFeatCustomizationChange,
+    handleTraitCustomizationChange: input.handlers.handleTraitCustomizationChange,
   });
 }
 
@@ -311,8 +315,9 @@ export function useCharacterSheetDerived({
       name?: string;
       id?: string;
     }>;
-    const speciesSkillIdSet = new Set(
-      characterSpeciesSkills.filter((id) => id !== '0').map((id) => String(id))
+    const speciesSkillIdSet = buildSpeciesSkillIdSet(
+      characterSpeciesSkills.filter((id) => id !== '0'),
+      skillsList
     );
     const defVals = character.defenseVals || character.defenseSkills || DEFAULT_DEFENSE_SKILLS;
     const spentSkillPoints = calculateCharacterSkillPointsSpent(
@@ -374,8 +379,9 @@ export function useCharacterSheetDerived({
       name?: string;
       id?: string;
     }>;
-    const speciesSkillIdSet = new Set(
-      characterSpeciesSkills.filter((id) => id !== '0').map((id) => String(id))
+    const speciesSkillIdSet = buildSpeciesSkillIdSet(
+      characterSpeciesSkills.filter((id) => id !== '0'),
+      skillsList
     );
     const defValsForSpend = character.defenseVals || character.defenseSkills || DEFAULT_DEFENSE_SKILLS;
     const spentSkillPoints = calculateCharacterSkillPointsSpent(

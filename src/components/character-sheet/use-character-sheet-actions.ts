@@ -13,6 +13,7 @@ import {
   getTrainingPointLimit,
   getMissingRequiredProficiencies,
 } from '@/lib/proficiencies';
+import { mergeEquipmentIntoInventory } from '@/lib/game/skill-allocation';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 import {
   withSyncedResourceFields,
@@ -751,11 +752,12 @@ const handleToggleEquipShield = useCallback((itemId: string | number) => {
 // Add equipment handler
 const handleAddEquipment = useCallback((items: Item[]) => {
   if (!character) return;
+  const currentItems = (character.equipment?.items as Item[]) || [];
   const candidate: Character = {
     ...character,
     equipment: {
       ...character.equipment,
-      items: [...((character.equipment?.items as Item[]) || []), ...items],
+      items: mergeEquipmentIntoInventory(currentItems, items),
     },
   };
   const next = applyAutoProficiencies(candidate, 'Adding equipment');
@@ -918,17 +920,22 @@ const handleFeatLevelChange = useCallback(
 
     setCharacter((prev) => {
       if (!prev) return null;
+      const mergeCustomization = (existing: CharacterFeat): CharacterFeat => ({
+        ...newFeat,
+        customName: existing.customName,
+        note: existing.note,
+      });
       if (listType === 'archetype') {
         return {
           ...prev,
           archetypeFeats: (prev.archetypeFeats || []).map((f) =>
-            String(f.id) === String(featId) ? newFeat : f
+            String(f.id) === String(featId) ? mergeCustomization(f) : f
           ),
         };
       }
       return {
         ...prev,
-        feats: (prev.feats || []).map((f) => (String(f.id) === String(featId) ? newFeat : f)),
+        feats: (prev.feats || []).map((f) => (String(f.id) === String(featId) ? mergeCustomization(f) : f)),
       };
     });
   },
@@ -1173,6 +1180,76 @@ const handleFeatUsesChange = useCallback((featId: string, delta: number) => {
   });
 }, [character, featsDb]);
 
+const applyFeatCustomization = (
+  feats: CharacterFeat[] | undefined,
+  featId: string,
+  updates: Partial<{ customName?: string; note?: string }>
+): CharacterFeat[] => {
+  return (feats || []).map((feat) => {
+    if (String(feat.id) !== featId) return feat;
+    const next = { ...feat };
+    if ('customName' in updates) {
+      const trimmed = updates.customName?.trim();
+      if (trimmed) next.customName = trimmed;
+      else delete next.customName;
+    }
+    if ('note' in updates) {
+      const trimmed = updates.note?.trim();
+      if (trimmed) next.note = trimmed;
+      else delete next.note;
+    }
+    return next;
+  });
+};
+
+const handleFeatCustomizationChange = useCallback(
+  (featId: string, listType: 'archetype' | 'character', updates: Partial<{ customName?: string; note?: string }>) => {
+    if (!character) return;
+    setCharacter((prev) => {
+      if (!prev) return null;
+      if (listType === 'archetype') {
+        return {
+          ...prev,
+          archetypeFeats: applyFeatCustomization(prev.archetypeFeats, featId, updates),
+        };
+      }
+      return {
+        ...prev,
+        feats: applyFeatCustomization(prev.feats, featId, updates),
+      };
+    });
+  },
+  [character, setCharacter]
+);
+
+const handleTraitCustomizationChange = useCallback(
+  (traitKey: string, updates: Partial<{ customName?: string; note?: string }>) => {
+    if (!character) return;
+    setCharacter((prev) => {
+      if (!prev) return null;
+      const existing = { ...(prev.traitCustomizations || {}) };
+      const current = { ...(existing[traitKey] || {}) };
+      if ('customName' in updates) {
+        const trimmed = updates.customName?.trim();
+        if (trimmed) current.customName = trimmed;
+        else delete current.customName;
+      }
+      if ('note' in updates) {
+        const trimmed = updates.note?.trim();
+        if (trimmed) current.note = trimmed;
+        else delete current.note;
+      }
+      if (Object.keys(current).length > 0) existing[traitKey] = current;
+      else delete existing[traitKey];
+      return {
+        ...prev,
+        traitCustomizations: Object.keys(existing).length > 0 ? existing : undefined,
+      };
+    });
+  },
+  [character, setCharacter]
+);
+
 // Trait uses change handler (+/- buttons for trait tracking)
 const handleTraitUsesChange = useCallback((traitName: string, delta: number) => {
   if (!character) return;
@@ -1297,6 +1374,8 @@ const handleModalAdd = useCallback((items: CharacterPower[] | CharacterTechnique
       handleFeatLevelChange,
       handleRequestRemoveFeat,
       handleTraitUsesChange,
+      handleFeatCustomizationChange,
+      handleTraitCustomizationChange,
     }),
     [
       setCharacter,
@@ -1320,6 +1399,8 @@ const handleModalAdd = useCallback((items: CharacterPower[] | CharacterTechnique
       handleFeatLevelChange,
       handleRequestRemoveFeat,
       handleTraitUsesChange,
+      handleFeatCustomizationChange,
+      handleTraitCustomizationChange,
     ]
   );
 
@@ -1373,6 +1454,8 @@ const handleModalAdd = useCallback((items: CharacterPower[] | CharacterTechnique
     handleFeatUsesChange,
     handleFeatLevelChange,
     handleTraitUsesChange,
+    handleFeatCustomizationChange,
+    handleTraitCustomizationChange,
     handleStateUsesChange,
     handleEnterState,
     handleModalAdd,

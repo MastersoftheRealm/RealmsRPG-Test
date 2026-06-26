@@ -35,6 +35,8 @@ export type EntityRowExtras = {
   detailSections?: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }>;
   uses?: { current: number; max: number };
   hideUsesInName?: boolean;
+  nameContent?: ReactNode;
+  supplementalExpandedContent?: ReactNode;
 };
 
 export type EntityListControls = {
@@ -219,6 +221,7 @@ function renderInteractiveGridRows(
       key={String(item.id ?? `${item.name}-${idx}`)}
       id={String(item.id ?? idx)}
       name={item.name}
+      nameContent={item.nameContent}
       description={item.description}
       columns={item.columns ?? buildDefaultColumns(item, idx)}
       gridColumns={item.gridColumns ?? defaultGrid}
@@ -249,6 +252,7 @@ function renderInteractiveGridRows(
       equipped={item.equipped}
       columnSpans={item.columnSpans}
       detailSections={item.detailSections}
+      supplementalExpandedContent={item.supplementalExpandedContent}
       uses={item.uses}
       hideUsesInName={item.hideUsesInName}
       compact={compactRows}

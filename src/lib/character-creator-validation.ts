@@ -11,7 +11,7 @@ import type { CoreRulesMap } from '@/types/core-rules';
 import { getChoiceOptionIds } from '@/lib/choice-trait';
 import { calculateAbilityPoints, calculateAbilityScoreCost, calculateHealthEnergyPool, calculateSkillPointsForEntity, calculateTrainingPoints } from '@/lib/game/formulas';
 import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
-import { calculateSimpleSkillPointsSpent } from '@/lib/game/skill-allocation';
+import { calculateSimpleSkillPointsSpent, resolveSkillAllocationRules } from '@/lib/game/skill-allocation';
 import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies } from '@/lib/proficiencies';
 
 export interface ValidationIssue {
@@ -30,6 +30,8 @@ export interface ValidationContext {
   codexSkills: Array<{ id: string; base_skill_id?: number }> | null;
   /** Used to validate species trait choice picks (option_trait_ids). */
   allTraits?: Array<{ id: string | number; option_trait_ids?: string[] }> | null;
+  /** Core rules for skill soft-cap / past-cap costs (optional; defaults match SKILLS_AND_DEFENSES seed). */
+  rules?: Partial<CoreRulesMap>;
 }
 
 /**
@@ -43,7 +45,7 @@ export function getValidationIssuesForStep(
 ): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const level = draft.level || 1;
-  const { allSpecies, codexSkills } = context;
+  const { allSpecies, codexSkills, rules } = context;
 
   switch (step) {
     case 'archetype':
@@ -193,7 +195,8 @@ export function getValidationIssuesForStep(
         (draft.skills || {}) as Record<string, number>,
         speciesSkillIds,
         skillMeta,
-        draft.defenseVals || draft.defenseSkills
+        draft.defenseVals || draft.defenseSkills,
+        resolveSkillAllocationRules(rules)
       );
       const remainingSkillPoints = maxSkillPoints - totalUsedSkillPoints;
       if (remainingSkillPoints > 0) {

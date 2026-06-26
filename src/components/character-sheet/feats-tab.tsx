@@ -20,7 +20,8 @@ import {
   getMaxQualifiedFeatLevel,
   type CharacterForFeatRequirement,
 } from '@/lib/game/feat-requirements';
-import { mapTraitRows, mapFeatRows, type FeatRowContext, type FeatLevelMeta } from './library-feat-rows';
+import { mapTraitRows, mapFeatRows, resolveTraitCustomizationKey, type FeatRowContext, type FeatLevelMeta } from './library-feat-rows';
+import type { FeatTraitCustomization } from '@/types/feats';
 
 interface TraitData {
   name: string;
@@ -58,6 +59,8 @@ interface FeatData {
   currentUses?: number;
   recovery?: string;
   type?: 'archetype' | 'character' | 'state';
+  customName?: string;
+  note?: string;
 }
 
 interface CharacterAncestry {
@@ -100,6 +103,13 @@ interface FeatsTabProps {
   onAddCharacterFeat?: () => void;
   onAddStateFeat?: () => void;
   onRemoveFeat?: (featId: string, featName?: string) => void;
+  traitCustomizations?: Record<string, FeatTraitCustomization>;
+  onFeatCustomizationChange?: (
+    featId: string,
+    listType: 'archetype' | 'character',
+    updates: Partial<FeatTraitCustomization>
+  ) => void;
+  onTraitCustomizationChange?: (traitKey: string, updates: Partial<FeatTraitCustomization>) => void;
 }
 
 export function FeatsTab({
@@ -129,6 +139,9 @@ export function FeatsTab({
   onAddCharacterFeat,
   onAddStateFeat,
   onRemoveFeat,
+  traitCustomizations = {},
+  onFeatCustomizationChange,
+  onTraitCustomizationChange,
 }: FeatsTabProps) {
   const { data: codexSkills = [] } = useCodexSkills();
 
@@ -233,13 +246,14 @@ export function FeatsTab({
       }
       const featLvl = dbFeat?.feat_lvl;
       const name = feat.name || dbFeat?.name || String(feat.id);
-      const displayName =
+      const codexName =
         featLvl != null && featLvl > 1
           ? formatFeatName({ id: String(feat.id ?? name), name, feat_lvl: featLvl })
           : name;
       return {
         ...feat,
-        name: displayName,
+        codexName,
+        name: feat.customName?.trim() || codexName,
         description: feat.description || dbFeat?.description || dbFeat?.effect,
         maxUses: feat.maxUses ?? dbFeat?.uses_per_rec ?? dbFeat?.max_uses ?? 0,
         recovery: feat.recovery || dbFeat?.rec_period,
@@ -282,14 +296,30 @@ export function FeatsTab({
   }, [ancestry, vanillaTraits, speciesTraitsFromCodex]);
 
   const processedTraits = useMemo(() => {
-    const enriched = allTraitsWithCategories.map((t) => ({
-      ...t,
-      ...enrichTrait(t.name),
-    }));
+    const enriched = allTraitsWithCategories.map((t) => {
+      const base = enrichTrait(t.name);
+      const traitKey = resolveTraitCustomizationKey(t.name, traitsDb);
+      const custom = traitCustomizations[traitKey];
+      return {
+        ...base,
+        traitKey,
+        codexName: base.name,
+        customName: custom?.customName,
+        note: custom?.note,
+        name: custom?.customName?.trim() || base.name,
+        category: t.category,
+      };
+    });
     traits.forEach((trait) => {
       const e = enrichTrait(trait.name);
+      const traitKey = resolveTraitCustomizationKey(trait.name, traitsDb);
+      const custom = traitCustomizations[traitKey];
       enriched.push({
-        name: e.name,
+        name: custom?.customName?.trim() || e.name,
+        codexName: e.name,
+        traitKey,
+        customName: custom?.customName,
+        note: custom?.note,
         description: e.description || trait.description,
         maxUses: e.maxUses || trait.maxUses || 0,
         recoveryPeriod: e.recoveryPeriod || trait.recoveryPeriod,
@@ -297,7 +327,7 @@ export function FeatsTab({
       });
     });
     return sortByColumn(enriched, traitSort);
-  }, [allTraitsWithCategories, traits, enrichTrait, traitSort]);
+  }, [allTraitsWithCategories, traits, enrichTrait, traitSort, traitsDb, traitCustomizations]);
 
   const processedArchetypeFeats = useMemo(
     () => sortByColumn(archetypeFeats.map(enrichFeat), archetypeFeatSort),
@@ -325,6 +355,8 @@ export function FeatsTab({
       onRemoveFeat,
       getFeatLevelDetailSections,
       getFeatLevelMeta,
+      onFeatCustomizationChange,
+      onTraitCustomizationChange,
     }),
     [
       showEditControls,
@@ -334,12 +366,15 @@ export function FeatsTab({
       onRemoveFeat,
       getFeatLevelDetailSections,
       getFeatLevelMeta,
+      onFeatCustomizationChange,
+      onTraitCustomizationChange,
     ]
   );
 
   const archetypeFeatRowContext = useMemo<FeatRowContext>(
     () => ({
       ...featRowContext,
+      featListType: 'archetype',
       onFeatLevelChange: onFeatLevelChange
         ? (featId, targetLevel) => onFeatLevelChange(featId, targetLevel, 'archetype')
         : undefined,
@@ -350,6 +385,7 @@ export function FeatsTab({
   const characterFeatRowContext = useMemo<FeatRowContext>(
     () => ({
       ...featRowContext,
+      featListType: 'character',
       onFeatLevelChange: onFeatLevelChange
         ? (featId, targetLevel) => onFeatLevelChange(featId, targetLevel, 'character')
         : undefined,
@@ -369,7 +405,10 @@ export function FeatsTab({
   const stateFeatRows = useMemo(
     () =>
       mapFeatRows(
-        processedStateFeats.map(({ stateType, ...feat }) => feat),
+        processedStateFeats.map(({ stateType, ...feat }) => ({
+          ...feat,
+          listType: stateType === 'archetype' ? ('archetype' as const) : ('character' as const),
+        })),
         featRowContext
       ).map((row, index) => ({
         ...row,

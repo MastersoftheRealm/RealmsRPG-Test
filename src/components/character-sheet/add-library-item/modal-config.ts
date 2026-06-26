@@ -52,7 +52,7 @@ export function getAddLibraryItemTitle(itemType: AddLibraryItemType): string {
     case 'armor':
       return 'Add Armor from Library';
     case 'equipment':
-      return 'Add Equipment from Library';
+      return 'Add to Inventory';
     default:
       return 'Add Item';
   }

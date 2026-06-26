@@ -63,6 +63,8 @@ export type BuildLibrarySectionPropsArgs = {
   handleFeatLevelChange: NonNullable<LibrarySectionProps['onFeatLevelChange']>;
   handleRequestRemoveFeat: NonNullable<LibrarySectionProps['onRemoveFeat']>;
   handleTraitUsesChange: NonNullable<LibrarySectionProps['onTraitUsesChange']>;
+  handleFeatCustomizationChange: NonNullable<LibrarySectionProps['onFeatCustomizationChange']>;
+  handleTraitCustomizationChange: NonNullable<LibrarySectionProps['onTraitCustomizationChange']>;
 };
 
 export function buildLibrarySectionProps({
@@ -102,6 +104,8 @@ export function buildLibrarySectionProps({
   handleFeatLevelChange,
   handleRequestRemoveFeat,
   handleTraitUsesChange,
+  handleFeatCustomizationChange,
+  handleTraitCustomizationChange,
 }: BuildLibrarySectionPropsArgs): Omit<LibrarySectionProps, 'className' | 'activeTab' | 'onActiveTabChange'> {
   return {
     powers: enrichedData?.powers || character.powers || [],
@@ -213,5 +217,8 @@ export function buildLibrarySectionProps({
     featsDb,
     traitUses: character.traitUses,
     onTraitUsesChange: handleTraitUsesChange,
+    traitCustomizations: character.traitCustomizations,
+    onFeatCustomizationChange: handleFeatCustomizationChange,
+    onTraitCustomizationChange: handleTraitCustomizationChange,
   };
 }
