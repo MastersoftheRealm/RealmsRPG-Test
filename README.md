@@ -3,7 +3,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 **RealmsRPG** — D&D Beyond–like TTRPG app. Stack: Next.js, React, Tailwind, Supabase (PostgreSQL, Auth, Storage), Vercel. No Prisma.
 
 - **Docs index:** `src/docs/README.md`
-- **Engineers:** `src/docs/ENGINEERING_ONBOARDING.md`
+- **Engineers:** `src/docs/human/ENGINEERING_ONBOARDING.md`
 - **AI agents:** `AGENTS.md`
 - **Deploy / secrets:** `src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md`
 

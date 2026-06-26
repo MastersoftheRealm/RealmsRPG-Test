@@ -5,7 +5,8 @@
 > **Supersedes:** `ai/archive/CODEBASE_AUDIT_2026-02-13.md` and `ai/archive/UNIFICATION_AUDIT_2026-02-20.md` (both stale; still reference Prisma/Firebase).
 > **Method:** `tsc`, `eslint`, `knip`, `ts-prune`, `jscpd`, file-size census, targeted greps, Supabase advisors (security + performance), Vercel project/deploy inspection.
 > **Companion:** [`SYSTEMATIC_AUDIT_2026-06.md`](SYSTEMATIC_AUDIT_2026-06.md) — exhaustive page-by-page / area-by-area walkthrough of the running site (20 areas, 10-lens rubric).
-> **Doc cleanup (2026-06-13):** Historical migration/rationale docs archived; living guidance in `AGENTS.md`, `PERFORMANCE_AND_EDGE.md`, and `ai/AGENT_GUIDE.md`. This audit is a **snapshot** — prefer `AI_TASK_QUEUE.md` for current disposition of findings.
+> **Doc cleanup (2026-06-13):** Historical migration/rationale docs archived; living guidance in `AGENTS.md`, `PERFORMANCE_AND_EDGE.md`, and `ai/AGENT_GUIDE.md`.
+> **Status (2026-06-26):** This file is a **historical snapshot**. For current completion/open gaps, use `REMEDIATION_STATUS_2026-06.md` + `AI_TASK_QUEUE.md`.
 
 ---
 

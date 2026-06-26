@@ -4,7 +4,7 @@
 
 ## For New Developers
 
-Start here: **[ENGINEERING_ONBOARDING.md](./ENGINEERING_ONBOARDING.md)** — architecture, directory map, data layer, state/persistence, gotchas, and a safe-edit ramp path.
+Start here: **[human/ENGINEERING_ONBOARDING.md](./human/ENGINEERING_ONBOARDING.md)** — architecture, directory map, data layer, state/persistence, gotchas, and a safe-edit ramp path.
 
 ## For AI Agents (Cursor)
 
@@ -16,9 +16,9 @@ Then, as needed:
 |-------|-----|
 | Component locations, patterns | [`ai/AGENT_GUIDE.md`](./ai/AGENT_GUIDE.md) |
 | Does this feature exist? | [`ai/FEATURE_INDEX.md`](./ai/FEATURE_INDEX.md) |
-| Open tasks | [`ai/AI_TASK_QUEUE.md`](./ai/AI_TASK_QUEUE.md) |
+| Current remediation status / open gaps | [`ai/REMEDIATION_STATUS_2026-06.md`](./ai/REMEDIATION_STATUS_2026-06.md) |
+| Open tasks (active only) | [`ai/AI_TASK_QUEUE.md`](./ai/AI_TASK_QUEUE.md) |
 | DB tables / columns | [`SUPABASE_SCHEMA.md`](./SUPABASE_SCHEMA.md) |
-| Codex field definitions | [`CODEX_SCHEMA_REFERENCE.md`](./CODEX_SCHEMA_REFERENCE.md) |
 | Game rules, formulas, caps | [`GAME_RULES.md`](./GAME_RULES.md) |
 | Data flow, enrichment | [`ARCHITECTURE.md`](./ARCHITECTURE.md) |
 | Codex/library caching | [`DATA_HANDLING.md`](./DATA_HANDLING.md) |
@@ -30,8 +30,8 @@ Then, as needed:
 | Edge / CDN performance | [`PERFORMANCE_AND_EDGE.md`](./PERFORMANCE_AND_EDGE.md) |
 | Owner feedback | [`ALL_FEEDBACK_CLEAN.md`](./ALL_FEEDBACK_CLEAN.md) |
 
-**Human deep-dive:** [`UI_COMPONENT_REFERENCE.md`](./UI_COMPONENT_REFERENCE.md) — detailed component catalog (agents: prefer `AGENT_GUIDE.md` + `.cursor/rules/realms-unification.mdc`).
+**Historical context (do not treat as current):** [`ai/archive/HISTORY_INDEX.md`](./ai/archive/HISTORY_INDEX.md) — June audits, full task backup, older plans. Archived paths are listed in `.cursorignore`.
 
-**Historical audits, migration plans, completed designs:** [`ai/archive/`](./ai/archive/) — reference only; do not treat as current truth.
+**Human deep-dives:** [`human/README.md`](./human/README.md) — onboarding, UI catalog, admin setup, codex fields, UX goals.
 
 Root `.cursor/rules/` provide session-level instructions.

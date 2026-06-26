@@ -4,7 +4,8 @@ Single reference for component locations, patterns, and where to record work. Ve
 
 > **First stop before building anything new:** [`FEATURE_INDEX.md`](FEATURE_INDEX.md) — feature/component/hook/service map to confirm it doesn't already exist. The full canonical "for X, read Y" map is in the root `AGENTS.md` (Source-of-Truth Map).
 >
-> **Known issues / audits:** [`FULL_AUDIT_2026-06.md`](FULL_AUDIT_2026-06.md) (cross-cutting) and [`SYSTEMATIC_AUDIT_2026-06.md`](SYSTEMATIC_AUDIT_2026-06.md) (per-page/area walkthrough). Check these before working in an area so you don't re-discover or re-introduce known problems.
+> **Current remediation status / open gaps:** [`REMEDIATION_STATUS_2026-06.md`](REMEDIATION_STATUS_2026-06.md).  
+> **Historical audits:** see [`archive/HISTORY_INDEX.md`](archive/HISTORY_INDEX.md) — do not treat archived findings as currently open.
 
 **Note:** When implementing a task, verify `related_files` in AI_TASK_QUEUE against the actual codebase — some entries may have been corrected; paths can become stale (e.g., `header-section.tsx` was replaced by `sheet-action-toolbar.tsx`).
 
@@ -79,16 +80,16 @@ Task queue `related_files` may reference outdated paths. When implementing, pref
 | Use Case | Component | Notes |
 |----------|-----------|-------|
 | Powers, techniques, feats, equipment in lists | **GridListRow** | Sortable columns, leftSlot/rightSlot, expandable rows |
-| Codex/Library browse, item cards | **ItemCard** / **ItemList** | Card layout, view/edit/duplicate/delete actions |
+| Codex/Library browse, item cards | **ItemCard** (and GridListRow list rows) | Card layout, view/edit/duplicate/delete actions |
 | Base-skill selector (add sub-skill) | **SelectionToggle** | Unique UX; not GridListRow |
 | Species detail view, level-up wizard | Custom layouts | Justified exceptions |
 | Add-feat, add-skill, add-library-item modals | **GridListRow** or **UnifiedSelectionModal** | Consistent list selection |
 
-**List item actions:** GridListRow and ItemCard use the same action set (view/edit/duplicate/delete, plus quantity where applicable). Use IconButton and the same placement pattern; see UI_COMPONENT_REFERENCE for details.
+**List item actions:** GridListRow and ItemCard use the same action set (view/edit/duplicate/delete, plus quantity where applicable). Use IconButton and the same placement pattern; see `src/docs/human/UI_COMPONENT_REFERENCE.md` for extended catalog details.
 
 **List modal layout (add-X, load, selection):** Use a consistent structure so modals match Codex/Library: (1) Header (title + close), (2) Search bar (`SearchInput`), (3) optional **FilterSection** for filters, (4) **ListHeader** (sortable), (5) scrollable list in a bordered container (`border border-border-light rounded-lg`) with **GridListRow** or selectable rows, (6) footer (selection count + Cancel + primary action). Use **EmptyState** and **LoadingState** (from `@/components/ui` or shared list-components) for empty and loading; avoid ad-hoc Spinner/divs. For search + sort state, **useModalListState** (`@/hooks/use-modal-list-state`) returns `search`, `setSearch`, `filteredItems`, `sortedItems`, `sortState`, `handleSort`, `reset` — use in load/add-X modals to reduce duplication.
 
-See `UI_COMPONENT_REFERENCE.md` for full component details.
+See `src/docs/human/UI_COMPONENT_REFERENCE.md` for extended component catalog (agents: prefer this guide + `realms-unification.mdc`).
 
 ## Tooltips (canonical: Collin / Tippy — TASK-376)
 
@@ -133,7 +134,7 @@ Goal: "Learn once, use forever" — consistent UI across Library, Codex, Charact
 |---------|------------|
 | GridListRow | Library, Codex, add-feat-modal, add-library-item-modal, add-skill-modal, equipment-step, feats-tab, library-section, creature-creator |
 | SkillRow | skills-section, skills-step, creature-creator |
-| ValueStepper | abilities-section, sheet-header, health-energy-allocator, dice-roller, all creators, encounter-tracker |
+| ValueStepper | abilities-section, sheet-header, health-energy-allocator, dice-roller, all creators, encounters pages |
 | SectionHeader | feats-tab, proficiencies-tab, notes-tab, archetype-section, crafting pages |
 | ListHeader | All Codex/Library/Admin list views, feats-step, UnifiedSelectionModal |
 | UnifiedSelectionModal | AddFeatModal, AddSkillModal, AddLibraryItemModal (thin wrappers) |
@@ -188,7 +189,7 @@ Steps live in `src/components/character-creator/steps/` (e.g., `species-step.tsx
 - `(main)/library` — user items (powers, techniques, armaments, creatures)
 - `(main)/codex` — browse all content
 - `(main)/power-creator`, `(main)/technique-creator`, `(main)/item-creator`, `(main)/creature-creator`
-- `(main)/encounter-tracker`, `(main)/crafting`, `(main)/my-account`, `(main)/rules`, `(main)/privacy`, `(main)/terms`, `(main)/resources`
+- `(main)/encounters`, `(main)/crafting`, `(main)/my-account`, `(main)/rules`, `(main)/privacy`, `(main)/terms`, `(main)/resources`
 - `(auth)/login`, `(auth)/register`, `(auth)/forgot-password`, `(auth)/forgot-username`
 
 ## Shared Component Usage (Verified)
@@ -196,7 +197,7 @@ Steps live in `src/components/character-creator/steps/` (e.g., `species-step.tsx
 - **GridListRow** — Library, Codex, add-feat-modal, add-library-item-modal, add-skill-modal, equipment-step, feats-tab, library-section, creature-creator
 - **HubListRow** — Encounters hub, Crafting hub, Library Enhanced tab (list rows with icon, title, badge, subtitle, delete). **Do not use** for combat/skill encounter participants: those use **CombatantCard** and participant-specific blocks (health, initiative, roll state); HubListRow is for “open/delete” list items only.
 - **SkillRow** — skills-section, skills-step, creature-creator
-- **ValueStepper** — abilities-section, sheet-header, health-energy-allocator, dice-roller, all creators, encounter-tracker
+- **ValueStepper** — abilities-section, sheet-header, health-energy-allocator, dice-roller, all creators, encounters pages
 - **SectionHeader** — feats-tab, proficiencies-tab, notes-tab, archetype-section, crafting pages
 - **AddSubSkillModal** — Uses SelectionToggle (not GridListRow) — unique base-skill selector UX
 
@@ -249,13 +250,14 @@ Use design tokens for colors; avoid raw `blue-*` / `green-*` outside auth.
 | Changelog | `src/docs/ai/AI_CHANGELOG.md` |
 | Raw feedback | `src/docs/ALL_FEEDBACK_CLEAN.md` |
 | Game rules | `src/docs/GAME_RULES.md` — terminology, formulas, display conventions |
-| **Full audit (current)** | `src/docs/ai/FULL_AUDIT_2026-06.md` — whole-site + AI-workflow audit organized by AI-agent pathology taxonomy; supersedes the Feb 2026 audits. |
+| **Current remediation status** | `src/docs/ai/REMEDIATION_STATUS_2026-06.md` — current completion/open-gap truth and execution sequencing for deferred work. |
+| Historical audits & task backup | `src/docs/ai/archive/HISTORY_INDEX.md` — June 2026 audits, full queue backup, older plans |
 | Codebase audit (historical) | `src/docs/ai/archive/CODEBASE_AUDIT_2026-02-13.md` — 98-finding audit with 6-phase fix plan |
 | Unification audit (historical) | `src/docs/ai/archive/UNIFICATION_AUDIT_2026-02-20.md` — shared logic, creators, libraries, allocation, centralized sources of truth |
 | Modal unification audit (historical) | `src/docs/ai/archive/MODAL_UNIFICATION_AUDIT_2026-02-20.md` — list modals (add-X, load, selection): logic, styles, EmptyState/LoadingState, FilterSection, alignment with Codex/Library. See TASK-264. |
 | **Performance & edge usage** | `src/docs/PERFORMANCE_AND_EDGE.md` — Vercel CDN/edge requests, proxy matcher, cache headers, prefetch, polling; checklist for new public APIs and hooks. |
 | **Mobile UX** | `src/docs/MOBILE_UX.md` — breakpoints, touch targets, full-screen modals, dense-layout strategy (side-scroll vs collapse). When adding a new page or modal, follow MOBILE_UX.md and the Agent checklist there. |
-| **User experience goals** | `src/docs/USER_EXPERIENCE_GOALS.md` — UX goals, terminology (Realms Codex/Library, My Library), implemented vs backlog, AI checklist for onboarding/retention/copy. Update Section 3/4 when completing UX tasks. |
+| **User experience goals** | `src/docs/human/USER_EXPERIENCE_GOALS.md` — human reference; update when completing UX tasks |
 
 ## Mobile
 

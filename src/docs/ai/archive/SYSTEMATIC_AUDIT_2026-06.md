@@ -3,6 +3,8 @@
 > **Companion to** [`FULL_AUDIT_2026-06.md`](FULL_AUDIT_2026-06.md). That report covers cross-cutting AI-pathology + codebase findings. **This document** is the exhaustive, page-by-page / area-by-area walkthrough of the *actual running website* — every page, modal, component, data path, and API route — leaving no leaf unturned.
 >
 > **Bigger-picture goal (why this exists):** RealmsRPG is a D&D-Beyond-style TTRPG app. The product promise is **"learn once, use forever"** — consistent UI, unified components, and a frictionless creator→library→character-sheet→play loop. This audit verifies every surface upholds that promise and is correct, secure, accessible, mobile-ready, and free of accreted AI debt.
+>
+> **Status (2026-06-26):** Historical snapshot. Some findings reference routes/components later removed or consolidated (e.g. `/browse`, `/encounter-tracker`). Use `REMEDIATION_STATUS_2026-06.md` + `AI_TASK_QUEUE.md` for current open items.
 
 ## How this audit works
 

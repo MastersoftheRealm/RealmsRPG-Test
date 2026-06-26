@@ -763,7 +763,7 @@ Manual QA after `sql/supabase-rls-consolidate-permissive-2026-06.sql`. **Needs:*
 | **Task** | TASK-352 |
 | **Where** | `/campaigns` · invite link or code |
 | **Steps** | 1. As member, join campaign via invite. 2. Confirm campaign appears in list. 3. Open campaign detail; confirm rolls and roster load. |
-| **Expected** | Join succeeds; member can read campaign row via consolidated SELECT (memberIds or campaign_members). |
+| **Expected** | Join succeeds; member can read campaign row via consolidated SELECT backed by `campaign_members` (single source of truth). |
 | **Report** | DEV-V-005-T001: PASS / FAIL / SKIP — |
 
 #### DEV-V-005-T002 — Campaign-shared character cross-read

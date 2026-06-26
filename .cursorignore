@@ -1,0 +1,6 @@
+﻿# Historical docs — out of default AI indexing (still in git for humans)
+src/docs/ai/archive/**
+src/docs/human/**
+
+# Build output
+.next/**

@@ -25,7 +25,7 @@
 | Species creator | `species-creator/page.tsx` |
 | Creature creator | `creature-creator/page.tsx`, `creature-skill-utils.ts` (skills ↔ allocations, load mapping) |
 | Crafting (sessions + enhanced items) | `crafting/page.tsx`, `crafting/[id]/page.tsx` |
-| Encounters / encounter tracker | `encounters/page.tsx`, `encounter-tracker/page.tsx` |
+| Encounters | `encounters/page.tsx`, `encounters/[id]/page.tsx`, `encounters/[id]/combat/page.tsx`, `encounters/[id]/mixed/page.tsx`, `encounters/[id]/skill/page.tsx` |
 | Campaigns | `campaigns/page.tsx` |
 | Admin (official content, users, tooltips) | `admin/page.tsx` |
 | Account / profile | `my-account/page.tsx` |
