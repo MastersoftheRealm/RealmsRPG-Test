@@ -348,15 +348,16 @@
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Z-index — sticky in-page chrome → header/modal overlay → popovers/tooltips →
-     toast/alerts → floating widgets. Prefer these utilities over ad-hoc z-[N]. */
-  --z-sticky: 10;
-  --z-header: 50;
-  --z-overlay: 50;
-  --z-popover: 70;
-  --z-toast: 100;
-  --z-floating: 1000;
-  --z-skip-link: 9999;
-  --z-toast-stack: 10000;
+     toast/alerts → floating widgets. Tailwind v4 requires `--z-index-*` to emit
+     matching `z-*` utilities (plain `--z-*` only defines vars, no class). */
+  --z-index-sticky: 10;
+  --z-index-header: 50;
+  --z-index-overlay: 50;
+  --z-index-popover: 70;
+  --z-index-toast: 100;
+  --z-index-floating: 1000;
+  --z-index-skip-link: 9999;
+  --z-index-toast-stack: 10000;
 
   /* Container widths — `max-w-narrow` (forms/legal), `max-w-standard` (most app
      pages = 7xl), `max-w-wide` (marketing = 1440px), `max-w-full-tool`

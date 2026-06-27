@@ -335,7 +335,7 @@ function AccountDropdown({
         </div>
       </button>
       {open && (
-        <div className="absolute right-0 top-full pt-2 z-overlay">
+        <div className="absolute right-0 top-full pt-2 z-popover">
           <div className="w-56 bg-surface rounded-lg shadow-lg border border-border-light py-2">
             <Link href="/my-account" className="px-4 py-2.5 text-text-secondary hover:bg-surface-alt min-h-11 flex items-center" onClick={() => setOpen(false)}>
               My Account
@@ -408,7 +408,7 @@ function NavDropdown({ item, pathname }: { item: DropdownItem; pathname: string 
         <ChevronDownIcon className={cn('w-4 h-4 transition-transform', open ? 'rotate-180' : '')} />
       </button>
       {open && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-overlay before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-2">
+        <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-popover before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-2">
           <div className="w-48 bg-surface-secondary rounded-lg shadow-lg border border-divider py-2">
             {item.dropdown?.map((subItem) => (
               <Link
