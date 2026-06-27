@@ -105,7 +105,7 @@ export function CharacterSheetSettingsModal({
       fullScreenOnMobile
     >
       <div className="space-y-4">
-        <div className="rounded-lg border border-border-light bg-surface-alt dark:bg-[#21262d] p-3">
+        <div className="rounded-lg border border-border-light bg-surface-alt p-3">
           <h3 className="text-sm font-semibold text-text-primary mb-1">Speed display</h3>
           <p className="text-xs text-text-muted mb-2">
             Speed is always edited in spaces. Choose how it appears on the sheet: spaces, feet (1 sp = 5 ft), or meters (1 sp = 1.5 m).
@@ -123,7 +123,7 @@ export function CharacterSheetSettingsModal({
             </p>
           )}
         </div>
-        <div className="rounded-lg border border-border-light bg-surface-alt dark:bg-[#21262d] p-3">
+        <div className="rounded-lg border border-border-light bg-surface-alt p-3">
           <h3 className="text-sm font-semibold text-text-primary mb-1">Character visibility</h3>
           <p className="text-xs text-text-muted mb-2">
             Controls who can view this character sheet. Realm Masters can view campaign members&apos; sheets when set to Campaign or Public.

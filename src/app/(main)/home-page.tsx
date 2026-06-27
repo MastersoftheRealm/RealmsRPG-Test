@@ -13,6 +13,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Sparkles, Sword, MessageCircle, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { LoadingState } from '@/components/ui';
 import { useAuth } from '@/hooks';
 import { OnboardingTour } from '@/components/shared';
 import { REALMS_MOTTO } from '@/lib/constants/site-copy';
@@ -27,7 +29,7 @@ const reviews: Array<{ quote: ReactNode; author: string }> = [
     quote: (
       <>
         It&apos;s a genuinely enjoyable time. I love the{' '}
-        <Link href="/characters/new" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">
+        <Link href="/characters/new" className="text-primary-link-fg hover:underline font-medium">
           character creation experience
         </Link>
         .
@@ -39,7 +41,7 @@ const reviews: Array<{ quote: ReactNode; author: string }> = [
     quote: (
       <>
         A refreshing take on tabletop RPGs with incredible flexibility in{' '}
-        <Link href="/characters/new" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">
+        <Link href="/characters/new" className="text-primary-link-fg hover:underline font-medium">
           character building
         </Link>
         .
@@ -51,7 +53,7 @@ const reviews: Array<{ quote: ReactNode; author: string }> = [
     quote: (
       <>
         The{' '}
-        <Link href="/power-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">
+        <Link href="/power-creator" className="text-primary-link-fg hover:underline font-medium">
           power creation system
         </Link>
         {' '}is unlike anything I&apos;ve seen before. So creative!
@@ -139,35 +141,35 @@ function HomeContent() {
 
       {/* Welcome banner for logged-in users (dismissible, once per session) */}
       {showWelcome && user && (
-        <section className="bg-primary-50 dark:bg-primary-900/20 border-b border-primary-200 dark:border-primary-800">
-          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-24 py-3 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm sm:text-base text-primary-800 dark:text-primary-200 font-medium">
+        <section className="bg-primary-subtle-bg border-b border-primary-subtle-border">
+          <div className="layout-shell-wide py-3 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm sm:text-base text-primary-subtle-fg font-medium">
               Welcome! Finish your character, browse Realms Library, or join the community.
             </p>
             <div className="flex items-center gap-2 flex-wrap">
-              <Link href="/characters/new" className="text-sm font-semibold text-primary-700 dark:text-primary-300 hover:underline">
+              <Link href="/characters/new" className="text-sm font-semibold text-primary-fg hover:text-primary-fg-hover hover:underline">
                 Create character
               </Link>
-              <span className="text-primary-600 dark:text-primary-400">·</span>
-              <Link href="/library" className="text-sm font-semibold text-primary-700 dark:text-primary-300 hover:underline">
+              <span className="text-primary-link-fg">·</span>
+              <Link href="/library" className="text-sm font-semibold text-primary-fg hover:text-primary-fg-hover hover:underline">
                 Realms Library
               </Link>
-              <span className="text-primary-600 dark:text-primary-400">·</span>
+              <span className="text-primary-link-fg">·</span>
               <button
                 type="button"
                 onClick={() => setShowTour(true)}
-                className="text-sm font-semibold text-primary-700 dark:text-primary-300 hover:underline"
+                className="text-sm font-semibold text-primary-fg hover:text-primary-fg-hover hover:underline"
               >
                 Take a quick tour
               </button>
-              <span className="text-primary-600 dark:text-primary-400">·</span>
-              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-primary-700 dark:text-primary-300 hover:underline">
+              <span className="text-primary-link-fg">·</span>
+              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-primary-fg hover:text-primary-fg-hover hover:underline">
                 Join Discord
               </a>
               <button
                 type="button"
                 onClick={dismissWelcome}
-                className="p-1 rounded hover:bg-primary-200/50 dark:hover:bg-primary-800/50 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                className="p-1 rounded hover:bg-primary-subtle-bg-hover min-w-[44px] min-h-[44px] flex items-center justify-center"
                 aria-label="Dismiss welcome"
               >
                 <X className="w-5 h-5" />
@@ -180,8 +182,8 @@ function HomeContent() {
       <OnboardingTour isOpen={showTour} onClose={() => setShowTour(false)} />
 
       {/* Features Section - linked cards; more top padding for breathing room from hero */}
-      <section className="bg-surface-secondary dark:bg-surface-secondary pt-10 sm:pt-14 pb-8 sm:pb-14 px-4 sm:px-6 lg:px-24 shadow-md">
-        <div className="max-w-[1440px] mx-auto flex flex-col lg:flex-row justify-between items-stretch lg:items-start gap-8 lg:gap-[116px]">
+      <section className="bg-surface-secondary dark:bg-surface-secondary pt-10 sm:pt-14 pb-8 sm:pb-14 shadow-md">
+        <div className="layout-shell-wide flex flex-col lg:flex-row justify-between items-stretch lg:items-start gap-8 lg:gap-[116px]">
           <FeatureCard
             href="/characters/new"
             title="CREATE A CHARACTER"
@@ -206,10 +208,11 @@ function HomeContent() {
         </div>
       </section>
 
-      {/* Content Section: Reviews + Creator Message + CTAs; compact height, equal-size CTAs */}
-      <section className="flex flex-col lg:flex-row bg-surface-alt">
+      {/* Content Section: Reviews + Creator Message + CTAs */}
+      <section className="bg-surface-alt">
+        <div className="layout-shell-wide flex flex-col lg:flex-row">
         {/* Reviews Section */}
-        <div className="flex-1 py-6 sm:py-8 pl-4 sm:pl-6 lg:pl-24 pr-4 flex items-center justify-center min-w-0">
+        <div className="flex-1 py-6 sm:py-8 pr-4 flex items-center justify-center min-w-0">
           <div className="flex items-center gap-3 sm:gap-6 w-full max-w-[781px]">
             <button
               type="button"
@@ -263,7 +266,7 @@ function HomeContent() {
         </div>
 
         {/* Creator Message + CTAs — equal-height buttons so section isn't overly tall */}
-        <div className="w-full lg:w-[420px] py-6 sm:py-8 px-4 sm:pr-12 lg:pr-16 flex items-center justify-center gap-4 sm:gap-6 flex-shrink-0 border-t lg:border-t-0 lg:border-l border-border-light">
+        <div className="w-full lg:w-[420px] py-6 sm:py-8 pl-4 flex items-center justify-center gap-4 sm:gap-6 flex-shrink-0 border-t lg:border-t-0 lg:border-l border-border-light">
           <div className="hidden lg:block w-px h-[200px] bg-divider flex-shrink-0" />
           <div className="flex-1 max-w-[340px] min-w-0">
             <p className="font-nunito text-base sm:text-lg text-text-muted dark:text-text-secondary text-center italic mb-3">
@@ -276,31 +279,27 @@ function HomeContent() {
               Sincerely, <span className="font-semibold text-text-primary">Kadin Brooksby</span>, Creator of Realms
             </p>
             <div className="flex flex-row flex-wrap gap-4 sm:gap-6 justify-center items-stretch">
-              <Link
-                href="/characters/new"
-                className="btn-solid inline-flex items-center justify-center gap-2 min-h-[44px] flex-1 min-w-[140px] max-w-[200px]"
-              >
-                <Sparkles className="w-5 h-5 shrink-0" suppressHydrationWarning />
-                Create a Character
-              </Link>
-              <Link
-                href="/power-creator"
-                className="btn-solid inline-flex items-center justify-center gap-2 min-h-[44px] flex-1 min-w-[140px] max-w-[200px]"
-              >
-                <Sword className="w-5 h-5 shrink-0" suppressHydrationWarning />
-                Create a Power
-              </Link>
-              <a
-                href={DISCORD_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-outline-clean inline-flex items-center justify-center gap-2 min-h-[44px] flex-1 min-w-[140px] max-w-[200px]"
-              >
-                <MessageCircle className="w-5 h-5 shrink-0" suppressHydrationWarning />
-                Join Discord
-              </a>
+              <Button asChild variant="primary" className="flex-1 min-w-[140px] max-w-[200px]">
+                <Link href="/characters/new">
+                  <Sparkles className="w-5 h-5 shrink-0" suppressHydrationWarning />
+                  Create a Character
+                </Link>
+              </Button>
+              <Button asChild variant="primary" className="flex-1 min-w-[140px] max-w-[200px]">
+                <Link href="/power-creator">
+                  <Sword className="w-5 h-5 shrink-0" suppressHydrationWarning />
+                  Create a Power
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="flex-1 min-w-[140px] max-w-[200px]">
+                <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer">
+                  <MessageCircle className="w-5 h-5 shrink-0" suppressHydrationWarning />
+                  Join Discord
+                </a>
+              </Button>
             </div>
           </div>
+        </div>
         </div>
       </section>
     </>
@@ -309,11 +308,7 @@ function HomeContent() {
 
 export default function HomePage() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center py-24">
-        <p className="text-text-muted dark:text-text-secondary">Loading...</p>
-      </div>
-    }>
+    <Suspense fallback={<LoadingState message="Loading..." size="lg" padding="lg" />}>
       <HomeContent />
     </Suspense>
   );
@@ -342,8 +337,8 @@ function FeatureCard({
           className="flex-1 max-w-full lg:max-w-[286px] group block transition-transform hover:-translate-y-1 min-w-0"
         >
       <div className="flex items-center gap-2 mb-3">
-        {icon && <span className="text-primary-600 dark:text-primary-400 group-hover:text-primary-500 dark:text-primary-300 transition-colors">{icon}</span>}
-        <h3 className="font-display font-normal text-xl text-text-primary uppercase group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+        {icon && <span className="text-primary-link-fg group-hover:text-primary-fg-hover transition-colors">{icon}</span>}
+        <h3 className="font-display font-normal text-xl text-text-primary uppercase group-hover:text-primary-link-fg transition-colors">
           {title}
         </h3>
       </div>
@@ -357,8 +352,8 @@ function FeatureCard({
           className="flex-1 max-w-full lg:max-w-[286px] group block transition-transform hover:-translate-y-1 min-w-0"
         >
       <div className="flex items-center gap-2 mb-3">
-        {icon && <span className="text-primary-600 dark:text-primary-400 group-hover:text-primary-500 dark:group-hover:text-primary-300 transition-colors">{icon}</span>}
-        <h3 className="font-display font-normal text-xl text-text-primary uppercase group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+        {icon && <span className="text-primary-link-fg group-hover:text-primary-fg-hover transition-colors">{icon}</span>}
+        <h3 className="font-display font-normal text-xl text-text-primary uppercase group-hover:text-primary-link-fg transition-colors">
           {title}
         </h3>
       </div>

@@ -6,7 +6,7 @@
 
 import { Download, FileText, BookOpen, Users } from 'lucide-react';
 import Link from 'next/link';
-import { PageContainer, PageHeader } from '@/components/ui';
+import { PageContainer, PageHeader, Button, Card } from '@/components/ui';
 
 export default function ResourcesPage() {
   return (
@@ -18,10 +18,10 @@ export default function ResourcesPage() {
 
       <div className="space-y-8">
         {/* Character Sheet PDF - Primary Resource */}
-        <section className="bg-surface rounded-xl shadow-md p-6">
+        <Card className="shadow-md p-6">
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-amber-100 rounded-lg">
-              <FileText className="w-8 h-8 text-amber-600" />
+            <div className="p-3 bg-warning-light rounded-lg">
+              <FileText className="w-8 h-8 text-warning-fg" />
             </div>
             <div className="flex-1">
               <h2 className="text-xl font-bold text-text-primary mb-2">Printable Character Sheet</h2>
@@ -29,20 +29,18 @@ export default function ResourcesPage() {
                 Download the official Realms Character Sheet Alpha for easy character creation 
                 and tracking during gameplay.
               </p>
-              <Link 
-                href="/Realms Character Sheet Alpha.pdf"
-                download
-                className="btn-solid inline-flex items-center gap-2"
-              >
-                <Download className="w-5 h-5" />
-                Click here to download
-              </Link>
+              <Button asChild variant="primary">
+                <Link href="/Realms Character Sheet Alpha.pdf" download>
+                  <Download className="w-5 h-5" />
+                  Click here to download
+                </Link>
+              </Button>
             </div>
           </div>
-        </section>
+        </Card>
 
         {/* Coming Soon Section */}
-        <section className="bg-surface-alt rounded-xl p-6 border border-border-light">
+        <Card className="bg-surface-alt p-6">
           <h2 className="text-xl font-bold text-text-primary mb-4">Coming Soon</h2>
           <ul className="space-y-3">
             <li className="flex items-center gap-3 text-text-secondary">
@@ -58,7 +56,7 @@ export default function ResourcesPage() {
               Community Creations
             </li>
           </ul>
-        </section>
+        </Card>
       </div>
     </PageContainer>
   );

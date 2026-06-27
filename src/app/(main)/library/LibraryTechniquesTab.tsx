@@ -246,9 +246,14 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
         {isLoading ? (
           <LoadingState />
         ) : filteredData.length === 0 ? (
-          <div className="py-12 text-center text-text-secondary">
-            {mode === 'empowered' ? 'No empowered techniques match your search.' : 'No techniques match your search.'}
-          </div>
+        <ListEmptyState
+          title={
+            mode === 'empowered'
+              ? 'No empowered techniques match your search.'
+              : 'No techniques match your search.'
+          }
+          size="sm"
+        />
         ) : (
           filteredData.map(tech => (
             <GridListRow
@@ -279,7 +284,7 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
                     void handleSyncOne(tech.id);
                   }}
                   label="Sync with current patch"
-                  className="text-warning-700 hover:text-warning-700 dark:text-warning-400"
+                  className="text-warning-fg hover:opacity-80"
                 >
                   <RefreshCw className={`w-4 h-4 ${syncingIds.has(tech.id) ? 'animate-spin' : ''}`} />
                 </IconButton>

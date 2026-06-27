@@ -14,7 +14,7 @@
 
 import { useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { Chip, Button, Alert } from '@/components/ui';
+import { Chip, Button, Alert, Card } from '@/components/ui';
 import { SelectionToggle, ChoiceTraitOptionListPicker } from '@/components/shared';
 import {
   getChoiceOptionIds,
@@ -27,6 +27,7 @@ import { useMergedSpecies, useTraits, useCodexSkills, resolveTraitIds, resolveSk
 import { Heart, AlertTriangle, Sparkles, Star, Info } from 'lucide-react';
 import Tippy from '@tippyjs/react';
 import { chooseYourAncestryTraits } from '../../../../public/tooltip-text';
+import { statusPanel } from '@/lib/ui/status-surface-classes';
 
 interface ResolvedTrait extends Trait {
   found: boolean;
@@ -437,7 +438,7 @@ export function AncestryStep() {
         <div className="flex items-center justify-center gap-1 mb-2">
           <h2 className="text-2xl font-bold text-text-primary">Choose Your Ancestry Traits</h2>
           <Tippy content={chooseYourAncestryTraits} allowHTML={true}>
-            <Info className="w-4 h-4 text-primary-700" aria-hidden />
+            <Info className="w-4 h-4 text-primary-subtle-fg" aria-hidden />
           </Tippy>
         </div>
         <p className="text-text-secondary mb-6">
@@ -484,7 +485,7 @@ export function AncestryStep() {
             <div className="flex items-center gap-1 mb-2">
               <h2 className="text-2xl font-bold text-text-primary">Mixed Species: Ancestry</h2>
               <Tippy content={chooseYourAncestryTraits} allowHTML={true}>
-                <Info className="w-4 h-4 text-primary-700" aria-hidden />
+                <Info className="w-4 h-4 text-primary-subtle-fg" aria-hidden />
               </Tippy>
             </div>
             <p className="text-text-secondary">
@@ -493,14 +494,14 @@ export function AncestryStep() {
           </div>
           <button
             onClick={() => setStep('species')}
-            className="text-sm text-primary-600 hover:text-primary-800 underline"
+            className="text-sm text-primary-link-fg hover:text-primary-fg-hover underline"
           >
             Change Species
           </button>
         </div>
 
         {/* Physical: averaged + size */}
-        <div className="bg-surface-alt rounded-xl p-4 mb-6 border border-border-light">
+        <Card className="bg-surface-alt p-4 mb-6 shadow-none">
           <h3 className="font-semibold text-text-primary mb-3">Physical (averaged)</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mb-4">
             <div>
@@ -534,11 +535,11 @@ export function AncestryStep() {
               ))}
             </select>
           </div>
-        </div>
+        </Card>
 
         {/* Mixed: choose exactly 2 species skills from the combined list */}
         {mixedSpeciesSkillOptions.length > 0 && (
-          <div className="bg-surface-alt rounded-xl p-4 mb-6 border border-border-light">
+          <Card className="bg-surface-alt p-4 mb-6 shadow-none">
             <h3 className="font-semibold text-text-primary mb-1">Species skills</h3>
             <p className="text-sm text-text-secondary mb-3">
               Choose exactly 2 skills from the options below (from both species). You get proficiency in these; all other species skills are not granted.
@@ -554,8 +555,8 @@ export function AncestryStep() {
                     className={cn(
                       'px-3 py-2 min-h-11 rounded-full text-sm font-medium border transition-colors',
                       selected
-                        ? 'bg-primary-100 dark:bg-primary-900/40 border-primary-400 dark:border-primary-600 text-primary-800 dark:text-primary-200'
-                        : 'bg-surface border-border-light text-text-secondary hover:bg-surface-alt hover:border-primary-300 dark:hover:border-primary-600'
+                        ? 'bg-primary-subtle-bg border-primary-subtle-border text-primary-subtle-fg'
+                        : 'bg-surface border-border-light text-text-secondary hover:bg-surface-alt hover:border-primary-outline-border dark:hover:border-primary-outline-border'
                     )}
                   >
                     {opt.name}
@@ -566,7 +567,7 @@ export function AncestryStep() {
             <p className="text-xs text-text-muted dark:text-text-secondary mt-2">
               Selected: {selectedSpeciesSkillIds.length} / 2
             </p>
-          </div>
+          </Card>
         )}
 
         {/* Species traits: one from each */}
@@ -574,7 +575,7 @@ export function AncestryStep() {
           <TraitSection
             title={`Species trait from ${nameA}`}
             subtitle="Choose 1"
-            icon={<Heart className="w-5 h-5 text-primary-600" />}
+            icon={<Heart className="w-5 h-5 text-primary-link-fg" />}
             traits={speciesTraitsFromA}
             selectable
             selectedIds={selectedSpeciesTraits?.[0] ? [selectedSpeciesTraits[0]] : []}
@@ -585,7 +586,7 @@ export function AncestryStep() {
           <TraitSection
             title={`Species trait from ${nameB}`}
             subtitle="Choose 1"
-            icon={<Heart className="w-5 h-5 text-primary-600" />}
+            icon={<Heart className="w-5 h-5 text-primary-link-fg" />}
             traits={speciesTraitsFromB}
             selectable
             selectedIds={selectedSpeciesTraits?.[1] ? [selectedSpeciesTraits[1]] : []}
@@ -708,7 +709,7 @@ export function AncestryStep() {
           <div className="flex items-center gap-1 mb-2">
             <h2 className="text-2xl font-bold text-text-primary">Choose Your Ancestry Traits</h2>
             <Tippy content={chooseYourAncestryTraits} allowHTML={true}>
-              <Info className="w-4 h-4 text-primary-700" aria-hidden />
+              <Info className="w-4 h-4 text-primary-subtle-fg" aria-hidden />
             </Tippy>
           </div>
           <p className="text-text-secondary">
@@ -717,14 +718,14 @@ export function AncestryStep() {
         </div>
         <button
           onClick={() => setStep('species')}
-          className="text-sm text-primary-600 hover:text-primary-800 underline"
+          className="text-sm text-primary-link-fg hover:text-primary-fg-hover underline"
         >
           Change Species
         </button>
       </div>
 
       {/* Species Info Summary */}
-      <div className="bg-surface-alt rounded-xl p-4 mb-6 border border-border-light">
+      <Card className="bg-surface-alt p-4 mb-6 shadow-none">
         {/* Species Description */}
         {selectedSpecies.description && (
           <p className="text-text-secondary text-sm mb-4 leading-relaxed">
@@ -794,23 +795,23 @@ export function AncestryStep() {
             </div>
           )}
         </div>
-      </div>
+      </Card>
 
       {/* Selection Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className={cn(
           'p-4 rounded-xl border-2',
           selectedTraitIds.length === maxAncestryTraits
-            ? 'bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-600/50'
-            : 'bg-amber-50 dark:bg-amber-900/30 border-amber-300 dark:border-amber-600/50'
+            ? statusPanel.complete
+            : statusPanel.warning
         )}>
           <div className="flex items-center justify-between mb-1">
             <span className="font-bold text-text-primary text-sm">Ancestry Traits</span>
             <span className={cn(
               'px-2 py-0.5 rounded-full text-xs font-bold',
               selectedTraitIds.length === maxAncestryTraits
-                ? 'bg-green-200 text-green-800 dark:bg-green-900/40 dark:text-green-300'
-                : 'bg-amber-200 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300'
+                ? statusPanel.completeBadge
+                : statusPanel.warningBadge
             )}>
               {selectedTraitIds.length} / {maxAncestryTraits}
             </span>
@@ -823,16 +824,16 @@ export function AncestryStep() {
         <div className={cn(
           'p-4 rounded-xl border-2',
           selectedCharacteristic
-            ? 'bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-600/50'
-            : 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-600/50'
+            ? statusPanel.complete
+            : statusPanel.info
         )}>
           <div className="flex items-center justify-between mb-1">
             <span className="font-bold text-text-primary text-sm">Characteristic</span>
             <span className={cn(
               'px-2 py-0.5 rounded-full text-xs font-bold',
               selectedCharacteristic
-                ? 'bg-green-200 text-green-800 dark:bg-green-900/40 dark:text-green-300'
-                : 'bg-blue-200 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300'
+                ? statusPanel.completeBadge
+                : statusPanel.infoBadge
             )}>
               {selectedCharacteristic ? '1' : '0'} / 1
             </span>
@@ -843,15 +844,15 @@ export function AncestryStep() {
         <div className={cn(
           'p-4 rounded-xl border-2',
           selectedFlaw
-            ? 'bg-red-50 dark:bg-red-900/30 border-red-300 dark:border-red-600/50'
-            : 'bg-surface-alt border-border-light'
+            ? statusPanel.danger
+            : statusPanel.neutral
         )}>
           <div className="flex items-center justify-between mb-1">
             <span className="font-bold text-text-primary text-sm">Flaw</span>
             <span className={cn(
               'px-2 py-0.5 rounded-full text-xs font-bold',
               selectedFlaw
-                ? 'bg-red-200 text-red-800 dark:bg-red-900/40 dark:text-red-300'
+                ? statusPanel.dangerBadge
                 : 'bg-surface text-text-secondary'
             )}>
               {selectedFlaw ? '1' : '0'} / 1
@@ -866,7 +867,7 @@ export function AncestryStep() {
         <TraitSection
           title="Species Traits"
           subtitle="Granted automatically. When a trait offers variants, pick one before continuing."
-          icon={<Heart className="w-5 h-5 text-primary-600" />}
+          icon={<Heart className="w-5 h-5 text-primary-link-fg" />}
           traits={speciesTraits}
           selectable={false}
           selectedIds={[]}
@@ -974,22 +975,22 @@ function TraitSection({
     default: {
       border: 'border-border-light',
       header: 'bg-surface-alt',
-      selected: 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/30',
+      selected: 'border-primary-outline-border bg-primary-subtle-bg',
     },
     ancestry: {
-      border: 'border-amber-200 dark:border-amber-700/50',
-      header: 'bg-amber-50 dark:bg-amber-900/30',
-      selected: 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/30',
+      border: 'border-warning-300',
+      header: 'bg-warning-light',
+      selected: 'border-warning-500 bg-warning-light',
     },
     characteristic: {
-      border: 'border-blue-200',
-      header: 'bg-blue-50 dark:bg-blue-900/30',
-      selected: 'border-blue-400 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/30',
+      border: 'border-info-border',
+      header: 'bg-info-light',
+      selected: 'border-info-500 bg-info-light',
     },
     flaw: {
-      border: 'border-red-200 dark:border-red-700/50',
-      header: 'bg-red-50 dark:bg-red-900/30',
-      selected: 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/30',
+      border: 'border-danger-300',
+      header: 'bg-danger-light',
+      selected: 'border-danger-500 bg-danger-light',
     },
   };
 

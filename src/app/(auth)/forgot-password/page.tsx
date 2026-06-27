@@ -71,7 +71,7 @@ export default function ForgotPasswordPage() {
           </p>
           <Link 
             href="/login"
-            className="inline-block text-primary-400 hover:text-primary-300 transition-colors font-medium"
+            className="inline-block text-primary-link-fg hover:text-primary-fg-hover transition-colors font-medium"
           >
             Back to Sign In
           </Link>
@@ -114,7 +114,7 @@ export default function ForgotPasswordPage() {
         Remember your password?{' '}
         <Link 
           href="/login"
-          className="text-primary-400 hover:text-primary-300 transition-colors font-medium"
+          className="text-primary-link-fg hover:text-primary-fg-hover transition-colors font-medium"
         >
           Sign in
         </Link>

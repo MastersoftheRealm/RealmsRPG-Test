@@ -12,7 +12,7 @@ import { useParams } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
 import { ProtectedRoute } from '@/components/layout';
-import { LoadingState, Alert } from '@/components/ui';
+import { LoadingState, Alert, PageContainer } from '@/components/ui';
 import { SheetHeader, AbilitiesSection, SkillsSection, ArchetypeSection, LibrarySection, RollLog } from '@/components/character-sheet';
 import { RollProvider } from '@/components/character-sheet/roll-context';
 import { calculateStats } from '@/app/(main)/characters/[id]/character-sheet-utils';
@@ -234,7 +234,7 @@ function CampaignCharacterViewContent() {
           </Alert>
           <Link
             href={`/campaigns/${campaignId}`}
-            className="mt-4 inline-flex items-center gap-1 text-primary-600 hover:underline"
+            className="mt-4 inline-flex items-center gap-1 text-primary-link-fg hover:underline"
           >
             <ChevronLeft className="w-4 h-4" />
             Back to Campaign
@@ -253,10 +253,10 @@ function CampaignCharacterViewContent() {
       }}
     >
       <div className="min-h-screen bg-background pb-8">
-        <div className="max-w-[1600px] mx-auto px-4 pt-4">
+        <PageContainer size="tool" padded={false} className="pt-4">
           <Link
             href={`/campaigns/${campaignId}`}
-            className="inline-flex items-center gap-1 text-text-secondary hover:text-primary-600 mb-4"
+            className="inline-flex items-center gap-1 text-text-secondary hover:text-primary-fg-hover mb-4"
           >
             <ChevronLeft className="w-4 h-4" />
             Back to Campaign
@@ -375,7 +375,7 @@ function CampaignCharacterViewContent() {
               </div>
             </>
           )}
-        </div>
+        </PageContainer>
         <RollLog />
       </div>
     </RollProvider>

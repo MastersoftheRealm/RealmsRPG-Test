@@ -171,7 +171,7 @@ function RegisterContent() {
 
             <Link
               href={`/login?redirect=${encodeURIComponent(getRedirectPath())}`}
-              className="inline-block text-primary-400 hover:text-primary-300 transition-colors font-medium"
+              className="inline-block text-primary-link-fg hover:text-primary-fg-hover transition-colors font-medium"
             >
               Back to Sign In
             </Link>
@@ -228,16 +228,16 @@ function RegisterContent() {
           <input
             type="checkbox"
             id="acceptTerms"
-            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-primary-500 focus:ring-primary-500"
+            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-primary-fg focus:ring-primary-outline-border"
             {...register('acceptTerms')}
           />
           <label htmlFor="acceptTerms" className="text-sm text-gray-300">
             I agree to the{' '}
-            <Link href="/terms" className="text-primary-400 hover:text-primary-300">
+            <Link href="/terms" className="text-primary-link-fg hover:text-primary-fg-hover">
               Terms of Service
             </Link>
             {' '}and{' '}
-            <Link href="/privacy" className="text-primary-400 hover:text-primary-300">
+            <Link href="/privacy" className="text-primary-link-fg hover:text-primary-fg-hover">
               Privacy Policy
             </Link>
           </label>
@@ -267,7 +267,7 @@ function RegisterContent() {
 
       <p className="mt-6 text-center text-gray-300">
         Already have an account?{' '}
-        <Link href="/login" className="text-primary-400 hover:text-primary-300 transition-colors font-medium">
+        <Link href="/login" className="text-primary-link-fg hover:text-primary-fg-hover transition-colors font-medium">
           Sign in
         </Link>
       </p>

@@ -17,7 +17,7 @@ import { useAdmin } from '@/hooks';
 import { ProtectedRoute } from '@/components/layout';
 import { cn } from '@/lib/utils';
 import { apiFetch } from '@/lib/api-client';
-import { LoadingState, Button, Input, Alert, PageContainer, Spinner } from '@/components/ui';
+import { LoadingState, Button, Input, Alert, PageContainer, Spinner, Card, PageHeader } from '@/components/ui';
 import { ImageUploadModal } from '@/components/shared';
 import { User as UserIcon, Mail, Lock, Trash2, AlertTriangle, AtSign, Camera } from 'lucide-react';
 
@@ -346,23 +346,22 @@ function AccountContent() {
 
   if (loading) {
     return (
-      <PageContainer size="xs" padded={false}>
+      <PageContainer size="xs">
         <LoadingState message="Loading account..." />
       </PageContainer>
     );
   }
 
   return (
-    <PageContainer size="xs" padded={false} className="space-y-6 min-w-0">
-      <div className="mb-8 min-w-0">
-        <h1 className="text-3xl font-bold text-text-primary flex items-center gap-3">
-          <UserIcon className="w-8 h-8 text-primary-600" />
-          My Account
-        </h1>
-        <p className="text-text-secondary mt-2">Manage your profile and account settings</p>
-      </div>
+    <PageContainer size="xs" className="space-y-6 min-w-0">
+      <PageHeader
+        title="My Account"
+        icon={<UserIcon className="w-8 h-8 text-primary-link-fg" />}
+        description="Manage your profile and account settings"
+        className="mb-0 min-w-0"
+      />
 
-      <div className="bg-surface rounded-xl shadow-md p-6">
+      <Card className="shadow-md p-6">
         <h2 className="text-lg font-bold text-text-primary mb-3">Help Tooltips</h2>
         <p className="text-text-secondary mb-4">
           Show contextual onboarding tooltips across navigation and creator flows.
@@ -378,13 +377,13 @@ function AccountContent() {
           <span className="text-text-primary font-medium">Show help tooltips</span>
         </label>
         {tooltipPrefMessage && (
-          <p className={cn('text-sm mt-3', tooltipPrefMessage.type === 'success' ? 'text-success-700 dark:text-success-400' : 'text-danger-700 dark:text-danger-400')}>
+          <p className={cn('text-sm mt-3', tooltipPrefMessage.type === 'success' ? 'text-success-fg' : 'text-danger-fg')}>
             {tooltipPrefMessage.text}
           </p>
         )}
-      </div>
+      </Card>
 
-      <div className="bg-surface rounded-xl shadow-md p-6">
+      <Card className="shadow-md p-6">
         <h2 className="text-lg font-bold text-text-primary mb-3">Role &amp; Limits</h2>
         <p className="text-text-secondary mb-4">
           Your role controls quotas for campaigns, characters, and custom library items.
@@ -435,9 +434,9 @@ function AccountContent() {
             <p className="text-text-muted dark:text-text-secondary italic">Limits unavailable.</p>
           )}
         </div>
-      </div>
+      </Card>
 
-      <div className="bg-surface rounded-xl shadow-md p-6">
+      <Card className="shadow-md p-6">
         <h2 className="text-lg font-bold text-text-primary mb-4">Profile Information</h2>
 
         <div className="flex items-center gap-4 mb-6 pb-4 border-b border-border-subtle">
@@ -498,9 +497,9 @@ function AccountContent() {
             </span>
           </div>
         </div>
-      </div>
+      </Card>
 
-      <div className="bg-surface rounded-xl shadow-md p-6">
+      <Card className="shadow-md p-6">
         <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
           <AtSign className="w-5 h-5 text-text-secondary" />
           Change Username
@@ -539,10 +538,10 @@ function AccountContent() {
             Update Username
           </Button>
         </form>
-      </div>
+      </Card>
 
       {canChangeEmailPassword && (
-        <div className="bg-surface rounded-xl shadow-md p-6">
+        <Card className="shadow-md p-6">
           <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
             <Mail className="w-5 h-5 text-text-secondary" />
             Change Email
@@ -584,11 +583,11 @@ function AccountContent() {
               Update Email
             </Button>
           </form>
-        </div>
+        </Card>
       )}
 
       {canChangeEmailPassword && (
-        <div className="bg-surface rounded-xl shadow-md p-6">
+        <Card className="shadow-md p-6">
           <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
             <Lock className="w-5 h-5 text-text-secondary" />
             Change Password
@@ -647,19 +646,19 @@ function AccountContent() {
               </Button>
             </div>
           </form>
-        </div>
+        </Card>
       )}
 
       {!canChangeEmailPassword && (
-        <div className="bg-surface rounded-xl shadow-md p-6 border border-border-light">
+        <Card className="shadow-md p-6">
           <p className="text-text-secondary text-sm">
             You signed in with {authProviderLabel}. Email and password cannot be changed here. To update your
             email, use your {authProviderLabel} account settings.
           </p>
-        </div>
+        </Card>
       )}
 
-      <div className="bg-surface rounded-xl shadow-md p-6 border-2 border-red-200">
+      <Card className="shadow-md p-6 border-2 border-red-200">
         <h2 className="text-lg font-bold text-red-700 mb-4 flex items-center gap-2">
           <AlertTriangle className="w-5 h-5" />
           Danger Zone
@@ -706,7 +705,7 @@ function AccountContent() {
             </div>
 
             {deleteError && (
-              <div className="p-3 rounded-lg bg-red-100 text-red-700 text-sm">{deleteError}</div>
+              <div className="p-3 rounded-lg bg-danger-light text-danger-fg text-sm">{deleteError}</div>
             )}
 
             <div className="flex gap-3">
@@ -736,7 +735,7 @@ function AccountContent() {
             </div>
           </div>
         )}
-      </div>
+      </Card>
 
       <ImageUploadModal
         isOpen={showPictureModal}
@@ -753,9 +752,7 @@ function AccountContent() {
 export default function MyAccountPage() {
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-background py-8 px-4">
-        <AccountContent />
-      </div>
+      <AccountContent />
     </ProtectedRoute>
   );
 }

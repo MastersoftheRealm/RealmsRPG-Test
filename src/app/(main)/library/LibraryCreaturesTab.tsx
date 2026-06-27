@@ -203,7 +203,7 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
         {isLoading ? (
           <LoadingState />
         ) : myOnlyCreatures.length === 0 ? (
-          <div className="py-12 text-center text-text-secondary">No creatures match your search.</div>
+          <ListEmptyState title="No creatures match your search." size="sm" />
         ) : (
           <div className="space-y-3">
             {myOnlyCreatures.map(creature => (
@@ -247,7 +247,7 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
                       void handleSyncOne(String(creature.docId));
                     }}
                     label="Sync with current patch"
-                    className="text-warning-700 hover:text-warning-700 dark:text-warning-400"
+                    className="text-warning-fg hover:opacity-80"
                   >
                     <RefreshCw className={`w-4 h-4 ${syncingIds.has(String(creature.docId)) ? 'animate-spin' : ''}`} />
                   </IconButton>

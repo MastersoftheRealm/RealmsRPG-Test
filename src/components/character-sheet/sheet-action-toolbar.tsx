@@ -39,19 +39,19 @@ export function SheetActionToolbar({
 }: SheetActionToolbarProps) {
   if (!canEdit) {
     return (
-      <div className="fixed top-24 right-4 z-50 flex items-center gap-2 px-3 py-2 rounded-full bg-surface border border-border-light text-text-muted text-sm">
+      <div className="fixed top-24 right-4 z-overlay flex items-center gap-2 px-3 py-2 rounded-full bg-surface border border-border-light text-text-muted text-sm">
         View only
       </div>
     );
   }
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:bottom-auto md:top-24 z-50 flex flex-row md:flex-col justify-center md:justify-start gap-2 md:gap-2">
+    <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:bottom-auto md:top-24 z-overlay flex flex-row md:flex-col justify-center md:justify-start gap-2 md:gap-2">
       {/* Edit / Done Toggle */}
       <button
         onClick={onToggleEditMode}
         className={cn(
-          'relative w-11 h-11 rounded-full shadow-lg transition-all duration-200',
+          'relative w-11 h-11 rounded-full shadow-lg transition-all duration-base ease-standard',
           'flex items-center justify-center',
           'hover:scale-110 active:scale-95',
           isEditMode
@@ -79,10 +79,10 @@ export function SheetActionToolbar({
       <button
         onClick={onRecovery}
         className={cn(
-          'w-11 h-11 rounded-full shadow-lg transition-all duration-200',
+          'w-11 h-11 rounded-full shadow-lg transition-all duration-base ease-standard',
           'flex items-center justify-center',
-          'bg-surface border border-border-light text-primary-600',
-          'hover:scale-110 hover:bg-primary-50 dark:hover:bg-primary-900/30 hover:border-primary-200 dark:hover:border-primary-700/50 active:scale-95'
+          'bg-surface border border-border-light text-primary-link-fg',
+          'hover:scale-110 hover:bg-primary-subtle-bg dark:hover:bg-primary-subtle-bg hover:border-primary-subtle-border dark:hover:border-primary-outline-border active:scale-95'
         )}
         title="Recovery"
         aria-label="Recovery"
@@ -94,10 +94,10 @@ export function SheetActionToolbar({
       <button
         onClick={onLevelUp}
         className={cn(
-          'w-11 h-11 rounded-full shadow-lg transition-all duration-200',
+          'w-11 h-11 rounded-full shadow-lg transition-all duration-base ease-standard',
           'flex items-center justify-center',
-          'bg-surface border border-border-light text-violet-600',
-          'hover:scale-110 hover:bg-violet-50 hover:border-violet-200 active:scale-95'
+          'bg-surface border border-border-light text-power-fg',
+          'hover:scale-110 hover:bg-power-light hover:border-power-border active:scale-95'
         )}
         title="Level Up"
         aria-label="Level Up"
@@ -110,7 +110,7 @@ export function SheetActionToolbar({
         <button
           onClick={onSettings}
           className={cn(
-            'w-11 h-11 rounded-full shadow-lg transition-all duration-200',
+            'w-11 h-11 rounded-full shadow-lg transition-all duration-base ease-standard',
             'flex items-center justify-center',
             'bg-surface border border-border-light text-text-secondary',
             'hover:scale-110 hover:text-text-primary hover:bg-surface-alt active:scale-95'

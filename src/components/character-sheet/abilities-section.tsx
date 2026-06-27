@@ -15,6 +15,7 @@ import { useMemo, useState } from 'react';
 import { cn, formatBonus } from '@/lib/utils';
 import { useRollsOptional } from './roll-context';
 import { RollButton, PointStatus, EditSectionToggle, DecrementButton, IncrementButton } from '@/components/shared';
+import { Card } from '@/components/ui';
 import { DEFENSE_INCREASE_COST } from '@/lib/game/skill-allocation';
 import { calculateAbilityScoreCost, getAbilityIncreaseCost } from '@/lib/game/formulas';
 import type { Abilities, AbilityName, DefenseSkills } from '@/types';
@@ -192,7 +193,7 @@ export function AbilitiesSection({
       : 'normal';
 
   return (
-    <div className="bg-surface rounded-xl shadow-md p-4 md:p-6 mb-4 relative">
+    <Card className="shadow-md p-4 md:p-6 mb-4 relative">
       {/* Edit Mode Indicator - Blue Pencil Icon in top-right */}
       {isEditMode && (
         <div className="absolute top-3 right-3">
@@ -276,7 +277,7 @@ export function AbilitiesSection({
                   />
                   <span className={cn(
                     'text-2xl font-bold min-w-[56px] text-center',
-                    value > 0 ? 'text-success-700 dark:text-success-400' : value < 0 ? 'text-danger-600 dark:text-danger-400' : 'text-text-secondary'
+                    value > 0 ? 'text-success-fg' : value < 0 ? 'text-danger-fg' : 'text-text-secondary'
                   )}>
                     {formatBonus(value)}
                   </span>
@@ -298,7 +299,7 @@ export function AbilitiesSection({
               
               {/* Cost indicator in edit mode - only show if next point costs 2 */}
               {showEditControls && cost > 1 && canIncrease && (
-                <span className="text-[10px] text-warning-600 dark:text-warning-400 font-medium mt-1">
+                <span className="text-[10px] text-warning-fg font-medium mt-1">
                   Next: {cost} Points
                 </span>
               )}
@@ -344,7 +345,7 @@ export function AbilitiesSection({
                       disabled={!canDecreaseDefense}
                       size="sm"
                     />
-                    <span className="text-sm font-bold min-w-[36px] text-center text-primary-600 dark:text-primary-400">
+                    <span className="text-sm font-bold min-w-[36px] text-center text-primary-link-fg">
                       {formatBonus(defenseBonus)}
                     </span>
                     <IncrementButton
@@ -365,7 +366,7 @@ export function AbilitiesSection({
                 
                 {/* Defense skill allocation indicator */}
                 {showEditControls && defenseValue > 0 && (
-                  <span className="text-[9px] text-primary-600 dark:text-primary-400 font-medium mt-0.5">
+                  <span className="text-[9px] text-primary-link-fg font-medium mt-0.5">
                     +{defenseValue} ({defenseValue * DEFENSE_INCREASE_COST}sp)
                   </span>
                 )}
@@ -374,6 +375,6 @@ export function AbilitiesSection({
           })}
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

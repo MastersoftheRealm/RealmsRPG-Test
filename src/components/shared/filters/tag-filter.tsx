@@ -56,7 +56,7 @@ export function TagFilter({
         <select
           id={id}
           onChange={handleChange}
-          className="flex-1 px-3 py-2 border border-border-light rounded-md bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          className="flex-1 px-3 py-2 border border-border-light rounded-md bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary-outline-border focus:border-primary-outline-border"
           defaultValue=""
         >
           <option value="">{placeholder}</option>
@@ -73,7 +73,7 @@ export function TagFilter({
               name="tagMode"
               checked={tagMode === 'any'}
               onChange={() => onModeChange('any')}
-              className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+              className="w-4 h-4 text-primary-link-fg focus:ring-primary-outline-border"
             />
             <span className="text-sm">Any</span>
           </label>
@@ -83,7 +83,7 @@ export function TagFilter({
               name="tagMode"
               checked={tagMode === 'all'}
               onChange={() => onModeChange('all')}
-              className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+              className="w-4 h-4 text-primary-link-fg focus:ring-primary-outline-border"
             />
             <span className="text-sm">All</span>
           </label>

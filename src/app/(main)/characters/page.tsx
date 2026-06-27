@@ -158,7 +158,7 @@ function CharactersContent() {
             onSort={handleSort}
           />
           {filteredCharacters.length === 0 ? (
-            <p className="py-12 text-center text-text-secondary">No characters match your search.</p>
+            <EmptyState title="No characters match your search." size="sm" />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {filteredCharacters.map((character) => (

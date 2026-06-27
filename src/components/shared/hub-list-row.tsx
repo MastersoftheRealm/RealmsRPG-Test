@@ -9,16 +9,16 @@
 
 import { type ReactNode } from 'react';
 import { ChevronRight, Trash2 } from 'lucide-react';
-import { IconButton } from '@/components/ui';
+import { IconButton, Card } from '@/components/ui';
 import { cn } from '@/lib/utils';
 
 const ROW_BASE_CLASS =
-  'flex items-center gap-4 p-4 bg-surface rounded-xl border border-border-light hover:border-primary-300 transition-colors cursor-pointer group';
+  'flex items-center gap-4 p-4 hover:border-primary-outline-border transition-colors cursor-pointer group shadow-none';
 
 export interface HubListRowProps {
   /** Icon (e.g. Hammer, Brain). Rendered in iconContainerClassName box. */
   icon: ReactNode;
-  /** Container for icon (e.g. bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300) */
+  /** Container for icon (e.g. bg-warning-light text-warning-fg) */
   iconContainerClassName?: string;
   /** Row title */
   title: string;
@@ -59,7 +59,7 @@ export function HubListRow({
 }: HubListRowProps) {
   const clickable = typeof onClick === 'function';
   return (
-    <div
+    <Card
       role={clickable ? 'button' : undefined}
       tabIndex={clickable ? 0 : undefined}
       onClick={clickable ? onClick : undefined}
@@ -120,7 +120,7 @@ export function HubListRow({
                   onDelete();
                 }}
                 label={deleteAriaLabel}
-                className="opacity-0 group-hover:opacity-100 text-text-muted dark:text-text-secondary hover:text-danger-600 dark:hover:text-danger-400 hover:bg-red-50 dark:hover:bg-danger-900/20 min-w-[44px] min-h-[44px]"
+                className="opacity-0 group-hover:opacity-100 text-text-muted dark:text-text-secondary hover:text-danger-fg hover:bg-red-50 dark:hover:bg-danger-900/20 min-w-[44px] min-h-[44px]"
               >
                 <Trash2 className="w-4 h-4" />
               </IconButton>
@@ -134,6 +134,6 @@ export function HubListRow({
           </>
         )}
       </div>
-    </div>
+    </Card>
   );
 }

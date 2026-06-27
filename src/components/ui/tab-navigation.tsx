@@ -120,6 +120,8 @@ interface TabNavigationProps {
   tabGroupId?: string;
   /** When set, every tab's `aria-controls` points here (shared panel mode) */
   sharedTabPanelId?: string;
+  /** When false, omit `aria-controls` (demo tabs without panels). Default true. */
+  associatePanels?: boolean;
 }
 
 export function TabNavigation({
@@ -132,6 +134,7 @@ export function TabNavigation({
   fullWidth = false,
   tabGroupId: tabGroupIdProp,
   sharedTabPanelId,
+  associatePanels = true,
 }: TabNavigationProps) {
   const generatedGroupId = React.useId();
   const tabGroupId = tabGroupIdProp ?? generatedGroupId;
@@ -166,8 +169,8 @@ export function TabNavigation({
     type: 'button' as const,
     role: 'tab' as const,
     'aria-selected': isActive,
-    'aria-controls': panelControlsId(tab.id),
-    'aria-disabled': tab.disabled,
+    ...(associatePanels ? { 'aria-controls': panelControlsId(tab.id) } : {}),
+    disabled: tab.disabled,
     tabIndex: isActive ? 0 : -1,
     onClick: () => !tab.disabled && onTabChange(tab.id),
     onKeyDown: (e: React.KeyboardEvent) => handleTabKeyDown(e, tab.id),
@@ -214,7 +217,7 @@ export function TabNavigation({
         <span className={cn(
           'ml-1 px-1.5 py-0.5 text-xs rounded-full',
           activeTab === tab.id
-            ? 'bg-primary-200 text-primary-700'
+            ? 'bg-primary-subtle-bg-hover text-primary-subtle-fg'
             : 'bg-surface-alt text-text-muted'
         )}>
           {tab.count}
@@ -245,7 +248,7 @@ export function TabNavigation({
                 key={tab.id}
                 className={cn(
                   'flex items-center shrink-0 border-b-2',
-                  isActive ? 'border-primary-600' : 'border-transparent'
+                  isActive ? 'border-primary-outline-border' : 'border-transparent'
                 )}
               >
                 <button

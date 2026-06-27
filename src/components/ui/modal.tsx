@@ -165,13 +165,13 @@ export function Modal({
 
   const modalContent = (
     <div className={cn(
-      'fixed inset-0 z-50 flex',
+      'fixed inset-0 z-overlay flex',
       useFullScreenMobile ? 'items-stretch' : 'items-center justify-center p-4'
     )}>
       {/* Backdrop */}
       <div
         className={cn(
-          'fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-200',
+          'fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-base ease-standard',
           animating ? 'opacity-100' : 'opacity-0'
         )}
         onClick={onClose}
@@ -211,7 +211,7 @@ export function Modal({
         )}
         {/* Simple Header (title/description mode) */}
         {hasSimpleHeader && (
-          <div className="mx-4 mt-4 mb-2 px-4 py-3 bg-primary-50 dark:bg-primary-900/30 rounded-xl border-b border-border-light">
+          <div className="mx-4 mt-4 mb-2 px-4 py-3 bg-primary-subtle-bg rounded-xl border-b border-border-light">
             {title && (
               <h2 id="modal-title" className="text-xl font-semibold text-text-primary">
                 {title}

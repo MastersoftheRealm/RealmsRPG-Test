@@ -40,7 +40,7 @@ const STATUS_LABELS: Record<CraftingSessionStatus, string> = {
 
 const STATUS_COLORS: Record<CraftingSessionStatus, string> = {
   planned: 'bg-surface-alt text-text-secondary',
-  in_progress: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  in_progress: 'bg-success-light text-success-fg',
   completed: 'bg-surface-alt text-text-muted dark:text-text-secondary',
 };
 
@@ -142,11 +142,11 @@ function CraftingHubContent() {
   return (
     <PageContainer size="xl">
       {!user && (
-        <div className="mb-4 rounded-lg bg-primary-600/10 border border-primary-600/20 px-4 py-3 text-text-primary text-sm">
+        <div className="mb-4 rounded-lg bg-primary-subtle-bg border border-primary-subtle-border px-4 py-3 text-text-primary text-sm">
           You&apos;re not signed in. Sign in to save crafting sessions to your account.
           <Link
             href="/login?returnTo=/crafting"
-            className="ml-2 font-medium text-primary-600 dark:text-primary-400 hover:underline"
+            className="ml-2 font-medium text-primary-link-fg hover:underline"
           >
             Sign in
           </Link>
@@ -227,7 +227,7 @@ function CraftingHubContent() {
               <HubListRow
                 key={session.id}
                 icon={<Hammer className="w-5 h-5" />}
-                iconContainerClassName="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                iconContainerClassName="bg-warning-light text-warning-fg"
                 title={session.itemName}
                 badge={STATUS_LABELS[session.status]}
                 badgeClassName={STATUS_COLORS[session.status]}

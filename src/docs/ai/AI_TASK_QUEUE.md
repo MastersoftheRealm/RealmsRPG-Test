@@ -2,7 +2,7 @@
 
 **Last slimmed:** 2026-06-26 (TASK-382). Full history: [`archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md`](archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md) and [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md).
 
-**Next task ID:** TASK-383
+**Next task ID:** TASK-386
 
 **Agent rules:** Skip `blocked` tasks and any task with `assignee:` (e.g. TASK-376). Skip human-only tasks (TASK-353 → `DEVELOPER_TASK_QUEUE.md` DEV-001). Pick highest-priority `not-started` or continue `partial`.
 
@@ -234,3 +234,121 @@
   notes: |
     DONE 2026-06-26: Slimmed queue to 10 active entries; moved June audits + root CODEBASE_AUDIT to
     `ai/archive/`; human onboarding/reference to `src/docs/human/`; added HISTORY_INDEX.md + .cursorignore.
+
+- id: TASK-383
+  title: "UI unification — Phase 0a: automated visual + a11y + contrast safety net"
+  priority: high
+  status: done
+  created_at: 2026-06-26
+  created_by: agent
+  description: |
+    Stand up an automated verification net BEFORE the design-system token re-architecture
+    (Phase 0+) so style/theme regressions are caught without manual visual QA. Plan:
+    `.cursor/plans/ui_unification_audit_4aa98a2a.plan.md`.
+  completed_work: |
+    - `scripts/check-contrast.mjs`: WCAG-AA contrast check of every semantic fg/bg token pair in
+      BOTH themes, with a 0-failure ratchet baseline (`scripts/contrast-baseline.json`).
+    - `/dev/styleguide`: auth-free, data-free gallery of every primitive + token swatch (the
+      canonical surface for visual review; captured in both themes at 3 breakpoints).
+    - Playwright + `@axe-core/playwright`: `tests/visual/` — full-page screenshot baselines (54)
+      across mobile/tablet/desktop x light/dark for deterministic routes, plus axe-core a11y scans
+      with a ratchet baseline (`tests/visual/a11y-baseline.json`).
+    - ESLint `realms/no-raw-color` guardrail (`eslint-rules/`): hard error banning raw Tailwind
+      palette / bare white-black / arbitrary hex in class strings; exempts auth shell + UI
+      primitives; 64-file migration backlog ratchet (`raw-color-backlog.mjs`) shrinks per phase.
+    - `npm run verify` (contrast + lint + visual + a11y) and `.github/workflows/ui-verify.yml`
+      hard-blocking CI gates.
+  follow_up_tasks:
+    - TASK-384
+    - TASK-385
+  build_validation: |
+    suite: DEV-V-011
+    tests:
+      - DEV-V-011-T001
+      - DEV-V-011-T002
+      - DEV-V-011-T003
+      - DEV-V-011-T004
+  developer_test_plan: |
+    Suite DEV-V-011 T001–T004 — see BUILD_VALIDATION.md. Human steps (CI secrets, Linux baseline
+    seeding, branch protection) in DEVELOPER_TASK_QUEUE DEV-002.
+  related_files:
+    - scripts/check-contrast.mjs
+    - scripts/contrast-baseline.json
+    - scripts/list-raw-color-backlog.mjs
+    - src/app/dev/styleguide/page.tsx
+    - playwright.config.ts
+    - tests/visual/
+    - eslint-rules/no-raw-color.mjs
+    - eslint-rules/raw-color-backlog.mjs
+    - eslint.config.mjs
+    - .github/workflows/ui-verify.yml
+    - package.json
+  notes: |
+    DONE 2026-06-26. Visual baselines committed are Windows (local/agent self-review). Linux CI
+    baselines + Supabase CI secrets + branch-protection required-checks = DEV-002 (one-time).
+
+- id: TASK-384
+  title: "Resolve a11y violations surfaced by the new axe baseline"
+  priority: medium
+  status: done
+  created_at: 2026-06-26
+  created_by: agent
+  description: |
+    The Phase 0a axe scan recorded a ratchet baseline of pre-existing violations. Drive these to
+    zero and shrink `tests/visual/a11y-baseline.json`. Highest-leverage first.
+  completed_work: |
+    - Toast region: `role="region"` so `aria-label` is valid with `aria-live`.
+    - TabNavigation: `disabled` instead of prohibited `aria-disabled` on tabs; `associatePanels` prop for demos.
+    - Form error text → `text-danger-fg` (Input/Select/Textarea/Checkbox).
+    - Privacy inline links: persistent underline (`link-in-text-block`).
+    - Styleguide: token swatches on correct surfaces; tab panels wired; toast trigger; PointStatus contrast.
+    - `tab-nav-trigger-active` → semantic tokens (no primary ramp `dark:`).
+    - `tests/visual/a11y-baseline.json` emptied — zero allowed violations.
+  related_files:
+    - src/components/layout/header.tsx
+    - src/app/(main)/library/
+    - src/app/(main)/privacy/page.tsx
+    - tests/visual/a11y-baseline.json
+  acceptance_criteria:
+    - Fix the near-global `aria-prohibited-attr` (appears on nearly every page — likely one shared
+      nav/header/skip-link/toggle element); remove its keys from the a11y baseline.
+    - Fix `/library` dark-mode `color-contrast` and `/privacy` `link-in-text-block`.
+    - `npm run verify:a11y` passes; baseline entries deleted (not re-added).
+    - `npm run build` passes.
+  notes: |
+    DONE 2026-06-27. `npm run verify:a11y` passes with empty baseline (30/30 routes, both themes).
+
+- id: TASK-385
+  title: "Authenticated-surface visual + a11y baselines (test session)"
+  priority: low
+  status: done
+  created_at: 2026-06-26
+  created_by: agent
+  description: |
+    Extend the safety net to auth-gated, data-bearing surfaces (character sheet, `/my-account`,
+    campaign detail/combat) once a deterministic test session + seed data exist.
+  completed_work: |
+    - `scripts/provision-e2e-baseline.js` + `tests/visual/e2e-seed-manifest.json` — deterministic user/character/campaign seed.
+    - `auth.setup.ts` + `playwright.auth.config.ts` — storageState login (login once, reuse session).
+    - Visual baselines: my-account, characters, campaigns, character-sheet, campaign-detail × light/dark (10 snapshots).
+    - `auth-a11y.pw.ts` + ratchet baseline; masks for portraits + roll logs.
+    - `npm run e2e:provision`, `verify:auth-visual`, `verify:auth-a11y` (+ update variants).
+    - CI optional step when `E2E_TEST_*` secrets present (`.github/workflows/ui-verify.yml`).
+  remaining_work: |
+    - Human DEV-003: add `E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD` (+ optional IDs) to GitHub Actions secrets; seed Linux auth baselines on first CI run (same as DEV-002).
+    - Follow-up: fix character-sheet axe allowances (`aria-valid-attr-value`, `scrollable-region-focusable`) and my-account dark `color-contrast`.
+  related_files:
+    - tests/visual/
+    - playwright.auth.config.ts
+    - scripts/provision-e2e-baseline.js
+  acceptance_criteria:
+    - Playwright storageState login flow using a CI test user (DEV-002/DEV-003).
+    - Deterministic seed (or masked dynamic regions) so screenshots don't churn.
+    - Baselines for character sheet, /my-account, campaign detail in both themes.
+  build_validation: |
+    suite: DEV-V-011
+    tests:
+      - DEV-V-011-T005
+      - DEV-V-011-T006
+  notes: |
+    DONE 2026-06-27. Test user `e2e-visual-baseline@realmsrpg.test` provisioned in dev Supabase. Windows baselines committed. Auth a11y ratchet has 5 pre-existing allowances on character sheet + my-account dark.

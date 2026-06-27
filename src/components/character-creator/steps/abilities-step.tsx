@@ -52,21 +52,21 @@ export function AbilitiesStep() {
       <div className="flex items-center gap-1 mb-2">
         <h2 className="text-2xl font-bold text-text-primary">Assign Abilities</h2>
           <Tippy content={assignAbilities} allowHTML={true}>
-              <Info className="w-4 h-4 text-primary-700"/>
+              <Info className="w-4 h-4 text-primary-subtle-fg"/>
           </Tippy>
       </div>
       <p className="text-text-secondary mb-6">
         Distribute your ability points. You can reduce abilities below 0 to gain extra points.
-        {powerAbility && <span className="text-power-dark dark:text-power-300"> Power archetype ability highlighted.</span>}
-        {martialAbility && <span className="text-martial-dark dark:text-martial-300"> Martial archetype ability highlighted.</span>}
+        {powerAbility && <span className="text-power-fg"> Power archetype ability highlighted.</span>}
+        {martialAbility && <span className="text-martial-fg"> Martial archetype ability highlighted.</span>}
       </p>
       {draft.creationMode === 'path' && draft.archetype?.name && (
         <PathHelpCard pathName={draft.archetype.name}>
           {pathPrimaryAbility ? (
             <>
-              you should prioritize having a high <strong className="text-primary-700 dark:text-primary-300 capitalize">{pathPrimaryAbility}</strong>
+              you should prioritize having a high <strong className="text-primary-fg capitalize">{pathPrimaryAbility}</strong>
               {pathSecondaryAbility ? (
-                <> and <strong className="text-primary-700 dark:text-primary-300 capitalize">{pathSecondaryAbility}</strong></>
+                <> and <strong className="text-primary-fg capitalize">{pathSecondaryAbility}</strong></>
               ) : null}
               !
             </>

@@ -12,6 +12,13 @@
 
 # testing
 /coverage
+# Playwright (keep committed baselines under tests/visual/**-snapshots/)
+/test-results/
+/playwright-report/
+/blob-report/
+/.playwright/
+/tests/visual/.auth/
+.last-run.json
 
 # next.js
 /.next/

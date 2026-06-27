@@ -45,7 +45,7 @@ function buildAbilityDisplay(abilityString?: string): {
         {abbrList.map((abbr) => (
           <span
             key={abbr}
-            className="inline-flex px-2 py-0.5 rounded text-xs font-semibold bg-info-50 dark:bg-info-900/30 border border-info-200 dark:border-info-800/50 text-info-700 dark:text-info-400"
+            className="inline-flex px-2 py-0.5 rounded text-xs font-semibold bg-info-50 dark:bg-info-900/30 border border-info-200 dark:border-info-800/50 text-info-fg"
           >
             {abbr}
           </span>
@@ -111,7 +111,7 @@ export function AddSkillModal({
       <select
         value={abilityFilter}
         onChange={(e) => setAbilityFilter(e.target.value)}
-        className="px-3 py-1.5 text-sm rounded-lg border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
+        className="px-3 py-1.5 text-sm rounded-lg border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-outline-border"
         aria-label="Filter by ability"
       >
         <option value="">All Abilities</option>
@@ -125,7 +125,7 @@ export function AddSkillModal({
   return (
     <>
       {error && isOpen && (
-        <Alert variant="danger" className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] max-w-md">
+        <Alert variant="danger" className="fixed top-4 left-1/2 -translate-x-1/2 z-toast max-w-md">
           {error}
         </Alert>
       )}

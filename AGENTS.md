@@ -31,6 +31,7 @@ Check the canonical source for the topic instead of trusting scattered/stale doc
 | Contextual help tooltips | `AGENT_GUIDE.md` § Tooltips — Collin/Tippy + `public/tooltip-text.tsx`; **TASK-376 = Collin only (AI skip)** |
 | QA build validation (step-by-step) | `src/docs/ai/BUILD_VALIDATION.md` |
 | Current remediation status & known open gaps | `src/docs/ai/REMEDIATION_STATUS_2026-06.md` |
+| UI/UX unification roadmap (design-system migration) | `src/docs/ai/UI_UNIFICATION_PLAN.md` + `VISUAL_STATE_AUDIT.md` + AGENT_GUIDE § Design-system safety net |
 | Deploy / secrets | `src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md` |
 | Edge / CDN performance | `src/docs/PERFORMANCE_AND_EDGE.md` |
 | DB ops runbook | `src/docs/DATABASE_CONSISTENCY_CHECKLIST.md` |

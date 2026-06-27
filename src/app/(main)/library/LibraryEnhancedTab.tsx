@@ -133,7 +133,7 @@ export function LibraryEnhancedTab({
       />
 
       {filteredData.length === 0 ? (
-        <div className="py-12 text-center text-text-secondary">No enhanced items match your search.</div>
+        <ListEmptyState title="No enhanced items match your search." size="sm" />
       ) : (
         <div className="flex flex-col gap-1 mt-2">
           {filteredData.map((row) => {

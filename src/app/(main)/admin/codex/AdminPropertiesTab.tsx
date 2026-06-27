@@ -469,7 +469,7 @@ export function AdminPropertiesTab() {
                             size="sm"
                             onClick={() => setPendingDeleteId(p.id)}
                             label="Delete"
-                            className="text-danger dark:text-danger-400 hover:text-danger-600 dark:hover:text-danger-300 hover:bg-transparent"
+                            className="text-danger-fg hover:opacity-80 hover:bg-transparent"
                           >
                             <X className="w-4 h-4" />
                           </IconButton>
@@ -591,7 +591,7 @@ export function AdminPropertiesTab() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-text-muted hover:text-danger"
+                    className="text-text-muted hover:text-danger-fg"
                     onClick={clearOption}
                     aria-label="Remove option"
                   >

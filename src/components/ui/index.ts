@@ -16,7 +16,9 @@ export { SearchInput } from './search-input';
 // Layout components
 export { PageContainer, type ContainerSize } from './page-container';
 export { PageHeader } from './page-header';
-export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './card';
+export { TableScroll } from './table-scroll';
+export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, cardVariants, type CardProps } from './card';
+export { SelectionCard, SelectionCardSurface, type SelectionCardProps, type SelectionCardSurfaceProps } from './selection-card';
 
 // Chip/Badge components
 export { Chip, chipVariants, type ChipProps } from './chip';

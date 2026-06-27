@@ -24,13 +24,13 @@ import { cn } from '@/lib/utils/cn';
 import { X } from 'lucide-react';
 
 const chipVariants = cva(
-  'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium border transition-colors',
+  'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium border transition-colors duration-base ease-standard',
   {
     variants: {
       variant: {
         // RECOMMENDED VARIANTS
         default: 'bg-surface-alt text-text-secondary border-border-light',
-        primary: 'bg-primary-700 text-primary-foreground border-primary-600 dark:bg-primary-100 dark:text-white dark:border-primary-400',
+        primary: 'bg-primary-chip-bg text-primary-chip-fg border-primary-chip-border',
         
         // Category-based colors for power/technique parts (KEEP - domain-specific)
         action: 'bg-category-action text-category-action-text border-category-action-border',
@@ -42,9 +42,27 @@ const chipVariants = cva(
         restriction: 'bg-category-restriction text-category-restriction-text border-category-restriction-border',
         
         // Status colors (KEEP - semantic feedback)
-        success: 'bg-success-light text-success-700 dark:text-success-300 border-success-300',
-        danger: 'bg-danger-light text-danger-700 dark:text-danger-300 border-danger-300',
-        warning: 'bg-warning-light text-warning-700 dark:text-warning-300 border-warning-300',
+        success: 'bg-success-light text-success-fg border-success-border',
+        danger: 'bg-danger-light text-danger-fg border-danger-border',
+        warning: 'bg-warning-light text-warning-fg border-warning-border',
+
+        // GridListRow expandable list chips (Phase 2.2 — unified from CHIP_STYLES)
+        list: 'bg-surface-alt border-border-light text-text-secondary hover:bg-surface',
+        listCost: 'bg-info-light text-info-fg border-info-border hover:opacity-90',
+        listWarning: 'bg-warning-light text-warning-fg border-warning-border',
+        listSuccess: 'bg-success-light text-success-fg border-success-border',
+
+        /** Proficiency / training-point (TP) domain chip — creator + sheet summaries */
+        tp: 'bg-tp-light text-tp-text border-tp-border',
+
+        /** Item rarity badges (Phase 4 — theme-aware semantic tokens) */
+        rarityCommon: 'bg-surface-alt text-text-primary border-border-light',
+        rarityUncommon: 'bg-success-light text-success-fg border-success-300',
+        rarityRare: 'bg-info-light text-info-fg border-info-border',
+        rarityEpic: 'bg-power-light text-power-fg border-power-border',
+        rarityLegendary: 'bg-warning-light text-warning-fg border-warning-border',
+        rarityMythic: 'bg-danger-light text-danger-fg border-danger-border',
+        rarityAscended: 'bg-accent-light text-accent-fg border-accent-border',
         
         // DEPRECATED VARIANTS (kept for backwards compatibility)
         /** @deprecated Use 'default' instead */
@@ -52,29 +70,29 @@ const chipVariants = cva(
         /** @deprecated Use 'default' instead */
         outline: 'border-border-light bg-transparent text-text-secondary hover:bg-surface-alt',
         /** @deprecated Use 'primary' instead */
-        accent: 'bg-accent-chip text-primary-700 border-accent-200',
+        accent: 'bg-accent-chip text-primary-subtle-fg border-accent-200',
         /** @deprecated Use 'default' instead */
-        info: 'bg-info-light text-info-700 dark:text-info-300 border-info-300',
+        info: 'bg-info-light text-info-fg border-info-border',
         
         // Equipment types - DEPRECATED (context provides meaning)
         /** @deprecated Use 'default' - context provides meaning */
-        weapon: 'bg-warning-100 text-warning-800 border-warning-300',
+        weapon: 'bg-warning-light text-warning-fg border-warning-border',
         /** @deprecated Use 'default' - context provides meaning */
-        armor: 'bg-info-100 text-info-800 border-info-300',
+        armor: 'bg-info-light text-info-fg border-info-border',
         /** @deprecated Use 'default' - context provides meaning */
-        shield: 'bg-success-100 text-success-700 border-success-300',
+        shield: 'bg-success-light text-success-fg border-success-border',
         
         // Character content types - DEPRECATED (context provides meaning)
         /** @deprecated Use 'default' - context provides meaning */
-        feat: 'bg-pink-100 text-pink-800 border-pink-300',
+        feat: 'bg-surface-alt text-text-secondary border-border-light',
         /** @deprecated Use 'default' - context provides meaning */
-        proficiency: 'bg-info-50 text-primary-600 border-info-200 dark:bg-info-900/30 dark:text-info-300 dark:border-info-700/50',
+        proficiency: 'bg-info-light text-info-fg border-info-border',
         /** @deprecated Use 'default' - context provides meaning */
-        weakness: 'bg-danger-100 text-danger-700 border-danger-300',
+        weakness: 'bg-danger-light text-danger-fg border-danger-border',
         /** @deprecated Use 'default' - context provides meaning */
-        power: 'bg-power-light text-power-text dark:text-power-300 border-power-border',
+        power: 'bg-power-light text-power-fg border-power-border',
         /** @deprecated Use 'default' - context provides meaning */
-        technique: 'bg-martial-light text-martial-text dark:text-martial-300 border-martial-border',
+        technique: 'bg-martial-light text-martial-fg border-martial-border',
       },
       size: {
         sm: 'px-2 py-0.5 text-xs',
@@ -116,7 +134,7 @@ const Chip = React.forwardRef<HTMLSpanElement, ChipProps>(
               e.stopPropagation();
               onRemove();
             }}
-            className="ml-0.5 -mr-1 rounded-full p-0.5 hover:bg-black/10 focus:outline-none transition-colors"
+            className="ml-0.5 -mr-1 rounded-full p-0.5 hover:bg-black/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border transition-colors touch-target-md-compact inline-flex items-center justify-center"
             aria-label="Remove"
           >
             <X className="h-3 w-3" />

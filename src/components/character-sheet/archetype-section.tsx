@@ -11,9 +11,11 @@ import { cn } from '@/lib/utils';
 import { calculateProficiency, getArchetypeType, getArchetypeMilestoneLevels } from '@/lib/game/formulas';
 import { useRollsOptional } from './roll-context';
 import { EditSectionToggle, RollButton, SectionHeader, PoweredMartialSlider, DecrementButton, IncrementButton } from '@/components/shared';
+import { TableScroll } from '@/components/ui';
 import type { Character, Abilities, Item } from '@/types';
 import type { EnrichedItem } from '@/lib/data-enrichment';
 import { QuickArmorTable, QuickShieldsTable, QuickWeaponsTable } from '@/components/shared';
+import { Card } from '@/components/ui';
 
 interface ArchetypeSectionProps {
   character: Character;
@@ -78,6 +80,7 @@ function AttackBonusesTable({
   return (
     <div className="bg-surface-alt rounded-lg p-3 mb-4">
       <SectionHeader title="Attack Bonuses" className="mb-2" />
+      <TableScroll>
       <table className="w-full text-sm">
         <thead>
           <tr className="text-xs text-text-muted dark:text-text-secondary">
@@ -120,6 +123,7 @@ function AttackBonusesTable({
           ))}
         </tbody>
       </table>
+      </TableScroll>
       
       {/* Power Attack Bonus - separate section, full width, no unprof */}
       {powerProf > 0 && (
@@ -210,13 +214,14 @@ function WeaponsSection({
         className="bg-transparent p-0 mb-0"
       />
       {/* Unarmed Prowess - always shown, styled based on proficiency */}
+      <TableScroll>
       <table className="w-full text-sm">
         <tbody>
           <tr className="border-t border-border-light align-top">
             <td className="py-2 font-medium text-text-secondary">
               Unarmed Prowess
               {hasProwess && (
-                <span className="text-xs text-primary-600 ml-1">(Proficient)</span>
+                <span className="text-xs text-primary-link-fg ml-1">(Proficient)</span>
               )}
             </td>
             <td className="text-center py-2">
@@ -259,6 +264,7 @@ function WeaponsSection({
           </tr>
         </tbody>
       </table>
+      </TableScroll>
     </div>
   );
 }
@@ -376,9 +382,9 @@ export function ArchetypeSection({
   
   // Three-state color for proficiency points
   const getProfPointsColorClass = () => {
-    if (remainingProfPoints > 0) return 'bg-success-100 text-success-700'; // Has points
-    if (remainingProfPoints < 0) return 'bg-danger-100 text-danger-700'; // Over budget
-    return 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'; // Perfect
+    if (remainingProfPoints > 0) return 'bg-success-100 text-success-fg'; // Has points
+    if (remainingProfPoints < 0) return 'bg-danger-100 text-danger-fg'; // Over budget
+    return 'bg-primary-subtle-bg text-primary-fg'; // Perfect
   };
   
   // Calculate Power Potency: 10 + pow_prof + pow_abil value
@@ -426,7 +432,7 @@ export function ArchetypeSection({
   };
 
   return (
-    <div className={cn("bg-surface rounded-xl shadow-md p-4 md:p-6 relative", className)}>
+    <Card className={cn('shadow-md p-4 md:p-6 relative', className)}>
       {/* Edit Mode Indicator - Blue Pencil Icon in top-right */}
       {isEditMode && (
         <div className="absolute top-3 right-3">
@@ -502,10 +508,10 @@ export function ArchetypeSection({
           {powerProf > 0 && (
             <div className={cn(
               'flex-1 rounded-lg px-3 py-2 flex flex-col gap-0.5 min-w-0',
-              'bg-violet-50 dark:bg-violet-900/20'
+              'bg-power-light'
             )}>
-              <span className="text-sm font-medium text-violet-600 dark:text-violet-300">Power</span>
-              <span className="text-sm text-violet-700 dark:text-violet-200" title="Prof: proficiency bonus · Potency: 10 + Prof + Ability">
+              <span className="text-sm font-medium text-power-fg">Power</span>
+              <span className="text-sm text-power-fg" title="Prof: proficiency bonus · Potency: 10 + Prof + Ability">
                 Prof +{powerProf} · Potency {powerPotency}
               </span>
             </div>
@@ -515,8 +521,8 @@ export function ArchetypeSection({
               'flex-1 rounded-lg px-3 py-2 flex flex-col gap-0.5 min-w-0',
               'bg-martial-light dark:bg-martial-light'
             )}>
-              <span className="text-sm font-medium text-martial-text dark:text-martial-border">Martial</span>
-              <span className="text-sm text-martial-dark dark:text-martial-300" title="Prof: proficiency bonus · Potency: 10 + Prof + Ability">
+              <span className="text-sm font-medium text-martial-fg">Martial</span>
+              <span className="text-sm text-martial-fg" title="Prof: proficiency bonus · Potency: 10 + Prof + Ability">
                 Prof +{martialProf} · Potency {martialPotency}
               </span>
             </div>
@@ -541,8 +547,8 @@ export function ArchetypeSection({
                         className={cn(
                           'px-2 py-0.5 text-xs rounded transition-colors',
                           currentChoice === 'innate'
-                            ? 'bg-violet-500 text-white dark:bg-violet-600 dark:text-white'
-                            : 'bg-violet-100 text-violet-600 hover:bg-violet-200 dark:bg-violet-900/30 dark:text-violet-300 dark:hover:bg-violet-800/40'
+                            ? 'bg-power-dark text-white'
+                            : 'bg-power-light text-power-fg hover:bg-power-border/30'
                         )}
                         title="Gain +1 Innate Threshold & +1 Innate Pools"
                       >
@@ -553,8 +559,8 @@ export function ArchetypeSection({
                         className={cn(
                           'px-2 py-0.5 text-xs rounded transition-colors',
                           currentChoice === 'feat'
-                            ? 'bg-martial-dark text-white dark:bg-martial-700 dark:text-white'
-                            : 'bg-martial-light text-martial-text hover:bg-martial-border/30 dark:bg-martial-900/30 dark:text-martial-300 dark:hover:bg-martial-800/40'
+                            ? 'bg-martial-dark text-white'
+                            : 'bg-martial-light text-martial-fg hover:bg-martial-border/30'
                         )}
                         title="Gain +1 Bonus Archetype Feat"
                       >
@@ -565,9 +571,9 @@ export function ArchetypeSection({
                     <span className={cn(
                       'px-2 py-0.5 text-xs rounded',
                       currentChoice === 'innate'
-                        ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-200'
+                        ? 'bg-power-light text-power-fg'
                         : currentChoice === 'feat'
-                          ? 'bg-martial-light text-martial-dark dark:bg-martial-900/30 dark:text-martial-300'
+                          ? 'bg-martial-light text-martial-fg'
                           : 'bg-surface text-text-muted dark:text-text-secondary italic'
                     )}>
                       {currentChoice === 'innate' ? '✨ Innate' : 
@@ -617,6 +623,6 @@ export function ArchetypeSection({
 
       {/* Armor Section */}
       <ArmorSection character={character} enrichedArmor={enrichedArmor} />
-    </div>
+    </Card>
   );
 }

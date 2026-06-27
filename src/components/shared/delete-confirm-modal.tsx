@@ -48,7 +48,7 @@ export function DeleteConfirmModal({
     >
       <div className="flex flex-col items-center text-center">
         <div className="w-12 h-12 rounded-full bg-danger-light flex items-center justify-center mb-4">
-          <AlertTriangle className="w-6 h-6 text-danger" />
+          <AlertTriangle className="w-6 h-6 text-danger-fg" />
         </div>
         <h3 className="text-lg font-semibold text-text-primary mb-2">
           Delete {itemName}?

@@ -198,7 +198,7 @@ export function CodexEquipmentTab({ codexMode = 'public' }: { codexMode?: 'publi
         {isLoading ? (
           <LoadingState />
         ) : filteredEquipment.length === 0 ? (
-          <div className="p-8 text-center text-text-muted dark:text-text-secondary">No equipment found.</div>
+          <EmptyState title="No equipment found." size="sm" />
         ) : (
           filteredEquipment.map((item: Equipment & { category: string; cost: number; rarity: string }) => (
             <EquipmentCard key={item.id} item={item} propertiesDb={propertiesDb} />

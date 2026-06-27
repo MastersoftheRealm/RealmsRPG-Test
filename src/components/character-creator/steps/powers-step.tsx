@@ -15,7 +15,7 @@ import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/
 import { cn } from '@/lib/utils';
 import { GridListRow, InnateToggle, ListHeader, SegmentedControl } from '@/components/shared';
 import { calculateArchetypeProgression } from '@/lib/game/formulas';
-import { Button, IconButton, Spinner } from '@/components/ui';
+import { Button, IconButton, Spinner, Chip, EmptyState } from '@/components/ui';
 import { useUserPowers, useUserTechniques, useUserEmpoweredTechniques, usePowerParts, useTechniqueParts, useOfficialLibrary, useItemProperties, useMergedSpecies, useCodexSkills, useTraits, type PowerPart, type TechniquePart } from '@/hooks';
 import { getValidationIssuesForStep } from '@/lib/character-creator-validation';
 import type { UserPower, UserTechnique } from '@/hooks/use-user-library';
@@ -744,20 +744,19 @@ export function PowersStep() {
           Select powers and techniques from your library for your character to know.
         </p>
         <div className="mt-4 flex items-center justify-center">
-          <div className={cn(
-            'inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold border',
-            proficiencyTpSummary.remaining >= 0
-              ? 'bg-tp-light dark:bg-warning-900/30 border-tp-border text-tp-text dark:text-warning-300'
-              : 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-600/50 text-danger-700 dark:text-danger-300'
-          )}>
+          <Chip
+            variant={proficiencyTpSummary.remaining >= 0 ? 'tp' : 'danger'}
+            size="md"
+            className="font-semibold"
+          >
             Proficiency TP: {proficiencyTpSummary.spent} / {proficiencyTpSummary.limit}
-          </div>
+          </Chip>
         </div>
       </div>
 
       {pathRecommendationsLoading && (
-        <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-700 rounded-xl p-6 flex items-center gap-4 mb-8">
-          <Spinner className="w-6 h-6 flex-shrink-0 text-primary-600 dark:text-primary-400" aria-hidden />
+        <div className="bg-primary-subtle-bg border border-primary-subtle-border rounded-xl p-6 flex items-center gap-4 mb-8">
+          <Spinner className="w-6 h-6 flex-shrink-0 text-primary-link-fg" aria-hidden />
           <div>
             <p className="text-text-primary font-medium">
               Loading recommended powers and techniques from the library…
@@ -804,7 +803,7 @@ export function PowersStep() {
           <div className="flex items-center justify-center gap-4">
             <Link
               href="/power-creator"
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-400 text-white hover:bg-primary-500 transition-colors shadow-sm"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-button text-white hover:bg-primary-button-hover transition-colors shadow-sm"
             >
               <Plus className="w-4 h-4" />
               Create Power
@@ -905,16 +904,23 @@ export function PowersStep() {
               </div>
             </div>
           ) : userPowers.length > 0 ? (
-            <div className="p-4 rounded-lg border border-dashed border-border text-center text-text-muted dark:text-text-secondary">
-              No powers selected. Click &quot;Add Powers&quot; to choose from your library.
-            </div>
+            <EmptyState
+              title="No powers selected"
+              description='Click "Add Powers" to choose from your library.'
+              size="sm"
+              className="py-4 rounded-lg border border-dashed border-border"
+            />
           ) : (
-            <div className="p-4 rounded-lg border border-dashed border-border text-center">
-              <span className="text-text-muted dark:text-text-secondary">No powers in your library. </span>
-              <Link href="/power-creator" className="text-primary hover:underline inline-flex items-center gap-1">
-                Create one <ExternalLink className="w-3 h-3" />
-              </Link>
-            </div>
+            <EmptyState
+              title="No powers in your library"
+              size="sm"
+              className="py-4 rounded-lg border border-dashed border-border"
+              action={
+                <Link href="/power-creator" className="text-primary hover:underline inline-flex items-center gap-1">
+                  Create one <ExternalLink className="w-3 h-3" />
+                </Link>
+              }
+            />
           )}
         </section>
       )}
@@ -925,7 +931,7 @@ export function PowersStep() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-martial-light flex items-center justify-center">
-                <Swords className="w-5 h-5 text-martial-dark dark:text-martial-300" />
+                <Swords className="w-5 h-5 text-martial-fg" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-text-primary">Techniques</h3>
@@ -987,16 +993,23 @@ export function PowersStep() {
               </div>
             </div>
           ) : userTechniques.length > 0 ? (
-            <div className="p-4 rounded-lg border border-dashed border-border text-center text-text-muted dark:text-text-secondary">
-              No techniques selected. Click &quot;Add Techniques&quot; to choose from your library.
-            </div>
+            <EmptyState
+              title="No techniques selected"
+              description='Click "Add Techniques" to choose from your library.'
+              size="sm"
+              className="py-4 rounded-lg border border-dashed border-border"
+            />
           ) : (
-            <div className="p-4 rounded-lg border border-dashed border-border text-center">
-              <span className="text-text-muted dark:text-text-secondary">No techniques in your library. </span>
-              <Link href="/technique-creator" className="text-primary hover:underline inline-flex items-center gap-1">
-                Create one <ExternalLink className="w-3 h-3" />
-              </Link>
-            </div>
+            <EmptyState
+              title="No techniques in your library"
+              size="sm"
+              className="py-4 rounded-lg border border-dashed border-border"
+              action={
+                <Link href="/technique-creator" className="text-primary hover:underline inline-flex items-center gap-1">
+                  Create one <ExternalLink className="w-3 h-3" />
+                </Link>
+              }
+            />
           )}
         </section>
       )}

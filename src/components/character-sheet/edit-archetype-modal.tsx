@@ -10,7 +10,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { Modal, Button, Chip, Spinner } from '@/components/ui';
+import { Modal, Button, Chip, Spinner, SelectionCard } from '@/components/ui';
 import { ConfirmActionModal } from '@/components/shared';
 import { useCodexArchetypes } from '@/hooks';
 import { calculateProficiency } from '@/lib/game/formulas';
@@ -300,7 +300,7 @@ export function EditArchetypeModal({
         {uiMode === 'path-view' && (
           <div className="space-y-6">
             <div
-              className="rounded-xl border-2 border-primary-200 dark:border-primary-800 bg-primary-50/80 dark:bg-primary-900/20 p-5 space-y-3"
+              className="rounded-xl border-2 border-primary-subtle-border bg-primary-subtle-bg p-5 space-y-3"
               role="region"
               aria-label={`Archetype path: ${pathName}`}
             >
@@ -378,11 +378,10 @@ export function EditArchetypeModal({
                       </h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {options.map((option) => (
-                          <button
+                          <SelectionCard
                             key={option.id}
-                            type="button"
                             onClick={() => setPendingConfirm({ type: 'switch-path', path: option })}
-                            className="selection-card text-left min-h-[44px] p-4"
+                            className="text-left min-h-[44px]"
                           >
                             <span className="font-semibold text-text-primary block mb-1">{option.name}</span>
                             {option.description ? (
@@ -390,7 +389,7 @@ export function EditArchetypeModal({
                                 {option.description}
                               </span>
                             ) : null}
-                          </button>
+                          </SelectionCard>
                         ))}
                       </div>
                     </section>
@@ -419,14 +418,14 @@ export function EditArchetypeModal({
                       className={cn(
                         'p-4 rounded-lg border-2 text-left transition-all min-h-[44px]',
                         selectedType === type
-                          ? 'border-primary-600 bg-primary-50 dark:bg-primary-900/20'
+                          ? 'border-primary-outline-border bg-primary-subtle-bg'
                           : 'border-border-light bg-surface hover:border-border'
                       )}
                     >
                       <span className="font-medium text-text-primary">{info.title}</span>
                       <p className="text-xs text-text-muted dark:text-text-secondary mt-1">{info.description}</p>
                       {selectedType === type && (
-                        <span className="text-xs text-primary-700 dark:text-primary-300 mt-2 inline-block">
+                        <span className="text-xs text-primary-fg mt-2 inline-block">
                           {type === 'power' && `Power +${powProf}`}
                           {type === 'martial' && `Martial +${martProf}`}
                           {type === 'powered-martial' && `Martial +${martProf} / Power +${powProf}`}
@@ -450,7 +449,7 @@ export function EditArchetypeModal({
               {selectedType === 'powered-martial' ? (
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <h4 className="text-xs font-medium text-power-dark dark:text-violet-300 mb-2">Power Ability</h4>
+                    <h4 className="text-xs font-medium text-power-fg mb-2">Power Ability</h4>
                     <div className="flex flex-wrap gap-2">
                       {ABILITIES.map((ability) => (
                         <button
@@ -461,7 +460,7 @@ export function EditArchetypeModal({
                           className={cn(
                             'px-3 py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] min-w-[44px]',
                             selectedPowerAbility === ability
-                              ? 'bg-violet-600 text-white dark:bg-violet-600'
+                              ? 'bg-power-dark text-white'
                               : selectedMartialAbility === ability
                                 ? 'bg-surface-alt text-text-muted dark:text-text-secondary cursor-not-allowed'
                                 : 'bg-surface border border-border-light hover:border-border'
@@ -473,7 +472,7 @@ export function EditArchetypeModal({
                     </div>
                   </div>
                   <div>
-                    <h4 className="text-xs font-medium text-martial-dark dark:text-orange-300 mb-2">
+                    <h4 className="text-xs font-medium text-martial-fg mb-2">
                       Martial Ability
                     </h4>
                     <div className="flex flex-wrap gap-2">
@@ -486,7 +485,7 @@ export function EditArchetypeModal({
                           className={cn(
                             'px-3 py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] min-w-[44px]',
                             selectedMartialAbility === ability
-                              ? 'bg-red-600 text-white dark:bg-red-700'
+                              ? 'bg-martial-dark text-white'
                               : selectedPowerAbility === ability
                                 ? 'bg-surface-alt text-text-muted dark:text-text-secondary cursor-not-allowed'
                                 : 'bg-surface border border-border-light hover:border-border'
@@ -514,7 +513,7 @@ export function EditArchetypeModal({
                         (selectedType === 'power'
                           ? selectedPowerAbility === ability
                           : selectedMartialAbility === ability)
-                          ? 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white'
+                          ? 'bg-primary-button text-white'
                           : 'bg-surface border border-border-light hover:border-border'
                       )}
                     >

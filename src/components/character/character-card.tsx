@@ -45,13 +45,13 @@ export function CharacterCard({
     <div
       className={cn(
         'group relative rounded-xl overflow-hidden bg-surface shadow-md',
-        'hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5',
+        'hover:shadow-lg transition-all duration-base ease-standard hover:-translate-y-0.5',
         isDeleting || isDuplicating ? 'opacity-50 pointer-events-none' : ''
       )}
     >
       <Link href={`/characters/${character.id}`} className="block">
         {/* Portrait */}
-        <div className="relative aspect-[3/4] bg-primary-800">
+        <div className="relative aspect-[3/4] bg-primary-button">
           <Image
             src={getEffectivePortrait(character.portrait)}
             alt={character.name}
@@ -117,12 +117,12 @@ export function AddCharacterCard({ onClick }: AddCharacterCardProps) {
   return (
     <button
       onClick={onClick}
-      className="group flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border-light bg-surface-secondary hover:border-primary-400 hover:bg-primary-50 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 min-h-[280px] cursor-pointer"
+      className="group flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border-light bg-surface-secondary hover:border-primary-outline-border hover:bg-primary-subtle-bg hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-base ease-standard min-h-[280px] cursor-pointer"
     >
-      <div className="w-16 h-16 rounded-full bg-surface group-hover:bg-primary-100 flex items-center justify-center transition-colors">
-        <Plus className="w-8 h-8 text-text-muted group-hover:text-primary-600" />
+      <div className="w-16 h-16 rounded-full bg-surface group-hover:bg-primary-subtle-bg-hover flex items-center justify-center transition-colors">
+        <Plus className="w-8 h-8 text-text-muted group-hover:text-primary-fg-hover" />
       </div>
-      <span className="mt-4 font-semibold text-text-muted group-hover:text-primary-600">
+      <span className="mt-4 font-semibold text-text-muted group-hover:text-primary-fg-hover">
         Add Character
       </span>
     </button>

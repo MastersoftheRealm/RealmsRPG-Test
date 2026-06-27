@@ -7,6 +7,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
+import { statusPanel } from '@/lib/ui/status-surface-classes';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createCharacter, saveCharacter } from '@/services/character-service';
 import { useAuth, useCodexSkills, useMergedSpecies, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useGameRules } from '@/hooks';
@@ -52,7 +53,7 @@ function ValidationModal({
   const modalHeader = (
     <div className={cn(
       'p-4 border-b flex items-center gap-3',
-      isValid ? 'bg-green-50 dark:bg-green-900/30' : hasErrors ? 'bg-red-50 dark:bg-red-900/30' : 'bg-amber-50 dark:bg-amber-900/30'
+      isValid ? statusPanel.completeBg : hasErrors ? statusPanel.dangerBg : statusPanel.warningBg
     )}>
       <span className="text-2xl">{isValid ? '✅' : hasErrors ? '⚠️' : '📋'}</span>
       <h2 className="text-xl font-bold text-text-primary">
@@ -117,7 +118,7 @@ function ValidationModal({
               key={idx} 
               className={cn(
                 'p-3 rounded-lg flex gap-3',
-                issue.severity === 'error' ? 'bg-red-50 dark:bg-red-900/30' : 'bg-amber-50 dark:bg-amber-900/30'
+                issue.severity === 'error' ? statusPanel.dangerBg : statusPanel.warningBg
               )}
             >
               <span className="text-xl flex-shrink-0">{issue.emoji}</span>
@@ -344,7 +345,7 @@ function PortraitUpload() {
               'inline-flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-colors',
               isProcessing
                 ? 'bg-surface-alt text-text-muted dark:text-text-secondary cursor-not-allowed'
-                : 'border-primary-300 dark:border-primary-600/50 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30'
+                : 'border-primary-outline-border text-primary-link-fg hover:bg-primary-subtle-bg'
             )}
           >
             {isProcessing ? (
@@ -619,7 +620,7 @@ export function FinalizeStep() {
           value={draft.name || ''}
           onChange={(e) => updateDraft({ name: e.target.value })}
           placeholder="Enter your character's name"
-          className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors"
+          className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border transition-colors"
         />
       </div>
       
@@ -663,14 +664,14 @@ export function FinalizeStep() {
                 </div>
                 {showPowerAbility && (
                   <div className="rounded-lg border border-power bg-power-light/40 dark:bg-power-900/20 p-3">
-                    <p className="text-xs font-medium text-power-dark dark:text-power-300 uppercase tracking-wide">Power Ability</p>
-                    <p className="text-lg font-bold text-power-dark dark:text-power-300 mt-0.5 capitalize">{draft.pow_abil}</p>
+                    <p className="text-xs font-medium text-power-fg uppercase tracking-wide">Power Ability</p>
+                    <p className="text-lg font-bold text-power-fg mt-0.5 capitalize">{draft.pow_abil}</p>
                   </div>
                 )}
                 {showMartialAbility && (
                   <div className="rounded-lg border border-martial bg-martial-light/40 dark:bg-martial-900/20 p-3">
-                    <p className="text-xs font-medium text-martial-dark dark:text-martial-300 uppercase tracking-wide">Martial Ability</p>
-                    <p className="text-lg font-bold text-martial-dark dark:text-martial-300 mt-0.5 capitalize">{draft.mart_abil}</p>
+                    <p className="text-xs font-medium text-martial-fg uppercase tracking-wide">Martial Ability</p>
+                    <p className="text-lg font-bold text-martial-fg mt-0.5 capitalize">{draft.mart_abil}</p>
                   </div>
                 )}
               </div>
@@ -691,15 +692,15 @@ export function FinalizeStep() {
                 className={cn(
                   'px-3 py-1.5 rounded-lg text-sm font-bold',
                   proficiencyTpSummary.remaining >= 0
-                    ? 'bg-success-100 dark:bg-success-900/40 text-success-700 dark:text-success-300 border border-success-200 dark:border-success-700/50'
-                    : 'bg-danger-100 dark:bg-danger-900/40 text-danger-700 dark:text-danger-300 border border-danger-200 dark:border-danger-700/50'
+                    ? 'bg-success-100 dark:bg-success-900/40 text-success-fg border border-success-200 dark:border-success-700/50'
+                    : 'bg-danger-100 dark:bg-danger-900/40 text-danger-fg border border-danger-200 dark:border-danger-700/50'
                 )}
               >
                 Remaining: {proficiencyTpSummary.remaining}
               </span>
             </div>
             {proficiencyTpSummary.remaining < 0 && (
-              <p className="mt-2 text-sm text-danger-700 dark:text-danger-300 font-medium">
+              <p className="mt-2 text-sm text-danger-fg font-medium">
                 Over by {Math.abs(proficiencyTpSummary.remaining)} TP. You can still create and adjust later.
               </p>
             )}
@@ -730,8 +731,8 @@ export function FinalizeStep() {
                       <p
                         className={cn(
                           'text-lg font-bold mt-0.5',
-                          value > 0 && 'text-success-700 dark:text-success-400',
-                          value < 0 && 'text-danger-700 dark:text-danger-400',
+                          value > 0 && 'text-success-fg',
+                          value < 0 && 'text-danger-fg',
                           value === 0 && 'text-text-secondary'
                         )}
                       >
@@ -755,8 +756,8 @@ export function FinalizeStep() {
                     className={cn(
                       'px-3 py-1.5 rounded-lg text-sm font-medium border',
                       feat.type === 'archetype'
-                        ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-700/50'
-                        : 'bg-info-100 dark:bg-info-900/40 text-info-800 dark:text-info-200 border-info-200 dark:border-info-700/50'
+                        ? cn(statusPanel.warning, 'text-warning-fg')
+                        : cn(statusPanel.info, 'text-info-fg')
                     )}
                   >
                     {feat.name}
@@ -771,7 +772,7 @@ export function FinalizeStep() {
             <div className="space-y-3">
               {draft.powers && draft.powers.length > 0 && (
                 <div>
-                  <p className="text-xs font-medium text-power-dark dark:text-power-300 uppercase tracking-wide mb-2">Powers</p>
+                  <p className="text-xs font-medium text-power-fg uppercase tracking-wide mb-2">Powers</p>
                   <div className="flex flex-wrap gap-2">
                     {draft.powers.map((p) => {
                       const doc: PowerDocument = {
@@ -790,7 +791,7 @@ export function FinalizeStep() {
                       return (
                         <span
                           key={String(p.id)}
-                          className="px-3 py-1.5 rounded-lg text-sm font-medium bg-power-light/50 dark:bg-power-900/30 text-power-dark dark:text-power-300 border border-power/30"
+                          className="px-3 py-1.5 rounded-lg text-sm font-medium bg-power-light/50 dark:bg-power-900/30 text-power-fg border border-power/30"
                         >
                           {p.name} <span className="opacity-90">({en} EN)</span>
                         </span>
@@ -801,7 +802,7 @@ export function FinalizeStep() {
               )}
               {draft.techniques && draft.techniques.length > 0 && (
                 <div>
-                  <p className="text-xs font-medium text-martial-dark dark:text-martial-300 uppercase tracking-wide mb-2">Techniques</p>
+                  <p className="text-xs font-medium text-martial-fg uppercase tracking-wide mb-2">Techniques</p>
                   <div className="flex flex-wrap gap-2">
                     {draft.techniques.map((t) => {
                       const doc: TechniqueDocument = {
@@ -818,7 +819,7 @@ export function FinalizeStep() {
                       return (
                         <span
                           key={String(t.id)}
-                          className="px-3 py-1.5 rounded-lg text-sm font-medium bg-martial-light/50 dark:bg-martial-900/30 text-martial-dark dark:text-martial-300 border border-martial/30"
+                          className="px-3 py-1.5 rounded-lg text-sm font-medium bg-martial-light/50 dark:bg-martial-900/30 text-martial-fg border border-martial/30"
                         >
                           {t.name} <span className="opacity-90">({en} EN)</span>
                         </span>
@@ -883,8 +884,8 @@ export function FinalizeStep() {
         <div className={cn(
           'mb-6 p-4 rounded-xl',
           validationIssues.some(i => i.severity === 'error') 
-            ? 'bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700/50' 
-            : 'bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700/50'
+            ? cn(statusPanel.danger, 'border')
+            : cn(statusPanel.warning, 'border')
         )}>
           <div className="flex items-center gap-2 mb-2">
             <span className="text-xl">

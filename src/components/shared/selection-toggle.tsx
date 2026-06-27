@@ -61,18 +61,18 @@ export function SelectionToggle({
       aria-label={label || (isSelected ? 'Remove selection' : 'Add selection')}
       aria-pressed={isSelected}
       className={cn(
-        'flex items-center justify-center transition-all duration-200 ease-out',
+        'flex items-center justify-center transition-all duration-base ease-standard',
         SIZE_STYLES[size],
         isSelected
-          ? 'text-success-700 dark:text-success-400'
-          : 'text-text-muted dark:text-text-secondary hover:text-primary-600',
+          ? 'text-success-fg'
+          : 'text-text-muted dark:text-text-secondary hover:text-primary-fg-hover',
         disabled && 'opacity-40 cursor-not-allowed',
         className
       )}
     >
       <span
         className={cn(
-          'transition-all duration-200 ease-out',
+          'transition-all duration-base ease-standard',
           isSelected ? 'scale-110' : 'scale-100 hover:scale-110'
         )}
       >

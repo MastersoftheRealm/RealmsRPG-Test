@@ -55,16 +55,16 @@ const TYPE_ICONS: Record<EncounterType, React.ReactNode> = {
 };
 
 const TYPE_COLORS: Record<EncounterType, string> = {
-  combat: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-  skill: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-  mixed: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300',
+  combat: 'bg-danger-light text-danger-fg',
+  skill: 'bg-info-light text-info-fg',
+  mixed: 'bg-power-light text-power-fg',
 };
 
 const STATUS_COLORS: Record<EncounterStatus, string> = {
   preparing: 'bg-surface-alt text-text-secondary',
-  active: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-  paused: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-  completed: 'bg-surface-alt text-text-muted dark:text-text-secondary',
+  active: 'bg-success-light text-success-fg',
+  paused: 'bg-warning-light text-warning-fg',
+  completed: 'bg-surface-alt text-text-muted',
 };
 
 type TabId = 'all' | 'active' | 'completed';
@@ -188,9 +188,9 @@ function EncountersContent() {
   return (
     <PageContainer size="xl">
       {!user && (
-        <div className="mb-4 rounded-lg bg-primary-600/10 border border-primary-600/20 px-4 py-3 text-text-primary text-sm">
+        <div className="mb-4 rounded-lg bg-primary-subtle-bg border border-primary-subtle-border px-4 py-3 text-text-primary text-sm">
           You&apos;re using encounters locally. Sign in to save encounters to your account.
-          <Link href="/login?returnTo=/encounters" className="ml-2 font-medium text-primary-600 dark:text-primary-400 hover:underline">
+          <Link href="/login?returnTo=/encounters" className="ml-2 font-medium text-primary-link-fg hover:underline">
             Sign in
           </Link>
         </div>
@@ -242,8 +242,8 @@ function EncountersContent() {
                 className={cn(
                   'px-3 py-1.5 text-sm rounded-lg font-medium transition-colors',
                   typeFilter === type
-                    ? 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white'
-                    : 'bg-surface-alt text-text-secondary dark:text-text-primary hover:bg-surface-alt/80'
+                    ? 'bg-primary-button text-white'
+                    : 'bg-surface-alt text-text-secondary hover:bg-surface-alt/80'
                 )}
               >
                 {type ? TYPE_LABELS[type] : 'All Types'}
@@ -317,7 +317,7 @@ function EncountersContent() {
                         size="sm"
                         label={`Mark ${encounter.name} complete`}
                         title="Mark complete"
-                        className="opacity-0 group-hover:opacity-100 text-text-muted dark:text-text-secondary hover:text-success-700 dark:hover:text-success-400 min-w-[44px] min-h-[44px]"
+                        className="opacity-0 group-hover:opacity-100 text-text-muted dark:text-text-secondary hover:text-success-fg min-w-[44px] min-h-[44px]"
                         onClick={(e) => {
                           e.stopPropagation();
                           void handleMarkComplete(encounter);
@@ -330,7 +330,7 @@ function EncountersContent() {
                       variant="ghost"
                       size="sm"
                       label={`Delete encounter ${encounter.name}`}
-                      className="opacity-0 group-hover:opacity-100 text-text-muted dark:text-text-secondary hover:text-danger-600 dark:hover:text-danger-400 hover:bg-red-50 dark:hover:bg-danger-900/20 min-w-[44px] min-h-[44px]"
+                      className="opacity-0 group-hover:opacity-100 text-text-muted dark:text-text-secondary hover:text-danger-fg hover:bg-red-50 dark:hover:bg-danger-900/20 min-w-[44px] min-h-[44px]"
                       onClick={(e) => {
                         e.stopPropagation();
                         setDeleteTarget(encounter);
@@ -416,8 +416,8 @@ function CreateEncounterModal({
                 className={cn(
                   'flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-colors',
                   type === t
-                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                    : 'border-border-light hover:border-primary-300'
+                    ? 'border-primary-outline-border bg-primary-subtle-bg'
+                    : 'border-border-light hover:border-primary-outline-border'
                 )}
               >
                 <div className={cn('p-2 rounded-lg', TYPE_COLORS[t])}>

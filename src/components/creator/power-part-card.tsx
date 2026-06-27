@@ -8,7 +8,7 @@
 import { useState, useMemo, useId } from 'react';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { formatCost } from '@/lib/game/creator-constants';
-import { partCategoryToChipVariant } from '@/lib/game/part-category';
+import { partChipVariant } from '@/lib/chip/part-chip-variant';
 import { Chip, IconButton, Checkbox } from '@/components/ui';
 import { ValueStepper } from '@/components/shared';
 import type { PowerPart, TechniquePart } from '@/hooks';
@@ -99,7 +99,7 @@ export function PowerPartCard({
           </span>
           {part.category && (
             <Chip
-              variant={partCategoryToChipVariant(part.category)}
+              variant={partChipVariant(part.category)}
               size="sm"
               className="shrink-0 max-w-[7.5rem] truncate font-normal"
               title={part.category}

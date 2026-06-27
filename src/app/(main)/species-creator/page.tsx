@@ -38,6 +38,7 @@ import {
 import { useSort } from '@/hooks/use-sort';
 import { ChipList } from '../creature-creator/CreatureCreatorHelpers';
 import { cn } from '@/lib/utils/cn';
+import { formatListCellLabel } from '@/lib/utils';
 
 const MAX_SPECIES_TRAITS = 3;
 const MAX_ANCESTRY_TRAITS = 6;
@@ -610,7 +611,7 @@ export default function SpeciesCreatorPage() {
 
   return (
     <CreatorLayout
-      icon={<Users className="w-8 h-8 text-primary-600" />}
+      icon={<Users className="w-8 h-8 text-primary-link-fg" />}
       title="Species Creator"
       description="Create custom species. Add traits (species, ancestry, characteristic, flaw), choose base skills and sizes, and set languages. Load from Realms Codex or My Codex; save to My Codex."
       actions={
@@ -765,7 +766,7 @@ export default function SpeciesCreatorPage() {
 
         <CollapsibleSection title={`Sizes (up to ${MAX_SIZES})`} collapsedSummary={sizesSummary} defaultExpanded={true}>
           <p className="text-sm text-text-muted dark:text-text-secondary mb-4">Choose up to two size options for this species.</p>
-          <ChipList items={form.sizes} onRemove={removeSize} color="bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200" />
+          <ChipList items={form.sizes} onRemove={removeSize} color="bg-primary-subtle-bg text-primary-subtle-fg" />
           <div className="flex flex-wrap gap-2 mt-2">
             {SIZE_OPTIONS.filter((s) => !form.sizes.includes(s)).slice(0, SIZE_OPTIONS.length - form.sizes.length).map((size) => (
               <Button key={size} variant="outline" size="sm" onClick={() => addSize(size)} disabled={form.sizes.length >= MAX_SIZES}>
@@ -924,7 +925,7 @@ function TraitBlock({
           {ids.map((id) => (
             <li key={id} className="flex items-center justify-between gap-2 py-1">
               <span className="text-text-primary">{traitIdToName.get(id) ?? id}</span>
-              <button type="button" onClick={() => onRemove(id)} className="text-text-muted hover:text-danger-500">×</button>
+              <button type="button" onClick={() => onRemove(id)} className="text-text-muted hover:text-danger-fg">×</button>
             </li>
           ))}
         </ul>
@@ -1069,7 +1070,7 @@ function TraitListModal({
                   }}
                   className={cn(
                     'min-h-[var(--touch-target-min,44px)] flex items-center rounded-lg',
-                    isSelected ? 'ring-2 ring-primary-500' : ''
+                    isSelected ? 'ring-2 ring-primary-subtle-border' : ''
                   )}
                   aria-pressed={isSelected}
                   aria-label={isSelected ? `Selected: ${t.name}. Click to deselect.` : `Select ${t.name}`}
@@ -1082,9 +1083,10 @@ function TraitListModal({
                   columns={[
                     {
                       key: 'uses_per_rec',
+                      label: 'Uses',
                       value: t.uses_per_rec != null && t.uses_per_rec > 0 ? String(t.uses_per_rec) : '-',
                     },
-                    { key: 'rec_period', value: t.rec_period ?? '-' },
+                    { key: 'rec_period', label: 'Recovery', value: t.rec_period ? formatListCellLabel(t.rec_period) : '-' },
                   ]}
                 />
               </div>

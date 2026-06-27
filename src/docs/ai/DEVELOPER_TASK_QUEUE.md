@@ -25,6 +25,8 @@ What **you** need to do that AI cannot (Dashboard, prod validation, decisions). 
 | ID | Task | What to do | Why AI can't |
 |----|------|------------|--------------|
 | **DEV-001** | [TASK-353](AI_TASK_QUEUE.md) — HIBP | Supabase Dashboard → **Authentication** → Password → enable **Leaked password protection**. Project: `RealmsRPG-Test` (`lbqhiwudvifmkjtkccdg`). [Docs](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection) | Dashboard-only |
+| **DEV-002** | [TASK-383](AI_TASK_QUEUE.md) — UI Verify CI bootstrap | One-time setup so the `UI Verify` workflow is a real gate: (1) Add repo **Actions secrets** `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY`. (2) **Seed Linux visual baselines**: run the `visual-a11y` job once (or locally via the Playwright Docker image `mcr.microsoft.com/playwright`) with `npx playwright test --update-snapshots`, then commit the generated `tests/visual/*-snapshots/*-linux.png`. (3) In **Settings → Branches**, add `UI Verify / static-gates` and `UI Verify / visual-a11y` to required status checks. | Repo settings + secrets + committing OS-specific baselines from a Linux runner |
+| **DEV-003** | [TASK-385](AI_TASK_QUEUE.md) — CI test user (optional) | (1) Run `npm run e2e:provision` locally with `E2E_TEST_EMAIL` + `E2E_TEST_PASSWORD` set (uses `SUPABASE_SERVICE_ROLE_KEY`). (2) Add repo **Actions secrets**: `E2E_TEST_EMAIL`, `E2E_TEST_PASSWORD`, optional `E2E_TEST_CHARACTER_ID` / `E2E_TEST_CAMPAIGN_ID` (defaults in `tests/visual/e2e-seed-manifest.json`). (3) On first CI run with secrets, commit Linux auth baselines from `tests/visual/auth-screenshots.pw.ts-snapshots/*-linux.png` (same flow as DEV-002). | Account creation + secret storage + OS-specific baselines |
 
 ---
 
@@ -39,6 +41,7 @@ Each suite is a **category** of step-by-step tests. Full steps live in [`BUILD_V
 | **DEV-V-009** | Character sheet refactor | TASK-317, TASK-348, TASK-365, TASK-375, TASK-318, TASK-349 | T001–T006 (6) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-009--character-sheet-refactor-task-317-task-348-task-365-task-375) |
 | **DEV-V-005** | RLS / DB migrations | TASK-352, TASK-327, TASK-354 | T001–T003 (3) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-005--rls-policy-consolidation-task-352-task-327) |
 | **DEV-V-010** | Feat/trait custom name + note | TASK-377 | T001–T004 (4) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-010--feattrait-custom-name--note-task-377) |
+| **DEV-V-011** | UI verification safety net | TASK-383, TASK-385 | T001–T006 (6) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-011--ui-verification-safety-net-task-383) |
 | DEV-V-002 | Campaign & rolls security | TASK-329 | — | Planned (legacy DEV-T-002) |
 | DEV-V-003 | Admin role change safety | TASK-330 | — | Planned |
 | DEV-V-004 | Storage & account security | TASK-326, TASK-331 | — | Planned |

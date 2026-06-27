@@ -20,6 +20,7 @@ import {
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
+import { EmptyState } from '@/components/ui';
 import { useItemProperties, type ItemProperty } from '@/hooks';
 import { formatListCellLabel } from '@/lib/utils';
 
@@ -162,7 +163,7 @@ export function CodexPropertiesTab({ codexMode = 'public' }: { codexMode?: 'publ
         {isLoading ? (
           <LoadingState />
         ) : filteredProperties.length === 0 ? (
-          <div className="p-8 text-center text-text-muted dark:text-text-secondary">No properties found.</div>
+          <EmptyState title="No properties found." size="sm" />
         ) : (
           filteredProperties.map((prop: ItemProperty) => (
             <PropertyCard key={prop.id} property={prop} />

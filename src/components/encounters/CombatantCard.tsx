@@ -7,7 +7,7 @@
 import { useState, useRef, useEffect, memo } from 'react';
 import { GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui';
+import { Button, Card } from '@/components/ui';
 import { ValueStepper } from '@/components/shared';
 import { CONDITION_OPTIONS } from './encounter-constants';
 import type { CombatantCardProps } from './encounter-combatant-types';
@@ -105,10 +105,10 @@ export const CombatantCard = memo(function CombatantCard({
 
   const getBorderColor = () => {
     switch (combatant.combatantType) {
-      case 'ally': return 'border-l-blue-500';
-      case 'enemy': return 'border-l-red-500';
-      case 'companion': return 'border-l-purple-500';
-      default: return combatant.isAlly ? 'border-l-blue-500' : 'border-l-red-500';
+      case 'ally': return 'border-l-ally';
+      case 'enemy': return 'border-l-enemy';
+      case 'companion': return 'border-l-companion';
+      default: return combatant.isAlly ? 'border-l-ally' : 'border-l-enemy';
     }
   };
 
@@ -128,16 +128,16 @@ export const CombatantCard = memo(function CombatantCard({
   };
 
   return (
-    <div
+    <Card
       id={`combatant-${combatant.id}`}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       className={cn(
-        'bg-surface rounded-xl shadow-md p-3 transition-all',
-        isCurrentTurn && 'ring-2 ring-primary-500 shadow-lg',
-        isDead && 'bg-red-50 dark:bg-red-900/30 dark:opacity-90',
-        isDragOver && 'ring-2 ring-amber-400 bg-amber-50 dark:bg-amber-900/30',
+        'shadow-md p-3 transition-all',
+        isCurrentTurn && 'ring-2 ring-primary-subtle-border shadow-lg',
+        isDead && 'bg-enemy-light opacity-90',
+        isDragOver && 'ring-2 ring-warning-500 bg-warning-light',
         isDragging && 'opacity-50',
         'border-l-4',
         getBorderColor()
@@ -150,13 +150,13 @@ export const CombatantCard = memo(function CombatantCard({
           onDragEnd={onDragEnd}
           className="flex flex-col items-center gap-1 cursor-grab active:cursor-grabbing select-none"
         >
-          <div className="text-text-muted dark:text-text-secondary hover:text-text-primary dark:hover:text-text-primary p-1 rounded hover:bg-surface-alt">
+          <div className="text-text-muted dark:text-text-secondary hover:text-text-primary dark:hover:text-text-primary p-1 rounded hover:bg-surface-alt touch-target-md-compact flex items-center justify-center">
             <GripVertical className="w-5 h-5" />
           </div>
           <div
             className={cn(
-              'w-10 h-10 rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors',
-              isCurrentTurn ? 'bg-primary-600 text-white' : 'bg-surface-alt text-text-secondary hover:bg-surface'
+              'w-11 h-11 md:w-10 md:h-10 rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors',
+              isCurrentTurn ? 'bg-primary-button text-white' : 'bg-surface-alt text-text-secondary hover:bg-surface'
             )}
             onClick={() => setIsEditingInitiative(true)}
             title="Click to edit initiative"
@@ -192,14 +192,14 @@ export const CombatantCard = memo(function CombatantCard({
                 onChange={(e) => onUpdate({ name: e.target.value })}
                 onBlur={() => setIsEditingName(false)}
                 onKeyDown={(e) => e.key === 'Enter' && setIsEditingName(false)}
-                className="text-base font-bold border-b-2 border-primary-500 outline-none bg-transparent"
+                className="text-base font-bold border-b-2 border-primary-outline-border outline-none bg-transparent"
                 autoFocus
               />
             ) : (
               <div
                 role="button"
                 tabIndex={0}
-                className={cn('text-base font-bold cursor-pointer hover:text-primary-600', isDead && 'line-through text-text-muted dark:text-text-secondary')}
+                className={cn('text-base font-bold cursor-pointer hover:text-primary-fg-hover', isDead && 'line-through text-text-muted dark:text-text-secondary')}
                 onClick={() => setIsEditingName(true)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsEditingName(true); } }}
                 title="Click to edit name"
@@ -218,9 +218,9 @@ export const CombatantCard = memo(function CombatantCard({
               title="Change side"
               aria-label="Combatant side (Ally, Enemy, or Companion)"
               className={cn(
-                'text-[10px] font-medium rounded px-1.5 py-0.5 border cursor-pointer',
-                combatant.combatantType === 'ally' && 'bg-blue-100 dark:bg-blue-900/40 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300',
-                combatant.combatantType === 'enemy' && 'bg-red-100 dark:bg-red-900/40 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300',
+                'text-[10px] font-medium rounded px-1.5 py-0.5 border cursor-pointer min-h-[var(--touch-target-min,44px)] md:min-h-0',
+                combatant.combatantType === 'ally' && 'bg-ally-light border-ally text-ally-text',
+                combatant.combatantType === 'enemy' && 'bg-enemy-light border-enemy text-enemy-text',
                 combatant.combatantType === 'companion' && 'bg-companion-light border-companion text-companion-text'
               )}
             >
@@ -228,22 +228,22 @@ export const CombatantCard = memo(function CombatantCard({
               <option value="enemy">Enemy</option>
               <option value="companion">Companion</option>
             </select>
-            <label className="flex items-center gap-1 cursor-pointer select-none" title="Surprised (goes last in round 1)">
+            <label className="flex items-center gap-1 cursor-pointer select-none min-h-[var(--touch-target-min,44px)]" title="Surprised (goes last in round 1)">
               <input
                 type="checkbox"
                 checked={!!combatant.isSurprised}
                 onChange={(e) => onUpdate({ isSurprised: e.target.checked })}
-                className="rounded border-border-light w-3.5 h-3.5"
+                className="rounded border-border-light w-4 h-4"
               />
               <span className="text-[10px] text-text-muted dark:text-text-secondary">Surprised</span>
             </label>
             {isCurrentTurn && (
-              <span className="px-1.5 py-0.5 text-[10px] bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 rounded font-medium">
+              <span className="px-1.5 py-0.5 text-[10px] bg-primary-subtle-bg text-primary-fg rounded font-medium">
                 Current
               </span>
             )}
             {isDead && (
-              <span className="px-1.5 py-0.5 text-[10px] bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded font-medium">
+              <span className="px-1.5 py-0.5 text-[10px] bg-enemy-light text-enemy-text rounded font-medium">
                 Down
               </span>
             )}
@@ -267,11 +267,11 @@ export const CombatantCard = memo(function CombatantCard({
 
           {variant === 'compact' ? (
             <div className="flex items-center gap-3 mb-2">
-              <div className={cn('flex flex-col flex-1 min-w-0 p-2 rounded-lg border', 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900/50')}>
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-red-700 dark:text-red-400 mb-0.5">Health</span>
+              <div className={cn('flex flex-col flex-1 min-w-0 p-2 rounded-lg border', 'bg-health-light border-health-border')}>
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-health-text mb-0.5">Health</span>
                 <div className="flex items-center gap-1">
                   {linkedResourcesReadOnly ? (
-                    <span className="text-sm font-bold text-red-800 dark:text-red-300" title={linkedResourcesTitle}>{combatant.currentHealth} / {combatant.maxHealth}</span>
+                    <span className="text-sm font-bold text-health-text" title={linkedResourcesTitle}>{combatant.currentHealth} / {combatant.maxHealth}</span>
                   ) : (
                     <>
                       <input
@@ -279,11 +279,11 @@ export const CombatantCard = memo(function CombatantCard({
                         value={combatant.currentHealth}
                         onChange={(e) => onUpdate({ currentHealth: parseInt(e.target.value) || 0 })}
                         className={cn(
-                          'w-10 px-0.5 py-0 text-sm font-bold rounded border text-center',
-                          'border-red-300 dark:border-red-800 text-red-800 dark:text-red-300'
+                          'w-10 px-0.5 py-0 text-sm font-bold rounded border text-center min-h-[var(--touch-target-min,44px)] md:min-h-0',
+                          'border-health-border text-health-text'
                         )}
                       />
-                      <span className="text-xs text-red-700 dark:text-red-400">/ {combatant.maxHealth}</span>
+                      <span className="text-xs text-health-text">/ {combatant.maxHealth}</span>
                       <ValueStepper
                         value={combatant.currentHealth}
                         onChange={(v) => onUpdate({ currentHealth: Math.max(0, v) })}
@@ -304,20 +304,20 @@ export const CombatantCard = memo(function CombatantCard({
                   />
                 </div>
               </div>
-              <div className={cn('flex flex-col flex-1 min-w-0 p-2 rounded-lg border', 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-900/50')}>
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400 mb-0.5">Energy</span>
+              <div className={cn('flex flex-col flex-1 min-w-0 p-2 rounded-lg border', 'bg-energy-light border-energy-border')}>
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-energy-text mb-0.5">Energy</span>
                 <div className="flex items-center gap-1">
                   {linkedResourcesReadOnly ? (
-                    <span className="text-sm font-bold text-blue-800 dark:text-blue-300" title={linkedResourcesTitle}>{combatant.currentEnergy} / {combatant.maxEnergy}</span>
+                    <span className="text-sm font-bold text-energy-text" title={linkedResourcesTitle}>{combatant.currentEnergy} / {combatant.maxEnergy}</span>
                   ) : (
                     <>
                       <input
                         type="number"
                         value={combatant.currentEnergy}
                         onChange={(e) => onUpdate({ currentEnergy: parseInt(e.target.value) || 0 })}
-                        className="w-10 px-0.5 py-0 text-sm font-bold rounded border border-blue-300 dark:border-blue-800 text-blue-800 dark:text-blue-300 text-center"
+                        className="w-10 px-0.5 py-0 text-sm font-bold rounded border border-energy-border text-energy-text text-center min-h-[var(--touch-target-min,44px)] md:min-h-0"
                       />
-                      <span className="text-xs text-blue-700 dark:text-blue-400">/ {combatant.maxEnergy}</span>
+                      <span className="text-xs text-energy-text">/ {combatant.maxEnergy}</span>
                       <ValueStepper
                         value={combatant.currentEnergy}
                         onChange={(v) => onUpdate({ currentEnergy: Math.max(0, v) })}
@@ -333,7 +333,7 @@ export const CombatantCard = memo(function CombatantCard({
                 </div>
                 <div className="relative h-1.5 mt-1 bg-surface rounded-full overflow-hidden">
                   <div
-                    className="absolute inset-y-0 left-0 bg-blue-500 transition-all rounded-full"
+                    className="absolute inset-y-0 left-0 bg-energy transition-all rounded-full"
                     style={{ width: `${Math.max(0, Math.min(100, energyPercent))}%` }}
                   />
                 </div>
@@ -342,7 +342,7 @@ export const CombatantCard = memo(function CombatantCard({
           ) : (
             <div className="flex items-center gap-3 mb-2">
               <div className="flex items-center gap-1 flex-1">
-                <span className="text-xs text-red-600 dark:text-red-400 font-medium w-6">HP</span>
+                <span className="text-xs text-health-text font-medium w-6">HP</span>
                 {linkedResourcesReadOnly ? (
                   <span className="text-xs font-medium" title={linkedResourcesTitle}>{combatant.currentHealth} / {combatant.maxHealth}</span>
                 ) : (
@@ -352,8 +352,8 @@ export const CombatantCard = memo(function CombatantCard({
                       value={combatant.currentHealth}
                       onChange={(e) => onUpdate({ currentHealth: parseInt(e.target.value) || 0 })}
                       className={cn(
-                        'w-12 px-1 py-0.5 text-xs border rounded text-center font-medium',
-                        combatant.currentHealth <= 0 ? 'border-red-300 dark:border-red-600/50 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300' : 'border-border-light'
+                        'w-12 px-1 py-0.5 text-xs border rounded text-center font-medium min-h-[var(--touch-target-min,44px)] md:min-h-0',
+                        combatant.currentHealth <= 0 ? 'border-danger-300 bg-danger-light text-danger-fg' : 'border-border-light'
                       )}
                     />
                     <span className="text-text-muted dark:text-text-secondary text-xs">/</span>
@@ -361,7 +361,7 @@ export const CombatantCard = memo(function CombatantCard({
                       type="number"
                       value={combatant.maxHealth}
                       onChange={(e) => onUpdate({ maxHealth: parseInt(e.target.value) || 1 })}
-                      className="w-12 px-1 py-0.5 text-xs border border-border-light rounded text-center"
+                      className="w-12 px-1 py-0.5 text-xs border border-border-light rounded text-center min-h-[var(--touch-target-min,44px)] md:min-h-0"
                     />
                   </>
                 )}
@@ -374,7 +374,7 @@ export const CombatantCard = memo(function CombatantCard({
               </div>
 
               <div className="flex items-center gap-1 flex-1">
-                <span className="text-xs text-blue-600 dark:text-blue-400 font-medium w-6">EN</span>
+                <span className="text-xs text-energy-text font-medium w-6">EN</span>
                 {linkedResourcesReadOnly ? (
                   <span className="text-xs font-medium" title={linkedResourcesTitle}>{combatant.currentEnergy} / {combatant.maxEnergy}</span>
                 ) : (
@@ -383,20 +383,20 @@ export const CombatantCard = memo(function CombatantCard({
                       type="number"
                       value={combatant.currentEnergy}
                       onChange={(e) => onUpdate({ currentEnergy: parseInt(e.target.value) || 0 })}
-                      className="w-12 px-1 py-0.5 text-xs border border-border-light rounded text-center font-medium"
+                      className="w-12 px-1 py-0.5 text-xs border border-border-light rounded text-center font-medium min-h-[var(--touch-target-min,44px)] md:min-h-0"
                     />
                     <span className="text-text-muted dark:text-text-secondary text-xs">/</span>
                     <input
                       type="number"
                       value={combatant.maxEnergy}
                       onChange={(e) => onUpdate({ maxEnergy: parseInt(e.target.value) || 0 })}
-                      className="w-12 px-1 py-0.5 text-xs border border-border-light rounded text-center"
+                      className="w-12 px-1 py-0.5 text-xs border border-border-light rounded text-center min-h-[var(--touch-target-min,44px)] md:min-h-0"
                     />
                   </>
                 )}
                 <div className="flex-1 h-2 bg-surface-alt rounded-full overflow-hidden max-w-20">
                   <div
-                    className="h-full bg-blue-500 transition-all"
+                    className="h-full bg-energy transition-all"
                     style={{ width: `${Math.max(0, Math.min(100, energyPercent))}%` }}
                   />
                 </div>
@@ -415,8 +415,8 @@ export const CombatantCard = memo(function CombatantCard({
                     key={cond.name}
                     className={cn(
                       'px-2 py-0.5 text-xs rounded-full flex items-center gap-1 select-none',
-                      isCustom ? 'bg-info-100 dark:bg-info-900/40 text-info-700 dark:text-info-300' :
-                      isLeveled ? 'bg-companion-light dark:bg-violet-900/40 text-companion-text dark:text-violet-300' : 'bg-warning-light dark:bg-warning-900/30 text-warning-700 dark:text-warning-300'
+                      isCustom ? 'bg-info-light text-info-fg' :
+                      isLeveled ? 'bg-companion-light text-companion-text' : 'bg-warning-light text-warning-fg'
                     )}
                     title={condDef?.description ?? 'Custom condition (leveled). Left-click to increase, right-click to decrease level.'}
                     onContextMenu={(e) => {
@@ -436,7 +436,7 @@ export const CombatantCard = memo(function CombatantCard({
                     </span>
                     <button
                       onClick={() => isLeveled ? onUpdateConditionLevel(cond.name, -1) : onRemoveCondition(cond.name)}
-                      className="hover:text-red-600 dark:hover:text-red-400 font-bold"
+                      className="hover:text-danger-fg font-bold touch-target-md-compact inline-flex items-center justify-center"
                       title={isLeveled ? 'Decrease level (removes at 0)' : 'Remove condition'}
                       aria-label={isLeveled ? `Decrease ${cond.name} level` : `Remove ${cond.name} condition`}
                     >
@@ -451,18 +451,18 @@ export const CombatantCard = memo(function CombatantCard({
             <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-border-subtle">
             {variant === 'full' && !isLinkedToCharacter && onDamage && onHeal && onEnergyDrain && onEnergyRestore && (
             <>
-            <div className="flex items-center gap-0.5 bg-red-50 dark:bg-red-900/30 rounded px-1.5 py-0.5">
+            <div className="flex items-center gap-0.5 bg-danger-light rounded px-1.5 py-0.5">
               <input
                 type="number"
                 value={damageInput}
                 onChange={(e) => setDamageInput(e.target.value)}
                 placeholder="−"
-                className="w-10 px-1 py-0.5 text-xs bg-white dark:bg-surface border border-red-200 dark:border-red-600/50 rounded text-center"
+                className="w-10 px-1 py-0.5 text-xs bg-surface border border-danger-300 rounded text-center min-h-[var(--touch-target-min,44px)] md:min-h-0"
                 onKeyDown={(e) => e.key === 'Enter' && handleDamage()}
               />
               <button
                 onClick={handleDamage}
-                className="px-1.5 py-0.5 text-xs text-red-700 dark:text-red-300 hover:text-red-900 dark:hover:text-red-200 font-medium"
+                className="px-1.5 py-0.5 text-xs text-danger-fg hover:opacity-80 font-medium touch-target-md-compact inline-flex items-center justify-center"
                 title="Apply damage"
               >
                 Dmg
@@ -473,30 +473,30 @@ export const CombatantCard = memo(function CombatantCard({
                 value={healInput}
                 onChange={(e) => setHealInput(e.target.value)}
                 placeholder="+"
-                className="w-10 px-1 py-0.5 text-xs bg-white dark:bg-surface border border-green-200 dark:border-green-600/50 rounded text-center"
+                className="w-10 px-1 py-0.5 text-xs bg-surface border border-success-300 rounded text-center min-h-[var(--touch-target-min,44px)] md:min-h-0"
                 onKeyDown={(e) => e.key === 'Enter' && handleHeal()}
               />
               <button
                 onClick={handleHeal}
-                className="px-1.5 py-0.5 text-xs text-green-700 dark:text-green-300 hover:text-green-900 dark:hover:text-green-200 font-medium"
+                className="px-1.5 py-0.5 text-xs text-success-fg hover:opacity-80 font-medium touch-target-md-compact inline-flex items-center justify-center"
                 title="Apply healing"
               >
                 Heal
               </button>
             </div>
 
-            <div className="flex items-center gap-0.5 bg-blue-50 dark:bg-blue-900/30 rounded px-1.5 py-0.5">
+            <div className="flex items-center gap-0.5 bg-energy-light rounded px-1.5 py-0.5">
               <input
                 type="number"
                 value={energyDrainInput}
                 onChange={(e) => setEnergyDrainInput(e.target.value)}
                 placeholder="−"
-                className="w-10 px-1 py-0.5 text-xs bg-white dark:bg-surface border border-blue-200 dark:border-blue-600/50 rounded text-center"
+                className="w-10 px-1 py-0.5 text-xs bg-surface border border-energy-border rounded text-center min-h-[var(--touch-target-min,44px)] md:min-h-0"
                 onKeyDown={(e) => e.key === 'Enter' && handleEnergyDrain()}
               />
               <button
                 onClick={handleEnergyDrain}
-                className="px-1.5 py-0.5 text-xs text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-200 font-medium"
+                className="px-1.5 py-0.5 text-xs text-energy-text hover:opacity-80 font-medium touch-target-md-compact inline-flex items-center justify-center"
                 title="Drain energy"
               >
                 Use
@@ -507,12 +507,12 @@ export const CombatantCard = memo(function CombatantCard({
                 value={energyRestoreInput}
                 onChange={(e) => setEnergyRestoreInput(e.target.value)}
                 placeholder="+"
-                className="w-10 px-1 py-0.5 text-xs bg-white dark:bg-surface border border-cyan-200 dark:border-cyan-600/50 rounded text-center"
+                className="w-10 px-1 py-0.5 text-xs bg-surface border border-info-border rounded text-center min-h-[var(--touch-target-min,44px)] md:min-h-0"
                 onKeyDown={(e) => e.key === 'Enter' && handleEnergyRestore()}
               />
               <button
                 onClick={handleEnergyRestore}
-                className="px-1.5 py-0.5 text-xs text-cyan-700 dark:text-cyan-300 hover:text-cyan-900 dark:hover:text-cyan-200 font-medium"
+                className="px-1.5 py-0.5 text-xs text-info-fg hover:opacity-80 font-medium touch-target-md-compact inline-flex items-center justify-center"
                 title="Restore energy"
               >
                 Rest
@@ -524,8 +524,8 @@ export const CombatantCard = memo(function CombatantCard({
             <button
               onClick={() => setShowConditions(!showConditions)}
               className={cn(
-                'px-2 py-0.5 text-xs rounded',
-                showConditions ? 'bg-amber-500 text-white' : 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800/50'
+                'px-2 py-0.5 text-xs rounded touch-target-md-compact inline-flex items-center justify-center',
+                showConditions ? 'bg-warning-500 text-white' : 'bg-warning-light text-warning-fg hover:opacity-90'
               )}
             >
               {showConditions ? '▲' : '▼'} Conditions
@@ -534,7 +534,7 @@ export const CombatantCard = memo(function CombatantCard({
             <div className="ml-auto flex items-center gap-1">
               <button
                 onClick={onDuplicate}
-                className="px-2 py-0.5 text-xs bg-surface-alt text-text-secondary rounded hover:bg-surface"
+                className="px-2 py-0.5 text-xs bg-surface-alt text-text-secondary rounded hover:bg-surface touch-target-md-compact inline-flex items-center justify-center"
                 title="Duplicate this combatant"
                 aria-label={`Duplicate ${combatant.name}`}
               >
@@ -542,7 +542,7 @@ export const CombatantCard = memo(function CombatantCard({
               </button>
               <button
                 onClick={onRemove}
-                className="px-2 py-0.5 text-xs bg-surface-alt text-text-secondary rounded hover:bg-red-100 dark:hover:bg-red-900/40 hover:text-red-700 dark:hover:text-red-300"
+                className="px-2 py-0.5 text-xs bg-surface-alt text-text-secondary rounded hover:bg-danger-light hover:text-danger-fg touch-target-md-compact inline-flex items-center justify-center"
                 title="Remove combatant"
                 aria-label={`Remove ${combatant.name}`}
               >
@@ -557,7 +557,7 @@ export const CombatantCard = memo(function CombatantCard({
                 <select
                   value={selectedCondition}
                   onChange={(e) => setSelectedCondition(e.target.value)}
-                  className="flex-1 px-3 py-1 text-sm border border-border-light rounded"
+                  className="flex-1 px-3 py-1 text-sm border border-border-light rounded min-h-[var(--touch-target-min,44px)] md:min-h-0"
                   aria-label="Select condition to add"
                 >
                   <option value="">Select Condition...</option>
@@ -588,7 +588,7 @@ export const CombatantCard = memo(function CombatantCard({
                   onChange={(e) => setCustomCondition(e.target.value)}
                   placeholder="Custom condition..."
                   aria-label="Custom condition name"
-                  className="flex-1 px-3 py-1 text-sm border border-border-light rounded"
+                  className="flex-1 px-3 py-1 text-sm border border-border-light rounded min-h-[var(--touch-target-min,44px)] md:min-h-0"
                   onKeyDown={(e) => e.key === 'Enter' && handleAddCustomCondition()}
                   maxLength={30}
                 />
@@ -609,6 +609,6 @@ export const CombatantCard = memo(function CombatantCard({
           )}
         </div>
       </div>
-    </div>
+    </Card>
   );
 });

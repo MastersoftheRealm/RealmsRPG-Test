@@ -3,6 +3,39 @@
 This document outlines the unified design system for RealmsRPG, based on the Figma mockup specifications and best practices for consistency across the entire application.
 
 > **Unification status:** See `src/docs/ai/AGENT_GUIDE.md` (Unified patterns section) and `.cursor/rules/realms-unification.mdc`.
+> **Active roadmap:** `src/docs/ai/UI_UNIFICATION_PLAN.md` is the source of truth for the in-progress token/component unification.
+
+## Token Architecture (Phase 0+)
+
+The design system is built on a **single source of truth** in `src/app/globals.css`.
+
+### Two tiers
+
+1. **Canonical tokens — `--color-*` in `@theme`.** These are the real tokens Tailwind compiles into utilities (`bg-surface`, `text-text-primary`, `border-border-light`, etc.). Every semantic color is defined here once.
+2. **Compat-alias shim — removed (Phase 1.5).** Legacy `:root` bare variables are gone;
+   only canonical `--color-*` in `@theme` + `.dark` overrides remain.
+
+Dark mode overrides **only** the canonical `--color-*` tokens inside `.dark { … }`; the aliases resolve through them automatically, so there are no duplicated hex values across themes.
+
+> **Rule:** New styles reference canonical tokens (`bg-surface`, `text-text-secondary`, `border-border`). Never reintroduce a bare legacy variable, and never hardcode a hex/`gray-*` value outside the auth pages.
+
+### Theme-aware semantic foreground tokens
+
+Status and archetype "on-color" text uses dedicated foreground tokens that are **theme-aware** (correct contrast in both light and dark): `--color-success-fg`, `--color-danger-fg`, `--color-warning-fg`, `--color-info-fg`, `--color-power-fg`, `--color-martial-fg`, and `--color-primary-button`. Prefer these over picking a ramp step by hand when placing text on a tinted/solid background — they are contrast-validated by `scripts/check-contrast.mjs`.
+
+### Standard ladders (semantic scales)
+
+Common scales are encoded as semantic tokens so components share one ladder instead of arbitrary values:
+
+| Scale | Tokens | Notes |
+|-------|--------|-------|
+| Radius | `--radius-control`, `--radius-card`, `--radius-pill` | controls = `lg`, cards = `xl`, pills/avatars = `full` |
+| Elevation | `--shadow-card`, `--shadow-raised`, `--shadow-overlay` | resting card → hovered/raised → modal/popover |
+| Motion | `--duration-fast` (150ms), `--duration-base` (200ms), `--duration-slow` (300ms), `--ease-standard` | one easing curve for all transitions; use `duration-base ease-standard` in TSX; in `@apply` use `var(--duration-base)` + `var(--ease-standard)` |
+| Z-index | `--z-sticky` (10), `--z-header` / `--z-overlay` (50), `--z-popover` (70), `--z-toast` (100), `--z-floating` (1000), `--z-skip-link` (9999), `--z-toast-stack` (10000) | sticky → header/modal → popovers/tooltips → alerts → skip link / toast stack |
+| Focus | `focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2` | buttons, icon buttons, tabs; form controls use `:focus:` (same ring token); errors use `ring-danger-border` |
+| Touch | `--touch-target-min: 44px`; utilities `.touch-target`, `.touch-target-md-compact` | 44px below `md`; compact on desktop; `Button`/`IconButton` also use `@media(pointer:coarse)` |
+| Container | `--container-narrow` (4xl), `--container-standard` (7xl), `--container-wide` (1440px), `--container-full-tool` (1600px) | page max-widths; marketing chrome uses `.layout-shell-wide` |
 
 ## Color Palette
 
@@ -29,7 +62,7 @@ Warm accent colors for highlights and special elements.
 |-------|-------|-------|
 | `accent-gold` | #c79956 | Primary accent |
 | `accent-bronze` | #d99735 | Secondary accent |
-| `accent-chip` | #fef8f0 | Chip backgrounds |
+| `accent-chip` | #fef8f0 | `<Chip variant="accent">` background |
 
 ### Utility Colors (Cool Blue)
 Secondary blue shades for utility buttons and accents.
@@ -156,14 +189,12 @@ import { PageContainer, PageHeader } from '@/components/ui';
 | `prose` | max-w-4xl | Privacy, terms, resources |
 | `md` | max-w-5xl | Medium content |
 | `content` | max-w-6xl | Creators, character wizard |
-| `lg` | max-w-7xl | Default, character sheet |
-| `xl` | max-w-[1440px] | Library, Codex |
+| `lg` | `var(--container-standard)` | Default pages |
+| `xl` | `var(--container-wide)` | Library, Codex |
+| `tool` | `var(--container-full-tool)` | Character sheet, campaign view (1600px) |
 | `full` | max-w-none | Full width |
 
-CSS classes available:
-- `.page-container` - Standard page container
-- `.page-container-wide` - Wide container with more horizontal padding
-- `.page-container-narrow` - Narrow container for focused content
+Use the `<PageContainer>` component for all page layouts. Container widths and padding are defined in `page-container.tsx` and backed by `--container-*` tokens in `globals.css`.
 
 ### Buttons
 
@@ -194,10 +225,8 @@ import { Button } from '@/components/ui';
 <Button isLoading>Loading...</Button>
 ```
 
-CSS classes available:
-- `.btn-primary`, `.btn-secondary`, `.btn-danger`
-- `.btn-ghost`, `.btn-icon`
-- `.btn-stepper` - +/- stepper buttons
+**Always use the `<Button>` component for buttons.** Legacy gradient utilities (`.btn-primary`, etc.) and raw link button classes (`.btn-solid`, `.btn-outline-clean`) were removed in Phase 0.4 / Phase 2.1. For links styled as buttons, use `<Button asChild><Link …></Button>`. Stepper buttons still use:
+- `.btn-stepper`, `.btn-stepper-danger`, `.btn-stepper-success` - +/- stepper buttons
 
 > **Note:** Navigation buttons (back/continue) now use the `<Button>` component with `variant="secondary"` for back and default for continue.
 
@@ -221,11 +250,9 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 ```
 
 CSS classes available:
-- `.card` - Base card styling
-- `.card-padded` - Card with padding
-- `.card-interactive` - Hoverable card
-- `.card-selected` - Selected state
-- `.selection-card` - Selection card variant
+- `.card` - Base card styling (`bg-surface` + `rounded-xl` + border + `shadow-sm`)
+- `.interactive-card` - Hoverable/clickable card
+- `.selection-card`, `.selection-card--selected` - Selection card + selected state
 
 ### Chips/Badges
 
@@ -262,10 +289,7 @@ import { Chip } from '@/components/ui';
 <Chip size="lg">Large</Chip>
 ```
 
-CSS classes available:
-- `.chip` - Base chip styling
-- `.chip-action`, `.chip-activation`, etc. - Category variants
-- `.chip-success`, `.chip-danger`, etc. - Status variants
+**Chips are component-only.** The raw `.chip` / `.chip-*` utility classes were removed in Phase 0.4 — use the `<Chip>` component (with its `variant` prop) for all chips and badges.
 
 ### Creator Summary Panel
 
@@ -339,7 +363,6 @@ const tabs = [
 CSS classes available:
 - `.tab-nav`, `.tab-nav-list`, `.tab-nav-trigger`, `.tab-nav-trigger-active`
 - `.tab-pill-list`, `.tab-pill-trigger`, `.tab-pill-trigger-active`
-- `.creator-tab`, `.creator-tab--active`, `.creator-tab--completed`
 
 ### Form Inputs
 
@@ -381,8 +404,7 @@ import { Spinner, LoadingState, LoadingOverlay } from '@/components/ui/spinner';
 <LoadingOverlay isLoading={loading} message="Saving..." fullScreen />
 ```
 
-CSS classes available:
-- `.loading-spinner`, `.loading-spinner-sm`, `.loading-spinner-lg`
+Use the `<Spinner>` / `<LoadingState>` components for spinners (the raw `.loading-spinner` classes were removed in Phase 0.4). Skeleton classes remain for placeholders:
 - `.skeleton`, `.skeleton-text`, `.skeleton-title`, `.skeleton-card`
 
 ### Alerts
@@ -399,8 +421,7 @@ import { Alert } from '@/components/ui';
 </Alert>
 ```
 
-CSS classes available:
-- `.alert`, `.alert-error`, `.alert-success`, `.alert-warning`, `.alert-info`
+Use the `<Alert>` component only — legacy `.alert-*` CSS utilities were removed in Phase 2.1.
 
 ### Empty States
 
@@ -497,9 +518,6 @@ Use semantic color tokens for text:
 // New
 import { Spinner } from '@/components/ui/spinner';
 <Spinner size="lg" />
-
-// Or use CSS class
-<div className="loading-spinner loading-spinner-lg" />
 ```
 
 ### Using Page Components

@@ -243,14 +243,14 @@ export function ImageUploadModal({
             className={cn(
               'flex flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed p-12 transition-colors cursor-pointer',
               isDragging
-                ? 'border-primary-500 bg-primary-50'
-                : 'border-border-light bg-surface-alt hover:border-primary-300 hover:bg-primary-50/50'
+                ? 'border-primary-outline-border bg-primary-subtle-bg'
+                : 'border-border-light bg-surface-alt hover:border-primary-outline-border hover:bg-primary-subtle-bg-hover/50'
             )}
             onClick={() => fileInputRef.current?.click()}
           >
             <div className={cn(
               'w-16 h-16 rounded-full flex items-center justify-center transition-colors',
-              isDragging ? 'bg-primary-100 text-primary-600' : 'bg-surface text-text-muted'
+              isDragging ? 'bg-primary-subtle-bg text-primary-link-fg' : 'bg-surface text-text-muted'
             )}>
               {isDragging ? (
                 <Upload className="w-8 h-8" />

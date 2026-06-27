@@ -135,9 +135,9 @@ export function ListHeader({
   // Use same horizontal padding as GridListRow so column content aligns with headers site-wide
   const rowPaddingX = compact ? 'px-3' : 'px-4';
   const headerTypography =
-    'text-xs font-semibold text-primary-700 dark:text-text-secondary uppercase tracking-wide';
+    'text-xs font-semibold text-primary-fg uppercase tracking-wide';
   const headerBarSurface =
-    'bg-primary-50 dark:bg-surface-alt dark:border dark:border-border rounded-lg';
+    'bg-primary-subtle-bg border border-primary-subtle-border rounded-lg';
 
   const desktopGridOnlyClasses = cn(
     'hidden lg:grid gap-2 py-2 mb-2',
@@ -177,11 +177,11 @@ export function ListHeader({
             key={column.key}
             onClick={() => handleColumnClick(column)}
             className={cn(
-              'w-full inline-flex items-center gap-1 transition-colors hover:text-primary-800 dark:hover:text-text-primary',
+              'w-full inline-flex items-center gap-1 transition-colors hover:text-primary-fg-hover',
               column.className,
               justifyStyles[align],
               alignStyles[align],
-              isActive && 'text-primary-800 dark:text-text-primary'
+              isActive && 'text-primary-fg'
             )}
           >
             {column.label.toUpperCase()}
@@ -226,18 +226,18 @@ export function ListHeader({
               onClick={() => setMobileSortOpen((o) => !o)}
               className={cn(
                 'flex items-center justify-between w-full gap-2 py-2.5 px-3 rounded-lg border text-left text-sm font-medium',
-                'bg-primary-50 dark:bg-surface-alt border-primary-200 dark:border-border',
-                'text-primary-700 dark:text-text-secondary',
-                'hover:bg-primary-100 dark:hover:bg-surface transition-colors'
+                'bg-primary-subtle-bg border-primary-subtle-border',
+                'text-primary-fg',
+                'hover:bg-primary-subtle-bg-hover transition-colors'
               )}
               aria-expanded={mobileSortOpen}
               aria-haspopup="listbox"
               aria-label={`Sort by. Current: ${currentLabel} ${currentDir}. Choose sort order.`}
             >
               <span className="flex items-center gap-1.5">
-                <span className="text-primary-600 dark:text-text-secondary">Sort by</span>
+                <span className="text-primary-link-fg">Sort by</span>
                 <span>{currentLabel}</span>
-                <span className="text-primary-600 dark:text-text-secondary text-xs">({currentDir})</span>
+                <span className="text-primary-link-fg text-xs">({currentDir})</span>
               </span>
               <ChevronsUpDown className={cn('w-4 h-4 shrink-0 transition-transform', mobileSortOpen && 'rotate-180')} />
             </button>
@@ -261,14 +261,14 @@ export function ListHeader({
                       className={cn(
                         'w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-left min-h-[44px]',
                         'hover:bg-surface-alt transition-colors',
-                        isActive && 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-medium'
+                        isActive && 'bg-primary-subtle-bg text-primary-fg font-medium'
                       )}
                     >
                       <span>{column.label}</span>
                       {isActive && (
                         sortState.dir === 1
-                          ? <ChevronUp className="w-4 h-4 text-primary-600 dark:text-primary-400" />
-                          : <ChevronDown className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+                          ? <ChevronUp className="w-4 h-4 text-primary-link-fg" />
+                          : <ChevronDown className="w-4 h-4 text-primary-link-fg" />
                       )}
                     </button>
                   );
@@ -341,18 +341,18 @@ export function ListHeader({
               onClick={() => setMobileSortOpen((o) => !o)}
               className={cn(
                 'flex items-center justify-between w-full gap-2 py-2.5 px-3 rounded-lg border text-left text-sm font-medium',
-                'bg-primary-50 dark:bg-surface-alt border-primary-200 dark:border-border',
-                'text-primary-700 dark:text-text-secondary',
-                'hover:bg-primary-100 dark:hover:bg-surface transition-colors'
+                'bg-primary-subtle-bg border-primary-subtle-border',
+                'text-primary-fg',
+                'hover:bg-primary-subtle-bg-hover transition-colors'
               )}
               aria-expanded={mobileSortOpen}
               aria-haspopup="listbox"
               aria-label={`Sort by. Current: ${currentLabel} ${currentDir}. Choose sort order.`}
             >
               <span className="flex items-center gap-1.5">
-                <span className="text-primary-600 dark:text-text-secondary">Sort by</span>
+                <span className="text-primary-link-fg">Sort by</span>
                 <span>{currentLabel}</span>
-                <span className="text-primary-600 dark:text-text-secondary text-xs">({currentDir})</span>
+                <span className="text-primary-link-fg text-xs">({currentDir})</span>
               </span>
               <ChevronsUpDown className={cn('w-4 h-4 shrink-0 transition-transform', mobileSortOpen && 'rotate-180')} />
             </button>
@@ -376,14 +376,14 @@ export function ListHeader({
                       className={cn(
                         'w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-left min-h-[44px]',
                         'hover:bg-surface-alt transition-colors',
-                        isActive && 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-medium'
+                        isActive && 'bg-primary-subtle-bg text-primary-fg font-medium'
                       )}
                     >
                       <span>{column.label}</span>
                       {isActive && (
                         sortState.dir === 1
-                          ? <ChevronUp className="w-4 h-4 text-primary-600 dark:text-primary-400" />
-                          : <ChevronDown className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+                          ? <ChevronUp className="w-4 h-4 text-primary-link-fg" />
+                          : <ChevronDown className="w-4 h-4 text-primary-link-fg" />
                       )}
                     </button>
                   );
@@ -413,18 +413,18 @@ export function ListHeader({
             onClick={() => setMobileSortOpen((o) => !o)}
             className={cn(
               'flex items-center justify-between w-full gap-2 py-2.5 px-3 rounded-lg border text-left text-sm font-medium',
-              'bg-primary-50 dark:bg-surface-alt border-primary-200 dark:border-border',
-              'text-primary-700 dark:text-text-secondary',
-              'hover:bg-primary-100 dark:hover:bg-surface transition-colors'
+              'bg-primary-subtle-bg border-primary-subtle-border',
+              'text-primary-fg',
+              'hover:bg-primary-subtle-bg-hover transition-colors'
             )}
             aria-expanded={mobileSortOpen}
             aria-haspopup="listbox"
             aria-label={`Sort by. Current: ${currentLabel} ${currentDir}. Choose sort order.`}
           >
             <span className="flex items-center gap-1.5">
-              <span className="text-primary-600 dark:text-text-secondary">Sort by</span>
+              <span className="text-primary-link-fg">Sort by</span>
               <span>{currentLabel}</span>
-              <span className="text-primary-600 dark:text-text-secondary text-xs">({currentDir})</span>
+              <span className="text-primary-link-fg text-xs">({currentDir})</span>
             </span>
             <ChevronsUpDown className={cn('w-4 h-4 shrink-0 transition-transform', mobileSortOpen && 'rotate-180')} />
           </button>
@@ -448,14 +448,14 @@ export function ListHeader({
                     className={cn(
                       'w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-left min-h-[44px]',
                       'hover:bg-surface-alt transition-colors',
-                      isActive && 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-medium'
+                      isActive && 'bg-primary-subtle-bg text-primary-fg font-medium'
                     )}
                   >
                     <span>{column.label}</span>
                     {isActive && (
                       sortState.dir === 1
-                        ? <ChevronUp className="w-4 h-4 text-primary-600 dark:text-primary-400" />
-                        : <ChevronDown className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+                        ? <ChevronUp className="w-4 h-4 text-primary-link-fg" />
+                        : <ChevronDown className="w-4 h-4 text-primary-link-fg" />
                     )}
                   </button>
                 );

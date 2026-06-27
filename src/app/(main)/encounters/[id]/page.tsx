@@ -43,7 +43,7 @@ export default function EncounterRedirectPage({ params }: PageParams) {
         </Alert>
         <Link
           href="/encounters"
-          className="mt-4 inline-block text-primary-600 hover:underline"
+          className="mt-4 inline-block text-primary-link-fg hover:underline"
         >
           Back to Encounters
         </Link>

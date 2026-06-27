@@ -11,7 +11,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Search, Replace, Copy, Save, Loader2, ChevronUp, ChevronDown } from 'lucide-react';
-import { Button, Spinner, Modal, useToast } from '@/components/ui';
+import { Button, LoadingState, Modal, useToast } from '@/components/ui';
 import { ErrorDisplay } from '@/components/shared';
 import { useCodexFull } from '@/hooks/use-codex';
 import { createCodexDoc, updateCodexDoc } from './actions';
@@ -474,11 +474,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
   }
 
   if (isLoading || !config) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <LoadingState size="lg" padding="lg" />;
   }
   const idColIndex = columns.indexOf('id');
   const nameColIndex = columns.indexOf('name');
@@ -625,7 +621,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
                     tabIndex={0}
                     onClick={() => handleSort(col)}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort(col); } }}
-                    className={`border-r border-border-subtle p-1.5 text-left text-xs font-semibold text-text-secondary whitespace-nowrap cursor-pointer select-none hover:bg-surface-alt/80 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary-400 ${isSticky ? 'sticky z-20 bg-surface-alt shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] dark:shadow-[2px_0_4px_-2px_rgba(0,0,0,0.3)]' : ''}`}
+                    className={`border-r border-border-subtle p-1.5 text-left text-xs font-semibold text-text-secondary whitespace-nowrap cursor-pointer select-none hover:bg-surface-alt/80 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary-outline-border ${isSticky ? 'sticky z-20 bg-surface-alt shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] dark:shadow-[2px_0_4px_-2px_rgba(0,0,0,0.3)]' : ''}`}
                     style={{
                       width: columnWidths[colIndex],
                       minWidth: columnWidths[colIndex],
@@ -652,7 +648,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
               return (
               <tr
                 key={rowIndex}
-                className={`border-b border-border-subtle hover:bg-surface-alt/50 ${dirty.has(rowIndex) ? 'bg-amber-50/50 dark:bg-amber-900/10' : ''}`}
+                className={`border-b border-border-subtle hover:bg-surface-alt/50 ${dirty.has(rowIndex) ? 'bg-warning-light/50' : ''}`}
               >
                 <td className="sticky left-0 z-10 bg-surface border-r border-border-subtle p-0 text-center text-xs text-text-muted">
                   {displayIndex + 1}
@@ -676,7 +672,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
                       typeof value === 'boolean' === false) &&
                     !Array.isArray(value) &&
                     !(typeof value === 'object' && value !== null);
-                  const inputClass = `w-full min-w-0 border-0 bg-transparent px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-inset focus:ring-primary-400 ${isFocused ? 'ring-1 ring-inset ring-primary-400' : ''}`;
+                  const inputClass = `w-full min-w-0 border-0 bg-transparent px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-inset focus:ring-primary-outline-border ${isFocused ? 'ring-1 ring-inset ring-primary-outline-border' : ''}`;
                   return (
                     <td
                       key={colKey}
@@ -763,7 +759,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
                         type="button"
                         onClick={() => saveRow(rowIndex)}
                         disabled={savingRowIndex === rowIndex}
-                        className="min-h-[44px] min-w-[44px] md:min-h-[36px] md:min-w-[36px] p-1.5 rounded text-text-muted hover:bg-surface-alt hover:text-primary-600 transition-colors inline-flex items-center justify-center"
+                        className="min-h-[44px] min-w-[44px] md:min-h-[36px] md:min-w-[36px] p-1.5 rounded text-text-muted hover:bg-surface-alt hover:text-primary-fg-hover transition-colors inline-flex items-center justify-center"
                         title="Save this row"
                         aria-label="Save this row"
                       >

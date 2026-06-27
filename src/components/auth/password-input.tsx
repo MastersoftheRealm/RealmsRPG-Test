@@ -38,8 +38,8 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             className={cn(
               'w-full px-4 py-3 pr-12 rounded-lg border bg-gray-800/50 text-white',
               'placeholder:text-gray-300',
-              'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent',
-              'transition-colors duration-200',
+              'focus:outline-none focus:ring-2 focus:ring-primary-outline-border focus:border-transparent',
+              'transition-colors duration-base',
               error
                 ? 'border-red-500 focus:ring-red-500'
                 : 'border-gray-600 hover:border-gray-500',

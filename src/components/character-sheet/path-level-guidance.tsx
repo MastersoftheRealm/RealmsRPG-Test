@@ -86,7 +86,7 @@ function GuidanceSection({
       <p
         className={
           variant === 'remove'
-            ? 'text-xs font-semibold uppercase tracking-wide text-danger-700 dark:text-danger-300 mb-1'
+            ? 'text-xs font-semibold uppercase tracking-wide text-danger-fg mb-1'
             : 'text-xs font-semibold uppercase tracking-wide text-text-secondary mb-1'
         }
       >
@@ -178,7 +178,7 @@ export function PathRemoveGuidance({
         role="region"
         aria-label={`Consider replacing or removing for ${displayName} at level ${targetLevel}`}
       >
-        <p className="text-xs font-semibold uppercase tracking-wide text-danger-700 dark:text-danger-300">
+        <p className="text-xs font-semibold uppercase tracking-wide text-danger-fg">
           Consider replacing or removing
         </p>
         {content}
@@ -255,12 +255,12 @@ export function PathLevelGuidance({ archetype, pathName, targetLevel }: PathLeve
 
   return (
     <div
-      className="rounded-lg border-2 border-primary-200 dark:border-primary-800 bg-primary-50/80 dark:bg-primary-900/20 px-4 py-4 space-y-3"
+      className="rounded-lg border-2 border-primary-subtle-border bg-primary-subtle-bg px-4 py-4 space-y-3"
       role="region"
       aria-label={`Path guidance for ${displayName} at level ${targetLevel}`}
     >
       <div className="flex items-start gap-2">
-        <MapPin className="w-5 h-5 text-primary-600 dark:text-primary-300 flex-shrink-0 mt-0.5" aria-hidden />
+        <MapPin className="w-5 h-5 text-primary-fg flex-shrink-0 mt-0.5" aria-hidden />
         <div>
           <h3 className="text-sm font-semibold text-text-primary">
             {displayName} — Level {targetLevel} guidance
@@ -272,7 +272,7 @@ export function PathLevelGuidance({ archetype, pathName, targetLevel }: PathLeve
       </div>
 
       {resolved.notes ? (
-        <p className="text-sm text-text-primary whitespace-pre-wrap border-l-2 border-primary-300 dark:border-primary-700 pl-3">
+        <p className="text-sm text-text-primary whitespace-pre-wrap border-l-2 border-primary-subtle-border pl-3">
           {resolved.notes}
         </p>
       ) : null}

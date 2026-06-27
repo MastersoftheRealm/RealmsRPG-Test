@@ -32,7 +32,7 @@ import {
 import { useAuthStore } from '@/stores';
 import { LoginPromptModal, ConfirmActionModal, ErrorDisplay } from '@/components/shared';
 import { CreatorSaveToolbar, CreatorLayout, CreatorWeaponPicker, AdvancedCalculationsPanel } from '@/components/creator';
-import { LoadingState, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
+import { LoadingState, Checkbox, Button, Input, Textarea, Alert, PageContainer, Card } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
@@ -862,7 +862,7 @@ function PowerCreatorContent() {
 
   return (
     <CreatorLayout
-      icon={<Wand2 className="w-8 h-8 text-primary-600" />}
+      icon={<Wand2 className="w-8 h-8 text-primary-link-fg" />}
       title="Power Creator"
       description="Design custom powers by combining power parts. Each part contributes to the total energy cost and training point requirements."
       actions={
@@ -943,7 +943,7 @@ function PowerCreatorContent() {
     >
       {/* Main Editor */}
           {/* Name & Description */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
+          <Card className="shadow-md p-6">
             <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm text-text-secondary">
@@ -979,7 +979,7 @@ function PowerCreatorContent() {
                 />
               </div>
             </div>
-          </div>
+          </Card>
 
           {/* Action Type */}
           <CollapsibleSection
@@ -1374,7 +1374,7 @@ function PowerCreatorContent() {
                     onClick={() =>
                       setDamages((prev) => prev.filter((_, i) => i !== index))
                     }
-                    className="p-2 rounded-lg text-danger-600 hover:bg-danger-100 dark:hover:bg-danger-900/30 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                    className="p-2 rounded-lg text-danger-fg hover:bg-danger-100 dark:hover:bg-danger-900/30 min-h-[44px] min-w-[44px] flex items-center justify-center"
                     aria-label={`Remove damage type row ${index + 1}`}
                   >
                     <Trash2 className="w-5 h-5" />
@@ -1409,10 +1409,8 @@ function PowerCreatorContent() {
 
 export default function PowerCreatorPage() {
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
-      <Suspense fallback={<div className="text-center py-12">Loading...</div>}>
-        <PowerCreatorContent />
-      </Suspense>
-    </div>
+    <Suspense fallback={<LoadingState message="Loading..." padding="md" />}>
+      <PowerCreatorContent />
+    </Suspense>
   );
 }

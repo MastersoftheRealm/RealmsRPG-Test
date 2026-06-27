@@ -18,6 +18,7 @@ import { Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatSpeedForDisplay } from '@/lib/utils/number';
 import { Spinner } from '@/components/ui/spinner';
+import { Card } from '@/components/ui';
 import { HealthEnergyAllocator } from '@/components/creator';
 import { ValueStepper, ImageUploadModal, EditSectionToggle } from '@/components/shared';
 import { useGameRules } from '@/hooks';
@@ -216,9 +217,9 @@ function ResourceInput({
       : 'bg-surface-alt dark:bg-surface border-border-light dark:border-border';
   
   const labelColor = colorVariant === 'health'
-    ? 'text-success-700 dark:text-success-400'
+    ? 'text-success-fg'
     : colorVariant === 'energy'
-      ? 'text-info-700 dark:text-info-400'
+      ? 'text-info-fg'
       : 'text-text-secondary dark:text-text-primary';
   
   // Calculate bar percentage - cap at 100% for display but allow tracking above max
@@ -232,12 +233,12 @@ function ResourceInput({
     ? 'bg-warning-400 dark:bg-warning-500'
     : colorVariant === 'health' 
       ? (percentage > 50 ? 'bg-success-500 dark:bg-success-400' : percentage > 25 ? 'bg-warning-500 dark:bg-warning-400' : 'bg-danger-600 dark:bg-danger-500')
-      : colorVariant === 'energy' ? 'bg-info-500 dark:bg-info-400' : 'bg-primary-500 dark:bg-primary-400';
+      : colorVariant === 'energy' ? 'bg-info-500 dark:bg-info-400' : 'bg-primary-button';
   
   const inputBorderText = colorVariant === 'health'
-    ? 'border-success-300 dark:border-success-700/60 text-success-800 dark:text-success-300'
+    ? 'border-success-300 dark:border-success-700/60 text-success-fg'
     : colorVariant === 'energy'
-      ? 'border-info-300 dark:border-info-700/60 text-info-800 dark:text-info-300'
+      ? 'border-info-300 dark:border-info-700/60 text-info-fg'
       : 'border-border-light dark:border-border text-text-primary';
   
   return (
@@ -262,7 +263,7 @@ function ResourceInput({
           onKeyDown={handleKeyDown}
           className={cn(
             'w-12 text-center text-lg font-bold rounded border px-1 py-0.5 bg-surface dark:bg-surface-alt',
-            'focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400',
+            'focus:outline-none focus:ring-2 focus:ring-primary-outline-border dark:focus:ring-primary-outline-border',
             inputBorderText
           )}
           aria-label={`Current ${label}`}
@@ -288,7 +289,7 @@ function ResourceInput({
       {showBar && (
         <div className="relative h-2 mt-2 bg-surface dark:bg-black/30 rounded-full overflow-hidden">
           <div
-            className={cn('absolute inset-y-0 left-0 transition-all duration-300 rounded-full', barColorClass)}
+            className={cn('absolute inset-y-0 left-0 transition-all duration-slow ease-standard rounded-full', barColorClass)}
             style={{ width: `${percentage}%` }}
           />
         </div>
@@ -341,7 +342,7 @@ function LargeStatBlock({
   const showEditControls = isEditMode && onChange && baseValue !== undefined && isEditingBase;
   
   return (
-    <div className="flex flex-col items-center p-4 bg-surface-alt rounded-xl border border-border-light min-w-[100px]">
+    <Card className="flex flex-col items-center p-4 bg-surface-alt min-w-[100px] shadow-none">
       <div className="flex items-center gap-1.5 w-full justify-center">
         <span className="text-sm font-semibold text-text-secondary uppercase tracking-wide">{label}</span>
         {isEditMode && onChange && (
@@ -373,8 +374,8 @@ function LargeStatBlock({
           </button>
           <span className={cn(
             'text-xs min-w-[3rem] text-center',
-            pencilState === 'over-budget' ? 'text-danger-700 dark:text-danger-400 font-bold' :
-            pencilState === 'has-points' ? 'text-success-700 dark:text-success-400 font-bold' : 'text-text-muted dark:text-text-secondary'
+            pencilState === 'over-budget' ? 'text-danger-fg font-bold' :
+            pencilState === 'has-points' ? 'text-success-fg font-bold' : 'text-text-muted dark:text-text-secondary'
           )}>
             Base: {baseValue}
           </span>
@@ -392,7 +393,7 @@ function LargeStatBlock({
           </button>
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -432,7 +433,7 @@ function HealthBar({
   return (
     <div className="relative h-3 bg-surface rounded-full overflow-hidden">
       <div
-        className={cn('absolute inset-y-0 left-0 transition-all duration-300 rounded-full', barColorClass)}
+        className={cn('absolute inset-y-0 left-0 transition-all duration-slow ease-standard rounded-full', barColorClass)}
         style={{ width: `${percentage}%` }}
       />
     </div>
@@ -538,7 +539,7 @@ export function SheetHeader({
     && normalizedMartialAbility !== normalizedPowerAbility;
 
   return (
-    <div className="bg-surface rounded-xl shadow-md p-4 md:p-6 mb-4">
+    <Card className="shadow-md p-4 md:p-6 mb-4">
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Left: Portrait and Identity */}
         <div className="flex gap-4 flex-shrink-0 items-center">
@@ -607,7 +608,7 @@ export function SheetHeader({
                     setIsEditingName(false);
                   }
                 }}
-                className="text-2xl md:text-3xl font-bold text-text-primary px-2 py-1 border-2 border-primary-400 rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="text-2xl md:text-3xl font-bold text-text-primary px-2 py-1 border-2 border-primary-outline-border rounded-lg focus:ring-2 focus:ring-primary-outline-border"
                 autoFocus
               />
             ) : (
@@ -616,7 +617,7 @@ export function SheetHeader({
                 {onNameChange && isEditMode && (
                   <button
                     onClick={() => setIsEditingName(true)}
-                    className="text-primary-500 hover:text-primary-600 transition-colors hover:scale-110"
+                    className="text-primary-fg hover:text-primary-fg-hover transition-colors hover:scale-110"
                     title="Edit name"
                   >
                     <Pencil className="w-4 h-4" />
@@ -631,7 +632,7 @@ export function SheetHeader({
               {onEditSpecies && (
                 <button
                   onClick={onEditSpecies}
-                  className="text-primary-500 hover:text-primary-600 transition-colors hover:scale-110"
+                  className="text-primary-fg hover:text-primary-fg-hover transition-colors hover:scale-110"
                   title="Edit species and ancestry"
                   aria-label="Edit species and ancestry"
                 >
@@ -653,18 +654,18 @@ export function SheetHeader({
                       : 'No Archetype')}
                   {(showPowerAbility || showMartialAbility) && ': '}
                   {showPowerAbility && (
-                    <span className="text-power-dark dark:text-violet-300 capitalize">{character.pow_abil}</span>
+                    <span className="text-power-fg capitalize">{character.pow_abil}</span>
                   )}
                   {showPowerAbility && showMartialAbility && ' / '}
                   {showMartialAbility && (
-                    <span className="text-martial-dark dark:text-orange-300 capitalize">{character.mart_abil}</span>
+                    <span className="text-martial-fg capitalize">{character.mart_abil}</span>
                   )}
                 </span>
                 <ArchetypeCreationBadge character={character} />
                 {onEditArchetype && (
                   <button
                     onClick={onEditArchetype}
-                    className="text-primary-500 hover:text-primary-600 transition-colors hover:scale-110 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+                    className="text-primary-fg hover:text-primary-fg-hover transition-colors hover:scale-110 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
                     title="Edit archetype and ability"
                     aria-label="Edit archetype and ability"
                   >
@@ -692,7 +693,7 @@ export function SheetHeader({
                         setIsEditingXP(false);
                       }
                     }}
-                    className="w-16 px-1 py-0 text-base border-2 border-primary-400 rounded focus:ring-2 focus:ring-primary-500"
+                    className="w-16 px-1 py-0 text-base border-2 border-primary-outline-border rounded focus:ring-2 focus:ring-primary-outline-border"
                     min={0}
                     autoFocus
                     aria-label="Experience points"
@@ -707,7 +708,7 @@ export function SheetHeader({
                         setXpInput(String(character.experience ?? 0));
                         setIsEditingXP(true);
                       }}
-                      className="text-primary-500 hover:text-primary-600 transition-colors hover:scale-110"
+                      className="text-primary-fg hover:text-primary-fg-hover transition-colors hover:scale-110"
                       title="Edit XP"
                     >
                       <Pencil className="w-4 h-4" />
@@ -717,7 +718,7 @@ export function SheetHeader({
               )}
               {canLevelUp && (
                 <span 
-                  className="text-success-700 dark:text-success-400 animate-pulse text-sm font-medium" 
+                  className="text-success-fg animate-pulse text-sm font-medium" 
                   title="Ready to level up!"
                 >
                   ⬆ Level up!
@@ -836,6 +837,6 @@ export function SheetHeader({
         aspect={1}
         title="Upload Character Portrait"
       />
-    </div>
+    </Card>
   );
 }

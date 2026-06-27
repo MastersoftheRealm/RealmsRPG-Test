@@ -53,7 +53,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
       return (
         <div className="flex flex-col items-center justify-center gap-3 p-8 rounded-lg bg-surface border border-border-light text-center">
-          <AlertCircle className="w-8 h-8 text-danger-600 dark:text-danger-400" />
+          <AlertCircle className="w-8 h-8 text-danger-fg" />
           <h3 className="text-lg font-semibold text-text-primary">
             Something went wrong
           </h3>

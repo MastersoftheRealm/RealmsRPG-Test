@@ -149,7 +149,7 @@ export default function CodexPage() {
             onClick={toggleAdvanced}
             className={cn(
               'gap-1.5 flex-shrink-0 min-h-[44px]',
-              showAdvanced && 'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700'
+              showAdvanced && 'bg-primary-subtle-bg border-primary-subtle-border'
             )}
             aria-pressed={showAdvanced}
           >

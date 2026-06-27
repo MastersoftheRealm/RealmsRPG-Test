@@ -23,7 +23,7 @@ import {
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
-import { Input } from '@/components/ui';
+import { Input, EmptyState } from '@/components/ui';
 import { useCodexFeats, useCodexSkills, useCharacter, type Feat, type Skill } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { groupFeatFamilies } from '@/lib/leveled-feats';
@@ -111,7 +111,7 @@ export function CodexFeatsTab({
       </div>
 
       {characterId && (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-900/20 px-4 py-3">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary-subtle-border bg-primary-subtle-bg px-4 py-3">
           <p className="text-sm text-text-secondary">
             Showing feats{' '}
             <span className="font-semibold text-text-primary">
@@ -128,7 +128,7 @@ export function CodexFeatsTab({
               'px-3 py-2 rounded-lg border text-sm font-medium transition-colors min-h-[44px] flex-shrink-0',
               showUnqualified
                 ? 'bg-surface border-border-light text-text-secondary hover:bg-surface-alt'
-                : 'bg-success-50 dark:bg-success-900/30 border-success-300 dark:border-success-600/50 text-success-700 dark:text-success-300'
+                : 'bg-success-50 dark:bg-success-900/30 border-success-300 dark:border-success-600/50 text-success-fg'
             )}
           >
             {showUnqualified ? 'Hide unqualified feats' : 'Show unqualified feats'}
@@ -234,7 +234,7 @@ export function CodexFeatsTab({
         {isLoading ? (
           <LoadingState />
         ) : featFamilies.length === 0 ? (
-          <div className="p-8 text-center text-text-muted dark:text-text-secondary">No feats match your filters.</div>
+          <EmptyState title="No feats match your filters." size="sm" />
         ) : (
           featFamilies.map(({ main, levels }) => (
             <CodexFeatRow

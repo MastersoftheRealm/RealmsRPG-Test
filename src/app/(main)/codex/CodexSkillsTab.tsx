@@ -21,6 +21,7 @@ import {
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
+import { EmptyState } from '@/components/ui';
 import { useCodexSkills, type Skill } from '@/hooks';
 import {
   SKILL_GRID_COLUMNS,
@@ -126,7 +127,7 @@ export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' 
         {isLoading ? (
           <LoadingState />
         ) : filteredSkills.length === 0 ? (
-          <div className="p-8 text-center text-text-muted dark:text-text-secondary">No skills match your filters.</div>
+          <EmptyState title="No skills match your filters." size="sm" />
         ) : (
           filteredSkills.map((skill: Skill) => (
             <SkillCard key={skill.id} skill={skill} skillIdToName={skillIdToName} />

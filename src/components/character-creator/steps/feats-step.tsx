@@ -13,7 +13,8 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
-import { Spinner, Button } from '@/components/ui';
+import { statusPanel } from '@/lib/ui/status-surface-classes';
+import { Spinner, Button, EmptyState } from '@/components/ui';
 import { 
   GridListRow, 
   SearchInput, 
@@ -528,16 +529,16 @@ export function FeatsStep() {
         <div className={cn(
           'p-4 rounded-xl border-2',
           selectedArchetypeFeats.length === maxArchetypeFeats
-            ? 'bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-600/50'
-            : 'bg-amber-50 dark:bg-amber-900/30 border-amber-300 dark:border-amber-600/50'
+            ? statusPanel.complete
+            : statusPanel.warning
         )}>
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-bold text-text-primary">Archetype Feats</h3>
             <span className={cn(
               'px-3 py-1 rounded-full text-sm font-bold',
               selectedArchetypeFeats.reduce((sum, f) => sum + getFeatLevel(featById.get(String(f.id))), 0) === maxArchetypeFeats
-                ? 'bg-green-200 text-green-800 dark:bg-green-900/40 dark:text-green-300'
-                : 'bg-amber-200 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300'
+                ? statusPanel.completeBadge
+                : statusPanel.warningBadge
             )}>
               {selectedArchetypeFeats.reduce((sum, f) => sum + getFeatLevel(featById.get(String(f.id))), 0)} / {maxArchetypeFeats}
             </span>
@@ -552,25 +553,25 @@ export function FeatsStep() {
                 const fullFeat = feats?.find(f => String(f.id) === String(feat.id));
                 const displayName = fullFeat ? formatFeatName(fullFeat) : feat.name;
                 return (
-                  <div key={feat.id} className="rounded-lg border border-amber-200 bg-surface overflow-hidden max-w-md">
+                  <div key={feat.id} className="rounded-lg border border-warning-300 bg-surface overflow-hidden max-w-md">
                     <div className="px-3 py-1.5 flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => setExpandedSelectedId(isExpanded ? null : key)}
-                        className="text-amber-700 font-medium text-sm text-left flex-1 truncate"
+                        className="text-warning-fg font-medium text-sm text-left flex-1 truncate"
                       >
                         {displayName}
                       </button>
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); updateDraft({ feats: draft.feats?.filter(f => f.id !== feat.id) }); }}
-                        className="text-danger dark:text-danger-400 hover:text-danger-600 dark:hover:text-danger-300 font-bold flex-shrink-0 min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)]"
+                        className="text-danger-fg hover:opacity-80 font-bold flex-shrink-0 min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)]"
                       >
                         ×
                       </button>
                     </div>
                     {isExpanded && feat.description && (
-                      <div className="px-3 pb-2 pt-0 text-xs text-text-secondary border-t border-amber-100">
+                      <div className="px-3 pb-2 pt-0 text-xs text-text-secondary border-t border-warning-300">
                         {feat.description}
                       </div>
                     )}
@@ -585,16 +586,16 @@ export function FeatsStep() {
         <div className={cn(
           'p-4 rounded-xl border-2',
           selectedCharacterFeats.length === maxCharacterFeats
-            ? 'bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-600/50'
-            : 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-600/50'
+            ? statusPanel.complete
+            : statusPanel.info
         )}>
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-bold text-text-primary">Character Feats</h3>
             <span className={cn(
               'px-3 py-1 rounded-full text-sm font-bold',
               selectedCharacterFeats.reduce((sum, f) => sum + getFeatLevel(featById.get(String(f.id))), 0) === maxCharacterFeats
-                ? 'bg-green-200 text-green-800 dark:bg-green-900/40 dark:text-green-300'
-                : 'bg-blue-200 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300'
+                ? statusPanel.completeBadge
+                : statusPanel.infoBadge
             )}>
               {selectedCharacterFeats.reduce((sum, f) => sum + getFeatLevel(featById.get(String(f.id))), 0)} / {maxCharacterFeats}
             </span>
@@ -609,25 +610,25 @@ export function FeatsStep() {
                 const fullFeat = feats?.find(f => String(f.id) === String(feat.id));
                 const displayName = fullFeat ? formatFeatName(fullFeat) : feat.name;
                 return (
-                  <div key={feat.id} className="rounded-lg border border-blue-200 dark:border-blue-800 bg-surface dark:bg-surface-alt overflow-hidden max-w-md">
+                  <div key={feat.id} className="rounded-lg border border-info-border bg-surface overflow-hidden max-w-md">
                     <div className="px-3 py-1.5 flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => setExpandedSelectedId(isExpanded ? null : key)}
-                        className="text-blue-700 dark:text-blue-300 font-medium text-sm text-left flex-1 truncate"
+                        className="text-info-fg font-medium text-sm text-left flex-1 truncate"
                       >
                         {displayName}
                       </button>
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); updateDraft({ feats: draft.feats?.filter(f => f.id !== feat.id) }); }}
-                        className="text-danger dark:text-danger-400 hover:text-danger-600 dark:hover:text-danger-300 font-bold flex-shrink-0 min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)]"
+                        className="text-danger-fg hover:opacity-80 font-bold flex-shrink-0 min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)]"
                       >
                         ×
                       </button>
                     </div>
                     {isExpanded && feat.description && (
-                      <div className="px-3 pb-2 pt-0 text-xs text-text-secondary border-t border-blue-100 dark:border-blue-800">
+                      <div className="px-3 pb-2 pt-0 text-xs text-text-secondary border-t border-info-border">
                         {feat.description}
                       </div>
                     )}
@@ -649,7 +650,7 @@ export function FeatsStep() {
               className={cn(
                 'px-4 py-2 rounded-lg border text-sm font-semibold transition-colors min-h-[44px]',
                 usePathRecommendations
-                  ? 'bg-success-50 dark:bg-success-900/30 border-success-300 dark:border-success-600/50 text-success-700 dark:text-success-300'
+                  ? 'bg-success-50 dark:bg-success-900/30 border-success-300 dark:border-success-600/50 text-success-fg'
                   : 'bg-surface border-border-light text-text-secondary hover:bg-surface-alt'
               )}
             >
@@ -711,9 +712,11 @@ export function FeatsStep() {
                 renderFeatRow(displayFeat, familyLevels, false)
               )}
               {pathModeArchetypeFeats.length === 0 && (
-                <div className="text-center py-4 text-text-muted dark:text-text-secondary bg-surface-alt rounded-lg">
-                  No recommended archetype feats for this path in codex.
-                </div>
+                <EmptyState
+                  title="No recommended archetype feats for this path in codex."
+                  size="sm"
+                  className="bg-surface-alt rounded-lg py-4"
+                />
               )}
             </div>
           </section>
@@ -735,9 +738,11 @@ export function FeatsStep() {
                 renderFeatRow(displayFeat, familyLevels, true)
               )}
               {pathModeCharacterFeats.length === 0 && (
-                <div className="text-center py-4 text-text-muted dark:text-text-secondary bg-surface-alt rounded-lg">
-                  No recommended character feats for this path in codex.
-                </div>
+                <EmptyState
+                  title="No recommended character feats for this path in codex."
+                  size="sm"
+                  className="bg-surface-alt rounded-lg py-4"
+                />
               )}
             </div>
           </section>
@@ -780,7 +785,7 @@ export function FeatsStep() {
                   className={cn(
                     'w-full px-3 py-2 rounded-lg border text-sm font-medium transition-colors text-left',
                     filters.hideUnqualified
-                      ? 'bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-600/50 text-green-700 dark:text-green-300'
+                      ? cn(statusPanel.complete, 'text-success-fg')
                       : 'bg-surface border-border-light text-text-secondary hover:bg-surface-alt'
                   )}
                 >
@@ -806,17 +811,19 @@ export function FeatsStep() {
                 renderFeatRow(displayFeat, familyLevels, !!displayFeat.char_feat)
               )}
               {groupedDisplayFeats.length === 0 && (
-                <div className="text-center py-4 text-text-muted bg-surface-alt rounded-lg">
-                  No feats match your filters.
-                  {filters.hideUnqualified && (
-                    <button
-                      onClick={() => setFilters(f => ({ ...f, hideUnqualified: false }))}
-                      className="block mx-auto mt-2 text-primary-600 hover:underline"
-                    >
-                      Show unqualified feats
-                    </button>
-                  )}
-                </div>
+                <EmptyState
+                  title="No feats match your filters."
+                  size="sm"
+                  className="bg-surface-alt rounded-lg py-4"
+                  secondaryAction={
+                    filters.hideUnqualified
+                      ? {
+                          label: 'Show unqualified feats',
+                          onClick: () => setFilters((f) => ({ ...f, hideUnqualified: false })),
+                        }
+                      : undefined
+                  }
+                />
               )}
             </div>
           </div>

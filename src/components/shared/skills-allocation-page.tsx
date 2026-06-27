@@ -35,7 +35,7 @@ import {
 import { useGameRules } from '@/hooks';
 import { formatBonus } from '@/lib/utils';
 import { SkillRow } from '@/components/shared';
-import { Button, Spinner, Alert } from '@/components/ui';
+import { Button, Spinner, Alert, Card, PageHeader, TableScroll } from '@/components/ui';
 import { PointStatus } from '@/components/shared';
 import { AddSkillModal, AddSubSkillModal } from '@/components/shared';
 import type { Abilities, DefenseSkills } from '@/types';
@@ -316,23 +316,25 @@ export function SkillsAllocationPage({
 
   return (
     <div className={cn('max-w-5xl mx-auto', className)}>
-      <div className="flex flex-nowrap items-start justify-between gap-4 mb-6">
-        <div className="min-w-0">
-          <div className="flex items-center gap-1 mb-2">
-            <h1 className="text-2xl font-bold text-text-primary">Allocate Skills</h1>
+      <PageHeader
+        title={
+          <span className="inline-flex items-center gap-1">
+            Allocate Skills
             {headingAddon}
-          </div>
-          <p className="text-text-secondary">
+          </span>
+        }
+        size="sm"
+        className="mb-6"
+        actions={<PointStatus total={totalPoints} spent={spentPoints} variant="compact" />}
+        description={
+          <>
             Spend Skill points to gain proficiency, increase Skill values, or boost defenses.
             Species Skills are always proficient and cannot be removed.
             {speciesSkillIds.has('0') && ' Species option "Any" gives one extra Skill point.'}
-          </p>
-          {afterDescription != null && <div className="mt-4">{afterDescription}</div>}
-        </div>
-        <span className="flex-shrink-0 whitespace-nowrap">
-          <PointStatus total={totalPoints} spent={spentPoints} variant="compact" />
-        </span>
-      </div>
+            {afterDescription != null && <div className="mt-4">{afterDescription}</div>}
+          </>
+        }
+      />
 
       {/* Add Skill / Add Sub-Skill — disabled when no points */}
       <div className="flex gap-3 mb-6">
@@ -362,8 +364,8 @@ export function SkillsAllocationPage({
       </div>
 
       {/* Single flat Skills table — same layout as character sheet (Prof, Skill, Ability, Bonus, Value) */}
-      <div className="bg-surface rounded-xl shadow-md overflow-hidden mb-8">
-        <div className="overflow-x-auto">
+      <Card className="shadow-md overflow-hidden mb-8 p-0">
+        <TableScroll>
           <table className="w-full text-sm">
             <thead>
               <tr className="text-xs text-text-muted uppercase tracking-wider border-b-2 border-border-light">
@@ -434,17 +436,17 @@ export function SkillsAllocationPage({
               })}
             </tbody>
           </table>
-        </div>
+        </TableScroll>
         {orderedSkills.length === 0 && (
           <div className="text-center py-8 text-text-muted dark:text-text-secondary">
             No Skills added yet. Use &quot;Add Skill&quot; or &quot;Add Sub-Skill&quot; (need at least 1 Skill point).
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Defense allocation — hidden for choose-a-path (advanced option) */}
       {!hideDefenseBonuses && (
-      <div className="bg-surface rounded-xl shadow-md p-4 mb-8">
+      <Card className="shadow-md p-4 mb-8">
         <h2 className="text-lg font-semibold text-text-primary mb-2 uppercase tracking-wide">Defense Bonuses</h2>
         <p className="text-sm text-text-muted dark:text-text-secondary mb-4">
           Spend {skillRules.defenseIncreaseCost} Skill points to increase a defense bonus by 1. Defense bonus from Skill points cannot exceed your level.
@@ -469,7 +471,7 @@ export function SkillsAllocationPage({
                   >
                     −
                   </button>
-                  <span className="text-sm font-bold min-w-[36px] text-center text-primary-600 dark:text-primary-400">
+                  <span className="text-sm font-bold min-w-[36px] text-center text-primary-link-fg">
                     {formatBonus(totalBonus)}
                   </span>
                   <button
@@ -482,7 +484,7 @@ export function SkillsAllocationPage({
                   </button>
                 </div>
                 {current > 0 && (
-                  <span className="text-[9px] text-primary-600 dark:text-primary-400 font-medium mt-0.5">
+                  <span className="text-[9px] text-primary-link-fg font-medium mt-0.5">
                     +{current} ({current * skillRules.defenseIncreaseCost}sp)
                   </span>
                 )}
@@ -490,7 +492,7 @@ export function SkillsAllocationPage({
           );
         })}
         </div>
-      </div>
+      </Card>
       )}
 
       {allSkills.length === 0 && (
@@ -500,7 +502,7 @@ export function SkillsAllocationPage({
       )}
 
       {footer && (
-        <div className="sticky bottom-3 left-0 right-0 z-10 mt-6 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:mx-0">
+        <div className="sticky bottom-3 left-0 right-0 z-sticky mt-6 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:mx-0">
           {footer}
         </div>
       )}

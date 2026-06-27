@@ -22,7 +22,7 @@ import { parseArchetypePathData } from '@/lib/game/archetype-path';
 function pathHelpContent(_pathName: string, names: string[]): React.ReactNode {
   if (names.length === 0) return null;
   const Bold = ({ children }: { children: string }) => (
-    <strong className="text-primary-700 dark:text-primary-300">{children}</strong>
+    <strong className="text-primary-fg">{children}</strong>
   );
   if (names.length === 1) {
     return <>the recommended Skill <Bold>{names[0]}</Bold> has been added!</>;

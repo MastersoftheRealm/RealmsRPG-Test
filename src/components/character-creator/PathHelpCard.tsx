@@ -23,14 +23,14 @@ export function PathHelpCard({ pathName, children, className }: PathHelpCardProp
   return (
     <div
       className={
-        'mb-6 rounded-xl border-2 border-primary-200 dark:border-primary-800 bg-primary-50/80 dark:bg-primary-900/20 px-5 py-4 text-base ' +
+        'mb-6 rounded-xl border-2 border-primary-subtle-border bg-primary-subtle-bg px-5 py-4 text-base ' +
         (className ?? '')
       }
       role="region"
       aria-label={`Guidance for path: ${pathName}`}
     >
       <p className="text-text-primary font-medium">
-        As a <strong className="text-primary-700 dark:text-primary-300">{pathName}</strong>, {children}
+        As a <strong className="text-primary-fg">{pathName}</strong>, {children}
       </p>
     </div>
   );

@@ -19,7 +19,7 @@ export default function PrivacyPage() {  return (
         <p className="text-text-secondary">
           Your privacy is important to us. It is Realms&apos; policy to respect your privacy regarding any 
           information we may collect from you across our website,{' '}
-          <a href="https://realmsroleplaygame.com" className="text-primary-600 hover:underline">
+          <a href="https://realmsroleplaygame.com" className="text-primary-link-fg underline underline-offset-2 hover:opacity-90">
             https://realmsroleplaygame.com
           </a>
           , and other sites we own and operate.
@@ -94,7 +94,7 @@ export default function PrivacyPage() {  return (
           <h2 className="text-xl font-semibold text-text-primary mb-4">7. Contact Us</h2>
           <p className="text-text-secondary">
             If you have any questions about this Privacy Policy, please contact us at{' '}
-            <a href="mailto:RealmsRoleplayGame@gmail.com" className="text-primary-600 hover:underline">
+            <a href="mailto:RealmsRoleplayGame@gmail.com" className="text-primary-link-fg underline underline-offset-2 hover:opacity-90">
               RealmsRoleplayGame@gmail.com
             </a>.
           </p>

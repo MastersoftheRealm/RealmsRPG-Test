@@ -11,6 +11,7 @@ import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils/cn';
 import { Check, X, AlertTriangle, Info, XCircle } from 'lucide-react';
+import { MOTION_DURATION_SLOW_MS } from '@/lib/utils/motion';
 import { IconButton } from './icon-button';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
@@ -45,17 +46,17 @@ const toastIcons: Record<ToastType, React.ReactNode> = {
 };
 
 const toastStyles: Record<ToastType, string> = {
-  success: 'border-l-4 border-l-success-500 bg-success-light text-success-700 dark:text-success-300',
-  error: 'border-l-4 border-l-danger-500 bg-danger-light text-danger-700 dark:text-danger-300',
-  warning: 'border-l-4 border-l-warning-500 bg-warning-light text-warning-700 dark:text-warning-300',
-  info: 'border-l-4 border-l-info-500 bg-info-light text-info-700 dark:text-info-300',
+  success: 'border-l-4 border-l-success-500 bg-success-light text-success-fg',
+  error: 'border-l-4 border-l-danger-500 bg-danger-light text-danger-fg',
+  warning: 'border-l-4 border-l-warning-500 bg-warning-light text-warning-fg',
+  info: 'border-l-4 border-l-info-500 bg-info-light text-info-fg',
 };
 
 const iconStyles: Record<ToastType, string> = {
-  success: 'text-success-500',
-  error: 'text-danger-500',
-  warning: 'text-warning-500',
-  info: 'text-info-500',
+  success: 'text-success-fg',
+  error: 'text-danger-fg',
+  warning: 'text-warning-fg',
+  info: 'text-info-fg',
 };
 
 function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }) {
@@ -70,7 +71,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
     const duration = toast.duration ?? 4000;
     const dismissTimer = setTimeout(() => {
       setIsLeaving(true);
-      setTimeout(onDismiss, 300);
+      setTimeout(onDismiss, MOTION_DURATION_SLOW_MS);
     }, duration);
 
     return () => {
@@ -82,7 +83,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
   return (
     <div
       className={cn(
-        'flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg transition-all duration-300',
+        'flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg transition-all duration-slow ease-standard',
         'min-w-[300px] max-w-[400px]',
         toastStyles[toast.type],
         isVisible && !isLeaving ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
@@ -98,7 +99,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
         size="sm"
         onClick={() => {
           setIsLeaving(true);
-          setTimeout(onDismiss, 300);
+          setTimeout(onDismiss, MOTION_DURATION_SLOW_MS);
         }}
         label="Dismiss"
       >
@@ -136,7 +137,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       {mounted &&
         createPortal(
           <div
-            className="fixed top-20 right-5 z-[10000] flex flex-col gap-3"
+            className="fixed top-20 right-5 z-toast-stack flex flex-col gap-3"
+            role="region"
             aria-live="polite"
             aria-label="Notifications"
           >

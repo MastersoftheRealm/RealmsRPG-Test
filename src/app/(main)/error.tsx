@@ -9,7 +9,7 @@
 
 import { useEffect } from 'react';
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
-import { Button } from '@/components/ui';
+import { Button, PageHeader } from '@/components/ui';
 
 interface ErrorProps {
   error: Error & { digest?: string };
@@ -23,15 +23,14 @@ export default function MainError({ error, reset }: ErrorProps) {
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-4">
-      <div className="flex flex-col items-center gap-4 max-w-md text-center">
-                <AlertCircle className="w-12 h-12 text-danger-600 dark:text-danger-400" />
-        <h1 className="text-xl font-semibold text-text-primary">
-          Something went wrong
-        </h1>
-        <p className="text-text-muted dark:text-text-secondary">
-          An unexpected error occurred. You can try again, or go back to the
-          home page.
-        </p>
+      <div className="flex flex-col items-center gap-4 max-w-md text-center w-full">
+        <AlertCircle className="w-12 h-12 text-danger-fg" aria-hidden />
+        <PageHeader
+          title="Something went wrong"
+          size="sm"
+          className="mb-0 w-full [&_h1]:justify-center"
+          description="An unexpected error occurred. You can try again, or go back to the home page."
+        />
         {process.env.NODE_ENV === 'development' && (
           <pre className="text-xs text-left bg-surface-alt p-3 rounded-lg w-full overflow-auto max-h-40 border border-border-light">
             {error.message}

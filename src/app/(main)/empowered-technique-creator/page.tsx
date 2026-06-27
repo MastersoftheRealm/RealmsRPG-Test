@@ -59,7 +59,7 @@ import {
   CreatorWeaponPicker,
   AdvancedCalculationsPanel,
 } from '@/components/creator';
-import { Button, Checkbox, Input, Textarea, LoadingState, Alert, PageContainer } from '@/components/ui';
+import { Button, Checkbox, Input, Textarea, LoadingState, Alert, PageContainer, Card } from '@/components/ui';
 import { ValueStepper, SectionCostBadge } from '@/components/shared';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
@@ -903,7 +903,7 @@ function EmpoweredTechniqueCreatorContent() {
 
   return (
     <CreatorLayout
-      icon={<Wand2 className="w-8 h-8 text-primary-600" />}
+      icon={<Wand2 className="w-8 h-8 text-primary-link-fg" />}
       title="Empowered Technique Creator"
       description="Build an empowered technique by combining power and technique parts in one shared action profile."
       actions={
@@ -980,7 +980,7 @@ function EmpoweredTechniqueCreatorContent() {
         </>
       }
     >
-      <div className="bg-surface rounded-xl shadow-md p-6 space-y-4">
+      <Card className="shadow-md p-6 space-y-4">
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-1">Empowered Technique Name *</label>
           <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Enter empowered technique name..." />
@@ -989,7 +989,7 @@ function EmpoweredTechniqueCreatorContent() {
           <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
           <Textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={3} placeholder="Describe your empowered technique..." />
         </div>
-      </div>
+      </Card>
 
       <CollapsibleSection
         title="Shared Action Profile"
@@ -1389,10 +1389,8 @@ function EmpoweredTechniqueCreatorContent() {
 
 export default function EmpoweredTechniqueCreatorPage() {
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
-      <Suspense fallback={<div className="text-center py-12">Loading...</div>}>
-        <EmpoweredTechniqueCreatorContent />
-      </Suspense>
-    </div>
+    <Suspense fallback={<LoadingState message="Loading..." padding="md" />}>
+      <EmpoweredTechniqueCreatorContent />
+    </Suspense>
   );
 }

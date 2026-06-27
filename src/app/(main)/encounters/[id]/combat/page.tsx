@@ -9,12 +9,12 @@
 
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, Cloud, CloudOff } from 'lucide-react';
 import { LoadingState, PageContainer, Alert, useToast } from '@/components/ui';
 import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
 import { RollProvider } from '@/components/character-sheet';
 import type { Encounter } from '@/types/encounter';
 import CombatEncounterView from '../_components/CombatEncounterView';
+import { EncounterPageHeader } from '../_components/EncounterPageHeader';
 
 interface PageParams {
   params: Promise<{ id: string }>;
@@ -64,9 +64,7 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
   if (isLoading) {
     return (
       <PageContainer size="full">
-        <div className="flex items-center justify-center py-20">
-          <LoadingState message="Loading encounter..." size="lg" />
-        </div>
+        <LoadingState message="Loading encounter..." size="lg" padding="lg" />
       </PageContainer>
     );
   }
@@ -77,7 +75,7 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
         <Alert variant="danger" title="Encounter not found">
           This encounter may have been deleted or you may not have access.
         </Alert>
-        <Link href="/encounters" className="mt-4 inline-block text-primary-600 hover:underline">
+        <Link href="/encounters" className="mt-4 inline-block text-primary-link-fg hover:underline">
           Back to Encounters
         </Link>
       </PageContainer>
@@ -92,79 +90,37 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
     );
   }
 
+  const handleCommitName = () => {
+    const trimmed = nameInput.trim();
+    if (trimmed && trimmed !== encounter.name) {
+      setEncounter((prev) => (prev ? { ...prev, name: trimmed } : prev));
+    } else {
+      setNameInput(encounter.name || '');
+    }
+    setIsEditingName(false);
+  };
+
+  const handleCancelEditName = () => {
+    setNameInput(encounter.name || '');
+    setIsEditingName(false);
+  };
+
   return (
     <RollProvider>
       <PageContainer size="full">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <Link
-              href="/encounters"
-              className="inline-flex items-center gap-1 text-text-secondary hover:text-primary-600 mb-2 text-sm"
-            >
-              <ChevronLeft className="w-4 h-4" /> Back to Encounters
-            </Link>
-            {isEditingName ? (
-              <input
-                type="text"
-                value={nameInput}
-                onChange={(e) => setNameInput(e.target.value)}
-                onBlur={() => {
-                  const trimmed = nameInput.trim();
-                  if (trimmed && trimmed !== encounter.name) {
-                    setEncounter((prev) => (prev ? { ...prev, name: trimmed } : prev));
-                  } else {
-                    setNameInput(encounter.name || '');
-                  }
-                  setIsEditingName(false);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    const trimmed = nameInput.trim();
-                    if (trimmed && trimmed !== encounter.name) {
-                      setEncounter((prev) => (prev ? { ...prev, name: trimmed } : prev));
-                    }
-                    setIsEditingName(false);
-                  } else if (e.key === 'Escape') {
-                    setNameInput(encounter.name || '');
-                    setIsEditingName(false);
-                  }
-                }}
-                className="text-3xl font-bold text-text-primary bg-transparent border-b-2 border-primary-500 outline-none w-full max-w-md"
-                autoFocus
-              />
-            ) : (
-              <>
-                <h1
-                  className="text-3xl font-bold text-text-primary cursor-pointer hover:text-primary-600 hover:underline"
-                  onClick={() => setIsEditingName(true)}
-                  title="Click to edit encounter name"
-                >
-                  {encounter.name}
-                </h1>
-                <div className="mt-1">
-                </div>
-              </>
-            )}
-            <p className="text-text-secondary">
-              Combat Encounter{encounter.description ? ` \u2014 ${encounter.description}` : ''}
-            </p>
-            <p className="text-xs mt-1 flex items-center gap-1">
-              {isSaving ? (
-                <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                  <CloudOff className="w-3 h-3" /> Saving...
-                </span>
-              ) : hasUnsavedChanges ? (
-                <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                  <CloudOff className="w-3 h-3" /> Unsaved changes
-                </span>
-              ) : (
-                <span className="text-success-700 dark:text-success-400 flex items-center gap-1">
-                  <Cloud className="w-3 h-3" /> Saved to cloud
-                </span>
-              )}
-            </p>
-          </div>
-        </div>
+        <EncounterPageHeader
+          encounterType="Combat"
+          name={encounter.name}
+          description={encounter.description}
+          isEditingName={isEditingName}
+          nameInput={nameInput}
+          onNameInputChange={setNameInput}
+          onStartEditingName={() => setIsEditingName(true)}
+          onCommitName={handleCommitName}
+          onCancelEdit={handleCancelEditName}
+          isSaving={isSaving}
+          hasUnsavedChanges={hasUnsavedChanges}
+        />
 
         <CombatEncounterView
           encounterId={encounterId}

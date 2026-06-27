@@ -840,6 +840,123 @@ Player rename + note on character sheet feats/traits. **Needs:** logged-in accou
 
 ---
 
+## DEV-V-011 — UI verification safety net (TASK-383)
+
+These verify the automated design-system net itself. They are **command-line** checks (no app clicking) — run from the repo root. A production build must exist (`npm run build`) or a dev/prod server must be running for the Playwright checks.
+
+#### DEV-V-011-T001 — Token contrast gate
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-011 — UI verification safety net |
+| **Related task** | TASK-383 |
+| **Where** | Terminal, repo root |
+| **Needs** | Node installed |
+
+**Steps**
+1. Run `npm run verify:contrast`.
+
+**Expected**
+- Exits 0 with `Contrast check passed.` and "0 ... no new regressions".
+- Editing a semantic token in `src/app/globals.css` to a low-contrast value and re-running makes it exit non-zero listing the failing pair.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-011-T002 — Raw-color ESLint guardrail
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-011 — UI verification safety net |
+| **Related task** | TASK-383 |
+| **Where** | Terminal, repo root |
+| **Needs** | — |
+
+**Steps**
+1. Run `npm run lint` (expect 0 errors).
+2. Temporarily add `className="bg-blue-500"` to a non-exempt component (not under `(auth)/` or `components/ui/`) and re-run `npm run lint`.
+
+**Expected**
+- Step 1: 0 errors (warnings allowed).
+- Step 2: a `realms/no-raw-color` **error** on that line. Revert the edit.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-011-T003 — Styleguide gallery renders in both themes
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-011 — UI verification safety net |
+| **Related task** | TASK-383 |
+| **Where** | `/dev/styleguide` |
+| **Needs** | Dev/prod server running |
+
+**Steps**
+1. Open `/dev/styleguide`.
+2. Click **Toggle theme** to switch light/dark.
+
+**Expected**
+- Every section renders (surfaces, text, borders, ramps, status, category, game tokens, buttons, forms, chips, alerts, cards, tabs, loading/empty, tooltip, modal).
+- Both themes look intentional; no raw-white panels floating on the dark background.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-011-T004 — Visual + a11y Playwright suite
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-011 — UI verification safety net |
+| **Related task** | TASK-383 |
+| **Where** | Terminal, repo root |
+| **Needs** | `npm run build` done (Playwright auto-starts `npm run start`); matching-OS baselines committed |
+
+**Steps**
+1. Run `npx playwright test` (or `npm run verify:visual` and `npm run verify:a11y`).
+
+**Expected**
+- All tests pass against committed baselines for the current OS.
+- After an intentional UI change, the run fails with a diff; `npm run verify:visual:update` re-baselines and a re-run passes.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-011-T005 — Authenticated visual baselines (TASK-385)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-011 — UI verification safety net |
+| **Related task** | TASK-385 |
+| **Where** | Terminal, repo root |
+| **Needs** | `E2E_TEST_EMAIL` + `E2E_TEST_PASSWORD`; run `npm run e2e:provision` once per environment |
+
+**Steps**
+1. Set E2E env vars (see `.env.example`).
+2. Run `npm run verify:auth-visual`.
+
+**Expected**
+- 11 tests pass (1 setup + 10 screenshots: my-account, characters, campaigns, character-sheet, campaign-detail × light/dark).
+- Without secrets, suite skips gracefully.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-011-T006 — Authenticated a11y ratchet (TASK-385)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-011 — UI verification safety net |
+| **Related task** | TASK-385 |
+| **Where** | Terminal, repo root |
+| **Needs** | Same E2E credentials as T005 |
+
+**Steps**
+1. Run `npm run verify:auth-a11y`.
+
+**Expected**
+- No **new** violations vs `tests/visual/auth-a11y-baseline.json`.
+- Pre-existing allowances on character sheet / my-account are documented in the baseline file.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |

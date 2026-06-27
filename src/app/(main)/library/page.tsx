@@ -187,7 +187,7 @@ function LibraryContent() {
   return (
     <PageContainer size="xl">
       {isGuest && (
-        <div className="mb-4 flex items-center justify-between gap-4 rounded-lg bg-primary-600/10 border border-primary-600/20 px-4 py-3 text-text-primary">
+        <div className="mb-4 flex items-center justify-between gap-4 rounded-lg bg-primary-subtle-bg border border-primary-subtle-border px-4 py-3 text-text-primary">
           <span>You&apos;re browsing the Realms Library. Sign in to see My Library and add items to your collection.</span>
           <Link href="/login?returnTo=/library">
             <Button variant="primary" size="sm">

@@ -30,7 +30,7 @@ import {
 } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { LoginPromptModal, ConfirmActionModal, ErrorDisplay } from '@/components/shared';
-import { LoadingState, IconButton, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
+import { LoadingState, IconButton, Checkbox, Button, Input, Textarea, Alert, PageContainer, Card } from '@/components/ui';
 import {
   LoadFromLibraryModal,
   CreatorSaveToolbar,
@@ -678,7 +678,7 @@ function TechniqueCreatorContent() {
     >
       {/* Main Editor */}
           {/* Name & Description */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
+          <Card className="shadow-md p-6">
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">
@@ -703,7 +703,7 @@ function TechniqueCreatorContent() {
                 />
               </div>
             </div>
-          </div>
+          </Card>
 
           {/* Weapon & Action Type */}
           <CollapsibleSection
@@ -843,10 +843,8 @@ function TechniqueCreatorContent() {
 
 export default function TechniqueCreatorPage() {
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
-      <Suspense fallback={<div className="flex items-center justify-center py-12"><LoadingState message="Loading..." /></div>}>
-        <TechniqueCreatorContent />
-      </Suspense>
-    </div>
+    <Suspense fallback={<div className="flex items-center justify-center py-12"><LoadingState message="Loading..." /></div>}>
+      <TechniqueCreatorContent />
+    </Suspense>
   );
 }

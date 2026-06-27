@@ -53,7 +53,7 @@ export function ChoiceTraitOptionListPicker({
               key={optId}
               className={cn(
                 'group rounded-md border border-border-light bg-surface',
-                isSelected && 'border-primary-300 dark:border-primary-700 bg-primary-50/50 dark:bg-primary-900/20',
+                isSelected && 'border-primary-subtle-border bg-primary-subtle-bg',
               )}
             >
               <summary className="list-none cursor-pointer px-3 py-2 flex items-start justify-between gap-3">

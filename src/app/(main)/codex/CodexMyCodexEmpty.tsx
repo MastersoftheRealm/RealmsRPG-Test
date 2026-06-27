@@ -14,7 +14,7 @@ export function CodexMyCodexEmpty() {
   return (
     <EmptyState
       size="lg"
-      icon={<BookMarked className="w-10 h-10 text-primary-500" />}
+      icon={<BookMarked className="w-10 h-10 text-primary-fg" />}
       title="My Codex"
       description="Your custom feats, traits, parts, properties, and other codex content will appear here when that feature is available. For now, all reference data lives in Realms Codex."
     />

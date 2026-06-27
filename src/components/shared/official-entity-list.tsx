@@ -131,7 +131,7 @@ export function OfficialEntityList<TRow extends OfficialEntityRow>({
         {isLoading ? (
           <LoadingState />
         ) : filtered.length === 0 ? (
-          <div className="py-12 text-center text-text-secondary">{searchEmptyMessage}</div>
+          <ListEmptyState title={searchEmptyMessage} size="sm" />
         ) : (
           filtered.map((row) => {
             const chips = getChips?.(row);
@@ -159,7 +159,7 @@ export function OfficialEntityList<TRow extends OfficialEntityRow>({
                         onAddRequest!(row);
                       }}
                       label="Add to my library"
-                      className="text-primary-600 hover:text-primary-700 hover:bg-primary-50"
+                      className="text-primary-link-fg hover:text-primary-fg-hover hover:bg-primary-subtle-bg"
                     >
                       <Plus className="w-4 h-4" />
                     </IconButton>

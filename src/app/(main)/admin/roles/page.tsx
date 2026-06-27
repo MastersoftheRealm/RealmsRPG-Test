@@ -8,7 +8,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Alert, Button, Input, PageContainer, PageHeader, Spinner } from '@/components/ui';
+import { Alert, Button, Input, PageContainer, PageHeader, LoadingState, EmptyState } from '@/components/ui';
 import { ErrorDisplay } from '@/components/shared';
 import { apiFetch } from '@/lib/api-client';
 
@@ -132,13 +132,11 @@ export default function AdminRolesPage() {
       )}
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <Spinner size="lg" />
-        </div>
+        <LoadingState size="lg" padding="md" />
       ) : error ? (
         <ErrorDisplay message={error} onRetry={() => setReloadToken((token) => token + 1)} />
       ) : rows.length === 0 ? (
-        <p className="text-text-muted dark:text-text-secondary italic">No role policies found.</p>
+        <EmptyState title="No role policies found." size="sm" />
       ) : (
         <div className="space-y-5">
           {rows.map((row) => {

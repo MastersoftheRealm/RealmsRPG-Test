@@ -9,7 +9,7 @@
 'use client';
 
 import { useAuth } from '@/hooks';
-import { LoadingState, PageContainer } from '@/components/ui';
+import { LoadingState, PageContainer, PageHeader, Card } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
@@ -60,23 +60,22 @@ export default function CharacterCreatorPage() {
   return (
     <div className="min-h-screen bg-background py-6">
       <PageContainer size="xl">
-        <div className="mb-6">
-          <div className="flex items-center gap-1">
-            <h1 className="text-3xl font-bold text-text-primary">Create New Character</h1>
+        <PageHeader
+          title="Create New Character"
+          description={`Step ${stepIndex} of ${totalSteps}. Follow the steps below to build your character.`}
+          className="mb-6"
+          actions={
             <Tippy content={createNewCharacter}>
-              <Info className="w-4 h-4 text-primary-700" aria-hidden />
+              <Info className="w-4 h-4 text-primary-subtle-fg" aria-hidden />
             </Tippy>
-          </div>
-          <p className="text-text-secondary mt-1">
-            Step {stepIndex} of {totalSteps}. Follow the steps below to build your character.
-          </p>
-        </div>
+          }
+        />
         
         <CreatorTabBar />
         
-        <div className="bg-surface rounded-xl shadow-md p-6 md:p-8">
+        <Card className="shadow-md p-6 md:p-8">
           <StepComponent />
-        </div>
+        </Card>
       </PageContainer>
     </div>
   );

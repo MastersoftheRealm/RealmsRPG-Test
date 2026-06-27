@@ -24,6 +24,46 @@ export function capitalizeWords(str: string | null | undefined): string {
 }
 
 /**
+ * Format codex/list column keys for UI display when no explicit `label` is set.
+ * Prefers curated labels for known schema keys; otherwise title-cases the key.
+ */
+const COLUMN_KEY_LABELS: Record<string, string> = {
+  uses_per_rec: 'Uses',
+  rec_period: 'Recovery',
+  uses_per_rec_per_tier: 'Uses / Tier',
+  lvl_req: 'Req. Level',
+  feat_lvl: 'Feat Level',
+  category: 'Category',
+  ability: 'Ability',
+  attack: 'Attack',
+  damage: 'Damage',
+  range: 'Range',
+  type: 'Type',
+  rarity: 'Rarity',
+  pow_abil_req: 'Power Ability',
+  mart_abil_req: 'Martial Ability',
+  pow_prof_req: 'Power Prof.',
+  mart_prof_req: 'Martial Prof.',
+  speed_req: 'Speed',
+  req_desc: 'Requirements',
+  abil_req_val: 'Ability Req.',
+  skill_req: 'Skill Req.',
+  skill_req_val: 'Skill Req. Value',
+  feat_cat_req: 'Feat Category',
+};
+
+export function formatColumnKeyLabel(key: string): string {
+  if (!key) return '';
+  const trimmed = key.trim();
+  const override = COLUMN_KEY_LABELS[trimmed.toLowerCase()];
+  if (override) return override;
+  if (trimmed.includes(' ') && !trimmed.includes('_')) {
+    return formatListCellLabel(trimmed);
+  }
+  return formatListCellLabel(trimmed.replace(/_/g, ' '));
+}
+
+/**
  * Format taxonomy / enum-style labels for collapsed list cells (item type, category, size, rarity, creature type, etc.).
  * - Title-cases whitespace-separated words (after replacing `_` with spaces).
  * - Hyphenated compounds (no spaces): each segment is title-cased (e.g. `powered-martial` → `Powered-Martial`).

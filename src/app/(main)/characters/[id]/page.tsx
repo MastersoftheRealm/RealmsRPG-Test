@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { getCharacter, saveCharacter, type LibraryForView } from '@/services/character-service';
 import { useAuth, useAutoSave, useCampaignsFull, useCharacterResourceSync, useUserPowers, useUserTechniques, useUserEmpoweredTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useMergedSpecies, useCodexFeats, useCodexSkills, useCodexArchetypes, useEquipment, useOfficialLibrary } from '@/hooks';
 import { useGameRules } from '@/hooks/use-game-rules';
-import { LoadingState } from '@/components/ui';
+import { LoadingState, PageContainer, PageHeader } from '@/components/ui';
 import { cleanForSave } from '@/lib/data-enrichment';
 import { getArchetypeCodexLookupId, applyPathProficiencyForLevel } from '@/lib/game/archetype-display';
 import {
@@ -466,19 +466,19 @@ export default function CharacterSheetPage({ params }: PageParams) {
   
   if (error || !character) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-text-primary mb-2">
-            {error || 'Character not found'}
-          </h1>
-          <Link
-            href="/characters"
-            className="text-primary-600 hover:text-primary-700"
-          >
-            ← Back to Characters
-          </Link>
-        </div>
-      </div>
+      <PageContainer size="md" className="min-h-[60vh] flex flex-col items-center justify-center text-center">
+        <PageHeader
+          title={error || 'Character not found'}
+          size="sm"
+          className="mb-4 w-full [&_h1]:justify-center [&_button]:mx-auto"
+        />
+        <Link
+          href="/characters"
+          className="text-primary-link-fg hover:text-primary-fg-hover"
+        >
+          ← Back to Characters
+        </Link>
+      </PageContainer>
     );
   }
 
@@ -534,7 +534,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
         )}
         
         {/* Character Sheet Content */}
-        <div className="max-w-[1600px] mx-auto px-4 pt-4">
+        <PageContainer size="tool" padded={false} className="pt-4">
           <div className="mb-2 flex justify-end">
           </div>
           {calculatedStats && (
@@ -567,7 +567,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
               <CharacterSheetBody />
           </>
         )}
-        </div>
+        </PageContainer>
         <RollLog />
         <CharacterSheetModals
           addModalType={addModalType}

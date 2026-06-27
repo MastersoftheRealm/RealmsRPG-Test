@@ -2,6 +2,7 @@
 
 import { SectionHeader } from '@/components/shared/section-header';
 import { RollButton } from '@/components/shared/roll-button';
+import { TableScroll } from '@/components/ui';
 import { cn, formatDamageDisplay } from '@/lib/utils';
 import { deriveShieldAmountFromProperties, formatRange } from '@/lib/calculators/item-calc';
 import { useRollsOptional } from '@/components/character-sheet/roll-context';
@@ -94,6 +95,7 @@ export function QuickWeaponsTable({
   return (
     <div className={cn('bg-surface-alt rounded-lg p-3 mb-4', className)}>
       {showHeader && <SectionHeader title={title} className="mb-2" />}
+      <TableScroll>
       <table className="w-full text-sm">
         <thead>
           <tr className="text-xs text-text-muted dark:text-text-secondary">
@@ -172,6 +174,7 @@ export function QuickWeaponsTable({
           })}
         </tbody>
       </table>
+      </TableScroll>
     </div>
   );
 }
@@ -205,6 +208,7 @@ export function QuickShieldsTable({
   return (
     <div className={cn('bg-surface-alt rounded-lg p-3 mb-4', className)}>
       {showHeader && <SectionHeader title={title} className="mb-2" />}
+      <TableScroll>
       <table className="w-full text-sm">
         <thead>
           <tr className="text-xs text-text-muted dark:text-text-secondary">
@@ -300,6 +304,7 @@ export function QuickShieldsTable({
           })}
         </tbody>
       </table>
+      </TableScroll>
     </div>
   );
 }
@@ -328,6 +333,7 @@ export function QuickArmorTable({
   return (
     <div className={cn('bg-surface-alt rounded-lg p-3 mb-4', className)}>
       {showHeader && <SectionHeader title={title} className="mb-2" />}
+      <TableScroll>
       <table className="w-full text-sm">
         <thead>
           <tr className="text-xs text-text-muted dark:text-text-secondary">
@@ -395,6 +401,7 @@ export function QuickArmorTable({
           })}
         </tbody>
       </table>
+      </TableScroll>
     </div>
   );
 }

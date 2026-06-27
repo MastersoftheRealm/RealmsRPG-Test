@@ -31,7 +31,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
             <button
               type="button"
               onClick={reset}
-              className="min-h-[44px] px-4 py-2 rounded-lg bg-primary-600 text-white font-semibold hover:bg-primary-700 transition-colors"
+              className="min-h-[44px] px-4 py-2 rounded-lg bg-primary-button text-white font-semibold hover:bg-primary-button-hover transition-colors"
             >
               Try Again
             </button>

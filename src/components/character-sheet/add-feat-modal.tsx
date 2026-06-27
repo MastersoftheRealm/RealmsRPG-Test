@@ -195,7 +195,7 @@ export function AddFeatModal({
           id={categorySelectId}
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
-          className="text-sm px-2 py-1 rounded-lg border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="text-sm px-2 py-1 rounded-lg border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-outline-border"
         >
           <option value="">All</option>
           {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
@@ -207,7 +207,7 @@ export function AddFeatModal({
           id={abilitySelectId}
           value={selectedAbility}
           onChange={(e) => setSelectedAbility(e.target.value)}
-          className="text-sm px-2 py-1 rounded-lg border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="text-sm px-2 py-1 rounded-lg border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-outline-border"
         >
           <option value="">All</option>
           {abilities.map(abil => <option key={abil} value={abil}>{abil}</option>)}
@@ -248,7 +248,7 @@ export function AddFeatModal({
   return (
     <>
       {error && isOpen && (
-        <Alert variant="danger" className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] max-w-md">
+        <Alert variant="danger" className="fixed top-4 left-1/2 -translate-x-1/2 z-toast max-w-md">
           {error}
         </Alert>
       )}

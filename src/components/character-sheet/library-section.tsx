@@ -29,7 +29,7 @@ import {
   type SortState,
 } from '@/components/shared';
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
-import { IconButton } from '@/components/ui';
+import { IconButton, Card } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
 import { calculateArmamentProficiency, calculateRemainingInnateEnergy } from '@/lib/game/formulas';
 import type {
@@ -601,7 +601,7 @@ export function LibrarySection({
   };
 
   return (
-    <div className={cn("bg-surface rounded-xl shadow-md p-4 md:p-6 relative flex flex-col", className)}>
+    <Card className={cn('shadow-md p-4 md:p-6 relative flex flex-col', className)}>
       {/* Edit Mode Indicator - Pencil toggles library in/out of edit (like other sections) */}
       {isEditMode && (
         <div className="absolute top-3 right-3">
@@ -728,7 +728,7 @@ export function LibrarySection({
                         onCurrencyChange?.(newValue);
                       }
                     }}
-                    className="w-20 px-2 py-1 text-sm font-bold text-warning-600 dark:text-warning-400 border border-warning-300 dark:border-warning-600/50 rounded focus:ring-2 focus:ring-warning-500 bg-white dark:bg-surface"
+                    className="w-20 px-2 py-1 text-sm font-bold text-warning-fg border border-warning-300 dark:border-warning-600/50 rounded focus:ring-2 focus:ring-warning-500 bg-white dark:bg-surface"
                     title="Use +5, -10, or a number"
                   />
                   <span className="text-sm font-medium text-text-muted dark:text-text-secondary">Currency</span>
@@ -888,6 +888,6 @@ export function LibrarySection({
           </p>
         )}
       </div>
-    </div>
+    </Card>
   );
 }

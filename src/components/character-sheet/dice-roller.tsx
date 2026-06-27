@@ -12,7 +12,7 @@ import { useState, useCallback } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { History, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui';
+import { Button, EmptyState, Card } from '@/components/ui';
 import { ValueStepper } from '@/components/shared';
 
 interface DieRoll {
@@ -113,7 +113,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
   const lastRoll = rollHistory[0];
 
   return (
-    <div className={cn('bg-surface rounded-xl shadow-md p-4', className)}>
+    <Card className={cn('shadow-md p-4', className)}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold text-text-primary">🎲 Dice Roller</h3>
@@ -121,7 +121,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
           onClick={() => setShowHistory(!showHistory)}
           className={cn(
             'p-2 rounded-lg transition-colors',
-            showHistory ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300' : 'text-text-muted dark:text-text-secondary hover:bg-surface-alt'
+            showHistory ? 'bg-primary-subtle-bg text-primary-subtle-fg' : 'text-text-muted dark:text-text-secondary hover:bg-surface-alt'
           )}
           title="Roll history"
           aria-label={showHistory ? 'Hide roll history' : 'Show roll history'}
@@ -141,7 +141,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
                 className={cn(
                   'flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-colors',
                   dieType === die
-                    ? 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white ring-2 ring-primary-400'
+                    ? 'bg-primary-button text-white ring-2 ring-primary-outline-border'
                     : 'bg-surface-alt text-text-secondary hover:bg-surface'
                 )}
                 title={`Select d${die}`}
@@ -185,7 +185,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
             </div>
           </div>
 
-          {/* Roll Button - solid style matching btn-solid */}
+          {/* Roll Button */}
           <Button
             variant="primary"
             size="lg"
@@ -197,11 +197,11 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
 
           {/* Last Roll Result */}
           {lastRoll && (
-            <div className="mt-4 p-4 bg-surface-alt rounded-xl text-center">
+            <Card className="mt-4 p-4 bg-surface-alt text-center shadow-none">
               <div className="text-sm text-text-secondary mb-1">
                 {lastRoll.count}d{lastRoll.dieType}{formatModifier(lastRoll.modifier)}
               </div>
-              <div className="text-4xl font-bold text-primary-600 dark:text-primary-400 mb-2">
+              <div className="text-4xl font-bold text-primary-link-fg mb-2">
                 {lastRoll.total}
               </div>
               <div className="flex items-center justify-center gap-2 flex-wrap">
@@ -220,13 +220,13 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
                 {lastRoll.modifier !== 0 && (
                   <span className={cn(
                     'px-2 py-0.5',
-                    lastRoll.modifier > 0 ? 'text-success-700 dark:text-success-400' : 'text-danger-600 dark:text-danger-400'
+                    lastRoll.modifier > 0 ? 'text-success-fg' : 'text-danger-fg'
                   )}>
                     {formatModifier(lastRoll.modifier)}
                   </span>
                 )}
               </div>
-            </div>
+            </Card>
           )}
         </>
       ) : (
@@ -236,7 +236,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
             <span className="text-sm text-text-secondary">Recent Rolls</span>
             <button
               onClick={clearHistory}
-              className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-500 transition-colors"
+              className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-fg transition-colors"
               title="Clear history"
               aria-label="Clear roll history"
             >
@@ -245,7 +245,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
           </div>
           
           {rollHistory.length === 0 ? (
-            <p className="text-center text-text-muted dark:text-text-secondary py-4">No rolls yet</p>
+            <EmptyState title="No rolls yet" size="sm" className="py-4" />
           ) : (
             <div className="max-h-[300px] overflow-y-auto space-y-2">
               {rollHistory.map((roll) => (
@@ -262,7 +262,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
                     <span className="text-xs text-text-muted dark:text-text-secondary">
                       [{roll.results.join(', ')}]
                     </span>
-                    <span className="font-bold text-primary-600 dark:text-primary-400">= {roll.total}</span>
+                    <span className="font-bold text-primary-link-fg">= {roll.total}</span>
                   </div>
                 </div>
               ))}
@@ -270,7 +270,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
           )}
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 

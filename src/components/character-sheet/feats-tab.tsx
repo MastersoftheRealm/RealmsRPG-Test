@@ -461,7 +461,7 @@ export function FeatsTab({
             className={cn(
               'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
               (stateUsesCurrent ?? stateUsesMax) > 0
-                ? 'bg-primary-600 text-white hover:bg-primary-700 dark:bg-primary-100 dark:text-white dark:hover:bg-primary-50'
+                ? 'bg-primary-button text-white hover:bg-primary-button-hover'
                 : 'bg-surface-alt text-text-muted dark:text-text-secondary cursor-not-allowed'
             )}
           >
@@ -492,7 +492,7 @@ export function FeatsTab({
             <span
               className={cn(
                 'tabular-nums text-sm font-medium',
-                archetypeOver && 'text-danger-600 dark:text-danger-400'
+                archetypeOver && 'text-danger-fg'
               )}
             >
               {usedArchetypeSlots}/{maxArchetypeFeats}
@@ -501,7 +501,7 @@ export function FeatsTab({
         }
         addButtonClassName={
           archetypeOver
-            ? 'text-danger-600 dark:text-danger-400 hover:text-danger-700 dark:hover:text-danger-300 hover:bg-danger-50 dark:hover:bg-danger-900/30'
+            ? 'text-danger-fg hover:opacity-80 hover:bg-danger-50 dark:hover:bg-danger-900/30'
             : undefined
         }
         sortState={archetypeFeatSort}
@@ -521,7 +521,7 @@ export function FeatsTab({
             <span
               className={cn(
                 'tabular-nums text-sm font-medium',
-                characterOver && 'text-danger-600 dark:text-danger-400'
+                characterOver && 'text-danger-fg'
               )}
             >
               {usedCharacterSlots}/{maxCharacterFeats}
@@ -530,7 +530,7 @@ export function FeatsTab({
         }
         addButtonClassName={
           characterOver
-            ? 'text-danger-600 dark:text-danger-400 hover:text-danger-700 dark:hover:text-danger-300 hover:bg-danger-50 dark:hover:bg-danger-900/30'
+            ? 'text-danger-fg hover:opacity-80 hover:bg-danger-50 dark:hover:bg-danger-900/30'
             : undefined
         }
         sortState={characterFeatSort}

@@ -24,7 +24,7 @@ Single reference for mobile breakpoints, touch targets, and layout patterns. Use
 - **Scope:** The 44×44px minimum applies to **mobile/touch viewports** (e.g. below `md`), not as a blanket rule for the whole site. WCAG 2.1 AA does not require a minimum target size; WCAG 2.5.5 (Level AAA) and platform guidelines (Apple HIG, Material) recommend 44–48pt for touch. We enforce 44px so the site is usable on phones without zoom.
 - **Minimum size (on touch):** Below `md`, tappable controls (buttons, icon buttons, steppers, tab triggers, toolbar icons, links in dense UI) should be at least 44×44px. On desktop (`md+`), controls can be smaller (e.g. compact steppers) since pointer precision is higher.
 - **Spacing:** Leaving enough gap between targets (e.g. 8px) helps avoid mis-taps. Spacing **supplements** but does not replace a minimum target size on touch: small targets remain hard to tap accurately even with spacing.
-- **Implementation:** Prefer responsive sizing: `min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0` with smaller `w`/`h` at `md+` so steppers and toggles stay compact on desktop. Use `--touch-target-min: 44px` and `--mobile-gutter: 0.75rem` in `globals.css` when helpful.
+- **Implementation:** Prefer responsive sizing: `touch-target-md-compact` (utility in `globals.css`), `min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0`, or `--touch-target-min: 44px` on steppers/toggles. Use `@media(pointer:coarse)` on `Button`/`IconButton` where the control stays compact on desktop only.
 - **Spacing:** Leave enough gap between targets so taps don’t hit the wrong one.
 - **Reference:** `--touch-target-min: 44px` and `--mobile-gutter: 0.75rem` in `globals.css` (optional; use in components when helpful).
 
@@ -90,5 +90,6 @@ When **creating or editing** a page or modal:
 | Collapsible section pattern | `src/components/creator/collapsible-section.tsx` | Use for within-panel sub-sections or lighter pages. |
 | ListHeader | `src/components/shared/list-header.tsx` | Desktop: column header grid. Mobile: expandable "Sort by [criteria] (A→Z)" using same sortState/onSort; no column headers. |
 | GridListRow | `src/components/shared/grid-list-row.tsx` | `hideOnMobile` on column values. |
-| TabNavigation | `src/components/ui/tab-navigation.tsx` | Tabs use `overflow-x-auto` in globals. |
+| TabNavigation | `src/components/ui/tab-navigation.tsx` | Tabs use `overflow-x-auto` in globals; triggers have `min-h` touch target below `md`. |
+| TableScroll | `src/components/ui/table-scroll.tsx` | Wrap data tables for horizontal scroll on narrow viewports. |
 | PageContainer | `src/components/ui/page-container.tsx` | `px-4 sm:px-6 lg:px-8`; adjust if audit shows overflow. |

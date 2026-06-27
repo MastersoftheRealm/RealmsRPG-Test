@@ -74,8 +74,8 @@ const CATEGORY_CONFIG: Record<TraitCategory, {
     colors: {
       bg: 'bg-info-50',
       border: 'border-info-200',
-      text: 'text-info-800',
-      iconColor: 'text-info-500',
+      text: 'text-info-fg',
+      iconColor: 'text-info-fg',
       selectedBg: 'bg-info-100',
       selectedBorder: 'border-info-400',
     },
@@ -86,8 +86,8 @@ const CATEGORY_CONFIG: Record<TraitCategory, {
     colors: {
       bg: 'bg-success-50',
       border: 'border-success-200',
-      text: 'text-success-800',
-      iconColor: 'text-success-500',
+      text: 'text-success-fg',
+      iconColor: 'text-success-fg',
       selectedBg: 'bg-success-100',
       selectedBorder: 'border-success-400',
     },
@@ -98,8 +98,8 @@ const CATEGORY_CONFIG: Record<TraitCategory, {
     colors: {
       bg: 'bg-danger-50',
       border: 'border-danger-200',
-      text: 'text-danger-800',
-      iconColor: 'text-danger-500',
+      text: 'text-danger-fg',
+      iconColor: 'text-danger-fg',
       selectedBg: 'bg-danger-100',
       selectedBorder: 'border-danger-400',
     },
@@ -124,8 +124,8 @@ const NEUTRAL_COLORS = {
   border: 'border-border-light',
   text: 'text-text-primary',
   iconColor: 'text-text-muted dark:text-text-secondary',
-  selectedBg: 'bg-primary-50',
-  selectedBorder: 'border-primary-400',
+  selectedBg: 'bg-primary-subtle-bg',
+  selectedBorder: 'border-primary-outline-border',
 };
 
 // =============================================================================
@@ -171,7 +171,7 @@ export function SpeciesTraitCard({
   return (
     <div
       className={cn(
-        'rounded-lg border transition-all duration-200',
+        'rounded-lg border transition-all duration-base ease-standard',
         compact ? 'p-2' : 'p-3',
         selected ? colors.selectedBg : colors.bg,
         selected ? colors.selectedBorder : colors.border,
@@ -183,9 +183,8 @@ export function SpeciesTraitCard({
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       tabIndex={selectable && !disabled ? 0 : undefined}
-      role={selectable ? 'button' : undefined}
-      aria-pressed={selectable ? selected : undefined}
-      aria-disabled={disabled}
+      role={selectable && !disabled ? 'button' : undefined}
+      aria-pressed={selectable && !disabled ? selected : undefined}
     >
       <div className="flex items-start gap-3">
         {/* Selection toggle (for selectable traits) */}
@@ -237,7 +236,7 @@ export function SpeciesTraitCard({
                 )}
                 <span className={cn(
                   'text-xs font-medium min-w-[36px] text-center',
-                  usesRemaining === 0 ? 'text-danger-700 dark:text-danger-400' : 'text-text-secondary'
+                  usesRemaining === 0 ? 'text-danger-fg' : 'text-text-secondary'
                 )}>
                   {usesRemaining}/{maxUses}
                 </span>
@@ -330,7 +329,7 @@ export function TraitGroup({
         {selection && selection.maxSelections && (
           <span className={cn(
             'text-sm font-medium',
-            selectedCount >= (selection.maxSelections || 0) ? 'text-success-700 dark:text-success-400' : 'text-text-muted dark:text-text-secondary'
+            selectedCount >= (selection.maxSelections || 0) ? 'text-success-fg' : 'text-text-muted dark:text-text-secondary'
           )}>
             {selectedCount}/{selection.maxSelections} selected
           </span>

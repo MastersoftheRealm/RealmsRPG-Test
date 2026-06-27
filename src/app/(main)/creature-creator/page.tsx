@@ -71,7 +71,7 @@ import {
 } from '@/lib/game/formulas';
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
 import { useSort } from '@/hooks/use-sort';
-import { Button, Input, Select, Textarea, IconButton } from '@/components/ui';
+import { Button, Input, Select, Textarea, IconButton, Card } from '@/components/ui';
 import { Skull, X } from 'lucide-react';
 import { RollLog, RollProvider } from '@/components/character-sheet';
 import { formatDamageDisplay, formatListCellLabel, normalizeRangeDisplay } from '@/lib/utils';
@@ -1079,7 +1079,7 @@ function CreatureCreatorContent() {
 
   return (
     <CreatorLayout
-      icon={<Skull className="w-8 h-8 text-primary-600" />}
+      icon={<Skull className="w-8 h-8 text-primary-link-fg" />}
       title="Creature Creator"
       description="Design custom creatures, monsters, and NPCs. Configure abilities, defenses, skills, and combat options."
       actions={
@@ -1101,7 +1101,7 @@ function CreatureCreatorContent() {
         <div className="self-start sticky top-24 space-y-6">
           <CreatorSummaryPanel
             title="Creature Summary"
-            badge={creature.name ? { label: creature.name, className: 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300' } : undefined}
+            badge={creature.name ? { label: creature.name, className: 'bg-primary-subtle-bg text-primary-fg' } : undefined}
             resourceBoxes={[
               { label: 'Ability Pts', value: `${stats.abilityRemaining}/${stats.abilityPoints}`, variant: stats.abilityRemaining < 0 ? 'danger' : stats.abilityRemaining === 0 ? 'success' : 'info' },
               { label: 'Skill Pts', value: `${stats.skillRemaining}/${stats.skillPoints}`, variant: stats.skillRemaining < 0 ? 'danger' : stats.skillRemaining === 0 ? 'success' : 'info' },
@@ -1316,7 +1316,7 @@ function CreatureCreatorContent() {
       }
     >
           {/* Basic Info - name, description, level, type, size (matches other creators) */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
+          <Card className="shadow-md p-6">
             <h2 className="text-lg font-bold text-text-primary mb-4">Basic Information</h2>
             <div className="space-y-4">
               <div>
@@ -1358,10 +1358,10 @@ function CreatureCreatorContent() {
                 />
               </div>
             </div>
-          </div>
+          </Card>
 
           {/* Archetype Selection */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
+          <Card className="shadow-md p-6">
             <h2 className="text-lg font-bold text-text-primary mb-4">Archetype</h2>
             <ArchetypeSelector
               value={creature.archetypeType}
@@ -1374,10 +1374,10 @@ function CreatureCreatorContent() {
                 martialProficiency: martial 
               })}
             />
-          </div>
+          </Card>
 
           {/* HP/EN Allocation */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
+          <Card className="shadow-md p-6">
             <h2 className="text-lg font-bold text-text-primary mb-4">Health & Energy</h2>
             <HealthEnergyAllocator
               hpBonus={creature.hitPoints}
@@ -1389,10 +1389,10 @@ function CreatureCreatorContent() {
               onEnergyChange={(val) => updateCreature({ energyPoints: val })}
               enableHoldRepeat
             />
-          </div>
+          </Card>
 
           {/* Abilities - Using shared AbilityScoreEditor */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
+          <Card className="shadow-md p-6">
             <h2 className="text-lg font-bold text-text-primary mb-4">Abilities</h2>
             <AbilityScoreEditor
               abilities={creature.abilities}
@@ -1405,7 +1405,7 @@ function CreatureCreatorContent() {
               compact={true}
               useHighAbilityCost={true}
             />
-          </div>
+          </Card>
 
           {/* Skills & defense bonuses (shared SkillsAllocationPage) */}
           <SkillsAllocationPage
@@ -1422,18 +1422,18 @@ function CreatureCreatorContent() {
           />
 
           {/* Resistances, Weaknesses, Immunities */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
+          <Card className="shadow-md p-6">
             <h2 className="text-lg font-bold text-text-primary mb-4">Damage Modifiers</h2>
             <p className="text-sm text-text-muted dark:text-text-secondary mb-3">Each type costs feat points as shown. Resistances and immunities cost points; weaknesses grant points.</p>
             <div className="grid md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-2">
-                  Resistances <span className="font-normal text-primary-600 dark:text-primary-400">(+{stats.resistanceFeatCost} pt each)</span>
+                  Resistances <span className="font-normal text-primary-link-fg">(+{stats.resistanceFeatCost} pt each)</span>
                 </label>
                 <ChipList 
                   items={creature.resistances} 
                   onRemove={(item) => removeFromArray('resistances', item)}
-                  color="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
+                  color="bg-success-light text-success-fg"
                   costLabel={() => `+${stats.resistanceFeatCost} pt`}
                 />
                 <AddItemDropdown
@@ -1447,12 +1447,12 @@ function CreatureCreatorContent() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-2">
-                  Weaknesses <span className="font-normal text-primary-600 dark:text-primary-400">({stats.weaknessFeatCost} pt each)</span>
+                  Weaknesses <span className="font-normal text-primary-link-fg">({stats.weaknessFeatCost} pt each)</span>
                 </label>
                 <ChipList 
                   items={creature.weaknesses} 
                   onRemove={(item) => removeFromArray('weaknesses', item)}
-                  color="bg-danger-light text-danger-700 dark:text-danger-400"
+                  color="bg-danger-light text-danger-fg"
                   costLabel={() => `${stats.weaknessFeatCost} pt`}
                 />
                 <AddItemDropdown
@@ -1466,12 +1466,12 @@ function CreatureCreatorContent() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-2">
-                  Immunities <span className="font-normal text-primary-600 dark:text-primary-400">(+{stats.immunityFeatCost} pt each)</span>
+                  Immunities <span className="font-normal text-primary-link-fg">(+{stats.immunityFeatCost} pt each)</span>
                 </label>
                 <ChipList 
                   items={creature.immunities} 
                   onRemove={(item) => removeFromArray('immunities', item)}
-                  color="bg-power-light text-power-text dark:text-power-300"
+                  color="bg-power-light text-power-fg"
                   costLabel={() => `+${stats.immunityFeatCost} pt`}
                 />
                 <AddItemDropdown
@@ -1484,10 +1484,10 @@ function CreatureCreatorContent() {
                 />
               </div>
             </div>
-          </div>
+          </Card>
 
           {/* Senses & Movement */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
+          <Card className="shadow-md p-6">
             <h2 className="text-lg font-bold text-text-primary mb-4">Senses & Movement</h2>
             <p className="text-sm text-text-muted dark:text-text-secondary mb-3">Each sense and movement type has a feat point cost shown when adding and on each row.</p>
             <div className="grid md:grid-cols-2 gap-4">
@@ -1496,7 +1496,7 @@ function CreatureCreatorContent() {
                 <ExpandableChipList 
                   items={creature.senses} 
                   onRemove={(item) => removeFromArray('senses', item)}
-                  color="bg-info-light text-info-700 dark:text-info-300"
+                  color="bg-info-light text-info-fg"
                   rowHoverClass="hover:bg-info-200 dark:hover:bg-info-900/40"
                   descriptions={senseDescriptions}
                   costLabel={getSenseCostLabel}
@@ -1514,7 +1514,7 @@ function CreatureCreatorContent() {
                 <ExpandableChipList 
                   items={creature.movementTypes} 
                   onRemove={(item) => removeFromArray('movementTypes', item)}
-                  color="bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300"
+                  color="bg-warning-light text-warning-fg"
                   rowHoverClass="hover:bg-amber-200 dark:hover:bg-amber-800/40"
                   descriptions={movementDescriptions}
                   costLabel={getMovementCostLabel}
@@ -1528,13 +1528,13 @@ function CreatureCreatorContent() {
                 />
               </div>
             </div>
-          </div>
+          </Card>
 
           {/* Condition Immunities */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
+          <Card className="shadow-md p-6">
             <h2 className="text-lg font-bold text-text-primary mb-4">Condition Immunities</h2>
             <label className="block text-sm font-medium text-text-secondary mb-2">
-              Conditions <span className="font-normal text-primary-600 dark:text-primary-400">(+{stats.conditionImmunityFeatCost} pt each)</span>
+              Conditions <span className="font-normal text-primary-link-fg">(+{stats.conditionImmunityFeatCost} pt each)</span>
             </label>
             <ChipList 
               items={creature.conditionImmunities} 
@@ -1550,15 +1550,15 @@ function CreatureCreatorContent() {
               sectionCostLabel={`+${stats.conditionImmunityFeatCost} pt each`}
               costForOption={() => stats.conditionImmunityFeatCost}
             />
-          </div>
+          </Card>
 
           {/* Languages */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
+          <Card className="shadow-md p-6">
             <h2 className="text-lg font-bold text-text-primary mb-4">Languages</h2>
             <ChipList 
               items={creature.languages} 
               onRemove={(item) => removeFromArray('languages', item)}
-              color="bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-300"
+              color="bg-info-light text-info-fg"
             />
             <div className="flex gap-2 mt-2">
               <Input
@@ -1577,7 +1577,7 @@ function CreatureCreatorContent() {
                 Add
               </Button>
             </div>
-          </div>
+          </Card>
 
           {/* Feats - Always visible, below languages (matches other creator ordering) */}
           <CollapsibleSection
@@ -1846,7 +1846,7 @@ function CreatureCreatorContent() {
                     <span
                       className={cn(
                         'font-semibold',
-                        stats.currencyRemaining < 0 ? 'text-danger-700 dark:text-danger-400' : 'text-text-primary'
+                        stats.currencyRemaining < 0 ? 'text-danger-fg' : 'text-text-primary'
                       )}
                     >
                       {stats.currencyRemaining}c / {stats.currency}c
@@ -1970,10 +1970,8 @@ function CreatureCreatorContent() {
 export default function CreatureCreatorPage() {
   return (
     <RollProvider canRoll>
-      <div className="min-h-screen bg-background py-8 px-4">
-        <CreatureCreatorContent />
-        <RollLog />
-      </div>
+      <CreatureCreatorContent />
+      <RollLog />
     </RollProvider>
   );
 }

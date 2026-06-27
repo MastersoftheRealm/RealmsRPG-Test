@@ -154,7 +154,7 @@ export const SkillRow = memo(function SkillRow({
         className={cn(
           'border-b border-border-subtle transition-colors',
           isSubSkill ? 'bg-surface-alt' : 'bg-surface',
-          !isEditing && !isLocked && 'hover:bg-primary-50 dark:hover:bg-primary-900/30',
+          !isEditing && !isLocked && 'hover:bg-primary-subtle-bg',
           !isUnlocked && 'opacity-50',
           className
         )}
@@ -168,7 +168,7 @@ export const SkillRow = memo(function SkillRow({
               className={cn(
                 'w-4 h-4 rounded-full inline-block transition-all',
                 proficient 
-                  ? 'bg-primary-600 border-2 border-primary-600' 
+                  ? 'bg-primary-button border-2 border-primary-outline-border' 
                   : 'bg-warning-400 border-2 border-warning-400',
                 canToggleProficiency && !isLocked && !isSpeciesSkill && 'cursor-pointer hover:scale-110',
                 (isLocked || isSpeciesSkill) && 'opacity-70'
@@ -225,7 +225,7 @@ export const SkillRow = memo(function SkillRow({
           {isEditing || !showRollButton ? (
             <span className={cn(
               'inline-block min-w-[40px] font-bold',
-              bonus > 0 ? 'text-success-700 dark:text-success-400' : bonus < 0 ? 'text-danger-700 dark:text-danger-400' : 'text-text-secondary'
+              bonus > 0 ? 'text-success-fg' : bonus < 0 ? 'text-danger-fg' : 'text-text-secondary'
             )}>
               {formatBonus(bonus)}
             </span>
@@ -282,7 +282,7 @@ export const SkillRow = memo(function SkillRow({
               size="sm"
               onClick={() => onRemove()}
               label="Remove skill"
-              className="text-danger dark:text-danger-400 hover:text-danger-600 dark:hover:text-danger-300 hover:bg-transparent"
+              className="text-danger-fg hover:opacity-80 hover:bg-transparent"
             >
               <X className="w-4 h-4" />
             </IconButton>
@@ -297,8 +297,8 @@ export const SkillRow = memo(function SkillRow({
     return (
       <div className={cn(
         'p-3 rounded-lg border transition-colors',
-        isSpeciesSkill ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-600/50' : 
-          value > 0 ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700/50' : 'bg-surface-alt border-border-light',
+        isSpeciesSkill ? 'bg-primary-subtle-bg border-primary-subtle-border' :
+          value > 0 ? 'bg-primary-subtle-bg border-primary-subtle-border' : 'bg-surface-alt border-border-light',
         !isUnlocked && 'opacity-50',
         className
       )}>
@@ -315,7 +315,7 @@ export const SkillRow = memo(function SkillRow({
                 className={cn(
                   isSpeciesSkill
                     ? 'text-text-muted dark:text-text-secondary opacity-50 cursor-not-allowed'
-                    : 'text-danger hover:text-danger-600 hover:bg-transparent'
+                    : 'text-danger-fg hover:opacity-80 hover:bg-transparent'
                 )}
               >
                 <X className="w-4 h-4" />
@@ -327,7 +327,7 @@ export const SkillRow = memo(function SkillRow({
               className={cn(
                 'w-4 h-4 rounded-full border-2',
                 proficient 
-                  ? 'bg-primary-600 border-primary-600' 
+                  ? 'bg-primary-button border-primary-outline-border' 
                   : 'bg-orange-400 border-orange-400'
               )}
               title={proficient ? 'Proficient' : 'Not proficient'}
@@ -342,10 +342,10 @@ export const SkillRow = memo(function SkillRow({
             </div>
             
             {isSpeciesSkill && (
-              <span className="text-xs text-primary-600 dark:text-primary-400 font-medium">(species)</span>
+              <span className="text-xs text-primary-link-fg font-medium">(species)</span>
             )}
             {sourceLabel && !isSpeciesSkill && (
-              <span className="text-xs text-primary-600 dark:text-primary-400 font-medium">({sourceLabel})</span>
+              <span className="text-xs text-primary-link-fg font-medium">({sourceLabel})</span>
             )}
           </div>
           
@@ -365,7 +365,7 @@ export const SkillRow = memo(function SkillRow({
                 {/* Bonus display */}
                 <span className={cn(
                   'w-12 text-right font-bold',
-                  bonus > 0 ? 'text-success-700 dark:text-success-400' : bonus < 0 ? 'text-danger-700 dark:text-danger-400' : 'text-text-muted dark:text-text-secondary'
+                  bonus > 0 ? 'text-success-fg' : bonus < 0 ? 'text-danger-fg' : 'text-text-muted dark:text-text-secondary'
                 )}>
                   {formatBonus(bonus)}
                 </span>
@@ -386,9 +386,9 @@ export const SkillRow = memo(function SkillRow({
     return (
       <div className={cn(
         'p-2 rounded-lg border transition-colors text-sm',
-        isSpeciesSkill ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-600/50' :
+        isSpeciesSkill ? 'bg-primary-subtle-bg border-primary-subtle-border' :
           !isUnlocked && 'opacity-50 bg-surface border-border-light',
-        isUnlocked && value > 0 && 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700/50',
+        isUnlocked && value > 0 && 'bg-primary-subtle-bg border-primary-subtle-border',
         isUnlocked && value === 0 && 'bg-surface-alt border-border-light',
         className
       )}>
@@ -397,16 +397,16 @@ export const SkillRow = memo(function SkillRow({
             <span className="text-xs text-text-muted dark:text-text-secondary">↳</span>
             <span className={cn(
               'font-medium',
-              isSpeciesSkill ? 'text-primary-700' :
+              isSpeciesSkill ? 'text-primary-subtle-fg' :
                 isUnlocked ? 'text-text-primary' : 'text-text-muted dark:text-text-secondary'
             )}>
               {name}
             </span>
             {isSpeciesSkill && (
-              <span className="text-xs text-primary-600 dark:text-primary-400 font-medium">(species)</span>
+              <span className="text-xs text-primary-link-fg font-medium">(species)</span>
             )}
             {sourceLabel && !isSpeciesSkill && (
-              <span className="text-xs text-primary-600 dark:text-primary-400 font-medium">({sourceLabel})</span>
+              <span className="text-xs text-primary-link-fg font-medium">({sourceLabel})</span>
             )}
           </div>
           

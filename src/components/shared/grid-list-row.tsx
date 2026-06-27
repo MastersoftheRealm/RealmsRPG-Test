@@ -19,13 +19,17 @@
  */
 
 import { useState, memo, ReactNode } from 'react';
-import { Edit, Copy, Check, Plus, AlertCircle, X, ChevronDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Edit, Copy, Check, Plus, AlertCircle, X } from 'lucide-react';
+import { cn, formatColumnKeyLabel } from '@/lib/utils';
 import { formatCostDisplay } from '@/lib/game/creator-constants';
 import { Button, IconButton } from '@/components/ui';
 import { SelectionToggle } from './selection-toggle';
 import { QuantitySelector, QuantityBadge } from './quantity-selector';
 import { GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH } from './grid-list-row-chrome';
+import { ExpandableGridListChip } from './expandable-grid-list-chip';
+import type { ChipData, ChipOptionData } from './grid-list-row-types';
+
+export type { ChipData, ChipOptionData } from './grid-list-row-types';
 
 // =============================================================================
 // Types
@@ -48,12 +52,10 @@ export interface ColumnValue {
   align?: 'left' | 'center' | 'right';
 }
 
-/** Humanize column key for display when label is not set (e.g. "uses_per_rec" → "Uses per rec", "attack" → "Attack"). */
+/** Humanize column key for display when label is not set. */
 function columnDisplayLabel(col: ColumnValue): string {
   if (col.label) return col.label;
-  const key = col.key;
-  if (!key) return '';
-  return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  return formatColumnKeyLabel(col.key);
 }
 
 /**
@@ -96,30 +98,6 @@ function countGridTemplateTracks(template?: string): number {
     }
     return count + 1;
   }, 0);
-}
-
-/** Option row for part/property chips (level > 0) with optional description */
-export interface ChipOptionData {
-  label: string;
-  description?: string;
-  level: number;
-}
-
-export interface ChipData {
-  /** Chip label/name */
-  name: string;
-  /** Description (shown when chip is expanded) */
-  description?: string;
-  /** Cost value (TP, IP, etc.) */
-  cost?: number;
-  /** Cost label (default: 'TP') */
-  costLabel?: string;
-  /** Optional level indicator */
-  level?: number;
-  /** Chip category for styling */
-  category?: 'default' | 'cost' | 'tag' | 'warning' | 'success' | 'archetype' | 'skill';
-  /** Options with level > 0 (shown below description in expanded chip, collapsible) */
-  options?: ChipOptionData[];
 }
 
 export interface GridListRowProps {
@@ -217,23 +195,12 @@ export interface GridListRowProps {
 // =============================================================================
 
 const BADGE_COLORS = {
-  blue: 'bg-info-100 dark:bg-info-900/40 text-info-700 dark:text-info-400',
-  purple: 'bg-power-light dark:bg-power-900/30 text-power-text dark:text-power-300',
-  green: 'bg-success-100 dark:bg-success-900/40 text-success-700 dark:text-success-400',
-  amber: 'bg-tp-light dark:bg-warning-900/30 text-tp-text dark:text-warning-400',
+  blue: 'bg-info-100 dark:bg-info-900/40 text-info-fg',
+  purple: 'bg-power-light dark:bg-power-900/30 text-power-fg',
+  green: 'bg-success-100 dark:bg-success-900/40 text-success-fg',
+  amber: 'bg-tp-light dark:bg-warning-900/30 text-tp-text',
   gray: 'bg-surface-alt text-text-secondary',
-  red: 'bg-danger-100 dark:bg-danger-900/40 text-danger-700 dark:text-danger-400',
-};
-
-/** Unified chip styles: default (neutral), cost (blue), tag (neutral same as default) */
-const CHIP_STYLES: Record<string, string> = {
-  default: 'bg-surface-alt dark:bg-surface border-border-light dark:border-border text-text-secondary dark:text-text-primary hover:bg-surface dark:hover:bg-surface-alt',
-  cost: 'bg-info-50 dark:bg-info-900/30 border-info-200 dark:border-info-800/50 text-info-700 dark:text-info-400 hover:bg-info-100 dark:hover:bg-info-800/40',
-  tag: 'bg-surface-alt dark:bg-surface border-border-light dark:border-border text-text-secondary dark:text-text-primary hover:bg-surface dark:hover:bg-surface-alt',
-  warning: 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-800/50 text-danger-700 dark:text-danger-400',
-  success: 'bg-success-50 dark:bg-success-900/30 border-success-200 dark:border-success-800/50 text-success-700 dark:text-success-400',
-  archetype: 'bg-surface-alt dark:bg-surface border-border-light dark:border-border text-text-secondary dark:text-text-primary',
-  skill: 'bg-surface-alt dark:bg-surface border-border-light dark:border-border text-text-secondary dark:text-text-primary',
+  red: 'bg-danger-100 dark:bg-danger-900/40 text-danger-fg',
 };
 
 // =============================================================================
@@ -351,9 +318,9 @@ export const GridListRow = memo(function GridListRow({
   const rowStyles = cn(
     'bg-surface transition-all rounded-lg border overflow-hidden',
     // Selection state
-    isSelected && 'bg-primary-50 border-l-4 border-l-primary-500',
+    isSelected && 'bg-primary-subtle-bg border-l-4 border-l-primary-outline-border',
     // Innate state (purple styling)
-    innate && !isSelected && 'border-violet-300 dark:border-violet-600/50 bg-violet-50 dark:bg-violet-900/30',
+    innate && !isSelected && 'border-power-border bg-power-light',
     // Default border
     !isSelected && !innate && 'border-border-light',
     // Disabled state
@@ -434,7 +401,7 @@ export const GridListRow = memo(function GridListRow({
             <span className="break-words lg:truncate">{nameContent ?? name}</span>
             {/* Innate indicator (hidden when already in innate section) */}
             {innate && !hideInnateBadge && (
-              <span className="text-[10px] px-1 py-0.5 rounded bg-violet-200 dark:bg-violet-800/50 text-violet-600 dark:text-violet-300 flex-shrink-0">★</span>
+              <span className="text-[10px] px-1 py-0.5 rounded bg-power-light text-power-fg border border-power-border flex-shrink-0">★</span>
             )}
             {/* Uses display (hidden when Uses column shows stepper). Show - when no/zero uses. */}
             {uses && !hideUsesInName && (
@@ -482,7 +449,7 @@ export const GridListRow = memo(function GridListRow({
                 'text-sm truncate min-w-0',
                 col.hideOnMobile !== false && 'hidden lg:block',
                 col.className,
-                col.highlight ? 'text-primary-600 font-medium' : 'text-text-primary',
+                col.highlight ? 'text-primary-link-fg font-medium' : 'text-text-primary',
                 col.align === 'left' && 'text-left',
                 col.align === 'right' && 'text-right',
                 (!col.align || col.align === 'center') && 'text-center'
@@ -498,7 +465,7 @@ export const GridListRow = memo(function GridListRow({
               {columns.slice(0, 3).map((col) => (
                 <span key={col.key} className="whitespace-nowrap">
                   <span className="text-text-muted dark:text-text-secondary">{(columnDisplayLabel(col))}:</span>{' '}
-                  <span className={cn(col.highlight && 'text-primary-600 font-medium', col.className)}>
+                  <span className={cn(col.highlight && 'text-primary-link-fg font-medium', col.className)}>
                     {col.value ?? '-'}
                   </span>
                 </span>
@@ -508,7 +475,7 @@ export const GridListRow = memo(function GridListRow({
           
           {/* Warning indicator */}
           {warningMessage && (
-            <div className="flex items-center text-warning-500" title={warningMessage}>
+            <div className="flex items-center text-warning-fg" title={warningMessage}>
               <AlertCircle className="w-4 h-4" />
             </div>
           )}
@@ -526,7 +493,7 @@ export const GridListRow = memo(function GridListRow({
                 size="sm"
                 onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
                 label="Edit"
-                className="text-text-muted dark:text-text-secondary hover:text-primary-600 hover:bg-transparent"
+                className="text-text-muted dark:text-text-secondary hover:text-primary-fg-hover hover:bg-transparent"
               >
                 <Edit className="w-4 h-4" />
               </IconButton>
@@ -539,7 +506,7 @@ export const GridListRow = memo(function GridListRow({
                 size="sm"
                 onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
                 label="Remove"
-                className="text-danger dark:text-danger-400 hover:text-danger-600 dark:hover:text-danger-300 hover:bg-transparent"
+                className="text-danger-fg hover:opacity-80 hover:bg-transparent"
               >
                 <X className="w-4 h-4" />
               </IconButton>
@@ -585,7 +552,7 @@ export const GridListRow = memo(function GridListRow({
               size="sm"
               onClick={(e) => { e.stopPropagation(); onEdit(); }}
               label="Edit"
-              className="text-text-muted dark:text-text-secondary hover:text-primary-600 hover:bg-transparent"
+              className="text-text-muted dark:text-text-secondary hover:text-primary-fg-hover hover:bg-transparent"
             >
               <Edit className="w-4 h-4" />
             </IconButton>
@@ -600,7 +567,7 @@ export const GridListRow = memo(function GridListRow({
               size="sm"
               onClick={(e) => { e.stopPropagation(); onDelete(); }}
               label="Remove"
-              className="text-danger dark:text-danger-400 hover:text-danger-600 dark:hover:text-danger-300 hover:bg-transparent"
+              className="text-danger-fg hover:opacity-80 hover:bg-transparent"
             >
               <X className="w-4 h-4" />
             </IconButton>
@@ -635,7 +602,7 @@ export const GridListRow = memo(function GridListRow({
             col.value && (
               <span key={col.key} className="flex items-center gap-1">
                 <span className="text-text-muted dark:text-text-secondary">{(columnDisplayLabel(col))}:</span>
-                <span className={cn(col.highlight && 'text-primary-600 font-medium')}>
+                <span className={cn(col.highlight && 'text-primary-link-fg font-medium')}>
                   {col.value}
                 </span>
               </span>
@@ -665,7 +632,7 @@ export const GridListRow = memo(function GridListRow({
               
               {/* Warning message */}
               {warningMessage && (
-                <p className="text-xs text-warning-700 dark:text-warning-400 mb-3 flex items-center gap-1">
+                <p className="text-xs text-warning-fg mb-3 flex items-center gap-1">
                   <AlertCircle className="w-3 h-3" />
                   {warningMessage}
                 </p>
@@ -693,8 +660,8 @@ export const GridListRow = memo(function GridListRow({
                 <div className="lg:hidden grid grid-cols-2 gap-2 mb-4 text-sm">
                   {columns.map((col) => (
                     <div key={col.key} className="flex items-center gap-2">
-                      <span className="text-text-muted dark:text-text-secondary capitalize">{(columnDisplayLabel(col))}:</span>
-                      <span className={cn('font-medium text-text-primary', col.highlight && 'text-primary-600')}>
+                      <span className="text-text-muted dark:text-text-secondary">{(columnDisplayLabel(col))}:</span>
+                      <span className={cn('font-medium text-text-primary', col.highlight && 'text-primary-link-fg')}>
                         {col.value ?? '-'}
                       </span>
                     </div>
@@ -705,7 +672,7 @@ export const GridListRow = memo(function GridListRow({
               {/* Total Cost */}
               {totalCost !== undefined && totalCost > 0 && (
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-info-50 dark:bg-info-900/30 text-info-700 dark:text-info-400 border border-info-200 dark:border-info-800/50">
+                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-info-50 dark:bg-info-900/30 text-info-fg border border-info-200 dark:border-info-800/50">
                     Total {costLabel}: {formatCostDisplay(totalCost)}
                   </span>
                 </div>
@@ -734,66 +701,21 @@ export const GridListRow = memo(function GridListRow({
                     <div className="flex flex-wrap gap-2">
                       {sectionChips.map((chip, chipIdx) => {
                         const index = sectionOffset + chipIdx;
-                        const hasCost = (chip.cost ?? 0) > 0;
-                        const isChipExpanded = expandedChipIndex === index;
-                        const category = chip.category || (hasCost ? 'cost' : 'default');
-                        const isExpandable = !!(chip.description || hasCost || (chip.options?.length ?? 0) > 0) && category !== 'tag';
-                        const showOptions = isChipExpanded && (chip.options?.length ?? 0) > 0;
-                        const optionsOpen = expandedOptionsChipIndex === index;
                         return (
-                          <div
+                          <ExpandableGridListChip
                             key={chipIdx}
-                            className={cn(
-                              'inline-flex flex-col items-start rounded-xl text-sm font-medium transition-all duration-200 border',
-                              CHIP_STYLES[category],
-                              isChipExpanded ? 'w-full ring-2 ring-offset-1 ring-current px-3 py-2' : 'px-3 py-1.5'
-                            )}
-                          >
-                            <button
-                              onClick={isExpandable ? (e) => { e.stopPropagation(); handleChipClick(index, e); } : (e) => e.stopPropagation()}
-                              className={cn('text-left w-full', isExpandable ? 'cursor-pointer' : 'cursor-default')}
-                            >
-                              <span className="inline-flex items-center gap-1.5">
-                                <span>{chip.name}</span>
-                                {chip.level && chip.level > 1 && (
-                                  <span className="text-xs text-text-secondary">(Lv.{chip.level})</span>
-                                )}
-                                {hasCost && (
-                                  <>
-                                    <span className="opacity-40">|</span>
-                                    <span className="text-xs font-semibold text-text-secondary dark:text-text-primary">{chip.costLabel || costLabel}: {typeof chip.cost === 'number' ? formatCostDisplay(chip.cost) : chip.cost}</span>
-                                  </>
-                                )}
-                              </span>
-                            </button>
-                            {isChipExpanded && chip.description && (
-                              <p className="block mt-1.5 pt-1.5 border-t border-current/15 text-xs font-normal text-left text-text-secondary leading-relaxed whitespace-pre-line w-full">
-                                {chip.description}
-                              </p>
-                            )}
-                            {showOptions && (
-                              <div className="mt-2 w-full">
-                                <button
-                                  type="button"
-                                  onClick={(e) => { e.stopPropagation(); setExpandedOptionsChipIndex(optionsOpen ? null : index); }}
-                                  className="flex items-center gap-1 text-xs font-medium text-text-secondary hover:text-text-primary"
-                                >
-                                  <ChevronDown className={cn('w-3.5 h-3.5 transition-transform', optionsOpen && 'rotate-180')} />
-                                  Options ({chip.options!.length})
-                                </button>
-                                {optionsOpen && (
-                                  <ul className="mt-1.5 space-y-2 pl-4 border-l-2 border-border-light dark:border-border">
-                                    {chip.options!.map((opt, oi) => (
-                                      <li key={oi} className="text-xs">
-                                        <span className="font-medium text-text-primary">{opt.label}: Level {opt.level}</span>
-                                        {opt.description && <p className="mt-0.5 text-text-secondary leading-relaxed">{opt.description}</p>}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                )}
-                              </div>
-                            )}
-                          </div>
+                            chip={chip}
+                            index={index}
+                            costLabel={costLabel}
+                            isExpanded={expandedChipIndex === index}
+                            optionsOpen={expandedOptionsChipIndex === index}
+                            onChipClick={handleChipClick}
+                            onToggleOptions={(chipIndex) =>
+                              setExpandedOptionsChipIndex(
+                                expandedOptionsChipIndex === chipIndex ? null : chipIndex
+                              )
+                            }
+                          />
                         );
                       })}
                     </div>
@@ -808,69 +730,22 @@ export const GridListRow = memo(function GridListRow({
                     {chipsLabel}
                   </h3>
                   <div className="flex flex-wrap gap-2">
-                    {chips.map((chip, index) => {
-                      const hasCost = (chip.cost ?? 0) > 0;
-                      const isChipExpanded = expandedChipIndex === index;
-                      const category = chip.category || (hasCost ? 'cost' : 'default');
-                      const isExpandable = !!(chip.description || hasCost || (chip.options?.length ?? 0) > 0) && category !== 'tag';
-                      const showOptions = isChipExpanded && (chip.options?.length ?? 0) > 0;
-                      const optionsOpen = expandedOptionsChipIndex === index;
-                      return (
-                        <div
-                          key={`${chip.name}-${category}-${index}`}
-                          className={cn(
-                            'inline-flex flex-col items-start rounded-xl text-sm font-medium transition-all duration-200 border',
-                            CHIP_STYLES[category],
-                            isChipExpanded ? 'w-full ring-2 ring-offset-1 ring-current px-3 py-2' : 'px-3 py-1.5'
-                          )}
-                        >
-                          <button
-                            onClick={isExpandable ? (e) => { e.stopPropagation(); handleChipClick(index, e); } : (e) => e.stopPropagation()}
-                            className={cn('text-left w-full', isExpandable ? 'cursor-pointer' : 'cursor-default')}
-                          >
-                            <span className="inline-flex items-center gap-1.5">
-                              <span>{chip.name}</span>
-                              {chip.level && chip.level > 1 && (
-                                <span className="text-xs text-text-secondary">(Lv.{chip.level})</span>
-                              )}
-                              {hasCost && (
-                                <>
-                                  <span className="opacity-40">|</span>
-                                  <span className="text-xs font-semibold text-text-secondary dark:text-text-primary">{chip.costLabel || costLabel}: {typeof chip.cost === 'number' ? formatCostDisplay(chip.cost) : chip.cost}</span>
-                                </>
-                              )}
-                            </span>
-                          </button>
-                          {isChipExpanded && chip.description && (
-                            <p className="block mt-1.5 pt-1.5 border-t border-current/15 text-xs font-normal text-left text-text-secondary leading-relaxed whitespace-pre-line w-full">
-                              {chip.description}
-                            </p>
-                          )}
-                          {showOptions && (
-                            <div className="mt-2 w-full">
-                              <button
-                                type="button"
-                                onClick={(e) => { e.stopPropagation(); setExpandedOptionsChipIndex(optionsOpen ? null : index); }}
-                                className="flex items-center gap-1 text-xs font-medium text-text-secondary hover:text-text-primary"
-                              >
-                                <ChevronDown className={cn('w-3.5 h-3.5 transition-transform', optionsOpen && 'rotate-180')} />
-                                Options ({chip.options!.length})
-                              </button>
-                              {optionsOpen && (
-                                <ul className="mt-1.5 space-y-2 pl-4 border-l-2 border-border-light dark:border-border">
-                                  {chip.options!.map((opt, oi) => (
-                                    <li key={oi} className="text-xs">
-                                      <span className="font-medium text-text-primary">{opt.label}: Level {opt.level}</span>
-                                      {opt.description && <p className="mt-0.5 text-text-secondary leading-relaxed">{opt.description}</p>}
-                                    </li>
-                                  ))}
-                                </ul>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                    {chips.map((chip, index) => (
+                      <ExpandableGridListChip
+                        key={`${chip.name}-${chip.category ?? 'default'}-${index}`}
+                        chip={chip}
+                        index={index}
+                        costLabel={costLabel}
+                        isExpanded={expandedChipIndex === index}
+                        optionsOpen={expandedOptionsChipIndex === index}
+                        onChipClick={handleChipClick}
+                        onToggleOptions={(chipIndex) =>
+                          setExpandedOptionsChipIndex(
+                            expandedOptionsChipIndex === chipIndex ? null : chipIndex
+                          )
+                        }
+                      />
+                    ))}
                   </div>
                 </div>
               )}

@@ -414,7 +414,7 @@ export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): En
             ) : (
               shieldBlock
             ),
-          className: 'text-primary-600 dark:text-primary-400 font-medium',
+          className: 'text-primary-link-fg font-medium',
           align: 'center',
         },
       ],
@@ -492,7 +492,7 @@ export function mapArmorRows(armor: Item[], ctx: LibraryEntityRowContext): Entit
         {
           key: 'dr',
           value: damageReduction > 0 ? String(damageReduction) : '-',
-          className: 'text-primary-600 dark:text-primary-400 font-medium',
+          className: 'text-primary-link-fg font-medium',
           align: 'center',
         },
         { key: 'crit', value: critThreshold ?? '-', align: 'center' },

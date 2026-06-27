@@ -2,7 +2,7 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { Modal, Chip, Button } from '@/components/ui';
+import { Modal, Chip, Button, Card } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { useCodexSkills, resolveSkillIdsToNames } from '@/hooks';
 import type { Species, Trait, Skill } from '@/hooks';
@@ -91,7 +91,7 @@ function TraitSection({ title, traits, isFlaw = false, selectable = false }: Tra
               key={`${trait.id}-${index}`}
               className={cn(
                 'rounded-lg border bg-surface-alt border-border-light',
-                selectable && 'cursor-pointer hover:border-primary-400 hover:bg-primary-50 transition-colors',
+                selectable && 'cursor-pointer hover:border-primary-outline-border hover:bg-primary-subtle-bg transition-colors',
                 !trait.found && 'opacity-60'
               )}
             >
@@ -229,7 +229,7 @@ export function SpeciesModal({
         </div>
 
         {/* Stats Grid - NO SPEED (species don't have speed values) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-surface-alt rounded-xl mb-6">
+        <Card className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-surface-alt mb-6 shadow-none">
           <div className="text-center">
             <span className="block text-xs text-text-muted dark:text-text-secondary uppercase tracking-wide">Size</span>
             <span className="font-bold text-text-primary capitalize">{sizesDisplay}</span>
@@ -250,7 +250,7 @@ export function SpeciesModal({
               <span className="font-bold text-text-primary">{species.ave_weight} kg</span>
             </div>
           )}
-        </div>
+        </Card>
 
         {/* Ability Bonuses */}
         {species.ability_bonuses && Object.keys(species.ability_bonuses).length > 0 && (
@@ -292,24 +292,24 @@ export function SpeciesModal({
               {selectedSkill && (
                 <div className="mt-2 p-3 bg-info-50 border border-info-200 rounded-lg">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium text-info-800">{(selectedSkill as { displayName?: string; name?: string }).displayName ?? (selectedSkill as { name?: string }).name ?? 'Skill'}</span>
+                    <span className="font-medium text-info-fg">{(selectedSkill as { displayName?: string; name?: string }).displayName ?? (selectedSkill as { name?: string }).name ?? 'Skill'}</span>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setSelectedSkill(null)}
                       aria-label="Dismiss skill description"
-                      className="text-info-600 dark:text-info-400 hover:text-info-800 dark:hover:text-info-300 h-auto py-0 px-1 min-w-0"
+                      className="text-info-fg hover:opacity-80 h-auto py-0 px-1 min-w-0"
                     >
                       ✕
                     </Button>
                   </div>
-                  <p className="text-sm text-info-700">
+                  <p className="text-sm text-info-fg">
                     {String(selectedSkill.id) === '0'
                       ? 'Your choice: pick any one skill as your second species skill, or treat this as an extra skill point.'
                       : ((selectedSkill as { description?: string }).description || 'No description available.')}
                   </p>
                   {selectedSkill.ability && (
-                    <p className="text-xs text-info-600 dark:text-info-400 mt-1">
+                    <p className="text-xs text-info-fg mt-1">
                       Ability: {selectedSkill.ability}
                     </p>
                   )}

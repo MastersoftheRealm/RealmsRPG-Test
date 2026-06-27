@@ -265,10 +265,48 @@
   --color-companion-text: #5b21b6;
 
   /* ---------------------------------------------------------------------------
+     SEMANTIC FOREGROUND TOKENS (theme-aware — dark overrides live in `.dark`)
+     Prefer these (e.g. `text-success-fg`) over pairing a numbered ramp step with
+     an ad-hoc `dark:` override. Each pair is validated for WCAG AA in BOTH
+     themes by scripts/check-contrast.mjs. Light defaults reference the ramp.
+     --------------------------------------------------------------------------- */
+  --color-success-fg: var(--color-success-700);
+  --color-danger-fg: var(--color-danger-700);
+  --color-warning-fg: var(--color-warning-700);
+  --color-info-fg: var(--color-info-700);
+  --color-power-fg: var(--color-power-dark);
+  --color-martial-fg: var(--color-martial-dark);
+  --color-accent-fg: var(--color-accent-800);
+  --color-accent-border: var(--color-accent-300);
+  --color-info-border: var(--color-info-200);
+  --color-success-border: var(--color-success-300);
+  --color-warning-border: var(--color-warning-300);
+  --color-danger-border: var(--color-danger-300);
+  /* Solid primary button background — kept dark enough for white text in BOTH themes */
+  --color-primary-button: var(--color-primary-600);
+  --color-primary-button-hover: var(--color-primary-700);
+  --color-primary-fg: var(--color-primary-700);
+  --color-primary-fg-hover: var(--color-primary-500);
+  --color-primary-fg-active: var(--color-primary-500);
+  --color-primary-link-fg: var(--color-primary-600);
+  --color-primary-subtle-bg: var(--color-primary-50);
+  --color-primary-subtle-bg-hover: var(--color-primary-100);
+  --color-primary-subtle-border: var(--color-primary-200);
+  --color-primary-subtle-fg: var(--color-primary-700);
+  --color-primary-outline-border: var(--color-primary-600);
+  --color-primary-outline-fg: var(--color-primary-700);
+  --color-primary-chip-bg: var(--color-primary-700);
+  --color-primary-chip-fg: var(--color-primary-foreground);
+  --color-primary-chip-border: var(--color-primary-600);
+  --color-danger-button: var(--color-danger-600);
+
+  /* ---------------------------------------------------------------------------
      TYPOGRAPHY
      --------------------------------------------------------------------------- */
   --font-sans: "Nunito", system-ui, sans-serif;
-  --font-display: "Nova Flat", system-ui, sans-serif;
+  /* Self-hosted via next/font (var set on <html> in layout.tsx) — falls back to
+     the literal family name then system-ui if the variable is unavailable. */
+  --font-display: var(--font-nova-flat, "Nova Flat"), system-ui, sans-serif;
   
   /* ---------------------------------------------------------------------------
      SEMANTIC COMPONENT COLORS (Backwards compatibility)
@@ -283,60 +321,82 @@
      --------------------------------------------------------------------------- */
   --touch-target-min: 44px;
   --mobile-gutter: 0.75rem;
+
+  /* ---------------------------------------------------------------------------
+     STANDARD LADDERS (Phase 0.3) — semantic scales encoding the DOMINANT
+     existing values so components/pages can migrate to one consistent set.
+     Additive only (no visual change until adopted). See UI_UNIFICATION_PLAN.md.
+     --------------------------------------------------------------------------- */
+
+  /* Radius — `rounded-control` (inputs/buttons), `rounded-card` (cards/panels),
+     `rounded-pill` (chips/badges). Map to the dominant lg / xl / full usage. */
+  --radius-control: 0.5rem;   /* = rounded-lg  (buttons, inputs, tabs) */
+  --radius-card: 0.75rem;     /* = rounded-xl  (cards, panels, modals) */
+  --radius-pill: 9999px;      /* = rounded-full (chips, pills, avatars) */
+
+  /* Elevation — `shadow-card` (resting surface), `shadow-raised` (hover/lifted),
+     `shadow-overlay` (modals/popovers/tooltips). Aligned to the existing scale. */
+  --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-raised: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-overlay: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /* Motion — one duration + easing scale for transitions/animations.
+     `duration-fast/base/slow` utilities + tokens for keyframe animations. */
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Z-index — sticky in-page chrome → header/modal overlay → popovers/tooltips →
+     toast/alerts → floating widgets. Prefer these utilities over ad-hoc z-[N]. */
+  --z-sticky: 10;
+  --z-header: 50;
+  --z-overlay: 50;
+  --z-popover: 70;
+  --z-toast: 100;
+  --z-floating: 1000;
+  --z-skip-link: 9999;
+  --z-toast-stack: 10000;
+
+  /* Container widths — `max-w-narrow` (forms/legal), `max-w-standard` (most app
+     pages = 7xl), `max-w-wide` (marketing = 1440px), `max-w-full-tool`
+     (character sheet / campaign view = 1600px). */
+  --container-narrow: 56rem;     /* = max-w-4xl */
+  --container-standard: 80rem;   /* = max-w-7xl */
+  --container-wide: 1440px;
+  --container-full-tool: 1600px;
+
+  /* Layout max-width utilities (pair with PageContainer sizes) */
+  --max-width-wide: var(--container-wide);
 }
 
 /* =============================================================================
    BASE STYLES
    ============================================================================= */
 @layer base {
-  /* -----------------------------------------------------------------------
-     Legacy :root aliases — kept for backward compatibility with components
-     that reference var(--background), var(--surface), etc. directly.
-     Canonical tokens are defined in @theme above (--color-*).
-     TODO: Migrate all usages to Tailwind v4 @theme tokens and remove these.
-     ----------------------------------------------------------------------- */
-  :root {
-    --background: #f6f6f6;
-    --foreground: #091d2d;
-    --card-bg: #ffffff;
-    --border: #707070;
-    --border-light: #dad9d9;
-    --primary-foreground: #f9f9f9;
-    --muted: #f1f5f9;
-    --muted-foreground: #707070;
-    --destructive: #dc2626;
-    --destructive-foreground: #ffffff;
-    --surface: #ffffff;
-    --surface-alt: #f9f9f9;
-    --surface-secondary: #f6f6f6;
-    --text-primary: #091d2d;
-    --text-secondary: #41464a;
-    --text-muted: #707070;
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 
+  /* Dark theme: override ONLY the canonical --color-* tokens from @theme. */
   .dark {
-    --background: #0d1117;
-    --foreground: #e6edf3;
-    --card-bg: #161b22;
-    --border: #30363d;
-    --border-light: #21262d;
-    --primary-foreground: #f9f9f9;
-    --muted: #21262d;
-    --muted-foreground: #8b949e;
-    --destructive: #f85149;
-    --destructive-foreground: #ffffff;
-    /* Dark theme surface/background tokens */
-    --surface: #161b22;
-    --surface-alt: #21262d;
-    --surface-secondary: #0d1117;
-    --text-primary: #e6edf3;
-    --text-secondary: #8b949e;
-    --text-muted: #8b949e; /* WCAG AA: 6e7681 failed 4.5:1 on #161b22; 8b949e passes ~4.6:1 */
     /* Tailwind theme color overrides for dark mode */
     --color-surface: #161b22;
     --color-surface-alt: #21262d;
     --color-surface-secondary: #0d1117;
     --color-background: #0d1117;
+    /* These @theme tokens previously had no dark value (stayed light): */
+    --color-card: #161b22;
+    --color-muted: #21262d;
+    --color-muted-foreground: #8b949e;
+    --color-destructive: #f85149;
     --color-text-primary: #e6edf3;
     --color-text-secondary: #8b949e;
     --color-text-muted: #8b949e; /* WCAG AA contrast on dark surfaces */
@@ -363,6 +423,9 @@
     --color-energy-light: #0f172a;
     --color-power-light: #1e1b24;
     --color-martial-light: #241b1b;
+    --color-power-border: rgb(217 211 227 / 0.35);
+    --color-martial-border: rgb(227 211 213 / 0.35);
+    --color-currency-border: rgb(250 204 21 / 0.4);
     /* Lighter power/martial text on dark power/martial backgrounds for WCAG AA */
     --color-power-300: #c4b8d4;
     --color-martial-300: #d4b8c0;
@@ -385,11 +448,88 @@
     --color-warning-500: #d97706;
     --color-warning-600: #b45309;
     --color-warning-700: #92400e;
+
+    /* -------------------------------------------------------------------------
+       Phase 0: complete the dark theme — every semantic token now has an
+       explicit dark value (previously these fell through to light values,
+       causing dark-on-dark text and light chips floating on dark surfaces).
+       ------------------------------------------------------------------------- */
+    /* Heading/title text (was olive #5a5645 → 2.35:1 on dark surface) */
+    --color-title: #cfcabb;
+
+    /* Theme-aware semantic foreground tokens — light text on dark tinted bgs */
+    --color-success-fg: #6ee7b7;
+    --color-danger-fg: #fca5a5;
+    --color-warning-fg: #fcd34d;
+    --color-info-fg: #93c5fd;
+    --color-power-fg: #c4b8d4;
+    --color-martial-fg: #d4b8c0;
+    --color-accent-fg: var(--color-accent-400);
+    --color-accent-border: var(--color-accent-400);
+    --color-info-border: rgb(147 197 253 / 0.35);
+    --color-success-border: rgb(110 231 183 / 0.35);
+    --color-warning-border: rgb(252 211 77 / 0.35);
+    --color-danger-border: rgb(252 165 165 / 0.35);
+    /* Solid primary button stays a dark blue in dark mode so white text passes */
+    --color-primary-button: #0a4a7a;
+    --color-primary-button-hover: var(--color-primary-50);
+    --color-primary-fg: var(--color-primary-300);
+    --color-primary-fg-hover: var(--color-primary-200);
+    --color-primary-fg-active: var(--color-primary-400);
+    --color-primary-link-fg: var(--color-primary-400);
+    --color-primary-subtle-bg: rgb(10 74 122 / 0.25);
+    --color-primary-subtle-bg-hover: rgb(10 74 122 / 0.35);
+    --color-primary-subtle-border: rgb(79 148 205 / 0.45);
+    --color-primary-subtle-fg: var(--color-primary-300);
+    --color-primary-outline-border: var(--color-primary-400);
+    --color-primary-outline-fg: var(--color-primary-300);
+    --color-primary-chip-bg: var(--color-primary-100);
+    --color-primary-chip-fg: #ffffff;
+    --color-primary-chip-border: var(--color-primary-400);
+    --color-danger-button: var(--color-danger-800);
+    /* Health stat text readable on dark health background */
+    --color-health-text: #86efac;
+
+    /* Category chips — dark tinted surface + light text + subtle border
+       (fixes light chips floating on dark surfaces). Contrast AA-verified. */
+    --color-category-action: #11213a;
+    --color-category-action-text: #9ec5ff;
+    --color-category-action-border: #1e3a5f;
+    --color-category-activation: #0c2622;
+    --color-category-activation-text: #5eead4;
+    --color-category-activation-border: #155e57;
+    --color-category-area: #0d2818;
+    --color-category-area-text: #86efac;
+    --color-category-area-border: #166534;
+    --color-category-duration: #1e1633;
+    --color-category-duration-text: #d8b4fe;
+    --color-category-duration-border: #4c2889;
+    --color-category-target: #2a1a0e;
+    --color-category-target-text: #fdba74;
+    --color-category-target-border: #7c3a12;
+    --color-category-special: #292419;
+    --color-category-special-text: #fde047;
+    --color-category-special-border: #854d0e;
+    --color-category-restriction: #2d1515;
+    --color-category-restriction-text: #fca5a5;
+    --color-category-restriction-border: #7f1d1d;
+
+    /* Combatant + companion chip surfaces (encounter tools) */
+    --color-ally-light: #11213a;
+    --color-ally-text: #9ec5ff;
+    --color-enemy-light: #2d1515;
+    --color-enemy-text: #fca5a5;
+    --color-companion-light: #1e1633;
+    --color-companion-text: #d8b4fe;
+
+    /* Accent (gold) chip surface — Chip component `accent` variant */
+    --color-accent-chip: #2a2416;
+    --color-accent-light: #2a2416;
   }
   
   body {
-    background-color: var(--surface-secondary);
-    color: var(--text-primary);
+    background-color: var(--color-surface-secondary);
+    color: var(--color-text-primary);
     font-family: var(--font-sans);
     @apply antialiased;
   }
@@ -499,219 +639,6 @@
   .font-display {
     font-family: var(--font-display);
   }
-  
-  .page-title {
-    font-family: var(--font-display);
-    @apply text-3xl font-bold text-text-primary;
-  }
-  
-  .section-title {
-    font-family: var(--font-display);
-    @apply text-xl font-semibold text-text-primary;
-  }
-
-  /* ---------------------------------------------------------------------------
-     LAYOUT COMPONENTS
-     --------------------------------------------------------------------------- */
-  .container-main {
-    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
-  }
-  
-  .page-container {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
-  }
-  
-  .page-container-wide {
-    @apply max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-24 py-8;
-  }
-  
-  .page-container-narrow {
-    @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
-  }
-
-  /* ---------------------------------------------------------------------------
-     PAGE HEADER COMPONENT
-     --------------------------------------------------------------------------- */
-  .page-header {
-    @apply mb-8;
-  }
-  
-  .page-header-title {
-    @apply text-3xl font-bold text-text-primary mb-2;
-  }
-  
-  .page-header-description {
-    @apply text-text-muted text-lg;
-  }
-
-  /* ---------------------------------------------------------------------------
-     BUTTON COMPONENTS - Unified styling
-     Clean solid/outline variants preferred over gradients for modern feel
-     --------------------------------------------------------------------------- */
-  /* Clean solid primary - flat bg, no gradient. Dark: use darker primary so white text meets WCAG AA. */
-  .btn-solid {
-    @apply inline-flex items-center gap-2 rounded-lg font-semibold
-           bg-primary-600 text-white px-5 py-2.5 transition-all
-           hover:bg-primary-700
-           dark:bg-primary-100 dark:text-white dark:hover:bg-primary-50
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2
-           disabled:pointer-events-none disabled:opacity-50;
-  }
-
-  /* Clean outline - border only, no fill. Dark: lighter border/text for contrast on dark bg. */
-  .btn-outline-clean {
-    @apply inline-flex items-center gap-2 rounded-lg font-semibold
-           border-2 border-primary-600 text-primary-700 px-5 py-2.5 transition-all
-           hover:bg-primary-50
-           dark:border-primary-400 dark:text-primary-300 dark:hover:bg-primary-900/30
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2
-           disabled:pointer-events-none disabled:opacity-50;
-  }
-
-  /* DEPRECATED: Legacy gradient classes - use btn-solid or Button component variants instead */
-  /* .btn-primary, .btn-danger, .btn-success use gradients; prefer solid colors */
-  .btn-primary {
-    @apply inline-flex items-center justify-center rounded-lg font-semibold 
-           bg-gradient-to-b from-primary-500 to-primary-700 text-primary-foreground 
-           px-5 py-2.5 transition-all 
-           hover:from-primary-400 hover:to-primary-600 hover:shadow-lg 
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2
-           disabled:pointer-events-none disabled:opacity-50 disabled:from-neutral-400 disabled:to-neutral-500;
-  }
-  
-  .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-lg font-semibold
-           bg-neutral-200 text-text-secondary px-5 py-2.5 transition-all 
-           hover:bg-neutral-300 border border-neutral-300
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 focus-visible:ring-offset-2
-           disabled:pointer-events-none disabled:opacity-50;
-  }
-  
-  .btn-danger {
-    @apply inline-flex items-center justify-center rounded-lg font-semibold
-           bg-gradient-to-b from-danger-600 to-danger-dark text-white 
-           px-5 py-2.5 transition-all hover:shadow-lg
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger focus-visible:ring-offset-2
-           disabled:pointer-events-none disabled:opacity-50;
-  }
-  
-  .btn-success {
-    @apply inline-flex items-center justify-center rounded-lg font-semibold
-           bg-gradient-to-b from-success-500 to-success-dark text-white 
-           px-5 py-2.5 transition-all hover:shadow-lg
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success focus-visible:ring-offset-2
-           disabled:pointer-events-none disabled:opacity-50;
-  }
-  
-  .btn-outline {
-    @apply inline-flex items-center justify-center rounded-lg font-semibold
-           bg-transparent border-2 border-primary-700 text-primary-700
-           px-5 py-2.5 transition-all hover:bg-primary-50
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2
-           disabled:pointer-events-none disabled:opacity-50;
-  }
-  
-  .btn-ghost {
-    @apply inline-flex items-center justify-center rounded-lg font-medium
-           text-text-secondary px-4 py-2 transition-all hover:bg-neutral-100
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 focus-visible:ring-offset-2
-           disabled:pointer-events-none disabled:opacity-50;
-  }
-  
-  .btn-utility {
-    @apply inline-flex items-center justify-center rounded-md font-medium
-           bg-utility-300 text-white px-3 py-1.5 text-sm transition-all 
-           hover:bg-utility-400
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-utility-300 focus-visible:ring-offset-2
-           disabled:pointer-events-none disabled:opacity-50;
-  }
-  
-  .btn-icon {
-    @apply inline-flex items-center justify-center rounded-full p-2
-           text-text-muted transition-colors hover:bg-neutral-100 hover:text-text-primary
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2;
-  }
-
-  /* ---------------------------------------------------------------------------
-     CARD COMPONENTS
-     --------------------------------------------------------------------------- */
-  .card {
-    @apply bg-surface rounded-xl border border-border-light shadow-sm;
-  }
-  
-
-  /* ---------------------------------------------------------------------------
-     CHIP / BADGE COMPONENTS
-     --------------------------------------------------------------------------- */
-  .chip {
-    @apply inline-flex items-center gap-1.5 rounded-full 
-           bg-accent-chip text-primary-700 
-           px-3 py-1 text-sm font-medium border border-transparent;
-  }
-  
-  .chip-removable {
-    @apply inline-flex items-center gap-1.5 rounded-full 
-           bg-accent-chip text-primary-700 
-           pr-2 py-1 text-sm font-medium border border-transparent;
-  }
-  
-  .chip-small {
-    @apply px-2 py-0.5 text-xs;
-  }
-  
-  .chip-large {
-    @apply px-4 py-1.5 text-base;
-  }
-
-  /* Category-based chip variants */
-  .chip-action {
-    @apply bg-category-action text-category-action-text border-category-action-border;
-  }
-  
-  .chip-activation {
-    @apply bg-category-activation text-category-activation-text border-category-activation-border;
-  }
-  
-  .chip-area {
-    @apply bg-category-area text-category-area-text border-category-area-border;
-  }
-  
-  .chip-duration {
-    @apply bg-category-duration text-category-duration-text border-category-duration-border;
-  }
-  
-  .chip-target {
-    @apply bg-category-target text-category-target-text border-category-target-border;
-  }
-  
-  .chip-special {
-    @apply bg-category-special text-category-special-text border-category-special-border;
-  }
-  
-  .chip-restriction {
-    @apply bg-category-restriction text-category-restriction-text border-category-restriction-border;
-  }
-
-  /* Status chip variants */
-  .chip-success {
-    @apply bg-success-light text-success-700 border-success-300
-           dark:bg-success-900/30 dark:text-success-400 dark:border-success-800/50;
-  }
-  
-  .chip-danger {
-    @apply bg-danger-light text-danger-700 border-danger-300
-           dark:bg-danger-900/30 dark:text-danger-400 dark:border-danger-800/50;
-  }
-  
-  .chip-warning {
-    @apply bg-warning-light text-warning-700 border-warning-300
-           dark:bg-warning-900/30 dark:text-warning-400 dark:border-warning-800/50;
-  }
-  
-  .chip-info {
-    @apply bg-info-light text-info-700 border-info-300
-           dark:bg-info-900/30 dark:text-info-400 dark:border-info-800/50;
-  }
 
   /* ---------------------------------------------------------------------------
      FORM INPUT COMPONENTS
@@ -719,13 +646,31 @@
   .input-field {
     @apply w-full rounded-lg border border-border-light bg-surface px-4 py-2.5
            text-text-primary placeholder:text-text-muted
-           focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-accent/20
+           focus:border-primary-outline-border focus:outline-none focus:ring-2 focus:ring-primary-outline-border
            disabled:cursor-not-allowed disabled:opacity-50;
   }
 }
 
 /* Animations */
 @layer utilities {
+  /* Touch targets — 44px minimum below md; compact on desktop (MOBILE_UX.md) */
+  .touch-target {
+    min-width: var(--touch-target-min, 44px);
+    min-height: var(--touch-target-min, 44px);
+  }
+
+  .touch-target-md-compact {
+    min-width: var(--touch-target-min, 44px);
+    min-height: var(--touch-target-min, 44px);
+  }
+
+  @media (min-width: 768px) {
+    .touch-target-md-compact {
+      min-width: 0;
+      min-height: 0;
+    }
+  }
+
   /* Modal pop-in animation matching vanilla site */
   @keyframes modal-pop {
     0% {
@@ -739,7 +684,7 @@
   }
   
   .animate-modal-pop {
-    animation: modal-pop 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: modal-pop var(--duration-base) var(--ease-standard);
   }
   
   /* Fade in animation */
@@ -749,7 +694,7 @@
   }
   
   .animate-fade-in {
-    animation: fade-in 0.2s ease;
+    animation: fade-in var(--duration-base) var(--ease-standard);
   }
   
   /* Slide in from right (for toasts) */
@@ -806,7 +751,9 @@
   
   /* Hover lift effect for cards */
   .hover-lift {
-    @apply transition-transform duration-200;
+    transition-property: transform;
+    transition-duration: var(--duration-base);
+    transition-timing-function: var(--ease-standard);
   }
   
   .hover-lift:hover {
@@ -815,7 +762,7 @@
   
   /* Focus ring utility */
   .focus-ring {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2;
   }
 }
 
@@ -836,11 +783,13 @@
   .tab-nav-trigger {
     @apply px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
            border-transparent text-text-muted hover:text-text-primary hover:bg-neutral-100
-           dark:hover:bg-neutral-800;
+           dark:hover:bg-neutral-800
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2
+           min-h-[var(--touch-target-min,44px)] md:min-h-0;
   }
   
   .tab-nav-trigger-active {
-    @apply border-primary-600 text-primary-700 bg-primary-50 dark:bg-primary-900/40 dark:text-primary-300;
+    @apply border-primary-outline-border text-primary-fg bg-primary-subtle-bg;
   }
   
   /* Pill-style tabs (wizard steps, settings) */
@@ -850,7 +799,9 @@
   
   .tab-pill-trigger {
     @apply px-4 py-2 text-sm font-medium rounded-md transition-colors
-           text-text-muted hover:text-text-primary;
+           text-text-muted hover:text-text-primary
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2
+           min-h-[var(--touch-target-min,44px)] md:min-h-0;
   }
   
   .tab-pill-trigger-active {
@@ -860,8 +811,9 @@
   /* Stepper buttons for +/- controls - unified, less stark colors */
   .btn-stepper {
     @apply flex items-center justify-center rounded-full font-bold border-2
-           transition-colors duration-150
+           transition-colors
            disabled:bg-neutral-100 disabled:text-neutral-400 disabled:border-neutral-200 disabled:cursor-not-allowed;
+    transition-duration: var(--duration-fast);
   }
 
   .btn-stepper-danger {
@@ -882,62 +834,6 @@
            dark:disabled:bg-neutral-800 dark:disabled:text-neutral-500;
   }
 
-  /* Interactive card hover effects */
-  .interactive-card {
-    @apply transition-all duration-200 cursor-pointer
-           hover:shadow-md hover:border-primary-300 hover:-translate-y-0.5;
-  }
-
-  /* Selection card styling */
-  .selection-card {
-    @apply rounded-xl border-2 p-4 transition-all duration-200 cursor-pointer
-           bg-surface border-neutral-200
-           hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5;
-  }
-
-  .selection-card--selected {
-    @apply border-primary-600 bg-primary-50 shadow-md ring-2 ring-primary-200;
-  }
-
-  /* Tab navigation styles for creator wizard */
-  .creator-tab {
-    @apply px-4 py-2 font-medium transition-colors rounded-lg text-sm;
-  }
-
-  .creator-tab--active {
-    @apply bg-primary-700 text-primary-foreground shadow-md;
-  }
-
-  .creator-tab--completed {
-    @apply bg-success-light text-success-700 hover:bg-success-200;
-  }
-
-  .creator-tab--upcoming {
-    @apply bg-surface text-text-muted hover:bg-neutral-100;
-  }
-
-  .creator-tab--disabled {
-    @apply bg-neutral-200 text-neutral-400 cursor-not-allowed;
-  }
-
-  /* Trait/feature chips */
-  .trait-chip {
-    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium
-           bg-accent-chip text-primary-700;
-  }
-
-  .trait-chip--flaw {
-    @apply bg-danger-light text-danger-700;
-  }
-
-  .trait-chip--selectable {
-    @apply cursor-pointer hover:bg-primary-200 transition-colors;
-  }
-
-  .trait-chip--selected {
-    @apply bg-primary-700 text-primary-foreground;
-  }
-  
   /* ---------------------------------------------------------------------------
      SEARCH INPUT - Unified component style
      --------------------------------------------------------------------------- */
@@ -952,29 +848,18 @@
   .search-input {
     @apply w-full pl-10 pr-4 py-2.5 rounded-lg border border-border-light bg-surface
            text-text-primary placeholder:text-text-muted
-           focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-accent/20;
+           focus:border-primary-outline-border focus:outline-none focus:ring-2 focus:ring-primary-outline-border;
   }
   
   .search-input-clear {
     @apply absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full
-           text-text-muted hover:text-text-primary hover:bg-neutral-100 transition-colors;
+           text-text-muted hover:text-text-primary hover:bg-neutral-100 transition-colors
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2;
   }
 
   /* ---------------------------------------------------------------------------
      LOADING STATES
      --------------------------------------------------------------------------- */
-  .loading-spinner {
-    @apply w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin;
-  }
-  
-  .loading-spinner-sm {
-    @apply w-5 h-5 border-2;
-  }
-  
-  .loading-spinner-lg {
-    @apply w-12 h-12 border-4;
-  }
-  
   .skeleton {
     @apply rounded;
     background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
@@ -1001,37 +886,6 @@
     background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
-  }
-
-  /* ---------------------------------------------------------------------------
-     ALERT / ERROR STATES
-     --------------------------------------------------------------------------- */
-  .alert {
-    @apply p-4 rounded-lg border flex items-start gap-3;
-  }
-  
-  .alert-error {
-    @apply bg-danger-light border-danger-300 text-danger-700;
-  }
-  
-  .alert-success {
-    @apply bg-success-light border-success-300 text-success-700;
-  }
-  
-  .alert-warning {
-    @apply bg-warning-light border-warning-300 text-warning-700;
-  }
-  
-  .alert-info {
-    @apply bg-info-light border-info-300 text-info-700;
-  }
-  
-  .alert-icon {
-    @apply w-5 h-5 flex-shrink-0 mt-0.5;
-  }
-  
-  .alert-content {
-    @apply flex-1 text-sm;
   }
 
   /* ---------------------------------------------------------------------------
@@ -1070,10 +924,6 @@
   .divider-light {
     @apply border-t border-border-light;
   }
-  
-  .divider-vertical {
-    @apply border-l border-divider h-full;
-  }
 
   /* ---------------------------------------------------------------------------
      UNIFIED LIST COMPONENTS
@@ -1091,15 +941,12 @@
     @apply flex flex-col gap-2;
   }
   
-  /* List container with dividers (for compact internal lists) */
-  .list-container-compact {
-    @apply border border-border-light rounded-lg divide-y divide-border-light;
-  }
-  
   /* Individual list item - rounded with soft border */
   .list-item {
-    @apply bg-surface rounded-lg border border-border-light overflow-hidden 
-           transition-all hover:border-primary-200;
+    @apply bg-surface rounded-lg border border-border-light overflow-hidden hover:border-primary-200;
+    transition-property: all;
+    transition-duration: var(--duration-base);
+    transition-timing-function: var(--ease-standard);
   }
   
   /* Selectable list item */
@@ -1117,12 +964,6 @@
     @apply border-t border-border-light bg-surface-alt px-4 py-3;
   }
   
-  /* Modal header with gradient */
-  .modal-header-gradient {
-    @apply px-5 py-4 border-b border-border-light rounded-t-xl 
-           bg-gradient-to-r from-primary-50 to-surface;
-  }
-  
   /* Modal filters section */
   .modal-filters {
     @apply px-5 py-4 border-b border-border-light bg-surface-alt;
@@ -1131,5 +972,10 @@
   /* Filter group - layout for filter controls (label + inputs) */
   .filter-group {
     @apply flex min-w-[140px] flex-col gap-1 flex-[1_1_180px];
+  }
+
+  /* Marketing / chrome shell — matches header, footer, home hero width + gutters */
+  .layout-shell-wide {
+    @apply mx-auto w-full max-w-[var(--container-wide)] px-4 sm:px-6 lg:px-24;
   }
 }

@@ -19,7 +19,7 @@ import { X, Plus, ChevronDown, ChevronUp, Shield, Sword, Target, Info, Coins } f
 import { cn } from '@/lib/utils';
 import { useItemProperties, useAdmin, useCreatorSave, useLoadModalLibrary, type ItemProperty, type UserItem } from '@/hooks';
 import { LoginPromptModal, ConfirmActionModal, ErrorDisplay } from '@/components/shared';
-import { LoadingState, IconButton, Checkbox, Button, Alert, PageContainer } from '@/components/ui';
+import { LoadingState, IconButton, Checkbox, Button, Alert, PageContainer, Card, Chip, TableScroll } from '@/components/ui';
 import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout, CollapsibleSection, AdvancedCalculationsPanel } from '@/components/creator';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
 import { ValueStepper, SectionCostBadge } from '@/components/shared';
@@ -61,10 +61,11 @@ import {
   ALL_DAMAGE_TYPES as DAMAGE_TYPES,
   WEAPON_DAMAGE_TYPES,
   DIE_SIZES,
-  RARITY_COLORS,
   CREATOR_CACHE_KEYS,
   formatCost,
 } from '@/lib/game/creator-constants';
+import { rarityChipVariant } from '@/lib/chip/rarity-chip-variant';
+import { statusPanel } from '@/lib/ui/status-surface-classes';
 
 // LocalStorage key for caching item creator state
 const ITEM_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.ITEM;
@@ -212,7 +213,7 @@ function PropertyCard({
 
           {/* Option Level */}
           {hasOption && (
-            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-lg p-3">
+            <div className={cn('rounded-lg p-3', statusPanel.warning)}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-tp-text">Option</span>
@@ -248,13 +249,13 @@ function PropertyCard({
 // =============================================================================
 
 const RARITY_REFERENCE = [
-  { name: 'Common', ipRange: '0 – 4', baseCost: 25, color: 'text-text-primary bg-surface-alt dark:bg-surface-alt dark:text-text-primary' },
-  { name: 'Uncommon', ipRange: '4 – 6', baseCost: 100, color: 'text-green-700 bg-green-100 dark:text-green-300 dark:bg-green-900/40' },
-  { name: 'Rare', ipRange: '6 – 8', baseCost: 500, color: 'text-blue-700 bg-blue-100 dark:text-blue-300 dark:bg-blue-900/40' },
-  { name: 'Epic', ipRange: '8 – 11', baseCost: 2500, color: 'text-power-text bg-power-light' },
-  { name: 'Legendary', ipRange: '11 – 14', baseCost: 10000, color: 'text-amber-700 bg-amber-100 dark:text-amber-300 dark:bg-amber-900/40' },
-  { name: 'Mythic', ipRange: '14 – 16', baseCost: 50000, color: 'text-red-700 bg-red-100 dark:text-red-300 dark:bg-red-900/40' },
-  { name: 'Ascended', ipRange: '16+', baseCost: 100000, color: 'text-pink-700 bg-pink-100 dark:text-pink-300 dark:bg-pink-900/40' },
+  { name: 'Common', ipRange: '0 – 4', baseCost: 25 },
+  { name: 'Uncommon', ipRange: '4 – 6', baseCost: 100 },
+  { name: 'Rare', ipRange: '6 – 8', baseCost: 500 },
+  { name: 'Epic', ipRange: '8 – 11', baseCost: 2500 },
+  { name: 'Legendary', ipRange: '11 – 14', baseCost: 10000 },
+  { name: 'Mythic', ipRange: '14 – 16', baseCost: 50000 },
+  { name: 'Ascended', ipRange: '16+', baseCost: 100000 },
 ];
 
 function RarityReferenceTable({ currentIP }: { currentIP: number }) {
@@ -273,7 +274,7 @@ function RarityReferenceTable({ currentIP }: { currentIP: number }) {
   const currentRarity = getCurrentRarity();
 
   return (
-    <div className="bg-surface rounded-xl shadow-md overflow-hidden">
+    <Card className="shadow-md overflow-hidden p-0">
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
@@ -291,6 +292,7 @@ function RarityReferenceTable({ currentIP }: { currentIP: number }) {
           <p className="text-xs text-text-muted dark:text-text-secondary mb-3">
             IP (Item Power) determines rarity. Currency cost = Base Cost × (1 + 0.125 × C multiplier)
           </p>
+          <TableScroll>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border-light">
@@ -309,9 +311,9 @@ function RarityReferenceTable({ currentIP }: { currentIP: number }) {
                   )}
                 >
                   <td className="py-1.5">
-                    <span className={cn('px-2 py-0.5 rounded text-xs font-medium', r.color)}>
+                    <Chip variant={rarityChipVariant(r.name)} size="sm">
                       {r.name}
-                    </span>
+                    </Chip>
                     {currentRarity === r.name && (
                       <span className="ml-1 text-xs text-ip-text">← Current</span>
                     )}
@@ -322,9 +324,10 @@ function RarityReferenceTable({ currentIP }: { currentIP: number }) {
               ))}
             </tbody>
           </table>
+          </TableScroll>
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -1069,7 +1072,7 @@ function ItemCreatorContent() {
             title="Item Summary"
             badge={{
               label: rarity,
-              className: RARITY_COLORS[rarity] || RARITY_COLORS.Common,
+              variant: rarityChipVariant(rarity),
             }}
             costStats={[
               { label: 'Currency Cost', value: currencyCost, icon: <Coins className="w-6 h-6" />, color: 'currency' },
@@ -1154,7 +1157,7 @@ function ItemCreatorContent() {
     >
       {/* Main Editor */}
           {/* Name & Type */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
+          <Card className="shadow-md p-6">
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">
@@ -1205,7 +1208,7 @@ function ItemCreatorContent() {
                 />
               </div>
             </div>
-          </div>
+          </Card>
 
           {/* Weapon / Shield Configuration - Handedness & (Weapon) Range */}
           {(armamentType === 'Weapon' || armamentType === 'Shield') && (
@@ -1606,10 +1609,8 @@ function ItemCreatorContent() {
 
 export default function ItemCreatorPage() {
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
-      <Suspense fallback={<div className="text-center py-12">Loading...</div>}>
-        <ItemCreatorContent />
-      </Suspense>
-    </div>
+    <Suspense fallback={<LoadingState message="Loading..." padding="md" />}>
+      <ItemCreatorContent />
+    </Suspense>
   );
 }

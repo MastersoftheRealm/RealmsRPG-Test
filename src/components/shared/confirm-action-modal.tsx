@@ -58,8 +58,8 @@ export function ConfirmActionModal({
   const confirmButtonLabel = isLoading ? (loadingLabel ?? defaultLoadingLabel) : confirmLabel;
 
   const IconComponent = icon === 'publish' ? Upload : AlertTriangle;
-  const iconBg = icon === 'publish' ? 'bg-primary-100 dark:bg-primary-900/30' : 'bg-danger-light';
-  const iconColor = icon === 'publish' ? 'text-primary-600' : 'text-danger';
+  const iconBg = icon === 'publish' ? 'bg-primary-subtle-bg' : 'bg-danger-light';
+  const iconColor = icon === 'publish' ? 'text-primary-link-fg' : 'text-danger-fg';
 
   return (
     <Modal

@@ -11,7 +11,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { ChevronLeft, Plus, Trash2 } from 'lucide-react';
-import { PageContainer, PageHeader, Button, TabNavigation, TabContentPanel, useTabGroup, Alert, Spinner } from '@/components/ui';
+import { PageContainer, PageHeader, Button, TabNavigation, TabContentPanel, useTabGroup, Alert, LoadingState, Spinner, TableScroll } from '@/components/ui';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { updateCodexDoc, createCodexDoc } from '../codex/actions';
 import type { CoreRulesMap, ProgressionCreatureRules } from '@/types/core-rules';
@@ -67,7 +67,7 @@ function NumInput({ value, onChange, min, max, step }: { value: number; onChange
       max={max}
       step={step}
       onChange={e => onChange(parseFloat(e.target.value) || 0)}
-      className="w-28 px-3 py-1.5 rounded-lg border border-border-light bg-surface text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-200"
+      className="w-28 px-3 py-1.5 rounded-lg border border-border-light bg-surface text-sm focus:border-primary-outline-border focus:ring-1 focus:ring-primary-outline-border"
     />
   );
 }
@@ -79,7 +79,7 @@ function TextInput({ value, onChange, wide, placeholder }: { value: string; onCh
       value={value}
       onChange={e => onChange(e.target.value)}
       placeholder={placeholder}
-      className={`${wide ? 'w-full' : 'w-64'} px-3 py-1.5 rounded-lg border border-border-light bg-surface text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-200`}
+      className={`${wide ? 'w-full' : 'w-64'} px-3 py-1.5 rounded-lg border border-border-light bg-surface text-sm focus:border-primary-outline-border focus:ring-1 focus:ring-primary-outline-border`}
     />
   );
 }
@@ -118,7 +118,7 @@ function ProgressionPreview({ data }: { data: Record<string, unknown> }) {
   }, [baseAbility, abilityInterval, abilityPerIncrease, skillsPerLevel, basePool, poolPerLevel, baseProf, profInterval, profPerIncrease, baseTP, tpMult]);
 
   return (
-    <div className="mt-4 overflow-x-auto">
+    <TableScroll className="mt-4">
       <SectionTitle>Level 1-10 Preview</SectionTitle>
       <table className="w-full text-xs">
         <thead>
@@ -144,7 +144,7 @@ function ProgressionPreview({ data }: { data: Record<string, unknown> }) {
           ))}
         </tbody>
       </table>
-    </div>
+    </TableScroll>
   );
 }
 
@@ -167,7 +167,7 @@ function DamageTypesEditor({
       <SectionTitle>All Damage Types ({all.length})</SectionTitle>
       <div className="flex flex-wrap gap-1.5 mb-3">
         {all.map((t) => (
-          <span key={t} className={`group px-2 py-0.5 rounded-full text-xs font-medium inline-flex items-center gap-1 ${exceptions.includes(t) ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' : 'bg-surface-alt text-text-secondary'}`}>
+          <span key={t} className={`group px-2 py-0.5 rounded-full text-xs font-medium inline-flex items-center gap-1 ${exceptions.includes(t) ? 'bg-warning-light text-warning-fg' : 'bg-surface-alt text-text-secondary'}`}>
             {t}{exceptions.includes(t) ? ' ⚡' : ''}
             <button
               type="button"
@@ -192,7 +192,7 @@ function DamageTypesEditor({
               setNewType('');
             }
           }}
-          className="text-xs text-primary-600 hover:text-primary-700 flex items-center gap-1"
+          className="text-xs text-primary-link-fg hover:text-primary-fg-hover flex items-center gap-1"
         >
           <Plus className="w-3.5 h-3.5" /> Add
         </button>
@@ -212,7 +212,7 @@ function DamageTypesEditor({
                 set('armorExceptions', [...exceptions, t]);
               }
             }}
-            className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${exceptions.includes(t) ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 ring-1 ring-amber-300' : `bg-surface-alt text-text-muted dark:text-text-secondary hover:bg-surface-alt/80`}`}
+            className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${exceptions.includes(t) ? 'bg-warning-light text-warning-fg ring-1 ring-warning-300' : `bg-surface-alt text-text-muted dark:text-text-secondary hover:bg-surface-alt/80`}`}
           >
             {t}{exceptions.includes(t) ? ' ⚡' : ''}
           </button>
@@ -401,7 +401,7 @@ function CategoryEditor({
                   delete updated[name];
                   set('standardArrays', updated);
                 }}
-                className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-600 dark:hover:text-danger-400 transition-colors"
+                className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-fg transition-colors"
                 title="Remove array"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -413,7 +413,7 @@ function CategoryEditor({
               const newName = `custom_${Object.keys(arrays).length + 1}`;
               set('standardArrays', { ...arrays, [newName]: [2, 2, 1, 1, 0, -1] });
             }}
-            className="mt-2 flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700"
+            className="mt-2 flex items-center gap-1 text-xs text-primary-link-fg hover:text-primary-fg-hover"
           >
             <Plus className="w-3.5 h-3.5" /> Add Standard Array
           </button>
@@ -467,7 +467,7 @@ function CategoryEditor({
                     const updated = standard.filter((_, idx) => idx !== i);
                     set('standard', updated);
                   }}
-                  className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-600 dark:hover:text-danger-400 transition-colors shrink-0"
+                  className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-fg transition-colors shrink-0"
                   title="Remove condition"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -477,7 +477,7 @@ function CategoryEditor({
           </div>
           <button
             onClick={() => set('standard', [...standard, { name: 'New Condition', leveled: false, description: '' }])}
-            className="mt-2 flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700"
+            className="mt-2 flex items-center gap-1 text-xs text-primary-link-fg hover:text-primary-fg-hover"
           >
             <Plus className="w-3.5 h-3.5" /> Add Standard Condition
           </button>
@@ -510,7 +510,7 @@ function CategoryEditor({
                     const updated = leveled.filter((_, idx) => idx !== i);
                     set('leveled', updated);
                   }}
-                  className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-600 dark:hover:text-danger-400 transition-colors shrink-0"
+                  className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-fg transition-colors shrink-0"
                   title="Remove condition"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -520,7 +520,7 @@ function CategoryEditor({
           </div>
           <button
             onClick={() => set('leveled', [...leveled, { name: 'New Condition', leveled: true, description: '' }])}
-            className="mt-2 flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700"
+            className="mt-2 flex items-center gap-1 text-xs text-primary-link-fg hover:text-primary-fg-hover"
           >
             <Plus className="w-3.5 h-3.5" /> Add Leveled Condition
           </button>
@@ -540,7 +540,7 @@ function CategoryEditor({
       return (
         <>
           <SectionTitle>Size Categories ({categories.length})</SectionTitle>
-          <div className="overflow-x-auto">
+          <TableScroll>
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs text-text-muted dark:text-text-secondary border-b">
@@ -575,16 +575,16 @@ function CategoryEditor({
                       <NumInput value={s.minCarry as number ?? 0} onChange={v => setSizeField(i, 'minCarry', v)} min={0} />
                     </td>
                     <td className="py-1 px-1">
-                      <button onClick={() => set('categories', categories.filter((_, idx) => idx !== i))} className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-600 dark:hover:text-danger-400"><Trash2 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => set('categories', categories.filter((_, idx) => idx !== i))} className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-fg"><Trash2 className="w-3.5 h-3.5" /></button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
+          </TableScroll>
           <button
             onClick={() => set('categories', [...categories, { value: 'custom', label: 'Custom', height: '-', spaces: 1, baseCarry: 0, perStrCarry: 0, minCarry: 0 }])}
-            className="mt-2 flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700"
+            className="mt-2 flex items-center gap-1 text-xs text-primary-link-fg hover:text-primary-fg-hover"
           >
             <Plus className="w-3.5 h-3.5" /> Add Size Category
           </button>
@@ -603,7 +603,7 @@ function CategoryEditor({
       return (
         <>
           <SectionTitle>Rarity Tiers ({tiers.length})</SectionTitle>
-          <div className="overflow-x-auto">
+          <TableScroll>
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs text-text-muted dark:text-text-secondary border-b">
@@ -626,16 +626,16 @@ function CategoryEditor({
                     <td className="text-center py-1 px-1"><NumInput value={t.currencyMin as number ?? 0} onChange={v => setTierField(i, 'currencyMin', v)} min={0} /></td>
                     <td className="text-center py-1 px-1"><NumInput value={t.currencyMax as number ?? 0} onChange={v => setTierField(i, 'currencyMax', v || null)} min={0} /></td>
                     <td className="py-1 px-1">
-                      <button onClick={() => set('tiers', tiers.filter((_, idx) => idx !== i))} className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-600 dark:hover:text-danger-400"><Trash2 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => set('tiers', tiers.filter((_, idx) => idx !== i))} className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-fg"><Trash2 className="w-3.5 h-3.5" /></button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
+          </TableScroll>
           <button
             onClick={() => set('tiers', [...tiers, { name: 'New Tier', levelMin: 1, levelMax: null, currencyMin: 0, currencyMax: null }])}
-            className="mt-2 flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700"
+            className="mt-2 flex items-center gap-1 text-xs text-primary-link-fg hover:text-primary-fg-hover"
           >
             <Plus className="w-3.5 h-3.5" /> Add Rarity Tier
           </button>
@@ -682,7 +682,7 @@ function CategoryEditor({
       return (
         <>
           <SectionTitle>Armament Proficiency Table</SectionTitle>
-          <div className="overflow-x-auto">
+          <TableScroll>
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs text-text-muted dark:text-text-secondary border-b">
@@ -701,20 +701,20 @@ function CategoryEditor({
                       <NumInput value={row.armamentMax} onChange={v => { const u = [...table]; u[i] = { ...row, armamentMax: v }; set('table', u); }} min={0} />
                     </td>
                     <td className="py-1 px-1">
-                      <button onClick={() => set('table', table.filter((_, idx) => idx !== i))} className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-600 dark:hover:text-danger-400"><Trash2 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => set('table', table.filter((_, idx) => idx !== i))} className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-fg"><Trash2 className="w-3.5 h-3.5" /></button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
+          </TableScroll>
           <button
             onClick={() => {
               const nextProf = table.length > 0 ? Math.max(...table.map(r => r.martialProf)) + 1 : 0;
               const nextMax = table.length > 0 ? table[table.length - 1].armamentMax + 3 : 3;
               set('table', [...table, { martialProf: nextProf, armamentMax: nextMax }]);
             }}
-            className="mt-2 flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700"
+            className="mt-2 flex items-center gap-1 text-xs text-primary-link-fg hover:text-primary-fg-hover"
           >
             <Plus className="w-3.5 h-3.5" /> Add Row
           </button>
@@ -750,7 +750,7 @@ function CategoryEditor({
 
           <SectionTitle>General Crafting Table ({generalTable.length})</SectionTitle>
           <p className="text-xs text-text-muted dark:text-text-secondary mb-2">Currency cost brackets → rarity, DS, successes, time.</p>
-          <div className="overflow-x-auto">
+          <TableScroll>
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs text-text-muted dark:text-text-secondary border-b">
@@ -781,19 +781,19 @@ function CategoryEditor({
                         <option value="days">days</option>
                       </select>
                     </td>
-                    <td className="py-1 px-1"><button type="button" onClick={() => set('generalTable', generalTable.filter((_, idx) => idx !== i))} className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-600 dark:hover:text-danger-400" aria-label="Remove row"><Trash2 className="w-3.5 h-3.5" /></button></td>
+                    <td className="py-1 px-1"><button type="button" onClick={() => set('generalTable', generalTable.filter((_, idx) => idx !== i))} className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-fg" aria-label="Remove row"><Trash2 className="w-3.5 h-3.5" /></button></td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
-          <button type="button" onClick={() => set('generalTable', [...generalTable, { currencyMin: 0, currencyMax: null, rarity: 'Common', difficultyScore: 14, successes: 1, timeValue: 8, timeUnit: 'hours' }])} className="mt-2 flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700">
+          </TableScroll>
+          <button type="button" onClick={() => set('generalTable', [...generalTable, { currencyMin: 0, currencyMax: null, rarity: 'Common', difficultyScore: 14, successes: 1, timeValue: 8, timeUnit: 'hours' }])} className="mt-2 flex items-center gap-1 text-xs text-primary-link-fg hover:text-primary-fg-hover">
             <Plus className="w-3.5 h-3.5" /> Add Row
           </button>
 
           <SectionTitle>Successes Table ({successesTable.length})</SectionTitle>
           <p className="text-xs text-text-muted dark:text-text-secondary mb-2">Delta from required successes → failure/success effects.</p>
-          <div className="overflow-x-auto">
+          <TableScroll>
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs text-text-muted dark:text-text-secondary border-b">
@@ -815,13 +815,13 @@ function CategoryEditor({
                     <td className="py-1 px-1"><NumInput value={(row.failureItemWorthPercent as number) ?? 0} onChange={v => setSuccessesRow(i, 'failureItemWorthPercent', v)} min={0} max={100} /></td>
                     <td className="py-1 px-1"><NumInput value={(row.successItemWorthPercent as number) ?? 0} onChange={v => setSuccessesRow(i, 'successItemWorthPercent', v)} min={0} max={200} /></td>
                     <td className="py-1 px-1"><NumInput value={(row.materialsRetainedPercent as number) ?? 0} onChange={v => setSuccessesRow(i, 'materialsRetainedPercent', v)} min={0} max={100} /></td>
-                    <td className="py-1 px-1"><button type="button" onClick={() => set('successesTable', successesTable.filter((_, idx) => idx !== i))} className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-600 dark:hover:text-danger-400" aria-label="Remove row"><Trash2 className="w-3.5 h-3.5" /></button></td>
+                    <td className="py-1 px-1"><button type="button" onClick={() => set('successesTable', successesTable.filter((_, idx) => idx !== i))} className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-fg" aria-label="Remove row"><Trash2 className="w-3.5 h-3.5" /></button></td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
-          <button type="button" onClick={() => set('successesTable', [...successesTable, { delta: 0, failureEffect: '', successEffect: '' }])} className="mt-2 flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700">
+          </TableScroll>
+          <button type="button" onClick={() => set('successesTable', [...successesTable, { delta: 0, failureEffect: '', successEffect: '' }])} className="mt-2 flex items-center gap-1 text-xs text-primary-link-fg hover:text-primary-fg-hover">
             <Plus className="w-3.5 h-3.5" /> Add Row
           </button>
         </>
@@ -923,9 +923,7 @@ export default function AdminCoreRulesPage() {
   if (isLoading) {
     return (
       <PageContainer size="xl">
-        <div className="flex items-center justify-center py-20">
-          <Spinner size="lg" />
-        </div>
+        <LoadingState size="lg" padding="lg" />
       </PageContainer>
     );
   }

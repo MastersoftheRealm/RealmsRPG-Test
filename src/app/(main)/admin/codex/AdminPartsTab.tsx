@@ -629,7 +629,7 @@ export function AdminPartsTab() {
                             size="sm"
                             onClick={() => setPendingDeleteId(p.id)}
                             label="Delete"
-                            className="text-danger dark:text-danger-400 hover:text-danger-600 dark:hover:text-danger-300 hover:bg-transparent"
+                            className="text-danger-fg hover:opacity-80 hover:bg-transparent"
                           >
                             <X className="w-4 h-4" />
                           </IconButton>
@@ -810,7 +810,7 @@ export function AdminPartsTab() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-text-muted hover:text-danger"
+                        className="text-text-muted hover:text-danger-fg"
                         onClick={() => deleteOptionAndCompact(n as 1 | 2 | 3)}
                         aria-label={`Remove option ${n}`}
                       >

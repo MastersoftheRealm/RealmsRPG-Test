@@ -98,12 +98,12 @@ function NoteCard({
                 setIsEditingName(false);
               }
             }}
-            className="flex-1 px-2 py-0.5 text-sm font-medium border border-primary-300 rounded focus:ring-2 focus:ring-primary-500"
+            className="flex-1 px-2 py-0.5 text-sm font-medium border border-primary-subtle-border rounded focus:ring-2 focus:ring-primary-outline-border"
             autoFocus
           />
         ) : (
           <span
-            className="flex-1 text-sm font-medium text-text-primary cursor-pointer hover:text-primary-600"
+            className="flex-1 text-sm font-medium text-text-primary cursor-pointer hover:text-primary-fg-hover"
             onClick={(e) => {
               e.stopPropagation();
               setIsEditingName(true);
@@ -231,7 +231,7 @@ export function NotesTab({
                     value={weightInput}
                     onChange={(e) => setWeightInput(e.target.value)}
                     onBlur={handleWeightBlur}
-                    className="w-16 px-2 py-0.5 text-sm border border-border-light rounded focus:ring-2 focus:ring-primary-500 bg-white dark:bg-surface"
+                    className="w-16 px-2 py-0.5 text-sm border border-border-light rounded focus:ring-2 focus:ring-primary-outline-border bg-white dark:bg-surface"
                     aria-label="Weight in kg"
                   />
                   <span className="text-sm text-text-muted dark:text-text-secondary">kg</span>
@@ -252,7 +252,7 @@ export function NotesTab({
                     value={heightInput}
                     onChange={(e) => setHeightInput(e.target.value)}
                     onBlur={handleHeightBlur}
-                    className="w-16 px-2 py-0.5 text-sm border border-border-light rounded focus:ring-2 focus:ring-primary-500 bg-white dark:bg-surface"
+                    className="w-16 px-2 py-0.5 text-sm border border-border-light rounded focus:ring-2 focus:ring-primary-outline-border bg-white dark:bg-surface"
                     aria-label="Height in cm"
                   />
                   <span className="text-sm text-text-muted dark:text-text-secondary">cm</span>

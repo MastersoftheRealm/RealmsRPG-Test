@@ -104,14 +104,14 @@ export function ArchetypeSelector({
               className={cn(
                 'p-4 rounded-xl border-2 text-left transition-all',
                 isSelected
-                  ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md'
+                  ? 'border-primary-outline-border bg-primary-subtle-bg shadow-md'
                   : 'border-border-light bg-surface hover:border-border hover:shadow',
                 disabled && 'opacity-50 cursor-not-allowed'
               )}
             >
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-2xl">{info.icon}</span>
-                <h4 className="font-bold text-primary dark:text-primary-300">{info.title}</h4>
+                <h4 className="font-bold text-primary-fg">{info.title}</h4>
               </div>
               {!compact && (
                 <p className="text-xs text-secondary dark:text-text-secondary">{info.description}</p>
@@ -141,7 +141,7 @@ export function ArchetypeSelector({
             </span>
             <span className={cn(
               'text-xl font-bold',
-              value === 'martial' ? 'text-martial-dark dark:text-martial-300' : 'text-power-dark dark:text-power-300'
+              value === 'martial' ? 'text-martial-fg' : 'text-power-fg'
             )}>
               +{maxProficiency}
             </span>

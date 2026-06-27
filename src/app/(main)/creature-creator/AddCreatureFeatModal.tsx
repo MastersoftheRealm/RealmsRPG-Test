@@ -391,7 +391,7 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
             id={categorySelectId}
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="min-h-[44px] rounded-lg border border-border-light bg-surface px-2 py-1 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="min-h-[44px] rounded-lg border border-border-light bg-surface px-2 py-1 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-outline-border"
           >
             <option value="">All</option>
             {categories.map((cat) => (
@@ -409,7 +409,7 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
             id={abilitySelectId}
             value={selectedAbility}
             onChange={(e) => setSelectedAbility(e.target.value)}
-            className="min-h-[44px] rounded-lg border border-border-light bg-surface px-2 py-1 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="min-h-[44px] rounded-lg border border-border-light bg-surface px-2 py-1 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-outline-border"
           >
             <option value="">All</option>
             {abilities.map((abil) => (
@@ -468,7 +468,7 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
   return (
     <>
       {error && isOpen && (
-        <Alert variant="danger" className="fixed top-4 left-1/2 z-[100] max-w-md -translate-x-1/2">
+        <Alert variant="danger" className="fixed top-4 left-1/2 z-toast max-w-md -translate-x-1/2">
           {error}
         </Alert>
       )}

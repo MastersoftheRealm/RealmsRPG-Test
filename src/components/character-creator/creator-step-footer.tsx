@@ -71,7 +71,7 @@ export function CreatorStepFooter({
   return (
     <div
       className={cn(
-        'sticky bottom-3 left-0 right-0 z-10 mt-8 flex justify-between gap-4',
+        'sticky bottom-3 left-0 right-0 z-sticky mt-8 flex justify-between gap-4',
         'bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4',
         '-mx-4 md:mx-0',
         className

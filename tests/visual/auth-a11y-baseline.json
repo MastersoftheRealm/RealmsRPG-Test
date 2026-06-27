@@ -1,0 +1,9 @@
+{
+  "allowed": [
+    "/characters/11111111-1111-4111-8111-111111111111|dark|aria-valid-attr-value",
+    "/characters/11111111-1111-4111-8111-111111111111|dark|scrollable-region-focusable",
+    "/characters/11111111-1111-4111-8111-111111111111|light|aria-valid-attr-value",
+    "/characters/11111111-1111-4111-8111-111111111111|light|scrollable-region-focusable",
+    "/my-account|dark|color-contrast"
+  ]
+}

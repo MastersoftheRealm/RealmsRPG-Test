@@ -14,6 +14,8 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { chipVariants, Chip } from '@/components/ui/chip';
+import { partChipVariant } from '@/lib/chip/part-chip-variant';
 
 // =============================================================================
 // Types
@@ -41,21 +43,6 @@ export interface PartData {
   /** Options with level > 0 (for expandable chip details) */
   options?: Array<{ label: string; description?: string; level: number }>;
 }
-
-// Category-specific colors using design tokens from globals.css
-const categoryStyles: Record<string, string> = {
-  action: 'bg-category-action-bg text-category-action-text border-category-action-border',
-  activation: 'bg-category-activation-bg text-category-activation-text border-category-activation-border',
-  area: 'bg-category-area-bg text-category-area-text border-category-area-border',
-  duration: 'bg-category-duration-bg text-category-duration-text border-category-duration-border',
-  target: 'bg-category-target-bg text-category-target-text border-category-target-border',
-  special: 'bg-category-special-bg text-category-special-text border-category-special-border',
-  restriction: 'bg-category-restriction-bg text-category-restriction-text border-category-restriction-border',
-  cost: 'bg-info-50 dark:bg-info-900/30 text-info-700 dark:text-info-400 border-info-200 dark:border-info-800/50',
-  proficiency: 'bg-info-50 dark:bg-info-900/30 text-info-700 dark:text-info-400 border-info-200 dark:border-info-800/50',
-  property: 'bg-surface-alt text-text-secondary border-border-light',
-  default: 'bg-surface-alt text-text-secondary border-border-light',
-};
 
 // =============================================================================
 // PartChip - Single chip that expands in place (same element, no separate panel)
@@ -86,16 +73,15 @@ export function PartChip({
   const hasOptions = (part.options?.length ?? 0) > 0;
   const canExpand = (hasDescription || hasOptions) && !!onClick;
   const category = part.category || (hasTP ? 'proficiency' : 'default');
-  const styleClass = categoryStyles[category] || categoryStyles.default;
 
   return (
     <div
       className={cn(
-        'inline-flex flex-col rounded-xl text-sm font-medium border',
-        styleClass,
+        'inline-flex flex-col rounded-xl text-sm font-medium',
+        chipVariants({ variant: partChipVariant(category) }),
         size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-3 py-1.5 text-sm',
         isExpanded && 'ring-2 ring-offset-1',
-        isExpanded && hasTP ? 'ring-info-400' : isExpanded && 'ring-primary-400',
+        isExpanded && hasTP ? 'ring-info-400' : isExpanded && 'ring-primary-outline-border',
         fullWidthWhenExpanded && isExpanded && 'w-full min-w-0',
         className
       )}
@@ -131,7 +117,7 @@ export function PartChip({
         {canExpand && (
           <ChevronDown
             className={cn(
-              'w-3 h-3 ml-auto shrink-0 transition-transform duration-200',
+              'w-3 h-3 ml-auto shrink-0 transition-transform duration-base ease-standard',
               isExpanded && 'rotate-180'
             )}
           />
@@ -202,9 +188,9 @@ export function PartChipDetails({ part, className }: PartChipDetailsProps) {
       <div className="flex items-start justify-between gap-2 mb-2">
         <h5 className="font-semibold text-text-primary">{part.name}</h5>
         {(part.tpCost ?? 0) > 0 && (
-          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-info-50 dark:bg-info-900/30 text-info-700 dark:text-info-400">
+          <Chip variant="listCost" size="sm" className="font-semibold">
             TP: {part.tpCost}
-          </span>
+          </Chip>
         )}
       </div>
 

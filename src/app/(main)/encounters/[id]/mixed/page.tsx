@@ -10,7 +10,7 @@
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, Cloud, CloudOff, Swords, Brain } from 'lucide-react';
+import { Swords, Brain } from 'lucide-react';
 import { PageContainer, LoadingState, Alert, useToast } from '@/components/ui';
 import { SegmentedControl } from '@/components/shared';
 import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
@@ -18,7 +18,7 @@ import { RollProvider, RollLog } from '@/components/character-sheet';
 import type { Encounter } from '@/types/encounter';
 import CombatEncounterView from '../_components/CombatEncounterView';
 import SkillEncounterView from '../_components/SkillEncounterView';
-
+import { EncounterPageHeader } from '../_components/EncounterPageHeader';
 type ViewTab = 'combat' | 'skill';
 
 interface PageParams {
@@ -36,6 +36,8 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
   const [encounter, setEncounter] = useState<Encounter | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [activeView, setActiveView] = useState<ViewTab>('combat');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
   const { data: campaignsFull = [] } = useCampaignsFull();
 
   useEffect(() => {
@@ -64,9 +66,14 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
         if (sk.useInitiative == null) sk.useInitiative = true;
       }
       setEncounter(enc);
+      setNameInput(enc.name || '');
       setIsInitialized(true);
     }
   }, [encounterData, isInitialized]);
+
+  useEffect(() => {
+    if (encounter?.name && !isEditingName) setNameInput(encounter.name);
+  }, [encounter?.name, isEditingName]);
 
   const { showToast } = useToast();
   const { isSaving, hasUnsavedChanges } = useAutoSave({
@@ -97,7 +104,7 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
         <Alert variant="danger" title="Encounter not found">
           This encounter may have been deleted or you may not have access.
         </Alert>
-        <Link href="/encounters" className="mt-4 inline-block text-primary-600 hover:underline">
+        <Link href="/encounters" className="mt-4 inline-block text-primary-link-fg hover:underline">
           Back to Encounters
         </Link>
       </PageContainer>
@@ -112,42 +119,37 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
     );
   }
 
+  const handleCommitName = () => {
+    const trimmed = nameInput.trim();
+    if (trimmed && trimmed !== encounter.name) {
+      setEncounter((prev) => (prev ? { ...prev, name: trimmed } : prev));
+    } else {
+      setNameInput(encounter.name || '');
+    }
+    setIsEditingName(false);
+  };
+
+  const handleCancelEditName = () => {
+    setNameInput(encounter.name || '');
+    setIsEditingName(false);
+  };
+
   return (
     <RollProvider>
       <PageContainer size="full">
-        <div className="mb-6">
-          <Link
-            href="/encounters"
-            className="inline-flex items-center gap-1 text-text-secondary hover:text-primary-600 mb-2 text-sm"
-          >
-            <ChevronLeft className="w-4 h-4" /> Back to Encounters
-          </Link>
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-text-primary">{encounter.name}</h1>
-              <div className="mt-1">
-              </div>
-              <p className="text-text-secondary">
-                Mixed Encounter{encounter.description ? ` \u2014 ${encounter.description}` : ''}
-              </p>
-              <p className="text-xs mt-1 flex items-center gap-1">
-                {isSaving ? (
-                  <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                    <CloudOff className="w-3 h-3" /> Saving...
-                  </span>
-                ) : hasUnsavedChanges ? (
-                  <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                    <CloudOff className="w-3 h-3" /> Unsaved changes
-                  </span>
-                ) : (
-                  <span className="text-green-600 dark:text-green-400 flex items-center gap-1">
-                    <Cloud className="w-3 h-3" /> Saved to cloud
-                  </span>
-                )}
-              </p>
-            </div>
-          </div>
-        </div>
+        <EncounterPageHeader
+          encounterType="Mixed"
+          name={encounter.name}
+          description={encounter.description}
+          isEditingName={isEditingName}
+          nameInput={nameInput}
+          onNameInputChange={setNameInput}
+          onStartEditingName={() => setIsEditingName(true)}
+          onCommitName={handleCommitName}
+          onCancelEdit={handleCancelEditName}
+          isSaving={isSaving}
+          hasUnsavedChanges={hasUnsavedChanges}
+        />
 
         <SegmentedControl
           value={activeView}

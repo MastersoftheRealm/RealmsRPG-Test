@@ -19,7 +19,7 @@ import { Plus } from 'lucide-react';
 import { useRollsOptional } from './roll-context';
 import { PointStatus, EditSectionToggle, getEditState, SkillRow } from '@/components/shared';
 import { ABILITY_ABBR } from '@/lib/constants/skills';
-import { Button } from '@/components/ui';
+import { Button, Card, TableScroll } from '@/components/ui';
 import { calculateSkillBonusWithProficiency, calculateSubSkillBonusWithProficiency } from '@/lib/game/formulas';
 import {
   calculateCharacterSkillPointsSpent,
@@ -283,7 +283,7 @@ export function SkillsSection({
     totalSkillPoints !== undefined ? getEditState(totalSpent, totalSkillPoints) : 'normal';
   
   return (
-    <div className={cn("bg-surface rounded-xl shadow-md p-4 md:p-6", className)}>
+    <Card className={cn('shadow-md p-4 md:p-6', className)}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold text-text-primary">Skills</h2>
@@ -335,7 +335,7 @@ export function SkillsSection({
       </div>
       
       {/* Skills Table */}
-      <div className="overflow-x-auto">
+      <TableScroll>
         <table className="w-full text-sm">
           <thead>
             <tr className="text-xs text-text-muted uppercase tracking-wider border-b-2 border-border-light">
@@ -400,7 +400,7 @@ export function SkillsSection({
             {showEditControls && ' Click "Add Skill" to get started.'}
           </div>
         )}
-      </div>
-    </div>
+      </TableScroll>
+    </Card>
   );
 }

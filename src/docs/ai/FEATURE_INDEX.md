@@ -83,7 +83,7 @@
 | Theme switch / onboarding | `ThemeToggle`, `OnboardingTour` |
 | Help tooltips (legacy — Collin/TASK-376) | `ContextHelpTooltip` — **AI agents do not migrate**; Collin owns TASK-376 |
 
-> UI primitives (Modal, Button, Chip, PageContainer, PageHeader, TabNavigation, SearchInput) live in `@/components/ui`.
+> UI primitives (Modal, Button, Chip, PageContainer, PageHeader, TabNavigation, SearchInput, **TableScroll**) live in `@/components/ui`.
 
 ## Game logic / calculators (`src/lib/`)
 
@@ -101,7 +101,7 @@
 | Roles / quotas / limits | `lib/role-policy.ts`, `lib/role-limits.ts`, `lib/role-quota-messages.ts`, `lib/admin.ts` |
 | API client / validation / rate limit | `lib/api-client.ts`, `lib/api-validation.ts`, `lib/validation/schemas.ts`, `lib/rate-limit.ts` |
 | Supabase clients (server/client/middleware) | `lib/supabase/*` |
-| Generic utils (cn, string, number, object, duration, array→ removed) | `lib/utils/*` |
+| Generic utils (cn, string, number, object, motion, duration display) | `lib/utils/*` — list column labels: `formatColumnKeyLabel()` in `string.ts`; motion timing: `MOTION_DURATION_SLOW_MS` in `motion.ts` |
 
 ## Services (`src/services/`, import from `@/services`)
 

@@ -1,24 +1,38 @@
 ﻿/**
  * Card Component
  * ================
- * Container component with header, content, and footer
+ * Container component with header, content, and footer.
+ * Variants consolidate legacy `.card`, `.interactive-card`, and `.selection-card` CSS (Phase 2.3).
  */
 
 import * as React from 'react';
+import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils/cn';
 
-type CardProps = React.HTMLAttributes<HTMLDivElement>;
+export const cardVariants = cva('rounded-xl bg-surface text-text-primary', {
+  variants: {
+    variant: {
+      default: 'border border-border-light shadow-sm',
+      interactive:
+        'border border-border-light shadow-sm transition-all duration-base ease-standard cursor-pointer hover:shadow-md hover:border-primary-outline-border hover:-translate-y-0.5',
+      selectable:
+        'border-2 border-neutral-200 p-4 transition-all duration-base ease-standard cursor-pointer hover:border-primary-outline-border hover:shadow-md hover:-translate-y-0.5',
+      selected:
+        'border-2 border-primary-outline-border bg-primary-subtle-bg shadow-md ring-2 ring-primary-subtle-border p-4',
+    },
+  },
+  defaultVariants: {
+    variant: 'default',
+  },
+});
+
+export interface CardProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof cardVariants> {}
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn(
-        'rounded-xl border border-border-light bg-surface text-text-primary shadow-sm',
-        className
-      )}
-      {...props}
-    />
+  ({ className, variant, ...props }, ref) => (
+    <div ref={ref} className={cn(cardVariants({ variant }), className)} {...props} />
   )
 );
 Card.displayName = 'Card';
@@ -55,7 +69,7 @@ const CardDescription = React.forwardRef<HTMLParagraphElement, CardDescriptionPr
   ({ className, ...props }, ref) => (
     <p
       ref={ref}
-      className={cn('text-sm text-text-muted', className)}
+      className={cn('text-sm text-text-muted dark:text-text-secondary', className)}
       {...props}
     />
   )

@@ -8,7 +8,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { PageContainer, PageHeader, Button, Spinner, Alert, Input } from '@/components/ui';
+import { PageContainer, PageHeader, Button, LoadingState, EmptyState, Alert, Input, TableScroll } from '@/components/ui';
 import { ConfirmActionModal, ErrorDisplay } from '@/components/shared';
 import { apiFetch } from '@/lib/api-client';
 
@@ -151,15 +151,13 @@ export default function AdminUsersPage() {
       )}
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <Spinner size="lg" />
-        </div>
+        <LoadingState size="lg" padding="md" />
       ) : error ? (
         <ErrorDisplay message={error} onRetry={() => setReloadToken((token) => token + 1)} />
       ) : filteredUsers.length === 0 ? (
-        <p className="text-text-muted dark:text-text-secondary italic">No users found.</p>
+        <EmptyState title="No users found." size="sm" />
       ) : (
-        <div className="rounded-lg border border-border overflow-hidden bg-surface">
+        <TableScroll className="rounded-lg border border-border bg-surface">
           <table className="w-full text-sm">
             <thead className="bg-surface-alt border-b border-border">
               <tr>
@@ -208,7 +206,7 @@ export default function AdminUsersPage() {
               ))}
             </tbody>
           </table>
-        </div>
+        </TableScroll>
       )}
 
       <ConfirmActionModal

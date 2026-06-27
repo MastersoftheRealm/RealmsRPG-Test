@@ -125,8 +125,8 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-surface-secondary border-b border-divider h-20">
-      <div className="max-w-360 mx-auto px-4 sm:px-6 lg:px-24">
+    <header className="sticky top-0 z-header w-full bg-surface-secondary border-b border-divider h-20">
+      <div className="layout-shell-wide">
         <div className="flex items-center justify-between h-20 gap-14">
           {/* Logo */}
           <Link href="/" className="shrink-0">
@@ -147,8 +147,8 @@ export function Header() {
               <Link
                 href="/admin"
                 className={cn(
-                  'font-semibold text-lg text-primary-700 dark:text-primary-300 hover:text-primary-500 dark:hover:text-primary-200 transition-colors whitespace-nowrap',
-                  pathname?.startsWith('/admin') ? 'text-primary-500 dark:text-primary-400' : ''
+                  'font-semibold text-lg text-primary-fg hover:text-primary-fg-hover transition-colors whitespace-nowrap',
+                  pathname?.startsWith('/admin') ? 'text-primary-fg-active' : ''
                 )}
               >
                 Admin
@@ -164,8 +164,8 @@ export function Header() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className={cn(
-                    'font-semibold text-lg text-primary-700 dark:text-primary-300 hover:text-primary-500 dark:hover:text-primary-200 transition-colors whitespace-nowrap',
-                    pathname === item.href ? 'text-primary-500 dark:text-primary-400' : ''
+                    'font-semibold text-lg text-primary-fg hover:text-primary-fg-hover transition-colors whitespace-nowrap',
+                    pathname === item.href ? 'text-primary-fg-active' : ''
                   )}
                 >
                   {item.label}
@@ -175,20 +175,20 @@ export function Header() {
                   <Link
                     href={item.href}
                     className={cn(
-                      'font-semibold text-lg text-primary-700 dark:text-primary-300 hover:text-primary-500 dark:hover:text-primary-200 transition-colors whitespace-nowrap',
-                      pathname === item.href ? 'text-primary-500 dark:text-primary-400' : ''
+                      'font-semibold text-lg text-primary-fg hover:text-primary-fg-hover transition-colors whitespace-nowrap',
+                      pathname === item.href ? 'text-primary-fg-active' : ''
                     )}
                   >
                     {item.label}
                   </Link>
                   {item.href === '/library' && (
                     <Tippy content={navbarLibrary}>
-                      <Info className="w-4 h-4 text-primary-700"/>
+                      <Info className="w-4 h-4 text-primary-fg"/>
                     </Tippy>
                   )}
                   {item.href === '/codex' && (
                     <Tippy content={navbarCodex}>
-                      <Info className="w-4 h-4 text-primary-700"/>
+                      <Info className="w-4 h-4 text-primary-fg"/>
                     </Tippy>
                   )}
                 </span>
@@ -209,7 +209,7 @@ export function Header() {
               <button
                 type="button"
                 onClick={handleLoginClick}
-                className="font-semibold text-lg text-primary-700 dark:text-primary-300 hover:text-primary-500 dark:hover:text-primary-200 transition-colors whitespace-nowrap min-h-[44px] px-2 flex items-center"
+                className="font-semibold text-lg text-primary-fg hover:text-primary-fg-hover transition-colors whitespace-nowrap min-h-[44px] px-2 flex items-center"
               >
                 Login
               </button>
@@ -255,7 +255,7 @@ export function Header() {
             {isAdmin && (
               <Link
                 href="/admin"
-                className="py-3 text-lg font-semibold text-primary-700 dark:text-primary-300 min-h-11 flex items-center"
+                className="py-3 text-lg font-semibold text-primary-fg min-h-11 flex items-center"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Admin
@@ -270,7 +270,7 @@ export function Header() {
                   href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="py-3 text-lg font-semibold text-primary-700 dark:text-primary-300 min-h-11 flex items-center"
+                  className="py-3 text-lg font-semibold text-primary-fg min-h-11 flex items-center"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {item.label}
@@ -279,7 +279,7 @@ export function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="py-3 text-lg font-semibold text-primary-700 dark:text-primary-300 min-h-11 flex items-center"
+                  className="py-3 text-lg font-semibold text-primary-fg min-h-11 flex items-center"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {item.label}
@@ -330,12 +330,12 @@ function AccountDropdown({
         className="flex items-center gap-2 min-h-11 min-w-11"
         onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
       >
-        <div className="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center text-white font-bold">
+        <div className="w-10 h-10 rounded-full bg-primary-button flex items-center justify-center text-white font-bold">
           {profile?.username?.charAt(0).toUpperCase() ?? '?'}
         </div>
       </button>
       {open && (
-        <div className="absolute right-0 top-full pt-2 z-50">
+        <div className="absolute right-0 top-full pt-2 z-overlay">
           <div className="w-56 bg-surface rounded-lg shadow-lg border border-border-light py-2">
             <Link href="/my-account" className="px-4 py-2.5 text-text-secondary hover:bg-surface-alt min-h-11 flex items-center" onClick={() => setOpen(false)}>
               My Account
@@ -364,7 +364,7 @@ function AccountDropdown({
               <span className={cn(
                 'text-xs font-semibold px-2 py-1 rounded-full',
                 showTooltips
-                  ? 'bg-success-100 dark:bg-success-900/40 text-success-700 dark:text-success-300'
+                  ? 'bg-success-100 dark:bg-success-900/40 text-success-fg'
                   : 'bg-surface-alt text-text-secondary'
               )}>
                 {showTooltips ? 'On' : 'Off'}
@@ -401,14 +401,14 @@ function NavDropdown({ item, pathname }: { item: DropdownItem; pathname: string 
         type="button"
         aria-label={`${item.label} menu`}
         aria-expanded={open}
-        className="font-semibold text-lg text-primary-700 dark:text-primary-300 hover:text-primary-500 dark:hover:text-primary-200 transition-colors flex items-center gap-1 whitespace-nowrap min-h-11"
+        className="font-semibold text-lg text-primary-fg hover:text-primary-fg-hover transition-colors flex items-center gap-1 whitespace-nowrap min-h-11"
         onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
       >
         {item.label}
         <ChevronDownIcon className={cn('w-4 h-4 transition-transform', open ? 'rotate-180' : '')} />
       </button>
       {open && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-50 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-2">
+        <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-overlay before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-2">
           <div className="w-48 bg-surface-secondary rounded-lg shadow-lg border border-divider py-2">
             {item.dropdown?.map((subItem) => (
               <Link
@@ -416,8 +416,8 @@ function NavDropdown({ item, pathname }: { item: DropdownItem; pathname: string 
                 href={subItem.href}
                 prefetch={false}
                 className={cn(
-                  'px-5 py-3 text-primary-700 dark:text-primary-300 hover:bg-surface hover:text-primary-500 dark:hover:text-primary-200 transition-colors min-h-11 flex items-center',
-                  pathname === subItem.href ? 'bg-surface-alt text-primary-500 dark:text-primary-400' : ''
+                  'px-5 py-3 text-primary-fg hover:bg-surface hover:text-primary-fg-hover transition-colors min-h-11 flex items-center',
+                  pathname === subItem.href ? 'bg-surface-alt text-primary-fg-active' : ''
                 )}
                 onClick={() => setOpen(false)}
               >
@@ -440,7 +440,7 @@ function MobileDropdown({ item, pathname, onLinkClick }: { item: DropdownItem; p
         type="button"
         aria-expanded={open}
         aria-label={`${item.label} menu`}
-        className="flex items-center justify-between w-full py-3 text-lg font-semibold text-primary-700 dark:text-primary-300 min-h-11"
+        className="flex items-center justify-between w-full py-3 text-lg font-semibold text-primary-fg min-h-11"
         onClick={() => setOpen(!open)}
       >
         {item.label}
@@ -454,8 +454,8 @@ function MobileDropdown({ item, pathname, onLinkClick }: { item: DropdownItem; p
               href={subItem.href}
               prefetch={false}
               className={cn(
-                'py-3 text-primary-700 dark:text-primary-300 min-h-11 flex items-center',
-                pathname === subItem.href ? 'text-primary-500 dark:text-primary-400' : ''
+                'py-3 text-primary-fg min-h-11 flex items-center',
+                pathname === subItem.href ? 'text-primary-fg-active' : ''
               )}
               onClick={onLinkClick}
             >

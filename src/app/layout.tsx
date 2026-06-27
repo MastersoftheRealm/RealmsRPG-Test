@@ -5,7 +5,7 @@
  */
 
 import type { Metadata, Viewport } from 'next';
-import { Nunito, Nunito_Sans } from 'next/font/google';
+import { Nunito, Nunito_Sans, Nova_Flat } from 'next/font/google';
 import { AuthProvider, QueryProvider, ThemeProvider } from '@/components/providers';
 import { ToastProvider } from '@/components/ui';
 import { SelectionGuard } from '@/components/layout';
@@ -25,6 +25,16 @@ const nunitoSans = Nunito_Sans({
   display: 'swap',
   variable: '--font-nunito-sans',
   weight: ['300', '400', '500', '600', '700'],
+});
+
+// Display font - Nova Flat (self-hosted via next/font for deterministic loading;
+// previously loaded at runtime from the Google Fonts CDN, which caused layout
+// reflow and flaky visual baselines). Wired to --font-display in globals.css.
+const novaFlat = Nova_Flat({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-nova-flat',
+  weight: ['400'],
 });
 
 export const metadata: Metadata = {
@@ -60,18 +70,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${nunito.variable} ${nunitoSans.variable}`} suppressHydrationWarning>
-      <head>
-        {/* Nova Flat font from Google Fonts (not available in next/font/google) */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Nova+Flat&display=swap" rel="stylesheet" />
-      </head>
+    <html
+      lang="en"
+      className={`${nunito.variable} ${nunitoSans.variable} ${novaFlat.variable}`}
+      suppressHydrationWarning
+    >
       <body className="min-h-screen bg-surface text-text-primary font-sans antialiased">
         {/* Skip-to-content link for keyboard/screen-reader accessibility */}
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-primary-600 focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-skip-link focus:px-4 focus:py-2 focus:bg-primary-button focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none"
         >
           Skip to main content
         </a>

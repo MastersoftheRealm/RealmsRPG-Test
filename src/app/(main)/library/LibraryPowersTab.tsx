@@ -217,7 +217,7 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
         {isLoading ? (
           <LoadingState />
         ) : filteredData.length === 0 ? (
-          <div className="py-12 text-center text-text-secondary">No powers match your search.</div>
+          <ListEmptyState title="No powers match your search." size="sm" />
         ) : (
           filteredData.map(power => (
             <GridListRow
@@ -249,7 +249,7 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
                     void handleSyncOne(power.id);
                   }}
                   label="Sync with current patch"
-                  className="text-warning-700 hover:text-warning-700 dark:text-warning-400"
+                  className="text-warning-fg hover:opacity-80"
                 >
                   <RefreshCw className={`w-4 h-4 ${syncingIds.has(power.id) ? 'animate-spin' : ''}`} />
                 </IconButton>

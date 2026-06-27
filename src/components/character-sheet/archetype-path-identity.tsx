@@ -92,11 +92,11 @@ export function ArchetypePathGuidance({ character }: { character: Character }) {
 
       {showLevelNotes ? (
         <div
-          className="rounded-xl border-2 border-primary-200 dark:border-primary-800 bg-primary-50/80 dark:bg-primary-900/20 px-4 py-3"
+          className="rounded-xl border-2 border-primary-subtle-border bg-primary-subtle-bg px-4 py-3"
           role="region"
           aria-label={`Level ${level} path guidance for ${pathName}`}
         >
-          <p className="text-xs font-semibold uppercase tracking-wide text-primary-700 dark:text-primary-300 mb-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-primary-fg mb-1">
             Level {level} guidance
           </p>
           <p className="text-sm text-text-primary whitespace-pre-wrap">{levelNotes}</p>

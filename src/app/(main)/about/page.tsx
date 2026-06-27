@@ -11,12 +11,58 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { PageContainer, PageHeader } from '@/components/ui';
+import { PageContainer, PageHeader, Button } from '@/components/ui';
 import { Swords, Sparkles, BookOpen, Users, Wand2, Shield, Skull, Sword, Zap, MessageCircle } from 'lucide-react';
 import { REALMS_MOTTO } from '@/lib/constants/site-copy';
 
 // Discord link (same as home/footer)
 const DISCORD_URL = 'https://discord.gg/XbX4nFbxga';
+
+type MarketingButtonVariant = 'primary' | 'outline';
+
+function MarketingLinkButton({
+  href,
+  variant = 'primary',
+  size,
+  className,
+  children,
+}: {
+  href: string;
+  variant?: MarketingButtonVariant;
+  size?: 'sm';
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Button asChild variant={variant} size={size} className={className}>
+      <Link prefetch={false} href={href}>
+        {children}
+      </Link>
+    </Button>
+  );
+}
+
+function MarketingExternalButton({
+  href,
+  variant = 'primary',
+  size,
+  className,
+  children,
+}: {
+  href: string;
+  variant?: MarketingButtonVariant;
+  size?: 'sm';
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Button asChild variant={variant} size={size} className={className}>
+      <a href={href} target="_blank" rel="noopener noreferrer">
+        {children}
+      </a>
+    </Button>
+  );
+}
 
 // Order: d10, d12, d20, d4(center on load), d6, d8, d10 — 7 dice; selected always centered; cycling wraps (leftmost moves to right)
 const DICE_IMAGES = [
@@ -41,24 +87,24 @@ const CAROUSEL_SLIDES: Array<{
     content: (
       <>
         <p className="text-lg text-text-secondary leading-relaxed mb-4">
-          <strong className="text-text-primary">Equip your party and run the game.</strong> Craft custom <Link prefetch={false} href="/item-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Armaments</Link> and weapons, build <Link prefetch={false} href="/creature-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Creatures</Link> and companions, and manage <Link prefetch={false} href="/encounters" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Encounters</Link> with ease. Whether you&apos;re a player outfitting your Character or a Realm Master preparing the next challenge, these tools put creation at your fingertips.
+          <strong className="text-text-primary">Equip your party and run the game.</strong> Craft custom <Link prefetch={false} href="/item-creator" className="text-primary-link-fg hover:underline font-medium">Armaments</Link> and weapons, build <Link prefetch={false} href="/creature-creator" className="text-primary-link-fg hover:underline font-medium">Creatures</Link> and companions, and manage <Link prefetch={false} href="/encounters" className="text-primary-link-fg hover:underline font-medium">Encounters</Link> with ease. Whether you&apos;re a player outfitting your Character or a Realm Master preparing the next challenge, these tools put creation at your fingertips.
         </p>
         <p className="text-lg text-text-secondary leading-relaxed mb-4">
           Design the perfect sword, summon a custom creature, or track your party&apos;s progress through Skill and Combat Encounters, all in one place.
         </p>
         <div className="mt-6 flex flex-wrap gap-4">
-          <Link prefetch={false} href="/item-creator" className="btn-solid">
+          <MarketingLinkButton href="/item-creator">
             <Sword className="w-5 h-5" />
             Create an Armament
-          </Link>
-          <Link prefetch={false} href="/creature-creator" className="btn-outline-clean">
+          </MarketingLinkButton>
+          <MarketingLinkButton href="/creature-creator" variant="outline">
             <Skull className="w-5 h-5" />
             Creature Creator
-          </Link>
-          <Link prefetch={false} href="/encounters" className="btn-outline-clean">
+          </MarketingLinkButton>
+          <MarketingLinkButton href="/encounters" variant="outline">
             <Users className="w-5 h-5" />
             Encounter Tracker
-          </Link>
+          </MarketingLinkButton>
         </div>
       </>
     ),
@@ -68,18 +114,18 @@ const CAROUSEL_SLIDES: Array<{
           <strong className="text-text-primary">Equip your party and run the game.</strong> Craft Armaments, build Creatures, and manage Encounters, all in one place.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
-          <Link prefetch={false} href="/item-creator" className="btn-solid text-sm">
+          <MarketingLinkButton href="/item-creator" size="sm">
             <Sword className="w-4 h-4" />
             Armaments
-          </Link>
-          <Link prefetch={false} href="/creature-creator" className="btn-outline-clean text-sm">
+          </MarketingLinkButton>
+          <MarketingLinkButton href="/creature-creator" variant="outline" size="sm">
             <Skull className="w-4 h-4" />
             Creatures
-          </Link>
-          <Link prefetch={false} href="/encounters" className="btn-outline-clean text-sm">
+          </MarketingLinkButton>
+          <MarketingLinkButton href="/encounters" variant="outline" size="sm">
             <Users className="w-4 h-4" />
             Encounters
-          </Link>
+          </MarketingLinkButton>
         </div>
       </>
     ),
@@ -92,20 +138,20 @@ const CAROUSEL_SLIDES: Array<{
           <strong className="text-text-primary">Dice are the lifeblood of the story.</strong> They introduce random chance and represent a hint of chaos in every Encounter, making each roll an exciting part of the game.
         </p>
         <p className="text-lg text-text-secondary leading-relaxed mb-4">
-          <Link prefetch={false} href="/characters/new" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Character creation</Link> is the most exciting part of the game, and it&apos;s a comprehensive guide for everything you need to create a unique Character. Whether you&apos;re a Realm Master crafting adventures for your party or a player bringing your dream Character to life, we&apos;re here to support your journey.
+          <Link prefetch={false} href="/characters/new" className="text-primary-link-fg hover:underline font-medium">Character creation</Link> is the most exciting part of the game, and it&apos;s a comprehensive guide for everything you need to create a unique Character. Whether you&apos;re a Realm Master crafting adventures for your party or a player bringing your dream Character to life, we&apos;re here to support your journey.
         </p>
         <p className="text-lg text-text-secondary leading-relaxed">
-          Realms promises to reward you with immersive and satisfying Characters built on exactly what you envision. We invite you to explore the <Link prefetch={false} href="/codex" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Codex</Link>, build in the <Link prefetch={false} href="/power-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Creators</Link>, and adventure in a way only the imagination can picture.
+          Realms promises to reward you with immersive and satisfying Characters built on exactly what you envision. We invite you to explore the <Link prefetch={false} href="/codex" className="text-primary-link-fg hover:underline font-medium">Codex</Link>, build in the <Link prefetch={false} href="/power-creator" className="text-primary-link-fg hover:underline font-medium">Creators</Link>, and adventure in a way only the imagination can picture.
         </p>
         <div className="mt-6 flex flex-wrap gap-4">
-          <Link prefetch={false} href="/characters/new" className="btn-solid">
+          <MarketingLinkButton href="/characters/new">
             <Sparkles className="w-5 h-5" />
             Create a Character
-          </Link>
-          <Link prefetch={false} href="/rules" className="btn-outline-clean">
+          </MarketingLinkButton>
+          <MarketingLinkButton href="/rules" variant="outline">
             <BookOpen className="w-5 h-5" />
             Read the Core Rulebook
-          </Link>
+          </MarketingLinkButton>
         </div>
       </>
     ),
@@ -115,14 +161,14 @@ const CAROUSEL_SLIDES: Array<{
           <strong className="text-text-primary">Dice are the lifeblood of the story.</strong> Character creation is the most exciting part. We support your journey from Codex to Creators to adventure.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
-          <Link prefetch={false} href="/characters/new" className="btn-solid text-sm">
+          <MarketingLinkButton href="/characters/new" size="sm">
             <Sparkles className="w-4 h-4" />
             Create a Character
-          </Link>
-          <Link prefetch={false} href="/rules" className="btn-outline-clean text-sm">
+          </MarketingLinkButton>
+          <MarketingLinkButton href="/rules" variant="outline" size="sm">
             <BookOpen className="w-4 h-4" />
             Core Rulebook
-          </Link>
+          </MarketingLinkButton>
         </div>
       </>
     ),
@@ -162,24 +208,24 @@ const CAROUSEL_SLIDES: Array<{
         </p>
         <ul className="space-y-3 text-text-secondary">
           <li className="flex items-start gap-3">
-            <BookOpen className="w-5 h-5 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5" />
-            <span><strong className="text-text-primary"><Link prefetch={false} href="/characters/new" className="text-primary-600 dark:text-primary-400 hover:underline">Digital Character Sheets</Link></strong>: Automatic ability calculations, dropdown menus for Skills and Feats, and user-friendly tools to streamline gameplay and Character creation.</span>
+            <BookOpen className="w-5 h-5 text-primary-link-fg flex-shrink-0 mt-0.5" />
+            <span><strong className="text-text-primary"><Link prefetch={false} href="/characters/new" className="text-primary-link-fg hover:underline">Digital Character Sheets</Link></strong>: Automatic ability calculations, dropdown menus for Skills and Feats, and user-friendly tools to streamline gameplay and Character creation.</span>
           </li>
           <li className="flex items-start gap-3">
-            <Wand2 className="w-5 h-5 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5" />
-            <span><strong className="text-text-primary"><Link prefetch={false} href="/power-creator" className="text-primary-600 dark:text-primary-400 hover:underline">Power</Link> & <Link prefetch={false} href="/technique-creator" className="text-primary-600 dark:text-primary-400 hover:underline">Technique Creator</Link></strong>: Design your Character&apos;s unique toolset with infinite combinations of flavor and effect.</span>
+            <Wand2 className="w-5 h-5 text-primary-link-fg flex-shrink-0 mt-0.5" />
+            <span><strong className="text-text-primary"><Link prefetch={false} href="/power-creator" className="text-primary-link-fg hover:underline">Power</Link> & <Link prefetch={false} href="/technique-creator" className="text-primary-link-fg hover:underline">Technique Creator</Link></strong>: Design your Character&apos;s unique toolset with infinite combinations of flavor and effect.</span>
           </li>
           <li className="flex items-start gap-3">
-            <Shield className="w-5 h-5 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5" />
-            <span><strong className="text-text-primary"><Link prefetch={false} href="/item-creator" className="text-primary-600 dark:text-primary-400 hover:underline">Item Creator</Link></strong>: Craft custom Armaments, weapons, and armor to fit your vision.</span>
+            <Shield className="w-5 h-5 text-primary-link-fg flex-shrink-0 mt-0.5" />
+            <span><strong className="text-text-primary"><Link prefetch={false} href="/item-creator" className="text-primary-link-fg hover:underline">Item Creator</Link></strong>: Craft custom Armaments, weapons, and armor to fit your vision.</span>
           </li>
           <li className="flex items-start gap-3">
-            <Skull className="w-5 h-5 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5" />
-            <span><strong className="text-text-primary"><Link prefetch={false} href="/creature-creator" className="text-primary-600 dark:text-primary-400 hover:underline">Creature Creator</Link></strong>: Build custom monsters, companions, and Encounters for your party.</span>
+            <Skull className="w-5 h-5 text-primary-link-fg flex-shrink-0 mt-0.5" />
+            <span><strong className="text-text-primary"><Link prefetch={false} href="/creature-creator" className="text-primary-link-fg hover:underline">Creature Creator</Link></strong>: Build custom monsters, companions, and Encounters for your party.</span>
           </li>
           <li className="flex items-start gap-3">
-            <Users className="w-5 h-5 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5" />
-            <span><strong className="text-text-primary"><Link prefetch={false} href="/encounters" className="text-primary-600 dark:text-primary-400 hover:underline">Encounter Tracker</Link></strong>: Run Skill and Combat Encounters with ease.</span>
+            <Users className="w-5 h-5 text-primary-link-fg flex-shrink-0 mt-0.5" />
+            <span><strong className="text-text-primary"><Link prefetch={false} href="/encounters" className="text-primary-link-fg hover:underline">Encounter Tracker</Link></strong>: Run Skill and Combat Encounters with ease.</span>
           </li>
         </ul>
       </>
@@ -191,20 +237,20 @@ const CAROUSEL_SLIDES: Array<{
         </p>
         <ul className="space-y-2 text-text-secondary text-sm">
           <li className="flex items-start gap-2">
-            <BookOpen className="w-4 h-4 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5" />
-            <span><Link prefetch={false} href="/characters/new" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Character Sheets</Link>: calculations, Skills, Feats.</span>
+            <BookOpen className="w-4 h-4 text-primary-link-fg flex-shrink-0 mt-0.5" />
+            <span><Link prefetch={false} href="/characters/new" className="text-primary-link-fg hover:underline font-medium">Character Sheets</Link>: calculations, Skills, Feats.</span>
           </li>
           <li className="flex items-start gap-2">
-            <Wand2 className="w-4 h-4 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5" />
-            <span><Link prefetch={false} href="/power-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Powers</Link> & <Link prefetch={false} href="/technique-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Techniques</Link>.</span>
+            <Wand2 className="w-4 h-4 text-primary-link-fg flex-shrink-0 mt-0.5" />
+            <span><Link prefetch={false} href="/power-creator" className="text-primary-link-fg hover:underline font-medium">Powers</Link> & <Link prefetch={false} href="/technique-creator" className="text-primary-link-fg hover:underline font-medium">Techniques</Link>.</span>
           </li>
           <li className="flex items-start gap-2">
-            <Shield className="w-4 h-4 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5" />
-            <span><Link prefetch={false} href="/item-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Armaments</Link>: weapons, armor.</span>
+            <Shield className="w-4 h-4 text-primary-link-fg flex-shrink-0 mt-0.5" />
+            <span><Link prefetch={false} href="/item-creator" className="text-primary-link-fg hover:underline font-medium">Armaments</Link>: weapons, armor.</span>
           </li>
           <li className="flex items-start gap-2">
-            <Skull className="w-4 h-4 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5" />
-            <span><Link prefetch={false} href="/creature-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Creatures</Link> & <Link prefetch={false} href="/encounters" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Encounters</Link>.</span>
+            <Skull className="w-4 h-4 text-primary-link-fg flex-shrink-0 mt-0.5" />
+            <span><Link prefetch={false} href="/creature-creator" className="text-primary-link-fg hover:underline font-medium">Creatures</Link> & <Link prefetch={false} href="/encounters" className="text-primary-link-fg hover:underline font-medium">Encounters</Link>.</span>
           </li>
         </ul>
       </>
@@ -241,24 +287,24 @@ const CAROUSEL_SLIDES: Array<{
     content: (
       <>
         <p className="text-lg text-text-secondary leading-relaxed mb-4">
-          <strong className="text-text-primary">Your Character is yours to define.</strong> From Species and Ancestry to <Link prefetch={false} href="/power-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Powers</Link>, <Link prefetch={false} href="/technique-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Techniques</Link>, Skills, and Feats, every choice shapes who they are. Create custom Powers that fit your vision, design Techniques that feel uniquely yours, and build a <Link prefetch={false} href="/characters/new" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Character</Link> that reflects your imagination.
+          <strong className="text-text-primary">Your Character is yours to define.</strong> From Species and Ancestry to <Link prefetch={false} href="/power-creator" className="text-primary-link-fg hover:underline font-medium">Powers</Link>, <Link prefetch={false} href="/technique-creator" className="text-primary-link-fg hover:underline font-medium">Techniques</Link>, Skills, and Feats, every choice shapes who they are. Create custom Powers that fit your vision, design Techniques that feel uniquely yours, and build a <Link prefetch={false} href="/characters/new" className="text-primary-link-fg hover:underline font-medium">Character</Link> that reflects your imagination.
         </p>
         <p className="text-lg text-text-secondary leading-relaxed mb-4">
           Whether you&apos;re a spellcaster weaving magic or a martial warrior mastering the blade, Realms gives you the tools to bring your ideal adventurer to life.
         </p>
         <div className="mt-6 flex flex-wrap gap-4">
-          <Link prefetch={false} href="/power-creator" className="btn-solid">
+          <MarketingLinkButton href="/power-creator">
             <Wand2 className="w-5 h-5" />
             Create a Power
-          </Link>
-          <Link prefetch={false} href="/technique-creator" className="btn-outline-clean">
+          </MarketingLinkButton>
+          <MarketingLinkButton href="/technique-creator" variant="outline">
             <Zap className="w-5 h-5" />
             Create a Technique
-          </Link>
-          <Link prefetch={false} href="/characters/new" className="btn-outline-clean">
+          </MarketingLinkButton>
+          <MarketingLinkButton href="/characters/new" variant="outline">
             <Sparkles className="w-5 h-5" />
             Create a Character
-          </Link>
+          </MarketingLinkButton>
         </div>
       </>
     ),
@@ -268,18 +314,18 @@ const CAROUSEL_SLIDES: Array<{
           <strong className="text-text-primary">Your Character is yours to define.</strong> From Species to Powers, Techniques, and Feats, every choice shapes who they are.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
-          <Link prefetch={false} href="/power-creator" className="btn-solid text-sm">
+          <MarketingLinkButton href="/power-creator" size="sm">
             <Wand2 className="w-4 h-4" />
             Power
-          </Link>
-          <Link prefetch={false} href="/technique-creator" className="btn-outline-clean text-sm">
+          </MarketingLinkButton>
+          <MarketingLinkButton href="/technique-creator" variant="outline" size="sm">
             <Zap className="w-4 h-4" />
             Technique
-          </Link>
-          <Link prefetch={false} href="/characters/new" className="btn-outline-clean text-sm">
+          </MarketingLinkButton>
+          <MarketingLinkButton href="/characters/new" variant="outline" size="sm">
             <Sparkles className="w-4 h-4" />
             Character
-          </Link>
+          </MarketingLinkButton>
         </div>
       </>
     ),
@@ -295,19 +341,14 @@ const CAROUSEL_SLIDES: Array<{
           Join the community to get the most out of Realms: ask questions, share characters and creatures, and stay updated on tools and rules.
         </p>
         <div className="mt-6 flex flex-wrap gap-4">
-          <a
-            href={DISCORD_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-solid inline-flex items-center gap-2"
-          >
+          <MarketingExternalButton href={DISCORD_URL}>
             <MessageCircle className="w-5 h-5" />
             Join the Discord
-          </a>
-          <Link prefetch={false} href="/rules" className="btn-outline-clean">
+          </MarketingExternalButton>
+          <MarketingLinkButton href="/rules" variant="outline">
             <BookOpen className="w-5 h-5" />
             Core Rules
-          </Link>
+          </MarketingLinkButton>
         </div>
       </>
     ),
@@ -317,14 +358,14 @@ const CAROUSEL_SLIDES: Array<{
           <strong className="text-text-primary">Realms is better together.</strong> Connect with players, share house rules, find games.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
-          <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="btn-solid text-sm inline-flex items-center gap-2">
+          <MarketingExternalButton href={DISCORD_URL} size="sm">
             <MessageCircle className="w-4 h-4" />
             Discord
-          </a>
-          <Link prefetch={false} href="/rules" className="btn-outline-clean text-sm">
+          </MarketingExternalButton>
+          <MarketingLinkButton href="/rules" variant="outline" size="sm">
             <BookOpen className="w-4 h-4" />
             Core Rules
-          </Link>
+          </MarketingLinkButton>
         </div>
       </>
     ),
@@ -402,7 +443,7 @@ export default function AboutPage() {
       <section className="relative mb-12">
         {/* Subtle ambient background */}
         <div className="absolute inset-0 pointer-events-none -z-10">
-          <div className="absolute -top-32 -right-32 w-64 h-64 bg-primary-100/20 rounded-full blur-3xl" />
+          <div className="absolute -top-32 -right-32 w-64 h-64 bg-primary-subtle-bg/20 rounded-full blur-3xl" />
           <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-accent-200/15 rounded-full blur-3xl" />
         </div>
 
@@ -410,7 +451,7 @@ export default function AboutPage() {
         <div className={cn('relative p-8 md:p-12', CAROUSEL_CONTENT_MIN_H)}>
           <h2
             className={cn(
-              'text-xl font-bold text-primary-700 dark:text-primary-300 mb-6 flex items-center gap-2 transition-all duration-300',
+              'text-xl font-bold text-primary-fg mb-6 flex items-center gap-2 transition-all duration-slow',
               (isFadingOut || isFadingIn) ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0'
             )}
           >
@@ -419,7 +460,7 @@ export default function AboutPage() {
           </h2>
           <div
             className={cn(
-              'text-text-secondary transition-all duration-300',
+              'text-text-secondary transition-all duration-slow',
               (isFadingOut || isFadingIn) ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'
             )}
           >
@@ -440,7 +481,7 @@ export default function AboutPage() {
         <div className="relative flex items-center justify-center py-6 px-14 overflow-hidden w-full">
           <button
             onClick={goPrev}
-            className="absolute left-2 md:left-4 p-2 rounded-full hover:bg-primary-50/80 dark:hover:bg-primary-900/30 transition-all hover:scale-110 z-10 min-h-[44px] min-w-[44px] flex items-center justify-center"
+            className="absolute left-2 md:left-4 p-2 rounded-full hover:bg-primary-subtle-bg transition-all hover:scale-110 z-10 min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Previous slide"
           >
             <Image src="/images/ArrowL.png" alt="" width={24} height={26} className="opacity-60 hover:opacity-100 transition-opacity" />
@@ -461,9 +502,9 @@ export default function AboutPage() {
                     key={`${dice.alt}-${diceIndex}-${displayPos}`}
                     onClick={() => goToSlide(diceIndex)}
                     className={cn(
-                      'flex-shrink-0 transition-all duration-300 ease-out rounded-xl p-2 min-h-[44px] min-w-[44px] flex items-center justify-center',
-                      'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-                      isSelected ? 'bg-primary-100/60 dark:bg-primary-900/40' : 'hover:bg-surface-alt/80'
+                      'flex-shrink-0 transition-all duration-slow ease-out rounded-xl p-2 min-h-[44px] min-w-[44px] flex items-center justify-center',
+                      'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                      isSelected ? 'bg-primary-subtle-bg' : 'hover:bg-surface-alt/80'
                     )}
                     style={{
                       transform: `scale(${scale})`,
@@ -489,7 +530,7 @@ export default function AboutPage() {
 
           <button
             onClick={goNext}
-            className="absolute right-2 md:right-4 p-2 rounded-full hover:bg-primary-50/80 dark:hover:bg-primary-900/30 transition-all hover:scale-110 z-10 min-h-[44px] min-w-[44px] flex items-center justify-center"
+            className="absolute right-2 md:right-4 p-2 rounded-full hover:bg-primary-subtle-bg transition-all hover:scale-110 z-10 min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Next slide"
           >
             <Image src="/images/ArrowR.png" alt="" width={24} height={26} className="opacity-60 hover:opacity-100 transition-opacity" />
@@ -498,7 +539,7 @@ export default function AboutPage() {
       </section>
 
       {/* Creator message - floating style, minimal border */}
-      <section className="rounded-2xl p-8 transition-all duration-300 hover:shadow-lg bg-surface-alt/60">
+      <section className="rounded-2xl p-8 transition-all duration-slow hover:shadow-lg bg-surface-alt/60">
         <h2 className="text-xl font-bold text-text-primary mb-4">A Note from the Creator</h2>
         <p className="text-lg text-text-muted dark:text-text-secondary italic mb-4">
           Dear Realms Players,
@@ -513,18 +554,18 @@ export default function AboutPage() {
         </p>
         {/* Primary CTAs for retention — clear next steps */}
         <div className="flex flex-wrap gap-3 justify-center items-center pt-4 border-t border-border-light">
-          <Link prefetch={false} href="/characters/new" className="btn-solid inline-flex items-center gap-2 min-h-[44px]">
+          <MarketingLinkButton href="/characters/new">
             <Sparkles className="w-5 h-5 shrink-0" />
             Create a Character
-          </Link>
-          <Link prefetch={false} href="/codex" className="btn-outline-clean inline-flex items-center gap-2 min-h-[44px]">
+          </MarketingLinkButton>
+          <MarketingLinkButton href="/codex" variant="outline">
             <BookOpen className="w-5 h-5 shrink-0" />
             Browse Codex
-          </Link>
-          <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="btn-outline-clean inline-flex items-center gap-2 min-h-[44px]">
+          </MarketingLinkButton>
+          <MarketingExternalButton href={DISCORD_URL} variant="outline">
             <MessageCircle className="w-5 h-5 shrink-0" />
             Join the Community
-          </a>
+          </MarketingExternalButton>
         </div>
       </section>
     </PageContainer>

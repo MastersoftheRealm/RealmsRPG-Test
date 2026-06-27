@@ -152,11 +152,11 @@ const valueDisplayVariants = cva(
         xl: 'min-w-[48px] text-xl',
       },
       valueState: {
-        positive: 'text-success-700',
-        negative: 'text-danger-700',
+        positive: 'text-success-fg',
+        negative: 'text-danger-fg',
         neutral: 'text-text-primary',
-        health: 'text-success-700 dark:text-success-400',
-        energy: 'text-info-600 dark:text-info-400',
+        health: 'text-success-fg',
+        energy: 'text-info-fg',
       },
     },
     defaultVariants: {
@@ -254,14 +254,14 @@ export function ValueStepper({
 
   // Button color classes based on colorVariant
   const getDecrementButtonClass = () => {
-    if (colorVariant === 'health') return 'bg-success-200 dark:bg-success-900/50 hover:bg-success-300 dark:hover:bg-success-800/50 text-success-700 dark:text-success-400';
-    if (colorVariant === 'energy') return 'bg-info-200 dark:bg-info-900/50 hover:bg-info-300 dark:hover:bg-info-800/50 text-info-700 dark:text-info-400';
+    if (colorVariant === 'health') return 'bg-success-200 dark:bg-success-900/50 hover:bg-success-300 dark:hover:bg-success-800/50 text-success-fg';
+    if (colorVariant === 'energy') return 'bg-info-200 dark:bg-info-900/50 hover:bg-info-300 dark:hover:bg-info-800/50 text-info-fg';
     return 'btn-stepper btn-stepper-danger';
   };
 
   const getIncrementButtonClass = () => {
-    if (colorVariant === 'health') return 'bg-success-200 dark:bg-success-900/50 hover:bg-success-300 dark:hover:bg-success-800/50 text-success-700 dark:text-success-400';
-    if (colorVariant === 'energy') return 'bg-info-200 dark:bg-info-900/50 hover:bg-info-300 dark:hover:bg-info-800/50 text-info-700 dark:text-info-400';
+    if (colorVariant === 'health') return 'bg-success-200 dark:bg-success-900/50 hover:bg-success-300 dark:hover:bg-success-800/50 text-success-fg';
+    if (colorVariant === 'energy') return 'bg-info-200 dark:bg-info-900/50 hover:bg-info-300 dark:hover:bg-info-800/50 text-info-fg';
     return 'btn-stepper btn-stepper-success';
   };
 

@@ -9,7 +9,7 @@
 import { useState, useMemo } from 'react';
 import type { KeyboardEvent } from 'react';
 import { cn } from '@/lib/utils';
-import { Chip, Button, Alert, Spinner } from '@/components/ui';
+import { Chip, Button, Alert, Spinner, SelectionCardSurface } from '@/components/ui';
 import { SegmentedControl } from '@/components/shared';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useMergedSpecies, useUserSpecies, useTraits, type Species } from '@/hooks';
@@ -87,7 +87,7 @@ export function SpeciesStep() {
       <div className="flex items-center gap-1 mb-2">
         <h2 className="text-2xl font-bold text-text-primary">Choose Your Species</h2>
         <Tippy content={chooseYourSpecies} allowHTML={true}>
-          <Info className="w-4 h-4 text-primary-700" aria-hidden />
+          <Info className="w-4 h-4 text-primary-subtle-fg" aria-hidden />
         </Tippy>
       </div>
       <p className="text-text-secondary mb-4">
@@ -122,38 +122,36 @@ export function SpeciesStep() {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         {/* Mixed species option */}
-        <div
+        <SelectionCardSurface
           role="button"
           tabIndex={0}
+          selected={isMixedSelected}
           onClick={() => setShowMixedModal(true)}
           onKeyDown={(e) => activateOnEnterOrSpace(e, () => setShowMixedModal(true))}
           className={cn(
-            'selection-card flex flex-col items-center justify-center min-h-35 border-2 border-dashed',
-            isMixedSelected ? 'selection-card--selected border-primary-500' : 'border-border hover:border-primary-400'
+            'flex flex-col items-center justify-center min-h-35 border-dashed',
+            isMixedSelected ? 'border-primary-outline-border' : 'border-border hover:border-primary-outline-border'
           )}
         >
-          <GitMerge className="w-10 h-10 text-primary-600 mb-2" />
+          <GitMerge className="w-10 h-10 text-primary-link-fg mb-2" />
           <h3 className="font-bold text-text-primary">Mixed species</h3>
           <p className="text-sm text-text-secondary text-center mt-1">Combine two species</p>
           {isMixedSelected && (
-            <span className="text-xs px-2 py-0.5 bg-primary-600 text-white dark:bg-primary-100 dark:text-white rounded mt-2">✓ Selected</span>
+            <span className="text-xs px-2 py-0.5 bg-primary-button text-white rounded mt-2">✓ Selected</span>
           )}
-        </div>
+        </SelectionCardSurface>
 
         {species?.map((s: Species) => {
           const isSelected = !draft.ancestry?.mixed && draft.ancestry?.id === s.id;
           
           return (
-            <div
+            <SelectionCardSurface
               key={s.id}
               role="button"
               tabIndex={0}
+              selected={isSelected}
               onClick={() => handleCardClick(s)}
               onKeyDown={(e) => activateOnEnterOrSpace(e, () => handleCardClick(s))}
-              className={cn(
-                'selection-card',
-                isSelected && 'selection-card--selected'
-              )}
             >
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-bold text-text-primary">{s.name}</h3>
@@ -163,7 +161,7 @@ export function SpeciesStep() {
                   </span>
                   {/* NO SPEED - species don't have speed values */}
                   {isSelected && (
-                    <span className="text-xs px-2 py-0.5 bg-primary-600 text-white dark:bg-primary-100 dark:text-white rounded">
+                    <span className="text-xs px-2 py-0.5 bg-primary-button text-white rounded">
                       ✓ Selected
                     </span>
                   )}
@@ -192,7 +190,7 @@ export function SpeciesStep() {
               >
                 View Details →
               </Button>
-            </div>
+            </SelectionCardSurface>
           );
         })}
       </div>

@@ -10,7 +10,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef, DragEvent } from 'react';
 import { cn } from '@/lib/utils';
 import { apiFetchOrNull } from '@/lib/api-client';
-import { Button, Checkbox, Input } from '@/components/ui';
+import { Button, Checkbox, Input, Card, CardContent, EmptyState } from '@/components/ui';
 import { ValueStepper } from '@/components/shared';
 import type { Combatant, CombatantCondition, CombatantType, TrackedCombatant } from '@/types/encounter';
 import type { Encounter } from '@/types/encounter';
@@ -721,7 +721,7 @@ function CombatEncounterViewInner({
     <>
       <div className="grid lg:grid-cols-4 gap-6 lg:items-stretch">
         <div className="lg:col-span-3 flex flex-col gap-4 min-h-0">
-          <div className="bg-surface rounded-xl shadow-md p-4 flex flex-wrap items-center gap-4 flex-shrink-0">
+          <Card className="shadow-md p-4 flex flex-wrap items-center gap-4 flex-shrink-0">
             {!encounter.isActive ? (
               <>
                 <Button onClick={startCombat} disabled={encounter.combatants.length === 0}>
@@ -771,7 +771,7 @@ function CombatEncounterViewInner({
             >
               Clear All
             </Button>
-          </div>
+          </Card>
 
           {!encounter.isActive && sortedCombatants.length > 0 && (
             <div className="text-xs text-text-muted dark:text-text-secondary flex items-center gap-4 px-2 flex-shrink-0">
@@ -783,9 +783,16 @@ function CombatEncounterViewInner({
 
           <div className="space-y-3 overflow-y-auto pr-2 scroll-smooth flex-1 min-h-[300px]">
             {sortedCombatants.length === 0 ? (
-              <div className="bg-surface rounded-xl shadow-md p-8 text-center text-text-muted dark:text-text-secondary">
-                No combatants added yet. Add some using the panel on the right.
-              </div>
+              <Card>
+                <CardContent>
+                  <EmptyState
+                    title="No combatants added yet"
+                    description="Add some using the panel on the right."
+                    size="sm"
+                    className="py-4"
+                  />
+                </CardContent>
+              </Card>
             ) : (
               sortedCombatants.map((combatant, index) => (
                 <CombatantCard
@@ -815,7 +822,7 @@ function CombatEncounterViewInner({
         </div>
 
         <div className="space-y-6 flex flex-col min-h-0">
-          <div className="bg-surface rounded-xl shadow-md p-6 flex-shrink-0">
+          <Card className="shadow-md p-6 flex-shrink-0">
             <h2 className="text-lg font-bold text-text-primary mb-4">Add Combatant</h2>
             <div className="mb-4 space-y-2">
               <label htmlFor="combat-encounter-campaign" className="block text-sm font-medium text-text-secondary">Campaign</label>
@@ -925,10 +932,10 @@ function CombatEncounterViewInner({
                       className={cn(
                         'text-sm font-medium',
                         t === 'ally'
-                          ? 'text-blue-700 dark:text-blue-300'
+                          ? 'text-ally-text'
                           : t === 'enemy'
-                            ? 'text-red-700 dark:text-red-300'
-                            : 'text-violet-700 dark:text-violet-300'
+                            ? 'text-enemy-text'
+                            : 'text-companion-text'
                       )}
                     >
                       {t.charAt(0).toUpperCase() + t.slice(1)}
@@ -945,8 +952,8 @@ function CombatEncounterViewInner({
                 Add Creature
               </Button>
             </div>
-          </div>
-          <div className="bg-surface rounded-xl shadow-md p-6">
+          </Card>
+          <Card className="shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Conditions Reference</h3>
             <div className="flex flex-wrap gap-1">
               {CONDITION_OPTIONS.map((condition) => (
@@ -963,7 +970,7 @@ function CombatEncounterViewInner({
                 </span>
               ))}
             </div>
-          </div>
+          </Card>
         </div>
       </div>
 

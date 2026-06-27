@@ -51,7 +51,7 @@ export function ChipSelect({
       <select
         id={id}
         onChange={handleChange}
-        className="w-full px-3 py-2 border border-border-light rounded-md bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+        className="w-full px-3 py-2 border border-border-light rounded-md bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary-outline-border focus:border-primary-outline-border"
         defaultValue=""
       >
         <option value="">{placeholder}</option>
@@ -68,13 +68,13 @@ export function ChipSelect({
             return (
               <span
                 key={value}
-                className="inline-flex items-center gap-1 px-2 py-1 bg-primary-100 text-primary-800 rounded-full text-sm"
+                className="inline-flex items-center gap-1 px-2 py-1 bg-primary-subtle-bg text-primary-fg-hover rounded-full text-sm"
               >
                 {option?.label || value}
                 <button
                   type="button"
                   onClick={() => onRemove(value)}
-                  className="hover:bg-primary-200 rounded-full p-0.5 transition-colors"
+                  className="hover:bg-primary-subtle-bg-hover rounded-full p-0.5 transition-colors"
                   aria-label={`Remove ${option?.label || value}`}
                 >
                   <X className="w-3 h-3" />

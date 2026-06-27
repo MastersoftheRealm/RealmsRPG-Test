@@ -149,14 +149,14 @@ function LoginContent() {
           <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer select-none">
             <input
               type="checkbox"
-              className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0 cursor-pointer transition-colors"
+              className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-primary-fg focus:ring-2 focus:ring-primary-outline-border focus:ring-offset-0 cursor-pointer transition-colors"
               {...register('rememberMe')}
             />
             Remember me
           </label>
           <Link
             href="/forgot-password"
-            className="text-sm text-primary-400 hover:text-primary-300 transition-colors"
+            className="text-sm text-primary-link-fg hover:text-primary-fg-hover transition-colors"
           >
             Forgot password?
           </Link>
@@ -208,7 +208,7 @@ function LoginContent() {
         Don&apos;t have an account?{' '}
         <Link
           href="/register"
-          className="text-primary-400 hover:text-primary-300 transition-colors font-medium"
+          className="text-primary-link-fg hover:text-primary-fg-hover transition-colors font-medium"
         >
           Create one
         </Link>

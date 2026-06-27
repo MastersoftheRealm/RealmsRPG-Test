@@ -511,11 +511,11 @@ export function ProficienciesTab({
       <div>
         <SectionHeader
           title="Missing For Current Loadout"
-          rightContent={<span className="text-xs text-danger-700 dark:text-danger-300">{missing.length} missing</span>}
+          rightContent={<span className="text-xs text-danger-fg">{missing.length} missing</span>}
         />
         <div className="px-2 py-3">
           {missing.length === 0 ? (
-            <p className="text-sm text-success-700 dark:text-success-400 italic text-center py-2">
+            <p className="text-sm text-success-fg italic text-center py-2">
               All current powers, techniques, and armaments are covered.
             </p>
           ) : (

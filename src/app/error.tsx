@@ -10,7 +10,7 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
 import { Header, Footer } from '@/components/layout';
-import { Button } from '@/components/ui';
+import { Button, PageHeader } from '@/components/ui';
 
 interface ErrorProps {
   error: Error & { digest?: string };
@@ -26,12 +26,14 @@ export default function RootError({ error, reset }: ErrorProps) {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main id="main-content" className="flex-1 flex items-center justify-center px-4 py-16">
-        <div className="flex flex-col items-center gap-4 max-w-md text-center">
-          <AlertCircle className="w-12 h-12 text-danger-700 dark:text-danger-400" />
-          <h1 className="text-xl font-semibold text-text-primary">Something went wrong</h1>
-          <p className="text-text-muted dark:text-text-secondary">
-            An unexpected error occurred. You can try again, or return to the home page.
-          </p>
+        <div className="flex flex-col items-center gap-4 max-w-md text-center w-full">
+          <AlertCircle className="w-12 h-12 text-danger-fg" aria-hidden />
+          <PageHeader
+            title="Something went wrong"
+            size="sm"
+            className="mb-0 w-full [&_h1]:justify-center"
+            description="An unexpected error occurred. You can try again, or return to the home page."
+          />
           {process.env.NODE_ENV === 'development' && (
             <pre className="text-xs text-left bg-surface-alt p-3 rounded-lg w-full overflow-auto max-h-40 border border-border-light text-text-secondary">
               {error.message}

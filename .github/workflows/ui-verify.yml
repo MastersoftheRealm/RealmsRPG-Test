@@ -1,0 +1,78 @@
+name: UI Verify (design system)
+
+# Hard-blocking design-system safety net for the UI unification work:
+#   - lint (incl. realms/no-raw-color guardrail)
+#   - token contrast (WCAG AA, both themes)
+#   - production build
+#   - accessibility (axe-core, deterministic routes, both themes)
+#   - visual regression (Playwright screenshots, both themes x 3 breakpoints)
+#
+# All steps are required (no continue-on-error). See src/docs/ai/BUILD_VALIDATION.md
+# and DEVELOPER_TASK_QUEUE for the one-time setup (CI secrets + seeding Linux
+# visual baselines).
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+
+jobs:
+  static-gates:
+    name: Lint, contrast & build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - name: Lint (incl. no-raw-color guardrail)
+        run: npm run lint
+      - name: Token contrast (WCAG AA)
+        run: npm run verify:contrast
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY }}
+
+  visual-a11y:
+    name: Visual regression & accessibility
+    runs-on: ubuntu-latest
+    env:
+      # CI scans only data-free routes so the gate never depends on Supabase data.
+      A11Y_DETERMINISTIC_ONLY: '1'
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - name: Install Playwright browser + OS deps
+        run: npx playwright install --with-deps chromium
+      - name: Build
+        run: npm run build
+      - name: Visual + accessibility (Playwright)
+        # Playwright's webServer starts `npm run start` automatically.
+        run: npx playwright test
+      - name: Authenticated visual + a11y (optional — DEV-003 secrets)
+        if: ${{ secrets.E2E_TEST_EMAIL != '' && secrets.E2E_TEST_PASSWORD != '' }}
+        env:
+          E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
+          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+          E2E_TEST_CHARACTER_ID: ${{ secrets.E2E_TEST_CHARACTER_ID }}
+          E2E_TEST_CAMPAIGN_ID: ${{ secrets.E2E_TEST_CAMPAIGN_ID }}
+        run: |
+          npx playwright test -c playwright.auth.config.ts
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14

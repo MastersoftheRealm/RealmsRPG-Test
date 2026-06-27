@@ -139,7 +139,7 @@ export function MixedSpeciesModal({
         </div>
 
         {speciesA && speciesB && (
-          <p className="text-sm text-primary-600 font-medium">
+          <p className="text-sm text-primary-link-fg font-medium">
             Mixed: {speciesA.name} / {speciesB.name}
           </p>
         )}

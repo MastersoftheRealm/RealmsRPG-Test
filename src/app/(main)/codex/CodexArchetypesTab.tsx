@@ -17,6 +17,7 @@ import {
 import type { ColumnValue } from '@/components/shared/grid-list-row';
 import { useSort, sortByColumn } from '@/hooks/use-sort';
 import { useCodexArchetypes, useCodexFeats, useCodexSkills, useEquipment, useOfficialLibrary } from '@/hooks';
+import { EmptyState } from '@/components/ui';
 import { parseArchetypePathData, pathHasPlayerVisibleLevel1 } from '@/lib/game/archetype-path';
 import { formatListCellLabel } from '@/lib/utils';
 import type { Archetype, ArchetypePathRecommendations } from '@/types/archetype';
@@ -159,7 +160,7 @@ function PathRecommendationsBlock({
     <div className="rounded-lg border border-border-light bg-surface-alt p-4 space-y-3">
       <h3 className="text-base font-semibold text-text-primary">{heading}</h3>
       {notes ? (
-        <p className="text-sm text-text-primary whitespace-pre-wrap border-l-2 border-primary-300 dark:border-primary-700 pl-3">
+        <p className="text-sm text-text-primary whitespace-pre-wrap border-l-2 border-primary-subtle-border pl-3">
           {notes}
         </p>
       ) : null}
@@ -363,7 +364,7 @@ export function CodexArchetypesTab({ codexMode }: CodexArchetypesTabProps) {
       />
 
       {sorted.length === 0 ? (
-        <p className="text-text-secondary py-8 text-center">No archetype paths match your search.</p>
+        <EmptyState title="No archetype paths match your search." size="sm" />
       ) : (
         <div className="space-y-2">
           {sorted.map((archetype) => (
