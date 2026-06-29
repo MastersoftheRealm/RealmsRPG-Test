@@ -2,7 +2,7 @@
 
 **Last slimmed:** 2026-06-26 (TASK-382). Full history: [`archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md`](archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md) and [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md).
 
-**Next task ID:** TASK-386
+**Next task ID:** TASK-389
 
 **Agent rules:** Skip `blocked` tasks and any task with `assignee:` (e.g. TASK-376). Skip human-only tasks (TASK-353 → `DEVELOPER_TASK_QUEUE.md` DEV-001). Pick highest-priority `not-started` or continue `partial`.
 
@@ -352,3 +352,90 @@
       - DEV-V-011-T006
   notes: |
     DONE 2026-06-27. Test user `e2e-visual-baseline@realmsrpg.test` provisioned in dev Supabase. Windows baselines committed. Auth a11y ratchet has 5 pre-existing allowances on character sheet + my-account dark.
+
+- id: TASK-386
+  title: "MVP: guided three-layer character creator pilot (archetype preview + feats L1)"
+  created_at: 2026-06-28
+  created_by: owner
+  priority: high
+  status: not-started
+  description: |
+    Character-creator implementation slice of the Product Experience Redesign
+    (`src/docs/REALMS_PRODUCT_OVERVIEW.md`, Appendix E). Establishes Layer 1
+    (guided) default + "see all" escape on the feats step; archetype preview cards.
+    Landing rebuild is TASK-387; post-activation flow is TASK-388.
+    Prefer simplification/restructuring over new features (Section 8).
+    Tooltip copy: coordinate with Collin TASK-376 Tippy pattern only.
+  related_files:
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - src/components/character-creator/steps/archetype-step.tsx
+    - src/components/character-creator/steps/feats-step.tsx
+    - src/components/character-creator/PathHelpCard.tsx
+    - src/lib/game/archetype-path.ts
+    - public/tooltip-text.tsx
+  acceptance_criteria:
+    - Archetype step: path cards show build preview (counts + one-line goal); Path default, "Forge Your Own" secondary/L3.
+    - Feats step (pilot): Layer 1 grouped recommended feats with why-copy; "See all feats" → existing L3 browser; "Back to recommendations" returns to L1.
+    - Global: `level1.notes` surfaced via enhanced `PathHelpCard` on every path step.
+    - Content: one fully authored reference martial path in admin; completable in L1 without opening full lists.
+    - `npm run build` passes; MOBILE_UX + ACCESSIBILITY rules followed.
+  notes: |
+    Refactor behind `creationMode === 'path'`. Do not build `GuidedChoiceShell` yet (Phase 4).
+    Do not implement TASK-376 tooltip migration — use Collin's pattern where already present.
+
+- id: TASK-387
+  title: "Landing page full redesign (modern TTRPG startup)"
+  created_at: 2026-06-28
+  created_by: owner
+  priority: high
+  status: not-started
+  description: |
+    Scrap and rebuild `home-page.tsx` per REALMS_PRODUCT_OVERVIEW Section 4 —
+    not a copy-only patch. Single primary CTA (Start Playing → /characters/new),
+    research-backed scroll structure, remove OnboardingTour and Codex/Library CTAs.
+    Mid-page secondary CTAs: custom power, weapons/armor (→ creators; Layer 1 entry
+    when those creators support it). Discord tertiary. Design system compliant.
+  related_files:
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - src/app/(main)/home-page.tsx
+    - src/components/shared/onboarding-tour.tsx
+    - src/lib/constants/site-copy.ts
+  acceptance_criteria:
+    - Remove OnboardingTour trigger and welcome-banner tour link from home.
+    - Remove Browse Codex / Browse Library as landing CTAs (nav only).
+    - One primary hero CTA: Start Playing → /characters/new.
+    - Uniqueness block with visual proof (screenshots/art), not abstract copy only.
+    - Below fold: Create a Custom Power + Create Weapons & Armor sections with links to creators.
+    - Join Discord in closing/footer section.
+    - Mobile-first (~360px); semantic tokens; `npm run build` passes.
+  notes: |
+    Can ship before or in parallel with TASK-386. Power/item creator links may land
+    on current L3 UI until Phase 3 adds L1 entry — document as known gap if needed.
+
+- id: TASK-388
+  title: "Post-activation onboarding (play together, sheet tour, level-up milestones)"
+  created_at: 2026-06-28
+  created_by: owner
+  priority: medium
+  status: not-started
+  description: |
+    Section 11 of REALMS_PRODUCT_OVERVIEW.md. After first character save, guide users
+    toward playing together (Discord, campaign invite). Optional post-save sheet tour.
+    Contextual level-up tutorials for milestones (first level-up, first ability point,
+    etc.) — delta-only, skippable, global tutorials on/off preference.
+  related_files:
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - src/components/character-creator/steps/finalize-step.tsx
+    - src/components/character-sheet/
+    - src/components/shared/onboarding-tour.tsx
+  acceptance_criteria:
+    - After first character save: dismissible play-together prompt (Discord + start campaign).
+    - Optional sheet tour offered once post-save (Skip + Don't show again); not on home page.
+    - First level-up shows contextual guide for fields that changed only.
+    - First ability-point level (e.g. level 3) shows where to allocate on sheet.
+    - User can disable all tutorials (setting or preference flag).
+    - Milestone flags stored (profile or character JSON); no repeat on subsequent level-ups of same type.
+    - `npm run build` passes.
+  notes: |
+    Replaces pre-creation home OnboardingTour with post-activation guidance.
+    Prefer Tippy/highlight chains over modal-heavy tours where TASK-376 allows.

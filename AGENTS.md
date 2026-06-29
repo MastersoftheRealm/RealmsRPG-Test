@@ -18,6 +18,7 @@ Check the canonical source for the topic instead of trusting scattered/stale doc
 
 | For… | Read (authority) |
 |------|------------------|
+| **Product vision, UX philosophy, onboarding/creator flow, three-layer model** | `src/docs/REALMS_PRODUCT_OVERVIEW.md` (desired experience) — pair with `src/docs/human/USER_EXPERIENCE_GOALS.md` (shipped-UX checklist) |
 | **Does this already exist?** (features, components, hooks, services) | `src/docs/ai/FEATURE_INDEX.md` → then `src/components/shared/index.ts`, `src/hooks/index.ts` |
 | DB tables / columns | `src/docs/SUPABASE_SCHEMA.md` (only) |
 | Game formulas, terminology, caps, display | `src/docs/GAME_RULES.md` |

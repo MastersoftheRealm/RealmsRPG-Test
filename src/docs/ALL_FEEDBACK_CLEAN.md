@@ -1606,3 +1606,11 @@ Notes
 - Feedback: Allow appending a note to a feat/trait and renaming a feat/trait in a character's feat list, without overwriting the codex name/description. Renames are editable only in edit mode and shown in italics; notes are non-invasive and visible only in the expanded row. Later refined: hide the fields behind a small "Customize" button (collapsed by default) and allow spaces in custom names/notes.
 - Expected: Player-defined `customName` (italic display, codex name preserved) and `note` (expanded-only) persist per character; visible in read-only campaign view; survive feat level-swaps.
 - Disposition: Implemented 2026-06-26 (TASK-377). Lean-save `customName`/`note` on `feats`/`archetypeFeats`; `traitCustomizations` map for traits; collapsible `FeatTraitCustomizationBlock`; trimming only on save (spaces allowed while typing). Audit fixes: `traitCustomizations` added to `SAVEABLE_FIELDS`; level-swap preserves customization; campaign read-only view passes trait map. No Supabase migration (JSONB `characters.data`).
+
+**Raw Feedback Log — 2026-06-28 (Product Experience Redesign clarifications)**
+- Date: 2026-06-28
+- Context: REALMS_PRODUCT_OVERVIEW.md vision doc; sitewide UX overhaul
+- Priority: High
+- Feedback: (1) Fully scrap and rebuild home page as modern TTRPG startup landing page — remove OnboardingTour, welcome tour, Codex/Library CTAs, multi-CTA sprawl; single primary CTA Start Playing; mid-page custom power + weapons/armor CTAs to creators (Layer 1 when built); Discord tertiary. (2) Sitewide UX overhaul one page at a time; creators currently Layer 3 only — migrate to L1/L2/L3; character creator highest priority. (3) Tooltip system depends on Collin TASK-376 Tippy — follow his methods. (4) Post-save: play-together prompt (Discord, campaign invite); optional sheet tour after character created; milestone level-up tutorials (first level-up, first ability point, delta-only per level); tutorials on/off toggle. Remove pre-creation home tour.
+- Expected: REALMS_PRODUCT_OVERVIEW.md updated; TASK-387 landing rebuild, TASK-386 creator pilot, TASK-388 post-activation.
+- Disposition: Documented 2026-06-28 in REALMS_PRODUCT_OVERVIEW.md Sections 4, 6, 11; tasks filed.

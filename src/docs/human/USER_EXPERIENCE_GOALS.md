@@ -1,5 +1,7 @@
 # User Experience Goals & Implementation
 
+> **The product *vision* lives in [`REALMS_PRODUCT_OVERVIEW.md`](../REALMS_PRODUCT_OVERVIEW.md)** — Product Experience Redesign (Landing -> Character Completion): desired experience, UX philosophy, and the three-layer interaction model. **This document is the shipped-UX checklist** — what is implemented today, terminology, guest gating, and retention tactics. When the two disagree, that doc is the target and this one is the current state.
+
 **Purpose:** Single reference for Realms UX goals, how we implement them, what’s done, what’s left, and what AI/developers should consider when making UX changes. Based on the Realms UX, Retention & Onboarding Plan and session implementation (Feb 2026).
 
 **Audience:** Product, engineers, and AI agents working on UI, copy, onboarding, or retention.

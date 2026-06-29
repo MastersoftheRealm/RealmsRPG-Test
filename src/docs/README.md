@@ -2,6 +2,11 @@
 
 **Stack:** Next.js, React, Tailwind, Supabase (PostgreSQL, Auth, Storage), Vercel. No Prisma.
 
+## Product & UX (start here for the "why")
+
+- **[`REALMS_PRODUCT_OVERVIEW.md`](./REALMS_PRODUCT_OVERVIEW.md)** — Product Experience Redesign (Landing → Character Completion): the canonical vision for what Realms is, the UX philosophy, the three-layer interaction model, and the desired landing-to-character-complete flow. Read this before UX, onboarding, or creator work.
+- [`human/USER_EXPERIENCE_GOALS.md`](./human/USER_EXPERIENCE_GOALS.md) — the shipped-UX checklist (terminology, guest gating, retention) that tracks what is implemented today.
+
 ## For New Developers
 
 Start here: **[human/ENGINEERING_ONBOARDING.md](./human/ENGINEERING_ONBOARDING.md)** — architecture, directory map, data layer, state/persistence, gotchas, and a safe-edit ramp path.
