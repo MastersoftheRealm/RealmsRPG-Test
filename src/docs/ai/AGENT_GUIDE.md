@@ -114,40 +114,31 @@ Task queue `related_files` may reference outdated paths. When implementing, pref
 
 See `src/docs/human/UI_COMPONENT_REFERENCE.md` for extended component catalog (agents: prefer this guide + `realms-unification.mdc`).
 
-## Tooltips (canonical: Collin / Tippy — TASK-376)
+## Tooltips (canonical: Tippy + tooltip-text.tsx — TASK-376 ✅)
 
-**Owner decision (2026-06-25):** Collin's `@tippyjs/react` approach replaces the legacy DB tooltip stack (`ui_tooltips`, `useTooltipByKey`, `ContextHelpTooltip`, `HelpTooltip`). **Collin's code is the standard; do not extend or re-introduce the DB system.**
+**Owner decision (2026-06-25):** Collin's `@tippyjs/react` + static copy in `public/tooltip-text.tsx` is the **only** contextual-help standard. Legacy DB tooltips were removed in TASK-376 (Jun 2026).
 
-**TASK-376 is Collin's work — AI agents must not implement it.** Status `blocked`, assignee Collin Morrison. Agents skip this task; continue on his branches or merge his PRs when asked. See `DEVELOPER_TASK_QUEUE.md` → **COLLIN-001**.
-
-### Use this (Collin's pattern)
+### Use this
 
 | Piece | Location / usage |
 |-------|------------------|
 | Copy (strings + rich JSX) | `public/tooltip-text.tsx` — add exports here; keep copy in one file |
-| Trigger | `Info` from `lucide-react` next to the heading/label |
-| Component | `Tippy` from `@tippyjs/react` + `import 'tippy.js/dist/tippy.css'` once per file |
-| Rich HTML | `allowHTML={true}` when content is JSX from `tooltip-text.tsx` |
-| Dynamic per-option text | Helper in `tooltip-text.tsx` (see `getTooltipTextByPowerAbility`) |
+| Component | `InfoTippy` from `@/components/shared` (wraps `@tippyjs/react` + accessible Info trigger) |
+| Dynamic values | Helpers in `tooltip-text.tsx` (e.g. `getAbilityPointsHelp`, `getSkillPointsHelp`, `getTooltipTextByPowerAbility`) |
+| Rich HTML | `allowHTML` on `InfoTippy` when content is JSX from `tooltip-text.tsx` |
+| Custom trigger | `InfoTippy` `children` prop (e.g. archetype ability buttons) or raw `Tippy` for non-Info triggers |
 
-**Reference implementations:** `src/components/layout/header.tsx`, character creator steps (`archetype-step`, `species-step`, `ancestry-step`, `abilities-step`), `characters/new/page.tsx`.
+**Reference:** `InfoTippy`, `header.tsx` (Library/Codex), all character-creator steps, `campaigns/page.tsx`.
 
-### Do not use (legacy — remove during TASK-376)
+### Do not use
 
-| Legacy | Why |
-|--------|-----|
-| `useTooltipByKey`, `useTooltips`, `ContextHelpTooltip` | DB-backed, inconsistent with Collin's static-copy model |
-| `HelpTooltip` / `Tooltip` from `@/components/ui` for **page help** | Superseded by Tippy; `Tooltip` may remain only for non-help UI if already present |
-| New `ContextHelpTooltip` on pages | Audits that say "add ContextHelpTooltip" are **obsolete** — use Tippy + `tooltip-text.tsx` instead |
-| Admin `/admin/tooltips`, `GET/PATCH /api/tooltips`, `ui_tooltips` table | Retire after migration (DB drop = human step in DEVELOPER_TASK_QUEUE) |
+| Legacy (removed) | Replacement |
+|------------------|-------------|
+| `useTooltipByKey`, `useTooltips`, `ContextHelpTooltip`, `HelpTooltip` | `InfoTippy` + `tooltip-text.tsx` |
+| Admin `/admin/tooltips`, `/api/tooltips`, user show-tooltips toggle | Edit `public/tooltip-text.tsx`; deploy |
+| `ui_tooltips` table | Optional SQL drop — human step in `DEVELOPER_TASK_QUEUE.md` |
 
-### Migration status (Jun 2026)
-
-**Migrated to Tippy:** navbar Library/Codex, creator page header, archetype/species/ancestry/abilities steps.
-
-**Still on legacy:** `skills-step.tsx` (`HelpTooltip` + `ContextHelpTooltip`), `campaigns/page.tsx` (`ContextHelpTooltip`); dead imports in `feats-step` / `equipment-step`. Account menu **Help tooltips On/Off** toggle targets the old system — remove when migration completes.
-
-**When touching tooltips:** Do **not** finish TASK-376 or migrate remaining pages — that is Collin's assignment. If you must edit a file with tooltips for unrelated work, do not replace Collin's Tippy markup and do not add `useTooltipByKey` / `ContextHelpTooltip`.
+**Page help:** Use `InfoTippy`, not `Tooltip` from `@/components/ui` (styleguide/demo only).
 
 ## Unified patterns (verified Jun 2026)
 

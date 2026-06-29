@@ -9,6 +9,7 @@ export { useAuth, useAuthStore } from './use-auth';
 export { useAdmin } from './use-admin';
 export { useCreatorSave } from './use-creator-save';
 export type { CreatorLibraryType, CreatorSavePayload, UseCreatorSaveOptions, UseCreatorSaveReturn } from './use-creator-save';
+export { useCreatorPathData } from './use-creator-path-data';
 export { useLoadModalLibrary } from './use-load-modal-library';
 export type { LoadModalLibraryType, UseLoadModalLibraryReturn } from './use-load-modal-library';
 export { useAddLibraryItemData } from './use-add-library-item-data';
@@ -22,7 +23,6 @@ export type {
 export { useCreatorWeaponOptions } from './use-creator-weapon-options';
 export type { CreatorWeaponOption } from '@/lib/creator-weapon-options';
 export { useProfile } from './use-profile';
-export { useTooltips, useTooltipByKey, useTooltipDefaults } from './use-tooltips';
 
 // Campaigns
 export {

@@ -40,7 +40,6 @@ interface UserProfile {
   email?: string;
   createdAt?: Date;
   photoURL?: string;
-  showTooltips?: boolean;
   role?: 'new_player' | 'playtester' | 'developer' | 'admin';
   rolePolicy?: {
     maxCampaigns: number;
@@ -89,8 +88,6 @@ function AccountContent() {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [tooltipPrefSaving, setTooltipPrefSaving] = useState(false);
-  const [tooltipPrefMessage, setTooltipPrefMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     async function loadProfile() {
@@ -108,7 +105,6 @@ function AccountContent() {
             email: (p.email as string | undefined) ?? user.email ?? undefined,
             createdAt: p.createdAt instanceof Date ? p.createdAt : p.createdAt ? new Date(p.createdAt as string | number | Date) : undefined,
             photoURL,
-            showTooltips: (p.showTooltips as boolean | undefined) ?? true,
             role: (p.role as UserProfile['role']) ?? undefined,
             rolePolicy: (p.rolePolicy as UserProfile['rolePolicy']) ?? undefined,
           });
@@ -116,7 +112,6 @@ function AccountContent() {
           setProfile({
             email: user.email ?? undefined,
             photoURL: user.photoURL ?? undefined,
-            showTooltips: true,
           });
         }
       } catch {
@@ -158,27 +153,6 @@ function AccountContent() {
       setPictureMessage({ type: 'error', text: 'Failed to upload profile picture' });
     } finally {
       setUploadingPicture(false);
-    }
-  };
-
-  const handleTooltipPreferenceChange = async (nextValue: boolean) => {
-    setTooltipPrefSaving(true);
-    setTooltipPrefMessage(null);
-    try {
-      await apiFetch('/api/user/settings/tooltips', {
-        method: 'PATCH',
-        body: JSON.stringify({ showTooltips: nextValue }),
-      });
-
-      setProfile((prev) => (prev ? { ...prev, showTooltips: nextValue } : prev));
-      setTooltipPrefMessage({ type: 'success', text: 'Tooltip preference updated.' });
-    } catch (err) {
-      setTooltipPrefMessage({
-        type: 'error',
-        text: err instanceof Error ? err.message : 'Failed to update tooltip setting',
-      });
-    } finally {
-      setTooltipPrefSaving(false);
     }
   };
 
@@ -361,27 +335,6 @@ function AccountContent() {
         className="mb-0 min-w-0"
       />
 
-      <Card className="shadow-md p-6">
-        <h2 className="text-lg font-bold text-text-primary mb-3">Help Tooltips</h2>
-        <p className="text-text-secondary mb-4">
-          Show contextual onboarding tooltips across navigation and creator flows.
-        </p>
-        <label className="inline-flex items-center gap-3 min-h-[44px] cursor-pointer">
-          <input
-            type="checkbox"
-            checked={profile?.showTooltips ?? true}
-            disabled={tooltipPrefSaving}
-            onChange={(event) => handleTooltipPreferenceChange(event.target.checked)}
-            aria-label="Show help tooltips"
-          />
-          <span className="text-text-primary font-medium">Show help tooltips</span>
-        </label>
-        {tooltipPrefMessage && (
-          <p className={cn('text-sm mt-3', tooltipPrefMessage.type === 'success' ? 'text-success-fg' : 'text-danger-fg')}>
-            {tooltipPrefMessage.text}
-          </p>
-        )}
-      </Card>
 
       <Card className="shadow-md p-6">
         <h2 className="text-lg font-bold text-text-primary mb-3">Role &amp; Limits</h2>

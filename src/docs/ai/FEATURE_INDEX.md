@@ -46,10 +46,11 @@
 | Encounters | `useEncounters`, `useEncounter`, `useCreate/Save/DeleteEncounter` |
 | Crafting + enhanced items | `useCraftingSession(s)`, `useEnhancedItems` + CRUD |
 | Save a creator's output | `useCreatorSave`; load into a modal: `useLoadModalLibrary` |
+| Character creator path recommendations | `useCreatorPathData` — resolves `path_data` from draft or codex by `archetypePathId` |
 | Autosave (debounced) | `useAutoSave` |
 | List sorting / modal list state | `useSort`, `sortByColumn`, `useModalListState` |
 | Tooltips (canonical) | `public/tooltip-text.tsx` + `@tippyjs/react` — see `AGENT_GUIDE.md` § Tooltips |
-| Tooltips (legacy — do not extend) | `useTooltips`, `useTooltipByKey`, `ContextHelpTooltip` — **TASK-376 (Collin only; AI skip)** |
+| Tooltips (contextual help) | `InfoTippy` + `public/tooltip-text.tsx` — TASK-376 done |
 
 > There is **one** codex fetch shared by all `useCodex*` and `useGameRules` (see `use-codex.ts`). Do not add a parallel codex fetch.
 
@@ -81,7 +82,7 @@
 | Confirm/delete/login modals | `ConfirmActionModal`, `DeleteConfirmModal`, `LoginPromptModal` |
 | Image upload + crop | `ImageUploadModal` |
 | Theme switch / onboarding | `ThemeToggle`, `OnboardingTour` |
-| Help tooltips (legacy — Collin/TASK-376) | `ContextHelpTooltip` — **AI agents do not migrate**; Collin owns TASK-376 |
+| Help tooltips | `InfoTippy` + `public/tooltip-text.tsx` |
 
 > UI primitives (Modal, Button, Chip, PageContainer, PageHeader, TabNavigation, SearchInput, **TableScroll**) live in `@/components/ui`.
 

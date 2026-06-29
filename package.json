@@ -23,6 +23,7 @@
     "verify:auth-visual:update": "npm run build && playwright test -c playwright.auth.config.ts tests/visual/auth-screenshots.pw.ts --update-snapshots",
     "verify:auth-a11y": "npm run build && playwright test -c playwright.auth.config.ts tests/visual/auth-a11y.pw.ts",
     "verify:auth-a11y:update": "npm run build && cross-env UPDATE_AUTH_A11Y_BASELINE=1 playwright test -c playwright.auth.config.ts tests/visual/auth-a11y.pw.ts --workers=1",
+    "verify:creator-audit": "npm run build && playwright test -c playwright.creator-audit.config.ts",
     "e2e:provision": "node scripts/provision-e2e-baseline.js",
     "db:seed": "node scripts/seed-to-supabase.js",
     "db:seed:reset": "node scripts/seed-to-supabase.js --reset",

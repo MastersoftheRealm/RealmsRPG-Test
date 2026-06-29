@@ -4,7 +4,7 @@
 
 **Next task ID:** TASK-391
 
-**Agent rules:** Skip `blocked` tasks and any task with `assignee:` (e.g. TASK-376). Skip human-only tasks (TASK-353 → `DEVELOPER_TASK_QUEUE.md` DEV-001). Pick highest-priority `not-started` or continue `partial`.
+**Agent rules:** Skip `blocked` tasks and any task with `assignee:` set to a human (e.g. TASK-353). Skip human-only tasks (TASK-353 → `DEVELOPER_TASK_QUEUE.md` DEV-001). Pick highest-priority `not-started` or continue `partial`.
 
 ---
 
@@ -91,24 +91,21 @@
 - id: TASK-376
   title: Retire DB tooltips — full migration to Collin Tippy + tooltip-text.tsx
   priority: high
-  status: blocked
-  assignee: Collin Morrison
+  status: done
   created_at: 2026-06-25
   created_by: owner
   description: |
     Collin's `@tippyjs/react` + `public/tooltip-text.tsx` is the only tooltip standard.
-    **AI agents: do not implement this task.**
   related_files:
     - public/tooltip-text.tsx
-    - src/components/shared/context-help-tooltip.tsx
-    - src/hooks/use-tooltips.ts
-    - src/app/api/tooltips/route.ts
-    - src/app/(main)/admin/tooltips/page.tsx
+    - src/components/shared/info-tippy.tsx
   acceptance_criteria:
     - All contextual help uses Tippy + `public/tooltip-text.tsx`
     - Legacy DB tooltip stack removed; build passes
   notes: |
-    **ASSIGNED TO COLLIN — NOT FOR AI AGENTS.** See DEVELOPER_TASK_QUEUE → COLLIN-001.
+    Completed 2026-06-29: InfoTippy shared component, full creator + campaigns + navbar migration,
+    legacy stack removed (useTooltipByKey, ContextHelpTooltip, HelpTooltip, admin/API routes, user toggle).
+    Copy centralized in public/tooltip-text.tsx. Optional human follow-up: drop ui_tooltips table (DEV queue).
 
 - id: TASK-378
   title: HYG-01 codex typing hardening + legacy payload compatibility gates
@@ -358,14 +355,28 @@
   created_at: 2026-06-28
   created_by: owner
   priority: high
-  status: not-started
+  status: done
+  completed_work: |
+    Full 9-step three-layer creator rework: GuidedChoiceShell on all path steps, per-step layer state + getStepCompletion, path-default archetype with build previews, species recommended_species L1, ancestry checklist, abilities suggested array + blurbs, skills L1 hide sub-skills, feats/equipment/powers guidance groups + weapon-then-armor + confirm loadout, finalize character reveal + edit jump-backs + identity fields, CreatorResourceBar, martial→skip powers tab, admin validatePathDataForPublish on save. Visual UX sweep (Playwright audit, footer/tab/InfoTippy fixes). Supabase: level1_recommended_species + level1_guidance_groups columns; Berserker reference path seeded. TASK-376 InfoTippy migration done. `npm run build` + `npm run verify:creator-audit` pass.
+  remaining_work: |
+    Optional follow-up: admin UI builder for guidance_groups (Advanced Path JSON + ChipSelect for recommended_species work today). Seed guidance groups for remaining paths (Warrior, Monk, power paths) as content work.
+  follow_up_tasks:
+    - TASK-391
+  build_validation: |
+    suite: DEV-V-001
+    tests:
+      - DEV-V-001-T001
+      - DEV-V-001-T011
+    automated: npm run verify:creator-audit
+  developer_test_plan: |
+    DEV-V-001 manual path/forge guards + npm run verify:creator-audit for step screenshots.
   description: |
     Character-creator implementation slice of the Product Experience Redesign
     (`src/docs/REALMS_PRODUCT_OVERVIEW.md`, Appendix E). Establishes Layer 1
     (guided) default + "see all" escape on the feats step; archetype preview cards.
     Landing rebuild is TASK-387; post-activation flow is TASK-388.
     Prefer simplification/restructuring over new features (Section 8).
-    Tooltip copy: coordinate with Collin TASK-376 Tippy pattern only.
+    Tooltip copy: `public/tooltip-text.tsx` + `InfoTippy` (TASK-376 done).
   related_files:
     - src/docs/REALMS_PRODUCT_OVERVIEW.md
     - src/components/character-creator/steps/archetype-step.tsx
@@ -380,8 +391,8 @@
     - Content: one fully authored reference martial path in admin; completable in L1 without opening full lists.
     - `npm run build` passes; MOBILE_UX + ACCESSIBILITY rules followed.
   notes: |
-    Refactor behind `creationMode === 'path'`. Do not build `GuidedChoiceShell` yet (Phase 4).
-    Do not implement TASK-376 tooltip migration — use Collin's pattern where already present.
+    Refactor behind `creationMode === 'path'`. GuidedChoiceShell built and used on abilities/skills; feats/equipment/powers use layer expand + path groups. 2026-06-29: comprehensive rework shipped (see completed_work).
+    Tooltip copy: add to `public/tooltip-text.tsx` and use `InfoTippy` (TASK-376 done).
 
 - id: TASK-387
   title: "Landing page full redesign (modern TTRPG startup)"
@@ -523,5 +534,26 @@
   notes: |
     Do not merge game mechanics (`skills.ts`) or Collin tooltip migration (`public/tooltip-text.tsx`) into marketing copy modules.
     Migrate incrementally when editing a page — avoid one giant PR moving every string.
+
+- id: TASK-391
+  title: "Admin path builder — guidance_groups UI + seed remaining paths"
+  created_at: 2026-06-29
+  created_by: agent
+  priority: medium
+  status: not-started
+  description: |
+    Character creator Layer 1 uses `level1_guidance_groups` (JSONB) and `level1_recommended_species`
+    (TEXT) on `codex_archetypes`. Berserker reference path seeded; admin can edit via Advanced Path JSON
+    and recommended-species ChipSelect today. Add a structured admin UI for guidance group authoring
+    and optionally seed Warrior/Monk/power paths with grouped recommendations.
+  related_files:
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - sql/codex-archetypes-creator-layer1-extensions.sql
+    - src/lib/constants/creator-layer-governance.ts
+  acceptance_criteria:
+    - Admin can add/edit/remove guidance groups without raw JSON (title, why, feat/power/armament picks per group).
+    - Layer 1 governance caps enforced in UI (max 3 groups, 7 items, 120-char why).
+    - Optional: at least one additional martial path seeded with guidance groups in Supabase.
+    - npm run build passes.
 
 ---

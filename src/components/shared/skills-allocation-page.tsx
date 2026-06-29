@@ -96,6 +96,10 @@ export interface SkillsAllocationPageProps {
   addSubSkillAddon?: React.ReactNode;
   /** When true, hide the Defense Bonuses section (e.g. for choose-a-path creation) */
   hideDefenseBonuses?: boolean;
+  /** When true, hide sub-skills and the Add Sub-Skill control (Layer 1 path mode). */
+  hideSubSkills?: boolean;
+  /** When true, omit the page title/description (parent shell owns the step header). */
+  embeddedInShell?: boolean;
   /** Optional className */
   className?: string;
 }
@@ -120,6 +124,8 @@ export function SkillsAllocationPage({
   headingAddon,
   addSubSkillAddon,
   hideDefenseBonuses = false,
+  hideSubSkills = false,
+  embeddedInShell = false,
   className,
 }: SkillsAllocationPageProps) {
   const { data: allSkills = [], isLoading } = useCodexSkills();
@@ -314,27 +320,37 @@ export function SkillsAllocationPage({
     );
   }
 
+  const visibleSkills = hideSubSkills
+    ? orderedSkills.filter((skill) => skill.base_skill_id === undefined)
+    : orderedSkills;
+
   return (
     <div className={cn('max-w-5xl mx-auto', className)}>
-      <PageHeader
-        title={
-          <span className="inline-flex items-center gap-1">
-            Allocate Skills
-            {headingAddon}
-          </span>
-        }
-        size="sm"
-        className="mb-6"
-        actions={<PointStatus total={totalPoints} spent={spentPoints} variant="compact" />}
-        description={
-          <>
-            Spend Skill points to gain proficiency, increase Skill values, or boost defenses.
-            Species Skills are always proficient and cannot be removed.
-            {speciesSkillIds.has('0') && ' Species option "Any" gives one extra Skill point.'}
-            {afterDescription != null && <div className="mt-4">{afterDescription}</div>}
-          </>
-        }
-      />
+      {embeddedInShell ? (
+        <div className="flex justify-end mb-4">
+          <PointStatus total={totalPoints} spent={spentPoints} variant="compact" />
+        </div>
+      ) : (
+        <PageHeader
+          title={
+            <span className="inline-flex items-center gap-1">
+              Allocate Skills
+              {headingAddon}
+            </span>
+          }
+          size="sm"
+          className="mb-6"
+          actions={<PointStatus total={totalPoints} spent={spentPoints} variant="compact" />}
+          description={
+            <>
+              Spend Skill points to gain proficiency, increase Skill values, or boost defenses.
+              Species Skills are always proficient and cannot be removed.
+              {speciesSkillIds.has('0') && ' Species option "Any" gives one extra Skill point.'}
+              {afterDescription != null && <div className="mt-4">{afterDescription}</div>}
+            </>
+          }
+        />
+      )}
 
       {/* Add Skill / Add Sub-Skill — disabled when no points */}
       <div className="flex gap-3 mb-6">
@@ -347,6 +363,7 @@ export function SkillsAllocationPage({
           <Plus size={14} />
           Add Skill
         </Button>
+        {!hideSubSkills && (
         <span className="inline-flex items-center gap-1">
           <Button
             size="sm"
@@ -361,6 +378,7 @@ export function SkillsAllocationPage({
           </Button>
           {addSubSkillAddon}
         </span>
+        )}
       </div>
 
       {/* Single flat Skills table — same layout as character sheet (Prof, Skill, Ability, Bonus, Value) */}
@@ -378,7 +396,7 @@ export function SkillsAllocationPage({
               </tr>
             </thead>
             <tbody>
-              {orderedSkills.map((skill) => {
+              {visibleSkills.map((skill) => {
                 const isSubSkill = skill.base_skill_id !== undefined;
                 const baseSkill = isSubSkill
                   ? allSkills.find((s: Skill) => String(s.id) === String(skill.base_skill_id))
@@ -437,7 +455,7 @@ export function SkillsAllocationPage({
             </tbody>
           </table>
         </TableScroll>
-        {orderedSkills.length === 0 && (
+        {visibleSkills.length === 0 && (
           <div className="text-center py-8 text-text-muted dark:text-text-secondary">
             No Skills added yet. Use &quot;Add Skill&quot; or &quot;Add Sub-Skill&quot; (need at least 1 Skill point).
           </div>
@@ -502,7 +520,7 @@ export function SkillsAllocationPage({
       )}
 
       {footer && (
-        <div className="sticky bottom-3 left-0 right-0 z-sticky mt-6 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:mx-0">
+        <div className="mt-6 pt-4 border-t border-border-light">
           {footer}
         </div>
       )}

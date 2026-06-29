@@ -11,15 +11,15 @@
 
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { cn, formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useEquipment, useUserItems, useItemProperties, useOfficialLibrary, usePowerParts, useTechniqueParts, useMergedSpecies, useCodexSkills, useTraits } from '@/hooks';
+import { useEquipment, useUserItems, useItemProperties, useOfficialLibrary, usePowerParts, useTechniqueParts, useMergedSpecies, useCodexSkills, useTraits, useCreatorPathData } from '@/hooks';
 import { deriveItemDisplay, trainingPointsForItemPropertyRef } from '@/lib/calculators/item-calc';
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 import {
-  ContextHelpTooltip,
+  InfoTippy,
   SearchInput,
   GridListRow,
   QuantitySelector,
@@ -37,10 +37,11 @@ import { AlertCircle, Swords, Check, X, ShoppingBag, ChevronLeft } from 'lucide-
 import { IconButton } from '@/components/ui';
 import type { Item } from '@/types';
 import type { CharacterPower, CharacterTechnique } from '@/types';
-import { parseArchetypePathData } from '@/lib/game/archetype-path';
-import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
+import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
-import { getValidationIssuesForStep } from '@/lib/character-creator-validation';
+import { CreatorResourceBar } from '@/components/character-creator/CreatorResourceBar';
+import { getValidationIssuesForStep, getStepCompletion } from '@/lib/character-creator-validation';
+import { equipmentCurrencyHelp } from '../../../../public/tooltip-text';
 import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies, getTrainingPointLimit } from '@/lib/proficiencies';
 
 // List column definitions and grid (unified with Library/Codex); name column wider for readability
@@ -126,7 +127,15 @@ interface SelectedItem {
 
 export function EquipmentStep() {
   const { tabGroupId, sharedPanelId } = useTabGroup();
-  const { draft, nextStep, prevStep, updateDraft } = useCharacterCreatorStore();
+  const {
+    draft,
+    nextStep,
+    prevStep,
+    updateDraft,
+    getStepLayer,
+    expandLayer,
+    collapseLayer,
+  } = useCharacterCreatorStore();
   const { data: allSpecies = [] } = useMergedSpecies();
   const { data: codexSkills } = useCodexSkills();
   const { data: allTraits } = useTraits();
@@ -138,7 +147,10 @@ export function EquipmentStep() {
     () => getValidationIssuesForStep('equipment', draft, validationContext),
     [draft, validationContext]
   );
-  const canContinue = !stepIssues.some((i) => i.severity === 'error');
+  const completion = useMemo(
+    () => getStepCompletion('equipment', draft, validationContext),
+    [draft, validationContext]
+  );
   // Fetch user's item library (weapons/armor) from API
   const { data: userItems, isLoading: userItemsLoading } = useUserItems();
   // Fetch general equipment from Codex
@@ -152,8 +164,12 @@ export function EquipmentStep() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sourceFilter, setSourceFilter] = useState<SourceFilterValue>('public');
   const [equipmentSort, setEquipmentSort] = useState<SortState>({ col: 'name', dir: 1 });
-  const [showFullEquipmentList, setShowFullEquipmentList] = useState(false);
-  const pathData = useMemo(() => parseArchetypePathData(draft.archetype?.path_data), [draft.archetype?.path_data]);
+  const layer = getStepLayer('equipment');
+  const pathMode = draft.creationMode === 'path';
+  const showFullEquipmentList = !pathMode || layer >= 2;
+  /** Path Layer 1: one decision at a time — weapon, then armor. */
+  const [loadoutPhase, setLoadoutPhase] = useState<'weapon' | 'armor'>('weapon');
+  const pathData = useCreatorPathData();
   const recommendedArmamentRefs = useMemo(
     () => new Set((pathData?.level1?.armaments || []).map((v: string) => String(v).toLowerCase())),
     [pathData?.level1?.armaments]
@@ -423,6 +439,14 @@ export function EquipmentStep() {
     return out;
   }, [allEquipment, pathArmamentRecommendations, pathEquipmentRecommendations, pathData?.level1?.armaments, pathData?.level1?.equipment]);
 
+  const pathRecommendedForPhase = useMemo(() => {
+    if (!pathMode || showFullEquipmentList) return pathRecommendedItems;
+    if (loadoutPhase === 'weapon') {
+      return pathRecommendedItems.filter(({ item }) => item.type === 'weapon');
+    }
+    return pathRecommendedItems.filter(({ item }) => item.type === 'armor');
+  }, [pathRecommendedItems, pathMode, showFullEquipmentList, loadoutPhase]);
+
   // Calculate starting currency - base 200 for level 1
   // For higher levels: 200 * 1.45^(level-1)
   const startingCurrency = useMemo(() => {
@@ -615,6 +639,44 @@ export function EquipmentStep() {
     });
   }, [pathRecommendedItems, draft.equipment, updateDraft]);
 
+  const pathConfirmMode =
+    pathMode && !showFullEquipmentList && pathRecommendedItems.length > 0 && !publicItemsLoading;
+  const pathMergeKey = useMemo(
+    () =>
+      `${draft.archetype?.id ?? ''}:${pathRecommendedItems.map(({ item, quantity }) => `${item.id}:${quantity}`).join('|')}`,
+    [draft.archetype?.id, pathRecommendedItems]
+  );
+  const hasMergedPathEquipmentRef = useRef<string | null>(null);
+
+  // Path Layer 1: pre-validated loadout — auto-add recommended gear once (confirm, not shop).
+  useEffect(() => {
+    if (!pathConfirmMode || !pathMergeKey) return;
+    if (hasMergedPathEquipmentRef.current === pathMergeKey) return;
+    addAllRecommendedEquipment();
+    hasMergedPathEquipmentRef.current = pathMergeKey;
+  }, [pathConfirmMode, pathMergeKey, addAllRecommendedEquipment]);
+
+  const recommendedInInventory = useMemo(() => {
+    const invIds = new Set((draft.equipment?.inventory ?? []).map((i) => String(i.id)));
+    return pathRecommendedItems.filter(({ item }) => invIds.has(String(item.id)));
+  }, [draft.equipment?.inventory, pathRecommendedItems]);
+
+  const canContinue = useMemo(() => {
+    const noErrors = !stepIssues.some((i) => i.severity === 'error');
+    if (!pathMode || layer !== 1 || !pathConfirmMode) return noErrors;
+    const loadoutReady =
+      pathRecommendedItems.length === 0 ||
+      recommendedInInventory.length >= pathRecommendedItems.length;
+    return noErrors && loadoutReady;
+  }, [
+    stepIssues,
+    pathMode,
+    layer,
+    pathConfirmMode,
+    pathRecommendedItems.length,
+    recommendedInInventory.length,
+  ]);
+
   // Save currency and proceed to next step
   const handleContinue = useCallback(() => {
     // Save the remaining currency to the draft
@@ -635,18 +697,19 @@ export function EquipmentStep() {
   if (error) {
     return (
       <div className="max-w-5xl mx-auto text-center py-12">
-        <p className="text-red-600 mb-4">Failed to load equipment data.</p>
+        <p className="text-danger-700 dark:text-danger-400 mb-4">Failed to load equipment data.</p>
         <Button variant="secondary" onClick={prevStep}>← Back</Button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto flex flex-col flex-1 min-h-0">
       <div className="flex items-start justify-between mb-6">
         <div>
           <div className="flex items-center gap-1 mb-2">
             <h2 className="text-2xl font-bold text-text-primary">Choose Equipment</h2>
+            <InfoTippy content={equipmentCurrencyHelp} allowHTML label="Starting equipment budget help" size="inline" />
           </div>
           <p className="text-text-secondary">
             Select your starting weapons, armor, and gear. Use + and - to adjust quantities.
@@ -654,46 +717,99 @@ export function EquipmentStep() {
         </div>
         
         <div className="flex flex-col items-end gap-2">
-          <div className={cn(
-            'px-4 py-2 rounded-xl font-bold text-lg border',
-            remainingCurrency >= 0
-              ? 'bg-tp-light dark:bg-warning-900/30 border-tp-border text-tp-text'
-              : 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-600/50 text-danger-fg'
-          )}>
-            {remainingCurrency} / {startingCurrency}c
-          </div>
-          <div className={cn(
-            'px-3 py-1.5 rounded-full text-sm font-semibold border',
-            proficiencyTpSummary.remaining >= 0
-              ? 'bg-tp-light dark:bg-warning-900/30 border-tp-border text-tp-text'
-              : 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-600/50 text-danger-fg'
-          )}>
-            Proficiency TP: {proficiencyTpSummary.spent} / {proficiencyTpSummary.limit}
-          </div>
+          {pathMode && layer === 1 ? (
+            <CreatorResourceBar
+              layer={layer}
+              creationMode={draft.creationMode}
+              trainingPoints={{
+                spent: proficiencyTpSummary.spent,
+                limit: proficiencyTpSummary.limit,
+              }}
+              currency={{
+                spent: startingCurrency - remainingCurrency,
+                limit: startingCurrency,
+              }}
+              className="mb-0"
+            />
+          ) : (
+            <>
+              <div className={cn(
+                'px-4 py-2 rounded-xl font-bold text-lg border',
+                remainingCurrency >= 0
+                  ? 'bg-tp-light dark:bg-warning-900/30 border-tp-border text-tp-text'
+                  : 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-600/50 text-danger-fg'
+              )}>
+                {remainingCurrency} / {startingCurrency}c
+              </div>
+              <div className={cn(
+                'px-3 py-1.5 rounded-full text-sm font-semibold border',
+                proficiencyTpSummary.remaining >= 0
+                  ? 'bg-tp-light dark:bg-warning-900/30 border-tp-border text-tp-text'
+                  : 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-600/50 text-danger-fg'
+              )}>
+                Proficiency TP: {proficiencyTpSummary.spent} / {proficiencyTpSummary.limit}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
-      {draft.creationMode === 'path' && draft.archetype?.name && (
-        <PathHelpCard pathName={draft.archetype.name}>
-          Add recommended equipment below (weapons, armor, shields, and general gear) with one click, or get your own from the full list.
-        </PathHelpCard>
+      {pathMode && draft.archetype?.name && (
+        <>
+          <PathHelpCard pathName={draft.archetype.name}>
+            {showFullEquipmentList
+              ? 'Browse the full equipment catalog, or return to your path loadout.'
+              : loadoutPhase === 'weapon'
+                ? 'Choose your weapon first — included in your path loadout.'
+                : 'Now choose armor — one decision at a time.'}
+          </PathHelpCard>
+          <PathNotes pathName={draft.archetype.name} notes={pathData?.level1?.notes} />
+        </>
+      )}
+
+      {pathMode && !showFullEquipmentList && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          <Button
+            variant={loadoutPhase === 'weapon' ? 'primary' : 'secondary'}
+            onClick={() => setLoadoutPhase('weapon')}
+            className="min-h-11"
+          >
+            1. Weapon
+          </Button>
+          <Button
+            variant={loadoutPhase === 'armor' ? 'primary' : 'secondary'}
+            onClick={() => setLoadoutPhase('armor')}
+            className="min-h-11"
+          >
+            2. Armor
+          </Button>
+        </div>
       )}
 
       {/* Path mode: recommended equipment = armaments (weapons, armor, shields) + general equipment from path. Show loading while public (official) library loads so recommended items can resolve. */}
-      {draft.creationMode === 'path' && !showFullEquipmentList && (pathRecommendedItems.length > 0 || (pathArmamentRecommendations.length + pathEquipmentRecommendations.length > 0 || (pathData?.level1?.armaments?.length ?? 0) + (pathData?.level1?.equipment?.length ?? 0) > 0)) && (
+      {pathMode && !showFullEquipmentList && (pathRecommendedForPhase.length > 0 || (pathArmamentRecommendations.length + pathEquipmentRecommendations.length > 0 || (pathData?.level1?.armaments?.length ?? 0) + (pathData?.level1?.equipment?.length ?? 0) > 0)) && (
         <div className="mb-6">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
             <div>
-              <h3 className="text-lg font-semibold text-text-primary">Recommended equipment</h3>
+              <h3 className="text-lg font-semibold text-text-primary">
+                {loadoutPhase === 'weapon' ? 'Recommended weapons' : 'Recommended armor'}
+              </h3>
               <p className="text-sm text-text-secondary mt-0.5">
-                {pathRecommendedItems.length > 0
-                  ? 'Weapons, armor, shields, and general equipment from your path. Click an item to add it, or add all at once below.'
-                  : publicItemsLoading
-                    ? 'Loading recommended equipment from the library…'
-                    : 'Recommended items from your path could not be found in the library. Add equipment from the list below.'}
+                {pathConfirmMode
+                  ? 'Included in your path — review your loadout below. Expand to swap gear or browse the full catalog.'
+                  : pathRecommendedForPhase.length > 0
+                    ? 'Included in your path — click to add, or add all at once.'
+                    : publicItemsLoading
+                      ? 'Loading recommended equipment from the library…'
+                      : 'Recommended items could not be found in the library.'}
               </p>
             </div>
-            {pathRecommendedItems.length > 0 && (
+            {pathConfirmMode ? (
+              <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400 text-sm font-medium min-h-11">
+                <Check className="w-4 h-4" aria-hidden />
+                {recommendedInInventory.length} / {pathRecommendedItems.length} confirmed
+              </span>
+            ) : pathRecommendedItems.length > 0 ? (
               <Button
                 onClick={addAllRecommendedEquipment}
                 className="inline-flex items-center gap-2 shrink-0"
@@ -702,17 +818,44 @@ export function EquipmentStep() {
                 <Check className="w-4 h-4" />
                 Add Recommended Equipment
               </Button>
-            )}
+            ) : null}
           </div>
+          {pathConfirmMode && pathRecommendedForPhase.length > 0 && (
+            <ul className="space-y-2 mb-4">
+              {pathRecommendedForPhase.map(({ item, quantity }) => {
+                const inInventory = recommendedInInventory.some((r) => r.item.id === item.id);
+                return (
+                  <li
+                    key={`${item.id}-${quantity}`}
+                    className="flex items-center gap-2 text-sm text-text-primary min-h-11"
+                  >
+                    <span
+                      className={cn(
+                        'inline-flex w-6 h-6 items-center justify-center rounded-full text-xs font-bold',
+                        inInventory
+                          ? 'bg-success-100 dark:bg-success-900/40 text-success-700 dark:text-success-400'
+                          : 'bg-surface-alt text-text-muted'
+                      )}
+                      aria-hidden
+                    >
+                      {inInventory ? '✓' : '·'}
+                    </span>
+                    {item.name}
+                    {quantity > 1 ? ` ×${quantity}` : ''}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
           {publicItemsLoading && pathRecommendedItems.length === 0 && (
             <div className="flex items-center gap-2 py-4 text-text-secondary">
               <Spinner className="w-5 h-5" />
               <span>Loading recommended equipment…</span>
             </div>
           )}
-          {!publicItemsLoading && pathRecommendedItems.length > 0 && (
+          {!publicItemsLoading && pathRecommendedForPhase.length > 0 && !pathConfirmMode && (
             <div className="flex flex-wrap gap-2">
-              {pathRecommendedItems.map(({ item, quantity }) => {
+              {pathRecommendedForPhase.map(({ item, quantity }) => {
                 const cost = item.gold_cost || item.currency || 0;
                 const totalCost = cost * quantity;
                 const canAfford = totalCost <= remainingCurrency;
@@ -805,19 +948,21 @@ export function EquipmentStep() {
         </div>
       )}
 
-      {draft.creationMode === 'path' && !showFullEquipmentList && (
-        <div className="mb-6">
+      {pathMode && !showFullEquipmentList && (
+        <div className="mb-6 flex flex-wrap gap-3">
           <Button
             variant="secondary"
-            onClick={() => setShowFullEquipmentList(true)}
-            className="inline-flex items-center gap-2"
+            onClick={() => expandLayer('equipment')}
+            className="inline-flex items-center gap-2 min-h-11"
           >
             <ShoppingBag className="w-4 h-4" />
-            Get Your Own Equipment
+            See all equipment
           </Button>
-          <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
-            Browse weapons, armor, and gear from the full list.
-          </p>
+          {loadoutPhase === 'weapon' ? (
+            <Button variant="outline" onClick={() => setLoadoutPhase('armor')} className="min-h-11">
+              Next: Choose armor →
+            </Button>
+          ) : null}
         </div>
       )}
 
@@ -876,21 +1021,17 @@ export function EquipmentStep() {
       {/* Full equipment list + tabs — hidden for path mode until "Get Your Own Equipment" is clicked */}
       {(draft.creationMode !== 'path' || showFullEquipmentList) && (
       <>
-      {/* Path mode: switch back to recommended equipment view */}
-      {draft.creationMode === 'path' && showFullEquipmentList && pathRecommendedItems.length > 0 && (
+      {pathMode && showFullEquipmentList && pathRecommendedItems.length > 0 && (
         <div className="mb-4">
           <Button
             variant="secondary"
-            onClick={() => setShowFullEquipmentList(false)}
-            className="inline-flex items-center gap-2"
+            onClick={() => collapseLayer('equipment')}
+            className="inline-flex items-center gap-2 min-h-11"
             aria-label="Back to recommended equipment view"
           >
             <ChevronLeft className="w-4 h-4" />
-            Back to recommended equipment
+            Back to path loadout
           </Button>
-          <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
-            Return to the simplified view with path-recommended weapons, armor, shields, and equipment.
-          </p>
         </div>
       )}
       {/* Type Tabs */}
@@ -915,7 +1056,7 @@ export function EquipmentStep() {
         <div className="border border-border-light rounded-lg mb-8 p-6 bg-surface">
           <div className="flex items-start gap-4 mb-6">
             <div className="p-3 rounded-full bg-warning-light">
-              <Swords className="w-8 h-8 text-amber-600" />
+              <Swords className="w-8 h-8 text-martial-dark" />
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-bold text-text-primary mb-1">Unarmed Prowess</h3>
@@ -1207,7 +1348,20 @@ export function EquipmentStep() {
       </>
       )}
       
-      <CreatorStepFooter onBack={prevStep} onContinue={handleContinue} continueDisabled={!canContinue} />
+      <CreatorStepFooter
+        onBack={prevStep}
+        onContinue={handleContinue}
+        continueDisabled={!canContinue}
+        completionHint={
+          pathConfirmMode ? (
+            <span>
+              Loadout {recommendedInInventory.length} / {pathRecommendedItems.length} confirmed
+            </span>
+          ) : (
+            <span>{completion.label}</span>
+          )
+        }
+      />
     </div>
   );
 }

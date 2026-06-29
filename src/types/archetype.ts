@@ -37,6 +37,18 @@ export interface PathItemRecommendation {
   quantity: number;
 }
 
+/** Build-goal group with one-line "why" copy for Layer 1 guided steps. */
+export interface PathGuidanceGroup {
+  id: string;
+  title: string;
+  why?: string;
+  feats?: string[];
+  powers?: string[];
+  techniques?: string[];
+  armaments?: string[];
+  equipment?: string[];
+}
+
 export interface ArchetypePathRecommendations {
   feats?: string[];
   skills?: string[];
@@ -44,6 +56,10 @@ export interface ArchetypePathRecommendations {
   techniques?: string[];
   armaments?: string[];
   equipment?: string[];
+  /** Layer 1 grouped recommendations with why-copy (feats, powers, equipment steps). */
+  guidance_groups?: PathGuidanceGroup[];
+  /** Optional species IDs/names recommended for this path (species step Layer 1). */
+  recommended_species?: string[];
   /** Parsed armaments with quantity (id or "id:qty" from armaments array) */
   armamentRecommendations?: PathItemRecommendation[];
   /** Parsed equipment with quantity */

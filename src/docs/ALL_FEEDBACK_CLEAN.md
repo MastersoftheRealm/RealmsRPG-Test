@@ -15,8 +15,7 @@ How to use
 ---
 
 ### Tooltips (canonical standard — Collin)
-- **Collin's Tippy approach is law:** static copy in `public/tooltip-text.tsx`, `@tippyjs/react`, `Info` icon triggers. Replaces the legacy DB tooltip system (`ui_tooltips`, `useTooltipByKey`, `ContextHelpTooltip`, `HelpTooltip`).
-- Do **not** extend the DB tooltip stack or add new `ContextHelpTooltip` usage. Full migration is **TASK-376 — Collin Morrison only; AI agents must not implement.**
+- **Tippy is the tooltip standard:** static copy in `public/tooltip-text.tsx`, `InfoTippy` / `@tippyjs/react`. TASK-376 complete (Jun 2026). Do not reintroduce DB tooltips.
 - When merging Collin's branches, prefer his tooltip code over master/AI patterns.
 
 ---

@@ -212,7 +212,7 @@ export {
 
 // ThemeToggle - Dark/Light/System theme switcher
 export { ThemeToggle } from './theme-toggle';
-export { ContextHelpTooltip } from './context-help-tooltip';
+export { InfoTippy } from './info-tippy';
 
 // PoweredMartialSlider - Allocation slider for powered-martial characters
 export { PoweredMartialSlider } from './powered-martial-slider';
@@ -228,3 +228,7 @@ export type { ImageUploadModalProps, CropShape } from './image-upload-modal';
 
 // OnboardingTour - Optional first-time guided tour (Codex → Library → Creator)
 export { OnboardingTour, getTourCompleted, setTourCompleted } from './onboarding-tour';
+
+// GuidedChoiceShell - Unified Layer 1/2/3 chrome for creator steps (three-layer model)
+export { GuidedChoiceShell } from './guided-choice';
+export type { GuidedChoiceShellProps, GuidedChoiceGroup } from './guided-choice';

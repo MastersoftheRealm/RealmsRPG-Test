@@ -7,6 +7,7 @@
 import { NextResponse } from 'next/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
+import { parseArchetypePathData } from '@/lib/game/archetype-path';
 
 function toStrArray(val: unknown): string[] {
   if (!val) return [];
@@ -308,7 +309,13 @@ async function fetchCodexFromClient(supabase: SupabaseClient) {
         .filter((entry) => typeof entry.level === 'number')
         .sort((a, b) => Number(a.level) - Number(b.level));
 
-      const level1FromColumns = {
+      const legacyPath = parseJsonObject(r.path_data);
+      const level1FromLegacy =
+        legacyPath && typeof legacyPath.level1 === 'object' && legacyPath.level1 !== null
+          ? (legacyPath.level1 as Record<string, unknown>)
+          : undefined;
+
+      const level1Raw: Record<string, unknown> = {
         feats: toStrArray(r.level1_feats),
         skills: toStrArray(r.level1_skills),
         powers: toStrArray(r.level1_powers),
@@ -321,17 +328,34 @@ async function fetchCodexFromClient(supabase: SupabaseClient) {
         removeTechniques: toStrArray(r.level1_remove_techniques),
         removeArmaments: toStrArray(r.level1_remove_armaments),
         notes: r.level1_notes ? String(r.level1_notes) : undefined,
+        recommended_species: toStrArray(
+          r.level1_recommended_species ?? level1FromLegacy?.recommended_species
+        ),
+        guidance_groups: r.level1_guidance_groups ?? level1FromLegacy?.guidance_groups,
       };
-      const hasLevel1Columns = Object.values(level1FromColumns).some((value) => {
+      const level1FromColumns = parseArchetypePathData({ level1: level1Raw })?.level1 ?? {
+        feats: level1Raw.feats as string[],
+        skills: level1Raw.skills as string[],
+        powers: level1Raw.powers as string[],
+        techniques: level1Raw.techniques as string[],
+        armaments: level1Raw.armaments as string[],
+        equipment: level1Raw.equipment as string[],
+        recommendUnarmedProwess: level1Raw.recommendUnarmedProwess as boolean,
+        removeFeats: level1Raw.removeFeats as string[],
+        removePowers: level1Raw.removePowers as string[],
+        removeTechniques: level1Raw.removeTechniques as string[],
+        removeArmaments: level1Raw.removeArmaments as string[],
+        notes: level1Raw.notes as string | undefined,
+        recommended_species: level1Raw.recommended_species as string[],
+        guidance_groups: parseArchetypePathData({ level1: { guidance_groups: level1Raw.guidance_groups } })
+          ?.level1?.guidance_groups,
+      };
+      const hasLevel1Columns = Object.entries(level1FromColumns).some(([key, value]) => {
+        if (key === 'recommendUnarmedProwess') return value === true;
+        if (key === 'armamentRecommendations' || key === 'equipmentRecommendations') return false;
         if (Array.isArray(value)) return value.length > 0;
         return Boolean(value);
       });
-
-      const legacyPath = parseJsonObject(r.path_data);
-      const level1FromLegacy =
-        legacyPath && typeof legacyPath.level1 === 'object' && legacyPath.level1 !== null
-          ? (legacyPath.level1 as Record<string, unknown>)
-          : undefined;
 
       return {
         id: r.id,
@@ -362,6 +386,10 @@ async function fetchCodexFromClient(supabase: SupabaseClient) {
         level1_remove_techniques: toStrArray(r.level1_remove_techniques),
         level1_remove_armaments: toStrArray(r.level1_remove_armaments),
         level1_notes: r.level1_notes ?? level1FromLegacy?.notes ?? '',
+        level1_recommended_species: toStrArray(
+          r.level1_recommended_species ?? level1FromLegacy?.recommended_species
+        ),
+        level1_guidance_groups: level1FromColumns.guidance_groups ?? null,
       };
     });
 

@@ -33,7 +33,8 @@ import {
   Alert,
   useToast,
 } from '@/components/ui';
-import { ContextHelpTooltip } from '@/components/shared';
+import { InfoTippy } from '@/components/shared';
+import { campaignsHelp } from '../../../../public/tooltip-text';
 import { cn } from '@/lib/utils';
 import { getEffectivePortrait } from '@/lib/portrait';
 import { useCampaigns, useCharacters, useInvalidateCampaigns, useAuth } from '@/hooks';
@@ -108,12 +109,7 @@ function CampaignsContent() {
         title="Campaigns"
         description="Create campaigns, invite players, and manage your Realm Master sessions."
         actions={
-          <ContextHelpTooltip
-            tooltipKey="campaigns.page.help"
-            scope="page:/campaigns"
-            label="Campaign workflow help"
-            placement="left"
-          />
+          <InfoTippy content={campaignsHelp} label="Campaign workflow help" placement="left" />
         }
       />
 

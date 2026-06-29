@@ -15,7 +15,7 @@
 import { useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Chip, Button, Alert, Card } from '@/components/ui';
-import { SelectionToggle, ChoiceTraitOptionListPicker } from '@/components/shared';
+import { SelectionToggle, ChoiceTraitOptionListPicker, InfoTippy } from '@/components/shared';
 import {
   getChoiceOptionIds,
   resolveChoiceOptionTraits,
@@ -23,11 +23,12 @@ import {
 } from '@/lib/choice-trait';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
-import { useMergedSpecies, useTraits, useCodexSkills, resolveTraitIds, resolveSkillIdsToNames, type Trait, type Species } from '@/hooks';
-import { Heart, AlertTriangle, Sparkles, Star, Info } from 'lucide-react';
-import Tippy from '@tippyjs/react';
+import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
+import { useMergedSpecies, useTraits, useCodexSkills, useCreatorPathData, resolveTraitIds, resolveSkillIdsToNames, type Trait, type Species } from '@/hooks';
+import { Heart, AlertTriangle, Sparkles, Star } from 'lucide-react';
 import { chooseYourAncestryTraits } from '../../../../public/tooltip-text';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
+import { getValidationIssuesForStep, getStepCompletion } from '@/lib/character-creator-validation';
 
 interface ResolvedTrait extends Trait {
   found: boolean;
@@ -42,6 +43,7 @@ export function AncestryStep() {
   const { data: allSpecies = [] } = useMergedSpecies();
   const { data: allTraits } = useTraits();
   const { data: allSkills } = useCodexSkills();
+  const pathData = useCreatorPathData();
 
   const isMixed = draft.ancestry?.mixed === true;
 
@@ -431,15 +433,61 @@ export function AncestryStep() {
 
   const canContinue = isMixed && speciesA && speciesB ? canContinueMixed : canContinueSingle;
 
+  // Guided "what's left to choose" checklist (REALMS_PRODUCT_OVERVIEW.md §5.3:
+  // the user never hunts for a missing pick). Reuses step validation so the
+  // checklist and the Continue gate never disagree.
+  const ancestryValidationContext = {
+    allSpecies,
+    codexSkills: allSkills ?? null,
+    allTraits: allTraits ?? null,
+  };
+  const ancestryIssues = getValidationIssuesForStep('ancestry', draft, ancestryValidationContext);
+  const ancestryCompletion = getStepCompletion('ancestry', draft, ancestryValidationContext);
+  const ancestryPathNotes =
+    draft.creationMode === 'path' ? pathData?.level1?.notes : undefined;
+
+  const guidedChecklist = (
+    <>
+      {draft.creationMode === 'path' && draft.archetype?.name && (
+        <>
+          <PathHelpCard pathName={draft.archetype.name}>
+            Complete each ancestry choice below — the checklist updates as you go.
+          </PathHelpCard>
+          <PathNotes pathName={draft.archetype.name} notes={ancestryPathNotes} />
+        </>
+      )}
+      <div
+        className={cn(
+          'mb-6 rounded-xl border-2 p-4',
+          ancestryIssues.length === 0 ? statusPanel.complete : statusPanel.info
+        )}
+        role="region"
+        aria-label="Ancestry choices remaining"
+      >
+        <h3 className="font-semibold text-text-primary mb-2">What to choose</h3>
+        {ancestryIssues.length === 0 ? (
+          <p className="text-sm text-success-fg">✓ Your ancestry is complete — nothing left to pick.</p>
+        ) : (
+          <ul className="space-y-1.5">
+            {ancestryIssues.map((issue, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm text-text-secondary">
+                <span aria-hidden className="shrink-0">{issue.emoji}</span>
+                <span>{issue.message}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </>
+  );
+
   // No species selected at all
   if (!draft.ancestry?.id) {
     return (
       <div className="max-w-2xl mx-auto text-center">
         <div className="flex items-center justify-center gap-1 mb-2">
           <h2 className="text-2xl font-bold text-text-primary">Choose Your Ancestry Traits</h2>
-          <Tippy content={chooseYourAncestryTraits} allowHTML={true}>
-            <Info className="w-4 h-4 text-primary-subtle-fg" aria-hidden />
-          </Tippy>
+          <InfoTippy content={chooseYourAncestryTraits} allowHTML label="Ancestry trait rules" size="inline" />
         </div>
         <p className="text-text-secondary mb-6">
           Customize your character with ancestry traits and an optional flaw.
@@ -449,10 +497,7 @@ export function AncestryStep() {
             <p className="mb-4">
               <strong>No species selected!</strong> Please choose a species first.
             </p>
-            <Button
-              onClick={() => setStep('species')}
-              className="bg-amber-600 text-white hover:bg-amber-700"
-            >
+            <Button onClick={() => setStep('species')} className="min-h-11">
               Go to Species Selection
             </Button>
           </div>
@@ -479,14 +524,12 @@ export function AncestryStep() {
     const selectedSize = draft.ancestry?.selectedSize || '';
 
     return (
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto flex flex-col flex-1 min-h-0">
         <div className="flex items-start justify-between mb-4">
           <div>
             <div className="flex items-center gap-1 mb-2">
               <h2 className="text-2xl font-bold text-text-primary">Mixed Species: Ancestry</h2>
-              <Tippy content={chooseYourAncestryTraits} allowHTML={true}>
-                <Info className="w-4 h-4 text-primary-subtle-fg" aria-hidden />
-              </Tippy>
+              <InfoTippy content={chooseYourAncestryTraits} allowHTML label="Ancestry trait rules" size="inline" />
             </div>
             <p className="text-text-secondary">
               <strong>{nameA}</strong> + <strong>{nameB}</strong>. Set physical traits and choose one species trait from each, then ancestry and optional flaw.
@@ -499,6 +542,8 @@ export function AncestryStep() {
             Change Species
           </button>
         </div>
+
+        {guidedChecklist}
 
         {/* Physical: averaged + size */}
         <Card className="bg-surface-alt p-4 mb-6 shadow-none">
@@ -601,7 +646,7 @@ export function AncestryStep() {
           <TraitSection
             title="Ancestry trait"
             subtitle={selectedFlaw ? '1 from either species; 2nd below from the species you took the flaw from' : 'Choose 1 from either species'}
-            icon={<Star className="w-5 h-5 text-amber-600" />}
+            icon={<Star className="w-5 h-5 text-warning-700 dark:text-warning-400" />}
             traits={ancestryForFirstSlot}
             selectable
             selectedIds={draft.ancestry?.selectedTraits?.[0] ? [draft.ancestry.selectedTraits[0]] : []}
@@ -629,14 +674,14 @@ export function AncestryStep() {
         {(flawsFromA.length > 0 || flawsFromB.length > 0) && (
           <div className="mb-6">
             <h3 className="font-semibold text-text-primary mb-2 flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
+              <AlertTriangle className="w-5 h-5 text-danger-700 dark:text-danger-400" />
               Flaw (optional, grants +1 ancestry trait from the same species)
             </h3>
             {flawsFromA.length > 0 && (
               <TraitSection
                 title={`Flaws from ${nameA}`}
                 subtitle="Choose up to 1"
-                icon={<AlertTriangle className="w-5 h-5 text-red-600" />}
+                icon={<AlertTriangle className="w-5 h-5 text-danger-700 dark:text-danger-400" />}
                 traits={flawsFromA}
                 selectable
                 selectedIds={selectedFlaw && selectedFlawSpeciesId === speciesA.id ? [selectedFlaw] : []}
@@ -649,7 +694,7 @@ export function AncestryStep() {
               <TraitSection
                 title={`Flaws from ${nameB}`}
                 subtitle="Choose up to 1"
-                icon={<AlertTriangle className="w-5 h-5 text-red-600" />}
+                icon={<AlertTriangle className="w-5 h-5 text-danger-700 dark:text-danger-400" />}
                 traits={flawsFromB}
                 selectable
                 selectedIds={selectedFlaw && selectedFlawSpeciesId === speciesB.id ? [selectedFlaw] : []}
@@ -666,7 +711,7 @@ export function AncestryStep() {
           <TraitSection
             title={`Extra ancestry trait (from ${selectedFlawSpeciesId === speciesA.id ? nameA : nameB} only)`}
             subtitle="Choose 1"
-            icon={<Star className="w-5 h-5 text-amber-600" />}
+            icon={<Star className="w-5 h-5 text-warning-700 dark:text-warning-400" />}
             traits={ancestryForSecondSlot}
             selectable
             selectedIds={draft.ancestry?.selectedTraits?.[1] ? [draft.ancestry.selectedTraits[1]] : []}
@@ -676,7 +721,7 @@ export function AncestryStep() {
           />
         )}
 
-        <CreatorStepFooter onBack={prevStep} onContinue={nextStep} continueDisabled={!canContinue} />
+        <CreatorStepFooter onBack={prevStep} onContinue={nextStep} continueDisabled={!canContinue} completionHint={<span>{ancestryCompletion.label}</span>} />
       </div>
     );
   }
@@ -703,14 +748,12 @@ export function AncestryStep() {
     : selectedSpecies.size || 'Medium';
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto flex flex-col flex-1 min-h-0">
       <div className="flex items-start justify-between mb-4">
         <div>
           <div className="flex items-center gap-1 mb-2">
             <h2 className="text-2xl font-bold text-text-primary">Choose Your Ancestry Traits</h2>
-            <Tippy content={chooseYourAncestryTraits} allowHTML={true}>
-              <Info className="w-4 h-4 text-primary-subtle-fg" aria-hidden />
-            </Tippy>
+            <InfoTippy content={chooseYourAncestryTraits} allowHTML label="Ancestry trait rules" size="inline" />
           </div>
           <p className="text-text-secondary">
             As a <strong>{selectedSpecies.name}</strong>, customize your heritage with traits and abilities.
@@ -796,6 +839,8 @@ export function AncestryStep() {
           )}
         </div>
       </Card>
+
+      {guidedChecklist}
 
       {/* Selection Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -883,7 +928,7 @@ export function AncestryStep() {
         <TraitSection
           title="Ancestry Traits"
           subtitle={`Select ${maxAncestryTraits} trait${maxAncestryTraits > 1 ? 's' : ''}`}
-          icon={<Star className="w-5 h-5 text-amber-600" />}
+          icon={<Star className="w-5 h-5 text-warning-700 dark:text-warning-400" />}
           traits={ancestryTraits}
           selectable
           selectedIds={selectedTraitIds}
@@ -913,7 +958,7 @@ export function AncestryStep() {
         <TraitSection
           title="Flaws"
           subtitle="Select 1 flaw to gain an extra ancestry trait (optional)"
-          icon={<AlertTriangle className="w-5 h-5 text-red-600" />}
+          icon={<AlertTriangle className="w-5 h-5 text-danger-700 dark:text-danger-400" />}
           traits={flaws}
           selectable
           selectedIds={selectedFlaw ? [selectedFlaw] : []}
@@ -933,7 +978,7 @@ export function AncestryStep() {
         </div>
       )}
 
-      <CreatorStepFooter onBack={prevStep} onContinue={nextStep} continueDisabled={!canContinue} />
+      <CreatorStepFooter onBack={prevStep} onContinue={nextStep} continueDisabled={!canContinue} completionHint={<span>{ancestryCompletion.label}</span>} />
     </div>
   );
 }

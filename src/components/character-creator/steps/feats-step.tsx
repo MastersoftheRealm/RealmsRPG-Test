@@ -19,18 +19,19 @@ import {
   GridListRow, 
   SearchInput, 
   ListHeader,
-  ContextHelpTooltip,
   SegmentedControl,
+  GuidedChoiceShell,
+  InfoTippy,
 } from '@/components/shared';
 import { 
   FilterSection, 
   ChipSelect,
 } from '@/components/codex';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
+import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
-import { useCodexFeats, useCodexSkills, useMergedSpecies, useTraits, type Feat, type Skill } from '@/hooks';
-import { getValidationIssuesForStep } from '@/lib/character-creator-validation';
+import { useCodexFeats, useCodexSkills, useMergedSpecies, useTraits, useCreatorPathData, type Feat, type Skill } from '@/hooks';
+import { getValidationIssuesForStep, getStepCompletion } from '@/lib/character-creator-validation';
 import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats } from '@/lib/game/formulas';
 import { checkFeatRequirements, type CharacterForFeatRequirement } from '@/lib/game/feat-requirements';
 import type { CodexSkillForFeat } from '@/lib/game/formulas';
@@ -38,7 +39,7 @@ import { formatAbilityList, formatListCellLabel } from '@/lib/utils';
 import { getFeatFamilyId, getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
 import { buildFeatDetailSections } from '@/lib/codex/feat-list';
 import type { ArchetypeCategory } from '@/types';
-import { parseArchetypePathData } from '@/lib/game/archetype-path';
+import { featSelectionHelp } from '../../../../public/tooltip-text';
 
 // Grid columns for feat display (Name, Category, Ability, Recovery, Uses, Add) — match Codex
 const FEAT_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 0.8fr 44px';
@@ -70,7 +71,15 @@ interface FeatFilters {
 }
 
 export function FeatsStep() {
-  const { draft, nextStep, prevStep, updateDraft } = useCharacterCreatorStore();
+  const {
+    draft,
+    nextStep,
+    prevStep,
+    updateDraft,
+    getStepLayer,
+    expandLayer,
+    collapseLayer,
+  } = useCharacterCreatorStore();
   const { data: feats, isLoading } = useCodexFeats();
   const { data: skillsDb = [] } = useCodexSkills();
   const { data: allSpecies = [] } = useMergedSpecies();
@@ -85,10 +94,16 @@ export function FeatsStep() {
     () => getValidationIssuesForStep('feats', draft, validationContext),
     [draft, validationContext]
   );
-  const canContinue = stepIssues.length === 0;
+  const completion = useMemo(
+    () => getStepCompletion('feats', draft, validationContext),
+    [draft, validationContext]
+  );
+  const layer = getStepLayer('feats');
+  const pathMode = draft.creationMode === 'path';
+  const usePathRecommendations = pathMode && layer === 1;
+  const canContinue = pathMode && layer === 1 ? completion.done : stepIssues.length === 0;
   
   const [expandedSelectedId, setExpandedSelectedId] = useState<string | null>(null);
-  const [usePathRecommendations, setUsePathRecommendations] = useState(draft.creationMode === 'path');
   const [filters, setFilters] = useState<FeatFilters>({
     search: '',
     categories: [],
@@ -116,7 +131,7 @@ export function FeatsStep() {
 
   // Get feat limits based on archetype type and level
   const archetypeType = (draft.archetype?.type || 'power') as ArchetypeCategory;
-  const pathData = useMemo(() => parseArchetypePathData(draft.archetype?.path_data), [draft.archetype?.path_data]);
+  const pathData = useCreatorPathData();
   const recommendedFeatRefs = useMemo(() => new Set((pathData?.level1?.feats || []).map((v: string) => String(v).toLowerCase())), [pathData?.level1?.feats]);
   const level = draft.level || 1;
   const maxArchetypeFeats = calculateMaxArchetypeFeats(level, archetypeType);
@@ -302,6 +317,23 @@ export function FeatsStep() {
       })
       .filter((entry): entry is { displayFeat: Feat; familyLevels: Feat[] } => entry !== null);
   }, [feats, recommendedFeatRefs]);
+
+  /** Layer 1 build-goal groups from path_data.level1.guidance_groups (fallback: single recommended list). */
+  const featGuidanceGroups = useMemo(() => {
+    const groups = pathData?.level1?.guidance_groups?.filter((g) => g.feats?.length) ?? [];
+    if (groups.length === 0) return null;
+    return groups.map((group) => ({
+      group,
+      archetypeEntries: pathModeArchetypeFeats.filter(({ displayFeat }) => {
+        const id = String(displayFeat.id).toLowerCase();
+        const name = String(displayFeat.name).toLowerCase();
+        return group.feats!.some((ref) => {
+          const r = ref.toLowerCase();
+          return r === id || r === name;
+        });
+      }),
+    }));
+  }, [pathData?.level1?.guidance_groups, pathModeArchetypeFeats]);
 
   const applyRecommendedPathFeats = useCallback(() => {
     if (!feats || recommendedFeatRefs.size === 0) return;
@@ -494,6 +526,190 @@ export function FeatsStep() {
     );
   }, [selectedArchetypeFeats, selectedCharacterFeats, maxArchetypeFeats, maxCharacterFeats, checkRequirements, toggleFeat, featById, skillIdToName]);
 
+  const pathGuidance =
+    pathMode && draft.archetype?.name ? (
+      <>
+        <PathHelpCard pathName={draft.archetype.name}>
+          the recommended feats are shown below — expand to choose your own from the full catalog.
+        </PathHelpCard>
+        <PathNotes pathName={draft.archetype.name} notes={pathData?.level1?.notes} />
+      </>
+    ) : null;
+
+  const featTypeToggle = (
+    <div className="flex items-center gap-2 mb-4">
+      <SegmentedControl
+        value={filters.featType}
+        onChange={(next) => setFilters((f) => ({ ...f, featType: next as 'archetype' | 'character' }))}
+        options={[
+          { value: 'archetype', label: 'Archetype Feats' },
+          { value: 'character', label: 'Character Feats' },
+        ]}
+        aria-label="Feat list type"
+        className="flex-1 min-w-0 sm:flex-initial"
+      />
+    </div>
+  );
+
+  const pathLayerOneLists = (
+    <div className="space-y-8">
+      {featGuidanceGroups ? (
+        featGuidanceGroups.map(({ group, archetypeEntries }) => (
+          <section key={group.id}>
+            <h3 className="text-lg font-semibold text-text-primary mb-1">{group.title}</h3>
+            {group.why && <p className="text-sm text-text-secondary mb-3">{group.why}</p>}
+            <ListHeader
+              columns={FEAT_HEADER_COLUMNS}
+              gridColumns={FEAT_GRID_COLUMNS}
+              sortState={{ col: filters.sortCol, dir: filters.sortDir }}
+              onSort={handleSort}
+            />
+            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 mt-2">
+              {archetypeEntries.map(({ displayFeat, familyLevels }) =>
+                renderFeatRow(displayFeat, familyLevels, false)
+              )}
+              {archetypeEntries.length === 0 && (
+                <EmptyState title="No feats in this group resolved from codex." size="sm" className="bg-surface-alt rounded-lg py-4" />
+              )}
+            </div>
+          </section>
+        ))
+      ) : (
+        <section>
+          <h3 className="text-lg font-semibold text-text-primary mb-2">
+            {draft.archetype?.name ?? 'Path'} Archetype Feats
+          </h3>
+          <p className="text-sm text-text-secondary mb-3">
+            Choose from the recommended archetype feats for this path.
+          </p>
+          <ListHeader
+            columns={FEAT_HEADER_COLUMNS}
+            gridColumns={FEAT_GRID_COLUMNS}
+            sortState={{ col: filters.sortCol, dir: filters.sortDir }}
+            onSort={handleSort}
+          />
+          <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 mt-2">
+            {pathModeArchetypeFeats.map(({ displayFeat, familyLevels }) =>
+              renderFeatRow(displayFeat, familyLevels, false)
+            )}
+            {pathModeArchetypeFeats.length === 0 && (
+              <EmptyState
+                title="No recommended archetype feats for this path in codex."
+                size="sm"
+                className="bg-surface-alt rounded-lg py-4"
+              />
+            )}
+          </div>
+        </section>
+      )}
+      <section>
+        <h3 className="text-lg font-semibold text-text-primary mb-2">
+          {draft.archetype?.name ?? 'Path'} Character Feats
+        </h3>
+        <p className="text-sm text-text-secondary mb-3">
+          Choose from the recommended character feats for this path.
+        </p>
+        <ListHeader
+          columns={FEAT_HEADER_COLUMNS}
+          gridColumns={FEAT_GRID_COLUMNS}
+          sortState={{ col: filters.sortCol, dir: filters.sortDir }}
+          onSort={handleSort}
+        />
+        <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 mt-2">
+          {pathModeCharacterFeats.map(({ displayFeat, familyLevels }) =>
+            renderFeatRow(displayFeat, familyLevels, true)
+          )}
+          {pathModeCharacterFeats.length === 0 && (
+            <EmptyState
+              title="No recommended character feats for this path in codex."
+              size="sm"
+              className="bg-surface-alt rounded-lg py-4"
+            />
+          )}
+        </div>
+      </section>
+    </div>
+  );
+
+  const fullFeatCatalog = (
+    <>
+      {featTypeToggle}
+      <div className="mb-4">
+        <SearchInput
+          value={filters.search}
+          onChange={(v) => setFilters((f) => ({ ...f, search: v }))}
+          placeholder="Search feats by name, description, or tags..."
+        />
+      </div>
+      <FilterSection>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <ChipSelect
+            label="Category"
+            placeholder="All categories"
+            options={categories.map((c) => ({ value: c, label: c }))}
+            selectedValues={filters.categories}
+            onSelect={(v) => setFilters((f) => ({ ...f, categories: [...f.categories, v] }))}
+            onRemove={(v) => setFilters((f) => ({ ...f, categories: f.categories.filter((c) => c !== v) }))}
+          />
+          <ChipSelect
+            label="Ability"
+            placeholder="All abilities"
+            options={abilityOptions.map((a) => ({ value: a, label: a }))}
+            selectedValues={filters.abilityFilter}
+            onSelect={(v) => setFilters((f) => ({ ...f, abilityFilter: [...f.abilityFilter, v] }))}
+            onRemove={(v) => setFilters((f) => ({ ...f, abilityFilter: f.abilityFilter.filter((a) => a !== v) }))}
+          />
+          <div className="filter-group">
+            <label className="block text-sm font-medium text-text-secondary mb-1">Qualification</label>
+            <button
+              type="button"
+              onClick={() => setFilters((f) => ({ ...f, hideUnqualified: !f.hideUnqualified }))}
+              className={cn(
+                'w-full px-3 py-2 rounded-lg border text-sm font-medium transition-colors text-left min-h-11',
+                filters.hideUnqualified
+                  ? cn(statusPanel.complete, 'text-success-fg')
+                  : 'bg-surface border-border-light text-text-secondary hover:bg-surface-alt'
+              )}
+            >
+              {filters.hideUnqualified ? '✓ Hiding unqualified' : 'Showing all feats'}
+            </button>
+            <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
+              {filters.hideUnqualified ? 'Only feats you qualify for' : 'Including unqualified'}
+            </p>
+          </div>
+        </div>
+      </FilterSection>
+      <ListHeader
+        columns={FEAT_HEADER_COLUMNS}
+        gridColumns={FEAT_GRID_COLUMNS}
+        sortState={{ col: filters.sortCol, dir: filters.sortDir }}
+        onSort={handleSort}
+      />
+      <div className="mb-8 mt-4">
+        <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
+          {groupedDisplayFeats.map(({ displayFeat, familyLevels }) =>
+            renderFeatRow(displayFeat, familyLevels, !!displayFeat.char_feat)
+          )}
+          {groupedDisplayFeats.length === 0 && (
+            <EmptyState
+              title="No feats match your filters."
+              size="sm"
+              className="bg-surface-alt rounded-lg py-4"
+              secondaryAction={
+                filters.hideUnqualified
+                  ? {
+                      label: 'Show unqualified feats',
+                      onClick: () => setFilters((f) => ({ ...f, hideUnqualified: false })),
+                    }
+                  : undefined
+              }
+            />
+          )}
+        </div>
+      </div>
+    </>
+  );
+
   if (isLoading) {
     return (
       <div className="max-w-5xl mx-auto flex items-center justify-center py-12">
@@ -503,24 +719,21 @@ export function FeatsStep() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <div className="flex items-center gap-1 mb-2">
-            <h2 className="text-2xl font-bold text-text-primary">Select Feats</h2>
+    <div className="max-w-5xl mx-auto flex flex-col flex-1 min-h-0">
+      {!pathMode && (
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <div className="flex items-center gap-1 mb-2">
+              <h2 className="text-2xl font-bold text-text-primary">Select Feats</h2>
+              <InfoTippy content={featSelectionHelp} allowHTML label="Feat selection help" size="inline" />
+            </div>
+            <p className="text-text-secondary">
+              Choose feats that grant special abilities and bonuses. Your archetype 
+              ({archetypeType}) allows {maxArchetypeFeats} archetype feat{maxArchetypeFeats !== 1 ? 's' : ''} 
+              {' '}and {maxCharacterFeats} character feat.
+            </p>
           </div>
-          <p className="text-text-secondary">
-            Choose feats that grant special abilities and bonuses. Your archetype 
-            ({archetypeType}) allows {maxArchetypeFeats} archetype feat{maxArchetypeFeats !== 1 ? 's' : ''} 
-            {' '}and {maxCharacterFeats} character feat.
-          </p>
         </div>
-      </div>
-
-      {draft.creationMode === 'path' && draft.archetype?.name && (
-        <PathHelpCard pathName={draft.archetype.name}>
-          the recommended feats are shown below. You can switch to choose your own if you prefer.
-        </PathHelpCard>
       )}
 
       {/* Selected Feats Summary */}
@@ -565,6 +778,7 @@ export function FeatsStep() {
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); updateDraft({ feats: draft.feats?.filter(f => f.id !== feat.id) }); }}
+                        aria-label={`Remove ${displayName}`}
                         className="text-danger-fg hover:opacity-80 font-bold flex-shrink-0 min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)]"
                       >
                         ×
@@ -622,6 +836,7 @@ export function FeatsStep() {
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); updateDraft({ feats: draft.feats?.filter(f => f.id !== feat.id) }); }}
+                        aria-label={`Remove ${displayName}`}
                         className="text-danger-fg hover:opacity-80 font-bold flex-shrink-0 min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)]"
                       >
                         ×
@@ -640,197 +855,47 @@ export function FeatsStep() {
         </div>
       </div>
 
-      {/* Toggle row: path toggle (left), archetype/character toggle (right, only when showing all feats) */}
-      <div className="flex flex-wrap items-center gap-3 gap-y-1 mb-4">
-        {draft.creationMode === 'path' && (
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setUsePathRecommendations((value) => !value)}
-              className={cn(
-                'px-4 py-2 rounded-lg border text-sm font-semibold transition-colors min-h-[44px]',
-                usePathRecommendations
-                  ? 'bg-success-50 dark:bg-success-900/30 border-success-300 dark:border-success-600/50 text-success-fg'
-                  : 'bg-surface border-border-light text-text-secondary hover:bg-surface-alt'
-              )}
-            >
-              {usePathRecommendations
-                ? `Showing ${draft.archetype?.name ?? 'Path'} Feats`
-                : 'Choose My Own Feats'}
-            </button>
-            {recommendedFeatRefs.size > 0 && (
+      {pathMode ? (
+        <GuidedChoiceShell
+          layer={layer}
+          title="Select Feats"
+          titleAddon={
+            <InfoTippy content={featSelectionHelp} allowHTML label="Feat selection help" size="inline" />
+          }
+          description={`Choose feats that grant special abilities and bonuses. Your archetype (${archetypeType}) allows ${maxArchetypeFeats} archetype feat${maxArchetypeFeats !== 1 ? 's' : ''} and ${maxCharacterFeats} character feat.`}
+          guidance={pathGuidance}
+          completionState={completion}
+          onExpandLayer={() => expandLayer('feats')}
+          onCollapseLayer={() => collapseLayer('feats')}
+          expandLabel="See all feats"
+          canExpand={layer === 1}
+          primaryAction={
+            recommendedFeatRefs.size > 0 && layer === 1 ? (
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={applyRecommendedPathFeats}
-                className="min-h-[44px]"
+                className="min-h-11"
                 aria-label="Apply recommended path feats"
               >
                 Apply recommended feats
               </Button>
-            )}
-            <span className="text-xs text-text-muted dark:text-text-secondary">
-              {usePathRecommendations ? 'Click to show all feats' : 'Click to show path feats'}
-            </span>
-          </div>
-        )}
-        {(draft.creationMode !== 'path' || !usePathRecommendations) && (
-          <div className="flex items-center gap-2">
-            <SegmentedControl
-              value={filters.featType}
-              onChange={(next) => setFilters((f) => ({ ...f, featType: next as 'archetype' | 'character' }))}
-              options={[
-                { value: 'archetype', label: 'Archetype Feats' },
-                { value: 'character', label: 'Character Feats' },
-              ]}
-              aria-label="Feat list type"
-              className="flex-1 min-w-0 sm:flex-initial"
-            />
-          </div>
-        )}
-      </div>
-
-      {usePathRecommendations && draft.creationMode === 'path' ? (
-        /* Path mode: path-recommended archetype feats and path-recommended character feats only */
-        <div className="space-y-8 mb-8">
-          <section>
-            <h3 className="text-lg font-semibold text-text-primary mb-2">
-              {draft.archetype?.name ?? 'Path'} Archetype Feats
-            </h3>
-            <p className="text-sm text-text-secondary mb-3">
-              Choose from the recommended archetype feats for this path.
-            </p>
-            <ListHeader
-              columns={FEAT_HEADER_COLUMNS}
-              gridColumns={FEAT_GRID_COLUMNS}
-              sortState={{ col: filters.sortCol, dir: filters.sortDir }}
-              onSort={handleSort}
-            />
-            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 mt-2">
-              {pathModeArchetypeFeats.map(({ displayFeat, familyLevels }) =>
-                renderFeatRow(displayFeat, familyLevels, false)
-              )}
-              {pathModeArchetypeFeats.length === 0 && (
-                <EmptyState
-                  title="No recommended archetype feats for this path in codex."
-                  size="sm"
-                  className="bg-surface-alt rounded-lg py-4"
-                />
-              )}
-            </div>
-          </section>
-          <section>
-            <h3 className="text-lg font-semibold text-text-primary mb-2">
-              {draft.archetype?.name ?? 'Path'} Character Feats
-            </h3>
-            <p className="text-sm text-text-secondary mb-3">
-              Choose from the recommended character feats for this path.
-            </p>
-            <ListHeader
-              columns={FEAT_HEADER_COLUMNS}
-              gridColumns={FEAT_GRID_COLUMNS}
-              sortState={{ col: filters.sortCol, dir: filters.sortDir }}
-              onSort={handleSort}
-            />
-            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 mt-2">
-              {pathModeCharacterFeats.map(({ displayFeat, familyLevels }) =>
-                renderFeatRow(displayFeat, familyLevels, true)
-              )}
-              {pathModeCharacterFeats.length === 0 && (
-                <EmptyState
-                  title="No recommended character feats for this path in codex."
-                  size="sm"
-                  className="bg-surface-alt rounded-lg py-4"
-                />
-              )}
-            </div>
-          </section>
-        </div>
+            ) : undefined
+          }
+        >
+          {layer === 1 ? pathLayerOneLists : fullFeatCatalog}
+        </GuidedChoiceShell>
       ) : (
-        <>
-          {/* Search Bar */}
-          <div className="mb-4">
-            <SearchInput
-              value={filters.search}
-              onChange={(v) => setFilters(f => ({ ...f, search: v }))}
-              placeholder="Search feats by name, description, or tags..."
-            />
-          </div>
-
-          {/* Filters Panel - Codex Style */}
-          <FilterSection>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <ChipSelect
-                label="Category"
-                placeholder="All categories"
-                options={categories.map(c => ({ value: c, label: c }))}
-                selectedValues={filters.categories}
-                onSelect={(v) => setFilters(f => ({ ...f, categories: [...f.categories, v] }))}
-                onRemove={(v) => setFilters(f => ({ ...f, categories: f.categories.filter(c => c !== v) }))}
-              />
-              <ChipSelect
-                label="Ability"
-                placeholder="All abilities"
-                options={abilityOptions.map(a => ({ value: a, label: a }))}
-                selectedValues={filters.abilityFilter}
-                onSelect={(v) => setFilters(f => ({ ...f, abilityFilter: [...f.abilityFilter, v] }))}
-                onRemove={(v) => setFilters(f => ({ ...f, abilityFilter: f.abilityFilter.filter(a => a !== v) }))}
-              />
-              <div className="filter-group">
-                <label className="block text-sm font-medium text-text-secondary mb-1">Qualification</label>
-                <button
-                  type="button"
-                  onClick={() => setFilters(f => ({ ...f, hideUnqualified: !f.hideUnqualified }))}
-                  className={cn(
-                    'w-full px-3 py-2 rounded-lg border text-sm font-medium transition-colors text-left',
-                    filters.hideUnqualified
-                      ? cn(statusPanel.complete, 'text-success-fg')
-                      : 'bg-surface border-border-light text-text-secondary hover:bg-surface-alt'
-                  )}
-                >
-                  {filters.hideUnqualified ? '✓ Hiding unqualified' : 'Showing all feats'}
-                </button>
-                <p className="text-xs text-text-muted mt-1">
-                  {filters.hideUnqualified ? 'Only feats you qualify for' : 'Including unqualified'}
-                </p>
-              </div>
-            </div>
-          </FilterSection>
-
-          <ListHeader
-            columns={FEAT_HEADER_COLUMNS}
-            gridColumns={FEAT_GRID_COLUMNS}
-            sortState={{ col: filters.sortCol, dir: filters.sortDir }}
-            onSort={handleSort}
-          />
-
-          <div className="mb-8 mt-4">
-            <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
-              {groupedDisplayFeats.map(({ displayFeat, familyLevels }) =>
-                renderFeatRow(displayFeat, familyLevels, !!displayFeat.char_feat)
-              )}
-              {groupedDisplayFeats.length === 0 && (
-                <EmptyState
-                  title="No feats match your filters."
-                  size="sm"
-                  className="bg-surface-alt rounded-lg py-4"
-                  secondaryAction={
-                    filters.hideUnqualified
-                      ? {
-                          label: 'Show unqualified feats',
-                          onClick: () => setFilters((f) => ({ ...f, hideUnqualified: false })),
-                        }
-                      : undefined
-                  }
-                />
-              )}
-            </div>
-          </div>
-        </>
+        fullFeatCatalog
       )}
-      
-      <CreatorStepFooter onBack={prevStep} onContinue={nextStep} continueDisabled={!canContinue} />
+
+      <CreatorStepFooter
+        onBack={prevStep}
+        onContinue={nextStep}
+        continueDisabled={!canContinue}
+        completionHint={<span>{completion.label}</span>}
+      />
     </div>
   );
 }

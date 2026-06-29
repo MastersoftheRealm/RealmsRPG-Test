@@ -23,6 +23,7 @@ export const CHARACTER_STARTING_CURRENCY = 200;
 
 function downstreamDraftReset(): Partial<CharacterDraft> {
   return {
+    species: undefined,
     ancestry: undefined,
     skills: {},
     feats: [],
@@ -64,6 +65,34 @@ const STEP_ORDER: CreatorStep[] = [
   'finalize',
 ];
 
+/**
+ * Three-layer interaction model (REALMS_PRODUCT_OVERVIEW.md §3).
+ * 1 = Guided (default for path mode), 2 = Semi-guided, 3 = Full system (default for forge).
+ */
+export type CreatorLayer = 1 | 2 | 3;
+
+/** Path-mode steps auto-skipped during Continue (Phase F — conditional steps). */
+export function isCreatorStepSkipped(step: CreatorStep, draft: CharacterDraft): boolean {
+  if (draft.creationMode !== 'path') return false;
+  // Pure martial paths skip powers/techniques in guided Layer 1 flow.
+  if (step === 'powers' && draft.archetype?.type === 'martial') return true;
+  return false;
+}
+
+function resolveAdjacentStep(
+  from: CreatorStep,
+  direction: 1 | -1,
+  draft: CharacterDraft
+): CreatorStep | null {
+  let idx = STEP_ORDER.indexOf(from) + direction;
+  while (idx >= 0 && idx < STEP_ORDER.length) {
+    const candidate = STEP_ORDER[idx];
+    if (!isCreatorStepSkipped(candidate, draft)) return candidate;
+    idx += direction;
+  }
+  return null;
+}
+
 function completedStepsThrough(step: CreatorStep): CreatorStep[] {
   const idx = STEP_ORDER.indexOf(step);
   return STEP_ORDER.slice(0, idx + 1);
@@ -73,6 +102,12 @@ interface CharacterCreatorState {
   // Current step
   currentStep: CreatorStep;
   completedSteps: CreatorStep[];
+
+  /**
+   * Per-step disclosure layer. Absent = use the mode default
+   * (1 for path/guided, 3 for forge/full). See getStepLayer().
+   */
+  stepLayer: Partial<Record<CreatorStep, CreatorLayer>>;
   
   // Character draft data
   draft: CharacterDraft;
@@ -83,6 +118,12 @@ interface CharacterCreatorState {
   prevStep: () => void;
   markStepComplete: (step: CreatorStep) => void;
   canNavigateToStep: (step: CreatorStep) => boolean;
+
+  // Layer (progressive disclosure) actions
+  getStepLayer: (step: CreatorStep) => CreatorLayer;
+  setStepLayer: (step: CreatorStep, layer: CreatorLayer) => void;
+  expandLayer: (step: CreatorStep) => void;
+  collapseLayer: (step: CreatorStep) => void;
   
   // Draft updates
   updateDraft: (updates: Partial<CharacterDraft>) => void;
@@ -119,13 +160,14 @@ function cloneInitialDraft(): CharacterDraft {
 }
 
 /** Bump when persisted draft shape or defaults change; old versions reset to a fresh draft. */
-const CREATOR_STORE_SCHEMA_VERSION = 1;
+const CREATOR_STORE_SCHEMA_VERSION = 2;
 
 export const useCharacterCreatorStore = create<CharacterCreatorState>()(
   persist(
     (set, get) => ({
       currentStep: 'archetype',
       completedSteps: [],
+      stepLayer: {},
       draft: cloneInitialDraft(),
       
       setStep: (step) => {
@@ -135,18 +177,25 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
       },
       
       nextStep: () => {
-        const currentIndex = STEP_ORDER.indexOf(get().currentStep);
-        if (currentIndex < STEP_ORDER.length - 1) {
-          get().markStepComplete(get().currentStep);
-          set({ currentStep: STEP_ORDER[currentIndex + 1] });
+        const current = get().currentStep;
+        const next = resolveAdjacentStep(current, 1, get().draft);
+        if (next) {
+          get().markStepComplete(current);
+          const currentIdx = STEP_ORDER.indexOf(current);
+          const nextIdx = STEP_ORDER.indexOf(next);
+          for (let i = currentIdx + 1; i < nextIdx; i++) {
+            const between = STEP_ORDER[i];
+            if (isCreatorStepSkipped(between, get().draft)) {
+              get().markStepComplete(between);
+            }
+          }
+          set({ currentStep: next });
         }
       },
       
       prevStep: () => {
-        const currentIndex = STEP_ORDER.indexOf(get().currentStep);
-        if (currentIndex > 0) {
-          set({ currentStep: STEP_ORDER[currentIndex - 1] });
-        }
+        const prev = resolveAdjacentStep(get().currentStep, -1, get().draft);
+        if (prev) set({ currentStep: prev });
       },
       
       markStepComplete: (step) => {
@@ -158,11 +207,13 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
       
       canNavigateToStep: (step) => {
         const { draft, completedSteps } = get();
+        if (isCreatorStepSkipped(step, draft)) return false;
         const idx = STEP_ORDER.indexOf(step);
         if (idx === 0) return true;
 
         for (let i = 0; i < idx; i++) {
           const prev = STEP_ORDER[i];
+          if (isCreatorStepSkipped(prev, draft)) continue;
           if (prev === 'archetype') {
             if (!draft.archetype?.type) return false;
             continue;
@@ -172,6 +223,28 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
         return true;
       },
       
+      getStepLayer: (step) => {
+        const explicit = get().stepLayer[step];
+        if (explicit) return explicit;
+        // Forge mode is full-system by default; path/guided defaults to Layer 1.
+        return get().draft.creationMode === 'forge' ? 3 : 1;
+      },
+
+      setStepLayer: (step, layer) => {
+        set({ stepLayer: { ...get().stepLayer, [step]: layer } });
+      },
+
+      expandLayer: (step) => {
+        const current = get().getStepLayer(step);
+        const next = (Math.min(3, current + 1)) as CreatorLayer;
+        set({ stepLayer: { ...get().stepLayer, [step]: next } });
+      },
+
+      collapseLayer: (step) => {
+        // "Back to recommendations" always returns to the guided layer.
+        set({ stepLayer: { ...get().stepLayer, [step]: 1 } });
+      },
+
       updateDraft: (updates) => {
         set({ draft: { ...get().draft, ...updates } });
       },
@@ -188,6 +261,7 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
         
         set({
           completedSteps: completedStepsThrough('archetype'),
+          stepLayer: {},
           draft: {
             ...get().draft,
             ...downstreamDraftReset(),
@@ -221,6 +295,7 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
 
         set({
           completedSteps: pathChanged ? completedStepsThrough('archetype') : get().completedSteps,
+          stepLayer: pathChanged ? {} : get().stepLayer,
           draft: {
             ...get().draft,
             ...(pathChanged ? downstreamDraftReset() : {}),
@@ -326,6 +401,7 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
       reselectArchetype: () => {
         set({
           completedSteps: [],
+          stepLayer: {},
           draft: {
             ...get().draft,
             ...downstreamDraftReset(),
@@ -342,6 +418,7 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
         set({
           currentStep: 'archetype',
           completedSteps: [],
+          stepLayer: {},
           draft: cloneInitialDraft(),
         });
       },
@@ -457,6 +534,8 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           ...(draft.description && { description: draft.description }),
           ...(draft.notes && { notes: draft.notes }),
           ...(draft.appearance && { appearance: draft.appearance }),
+          ...(draft.height != null && { height: draft.height }),
+          ...(draft.weight != null && { weight: draft.weight }),
           ...(draft.portrait && { portrait: draft.portrait }),
           status: 'complete' as const,
         };
@@ -471,14 +550,16 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           return {
             currentStep: 'archetype' as CreatorStep,
             completedSteps: [] as CreatorStep[],
+            stepLayer: {} as Partial<Record<CreatorStep, CreatorLayer>>,
             draft: cloneInitialDraft(),
           };
         }
-        return persistedState as Pick<CharacterCreatorState, 'currentStep' | 'completedSteps' | 'draft'>;
+        return persistedState as Pick<CharacterCreatorState, 'currentStep' | 'completedSteps' | 'stepLayer' | 'draft'>;
       },
       partialize: (state) => ({
         currentStep: state.currentStep,
         completedSteps: state.completedSteps,
+        stepLayer: state.stepLayer,
         draft: state.draft,
       }),
     }

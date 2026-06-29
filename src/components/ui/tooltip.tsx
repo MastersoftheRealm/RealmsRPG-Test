@@ -2,7 +2,6 @@
 
 import { cloneElement, isValidElement, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { Info } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { renderMarkdownLite } from '@/lib/tooltips/markdown-lite';
 import type { TooltipPlacement, TooltipTrigger } from '@/types/tooltips';
@@ -143,46 +142,3 @@ export function Tooltip({
   );
 }
 
-interface HelpTooltipProps {
-  title?: string | null;
-  content: string;
-  placement?: TooltipPlacement;
-  trigger?: TooltipTrigger;
-  label?: string;
-  className?: string;
-  disabled?: boolean;
-}
-
-export function HelpTooltip({
-  title,
-  content,
-  placement = 'top',
-  trigger = 'auto',
-  label = 'Help information',
-  className,
-  disabled = false,
-}: HelpTooltipProps) {
-  return (
-    <Tooltip
-      title={title}
-      content={content}
-      placement={placement}
-      trigger={trigger}
-      className={className}
-      disabled={disabled}
-    >
-      <button
-        type="button"
-        aria-label={label}
-        className={cn(
-          'inline-flex items-center justify-center rounded-full',
-          'min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] md:min-w-[28px] md:min-h-[28px]',
-          'text-primary-link-fg hover:text-primary-fg-hover',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border'
-        )}
-      >
-        <Info className="w-4 h-4" />
-      </button>
-    </Tooltip>
-  );
-}

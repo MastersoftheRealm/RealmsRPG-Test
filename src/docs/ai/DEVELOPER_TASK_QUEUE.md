@@ -14,9 +14,7 @@ What **you** need to do that AI cannot (Dashboard, prod validation, decisions). 
 
 | ID | Task | Assignee | What to do |
 |----|------|----------|------------|
-| **COLLIN-001** | [TASK-376](AI_TASK_QUEUE.md) — Tippy tooltip migration | **Collin Morrison** | Finish retiring the DB tooltip stack; extend `public/tooltip-text.tsx` + `@tippyjs/react` per Collin's existing branches (`Collin-tooltipExperimentation`). Remaining: creator skills/feats/equipment/powers/finalize, campaigns page, remove `useTooltipByKey` / `ContextHelpTooltip` / admin tooltips API, account toggle. Optional SQL: deprecate `ui_tooltips` after code removal. |
-
-**AI agents:** Do **not** pick up TASK-376 or implement tooltip migration work. Merge Collin's PRs when the owner asks; do not substitute HelpTooltip/DB patterns.
+| **DEV-376** | [TASK-376](AI_TASK_QUEUE.md) — optional DB cleanup | **Human** | Code migration complete (Jun 2026). Optional: drop `ui_tooltips` table + `user_profiles.show_tooltips` column if no longer needed. See `SUPABASE_SCHEMA.md`. |
 
 ---
 

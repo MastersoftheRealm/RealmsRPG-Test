@@ -17,19 +17,52 @@ import { dataUrlToBlob } from '@/lib/portrait';
 import { apiUpload } from '@/lib/api-client';
 import type { Character, CharacterPower, CharacterTechnique, Item } from '@/types';
 import { Spinner, Button, Alert, Modal, Textarea, useToast } from '@/components/ui';
-import { useCharacterCreatorStore } from '@/stores/character-creator-store';
+import { useCharacterCreatorStore, CHARACTER_STARTING_CURRENCY, type CreatorStep } from '@/stores/character-creator-store';
 import { getAllValidationIssues, type ValidationIssue } from '@/lib/character-creator-validation';
 import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
 import { calculateHealthEnergyPool } from '@/lib/game/formulas';
 import { ABILITY_DISPLAY_NAMES } from '@/lib/game/constants';
-import { LoginPromptModal, ImageUploadModal } from '@/components/shared';
+import { LoginPromptModal, ImageUploadModal, InfoTippy } from '@/components/shared';
+import { finalizeSummaryHelp } from '../../../../public/tooltip-text';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
+import { CreatorResourceBar } from '@/components/character-creator/CreatorResourceBar';
 import { HealthEnergyAllocator } from '@/components/creator';
 import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies, getTrainingPointLimit } from '@/lib/proficiencies';
 import { derivePowerDisplay } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
+
+const AGE_IN_APPEARANCE = /^Age:\s*(\d+)\s*(?:\n|$)/;
+
+function parseAgeFromAppearance(appearance?: string): string {
+  const match = appearance?.match(AGE_IN_APPEARANCE);
+  return match?.[1] ?? '';
+}
+
+function mergeAgeIntoAppearance(age: string, appearance?: string): string | undefined {
+  const rest = appearance?.replace(AGE_IN_APPEARANCE, '').trim() ?? '';
+  const trimmedAge = age.trim();
+  if (!trimmedAge && !rest) return undefined;
+  if (!trimmedAge) return rest || undefined;
+  return rest ? `Age: ${trimmedAge}\n${rest}` : `Age: ${trimmedAge}`;
+}
+
+function StepEditLink({ step, label }: { step: CreatorStep; label: string }) {
+  const { setStep, canNavigateToStep } = useCharacterCreatorStore();
+  if (!canNavigateToStep(step)) return null;
+  return (
+    <Button
+      type="button"
+      variant="link"
+      size="sm"
+      onClick={() => setStep(step)}
+      className="min-h-11 shrink-0"
+    >
+      Edit {label}
+    </Button>
+  );
+}
 
 function ValidationModal({ 
   isOpen, 
@@ -87,7 +120,7 @@ function ValidationModal({
         <Button
           onClick={onContinueAnyway}
           disabled={isSaving}
-          className="bg-amber-500 text-white hover:bg-amber-600"
+          className="bg-warning-600 text-white hover:bg-warning-700 dark:bg-warning-500 dark:hover:bg-warning-600"
         >
           Save Anyway
         </Button>
@@ -198,23 +231,21 @@ function HealthEnergyAllocationSection() {
   }, [baseEnergy, hePool, highestEnergyCost, updateDraft]);
   
   return (
-    <div className="mb-6">
+    <div>
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <h3 className="font-bold text-text-primary">Health/Energy Allocation</h3>
-        <div className="flex items-center gap-2">
-          <div className="text-xs text-text-muted dark:text-text-secondary">
-            Base HP: {baseHealth} | Base EN: {baseEnergy}
-          </div>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={onAutoAllocate}
-            aria-label="Auto-allocate points so max energy matches highest power or technique cost, rest to health"
-          >
-            Auto-allocate to match highest cost
-          </Button>
-        </div>
+        <p className="text-xs text-text-muted dark:text-text-secondary">
+          Base HP: {baseHealth} | Base EN: {baseEnergy}
+        </p>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={onAutoAllocate}
+          aria-label="Auto-allocate points so max energy matches highest power or technique cost, rest to health"
+          className="min-h-11"
+        >
+          Auto-allocate to match highest cost
+        </Button>
       </div>
       <HealthEnergyAllocator
         hpBonus={hpBonus}
@@ -323,7 +354,7 @@ function PortraitUpload() {
                 type="button"
                 onClick={handleRemove}
                 aria-label="Remove portrait"
-                className="absolute top-1 right-1 min-h-11 min-w-11 rounded-full bg-red-500 text-white flex items-center justify-center text-sm hover:bg-red-600"
+                className="absolute top-1 right-1 min-h-11 min-w-11 rounded-full bg-danger-button text-white flex items-center justify-center text-sm hover:bg-danger-700"
               >
                 ×
               </button>
@@ -361,7 +392,7 @@ function PortraitUpload() {
             Click to upload and crop. JPG, PNG, or GIF. Max 5MB.
           </p>
           {error && (
-            <p className="text-xs text-red-600 mt-1 font-medium">{error}</p>
+            <p className="text-xs text-danger-700 dark:text-danger-400 mt-1 font-medium">{error}</p>
           )}
         </div>
       </div>
@@ -441,6 +472,33 @@ export function FinalizeStep() {
     const limit = getTrainingPointLimit(draft.level || 1, archetypeAbility);
     return { spent, limit, remaining: limit - spent };
   }, [draft, powerPartsDb, techniquePartsDb, itemPropertiesDb]);
+  
+  const displayAge = parseAgeFromAppearance(draft.appearance);
+  const physicalDescription = draft.appearance?.replace(AGE_IN_APPEARANCE, '').trim() ?? '';
+
+  const handleAgeChange = (value: string) => {
+    updateDraft({ appearance: mergeAgeIntoAppearance(value, draft.appearance) });
+  };
+
+  const handlePhysicalDescriptionChange = (value: string) => {
+    updateDraft({ appearance: mergeAgeIntoAppearance(displayAge, value) });
+  };
+
+  const energySummary = useMemo(() => {
+    const abilities = draft.abilities || {};
+    const level = draft.level || 1;
+    const powAbil = draft.pow_abil || draft.archetype?.pow_abil || draft.archetype?.ability;
+    const martAbil = draft.mart_abil || draft.archetype?.mart_abil;
+    const maxEnergy = calculateMaxEnergy(draft.energyPoints || 0, powAbil || martAbil, abilities, level);
+    return { current: maxEnergy, max: maxEnergy };
+  }, [draft]);
+
+  const startingCurrency = useMemo(() => {
+    const level = draft.level || 1;
+    if (level <= 1) return CHARACTER_STARTING_CURRENCY;
+    return Math.round(CHARACTER_STARTING_CURRENCY * Math.pow(1.45, level - 1));
+  }, [draft.level]);
+  const remainingCurrency = draft.currency ?? startingCurrency;
   
   const handleValidateAndSave = () => {
     setShowValidation(true);
@@ -602,25 +660,125 @@ export function FinalizeStep() {
   };
   
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto flex flex-col flex-1 min-h-0">
+      <CreatorResourceBar
+        trainingPoints={{
+          spent: proficiencyTpSummary.spent,
+          limit: proficiencyTpSummary.limit,
+        }}
+        currency={{
+          spent: startingCurrency - remainingCurrency,
+          limit: startingCurrency,
+        }}
+        energy={energySummary}
+        layer={3}
+        creationMode={draft.creationMode}
+      />
+
       <div className="flex items-center gap-1 mb-2">
-        <h2 className="text-2xl font-bold text-text-primary">Finalize Your Character</h2>
+        <h2 className="text-2xl font-bold text-text-primary">Meet Your Character</h2>
+        <InfoTippy content={finalizeSummaryHelp} allowHTML label="Finalize checklist help" size="inline" />
       </div>
       <p className="text-text-secondary mb-6">
-        Add the final details to bring your character to life.
+        Review your build, add identity details, then create your character.
       </p>
+
+      {/* Character reveal hero */}
+      <div className="rounded-xl border border-primary-subtle-border bg-gradient-to-br from-primary-subtle-bg/80 to-surface overflow-hidden mb-6 shadow-sm">
+        <div className="p-5 flex flex-col sm:flex-row gap-5 items-center sm:items-start">
+          <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-surface-alt border-2 border-border-light flex items-center justify-center shrink-0">
+            {draft.portrait ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={draft.portrait} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-4xl text-text-muted dark:text-text-secondary" aria-hidden>
+                {draft.name?.charAt(0).toUpperCase() || '?'}
+              </span>
+            )}
+          </div>
+          <div className="min-w-0 text-center sm:text-left flex-1">
+            <p className="text-xs font-medium uppercase tracking-wide text-primary-fg mb-1">Level {draft.level || 1}</p>
+            <h3 className="text-2xl font-bold text-text-primary truncate">
+              {draft.name?.trim() || 'Unnamed Hero'}
+            </h3>
+            <p className="text-text-secondary mt-1">
+              {[draft.archetype?.name, draft.ancestry?.name].filter(Boolean).join(' · ') || 'Complete earlier steps to fill in your build.'}
+            </p>
+          </div>
+        </div>
+      </div>
       
-      {/* Character Name */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-text-secondary mb-2">
-          Character Name *
-        </label>
-        <input
-          type="text"
-          value={draft.name || ''}
-          onChange={(e) => updateDraft({ name: e.target.value })}
-          placeholder="Enter your character's name"
-          className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border transition-colors"
+      {/* Character Name & identity */}
+      <div className="mb-6 rounded-xl border border-border-light bg-surface p-5 space-y-4">
+        <h3 className="text-lg font-bold text-text-primary">Identity</h3>
+        <div>
+          <label htmlFor="character-name" className="block text-sm font-medium text-text-secondary mb-2">
+            Character Name *
+          </label>
+          <input
+            id="character-name"
+            type="text"
+            value={draft.name || ''}
+            onChange={(e) => updateDraft({ name: e.target.value })}
+            placeholder="Enter your character's name"
+            className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border transition-colors"
+          />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label htmlFor="character-age" className="block text-sm font-medium text-text-secondary mb-2">
+              Age (optional)
+            </label>
+            <input
+              id="character-age"
+              type="number"
+              min={1}
+              value={displayAge}
+              onChange={(e) => handleAgeChange(e.target.value)}
+              placeholder="—"
+              className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border transition-colors"
+            />
+          </div>
+          <div>
+            <label htmlFor="character-height" className="block text-sm font-medium text-text-secondary mb-2">
+              Height cm (optional)
+            </label>
+            <input
+              id="character-height"
+              type="number"
+              min={0}
+              value={draft.height ?? ''}
+              onChange={(e) =>
+                updateDraft({ height: e.target.value ? Number(e.target.value) : undefined })
+              }
+              placeholder="—"
+              className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border transition-colors"
+            />
+          </div>
+          <div>
+            <label htmlFor="character-weight" className="block text-sm font-medium text-text-secondary mb-2">
+              Weight kg (optional)
+            </label>
+            <input
+              id="character-weight"
+              type="number"
+              min={0}
+              value={draft.weight ?? ''}
+              onChange={(e) =>
+                updateDraft({ weight: e.target.value ? Number(e.target.value) : undefined })
+              }
+              placeholder="—"
+              className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border transition-colors"
+            />
+          </div>
+        </div>
+        <Textarea
+          label="Appearance (optional)"
+          value={physicalDescription}
+          onChange={(e) => handlePhysicalDescriptionChange(e.target.value)}
+          placeholder="Hair, eyes, distinguishing features…"
+          rows={2}
+          className="resize-none"
         />
       </div>
       
@@ -629,9 +787,11 @@ export function FinalizeStep() {
       
       {/* Character Summary — styled to match creator steps: clear hierarchy, ability cards, no grey-on-grey */}
       <div className="rounded-xl border border-border-light bg-surface overflow-hidden mb-6 shadow-sm">
-        <div className="px-5 py-4 border-b border-border-light bg-surface-alt">
-          <h2 className="text-lg font-bold text-text-primary">Character Summary</h2>
-          <p className="text-sm text-text-secondary mt-0.5">Review your character at a glance.</p>
+        <div className="px-5 py-4 border-b border-border-light bg-surface-alt flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <h3 className="text-lg font-bold text-text-primary">Build Summary</h3>
+            <p className="text-sm text-text-secondary mt-0.5">Every choice at a glance — jump back to edit any step.</p>
+          </div>
         </div>
 
         <div className="p-5 space-y-5">
@@ -643,6 +803,17 @@ export function FinalizeStep() {
             const showPowerAbility = draft.pow_abil && hasPowerProf;
             const showMartialAbility = draft.mart_abil && hasMartialProf;
             return (
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs font-medium text-text-secondary uppercase tracking-wide">Core choices</p>
+                  <div className="flex flex-wrap gap-1">
+                    <StepEditLink step="archetype" label="archetype" />
+                    <StepEditLink step="species" label="species" />
+                    <StepEditLink step="ancestry" label="ancestry" />
+                    <StepEditLink step="abilities" label="abilities" />
+                    <StepEditLink step="skills" label="skills" />
+                  </div>
+                </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 <div className="rounded-lg border border-border-light bg-surface-alt/50 p-3">
                   <p className="text-xs font-medium text-text-secondary uppercase tracking-wide">Level</p>
@@ -675,12 +846,16 @@ export function FinalizeStep() {
                   </div>
                 )}
               </div>
+              </div>
             );
           })()}
 
           {/* Proficiency TP — same token styling as elsewhere */}
           <div className="rounded-lg border border-border-light bg-surface-alt/50 p-4">
-            <p className="text-xs font-medium text-text-secondary uppercase tracking-wide mb-2">Proficiency TP</p>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <p className="text-xs font-medium text-text-secondary uppercase tracking-wide">Proficiency TP</p>
+              <StepEditLink step="equipment" label="equipment" />
+            </div>
             <div className="flex flex-wrap gap-2">
               <span className="px-3 py-1.5 rounded-lg text-sm font-medium bg-surface text-text-primary border border-border-light">
                 Limit: {proficiencyTpSummary.limit}
@@ -709,7 +884,9 @@ export function FinalizeStep() {
           {/* Abilities — name above value, mini ability cards matching creator (power/martial tint, +/- colors) */}
           {draft.abilities && (
             <div>
-              <p className="text-xs font-medium text-text-secondary uppercase tracking-wide mb-3">Abilities</p>
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <p className="text-xs font-medium text-text-secondary uppercase tracking-wide">Abilities</p>
+              </div>
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                 {(Object.entries(draft.abilities) as [string, number][]).map(([key, value]) => {
                   const isPower = draft.pow_abil === key;
@@ -748,7 +925,10 @@ export function FinalizeStep() {
           {/* Feats — chips with contrast */}
           {draft.feats && draft.feats.length > 0 && (
             <div>
-              <p className="text-xs font-medium text-text-secondary uppercase tracking-wide mb-2">Feats</p>
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                <p className="text-xs font-medium text-text-secondary uppercase tracking-wide">Feats</p>
+                <StepEditLink step="feats" label="feats" />
+              </div>
               <div className="flex flex-wrap gap-2">
                 {draft.feats.map((feat) => (
                   <span
@@ -770,6 +950,10 @@ export function FinalizeStep() {
           {/* Powers & Techniques — section headers with power/martial color, list with EN */}
           {((draft.powers && draft.powers.length > 0) || (draft.techniques && draft.techniques.length > 0)) && (
             <div className="space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-medium text-text-secondary uppercase tracking-wide">Powers &amp; techniques</p>
+                <StepEditLink step="powers" label="powers" />
+              </div>
               {draft.powers && draft.powers.length > 0 && (
                 <div>
                   <p className="text-xs font-medium text-power-fg uppercase tracking-wide mb-2">Powers</p>
@@ -834,7 +1018,10 @@ export function FinalizeStep() {
           {/* Equipment */}
           {draft.equipment?.inventory && draft.equipment.inventory.length > 0 && (
             <div>
-              <p className="text-xs font-medium text-text-secondary uppercase tracking-wide mb-2">Equipment</p>
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                <p className="text-xs font-medium text-text-secondary uppercase tracking-wide">Equipment</p>
+                <StepEditLink step="equipment" label="equipment" />
+              </div>
               <p className="text-sm text-text-primary">
                 {draft.equipment.inventory.map(i =>
                   (i.quantity ?? 1) > 1 ? `${i.name} ×${i.quantity ?? 1}` : i.name
@@ -846,7 +1033,10 @@ export function FinalizeStep() {
       </div>
       
       {/* Health & Energy Allocation */}
-      <HealthEnergyAllocationSection />
+      <div className="mb-6">
+        <h3 className="font-bold text-text-primary mb-3">Health &amp; Energy</h3>
+        <HealthEnergyAllocationSection />
+      </div>
       
       {/* Description (Optional) */}
       <div className="mb-6">
@@ -920,7 +1110,7 @@ export function FinalizeStep() {
               'min-h-11 min-w-11 px-8',
               !saving &&
                 validationIssues.some((i) => i.severity === 'error') &&
-                'bg-warning-500 hover:bg-warning-600 text-white'
+                'bg-warning-600 hover:bg-warning-700 dark:bg-warning-500 dark:hover:bg-warning-600 text-white'
             )}
           >
             {validationIssues.length > 0 ? '📋 Review & Create' : '✓ Create Character'}

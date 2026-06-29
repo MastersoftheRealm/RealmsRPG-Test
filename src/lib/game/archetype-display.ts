@@ -87,7 +87,7 @@ export async function fetchCodexArchetypeById(
   const { data: row, error } = await supabase
     .from('codex_archetypes')
     .select(
-      'id, name, type, description, archetype_ability, secondary_ability, power_prof_start, martial_prof_start, power_prof_level5, martial_prof_level5, path_data, level1_feats, level1_skills, level1_powers, level1_techniques, level1_armaments, level1_equipment, level1_recommend_unarmed_prowess, level1_remove_feats, level1_remove_powers, level1_remove_techniques, level1_remove_armaments, level1_notes'
+      'id, name, type, description, archetype_ability, secondary_ability, power_prof_start, martial_prof_start, power_prof_level5, martial_prof_level5, path_data, level1_feats, level1_skills, level1_powers, level1_techniques, level1_armaments, level1_equipment, level1_recommend_unarmed_prowess, level1_remove_feats, level1_remove_powers, level1_remove_techniques, level1_remove_armaments, level1_notes, level1_recommended_species, level1_guidance_groups'
     )
     .eq('id', id.trim())
     .maybeSingle();
@@ -130,7 +130,16 @@ export async function fetchCodexArchetypeById(
     .sort((a, b) => a.level - b.level);
 
   const r = row as Record<string, unknown>;
-  const level1FromColumns = {
+  const legacyPath =
+    r.path_data && typeof r.path_data === 'object'
+      ? (r.path_data as Record<string, unknown>)
+      : undefined;
+  const level1FromLegacy =
+    legacyPath && typeof legacyPath.level1 === 'object' && legacyPath.level1 !== null
+      ? (legacyPath.level1 as Record<string, unknown>)
+      : undefined;
+
+  const level1Raw: Record<string, unknown> = {
     feats: toStrArray(r.level1_feats),
     skills: toStrArray(r.level1_skills),
     powers: toStrArray(r.level1_powers),
@@ -143,25 +152,32 @@ export async function fetchCodexArchetypeById(
     removeTechniques: toStrArray(r.level1_remove_techniques),
     removeArmaments: toStrArray(r.level1_remove_armaments),
     notes: r.level1_notes ? String(r.level1_notes) : undefined,
+    recommended_species: toStrArray(
+      r.level1_recommended_species ?? level1FromLegacy?.recommended_species
+    ),
+    guidance_groups: r.level1_guidance_groups ?? level1FromLegacy?.guidance_groups,
   };
+  const level1FromColumns = parseArchetypePathData({ level1: level1Raw })?.level1;
 
-  const hasLevel1 = Object.entries(level1FromColumns).some(([key, value]) => {
-    if (key === 'recommendUnarmedProwess') return value === true;
-    if (Array.isArray(value)) return value.length > 0;
-    return Boolean(value);
-  });
+  const hasLevel1 = Boolean(
+    level1FromColumns &&
+      Object.entries(level1FromColumns).some(([key, value]) => {
+        if (key === 'recommendUnarmedProwess') return value === true;
+        if (key === 'armamentRecommendations' || key === 'equipmentRecommendations') return false;
+        if (Array.isArray(value)) return value.length > 0;
+        return Boolean(value);
+      })
+  );
 
-  const legacyPath =
-    r.path_data && typeof r.path_data === 'object'
-      ? (r.path_data as Record<string, unknown>)
-      : undefined;
+  const legacyPathOnly =
+    legacyPath && typeof legacyPath === 'object' ? legacyPath : undefined;
 
   const path_data = hasLevel1 || levels.length > 0
     ? {
-        ...(hasLevel1 ? { level1: level1FromColumns } : {}),
+        ...(hasLevel1 && level1FromColumns ? { level1: level1FromColumns } : {}),
         ...(levels.length > 0 ? { levels } : {}),
       }
-    : parseArchetypePathData(legacyPath ?? r.path_data);
+    : parseArchetypePathData(legacyPathOnly ?? r.path_data);
 
   return {
     ...rowToArchetype({ ...r, path_data }),

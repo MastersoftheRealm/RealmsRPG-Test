@@ -7,6 +7,7 @@
 
 import type { CharacterDraft, CharacterPower, CharacterTechnique, Item } from '@/types';
 import type { CreatorStep } from '@/stores/character-creator-store';
+import { isCreatorStepSkipped } from '@/stores/character-creator-store';
 import type { CoreRulesMap } from '@/types/core-rules';
 import { getChoiceOptionIds } from '@/lib/choice-trait';
 import { calculateAbilityPoints, calculateAbilityScoreCost, calculateHealthEnergyPool, calculateSkillPointsForEntity, calculateTrainingPoints } from '@/lib/game/formulas';
@@ -18,6 +19,24 @@ export interface ValidationIssue {
   emoji: string;
   message: string;
   severity: 'error' | 'warning';
+}
+
+/**
+ * Per-step completion descriptor (REALMS_PRODUCT_OVERVIEW.md Appendix D).
+ * Powers a "2 of 3 picks made" style indicator on the tab bar and step footer,
+ * rather than surfacing errors only on Continue.
+ */
+export interface StepCompletion {
+  /** No outstanding errors or incompleteness for this step. */
+  done: boolean;
+  /** Choices/points made so far (where countable). */
+  made: number;
+  /** Choices/points required (where countable; 0 when not countable). */
+  required: number;
+  /** Short human label, e.g. "2 / 3 feats" or "Complete". */
+  label: string;
+  /** Step has no hard requirement (e.g. powers/equipment in path mode). */
+  optional?: boolean;
 }
 
 export interface ValidationContext {
@@ -382,4 +401,83 @@ export function getAllValidationIssues(
   }
 
   return issues;
+}
+
+/** Steps with no hard requirement to advance (still validated for overspend). */
+const OPTIONAL_STEPS: ReadonlySet<CreatorStep> = new Set<CreatorStep>(['powers']);
+
+/**
+ * Completion descriptor for a step: a `done` flag plus a countable
+ * `made / required` where it is meaningful (abilities, skills, feats, finalize).
+ * `done` is derived from the same validation as Continue, so the indicator
+ * never disagrees with the gate.
+ */
+export function getStepCompletion(
+  step: CreatorStep,
+  draft: CharacterDraft,
+  context: ValidationContext
+): StepCompletion {
+  const issues = getValidationIssuesForStep(step, draft, context);
+  if (isCreatorStepSkipped(step, draft)) {
+    return { done: true, made: 1, required: 0, optional: true, label: 'Not needed' };
+  }
+  const hasError = issues.some((i) => i.severity === 'error');
+  const optional = OPTIONAL_STEPS.has(step);
+  const done = optional ? !hasError : issues.length === 0;
+  const level = draft.level || 1;
+
+  const countable = (made: number, required: number, noun: string): StepCompletion => ({
+    done,
+    made,
+    required,
+    optional,
+    label: required > 0 ? `${Math.max(0, made)} / ${required} ${noun}` : done ? 'Complete' : 'Incomplete',
+  });
+
+  switch (step) {
+    case 'archetype':
+      return countable(draft.archetype?.type ? 1 : 0, 1, '');
+
+    case 'species':
+      return countable(draft.ancestry?.id ? 1 : 0, 1, '');
+
+    case 'abilities': {
+      const required = calculateAbilityPoints(level);
+      const made = draft.abilities
+        ? Object.values(draft.abilities).reduce((sum, val) => sum + calculateAbilityScoreCost(val || 0), 0)
+        : 0;
+      return countable(made, required, 'points');
+    }
+
+    case 'feats': {
+      const archetypeType = draft.archetype?.type;
+      let expectedArchetypeFeatCount = 0;
+      if (archetypeType === 'power') expectedArchetypeFeatCount = 1;
+      else if (archetypeType === 'powered-martial') expectedArchetypeFeatCount = 2;
+      else if (archetypeType === 'martial') expectedArchetypeFeatCount = 3;
+      const required = expectedArchetypeFeatCount + 1; // + 1 character feat
+      const all = draft.feats || [];
+      const made = Math.min(required, all.length);
+      return countable(made, required, 'feats');
+    }
+
+    case 'finalize': {
+      if (!draft.name?.trim()) {
+        return { done: false, made: 0, required: 1, label: 'Name needed' };
+      }
+      const hePool = calculateHealthEnergyPool(level, 'PLAYER', false);
+      const used = (draft.healthPoints || 0) + (draft.energyPoints || 0);
+      return countable(used, hePool, 'HE points');
+    }
+
+    // ancestry / skills / equipment / powers: binary completion (counts vary too much to be useful).
+    default:
+      return {
+        done,
+        made: done ? 1 : 0,
+        required: optional ? 0 : 1,
+        optional,
+        label: optional ? (done ? 'Ready' : 'Optional') : done ? 'Complete' : 'Incomplete',
+      };
+  }
 }

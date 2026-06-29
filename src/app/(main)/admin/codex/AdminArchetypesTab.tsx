@@ -5,6 +5,7 @@ import { SectionHeader, SearchInput, LoadingState, ErrorDisplay as ErrorState, G
 import { Modal, Button, Input, IconButton, useToast } from '@/components/ui';
 import { ChipSelect } from '@/components/shared';
 import { useCodexArchetypes, useCodexEquipment, useCodexFeats, useCodexSkills } from '@/hooks/use-codex';
+import { useMergedSpecies } from '@/hooks';
 import { useOfficialLibrary } from '@/hooks/use-official-library';
 import { useQueryClient } from '@tanstack/react-query';
 import { deleteCodexDoc, saveArchetypeWithPath } from './actions';
@@ -12,6 +13,7 @@ import { Pencil, Copy, X } from 'lucide-react';
 import { getFeatLevel, formatFeatName } from '@/lib/leveled-feats';
 import { formatListCellLabel } from '@/lib/utils';
 import { parseArchetypePathData, pathHiddenFromPlayerPicker } from '@/lib/game/archetype-path';
+import { validatePathDataForPublish } from '@/lib/game/path-validation';
 
 const COPY_NAME_SUFFIX = ' copy';
 const ABILITY_OPTIONS = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'] as const;
@@ -38,6 +40,8 @@ type PathLevelForm = {
   removeTechniques: string[];
   removeArmaments: string[];
   notes: string;
+  /** Level 1 only: species IDs/names recommended on the species step */
+  recommendedSpecies: string[];
 };
 
 function parseIdQuantityStrings(arr: string[]): PathItemEntry[] {
@@ -126,6 +130,7 @@ function makeLevelRow(level = 2): PathLevelForm {
     removeTechniques: [],
     removeArmaments: [],
     notes: '',
+    recommendedSpecies: [],
   };
 }
 
@@ -155,6 +160,7 @@ function toLevelForm(
     removeTechniques: resolveSelectedValues(toSelectionArray(raw.removeTechniques), optionsByKey?.removeTechniques ?? []),
     removeArmaments: resolveSelectedValues(toSelectionArray(raw.removeArmaments), optionsByKey?.removeArmaments ?? []),
     notes: typeof raw.notes === 'string' ? raw.notes : '',
+    recommendedSpecies: toSelectionArray(raw.recommended_species),
   };
 }
 
@@ -188,6 +194,10 @@ function buildLevelPayload(level: PathLevelForm, includeLevel: boolean): Record<
   if (removeArmaments.length) payload.removeArmaments = removeArmaments;
   if (level.notes.trim()) payload.notes = level.notes.trim();
   if (isLevel1 && (level as PathLevelForm).recommendUnarmedProwess) payload.recommendUnarmedProwess = true;
+  if (isLevel1) {
+    const recommendedSpecies = dedupeStrings(level.recommendedSpecies);
+    if (recommendedSpecies.length) payload.recommended_species = recommendedSpecies;
+  }
   return payload;
 }
 
@@ -196,6 +206,7 @@ export function AdminArchetypesTab() {
   const { data: archetypes, isLoading, error, refetch } = useCodexArchetypes();
   const { data: codexFeats = [] } = useCodexFeats();
   const { data: codexSkills = [] } = useCodexSkills();
+  const { data: allSpecies = [] } = useMergedSpecies();
   const { data: codexEquipment = [] } = useCodexEquipment();
   const { data: officialPowers = [], isLoading: isLoadingOfficialPowers } = useOfficialLibrary('powers');
   const { data: officialTechniques = [], isLoading: isLoadingOfficialTechniques } = useOfficialLibrary('techniques');
@@ -259,6 +270,17 @@ export function AdminArchetypesTab() {
         .filter((feat) => feat.value && feat.label)
         .sort((a, b) => a.label.localeCompare(b.label)),
     [codexFeats]
+  );
+  const speciesOptions = useMemo<SelectionOption[]>(
+    () =>
+      (allSpecies as Array<{ id?: string; name?: string }>)
+        .map((species) => ({
+          value: String(species.id ?? ''),
+          label: String(species.name ?? species.id ?? ''),
+        }))
+        .filter((s) => s.value && s.label)
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    [allSpecies]
   );
   const getFeatOptionsForLevel = useCallback(
     (pathLevel: number): SelectionOption[] => {
@@ -575,6 +597,22 @@ export function AdminArchetypesTab() {
       );
     }
 
+    if (structuredPathData) {
+      const publishIssues = validatePathDataForPublish(parseArchetypePathData(structuredPathData));
+      const publishErrors = publishIssues.filter((i) => i.severity === 'error');
+      if (publishErrors.length > 0) {
+        showToast(publishErrors.map((i) => i.message).join(' '), 'error');
+        return;
+      }
+      const publishWarnings = publishIssues.filter((i) => i.severity === 'warning');
+      if (publishWarnings.length > 0) {
+        showToast(
+          `Layer 1 governance: ${publishWarnings.map((i) => i.message).join(' ')}`,
+          'warning'
+        );
+      }
+    }
+
     let level1Override: Record<string, unknown> | undefined;
     let levelsOverride: Record<string, unknown>[] | undefined;
     if (form.advancedPathJson.trim()) {
@@ -594,6 +632,16 @@ export function AdminArchetypesTab() {
     setSaving(true);
     const finalLevel1 = level1Override || (structuredPathData?.level1 as Record<string, unknown> | undefined) || {};
     const finalLevels = levelsOverride || (structuredPathData?.levels as Record<string, unknown>[] | undefined) || [];
+    const existingLevel1 = editing ? parseArchetypePathData(editing.path_data)?.level1 : undefined;
+    const preservedGuidanceGroups =
+      Array.isArray(finalLevel1.guidance_groups) && finalLevel1.guidance_groups.length > 0
+        ? finalLevel1.guidance_groups
+        : existingLevel1?.guidance_groups ?? null;
+    const preservedRecommendedSpecies = toCsv(
+      Array.isArray(finalLevel1.recommended_species)
+        ? finalLevel1.recommended_species
+        : finalLevel1.recommended_species ?? existingLevel1?.recommended_species
+    );
 
     const result = await saveArchetypeWithPath({
       ...(editing ? { id: editing.id } : {}),
@@ -618,6 +666,8 @@ export function AdminArchetypesTab() {
       level1_remove_techniques: toCsv(finalLevel1.removeTechniques),
       level1_remove_armaments: toCsv(finalLevel1.removeArmaments),
       level1_notes: typeof finalLevel1.notes === 'string' ? finalLevel1.notes : undefined,
+      level1_recommended_species: preservedRecommendedSpecies || undefined,
+      level1_guidance_groups: preservedGuidanceGroups,
       levels: finalLevels.map((entry) => ({
         level: Number(entry.level || 0),
         feats: toCsv(entry.feats),
@@ -1023,6 +1073,30 @@ export function AdminArchetypesTab() {
                 </p>
               )}
               <Input value={form.level1Path.notes} onChange={(e) => setForm((f) => ({ ...f, level1Path: { ...f.level1Path, notes: e.target.value } }))} placeholder="Level 1 notes (optional)" />
+              <ChipSelect
+                label="Recommended species (Layer 1 species step)"
+                placeholder="Select species recommended for this path"
+                options={speciesOptions}
+                selectedValues={form.level1Path.recommendedSpecies}
+                onSelect={(value) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    level1Path: {
+                      ...prev.level1Path,
+                      recommendedSpecies: dedupeStrings([...prev.level1Path.recommendedSpecies, value]),
+                    },
+                  }))
+                }
+                onRemove={(value) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    level1Path: {
+                      ...prev.level1Path,
+                      recommendedSpecies: prev.level1Path.recommendedSpecies.filter((entry) => entry !== value),
+                    },
+                  }))
+                }
+              />
             </div>
 
             <div className="space-y-3">

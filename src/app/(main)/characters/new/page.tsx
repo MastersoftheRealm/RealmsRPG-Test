@@ -10,9 +10,8 @@
 
 import { useAuth } from '@/hooks';
 import { LoadingState, PageContainer, PageHeader, Card } from '@/components/ui';
-import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
+import { useCharacterCreatorStore, STEP_ORDER, isCreatorStepSkipped } from '@/stores/character-creator-store';
+import { InfoTippy } from '@/components/shared';
 import {
   CreatorTabBar,
   ArchetypeStep,
@@ -25,8 +24,6 @@ import {
   PowersStep,
   FinalizeStep,
 } from '@/components/character-creator';
-import { STEP_ORDER } from '@/stores/character-creator-store';
-import { Info } from 'lucide-react';
 import { createNewCharacter } from '../../../../../public/tooltip-text';
 
 const STEP_COMPONENTS = {
@@ -43,9 +40,10 @@ const STEP_COMPONENTS = {
 
 export default function CharacterCreatorPage() {
   const { loading } = useAuth();
-  const { currentStep } = useCharacterCreatorStore();
-  const stepIndex = STEP_ORDER.indexOf(currentStep) + 1;
-  const totalSteps = STEP_ORDER.length;
+  const { currentStep, draft } = useCharacterCreatorStore();
+  const visibleSteps = STEP_ORDER.filter((step) => !isCreatorStepSkipped(step, draft));
+  const stepIndex = visibleSteps.indexOf(currentStep) + 1;
+  const totalSteps = visibleSteps.length;
   
   if (loading) {
     return (
@@ -65,16 +63,16 @@ export default function CharacterCreatorPage() {
           description={`Step ${stepIndex} of ${totalSteps}. Follow the steps below to build your character.`}
           className="mb-6"
           actions={
-            <Tippy content={createNewCharacter}>
-              <Info className="w-4 h-4 text-primary-subtle-fg" aria-hidden />
-            </Tippy>
+            <InfoTippy content={createNewCharacter} label="Character creation overview" />
           }
         />
         
         <CreatorTabBar />
         
-        <Card className="shadow-md p-6 md:p-8">
-          <StepComponent />
+        <Card className="shadow-md p-6 md:p-8 flex flex-col min-h-[calc(100dvh-14rem)]">
+          <div className="flex flex-col flex-1 min-h-0">
+            <StepComponent />
+          </div>
         </Card>
       </PageContainer>
     </div>

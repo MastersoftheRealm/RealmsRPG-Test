@@ -13,11 +13,11 @@ import { Plus, Wand2, Swords, X, ExternalLink } from 'lucide-react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
 import { cn } from '@/lib/utils';
-import { GridListRow, InnateToggle, ListHeader, SegmentedControl } from '@/components/shared';
+import { GridListRow, InnateToggle, ListHeader, SegmentedControl, InfoTippy } from '@/components/shared';
 import { calculateArchetypeProgression } from '@/lib/game/formulas';
 import { Button, IconButton, Spinner, Chip, EmptyState } from '@/components/ui';
-import { useUserPowers, useUserTechniques, useUserEmpoweredTechniques, usePowerParts, useTechniqueParts, useOfficialLibrary, useItemProperties, useMergedSpecies, useCodexSkills, useTraits, type PowerPart, type TechniquePart } from '@/hooks';
-import { getValidationIssuesForStep } from '@/lib/character-creator-validation';
+import { useUserPowers, useUserTechniques, useUserEmpoweredTechniques, usePowerParts, useTechniqueParts, useOfficialLibrary, useItemProperties, useMergedSpecies, useCodexSkills, useTraits, useCreatorPathData, type PowerPart, type TechniquePart } from '@/hooks';
+import { getValidationIssuesForStep, getStepCompletion } from '@/lib/character-creator-validation';
 import type { UserPower, UserTechnique } from '@/hooks/use-user-library';
 import { SourceFilter, type SourceFilterValue } from '@/components/shared';
 import type { ChipData } from '@/components/shared/grid-list-row';
@@ -25,11 +25,12 @@ import { derivePowerDisplay } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
-import { parseArchetypePathData } from '@/lib/game/archetype-path';
-import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
+import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
+import { CreatorResourceBar } from '@/components/character-creator/CreatorResourceBar';
 import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies, getTrainingPointLimit } from '@/lib/proficiencies';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
+import { powersSelectionHelp } from '../../../../public/tooltip-text';
 
 /** Capitalize first letter of each word for display */
 function capitalize(s: string | undefined): string {
@@ -57,7 +58,8 @@ const TECHNIQUE_GRID_COLUMNS = '1.4fr 0.7fr 1fr 0.8fr';
 type PowerModalTab = 'powers' | 'empowered';
 
 export function PowersStep() {
-  const { draft, updateDraft, nextStep, prevStep } = useCharacterCreatorStore();
+  const { draft, updateDraft, nextStep, prevStep, getStepLayer, expandLayer, collapseLayer } =
+    useCharacterCreatorStore();
   const [showPowerModal, setShowPowerModal] = useState(false);
   const [showTechniqueModal, setShowTechniqueModal] = useState(false);
   const [powerModalTab, setPowerModalTab] = useState<PowerModalTab>('powers');
@@ -74,6 +76,10 @@ export function PowersStep() {
   );
   const stepIssues = useMemo(
     () => getValidationIssuesForStep('powers', draft, validationContext),
+    [draft, validationContext]
+  );
+  const completion = useMemo(
+    () => getStepCompletion('powers', draft, validationContext),
     [draft, validationContext]
   );
   const canContinue = stepIssues.length === 0;
@@ -186,10 +192,15 @@ export function PowersStep() {
     () => new Set(selectedTechniques.map((t: { id: string | number }) => String(t.id))), 
     [selectedTechniques]
   );
-  const pathData = useMemo(() => parseArchetypePathData(draft.archetype?.path_data), [draft.archetype?.path_data]);
+  const pathData = useCreatorPathData();
   const recommendedPowerRefs = useMemo(() => new Set((pathData?.level1?.powers || []).map((v: string) => String(v).toLowerCase())), [pathData?.level1?.powers]);
   const recommendedTechniqueRefs = useMemo(() => new Set((pathData?.level1?.techniques || []).map((v: string) => String(v).toLowerCase())), [pathData?.level1?.techniques]);
   const pathName = draft.archetype?.name ?? 'Path';
+  const layer = getStepLayer('powers');
+  const pathMode = draft.creationMode === 'path';
+  const showFullCatalog = !pathMode || layer >= 2;
+  const minimizeTechniques =
+    pathMode && layer === 1 && draft.archetype?.type === 'power';
   const hasPathPowerRecs = recommendedPowerRefs.size > 0;
   const hasPathTechniqueRecs = recommendedTechniqueRefs.size > 0;
   const pathMergeKey = draft.creationMode === 'path' ? draft.archetype?.id ?? 'path' : '';
@@ -732,25 +743,48 @@ export function PowersStep() {
   const hasContent = hasPowersAvailable || hasTechniquesAvailable;
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto flex flex-col flex-1 min-h-0">
       {/* Header */}
       <div className="text-center mb-8">
         <div className="flex items-center justify-center gap-1 mb-2">
-            <h2 className="text-2xl font-bold text-text-primary mb-2">
-              Powers & Techniques
-            </h2>
+          <h2 className="text-2xl font-bold text-text-primary">Powers & Techniques</h2>
+          <InfoTippy content={powersSelectionHelp} allowHTML label="Powers and techniques help" size="inline" />
         </div>
         <p className="text-text-muted dark:text-text-secondary">
           Select powers and techniques from your library for your character to know.
         </p>
-        <div className="mt-4 flex items-center justify-center">
-          <Chip
-            variant={proficiencyTpSummary.remaining >= 0 ? 'tp' : 'danger'}
-            size="md"
-            className="font-semibold"
-          >
-            Proficiency TP: {proficiencyTpSummary.spent} / {proficiencyTpSummary.limit}
-          </Chip>
+        <div className="mt-4 flex flex-col items-center justify-center gap-3">
+          {pathMode && layer === 1 ? (
+            <CreatorResourceBar
+              layer={layer}
+              creationMode={draft.creationMode}
+              trainingPoints={{
+                spent: proficiencyTpSummary.spent,
+                limit: proficiencyTpSummary.limit,
+              }}
+            />
+          ) : (
+            <Chip
+              variant={proficiencyTpSummary.remaining >= 0 ? 'tp' : 'danger'}
+              size="md"
+              className="font-semibold"
+            >
+              Proficiency TP: {proficiencyTpSummary.spent} / {proficiencyTpSummary.limit}
+            </Chip>
+          )}
+          {pathMode && (
+            <div className="flex flex-wrap gap-2 justify-center">
+              {layer === 1 ? (
+                <Button variant="outline" onClick={() => expandLayer('powers')} className="min-h-11">
+                  See all powers & techniques
+                </Button>
+              ) : (
+                <Button variant="outline" onClick={() => collapseLayer('powers')} className="min-h-11">
+                  ← Back to recommendations
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -767,16 +801,28 @@ export function PowersStep() {
           </div>
         </div>
       )}
-      {!pathRecommendationsLoading && draft.creationMode === 'path' && draft.archetype?.name && (hasPathPowerRecs || hasPathTechniqueRecs) && (
-        <PathHelpCard pathName={draft.archetype.name}>
-          some{' '}
-          {hasPathPowerRecs && hasPathTechniqueRecs
-            ? 'recommended powers and techniques'
-            : hasPathPowerRecs
-              ? 'recommended powers'
-              : 'recommended techniques'}{' '}
-          have been added to your list. Look through them and keep the ones you&apos;d like.
-        </PathHelpCard>
+      {!pathRecommendationsLoading && pathMode && draft.archetype?.name && (hasPathPowerRecs || hasPathTechniqueRecs) && (
+        <>
+          <PathHelpCard pathName={draft.archetype.name}>
+            {hasPathPowerRecs && hasPathTechniqueRecs && !minimizeTechniques
+              ? 'Recommended powers and techniques fit your build — keep what you like.'
+              : hasPathPowerRecs
+                ? 'Recommended powers fit your build — innate vs regular marked where applicable.'
+                : 'Recommended techniques fit your build.'}
+          </PathHelpCard>
+          <PathNotes pathName={draft.archetype.name} notes={pathData?.level1?.notes} />
+          {(pathData?.level1?.guidance_groups ?? [])
+            .filter((g) => g.powers?.length || g.techniques?.length)
+            .map((group) => (
+              <div
+                key={group.id}
+                className="mb-4 rounded-xl border border-border-light bg-surface-alt px-4 py-3"
+              >
+                <h3 className="font-semibold text-text-primary">{group.title}</h3>
+                {group.why && <p className="text-sm text-text-secondary mt-1">{group.why}</p>}
+              </div>
+            ))}
+        </>
       )}
       
       {/* Path mode but no recommendations: nothing to show in this step */}
@@ -841,7 +887,7 @@ export function PowersStep() {
             </div>
             <Button
               onClick={() => setShowPowerModal(true)}
-              disabled={!hasPowersAvailable && !powersLoading && !publicPowersLoading}
+              disabled={(!hasPowersAvailable && !powersLoading && !publicPowersLoading) || (pathMode && !showFullCatalog)}
             >
               <Plus className="w-4 h-4" />
               Add Powers
@@ -926,7 +972,9 @@ export function PowersStep() {
       )}
       
       {/* Techniques Section — hidden in path mode when path has no technique recommendations */}
-      {(hasContent || techniquesLoading) && (draft.creationMode !== 'path' || hasPathTechniqueRecs) && (
+      {(hasContent || techniquesLoading) &&
+        (draft.creationMode !== 'path' || hasPathTechniqueRecs) &&
+        !(minimizeTechniques && !showFullCatalog) && (
         <section className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -942,7 +990,10 @@ export function PowersStep() {
             </div>
             <Button
               onClick={() => setShowTechniqueModal(true)}
-              disabled={!hasTechniquesAvailable && !techniquesLoading && !publicTechniquesLoading}
+              disabled={
+                (pathMode && !showFullCatalog) ||
+                (!hasTechniquesAvailable && !techniquesLoading && !publicTechniquesLoading)
+              }
               className="bg-martial-dark hover:bg-martial-text"
             >
               <Plus className="w-4 h-4" />
@@ -1014,7 +1065,12 @@ export function PowersStep() {
         </section>
       )}
       
-      <CreatorStepFooter onBack={prevStep} onContinue={nextStep} continueDisabled={!canContinue} />
+      <CreatorStepFooter
+        onBack={prevStep}
+        onContinue={nextStep}
+        continueDisabled={!canContinue}
+        completionHint={<span>{completion.label}</span>}
+      />
       
       {/* Power Selection Modal — same column headers/layout as character sheet add-library-item */}
       <UnifiedSelectionModal

@@ -17,6 +17,7 @@
 /playwright-report/
 /blob-report/
 /.playwright/
+/.creator-audit-screenshots/
 /tests/visual/.auth/
 .last-run.json
 

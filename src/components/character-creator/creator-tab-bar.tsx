@@ -12,22 +12,22 @@
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
-import { useCharacterCreatorStore, STEP_ORDER, type CreatorStep } from '@/stores/character-creator-store';
+import { useCharacterCreatorStore, STEP_ORDER, isCreatorStepSkipped, type CreatorStep } from '@/stores/character-creator-store';
 import { useMergedSpecies, useCodexSkills, useTraits } from '@/hooks';
-import { getValidationIssuesForStep, type ValidationIssue } from '@/lib/character-creator-validation';
+import { getValidationIssuesForStep, getStepCompletion, type ValidationIssue } from '@/lib/character-creator-validation';
 import { ConfirmActionModal } from '@/components/shared';
 import { Modal, Button } from '@/components/ui';
 
-const STEP_LABELS: Record<CreatorStep, string> = {
-  archetype: '1. Archetype',
-  species: '2. Species',
-  ancestry: '3. Ancestry',
-  abilities: '4. Abilities',
-  skills: '5. Skills',
-  feats: '6. Feats',
-  equipment: '7. Equipment',
-  powers: '8. Powers & Techniques',
-  finalize: '9. Finalize',
+const STEP_NAMES: Record<CreatorStep, string> = {
+  archetype: 'Archetype',
+  species: 'Species',
+  ancestry: 'Ancestry',
+  abilities: 'Abilities',
+  skills: 'Skills',
+  feats: 'Feats',
+  equipment: 'Equipment',
+  powers: 'Powers & Techniques',
+  finalize: 'Finalize',
 };
 
 export function CreatorTabBar() {
@@ -46,6 +46,33 @@ export function CreatorTabBar() {
     () => getValidationIssuesForStep(currentStep, draft, context),
     [currentStep, draft, context]
   );
+
+  // Per-step completion descriptors drive the tab check-marks / counts so the
+  // indicator reflects "what's done" rather than only "what's been visited".
+  const visibleSteps = useMemo(
+    () => STEP_ORDER.filter((step) => !isCreatorStepSkipped(step, draft)),
+    [draft]
+  );
+
+  const completionByStep = useMemo(
+    () =>
+      STEP_ORDER.reduce((acc, step) => {
+        acc[step] = getStepCompletion(step, draft, context);
+        return acc;
+      }, {} as Record<CreatorStep, ReturnType<typeof getStepCompletion>>),
+    [draft, context]
+  );
+
+  const currentStepLabel = useMemo(() => {
+    const idx = visibleSteps.indexOf(currentStep);
+    return idx >= 0 ? `${idx + 1}. ${STEP_NAMES[currentStep]}` : STEP_NAMES[currentStep];
+  }, [visibleSteps, currentStep]);
+
+  const pendingStepLabel = useMemo(() => {
+    if (pendingStep === null) return '';
+    const idx = visibleSteps.indexOf(pendingStep);
+    return idx >= 0 ? `${idx + 1}. ${STEP_NAMES[pendingStep]}` : STEP_NAMES[pendingStep];
+  }, [visibleSteps, pendingStep]);
 
   const handleTabClick = (step: CreatorStep) => {
     if (step === currentStep) return;
@@ -75,9 +102,12 @@ export function CreatorTabBar() {
 
   return (
     <div className="flex flex-nowrap md:flex-wrap items-center gap-1 p-2 bg-surface-alt rounded-lg mb-4 overflow-x-auto scrollbar-thin min-w-0" style={{ WebkitOverflowScrolling: 'touch' }}>
-      {STEP_ORDER.map((step) => {
+      {visibleSteps.map((step, stepIndex) => {
+        const stepLabel = `${stepIndex + 1}. ${STEP_NAMES[step]}`;
         const isActive = currentStep === step;
-        const isComplete = completedSteps.includes(step);
+        const completion = completionByStep[step];
+        // A step reads as "complete" once visited AND its requirements are met.
+        const isComplete = completedSteps.includes(step) && completion.done;
         const canNavigate = canNavigateToStep(step);
 
         return (
@@ -92,11 +122,16 @@ export function CreatorTabBar() {
               isActive && 'bg-primary-button text-white shadow-md',
               !isActive && isComplete && 'bg-success-light text-success-fg hover:bg-success-200/80 dark:bg-success-900/30 dark:hover:bg-success-800/40',
               !isActive && !isComplete && canNavigate && 'bg-surface text-text-secondary hover:bg-surface-alt',
-              !isActive && !isComplete && !canNavigate && 'bg-surface text-text-muted cursor-not-allowed'
+              !isActive && !isComplete && !canNavigate && 'bg-surface text-text-muted dark:text-text-secondary cursor-not-allowed'
             )}
           >
             {isComplete && !isActive && '✓ '}
-            {STEP_LABELS[step]}
+            {stepLabel}
+            {isActive && completion.required > 0 && !completion.done && (
+              <span className="ml-1.5 text-xs font-semibold opacity-90">
+                ({completion.made}/{completion.required})
+              </span>
+            )}
           </button>
         );
       })}
@@ -128,7 +163,7 @@ export function CreatorTabBar() {
         size="lg"
         fullScreenOnMobile
         flexLayout
-        title={`${STEP_LABELS[currentStep]}: things left to do`}
+        title={`${currentStepLabel}: things left to do`}
         showCloseButton={true}
         contentClassName="p-4 overflow-y-auto"
         footer={
@@ -145,7 +180,7 @@ export function CreatorTabBar() {
         {pendingStep !== null && (
           <div className="space-y-3">
             <p className="text-text-secondary text-sm mb-3">
-              You’re about to go to {STEP_LABELS[pendingStep]}. This step still has:
+              You’re about to go to {pendingStepLabel}. This step still has:
             </p>
             {currentStepIssues.map((issue, idx) => (
               <div

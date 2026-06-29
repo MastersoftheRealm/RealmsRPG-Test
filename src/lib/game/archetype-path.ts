@@ -1,4 +1,4 @@
-import type { ArchetypePathData, ArchetypePathRecommendations, PathItemRecommendation } from '@/types/archetype';
+import type { ArchetypePathData, ArchetypePathRecommendations, PathGuidanceGroup, PathItemRecommendation } from '@/types/archetype';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -30,6 +30,30 @@ function parseIdQuantityArray(arr: string[]): PathItemRecommendation[] {
 function parseLevel(value: unknown): number | null {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function parseGuidanceGroups(value: unknown): PathGuidanceGroup[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const groups = value
+    .map((entry) => {
+      if (!isRecord(entry)) return null;
+      const id = typeof entry.id === 'string' ? entry.id : typeof entry.title === 'string' ? entry.title : null;
+      const title = typeof entry.title === 'string' ? entry.title : id;
+      if (!id || !title) return null;
+      const group: PathGuidanceGroup = {
+        id,
+        title,
+        ...(typeof entry.why === 'string' ? { why: entry.why } : {}),
+        feats: toStringArray(entry.feats),
+        powers: toStringArray(entry.powers),
+        techniques: toStringArray(entry.techniques),
+        armaments: toStringArray(entry.armaments),
+        equipment: toStringArray(entry.equipment),
+      };
+      return group;
+    })
+    .filter((g): g is PathGuidanceGroup => g !== null);
+  return groups.length > 0 ? groups : undefined;
 }
 
 export function parseArchetypePathData(value: unknown): ArchetypePathData | undefined {
@@ -68,6 +92,8 @@ export function parseArchetypePathData(value: unknown): ArchetypePathData | unde
         removeTechniques: toStringArray(level1Raw.removeTechniques),
         removeArmaments: toStringArray(level1Raw.removeArmaments),
         notes: typeof level1Raw.notes === 'string' ? level1Raw.notes : undefined,
+        recommended_species: toStringArray(level1Raw.recommended_species),
+        guidance_groups: parseGuidanceGroups(level1Raw.guidance_groups),
         proficiency: isRecord(level1Raw.proficiency)
           ? {
               power:

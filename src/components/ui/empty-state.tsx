@@ -91,9 +91,9 @@ export function EmptyState({
           {icon}
         </div>
       )}
-      <h2 className={cn('font-semibold text-text-primary', sizes.title)}>
+      <p className={cn('font-semibold text-text-primary', sizes.title)} role="status">
         {title}
-      </h2>
+      </p>
       {displayMessage && (
         <p className={cn('mt-2 text-text-muted dark:text-text-secondary max-w-md', sizes.description)}>
           {displayMessage}

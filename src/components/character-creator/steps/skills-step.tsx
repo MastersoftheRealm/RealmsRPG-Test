@@ -10,14 +10,14 @@
 
 import React, { useMemo, useCallback } from 'react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useMergedSpecies, useCodexSkills, useTraits, useTooltipByKey, useGameRules, type Species, type Skill } from '@/hooks';
-import { SkillsAllocationPage, ContextHelpTooltip } from '@/components/shared';
-import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
+import { useMergedSpecies, useCodexSkills, useTraits, useGameRules, useCreatorPathData, type Species, type Skill } from '@/hooks';
+import { SkillsAllocationPage, InfoTippy, GuidedChoiceShell } from '@/components/shared';
+import { getValidationIssuesForStep, getStepCompletion } from '@/lib/character-creator-validation';
+import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
-import { getValidationIssuesForStep } from '@/lib/character-creator-validation';
-import { Button, HelpTooltip } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { getSkillPointsHelp, subSkillsHelp } from '../../../../public/tooltip-text';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
-import { parseArchetypePathData } from '@/lib/game/archetype-path';
 
 function pathHelpContent(_pathName: string, names: string[]): React.ReactNode {
   if (names.length === 0) return null;
@@ -25,16 +25,16 @@ function pathHelpContent(_pathName: string, names: string[]): React.ReactNode {
     <strong className="text-primary-fg">{children}</strong>
   );
   if (names.length === 1) {
-    return <>the recommended Skill <Bold>{names[0]}</Bold> has been added!</>;
+    return <>The recommended Skill <Bold>{names[0]}</Bold> has been added!</>;
   }
   if (names.length === 2) {
-    return <>the recommended Skills <Bold>{names[0]}</Bold> and <Bold>{names[1]}</Bold> have been added!</>;
+    return <>The recommended Skills <Bold>{names[0]}</Bold> and <Bold>{names[1]}</Bold> have been added!</>;
   }
   const last = names[names.length - 1];
   const rest = names.slice(0, -1);
   return (
     <>
-      the recommended Skills{' '}
+      The recommended Skills{' '}
       {rest.map((n, i) => (
         <React.Fragment key={n}>{i > 0 ? ', ' : ''}<Bold>{n}</Bold></React.Fragment>
       ))}
@@ -44,7 +44,15 @@ function pathHelpContent(_pathName: string, names: string[]): React.ReactNode {
 }
 
 export function SkillsStep() {
-  const { draft, nextStep, prevStep, updateDraft } = useCharacterCreatorStore();
+  const {
+    draft,
+    nextStep,
+    prevStep,
+    updateDraft,
+    getStepLayer,
+    expandLayer,
+    collapseLayer,
+  } = useCharacterCreatorStore();
   const { data: allSpecies = [] } = useMergedSpecies();
   const { data: codexSkills = [] } = useCodexSkills();
   const { data: allTraits } = useTraits();
@@ -58,7 +66,13 @@ export function SkillsStep() {
     () => getValidationIssuesForStep('skills', draft, validationContext),
     [draft, validationContext]
   );
-  const canContinue = stepIssues.length === 0;
+  const completion = useMemo(
+    () => getStepCompletion('skills', draft, validationContext),
+    [draft, validationContext]
+  );
+  const layer = getStepLayer('skills');
+  const pathMode = draft.creationMode === 'path';
+  const canContinue = pathMode && layer === 1 ? completion.done : stepIssues.length === 0;
 
   const speciesSkillIds = useMemo(() => {
     const isMixed = draft.ancestry?.mixed === true;
@@ -92,13 +106,13 @@ export function SkillsStep() {
   const defenseVals = draft.defenseVals || draft.defenseSkills || { ...DEFAULT_DEFENSE_SKILLS };
   const abilities = draft.abilities || { ...DEFAULT_ABILITIES };
   const level = draft.level || 1;
-  const skillsTooltip = useTooltipByKey('characters.new.step.skills.pointsHelp', {
-    scope: 'page:/characters/new',
-    context: { level },
-  });
+  const skillPointsHelp = useMemo(
+    () => getSkillPointsHelp(level, rules),
+    [level, rules]
+  );
 
   const mergedSkillAbilities = draft.skillAbilities ?? {};
-  const pathData = useMemo(() => parseArchetypePathData(draft.archetype?.path_data), [draft.archetype?.path_data]);
+  const pathData = useCreatorPathData();
   const recommendedSkillIds = pathData?.level1?.skills ?? [];
 
   const declinedPathSkillIds = useMemo(
@@ -174,14 +188,21 @@ export function SkillsStep() {
       .map((id) => (codexSkills as Skill[]).find((s) => String(s.id) === String(id))?.name)
       .filter((n): n is string => !!n);
   }, [recommendedSkillIds, codexSkills]);
+  const pathNotes = pathData?.level1?.notes;
+
   const pathHelpAfterDescription = useMemo(() => {
-    if (draft.creationMode !== 'path' || !draft.archetype?.name || recommendedSkillNames.length === 0) return null;
+    if (!pathMode || !draft.archetype?.name) return null;
     return (
-      <PathHelpCard pathName={draft.archetype.name}>
-        {pathHelpContent(draft.archetype.name, recommendedSkillNames)}
-      </PathHelpCard>
+      <>
+        {recommendedSkillNames.length > 0 && (
+          <PathHelpCard pathName={draft.archetype.name}>
+            {pathHelpContent(draft.archetype.name, recommendedSkillNames)}
+          </PathHelpCard>
+        )}
+        <PathNotes pathName={draft.archetype.name} notes={pathNotes} />
+      </>
     );
-  }, [draft.creationMode, draft.archetype, recommendedSkillNames]);
+  }, [pathMode, draft.archetype, recommendedSkillNames, pathNotes]);
 
   const hasMissingRecommendedSkills = useMemo(() => {
     return recommendedSkillIds.some((id) => {
@@ -253,49 +274,91 @@ export function SkillsStep() {
     resolve: abilities.charisma,
   }), [abilities]);
 
-  const footer = (
-    <CreatorStepFooter variant="inline" onBack={prevStep} onContinue={handleContinue} continueDisabled={!canContinue} />
+  const skillsPage = (
+    <SkillsAllocationPage
+      entityType="character"
+      level={level}
+      abilities={abilities}
+      allocations={allocationsWithSpecies}
+      defenseSkills={defenseVals}
+      speciesSkillIds={speciesSkillIds}
+      pathSkillIds={pathSkillIds}
+      pathSourceLabel={draft.archetype?.name}
+      extraSkillPoints={extraSkillPoints}
+      onAllocationsChange={handleAllocationsChange}
+      onDefenseChange={handleDefenseChange}
+      abilityDefenseBonuses={abilityDefenseBonuses}
+      skillAbilities={mergedSkillAbilities}
+      onSkillAbilityChange={handleSkillAbilityChange}
+      afterDescription={pathMode ? undefined : pathHelpAfterDescription}
+      hideDefenseBonuses={pathMode && layer === 1}
+      hideSubSkills={pathMode && layer === 1}
+      embeddedInShell={pathMode}
+      headingAddon={
+        !pathMode ? (
+          <InfoTippy
+            content={skillPointsHelp}
+            allowHTML
+            label="Skill allocation help"
+            size="inline"
+          />
+        ) : undefined
+      }
+      addSubSkillAddon={
+        <InfoTippy
+          content={subSkillsHelp}
+          allowHTML
+          label="Sub-skill help"
+          placement="top"
+          size="inline"
+        />
+      }
+    />
+  );
+
+  const stepFooter = (
+    <CreatorStepFooter
+      onBack={prevStep}
+      onContinue={handleContinue}
+      continueDisabled={!canContinue}
+      completionHint={<span>{completion.label}</span>}
+    />
   );
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col flex-1 min-h-0 space-y-4">
       {pathSkillsAction}
-      <SkillsAllocationPage
-        entityType="character"
-        level={level}
-        abilities={abilities}
-        allocations={allocationsWithSpecies}
-        defenseSkills={defenseVals}
-        speciesSkillIds={speciesSkillIds}
-        pathSkillIds={pathSkillIds}
-        pathSourceLabel={draft.archetype?.name}
-        extraSkillPoints={extraSkillPoints}
-        onAllocationsChange={handleAllocationsChange}
-        onDefenseChange={handleDefenseChange}
-        abilityDefenseBonuses={abilityDefenseBonuses}
-        skillAbilities={mergedSkillAbilities}
-        onSkillAbilityChange={handleSkillAbilityChange}
-        afterDescription={pathHelpAfterDescription}
-        hideDefenseBonuses={draft.creationMode === 'path'}
-        headingAddon={
-          skillsTooltip.showTooltips && skillsTooltip.body ? (
-            <HelpTooltip
-              title={skillsTooltip.title}
-              content={skillsTooltip.body}
-              label="Skill allocation help"
-            />
-          ) : null
-        }
-        addSubSkillAddon={
-          <ContextHelpTooltip
-            tooltipKey="characters.new.step.skills.subskillsHelp"
-            scope="page:/characters/new"
-            label="Sub-skill help"
-            placement="top"
-          />
-        }
-        footer={footer}
-      />
+      {pathMode ? (
+        <>
+          <GuidedChoiceShell
+            layer={layer}
+            title="Allocate Skills"
+            titleAddon={
+              <InfoTippy
+                content={skillPointsHelp}
+                allowHTML
+                label="Skill allocation help"
+                size="inline"
+              />
+            }
+            description="Spend skill points on proficiencies and values. Species skills stay locked; expand for sub-skills and defense bonuses."
+            guidance={pathHelpAfterDescription}
+            completionState={completion}
+            onExpandLayer={() => expandLayer('skills')}
+            onCollapseLayer={() => collapseLayer('skills')}
+            expandLabel={layer === 1 ? 'See more options (sub-skills & defenses)' : 'See all skills'}
+            canExpand={layer === 1}
+          >
+            {skillsPage}
+          </GuidedChoiceShell>
+          {stepFooter}
+        </>
+      ) : (
+        <>
+          {skillsPage}
+          {stepFooter}
+        </>
+      )}
     </div>
   );
 }

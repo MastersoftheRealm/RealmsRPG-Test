@@ -76,15 +76,6 @@ export default function AdminPage() {
           </Button>
         </section>
 
-        <section className="rounded-lg border border-border bg-surface p-6">
-          <h2 className="text-lg font-semibold text-text-primary mb-2">Tooltips</h2>
-          <p className="text-text-secondary mb-4">
-            Manage onboarding and contextual help tooltips shown across navigation, creator flows, and gameplay tools.
-          </p>
-          <Button asChild>
-            <Link href="/admin/tooltips">Open Tooltip Editor</Link>
-          </Button>
-        </section>
       </div>
     </PageContainer>
   );

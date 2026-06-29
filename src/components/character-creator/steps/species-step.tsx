@@ -6,18 +6,19 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import type { KeyboardEvent } from 'react';
 import { cn } from '@/lib/utils';
 import { Chip, Button, Alert, Spinner, SelectionCardSurface } from '@/components/ui';
-import { SegmentedControl } from '@/components/shared';
+import { SegmentedControl, InfoTippy } from '@/components/shared';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useMergedSpecies, useUserSpecies, useTraits, type Species } from '@/hooks';
+import { useMergedSpecies, useUserSpecies, useTraits, useCodexSkills, useCreatorPathData, resolveSkillIdsToNames, type Species } from '@/hooks';
 import { SpeciesModal } from '../species-modal';
 import { MixedSpeciesModal } from '../MixedSpeciesModal';
 import { CreatorStepFooter } from '../creator-step-footer';
-import { GitMerge, Info } from 'lucide-react';
-import Tippy from '@tippyjs/react';
+import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
+import { getStepCompletion } from '@/lib/character-creator-validation';
+import { GitMerge } from 'lucide-react';
 import { chooseYourSpecies } from '../../../../public/tooltip-text';
 
 type SourceFilterValue = 'all' | 'public' | 'my' | 'make';
@@ -30,10 +31,20 @@ function activateOnEnterOrSpace(e: KeyboardEvent, action: () => void) {
 }
 
 export function SpeciesStep() {
-  const { draft, nextStep, prevStep, setSpecies, setMixedSpecies } = useCharacterCreatorStore();
+  const {
+    draft,
+    nextStep,
+    prevStep,
+    setSpecies,
+    setMixedSpecies,
+    getStepLayer,
+    expandLayer,
+    collapseLayer,
+  } = useCharacterCreatorStore();
   const { data: allSpecies = [], isLoading: speciesLoading } = useMergedSpecies();
   const { data: userSpeciesList = [] } = useUserSpecies();
   const { data: traits } = useTraits();
+  const { data: codexSkills = [] } = useCodexSkills();
   const [source, setSource] = useState<SourceFilterValue>('public');
   const [selectedSpeciesForModal, setSelectedSpeciesForModal] = useState<Species | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -46,6 +57,32 @@ export function SpeciesStep() {
     if (source === 'public') return allSpecies.filter((s) => !userSpeciesIds.has(s.id));
     return allSpecies;
   }, [allSpecies, source, userSpeciesIds]);
+
+  const pathMode = draft.creationMode === 'path';
+  const layer = getStepLayer('species');
+  const showFullCatalog = !pathMode || layer >= 2;
+  const pathData = useCreatorPathData();
+  const recommendedSpeciesRefs = useMemo(
+    () => new Set((pathData?.level1?.recommended_species ?? []).map((v) => String(v).toLowerCase().trim())),
+    [pathData?.level1?.recommended_species]
+  );
+  const hasRecommendedSpecies = recommendedSpeciesRefs.size > 0;
+  const matchesRecommended = useCallback(
+    (s: Species) =>
+      recommendedSpeciesRefs.has(String(s.id).toLowerCase()) ||
+      recommendedSpeciesRefs.has(String(s.name ?? '').toLowerCase()),
+    [recommendedSpeciesRefs]
+  );
+  const recommendedSpecies = useMemo(
+    () => (hasRecommendedSpecies ? species.filter(matchesRecommended) : []),
+    [species, hasRecommendedSpecies, matchesRecommended]
+  );
+  const speciesForGrid = useMemo(() => {
+    if (pathMode && !showFullCatalog && recommendedSpecies.length > 0) {
+      return recommendedSpecies;
+    }
+    return species;
+  }, [pathMode, showFullCatalog, recommendedSpecies, species]);
 
   const handleCardClick = (s: Species) => {
     setSelectedSpeciesForModal(s);
@@ -73,6 +110,10 @@ export function SpeciesStep() {
   const isMixedSelected = draft.ancestry?.mixed === true;
   const isSingleSelected = draft.ancestry?.id && !draft.ancestry?.mixed;
   const canContinue = !!(draft.ancestry?.id);
+  const completion = useMemo(
+    () => getStepCompletion('species', draft, { allSpecies, codexSkills: codexSkills ?? null, allTraits: null }),
+    [draft, allSpecies, codexSkills]
+  );
 
   if (speciesLoading) {
     return (
@@ -83,17 +124,46 @@ export function SpeciesStep() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto flex flex-col flex-1 min-h-0">
       <div className="flex items-center gap-1 mb-2">
         <h2 className="text-2xl font-bold text-text-primary">Choose Your Species</h2>
-        <Tippy content={chooseYourSpecies} allowHTML={true}>
-          <Info className="w-4 h-4 text-primary-subtle-fg" aria-hidden />
-        </Tippy>
+        <InfoTippy content={chooseYourSpecies} allowHTML label="Species selection help" size="inline" />
       </div>
       <p className="text-text-secondary mb-4">
         Your species defines your character&apos;s physical traits and inherent abilities.
-        Click a card to view details, or choose Mixed to combine two species.
+        Pick one straight from the grid, open details for the full breakdown, or choose Mixed to combine two species.
       </p>
+
+      {pathMode && draft.archetype?.name && (
+        <>
+          <PathHelpCard pathName={draft.archetype.name}>
+            {hasRecommendedSpecies
+              ? 'These species fit your path — pick one, or browse all species below.'
+              : 'Choose the species that fits your character, or browse the full list.'}
+          </PathHelpCard>
+          <PathNotes pathName={draft.archetype.name} notes={pathData?.level1?.notes} />
+        </>
+      )}
+
+      {pathMode && !showFullCatalog && hasRecommendedSpecies && (
+        <div className="mb-4 flex flex-wrap gap-3">
+          <Button
+            variant="secondary"
+            onClick={() => expandLayer('species')}
+            className="min-h-11"
+          >
+            Browse all species
+          </Button>
+        </div>
+      )}
+
+      {pathMode && showFullCatalog && hasRecommendedSpecies && (
+        <div className="mb-4">
+          <Button variant="link" onClick={() => collapseLayer('species')} className="min-h-11 px-0">
+            ← Back to path recommendations
+          </Button>
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center gap-4 mb-4">
         <span className="text-sm font-medium text-text-secondary">Source:</span>
@@ -141,9 +211,13 @@ export function SpeciesStep() {
           )}
         </SelectionCardSurface>
 
-        {species?.map((s: Species) => {
+        {speciesForGrid?.map((s: Species) => {
           const isSelected = !draft.ancestry?.mixed && draft.ancestry?.id === s.id;
-          
+          const traitCount = Array.isArray(s.species_traits) ? s.species_traits.length : 0;
+          const skillNames = Array.isArray(s.skills) && s.skills.length > 0
+            ? resolveSkillIdsToNames(s.skills, codexSkills).filter(Boolean)
+            : [];
+
           return (
             <SelectionCardSurface
               key={s.id}
@@ -153,24 +227,34 @@ export function SpeciesStep() {
               onClick={() => handleCardClick(s)}
               onKeyDown={(e) => activateOnEnterOrSpace(e, () => handleCardClick(s))}
             >
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-bold text-text-primary">{s.name}</h3>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs px-2 py-0.5 bg-surface-alt text-text-secondary rounded capitalize">
-                    {getSizesDisplay(s)}
-                  </span>
-                  {/* NO SPEED - species don't have speed values */}
-                  {isSelected && (
-                    <span className="text-xs px-2 py-0.5 bg-primary-button text-white rounded">
-                      ✓ Selected
-                    </span>
-                  )}
+              <div className="flex items-start gap-3 mb-2">
+                {/* Image-forward avatar (species have no portrait field yet — stylized initial). */}
+                <div
+                  className="shrink-0 w-12 h-12 rounded-xl bg-primary-subtle-bg border border-primary-subtle-border flex items-center justify-center text-lg font-bold text-primary-fg"
+                  aria-hidden
+                >
+                  {s.name?.charAt(0).toUpperCase() || '?'}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="font-bold text-text-primary truncate">{s.name}</h3>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-xs px-2 py-0.5 bg-surface-alt text-text-secondary rounded capitalize">
+                        {getSizesDisplay(s)}
+                      </span>
+                      {isSelected && (
+                        <span className="text-xs px-2 py-0.5 bg-primary-button text-white rounded">
+                          ✓ Selected
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-sm text-text-secondary line-clamp-2 mt-1">{s.description}</p>
                 </div>
               </div>
-              <p className="text-sm text-text-secondary line-clamp-2">{s.description}</p>
-              
+
               {s.ability_bonuses && Object.keys(s.ability_bonuses).length > 0 && (
-                <div className="flex gap-1 mt-2">
+                <div className="flex flex-wrap gap-1 mt-2">
                   {Object.entries(s.ability_bonuses).map(([ability, bonus]) => (
                     <Chip key={ability} variant="primary" size="sm">
                       {ability.substring(0, 3).toUpperCase()} +{bonus}
@@ -178,30 +262,55 @@ export function SpeciesStep() {
                   ))}
                 </div>
               )}
-              
-              <Button 
-                variant="link"
-                size="sm"
-                className="mt-3"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleCardClick(s);
-                }}
-              >
-                View Details →
-              </Button>
+
+              {/* Inline at-a-glance summary so basics read without opening the modal. */}
+              <p className="text-xs text-text-muted dark:text-text-secondary mt-2">
+                {traitCount > 0 && <>{traitCount} species trait{traitCount !== 1 ? 's' : ''}</>}
+                {traitCount > 0 && skillNames.length > 0 && ' · '}
+                {skillNames.length > 0 && <>Skills: {skillNames.slice(0, 3).join(', ')}{skillNames.length > 3 ? '…' : ''}</>}
+              </p>
+
+              <div className="flex items-center gap-2 mt-3">
+                <Button
+                  variant={isSelected ? 'secondary' : 'primary'}
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSelect(s.id, s.name);
+                  }}
+                >
+                  {isSelected ? '✓ Selected' : 'Select'}
+                </Button>
+                <Button
+                  variant="link"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCardClick(s);
+                  }}
+                >
+                  View details →
+                </Button>
+              </div>
             </SelectionCardSurface>
           );
         })}
       </div>
       
-      {source !== 'all' && (!species || species.length === 0) && (
+      {source !== 'all' && (!speciesForGrid || speciesForGrid.length === 0) && (
         <Alert variant="warning" className="mb-8">
-          No species in this source. Try &quot;All sources&quot; or create species in the Species Creator (My species).
+          {pathMode && !showFullCatalog && hasRecommendedSpecies
+            ? 'No recommended species matched this source filter. Browse all species or try another source.'
+            : 'No species in this source. Try "All sources" or create species in the Species Creator (My species).'}
         </Alert>
       )}
 
-      <CreatorStepFooter onBack={prevStep} onContinue={nextStep} continueDisabled={!canContinue} />
+      <CreatorStepFooter
+        onBack={prevStep}
+        onContinue={nextStep}
+        continueDisabled={!canContinue}
+        completionHint={draft.ancestry?.id ? <span>{completion.label}</span> : undefined}
+      />
 
       <MixedSpeciesModal
         isOpen={showMixedModal}

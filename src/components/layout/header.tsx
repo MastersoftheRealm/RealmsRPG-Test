@@ -11,32 +11,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { apiFetch } from '@/lib/api-client';
 import { useAuth, useAdmin, useProfile } from '@/hooks';
-import { ThemeToggle } from '@/components/shared';
-import { Tooltip } from '@/components/ui';
-import { useQueryClient } from '@tanstack/react-query';
+import { ThemeToggle, InfoTippy } from '@/components/shared';
 import { navbarCodex, navbarLibrary } from '../../../public/tooltip-text';
-import { Info } from 'lucide-react';
-
-function NavInfoTooltip({ content, label }: { content: string; label: string }) {
-  return (
-    <Tooltip content={content} placement="bottom">
-      <button
-        type="button"
-        aria-label={label}
-        className={cn(
-          'inline-flex items-center justify-center rounded-full',
-          'min-h-[var(--touch-target-min,44px)] min-w-[var(--touch-target-min,44px)] md:min-h-7 md:min-w-7',
-          'text-primary-fg hover:text-primary-fg-hover',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2'
-        )}
-      >
-        <Info className="w-4 h-4" aria-hidden />
-      </button>
-    </Tooltip>
-  );
-}
 
 const navLinks: Array<{ href: string; label: string; external?: boolean } | { label: string; dropdown: { href: string; label: string }[] }> = [
   { href: '/characters', label: 'Characters' },
@@ -200,10 +177,10 @@ export function Header() {
                     {item.label}
                   </Link>
                   {item.href === '/library' && (
-                    <NavInfoTooltip content={navbarLibrary} label="About Realms Library" />
+                    <InfoTippy content={navbarLibrary} label="About Realms Library" placement="bottom" />
                   )}
                   {item.href === '/codex' && (
-                    <NavInfoTooltip content={navbarCodex} label="About Realms Codex" />
+                    <InfoTippy content={navbarCodex} label="About Realms Codex" placement="bottom" />
                   )}
                 </span>
               )
@@ -318,16 +295,11 @@ function AccountDropdown({
   profile,
   signOut,
 }: {
-  profile: { username?: string | null; showTooltips?: boolean | null } | null;
+  profile: { username?: string | null } | null;
   signOut: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [showTooltips, setShowTooltips] = useState<boolean>(profile?.showTooltips ?? true);
-  const queryClient = useQueryClient();
   const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    setShowTooltips(profile?.showTooltips ?? true);
-  }, [profile?.showTooltips]);
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
@@ -356,34 +328,6 @@ function AccountDropdown({
             </Link>
             <div className="border-t border-border-light my-1" />
             <ThemeToggle />
-            <button
-              type="button"
-              onClick={async () => {
-                const next = !showTooltips;
-                setShowTooltips(next);
-                try {
-                  await apiFetch('/api/user/settings/tooltips', {
-                    method: 'PATCH',
-                    body: JSON.stringify({ showTooltips: next }),
-                  });
-                  queryClient.invalidateQueries({ queryKey: ['tooltips'] });
-                } catch {
-                  setShowTooltips((prev) => !prev);
-                }
-              }}
-              className="w-full text-left px-4 py-2.5 text-text-secondary hover:bg-surface-alt min-h-[44px] flex items-center justify-between gap-3"
-              aria-label="Toggle help tooltips"
-            >
-              <span>Help tooltips</span>
-              <span className={cn(
-                'text-xs font-semibold px-2 py-1 rounded-full',
-                showTooltips
-                  ? 'bg-success-100 dark:bg-success-900/40 text-success-fg'
-                  : 'bg-surface-alt text-text-secondary'
-              )}>
-                {showTooltips ? 'On' : 'Off'}
-              </span>
-            </button>
             <div className="border-t border-border-light my-1" />
             <button
               type="button"

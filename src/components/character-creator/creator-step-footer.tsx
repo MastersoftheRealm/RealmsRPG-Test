@@ -13,7 +13,9 @@ export interface CreatorStepFooterProps {
   backDisabled?: boolean;
   /** Replaces the default Continue button (e.g. Create Character). */
   primaryAction?: ReactNode;
-  /** `inline` = button row only (parent provides sticky chrome, e.g. SkillsAllocationPage). */
+  /** Optional completion indicator shown between Back and Continue (e.g. "2 / 3 feats"). */
+  completionHint?: ReactNode;
+  /** `inline` = button row only (parent provides surrounding chrome). */
   variant?: 'sticky' | 'inline';
   className?: string;
 }
@@ -30,9 +32,12 @@ export function CreatorStepFooter({
   continueDisabled,
   backDisabled,
   primaryAction,
+  completionHint,
   variant = 'sticky',
   className,
 }: CreatorStepFooterProps) {
+  const soloPrimary = Boolean(primaryAction && !onBack && !onContinue);
+
   const actions = (
     <>
       {onBack ? (
@@ -44,8 +49,13 @@ export function CreatorStepFooter({
         >
           {backLabel}
         </Button>
-      ) : (
+      ) : !soloPrimary ? (
         <span />
+      ) : null}
+      {completionHint && (
+        <div className="hidden sm:flex items-center text-sm text-text-secondary self-center mx-auto">
+          {completionHint}
+        </div>
       )}
       {primaryAction ??
         (onContinue ? (
@@ -70,9 +80,11 @@ export function CreatorStepFooter({
 
   return (
     <div
+      data-testid="creator-step-footer"
       className={cn(
-        'sticky bottom-3 left-0 right-0 z-sticky mt-8 flex justify-between gap-4',
-        'bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4',
+        'mt-auto pt-8 flex gap-4',
+        soloPrimary ? 'justify-end' : 'justify-between',
+        'border-t border-border-light bg-surface-alt/80 rounded-xl py-3 px-4',
         '-mx-4 md:mx-0',
         className
       )}

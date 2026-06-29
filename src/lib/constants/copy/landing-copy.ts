@@ -15,7 +15,7 @@ export const LANDING_COPY = {
     },
   },
   uniqueness: {
-    heading: 'A system to Built Around Your Imagination',
+    heading: 'A System Built Around Your Imagination',
     subheading: 'Create something unique, or utilize something tried and true.',
     items: [
       {
@@ -27,8 +27,8 @@ export const LANDING_COPY = {
       {
         title: 'Custom Powers & Gear',
         body: 'Design powers from infinite combinations of parts and effects, or craft weapons and armor to perfectly fit your build.',
-        href: '/library?view=realms',
-        linkLabel: 'Browse the Realms Library',
+        href: '/power-creator',
+        linkLabel: 'Create custom powers',
       },
       {
         title: 'Rules that Support Your Creativity',
@@ -66,7 +66,7 @@ export const LANDING_COPY = {
     item: {
       title: 'Create Weapons & Armor',
       body: 'Forge custom armaments crafted for your build and your story.',
-      cta: 'Open the Armament Creator',
+      cta: 'Open the Item Creator',
     },
   },
   community: {
