@@ -10,6 +10,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Plus, Wand2, Swords, Shield, Users, LogIn, Sparkles } from 'lucide-react';
 import { useAuth } from '@/hooks';
 import { PageContainer, PageHeader, TabNavigation, TabContentPanel, useTabGroup, Button, useToast } from '@/components/ui';
@@ -64,6 +65,8 @@ export default function LibraryPage() {
 }
 
 function LibraryContent() {
+  const searchParams = useSearchParams();
+  const viewParam = searchParams.get('view');
   const { tabGroupId, sharedPanelId } = useTabGroup();
   const { user, initialized: authInitialized } = useAuth();
   const isGuest = !user;
@@ -77,10 +80,14 @@ function LibraryContent() {
   useEffect(() => {
     if (!authInitialized) return;
     if (!modeInitialized) {
-      setLibraryMode(user ? 'my' : 'public');
+      if (viewParam === 'realms') {
+        setLibraryMode('public');
+      } else {
+        setLibraryMode(user ? 'my' : 'public');
+      }
       setModeInitialized(true);
     }
-  }, [authInitialized, user, modeInitialized]);
+  }, [authInitialized, user, modeInitialized, viewParam]);
 
   // The Enhanced tab only exists in My Library; if we switch to Realms mode
   // while it's active, fall back to a valid tab so content doesn't go blank.

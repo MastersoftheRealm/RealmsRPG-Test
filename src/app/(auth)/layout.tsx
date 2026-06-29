@@ -1,11 +1,18 @@
 /**
  * Auth Layout
  * ============
- * Branded layout for authentication pages matching vanilla design
+ * Branded shell for login/register — matches landing hero gradient and tokens.
  */
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { cn } from '@/lib/utils/cn';
+import { AUTH_COPY, DISCORD_URL } from '@/lib/constants/site-copy';
+import { LandingGradientBackdrop } from '@/components/landing/landing-gradient-backdrop';
+import { LandingDiceDecor } from '@/components/landing/landing-dice-decor';
+
+const footerLinkClass =
+  'text-text-secondary hover:text-text-primary dark:text-text-on-dark/80 dark:hover:text-text-on-dark transition-colors';
 
 export default function AuthLayout({
   children,
@@ -13,76 +20,72 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-900 relative overflow-hidden">
-      {/* Background image */}
-      <div className="absolute inset-0 z-0">
-        <Image
-          src="/images/LoginBackground.jpg"
-          alt=""
-          fill
-          className="object-cover"
-          priority
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900/70 via-gray-800/60 to-primary-900/40" />
-      </div>
+    <div
+      className={cn(
+        'min-h-screen flex flex-col relative overflow-hidden',
+        'bg-gradient-to-br from-background via-primary-subtle-bg to-primary-100',
+        'dark:from-primary-900 dark:via-primary-800 dark:to-primary-900'
+      )}
+    >
+      <LandingGradientBackdrop />
+      <LandingDiceDecor variant="auth" />
 
-      {/* Decorative D20 Elements */}
-      <div className="absolute top-[8%] right-[6%] w-28 h-28 opacity-60 z-10 hidden lg:block">
-        <Image src="/images/D20_1.png" alt="" fill className="object-contain" />
-      </div>
-      <div className="absolute top-[40%] left-[3%] w-20 h-20 opacity-50 z-10 hidden lg:block">
-        <Image src="/images/D20_2.png" alt="" fill className="object-contain" />
-      </div>
-      <div className="absolute bottom-[15%] left-[8%] w-36 h-36 opacity-50 z-10 hidden lg:block">
-        <Image src="/images/D20_3.png" alt="" fill className="object-contain" />
-      </div>
-      <div className="absolute bottom-[20%] right-[25%] w-24 h-24 opacity-40 z-10 hidden xl:block">
-        <Image src="/images/D20_4.png" alt="" fill className="object-contain" />
-      </div>
-
-      {/* Main content - side by side on desktop */}
-      <main id="main-content" className="relative z-20 flex-1 flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-5xl flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
-          {/* Brand Section */}
+      <main
+        id="main-content"
+        className="relative z-20 flex-1 flex items-center justify-center px-4 py-10 sm:py-12"
+      >
+        <div className="w-full max-w-5xl flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
           <div className="flex-1 text-center lg:text-left">
-            <Link href="/" className="inline-block mb-6">
+            <Link
+              href="/"
+              className="inline-block mb-6 w-full max-w-[300px] sm:max-w-[360px] lg:max-w-[420px] mx-auto lg:mx-0 -translate-x-[4%] sm:-translate-x-[5%]"
+            >
               <Image
                 src="/images/LogoFull.png"
-                alt="Realms RPG"
-                width={400}
-                height={150}
-                className="h-24 lg:h-32 w-auto"
+                alt="Realms"
+                width={560}
+                height={187}
+                className="dark:hidden w-full h-auto object-contain"
+                priority
+              />
+              <Image
+                src="/images/LogoFullGrey.png"
+                alt="Realms"
+                width={560}
+                height={187}
+                className="hidden dark:block w-full h-auto object-contain drop-shadow-lg"
                 priority
               />
             </Link>
-            <p className="text-2xl lg:text-3xl font-bold text-white mb-2">
-              Forge your own path.
+            <p className="font-display text-xl sm:text-2xl lg:text-3xl font-bold text-text-primary dark:text-text-on-dark mb-2 max-w-[22ch] mx-auto lg:mx-0">
+              {AUTH_COPY.headline}
             </p>
-            <p className="text-lg text-gray-300">
-              Create unique powers and bring your characters to life.
+            <p className="font-nunito text-base sm:text-lg text-text-secondary dark:text-text-on-dark/90 max-w-[42ch] mx-auto lg:mx-0">
+              {AUTH_COPY.subline}
             </p>
           </div>
 
-          {/* Form Section */}
-          <div className="w-full max-w-md">
-            {children}
-          </div>
+          <div className="w-full max-w-md">{children}</div>
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="relative z-20 p-4 text-center">
-        <div className="flex justify-center gap-6 text-gray-300 text-sm">
-          <Link href="/privacy" className="hover:text-white transition-colors">
+        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm">
+          <Link href="/privacy" prefetch={false} className={footerLinkClass}>
             Privacy Policy
           </Link>
-          <Link href="/terms" className="hover:text-white transition-colors">
+          <Link href="/terms" prefetch={false} className={footerLinkClass}>
             Terms of Service
           </Link>
-          <a href="mailto:RealmsRoleplayGame@gmail.com" className="hover:text-white transition-colors">
+          <a href="mailto:RealmsRoleplayGame@gmail.com" className={footerLinkClass}>
             Contact
           </a>
-          <a href="https://discord.gg/XbX4nFbxga" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+          <a
+            href={DISCORD_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={footerLinkClass}
+          >
             Discord
           </a>
         </div>

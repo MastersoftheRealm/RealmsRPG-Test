@@ -2,7 +2,7 @@
 
 **Last slimmed:** 2026-06-26 (TASK-382). Full history: [`archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md`](archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md) and [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md).
 
-**Next task ID:** TASK-389
+**Next task ID:** TASK-391
 
 **Agent rules:** Skip `blocked` tasks and any task with `assignee:` (e.g. TASK-376). Skip human-only tasks (TASK-353 → `DEVELOPER_TASK_QUEUE.md` DEV-001). Pick highest-priority `not-started` or continue `partial`.
 
@@ -388,7 +388,7 @@
   created_at: 2026-06-28
   created_by: owner
   priority: high
-  status: not-started
+  status: done
   description: |
     Scrap and rebuild `home-page.tsx` per REALMS_PRODUCT_OVERVIEW Section 4 —
     not a copy-only patch. Single primary CTA (Start Playing → /characters/new),
@@ -408,9 +408,32 @@
     - Below fold: Create a Custom Power + Create Weapons & Armor sections with links to creators.
     - Join Discord in closing/footer section.
     - Mobile-first (~360px); semantic tokens; `npm run build` passes.
+  completed_work: |
+    Rebuilt `home-page.tsx` from scratch as a composition shell over new section
+    components in `src/components/landing/` (HeroSection, UniquenessSection,
+    HowItWorksSection, SecondaryDiscoverySection, CommunitySection + MarketingButton
+    helpers + barrel). AIDA scroll story per Section 4.
+    - Removed: OnboardingTour trigger + "Take a quick tour", logged-in welcome
+      link-farm, review carousel, equal-weight feature cards. No Codex/Library CTAs.
+    - Single dominant primary CTA "Start Playing" -> /characters/new (hero) repeated
+      once mid-page in How-it-works. Low-weight "#how-it-works" explorer anchor for
+      researching visitors (owner: proceed with research best practice, I.4).
+    - Conditional hero: returning users with >=1 character get continue-focused hero
+      (Continue your adventure -> /characters) via useCharacters.
+    - Secondary discovery: Create a Custom Power -> /power-creator, Create Weapons &
+      Armor -> /item-creator (outline/subordinate). Community: Join Discord tertiary.
+    - Copy centralized in `LANDING_COPY` (site-copy.ts). Semantic tokens, dark mode,
+      44px targets, h1->h2->h3 hierarchy. `npm run build` passes; lint clean.
+  remaining_work: |
+    (None — licensed character/item art integrated 2026-06-28: Faust hero, Human-Greyscale
+    / gnome / Shroom-Shot uniqueness, gnome + Shroom-Shot secondary discovery.)
+    Power/item secondary CTAs still link to Layer 3 creators until Phase 3.
+  follow_up_tasks: []
+  build_validation: DEV-V-012
+  developer_test_plan: BUILD_VALIDATION.md#dev-v-012--landing-page-rebuild-task-387
   notes: |
-    Can ship before or in parallel with TASK-386. Power/item creator links may land
-    on current L3 UI until Phase 3 adds L1 entry — document as known gap if needed.
+    Can ship before or in parallel with TASK-386. OnboardingTour component file kept
+    in `src/components/shared/` for TASK-388 to repurpose (no longer imported by home).
 
 - id: TASK-388
   title: "Post-activation onboarding (play together, sheet tour, level-up milestones)"
@@ -439,3 +462,66 @@
   notes: |
     Replaces pre-creation home OnboardingTour with post-activation guidance.
     Prefer Tippy/highlight chains over modal-heavy tours where TASK-376 allows.
+
+- id: TASK-389
+  title: "Landing visual assets — replace uniqueness placeholder panels"
+  created_at: 2026-06-28
+  created_by: agent
+  priority: medium
+  status: done
+  description: |
+    Follow-up to TASK-387. The rebuilt landing uniqueness block (Section 4 "visual
+    proof") currently renders layout-stable placeholder panels (`VisualPanel` in
+    `src/components/landing/uniqueness-section.tsx`). Replace with real product
+    screenshots / species art / power examples so the differentiators show the
+    product in use rather than illustrative placeholders.
+  related_files:
+    - src/components/landing/uniqueness-section.tsx
+    - public/images/
+  acceptance_criteria:
+    - Each uniqueness card shows a real screenshot or art asset (creator UI, species
+      art, power example) at the existing 16:10 panel aspect (no layout shift).
+    - Assets optimized (next/image, sized); mobile + dark mode verified.
+    - `npm run build` passes.
+  notes: |
+    Completed 2026-06-28: owner supplied Faust, gnome, Shroom-Shot, Human-Greyscale;
+    integrated via LandingArtFrame + hero split layout (banner removed).
+
+- id: TASK-390
+  title: "Migrate editable static copy to per-page constants modules"
+  created_at: 2026-06-28
+  created_by: owner
+  priority: medium
+  status: in-progress
+  description: |
+    Owner wants all user-editable marketing/UI strings in `src/lib/constants/copy/`
+    — one module per page or area for easy editing while viewing a route. Landing,
+    auth, and about headers/CTAs are migrated; carousel slide bodies, footer, nav,
+    rules/resources pages, creators, and tooltips remain scattered.
+  related_files:
+    - src/lib/constants/copy/
+    - src/lib/constants/site-copy.ts
+    - src/lib/constants/skills.ts
+    - public/tooltip-text.tsx
+    - src/components/layout/footer.tsx
+    - src/components/layout/header.tsx
+  acceptance_criteria:
+    - `src/lib/constants/copy/` holds per-page modules; `site-copy.ts` re-exports (backward compatible).
+    - Each major route with owner-editable prose has a dedicated `*-copy.ts` file documented in `site-copy.ts` header table.
+    - No duplicate hardcoded motto/Discord URL outside copy modules (except tooltip-text.tsx per TASK-376).
+    - Pages import copy from constants; no marketing string changes required in JSX for migrated sections.
+    - `npm run build` passes.
+  completed_work: |
+    - Created `src/lib/constants/copy/` (shared, landing, auth, about + index barrel).
+    - Refactored `site-copy.ts` to re-export from `copy/` with editor map in header comment.
+    - Migrated About page header + creator note + bottom CTAs to `about-copy.ts` (TASK-390 partial).
+  remaining_work: |
+    - Migrate About dice-carousel slide bodies from `about/page.tsx` to `about-copy.ts` (or structured slide data).
+    - Add `footer-copy.ts`, `nav-copy.ts`, `rules-copy.ts`, etc. incrementally per page touched.
+    - Optional: split long About carousel into `src/components/about/` + copy-only slide definitions.
+  follow_up_tasks: []
+  notes: |
+    Do not merge game mechanics (`skills.ts`) or Collin tooltip migration (`public/tooltip-text.tsx`) into marketing copy modules.
+    Migrate incrementally when editing a page — avoid one giant PR moving every string.
+
+---

@@ -7,62 +7,18 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
-import { cn } from '@/lib/utils';
-import { PageContainer, PageHeader, Button } from '@/components/ui';
-import { Swords, Sparkles, BookOpen, Users, Wand2, Shield, Skull, Sword, Zap, MessageCircle } from 'lucide-react';
-import { REALMS_MOTTO } from '@/lib/constants/site-copy';
-
-// Discord link (same as home/footer)
-const DISCORD_URL = 'https://discord.gg/XbX4nFbxga';
-
-type MarketingButtonVariant = 'primary' | 'outline';
-
-function MarketingLinkButton({
-  href,
-  variant = 'primary',
-  size,
-  className,
-  children,
-}: {
-  href: string;
-  variant?: MarketingButtonVariant;
-  size?: 'sm';
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Button asChild variant={variant} size={size} className={className}>
-      <Link prefetch={false} href={href}>
-        {children}
-      </Link>
-    </Button>
-  );
-}
-
-function MarketingExternalButton({
-  href,
-  variant = 'primary',
-  size,
-  className,
-  children,
-}: {
-  href: string;
-  variant?: MarketingButtonVariant;
-  size?: 'sm';
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Button asChild variant={variant} size={size} className={className}>
-      <a href={href} target="_blank" rel="noopener noreferrer">
-        {children}
-      </a>
-    </Button>
-  );
-}
+import { cn } from '@/lib/utils/cn';
+import { Sparkles, BookOpen, Users, Wand2, Shield, Skull, Sword, Zap } from 'lucide-react';
+import { ABOUT_COPY, DISCORD_URL, LANDING_COPY } from '@/lib/constants/site-copy';
+import { DiscordIcon } from '@/components/shared/discord-icon';
+import {
+  MarketingLinkButton,
+  MarketingExternalButton,
+} from '@/components/landing/marketing-button';
+import { LandingGradientBackdrop } from '@/components/landing/landing-gradient-backdrop';
+import { LandingDiceDecor } from '@/components/landing/landing-dice-decor';
+import { AboutCarouselSection } from '@/components/about/about-carousel-section';
 
 // Order: d10, d12, d20, d4(center on load), d6, d8, d10 — 7 dice; selected always centered; cycling wraps (leftmost moves to right)
 const DICE_IMAGES = [
@@ -342,8 +298,8 @@ const CAROUSEL_SLIDES: Array<{
         </p>
         <div className="mt-6 flex flex-wrap gap-4">
           <MarketingExternalButton href={DISCORD_URL}>
-            <MessageCircle className="w-5 h-5" />
-            Join the Discord
+            <DiscordIcon className="w-5 h-5" />
+            {LANDING_COPY.community.cta}
           </MarketingExternalButton>
           <MarketingLinkButton href="/rules" variant="outline">
             <BookOpen className="w-5 h-5" />
@@ -359,8 +315,8 @@ const CAROUSEL_SLIDES: Array<{
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
           <MarketingExternalButton href={DISCORD_URL} size="sm">
-            <MessageCircle className="w-4 h-4" />
-            Discord
+            <DiscordIcon className="w-4 h-4" />
+            {LANDING_COPY.community.cta}
           </MarketingExternalButton>
           <MarketingLinkButton href="/rules" variant="outline" size="sm">
             <BookOpen className="w-4 h-4" />
@@ -372,202 +328,75 @@ const CAROUSEL_SLIDES: Array<{
   },
 ];
 
-// Fixed height so carousel doesn't jump when switching slides
-const CAROUSEL_CONTENT_MIN_H = 'min-h-[420px]';
-
-const FADE_DURATION_MS = 180;
-
 const CENTER_INDEX = 3; // d4 in order: d10, d12, d20, d4, d6, d8, d10
-const NUM_DICE = DICE_IMAGES.length;
-
-/** Indices of dice to show: selected at center (position 3), 3 left, 3 right. Wraps circularly. */
-function getVisibleDiceIndices(selectedIndex: number): number[] {
-  return Array.from({ length: NUM_DICE }, (_, i) => (selectedIndex - 3 + i + NUM_DICE * 2) % NUM_DICE);
-}
 
 export default function AboutPage() {
-  const [currentSlide, setCurrentSlide] = useState(CENTER_INDEX); // Start on d4 (center)
-  const [pendingSlide, setPendingSlide] = useState<number | null>(null);
-  const [isFadingOut, setIsFadingOut] = useState(false);
-
-  const goToSlide = (index: number) => {
-    if (index === currentSlide && !pendingSlide) return;
-    if (pendingSlide !== null) return; // Ignore rapid clicks during transition
-    setPendingSlide(index);
-    setIsFadingOut(true);
-  };
-
-  const goPrev = () => {
-    const next = (currentSlide - 1 + NUM_DICE) % NUM_DICE;
-    goToSlide(next);
-  };
-
-  const goNext = () => {
-    const next = (currentSlide + 1) % NUM_DICE;
-    goToSlide(next);
-  };
-
-  const visibleIndices = getVisibleDiceIndices(currentSlide);
-
-  // Phase 1: fade out current content. Phase 2: swap slide, then fade in new content.
-  const [isFadingIn, setIsFadingIn] = useState(false);
-  useEffect(() => {
-    if (!isFadingOut || pendingSlide === null) return;
-    const t = setTimeout(() => {
-      setCurrentSlide(pendingSlide);
-      setPendingSlide(null);
-      setIsFadingOut(false);
-      setIsFadingIn(true);
-    }, FADE_DURATION_MS);
-    return () => clearTimeout(t);
-  }, [isFadingOut, pendingSlide]);
-
-  // Trigger fade-in: start new content at opacity-0, then animate to 1.
-  useEffect(() => {
-    if (!isFadingIn) return;
-    const raf = requestAnimationFrame(() => {
-      requestAnimationFrame(() => setIsFadingIn(false));
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [isFadingIn]);
-
   return (
-    <PageContainer size="xl" padded>
-      <PageHeader
-        title="About Realms"
-        description={`${REALMS_MOTTO}. The tabletop RPG built for ultimate creative freedom, where fun comes first, flavor second, and rules third.`}
-        size="lg"
-      />
-
-      {/* Carousel - floating, borderless, fixed height */}
-      <section className="relative mb-12">
-        {/* Subtle ambient background */}
-        <div className="absolute inset-0 pointer-events-none -z-10">
-          <div className="absolute -top-32 -right-32 w-64 h-64 bg-primary-subtle-bg/20 rounded-full blur-3xl" />
-          <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-accent-200/15 rounded-full blur-3xl" />
+    <>
+      <section
+        className={cn(
+          'relative overflow-hidden',
+          'bg-gradient-to-br from-background via-primary-subtle-bg to-primary-100',
+          'dark:from-primary-900 dark:via-primary-800 dark:to-primary-900'
+        )}
+      >
+        <LandingGradientBackdrop />
+        <LandingDiceDecor variant="auth" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background to-transparent dark:from-background" aria-hidden="true" />
+        <div className="relative z-10 layout-shell-wide mx-auto max-w-[var(--container-wide)] px-4 sm:px-6 lg:px-8 py-10 sm:py-12 lg:py-14 text-center lg:text-left">
+          <h1 className="font-display text-3xl sm:text-4xl font-bold text-text-primary dark:text-text-on-dark mb-3">
+            {ABOUT_COPY.pageTitle}
+          </h1>
+          <p className="font-nunito text-base sm:text-lg text-text-secondary dark:text-text-on-dark/90 max-w-[58ch] mx-auto lg:mx-0">
+            {ABOUT_COPY.pageDescription}
+          </p>
         </div>
+      </section>
 
-        {/* Content - fixed min-height, no box. Fade out old, swap, then fade in new. */}
-        <div className={cn('relative p-8 md:p-12', CAROUSEL_CONTENT_MIN_H)}>
-          <h2
-            className={cn(
-              'text-xl font-bold text-primary-fg mb-6 flex items-center gap-2 transition-all duration-slow',
-              (isFadingOut || isFadingIn) ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0'
-            )}
-          >
-            <Swords className="w-6 h-6" />
-            <span>{CAROUSEL_SLIDES[currentSlide].title}</span>
-          </h2>
-          <div
-            className={cn(
-              'text-text-secondary transition-all duration-slow',
-              (isFadingOut || isFadingIn) ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'
-            )}
-          >
-            {(() => {
-              const slide = CAROUSEL_SLIDES[currentSlide];
-              const mobileContent = slide.contentMobile ?? slide.content;
-              return (
-                <>
-                  <div className="md:hidden">{mobileContent}</div>
-                  <div className="max-md:hidden">{slide.content}</div>
-                </>
-              );
-            })()}
-          </div>
-        </div>
+      <section className="bg-background pb-14 sm:pb-20 pt-8 sm:pt-10 -mt-1">
+        <div className="layout-shell-wide mx-auto max-w-[var(--container-wide)] px-4 sm:px-6 lg:px-8 space-y-14 sm:space-y-16">
+          <AboutCarouselSection
+            slides={CAROUSEL_SLIDES}
+            dice={DICE_IMAGES}
+            initialIndex={CENTER_INDEX}
+          />
 
-        {/* Dice carousel - selected die always center; 3 on each side; arrows cycle selection */}
-        <div className="relative flex items-center justify-center py-6 px-14 overflow-hidden w-full">
-          <button
-            onClick={goPrev}
-            className="absolute left-2 md:left-4 p-2 rounded-full hover:bg-primary-subtle-bg transition-all hover:scale-110 z-10 min-h-[44px] min-w-[44px] flex items-center justify-center"
-            aria-label="Previous slide"
-          >
-            <Image src="/images/ArrowL.png" alt="" width={24} height={26} className="opacity-60 hover:opacity-100 transition-opacity" />
-          </button>
-
-          <div className="flex items-center justify-center w-full overflow-hidden">
-            <div className="flex items-center justify-center gap-1 md:gap-2">
-              {visibleIndices.map((diceIndex, displayPos) => {
-                const dice = DICE_IMAGES[diceIndex];
-                const distance = Math.abs(displayPos - 3); // 3 = center
-                const isSelected = displayPos === 3;
-                const scale = isSelected ? 1.2 : Math.max(0.55, 1 - distance * 0.18);
-                const opacity = isSelected ? 1 : Math.max(0.4, 1 - distance * 0.22);
-                const zIndex = isSelected ? 20 : 10 - distance;
-
-                return (
-                  <button
-                    key={`${dice.alt}-${diceIndex}-${displayPos}`}
-                    onClick={() => goToSlide(diceIndex)}
-                    className={cn(
-                      'flex-shrink-0 transition-all duration-slow ease-out rounded-xl p-2 min-h-[44px] min-w-[44px] flex items-center justify-center',
-                      'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-                      isSelected ? 'bg-primary-subtle-bg' : 'hover:bg-surface-alt/80'
-                    )}
-                    style={{
-                      transform: `scale(${scale})`,
-                      opacity,
-                      zIndex,
-                    }}
-                    aria-label={`Go to ${dice.label}`}
-                    aria-current={isSelected ? 'true' : undefined}
-                    title={dice.label}
-                  >
-                    <Image
-                      src={dice.src}
-                      alt=""
-                      width={48}
-                      height={48}
-                      className={cn('w-10 h-10 md:w-12 md:h-12 object-contain', dice.className)}
-                    />
-                  </button>
-                );
-              })}
+          <div className="max-w-3xl lg:max-w-none">
+            <h2 className="font-display text-xl sm:text-2xl font-bold text-text-primary mb-4">
+              {ABOUT_COPY.creatorNote.heading}
+            </h2>
+            <p className="font-nunito text-lg text-text-muted dark:text-text-secondary italic mb-4">
+              {ABOUT_COPY.creatorNote.greeting}
+            </p>
+            <p className="font-nunito text-base sm:text-lg text-text-secondary leading-relaxed mb-4">
+              {ABOUT_COPY.creatorNote.bodyLead}{' '}
+              <strong className="text-text-primary">{ABOUT_COPY.creatorNote.bodyEmphasis}</strong>,{' '}
+              {ABOUT_COPY.creatorNote.bodyTail}
+            </p>
+            <p className="font-nunito text-lg text-text-muted dark:text-text-secondary italic mb-8">
+              {ABOUT_COPY.creatorNote.closing}
+              <br />
+              <span className="font-semibold text-text-primary not-italic">{ABOUT_COPY.creatorNote.authorName}</span>
+              <br />
+              {ABOUT_COPY.creatorNote.authorTitle}
+            </p>
+            <div className="flex flex-wrap gap-3 justify-center sm:justify-start items-center">
+              <MarketingLinkButton href="/characters/new">
+                <Sparkles className="w-5 h-5 shrink-0" />
+                {LANDING_COPY.hero.primaryCta}
+              </MarketingLinkButton>
+              <MarketingLinkButton href="/rules" variant="outline">
+                <BookOpen className="w-5 h-5 shrink-0" />
+                {ABOUT_COPY.ctas.rules}
+              </MarketingLinkButton>
+              <MarketingExternalButton href={DISCORD_URL} variant="outline">
+                <DiscordIcon className="w-5 h-5" />
+                {LANDING_COPY.community.cta}
+              </MarketingExternalButton>
             </div>
           </div>
-
-          <button
-            onClick={goNext}
-            className="absolute right-2 md:right-4 p-2 rounded-full hover:bg-primary-subtle-bg transition-all hover:scale-110 z-10 min-h-[44px] min-w-[44px] flex items-center justify-center"
-            aria-label="Next slide"
-          >
-            <Image src="/images/ArrowR.png" alt="" width={24} height={26} className="opacity-60 hover:opacity-100 transition-opacity" />
-          </button>
         </div>
       </section>
-
-      {/* Creator message - floating style, minimal border */}
-      <section className="rounded-2xl p-8 transition-all duration-slow hover:shadow-lg bg-surface-alt/60">
-        <h2 className="text-xl font-bold text-text-primary mb-4">A Note from the Creator</h2>
-        <p className="text-lg text-text-muted dark:text-text-secondary italic mb-4">
-          Dear Realms Players,
-        </p>
-        <p className="text-lg text-text-secondary leading-relaxed mb-4">
-          Thank you for playing my game! I designed it with the hope that others would have as much fun with it as I do, and it means a lot to see people enjoying it. Realms is built to put <strong className="text-text-primary">fun first, flavor second, and rules third</strong>, so that your imagination can run free. I appreciate your time and enthusiasm.
-        </p>
-        <p className="text-lg text-text-muted dark:text-text-secondary italic mb-6">
-          Sincerely,<br />
-          <span className="font-semibold text-text-primary">Kadin Brooksby</span><br />
-          Creator of Realms
-        </p>
-        {/* Primary CTAs for retention — clear next steps */}
-        <div className="flex flex-wrap gap-3 justify-center items-center pt-4 border-t border-border-light">
-          <MarketingLinkButton href="/characters/new">
-            <Sparkles className="w-5 h-5 shrink-0" />
-            Create a Character
-          </MarketingLinkButton>
-          <MarketingLinkButton href="/codex" variant="outline">
-            <BookOpen className="w-5 h-5 shrink-0" />
-            Browse Codex
-          </MarketingLinkButton>
-          <MarketingExternalButton href={DISCORD_URL} variant="outline">
-            <MessageCircle className="w-5 h-5 shrink-0" />
-            Join the Community
-          </MarketingExternalButton>
-        </div>
-      </section>
-    </PageContainer>
+    </>
   );
 }

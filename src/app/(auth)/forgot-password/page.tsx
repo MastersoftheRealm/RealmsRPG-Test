@@ -55,11 +55,11 @@ export default function ForgotPasswordPage() {
           <div className="w-16 h-16 mx-auto rounded-full bg-green-500/10 flex items-center justify-center">
             <CheckIcon className="w-8 h-8 text-green-400" />
           </div>
-          <p className="text-gray-300">
+          <p className="text-text-secondary">
             We have sent password reset instructions to your email address. 
             Please check your inbox and follow the link to reset your password.
           </p>
-          <p className="text-sm text-gray-300">
+          <p className="text-sm text-text-secondary">
             Did not receive the email? Check your spam folder or{' '}
             <Button
               variant="link"
@@ -110,7 +110,7 @@ export default function ForgotPasswordPage() {
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-gray-300">
+      <p className="mt-6 text-center text-text-secondary">
         Remember your password?{' '}
         <Link 
           href="/login"

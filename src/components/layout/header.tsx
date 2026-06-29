@@ -14,11 +14,29 @@ import { cn } from '@/lib/utils';
 import { apiFetch } from '@/lib/api-client';
 import { useAuth, useAdmin, useProfile } from '@/hooks';
 import { ThemeToggle } from '@/components/shared';
+import { Tooltip } from '@/components/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { navbarCodex, navbarLibrary } from '../../../public/tooltip-text';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
-import { Info } from 'lucide-react'
+import { Info } from 'lucide-react';
+
+function NavInfoTooltip({ content, label }: { content: string; label: string }) {
+  return (
+    <Tooltip content={content} placement="bottom">
+      <button
+        type="button"
+        aria-label={label}
+        className={cn(
+          'inline-flex items-center justify-center rounded-full',
+          'min-h-[var(--touch-target-min,44px)] min-w-[var(--touch-target-min,44px)] md:min-h-7 md:min-w-7',
+          'text-primary-fg hover:text-primary-fg-hover',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2'
+        )}
+      >
+        <Info className="w-4 h-4" aria-hidden />
+      </button>
+    </Tooltip>
+  );
+}
 
 const navLinks: Array<{ href: string; label: string; external?: boolean } | { label: string; dropdown: { href: string; label: string }[] }> = [
   { href: '/characters', label: 'Characters' },
@@ -182,14 +200,10 @@ export function Header() {
                     {item.label}
                   </Link>
                   {item.href === '/library' && (
-                    <Tippy content={navbarLibrary}>
-                      <Info className="w-4 h-4 text-primary-fg"/>
-                    </Tippy>
+                    <NavInfoTooltip content={navbarLibrary} label="About Realms Library" />
                   )}
                   {item.href === '/codex' && (
-                    <Tippy content={navbarCodex}>
-                      <Info className="w-4 h-4 text-primary-fg"/>
-                    </Tippy>
+                    <NavInfoTooltip content={navbarCodex} label="About Realms Codex" />
                   )}
                 </span>
               )

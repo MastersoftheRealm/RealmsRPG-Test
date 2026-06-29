@@ -28,6 +28,7 @@ export { ItemCard } from './item-card';
 
 // Modal components
 export { LoginPromptModal } from './login-prompt-modal';
+export { DiscordIcon } from './discord-icon';
 export { DeleteConfirmModal } from './delete-confirm-modal';
 export { ConfirmActionModal } from './confirm-action-modal';
 

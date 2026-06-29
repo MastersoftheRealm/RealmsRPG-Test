@@ -1614,3 +1614,11 @@ Notes
 - Feedback: (1) Fully scrap and rebuild home page as modern TTRPG startup landing page — remove OnboardingTour, welcome tour, Codex/Library CTAs, multi-CTA sprawl; single primary CTA Start Playing; mid-page custom power + weapons/armor CTAs to creators (Layer 1 when built); Discord tertiary. (2) Sitewide UX overhaul one page at a time; creators currently Layer 3 only — migrate to L1/L2/L3; character creator highest priority. (3) Tooltip system depends on Collin TASK-376 Tippy — follow his methods. (4) Post-save: play-together prompt (Discord, campaign invite); optional sheet tour after character created; milestone level-up tutorials (first level-up, first ability point, delta-only per level); tutorials on/off toggle. Remove pre-creation home tour.
 - Expected: REALMS_PRODUCT_OVERVIEW.md updated; TASK-387 landing rebuild, TASK-386 creator pilot, TASK-388 post-activation.
 - Disposition: Documented 2026-06-28 in REALMS_PRODUCT_OVERVIEW.md Sections 4, 6, 11; tasks filed.
+
+**Raw Feedback Log — 2026-06-28 (Validation-first critique — external review)**
+- Date: 2026-06-28
+- Context: REALMS_PRODUCT_OVERVIEW.md; pre-implementation strategy
+- Priority: High
+- Feedback: Doc over-specified before validation (layers, 10 steps, migration, tooltips, landing, post-activation) — risk building theory that breaks in real use. Missing failure modes: users ignore recs, Forge-first, species bounce, TP confusion, speedrun. Layer system needs governance (what qualifies as L1). Landing single-CTA may be too rigid for skeptical explorers — consider light "Explore system first" secondary intent. Section 11 retention shallow vs "why come back tomorrow" (campaign, encounters, progression). Doc is philosophy/direction not validated UX. Next: lock 3 things only, prototype 1 path + species + feats step, let behavior rewrite spec before expanding doc.
+- Expected: Appendix I in REALMS_PRODUCT_OVERVIEW.md; validation gate on phases; defer doc expansion until prototype.
+- Disposition: Documented 2026-06-28 in REALMS_PRODUCT_OVERVIEW.md Appendix I; Appendix E validation gate note.

@@ -42,6 +42,7 @@ Each suite is a **category** of step-by-step tests. Full steps live in [`BUILD_V
 | **DEV-V-005** | RLS / DB migrations | TASK-352, TASK-327, TASK-354 | T001–T003 (3) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-005--rls-policy-consolidation-task-352-task-327) |
 | **DEV-V-010** | Feat/trait custom name + note | TASK-377 | T001–T004 (4) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-010--feattrait-custom-name--note-task-377) |
 | **DEV-V-011** | UI verification safety net | TASK-383, TASK-385 | T001–T006 (6) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-011--ui-verification-safety-net-task-383) |
+| **DEV-V-012** | Landing page rebuild | TASK-387 | T001–T006 (6) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-012--landing-page-rebuild-task-387) |
 | DEV-V-002 | Campaign & rolls security | TASK-329 | — | Planned (legacy DEV-T-002) |
 | DEV-V-003 | Admin role change safety | TASK-330 | — | Planned |
 | DEV-V-004 | Storage & account security | TASK-326, TASK-331 | — | Planned |

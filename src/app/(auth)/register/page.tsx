@@ -145,13 +145,13 @@ function RegisterContent() {
             <CheckIcon className="w-8 h-8 text-green-400" />
           </div>
 
-          <p className="text-gray-300">
+          <p className="text-text-secondary">
             We sent a confirmation link to{' '}
-            <span className="font-semibold text-gray-100">{signupEmail || 'your email'}</span>.
+            <span className="font-semibold text-text-primary">{signupEmail || 'your email'}</span>.
             Open it to finish creating your account.
           </p>
 
-          <p className="text-sm text-gray-300">
+          <p className="text-sm text-text-secondary">
             Didn&apos;t get an email? Check spam, or resend the confirmation.
           </p>
 
@@ -228,10 +228,10 @@ function RegisterContent() {
           <input
             type="checkbox"
             id="acceptTerms"
-            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-primary-fg focus:ring-primary-outline-border"
+            className="w-4 h-4 rounded border-border-light dark:border-border bg-surface text-primary-fg focus:ring-primary-outline-border"
             {...register('acceptTerms')}
           />
-          <label htmlFor="acceptTerms" className="text-sm text-gray-300">
+          <label htmlFor="acceptTerms" className="text-sm text-text-secondary">
             I agree to the{' '}
             <Link href="/terms" className="text-primary-link-fg hover:text-primary-fg-hover">
               Terms of Service
@@ -252,9 +252,9 @@ function RegisterContent() {
       </form>
 
       <div className="my-6 flex items-center gap-4">
-        <div className="flex-1 h-px bg-gray-600" />
-        <span className="text-gray-300 text-sm">or</span>
-        <div className="flex-1 h-px bg-gray-600" />
+        <div className="flex-1 h-px bg-border-light dark:bg-border" />
+        <span className="text-text-secondary text-sm">or</span>
+        <div className="flex-1 h-px bg-border-light dark:bg-border" />
       </div>
 
       <div className="space-y-3">
@@ -265,7 +265,7 @@ function RegisterContent() {
         />
       </div>
 
-      <p className="mt-6 text-center text-gray-300">
+      <p className="mt-6 text-center text-text-secondary">
         Already have an account?{' '}
         <Link href="/login" className="text-primary-link-fg hover:text-primary-fg-hover transition-colors font-medium">
           Sign in

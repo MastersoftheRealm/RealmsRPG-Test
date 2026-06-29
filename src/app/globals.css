@@ -402,8 +402,9 @@
     --color-text-secondary: #8b949e;
     --color-text-muted: #8b949e; /* WCAG AA contrast on dark surfaces */
     --color-border: #30363d;
-    --color-border-light: #21262d;
-    --color-border-subtle: #21262d; /* Softer internal dividers; matches border-light in dark */
+    /* Visible on surface-alt (#21262d) — chips, inputs, cards */
+    --color-border-light: #6e7681;
+    --color-border-subtle: #21262d; /* Hairline dividers on same-tone surfaces only */
     --color-neutral-50: #21262d;
     --color-neutral-100: #161b22;
     --color-neutral-200: #21262d;

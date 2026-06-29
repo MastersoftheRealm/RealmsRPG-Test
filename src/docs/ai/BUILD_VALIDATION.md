@@ -957,6 +957,119 @@ These verify the automated design-system net itself. They are **command-line** c
 
 ---
 
+## DEV-V-012 — Landing page rebuild (TASK-387)
+
+Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Section 4). One dominant primary CTA, AIDA scroll story, removed onboarding tour / welcome link-farm / Codex-Library CTAs.
+
+#### DEV-V-012-T001 — Guest hero: single primary CTA
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-012 — Landing page rebuild |
+| **Related task** | TASK-387 |
+| **Where** | `/` (signed out) |
+| **Needs** | Logged out (or incognito) |
+
+**Steps**
+1. Open `/` while signed out.
+
+**Expected**
+- Hero shows headline, subline, and one prominent **Start Playing** button → `/characters/new`.
+- A low-weight text link **New to TTRPGs? See how Realms works** sits below the button (not a second button).
+- No "Take a quick tour", no welcome banner, no Browse Codex / Browse Library buttons anywhere on the page.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-012-T002 — Explorer anchor scrolls to How it works
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-012 — Landing page rebuild |
+| **Related task** | TASK-387 |
+| **Where** | `/` |
+| **Needs** | — |
+
+**Steps**
+1. On `/`, click **New to TTRPGs? See how Realms works**.
+
+**Expected**
+- Page scrolls to the **Start playing in three steps** section (3 numbered steps) with offset (heading not hidden under header).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-012-T003 — Returning user gets continue-focused hero
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-012 — Landing page rebuild |
+| **Related task** | TASK-387 |
+| **Where** | `/` (signed in, ≥1 saved character) |
+| **Needs** | Account with at least one saved character |
+
+**Steps**
+1. Sign in with an account that has ≥1 saved character.
+2. Open `/`.
+
+**Expected**
+- Hero shows **Welcome back, adventurer.** with **Continue your adventure** → `/characters` and **Create another character** → `/characters/new`.
+- Signing in on an account with **0** characters instead shows the guest **Start Playing** hero.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-012-T004 — Secondary discovery links to creators
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-012 — Landing page rebuild |
+| **Related task** | TASK-387 |
+| **Where** | `/` |
+| **Needs** | — |
+
+**Steps**
+1. Scroll to **Want to build something custom?**.
+
+**Expected**
+- **Open the Power Creator** → `/power-creator`; **Open the Item Creator** → `/item-creator`.
+- These are outline (subordinate) buttons, visually lighter than the hero primary CTA.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-012-T005 — Community Discord CTA
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-012 — Landing page rebuild |
+| **Related task** | TASK-387 |
+| **Where** | `/` |
+| **Needs** | — |
+
+**Steps**
+1. Scroll to the closing **Realms is better together** section.
+
+**Expected**
+- **Join the Discord** opens the Discord invite in a new tab.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-012-T006 — Mobile (~360px) layout
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-012 — Landing page rebuild |
+| **Related task** | TASK-387 |
+| **Where** | `/` |
+| **Needs** | DevTools responsive mode at 360px width |
+
+**Steps**
+1. Open `/` at 360px width, scroll the full page in both light and dark mode.
+
+**Expected**
+- No horizontal scroll; hero CTA is full-width and tappable (≥44px); all section headings and cards stack cleanly; dark mode surfaces/borders look intentional.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |

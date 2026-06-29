@@ -146,10 +146,10 @@ function LoginContent() {
         />
 
         <div className="flex items-center justify-between">
-          <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer select-none">
+          <label className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer select-none">
             <input
               type="checkbox"
-              className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-primary-fg focus:ring-2 focus:ring-primary-outline-border focus:ring-offset-0 cursor-pointer transition-colors"
+              className="h-4 w-4 rounded border-border-light dark:border-border bg-surface text-primary-fg focus:ring-2 focus:ring-primary-outline-border focus:ring-offset-0 cursor-pointer transition-colors"
               {...register('rememberMe')}
             />
             Remember me
@@ -191,9 +191,9 @@ function LoginContent() {
       ) : null}
 
       <div className="my-6 flex items-center gap-4">
-        <div className="flex-1 h-px bg-gray-600" />
-        <span className="text-gray-300 text-sm">or</span>
-        <div className="flex-1 h-px bg-gray-600" />
+        <div className="flex-1 h-px bg-border-light dark:bg-border" />
+        <span className="text-text-secondary text-sm">or</span>
+        <div className="flex-1 h-px bg-border-light dark:bg-border" />
       </div>
 
       <div className="space-y-3">
@@ -204,7 +204,7 @@ function LoginContent() {
         />
       </div>
 
-      <p className="mt-6 text-center text-gray-300">
+      <p className="mt-6 text-center text-text-secondary">
         Don&apos;t have an account?{' '}
         <Link
           href="/register"

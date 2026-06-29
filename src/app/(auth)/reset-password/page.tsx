@@ -74,7 +74,7 @@ export default function ResetPasswordPage() {
   if (sessionReady === null) {
     return (
       <AuthCard title="Set New Password" subtitle="Loading...">
-        <p className="text-center text-gray-300">Verifying your reset link...</p>
+        <p className="text-center text-text-secondary">Verifying your reset link...</p>
       </AuthCard>
     );
   }

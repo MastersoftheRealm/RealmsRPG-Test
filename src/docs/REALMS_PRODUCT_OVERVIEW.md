@@ -10,7 +10,9 @@
 >
 > **Related:** [`human/USER_EXPERIENCE_GOALS.md`](./human/USER_EXPERIENCE_GOALS.md) is the **shipped-UX checklist** (terminology, guest gating, retention tactics). This document is the **vision**; that document tracks what is implemented. When they disagree, this document describes the target and that one describes today.
 
-**Last updated:** 2026-06-28 (Appendix H: UX critique backlog for pre-implementation review)
+> **Document status (read before building):** This is **intention-driven design** — a system philosophy, onboarding architecture, and product direction doc. It is **not** a validated UX system, behavior-tested flow, or production-ready interaction spec until Layer 1 is prototyped and revised from real user behavior. See **Appendix I** before expanding scope or treating every section as committed. **Do not expand this doc further until a narrow prototype is tested** (Appendix I §I.6).
+
+**Last updated:** 2026-06-28 (Appendix I: validation-first critique)
 
 ---
 
@@ -685,6 +687,8 @@ flowchart LR
 
 Everything else stays on current UI until each phase validates the pattern.
 
+**Validation gate (Appendix I):** Do not treat later phases as committed until Step 2 prototype (one path, species hypothesis, feats L1) produces behavior signal. TASK-387 landing full rebuild should follow Step 1 landing lock including optional explorer entry (Appendix I §I.4).
+
 ---
 
 ## Appendix F — High-risk complexity and simplification
@@ -922,3 +926,180 @@ Before executing TASK-387 / TASK-386 / TASK-388 and later phases:
 ---
 
 *Appendix H added 2026-06-28 from critical UX review (TTRPG product patterns, retention, codebase comparison).*
+
+---
+
+## Appendix I — Validation-first critique (review before expanding scope)
+
+> **Status:** Owner review backlog — complements Appendix H. **Do not treat as rejection of the vision** — it flags **over-certainty before testing** and missing **failure-mode / resistance** design. Promote accepted items into Sections 1–11 or into prototype test plans. **Agents: prefer Appendix I §I.6 over adding new spec sections until behavior data exists.**
+
+**Source:** External UX/product review (2026-06-28), cross-checked against this doc and TASK-386–388.
+
+**Honest framing — what this document actually is:**
+
+| It is | It is not (yet) |
+|-------|------------------|
+| System philosophy + onboarding architecture + product direction | A validated UX system |
+| A foundation strong teams and engineers can implement against | Behavior-tested onboarding |
+| Intention-driven target state | Production-ready interaction spec for every surface |
+
+---
+
+### I.1 Over-specification before validation (risk)
+
+The doc currently bundles high certainty across:
+
+- Three UX layers (Section 3)
+- Ten-step creator flow (Section 5)
+- Per-step requirements + gap tables
+- Component migration plan (`GuidedChoiceShell`, Appendix E)
+- Tooltip system dependency (Section 2.6 / TASK-376)
+- Landing redesign rules (Section 4)
+- Post-activation system (Section 11)
+- Partial metrics concept (Appendix H)
+- Content model implications (Appendix C)
+
+**Risk:** Weeks building structure that feels correct in theory but **breaks under real user behavior**.
+
+**Mitigation:** Treat Sections 4–11 and Appendices C–F as **hypotheses** until a **narrow prototype** (one path, one species flow, one feats step — see §I.6) is observed with real or proxy users. Expand the doc only where behavior confirms or falsifies assumptions.
+
+---
+
+### I.2 Missing piece: real user failure modes
+
+The doc describes **ideal** guided behavior well. It under-specifies **what happens when users do not cooperate**:
+
+| Failure mode | Doc assumption today | Design gap |
+|--------------|----------------------|------------|
+| User ignores all recommendations | Guidance is clear → user follows | No **resistance** UX (speedrun, dismiss recs, empty path selections) |
+| User clicks **Forge** immediately | Path is default | No recovery if fork is still visible; no analytics on Forge-first |
+| User bounces at **species** step | Image grid + tooltips fix hesitation | No **confusion recovery loop** (what to show after 30s idle, back-track, abandon draft) |
+| User doesn’t understand **TP** despite tooltips | Tooltips explain resources | Min-maxers and skippers may never open tooltips — need non-tooltip path |
+| User **speedruns** creation | Step completion + path groups help | **Optimization behavior** — doc assumes guidance slows them down willingly |
+
+**Principle to add when promoted:** Users **actively resist guidance** when it feels slower than their goal. Layer 1 must be **fast enough to follow**, not only clear — and Layer 3 must remain **one tap away** without shame.
+
+**Open design areas (promote when ready):**
+
+- Explicit **skip / override** affordances that don’t punish (path skills declined, recs dismissed — partially in code via `declinedPathSkillIds`)
+- **Confusion recovery:** “Stuck?” mini-help, step checklist, not only validation on Continue
+- **Min-maxer path:** Forge or “See all” as first-class, not failure state
+- **Telemetry:** where users ignore recs, expand to L3, or Continue anyway
+
+---
+
+### I.3 Layer system — correct but needs governance
+
+Layers 1 / 2 / 3 are the right model, but production systems get **messy**:
+
+- Layer 1 drifts toward Layer 2 (“recommended lists” grow until they are semi-full catalogs)
+- Content authors break filtering rules
+- Exceptions accumulate (“just this one path needs…”)
+
+**Underdefined today:** What **qualifies** as Layer 1 content?
+
+**Suggested governance (when promoted):**
+
+| Rule | Example |
+|------|---------|
+| Max visible choices in L1 per step | e.g. ≤ 7 feat options in a group, ≤ 3 groups |
+| L1 items must be **pre-validated** (requirements, TP, currency) | Admin publish gate |
+| L1 copy length cap | One-line “why” + expand for detail |
+| No new L1 item without owner/content sign-off | Prevents catalog creep |
+| Periodic **L1 audit** | Recommended lists re-reviewed each release |
+
+Add to admin path builder when content ops is prioritized (Appendix C + H.3).
+
+---
+
+### I.4 Landing page — solid logic, possibly too rigid
+
+Single CTA + funnel removal (Codex/Library from hero) is strong **activation** logic but may **under-serve intent diversity**:
+
+| User intent | Current doc treatment | Risk |
+|-------------|----------------------|------|
+| “Start playing now” | Primary CTA — good | — |
+| “See rules / is this D&D-like?” | Deferred to nav `/rules`, About | **Skeptical explorer** may bounce |
+| “Browse content before committing” | Codex/Library nav only | Feels hidden if hero is single-minded |
+| “Build without commitment” | Guest creator (good) | Not advertised on landing if hero-only |
+
+**Open decision:** Second **lightweight entry path** on landing — e.g. **“Explore the system first”** (short primer + optional read-only browse mode), **not** equal weight to Start Playing.
+
+- Must not become a second full funnel (no Codex tour revival)
+- Could be text link or tertiary block below hero — validates explorer conversion without splitting primary CTA
+
+**Do not implement second path in TASK-387 until owner accepts/rejects this item.**
+
+---
+
+### I.5 Retention loop still shallow (Section 11)
+
+Section 11 (play together, sheet tour, level-up milestones) is directionally right but **thin vs importance**.
+
+Doc currently ends emotionally at: **“You built your character → join Discord / campaign.”**
+
+**Missing — “Why do I come back tomorrow?”** TTRPG retention usually requires:
+
+- Campaign interaction (not just create + invite code)
+- Leveling decisions that feel meaningful
+- Progression / loot / reward (if applicable to Realms)
+- Party coordination
+- **Encounter engagement** (session at the table)
+
+**Relation to Appendix H:** H.3 (sheet-as-product, RM funnel) + this section = promote **core loop** spec **after** creator prototype validates, not before.
+
+**Not a reason to expand Section 11 in writing now** — reason to **scope Phase 2b** as hypothesis until creator L1 is proven.
+
+---
+
+### I.6 Recommended next steps (lock → prototype → rewrite spec)
+
+**Do not expand this document further until these steps produce behavior signal.**
+
+#### Step 1 — Lock only three things
+
+1. **Landing structure** — Single primary CTA + **at most one** secondary intent (owner: decide if “Explore system first” from §I.4)
+2. **Layer system definition** — Simplified rules + §I.3 governance draft (max choices, pre-validation)
+3. **Archetype → character creation** — **One path type only** for prototype (e.g. one martial path), not full 10-step spec for all archetypes
+
+#### Step 2 — Prototype before refining doc
+
+Build **only:**
+
+- 1 archetype path (content + UI)
+- 1 species flow (image-forward or current — pick one hypothesis)
+- 1 feats step (Layer 1 groups pilot — aligns with TASK-386)
+
+**Observe (even informal / playtest):**
+
+- Do users follow guidance?
+- Do they ignore recommendations?
+- Where do they hesitate or open “See all”?
+- Do they Forge-first?
+
+#### Step 3 — Let behavior rewrite the spec
+
+Convert doc from **intention-driven** → **behavior-corrected**:
+
+- Promote or cut Section 5 subsections based on prototype
+- Adjust Layer 1 governance from real “recommended list” size
+- Falsify or confirm landing single-CTA vs explorer path
+
+**Task alignment:** TASK-386 matches Step 2 scope. **Defer TASK-387 full rebuild** until Step 1 landing decisions include §I.4. **Defer TASK-388** until creator path shows save completion. Consider adding a **validation / playtest** note to TASK-386 acceptance criteria when owner is ready.
+
+---
+
+### I.7 Final assessment (snapshot)
+
+| Verdict | Detail |
+|---------|--------|
+| ✔ Strong foundation | Product designers and engineers can align on philosophy and direction |
+| ✔ Worth keeping | Decision hierarchy, three-layer model, post-activation *direction*, Appendix H gaps |
+| ⚠ Primary risk | **Over-engineering UX before validation** — too many sections read as committed |
+| ⚠ Fix before scale | Failure modes, layer governance, retention loop depth, explorer landing path |
+
+**Agent instruction:** When picking up TASK-386–388, read Appendix I §I.6 first. Minimize new spec in this file; maximize **observable prototype** and **test notes** in task completion notes or `BUILD_VALIDATION.md` when owner adds playtest steps.
+
+---
+
+*Appendix I added 2026-06-28 from validation-first product review. Pair with Appendix H before full rollout.*
