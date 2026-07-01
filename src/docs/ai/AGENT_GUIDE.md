@@ -114,31 +114,109 @@ Task queue `related_files` may reference outdated paths. When implementing, pref
 
 See `src/docs/human/UI_COMPONENT_REFERENCE.md` for extended component catalog (agents: prefer this guide + `realms-unification.mdc`).
 
-## Tooltips (canonical: Tippy + tooltip-text.tsx — TASK-376 ✅)
+## Floating UI & contextual help (TASK-376 ✅ / TASK-392 ✅)
 
-**Owner decision (2026-06-25):** Collin's `@tippyjs/react` + static copy in `public/tooltip-text.tsx` is the **only** contextual-help standard. Legacy DB tooltips were removed in TASK-376 (Jun 2026).
+**Authority for agents:** This section is the decision guide for `@floating-ui/react`, `InfoTippy`, and related patterns. Product vision context: `REALMS_PRODUCT_OVERVIEW.md` § 2.6.
 
-### Use this
+**Owner decision (2026-06-25):** Static copy in `public/tooltip-text.tsx` is the **only** contextual-help standard. Legacy DB tooltips were removed in TASK-376 (Jun 2026). **Engine:** `@floating-ui/react` via `InfoTippy` (TASK-392, Jun 2026).
 
-| Piece | Location / usage |
-|-------|------------------|
-| Copy (strings + rich JSX) | `public/tooltip-text.tsx` — add exports here; keep copy in one file |
-| Component | `InfoTippy` from `@/components/shared` (wraps `@tippyjs/react` + accessible Info trigger) |
-| Dynamic values | Helpers in `tooltip-text.tsx` (e.g. `getAbilityPointsHelp`, `getSkillPointsHelp`, `getTooltipTextByPowerAbility`) |
-| Rich HTML | `allowHTML` on `InfoTippy` when content is JSX from `tooltip-text.tsx` |
-| Custom trigger | `InfoTippy` `children` prop (e.g. archetype ability buttons) or raw `Tippy` for non-Info triggers |
+### Two layers — do not conflate them
 
-**Reference:** `InfoTippy`, `header.tsx` (Library/Codex), all character-creator steps, `campaigns/page.tsx`.
+| Layer | What it is | When agents touch it |
+|-------|------------|----------------------|
+| **`@floating-ui/react`** | Positioning + interaction **engine** (flip/shift, portal, hover/focus/dismiss, ARIA). Successor to Popper/Tippy. | Import **only inside shared primitives** (`InfoTippy` today). Do **not** sprinkle `useFloating` across feature pages unless adding a **new shared** anchored component (see below). |
+| **`InfoTippy`** | **Product component** for contextual **help**: Info trigger (or custom child), copy from `tooltip-text.tsx`, mobile touch-hold, interactive JSX lists. | Any time you add optional “what is this?” / rules help on a page or step. |
 
-### Do not use
+`InfoTippy` is **not** a generic tooltip primitive. It is opinionated help chrome. Do not use it for nav menus, filters, or dynamic stat breakdowns.
 
-| Legacy (removed) | Replacement |
-|------------------|-------------|
+### Decision matrix — what to use when
+
+| User need | Use | Do **not** use |
+|-----------|-----|----------------|
+| Optional rules / step help beside a heading | **`InfoTippy`** + export in `tooltip-text.tsx` | Raw Floating UI on the page, `Tooltip` from `@/components/ui`, `title=` only |
+| Help on a non-Info control (e.g. ability pick button) | **`InfoTippy`** with `children` + `label` / child `aria-label` | Separate tooltip library |
+| Level-aware help copy (points at level N) | Helper in **`tooltip-text.tsx`** (e.g. `getAbilityPointsHelp`) → **`InfoTippy`** | Inline paragraph duplicating rules |
+| Rich help (bullets, bold, JSX) | JSX export in **`tooltip-text.tsx`** → **`InfoTippy`** `content` | DB tooltips, markdown in random components |
+| Full-screen or multi-step flow | **`Modal`** (`fullScreenOnMobile` on mobile) | InfoTippy |
+| Pick one option from a list (filters, sort) | **`Select`**, **`SelectFilter`**, **`ChipSelect`**, native `<select>` | InfoTippy |
+| Nav dropdown (Library links, account menu) | Existing header / menu pattern; **future:** shared **`AnchoredMenu`** on Floating UI | InfoTippy |
+| Click-to-open panel (actions, compact picker) | **Future:** shared **`AnchoredPopover`** on Floating UI; until then, extend nearest existing pattern | InfoTippy, one-off `absolute top-full` without a plan to unify |
+| Post-activation sheet tour / highlight chain (TASK-388) | Dedicated tour/highlight system (not built) | InfoTippy chain for walkthroughs |
+| Primary step guidance (Path mode) | **`PathHelpCard`**, **`GuidedChoiceShell`** `guidance` slot, step description prose | InfoTippy alone as the only guidance |
+| Styleguide / demo only | **`Tooltip`** from `@/components/ui` | InfoTippy |
+
+**Rule of thumb:** If the user can **ignore it and still complete the task**, and copy is **static and reviewable**, use **`InfoTippy`**. If the UI **must be used to proceed** or is **navigation**, use the appropriate modal/menu/select pattern.
+
+### When to use `InfoTippy` (all should be true)
+
+1. Copy lives in (or is returned from) **`public/tooltip-text.tsx`**
+2. Help is **supplementary** — not the only explanation of a required action
+3. Panel is **small** (~320px max; strings or short JSX)
+4. Trigger is the **Info icon** (default) or a **single DOM element** via `children`
+
+### When to use `@floating-ui/react` directly
+
+Use the dependency **inside `@/components/shared` or `@/components/ui`**, not ad hoc on feature pages, when:
+
+- Adding a **new reusable** anchored pattern (popover, menu, combobox, context menu)
+- Refactoring an existing **manual `absolute` + portal** floater that appears in **multiple** places (e.g. header dropdowns)
+
+**Before creating a new Floating UI wrapper:** grep for existing components; extend with a prop/variant first. Name future primitives clearly (`AnchoredPopover`, `AnchoredMenu`) — not `InfoTippy`.
+
+**Not yet in the repo:** `AnchoredPopover` / `AnchoredMenu`. Until they exist, do not block feature work — but avoid copying positioning logic; note a follow-up to consolidate.
+
+### Surfaces — wired today vs planned
+
+| Surface | Status | Notes |
+|---------|--------|-------|
+| Character creator (all steps) | ✅ Wired | `size="inline"` on step headings; archetype ability buttons use `children` |
+| `characters/new` page header | ✅ Wired | |
+| Navbar Library / Codex | ✅ Wired | `placement="bottom"` |
+| Campaigns hub | ✅ Wired | |
+| Character sheet | ⬜ Planned | First-exposure help per `REALMS_PRODUCT_OVERVIEW.md` § 11 |
+| Standalone creators (power, technique, item, …) | ⬜ Planned | When Layer 1 UX lands |
+| Encounters, crafting, Codex/Library browse | ⬜ Planned | Scoped section help only where dense |
+
+### How to add contextual help (agent checklist)
+
+1. **Search** — grep `tooltip-text.tsx` and existing `InfoTippy` on the same surface; reuse or extend copy.
+2. **Copy** — add a string, JSX export, or helper to `public/tooltip-text.tsx` (one file; no DB).
+3. **Wire** — import `InfoTippy` from `@/components/shared`:
+   - Page/step title: `<InfoTippy content={…} label="…" size="inline" />`
+   - Default icon trigger: omit `children`; **`label` is required** (becomes `aria-label`).
+   - Custom trigger: pass `children` (single element); child needs its own `aria-label`; keep `label` for consistency.
+4. **Mobile** — default touch-hold (~400ms) is built in; do not add parallel click handlers.
+5. **A11y** — every trigger has a discernable name; do not rely on `title` alone.
+6. **Verify** — hover, keyboard focus, touch-hold on ~360px width; JSX lists allow pointer into panel.
+
+### `InfoTippy` API (quick reference)
+
+| Prop | Purpose |
+|------|---------|
+| `content` | `string` or JSX from `tooltip-text.tsx` |
+| `label` | Accessible name (required) |
+| `size` | `'icon'` (default, 44px touch) or `'inline'` (compact, step headings) |
+| `placement` | `'top' \| 'bottom' \| 'left' \| 'right'` |
+| `children` | Optional custom trigger element |
+| `allowHTML` | **Deprecated** — no-op; kept for call-site compat |
+
+Implementation: `src/components/shared/info-tippy.tsx`. Types: `InfoTippyProps` exported from `@/components/shared`.
+
+### Do not use (removed / wrong tool)
+
+| Legacy or wrong | Replacement |
+|-----------------|-------------|
 | `useTooltipByKey`, `useTooltips`, `ContextHelpTooltip`, `HelpTooltip` | `InfoTippy` + `tooltip-text.tsx` |
-| Admin `/admin/tooltips`, `/api/tooltips`, user show-tooltips toggle | Edit `public/tooltip-text.tsx`; deploy |
-| `ui_tooltips` table | Optional SQL drop — human step in `DEVELOPER_TASK_QUEUE.md` |
+| Admin `/admin/tooltips`, `/api/tooltips`, user show-tooltips toggle | Edit `tooltip-text.tsx`; deploy |
+| `ui_tooltips` table / `show_tooltips` column | Dropped 2026-06-30 (DEV-376) — `sql/drop-legacy-ui-tooltips-2026-06.sql` |
+| `@tippyjs/react`, `tippy.js` | Removed (TASK-392) |
+| `Tooltip` from `@/components/ui` for product help | `InfoTippy` only |
 
-**Page help:** Use `InfoTippy`, not `Tooltip` from `@/components/ui` (styleguide/demo only).
+### Related patterns (not InfoTippy)
+
+- **`PathHelpCard` / `GuidedChoiceShell`** — path-mode prose and layer chrome; pair with InfoTippy on headings, do not duplicate rules in both.
+- **`Modal`** — Layer 2/3 selection, wizards; `fullScreenOnMobile` per `MOBILE_UX.md`.
+- **Marketing / landing copy** — `src/lib/constants/copy/*`; do not merge into `tooltip-text.tsx` (TASK-390).
 
 ## Unified patterns (verified Jun 2026)
 
@@ -165,7 +243,7 @@ Quick reference: `.cursor/rules/realms-unification.mdc`, `DESIGN_SYSTEM.md`.
 | Design tokens | `src/app/globals.css` |
 | Data enrichment | `src/lib/data-enrichment.ts` |
 | Character logic | `src/services/character-service.ts`, `src/hooks/use-characters.ts` |
-| Creator state | `src/stores/character-creator-store.ts` |
+| Creator state | `src/stores/character-creator-store.ts` (Advanced) · `src/stores/guided-creator-store.ts` (Simple/Guided) |
 | Supabase | `src/lib/supabase/` |
 | **Database schema (single source of truth)** | `src/docs/SUPABASE_SCHEMA.md` — all public tables, columnar vs JSONB, API→tables; do not duplicate elsewhere |
 | Database types | `src/types/database.ts` (or Supabase-generated types) |
@@ -191,15 +269,51 @@ Quick reference: `.cursor/rules/realms-unification.mdc`, `DESIGN_SYSTEM.md`.
 
 **Enrichment:** Use `enrichPowers`, `enrichTechniques`, `enrichItems` from `data-enrichment.ts` when displaying character powers/techniques/items. Pass `powerPartsDb` / `techniquePartsDb` from `useCodexPowerParts()` / `useCodexTechniqueParts()` for correct EN/TP costs. See `ARCHITECTURE.md`. **Codex/library:** Use `useCodex*` hooks (single `['codex']` fetch); avoid duplicate codex fetches. See `DATA_HANDLING.md`.
 
-## Character Creator Step Order
+## Character Creator — two models (DECIDED 2026-06-30)
+
+See **`REALMS_PRODUCT_OVERVIEW.md` §5.0** for product intent. Two creators coexist; do not merge stores or routes.
+
+| Creator | Route | Store | Steps |
+|---------|-------|-------|-------|
+| **Simple (Guided)** | `/characters/new/guided` | `guided-creator-store.ts` | 6 chapters, 10 sub-steps — `src/components/guided-creator/steps/` |
+| **Advanced (Classic)** | `/characters/new/advanced` | `character-creator-store.ts` | 9 steps — `src/components/character-creator/steps/` |
+| **Entry chooser** | `/characters/new` | — | Simple vs Advanced cards; home CTAs land here |
+
+**Guided shell:** `GuidedCreatorShell` — chapter rail, `CharacterPreviewPanel`, `GuidedStepFooter`, landing-cohesive `CreatorFunnelHero`. Path data via `useGuidedPathData`. Save via `buildGuidedCharacterPayload` → `createCharacter`.
+
+**User-facing copy:** Edit static prose in `src/lib/constants/copy/guided-creator-copy.ts` (chooser labels, step titles/descriptions, chapter rail, modals). Codex names (paths, species, feats) still come from the database.
+
+**Guided DB fields** (see `SUPABASE_SCHEMA.md`): `codex_species.is_starter`, `codex_archetypes.level1_recommended_abilities`, `level1_loadouts`. Seed: `sql/guided-creator-schema-seed.sql` (applied as migration `guided_creator_schema_seed`).
+
+**Advanced step order** (unchanged):
 
 1. Species → 2. Powers → 3. Skills → 4. Feats → 5. Archetype → 6. Ancestry → 7. Abilities → 8. Equipment → 9. Finalize
 
 Steps live in `src/components/character-creator/steps/` (e.g., `species-step.tsx`, `abilities-step.tsx`).
 
+## Database operations (Supabase MCP)
+
+Agents should apply schema and seed SQL via the **Supabase plugin** when it is enabled — not only document “run in Dashboard.” Human-only fallback: `DEVELOPER_TASK_QUEUE.md`.
+
+| Operation | MCP tool | Notes |
+|-----------|----------|-------|
+| DDL (`ALTER`, `CREATE`, indexes) | `apply_migration` | `project_id`, snake_case `name`, SQL body. Preferred for tracked schema changes. |
+| Seed / verify DML | `execute_sql` | `UPDATE`/`INSERT` seeds, or `SELECT` to verify after migrate. |
+| Pre-flight | `list_tables` | Confirm table/column names match `SUPABASE_SCHEMA.md`. |
+| Post-flight | `get_advisors` | Security/performance warnings after RLS or policy changes. |
+
+**Project:** RealmsRPG-Test → `lbqhiwudvifmkjtkccdg`.
+
+**Agent checklist:** (1) Read `SUPABASE_SCHEMA.md`. (2) Add idempotent SQL under `sql/` if reusable. (3) `apply_migration` for DDL + seed when appropriate. (4) `execute_sql` to verify rows. (5) Update `SUPABASE_SCHEMA.md` and `DEVELOPER_TASK_QUEUE.md` (mark DEV-### done or note MCP apply date).
+
+**Guided creator example:** migration `guided_creator_schema_seed` — columns above + Berserker (id=`1`) abilities/loadouts + starter species flags.
+
 ## Pages / Routes
 
-- `(main)/characters`, `(main)/characters/[id]`, `(main)/characters/new`
+- `(main)/characters`, `(main)/characters/[id]`
+- `(main)/characters/new` — Simple vs Advanced chooser
+- `(main)/characters/new/guided` — Guided ("Simple") creator
+- `(main)/characters/new/advanced` — Classic 9-step creator
 - `(main)/library` — user items (powers, techniques, armaments, creatures)
 - `(main)/codex` — browse all content
 - `(main)/power-creator`, `(main)/technique-creator`, `(main)/item-creator`, `(main)/creature-creator`

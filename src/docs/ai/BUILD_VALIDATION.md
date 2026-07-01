@@ -1070,6 +1070,102 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 ---
 
+## DEV-V-013 — Guided Simple character creator (TASK-394–403)
+
+**Category:** End-to-end guided creator funnel — entry chooser, chapters, save.  
+**Prerequisite:** Run **DEV-004** (`sql/guided-creator-schema-seed.sql`) so starter species and Berserker loadouts/abilities exist.
+
+#### DEV-V-013-T001 — Entry chooser routes
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-394 |
+| **Where** | `/characters/new` |
+| **Needs** | — |
+
+**Steps**
+1. From home, click **Start Playing** or **Create another character** (or open `/characters/new` directly).
+
+**Expected**
+- Simple vs Advanced cards appear with landing-style hero (gradient, dice decor).
+- **Simple** → `/characters/new/guided`; **Advanced** → `/characters/new/advanced`.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T002 — Chapter rail and preview
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-395 |
+| **Where** | `/characters/new/guided` |
+| **Needs** | — |
+
+**Steps**
+1. Open guided creator; confirm chapter rail shows 6 chapters.
+2. Pick a path; confirm preview panel updates with path name.
+
+**Expected**
+- Rail highlights active chapter; preview shows path after selection; sticky footer visible at bottom.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T003 — Starter species filter
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-397 |
+| **Where** | Guided creator → Species step |
+| **Needs** | DEV-004 seed applied (`is_starter` flags) |
+
+**Steps**
+1. Complete path step; on species step confirm a reduced starter set appears.
+2. Click **Show all species**; confirm full list expands.
+
+**Expected**
+- Starter filter when `is_starter` data exists; expand reveals all species.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T004 — Berserker loadout + abilities
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-399, TASK-401 |
+| **Where** | Guided creator with Berserker (id=1) |
+| **Needs** | DEV-004 seed applied |
+
+**Steps**
+1. Select Berserker path; on Abilities step click **Use recommended**.
+2. Advance to Loadout step.
+
+**Expected**
+- Recommended abilities apply without customize; loadout cards show Greataxe bruiser / Sword & shield kits.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T005 — Save character (signed in)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-402 |
+| **Where** | Guided creator → Your Hero |
+| **Needs** | Signed-in account; complete prior steps |
+
+**Steps**
+1. Enter name, allocate HP/EN, click **Save character**.
+
+**Expected**
+- Character saves; play-together modal or redirect to sheet; character appears on `/characters`.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |

@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
 import { Chip, Button, Spinner, SelectionCard, Card } from '@/components/ui';
@@ -16,7 +16,6 @@ import { CreatorStepFooter } from '@/components/character-creator/creator-step-f
 import { parseArchetypePathData, pathHasPlayerVisibleLevel1 } from '@/lib/game/archetype-path';
 import type { Archetype, ArchetypeCategory, AbilityName } from '@/types';
 import { InfoTippy } from '@/components/shared';
-import Tippy from '@tippyjs/react';
 import { chooseCharacterCreationStyle, getTooltipTextByPowerAbility, martialAbility, powerAbility } from '../../../../public/tooltip-text';
 
 const ABILITIES: AbilityName[] = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'];
@@ -36,34 +35,6 @@ const ARCHETYPE_INFO: Record<ArchetypeCategory, { title: string; description: st
   },
 };
 
-/** Compact "Includes 3 feats · 2 powers · 2 starting items" preview for a path card. */
-function PathBuildPreview({
-  level1,
-}: {
-  level1?: {
-    feats?: string[];
-    powers?: string[];
-    techniques?: string[];
-    armaments?: string[];
-    equipment?: string[];
-  };
-}) {
-  if (!level1) return null;
-  const parts: string[] = [];
-  const featCount = level1.feats?.length ?? 0;
-  if (featCount) parts.push(`${featCount} feat${featCount !== 1 ? 's' : ''}`);
-  const powerCount = (level1.powers?.length ?? 0) + (level1.techniques?.length ?? 0);
-  if (powerCount) parts.push(`${powerCount} power${powerCount !== 1 ? 's' : ''}/technique${powerCount !== 1 ? 's' : ''}`);
-  const gearCount = (level1.armaments?.length ?? 0) + (level1.equipment?.length ?? 0);
-  if (gearCount) parts.push(`${gearCount} starting item${gearCount !== 1 ? 's' : ''}`);
-  if (parts.length === 0) return null;
-  return (
-    <p className="text-xs text-text-muted dark:text-text-secondary mt-2">
-      Includes {parts.join(' · ')}
-    </p>
-  );
-}
-
 function AbilityPickButton({
   variant,
   ability,
@@ -78,36 +49,46 @@ function AbilityPickButton({
   onPick: () => void;
 }) {
 
-  const button = (
-    <button
-      type="button"
-      onClick={onPick}
-      disabled={disabled}
-      className={cn(
-        'px-3 py-2 min-h-11 min-w-11 rounded-lg text-sm font-medium transition-colors',
-        selected
-          ? variant === 'power'
-            ? 'bg-power-dark text-white'
-            : 'bg-martial-dark text-white'
-          : disabled
-            ? 'bg-surface text-text-muted dark:text-text-secondary cursor-not-allowed'
-            : 'bg-surface border border-border-light hover:border-border'
-      )}
-    >
-      {ability.charAt(0).toUpperCase() + ability.slice(1)}
-    </button>
-  );
-
+  const abilityLabel = ability.charAt(0).toUpperCase() + ability.slice(1);
 
   return (
-    <Tippy content={getTooltipTextByPowerAbility(ability)}>
-        {button}
-    </Tippy>
+    <InfoTippy
+      content={getTooltipTextByPowerAbility(ability)}
+      label={`${abilityLabel} ability guidance`}
+    >
+      <button
+        type="button"
+        onClick={onPick}
+        disabled={disabled}
+        className={cn(
+          'px-3 py-2 min-h-11 min-w-11 rounded-lg text-sm font-medium transition-colors',
+          selected
+            ? variant === 'power'
+              ? 'bg-power-dark text-white'
+              : 'bg-martial-dark text-white'
+            : disabled
+              ? 'bg-surface text-text-muted dark:text-text-secondary cursor-not-allowed'
+              : 'bg-surface border border-border-light hover:border-border'
+        )}
+      >
+        {abilityLabel}
+      </button>
+    </InfoTippy>
   );
 }
 
 export function ArchetypeStep() {
-  const { draft, setArchetype, setArchetypePath, setCreationMode, nextStep, prevStep, reselectArchetype } = useCharacterCreatorStore();
+  const {
+    draft,
+    completedSteps,
+    setArchetype,
+    setArchetypePath,
+    setCreationMode,
+    nextStep,
+    prevStep,
+    reselectArchetype,
+    updateDraft,
+  } = useCharacterCreatorStore();
   const { data: codexArchetypes = [], isLoading } = useCodexArchetypes();
   
   const [selectedType, setSelectedType] = useState<ArchetypeCategory | null>(
@@ -138,27 +119,7 @@ export function ArchetypeStep() {
     [archetypePathOptions, selectedPathId]
   );
 
-  const isLocked = draft.archetype?.type !== undefined && draft.creationMode !== undefined;
-
-  const handleConfirm = () => {
-    if (creationChoice === 'path') {
-      if (!selectedPath) return;
-      setArchetypePath(selectedPath);
-      nextStep();
-      return;
-    }
-
-    if (!selectedType || !selectedAbility) return;
-    
-    if (selectedType === 'powered-martial' && !selectedMartialAbility) return;
-    
-    setArchetype(
-      selectedType, 
-      selectedAbility, 
-      selectedType === 'powered-martial' ? selectedMartialAbility! : undefined
-    );
-    nextStep();
-  };
+  const isLocked = completedSteps.includes('archetype');
 
   const canConfirm =
     creationChoice === 'path'
@@ -167,6 +128,59 @@ export function ArchetypeStep() {
         !!selectedType &&
         !!selectedAbility &&
         (selectedType !== 'powered-martial' || !!selectedMartialAbility);
+
+  // Keep draft in sync while picking so the next tab can act like Continue.
+  useEffect(() => {
+    if (isLocked) return;
+
+    if (creationChoice === 'path') {
+      if (selectedPath) setArchetypePath(selectedPath);
+      return;
+    }
+    if (!canConfirm || !selectedType || !selectedAbility) return;
+    if (selectedType === 'powered-martial' && !selectedMartialAbility) return;
+
+    const archetype = {
+      id: selectedType,
+      name: selectedType.charAt(0).toUpperCase() + selectedType.slice(1),
+      type: selectedType,
+      pow_abil: selectedType !== 'martial' ? selectedAbility : undefined,
+      mart_abil: selectedType !== 'power' ? (selectedMartialAbility || selectedAbility) : undefined,
+      ability: selectedAbility,
+    };
+
+    updateDraft({
+      creationMode: 'forge',
+      archetype,
+      pow_abil: archetype.pow_abil,
+      mart_abil: archetype.mart_abil,
+      archetypePathId: undefined,
+    });
+  }, [
+    isLocked,
+    creationChoice,
+    canConfirm,
+    selectedPath,
+    selectedType,
+    selectedAbility,
+    selectedMartialAbility,
+    setArchetypePath,
+    updateDraft,
+  ]);
+
+  const handleConfirm = () => {
+    if (!canConfirm) return;
+
+    if (creationChoice === 'forge') {
+      setArchetype(
+        selectedType!,
+        selectedAbility!,
+        selectedType === 'powered-martial' ? selectedMartialAbility! : undefined
+      );
+    }
+
+    nextStep();
+  };
 
   if (isLocked) {
     return (
@@ -249,7 +263,10 @@ export function ArchetypeStep() {
                         <SelectionCard
                           key={option.id}
                           selected={selectedPathId === option.id}
-                          onClick={() => setSelectedPathId(option.id)}
+                          onClick={() => {
+                            setSelectedPathId(option.id);
+                            setCreationMode('path');
+                          }}
                           className="text-left"
                         >
                           <h4 className="font-semibold text-text-primary mb-1">{option.name}</h4>
@@ -275,7 +292,6 @@ export function ArchetypeStep() {
                               )}
                             </div>
                           )}
-                          <PathBuildPreview level1={option.path_data?.level1} />
                         </SelectionCard>
                       ))}
                     </div>

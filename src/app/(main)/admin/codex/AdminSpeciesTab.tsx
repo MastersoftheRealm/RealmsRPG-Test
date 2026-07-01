@@ -55,6 +55,7 @@ export function AdminSpeciesTab() {
     adultAge: '',
     maxAge: '',
     languages: '',
+    isStarter: false,
   });
 
   const skillOptions = useMemo(
@@ -135,6 +136,7 @@ export function AdminSpeciesTab() {
       adultAge: '',
       maxAge: '',
       languages: '',
+      isStarter: false,
     });
     setModalOpen(true);
   };
@@ -167,6 +169,7 @@ export function AdminSpeciesTab() {
       adultAge: adult,
       maxAge: max,
       languages: (s.languages || []).join(', '),
+      isStarter: Boolean((s as Species & { is_starter?: boolean }).is_starter),
     });
     setModalOpen(true);
   };
@@ -200,6 +203,7 @@ export function AdminSpeciesTab() {
       adultAge: adult,
       maxAge: max,
       languages: (s.languages || []).join(', '),
+      isStarter: Boolean((s as Species & { is_starter?: boolean }).is_starter),
     });
     setModalOpen(true);
   };
@@ -249,6 +253,7 @@ export function AdminSpeciesTab() {
       ave_weight,
       adulthood_lifespan,
       languages,
+      isStarter: form.isStarter,
     };
 
     const result = editing
@@ -514,6 +519,17 @@ export function AdminSpeciesTab() {
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">Languages (comma-separated)</label>
               <Input value={form.languages} onChange={(e) => setForm((f) => ({ ...f, languages: e.target.value }))} placeholder="Universal, Any, ..." />
+            </div>
+            <div className="flex items-end pb-2">
+              <label className="flex items-center gap-2 min-h-11 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.isStarter}
+                  onChange={(e) => setForm((f) => ({ ...f, isStarter: e.target.checked }))}
+                  className="rounded border-border"
+                />
+                <span className="text-sm font-medium text-text-primary">Starter species (guided creator)</span>
+              </label>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">

@@ -16,6 +16,17 @@ export { RollButton, rollButtonVariants, type RollButtonProps } from './roll-but
 // PointStatus - Unified point allocation display (creators, character sheet edit mode)
 export { PointStatus, type PointStatusProps } from './point-status';
 
+// AbilityScoreGrid - Six-ability tile row (sheet layout; display or edit)
+export {
+  AbilityScoreGrid,
+  ABILITY_DISPLAY_ORDER,
+  ABILITY_DISPLAY_INFO,
+  type AbilityScoreGridProps,
+} from './ability-score-grid';
+
+// SkillSourceChip - Species/path skill pills (guided creator)
+export { SkillSourceChip, type SkillSourceChipProps, type SkillSourceKind } from './skill-source-chip';
+
 // ValueStepper - Unified +/- controls (abilities, skills, quantities)
 export { ValueStepper, DecrementButton, IncrementButton, type ValueStepperProps, type StepperButtonProps } from './value-stepper';
 
@@ -213,6 +224,7 @@ export {
 // ThemeToggle - Dark/Light/System theme switcher
 export { ThemeToggle } from './theme-toggle';
 export { InfoTippy } from './info-tippy';
+export type { InfoTippyProps } from './info-tippy';
 
 // PoweredMartialSlider - Allocation slider for powered-martial characters
 export { PoweredMartialSlider } from './powered-martial-slider';

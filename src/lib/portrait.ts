@@ -22,10 +22,6 @@ export function getEffectivePortrait(portrait: string | null | undefined): strin
   return portrait;
 }
 
-/**
- * Convert a data URL (e.g. cropped JPEG from canvas) to a Blob without `fetch(dataUrl)`.
- * Some browsers choke on `fetch()` for large data URLs; this path is reliable for portrait upload.
- */
 export function dataUrlToBlob(dataUrl: string): Blob {
   const comma = dataUrl.indexOf(',');
   if (comma === -1 || !dataUrl.startsWith('data:')) {
@@ -45,4 +41,45 @@ export function dataUrlToBlob(dataUrl: string): Blob {
   const bytes = new Uint8Array(len);
   for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
   return new Blob([bytes], { type: mime });
+}
+
+/** Compress a cropped portrait blob to a JPEG data URL (max ~700KB). */
+export function blobToCompressedBase64(blob: Blob, maxSize = 700 * 1024): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(blob);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      let { width, height } = img;
+      const maxDim = 400;
+      if (width > height && width > maxDim) {
+        height = Math.round((height * maxDim) / width);
+        width = maxDim;
+      } else if (height > maxDim) {
+        width = Math.round((width * maxDim) / height);
+        height = maxDim;
+      }
+      canvas.width = width;
+      canvas.height = height;
+      ctx?.drawImage(img, 0, 0, width, height);
+      let quality = 0.7;
+      const tryEncode = () => {
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        if (dataUrl.length > maxSize && quality > 0.3) {
+          quality -= 0.1;
+          tryEncode();
+        } else {
+          resolve(dataUrl);
+        }
+      };
+      tryEncode();
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to load image'));
+    };
+    img.src = url;
+  });
 }

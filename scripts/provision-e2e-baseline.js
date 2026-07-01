@@ -91,7 +91,6 @@ async function ensureProfile(userId) {
     username: manifest.profileUsername,
     username_display: manifest.profileUsernameDisplay,
     display_name: manifest.profileUsernameDisplay,
-    show_tooltips: true,
     role: 'new_player',
     created_at: manifest.profileCreatedAt,
     updated_at: now,

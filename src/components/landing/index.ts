@@ -16,3 +16,5 @@ export {
   LANDING_MEDIA_ASPECT,
 } from './landing-art-frame';
 export { MarketingLinkButton, MarketingExternalButton } from './marketing-button';
+export { CreatorFunnelHero } from './creator-funnel-hero';
+export type { CreatorFunnelHeroProps } from './creator-funnel-hero';

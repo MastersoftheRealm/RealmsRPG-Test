@@ -26,6 +26,7 @@ alwaysApply: false
 | Primary nav tabs (underline, badges) | `@/components/ui` → TabNavigation |
 | Page layout | `@/components/ui` → PageContainer, PageHeader |
 | Modals, Buttons, Chips | `@/components/ui` |
+| Contextual help (optional rules / step info) | `@/components/shared` → **InfoTippy** + `public/tooltip-text.tsx` — **not** for menus/filters; see `AGENT_GUIDE.md` § Floating UI & contextual help |
 
 ### ListHeader in modals
 

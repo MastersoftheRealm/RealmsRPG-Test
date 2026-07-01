@@ -1,5 +1,8 @@
 'use client';
 
+/**
+ * Styleguide/demo tooltip only. For contextual page help use `InfoTippy` from `@/components/shared`.
+ */
 import { cloneElement, isValidElement, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { cn } from '@/lib/utils/cn';

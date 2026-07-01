@@ -200,6 +200,7 @@ async function fetchCodexFromClient(supabase: SupabaseClient) {
         ave_height: aveHeight,
         ave_weight: aveWeight,
         adulthood_lifespan: toAdulthoodLifespan(r.adulthood_lifespan),
+        is_starter: r.is_starter === true,
       };
     });
 
@@ -332,6 +333,8 @@ async function fetchCodexFromClient(supabase: SupabaseClient) {
           r.level1_recommended_species ?? level1FromLegacy?.recommended_species
         ),
         guidance_groups: r.level1_guidance_groups ?? level1FromLegacy?.guidance_groups,
+        recommended_abilities: r.level1_recommended_abilities ?? level1FromLegacy?.recommended_abilities,
+        loadouts: r.level1_loadouts ?? level1FromLegacy?.loadouts,
       };
       const level1FromColumns = parseArchetypePathData({ level1: level1Raw })?.level1 ?? {
         feats: level1Raw.feats as string[],

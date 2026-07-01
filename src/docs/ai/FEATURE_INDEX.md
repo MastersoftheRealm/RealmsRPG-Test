@@ -15,6 +15,9 @@
 | Character list / dashboard | `characters/page.tsx` |
 | Character sheet (view + edit) | `characters/[id]/page.tsx` — layout `CharacterSheetBody` (single library mount); derived `useCharacterSheetDerived`; handlers `useCharacterSheetActions`; library lists via `entity-library-sections` + `library-entity-rows`; feats tab via `FeatsTraitsListSection` + `library-feat-rows` (player feat/trait `customName` + `note` on save; trait map `traitCustomizations`) |
 | Character creator | `character-creator/` (wizard steps under `components/character-creator/steps/`) |
+| Character creator entry (Simple vs Advanced) | `characters/new/page.tsx` |
+| Guided ("Simple") character creator | `characters/new/guided/page.tsx`, `components/guided-creator/`, `stores/guided-creator-store.ts`, `lib/guided-creator/build-character.ts` |
+| Advanced character creator (classic 9-step) | `characters/new/advanced/page.tsx` |
 | Library (user + official content browse) | `library/page.tsx` |
 | Codex (rules data browser) | `codex/page.tsx` |
 | Realms Library, guest read-only | `library/page.tsx` + `library/LibraryPublicContent.tsx` — guests see official "Realms" content with the My-Library toggle + "Add to library" hidden. (Former `/browse` was a redundant duplicate; removed and redirected to `/library` — TASK-336.) |
@@ -47,10 +50,11 @@
 | Crafting + enhanced items | `useCraftingSession(s)`, `useEnhancedItems` + CRUD |
 | Save a creator's output | `useCreatorSave`; load into a modal: `useLoadModalLibrary` |
 | Character creator path recommendations | `useCreatorPathData` — resolves `path_data` from draft or codex by `archetypePathId` |
+| Guided creator path data | `useGuidedPathData` in `components/guided-creator/use-guided-path-data.ts` |
 | Autosave (debounced) | `useAutoSave` |
 | List sorting / modal list state | `useSort`, `sortByColumn`, `useModalListState` |
-| Tooltips (canonical) | `public/tooltip-text.tsx` + `@tippyjs/react` — see `AGENT_GUIDE.md` § Tooltips |
-| Tooltips (contextual help) | `InfoTippy` + `public/tooltip-text.tsx` — TASK-376 done |
+| Tooltips (canonical) | `InfoTippy` + `public/tooltip-text.tsx` — **`AGENT_GUIDE.md` § Floating UI & contextual help** (decision matrix) |
+| Floating UI (`@floating-ui/react`) | Engine inside `InfoTippy` only today; new anchored UI → shared primitive first — see same AGENT_GUIDE section |
 
 > There is **one** codex fetch shared by all `useCodex*` and `useGameRules` (see `use-codex.ts`). Do not add a parallel codex fetch.
 
@@ -82,7 +86,7 @@
 | Confirm/delete/login modals | `ConfirmActionModal`, `DeleteConfirmModal`, `LoginPromptModal` |
 | Image upload + crop | `ImageUploadModal` |
 | Theme switch / onboarding | `ThemeToggle`, `OnboardingTour` |
-| Help tooltips | `InfoTippy` + `public/tooltip-text.tsx` |
+| Help tooltips | `InfoTippy` + `public/tooltip-text.tsx` — see `AGENT_GUIDE.md` § Floating UI & contextual help |
 
 > UI primitives (Modal, Button, Chip, PageContainer, PageHeader, TabNavigation, SearchInput, **TableScroll**) live in `@/components/ui`.
 

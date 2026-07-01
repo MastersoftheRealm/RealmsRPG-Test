@@ -74,9 +74,24 @@ export function CreatorTabBar() {
     return idx >= 0 ? `${idx + 1}. ${STEP_NAMES[pendingStep]}` : STEP_NAMES[pendingStep];
   }, [visibleSteps, pendingStep]);
 
+  const nextVisibleStep = useMemo(() => {
+    const idx = visibleSteps.indexOf(currentStep);
+    if (idx < 0 || idx >= visibleSteps.length - 1) return null;
+    return visibleSteps[idx + 1];
+  }, [visibleSteps, currentStep]);
+
+  const currentStepCompletion = completionByStep[currentStep];
+
+  /** Immediate next tab doubles as Continue when the current step is ready. */
+  const isContinueViaTabTarget = (step: CreatorStep) =>
+    step === nextVisibleStep && currentStepCompletion.done;
+
+  const canOpenStep = (step: CreatorStep) =>
+    canNavigateToStep(step) || isContinueViaTabTarget(step);
+
   const handleTabClick = (step: CreatorStep) => {
     if (step === currentStep) return;
-    if (!canNavigateToStep(step)) return;
+    if (!canOpenStep(step)) return;
 
     const currentIndex = STEP_ORDER.indexOf(currentStep);
     const targetIndex = STEP_ORDER.indexOf(step);
@@ -108,7 +123,7 @@ export function CreatorTabBar() {
         const completion = completionByStep[step];
         // A step reads as "complete" once visited AND its requirements are met.
         const isComplete = completedSteps.includes(step) && completion.done;
-        const canNavigate = canNavigateToStep(step);
+        const canNavigate = canOpenStep(step);
 
         return (
           <button

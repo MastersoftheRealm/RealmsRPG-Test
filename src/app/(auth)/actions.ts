@@ -100,7 +100,6 @@ export async function createUserProfileAction(data: {
         display_name: data.displayName ?? null,
         username: normalized,
         username_display: usernameDisplay,
-        show_tooltips: true,
         created_at: now,
         updated_at: now,
       });
@@ -159,7 +158,6 @@ export async function getUserProfileAction() {
         photoUrl: p.photo_url,
         role: p.role,
         rolePolicy,
-        showTooltips: p.show_tooltips,
         lastUsernameChange: p.last_username_change,
         createdAt: p.created_at,
         updatedAt: p.updated_at,

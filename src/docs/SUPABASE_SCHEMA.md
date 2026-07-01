@@ -26,7 +26,7 @@ Tables are listed in dependency-friendly order. **Columnar** = proper columns; *
 
 | Table | Shape | Key columns |
 |-------|--------|-------------|
-| `user_profiles` | Columnar | id (PK), email, display_name, username (canonical lowercase), username_display (preserved casing), photo_url, last_username_change, created_at, updated_at, role (UserRole enum), show_tooltips |
+| `user_profiles` | Columnar | id (PK), email, display_name, username (canonical lowercase), username_display (preserved casing), photo_url, last_username_change, created_at, updated_at, role (UserRole enum) |
 | `usernames` | Columnar | username (PK), user_id (FK → user_profiles) |
 
 ---
@@ -39,12 +39,12 @@ All codex tables are **columnar** and live in **public** (no `codex` schema). Ar
 |-------|--------|------------------------|
 | `codex_feats` | Columnar | id (PK), name, description, req_desc, ability_req (TEXT), abil_req_val (TEXT), skill_req (TEXT), skill_req_val (TEXT), feat_cat_req, pow_abil_req, mart_abil_req, pow_prof_req, mart_prof_req, speed_req, feat_lvl, lvl_req, uses_per_rec, rec_period, category, ability, tags (TEXT), char_feat, state_feat, base_feat_id (TEXT, nullable) |
 | `codex_skills` | Columnar | id (PK), name, description, ability, base_skill (TEXT), success_desc, failure_desc, ds_calc, craft_failure_desc, craft_success_desc |
-| `codex_species` | Columnar | id (PK), name, description, type, sizes (TEXT), skills (TEXT), species_traits (TEXT), ancestry_traits (TEXT), flaws (TEXT), characteristics (TEXT), ave_hgt_cm, ave_wgt_kg, adulthood_lifespan (TEXT), languages (TEXT) |
+| `codex_species` | Columnar | id (PK), name, description, type, sizes (TEXT), skills (TEXT), species_traits (TEXT), ancestry_traits (TEXT), flaws (TEXT), characteristics (TEXT), ave_hgt_cm, ave_wgt_kg, adulthood_lifespan (TEXT), languages (TEXT), **is_starter (BOOLEAN)** |
 | `codex_traits` | Columnar | id (PK), name, description, uses_per_rec, rec_period, flaw, characteristic, option_trait_ids (TEXT) |
 | `codex_parts` | Columnar | id (PK), name, description, category, base_en, base_tp, op_1_desc, op_1_en, op_1_tp, op_2_desc, op_2_en, op_2_tp, op_3_desc, op_3_en, op_3_tp, type, mechanic, percentage, duration, defense (TEXT) |
 | `codex_properties` | Columnar | id (PK), name, description, base_ip, base_tp, base_c, op_1_desc, op_1_ip, op_1_tp, op_1_c, type, mechanic |
 | `codex_equipment` | Columnar | id (PK), name, description, category, currency, rarity |
-| `codex_archetypes` | Columnar | id (PK), name, type, description, archetype_ability, secondary_ability, power_prof_start, martial_prof_start, power_prof_level5, martial_prof_level5, level1_feats (TEXT), level1_skills (TEXT), level1_powers (TEXT), level1_techniques (TEXT), level1_armaments (TEXT), level1_equipment (TEXT), level1_recommend_unarmed_prowess (BOOLEAN), level1_remove_feats (TEXT), level1_remove_powers (TEXT), level1_remove_techniques (TEXT), level1_remove_armaments (TEXT), level1_notes (TEXT), level1_recommended_species (TEXT), level1_guidance_groups (JSONB); **legacy:** `path_data` (JSONB, optional — pre-columnar compat; GET /api/codex composes `path_data` from level1 columns + `codex_archetype_levels`). **Player picker visibility:** paths appear in creator/codex/sheet switcher only when level 1 has at least one add recommendation (feats/skills/powers/techniques/armaments/equipment); see `src/docs/human/CODEX_SCHEMA_REFERENCE.md` and `pathHasPlayerVisibleLevel1()` |
+| `codex_archetypes` | Columnar | id (PK), name, type, description, archetype_ability, secondary_ability, power_prof_start, martial_prof_start, power_prof_level5, martial_prof_level5, level1_feats (TEXT), level1_skills (TEXT), level1_powers (TEXT), level1_techniques (TEXT), level1_armaments (TEXT), level1_equipment (TEXT), level1_recommend_unarmed_prowess (BOOLEAN), level1_remove_feats (TEXT), level1_remove_powers (TEXT), level1_remove_techniques (TEXT), level1_remove_armaments (TEXT), level1_notes (TEXT), level1_recommended_species (TEXT), level1_guidance_groups (JSONB), **level1_recommended_abilities (JSONB)**, **level1_loadouts (JSONB)**; **legacy:** `path_data` (JSONB, optional — pre-columnar compat; GET /api/codex composes `path_data` from level1 columns + `codex_archetype_levels`). **Player picker visibility:** paths appear in creator/codex/sheet switcher only when level 1 has at least one add recommendation (feats/skills/powers/techniques/armaments/equipment); see `src/docs/human/CODEX_SCHEMA_REFERENCE.md` and `pathHasPlayerVisibleLevel1()` |
 | `codex_archetype_levels` | Columnar | id (PK), archetype_id (FK → codex_archetypes.id), level, feats (TEXT), skills (TEXT), powers (TEXT), techniques (TEXT), armaments (TEXT), equipment (TEXT), remove_feats (TEXT), remove_powers (TEXT), remove_techniques (TEXT), remove_armaments (TEXT), notes |
 | `codex_creature_feats` | Columnar | id (PK), name, description, feat_points, feat_lvl, lvl_req, mechanic |
 | `core_rules` | JSONB | id (PK), data (JSONB), updated_at |
@@ -241,15 +241,9 @@ CREATE POLICY "Admin can delete official enhanced items" ON public.official_enha
 
 ---
 
-### 2.12 UI Tooltips (onboarding/help text)
+### 2.12 UI Tooltips (removed)
 
-| Table | Shape | Key columns |
-|-------|--------|-------------|
-| `ui_tooltips` | Columnar | id (PK), key (UNIQUE), scope, title, body_md, placement, trigger, audience, enabled, version, updated_at, updated_by |
-
-Stores admin-editable tooltip/help content used across navigation, creator steps, and settings. Tooltip text supports markdown-lite and runtime interpolation of Core Rule values in app code.
-
-**Migration:** `sql/supabase-ui-tooltips.sql`
+**Removed 2026-06-30 (DEV-376 / TASK-392):** Legacy `ui_tooltips` table and `user_profiles.show_tooltips` column were dropped. Contextual help uses `InfoTippy` + `public/tooltip-text.tsx`. See `sql/drop-legacy-ui-tooltips-2026-06.sql`. Original create script (historical): `sql/supabase-ui-tooltips.sql`.
 
 ---
 
@@ -318,7 +312,7 @@ Used by `user_profiles.role`.
 | Characters list | Done | **TASK-282:** name, level, archetype_name, ancestry_name, status, visibility; backfill + API. |
 | Campaign rolls list | Done | **TASK-283:** character_id, user_id, type, title; backfill + API. |
 | Core rules | Keep JSONB | Category-specific shapes; no columnar migration planned. |
-| UI tooltips | Done | `ui_tooltips` table + `user_profiles.show_tooltips` preference via `sql/supabase-ui-tooltips.sql`. |
+| UI tooltips (legacy DB) | Removed | Dropped 2026-06-30 — `sql/drop-legacy-ui-tooltips-2026-06.sql`. Help copy in `public/tooltip-text.tsx` + `InfoTippy`. |
 
 See `AI_TASK_QUEUE.md` for TASK-279–TASK-283 and TASK-304. Historical rationale: `src/docs/ai/archive/DATABASE_SCALABILITY_AUDIT.md`.
 
@@ -340,8 +334,6 @@ See `AI_TASK_QUEUE.md` for TASK-279–TASK-283 and TASK-304. Historical rational
 | GET /api/public/[type] | official_powers, official_techniques, official_empowered_techniques, official_items, official_creatures |
 | GET/POST/PATCH/DELETE /api/official/enhanced-items | official_enhanced_items (admin) |
 | GET/POST/PATCH/DELETE /api/user/library/[type] | user_powers, user_techniques, user_empowered_techniques, user_items, user_creatures, user_species |
-| GET/POST/PATCH/DELETE /api/tooltips | ui_tooltips (admin write, audience-filtered read) |
-| GET/PATCH /api/user/settings/tooltips | user_profiles.show_tooltips |
 | Characters CRUD | characters |
 | Campaigns | campaigns, campaign_members, campaign_rolls |
 | Encounters | encounters |

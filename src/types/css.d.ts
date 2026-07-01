@@ -1,3 +1,3 @@
-// This file gets rid of the import errors on the tippy css. It worked without this, but the red squiggles were bothering me.
+// Ambient CSS module declarations (e.g. third-party component styles).
 
 declare module '*.css';

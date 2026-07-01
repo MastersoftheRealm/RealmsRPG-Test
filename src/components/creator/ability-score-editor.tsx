@@ -19,7 +19,7 @@
 
 import { useMemo } from 'react';
 import { cn, formatBonus } from '@/lib/utils';
-import { PointStatus, DecrementButton, IncrementButton } from '@/components/shared';
+import { PointStatus, DecrementButton, IncrementButton, AbilityScoreGrid } from '@/components/shared';
 import type { AbilityName, Abilities } from '@/types';
 import { calculateAbilityScoreCost, getAbilityIncreaseCost } from '@/lib/game/formulas';
 
@@ -50,6 +50,8 @@ export interface AbilityScoreEditorProps {
   hidePointsStatus?: boolean;
   /** Whether high abilities (4+) cost 2 points each (default: true) */
   useHighAbilityCost?: boolean;
+  /** sheet = character-sheet tile row; default = legacy card grid with descriptions */
+  variant?: 'default' | 'sheet';
 }
 
 const ABILITY_ORDER: AbilityName[] = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'];
@@ -77,6 +79,7 @@ export function AbilityScoreEditor({
   compact = false,
   hidePointsStatus = false,
   useHighAbilityCost = true,
+  variant = 'default',
 }: AbilityScoreEditorProps) {
   // Calculate points spent (considering high ability cost)
   const spentPoints = useMemo(() => {
@@ -119,7 +122,6 @@ export function AbilityScoreEditor({
 
   return (
     <div className="space-y-4">
-      {/* Points Status - can be hidden for custom headers */}
       {!hidePointsStatus && (
         <PointStatus
           total={totalPoints}
@@ -129,107 +131,122 @@ export function AbilityScoreEditor({
         />
       )}
 
-      {/* Ability Grid */}
-      <div className={cn(
-        'grid gap-3',
-        compact ? 'grid-cols-3 md:grid-cols-6' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6'
-      )}>
-        {ABILITY_ORDER.map((ability) => {
-          const value = abilities[ability] || 0;
-          const info = ABILITY_INFO[ability];
-          const isPowerAbility = powerAbility === ability;
-          const isMartialAbility = martialAbility === ability;
-          // Fallback for deprecated highlightedAbilities prop
-          const isLegacyHighlight = !powerAbility && !martialAbility && highlightedAbilities.includes(ability);
-          const increaseCost = useHighAbilityCost ? getAbilityIncreaseCost(value) : 1;
-          const canInc = canIncrease(ability);
-          const canDec = canDecrease(ability);
-
-          // Determine border/highlight color
-          let borderClass = 'border-border-light';
-          let bgClass = 'bg-surface';
-          if (isPowerAbility) {
-            borderClass = 'border-power';
-            bgClass = 'bg-power-light/50';
-          } else if (isMartialAbility) {
-            borderClass = 'border-martial';
-            bgClass = 'bg-martial-light/50';
-          } else if (isLegacyHighlight) {
-            borderClass = 'border-warning-400';
-            bgClass = 'bg-warning-50/50 dark:bg-warning-900/20';
+      {variant === 'sheet' ? (
+        <AbilityScoreGrid
+          abilities={abilities}
+          powerAbility={powerAbility}
+          martialAbility={martialAbility}
+          mode={isEditMode ? 'edit' : 'display'}
+          onAbilityChange={onAbilityChange}
+          canIncrease={canIncrease}
+          canDecrease={canDecrease}
+          getIncreaseCost={
+            isEditMode && useHighAbilityCost
+              ? (ability) => getAbilityIncreaseCost(abilities[ability] || 0)
+              : undefined
           }
+        />
+      ) : (
+        <div
+          className={cn(
+            'grid gap-3',
+            compact ? 'grid-cols-3 md:grid-cols-6' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6'
+          )}
+        >
+          {ABILITY_ORDER.map((ability) => {
+            const value = abilities[ability] || 0;
+            const info = ABILITY_INFO[ability];
+            const isPowerAbility = powerAbility === ability;
+            const isMartialAbility = martialAbility === ability;
+            const isLegacyHighlight =
+              !powerAbility && !martialAbility && highlightedAbilities.includes(ability);
+            const increaseCost = useHighAbilityCost ? getAbilityIncreaseCost(value) : 1;
+            const canInc = canIncrease(ability);
+            const canDec = canDecrease(ability);
 
-          return (
-            <div
-              key={ability}
-              className="flex flex-col"
-            >
-              {/* Ability Card */}
-              <div
-                className={cn(
-                  'p-3 rounded-xl border-2 transition-all flex-1',
-                  borderClass,
-                  bgClass,
-                  !isEditMode && 'text-text-muted dark:text-text-secondary'
-                )}
-              >
-                <div className="text-center mb-2">
-                  <h3 className="font-bold text-sm text-text-primary capitalize">
-                    {compact ? info.shortName : info.name}
-                  </h3>
-                </div>
+            let borderClass = 'border-border-light';
+            let bgClass = 'bg-surface';
+            if (isPowerAbility) {
+              borderClass = 'border-power';
+              bgClass = 'bg-power-light/50';
+            } else if (isMartialAbility) {
+              borderClass = 'border-martial';
+              bgClass = 'bg-martial-light/50';
+            } else if (isLegacyHighlight) {
+              borderClass = 'border-warning-400';
+              bgClass = 'bg-warning-50/50 dark:bg-warning-900/20';
+            }
 
-                <div className="flex items-center justify-center gap-2">
-                  {isEditMode && (
-                    <DecrementButton
-                      onClick={() => onAbilityChange(ability, value - 1)}
-                      disabled={!canDec}
-                      size="md"
-                      // No enableHoldRepeat - abilities should be clicked individually
-                    />
+            return (
+              <div key={ability} className="flex flex-col">
+                <div
+                  className={cn(
+                    'p-3 rounded-xl border-2 transition-all flex-1',
+                    borderClass,
+                    bgClass,
+                    !isEditMode && 'text-text-muted dark:text-text-secondary'
                   )}
-
-                  <div className={cn(
-                    'text-2xl font-bold min-w-[3rem] text-center',
-                    value > 0 ? 'text-success-fg' :
-                    value < 0 ? 'text-danger-fg' :
-                    'text-text-secondary'
-                  )}>
-                    {formatBonus(value)}
+                >
+                  <div className="text-center mb-2">
+                    <h3 className="font-bold text-sm text-text-primary capitalize">
+                      {compact ? info.shortName : info.name}
+                    </h3>
                   </div>
 
-                  {isEditMode && (
-                    <IncrementButton
-                      onClick={() => onAbilityChange(ability, value + 1)}
-                      disabled={!canInc}
-                      size="md"
-                      title={canInc && increaseCost > 1 ? `Cost: ${increaseCost} points` : undefined}
-                      // No enableHoldRepeat - abilities should be clicked individually
-                    />
+                  <div className="flex items-center justify-center gap-2">
+                    {isEditMode && (
+                      <DecrementButton
+                        onClick={() => onAbilityChange(ability, value - 1)}
+                        disabled={!canDec}
+                        size="md"
+                      />
+                    )}
+
+                    <div
+                      className={cn(
+                        'text-2xl font-bold min-w-[3rem] text-center',
+                        value > 0
+                          ? 'text-success-fg'
+                          : value < 0
+                            ? 'text-danger-fg'
+                            : 'text-text-secondary'
+                      )}
+                    >
+                      {formatBonus(value)}
+                    </div>
+
+                    {isEditMode && (
+                      <IncrementButton
+                        onClick={() => onAbilityChange(ability, value + 1)}
+                        disabled={!canInc}
+                        size="md"
+                        title={canInc && increaseCost > 1 ? `Cost: ${increaseCost} points` : undefined}
+                      />
+                    )}
+                  </div>
+
+                  {isEditMode && useHighAbilityCost && (
+                    <p
+                      className={cn(
+                        'text-[10px] font-medium text-center mt-1',
+                        increaseCost > 1 && canInc ? 'text-warning-fg' : 'invisible'
+                      )}
+                    >
+                      Next: {increaseCost} Points
+                    </p>
                   )}
                 </div>
 
-                {/* Cost indicator - reserve space to keep all boxes same height */}
-                {isEditMode && useHighAbilityCost && (
-                  <p className={cn(
-                    "text-[10px] font-medium text-center mt-1",
-                    increaseCost > 1 && canInc ? "text-warning-fg" : "invisible"
-                  )}>
-                    Next: {increaseCost} Points
+                {!compact && (
+                  <p className="text-xs text-text-muted dark:text-text-secondary text-center mt-1.5 px-1 line-clamp-2 min-h-[2.5rem]">
+                    {info.description}
                   </p>
                 )}
               </div>
-              
-              {/* Description below card (not in compact mode) */}
-              {!compact && (
-                <p className="text-xs text-text-muted dark:text-text-secondary text-center mt-1.5 px-1 line-clamp-2 min-h-[2.5rem]">
-                  {info.description}
-                </p>
-              )}
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

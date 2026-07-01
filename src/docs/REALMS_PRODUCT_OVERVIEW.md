@@ -73,19 +73,20 @@ Each principle below carries a **decision rule** for resolving tradeoffs in the 
 | **2.2 Guided decision flow** | A single clear next action at all times | Every screen has one primary call to action plus visible step progress |
 | **2.3 Reduced cognitive load** | Minimize simultaneous decisions | Split compound steps (weapon, then armor); hide sub-skills and resource math in Layer 1 |
 | **2.4 Confidence-driven progression** | The user feels "I understand this," "I know what to choose," "I know what's next" | Show per-step completion indicators, not only validation errors on Continue |
-| **2.5 System transparency without overload** | Choices are explained in context | First-exposure tooltips via Collin's Tippy pattern (see Section 2.6); no external documentation required to complete the Layer 1 flow |
+| **2.5 System transparency without overload** | Choices are explained in context | First-exposure tooltips via `InfoTippy` (see Section 2.6); no external documentation required to complete the Layer 1 flow |
 
-### 2.6 Contextual help — Tippy tooltips (Collin / TASK-376)
+### 2.6 Contextual help — InfoTippy + tooltip-text.tsx (TASK-376 ✅ / TASK-392 ✅)
 
-In-context explanation is central to this UX vision. **Follow Collin's established Tippy approach** as the only tooltip standard:
+In-context explanation is central to this UX vision. **Use `InfoTippy` + static copy in `public/tooltip-text.tsx`** as the only contextual-help standard:
 
-- `@tippyjs/react` + copy in `public/tooltip-text.tsx`
-- `Info` icon triggers; static, reviewable copy
-- Replace the legacy DB tooltip stack entirely (`ui_tooltips`, `useTooltipByKey`, `ContextHelpTooltip`)
+- `@floating-ui/react` via `InfoTippy` from `@/components/shared`
+- `Info` icon triggers (or custom `children` for non-icon triggers)
+- Copy is static, reviewable, and version-controlled in `public/tooltip-text.tsx`
+- Legacy DB tooltip stack removed (Jun 2026); do not reintroduce `useTooltipByKey`, admin `/api/tooltips`, or user show-tooltips toggle
 
-**TASK-376 is Collin Morrison's assignment — AI agents must not implement the migration.** Agents may **use** Tippy where Collin has already landed it (character creator steps, header); do not extend the legacy system. UX work that needs new tooltip copy should coordinate with Collin's pattern and file structure. See [`ai/AGENT_GUIDE.md`](./ai/AGENT_GUIDE.md) section Tooltips and `DEVELOPER_TASK_QUEUE.md` → COLLIN-001.
+Agents add new help copy to `tooltip-text.tsx` and wire `InfoTippy` on the surface.
 
-First-exposure tooltips in the guided creator flow depend on TASK-376 progressing; plan Layer 1 copy to slot into `tooltip-text.tsx` as Collin migrates each surface.
+**When / what / where (agents):** Full decision matrix, checklist, and surface map → [`ai/AGENT_GUIDE.md`](./ai/AGENT_GUIDE.md) § **Floating UI & contextual help**. Do not use InfoTippy for menus, modals, or filters.
 
 ### Decision hierarchy (for agents when principles conflict)
 
@@ -215,6 +216,73 @@ Today's home page mixes hero, reviews, multiple feature cards, welcome banner, o
 
 Character creation is the **primary onboarding experience** and must be fully guided.
 
+### 5.0 Two-creator model — Simple (Guided) vs Advanced (Classic) — DECIDED 2026-06-30
+
+Rather than rewrite the existing wizard in place, Realms ships **two coexisting creators**, chosen at entry:
+
+- **Advanced (Classic)** — today's 9-step wizard (`STEP_ORDER` in [`character-creator-store.ts`](../stores/character-creator-store.ts)), unchanged. The full-system / power-user surface. Lives at `/characters/new/advanced`.
+- **Simple (Guided)** — a brand-new, **separate** chapter-based creator with a persistent live character preview. Lives at `/characters/new/guided`. Own route, store ([`guided-creator-store.ts`](../stores/guided-creator-store.ts)), and components under `src/components/guided-creator/`.
+
+**Entry chooser:** Clicking **New Character** first asks **Simple vs Advanced** (modal/`/characters/new` chooser) before entering either creator. Terms ("Simple"/"Advanced") are placeholders and may be refined.
+
+**Build strategy:** UI-first prototype. We hand-seed **one reference path** + a few **starter species** via SQL, build the guided flow end-to-end to validate the feel, then harden DB fields and build robust admin tooling. The Simple creator is a prototype that coexists with — does not yet replace — the Advanced creator.
+
+**Future (not in scope yet):** an **animated character avatar** that progresses/levels visually along the chapters near the top of the guided creator. The shell reserves a header slot for it.
+
+#### 5.0.1 Guided chapter model (rulebook-aligned)
+
+The Core Rulebook Chapter 3 flow is **Archetype → Determine Ancestry → Determine Abilities → Build Archetype → Fill in Details → Equip**. The guided creator maps onto that, honoring dependency rules (abilities before skills; abilities/skills before feats since feats have ability/skill requirements; equipment before powers/techniques; "fill in details" automated):
+
+```mermaid
+flowchart LR
+  G1["Ch1 Foundation: Path then Species"]
+  G2["Ch2 Ancestry: species-trait options, ancestry trait, characteristic, optional flaw"]
+  G3["Ch3 Abilities: recommended array or customize"]
+  G4["Ch4 Your Archetype: Skills then Archetype Feat(s) then Character Feat"]
+  G5["Ch5 Equipment then Powers OR Techniques"]
+  G6["Ch6 Your Hero: reveal, name, portrait, HP/EN, save"]
+  G1 --> G2 --> G3 --> G4 --> G5 --> G6
+```
+
+Decisions baked into this model:
+
+- **Path drives the build.** A chosen path supplies recommended abilities, skills, archetype feat(s) (1–3, usually combat), a character feat (1, usually non-combat), equipment loadouts, and recommended powers/techniques. The simplest flow = accept path defaults and barely touch the middle chapters.
+- **Abilities = who you are** (natural aptitude; e.g. high INT → naturally better at History); **Skills = what you can do** (learned capabilities). They are distinct themes, so abilities is its own chapter; skills sits in the "build your archetype" chapter where it belongs mechanically.
+- **Species are path-ambiguous.** There are **no recommended species per path**. Instead, a **starter-species** flag curates a small Layer-1 set; "show all species" reveals the rest.
+- **Shared card format** across Path and Species (and reused elsewhere): short eye-catcher description on the card, full description behind inline **Read more…**, and **hero art** where the entity is a visual selling point (species first). Consistency between steps is a goal.
+- **Ancestry** is a post-species, one-pick-at-a-time flow (full-width cards mimicking earlier steps): auto-granted species traits (some are "trait-with-options" requiring a pick via `option_trait_ids`), one ancestry trait of ~6, one characteristic of ~6, and an **optional** flaw of ~3 that grants an **extra** ancestry trait. Mixed/make-your-own species is deferred.
+- **Chapter 5 step is named "Powers" OR "Techniques"** (never both), chosen by archetype. **Powered-Martial** path options are hidden behind an easy expand affordance at first (same pattern as "show all species").
+- "How you fight" framing is avoided; character feats are usually **non-combat**, and copy reflects that.
+- Chapter count/naming (5 vs 6) is the working backbone and may be refined during the shell prototype.
+
+#### 5.0.2 Guided-creator data needs
+
+Existing `path_data` already supports `guidance_groups`, `recommended_species` (unused by guided per above), and per-level recommendations ([`src/types/archetype.ts`](../types/archetype.ts)). New fields (seeded by SQL first, promoted to admin later):
+
+- `codex_species.is_starter` (BOOLEAN) — curate the Layer-1 starter set.
+- Archetype **recommended abilities** (e.g. `codex_archetypes.level1_recommended_abilities`) — power the one-click recommended array.
+- Archetype **loadout options** (e.g. `codex_archetypes.level1_loadouts` JSONB: `{ id, title, why, armaments[], armor, equipment[] }`) — coherent weapon/armor kits for the equipment chapter.
+- **Choice-card art URLs** (TASK-405): `codex_species.image_url`; optional `image_url` on powers, techniques, and loadout JSON entries; Supabase Storage + admin upload. UI already supports hero/thumb via `GuidedChoiceCard` + placeholders until populated.
+
+Admin tooling (later phase): replace the archetype edit **modal** ([`AdminArchetypesTab.tsx`](<../app/(main)/admin/codex/AdminArchetypesTab.tsx>)) with a robust admin-only **archetype creator**, and improve species editing for trait options + the starter flag.
+
+#### 5.0.3 Choice-card art (image-forward selling) — PLANNED
+
+**Species art is a primary selling point**, not decoration. The guided creator's [`GuidedChoiceCard`](../components/guided-creator/guided-choice-card.tsx) must treat illustration as the hero of the card wherever it helps users imagine their character or gear.
+
+| Surface | Layout | Art role | Backend (planned) |
+|---------|--------|----------|-------------------|
+| **Species** | Featured inline art (~80px) beside title + copy | Primary selling point without dominating the card | `codex_species.image_url` (+ admin upload) |
+| **Equipment / loadouts** | Featured inline art | Visual kit cue, same scale as species | `level1_loadouts[].image_url` or armament art refs |
+| **Powers / techniques** | Featured inline art (when guided step adds pickers) | Ability identity at a glance | `codex_powers.image_url`, `codex_techniques.image_url` (or library payload) |
+| **Paths / feats / ancestry** | Thumb or optional hero | Icon/thumb until path art pipeline exists | Optional later |
+
+**Prototype now:** UI reads `image_url` when present on a record; otherwise typed SVG placeholders under `public/images/placeholder-*-card.svg` via [`guided-choice-image.ts`](../components/guided-creator/guided-choice-image.ts). **No modal required** to understand a species — art + short copy + Read more on the card.
+
+**Implementation track:** TASK-405 (codex columns, Storage uploads, admin pickers). Same card component and layout tokens apply across creators and library/codex pickers over time.
+
+> The subsections below (5.1–5.10) describe the **per-step UX vision** shared by both creators. The guided creator realizes them chapter-by-chapter per 5.0.1.
+
 **Current step order** (`STEP_ORDER` in [`character-creator-store.ts`](../stores/character-creator-store.ts)): archetype → species → ancestry → abilities → skills → feats → equipment → powers → finalize.
 
 **Target flow** (vision reconciled with the codebase):
@@ -269,11 +337,11 @@ The user selects a species. The feeling to evoke: "I see who I am becoming."
 
 | Requirement | Target |
 |-------------|--------|
-| Images are essential | Image-forward grid; species identity readable at a glance |
+| Images are essential | **Featured inline art** on each species card (see §5.0.3); identity at a glance without a full-bleed banner |
 | Hover and tooltips for detail | No modal required to understand the basics |
-| Layer 1 | Grid cards carry an inline stats and traits summary |
+| Layer 1 | Grid cards: art + short copy + Read more; stats/tags stay out of the default card unless they add real value |
 
-**Current gap:** Modal-heavy ([`species-modal.tsx`](../components/character-creator/species-modal.tsx)); a click is required to understand each option.
+**Current gap:** Advanced creator modal-heavy ([`species-modal.tsx`](../components/character-creator/species-modal.tsx)). **Guided creator:** hero layout + placeholders wired; **codex art fields** pending TASK-405.
 
 ### 5.3 Ancestry (identity step)
 
@@ -400,7 +468,7 @@ Consistency across **all surfaces** is **mandatory** — this is a **sitewide** 
   5. Encounters, campaigns, crafting, creature/species creators
   6. Codex / Library browse (reference surfaces; lower landing priority)
 
-Each page refactor must still feel like one product: same step chrome, same layer expand/collapse affordances, same tooltip pattern (Tippy).
+Each page refactor must still feel like one product: same step chrome, same layer expand/collapse affordances, same tooltip pattern (`InfoTippy`).
 
 **Surfaces to unify (phased):**
 
@@ -495,7 +563,7 @@ Show for first-time players (first saved character); optional "don't show again.
 - What each major section is (abilities, skills, feats, library tabs)
 - How to roll (roll log)
 - Where to edit vs view
-- How to find help (Tippy tooltips on sheet)
+- How to find help (`InfoTippy` on sheet)
 
 **UX pattern:**
 - Offer once: "Take a quick tour of your sheet?" with **Skip** and **Don't show again**
@@ -511,7 +579,7 @@ When a character **levels up for the first time**, and again when a level introd
 | Milestone | New concept | Tutorial scope |
 |-----------|-------------|----------------|
 | First level-up ever | Updating stats from a level | Health, energy, skill points, new feat slots — only fields affected by this level |
-| First ability point (e.g. level 3) | Ability allocation on sheet | Where to spend the point; what each ability affects (Tippy) |
+| First ability point (e.g. level 3) | Ability allocation on sheet | Where to spend the point; what each ability affects (`InfoTippy`) |
 | First new power/technique slot | Adding to library from sheet | How to add powers; Layer 1 path guidance if applicable |
 | Later levels | Only **delta** | "At this level you gain X" — tour covers X only |
 
@@ -520,7 +588,7 @@ When a character **levels up for the first time**, and again when a level introd
 - **Never** repeat full sheet tour on every level-up.
 - **Always** skippable; respect global "tutorials off."
 - **Trigger on milestone** (first time this level-up type occurs for this character or account), not calendar time.
-- Prefer **highlight + one Tippy chain** over modal-heavy walkthroughs.
+- Prefer **highlight + one InfoTippy chain** over modal-heavy walkthroughs.
 - Celebrate completion lightly ("You're ready to play at level N") — no gamified achievement spam.
 
 **Implementation note:** Track `tutorial_milestones` per user or character (e.g. `seen_first_level_up`, `seen_ability_point_level_3`) in character metadata or user profile JSON. Exact storage TBD in implementation task.
@@ -637,7 +705,7 @@ Only changes that the UX requires. Do not expand the data model beyond reducing 
 
 - **Step chrome:** sticky footer, visible progress, a completion badge per step.
 - **Modals:** used for Layer 2 and Layer 3 only; set `fullScreenOnMobile` (see [`MOBILE_UX.md`](./MOBILE_UX.md)). Never open the full library as the default view.
-- **Tooltips:** contextual first-exposure via **Collin Tippy only** (Section 2.6); do not add legacy `ContextHelpTooltip`. New copy belongs in `public/tooltip-text.tsx`, coordinated with TASK-376.
+- **Tooltips:** contextual first-exposure via **`InfoTippy`** (Section 2.6). New copy belongs in `public/tooltip-text.tsx`.
 - **Touch targets:** minimum 44 by 44 pixels.
 - **Tokens:** semantic tokens only (see [`DESIGN_SYSTEM.md`](./DESIGN_SYSTEM.md)).
 - **Grouped recommendations:** expandable sections with a one-line "why pick this" and an expand for full detail.
@@ -758,7 +826,7 @@ Everything else stays on current UI until each phase validates the pattern.
 | Post-save flow | Play-together prompt on sheet | `finalize-step.tsx` → toast + redirect only | Section 11 entirely aspirational until TASK-388 |
 | Path as default | Path-first from landing | `archetype-step.tsx` fork: Path **or** Forge | New users can still enter full L3 via Forge |
 | Path L1 strictness | Continue when step is complete | Tab bar allows **Continue anyway** | Undermines guided path if not path-gated |
-| Tooltips | Tippy first-exposure (Section 2.6) | TASK-376 (Collin only); legacy tooltips on some pages (e.g. campaigns) | L1 copy cannot ship uniformly until migration + fallback |
+| Tooltips | `InfoTippy` first-exposure (Section 2.6) | Creator, navbar, campaigns wired (TASK-376 ✅); Floating UI engine (TASK-392 ✅) | Extend to sheet/creators as those surfaces get L1 UX |
 | Campaign CTA | “Start a campaign” post-save | Create (RM) vs join (invite code + character) are different flows | Single CTA oversimplifies player vs RM jobs |
 | Guest → save | Account at value, not at door | Full guest build → `LoginPromptModal` at finalize | **Activation cliff** — not spec’d in Sections 1–5 |
 | Landing secondary CTAs | Power / item creators (Layer 1) | Creators are **Layer 3 today** | Linking from landing before L1 ships = conversion leak |
@@ -843,7 +911,7 @@ Qualitative landing success exists; no **activation funnel** defined.
 
 L1 assumes contextual help at scale; Collin owns migration; AI agents cannot implement TASK-376.
 
-- **Open question:** Fallback until Tippy is on a surface — inline step copy, `PathHelpCard` prose, header one-liners?
+- **Open question:** Fallback until `InfoTippy` is on a surface — inline step copy, `PathHelpCard` prose, header one-liners?
 - Do not block all UX work on tooltip icons alone.
 
 #### Error, empty, and degradation states

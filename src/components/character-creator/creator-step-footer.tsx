@@ -21,8 +21,8 @@ export interface CreatorStepFooterProps {
 }
 
 /**
- * Sticky Back / Continue bar for character creator steps (TASK-285 pattern).
- * Primary action sits on the right; Back on the left.
+ * Fixed Back / Continue controls for character creator steps.
+ * Pinned to the viewport bottom (no chrome box) so actions stay reachable while scrolling.
  */
 export function CreatorStepFooter({
   onBack,
@@ -82,14 +82,18 @@ export function CreatorStepFooter({
     <div
       data-testid="creator-step-footer"
       className={cn(
-        'mt-auto pt-8 flex gap-4',
-        soloPrimary ? 'justify-end' : 'justify-between',
-        'border-t border-border-light bg-surface-alt/80 rounded-xl py-3 px-4',
-        '-mx-4 md:mx-0',
+        'fixed bottom-0 inset-x-0 z-30 pointer-events-none px-4 sm:px-6 lg:px-8 pb-4 pt-2',
         className
       )}
     >
-      {actions}
+      <div
+        className={cn(
+          'mx-auto max-w-[var(--container-wide)] lg:px-24 flex gap-4 pointer-events-auto',
+          soloPrimary ? 'justify-end' : 'justify-between'
+        )}
+      >
+        {actions}
+      </div>
     </div>
   );
 }

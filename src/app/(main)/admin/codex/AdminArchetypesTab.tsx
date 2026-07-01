@@ -18,6 +18,23 @@ import { validatePathDataForPublish } from '@/lib/game/path-validation';
 const COPY_NAME_SUFFIX = ' copy';
 const ABILITY_OPTIONS = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'] as const;
 
+function guidedJsonFromPath(pathData: unknown, field: 'recommended_abilities' | 'loadouts'): string {
+  const level1 = parseArchetypePathData(pathData)?.level1;
+  const value = field === 'recommended_abilities' ? level1?.recommended_abilities : level1?.loadouts;
+  if (value == null || (Array.isArray(value) && value.length === 0)) return '';
+  return JSON.stringify(value, null, 2);
+}
+
+function parseOptionalJsonField(raw: string, label: string): { ok: true; value: unknown } | { ok: false; error: string } {
+  const trimmed = raw.trim();
+  if (!trimmed) return { ok: true, value: null };
+  try {
+    return { ok: true, value: JSON.parse(trimmed) as unknown };
+  } catch {
+    return { ok: false, error: `${label} must be valid JSON.` };
+  }
+}
+
 type PathItemEntry = { id: string; quantity: number };
 
 type PathLevelForm = {
@@ -246,6 +263,8 @@ export function AdminArchetypesTab() {
     level1Path: makeLevelRow(1),
     levelPathRows: [makeLevelRow(2)],
     advancedPathJson: '',
+    guidedRecommendedAbilitiesJson: '',
+    guidedLoadoutsJson: '',
   });
 
   const filtered = (archetypes || []).filter(
@@ -483,6 +502,8 @@ export function AdminArchetypesTab() {
       level1Path: makeLevelRow(1),
       levelPathRows: [makeLevelRow(2)],
       advancedPathJson: '',
+      guidedRecommendedAbilitiesJson: '',
+      guidedLoadoutsJson: '',
     });
     setModalOpen(true);
   };
@@ -515,6 +536,8 @@ export function AdminArchetypesTab() {
       level1Path: toLevelForm(rawLevel1, 1, optionsByField),
       levelPathRows: levelRows.length ? levelRows : [makeLevelRow(2)],
       advancedPathJson: '',
+      guidedRecommendedAbilitiesJson: guidedJsonFromPath(a.path_data, 'recommended_abilities'),
+      guidedLoadoutsJson: guidedJsonFromPath(a.path_data, 'loadouts'),
     });
     setModalOpen(true);
   };
@@ -547,6 +570,8 @@ export function AdminArchetypesTab() {
       level1Path: toLevelForm(rawLevel1, 1, optionsByField),
       levelPathRows: levelRows.length ? levelRows : [makeLevelRow(2)],
       advancedPathJson: '',
+      guidedRecommendedAbilitiesJson: guidedJsonFromPath(a.path_data, 'recommended_abilities'),
+      guidedLoadoutsJson: guidedJsonFromPath(a.path_data, 'loadouts'),
     });
     setModalOpen(true);
   };
@@ -629,6 +654,18 @@ export function AdminArchetypesTab() {
         return;
       }
     }
+
+    const abilitiesParse = parseOptionalJsonField(form.guidedRecommendedAbilitiesJson, 'Recommended abilities');
+    if (!abilitiesParse.ok) {
+      showToast(abilitiesParse.error, 'error');
+      return;
+    }
+    const loadoutsParse = parseOptionalJsonField(form.guidedLoadoutsJson, 'Guided loadouts');
+    if (!loadoutsParse.ok) {
+      showToast(loadoutsParse.error, 'error');
+      return;
+    }
+
     setSaving(true);
     const finalLevel1 = level1Override || (structuredPathData?.level1 as Record<string, unknown> | undefined) || {};
     const finalLevels = levelsOverride || (structuredPathData?.levels as Record<string, unknown>[] | undefined) || [];
@@ -642,6 +679,14 @@ export function AdminArchetypesTab() {
         ? finalLevel1.recommended_species
         : finalLevel1.recommended_species ?? existingLevel1?.recommended_species
     );
+    const preservedRecommendedAbilities =
+      abilitiesParse.value ??
+      existingLevel1?.recommended_abilities ??
+      null;
+    const preservedLoadouts =
+      loadoutsParse.value ??
+      existingLevel1?.loadouts ??
+      null;
 
     const result = await saveArchetypeWithPath({
       ...(editing ? { id: editing.id } : {}),
@@ -668,6 +713,8 @@ export function AdminArchetypesTab() {
       level1_notes: typeof finalLevel1.notes === 'string' ? finalLevel1.notes : undefined,
       level1_recommended_species: preservedRecommendedSpecies || undefined,
       level1_guidance_groups: preservedGuidanceGroups,
+      level1_recommended_abilities: preservedRecommendedAbilities,
+      level1_loadouts: preservedLoadouts,
       levels: finalLevels.map((entry) => ({
         level: Number(entry.level || 0),
         feats: toCsv(entry.feats),
@@ -1097,6 +1144,39 @@ export function AdminArchetypesTab() {
                   }))
                 }
               />
+            </div>
+
+            <div className="space-y-3 rounded-md border border-border-light p-3">
+              <h4 className="text-sm font-medium text-text-primary">Guided creator (Simple)</h4>
+              <p className="text-xs text-text-muted dark:text-text-secondary">
+                Powers the guided character creator: one-click ability arrays and equipment loadout cards.
+              </p>
+              <div>
+                <label htmlFor="guided-recommended-abilities" className="block text-sm font-medium text-text-secondary mb-1">
+                  Recommended abilities (JSON object)
+                </label>
+                <textarea
+                  id="guided-recommended-abilities"
+                  value={form.guidedRecommendedAbilitiesJson}
+                  onChange={(e) => setForm((f) => ({ ...f, guidedRecommendedAbilitiesJson: e.target.value }))}
+                  placeholder='{"strength": 3, "vitality": 2, "agility": 1, "acuity": 1, "intelligence": 0, "charisma": 0}'
+                  className="w-full min-h-[100px] px-3 py-2 rounded-md border border-border bg-background text-text-primary font-mono text-xs"
+                  rows={5}
+                />
+              </div>
+              <div>
+                <label htmlFor="guided-loadouts" className="block text-sm font-medium text-text-secondary mb-1">
+                  Loadout kits (JSON array)
+                </label>
+                <textarea
+                  id="guided-loadouts"
+                  value={form.guidedLoadoutsJson}
+                  onChange={(e) => setForm((f) => ({ ...f, guidedLoadoutsJson: e.target.value }))}
+                  placeholder='[{"id": "kit-a", "title": "Greataxe bruiser", "why": "...", "armaments": [{"id": "uuid", "quantity": 1}]}]'
+                  className="w-full min-h-[120px] px-3 py-2 rounded-md border border-border bg-background text-text-primary font-mono text-xs"
+                  rows={6}
+                />
+              </div>
             </div>
 
             <div className="space-y-3">

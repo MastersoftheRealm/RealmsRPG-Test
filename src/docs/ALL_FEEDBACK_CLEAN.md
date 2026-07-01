@@ -14,9 +14,8 @@ How to use
 
 ---
 
-### Tooltips (canonical standard — Collin)
-- **Tippy is the tooltip standard:** static copy in `public/tooltip-text.tsx`, `InfoTippy` / `@tippyjs/react`. TASK-376 complete (Jun 2026). Do not reintroduce DB tooltips.
-- When merging Collin's branches, prefer his tooltip code over master/AI patterns.
+### Tooltips (canonical standard)
+- **Tooltips:** static copy in `public/tooltip-text.tsx`, `InfoTippy` (`@floating-ui/react`). TASK-376 + TASK-392 complete. Do not reintroduce DB tooltips.
 
 ---
 

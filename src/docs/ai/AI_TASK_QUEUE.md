@@ -2,7 +2,7 @@
 
 **Last slimmed:** 2026-06-26 (TASK-382). Full history: [`archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md`](archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md) and [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md).
 
-**Next task ID:** TASK-391
+**Next task ID:** TASK-407
 
 **Agent rules:** Skip `blocked` tasks and any task with `assignee:` set to a human (e.g. TASK-353). Skip human-only tasks (TASK-353 → `DEVELOPER_TASK_QUEUE.md` DEV-001). Pick highest-priority `not-started` or continue `partial`.
 
@@ -105,7 +105,8 @@
   notes: |
     Completed 2026-06-29: InfoTippy shared component, full creator + campaigns + navbar migration,
     legacy stack removed (useTooltipByKey, ContextHelpTooltip, HelpTooltip, admin/API routes, user toggle).
-    Copy centralized in public/tooltip-text.tsx. Optional human follow-up: drop ui_tooltips table (DEV queue).
+    Copy centralized in public/tooltip-text.tsx. Engine migrated to Floating UI in TASK-392 (2026-06-30).
+    DB cleanup DEV-376 done 2026-06-30: dropped ui_tooltips + show_tooltips (sql/drop-legacy-ui-tooltips-2026-06.sql).
 
 - id: TASK-378
   title: HYG-01 codex typing hardening + legacy payload compatibility gates
@@ -472,7 +473,7 @@
     - `npm run build` passes.
   notes: |
     Replaces pre-creation home OnboardingTour with post-activation guidance.
-    Prefer Tippy/highlight chains over modal-heavy tours where TASK-376 allows.
+    Prefer InfoTippy/highlight chains over modal-heavy tours.
 
 - id: TASK-389
   title: "Landing visual assets — replace uniqueness placeholder panels"
@@ -555,5 +556,318 @@
     - Layer 1 governance caps enforced in UI (max 3 groups, 7 items, 120-char why).
     - Optional: at least one additional martial path seeded with guidance groups in Supabase.
     - npm run build passes.
+
+- id: TASK-392
+  title: Migrate InfoTippy from Tippy.js to Floating UI (React 19)
+  created_at: 2026-06-30
+  created_by: agent
+  priority: high
+  status: done
+  description: |
+    Replace archived `@tippyjs/react` / `tippy.js` with `@floating-ui/react` in `InfoTippy`.
+    Removes React 19 `element.ref` console warning and unmaintained dependency. Keep same
+    public API (`content`, `label`, `placement`, `size`, `children`, `allowHTML` compat).
+  related_files:
+    - src/components/shared/info-tippy.tsx
+    - package.json
+    - src/docs/ai/AGENT_GUIDE.md
+    - src/docs/ai/FEATURE_INDEX.md
+  acceptance_criteria:
+    - InfoTippy uses Floating UI; no `@tippyjs/react` or `tippy.js` in dependencies.
+    - Hover (desktop), focus, touch-hold (~400ms), portal to body, flip/shift, max-width 320px preserved.
+    - Interactive JSX tooltips allow pointer entry (safePolygon).
+    - All existing InfoTippy call sites work without changes.
+    - npm run build passes.
+  notes: |
+    2026-06-30: Implemented. Removed tippy packages; added @floating-ui/react.
+    Integration audit 2026-06-30: no @tippyjs/react imports remain; dead tooltip Zod schemas removed;
+    agent docs/rules updated; InfoTippyProps exported from shared barrel.
+    DEV-376 2026-06-30: Supabase MCP migration drop_legacy_ui_tooltips applied; app code no longer references show_tooltips.
+
+- id: TASK-393
+  title: Guided Simple Creator — docs & product model (REALMS §5.0)
+  created_at: 2026-06-30
+  created_by: agent
+  priority: high
+  status: done
+  description: |
+    Document two-creator model, chapter backbone, starter-species rule, recommended abilities/loadouts data needs, and future avatar slot in REALMS_PRODUCT_OVERVIEW.md.
+  related_files:
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+  acceptance_criteria:
+    - Section 5.0 records Simple vs Advanced, entry chooser, chapters, and data fields.
+  notes: |
+    2026-06-30: Implemented as part of guided creator build.
+
+- id: TASK-394
+  title: Guided Simple Creator — Phase 0 entry chooser & routes
+  created_at: 2026-06-30
+  created_by: agent
+  priority: high
+  status: done
+  description: |
+    Simple vs Advanced chooser at /characters/new; Advanced at /characters/new/advanced; guided at /characters/new/guided; guided-creator-store scaffold.
+  related_files:
+    - src/app/(main)/characters/new/page.tsx
+    - src/app/(main)/characters/new/advanced/page.tsx
+    - src/app/(main)/characters/new/guided/page.tsx
+    - src/stores/guided-creator-store.ts
+  acceptance_criteria:
+    - New Character navigates to chooser; both routes load; stores are separate.
+    - npm run build passes.
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T001
+  notes: |
+    2026-06-30: Landing-cohesive chooser with CreatorFunnelHero.
+
+- id: TASK-395
+  title: Guided Simple Creator — Phase 1 shell (rail, preview, footer)
+  created_at: 2026-06-30
+  created_by: agent
+  priority: high
+  status: done
+  description: |
+    GuidedCreatorShell with chapter rail, CharacterPreviewPanel, GuidedStepFooter, and step routing for all chapters.
+  related_files:
+    - src/components/guided-creator/guided-creator-shell.tsx
+    - src/components/guided-creator/character-preview-panel.tsx
+    - src/components/guided-creator/guided-step-footer.tsx
+    - src/components/guided-creator/guided-creator-page-shell.tsx
+  acceptance_criteria:
+    - Chapter rail matches GUIDED_CHAPTERS; preview updates from draft; sticky footer on all steps.
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T002
+  notes: |
+    2026-06-30: Visual language matches landing (CreatorFunnelHero, rounded-card surfaces).
+
+- id: TASK-396
+  title: Guided Simple Creator — schema fields & seed SQL
+  created_at: 2026-06-30
+  created_by: agent
+  priority: high
+  status: done
+  description: |
+    Add codex_species.is_starter, codex_archetypes.level1_recommended_abilities, level1_loadouts; SQL seed for Berserker + starter species; update SUPABASE_SCHEMA.md.
+  related_files:
+    - sql/guided-creator-schema-seed.sql
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/app/api/codex/route.ts
+  acceptance_criteria:
+    - SQL file documents migration + seed; schema doc updated; API maps new fields into path_data.
+    - Human runs SQL in Supabase (DEV-004).
+  notes: |
+    2026-06-30: Seed SQL applied via Supabase MCP migration `guided_creator_schema_seed` (DEV-004 done). 8 starter species + Berserker verified in DB.
+
+- id: TASK-397
+  title: Guided Simple Creator — Phase 2 Foundation (path + species)
+  created_at: 2026-06-30
+  created_by: agent
+  priority: high
+  status: done
+  description: |
+    Shared GuidedChoiceCard for path/species; starter-species filter with expand-to-all; Powered-Martial paths behind expand affordance.
+  related_files:
+    - src/components/guided-creator/steps/path-step.tsx
+    - src/components/guided-creator/steps/species-step.tsx
+    - src/components/guided-creator/guided-choice-card.tsx
+  acceptance_criteria:
+    - Path and species use same card format; starter filter works when is_starter seeded; hybrid paths expandable.
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T003
+  notes: |
+    2026-06-30: Species path-ambiguous (no per-path recommended species).
+
+- id: TASK-398
+  title: Guided Simple Creator — Phase 3 Ancestry micro-flow
+  created_at: 2026-06-30
+  created_by: agent
+  priority: high
+  status: done
+  description: |
+    One-pick-at-a-time full-width cards for species-trait options, ancestry trait, characteristic, optional flaw + bonus trait; draft-state completion validation.
+  related_files:
+    - src/components/guided-creator/steps/ancestry-step.tsx
+  acceptance_criteria:
+    - Continue disabled until required ancestry picks complete; optional flaw skippable.
+  notes: |
+    2026-06-30: Mixed species deferred.
+
+- id: TASK-399
+  title: Guided Simple Creator — Phase 4 Abilities
+  created_at: 2026-06-30
+  created_by: agent
+  priority: high
+  status: done
+  description: |
+    Apply path recommended_abilities or customize via AbilityScoreEditor; in-context ability blurbs.
+  related_files:
+    - src/components/guided-creator/steps/abilities-step.tsx
+    - src/lib/guided-creator/build-character.ts
+  acceptance_criteria:
+    - Use recommended one-click apply; customize mode enforces point spend.
+  notes: |
+    2026-06-30: resolveGuidedRecommendedAbilities from path_data.
+
+- id: TASK-400
+  title: Guided Simple Creator — Phase 4 Your Archetype (skills + feats)
+  created_at: 2026-06-30
+  created_by: agent
+  priority: high
+  status: done
+  description: |
+    Skills (species locked + path toggleable), archetype feats via guidance groups, character feat step; ordered after abilities.
+  related_files:
+    - src/components/guided-creator/steps/skills-step.tsx
+    - src/components/guided-creator/steps/archetype-feats-step.tsx
+    - src/components/guided-creator/steps/character-feat-step.tsx
+  acceptance_criteria:
+    - Sub-step order enforced in store; guidance groups drive feat selection when present.
+  notes: |
+    2026-06-30: Chapter 4 sub-steps skills → archetype-feats → character-feat.
+
+- id: TASK-401
+  title: Guided Simple Creator — Phase 5 Equipment + Powers/Techniques
+  created_at: 2026-06-30
+  created_by: agent
+  priority: high
+  status: done
+  description: |
+    Loadout cards from level1_loadouts (fallback to path armaments); single Powers or Techniques step by archetype type.
+  related_files:
+    - src/components/guided-creator/steps/loadout-step.tsx
+    - src/components/guided-creator/steps/powers-techniques-step.tsx
+    - src/lib/game/archetype-path.ts
+  acceptance_criteria:
+    - Loadout step selects kit; powers/techniques step title varies by martial vs power archetype.
+  notes: |
+    2026-06-30: parseLoadouts supports object-shaped armament entries in JSON.
+
+- id: TASK-402
+  title: Guided Simple Creator — Phase 6 Your Hero (reveal + save)
+  created_at: 2026-06-30
+  created_by: agent
+  priority: high
+  status: done
+  description: |
+    Reveal step with name, HP/EN allocation, save character, login prompt for guests, post-save play-together modal.
+  related_files:
+    - src/components/guided-creator/steps/reveal-step.tsx
+    - src/lib/guided-creator/build-character.ts
+  acceptance_criteria:
+    - buildGuidedCharacterPayload + createCharacter; guest sees login modal; post-save Discord/campaign prompt.
+  follow_up_tasks:
+    - TASK-406
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T004
+      - DEV-V-013-T005
+  notes: |
+    2026-06-30: Marketing CTAs in modals match landing patterns. Reveal UX completed in TASK-406.
+
+- id: TASK-403
+  title: Guided Simple Creator — Phase 8 admin & species starter flag
+  created_at: 2026-06-30
+  created_by: agent
+  priority: high
+  status: partial
+  description: |
+    Admin species is_starter checkbox; admin archetype JSON fields for level1_recommended_abilities and level1_loadouts; save via saveArchetypeWithPath.
+  related_files:
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/app/(main)/admin/codex/actions.ts
+  acceptance_criteria:
+    - isStarter persists on species; guided JSON fields editable and saved to DB columns.
+  completed_work: |
+    - isStarter checkbox wired in AdminSpeciesTab (openAdd/openEdit/save).
+    - Guided JSON textareas for recommended abilities + loadouts in AdminArchetypesTab.
+    - saveArchetypeWithPath persists level1_recommended_abilities and level1_loadouts.
+  remaining_work: |
+    - Plan Phase 8 also called for replacing the archetype edit modal with a full admin-only archetype creator (structured loadout builder, not raw JSON).
+    - Species trait-option editing improvements beyond existing AdminSpeciesTab pickers (if needed for guided ancestry QA).
+  follow_up_tasks:
+    - TASK-404
+  notes: |
+    2026-06-30: JSON fields sufficient for prototype; full archetype creator UI deferred to TASK-404.
+
+- id: TASK-404
+  title: Guided creator — admin archetype creator + reveal portrait upload
+  created_at: 2026-06-30
+  created_by: agent
+  priority: medium
+  status: not-started
+  description: |
+    Close remaining plan gaps: structured admin loadout/abilities builder (replace raw JSON in AdminArchetypesTab). Portrait upload on guided reveal delivered in TASK-406.
+  related_files:
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/components/guided-creator/steps/reveal-step.tsx
+  acceptance_criteria:
+    - Admin can author loadouts without hand-editing JSON.
+  notes: |
+    Follow-up from TASK-403 partial. Guided reveal portrait upload moved to TASK-406.
+
+- id: TASK-406
+  title: Guided creator — Your Hero reveal redesign (§5.10)
+  created_at: 2026-06-30
+  created_by: agent
+  priority: high
+  status: done
+  description: |
+    Redesign guided reveal/finalize step to match REALMS §5.10: hero reveal moment, full build summary with names and edit jump-backs, identity fields, portrait upload, smart HP/EN allocation, reveal-first layout.
+  related_files:
+    - src/components/guided-creator/steps/reveal-step.tsx
+    - src/components/guided-creator/guided-reveal-summary.tsx
+    - src/components/guided-creator/guided-portrait-upload.tsx
+    - src/components/guided-creator/guided-health-energy-section.tsx
+    - src/components/guided-creator/guided-step-edit-link.tsx
+    - src/components/guided-creator/guided-creator-shell.tsx
+    - src/lib/constants/copy/guided-creator-copy.ts
+    - src/lib/guided-creator/build-character.ts
+    - src/stores/guided-creator-store.ts
+  acceptance_criteria:
+    - Full overview shows names (skills, traits, feats, loadout, powers/techniques) not counts.
+    - Edit links jump back to prior guided sub-steps.
+    - Identity block: name, optional age/height/weight/appearance, portrait upload.
+    - HP/EN auto-applies on enter + auto-allocate button tied to highest power/technique cost.
+    - Reveal layout feels like a finale (hero band, no duplicate preview strip).
+    - Save + guest login + portrait upload on save still work.
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T004
+      - DEV-V-013-T005
+  notes: |
+    2026-06-30: Owner feedback — guided reveal was worst finalize step; redesign in stages.
+    2026-06-30: Hero band, GuidedRevealSummary (names + edit links), identity block, portrait upload, smart HP/EN auto-allocate, shell hides strip on reveal. npm run build pass.
+
+- id: TASK-405
+  title: Choice-card art — codex image_url fields + admin upload
+  created_at: 2026-06-30
+  created_by: owner
+  priority: high
+  status: not-started
+  description: |
+    Species (and later equipment, powers, techniques) use hero art on GuidedChoiceCard as a primary selling point (REALMS §5.0.3). UI resolves image_url from records with typed SVG placeholders until art exists. Add codex columns, Storage upload, admin pickers, and seed real species art for starters.
+  related_files:
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - src/components/guided-creator/guided-choice-card.tsx
+    - src/components/guided-creator/guided-choice-image.ts
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - public/images/placeholder-*-card.svg
+  acceptance_criteria:
+    - codex_species.image_url (TEXT, nullable) + documented in SUPABASE_SCHEMA.md; migration applied.
+    - Admin species editor: upload or URL for card art; preview matches guided hero layout.
+    - Guided species step shows real art when image_url set; placeholders otherwise.
+    - Plan documented for powers/techniques/loadout image_url (column or JSON) as follow-up sub-task or phase 2.
+  notes: |
+    2026-06-30: Product owner — species art is main marketing hook on cards. Prototype placeholders + GuidedChoiceCard hero layout landed first.
 
 ---

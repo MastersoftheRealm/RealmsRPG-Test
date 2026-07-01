@@ -49,6 +49,20 @@ export interface PathGuidanceGroup {
   equipment?: string[];
 }
 
+/**
+ * A coherent weapon/armor/gear kit a path offers in the guided creator's equipment chapter
+ * (REALMS_PRODUCT_OVERVIEW.md §5.0.2). A path may offer several loadouts (e.g. "Sword & Shield",
+ * "Two-handed"). Seeded by SQL first, promoted to the admin archetype creator later.
+ */
+export interface PathLoadout {
+  id: string;
+  title: string;
+  why?: string;
+  armaments?: PathItemRecommendation[];
+  armor?: PathItemRecommendation[];
+  equipment?: PathItemRecommendation[];
+}
+
 export interface ArchetypePathRecommendations {
   feats?: string[];
   skills?: string[];
@@ -58,6 +72,13 @@ export interface ArchetypePathRecommendations {
   equipment?: string[];
   /** Layer 1 grouped recommendations with why-copy (feats, powers, equipment steps). */
   guidance_groups?: PathGuidanceGroup[];
+  /**
+   * Recommended ability array for the guided creator's Abilities chapter (one-click apply).
+   * Map of ability name -> value (e.g. { strength: 3, vitality: 2, ... }).
+   */
+  recommended_abilities?: Partial<Record<AbilityName, number>>;
+  /** Coherent equipment kits offered in the guided creator's equipment chapter. */
+  loadouts?: PathLoadout[];
   /** Optional species IDs/names recommended for this path (species step Layer 1). */
   recommended_species?: string[];
   /** Parsed armaments with quantity (id or "id:qty" from armaments array) */

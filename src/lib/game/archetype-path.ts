@@ -1,4 +1,7 @@
-import type { ArchetypePathData, ArchetypePathRecommendations, PathGuidanceGroup, PathItemRecommendation } from '@/types/archetype';
+import type { ArchetypePathData, ArchetypePathRecommendations, PathGuidanceGroup, PathItemRecommendation, PathLoadout } from '@/types/archetype';
+import type { AbilityName } from '@/types/abilities';
+
+const ABILITY_NAMES: AbilityName[] = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -30,6 +33,56 @@ function parseIdQuantityArray(arr: string[]): PathItemRecommendation[] {
 function parseLevel(value: unknown): number | null {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function parseRecommendedAbilities(value: unknown): Partial<Record<AbilityName, number>> | undefined {
+  if (!isRecord(value)) return undefined;
+  const result: Partial<Record<AbilityName, number>> = {};
+  for (const ability of ABILITY_NAMES) {
+    const raw = value[ability];
+    if (raw == null) continue;
+    const num = Number(raw);
+    if (Number.isFinite(num)) result[ability] = num;
+  }
+  return Object.keys(result).length > 0 ? result : undefined;
+}
+
+function parseIdQuantityObjects(value: unknown): PathItemRecommendation[] {
+  if (Array.isArray(value)) {
+    const fromObjects = value
+      .map((entry) => {
+        if (!isRecord(entry)) return null;
+        const id = entry.id != null ? String(entry.id).trim() : '';
+        if (!id) return null;
+        const q = entry.quantity != null ? Number(entry.quantity) : 1;
+        return { id, quantity: Number.isFinite(q) && q >= 1 ? q : 1 };
+      })
+      .filter((entry): entry is PathItemRecommendation => entry !== null);
+    if (fromObjects.length > 0) return fromObjects;
+  }
+  return parseIdQuantityArray(toStringArray(value));
+}
+
+function parseLoadouts(value: unknown): PathLoadout[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const loadouts = value
+    .map((entry) => {
+      if (!isRecord(entry)) return null;
+      const id = typeof entry.id === 'string' ? entry.id : typeof entry.title === 'string' ? entry.title : null;
+      const title = typeof entry.title === 'string' ? entry.title : id;
+      if (!id || !title) return null;
+      const loadout: PathLoadout = {
+        id,
+        title,
+        ...(typeof entry.why === 'string' ? { why: entry.why } : {}),
+        armaments: parseIdQuantityObjects(entry.armaments),
+        armor: parseIdQuantityObjects(entry.armor),
+        equipment: parseIdQuantityObjects(entry.equipment),
+      };
+      return loadout;
+    })
+    .filter((l): l is PathLoadout => l !== null);
+  return loadouts.length > 0 ? loadouts : undefined;
 }
 
 function parseGuidanceGroups(value: unknown): PathGuidanceGroup[] | undefined {
@@ -94,6 +147,8 @@ export function parseArchetypePathData(value: unknown): ArchetypePathData | unde
         notes: typeof level1Raw.notes === 'string' ? level1Raw.notes : undefined,
         recommended_species: toStringArray(level1Raw.recommended_species),
         guidance_groups: parseGuidanceGroups(level1Raw.guidance_groups),
+        recommended_abilities: parseRecommendedAbilities(level1Raw.recommended_abilities),
+        loadouts: parseLoadouts(level1Raw.loadouts),
         proficiency: isRecord(level1Raw.proficiency)
           ? {
               power:

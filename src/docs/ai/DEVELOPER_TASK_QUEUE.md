@@ -6,7 +6,7 @@ What **you** need to do that AI cannot (Dashboard, prod validation, decisions). 
 
 **Agents:** When you finish a user-facing task (`done` or `partial`), add granular tests to `BUILD_VALIDATION.md` and index the suite below. See [`AGENT_GUIDE.md`](AGENT_GUIDE.md).
 
-**Last updated:** 2026-06-26
+**Last updated:** 2026-06-30
 
 ---
 
@@ -14,7 +14,8 @@ What **you** need to do that AI cannot (Dashboard, prod validation, decisions). 
 
 | ID | Task | Assignee | What to do |
 |----|------|----------|------------|
-| **DEV-376** | [TASK-376](AI_TASK_QUEUE.md) — optional DB cleanup | **Human** | Code migration complete (Jun 2026). Optional: drop `ui_tooltips` table + `user_profiles.show_tooltips` column if no longer needed. See `SUPABASE_SCHEMA.md`. |
+| **DEV-376** | [TASK-376](AI_TASK_QUEUE.md) — DB cleanup | **Done** 2026-06-30 | Dropped `ui_tooltips` + `user_profiles.show_tooltips` via Supabase MCP (`drop_legacy_ui_tooltips`). Repo SQL: `sql/drop-legacy-ui-tooltips-2026-06.sql`. App code no longer references `show_tooltips`. |
+| **DEV-004** | [TASK-396](AI_TASK_QUEUE.md) — Guided creator seed SQL | **Done** 2026-06-30 | Applied via Supabase MCP migration `guided_creator_schema_seed` on project `lbqhiwudvifmkjtkccdg`. Verified: Berserker id=1 has recommended abilities + 2 loadouts; 8 starter species flagged. Repo SQL: `sql/guided-creator-schema-seed.sql`. |
 
 ---
 
@@ -25,6 +26,7 @@ What **you** need to do that AI cannot (Dashboard, prod validation, decisions). 
 | **DEV-001** | [TASK-353](AI_TASK_QUEUE.md) — HIBP | Supabase Dashboard → **Authentication** → Password → enable **Leaked password protection**. Project: `RealmsRPG-Test` (`lbqhiwudvifmkjtkccdg`). [Docs](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection) | Dashboard-only |
 | **DEV-002** | [TASK-383](AI_TASK_QUEUE.md) — UI Verify CI bootstrap | One-time setup so the `UI Verify` workflow is a real gate: (1) Add repo **Actions secrets** `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY`. (2) **Seed Linux visual baselines**: run the `visual-a11y` job once (or locally via the Playwright Docker image `mcr.microsoft.com/playwright`) with `npx playwright test --update-snapshots`, then commit the generated `tests/visual/*-snapshots/*-linux.png`. (3) In **Settings → Branches**, add `UI Verify / static-gates` and `UI Verify / visual-a11y` to required status checks. | Repo settings + secrets + committing OS-specific baselines from a Linux runner |
 | **DEV-003** | [TASK-385](AI_TASK_QUEUE.md) — CI test user (optional) | (1) Run `npm run e2e:provision` locally with `E2E_TEST_EMAIL` + `E2E_TEST_PASSWORD` set (uses `SUPABASE_SERVICE_ROLE_KEY`). (2) Add repo **Actions secrets**: `E2E_TEST_EMAIL`, `E2E_TEST_PASSWORD`, optional `E2E_TEST_CHARACTER_ID` / `E2E_TEST_CAMPAIGN_ID` (defaults in `tests/visual/e2e-seed-manifest.json`). (3) On first CI run with secrets, commit Linux auth baselines from `tests/visual/auth-screenshots.pw.ts-snapshots/*-linux.png` (same flow as DEV-002). | Account creation + secret storage + OS-specific baselines |
+| **DEV-004** | [TASK-396](AI_TASK_QUEUE.md) — Guided creator seed | **Done** 2026-06-30 via Supabase MCP (`guided_creator_schema_seed`). Re-apply only if resetting a fresh DB. |
 
 ---
 
@@ -41,6 +43,7 @@ Each suite is a **category** of step-by-step tests. Full steps live in [`BUILD_V
 | **DEV-V-010** | Feat/trait custom name + note | TASK-377 | T001–T004 (4) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-010--feattrait-custom-name--note-task-377) |
 | **DEV-V-011** | UI verification safety net | TASK-383, TASK-385 | T001–T006 (6) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-011--ui-verification-safety-net-task-383) |
 | **DEV-V-012** | Landing page rebuild | TASK-387 | T001–T006 (6) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-012--landing-page-rebuild-task-387) |
+| **DEV-V-013** | Guided Simple character creator | TASK-394–403 | T001–T005 (5) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-013--guided-simple-character-creator-task-394403) |
 | DEV-V-002 | Campaign & rolls security | TASK-329 | — | Planned (legacy DEV-T-002) |
 | DEV-V-003 | Admin role change safety | TASK-330 | — | Planned |
 | DEV-V-004 | Storage & account security | TASK-326, TASK-331 | — | Planned |

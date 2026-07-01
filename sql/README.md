@@ -43,7 +43,8 @@
 | **supabase-user-profiles-timestamps-default.sql** | user_profiles: set DEFAULT now() on created_at, updated_at | Run if inserts fail with "null value in column updated_at" |
 | **supabase-user-profiles-username-display.sql** | user_profiles: add `username_display` and backfill from canonical `username` | Run once to preserve entered username casing in UI while keeping lowercase canonical uniqueness |
 | **supabase-role-policies.sql** | Create `role_policies` table + seed defaults + RLS for admin-managed role quotas/permissions | Run once before enabling `/admin/roles` and quota enforcement |
-| **supabase-ui-tooltips.sql** | Adds `user_profiles.show_tooltips`, creates `ui_tooltips` table, RLS policies, and initial seed tooltips | Run once when enabling tooltip system |
+| **supabase-ui-tooltips.sql** | *(Historical)* Created `ui_tooltips` + `show_tooltips` — **superseded** | Do **not** run on new envs; use `drop-legacy-ui-tooltips-2026-06.sql` instead |
+| **drop-legacy-ui-tooltips-2026-06.sql** | DEV-376: drops `ui_tooltips`, `set_ui_tooltips_updated_at()`, `user_profiles.show_tooltips` | Applied 2026-06-30 on RealmsRPG-Test (`drop_legacy_ui_tooltips`) |
 | **codex-archetypes-path-columns.sql** | `codex_archetypes` level1 columnar path fields + `codex_archetype_levels` | Applied on RealmsRPG-Test |
 | **codex-archetypes-recommend-unarmed-prowess.sql** | Adds `level1_recommend_unarmed_prowess` to `codex_archetypes` | Applied on RealmsRPG-Test |
 | **codex-archetypes-creator-layer1-extensions.sql** | Adds `level1_recommended_species`, `level1_guidance_groups`; backfills from `path_data`; seeds Berserker reference groups | Applied 2026-06-29 via Supabase MCP migration `codex_archetypes_creator_layer1_extensions`; backup tables `codex_archetypes_backup_20260629` |
@@ -67,7 +68,6 @@ After deploying app code that uses the new columnar or list-column schema, run t
 4. **supabase-encounters-list-columns.sql** — Adds `name`, `type`, `status` to `encounters`; backfills. Optional.
 5. **supabase-characters-list-columns.sql** — Adds list columns to `characters`; backfills. Optional but recommended for list/filter.
 6. **supabase-campaign-rolls-list-columns.sql** — Adds list columns to `campaign_rolls`; backfills. Optional.
-7. **supabase-ui-tooltips.sql** — Adds tooltip data table + preference column and seeds baseline tooltips.
 
 **Back up** before running. Each script is idempotent where possible (ADD COLUMN IF NOT EXISTS, ON CONFLICT, or conditional backfill). See [SUPABASE_SCHEMA.md](../src/docs/SUPABASE_SCHEMA.md) §4 for status and task refs.
 

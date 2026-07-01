@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none" role="img" aria-label="">
+  <rect width="400" height="300" fill="var(--placeholder-bg, #e8eef4)"/>
+  <path d="M200 56 L248 152 L200 128 L152 152 Z" fill="var(--placeholder-accent, #c5d4e3)"/>
+  <rect x="120" y="168" width="160" height="88" rx="12" fill="var(--placeholder-accent, #c5d4e3)"/>
+</svg>

@@ -111,7 +111,7 @@ function toColumnValue(val: unknown): unknown {
 const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
   codex_feats: ['name', 'description', 'reqDesc', 'abilityReq', 'abilReqVal', 'skillReq', 'skillReqVal', 'featCatReq', 'powAbilReq', 'martAbilReq', 'powProfReq', 'martProfReq', 'speedReq', 'featLvl', 'lvlReq', 'usesPerRec', 'recPeriod', 'category', 'ability', 'tags', 'charFeat', 'stateFeat', 'baseFeatId'],
   codex_skills: ['name', 'description', 'ability', 'baseSkill', 'baseSkillId', 'successDesc', 'failureDesc', 'dsCalc', 'craftFailureDesc', 'craftSuccessDesc'],
-  codex_species: ['name', 'description', 'type', 'sizes', 'skills', 'speciesTraits', 'ancestryTraits', 'flaws', 'characteristics', 'aveHgtCm', 'aveWgtKg', 'aveHeight', 'aveWeight', 'adulthoodLifespan', 'languages'],
+  codex_species: ['name', 'description', 'type', 'sizes', 'skills', 'speciesTraits', 'ancestryTraits', 'flaws', 'characteristics', 'aveHgtCm', 'aveWgtKg', 'aveHeight', 'aveWeight', 'adulthoodLifespan', 'languages', 'isStarter'],
   codex_traits: ['name', 'description', 'usesPerRec', 'recPeriod', 'flaw', 'characteristic', 'optionTraitIds'],
   codex_parts: ['name', 'description', 'category', 'baseEn', 'baseTp', 'op1Desc', 'op1En', 'op1Tp', 'op2Desc', 'op2En', 'op2Tp', 'op3Desc', 'op3En', 'op3Tp', 'type', 'mechanic', 'percentage', 'duration', 'defense'],
   codex_properties: ['name', 'description', 'baseIp', 'baseTp', 'baseC', 'op1Desc', 'op1Ip', 'op1Tp', 'op1C', 'type', 'mechanic'],
@@ -408,6 +408,8 @@ type SaveArchetypeWithPathInput = {
   level1_notes?: string;
   level1_recommended_species?: string;
   level1_guidance_groups?: unknown;
+  level1_recommended_abilities?: unknown;
+  level1_loadouts?: unknown;
   levels: ArchetypeLevelPayload[];
 };
 
@@ -445,6 +447,8 @@ export async function saveArchetypeWithPath(
       level1_notes: payload.level1_notes ?? null,
       level1_recommended_species: payload.level1_recommended_species ?? null,
       level1_guidance_groups: payload.level1_guidance_groups ?? null,
+      level1_recommended_abilities: payload.level1_recommended_abilities ?? null,
+      level1_loadouts: payload.level1_loadouts ?? null,
     };
 
     const { error: upsertError } = await supabase.from('codex_archetypes').upsert(archetypeRow);

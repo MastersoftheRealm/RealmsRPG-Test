@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none" role="img" aria-label="">
+  <rect width="400" height="300" fill="var(--placeholder-bg, #e8eef4)"/>
+  <rect x="108" y="72" width="184" height="156" rx="16" fill="var(--placeholder-accent, #c5d4e3)"/>
+  <rect x="148" y="112" width="104" height="12" rx="6" fill="var(--placeholder-bg, #e8eef4)"/>
+  <rect x="148" y="140" width="72" height="12" rx="6" fill="var(--placeholder-bg, #e8eef4)"/>
+</svg>
