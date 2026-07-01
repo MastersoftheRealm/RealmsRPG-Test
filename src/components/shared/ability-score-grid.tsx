@@ -43,14 +43,20 @@ export interface AbilityScoreGridProps {
   className?: string;
 }
 
-type PathAbilityRole = 'primary' | 'power' | 'martial';
+type PathAbilityRole = 'power' | 'martial';
 
 function normalizeAbilityKey(value?: AbilityName | null): string | null {
   return value ? value.toLowerCase() : null;
 }
 
-/** Label path key abilities: Power + Martial when both differ; otherwise Primary. */
-function getPathAbilityRole(
+function isHybridPath(powerAbility?: AbilityName, martialAbility?: AbilityName): boolean {
+  const pow = normalizeAbilityKey(powerAbility);
+  const mart = normalizeAbilityKey(martialAbility);
+  return Boolean(pow && mart && pow !== mart);
+}
+
+/** Tint key abilities on the grid; hybrid paths get both sides when distinct. */
+function getPathAbilityHighlight(
   ability: AbilityName,
   powerAbility?: AbilityName,
   martialAbility?: AbilityName
@@ -58,38 +64,35 @@ function getPathAbilityRole(
   const key = ability.toLowerCase();
   const pow = normalizeAbilityKey(powerAbility);
   const mart = normalizeAbilityKey(martialAbility);
-  const hasPow = Boolean(pow);
-  const hasMart = Boolean(mart && mart !== pow);
-
-  if (hasPow && hasMart) {
-    if (key === pow) return 'power';
-    if (key === mart) return 'martial';
-    return null;
-  }
-
-  if (hasPow && key === pow) return 'primary';
-  if (hasMart && key === mart) return 'primary';
+  if (pow && key === pow) return 'power';
+  if (mart && key === mart) return 'martial';
   return null;
 }
 
-function pathRoleLabel(role: PathAbilityRole): string {
-  if (role === 'power') return 'Power';
-  if (role === 'martial') return 'Martial';
-  return 'Primary';
+/** Power / Martial labels only when the path uses both (powered-martial). */
+function getPathAbilityBadgeRole(
+  ability: AbilityName,
+  powerAbility?: AbilityName,
+  martialAbility?: AbilityName
+): PathAbilityRole | null {
+  if (!isHybridPath(powerAbility, martialAbility)) return null;
+  return getPathAbilityHighlight(ability, powerAbility, martialAbility);
 }
 
 function abilityBorderClass(role: PathAbilityRole | null): string {
   if (role === 'power') return 'border-power-border';
   if (role === 'martial') return 'border-martial-border';
-  if (role === 'primary') return 'border-primary-subtle-border';
   return 'border-border-light';
 }
 
 function abilityGradientClass(role: PathAbilityRole | null): string {
   if (role === 'power') return 'from-power-light/50 to-surface-alt';
   if (role === 'martial') return 'from-martial-light/50 to-surface-alt';
-  if (role === 'primary') return 'from-primary-subtle-bg/60 to-surface-alt';
   return 'from-surface to-surface-alt';
+}
+
+function pathRoleLabel(role: PathAbilityRole): string {
+  return role === 'power' ? 'Power' : 'Martial';
 }
 
 function PathAbilityBadge({ role }: { role: PathAbilityRole }) {
@@ -100,9 +103,7 @@ function PathAbilityBadge({ role }: { role: PathAbilityRole }) {
         role === 'power' &&
           'border-power-border bg-power-light/70 text-power-dark dark:bg-power-light/20 dark:text-power-300',
         role === 'martial' &&
-          'border-martial-border bg-martial-light/70 text-martial-dark dark:bg-martial-light/20 dark:text-martial-300',
-        role === 'primary' &&
-          'border-primary-subtle-border bg-primary-subtle-bg text-primary-subtle-fg'
+          'border-martial-border bg-martial-light/70 text-martial-dark dark:bg-martial-light/20 dark:text-martial-300'
       )}
     >
       {pathRoleLabel(role)}
@@ -134,7 +135,8 @@ export function AbilityScoreGrid({
       {ABILITY_DISPLAY_ORDER.map((ability) => {
         const value = abilities[ability] ?? 0;
         const info = ABILITY_DISPLAY_INFO[ability];
-        const pathRole = getPathAbilityRole(ability, powerAbility, martialAbility);
+        const highlight = getPathAbilityHighlight(ability, powerAbility, martialAbility);
+        const badgeRole = getPathAbilityBadgeRole(ability, powerAbility, martialAbility);
         const canInc = isEdit ? (canIncrease?.(ability) ?? false) : false;
         const canDec = isEdit ? (canDecrease?.(ability) ?? false) : false;
         const increaseCost = getIncreaseCost?.(ability) ?? 1;
@@ -144,8 +146,8 @@ export function AbilityScoreGrid({
             key={ability}
             className={cn(
               'flex flex-col items-center p-3 bg-gradient-to-b rounded-xl border-2 transition-all',
-              abilityGradientClass(pathRole),
-              abilityBorderClass(pathRole),
+              abilityGradientClass(highlight),
+              abilityBorderClass(highlight),
               !isEdit && 'hover:shadow-md'
             )}
           >
@@ -153,7 +155,7 @@ export function AbilityScoreGrid({
               {info.name}
             </span>
             <div className="mb-1.5 flex min-h-[1.125rem] items-center justify-center">
-              {pathRole ? <PathAbilityBadge role={pathRole} /> : null}
+              {badgeRole ? <PathAbilityBadge role={badgeRole} /> : null}
             </div>
 
             {isEdit ? (

@@ -35,8 +35,16 @@ export function AbilitiesStep() {
   const { rules } = useGameRules();
   const [customizing, setCustomizing] = useState(draft.abilitiesMode === 'custom');
 
-  const primary = draft.pow_abil ?? archetype?.archetype_ability ?? null;
+  const primary = draft.pow_abil ?? draft.mart_abil ?? archetype?.archetype_ability ?? null;
   const secondary = draft.mart_abil ?? archetype?.secondary_ability ?? null;
+  const powerAbilityProp =
+    draft.archetypeType === 'martial' ? undefined : (draft.pow_abil ?? primary ?? undefined);
+  const martialAbilityProp =
+    draft.archetypeType === 'power'
+      ? undefined
+      : draft.archetypeType === 'powered-martial'
+        ? (draft.mart_abil ?? secondary ?? undefined)
+        : (draft.mart_abil ?? primary ?? undefined);
 
   const recommended = useMemo(
     () => resolveGuidedRecommendedAbilities(pathData, primary, secondary),
@@ -94,8 +102,8 @@ export function AbilitiesStep() {
             <div className="mt-4">
               <AbilityScoreGrid
                 abilities={displayAbilities}
-                powerAbility={primary ?? undefined}
-                martialAbility={secondary ?? undefined}
+                powerAbility={powerAbilityProp}
+                martialAbility={martialAbilityProp}
                 mode="display"
               />
             </div>
@@ -117,8 +125,8 @@ export function AbilitiesStep() {
             abilities={draft.abilities}
             totalPoints={totalPoints}
             onAbilityChange={handleAbilityChange}
-            powerAbility={primary ?? undefined}
-            martialAbility={secondary ?? undefined}
+            powerAbility={powerAbilityProp}
+            martialAbility={martialAbilityProp}
             variant="sheet"
           />
           <ul className="grid gap-2 sm:grid-cols-2">

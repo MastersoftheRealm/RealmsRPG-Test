@@ -150,8 +150,12 @@ export const GUIDED_CREATOR_COPY = {
         title: 'Your powers',
         description: 'Powers are your supernatural or extraordinary abilities.',
       },
+      groupIntro: (kind: string) =>
+        `These ${kind} are recommended for your path. Select the ones you want on your character.`,
+      energyTag: (energy: number) => `${energy} EN`,
       emptyTitle: (kind: string) => `No ${kind} on this path`,
-      emptyDescription: (kind: string) => `This path has no level-1 ${kind} recommendations yet.`,
+      emptyDescription: (kind: string) =>
+        `This path has no level-1 ${kind} recommendations yet. You can add ${kind} from your library later.`,
     },
     reveal: {
       title: 'Meet your hero',

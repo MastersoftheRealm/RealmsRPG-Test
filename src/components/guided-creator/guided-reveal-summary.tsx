@@ -219,14 +219,10 @@ export function GuidedRevealSummary() {
     });
   }, [draft.techniqueIds, officialTechniques, techniquePartsDb]);
 
-  const hasPowerProf =
-    pathType === 'power' ||
-    pathType === 'powered-martial' ||
-    (archetype?.power_prof_start ?? 0) > 0;
-  const hasMartialProf =
-    pathType === 'martial' ||
-    pathType === 'powered-martial' ||
-    (archetype?.martial_prof_start ?? 0) > 0;
+  const showPowerAbility = Boolean(draft.pow_abil && pathType !== 'martial');
+  const showMartialAbility = Boolean(draft.mart_abil && pathType !== 'power');
+  const gridPowerAbility = pathType === 'martial' ? undefined : (draft.pow_abil ?? undefined);
+  const gridMartialAbility = pathType === 'power' ? undefined : (draft.mart_abil ?? undefined);
 
   return (
     <div className="overflow-hidden rounded-card border border-border-light bg-surface shadow-sm">
@@ -284,7 +280,7 @@ export function GuidedRevealSummary() {
                 </p>
               </div>
             )}
-            {draft.pow_abil && hasPowerProf && (
+            {showPowerAbility && draft.pow_abil && (
               <div className="rounded-lg border border-power bg-power-light/40 p-3 dark:bg-power-900/20">
                 <p className="font-nunito text-xs font-medium uppercase tracking-wide text-power-fg">
                   {copy.powerAbilityLabel}
@@ -294,7 +290,7 @@ export function GuidedRevealSummary() {
                 </p>
               </div>
             )}
-            {draft.mart_abil && hasMartialProf && (
+            {showMartialAbility && draft.mart_abil && (
               <div className="rounded-lg border border-martial bg-martial-light/40 p-3 dark:bg-martial-900/20">
                 <p className="font-nunito text-xs font-medium uppercase tracking-wide text-martial-fg">
                   {copy.martialAbilityLabel}
@@ -311,8 +307,8 @@ export function GuidedRevealSummary() {
           <SummarySectionHeader title={copy.abilitiesTitle} editSubSteps={[{ subStep: 'abilities', label: 'abilities' }]} />
           <AbilityScoreGrid
             abilities={draft.abilities}
-            powerAbility={draft.pow_abil ?? undefined}
-            martialAbility={draft.mart_abil ?? undefined}
+            powerAbility={gridPowerAbility}
+            martialAbility={gridMartialAbility}
             mode="display"
           />
         </div>

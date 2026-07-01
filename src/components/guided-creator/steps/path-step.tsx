@@ -56,11 +56,19 @@ export function PathStep() {
   const handleSelect = (path: Archetype) => {
     const type = (path.type || 'power') as ArchetypeCategory;
     const pathChanged = draft.archetypePathId !== String(path.id);
+    const primaryAbility = path.archetype_ability ?? path.pow_abil ?? null;
+    const secondaryAbility = path.mart_abil ?? path.secondary_ability ?? null;
+
     updateDraft({
       archetypePathId: String(path.id),
       archetypeType: type,
-      pow_abil: path.archetype_ability ?? path.pow_abil ?? null,
-      mart_abil: path.mart_abil ?? path.secondary_ability ?? path.archetype_ability ?? null,
+      pow_abil: type === 'martial' ? null : primaryAbility,
+      mart_abil:
+        type === 'power'
+          ? null
+          : type === 'powered-martial'
+            ? secondaryAbility
+            : secondaryAbility ?? primaryAbility,
       ...(pathChanged ? { abilitiesMode: null } : {}),
     });
   };
