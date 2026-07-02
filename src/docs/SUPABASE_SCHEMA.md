@@ -39,7 +39,7 @@ All codex tables are **columnar** and live in **public** (no `codex` schema). Ar
 |-------|--------|------------------------|
 | `codex_feats` | Columnar | id (PK), name, description, req_desc, ability_req (TEXT), abil_req_val (TEXT), skill_req (TEXT), skill_req_val (TEXT), feat_cat_req, pow_abil_req, mart_abil_req, pow_prof_req, mart_prof_req, speed_req, feat_lvl, lvl_req, uses_per_rec, rec_period, category, ability, tags (TEXT), char_feat, state_feat, base_feat_id (TEXT, nullable) |
 | `codex_skills` | Columnar | id (PK), name, description, ability, base_skill (TEXT), success_desc, failure_desc, ds_calc, craft_failure_desc, craft_success_desc |
-| `codex_species` | Columnar | id (PK), name, description, type, sizes (TEXT), skills (TEXT), species_traits (TEXT), ancestry_traits (TEXT), flaws (TEXT), characteristics (TEXT), ave_hgt_cm, ave_wgt_kg, adulthood_lifespan (TEXT), languages (TEXT), **is_starter (BOOLEAN)** |
+| `codex_species` | Columnar | id (PK), name, description, type, sizes (TEXT), skills (TEXT), species_traits (TEXT), ancestry_traits (TEXT), flaws (TEXT), characteristics (TEXT), ave_hgt_cm, ave_wgt_kg, adulthood_lifespan (TEXT), languages (TEXT), **is_starter (BOOLEAN)**, **image_url (TEXT, nullable)** — public URL for card art in `codex-art` Storage bucket |
 | `codex_traits` | Columnar | id (PK), name, description, uses_per_rec, rec_period, flaw, characteristic, option_trait_ids (TEXT) |
 | `codex_parts` | Columnar | id (PK), name, description, category, base_en, base_tp, op_1_desc, op_1_en, op_1_tp, op_2_desc, op_2_en, op_2_tp, op_3_desc, op_3_en, op_3_tp, type, mechanic, percentage, duration, defense (TEXT) |
 | `codex_properties` | Columnar | id (PK), name, description, base_ip, base_tp, base_c, op_1_desc, op_1_ip, op_1_tp, op_1_c, type, mechanic |
@@ -356,6 +356,6 @@ Supabase Dashboard → Logs shows **PostgREST** requests. Our app uses the **pub
 **Other schemas (reference only):**
 
 - **auth** — Supabase Auth (users, sessions, etc.). We don’t create or query these directly; we use Supabase Auth APIs and `user_profiles` / `usernames` in **public** for app profile data.
-- **storage** — Supabase Storage (buckets, objects). We use this for portraits and profile pictures; RLS is in `sql/supabase-storage-policies.sql`. App row data stays in **public**.
+- **storage** — Supabase Storage (buckets, objects). **Buckets:** `portraits`, `profile-pictures` (user uploads), **`codex-art`** (admin-only writes via `/api/upload/codex-art`; public read). RLS: `sql/supabase-storage-policies.sql`, `sql/codex-art-species-image-url.sql`. App row URLs stay in **public** codex/official columns (e.g. `codex_species.image_url`).
 
 If you see **404 or 500** on any `/rest/v1/codex_*` or `core_rules`, check that the table exists in **public** (Table Editor) and that RLS allows the anon/service role used by the API (see DEPLOYMENT_AND_SECRETS_SUPABASE.md).

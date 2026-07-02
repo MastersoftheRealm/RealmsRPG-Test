@@ -10,7 +10,8 @@
  * | Auth login/register| `copy/auth-copy.ts`           |
  * | About `/about`     | `copy/about-copy.ts`          |
  * | Character creator chooser + guided flow | `copy/guided-creator-copy.ts` |
- * | Footer, nav, etc.  | TASK-390 (not migrated yet)   |
+ * | Footer             | `copy/footer-copy.ts`         |
+ * | Nav, rules, etc.   | TASK-390 (not migrated yet)   |
  * | Tooltips           | `public/tooltip-text.tsx`     |
  *
  * Game mechanics (not prose): `skills.ts`, `GAME_RULES.md`
@@ -24,5 +25,6 @@ export {
   AUTH_COPY,
   ABOUT_COPY,
   GUIDED_CREATOR_COPY,
+  FOOTER_COPY,
 } from './copy';
 

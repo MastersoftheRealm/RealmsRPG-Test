@@ -139,7 +139,7 @@ export interface Species {
   adulthood_lifespan?: number[];
   /** Curated starter species surfaced first in the guided creator's Layer 1 (codex_species.is_starter). */
   is_starter?: boolean;
-  /** Card/hero art URL when authored (codex_species.image_url — planned TASK-405). */
+  /** Card/hero art URL when authored (codex_species.image_url). */
   image_url?: string | null;
 }
 

@@ -69,25 +69,19 @@ function getPathAbilityHighlight(
   return null;
 }
 
-/** Power / Martial labels only when the path uses both (powered-martial). */
-function getPathAbilityBadgeRole(
-  ability: AbilityName,
-  powerAbility?: AbilityName,
-  martialAbility?: AbilityName
-): PathAbilityRole | null {
-  if (!isHybridPath(powerAbility, martialAbility)) return null;
-  return getPathAbilityHighlight(ability, powerAbility, martialAbility);
-}
-
 function abilityBorderClass(role: PathAbilityRole | null): string {
-  if (role === 'power') return 'border-power-border';
-  if (role === 'martial') return 'border-martial-border';
+  if (role === 'power') return 'border-power dark:border-power-border';
+  if (role === 'martial') return 'border-martial dark:border-martial-border';
   return 'border-border-light';
 }
 
 function abilityGradientClass(role: PathAbilityRole | null): string {
-  if (role === 'power') return 'from-power-light/50 to-surface-alt';
-  if (role === 'martial') return 'from-martial-light/50 to-surface-alt';
+  if (role === 'power') {
+    return 'from-power-light via-power-light/60 to-surface-alt dark:from-power-light/35 dark:via-power-light/20 dark:to-surface-alt';
+  }
+  if (role === 'martial') {
+    return 'from-martial-light via-martial-light/60 to-surface-alt dark:from-martial-light/35 dark:via-martial-light/20 dark:to-surface-alt';
+  }
   return 'from-surface to-surface-alt';
 }
 
@@ -95,18 +89,22 @@ function pathRoleLabel(role: PathAbilityRole): string {
   return role === 'power' ? 'Power' : 'Martial';
 }
 
-function PathAbilityBadge({ role }: { role: PathAbilityRole }) {
+function pathAbilityLabel(role: PathAbilityRole, hybrid: boolean): string {
+  return hybrid ? pathRoleLabel(role) : 'Archetype Ability';
+}
+
+function PathAbilityLabel({ role, hybrid }: { role: PathAbilityRole; hybrid: boolean }) {
   return (
     <span
       className={cn(
-        'rounded-pill border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide leading-none font-nunito',
+        'pointer-events-none absolute left-1/2 top-0 z-10 max-w-[calc(100%+0.5rem)] -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-pill border px-2 py-px text-[9px] font-semibold uppercase tracking-wide leading-tight font-nunito shadow-sm',
         role === 'power' &&
-          'border-power-border bg-power-light/70 text-power-dark dark:bg-power-light/20 dark:text-power-300',
+          'border-power bg-power-light text-power-dark dark:border-power-border dark:bg-power-light/40 dark:text-power-300',
         role === 'martial' &&
-          'border-martial-border bg-martial-light/70 text-martial-dark dark:bg-martial-light/20 dark:text-martial-300'
+          'border-martial bg-martial-light text-martial-dark dark:border-martial-border dark:bg-martial-light/40 dark:text-martial-300'
       )}
     >
-      {pathRoleLabel(role)}
+      {pathAbilityLabel(role, hybrid)}
     </span>
   );
 }
@@ -129,82 +127,83 @@ export function AbilityScoreGrid({
   className,
 }: AbilityScoreGridProps) {
   const isEdit = mode === 'edit';
+  const hybrid = isHybridPath(powerAbility, martialAbility);
 
   return (
-    <div className={cn('grid grid-cols-3 sm:grid-cols-6 gap-3 md:gap-4', className)}>
+    <div className={cn('grid grid-cols-3 sm:grid-cols-6 gap-3 pt-3 md:gap-4', className)}>
       {ABILITY_DISPLAY_ORDER.map((ability) => {
         const value = abilities[ability] ?? 0;
         const info = ABILITY_DISPLAY_INFO[ability];
         const highlight = getPathAbilityHighlight(ability, powerAbility, martialAbility);
-        const badgeRole = getPathAbilityBadgeRole(ability, powerAbility, martialAbility);
         const canInc = isEdit ? (canIncrease?.(ability) ?? false) : false;
         const canDec = isEdit ? (canDecrease?.(ability) ?? false) : false;
         const increaseCost = getIncreaseCost?.(ability) ?? 1;
 
         return (
-          <div
-            key={ability}
-            className={cn(
-              'flex flex-col items-center p-3 bg-gradient-to-b rounded-xl border-2 transition-all',
-              abilityGradientClass(highlight),
-              abilityBorderClass(highlight),
-              !isEdit && 'hover:shadow-md'
-            )}
-          >
-            <span className="text-xs font-bold text-text-muted dark:text-text-secondary uppercase tracking-wider mb-1 text-center">
-              {info.name}
-            </span>
-            <div className="mb-1.5 flex min-h-[1.125rem] items-center justify-center">
-              {badgeRole ? <PathAbilityBadge role={badgeRole} /> : null}
-            </div>
+          <div key={ability} className="relative">
+            {highlight ? <PathAbilityLabel role={highlight} hybrid={hybrid} /> : null}
+            <div
+              className={cn(
+                'flex h-full flex-col items-center rounded-xl border-2 bg-gradient-to-b px-2 py-2 transition-all',
+                abilityGradientClass(highlight),
+                abilityBorderClass(highlight),
+                !isEdit && 'hover:shadow-md'
+              )}
+            >
+              <span className="text-[11px] font-bold uppercase tracking-wider text-text-muted dark:text-text-secondary">
+                {info.name}
+              </span>
 
-            {isEdit ? (
-              <div className="flex items-center gap-1">
-                <DecrementButton
-                  onClick={() => onAbilityChange?.(ability, value - 1)}
-                  disabled={!canDec}
-                  size="sm"
-                />
+              <div className="mt-1 flex min-h-[2.25rem] items-center justify-center">
+                {isEdit ? (
+                  <div className="flex items-center gap-1">
+                    <DecrementButton
+                      onClick={() => onAbilityChange?.(ability, value - 1)}
+                      disabled={!canDec}
+                      size="sm"
+                    />
+                    <span
+                      className={cn(
+                        'min-w-[2.75rem] text-center text-2xl font-bold',
+                        abilityValueClass(value)
+                      )}
+                    >
+                      {formatBonus(value)}
+                    </span>
+                    <IncrementButton
+                      onClick={() => onAbilityChange?.(ability, value + 1)}
+                      disabled={!canInc}
+                      size="sm"
+                      title={
+                        canInc && increaseCost > 1
+                          ? `Cost: ${increaseCost} point${increaseCost > 1 ? 's' : ''}`
+                          : undefined
+                      }
+                    />
+                  </div>
+                ) : (
+                  <span
+                    className={cn(
+                      'min-w-[2.75rem] text-center text-2xl font-bold',
+                      abilityValueClass(value)
+                    )}
+                  >
+                    {formatBonus(value)}
+                  </span>
+                )}
+              </div>
+
+              {isEdit && getIncreaseCost ? (
                 <span
                   className={cn(
-                    'text-2xl font-bold min-w-[56px] text-center',
-                    abilityValueClass(value)
+                    'mt-0.5 h-3.5 text-[10px] font-medium leading-none',
+                    increaseCost > 1 && canInc ? 'text-warning-fg' : 'invisible'
                   )}
                 >
-                  {formatBonus(value)}
+                  Next: {increaseCost} Points
                 </span>
-                <IncrementButton
-                  onClick={() => onAbilityChange?.(ability, value + 1)}
-                  disabled={!canInc}
-                  size="sm"
-                  title={
-                    canInc && increaseCost > 1
-                      ? `Cost: ${increaseCost} point${increaseCost > 1 ? 's' : ''}`
-                      : undefined
-                  }
-                />
-              </div>
-            ) : (
-              <span
-                className={cn(
-                  'text-2xl font-bold min-w-[56px] text-center',
-                  abilityValueClass(value)
-                )}
-              >
-                {formatBonus(value)}
-              </span>
-            )}
-
-            {isEdit && getIncreaseCost && (
-              <span
-                className={cn(
-                  'text-[10px] font-medium mt-1',
-                  increaseCost > 1 && canInc ? 'text-warning-fg' : 'invisible'
-                )}
-              >
-                Next: {increaseCost} Points
-              </span>
-            )}
+              ) : null}
+            </div>
           </div>
         );
       })}

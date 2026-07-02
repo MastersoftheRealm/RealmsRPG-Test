@@ -201,6 +201,7 @@ async function fetchCodexFromClient(supabase: SupabaseClient) {
         ave_weight: aveWeight,
         adulthood_lifespan: toAdulthoodLifespan(r.adulthood_lifespan),
         is_starter: r.is_starter === true,
+        image_url: typeof r.image_url === 'string' && r.image_url.trim() ? r.image_url.trim() : null,
       };
     });
 

@@ -118,14 +118,17 @@ export function GuidedRevealSummary() {
     return ids.map((id) => ({ key: String(id), label: traitName(String(id)) }));
   }, [species, draft, allTraits]);
 
-  const skillNames = useMemo(
-    () =>
-      draft.skillIds.map((id) => ({
-        key: id,
-        label: codexSkills.find((s) => String(s.id) === id)?.name ?? id,
-      })),
-    [draft.skillIds, codexSkills]
-  );
+  const skillNames = useMemo(() => {
+    const ids = new Set<string>();
+    (species?.skills ?? []).forEach((id) => {
+      if (String(id) !== '0') ids.add(String(id));
+    });
+    Object.keys(draft.skills ?? {}).forEach((id) => ids.add(String(id)));
+    return Array.from(ids).map((id) => ({
+      key: id,
+      label: codexSkills.find((s) => String(s.id) === id)?.name ?? id,
+    }));
+  }, [draft.skills, species, codexSkills]);
 
   const featById = useMemo(() => new Map(feats.map((f) => [String(f.id), f])), [feats]);
 

@@ -12,6 +12,7 @@ import type { Archetype, ArchetypePathData } from '@/types/archetype';
 import type { Species, Trait } from '@/hooks';
 import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
 import { buildSuggestedAbilityArray } from '@/lib/game/suggested-abilities';
+import { buildGuidedSkillsArray } from '@/lib/guided-creator/build-skills';
 
 export interface BuildGuidedCharacterContext {
   archetype?: Archetype;
@@ -63,22 +64,18 @@ export function buildGuidedCharacterPayload(
       }
     : undefined;
 
-  const skillsRecord: Record<string, number> = {};
-  draft.skillIds.forEach((id) => {
-    skillsRecord[id] = 1;
+  const speciesSkillIds = (ctx.species?.skills ?? []).map(String);
+
+  const activePathSkillIds = (ctx.pathData?.level1?.skills ?? [])
+    .map(String)
+    .filter((id) => id !== '0' && !draft.declinedPathSkillIds.map(String).includes(id));
+
+  const skillsForSave = { ...(draft.skills ?? {}) };
+  activePathSkillIds.forEach((id) => {
+    if (!(id in skillsForSave)) skillsForSave[id] = 0;
   });
 
-  const skillsArray = draft.skillIds.map((skillId) => {
-    const skillData = ctx.codexSkills?.find((s) => String(s.id) === String(skillId));
-    return {
-      id: skillId,
-      name: skillData?.name ?? skillId,
-      category: skillData?.category || skillData?.ability?.split(',')[0]?.trim() || 'other',
-      skill_val: 1,
-      prof: true,
-      ability: skillData?.ability?.split(',')[0]?.trim().toLowerCase(),
-    };
-  });
+  const skillsArray = buildGuidedSkillsArray(skillsForSave, speciesSkillIds, ctx.codexSkills ?? []);
 
   const archetypeFeats = draft.archetypeFeatIds.map((id) => ({ id, name: String(id) }));
   const characterFeats = draft.characterFeatIds.map((id) => ({ id, name: String(id) }));

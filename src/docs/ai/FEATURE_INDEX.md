@@ -21,7 +21,7 @@
 | Library (user + official content browse) | `library/page.tsx` |
 | Codex (rules data browser) | `codex/page.tsx` |
 | Realms Library, guest read-only | `library/page.tsx` + `library/LibraryPublicContent.tsx` — guests see official "Realms" content with the My-Library toggle + "Add to library" hidden. (Former `/browse` was a redundant duplicate; removed and redirected to `/library` — TASK-336.) |
-| Power creator | `power-creator/page.tsx` |
+| Power creator | `power-creator/page.tsx` (advanced); guided: `power-creator/guided/page.tsx` (TASK-410+) |
 | Technique creator | `technique-creator/page.tsx` |
 | Empowered technique creator | `empowered-technique-creator/page.tsx` |
 | Item creator | `item-creator/page.tsx` |

@@ -6,13 +6,13 @@
  * - Upload from device, drag and drop
  * - Crop frame (square for character sheet portrait, circle for profile)
  * - Drag/pinch to position and scale within frame
- * - Preview before confirming
+ * - Live output preview matching the confirmed crop
  * - Accepted formats and size info
  */
 
 'use client';
 
-import { useState, useCallback, useRef, lazy, Suspense } from 'react';
+import { useState, useCallback, useRef, useEffect, lazy, Suspense } from 'react';
 import type { Area, Point } from 'react-easy-crop';
 
 const Cropper = lazy(() => import('react-easy-crop'));
@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { Modal } from '@/components/ui';
 import { Button, Alert } from '@/components/ui';
 import { Upload, ImageIcon, ZoomIn, ZoomOut } from 'lucide-react';
+import { getCroppedImageBlob, normalizeImageFileToDataUrl } from '@/lib/crop-image';
 
 // =============================================================================
 // Types
@@ -56,50 +57,6 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-/**
- * Create a cropped image from the source image and crop area.
- * Returns a Blob of the cropped image in JPEG format.
- */
-function getCroppedImage(imageSrc: string, pixelCrop: Area): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.crossOrigin = 'anonymous';
-    image.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = pixelCrop.width;
-      canvas.height = pixelCrop.height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        reject(new Error('Could not get canvas context'));
-        return;
-      }
-
-      ctx.drawImage(
-        image,
-        pixelCrop.x,
-        pixelCrop.y,
-        pixelCrop.width,
-        pixelCrop.height,
-        0,
-        0,
-        pixelCrop.width,
-        pixelCrop.height
-      );
-
-      canvas.toBlob(
-        (blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error('Canvas toBlob failed'));
-        },
-        'image/jpeg',
-        0.9
-      );
-    };
-    image.onerror = () => reject(new Error('Failed to load image'));
-    image.src = imageSrc;
-  });
-}
-
 // =============================================================================
 // Component
 // =============================================================================
@@ -117,29 +74,42 @@ export function ImageUploadModal({
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const croppedAreaPixelsRef = useRef<Area | null>(null);
+  const [outputPreviewUrl, setOutputPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isLoadingImage, setIsLoadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const effectiveAspect = aspect ?? 1;
+
+  const clearOutputPreview = useCallback(() => {
+    setOutputPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+  }, []);
 
   const resetState = useCallback(() => {
     setImageSrc(null);
     setCrop({ x: 0, y: 0 });
     setZoom(1);
     setCroppedAreaPixels(null);
+    croppedAreaPixelsRef.current = null;
+    clearOutputPreview();
     setError(null);
     setIsProcessing(false);
     setIsDragging(false);
-  }, []);
+    setIsLoadingImage(false);
+  }, [clearOutputPreview]);
 
   const handleClose = useCallback(() => {
     resetState();
     onClose();
   }, [resetState, onClose]);
 
-  const validateAndLoadFile = useCallback((file: File) => {
+  const validateAndLoadFile = useCallback(async (file: File) => {
     setError(null);
 
     if (!ACCEPTED_TYPES.includes(file.type)) {
@@ -151,24 +121,28 @@ export function ImageUploadModal({
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setImageSrc(reader.result as string);
+    setIsLoadingImage(true);
+    try {
+      const dataUrl = await normalizeImageFileToDataUrl(file);
+      setImageSrc(dataUrl);
       setCrop({ x: 0, y: 0 });
       setZoom(1);
-    };
-    reader.onerror = () => setError('Failed to read file');
-    reader.readAsDataURL(file);
-  }, [maxFileSize]);
+      setCroppedAreaPixels(null);
+      croppedAreaPixelsRef.current = null;
+      clearOutputPreview();
+    } catch {
+      setError('Failed to read image');
+    } finally {
+      setIsLoadingImage(false);
+    }
+  }, [maxFileSize, clearOutputPreview]);
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) validateAndLoadFile(file);
-    // Reset input so the same file can be selected again
+    if (file) void validateAndLoadFile(file);
     if (e.target) e.target.value = '';
   }, [validateAndLoadFile]);
 
-  // Drag and drop handlers
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -187,20 +161,50 @@ export function ImageUploadModal({
     setIsDragging(false);
 
     const file = e.dataTransfer.files?.[0];
-    if (file) validateAndLoadFile(file);
+    if (file) void validateAndLoadFile(file);
   }, [validateAndLoadFile]);
 
   const onCropComplete = useCallback((_croppedArea: Area, croppedAreaPx: Area) => {
+    croppedAreaPixelsRef.current = croppedAreaPx;
     setCroppedAreaPixels(croppedAreaPx);
   }, []);
 
+  useEffect(() => {
+    if (!imageSrc || !croppedAreaPixels) {
+      clearOutputPreview();
+      return;
+    }
+
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      void getCroppedImageBlob(imageSrc, croppedAreaPixels)
+        .then((blob) => {
+          if (cancelled) return;
+          const url = URL.createObjectURL(blob);
+          setOutputPreviewUrl((prev) => {
+            if (prev) URL.revokeObjectURL(prev);
+            return url;
+          });
+        })
+        .catch(() => {
+          if (!cancelled) clearOutputPreview();
+        });
+    }, 120);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [imageSrc, croppedAreaPixels, clearOutputPreview]);
+
   const handleConfirm = useCallback(async () => {
-    if (!imageSrc || !croppedAreaPixels) return;
+    const pixels = croppedAreaPixelsRef.current;
+    if (!imageSrc || !pixels) return;
 
     setIsProcessing(true);
     setError(null);
     try {
-      const blob = await getCroppedImage(imageSrc, croppedAreaPixels);
+      const blob = await getCroppedImageBlob(imageSrc, pixels);
       await onConfirm(blob);
       handleClose();
     } catch (err) {
@@ -208,9 +212,8 @@ export function ImageUploadModal({
     } finally {
       setIsProcessing(false);
     }
-  }, [imageSrc, croppedAreaPixels, onConfirm, handleClose]);
+  }, [imageSrc, onConfirm, handleClose]);
 
-  // Recommended size text (modal description)
   const sizeHint =
     cropShape === 'round'
       ? 'Recommended: square image, at least 200x200px'
@@ -229,13 +232,13 @@ export function ImageUploadModal({
       fullScreenOnMobile
     >
       <div className="space-y-4">
-        {/* Error message */}
-        {error && (
-          <Alert variant="danger">{error}</Alert>
-        )}
+        {error && <Alert variant="danger">{error}</Alert>}
 
-        {!imageSrc ? (
-          /* ============ UPLOAD ZONE ============ */
+        {isLoadingImage ? (
+          <div className="flex h-[200px] items-center justify-center rounded-xl bg-surface-alt font-nunito text-sm text-text-secondary">
+            Preparing image…
+          </div>
+        ) : !imageSrc ? (
           <div
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -248,15 +251,13 @@ export function ImageUploadModal({
             )}
             onClick={() => fileInputRef.current?.click()}
           >
-            <div className={cn(
-              'w-16 h-16 rounded-full flex items-center justify-center transition-colors',
-              isDragging ? 'bg-primary-subtle-bg text-primary-link-fg' : 'bg-surface text-text-muted'
-            )}>
-              {isDragging ? (
-                <Upload className="w-8 h-8" />
-              ) : (
-                <ImageIcon className="w-8 h-8" />
+            <div
+              className={cn(
+                'w-16 h-16 rounded-full flex items-center justify-center transition-colors',
+                isDragging ? 'bg-primary-subtle-bg text-primary-link-fg' : 'bg-surface text-text-muted'
               )}
+            >
+              {isDragging ? <Upload className="w-8 h-8" /> : <ImageIcon className="w-8 h-8" />}
             </div>
             <div className="text-center">
               <p className="text-sm font-medium text-text-primary">
@@ -276,9 +277,7 @@ export function ImageUploadModal({
             />
           </div>
         ) : (
-          /* ============ CROP EDITOR ============ */
           <>
-            {/* Crop area (lazy-loaded) */}
             <div className="relative w-full h-[400px] bg-black/90 rounded-xl overflow-hidden">
               <Suspense fallback={<div className="flex items-center justify-center h-full text-text-muted">Loading editor...</div>}>
                 <Cropper
@@ -291,6 +290,7 @@ export function ImageUploadModal({
                   onCropComplete={onCropComplete}
                   onZoomChange={setZoom}
                   showGrid={false}
+                  objectFit="contain"
                   style={{
                     containerStyle: { borderRadius: '0.75rem' },
                   }}
@@ -298,11 +298,37 @@ export function ImageUploadModal({
               </Suspense>
             </div>
 
-            {/* Zoom slider */}
+            {outputPreviewUrl && (
+              <div className="rounded-xl border border-border-light bg-surface-alt/60 px-4 py-3">
+                <p className="mb-2 font-nunito text-xs font-medium uppercase tracking-wide text-text-secondary">
+                  Output preview
+                </p>
+                <div className="flex items-center gap-4">
+                  <div
+                    className={cn(
+                      'relative shrink-0 overflow-hidden border border-border-light bg-surface shadow-sm',
+                      cropShape === 'round' ? 'h-20 w-20 rounded-full' : 'h-20 w-20 rounded-card'
+                    )}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={outputPreviewUrl}
+                      alt=""
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
+                  <p className="font-nunito text-xs text-text-secondary">
+                    This is the exact image that will be saved when you confirm.
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="flex items-center gap-3 px-2">
               <button
+                type="button"
                 onClick={() => setZoom((z) => Math.max(1, z - 0.1))}
-                className="p-1.5 rounded-lg hover:bg-surface-alt text-text-muted hover:text-text-primary transition-colors"
+                className="p-1.5 rounded-lg hover:bg-surface-alt text-text-muted hover:text-text-primary transition-colors min-h-11 min-w-11 flex items-center justify-center"
                 aria-label="Zoom out"
               >
                 <ZoomOut className="w-5 h-5" />
@@ -318,8 +344,9 @@ export function ImageUploadModal({
                 aria-label="Zoom"
               />
               <button
+                type="button"
                 onClick={() => setZoom((z) => Math.min(3, z + 0.1))}
-                className="p-1.5 rounded-lg hover:bg-surface-alt text-text-muted hover:text-text-primary transition-colors"
+                className="p-1.5 rounded-lg hover:bg-surface-alt text-text-muted hover:text-text-primary transition-colors min-h-11 min-w-11 flex items-center justify-center"
                 aria-label="Zoom in"
               >
                 <ZoomIn className="w-5 h-5" />
@@ -329,7 +356,6 @@ export function ImageUploadModal({
               </span>
             </div>
 
-            {/* Action buttons */}
             <div className="flex items-center justify-between pt-2">
               <Button
                 variant="ghost"
@@ -337,6 +363,9 @@ export function ImageUploadModal({
                   setImageSrc(null);
                   setCrop({ x: 0, y: 0 });
                   setZoom(1);
+                  setCroppedAreaPixels(null);
+                  croppedAreaPixelsRef.current = null;
+                  clearOutputPreview();
                 }}
               >
                 Choose Different Image
@@ -347,7 +376,7 @@ export function ImageUploadModal({
                 </Button>
                 <Button
                   onClick={handleConfirm}
-                  disabled={isProcessing}
+                  disabled={isProcessing || !croppedAreaPixels}
                   isLoading={isProcessing}
                 >
                   Confirm

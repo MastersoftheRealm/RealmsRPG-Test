@@ -10,6 +10,7 @@ import {
   GridListRow,
   ListEmptyState as EmptyState,
   ListHeader,
+  CodexArtUploadField,
 } from '@/components/shared';
 import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
 import { useSpecies, useCodexSkills, useTraits, type Species, type Trait, type Skill } from '@/hooks';
@@ -18,6 +19,7 @@ import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Copy, X, Plus } from 'lucide-react';
 import { useModalListState } from '@/hooks/use-modal-list-state';
 import { formatListCellLabel } from '@/lib/utils';
+import { uploadCodexArt } from '@/lib/codex-art';
 
 const COPY_NAME_SUFFIX = ' copy';
 const TRAIT_PICKER_GRID = '1.5fr 0.6fr 0.6fr 60px';
@@ -37,6 +39,7 @@ export function AdminSpeciesTab() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [copySourceName, setCopySourceName] = useState<string | null>(null);
+  const [pendingArtBlob, setPendingArtBlob] = useState<Blob | null>(null);
 
   const [form, setForm] = useState({
     name: '',
@@ -56,6 +59,7 @@ export function AdminSpeciesTab() {
     maxAge: '',
     languages: '',
     isStarter: false,
+    imageUrl: null as string | null,
   });
 
   const skillOptions = useMemo(
@@ -120,6 +124,7 @@ export function AdminSpeciesTab() {
   const openAdd = () => {
     setEditing(null);
     setCopySourceName(null);
+    setPendingArtBlob(null);
     setForm({
       name: '',
       description: '',
@@ -137,6 +142,7 @@ export function AdminSpeciesTab() {
       maxAge: '',
       languages: '',
       isStarter: false,
+      imageUrl: null,
     });
     setModalOpen(true);
   };
@@ -144,6 +150,7 @@ export function AdminSpeciesTab() {
   const openDuplicate = (s: Species) => {
     setEditing(null);
     setCopySourceName(s.name);
+    setPendingArtBlob(null);
     const allSkillsArr = skills as Skill[];
     const allTraitsArr = traits as Trait[];
     const skillIds = normalizeIds((s.skills || []) as string[], allSkillsArr);
@@ -170,6 +177,7 @@ export function AdminSpeciesTab() {
       maxAge: max,
       languages: (s.languages || []).join(', '),
       isStarter: Boolean((s as Species & { is_starter?: boolean }).is_starter),
+      imageUrl: s.image_url ?? null,
     });
     setModalOpen(true);
   };
@@ -177,6 +185,7 @@ export function AdminSpeciesTab() {
   const openEdit = (s: Species) => {
     setEditing(s);
     setCopySourceName(null);
+    setPendingArtBlob(null);
     const allSkillsArr = skills as Skill[];
     const allTraitsArr = traits as Trait[];
     const skillIds = normalizeIds((s.skills || []) as string[], allSkillsArr);
@@ -204,6 +213,7 @@ export function AdminSpeciesTab() {
       maxAge: max,
       languages: (s.languages || []).join(', '),
       isStarter: Boolean((s as Species & { is_starter?: boolean }).is_starter),
+      imageUrl: s.image_url ?? null,
     });
     setModalOpen(true);
   };
@@ -214,6 +224,7 @@ export function AdminSpeciesTab() {
     setCopySourceName(null);
     setDeleteConfirm(null);
     setTraitPickerFor(null);
+    setPendingArtBlob(null);
   };
 
   const addTraitTo = (traitId: string) => {
@@ -238,8 +249,10 @@ export function AdminSpeciesTab() {
       .split(',')
       .map((l) => l.trim())
       .filter(Boolean);
-    // Only sizes is stored in DB; size is form-only fallback. Do not send size.
-    const data = {
+
+    let imageUrl = form.imageUrl;
+
+    const baseData = {
       name: form.name.trim(),
       description: form.description.trim(),
       type: form.type.trim(),
@@ -254,20 +267,43 @@ export function AdminSpeciesTab() {
       adulthood_lifespan,
       languages,
       isStarter: form.isStarter,
+      imageUrl,
     };
 
     const result = editing
-      ? await updateCodexDoc('codex_species', editing.id, data)
-      : await createCodexDoc('codex_species', undefined, data);
+      ? await updateCodexDoc('codex_species', editing.id, baseData)
+      : await createCodexDoc('codex_species', undefined, baseData);
+
+    if (!result.success) {
+      setSaving(false);
+      showToast(result.error ?? 'Operation failed', 'error');
+      return;
+    }
+
+    const speciesId =
+      editing?.id ??
+      (result.success && 'id' in result && typeof result.id === 'string' ? result.id : undefined);
+
+    if (pendingArtBlob && speciesId) {
+      try {
+        const { url } = await uploadCodexArt(pendingArtBlob, 'species', speciesId);
+        imageUrl = url;
+        const artResult = await updateCodexDoc('codex_species', speciesId, { imageUrl: url });
+        if (!artResult.success) {
+          showToast(artResult.error ?? 'Species saved but card art URL failed to persist', 'error');
+        }
+      } catch (e) {
+        showToast(
+          e instanceof Error ? e.message : 'Species saved but card art upload failed',
+          'error'
+        );
+      }
+    }
 
     setSaving(false);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      closeModal();
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-    }
+    queryClient.invalidateQueries({ queryKey: ['codex'] });
+    await queryClient.refetchQueries({ queryKey: ['codex'] });
+    closeModal();
   };
 
   const handleDelete = async (id: string) => {
@@ -505,6 +541,15 @@ export function AdminSpeciesTab() {
             <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
             <Textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Species description" className="min-h-[120px] resize-y" rows={4} />
           </div>
+          <CodexArtUploadField
+            entityType="species"
+            entityId={editing?.id}
+            imageUrl={form.imageUrl}
+            onImageUrlChange={(url) => setForm((f) => ({ ...f, imageUrl: url }))}
+            onPendingBlobChange={setPendingArtBlob}
+            label="Species card art"
+            hint="Shown on guided creator species cards and the ancestry overview. Admin-only."
+          />
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">Type</label>

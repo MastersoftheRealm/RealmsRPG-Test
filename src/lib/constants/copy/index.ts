@@ -8,3 +8,4 @@ export { LANDING_COPY } from './landing-copy';
 export { AUTH_COPY } from './auth-copy';
 export { ABOUT_COPY } from './about-copy';
 export { GUIDED_CREATOR_COPY } from './guided-creator-copy';
+export { FOOTER_COPY } from './footer-copy';

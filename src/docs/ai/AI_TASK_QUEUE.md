@@ -2,9 +2,9 @@
 
 **Last slimmed:** 2026-06-26 (TASK-382). Full history: [`archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md`](archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md) and [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md).
 
-**Next task ID:** TASK-407
+**Next task ID:** TASK-415
 
-**Agent rules:** Skip `blocked` tasks and any task with `assignee:` set to a human (e.g. TASK-353). Skip human-only tasks (TASK-353 → `DEVELOPER_TASK_QUEUE.md` DEV-001). Pick highest-priority `not-started` or continue `partial`.
+**Agent rules:** Skip `blocked` tasks and any task with `assignee:` set to a human (e.g. TASK-353, **TASK-414**). Skip human-only tasks (TASK-353 → `DEVELOPER_TASK_QUEUE.md` DEV-001). Pick highest-priority `not-started` or continue `partial`. **Do not start TASK-408–413** until TASK-414 spec is `done` (owner approval).
 
 ---
 
@@ -186,6 +186,7 @@
     - Dedicated creator parity validation suite added before merge.
   notes: |
     Execute after TASK-379 and associated QA harness.
+    2026-07-01: Owner — Phase 1b prerequisite for standalone guided creators (REALMS §5.11). Bump priority when starting power guided work.
 
 - id: TASK-381
   title: BIG-01/02 phased decomposition of character-sheet and creator god files
@@ -207,6 +208,7 @@
     - `npm run build`, `npm test`, and `npm run lint` pass per phase.
   notes: |
     High blast radius — proceed only with expanded DEV-V validation and small-scope PRs.
+    2026-07-01: Owner — start with power-creator and item-creator pages first; species/creature deferred from beginner funnel.
 
 - id: TASK-382
   title: Docs compaction pass (active queue slimming + stale-reference pruning)
@@ -527,9 +529,10 @@
     - Created `src/lib/constants/copy/` (shared, landing, auth, about + index barrel).
     - Refactored `site-copy.ts` to re-export from `copy/` with editor map in header comment.
     - Migrated About page header + creator note + bottom CTAs to `about-copy.ts` (TASK-390 partial).
+    - Added `footer-copy.ts`; redesigned `footer.tsx` (grouped columns, Discord CTA, copyright); auth shell uses `Footer variant="minimal"`.
   remaining_work: |
     - Migrate About dice-carousel slide bodies from `about/page.tsx` to `about-copy.ts` (or structured slide data).
-    - Add `footer-copy.ts`, `nav-copy.ts`, `rules-copy.ts`, etc. incrementally per page touched.
+    - Add `nav-copy.ts`, `rules-copy.ts`, etc. incrementally per page touched.
     - Optional: split long About carousel into `src/components/about/` + copy-only slide definitions.
   follow_up_tasks: []
   notes: |
@@ -813,6 +816,36 @@
   notes: |
     Follow-up from TASK-403 partial. Guided reveal portrait upload moved to TASK-406.
 
+- id: TASK-407
+  title: Guided creator — skills step full allocation (§5.5 Option B)
+  created_at: 2026-06-30
+  created_by: agent
+  priority: high
+  status: done
+  description: |
+    Replace guided skills toggles with full skill-point allocation: species locked (free), path skills toggleable, decline frees points for curated free picks + Add Skill catalog. Store skills as Record<id, value>; save with correct skill_val.
+  related_files:
+    - src/components/guided-creator/steps/skills-step.tsx
+    - src/lib/guided-creator/build-skills.ts
+    - src/lib/guided-creator/curated-skills.ts
+    - src/lib/guided-creator/build-character.ts
+    - src/stores/guided-creator-store.ts
+    - src/components/guided-creator/guided-reveal-summary.tsx
+    - src/components/guided-creator/character-preview-panel.tsx
+    - src/lib/constants/copy/guided-creator-copy.ts
+  acceptance_criteria:
+    - SkillsAllocationPage embedded with species/path locking, sub-skills hidden, defense hidden.
+    - 3 L1 skill points (+ species "Any" extra) must be fully spent to continue.
+    - Declining path skill frees 1 point; curated picks surface ability-aligned base skills.
+    - Save payload uses skill_val from allocations (not hardcoded 1).
+    - Reveal summary and preview show skill names/count from skills record + species.
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T003
+  notes: |
+    2026-06-30: Owner chose Option B — full allocation per REALMS §5.5. Store schema v3 (skillIds → skills). npm run build pass.
+
 - id: TASK-406
   title: Guided creator — Your Hero reveal redesign (§5.10)
   created_at: 2026-06-30
@@ -852,7 +885,7 @@
   created_at: 2026-06-30
   created_by: owner
   priority: high
-  status: not-started
+  status: partial
   description: |
     Species (and later equipment, powers, techniques) use hero art on GuidedChoiceCard as a primary selling point (REALMS §5.0.3). UI resolves image_url from records with typed SVG placeholders until art exists. Add codex columns, Storage upload, admin pickers, and seed real species art for starters.
   related_files:
@@ -861,13 +894,182 @@
     - src/components/guided-creator/guided-choice-image.ts
     - src/docs/SUPABASE_SCHEMA.md
     - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/components/shared/codex-art-upload-field.tsx
+    - src/app/api/upload/codex-art/route.ts
+    - src/lib/codex-art.ts
+    - sql/codex-art-species-image-url.sql
     - public/images/placeholder-*-card.svg
   acceptance_criteria:
     - codex_species.image_url (TEXT, nullable) + documented in SUPABASE_SCHEMA.md; migration applied.
     - Admin species editor: upload or URL for card art; preview matches guided hero layout.
     - Guided species step shows real art when image_url set; placeholders otherwise.
     - Plan documented for powers/techniques/loadout image_url (column or JSON) as follow-up sub-task or phase 2.
+  completed_work: |
+    Phase 1 (2026-07-01): codex_species.image_url + codex-art bucket (migration applied). Admin species editor CodexArtUploadField (crop + upload). /api/upload/codex-art (isAdmin + service role). REALMS §5.0.3 coverage matrix (species/creature high, weapon some, armor/shield/power/technique low; no skills/feats/traits).
+  remaining_work: |
+    Seed starter species art. Phase 2 image_url columns + admin upload on creatures, equipment (weapon/armor/shield), powers, techniques. Optional auto-persist image_url on upload without separate Save click.
   notes: |
     2026-06-30: Product owner — species art is main marketing hook on cards. Prototype placeholders + GuidedChoiceCard hero layout landed first.
+    2026-07-01: Phase 1 species pipeline shipped; guided UI already reads image_url.
+
+- id: TASK-408
+  title: Power creator InfoTippy — tooltip draft to tooltip-text.tsx
+  priority: medium
+  status: blocked
+  created_at: 2026-07-01
+  created_by: owner
+  description: |
+    Migrate owner draft copy from POWER_CREATOR_TOOLTIPS_DRAFT.md into public/tooltip-text.tsx and wire InfoTippy on advanced power creator sections (Description, Action Type, Reaction, Weapon, Area, Duration, Parts, Mechanics, Damage, Energy, Innate, TP, Load, Reset). Phase 1b / prerequisite for guided power creator.
+  related_files:
+    - src/docs/human/POWER_CREATOR_TOOLTIPS_DRAFT.md
+    - public/tooltip-text.tsx
+    - src/app/(main)/power-creator/page.tsx
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+  acceptance_criteria:
+    - All draft field tooltips exist in tooltip-text.tsx (owner-editable strings).
+    - InfoTippy on each major advanced power-creator section header or label.
+    - Guided L1 placeholder exports added for Power character, Powered-Martial, innate intent, category (strings only; wiring in TASK-411).
+    - npm run build and lint pass.
+  notes: |
+    **Blocked until TASK-414 done** (2026-07-01 owner: no creator L1 work until exact guided spec locked). Optional early win: advanced (L3) tooltips only — unblocks if owner explicitly requests before TASK-414.
+
+- id: TASK-409
+  title: Standalone creator Phase 1b — CreatorPageShell + power/item god-file split (TASK-380/381)
+  priority: medium
+  status: blocked
+  created_at: 2026-07-01
+  created_by: owner
+  description: |
+    Execute engineering prerequisites before large guided power-creator UI: TASK-380 CreatorPageShell for shared auth/load/save; TASK-381 phase 1 extracting power-creator and item-creator page shells + section islands with parity tests.
+  related_files:
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/item-creator/page.tsx
+    - src/components/creator/
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+  acceptance_criteria:
+    - CreatorPageShell adopted by power-creator and item-creator routes (minimum).
+    - Power-creator page decomposed into shell + section components without save/load/cost regressions.
+    - Parity validation suite indexed in DEVELOPER_TASK_QUEUE / BUILD_VALIDATION.
+    - npm run build passes.
+  notes: |
+    Blocks TASK-410–412. Species/creature creators out of scope for this phase.
+    **Blocked until TASK-414 done** (2026-07-01 owner gate).
+
+- id: TASK-410
+  title: Power creator guided — entry chooser + route shell
+  priority: high
+  status: blocked
+  created_at: 2026-07-01
+  created_by: owner
+  description: |
+    Add /power-creator entry chooser (Guided vs Advanced) and /power-creator/guided route shell reusing guided-creator chrome (GuidedStepLayout, footer, preview slot). Advanced remains current builder at /power-creator/advanced or equivalent. No wizard steps yet — navigation scaffold only.
+  related_files:
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/power-creator/guided/page.tsx
+    - src/components/guided-creator/
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+  acceptance_criteria:
+    - /power-creator shows Guided vs Advanced choice before entering either flow.
+    - /power-creator/guided renders step shell with placeholder step 1.
+    - Advanced route loads existing power creator unchanged.
+    - Mobile fullScreenOnMobile patterns where modals added.
+    - npm run build passes.
+  notes: |
+    Mirror characters/new chooser pattern. Owner feedback required on labels (Guided/Advanced placeholders).
+    **Blocked until TASK-414 done.**
+
+- id: TASK-411
+  title: Power creator guided — audience, innate, and category steps
+  priority: high
+  status: blocked
+  created_at: 2026-07-01
+  created_by: owner
+  description: |
+    Implement guided power wizard steps 1–3 (REALMS §5.11): (1) audience — pick saved character OR generic Power vs Powered-Martial + level; (2) innate intent toggle with InfoTippy and constraint preview; (3) power category cards mapped to codex part categories (Offense, Defense, Utility, Control, etc.). Store in guided-power-creator-store or equivalent; preserve handoff shape for advanced editor.
+  related_files:
+    - src/app/(main)/power-creator/guided/
+    - src/components/guided-creator/
+    - public/tooltip-text.tsx
+    - src/docs/GAME_RULES.md
+    - src/docs/human/POWER_CREATOR_TOOLTIPS_DRAFT.md
+  acceptance_criteria:
+    - Character picker loads user characters when logged in; guest can pick archetype + level.
+    - Innate threshold shown from GAME_RULES (L1: 8 Power, 6 Powered-Martial).
+    - Category step uses GuidedChoiceCard; max one primary category per screen.
+    - InfoTippy on archetype, innate, and category decisions.
+    - Owner review checkpoint before TASK-412.
+  notes: |
+    Depends on TASK-408 (tooltips) and TASK-410 (shell). Iterative owner feedback expected.
+    **Blocked until TASK-414 done** — implement only from locked spec, not §5.11 draft.
+
+- id: TASK-412
+  title: Power creator guided — delivery, damage, templates, save, advanced handoff
+  priority: high
+  status: blocked
+  created_at: 2026-07-01
+  created_by: owner
+  description: |
+    Complete guided power wizard steps 4–7: delivery (melee/ranged/area), damage yes/no + presets, template pick from official_powers (curated per category — e.g. Fireball, Icebolt, Healing Incantation, Protective Ward, Charm Creature, Fog Cloud) or start blank, name/description + live preview, save to My Library or open Advanced with state handoff. Reuse existing calculators and useCreatorSave.
+  related_files:
+    - src/app/(main)/power-creator/guided/
+    - src/hooks/useOfficialLibrary.ts
+    - src/lib/calculators/
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+  acceptance_criteria:
+    - At least 4 official_powers loadable as templates by category.
+    - Innate filter hides/disables templates above threshold when innate selected.
+    - Save works for logged-in users; guest login prompt at save.
+    - Customize in Advanced opens advanced builder with guided state applied.
+    - New user can complete flow without seeing part option levels.
+    - npm run build passes.
+  notes: |
+    Templates from existing official_powers table (31 rows); no new DB table for MVP. Owner curates template set.
+    **Blocked until TASK-414 done.**
+
+- id: TASK-413
+  title: Landing secondary CTAs → power creator guided entry
+  priority: medium
+  status: blocked
+  created_at: 2026-07-01
+  created_by: owner
+  description: |
+    Update SecondaryDiscoverySection power CTA to /power-creator (chooser) or /power-creator/guided once TASK-410 ships. Item CTA waits for item guided. Aligns with REALMS §5.11 conversion fix.
+  related_files:
+    - src/components/landing/secondary-discovery-section.tsx
+    - src/lib/constants/site-copy.ts
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+  acceptance_criteria:
+    - Create a Custom Power lands on guided entry or chooser, not raw L3 advanced scroll.
+    - Item CTA unchanged or clearly marked until item guided exists.
+    - npm run build passes.
+  notes: |
+    Blocked until TASK-410. Item guided follow-up task after TASK-412 validates power pattern.
+    **Blocked until TASK-414 done** (do not change landing CTA until guided entry exists).
+
+- id: TASK-414
+  title: Power creator Layer 1 — owner spec lock (design before build)
+  priority: high
+  status: not-started
+  assignee: owner
+  created_at: 2026-07-01
+  created_by: owner
+  description: |
+    Owner completes POWER_CREATOR_LAYER1_SPEC.md with exact step order, screen copy, template list, character/innate rules, and L1/L2/L3 boundaries. No agent implementation of guided power creator (TASK-408–413) until this task is marked done with owner approval.
+  related_files:
+    - src/docs/human/POWER_CREATOR_LAYER1_SPEC.md
+    - src/docs/human/POWER_CREATOR_TOOLTIPS_DRAFT.md
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - src/docs/GAME_RULES.md
+  acceptance_criteria:
+    - Every wizard step documented per Appendix A template (purpose, L1 UI, completion rules, tooltips).
+    - Open questions in spec resolved or explicitly deferred with owner decision.
+    - Template powers chosen from official_powers with IDs and category mapping.
+    - Character vs guest flow, innate filtering, and advanced handoff behavior specified.
+    - Owner marks spec status APPROVED at top of POWER_CREATOR_LAYER1_SPEC.md.
+    - REALMS §5.11 updated to reference locked spec (agent may assist after approval).
+  notes: |
+    Human-owned design task. Agents may help draft or facilitate review but must not implement TASK-410+ until done.
+    2026-07-01: Owner — no perfect L1 vision yet; spec must be exact before build.
 
 ---

@@ -92,6 +92,35 @@ export const GUIDED_CREATOR_COPY = {
       selectSpeciesFirst: 'Select a species first.',
       emptyOptions: 'No ancestry options are available for this species.',
       nextPick: 'Next pick',
+      speciesOverview: {
+        title: (name: string) => `Your ${name} heritage`,
+        description:
+          "These traits and details come with your species. Next, you'll personalize your ancestry.",
+        vitalsTitle: 'At a glance',
+        sizeLabel: 'Size',
+        typeLabel: 'Type',
+        avgHeightLabel: 'Avg height',
+        avgWeightLabel: 'Avg weight',
+        adulthoodLabel: 'Adulthood',
+        lifespanLabel: 'Lifespan',
+        abilityBonusesTitle: 'Ability bonuses',
+        skillsTitle: 'Species skills',
+        languagesTitle: 'Languages',
+        grantedTitle: 'Species traits',
+        grantedHint: 'Granted automatically — no choice needed.',
+        choiceTeaserTitle: 'Choices ahead',
+        choiceTeaserHint: (names: string[]) => {
+          if (names.length === 1) {
+            return `You'll choose your variant for ${names[0]} on the next screen.`;
+          }
+          if (names.length === 2) {
+            return `You'll choose your variants for ${names[0]} and ${names[1]} on the next screens.`;
+          }
+          const last = names[names.length - 1];
+          return `You'll choose your variants for ${names.slice(0, -1).join(', ')}, and ${last} on the next screens.`;
+        },
+        continueLabel: 'Continue',
+      },
     },
     abilities: {
       title: 'Your natural abilities',
@@ -103,11 +132,22 @@ export const GUIDED_CREATOR_COPY = {
     },
     skills: {
       title: 'Your skills',
-      description: 'Skills are what you can do. Species skills are automatic; path skills are recommended.',
-      fromSpecies: 'From your species',
-      fromSpeciesHint: 'These are included automatically.',
-      fromPath: 'From your path',
-      fromPathHint: 'Tap to toggle off if you prefer.',
+      description:
+        'You have 3 skill points at level 1. Species skills are free; each other skill costs 1 point for proficiency (then more to raise its value).',
+      pathHelp: (names: string[]) =>
+        names.length === 1
+          ? `we recommend ${names[0]} — toggle it off to spend that point elsewhere.`
+          : names.length === 2
+            ? `we recommend ${names[0]} and ${names[1]} — toggle either off to pick a different skill.`
+            : `we recommend ${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]} — adjust as you like.`,
+      applyRecommended: 'Restore path skills',
+      applyRecommendedHint: 'Re-adds path skill proficiencies you removed.',
+      pointsRemaining: (n: number) =>
+        `Spend ${n} more skill point${n === 1 ? '' : 's'} to continue.`,
+      freePicksTitle: 'Pick another skill',
+      freePicksHint: (n: number) =>
+        `You have ${n} skill point${n === 1 ? '' : 's'} left — add a skill below or use Add Skill for the full list.`,
+      browseAll: 'Browse all skills',
       continueLabel: 'Looks good →',
     },
     archetypeFeats: {

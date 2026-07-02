@@ -7,12 +7,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils/cn';
-import { AUTH_COPY, DISCORD_URL } from '@/lib/constants/site-copy';
+import { AUTH_COPY } from '@/lib/constants/site-copy';
+import { Footer } from '@/components/layout';
 import { LandingGradientBackdrop } from '@/components/landing/landing-gradient-backdrop';
 import { LandingDiceDecor } from '@/components/landing/landing-dice-decor';
-
-const footerLinkClass =
-  'text-text-secondary hover:text-text-primary dark:text-text-on-dark/80 dark:hover:text-text-on-dark transition-colors';
 
 export default function AuthLayout({
   children,
@@ -69,27 +67,7 @@ export default function AuthLayout({
         </div>
       </main>
 
-      <footer className="relative z-20 p-4 text-center">
-        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm">
-          <Link href="/privacy" prefetch={false} className={footerLinkClass}>
-            Privacy Policy
-          </Link>
-          <Link href="/terms" prefetch={false} className={footerLinkClass}>
-            Terms of Service
-          </Link>
-          <a href="mailto:RealmsRoleplayGame@gmail.com" className={footerLinkClass}>
-            Contact
-          </a>
-          <a
-            href={DISCORD_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={footerLinkClass}
-          >
-            Discord
-          </a>
-        </div>
-      </footer>
+      <Footer variant="minimal" tone="auth" className="relative z-20" />
     </div>
   );
 }

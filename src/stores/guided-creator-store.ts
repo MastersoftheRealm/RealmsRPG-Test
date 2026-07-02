@@ -137,7 +137,8 @@ export interface GuidedDraft {
   abilitiesMode: 'recommended' | 'custom' | null;
 
   // Chapter 4 — Your Archetype
-  skillIds: string[];
+  /** skillId -> skill value (0 = proficient, +0 bonus) */
+  skills: Record<string, number>;
   declinedPathSkillIds: string[];
   archetypeFeatIds: string[];
   characterFeatIds: string[];
@@ -174,7 +175,7 @@ function createInitialDraft(): GuidedDraft {
     selectedFlawId: null,
     abilities: { ...DEFAULT_ABILITIES },
     abilitiesMode: null,
-    skillIds: [],
+    skills: {},
     declinedPathSkillIds: [],
     archetypeFeatIds: [],
     characterFeatIds: [],
@@ -213,7 +214,7 @@ interface GuidedCreatorState {
 }
 
 /** Bump when persisted draft shape changes; old versions migrate forward. */
-const GUIDED_STORE_SCHEMA_VERSION = 2;
+const GUIDED_STORE_SCHEMA_VERSION = 3;
 
 export const useGuidedCreatorStore = create<GuidedCreatorState>()(
   persist(
@@ -279,28 +280,82 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
       version: GUIDED_STORE_SCHEMA_VERSION,
       storage: createJSONStorage(() => localStorage),
       migrate: (persisted, version) => {
-        if (persisted && typeof persisted === 'object') {
-          const state = persisted as GuidedCreatorState;
-          if (version < 2 && state.draft) {
-            return {
-              ...state,
-              draft: {
-                ...state.draft,
-                appearanceNotes:
-                  'appearanceNotes' in state.draft && typeof state.draft.appearanceNotes === 'string'
-                    ? state.draft.appearanceNotes
-                    : '',
-              },
-            };
+        if (!persisted || typeof persisted !== 'object') {
+          return {
+            currentSubStep: 'path' as GuidedSubStep,
+            completedSubSteps: [] as GuidedSubStep[],
+            draft: cloneInitialDraft(),
+          };
+        }
+
+        let state = persisted as GuidedCreatorState & {
+          draft?: GuidedDraft & { skillIds?: string[] };
+        };
+
+        if (version < 2 && state.draft) {
+          state = {
+            ...state,
+            draft: {
+              ...state.draft,
+              appearanceNotes:
+                'appearanceNotes' in state.draft && typeof state.draft.appearanceNotes === 'string'
+                  ? state.draft.appearanceNotes
+                  : '',
+            },
+          };
+        }
+
+        if (version < 3 && state.draft) {
+          const legacy = state.draft;
+          const skills: Record<string, number> = legacy.skills ?? {};
+          if (Object.keys(skills).length === 0 && legacy.skillIds?.length) {
+            legacy.skillIds.forEach((id) => {
+              skills[String(id)] = 0;
+            });
           }
-          if (version >= GUIDED_STORE_SCHEMA_VERSION - 1) {
-            return state;
-          }
+          const { skillIds: _removed, ...rest } = legacy;
+          state = {
+            ...state,
+            draft: {
+              ...rest,
+              skills,
+              declinedPathSkillIds: legacy.declinedPathSkillIds ?? [],
+            },
+          };
+        }
+
+        if (state.draft) {
+          const draft = state.draft;
+          state = {
+            ...state,
+            draft: {
+              ...cloneInitialDraft(),
+              ...draft,
+              skills:
+                draft.skills && typeof draft.skills === 'object' && !Array.isArray(draft.skills)
+                  ? draft.skills
+                  : {},
+              declinedPathSkillIds: draft.declinedPathSkillIds ?? [],
+            },
+          };
+        }
+
+        return state;
+      },
+      merge: (persistedState, currentState) => {
+        const persisted = persistedState as Partial<GuidedCreatorState> | undefined;
+        if (!persisted) return currentState;
+        const draft = { ...currentState.draft, ...persisted.draft };
+        if (!draft.skills || typeof draft.skills !== 'object' || Array.isArray(draft.skills)) {
+          draft.skills = {};
+        }
+        if (!Array.isArray(draft.declinedPathSkillIds)) {
+          draft.declinedPathSkillIds = [];
         }
         return {
-          currentSubStep: 'path' as GuidedSubStep,
-          completedSubSteps: [] as GuidedSubStep[],
-          draft: cloneInitialDraft(),
+          ...currentState,
+          ...persisted,
+          draft,
         };
       },
     }

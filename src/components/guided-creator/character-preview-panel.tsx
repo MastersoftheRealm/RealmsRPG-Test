@@ -58,6 +58,20 @@ export function CharacterPreviewPanel({ className, variant = 'panel' }: Characte
     return match?.name ?? null;
   }, [draft.speciesName, draft.speciesId, allSpecies]);
 
+  const species = useMemo(
+    () => allSpecies.find((s) => String(s.id) === String(draft.speciesId)),
+    [allSpecies, draft.speciesId]
+  );
+
+  const skillCount = useMemo(() => {
+    const ids = new Set<string>();
+    (species?.skills ?? []).forEach((id) => {
+      if (String(id) !== '0') ids.add(String(id));
+    });
+    Object.keys(draft.skills ?? {}).forEach((id) => ids.add(String(id)));
+    return ids.size;
+  }, [species, draft.skills]);
+
   const featNames = useMemo(() => {
     const ids = [...draft.archetypeFeatIds, ...draft.characterFeatIds];
     if (ids.length === 0) return [];
@@ -167,10 +181,10 @@ export function CharacterPreviewPanel({ className, variant = 'panel' }: Characte
             <dd className="font-medium text-text-primary">{draft.selectedAncestryTraitIds.length}</dd>
           </div>
         )}
-        {draft.skillIds.length > 0 && (
+        {skillCount > 0 && (
           <div className="flex justify-between gap-2">
             <dt className="text-text-secondary">Skills</dt>
-            <dd className="font-medium text-text-primary">{draft.skillIds.length}</dd>
+            <dd className="font-medium text-text-primary">{skillCount}</dd>
           </div>
         )}
         {featNames.length > 0 && (

@@ -12,7 +12,7 @@
 
 > **Document status (read before building):** This is **intention-driven design** — a system philosophy, onboarding architecture, and product direction doc. It is **not** a validated UX system, behavior-tested flow, or production-ready interaction spec until Layer 1 is prototyped and revised from real user behavior. See **Appendix I** before expanding scope or treating every section as committed. **Do not expand this doc further until a narrow prototype is tested** (Appendix I §I.6).
 
-**Last updated:** 2026-06-28 (Appendix I: validation-first critique)
+**Last updated:** 2026-07-01 (§5.11 standalone creators; owner review 2026-07-01)
 
 ---
 
@@ -149,8 +149,8 @@ Proposed contract (props): `layer`, `groups[]`, `onExpandLayer`, `onCollapseLaye
 | Surface | Target layers | Current default |
 |---------|---------------|-----------------|
 | Character creator (path mode) | L1 partial on some steps | Mixed; forge = L3 |
-| Power / technique / item creators | L1 templates → L2 filtered parts → L3 full | **L3 only** |
-| Species / creature creators | L1 guided picks → L2 → L3 | **L3 only** |
+| Power / technique / item creators | L1 guided routes → L2 filtered → L3 advanced builder | **L3 only** |
+| Species / creature creators | L3 only (deferred from beginner funnel) | **L3 only** |
 | Encounters, campaigns, crafting | L1 task-focused → L2 → L3 | **L3 / dense UI** |
 | Codex / Library browse | L1 curated → L2 filtered → L3 full tables | **L3 browse** |
 
@@ -227,6 +227,8 @@ Rather than rewrite the existing wizard in place, Realms ships **two coexisting 
 
 **Build strategy:** UI-first prototype. We hand-seed **one reference path** + a few **starter species** via SQL, build the guided flow end-to-end to validate the feel, then harden DB fields and build robust admin tooling. The Simple creator is a prototype that coexists with — does not yet replace — the Advanced creator.
 
+**Future evolution (after Guided is validated):** Once Simple (Guided) works well end-to-end, reposition **Advanced** as **Layer 2 face value** — more options visible by default, still structured — with **Layer 3** when the user deliberately expands into full catalogs and forge-style freedom. The same progression applies to standalone creators (Section 5.11). Do not collapse Advanced into Guided in place; evolve routes and defaults.
+
 **Future (not in scope yet):** an **animated character avatar** that progresses/levels visually along the chapters near the top of the guided creator. The shell reserves a header slot for it.
 
 #### 5.0.1 Guided chapter model (rulebook-aligned)
@@ -266,20 +268,35 @@ Existing `path_data` already supports `guidance_groups`, `recommended_species` (
 
 Admin tooling (later phase): replace the archetype edit **modal** ([`AdminArchetypesTab.tsx`](<../app/(main)/admin/codex/AdminArchetypesTab.tsx>)) with a robust admin-only **archetype creator**, and improve species editing for trait options + the starter flag.
 
-#### 5.0.3 Choice-card art (image-forward selling) — PLANNED
+#### 5.0.3 Choice-card art (image-forward selling) — IN PROGRESS (TASK-405)
 
 **Species art is a primary selling point**, not decoration. The guided creator's [`GuidedChoiceCard`](../components/guided-creator/guided-choice-card.tsx) must treat illustration as the hero of the card wherever it helps users imagine their character or gear.
 
-| Surface | Layout | Art role | Backend (planned) |
-|---------|--------|----------|-------------------|
+**What gets paired art (and what does not)**
+
+| Entity | Paired art? | Expected coverage | Storage path | DB field (phase) |
+|--------|-------------|-------------------|--------------|------------------|
+| **Species** | Yes | **High** — most species should have art | `codex-art/species/{id}.jpg` | `codex_species.image_url` |
+| **Creatures** | Yes | **High** — most creatures should have art | `codex-art/creature/{id}.jpg` | `official_creatures.image_url` (phase 2) |
+| **Weapons** | Yes | **Some** — iconic weapons only | `codex-art/weapon/{id}.jpg` | `codex_equipment.image_url` or payload (phase 2) |
+| **Armor** | Yes | **Low** — select pieces | `codex-art/armor/{id}.jpg` | `codex_equipment.image_url` (phase 2) |
+| **Shields** | Yes | **Low** — select pieces | `codex-art/shield/{id}.jpg` | `codex_equipment.image_url` (phase 2) |
+| **Powers** | Yes | **Low** — standout abilities only | `codex-art/power/{id}.jpg` | `official_powers.image_url` or payload (phase 2) |
+| **Techniques** | Yes | **Low** — standout abilities only | `codex-art/technique/{id}.jpg` | `official_techniques.image_url` (phase 2) |
+| Skills, feats, traits | **No** | — | — | — |
+
+**Upload policy:** Card art is **admin/developer only** (same as codex authoring). End users upload **portraits/profile pictures** only — not species or item art. Upload flow reuses [`ImageUploadModal`](../components/shared/image-upload-modal.tsx) (crop + compress) via [`CodexArtUploadField`](../components/shared/codex-art-upload-field.tsx); server route [`/api/upload/codex-art`](../app/api/upload/codex-art/route.ts) gates on `isAdmin()` and writes with service role to the **`codex-art`** bucket. The public URL is stored on the codex/official row (`image_url`).
+
+| Surface | Layout | Art role | Backend |
+|---------|--------|----------|---------|
 | **Species** | Featured inline art (~80px) beside title + copy | Primary selling point without dominating the card | `codex_species.image_url` (+ admin upload) |
 | **Equipment / loadouts** | Featured inline art | Visual kit cue, same scale as species | `level1_loadouts[].image_url` or armament art refs |
-| **Powers / techniques** | Featured inline art (when guided step adds pickers) | Ability identity at a glance | `codex_powers.image_url`, `codex_techniques.image_url` (or library payload) |
+| **Powers / techniques** | Featured inline art (when guided step adds pickers) | Ability identity at a glance | `official_powers.image_url`, `official_techniques.image_url` (or library payload) |
 | **Paths / feats / ancestry** | Thumb or optional hero | Icon/thumb until path art pipeline exists | Optional later |
 
-**Prototype now:** UI reads `image_url` when present on a record; otherwise typed SVG placeholders under `public/images/placeholder-*-card.svg` via [`guided-choice-image.ts`](../components/guided-creator/guided-choice-image.ts). **No modal required** to understand a species — art + short copy + Read more on the card.
+**Shipped now:** UI reads `image_url` when present; otherwise typed SVG placeholders under `public/images/placeholder-*-card.svg` via [`guided-choice-image.ts`](../components/guided-creator/guided-choice-image.ts). **Species:** `image_url` column + `codex-art` bucket + admin species editor upload (TASK-405 phase 1).
 
-**Implementation track:** TASK-405 (codex columns, Storage uploads, admin pickers). Same card component and layout tokens apply across creators and library/codex pickers over time.
+**Implementation track:** TASK-405 phase 2 — `image_url` on creatures, equipment subtypes, powers/techniques; admin pickers on remaining codex tabs. Same card component and layout tokens across creators and library/codex pickers.
 
 > The subsections below (5.1–5.10) describe the **per-step UX vision** shared by both creators. The guided creator realizes them chapter-by-chapter per 5.0.1.
 
@@ -445,6 +462,126 @@ The final step delivers a fulfilling character reveal, then the identity details
 
 **Current gap:** [`finalize-step.tsx`](../components/character-creator/steps/finalize-step.tsx) has a functional save flow but is not yet a fulfilling reveal.
 
+### 5.11 Standalone creators (power, technique, item) — DECIDED 2026-07-01
+
+Standalone creators are **conversion surfaces** (landing secondary CTAs) and **homebrew tools** for players who want custom powers and gear. They must follow the same philosophy as character creation: **build Layer 1 first on a parallel route, keep the existing calculator/save stack, validate with owner feedback, then evolve the current full builder toward Layer 2 face value and Layer 3 on deliberate expand.**
+
+**Owner review (2026-07-01):** Implementation is iterative and requires owner feedback at each milestone. Do not treat this section as a frozen spec until the power-creator guided prototype is playtested.
+
+**Spec lock gate (2026-07-01, owner):** Layer 1 for the power creator does **not** have a finalized step-by-step design yet. **Do not implement** TASK-410–413 (or guided routes/UI) until the owner completes and approves [`human/POWER_CREATOR_LAYER1_SPEC.md`](./human/POWER_CREATOR_LAYER1_SPEC.md) (TASK-414). §5.11 below is **direction and hypotheses**, not an implementation contract. Appendix I validation-first rules apply here too.
+
+#### Scope decisions
+
+| Surface | In guided/L1 funnel? | Notes |
+|---------|----------------------|-------|
+| **Power creator** | **Yes — pilot** | Highest complexity; landing CTA; templates from Realms Library |
+| **Item (armament) creator** | **Yes — after power validates** | Similar character-context pattern (armament proficiency, rarity) |
+| **Technique creator** | **Yes — after item** | Simpler mirror of power; same layer pattern |
+| **Empowered technique creator** | **No L1** | Afterthought / advanced-only; link from power advanced, not landing |
+| **Species / creature creators** | **Deferred** | RM/homebrew complexity; not beginner funnel; keep Layer 3 until reprioritized |
+
+#### Two-route model (same as character creator)
+
+Do **not** rewrite [`power-creator/page.tsx`](../app/(main)/power-creator/page.tsx) in place. Ship parallel routes:
+
+| Route | Layer | Behavior |
+|-------|-------|----------|
+| `/power-creator` | Entry | Chooser: **Guided** vs **Advanced** (terms TBD) |
+| `/power-creator/guided` | **L1** (new) | Step wizard; category + template flow; hands off to advanced |
+| `/power-creator/advanced` (or current page) | **L2/L3 today → L2 face value later** | Today's full builder; calculators unchanged |
+
+Item creator mirrors: `/item-creator` chooser → `/item-creator/guided` → `/item-creator/advanced`.
+
+**Preserve:** `lib/calculators`, `useCreatorSave`, `CreatorSummaryPanel`, localStorage draft cache, load-from-library. **Replace over time:** scroll-wall UX, default-expanded sections, missing `InfoTippy`, landing links that dump users into L3.
+
+#### Visual / interaction parity
+
+Guided standalone creators reuse guided character creator chrome where possible:
+
+- [`GuidedStepLayout`](../components/guided-creator/guided-step-layout.tsx), [`GuidedChoiceCard`](../components/guided-creator/guided-choice-card.tsx), sticky step footer
+- `font-display` / `font-nunito` typography (landing cohesion)
+- `InfoTippy` on every decision point (copy draft: [`human/POWER_CREATOR_TOOLTIPS_DRAFT.md`](./human/POWER_CREATOR_TOOLTIPS_DRAFT.md) → `public/tooltip-text.tsx`)
+- Live preview sidebar (evolve `CreatorSummaryPanel` toward narrative “your power so far”)
+
+Advanced routes keep collapsible sections but should **default collapsed** except identity (name) as L2 polish.
+
+#### Power creator — guided Layer 1 flow (draft hypothesis — not locked)
+
+> **Status:** OPEN. Replace with TASK-414 spec when owner locks design. Agents must not build wizard steps from this list alone.
+
+Category-first, not parts-first. Power **part categories** in codex (`Offense`, `Defense`, `Utility`, `Control`, `Healing`, etc.) align with player intent. **Proposed** steps (refine during spec work):
+
+```mermaid
+flowchart LR
+  S1["1 Audience: character or generic archetype"]
+  S2["2 Innate intent + constraints"]
+  S3["3 Category: offense / defense / utility / control / …"]
+  S4["4 Delivery + damage prompts"]
+  S5["5 Template or start blank"]
+  S6["6 Name flavor + preview"]
+  S7["7 Save or open Advanced"]
+  S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7
+```
+
+| Step | User question | Layer 1 behavior |
+|------|---------------|------------------|
+| **Audience** | Who is this for? | Optional: pick a **saved character** (level, archetype) **or** generic **Power** vs **Powered-Martial** + level. Enables innate threshold and TP context. `InfoTippy` on archetype terms. |
+| **Innate** | Innate or standard? | Toggle with rules tooltips. If innate: filter templates and validate action type (Basic/Reaction only), no healing/energy-gain parts, energy ≤ **Innate Threshold** for level/archetype ([`GAME_RULES.md`](./GAME_RULES.md): L1 threshold **8** Power, **6** Powered-Martial). |
+| **Category** | What kind of power? | `GuidedChoiceCard` grid mapped to part categories — not raw part names. |
+| **Delivery** | How does it reach targets? | Melee / ranged / area cards; hides steppers and mechanic jargon. |
+| **Damage** | Does it deal damage? | Yes/no → simple presets (light / moderate / heavy) before die math. |
+| **Template** | Start from example? | Load from **`official_powers`** (Realms Library) as presets; “start blank” always available. |
+| **Identity + review** | Name, description, preview | Example description style in tooltip draft; save to My Library or **Customize in Advanced** with state handoff. |
+
+**Template content:** Use existing **`official_powers`** rows (31 in library as of 2026-07-01) — no new DB table required for MVP. Curate a small set per category for Layer 1 cards; full library remains Layer 2/3. Example starter set: *Fireball* (offense/area), *Icebolt* (offense/ranged), *Healing Incantation* (utility), *Protective Ward* (defense/reaction), *Charm Creature* (control), *Fog Cloud* (utility/area). Load full payload via existing official-library API; hand off to advanced editor for edits.
+
+**Layer 2 (within guided or expand):** Filtered part groups via `UnifiedSelectionModal`; ranked by category + build state.
+
+**Layer 3:** Current advanced page; “See everything” for parts catalog.
+
+#### Item creator — guided Layer 1 (after power validates)
+
+Same audience pattern:
+
+| Context | Drives |
+|---------|--------|
+| Character or archetype + level | **Armament proficiency** max TP ([`GAME_RULES.md`](./GAME_RULES.md) progression table) |
+| Level 1 | `InfoTippy`: players typically only have **Common** rarity armaments in play |
+| Armament type | Weapon / armor / shield cards |
+| Template | Curated rows from **`official_items`** |
+
+#### Teaching / tooltips
+
+- **Primary:** `InfoTippy` + `public/tooltip-text.tsx` (owner-editable).
+- **Draft copy:** [`human/POWER_CREATOR_TOOLTIPS_DRAFT.md`](./human/POWER_CREATOR_TOOLTIPS_DRAFT.md).
+- **Open:** short videos vs guided tutorial overlay — not decided; do not block L1 on video production.
+
+#### Engineering prerequisites (Phase 0)
+
+Before large guided UI work:
+
+1. **TASK-380** — `CreatorPageShell` (shared auth/load/save scaffolding).
+2. **TASK-381** — decompose god files starting with **power-creator** and **item-creator** pages (parity tests).
+3. Wire **InfoTippy** on advanced creators using tooltip draft.
+
+#### Current gaps
+
+| Gap | Today |
+|-----|--------|
+| Layer model | L3 only; all sections default expanded |
+| Landing CTAs | [`secondary-discovery-section.tsx`](../components/landing/secondary-discovery-section.tsx) → `/power-creator` L3 |
+| Tooltips | None on standalone creator pages |
+| Templates | No guided entry; official library exists but unused for onboarding |
+| Character context | No innate-threshold or armament-prof filtering by character |
+| File size | Power ~3.4k lines, item ~4.3k lines — blocks safe iteration |
+
+#### Success criteria (power guided pilot)
+
+- New visitor from landing completes a saved custom power in **&lt;5 minutes** without learning part option levels.
+- “Customize in Advanced” opens full builder with guided state intact.
+- Innate toggle correctly filters by archetype/level threshold when character selected.
+- Owner sign-off on step order and template set before item guided ships.
+
 ---
 
 ## Section 6 — UX Unification Principle
@@ -461,21 +598,24 @@ Consistency across **all surfaces** is **mandatory** — this is a **sitewide** 
 - **Do not** big-bang rewrite every route at once.
 - **Do** pick a page, apply this document's principles, ship, then move to the next.
 - **Priority order (recommended):**
-  1. Landing page (Section 4) — full rebuild
-  2. Character creator (Section 5) — highest confusion risk for new players
-  3. Standalone creators (power, technique, item) — currently Layer 3 only; add L1/L2
+  1. Landing page (Section 4) — full rebuild ✅
+  2. Character creator guided (Section 5) — Simple/Guided in progress; Advanced → L2 later
+  3. Standalone creators — **power guided pilot** (Section 5.11), then item, then technique
   4. Character sheet + post-activation flow (Section 11)
-  5. Encounters, campaigns, crafting, creature/species creators
-  6. Codex / Library browse (reference surfaces; lower landing priority)
+  5. Encounters, campaigns, crafting
+  6. Species / creature creators (deferred; RM/homebrew)
+  7. Codex / Library browse (reference surfaces; lower landing priority)
 
 Each page refactor must still feel like one product: same step chrome, same layer expand/collapse affordances, same tooltip pattern (`InfoTippy`).
 
 **Surfaces to unify (phased):**
 
-1. Character creator (Phases 1–2)
-2. Standalone creators: power, technique, item, species, creature (see [`ai/FEATURE_INDEX.md`](./ai/FEATURE_INDEX.md))
+1. Character creator guided (Phases 1–2); Advanced evolves to L2 face value after validation
+2. Standalone creators: **power** (pilot), **item**, **technique** — see Section 5.11
 3. Crafting ([`crafting/page.tsx`](<../app/(main)/crafting/page.tsx>))
 4. Realms Library and Codex browse (Layer 1 curated → Layer 2 filtered → Layer 3 full tables)
+
+**Explicitly deferred from beginner funnel:** species creator, creature creator, empowered technique creator (advanced-only link).
 
 Tie **visual** consistency to [`ai/UI_UNIFICATION_PLAN.md`](./ai/UI_UNIFICATION_PLAN.md); tie **interaction** consistency to this document.
 
@@ -662,10 +802,11 @@ Path data and logic: [`src/types/archetype.ts`](../types/archetype.ts), [`src/li
 |---------|--------------|----------------|--------|
 | Home | `home-page.tsx` | Multi-CTA, onboarding tour | Section 4 rebuild |
 | Character creator (forge) | `characters/new` | Layer 3 | Layer 1 path default |
-| Power creator | `power-creator/page.tsx` | Layer 3 | L1 templates → L2 → L3 |
-| Technique creator | `technique-creator/page.tsx` | Layer 3 | Same |
-| Item creator | `item-creator/page.tsx` | Layer 3 | Same; landing CTA entry |
-| Species / creature creators | `species-creator`, `creature-creator` | Layer 3 | Guided L1 when prioritized |
+| Power creator | `power-creator/page.tsx` (+ future `/guided`) | Layer 3 | L1 guided route + `official_powers` templates (§5.11) |
+| Technique creator | `technique-creator/page.tsx` | Layer 3 | After power/item guided |
+| Item creator | `item-creator/page.tsx` (+ future `/guided`) | Layer 3 | L1 guided; landing CTA entry |
+| Species / creature creators | `species-creator`, `creature-creator` | Layer 3 | **Deferred** from beginner funnel |
+| Empowered technique | `empowered-technique-creator` | Layer 3 | Advanced-only; no L1 |
 | Character sheet | `characters/[id]` | Dense full UI | Optional post-save tour (Section 11) |
 | Encounters | `encounters/` | Full tracker UI | Phased simplification |
 | Campaigns | `campaigns/` | Full UI | Post-save CTA target |
@@ -731,12 +872,17 @@ flowchart LR
 
 | Phase | Scope | Ship criteria |
 |-------|-------|---------------|
-| **Phase 0** | **Full landing page rebuild** (Section 4): remove onboarding tour, Codex/Library CTAs, multi-CTA sprawl; single primary CTA; mid-page power/item creator teasers; Discord tertiary | Landing matches Section 4 spec; one obvious "Start Playing" path |
-| **MVP** | Character creator pilot: archetype preview cards, Layer 1 feat groups, `level1_notes` in creator, one reference path | One martial path completable in Layer 1 without opening full lists |
-| **Phase 2** | Remaining creator steps: species grid, ancestry guided flow, Layer 1 skills, equipment split, powers grouping | New player completes path unaided |
-| **Phase 2b** | Post-activation (Section 11): play-together prompt, optional sheet tour, level-up milestone tutorials, tutorials on/off | First save → play prompt; sheet tour skippable; first level-up shows delta-only guide |
-| **Phase 3** | Standalone creators gain L1/L2; landing CTAs land in guided entry | Power and item creators open in Layer 1 from landing links |
-| **Phase 4** | `GuidedChoiceShell`, admin path validation, encounters/campaigns/crafting passes, codex/library L1 curated | Sitewide layer model; all published paths pass TP/currency checks |
+| **Phase 0** | **Landing page rebuild** (Section 4) | Landing matches Section 4 spec; one obvious "Start Playing" path |
+| **Phase 1** | **Character creator guided** (Section 5.0) — Simple creator chapters; Advanced coexists | One path completable in guided flow; owner sign-off |
+| **Phase 1b** | **Creator engineering Phase 0** — TASK-380 `CreatorPageShell`, TASK-381 god-file decomposition (power + item first), power-creator `InfoTippy` from tooltip draft | Safe to iterate on guided standalone routes |
+| **Phase 2** | **Power creator guided** (Section 5.11) — **after TASK-414 spec APPROVED**; then TASK-410–412 | New visitor saves a custom power without part jargon |
+| **Phase 2b** | Post-activation (Section 11): play-together prompt, optional sheet tour, level-up milestone tutorials | First save → play prompt; sheet tour skippable |
+| **Phase 3** | **Item creator guided**, then **technique guided**; advanced builders evolve toward L2 face value | Item landing CTA → guided entry |
+| **Phase 4** | `GuidedChoiceShell`, character Advanced → L2 positioning, encounters/campaigns/crafting, codex/library L1 curated | Sitewide layer model |
+
+**Deferred (not in beginner funnel):** species creator, creature creator, empowered technique guided (advanced-only link from power advanced).
+
+**Owner feedback gate:** Each standalone-creator phase requires owner review before the next surface ships.
 
 **Dependency:** Contextual tooltips across new surfaces follow **TASK-376** (Collin). UX copy can be drafted in this doc and in `tooltip-text.tsx` as Collin migrates.
 
@@ -770,6 +916,10 @@ Everything else stays on current UI until each phase validates the pattern.
 | Powered-martial dual track | Two proficiencies plus innate powers | Split sections with path copy |
 | Equipment catalog size | Scroll fatigue | Weapon then armor sub-steps |
 | Empty path content in the database | The picker is empty | Content is a prerequisite; gate publish in admin |
+| Power creator parts surface | Hundreds of parts + option levels | L1: category cards + official_power templates; L2: filtered modal; L3: current advanced page |
+| Innate power qualification | Threshold varies by archetype/level; action/part restrictions | L1: character or archetype picker + innate toggle with live filter; tooltips from POWER_CREATOR_TOOLTIPS_DRAFT |
+| Armament TP / rarity context | Depends on character level and archetype | Item guided: character picker + armament prof cap; L1 rarity copy for level 1 |
+| Standalone creator god files | 3k–4k line pages block UX iteration | TASK-381 phased extraction before large guided UI (Phase 1b) |
 
 ---
 
@@ -783,6 +933,9 @@ Everything else stays on current UI until each phase validates the pattern.
 
 - **Path / Archetype** — a guided character build direction (Power, Powered-Martial, or Martial), with level-1 recommendations.
 - **Forge Your Own** — the unguided Layer 3 path that gives full control from the start.
+- **Guided creator route** — parallel L1 flow (character: `/characters/new/guided`; power: `/power-creator/guided` when built).
+- **Innate Power** — a power whose Energy is at or below your Innate Threshold; usable without spending pool Energy when qualified (Basic/Reaction only; no healing/energy-gain parts).
+- **Innate Threshold** — max Energy for an innate power; level 1: 8 (Power), 6 (Powered-Martial); +1 every 3 levels from 4.
 - **Archetype feat** — a feat oriented toward combat and high-stakes situations.
 - **Character feat** — a feat oriented toward identity and build expression.
 - **Training Points (TP)** — the resource that bounds proficiency, weapon, and power investment.

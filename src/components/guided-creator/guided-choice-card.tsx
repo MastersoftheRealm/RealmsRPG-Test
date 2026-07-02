@@ -9,7 +9,7 @@ import { useMemo, useState, type KeyboardEvent, type ReactNode } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
-import { truncateAtWord, COMPACT_PREVIEW_LEN } from './guided-text';
+import { truncateAtWord, COMPACT_PREVIEW_LEN, shouldExpandTaglineBody } from './guided-text';
 import {
   defaultImageLayoutForKind,
   resolveChoiceCardImage,
@@ -41,7 +41,7 @@ export interface GuidedChoiceCardProps {
   fullWidth?: boolean;
   /**
    * standard — min-heights for species/path grids (self-start, no row stretch).
-   * compact — no forced min-heights; line-clamp cap; use with COMPACT_GRID + h-full.
+   * compact — no forced min-heights; line-clamp cap (6 lines); use with COMPACT_GRID + h-full.
    */
   density?: 'standard' | 'compact';
 }
@@ -76,7 +76,8 @@ function resolveBody(
     if (extra != null && extra !== '' && extra !== tag) {
       if (typeof extra === 'string') {
         const expanded = extra.startsWith(tag) ? extra : `${tag}\n\n${extra}`;
-        return { kind: 'plain', collapsed: tag, expanded, canExpand: true };
+        const canExpand = shouldExpandTaglineBody(tag, extra);
+        return { kind: 'plain', collapsed: tag, expanded, canExpand };
       }
       return { kind: 'rich', collapsed: tag, expanded: extra, canExpand: true };
     }
@@ -202,7 +203,7 @@ export function GuidedChoiceCard({
                   className={cn(
                     s.body,
                     !expanded && !isCompact && s.bodyCollapsed,
-                    !expanded && isCompact && 'line-clamp-4',
+                    !expanded && isCompact && 'line-clamp-6',
                     expanded && 'whitespace-pre-wrap'
                   )}
                 >

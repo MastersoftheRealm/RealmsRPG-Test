@@ -30,6 +30,24 @@ export const GUIDED_CHOICE_STYLES = {
   meta: 'font-nunito text-sm text-text-muted dark:text-text-secondary',
 } as const;
 
+/**
+ * Typography for read-only overview panels (species reveal, summary chips).
+ * Pair display titles with nunito body — no mixed display fonts on stat values.
+ */
+export const GUIDED_OVERVIEW_STYLES = {
+  sectionTitle: 'font-display text-lg font-semibold text-text-primary',
+  sectionHint: 'mt-1 font-nunito text-sm text-text-secondary',
+  body: 'font-nunito text-base text-text-primary leading-relaxed',
+  bodySecondary: 'font-nunito text-base text-text-secondary leading-relaxed',
+  statLabel:
+    'font-nunito text-xs font-medium uppercase tracking-wide text-text-secondary',
+  statValue: 'mt-1 font-nunito text-sm font-semibold text-text-primary capitalize',
+  pill: 'rounded-lg border border-border-light bg-surface-alt/50 px-3 py-1.5 font-nunito text-sm font-medium text-text-primary',
+  pillPrimary:
+    'rounded-lg border border-primary-chip-border bg-primary-chip-bg px-3 py-1.5 font-nunito text-sm font-medium text-primary-chip-fg',
+  callout: 'rounded-card border border-border-light bg-primary-subtle-bg/40 px-4 py-3',
+} as const;
+
 /** Two-column grid — items-start so expanded cards do not stretch neighbors. */
 export const GUIDED_CHOICE_GRID_CLASS = 'grid grid-cols-1 sm:grid-cols-2 gap-3 items-start';
 

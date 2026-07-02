@@ -1,5 +1,5 @@
 /**
- * Ancestry micro-flow: one pick at a time, compact two-column cards.
+ * Ancestry micro-flow: species overview, then one pick at a time.
  * Select a trait, confirm with Next pick, Back revisits prior picks.
  * Deferred: mixed species.
  */
@@ -15,9 +15,11 @@ import { useGuidedCreatorStore, type GuidedDraft } from '@/stores/guided-creator
 import { GuidedChoiceCard } from '../guided-choice-card';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from '../guided-choice-styles';
 import { GuidedStepLayout } from '../guided-step-layout';
+import { SpeciesRevealPanel } from '../species-reveal-panel';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.ancestry;
+const overviewCopy = stepCopy.speciesOverview;
 
 type AncestryPhase =
   | 'species-trait-option'
@@ -63,9 +65,12 @@ function resolveInitialPhaseIndex(
   ancestryAlreadyComplete: boolean
 ): number {
   if (tasks.length === 0) return 0;
-  if (ancestryAlreadyComplete) return tasks.length - 1;
+  if (ancestryAlreadyComplete) return tasks.length;
+  // Always show the species overview first when no ancestry picks exist yet.
+  const hasProgress = tasks.some((task) => isTaskFilled(task, draft));
+  if (!hasProgress) return 0;
   const firstOpen = tasks.findIndex((task) => !isTaskFilled(task, draft));
-  return firstOpen >= 0 ? firstOpen : tasks.length - 1;
+  return firstOpen >= 0 ? firstOpen + 1 : tasks.length;
 }
 
 export function AncestryStep() {
@@ -140,18 +145,22 @@ export function AncestryStep() {
     return list;
   }, [species, allTraits, draft.selectedFlawId, draft.selectedAncestryTraitIds]);
 
+  const showOverview = Boolean(species);
+  const isOverview = showOverview && phaseIndex === 0;
+  const pickIndex = showOverview ? phaseIndex - 1 : phaseIndex;
+  const currentTask = pickIndex >= 0 ? tasks[Math.min(pickIndex, Math.max(0, tasks.length - 1))] : undefined;
+  const totalPicks = tasks.length;
+
   useEffect(() => {
     phaseInitialized.current = false;
+    setPhaseIndex(0);
   }, [draft.speciesId]);
 
   useEffect(() => {
-    if (phaseInitialized.current || tasks.length === 0) return;
+    if (phaseInitialized.current || !species) return;
     setPhaseIndex(resolveInitialPhaseIndex(tasks, draft, ancestryChapterComplete));
     phaseInitialized.current = true;
-  }, [tasks, draft, ancestryChapterComplete, draft.speciesId]);
-
-  const currentTask = tasks[Math.min(phaseIndex, Math.max(0, tasks.length - 1))];
-  const totalPicks = tasks.length;
+  }, [tasks, draft, ancestryChapterComplete, species]);
 
   const isSelected = useCallback(
     (trait: Trait, task: PickTask | undefined = currentTask): boolean => {
@@ -261,6 +270,15 @@ export function AncestryStep() {
   };
 
   const handleAncestryContinue = () => {
+    if (isOverview) {
+      if (totalPicks === 0) {
+        if (ancestryComplete) nextSubStep();
+        return;
+      }
+      setPhaseIndex(1);
+      return;
+    }
+
     if (!currentTask) {
       if (ancestryComplete) nextSubStep();
       return;
@@ -272,7 +290,7 @@ export function AncestryStep() {
       return;
     }
 
-    const isLastTask = phaseIndex >= totalPicks - 1;
+    const isLastTask = pickIndex >= totalPicks - 1;
     if (isLastTask) {
       nextSubStep();
       return;
@@ -281,25 +299,37 @@ export function AncestryStep() {
     setPhaseIndex((i) => i + 1);
   };
 
-  const footerCanContinue = currentTask
-    ? currentTask.optional || hasCurrentPick
-    : ancestryComplete;
+  const footerCanContinue = isOverview
+    ? totalPicks > 0 || ancestryComplete
+    : currentTask
+      ? currentTask.optional || hasCurrentPick
+      : ancestryComplete;
+
+  const stepTitle = isOverview
+    ? overviewCopy.title(species?.name ?? 'species')
+    : (currentTask?.title ?? GUIDED_CREATOR_COPY.chapters.ancestry.title);
+
+  const stepDescription = isOverview
+    ? overviewCopy.description
+    : currentTask?.description;
+
+  const continueLabel = isOverview ? overviewCopy.continueLabel : stepCopy.nextPick;
 
   const loading = speciesLoading || traitsLoading;
 
   return (
     <GuidedStepLayout
       subStep="ancestry"
-      title={currentTask?.title ?? GUIDED_CREATOR_COPY.chapters.ancestry.title}
-      description={currentTask?.description}
+      title={stepTitle}
+      description={stepDescription}
       canContinue={footerCanContinue}
-      continueLabel={stepCopy.nextPick}
+      continueLabel={continueLabel}
       footerBack={handleAncestryBack}
       footerContinue={handleAncestryContinue}
       completionHint={
-        totalPicks > 0 && currentTask ? (
+        !isOverview && totalPicks > 0 && currentTask ? (
           <span className="font-nunito">
-            {phaseIndex + 1} / {totalPicks} picks
+            {pickIndex + 1} / {totalPicks} picks
           </span>
         ) : undefined
       }
@@ -310,6 +340,8 @@ export function AncestryStep() {
         </div>
       ) : !species ? (
         <p className="font-nunito text-text-secondary">{stepCopy.selectSpeciesFirst}</p>
+      ) : isOverview ? (
+        <SpeciesRevealPanel species={species as Species} allTraits={allTraits} />
       ) : !currentTask ? (
         <p className="font-nunito text-text-secondary">{stepCopy.emptyOptions}</p>
       ) : (

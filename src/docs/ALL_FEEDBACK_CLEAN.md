@@ -1620,3 +1620,19 @@ Notes
 - Feedback: Doc over-specified before validation (layers, 10 steps, migration, tooltips, landing, post-activation) — risk building theory that breaks in real use. Missing failure modes: users ignore recs, Forge-first, species bounce, TP confusion, speedrun. Layer system needs governance (what qualifies as L1). Landing single-CTA may be too rigid for skeptical explorers — consider light "Explore system first" secondary intent. Section 11 retention shallow vs "why come back tomorrow" (campaign, encounters, progression). Doc is philosophy/direction not validated UX. Next: lock 3 things only, prototype 1 path + species + feats step, let behavior rewrite spec before expanding doc.
 - Expected: Appendix I in REALMS_PRODUCT_OVERVIEW.md; validation gate on phases; defer doc expansion until prototype.
 - Disposition: Documented 2026-06-28 in REALMS_PRODUCT_OVERVIEW.md Appendix I; Appendix E validation gate note.
+
+**Raw Feedback Log — 2026-07-01 (Standalone creator UX plan — owner review)**
+- Date: 2026-07-01
+- Context: Product overview; standalone creators (power, technique, item); landing secondary CTAs
+- Priority: High
+- Feedback: (1) Build Layer 1 guided power creator first on parallel route; keep underlying calculator/save code; evolve current advanced builder to L2 face value over time (same pattern as character creator: guided L1 now, Advanced → L2 later). (2) Defer species/creature creators from beginner funnel; empowered technique is afterthought — advanced-only, no L1. (3) Templates from existing official_powers in Supabase (curate by part category); category-first flow with damage/delivery prompts. (4) Layer 1 needs character context (Power vs Powered-Martial, level) for innate threshold filtering; innate toggle with rule constraints (Basic/Reaction, no healing/energy parts, threshold 8/6 at L1). Item guided similar: armament proficiency cap, L1 common rarity note. (5) Owner-authored power creator tooltip copy for future InfoTippy; teaching via tooltips primary; videos/tutorial TBD. (6) Phase 0: god-file decomposition (TASK-380/381). Owner feedback required at each milestone.
+- Expected: REALMS §5.11; POWER_CREATOR_TOOLTIPS_DRAFT.md; TASK-408–413 in AI_TASK_QUEUE.
+- Disposition: Documented 2026-07-01 in REALMS_PRODUCT_OVERVIEW.md §5.11, Appendix E/F; tasks TASK-408–413 filed; tooltip draft in src/docs/human/POWER_CREATOR_TOOLTIPS_DRAFT.md.
+
+**Raw Feedback Log — 2026-07-01 (Power creator L1 — spec before build)**
+- Date: 2026-07-01
+- Context: Standalone creator task queue; power creator Layer 1
+- Priority: High
+- Feedback: No perfect vision yet for exactly how Layer 1 power creator should work. Do not start implementation tasks (TASK-408–413) until owner locks exact spec.
+- Expected: TASK-414 owner spec; POWER_CREATOR_LAYER1_SPEC.md; TASK-408–413 blocked.
+- Disposition: TASK-414 filed (assignee: owner); TASK-408–413 blocked; REALMS §5.11 spec-lock gate; agent queue rule updated.
