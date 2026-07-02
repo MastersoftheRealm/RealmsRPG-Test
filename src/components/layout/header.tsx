@@ -12,12 +12,8 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth, useAdmin, useProfile } from '@/hooks';
-import { ThemeToggle } from '@/components/shared';
+import { ContextHelpTooltip, ThemeToggle } from '@/components/shared';
 import { useQueryClient } from '@tanstack/react-query';
-import { navbarCodex, navbarLibrary } from '../../../public/tooltip-text';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
-import { Info } from 'lucide-react'
 
 const navLinks: Array<{ href: string; label: string; external?: boolean } | { label: string; dropdown: { href: string; label: string }[] }> = [
   { href: '/characters', label: 'Characters' },
@@ -127,14 +123,10 @@ export function Header() {
                     {item.label}
                   </Link>
                   {item.href === '/library' && (
-                    <Tippy content={navbarLibrary}>
-                      <Info className="w-4 h-4 text-primary-700"/>
-                    </Tippy>
+                    <ContextHelpTooltip tooltipKey="global.nav.library" scope="global:nav" label="Library help" />
                   )}
                   {item.href === '/codex' && (
-                    <Tippy content={navbarCodex}>
-                      <Info className="w-4 h-4 text-primary-700"/>
-                    </Tippy>
+                    <ContextHelpTooltip tooltipKey="global.nav.codex" scope="global:nav" label="Codex help" />
                   )}
                 </span>
               )

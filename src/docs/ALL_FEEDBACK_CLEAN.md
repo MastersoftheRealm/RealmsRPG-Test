@@ -1503,3 +1503,26 @@ Notes
 - Feedback: When adding a weapon to a technique, the Add Weapon part does not appear to increase based on weapon TP, and the selected weapon is not reliably saved/loaded. This impacts both private and public library behavior, and empowered/power add-weapon flows should follow the same best-practice implementation.
 - Expected: Weapon references persist for custom and official techniques/powers/empowered techniques; TP scaling reflects selected weapon TP (or saved Add Weapon part level fallback for older official entries); load behavior remains consistent across My Library and Realms Library.
 - Disposition: Implemented 2026-05-16. Fixed UUID weapon save conditions in creators, added Add Weapon level fallback reconstruction on load for technique/empowered flows, and updated shared columnar mapping to persist/rehydrate weaponName from nested payload weapon fields.
+
+**Raw Feedback Log — 2026-06-26 (Use Tippy for app tooltips)**
+- Date: 2026-06-26
+- Context: App-wide contextual/help tooltips
+- Priority: High
+- Feedback: Tippy has been imported as the tooltip library. Remove usages of the custom tooltip system in favor of Tippy to simplify and streamline the app.
+- Expected: Tooltip rendering uses Tippy instead of the custom hover/focus/click implementation; duplicate tooltip text sources/usages are reduced where possible.
+
+**Raw Feedback Log — 2026-07-02 (Use Floating UI instead of Tippy for app tooltips)**
+- Date: 2026-07-02
+- Context: App-wide contextual/help tooltips
+- Priority: High
+- Feedback: Floating UI appears to be the successor to Tippy; use Floating UI instead of Tippy for tooltip rendering.
+- Expected: Tooltip rendering uses Floating UI, Tippy runtime dependencies/imports/styles are removed, and existing keyed tooltip content/admin API behavior remains intact.
+- Disposition: Implemented 2026-07-02 — replaced the shared tooltip primitive with Floating UI, removed Tippy dependencies/CSS import/theme styles, and verified `npm run build` passes.
+
+**Raw Feedback Log — 2026-07-02 (Floating UI tooltips render in top-left corner)**
+- Date: 2026-07-02
+- Context: App-wide contextual/help tooltips after Floating UI migration
+- Priority: High
+- Feedback: Tooltips are rendering in the top-left corner of the page.
+- Expected: Tooltips render adjacent to their trigger according to configured placement.
+- Disposition: Implemented 2026-07-02 — removed transition scale transforms that overwrote Floating UI's placement transform; tooltips now preserve Floating UI positioning.

@@ -16,12 +16,12 @@
     "db:migrate": "echo Run SQL in Supabase Dashboard. See sql/README.md and src/docs/SUPABASE_SCHEMA.md."
   },
   "dependencies": {
+    "@floating-ui/react": "^0.27.19",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-slot": "^1.2.4",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.95.3",
     "@tanstack/react-query": "^5.90.16",
-    "@tippyjs/react": "^4.2.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.562.0",
@@ -32,7 +32,6 @@
     "react-easy-crop": "^5.5.6",
     "react-hook-form": "^7.70.0",
     "tailwind-merge": "^3.4.0",
-    "tippy.js": "^6.3.7",
     "zod": "^4.3.5",
     "zustand": "^5.0.9"
   },

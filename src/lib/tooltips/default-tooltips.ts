@@ -49,7 +49,7 @@ export const DEFAULT_TOOLTIPS: Record<string, TooltipRecord> = {
     scope: 'page:/characters/new',
     title: 'Skill Point Rules',
     bodyMd:
-      'At level **{{context.level}}**, you have **{{calc.skillPointsAtLevel(level,\"character\")}} Skill Points**.\n' +
+      'At level **{{context.level}}**, you have **{{calc.skillPointsAtLevel(level,entityType)}} Skill Points**.\n' +
       'Base skill cap is **{{rules.SKILLS_AND_DEFENSES.maxSkillValue}}**.\n' +
       'Past-cap cost: base **{{rules.SKILLS_AND_DEFENSES.baseSkillPastCapCost}}**, sub-skill **{{rules.SKILLS_AND_DEFENSES.subSkillPastCapCost}}**.',
   }),

@@ -16,7 +16,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { Info, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useCodexSkills, type Skill } from '@/hooks';
 import {
   calculateSkillBonusWithProficiency,
@@ -32,14 +32,12 @@ import {
   canIncreaseDefense,
 } from '@/lib/game/skill-allocation';
 import { formatBonus } from '@/lib/utils';
-import { SkillRow } from '@/components/shared';
+import { ContextHelpTooltip, SkillRow } from '@/components/shared';
 import { Button, Spinner, Alert } from '@/components/ui';
 import { PointStatus } from '@/components/shared';
 import { AddSkillModal, AddSubSkillModal } from '@/components/shared';
 import type { Abilities, DefenseSkills } from '@/types';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types';
-import Tippy from '@tippyjs/react';
-import { addSubSkill, allocateSkills } from '../../../public/tooltip-text';
 
 const DEFENSE_KEYS: (keyof DefenseSkills)[] = [
   'might',
@@ -315,9 +313,12 @@ export function SkillsAllocationPage({
         <div className="min-w-0">
           <div className="flex items-center gap-1 mb-2">
             <h1 className="text-2xl font-bold text-text-primary">Allocate Skills</h1>
-            <Tippy content={allocateSkills} allowHTML={true}>
-              <Info className="w-4 h-4 text-primary-700"/>
-            </Tippy>
+            <ContextHelpTooltip
+              tooltipKey="characters.new.step.skills.pointsHelp"
+              scope="page:/characters/new"
+              label="Skill point rules"
+              context={{ level, entityType }}
+            />
           </div>
           <p className="text-text-secondary">
             Spend Skill points to gain proficiency, increase Skill values, or boost defenses.
@@ -354,9 +355,11 @@ export function SkillsAllocationPage({
             <Plus size={14} />
             Add Sub-Skill
           </Button>
-          <Tippy content={addSubSkill} allowHTML={true}>
-              <Info className="w-4 h-4 text-primary-700"/>
-          </Tippy>
+          <ContextHelpTooltip
+            tooltipKey="characters.new.step.skills.subskillsHelp"
+            scope="page:/characters/new"
+            label="Sub-skill help"
+          />
         </span>
       </div>
 
