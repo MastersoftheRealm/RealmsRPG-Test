@@ -12,7 +12,7 @@ import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { AbilityScoreEditor } from '@/components/creator';
 import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
 import { ContextHelpTooltip } from '@/components/shared';
-import { Button } from '@/components/ui';
+import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
 import { calculateAbilityPoints, calculateAbilityScoreCost } from '@/lib/game/formulas';
 import type { AbilityName } from '@/types';
 
@@ -36,7 +36,7 @@ export function AbilitiesStep() {
   }, [abilities]);
   
   const remainingPoints = totalPoints - spentPoints;
-  const canContinue = remainingPoints >= 0;
+  const canContinue = remainingPoints === 0;
   
   // Get archetype abilities
   const pathPrimaryAbility = (draft.archetype?.archetype_ability || draft.pow_abil || draft.mart_abil) as AbilityName | undefined;
@@ -57,16 +57,16 @@ export function AbilitiesStep() {
       </div>
       <p className="text-text-secondary mb-6">
         Distribute your ability points. You can reduce abilities below 0 to gain extra points.
-        {powerAbility && <span className="text-power-dark dark:text-power-300"> Power archetype ability highlighted.</span>}
-        {martialAbility && <span className="text-martial-dark dark:text-martial-300"> Martial archetype ability highlighted.</span>}
+        {powerAbility && <span className="text-power-fg"> Power archetype ability highlighted.</span>}
+        {martialAbility && <span className="text-martial-fg"> Martial archetype ability highlighted.</span>}
       </p>
       {draft.creationMode === 'path' && draft.archetype?.name && (
         <PathHelpCard pathName={draft.archetype.name}>
           {pathPrimaryAbility ? (
             <>
-              you should prioritize having a high <strong className="text-primary-700 dark:text-primary-300 capitalize">{pathPrimaryAbility}</strong>
+              you should prioritize having a high <strong className="text-primary-fg capitalize">{pathPrimaryAbility}</strong>
               {pathSecondaryAbility ? (
-                <> and <strong className="text-primary-700 dark:text-primary-300 capitalize">{pathSecondaryAbility}</strong></>
+                <> and <strong className="text-primary-fg capitalize">{pathSecondaryAbility}</strong></>
               ) : null}
               !
             </>
@@ -91,22 +91,7 @@ export function AbilitiesStep() {
         />
       </div>
       
-      {/* Navigation */}
-      <div className="flex justify-between">
-        <Button
-          variant="secondary"
-          onClick={prevStep}
-        >
-          ← Back
-        </Button>
-        
-        <Button
-          onClick={nextStep}
-          disabled={!canContinue}
-        >
-          Continue →
-        </Button>
-      </div>
+      <CreatorStepFooter onBack={prevStep} onContinue={nextStep} continueDisabled={!canContinue} />
     </div>
   );
 }

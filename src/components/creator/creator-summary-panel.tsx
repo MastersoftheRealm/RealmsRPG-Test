@@ -14,7 +14,12 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import { Card, Chip } from '@/components/ui';
+import type { chipVariants } from '@/components/ui/chip';
+import type { VariantProps } from 'class-variance-authority';
 import type { ReactNode } from 'react';
+
+type ChipVariant = NonNullable<VariantProps<typeof chipVariants>['variant']>;
 
 export interface SummaryItem {
   /** Label for the resource */
@@ -62,6 +67,8 @@ export interface CreatorSummaryPanelProps {
   /** Badge displayed prominently (for rarity, etc.) */
   badge?: {
     label: string;
+    variant?: ChipVariant;
+    /** @deprecated Prefer `variant` (canonical chip token) */
     className?: string;
   };
   /** Summary items to display (resource tracking with remaining points) */
@@ -106,13 +113,13 @@ function getVariantClasses(variant: SummaryItem['variant'], remaining: number | 
 
   switch (variant) {
     case 'danger':
-      return 'bg-danger-light text-danger-700 dark:text-danger-400';
+      return 'bg-danger-light text-danger-fg';
     case 'success':
-      return 'bg-success-light text-success-700 dark:text-success-400';
+      return 'bg-success-light text-success-fg';
     case 'warning':
-      return 'bg-warning-light text-warning-700 dark:text-warning-300';
+      return 'bg-warning-light text-warning-fg';
     case 'info':
-      return 'bg-info-light text-info-600 dark:text-info-400';
+      return 'bg-info-light text-info-fg';
     default:
       return 'bg-surface-alt text-secondary';
   }
@@ -133,10 +140,7 @@ export function CreatorSummaryPanel({
   className,
 }: CreatorSummaryPanelProps) {
   return (
-    <div className={cn(
-      'bg-surface rounded-xl shadow-md p-6',
-      className
-    )}>
+    <Card className={cn('shadow-md p-6', className)}>
       <h2 className="text-lg font-bold text-text-primary mb-4">{title}</h2>
 
       {/* Resource boxes (compact, for creature creator - ability/skill/feat/training/currency) */}
@@ -167,12 +171,18 @@ export function CreatorSummaryPanel({
       {/* Badge (Rarity, etc.) */}
       {badge && (
         <div className="text-center mb-6">
-          <span className={cn(
-            'inline-block px-4 py-1 rounded-full font-bold text-lg',
-            badge.className || 'bg-surface-alt text-text-secondary'
-          )}>
-            {badge.label}
-          </span>
+          {badge.variant ? (
+            <Chip variant={badge.variant} size="lg" className="font-bold">
+              {badge.label}
+            </Chip>
+          ) : (
+            <span className={cn(
+              'inline-block px-4 py-1 rounded-full font-bold text-lg',
+              badge.className || 'bg-surface-alt text-text-secondary'
+            )}>
+              {badge.label}
+            </span>
+          )}
         </div>
       )}
 
@@ -317,6 +327,6 @@ export function CreatorSummaryPanel({
           {children}
         </div>
       )}
-    </div>
+    </Card>
   );
 }

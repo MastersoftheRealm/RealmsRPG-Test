@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Alert, Button, Modal, PageContainer, PageHeader, Spinner, TabNavigation } from '@/components/ui';
+import { Button, Chip, Modal, PageContainer, PageHeader, LoadingState, EmptyState, TabNavigation, TabContentPanel, useTabGroup } from '@/components/ui';
+import { ErrorDisplay } from '@/components/shared';
+import { apiFetch } from '@/lib/api-client';
 
 type TabId =
   | 'codex_feats'
@@ -58,10 +60,10 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
   minute: '2-digit',
 });
 
-function operationChipClass(operation: Operation): string {
-  if (operation === 'create') return 'bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400';
-  if (operation === 'delete') return 'bg-danger-100 text-danger-700 dark:bg-danger-900/30 dark:text-danger-400';
-  return 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300';
+function operationChipVariant(operation: Operation): 'success' | 'danger' | 'primary' {
+  if (operation === 'create') return 'success';
+  if (operation === 'delete') return 'danger';
+  return 'primary';
 }
 
 function readEntityName(entry: ChangeLogEntry): string {
@@ -75,23 +77,22 @@ function readActorLabel(entry: ChangeLogEntry): string {
 }
 
 export default function AdminChangelogsPage() {
+  const { tabGroupId, sharedPanelId } = useTabGroup();
   const [activeTab, setActiveTab] = useState<TabId>('codex_feats');
   const [rows, setRows] = useState<ChangeLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<ChangeLogEntry | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
 
-    fetch(`/api/admin/changelogs?entityType=${encodeURIComponent(activeTab)}&limit=200`)
-      .then(async (res) => {
-        const payload = (await res.json().catch(() => ({}))) as { error?: string };
-        if (!res.ok) throw new Error(payload.error ?? (res.status === 403 ? 'Forbidden' : 'Failed to load changelogs'));
-        return payload as unknown as ChangeLogEntry[];
-      })
+    apiFetch<ChangeLogEntry[]>(
+      `/api/admin/changelogs?entityType=${encodeURIComponent(activeTab)}&limit=200`
+    )
       .then((data) => {
         if (!cancelled) setRows(Array.isArray(data) ? data : []);
       })
@@ -105,7 +106,7 @@ export default function AdminChangelogsPage() {
     return () => {
       cancelled = true;
     };
-  }, [activeTab]);
+  }, [activeTab, reloadToken]);
 
   const tabs = useMemo(
     () =>
@@ -139,16 +140,17 @@ export default function AdminChangelogsPage() {
         }}
         variant="underline"
         className="mb-6"
+        tabGroupId={tabGroupId}
+        sharedTabPanelId={sharedPanelId}
       />
 
+      <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab}>
       {loading ? (
-        <div className="flex justify-center py-12">
-          <Spinner size="lg" />
-        </div>
+        <LoadingState size="lg" padding="md" />
       ) : error ? (
-        <Alert variant="danger">{error}</Alert>
+        <ErrorDisplay message={error} onRetry={() => setReloadToken((token) => token + 1)} />
       ) : rows.length === 0 ? (
-        <p className="text-text-muted dark:text-text-secondary italic">No changelog entries yet for this tab.</p>
+        <EmptyState title="No changelog entries yet for this tab." size="sm" />
       ) : (
         <div className="space-y-3">
           {rows.map((entry) => (
@@ -162,9 +164,13 @@ export default function AdminChangelogsPage() {
                     {readEntityName(entry)} <span className="text-text-secondary font-normal">({entry.entity_id})</span>
                   </h2>
                 </div>
-                <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ${operationChipClass(entry.operation)}`}>
+                <Chip
+                  variant={operationChipVariant(entry.operation)}
+                  size="sm"
+                  className="uppercase tracking-wide font-semibold"
+                >
                   {entry.operation}
-                </span>
+                </Chip>
               </div>
 
               <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
@@ -184,6 +190,7 @@ export default function AdminChangelogsPage() {
           ))}
         </div>
       )}
+      </TabContentPanel>
 
       <Modal
         isOpen={selectedEntry !== null}

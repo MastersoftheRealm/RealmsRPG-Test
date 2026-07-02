@@ -10,10 +10,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Plus, Wand2, Swords, Shield, Users, LogIn, Sparkles } from 'lucide-react';
 import { useAuth } from '@/hooks';
-import { PageContainer, PageHeader, TabNavigation, Button, useToast } from '@/components/ui';
-import { ContextHelpTooltip, DeleteConfirmModal, LoginPromptModal, SegmentedControl } from '@/components/shared';
+import { PageContainer, PageHeader, TabNavigation, TabContentPanel, useTabGroup, Button, useToast } from '@/components/ui';
+import { DeleteConfirmModal, LoginPromptModal, SegmentedControl, LoadingState } from '@/components/shared';
 import {
   useUserPowers,
   useUserTechniques,
@@ -25,7 +26,7 @@ import {
   useDeleteEmpoweredTechnique,
   useDeleteItem,
   useDeleteCreature,
-  usePublicLibrary,
+  useOfficialLibrary,
   useEnhancedItems,
   useDeleteEnhancedItem,
 } from '@/hooks';
@@ -64,29 +65,50 @@ export default function LibraryPage() {
 }
 
 function LibraryContent() {
-  const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const viewParam = searchParams.get('view');
+  const { tabGroupId, sharedPanelId } = useTabGroup();
+  const { user, initialized: authInitialized } = useAuth();
   const isGuest = !user;
   const { showToast } = useToast();
   const [libraryMode, setLibraryMode] = useState<LibraryMode>('public');
+  const [modeInitialized, setModeInitialized] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>('powers');
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: TabId; item: DisplayItem | UserEnhancedItem } | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   useEffect(() => {
-    if (!isGuest) setLibraryMode('my');
-  }, [isGuest]);
+    if (!authInitialized) return;
+    if (!modeInitialized) {
+      if (viewParam === 'realms') {
+        setLibraryMode('public');
+      } else {
+        setLibraryMode(user ? 'my' : 'public');
+      }
+      setModeInitialized(true);
+    }
+  }, [authInitialized, user, modeInitialized, viewParam]);
 
-  const { data: powers = [] } = useUserPowers();
-  const { data: techniques = [] } = useUserTechniques();
-  const { data: empoweredTechniques = [] } = useUserEmpoweredTechniques();
-  const { data: items = [] } = useUserItems();
-  const { data: creatures = [] } = useUserCreatures();
+  // The Enhanced tab only exists in My Library; if we switch to Realms mode
+  // while it's active, fall back to a valid tab so content doesn't go blank.
+  useEffect(() => {
+    if (libraryMode === 'public' && activeTab === 'enhanced') setActiveTab('powers');
+  }, [libraryMode, activeTab]);
 
-  const { data: publicPowers = [] } = usePublicLibrary('powers');
-  const { data: publicTechniques = [] } = usePublicLibrary('techniques');
-  const { data: publicEmpoweredTechniques = [] } = usePublicLibrary('empowered-techniques');
-  const { data: publicItems = [] } = usePublicLibrary('items');
-  const { data: publicCreatures = [] } = usePublicLibrary('creatures');
+  const fetchMyLibrary = libraryMode === 'my' && !!user;
+  const fetchPublicLibrary = libraryMode === 'public';
+
+  const { data: powers = [] } = useUserPowers({ enabled: fetchMyLibrary });
+  const { data: techniques = [] } = useUserTechniques({ enabled: fetchMyLibrary });
+  const { data: empoweredTechniques = [] } = useUserEmpoweredTechniques({ enabled: fetchMyLibrary });
+  const { data: items = [] } = useUserItems({ enabled: fetchMyLibrary });
+  const { data: creatures = [] } = useUserCreatures({ enabled: fetchMyLibrary });
+
+  const { data: publicPowers = [] } = useOfficialLibrary('powers', { enabled: fetchPublicLibrary });
+  const { data: publicTechniques = [] } = useOfficialLibrary('techniques', { enabled: fetchPublicLibrary });
+  const { data: publicEmpoweredTechniques = [] } = useOfficialLibrary('empowered-techniques', { enabled: fetchPublicLibrary });
+  const { data: publicItems = [] } = useOfficialLibrary('items', { enabled: fetchPublicLibrary });
+  const { data: publicCreatures = [] } = useOfficialLibrary('creatures', { enabled: fetchPublicLibrary });
 
   const deletePower = useDeletePower();
   const deleteTechnique = useDeleteTechnique();
@@ -95,7 +117,7 @@ function LibraryContent() {
   const deleteCreature = useDeleteCreature();
   const deleteEnhancedItem = useDeleteEnhancedItem();
 
-  const { data: enhancedItems = [] } = useEnhancedItems();
+  const { data: enhancedItems = [] } = useEnhancedItems('user', { enabled: fetchMyLibrary });
 
   const myCounts: Record<TabId, number> = {
     powers: powers.length,
@@ -147,7 +169,6 @@ function LibraryContent() {
       }
       setDeleteConfirm(null);
     } catch (error) {
-      console.error('Failed to delete:', error);
       showToast((error as Error)?.message ?? 'Failed to delete item', 'error');
     }
   };
@@ -156,15 +177,24 @@ function LibraryContent() {
     id: tab.id,
     label: tab.label,
     icon: tab.icon,
-    badge: counts[tab.id].toString(),
+    count: counts[tab.id],
   }));
 
   const isPublic = libraryMode === 'public';
 
+  if (!authInitialized || !modeInitialized) {
+    return (
+      <PageContainer size="xl">
+        <PageHeader title="Library" />
+        <LoadingState message="Loading library..." />
+      </PageContainer>
+    );
+  }
+
   return (
     <PageContainer size="xl">
       {isGuest && (
-        <div className="mb-4 flex items-center justify-between gap-4 rounded-lg bg-primary-600/10 border border-primary-600/20 px-4 py-3 text-text-primary">
+        <div className="mb-4 flex items-center justify-between gap-4 rounded-lg bg-primary-subtle-bg border border-primary-subtle-border px-4 py-3 text-text-primary">
           <span>You&apos;re browsing the Realms Library. Sign in to see My Library and add items to your collection.</span>
           <Link href="/login?returnTo=/library">
             <Button variant="primary" size="sm">
@@ -179,12 +209,6 @@ function LibraryContent() {
         description={isPublic ? 'Official Realms content. Add items to My Library to use as-is or customize.' : 'Your custom powers, techniques, armaments, and creatures'}
         actions={
           <div className="flex items-center gap-2">
-            <ContextHelpTooltip
-              tooltipKey="library.page.modeHelp"
-              scope="page:/library"
-              label="Library mode help"
-              placement="left"
-            />
             {!isPublic && !isGuest ? (
               <Link href={currentTab.createHref}>
                 <Button variant="primary">
@@ -219,9 +243,12 @@ function LibraryContent() {
           activeTab={activeTab}
           onTabChange={(tabId) => setActiveTab(tabId as TabId)}
           variant="underline"
+          tabGroupId={tabGroupId}
+          sharedTabPanelId={sharedPanelId}
         />
       </div>
 
+      <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab}>
       {isPublic ? (
         <LibraryPublicContent
           activeTab={activeTab as LibraryPublicTabId}
@@ -238,6 +265,7 @@ function LibraryContent() {
           {activeTab === 'enhanced' && <LibraryEnhancedTab onDelete={(item) => setDeleteConfirm({ type: 'enhanced', item })} />}
         </>
       )}
+      </TabContentPanel>
 
       {deleteConfirm && (
         <DeleteConfirmModal

@@ -19,9 +19,11 @@ import {
   Alert,
   SearchInput,
   TabNavigation,
+  TabContentPanel,
+  useTabGroup,
   useToast,
 } from '@/components/ui';
-import { DeleteConfirmModal, HubListRow } from '@/components/shared';
+import { DeleteConfirmModal, HubListRow, ErrorDisplay } from '@/components/shared';
 import {
   useCraftingSessions,
   useDeleteCraftingSession,
@@ -38,7 +40,7 @@ const STATUS_LABELS: Record<CraftingSessionStatus, string> = {
 
 const STATUS_COLORS: Record<CraftingSessionStatus, string> = {
   planned: 'bg-surface-alt text-text-secondary',
-  in_progress: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  in_progress: 'bg-success-light text-success-fg',
   completed: 'bg-surface-alt text-text-muted dark:text-text-secondary',
 };
 
@@ -65,10 +67,11 @@ export default function CraftingHubPage() {
 }
 
 function CraftingHubContent() {
+  const { tabGroupId, sharedPanelId } = useTabGroup();
   const router = useRouter();
   const { user } = useAuth();
   const { showToast } = useToast();
-  const { data: sessions = [], isLoading, error } = useCraftingSessions();
+  const { data: sessions = [], isLoading, error, refetch } = useCraftingSessions();
   const deleteMutation = useDeleteCraftingSession();
   const createSession = useCreateCraftingSession();
 
@@ -118,7 +121,6 @@ function CraftingHubContent() {
       });
       router.push(`/crafting/${id}`);
     } catch (err) {
-      console.error('Failed to start crafting session:', err);
       showToast((err as Error)?.message ?? 'Failed to start crafting session', 'error');
     }
   };
@@ -133,7 +135,6 @@ function CraftingHubContent() {
       await deleteMutation.mutateAsync(deleteTarget.id);
       setDeleteTarget(null);
     } catch (err) {
-      console.error('Failed to delete crafting session:', err);
       showToast((err as Error)?.message ?? 'Failed to delete session', 'error');
     }
   };
@@ -141,11 +142,11 @@ function CraftingHubContent() {
   return (
     <PageContainer size="xl">
       {!user && (
-        <div className="mb-4 rounded-lg bg-primary-600/10 border border-primary-600/20 px-4 py-3 text-text-primary text-sm">
+        <div className="mb-4 rounded-lg bg-primary-subtle-bg border border-primary-subtle-border px-4 py-3 text-text-primary text-sm">
           You&apos;re not signed in. Sign in to save crafting sessions to your account.
           <Link
             href="/login?returnTo=/crafting"
-            className="ml-2 font-medium text-primary-600 dark:text-primary-400 hover:underline"
+            className="ml-2 font-medium text-primary-link-fg hover:underline"
           >
             Sign in
           </Link>
@@ -176,9 +177,11 @@ function CraftingHubContent() {
         }))}
         activeTab={activeTab}
         onTabChange={(id) => setActiveTab(id as TabId)}
+        tabGroupId={tabGroupId}
+        sharedTabPanelId={sharedPanelId}
       />
 
-      <div className="mt-6">
+      <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab} className="mt-6">
         <div className="flex flex-wrap items-center gap-3 mb-4 min-w-0">
           <div className="flex-1 min-w-[200px]">
             <SearchInput
@@ -192,9 +195,10 @@ function CraftingHubContent() {
         {isLoading ? (
           <LoadingState message="Loading crafting sessions..." />
         ) : error ? (
-          <Alert variant="danger" title="Failed to load crafting sessions">
-            {error.message}
-          </Alert>
+          <ErrorDisplay
+            message={error.message || 'Failed to load crafting sessions'}
+            onRetry={() => { void refetch(); }}
+          />
         ) : filteredSessions.length === 0 ? (
           <EmptyState
             icon={<Hammer className="w-10 h-10" />}
@@ -223,7 +227,7 @@ function CraftingHubContent() {
               <HubListRow
                 key={session.id}
                 icon={<Hammer className="w-5 h-5" />}
-                iconContainerClassName="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                iconContainerClassName="bg-warning-light text-warning-fg"
                 title={session.itemName}
                 badge={STATUS_LABELS[session.status]}
                 badgeClassName={STATUS_COLORS[session.status]}
@@ -247,7 +251,7 @@ function CraftingHubContent() {
             ))}
           </div>
         )}
-      </div>
+      </TabContentPanel>
 
       {deleteTarget && (
         <DeleteConfirmModal

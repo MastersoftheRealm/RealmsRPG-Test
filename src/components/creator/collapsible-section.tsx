@@ -11,7 +11,7 @@
 import { useState, type ReactNode } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui';
+import { Button, Card } from '@/components/ui';
 
 export interface CollapsibleSectionProps {
   /** Section title */
@@ -94,10 +94,7 @@ export function CollapsibleSection({
   };
 
   return (
-    <div className={cn(
-      'rounded-xl border border-border-light bg-surface shadow-sm overflow-hidden',
-      className
-    )}>
+    <Card className={cn('overflow-hidden p-0', className)}>
       {/* Header: div with role="button" so rightSlot can contain real <button>s without nesting */}
       <div
         role="button"
@@ -112,7 +109,7 @@ export function CollapsibleSection({
           {icon && <span className="text-xl flex-shrink-0">{icon}</span>}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-bold text-primary dark:text-primary-300">{title}</h3>
+              <h3 className="font-bold text-primary-fg">{title}</h3>
               {!isExpanded && collapsedSummary && (
                 <span className="text-sm font-medium text-text-secondary dark:text-text-primary truncate">
                   {collapsedSummary}
@@ -122,8 +119,8 @@ export function CollapsibleSection({
                 <span className={cn(
                   'px-2 py-0.5 text-xs font-medium rounded-full flex-shrink-0',
                   points.spent > points.total 
-                    ? 'bg-danger-light text-danger-700 dark:text-danger-400' 
-                    : 'bg-warning-light text-warning-700 dark:text-warning-300'
+                    ? 'bg-danger-light text-danger-fg' 
+                    : 'bg-warning-light text-warning-fg'
                 )}>
                   {points.spent}/{points.total} pts
                 </span>
@@ -149,7 +146,7 @@ export function CollapsibleSection({
                 e.stopPropagation();
                 onEnabledChange?.(false);
               }}
-              className="text-danger-600 dark:text-danger-400 hover:bg-danger-light dark:hover:bg-danger-900/20"
+              className="text-danger-fg hover:bg-danger-light dark:hover:bg-danger-900/20"
             >
               Remove
             </Button>
@@ -163,6 +160,6 @@ export function CollapsibleSection({
           {children}
         </div>
       )}
-    </div>
+    </Card>
   );
 }

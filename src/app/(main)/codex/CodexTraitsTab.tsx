@@ -16,9 +16,9 @@ import {
   GridListRow,
   ListEmptyState as EmptyState,
 } from '@/components/shared';
-import { EmptyState as UiEmptyState } from '@/components/ui';
 import { useTraits, type Trait } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
+import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { traitsByIdMap, choiceTraitOptionIdsToChipData } from '@/lib/choice-trait';
 
 const TRAIT_GRID_COLUMNS = '1.5fr 0.6fr 0.6fr 40px';
@@ -30,7 +30,8 @@ const TRAIT_COLUMNS = [
 ];
 
 export function CodexTraitsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  const { data: traits, isLoading, error } = useTraits();
+  const loadPublicCodex = codexMode === 'public';
+  const { data: traits, isLoading, error, refetch } = useTraits({ enabled: loadPublicCodex });
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
 
@@ -50,16 +51,10 @@ export function CodexTraitsTab({ codexMode = 'public' }: { codexMode?: 'public' 
   const traitById = useMemo(() => traitsByIdMap(traits || []), [traits]);
 
   if (codexMode === 'my') {
-    return (
-      <UiEmptyState
-        size="lg"
-        title="My Codex: Traits"
-        description="Custom traits are not available yet. For now, use Realms Codex."
-      />
-    );
+    return <CodexMyCodexEmpty />;
   }
 
-  if (error) return <ErrorState message="Failed to load traits" />;
+  if (error) return <ErrorState message="Failed to load traits" onRetry={() => refetch()} />;
 
   return (
     <div>

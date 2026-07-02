@@ -23,6 +23,8 @@ import {
   PageContainer,
   PageHeader,
   TabNavigation,
+  TabContentPanel,
+  useTabGroup,
   Button,
   Input,
   Textarea,
@@ -84,6 +86,7 @@ export default function CampaignsPage() {
 }
 
 function CampaignsContent() {
+  const { tabGroupId, sharedPanelId } = useTabGroup();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabId>('my-campaigns');
@@ -122,10 +125,12 @@ function CampaignsContent() {
           }))}
           activeTab={activeTab}
           onTabChange={(id) => setActiveTab(id as TabId)}
+          tabGroupId={tabGroupId}
+          sharedTabPanelId={sharedPanelId}
         />
       </div>
 
-      <div className="mt-6 min-w-0">
+      <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab} className="mt-6 min-w-0">
         {activeTab === 'my-campaigns' && (
           <MyCampaignsTab
             campaigns={campaigns}
@@ -155,7 +160,7 @@ function CampaignsContent() {
             }}
           />
         )}
-      </div>
+      </TabContentPanel>
     </PageContainer>
   );
 }
@@ -218,7 +223,7 @@ function MyCampaignsTab({
         <Link
           key={campaign.id}
           href={`/campaigns/${campaign.id}`}
-          className="block rounded-xl border border-border-light bg-surface p-5 shadow-sm hover:border-primary-300 hover:shadow-md transition-all"
+          className="block rounded-xl border border-border-light bg-surface p-5 shadow-sm hover:border-primary-outline-border hover:shadow-md transition-all"
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
@@ -291,12 +296,12 @@ function CreateCampaignTab({ onSuccess }: { onSuccess: () => void }) {
   if (createdInviteCode) {
     return (
       <div className="rounded-xl border border-success-200 bg-success-50 p-6 max-w-lg">
-        <h2 className="font-bold text-lg text-success-800">Campaign created!</h2>
-        <p className="mt-2 text-success-700">
+        <h2 className="font-bold text-lg text-success-fg">Campaign created!</h2>
+        <p className="mt-2 text-success-fg">
           Share this invite code with players so they can join:
         </p>
         <div className="mt-4 p-4 bg-surface rounded-lg border border-success-200">
-          <code className="text-2xl font-mono font-bold tracking-widest text-primary-700">
+          <code className="text-2xl font-mono font-bold tracking-widest text-primary-subtle-fg">
             {createdInviteCode}
           </code>
         </div>
@@ -437,11 +442,6 @@ function JoinCampaignTab({
           <label className="block text-sm font-medium text-text-secondary">
             Invite Code
           </label>
-          <ContextHelpTooltip
-            tooltipKey="campaigns.page.inviteHelp"
-            scope="page:/campaigns"
-            label="Invite code help"
-          />
         </div>
         <Input
           value={inviteCode}
@@ -474,7 +474,7 @@ function JoinCampaignTab({
               className={cn(
                 'flex items-center gap-3 p-3 rounded-lg cursor-pointer border transition-colors',
                 selectedCharacterId === c.id
-                  ? 'border-primary-500 bg-primary-50'
+                  ? 'border-primary-outline-border bg-primary-subtle-bg'
                   : 'border-transparent hover:bg-surface-alt'
               )}
             >

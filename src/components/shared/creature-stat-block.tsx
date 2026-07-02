@@ -16,6 +16,7 @@ import {
   type EntityTechniqueRow,
 } from './entity-library-sections';
 import { SectionHeader } from './section-header';
+import { Card } from '@/components/ui';
 import { ListHeader, type ListColumn } from './list-header';
 import { RollButton } from './roll-button';
 import { useRollsOptional } from '@/components/character-sheet/roll-context';
@@ -484,6 +485,7 @@ export function CreatureStatBlock({
             parts: userMatch.parts || [],
             damage: userMatch.damage,
             actionType: userMatch.actionType,
+            isReaction: userMatch.isReaction,
             range: userMatch.range,
             area: userMatch.area,
             duration: userMatch.duration,
@@ -494,7 +496,8 @@ export function CreatureStatBlock({
               description: officialMatch.description != null ? String(officialMatch.description) : undefined,
               parts: ((officialMatch.parts ?? (officialMatch.payload as Record<string, unknown> | undefined)?.parts) as unknown[]) ?? [],
               damage: (officialMatch.damage ?? (officialMatch.payload as Record<string, unknown> | undefined)?.damage) as unknown,
-              actionType: (officialMatch.actionType ?? (officialMatch.payload as Record<string, unknown> | undefined)?.actionType) as unknown,
+              actionType: (officialMatch.actionType ?? (officialMatch.payload as Record<string, unknown> | undefined)?.actionType) as string | undefined,
+              isReaction: (officialMatch.isReaction ?? (officialMatch.payload as Record<string, unknown> | undefined)?.isReaction) as boolean | undefined,
               range: (officialMatch.range ?? (officialMatch.payload as Record<string, unknown> | undefined)?.range) as unknown,
               area: (officialMatch.area ?? (officialMatch.payload as Record<string, unknown> | undefined)?.area) as unknown,
               duration: (officialMatch.duration ?? (officialMatch.payload as Record<string, unknown> | undefined)?.duration) as unknown,
@@ -512,6 +515,8 @@ export function CreatureStatBlock({
           description: baseDescription,
           parts: parts as never,
           damage: Array.isArray(damage) ? (damage as never) : undefined,
+          actionType: enriched?.actionType as string | undefined,
+          isReaction: enriched?.isReaction as boolean | undefined,
         },
         powerPartsDb as never
       );
@@ -583,6 +588,8 @@ export function CreatureStatBlock({
             parts: userMatch.parts || [],
             damage: userMatch.damage,
             weapon: userMatch.weapon,
+            actionType: userMatch.actionType,
+            isReaction: userMatch.isReaction,
           }
         : officialMatch
           ? {
@@ -591,6 +598,8 @@ export function CreatureStatBlock({
               parts: ((officialMatch.parts ?? (officialMatch.payload as Record<string, unknown> | undefined)?.parts) as unknown[]) ?? [],
               damage: (officialMatch.damage ?? (officialMatch.payload as Record<string, unknown> | undefined)?.damage) as unknown,
               weapon: (officialMatch.weapon ?? (officialMatch.payload as Record<string, unknown> | undefined)?.weapon) as unknown,
+              actionType: (officialMatch.actionType ?? (officialMatch.payload as Record<string, unknown> | undefined)?.actionType) as string | undefined,
+              isReaction: (officialMatch.isReaction ?? (officialMatch.payload as Record<string, unknown> | undefined)?.isReaction) as boolean | undefined,
             }
           : null;
 
@@ -606,6 +615,8 @@ export function CreatureStatBlock({
           parts: parts as never,
           damage: Array.isArray(damage) ? (damage as never)[0] : undefined,
           weapon: (enriched?.weapon as never) ?? undefined,
+          actionType: enriched?.actionType as string | undefined,
+          isReaction: enriched?.isReaction as boolean | undefined,
         },
         techniquePartsDb as never
       );
@@ -652,11 +663,11 @@ export function CreatureStatBlock({
       align: 'center',
       className:
         archetype === 'Power'
-          ? 'text-power-dark'
+          ? 'text-power-fg'
           : archetype === 'Martial'
-            ? 'text-martial-dark'
+            ? 'text-martial-fg'
             : archetype === 'Powered-Martial'
-              ? 'text-power-dark'
+              ? 'text-power-fg'
               : undefined,
     },
     { key: 'hp', value: maxHpDisplay, align: 'center', highlight: true },
@@ -750,7 +761,7 @@ export function CreatureStatBlock({
       expandedContent={
         <div className="space-y-4">
           {/* Header (character-sheet style, simplified) */}
-          <div className="bg-surface rounded-xl shadow-md p-4 md:p-6">
+          <Card className="shadow-md p-4 md:p-6">
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-stretch">
               {creature.imageUrl ? (
                 <div className="w-20 h-20 rounded-lg overflow-hidden border border-border-light bg-surface-alt flex-shrink-0">
@@ -765,7 +776,7 @@ export function CreatureStatBlock({
                 <h3 className="text-xl font-bold text-text-primary truncate">{creature.name}</h3>
                 <p className="text-sm text-text-secondary">{subline}</p>
                 <p className="text-sm font-semibold text-text-primary">
-                  <span className={archetype === 'Power' ? 'text-power-dark' : archetype === 'Martial' ? 'text-martial-dark' : archetype === 'Powered-Martial' ? 'text-power-dark' : undefined}>
+                  <span className={archetype === 'Power' ? 'text-power-fg' : archetype === 'Martial' ? 'text-martial-fg' : archetype === 'Powered-Martial' ? 'text-power-fg' : undefined}>
                     {archetype}
                   </span>
                   : <span className="text-text-primary">{highestAbility.displayName}</span>
@@ -784,12 +795,12 @@ export function CreatureStatBlock({
                   <span className="text-lg font-bold text-text-primary">{evasion}</span>
                   </div>
                   <div className="flex flex-col p-3 rounded-lg border bg-success-50 dark:bg-surface border-success-200 dark:border-success-800/50 min-w-[92px]">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-success-700 dark:text-success-400">Health</span>
-                  <span className="text-lg font-bold text-success-800 dark:text-success-300">{maxHpDisplay}</span>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-success-fg">Health</span>
+                  <span className="text-lg font-bold text-success-fg">{maxHpDisplay}</span>
                   </div>
                   <div className="flex flex-col p-3 rounded-lg border bg-info-50 dark:bg-surface border-info-200 dark:border-info-800/50 min-w-[92px]">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-info-700 dark:text-info-400">Energy</span>
-                  <span className="text-lg font-bold text-info-800 dark:text-info-300">{maxEnDisplay}</span>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-info-fg">Energy</span>
+                  <span className="text-lg font-bold text-info-fg">{maxEnDisplay}</span>
                   </div>
                 </div>
               </div>
@@ -855,7 +866,7 @@ export function CreatureStatBlock({
               ))}
               <p className="text-sm text-text-primary"><strong>Damage Reduction</strong> {damageReduction}</p>
             </div>
-          </div>
+          </Card>
 
           {/* Sections start full-width under the header */}
           <div className="grid gap-4 xl:grid-cols-2">

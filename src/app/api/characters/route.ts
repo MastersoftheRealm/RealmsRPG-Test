@@ -10,31 +10,12 @@ import { getSession } from '@/lib/supabase/session';
 import { ensureUserProfile } from '@/lib/ensure-user-profile';
 import { getRolePolicyForUser } from '@/lib/role-policy';
 import { buildRoleQuotaExceededResponse } from '@/lib/role-quota-messages';
-import { removeUndefined } from '@/lib/utils/object';
 import { validateJson, characterCreateSchema } from '@/lib/api-validation';
+import { prepareCharacterForCreate } from '@/lib/character-save';
 import { standardLimiter } from '@/lib/rate-limit';
 import { getCharacterListColumns } from '@/lib/character-list-columns';
+import { fetchArchetypeNameMap } from '@/lib/game/archetype-display';
 import type { Character, CharacterSummary } from '@/types';
-
-function prepareForSave(data: Partial<Character>): Record<string, unknown> {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { id, createdAt, updatedAt, ...dataToSave } = data;
-
-  const cleaned = { ...dataToSave } as Record<string, unknown>;
-  delete cleaned._displayFeats;
-  delete cleaned.allTraits;
-  delete cleaned.defenses;
-  delete cleaned.defenseBonuses;
-
-  cleaned.updatedAt = new Date().toISOString();
-  return removeUndefined(cleaned);
-}
-
-function prepareForCreate(data: Partial<Character>): Record<string, unknown> {
-  const cleaned = prepareForSave(data);
-  cleaned.createdAt = new Date().toISOString();
-  return cleaned;
-}
 
 export async function GET() {
   try {
@@ -44,11 +25,16 @@ export async function GET() {
     }
 
     const supabase = await createClient();
-    const { data: rows } = await supabase
+    const { data: rows, error: dbError } = await supabase
       .from('characters')
       .select('id, user_id, data, name, level, archetype_name, ancestry_name, status, visibility, updated_at')
       .eq('user_id', user.uid)
       .order('updated_at', { ascending: false });
+
+    if (dbError) {
+      console.error('[API Error] GET /api/characters:', dbError);
+      return NextResponse.json({ error: 'Failed to load characters' }, { status: 500 });
+    }
 
     const list = (rows ?? []) as {
       id: string;
@@ -61,12 +47,13 @@ export async function GET() {
       status?: string | null;
       visibility?: string | null;
     }[];
+
+    const archetypeNameById = await fetchArchetypeNameMap(supabase);
+
     const characters: CharacterSummary[] = list.map((r) => {
       const d = (r.data as Record<string, unknown>) ?? {};
-      const archName =
-        r.archetype_name ??
-        (d.archetype as { name?: string; type?: string })?.name ??
-        ((d.archetype as { type?: string })?.type?.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' '));
+      const listCols = getCharacterListColumns(d, { archetypeNameById });
+      const archName = listCols.archetype_name ?? r.archetype_name ?? undefined;
       return {
         id: r.id,
         name: r.name ?? (d.name as string) ?? 'Unnamed',
@@ -144,7 +131,8 @@ export async function POST(request: NextRequest) {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      const listCols = getCharacterListColumns(newData as Record<string, unknown>);
+      const archetypeNameById = await fetchArchetypeNameMap(supabase);
+      const listCols = getCharacterListColumns(newData as Record<string, unknown>, { archetypeNameById });
       const newId = crypto.randomUUID();
 
       await ensureUserProfile(supabase, user.uid);
@@ -158,8 +146,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ id: created.id });
     }
 
-    const cleanedData = prepareForCreate(data);
-    const listCols = getCharacterListColumns(cleanedData as Record<string, unknown>);
+    const cleanedData = prepareCharacterForCreate(data);
+    const archetypeNameById = await fetchArchetypeNameMap(supabase);
+    const listCols = getCharacterListColumns(cleanedData as Record<string, unknown>, { archetypeNameById });
     const newId = crypto.randomUUID();
 
     await ensureUserProfile(supabase, user.uid);

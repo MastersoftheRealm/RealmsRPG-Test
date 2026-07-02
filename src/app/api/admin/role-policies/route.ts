@@ -92,9 +92,9 @@ export async function PATCH(request: NextRequest) {
 
     const row = existing as RolePolicyRow;
     const permissionsIn = (body.permissions ?? row.permissions ?? {}) as Record<string, unknown>;
-    const permissions = {
-      ...(row.permissions ?? {}),
-      ...permissionsIn,
+    // Only persist known permission keys (allowlist) — never spread arbitrary
+    // client-supplied keys into the stored permissions blob (TASK-330).
+    const permissions: Record<string, boolean> = {
       can_upload_profile_picture: Boolean(permissionsIn.can_upload_profile_picture),
     };
 

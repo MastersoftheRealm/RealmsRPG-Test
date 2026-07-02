@@ -1,11 +1,12 @@
 /**
  * Campaign Roll Service
  * ======================
- * Client-side API calls for campaign roll logs. Uses /api/campaigns/[id]/rolls (Prisma).
+ * Client-side API calls for campaign roll logs. Uses /api/campaigns/[id]/rolls (Supabase).
  */
 
 import type { CampaignRollEntry } from '@/types/campaign-roll';
 import type { RollEntry } from '@/components/character-sheet/roll-context';
+import { apiFetch } from '@/lib/api-client';
 
 export interface AddCampaignRollParams {
   campaignId: string;
@@ -23,33 +24,23 @@ export async function addCampaignRoll({
   characterName,
   roll,
 }: AddCampaignRollParams): Promise<void> {
-  const res = await fetch(`/api/campaigns/${encodeURIComponent(campaignId)}/rolls`, {
+  await apiFetch(`/api/campaigns/${encodeURIComponent(campaignId)}/rolls`, {
     method: 'POST',
     credentials: 'same-origin',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       characterId,
       characterName,
       roll,
     }),
   });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error((err as { error?: string }).error ?? 'Failed to add roll');
-  }
 }
 
 /**
  * Get campaign rolls (for polling).
  */
 export async function getCampaignRolls(campaignId: string): Promise<CampaignRollEntry[]> {
-  const res = await fetch(`/api/campaigns/${encodeURIComponent(campaignId)}/rolls`, {
-    credentials: 'same-origin',
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error((err as { error?: string }).error ?? 'Failed to fetch rolls');
-  }
-  return res.json();
+  return apiFetch<CampaignRollEntry[]>(
+    `/api/campaigns/${encodeURIComponent(campaignId)}/rolls`,
+    { credentials: 'same-origin' }
+  );
 }

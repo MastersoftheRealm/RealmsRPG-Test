@@ -19,12 +19,16 @@ import { Plus } from 'lucide-react';
 import { useRollsOptional } from './roll-context';
 import { PointStatus, EditSectionToggle, getEditState, SkillRow } from '@/components/shared';
 import { ABILITY_ABBR } from '@/lib/constants/skills';
-import { Button } from '@/components/ui';
+import { Button, Card, TableScroll } from '@/components/ui';
 import { calculateSkillBonusWithProficiency, calculateSubSkillBonusWithProficiency } from '@/lib/game/formulas';
+import {
+  calculateCharacterSkillPointsSpent,
+  getSkillValueIncreaseCost,
+  resolveSkillAllocationRules,
+  buildSpeciesSkillIdSet,
+} from '@/lib/game/skill-allocation';
+import { useGameRules } from '@/hooks';
 import type { Abilities } from '@/types';
-
-// Game rule: skill values are capped at 3
-const MAX_SKILL_VALUE = 3;
 
 interface Skill {
   id: string;
@@ -34,7 +38,7 @@ interface Skill {
   prof?: boolean;
   baseSkill?: string;
   ability?: string;
-  // Available abilities for this skill (from RTDB)
+  // Available abilities for this skill (from the Codex)
   availableAbilities?: string[];
 }
 
@@ -72,6 +76,8 @@ export function SkillsSection({
   className,
 }: SkillsSectionProps) {
   const rollContext = useRollsOptional();
+  const { rules } = useGameRules();
+  const skillRules = resolveSkillAllocationRules(rules);
   
   // Local state for whether this section is actively being edited
   const [isSectionEditing, setIsSectionEditing] = useState(false);
@@ -208,23 +214,45 @@ export function SkillsSection({
     return result;
   }, [baseSkills, subSkillsByParent]);
   
-  // Calculate total skill points spent on skills only (excluding species skill proficiency costs)
-  const totalSpentFromSkills = useMemo(() => {
-    return skills.reduce((sum, skill) => {
-      let cost = skill.skill_val || 0;
-      // Proficiency costs 1 for base skills, but species skills are free
-      if (skill.prof && !skill.baseSkill) {
-        if (!isSpeciesSkill(skill.name, skill.id)) {
-          cost += 1;
-        }
-      }
-      return sum + cost;
-    }, 0);
-  }, [skills]);
+  // Calculate total skill points spent (includes past-cap costs and defenses)
+  const speciesSkillIdSet = useMemo(
+    () => buildSpeciesSkillIdSet(speciesSkills.filter((ss) => ss !== '0'), skills),
+    [speciesSkills, skills]
+  );
+
+  const totalSpentFromSkills = useMemo(
+    () =>
+      calculateCharacterSkillPointsSpent(
+        skills,
+        speciesSkillIdSet,
+        undefined,
+        rules
+      ),
+    [skills, speciesSkillIdSet, rules]
+  );
 
   // Use page-provided spent (includes defenses) when available for display and pencil state; else skills-only
   const totalSpent = spentSkillPointsProp ?? totalSpentFromSkills;
   const remaining = totalSkillPoints !== undefined ? totalSkillPoints - totalSpent : undefined;
+
+  const canIncreaseSkill = (skill: Skill): boolean => {
+    if (remaining === undefined || remaining <= 0) return false;
+    const isSubSkill = Boolean(skill.baseSkill);
+    const isFromSpecies = isSpeciesSkill(skill.name, skill.id);
+
+    if (isSubSkill) {
+      if (!skill.prof) {
+        const parent = findParentSkill(skill.baseSkill);
+        if (!parent?.prof) return false;
+        return remaining >= skillRules.gainProficiencyCost;
+      }
+      return remaining >= getSkillValueIncreaseCost(skill.skill_val, true, skillRules);
+    }
+    if (!skill.prof && !isFromSpecies) {
+      return remaining >= skillRules.gainProficiencyCost;
+    }
+    return remaining >= getSkillValueIncreaseCost(skill.skill_val, false, skillRules);
+  };
 
   // Single source of truth: use shared formulas (GAME_RULES) — same as character creator and creature creator
   const getSkillBonus = (skill: Skill): number => {
@@ -255,7 +283,7 @@ export function SkillsSection({
     totalSkillPoints !== undefined ? getEditState(totalSpent, totalSkillPoints) : 'normal';
   
   return (
-    <div className={cn("bg-surface rounded-xl shadow-md p-4 md:p-6", className)}>
+    <Card className={cn('shadow-md p-4 md:p-6', className)}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold text-text-primary">Skills</h2>
@@ -307,7 +335,7 @@ export function SkillsSection({
       </div>
       
       {/* Skills Table */}
-      <div className="overflow-x-auto">
+      <TableScroll>
         <table className="w-full text-sm">
           <thead>
             <tr className="text-xs text-text-muted uppercase tracking-wider border-b-2 border-border-light">
@@ -351,7 +379,7 @@ export function SkillsSection({
                       handleSkillDecrease(skill);
                     }
                   }}
-                  canIncrease={true}
+                  canIncrease={canIncreaseSkill(skill)}
                   onRemove={showEditControls && onRemoveSkill 
                     ? () => onRemoveSkill(skill.id) 
                     : undefined
@@ -372,7 +400,7 @@ export function SkillsSection({
             {showEditControls && ' Click "Add Skill" to get started.'}
           </div>
         )}
-      </div>
-    </div>
+      </TableScroll>
+    </Card>
   );
 }

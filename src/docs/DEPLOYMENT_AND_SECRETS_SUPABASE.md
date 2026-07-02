@@ -36,7 +36,31 @@ In Vercel → Project → Settings → Environment Variables, add:
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` | All | Anon/public key (safe for client) |
 | `SUPABASE_SERVICE_ROLE_KEY` | All | **Server-only** — never expose to client |
 
-**Never** use `NEXT_PUBLIC_` prefix for `SUPABASE_SERVICE_ROLE_KEY`. `DATABASE_URL` / `DIRECT_URL` are optional (only for external migration tools); the app uses the Supabase client only.
+**Never** use `NEXT_PUBLIC_` prefix for `SUPABASE_SERVICE_ROLE_KEY`. `DATABASE_URL` / `DIRECT_URL` are optional for the Next.js app; they are **required for local full-database backups** (`npm run db:backup`).
+
+### Local database backup
+
+From the project root, with `DATABASE_URL` (and preferably `DIRECT_URL`, port 5432) in `.env.local` or `.env`:
+
+```bash
+npm run db:backup
+```
+
+Writes `backups/supabase-<timestamp>/` (`roles.sql`, `schema.sql`, `data.sql`). **Postgres client tools** (`pg_dump` on PATH) or **Supabase CLI** (+ Docker for CLI dumps) must be installed. This backs up the database only — not Storage. See [scripts/README.md](../../scripts/README.md).
+
+### Local Storage backup (files)
+
+```bash
+npm run storage:backup
+```
+
+Downloads all objects from `portraits` and `profile-pictures` to `backups/storage-<timestamp>/` (plus `manifest.json`). Requires `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in `.env.local` or `.env`. Override buckets: `STORAGE_BACKUP_BUCKETS=portraits,profile-pictures`.
+
+**Full local backup (database + files):**
+
+```bash
+npm run backup:all
+```
 
 All app tables live in the **public** schema. **Schema reference:** [SUPABASE_SCHEMA.md](SUPABASE_SCHEMA.md). **Which SQL to run and in what order:** [sql/README.md](../../sql/README.md). Run SQL in Supabase Dashboard → SQL Editor.
 
@@ -55,10 +79,12 @@ The app uses two buckets for image uploads. **Create these in Supabase Dashboard
 
 Enable RLS on each bucket. The app needs **SELECT, INSERT, UPDATE, and DELETE** for portrait uploads (list existing, remove old file, then upload/upsert). The canonical policy set is in **`sql/supabase-storage-policies.sql`** — run that file in Supabase Dashboard → SQL Editor.
 
-- **Read (SELECT):** Public or own path
+- **Read (SELECT):** Authenticated users may list/read only their own path (not bucket-wide). Public **read-by-key** (images in the UI) uses **Public bucket** CDN URLs from `getPublicUrl`, not bucket-wide Storage SELECT.
 - **Insert/Update/Delete:** Only the user’s own path (`portraits`: first folder = `auth.uid()`; `profile-pictures`: filename prefix = `auth.uid()`)
 
 **Create buckets:** In Supabase Dashboard → Storage → New bucket, create `portraits` and `profile-pictures`. Enable public access if you want public URLs (the app uses `getPublicUrl`). Then run **`sql/supabase-storage-policies.sql`** in the SQL Editor.
+
+**Security hardening (TASK-326):** After the base storage policies, run **`sql/supabase-storage-select-hardening-2026-06.sql`** to remove bucket-wide public SELECT (prevents Storage API listing). Keep both buckets marked **Public bucket** so direct object URLs still load in the app.
 
 **Portrait upload fails with "new row violates row-level security policy"?**  
 Run `sql/supabase-storage-policies.sql`. If you previously only added INSERT + SELECT (e.g. from an older snippet), add the UPDATE and DELETE policies for the `portraits` bucket from that file.
@@ -77,6 +103,18 @@ Run `sql/supabase-storage-policies.sql`. If you previously only added INSERT + S
 
 ---
 
+## Auth: Leaked-password protection (TASK-326)
+
+Supabase security advisors flag **Leaked password protection** when disabled. This is **not** configured via SQL — enable it in the Dashboard:
+
+1. **Supabase Dashboard** → **Authentication** → **Providers** (or **Auth** settings, depending on UI version).
+2. Find **Leaked password protection** (Have I Been Pwned / HIBP check).
+3. **Enable** it so new passwords and password changes are rejected if they appear in known breach lists.
+
+Applies to email/password sign-up and password updates (including **My Account** password change). OAuth-only users are unaffected. Re-check **Dashboard → Advisors → Security** after enabling.
+
+---
+
 ## Admin Setup
 
 Admins are configured in `public.user_profiles`:
@@ -90,7 +128,7 @@ See `ADMIN_SETUP.md` for current implementation.
 
 ## Vercel free tier usage
 
-On the free tier, watch **Edge Requests**, **Fast Data Transfer** (CDN → users), and **Edge Request CPU Duration** (charged when >10ms per request). For a full audit of CDN/query usage and optimization tips, see **`src/docs/ai/CDN_QUERY_AUDIT_2026-02-24.md`**.
+On the free tier, watch **Edge Requests**, **Fast Data Transfer** (CDN → users), and **Edge Request CPU Duration** (charged when >10ms per request). See **`src/docs/PERFORMANCE_AND_EDGE.md`**.
 
 - **Proxy (Edge):** `src/proxy.ts` runs on every *matching* request. We exclude high-volume public APIs (`/api/codex`, `/api/public`) from the matcher so those routes don’t count as Edge Requests or Edge CPU.
 - **Caching:** `/api/codex` and `/api/public/[type]` GET responses use `Cache-Control: public, max-age=300, s-maxage=600, stale-while-revalidate=300` so browsers and CDN cache for 5–10 minutes and repeated requests don’t re-download the same payload (reduces Fast Data Transfer).
@@ -139,7 +177,9 @@ On the free tier, watch **Edge Requests**, **Fast Data Transfer** (CDN → users
      - Local: `http://localhost:3000/auth/callback`, `http://localhost:3000/auth/confirm`
      - Production (Vercel): `https://your-app.vercel.app/auth/callback`, `https://your-app.vercel.app/auth/confirm`
      - Production (custom domain): `https://realmsrpg.com/auth/callback`, `https://realmsrpg.com/auth/confirm` (and `https://www.realmsrpg.com/...` if you use www)
-   - If Redirect URLs are missing, Supabase may redirect to Site URL with `?code=...`; the app will redirect to `/auth/callback` as a fallback.
+   - If Redirect URLs are missing, Supabase may redirect to Site URL with `?code=...`; the app redirects to `/auth/callback` as a fallback.
+   - **Site URL must use HTTPS** in production (e.g. `https://realmsrpg.com`, not `http://`). HTTP Site URLs break OAuth PKCE cookie scope and cause `flow_state_not_found` on Google sign-in.
+   - Ensure `https://realmsrpg.com/auth/callback` (and `/auth/confirm`) are in **Redirect URLs**, not only the Vercel preview URL.
 2. **Google OAuth (if used):** In Google Cloud Console → APIs & Services → Credentials → your OAuth client → Authorized redirect URIs, add:
    - `https://realmsrpg.com/auth/callback` (and `https://www.realmsrpg.com/auth/callback` if you use www)
    - Your Vercel URL redirect if you still use it.

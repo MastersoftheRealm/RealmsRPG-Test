@@ -10,14 +10,15 @@
 
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
+import { apiFetchOrNull } from '@/lib/api-client';
 import { BookOpen, Users, Search, Plus, Minus } from 'lucide-react';
-import { Modal, Button, Input, SearchInput } from '@/components/ui';
+import { Modal, Button, Input, SearchInput, LoadingState, EmptyState } from '@/components/ui';
 import { SegmentedControl } from '@/components/shared';
 import { ValueStepper } from '@/components/shared/value-stepper';
 import { useUserCreatures, useCampaignsFull, type UserCreature } from '@/hooks';
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
 import type { TrackedCombatant, CombatantType, SkillParticipant } from '@/types/encounter';
-import type { Campaign, CampaignCharacter } from '@/types/campaign';
+import type { Campaign, CampaignCharacter, CampaignCharacterEncounterData } from '@/types/campaign';
 
 type TabId = 'library' | 'campaign';
 
@@ -150,15 +151,16 @@ function CreatureLibraryTab({
   };
 
   if (isLoading) {
-    return <div className="py-8 text-center text-text-muted">Loading creatures...</div>;
+    return <LoadingState message="Loading creatures..." size="md" padding="sm" />;
   }
 
   if (creatures.length === 0) {
     return (
-      <div className="py-8 text-center text-text-muted">
-        <p>No creatures in your library.</p>
-        <p className="text-sm mt-1">Create creatures in the Creature Creator first.</p>
-      </div>
+      <EmptyState
+        title="No creatures in your library."
+        description="Create creatures in the Creature Creator first."
+        size="sm"
+      />
     );
   }
 
@@ -174,7 +176,7 @@ function CreatureLibraryTab({
             className={cn(
               'w-full text-left px-3 py-2 rounded-lg transition-colors',
               selected?.id === creature.id
-                ? 'bg-primary-100 dark:bg-primary-900/30 border border-primary-300'
+                ? 'bg-primary-subtle-bg border border-primary-subtle-border'
                 : 'hover:bg-surface-alt border border-transparent'
             )}
           >
@@ -193,14 +195,14 @@ function CreatureLibraryTab({
           </button>
         ))}
         {filtered.length === 0 && (
-          <p className="py-4 text-center text-text-muted text-sm">No creatures match your search.</p>
+          <EmptyState title="No creatures match your search." size="sm" />
         )}
       </div>
 
       {selected && (
         <div className="mt-4 pt-4 border-t border-border-light space-y-3">
           <p className="text-sm font-medium text-text-primary">
-            Adding: <span className="text-primary-600">{selected.name}</span>
+            Adding: <span className="text-primary-link-fg">{selected.name}</span>
           </p>
 
           <div className="flex items-center gap-4">
@@ -278,11 +280,11 @@ function CampaignCharactersTab({
       const results = await Promise.all(
         chars.map(async (c) => {
           try {
-            const res = await fetch(
+            const data = await apiFetchOrNull<CampaignCharacterEncounterData>(
               `/api/campaigns/${selectedCampaign.id}/characters/${c.userId}/${c.characterId}?scope=encounter`
             );
-            if (!res.ok) return null;
-            return { charMeta: c, data: await res.json() };
+            if (!data) return null;
+            return { charMeta: c, data };
           } catch {
             return null;
           }
@@ -336,23 +338,23 @@ function CampaignCharactersTab({
 
       onAdd(combatants);
       onClose();
-    } catch (err) {
-      console.error('Failed to fetch campaign characters:', err);
+    } catch {
     } finally {
       setLoading(false);
     }
   };
 
   if (isLoading) {
-    return <div className="py-8 text-center text-text-muted">Loading campaigns...</div>;
+    return <LoadingState message="Loading campaigns..." size="md" padding="sm" />;
   }
 
   if (campaigns.length === 0) {
     return (
-      <div className="py-8 text-center text-text-muted">
-        <p>You are not in any campaigns.</p>
-        <p className="text-sm mt-1">Join or create a campaign first.</p>
-      </div>
+      <EmptyState
+        title="You are not in any campaigns."
+        description="Join or create a campaign first."
+        size="sm"
+      />
     );
   }
 
@@ -365,7 +367,7 @@ function CampaignCharactersTab({
             <button
               key={campaign.id}
               onClick={() => setSelectedCampaign(campaign)}
-              className="w-full text-left px-4 py-3 rounded-lg border border-border-light hover:border-primary-300 hover:bg-surface-alt transition-colors"
+              className="w-full text-left px-4 py-3 rounded-lg border border-border-light hover:border-primary-outline-border hover:bg-surface-alt transition-colors"
             >
               <div className="font-medium text-text-primary">{campaign.name}</div>
               <div className="text-xs text-text-muted">
@@ -378,7 +380,7 @@ function CampaignCharactersTab({
         <div>
           <button
             onClick={() => { setSelectedCampaign(null); setSelectedChars(new Set()); }}
-            className="text-sm text-primary-600 hover:underline mb-3"
+            className="text-sm text-primary-link-fg hover:underline mb-3"
           >
             &larr; Back to campaigns
           </button>
@@ -398,13 +400,13 @@ function CampaignCharactersTab({
                   className={cn(
                     'w-full text-left px-3 py-2 rounded-lg flex items-center gap-3 transition-colors',
                     isSelected
-                      ? 'bg-primary-100 dark:bg-primary-900/30 border border-primary-300'
+                      ? 'bg-primary-subtle-bg border border-primary-subtle-border'
                       : 'hover:bg-surface-alt border border-transparent'
                   )}
                 >
                   <div className={cn(
                     'w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0',
-                    isSelected ? 'border-primary-500 bg-primary-500 text-white' : 'border-border-light'
+                    isSelected ? 'border-primary-outline-border bg-primary-button text-white' : 'border-border-light'
                   )}>
                     {isSelected && <span className="text-xs">&#10003;</span>}
                   </div>

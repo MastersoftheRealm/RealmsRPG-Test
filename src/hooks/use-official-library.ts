@@ -1,0 +1,59 @@
+/**
+ * Official Library Hook
+ * =====================
+ * Fetches official library items (no auth). Uses /api/official (columnar tables).
+ * Used for Library "Official" tab and add-to-library flows.
+ */
+
+'use client';
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchOfficialLibrary, addOfficialItemToLibrary } from '@/services/library-service';
+
+const OFFICIAL_LIBRARY_KEYS = {
+  all: ['official-library'] as const,
+  byType: (type: string) => ['official-library', type] as const,
+};
+
+export function useOfficialLibrary(
+  type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species',
+  options?: { enabled?: boolean }
+) {
+  const enabled = options?.enabled ?? true;
+  return useQuery({
+    queryKey: OFFICIAL_LIBRARY_KEYS.byType(type),
+    queryFn: () => fetchOfficialLibrary(type),
+    staleTime: 5 * 60 * 1000, // 5 min — official library changes rarely; avoid refetch on every add-modal open
+    refetchOnMount: true,
+    enabled,
+  });
+}
+
+const USER_LIBRARY_KEY_MAP: Record<string, string> = {
+  powers: 'user-powers',
+  techniques: 'user-techniques',
+  'empowered-techniques': 'user-empowered-techniques',
+  items: 'user-items',
+  creatures: 'user-creatures',
+  species: 'user-species',
+};
+
+export function useAddOfficialToLibrary(
+  type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species'
+) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (item: Record<string, unknown>) => addOfficialItemToLibrary(type, item),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: OFFICIAL_LIBRARY_KEYS.byType(type),
+        refetchType: 'all',
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [USER_LIBRARY_KEY_MAP[type]],
+        refetchType: 'all',
+      });
+    },
+  });
+}

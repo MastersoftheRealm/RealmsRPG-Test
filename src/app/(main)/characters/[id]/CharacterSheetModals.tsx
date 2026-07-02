@@ -15,9 +15,10 @@ import {
 } from '@/components/character-sheet';
 import type { EditArchetypeResult } from '@/components/character-sheet';
 import { DeleteConfirmModal, AddSkillModal, AddSubSkillModal } from '@/components/shared';
+import type { AddLibraryItemType } from '@/hooks/use-add-library-item-data';
 import type { CharacterSheetStats } from './character-sheet-utils';
 
-export type AddModalType = 'power' | 'technique' | 'weapon' | 'shield' | 'armor' | 'equipment' | null;
+export type AddModalType = 'power' | 'innate-power' | 'technique' | 'weapon' | 'shield' | 'armor' | 'equipment' | null;
 export type FeatModalType = 'archetype' | 'character' | 'state' | null;
 export type SkillModalType = 'skill' | 'subskill' | null;
 
@@ -61,6 +62,8 @@ interface CharacterSheetModalsProps {
   showRecoveryModal: boolean;
   setShowRecoveryModal: (v: boolean) => void;
   character: Character | null;
+  /** Codex-hydrated character for path-aware modals (optional). */
+  displayCharacter?: Character | null;
   calculatedStats: CharacterSheetStats | null;
   existingIds: Set<string>;
   skills: SkillForModal[];
@@ -94,6 +97,7 @@ export function CharacterSheetModals({
   showRecoveryModal,
   setShowRecoveryModal,
   character,
+  displayCharacter,
   calculatedStats,
   existingIds,
   skills,
@@ -119,6 +123,7 @@ export function CharacterSheetModals({
           isOpen={showEditArchetypeModal}
           onClose={() => setShowEditArchetypeModal(false)}
           character={character}
+          displayCharacter={displayCharacter ?? character}
           onSave={onArchetypeSave}
         />
       )}
@@ -136,7 +141,8 @@ export function CharacterSheetModals({
         <AddLibraryItemModal
           isOpen={!!addModalType}
           onClose={() => setAddModalType(null)}
-          itemType={addModalType}
+          itemType={addModalType === 'innate-power' ? 'power' : (addModalType as AddLibraryItemType)}
+          titleOverride={addModalType === 'innate-power' ? 'Add Innate Power from Library' : undefined}
           existingIds={existingIds}
           onAdd={onModalAdd}
         />
@@ -191,6 +197,7 @@ export function CharacterSheetModals({
           isOpen={showLevelUpModal}
           onClose={() => setShowLevelUpModal(false)}
           character={character}
+          displayCharacter={displayCharacter ?? character}
           onConfirm={onLevelUp}
         />
       )}

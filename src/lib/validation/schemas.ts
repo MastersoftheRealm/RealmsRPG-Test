@@ -5,6 +5,7 @@
  */
 
 import { z } from 'zod';
+import { validateUsername } from '@/lib/username-rules';
 
 // =============================================================================
 // Auth Schemas
@@ -20,13 +21,20 @@ export const registerSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string(),
-  username: z.string().min(3, 'Username must be at least 3 characters').max(24).optional().or(z.literal('')),
+  username: z.string().max(24).optional().or(z.literal('')),
   acceptTerms: z.boolean().refine((val) => val === true, {
     message: 'You must accept the terms and conditions',
   }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ['confirmPassword'],
+}).superRefine((data, ctx) => {
+  const username = data.username?.trim();
+  if (!username) return;
+  const result = validateUsername(username);
+  if (!result.ok) {
+    ctx.addIssue({ code: 'custom', message: result.error, path: ['username'] });
+  }
 });
 
 export const forgotPasswordSchema = z.object({

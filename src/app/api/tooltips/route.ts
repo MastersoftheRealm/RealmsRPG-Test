@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/supabase/session';
-import { createServiceRoleClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/admin';
+import {
+  buildRateLimitKey,
+  resolveClientIp,
+  standardLimiter,
+} from '@/lib/rate-limit';
+import {
+  validateJson,
+  tooltipCreateSchema,
+  tooltipPatchSchema,
+} from '@/lib/api-validation';
 import type { TooltipAudience, TooltipPlacement, TooltipRecord, TooltipTrigger } from '@/types/tooltips';
 
 export const dynamic = 'force-dynamic';
@@ -46,29 +56,21 @@ function parseKeys(input: string | null): string[] {
     .filter(Boolean);
 }
 
-function validPlacement(value: string): value is TooltipPlacement {
-  return ['top', 'bottom', 'left', 'right'].includes(value);
-}
-
-function validTrigger(value: string): value is TooltipTrigger {
-  return ['auto', 'hover', 'focus', 'click'].includes(value);
-}
-
-function validAudience(value: string): value is TooltipAudience {
-  return ['new_player', 'all', 'admin'].includes(value);
-}
-
 async function getRoleAndTooltipSetting(userId: string | undefined) {
   if (!userId) {
     return { role: null, showTooltips: true };
   }
 
-  const supabase = createServiceRoleClient();
-  const { data } = await supabase
+  const supabase = await createClient();
+  const { data, error } = await supabase
     .from('user_profiles')
     .select('role, show_tooltips')
     .eq('id', userId)
     .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
 
   const profile = (data as { role?: string | null; show_tooltips?: boolean | null } | null) ?? null;
   return {
@@ -88,12 +90,21 @@ export async function GET(request: NextRequest) {
     const userId = user?.uid;
     const admin = await isAdmin(userId);
 
+    const rateKey = buildRateLimitKey('tooltips-get', {
+      userId,
+      ip: resolveClientIp(request.headers),
+    });
+    const { success: rateOk } = standardLimiter.check(rateKey);
+    if (!rateOk) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+    }
+
     if (includeAll && !admin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const { role, showTooltips } = await getRoleAndTooltipSetting(userId);
-    const supabase = createServiceRoleClient();
+    const supabase = await createClient();
     let query = supabase
       .from('ui_tooltips')
       .select('id, key, scope, title, body_md, placement, trigger, audience, enabled, version, updated_at, updated_by')
@@ -151,24 +162,20 @@ export async function POST(request: NextRequest) {
   const auth = await requireAdminUser();
   if (!auth.ok) return auth.response;
 
-  try {
-    const body = await request.json();
-    const key = String(body.key ?? '').trim();
-    const scope = String(body.scope ?? '').trim();
-    const title = body.title == null ? null : String(body.title).trim();
-    const bodyMd = String(body.bodyMd ?? '').trim();
-    const placement = String(body.placement ?? 'top');
-    const trigger = String(body.trigger ?? 'auto');
-    const audience = String(body.audience ?? 'new_player');
-    const enabled = body.enabled !== false;
-    const version = Number.isFinite(Number(body.version)) ? Number(body.version) : 1;
+  const rateKey = buildRateLimitKey('tooltips-post', {
+    userId: auth.userId,
+    ip: resolveClientIp(request.headers),
+  });
+  const { success: rateOk } = standardLimiter.check(rateKey);
+  if (!rateOk) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+  }
 
-    if (!key || !scope || !bodyMd) {
-      return NextResponse.json({ error: 'key, scope, and bodyMd are required.' }, { status: 400 });
-    }
-    if (!validPlacement(placement) || !validTrigger(trigger) || !validAudience(audience)) {
-      return NextResponse.json({ error: 'Invalid placement, trigger, or audience.' }, { status: 400 });
-    }
+  try {
+    const validation = await validateJson(request, tooltipCreateSchema);
+    if (!validation.success) return validation.error;
+    const body = validation.data;
+    const { key, scope, title, bodyMd, placement, trigger, audience, enabled, version } = body;
 
     const supabase = createServiceRoleClient();
     const { data, error } = await supabase
@@ -176,7 +183,7 @@ export async function POST(request: NextRequest) {
       .insert({
         key,
         scope,
-        title,
+        title: title ?? null,
         body_md: bodyMd,
         placement,
         trigger,
@@ -203,50 +210,39 @@ export async function PATCH(request: NextRequest) {
   const auth = await requireAdminUser();
   if (!auth.ok) return auth.response;
 
+  const rateKey = buildRateLimitKey('tooltips-patch', {
+    userId: auth.userId,
+    ip: resolveClientIp(request.headers),
+  });
+  const { success: rateOk } = standardLimiter.check(rateKey);
+  if (!rateOk) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+  }
+
   try {
-    const body = await request.json();
-    const id = String(body.id ?? '').trim();
-    if (!id) {
-      return NextResponse.json({ error: 'id is required.' }, { status: 400 });
-    }
+    const validation = await validateJson(request, tooltipPatchSchema);
+    if (!validation.success) return validation.error;
+    const body = validation.data;
 
     const updates: Record<string, unknown> = {
       updated_by: auth.userId,
     };
 
-    if (typeof body.key === 'string') updates.key = body.key.trim();
-    if (typeof body.scope === 'string') updates.scope = body.scope.trim();
-    if (typeof body.title === 'string' || body.title === null) updates.title = body.title;
-    if (typeof body.bodyMd === 'string') updates.body_md = body.bodyMd.trim();
-    if (typeof body.enabled === 'boolean') updates.enabled = body.enabled;
-    if (body.version != null && Number.isFinite(Number(body.version))) updates.version = Number(body.version);
-
-    if (typeof body.placement === 'string') {
-      if (!validPlacement(body.placement)) {
-        return NextResponse.json({ error: 'Invalid placement.' }, { status: 400 });
-      }
-      updates.placement = body.placement;
-    }
-
-    if (typeof body.trigger === 'string') {
-      if (!validTrigger(body.trigger)) {
-        return NextResponse.json({ error: 'Invalid trigger.' }, { status: 400 });
-      }
-      updates.trigger = body.trigger;
-    }
-
-    if (typeof body.audience === 'string') {
-      if (!validAudience(body.audience)) {
-        return NextResponse.json({ error: 'Invalid audience.' }, { status: 400 });
-      }
-      updates.audience = body.audience;
-    }
+    if (body.key !== undefined) updates.key = body.key;
+    if (body.scope !== undefined) updates.scope = body.scope;
+    if (body.title !== undefined) updates.title = body.title;
+    if (body.bodyMd !== undefined) updates.body_md = body.bodyMd;
+    if (body.enabled !== undefined) updates.enabled = body.enabled;
+    if (body.version !== undefined) updates.version = body.version;
+    if (body.placement !== undefined) updates.placement = body.placement;
+    if (body.trigger !== undefined) updates.trigger = body.trigger;
+    if (body.audience !== undefined) updates.audience = body.audience;
 
     const supabase = createServiceRoleClient();
     const { data, error } = await supabase
       .from('ui_tooltips')
       .update(updates)
-      .eq('id', id)
+      .eq('id', body.id)
       .select('id, key, scope, title, body_md, placement, trigger, audience, enabled, version, updated_at, updated_by')
       .single();
 
@@ -264,6 +260,15 @@ export async function PATCH(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const auth = await requireAdminUser();
   if (!auth.ok) return auth.response;
+
+  const rateKey = buildRateLimitKey('tooltips-delete', {
+    userId: auth.userId,
+    ip: resolveClientIp(request.headers),
+  });
+  const { success: rateOk } = standardLimiter.check(rateKey);
+  if (!rateOk) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+  }
 
   try {
     const url = new URL(request.url);

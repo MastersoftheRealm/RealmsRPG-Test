@@ -17,9 +17,14 @@ import {
   type Trait,
   type CreatureFeat as CodexCreatureFeatRow,
 } from '@/hooks';
-import type { Character } from '@/types';
-import { getSkillBonusForFeatRequirement } from '@/lib/game/formulas';
+import {
+  checkFeatRequirements,
+} from '@/lib/game/feat-requirements';
 import { buildFeatLevelChips, getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
+import {
+  creatureToFeatRequirementCharacter,
+  creaturePointsForPlayerFeat,
+} from './creature-feat-utils';
 import { Alert } from '@/components/ui';
 import { SegmentedControl } from '@/components/shared';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
@@ -37,25 +42,6 @@ import type { CreatureState } from './creature-creator-types';
 
 type FeatSourceTab = 'creature' | 'library' | 'species';
 
-function normalizeReqKey(input: string): string {
-  return String(input ?? '')
-    .trim()
-    .toLowerCase()
-    .replace(/[\s_-]+/g, '');
-}
-
-type DefenseReqKey = 'might' | 'fortitude' | 'reflex' | 'discernment' | 'mentalFortitude' | 'resolve';
-
-function toDefenseReqKey(key: string): DefenseReqKey | null {
-  if (key === 'might') return 'might';
-  if (key === 'fortitude') return 'fortitude';
-  if (key === 'reflex' || key === 'reflexes') return 'reflex';
-  if (key === 'discernment') return 'discernment';
-  if (key === 'mentalfortitude') return 'mentalFortitude';
-  if (key === 'resolve') return 'resolve';
-  return null;
-}
-
 interface FeatModal extends Feat {
   effect?: string;
   max_uses?: number;
@@ -66,46 +52,15 @@ type ModalRowData =
   | { tab: 'library'; feat: FeatModal; familyLevels: FeatModal[] }
   | { tab: 'species'; trait: Trait };
 
-function creatureSkillsToFeatReqRecord(
-  skills: CreatureState['skills']
-): Record<string, { prof?: boolean; val?: number }> {
-  const out: Record<string, { prof?: boolean; val?: number }> = {};
-  skills.forEach((s) => {
-    const entry = { prof: s.proficient, val: s.value };
-    if (s.id) out[String(s.id)] = entry;
-    if (s.name) out[s.name] = entry;
-  });
-  return out;
-}
-
 function formatFeatPointCost(n: number): string {
   if (Number.isInteger(n)) return String(n);
   return String(n);
-}
-
-/** Archetype: 1 × feat level; character: 0.5 × feat level */
-function creaturePointsForPlayerFeat(feat: FeatModal): number {
-  const lvl = getFeatLevel(feat);
-  return feat.char_feat ? 0.5 * lvl : 1 * lvl;
 }
 
 function creaturePointsForTrait(trait: Trait): number {
   if (trait.flaw) return -0.5;
   if (trait.characteristic) return 0;
   return 1;
-}
-
-function getPreviousLevelFeatId(feat: FeatModal, allFeats: FeatModal[]): string | null {
-  const level = getFeatLevel(feat);
-  if (level <= 1) return null;
-  if (feat.base_feat_id && level === 2) return feat.base_feat_id;
-  if (feat.base_feat_id && level >= 3) {
-    const prev = allFeats.find(
-      (f) => f.base_feat_id === feat.base_feat_id && getFeatLevel(f) === level - 1
-    );
-    return prev ? String(prev.id) : null;
-  }
-  return null;
 }
 
 function featToSelectableItem(
@@ -222,82 +177,17 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
     }));
   }, [codexFeats]);
 
-  const pseudoCharacter = useMemo(
-    () =>
-      ({
-        level: creatureLevel,
-        abilities: creature.abilities,
-        skills: creatureSkillsToFeatReqRecord(creature.skills),
-        archetypeFeats: [],
-        feats: creature.feats.map((f) => ({ id: f.id, name: f.name })),
-      }) as unknown as Character,
-    [creatureLevel, creature.abilities, creature.skills, creature.feats]
+  const featRequirementCharacter = useMemo(
+    () => creatureToFeatRequirementCharacter(creature),
+    [creature]
   );
 
   const checkPlayerFeatRequirements = useCallback(
     (feat: FeatModal): { meets: boolean; warning?: string } => {
-      const warnings: string[] = [];
-      if (feat.lvl_req && pseudoCharacter.level < feat.lvl_req) {
-        warnings.push(`Requires level ${feat.lvl_req}`);
-      }
-      if (feat.ability_req && feat.abil_req_val) {
-        const abilities = pseudoCharacter.abilities || {};
-        feat.ability_req.forEach((abil, idx) => {
-          const required = feat.abil_req_val?.[idx] ?? 0;
-          const key = normalizeReqKey(abil);
-          const defenseKey = toDefenseReqKey(key);
-          const current = defenseKey ? (creature.defenses?.[defenseKey] ?? 0) : (abilities[key as keyof typeof abilities] ?? 0);
-          if (current < required) warnings.push(`Requires ${abil} ${required}+`);
-        });
-      }
-      if (feat.skill_req && feat.skill_req_val) {
-        const charSkills = pseudoCharacter.skills || {};
-        let skillsForReq: Record<string, { prof?: boolean; val?: number }>;
-        if (Array.isArray(charSkills)) {
-          skillsForReq = {};
-          (
-            charSkills as Array<{ id?: string; name?: string; skill_val?: number; prof?: boolean }>
-          ).forEach((s) => {
-            const id = s.id != null ? String(s.id) : '';
-            const name = s.name != null ? String(s.name) : '';
-            const entry = { prof: s.prof ?? false, val: s.skill_val ?? 0 };
-            if (id) skillsForReq[id] = entry;
-            if (name && name !== id) skillsForReq[name] = entry;
-          });
-        } else {
-          skillsForReq =
-            typeof charSkills === 'object' && charSkills
-              ? (charSkills as Record<string, { prof?: boolean; val?: number }>)
-              : {};
-        }
-        feat.skill_req.forEach((skillId, idx) => {
-          const requiredBonus = feat.skill_req_val?.[idx] ?? 1;
-          const skillName = skillIdToName.get(String(skillId)) || String(skillId);
-          const { bonus, proficient } = getSkillBonusForFeatRequirement(
-            String(skillId),
-            pseudoCharacter.abilities || {},
-            skillsForReq,
-            codexSkills
-          );
-          if (!proficient) warnings.push(`Requires proficiency in ${skillName}`);
-          else if (bonus < requiredBonus) {
-            warnings.push(`Requires ${skillName} bonus ${requiredBonus}+ (yours: ${bonus})`);
-          }
-        });
-      }
-      const prevLevelId = getPreviousLevelFeatId(feat, feats);
-      if (prevLevelId) {
-        const allIds = creature.feats.map((f) => String(f.id));
-        const hasPrereq = allIds.includes(prevLevelId);
-        if (!hasPrereq) {
-          const prevFeat = feats.find((f) => String(f.id) === prevLevelId);
-          const prevLevel = prevFeat?.feat_lvl ?? 1;
-          warnings.push(`Requires ${prevFeat?.name ?? 'previous level'} (level ${prevLevel})`);
-        }
-      }
-      return { meets: warnings.length === 0, warning: warnings.join(', ') };
+      const { met, reason } = checkFeatRequirements(feat, featRequirementCharacter, codexSkills, feats);
+      return { meets: met, warning: reason };
     },
-    [pseudoCharacter, skillIdToName, codexSkills, feats, creature.feats]
+    [featRequirementCharacter, codexSkills, feats]
   );
 
   const { categories, abilities } = useMemo(() => {
@@ -501,7 +391,7 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
             id={categorySelectId}
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="min-h-[44px] rounded-lg border border-border-light bg-surface px-2 py-1 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="min-h-[44px] rounded-lg border border-border-light bg-surface px-2 py-1 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-outline-border"
           >
             <option value="">All</option>
             {categories.map((cat) => (
@@ -519,7 +409,7 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
             id={abilitySelectId}
             value={selectedAbility}
             onChange={(e) => setSelectedAbility(e.target.value)}
-            className="min-h-[44px] rounded-lg border border-border-light bg-surface px-2 py-1 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="min-h-[44px] rounded-lg border border-border-light bg-surface px-2 py-1 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-outline-border"
           >
             <option value="">All</option>
             {abilities.map((abil) => (
@@ -578,7 +468,7 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
   return (
     <>
       {error && isOpen && (
-        <Alert variant="danger" className="fixed top-4 left-1/2 z-[100] max-w-md -translate-x-1/2">
+        <Alert variant="danger" className="fixed top-4 left-1/2 z-toast max-w-md -translate-x-1/2">
           {error}
         </Alert>
       )}

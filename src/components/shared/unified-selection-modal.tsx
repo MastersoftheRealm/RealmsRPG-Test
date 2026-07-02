@@ -19,6 +19,7 @@ import { useState, useEffect, useMemo, useCallback, useRef, ReactNode } from 're
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Modal, Button, IconButton } from '@/components/ui';
+import { TabContentPanel } from '@/components/ui/tab-navigation';
 import { 
   GridListRow, 
   SearchInput, 
@@ -122,6 +123,12 @@ export interface UnifiedSelectionModalProps {
   
   /** Optional extra content in footer (e.g. per-item options for selected items) */
   footerExtra?: (selectedItems: SelectableItem[]) => ReactNode;
+  /** When tabs live in headerExtra, wire list region to TabNavigation aria-controls (TASK-355) */
+  tabPanelA11y?: {
+    tabGroupId: string;
+    id: string;
+    activeTab: string;
+  };
   /** Optional: disable the confirm button based on selected items (e.g. missing required choices) */
   confirmDisabled?: (selectedItems: SelectableItem[]) => boolean;
   
@@ -159,6 +166,7 @@ export function UnifiedSelectionModal({
   showQuantity = false,
   footerExtra,
   confirmDisabled,
+  tabPanelA11y,
   size = 'lg',
   className,
 }: UnifiedSelectionModalProps) {
@@ -266,8 +274,8 @@ export function UnifiedSelectionModal({
   };
   
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size={size} showCloseButton={false} fullScreenOnMobile>
-      <div className={cn('flex flex-col h-[70vh]', className)}>
+    <Modal isOpen={isOpen} onClose={onClose} size={size} showCloseButton={false} fullScreenOnMobile titleA11y={title}>
+      <div className={cn('flex flex-col flex-1 min-h-0 md:max-h-[70vh]', className)}>
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div>
@@ -317,58 +325,76 @@ export function UnifiedSelectionModal({
         )}
         
         {/* Items List — no outline, no extra padding so columns align with header */}
-        <div className="flex-1 overflow-y-auto overflow-x-auto min-h-0">
-          {isLoading ? (
-            <LoadingState message="Loading..." size="md" padding="md" />
-          ) : filteredItems.length === 0 ? (
-            <EmptyState
-              title={emptyMessage || `No ${itemLabel}s found`}
-              description={emptySubMessage}
-              size="sm"
-            />
-          ) : (
-            <div className="space-y-1 min-w-0">
-              {filteredItems.map(item => {
-                const itemIdStr = String(item.id);
-                const isSelected = selectedIds.has(itemIdStr);
-                
-                return (
-                  <div key={itemIdStr} className="flex items-center gap-2 min-w-0">
-                    <div className="flex-1 min-w-0">
-                      <GridListRow
-                        id={itemIdStr}
-                        name={item.name}
-                        description={item.description}
-                        columns={item.columns}
-                        chips={item.chips}
-                        detailSections={item.detailSections}
-                        totalCost={item.totalCost}
-                        costLabel={item.costLabel}
-                        badges={item.badges}
-                        gridColumns={gridColumns ? `${gridColumns} 2.5rem` : undefined}
-                        selectable
-                        isSelected={isSelected}
-                        onSelect={() => toggleSelection(item.id)}
-                        disabled={item.disabled}
-                        warningMessage={item.warningMessage}
-                        compact
-                      />
-                    </div>
-                    {/* Quantity selector for selected items */}
-                    {showQuantity && isSelected && (
-                      <div className="flex-shrink-0 px-2">
-                        <QuantitySelector
-                          quantity={quantities[itemIdStr] || 1}
-                          onChange={(qty) => setQuantities(q => ({ ...q, [itemIdStr]: qty }))}
-                        />
+        {(() => {
+          const listBody = (
+            <>
+              {isLoading ? (
+                <LoadingState message="Loading..." size="md" padding="md" />
+              ) : filteredItems.length === 0 ? (
+                <EmptyState
+                  title={emptyMessage || `No ${itemLabel}s found`}
+                  description={emptySubMessage}
+                  size="sm"
+                />
+              ) : (
+                <div className="space-y-1 min-w-0">
+                  {filteredItems.map(item => {
+                    const itemIdStr = String(item.id);
+                    const isSelected = selectedIds.has(itemIdStr);
+
+                    return (
+                      <div key={itemIdStr} className="flex items-center gap-2 min-w-0">
+                        <div className="flex-1 min-w-0">
+                          <GridListRow
+                            id={itemIdStr}
+                            name={item.name}
+                            description={item.description}
+                            columns={item.columns}
+                            chips={item.chips}
+                            detailSections={item.detailSections}
+                            totalCost={item.totalCost}
+                            costLabel={item.costLabel}
+                            badges={item.badges}
+                            gridColumns={gridColumns ? `${gridColumns} 2.5rem` : undefined}
+                            selectable
+                            isSelected={isSelected}
+                            onSelect={() => toggleSelection(item.id)}
+                            disabled={item.disabled}
+                            warningMessage={item.warningMessage}
+                            compact
+                          />
+                        </div>
+                        {showQuantity && isSelected && (
+                          <div className="flex-shrink-0 px-2">
+                            <QuantitySelector
+                              quantity={quantities[itemIdStr] || 1}
+                              onChange={(qty) => setQuantities(q => ({ ...q, [itemIdStr]: qty }))}
+                            />
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          );
+
+          const listRegion = tabPanelA11y ? (
+            <TabContentPanel
+              tabGroupId={tabPanelA11y.tabGroupId}
+              id={tabPanelA11y.id}
+              activeTab={tabPanelA11y.activeTab}
+              className="flex-1 overflow-y-auto overflow-x-auto min-h-0"
+            >
+              {listBody}
+            </TabContentPanel>
+          ) : (
+            <div className="flex-1 overflow-y-auto overflow-x-auto min-h-0">{listBody}</div>
+          );
+
+          return listRegion;
+        })()}
         
         {/* Footer */}
         <div className="flex flex-col gap-3 pt-4 border-t border-border-light mt-4">

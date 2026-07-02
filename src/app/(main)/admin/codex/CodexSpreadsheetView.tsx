@@ -11,7 +11,8 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Search, Replace, Copy, Save, Loader2, ChevronUp, ChevronDown } from 'lucide-react';
-import { Button, Spinner, Modal } from '@/components/ui';
+import { Button, LoadingState, Modal, useToast } from '@/components/ui';
+import { ErrorDisplay } from '@/components/shared';
 import { useCodexFull } from '@/hooks/use-codex';
 import { createCodexDoc, updateCodexDoc } from './actions';
 
@@ -171,7 +172,8 @@ interface CodexSpreadsheetViewProps {
 }
 
 export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
-  const { data: codex, isLoading, error } = useCodexFull();
+  const { showToast } = useToast();
+  const { data: codex, isLoading, error, refetch } = useCodexFull();
   const queryClient = useQueryClient();
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
   const [dirty, setDirty] = useState<Set<number>>(new Set());
@@ -376,7 +378,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
       }
     }
     if (errors.length > 0) {
-      alert(errors.slice(0, 5).join('\n') + (errors.length > 5 ? `\n... and ${errors.length - 5} more` : ''));
+      showToast(errors.slice(0, 5).join('; ') + (errors.length > 5 ? `; ... and ${errors.length - 5} more` : ''), 'error');
     } else {
       setDirty(new Set());
       setSaveConfirmOpen(false);
@@ -384,16 +386,16 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
     }
     setSaving(false);
-  }, [collection, dirty, rows, queryClient]);
+  }, [collection, dirty, rows, queryClient, showToast]);
 
   const handleSaveAllClick = useCallback(() => {
     const { valid, invalidDisplayIndices } = validateDirtyRows();
     if (!valid) {
-      alert(`Please add a name for new row(s): ${invalidDisplayIndices.slice(0, 10).join(', ')}${invalidDisplayIndices.length > 10 ? ` and ${invalidDisplayIndices.length - 10} more` : ''}.`);
+      showToast(`Please add a name for new row(s): ${invalidDisplayIndices.slice(0, 10).join(', ')}${invalidDisplayIndices.length > 10 ? ` and ${invalidDisplayIndices.length - 10} more` : ''}.`, 'error');
       return;
     }
     setSaveConfirmOpen(true);
-  }, [validateDirtyRows]);
+  }, [validateDirtyRows, showToast]);
 
   const handleSaveAll = useCallback(() => {
     performSaveAll();
@@ -409,7 +411,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
       if (isNew) {
         const name = row.name;
         if (typeof name !== 'string' || !name.trim()) {
-          alert('New rows must have a name.');
+          showToast('New rows must have a name.', 'error');
           return;
         }
       }
@@ -433,7 +435,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
         if (!result.success) err = result.error ?? null;
       }
       setSavingRowIndex(null);
-      if (err) alert(err);
+      if (err) showToast(err, 'error');
       else {
         setDirty((prev) => {
           const next = new Set(prev);
@@ -444,7 +446,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
         await queryClient.refetchQueries({ queryKey: ['codex'] });
       }
     },
-    [collection, rows, queryClient]
+    [collection, rows, queryClient, showToast]
   );
 
   const addNewRow = useCallback(() => {
@@ -463,18 +465,16 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
 
   if (error) {
     return (
-      <div className="rounded-lg border border-border bg-surface p-6 text-center text-red-600">
-        Failed to load codex. Check console for details.
-      </div>
+      <ErrorDisplay
+        message="Failed to load codex"
+        subMessage={error.message}
+        onRetry={() => { void refetch(); }}
+      />
     );
   }
 
   if (isLoading || !config) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <LoadingState size="lg" padding="lg" />;
   }
   const idColIndex = columns.indexOf('id');
   const nameColIndex = columns.indexOf('name');
@@ -621,7 +621,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
                     tabIndex={0}
                     onClick={() => handleSort(col)}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort(col); } }}
-                    className={`border-r border-border-subtle p-1.5 text-left text-xs font-semibold text-text-secondary whitespace-nowrap cursor-pointer select-none hover:bg-surface-alt/80 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary-400 ${isSticky ? 'sticky z-20 bg-surface-alt shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] dark:shadow-[2px_0_4px_-2px_rgba(0,0,0,0.3)]' : ''}`}
+                    className={`border-r border-border-subtle p-1.5 text-left text-xs font-semibold text-text-secondary whitespace-nowrap cursor-pointer select-none hover:bg-surface-alt/80 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary-outline-border ${isSticky ? 'sticky z-20 bg-surface-alt shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] dark:shadow-[2px_0_4px_-2px_rgba(0,0,0,0.3)]' : ''}`}
                     style={{
                       width: columnWidths[colIndex],
                       minWidth: columnWidths[colIndex],
@@ -648,7 +648,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
               return (
               <tr
                 key={rowIndex}
-                className={`border-b border-border-subtle hover:bg-surface-alt/50 ${dirty.has(rowIndex) ? 'bg-amber-50/50 dark:bg-amber-900/10' : ''}`}
+                className={`border-b border-border-subtle hover:bg-surface-alt/50 ${dirty.has(rowIndex) ? 'bg-warning-light/50' : ''}`}
               >
                 <td className="sticky left-0 z-10 bg-surface border-r border-border-subtle p-0 text-center text-xs text-text-muted">
                   {displayIndex + 1}
@@ -672,7 +672,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
                       typeof value === 'boolean' === false) &&
                     !Array.isArray(value) &&
                     !(typeof value === 'object' && value !== null);
-                  const inputClass = `w-full min-w-0 border-0 bg-transparent px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-inset focus:ring-primary-400 ${isFocused ? 'ring-1 ring-inset ring-primary-400' : ''}`;
+                  const inputClass = `w-full min-w-0 border-0 bg-transparent px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-inset focus:ring-primary-outline-border ${isFocused ? 'ring-1 ring-inset ring-primary-outline-border' : ''}`;
                   return (
                     <td
                       key={colKey}
@@ -759,7 +759,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
                         type="button"
                         onClick={() => saveRow(rowIndex)}
                         disabled={savingRowIndex === rowIndex}
-                        className="min-h-[44px] min-w-[44px] md:min-h-[36px] md:min-w-[36px] p-1.5 rounded text-text-muted hover:bg-surface-alt hover:text-primary-600 transition-colors inline-flex items-center justify-center"
+                        className="min-h-[44px] min-w-[44px] md:min-h-[36px] md:min-w-[36px] p-1.5 rounded text-text-muted hover:bg-surface-alt hover:text-primary-fg-hover transition-colors inline-flex items-center justify-center"
                         title="Save this row"
                         aria-label="Save this row"
                       >

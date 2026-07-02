@@ -13,8 +13,9 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { cn, formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
+import { statusPanel } from '@/lib/ui/status-surface-classes';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useEquipment, useUserItems, useItemProperties, usePublicLibrary, usePowerParts, useTechniqueParts } from '@/hooks';
+import { useEquipment, useUserItems, useItemProperties, useOfficialLibrary, usePowerParts, useTechniqueParts, useMergedSpecies, useCodexSkills, useTraits } from '@/hooks';
 import { deriveItemDisplay, trainingPointsForItemPropertyRef } from '@/lib/calculators/item-calc';
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 import {
@@ -30,14 +31,16 @@ import {
 } from '@/components/shared';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { FilterSection } from '@/components/codex';
-import { Spinner, Button, EmptyState } from '@/components/ui';
-import { TabNavigation } from '@/components/ui/tab-navigation';
+import { Spinner, Button, EmptyState, Card } from '@/components/ui';
+import { TabNavigation, TabContentPanel, useTabGroup } from '@/components/ui/tab-navigation';
 import { AlertCircle, Swords, Check, X, ShoppingBag, ChevronLeft } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 import type { Item } from '@/types';
 import type { CharacterPower, CharacterTechnique } from '@/types';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
 import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
+import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
+import { getValidationIssuesForStep } from '@/lib/character-creator-validation';
 import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies, getTrainingPointLimit } from '@/lib/proficiencies';
 
 // List column definitions and grid (unified with Library/Codex); name column wider for readability
@@ -106,7 +109,8 @@ interface UnifiedEquipmentItem {
 }
 
 // Starting currency for new characters at level 1 is 200
-const STARTING_CURRENCY = 200;
+import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
+const STARTING_CURRENCY = CHARACTER_STARTING_CURRENCY;
 
 // Selected item type for our internal state with quantity
 interface SelectedItem {
@@ -121,7 +125,20 @@ interface SelectedItem {
 }
 
 export function EquipmentStep() {
+  const { tabGroupId, sharedPanelId } = useTabGroup();
   const { draft, nextStep, prevStep, updateDraft } = useCharacterCreatorStore();
+  const { data: allSpecies = [] } = useMergedSpecies();
+  const { data: codexSkills } = useCodexSkills();
+  const { data: allTraits } = useTraits();
+  const validationContext = useMemo(
+    () => ({ allSpecies, codexSkills: codexSkills ?? null, allTraits: allTraits ?? null }),
+    [allSpecies, codexSkills, allTraits]
+  );
+  const stepIssues = useMemo(
+    () => getValidationIssuesForStep('equipment', draft, validationContext),
+    [draft, validationContext]
+  );
+  const canContinue = !stepIssues.some((i) => i.severity === 'error');
   // Fetch user's item library (weapons/armor) from API
   const { data: userItems, isLoading: userItemsLoading } = useUserItems();
   // Fetch general equipment from Codex
@@ -151,7 +168,7 @@ export function EquipmentStep() {
 
   // Resolve path recommendations to full items (depends on allEquipment, so after it's defined)
 
-  const { data: publicItems = [], isLoading: publicItemsLoading } = usePublicLibrary('items');
+  const { data: publicItems = [], isLoading: publicItemsLoading } = useOfficialLibrary('items');
 
   const isLoading = userItemsLoading || codexLoading || publicItemsLoading;
   const error = codexError;
@@ -261,7 +278,7 @@ export function EquipmentStep() {
       }
     }
     
-    // Add all equipment from RTDB (weapons, armor, and general equipment)
+    // Add all equipment from the Codex (weapons, armor, and general equipment)
     if (codexEquipment) {
       for (const item of codexEquipment) {
         const equip = item as { category?: string };
@@ -630,11 +647,6 @@ export function EquipmentStep() {
         <div>
           <div className="flex items-center gap-1 mb-2">
             <h2 className="text-2xl font-bold text-text-primary">Choose Equipment</h2>
-            <ContextHelpTooltip
-              tooltipKey="characters.new.step.equipment.currencyHelp"
-              scope="page:/characters/new"
-              label="Equipment budget help"
-            />
           </div>
           <p className="text-text-secondary">
             Select your starting weapons, armor, and gear. Use + and - to adjust quantities.
@@ -645,16 +657,16 @@ export function EquipmentStep() {
           <div className={cn(
             'px-4 py-2 rounded-xl font-bold text-lg border',
             remainingCurrency >= 0
-              ? 'bg-tp-light dark:bg-warning-900/30 border-tp-border text-tp-text dark:text-warning-300'
-              : 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-600/50 text-danger-700 dark:text-danger-300'
+              ? 'bg-tp-light dark:bg-warning-900/30 border-tp-border text-tp-text'
+              : 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-600/50 text-danger-fg'
           )}>
             {remainingCurrency} / {startingCurrency}c
           </div>
           <div className={cn(
             'px-3 py-1.5 rounded-full text-sm font-semibold border',
             proficiencyTpSummary.remaining >= 0
-              ? 'bg-tp-light dark:bg-warning-900/30 border-tp-border text-tp-text dark:text-warning-300'
-              : 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-600/50 text-danger-700 dark:text-danger-300'
+              ? 'bg-tp-light dark:bg-warning-900/30 border-tp-border text-tp-text'
+              : 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-600/50 text-danger-fg'
           )}>
             Proficiency TP: {proficiencyTpSummary.spent} / {proficiencyTpSummary.limit}
           </div>
@@ -713,7 +725,7 @@ export function EquipmentStep() {
                     className={cn(
                       'inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors min-h-[44px]',
                       canAfford
-                        ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700 text-primary-800 dark:text-primary-200 hover:bg-primary-100 dark:hover:bg-primary-900/50'
+                        ? 'bg-primary-subtle-bg border-primary-subtle-border text-primary-subtle-fg hover:bg-primary-subtle-bg-hover'
                         : 'bg-surface-alt border-border-light text-text-muted dark:text-text-secondary cursor-not-allowed'
                     )}
                   >
@@ -750,9 +762,9 @@ export function EquipmentStep() {
                   key={prowessLevel.level}
                   className={cn(
                     'flex items-center gap-4 p-3 rounded-lg border transition-all',
-                    isSelected ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-300 dark:border-primary-600/50' : 'bg-surface-alt border-border-light',
+                    isSelected ? 'bg-primary-subtle-bg border-primary-subtle-border' : 'bg-surface-alt border-border-light',
                     !isAvailable && 'opacity-50',
-                    canSelect && !isSelected && 'hover:border-primary-300 cursor-pointer'
+                    canSelect && !isSelected && 'hover:border-primary-outline-border cursor-pointer'
                   )}
                   onClick={() => {
                     if (!isAvailable) return;
@@ -762,7 +774,7 @@ export function EquipmentStep() {
                 >
                   <div className={cn(
                     'w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0',
-                    isSelected ? 'bg-primary-600 text-white' : 'bg-surface border border-border-light'
+                    isSelected ? 'bg-primary-button text-white' : 'bg-surface border border-border-light'
                   )}>
                     {isSelected && <Check className="w-4 h-4" />}
                   </div>
@@ -776,7 +788,7 @@ export function EquipmentStep() {
                   </div>
                   <div className={cn(
                     'px-3 py-1.5 rounded-lg text-sm font-bold flex-shrink-0',
-                    isSelected ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                    isSelected ? 'bg-primary-subtle-bg text-primary-fg' : cn(statusPanel.warningBg, 'text-warning-fg')
                   )}>
                     {tpCost} TP
                   </div>
@@ -787,7 +799,7 @@ export function EquipmentStep() {
           {currentUnarmedProwess > 0 && (
             <div className="mt-4 pt-3 border-t border-border-light flex items-center justify-between">
               <span className="text-text-secondary">Total Unarmed Prowess:</span>
-              <span className="font-bold text-primary-600">{unarmedProwessTPCost} TP</span>
+              <span className="font-bold text-primary-link-fg">{unarmedProwessTPCost} TP</span>
             </div>
           )}
         </div>
@@ -811,7 +823,7 @@ export function EquipmentStep() {
 
       {/* Selected Equipment — GridListRow: name only in name prop, type/cost/qty in columns, quantity stepper via quantity + onQuantityChange */}
       {selectedItems.length > 0 && (
-        <div className="bg-surface-alt dark:bg-surface rounded-xl border border-border-light overflow-hidden mb-6">
+        <Card className="bg-surface-alt dark:bg-surface overflow-hidden mb-6 p-0">
           <h3 className="font-medium text-text-primary px-4 pt-4 pb-2">Selected Equipment ({selectedItems.reduce((sum, i) => sum + i.quantity, 0)} items)</h3>
           <ListHeader
             columns={SELECTED_EQUIPMENT_COLUMNS.map((c) => ({ ...c, align: (c.align as 'left' | 'center' | 'right') ?? 'left' }))}
@@ -858,7 +870,7 @@ export function EquipmentStep() {
               );
             })}
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Full equipment list + tabs — hidden for path mode until "Get Your Own Equipment" is clicked */}
@@ -893,13 +905,16 @@ export function EquipmentStep() {
         onTabChange={(tabId) => setActiveTab(tabId as EquipmentTabId)}
         variant="pill"
         className="mb-4"
+        tabGroupId={tabGroupId}
+        sharedTabPanelId={sharedPanelId}
       />
 
+      <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab}>
       {/* Unarmed Prowess Tab Content */}
       {activeTab === 'unarmed' ? (
         <div className="border border-border-light rounded-lg mb-8 p-6 bg-surface">
           <div className="flex items-start gap-4 mb-6">
-            <div className="p-3 rounded-full bg-amber-100 dark:bg-amber-900/30">
+            <div className="p-3 rounded-full bg-warning-light">
               <Swords className="w-8 h-8 text-amber-600" />
             </div>
             <div className="flex-1">
@@ -924,9 +939,9 @@ export function EquipmentStep() {
                   key={prowessLevel.level}
                   className={cn(
                     'flex items-center gap-4 p-4 rounded-lg border transition-all',
-                    isSelected ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-300 dark:border-primary-600/50' : 'bg-surface border-border-light',
+                    isSelected ? 'bg-primary-subtle-bg border-primary-subtle-border' : 'bg-surface border-border-light',
                     !isAvailable && 'opacity-50',
-                    canSelect && !isSelected && 'hover:border-primary-300 cursor-pointer'
+                    canSelect && !isSelected && 'hover:border-primary-outline-border cursor-pointer'
                   )}
                   onClick={() => {
                     if (!isAvailable) return;
@@ -942,7 +957,7 @@ export function EquipmentStep() {
                   {/* Selection indicator */}
                   <div className={cn(
                     'w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0',
-                    isSelected ? 'bg-primary-600 text-white' : 'bg-surface-alt border border-border-light'
+                    isSelected ? 'bg-primary-button text-white' : 'bg-surface-alt border border-border-light'
                   )}>
                     {isSelected && <Check className="w-4 h-4" />}
                   </div>
@@ -963,7 +978,7 @@ export function EquipmentStep() {
                   {/* TP Cost */}
                   <div className={cn(
                     'px-3 py-1.5 rounded-lg text-sm font-bold flex-shrink-0',
-                    isSelected ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                    isSelected ? 'bg-primary-subtle-bg text-primary-fg' : cn(statusPanel.warningBg, 'text-warning-fg')
                   )}>
                     {tpCost} TP
                   </div>
@@ -976,7 +991,7 @@ export function EquipmentStep() {
           {currentUnarmedProwess > 0 && (
             <div className="mt-6 pt-4 border-t border-border-light flex items-center justify-between">
               <span className="text-text-secondary">Total Unarmed Prowess Cost:</span>
-              <span className="text-lg font-bold text-primary-600">{unarmedProwessTPCost} TP</span>
+              <span className="text-lg font-bold text-primary-link-fg">{unarmedProwessTPCost} TP</span>
             </div>
           )}
         </div>
@@ -1003,8 +1018,8 @@ export function EquipmentStep() {
                 <div className={cn(
                   'px-3 py-2 rounded-lg border text-sm',
                   remainingCurrency >= 0
-                    ? 'bg-success-50 dark:bg-success-900/30 border-success-200 dark:border-success-600/50 text-success-700 dark:text-success-400'
-                    : 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-600/50 text-danger-700 dark:text-danger-300'
+                    ? 'bg-success-50 dark:bg-success-900/30 border-success-200 dark:border-success-600/50 text-success-fg'
+                    : 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-600/50 text-danger-fg'
                 )}>
                   {remainingCurrency}c remaining of {startingCurrency}c
                 </div>
@@ -1117,7 +1132,7 @@ export function EquipmentStep() {
                     key: 'gold_cost',
                     value: `${cost}c`,
                     highlight: !canAfford,
-                    className: canAfford ? 'text-tp-text dark:text-warning-400 font-bold' : 'text-danger-600 dark:text-danger-400 font-bold',
+                    className: canAfford ? 'text-tp-text font-bold' : 'text-danger-fg font-bold',
                     align: 'right' as const,
                   };
                   const sourceColumn = {
@@ -1188,22 +1203,11 @@ export function EquipmentStep() {
           </div>
         </>
       )}
+      </TabContentPanel>
       </>
       )}
       
-      <div className="flex justify-between">
-        <Button
-          variant="secondary"
-          onClick={prevStep}
-        >
-          ← Back
-        </Button>
-        <Button
-          onClick={handleContinue}
-        >
-          Continue →
-        </Button>
-      </div>
+      <CreatorStepFooter onBack={prevStep} onContinue={handleContinue} continueDisabled={!canContinue} />
     </div>
   );
 }

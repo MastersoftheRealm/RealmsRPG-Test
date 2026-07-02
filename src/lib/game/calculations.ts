@@ -15,6 +15,7 @@ import type { Abilities, DefenseBonuses, DefenseSkills, Character, AbilityName, 
 import type { CoreRulesMap } from '@/types/core-rules';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 import { COMBAT_DEFAULTS } from './constants';
+import { unproficientBonus } from './formulas';
 
 type Rules = Partial<CoreRulesMap>;
 
@@ -84,13 +85,15 @@ export function calculateMaxHealth(
   healthPoints: number,
   vitality: number,
   level: number,
-  archetypeAbility: AbilityName | string | undefined,
+  powAbil: AbilityName | string | undefined,
   abilities: Partial<Abilities>,
-  rules?: Rules
+  rules?: Rules,
+  martAbil?: AbilityName | string | undefined
 ): number {
   const baseHealth = rules?.PROGRESSION_PLAYER?.baseHealth ?? 8;
-  const useStrength = archetypeAbility?.toLowerCase() === 'vitality';
-  const abilityMod = useStrength ? (abilities?.strength || 0) : vitality;
+  const vitalityIsArchetype =
+    powAbil?.toLowerCase() === 'vitality' || martAbil?.toLowerCase() === 'vitality';
+  const abilityMod = vitalityIsArchetype ? (abilities?.strength || 0) : vitality;
   
   if (abilityMod < 0) {
     return baseHealth + abilityMod + healthPoints;
@@ -163,30 +166,40 @@ export function calculateBonuses(
     ? (abilities?.[powAbil.toLowerCase() as keyof Abilities] || 0) 
     : (abilities?.charisma || 0);
   
-  const unprofBonus = (abilityValue: number): number => {
-    return abilityValue < 0 ? abilityValue * 2 : Math.ceil(abilityValue / 2);
-  };
-  
   return {
     martial: mart,
     power: pow,
     strength: {
       prof: mart + (abilities?.strength || 0),
-      unprof: unprofBonus(abilities?.strength || 0),
+      unprof: unproficientBonus(abilities?.strength || 0),
     },
     agility: {
       prof: mart + (abilities?.agility || 0),
-      unprof: unprofBonus(abilities?.agility || 0),
+      unprof: unproficientBonus(abilities?.agility || 0),
     },
     acuity: {
       prof: mart + (abilities?.acuity || 0),
-      unprof: unprofBonus(abilities?.acuity || 0),
+      unprof: unproficientBonus(abilities?.acuity || 0),
     },
     powerAttack: {
       prof: pow + powerAbilityValue,
-      unprof: unprofBonus(powerAbilityValue),
+      unprof: unproficientBonus(powerAbilityValue),
     },
   };
+}
+
+/** Power Attack Bonus = Power Ability + Power Proficiency (GAME_RULES). */
+export function calculatePowerAttackBonus(charData: Partial<Character>): number {
+  const abilities = charData.abilities ?? {};
+  const powProf = charData.pow_prof ?? charData.powerProficiency ?? 0;
+  const powAbil =
+    charData.pow_abil ?? charData.archetype?.pow_abil ?? charData.archetype?.ability;
+  return calculateBonuses(
+    charData.mart_prof ?? charData.martialProficiency ?? 0,
+    powProf,
+    abilities,
+    powAbil
+  ).powerAttack.prof;
 }
 
 // =============================================================================
@@ -274,7 +287,15 @@ export function calculateAllStats(character: Partial<Character>, rules?: Rules):
   const powAbil = character.pow_abil || archetype?.pow_abil || archetype?.ability;
   const martAbil = character.mart_abil || archetype?.mart_abil;
 
-  const maxHealth = calculateMaxHealth(healthPoints, abilities.vitality || 0, level, powAbil, abilities, rules);
+  const maxHealth = calculateMaxHealth(
+    healthPoints,
+    abilities.vitality || 0,
+    level,
+    powAbil,
+    abilities,
+    rules,
+    martAbil
+  );
   const maxEnergy = calculateMaxEnergy(energyPoints, powAbil || martAbil, abilities, level);
 
   const terminal = calculateTerminal(maxHealth);
@@ -310,9 +331,17 @@ export function computeMaxHealthEnergy(charData: Record<string, unknown>, rules?
   const archetype = charData.archetype as { type?: string; pow_abil?: string; mart_abil?: string; ability?: string } | undefined;
   // Match calculateAllStats: top-level pow_abil / archetype.pow_abil / archetype.ability
   const powAbil = (charData.pow_abil as string) || archetype?.pow_abil || archetype?.ability;
-  const martAbil = archetype?.mart_abil;
+  const martAbil = (charData.mart_abil as string) || archetype?.mart_abil;
 
-  const maxHealth = calculateMaxHealth(healthPoints, abilities.vitality || 0, level, powAbil, abilities, rules);
+  const maxHealth = calculateMaxHealth(
+    healthPoints,
+    abilities.vitality || 0,
+    level,
+    powAbil,
+    abilities,
+    rules,
+    martAbil
+  );
   const maxEnergy = calculateMaxEnergy(energyPoints, powAbil || martAbil, abilities, level);
 
   return { maxHealth, maxEnergy };

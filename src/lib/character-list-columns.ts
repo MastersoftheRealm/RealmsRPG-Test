@@ -3,7 +3,12 @@
  * Used when creating/updating characters so list views can use columns instead of JSONB.
  */
 
-export function getCharacterListColumns(data: Record<string, unknown>): {
+import { resolveArchetypeDisplayName } from '@/lib/game/archetype-display';
+
+export function getCharacterListColumns(
+  data: Record<string, unknown>,
+  options?: { archetypeNameById?: Map<string, string> }
+): {
   name: string;
   level: number;
   archetype_name: string | null;
@@ -11,8 +16,13 @@ export function getCharacterListColumns(data: Record<string, unknown>): {
   status: string | null;
   visibility: string | null;
 } {
-  const arch = data.archetype as { name?: string; type?: string } | undefined;
-  const archName = arch?.name ?? (arch?.type ? arch.type.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : null);
+  const archName = resolveArchetypeDisplayName(
+    {
+      archetypePathId: data.archetypePathId as string | undefined,
+      archetype: data.archetype as { id?: string; name?: string; type?: string } | undefined,
+    },
+    options?.archetypeNameById
+  );
   const ancestry = data.ancestry as { name?: string } | undefined;
   return {
     name: (data.name as string) ?? 'Unnamed',

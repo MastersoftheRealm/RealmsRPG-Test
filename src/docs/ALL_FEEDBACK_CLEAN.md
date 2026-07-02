@@ -14,6 +14,13 @@ How to use
 
 ---
 
+### Tooltips (current renderer — Floating UI)
+- **Current branch direction:** app tooltip rendering uses the shared Floating UI primitive in `src/components/ui/tooltip.tsx` (`Tooltip` / `HelpTooltip`).
+- Keep existing keyed contextual-help copy/admin behavior flowing through `ContextHelpTooltip` where it already exists; it renders through Floating UI.
+- Do **not** reintroduce Tippy dependencies, imports, CSS, or `public/tooltip-text.tsx` while this branch is on Floating UI.
+
+---
+
 ## Core Principles
 - Primary role: act as a senior front-end architect for a React / Next.js / Tailwind codebase.
 - Secondary goal: unify components, styles, and logic while preserving behavior and UX.
@@ -1504,12 +1511,117 @@ Notes
 - Expected: Weapon references persist for custom and official techniques/powers/empowered techniques; TP scaling reflects selected weapon TP (or saved Add Weapon part level fallback for older official entries); load behavior remains consistent across My Library and Realms Library.
 - Disposition: Implemented 2026-05-16. Fixed UUID weapon save conditions in creators, added Add Weapon level fallback reconstruction on load for technique/empowered flows, and updated shared columnar mapping to persist/rehydrate weaponName from nested payload weapon fields.
 
-**Raw Feedback Log — 2026-06-26 (Use Tippy for app tooltips)**
-- Date: 2026-06-26
-- Context: App-wide contextual/help tooltips
+**Raw Feedback Log — 2026-05-22 (Character creator — add powers empty on mobile)**
+- Date: 2026-05-22
+- Context: Character creator, Powers & Techniques step, mobile
 - Priority: High
-- Feedback: Tippy has been imported as the tooltip library. Remove usages of the custom tooltip system in favor of Tippy to simplify and streamline the app.
-- Expected: Tooltip rendering uses Tippy instead of the custom hover/focus/click implementation; duplicate tooltip text sources/usages are reduced where possible.
+- Feedback: On mobile, creating a new character and opening Add Powers shows no items from Realms Library, My Library, or All sources despite having content in all libraries.
+- Expected: Add Powers / Add Techniques modals list the same merged library content as the character sheet add-library-item modal, with working source filter and visible rows on mobile.
+- Disposition: Implemented 2026-05-22. Aligned powers-step with add-library-item modal (merge all sources + displayFilter), source-aware loading (My Library no longer blocked on official fetch), stable item ids (docId ?? id), default source All, mobile-friendly modal flex height. `npm run build` passes.
+
+**Raw Feedback Log — 2026-06-12 (Codex "view as character" filter)**
+- Date: 2026-06-12
+- Context: Codex (all tabs; Feats tab specifically)
+- Priority: High
+- Feedback: To the Codex add a filter option you can select (that persists between tabs) that allows you to filter by one of your characters to essentially view or filter the codex with more accuracy. What this means for the Feat Codex Page for instance is that it automatically fills in/filters the list by that specific character's information, ie that character's Speed for filtering out feats whose speed requirement isn't met by the character, same for skill requirements, ability requirements, level requirements, and so on (exactly like how our character creator does this as you make a character, automatically filtering available/visible feats by that character's current statistics/values). Since this will be similar, reuse that same code/module/component if at all possible. Leave the other tabs (other than the character filter itself) alone for now.
+- Expected: A persistent "view as character" selector on the Codex that, on the Feats tab, auto-filters feats by the selected character's stats (level, abilities, skills, speed, prerequisites) reusing the character creator's qualification logic. Other tabs unchanged for now.
+- Disposition: Implemented 2026-06-12 (TASK-311). Extracted creator/sheet feat-requirement logic into shared `src/lib/game/feat-requirements.ts` (now also covers speed); added `CodexCharacterFilter` with page-level + localStorage persistence; wired `CodexFeatsTab` to auto-filter via the shared module with a show/hide-unqualified toggle. `npm run build` passes.
+
+**Raw Feedback Log — 2026-06-13 (QA — build validation format)**
+- Date: 2026-06-13
+- Context: DEVELOPER_TASK_QUEUE smoke tests (e.g. DEV-T-001 character creator)
+- Priority: High
+- Feedback: Smoke tests are too convoluted/cramped — missing context; each validation point should be its own step-by-step test under a category (e.g. DEV-V-001 Character creator step guards → 1. Archetype → Test-001 Choose a Path selectable). Need fool-proof How-To for QA to report PASS/FAIL per test after each build. Write into AI workflow as Build Validation tasks.
+- Expected: Granular DEV-V-### suites in BUILD_VALIDATION.md; agents add one-behavior-per-test on user-facing done/partial; DEVELOPER_TASK_QUEUE indexes suites only.
+- Disposition: Implemented 2026-06-13. Created `BUILD_VALIDATION.md` with DEV-V-001 (15 tests); updated AGENT_GUIDE, AI_REQUEST_TEMPLATE, realms-tasks, AGENTS.md, DEVELOPER_TASK_QUEUE index; TASK-356 `build_validation` field.
+
+**Raw Feedback Log — 2026-06-19 (Prod — RLS recursion + tooltips column)**
+- Date: 2026-06-19
+- Context: Production realmsrpg.com — GET /api/characters, /api/tooltips; Supabase logs
+- Priority: Critical
+- Feedback: After TASK-352 RLS consolidation, `/api/characters` returns 500 with `42P17 infinite recursion detected in policy for relation "campaign_members"`. `/api/tooltips` fails with `column user_profiles.show_tooltips does not exist`. Auth refresh "session missing" on manifest (likely unauthenticated asset requests).
+- Expected: Characters list loads for signed-in users; tooltips API works; no RLS recursion between campaigns and campaign_members.
+- Disposition: Hotfix applied 2026-06-19 (`rls_fix_campaign_members_recursion_2026_06`): SECURITY DEFINER helpers `auth_is_campaign_owner` / `auth_is_campaign_participant`; campaigns SELECT uses owner_id + memberIds only; added `user_profiles.show_tooltips` column. See `sql/supabase-rls-fix-campaign-recursion-2026-06.sql`.
+
+**Raw Feedback Log — 2026-06-20 (Character creator — path descriptions truncated)**
+- Date: 2026-06-20
+- Context: Character creator → Archetype step → Choose a Path
+- Priority: High
+- Feedback: Path cards show truncated descriptions (`line-clamp-2`); selecting a path does not reveal full text. Users must Confirm, advance to Species, then navigate back to Archetype to read full descriptions.
+- Expected: Selecting a path shows the complete description before confirming; no workaround required.
+- Disposition: Implemented 2026-06-20. Selected path expands in-card; full description panel appears below path grid on selection. Edit Archetype path picker also shows full descriptions (no line-clamp).
+
+**Raw Feedback Log — 2026-06-20 (Character creator vs sheet max HP mismatch)**
+- Date: 2026-06-20
+- Context: Character creator Finalize vs character sheet — max HP / HP-EN pool
+- Priority: High
+- Feedback: Max HP during character creation differs from character sheet; unclear if both use admin core rules (`baseHealth`, HP/EN pool).
+- Expected: Creator and sheet use same `calculateMaxHealth` + `calculateHealthEnergyPool` with core rules from `useGameRules()`.
+- Disposition: Implemented 2026-06-20. Creator finalize/validation/store wired to `useGameRules()`; sheet header + derived hooks use `calculateHealthEnergyPool` with rules; `mart_abil` vitality check in `calculateMaxHealth`; save path always recomputes `health.max`/`energy.max` (no stale persisted max). Server/API still uses formula fallbacks when DB rules unavailable.
+
+**Raw Feedback Log — 2026-06-20 (Filter dropdown duplicate options)**
+- Date: 2026-06-20
+- Context: Codex/Library list filters — SelectFilter dropdowns
+- Priority: Medium
+- Feedback: Filter dropdowns show duplicate entries for "All", current selection, or placeholder labels (e.g. Mechanics filter showed "Hide Mechanics" twice).
+- Expected: One option per filter value in every filter dropdown.
+- Disposition: Implemented 2026-06-20. Central dedupe in `SelectFilter`, `ChipSelect`, `TagFilter`, `ItemList`; shared `filter-utils.ts`.
+
+**Raw Feedback Log — 2026-06-20 (PathHelpCard duplicate prefix on Powers step)**
+- Date: 2026-06-20
+- Context: Character creator → Powers & Techniques step (path mode)
+- Priority: Medium
+- Feedback: Message reads "As a Necromancer, As a Necromancer, some recommended techniques…" — duplicated path prefix.
+- Expected: Single "As a {pathName}," prefix from `PathHelpCard` only.
+- Disposition: Implemented 2026-06-20. Powers step children text is continuation-only (matches Feats/Equipment/Skills steps).
+
+**Raw Feedback Log — 2026-06-25 (Tooltips: Collin's Tippy is canonical)**
+- Date: 2026-06-25
+- Context: Collin tooltip branches merged into master; long-term tooltip direction
+- Priority: High
+- Feedback: We will eventually FULLY align to only Collin's approach to tooltips, which replaces the current tooltip DB system completely. His code is law; master/Kadin AI-written tooltip code is flawed and inconsistent.
+- Expected: All contextual help uses Tippy + `public/tooltip-text.tsx`; retire `useTooltipByKey`, `ContextHelpTooltip`, `HelpTooltip`, admin tooltips DB/API, and user show-tooltips preference. New work follows Collin's pattern only.
+- Disposition: Policy documented in `AGENT_GUIDE.md` § Tooltips, `FEATURE_INDEX.md`, `REMEDIATION_STATUS_2026-06.md`. **TASK-376** blocked, assignee **Collin Morrison** — AI agents skip; see `DEVELOPER_TASK_QUEUE.md` **COLLIN-001**.
+
+**Raw Feedback Log — 2026-06-26 (Creature creator feat requirement filter)**
+- Date: 2026-06-26
+- Context: Creature creator → Add feat modal → Character & archetype tab
+- Priority: High
+- Feedback: Feat list filters out feats whose requirements appear met (skill bonus, defense bonus) but still hides them as unavailable.
+- Expected: Same feat requirement logic as character sheet/creator (`checkFeatRequirements`).
+- Disposition: Implemented 2026-06-26. `AddCreatureFeatModal` now uses shared `checkFeatRequirements` with `defenseVals` from creature defenses (was comparing raw allocation vs required bonus).
+
+**Raw Feedback Log — 2026-06-26 (Creature creator leveled feat stepper)**
+- Date: 2026-06-26
+- Context: Creature creator → Feats list
+- Priority: Medium
+- Feedback: No way to increase feat level after adding a leveled character/archetype feat; should be easy (step up in feat list).
+- Expected: Level stepper on added library feats; respects requirements and updates feat points.
+- Disposition: Implemented 2026-06-26. LVL column with ValueStepper for multi-level library feats; add-feat merges replace lower levels in same family.
+
+**Raw Feedback Log — 2026-06-26 (Feat/trait custom name + player note)**
+- Date: 2026-06-26
+- Context: Character sheet → Library → Feats/Traits
+- Priority: Medium
+- Feedback: Allow appending a note to a feat/trait and renaming a feat/trait in a character's feat list, without overwriting the codex name/description. Renames are editable only in edit mode and shown in italics; notes are non-invasive and visible only in the expanded row. Later refined: hide the fields behind a small "Customize" button (collapsed by default) and allow spaces in custom names/notes.
+- Expected: Player-defined `customName` (italic display, codex name preserved) and `note` (expanded-only) persist per character; visible in read-only campaign view; survive feat level-swaps.
+- Disposition: Implemented 2026-06-26 (TASK-377). Lean-save `customName`/`note` on `feats`/`archetypeFeats`; `traitCustomizations` map for traits; collapsible `FeatTraitCustomizationBlock`; trimming only on save (spaces allowed while typing). Audit fixes: `traitCustomizations` added to `SAVEABLE_FIELDS`; level-swap preserves customization; campaign read-only view passes trait map. No Supabase migration (JSONB `characters.data`).
+
+**Raw Feedback Log — 2026-06-28 (Product Experience Redesign clarifications)**
+- Date: 2026-06-28
+- Context: REALMS_PRODUCT_OVERVIEW.md vision doc; sitewide UX overhaul
+- Priority: High
+- Feedback: (1) Fully scrap and rebuild home page as modern TTRPG startup landing page — remove OnboardingTour, welcome tour, Codex/Library CTAs, multi-CTA sprawl; single primary CTA Start Playing; mid-page custom power + weapons/armor CTAs to creators (Layer 1 when built); Discord tertiary. (2) Sitewide UX overhaul one page at a time; creators currently Layer 3 only — migrate to L1/L2/L3; character creator highest priority. (3) Tooltip system depends on Collin TASK-376 Tippy — follow his methods. (4) Post-save: play-together prompt (Discord, campaign invite); optional sheet tour after character created; milestone level-up tutorials (first level-up, first ability point, delta-only per level); tutorials on/off toggle. Remove pre-creation home tour.
+- Expected: REALMS_PRODUCT_OVERVIEW.md updated; TASK-387 landing rebuild, TASK-386 creator pilot, TASK-388 post-activation.
+- Disposition: Documented 2026-06-28 in REALMS_PRODUCT_OVERVIEW.md Sections 4, 6, 11; tasks filed.
+
+**Raw Feedback Log — 2026-06-28 (Validation-first critique — external review)**
+- Date: 2026-06-28
+- Context: REALMS_PRODUCT_OVERVIEW.md; pre-implementation strategy
+- Priority: High
+- Feedback: Doc over-specified before validation (layers, 10 steps, migration, tooltips, landing, post-activation) — risk building theory that breaks in real use. Missing failure modes: users ignore recs, Forge-first, species bounce, TP confusion, speedrun. Layer system needs governance (what qualifies as L1). Landing single-CTA may be too rigid for skeptical explorers — consider light "Explore system first" secondary intent. Section 11 retention shallow vs "why come back tomorrow" (campaign, encounters, progression). Doc is philosophy/direction not validated UX. Next: lock 3 things only, prototype 1 path + species + feats step, let behavior rewrite spec before expanding doc.
+- Expected: Appendix I in REALMS_PRODUCT_OVERVIEW.md; validation gate on phases; defer doc expansion until prototype.
+- Disposition: Documented 2026-06-28 in REALMS_PRODUCT_OVERVIEW.md Appendix I; Appendix E validation gate note.
 
 **Raw Feedback Log — 2026-07-02 (Use Floating UI instead of Tippy for app tooltips)**
 - Date: 2026-07-02

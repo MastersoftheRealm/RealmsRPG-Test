@@ -26,11 +26,11 @@ interface ItemCardProps {
 // Badge variants with design token classes
 const badgeVariants = {
   default: 'bg-surface-alt text-text-secondary',
-  primary: 'bg-primary-100 text-primary-700',
-  success: 'bg-success-100 text-success-700 dark:text-success-300',
-  warning: 'bg-warning-100 text-warning-700 dark:text-warning-300',
-  danger: 'bg-danger-100 text-danger-700 dark:text-danger-300',
-  info: 'bg-info-100 text-info-700 dark:text-info-300',
+  primary: 'bg-primary-subtle-bg text-primary-subtle-fg',
+  success: 'bg-success-100 text-success-fg',
+  warning: 'bg-warning-100 text-warning-fg',
+  danger: 'bg-danger-100 text-danger-fg',
+  info: 'bg-info-100 text-info-fg',
 };
 
 export const ItemCard = memo(function ItemCard({ 
@@ -69,10 +69,10 @@ export const ItemCard = memo(function ItemCard({
   return (
     <div
       className={cn(
-        'rounded-lg border transition-all duration-200',
+        'rounded-lg border transition-all duration-base ease-standard',
         item.isSelected 
-          ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500' 
-          : 'border-border-light bg-surface hover:border-primary-300',
+          ? 'border-primary-outline-border bg-primary-subtle-bg ring-1 ring-primary-subtle-border' 
+          : 'border-border-light bg-surface hover:border-primary-outline-border',
         item.isDisabled 
           ? 'opacity-50 cursor-not-allowed' 
           : (isSelectable || hasDetails) && 'cursor-pointer',
@@ -82,9 +82,8 @@ export const ItemCard = memo(function ItemCard({
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       tabIndex={isSelectable && !item.isDisabled ? 0 : undefined}
-      role={isSelectable ? 'button' : undefined}
-      aria-pressed={isSelectable ? item.isSelected : undefined}
-      aria-disabled={item.isDisabled}
+      role={isSelectable && !item.isDisabled ? 'button' : undefined}
+      aria-pressed={isSelectable && !item.isDisabled ? item.isSelected : undefined}
     >
       {/* Header Row */}
       <div className="flex items-start justify-between gap-2">
@@ -134,7 +133,7 @@ export const ItemCard = memo(function ItemCard({
           
           {/* Cost display */}
           {item.cost !== undefined && (
-            <span className="text-sm font-medium text-primary-600 whitespace-nowrap">
+            <span className="text-sm font-medium text-primary-link-fg whitespace-nowrap">
               {item.cost} {item.costLabel}
             </span>
           )}
@@ -178,7 +177,7 @@ export const ItemCard = memo(function ItemCard({
                   size="sm"
                   onClick={() => actions.onDelete?.(item)}
                   label="Remove"
-                  className="text-danger dark:text-danger-400 hover:text-danger-600 dark:hover:text-danger-300 hover:bg-transparent"
+                  className="text-danger-fg hover:opacity-80 hover:bg-transparent"
                 >
                   <X className="w-4 h-4" />
                 </IconButton>
@@ -220,7 +219,7 @@ export const ItemCard = memo(function ItemCard({
       
       {/* Disabled reason */}
       {item.isDisabled && item.disabledReason && (
-        <div className="flex items-center gap-1.5 mt-2 text-xs text-danger-600 dark:text-danger-400">
+        <div className="flex items-center gap-1.5 mt-2 text-xs text-danger-fg">
           <AlertCircle className="w-3 h-3 flex-shrink-0" />
           <span>{item.disabledReason}</span>
         </div>
@@ -255,7 +254,7 @@ export const ItemCard = memo(function ItemCard({
                 {item.requirements.map((req, i) => (
                   <span 
                     key={i}
-                    className={cn(req.met ? 'text-success-700 dark:text-success-400' : 'text-danger-600 dark:text-danger-400')}
+                    className={cn(req.met ? 'text-success-fg' : 'text-danger-fg')}
                   >
                     {req.name} {req.value}
                     {i < item.requirements!.length - 1 ? ', ' : ''}

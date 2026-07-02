@@ -24,7 +24,7 @@ const TOUR_STEPS: Array<{ title: string; body: React.ReactNode; icon: React.Reac
         </p>
       </>
     ),
-    icon: <Sparkles className="w-8 h-8 text-primary-500" />,
+    icon: <Sparkles className="w-8 h-8 text-primary-fg" />,
   },
   {
     title: 'Realms Codex',
@@ -33,12 +33,12 @@ const TOUR_STEPS: Array<{ title: string; body: React.ReactNode; icon: React.Reac
         <p className="text-text-secondary mb-3">
           The <strong className="text-text-primary">Codex</strong> is the game&apos;s reference: species, feats, skills, equipment, and parts. Use it when building characters or creating custom content.
         </p>
-        <Link href="/codex" className="text-primary-600 dark:text-primary-400 hover:underline font-medium text-sm">
+        <Link href="/codex" className="text-primary-link-fg hover:underline font-medium text-sm">
           Open Codex →
         </Link>
       </>
     ),
-    icon: <BookOpen className="w-8 h-8 text-primary-500" />,
+    icon: <BookOpen className="w-8 h-8 text-primary-fg" />,
   },
   {
     title: 'Library',
@@ -47,12 +47,12 @@ const TOUR_STEPS: Array<{ title: string; body: React.ReactNode; icon: React.Reac
         <p className="text-text-secondary mb-3">
           <strong className="text-text-primary">Realms Library</strong> has official powers, techniques, armaments, and creatures. <strong className="text-text-primary">My Library</strong> is your personal collection. Add from Realms Library to use as-is, or customize.
         </p>
-        <Link href="/library" className="text-primary-600 dark:text-primary-400 hover:underline font-medium text-sm">
+        <Link href="/library" className="text-primary-link-fg hover:underline font-medium text-sm">
           Open Library →
         </Link>
       </>
     ),
-    icon: <Library className="w-8 h-8 text-primary-500" />,
+    icon: <Library className="w-8 h-8 text-primary-fg" />,
   },
   {
     title: 'Character creator & save',
@@ -61,12 +61,12 @@ const TOUR_STEPS: Array<{ title: string; body: React.ReactNode; icon: React.Reac
         <p className="text-text-secondary mb-3">
           Create a character using the Codex and Realms Library at each step. When you&apos;re ready, sign in and save. Your character will be ready for the table.
         </p>
-        <Link href="/characters/new" className="text-primary-600 dark:text-primary-400 hover:underline font-medium text-sm">
+        <Link href="/characters/new" className="text-primary-link-fg hover:underline font-medium text-sm">
           Create a character →
         </Link>
       </>
     ),
-    icon: <CheckCircle className="w-8 h-8 text-primary-500" />,
+    icon: <CheckCircle className="w-8 h-8 text-primary-fg" />,
   },
 ];
 
@@ -122,6 +122,7 @@ export function OnboardingTour({ isOpen, onClose }: OnboardingTourProps) {
       title={`${current.title} (${step + 1} of ${TOUR_STEPS.length})`}
       titleA11y="Guided tour"
       size="md"
+      fullScreenOnMobile
       showCloseButton={true}
       footer={
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 p-4 border-t border-border-light bg-surface-alt/50">

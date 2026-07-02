@@ -1,2680 +1,2024 @@
 {
-  "generated_at": "2026-03-21T22:29:03.377Z",
+  "generated_at": "2026-06-19T00:36:35.330Z",
   "tasks": [
-    {
-      "id": "TASK-001",
-      "title": "Unify skill rows across creators",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-002",
-      "title": "Audit lists and modals for `ListHeader` adoption",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-284",
-      "title": "Migrate admin authorization from ADMIN_UIDS env to Supabase role-based admin",
-      "status": "done",
-      "matches": [
-        {
-          "hash": "8eb1d5cea87e84ef6b2e2f0fbbeceabfa375b026",
-          "subject": "Barfight feedback: official library save, species dedupe, sticky Continue, multiple damage types, remove (optional), range spacing, DB checklist",
-          "files": [
-            "sql/README.md",
-            "src/app/(main)/item-creator/page.tsx",
-            "src/app/(main)/power-creator/page.tsx",
-            "src/app/api/official/[type]/route.ts",
-            "src/components/character-creator/steps/ancestry-step.tsx",
-            "src/components/character-creator/steps/species-step.tsx",
-            "src/components/character-sheet/library-section.tsx",
-            "src/docs/ALL_FEEDBACK_CLEAN.md",
-            "src/docs/DATABASE_CONSISTENCY_CHECKLIST.md",
-            "src/docs/ai/AI_CHANGELOG.md",
-            "src/docs/ai/AI_TASK_QUEUE.md",
-            "src/hooks/use-creator-save.ts",
-            "src/lib/calculators/item-calc.ts",
-            "src/lib/calculators/power-calc.ts",
-            "src/lib/utils/string.ts"
-          ]
-        }
-      ],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-003",
-      "title": "Show weapon damage in Library and wire Edit -> Item Creator",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-004",
-      "title": "Fix RTDB enrichment so list views compute EN/TP/C correctly",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-005",
-      "title": "Fix Innate toggle hit area and alignment in list rows",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-006",
-      "title": "Fix missing/incorrect EN/TP display for Powers/Techniques/Armaments",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-007",
-      "title": "Library — Show weapon damage and enable in-place Edit/Duplicate",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-008",
-      "title": "RTDB Enrichment — Resolve part IDs and compute costs in creators",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-009",
-      "title": "Character Sheet — Innate toggle hit area & alignment (duplicate check)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-010",
-      "title": "Powers/Techniques/Armaments — Fix missing/incorrect EN/TP display (duplicate)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-011",
-      "title": "Fix login redirect to previous page",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-012",
-      "title": "My Account — Security audit and feature review",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-013",
-      "title": "Add theme toggle (dark/light/system) in nav dropdown",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-014",
-      "title": "Replace placeholder login icon with \"Login\" button",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-015",
-      "title": "Create reusable Powered Martial allocation slider component",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-016",
-      "title": "Unify ability/defense allocation and stepper styles across creators",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-017",
-      "title": "Implement Recovery Modal with full and partial recovery options",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-018",
-      "title": "\"BUG: Prevent negative weight/height values in character notes\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-019",
-      "title": "\"BUG: Fix unable to remove items from inventory\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-020",
-      "title": "Unify pencil/edit icons across character sheet",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-021",
-      "title": "Character name edit mode restriction + XP always editable",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-022",
-      "title": "Library feats tab - enable feat deletion via pencil icon",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-023",
-      "title": "\"BUG: Custom note name edit should not collapse the note\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-024",
-      "title": "Energy cost buttons for Powers/Techniques - match roll button styles",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-025",
-      "title": "Update Innate Energy tab summary text and centering",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-026",
-      "title": "Power/Technique display formatting - capitalize and abbreviate",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-027",
-      "title": "Remove invalid \"radiant\" damage type from Power Creator",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-028",
-      "title": "List headers - use all caps consistently",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-029",
-      "title": "List header column alignment - center over list items",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-030",
-      "title": "Remove \"Character Saved\" toast - keep only top bar save state",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-031",
-      "title": "Relocate character sheet top bar actions to side icons",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-032",
-      "title": "Dice Roller overhaul - match vanilla site design with enhancements",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-033",
-      "title": "Chip expansion behavior - expand in place without separate bubble",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-034",
-      "title": "\"BUG: Fix armor/weapon equip toggle functionality\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-035",
-      "title": "Equipment/Inventory tab fixes - quantity, tags, height",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-036",
-      "title": "Archetype ability indicators - purple/red outlines instead of yellow",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-037",
-      "title": "Ability edit mode - center skill/ability points display",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-038",
-      "title": "Remove hold-to-increase from ability/defense steppers",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-039",
-      "title": "Implement skill value cap (max 3) and defense bonus validation",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-040",
-      "title": "Character library UI - capitalize Currency, bigger tabs, defense button style",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-041",
-      "title": "Character/profile picture upload modal with crop",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-042",
-      "title": "Separate species name from level line in character sheet header",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-043",
-      "title": "Hide skill point display in non-edit mode",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-044",
-      "title": "Fix skill point calculation - show 3/3 not 5/5 at level 1",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-045",
-      "title": "Unify HP/EN pool allocation styles across sheet and creators",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-046",
-      "title": "Username change with validation (uniqueness, filtering, rate limit)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-047",
-      "title": "Auth provider detection for My Account settings",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-048",
-      "title": "Library tab ordering - default to Feats",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-049",
-      "title": "Sortable list headers (column sorting)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-050",
-      "title": "Creature creator fixes (prowess, dropdowns, summary scroll)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-051",
-      "title": "Implement modern thin scrollbars sitewide",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-052",
-      "title": "Character creator - persist skill allocations on tab switch",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-053",
-      "title": "Add confirmation dialog before feat deletion (TASK-022 compliance)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-054",
-      "title": "Documentation — add agent verification guidelines",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-055",
-      "title": "Rename \"Ability Scores\" to \"Abilities\" everywhere + fix cost hint",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-056",
-      "title": "Auto-capitalize archetype ability display",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-057",
-      "title": "Unify page content width across non-unique pages",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-058",
-      "title": "Fix health bar half-HP color (yellower orange) and deepen terminal red",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-059",
-      "title": "Unify selection/add button styles site-wide",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-060",
-      "title": "Fix vitality box height mismatch in ability editor",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-061",
-      "title": "TASK-012 completion — close security audit with sub-task references",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-062",
-      "title": "Match character library section heights to archetype section",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-063",
-      "title": "Creature creator basic info dropdown alignment and sizing",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-064",
-      "title": "Game rules audit — fix terminology and CreatureStatBlock ability schema",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-065",
-      "title": "Enable hold-to-repeat for Health/Energy allocation in creature creator",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-066",
-      "title": "Remove hold-to-repeat from defense steppers in creature creator",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-067",
-      "title": "Fix inconsistent vertical margins on senses/movement item cards (ExpandableChipList)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-068",
-      "title": "Unify creature creator add modals with character sheet/codex list styles",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-069",
-      "title": "Power/Martial slider should not allow 0 at either end (min 1 each)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-070",
-      "title": "Restructure Creature Summary to match other creators with resource boxes",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-071",
-      "title": "Unify stepper button styles across the site",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-072",
-      "title": "Health/Energy edit mode — bump current when at max and increasing max",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-073",
-      "title": "Speed/Evasion base editing — pencil icon, hide by default, red/green validation",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-074",
-      "title": "Dark mode — soften contrasting colors for easier viewing",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-075",
-      "title": "Fix /api/session 500 Internal Server Error",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-076",
-      "title": "Fix Firebase Storage rules for portraits and profile-pictures",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-077",
-      "title": "Fix username regex — invalid character class in pattern attribute",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-078",
-      "title": "\"Dice roller — replace Lucide icons with custom dice PNGs\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-079",
-      "title": "\"Weapon columns — add attack bonus column\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-080",
-      "title": "\"Unified Selection Modal — remove 'Add' column header text\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-081",
-      "title": "\"Add Skill / Add Sub-Skill modals — adopt ListHeader + sort\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-082",
-      "title": "\"LoadFromLibraryModal — remove item count from footer\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-083",
-      "title": "\"Remove remaining button gradients site-wide\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-084",
-      "title": "\"Dark mode — comprehensive pass on remaining hardcoded light colors\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-085",
-      "title": "\"Creator summaries — add sticky positioning to power/technique/item creators\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-086",
-      "title": "\"Full recovery — filter feat resets by recovery type\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-087",
-      "title": "\"Remove dead code — unused imports and deprecated definitions\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-088",
-      "title": "\"Fix chevron layout shift — use single icon with rotation\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-089",
-      "title": "\"Power/Technique/Item creator modals — unify LoadFromLibraryModal with shared patterns\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-090",
-      "title": "\"Codebase health audit — dead code removal, deduplication, shared component unification, best practices\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-091",
-      "title": "\"Extract shared useSort hook — eliminate 20+ duplicate toggleSort/handleSort implementations\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-092",
-      "title": "\"Import SortState type from shared instead of inline definitions\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-093",
-      "title": "\"Remaining template literal → cn() conversions\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-094",
-      "title": "\"Replace inline button styling with Button component\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-095",
-      "title": "\"Replace remaining raw inputs with Input/SearchInput components\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-096",
-      "title": "\"Split large page components (>1000 lines) into focused sub-components\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-097",
-      "title": "\"Unify filter component className patterns — extract filter-group class\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-098",
-      "title": "\"Fix dark mode contrast and missing variants — audit follow-up\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-099",
-      "title": "Campaigns — return to Join tab after creating character",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-100",
-      "title": "Campaigns — real-time updates via Firestore onSnapshot",
-      "status": "cancelled",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-101",
-      "title": "Archetype prof slider — hide unless pencil clicked; show simple values otherwise",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-102",
-      "title": "Encounter Tracker — add creatures from library (auto HP/EN, quantity)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-103",
-      "title": "Encounters hub — rename to Encounters; list/create/filter/search/sort",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-104",
-      "title": "Persist encounters to Firestore; save/return to sessions",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-105",
-      "title": "Designate combat tracker; tie to encounter ID",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-106",
-      "title": "Create Skill Encounter page",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-107",
-      "title": "Create Mixed Encounter page (combat + skill combined)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-108",
-      "title": "Campaign integration — add characters from campaigns to encounters",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-109",
-      "title": "Verify equip toggle ID matching and persistence",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-110",
-      "title": "Verify weapon/armor delete in character sheet",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-111",
-      "title": "Fix inventory remove bug (Library → Equipment)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-112",
-      "title": "Audit all list/section headers for full caps",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-113",
-      "title": "Full dark mode implementation pass",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-114",
-      "title": "Style consistency audit (ability/defense/health-energy)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-115",
-      "title": "Component reuse audit (add-X modals)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-116",
-      "title": "Add Firestore rules for codex_* collections",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-117",
-      "title": "Create migration script RTDB → Firestore",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-118",
-      "title": "Create useFirestoreCodex hooks (read from Firestore)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-119",
-      "title": "Switch all codex consumers to Firestore hooks",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-120",
-      "title": "[USER] Run migration script and verify in Firebase Console",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-121",
-      "title": "Admin config and isAdmin helper",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-122",
-      "title": "[USER] Add admin UID to config",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-123",
-      "title": "Admin layout and route protection",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-124",
-      "title": "Admin Codex page shell with tabs",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-125",
-      "title": "Admin CRUD server actions for codex",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-126",
-      "title": "Admin Feats editor tab",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-127",
-      "title": "Admin Traits editor tab",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-128",
-      "title": "Admin Species editor tab",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-129",
-      "title": "Admin Skills editor tab",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-130",
-      "title": "Admin Parts editor tab",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-131",
-      "title": "Admin Properties editor tab",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-132",
-      "title": "Admin Equipment editor tab",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-133",
-      "title": "Admin Archetypes editor tab",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-134",
-      "title": "Admin Creature Feats editor tab",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-135",
-      "title": "Admin Codex UI polish — consistent design",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-136",
-      "title": "Prisma tables for public library",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-137",
-      "title": "Admin Save to library — public vs private toggle in creators",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-138",
-      "title": "User Add to my library from public library",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-139",
-      "title": "Unified source filter (public / library / all) across app",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-140",
-      "title": "Public vs private badges/chips in lists",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-141",
-      "title": "Add public library tab to Codex",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-142",
-      "title": "Update ARCHITECTURE.md for Supabase/Prisma codex and data flow",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-143",
-      "title": "Add Admin / Public Library workflow docs",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-144",
-      "title": "Documentation migration audit — update all docs for Supabase stack",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-145",
-      "title": "Rename RTDB → Codex globally (hooks, types, variables)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-146",
-      "title": "Fix TypeScript build errors (implicit any, type mismatches)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-147",
-      "title": "Fix gold → currency terminology globally",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-148",
-      "title": "Migrate character-service, use-user-library, campaign-service to Prisma",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-149",
-      "title": "Migrate admin codex actions to Prisma",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-150",
-      "title": "Add auth confirm route for Supabase email OTP / magic links",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-151",
-      "title": "Add x-forwarded-host handling in auth callback for Vercel/proxy",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-152",
-      "title": "Audit skill encounter page — verify completeness vs feedback",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-153",
-      "title": "Navbar — Move Campaigns to right of RM Tools, left of About",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-154",
-      "title": "Admin Codex — Display \"-\" for feat level 0 in list",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-155",
-      "title": "Admin Codex — List refresh after delete; unify UI with Codex",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-156",
-      "title": "Feat Editing — Ability dropdown (6 abilities + 6 defenses)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-157",
-      "title": "Feat Editing — Add all missing editable fields",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-158",
-      "title": "Centralized codex data schema — AI reference doc",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-159",
-      "title": "Admin Codex — Reduce input lag in edit mode",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-160",
-      "title": "Admin Codex — Array fields use dropdowns, not raw IDs",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-161",
-      "title": "Campaign–Encounter attachment and \"Add all Characters\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-162",
-      "title": "Fix encounter combatant HP/EN when tied to user character",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-163",
-      "title": "Add roll log to encounters for RM (personal + campaign tabs)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-164",
-      "title": "Roll log consistency — styles, date display across encounter/campaign/sheet",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-165",
-      "title": "Roll log real-time sync via Supabase Realtime",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-166",
-      "title": "Health/Energy real-time sync between encounters and characters",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-167",
-      "title": "Character visibility — public link, campaign-only, private→campaign on join",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-168",
-      "title": "Character-derived content visibility — library items view-only for viewers",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-169",
-      "title": "Admin Feats — remove prereq_text and rely on req_desc",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-170",
-      "title": "Admin Codex — unify Skills, Parts, Properties, and Equipment tabs with Codex layout",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-171",
-      "title": "Admin Skills — base skill dropdown resolves base_skill_id",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-172",
-      "title": "Admin Skills — expose additional description fields",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-173",
-      "title": "Skills — render extra descriptions as expandable chips in item cards",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-174",
-      "title": "Codex schema — add Use column and align fields",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-175",
-      "title": "Codex skills — remove invalid trained_only field",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-176",
-      "title": "Codex seeding — wipe and reseed from canonical CSVs",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-177",
-      "title": "Codex schema usage audit — IDs, equipment, mechanic properties",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-178",
-      "title": "Armament creator — hide mechanic properties from add-property lists",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-179",
-      "title": "Feat skill_req — convert to ID-based everywhere",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-180",
-      "title": "Species skills/traits/flaws/characteristics — enforce ID-based usage",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-181",
-      "title": "Admin Skills — ability multi-select aligned with schema",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-182",
-      "title": "Admin Equipment — align fields with codex_equipment schema",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-184",
-      "title": "Publish confirmation modal in all creators",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-185",
-      "title": "Unify admin codex delete icons (Trash2 → X) and fix delete handler bug",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-186",
-      "title": "Inline delete confirmation in admin codex",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-187",
-      "title": "Add inline pencil/edit icon to GridListRow for library items",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-188",
-      "title": "Power and technique creators handle ?edit= query param to load items",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-189",
-      "title": "Fix save/display pipeline — item auto-gen properties, technique actionType, enrichment",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-183",
-      "title": "Admin Parts — edit defense targets",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-190",
-      "title": "Admin Creature Feats — level, requirement, mechanic flags",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-191",
-      "title": "Admin Equipment — currency, category, and type alignment",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-192",
-      "title": "Admin Properties & Parts — mechanic/duration flags, percentage display, option chips",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-193",
-      "title": "Admin Traits & Species — flaw/characteristic flags, sizes, trait chips",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-194",
-      "title": "Admin Skills & Feats — base skill display and filter “All” options",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-195",
-      "title": "\"CANCELLED: Ability cost threshold - code is correct\"",
-      "status": "cancelled",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-196",
-      "title": "\"Bug: maxHealth ignores archetype ability - always uses Vitality\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-197",
-      "title": "\"Bug: Character creator uses hardcoded base health/energy (10) instead of formulas\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-198",
-      "title": "\"Fix game constants - ability caps, damage types, Staggered, ice naming\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-199",
-      "title": "\"Fix feat slot formulas - character feats = level, archetype varies by archetype\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-199",
-      "title": "\"Bug: SAVEABLE_FIELDS missing critical fields, xp vs experience mismatch\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-200",
-      "title": "\"Design: Define canonical CharacterSaveData type - what gets persisted\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-201",
-      "title": "\"Centralize all health/energy/defense/speed/evasion calculations\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-202",
-      "title": "\"Unify defense fields - keep only defenseVals, remove defenseSkills alias\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-203",
-      "title": "\"Creator: Save species as speciesId, not name/object - derive on load\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-204",
-      "title": "\"Creator: Save archetype as archetypeId only - derive prof/abilities from codex\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-205",
-      "title": "\"Creator: Save feats as IDs only - derive name/description from codex\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-206",
-      "title": "\"Creator: Save powers as { id, innate } only - derive from library + codex parts\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-207",
-      "title": "\"Creator: Save techniques as { id } only - derive from library + codex parts\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-208",
-      "title": "\"Creator: Save skills as Record<skillId, {prof,val}> - derive name/ability from codex\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-209",
-      "title": "\"Creator: Save equipment as single inventory with IDs - remove redundant sub-arrays\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-210",
-      "title": "\"Creator: Save lean health/energy - allocation + current only, remove duplicates\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-211",
-      "title": "\"Sheet: Load feats by ID from codex - derive name, description, uses\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-212",
-      "title": "\"Sheet: Load powers/techniques by ID from library - derive all display data\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-213",
-      "title": "\"Sheet: Load equipment by ID from codex/library - derive stats and properties\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-214",
-      "title": "\"Sheet: Derive skills display from codex - only prof/val from character\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-215",
-      "title": "\"Sheet: Derive all computed stats - stop persisting maxHP/maxEN/evasion/speed\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-216",
-      "title": "\"Unify enrichment pipeline - shared ID-based loading for all contexts\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-217",
-      "title": "\"Update cleanForSave to match lean schema\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-218",
-      "title": "\"Remove all redundant fields from Character type - final cleanup\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-219",
-      "title": "\"Portrait storage - move from base64 blob to Supabase Storage URL\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-220",
-      "title": "\"Data migration script - convert existing characters from old schema to lean\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-221",
-      "title": "\"Design: Core rules DB schema and data categories\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-222",
-      "title": "\"Create Prisma model + migration for core_rules table\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-223",
-      "title": "\"Seed core_rules table with current hardcoded values\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-224",
-      "title": "\"Create useGameRules() hook - loads core rules from DB with fallback\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-225",
-      "title": "\"Admin Core Rules page - Progression tab (Player & Creature)\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-226",
-      "title": "\"Admin Core Rules page - Combat & Scores tab\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-227",
-      "title": "\"Admin Core Rules page - Archetypes tab\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-228",
-      "title": "\"Admin Core Rules page - Conditions tab (with definitions)\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-229",
-      "title": "\"Admin Core Rules page - Sizes & Carrying Capacity tab\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-230",
-      "title": "\"Admin Core Rules page - Rarities & Currency tab\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-231",
-      "title": "\"Admin Core Rules page - Ability Scores tab\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-232",
-      "title": "\"Admin Core Rules page - Skills, Recovery, Experience, Damage Types tabs\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-233",
-      "title": "\"Refactor formulas.ts to read from useGameRules() instead of constants.ts\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-234",
-      "title": "\"Refactor calculations.ts to read from useGameRules() instead of constants.ts\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-235",
-      "title": "About page — dice carousel redesign (center, 7 dice, wrap, no brackets)",
-      "status": "done",
-      "matches": [
-        {
-          "hash": "a9a1b1f184100cede1c7593b2a3fe422e83d981e",
-          "subject": "About dice carousel, Skill encounter Successes/RM bonus, Combat tracker UX (TASK-235, 236, 237)",
-          "files": [
-            "src/app/(main)/about/page.tsx",
-            "src/app/(main)/encounter-tracker/CombatantCard.tsx",
-            "src/app/(main)/encounters/[id]/combat/page.tsx",
-            "src/app/(main)/encounters/[id]/skill/page.tsx",
-            "src/docs/ALL_FEEDBACK_CLEAN.md",
-            "src/docs/ai/AI_CHANGELOG.md",
-            "src/docs/ai/AI_TASK_QUEUE.md",
-            "src/types/encounter.ts"
-          ]
-        }
-      ],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-236",
-      "title": "Skill encounter — Successes UI, DS post-roll, RM bonus, additional success/failure",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-237",
-      "title": "Combat tracker — surprised checkbox, initiative select-all, delete turn, auto-sort",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-238",
-      "title": "\"Codebase Audit 2026-02-13 — Phase 1-3 implementation\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-239",
-      "title": "\"Audit Phase 2 — Complete design token migration (blue/green/red/amber → tokens)\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-240",
-      "title": "\"Audit Phase 2 — Standardize modal/error/loading patterns\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-241",
-      "title": "\"Audit Phase 1 — Add Zod input validation to API routes\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-242",
-      "title": "\"Audit Phase 1 — Add rate limiting to API routes\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-243",
-      "title": "\"Audit Phase 4 — Add loading.tsx and error.tsx route handlers\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-244",
-      "title": "\"Audit Phase 5 — Add missing Prisma indexes\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-245",
-      "title": "\"Audit Phase 6 — Public character view page (frontend)\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-246",
-      "title": "\"Audit Phase 6 — Character creator skill auto-save on tab switch\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-247",
-      "title": "\"Audit Phase 4 — Optimize React Query stale times for codex data\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-248",
-      "title": "\"P-5: Create CharacterSheetContext to reduce prop drilling\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-249",
-      "title": "\"FB-6: Campaign join notification for visibility change\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-250",
-      "title": "\"Character creator — Species modal skill description clear when switching species\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-251",
-      "title": "\"Character creator — Step check mark when navigating away with 'Continue anyway'\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-252",
-      "title": "\"Unify add power/technique modals — character creator and creature creator\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-253",
-      "title": "\"Finalize step — display ability names as full text (min 3-letter)\"",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-254",
-      "title": "Creators — description/option contrast + dropdown dark mode",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-255",
-      "title": "Accessibility audit — color contrast WCAG 2.1 AA",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-256",
-      "title": "Species height/weight/lifespan — API mapping and display everywhere",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-257",
-      "title": "Skill admin — governing ability is abilities-only (not defenses)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-258",
-      "title": "Public codex — add Traits tab and Advanced tabs toggle",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-259",
-      "title": "Public vs admin codex unification — layouts, chips, descriptions",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-260",
-      "title": "Edit property — option cost labels (IP/TP/c) and larger description field",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-261",
-      "title": "Edit equipment — category dropdown with add-new and existing list",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-262",
-      "title": "Single list header component — migrate SortHeader views to ListHeader",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-263",
-      "title": "Shared creator load helper — useCreatorLoad(type, options)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-264",
-      "title": "Modal unification — implement audit recommendations (list modals)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-265",
-      "title": "Add source filter (My/Public/All) to add-X modals + reference public items on character",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-266",
-      "title": "Mobile-first UX overhaul (Phases 2–4)",
-      "status": "done",
-      "matches": [
-        {
-          "hash": "33e86f79b57dea547b1626c37244b7e9211da364",
-          "subject": "Mobile-first UX: phases 1-4 complete, finalize & audit (TASK-266)",
-          "files": [
-            ".cursor/rules/realms-mobile.mdc",
-            ".cursor/rules/realms-tasks.mdc",
-            "AGENTS.md",
-            "src/app/(main)/campaigns/[id]/page.tsx",
-            "src/app/(main)/campaigns/page.tsx",
-            "src/app/(main)/characters/[id]/page.tsx",
-            "src/app/(main)/codex/page.tsx",
-            "src/app/(main)/creature-creator/LoadCreatureModal.tsx",
-            "src/app/(main)/encounters/page.tsx",
-            "src/app/(main)/library/page.tsx",
-            "src/app/(main)/my-account/page.tsx",
-            "src/app/(main)/species-creator/page.tsx",
-            "src/app/globals.css",
-            "src/components/character-creator/MixedSpeciesModal.tsx",
-            "src/components/character-creator/creator-tab-bar.tsx",
-            "src/components/character-creator/species-modal.tsx",
-            "src/components/character-creator/steps/finalize-step.tsx",
-            "src/components/character-sheet/character-sheet-settings-modal.tsx",
-            "src/components/character-sheet/edit-archetype-modal.tsx",
-            "src/components/character-sheet/level-up-modal.tsx",
-            "src/components/character-sheet/recovery-modal.tsx",
-            "src/components/character-sheet/sheet-action-toolbar.tsx",
-            "src/components/character-sheet/sheet-header.tsx",
-            "src/components/creator/CreatorLayout.tsx",
-            "src/components/creator/LoadFromLibraryModal.tsx",
-            "src/components/shared/add-combatant-modal.tsx",
-            "src/components/shared/confirm-action-modal.tsx",
-            "src/components/shared/delete-confirm-modal.tsx",
-            "src/components/shared/image-upload-modal.tsx",
-            "src/components/shared/login-prompt-modal.tsx",
-            "src/components/shared/unified-selection-modal.tsx",
-            "src/components/ui/modal.tsx",
-            "src/components/ui/page-container.tsx",
-            "src/docs/ALL_FEEDBACK_CLEAN.md",
-            "src/docs/MOBILE_UX.md",
-            "src/docs/ai/AGENT_GUIDE.md",
-            "src/docs/ai/AI_CHANGELOG.md",
-            "src/docs/ai/AI_TASK_QUEUE.md"
-          ]
-        }
-      ],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-267",
-      "title": "Accessibility audit fixes and a11y systems (Vercel audit)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-268",
-      "title": "Investigate Range/selectNode InvalidNodeTypeError on mouse up",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
     {
       "id": "TASK-269",
       "title": "Fix Resources page Character Sheet PDF 404",
+      "status": "done",
+      "matches": [
+        {
+          "hash": "da2e96e733237e94edf78c09ccdd031dfd9f550c",
+          "subject": "Complete remaining task queue (TASK-269, TASK-313-327).",
+          "files": [
+            "scripts/session_submit.js",
+            "sql/README.md",
+            "sql/supabase-rls-initplan-fk-indexes-2026-06.sql",
+            "sql/supabase-storage-select-hardening-2026-06.sql",
+            "src/app/(main)/admin/codex/AdminArchetypesTab.tsx",
+            "src/app/(main)/admin/public-library/AdminPublicCreaturesTab.tsx",
+            "src/app/(main)/admin/public-library/AdminPublicItemsTab.tsx",
+            "src/app/(main)/admin/public-library/AdminPublicPowersTab.tsx",
+            "src/app/(main)/admin/public-library/AdminPublicTechniquesTab.tsx",
+            "src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx",
+            "src/app/(main)/characters/[id]/page.tsx",
+            "src/app/(main)/codex/CodexCreatureFeatsTab.tsx",
+            "src/app/(main)/codex/CodexFeatsTab.tsx",
+            "src/app/(main)/codex/CodexPartsTab.tsx",
+            "src/app/(main)/codex/CodexPropertiesTab.tsx",
+            "src/app/(main)/codex/CodexSkillsTab.tsx",
+            "src/app/(main)/codex/CodexTraitsTab.tsx",
+            "src/app/(main)/creature-creator/page.tsx",
+            "src/app/(main)/creature-creator/transformers.ts",
+            "src/app/(main)/empowered-technique-creator/page.tsx",
+            "src/app/(main)/layout.tsx",
+            "src/app/(main)/library/LibraryPublicContent.tsx",
+            "src/app/(main)/library/page.tsx",
+            "src/app/(main)/power-creator/page.tsx",
+            "src/app/(main)/technique-creator/page.tsx",
+            "src/app/api/public/[type]/route.ts",
+            "src/app/global-error.tsx",
+            "src/components/character-creator/steps/equipment-step.tsx",
+            "src/components/character-creator/steps/powers-step.tsx",
+            "src/components/character-sheet/add-library-item-modal.tsx",
+            "src/components/character-sheet/character-sheet-context.tsx",
+            "src/components/character-sheet/library-section.tsx",
+            "src/components/crafting/CraftingItemSelectModal.tsx",
+            "src/components/crafting/get-crafting-market-price.ts",
+            "src/components/creator/LoadFromLibraryModal.tsx",
+            "src/components/layout/main-content-boundary.tsx",
+            "src/components/shared/choice-trait-option-select.tsx",
+            "src/components/shared/index.ts",
+            "src/components/shared/list-components.tsx",
+            "src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/AI_TASK_QUEUE.md",
+            "src/hooks/codex-types.ts",
+            "src/hooks/index.ts",
+            "src/hooks/use-add-library-item-data.ts",
+            "src/hooks/use-codex.ts",
+            "src/hooks/use-load-modal-library.ts",
+            "src/hooks/use-official-library.ts",
+            "src/hooks/use-user-library.ts",
+            "src/lib/calculators/empowered-technique-calc.ts",
+            "src/lib/calculators/item-calc.ts",
+            "src/lib/calculators/power-calc.ts",
+            "src/lib/calculators/technique-calc.ts",
+            "src/lib/data-enrichment.ts",
+            "src/lib/game/formulas.ts",
+            "src/lib/library-selectable-builders.ts",
+            "src/proxy.ts"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/app/(main)/resources/page.tsx",
+        "acceptance_criteria:",
+        "EitherPDFexistsinpublic/andlinkworks,orlinkpointstoexistingasset,orUIclearlyindicatesunavailabilityanddoesnot404.",
+        "notes:\"DONE20260613:`public/RealmsCharacterSheetAlpha.pdf`existsandresourcespagelinksto`/RealmsCharacterSheetAlpha.pdf`withdownloadattribute.No404.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-305",
+      "title": "Fix email/password onboarding (verification + redirects + resend)",
+      "status": "done",
+      "matches": [
+        {
+          "hash": "8c90d75a1a210ed056c9a0f8a024bbde4a43f3bb",
+          "subject": "chore(audit): full-site + AI-workflow audit, safe fixes, critical RLS fix, backlog",
+          "files": [
+            ".cursor/rules/realms-project.mdc",
+            ".cursor/rules/realms-unification.mdc",
+            "AGENTS.md",
+            "package.json",
+            "reports/task-reconcile-report.json",
+            "sql/supabase-role-escalation-fix-2026-06.sql",
+            "src/app/(auth)/forgot-username/page.tsx",
+            "src/app/(main)/about/page.tsx",
+            "src/app/(main)/characters/actions.ts",
+            "src/app/(main)/characters/page.tsx",
+            "src/app/(main)/crafting/[id]/page.tsx",
+            "src/app/(main)/creature-creator/transformers.ts",
+            "src/app/(main)/item-creator/page.tsx",
+            "src/app/(main)/library/actions.ts",
+            "src/app/(main)/library/page.tsx",
+            "src/app/(main)/my-account/page.tsx",
+            "src/app/(main)/technique-creator/page.tsx",
+            "src/app/actions.ts",
+            "src/app/api/session/route.ts",
+            "src/components/character-creator/species-modal.tsx",
+            "src/components/character-creator/steps/equipment-step.tsx",
+            "src/components/character-creator/steps/species-step.tsx",
+            "src/components/character-sheet/feats-tab.tsx",
+            "src/components/character-sheet/library-section.tsx",
+            "src/components/character-sheet/roll-log.tsx",
+            "src/components/character-sheet/skills-section.tsx",
+            "src/components/character/character-card.tsx",
+            "src/components/ui/button.tsx",
+            "src/docs/DATABASE_CODEX_AUDIT.md",
+            "src/docs/README.md",
+            "src/docs/UI_COMPONENT_REFERENCE.md",
+            "src/docs/ai/AGENT_GUIDE.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/AI_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/FULL_AUDIT_2026-06.md",
+            "src/docs/ai/SYSTEMATIC_AUDIT_2026-06.md",
+            "src/docs/ai/archive/ADMIN_EDIT_AUDIT.md",
+            "src/docs/ai/archive/AI_CHANGELOG_ARCHIVE.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/ai/archive/TOOLTIP_AUDIT_AND_STANDARD_2026-04-09.md",
+            "src/hooks/index.ts",
+            "src/hooks/use-codex.ts",
+            "src/hooks/use-creator-cache.ts",
+            "src/hooks/use-creator-load.ts",
+            "src/hooks/use-rtdb.ts",
+            "src/lib/calculators/power-calc.ts",
+            "src/lib/character-server.ts",
+            "src/lib/codex-server.ts",
+            "src/lib/data-enrichment.ts",
+            "src/lib/game/index.ts",
+            "src/lib/game/progression.ts",
+            "src/lib/server.ts",
+            "src/lib/supabase/session.ts",
+            "src/lib/utils/array.ts",
+            "src/services/campaign-roll-service.ts",
+            "src/services/campaign-service.ts",
+            "src/services/game-data-service.ts",
+            "src/services/index.ts",
+            "src/services/library-service.ts",
+            "src/types/auth.ts",
+            "src/types/campaign-roll.ts"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/app/(auth)/register/page.tsx",
+        "src/app/(auth)/login/page.tsx",
+        "src/app/(auth)/forgotpassword/page.tsx",
+        "src/app/auth/confirm/route.ts",
+        "acceptance_criteria:",
+        "Registeruses`emailRedirectTo`pointingto`/auth/confirm?next=...`",
+        "If`signUp()`returnsnosession,Registershowsa“Checkyouremail”successscreenanddoesnotredirectintotheapp",
+        "Loginsupportsboth`redirect`and`returnTo`andsafelynormalizesredirectpaths",
+        "Loginsurfacesclear“confirmyouremail”messagingandallowsresendingconfirmation",
+        "Forgotpassworduses`/auth/confirm?next=/login`redirect",
+        "`npmrunbuild`passes",
+        "notes:|",
+        "Inprogress20260409:ImplementedconfirmawaresignupsuccessUI+resendconfirmation;normalizedredirectparams(`redirect`+`returnTo`+sessionStoragefallback)onlogin/register;loginshowsconfirmerrorsandsupportsresend;forgotpasswordredirectTonowuses/auth/confirm.PRlinkpending.",
+        "Normalizedtodone20260612(doublecheckpass):verifiedincode—registeremailRedirectTo`/auth/confirm?next=...`+\"CheckYourEmail\"state+resend;loginreads`redirect`/`returnTo`withsafepathnormalization;forgotpasswordredirectTo`/auth/confirm?next=/login`.Buildpasses."
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-306",
+      "title": "Allow leveling down in Level Up modal",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/components/charactersheet/levelupmodal.tsx",
+        "src/app/(main)/characters/[id]/page.tsx",
+        "pr_link:(pending)",
+        "merged_at:(pending)",
+        "description:|",
+        "ThecharactersheetLevelUpmodalcurrentlyonlysupportsincreasinglevel.Itshouldalsoallow",
+        "decreasinglevel(s)(formanualadjustmentandtesting),withthepreviewpanelshowingnegative",
+        "deltascorrectlybeforeapplyingthechange.",
+        "acceptance_criteria:",
+        "Thelevelselectorsupportsdecrementingbelowcurrentlevel(downtolevel1)",
+        "Thegainspreviewdisplaysnegativedeltascorrectly(no\"+12\"formatting)",
+        "Confirmisdisabledwhentargetlevelequalscurrentlevel",
+        "`npmrunbuild`passes",
+        "notes:|",
+        "Ownerfeedback20260420:\"thelevleupmodalshouldalsoletyougodownlevel(s)notjustup\"",
+        "Implementedlocally20260420:",
+        "Levelselectornowallowsdecrementingdowntolevel1(notjustcurrent+1..max)",
+        "Previewdeltasrenderwithcorrectsignformatting(no\"+\")",
+        "Confirmdisabledunlesstargetdiffersfromcurrentlevel",
+        "Verification:`npmrunbuild`passes",
+        "Normalizedtodone20260612(doublecheckpass):verifiedinlevelupmodal.tsx—minLevel=1,decrementenabledto1,confirmdisabledwhen!isLevelChange,ArrowDown/Up+signeddeltas."
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-307",
+      "title": "Species preview modal should expand multi-choice traits",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/components/charactercreator/speciesmodal.tsx",
+        "src/components/charactercreator/steps/speciesstep.tsx",
+        "src/lib/choicetrait.ts",
+        "pr_link:(pending)",
+        "merged_at:(pending)",
+        "description:|",
+        "IntheSpeciessteppreviewmodal(openedbeforeselectingaspecies),traitsthathavemultiple",
+        "choiceoptions(via`option_trait_ids`)shouldbeexpandablesouserscanviewtheavailable",
+        "optionsbeforepickingthespecies.",
+        "acceptance_criteria:",
+        "Inthespeciespreviewmodal,choicetraitsrenderwithanexpand/collapseUI",
+        "Expandingshowsalloptiontraits(name+description)",
+        "Nonchoicetraitsrenderasbefore",
+        "`npmrunbuild`passes",
+        "notes:|",
+        "Ownerfeedback20260420:expandmultichoicetraitsinspeciespreviewmodal.",
+        "Implementedlocally20260420:",
+        "SpeciesModalrenderstraitswith`option_trait_ids`asexpandablerows(showsoptionlist)",
+        "Buildverified:`npmrunbuild`passes",
+        "Normalizedtodone20260612:verifiedimplementedduringsystematicaudit(SA518)andreconfirmedindoublecheckpass(componentpresent+wired)."
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-308",
+      "title": "Ancestry step choice traits should use expandable option list (not dropdown)",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/components/charactercreator/steps/ancestrystep.tsx",
+        "src/components/shared/choicetraitoptionselect.tsx",
+        "src/components/shared/index.ts",
+        "src/components/charactersheet/editspeciesmodal.tsx",
+        "pr_link:(pending)",
+        "merged_at:(pending)",
+        "description:|",
+        "Theancestrystep(andmatchingeditspeciesflow)currentlyusesa<select>forchoicetraits",
+        "(traitswith`option_trait_ids`).Thispreventsusersfromreadingthefulloptiondescriptions",
+        "beforeselecting.",
+        "acceptance_criteria:",
+        "Choicetraitsrenderanexpandablelistofoptions(name+description)withaclearselectedstate",
+        "Userscanselect/unselectanoptionfromthelist(taptargets≥44px)",
+        "CreatorAncestrystepandsheetEditSpeciesmodalbothusethesamepattern",
+        "`npmrunbuild`passes",
+        "notes:|",
+        "Ownerfeedback20260420:replacedropdownchoicetraitUIwithexpandablelistpicker.",
+        "Implementedlocally20260420:",
+        "Added`ChoiceTraitOptionListPicker`(expandableoptionswithdescriptions+selectbutton)",
+        "Wiredintocreator`ancestrystep`andsheet`editspeciesmodal`",
+        "Verification:`npmrunbuild`passes",
+        "Normalizedtodone20260612:verifiedimplementedduringsystematicaudit(SA519)andreconfirmedindoublecheckpass(choicetraitoptionselect.tsxpresent+wiredintoancestrystep+editspeciesmodal)."
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-310",
+      "title": "User library drift detection + patch sync controls (powers/techniques/armaments)",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/lib/librarysync.ts",
+        "src/app/(main)/library/LibraryPowersTab.tsx",
+        "src/app/(main)/library/LibraryTechniquesTab.tsx",
+        "src/app/(main)/library/LibraryItemsTab.tsx",
+        "src/app/(main)/characters/[id]/page.tsx",
+        "src/docs/ALL_FEEDBACK_CLEAN.md",
+        "src/docs/ai/AI_CHANGELOG.md",
+        "pr_link:(pending)",
+        "merged_at:(pending)",
+        "description:|",
+        "Addalightweightdependencysafetyworkflowforuserlibraries:",
+        "detectunresolved/deletedparts/options/propertiesagainstcurrentcodexrules,shownonblocking",
+        "driftwarnings,andallowexplicitperitemandglobal“Syncwithcurrentpatch”updates.",
+        "Keepcharactersheetenrichmentlivewithlatestavailabletechniquesources(includingempoweredtechniques).",
+        "acceptance_criteria:",
+        "Shareddrift/sanitizeutilityexistsforpowers,techniques,andarmaments(missingref+missingoptiondetection).",
+        "MyLibrarypowers/techniques/armamentslistsshowdriftstateandnonblockingwarningcontext.",
+        "Peritemsyncactionupdatesonlytheselecteddriftedentrytosanitizedcurrentrulepayload.",
+        "Globalsyncactionupdatesalldriftedentriesintheactivetab.",
+        "Charactersheetenrichmentincludesempoweredtechniquelibrariesintechniqueresolutionfallback.",
+        "`npmrunbuild`passes.",
+        "notes:|",
+        "Inprogress20260501:",
+        "Addedsharedresolver/sanitizerin`src/lib/librarysync.ts`withnullsafeoptionhandlingandmissingrefdetection.",
+        "Addedperitem+globalsynccontrolsanddriftbadges/warningstopowers,techniques(standard+empowered),andarmamentstabs.",
+        "Updatedcharactersheetdatasourcestoincludeuser/publicempoweredtechniquesintechniqueenrichmentfallback.",
+        "Verification:`npmrunbuild`passes.",
+        "Followup20260516:",
+        "Fixeddriftdetectionblindspotwhereeditedpart/propertydefinitionsdidnottriggersyncstate.",
+        "Addeddependencyfingerprintmetadataandcomparisonlogic(`syncMeta.dependencyFingerprint`)forpowers/techniques/items/creatures.",
+        "Legacyentrieswithoutfingerprintmetadatanowsurfaceasdriftedonce(\"needsbootstrapsync\"),thenstorefingerprintonsync.",
+        "Verification:`npmrunbuild`passes.",
+        "Normalizedtodone20260612(doublecheckpass):librarysync.tspresent;peritem+globalsync+driftbadgeswiredacrosspowers/techniques/empowered/armamentstabs;referencedaslivebyTASK335.(Note:TASK335item5—addaconfirmtoglobalsync—remainstrackedunderTASK335,nothere.)"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-313",
+      "title": "Unify enhanced-item hooks (official vs user)",
+      "status": "done",
+      "matches": [
+        {
+          "hash": "da2e96e733237e94edf78c09ccdd031dfd9f550c",
+          "subject": "Complete remaining task queue (TASK-269, TASK-313-327).",
+          "files": [
+            "scripts/session_submit.js",
+            "sql/README.md",
+            "sql/supabase-rls-initplan-fk-indexes-2026-06.sql",
+            "sql/supabase-storage-select-hardening-2026-06.sql",
+            "src/app/(main)/admin/codex/AdminArchetypesTab.tsx",
+            "src/app/(main)/admin/public-library/AdminPublicCreaturesTab.tsx",
+            "src/app/(main)/admin/public-library/AdminPublicItemsTab.tsx",
+            "src/app/(main)/admin/public-library/AdminPublicPowersTab.tsx",
+            "src/app/(main)/admin/public-library/AdminPublicTechniquesTab.tsx",
+            "src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx",
+            "src/app/(main)/characters/[id]/page.tsx",
+            "src/app/(main)/codex/CodexCreatureFeatsTab.tsx",
+            "src/app/(main)/codex/CodexFeatsTab.tsx",
+            "src/app/(main)/codex/CodexPartsTab.tsx",
+            "src/app/(main)/codex/CodexPropertiesTab.tsx",
+            "src/app/(main)/codex/CodexSkillsTab.tsx",
+            "src/app/(main)/codex/CodexTraitsTab.tsx",
+            "src/app/(main)/creature-creator/page.tsx",
+            "src/app/(main)/creature-creator/transformers.ts",
+            "src/app/(main)/empowered-technique-creator/page.tsx",
+            "src/app/(main)/layout.tsx",
+            "src/app/(main)/library/LibraryPublicContent.tsx",
+            "src/app/(main)/library/page.tsx",
+            "src/app/(main)/power-creator/page.tsx",
+            "src/app/(main)/technique-creator/page.tsx",
+            "src/app/api/public/[type]/route.ts",
+            "src/app/global-error.tsx",
+            "src/components/character-creator/steps/equipment-step.tsx",
+            "src/components/character-creator/steps/powers-step.tsx",
+            "src/components/character-sheet/add-library-item-modal.tsx",
+            "src/components/character-sheet/character-sheet-context.tsx",
+            "src/components/character-sheet/library-section.tsx",
+            "src/components/crafting/CraftingItemSelectModal.tsx",
+            "src/components/crafting/get-crafting-market-price.ts",
+            "src/components/creator/LoadFromLibraryModal.tsx",
+            "src/components/layout/main-content-boundary.tsx",
+            "src/components/shared/choice-trait-option-select.tsx",
+            "src/components/shared/index.ts",
+            "src/components/shared/list-components.tsx",
+            "src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/AI_TASK_QUEUE.md",
+            "src/hooks/codex-types.ts",
+            "src/hooks/index.ts",
+            "src/hooks/use-add-library-item-data.ts",
+            "src/hooks/use-codex.ts",
+            "src/hooks/use-load-modal-library.ts",
+            "src/hooks/use-official-library.ts",
+            "src/hooks/use-user-library.ts",
+            "src/lib/calculators/empowered-technique-calc.ts",
+            "src/lib/calculators/item-calc.ts",
+            "src/lib/calculators/power-calc.ts",
+            "src/lib/calculators/technique-calc.ts",
+            "src/lib/data-enrichment.ts",
+            "src/lib/game/formulas.ts",
+            "src/lib/library-selectable-builders.ts",
+            "src/proxy.ts"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/hooks/useenhanceditems.ts",
+        "src/hooks/index.ts",
+        "src/app/(main)/admin/publiclibrary/AdminPublicEnhancedItemsTab.tsx",
+        "acceptance_criteria:",
+        "Onesharedhook(scopeparamorsharedinternal)servesbothuserandofficialenhanceditemreads.",
+        "Admintabconsumermigrated;nobehaviorchange.",
+        "`npmrunbuild`passes.",
+        "notes:\"20260613.OptionB:single`useenhanceditems.ts`with`scope:'user'|'official'`forquery+CRUD;`OfficialEnhancedItem`typecolocated;admintabuses`useEnhancedItems('official')`+scopedmutationsfrom`@/hooks`;deleted`useofficialenhanceditems.ts`.Thin`useOfficialEnhancedItems`aliasesretained.Buildexit0.\""
+      ],
+      "related_overlap": [
+        "src/hooks/index.ts"
+      ]
+    },
+    {
+      "id": "TASK-314",
+      "title": "Extract shared official-library list renderer (Library/Admin/Codex tab dedup)",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/lib/codex/featlist.ts",
+        "src/lib/codex/skilllist.ts",
+        "src/components/codex/codexfeatrow.tsx",
+        "src/components/codex/codexskillrow.tsx",
+        "src/app/(main)/codex/CodexFeatsTab.tsx",
+        "src/app/(main)/codex/CodexSkillsTab.tsx",
+        "src/app/(main)/admin/codex/AdminFeatsTab.tsx",
+        "src/app/(main)/admin/codex/AdminSkillsTab.tsx",
+        "acceptance_criteria:",
+        "Asharedlistrenderercollapsestheduplicatedgrid/displaylogicbetweenLibraryandAdmin(andCodexwhereapplicable).",
+        "The4Codextabsreuse`CodexMyCodexEmpty`insteadofinlinecopy.",
+        "Novisual/behavioralregressionsacrossLibrary,Admin,Codex.",
+        "`npmrunbuild`passes.",
+        "notes:|",
+        "Done20260618.OfficiallibrarylistsviaTASK347;Codex≈Adminfeats/skillsdedupvia",
+        "lib/codex/*list.ts+CodexFeatRow/CodexSkillRow.CodexMyCodexEmptyon6Mymodetabs.Buildexit0."
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-315",
+      "title": "Finish public→official rename (delete /api/public, migrate usePublicLibrary call sites)",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/app/api/public/[type]/route.ts",
+        "src/app/api/official/[type]/route.ts",
+        "src/hooks/usepubliclibrary.ts",
+        "src/hooks/index.ts",
+        "acceptance_criteria:",
+        "All`usePublicLibrary`/`useAddPublicToLibrary`callsitesmigratedto`useOfficial*`.",
+        "`/api/public/[type]`removed;noruntimecallersremain.",
+        "`usepubliclibrary.ts`renamed(andimportersupdated).",
+        "`npmrunbuild`passes.",
+        "notes:\"DONE20260613:MigratedallcallsitestouseOfficialLibrary/useAddOfficialToLibrary;renamedhookfiletouseofficiallibrary.ts;removeddeprecatedaliases;deleted/api/public/[type];proxymatcherupdated.Buildexit0.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-316",
+      "title": "Rename use-rtdb.ts → codex-types (misleading filename)",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/hooks/usertdb.ts",
+        "src/hooks/index.ts",
+        "acceptance_criteria:",
+        "Filerenamed;allimportersandthebarrelupdated.",
+        "No`rtdb`tokenremainsinthefilenameoritsheader.",
+        "`npmrunbuild`passes.",
+        "notes:\"DONE20260613:Renamedusertdb.ts→codextypes.ts;barrel+directimportersupdated.Buildexit0.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-317",
+      "title": "Adopt existing character-sheet context; split characters/[id]/page.tsx (4,200 L)",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/app/(main)/characters/[id]/page.tsx",
+        "src/components/charactersheet/charactersheetcontext.tsx",
+        "src/components/charactersheet/librarysection.tsx",
+        "src/components/charactersheet/CharacterSheetModals.tsx",
+        "acceptance_criteria:",
+        "`useCharacterSheet`/contextisadoptedforsharedsheetstate;propdrillingreducedmeasurably.",
+        "Pagesplitintosmallertab/sectionmodules(nosinglefilegrowth).",
+        "Nobehaviorregressions(autosave,enrichment,rolls,portrait,campaignvisibility).",
+        "`npmrunbuild`passes.",
+        "completed_work:|",
+        "CharacterSheetProvider+LibrarySectioncontext(20propremovals).",
+        "TASK348:CharacterSheetBody+useCharacterSheetDerived;fourmainsectionsoncontext.",
+        "useCharacterSheetActions:allsheetmutationhandlersextractedfrompage.",
+        "LibrarySectionusesentitylibrarysections(*ListSection)vialibraryentityrowsmappers;librarysection~1783→~820lines.",
+        "SingleLibrarySectionDOMmountinCharacterSheetBody(responsiveflex/grid).",
+        "FeatsTabusesFeatsTraitsListSection+libraryfeatrows(~760→~454L).",
+        "TASK375:sharedpartdisplay.tsforPartData+calculatorTPalignment.",
+        "remaining_work:|",
+        "(none)",
+        "notes:|",
+        "Done20260618(continued):FeatsTabwiredthroughFeatsTraitsListSection+libraryfeatrowsmappers(~760→~454L).TASK375partsToPartDatadedupedone.Buildexit0.",
+        "20260613incremental.20260618:page~639L;entitylibrarysectionsmigration+singlelibrarymount.Buildexit0(webpack).",
+        "developer_test_plan:|",
+        "SuiteDEVV009T001–T005—seeBUILD_VALIDATION.md.",
+        "build_validation:",
+        "suite:DEVV009",
+        "tests:",
+        "DEVV009T001",
+        "DEVV009T002",
+        "DEVV009T003",
+        "DEVV009T004",
+        "DEVV009T005"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-318",
+      "title": "Split add-library-item-modal.tsx (4,762 L) into hook + per-type subcomponents",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/components/charactersheet/addlibraryitemmodal.tsx",
+        "src/components/charactersheet/addlibraryitem/modalconfig.ts",
+        "src/components/charactersheet/addlibraryitem/mapselection.ts",
+        "src/components/charactersheet/addlibraryitem/powerheaderextra.tsx",
+        "src/hooks/addlibraryitem/",
+        "src/hooks/useaddlibraryitemdata.ts",
+        "src/hooks/index.ts",
+        "acceptance_criteria:",
+        "Fetch/filter/sortlogicextractedintoahook;pertyperenderingsplitintosubcomponents.",
+        "Nobehaviorchangetoselectionacrossallitemtypes.",
+        "`npmrunbuild`passes.",
+        "notes:Done20260618.Modal~90lines;`hooks/addlibraryitem/`pertypebuilders+load/normalize;modalconfig/mapselection/headerextra.Buildexit0.",
+        "build_validation:",
+        "suite:DEVV009",
+        "tests:",
+        "DEVV009T006"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-319",
+      "title": "Remove verified-unused shared exports + legacy load-modal branch",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/components/shared/listcomponents.tsx",
+        "src/components/shared/itemlist.tsx",
+        "src/components/shared/entitylibrarysections.tsx",
+        "src/components/shared/index.ts",
+        "src/hooks/usecodex.ts",
+        "acceptance_criteria:",
+        "Eachexportconfirmedzeroimporter(freshgrep)beforeremoval.",
+        "Barrelsupdated;`tscnoEmit`,`npmrunlint`,`npmrunbuild`pass.",
+        "notes:\"DONE20260613:RemovedSortHeader/SortHeaderRow,ItemList,EquipmentListSection,ChoiceTraitOptionSelect,prefetchFunctionsexports;removedLoadFromLibraryModalLegacybranch.Buildexit0.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-320",
+      "title": "Mount or remove unused ErrorBoundary",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/components/shared/errorboundary.tsx",
+        "acceptance_criteria:",
+        "ErrorBoundaryiseitherwiredaroundthehighrisksurfacesordeleted(withbarrelcleanup).",
+        "`npmrunbuild`passes.",
+        "notes:\"DONE20260613:MainContentBoundarywraps(main)layoutchildrenwithErrorBoundary.Buildexit0.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-321",
+      "title": "Reduce ESLint warnings (batch by rule)",
+      "status": "partial",
+      "matches": [],
+      "related_files": [
+        "(repowide)",
+        "acceptance_criteria:",
+        "Warningcountmateriallyreduced;nonewerrorsintroduced.",
+        "`reacthooks/exhaustivedeps`fixesdonotchangeruntimebehavior.",
+        "`npmrunbuild`passes.",
+        "completed_work:|",
+        "Batch1lintfix;0errors.",
+        "Batch2(TASK350):lib/hooksnounusedvars;charactersheetpagedestructuring;ESLint393→339warnings.",
+        "remaining_work:|",
+        "~339ESLintwarningsremain(mostlyexhaustivedeps,setstateineffect,adminany).",
+        "follow_up_tasks:",
+        "TASK350",
+        "notes:\"20260613batch1.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-322",
+      "title": "Route admin fetch through apiFetch wrapper",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/lib/apiclient.ts",
+        "acceptance_criteria:",
+        "Admindelete/savepathsuse`apiFetch`;errorhandlingconsistentwiththerestoftheapp.",
+        "`npmrunbuild`passes.",
+        "notes:\"DONE20260613:AdminpubliclibraryDELETEusesapiFetchin4tabs.Buildexit0.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-323",
+      "title": "Standardize loading/error/empty-state components",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/components/shared/listcomponents.tsx",
+        "acceptance_criteria:",
+        "Canonicalloading/error/emptycomponentschosenanddocumented(AGENT_GUIDE/unificationrule).",
+        "Inconsistentusagesmigrated;visualsconsistentacrosspages.",
+        "`npmrunbuild`passes.",
+        "notes:\"DONE20260613:AbsorbedbyTASK339—ErrorDisplay+onRetry,LoadingState,ListEmptyStatestandardizedacrossLibrary/Codex/creators/admin.Buildexit0.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-324",
+      "title": "Consolidate health/energy/skill-point formulas into calculations.ts",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/lib/game/formulas.ts",
+        "src/lib/game/calculations.ts",
+        "acceptance_criteria:",
+        "Deprecatedhelpersremoved;allcallersuse`calculations.ts`.",
+        "Valuesunchanged(verifyagainstGAME_RULES.md).",
+        "`npmrunbuild`passes.",
+        "notes:\"DONE20260613:RemoveddeprecatedgetBaseHealth/getBaseEnergy/getCharacterMaxHealthEnergy/calculateSkillPointsfromformulas.ts(noexternalcallers).Activelogicincalculations.ts.Buildexit0.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-325",
+      "title": "Fix or drop session_submit.js (--autopush + wrong path)",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "scripts/session_submit.js",
+        "package.json",
+        "acceptance_criteria:",
+        "`session_submit.js`eitherfixed(correctpath,nounguardedgitmutation)orremoved.",
+        "Noscriptreferencesanonexistent`docs/ai/`path.",
+        "notes:\"DONE20260613:Autopushplaceholderpathfixedtosrc/docs/ai/;requiresALLOW_AUTOPUSH=1.Feedbackpathalreadycorrect.BuildN/A.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-326",
+      "title": "Tighten Supabase security advisors (bucket listing + leaked-password protection)",
+      "status": "partial",
+      "matches": [],
+      "related_files": [
+        "src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md",
+        "acceptance_criteria:",
+        "StorageSELECTpoliciesscopedsobucketsaren'tbroadlylistable(readbykeystillworks).",
+        "LeakedpasswordprotectionenabledinSupabaseAuth.",
+        "SQL/migrationdocumented;advisorsrechecked.",
+        "completed_work:|",
+        "StorageSELECThardeningappliedlive(MCP).",
+        "remaining_work:|",
+        "EnableHIBPinSupabaseAuth(DEV001).",
+        "follow_up_tasks:",
+        "TASK353",
+        "notes:\"20260613.SeeDEVELOPER_TASK_QUEUE.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-327",
+      "title": "Address Supabase performance advisors (RLS initplan, dup policies, FK indexes)",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/docs/SUPABASE_SCHEMA.md",
+        "sql/supabaserlsinitplanfkindexes202606.sql",
+        "sql/supabaserlsinitplanbatch2202606.sql",
+        "sql/supabaserlsconsolidatepermissive202606.sql",
+        "acceptance_criteria:",
+        "RLSpolicieswrap`auth.*()`inascalarsubquery.",
+        "Duplicatepermissivepoliciesconsolidatedwheresafe.",
+        "MissingFKindexesadded;clearlyunusedindexesremoved.",
+        "Migrationsdocumented;advisorsrechecked;noaccessregressions.",
+        "notes:\"Done20260618.Batch1initplan+FKindexes(20260613),batch2(TASK354),duplicatepolicyconsolidation(TASK352).Performanceadvisor:nomultiple_permissive_policies;unused_indexINFOonlyonempty/lowtraffictables.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-328",
+      "title": "\"CRITICAL: Prevent user_profiles.role self-escalation (RLS/trigger)\"",
+      "status": "done",
+      "matches": [
+        {
+          "hash": "8c90d75a1a210ed056c9a0f8a024bbde4a43f3bb",
+          "subject": "chore(audit): full-site + AI-workflow audit, safe fixes, critical RLS fix, backlog",
+          "files": [
+            ".cursor/rules/realms-project.mdc",
+            ".cursor/rules/realms-unification.mdc",
+            "AGENTS.md",
+            "package.json",
+            "reports/task-reconcile-report.json",
+            "sql/supabase-role-escalation-fix-2026-06.sql",
+            "src/app/(auth)/forgot-username/page.tsx",
+            "src/app/(main)/about/page.tsx",
+            "src/app/(main)/characters/actions.ts",
+            "src/app/(main)/characters/page.tsx",
+            "src/app/(main)/crafting/[id]/page.tsx",
+            "src/app/(main)/creature-creator/transformers.ts",
+            "src/app/(main)/item-creator/page.tsx",
+            "src/app/(main)/library/actions.ts",
+            "src/app/(main)/library/page.tsx",
+            "src/app/(main)/my-account/page.tsx",
+            "src/app/(main)/technique-creator/page.tsx",
+            "src/app/actions.ts",
+            "src/app/api/session/route.ts",
+            "src/components/character-creator/species-modal.tsx",
+            "src/components/character-creator/steps/equipment-step.tsx",
+            "src/components/character-creator/steps/species-step.tsx",
+            "src/components/character-sheet/feats-tab.tsx",
+            "src/components/character-sheet/library-section.tsx",
+            "src/components/character-sheet/roll-log.tsx",
+            "src/components/character-sheet/skills-section.tsx",
+            "src/components/character/character-card.tsx",
+            "src/components/ui/button.tsx",
+            "src/docs/DATABASE_CODEX_AUDIT.md",
+            "src/docs/README.md",
+            "src/docs/UI_COMPONENT_REFERENCE.md",
+            "src/docs/ai/AGENT_GUIDE.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/AI_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/FULL_AUDIT_2026-06.md",
+            "src/docs/ai/SYSTEMATIC_AUDIT_2026-06.md",
+            "src/docs/ai/archive/ADMIN_EDIT_AUDIT.md",
+            "src/docs/ai/archive/AI_CHANGELOG_ARCHIVE.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/ai/archive/TOOLTIP_AUDIT_AND_STANDARD_2026-04-09.md",
+            "src/hooks/index.ts",
+            "src/hooks/use-codex.ts",
+            "src/hooks/use-creator-cache.ts",
+            "src/hooks/use-creator-load.ts",
+            "src/hooks/use-rtdb.ts",
+            "src/lib/calculators/power-calc.ts",
+            "src/lib/character-server.ts",
+            "src/lib/codex-server.ts",
+            "src/lib/data-enrichment.ts",
+            "src/lib/game/index.ts",
+            "src/lib/game/progression.ts",
+            "src/lib/server.ts",
+            "src/lib/supabase/session.ts",
+            "src/lib/utils/array.ts",
+            "src/services/campaign-roll-service.ts",
+            "src/services/campaign-service.ts",
+            "src/services/game-data-service.ts",
+            "src/services/index.ts",
+            "src/services/library-service.ts",
+            "src/types/auth.ts",
+            "src/types/campaign-roll.ts"
+          ]
+        }
+      ],
+      "related_files": [
+        "sql/supabasesecurityhardening202606.sql",
+        "src/lib/admin.ts",
+        "src/app/api/admin/users/updaterole/route.ts",
+        "acceptance_criteria:",
+        "Anonadminauthenticatedusercannotchangetheirown(oranyone's)`role`viatheSupabaseclient/PostgREST.",
+        "AdminrolechangesviatheserviceroleAPIstillsucceed.",
+        "Newusersignup/profilecreationstillworks(INSERTpathunaffected).",
+        "Migrationdocumentedinsql/andruninSupabaseDashboard;reverifiedviapg_policies/test.",
+        "notes:\"SA191.DONE20260612:migrationsql/supabaseroleescalationfix202606.sqlAPPLIEDtoproduction(lbqhiwudvifmkjtkccdg)viaMCPapply_migration(name:prevent_role_self_escalation).Verifiedinarolledbacktransaction:authenticatedrolechange=BLOCKED,service_role=ALLOWED(adminAPIunaffected).Triggertrg_prevent_unauthorized_role_changeenabledonuser_profiles.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-329",
+      "title": "Campaign & roll authorization hardening (RLS + API)",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "sql/pathcphase0consolidatetopublicpart2.sql",
+        "src/app/api/campaigns/[id]/rolls/route.ts",
+        "src/app/api/campaigns/invite/[code]/route.ts",
+        "src/app/(main)/campaigns/actions.ts",
+        "src/app/(main)/campaigns/[id]/page.tsx",
+        "acceptance_criteria:",
+        "MemberscannotUPDATEcampaignrowstheydon'townviaPostgREST(owneronlyRLSforsensitivecolumns).",
+        "campaign_rollswritepoliciesrequireuser_id=auth.uid()androster/characterownership.",
+        "RollPOSTderivesattributionfromverifiedownership,notclientfields.",
+        "Invitecodelookuprequiresauthorisotherwisehardenedagainstenumeration.",
+        "InvitecodevisibletoRMonly.",
+        "notes:\"SA131/2/3/5/6/7,SA192..5/17.DONE20260613.Migrationsql/supabasecampaignauthz202606.sqlAPPLIEDtoprod(lbqhiwudvifmkjtkccdg,name:campaign_authz_hardening):droppedmemberUPDATEoncampaigns(ownerALLpolicyremains);campaign_rollsnowhascallerboundINSERT(user_id=auth.uid+participant)+ownerorauthorDELETE+noUPDATE.Verifiedliveinarolledbacktx:memberUPDATEcampaigns=0rows,spoofedrollINSERT=BLOCKED,ownrollINSERT=ALLOWED.Code:removeCharacterFromCampaignActionnowwritesviaservicerole;rollsPOSTverifiescharacterIdagainsttheroster(ownermayrollanyrosterchar)andderivesthedisplayednamefromtheroster,trimrunsviaservicerole;invite/[code]GETnowrequiresauth(+existingratelimit);GET/api/campaigns/[id]andlistendpointwithholdinvite_codefromnonowners;campaigndetailpageshowstheInviteCodesectiontotheRMonly.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-330",
+      "title": "Admin role-management hardening",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/app/api/admin/users/updaterole/route.ts",
+        "src/app/(main)/admin/users/page.tsx",
+        "src/app/api/admin/rolepolicies/route.ts",
+        "src/app/api/admin/users/route.ts",
+        "acceptance_criteria:",
+        "updaterolereturnsanerrorwhentheDBupdatefails.",
+        "Rolechangesrequireexplicitconfirm;admingrant/revokeislogged;cannotremovethelastadmin.",
+        "rolepoliciesvalidatespermissionkeysagainstanallowlist(Zod).",
+        "Adminuserlistispaginated/emailexposureminimized.",
+        "notes:\"SA141/2/3/4/7,SA196/7/20.DONE20260613.updaterolenow:readsthetarget'scurrentrole,returns500onafailedDBupdate(nomoresilentsuccess),enforcesalastadminguard(409whendemotingtheonlyadmin),andwritesanappendonlyauditrow.Migrationsql/supabaseadminroleaudit202606.sqlAPPLIEDtoprod(name:admin_role_audit_log):admin_role_audittable,adminsreadRLS,serviceroleonlywrites.rolepoliciesPATCHnowpersistsonlytheallowlistedpermissionkey(can_upload_profile_picture)insteadofspreadingarbitraryclientkeys./api/admin/userscappedat1000.Adminuserspagenowrequiresaconfirmationmodal(ConfirmActionModal)beforeanyrolechange,withastrongerdangervariantwarningforadmingrant/revoke(nomoreoneclick<select>).\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-331",
+      "title": "Upload & account auth hardening",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/app/api/upload/portrait/route.ts",
+        "src/app/api/upload/profilepicture/route.ts",
+        "src/app/(main)/myaccount/page.tsx",
+        "acceptance_criteria:",
+        "PortraituploadvalidatescharacterIdformatandownershipbeforewrite.",
+        "Profilepictureextensionderivesfromdetectedcontenttype.",
+        "Email/passwordchangereauthenticateswiththeprovidedcurrentpassword.",
+        "OAuthonlyuserscandeletetheiraccount.",
+        "Uploadupsertnolongerclobberscreated_at.",
+        "notes:\"SA152..7/10,SA1818,SA199.(Bucketlisting+leakedpassword=TASK326.)DONE20260613(codeonly,nomigration).Portraitupload:characterIdmustmatchaUUIDandbeownedbythecaller(characters.user_id)beforeitiswritten;bothcallers(finalizestep,charactersheet)uploadonlyafterthecharacterissaved,sothisissafe.Profilepicture:extensionnowderivedfromthedetectedmagicbyteMIME(newdetectImageMime/extensionForImageMimeinlib/validateimage.ts),nottheclientfilename;upsertnolongerwritescreated_at(onlyphoto_url+updated_at),sosignuptimestampispreserved.myaccount:email+passwordchangesnowreauthenticatewiththecurrentpasswordviasignInWithPasswordbeforeupdateUser;accountdeletenowskipspasswordreauthforOAuthonlyusers(canChangeEmailPassword=false)andconfirmsviathetypedDELETE,withthepasswordfieldhiddenforthem.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-332",
+      "title": "Primitive-level a11y & touch targets (high leverage)",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/components/ui/button.tsx",
+        "src/components/ui/iconbutton.tsx",
+        "src/components/ui/modal.tsx",
+        "src/components/ui/tabnavigation.tsx",
+        "src/components/shared/listcomponents.tsx",
+        "acceptance_criteria:",
+        "InteractiveButton/IconButtonmeet44pxontouchviewports.",
+        "Modalstrapfocus,restoreonclose,andalwayshaveanaccessiblename.",
+        "TabpatternisWAIARIAcomplete;tabcountsrender.",
+        "ErrorDisplaysupportsretry;Library/Codexerrorstatesuseit.",
+        "npmrunbuildpasses;spotchecknolayoutregressions.",
+        "completed_work:|",
+        "Touchtargets,modalfocustrap,tabkeyboardnav,ErrorDisplayonRetry.",
+        "remaining_work:|",
+        "(none—completedviaTASK355)",
+        "follow_up_tasks:[]",
+        "notes:\"20260613.SA171..8.Tabpanelwiringfinished20260618(TASK355).Buildexit0.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-333",
+      "title": "Autosave correctness (sheet / encounter / crafting)",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/hooks/useautosave.ts",
+        "src/app/(main)/characters/[id]/page.tsx",
+        "src/app/(main)/encounters/[id]/combat/page.tsx",
+        "src/app/(main)/crafting/[id]/page.tsx",
+        "acceptance_criteria:",
+        "NoPATCHfiresoninitialloadwhennothingchanged.",
+        "Editsduringaninflightsavearenotlost.",
+        "Autosavefailuresshowanonblockingerrortotheuser.",
+        "npmrunbuildpasses.",
+        "notes:\"SA47/8/9,SA111/2,SA124.DONE20260613.Hook(useautosave.ts):(a)baselineresetonenable—when`enabled`flipsfalse→true(whichisexactlywhendatafinishesloadingineverycaller:sheet`enabled:isOwner`isfalseuntilthecharacterloads;encounters`enabled:isInitialized&&!!encounter`),thecurrentdataisadoptedasthesavedbaselineandNOsavefires;whiledisabledthebaselinetracksdatasoreenablingneverseesaphantomdiff.(b)queuedresave—asavearrivingwhileoneisinflightsetspendingResaveRef;oncompletionthelatestsnapshotisresaved(viaperformSaveReftoavoidselfreference),soeditsduringasaveareneverdropped;dirtyflagonlyclearsifnonewereditsarrived.(c)datareturnstobaselinenowcancelsthependingtimeoutandclearsthedirtyflag.Callers:charactersheetalreadytoastedonSaveError;addeduseToast+failuretoaststoall3encounterpages(combat/skill/mixed)sosavefailuresaresurfaced.NOTE:crafting/[id]doesNOTuseuseAutoSave(manualsave),soitwasoutofscope.Buildgreen,lintclean.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-334",
+      "title": "Technique creator load/save bug fixes + share PartCard + unify mechanic builder",
+      "status": "done",
+      "matches": [
+        {
+          "hash": "47da4bdab8ebc3036302a9dc05586a843cf9a036",
+          "subject": "Complete systematic audit backlog (TASK-334-346).",
+          "files": [
+            "AGENTS.md",
+            "sql/README.md",
+            "src/app/(auth)/actions.ts",
+            "src/app/(auth)/forgot-password/page.tsx",
+            "src/app/(auth)/forgot-username/action.ts",
+            "src/app/(auth)/forgot-username/page.tsx",
+            "src/app/(auth)/login/page.tsx",
+            "src/app/(auth)/register/page.tsx",
+            "src/app/(auth)/reset-password/page.tsx",
+            "src/app/(main)/about/layout.tsx",
+            "src/app/(main)/about/page.tsx",
+            "src/app/(main)/admin/codex/AdminArchetypesTab.tsx",
+            "src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx",
+            "src/app/(main)/admin/codex/AdminEquipmentTab.tsx",
+            "src/app/(main)/admin/codex/AdminFeatsTab.tsx",
+            "src/app/(main)/admin/codex/AdminPartsTab.tsx",
+            "src/app/(main)/admin/codex/AdminPropertiesTab.tsx",
+            "src/app/(main)/admin/codex/AdminSkillsTab.tsx",
+            "src/app/(main)/admin/codex/AdminSpeciesTab.tsx",
+            "src/app/(main)/admin/codex/AdminTraitsTab.tsx",
+            "src/app/(main)/admin/codex/CodexSpreadsheetView.tsx",
+            "src/app/(main)/admin/layout.tsx",
+            "src/app/(main)/admin/public-library/AdminPublicCreaturesTab.tsx",
+            "src/app/(main)/admin/public-library/AdminPublicEnhancedItemsTab.tsx",
+            "src/app/(main)/admin/public-library/AdminPublicItemsTab.tsx",
+            "src/app/(main)/admin/public-library/AdminPublicPowersTab.tsx",
+            "src/app/(main)/admin/public-library/AdminPublicTechniquesTab.tsx",
+            "src/app/(main)/characters/page.tsx",
+            "src/app/(main)/crafting/page.tsx",
+            "src/app/(main)/creature-creator/page.tsx",
+            "src/app/(main)/creature-creator/transformers.ts",
+            "src/app/(main)/empowered-technique-creator/page.tsx",
+            "src/app/(main)/encounter-tracker/page.tsx",
+            "src/app/(main)/encounter-tracker/redirect-page.tsx",
+            "src/app/(main)/encounters/[id]/_components/CombatEncounterView.tsx",
+            "src/app/(main)/encounters/page.tsx",
+            "src/app/(main)/error.tsx",
+            "src/app/(main)/home-page.tsx",
+            "src/app/(main)/item-creator/page.tsx",
+            "src/app/(main)/library/LibraryCreaturesTab.tsx",
+            "src/app/(main)/library/LibraryEnhancedTab.tsx",
+            "src/app/(main)/library/LibraryItemsTab.tsx",
+            "src/app/(main)/library/LibraryPowersTab.tsx",
+            "src/app/(main)/library/LibraryPublicContent.tsx",
+            "src/app/(main)/library/LibraryTechniquesTab.tsx",
+            "src/app/(main)/library/page.tsx",
+            "src/app/(main)/power-creator/page.tsx",
+            "src/app/(main)/privacy/page.tsx",
+            "src/app/(main)/rules/page.tsx",
+            "src/app/(main)/species-creator/page.tsx",
+            "src/app/(main)/technique-creator/page.tsx",
+            "src/app/(main)/terms/page.tsx",
+            "src/app/api/admin/users/route.ts",
+            "src/app/api/campaigns/route.ts",
+            "src/app/api/characters/route.ts",
+            "src/app/api/public/[type]/route.ts",
+            "src/app/api/tooltips/route.ts",
+            "src/app/auth/callback/route.ts",
+            "src/app/auth/confirm/route.ts",
+            "src/app/error.tsx",
+            "src/app/global-error.tsx",
+            "src/app/not-found.tsx",
+            "src/components/character/character-card.tsx",
+            "src/components/creator/index.ts",
+            "src/components/creator/power-part-card.tsx",
+            "src/components/encounters/CombatantCard.tsx",
+            "src/components/encounters/encounter-combatant-types.ts",
+            "src/components/encounters/encounter-constants.ts",
+            "src/components/layout/footer.tsx",
+            "src/components/layout/header.tsx",
+            "src/components/layout/protected-route.tsx",
+            "src/components/shared/roll-button.tsx",
+            "src/docs/DATABASE_CONSISTENCY_CHECKLIST.md",
+            "src/docs/SUPABASE_SCHEMA.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/AI_TASK_QUEUE.md",
+            "src/hooks/use-auth.ts",
+            "src/hooks/use-public-library.ts",
+            "src/hooks/use-user-library.ts",
+            "src/lib/api-validation.ts",
+            "src/lib/calculators/mechanic-builder.ts",
+            "src/lib/guest-encounter-migration.ts",
+            "src/lib/safe-redirect.ts",
+            "src/types/encounter.ts"
+          ]
+        },
+        {
+          "hash": "8c90d75a1a210ed056c9a0f8a024bbde4a43f3bb",
+          "subject": "chore(audit): full-site + AI-workflow audit, safe fixes, critical RLS fix, backlog",
+          "files": [
+            ".cursor/rules/realms-project.mdc",
+            ".cursor/rules/realms-unification.mdc",
+            "AGENTS.md",
+            "package.json",
+            "reports/task-reconcile-report.json",
+            "sql/supabase-role-escalation-fix-2026-06.sql",
+            "src/app/(auth)/forgot-username/page.tsx",
+            "src/app/(main)/about/page.tsx",
+            "src/app/(main)/characters/actions.ts",
+            "src/app/(main)/characters/page.tsx",
+            "src/app/(main)/crafting/[id]/page.tsx",
+            "src/app/(main)/creature-creator/transformers.ts",
+            "src/app/(main)/item-creator/page.tsx",
+            "src/app/(main)/library/actions.ts",
+            "src/app/(main)/library/page.tsx",
+            "src/app/(main)/my-account/page.tsx",
+            "src/app/(main)/technique-creator/page.tsx",
+            "src/app/actions.ts",
+            "src/app/api/session/route.ts",
+            "src/components/character-creator/species-modal.tsx",
+            "src/components/character-creator/steps/equipment-step.tsx",
+            "src/components/character-creator/steps/species-step.tsx",
+            "src/components/character-sheet/feats-tab.tsx",
+            "src/components/character-sheet/library-section.tsx",
+            "src/components/character-sheet/roll-log.tsx",
+            "src/components/character-sheet/skills-section.tsx",
+            "src/components/character/character-card.tsx",
+            "src/components/ui/button.tsx",
+            "src/docs/DATABASE_CODEX_AUDIT.md",
+            "src/docs/README.md",
+            "src/docs/UI_COMPONENT_REFERENCE.md",
+            "src/docs/ai/AGENT_GUIDE.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/AI_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/FULL_AUDIT_2026-06.md",
+            "src/docs/ai/SYSTEMATIC_AUDIT_2026-06.md",
+            "src/docs/ai/archive/ADMIN_EDIT_AUDIT.md",
+            "src/docs/ai/archive/AI_CHANGELOG_ARCHIVE.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/ai/archive/TOOLTIP_AUDIT_AND_STANDARD_2026-04-09.md",
+            "src/hooks/index.ts",
+            "src/hooks/use-codex.ts",
+            "src/hooks/use-creator-cache.ts",
+            "src/hooks/use-creator-load.ts",
+            "src/hooks/use-rtdb.ts",
+            "src/lib/calculators/power-calc.ts",
+            "src/lib/character-server.ts",
+            "src/lib/codex-server.ts",
+            "src/lib/data-enrichment.ts",
+            "src/lib/game/index.ts",
+            "src/lib/game/progression.ts",
+            "src/lib/server.ts",
+            "src/lib/supabase/session.ts",
+            "src/lib/utils/array.ts",
+            "src/services/campaign-roll-service.ts",
+            "src/services/campaign-service.ts",
+            "src/services/game-data-service.ts",
+            "src/services/index.ts",
+            "src/services/library-service.ts",
+            "src/types/auth.ts",
+            "src/types/campaign-roll.ts"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/app/(main)/techniquecreator/page.tsx",
+        "src/app/(main)/powercreator/PowerPartCard.tsx",
+        "src/lib/calculators/techniquecalc.ts",
+        "src/lib/calculators/mechanicbuilder.ts",
+        "acceptance_criteria:",
+        "Savedtechniquesroundtripreactionstateandmultidamagecorrectly.",
+        "onSaveSuccessfullyresetstheform.",
+        "Techniquereusesthesharedpartcardandunifiedmechanicbuilder.",
+        "npmrunbuildpasses.",
+        "notes:\"SA91/3/4/5/6/7.DONE20260613.Bugfixes(20260612)+unification:movedPowerPartCard→`src/components/creator/powerpartcard.tsx`;techniquecreatorusessharedPowerPartCard(`showApplyDuration={false}`)and`buildMechanicParts`(removed~240lineinlinePartCard+legacybuildMechanicPartPayload);mechanicbuilderextendedwith`WeaponConfig.attackMode`+`no_attack`.FixedTechniquePartPayloadTSmappingformechanicparts.Buildexit0.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-335",
+      "title": "Library tab UX bugs & parity",
+      "status": "done",
+      "matches": [
+        {
+          "hash": "8c90d75a1a210ed056c9a0f8a024bbde4a43f3bb",
+          "subject": "chore(audit): full-site + AI-workflow audit, safe fixes, critical RLS fix, backlog",
+          "files": [
+            ".cursor/rules/realms-project.mdc",
+            ".cursor/rules/realms-unification.mdc",
+            "AGENTS.md",
+            "package.json",
+            "reports/task-reconcile-report.json",
+            "sql/supabase-role-escalation-fix-2026-06.sql",
+            "src/app/(auth)/forgot-username/page.tsx",
+            "src/app/(main)/about/page.tsx",
+            "src/app/(main)/characters/actions.ts",
+            "src/app/(main)/characters/page.tsx",
+            "src/app/(main)/crafting/[id]/page.tsx",
+            "src/app/(main)/creature-creator/transformers.ts",
+            "src/app/(main)/item-creator/page.tsx",
+            "src/app/(main)/library/actions.ts",
+            "src/app/(main)/library/page.tsx",
+            "src/app/(main)/my-account/page.tsx",
+            "src/app/(main)/technique-creator/page.tsx",
+            "src/app/actions.ts",
+            "src/app/api/session/route.ts",
+            "src/components/character-creator/species-modal.tsx",
+            "src/components/character-creator/steps/equipment-step.tsx",
+            "src/components/character-creator/steps/species-step.tsx",
+            "src/components/character-sheet/feats-tab.tsx",
+            "src/components/character-sheet/library-section.tsx",
+            "src/components/character-sheet/roll-log.tsx",
+            "src/components/character-sheet/skills-section.tsx",
+            "src/components/character/character-card.tsx",
+            "src/components/ui/button.tsx",
+            "src/docs/DATABASE_CODEX_AUDIT.md",
+            "src/docs/README.md",
+            "src/docs/UI_COMPONENT_REFERENCE.md",
+            "src/docs/ai/AGENT_GUIDE.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/AI_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/FULL_AUDIT_2026-06.md",
+            "src/docs/ai/SYSTEMATIC_AUDIT_2026-06.md",
+            "src/docs/ai/archive/ADMIN_EDIT_AUDIT.md",
+            "src/docs/ai/archive/AI_CHANGELOG_ARCHIVE.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/ai/archive/TOOLTIP_AUDIT_AND_STANDARD_2026-04-09.md",
+            "src/hooks/index.ts",
+            "src/hooks/use-codex.ts",
+            "src/hooks/use-creator-cache.ts",
+            "src/hooks/use-creator-load.ts",
+            "src/hooks/use-rtdb.ts",
+            "src/lib/calculators/power-calc.ts",
+            "src/lib/character-server.ts",
+            "src/lib/codex-server.ts",
+            "src/lib/data-enrichment.ts",
+            "src/lib/game/index.ts",
+            "src/lib/game/progression.ts",
+            "src/lib/server.ts",
+            "src/lib/supabase/session.ts",
+            "src/lib/utils/array.ts",
+            "src/services/campaign-roll-service.ts",
+            "src/services/campaign-service.ts",
+            "src/services/game-data-service.ts",
+            "src/services/index.ts",
+            "src/services/library-service.ts",
+            "src/types/auth.ts",
+            "src/types/campaign-roll.ts"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/app/(main)/library/page.tsx",
+        "src/app/(main)/library/LibraryEnhancedTab.tsx",
+        "src/app/(main)/library/LibraryPowersTab.tsx",
+        "acceptance_criteria:",
+        "Tabcountsrender;modeswitchneverblankscontent;nologgedinflash.",
+        "Duplicateandglobalsyncrequireconfirmation.",
+        "Enhancedtabmatchessiblingtabpatterns.",
+        "npmrunbuildpasses.",
+        "notes:\"SA61/2/3/8/9/11.DONE20260613:(1–2)tabcounts+Enhancedtabfallback(20260612).(3)librarypagewaitsforauthinit+setsinitialmodeonce(nologgedinRealmsflash).(4)ConfirmActionModalbeforeduplicateinPowers/Techniques/Items/Creaturestabs.(5)ConfirmActionModalbeforeglobalsyncallinsametabs(warnsmissingcodexrefsmayberemoved).(6)Enhancedtab:ListEmptyState,useSort+ListHeader,edit→/crafting/[id](noduplicatehookexists).Build:webpackcompiles;preexistingTSerrorintechniquecreator/page.tsx(TASK334)blocksfullbuild.\""
+      ],
+      "related_overlap": [
+        "src/app/(main)/library/page.tsx"
+      ]
+    },
+    {
+      "id": "TASK-336",
+      "title": "Decide Browse vs Library-public consolidation",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/app/(main)/browse/page.tsx",
+        "src/app/(main)/library/page.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "acceptance_criteria:",
+        "Acleardecisionisimplemented;noorphaned/duplicatedroute.",
+        "Ifkept,Browsereachesparity(tabs,readOnly,metadata,navlinks).",
+        "notes:\"SA81..4/11/13.DONE20260612perownerintent:guestsshouldviewRealmscontentontheLibrarypage(noMyLibrarytab/noAdd).TheLibrarypagealreadydoesexactlythis(SegmentedControl+createbuttonhiddenforguests;LibraryPublicContentreadOnly={isGuest})./browsewasaredundant,navorphanedduplicate,soDELETEDsrc/app/(main)/browse/page.tsxandaddeda/browse>/libraryredirectinnext.config.ts.UpdatedUSER_EXPERIENCE_GOALS.md(alsofixedastaleclaimthattheLibrarypagewasProtectedRoutegated)andFEATURE_INDEX.md.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-337",
+      "title": "Creature/species creator unification + bug fixes",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/app/(main)/creaturecreator/page.tsx",
+        "src/app/(main)/creaturecreator/transformers.ts",
+        "src/app/(main)/speciescreator/page.tsx",
+        "src/components/shared/skillsallocationpage.tsx",
+        "acceptance_criteria:",
+        "Transformermapsleveled/shielditemscorrectly.",
+        "Speciesbatchaddkeepsallselectedtraits.",
+        "Creaturereusessharedskillsallocation+loadmodal;overfetchremoved.",
+        "Savetimebudget/requiredfieldguardsadded.",
+        "npmrunbuildpasses.",
+        "completed_work:|",
+        "Transformerfixes;speciesbatch;creaturelazyhooks+budgetguard.",
+        "SkillsAllocationPage+LoadFromLibraryModal(TASK357).",
+        "SpeciesLoadFromLibraryModal+SourceFilter;lazyuser/officialspeciesfetchonmodalopen.",
+        "isSpeciesFormSaveReadyguardontoolbar+handleSave.",
+        "remaining_work:[]",
+        "follow_up_tasks:[]",
+        "notes:\"20260613.Skills/loadunified20260618(TASK357).Speciesload/saveguards20260618.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-338",
+      "title": "Replace blocking alert()/confirm() with toasts/modals",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/app/(main)/admin/codex/AdminFeatsTab.tsx",
+        "src/app/(main)/admin/codex/CodexSpreadsheetView.tsx",
+        "src/components/ui/toast.tsx",
+        "src/components/shared/confirmactionmodal.tsx",
+        "acceptance_criteria:",
+        "Noblockingalert()/confirm()inclientcode;errors/confirmsusesharedcomponents.",
+        "npmrunbuildpasses.",
+        "notes:\"SA710,SA1411/12,SA2011/17.DONE20260613.Replaced~42blockingalert()across14admincodex/publiclibrarytabs+CodexSpreadsheetViewwithuseToast(errors→'error',missingIDaftersave→'warning',validationlistsuse';'separators).ProficienciestabsyncusesConfirmActionModal;charactersheetTPoverlimitusesapply+warningtoast(softcap).Fixedresult.error??'Operationfailed'foroptionalerrorstrings.Grep:zeroalert()/confirm()inclientsrc.Buildexit0.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-339",
+      "title": "Standardize loading/error/empty states with retry",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/components/shared/listcomponents.tsx",
+        "src/app/(main)/library",
+        "src/app/(main)/codex",
+        "acceptance_criteria:",
+        "Errorstatesofferretry;loading/emptycomponentsconsistentacrossareas.",
+        "npmrunbuildpasses.",
+        "completed_work:|",
+        "ErrorDisplay+onRetryonLibrary,Codex,creators,encounters,characters.",
+        "TASK358:admintooltips/users/roles/changelogsretry.",
+        "CodexSpreadsheetViewErrorDisplay+refetch(20260618auditpass).",
+        "remaining_work:[]",
+        "follow_up_tasks:[]",
+        "notes:\"20260613.AbsorbedTASK323.Closed20260618viaTASK358+spreadsheetretry.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-340",
+      "title": "API consistency & hardening",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/lib/apivalidation.ts",
+        "src/lib/ratelimit.ts",
+        "src/app/api/tooltips/route.ts",
+        "src/app/api/codex/route.ts",
+        "src/app/api/characters/route.ts",
+        "acceptance_criteria:",
+        "Mutationschemasboundpayloads;GETerrorssurfaceas500;errorshapesconsistent.",
+        "Admin/campaign/tooltipsroutesratelimited+validated.",
+        "ServicerolescopereducedwhereRLSsuffices.",
+        "npmrunbuildpasses.",
+        "completed_work:|",
+        "GETcharacterserrorhandling;campaignsratelimit;admin/tooltipsZod.",
+        "TASK359:withSafeJsonBlob,strictencountercreate,charactersavededup,codexcachealign.",
+        "remaining_work:|",
+        "Craftingsessionschemasstillusepassthroughonnestedrefs(lowerpriority).",
+        "follow_up_tasks:[]",
+        "notes:\"20260613subset.TASK359closedpassthrough/cache/dedupremainder20260618.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-341",
+      "title": "Characters list parity (sort/search, touch actions, auth-init)",
+      "status": "done",
+      "matches": [
+        {
+          "hash": "8c90d75a1a210ed056c9a0f8a024bbde4a43f3bb",
+          "subject": "chore(audit): full-site + AI-workflow audit, safe fixes, critical RLS fix, backlog",
+          "files": [
+            ".cursor/rules/realms-project.mdc",
+            ".cursor/rules/realms-unification.mdc",
+            "AGENTS.md",
+            "package.json",
+            "reports/task-reconcile-report.json",
+            "sql/supabase-role-escalation-fix-2026-06.sql",
+            "src/app/(auth)/forgot-username/page.tsx",
+            "src/app/(main)/about/page.tsx",
+            "src/app/(main)/characters/actions.ts",
+            "src/app/(main)/characters/page.tsx",
+            "src/app/(main)/crafting/[id]/page.tsx",
+            "src/app/(main)/creature-creator/transformers.ts",
+            "src/app/(main)/item-creator/page.tsx",
+            "src/app/(main)/library/actions.ts",
+            "src/app/(main)/library/page.tsx",
+            "src/app/(main)/my-account/page.tsx",
+            "src/app/(main)/technique-creator/page.tsx",
+            "src/app/actions.ts",
+            "src/app/api/session/route.ts",
+            "src/components/character-creator/species-modal.tsx",
+            "src/components/character-creator/steps/equipment-step.tsx",
+            "src/components/character-creator/steps/species-step.tsx",
+            "src/components/character-sheet/feats-tab.tsx",
+            "src/components/character-sheet/library-section.tsx",
+            "src/components/character-sheet/roll-log.tsx",
+            "src/components/character-sheet/skills-section.tsx",
+            "src/components/character/character-card.tsx",
+            "src/components/ui/button.tsx",
+            "src/docs/DATABASE_CODEX_AUDIT.md",
+            "src/docs/README.md",
+            "src/docs/UI_COMPONENT_REFERENCE.md",
+            "src/docs/ai/AGENT_GUIDE.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/AI_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/FULL_AUDIT_2026-06.md",
+            "src/docs/ai/SYSTEMATIC_AUDIT_2026-06.md",
+            "src/docs/ai/archive/ADMIN_EDIT_AUDIT.md",
+            "src/docs/ai/archive/AI_CHANGELOG_ARCHIVE.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/ai/archive/TOOLTIP_AUDIT_AND_STANDARD_2026-04-09.md",
+            "src/hooks/index.ts",
+            "src/hooks/use-codex.ts",
+            "src/hooks/use-creator-cache.ts",
+            "src/hooks/use-creator-load.ts",
+            "src/hooks/use-rtdb.ts",
+            "src/lib/calculators/power-calc.ts",
+            "src/lib/character-server.ts",
+            "src/lib/codex-server.ts",
+            "src/lib/data-enrichment.ts",
+            "src/lib/game/index.ts",
+            "src/lib/game/progression.ts",
+            "src/lib/server.ts",
+            "src/lib/supabase/session.ts",
+            "src/lib/utils/array.ts",
+            "src/services/campaign-roll-service.ts",
+            "src/services/campaign-service.ts",
+            "src/services/game-data-service.ts",
+            "src/services/index.ts",
+            "src/services/library-service.ts",
+            "src/types/auth.ts",
+            "src/types/campaign-roll.ts"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/app/(main)/characters/page.tsx",
+        "src/components/character/charactercard.tsx",
+        "src/hooks/usecharacters.ts",
+        "acceptance_criteria:",
+        "Noauthstateflash;deleteusableontouch;validHTML(nobuttoninlink).",
+        "Duplicate+sort/searchavailable;guestpathpresent.",
+        "npmrunbuildpasses.",
+        "notes:\"SA31/2/3/5/6/10.DONE20260613:authinitskeleton(20260612);deleteoutofLink+touchvisible.AddeduseDuplicateCharacter(toast+navigatetonewsheet),SearchInput+useSort/ListHeader(name/level/updatedAt),guestEmptyStatesecondaryAction→/login?returnTo=/characters.CharacterCardduplicateIconButton(siblingofLink).Build:webpackcompiles;preexistingTSerrorintechniquecreator/page.tsxblocksfullbuild.\""
+      ],
+      "related_overlap": [
+        "src/app/(main)/characters/page.tsx"
+      ]
+    },
+    {
+      "id": "TASK-342",
+      "title": "App-shell hardening (routing, errors, mobile nav, theme)",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/components/layout/header.tsx",
+        "src/components/layout/protectedroute.tsx",
+        "src/app/notfound.tsx",
+        "src/app/(main)/homepage.tsx",
+        "acceptance_criteria:",
+        "Protectedroutespreservereturnpath;rooterror/404arebrandedwithshell.",
+        "Homeheadinghierarchyvalid;mobiledrawerisaccessible;themeavailableloggedout.",
+        "npmrunbuildpasses.",
+        "notes:\"SA11/2/3/8/9/10/15.DONE20260613:rooterror.tsx+globalerror.tsx;notfoundHeader/Footer+#maincontent;homesronlyh1;mobilenava11y+44pxtargets;ThemeToggleloggedout;ProtectedRoute+adminlayoutpreservereturnToonloginredirect.Buildexit0.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-343",
+      "title": "Auth UX & security follow-ups",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/app/auth/confirm/route.ts",
+        "src/app/(auth)/register/page.tsx",
+        "src/app/(auth)/forgotusername/action.ts",
+        "src/app/(auth)/actions.ts",
+        "src/app/(auth)/forgotpassword/page.tsx",
+        "acceptance_criteria:",
+        "Redirectsrejectoffsitetargets;usernamesurvivesconfirmation;signOutclearssession.",
+        "Forgotusernameworksorishonestlydisabled;resetpasswordhasasetnewpasswordstep.",
+        "npmrunbuildpasses.",
+        "notes:\"SA21/4/5/8/9/12,SA1916/18.DONE20260613:sanitizeRedirectPathinlib/saferedirect.ts(confirm/callback/login/register);signOutActioncallsauth.signOut();registerstoresusername_displayinuser_metadataforconfirm;resendpassesemailRedirectTo;/resetpasswordsetnewpasswordstep;forgotusernameshowsContactsupport.npmrunbuildexit0.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-344",
+      "title": "Encounters cleanup & correctness",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/app/(main)/encountertracker/page.tsx",
+        "src/app/(main)/encounters/[id]/_components/CombatEncounterView.tsx",
+        "src/hooks/useencounters.ts",
+        "src/lib/guestencounterstorage.ts",
+        "src/lib/encounter/characterresourcesync.ts",
+        "acceptance_criteria:",
+        "DeadtrackerUIremoved;legacyfolderdependencyresolved.",
+        "Completedstatusreachable;turnordercorrectafterreorder;guestdatamigratesonlogin.",
+        "npmrunbuildpasses.",
+        "completed_work:|",
+        "Deadtrackerremoved;completedlifecycle;guestmigration;modulemove.",
+        "TwowayHP/EN/APsyncviaTASK360.",
+        "notes:Done20260618(TASK360closedremainingsyncgap).Buildexit0."
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-345",
+      "title": "Static content fixes (metadata, legal copy, carousel a11y)",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/app/(main)/about/page.tsx",
+        "src/app/(main)/privacy/page.tsx",
+        "src/app/(main)/terms/page.tsx",
+        "src/app/(main)/resources/page.tsx",
+        "src/app/(main)/rules/page.tsx",
+        "acceptance_criteria:",
+        "Allcontentrouteshavemetadata;legalcopyisaccurate;carouselmeetstouch/a11y;ruleshasafallbacklink.",
+        "npmrunbuildpasses.",
+        "notes:\"SA162..11/13/14/15.DONE20260613:metadataonabout/privacy/terms(resourceslayoutalreadyhadit);privacy/termsrewrittenforfreeTTRPGwebapp;aboutcarousel44pxtouch+decorativedicealt=\\\"\\\";rulesOpeninnewtabfallback;/resourcesinfooter.npmrunbuildexit0.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-346",
+      "title": "\"Systemic token & console cleanup (batch by rule)\"",
+      "status": "partial",
+      "matches": [],
+      "related_files": [
+        "src/app/globals.css",
+        "src/components/layout/footer.tsx",
+        "src/components/shared/rollbutton.tsx",
+        "acceptance_criteria:",
+        "Status/secondarytextpassesWCAGAAtokensinbothmodes;nostraygray*/neutraloutsideauth.",
+        "Noclientconsole.*left;npmrunbuild+lintpass.",
+        "completed_work:|",
+        "Batch1:footer,rollbutton,craftingconsole.*.",
+        "Batch2(TASK351):~38clientconsole.*removed;homepage/itemcreatorneutral→semantic;sharedstatustext600→700.",
+        "remaining_work:|",
+        "Residualstatus600onhover/buttonbackgrounds(intentional);someadmin/codexbodytext.",
+        "follow_up_tasks:",
+        "TASK351",
+        "notes:\"20260613batch1.\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-347",
+      "title": "Extract shared OfficialLibraryList (Library + Admin grid dedup)",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/components/shared/officialpowerlist.tsx",
+        "src/components/shared/officialtechniquelist.tsx",
+        "src/components/shared/officialitemlist.tsx",
+        "src/components/shared/officialcreaturelist.tsx",
+        "src/lib/library/officialpowerlist.ts",
+        "src/lib/library/officialtechniquelist.ts",
+        "src/lib/library/officialitemlist.ts",
+        "src/lib/library/officialcreaturelist.ts",
+        "src/app/(main)/library/LibraryPublicContent.tsx",
+        "src/app/(main)/admin/publiclibrary/AdminPublic*.tsx",
+        "acceptance_criteria:",
+        "SharedlistcomponentforLibrary+Adminofficialviews;buildpasses.",
+        "notes:Done20260618.OfficialPower/Technique/Item/CreatureListsharedbyLibraryPublicContent+Adminpubliclibrarytabs.LibraryPublicContent~580→~220lines.Buildexit0."
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-348",
+      "title": "Split character sheet page into per-tab modules",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/app/(main)/characters/[id]/page.tsx",
+        "src/components/charactersheet/charactersheetbody.tsx",
+        "src/components/charactersheet/charactersheetcontext.tsx",
+        "src/components/charactersheet/usecharactersheetderived.ts",
+        "acceptance_criteria:",
+        "Pageslimmed;two+sectionsusecontext;buildpasses.",
+        "notes:|",
+        "Done20260618.useCharacterSheetDerived+buildCharacterSheetLibraryProps;CharacterSheetBodywithcontextconnectedAbilities/Skills/Archetype/Librarypanels;expandedCharacterSheetProvider.page.tsx~2130→~639lines(withuseCharacterSheetActions).Buildexit0."
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-349",
+      "title": "Add-library-item modal per-type subcomponents",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-350",
+      "title": "ESLint warning cleanup batch 2",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-351",
+      "title": "Token & console cleanup batch 2",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-352",
+      "title": "Consolidate duplicate permissive RLS policies",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "sql/supabaserlsconsolidatepermissive202606.sql",
+        "acceptance_criteria:",
+        "SQLapplied;advisorwarningsreduced;spottestcampaigns.",
+        "notes:\"Done20260618.Appliedmigrationrls_consolidate_permissive_policies_2026_06onlbqhiwudvifmkjtkccdg.Mergedcampaign_members/campaigns/charactersSELECT+writedupes;splitrole_policiesadminALLintoINSERT/UPDATE/DELETE;campaignsSELECTnowincludescampaign_membersEXISTS;characterscampaignrostermatchfixed(characters.id).Performanceadvisor:zeromultiple_permissive_policies.Humanspottest:DEVV005T001–T003.\"",
+        "build_validation:",
+        "suite:DEVV005",
+        "tests:",
+        "DEVV005T001",
+        "DEVV005T002",
+        "DEVV005T003"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-353",
+      "title": "Enable Supabase leaked-password protection (HIBP)",
       "status": "not-started",
       "matches": [],
       "related_files": [],
       "related_overlap": []
     },
     {
-      "id": "TASK-270",
-      "title": "Use columnar codex tables in Prisma and API (after DB migration)",
+      "id": "TASK-354",
+      "title": "RLS initplan batch 2",
       "status": "done",
       "matches": [],
       "related_files": [],
       "related_overlap": []
     },
     {
-      "id": "TASK-271",
-      "title": "Rename public library to official + columnar official_* tables",
+      "id": "TASK-355",
+      "title": "TabNavigation aria-controls + tabpanel wiring",
       "status": "done",
       "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-272",
-      "title": "User library columnar (same schema as official + user_id)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-273",
-      "title": "Campaign members as table (replace memberIds JSONB)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-274",
-      "title": "Creature Creator — Show feat point cost for damage modifiers, senses, movement, condition immunities",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-275",
-      "title": "Creature Creator — Use AddSkillModal and AddSubSkillModal instead of skills dropdown",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-276",
-      "title": "Creature Creator — Separate Add Feat and Add Negative Feat modals",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-277",
-      "title": "Creature Creator — Power/technique/armament modals and lists show parts, properties, options as chips; use site-wide display logic",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-278",
-      "title": "Fix username change — new username replaced by Player### instead of kept",
-      "status": "not-started",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-279",
-      "title": "Public library columnar as primary (official_* preferred over public_*)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-280",
-      "title": "User species columnar (same columns as codex_species + user_id)",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-281",
-      "title": "Encounters — add list columns (name, type, status) for filtering",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-282",
-      "title": "Characters — add list columns (name, level, archetype_name, etc.); keep data JSONB",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-283",
-      "title": "Campaign rolls — add list columns (character_id, user_id, type, title); keep data JSONB",
-      "status": "done",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-284",
-      "title": "Species steps — deduplicate list items (flaws, traits, characteristics) when mixed",
-      "status": "done",
-      "matches": [
-        {
-          "hash": "8eb1d5cea87e84ef6b2e2f0fbbeceabfa375b026",
-          "subject": "Barfight feedback: official library save, species dedupe, sticky Continue, multiple damage types, remove (optional), range spacing, DB checklist",
-          "files": [
-            "sql/README.md",
-            "src/app/(main)/item-creator/page.tsx",
-            "src/app/(main)/power-creator/page.tsx",
-            "src/app/api/official/[type]/route.ts",
-            "src/components/character-creator/steps/ancestry-step.tsx",
-            "src/components/character-creator/steps/species-step.tsx",
-            "src/components/character-sheet/library-section.tsx",
-            "src/docs/ALL_FEEDBACK_CLEAN.md",
-            "src/docs/DATABASE_CONSISTENCY_CHECKLIST.md",
-            "src/docs/ai/AI_CHANGELOG.md",
-            "src/docs/ai/AI_TASK_QUEUE.md",
-            "src/hooks/use-creator-save.ts",
-            "src/lib/calculators/item-calc.ts",
-            "src/lib/calculators/power-calc.ts",
-            "src/lib/utils/string.ts"
-          ]
-        }
+      "related_files": [
+        "src/components/ui/tabnavigation.tsx",
+        "src/components/ui/index.ts",
+        "src/app/(main)/codex/page.tsx",
+        "src/app/(main)/library/page.tsx",
+        "src/app/(main)/encounters/page.tsx",
+        "src/app/(main)/campaigns/page.tsx",
+        "src/app/(main)/crafting/page.tsx",
+        "src/app/(main)/admin/codex/page.tsx",
+        "src/app/(main)/admin/publiclibrary/page.tsx",
+        "src/app/(main)/admin/changelogs/page.tsx",
+        "src/app/(main)/admin/corerules/page.tsx",
+        "src/components/charactersheet/librarysection.tsx",
+        "src/components/charactercreator/steps/equipmentstep.tsx",
+        "src/components/crafting/CraftingItemSelectModal.tsx",
+        "description:|",
+        "CompleteWAIARIAtabspattern:tabbuttonsgetariacontrols;tabcontentgetsrole=\"tabpanel\"",
+        "withmatchingidandarialabelledby.ExportuseTabGroup+TabContentPanelhelpersforsharedpanel",
+        "pagesthatconditionallyrendertabcontent.",
+        "acceptance_criteria:",
+        "TabNavigationsetsariacontrolsoneverytabbutton.",
+        "Tabpanelsuserole=\"tabpanel\"withstableidsandarialabelledby.",
+        "Codex,Library,andotherTabNavigationcallsiteswired.",
+        "npmrunbuildpasses.",
+        "notes:|",
+        "Done20260618:tabnavigation.tsx—useTabGroup,TabContentPanel,TabPanel,tabButtonId,",
+        "tabPanelIdForTab;sharedTabPanelId+tabGroupIdonTabNavigation.WiredonCodex,Library,",
+        "Encounters,Campaigns,Crafting,admincodex/publiclibrary/changelogs/corerules,sheet",
+        "librarysection,creatorequipmentstep,CraftingItemSelectModal(tabPanelA11y).Buildexit0."
       ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-356",
+      "title": "Character creator validation & step guards",
+      "status": "done",
+      "matches": [],
       "related_files": [],
       "related_overlap": []
     },
     {
-      "id": "TASK-285",
-      "title": "Species steps — sticky Continue button",
+      "id": "TASK-357",
+      "title": "Creature SkillsAllocationPage + unified load modal",
       "status": "done",
-      "matches": [
-        {
-          "hash": "8eb1d5cea87e84ef6b2e2f0fbbeceabfa375b026",
-          "subject": "Barfight feedback: official library save, species dedupe, sticky Continue, multiple damage types, remove (optional), range spacing, DB checklist",
-          "files": [
-            "sql/README.md",
-            "src/app/(main)/item-creator/page.tsx",
-            "src/app/(main)/power-creator/page.tsx",
-            "src/app/api/official/[type]/route.ts",
-            "src/components/character-creator/steps/ancestry-step.tsx",
-            "src/components/character-creator/steps/species-step.tsx",
-            "src/components/character-sheet/library-section.tsx",
-            "src/docs/ALL_FEEDBACK_CLEAN.md",
-            "src/docs/DATABASE_CONSISTENCY_CHECKLIST.md",
-            "src/docs/ai/AI_CHANGELOG.md",
-            "src/docs/ai/AI_TASK_QUEUE.md",
-            "src/hooks/use-creator-save.ts",
-            "src/lib/calculators/item-calc.ts",
-            "src/lib/calculators/power-calc.ts",
-            "src/lib/utils/string.ts"
-          ]
-        }
+      "matches": [],
+      "related_files": [
+        "src/app/(main)/creaturecreator/page.tsx",
+        "src/app/(main)/creaturecreator/creatureskillutils.ts",
+        "src/components/shared/skillsallocationpage.tsx",
+        "src/components/creator/LoadFromLibraryModal.tsx",
+        "description:|",
+        "ReplacebespokecreatureskillsUIandLoadCreatureModalwithsharedSkillsAllocationPage",
+        "(AddSkill/SubSkillmodals,defensebonusallocationwithpointcosts)andLoadFromLibraryModal",
+        "withSourceFilter(My/Realms/All)matchingpower/technique/itemcreators.",
+        "acceptance_criteria:",
+        "CreaturecreatorusesSkillsAllocationPageforskills+defenseskillpointallocation.",
+        "LoadusesLoadFromLibraryModalwithSourceFilterforuser+officialcreatures.",
+        "LoadCreatureModalremoved;buildpasses.",
+        "notes:|",
+        "Done20260618:creatureskillutils.ts(allocations↔CreatureSkill[],rawRecordToCreatureState,",
+        "buildCreatureSelectableItem).PageusesSkillsAllocationPage;removedDefenseBlockduplicatesection.",
+        "LoadFromLibraryModal+loadSource.DeletedLoadCreatureModal.tsx.Buildexit0."
       ],
-      "related_files": [],
       "related_overlap": []
     },
     {
-      "id": "TASK-286",
-      "title": "Power creator — support multiple damage types per power",
+      "id": "TASK-358",
+      "title": "Admin low-traffic pages error retry",
       "status": "done",
-      "matches": [
-        {
-          "hash": "8eb1d5cea87e84ef6b2e2f0fbbeceabfa375b026",
-          "subject": "Barfight feedback: official library save, species dedupe, sticky Continue, multiple damage types, remove (optional), range spacing, DB checklist",
-          "files": [
-            "sql/README.md",
-            "src/app/(main)/item-creator/page.tsx",
-            "src/app/(main)/power-creator/page.tsx",
-            "src/app/api/official/[type]/route.ts",
-            "src/components/character-creator/steps/ancestry-step.tsx",
-            "src/components/character-creator/steps/species-step.tsx",
-            "src/components/character-sheet/library-section.tsx",
-            "src/docs/ALL_FEEDBACK_CLEAN.md",
-            "src/docs/DATABASE_CONSISTENCY_CHECKLIST.md",
-            "src/docs/ai/AI_CHANGELOG.md",
-            "src/docs/ai/AI_TASK_QUEUE.md",
-            "src/hooks/use-creator-save.ts",
-            "src/lib/calculators/item-calc.ts",
-            "src/lib/calculators/power-calc.ts",
-            "src/lib/utils/string.ts"
-          ]
-        }
+      "matches": [],
+      "related_files": [
+        "src/app/(main)/admin/tooltips/page.tsx",
+        "src/app/(main)/admin/users/page.tsx",
+        "src/app/(main)/admin/roles/page.tsx",
+        "src/app/(main)/admin/changelogs/page.tsx",
+        "acceptance_criteria:",
+        "Loadfailuresontooltips,users,roles,andchangelogsshowErrorDisplaywithretry.",
+        "npmrunbuildpasses.",
+        "notes:Done20260618.ErrorDisplay+refetch/reloadTokenonallfourpages.Buildexit0."
       ],
-      "related_files": [],
       "related_overlap": []
     },
     {
-      "id": "TASK-287",
-      "title": "Creators — explicit energy (EN) display per item",
+      "id": "TASK-359",
+      "title": "API hardening remainder",
       "status": "done",
-      "matches": [
-        {
-          "hash": "8eb1d5cea87e84ef6b2e2f0fbbeceabfa375b026",
-          "subject": "Barfight feedback: official library save, species dedupe, sticky Continue, multiple damage types, remove (optional), range spacing, DB checklist",
-          "files": [
-            "sql/README.md",
-            "src/app/(main)/item-creator/page.tsx",
-            "src/app/(main)/power-creator/page.tsx",
-            "src/app/api/official/[type]/route.ts",
-            "src/components/character-creator/steps/ancestry-step.tsx",
-            "src/components/character-creator/steps/species-step.tsx",
-            "src/components/character-sheet/library-section.tsx",
-            "src/docs/ALL_FEEDBACK_CLEAN.md",
-            "src/docs/DATABASE_CONSISTENCY_CHECKLIST.md",
-            "src/docs/ai/AI_CHANGELOG.md",
-            "src/docs/ai/AI_TASK_QUEUE.md",
-            "src/hooks/use-creator-save.ts",
-            "src/lib/calculators/item-calc.ts",
-            "src/lib/calculators/power-calc.ts",
-            "src/lib/utils/string.ts"
-          ]
-        }
+      "matches": [],
+      "related_files": [
+        "src/lib/apivalidation.ts",
+        "src/lib/charactersave.ts",
+        "src/app/api/characters/route.ts",
+        "src/app/api/characters/[id]/route.ts",
+        "src/hooks/usecodex.ts",
+        "description:|",
+        "(1)Tighten`.passthrough()`oncharacter/library/encounter/publicmutationschemas;",
+        "(2)reconcilecodexclientcachewithservermustrevalidate;(3)dedupprepareForSave.",
+        "acceptance_criteria:",
+        "Character/library/publicblobsusecatchall+keybounds;encountercreateusesexplicitstrictschema.",
+        "prepareForSavelivesinsharedlib;bothcharacterroutesimportit.",
+        "useCodexstaleTimealignedwithofficiallibrary(5min)+refetchOnMount.",
+        "npmrunbuildpasses.",
+        "notes:|",
+        "Done20260618:`withSafeJsonBlob`helper(max500keys,blocks__proto__/constructor);",
+        "encounterCreateSchemastrictwithfulldefaultpayloadfields;`charactersave.ts`sharedmodule;",
+        "usecodexstaleTime30m→5m.Buildexit0."
       ],
-      "related_files": [],
       "related_overlap": []
     },
     {
-      "id": "TASK-288",
-      "title": "Remove \"(optional)\" label from damage in creators",
+      "id": "TASK-360",
+      "title": "Encounter two-way HP/EN/AP sync",
       "status": "done",
-      "matches": [
-        {
-          "hash": "8eb1d5cea87e84ef6b2e2f0fbbeceabfa375b026",
-          "subject": "Barfight feedback: official library save, species dedupe, sticky Continue, multiple damage types, remove (optional), range spacing, DB checklist",
-          "files": [
-            "sql/README.md",
-            "src/app/(main)/item-creator/page.tsx",
-            "src/app/(main)/power-creator/page.tsx",
-            "src/app/api/official/[type]/route.ts",
-            "src/components/character-creator/steps/ancestry-step.tsx",
-            "src/components/character-creator/steps/species-step.tsx",
-            "src/components/character-sheet/library-section.tsx",
-            "src/docs/ALL_FEEDBACK_CLEAN.md",
-            "src/docs/DATABASE_CONSISTENCY_CHECKLIST.md",
-            "src/docs/ai/AI_CHANGELOG.md",
-            "src/docs/ai/AI_TASK_QUEUE.md",
-            "src/hooks/use-creator-save.ts",
-            "src/lib/calculators/item-calc.ts",
-            "src/lib/calculators/power-calc.ts",
-            "src/lib/utils/string.ts"
-          ]
-        }
+      "matches": [],
+      "related_files": [
+        "src/lib/encounter/characterresourcesync.ts",
+        "src/hooks/usecharacterresourcesync.ts",
+        "src/app/(main)/encounters/[id]/_components/CombatEncounterView.tsx",
+        "src/components/encounters/CombatantCard.tsx",
+        "src/app/(main)/characters/[id]/page.tsx",
+        "acceptance_criteria:",
+        "CharactersheetHP/EN/APchangessynctolinkedencountercombatants(realtime+fastPATCH).",
+        "CharacterownercaneditHP/EN/APontheirlinkedencountercard;changesPATCHbacktocharacter.",
+        "Otherplayers'linkedcombatantsstayreadonlyonencounter.",
+        "npmrunbuildpasses.",
+        "notes:Done20260618.scheduleCharacterResourceSync(400msdebounce)+useCharacterResourceSynconsheet;ownedlinkedcombatantseditableonencounter.Buildexit0."
       ],
-      "related_files": [],
       "related_overlap": []
     },
     {
-      "id": "TASK-289",
-      "title": "Official library — fix save for powers, techniques, armaments",
+      "id": "TASK-361",
+      "title": "Auth UX remainder",
       "status": "done",
-      "matches": [
-        {
-          "hash": "8eb1d5cea87e84ef6b2e2f0fbbeceabfa375b026",
-          "subject": "Barfight feedback: official library save, species dedupe, sticky Continue, multiple damage types, remove (optional), range spacing, DB checklist",
-          "files": [
-            "sql/README.md",
-            "src/app/(main)/item-creator/page.tsx",
-            "src/app/(main)/power-creator/page.tsx",
-            "src/app/api/official/[type]/route.ts",
-            "src/components/character-creator/steps/ancestry-step.tsx",
-            "src/components/character-creator/steps/species-step.tsx",
-            "src/components/character-sheet/library-section.tsx",
-            "src/docs/ALL_FEEDBACK_CLEAN.md",
-            "src/docs/DATABASE_CONSISTENCY_CHECKLIST.md",
-            "src/docs/ai/AI_CHANGELOG.md",
-            "src/docs/ai/AI_TASK_QUEUE.md",
-            "src/hooks/use-creator-save.ts",
-            "src/lib/calculators/item-calc.ts",
-            "src/lib/calculators/power-calc.ts",
-            "src/lib/utils/string.ts"
-          ]
-        }
+      "matches": [],
+      "related_files": [
+        "src/lib/usernamerules.ts",
+        "src/app/(auth)/authactions.ts",
+        "src/app/(auth)/forgotusername/page.tsx",
+        "src/lib/validation/schemas.ts",
+        "src/app/(auth)/login/page.tsx",
+        "src/app/(auth)/register/page.tsx",
+        "notes:\"Done20260618.resendConfirmationActiononlogin/register.Buildexit0.\""
       ],
-      "related_files": [],
       "related_overlap": []
     },
     {
-      "id": "TASK-290",
-      "title": "Range display — consistent spacing for powers and armaments across views",
+      "id": "TASK-362",
+      "title": "Library/Codex lazy tab queries",
       "status": "done",
-      "matches": [
-        {
-          "hash": "8eb1d5cea87e84ef6b2e2f0fbbeceabfa375b026",
-          "subject": "Barfight feedback: official library save, species dedupe, sticky Continue, multiple damage types, remove (optional), range spacing, DB checklist",
-          "files": [
-            "sql/README.md",
-            "src/app/(main)/item-creator/page.tsx",
-            "src/app/(main)/power-creator/page.tsx",
-            "src/app/api/official/[type]/route.ts",
-            "src/components/character-creator/steps/ancestry-step.tsx",
-            "src/components/character-creator/steps/species-step.tsx",
-            "src/components/character-sheet/library-section.tsx",
-            "src/docs/ALL_FEEDBACK_CLEAN.md",
-            "src/docs/DATABASE_CONSISTENCY_CHECKLIST.md",
-            "src/docs/ai/AI_CHANGELOG.md",
-            "src/docs/ai/AI_TASK_QUEUE.md",
-            "src/hooks/use-creator-save.ts",
-            "src/lib/calculators/item-calc.ts",
-            "src/lib/calculators/power-calc.ts",
-            "src/lib/utils/string.ts"
-          ]
-        }
+      "matches": [],
+      "related_files": [
+        "src/app/(main)/library/page.tsx",
+        "src/app/(main)/library/LibraryTechniquesTab.tsx",
+        "src/hooks/usecodex.ts",
+        "src/hooks/useenhanceditems.ts",
+        "src/app/(main)/codex/*.tsx",
+        "acceptance_criteria:",
+        "Librarypagefetchesmyvspubliccountsonlyforactivemode.",
+        "LibraryTechniquesTabrunsoneuserquerypermode.",
+        "Codexmymodeemptytabsskipcodexfetchviaenabledflags.",
+        "npmrunbuildpasses.",
+        "notes:Done20260618.useCodex*+useEnhancedItemsacceptenabled;library/codextabsgated.Buildexit0."
       ],
-      "related_files": [],
       "related_overlap": []
     },
     {
-      "id": "TASK-291",
-      "title": "Power Mechanics rework, remove apply duration, section cost badges",
+      "id": "TASK-363",
+      "title": "apiFetch migration remainder",
       "status": "done",
       "matches": [],
-      "related_files": [],
+      "related_files": [
+        "src/lib/apiclient.ts",
+        "src/services/characterservice.ts",
+        "src/services/craftingservice.ts",
+        "src/services/encounterservice.ts",
+        "src/services/libraryservice.ts",
+        "src/services/campaignservice.ts",
+        "src/services/campaignrollservice.ts",
+        "src/hooks/useuserlibrary.ts",
+        "src/hooks/useadmin.ts",
+        "src/components/layout/header.tsx",
+        "src/app/(main)/myaccount/page.tsx",
+        "src/app/(main)/encounters/[id]/_components/CombatEncounterView.tsx",
+        "src/components/shared/addcombatantmodal.tsx",
+        "src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx",
+        "acceptance_criteria:",
+        "JSONAPIcallsuseapiFetch/apiFetchOrNullexceptFormDatauploads.",
+        "npmrunbuildpasses.",
+        "notes:|",
+        "Done20260618.Services+hooks+header/myaccounttooltipPATCH+encountercampaigncharacterfetchesmigrated.",
+        "Uploadroutes(portrait/profilepicture)intentionallyremainrawfetch(FormData).AddedapiFetchOrNull+CampaignCharacterEncounterDatatype.Buildexit0."
+      ],
       "related_overlap": []
     },
     {
-      "id": "TASK-292",
-      "title": "Area of effect description + collapsible sections in creators",
+      "id": "TASK-364",
+      "title": "Unify FilterSection implementations",
       "status": "done",
       "matches": [],
-      "related_files": [],
+      "related_files": [
+        "src/components/shared/filters/filtersection.tsx",
+        "src/components/shared/listcomponents.tsx",
+        "src/components/shared/index.ts",
+        "acceptance_criteria:",
+        "SingleFilterSectionimplementationusedsitewide.",
+        "Togglehastype=\"button\"andariaexpanded.",
+        "npmrunbuildpasses.",
+        "notes:Done20260618.listcomponentsreexportscanonicalfilters/filtersection;removedduplicateimpl+SharedFilterSectionalias.Buildexit0."
+      ],
       "related_overlap": []
     },
     {
-      "id": "TASK-293",
-      "title": "Add crafting rules to core_rules + admin Crafting tab",
+      "id": "TASK-365",
+      "title": "Character sheet LibrarySection desktop/mobile dedup",
       "status": "done",
       "matches": [],
-      "related_files": [],
+      "related_files": [
+        "src/app/(main)/characters/[id]/librarysectionprops.ts",
+        "src/app/(main)/characters/[id]/page.tsx",
+        "src/components/charactersheet/librarysection.tsx",
+        "acceptance_criteria:",
+        "Desktop/mobileLibrarySectionshareonepropsbuilder(no~120lineduplicate).",
+        "Activelibrarytabsyncedbetweendesktopandmobileinstances.",
+        "npmrunbuildpasses.",
+        "notes:|",
+        "Done20260618:buildLibrarySectionProps+controlledactiveTab/onActiveTabChange.",
+        "SingleLibrarySectionDOMmountcompletedinCharacterSheetBody(TASK317,20260618).Buildexit0.",
+        "developer_test_plan:|",
+        "SuiteDEVV009T001–T002—seeBUILD_VALIDATION.md.",
+        "build_validation:",
+        "suite:DEVV009",
+        "tests:",
+        "DEVV009T001",
+        "DEVV009T002"
+      ],
       "related_overlap": []
     },
     {
-      "id": "TASK-294",
-      "title": "Create crafting hub + crafting page with skill-encounter logic",
+      "id": "TASK-366",
+      "title": "Archetype path hydration on load + list column fix",
       "status": "done",
       "matches": [],
-      "related_files": [],
+      "related_files": [
+        "src/lib/game/archetypedisplay.ts",
+        "src/lib/characterlistcolumns.ts",
+        "src/app/api/characters/route.ts",
+        "src/app/api/characters/[id]/route.ts",
+        "src/app/(main)/characters/[id]/page.tsx",
+        "src/app/(main)/browse/page.tsx",
+        "description:|",
+        "Savedcharactersstorelean`archetype:{id,type}`plus`archetypePathId`,butthesheetandcharacterlistneverresolvethecodexpathname/description/path_dataafterreload.Implementsharedhydrationviacodexlookupandfix`archetype_name`listcolumnoncreate/updatesopathcharactersshowtheirpathname(notgeneric\"Power\"/\"Martial\").",
+        "acceptance_criteria:",
+        "Charactersheetheadershowscodexpathnamewhen`archetypePathId`(ornongenericarchetypeid)isset,afterreload",
+        "GET/api/charactersreturnscorrect`archetypeName`forpathcharacters(codexlookuponlistcolumnoratreadtime)",
+        "POST/PATCHset`archetype_name`fromcodexwhenpathidispresent",
+        "SavedJSONBstillstoresleanarchetype`{id,type}`only(displayfieldsnotpersisted)",
+        "`npmrunbuild`passes",
+        "notes:|",
+        "Done20260618:`archetypedisplay.ts`,listcolumn+APInamemap,sheet`characterForDisplay`hydration.Restored`/browse`redirectpageforNextroutetypes.Buildexit0.",
+        "developer_test_plan:|",
+        "SuiteDEVV008T001–T002—seeBUILD_VALIDATION.md.",
+        "build_validation:",
+        "suite:DEVV008",
+        "tests:",
+        "DEVV008T001",
+        "DEVV008T002"
+      ],
       "related_overlap": []
     },
     {
-      "id": "TASK-295",
-      "title": "Enhanced crafting + Enhanced Equipment Library",
+      "id": "TASK-367",
+      "title": "Level-up path progression guide (levels 2+)",
       "status": "done",
       "matches": [],
-      "related_files": [],
+      "related_files": [
+        "src/lib/game/archetypepath.ts",
+        "src/components/charactersheet/pathlevelguidance.tsx",
+        "src/components/charactersheet/levelupmodal.tsx",
+        "src/app/(main)/characters/[id]/CharacterSheetModals.tsx",
+        "src/app/(main)/characters/[id]/page.tsx",
+        "description:|",
+        "Wire`getPathRecommendationsForLevel`intolevelupand/orasheet\"Pathprogression\"panel.Whenacharacterhas`archetypePathId`andthetargetlevelhasrowsin`codex_archetype_levels`,showrecommendedaddlists(feats,skills,powers,techniques,armaments,equipment)andadminnotes.Optionalquickaddflowsforpowers/techniques/featswherelibrarypatternsexist.",
+        "acceptance_criteria:",
+        "Levelupmodal(oradjacentpanel)showspathrecommendationsforthenewlevelwhen`path_data.levels`hasamatchingentry",
+        "Level1pathdataisnotduplicatedincorrectly(uselevel1vslevelsbylevelnumber)",
+        "PathcharacterswithnolevelNrowshowgracefulemptystate,noterrors",
+        "Mobile:recommendationsscroll/collapseperMOBILE_UX.md;modalkeepsfullScreenOnMobile",
+        "`npmrunbuild`passes",
+        "notes:|",
+        "Done20260618:`PathLevelGuidance`inlevelupmodal;resolvescodex/librarynames;showsadd+removelistsandnotes;useshydrated`displayCharacter`.Emptystatewhennorowfortargetlevel.Buildexit0.",
+        "developer_test_plan:|",
+        "SuiteDEVV008T003—seeBUILD_VALIDATION.md.",
+        "build_validation:",
+        "suite:DEVV008",
+        "tests:",
+        "DEVV008T003"
+      ],
       "related_overlap": []
     },
     {
-      "id": "TASK-296",
-      "title": "Creator resource colors — shift TP to lime and keep IP/C distinct",
+      "id": "TASK-368",
+      "title": "Apply path level-5 proficiency from admin config",
       "status": "done",
       "matches": [],
-      "related_files": [],
+      "related_files": [
+        "src/lib/game/archetypedisplay.ts",
+        "src/app/(main)/characters/[id]/page.tsx",
+        "acceptance_criteria:",
+        "Pathcharacterlevelingfrom4→5appliesadminlevel5profconfigwhenset(documentbehaviorintasknotesifadditivevsabsolute)",
+        "Forgecharactersandpathswithoutlevel5fieldsunchanged",
+        "Sheetprofsliderreflectsappliedvalues;usercanadjustineditmode",
+        "`npmrunbuild`passes",
+        "notes:|",
+        "Done20260618:`applyPathProficiencyForLevel`onlevelup4→5+andonsheetloadforlevel≥5pathcharacters(floor,neverreduces).Toastonlevelupapply.Buildexit0.",
+        "developer_test_plan:|",
+        "SuiteDEVV008T004,T012—seeBUILD_VALIDATION.md.",
+        "build_validation:",
+        "suite:DEVV008",
+        "tests:",
+        "DEVV008T004",
+        "DEVV008T012"
+      ],
       "related_overlap": []
     },
     {
-      "id": "TASK-297",
-      "title": "Leveled feats migration and sitewide behavior unification (same name + level/id)",
-      "status": "in-progress",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-298",
-      "title": "Archetype Path system for guided character creation + admin authoring",
-      "status": "in-progress",
-      "matches": [],
-      "related_files": [],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-299",
-      "title": "TP/proficiency system completion audit and rule-hardening",
+      "id": "TASK-369",
+      "title": "Character sheet path identity and admin notes",
       "status": "done",
       "matches": [],
-      "related_files": [],
+      "related_files": [
+        "src/components/charactersheet/archetypepathidentity.tsx",
+        "src/components/charactersheet/sheetheader.tsx",
+        "src/components/charactercreator/PathHelpCard.tsx",
+        "src/app/(main)/characters/[id]/page.tsx",
+        "acceptance_criteria:",
+        "Pathcharactersshowpathname+badge;forgecharactersshowforgestylelabel",
+        "Adminpathnotesvisibleinaguidanceregion(noteditableasarchetypeDesc)",
+        "Accessiblelabelsandcontrastsafetokens",
+        "`npmrunbuild`passes",
+        "notes:|",
+        "Done20260618:`ArchetypeCreationBadge`+`ArchetypePathGuidance`insheetheader;pathdescription+level1/perleveladminnotesviaPathHelpCardpattern;forgebadgewhencreationModeforge.Buildexit0.",
+        "developer_test_plan:|",
+        "SuiteDEVV008T005—seeBUILD_VALIDATION.md.",
+        "build_validation:",
+        "suite:DEVV008",
+        "tests:",
+        "DEVV008T005"
+      ],
       "related_overlap": []
     },
     {
-      "id": "TASK-300",
-      "title": "Pin Node and Next versions for stable Vercel deploys",
+      "id": "TASK-370",
+      "title": "Public Codex archetypes tab",
       "status": "done",
       "matches": [],
-      "related_files": [],
+      "related_files": [
+        "src/app/(main)/codex/page.tsx",
+        "src/app/(main)/codex/CodexArchetypesTab.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "acceptance_criteria:",
+        "NewCodextab\"Archetypes\"inRealmsCodex(mainorAdvancedsectionperUX)",
+        "Expandablerowsshowlevel1recommendationsandlevel2+progressionsummary",
+        "Mobilefriendlylist;touchtargets≥44px",
+        "`npmrunbuild`passes",
+        "notes:|",
+        "Done20260618:MainRealmsCodextab\"Archetypes\"with`CodexArchetypesTab`—searchableGridListRowlist,expandablelevel1+levelupprogressionsummarieswithresolvedcodex/librarynames.Buildexit0.",
+        "developer_test_plan:|",
+        "SuiteDEVV008T006—seeBUILD_VALIDATION.md.",
+        "build_validation:",
+        "suite:DEVV008",
+        "tests:",
+        "DEVV008T006"
+      ],
       "related_overlap": []
     },
     {
-      "id": "TASK-301",
-      "title": "Migrate duplicate segmented pill toggles to SegmentedControl",
+      "id": "TASK-371",
+      "title": "Path remove lists in guidance flows",
       "status": "done",
       "matches": [],
-      "related_files": [],
+      "related_files": [
+        "src/lib/game/archetypepath.ts",
+        "src/components/charactersheet/levelupmodal.tsx",
+        "src/components/charactersheet/pathlevelguidance.tsx",
+        "acceptance_criteria:",
+        "Removelistsrenderwhenpresentinpath_datafortherelevantlevel",
+        "Copyclearlyindicatesoptionalguidance,notautomaticremoval",
+        "`npmrunbuild`passes",
+        "notes:|",
+        "Done20260618:`PathLevelGuidance`inlevelupmodal;`PathRemoveGuidance`onsheetheaderforcurrentlevelremovelists.Optionalcopy;dangerstyledlists.Buildexit0.",
+        "developer_test_plan:|",
+        "SuiteDEVV008T007—seeBUILD_VALIDATION.md.",
+        "build_validation:",
+        "suite:DEVV008",
+        "tests:",
+        "DEVV008T007"
+      ],
       "related_overlap": []
     },
     {
-      "id": "TASK-302",
-      "title": "Creature creator inventory budget summary (current/max) + inventory type tabs",
+      "id": "TASK-372",
+      "title": "EditArchetypeModal path awareness",
       "status": "done",
       "matches": [],
-      "related_files": [],
+      "related_files": [
+        "src/components/charactersheet/editarchetypemodal.tsx",
+        "src/app/(main)/characters/[id]/CharacterSheetModals.tsx",
+        "acceptance_criteria:",
+        "Pathcharactersseepathidentityinmodal;forgeflowunchangedforforgecharacters",
+        "AnypathswitchrequiresConfirmActionModalwithcleardatalosswarning",
+        "`npmrunbuild`passes",
+        "notes:|",
+        "Done20260618:Pathviewwithreadonlyidentity;switchtoforgeorpickanotherpathviaConfirmActionModal;forgeeditorunchangedforforgecharacters.SavescreationMode/archetypePathId.Buildexit0.",
+        "developer_test_plan:|",
+        "SuiteDEVV008T008—seeBUILD_VALIDATION.md.",
+        "build_validation:",
+        "suite:DEVV008",
+        "tests:",
+        "DEVV008T008"
+      ],
       "related_overlap": []
     },
     {
-      "id": "TASK-303",
-      "title": "Add empowered technique creator combining power + technique systems",
+      "id": "TASK-373",
+      "title": "Creator path polish — apply recommended skills and feats",
       "status": "done",
       "matches": [],
-      "related_files": [],
+      "related_files": [
+        "src/components/charactercreator/steps/skillsstep.tsx",
+        "src/components/charactercreator/steps/featsstep.tsx",
+        "src/components/shared/skillsallocationpage.tsx",
+        "acceptance_criteria:",
+        "Skillsstepoffersapplyrecommendedactionthatallocatespathskillidsperexistingallocationrules",
+        "Featsstepcanpreselectrecommendedarchetype/characterfeatswhenqualified(toggleorfirstvisit)",
+        "Usercanstillchangeselectionsafterward",
+        "`npmrunbuild`passes",
+        "notes:|",
+        "Done20260618:Skillsstep\"Applyrecommendedskills\"button(readdsdeclinedpathskills).Featsstepautoappliesqualifiedpathfeatsonfirstvisit+manual\"Applyrecommendedfeats\"button.Buildexit0.",
+        "developer_test_plan:|",
+        "SuiteDEVV008T009–T010—seeBUILD_VALIDATION.md.",
+        "build_validation:",
+        "suite:DEVV008",
+        "tests:",
+        "DEVV008T009",
+        "DEVV008T010"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-374",
+      "title": "Admin path visibility rules and CODEX schema docs",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/components/charactercreator/steps/archetypestep.tsx",
+        "src/app/(main)/admin/codex/AdminArchetypesTab.tsx",
+        "src/docs/CODEX_SCHEMA_REFERENCE.md",
+        "src/types/archetype.ts",
+        "acceptance_criteria:",
+        "AdminanddocsagreeonwhichfieldsaffectplayerUX",
+        "Pathvisibilitybehaviordocumentedandconsistent(pickerand/oradminwarning)",
+        "`npmrunbuild`passes",
+        "notes:|",
+        "Done20260618:Shared`pathHasPlayerVisibleLevel1`/`pathHiddenFromPlayerPicker`inarchetypepath.ts;usedincreator,codex,sheetpathswitcher.Adminsavewarningwhenlevel1hasnoaddrecommendations.CODEX_SCHEMA_REFERENCEarchetype/pathcolumnsexpanded.DeprecatedArchetype.feats/traitsdocumented.Buildexit0.",
+        "developer_test_plan:|",
+        "SuiteDEVV008T011—seeBUILD_VALIDATION.md.",
+        "build_validation:",
+        "suite:DEVV008",
+        "tests:",
+        "DEVV008T011"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-375",
+      "title": "Dedupe partsToPartData with shared enrichment (SA-4-17)",
+      "status": "done",
+      "matches": [],
+      "related_files": [
+        "src/lib/library/partdisplay.ts",
+        "src/components/charactersheet/librarylisthelpers.ts",
+        "src/components/charactersheet/libraryentityrows.tsx",
+        "src/lib/calculators/powercalc.ts",
+        "src/lib/calculators/techniquecalc.ts",
+        "acceptance_criteria:",
+        "Singlesharedhelper(orcalculatorexport)replacesduplicate`partsToPartData`/propertymappinglogic.",
+        "Charactersheetlibraryrowsandselectionmodalsshowidenticalpartchips(level,TP,description).",
+        "Nobehaviorregressionsforpowers,techniques,orinventorypropertychips.",
+        "`npmrunbuild`passes.",
+        "notes:|",
+        "Done20260618:`lib/library/partdisplay.ts`withcomputePartTrainingPoints,characterPartsToPartData,itemPropertiesToPartData;librarylisthelpersreexports;formatPowerPartChip/formatTechniquePartChipusesharedTPmath;techniquerowspassvariant.Buildexit0.",
+        "developer_test_plan:|",
+        "SuiteDEVV009T004—seeBUILD_VALIDATION.md.",
+        "build_validation:",
+        "suite:DEVV009",
+        "tests:",
+        "DEVV009T004"
+      ],
       "related_overlap": []
     }
   ]

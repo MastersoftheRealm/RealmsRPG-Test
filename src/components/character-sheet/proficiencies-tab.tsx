@@ -10,7 +10,7 @@ import { useMemo, useState } from 'react';
 import { Chip, IconButton, Button, Input } from '@/components/ui';
 import { Plus, X, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { SectionHeader, TabSummarySection, SummaryItem, SummaryRow, ValueStepper, PartChipComponent } from '@/components/shared';
+import { SectionHeader, TabSummarySection, SummaryItem, SummaryRow, ValueStepper, PartChipComponent, ConfirmActionModal } from '@/components/shared';
 import type { PartData } from '@/components/shared/part-chip';
 import { AddProficiencyModal, type AddProficiencyVariant } from './add-proficiency-modal';
 import type { CharacterPower, CharacterTechnique, Item, CharacterProficiency } from '@/types';
@@ -204,6 +204,7 @@ export function ProficienciesTab({
   const [customTp, setCustomTp] = useState(1);
   const [addProficiencyVariant, setAddProficiencyVariant] = useState<AddProficiencyVariant | null>(null);
   const [expandedProfId, setExpandedProfId] = useState<string | null>(null);
+  const [showSyncConfirm, setShowSyncConfirm] = useState(false);
 
   const required = useMemo(
     () =>
@@ -248,11 +249,13 @@ export function ProficienciesTab({
 
   const syncProficiencies = () => {
     if (!onProficienciesChange) return;
-    const message =
-      'Sync will remove proficiencies not needed for your current loadout and add any missing. Custom proficiencies are kept. Continue?';
-    if (!window.confirm(message)) return;
+    setShowSyncConfirm(true);
+  };
+
+  const confirmSyncProficiencies = () => {
     const kept = filterToRequiredAndCustom(owned, required);
     persistProficiencies(mergeOwnedWithRequired(kept, required));
+    setShowSyncConfirm(false);
   };
 
   const removeProf = (id: string) => {
@@ -348,27 +351,37 @@ export function ProficienciesTab({
         </SummaryRow>
       </TabSummarySection>
 
+      {onProficienciesChange && (
+        <div className="rounded-lg border border-border bg-surface-alt/50 px-3 py-2">
+          <p className="text-xs font-medium text-text-muted mb-2">
+            Catch-all: add every proficiency required by your current loadout
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={addAllMissing}
+              disabled={missing.length === 0}
+            >
+              <Plus className="w-4 h-4" /> Add All Missing Proficiencies
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={syncProficiencies}
+              aria-label="Sync proficiencies with current loadout (removes unused, adds missing)"
+            >
+              <RefreshCw className="w-4 h-4" /> Sync Proficiencies
+            </Button>
+          </div>
+          <p className="text-xs text-text-muted mt-2">
+            Sync removes proficiencies no longer needed for your current powers/techniques/equipment and adds any missing. Custom proficiencies are kept.
+          </p>
+        </div>
+      )}
+
       {isEditMode && (
         <div className="space-y-4">
-          <div className="rounded-lg border border-border bg-surface-alt/50 px-3 py-2">
-            <p className="text-xs font-medium text-text-muted mb-2">Catch-all: add every proficiency required by your current loadout</p>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button size="sm" variant="secondary" onClick={addAllMissing} disabled={missing.length === 0}>
-                <Plus className="w-4 h-4" /> Add All Missing Proficiencies
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={syncProficiencies}
-                aria-label="Sync proficiencies with current loadout (removes unused, adds missing)"
-              >
-                <RefreshCw className="w-4 h-4" /> Sync Proficiencies
-              </Button>
-            </div>
-            <p className="text-xs text-text-muted mt-2">
-              Sync removes proficiencies no longer needed for your current powers/techniques/equipment and adds any missing. Custom proficiencies are kept.
-            </p>
-          </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button
               size="sm"
@@ -498,11 +511,11 @@ export function ProficienciesTab({
       <div>
         <SectionHeader
           title="Missing For Current Loadout"
-          rightContent={<span className="text-xs text-danger-700 dark:text-danger-300">{missing.length} missing</span>}
+          rightContent={<span className="text-xs text-danger-fg">{missing.length} missing</span>}
         />
         <div className="px-2 py-3">
           {missing.length === 0 ? (
-            <p className="text-sm text-success-700 dark:text-success-400 italic text-center py-2">
+            <p className="text-sm text-success-fg italic text-center py-2">
               All current powers, techniques, and armaments are covered.
             </p>
           ) : (
@@ -533,6 +546,16 @@ export function ProficienciesTab({
           onAdd={addProficiency}
         />
       )}
+
+      <ConfirmActionModal
+        isOpen={showSyncConfirm}
+        onClose={() => setShowSyncConfirm(false)}
+        onConfirm={confirmSyncProficiencies}
+        title="Sync proficiencies?"
+        description="Sync will remove proficiencies not needed for your current loadout and add any missing. Custom proficiencies are kept."
+        confirmLabel="Sync"
+        confirmVariant="primary"
+      />
     </div>
   );
 }

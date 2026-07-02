@@ -292,10 +292,10 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                 onClick={() => setShowMixedModal(true)}
                 className={cn(
                   'flex flex-col items-center justify-center min-h-[100px] border-2 border-dashed rounded-xl p-4',
-                  isMixed ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-border hover:border-primary-400'
+                  isMixed ? 'border-primary-outline-border bg-primary-subtle-bg' : 'border-border hover:border-primary-outline-border'
                 )}
               >
-                <GitMerge className="w-8 h-8 text-primary-600 mb-1" />
+                <GitMerge className="w-8 h-8 text-primary-link-fg mb-1" />
                 <span className="font-medium text-text-primary">Mixed species</span>
               </button>
               {allSpecies.map((s: Species) => {
@@ -307,7 +307,7 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                     onClick={() => handleSingleSpeciesSelect(s)}
                     className={cn(
                       'text-left border-2 rounded-xl p-4 min-h-[100px]',
-                      isSelected ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-border hover:border-primary-400'
+                      isSelected ? 'border-primary-outline-border bg-primary-subtle-bg' : 'border-border hover:border-primary-outline-border'
                     )}
                   >
                     <span className="font-medium text-text-primary">{s.name}</span>
@@ -342,7 +342,7 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
             {!isMixed && speciesTraits.length > 0 && (
               <div className="space-y-2">
                 <h4 className="text-sm font-semibold text-text-primary flex items-center gap-1">
-                  <Heart className="w-4 h-4 text-primary-600" />
+                  <Heart className="w-4 h-4 text-primary-link-fg" />
                   Species traits
                 </h4>
                 <p className="text-xs text-text-secondary">
@@ -498,8 +498,8 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                             className={cn(
                               'px-3 py-1.5 rounded-full text-sm font-medium border',
                               selected
-                                ? 'bg-primary-100 dark:bg-primary-900/40 border-primary-400 text-primary-800 dark:text-primary-200'
-                                : 'bg-surface border-border text-text-secondary hover:border-primary-300'
+                                ? 'bg-primary-subtle-bg border-primary-subtle-border text-primary-subtle-fg'
+                                : 'bg-surface border-border text-text-secondary hover:border-primary-outline-border'
                             )}
                           >
                             {opt.name}

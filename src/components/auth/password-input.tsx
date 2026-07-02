@@ -25,7 +25,7 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
         {label ? (
           <label 
             htmlFor={inputId}
-            className="block text-sm font-medium text-gray-200"
+            className="block text-sm font-medium text-text-primary"
           >
             {label}
           </label>
@@ -36,13 +36,13 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             id={inputId}
             type={showPassword ? 'text' : 'password'}
             className={cn(
-              'w-full px-4 py-3 pr-12 rounded-lg border bg-gray-800/50 text-white',
-              'placeholder:text-gray-300',
-              'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent',
-              'transition-colors duration-200',
+              'w-full px-4 py-3 pr-12 rounded-lg border bg-surface text-text-primary',
+              'placeholder:text-text-muted dark:placeholder:text-text-secondary',
+              'focus:outline-none focus:ring-2 focus:ring-primary-outline-border focus:border-transparent',
+              'transition-colors duration-base',
               error
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-600 hover:border-gray-500',
+                ? 'border-danger-border focus:ring-danger-border'
+                : 'border-border-light dark:border-border hover:border-border',
               className
             )}
             {...props}
@@ -50,7 +50,7 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-white transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-text-muted hover:text-text-primary dark:text-text-secondary dark:hover:text-text-on-dark transition-colors"
             tabIndex={-1}
             aria-label={showPassword ? 'Hide password' : 'Show password'}
           >
@@ -62,7 +62,7 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
           </button>
         </div>
         {error ? (
-          <p className="text-sm text-red-400">{error}</p>
+          <p className="text-sm text-danger-700 dark:text-danger-400">{error}</p>
         ) : null}
       </div>
     );

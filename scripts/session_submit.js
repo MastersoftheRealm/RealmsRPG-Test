@@ -68,6 +68,10 @@ try {
 
 // Optional: autopush - create branches for low-risk tasks and open PRs using gh (if available)
 if (autopush) {
+  if (process.env.ALLOW_AUTOPUSH !== '1') {
+    console.error('Autopush requires ALLOW_AUTOPUSH=1 environment variable.');
+    process.exit(1);
+  }
   console.log('Autopush requested. Attempting to create branches and PRs for low-risk tasks.');
   // require gh CLI
   try {
@@ -99,7 +103,7 @@ if (autopush) {
       console.log(`Creating branch ${branch} and pushing...`);
       execSync(`git checkout -b ${branch}`, { cwd: repoRoot, stdio: 'inherit' });
       // create a small placeholder commit to open the PR from — agent will replace with real work later
-      fs.writeFileSync(path.join(repoRoot,'docs','ai','PLACEHOLDER_'+id+'.md'), `Placeholder for ${id}\n`, 'utf8');
+      fs.writeFileSync(path.join(repoRoot,'src','docs','ai','PLACEHOLDER_'+id+'.md'), `Placeholder for ${id}\n`, 'utf8');
       execSync(`git add . && git commit -m "[${id}] Create branch for auto-implementation"`, { cwd: repoRoot, stdio: 'inherit' });
       execSync(`git push -u origin ${branch}`, { cwd: repoRoot, stdio: 'inherit' });
       // open PR

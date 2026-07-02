@@ -53,6 +53,9 @@ const sizeClasses = {
 
 const MOBILE_BREAKPOINT_PX = 768;
 
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export function Modal({
   isOpen,
   onClose,
@@ -72,6 +75,8 @@ export function Modal({
   const [mounted, setMounted] = React.useState(false);
   const [animating, setAnimating] = React.useState(false);
   const [isMobileViewport, setIsMobileViewport] = React.useState(false);
+  const dialogRef = React.useRef<HTMLDivElement>(null);
+  const previouslyFocusedRef = React.useRef<HTMLElement | null>(null);
 
   React.useEffect(() => {
     setMounted(true);
@@ -108,7 +113,49 @@ export function Modal({
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, onClose]);
 
+  // Focus management: remember the trigger, move focus into the dialog on open,
+  // and restore focus to the trigger on close/unmount (a11y — TASK-332).
+  React.useEffect(() => {
+    if (!mounted || !isOpen) return;
+    previouslyFocusedRef.current = (document.activeElement as HTMLElement | null) ?? null;
+    const node = dialogRef.current;
+    if (node) {
+      const firstFocusable = node.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+      (firstFocusable ?? node).focus();
+    }
+    return () => {
+      previouslyFocusedRef.current?.focus?.();
+    };
+  }, [mounted, isOpen]);
+
   if (!mounted || !isOpen) return null;
+
+  // Keep keyboard focus inside the dialog while it is open.
+  const handleFocusTrap = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== 'Tab') return;
+    const node = dialogRef.current;
+    if (!node) return;
+    const focusables = Array.from(node.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+      (el) => el.offsetParent !== null || el === document.activeElement
+    );
+    if (focusables.length === 0) {
+      e.preventDefault();
+      node.focus();
+      return;
+    }
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const active = document.activeElement;
+    if (e.shiftKey) {
+      if (active === first || !node.contains(active)) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else if (active === last || !node.contains(active)) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
 
   // Determine if we're using simple mode (title/description) or custom mode (header slot)
   const hasSimpleHeader = (title || description) && !header;
@@ -118,13 +165,13 @@ export function Modal({
 
   const modalContent = (
     <div className={cn(
-      'fixed inset-0 z-50 flex',
+      'fixed inset-0 z-overlay flex',
       useFullScreenMobile ? 'items-stretch' : 'items-center justify-center p-4'
     )}>
       {/* Backdrop */}
       <div
         className={cn(
-          'fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-200',
+          'fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-base ease-standard',
           animating ? 'opacity-100' : 'opacity-0'
         )}
         onClick={onClose}
@@ -133,8 +180,11 @@ export function Modal({
       
       {/* Modal */}
       <div
+        ref={dialogRef}
+        tabIndex={-1}
+        onKeyDown={handleFocusTrap}
         className={cn(
-          'relative z-10 w-full bg-surface shadow-2xl border-border-light overflow-hidden',
+          'relative z-10 w-full bg-surface shadow-2xl border-border-light overflow-hidden focus:outline-none',
           useFullScreenMobile
             ? 'inset-0 flex flex-col rounded-none border-0 max-h-none'
             : cn(
@@ -157,11 +207,11 @@ export function Modal({
       >
         {/* Visually hidden title when custom header without title, for screen readers */}
         {!title && hasCustomHeader && (
-          <span id="modal-title" className="sr-only">Dialog</span>
+          <span id="modal-title" className="sr-only">{titleA11y ?? 'Dialog'}</span>
         )}
         {/* Simple Header (title/description mode) */}
         {hasSimpleHeader && (
-          <div className="mx-4 mt-4 mb-2 px-4 py-3 bg-primary-50 dark:bg-primary-900/30 rounded-xl border-b border-border-light">
+          <div className="mx-4 mt-4 mb-2 px-4 py-3 bg-primary-subtle-bg rounded-xl border-b border-border-light">
             {title && (
               <h2 id="modal-title" className="text-xl font-semibold text-text-primary">
                 {title}

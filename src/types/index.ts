@@ -42,6 +42,7 @@ export type {
   FeatCategory,
   Feat,
   CharacterFeat,
+  FeatTraitCustomization,
 } from './feats';
 
 // Equipment

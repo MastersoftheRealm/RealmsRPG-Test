@@ -18,8 +18,9 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/shared';
-import { EmptyState } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
+import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
+import { EmptyState } from '@/components/ui';
 import { useItemProperties, type ItemProperty } from '@/hooks';
 import { formatListCellLabel } from '@/lib/utils';
 
@@ -90,7 +91,8 @@ function PropertyCard({ property }: { property: ItemProperty }) {
 }
 
 export function CodexPropertiesTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  const { data: properties, isLoading, error } = useItemProperties();
+  const loadPublicCodex = codexMode === 'public';
+  const { data: properties, isLoading, error, refetch } = useItemProperties({ enabled: loadPublicCodex });
   const { sortState, handleSort } = useSort('name');
   const [filters, setFilters] = useState<PropertyFilters>({
     search: '',
@@ -127,16 +129,10 @@ export function CodexPropertiesTab({ codexMode = 'public' }: { codexMode?: 'publ
   }, [properties, filters, sortState]);
 
   if (codexMode === 'my') {
-    return (
-      <EmptyState
-        size="lg"
-        title="My Codex: Properties"
-        description="Custom properties are not available yet. For now, use Realms Codex."
-      />
-    );
+    return <CodexMyCodexEmpty />;
   }
 
-  if (error) return <ErrorState message="Failed to load properties" />;
+  if (error) return <ErrorState message="Failed to load properties" onRetry={() => refetch()} />;
 
   return (
     <div>
@@ -167,7 +163,7 @@ export function CodexPropertiesTab({ codexMode = 'public' }: { codexMode?: 'publ
         {isLoading ? (
           <LoadingState />
         ) : filteredProperties.length === 0 ? (
-          <div className="p-8 text-center text-text-muted dark:text-text-secondary">No properties found.</div>
+          <EmptyState title="No properties found." size="sm" />
         ) : (
           filteredProperties.map((prop: ItemProperty) => (
             <PropertyCard key={prop.id} property={prop} />

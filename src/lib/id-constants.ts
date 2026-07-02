@@ -305,9 +305,11 @@ export function findByIdOrName<T extends HasIdAndName>(
     if (byId) return byId;
   }
 
-  // Fallback to name for backwards compatibility
+  // Fallback to name for backwards compatibility (case-insensitive / trimmed
+  // so legacy string-named refs still resolve to their codex entry).
   if (ref.name) {
-    return db.find((item) => item.name === ref.name);
+    const refName = String(ref.name).trim().toLowerCase();
+    return db.find((item) => String(item.name ?? '').trim().toLowerCase() === refName);
   }
 
   return undefined;

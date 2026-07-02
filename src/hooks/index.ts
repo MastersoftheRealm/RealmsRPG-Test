@@ -9,10 +9,16 @@ export { useAuth, useAuthStore } from './use-auth';
 export { useAdmin } from './use-admin';
 export { useCreatorSave } from './use-creator-save';
 export type { CreatorLibraryType, CreatorSavePayload, UseCreatorSaveOptions, UseCreatorSaveReturn } from './use-creator-save';
-export { useCreatorLoad } from './use-creator-load';
-export type { CreatorLoadType, UseCreatorLoadReturn } from './use-creator-load';
 export { useLoadModalLibrary } from './use-load-modal-library';
 export type { LoadModalLibraryType, UseLoadModalLibraryReturn } from './use-load-modal-library';
+export { useAddLibraryItemData } from './use-add-library-item-data';
+export type {
+  AddLibraryItemType,
+  EqItem,
+  PowerSelectionMode,
+  UseAddLibraryItemDataOptions,
+  UseAddLibraryItemDataReturn,
+} from './use-add-library-item-data';
 export { useCreatorWeaponOptions } from './use-creator-weapon-options';
 export type { CreatorWeaponOption } from '@/lib/creator-weapon-options';
 export { useProfile } from './use-profile';
@@ -50,13 +56,19 @@ export {
   useDeleteCraftingSession,
 } from './use-crafting';
 
-// Enhanced items (from crafting)
+// Enhanced items (user library + official admin)
 export {
   enhancedItemsKeys,
   useEnhancedItems,
+  useOfficialEnhancedItems,
   useCreateEnhancedItem,
+  useCreateOfficialEnhancedItem,
   useDeleteEnhancedItem,
+  useDeleteOfficialEnhancedItem,
   useUpdateEnhancedItem,
+  useUpdateOfficialEnhancedItem,
+  type EnhancedItemsScope,
+  type OfficialEnhancedItem,
 } from './use-enhanced-items';
 
 // Characters
@@ -71,9 +83,9 @@ export {
 } from './use-characters';
 
 // Game Data (useArchetype for single archetype by id; useArchetypes = useCodexArchetypes)
-export { gameDataKeys, useArchetype } from './use-game-data';
+export { useArchetype } from './use-game-data';
 
-// Codex Data (Prisma via API) — single codex fetch shared by all useCodex* and useGameRules
+// Codex Data (Supabase via API) — single codex fetch shared by all useCodex* and useGameRules
 export {
   useCodexFull,
   useCodexFeats,
@@ -88,7 +100,6 @@ export {
   useCodexCreatureFeats as useCreatureFeats,
   useCodexArchetypes,
   useCodexArchetypes as useArchetypes,
-  prefetchFunctions,
 } from './use-codex';
 export { useGameRules, getGameRulesFallback } from './use-game-rules';
 
@@ -111,13 +122,14 @@ export {
   type ItemProperty,
   type EquipmentItem,
   type CreatureFeat,
-} from './use-rtdb';
+} from './codex-types';
 
-// Public Library (browse, add to my library)
-export { useOfficialLibrary, useAddOfficialToLibrary, usePublicLibrary, useAddPublicToLibrary } from './use-public-library';
+// Official Library (browse, add to my library)
+export { useOfficialLibrary, useAddOfficialToLibrary } from './use-official-library';
 
 // User Library (user-specific content)
 export {
+  useUserLibrary,
   useUserPowers,
   useUserTechniques,
   useUserEmpoweredTechniques,
@@ -131,11 +143,13 @@ export {
   useDeleteEmpoweredTechnique,
   useDeleteItem,
   useDeleteCreature,
+  useDeleteSpecies,
   useDuplicatePower,
   useDuplicateTechnique,
   useDuplicateEmpoweredTechnique,
   useDuplicateItem,
   useDuplicateCreature,
+  useDuplicateSpecies,
   type UserPower,
   type UserTechnique,
   type UserItem,
@@ -147,15 +161,7 @@ export {
 
 // Auto-save
 export { useAutoSave } from './use-auto-save';
-
-// Creator Cache (localStorage persistence for guest users)
-export { 
-  useCreatorCache, 
-  useCreatorCacheValue,
-  clearAllCreatorCaches,
-  getCreatorCacheInfo,
-  type CreatorType,
-} from './use-creator-cache';
+export { useCharacterResourceSync } from './use-character-resource-sync';
 
 // Sort (shared list sorting logic)
 export { useSort, toggleSort, sortByColumn } from './use-sort';

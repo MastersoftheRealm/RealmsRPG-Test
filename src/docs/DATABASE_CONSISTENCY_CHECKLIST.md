@@ -40,6 +40,7 @@ Use this checklist to keep your Supabase database in sync with the app and fix c
 
 - **Drop legacy Prisma table:** `DROP TABLE IF EXISTS public._prisma_migrations;` — safe if you no longer use Prisma (see SUPABASE_SCHEMA.md §4).
 - **Codex RLS:** If GET `/api/codex` returns 500 (permission denied), run **sql/supabase-codex-rls-public.sql** to grant SELECT on codex_* and core_rules.
+- **Account delete orphans:** If users deleted before 2026-06-13, orphaned rows may remain in `user_species`, `user_empowered_techniques`, `crafting_sessions`, or `user_enhanced_items`. Current app `deleteAccountAction` clears all user-owned tables listed in SUPABASE_SCHEMA.md §6.
 
 ---
 
@@ -64,7 +65,7 @@ These areas were audited for consistency with the current Supabase implementatio
 | **Character creator** | Characters API; library from `useUserPowers` etc. and `useOfficialLibrary` for add-power/technique modals. | Adding a public item to character stores `{ id, name }` only; enrichment resolves from user library then public (official) library by id. |
 | **Character sheet** | `enrichCharacterData(character, userPowers, userTechniques, userItems, …, publicLibraries)`. Character load returns `libraryForView` for non-owner view. | Powers/techniques/items must be resolvable by id (or name fallback) in user library or publicLibraries. Public library comes from `useOfficialLibrary` (GET /api/official). |
 | **Library page** | User: `GET /api/user/library/[type]`. Official: `GET /api/official/[type]`. | Both return client shape from `rowToItem` (id, docId, name, description, parts, range, duration, area, damage in payload for powers). |
-| **Enrichment** | `enrichPowers`, `enrichTechniques`, `enrichItems` take optional `publicPowerLibrary` etc. for character-referenced official items. | Character page builds `publicLibraries` from `usePublicLibrary` (official) and passes to `enrichCharacterData`. |
+| **Enrichment** | `enrichPowers`, `enrichTechniques`, `enrichItems` take optional `publicPowerLibrary` etc. for character-referenced official items. | Character page builds `publicLibraries` from `useOfficialLibrary` and passes to `enrichCharacterData`. |
 | **User species** | `GET /api/user/library/species` → `user_species` columnar or legacy `r.data`. | `rowToItemSpecies` returns codex-like shape (sizes, skills, species_traits, etc. as arrays). Character creator and hooks expect that shape. |
 
 **If something doesn’t load or display after a change:**

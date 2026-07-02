@@ -82,47 +82,84 @@ export async function validateJson<T>(
 // Character Schemas
 // =============================================================================
 
-/** Minimal required fields for character creation. Data blob validated at top level. */
-export const characterCreateSchema = z.object({
+/** Reject prototype-pollution keys and bound JSON blob size on mutation payloads (TASK-359). */
+const UNSAFE_PAYLOAD_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+const MAX_MUTATION_KEYS = 500;
+
+function isSafeMutationPayload(obj: Record<string, unknown>): boolean {
+  const keys = Object.keys(obj);
+  if (keys.length > MAX_MUTATION_KEYS) return false;
+  return !keys.some((key) => UNSAFE_PAYLOAD_KEYS.has(key));
+}
+
+function withSafeJsonBlob<T extends z.ZodRawShape>(shape: T) {
+  return z
+    .object(shape)
+    .catchall(z.unknown())
+    .refine(isSafeMutationPayload, { message: 'Payload has too many fields or invalid keys' });
+}
+
+/** Minimal required fields for character creation. Additional character fields allowed via catchall. */
+export const characterCreateSchema = withSafeJsonBlob({
   name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
   level: z.number().int().min(1).max(20).optional().default(1),
   duplicateOf: z.string().uuid().optional(),
-}).passthrough(); // Allow additional character data fields
+});
 
 /** Character update — partial, all fields optional */
-export const characterUpdateSchema = z.object({
+export const characterUpdateSchema = withSafeJsonBlob({
   name: z.string().min(1).max(100).optional(),
   level: z.number().int().min(1).max(20).optional(),
   visibility: z.enum(['private', 'campaign', 'public']).optional(),
   /** Storage public URL or external URL after upload */
   portrait: z.string().min(1).max(4000).optional(),
-}).passthrough();
+});
 
 // =============================================================================
 // Encounter Schemas
 // =============================================================================
 
+const combatantSchema = z.record(z.string(), z.unknown());
+
+const skillEncounterCreateSchema = z.object({
+  difficultyScore: z.number().optional(),
+  participants: z.array(combatantSchema).optional(),
+  currentSuccesses: z.number().int().min(0).optional(),
+  currentFailures: z.number().int().min(0).optional(),
+  additionalSuccesses: z.number().int().min(0).optional(),
+  additionalFailures: z.number().int().min(0).optional(),
+  requiredSuccesses: z.number().int().min(0).optional(),
+  maxFailures: z.number().int().min(0).optional(),
+});
+
 export const encounterCreateSchema = z.object({
   name: z.string().min(1, 'Name is required').max(200, 'Name too long'),
   type: z.enum(['combat', 'skill', 'mixed']).optional().default('combat'),
   description: z.string().max(5000).optional(),
-}).passthrough();
+  status: z.enum(['preparing', 'active', 'paused', 'completed']).optional(),
+  combatants: z.array(combatantSchema).optional(),
+  round: z.number().int().min(0).optional(),
+  currentTurnIndex: z.number().int().optional(),
+  isActive: z.boolean().optional(),
+  applySurprise: z.boolean().optional(),
+  skillEncounter: skillEncounterCreateSchema.optional().nullable(),
+  campaignId: z.string().uuid().optional().nullable(),
+}).strict();
 
-const combatantSchema = z.record(z.string(), z.unknown());
-export const encounterUpdateSchema = z.object({
+export const encounterUpdateSchema = withSafeJsonBlob({
   name: z.string().min(1).max(200).optional(),
   type: z.enum(['combat', 'skill', 'mixed']).optional(),
   description: z.string().max(5000).optional(),
   combatants: z.array(combatantSchema).optional(),
   round: z.number().int().min(0).optional(),
   currentTurnIndex: z.number().int().optional(),
-  status: z.enum(['preparing', 'active', 'completed']).optional(),
+  status: z.enum(['preparing', 'active', 'paused', 'completed']).optional(),
   isActive: z.boolean().optional(),
   campaignId: z.string().uuid().optional().nullable(),
   applySurprise: z.boolean().optional(),
   skillEncounter: z.record(z.string(), z.unknown()).optional().nullable(),
   updatedAt: z.string().optional(),
-}).passthrough();
+});
 
 // =============================================================================
 // Crafting Session Schemas
@@ -275,14 +312,14 @@ export const enhancedItemPatchSchema = z.object({
 // Library Item Schemas
 // =============================================================================
 
-export const libraryItemCreateSchema = z.object({
+export const libraryItemCreateSchema = withSafeJsonBlob({
   name: z.string().min(1, 'Name is required').max(200, 'Name too long'),
   duplicateOf: z.string().uuid().optional(),
-}).passthrough();
+});
 
-export const libraryItemUpdateSchema = z.object({
+export const libraryItemUpdateSchema = withSafeJsonBlob({
   name: z.string().min(1).max(200).optional(),
-}).passthrough();
+});
 
 // =============================================================================
 // Campaign Roll Schemas
@@ -308,7 +345,54 @@ export const campaignRollCreateSchema = z.object({
 // =============================================================================
 
 /** Permissive schema for admin public item creation/update — validates shape, not content. */
-export const publicItemSchema = z.object({
+export const publicItemSchema = withSafeJsonBlob({
   id: z.string().optional(),
   name: z.string().min(1, 'Name is required').max(200).optional(),
-}).passthrough();
+});
+
+// =============================================================================
+// Tooltip Schemas (admin ui_tooltips)
+// =============================================================================
+
+const tooltipPlacementSchema = z.enum(['top', 'bottom', 'left', 'right']);
+const tooltipTriggerSchema = z.enum(['auto', 'hover', 'focus', 'click']);
+const tooltipAudienceSchema = z.enum(['new_player', 'all', 'admin']);
+
+export const tooltipCreateSchema = z.object({
+  key: z.string().trim().min(1, 'key is required').max(200),
+  scope: z.string().trim().min(1, 'scope is required').max(200),
+  title: z.string().trim().max(500).nullable().optional(),
+  bodyMd: z.string().trim().min(1, 'bodyMd is required').max(20000),
+  placement: tooltipPlacementSchema.optional().default('top'),
+  trigger: tooltipTriggerSchema.optional().default('auto'),
+  audience: tooltipAudienceSchema.optional().default('new_player'),
+  enabled: z.boolean().optional().default(true),
+  version: z.number().int().min(1).optional().default(1),
+});
+
+export const tooltipPatchSchema = z
+  .object({
+    id: z.string().trim().min(1, 'id is required'),
+    key: z.string().trim().min(1).max(200).optional(),
+    scope: z.string().trim().min(1).max(200).optional(),
+    title: z.string().trim().max(500).nullable().optional(),
+    bodyMd: z.string().trim().min(1).max(20000).optional(),
+    placement: tooltipPlacementSchema.optional(),
+    trigger: tooltipTriggerSchema.optional(),
+    audience: tooltipAudienceSchema.optional(),
+    enabled: z.boolean().optional(),
+    version: z.number().int().min(1).optional(),
+  })
+  .refine(
+    (value) =>
+      value.key !== undefined ||
+      value.scope !== undefined ||
+      value.title !== undefined ||
+      value.bodyMd !== undefined ||
+      value.placement !== undefined ||
+      value.trigger !== undefined ||
+      value.audience !== undefined ||
+      value.enabled !== undefined ||
+      value.version !== undefined,
+    { message: 'At least one field besides id must be provided.' }
+  );

@@ -8,11 +8,13 @@
 
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Chip, Button, Spinner } from '@/components/ui';
+import { statusPanel } from '@/lib/ui/status-surface-classes';
+import { Chip, Button, Spinner, SelectionCard, Card } from '@/components/ui';
 import { ContextHelpTooltip } from '@/components/shared';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useCodexArchetypes } from '@/hooks';
-import { parseArchetypePathData } from '@/lib/game/archetype-path';
+import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
+import { parseArchetypePathData, pathHasPlayerVisibleLevel1 } from '@/lib/game/archetype-path';
 import type { Archetype, ArchetypeCategory, AbilityName } from '@/types';
 
 const ABILITIES: AbilityName[] = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'];
@@ -52,11 +54,11 @@ function AbilityPickButton({
       onClick={onPick}
       disabled={disabled}
       className={cn(
-        'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+        'px-3 py-2 min-h-11 min-w-11 rounded-lg text-sm font-medium transition-colors',
         selected
           ? variant === 'power'
-            ? 'bg-violet-500 text-white dark:bg-violet-600 dark:text-white'
-            : 'bg-red-600 text-white dark:bg-red-700 dark:text-white'
+            ? 'bg-power-dark text-white'
+            : 'bg-martial-dark text-white'
           : disabled
             ? 'bg-surface text-text-muted dark:text-text-secondary cursor-not-allowed'
             : 'bg-surface border border-border-light hover:border-border'
@@ -78,7 +80,7 @@ function AbilityPickButton({
 }
 
 export function ArchetypeStep() {
-  const { draft, setArchetype, setArchetypePath, setCreationMode, nextStep } = useCharacterCreatorStore();
+  const { draft, setArchetype, setArchetypePath, setCreationMode, nextStep, prevStep, reselectArchetype } = useCharacterCreatorStore();
   const { data: codexArchetypes = [], isLoading } = useCodexArchetypes();
   
   const [selectedType, setSelectedType] = useState<ArchetypeCategory | null>(
@@ -99,17 +101,7 @@ export function ArchetypeStep() {
         ...archetype,
         path_data: parseArchetypePathData(archetype.path_data),
       }))
-      .filter((archetype) => {
-        const hasLevelOne =
-          !!archetype.path_data?.level1 &&
-          (archetype.path_data.level1.feats?.length ||
-            archetype.path_data.level1.skills?.length ||
-            archetype.path_data.level1.powers?.length ||
-            archetype.path_data.level1.techniques?.length ||
-            archetype.path_data.level1.armaments?.length ||
-            archetype.path_data.level1.equipment?.length);
-        return hasLevelOne;
-      });
+      .filter((archetype) => pathHasPlayerVisibleLevel1(archetype.path_data));
   }, [codexArchetypes]);
 
   const selectedPath = useMemo(
@@ -152,9 +144,9 @@ export function ArchetypeStep() {
       <div className="max-w-2xl mx-auto">
         <h2 className="text-2xl font-bold text-text-primary mb-2">Your Archetype</h2>
         
-        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/50 rounded-xl p-6 mb-6">
-          <h3 className="text-xl font-bold text-success-800 dark:text-success-300 mb-2">{draft.archetype?.name || ARCHETYPE_INFO[draft.archetype!.type].title}</h3>
-          <p className="text-success-700 dark:text-success-300 mb-4">{draft.archetype?.description || ARCHETYPE_INFO[draft.archetype!.type].description}</p>
+        <div className={cn('border-2 rounded-xl p-6 mb-6', statusPanel.complete)}>
+          <h3 className="text-xl font-bold text-success-fg mb-2">{draft.archetype?.name || ARCHETYPE_INFO[draft.archetype!.type].title}</h3>
+          <p className="text-success-fg mb-4">{draft.archetype?.description || ARCHETYPE_INFO[draft.archetype!.type].description}</p>
           
           <div className="flex flex-wrap gap-2">
             {draft.creationMode && (
@@ -176,25 +168,19 @@ export function ArchetypeStep() {
         </div>
         
         <button
+          type="button"
           onClick={() => {
             setSelectedType(null);
             setSelectedAbility(null);
             setSelectedMartialAbility(null);
-            useCharacterCreatorStore.setState({ 
-              draft: { 
-                ...draft, 
-                archetype: undefined,
-                pow_abil: undefined,
-                mart_abil: undefined,
-                creationMode: undefined,
-                archetypePathId: undefined,
-              }
-            });
+            reselectArchetype();
           }}
-          className="text-text-secondary hover:text-text-primary underline"
+          className="text-text-secondary hover:text-text-primary underline mb-6"
         >
           Choose a different archetype
         </button>
+
+        <CreatorStepFooter onBack={prevStep} onContinue={nextStep} />
       </div>
     );
   }
@@ -212,40 +198,34 @@ export function ArchetypeStep() {
       <p className="text-text-secondary mb-6">Pick a fully custom creation flow or an archetype-guided path with curated recommendations.</p>
 
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-8">
-        <button
-          type="button"
+        <SelectionCard
+          selected={creationChoice === 'path'}
           onClick={() => {
             setCreationChoice('path');
             setCreationMode('path');
           }}
-          className={cn(
-            'selection-card text-left min-h-40 flex-1',
-            creationChoice === 'path' && 'selection-card--selected'
-          )}
+          className="text-left min-h-40 flex-1"
         >
           <h3 className="text-lg font-bold text-text-primary mb-2">Choose a Path</h3>
           <p className="text-text-secondary text-sm">
             Faster setup with official archetype paths that recommend Feats, Powers, Techniques, Armaments, Skills, and Equipment.
           </p>
-        </button>
+        </SelectionCard>
         <span className="text-text-muted dark:text-text-secondary text-sm font-medium self-center shrink-0" aria-hidden="true">or</span>
-        <button
-          type="button"
+        <SelectionCard
+          selected={creationChoice === 'forge'}
           onClick={() => {
             setCreationChoice('forge');
             setCreationMode('forge');
             setSelectedPathId(null);
           }}
-          className={cn(
-            'selection-card text-left min-h-40 flex-1',
-            creationChoice === 'forge' && 'selection-card--selected'
-          )}
+          className="text-left min-h-40 flex-1"
         >
           <h3 className="text-lg font-bold text-text-primary mb-2">Forge Your Own</h3>
           <p className="text-text-secondary text-sm">
             Fully customizable character creation. Pick your own Feats, Powers, Techniques, Armaments, Skills, and Equipment.
           </p>
-        </button>
+        </SelectionCard>
       </div>
       
       {creationChoice === 'path' && (
@@ -266,17 +246,21 @@ export function ArchetypeStep() {
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {options.map((option) => (
-                        <button
-                          type="button"
+                        <SelectionCard
                           key={option.id}
+                          selected={selectedPathId === option.id}
                           onClick={() => setSelectedPathId(option.id)}
-                          className={cn(
-                            'selection-card text-left',
-                            selectedPathId === option.id && 'selection-card--selected'
-                          )}
+                          className="text-left"
                         >
                           <h4 className="font-semibold text-text-primary mb-1">{option.name}</h4>
-                          <p className="text-sm text-text-secondary mb-2 line-clamp-2">{option.description || 'No description provided.'}</p>
+                          <p
+                            className={cn(
+                              'text-sm text-text-secondary mb-2',
+                              selectedPathId !== option.id && 'line-clamp-2'
+                            )}
+                          >
+                            {option.description || 'No description provided.'}
+                          </p>
                           {(option.archetype_ability || option.secondary_ability) && (
                             <div className="flex flex-wrap gap-1">
                               {option.archetype_ability && (
@@ -291,12 +275,42 @@ export function ArchetypeStep() {
                               )}
                             </div>
                           )}
-                        </button>
+                        </SelectionCard>
                       ))}
                     </div>
                   </section>
                 );
               })}
+            </div>
+          )}
+
+          {selectedPath && (
+            <div
+              className="mt-5 rounded-xl border border-primary-subtle-border bg-primary-subtle-bg p-4"
+              aria-live="polite"
+            >
+              <h4 className="font-semibold text-text-primary mb-2">{selectedPath.name}</h4>
+              <p className="text-sm text-text-secondary whitespace-pre-wrap">
+                {selectedPath.description || 'No description provided.'}
+              </p>
+              {(selectedPath.archetype_ability || selectedPath.secondary_ability) && (
+                <div className="flex flex-wrap gap-1 mt-3">
+                  {selectedPath.archetype_ability && (
+                    <Chip variant="power" size="sm">
+                      Primary Ability:{' '}
+                      {selectedPath.archetype_ability.charAt(0).toUpperCase() +
+                        selectedPath.archetype_ability.slice(1)}
+                    </Chip>
+                  )}
+                  {selectedPath.secondary_ability && (
+                    <Chip variant="technique" size="sm">
+                      Secondary Ability:{' '}
+                      {selectedPath.secondary_ability.charAt(0).toUpperCase() +
+                        selectedPath.secondary_ability.slice(1)}
+                    </Chip>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -317,7 +331,7 @@ export function ArchetypeStep() {
                   className={cn(
                     'p-6 rounded-xl border-2 text-left transition-all',
                     selectedType === type
-                      ? 'border-primary-600 bg-primary-50 shadow-lg'
+                      ? 'border-primary-outline-border bg-primary-subtle-bg shadow-lg'
                       : 'border-border-light bg-surface hover:border-border hover:shadow'
                   )}
                 >
@@ -329,7 +343,7 @@ export function ArchetypeStep() {
           </div>
       
           {selectedType && (
-            <div className="bg-surface-alt rounded-xl p-6 mb-6">
+            <Card className="bg-surface-alt p-6 mb-6 shadow-none">
               <h3 className="font-bold text-text-primary mb-4">
                 {selectedType === 'powered-martial' 
                   ? 'Choose Your Power and Martial Abilities'
@@ -341,7 +355,7 @@ export function ArchetypeStep() {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <div className="flex items-center gap-1 mb-2">
-                      <h4 className="text-sm font-medium text-violet-600 dark:text-violet-300">Power Ability</h4>
+                      <h4 className="text-sm font-medium text-power-fg">Power Ability</h4>
                       <ContextHelpTooltip
                         tooltipKey="characters.new.step.archetype.powerAbilityHelp"
                         scope="page:/characters/new"
@@ -364,7 +378,7 @@ export function ArchetypeStep() {
                   
                   <div>
                     <div className="flex items-center gap-1 mb-2">
-                      <h4 className="text-sm font-medium text-red-700 dark:text-red-300">Martial Ability</h4>
+                      <h4 className="text-sm font-medium text-martial-fg">Martial Ability</h4>
                       <ContextHelpTooltip
                         tooltipKey="characters.new.step.archetype.martialAbilityHelp"
                         scope="page:/characters/new"
@@ -399,19 +413,19 @@ export function ArchetypeStep() {
                   ))}
                 </div>
               )}
-            </div>
+            </Card>
           )}
         </>
       )}
       
-      {/* Confirm Button */}
-      <Button
-        onClick={handleConfirm}
-        disabled={!canConfirm}
-        className="w-full"
-      >
-        {creationChoice === 'path' ? 'Confirm Archetype Path' : 'Confirm Archetype'}
-      </Button>
+      {/* Confirm Archetype */}
+      <CreatorStepFooter
+        primaryAction={
+          <Button onClick={handleConfirm} disabled={!canConfirm} className="min-h-11 min-w-11">
+            {creationChoice === 'path' ? 'Confirm Archetype Path' : 'Confirm Archetype'}
+          </Button>
+        }
+      />
     </div>
   );
 }

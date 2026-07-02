@@ -5,7 +5,7 @@
 
 import type { ColumnValue, ChipData } from '@/components/shared/grid-list-row';
 import type { SelectableItem } from '@/components/shared/unified-selection-modal';
-import { formatDamageDisplay, formatActionTypeForDisplay, formatListCellLabel } from '@/lib/utils';
+import { formatDamageDisplay, formatSavedActionTypeForDisplay, formatListCellLabel } from '@/lib/utils';
 import {
   deriveShieldAmountFromProperties,
   deriveShieldDamageFromProperties,
@@ -15,7 +15,7 @@ import { derivePowerDisplay } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
-import type { PowerPart, TechniquePart } from '@/hooks/use-rtdb';
+import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
 
 export type LibraryItemType =
@@ -52,7 +52,7 @@ export function getItemColumns(
     const damageStr = power.damage?.length ? power.damage.map((d) => capitalize(d.type)).join(', ') : '-';
     const areaStr = power.area?.type ? capitalize(power.area.type) : '-';
     return [
-      { key: 'Action', value: formatActionTypeForDisplay(power.actionType ?? ''), align: 'center' as const },
+      { key: 'Action', value: formatSavedActionTypeForDisplay(power.actionType, power.isReaction), align: 'center' as const },
       { key: 'Damage', value: damageStr, align: 'center' as const },
       { key: 'Area', value: areaStr, align: 'center' as const },
     ];

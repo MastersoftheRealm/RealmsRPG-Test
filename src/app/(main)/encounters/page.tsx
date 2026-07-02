@@ -18,6 +18,7 @@ import {
   Trash2,
   ChevronRight,
   Search,
+  CheckCircle2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -30,11 +31,14 @@ import {
   Modal,
   Input,
   TabNavigation,
+  TabContentPanel,
+  useTabGroup,
   SearchInput,
   useToast,
 } from '@/components/ui';
-import { ContextHelpTooltip, DeleteConfirmModal, HubListRow } from '@/components/shared';
-import { useEncounters, useCreateEncounter, useDeleteEncounter, useAuth } from '@/hooks';
+import { DeleteConfirmModal, HubListRow, ErrorDisplay } from '@/components/shared';
+import { IconButton } from '@/components/ui';
+import { useEncounters, useCreateEncounter, useDeleteEncounter, useSaveEncounter, useAuth } from '@/hooks';
 import { createDefaultEncounter } from '@/types/encounter';
 import type { EncounterType, EncounterStatus, EncounterSummary } from '@/types/encounter';
 
@@ -51,16 +55,16 @@ const TYPE_ICONS: Record<EncounterType, React.ReactNode> = {
 };
 
 const TYPE_COLORS: Record<EncounterType, string> = {
-  combat: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-  skill: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-  mixed: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300',
+  combat: 'bg-danger-light text-danger-fg',
+  skill: 'bg-info-light text-info-fg',
+  mixed: 'bg-power-light text-power-fg',
 };
 
 const STATUS_COLORS: Record<EncounterStatus, string> = {
   preparing: 'bg-surface-alt text-text-secondary',
-  active: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-  paused: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-  completed: 'bg-surface-alt text-text-muted dark:text-text-secondary',
+  active: 'bg-success-light text-success-fg',
+  paused: 'bg-warning-light text-warning-fg',
+  completed: 'bg-surface-alt text-text-muted',
 };
 
 type TabId = 'all' | 'active' | 'completed';
@@ -86,12 +90,14 @@ export default function EncountersPage() {
 }
 
 function EncountersContent() {
+  const { tabGroupId, sharedPanelId } = useTabGroup();
   const router = useRouter();
   const { user } = useAuth();
   const { showToast } = useToast();
-  const { data: encounters = [], isLoading, error } = useEncounters();
+  const { data: encounters = [], isLoading, error, refetch } = useEncounters();
   const createEncounter = useCreateEncounter();
   const deleteEncounterMutation = useDeleteEncounter();
+  const saveEncounterMutation = useSaveEncounter();
 
   const [activeTab, setActiveTab] = useState<TabId>('all');
   const [search, setSearch] = useState('');
@@ -141,7 +147,6 @@ function EncountersContent() {
       const typePath = type;
       router.push(`/encounters/${id}/${typePath}`);
     } catch (err) {
-      console.error('Failed to create encounter:', err);
       showToast((err as Error)?.message ?? 'Failed to create encounter', 'error');
     }
   };
@@ -152,8 +157,20 @@ function EncountersContent() {
       await deleteEncounterMutation.mutateAsync(deleteTarget.id);
       setDeleteTarget(null);
     } catch (err) {
-      console.error('Failed to delete encounter:', err);
       showToast((err as Error)?.message ?? 'Failed to delete encounter', 'error');
+    }
+  };
+
+  const handleMarkComplete = async (encounter: EncounterSummary) => {
+    if (encounter.status === 'completed') return;
+    try {
+      await saveEncounterMutation.mutateAsync({
+        id: encounter.id,
+        data: { status: 'completed', isActive: false, currentTurnIndex: -1 },
+      });
+      showToast(`"${encounter.name}" marked complete`, 'success');
+    } catch (err) {
+      showToast((err as Error)?.message ?? 'Failed to mark encounter complete', 'error');
     }
   };
 
@@ -171,9 +188,9 @@ function EncountersContent() {
   return (
     <PageContainer size="xl">
       {!user && (
-        <div className="mb-4 rounded-lg bg-primary-600/10 border border-primary-600/20 px-4 py-3 text-text-primary text-sm">
+        <div className="mb-4 rounded-lg bg-primary-subtle-bg border border-primary-subtle-border px-4 py-3 text-text-primary text-sm">
           You&apos;re using encounters locally. Sign in to save encounters to your account.
-          <Link href="/login?returnTo=/encounters" className="ml-2 font-medium text-primary-600 dark:text-primary-400 hover:underline">
+          <Link href="/login?returnTo=/encounters" className="ml-2 font-medium text-primary-link-fg hover:underline">
             Sign in
           </Link>
         </div>
@@ -183,18 +200,6 @@ function EncountersContent() {
         description="Create and manage combat, skill, and mixed encounters for your sessions."
         actions={
           <div className="flex items-center gap-2">
-            <ContextHelpTooltip
-              tooltipKey="encounters.page.help"
-              scope="page:/encounters"
-              label="Encounter types help"
-              placement="left"
-            />
-            <ContextHelpTooltip
-              tooltipKey="encounters.page.createHelp"
-              scope="page:/encounters"
-              label="Create encounter help"
-              placement="left"
-            />
             <Button onClick={() => setCreateModalOpen(true)}>
               <Plus className="w-4 h-4" />
               Create Encounter
@@ -215,9 +220,11 @@ function EncountersContent() {
         }))}
         activeTab={activeTab}
         onTabChange={(id) => setActiveTab(id as TabId)}
+        tabGroupId={tabGroupId}
+        sharedTabPanelId={sharedPanelId}
       />
 
-      <div className="mt-6">
+      <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab} className="mt-6">
         {/* Search & Filters */}
         <div className="flex flex-wrap items-center gap-3 mb-4 min-w-0">
           <div className="flex-1 min-w-[200px]">
@@ -235,8 +242,8 @@ function EncountersContent() {
                 className={cn(
                   'px-3 py-1.5 text-sm rounded-lg font-medium transition-colors',
                   typeFilter === type
-                    ? 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white'
-                    : 'bg-surface-alt text-text-secondary dark:text-text-primary hover:bg-surface-alt/80'
+                    ? 'bg-primary-button text-white'
+                    : 'bg-surface-alt text-text-secondary hover:bg-surface-alt/80'
                 )}
               >
                 {type ? TYPE_LABELS[type] : 'All Types'}
@@ -249,9 +256,10 @@ function EncountersContent() {
         {isLoading ? (
           <LoadingState message="Loading encounters..." />
         ) : error ? (
-          <Alert variant="danger" title="Failed to load encounters">
-            {error.message}
-          </Alert>
+          <ErrorDisplay
+            message={error.message || 'Failed to load encounters'}
+            onRetry={() => { void refetch(); }}
+          />
         ) : filteredEncounters.length === 0 ? (
           <EmptyState
             icon={<Swords className="w-10 h-10" />}
@@ -301,11 +309,43 @@ function EncountersContent() {
                 onClick={() => handleOpen(encounter)}
                 onDelete={() => setDeleteTarget(encounter)}
                 deleteAriaLabel={`Delete encounter ${encounter.name}`}
+                rightSlot={
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {encounter.status !== 'completed' && (
+                      <IconButton
+                        variant="ghost"
+                        size="sm"
+                        label={`Mark ${encounter.name} complete`}
+                        title="Mark complete"
+                        className="opacity-0 group-hover:opacity-100 text-text-muted dark:text-text-secondary hover:text-success-fg min-w-[44px] min-h-[44px]"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void handleMarkComplete(encounter);
+                        }}
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                      </IconButton>
+                    )}
+                    <IconButton
+                      variant="ghost"
+                      size="sm"
+                      label={`Delete encounter ${encounter.name}`}
+                      className="opacity-0 group-hover:opacity-100 text-text-muted dark:text-text-secondary hover:text-danger-fg hover:bg-red-50 dark:hover:bg-danger-900/20 min-w-[44px] min-h-[44px]"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteTarget(encounter);
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </IconButton>
+                    <ChevronRight className="w-5 h-5 text-text-muted shrink-0" aria-hidden />
+                  </div>
+                }
               />
             ))}
           </div>
         )}
-      </div>
+      </TabContentPanel>
 
       {/* Create Encounter Modal */}
       {createModalOpen && (
@@ -376,8 +416,8 @@ function CreateEncounterModal({
                 className={cn(
                   'flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-colors',
                   type === t
-                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                    : 'border-border-light hover:border-primary-300'
+                    ? 'border-primary-outline-border bg-primary-subtle-bg'
+                    : 'border-border-light hover:border-primary-outline-border'
                 )}
               >
                 <div className={cn('p-2 rounded-lg', TYPE_COLORS[t])}>

@@ -11,7 +11,7 @@
 'use client';
 
 import { useState } from 'react';
-import { PageContainer, PageHeader, TabNavigation } from '@/components/ui';
+import { PageContainer, PageHeader, TabNavigation, TabContentPanel, useTabGroup } from '@/components/ui';
 import { Wand2, Swords, Shield, Sparkles, Users } from 'lucide-react';
 import { AdminPublicPowersTab } from './AdminPublicPowersTab';
 import { AdminPublicTechniquesTab } from './AdminPublicTechniquesTab';
@@ -31,6 +31,7 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
 ];
 
 export default function AdminPublicLibraryPage() {
+  const { tabGroupId, sharedPanelId } = useTabGroup();
   const [activeTab, setActiveTab] = useState<TabId>('powers');
 
   return (
@@ -46,14 +47,18 @@ export default function AdminPublicLibraryPage() {
         onTabChange={(id) => setActiveTab(id as TabId)}
         variant="underline"
         className="mb-6"
+        tabGroupId={tabGroupId}
+        sharedTabPanelId={sharedPanelId}
       />
 
+      <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab}>
       {activeTab === 'powers' && <AdminPublicPowersTab />}
       {activeTab === 'techniques' && <AdminPublicTechniquesTab />}
       {activeTab === 'empowered-techniques' && <AdminPublicTechniquesTab mode="empowered" />}
       {activeTab === 'items' && <AdminPublicItemsTab />}
       {activeTab === 'creatures' && <AdminPublicCreaturesTab />}
       {activeTab === 'enhanced' && <AdminPublicEnhancedItemsTab />}
+      </TabContentPanel>
     </PageContainer>
   );
 }

@@ -5,7 +5,7 @@
  */
 
 import type { Character, CharacterSummary } from '@/types';
-import { apiFetch } from '@/lib/api-client';
+import { apiFetch, apiFetchOrNull } from '@/lib/api-client';
 
 const API_BASE = '/api/characters';
 
@@ -38,18 +38,16 @@ export async function getCharacter(characterId: string): Promise<GetCharacterRes
     throw new Error('Invalid character ID');
   }
 
-  const res = await fetch(`${API_BASE}/${encodeURIComponent(characterId.trim())}`, {
-    cache: 'no-store',
-  });
-  if (res.status === 404) return { character: null };
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error((err as { error?: string }).error ?? 'Request failed');
-  }
+  const data = await apiFetchOrNull<
+    | GetCharacterResult
+    | Character
+  >(`${API_BASE}/${encodeURIComponent(characterId.trim())}`, { cache: 'no-store' });
 
-  const data = await res.json();
-  if (data && typeof data.character !== 'undefined') {
-    return { character: data.character, libraryForView: data.libraryForView };
+  if (data === null) return { character: null };
+
+  if (data && typeof data === 'object' && 'character' in data) {
+    const wrapped = data as GetCharacterResult;
+    return { character: wrapped.character, libraryForView: wrapped.libraryForView };
   }
   if (data && typeof data === 'object' && !Array.isArray(data)) {
     return { character: data as Character };
@@ -99,18 +97,17 @@ export async function deleteCharacter(characterId: string): Promise<void> {
 }
 
 /**
- * Duplicate a character.
+ * Duplicate a character. The server resolves and validates `duplicateOf`
+ * (404 when missing), so no wasteful client pre-fetch is needed.
  */
 export async function duplicateCharacter(characterId: string): Promise<string> {
-  const { character } = await getCharacter(characterId);
-
-  if (!character) {
-    throw new Error('Character not found');
+  if (!characterId?.trim()) {
+    throw new Error('Invalid character ID');
   }
 
   const result = await apiFetch<{ id: string }>(API_BASE, {
     method: 'POST',
-    body: JSON.stringify({ duplicateOf: characterId }),
+    body: JSON.stringify({ duplicateOf: characterId.trim() }),
   });
   return result.id;
 }

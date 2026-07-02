@@ -31,9 +31,10 @@ import {
   Alert,
   Modal,
   IconButton,
+  PageHeader,
   useToast,
 } from '@/components/ui';
-import { ContextHelpTooltip, DeleteConfirmModal } from '@/components/shared';
+import { DeleteConfirmModal } from '@/components/shared';
 import { RollEntryCard } from '@/components/character-sheet';
 import { useCampaign, useCharacters, useInvalidateCampaigns, useAuth, useCampaignRolls } from '@/hooks';
 import { addCharacterToCampaignAction, removeCharacterFromCampaignAction, deleteCampaignAction, updateCampaignAction } from '../actions';
@@ -244,7 +245,7 @@ function CampaignDetailContent() {
         <Alert variant="danger" title="Campaign not found">
           This campaign may have been deleted or you may not have access to it.
         </Alert>
-        <Link href="/campaigns" className="mt-4 inline-block text-primary-600 hover:underline">
+        <Link href="/campaigns" className="mt-4 inline-block text-primary-link-fg hover:underline">
           ← Back to Campaigns
         </Link>
       </PageContainer>
@@ -271,7 +272,7 @@ function CampaignDetailContent() {
       <div className="mb-6">
         <Link
           href="/campaigns"
-          className="inline-flex items-center gap-1 text-text-secondary hover:text-primary-600 mb-4"
+          className="inline-flex items-center gap-1 text-text-secondary hover:text-primary-fg-hover mb-4"
         >
           <ChevronLeft className="w-4 h-4" />
           Back to Campaigns
@@ -294,38 +295,38 @@ function CampaignDetailContent() {
                     setEditingName(false);
                   }
                 }}
-                className="text-2xl md:text-3xl font-bold text-text-primary px-2 py-1 border-2 border-primary-400 rounded-lg focus:ring-2 focus:ring-primary-500 w-full max-w-md"
+                className="text-2xl md:text-3xl font-bold text-text-primary px-2 py-1 border-2 border-primary-outline-border rounded-lg focus:ring-2 focus:ring-primary-outline-border w-full max-w-md"
                 autoFocus
                 disabled={updateLoading}
               />
             ) : (
-              <h1 className="text-2xl md:text-3xl font-bold text-text-primary flex items-center gap-2">
-                {campaign.name}
-                <ContextHelpTooltip
-                  tooltipKey="campaigns.page.help"
-                  scope="page:/campaigns"
-                  label="Campaign detail help"
-                />
-                {isRealmMaster && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setNameInput(campaign.name);
-                      setEditingName(true);
-                    }}
-                    className="text-primary-500 hover:text-primary-600 transition-colors hover:scale-110"
-                    title="Edit campaign name"
-                    aria-label="Edit campaign name"
-                    disabled={updateLoading}
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                )}
-              </h1>
+              <PageHeader
+                title={campaign.name}
+                size="sm"
+                className="mb-0"
+                actions={
+                  isRealmMaster ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNameInput(campaign.name);
+                        setEditingName(true);
+                      }}
+                      className="text-primary-fg hover:text-primary-fg-hover transition-colors hover:scale-110 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+                      title="Edit campaign name"
+                      aria-label="Edit campaign name"
+                      disabled={updateLoading}
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                  ) : undefined
+                }
+              />
             )}
             {isRealmMaster && editingDescription ? (
               <div className="mt-2">
                 <textarea
+                  aria-label="Campaign description"
                   value={descriptionInput}
                   onChange={(e) => setDescriptionInput(e.target.value)}
                   onBlur={handleSaveDescription}
@@ -335,7 +336,7 @@ function CampaignDetailContent() {
                       setEditingDescription(false);
                     }
                   }}
-                  className="mt-2 w-full max-w-xl px-2 py-1 text-text-primary border-2 border-primary-400 rounded-lg focus:ring-2 focus:ring-primary-500 min-h-[80px] bg-surface"
+                  className="mt-2 w-full max-w-xl px-2 py-1 text-text-primary border-2 border-primary-outline-border rounded-lg focus:ring-2 focus:ring-primary-outline-border min-h-[80px] bg-surface"
                   placeholder="Brief description of your campaign..."
                   autoFocus
                   disabled={updateLoading}
@@ -352,7 +353,7 @@ function CampaignDetailContent() {
                         setDescriptionInput(campaign.description ?? '');
                         setEditingDescription(true);
                       }}
-                      className="text-primary-500 hover:text-primary-600 transition-colors hover:scale-110"
+                      className="text-primary-fg hover:text-primary-fg-hover transition-colors hover:scale-110"
                       title="Edit description"
                       aria-label="Edit description"
                       disabled={updateLoading}
@@ -387,34 +388,31 @@ function CampaignDetailContent() {
         </Alert>
       )}
 
-      {/* Invite Code */}
-      <div className="rounded-xl border border-border-light bg-surface p-6 mb-6">
-        <h2 className="font-semibold text-text-primary mb-2 flex items-center gap-1">
-          Invite Code
-          <ContextHelpTooltip
-            tooltipKey="campaigns.page.inviteHelp"
-            scope="page:/campaigns"
-            label="Campaign invite code help"
-          />
-        </h2>
-        <p className="text-sm text-text-secondary mb-3">
-          Share this code with players so they can join your campaign.
-          {isCampaignFull && ' (Campaign is full. No new players can join until someone leaves.)'}
-        </p>
-        <div className="flex items-center gap-3">
-          <code className="px-4 py-2 bg-surface-alt rounded-lg font-mono text-xl font-bold tracking-widest text-primary-700">
-            {campaign.inviteCode}
-          </code>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleCopyCode}
-          >
-            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            {copied ? 'Copied!' : 'Copy'}
-          </Button>
+      {/* Invite Code — RM only (the API also withholds the code from members) */}
+      {isRealmMaster && (
+        <div className="rounded-xl border border-border-light bg-surface p-6 mb-6">
+          <h2 className="font-semibold text-text-primary mb-2 flex items-center gap-1">
+            Invite Code
+          </h2>
+          <p className="text-sm text-text-secondary mb-3">
+            Share this code with players so they can join your campaign.
+            {isCampaignFull && ' (Campaign is full. No new players can join until someone leaves.)'}
+          </p>
+          <div className="flex items-center gap-3">
+            <code className="px-4 py-2 bg-surface-alt rounded-lg font-mono text-xl font-bold tracking-widest text-primary-subtle-fg">
+              {campaign.inviteCode}
+            </code>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleCopyCode}
+            >
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              {copied ? 'Copied!' : 'Copy'}
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Realm Master */}
       <div className="rounded-xl border border-border-light bg-surface p-6 mb-6">
@@ -437,7 +435,7 @@ function CampaignDetailContent() {
             {canAddOwnCharacters && (
               <button
                 onClick={() => setAddModalOpen(true)}
-                className="flex flex-col items-center justify-center w-20 h-24 rounded-lg border-2 border-dashed border-border-light hover:border-primary-400 hover:bg-primary-50 dark:hover:bg-surface transition-colors text-text-muted dark:text-text-secondary"
+                className="flex flex-col items-center justify-center w-20 h-24 rounded-lg border-2 border-dashed border-border-light hover:border-primary-outline-border hover:bg-primary-subtle-bg dark:hover:bg-surface transition-colors text-text-muted dark:text-text-secondary"
               >
                 <UserPlus className="w-6 h-6" />
                 <span className="text-xs mt-1">Add</span>
@@ -505,9 +503,12 @@ function CampaignDetailContent() {
           {campaignRollsLoading && campaignRolls.length === 0 && !campaignRollsQueryError ? (
             <LoadingState message="Loading campaign rolls…" />
           ) : campaignRolls.length === 0 && !campaignRollsQueryError ? (
-            <p className="text-center text-text-muted dark:text-text-secondary italic py-10">
-              No campaign rolls yet. Rolls from character sheets will appear here.
-            </p>
+            <EmptyState
+              title="No campaign rolls yet"
+              description="Rolls from character sheets will appear here."
+              size="sm"
+              className="py-10"
+            />
           ) : !campaignRollsQueryError ? (
             // Oldest at top, newest at bottom (API returns newest-first; reverse to match roll log elsewhere)
             [...campaignRolls].reverse().map((roll) => (
@@ -591,7 +592,7 @@ function CharacterChip({
 }) {
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg border border-border-light bg-surface-alt min-w-[200px]">
-      <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-primary-800">
+      <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-primary-button">
         <Image
           src={getEffectivePortrait(character.portrait)}
           alt={character.characterName}
@@ -619,7 +620,7 @@ function CharacterChip({
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`View ${character.characterName} sheet`}
-            className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-alt transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+            className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-alt transition-colors focus:outline-none focus:ring-2 focus:ring-primary-outline-border focus:ring-offset-2"
           >
             <ExternalLink className="w-4 h-4" />
           </Link>

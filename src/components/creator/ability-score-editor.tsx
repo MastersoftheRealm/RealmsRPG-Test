@@ -191,8 +191,8 @@ export function AbilityScoreEditor({
 
                   <div className={cn(
                     'text-2xl font-bold min-w-[3rem] text-center',
-                    value > 0 ? 'text-success-700 dark:text-success-400' :
-                    value < 0 ? 'text-danger-600 dark:text-danger-400' :
+                    value > 0 ? 'text-success-fg' :
+                    value < 0 ? 'text-danger-fg' :
                     'text-text-secondary'
                   )}>
                     {formatBonus(value)}
@@ -213,7 +213,7 @@ export function AbilityScoreEditor({
                 {isEditMode && useHighAbilityCost && (
                   <p className={cn(
                     "text-[10px] font-medium text-center mt-1",
-                    increaseCost > 1 && canInc ? "text-warning-600 dark:text-warning-400" : "invisible"
+                    increaseCost > 1 && canInc ? "text-warning-fg" : "invisible"
                   )}>
                     Next: {increaseCost} Points
                   </p>

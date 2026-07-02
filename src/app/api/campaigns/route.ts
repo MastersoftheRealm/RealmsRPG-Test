@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
+import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 import type { Campaign, CampaignSummary } from '@/types/campaign';
 import { normalizeCampaignRosterCharacters } from '@/lib/campaign-roster';
 
@@ -23,7 +24,7 @@ type CampaignRow = {
   updated_at: string | null;
 };
 
-function rowToCampaign(row: CampaignRow, memberIds: string[]): Campaign {
+function rowToCampaign(row: CampaignRow, memberIds: string[], isOwner: boolean): Campaign {
   const characters = normalizeCampaignRosterCharacters(row.characters);
   return {
     id: row.id,
@@ -31,7 +32,8 @@ function rowToCampaign(row: CampaignRow, memberIds: string[]): Campaign {
     description: row.description ?? undefined,
     ownerId: row.owner_id,
     ownerUsername: row.owner_username ?? undefined,
-    inviteCode: row.invite_code,
+    // Only the Realm Master (owner) should see/share the invite code (TASK-329).
+    inviteCode: isOwner ? row.invite_code : '',
     characters,
     memberIds,
     createdAt: row.created_at ?? undefined,
@@ -44,6 +46,15 @@ export async function GET(request: NextRequest) {
     const { user, error } = await getSession();
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const rateKey = buildRateLimitKey('campaigns-get', {
+      userId: user.uid,
+      ip: resolveClientIp(request.headers),
+    });
+    const { success } = standardLimiter.check(rateKey);
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }
 
     const userId = user.uid;
@@ -85,7 +96,7 @@ export async function GET(request: NextRequest) {
     const campaigns: Campaign[] = (campaignRows ?? []).map((row) => {
       const r = row as CampaignRow;
       const memberIds = membersByCampaignId.get(r.id) ?? [];
-      return rowToCampaign(r, memberIds);
+      return rowToCampaign(r, memberIds, r.owner_id === userId);
     });
 
     if (full) {

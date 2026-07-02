@@ -7,16 +7,25 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import type { KeyboardEvent } from 'react';
 import { cn } from '@/lib/utils';
-import { Chip, Button, Alert, Spinner } from '@/components/ui';
+import { Chip, Button, Alert, Spinner, SelectionCardSurface } from '@/components/ui';
 import { ContextHelpTooltip, SegmentedControl } from '@/components/shared';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useMergedSpecies, useUserSpecies, useTraits, type Species } from '@/hooks';
 import { SpeciesModal } from '../species-modal';
 import { MixedSpeciesModal } from '../MixedSpeciesModal';
+import { CreatorStepFooter } from '../creator-step-footer';
 import { GitMerge } from 'lucide-react';
 
 type SourceFilterValue = 'all' | 'public' | 'my' | 'make';
+
+function activateOnEnterOrSpace(e: KeyboardEvent, action: () => void) {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    action();
+  }
+}
 
 export function SpeciesStep() {
   const { draft, nextStep, prevStep, setSpecies, setMixedSpecies } = useCharacterCreatorStore();
@@ -60,7 +69,6 @@ export function SpeciesStep() {
   };
 
   const isMixedSelected = draft.ancestry?.mixed === true;
-  const isSingleSelected = draft.ancestry?.id && !draft.ancestry?.mixed;
   const canContinue = !!(draft.ancestry?.id);
 
   if (speciesLoading) {
@@ -113,32 +121,36 @@ export function SpeciesStep() {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         {/* Mixed species option */}
-        <div
+        <SelectionCardSurface
+          role="button"
+          tabIndex={0}
+          selected={isMixedSelected}
           onClick={() => setShowMixedModal(true)}
+          onKeyDown={(e) => activateOnEnterOrSpace(e, () => setShowMixedModal(true))}
           className={cn(
-            'selection-card flex flex-col items-center justify-center min-h-35 border-2 border-dashed',
-            isMixedSelected ? 'selection-card--selected border-primary-500' : 'border-border hover:border-primary-400'
+            'flex flex-col items-center justify-center min-h-35 border-dashed',
+            isMixedSelected ? 'border-primary-outline-border' : 'border-border hover:border-primary-outline-border'
           )}
         >
-          <GitMerge className="w-10 h-10 text-primary-600 mb-2" />
+          <GitMerge className="w-10 h-10 text-primary-link-fg mb-2" />
           <h3 className="font-bold text-text-primary">Mixed species</h3>
           <p className="text-sm text-text-secondary text-center mt-1">Combine two species</p>
           {isMixedSelected && (
-            <span className="text-xs px-2 py-0.5 bg-primary-600 text-white dark:bg-primary-100 dark:text-white rounded mt-2">✓ Selected</span>
+            <span className="text-xs px-2 py-0.5 bg-primary-button text-white rounded mt-2">✓ Selected</span>
           )}
-        </div>
+        </SelectionCardSurface>
 
         {species?.map((s: Species) => {
           const isSelected = !draft.ancestry?.mixed && draft.ancestry?.id === s.id;
           
           return (
-            <div
+            <SelectionCardSurface
               key={s.id}
+              role="button"
+              tabIndex={0}
+              selected={isSelected}
               onClick={() => handleCardClick(s)}
-              className={cn(
-                'selection-card',
-                isSelected && 'selection-card--selected'
-              )}
+              onKeyDown={(e) => activateOnEnterOrSpace(e, () => handleCardClick(s))}
             >
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-bold text-text-primary">{s.name}</h3>
@@ -146,9 +158,9 @@ export function SpeciesStep() {
                   <span className="text-xs px-2 py-0.5 bg-surface-alt text-text-secondary rounded capitalize">
                     {getSizesDisplay(s)}
                   </span>
-                  {/* NO SPEED - species don't have speed values in RTDB */}
+                  {/* NO SPEED - species don't have speed values */}
                   {isSelected && (
-                    <span className="text-xs px-2 py-0.5 bg-primary-600 text-white dark:bg-primary-100 dark:text-white rounded">
+                    <span className="text-xs px-2 py-0.5 bg-primary-button text-white rounded">
                       ✓ Selected
                     </span>
                   )}
@@ -177,7 +189,7 @@ export function SpeciesStep() {
               >
                 View Details →
               </Button>
-            </div>
+            </SelectionCardSurface>
           );
         })}
       </div>
@@ -188,11 +200,7 @@ export function SpeciesStep() {
         </Alert>
       )}
 
-      {/* Sticky footer so Continue is always visible (TASK-285) */}
-      <div className="sticky bottom-3 left-0 right-0 mt-8 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:mx-0 md:px-0">
-        <Button variant="secondary" onClick={prevStep} className="min-h-11 min-w-11">← Back</Button>
-        <Button onClick={nextStep} disabled={!canContinue} className="min-h-11 min-w-11">Continue →</Button>
-      </div>
+      <CreatorStepFooter onBack={prevStep} onContinue={nextStep} continueDisabled={!canContinue} />
 
       <MixedSpeciesModal
         isOpen={showMixedModal}

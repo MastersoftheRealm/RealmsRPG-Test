@@ -11,6 +11,29 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Legacy route consolidation (handled at config level so no page module is needed):
+  // - /browse was a redundant duplicate of the Library page's public (Realms) mode.
+  // - /encounter-tracker was the old name for the Encounters hub.
+  // - /crafting/new now opens directly from the crafting hub into /crafting/[id].
+  async redirects() {
+    return [
+      {
+        source: '/browse',
+        destination: '/library',
+        permanent: false,
+      },
+      {
+        source: '/encounter-tracker',
+        destination: '/encounters',
+        permanent: true,
+      },
+      {
+        source: '/crafting/new',
+        destination: '/crafting',
+        permanent: true,
+      },
+    ];
+  },
   // Security headers for all responses; long cache for static images to cut edge requests (e.g. placeholder-portrait.png)
   async headers() {
     const csp = [

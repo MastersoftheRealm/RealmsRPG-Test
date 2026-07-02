@@ -1,6 +1,11 @@
 # Agent Guide — Sources of Truth
 
-Single reference for component locations, patterns, and where to record work. Verified against codebase (Feb 2026).
+Single reference for component locations, patterns, and where to record work. Verified against codebase (Jun 2026).
+
+> **First stop before building anything new:** [`FEATURE_INDEX.md`](FEATURE_INDEX.md) — feature/component/hook/service map to confirm it doesn't already exist. The full canonical "for X, read Y" map is in the root `AGENTS.md` (Source-of-Truth Map).
+>
+> **Current remediation status / open gaps:** [`REMEDIATION_STATUS_2026-06.md`](REMEDIATION_STATUS_2026-06.md).
+> **Historical audits:** see [`archive/HISTORY_INDEX.md`](archive/HISTORY_INDEX.md) — do not treat archived findings as currently open.
 
 **Note:** When implementing a task, verify `related_files` in AI_TASK_QUEUE against the actual codebase — some entries may have been corrected; paths can become stale (e.g., `header-section.tsx` was replaced by `sheet-action-toolbar.tsx`).
 
@@ -8,12 +13,57 @@ Single reference for component locations, patterns, and where to record work. Ve
 
 Before marking a task `done`, verify:
 
-1. **Acceptance criteria** — Every criterion is fully met. Do not mark done if any bullet is incomplete (e.g., "Confirmation dialog before deletion" means a dialog must exist).
-2. **Related files** — Paths in the task's `related_files` match the actual codebase. Use file search or `list_dir` to confirm. Update the task if you correct paths during implementation.
+1. **Acceptance criteria** — Every criterion is fully met. Do not mark `done` if any bullet is incomplete.
+2. **Related files** — Paths in the task's `related_files` match the actual codebase. Update the task if you correct paths.
 3. **Build** — `npm run build` passes.
 4. **Manual check** — For UI changes, spot-check in the browser if feasible.
 
-If a task was marked done but a criterion was missed, create a follow-up task (e.g., TASK-053 for TASK-022's missing confirmation dialog).
+### If work is incomplete
+
+Use **`status: partial`**, not `done` with "deferred" in notes:
+
+- **`completed_work`** — bullets of what shipped
+- **`remaining_work`** — open acceptance criteria
+- **`follow_up_tasks`** — new TASK-### IDs for the remainder (no orphan audit findings)
+
+Human-only steps (Dashboard, prod smoke, product decisions) go in [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md), not buried in notes.
+
+### Build validation (QA how-to)
+
+For **user-facing** tasks (UI, auth, campaigns, sheet, admin, security, DB RLS):
+
+1. Set **`build_validation`** on the task (suite id + test ids) and a short **`developer_test_plan`** pointer.
+2. **Add or update** granular tests in [`BUILD_VALIDATION.md`](BUILD_VALIDATION.md) — **one behavior per DEV-V-###-T### test** (steps + expected + report line).
+3. **Index** the suite in [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Build validation index.
+
+Do **not** write cramped multi-check smoke paragraphs. Split “pick archetype AND check skills AND check feats” into separate tests under one **DEV-V-###** category.
+
+Automated-only tasks (`npm run build`, lint) do not need build validation unless behavior is hard to verify in CI.
+
+If a task was wrongly marked `done`, re-open as `partial` or add/finish follow-up tasks.
+
+## Design-system safety net (UI verification)
+
+For **any UI / token / theme change**, use the automated net (TASK-383). The guiding roadmap for this effort is [`UI_UNIFICATION_PLAN.md`](./UI_UNIFICATION_PLAN.md) (durable plan; read it before continuing UI-unification work). The net replaces manual visual QA with deterministic checks.
+
+- **Visual State Exploration Audit (VSEA):** Static screenshots only capture default page views. Before refactoring a page or component, explore **all meaningful interactive states** (modals open, tabs selected, expanded sections, errors, loading, empty, hover/focus) and log findings in [`VISUAL_STATE_AUDIT.md`](./VISUAL_STATE_AUDIT.md). See the plan § Visual State Exploration Audit. Retroactively re-audit Phase 1.1–1.2 components via the retroactive queue there.
+- **Run it:** `npm run verify` (now **builds first**, then contrast + lint + visual + a11y). The `verify`, `verify:visual:update`, and `verify:a11y:update` scripts all run `npm run build` themselves. The bare `verify:visual` / `verify:a11y` do **not** build — only use them standalone right after a build.
+- **Styleguide:** `/dev/styleguide` is the canonical, auth-free gallery of every primitive + token in both themes. When adding/changing a primitive or token, render it here and confirm it looks intentional in light **and** dark. It is captured in the screenshot suite.
+- **Contrast** (`scripts/check-contrast.mjs`): resolves every semantic fg/bg token pair (following `var()` indirection) in **both** themes vs WCAG AA. Baseline `scripts/contrast-baseline.json` is at 0 — keep it there. To add a token pairing, edit the `PAIRS` array.
+- **Visual regression** (`tests/visual/screenshots.pw.ts`): full-page baselines across mobile/tablet/desktop x light/dark for deterministic routes. After an **intentional** change, re-baseline with `npm run verify:visual:update`, **view the regenerated PNG(s)** (and any `*-diff.png`) to confirm the change is what you intended, then commit. Baselines are OS-specific (committed set is Windows; Linux CI baselines = DEV-002).
+- **Accessibility** (`tests/visual/a11y.pw.ts`): axe-core scan, ratcheted via `tests/visual/a11y-baseline.json`. Fix violations and **prune** the baseline (`verify:a11y:update`) — never use update to mask a new violation.
+- **No raw colors:** ESLint `realms/no-raw-color` (hard error) bans raw Tailwind palette / bare white-black / arbitrary hex in class strings. Use semantic tokens (`bg-surface`, `text-text-primary`, `bg-primary-600`, …). Exemptions: `(auth)/`, `components/auth/`, `components/ui/` primitives, and the shrinking `eslint-rules/raw-color-backlog.mjs` list — **delete** a file from that backlog when you migrate it off raw colors (audit with `node scripts/list-raw-color-backlog.mjs`).
+- **CI:** `.github/workflows/ui-verify.yml` runs all of the above as hard-blocking gates.
+
+### Token architecture (Phase 0+)
+- **Theme-aware semantic foreground tokens** exist for status/archetype: `text-success-fg`, `text-danger-fg`, `text-warning-fg`, `text-info-fg`, `text-power-fg`, `text-martial-fg`, and `bg-primary-button`. Each is correct in **both** themes (dark values live in `.dark`). **Prefer these over** pairing a numbered ramp step with an ad-hoc `dark:` override (e.g. use `text-success-fg`, not `text-success-700 dark:text-success-400`). Numbered ramps (`success-700`, etc.) remain for compat.
+- **Every** semantic token now has an explicit dark value. When you add a token to `@theme`, also add its `.dark` override (or it will silently render its light value in dark mode — the original dark-mode bug class).
+
+### Hard-won gotchas (don't relearn these the hard way)
+- **Always build before visual/a11y.** These serve the production build (`npm run start` on `.next`). A stale `.next` = false pass/fail. The canonical scripts now build for you; if you invoke Playwright directly, build first.
+- **Never reuse a stray server.** `playwright.config.ts` sets `reuseExistingServer: false` so the suite always serves the build under test. Tell-tale of an unstyled/stale render: links show Chrome's default dark-mode color **`#9e9eff` on white** and `body` background is transparent — that means app CSS isn't applied (wrong/old server), not a real failure.
+- **Fonts are self-hosted via `next/font`** (incl. `Nova Flat` → `--font-nova-flat` → `--font-display`). Do **not** reintroduce a runtime Google-Fonts `<link>` with `display=swap`; the fallback→web-font swap reflows layout and makes screenshot baselines flaky.
+- **Verify your verifier.** The contrast script once matched the `@custom-variant dark (…)` line instead of the real `.dark { }` rule and silently compared dark≈light. If a check reports identical results across themes, suspect the check before trusting it.
 
 ## Common File Path Corrections
 
@@ -46,21 +96,58 @@ Task queue `related_files` may reference outdated paths. When implementing, pref
 | Feat source / other modal sub-modes needing `role="tab"` | **SegmentedControl** with `tabs` + `tabPanelId` | A11y tablist when acting as tabs |
 | Powers / Techniques / … primary navigation | **TabNavigation** (`variant="underline"`) | Long tab sets; keep underline tabs, do not swap for SegmentedControl |
 
+**Tab a11y (TASK-355):** Call `useTabGroup()` in the page, pass `tabGroupId` + `sharedTabPanelId` to `TabNavigation`, wrap tab content in `<TabContentPanel tabGroupId={…} id={sharedPanelId} activeTab={…}>`. For per-tab panels in DOM, use `TabPanel` instead.
+
 ## Component Decision Tree (List/Selection UI)
 
 | Use Case | Component | Notes |
 |----------|-----------|-------|
 | Powers, techniques, feats, equipment in lists | **GridListRow** | Sortable columns, leftSlot/rightSlot, expandable rows |
-| Codex/Library browse, item cards | **ItemCard** / **ItemList** | Card layout, view/edit/duplicate/delete actions |
+| Codex/Library browse, item cards | **ItemCard** (and GridListRow list rows) | Card layout, view/edit/duplicate/delete actions |
 | Base-skill selector (add sub-skill) | **SelectionToggle** | Unique UX; not GridListRow |
 | Species detail view, level-up wizard | Custom layouts | Justified exceptions |
 | Add-feat, add-skill, add-library-item modals | **GridListRow** or **UnifiedSelectionModal** | Consistent list selection |
 
-**List item actions:** GridListRow and ItemCard use the same action set (view/edit/duplicate/delete, plus quantity where applicable). Use IconButton and the same placement pattern; see UI_COMPONENT_REFERENCE for details.
+**List item actions:** GridListRow and ItemCard use the same action set (view/edit/duplicate/delete, plus quantity where applicable). Use IconButton and the same placement pattern; see `src/docs/human/UI_COMPONENT_REFERENCE.md` for extended catalog details.
 
 **List modal layout (add-X, load, selection):** Use a consistent structure so modals match Codex/Library: (1) Header (title + close), (2) Search bar (`SearchInput`), (3) optional **FilterSection** for filters, (4) **ListHeader** (sortable), (5) scrollable list in a bordered container (`border border-border-light rounded-lg`) with **GridListRow** or selectable rows, (6) footer (selection count + Cancel + primary action). Use **EmptyState** and **LoadingState** (from `@/components/ui` or shared list-components) for empty and loading; avoid ad-hoc Spinner/divs. For search + sort state, **useModalListState** (`@/hooks/use-modal-list-state`) returns `search`, `setSearch`, `filteredItems`, `sortedItems`, `sortState`, `handleSort`, `reset` — use in load/add-X modals to reduce duplication.
 
-See `UI_COMPONENT_REFERENCE.md` for full component details.
+See `src/docs/human/UI_COMPONENT_REFERENCE.md` for extended component catalog (agents: prefer this guide + `realms-unification.mdc`).
+
+## Tooltips (canonical: Floating UI renderer)
+
+**Current branch decision (2026-07-02):** tooltip rendering uses `@floating-ui/react` through the shared `Tooltip` / `HelpTooltip` primitive in `src/components/ui/tooltip.tsx`. Do not reintroduce Tippy dependencies, Tippy imports, `tippy.js` CSS, or `public/tooltip-text.tsx`.
+
+Contextual help copy still flows through the keyed tooltip defaults/admin API where it already exists:
+
+| Piece | Location / usage |
+|-------|------------------|
+| Copy defaults | `src/lib/tooltips/default-tooltips.ts` |
+| Trigger wrapper | `ContextHelpTooltip` from `@/components/shared` |
+| Renderer | `Tooltip` / `HelpTooltip` from `@/components/ui` (Floating UI) |
+| Markdown rendering | `src/lib/tooltips/markdown-lite.tsx` |
+
+**Reference implementations:** `src/components/layout/header.tsx`, character creator steps (`archetype-step`, `species-step`, `ancestry-step`, `abilities-step`, `skills-step`), `characters/new/page.tsx`.
+
+**When touching tooltips:** Keep existing `ContextHelpTooltip` call sites on the keyed content path unless a task explicitly changes the tooltip content model. New page-help call sites should use `ContextHelpTooltip` so copy remains centralized and the account-level help toggle still applies.
+
+## Unified patterns (verified Jun 2026)
+
+Goal: "Learn once, use forever" — consistent UI across Library, Codex, Character Sheet, Creators. List/sort headers use **ListHeader** (single source of truth).
+
+| Pattern | Where used |
+|---------|------------|
+| GridListRow | Library, Codex, add-feat-modal, add-library-item-modal, add-skill-modal, equipment-step, feats-tab, library-section, creature-creator |
+| SkillRow | skills-section, skills-step, creature-creator |
+| ValueStepper | abilities-section, sheet-header, health-energy-allocator, dice-roller, all creators, encounters pages |
+| SectionHeader | feats-tab, proficiencies-tab, notes-tab, archetype-section, crafting pages |
+| ListHeader | All Codex/Library/Admin list views, feats-step, UnifiedSelectionModal |
+| UnifiedSelectionModal | AddFeatModal, AddSkillModal, AddLibraryItemModal (thin wrappers) |
+| useModalListState | LoadFromLibraryModal |
+
+**Intentional exceptions:** Auth pages use `gray-*`; AddSubSkillModal uses SelectionToggle (not GridListRow); footer uses `bg-neutral-400`; RollButton gradients use neutral tokens.
+
+Quick reference: `.cursor/rules/realms-unification.mdc`, `DESIGN_SYSTEM.md`.
 
 ## Key Files
 
@@ -79,7 +166,7 @@ See `UI_COMPONENT_REFERENCE.md` for full component details.
 | **User experience goals** | `src/docs/USER_EXPERIENCE_GOALS.md` — UX goals, terminology (Realms Codex/Library, My Library), what’s implemented vs backlog, and AI checklist for onboarding/retention/copy. Read when changing landing, creator, library, or onboarding flows. |
 | Architecture | `src/docs/ARCHITECTURE.md` |
 | **Codex/library data** | `src/docs/DATA_HANDLING.md` — single codex fetch, query keys, cache headers, prefetch; read when adding or changing codex/library hooks or APIs |
-| **Character/creature math** | `src/lib/formulas.ts`, `src/lib/calculations.ts`, `src/lib/skill-allocation.ts` — all ability, defense, skill, and derived stats |
+| **Character/creature math** | `src/lib/game/formulas.ts`, `src/lib/game/calculations.ts`, `src/lib/game/skill-allocation.ts` — all ability, defense, skill, and derived stats |
 | **Power/technique/item cost and display** | `src/lib/calculators/` — part costs, derive*Display helpers, filterSavedItemPropertiesForList; use for creator preview and library/codex display |
 | **Crafting requirements and outcome** | `src/lib/game/crafting-utils.ts` — getCraftingRequirements, getUpgradeRequirements, getEnhancedCraftingRequirements, calculateCraftingOutcome, optional modifiers; `src/types/crafting.ts` — session and enhanced item types |
 
@@ -107,7 +194,7 @@ Steps live in `src/components/character-creator/steps/` (e.g., `species-step.tsx
 - `(main)/library` — user items (powers, techniques, armaments, creatures)
 - `(main)/codex` — browse all content
 - `(main)/power-creator`, `(main)/technique-creator`, `(main)/item-creator`, `(main)/creature-creator`
-- `(main)/encounter-tracker`, `(main)/crafting`, `(main)/my-account`, `(main)/rules`, `(main)/privacy`, `(main)/terms`, `(main)/resources`
+- `(main)/encounters`, `(main)/crafting`, `(main)/my-account`, `(main)/rules`, `(main)/privacy`, `(main)/terms`, `(main)/resources`
 - `(auth)/login`, `(auth)/register`, `(auth)/forgot-password`, `(auth)/forgot-username`
 
 ## Shared Component Usage (Verified)
@@ -115,7 +202,7 @@ Steps live in `src/components/character-creator/steps/` (e.g., `species-step.tsx
 - **GridListRow** — Library, Codex, add-feat-modal, add-library-item-modal, add-skill-modal, equipment-step, feats-tab, library-section, creature-creator
 - **HubListRow** — Encounters hub, Crafting hub, Library Enhanced tab (list rows with icon, title, badge, subtitle, delete). **Do not use** for combat/skill encounter participants: those use **CombatantCard** and participant-specific blocks (health, initiative, roll state); HubListRow is for “open/delete” list items only.
 - **SkillRow** — skills-section, skills-step, creature-creator
-- **ValueStepper** — abilities-section, sheet-header, health-energy-allocator, dice-roller, all creators, encounter-tracker
+- **ValueStepper** — abilities-section, sheet-header, health-energy-allocator, dice-roller, all creators, encounters pages
 - **SectionHeader** — feats-tab, proficiencies-tab, notes-tab, archetype-section, crafting pages
 - **AddSubSkillModal** — Uses SelectionToggle (not GridListRow) — unique base-skill selector UX
 
@@ -139,7 +226,7 @@ When loading a saved item/power/technique into a creator, follow this **three-st
 
 **Rule:** Mechanic-only entries (parts/properties driven by dedicated UI) are restored from dedicated state only. Never restore them into the user-selectable list.
 
-**Load modal state and data:** Use `useCreatorLoad('powers' | 'techniques' | 'items')` from `@/hooks` for load-modal visibility and library items. Returns `showLoadModal`, `setShowLoadModal`, `openLoadModal`, `closeLoadModal`, `items`, `isLoading`, `error`. Type-specific `handleLoad*` (reset → restore mechanics → restore filtered list) stays in each creator.
+**Load modal state and data:** Use `useLoadModalLibrary('powers' | 'techniques' | 'items' | 'empowered-technique')` from `@/hooks` for load-modal visibility and library items. Returns `showLoadModal`, `setShowLoadModal`, `openLoadModal`, `closeLoadModal`, `selectableItems`, `rawItems`, `isLoading`, `error`, plus source-filter state. Type-specific `handleLoad*` (reset → restore mechanics → restore filtered list) stays in each creator.
 
 ## Creator layout
 
@@ -168,12 +255,14 @@ Use design tokens for colors; avoid raw `blue-*` / `green-*` outside auth.
 | Changelog | `src/docs/ai/AI_CHANGELOG.md` |
 | Raw feedback | `src/docs/ALL_FEEDBACK_CLEAN.md` |
 | Game rules | `src/docs/GAME_RULES.md` — terminology, formulas, display conventions |
-| Codebase audit | `src/docs/ai/CODEBASE_AUDIT_2026-02-13.md` — 98-finding audit with 6-phase fix plan |
-| Unification audit | `src/docs/ai/UNIFICATION_AUDIT_2026-02-20.md` — shared logic, creators, libraries, allocation, centralized sources of truth |
-| **Modal unification audit** | `src/docs/ai/MODAL_UNIFICATION_AUDIT_2026-02-20.md` — list modals (add-X, load, selection): logic, styles, EmptyState/LoadingState, FilterSection, alignment with Codex/Library. See TASK-264. |
-| **CDN & query audit** | `src/docs/ai/CDN_QUERY_AUDIT_2026-02-24.md` — Vercel Fast Data Transfer, Fast Origin Transfer, Edge Requests, Edge CPU; proxy matcher, cache headers, refetch/polling, images; checklist for new public APIs and hooks. |
+| **Current remediation status** | `src/docs/ai/REMEDIATION_STATUS_2026-06.md` — current completion/open-gap truth and execution sequencing for deferred work. |
+| Historical audits & task backup | `src/docs/ai/archive/HISTORY_INDEX.md` — June 2026 audits, full queue backup, older plans |
+| Codebase audit (historical) | `src/docs/ai/archive/CODEBASE_AUDIT_2026-02-13.md` — 98-finding audit with 6-phase fix plan |
+| Unification audit (historical) | `src/docs/ai/archive/UNIFICATION_AUDIT_2026-02-20.md` — shared logic, creators, libraries, allocation, centralized sources of truth |
+| Modal unification audit (historical) | `src/docs/ai/archive/MODAL_UNIFICATION_AUDIT_2026-02-20.md` — list modals (add-X, load, selection): logic, styles, EmptyState/LoadingState, FilterSection, alignment with Codex/Library. See TASK-264. |
+| **Performance & edge usage** | `src/docs/PERFORMANCE_AND_EDGE.md` — Vercel CDN/edge requests, proxy matcher, cache headers, prefetch, polling; checklist for new public APIs and hooks. |
 | **Mobile UX** | `src/docs/MOBILE_UX.md` — breakpoints, touch targets, full-screen modals, dense-layout strategy (side-scroll vs collapse). When adding a new page or modal, follow MOBILE_UX.md and the Agent checklist there. |
-| **User experience goals** | `src/docs/USER_EXPERIENCE_GOALS.md` — UX goals, terminology (Realms Codex/Library, My Library), implemented vs backlog, AI checklist for onboarding/retention/copy. Update Section 3/4 when completing UX tasks. |
+| **User experience goals** | `src/docs/human/USER_EXPERIENCE_GOALS.md` — human reference; update when completing UX tasks |
 
 ## Mobile
 

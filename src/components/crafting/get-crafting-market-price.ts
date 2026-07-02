@@ -5,7 +5,7 @@
  * as Library, add-library-item, and equipment-step.
  */
 
-import type { ItemProperty } from '@/hooks/use-rtdb';
+import type { ItemProperty } from '@/hooks/codex-types';
 import { deriveItemDisplay, type ItemDocument } from '@/lib/calculators/item-calc';
 
 /** Codex equipment row (from useEquipment) */

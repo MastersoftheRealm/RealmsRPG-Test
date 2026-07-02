@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
+import { strictLimiter, buildRateLimitKey, resolveClientIp } from '@/lib/rate-limit';
 
 const ALLOWED_ROLES = ['new_player', 'playtester', 'developer', 'admin'] as const;
 
@@ -33,6 +34,14 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    // SEC-05: limit sensitive role mutations per admin/IP.
+    const { success } = strictLimiter.check(
+      buildRateLimitKey('admin-update-role', { userId: user.uid, ip: resolveClientIp(request.headers) })
+    );
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+    }
+
     const body = await request.json();
     const userId = typeof body.userId === 'string' ? body.userId.trim() : '';
     const username = typeof body.username === 'string' ? body.username.trim() : '';
@@ -48,7 +57,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const supabase = getSupabaseAdmin();
-    const profileQuery = supabase.from('user_profiles').select('id').limit(1);
+    const profileQuery = supabase.from('user_profiles').select('id, role').limit(1);
     const { data: profile } = userId
       ? await profileQuery.eq('id', userId).maybeSingle()
       : await profileQuery.ilike('username', username.toLowerCase()).maybeSingle();
@@ -56,12 +65,54 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    await supabase
+    const targetId = (profile as { id: string }).id;
+    const oldRole = (profile as { role: string }).role;
+
+    // No-op: nothing to change.
+    if (oldRole === role) {
+      return NextResponse.json({ success: true, userId: targetId, role });
+    }
+
+    // Last-admin guard: never demote the only remaining admin (prevents locking
+    // everyone out of the admin surface).
+    if (oldRole === 'admin' && role !== 'admin') {
+      const { count, error: countError } = await supabase
+        .from('user_profiles')
+        .select('id', { count: 'exact', head: true })
+        .eq('role', 'admin');
+      if (countError) {
+        console.error('[API Error] update-role admin count:', countError);
+        return NextResponse.json({ error: 'Failed to verify admin count' }, { status: 500 });
+      }
+      if ((count ?? 0) <= 1) {
+        return NextResponse.json(
+          { error: 'Cannot remove the last admin. Promote another admin first.' },
+          { status: 409 }
+        );
+      }
+    }
+
+    const { error: updateError } = await supabase
       .from('user_profiles')
       .update({ role: role as 'new_player' | 'playtester' | 'developer' | 'admin' })
-      .eq('id', (profile as { id: string }).id);
+      .eq('id', targetId);
+    if (updateError) {
+      console.error('[API Error] update-role update:', updateError);
+      return NextResponse.json({ error: 'Failed to update role' }, { status: 500 });
+    }
 
-    return NextResponse.json({ success: true, userId: (profile as { id: string }).id, role });
+    // Append-only audit trail (best-effort; never blocks the role change).
+    const { error: auditError } = await supabase.from('admin_role_audit').insert({
+      actor_id: user.uid,
+      target_id: targetId,
+      old_role: oldRole,
+      new_role: role,
+    });
+    if (auditError) {
+      console.error('[API Error] update-role audit insert:', auditError);
+    }
+
+    return NextResponse.json({ success: true, userId: targetId, role });
   } catch (err) {
     console.error('[API Error] PATCH /api/admin/users/update-role:', err);
     return NextResponse.json({ error: 'Failed to update role' }, { status: 500 });

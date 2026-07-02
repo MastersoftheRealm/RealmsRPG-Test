@@ -9,9 +9,9 @@
  * NOTE: SearchInput is re-exported from ui/search-input.tsx for backward compatibility
  */
 
-import { useState, type ReactNode } from 'react';
-import { ChevronDown, Filter } from 'lucide-react';
+import { RotateCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 // Re-export SearchInput from UI for backward compatibility
 // Use the fully-featured version from ui/search-input
@@ -26,122 +26,10 @@ export interface SearchInputProps {
 }
 
 // =============================================================================
-// Sort Header Row — Unified container for sortable list headers
-// =============================================================================
-// Use this wrapper so all list views (Codex, Library, Admin, modals) share the
-// same header row styling as ListHeader: background, padding, dark mode.
-// Pass gridTemplateColumns to match your GridListRow columns.
-
-export interface SortHeaderRowProps {
-  children: ReactNode;
-  /** Grid template columns CSS (e.g. '1fr 0.8fr 0.8fr') — should match list rows */
-  gridTemplateColumns?: string;
-  className?: string;
-}
-
-// Align with ListHeader/GridListRow: px-4 only (no mx-1) so column content lines up with row content
-const SORT_HEADER_ROW_CLASS =
-  'hidden lg:grid gap-2 px-4 py-2 bg-primary-50 dark:bg-primary-900/30 rounded-lg mb-2 text-xs font-semibold text-primary-700 dark:text-primary-300 uppercase tracking-wide';
-
-export function SortHeaderRow({ children, gridTemplateColumns, className }: SortHeaderRowProps) {
-  return (
-    <div
-      className={cn(SORT_HEADER_ROW_CLASS, className)}
-      style={gridTemplateColumns ? { gridTemplateColumns } : undefined}
-    >
-      {children}
-    </div>
-  );
-}
-
-// =============================================================================
-// Sort Header
-// =============================================================================
-
-// SortState re-exported from list-header.tsx (canonical location)
-import type { SortState } from './list-header';
-export type { SortState } from './list-header';
-
-export interface SortHeaderProps {
-  label: string;
-  col: string;
-  sortState: SortState;
-  onSort: (col: string) => void;
-  /** Text alignment. Defaults to name-left, others centered. */
-  align?: 'left' | 'center' | 'right';
-  className?: string;
-}
-
-export function SortHeader({ 
-  label, 
-  col, 
-  sortState, 
-  onSort,
-  align,
-  className,
-}: SortHeaderProps) {
-  const isActive = sortState.col === col;
-  const normalizedLabel = label.trim().toLowerCase();
-  const normalizedCol = col.trim().toLowerCase();
-  const resolvedAlign =
-    align ?? (normalizedCol === 'name' || normalizedLabel === 'name' ? 'left' : 'center');
-  
-  return (
-    <button
-      onClick={() => onSort(col)}
-      className={cn(
-        'flex items-center gap-1 text-text-secondary hover:text-primary-800 dark:hover:text-primary-200 transition-colors',
-        className,
-        resolvedAlign === 'left' && 'justify-start text-left',
-        resolvedAlign === 'right' && 'justify-end text-right',
-        resolvedAlign === 'center' && 'justify-center text-center',
-        isActive && 'text-primary-800 dark:text-primary-200',
-      )}
-    >
-      {label.toUpperCase()}
-      {isActive && (
-        <ChevronDown className={cn('w-3 h-3 transition-transform', sortState.dir === 1 && 'rotate-180')} />
-      )}
-    </button>
-  );
-}
-
-// =============================================================================
 // Filter Section
 // =============================================================================
 
-export interface FilterSectionProps {
-  children: React.ReactNode;
-  defaultExpanded?: boolean;
-  className?: string;
-}
-
-export function FilterSection({
-  children,
-  defaultExpanded = true,
-  className,
-}: FilterSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
-
-  return (
-    <div className={cn('mb-6', className)}>
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary mb-4 transition-colors"
-      >
-        <Filter className="w-4 h-4" />
-        {isExpanded ? <span>Hide Filters</span> : <span>Show Filters</span>}
-        <ChevronDown className={cn('w-4 h-4 transition-transform', isExpanded && 'rotate-180')} />
-      </button>
-
-      {isExpanded && (
-        <div className="p-4 bg-surface-secondary rounded-lg border border-border-light">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-}
+export { FilterSection, type FilterSectionProps } from './filters/filter-section';
 
 // =============================================================================
 // Empty State - Re-export from ui/ for backward compatibility
@@ -164,19 +52,29 @@ export { LoadingState } from '@/components/ui/spinner';
 export interface ErrorDisplayProps {
   message: string;
   subMessage?: string;
+  /** When provided, shows a retry button that calls this handler. */
+  onRetry?: () => void;
+  /** Label for the retry button (default: "Try again"). */
+  retryLabel?: string;
 }
 
-export function ErrorDisplay({ message, subMessage }: ErrorDisplayProps) {
+export function ErrorDisplay({ message, subMessage, onRetry, retryLabel = 'Try again' }: ErrorDisplayProps) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="w-12 h-12 mb-4 text-danger">
+      <div className="w-12 h-12 mb-4 text-danger-fg">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
         </svg>
       </div>
-      <p className="text-danger font-medium">{message}</p>
+      <p className="text-danger-fg font-medium">{message}</p>
       {subMessage && (
         <p className="text-text-muted text-sm mt-1">{subMessage}</p>
+      )}
+      {onRetry && (
+        <Button variant="secondary" size="sm" onClick={onRetry} className="mt-4">
+          <RotateCw className="w-4 h-4" />
+          {retryLabel}
+        </Button>
       )}
     </div>
   );

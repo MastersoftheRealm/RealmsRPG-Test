@@ -10,8 +10,9 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
+import { apiFetch } from '@/lib/api-client';
 import { ProtectedRoute } from '@/components/layout';
-import { LoadingState, Alert } from '@/components/ui';
+import { LoadingState, Alert, PageContainer } from '@/components/ui';
 import { SheetHeader, AbilitiesSection, SkillsSection, ArchetypeSection, LibrarySection, RollLog } from '@/components/character-sheet';
 import { RollProvider } from '@/components/character-sheet/roll-context';
 import { calculateStats } from '@/app/(main)/characters/[id]/character-sheet-utils';
@@ -28,7 +29,7 @@ import {
   useSpecies,
   useCodexFeats,
   useCodexSkills,
-  usePublicLibrary,
+  useOfficialLibrary,
   type Species,
   type Skill,
 } from '@/hooks';
@@ -38,7 +39,7 @@ import {
   calculateSkillPointsForEntity,
   resolveParentSkillNameForSubSkill,
 } from '@/lib/game/formulas';
-import { getArchetypeAbilityScore } from '@/lib/game/calculations';
+import { getArchetypeAbilityScore, calculatePowerAttackBonus } from '@/lib/game/calculations';
 import type { Character, Item } from '@/types';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
@@ -72,9 +73,9 @@ function CampaignCharacterViewContent() {
   const { data: techniquePartsDb = [] } = useTechniqueParts();
   const { data: itemPropertiesDb = [] } = useItemProperties();
   const { data: codexEquipment = [] } = useEquipment();
-  const { data: publicPowersRaw = [] } = usePublicLibrary('powers');
-  const { data: publicTechniquesRaw = [] } = usePublicLibrary('techniques');
-  const { data: publicItemsRaw = [] } = usePublicLibrary('items');
+  const { data: publicPowersRaw = [] } = useOfficialLibrary('powers');
+  const { data: publicTechniquesRaw = [] } = useOfficialLibrary('techniques');
+  const { data: publicItemsRaw = [] } = useOfficialLibrary('items');
   const publicLibraries = useMemo(() => {
     const powers = (publicPowersRaw as Record<string, unknown>[]).map((p) => ({
       id: String(p.id ?? p.docId ?? ''),
@@ -119,16 +120,18 @@ function CampaignCharacterViewContent() {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(
-          `/api/campaigns/${campaignId}/characters/${userId}/${characterId}`
-        );
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || `Failed to load (${res.status})`);
-        }
-        const data = await res.json();
+        const data = await apiFetch<
+          Character & {
+            libraryForView?: {
+              powers: unknown[];
+              techniques: unknown[];
+              items: unknown[];
+              creatures: unknown[];
+            };
+          }
+        >(`/api/campaigns/${campaignId}/characters/${userId}/${characterId}`);
         const { libraryForView: lib, ...charData } = data;
-        setCharacter({ id: charData.id, ...charData });
+        setCharacter(charData);
         setLibraryForView(lib);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load character');
@@ -231,7 +234,7 @@ function CampaignCharacterViewContent() {
           </Alert>
           <Link
             href={`/campaigns/${campaignId}`}
-            className="mt-4 inline-flex items-center gap-1 text-primary-600 hover:underline"
+            className="mt-4 inline-flex items-center gap-1 text-primary-link-fg hover:underline"
           >
             <ChevronLeft className="w-4 h-4" />
             Back to Campaign
@@ -250,10 +253,10 @@ function CampaignCharacterViewContent() {
       }}
     >
       <div className="min-h-screen bg-background pb-8">
-        <div className="max-w-[1600px] mx-auto px-4 pt-4">
+        <PageContainer size="tool" padded={false} className="pt-4">
           <Link
             href={`/campaigns/${campaignId}`}
-            className="inline-flex items-center gap-1 text-text-secondary hover:text-primary-600 mb-4"
+            className="inline-flex items-center gap-1 text-text-secondary hover:text-primary-fg-hover mb-4"
           >
             <ChevronLeft className="w-4 h-4" />
             Back to Campaign
@@ -312,6 +315,7 @@ function CampaignCharacterViewContent() {
                   innatePools={archetypeProgression?.innatePools || 0}
                   currentEnergy={character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy}
                   martialProficiency={character.mart_prof ?? 0}
+                  powerAttackBonus={calculatePowerAttackBonus(character)}
                   speedDisplayUnit={character.speedDisplayUnit ?? 'spaces'}
                   isEditMode={false}
                   onAddPower={() => {}}
@@ -348,6 +352,7 @@ function CampaignCharacterViewContent() {
                   featsDb={featsDb}
                   traitUses={character.traitUses}
                   onTraitUsesChange={() => {}}
+                  traitCustomizations={character.traitCustomizations}
                   ancestry={character.ancestry as never}
                   vanillaTraits={{
                     ancestryTraits: character.ancestryTraits,
@@ -370,7 +375,7 @@ function CampaignCharacterViewContent() {
               </div>
             </>
           )}
-        </div>
+        </PageContainer>
         <RollLog />
       </div>
     </RollProvider>

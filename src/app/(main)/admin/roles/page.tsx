@@ -8,7 +8,9 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Alert, Button, Input, PageContainer, PageHeader, Spinner } from '@/components/ui';
+import { Alert, Button, Input, PageContainer, PageHeader, LoadingState, EmptyState } from '@/components/ui';
+import { ErrorDisplay } from '@/components/shared';
+import { apiFetch } from '@/lib/api-client';
 
 type UserRole = 'new_player' | 'playtester' | 'developer' | 'admin';
 
@@ -39,19 +41,13 @@ export default function AdminRolesPage() {
   const [error, setError] = useState<string | null>(null);
   const [savingRole, setSavingRole] = useState<UserRole | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    fetch('/api/admin/role-policies')
-      .then(async (res) => {
-        const payload = (await res.json().catch(() => ({}))) as { error?: string };
-        if (!res.ok) {
-          throw new Error(payload.error ?? (res.status === 403 ? 'Forbidden' : 'Failed to load role policies'));
-        }
-        return payload as unknown as RolePolicyRow[];
-      })
+    apiFetch<RolePolicyRow[]>('/api/admin/role-policies')
       .then((data) => {
         if (!cancelled) setRows(Array.isArray(data) ? data : []);
       })
@@ -64,7 +60,7 @@ export default function AdminRolesPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadToken]);
 
   const onNumberChange = (role: UserRole, key: keyof RolePolicyRow, rawValue: string) => {
     const value = Math.max(0, Math.floor(Number(rawValue) || 0));
@@ -91,9 +87,8 @@ export default function AdminRolesPage() {
     setSavingRole(row.role);
     setMessage(null);
     try {
-      const res = await fetch('/api/admin/role-policies', {
+      const data = await apiFetch<RolePolicyRow>('/api/admin/role-policies', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           role: row.role,
           maxCampaigns: row.max_campaigns,
@@ -106,8 +101,6 @@ export default function AdminRolesPage() {
           permissions: row.permissions ?? {},
         }),
       });
-      const data = (await res.json().catch(() => ({}))) as RolePolicyRow & { error?: string };
-      if (!res.ok) throw new Error(data.error ?? 'Failed to save role policy');
       setRows((prev) => prev.map((r) => (r.role === row.role ? data : r)));
       setMessage({ type: 'success', text: `${ROLE_LABELS[row.role]} policy saved.` });
     } catch (err) {
@@ -139,13 +132,11 @@ export default function AdminRolesPage() {
       )}
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <Spinner size="lg" />
-        </div>
+        <LoadingState size="lg" padding="md" />
       ) : error ? (
-        <Alert variant="danger">{error}</Alert>
+        <ErrorDisplay message={error} onRetry={() => setReloadToken((token) => token + 1)} />
       ) : rows.length === 0 ? (
-        <p className="text-text-muted dark:text-text-secondary italic">No role policies found.</p>
+        <EmptyState title="No role policies found." size="sm" />
       ) : (
         <div className="space-y-5">
           {rows.map((row) => {

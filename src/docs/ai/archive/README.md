@@ -1,16 +1,19 @@
-# Archive — Historical AI/Agent Docs
+﻿# Archive — Historical AI/Agent Docs
 
-This folder contains **one-off audits**, **design snapshots**, and **migration plans** that are no longer the active reference. Kept for reference only.
+This folder contains one-off audits, design snapshots, migration plans, and completed implementation plans.
 
-**Schema & DB layout:** Use [SUPABASE_SCHEMA.md](../../SUPABASE_SCHEMA.md) — single source of truth. Do not use archive docs for current schema.
+**Start here:** HISTORY_INDEX.md — June 2026 audits, task backups, older docs.
 
-**Active agent docs** (do not move here): `AGENT_GUIDE.md`, `AI_TASK_QUEUE.md`, `AI_CHANGELOG.md`, `AI_REQUEST_TEMPLATE.md`.
+**Schema:** Use ../SUPABASE_SCHEMA.md.
+
+**Active agent docs** (parent ai/ folder): AGENT_GUIDE, FEATURE_INDEX, AI_TASK_QUEUE (slim), AI_CHANGELOG, REMEDIATION_STATUS_2026-06.
+
+**Indexing:** ai/archive/ and src/docs/human/ are in .cursorignore.
 
 ## Contents
 
-- **Audits** — CODEBASE_AUDIT, UNIFICATION_AUDIT, MODAL_UNIFICATION_AUDIT, UNIMPLEMENTED_AUDIT, ACCESSIBILITY_SITEWIDE_PLAN, ACCESSIBILITY_AUDIT_2026-02-18 (findings addressed or deferred).
-- **Path C (migration complete)** — PATH_C_MIGRATION_PLAN (Prisma → Supabase; Phases 0–6 done), PATH_C_AUDIT_FULFILLMENT (one-time fulfillment audit). For current schema use SUPABASE_SCHEMA.md; for SQL run order see sql/README.md.
-- **Design docs** — PUBLIC_LIBRARY_IN_MODALS_DESIGN (snapshot; implementation may have diverged).
-- **templates/** — Optional PR/commit/request templates; not required by current workflow.
+- June 2026 audits — CODEBASE_AUDIT_2026-06, FULL_AUDIT_2026-06, SYSTEMATIC_AUDIT_2026-06, CHARACTER_CREATOR_AUDIT_2026-06-26
+- Task history — AI_TASK_QUEUE_FULL_BACKUP_2026-06-26, TASK_QUEUE_DONE
+- Older audits, Path C docs, completed designs, templates/
 
-Agents should prefer the active docs and SUPABASE_SCHEMA.md; use archive only when tracing historical context.
+Agents: prefer root AGENTS.md Source-of-Truth Map.

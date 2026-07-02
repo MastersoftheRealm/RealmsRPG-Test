@@ -17,6 +17,7 @@ import {
   LoadingState,
   ErrorDisplay,
   ListEmptyState,
+  ConfirmActionModal,
   type ChipData,
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
@@ -55,8 +56,8 @@ function getEmpoweredTotals(technique: unknown): { energy?: number; tp?: number 
 export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTechniquesTabProps) {
   const router = useRouter();
   const { showToast } = useToast();
-  const standardTechniquesQuery = useUserTechniques();
-  const empoweredTechniquesQuery = useUserEmpoweredTechniques();
+  const standardTechniquesQuery = useUserTechniques({ enabled: mode === 'standard' });
+  const empoweredTechniquesQuery = useUserEmpoweredTechniques({ enabled: mode === 'empowered' });
   const { data: standardTechniques = [], isLoading: standardLoading, error: standardError } = standardTechniquesQuery;
   const { data: empoweredTechniques = [], isLoading: empoweredLoading, error: empoweredError } = empoweredTechniquesQuery;
   const { data: partsDb = [] } = useTechniqueParts();
@@ -65,6 +66,8 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
   const [search, setSearch] = useState('');
   const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set());
   const [syncingAll, setSyncingAll] = useState(false);
+  const [duplicateConfirm, setDuplicateConfirm] = useState<{ id: string; name: string } | null>(null);
+  const [showSyncAllConfirm, setShowSyncAllConfirm] = useState(false);
   const { sortState, handleSort, sortItems } = useSort('name');
   const techniques = mode === 'empowered' ? empoweredTechniques : standardTechniques;
   const isLoading = mode === 'empowered' ? empoweredLoading : standardLoading;
@@ -182,7 +185,16 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
   }, [cardData, search, sortItems]);
 
   if (error) {
-    return <ErrorDisplay message="Failed to load techniques" subMessage="Please try again later" />;
+    return (
+      <ErrorDisplay
+        message="Failed to load techniques"
+        subMessage="Please try again later"
+        onRetry={() => {
+          standardTechniquesQuery.refetch();
+          empoweredTechniquesQuery.refetch();
+        }}
+      />
+    );
   }
 
   if (!isLoading && cardData.length === 0) {
@@ -214,7 +226,7 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
         <Button
           variant="secondary"
           size="sm"
-          onClick={handleSyncAll}
+          onClick={() => setShowSyncAllConfirm(true)}
           disabled={driftedItems.length === 0 || syncingAll}
         >
           <RefreshCw className={`w-4 h-4 ${syncingAll ? 'animate-spin' : ''}`} />
@@ -234,9 +246,14 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
         {isLoading ? (
           <LoadingState />
         ) : filteredData.length === 0 ? (
-          <div className="py-12 text-center text-text-secondary">
-            {mode === 'empowered' ? 'No empowered techniques match your search.' : 'No techniques match your search.'}
-          </div>
+        <ListEmptyState
+          title={
+            mode === 'empowered'
+              ? 'No empowered techniques match your search.'
+              : 'No techniques match your search.'
+          }
+          size="sm"
+        />
         ) : (
           filteredData.map(tech => (
             <GridListRow
@@ -267,7 +284,7 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
                     void handleSyncOne(tech.id);
                   }}
                   label="Sync with current patch"
-                  className="text-warning-700 hover:text-warning-700 dark:text-warning-400"
+                  className="text-warning-fg hover:opacity-80"
                 >
                   <RefreshCw className={`w-4 h-4 ${syncingIds.has(tech.id) ? 'animate-spin' : ''}`} />
                 </IconButton>
@@ -277,15 +294,52 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
                 router.push(`${creator}?edit=${encodeURIComponent(tech.id)}`);
               }}
               onDelete={() => onDelete({ id: tech.id, name: tech.name } as DisplayItem)}
-              onDuplicate={() =>
-                (mode === 'empowered' ? duplicateEmpoweredTechnique : duplicateTechnique).mutate(tech.id, {
-                  onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error'),
-                })
-              }
+              onDuplicate={() => setDuplicateConfirm({ id: tech.id, name: tech.name })}
             />
           ))
         )}
       </div>
+
+      <ConfirmActionModal
+        isOpen={!!duplicateConfirm}
+        onClose={() => setDuplicateConfirm(null)}
+        onConfirm={() => {
+          if (!duplicateConfirm) return;
+          const duplicateMutation = mode === 'empowered' ? duplicateEmpoweredTechnique : duplicateTechnique;
+          duplicateMutation.mutate(duplicateConfirm.id, {
+            onSuccess: () => {
+              showToast(`Duplicated "${duplicateConfirm.name}"`, 'success');
+              setDuplicateConfirm(null);
+            },
+            onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error'),
+          });
+        }}
+        title={mode === 'empowered' ? 'Duplicate empowered technique?' : 'Duplicate technique?'}
+        description={
+          duplicateConfirm
+            ? `Create a copy of "${duplicateConfirm.name}" in your library?`
+            : ''
+        }
+        confirmLabel="Duplicate"
+        loadingLabel="Duplicating..."
+        isLoading={
+          mode === 'empowered' ? duplicateEmpoweredTechnique.isPending : duplicateTechnique.isPending
+        }
+      />
+
+      <ConfirmActionModal
+        isOpen={showSyncAllConfirm}
+        onClose={() => setShowSyncAllConfirm(false)}
+        onConfirm={() => {
+          setShowSyncAllConfirm(false);
+          void handleSyncAll();
+        }}
+        title="Sync with current patch?"
+        description={`Sync ${driftedItems.length} ${mode === 'empowered' ? 'empowered technique' : 'technique'}${driftedItems.length === 1 ? '' : 's'} to current patch rules. Parts that no longer exist in the codex may be removed.`}
+        confirmLabel="Sync all"
+        loadingLabel="Syncing..."
+        isLoading={syncingAll}
+      />
     </div>
   );
 }

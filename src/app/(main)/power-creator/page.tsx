@@ -24,15 +24,15 @@ import {
   useAdmin,
   useCreatorSave,
   useLoadModalLibrary,
-  usePublicLibrary,
+  useOfficialLibrary,
   useCreatorWeaponOptions,
   type PowerPart,
   type CreatorWeaponOption,
 } from '@/hooks';
 import { useAuthStore } from '@/stores';
-import { ContextHelpTooltip, LoginPromptModal, ConfirmActionModal } from '@/components/shared';
+import { LoginPromptModal, ConfirmActionModal, ErrorDisplay } from '@/components/shared';
 import { CreatorSaveToolbar, CreatorLayout, CreatorWeaponPicker, AdvancedCalculationsPanel } from '@/components/creator';
-import { LoadingState, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
+import { LoadingState, Checkbox, Button, Input, Textarea, Alert, PageContainer, Card } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
@@ -45,6 +45,7 @@ import {
   deriveRange,
   deriveArea,
   deriveDuration,
+  formatPowerRangeFromSteps,
   getAreaPartForDisplay,
   formatAreaForDisplay,
   type PowerPartPayload,
@@ -63,7 +64,7 @@ import {
 import { formatDurationFromTypeAndValue } from '@/lib/utils/duration';
 import type { SelectedPart, AdvancedPart, DamageConfig, RangeConfig } from './power-creator-types';
 import { POWER_CREATOR_CACHE_KEY, ADVANCED_CATEGORIES, EXCLUDED_PARTS } from './power-creator-constants';
-import { PowerPartCard } from './PowerPartCard';
+import { PowerPartCard } from '@/components/creator';
 import { shouldPersistCreatorWeaponId } from '@/lib/creator-weapon-persistence';
 
 // =============================================================================
@@ -140,10 +141,10 @@ function PowerCreatorContent() {
   const load = useLoadModalLibrary('power');
 
   // Fetch power parts
-  const { data: powerParts = [], isLoading, error } = usePowerParts();
+  const { data: powerParts = [], isLoading, error, refetch } = usePowerParts();
   const { data: userItems = [] } = useUserItems();
   const { data: itemPropertiesDb = [] } = useItemProperties();
-  const { data: officialItems = [] } = usePublicLibrary('items');
+  const { data: officialItems = [] } = useOfficialLibrary('items');
 
   const { fullOptions: allWeaponOptions, visibleOptions } = useCreatorWeaponOptions({
     defaults: DEFAULT_WEAPON_OPTIONS,
@@ -234,8 +235,7 @@ function PowerCreatorContent() {
           localStorage.removeItem(POWER_CREATOR_CACHE_KEY);
         }
       }
-    } catch (e) {
-      console.error('Failed to load power creator cache:', e);
+    } catch {
     }
     setIsInitialized(true);
   }, [powerParts, allWeaponOptions, isInitialized, editPowerId]);
@@ -273,8 +273,7 @@ function PowerCreatorContent() {
         timestamp: Date.now(),
       };
       localStorage.setItem(POWER_CREATOR_CACHE_KEY, JSON.stringify(cache));
-    } catch (e) {
-      console.error('Failed to save power creator cache:', e);
+    } catch {
     }
   }, [isInitialized, name, description, selectedParts, selectedAdvancedParts, actionType, isReaction, damages, range, area, duration, weapon.id]);
 
@@ -392,15 +391,15 @@ function PowerCreatorContent() {
     [actionType, isReaction]
   );
 
-  const rangeDisplay = useMemo(() => deriveRange(partsPayload, powerParts), [partsPayload, powerParts]);
-  const areaDisplay = useMemo(() => deriveArea(partsPayload, powerParts), [partsPayload, powerParts]);
-  const durationDisplay = useMemo(() => deriveDuration(partsPayload, powerParts), [partsPayload, powerParts]);
+  const rangeDisplay = useMemo(() => deriveRange(partsPayload), [partsPayload]);
+  const areaDisplay = useMemo(() => deriveArea(partsPayload), [partsPayload]);
+  const durationDisplay = useMemo(() => deriveDuration(partsPayload), [partsPayload]);
 
   // Format range for collapsed summary (from UI state)
   const rangeSummary = useMemo(() => {
     if (range.steps === 0) return '1 Space / Melee';
-    const spaces = 3 + 3 * (range.steps - 1);
-    return `${spaces} ${spaces > 1 ? 'Spaces' : 'Space'}`;
+    const formatted = formatPowerRangeFromSteps(range.steps);
+    return formatted.replace(/\bspaces\b/, 'Spaces').replace(/\bspace\b/, 'Space');
   }, [range.steps]);
 
   // Area part for description display when area is selected
@@ -656,8 +655,7 @@ function PowerCreatorContent() {
     // Clear localStorage cache
     try {
       localStorage.removeItem(POWER_CREATOR_CACHE_KEY);
-    } catch (e) {
-      console.error('Failed to clear power creator cache:', e);
+    } catch {
     }
   }, [save]);
 
@@ -835,7 +833,6 @@ function PowerCreatorContent() {
     ) as Parameters<typeof handleLoadPower>[0] | undefined;
     editLoadedRef.current = true;
     if (!powerToEdit) {
-      console.warn(`Power with ID ${editPowerId} not found in library`);
       setIsInitialized(true);
       return;
     }
@@ -855,26 +852,21 @@ function PowerCreatorContent() {
   if (error) {
     return (
       <PageContainer size="xl">
-        <Alert variant="danger">
-          Failed to load power parts: {error.message}
-        </Alert>
+        <ErrorDisplay
+          message={`Failed to load power parts: ${error.message}`}
+          onRetry={() => { void refetch(); }}
+        />
       </PageContainer>
     );
   }
 
   return (
     <CreatorLayout
-      icon={<Wand2 className="w-8 h-8 text-primary-600" />}
+      icon={<Wand2 className="w-8 h-8 text-primary-link-fg" />}
       title="Power Creator"
       description="Design custom powers by combining power parts. Each part contributes to the total energy cost and training point requirements."
       actions={
         <div className="flex items-center gap-2">
-          <ContextHelpTooltip
-            tooltipKey="creators.power.headerHelp"
-            scope="page:/power-creator"
-            label="Power creator help"
-            placement="left"
-          />
           <CreatorSaveToolbar
             saveTarget={save.saveTarget}
             onSaveTargetChange={save.setSaveTarget}
@@ -951,7 +943,7 @@ function PowerCreatorContent() {
     >
       {/* Main Editor */}
           {/* Name & Description */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
+          <Card className="shadow-md p-6">
             <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm text-text-secondary">
@@ -987,7 +979,7 @@ function PowerCreatorContent() {
                 />
               </div>
             </div>
-          </div>
+          </Card>
 
           {/* Action Type */}
           <CollapsibleSection
@@ -1382,7 +1374,7 @@ function PowerCreatorContent() {
                     onClick={() =>
                       setDamages((prev) => prev.filter((_, i) => i !== index))
                     }
-                    className="p-2 rounded-lg text-danger-600 hover:bg-danger-100 dark:hover:bg-danger-900/30 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                    className="p-2 rounded-lg text-danger-fg hover:bg-danger-100 dark:hover:bg-danger-900/30 min-h-[44px] min-w-[44px] flex items-center justify-center"
                     aria-label={`Remove damage type row ${index + 1}`}
                   >
                     <Trash2 className="w-5 h-5" />
@@ -1417,10 +1409,8 @@ function PowerCreatorContent() {
 
 export default function PowerCreatorPage() {
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
-      <Suspense fallback={<div className="text-center py-12">Loading...</div>}>
-        <PowerCreatorContent />
-      </Suspense>
-    </div>
+    <Suspense fallback={<LoadingState message="Loading..." padding="md" />}>
+      <PowerCreatorContent />
+    </Suspense>
   );
 }

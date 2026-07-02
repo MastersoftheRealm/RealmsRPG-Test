@@ -1,7 +1,7 @@
 /**
  * Supabase Session Helpers
  * =========================
- * Server-side session utilities (replaces Firebase session).
+ * Server-side session utilities.
  */
 
 import { createClient } from './server';

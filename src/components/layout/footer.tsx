@@ -8,24 +8,29 @@
 import Link from 'next/link';
 import { REALMS_MOTTO } from '@/lib/constants/site-copy';
 
+const footerLinkClass =
+  'font-semibold text-sm sm:text-base text-text-primary hover:text-primary-fg-hover transition-colors whitespace-nowrap min-h-[44px] flex items-center justify-center';
+
 export function Footer() {
   return (
-    <footer className="w-full bg-neutral-400 dark:bg-neutral-800 border-t border-divider mt-auto">
-      <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-24 py-4 sm:py-3">
-        <p className="text-center text-sm text-neutral-700 dark:text-neutral-300 mb-3 font-medium">
+    <footer className="w-full bg-surface-alt border-t border-divider mt-auto">
+      <div className="layout-shell-wide py-4 sm:py-3">
+        <p className="text-center text-sm text-text-secondary mb-3 font-medium">
           {REALMS_MOTTO}
         </p>
         <nav className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3 sm:gap-4 md:gap-6 text-center" aria-label="Footer navigation">
-          <Link href="/about" prefetch={false} className="font-semibold text-sm sm:text-base text-neutral-900 dark:text-white hover:text-primary-700 dark:hover:text-primary-300 transition-colors whitespace-nowrap min-h-[44px] flex items-center justify-center">About</Link>
-          <Link href="/rules" prefetch={false} className="font-semibold text-sm sm:text-base text-neutral-900 dark:text-white hover:text-primary-700 dark:hover:text-primary-300 transition-colors whitespace-nowrap min-h-[44px] flex items-center justify-center">Core Rulebook</Link>
-          <Link href="/codex" prefetch={false} className="font-semibold text-sm sm:text-base text-neutral-900 dark:text-white hover:text-primary-700 dark:hover:text-primary-300 transition-colors whitespace-nowrap min-h-[44px] flex items-center justify-center">Codex</Link>
-          <Link href="/library" prefetch={false} className="font-semibold text-sm sm:text-base text-neutral-900 dark:text-white hover:text-primary-700 dark:hover:text-primary-300 transition-colors whitespace-nowrap min-h-[44px] flex items-center justify-center">Library</Link>
-          <Link href="/terms" prefetch={false} className="font-semibold text-sm sm:text-base text-neutral-900 dark:text-white hover:text-primary-700 dark:hover:text-primary-300 transition-colors whitespace-nowrap min-h-[44px] flex items-center justify-center">Terms</Link>
-          <Link href="/privacy" prefetch={false} className="font-semibold text-sm sm:text-base text-neutral-900 dark:text-white hover:text-primary-700 dark:hover:text-primary-300 transition-colors whitespace-nowrap min-h-[44px] flex items-center justify-center">Privacy</Link>
-          <a href="mailto:RealmsRoleplayGame@gmail.com" className="font-semibold text-sm sm:text-base text-neutral-900 dark:text-white hover:text-primary-700 dark:hover:text-primary-300 transition-colors whitespace-nowrap min-h-[44px] flex items-center justify-center">Contact</a>
-          <a href="https://discord.gg/XbX4nFbxga" target="_blank" rel="noopener noreferrer" className="font-semibold text-sm sm:text-base text-neutral-900 dark:text-white hover:text-primary-700 dark:hover:text-primary-300 transition-colors whitespace-nowrap min-h-[44px] flex items-center justify-center" aria-label="Join the community on Discord">Join the Community</a>
+          <Link href="/about" prefetch={false} className={footerLinkClass}>About</Link>
+          <Link href="/rules" prefetch={false} className={footerLinkClass}>Core Rulebook</Link>
+          <Link href="/resources" prefetch={false} className={footerLinkClass}>Resources</Link>
+          <Link href="/codex" prefetch={false} className={footerLinkClass}>Codex</Link>
+          <Link href="/library" prefetch={false} className={footerLinkClass}>Library</Link>
+          <Link href="/terms" prefetch={false} className={footerLinkClass}>Terms</Link>
+          <Link href="/privacy" prefetch={false} className={footerLinkClass}>Privacy</Link>
+          <a href="mailto:RealmsRoleplayGame@gmail.com" className={footerLinkClass}>Contact</a>
+          <a href="https://discord.gg/XbX4nFbxga" target="_blank" rel="noopener noreferrer" className={footerLinkClass} aria-label="Join the community on Discord">Join the Community</a>
         </nav>
       </div>
     </footer>
   );
 }
+

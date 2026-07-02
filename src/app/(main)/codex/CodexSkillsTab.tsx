@@ -11,69 +11,42 @@ import {
   ChipSelect,
   SelectFilter,
   FilterSection,
+  CodexSkillRow,
 } from '@/components/codex';
 import {
   SearchInput,
   ListHeader,
   LoadingState,
   ErrorDisplay as ErrorState,
-  GridListRow,
 } from '@/components/shared';
-import { EmptyState } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
+import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
+import { EmptyState } from '@/components/ui';
 import { useCodexSkills, type Skill } from '@/hooks';
-import { getSkillExtraDescriptionDetailSections } from '@/lib/skill-extra-descriptions';
+import {
+  SKILL_GRID_COLUMNS,
+  SKILL_HEADER_COLUMNS,
+  buildSkillFilterOptions,
+  buildSkillIdToName,
+  filterSkills,
+  sortSkillsForBaseFilter,
+  type SkillListFilters,
+} from '@/lib/codex/skill-list';
 
-const SKILL_GRID_COLUMNS = '1.5fr 1fr 1fr 40px';
-const SKILL_COLUMNS = [
-  { key: 'name', label: 'NAME' },
-  { key: 'ability', label: 'ABILITIES' },
-  { key: 'base_skill', label: 'BASE SKILL' },
-  { key: '_actions', label: '', sortable: false as const },
-];
-
-interface SkillFilters {
-  search: string;
-  abilities: string[];
-  baseSkill: string;
+interface SkillFilters extends SkillListFilters {
   subSkillMode: 'all' | 'only' | 'hide';
 }
 
 function SkillCard({ skill, skillIdToName }: { skill: Skill; skillIdToName: Map<string, string> }) {
-  const isSubSkill = skill.base_skill_id !== undefined;
-  const baseSkillName = isSubSkill ? (skillIdToName.get(String(skill.base_skill_id)) || '-') : '-';
-
-  const descriptionParts: string[] = [];
-  if (skill.description?.trim()) descriptionParts.push(skill.description.trim());
-  if (isSubSkill) descriptionParts.push(`Sub-skill of: ${baseSkillName}`);
-  const description = descriptionParts.length > 0 ? descriptionParts.join('\n\n') : undefined;
-  const detailSections = getSkillExtraDescriptionDetailSections(skill);
-
-  const displayName = isSubSkill ? `↳ ${skill.name}` : skill.name;
-
-  return (
-    <GridListRow
-      id={skill.id}
-      name={displayName}
-      description={description}
-      gridColumns={SKILL_GRID_COLUMNS}
-      columns={[
-        { key: 'Ability', value: skill.ability || '-', highlight: false },
-        { key: 'Base Skill', value: baseSkillName, highlight: isSubSkill },
-      ]}
-      detailSections={detailSections.length > 0 ? detailSections : undefined}
-    />
-  );
+  return <CodexSkillRow skill={skill} skillIdToName={skillIdToName} />;
 }
 
 export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  const { data: skills, isLoading, error } = useCodexSkills();
+  const loadPublicCodex = codexMode === 'public';
+  const { data: skills, isLoading, error, refetch } = useCodexSkills({ enabled: loadPublicCodex });
   const { sortState, handleSort, sortItems } = useSort('name');
 
-  const skillIdToName = useMemo((): Map<string, string> => {
-    if (!skills) return new Map<string, string>();
-    return new Map(skills.map((s: Skill) => [String(s.id), s.name] as [string, string]));
-  }, [skills]);
+  const skillIdToName = useMemo(() => buildSkillIdToName(skills), [skills]);
 
   const [filters, setFilters] = useState<SkillFilters>({
     search: '',
@@ -82,92 +55,23 @@ export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' 
     subSkillMode: 'all',
   });
 
-  const filterOptions = useMemo(() => {
-    if (!skills) return { abilities: [], baseSkills: [] };
-
-    const abilities = new Set<string>();
-    const baseSkills = new Set<string>();
-
-    skills.forEach((s: Skill) => {
-      if (s.ability && typeof s.ability === 'string') {
-        s.ability.split(',').forEach((ab: string) => {
-          const trimmed = ab.trim();
-          if (trimmed) abilities.add(trimmed);
-        });
-      }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const cat = (s as any).category;
-      if (cat && typeof cat === 'string') baseSkills.add(cat);
-      if (s.base_skill_id !== undefined) {
-        const baseSkillName: string | undefined = skillIdToName.get(String(s.base_skill_id));
-        if (typeof baseSkillName === 'string') baseSkills.add(baseSkillName);
-      }
-    });
-
-    return {
-      abilities: Array.from(abilities).sort(),
-      baseSkills: Array.from(baseSkills).sort(),
-    };
-  }, [skills, skillIdToName]);
+  const filterOptions = useMemo(
+    () => buildSkillFilterOptions(skills, skillIdToName, { includeCategoryBaseSkills: true }),
+    [skills, skillIdToName]
+  );
 
   const filteredSkills = useMemo(() => {
     if (!skills) return [];
-
-    const filtered = skills.filter((s: Skill) => {
-      if (filters.search) {
-        const searchLower = filters.search.toLowerCase();
-        if (!s.name.toLowerCase().includes(searchLower) &&
-          !s.description?.toLowerCase().includes(searchLower)) {
-          return false;
-        }
-      }
-
-      if (filters.abilities.length > 0) {
-        const skillAbilities = s.ability?.split(',').map((a: string) => a.trim()) || [];
-        const hasMatchingAbility = filters.abilities.some(filterAb =>
-          skillAbilities.includes(filterAb)
-        );
-        if (!hasMatchingAbility) return false;
-      }
-
-      if (filters.baseSkill) {
-        const isThisBaseSkill = s.name === filters.baseSkill;
-        const baseSkillName = s.base_skill_id !== undefined ? skillIdToName.get(String(s.base_skill_id)) : undefined;
-        const hasThisBaseSkill = baseSkillName === filters.baseSkill;
-        if (!isThisBaseSkill && !hasThisBaseSkill) return false;
-      }
-
-      const isSubSkill = s.base_skill_id !== undefined;
-
-      if (filters.subSkillMode === 'only' && !isSubSkill) return false;
-      if (filters.subSkillMode === 'hide' && isSubSkill) return false;
-
-      return true;
-    });
-
-    if (filters.baseSkill) {
-      return filtered.sort((a: Skill, b: Skill) => {
-        const aIsBase = a.name === filters.baseSkill;
-        const bIsBase = b.name === filters.baseSkill;
-        if (aIsBase && !bIsBase) return -1;
-        if (!aIsBase && bIsBase) return 1;
-        return a.name.localeCompare(b.name);
-      });
-    }
+    const filtered = filterSkills(skills, filters, skillIdToName);
+    if (filters.baseSkill) return sortSkillsForBaseFilter(filtered, filters.baseSkill);
     return sortItems<Skill>(filtered);
   }, [skills, filters, sortItems, skillIdToName]);
 
   if (codexMode === 'my') {
-    return (
-      <EmptyState
-        size="lg"
-        title="My Codex: Skills"
-        description="Custom skills are not available yet. For now, use Realms Codex."
-      />
-    );
+    return <CodexMyCodexEmpty />;
   }
 
-  if (error) return <ErrorState message="Failed to load skills" />;
+  if (error) return <ErrorState message="Failed to load skills" onRetry={() => refetch()} />;
 
   return (
     <div>
@@ -213,7 +117,7 @@ export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' 
       </FilterSection>
 
       <ListHeader
-        columns={SKILL_COLUMNS}
+        columns={SKILL_HEADER_COLUMNS}
         gridColumns={SKILL_GRID_COLUMNS}
         sortState={sortState}
         onSort={handleSort}
@@ -223,7 +127,7 @@ export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' 
         {isLoading ? (
           <LoadingState />
         ) : filteredSkills.length === 0 ? (
-          <div className="p-8 text-center text-text-muted dark:text-text-secondary">No skills match your filters.</div>
+          <EmptyState title="No skills match your filters." size="sm" />
         ) : (
           filteredSkills.map((skill: Skill) => (
             <SkillCard key={skill.id} skill={skill} skillIdToName={skillIdToName} />

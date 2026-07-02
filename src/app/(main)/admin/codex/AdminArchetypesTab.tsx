@@ -2,16 +2,16 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { SectionHeader, SearchInput, LoadingState, ErrorDisplay as ErrorState, GridListRow, ListEmptyState as EmptyState } from '@/components/shared';
-import { Modal, Button, Input } from '@/components/ui';
+import { Modal, Button, Input, IconButton, useToast } from '@/components/ui';
 import { ChipSelect } from '@/components/shared';
 import { useCodexArchetypes, useCodexEquipment, useCodexFeats, useCodexSkills } from '@/hooks/use-codex';
-import { useOfficialLibrary } from '@/hooks/use-public-library';
+import { useOfficialLibrary } from '@/hooks/use-official-library';
 import { useQueryClient } from '@tanstack/react-query';
 import { deleteCodexDoc, saveArchetypeWithPath } from './actions';
 import { Pencil, Copy, X } from 'lucide-react';
-import { IconButton } from '@/components/ui';
 import { getFeatLevel, formatFeatName } from '@/lib/leveled-feats';
 import { formatListCellLabel } from '@/lib/utils';
+import { parseArchetypePathData, pathHiddenFromPlayerPicker } from '@/lib/game/archetype-path';
 
 const COPY_NAME_SUFFIX = ' copy';
 const ABILITY_OPTIONS = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'] as const;
@@ -192,7 +192,8 @@ function buildLevelPayload(level: PathLevelForm, includeLevel: boolean): Record<
 }
 
 export function AdminArchetypesTab() {
-  const { data: archetypes, isLoading, error } = useCodexArchetypes();
+  const { showToast } = useToast();
+  const { data: archetypes, isLoading, error, refetch } = useCodexArchetypes();
   const { data: codexFeats = [] } = useCodexFeats();
   const { data: codexSkills = [] } = useCodexSkills();
   const { data: codexEquipment = [] } = useCodexEquipment();
@@ -544,10 +545,11 @@ export function AdminArchetypesTab() {
     );
     const allUnknowns = [...unknownFromLevel1, ...unknownFromLevels];
     if (allUnknowns.length) {
-      alert(
+      showToast(
         'Some archetype path entries no longer match existing Codex/Official Library items. ' +
-          'Please fix or remove these before saving:\n\n' +
-          allUnknowns.join('\n')
+          'Please fix or remove these before saving: ' +
+          allUnknowns.join('; '),
+        'error'
       );
       return;
     }
@@ -565,6 +567,14 @@ export function AdminArchetypesTab() {
       if (levelsPayload.length > 0) structuredPathData.levels = levelsPayload;
     }
 
+    if (structuredPathData && pathHiddenFromPlayerPicker(parseArchetypePathData(structuredPathData))) {
+      showToast(
+        'Level 1 has notes, remove lists, or Unarmed Prowess only — no add recommendations. ' +
+          'This path will not appear in the character creator picker or public codex path list until you add level 1 feats, skills, powers, techniques, armaments, or equipment.',
+        'warning'
+      );
+    }
+
     let level1Override: Record<string, unknown> | undefined;
     let levelsOverride: Record<string, unknown>[] | undefined;
     if (form.advancedPathJson.trim()) {
@@ -577,7 +587,7 @@ export function AdminArchetypesTab() {
           );
         }
       } catch {
-        alert('Advanced Path JSON must be valid JSON.');
+        showToast('Advanced Path JSON must be valid JSON.', 'error');
         return;
       }
     }
@@ -632,7 +642,7 @@ export function AdminArchetypesTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
     }
   };
 
@@ -649,7 +659,7 @@ export function AdminArchetypesTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
     }
   };
 
@@ -666,12 +676,12 @@ export function AdminArchetypesTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       setPendingDeleteId(null);
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
       setPendingDeleteId(null);
     }
   };
 
-  if (error) return <ErrorState message="Failed to load archetypes" />;
+  if (error) return <ErrorState message="Failed to load archetypes" onRetry={() => { void refetch(); }} />;
 
   return (
     <div>
@@ -709,7 +719,7 @@ export function AdminArchetypesTab() {
                       size="sm"
                       onClick={() => setPendingDeleteId(a.id)}
                       label="Delete"
-                      className="text-danger dark:text-danger-400 hover:text-danger-600 dark:hover:text-danger-300 hover:bg-transparent"
+                      className="text-danger-fg hover:opacity-80 hover:bg-transparent"
                     >
                       <X className="w-4 h-4" />
                     </IconButton>

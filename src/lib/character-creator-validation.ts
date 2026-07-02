@@ -7,12 +7,12 @@
 
 import type { CharacterDraft, CharacterPower, CharacterTechnique, Item } from '@/types';
 import type { CreatorStep } from '@/stores/character-creator-store';
+import type { CoreRulesMap } from '@/types/core-rules';
 import { getChoiceOptionIds } from '@/lib/choice-trait';
-import { calculateAbilityPoints, calculateAbilityScoreCost, calculateSkillPointsForEntity, calculateTrainingPoints } from '@/lib/game/formulas';
-import { calculateSimpleSkillPointsSpent } from '@/lib/game/skill-allocation';
+import { calculateAbilityPoints, calculateAbilityScoreCost, calculateHealthEnergyPool, calculateSkillPointsForEntity, calculateTrainingPoints } from '@/lib/game/formulas';
+import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
+import { calculateSimpleSkillPointsSpent, resolveSkillAllocationRules } from '@/lib/game/skill-allocation';
 import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies } from '@/lib/proficiencies';
-
-const BASE_HE_POOL = 18; // 18 at level 1, +2 per level
 
 export interface ValidationIssue {
   emoji: string;
@@ -30,6 +30,8 @@ export interface ValidationContext {
   codexSkills: Array<{ id: string; base_skill_id?: number }> | null;
   /** Used to validate species trait choice picks (option_trait_ids). */
   allTraits?: Array<{ id: string | number; option_trait_ids?: string[] }> | null;
+  /** Core rules for skill soft-cap / past-cap costs (optional; defaults match SKILLS_AND_DEFENSES seed). */
+  rules?: Partial<CoreRulesMap>;
 }
 
 /**
@@ -43,7 +45,7 @@ export function getValidationIssuesForStep(
 ): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const level = draft.level || 1;
-  const { allSpecies, codexSkills } = context;
+  const { allSpecies, codexSkills, rules } = context;
 
   switch (step) {
     case 'archetype':
@@ -91,7 +93,30 @@ export function getValidationIssuesForStep(
 
         const anc = draft.ancestry;
         const traitsDb = context.allTraits;
-        if (
+        if (anc?.mixed === true && anc.speciesIds?.length === 2) {
+          if (!anc.selectedSize) {
+            issues.push({
+              emoji: '📏',
+              message: 'Choose a size for your mixed species.',
+              severity: 'error',
+            });
+          }
+          if (!anc.selectedSpeciesSkillIds || anc.selectedSpeciesSkillIds.length !== 2) {
+            issues.push({
+              emoji: '📚',
+              message: 'Select one base skill from each parent species.',
+              severity: 'error',
+            });
+          }
+          const speciesTraits = anc.selectedSpeciesTraits;
+          if (!speciesTraits?.[0] || !speciesTraits?.[1]) {
+            issues.push({
+              emoji: '🧬',
+              message: 'Select one species trait from each parent species.',
+              severity: 'error',
+            });
+          }
+        } else if (
           anc?.id &&
           anc.mixed !== true &&
           traitsDb?.length &&
@@ -170,7 +195,8 @@ export function getValidationIssuesForStep(
         (draft.skills || {}) as Record<string, number>,
         speciesSkillIds,
         skillMeta,
-        draft.defenseVals || draft.defenseSkills
+        draft.defenseVals || draft.defenseSkills,
+        resolveSkillAllocationRules(rules)
       );
       const remainingSkillPoints = maxSkillPoints - totalUsedSkillPoints;
       if (remainingSkillPoints > 0) {
@@ -250,7 +276,7 @@ export function getValidationIssuesForStep(
           severity: 'warning',
         });
       }
-      const baseCurrency = 200;
+      const baseCurrency = CHARACTER_STARTING_CURRENCY;
       const equipmentItems = draft.equipment?.items || draft.equipment?.inventory || [];
       const spentCurrency = equipmentItems.reduce((sum: number, item: { cost?: number }) => sum + (item.cost || 0), 0);
       if (spentCurrency > baseCurrency) {
@@ -267,9 +293,34 @@ export function getValidationIssuesForStep(
       // Optional step; no hard requirements. Could add "must have at least one power" if needed.
       break;
 
-    case 'finalize':
-      // Name is only required on finalize; we don't validate name when leaving other steps.
+    case 'finalize': {
+      if (!draft.name?.trim()) {
+        issues.push({
+          emoji: '📝',
+          message: "Your hero needs a name! Give them something legendary.",
+          severity: 'error',
+        });
+      }
+      const hePool = calculateHealthEnergyPool(level, 'PLAYER', false);
+      const healthAllocation = draft.healthPoints || 0;
+      const energyAllocation = draft.energyPoints || 0;
+      const usedHEPoints = healthAllocation + energyAllocation;
+      const remainingHEPoints = hePool - usedHEPoints;
+      if (remainingHEPoints > 0) {
+        issues.push({
+          emoji: '❤️',
+          message: `You have ${remainingHEPoints} Health-Energy point${remainingHEPoints === 1 ? '' : 's'} to allocate.`,
+          severity: 'warning',
+        });
+      } else if (remainingHEPoints < 0) {
+        issues.push({
+          emoji: '❤️',
+          message: `You've overspent Health-Energy by ${Math.abs(remainingHEPoints)} point${Math.abs(remainingHEPoints) === 1 ? '' : 's'}.`,
+          severity: 'error',
+        });
+      }
       break;
+    }
   }
 
   return issues;
@@ -279,7 +330,11 @@ export function getValidationIssuesForStep(
  * Returns all validation issues across every step (for Finalize "Review & Create").
  * Name and HE allocation are finalize-specific.
  */
-export function getAllValidationIssues(draft: CharacterDraft, context: ValidationContext): ValidationIssue[] {
+export function getAllValidationIssues(
+  draft: CharacterDraft,
+  context: ValidationContext,
+  rules?: Partial<CoreRulesMap>
+): ValidationIssue[] {
   const steps: CreatorStep[] = [
     'archetype',
     'species',
@@ -307,7 +362,7 @@ export function getAllValidationIssues(draft: CharacterDraft, context: Validatio
 
   // Health/Energy allocation (abilities/finalize)
   const level = draft.level || 1;
-  const hePool = BASE_HE_POOL + (level - 1) * 2;
+  const hePool = calculateHealthEnergyPool(level, 'PLAYER', false, rules);
   const healthAllocation = draft.healthPoints || 0;
   const energyAllocation = draft.energyPoints || 0;
   const usedHEPoints = healthAllocation + energyAllocation;
@@ -317,6 +372,12 @@ export function getAllValidationIssues(draft: CharacterDraft, context: Validatio
       emoji: '❤️',
       message: `You have ${remainingHEPoints} Health-Energy point${remainingHEPoints === 1 ? '' : 's'} to allocate.`,
       severity: 'warning',
+    });
+  } else if (remainingHEPoints < 0) {
+    issues.push({
+      emoji: '❤️',
+      message: `You've overspent Health-Energy by ${Math.abs(remainingHEPoints)} point${Math.abs(remainingHEPoints) === 1 ? '' : 's'}.`,
+      severity: 'error',
     });
   }
 

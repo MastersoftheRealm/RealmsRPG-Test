@@ -25,10 +25,10 @@ export { EditSectionToggle, getEditState, type EditState } from './edit-section-
 // ============================================================================
 // Item display components
 export { ItemCard } from './item-card';
-export { ItemList } from './item-list';
 
 // Modal components
 export { LoginPromptModal } from './login-prompt-modal';
+export { DiscordIcon } from './discord-icon';
 export { DeleteConfirmModal } from './delete-confirm-modal';
 export { ConfirmActionModal } from './confirm-action-modal';
 
@@ -43,11 +43,7 @@ export { ConfirmActionModal } from './confirm-action-modal';
 export { GridListRow } from './grid-list-row';
 export type { ColumnValue, ChipData, ChipOptionData, GridListRowProps } from './grid-list-row';
 
-export { ChoiceTraitOptionSelect, ChoiceTraitOptionListPicker } from './choice-trait-option-select';
-export type {
-  ChoiceTraitOptionSelectProps,
-  ChoiceTraitOptionSelectLayout,
-} from './choice-trait-option-select';
+export { ChoiceTraitOptionListPicker } from './choice-trait-option-select';
 
 // SectionCostBadge - EN/TP/IP cost display next to section labels
 export { SectionCostBadge } from './section-cost-badge';
@@ -72,6 +68,22 @@ export type { TabSummarySectionProps, SummaryItemProps, SummaryRowProps } from '
 export { ListHeader } from './list-header';
 export type { ListHeaderProps, ListColumn, ListHeaderRowChrome } from './list-header';
 
+// OfficialPowerList - shared Realms Library powers grid (Library browse + Admin)
+export { OfficialPowerList } from './official-power-list';
+export type { OfficialPowerListProps, OfficialPowerRow } from './official-power-list';
+
+// OfficialTechniqueList - shared Realms Library techniques grid
+export { OfficialTechniqueList } from './official-technique-list';
+export type { OfficialTechniqueListProps, OfficialTechniqueRow } from './official-technique-list';
+
+// OfficialItemList - shared Realms Library armaments grid
+export { OfficialItemList } from './official-item-list';
+export type { OfficialItemListProps, OfficialItemRow } from './official-item-list';
+
+// OfficialCreatureList - shared Realms Library creatures grid
+export { OfficialCreatureList } from './official-creature-list';
+export type { OfficialCreatureListProps, OfficialCreatureRow } from './official-creature-list';
+
 // Part/Property chip components (reusable across Library, Character Sheet, Codex)
 export { PartChip as PartChipComponent, PartChipDetails, PartChipList, PropertyChipList } from './part-chip';
 export type { PartData } from './part-chip';
@@ -94,8 +106,6 @@ export type { AddSubSkillModalProps, CharacterSkillForSubModal } from './add-sub
 // List components (shared between Codex and Library)
 export {
   SearchInput,
-  SortHeader,
-  SortHeaderRow,
   FilterSection,
   EmptyState as ListEmptyState,
   LoadingState,
@@ -103,8 +113,6 @@ export {
 } from './list-components';
 export type { 
   SearchInputProps, 
-  SortHeaderProps, 
-  SortHeaderRowProps,
   FilterSectionProps,
   EmptyStateProps,
   ErrorDisplayProps,
@@ -126,6 +134,7 @@ export {
   ArmorListSection,
   EquipmentListSection,
   FeatsTraitsListSection,
+  splitDamageDiceAndType,
 } from './entity-library-sections';
 export type {
   EntityPowerRow,
@@ -135,6 +144,8 @@ export type {
   EntityArmorRow,
   EntityEquipmentRow,
   EntityFeatRow,
+  EntityRowExtras,
+  EntityListControls,
 } from './entity-library-sections';
 
 // Quick armaments tables (Archetype-style)
@@ -195,7 +206,6 @@ export {
   TagFilter,
   CheckboxFilter,
   SelectFilter,
-  FilterSection as SharedFilterSection,
   SourceFilter,
   type SourceFilterValue,
 } from './filters';

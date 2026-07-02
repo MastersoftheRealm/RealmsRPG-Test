@@ -12,8 +12,11 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createClient } from '@/lib/supabase/client';
+import { hasGuestEncountersToMigrate, migrateGuestEncountersOnSignIn } from '@/lib/guest-encounter-migration';
 
 import { loginSchema, type LoginFormData } from '@/lib/validation';
+import { sanitizeRedirectPath } from '@/lib/safe-redirect';
+import { resendConfirmationAction } from '@/app/(auth)/auth-actions';
 import { AuthCard, FormInput, PasswordInput, SocialButton } from '@/components/auth';
 import { Spinner } from '@/components/ui';
 import { Button, Alert } from '@/components/ui';
@@ -30,12 +33,7 @@ function LoginContent() {
   const getRedirectPath = () => {
     const urlRedirect = searchParams.get('redirect') ?? searchParams.get('returnTo');
     const sessionRedirect = typeof window !== 'undefined' ? sessionStorage.getItem('loginRedirect') : null;
-    const raw = urlRedirect || sessionRedirect || '/';
-    const normalized = raw.startsWith('/') ? raw : '/';
-    if (normalized === '/login' || normalized === '/register' || normalized === '/forgot-password' || normalized === '/forgot-username') {
-      return '/';
-    }
-    return normalized;
+    return sanitizeRedirectPath(urlRedirect || sessionRedirect || '/');
   };
 
   useEffect(() => {
@@ -65,6 +63,9 @@ function LoginContent() {
       const supabase = createClient();
       const { error: err } = await supabase.auth.signInWithPassword({ email: data.email, password: data.password });
       if (err) throw err;
+      if (hasGuestEncountersToMigrate()) {
+        await migrateGuestEncountersOnSignIn();
+      }
       sessionStorage.removeItem('loginRedirect');
       router.push(getRedirectPath());
     } catch (err) {
@@ -83,9 +84,9 @@ function LoginContent() {
     setResendStatus('sending');
     setError(null);
     try {
-      const supabase = createClient();
-      const { error: resendError } = await supabase.auth.resend({ type: 'signup', email });
-      if (resendError) throw resendError;
+      const redirectPath = getRedirectPath();
+      const result = await resendConfirmationAction(email, redirectPath);
+      if (!result.success) throw new Error(result.error);
       setResendStatus('sent');
     } catch (e) {
       setResendStatus('idle');
@@ -113,10 +114,6 @@ function LoginContent() {
       setError(getAuthErrorMessage(err));
       setIsLoading(false);
     }
-  };
-
-  const handleAppleSignIn = () => {
-    setError('Apple Sign-In coming soon!');
   };
 
   return (
@@ -149,17 +146,17 @@ function LoginContent() {
         />
 
         <div className="flex items-center justify-between">
-          <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer select-none">
+          <label className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer select-none">
             <input
               type="checkbox"
-              className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0 cursor-pointer transition-colors"
+              className="h-4 w-4 rounded border-border-light dark:border-border bg-surface text-primary-fg focus:ring-2 focus:ring-primary-outline-border focus:ring-offset-0 cursor-pointer transition-colors"
               {...register('rememberMe')}
             />
             Remember me
           </label>
           <Link
             href="/forgot-password"
-            className="text-sm text-primary-400 hover:text-primary-300 transition-colors"
+            className="text-sm text-primary-link-fg hover:text-primary-fg-hover transition-colors"
           >
             Forgot password?
           </Link>
@@ -194,9 +191,9 @@ function LoginContent() {
       ) : null}
 
       <div className="my-6 flex items-center gap-4">
-        <div className="flex-1 h-px bg-gray-600" />
-        <span className="text-gray-300 text-sm">or</span>
-        <div className="flex-1 h-px bg-gray-600" />
+        <div className="flex-1 h-px bg-border-light dark:bg-border" />
+        <span className="text-text-secondary text-sm">or</span>
+        <div className="flex-1 h-px bg-border-light dark:bg-border" />
       </div>
 
       <div className="space-y-3">
@@ -205,18 +202,13 @@ function LoginContent() {
           onClick={handleGoogleSignIn}
           disabled={isLoading || !ready}
         />
-        <SocialButton
-          provider="apple"
-          onClick={handleAppleSignIn}
-          disabled={isLoading || !ready}
-        />
       </div>
 
-      <p className="mt-6 text-center text-gray-300">
+      <p className="mt-6 text-center text-text-secondary">
         Don&apos;t have an account?{' '}
         <Link
           href="/register"
-          className="text-primary-400 hover:text-primary-300 transition-colors font-medium"
+          className="text-primary-link-fg hover:text-primary-fg-hover transition-colors font-medium"
         >
           Create one
         </Link>

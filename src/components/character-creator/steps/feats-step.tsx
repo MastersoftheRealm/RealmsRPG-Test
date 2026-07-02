@@ -11,16 +11,16 @@
 
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
-import { Spinner, Button } from '@/components/ui';
+import { statusPanel } from '@/lib/ui/status-surface-classes';
+import { Spinner, Button, EmptyState } from '@/components/ui';
 import { 
   GridListRow, 
   SearchInput, 
   ListHeader,
   ContextHelpTooltip,
   SegmentedControl,
-  type ChipData 
 } from '@/components/shared';
 import { 
   FilterSection, 
@@ -28,59 +28,17 @@ import {
 } from '@/components/codex';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
-import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
-import { calculateDefenses } from '@/lib/game/calculations';
-import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats, getSkillBonusForFeatRequirement } from '@/lib/game/formulas';
+import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
+import { useCodexFeats, useCodexSkills, useMergedSpecies, useTraits, type Feat, type Skill } from '@/hooks';
+import { getValidationIssuesForStep } from '@/lib/character-creator-validation';
+import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats } from '@/lib/game/formulas';
+import { checkFeatRequirements, type CharacterForFeatRequirement } from '@/lib/game/feat-requirements';
+import type { CodexSkillForFeat } from '@/lib/game/formulas';
 import { formatAbilityList, formatListCellLabel } from '@/lib/utils';
-import { buildFeatLevelChips, getFeatFamilyId, getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
-import type { Abilities, ArchetypeCategory } from '@/types';
+import { getFeatFamilyId, getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
+import { buildFeatDetailSections } from '@/lib/codex/feat-list';
+import type { ArchetypeCategory } from '@/types';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
-import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
-
-function normalizeReqKey(input: string): string {
-  return String(input ?? '')
-    .trim()
-    .toLowerCase()
-    .replace(/[\s_-]+/g, '');
-}
-
-function isAbilityReqKey(
-  key: string
-): key is 'strength' | 'vitality' | 'agility' | 'acuity' | 'intelligence' | 'charisma' {
-  return (
-    key === 'strength' ||
-    key === 'vitality' ||
-    key === 'agility' ||
-    key === 'acuity' ||
-    key === 'intelligence' ||
-    key === 'charisma'
-  );
-}
-
-type DefenseReqKey = 'might' | 'fortitude' | 'reflex' | 'discernment' | 'mentalFortitude' | 'resolve';
-
-function toDefenseReqKey(key: string): DefenseReqKey | null {
-  if (key === 'might') return 'might';
-  if (key === 'fortitude') return 'fortitude';
-  if (key === 'reflex' || key === 'reflexes') return 'reflex';
-  if (key === 'discernment') return 'discernment';
-  if (key === 'mentalfortitude') return 'mentalFortitude';
-  if (key === 'resolve') return 'resolve';
-  return null;
-}
-
-function getPreviousLevelFeatId(feat: Feat, allFeats: Feat[]): string | null {
-  const level = getFeatLevel(feat);
-  if (level <= 1) return null;
-  if (feat.base_feat_id && level === 2) return String(feat.base_feat_id);
-  if (feat.base_feat_id && level >= 3) {
-    const prev = allFeats.find(
-      (f) => f.base_feat_id === feat.base_feat_id && getFeatLevel(f) === level - 1
-    );
-    return prev ? String(prev.id) : null;
-  }
-  return null;
-}
 
 // Grid columns for feat display (Name, Category, Ability, Recovery, Uses, Add) — match Codex
 const FEAT_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 0.8fr 44px';
@@ -115,6 +73,19 @@ export function FeatsStep() {
   const { draft, nextStep, prevStep, updateDraft } = useCharacterCreatorStore();
   const { data: feats, isLoading } = useCodexFeats();
   const { data: skillsDb = [] } = useCodexSkills();
+  const { data: allSpecies = [] } = useMergedSpecies();
+  const { data: codexSkills } = useCodexSkills();
+  const { data: allTraits } = useTraits();
+
+  const validationContext = useMemo(
+    () => ({ allSpecies, codexSkills: codexSkills ?? null, allTraits: allTraits ?? null }),
+    [allSpecies, codexSkills, allTraits]
+  );
+  const stepIssues = useMemo(
+    () => getValidationIssuesForStep('feats', draft, validationContext),
+    [draft, validationContext]
+  );
+  const canContinue = stepIssues.length === 0;
   
   const [expandedSelectedId, setExpandedSelectedId] = useState<string | null>(null);
   const [usePathRecommendations, setUsePathRecommendations] = useState(draft.creationMode === 'path');
@@ -190,74 +161,27 @@ export function FeatsStep() {
     return Array.from(abils).sort();
   }, [feats]);
 
-  // Check if character meets feat requirements
+  // Check if character meets feat requirements (shared single source of truth)
   const checkRequirements = useCallback((feat: Feat): { met: boolean; reason?: string } => {
-    const abilities = (draft.abilities || {}) as Partial<Abilities>;
-    const skills = draft.skills || {};
-    const defenseVals = (draft.defenseVals || (draft as unknown as { defenseSkills?: unknown }).defenseSkills || {}) as Record<
-      string,
-      number
-    >;
-    const { defenseBonuses } = calculateDefenses(abilities, { ...DEFAULT_DEFENSE_SKILLS, ...defenseVals });
-    
-    // Check level requirement
-    if (feat.lvl_req > (draft.level || 1)) {
-      return { met: false, reason: `Requires level ${feat.lvl_req}` };
-    }
-    
-    // Check ability requirements
-    for (let i = 0; i < feat.ability_req.length; i++) {
-      const reqKey = normalizeReqKey(feat.ability_req[i]);
-      const reqValue = feat.abil_req_val[i] || 0;
-      const defenseKey = toDefenseReqKey(reqKey);
-      const charValue = isAbilityReqKey(reqKey)
-        ? (abilities[reqKey] || 0)
-        : defenseKey
-          ? (defenseBonuses[defenseKey] || 0)
-          : 0;
-      
-      if (charValue < reqValue) {
-        return { met: false, reason: `Requires ${feat.ability_req[i]} ${reqValue}+` };
-      }
-    }
-    
-    // Skill requirements: skill_req_val = required SKILL BONUS (not value). Proficiency required for all.
-    for (let i = 0; i < feat.skill_req.length; i++) {
-      const skillId = String(feat.skill_req[i]);
-      const reqSkillName = skillIdToName.get(skillId) || skillId;
-      const requiredBonus = feat.skill_req_val?.[i] ?? 1;
-      const { bonus, proficient } = getSkillBonusForFeatRequirement(
-        skillId,
-        abilities,
-        skills as Record<string, number>,
-        skillsDb as import('@/lib/game/formulas').CodexSkillForFeat[]
-      );
-      if (!proficient) {
-        return { met: false, reason: `Requires proficiency in ${reqSkillName}` };
-      }
-      if (bonus < requiredBonus) {
-        return { met: false, reason: `Requires ${reqSkillName} bonus ${requiredBonus}+ (yours: ${bonus})` };
-      }
-    }
-    
-    // Check martial ability requirement
-    if (feat.mart_abil_req && draft.archetype?.mart_abil !== feat.mart_abil_req) {
-      return { met: false, reason: `Requires ${feat.mart_abil_req} martial ability` };
-    }
-
-    // Leveled feat prerequisite: requires previous level by id.
-    const prevLevelId = getPreviousLevelFeatId(feat, feats || []);
-    if (prevLevelId) {
-      const hasPrevious = (draft.feats || []).some((f) => String(f.id) === prevLevelId);
-      if (!hasPrevious) {
-        const prevFeat = (feats || []).find((f) => String(f.id) === prevLevelId);
-        const prevLevel = getFeatLevel(prevFeat);
-        return { met: false, reason: `Requires ${prevFeat?.name ?? 'previous level'} (Level ${prevLevel})` };
-      }
-    }
-    
-    return { met: true };
-  }, [draft.abilities, draft.skills, draft.level, draft.archetype?.mart_abil, draft.feats, skillIdToName, skillsDb, feats]);
+    const character: CharacterForFeatRequirement = {
+      level: draft.level,
+      abilities: draft.abilities,
+      skills: draft.skills as CharacterForFeatRequirement['skills'],
+      defenseVals: draft.defenseVals,
+      defenseSkills: draft.defenseSkills,
+      mart_abil: draft.mart_abil,
+      archetype: draft.archetype ? { mart_abil: draft.archetype.mart_abil } : undefined,
+      speedBase: draft.speedBase,
+      feats: draft.feats,
+    };
+    const { met, reason } = checkFeatRequirements(
+      feat,
+      character,
+      skillsDb as CodexSkillForFeat[],
+      feats || []
+    );
+    return { met, reason };
+  }, [draft.abilities, draft.skills, draft.level, draft.defenseVals, draft.mart_abil, draft.archetype?.mart_abil, draft.speedBase, draft.feats, skillsDb, feats]);
 
   // Filter and sort feats
   const filteredFeats = useMemo(() => {
@@ -379,6 +303,88 @@ export function FeatsStep() {
       .filter((entry): entry is { displayFeat: Feat; familyLevels: Feat[] } => entry !== null);
   }, [feats, recommendedFeatRefs]);
 
+  const applyRecommendedPathFeats = useCallback(() => {
+    if (!feats || recommendedFeatRefs.size === 0) return;
+
+    let workingFeats = [...(draft.feats || [])];
+
+    const addFeatIfPossible = (feat: Feat, isCharacterFeat: boolean) => {
+      const featType = isCharacterFeat ? 'character' : 'archetype';
+      if (workingFeats.some((f) => f.id === feat.id)) return;
+
+      const selectedList = workingFeats.filter((f) =>
+        isCharacterFeat ? f.type === 'character' : f.type !== 'character'
+      );
+      const maxForType = isCharacterFeat ? maxCharacterFeats : maxArchetypeFeats;
+      const requirements = checkRequirements(feat);
+      if (!requirements.met) return;
+
+      const selectedWeight = selectedList.reduce((sum, selected) => {
+        const selectedFeat = featById.get(String(selected.id));
+        return sum + getFeatLevel(selectedFeat);
+      }, 0);
+      const targetFamily = getFeatFamilyId(feat);
+      const targetLevel = getFeatLevel(feat);
+      const sameFamilyToReplace = selectedList.filter((selected) => {
+        const selectedFeat = featById.get(String(selected.id));
+        if (!selectedFeat) return false;
+        if (getFeatFamilyId(selectedFeat) !== targetFamily) return false;
+        return getFeatLevel(selectedFeat) < targetLevel;
+      });
+      const replacedWeight = sameFamilyToReplace.reduce((sum, selected) => {
+        const selectedFeat = featById.get(String(selected.id));
+        return sum + getFeatLevel(selectedFeat);
+      }, 0);
+      const nextWeight = selectedWeight - replacedWeight + targetLevel;
+      if (nextWeight > maxForType) return;
+
+      const replacementIds = new Set(sameFamilyToReplace.map((f) => String(f.id)));
+      workingFeats = [
+        ...workingFeats.filter((f) => !replacementIds.has(String(f.id))),
+        {
+          id: feat.id,
+          name: feat.name,
+          description: feat.description,
+          type: featType,
+        },
+      ];
+    };
+
+    for (const { displayFeat } of pathModeArchetypeFeats) {
+      addFeatIfPossible(displayFeat, false);
+    }
+    for (const { displayFeat } of pathModeCharacterFeats) {
+      addFeatIfPossible(displayFeat, true);
+    }
+
+    const prevIds = (draft.feats ?? []).map((f) => String(f.id)).sort().join(',');
+    const nextIds = workingFeats.map((f) => String(f.id)).sort().join(',');
+    if (prevIds !== nextIds) {
+      updateDraft({ feats: workingFeats });
+    }
+  }, [
+    feats,
+    recommendedFeatRefs.size,
+    draft.feats,
+    pathModeArchetypeFeats,
+    pathModeCharacterFeats,
+    maxArchetypeFeats,
+    maxCharacterFeats,
+    featById,
+    checkRequirements,
+    updateDraft,
+  ]);
+
+  const pathFeatMergeKey = draft.creationMode === 'path' ? String(draft.archetypePathId ?? '') : '';
+  const hasAppliedPathFeatsRef = useRef('');
+
+  useEffect(() => {
+    if (!pathFeatMergeKey || recommendedFeatRefs.size === 0 || isLoading) return;
+    if (hasAppliedPathFeatsRef.current === pathFeatMergeKey) return;
+    applyRecommendedPathFeats();
+    hasAppliedPathFeatsRef.current = pathFeatMergeKey;
+  }, [pathFeatMergeKey, recommendedFeatRefs.size, isLoading, applyRecommendedPathFeats]);
+
   const toggleFeat = useCallback((feat: Feat, isCharacterFeat: boolean) => {
     const featType = isCharacterFeat ? 'character' : 'archetype';
     const selectedList = isCharacterFeat ? selectedCharacterFeats : selectedArchetypeFeats;
@@ -462,51 +468,8 @@ export function FeatsStep() {
     const nextWeight = selectedWeight - replacedWeight + targetLevel;
     const canSelect = (nextWeight <= maxForType || isSelected) && requirements.met;
     
-    // Build detail sections (Type, Category, Tags, Requirements) - consistent header+chips format
-    const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> = [];
-    
-    // Type: Character/Archetype, State
-    const typeChips: ChipData[] = [];
-    if (isCharacterFeat) typeChips.push({ name: 'Character Feat', category: 'skill' });
-    else typeChips.push({ name: 'Archetype Feat', category: 'archetype' });
-    if (feat.state_feat) typeChips.push({ name: 'State Feat', category: 'archetype' });
-    if (typeChips.length > 0) {
-      detailSections.push({ label: 'Type', chips: typeChips, hideLabelIfSingle: true });
-    }
-    
-    // Category
-    if (feat.category) {
-      detailSections.push({ label: 'Category', chips: [{ name: feat.category, category: 'default' }], hideLabelIfSingle: true });
-    }
-    
-    // Tags
-    const tagChips: ChipData[] = feat.tags?.map(tag => ({ name: tag, category: 'tag' as const })) || [];
-    if (tagChips.length > 0) {
-      detailSections.push({ label: 'Tags', chips: tagChips, hideLabelIfSingle: true });
-    }
-    
-    // Ability Requirements
-    const abilityReqChips: ChipData[] = (feat.ability_req || []).map((a, i) => {
-      const val = feat.abil_req_val?.[i];
-      return { name: `${a}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'default' as const };
-    });
-    if (abilityReqChips.length > 0) {
-      detailSections.push({ label: 'Ability Requirements', chips: abilityReqChips });
-    }
-    
-    // Skill Requirements
-    const skillReqChips: ChipData[] = (feat.skill_req || []).map((id, i) => {
-      const label = skillIdToName.get(String(id)) || String(id);
-      const val = feat.skill_req_val?.[i];
-      return { name: `${label}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'skill' as const };
-    });
-    if (skillReqChips.length > 0) {
-      detailSections.push({ label: 'Skill Requirements', chips: skillReqChips });
-    }
-    const levelChips = buildFeatLevelChips(familyLevels, feat.id);
-    if (levelChips.length > 0) {
-      detailSections.push({ label: 'Feat Levels', chips: levelChips });
-    }
+    // Build detail sections (Type, Category, Tags, Requirements) — shared builder. (DUP-10)
+    const detailSections = buildFeatDetailSections(feat, skillIdToName, familyLevels, { isCharacterFeat });
 
     return (
       <GridListRow
@@ -545,11 +508,6 @@ export function FeatsStep() {
         <div>
           <div className="flex items-center gap-1 mb-2">
             <h2 className="text-2xl font-bold text-text-primary">Select Feats</h2>
-            <ContextHelpTooltip
-              tooltipKey="characters.new.step.feats.selectionHelp"
-              scope="page:/characters/new"
-              label="Feat selection help"
-            />
           </div>
           <p className="text-text-secondary">
             Choose feats that grant special abilities and bonuses. Your archetype 
@@ -571,16 +529,16 @@ export function FeatsStep() {
         <div className={cn(
           'p-4 rounded-xl border-2',
           selectedArchetypeFeats.length === maxArchetypeFeats
-            ? 'bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-600/50'
-            : 'bg-amber-50 dark:bg-amber-900/30 border-amber-300 dark:border-amber-600/50'
+            ? statusPanel.complete
+            : statusPanel.warning
         )}>
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-bold text-text-primary">Archetype Feats</h3>
             <span className={cn(
               'px-3 py-1 rounded-full text-sm font-bold',
               selectedArchetypeFeats.reduce((sum, f) => sum + getFeatLevel(featById.get(String(f.id))), 0) === maxArchetypeFeats
-                ? 'bg-green-200 text-green-800 dark:bg-green-900/40 dark:text-green-300'
-                : 'bg-amber-200 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300'
+                ? statusPanel.completeBadge
+                : statusPanel.warningBadge
             )}>
               {selectedArchetypeFeats.reduce((sum, f) => sum + getFeatLevel(featById.get(String(f.id))), 0)} / {maxArchetypeFeats}
             </span>
@@ -595,25 +553,25 @@ export function FeatsStep() {
                 const fullFeat = feats?.find(f => String(f.id) === String(feat.id));
                 const displayName = fullFeat ? formatFeatName(fullFeat) : feat.name;
                 return (
-                  <div key={feat.id} className="rounded-lg border border-amber-200 bg-white overflow-hidden max-w-md">
+                  <div key={feat.id} className="rounded-lg border border-warning-300 bg-surface overflow-hidden max-w-md">
                     <div className="px-3 py-1.5 flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => setExpandedSelectedId(isExpanded ? null : key)}
-                        className="text-amber-700 font-medium text-sm text-left flex-1 truncate"
+                        className="text-warning-fg font-medium text-sm text-left flex-1 truncate"
                       >
                         {displayName}
                       </button>
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); updateDraft({ feats: draft.feats?.filter(f => f.id !== feat.id) }); }}
-                        className="text-danger dark:text-danger-400 hover:text-danger-600 dark:hover:text-danger-300 font-bold flex-shrink-0 min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)]"
+                        className="text-danger-fg hover:opacity-80 font-bold flex-shrink-0 min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)]"
                       >
                         ×
                       </button>
                     </div>
                     {isExpanded && feat.description && (
-                      <div className="px-3 pb-2 pt-0 text-xs text-text-secondary border-t border-amber-100">
+                      <div className="px-3 pb-2 pt-0 text-xs text-text-secondary border-t border-warning-300">
                         {feat.description}
                       </div>
                     )}
@@ -628,16 +586,16 @@ export function FeatsStep() {
         <div className={cn(
           'p-4 rounded-xl border-2',
           selectedCharacterFeats.length === maxCharacterFeats
-            ? 'bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-600/50'
-            : 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-600/50'
+            ? statusPanel.complete
+            : statusPanel.info
         )}>
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-bold text-text-primary">Character Feats</h3>
             <span className={cn(
               'px-3 py-1 rounded-full text-sm font-bold',
               selectedCharacterFeats.reduce((sum, f) => sum + getFeatLevel(featById.get(String(f.id))), 0) === maxCharacterFeats
-                ? 'bg-green-200 text-green-800 dark:bg-green-900/40 dark:text-green-300'
-                : 'bg-blue-200 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300'
+                ? statusPanel.completeBadge
+                : statusPanel.infoBadge
             )}>
               {selectedCharacterFeats.reduce((sum, f) => sum + getFeatLevel(featById.get(String(f.id))), 0)} / {maxCharacterFeats}
             </span>
@@ -652,25 +610,25 @@ export function FeatsStep() {
                 const fullFeat = feats?.find(f => String(f.id) === String(feat.id));
                 const displayName = fullFeat ? formatFeatName(fullFeat) : feat.name;
                 return (
-                  <div key={feat.id} className="rounded-lg border border-blue-200 dark:border-blue-800 bg-white dark:bg-surface-alt overflow-hidden max-w-md">
+                  <div key={feat.id} className="rounded-lg border border-info-border bg-surface overflow-hidden max-w-md">
                     <div className="px-3 py-1.5 flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => setExpandedSelectedId(isExpanded ? null : key)}
-                        className="text-blue-700 dark:text-blue-300 font-medium text-sm text-left flex-1 truncate"
+                        className="text-info-fg font-medium text-sm text-left flex-1 truncate"
                       >
                         {displayName}
                       </button>
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); updateDraft({ feats: draft.feats?.filter(f => f.id !== feat.id) }); }}
-                        className="text-danger dark:text-danger-400 hover:text-danger-600 dark:hover:text-danger-300 font-bold flex-shrink-0 min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)]"
+                        className="text-danger-fg hover:opacity-80 font-bold flex-shrink-0 min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)]"
                       >
                         ×
                       </button>
                     </div>
                     {isExpanded && feat.description && (
-                      <div className="px-3 pb-2 pt-0 text-xs text-text-secondary border-t border-blue-100 dark:border-blue-800">
+                      <div className="px-3 pb-2 pt-0 text-xs text-text-secondary border-t border-info-border">
                         {feat.description}
                       </div>
                     )}
@@ -685,14 +643,14 @@ export function FeatsStep() {
       {/* Toggle row: path toggle (left), archetype/character toggle (right, only when showing all feats) */}
       <div className="flex flex-wrap items-center gap-3 gap-y-1 mb-4">
         {draft.creationMode === 'path' && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => setUsePathRecommendations((value) => !value)}
               className={cn(
-                'px-4 py-2 rounded-lg border text-sm font-semibold transition-colors',
+                'px-4 py-2 rounded-lg border text-sm font-semibold transition-colors min-h-[44px]',
                 usePathRecommendations
-                  ? 'bg-success-50 dark:bg-success-900/30 border-success-300 dark:border-success-600/50 text-success-700 dark:text-success-300'
+                  ? 'bg-success-50 dark:bg-success-900/30 border-success-300 dark:border-success-600/50 text-success-fg'
                   : 'bg-surface border-border-light text-text-secondary hover:bg-surface-alt'
               )}
             >
@@ -700,6 +658,18 @@ export function FeatsStep() {
                 ? `Showing ${draft.archetype?.name ?? 'Path'} Feats`
                 : 'Choose My Own Feats'}
             </button>
+            {recommendedFeatRefs.size > 0 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={applyRecommendedPathFeats}
+                className="min-h-[44px]"
+                aria-label="Apply recommended path feats"
+              >
+                Apply recommended feats
+              </Button>
+            )}
             <span className="text-xs text-text-muted dark:text-text-secondary">
               {usePathRecommendations ? 'Click to show all feats' : 'Click to show path feats'}
             </span>
@@ -742,9 +712,11 @@ export function FeatsStep() {
                 renderFeatRow(displayFeat, familyLevels, false)
               )}
               {pathModeArchetypeFeats.length === 0 && (
-                <div className="text-center py-4 text-text-muted dark:text-text-secondary bg-surface-alt rounded-lg">
-                  No recommended archetype feats for this path in codex.
-                </div>
+                <EmptyState
+                  title="No recommended archetype feats for this path in codex."
+                  size="sm"
+                  className="bg-surface-alt rounded-lg py-4"
+                />
               )}
             </div>
           </section>
@@ -766,9 +738,11 @@ export function FeatsStep() {
                 renderFeatRow(displayFeat, familyLevels, true)
               )}
               {pathModeCharacterFeats.length === 0 && (
-                <div className="text-center py-4 text-text-muted dark:text-text-secondary bg-surface-alt rounded-lg">
-                  No recommended character feats for this path in codex.
-                </div>
+                <EmptyState
+                  title="No recommended character feats for this path in codex."
+                  size="sm"
+                  className="bg-surface-alt rounded-lg py-4"
+                />
               )}
             </div>
           </section>
@@ -811,7 +785,7 @@ export function FeatsStep() {
                   className={cn(
                     'w-full px-3 py-2 rounded-lg border text-sm font-medium transition-colors text-left',
                     filters.hideUnqualified
-                      ? 'bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-600/50 text-green-700 dark:text-green-300'
+                      ? cn(statusPanel.complete, 'text-success-fg')
                       : 'bg-surface border-border-light text-text-secondary hover:bg-surface-alt'
                   )}
                 >
@@ -837,36 +811,26 @@ export function FeatsStep() {
                 renderFeatRow(displayFeat, familyLevels, !!displayFeat.char_feat)
               )}
               {groupedDisplayFeats.length === 0 && (
-                <div className="text-center py-4 text-text-muted bg-surface-alt rounded-lg">
-                  No feats match your filters.
-                  {filters.hideUnqualified && (
-                    <button
-                      onClick={() => setFilters(f => ({ ...f, hideUnqualified: false }))}
-                      className="block mx-auto mt-2 text-primary-600 hover:underline"
-                    >
-                      Show unqualified feats
-                    </button>
-                  )}
-                </div>
+                <EmptyState
+                  title="No feats match your filters."
+                  size="sm"
+                  className="bg-surface-alt rounded-lg py-4"
+                  secondaryAction={
+                    filters.hideUnqualified
+                      ? {
+                          label: 'Show unqualified feats',
+                          onClick: () => setFilters((f) => ({ ...f, hideUnqualified: false })),
+                        }
+                      : undefined
+                  }
+                />
               )}
             </div>
           </div>
         </>
       )}
       
-      <div className="flex justify-between">
-        <Button
-          variant="secondary"
-          onClick={prevStep}
-        >
-          ← Back
-        </Button>
-        <Button
-          onClick={nextStep}
-        >
-          Continue →
-        </Button>
-      </div>
+      <CreatorStepFooter onBack={prevStep} onContinue={nextStep} continueDisabled={!canContinue} />
     </div>
   );
 }

@@ -9,46 +9,27 @@ import type {
   CraftingSessionSummary,
   CraftingSessionData,
 } from '@/types/crafting';
-import { apiFetch } from '@/lib/api-client';
+import { createResourceClient } from './resource-client';
 
-const API_BASE = '/api/crafting';
+const client = createResourceClient<
+  CraftingSession,
+  CraftingSessionSummary,
+  CraftingSessionData,
+  Partial<CraftingSessionData>
+>('/api/crafting');
 
-export async function getCraftingSessions(): Promise<CraftingSessionSummary[]> {
-  return apiFetch<CraftingSessionSummary[]>(API_BASE);
-}
+export const getCraftingSessions = (): Promise<CraftingSessionSummary[]> => client.list();
 
-export async function getCraftingSession(sessionId: string): Promise<CraftingSession | null> {
-  const res = await fetch(`${API_BASE}/${encodeURIComponent(sessionId)}`);
-  if (res.status === 404) return null;
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error((err as { error?: string }).error ?? 'Request failed');
-  }
-  return res.json();
-}
+export const getCraftingSession = (sessionId: string): Promise<CraftingSession | null> =>
+  client.get(sessionId);
 
-export async function createCraftingSession(
-  data: CraftingSessionData
-): Promise<string> {
-  const result = await apiFetch<{ id: string }>(API_BASE, {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
-  return result.id;
-}
+export const createCraftingSession = (data: CraftingSessionData): Promise<string> =>
+  client.create(data);
 
-export async function saveCraftingSession(
+export const saveCraftingSession = (
   sessionId: string,
   data: Partial<CraftingSessionData>
-): Promise<void> {
-  await apiFetch<void>(`${API_BASE}/${encodeURIComponent(sessionId)}`, {
-    method: 'PATCH',
-    body: JSON.stringify(data),
-  });
-}
+): Promise<void> => client.save(sessionId, data);
 
-export async function deleteCraftingSession(sessionId: string): Promise<void> {
-  await apiFetch<void>(`${API_BASE}/${encodeURIComponent(sessionId)}`, {
-    method: 'DELETE',
-  });
-}
+export const deleteCraftingSession = (sessionId: string): Promise<void> =>
+  client.remove(sessionId);

@@ -21,7 +21,6 @@ import { useCodexSkills, type Skill } from '@/hooks';
 import {
   calculateSkillBonusWithProficiency,
   calculateSubSkillBonusWithProficiency,
-  calculateSkillPointsForEntity,
   getLinkedAbilityKeys,
   getHighestLinkedAbilityKey,
 } from '@/lib/game/formulas';
@@ -30,14 +29,15 @@ import {
   getSkillValueIncreaseCost,
   calculateSimpleSkillPointsSpent,
   canIncreaseDefense,
+  resolveSkillAllocationRules,
 } from '@/lib/game/skill-allocation';
+import { useGameRules } from '@/hooks';
 import { formatBonus } from '@/lib/utils';
-import { ContextHelpTooltip, SkillRow } from '@/components/shared';
-import { Button, Spinner, Alert } from '@/components/ui';
+import { SkillRow } from '@/components/shared';
+import { Button, Spinner, Alert, Card, PageHeader, TableScroll } from '@/components/ui';
 import { PointStatus } from '@/components/shared';
 import { AddSkillModal, AddSubSkillModal } from '@/components/shared';
 import type { Abilities, DefenseSkills } from '@/types';
-import { DEFAULT_DEFENSE_SKILLS } from '@/types';
 
 const DEFENSE_KEYS: (keyof DefenseSkills)[] = [
   'might',
@@ -115,10 +115,14 @@ export function SkillsAllocationPage({
   onSkillAbilityChange,
   footer,
   afterDescription,
+  headingAddon,
+  addSubSkillAddon,
   hideDefenseBonuses = false,
   className,
 }: SkillsAllocationPageProps) {
   const { data: allSkills = [], isLoading } = useCodexSkills();
+  const { rules } = useGameRules();
+  const skillRules = resolveSkillAllocationRules(rules);
   const [addSkillModalOpen, setAddSkillModalOpen] = useState(false);
   const [addSubSkillModalOpen, setAddSubSkillModalOpen] = useState(false);
 
@@ -138,20 +142,21 @@ export function SkillsAllocationPage({
         allocations,
         speciesSkillIds,
         skillMeta,
-        defenseSkills
+        defenseSkills,
+        skillRules
       ),
-    [allocations, speciesSkillIds, skillMeta, defenseSkills]
+    [allocations, speciesSkillIds, skillMeta, defenseSkills, skillRules]
   );
 
   const remainingPoints = totalPoints - spentPoints;
 
-  const { subSkillsByBase, orderedSkills } = useMemo(() => {
+  const orderedSkills = useMemo(() => {
     const subsByBase: Record<string, Skill[]> = {};
     const inList = (id: string | number) => {
       const key = String(id);
       return (speciesSkillIds.has(key) && key !== '0') || key in allocations;
     };
-    if (!allSkills.length) return { subSkillsByBase: subsByBase, orderedSkills: [] as Skill[] };
+    if (!allSkills.length) return [] as Skill[];
 
     allSkills.forEach((s: Skill) => {
       if (s.base_skill_id !== undefined) {
@@ -174,7 +179,7 @@ export function SkillsAllocationPage({
       subsInList.sort((a: Skill, b: Skill) => String(a.name ?? '').localeCompare(String(b.name ?? '')));
       result.push(...subsInList);
     });
-    return { subSkillsByBase: subsByBase, orderedSkills: result };
+    return result;
   }, [allSkills, speciesSkillIds, allocations]);
 
   const existingSkillIds = useMemo(
@@ -197,8 +202,9 @@ export function SkillsAllocationPage({
   const handleRemoveSkill = useCallback(
     (skillId: string) => {
       if (speciesSkillIds.has(skillId)) return;
-      const { [skillId]: _, ...rest } = allocations;
-      onAllocationsChange(rest);
+      const next = { ...allocations };
+      delete next[skillId];
+      onAllocationsChange(next);
     },
     [allocations, speciesSkillIds, onAllocationsChange]
   );
@@ -213,7 +219,7 @@ export function SkillsAllocationPage({
       const isSpecies = speciesSkillIds.has(skillId);
 
       if (delta > 0) {
-        const cost = getSkillValueIncreaseCost(current, isSubSkill);
+        const cost = getSkillValueIncreaseCost(current, isSubSkill, skillRules);
         if (remainingPoints < cost) return;
         onAllocationsChange({ ...allocations, [skillId]: current + 1 });
       } else {
@@ -228,7 +234,7 @@ export function SkillsAllocationPage({
         }
       }
     },
-    [allocations, allSkills, speciesSkillIds, remainingPoints, onAllocationsChange, handleRemoveSkill]
+    [allocations, allSkills, speciesSkillIds, remainingPoints, onAllocationsChange, handleRemoveSkill, skillRules]
   );
 
   const handleAddSkills = useCallback(
@@ -268,13 +274,13 @@ export function SkillsAllocationPage({
         const abilityBonus = abilityDefenseBonuses[key] ?? 0;
         const totalBonus = current + abilityBonus;
         if (totalBonus >= level) return;
-        if (remainingPoints < 2) return;
+        if (remainingPoints < skillRules.defenseIncreaseCost) return;
         onDefenseChange({ ...defenseSkills, [key]: current + 1 });
       } else if (current > 0) {
         onDefenseChange({ ...defenseSkills, [key]: current - 1 });
       }
     },
-    [defenseSkills, level, remainingPoints, abilityDefenseBonuses, onDefenseChange]
+    [defenseSkills, level, remainingPoints, abilityDefenseBonuses, onDefenseChange, skillRules]
   );
 
   const getSkillBonus = useCallback(
@@ -309,28 +315,25 @@ export function SkillsAllocationPage({
 
   return (
     <div className={cn('max-w-5xl mx-auto', className)}>
-      <div className="flex flex-nowrap items-start justify-between gap-4 mb-6">
-        <div className="min-w-0">
-          <div className="flex items-center gap-1 mb-2">
-            <h1 className="text-2xl font-bold text-text-primary">Allocate Skills</h1>
-            <ContextHelpTooltip
-              tooltipKey="characters.new.step.skills.pointsHelp"
-              scope="page:/characters/new"
-              label="Skill point rules"
-              context={{ level, entityType }}
-            />
-          </div>
-          <p className="text-text-secondary">
+      <PageHeader
+        title={
+          <span className="inline-flex items-center gap-1">
+            Allocate Skills
+            {headingAddon}
+          </span>
+        }
+        size="sm"
+        className="mb-6"
+        actions={<PointStatus total={totalPoints} spent={spentPoints} variant="compact" />}
+        description={
+          <>
             Spend Skill points to gain proficiency, increase Skill values, or boost defenses.
             Species Skills are always proficient and cannot be removed.
             {speciesSkillIds.has('0') && ' Species option "Any" gives one extra Skill point.'}
-          </p>
-          {afterDescription != null && <div className="mt-4">{afterDescription}</div>}
-        </div>
-        <span className="shrink-0 whitespace-nowrap">
-          <PointStatus total={totalPoints} spent={spentPoints} variant="compact" />
-        </span>
-      </div>
+            {afterDescription != null && <div className="mt-4">{afterDescription}</div>}
+          </>
+        }
+      />
 
       {/* Add Skill / Add Sub-Skill — disabled when no points */}
       <div className="flex gap-3 mb-6">
@@ -355,17 +358,13 @@ export function SkillsAllocationPage({
             <Plus size={14} />
             Add Sub-Skill
           </Button>
-          <ContextHelpTooltip
-            tooltipKey="characters.new.step.skills.subskillsHelp"
-            scope="page:/characters/new"
-            label="Sub-skill help"
-          />
+          {addSubSkillAddon}
         </span>
       </div>
 
       {/* Single flat Skills table — same layout as character sheet (Prof, Skill, Ability, Bonus, Value) */}
-      <div className="bg-surface rounded-xl shadow-md overflow-hidden mb-8">
-        <div className="overflow-x-auto">
+      <Card className="shadow-md overflow-hidden mb-8 p-0">
+        <TableScroll>
           <table className="w-full text-sm">
             <thead>
               <tr className="text-xs text-text-muted uppercase tracking-wider border-b-2 border-border-light">
@@ -399,8 +398,15 @@ export function SkillsAllocationPage({
                   ? getSubSkillBonus(skill, effectiveValue, baseValue, baseProficient, proficient, chosenAbilityKey)
                   : getSkillBonus(skill, effectiveValue, proficient, chosenAbilityKey);
                 const canInc = isSubSkill
-                  ? baseProficient && remainingPoints >= (effectiveValue === 0 ? 1 : getSkillValueIncreaseCost(effectiveValue, true))
-                  : remainingPoints >= (effectiveValue === 0 ? 1 : getSkillValueIncreaseCost(effectiveValue, false));
+                  ? baseProficient &&
+                    remainingPoints >=
+                      (effectiveValue === 0
+                        ? skillRules.gainProficiencyCost
+                        : getSkillValueIncreaseCost(effectiveValue, true, skillRules))
+                  : remainingPoints >=
+                      (effectiveValue === 0
+                        ? skillRules.gainProficiencyCost
+                        : getSkillValueIncreaseCost(effectiveValue, false, skillRules));
                 const hasMultipleAbilities = linkedKeys.length > 1;
                 return (
                   <SkillRow
@@ -429,27 +435,27 @@ export function SkillsAllocationPage({
               })}
             </tbody>
           </table>
-        </div>
+        </TableScroll>
         {orderedSkills.length === 0 && (
           <div className="text-center py-8 text-text-muted dark:text-text-secondary">
             No Skills added yet. Use &quot;Add Skill&quot; or &quot;Add Sub-Skill&quot; (need at least 1 Skill point).
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Defense allocation — hidden for choose-a-path (advanced option) */}
       {!hideDefenseBonuses && (
-      <div className="bg-surface rounded-xl shadow-md p-4 mb-8">
+      <Card className="shadow-md p-4 mb-8">
         <h2 className="text-lg font-semibold text-text-primary mb-2 uppercase tracking-wide">Defense Bonuses</h2>
         <p className="text-sm text-text-muted dark:text-text-secondary mb-4">
-          Spend 2 Skill points to increase a defense bonus by 1. Defense bonus from Skill points cannot exceed your level.
+          Spend {skillRules.defenseIncreaseCost} Skill points to increase a defense bonus by 1. Defense bonus from Skill points cannot exceed your level.
         </p>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {DEFENSE_KEYS.map((key) => {
             const current = defenseSkills[key] ?? 0;
             const abilityBonus = abilityDefenseBonuses[key] ?? 0;
             const totalBonus = abilityBonus + current;
-            const canInc = canIncreaseDefense(current, level, abilityBonus, remainingPoints);
+            const canInc = canIncreaseDefense(current, level, abilityBonus, remainingPoints, skillRules);
             return (
               <div
                 key={key}
@@ -464,28 +470,28 @@ export function SkillsAllocationPage({
                   >
                     −
                   </button>
-                  <span className="text-sm font-bold min-w-9 text-center text-primary-600 dark:text-primary-400">
+                  <span className="text-sm font-bold min-w-[36px] text-center text-primary-link-fg">
                     {formatBonus(totalBonus)}
                   </span>
                   <button
                     onClick={() => handleDefenseChange(key, 1)}
                     disabled={!canInc}
                     className="w-6 h-6 rounded flex items-center justify-center text-sm font-bold bg-surface hover:bg-surface-alt disabled:opacity-50"
-                    title={canInc ? 'Cost: 2 Skill points' : `Max at level ${level}`}
+                    title={canInc ? `Cost: ${skillRules.defenseIncreaseCost} Skill points` : `Max at level ${level}`}
                   >
                     +
                   </button>
                 </div>
                 {current > 0 && (
-                  <span className="text-[9px] text-primary-600 dark:text-primary-400 font-medium mt-0.5">
-                    +{current} ({current * 2}sp)
+                  <span className="text-[9px] text-primary-link-fg font-medium mt-0.5">
+                    +{current} ({current * skillRules.defenseIncreaseCost}sp)
                   </span>
                 )}
             </div>
           );
         })}
         </div>
-      </div>
+      </Card>
       )}
 
       {allSkills.length === 0 && (
@@ -494,7 +500,11 @@ export function SkillsAllocationPage({
         </Alert>
       )}
 
-      {footer && <div className="flex justify-between mt-6">{footer}</div>}
+      {footer && (
+        <div className="sticky bottom-3 left-0 right-0 z-sticky mt-6 flex justify-between gap-4 bg-background/95 backdrop-blur rounded-xl shadow-lg py-3 px-4 -mx-4 md:mx-0">
+          {footer}
+        </div>
+      )}
 
       <AddSkillModal
         isOpen={addSkillModalOpen}

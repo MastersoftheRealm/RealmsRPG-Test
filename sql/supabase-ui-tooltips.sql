@@ -26,12 +26,15 @@ CREATE INDEX IF NOT EXISTS idx_ui_tooltips_enabled ON public.ui_tooltips(enabled
 CREATE INDEX IF NOT EXISTS idx_ui_tooltips_audience ON public.ui_tooltips(audience);
 
 CREATE OR REPLACE FUNCTION public.set_ui_tooltips_updated_at()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
 BEGIN
   NEW.updated_at = now();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 DROP TRIGGER IF EXISTS trigger_ui_tooltips_updated_at ON public.ui_tooltips;
 CREATE TRIGGER trigger_ui_tooltips_updated_at

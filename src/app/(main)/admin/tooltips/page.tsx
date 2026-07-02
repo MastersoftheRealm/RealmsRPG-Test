@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Button, Input, Modal, PageContainer, PageHeader, Spinner, Textarea, Alert } from '@/components/ui';
+import { Button, Input, Modal, PageContainer, PageHeader, LoadingState, EmptyState, Textarea, Alert, TableScroll } from '@/components/ui';
+import { ErrorDisplay } from '@/components/shared';
 import { apiFetch } from '@/lib/api-client';
 import { interpolateTooltipTemplate } from '@/lib/tooltips/interpolate';
 import { renderMarkdownLite } from '@/lib/tooltips/markdown-lite';
@@ -225,13 +226,11 @@ export default function AdminTooltipsPage() {
       </div>
 
       {query.isLoading ? (
-        <div className="flex items-center justify-center py-20">
-          <Spinner size="lg" />
-        </div>
+        <LoadingState size="lg" padding="lg" />
       ) : query.error ? (
-        <Alert variant="danger">{query.error.message}</Alert>
+        <ErrorDisplay message={query.error.message || 'Failed to load tooltips'} onRetry={() => { void query.refetch(); }} />
       ) : (
-        <div className="rounded-lg border border-border bg-surface overflow-x-auto">
+        <TableScroll className="rounded-lg border border-border bg-surface">
           <table className="w-full text-sm">
             <thead className="bg-surface-alt border-b border-border">
               <tr>
@@ -263,14 +262,14 @@ export default function AdminTooltipsPage() {
               ))}
               {filteredRows.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-text-muted dark:text-text-secondary">
-                    No tooltips found.
+                  <td colSpan={5}>
+                    <EmptyState title="No tooltips found." size="sm" />
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
-        </div>
+        </TableScroll>
       )}
 
       <Modal

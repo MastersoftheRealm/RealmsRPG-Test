@@ -9,7 +9,7 @@
 'use client';
 
 import { useAuth } from '@/hooks';
-import { LoadingState, PageContainer } from '@/components/ui';
+import { LoadingState, PageContainer, PageHeader, Card } from '@/components/ui';
 import { ContextHelpTooltip } from '@/components/shared';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import {
@@ -57,21 +57,24 @@ export default function CharacterCreatorPage() {
   return (
     <div className="min-h-screen bg-background py-6">
       <PageContainer size="xl">
-        <div className="mb-6">
-          <div className="flex items-center gap-1">
-            <h1 className="text-3xl font-bold text-text-primary">Create New Character</h1>
-            <ContextHelpTooltip tooltipKey="characters.new.overview" scope="page:/characters/new" label="Character creation help" />
-          </div>
-          <p className="text-text-secondary mt-1">
-            Step {stepIndex} of {totalSteps}. Follow the steps below to build your character.
-          </p>
-        </div>
+        <PageHeader
+          title="Create New Character"
+          description={`Step ${stepIndex} of ${totalSteps}. Follow the steps below to build your character.`}
+          className="mb-6"
+          actions={
+            <ContextHelpTooltip
+              tooltipKey="characters.new.overview"
+              scope="page:/characters/new"
+              label="Character creation help"
+            />
+          }
+        />
         
         <CreatorTabBar />
         
-        <div className="bg-surface rounded-xl shadow-md p-6 md:p-8">
+        <Card className="shadow-md p-6 md:p-8">
           <StepComponent />
-        </div>
+        </Card>
       </PageContainer>
     </div>
   );

@@ -40,6 +40,17 @@ Do **not** strip ListHeader chrome with `className="border-0 rounded-none bg-tra
 
 Use semantic tokens, not raw colors: `bg-surface`, `bg-background`, `bg-surface-alt`, `text-text-primary`, `text-text-secondary`, `text-text-muted`, `border-border-light`, `border-border`. Exception: auth (`(auth)/`, `components/auth/`) may use `gray-*` for the dark auth shell. Outside auth, prefer tokens; migrate stray `gray-*` when editing a file.
 
+## Search before you build (preflight — do this first)
+
+Before creating **any** new component, hook, service, API route, or util, confirm it doesn't already exist:
+
+1. Check `src/docs/ai/FEATURE_INDEX.md` (feature → file map).
+2. Grep the barrels: `src/components/shared/index.ts`, `src/components/ui/index.ts`, `src/hooks/index.ts`, `src/services/index.ts`.
+3. Grep `src/lib/` for calculators/formulas/utils by keyword.
+4. If something similar exists, **extend it with a prop/variant** rather than forking a parallel copy.
+
+This is the main guardrail against re-implementation — the most common multi-agent failure mode in this repo (e.g. parallel `Library*Tab` vs `AdminPublic*Tab`, duplicate load hooks, duplicate official/public APIs).
+
 ## Before adding a new component
 
-Search `src/components/shared/index.ts` and this table. Prefer extending shared components with props/variants over creating new ones. If you duplicate `flex … p-1 rounded-lg bg-surface-alt` + multiple buttons, use **SegmentedControl** instead.
+Search `src/components/shared/index.ts` and the table above. Prefer extending shared components with props/variants over creating new ones. If you duplicate `flex … p-1 rounded-lg bg-surface-alt` + multiple buttons, use **SegmentedControl** instead.

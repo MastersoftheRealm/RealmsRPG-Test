@@ -5,7 +5,7 @@
  */
 
 export { cn } from './cn';
-export { formatActionTypeForDisplay } from './action-type';
+export { formatActionTypeForDisplay, formatSavedActionTypeForDisplay } from './action-type';
 export * from './string';
 export * from './number';
 export * from './object';

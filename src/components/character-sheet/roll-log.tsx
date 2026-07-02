@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils/cn';
 import { Minus, Plus, Trash2, Users, User } from 'lucide-react';
 import { useRolls, type RollEntry, type RollType, type DieResult } from './roll-context';
 import { useCampaignRolls } from '@/hooks/use-campaign-rolls';
+import { LoadingState, EmptyState, Card } from '@/components/ui';
 import type { CampaignRollEntry } from '@/types/campaign-roll';
 
 // Re-export types for convenience
@@ -40,7 +41,7 @@ const DIE_IMAGES: Record<DieType, string> = {
 const ROLL_TYPE_COLORS: Record<RollType, string> = {
   attack: 'border-l-danger-500',
   damage: 'border-l-martial-dark',
-  skill: 'border-l-primary-500',
+  skill: 'border-l-primary-outline-border',
   ability: 'border-l-power-dark',
   defense: 'border-l-info-500',
   custom: 'border-l-border',
@@ -64,7 +65,7 @@ function generateRollId(): string {
   return `roll-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
-/** Normalize roll timestamp from API (Date serialized as ISO string), Firestore ({ seconds }), or Date to a Date. */
+/** Normalize roll timestamp from API (Date serialized as ISO string), legacy ({ seconds }), or Date to a Date. */
 function normalizeRollTimestamp(
   timestamp: Date | string | { seconds: number; nanoseconds?: number } | unknown
 ): Date {
@@ -231,18 +232,18 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
   const totalDice = Object.values(dicePool).reduce((a, b) => a + b, 0);
 
   return (
-    <div className={cn('fixed bottom-5 right-5 z-[1000] flex flex-col items-end', className)}>
+    <div className={cn('fixed bottom-5 right-5 z-floating flex flex-col items-end', className)}>
       {/* Panel */}
-      <div
+      <Card
         className={cn(
           'absolute bottom-[70px] right-0 w-[360px] max-w-[calc(100vw-40px)]',
-          'bg-surface rounded-xl shadow-2xl overflow-hidden',
-          'flex flex-col transition-all duration-300',
+          'shadow-2xl overflow-hidden p-0',
+          'flex flex-col transition-all duration-slow ease-standard',
           isOpen ? 'h-[70vh] max-h-[600px] opacity-100' : 'h-0 opacity-0 pointer-events-none'
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-primary-700 text-white">
+        <div className="flex items-center justify-between px-4 py-3 bg-primary-button text-white">
           <div className="flex items-center gap-2">
             <h3 className="font-bold text-base tracking-wide">🎲 Roll Log</h3>
             {campaignId && (
@@ -284,10 +285,10 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
         {/* Roll History */}
         <div ref={listRef} className="flex-1 overflow-y-auto p-2 bg-surface-alt">
           {isCampaignMode && campaignRollsLoading && campaignRolls.length === 0 && !campaignRollsFailed ? (
-            <p className="text-center text-text-muted dark:text-text-secondary italic py-10">Loading campaign rolls…</p>
+            <LoadingState message="Loading campaign rolls…" size="md" padding="sm" />
           ) : isCampaignMode && campaignRollsFailed ? (
             <div className="py-6 px-3 text-center space-y-3">
-              <p className="text-sm text-danger-700 dark:text-danger-400">
+              <p className="text-sm text-danger-fg">
                 Couldn&apos;t load campaign rolls.
                 {campaignRollsError?.message ? (
                   <span className="block mt-1 text-text-secondary dark:text-text-secondary">{campaignRollsError.message}</span>
@@ -296,16 +297,23 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
               <button
                 type="button"
                 onClick={() => void refetchCampaignRolls()}
-                className="min-h-[44px] min-w-[44px] px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700"
+                className="min-h-[44px] min-w-[44px] px-4 py-2 rounded-lg bg-primary-button text-white text-sm font-semibold hover:bg-primary-button-hover"
                 aria-label="Retry loading campaign rolls"
               >
                 Retry
               </button>
             </div>
           ) : displayRolls.length === 0 ? (
-            <p className="text-center text-text-muted dark:text-text-secondary italic py-10">
-              {isCampaignMode ? 'No campaign rolls yet. Rolls from any character sheet will appear here.' : 'No rolls yet. Build your dice pool below!'}
-            </p>
+            <EmptyState
+              title={isCampaignMode ? 'No campaign rolls yet' : 'No rolls yet'}
+              description={
+                isCampaignMode
+                  ? 'Rolls from any character sheet will appear here.'
+                  : 'Build your dice pool below!'
+              }
+              size="sm"
+              className="py-10"
+            />
           ) : (
             displayRolls.map((roll) => (
               <RollEntryCard
@@ -318,7 +326,7 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
         </div>
 
         {/* Dice Builder - visible in both Personal and Campaign tabs so users can send custom rolls to campaign */}
-        <div className="p-3 bg-primary-700 border-t-2 border-border-light">
+        <div className="p-3 bg-primary-button border-t-2 border-border-light">
           {/* Dice Grid - clickable images with labels and counts */}
           <div className="grid grid-cols-6 gap-1.5 mb-3">
             {(['d4', 'd6', 'd8', 'd10', 'd12', 'd20'] as DieType[]).map((die) => (
@@ -382,7 +390,7 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
             )}
           </div>
 
-          {/* Roll Button - solid green matching btn-solid style */}
+          {/* Roll Button */}
           <button
             onClick={executeRoll}
             disabled={totalDice === 0}
@@ -395,16 +403,16 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
             {totalDice > 0 ? `Roll ${totalDice} ${totalDice === 1 ? 'die' : 'dice'}` : 'Select dice to roll'}
           </button>
         </div>
-      </div>
+      </Card>
 
       {/* Toggle Button - custom d20 image matching vanilla site */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'w-14 h-14 rounded-full shadow-lg transition-all duration-300',
+          'w-14 h-14 rounded-full shadow-lg transition-all duration-slow ease-standard',
           'flex items-center justify-center',
-          'bg-primary-600 text-white hover:bg-primary-700 hover:scale-110 active:scale-95',
-          isOpen && 'bg-primary-800'
+          'bg-primary-button text-white hover:bg-primary-button-hover hover:scale-110 active:scale-95',
+          isOpen && 'bg-primary-button-hover'
         )}
         aria-label={isOpen ? 'Close roll log' : 'Open roll log'}
       >
@@ -455,11 +463,11 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
           <span className="text-sm flex-shrink-0">{ROLL_TYPE_ICONS[roll.type as RollType]}</span>
           <div className="min-w-0">
             {characterName && (
-              <span className="block text-xs font-medium text-primary-600 dark:text-primary-400 truncate" title={characterName}>
+              <span className="block text-xs font-medium text-primary-link-fg truncate" title={characterName}>
                 {characterName}
               </span>
             )}
-            <span className="font-semibold text-sm text-primary-dark dark:text-primary-200 truncate block">{roll.title}</span>
+            <span className="font-semibold text-sm text-primary-fg truncate block">{roll.title}</span>
           </div>
         </div>
         <span className="text-[10px] text-text-secondary flex-shrink-0 ml-1" title={timestampStr}>
@@ -490,13 +498,13 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
                   die.type === 'd20'
                     ? cn(
                         'border',
-                        die.isMax && 'bg-success-100 border-success-500 text-success-800',
-                        die.isMin && 'bg-danger-100 border-danger-500 text-danger-800',
+                        die.isMax && 'bg-success-100 border-success-500 text-success-fg',
+                        die.isMin && 'bg-danger-100 border-danger-500 text-danger-fg',
                         !die.isMax && !die.isMin && 'bg-surface-alt dark:bg-neutral-800 text-text-secondary dark:text-text-primary border-border-light'
                       )
                     : cn(
-                        die.isMax ? 'bg-success-100 border border-success-400 text-success-800' :
-                        die.isMin ? 'bg-danger-100 border border-danger-400 text-danger-800' :
+                        die.isMax ? 'bg-success-100 border border-success-400 text-success-fg' :
+                        die.isMin ? 'bg-danger-100 border border-danger-400 text-danger-fg' :
                         'bg-surface-alt dark:bg-neutral-800 text-text-secondary dark:text-text-primary border border-border-light'
                       )
                 )}
@@ -514,8 +522,8 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
             <span className={cn(
               'inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold border',
               roll.modifier >= 0
-                ? 'bg-success-50 text-success-700 border-success-200'
-                : 'bg-danger-50 text-danger-700 border-danger-200'
+                ? 'bg-success-50 text-success-fg border-success-200'
+                : 'bg-danger-50 text-danger-fg border-danger-200'
             )}>
               {roll.modifier >= 0 ? roll.modifier : -roll.modifier}
             </span>
@@ -528,9 +536,9 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
             <span className="text-text-muted dark:text-text-secondary text-xs">=</span>
             <span className={cn(
               'inline-flex items-center px-2 py-0.5 rounded text-sm font-bold',
-              roll.isCrit && 'bg-success-100 border border-success-400 text-success-800',
-              roll.isCritFail && 'bg-danger-100 border border-danger-400 text-danger-800',
-              !roll.isCrit && !roll.isCritFail && 'bg-primary-50 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-700/50 text-primary-700 dark:text-primary-300'
+              roll.isCrit && 'bg-success-100 border border-success-400 text-success-fg',
+              roll.isCritFail && 'bg-danger-100 border border-danger-400 text-danger-fg',
+              !roll.isCrit && !roll.isCritFail && 'bg-primary-subtle-bg border border-primary-subtle-border text-primary-fg'
             )}>
               {roll.total}
             </span>

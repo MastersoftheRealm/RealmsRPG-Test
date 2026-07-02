@@ -28,14 +28,16 @@ export function FilterSection({
   return (
     <div className={cn('mb-6', className)}>
       <Button
+        type="button"
         variant="ghost"
         size="sm"
+        aria-expanded={isExpanded}
         onClick={() => setIsExpanded(!isExpanded)}
         className="mb-4"
       >
-        <Filter className="w-4 h-4" />
+        <Filter className="w-4 h-4" aria-hidden />
         {isExpanded ? <span>Hide Filters</span> : <span>Show Filters</span>}
-        <ChevronDown className={cn('w-4 h-4 transition-transform', isExpanded && 'rotate-180')} />
+        <ChevronDown className={cn('w-4 h-4 transition-transform', isExpanded && 'rotate-180')} aria-hidden />
       </Button>
 
       {isExpanded && (
@@ -47,4 +49,5 @@ export function FilterSection({
   );
 }
 
+export type { FilterSectionProps };
 export default FilterSection;

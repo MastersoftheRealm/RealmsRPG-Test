@@ -50,10 +50,12 @@ export function ThemeToggle({ variant = 'dropdown', className }: ThemeToggleProp
             className={cn(
               'p-2 rounded-md transition-colors',
               theme === value
-                ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-300'
+                ? 'bg-primary-subtle-bg text-primary-subtle-fg'
                 : 'text-text-secondary hover:text-text-primary hover:bg-surface'
             )}
             title={label}
+            aria-label={`${label} theme`}
+            aria-pressed={theme === value}
           >
             <Icon className="w-4 h-4" />
           </button>
@@ -73,14 +75,14 @@ export function ThemeToggle({ variant = 'dropdown', className }: ThemeToggleProp
           className={cn(
             'w-full flex items-center gap-3 px-4 py-2 text-left transition-colors',
             theme === value
-              ? 'bg-primary-50 dark:bg-primary-900/40 text-primary-600 dark:text-primary-300'
+              ? 'bg-primary-subtle-bg text-primary-subtle-fg'
               : 'text-text-secondary hover:bg-surface-alt'
           )}
         >
           <Icon className="w-4 h-4" />
           <span>{label}</span>
           {theme === value && (
-            <span className="ml-auto text-primary-500 dark:text-primary-400">✓</span>
+            <span className="ml-auto text-primary-fg-active">✓</span>
           )}
         </button>
       ))}

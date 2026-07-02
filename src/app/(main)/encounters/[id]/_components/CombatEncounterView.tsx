@@ -9,17 +9,25 @@
 
 import { useState, useCallback, useMemo, useEffect, useRef, DragEvent } from 'react';
 import { cn } from '@/lib/utils';
-import { Button, Checkbox, Input } from '@/components/ui';
+import { apiFetchOrNull } from '@/lib/api-client';
+import { Button, Checkbox, Input, Card, CardContent, EmptyState } from '@/components/ui';
 import { ValueStepper } from '@/components/shared';
 import type { Combatant, CombatantCondition, CombatantType, TrackedCombatant } from '@/types/encounter';
 import type { Encounter } from '@/types/encounter';
-import { CombatantCard } from '@/app/(main)/encounter-tracker/CombatantCard';
-import { CONDITION_OPTIONS } from '@/app/(main)/encounter-tracker/encounter-tracker-constants';
+import { CombatantCard } from '@/components/encounters/CombatantCard';
+import { CONDITION_OPTIONS } from '@/components/encounters/encounter-constants';
 import { AddCombatantModal } from '@/components/shared/add-combatant-modal';
 import { RollLog } from '@/components/character-sheet';
+import { useAuth } from '@/hooks';
 import { createClient } from '@/lib/supabase/client';
 import { computeMaxHealthEnergy } from '@/lib/game/calculations';
-import type { Campaign } from '@/types/campaign';
+import { useGameRules } from '@/hooks';
+import {
+  isOwnedLinkedCombatant,
+  readResourcesFromCharacterData,
+  scheduleCharacterResourceSyncFromCombatant,
+} from '@/lib/encounter/character-resource-sync';
+import type { Campaign, CampaignCharacterEncounterData } from '@/types/campaign';
 
 export function generateId(): string {
   return Math.random().toString(36).substring(2, 9);
@@ -27,6 +35,33 @@ export function generateId(): string {
 
 export function rollInitiative(acuity: number): number {
   return Math.floor(Math.random() * 20) + 1 + acuity;
+}
+
+/** Initiative order used for turn tracking and drag-reorder remapping. */
+export function sortCombatantsForTurnOrder(
+  combatants: Combatant[],
+  round: number
+): Combatant[] {
+  const companions = combatants.filter((c) => c.combatantType === 'companion');
+  const nonCompanions = combatants.filter((c) => c.combatantType !== 'companion');
+  if (round === 1) {
+    const notSurprised = nonCompanions.filter((c) => !c.isSurprised);
+    const surprised = nonCompanions.filter((c) => c.isSurprised);
+    return [...notSurprised, ...surprised, ...companions];
+  }
+  return [...nonCompanions, ...companions];
+}
+
+function remapTurnIndexAfterReorder(
+  prevIndex: number,
+  oldSorted: Combatant[],
+  newSorted: Combatant[]
+): number {
+  if (prevIndex < 0) return prevIndex;
+  const currentId = oldSorted[prevIndex]?.id;
+  if (!currentId) return Math.min(prevIndex, Math.max(0, newSorted.length - 1));
+  const nextIndex = newSorted.findIndex((c) => c.id === currentId);
+  return nextIndex >= 0 ? nextIndex : Math.min(prevIndex, Math.max(0, newSorted.length - 1));
 }
 
 export interface CombatEncounterViewProps {
@@ -49,6 +84,8 @@ function CombatEncounterViewInner({
   campaignsFull,
   showRollLog = true,
 }: CombatEncounterViewProps & { encounter: Encounter }) {
+  const { user } = useAuth();
+  const { rules } = useGameRules();
   const [showAddModal, setShowAddModal] = useState(false);
   const [addingAllChars, setAddingAllChars] = useState(false);
   const [newCombatant, setNewCombatant] = useState(() => ({
@@ -77,11 +114,11 @@ function CombatEncounterViewInner({
     const results = await Promise.all(
       linked.map(async (c) => {
         try {
-          const res = await fetch(
+          const data = await apiFetchOrNull<CampaignCharacterEncounterData>(
             `/api/campaigns/${encounter!.campaignId}/characters/${c.sourceUserId}/${c.sourceId}?scope=encounter`
           );
-          if (!res.ok) return null;
-          return { combatantId: c.id, data: await res.json() };
+          if (!data) return null;
+          return { combatantId: c.id, data };
         } catch {
           return null;
         }
@@ -93,18 +130,13 @@ function CombatEncounterViewInner({
       const nextCombatants = prev.combatants.map((c) => {
         const result = results.find((r) => r && r.combatantId === c.id);
         if (!result?.data) return c;
-        const d = result.data as {
-          currentHealth?: number;
-          currentEnergy?: number;
-          actionPoints?: number;
-          health?: { current?: number; max?: number };
-          energy?: { current?: number; max?: number };
-        };
-        const currentHp = d.currentHealth ?? d.health?.current;
-        const currentEn = d.currentEnergy ?? d.energy?.current;
-        const maxHp = d.health?.max;
-        const maxEn = d.energy?.max;
-        const ap = d.actionPoints;
+        const d = result.data as Record<string, unknown>;
+        const resources = readResourcesFromCharacterData(d);
+        const currentHp = resources.currentHealth;
+        const currentEn = resources.currentEnergy;
+        const maxHp = resources.healthMax;
+        const maxEn = resources.energyMax;
+        const ap = resources.actionPoints;
         if (
           currentHp === undefined &&
           currentEn === undefined &&
@@ -201,12 +233,11 @@ function CombatEncounterViewInner({
           const charId = row.id;
           const raw = row.data;
           const data = (typeof raw === 'object' && raw !== null ? raw : {}) as Record<string, unknown>;
-          const health = data.health as { current?: number; max?: number } | undefined;
-          const energy = data.energy as { current?: number; max?: number } | undefined;
-          const currentHp = (data.currentHealth as number) ?? health?.current;
-          const currentEn = (data.currentEnergy as number) ?? energy?.current;
-          const ap = data.actionPoints as number | undefined;
-          const { maxHealth: computedMaxHp, maxEnergy: computedMaxEn } = computeMaxHealthEnergy(data);
+          const resources = readResourcesFromCharacterData(data);
+          const { maxHealth: computedMaxHp, maxEnergy: computedMaxEn } = computeMaxHealthEnergy(data, rules);
+          const currentHp = resources.currentHealth;
+          const currentEn = resources.currentEnergy;
+          const ap = resources.actionPoints;
           setEncounter((prev) => {
             if (!prev) return prev;
             const hasMatch = prev.combatants.some((c) => (c as TrackedCombatant).sourceId === charId);
@@ -217,9 +248,9 @@ function CombatEncounterViewInner({
                 if ((c as TrackedCombatant).sourceId !== charId) return c;
                 const updates: Partial<TrackedCombatant> = { ...c };
                 if (currentHp !== undefined) updates.currentHealth = currentHp;
-                updates.maxHealth = computedMaxHp;
+                updates.maxHealth = resources.healthMax ?? computedMaxHp;
                 if (currentEn !== undefined) updates.currentEnergy = currentEn;
-                updates.maxEnergy = computedMaxEn;
+                updates.maxEnergy = resources.energyMax ?? computedMaxEn;
                 if (ap !== undefined) updates.ap = ap;
                 return { ...c, ...updates };
               }),
@@ -231,7 +262,7 @@ function CombatEncounterViewInner({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [encounterId, characterIdsForSync.join(','), setEncounter]);
+  }, [encounterId, characterIdsForSync.join(','), setEncounter, rules]);
 
   const handleDragStart = useCallback((e: DragEvent<HTMLDivElement>, id: string) => {
     setDraggedId(id);
@@ -262,13 +293,20 @@ function CombatEncounterViewInner({
       }
       setEncounter((prev) => {
         if (!prev) return prev;
+        const oldSorted = sortCombatantsForTurnOrder(prev.combatants, prev.round);
         const combatants = [...prev.combatants];
         const draggedIndex = combatants.findIndex((c) => c.id === draggedId);
         const targetIndex = combatants.findIndex((c) => c.id === targetId);
         if (draggedIndex === -1 || targetIndex === -1) return prev;
         const [draggedItem] = combatants.splice(draggedIndex, 1);
         combatants.splice(targetIndex, 0, draggedItem);
-        return { ...prev, combatants };
+        const newSorted = sortCombatantsForTurnOrder(combatants, prev.round);
+        const newTurnIndex = remapTurnIndexAfterReorder(
+          prev.currentTurnIndex,
+          oldSorted,
+          newSorted
+        );
+        return { ...prev, combatants, currentTurnIndex: newTurnIndex };
       });
       setDraggedId(null);
       setDragOverId(null);
@@ -278,15 +316,7 @@ function CombatEncounterViewInner({
 
   const sortedCombatants = useMemo(() => {
     if (!encounter) return [];
-    const combatants = [...encounter.combatants];
-    const companions = combatants.filter((c) => c.combatantType === 'companion');
-    const nonCompanions = combatants.filter((c) => c.combatantType !== 'companion');
-    if (encounter.round === 1) {
-      const notSurprised = nonCompanions.filter((c) => !c.isSurprised);
-      const surprised = nonCompanions.filter((c) => c.isSurprised);
-      return [...notSurprised, ...surprised, ...companions];
-    }
-    return [...nonCompanions, ...companions];
+    return sortCombatantsForTurnOrder(encounter.combatants, encounter.round);
   }, [encounter]);
 
   const addCombatant = () => {
@@ -348,11 +378,11 @@ function CombatEncounterViewInner({
         linkedCampaign.characters.map(
           async (c: { userId: string; characterId: string; characterName: string }) => {
             try {
-              const res = await fetch(
+              const data = await apiFetchOrNull<CampaignCharacterEncounterData>(
                 `/api/campaigns/${encounter.campaignId}/characters/${c.userId}/${c.characterId}?scope=encounter`
               );
-              if (!res.ok) return null;
-              return { charMeta: c, data: await res.json() };
+              if (!data) return null;
+              return { charMeta: c, data };
             } catch {
               return null;
             }
@@ -390,8 +420,7 @@ function CombatEncounterViewInner({
           };
         });
       setEncounter((prev) => (prev ? { ...prev, combatants: [...prev.combatants, ...combatants] } : prev));
-    } catch (err) {
-      console.error('Failed to add campaign characters:', err);
+    } catch {
     } finally {
       setAddingAllChars(false);
     }
@@ -466,14 +495,26 @@ function CombatEncounterViewInner({
     setEncounter((prev) => {
       if (!prev) return prev;
       const combatant = prev.combatants.find((c) => c.id === id) as TrackedCombatant | undefined;
+      const owned = isOwnedLinkedCombatant(combatant, user?.uid);
       const isLinked = combatant?.sourceType === 'campaign-character';
       const resourceKeys = ['currentHealth', 'maxHealth', 'currentEnergy', 'maxEnergy', 'ap'] as const;
-      const applied: Partial<Combatant> = isLinked
-        ? Object.fromEntries(
-            Object.entries(updates).filter(([k]) => !resourceKeys.includes(k as (typeof resourceKeys)[number]))
+      let applied: Partial<Combatant> = updates;
+      if (isLinked && !owned) {
+        applied = Object.fromEntries(
+          Object.entries(updates).filter(
+            ([k]) => !resourceKeys.includes(k as (typeof resourceKeys)[number])
           )
-        : updates;
+        ) as Partial<Combatant>;
+      } else if (isLinked && owned) {
+        applied = Object.fromEntries(
+          Object.entries(updates).filter(([k]) => k !== 'maxHealth' && k !== 'maxEnergy')
+        ) as Partial<Combatant>;
+      }
       const next = prev.combatants.map((c) => (c.id === id ? { ...c, ...applied } : c));
+      const updated = next.find((c) => c.id === id) as TrackedCombatant | undefined;
+      if (owned && updated && resourceKeys.some((k) => k in updates)) {
+        scheduleCharacterResourceSyncFromCombatant(updated);
+      }
       return { ...prev, combatants: next };
     });
   };
@@ -533,10 +574,15 @@ function CombatEncounterViewInner({
     setEncounter((prev) => {
       if (!prev) return prev;
       const combatant = prev.combatants.find((c) => c.id === id) as TrackedCombatant | undefined;
-      if (combatant?.sourceType === 'campaign-character') return prev;
+      const owned = isOwnedLinkedCombatant(combatant, user?.uid);
+      if (combatant?.sourceType === 'campaign-character' && !owned) return prev;
       const next = prev.combatants.map((c) =>
         c.id === id ? { ...c, ap: Math.max(0, Math.min(10, c.ap + delta)) } : c
       );
+      const updated = next.find((c) => c.id === id) as TrackedCombatant | undefined;
+      if (owned && updated) {
+        scheduleCharacterResourceSyncFromCombatant(updated);
+      }
       return { ...prev, combatants: next };
     });
   };
@@ -604,6 +650,20 @@ function CombatEncounterViewInner({
     );
   };
 
+  const markCompleted = () => {
+    setEncounter((prev) =>
+      prev
+        ? {
+            ...prev,
+            round: prev.round > 0 ? prev.round : 0,
+            currentTurnIndex: -1,
+            isActive: false,
+            status: 'completed',
+          }
+        : prev
+    );
+  };
+
   const resetEncounter = () => {
     setEncounter((prev) =>
       prev
@@ -661,7 +721,7 @@ function CombatEncounterViewInner({
     <>
       <div className="grid lg:grid-cols-4 gap-6 lg:items-stretch">
         <div className="lg:col-span-3 flex flex-col gap-4 min-h-0">
-          <div className="bg-surface rounded-xl shadow-md p-4 flex flex-wrap items-center gap-4 flex-shrink-0">
+          <Card className="shadow-md p-4 flex flex-wrap items-center gap-4 flex-shrink-0">
             {!encounter.isActive ? (
               <>
                 <Button onClick={startCombat} disabled={encounter.combatants.length === 0}>
@@ -683,7 +743,15 @@ function CombatEncounterViewInner({
                 <Button variant="danger" onClick={endCombat}>
                   End Combat
                 </Button>
+                <Button variant="secondary" onClick={markCompleted}>
+                  Mark Complete
+                </Button>
               </>
+            )}
+            {!encounter.isActive && encounter.status !== 'completed' && (
+              <Button variant="secondary" onClick={markCompleted}>
+                Mark Complete
+              </Button>
             )}
             <label className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer">
               <input
@@ -703,7 +771,7 @@ function CombatEncounterViewInner({
             >
               Clear All
             </Button>
-          </div>
+          </Card>
 
           {!encounter.isActive && sortedCombatants.length > 0 && (
             <div className="text-xs text-text-muted dark:text-text-secondary flex items-center gap-4 px-2 flex-shrink-0">
@@ -715,14 +783,22 @@ function CombatEncounterViewInner({
 
           <div className="space-y-3 overflow-y-auto pr-2 scroll-smooth flex-1 min-h-[300px]">
             {sortedCombatants.length === 0 ? (
-              <div className="bg-surface rounded-xl shadow-md p-8 text-center text-text-muted dark:text-text-secondary">
-                No combatants added yet. Add some using the panel on the right.
-              </div>
+              <Card>
+                <CardContent>
+                  <EmptyState
+                    title="No combatants added yet"
+                    description="Add some using the panel on the right."
+                    size="sm"
+                    className="py-4"
+                  />
+                </CardContent>
+              </Card>
             ) : (
               sortedCombatants.map((combatant, index) => (
                 <CombatantCard
                   key={combatant.id}
                   combatant={combatant}
+                  canEditLinkedResources={isOwnedLinkedCombatant(combatant as TrackedCombatant, user?.uid)}
                   isCurrentTurn={encounter.isActive && index === encounter.currentTurnIndex}
                   isDragOver={dragOverId === combatant.id}
                   isDragging={draggedId === combatant.id}
@@ -746,7 +822,7 @@ function CombatEncounterViewInner({
         </div>
 
         <div className="space-y-6 flex flex-col min-h-0">
-          <div className="bg-surface rounded-xl shadow-md p-6 flex-shrink-0">
+          <Card className="shadow-md p-6 flex-shrink-0">
             <h2 className="text-lg font-bold text-text-primary mb-4">Add Combatant</h2>
             <div className="mb-4 space-y-2">
               <label htmlFor="combat-encounter-campaign" className="block text-sm font-medium text-text-secondary">Campaign</label>
@@ -856,10 +932,10 @@ function CombatEncounterViewInner({
                       className={cn(
                         'text-sm font-medium',
                         t === 'ally'
-                          ? 'text-blue-700 dark:text-blue-300'
+                          ? 'text-ally-text'
                           : t === 'enemy'
-                            ? 'text-red-700 dark:text-red-300'
-                            : 'text-violet-700 dark:text-violet-300'
+                            ? 'text-enemy-text'
+                            : 'text-companion-text'
                       )}
                     >
                       {t.charAt(0).toUpperCase() + t.slice(1)}
@@ -876,8 +952,8 @@ function CombatEncounterViewInner({
                 Add Creature
               </Button>
             </div>
-          </div>
-          <div className="bg-surface rounded-xl shadow-md p-6">
+          </Card>
+          <Card className="shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Conditions Reference</h3>
             <div className="flex flex-wrap gap-1">
               {CONDITION_OPTIONS.map((condition) => (
@@ -894,7 +970,7 @@ function CombatEncounterViewInner({
                 </span>
               ))}
             </div>
-          </div>
+          </Card>
         </div>
       </div>
 

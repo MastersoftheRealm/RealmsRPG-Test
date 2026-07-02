@@ -1,132 +1,56 @@
 /**
  * Forgot Username Page
  * ====================
- * Allows users to recover their username by entering their email address.
- * Uses Prisma for lookup. Always shows success for security (don't reveal if email exists).
+ * Username recovery is not yet available via email — contact support.
  */
 
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { submitForgotUsernameAction } from './action';
-import { Button, Alert } from '@/components/ui';
-import { Mail, ArrowLeft, Check } from 'lucide-react';
+import { Mail, ArrowLeft } from 'lucide-react';
+import { AuthCard } from '@/components/auth';
+import { Button } from '@/components/ui';
+
+const SUPPORT_EMAIL = 'RealmsRoleplayGame@gmail.com';
 
 export default function ForgotUsernamePage() {
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    try {
-      await submitForgotUsernameAction(email.toLowerCase().trim());
-      setSubmitted(true);
-    } catch (err) {
-      console.error('Error submitting forgot username:', err);
-      setError('An error occurred. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white flex flex-col items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Recover Username</h1>
-          <p className="text-gray-600 mt-2">
-            Enter your email address and we&apos;ll send you your username.
-          </p>
+    <AuthCard title="Recover Username" subtitle="Automated recovery by email is not available yet">
+      <div className="text-center space-y-6">
+        <div className="w-16 h-16 mx-auto rounded-full bg-primary-subtle-bg0/10 flex items-center justify-center">
+          <Mail className="w-8 h-8 text-primary-link-fg" aria-hidden />
         </div>
+        <p className="text-gray-300 dark:text-text-secondary">
+          If you forgot your username, email us from the address on your account and we can help you recover it.
+        </p>
+        <Button asChild className="w-full min-h-[44px]">
+          <a href={`mailto:${SUPPORT_EMAIL}?subject=Username%20recovery%20request`}>
+            Email {SUPPORT_EMAIL}
+          </a>
+        </Button>
+      </div>
 
-        <div className="bg-surface rounded-xl shadow-lg p-8">
-          {!submitted ? (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
-                  <input
-                    type="email"
-                    id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
-                    placeholder="you@example.com"
-                  />
-                </div>
-              </div>
-
-              {error && (
-                <Alert variant="danger">{error}</Alert>
-              )}
-
-              <Button
-                type="submit"
-                disabled={loading || !email}
-                isLoading={loading}
-                className="w-full"
-              >
-                {loading ? 'Sending...' : 'Send Username'}
-              </Button>
-            </form>
-          ) : (
-            <div className="text-center py-4">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Check className="w-8 h-8 text-green-600" />
-              </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Check Your Email</h2>
-              <p className="text-gray-600">
-                If an account exists with that email address, we&apos;ve sent your username to it.
-              </p>
-              <p className="text-sm text-gray-300 mt-4">
-                Don&apos;t see it? Check your spam folder.
-              </p>
-            </div>
-          )}
-
-          <div className="mt-6 pt-6 border-t border-gray-200 space-y-3 text-center text-sm">
-            <Link
-              href="/login"
-              className="flex items-center justify-center gap-1 text-primary-600 hover:text-primary-700 font-medium"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              Back to Login
-            </Link>
-            <div className="text-gray-300">
-              Need to reset your password?{' '}
-              <Link href="/forgot-password" className="text-primary-600 hover:text-primary-700 font-medium">
-                Reset Password
-              </Link>
-            </div>
-            <div className="text-gray-300">
-              Don&apos;t have an account?{' '}
-              <Link href="/register" className="text-primary-600 hover:text-primary-700 font-medium">
-                Sign Up
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        <p className="text-center text-sm text-gray-300 mt-6">
-          Remember your credentials?{' '}
-          <Link href="/login" className="text-primary-600 hover:text-primary-700">
-            Sign in here
+      <div className="mt-6 pt-6 border-t border-gray-600/50 dark:border-border space-y-3 text-center text-sm">
+        <Link
+          href="/login"
+          className="inline-flex items-center justify-center gap-1 text-primary-link-fg hover:text-primary-fg-hover transition-colors font-medium min-h-[44px]"
+        >
+          <ArrowLeft className="w-5 h-5" aria-hidden />
+          Back to Sign In
+        </Link>
+        <p className="text-gray-300 dark:text-text-secondary">
+          Need to reset your password?{' '}
+          <Link href="/forgot-password" className="text-primary-link-fg hover:text-primary-fg-hover font-medium">
+            Reset Password
+          </Link>
+        </p>
+        <p className="text-gray-300 dark:text-text-secondary">
+          Don&apos;t have an account?{' '}
+          <Link href="/register" className="text-primary-link-fg hover:text-primary-fg-hover font-medium">
+            Create one
           </Link>
         </p>
       </div>
-    </div>
+    </AuthCard>
   );
 }

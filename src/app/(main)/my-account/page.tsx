@@ -2,7 +2,7 @@
  * My Account Page
  * ===============
  * User profile and account settings page.
- * Uses Supabase Auth, Prisma, and Supabase Storage.
+ * Uses Supabase Auth, Database, and Storage.
  */
 
 'use client';
@@ -16,7 +16,8 @@ import { useAuthStore } from '@/stores';
 import { useAdmin } from '@/hooks';
 import { ProtectedRoute } from '@/components/layout';
 import { cn } from '@/lib/utils';
-import { LoadingState, Button, Input, Alert, PageContainer, Spinner } from '@/components/ui';
+import { apiFetch } from '@/lib/api-client';
+import { LoadingState, Button, Input, Alert, PageContainer, Spinner, Card, PageHeader } from '@/components/ui';
 import { ImageUploadModal } from '@/components/shared';
 import { User as UserIcon, Mail, Lock, Trash2, AlertTriangle, AtSign, Camera } from 'lucide-react';
 
@@ -118,8 +119,7 @@ function AccountContent() {
             showTooltips: true,
           });
         }
-      } catch (err) {
-        console.error('Error loading profile:', err);
+      } catch {
       } finally {
         setLoading(false);
       }
@@ -155,7 +155,6 @@ function AccountContent() {
       const supabase = createClient();
       await supabase.auth.updateUser({ data: { avatar_url: url } });
     } catch (err) {
-      console.error('Profile picture upload error:', err);
       setPictureMessage({ type: 'error', text: 'Failed to upload profile picture' });
     } finally {
       setUploadingPicture(false);
@@ -166,16 +165,10 @@ function AccountContent() {
     setTooltipPrefSaving(true);
     setTooltipPrefMessage(null);
     try {
-      const response = await fetch('/api/user/settings/tooltips', {
+      await apiFetch('/api/user/settings/tooltips', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ showTooltips: nextValue }),
       });
-
-      const payload = (await response.json().catch(() => ({}))) as { error?: string };
-      if (!response.ok) {
-        throw new Error(payload.error ?? 'Failed to update tooltip setting');
-      }
 
       setProfile((prev) => (prev ? { ...prev, showTooltips: nextValue } : prev));
       setTooltipPrefMessage({ type: 'success', text: 'Tooltip preference updated.' });
@@ -215,8 +208,21 @@ function AccountContent() {
     setEmailChanging(true);
     setEmailMessage(null);
 
+    if (!emailPassword) {
+      setEmailMessage({ type: 'error', text: 'Please enter your current password' });
+      setEmailChanging(false);
+      return;
+    }
+
     try {
       const supabase = createClient();
+      // Re-authenticate with the current password before changing the email so a
+      // hijacked session cannot silently take over the account (TASK-331).
+      const { error: reauthError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: emailPassword,
+      });
+      if (reauthError) throw new Error('Current password is incorrect');
       const { error } = await supabase.auth.updateUser({ email: newEmail });
       if (error) throw error;
       setProfile((prev) => (prev ? { ...prev, email: newEmail } : null));
@@ -260,6 +266,12 @@ function AccountContent() {
 
     try {
       const supabase = createClient();
+      // Verify the current password before setting a new one (TASK-331).
+      const { error: reauthError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+      });
+      if (reauthError) throw new Error('Current password is incorrect');
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
       setCurrentPassword('');
@@ -295,7 +307,7 @@ function AccountContent() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!user || !user.email) return;
+    if (!user) return;
     if (deleteConfirmText !== 'DELETE') return;
 
     setDeleting(true);
@@ -303,11 +315,16 @@ function AccountContent() {
 
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: deletePassword,
-      });
-      if (error) throw error;
+      // Password accounts re-authenticate; OAuth-only users (no password) confirm
+      // via the typed DELETE, so they aren't locked out of deleting (TASK-331).
+      if (canChangeEmailPassword) {
+        if (!user.email) throw new Error('Missing account email');
+        const { error } = await supabase.auth.signInWithPassword({
+          email: user.email,
+          password: deletePassword,
+        });
+        if (error) throw error;
+      }
 
       const result = await deleteAccountAction();
       if (!result.success) {
@@ -329,23 +346,22 @@ function AccountContent() {
 
   if (loading) {
     return (
-      <PageContainer size="xs" padded={false}>
+      <PageContainer size="xs">
         <LoadingState message="Loading account..." />
       </PageContainer>
     );
   }
 
   return (
-    <PageContainer size="xs" padded={false} className="space-y-6 min-w-0">
-      <div className="mb-8 min-w-0">
-        <h1 className="text-3xl font-bold text-text-primary flex items-center gap-3">
-          <UserIcon className="w-8 h-8 text-primary-600" />
-          My Account
-        </h1>
-        <p className="text-text-secondary mt-2">Manage your profile and account settings</p>
-      </div>
+    <PageContainer size="xs" className="space-y-6 min-w-0">
+      <PageHeader
+        title="My Account"
+        icon={<UserIcon className="w-8 h-8 text-primary-link-fg" />}
+        description="Manage your profile and account settings"
+        className="mb-0 min-w-0"
+      />
 
-      <div className="bg-surface rounded-xl shadow-md p-6">
+      <Card className="shadow-md p-6">
         <h2 className="text-lg font-bold text-text-primary mb-3">Help Tooltips</h2>
         <p className="text-text-secondary mb-4">
           Show contextual onboarding tooltips across navigation and creator flows.
@@ -361,13 +377,13 @@ function AccountContent() {
           <span className="text-text-primary font-medium">Show help tooltips</span>
         </label>
         {tooltipPrefMessage && (
-          <p className={cn('text-sm mt-3', tooltipPrefMessage.type === 'success' ? 'text-success-700 dark:text-success-400' : 'text-danger-700 dark:text-danger-400')}>
+          <p className={cn('text-sm mt-3', tooltipPrefMessage.type === 'success' ? 'text-success-fg' : 'text-danger-fg')}>
             {tooltipPrefMessage.text}
           </p>
         )}
-      </div>
+      </Card>
 
-      <div className="bg-surface rounded-xl shadow-md p-6">
+      <Card className="shadow-md p-6">
         <h2 className="text-lg font-bold text-text-primary mb-3">Role &amp; Limits</h2>
         <p className="text-text-secondary mb-4">
           Your role controls quotas for campaigns, characters, and custom library items.
@@ -418,9 +434,9 @@ function AccountContent() {
             <p className="text-text-muted dark:text-text-secondary italic">Limits unavailable.</p>
           )}
         </div>
-      </div>
+      </Card>
 
-      <div className="bg-surface rounded-xl shadow-md p-6">
+      <Card className="shadow-md p-6">
         <h2 className="text-lg font-bold text-text-primary mb-4">Profile Information</h2>
 
         <div className="flex items-center gap-4 mb-6 pb-4 border-b border-border-subtle">
@@ -481,9 +497,9 @@ function AccountContent() {
             </span>
           </div>
         </div>
-      </div>
+      </Card>
 
-      <div className="bg-surface rounded-xl shadow-md p-6">
+      <Card className="shadow-md p-6">
         <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
           <AtSign className="w-5 h-5 text-text-secondary" />
           Change Username
@@ -522,10 +538,10 @@ function AccountContent() {
             Update Username
           </Button>
         </form>
-      </div>
+      </Card>
 
       {canChangeEmailPassword && (
-        <div className="bg-surface rounded-xl shadow-md p-6">
+        <Card className="shadow-md p-6">
           <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
             <Mail className="w-5 h-5 text-text-secondary" />
             Change Email
@@ -567,11 +583,11 @@ function AccountContent() {
               Update Email
             </Button>
           </form>
-        </div>
+        </Card>
       )}
 
       {canChangeEmailPassword && (
-        <div className="bg-surface rounded-xl shadow-md p-6">
+        <Card className="shadow-md p-6">
           <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
             <Lock className="w-5 h-5 text-text-secondary" />
             Change Password
@@ -630,19 +646,19 @@ function AccountContent() {
               </Button>
             </div>
           </form>
-        </div>
+        </Card>
       )}
 
       {!canChangeEmailPassword && (
-        <div className="bg-surface rounded-xl shadow-md p-6 border border-border-light">
+        <Card className="shadow-md p-6">
           <p className="text-text-secondary text-sm">
             You signed in with {authProviderLabel}. Email and password cannot be changed here. To update your
             email, use your {authProviderLabel} account settings.
           </p>
-        </div>
+        </Card>
       )}
 
-      <div className="bg-surface rounded-xl shadow-md p-6 border-2 border-red-200">
+      <Card className="shadow-md p-6 border-2 border-red-200">
         <h2 className="text-lg font-bold text-red-700 mb-4 flex items-center gap-2">
           <AlertTriangle className="w-5 h-5" />
           Danger Zone
@@ -661,18 +677,22 @@ function AccountContent() {
         ) : (
           <div className="bg-red-50 rounded-lg p-4 space-y-4">
             <p className="text-sm text-red-700 font-medium">
-              To confirm deletion, enter your password and type DELETE below:
+              {canChangeEmailPassword
+                ? 'To confirm deletion, enter your password and type DELETE below:'
+                : 'To confirm deletion, type DELETE below:'}
             </p>
-            <div>
-              <label className="block text-sm font-medium text-red-700 mb-1">Password</label>
-              <Input
-                type="password"
-                value={deletePassword}
-                onChange={(e) => setDeletePassword(e.target.value)}
-                className="border-red-300 focus:ring-red-500"
-                placeholder="Enter your password"
-              />
-            </div>
+            {canChangeEmailPassword && (
+              <div>
+                <label className="block text-sm font-medium text-red-700 mb-1">Password</label>
+                <Input
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  className="border-red-300 focus:ring-red-500"
+                  placeholder="Enter your password"
+                />
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-red-700 mb-1">Type DELETE to confirm</label>
               <Input
@@ -685,14 +705,18 @@ function AccountContent() {
             </div>
 
             {deleteError && (
-              <div className="p-3 rounded-lg bg-red-100 text-red-700 text-sm">{deleteError}</div>
+              <div className="p-3 rounded-lg bg-danger-light text-danger-fg text-sm">{deleteError}</div>
             )}
 
             <div className="flex gap-3">
               <Button
                 variant="danger"
                 onClick={handleDeleteAccount}
-                disabled={deleting || deleteConfirmText !== 'DELETE' || !deletePassword}
+                disabled={
+                  deleting ||
+                  deleteConfirmText !== 'DELETE' ||
+                  (canChangeEmailPassword && !deletePassword)
+                }
                 isLoading={deleting}
               >
                 Permanently Delete Account
@@ -711,7 +735,7 @@ function AccountContent() {
             </div>
           </div>
         )}
-      </div>
+      </Card>
 
       <ImageUploadModal
         isOpen={showPictureModal}
@@ -728,9 +752,7 @@ function AccountContent() {
 export default function MyAccountPage() {
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-background py-8 px-4">
-        <AccountContent />
-      </div>
+      <AccountContent />
     </ProtectedRoute>
   );
 }

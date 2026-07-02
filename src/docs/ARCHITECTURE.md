@@ -2,7 +2,7 @@
 
 > **Purpose:** Single reference for data flow, Supabase structure, and service/hook usage. For AI agents and engineers.
 
-**Last verified:** Feb 2026
+**Last verified:** Jun 2026
 
 ---
 
@@ -92,9 +92,8 @@ Codex reference data comes from Supabase via `/api/codex`. Hooks like `useCodexP
 | Codex API | `src/app/api/codex/` |
 | Data enrichment | `src/lib/data-enrichment.ts` |
 | Character CRUD | `src/services/character-service.ts` |
-| Game formulas | `src/lib/game/formulas.ts` |
+| Game formulas | `src/lib/game/formulas.ts`, `src/lib/game/calculations.ts`, `src/lib/game/skill-allocation.ts` |
 | Game constants | `src/lib/game/constants.ts` |
-| Progression | `src/lib/game/progression.ts` |
 
 **Data handling (codex, library, caching):** See `DATA_HANDLING.md` for single-source codex fetch, query keys, cache headers, and prefetch pattern.
 

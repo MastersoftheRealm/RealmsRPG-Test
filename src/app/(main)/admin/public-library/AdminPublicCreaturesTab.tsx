@@ -5,125 +5,54 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  SectionHeader,
-  SearchInput,
-  ListHeader,
-  LoadingState,
-  ErrorDisplay,
-  GridListRow,
-  ListEmptyState,
-  DeleteConfirmModal,
-} from '@/components/shared';
+import { DeleteConfirmModal, OfficialCreatureList } from '@/components/shared';
+import { useToast } from '@/components/ui';
 import { useOfficialLibrary } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
-import { useSort } from '@/hooks/use-sort';
+import { apiFetch } from '@/lib/api-client';
 import { Users } from 'lucide-react';
-import { formatListCellLabel } from '@/lib/utils';
 
-const CREATURE_GRID = '1.5fr 0.8fr 1fr 40px';
 const QUERY_KEY = ['official-library', 'creatures'] as const;
 
 export function AdminPublicCreaturesTab() {
+  const { showToast } = useToast();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: items = [], isLoading, error } = useOfficialLibrary('creatures');
-  const [search, setSearch] = useState('');
+  const { data: items = [], isLoading, error, refetch } = useOfficialLibrary('creatures');
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
-
-  const { sortState, handleSort, sortItems } = useSort('name');
-
-  const cardData = useMemo(() => {
-    return (items as Array<Record<string, unknown>>).map((c) => ({
-      id: String(c.id ?? c.docId ?? ''),
-      raw: c,
-      name: String(c.name ?? ''),
-      description: String(c.description ?? ''),
-      level: Number(c.level ?? 0),
-      type: String(c.type ?? ''),
-    }));
-  }, [items]);
-
-  const filtered = useMemo(() => {
-    let r = cardData;
-    if (search) {
-      const s = search.toLowerCase();
-      r = r.filter(
-        (x) =>
-          String(x.name ?? '').toLowerCase().includes(s) ||
-          String(x.type ?? '').toLowerCase().includes(s) ||
-          String(x.description ?? '').toLowerCase().includes(s)
-      );
-    }
-    return sortItems(r);
-  }, [cardData, search, sortItems]);
 
   const handleDeleteFromList = async () => {
     if (!deleteConfirm) return;
     try {
-      const res = await fetch(`/api/official/creatures?id=${encodeURIComponent(deleteConfirm.id)}`, {
+      await apiFetch(`/api/official/creatures?id=${encodeURIComponent(deleteConfirm.id)}`, {
         method: 'DELETE',
       });
-      if (!res.ok) {
-        const msg = res.status === 404 ? 'Item not found or already deleted.' : res.statusText;
-        throw new Error(msg);
-      }
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       await queryClient.refetchQueries({ queryKey: QUERY_KEY });
       setDeleteConfirm(null);
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Failed to delete');
+      showToast(e instanceof Error ? e.message : 'Failed to delete', 'error');
     }
   };
 
-  if (error) return <ErrorDisplay message="Failed to load official creatures" />;
-
   return (
-    <div>
-      <SectionHeader title="Official Creatures" size="md" />
-      <div className="mb-4">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search creatures..." />
-      </div>
-      <ListHeader
-        columns={[
-          { key: 'name', label: 'NAME' },
-          { key: 'level', label: 'LEVEL' },
-          { key: 'type', label: 'TYPE' },
-          { key: '_actions', label: '', sortable: false as const },
-        ]}
-        gridColumns={CREATURE_GRID}
-        sortState={sortState}
-        onSort={handleSort}
+    <>
+      <OfficialCreatureList
+        items={items as Array<Record<string, unknown>>}
+        isLoading={isLoading}
+        error={error}
+        onRetry={() => { void refetch(); }}
+        errorMessage="Failed to load official creatures"
+        sectionTitle="Official Creatures"
+        emptyIcon={<Users className="w-8 h-8" />}
+        emptyTitle="No official creatures"
+        emptyMessage="Add one from the header or publish from a creator."
+        variant="admin"
+        onEdit={(id) => router.push(`/creature-creator?edit=${encodeURIComponent(id)}`)}
+        onDelete={(id, name) => setDeleteConfirm({ id, name })}
       />
-      <div className="flex flex-col gap-1 mt-2">
-        {isLoading ? (
-          <LoadingState />
-        ) : filtered.length === 0 ? (
-          <ListEmptyState
-            icon={<Users className="w-8 h-8" />}
-            title="No official creatures"
-            message="Add one from the header or publish from a creator."
-          />
-        ) : (
-          filtered.map((c) => (
-            <GridListRow
-              key={c.id}
-              id={c.id}
-              name={c.name}
-              description={c.description}
-              gridColumns={CREATURE_GRID}
-              columns={[
-                { key: 'Level', value: c.level, highlight: true },
-                { key: 'Type', value: formatListCellLabel(c.type) },
-              ]}
-              onEdit={() => router.push(`/creature-creator?edit=${encodeURIComponent(c.id)}`)}
-              onDelete={() => setDeleteConfirm({ id: c.id, name: c.name })}
-            />
-          ))
-        )}
-      </div>
 
       {deleteConfirm && (
         <DeleteConfirmModal
@@ -136,6 +65,6 @@ export function AdminPublicCreaturesTab() {
           onClose={() => setDeleteConfirm(null)}
         />
       )}
-    </div>
+    </>
   );
 }

@@ -16,7 +16,30 @@ import type {
 } from '@/types';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
 import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
+import type { CoreRulesMap } from '@/types/core-rules';
 import { buildRequiredProficiencies } from '@/lib/proficiencies';
+
+export const CHARACTER_STARTING_CURRENCY = 200;
+
+function downstreamDraftReset(): Partial<CharacterDraft> {
+  return {
+    ancestry: undefined,
+    skills: {},
+    feats: [],
+    equipment: undefined,
+    powers: [],
+    techniques: [],
+    abilities: { ...DEFAULT_ABILITIES },
+    healthPoints: 0,
+    energyPoints: 0,
+    currency: CHARACTER_STARTING_CURRENCY,
+    defenseVals: { ...DEFAULT_DEFENSE_SKILLS },
+    defenseSkills: { ...DEFAULT_DEFENSE_SKILLS },
+    pow_prof: undefined,
+    mart_prof: undefined,
+    declinedPathSkillIds: undefined,
+  };
+}
 
 export type CreatorStep = 
   | 'archetype' 
@@ -40,6 +63,11 @@ const STEP_ORDER: CreatorStep[] = [
   'powers',
   'finalize',
 ];
+
+function completedStepsThrough(step: CreatorStep): CreatorStep[] {
+  const idx = STEP_ORDER.indexOf(step);
+  return STEP_ORDER.slice(0, idx + 1);
+}
 
 interface CharacterCreatorState {
   // Current step
@@ -65,6 +93,7 @@ interface CharacterCreatorState {
   setMixedSpecies: (speciesA: { id: string; name: string }, speciesB: { id: string; name: string }) => void;
   setAncestry: (ancestryId: string, ancestryName: string, traits: string[]) => void;
   updateAbility: (ability: AbilityName, value: number) => void;
+  reselectArchetype: () => void;
   
   // Reset
   resetCreator: () => void;
@@ -74,23 +103,30 @@ interface CharacterCreatorState {
     powerPartsDb?: Array<{ id?: string | number; name?: string; base_tp?: number; op_1_tp?: number; op_2_tp?: number; op_3_tp?: number }>;
     techniquePartsDb?: Array<{ id?: string | number; name?: string; base_tp?: number; op_1_tp?: number; op_2_tp?: number; op_3_tp?: number }>;
     itemPropertiesDb?: Array<{ id?: string | number; name?: string; base_tp?: number; op_1_tp?: number }>;
+    rules?: Partial<CoreRulesMap>;
   }) => Partial<Character>;
 }
 
-const initialDraft: CharacterDraft = {
-  name: '',
-  level: 1,
-  abilities: { ...DEFAULT_ABILITIES },
-  step: 0,
-  isComplete: false,
-};
+function cloneInitialDraft(): CharacterDraft {
+  return {
+    name: '',
+    level: 1,
+    abilities: { ...DEFAULT_ABILITIES },
+    step: 0,
+    isComplete: false,
+    currency: CHARACTER_STARTING_CURRENCY,
+  };
+}
+
+/** Bump when persisted draft shape or defaults change; old versions reset to a fresh draft. */
+const CREATOR_STORE_SCHEMA_VERSION = 1;
 
 export const useCharacterCreatorStore = create<CharacterCreatorState>()(
   persist(
     (set, get) => ({
       currentStep: 'archetype',
       completedSteps: [],
-      draft: initialDraft,
+      draft: cloneInitialDraft(),
       
       setStep: (step) => {
         if (get().canNavigateToStep(step)) {
@@ -121,22 +157,18 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
       },
       
       canNavigateToStep: (step) => {
-        const draft = get().draft;
-        
-        // Only lock specific steps based on prerequisites:
-        // - ancestry: requires species to be selected
-        // - skills: requires species to be selected (for species skills)
-        // All other steps are freely navigable
-        
-        if (step === 'ancestry') {
-          return Boolean(draft.ancestry?.id);
+        const { draft, completedSteps } = get();
+        const idx = STEP_ORDER.indexOf(step);
+        if (idx === 0) return true;
+
+        for (let i = 0; i < idx; i++) {
+          const prev = STEP_ORDER[i];
+          if (prev === 'archetype') {
+            if (!draft.archetype?.type) return false;
+            continue;
+          }
+          if (!completedSteps.includes(prev)) return false;
         }
-        
-        if (step === 'skills') {
-          return Boolean(draft.ancestry?.id);
-        }
-        
-        // All other steps are always accessible
         return true;
       },
       
@@ -155,15 +187,16 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
         };
         
         set({
+          completedSteps: completedStepsThrough('archetype'),
           draft: {
             ...get().draft,
+            ...downstreamDraftReset(),
             creationMode: 'forge',
             archetype,
             pow_abil: archetype.pow_abil,
             mart_abil: archetype.mart_abil,
             archetypePathId: undefined,
-            declinedPathSkillIds: undefined,
-          }
+          },
         });
       },
 
@@ -187,8 +220,10 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
         const pathChanged = prevPathId !== undefined && prevPathId !== archetype.id;
 
         set({
+          completedSteps: pathChanged ? completedStepsThrough('archetype') : get().completedSteps,
           draft: {
             ...get().draft,
+            ...(pathChanged ? downstreamDraftReset() : {}),
             creationMode: 'path',
             archetype: {
               id: archetype.id,
@@ -287,12 +322,27 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           }
         });
       },
+
+      reselectArchetype: () => {
+        set({
+          completedSteps: [],
+          draft: {
+            ...get().draft,
+            ...downstreamDraftReset(),
+            archetype: undefined,
+            pow_abil: undefined,
+            mart_abil: undefined,
+            creationMode: undefined,
+            archetypePathId: undefined,
+          },
+        });
+      },
       
       resetCreator: () => {
         set({
           currentStep: 'archetype',
           completedSteps: [],
-          draft: initialDraft,
+          draft: cloneInitialDraft(),
         });
       },
       
@@ -308,7 +358,15 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
         const powAbil = draft.pow_abil || draft.archetype?.pow_abil || draft.archetype?.ability;
         const martAbil = draft.mart_abil || draft.archetype?.mart_abil;
         
-        const maxHealth = calculateMaxHealth(allocatedHealth, abilities.vitality || 0, level, powAbil, abilities);
+        const maxHealth = calculateMaxHealth(
+          allocatedHealth,
+          abilities.vitality || 0,
+          level,
+          powAbil,
+          abilities,
+          options?.rules,
+          martAbil
+        );
         const maxEnergy = calculateMaxEnergy(allocatedEnergy, powAbil || martAbil, abilities, level);
         
         // Save lean archetype — just id + type. Name/description derived from codex on load.
@@ -366,7 +424,7 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           healthPoints: draft.healthPoints || 0,
           energyPoints: draft.energyPoints || 0,
           // Currency remaining from equipment purchases
-          currency: draft.currency ?? 500,
+          currency: draft.currency ?? CHARACTER_STARTING_CURRENCY,
           // Species/ancestry — lean save: { id, name, selectedTraits, selectedFlaw, selectedCharacteristic }
           ancestry: draft.ancestry,
           skills: draft.skills || {},
@@ -375,10 +433,18 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           // The feats step stores them with type: 'archetype' | 'character'
           archetypeFeats: (draft.feats || [])
             .filter((f: { type?: string }) => f.type !== 'character')
-            .map(({ type, ...rest }) => rest), // Remove the type field
+            .map((f) => {
+              const rest = { ...f };
+              delete (rest as { type?: string }).type;
+              return rest;
+            }),
           feats: (draft.feats || [])
             .filter((f: { type?: string }) => f.type === 'character')
-            .map(({ type, ...rest }) => rest), // Remove the type field
+            .map((f) => {
+              const rest = { ...f };
+              delete (rest as { type?: string }).type;
+              return rest;
+            }),
           powers: draft.powers || [],
           techniques: draft.techniques || [],
           equipment: equipment,
@@ -398,7 +464,18 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
     }),
     {
       name: 'character-creator-storage',
+      version: CREATOR_STORE_SCHEMA_VERSION,
       storage: createJSONStorage(() => localStorage),
+      migrate: (persistedState, version) => {
+        if (version < CREATOR_STORE_SCHEMA_VERSION) {
+          return {
+            currentStep: 'archetype' as CreatorStep,
+            completedSteps: [] as CreatorStep[],
+            draft: cloneInitialDraft(),
+          };
+        }
+        return persistedState as Pick<CharacterCreatorState, 'currentStep' | 'completedSteps' | 'draft'>;
+      },
       partialize: (state) => ({
         currentStep: state.currentStep,
         completedSteps: state.completedSteps,

@@ -48,6 +48,45 @@ export function normalizeCampaignRosterCharacters(raw: unknown): CampaignCharact
   return out;
 }
 
+/** Map a character archetype `type` to the roster display label. */
+export function archetypeDisplayNameFromType(
+  archetypeType?: string
+): CampaignCharacter['archetype'] {
+  if (!archetypeType) return undefined;
+  const lower = archetypeType.toLowerCase();
+  if (lower === 'power') return 'Power';
+  if (lower === 'martial') return 'Martial';
+  if (lower === 'powered-martial' || lower === 'poweredmartial') return 'Powered-Martial';
+  return undefined;
+}
+
+/**
+ * SEC-06: derive the campaign roster fields (name/level/species/archetype/portrait)
+ * from the authoritative character `data` JSONB rather than trusting client input,
+ * so a player cannot misrepresent their character to other campaign members.
+ */
+export function buildRosterFieldsFromCharacterData(charData: Record<string, unknown>): {
+  characterName: string;
+  level: number;
+  portrait?: string;
+  species?: string;
+  archetype: CampaignCharacter['archetype'];
+} {
+  const archetype = charData.archetype as { type?: string } | undefined;
+  const ancestry = charData.ancestry as { name?: string } | undefined;
+  const speciesStr =
+    (typeof ancestry?.name === 'string' && ancestry.name.trim()) ||
+    (typeof charData.species === 'string' ? (charData.species as string).trim() : '') ||
+    undefined;
+  return {
+    characterName: String((charData.name as string) ?? 'Character').trim() || 'Character',
+    level: typeof charData.level === 'number' ? charData.level : Number(charData.level) || 1,
+    portrait: typeof charData.portrait === 'string' ? (charData.portrait as string) : undefined,
+    species: speciesStr || undefined,
+    archetype: archetypeDisplayNameFromType(archetype?.type),
+  };
+}
+
 export function isCharacterOnCampaignRoster(
   rosterRaw: unknown,
   userId: string,

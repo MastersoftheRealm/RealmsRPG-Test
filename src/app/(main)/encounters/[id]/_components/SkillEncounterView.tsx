@@ -21,7 +21,7 @@ import {
   ListOrdered,
   Swords,
 } from 'lucide-react';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, Card, CardContent, EmptyState } from '@/components/ui';
 import { ValueStepper } from '@/components/shared';
 import { useCodexSkills } from '@/hooks';
 import { AddCombatantModal } from '@/components/shared/add-combatant-modal';
@@ -496,7 +496,7 @@ function SkillEncounterViewInner({
     <>
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-surface rounded-xl border border-border-light p-4">
+          <Card className="p-4">
             <h2 className="text-sm font-semibold text-text-secondary mb-3">Successes</h2>
             <SuccessFailureTracker
               rollSuccesses={derivedRollSuccesses}
@@ -531,10 +531,10 @@ function SkillEncounterViewInner({
                 />
               </div>
             </div>
-          </div>
+          </Card>
 
           {/* Sequence tracker: manual S/F across multiple skill encounters */}
-          <div className="bg-surface rounded-xl border border-border-light p-4">
+          <Card className="p-4">
             <h2 className="text-sm font-semibold text-text-secondary mb-2 flex items-center gap-2">
               <ListOrdered className="w-4 h-4" /> Sequence
             </h2>
@@ -565,9 +565,9 @@ function SkillEncounterViewInner({
                 />
               </div>
             </div>
-          </div>
+          </Card>
 
-          <div className="bg-surface rounded-xl border border-border-light p-4 flex flex-wrap items-center gap-3">
+          <Card className="p-4 flex flex-wrap items-center gap-3">
             <Button variant="secondary" onClick={resetEncounter} aria-label="Reset skill encounter (clear all rolls and totals)">
               <RotateCcw className="w-4 h-4" /> Reset
             </Button>
@@ -576,14 +576,21 @@ function SkillEncounterViewInner({
               {' · '}
               {skill.participants.filter((p) => p.hasRolled || p.isHelping).length} acted
             </div>
-          </div>
+          </Card>
 
           <div className="space-y-3">
             {sortedParticipants.length === 0 ? (
-              <div className="bg-surface rounded-xl border border-border-light p-8 text-center text-text-muted dark:text-text-secondary">
-                <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p>No participants yet. Add characters using the panel on the right.</p>
-              </div>
+              <Card>
+                <CardContent>
+                  <EmptyState
+                    title="No participants yet"
+                    description="Add characters using the panel on the right."
+                    icon={<Users className="w-6 h-6" />}
+                    size="sm"
+                    className="py-4"
+                  />
+                </CardContent>
+              </Card>
             ) : (
               sortedParticipants.map((p) => (
                 <ParticipantCard
@@ -615,7 +622,7 @@ function SkillEncounterViewInner({
         </div>
 
         <div className="space-y-6">
-          <div className="bg-surface rounded-xl border border-border-light p-6">
+          <Card className="p-6">
             <h2 className="font-bold text-text-primary mb-4 flex items-center gap-2">
               <Brain className="w-5 h-5 text-blue-500" /> Configuration
             </h2>
@@ -668,7 +675,7 @@ function SkillEncounterViewInner({
                   value={encounter.description ?? ''}
                   onChange={(e) => setEncounter((prev) => (prev ? { ...prev, description: e.target.value } : prev))}
                   placeholder="Rewards, penalties, context, and skill bonus notes..."
-                  className="w-full rounded-lg border border-border-light bg-background px-3 py-2 text-sm text-text-primary focus:border-primary-500 focus:outline-none min-h-[96px]"
+                  className="w-full rounded-lg border border-border-light bg-background px-3 py-2 text-sm text-text-primary focus:border-primary-outline-border focus:outline-none min-h-[96px]"
                 />
               </div>
               <label className="flex items-center gap-2 cursor-pointer">
@@ -698,9 +705,9 @@ function SkillEncounterViewInner({
                 </Button>
               )}
             </div>
-          </div>
+          </Card>
 
-          <div className="bg-surface rounded-xl border border-border-light p-6">
+          <Card className="p-6">
             <h2 className="font-bold text-text-primary mb-4">Add Participants</h2>
             {isMixedEncounter && encounter?.combatants?.length ? (() => {
               const combatants = encounter.combatants as TrackedCombatant[];
@@ -763,9 +770,9 @@ function SkillEncounterViewInner({
                 <Plus className="w-4 h-4" />
               </Button>
             </div>
-          </div>
+          </Card>
 
-          <div className="bg-surface rounded-xl border border-border-light p-6">
+          <Card className="p-6">
             <h2 className="font-bold text-text-primary mb-3">Quick Reference</h2>
             <div className="space-y-2 text-xs text-text-muted dark:text-text-secondary">
               <p>
@@ -794,7 +801,7 @@ function SkillEncounterViewInner({
                     : 'In Progress'}
               </p>
             </div>
-          </div>
+          </Card>
         </div>
       </div>
 
@@ -840,13 +847,13 @@ function SuccessFailureTracker({
       <div className="grid sm:grid-cols-3 gap-2 text-xs">
         <div className="rounded-lg border border-border-light bg-surface-alt px-3 py-2">
           <div className="text-text-muted dark:text-text-secondary">Total Successes</div>
-          <div className="text-sm font-semibold text-success-700 dark:text-success-400">
+          <div className="text-sm font-semibold text-success-fg">
             {totalSuccesses} / {requiredSuccesses}
           </div>
         </div>
         <div className="rounded-lg border border-border-light bg-surface-alt px-3 py-2">
           <div className="text-text-muted dark:text-text-secondary">Total Failures</div>
-          <div className="text-sm font-semibold text-danger-700 dark:text-danger-400">
+          <div className="text-sm font-semibold text-danger-fg">
             {totalFailures} / {maxFailures}
           </div>
         </div>
@@ -855,8 +862,8 @@ function SuccessFailureTracker({
           <div
             className={cn(
               'text-sm font-semibold',
-              outcome === 'success' && 'text-success-700 dark:text-success-400',
-              outcome === 'failure' && 'text-danger-700 dark:text-danger-400',
+              outcome === 'success' && 'text-success-fg',
+              outcome === 'failure' && 'text-danger-fg',
               outcome === 'in-progress' && 'text-text-primary'
             )}
           >
@@ -871,17 +878,17 @@ function SuccessFailureTracker({
         <div className="flex items-center gap-1">
           {net > 0 &&
             Array.from({ length: Math.min(netAbs, maxBubbles) }).map((_, i) => (
-              <div key={`g-${i}`} className="w-4 h-4 rounded-full bg-green-500 dark:bg-green-600" title="Success" />
+              <div key={`g-${i}`} className="w-4 h-4 rounded-full bg-success-500" title="Success" />
             ))}
           {net < 0 &&
             Array.from({ length: Math.min(netAbs, maxBubbles) }).map((_, i) => (
-              <div key={`r-${i}`} className="w-4 h-4 rounded-full bg-red-500 dark:bg-red-600" title="Failure" />
+              <div key={`r-${i}`} className="w-4 h-4 rounded-full bg-danger-500" title="Failure" />
             ))}
           {(net > 0 || net < 0) && (
             <span
               className={cn(
                 'text-xs font-medium ml-1',
-                net > 0 ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'
+                net > 0 ? 'text-success-fg' : 'text-danger-fg'
               )}
             >
               {net > 0 ? `+${net}` : net}
@@ -899,13 +906,13 @@ interface CodexSkillOption {
 }
 
 function getParticipantBorderColor(participant: SkillParticipant, useInitiative: boolean): string {
-  if (useInitiative && participant.participantType === 'enemy') return 'border-l-red-500';
-  if (useInitiative && participant.participantType === 'ally') return 'border-l-blue-500';
-  if (participant.isHelping) return 'border-l-amber-500';
+  if (useInitiative && participant.participantType === 'enemy') return 'border-l-enemy';
+  if (useInitiative && participant.participantType === 'ally') return 'border-l-ally';
+  if (participant.isHelping) return 'border-l-warning-500';
   const hasActed = participant.hasRolled || participant.isHelping;
   const isSuccess = (participant.successCount ?? 0) > 0;
-  if (hasActed && isSuccess) return 'border-l-green-500';
-  if (hasActed && !isSuccess) return 'border-l-red-500';
+  if (hasActed && isSuccess) return 'border-l-success-500';
+  if (hasActed && !isSuccess) return 'border-l-danger-500';
   return 'border-l-border-light';
 }
 
@@ -990,17 +997,17 @@ function ParticipantCard({
   };
 
   return (
-    <div
+    <Card
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       className={cn(
-        'bg-surface rounded-xl shadow-md p-3 transition-all border-l-4',
+        'shadow-md p-3 transition-all border-l-4',
         getParticipantBorderColor(participant, useInitiative),
-        participant.isHelping && 'bg-amber-50/50 dark:bg-amber-900/10',
-        hasActed && !participant.isHelping && isSuccess && 'bg-green-50/50 dark:bg-green-900/10',
-        hasActed && !participant.isHelping && !isSuccess && 'bg-red-50/50 dark:bg-red-900/10',
-        isDragOver && 'ring-2 ring-amber-400 bg-amber-50 dark:bg-amber-900/30',
+        participant.isHelping && 'bg-warning-light/50',
+        hasActed && !participant.isHelping && isSuccess && 'bg-success-light/50',
+        hasActed && !participant.isHelping && !isSuccess && 'bg-danger-light/50',
+        isDragOver && 'ring-2 ring-warning-500 bg-warning-light',
         isDragging && 'opacity-50'
       )}
     >
@@ -1039,8 +1046,8 @@ function ParticipantCard({
                 aria-label="Participant side"
                 className={cn(
                   'text-[10px] font-medium rounded px-1.5 py-0.5 border cursor-pointer',
-                  (participant.participantType ?? 'ally') === 'ally' && 'bg-blue-100 dark:bg-blue-900/40 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300',
-                  participant.participantType === 'enemy' && 'bg-red-100 dark:bg-red-900/40 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300'
+                  (participant.participantType ?? 'ally') === 'ally' && 'bg-ally-light border-ally text-ally-text',
+                  participant.participantType === 'enemy' && 'bg-enemy-light border-enemy text-enemy-text'
                 )}
               >
                 <option value="ally">Ally</option>
@@ -1053,7 +1060,7 @@ function ParticipantCard({
               aria-label="Skill for participant"
               value={participant.skillUsed || ''}
               onChange={(e) => onUpdateSkill(e.target.value)}
-              className="text-xs bg-transparent border border-border-light rounded px-1 py-0.5 text-text-secondary focus:border-primary-500 focus:outline-none min-w-0 max-w-[140px]"
+              className="text-xs bg-transparent border border-border-light rounded px-1 py-0.5 text-text-secondary focus:border-primary-outline-border focus:outline-none min-w-0 max-w-[140px]"
             >
               <option value="">Skill...</option>
               {codexSkills.map((s) => (
@@ -1077,8 +1084,8 @@ function ParticipantCard({
                   className={cn(
                     'px-3 py-1 rounded-lg font-bold text-sm',
                     isSuccess
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-                      : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                      ? 'bg-success-light text-success-fg'
+                      : 'bg-danger-light text-danger-fg'
                   )}
                 >
                   {participant.rollValue}
@@ -1096,7 +1103,7 @@ function ParticipantCard({
                     value={rmBonusInput}
                     onChange={(e) => handleRmBonusChange(e.target.value)}
                     placeholder="+0"
-                    className="w-14 px-2 py-1 text-xs border border-border-light rounded bg-surface text-text-primary focus:border-primary-500 focus:outline-none min-h-[44px]"
+                    className="w-14 px-2 py-1 text-xs border border-border-light rounded bg-surface text-text-primary focus:border-primary-outline-border focus:outline-none min-h-[44px]"
                     aria-label="RM bonus"
                   />
                 </div>
@@ -1104,8 +1111,8 @@ function ParticipantCard({
                   className={cn(
                     'px-2 py-1 rounded-lg text-sm font-bold min-h-[44px] flex items-center',
                     successCount > 0
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-                      : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                      ? 'bg-success-light text-success-fg'
+                      : 'bg-danger-light text-danger-fg'
                   )}
                   aria-live="polite"
                 >
@@ -1133,7 +1140,7 @@ function ParticipantCard({
                 onChange={(e) => setRollInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && submitRoll()}
                 placeholder="Total"
-                className="w-16 px-2 py-1.5 text-sm border border-border-light rounded-lg bg-surface text-text-primary focus:border-primary-500 focus:outline-none min-h-[44px]"
+                className="w-16 px-2 py-1.5 text-sm border border-border-light rounded-lg bg-surface text-text-primary focus:border-primary-outline-border focus:outline-none min-h-[44px]"
                 aria-label="Roll total"
               />
               <div className="flex items-center gap-1">
@@ -1143,7 +1150,7 @@ function ParticipantCard({
                   value={rmBonusInput}
                   onChange={(e) => handleRmBonusChange(e.target.value)}
                   placeholder="+0"
-                  className="w-14 px-2 py-1.5 text-sm border border-border-light rounded-lg bg-surface text-text-primary focus:border-primary-500 focus:outline-none min-h-[44px]"
+                  className="w-14 px-2 py-1.5 text-sm border border-border-light rounded-lg bg-surface text-text-primary focus:border-primary-outline-border focus:outline-none min-h-[44px]"
                   aria-label="RM bonus"
                 />
               </div>
@@ -1154,9 +1161,9 @@ function ParticipantCard({
                 className={cn(
                   'px-2 py-1 rounded-lg text-sm font-bold min-h-[44px] flex items-center empty:invisible',
                   successCount > 0
-                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                    ? 'bg-success-light text-success-fg'
                     : failureCount > 0
-                      ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                      ? 'bg-danger-light text-danger-fg'
                       : ''
                 )}
                 aria-live="polite"
@@ -1182,7 +1189,7 @@ function ParticipantCard({
 
           <button
             onClick={onRemove}
-            className="p-2 min-w-[44px] min-h-[44px] text-text-muted dark:text-text-secondary hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex-shrink-0"
+            className="p-2 min-w-[44px] min-h-[44px] text-text-muted dark:text-text-secondary hover:text-danger-fg hover:bg-danger-light rounded-lg transition-colors flex-shrink-0"
             title="Remove participant"
             aria-label="Remove participant"
           >
@@ -1190,6 +1197,6 @@ function ParticipantCard({
           </button>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

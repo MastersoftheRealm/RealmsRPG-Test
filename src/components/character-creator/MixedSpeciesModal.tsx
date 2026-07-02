@@ -74,8 +74,10 @@ export function MixedSpeciesModal({
       title="Mixed species"
       size="lg"
       fullScreenOnMobile
+      flexLayout
+      contentClassName="p-0"
       footer={
-        <div className="p-4 flex justify-end gap-2">
+        <div className="shrink-0 border-t border-border-light p-4 flex justify-end gap-2">
           <Button variant="outline" onClick={handleClose} className="min-h-[44px] min-w-[44px]">
             Cancel
           </Button>
@@ -137,7 +139,7 @@ export function MixedSpeciesModal({
         </div>
 
         {speciesA && speciesB && (
-          <p className="text-sm text-primary-600 font-medium">
+          <p className="text-sm text-primary-link-fg font-medium">
             Mixed: {speciesA.name} / {speciesB.name}
           </p>
         )}

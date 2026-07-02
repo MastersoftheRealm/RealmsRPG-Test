@@ -39,7 +39,7 @@ export function SocialButton({ provider, onClick, disabled, className }: SocialB
       disabled={disabled}
       className={cn(
         'w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg',
-        'font-medium transition-colors duration-200',
+        'font-medium transition-colors duration-base',
         'disabled:opacity-50 disabled:cursor-not-allowed',
         config.bg,
         config.text,

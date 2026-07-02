@@ -5,7 +5,7 @@
  * Used in character sheet, creature stat blocks, encounter tracker, etc.
  * 
  * Visual Design:
- * - Solid colors (clean, no gradients) matching btn-solid/btn-outline-clean
+ * Solid colors using semantic Button / roll tokens.
  * - White text with +/- number format
  * - Rounded corners, clear white font
  * - Hover: darker shade, active: press effect
@@ -30,23 +30,22 @@ import { formatBonus } from '@/lib/utils';
 
 const rollButtonVariants = cva(
   // Base styles - consistent across all variants
-  'inline-flex items-center justify-center font-bold rounded-lg transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100',
+  'inline-flex items-center justify-center font-bold rounded-lg transition-all duration-base ease-standard cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 min-h-[var(--touch-target-min,44px)] md:min-h-0',
   {
     variants: {
       variant: {
         // Standard roll button - solid primary; dark mode for contrast
         primary: [
           'text-white',
-          'bg-primary-600 hover:bg-primary-700 focus-visible:ring-primary-accent',
-          'dark:bg-primary-100 dark:text-white dark:hover:bg-primary-50',
+          'bg-primary-button hover:bg-primary-button-hover focus-visible:ring-primary-outline-border',
           'hover:scale-105 active:scale-95',
         ].join(' '),
         
         // Unproficient/disadvantage - solid gray; dark mode for contrast
         unproficient: [
-          'text-white',
-          'bg-neutral-500 hover:bg-neutral-600 focus-visible:ring-neutral-400',
-          'dark:bg-neutral-600 dark:hover:bg-neutral-500 dark:text-white',
+          'text-text-primary',
+          'bg-surface-alt hover:bg-border-light focus-visible:ring-primary-outline-border border border-border-light',
+          'dark:bg-surface dark:hover:bg-surface-alt dark:text-text-primary',
           'hover:scale-105 active:scale-95',
         ].join(' '),
         
@@ -71,11 +70,12 @@ const rollButtonVariants = cva(
           'hover:scale-105 active:scale-95',
         ].join(' '),
         
-        // Outline variant - matches btn-outline-clean
+        // Outline variant
         outline: [
-          'text-primary-700 border-2 border-primary-600 bg-transparent',
-          'hover:bg-primary-50 hover:scale-105',
-          'active:scale-95 active:bg-primary-100',
+          'text-primary-subtle-fg border-2 border-primary-outline-border bg-transparent',
+          'hover:bg-primary-subtle-bg hover:scale-105',
+          'active:scale-95 active:bg-primary-subtle-bg',
+          'focus-visible:ring-primary-outline-border',
         ].join(' '),
       },
       

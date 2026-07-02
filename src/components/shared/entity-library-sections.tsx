@@ -1,8 +1,9 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { GridListRow, type ColumnValue, type ChipData } from '@/components/shared/grid-list-row';
-import { ListHeader, type ListColumn } from '@/components/shared/list-header';
+import { ListHeader, type ListColumn, type SortState } from '@/components/shared/list-header';
+import type { ListHeaderRowChrome } from '@/components/shared/grid-list-row-chrome';
 import { SectionHeader } from '@/components/shared/section-header';
 import { QuantitySelector } from '@/components/shared/quantity-selector';
 import { RollButton } from '@/components/shared/roll-button';
@@ -11,8 +12,56 @@ import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { useRollsOptional } from '@/components/character-sheet/roll-context';
 
 // =============================================================================
-// Shared display-only list sections (character sheet + creatures + elsewhere)
+// Shared list sections (character sheet + creatures + elsewhere)
 // =============================================================================
+
+/** Optional per-row chrome passed through to GridListRow (character sheet edit/use flows). */
+export type EntityRowExtras = {
+  columns?: ColumnValue[];
+  gridColumns?: string;
+  leftSlot?: ReactNode;
+  rightSlot?: ReactNode;
+  onDelete?: () => void;
+  badges?: Array<{ label: string; color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' }>;
+  equipped?: boolean;
+  innate?: boolean;
+  hideInnateBadge?: boolean;
+  requirements?: ReactNode;
+  partsChips?: ChipData[];
+  chips?: ChipData[];
+  chipsLabel?: string;
+  totalTp?: number;
+  columnSpans?: (number | undefined)[];
+  detailSections?: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }>;
+  uses?: { current: number; max: number };
+  hideUsesInName?: boolean;
+  nameContent?: ReactNode;
+  supplementalExpandedContent?: ReactNode;
+};
+
+export type EntityListControls = {
+  sortState?: SortState;
+  onSort?: (columnKey: string) => void;
+  rowChrome?: ListHeaderRowChrome;
+  onAdd?: () => void;
+  addLabel?: string;
+  emptyMessage?: string;
+};
+
+export function splitDamageDiceAndType(damage: unknown): { dice: string; type: string; rollStr: string } {
+  if (!damage) return { dice: '-', type: '', rollStr: '-' };
+  if (typeof damage === 'string') {
+    const str = damage.trim();
+    const match = str.match(/^([\dd+\-\s]+)(?:\s+(.+))?$/);
+    if (!match) return { dice: str, type: '', rollStr: str };
+    return { dice: match[1].trim(), type: (match[2] ?? '').trim(), rollStr: str };
+  }
+  const formatted = formatDamageDisplay(damage as never);
+  const str = formatted ? String(formatted) : '-';
+  const match = str.match(/^([\dd+\-\s]+)(?:\s+(.+))?$/);
+  if (!match) return { dice: str, type: '', rollStr: str };
+  return { dice: match[1].trim(), type: (match[2] ?? '').trim(), rollStr: str };
+}
 
 // Powers (character sheet-like; creature stat block can include Energy)
 const POWER_COLUMNS: ListColumn[] = [
@@ -23,6 +72,8 @@ const POWER_COLUMNS: ListColumn[] = [
   { key: 'duration', label: 'Duration', width: '0.7fr', align: 'center' },
 ];
 const POWER_GRID = '1.4fr 1fr 1fr 0.7fr 0.7fr';
+
+export { POWER_COLUMNS, POWER_GRID };
 
 const POWER_COLUMNS_WITH_ENERGY: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1.2fr' },
@@ -43,6 +94,16 @@ const TECHNIQUE_COLUMNS: ListColumn[] = [
 ];
 const TECHNIQUE_GRID = '1.4fr 0.7fr 1fr 0.8fr';
 
+/** Character sheet techniques tab includes Action column */
+export const CHARACTER_SHEET_TECHNIQUE_COLUMNS: ListColumn[] = [
+  { key: 'name', label: 'Name', width: '1.4fr' },
+  { key: 'action', label: 'Action', width: '1fr', align: 'center' },
+  { key: 'energy', label: 'Energy', width: '0.7fr', align: 'center' },
+  { key: 'weapon', label: 'Weapon', width: '1fr', align: 'center' },
+  { key: 'tp', label: 'Training Pts', width: '0.8fr', align: 'center' },
+];
+export const CHARACTER_SHEET_TECHNIQUE_GRID = '1.4fr 1fr 0.7fr 1fr 0.8fr';
+
 // Weapons / Shields / Armor / Equipment (matches Character Sheet -> Library -> Inventory)
 const WEAPON_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1fr' },
@@ -51,6 +112,15 @@ const WEAPON_COLUMNS: ListColumn[] = [
 ];
 const WEAPON_GRID = '1fr 0.8fr 0.6fr';
 
+/** Character sheet weapons: range, attack roll, damage roll */
+export const CHARACTER_SHEET_WEAPON_COLUMNS: ListColumn[] = [
+  { key: 'name', label: 'Name', width: 'minmax(180px, 0.9fr)' },
+  { key: 'range', label: 'Range', width: 'minmax(88px, 7rem)', align: 'center' },
+  { key: 'attack', label: 'Attack', width: 'minmax(60px, 4rem)', align: 'center' },
+  { key: 'damage', label: 'Damage', width: 'minmax(110px, 8rem)', align: 'center' },
+];
+export const CHARACTER_SHEET_WEAPON_GRID = 'minmax(180px, 0.9fr) minmax(88px, 7rem) minmax(60px, 4rem) minmax(110px, 8rem)';
+
 const SHIELD_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1fr' },
   { key: 'attack', label: 'Attack', width: '0.6fr', align: 'center' },
@@ -58,6 +128,16 @@ const SHIELD_COLUMNS: ListColumn[] = [
   { key: 'block', label: 'Block', width: '0.7fr', align: 'center' },
 ];
 const SHIELD_GRID = '1fr 0.6fr 0.7fr 0.7fr';
+
+export const CHARACTER_SHEET_SHIELD_COLUMNS: ListColumn[] = [
+  { key: 'name', label: 'Name', width: 'minmax(160px, 1fr)' },
+  { key: 'range', label: 'Range', width: 'minmax(64px, 0.6fr)', align: 'center' },
+  { key: 'attack', label: 'Attack', width: 'minmax(64px, 4.5rem)', align: 'center' },
+  { key: 'damage', label: 'Damage', width: 'minmax(64px, 4.5rem)', align: 'center' },
+  { key: 'block', label: 'Block', width: 'minmax(64px, 0.7fr)', align: 'center' },
+];
+export const CHARACTER_SHEET_SHIELD_GRID =
+  'minmax(160px, 1fr) minmax(64px, 0.6fr) minmax(64px, 4.5rem) minmax(64px, 4.5rem) minmax(64px, 0.7fr)';
 
 const ARMOR_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1fr' },
@@ -82,6 +162,17 @@ const FEAT_COLUMNS: ListColumn[] = [
 ];
 const FEAT_GRID = 'minmax(140px, 1.6fr) 2.5fr 5rem 4rem';
 
+const FEAT_COLUMNS_WITH_LEVEL: ListColumn[] = [
+  { key: 'name', label: 'Name', width: 'minmax(140px, 1.6fr)' },
+  { key: 'description', label: 'Description', width: '2fr', sortable: false },
+  { key: 'level', label: 'Lvl', width: '3.5rem', align: 'center' },
+  { key: 'uses', label: 'Uses', width: '5rem', align: 'center' },
+  { key: 'recovery', label: 'Recovery', width: '4rem', align: 'center' },
+];
+const FEAT_GRID_WITH_LEVEL = 'minmax(140px, 1.6fr) 2fr 3.5rem 5rem 4rem';
+
+export { FEAT_COLUMNS, FEAT_GRID, FEAT_COLUMNS_WITH_LEVEL, FEAT_GRID_WITH_LEVEL };
+
 function truncateText(text: string | undefined, maxLength: number): string {
   if (!text) return '';
   if (text.length <= maxLength) return text;
@@ -98,35 +189,76 @@ function formatRecoveryAbbrev(recovery: string | undefined): string {
   return '-';
 }
 
-function splitDamageDiceAndType(damage: unknown): { dice: string; type: string; rollStr: string } {
-  if (!damage) return { dice: '-', type: '', rollStr: '-' };
-  if (typeof damage === 'string') {
-    const str = damage.trim();
-    const match = str.match(/^([\dd+\-\s]+)(?:\s+(.+))?$/);
-    if (!match) return { dice: str, type: '', rollStr: str };
-    return { dice: match[1].trim(), type: (match[2] ?? '').trim(), rollStr: str };
-  }
-  const formatted = formatDamageDisplay(damage as never);
-  const str = formatted ? String(formatted) : '-';
-  const match = str.match(/^([\dd+\-\s]+)(?:\s+(.+))?$/);
-  if (!match) return { dice: str, type: '', rollStr: str };
-  return { dice: match[1].trim(), type: (match[2] ?? '').trim(), rollStr: str };
-}
-
 export type EntityPowerRow = {
   id?: string | number;
   name: string;
   description?: string;
   actionType?: string;
-  damage?: string;
+  damage?: string | ReactNode;
   area?: string;
   duration?: string;
   energyCost?: number;
   innate?: boolean;
   partsChips?: ChipData[];
   totalTp?: number;
-  requirements?: React.ReactNode;
+  requirements?: ReactNode;
+} & EntityRowExtras;
+
+type InteractiveRow = EntityRowExtras & {
+  id?: string | number;
+  name: string;
+  description?: string;
 };
+
+function renderInteractiveGridRows(
+  items: InteractiveRow[],
+  defaultGrid: string,
+  buildDefaultColumns: (item: InteractiveRow, idx: number) => ColumnValue[],
+  compactRows: boolean
+) {
+  return items.map((item, idx) => (
+    <GridListRow
+      key={String(item.id ?? `${item.name}-${idx}`)}
+      id={String(item.id ?? idx)}
+      name={item.name}
+      nameContent={item.nameContent}
+      description={item.description}
+      columns={item.columns ?? buildDefaultColumns(item, idx)}
+      gridColumns={item.gridColumns ?? defaultGrid}
+      expandedContent={
+        item.requirements ? (
+          <div className="space-y-2">
+            {item.description && (
+              <p className="text-sm text-text-secondary whitespace-pre-wrap">{item.description}</p>
+            )}
+            {item.requirements}
+          </div>
+        ) : undefined
+      }
+      chips={item.partsChips ?? item.chips}
+      chipsLabel={
+        item.chipsLabel ??
+        (item.partsChips?.length || item.chips?.length ? 'Parts & Proficiencies' : undefined)
+      }
+      totalCost={item.totalTp && item.totalTp > 0 ? item.totalTp : undefined}
+      costLabel={item.totalTp && item.totalTp > 0 ? 'TP' : undefined}
+      requirements={!item.columns ? item.requirements : undefined}
+      innate={item.innate === true}
+      hideInnateBadge={item.hideInnateBadge}
+      leftSlot={item.leftSlot}
+      rightSlot={item.rightSlot}
+      onDelete={item.onDelete}
+      badges={item.badges}
+      equipped={item.equipped}
+      columnSpans={item.columnSpans}
+      detailSections={item.detailSections}
+      supplementalExpandedContent={item.supplementalExpandedContent}
+      uses={item.uses}
+      hideUsesInName={item.hideUsesInName}
+      compact={compactRows}
+    />
+  ));
+}
 
 export function PowersListSection({
   title = 'Powers',
@@ -135,6 +267,12 @@ export function PowersListSection({
   compactRows = true,
   includeEnergyColumn = false,
   showTitle = true,
+  sortState,
+  onSort,
+  rowChrome,
+  onAdd,
+  addLabel,
+  emptyMessage = 'No powers',
 }: {
   title?: string;
   items: EntityPowerRow[];
@@ -143,66 +281,51 @@ export function PowersListSection({
   includeEnergyColumn?: boolean;
   /** When false, omit the internal SectionHeader title (for callers that provide their own header) */
   showTitle?: boolean;
-}) {
+} & EntityListControls) {
   const hasAny = items.length > 0;
   const cols = includeEnergyColumn ? POWER_COLUMNS_WITH_ENERGY : POWER_COLUMNS;
   const grid = includeEnergyColumn ? POWER_GRID_WITH_ENERGY : POWER_GRID;
   return (
     <div>
-      {showTitle && <SectionHeader title={title} size="sm" />}
-      {showListHeader && hasAny && <ListHeader columns={cols} gridColumns={grid} />}
+      {showTitle && <SectionHeader title={title} size="sm" onAdd={onAdd} addLabel={addLabel} />}
+      {showListHeader && hasAny && (
+        <ListHeader
+          columns={cols}
+          gridColumns={grid}
+          sortState={sortState}
+          onSort={onSort}
+          rowChrome={rowChrome}
+        />
+      )}
       {hasAny ? (
         <div className="space-y-1">
-          {items.map((power, idx) => {
-            const columns: ColumnValue[] = includeEnergyColumn
-              ? [
-                  { key: 'energy', value: power.energyCost ?? '-', align: 'center' },
-                  { key: 'action', value: power.actionType ?? '-', align: 'center' },
-                  { key: 'damage', value: power.damage ?? '-', align: 'center' },
-                  { key: 'area', value: power.area ?? '-', align: 'center' },
-                  { key: 'duration', value: power.duration ?? '-', align: 'center' },
-                ]
-              : [
-                  { key: 'action', value: power.actionType ?? '-', align: 'center' },
-                  { key: 'damage', value: power.damage ?? '-', align: 'center' },
-                  { key: 'area', value: power.area ?? '-', align: 'center' },
-                  { key: 'duration', value: power.duration ?? '-', align: 'center' },
-                ];
-            return (
-              <GridListRow
-                key={String(power.id ?? `${power.name}-${idx}`)}
-                id={String(power.id ?? idx)}
-                name={power.name}
-                description={power.description}
-                columns={columns}
-                gridColumns={grid}
-                expandedContent={
-                  <div className="space-y-2">
-                    {power.description && (
-                      <p className="text-sm text-text-secondary whitespace-pre-wrap">{power.description}</p>
-                    )}
-                    <div className="flex flex-wrap gap-3 text-sm text-text-secondary">
-                      {power.energyCost != null && <span><span className="font-medium">Energy:</span> {power.energyCost}</span>}
-                      {power.actionType && <span><span className="font-medium">Action:</span> {power.actionType}</span>}
-                      {power.damage && <span><span className="font-medium">Damage:</span> {power.damage}</span>}
-                      {power.area && <span><span className="font-medium">Area:</span> {power.area}</span>}
-                      {power.duration && <span><span className="font-medium">Duration:</span> {power.duration}</span>}
-                    </div>
-                  </div>
-                }
-                chips={power.partsChips}
-                chipsLabel={power.partsChips?.length ? 'Parts & Proficiencies' : undefined}
-                totalCost={power.totalTp && power.totalTp > 0 ? power.totalTp : undefined}
-                costLabel={power.totalTp && power.totalTp > 0 ? 'TP' : undefined}
-                requirements={power.requirements}
-                innate={power.innate === true}
-                compact={compactRows}
-              />
-            );
-          })}
+          {renderInteractiveGridRows(
+            items,
+            grid,
+            (power) => {
+              const row = power as EntityPowerRow;
+              const damageVal =
+                typeof row.damage === 'string' || row.damage == null ? (row.damage ?? '-') : row.damage;
+              return includeEnergyColumn
+                ? [
+                    { key: 'energy', value: row.energyCost ?? '-', align: 'center' as const },
+                    { key: 'action', value: row.actionType ?? '-', align: 'center' as const },
+                    { key: 'damage', value: damageVal, align: 'center' as const },
+                    { key: 'area', value: row.area ?? '-', align: 'center' as const },
+                    { key: 'duration', value: row.duration ?? '-', align: 'center' as const },
+                  ]
+                : [
+                    { key: 'action', value: row.actionType ?? '-', align: 'center' as const },
+                    { key: 'damage', value: damageVal, align: 'center' as const },
+                    { key: 'area', value: row.area ?? '-', align: 'center' as const },
+                    { key: 'duration', value: row.duration ?? '-', align: 'center' as const },
+                  ];
+            },
+            compactRows
+          )}
         </div>
       ) : (
-        <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">No powers</p>
+        <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
       )}
     </div>
   );
@@ -212,12 +335,13 @@ export type EntityTechniqueRow = {
   id?: string | number;
   name: string;
   description?: string;
+  actionType?: string;
   energyCost?: number;
   weaponName?: string;
   tp?: number | string;
   partsChips?: ChipData[];
   totalTp?: number;
-};
+} & EntityRowExtras;
 
 export function TechniquesListSection({
   title = 'Techniques',
@@ -225,54 +349,52 @@ export function TechniquesListSection({
   showListHeader = true,
   compactRows = true,
   showTitle = true,
+  includeActionColumn = false,
+  sortState,
+  onSort,
+  rowChrome,
+  onAdd,
+  addLabel,
+  emptyMessage = 'No techniques',
 }: {
   title?: string;
   items: EntityTechniqueRow[];
   showListHeader?: boolean;
   compactRows?: boolean;
   showTitle?: boolean;
-}) {
+  includeActionColumn?: boolean;
+} & EntityListControls) {
   const hasAny = items.length > 0;
+  const cols = includeActionColumn ? CHARACTER_SHEET_TECHNIQUE_COLUMNS : TECHNIQUE_COLUMNS;
+  const grid = includeActionColumn ? CHARACTER_SHEET_TECHNIQUE_GRID : TECHNIQUE_GRID;
   return (
     <div>
-      {showTitle && <SectionHeader title={title} size="sm" />}
-      {showListHeader && hasAny && <ListHeader columns={TECHNIQUE_COLUMNS} gridColumns={TECHNIQUE_GRID} />}
+      {showTitle && <SectionHeader title={title} size="sm" onAdd={onAdd} addLabel={addLabel} />}
+      {showListHeader && hasAny && (
+        <ListHeader columns={cols} gridColumns={grid} sortState={sortState} onSort={onSort} rowChrome={rowChrome} />
+      )}
       {hasAny ? (
         <div className="space-y-1">
-          {items.map((tech, idx) => {
-            const columns: ColumnValue[] = [
-              { key: 'energy', value: tech.energyCost ?? '-', align: 'center' },
-              { key: 'weapon', value: tech.weaponName ?? '-', align: 'center' },
-              { key: 'tp', value: tech.tp ?? '-', align: 'center' },
-            ];
-            return (
-              <GridListRow
-                key={String(tech.id ?? `${tech.name}-${idx}`)}
-                id={String(tech.id ?? idx)}
-                name={tech.name}
-                description={tech.description}
-                columns={columns}
-                gridColumns={TECHNIQUE_GRID}
-                expandedContent={
-                  tech.description ? (
-                    <div className="space-y-2">
-                      <p className="text-sm text-text-secondary whitespace-pre-wrap">{tech.description}</p>
-                    </div>
-                  ) : (
-                    <div className="text-sm text-text-muted dark:text-text-secondary italic">No description.</div>
-                  )
-                }
-                chips={tech.partsChips}
-                chipsLabel={tech.partsChips?.length ? 'Parts & Proficiencies' : undefined}
-                totalCost={tech.totalTp && tech.totalTp > 0 ? tech.totalTp : undefined}
-                costLabel={tech.totalTp && tech.totalTp > 0 ? 'TP' : undefined}
-                compact={compactRows}
-              />
-            );
-          })}
+          {renderInteractiveGridRows(
+            items,
+            grid,
+            (tech) => {
+              const row = tech as EntityTechniqueRow;
+              const base: ColumnValue[] = includeActionColumn
+                ? [{ key: 'action', value: row.actionType ?? '-', align: 'center' }]
+                : [];
+              return [
+                ...base,
+                { key: 'energy', value: row.energyCost ?? '-', align: 'center' },
+                { key: 'weapon', value: row.weaponName ?? '-', align: 'center' },
+                { key: 'tp', value: row.tp ?? '-', align: 'center' },
+              ];
+            },
+            compactRows
+          )}
         </div>
       ) : (
-        <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">No techniques</p>
+        <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
       )}
     </div>
   );
@@ -286,7 +408,7 @@ export type EntityWeaponRow = {
   range?: string;
   attackBonus?: number;
   chips?: ChipData[];
-};
+} & EntityRowExtras;
 
 export function WeaponsListSection({
   title = 'Weapons',
@@ -295,6 +417,13 @@ export function WeaponsListSection({
   compactRows = true,
   showTitle = true,
   rollTitlePrefix,
+  layout = 'creature',
+  sortState,
+  onSort,
+  rowChrome,
+  onAdd,
+  addLabel,
+  emptyMessage = 'No weapons',
 }: {
   title?: string;
   items: EntityWeaponRow[];
@@ -302,13 +431,35 @@ export function WeaponsListSection({
   compactRows?: boolean;
   showTitle?: boolean;
   rollTitlePrefix?: string;
-}) {
+  layout?: 'creature' | 'characterSheet';
+} & EntityListControls) {
   const rollContext = useRollsOptional();
   const hasAny = items.length > 0;
+  const cols = layout === 'characterSheet' ? CHARACTER_SHEET_WEAPON_COLUMNS : WEAPON_COLUMNS;
+  const grid = layout === 'characterSheet' ? CHARACTER_SHEET_WEAPON_GRID : WEAPON_GRID;
+
+  if (layout === 'characterSheet') {
+    return (
+      <div>
+        {showTitle && <SectionHeader title={title} size="sm" onAdd={onAdd} addLabel={addLabel} />}
+        {showListHeader && hasAny && (
+          <ListHeader columns={cols} gridColumns={grid} sortState={sortState} onSort={onSort} rowChrome={rowChrome} />
+        )}
+        {hasAny ? (
+          <div className="space-y-1">{renderInteractiveGridRows(items, grid, () => [], compactRows)}</div>
+        ) : (
+          <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div>
-      {showTitle && <SectionHeader title={title} size="sm" />}
-      {showListHeader && hasAny && <ListHeader columns={WEAPON_COLUMNS} gridColumns={WEAPON_GRID} />}
+      {showTitle && <SectionHeader title={title} size="sm" onAdd={onAdd} addLabel={addLabel} />}
+      {showListHeader && hasAny && (
+        <ListHeader columns={cols} gridColumns={grid} sortState={sortState} onSort={onSort} rowChrome={rowChrome} />
+      )}
       {hasAny ? (
         <div className="space-y-1">
           {items.map((w, idx) => {
@@ -353,21 +504,25 @@ export function WeaponsListSection({
                 id={String(w.id ?? idx)}
                 name={w.name}
                 description={w.description}
-                columns={[
+                columns={w.columns ?? [
                   { key: 'damage', value: w.damage ?? '-', align: 'center' },
                   { key: 'range', value: w.range ?? 'Melee', align: 'center' },
                 ]}
-                gridColumns={WEAPON_GRID}
+                gridColumns={w.gridColumns ?? grid}
                 chips={w.chips}
                 chipsLabel={w.chips?.length ? 'Properties & Proficiencies' : undefined}
-                rightSlot={rightSlot}
+                rightSlot={w.rightSlot ?? rightSlot}
+                leftSlot={w.leftSlot}
+                onDelete={w.onDelete}
+                badges={w.badges}
+                equipped={w.equipped}
                 compact={compactRows}
               />
             );
           })}
         </div>
       ) : (
-        <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">No weapons</p>
+        <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
       )}
     </div>
   );
@@ -380,7 +535,7 @@ export type EntityShieldRow = {
   damage?: string;
   properties?: Array<{ id?: number; name?: string; op_1_lvl?: number }>;
   chips?: ChipData[];
-};
+} & EntityRowExtras;
 
 export function ShieldsListSection({
   title = 'Shields',
@@ -388,18 +543,47 @@ export function ShieldsListSection({
   showListHeader = true,
   compactRows = true,
   showTitle = true,
+  layout = 'creature',
+  sortState,
+  onSort,
+  rowChrome,
+  onAdd,
+  addLabel,
+  emptyMessage = 'No shields',
 }: {
   title?: string;
   items: EntityShieldRow[];
   showListHeader?: boolean;
   compactRows?: boolean;
   showTitle?: boolean;
-}) {
+  layout?: 'creature' | 'characterSheet';
+} & EntityListControls) {
   const hasAny = items.length > 0;
+  const cols = layout === 'characterSheet' ? CHARACTER_SHEET_SHIELD_COLUMNS : SHIELD_COLUMNS;
+  const grid = layout === 'characterSheet' ? CHARACTER_SHEET_SHIELD_GRID : SHIELD_GRID;
+
+  if (layout === 'characterSheet') {
+    return (
+      <div>
+        {showTitle && <SectionHeader title={title} size="sm" onAdd={onAdd} addLabel={addLabel} />}
+        {showListHeader && hasAny && (
+          <ListHeader columns={cols} gridColumns={grid} sortState={sortState} onSort={onSort} rowChrome={rowChrome} />
+        )}
+        {hasAny ? (
+          <div className="space-y-1">{renderInteractiveGridRows(items, grid, () => [], compactRows)}</div>
+        ) : (
+          <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div>
-      {showTitle && <SectionHeader title={title} size="sm" />}
-      {showListHeader && hasAny && <ListHeader columns={SHIELD_COLUMNS} gridColumns={SHIELD_GRID} />}
+      {showTitle && <SectionHeader title={title} size="sm" onAdd={onAdd} addLabel={addLabel} />}
+      {showListHeader && hasAny && (
+        <ListHeader columns={cols} gridColumns={grid} sortState={sortState} onSort={onSort} rowChrome={rowChrome} />
+      )}
       {hasAny ? (
         <div className="space-y-1">
           {items.map((s, idx) => {
@@ -416,7 +600,7 @@ export function ShieldsListSection({
                 name={s.name}
                 description={s.description}
                 columns={columns}
-                gridColumns={SHIELD_GRID}
+                gridColumns={grid}
                 chips={s.chips}
                 chipsLabel={s.chips?.length ? 'Properties & Proficiencies' : undefined}
                 compact={compactRows}
@@ -425,7 +609,7 @@ export function ShieldsListSection({
           })}
         </div>
       ) : (
-        <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">No shields</p>
+        <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
       )}
     </div>
   );
@@ -438,7 +622,7 @@ export type EntityArmorRow = {
   damageReduction?: number;
   armorValue?: number;
   chips?: ChipData[];
-};
+} & EntityRowExtras;
 
 export function ArmorListSection({
   title = 'Armor',
@@ -446,18 +630,52 @@ export function ArmorListSection({
   showListHeader = true,
   compactRows = true,
   showTitle = true,
+  layout = 'creature',
+  sortState,
+  onSort,
+  rowChrome,
+  onAdd,
+  addLabel,
+  emptyMessage = 'No armor',
 }: {
   title?: string;
   items: EntityArmorRow[];
   showListHeader?: boolean;
   compactRows?: boolean;
   showTitle?: boolean;
-}) {
+  layout?: 'creature' | 'characterSheet';
+} & EntityListControls) {
   const hasAny = items.length > 0;
+  const grid = ARMOR_GRID;
+
+  if (layout === 'characterSheet') {
+    return (
+      <div>
+        {showTitle && <SectionHeader title={title} size="sm" onAdd={onAdd} addLabel={addLabel} />}
+        {showListHeader && hasAny && (
+          <ListHeader
+            columns={ARMOR_COLUMNS}
+            gridColumns={grid}
+            sortState={sortState}
+            onSort={onSort}
+            rowChrome={rowChrome}
+          />
+        )}
+        {hasAny ? (
+          <div className="space-y-1">{renderInteractiveGridRows(items, grid, () => [], compactRows)}</div>
+        ) : (
+          <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div>
-      {showTitle && <SectionHeader title={title} size="sm" />}
-      {showListHeader && hasAny && <ListHeader columns={ARMOR_COLUMNS} gridColumns={ARMOR_GRID} />}
+      {showTitle && <SectionHeader title={title} size="sm" onAdd={onAdd} addLabel={addLabel} />}
+      {showListHeader && hasAny && (
+        <ListHeader columns={ARMOR_COLUMNS} gridColumns={grid} sortState={sortState} onSort={onSort} rowChrome={rowChrome} />
+      )}
       {hasAny ? (
         <div className="space-y-1">
           {items.map((a, idx) => (
@@ -470,7 +688,7 @@ export function ArmorListSection({
                 { key: 'dr', value: a.damageReduction ?? a.armorValue ?? '-', align: 'center' },
                 { key: 'crit', value: '-', align: 'center' },
               ]}
-              gridColumns={ARMOR_GRID}
+              gridColumns={grid}
               chips={a.chips}
               chipsLabel={a.chips?.length ? 'Properties & Proficiencies' : undefined}
               compact={compactRows}
@@ -478,7 +696,7 @@ export function ArmorListSection({
           ))}
         </div>
       ) : (
-        <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">No armor</p>
+        <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
       )}
     </div>
   );
@@ -490,24 +708,60 @@ export type EntityEquipmentRow = {
   description?: string;
   type?: string;
   quantity?: number;
-};
+} & EntityRowExtras;
 
 export function EquipmentListSection({
   title = 'Equipment',
   items,
   showListHeader = true,
   compactRows = true,
+  showTitle = true,
+  layout = 'creature',
+  sortState,
+  onSort,
+  rowChrome,
+  onAdd,
+  addLabel,
+  emptyMessage = 'No equipment',
 }: {
   title?: string;
   items: EntityEquipmentRow[];
   showListHeader?: boolean;
   compactRows?: boolean;
-}) {
+  showTitle?: boolean;
+  layout?: 'creature' | 'characterSheet';
+} & EntityListControls) {
   const hasAny = items.length > 0;
+  const grid = EQUIPMENT_GRID;
+
+  if (layout === 'characterSheet') {
+    return (
+      <div>
+        {showTitle && <SectionHeader title={title} size="sm" onAdd={onAdd} addLabel={addLabel} />}
+        {showListHeader && hasAny && (
+          <ListHeader
+            columns={EQUIPMENT_COLUMNS}
+            gridColumns={grid}
+            sortState={sortState}
+            onSort={onSort}
+            rowChrome={rowChrome}
+          />
+        )}
+        {hasAny ? (
+          <div className="space-y-1">{renderInteractiveGridRows(items, grid, () => [], compactRows)}</div>
+        ) : (
+          <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div>
-      <SectionHeader title={title} size="sm" />
-      {showListHeader && hasAny && <ListHeader columns={EQUIPMENT_COLUMNS} gridColumns={EQUIPMENT_GRID} />}
+      <SectionHeader title={title} size="sm" onAdd={onAdd} addLabel={addLabel} />
+      {showListHeader && hasAny && (
+        <ListHeader columns={EQUIPMENT_COLUMNS} gridColumns={grid} sortState={sortState} onSort={onSort} rowChrome={rowChrome} />
+      )}
       {hasAny ? (
         <div className="space-y-1">
           {items.map((e, idx) => {
@@ -529,14 +783,14 @@ export function EquipmentListSection({
                 name={e.name}
                 description={e.description}
                 columns={columns}
-                gridColumns={EQUIPMENT_GRID}
+                gridColumns={grid}
                 compact={compactRows}
               />
             );
           })}
         </div>
       ) : (
-        <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">No equipment</p>
+        <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
       )}
     </div>
   );
@@ -549,7 +803,7 @@ export type EntityFeatRow = {
   maxUses?: number;
   currentUses?: number;
   recovery?: string;
-};
+} & EntityRowExtras;
 
 export function FeatsTraitsListSection({
   title = 'Feats',
@@ -557,25 +811,88 @@ export function FeatsTraitsListSection({
   showListHeader = true,
   compactRows = true,
   showTitle = true,
+  includeLevelColumn = false,
+  sortState,
+  onSort,
+  rowChrome,
+  onAdd,
+  addLabel,
+  headerRightContent,
+  addButtonClassName,
+  emptyMessage = 'No feats',
 }: {
   title?: string;
   items: EntityFeatRow[];
   showListHeader?: boolean;
   compactRows?: boolean;
   showTitle?: boolean;
-}) {
+  /** Show Lvl column header when editing leveled feats */
+  includeLevelColumn?: boolean;
+  headerRightContent?: ReactNode;
+  addButtonClassName?: string;
+} & EntityListControls) {
   const hasAny = items.length > 0;
+  const useInteractiveRows = items.some((item) => item.columns != null);
+  const featColumns = includeLevelColumn ? FEAT_COLUMNS_WITH_LEVEL : FEAT_COLUMNS;
+  const featGrid = includeLevelColumn ? FEAT_GRID_WITH_LEVEL : FEAT_GRID;
 
-  // Keep row rendering stable and cheap for large lists
-  const rows = useMemo(() => items, [items]);
+  if (useInteractiveRows) {
+    return (
+      <div>
+        {showTitle && (
+          <SectionHeader
+            title={title}
+            size="sm"
+            onAdd={onAdd}
+            addLabel={addLabel}
+            rightContent={headerRightContent}
+            addButtonClassName={addButtonClassName}
+          />
+        )}
+        {showListHeader && hasAny && (
+          <ListHeader
+            columns={featColumns}
+            gridColumns={featGrid}
+            sortState={sortState}
+            onSort={onSort}
+            rowChrome={rowChrome}
+          />
+        )}
+        {hasAny ? (
+          <div className="space-y-1">
+            {renderInteractiveGridRows(items, featGrid, () => [], compactRows)}
+          </div>
+        ) : (
+          <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div>
-      {showTitle && <SectionHeader title={title} size="sm" />}
-      {showListHeader && hasAny && <ListHeader columns={FEAT_COLUMNS} gridColumns={FEAT_GRID} />}
+      {showTitle && (
+        <SectionHeader
+          title={title}
+          size="sm"
+          onAdd={onAdd}
+          addLabel={addLabel}
+          rightContent={headerRightContent}
+          addButtonClassName={addButtonClassName}
+        />
+      )}
+      {showListHeader && hasAny && (
+        <ListHeader
+          columns={FEAT_COLUMNS}
+          gridColumns={FEAT_GRID}
+          sortState={sortState}
+          onSort={onSort}
+          rowChrome={rowChrome}
+        />
+      )}
       {hasAny ? (
         <div className="space-y-1">
-          {rows.map((feat, index) => {
+          {items.map((feat, index) => {
             const uses =
               (feat.maxUses ?? 0) > 0
                 ? { current: feat.currentUses ?? feat.maxUses ?? 0, max: feat.maxUses ?? 0 }
@@ -607,7 +924,7 @@ export function FeatsTraitsListSection({
           })}
         </div>
       ) : (
-        <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">No feats</p>
+        <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
       )}
     </div>
   );

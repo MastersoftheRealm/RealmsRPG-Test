@@ -47,10 +47,10 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             className={cn(
               'flex h-10 w-full appearance-none rounded-lg border bg-surface px-4 py-2.5 pr-10 text-sm',
               'text-text-primary',
-              'focus:outline-none focus:ring-2 focus:ring-primary-accent/20 focus:border-primary-600',
+              'focus:outline-none focus:ring-2 focus:ring-primary-outline-border focus:border-primary-outline-border',
               'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-surface-alt',
               error
-                ? 'border-danger focus:ring-danger/20'
+                ? 'border-danger focus:ring-danger-border'
                 : 'border-border-light',
               className
             )}
@@ -74,7 +74,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted pointer-events-none" />
         </div>
         {error && (
-          <p id={errorId} className="mt-1.5 text-sm text-danger">
+          <p id={errorId} className="mt-1.5 text-sm text-danger-fg">
             {error}
           </p>
         )}

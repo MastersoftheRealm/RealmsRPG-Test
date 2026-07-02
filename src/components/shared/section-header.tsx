@@ -78,7 +78,7 @@ export function SectionHeader({
             onClick={onAdd}
             label={addLabel || `Add ${title.toLowerCase()}`}
             className={cn(
-              'text-primary-600 hover:text-primary-700 hover:bg-primary-50',
+              'text-primary-link-fg hover:text-primary-fg-hover hover:bg-primary-subtle-bg',
               addButtonClassName
             )}
           >

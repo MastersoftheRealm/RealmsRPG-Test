@@ -15,6 +15,6 @@ This writes one `.json` file per category from the embedded `CORE_RULES` in `scr
 ## After Path C Phase 0 Part 2
 
 1. Run `sql/create-public-core-rules.sql` in Supabase SQL Editor (creates `public.core_rules`).
-2. Seed the table: `node scripts/seed-core-rules.js` (uses embedded CORE_RULES; Prisma must point at `public` schema).
+2. Seed the table: `node scripts/seed-core-rules.js` (uses embedded CORE_RULES; writes to `public.core_rules` via Supabase).
 
 The app reads core rules via `/api/codex` (coreRules) and `useGameRules()`; admin edits save to `core_rules` via codex actions.

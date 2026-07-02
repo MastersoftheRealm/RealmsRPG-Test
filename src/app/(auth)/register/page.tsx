@@ -14,7 +14,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { createClient } from '@/lib/supabase/client';
 
 import { registerSchema, type RegisterFormData } from '@/lib/validation';
+import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { createUserProfileAction } from '@/app/(auth)/actions';
+import { resendConfirmationAction } from '@/app/(auth)/auth-actions';
 import { AuthCard, FormInput, PasswordInput, SocialButton } from '@/components/auth';
 import { Spinner } from '@/components/ui';
 import { Button, Alert } from '@/components/ui';
@@ -31,12 +33,7 @@ function RegisterContent() {
   const getRedirectPath = () => {
     const urlRedirect = searchParams.get('redirect') ?? searchParams.get('returnTo');
     const sessionRedirect = typeof window !== 'undefined' ? sessionStorage.getItem('loginRedirect') : null;
-    const raw = urlRedirect || sessionRedirect || '/';
-    const normalized = raw.startsWith('/') ? raw : '/';
-    if (normalized === '/login' || normalized === '/register' || normalized === '/forgot-password' || normalized === '/forgot-username') {
-      return '/';
-    }
-    return normalized;
+    return sanitizeRedirectPath(urlRedirect || sessionRedirect || '/');
   };
 
   const {
@@ -57,11 +54,13 @@ function RegisterContent() {
     try {
       const supabase = createClient();
       const redirectPath = getRedirectPath();
+      const chosenUsername = data.username?.trim();
       const { data: authData, error: err } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(redirectPath)}`,
+          data: chosenUsername ? { username_display: chosenUsername } : undefined,
         },
       });
       if (err) throw err;
@@ -74,7 +73,6 @@ function RegisterContent() {
       }
 
       if (authData.user) {
-        const chosenUsername = data.username?.trim();
         await createUserProfileAction({
           uid: authData.user.id,
           email: data.email,
@@ -101,9 +99,9 @@ function RegisterContent() {
     setResendStatus('sending');
     setError(null);
     try {
-      const supabase = createClient();
-      const { error: resendError } = await supabase.auth.resend({ type: 'signup', email });
-      if (resendError) throw resendError;
+      const redirectPath = getRedirectPath();
+      const result = await resendConfirmationAction(email, redirectPath);
+      if (!result.success) throw new Error(result.error);
       setResendStatus('sent');
     } catch (e) {
       setResendStatus('idle');
@@ -133,10 +131,6 @@ function RegisterContent() {
     }
   };
 
-  const handleAppleSignIn = () => {
-    setError('Apple Sign-In coming soon!');
-  };
-
   if (needsEmailConfirm) {
     return (
       <AuthCard title="Check Your Email" subtitle="Confirm your account to continue">
@@ -151,13 +145,13 @@ function RegisterContent() {
             <CheckIcon className="w-8 h-8 text-green-400" />
           </div>
 
-          <p className="text-gray-300">
+          <p className="text-text-secondary">
             We sent a confirmation link to{' '}
-            <span className="font-semibold text-gray-100">{signupEmail || 'your email'}</span>.
+            <span className="font-semibold text-text-primary">{signupEmail || 'your email'}</span>.
             Open it to finish creating your account.
           </p>
 
-          <p className="text-sm text-gray-300">
+          <p className="text-sm text-text-secondary">
             Didn&apos;t get an email? Check spam, or resend the confirmation.
           </p>
 
@@ -177,7 +171,7 @@ function RegisterContent() {
 
             <Link
               href={`/login?redirect=${encodeURIComponent(getRedirectPath())}`}
-              className="inline-block text-primary-400 hover:text-primary-300 transition-colors font-medium"
+              className="inline-block text-primary-link-fg hover:text-primary-fg-hover transition-colors font-medium"
             >
               Back to Sign In
             </Link>
@@ -234,16 +228,16 @@ function RegisterContent() {
           <input
             type="checkbox"
             id="acceptTerms"
-            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-primary-500 focus:ring-primary-500"
+            className="w-4 h-4 rounded border-border-light dark:border-border bg-surface text-primary-fg focus:ring-primary-outline-border"
             {...register('acceptTerms')}
           />
-          <label htmlFor="acceptTerms" className="text-sm text-gray-300">
+          <label htmlFor="acceptTerms" className="text-sm text-text-secondary">
             I agree to the{' '}
-            <Link href="/terms" className="text-primary-400 hover:text-primary-300">
+            <Link href="/terms" className="text-primary-link-fg hover:text-primary-fg-hover">
               Terms of Service
             </Link>
             {' '}and{' '}
-            <Link href="/privacy" className="text-primary-400 hover:text-primary-300">
+            <Link href="/privacy" className="text-primary-link-fg hover:text-primary-fg-hover">
               Privacy Policy
             </Link>
           </label>
@@ -258,9 +252,9 @@ function RegisterContent() {
       </form>
 
       <div className="my-6 flex items-center gap-4">
-        <div className="flex-1 h-px bg-gray-600" />
-        <span className="text-gray-300 text-sm">or</span>
-        <div className="flex-1 h-px bg-gray-600" />
+        <div className="flex-1 h-px bg-border-light dark:bg-border" />
+        <span className="text-text-secondary text-sm">or</span>
+        <div className="flex-1 h-px bg-border-light dark:bg-border" />
       </div>
 
       <div className="space-y-3">
@@ -269,12 +263,11 @@ function RegisterContent() {
           onClick={handleGoogleSignIn}
           disabled={isLoading}
         />
-        <SocialButton provider="apple" onClick={handleAppleSignIn} disabled={isLoading} />
       </div>
 
-      <p className="mt-6 text-center text-gray-300">
+      <p className="mt-6 text-center text-text-secondary">
         Already have an account?{' '}
-        <Link href="/login" className="text-primary-400 hover:text-primary-300 transition-colors font-medium">
+        <Link href="/login" className="text-primary-link-fg hover:text-primary-fg-hover transition-colors font-medium">
           Sign in
         </Link>
       </p>

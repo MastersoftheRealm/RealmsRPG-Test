@@ -50,11 +50,12 @@ export function LoginPromptModal({
       onClose={onClose}
       fullScreenOnMobile
       size="md"
+      titleA11y="Login Required to Save"
     >
       {/* Content */}
       <div className="text-center">
-        <div className="mx-auto w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mb-4">
-          <LogIn className="w-8 h-8 text-primary-600" />
+        <div className="mx-auto w-16 h-16 bg-primary-subtle-bg rounded-full flex items-center justify-center mb-4">
+          <LogIn className="w-8 h-8 text-primary-link-fg" />
         </div>
 
         <h2 className="text-xl font-semibold text-text-primary mb-2">

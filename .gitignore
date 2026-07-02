@@ -12,6 +12,13 @@
 
 # testing
 /coverage
+# Playwright (keep committed baselines under tests/visual/**-snapshots/)
+/test-results/
+/playwright-report/
+/blob-report/
+/.playwright/
+/tests/visual/.auth/
+.last-run.json
 
 # next.js
 /.next/
@@ -41,16 +48,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Firebase
-.firebase
-.firebase/
-/functions/node_modules
-functions/.next/
-firebase-debug.log
-
-# Admin SDK / service account keys (never commit)
+# Service account keys / secrets (never commit)
 admin_sdk_secrets.json
-*firebase-adminsdk*.json
 
 # Local reference (contains project IDs, URLs; keep out of repo)
 LOCAL_REFERENCE.md

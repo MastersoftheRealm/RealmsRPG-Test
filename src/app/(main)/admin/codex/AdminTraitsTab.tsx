@@ -11,14 +11,13 @@ import {
   ListEmptyState as EmptyState,
 } from '@/components/shared';
 import { traitsByIdMap, choiceTraitOptionIdsToChipData } from '@/lib/choice-trait';
-import { Modal, Button, Input, Textarea } from '@/components/ui';
+import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
 import { useTraits, type Trait } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useModalListState } from '@/hooks/use-modal-list-state';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Copy, X, Plus } from 'lucide-react';
-import { IconButton } from '@/components/ui';
 
 const ADMIN_TRAIT_GRID = '1.5fr 0.6fr 0.6fr 0.6fr 40px';
 const CHOICE_TRAIT_GRID = '1.5fr 0.6fr 0.6fr 80px';
@@ -32,7 +31,8 @@ const ADMIN_TRAIT_COLUMNS = [
 const COPY_NAME_SUFFIX = ' copy';
 
 export function AdminTraitsTab() {
-  const { data: traits, isLoading, error } = useTraits();
+  const { showToast } = useToast();
+  const { data: traits, isLoading, error, refetch } = useTraits();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
@@ -139,7 +139,7 @@ export function AdminTraitsTab() {
     if (result.success) {
       const id = result.id;
       if (!id) {
-        alert('Create succeeded but no ID was returned. Please refresh.');
+        showToast('Create succeeded but no ID was returned. Please refresh.', 'warning');
         return;
       }
       queryClient.invalidateQueries({ queryKey: ['codex'] });
@@ -148,7 +148,7 @@ export function AdminTraitsTab() {
       setCreateTraitForm({ name: '', description: '' });
       setCreateTraitOpen(false);
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
     }
   };
 
@@ -177,7 +177,7 @@ export function AdminTraitsTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
     }
   };
 
@@ -192,7 +192,7 @@ export function AdminTraitsTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
     }
   };
 
@@ -207,12 +207,12 @@ export function AdminTraitsTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       setPendingDeleteId(null);
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
       setPendingDeleteId(null);
     }
   };
 
-  if (error) return <ErrorState message="Failed to load traits" />;
+  if (error) return <ErrorState message="Failed to load traits" onRetry={() => { void refetch(); }} />;
 
   return (
     <div>
@@ -276,7 +276,7 @@ export function AdminTraitsTab() {
                           size="sm"
                           onClick={() => setPendingDeleteId(t.id)}
                           label="Delete"
-                          className="text-danger dark:text-danger-400 hover:text-danger-600 dark:hover:text-danger-300 hover:bg-transparent"
+                          className="text-danger-fg hover:opacity-80 hover:bg-transparent"
                         >
                           <X className="w-4 h-4" />
                         </IconButton>

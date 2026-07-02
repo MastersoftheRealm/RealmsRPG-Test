@@ -237,8 +237,8 @@ export function HelpTooltip({
         className={cn(
           'inline-flex items-center justify-center rounded-full',
           'min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] md:min-w-[28px] md:min-h-[28px]',
-          'text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/60'
+          'text-primary-link-fg hover:text-primary-fg-hover',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border'
         )}
       >
         <Info className="w-4 h-4" />

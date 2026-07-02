@@ -35,7 +35,7 @@ function renderInline(text: string): ReactNode[] {
       if (linkMatch) {
         const [, label, href] = linkMatch;
         nodes.push(
-          <a key={`l-${index++}`} href={href} target="_blank" rel="noopener noreferrer" className="text-primary-600 dark:text-primary-400 underline">
+          <a key={`l-${index++}`} href={href} target="_blank" rel="noopener noreferrer" className="text-primary-link-fg underline">
             {label}
           </a>
         );

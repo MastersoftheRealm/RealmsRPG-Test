@@ -1,4 +1,7 @@
 import type { CharacterPower, CharacterTechnique, Item, CharacterProficiency } from '@/types';
+import type { CoreRulesMap } from '@/types/core-rules';
+import { findByIdOrName } from '@/lib/id-constants';
+import { calculateTrainingPoints } from '@/lib/game/formulas';
 
 interface CodexPartLike {
   id?: string | number;
@@ -27,10 +30,20 @@ interface BuildRequiredProficienciesInput {
   itemPropertiesDb?: CodexPropertyLike[];
 }
 
-export function getTrainingPointLimit(level: number, archetypeAbility: number): number {
+/**
+ * Training-point cap. Delegates to the canonical, rules-aware
+ * `calculateTrainingPoints` (TYPE-01) — the prior local formula was
+ * algebraically identical but ignored DB core-rules overrides. Pass `rules`
+ * (from `useGameRules()`) where available so the cap honours custom rules.
+ */
+export function getTrainingPointLimit(
+  level: number,
+  archetypeAbility: number,
+  rules?: Partial<CoreRulesMap>
+): number {
   const lvl = Math.max(1, Number(level) || 1);
   const abil = Number(archetypeAbility) || 0;
-  return 22 + (abil * lvl) + (2 * (lvl - 1));
+  return calculateTrainingPoints(lvl, abil, rules);
 }
 
 export function calculateProficiencyTP(prof: CharacterProficiency): number {
@@ -86,19 +99,6 @@ function parseDamageTypes(value: unknown): string[] {
   }
 
   return [];
-}
-
-function findByIdOrName<T extends { id?: string | number; name?: string }>(
-  list: T[] | undefined,
-  ref: { id?: string | number; name?: string }
-): T | undefined {
-  const id = ref.id != null ? normalize(ref.id) : '';
-  const name = normalize(ref.name);
-  return (list || []).find((item) => {
-    const itemId = item.id != null ? normalize(item.id) : '';
-    const itemName = normalize(item.name);
-    return (id && itemId === id) || (name && itemName === name);
-  });
 }
 
 function pickHigher(a: CharacterProficiency, b: CharacterProficiency): CharacterProficiency {

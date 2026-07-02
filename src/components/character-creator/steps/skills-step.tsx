@@ -10,9 +10,11 @@
 
 import React, { useMemo, useCallback } from 'react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useMergedSpecies, useCodexSkills, type Species, type Skill } from '@/hooks';
-import { SkillsAllocationPage } from '@/components/shared';
+import { useMergedSpecies, useCodexSkills, useTraits, useGameRules, type Species, type Skill } from '@/hooks';
+import { SkillsAllocationPage, ContextHelpTooltip } from '@/components/shared';
 import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
+import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
+import { getValidationIssuesForStep } from '@/lib/character-creator-validation';
 import { Button } from '@/components/ui';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
@@ -20,7 +22,7 @@ import { parseArchetypePathData } from '@/lib/game/archetype-path';
 function pathHelpContent(_pathName: string, names: string[]): React.ReactNode {
   if (names.length === 0) return null;
   const Bold = ({ children }: { children: string }) => (
-    <strong className="text-primary-700 dark:text-primary-300">{children}</strong>
+    <strong className="text-primary-fg">{children}</strong>
   );
   if (names.length === 1) {
     return <>the recommended Skill <Bold>{names[0]}</Bold> has been added!</>;
@@ -45,6 +47,18 @@ export function SkillsStep() {
   const { draft, nextStep, prevStep, updateDraft } = useCharacterCreatorStore();
   const { data: allSpecies = [] } = useMergedSpecies();
   const { data: codexSkills = [] } = useCodexSkills();
+  const { data: allTraits } = useTraits();
+  const { rules } = useGameRules();
+
+  const validationContext = useMemo(
+    () => ({ allSpecies, codexSkills: codexSkills ?? null, allTraits: allTraits ?? null, rules }),
+    [allSpecies, codexSkills, allTraits, rules]
+  );
+  const stepIssues = useMemo(
+    () => getValidationIssuesForStep('skills', draft, validationContext),
+    [draft, validationContext]
+  );
+  const canContinue = stepIssues.length === 0;
 
   const speciesSkillIds = useMemo(() => {
     const isMixed = draft.ancestry?.mixed === true;
@@ -165,6 +179,62 @@ export function SkillsStep() {
     );
   }, [draft.creationMode, draft.archetype, recommendedSkillNames]);
 
+  const hasMissingRecommendedSkills = useMemo(() => {
+    return recommendedSkillIds.some((id) => {
+      const key = String(id);
+      if (key === '0') return false;
+      return declinedPathSkillIds.has(key) || !(key in allocations);
+    });
+  }, [recommendedSkillIds, declinedPathSkillIds, allocations]);
+
+  const handleApplyRecommendedSkills = useCallback(() => {
+    const next = { ...allocations };
+    speciesSkillIds.forEach((id) => {
+      if (id === '0') return;
+      if (!(id in next)) next[id] = 0;
+    });
+    recommendedSkillIds.forEach((id) => {
+      const key = String(id);
+      if (key === '0') return;
+      next[key] = next[key] ?? 0;
+    });
+    updateDraft({
+      skills: next,
+      declinedPathSkillIds: undefined,
+    });
+  }, [allocations, speciesSkillIds, recommendedSkillIds, updateDraft]);
+
+  const pathSkillsAction = useMemo(() => {
+    if (draft.creationMode !== 'path' || recommendedSkillIds.length === 0) return null;
+    return (
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleApplyRecommendedSkills}
+          className="min-h-[44px]"
+          aria-label="Apply recommended path skills"
+        >
+          Apply recommended skills
+        </Button>
+        {hasMissingRecommendedSkills ? (
+          <span className="text-sm text-text-secondary">
+            Re-adds path skill proficiencies you removed.
+          </span>
+        ) : (
+          <span className="text-sm text-text-secondary">
+            Path skills are added as proficient (0 bonus) by default.
+          </span>
+        )}
+      </div>
+    );
+  }, [
+    draft.creationMode,
+    recommendedSkillIds.length,
+    handleApplyRecommendedSkills,
+    hasMissingRecommendedSkills,
+  ]);
+
   const handleContinue = () => {
     updateDraft({ skills: allocationsWithSpecies, defenseVals });
     nextStep();
@@ -180,16 +250,12 @@ export function SkillsStep() {
   }), [abilities]);
 
   const footer = (
-    <>
-      <Button variant="secondary" onClick={prevStep}>
-        ← Back
-      </Button>
-      <Button onClick={handleContinue}>Continue →</Button>
-    </>
+    <CreatorStepFooter variant="inline" onBack={prevStep} onContinue={handleContinue} continueDisabled={!canContinue} />
   );
 
   return (
     <div className="space-y-4">
+      {pathSkillsAction}
       <SkillsAllocationPage
         entityType="character"
         level={level}
@@ -206,6 +272,21 @@ export function SkillsStep() {
         skillAbilities={mergedSkillAbilities}
         onSkillAbilityChange={handleSkillAbilityChange}
         afterDescription={pathHelpAfterDescription}
+        headingAddon={
+          <ContextHelpTooltip
+            tooltipKey="characters.new.step.skills.pointsHelp"
+            scope="page:/characters/new"
+            label="Skill point rules"
+            context={{ level, entityType: 'character' }}
+          />
+        }
+        addSubSkillAddon={
+          <ContextHelpTooltip
+            tooltipKey="characters.new.step.skills.subskillsHelp"
+            scope="page:/characters/new"
+            label="Sub-skill help"
+          />
+        }
         hideDefenseBonuses={draft.creationMode === 'path'}
         footer={footer}
       />

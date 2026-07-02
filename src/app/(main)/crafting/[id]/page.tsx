@@ -26,6 +26,7 @@ import {
   LoadingState,
   Alert,
   Input,
+  Card,
 } from '@/components/ui';
 import { ValueStepper, SectionHeader } from '@/components/shared';
 import { CreatorLayout, CreatorSummaryPanel, CollapsibleSection } from '@/components/creator';
@@ -156,6 +157,16 @@ export default function CraftingToolPage() {
   const [upgradePotencyValue, setUpgradePotencyValue] = useState('');
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const updateData = useCallback(
+    (updates: Partial<CraftingSessionType['data']>) => {
+      setSession((prev) => {
+        if (!prev) return prev;
+        return { ...prev, data: { ...prev.data, ...updates } };
+      });
+    },
+    []
+  );
+
   const { data: codexSkills = [] } = useCodexSkills();
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: userPowers = [] } = useUserPowers();
@@ -180,16 +191,6 @@ export default function CraftingToolPage() {
     updateData({ usesType, usesCount });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.data.multipleUseTableIndex, rulesData]);
-
-  const updateData = useCallback(
-    (updates: Partial<CraftingSessionType['data']>) => {
-      setSession((prev) => {
-        if (!prev) return prev;
-        return { ...prev, data: { ...prev.data, ...updates } };
-      });
-    },
-    []
-  );
 
   // Autosave: debounced 2s after any change
   useEffect(() => {
@@ -924,8 +925,8 @@ export default function CraftingToolPage() {
                       value: `${Math.ceil(liveOutcome.itemWorth)} C`,
                       valueColor:
                         netDelta >= 0
-                          ? 'text-success-700 dark:text-success-400'
-                          : 'text-danger-700 dark:text-danger-400',
+                          ? 'text-success-fg'
+                          : 'text-danger-fg',
                     },
                   ]
                 : []),
@@ -969,13 +970,13 @@ export default function CraftingToolPage() {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-text-secondary">Successes (enhancement)</span>
-                <span className="font-medium text-success-700 dark:text-success-400">
+                <span className="font-medium text-success-fg">
                   {totalEnhSuccesses}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-text-secondary">Failures (enhancement)</span>
-                <span className="font-medium text-danger-700 dark:text-danger-400">
+                <span className="font-medium text-danger-fg">
                   {totalEnhFailures}
                 </span>
               </div>
@@ -995,8 +996,8 @@ export default function CraftingToolPage() {
                   className={cn(
                     'font-bold',
                     netDelta >= 0
-                      ? 'text-success-700 dark:text-success-400'
-                      : 'text-danger-700 dark:text-danger-400'
+                      ? 'text-success-fg'
+                      : 'text-danger-fg'
                   )}
                 >
                   {netDelta >= 0 ? `+${netDelta}` : netDelta}
@@ -1020,7 +1021,7 @@ export default function CraftingToolPage() {
                     <div>Projected extra items: {liveOutcome.extraItemCount}</div>
                   )}
                   {liveOutcome.choiceExtraOrEnhance && (
-                    <div className="text-text-primary dark:text-primary-400 font-medium">
+                    <div className="text-primary-fg font-medium">
                       Choice: extra item at 100% or enhance to 200%
                     </div>
                   )}
@@ -1718,10 +1719,10 @@ export default function CraftingToolPage() {
                         'flex flex-wrap items-center gap-4 p-3 sm:p-4 rounded-xl border transition-colors',
                         hasRoll &&
                           isSuccess &&
-                          'bg-green-50/50 dark:bg-green-900/10 border-l-4 border-l-green-500 border-border-light',
+                          'bg-success-light/50 border-l-4 border-l-success-500 border-border-light',
                         hasRoll &&
                           isFailure &&
-                          'bg-red-50/50 dark:bg-red-900/10 border-l-4 border-l-red-500 border-border-light',
+                          'bg-danger-light/50 border-l-4 border-l-danger-500 border-border-light',
                         !hasRoll && 'border-border-light'
                       )}
                     >
@@ -1753,16 +1754,16 @@ export default function CraftingToolPage() {
                         <span className="text-sm flex items-center gap-1">
                           {isSuccess && (
                             <>
-                              <CheckCircle2 className="w-4 h-4 text-success-700 dark:text-success-400" />
-                              <span className="text-success-700 dark:text-success-400 font-medium">
+                              <CheckCircle2 className="w-4 h-4 text-success-fg" />
+                              <span className="text-success-fg font-medium">
                                 {s.successes} success{s.successes !== 1 ? 'es' : ''}
                               </span>
                             </>
                           )}
                           {isFailure && (
                             <>
-                              <XCircle className="w-4 h-4 text-danger-700 dark:text-danger-400" />
-                              <span className="text-danger-700 dark:text-danger-400 font-medium">
+                              <XCircle className="w-4 h-4 text-danger-fg" />
+                              <span className="text-danger-fg font-medium">
                                 {s.failures} failure{s.failures !== 1 ? 's' : ''}
                               </span>
                             </>
@@ -1914,7 +1915,7 @@ export default function CraftingToolPage() {
 
           {/* Completed outcome */}
           {isCompleted && outcome && (
-            <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
+            <Card className="p-4 sm:p-6">
               <SectionHeader title="Outcome" size="md" className="mb-3" />
               <p className="text-text-secondary whitespace-pre-wrap">{outcome.effectText}</p>
               {craftSubSkill && (craftSubSkill.craft_success_desc || craftSubSkill.craft_failure_desc) && (
@@ -2029,7 +2030,7 @@ export default function CraftingToolPage() {
                   </div>
                 </div>
               )}
-            </section>
+            </Card>
           )}
     </CreatorLayout>
   );

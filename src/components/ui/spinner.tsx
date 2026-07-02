@@ -25,7 +25,7 @@ const sizeClasses = {
 };
 
 const variantClasses = {
-  primary: 'border-primary-200 border-t-primary-600',
+  primary: 'border-primary-subtle-border border-t-primary-button',
   white: 'border-white/30 border-t-white',
   muted: 'border-border-light border-t-neutral-500',
 };
@@ -78,7 +78,7 @@ export function LoadingOverlay({
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center bg-white/80 dark:bg-black/60 backdrop-blur-sm z-50',
+        'flex flex-col items-center justify-center bg-white/80 dark:bg-black/60 backdrop-blur-sm z-overlay',
         fullScreen ? 'fixed inset-0' : 'absolute inset-0'
       )}
     >

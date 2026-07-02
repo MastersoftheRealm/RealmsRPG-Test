@@ -22,6 +22,7 @@ GRANT SELECT ON public.codex_parts TO anon, authenticated;
 GRANT SELECT ON public.codex_properties TO anon, authenticated;
 GRANT SELECT ON public.codex_equipment TO anon, authenticated;
 GRANT SELECT ON public.codex_archetypes TO anon, authenticated;
+GRANT SELECT ON public.codex_archetype_levels TO anon, authenticated;
 GRANT SELECT ON public.codex_creature_feats TO anon, authenticated;
 GRANT SELECT ON public.core_rules TO anon, authenticated;
 
@@ -80,6 +81,11 @@ CREATE POLICY "Anyone can read codex equipment" ON public.codex_equipment FOR SE
 ALTER TABLE public.codex_archetypes ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Anyone can read codex archetypes" ON public.codex_archetypes;
 CREATE POLICY "Anyone can read codex archetypes" ON public.codex_archetypes FOR SELECT TO public USING (true);
+
+-- codex_archetype_levels
+ALTER TABLE public.codex_archetype_levels ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Anyone can read codex archetype levels" ON public.codex_archetype_levels;
+CREATE POLICY "Anyone can read codex archetype levels" ON public.codex_archetype_levels FOR SELECT TO public USING (true);
 
 -- codex_creature_feats
 ALTER TABLE public.codex_creature_feats ENABLE ROW LEVEL SECURITY;

@@ -5,10 +5,12 @@
  * Provides cost calculation and display helpers for powers.
  */
 
-import type { PowerPart } from '@/hooks/use-rtdb';
+import type { PowerPart } from '@/hooks/codex-types';
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
+import { computePartTrainingPoints } from '@/lib/library/part-display';
 import { formatDurationFromTypeAndValue, formatDurationWithModifiers } from '@/lib/utils/duration';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
+import { deriveActionType, actionTypeFromSelection } from './action-type';
 
 // Re-export for backwards compatibility
 export { PART_IDS, findByIdOrName };
@@ -176,11 +178,7 @@ export function computeActionType(
   partsPayload: PowerPartPayload[] = [],
   partsDb: PowerPart[] = []
 ): string {
-  let actionType = 'Basic';
-  let isReaction = false;
-
-  partsPayload.forEach((p) => {
-    // Get part ID
+  const resolved = partsPayload.map((p) => {
     let partId: number | undefined;
     if (p.part?.id !== undefined) {
       partId = Number(p.part.id);
@@ -191,36 +189,20 @@ export function computeActionType(
       const def = findByIdOrName(partsDb, { name: name! });
       partId = def ? Number(def.id) : undefined;
     }
-
-    const l1 = getOptionLevel(p, 1);
-
-    if (partId === PART_IDS.POWER_REACTION) isReaction = true;
-    else if (partId === PART_IDS.POWER_QUICK_OR_FREE_ACTION) {
-      if (l1 === 0) actionType = 'Quick';
-      else if (l1 === 1) actionType = 'Free';
-    } else if (partId === PART_IDS.POWER_LONG_ACTION) {
-      if (l1 === 0) actionType = 'Long (3)';
-      else if (l1 === 1) actionType = 'Long (4)';
-    }
+    return { partId, level: getOptionLevel(p, 1) };
   });
 
-  return isReaction ? `${actionType} Reaction` : `${actionType} Action`;
+  return deriveActionType(resolved, {
+    reaction: PART_IDS.POWER_REACTION,
+    quickOrFree: PART_IDS.POWER_QUICK_OR_FREE_ACTION,
+    longAction: PART_IDS.POWER_LONG_ACTION,
+  });
 }
 
 /**
  * Helper when UI stores selector value
  */
-export function computeActionTypeFromSelection(
-  selection: string,
-  reactionFlag: boolean
-): string {
-  let base = 'Basic';
-  if (selection === 'quick') base = 'Quick';
-  else if (selection === 'free') base = 'Free';
-  else if (selection === 'long3') base = 'Long (3)';
-  else if (selection === 'long4') base = 'Long (4)';
-  return reactionFlag ? `${base} Reaction` : `${base} Action`;
-}
+export const computeActionTypeFromSelection = actionTypeFromSelection;
 
 // =============================================================================
 // Mechanic Part Assembly
@@ -236,7 +218,7 @@ export interface PowerMechanicContext {
 }
 
 /**
- * Map damage type string to RTDB part ID
+ * Map damage type string to Codex part ID
  */
 function getDamagePartId(damageType: string): number | null {
   switch (damageType) {
@@ -306,7 +288,7 @@ function getDamagePartName(damageType: string): string {
 
 /**
  * Build mechanic part payloads based on current UI selections.
- * Converts action type and damage selections into RTDB parts for cost calculation.
+ * Converts action type and damage selections into Codex parts for cost calculation.
  */
 export function buildPowerMechanicPartPayload(
   ctx: PowerMechanicContext
@@ -366,11 +348,20 @@ export function buildPowerMechanicPartPayload(
 // =============================================================================
 
 /**
+ * Convert power creator `range.steps` to a display string (steps 1 → "3 spaces").
+ * steps 0 is melee — handle that case separately.
+ */
+export function formatPowerRangeFromSteps(steps: number): string {
+  const spaces = 3 + 3 * (steps - 1);
+  return `${spaces} ${spaces > 1 ? 'spaces' : 'space'}`;
+}
+
+/**
  * Derive range string from parts
  */
 export function deriveRange(
   partsPayload: PowerPartPayload[] = [],
-  partsDb: PowerPart[] = []
+  _partsDb?: unknown
 ): string {
   const pr = partsPayload.find((p) => {
     const partId = p.part?.id ?? p.id;
@@ -436,7 +427,7 @@ export function formatAreaForDisplay(areaType: string, areaLevel: number): strin
  */
 export function deriveArea(
   partsPayload: PowerPartPayload[] = [],
-  _partsDb: PowerPart[] = []
+  _partsDb?: unknown
 ): string {
   const areaPartIds = [
     PART_IDS.SPHERE_OF_EFFECT,
@@ -465,7 +456,7 @@ export function deriveArea(
  */
 export function deriveDuration(
   partsPayload: PowerPartPayload[] = [],
-  _partsDb: PowerPart[] = []
+  _partsDb?: unknown
 ): string {
   const findPartById = (partId: number, fallbackName: string) =>
     partsPayload.find((p) => {
@@ -526,13 +517,7 @@ export function formatPowerPartChip(
   const l2 = pl.op_2_lvl || 0;
   const l3 = pl.op_3_lvl || 0;
 
-  const rawTP =
-    (def.base_tp || 0) +
-    (def.op_1_tp || 0) * l1 +
-    (def.op_2_tp || 0) * l2 +
-    (def.op_3_tp || 0) * l3;
-
-  const finalTP = Math.floor(rawTP);
+  const finalTP = computePartTrainingPoints(def, pl, 'power');
   let text = def.name;
   if (l1 > 0) text += ` (Opt1 ${l1})`;
   if (l2 > 0) text += ` (Opt2 ${l2})`;
@@ -611,20 +596,18 @@ export function derivePowerDisplay(
   const calc = calculatePowerCosts(partsPayload, partsDb);
   
   // Use directly saved actionType if available, otherwise derive from parts; format for display (e.g. Long (3 AP))
-  let actionType: string;
-  if (powerDoc.actionType) {
-    actionType = powerDoc.isReaction ? 'Reaction' : formatActionTypeForDisplay(powerDoc.actionType);
-  } else {
-    actionType = formatActionTypeForDisplay(computeActionType(partsPayload, partsDb));
-  }
+  const derivedAction = computeActionType(partsPayload, partsDb);
+  const savedAction = powerDoc.actionType
+    ? computeActionTypeFromSelection(powerDoc.actionType, !!powerDoc.isReaction)
+    : null;
+  const actionType = formatActionTypeForDisplay(savedAction || derivedAction);
   
   // Use directly saved range if available, otherwise derive from parts
   let rangeStr: string;
   if (powerDoc.range && powerDoc.range.steps !== undefined && powerDoc.range.steps > 0) {
-    const spaces = 3 + 3 * powerDoc.range.steps;
-    rangeStr = `${spaces} ${spaces > 1 ? 'spaces' : 'space'}`;
+    rangeStr = formatPowerRangeFromSteps(powerDoc.range.steps);
   } else {
-    rangeStr = deriveRange(partsPayload, partsDb);
+    rangeStr = deriveRange(partsPayload);
   }
   
   // Use directly saved area if available, otherwise derive from parts
@@ -642,7 +625,7 @@ export function derivePowerDisplay(
       areaStr += ` ${powerDoc.area.level}`;
     }
   } else {
-    areaStr = deriveArea(partsPayload, partsDb);
+    areaStr = deriveArea(partsPayload);
   }
   
   // Use directly saved duration if available, otherwise derive from parts
@@ -655,7 +638,7 @@ export function derivePowerDisplay(
       sustain: powerDoc.duration.sustain,
     });
   } else {
-    durationStr = deriveDuration(partsPayload, partsDb);
+    durationStr = deriveDuration(partsPayload);
   }
 
   // Build part chips

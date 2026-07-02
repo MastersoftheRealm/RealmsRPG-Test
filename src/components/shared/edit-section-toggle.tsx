@@ -36,19 +36,19 @@ const STATE_COLORS: Record<
   { icon: string; glow?: string; activeBg: string; activeRing: string; activeGlow?: string }
 > = {
   'normal': {
-    icon: 'text-primary-500 hover:text-primary-600',
-    activeBg: 'bg-primary-50 dark:bg-primary-900/20',
-    activeRing: 'ring-primary-200 dark:ring-primary-800/50',
+    icon: 'text-primary-fg hover:text-primary-fg-hover',
+    activeBg: 'bg-primary-subtle-bg',
+    activeRing: 'ring-primary-subtle-border dark:ring-primary-subtle-border',
   },
   'has-points': {
-    icon: 'text-success-700 dark:text-success-400 hover:text-success-800 dark:hover:text-success-300',
+    icon: 'text-success-fg hover:opacity-90',
     glow: 'drop-shadow-[0_0_3px_rgba(34,197,94,0.5)]',
     activeBg: 'bg-success-50 dark:bg-success-900/25',
     activeRing: 'ring-success-200 dark:ring-success-800/50',
     activeGlow: 'drop-shadow-[0_0_6px_rgba(34,197,94,0.35)]',
   },
   'over-budget': {
-    icon: 'text-danger-600 dark:text-danger-400 hover:text-danger-700 dark:hover:text-danger-300',
+    icon: 'text-danger-fg hover:opacity-90',
     glow: 'drop-shadow-[0_0_3px_rgba(239,68,68,0.5)]',
     activeBg: 'bg-danger-50 dark:bg-danger-900/25',
     activeRing: 'ring-danger-200 dark:ring-danger-800/50',
@@ -75,9 +75,9 @@ export function EditSectionToggle({
       className={cn(
         'min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)]',
         'flex items-center justify-center p-2 rounded-md',
-        'transition-all duration-200',
+        'transition-all duration-base ease-standard',
         'hover:scale-110',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
         colors.icon,
         colors.glow,
         isActive && [

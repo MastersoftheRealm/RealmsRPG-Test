@@ -22,6 +22,7 @@ import {
 } from '@/components/shared';
 import { EmptyState } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
+import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { useParts } from '@/hooks';
 
 const PART_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 40px';
@@ -34,9 +35,9 @@ const PART_COLUMNS = [
 ];
 
 const CHIP_SECTION_STYLES: Record<string, string> = {
-  default: 'bg-primary-50 border-primary-200 text-primary-700',
+  default: 'bg-primary-subtle-bg border-primary-subtle-border text-primary-subtle-fg',
   archetype: 'bg-power-light border-power-border text-power-text',
-  skill: 'bg-info-50 border-info-200 text-info-700',
+  skill: 'bg-info-50 border-info-200 text-info-fg',
 };
 
 function formatEnergyCost(en: number | undefined, isPercentage: boolean | undefined): string {
@@ -122,7 +123,8 @@ interface PartFilters {
 }
 
 export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  const { data: parts, isLoading, error } = useParts();
+  const loadPublicCodex = codexMode === 'public';
+  const { data: parts, isLoading, error, refetch } = useParts({ enabled: loadPublicCodex });
   const { sortState, handleSort } = useSort('name');
   const [filters, setFilters] = useState<PartFilters>({
     search: '',
@@ -172,16 +174,10 @@ export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' |
   }, [parts, filters, sortState]);
 
   if (codexMode === 'my') {
-    return (
-      <EmptyState
-        size="lg"
-        title="My Codex: Parts"
-        description="Custom parts are not available yet. For now, use Realms Codex."
-      />
-    );
+    return <CodexMyCodexEmpty />;
   }
 
-  if (error) return <ErrorState message="Failed to load parts" />;
+  if (error) return <ErrorState message="Failed to load parts" onRetry={() => refetch()} />;
 
   return (
     <div>
@@ -220,7 +216,7 @@ export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' |
               { value: 'hide', label: 'Hide Mechanics' },
             ]}
             onChange={(v) => setFilters(f => ({ ...f, mechanicMode: v as 'all' | 'only' | 'hide' }))}
-            placeholder="Hide Mechanics"
+            placeholder={null}
           />
         </div>
       </FilterSection>
@@ -236,7 +232,7 @@ export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' |
         {isLoading ? (
           <LoadingState />
         ) : filteredParts.length === 0 ? (
-          <div className="p-8 text-center text-text-muted dark:text-text-secondary">No parts found.</div>
+          <EmptyState title="No parts found" size="sm" />
         ) : (
           filteredParts.map(part => (
             <PartCard key={part.id} part={part} />

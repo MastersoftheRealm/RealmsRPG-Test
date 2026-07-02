@@ -246,7 +246,7 @@ export function AddSubSkillModal({
         <select
           value={abilityFilter}
           onChange={(e) => setAbilityFilter(e.target.value)}
-          className="px-3 py-1.5 text-sm rounded-lg border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-surface-alt dark:border-border"
+          className="px-3 py-1.5 text-sm rounded-lg border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-outline-border dark:bg-surface-alt dark:border-border"
           aria-label="Filter by ability"
         >
           <option value="">All</option>
@@ -262,7 +262,7 @@ export function AddSubSkillModal({
         <select
           value={baseSkillFilter}
           onChange={(e) => setBaseSkillFilter(e.target.value)}
-          className="px-3 py-1.5 text-sm rounded-lg border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-surface-alt dark:border-border"
+          className="px-3 py-1.5 text-sm rounded-lg border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-outline-border dark:bg-surface-alt dark:border-border"
           aria-label="Filter by base skill"
         >
           <option value="">All</option>
@@ -281,7 +281,7 @@ export function AddSubSkillModal({
   return (
     <>
       {error && isOpen && (
-        <Alert variant="danger" className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] max-w-md">
+        <Alert variant="danger" className="fixed top-4 left-1/2 -translate-x-1/2 z-toast max-w-md">
           {error}
         </Alert>
       )}

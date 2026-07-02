@@ -5,176 +5,75 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  SectionHeader,
-  SearchInput,
-  ListHeader,
-  LoadingState,
-  ErrorDisplay,
-  GridListRow,
-  ListEmptyState,
-  DeleteConfirmModal,
-  type ChipData,
-} from '@/components/shared';
+import { DeleteConfirmModal, OfficialTechniqueList } from '@/components/shared';
+import { useToast } from '@/components/ui';
 import { useOfficialLibrary, useTechniqueParts } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
-import { useSort } from '@/hooks/use-sort';
-import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
-import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators/technique-calc';
+import { apiFetch } from '@/lib/api-client';
 import { Swords } from 'lucide-react';
 
-const TECHNIQUE_GRID = '1.5fr 0.8fr 0.8fr 1fr 1fr 1fr 40px';
 export function AdminPublicTechniquesTab({ mode = 'standard' }: { mode?: 'standard' | 'empowered' }) {
+  const { showToast } = useToast();
   const libraryType = mode === 'empowered' ? 'empowered-techniques' : 'techniques';
   const queryKey = ['official-library', libraryType] as const;
   const creatorPath = mode === 'empowered' ? '/empowered-technique-creator' : '/technique-creator';
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: items = [], isLoading, error } = useOfficialLibrary(libraryType);
+  const { data: items = [], isLoading, error, refetch } = useOfficialLibrary(libraryType);
   const { data: partsDb = [] } = useTechniqueParts();
-  const [search, setSearch] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
+  const empowered = mode === 'empowered';
 
-  const { sortState, handleSort, sortItems } = useSort('name');
-
-  const cardData = useMemo(() => {
-    return (items as Array<Record<string, unknown>>).map((t) => {
-      const doc: TechniqueDocument = {
-        name: String(t.name ?? ''),
-        description: String(t.description ?? ''),
-        parts: Array.isArray(t.parts) ? (t.parts as TechniqueDocument['parts']) : [],
-        damage: Array.isArray(t.damage) ? (t.damage[0] as TechniqueDocument['damage']) : (t.damage as TechniqueDocument['damage']),
-        weapon: t.weapon as TechniqueDocument['weapon'],
-      };
-      const display = deriveTechniqueDisplay(doc, partsDb);
-      const damageStr = formatTechniqueDamage(doc.damage);
-      const parts: ChipData[] = display.partChips.map((chip) => ({
-        name: chip.text.split(' | TP:')[0].replace(/\s*\(Opt\d+ \d+\)/g, '').trim(),
-        description: chip.description,
-        cost: chip.finalTP,
-        costLabel: 'TP',
-      }));
-      return {
-        id: String(t.id ?? t.docId ?? ''),
-        raw: t,
-        name: display.name,
-        description: display.description,
-        energy: display.energy,
-        tp: display.tp,
-        action: display.actionType,
-        weapon: display.weaponName || '-',
-        damage: damageStr,
-        parts,
-      };
-    });
-  }, [items, partsDb]);
-
-  const filtered = useMemo(() => {
-    let r = cardData;
-    if (search) {
-      const s = search.toLowerCase();
-      r = r.filter(
-        (x) =>
-          String(x.name ?? '').toLowerCase().includes(s) ||
-          String(x.description ?? '').toLowerCase().includes(s) ||
-          String(x.weapon ?? '').toLowerCase().includes(s)
-      );
-    }
-    return sortItems(r);
-  }, [cardData, search, sortItems]);
-
-  const handleDeleteFromListLegacy = async () => {
+  const handleDeleteFromList = async () => {
     if (!deleteConfirm) return;
     try {
-      const res = await fetch(`/api/official/${libraryType}?id=${encodeURIComponent(deleteConfirm.id)}`, {
+      await apiFetch(`/api/official/${libraryType}?id=${encodeURIComponent(deleteConfirm.id)}`, {
         method: 'DELETE',
       });
-      if (!res.ok) {
-        const msg = res.status === 404 ? 'Item not found or already deleted.' : res.statusText;
-        throw new Error(msg);
-      }
       queryClient.invalidateQueries({ queryKey });
       await queryClient.refetchQueries({ queryKey });
       setDeleteConfirm(null);
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Failed to delete');
+      showToast(e instanceof Error ? e.message : 'Failed to delete', 'error');
     }
   };
 
-  if (error) return <ErrorDisplay message={`Failed to load official ${mode === 'empowered' ? 'empowered techniques' : 'techniques'}`} />;
-
   return (
-    <div>
-      <SectionHeader title={mode === 'empowered' ? 'Official Empowered Techniques' : 'Official Techniques'} size="md" />
-      <div className="mb-4">
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder={mode === 'empowered' ? 'Search empowered techniques...' : 'Search techniques...'}
-        />
-      </div>
-      <ListHeader
-        columns={[
-          { key: 'name', label: 'NAME' },
-          { key: 'energy', label: 'ENERGY' },
-          { key: 'tp', label: 'TP' },
-          { key: 'action', label: 'ACTION' },
-          { key: 'weapon', label: 'WEAPON' },
-          { key: 'damage', label: 'DAMAGE' },
-          { key: '_actions', label: '', sortable: false as const },
-        ]}
-        gridColumns={TECHNIQUE_GRID}
-        sortState={sortState}
-        onSort={handleSort}
+    <>
+      <OfficialTechniqueList
+        items={items as Array<Record<string, unknown>>}
+        partsDb={partsDb}
+        isLoading={isLoading}
+        error={error}
+        onRetry={() => { void refetch(); }}
+        mode={mode}
+        errorMessage={`Failed to load official ${empowered ? 'empowered techniques' : 'techniques'}`}
+        sectionTitle={empowered ? 'Official Empowered Techniques' : 'Official Techniques'}
+        emptyIcon={<Swords className="w-8 h-8" />}
+        emptyTitle="No official techniques"
+        emptyMessage={
+          empowered
+            ? 'Publish one from the Empowered Technique Creator.'
+            : 'Add one from the header or publish from a creator.'
+        }
+        variant="admin"
+        onEdit={(id) => router.push(`${creatorPath}?edit=${encodeURIComponent(id)}`)}
+        onDelete={(id, name) => setDeleteConfirm({ id, name })}
       />
-      <div className="flex flex-col gap-1 mt-2">
-        {isLoading ? (
-          <LoadingState />
-        ) : filtered.length === 0 ? (
-          <ListEmptyState
-            icon={<Swords className="w-8 h-8" />}
-            title="No official techniques"
-            message={mode === 'empowered' ? 'Publish one from the Empowered Technique Creator.' : 'Add one from the header or publish from a creator.'}
-          />
-        ) : (
-          filtered.map((t) => (
-            <GridListRow
-              key={t.id}
-              id={t.id}
-              name={t.name}
-              description={t.description}
-              gridColumns={TECHNIQUE_GRID}
-              columns={[
-                { key: 'Energy', value: t.energy, highlight: true },
-                { key: 'TP', value: t.tp },
-                { key: 'Action', value: t.action },
-                { key: 'Weapon', value: t.weapon },
-                { key: 'Damage', value: t.damage },
-              ]}
-              chips={t.parts}
-              chipsLabel="Parts"
-              totalCost={t.tp}
-              costLabel="TP"
-              onEdit={() => router.push(`${creatorPath}?edit=${encodeURIComponent(t.id)}`)}
-              onDelete={() => setDeleteConfirm({ id: t.id, name: t.name })}
-            />
-          ))
-        )}
-      </div>
 
       {deleteConfirm && (
         <DeleteConfirmModal
           isOpen={true}
           itemName={deleteConfirm.name}
-          itemType={mode === 'empowered' ? 'empowered technique' : 'technique'}
+          itemType={empowered ? 'empowered technique' : 'technique'}
           deleteContext="Realms Library"
           isDeleting={false}
-          onConfirm={handleDeleteFromListLegacy}
+          onConfirm={handleDeleteFromList}
           onClose={() => setDeleteConfirm(null)}
         />
       )}
-    </div>
+    </>
   );
 }

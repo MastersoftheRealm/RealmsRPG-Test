@@ -10,24 +10,13 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils/cn';
 import { ChevronDown } from 'lucide-react';
-
-// Category-specific colors matching vanilla site and design system
-const categoryStyles: Record<string, string> = {
-  action: 'bg-category-action text-category-action-text',
-  activation: 'bg-category-activation text-category-activation-text',
-  area: 'bg-category-area text-category-area-text',
-  duration: 'bg-category-duration text-category-duration-text',
-  target: 'bg-category-target text-category-target-text',
-  special: 'bg-category-special text-category-special-text',
-  restriction: 'bg-category-restriction text-category-restriction-text',
-  cost: 'bg-category-action text-category-action-text',
-  default: 'bg-surface-alt text-text-secondary',
-};
+import { chipVariants } from '@/components/ui/chip';
+import { partChipVariant } from '@/lib/chip/part-chip-variant';
 
 export interface ExpandableChipProps {
   label: string;
   description?: string;
-  category?: keyof typeof categoryStyles | string;
+  category?: string;
   sublabel?: string;
   cost?: string | number;
   className?: string;
@@ -49,7 +38,6 @@ export function ExpandableChip({
   
   const hasContent = description || sublabel;
   const canExpand = expandable && hasContent;
-  const styleClass = categoryStyles[category] || categoryStyles.default;
 
   const handleClick = () => {
     if (canExpand) {
@@ -67,8 +55,8 @@ export function ExpandableChip({
   return (
     <div
       className={cn(
-        'inline-flex flex-col rounded-lg text-sm transition-all duration-200',
-        styleClass,
+        'inline-flex flex-col rounded-lg text-sm transition-all duration-base ease-standard',
+        chipVariants({ variant: partChipVariant(category) }),
         canExpand && 'cursor-pointer hover:shadow-md',
         isExpanded && 'shadow-md',
         className
@@ -88,7 +76,7 @@ export function ExpandableChip({
         {canExpand && (
           <ChevronDown
             className={cn(
-              'w-4 h-4 transition-transform duration-200',
+              'w-4 h-4 transition-transform duration-base ease-standard',
               isExpanded && 'rotate-180'
             )}
           />

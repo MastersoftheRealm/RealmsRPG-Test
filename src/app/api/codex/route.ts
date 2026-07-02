@@ -5,7 +5,8 @@
  */
 
 import { NextResponse } from 'next/server';
-import { createServiceRoleClient } from '@/lib/supabase/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/server';
 
 function toStrArray(val: unknown): string[] {
   if (!val) return [];
@@ -46,7 +47,7 @@ function parseJsonObject(val: unknown): Record<string, unknown> | undefined {
 /** DB row shape (snake_case from Supabase) */
 type Row = Record<string, unknown>;
 
-async function fetchCodexFromClient(supabase: ReturnType<typeof createServiceRoleClient>) {
+async function fetchCodexFromClient(supabase: SupabaseClient) {
   const [
     { data: feats, error: eFeats },
     { data: skills, error: eSkills },
@@ -409,7 +410,10 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const debug = url.searchParams.get('debug') === '1';
   try {
-    const supabase = createServiceRoleClient();
+    // Public reference data: read through the cookie-aware anon client so the
+    // "Anyone can read codex*/core_rules" RLS policies apply. The service-role
+    // key (RLS bypass) is reserved for authorized admin writes only (SEC-01).
+    const supabase = await createClient();
     const body = await fetchCodexFromClient(supabase);
     return NextResponse.json(body, { headers: { 'Cache-Control': cacheControl } });
   } catch (err) {

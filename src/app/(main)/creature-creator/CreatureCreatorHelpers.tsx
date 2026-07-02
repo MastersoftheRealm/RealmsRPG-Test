@@ -45,13 +45,13 @@ export function ChipList({
           >
             {item}
             {cost != null && cost !== '' && (
-              <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300" title="Feat point cost">
+              <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-primary-subtle-bg text-primary-fg" title="Feat point cost">
                 {cost}
               </span>
             )}
             <button
               onClick={() => onRemove(item)}
-              className="text-text-muted dark:text-text-secondary hover:text-danger-500 dark:hover:text-danger-400"
+              className="text-text-muted dark:text-text-secondary hover:text-danger-fg"
               aria-label={`Remove ${item}`}
             >
               ×
@@ -103,7 +103,7 @@ export function ExpandableChipList({
             rowHoverClass={rowHoverClass}
             rightSlot={
               cost != null && cost !== '' ? (
-                <span className="text-xs font-medium px-2 py-0.5 rounded bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 shrink-0" title="Feat point cost">
+                <span className="text-xs font-medium px-2 py-0.5 rounded bg-primary-subtle-bg text-primary-fg shrink-0" title="Feat point cost">
                   {cost}
                 </span>
               ) : undefined
@@ -154,7 +154,7 @@ export function AddItemDropdown({
   return (
     <div className="flex flex-col gap-1 mt-2">
       {sectionCostLabel && (
-        <span className="text-xs font-medium text-primary-600 dark:text-primary-400" title="Feat point cost">
+        <span className="text-xs font-medium text-primary-link-fg" title="Feat point cost">
           {sectionCostLabel}
         </span>
       )}

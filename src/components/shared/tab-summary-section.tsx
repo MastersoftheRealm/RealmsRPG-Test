@@ -5,12 +5,9 @@
  * ============================================================
  * A unified component for displaying summary information at the top of tabs.
  * Used for: innate energy/pools, currency, armament proficiency, physical attributes, etc.
- * 
- * Design Goals:
- * - Compact and clean - doesn't waste vertical space
- * - Sleek gradient background to distinguish from main content
- * - Flexible layout for different content types
- * - Consistent padding and rounded corners
+ *
+ * Variants use theme-aware domain tokens (power/martial/currency/info/surface) — no
+ * numbered ramps or ad-hoc `dark:` gradient pairs (Phase 4).
  */
 
 import { ReactNode } from 'react';
@@ -26,11 +23,11 @@ export interface TabSummarySectionProps {
 }
 
 const variantStyles = {
-  default: 'bg-gradient-to-r from-surface-alt to-surface border-border-light dark:from-surface dark:to-surface-alt',
-  power: 'bg-gradient-to-r from-violet-50 to-indigo-50 dark:from-violet-900/30 dark:to-indigo-900/30 border-violet-200 dark:border-violet-700/50',
-  martial: 'bg-gradient-to-r from-success-50 to-success-100 dark:from-success-900/30 dark:to-success-800/20 border-success-200 dark:border-success-700/50',
-  currency: 'bg-gradient-to-r from-warning-50 to-warning-100 dark:from-warning-900/30 dark:to-warning-800/20 border-warning-200 dark:border-warning-700/50',
-  physical: 'bg-gradient-to-r from-info-50 to-info-100 dark:from-info-900/30 dark:to-info-800/20 border-info-200 dark:border-info-700/50',
+  default: 'bg-gradient-to-r from-surface-alt to-surface border-border-light',
+  power: 'bg-gradient-to-r from-power-light to-surface border-power-border',
+  martial: 'bg-gradient-to-r from-martial-light to-surface border-martial-border',
+  currency: 'bg-gradient-to-r from-currency-light to-surface border-currency-border',
+  physical: 'bg-gradient-to-r from-info-light to-surface border-info-border',
 };
 
 export function TabSummarySection({
@@ -71,12 +68,12 @@ export interface SummaryItemProps {
 }
 
 const highlightColors = {
-  primary: 'text-primary-600 dark:text-primary-400',
-  success: 'text-success-700 dark:text-success-400',
-  warning: 'text-warning-600 dark:text-warning-400',
-  danger: 'text-danger-600 dark:text-danger-400',
-  power: 'text-violet-600 dark:text-violet-400',
-  martial: 'text-success-700 dark:text-success-400',
+  primary: 'text-primary-link-fg',
+  success: 'text-success-fg',
+  warning: 'text-warning-fg',
+  danger: 'text-danger-fg',
+  power: 'text-power-fg',
+  martial: 'text-martial-fg',
 };
 
 export function SummaryItem({

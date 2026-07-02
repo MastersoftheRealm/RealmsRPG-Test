@@ -48,7 +48,7 @@ export const WEAPON_DAMAGE_TYPES = [
   'bludgeoning',
 ] as const;
 
-/** Power damage types (all non-physical damage types — includes 'none' for non-damaging powers) */
+/** Power damage types (includes physical — Bludgeoning, Piercing, Slashing map to Physical Damage part) */
 export const POWER_DAMAGE_TYPES = [
   'none',
   'magic',
@@ -62,6 +62,9 @@ export const POWER_DAMAGE_TYPES = [
   'poison',
   'sonic',
   'acid',
+  'bludgeoning',
+  'piercing',
+  'slashing',
 ] as const;
 
 /** All damage types (used by creatures and items with mixed damage) */
@@ -153,34 +156,6 @@ export const DURATION_VALUES: Record<string, { value: number; label: string }[]>
     { value: 7, label: '7 days' },
     { value: 14, label: '14 days' },
   ],
-};
-
-// =============================================================================
-// Rarity
-// =============================================================================
-
-export const RARITY_COLORS: Record<string, string> = {
-  Common: 'text-text-primary bg-neutral-200 dark:bg-neutral-600 dark:text-neutral-100',
-  Uncommon: 'text-green-700 bg-green-100 dark:text-green-300 dark:bg-green-900/40',
-  Rare: 'text-blue-700 bg-blue-100 dark:text-blue-300 dark:bg-blue-900/40',
-  Epic: 'text-power-text bg-power-light',
-  Legendary: 'text-amber-700 bg-amber-100 dark:text-amber-300 dark:bg-amber-900/40',
-  Mythic: 'text-red-700 bg-red-100 dark:text-red-300 dark:bg-red-900/40',
-  Ascended: 'text-pink-700 bg-pink-100 dark:text-pink-300 dark:bg-pink-900/40',
-};
-
-// =============================================================================
-// Category Colors (for Power Parts)
-// =============================================================================
-
-export const CATEGORY_COLORS: Record<string, { bg: string; border: string; text: string; hoverBg: string; buttonBg: string; buttonHover: string }> = {
-  'Action': { bg: 'bg-blue-100', border: 'border-blue-300', text: 'text-blue-800', hoverBg: 'hover:bg-blue-200', buttonBg: 'bg-blue-600', buttonHover: 'hover:bg-blue-700' },
-  'Activation': { bg: 'bg-teal-100', border: 'border-teal-300', text: 'text-teal-800', hoverBg: 'hover:bg-teal-200', buttonBg: 'bg-teal-600', buttonHover: 'hover:bg-teal-700' },
-  'Area of Effect': { bg: 'bg-green-100', border: 'border-green-300', text: 'text-green-800', hoverBg: 'hover:bg-green-200', buttonBg: 'bg-green-600', buttonHover: 'hover:bg-green-700' },
-  'Duration': { bg: 'bg-category-duration', border: 'border-category-duration-border', text: 'text-category-duration-text', hoverBg: 'hover:bg-category-duration/80', buttonBg: 'bg-power', buttonHover: 'hover:bg-power-dark' },
-  'Target': { bg: 'bg-orange-100', border: 'border-orange-300', text: 'text-orange-800', hoverBg: 'hover:bg-orange-200', buttonBg: 'bg-orange-600', buttonHover: 'hover:bg-orange-700' },
-  'Special': { bg: 'bg-amber-100', border: 'border-amber-300', text: 'text-amber-800', hoverBg: 'hover:bg-amber-200', buttonBg: 'bg-amber-600', buttonHover: 'hover:bg-amber-700' },
-  'Restriction': { bg: 'bg-red-100', border: 'border-red-300', text: 'text-red-800', hoverBg: 'hover:bg-red-200', buttonBg: 'bg-red-600', buttonHover: 'hover:bg-red-700' },
 };
 
 // =============================================================================

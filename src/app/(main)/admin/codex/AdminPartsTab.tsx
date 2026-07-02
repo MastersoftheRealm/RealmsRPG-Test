@@ -18,7 +18,7 @@ const ADMIN_PART_COLUMNS = [
   { key: '_tp', label: 'TP' },
   { key: '_actions', label: '', sortable: false as const },
 ];
-import { Modal, Button, Input, Textarea } from '@/components/ui';
+import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
 import { ChipSelect, SelectFilter, FilterSection } from '@/components/codex';
 import { useParts, type Part } from '@/hooks';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
@@ -27,7 +27,6 @@ import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Copy, X, Plus } from 'lucide-react';
-import { IconButton } from '@/components/ui';
 
 const COPY_NAME_SUFFIX = ' copy';
 
@@ -90,7 +89,8 @@ interface PartFilters {
 }
 
 export function AdminPartsTab() {
-  const { data: parts, isLoading, error } = useParts();
+  const { showToast } = useToast();
+  const { data: parts, isLoading, error, refetch } = useParts();
   const queryClient = useQueryClient();
   const { sortState, handleSort } = useSort('name');
   const [filters, setFilters] = useState<PartFilters>({
@@ -379,7 +379,7 @@ export function AdminPartsTab() {
       // even if the codex refetch is delayed (staleTime is long).
       const savedId = editing ? editing.id : (result as { id?: string }).id;
       if (!savedId) {
-        alert('Save succeeded but no ID was returned. Please refresh.');
+        showToast('Save succeeded but no ID was returned. Please refresh.', 'warning');
         closeModal();
         return;
       }
@@ -420,7 +420,7 @@ export function AdminPartsTab() {
       await queryClient.refetchQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
     }
   };
 
@@ -435,7 +435,7 @@ export function AdminPartsTab() {
       closeModal();
       setDeleteConfirm(null);
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
     }
   };
 
@@ -449,12 +449,12 @@ export function AdminPartsTab() {
       queryClient.invalidateQueries({ queryKey: ['codex'] });
       setPendingDeleteId(null);
     } else {
-      alert(result.error);
+      showToast(result.error ?? 'Operation failed', 'error');
       setPendingDeleteId(null);
     }
   };
 
-  if (error) return <ErrorState message="Failed to load parts" />;
+  if (error) return <ErrorState message="Failed to load parts" onRetry={() => { void refetch(); }} />;
 
   return (
     <div>
@@ -629,7 +629,7 @@ export function AdminPartsTab() {
                             size="sm"
                             onClick={() => setPendingDeleteId(p.id)}
                             label="Delete"
-                            className="text-danger dark:text-danger-400 hover:text-danger-600 dark:hover:text-danger-300 hover:bg-transparent"
+                            className="text-danger-fg hover:opacity-80 hover:bg-transparent"
                           >
                             <X className="w-4 h-4" />
                           </IconButton>
@@ -810,7 +810,7 @@ export function AdminPartsTab() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-text-muted hover:text-danger"
+                        className="text-text-muted hover:text-danger-fg"
                         onClick={() => deleteOptionAndCompact(n as 1 | 2 | 3)}
                         aria-label={`Remove option ${n}`}
                       >

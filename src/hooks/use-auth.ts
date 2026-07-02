@@ -10,6 +10,7 @@ import { useEffect, useCallback, useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/stores/auth-store';
 import type { AuthUser } from '@/types/auth';
+import { migrateGuestEncountersOnSignIn, hasGuestEncountersToMigrate } from '@/lib/guest-encounter-migration';
 
 function toAuthUser(user: { id: string; email?: string; user_metadata?: Record<string, unknown>; app_metadata?: { provider?: string }; identities?: Array<{ provider?: string }> } | null): AuthUser | null {
   if (!user) return null;
@@ -51,10 +52,13 @@ export function useAuth() {
 
     const supabase = createClient();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (mountedRef.current) {
         setUser(toAuthUser(session?.user ?? null));
         setInitialized(true);
+        if (event === 'SIGNED_IN' && session?.user && hasGuestEncountersToMigrate()) {
+          migrateGuestEncountersOnSignIn().catch(() => {});
+        }
       }
     });
 
@@ -64,9 +68,8 @@ export function useAuth() {
         setUser(toAuthUser(u));
         setInitialized(true);
       }
-    }).catch((err) => {
+    }).catch(() => {
       if (mountedRef.current) {
-        console.error('Auth init error:', err);
         setError('Failed to initialize auth');
         setInitialized(true);
       }
@@ -84,6 +87,9 @@ export function useAuth() {
         const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
         if (err) throw err;
         setUser(toAuthUser(data.user));
+        if (hasGuestEncountersToMigrate()) {
+          await migrateGuestEncountersOnSignIn();
+        }
         return data.user;
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to sign in';

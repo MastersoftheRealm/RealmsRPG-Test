@@ -9,14 +9,13 @@
 
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, Cloud, CloudOff } from 'lucide-react';
-import { PageContainer, LoadingState, Alert } from '@/components/ui';
-import { ContextHelpTooltip } from '@/components/shared';
+import { PageContainer, LoadingState, Alert, useToast } from '@/components/ui';
 import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
 import { RollProvider } from '@/components/character-sheet';
 import type { Encounter, SkillParticipant } from '@/types/encounter';
 import { computeSkillRollResult } from '@/lib/game/encounter-utils';
 import SkillEncounterView from '../_components/SkillEncounterView';
+import { EncounterPageHeader } from '../_components/EncounterPageHeader';
 
 interface PageParams {
   params: Promise<{ id: string }>;
@@ -83,6 +82,7 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
     if (encounter?.name && !isEditingName) setNameInput(encounter.name);
   }, [encounter?.name, isEditingName]);
 
+  const { showToast } = useToast();
   const { isSaving, hasUnsavedChanges } = useAutoSave({
     data: encounter,
     onSave: async (data) => {
@@ -92,11 +92,14 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
     },
     delay: 1500,
     enabled: isInitialized && !!encounter,
+    onSaveError: () => {
+      showToast('Failed to save encounter. Your latest changes may not be stored.', 'error');
+    },
   });
 
   if (isLoading) {
     return (
-      <PageContainer size="xl">
+      <PageContainer size="full">
         <LoadingState message="Loading encounter..." size="lg" />
       </PageContainer>
     );
@@ -104,11 +107,11 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
 
   if (error || (!isLoading && !encounterData)) {
     return (
-      <PageContainer size="xl">
+      <PageContainer size="full">
         <Alert variant="danger" title="Encounter not found">
           This encounter may have been deleted or you may not have access.
         </Alert>
-        <Link href="/encounters" className="mt-4 inline-block text-primary-600 hover:underline">
+        <Link href="/encounters" className="mt-4 inline-block text-primary-link-fg hover:underline">
           Back to Encounters
         </Link>
       </PageContainer>
@@ -117,93 +120,43 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
 
   if (!encounter || !encounter.skillEncounter) {
     return (
-      <PageContainer size="xl">
+      <PageContainer size="full">
         <LoadingState message="Initializing..." />
       </PageContainer>
     );
   }
 
+  const handleCommitName = () => {
+    const trimmed = nameInput.trim();
+    if (trimmed && trimmed !== encounter.name) {
+      setEncounter((prev) => (prev ? { ...prev, name: trimmed } : prev));
+    } else {
+      setNameInput(encounter.name || '');
+    }
+    setIsEditingName(false);
+  };
+
+  const handleCancelEditName = () => {
+    setNameInput(encounter.name || '');
+    setIsEditingName(false);
+  };
+
   return (
     <RollProvider>
-      <PageContainer size="xl">
-        <div className="mb-6">
-          <Link
-            href="/encounters"
-            className="inline-flex items-center gap-1 text-text-secondary hover:text-primary-600 mb-2 text-sm"
-          >
-            <ChevronLeft className="w-4 h-4" /> Back to Encounters
-          </Link>
-          <div className="flex items-start justify-between">
-            <div>
-              {isEditingName ? (
-                <input
-                  type="text"
-                  value={nameInput}
-                  onChange={(e) => setNameInput(e.target.value)}
-                  onBlur={() => {
-                    const trimmed = nameInput.trim();
-                    if (trimmed && trimmed !== encounter.name) {
-                      setEncounter((prev) => (prev ? { ...prev, name: trimmed } : prev));
-                    } else {
-                      setNameInput(encounter.name || '');
-                    }
-                    setIsEditingName(false);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      const trimmed = nameInput.trim();
-                      if (trimmed && trimmed !== encounter.name) {
-                        setEncounter((prev) => (prev ? { ...prev, name: trimmed } : prev));
-                      }
-                      setIsEditingName(false);
-                    } else if (e.key === 'Escape') {
-                      setNameInput(encounter.name || '');
-                      setIsEditingName(false);
-                    }
-                  }}
-                  className="text-3xl font-bold text-text-primary bg-transparent border-b-2 border-primary-500 outline-none w-full max-w-md"
-                  autoFocus
-                />
-              ) : (
-                <>
-                  <h1
-                    className="text-3xl font-bold text-text-primary cursor-pointer hover:text-primary-600 hover:underline"
-                    onClick={() => setIsEditingName(true)}
-                    title="Click to edit encounter name"
-                  >
-                    {encounter.name}
-                  </h1>
-                  <div className="mt-1">
-                    <ContextHelpTooltip
-                      tooltipKey="encounters.skill.headerHelp"
-                      scope="page:/encounters/[id]/skill"
-                      label="Skill encounter help"
-                    />
-                  </div>
-                </>
-              )}
-
-              <p className="text-text-secondary">
-                Skill Encounter{encounter.description ? ` \u2014 ${encounter.description}` : ''}
-              </p>
-              <p className="text-xs mt-1 flex items-center gap-1">
-                {isSaving ? (
-                  <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                    <CloudOff className="w-3 h-3" /> Saving...
-                  </span>
-                ) : hasUnsavedChanges ? (
-                  <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                    <CloudOff className="w-3 h-3" /> Unsaved changes
-                  </span>
-                ) : (
-                  <span className="text-green-600 dark:text-green-400 flex items-center gap-1">
-                    <Cloud className="w-3 h-3" /> Saved to cloud
-                  </span>
-                )}
-              </p>
-            </div>
-          </div>
-        </div>
+      <PageContainer size="full">
+        <EncounterPageHeader
+          encounterType="Skill"
+          name={encounter.name}
+          description={encounter.description}
+          isEditingName={isEditingName}
+          nameInput={nameInput}
+          onNameInputChange={setNameInput}
+          onStartEditingName={() => setIsEditingName(true)}
+          onCommitName={handleCommitName}
+          onCancelEdit={handleCancelEditName}
+          isSaving={isSaving}
+          hasUnsavedChanges={hasUnsavedChanges}
+        />
 
         <SkillEncounterView
           encounterId={encounterId}

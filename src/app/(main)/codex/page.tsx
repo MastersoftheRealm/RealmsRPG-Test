@@ -9,8 +9,9 @@
 
 'use client';
 
-import { useState, useCallback } from 'react';
-import { PageContainer, PageHeader, TabNavigation, Button } from '@/components/ui';
+import { useState, useCallback, useEffect } from 'react';
+import { PageContainer, PageHeader, TabNavigation, TabContentPanel, useTabGroup, Button } from '@/components/ui';
+import { CodexCharacterFilter } from '@/components/codex';
 import { CodexFeatsTab } from './CodexFeatsTab';
 import { CodexSkillsTab } from './CodexSkillsTab';
 import { CodexSpeciesTab } from './CodexSpeciesTab';
@@ -19,21 +20,26 @@ import { CodexPropertiesTab } from './CodexPropertiesTab';
 import { CodexPartsTab } from './CodexPartsTab';
 import { CodexTraitsTab } from './CodexTraitsTab';
 import { CodexCreatureFeatsTab } from './CodexCreatureFeatsTab';
+import { CodexArchetypesTab } from './CodexArchetypesTab';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ContextHelpTooltip, SegmentedControl } from '@/components/shared';
+import { SegmentedControl } from '@/components/shared';
 
 type CodexMode = 'public' | 'my';
 
-type TabId = 'feats' | 'skills' | 'species' | 'equipment' | 'properties' | 'parts' | 'traits' | 'creature_feats';
+type TabId = 'feats' | 'skills' | 'species' | 'archetypes' | 'equipment' | 'properties' | 'parts' | 'traits' | 'creature_feats';
 
-const MAIN_TAB_IDS: TabId[] = ['feats', 'skills', 'species', 'equipment'];
+/** localStorage key for the persisted "view as character" selection. */
+const CODEX_CHARACTER_FILTER_KEY = 'codex:characterFilterId';
+
+const MAIN_TAB_IDS: TabId[] = ['feats', 'skills', 'species', 'archetypes', 'equipment'];
 const ADVANCED_TAB_IDS: TabId[] = ['parts', 'properties', 'creature_feats', 'traits'];
 
 const TAB_META: { id: TabId; label: string; labelMobile?: string }[] = [
   { id: 'feats', label: 'Feats' },
   { id: 'skills', label: 'Skills' },
   { id: 'species', label: 'Species' },
+  { id: 'archetypes', label: 'Archetypes' },
   { id: 'equipment', label: 'Equipment' },
   { id: 'parts', label: 'Power & Technique Parts', labelMobile: 'Parts' },
   { id: 'properties', label: 'Armament Properties', labelMobile: 'Properties' },
@@ -42,9 +48,31 @@ const TAB_META: { id: TabId; label: string; labelMobile?: string }[] = [
 ];
 
 export default function CodexPage() {
+  const { tabGroupId, sharedPanelId } = useTabGroup();
   const [codexMode, setCodexMode] = useState<CodexMode>('public');
   const [activeTab, setActiveTab] = useState<TabId>('feats');
   const [showAdvanced, setShowAdvanced] = useState(false);
+  // "View as character" selection — shared across all tabs and persisted locally.
+  const [characterFilterId, setCharacterFilterId] = useState('');
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(CODEX_CHARACTER_FILTER_KEY);
+      if (stored) setCharacterFilterId(stored);
+    } catch {
+      // ignore storage access errors (private mode, etc.)
+    }
+  }, []);
+
+  const handleCharacterFilterChange = useCallback((id: string) => {
+    setCharacterFilterId(id);
+    try {
+      if (id) window.localStorage.setItem(CODEX_CHARACTER_FILTER_KEY, id);
+      else window.localStorage.removeItem(CODEX_CHARACTER_FILTER_KEY);
+    } catch {
+      // ignore storage access errors
+    }
+  }, []);
 
   const visibleTabIds = showAdvanced ? [...MAIN_TAB_IDS, ...ADVANCED_TAB_IDS] : MAIN_TAB_IDS;
   const tabs = visibleTabIds
@@ -78,21 +106,15 @@ export default function CodexPage() {
           title={isPublic ? 'Realms Codex' : 'My Codex'}
           description={
             isPublic
-              ? 'Complete reference for the Realms RPG system: feats, skills, species, equipment, parts, and properties.'
+              ? 'Complete reference for the Realms RPG system: feats, skills, species, archetype paths, equipment, parts, and properties.'
               : 'Your custom species and other codex content appear here. Create species in the Species Creator.'
           }
         />
         <div className="flex items-center gap-2">
-          <ContextHelpTooltip
-            tooltipKey="codex.page.modeHelp"
-            scope="page:/codex"
-            label="Codex usage help"
-            placement="left"
-          />
         </div>
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-4 min-w-0">
+      <div className="mb-4 flex flex-wrap items-end gap-4 min-w-0">
         <SegmentedControl
           value={codexMode}
           onChange={setCodexMode}
@@ -102,6 +124,10 @@ export default function CodexPage() {
           ]}
           aria-label="Codex scope"
           className="flex-shrink-0"
+        />
+        <CodexCharacterFilter
+          value={characterFilterId}
+          onChange={handleCharacterFilterChange}
         />
       </div>
 
@@ -113,6 +139,8 @@ export default function CodexPage() {
               activeTab={activeTab}
               onTabChange={onTabChange}
               variant="underline"
+              tabGroupId={tabGroupId}
+              sharedTabPanelId={sharedPanelId}
             />
           </div>
           <Button
@@ -121,7 +149,7 @@ export default function CodexPage() {
             onClick={toggleAdvanced}
             className={cn(
               'gap-1.5 flex-shrink-0 min-h-[44px]',
-              showAdvanced && 'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700'
+              showAdvanced && 'bg-primary-subtle-bg border-primary-subtle-border'
             )}
             aria-pressed={showAdvanced}
           >
@@ -131,11 +159,13 @@ export default function CodexPage() {
         </div>
       </div>
 
+      <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab}>
       {isPublic && (
         <>
-          {activeTab === 'feats' && <CodexFeatsTab codexMode="public" />}
+          {activeTab === 'feats' && <CodexFeatsTab codexMode="public" characterId={characterFilterId} />}
           {activeTab === 'skills' && <CodexSkillsTab codexMode="public" />}
           {activeTab === 'species' && <CodexSpeciesTab codexMode="public" />}
+          {activeTab === 'archetypes' && <CodexArchetypesTab codexMode="public" />}
           {activeTab === 'equipment' && <CodexEquipmentTab codexMode="public" />}
           {activeTab === 'properties' && <CodexPropertiesTab codexMode="public" />}
           {activeTab === 'parts' && <CodexPartsTab codexMode="public" />}
@@ -145,9 +175,10 @@ export default function CodexPage() {
       )}
       {!isPublic && (
         <>
-          {activeTab === 'feats' && <CodexFeatsTab codexMode="my" />}
+          {activeTab === 'feats' && <CodexFeatsTab codexMode="my" characterId={characterFilterId} />}
           {activeTab === 'skills' && <CodexSkillsTab codexMode="my" />}
           {activeTab === 'species' && <CodexSpeciesTab codexMode="my" />}
+          {activeTab === 'archetypes' && <CodexArchetypesTab codexMode="my" />}
           {activeTab === 'equipment' && <CodexEquipmentTab codexMode="my" />}
           {activeTab === 'properties' && <CodexPropertiesTab codexMode="my" />}
           {activeTab === 'parts' && <CodexPartsTab codexMode="my" />}
@@ -155,6 +186,7 @@ export default function CodexPage() {
           {activeTab === 'creature_feats' && <CodexCreatureFeatsTab codexMode="my" />}
         </>
       )}
+      </TabContentPanel>
     </PageContainer>
   );
 }

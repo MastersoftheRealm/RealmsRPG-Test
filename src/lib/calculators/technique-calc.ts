@@ -6,8 +6,10 @@
  */
 
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
-import type { TechniquePart } from '@/hooks/use-rtdb';
+import { computePartTrainingPoints } from '@/lib/library/part-display';
+import type { TechniquePart } from '@/hooks/codex-types';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
+import { deriveActionType, actionTypeFromSelection } from './action-type';
 
 // Re-export for convenience
 export type { TechniquePart };
@@ -78,16 +80,7 @@ export interface MechanicContext {
 // Damage Helpers
 // =============================================================================
 
-/**
- * Compute the number of "splits" if using dice smaller than d12.
- */
-export function computeSplits(diceAmt: number, dieSize: number): number {
-  const valid = [4, 6, 8, 10, 12];
-  if (!valid.includes(dieSize) || diceAmt <= 1) return 0;
-  const total = diceAmt * dieSize;
-  const minDiceUsingD12 = Math.ceil(total / 12);
-  return Math.max(0, diceAmt - minDiceUsingD12);
-}
+export { computeSplits } from './dice-splits';
 
 /**
  * Compute the option level for Additional Damage based on dice.
@@ -120,119 +113,40 @@ export function computeActionType(
   partsPayload: TechniquePartPayload[] = [],
   partsDb: TechniquePart[] = []
 ): string {
-  let actionType = 'Basic';
-  let isReaction = false;
+  const ids = {
+    reaction: PART_IDS.REACTION,
+    quickOrFree: PART_IDS.QUICK_OR_FREE_ACTION,
+    longAction: PART_IDS.LONG_ACTION,
+  };
 
-  partsPayload.forEach((p) => {
-    // Get part ID - prefer id, fallback to name lookup
+  const resolved = partsPayload.map((p) => {
+    // Prefer id, fall back to name lookup against the codex.
     let partId = p.id;
     if (partId === undefined && p.name) {
       const def = findByIdOrName(partsDb, { name: p.name });
       partId = def?.id !== undefined ? Number(def.id) : undefined;
     }
-
-    const l1 = p.op_1_lvl || 0;
-
-    if (partId === PART_IDS.REACTION) {
-      isReaction = true;
-    } else if (partId === PART_IDS.QUICK_OR_FREE_ACTION) {
-      if (l1 === 0) actionType = 'Quick';
-      else if (l1 === 1) actionType = 'Free';
-    } else if (partId === PART_IDS.LONG_ACTION) {
-      if (l1 === 0) actionType = 'Long (3)';
-      else if (l1 === 1) actionType = 'Long (4)';
-    } else {
-      // Legacy name-based fallback
-      if (p.name === 'Reaction') isReaction = true;
-      else if (p.name === 'Quick or Free Action') {
-        if (l1 === 0) actionType = 'Quick';
-        else if (l1 === 1) actionType = 'Free';
-      } else if (p.name === 'Long Action') {
-        if (l1 === 0) actionType = 'Long (3)';
-        else if (l1 === 1) actionType = 'Long (4)';
-      }
+    // Legacy name-based fallback when the resolved id is not an action part.
+    if (
+      partId !== ids.reaction &&
+      partId !== ids.quickOrFree &&
+      partId !== ids.longAction &&
+      p.name
+    ) {
+      if (p.name === 'Reaction') partId = ids.reaction;
+      else if (p.name === 'Quick or Free Action') partId = ids.quickOrFree;
+      else if (p.name === 'Long Action') partId = ids.longAction;
     }
+    return { partId, level: p.op_1_lvl || 0 };
   });
 
-  return isReaction ? `${actionType} Reaction` : `${actionType} Action`;
+  return deriveActionType(resolved, ids);
 }
 
 /**
  * Helper when UI stores a selector value like: quick|free|long3|long4|basic
  */
-export function computeActionTypeFromSelection(selection: string, reactionFlag: boolean): string {
-  let base = 'Basic';
-  if (selection === 'quick') base = 'Quick';
-  else if (selection === 'free') base = 'Free';
-  else if (selection === 'long3') base = 'Long (3)';
-  else if (selection === 'long4') base = 'Long (4)';
-  return reactionFlag ? `${base} Reaction` : `${base} Action`;
-}
-
-// =============================================================================
-// Mechanic Part Assembly
-// =============================================================================
-
-/**
- * Build mechanic part payloads based on current UI selections.
- * Used to auto-generate action/damage parts based on selections.
- */
-export function buildMechanicPartPayload(
-  ctx: MechanicContext
-): Array<{ id: number; name: string; op_1_lvl: number; op_2_lvl: number; op_3_lvl: number }> {
-  const {
-    actionTypeSelection = 'basic',
-    reaction = false,
-    weaponTP = 0,
-    weaponAttackMode = 'attack',
-    diceAmt = 0,
-    dieSize = 0,
-    partsDb = [],
-  } = ctx || {};
-
-  const payload: Array<{ id: number; name: string; op_1_lvl: number; op_2_lvl: number; op_3_lvl: number }> = [];
-
-  function pushIf(partId: number, partName: string, op1 = 0): void {
-    // Try by ID first, then by name for backwards compatibility
-    let def = findByIdOrName(partsDb, { id: partId });
-    if (!def) def = findByIdOrName(partsDb, { name: partName });
-    // Only include mechanic parts
-    if (def && def.mechanic) {
-      payload.push({
-        id: Number(def.id),
-        name: def.name || partName,
-        op_1_lvl: op1,
-        op_2_lvl: 0,
-        op_3_lvl: 0,
-      });
-    }
-  }
-
-  // Action / Reaction
-  if (reaction) pushIf(PART_IDS.REACTION, 'Reaction', 0);
-  if (actionTypeSelection === 'quick') pushIf(PART_IDS.QUICK_OR_FREE_ACTION, 'Quick or Free Action', 0);
-  else if (actionTypeSelection === 'free') pushIf(PART_IDS.QUICK_OR_FREE_ACTION, 'Quick or Free Action', 1);
-  else if (actionTypeSelection === 'long3') pushIf(PART_IDS.LONG_ACTION, 'Long Action', 0);
-  else if (actionTypeSelection === 'long4') pushIf(PART_IDS.LONG_ACTION, 'Long Action', 1);
-
-  // Additional Damage
-  if (diceAmt > 0 && dieSize >= 4) {
-    const level = computeAdditionalDamageLevel(diceAmt, dieSize);
-    pushIf(PART_IDS.ADDITIONAL_DAMAGE, 'Additional Damage', level);
-    // Split Damage Dice
-    const splits = computeSplits(diceAmt, dieSize);
-    if (splits > 0) pushIf(PART_IDS.SPLIT_DAMAGE_DICE, 'Split Damage Dice', splits - 1);
-  }
-
-  // Weapon Attack scaling
-  if (weaponAttackMode === 'no_attack') {
-    pushIf(PART_IDS.NO_ATTACK, 'No Attack', 0);
-  } else if (weaponTP >= 1) {
-    pushIf(PART_IDS.ADD_WEAPON_ATTACK, 'Add Weapon Attack', weaponTP - 1);
-  }
-
-  return payload;
-}
+export const computeActionTypeFromSelection = actionTypeFromSelection;
 
 // =============================================================================
 // Core Cost Calculator
@@ -316,16 +230,7 @@ export function formatTechniquePartChip(
   const l2 = pl.op_2_lvl || 0;
   const l3 = pl.op_3_lvl || 0;
 
-  let opt1TPRaw = (def.op_1_tp || 0) * l1;
-  const defId = typeof def.id === 'string' ? parseInt(def.id, 10) : def.id;
-  if (defId === PART_IDS.ADDITIONAL_DAMAGE || def.name === 'Additional Damage') {
-    opt1TPRaw = Math.floor(opt1TPRaw);
-  }
-
-  const rawTP =
-    (def.base_tp || 0) + opt1TPRaw + (def.op_2_tp || 0) * l2 + (def.op_3_tp || 0) * l3;
-
-  const finalTP = Math.floor(rawTP);
+  const finalTP = computePartTrainingPoints(def, pl, 'technique');
   let text = def.name || '';
   if (l1 > 0) text += ` (Opt1 ${l1})`;
   if (l2 > 0) text += ` (Opt2 ${l2})`;

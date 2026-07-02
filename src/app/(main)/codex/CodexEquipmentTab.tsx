@@ -105,8 +105,9 @@ function EquipmentCard({ item, propertiesDb = [] }: { item: Equipment; propertie
 }
 
 export function CodexEquipmentTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
-  const { data: equipment, isLoading, error } = useEquipment();
-  const { data: propertiesDb = [] } = useItemProperties();
+  const loadPublicCodex = codexMode === 'public';
+  const { data: equipment, isLoading, error, refetch } = useEquipment({ enabled: loadPublicCodex });
+  const { data: propertiesDb = [] } = useItemProperties({ enabled: loadPublicCodex });
   const { sortState, handleSort, sortItems } = useSort('name');
   const [filters, setFilters] = useState<EquipmentFilters>({
     search: '',
@@ -159,7 +160,7 @@ export function CodexEquipmentTab({ codexMode = 'public' }: { codexMode?: 'publi
     );
   }
 
-  if (error) return <ErrorState message="Failed to load equipment" />;
+  if (error) return <ErrorState message="Failed to load equipment" onRetry={() => refetch()} />;
 
   return (
     <div>
@@ -197,7 +198,7 @@ export function CodexEquipmentTab({ codexMode = 'public' }: { codexMode?: 'publi
         {isLoading ? (
           <LoadingState />
         ) : filteredEquipment.length === 0 ? (
-          <div className="p-8 text-center text-text-muted dark:text-text-secondary">No equipment found.</div>
+          <EmptyState title="No equipment found." size="sm" />
         ) : (
           filteredEquipment.map((item: Equipment & { category: string; cost: number; rarity: string }) => (
             <EquipmentCard key={item.id} item={item} propertiesDb={propertiesDb} />

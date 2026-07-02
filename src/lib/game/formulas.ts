@@ -8,7 +8,7 @@
  * When provided, DB-stored values are used. Otherwise, constants.ts fallbacks apply.
  */
 
-import type { EntityType, Abilities, ArchetypeCategory, Character } from '@/types';
+import type { EntityType, Abilities, ArchetypeCategory } from '@/types';
 import type { CoreRulesMap, ArchetypeConfigRules } from '@/types/core-rules';
 import { 
   SHARED_CONSTANTS, 
@@ -23,6 +23,19 @@ import {
 // =============================================================================
 
 type Rules = Partial<CoreRulesMap>;
+
+// =============================================================================
+// Shared ability helpers
+// =============================================================================
+
+/**
+ * Unproficient attribute bonus: a negative modifier is doubled (penalty), a
+ * non-negative modifier is halved (rounded up). Single source of truth shared
+ * by skill, sub-skill and attack-bonus calculations. (DUP-04)
+ */
+export function unproficientBonus(abilityMod: number): number {
+  return abilityMod < 0 ? abilityMod * 2 : Math.ceil(abilityMod / 2);
+}
 
 // =============================================================================
 // Level Progression Calculations
@@ -47,20 +60,6 @@ export function calculateAbilityPoints(level: number, allowSubLevel = false, rul
   
   const bonusPoints = Math.floor(parsedLevel / interval) * perIncrease;
   return base + bonusPoints;
-}
-
-/**
- * @deprecated Use calculateSkillPointsForEntity() instead.
- */
-export function calculateSkillPoints(level: number, allowSubLevel = false): number {
-  const parsedLevel = parseFloat(String(level)) || 1;
-  
-  if (allowSubLevel && parsedLevel < 1) {
-    return Math.ceil(5 * parsedLevel);
-  }
-  
-  return SHARED_CONSTANTS.BASE_SKILL_POINTS + 
-         (SHARED_CONSTANTS.SKILL_POINTS_PER_LEVEL * Math.floor(parsedLevel));
 }
 
 /**
@@ -478,87 +477,21 @@ export function getInnateEnergyMax(archetype: ArchetypeCategory | { type?: Arche
   return getArchetypeConfig(type || 'power', rules).innateEnergy;
 }
 
-/**
- * Get the archetype ability score.
- */
-export function getArchetypeAbility(
-  archetype: { type?: string; pow_abil?: string; mart_abil?: string } | undefined,
-  abilities: Partial<Abilities>
+/** Sum energy costs of powers marked innate (innate energy budget spent). */
+export function sumInnatePowerEnergyCosts(
+  powers: Array<{ innate?: boolean; cost?: number }> = []
 ): number {
-  if (!archetype?.type) return 0;
-  
-  if (archetype.type === 'powered-martial') {
-    const pow = archetype.pow_abil?.toLowerCase() as keyof Abilities;
-    const mar = archetype.mart_abil?.toLowerCase() as keyof Abilities;
-    const powVal = pow ? (abilities[pow] || 0) : 0;
-    const marVal = mar ? (abilities[mar] || 0) : 0;
-    return Math.max(powVal, marVal);
-  }
-  
-  const abilityKey = (archetype.pow_abil || archetype.mart_abil)?.toLowerCase() as keyof Abilities;
-  return abilityKey ? (abilities[abilityKey] || 0) : 0;
+  return powers
+    .filter((p) => p.innate === true)
+    .reduce((sum, p) => sum + (p.cost ?? 0), 0);
 }
 
-/**
- * @deprecated Use calculateMaxHealth() from @/lib/game/calculations instead.
- */
-export function getBaseHealth(
-  archetype: { type?: string; pow_abil?: string; mart_abil?: string } | undefined,
-  abilities: Partial<Abilities>,
-  rules?: Rules
+/** Remaining innate energy budget after innate power costs. */
+export function calculateRemainingInnateEnergy(
+  maxInnateEnergy: number,
+  powers: Array<{ innate?: boolean; cost?: number }> = []
 ): number {
-  const baseHealth = rules?.PROGRESSION_PLAYER?.baseHealth ?? 8;
-  const vitality = abilities.vitality || 0;
-  
-  const isVitalityArchetype = 
-    archetype?.pow_abil?.toLowerCase() === 'vitality' ||
-    archetype?.mart_abil?.toLowerCase() === 'vitality';
-  
-  if (isVitalityArchetype) {
-    return baseHealth + (abilities.strength || 0);
-  }
-  
-  return baseHealth + vitality;
-}
-
-/**
- * @deprecated Use calculateMaxEnergy() from @/lib/game/calculations instead.
- */
-export function getBaseEnergy(
-  archetype: { type?: string; pow_abil?: string; mart_abil?: string } | undefined,
-  abilities: Partial<Abilities>
-): number {
-  return getArchetypeAbility(archetype, abilities);
-}
-
-/**
- * @deprecated Use computeMaxHealthEnergy() from @/lib/game/calculations instead.
- */
-export function getCharacterMaxHealthEnergy(charData: Record<string, unknown>): {
-  maxHealth: number;
-  maxEnergy: number;
-} {
-  const rawAbilities = (charData.abilities || {}) as Record<string, number>;
-  const abilities: Partial<Abilities> = {
-    ...rawAbilities,
-    acuity: rawAbilities.acuity ?? rawAbilities.acu ?? 0,
-    agility: rawAbilities.agility ?? rawAbilities.agi ?? 0,
-  };
-  const level = (charData.level as number) ?? 1;
-  const healthPoints = (charData.healthPoints as number) ?? 0;
-  const energyPoints = (charData.energyPoints as number) ?? 0;
-  const archetype = charData.archetype as { type?: string; pow_abil?: string; mart_abil?: string } | undefined;
-
-  const baseHealth = getBaseHealth(archetype, abilities);
-  const healthAbility = baseHealth - 8;
-  const maxHealth = healthAbility < 0
-    ? 8 + healthAbility + healthPoints
-    : 8 + healthAbility * level + healthPoints;
-
-  const archetypeAbilityValue = getArchetypeAbility(archetype, abilities);
-  const maxEnergy = archetypeAbilityValue * level + energyPoints;
-
-  return { maxHealth, maxEnergy };
+  return maxInnateEnergy - sumInnatePowerEnergyCosts(powers);
 }
 
 // =============================================================================
@@ -717,10 +650,9 @@ export function calculateSubSkillBonusWithProficiency(
   chosenAbilityKey?: string
 ): number {
   const abilityMod = getLinkedAbilityMod(linkedAbilities, abilities, chosenAbilityKey);
-  const unprofBonus = (a: number) => (a < 0 ? a * 2 : Math.ceil(a / 2));
 
   if (!baseSkillProficient) {
-    return unprofBonus(abilityMod) + baseSkillValue;
+    return unproficientBonus(abilityMod) + baseSkillValue;
   }
   if (isProficient) {
     return abilityMod + baseSkillValue + subSkillValue;
@@ -786,7 +718,6 @@ export function getSkillBonusForFeatRequirement(
 
   const abilityKey = (codexSkill.ability?.split(',')[0]?.trim()?.toLowerCase() || 'strength') as keyof Abilities;
   const abilityMod = abilities[abilityKey] ?? 0;
-  const unprofBonus = (a: number) => (a < 0 ? a * 2 : Math.ceil(a / 2));
 
   if (baseSkillId) {
     // Sub-skill: need base skill value and proficiency
@@ -800,7 +731,7 @@ export function getSkillBonusForFeatRequirement(
       readProficiency(baseSkillId, false) ||
       (baseCodex?.name ? readProficiency(String(baseCodex.name), false) : false);
     if (!baseProficient) {
-      return { bonus: unprofBonus(abilityMod) + baseValue, proficient: false };
+      return { bonus: unproficientBonus(abilityMod) + baseValue, proficient: false };
     }
     const bonus = abilityMod + baseValue + value;
     return { bonus, proficient: proficient && value >= 1 };
@@ -808,7 +739,7 @@ export function getSkillBonusForFeatRequirement(
 
   // Base skill
   if (!proficient) {
-    return { bonus: unprofBonus(abilityMod), proficient: false };
+    return { bonus: unproficientBonus(abilityMod), proficient: false };
   }
   return { bonus: abilityMod + value, proficient: true };
 }

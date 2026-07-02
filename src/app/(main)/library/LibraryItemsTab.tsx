@@ -17,6 +17,7 @@ import {
   LoadingState,
   ErrorDisplay,
   ListEmptyState,
+  ConfirmActionModal,
   type ChipData,
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
@@ -59,6 +60,8 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
   const [search, setSearch] = useState('');
   const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set());
   const [syncingAll, setSyncingAll] = useState(false);
+  const [duplicateConfirm, setDuplicateConfirm] = useState<{ id: string; name: string } | null>(null);
+  const [showSyncAllConfirm, setShowSyncAllConfirm] = useState(false);
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const cardData = useMemo(() => {
@@ -170,7 +173,7 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
   }, [cardData, search, sortItems]);
 
   if (error) {
-    return <ErrorDisplay message="Failed to load armaments" subMessage="Please try again later" />;
+    return <ErrorDisplay message="Failed to load armaments" subMessage="Please try again later" onRetry={() => refetch()} />;
   }
 
   if (!isLoading && cardData.length === 0) {
@@ -202,7 +205,7 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
         <Button
           variant="secondary"
           size="sm"
-          onClick={handleSyncAll}
+          onClick={() => setShowSyncAllConfirm(true)}
           disabled={driftedItems.length === 0 || syncingAll}
         >
           <RefreshCw className={`w-4 h-4 ${syncingAll ? 'animate-spin' : ''}`} />
@@ -222,7 +225,7 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
         {isLoading ? (
           <LoadingState />
         ) : filteredData.length === 0 ? (
-          <div className="py-12 text-center text-text-secondary">No armaments match your search.</div>
+          <ListEmptyState title="No armaments match your search." size="sm" />
         ) : (
           filteredData.map(item => (
             <GridListRow
@@ -254,18 +257,56 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
                     void handleSyncOne(item.id);
                   }}
                   label="Sync with current patch"
-                  className="text-warning-700 hover:text-warning-700 dark:text-warning-400"
+                  className="text-warning-fg hover:opacity-80"
                 >
                   <RefreshCw className={`w-4 h-4 ${syncingIds.has(item.id) ? 'animate-spin' : ''}`} />
                 </IconButton>
               ) : undefined}
               onEdit={() => router.push(`/item-creator?edit=${item.id}`)}
               onDelete={() => onDelete({ id: item.id, name: item.name } as DisplayItem)}
-              onDuplicate={() => duplicateItem.mutate(item.id, { onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error') })}
+              onDuplicate={() => setDuplicateConfirm({ id: item.id, name: item.name })}
             />
           ))
         )}
       </div>
+
+      <ConfirmActionModal
+        isOpen={!!duplicateConfirm}
+        onClose={() => setDuplicateConfirm(null)}
+        onConfirm={() => {
+          if (!duplicateConfirm) return;
+          duplicateItem.mutate(duplicateConfirm.id, {
+            onSuccess: () => {
+              showToast(`Duplicated "${duplicateConfirm.name}"`, 'success');
+              setDuplicateConfirm(null);
+            },
+            onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error'),
+          });
+        }}
+        title="Duplicate armament?"
+        description={
+          duplicateConfirm
+            ? `Create a copy of "${duplicateConfirm.name}" in your library?`
+            : ''
+        }
+        confirmLabel="Duplicate"
+        loadingLabel="Duplicating..."
+        isLoading={duplicateItem.isPending}
+      />
+
+      <ConfirmActionModal
+        isOpen={showSyncAllConfirm}
+        onClose={() => setShowSyncAllConfirm(false)}
+        onConfirm={() => {
+          setShowSyncAllConfirm(false);
+          void handleSyncAll();
+        }}
+        title="Sync with current patch?"
+        description={`Sync ${driftedItems.length} armament${driftedItems.length === 1 ? '' : 's'} to current patch rules. Properties that no longer exist in the codex may be removed.`}
+        confirmLabel="Sync all"
+        loadingLabel="Syncing..."
+        isLoading={syncingAll}
+      />
     </div>
   );
 }

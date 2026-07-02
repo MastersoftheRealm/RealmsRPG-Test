@@ -24,17 +24,19 @@ import { cn } from '@/lib/utils/cn';
 import { Loader2 } from 'lucide-react';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+  // Touch devices get a 44px minimum tap target (WCAG/MOBILE_UX). Scoped to
+  // coarse pointers so desktop dense layouts keep their compact sizing (TASK-332).
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-all duration-base ease-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 [@media(pointer:coarse)]:min-h-[44px] [@media(pointer:coarse)]:min-w-[44px]',
   {
     variants: {
       variant: {
         // RECOMMENDED VARIANTS - clean solid/outline preferred over gradients
-        primary: 'bg-primary-600 text-white hover:bg-primary-700 focus-visible:ring-primary-accent dark:bg-primary-100 dark:text-white dark:hover:bg-primary-50',
-        secondary: 'bg-surface text-text-secondary border border-border-light hover:bg-surface-alt focus-visible:ring-border dark:bg-surface-alt dark:border-border dark:hover:bg-surface',
-        danger: 'bg-danger-600 text-white hover:bg-danger-700 focus-visible:ring-danger dark:bg-danger-800 dark:text-white dark:hover:bg-danger-700',
-        ghost: 'text-text-secondary hover:bg-surface-alt hover:text-text-primary focus-visible:ring-border',
-        link: 'text-primary-600 dark:text-primary-400 underline-offset-4 hover:underline focus-visible:ring-primary-accent',
-        outline: 'border-2 border-primary-600 text-primary-700 bg-transparent hover:bg-primary-50 focus-visible:ring-primary-accent dark:text-primary-300 dark:hover:bg-primary-900/30',
+        primary: 'bg-primary-button text-white hover:bg-primary-button-hover focus-visible:ring-primary-outline-border',
+        secondary: 'bg-surface text-text-secondary border border-border-light hover:bg-surface-alt focus-visible:ring-primary-outline-border dark:bg-surface-alt dark:border-border dark:hover:bg-surface',
+        danger: 'bg-danger-button text-white hover:bg-danger-700 focus-visible:ring-danger-border',
+        ghost: 'text-text-secondary hover:bg-surface-alt hover:text-text-primary focus-visible:ring-primary-outline-border',
+        link: 'text-primary-link-fg underline-offset-4 hover:underline focus-visible:ring-primary-outline-border',
+        outline: 'border-2 border-primary-outline-border text-primary-outline-fg bg-transparent hover:bg-primary-subtle-bg focus-visible:ring-primary-outline-border',
       },
       size: {
         sm: 'h-8 px-3 text-xs',
@@ -64,34 +66,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, isLoading, asChild = false, children, disabled, onClick, ...props }, ref) => {
     const Comp = asChild ? Slot : 'button';
 
-    // IMPORTANT (Next.js RSC): Only pass an `onClick` prop when one was provided.
-    // If we always pass a handler wrapper, server components that render <Button /> would fail prerendering.
-    const wrappedOnClick = onClick
-      ? ((e: React.MouseEvent<HTMLButtonElement>) => {
-          if (process.env.NODE_ENV !== 'production' && typeof performance !== 'undefined') {
-            const t0 = performance.now();
-            onClick(e);
-            const dt = performance.now() - t0;
-            // INP is about main-thread blocking sync work; only log slow synchronous handlers.
-            if (dt > 50) {
-              const label =
-                typeof children === 'string'
-                  ? children
-                  : (e.currentTarget.getAttribute('aria-label') ?? e.currentTarget.textContent?.trim() ?? '(unlabeled)');
-              const stack = new Error().stack;
-              // eslint-disable-next-line no-console
-              console.warn(`[INP] Slow Button onClick: ${Math.round(dt)}ms`, {
-                label,
-                variant,
-                size,
-                stack,
-              });
-            }
-          } else {
-            onClick(e);
-          }
-        })
-      : undefined;
+    // IMPORTANT (Next.js RSC): only pass an `onClick` prop when one was provided, so
+    // server components that render <Button /> don't fail prerendering.
+    const wrappedOnClick = onClick ?? undefined;
     
     return (
       <Comp
