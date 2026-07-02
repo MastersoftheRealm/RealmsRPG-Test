@@ -4,7 +4,7 @@ Single reference for component locations, patterns, and where to record work. Ve
 
 > **First stop before building anything new:** [`FEATURE_INDEX.md`](FEATURE_INDEX.md) — feature/component/hook/service map to confirm it doesn't already exist. The full canonical "for X, read Y" map is in the root `AGENTS.md` (Source-of-Truth Map).
 >
-> **Current remediation status / open gaps:** [`REMEDIATION_STATUS_2026-06.md`](REMEDIATION_STATUS_2026-06.md).  
+> **Current remediation status / open gaps:** [`REMEDIATION_STATUS_2026-06.md`](REMEDIATION_STATUS_2026-06.md).
 > **Historical audits:** see [`archive/HISTORY_INDEX.md`](archive/HISTORY_INDEX.md) — do not treat archived findings as currently open.
 
 **Note:** When implementing a task, verify `related_files` in AI_TASK_QUEUE against the actual codebase — some entries may have been corrected; paths can become stale (e.g., `header-section.tsx` was replaced by `sheet-action-toolbar.tsx`).
@@ -114,40 +114,22 @@ Task queue `related_files` may reference outdated paths. When implementing, pref
 
 See `src/docs/human/UI_COMPONENT_REFERENCE.md` for extended component catalog (agents: prefer this guide + `realms-unification.mdc`).
 
-## Tooltips (canonical: Collin / Tippy — TASK-376)
+## Tooltips (canonical: Floating UI renderer)
 
-**Owner decision (2026-06-25):** Collin's `@tippyjs/react` approach replaces the legacy DB tooltip stack (`ui_tooltips`, `useTooltipByKey`, `ContextHelpTooltip`, `HelpTooltip`). **Collin's code is the standard; do not extend or re-introduce the DB system.**
+**Current branch decision (2026-07-02):** tooltip rendering uses `@floating-ui/react` through the shared `Tooltip` / `HelpTooltip` primitive in `src/components/ui/tooltip.tsx`. Do not reintroduce Tippy dependencies, Tippy imports, `tippy.js` CSS, or `public/tooltip-text.tsx`.
 
-**TASK-376 is Collin's work — AI agents must not implement it.** Status `blocked`, assignee Collin Morrison. Agents skip this task; continue on his branches or merge his PRs when asked. See `DEVELOPER_TASK_QUEUE.md` → **COLLIN-001**.
-
-### Use this (Collin's pattern)
+Contextual help copy still flows through the keyed tooltip defaults/admin API where it already exists:
 
 | Piece | Location / usage |
 |-------|------------------|
-| Copy (strings + rich JSX) | `public/tooltip-text.tsx` — add exports here; keep copy in one file |
-| Trigger | `Info` from `lucide-react` next to the heading/label |
-| Component | `Tippy` from `@tippyjs/react` + `import 'tippy.js/dist/tippy.css'` once per file |
-| Rich HTML | `allowHTML={true}` when content is JSX from `tooltip-text.tsx` |
-| Dynamic per-option text | Helper in `tooltip-text.tsx` (see `getTooltipTextByPowerAbility`) |
+| Copy defaults | `src/lib/tooltips/default-tooltips.ts` |
+| Trigger wrapper | `ContextHelpTooltip` from `@/components/shared` |
+| Renderer | `Tooltip` / `HelpTooltip` from `@/components/ui` (Floating UI) |
+| Markdown rendering | `src/lib/tooltips/markdown-lite.tsx` |
 
-**Reference implementations:** `src/components/layout/header.tsx`, character creator steps (`archetype-step`, `species-step`, `ancestry-step`, `abilities-step`), `characters/new/page.tsx`.
+**Reference implementations:** `src/components/layout/header.tsx`, character creator steps (`archetype-step`, `species-step`, `ancestry-step`, `abilities-step`, `skills-step`), `characters/new/page.tsx`.
 
-### Do not use (legacy — remove during TASK-376)
-
-| Legacy | Why |
-|--------|-----|
-| `useTooltipByKey`, `useTooltips`, `ContextHelpTooltip` | DB-backed, inconsistent with Collin's static-copy model |
-| `HelpTooltip` / `Tooltip` from `@/components/ui` for **page help** | Superseded by Tippy; `Tooltip` may remain only for non-help UI if already present |
-| New `ContextHelpTooltip` on pages | Audits that say "add ContextHelpTooltip" are **obsolete** — use Tippy + `tooltip-text.tsx` instead |
-| Admin `/admin/tooltips`, `GET/PATCH /api/tooltips`, `ui_tooltips` table | Retire after migration (DB drop = human step in DEVELOPER_TASK_QUEUE) |
-
-### Migration status (Jun 2026)
-
-**Migrated to Tippy:** navbar Library/Codex, creator page header, archetype/species/ancestry/abilities steps.
-
-**Still on legacy:** `skills-step.tsx` (`HelpTooltip` + `ContextHelpTooltip`), `campaigns/page.tsx` (`ContextHelpTooltip`); dead imports in `feats-step` / `equipment-step`. Account menu **Help tooltips On/Off** toggle targets the old system — remove when migration completes.
-
-**When touching tooltips:** Do **not** finish TASK-376 or migrate remaining pages — that is Collin's assignment. If you must edit a file with tooltips for unrelated work, do not replace Collin's Tippy markup and do not add `useTooltipByKey` / `ContextHelpTooltip`.
+**When touching tooltips:** Keep existing `ContextHelpTooltip` call sites on the keyed content path unless a task explicitly changes the tooltip content model. New page-help call sites should use `ContextHelpTooltip` so copy remains centralized and the account-level help toggle still applies.
 
 ## Unified patterns (verified Jun 2026)
 

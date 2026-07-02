@@ -10,15 +10,13 @@ import { useState, useMemo } from 'react';
 import type { KeyboardEvent } from 'react';
 import { cn } from '@/lib/utils';
 import { Chip, Button, Alert, Spinner, SelectionCardSurface } from '@/components/ui';
-import { SegmentedControl } from '@/components/shared';
+import { ContextHelpTooltip, SegmentedControl } from '@/components/shared';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useMergedSpecies, useUserSpecies, useTraits, type Species } from '@/hooks';
 import { SpeciesModal } from '../species-modal';
 import { MixedSpeciesModal } from '../MixedSpeciesModal';
 import { CreatorStepFooter } from '../creator-step-footer';
-import { GitMerge, Info } from 'lucide-react';
-import Tippy from '@tippyjs/react';
-import { chooseYourSpecies } from '../../../../public/tooltip-text';
+import { GitMerge } from 'lucide-react';
 
 type SourceFilterValue = 'all' | 'public' | 'my' | 'make';
 
@@ -71,7 +69,6 @@ export function SpeciesStep() {
   };
 
   const isMixedSelected = draft.ancestry?.mixed === true;
-  const isSingleSelected = draft.ancestry?.id && !draft.ancestry?.mixed;
   const canContinue = !!(draft.ancestry?.id);
 
   if (speciesLoading) {
@@ -86,9 +83,11 @@ export function SpeciesStep() {
     <div className="max-w-4xl mx-auto">
       <div className="flex items-center gap-1 mb-2">
         <h2 className="text-2xl font-bold text-text-primary">Choose Your Species</h2>
-        <Tippy content={chooseYourSpecies} allowHTML={true}>
-          <Info className="w-4 h-4 text-primary-subtle-fg" aria-hidden />
-        </Tippy>
+        <ContextHelpTooltip
+          tooltipKey="characters.new.step.species.sourceHelp"
+          scope="page:/characters/new"
+          label="Species source help"
+        />
       </div>
       <p className="text-text-secondary mb-4">
         Your species defines your character&apos;s physical traits and inherent abilities.

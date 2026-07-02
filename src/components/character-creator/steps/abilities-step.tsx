@@ -11,13 +11,10 @@ import { useMemo } from 'react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { AbilityScoreEditor } from '@/components/creator';
 import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
+import { ContextHelpTooltip } from '@/components/shared';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
-import { Button } from '@/components/ui';
 import { calculateAbilityPoints, calculateAbilityScoreCost } from '@/lib/game/formulas';
 import type { AbilityName } from '@/types';
-import { assignAbilities } from '../../../../public/tooltip-text';
-import Tippy from '@tippyjs/react';
-import { Info } from 'lucide-react';
 
 export function AbilitiesStep() {
   const { draft, updateAbility, nextStep, prevStep } = useCharacterCreatorStore();
@@ -51,9 +48,12 @@ export function AbilitiesStep() {
     <div className="max-w-4xl mx-auto">
       <div className="flex items-center gap-1 mb-2">
         <h2 className="text-2xl font-bold text-text-primary">Assign Abilities</h2>
-          <Tippy content={assignAbilities} allowHTML={true}>
-              <Info className="w-4 h-4 text-primary-subtle-fg"/>
-          </Tippy>
+        <ContextHelpTooltip
+          tooltipKey="characters.new.step.abilities.pointsHelp"
+          scope="page:/characters/new"
+          label="Ability point rules"
+          context={{ level }}
+        />
       </div>
       <p className="text-text-secondary mb-6">
         Distribute your ability points. You can reduce abilities below 0 to gain extra points.
@@ -95,4 +95,3 @@ export function AbilitiesStep() {
     </div>
   );
 }
-

@@ -14,10 +14,10 @@ How to use
 
 ---
 
-### Tooltips (canonical standard — Collin)
-- **Collin's Tippy approach is law:** static copy in `public/tooltip-text.tsx`, `@tippyjs/react`, `Info` icon triggers. Replaces the legacy DB tooltip system (`ui_tooltips`, `useTooltipByKey`, `ContextHelpTooltip`, `HelpTooltip`).
-- Do **not** extend the DB tooltip stack or add new `ContextHelpTooltip` usage. Full migration is **TASK-376 — Collin Morrison only; AI agents must not implement.**
-- When merging Collin's branches, prefer his tooltip code over master/AI patterns.
+### Tooltips (current renderer — Floating UI)
+- **Current branch direction:** app tooltip rendering uses the shared Floating UI primitive in `src/components/ui/tooltip.tsx` (`Tooltip` / `HelpTooltip`).
+- Keep existing keyed contextual-help copy/admin behavior flowing through `ContextHelpTooltip` where it already exists; it renders through Floating UI.
+- Do **not** reintroduce Tippy dependencies, imports, CSS, or `public/tooltip-text.tsx` while this branch is on Floating UI.
 
 ---
 
@@ -1622,3 +1622,19 @@ Notes
 - Feedback: Doc over-specified before validation (layers, 10 steps, migration, tooltips, landing, post-activation) — risk building theory that breaks in real use. Missing failure modes: users ignore recs, Forge-first, species bounce, TP confusion, speedrun. Layer system needs governance (what qualifies as L1). Landing single-CTA may be too rigid for skeptical explorers — consider light "Explore system first" secondary intent. Section 11 retention shallow vs "why come back tomorrow" (campaign, encounters, progression). Doc is philosophy/direction not validated UX. Next: lock 3 things only, prototype 1 path + species + feats step, let behavior rewrite spec before expanding doc.
 - Expected: Appendix I in REALMS_PRODUCT_OVERVIEW.md; validation gate on phases; defer doc expansion until prototype.
 - Disposition: Documented 2026-06-28 in REALMS_PRODUCT_OVERVIEW.md Appendix I; Appendix E validation gate note.
+
+**Raw Feedback Log — 2026-07-02 (Use Floating UI instead of Tippy for app tooltips)**
+- Date: 2026-07-02
+- Context: App-wide contextual/help tooltips
+- Priority: High
+- Feedback: Floating UI appears to be the successor to Tippy; use Floating UI instead of Tippy for tooltip rendering.
+- Expected: Tooltip rendering uses Floating UI, Tippy runtime dependencies/imports/styles are removed, and existing keyed tooltip content/admin API behavior remains intact.
+- Disposition: Implemented 2026-07-02 — replaced the shared tooltip primitive with Floating UI, removed Tippy dependencies/CSS import/theme styles, and verified `npm run build` passes.
+
+**Raw Feedback Log — 2026-07-02 (Floating UI tooltips render in top-left corner)**
+- Date: 2026-07-02
+- Context: App-wide contextual/help tooltips after Floating UI migration
+- Priority: High
+- Feedback: Tooltips are rendering in the top-left corner of the page.
+- Expected: Tooltips render adjacent to their trigger according to configured placement.
+- Disposition: Implemented 2026-07-02 — removed transition scale transforms that overwrote Floating UI's placement transform; tooltips now preserve Floating UI positioning.

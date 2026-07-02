@@ -48,8 +48,8 @@
 | Save a creator's output | `useCreatorSave`; load into a modal: `useLoadModalLibrary` |
 | Autosave (debounced) | `useAutoSave` |
 | List sorting / modal list state | `useSort`, `sortByColumn`, `useModalListState` |
-| Tooltips (canonical) | `public/tooltip-text.tsx` + `@tippyjs/react` — see `AGENT_GUIDE.md` § Tooltips |
-| Tooltips (legacy — do not extend) | `useTooltips`, `useTooltipByKey`, `ContextHelpTooltip` — **TASK-376 (Collin only; AI skip)** |
+| Tooltips (canonical) | `Tooltip` / `HelpTooltip` in `src/components/ui/tooltip.tsx` (`@floating-ui/react`) — see `AGENT_GUIDE.md` § Tooltips |
+| Contextual help copy | `ContextHelpTooltip` + `src/lib/tooltips/default-tooltips.ts` keyed defaults/admin API |
 
 > There is **one** codex fetch shared by all `useCodex*` and `useGameRules` (see `use-codex.ts`). Do not add a parallel codex fetch.
 
@@ -81,7 +81,7 @@
 | Confirm/delete/login modals | `ConfirmActionModal`, `DeleteConfirmModal`, `LoginPromptModal` |
 | Image upload + crop | `ImageUploadModal` |
 | Theme switch / onboarding | `ThemeToggle`, `OnboardingTour` |
-| Help tooltips (legacy — Collin/TASK-376) | `ContextHelpTooltip` — **AI agents do not migrate**; Collin owns TASK-376 |
+| Help tooltips | `ContextHelpTooltip` — keyed contextual help rendered through Floating UI |
 
 > UI primitives (Modal, Button, Chip, PageContainer, PageHeader, TabNavigation, SearchInput, **TableScroll**) live in `@/components/ui`.
 

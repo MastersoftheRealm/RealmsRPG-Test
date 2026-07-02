@@ -10,9 +10,8 @@
 
 import { useAuth } from '@/hooks';
 import { LoadingState, PageContainer, PageHeader, Card } from '@/components/ui';
+import { ContextHelpTooltip } from '@/components/shared';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 import {
   CreatorTabBar,
   ArchetypeStep,
@@ -26,8 +25,6 @@ import {
   FinalizeStep,
 } from '@/components/character-creator';
 import { STEP_ORDER } from '@/stores/character-creator-store';
-import { Info } from 'lucide-react';
-import { createNewCharacter } from '../../../../../public/tooltip-text';
 
 const STEP_COMPONENTS = {
   archetype: ArchetypeStep,
@@ -65,9 +62,11 @@ export default function CharacterCreatorPage() {
           description={`Step ${stepIndex} of ${totalSteps}. Follow the steps below to build your character.`}
           className="mb-6"
           actions={
-            <Tippy content={createNewCharacter}>
-              <Info className="w-4 h-4 text-primary-subtle-fg" aria-hidden />
-            </Tippy>
+            <ContextHelpTooltip
+              tooltipKey="characters.new.overview"
+              scope="page:/characters/new"
+              label="Character creation help"
+            />
           }
         />
         

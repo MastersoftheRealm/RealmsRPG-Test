@@ -21,7 +21,6 @@ import { useCodexSkills, type Skill } from '@/hooks';
 import {
   calculateSkillBonusWithProficiency,
   calculateSubSkillBonusWithProficiency,
-  calculateSkillPointsForEntity,
   getLinkedAbilityKeys,
   getHighestLinkedAbilityKey,
 } from '@/lib/game/formulas';
@@ -39,7 +38,6 @@ import { Button, Spinner, Alert, Card, PageHeader, TableScroll } from '@/compone
 import { PointStatus } from '@/components/shared';
 import { AddSkillModal, AddSubSkillModal } from '@/components/shared';
 import type { Abilities, DefenseSkills } from '@/types';
-import { DEFAULT_DEFENSE_SKILLS } from '@/types';
 
 const DEFENSE_KEYS: (keyof DefenseSkills)[] = [
   'might',
@@ -152,13 +150,13 @@ export function SkillsAllocationPage({
 
   const remainingPoints = totalPoints - spentPoints;
 
-  const { subSkillsByBase, orderedSkills } = useMemo(() => {
+  const orderedSkills = useMemo(() => {
     const subsByBase: Record<string, Skill[]> = {};
     const inList = (id: string | number) => {
       const key = String(id);
       return (speciesSkillIds.has(key) && key !== '0') || key in allocations;
     };
-    if (!allSkills.length) return { subSkillsByBase: subsByBase, orderedSkills: [] as Skill[] };
+    if (!allSkills.length) return [] as Skill[];
 
     allSkills.forEach((s: Skill) => {
       if (s.base_skill_id !== undefined) {
@@ -181,7 +179,7 @@ export function SkillsAllocationPage({
       subsInList.sort((a: Skill, b: Skill) => String(a.name ?? '').localeCompare(String(b.name ?? '')));
       result.push(...subsInList);
     });
-    return { subSkillsByBase: subsByBase, orderedSkills: result };
+    return result;
   }, [allSkills, speciesSkillIds, allocations]);
 
   const existingSkillIds = useMemo(
@@ -204,8 +202,9 @@ export function SkillsAllocationPage({
   const handleRemoveSkill = useCallback(
     (skillId: string) => {
       if (speciesSkillIds.has(skillId)) return;
-      const { [skillId]: _, ...rest } = allocations;
-      onAllocationsChange(rest);
+      const next = { ...allocations };
+      delete next[skillId];
+      onAllocationsChange(next);
     },
     [allocations, speciesSkillIds, onAllocationsChange]
   );

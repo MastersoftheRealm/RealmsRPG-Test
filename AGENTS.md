@@ -29,7 +29,7 @@ Check the canonical source for the topic instead of trusting scattered/stale doc
 | Accessibility / contrast | `src/docs/ACCESSIBILITY.md` |
 | Open tasks | `src/docs/ai/AI_TASK_QUEUE.md` (active only) / `src/docs/ai/DEVELOPER_TASK_QUEUE.md` |
 | Task & audit history | `src/docs/ai/archive/HISTORY_INDEX.md` — not current truth; paths listed in `.cursorignore` |
-| Contextual help tooltips | `AGENT_GUIDE.md` § Tooltips — Collin/Tippy + `public/tooltip-text.tsx`; **TASK-376 = Collin only (AI skip)** |
+| Contextual help tooltips | `AGENT_GUIDE.md` § Tooltips — Floating UI renderer + keyed `ContextHelpTooltip` defaults/admin copy |
 | QA build validation (step-by-step) | `src/docs/ai/BUILD_VALIDATION.md` |
 | Current remediation status & known open gaps | `src/docs/ai/REMEDIATION_STATUS_2026-06.md` |
 | UI/UX unification roadmap (design-system migration) | `src/docs/ai/UI_UNIFICATION_PLAN.md` + `VISUAL_STATE_AUDIT.md` + AGENT_GUIDE § Design-system safety net |

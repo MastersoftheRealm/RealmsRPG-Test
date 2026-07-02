@@ -1,3 +1,3 @@
-// This file gets rid of the import errors on the tippy css. It worked without this, but the red squiggles were bothering me.
+// Allow global CSS imports from app layout without TypeScript module noise.
 
 declare module '*.css';

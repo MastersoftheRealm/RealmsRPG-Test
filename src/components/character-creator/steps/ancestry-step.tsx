@@ -15,7 +15,7 @@
 import { useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Chip, Button, Alert, Card } from '@/components/ui';
-import { SelectionToggle, ChoiceTraitOptionListPicker } from '@/components/shared';
+import { ContextHelpTooltip, SelectionToggle, ChoiceTraitOptionListPicker } from '@/components/shared';
 import {
   getChoiceOptionIds,
   resolveChoiceOptionTraits,
@@ -24,9 +24,7 @@ import {
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
 import { useMergedSpecies, useTraits, useCodexSkills, resolveTraitIds, resolveSkillIdsToNames, type Trait, type Species } from '@/hooks';
-import { Heart, AlertTriangle, Sparkles, Star, Info } from 'lucide-react';
-import Tippy from '@tippyjs/react';
-import { chooseYourAncestryTraits } from '../../../../public/tooltip-text';
+import { Heart, AlertTriangle, Sparkles, Star } from 'lucide-react';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
 
 interface ResolvedTrait extends Trait {
@@ -437,9 +435,11 @@ export function AncestryStep() {
       <div className="max-w-2xl mx-auto text-center">
         <div className="flex items-center justify-center gap-1 mb-2">
           <h2 className="text-2xl font-bold text-text-primary">Choose Your Ancestry Traits</h2>
-          <Tippy content={chooseYourAncestryTraits} allowHTML={true}>
-            <Info className="w-4 h-4 text-primary-subtle-fg" aria-hidden />
-          </Tippy>
+          <ContextHelpTooltip
+            tooltipKey="characters.new.step.ancestry.rulesHelp"
+            scope="page:/characters/new"
+            label="Ancestry trait rules"
+          />
         </div>
         <p className="text-text-secondary mb-6">
           Customize your character with ancestry traits and an optional flaw.
@@ -484,9 +484,11 @@ export function AncestryStep() {
           <div>
             <div className="flex items-center gap-1 mb-2">
               <h2 className="text-2xl font-bold text-text-primary">Mixed Species: Ancestry</h2>
-              <Tippy content={chooseYourAncestryTraits} allowHTML={true}>
-                <Info className="w-4 h-4 text-primary-subtle-fg" aria-hidden />
-              </Tippy>
+              <ContextHelpTooltip
+                tooltipKey="characters.new.step.ancestry.rulesHelp"
+                scope="page:/characters/new"
+                label="Ancestry trait rules"
+              />
             </div>
             <p className="text-text-secondary">
               <strong>{nameA}</strong> + <strong>{nameB}</strong>. Set physical traits and choose one species trait from each, then ancestry and optional flaw.
@@ -708,9 +710,11 @@ export function AncestryStep() {
         <div>
           <div className="flex items-center gap-1 mb-2">
             <h2 className="text-2xl font-bold text-text-primary">Choose Your Ancestry Traits</h2>
-            <Tippy content={chooseYourAncestryTraits} allowHTML={true}>
-              <Info className="w-4 h-4 text-primary-subtle-fg" aria-hidden />
-            </Tippy>
+            <ContextHelpTooltip
+              tooltipKey="characters.new.step.ancestry.rulesHelp"
+              scope="page:/characters/new"
+              label="Ancestry trait rules"
+            />
           </div>
           <p className="text-text-secondary">
             As a <strong>{selectedSpecies.name}</strong>, customize your heritage with traits and abilities.
