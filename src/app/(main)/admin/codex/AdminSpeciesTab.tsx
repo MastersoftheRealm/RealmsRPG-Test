@@ -11,6 +11,7 @@ import {
   ListEmptyState as EmptyState,
   ListHeader,
   CodexArtUploadField,
+  type ChipData,
 } from '@/components/shared';
 import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
 import { useSpecies, useCodexSkills, useTraits, type Species, type Trait, type Skill } from '@/hooks';
@@ -20,6 +21,8 @@ import { Pencil, Copy, X, Plus } from 'lucide-react';
 import { useModalListState } from '@/hooks/use-modal-list-state';
 import { formatListCellLabel } from '@/lib/utils';
 import { uploadCodexArt } from '@/lib/codex-art';
+import { resolveSpeciesListRowThumbnail } from '@/lib/list-row-image';
+import { speciesSkillToChipData } from '@/lib/chip/species-skill-chips';
 
 const COPY_NAME_SUFFIX = ' copy';
 const TRAIT_PICKER_GRID = '1.5fr 0.6fr 0.6fr 60px';
@@ -376,6 +379,7 @@ export function AdminSpeciesTab() {
           { key: '_actions', label: '', sortable: false as const },
         ]}
         gridColumns="1.5fr 1fr 0.8fr 40px"
+        hasThumbnailColumn
         sortState={sortState}
         onSort={handleSort}
       />
@@ -394,9 +398,6 @@ export function AdminSpeciesTab() {
           ) : (
             filtered.map((s: Species) => {
               // Build expandable chips for skills and traits so RMs can read descriptions inline
-              const skillIdToName = new Map<string, string>(
-                (skills as Skill[]).map((sk) => [String(sk.id), sk.name]),
-              );
               const traitIdToTrait = new Map<string, Trait>(
                 (traits as Trait[]).map((t) => [String(t.id), t]),
               );
@@ -412,12 +413,9 @@ export function AdminSpeciesTab() {
                   };
                 });
 
-              const skillsChips =
-                (s.skills || []).map((id) => {
-                  const key = String(id);
-                  const name = skillIdToName.get(key) || key;
-                  return { name, category: 'skill' as const };
-                });
+              const skillsChips = (s.skills || []).map((id) =>
+                speciesSkillToChipData(id, skills as Skill[])
+              );
 
               const speciesTraitChips = makeTraitChips(s.species_traits as string[] | undefined);
               const ancestryTraitChips = makeTraitChips(s.ancestry_traits as string[] | undefined);
@@ -426,7 +424,7 @@ export function AdminSpeciesTab() {
 
               const detailSections: Array<{
                 label: string;
-                chips: { name: string; description?: string; category?: 'default' | 'skill' | 'tag' | 'archetype' }[];
+                chips: ChipData[];
                 hideLabelIfSingle?: boolean;
               }> = [];
 
@@ -451,6 +449,7 @@ export function AdminSpeciesTab() {
                   key={s.id}
                   id={s.id}
                   name={s.name}
+                  thumbnail={resolveSpeciesListRowThumbnail(s)}
                   description={s.description || ''}
                   gridColumns="1.5fr 1fr 0.8fr 40px"
                   columns={[

@@ -14,7 +14,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { Card, Chip } from '@/components/ui';
+import { Card, DescriptorChip } from '@/components/ui';
 import type { chipVariants } from '@/components/ui/chip';
 import type { VariantProps } from 'class-variance-authority';
 import type { ReactNode } from 'react';
@@ -172,16 +172,13 @@ export function CreatorSummaryPanel({
       {badge && (
         <div className="text-center mb-6">
           {badge.variant ? (
-            <Chip variant={badge.variant} size="lg" className="font-bold">
+            <DescriptorChip variant={badge.variant} size="lg" className="font-bold">
               {badge.label}
-            </Chip>
+            </DescriptorChip>
           ) : (
-            <span className={cn(
-              'inline-block px-4 py-1 rounded-full font-bold text-lg',
-              badge.className || 'bg-surface-alt text-text-secondary'
-            )}>
+            <DescriptorChip size="lg" className={cn('font-bold', badge.className)}>
               {badge.label}
-            </span>
+            </DescriptorChip>
           )}
         </div>
       )}

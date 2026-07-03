@@ -22,6 +22,7 @@ import {
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
+import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
 import { useUserPowers, usePowerParts, useDuplicatePower } from '@/hooks';
 import { Button, IconButton, useToast } from '@/components/ui';
 import type { DisplayItem } from '@/types';
@@ -74,12 +75,7 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
       const display = derivePowerDisplay(doc, partsDb);
       const syncResult = getPowerSyncResult(p, partsDb);
       const damageStr = formatPowerDamage(doc.damage);
-      const parts: ChipData[] = display.partChips.map(chip => ({
-        name: chip.text.split(' | TP:')[0].replace(/\s*\(Opt\d+ \d+\)/g, '').trim(),
-        description: chip.description,
-        cost: chip.finalTP,
-        costLabel: 'TP',
-      }));
+      const parts = partChipsFromDisplay(display.partChips, { stripOptionSuffix: true });
       return {
         id: String(p.docId ?? p.id ?? ''),
         source: p,

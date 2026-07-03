@@ -26,11 +26,9 @@ import type {
   CharacterFeat,
   CharacterPower,
   CharacterTechnique,
-  Feat,
   Item,
 } from '@/types';
-import type { Trait } from '@/hooks/codex-types';
-import type { Skill } from '@/hooks/codex-types';
+import type { CodexFeat, Skill, Trait } from '@/hooks/codex-types';
 import {
   checkFeatRequirements,
   characterToFeatRequirementCharacter,
@@ -45,7 +43,7 @@ export interface UseCharacterSheetActionsArgs {
   character: Character | null;
   setCharacter: React.Dispatch<React.SetStateAction<Character | null>>;
   calculatedStats: CharacterSheetStats | null;
-  featsDb: Feat[];
+  featsDb: CodexFeat[];
   codexSkills: Skill[];
   traitsDb: Trait[];
   codexArchetypes: Archetype[];
@@ -263,9 +261,9 @@ const handleFullRecovery = useCallback(() => {
 
   // Lookup codex data for a feat (maxUses, recovery period)
   const getCodexFeat = (feat: CharacterFeat) => {
-    let dbFeat = featsDb.find((f: Feat) => f.id === String(feat.id));
-    if (!dbFeat && feat.name) dbFeat = featsDb.find((f: Feat) => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
-    return dbFeat as Feat | undefined;
+    let dbFeat = featsDb.find((f: CodexFeat) => f.id === String(feat.id));
+    if (!dbFeat && feat.name) dbFeat = featsDb.find((f: CodexFeat) => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
+    return dbFeat as CodexFeat | undefined;
   };
   
   // Reset feat uses only when recovery type is Full or Partial (not one-time-use)
@@ -336,9 +334,9 @@ const handlePartialRecovery = useCallback((hpRestored: number, enRestored: numbe
   
   // Lookup codex data for a feat (maxUses, recovery period)
   const getCodexFeat = (feat: CharacterFeat) => {
-    let dbFeat = featsDb.find((f: Feat) => f.id === String(feat.id));
-    if (!dbFeat && feat.name) dbFeat = featsDb.find((f: Feat) => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
-    return dbFeat as Feat | undefined;
+    let dbFeat = featsDb.find((f: CodexFeat) => f.id === String(feat.id));
+    if (!dbFeat && feat.name) dbFeat = featsDb.find((f: CodexFeat) => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
+    return dbFeat as CodexFeat | undefined;
   };
 
   // Reset feats with "Partial" recovery to max uses
@@ -832,7 +830,7 @@ const handleAddFeats = useCallback((feats: { id: string; name: string; descripti
   }));
   
   if (type === 'state') {
-    const db = featsDb as Array<Feat & { char_feat?: boolean }>;
+    const db = featsDb as Array<CodexFeat & { char_feat?: boolean }>;
     const toArchetype: CharacterFeat[] = [];
     const toCharacter: CharacterFeat[] = [];
     newFeats.forEach(f => {
@@ -846,7 +844,7 @@ const handleAddFeats = useCallback((feats: { id: string; name: string; descripti
       feats: [...(prev.feats || []), ...toCharacter],
     } : null);
   } else if (type === 'archetype') {
-    type LeveledFeat = Feat & { base_feat_id?: string; feat_lvl?: number };
+    type LeveledFeat = CodexFeat & { base_feat_id?: string; feat_lvl?: number };
     const db = featsDb as LeveledFeat[];
     const byId = new Map<string, LeveledFeat>(db.map((f) => [String(f.id), f]));
     const getLevel = (f: LeveledFeat | undefined) => (f?.feat_lvl != null && f.feat_lvl > 0 ? f.feat_lvl : 1);
@@ -867,7 +865,7 @@ const handleAddFeats = useCallback((feats: { id: string; name: string; descripti
       }, [...(prev.archetypeFeats || [])])
     } : null);
   } else {
-    type LeveledFeat = Feat & { base_feat_id?: string; feat_lvl?: number };
+    type LeveledFeat = CodexFeat & { base_feat_id?: string; feat_lvl?: number };
     const db = featsDb as LeveledFeat[];
     const byId = new Map<string, LeveledFeat>(db.map((f) => [String(f.id), f]));
     const getLevel = (f: LeveledFeat | undefined) => (f?.feat_lvl != null && f.feat_lvl > 0 ? f.feat_lvl : 1);
@@ -895,7 +893,7 @@ const handleAddFeats = useCallback((feats: { id: string; name: string; descripti
 const handleFeatLevelChange = useCallback(
   (featId: string, targetLevel: number, listType: 'archetype' | 'character') => {
     if (!character) return;
-    type LeveledFeat = Feat & { base_feat_id?: string; feat_lvl?: number; uses_per_rec?: number; max_uses?: number };
+    type LeveledFeat = CodexFeat & { base_feat_id?: string; feat_lvl?: number; uses_per_rec?: number; max_uses?: number };
     const db = featsDb as LeveledFeat[];
     const codexFeat = db.find((f) => String(f.id) === String(featId));
     if (!codexFeat) return;
@@ -1146,7 +1144,7 @@ const handleMilestoneChoiceChange = useCallback((level: number, choice: 'innate'
 // maxUses derived from codex, with saved feat.maxUses as backward compat fallback
 const handleFeatUsesChange = useCallback((featId: string, delta: number) => {
   if (!character) return;
-  const codexFeat = featsDb.find((f: Feat) => f.id === featId) as Feat | undefined;
+  const codexFeat = featsDb.find((f: CodexFeat) => f.id === featId) as CodexFeat | undefined;
   setCharacter(prev => {
     if (!prev) return null;
     
@@ -1282,7 +1280,7 @@ const handleEnterState = useCallback(() => {
   if (current <= 0) return;
   setCharacter(prev => {
     if (!prev) return null;
-    const db = featsDb as Array<Feat & { state_feat?: boolean; uses_per_rec?: number }>;
+    const db = featsDb as Array<CodexFeat & { state_feat?: boolean; uses_per_rec?: number }>;
     const isStateFeat = (feat: CharacterFeat) => {
       const codex = db.find(f => f.id === String(feat.id)) ?? db.find(f => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
       return !!(codex?.state_feat);

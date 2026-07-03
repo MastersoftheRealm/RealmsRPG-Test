@@ -1,21 +1,16 @@
 /**
  * Chip Component
  * ===============
- * Small tag/badge for displaying labels
- * Uses design system colors from globals.css
- * 
- * RECOMMENDED VARIANTS:
- * - default: Neutral chips, general purpose
- * - primary: Emphasized/highlighted chips
- * - Category-based (action, activation, area, duration, target, special, restriction):
- *   Semantic colors for power/technique parts - these are domain-specific and necessary
- * - Status (success, warning, danger): For validation/feedback states
- * 
- * DEPRECATED VARIANTS (avoid, will be removed):
- * - secondary, outline, accent: Use 'default' instead
- * - weapon, armor, shield: Use 'default' - context provides meaning
- * - feat, proficiency, weakness, power, technique: Use 'default' - let context provide meaning
- * - info: Use 'default' or 'primary' instead
+ * Small tag/badge for displaying labels.
+ *
+ * **Two roles** (see `CHIP_UNIFICATION_PLAN.md`):
+ * - **Descriptor** — metadata only (`variant="descriptor"`, `shape="rounded"`). Use `<DescriptorChip>`.
+ * - **Expandable** — parts/properties with descriptions. Use `<ExpandableChip>` (shape `expandable` via chipVariants).
+ *
+ * **Shape:**
+ * - `pill` — filters, removable tags (default for legacy `<Chip>`)
+ * - `rounded` — descriptor chips (`rounded-md`)
+ * - `expandable` — interactive expand-in-place chips (`rounded-lg`)
  */
 
 import * as React from 'react';
@@ -24,14 +19,17 @@ import { cn } from '@/lib/utils/cn';
 import { X } from 'lucide-react';
 
 const chipVariants = cva(
-  'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium border transition-colors duration-base ease-standard',
+  'inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium border transition-colors duration-base ease-standard',
   {
     variants: {
       variant: {
         // RECOMMENDED VARIANTS
         default: 'bg-surface-alt text-text-secondary border-border-light',
         primary: 'bg-primary-chip-bg text-primary-chip-fg border-primary-chip-border',
-        
+
+        /** Opaque metadata label — feat type, tags, trait kind, requirements (non-expandable) */
+        descriptor: 'bg-surface text-text-secondary border-border-light dark:bg-surface dark:border-border-light',
+
         // Category-based colors for power/technique parts (KEEP - domain-specific)
         action: 'bg-category-action text-category-action-text border-category-action-border',
         activation: 'bg-category-activation text-category-activation-text border-category-activation-border',
@@ -40,7 +38,7 @@ const chipVariants = cva(
         target: 'bg-category-target text-category-target-text border-category-target-border',
         special: 'bg-category-special text-category-special-text border-category-special-border',
         restriction: 'bg-category-restriction text-category-restriction-text border-category-restriction-border',
-        
+
         // Status colors (KEEP - semantic feedback)
         success: 'bg-success-light text-success-fg border-success-border',
         danger: 'bg-danger-light text-danger-fg border-danger-border',
@@ -63,7 +61,7 @@ const chipVariants = cva(
         rarityLegendary: 'bg-warning-light text-warning-fg border-warning-border',
         rarityMythic: 'bg-danger-light text-danger-fg border-danger-border',
         rarityAscended: 'bg-accent-light text-accent-fg border-accent-border',
-        
+
         // DEPRECATED VARIANTS (kept for backwards compatibility)
         /** @deprecated Use 'default' instead */
         secondary: 'bg-surface text-text-secondary border-border-light',
@@ -73,7 +71,7 @@ const chipVariants = cva(
         accent: 'bg-accent-chip text-primary-subtle-fg border-accent-200',
         /** @deprecated Use 'default' instead */
         info: 'bg-info-light text-info-fg border-info-border',
-        
+
         // Equipment types - DEPRECATED (context provides meaning)
         /** @deprecated Use 'default' - context provides meaning */
         weapon: 'bg-warning-light text-warning-fg border-warning-border',
@@ -81,7 +79,7 @@ const chipVariants = cva(
         armor: 'bg-info-light text-info-fg border-info-border',
         /** @deprecated Use 'default' - context provides meaning */
         shield: 'bg-success-light text-success-fg border-success-border',
-        
+
         // Character content types - DEPRECATED (context provides meaning)
         /** @deprecated Use 'default' - context provides meaning */
         feat: 'bg-surface-alt text-text-secondary border-border-light',
@@ -93,6 +91,14 @@ const chipVariants = cva(
         power: 'bg-power-light text-power-fg border-power-border',
         /** @deprecated Use 'default' - context provides meaning */
         technique: 'bg-martial-light text-martial-fg border-martial-border',
+      },
+      shape: {
+        /** Filters, removable tags, legacy chips */
+        pill: 'rounded-full',
+        /** Descriptor metadata (rounded rectangle) */
+        rounded: 'rounded-md',
+        /** Expand-in-place part/property chips */
+        expandable: 'rounded-lg',
       },
       size: {
         sm: 'px-2 py-0.5 text-xs',
@@ -106,6 +112,7 @@ const chipVariants = cva(
     },
     defaultVariants: {
       variant: 'default',
+      shape: 'pill',
       size: 'md',
       interactive: false,
     },
@@ -119,11 +126,11 @@ export interface ChipProps
 }
 
 const Chip = React.forwardRef<HTMLSpanElement, ChipProps>(
-  ({ className, variant, size, interactive, onRemove, children, ...props }, ref) => {
+  ({ className, variant, shape, size, interactive, onRemove, children, ...props }, ref) => {
     return (
       <span
         ref={ref}
-        className={cn(chipVariants({ variant, size, interactive, className }))}
+        className={cn(chipVariants({ variant, shape, size, interactive, className }))}
         {...props}
       >
         {children}
@@ -146,4 +153,13 @@ const Chip = React.forwardRef<HTMLSpanElement, ChipProps>(
 );
 Chip.displayName = 'Chip';
 
-export { Chip, chipVariants };
+/** Non-expandable metadata chip — opaque fill, rounded-md. */
+const DescriptorChip = React.forwardRef<
+  HTMLSpanElement,
+  Omit<ChipProps, 'shape' | 'interactive'> & { shape?: ChipProps['shape'] }
+>(({ variant = 'descriptor', shape = 'rounded', size = 'sm', ...props }, ref) => (
+  <Chip ref={ref} variant={variant} shape={shape} size={size} interactive={false} {...props} />
+));
+DescriptorChip.displayName = 'DescriptorChip';
+
+export { Chip, DescriptorChip, chipVariants };

@@ -9,7 +9,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
-import { Chip, Button, Spinner, SelectionCard, Card } from '@/components/ui';
+import { Button, Spinner, SelectionCard, Card, DescriptorChip } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useCodexArchetypes } from '@/hooks';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
@@ -193,19 +193,19 @@ export function ArchetypeStep() {
           
           <div className="flex flex-wrap gap-2">
             {draft.creationMode && (
-              <Chip variant="primary">
+              <DescriptorChip variant="primary">
                 {draft.creationMode === 'path' ? 'Archetype Path' : 'Forge Your Own Path'}
-              </Chip>
+              </DescriptorChip>
             )}
             {draft.pow_abil && (
-              <Chip variant="power">
+              <DescriptorChip variant="power">
                 Power Ability: {draft.pow_abil.charAt(0).toUpperCase() + draft.pow_abil.slice(1)}
-              </Chip>
+              </DescriptorChip>
             )}
             {draft.mart_abil && (
-              <Chip variant="technique">
+              <DescriptorChip variant="technique">
                 Martial Ability: {draft.mart_abil.charAt(0).toUpperCase() + draft.mart_abil.slice(1)}
-              </Chip>
+              </DescriptorChip>
             )}
           </div>
         </div>
@@ -281,14 +281,14 @@ export function ArchetypeStep() {
                           {(option.archetype_ability || option.secondary_ability) && (
                             <div className="flex flex-wrap gap-1">
                               {option.archetype_ability && (
-                                <Chip variant="power" size="sm">
+                                <DescriptorChip variant="power" size="sm">
                                   Primary Ability: {option.archetype_ability.charAt(0).toUpperCase() + option.archetype_ability.slice(1)}
-                                </Chip>
+                                </DescriptorChip>
                               )}
                               {option.secondary_ability && (
-                                <Chip variant="technique" size="sm">
+                                <DescriptorChip variant="technique" size="sm">
                                   Secondary Ability: {option.secondary_ability.charAt(0).toUpperCase() + option.secondary_ability.slice(1)}
-                                </Chip>
+                                </DescriptorChip>
                               )}
                             </div>
                           )}
@@ -313,18 +313,18 @@ export function ArchetypeStep() {
               {(selectedPath.archetype_ability || selectedPath.secondary_ability) && (
                 <div className="flex flex-wrap gap-1 mt-3">
                   {selectedPath.archetype_ability && (
-                    <Chip variant="power" size="sm">
+                    <DescriptorChip variant="power" size="sm">
                       Primary Ability:{' '}
                       {selectedPath.archetype_ability.charAt(0).toUpperCase() +
                         selectedPath.archetype_ability.slice(1)}
-                    </Chip>
+                    </DescriptorChip>
                   )}
                   {selectedPath.secondary_ability && (
-                    <Chip variant="technique" size="sm">
+                    <DescriptorChip variant="technique" size="sm">
                       Secondary Ability:{' '}
                       {selectedPath.secondary_ability.charAt(0).toUpperCase() +
                         selectedPath.secondary_ability.slice(1)}
-                    </Chip>
+                    </DescriptorChip>
                   )}
                 </div>
               )}

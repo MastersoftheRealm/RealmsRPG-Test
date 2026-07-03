@@ -13,7 +13,7 @@ import {
   type SelectableItem,
   type ColumnValue,
 } from '@/components/shared';
-import { Button } from '@/components/ui';
+import { Button, DescriptorChip } from '@/components/ui';
 import type { DisplayItem } from '@/types/items';
 
 // =============================================================================
@@ -45,9 +45,9 @@ export function ChipList({
           >
             {item}
             {cost != null && cost !== '' && (
-              <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-primary-subtle-bg text-primary-fg" title="Feat point cost">
+              <DescriptorChip variant="primary" size="sm" className="shrink-0" title="Feat point cost">
                 {cost}
-              </span>
+              </DescriptorChip>
             )}
             <button
               onClick={() => onRemove(item)}
@@ -103,9 +103,9 @@ export function ExpandableChipList({
             rowHoverClass={rowHoverClass}
             rightSlot={
               cost != null && cost !== '' ? (
-                <span className="text-xs font-medium px-2 py-0.5 rounded bg-primary-subtle-bg text-primary-fg shrink-0" title="Feat point cost">
+                <DescriptorChip variant="primary" size="sm" className="shrink-0" title="Feat point cost">
                   {cost}
-                </span>
+                </DescriptorChip>
               ) : undefined
             }
           />

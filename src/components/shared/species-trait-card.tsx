@@ -10,6 +10,8 @@
 
 import { Heart, Star, Sparkles, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
+import { DescriptorChip } from '@/components/ui';
+import { traitCategoryDescriptorVariant } from '@/lib/chip/descriptor-chip-variants';
 import { DecrementButton, IncrementButton } from './value-stepper';
 import { SelectionToggle } from './selection-toggle';
 
@@ -217,9 +219,9 @@ export function SpeciesTraitCard({
               </h4>
               {/* Subtext label for trait type when using neutral style */}
               {neutralStyle && (
-                <span className="text-xs text-text-muted dark:text-text-secondary italic">
+                <DescriptorChip variant={traitCategoryDescriptorVariant(category)} size="sm">
                   {config.label}
-                </span>
+                </DescriptorChip>
               )}
             </div>
             

@@ -2,9 +2,34 @@
 
 **Last slimmed:** 2026-06-26 (TASK-382). Full history: [`archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md`](archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md) and [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md).
 
-**Next task ID:** TASK-415
+**Next task ID:** TASK-420
 
 **Agent rules:** Skip `blocked` tasks and any task with `assignee:` set to a human (e.g. TASK-353, **TASK-414**). Skip human-only tasks (TASK-353 → `DEVELOPER_TASK_QUEUE.md` DEV-001). Pick highest-priority `not-started` or continue `partial`. **Do not start TASK-408–413** until TASK-414 spec is `done` (owner approval).
+
+---
+
+- id: TASK-419
+  title: Guided skills step — Layer 1 presentation (§5.5)
+  created_at: 2026-07-03
+  created_by: agent
+  priority: high
+  status: done
+  description: |
+    Replace SkillsAllocationPage embed in guided creator with guided-native skill list: labeled centered point budget,
+    simplified rows (bonus ±, X remove), path skill chips in PathHelpCard, browse-all link instead of floating Add Skill.
+  related_files:
+    - src/components/guided-creator/guided-skills-panel.tsx
+    - src/components/guided-creator/steps/skills-step.tsx
+    - src/components/character-creator/PathHelpCard.tsx
+    - src/lib/constants/copy/guided-creator-copy.ts
+  acceptance_criteria:
+    - No spreadsheet table / prof column in guided skills step.
+    - Single labeled skill-point display centered above list; footer shows remaining/complete text only.
+    - Path skills toggled via SkillSourceChip in path help card.
+    - Advanced creator SkillsAllocationPage unchanged.
+    - npm run build passes.
+  notes: |
+    2026-07-03: Owner feedback on skills step UX mismatch vs other guided steps. npm run build pass.
 
 ---
 
@@ -111,7 +136,7 @@
 - id: TASK-378
   title: HYG-01 codex typing hardening + legacy payload compatibility gates
   priority: high
-  status: not-started
+  status: done
   created_at: 2026-06-26
   created_by: agent
   description: |
@@ -135,6 +160,7 @@
     - Build validation suite added/indexed for codex + roll-log compatibility checks.
   notes: |
     Planned from remediation close-out. Compatibility-first phases required.
+    DONE 2026-07-03: `CodexPayload` in `src/types/codex.ts`; typed `fetchCodex` + server route; entity types moved from hooks/codex-types; roll timestamp util extracted; character sheet uses CodexFeat/CodexSkill; vitest shape + timestamp tests; build pass.
 
 - id: TASK-379
   title: DUP-05/08 unify library selection pipelines and make LoadFromLibraryModal a thin wrapper
@@ -907,10 +933,41 @@
   completed_work: |
     Phase 1 (2026-07-01): codex_species.image_url + codex-art bucket (migration applied). Admin species editor CodexArtUploadField (crop + upload). /api/upload/codex-art (isAdmin + service role). REALMS §5.0.3 coverage matrix (species/creature high, weapon some, armor/shield/power/technique low; no skills/feats/traits).
   remaining_work: |
-    Seed starter species art. Phase 2 image_url columns + admin upload on creatures, equipment (weapon/armor/shield), powers, techniques. Optional auto-persist image_url on upload without separate Save click.
+    Seed starter species art. Phase 2 image_url columns + admin upload on creatures, powers, techniques. Equipment uses art bank only (no codex_equipment.image_url).     Follow-on TASK-417 for bank + user-library parity.
+  follow_up_tasks:
+    - TASK-417
   notes: |
     2026-06-30: Product owner — species art is main marketing hook on cards. Prototype placeholders + GuidedChoiceCard hero layout landed first.
     2026-07-01: Phase 1 species pipeline shipped; guided UI already reads image_url.
+    2026-07-01: official_items.image_url + armament admin upload (weapon/armor/shield). REALMS §5.0.3 expanded with three-layer image model (official / bank / user upload).
+
+- id: TASK-417
+  title: Art bank + user-library image_url parity + copy-on-add
+  created_at: 2026-07-01
+  created_by: owner
+  priority: medium
+  status: not-started
+  description: |
+    Long-term card-art model (REALMS §5.0.3): (1) curated art bank all users pick from when creating custom species/armaments/powers/techniques/equipment; (2) privileged roles (developer, admin) may upload custom art tied to user-owned rows; (3) official items with image_url keep art when copied to personal library — user_* tables mirror official/codex image_url column shape.
+  related_files:
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/lib/library-columnar.ts
+    - src/lib/codex-art.ts
+    - src/components/shared/codex-art-upload-field.tsx
+    - src/components/guided-creator/guided-choice-image.ts
+    - src/app/api/upload/codex-art/route.ts
+    - src/app/api/user/library/[type]/route.ts
+    - src/app/api/official/[type]/route.ts
+  acceptance_criteria:
+    - art_bank catalog (table or manifest) with categories: species, weapon, armor, shield, equipment, power, technique; admin CRUD; public read.
+    - Shared ArtBankPicker (or extend CodexArtUploadField) in species/item/power/technique creators — all users can pick bank image.
+    - image_url columns on user_powers, user_techniques, user_items, user_creatures, user_species (migrations + library-columnar + API).
+    - Add official/public item to user library copies image_url to new user row.
+    - /api/upload/user-creation-art (or equivalent) for developer+admin; writes user-creations bucket; sets user_* image_url.
+    - Creators and GuidedChoiceCard resolve image_url identically for official and user rows.
+  notes: |
+    2026-07-01: Owner direction — three-layer model documented in REALMS §5.0.3. Depends on TASK-405 phase 2 for full official coverage. codex_equipment stays bank-only (no per-row image).
 
 - id: TASK-408
   title: Power creator InfoTippy — tooltip draft to tooltip-text.tsx
@@ -1046,6 +1103,113 @@
   notes: |
     Blocked until TASK-410. Item guided follow-up task after TASK-412 validates power pattern.
     **Blocked until TASK-414 done** (do not change landing CTA until guided entry exists).
+
+- id: TASK-415
+  title: Chip taxonomy & metadata display unification
+  priority: high
+  status: done
+  created_at: 2026-07-02
+  created_by: owner
+  description: |
+    Unify expandable vs descriptor chips into two roles with distinct visuals; fix expandable
+    rounded-rectangle shape (no pill clipping); enforce metadata visibility rule for GridListRow
+    items; remove redundant collapsed/expanded metadata. Plan: `src/docs/ai/CHIP_UNIFICATION_PLAN.md`.
+  related_files:
+    - src/docs/ai/CHIP_UNIFICATION_PLAN.md
+    - src/components/ui/chip.tsx
+    - src/components/ui/expandable-chip.tsx
+    - src/lib/chip/expandable-chip-props.ts
+    - src/lib/chip/expandable-chip-shell.ts
+    - src/components/shared/grid-list-chip.tsx
+    - src/lib/chip/part-data.ts
+    - src/lib/chip/chip-options-panel.tsx
+    - src/lib/chip/index.ts
+    - src/components/shared/grid-list-row.tsx
+    - src/components/shared/species-trait-card.tsx
+    - src/lib/codex/feat-list.ts
+    - src/components/character-sheet/library-feat-rows.ts
+    - src/components/character-sheet/library-entity-rows.ts
+    - src/app/dev/styleguide/page.tsx
+  acceptance_criteria:
+    - Two chip roles documented and implemented — ExpandableChip (interactive) + DescriptorChip (opaque, non-expandable)
+    - Expandable chips use rounded-lg/rectangle geometry; expanded state does not clip label text (styleguide proof)
+    - GridListRow BADGE_COLORS inline spans replaced with DescriptorChip
+    - PartChip + ExpandableGridListChip + ui ExpandableChip merged into one ui ExpandableChip
+    - Redundant metadata removed (feat category column vs chip; trait category bar vs floating text)
+    - Metadata audit table in CHIP_UNIFICATION_PLAN.md completed for feats, traits, powers, techniques, weapons, armor
+    - Styleguide shows expandable vs descriptor side-by-side; npm run build passes
+  completed_work: |
+    Phase A (2026-07-02): chip `shape` variant; `descriptor` variant + DescriptorChip; shared expandableChipShellClass;
+    GridListRow badges/total cost → DescriptorChip; descriptor routing for tags/metadata; styleguide + docs.
+    Phase B (2026-07-02): merged ExpandableChip, PartChip, GridListRow chips into single `ui/ExpandableChip`;
+    `expandable-chip-props.ts` adapters; deleted `expandable-grid-list-chip.tsx`. Build passes.
+    Phase B audit (2026-07-02): `GridListChip` wrapper; `PartData` + `ChipOptionsPanel` in `lib/chip/`; `PartChipList` → ExpandableChip; styleguide GridListRow patterns. Build passes.
+    Phase C (2026-07-02): feat category redundancy removed; SpeciesTraitCard/HubListRow/ItemCard → DescriptorChip; encounters/crafting badgeVariant. Build passes.
+    Phase C audit (2026-07-03): `descriptor-chip-variants.ts`; global metadata migration (creator, sheet, guided, admin, creature/item/power creators). Build passes.
+    Phase D (2026-07-03): `list-row-metadata.ts`; raw requirements divs → descriptor detailSections (powers/techniques/armor); range/damage in add-library + creator modals; feat Type hidden in creator tabs. Build passes.
+    Phase D audit (2026-07-03): `part-chips-from-display.ts`; creature stat block, load-library modal, creature creator, library/official lists; weapon/shield/equipment detailSections; empowered range metadata. Build passes.
+    Phase E (2026-07-03): `ChipData.kind`; removed `category: 'tag'` + `PartChipDetails`; `chip-data-helpers.ts`; feat modals → `buildFeatDetailSections`; styleguide expanded rows + `chip-unification.pw.ts` baselines. Build passes.
+    Phase E audit (2026-07-03): explicit `descriptorChipData` on codex parts/equipment, add-skill abilities, admin species skills; `buildUsesRecoveryDetailSections`; VSEA-004 closed. Build passes.
+  remaining_work: |
+    None — TASK-415 complete. Expandable chips (options, leveled feats, traits with descriptions) correctly omit explicit `kind`.
+  notes: |
+    Owner feedback 2026-07-02. Phase 2.2 unified token maps; this task completes semantic/UX chip unification.
+    Implement in sub-phases A–E per CHIP_UNIFICATION_PLAN.md (primitives → merge → descriptors → metadata audit → cleanup).
+
+- id: TASK-416
+  title: Feat tag unification — taxonomy cleanup + untagged feats
+  priority: medium
+  status: done
+  created_at: 2026-07-03
+  created_by: owner
+  description: |
+    Reduce duplicate/noisy feat tags in codex_feats; normalize on admin save; tag feats missing tags.
+    SQL migrations in sql/feat-tags-unification-phase*.sql; rules in src/docs/FEAT_TAGS.md.
+  related_files:
+    - sql/feat-tags-unification-phase1.sql
+    - sql/feat-tags-unification-phase2.sql
+    - sql/feat-tags-unification-phase3-proposed.sql
+    - scripts/sync-feat-tags-csv.js
+    - src/docs/FEAT_TAGS.md
+    - src/lib/codex/feat-tags.ts
+    - src/app/(main)/admin/codex/actions.ts
+    - src/lib/codex/feat-list.ts
+  acceptance_criteria:
+    - Phase 1–2 SQL applied; unique tags materially reduced (349 → ~277 achieved)
+    - Admin feat save normalizes tags via `normalize_feat_tags` RPC
+    - Phase 3 proposed tags for all untagged feats; owner approves before DB apply
+    - Seed CSV parity documented or exported after approved apply
+  completed_work: |
+    Phase 1–2 (2026-07-03): SQL functions + live DB apply — 277 unique tags.
+    Phase 3 prep (2026-07-03): `feat-tags.ts`, admin save RPC normalization, phase3-proposed.sql (50 feats), FEAT_TAGS.md.
+    Phase 3 apply (2026-07-03): 50 feats tagged; 0 untagged; 291 unique tags. `feats.csv` synced via `scripts/sync-feat-tags-csv.js` (538 tag column updates).
+    Phase 4 (TASK-418, 2026-07-03): singleton merges — 172 unique tags. See `feat-tags-unification-phase4.sql`.
+  remaining_work: |
+    None — feat tag unification complete (phases 1–4).
+  notes: |
+    Owner approved phases 3–4 apply 2026-07-03. Codex data workflow: realms-codex-data.mdc.
+
+- id: TASK-418
+  title: Feat tag unification — Phase 4 singleton merges
+  priority: medium
+  status: done
+  created_at: 2026-07-03
+  created_by: owner
+  parent_task: TASK-416
+  description: |
+    Merge singleton/low-count tags into canonical families; fix phase 1–2 over-drops (Focus, Movement).
+  related_files:
+    - sql/feat-tags-unification-phase4.sql
+    - src/docs/FEAT_TAGS.md
+  acceptance_criteria:
+    - map_feat_tag_phase3 + updated normalize_feat_tags deployed
+    - Unique tags reduced materially; zero untagged feats
+    - feats.csv synced
+  completed_work: |
+    Applied 2026-07-03: 291 → 172 unique tags; 122 → 14 singletons; ~128 feats re-normalized.
+    Fixed Focus/Movement drops; remapped Carry/Luck/Solo/Environment/Wall/Water instead of NULL.
+  notes: |
+    Owner approved 2026-07-03. Remaining 14 singletons intentional (skills, Focus, Interchangeable, etc.).
 
 - id: TASK-414
   title: Power creator Layer 1 — owner spec lock (design before build)

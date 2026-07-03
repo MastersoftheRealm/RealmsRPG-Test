@@ -10,7 +10,8 @@
 import { useState, memo } from 'react';
 import { Check, Edit, Copy, Eye, AlertCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { IconButton } from '@/components/ui';
+import { IconButton, DescriptorChip } from '@/components/ui';
+import { itemBadgeToDescriptorVariant } from '@/lib/chip/descriptor-chip-variants';
 import { SelectionToggle } from './selection-toggle';
 import type { DisplayItem, ListMode, ItemActions } from '@/types/items';
 
@@ -23,19 +24,11 @@ interface ItemCardProps {
   className?: string;
 }
 
-// Badge variants with design token classes
-const badgeVariants = {
-  default: 'bg-surface-alt text-text-secondary',
-  primary: 'bg-primary-subtle-bg text-primary-subtle-fg',
-  success: 'bg-success-100 text-success-fg',
-  warning: 'bg-warning-100 text-warning-fg',
-  danger: 'bg-danger-100 text-danger-fg',
-  info: 'bg-info-100 text-info-fg',
-};
+// Badge variants map to DescriptorChip semantic variants (legacy key names preserved on ItemBadge)
 
-export const ItemCard = memo(function ItemCard({ 
-  item, 
-  mode = 'view', 
+export const ItemCard = memo(function ItemCard({
+  item,
+  mode = 'view',
   actions,
   showDetails = false,
   compact = false,
@@ -193,12 +186,9 @@ export const ItemCard = memo(function ItemCard({
       {item.badges && item.badges.length > 0 && (
         <div className={cn('flex flex-wrap gap-1', compact ? 'mt-1' : 'mt-2')}>
           {item.badges.map((badge, i) => (
-            <span 
-              key={i}
-              className={cn('text-xs px-2 py-0.5 rounded-full', badgeVariants[badge.variant])}
-            >
+            <DescriptorChip key={i} variant={itemBadgeToDescriptorVariant(badge.variant)} size="sm">
               {badge.label}
-            </span>
+            </DescriptorChip>
           ))}
         </div>
       )}
@@ -207,12 +197,9 @@ export const ItemCard = memo(function ItemCard({
       {item.tags && item.tags.length > 0 && !compact && (
         <div className="flex flex-wrap gap-1 mt-2">
           {item.tags.map((tag, i) => (
-            <span 
-              key={i}
-              className="text-xs px-1.5 py-0.5 rounded bg-surface-alt text-text-muted dark:text-text-secondary"
-            >
+            <DescriptorChip key={i} size="sm">
               {tag}
-            </span>
+            </DescriptorChip>
           ))}
         </div>
       )}

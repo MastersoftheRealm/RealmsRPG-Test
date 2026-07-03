@@ -23,6 +23,9 @@ import {
   GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH,
   GRID_LIST_ROW_ICON_COLUMN_WIDTH,
   GRID_LIST_ROW_SELECTION_COLUMN_WIDTH,
+  gridTemplateColumnsWithThumbnail,
+  prependThumbnailHeaderColumn,
+  THUMBNAIL_HEADER_COLUMN_KEY,
 } from './grid-list-row-chrome';
 
 export type { ListHeaderRowChrome } from './grid-list-row-chrome';
@@ -68,6 +71,11 @@ export interface ListHeaderProps {
    * Do not combine with `rightSlotWidth` (equipment-step pattern uses `rightSlotWidth` only).
    */
   rowChrome?: ListHeaderRowChrome;
+  /**
+   * Reserve a blank first column aligned with `GridListRow.thumbnail` (44px).
+   * Prepends to `gridColumns` automatically — pass the same base template as rows (without thumb track).
+   */
+  hasThumbnailColumn?: boolean;
   /** Compact mode: use px-3 to match GridListRow compact rows (e.g. in modals) */
   compact?: boolean;
   /** Additional className */
@@ -94,11 +102,16 @@ export function ListHeader({
   hasSelectionColumn = false,
   rightSlotWidth,
   rowChrome,
+  hasThumbnailColumn = false,
   compact = false,
   className,
 }: ListHeaderProps) {
+  const displayColumns = hasThumbnailColumn ? prependThumbnailHeaderColumn(columns) : columns;
   // Build grid template from columns if not provided
-  const gridTemplate = gridColumns || columns.map(c => c.width || '1fr').join(' ');
+  const baseGridTemplate = gridColumns || columns.map((c) => c.width || '1fr').join(' ');
+  const gridTemplate = hasThumbnailColumn
+    ? gridTemplateColumnsWithThumbnail(baseGridTemplate)
+    : baseGridTemplate;
   
   const useRowChrome = hasListHeaderRowChrome(rowChrome) && !rightSlotWidth;
   const selectionColumnInGrid =
@@ -113,7 +126,7 @@ export function ListHeader({
     }
   };
 
-  const sortableColumns = columns.filter((c) => c.sortable !== false && onSort);
+  const sortableColumns = displayColumns.filter((c) => c.sortable !== false && onSort && c.key !== THUMBNAIL_HEADER_COLUMN_KEY);
   const hasSortable = sortableColumns.length > 0;
   const currentCol = sortState && hasSortable ? sortableColumns.find((c) => c.key === sortState.col) : sortableColumns[0];
   const currentLabel = currentCol?.label ?? sortState?.col ?? 'Name';
@@ -150,24 +163,29 @@ export function ListHeader({
 
   const headerContent = (
     <>
-      {columns.map((column, index) => {
-        const isSortable = column.sortable !== false && onSort;
+      {displayColumns.map((column, index) => {
+        const isThumbnailSpacer = column.key === THUMBNAIL_HEADER_COLUMN_KEY;
+        const isSortable = !isThumbnailSpacer && column.sortable !== false && onSort;
         const isActive = sortState?.col === column.key;
-        // Name column is always left-aligned; others default to center unless explicitly set
+        // First data column (name) is left-aligned; thumb spacer + other cols default to center
+        const firstDataColumnIndex = displayColumns.findIndex(
+          (c) => c.key !== THUMBNAIL_HEADER_COLUMN_KEY
+        );
         const align =
           typeof column.align !== 'undefined'
             ? column.align
-            : index === 0
-            ? 'left'
-            : 'center';
+            : index === firstDataColumnIndex || column.key === 'name'
+              ? 'left'
+              : 'center';
         
         if (!isSortable) {
           return (
             <span
               key={column.key}
               className={cn('block w-full', column.className, alignStyles[align])}
+              aria-hidden={isThumbnailSpacer || undefined}
             >
-              {column.label.toUpperCase()}
+              {column.label ? column.label.toUpperCase() : null}
             </span>
           );
         }

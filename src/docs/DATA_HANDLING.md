@@ -104,6 +104,7 @@ Spreadsheet and list edit modes in the Codex Editor persist via `createCodexDoc`
 | Codex API         | `src/app/api/codex/route.ts` |
 | Codex hooks       | `src/hooks/use-codex.ts` |
 | Codex fetch       | `src/lib/api-client.ts` (`fetchCodex`) |
+| Codex types       | `src/types/codex.ts` (`CodexPayload` — canonical GET /api/codex shape) |
 | Game rules (codex slice) | `src/hooks/use-game-rules.ts` |
 | User library hooks | `src/hooks/use-user-library.ts` |
 | Official library hooks | `src/hooks/use-public-library.ts` (`useOfficialLibrary`), `src/app/api/official/[type]/route.ts` |

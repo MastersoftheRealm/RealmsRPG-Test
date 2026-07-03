@@ -142,11 +142,13 @@ export const GUIDED_CREATOR_COPY = {
             : `we recommend ${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]} — adjust as you like.`,
       applyRecommended: 'Restore path skills',
       applyRecommendedHint: 'Re-adds path skill proficiencies you removed.',
+      emptySkills: 'No skills yet — use suggestions below or browse the full list.',
       pointsRemaining: (n: number) =>
         `Spend ${n} more skill point${n === 1 ? '' : 's'} to continue.`,
-      freePicksTitle: 'Pick another skill',
+      pointsComplete: 'All skill points spent',
+      freePicksTitle: 'Suggestions',
       freePicksHint: (n: number) =>
-        `You have ${n} skill point${n === 1 ? '' : 's'} left — add a skill below or use Add Skill for the full list.`,
+        `You have ${n} skill point${n === 1 ? '' : 's'} left — add a new skill below, increase a skill you already have, or browse the full list.`,
       browseAll: 'Browse all skills',
       continueLabel: 'Looks good →',
     },

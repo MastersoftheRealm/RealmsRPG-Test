@@ -18,8 +18,8 @@ import { useSearchParams } from 'next/navigation';
 import { X, Plus, ChevronDown, ChevronUp, Shield, Sword, Target, Info, Coins } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useItemProperties, useAdmin, useCreatorSave, useLoadModalLibrary, type ItemProperty, type UserItem } from '@/hooks';
-import { LoginPromptModal, ConfirmActionModal, ErrorDisplay } from '@/components/shared';
-import { LoadingState, IconButton, Checkbox, Button, Alert, PageContainer, Card, Chip, TableScroll } from '@/components/ui';
+import { LoginPromptModal, ConfirmActionModal, ErrorDisplay, CodexArtUploadField } from '@/components/shared';
+import { LoadingState, IconButton, Checkbox, Button, Alert, PageContainer, Card, TableScroll, DescriptorChip } from '@/components/ui';
 import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout, CollapsibleSection, AdvancedCalculationsPanel } from '@/components/creator';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
 import { ValueStepper, SectionCostBadge } from '@/components/shared';
@@ -35,6 +35,7 @@ import {
   type ItemDamage,
 } from '@/lib/calculators';
 import { PROPERTY_IDS } from '@/lib/id-constants';
+import { armamentTypeToArtEntity } from '@/lib/codex-art';
 
 // =============================================================================
 // Types
@@ -311,9 +312,9 @@ function RarityReferenceTable({ currentIP }: { currentIP: number }) {
                   )}
                 >
                   <td className="py-1.5">
-                    <Chip variant={rarityChipVariant(r.name)} size="sm">
+                    <DescriptorChip variant={rarityChipVariant(r.name)} size="sm">
                       {r.name}
-                    </Chip>
+                    </DescriptorChip>
                     {currentRarity === r.name && (
                       <span className="ml-1 text-xs text-ip-text">← Current</span>
                     )}
@@ -389,6 +390,12 @@ function ItemCreatorContent() {
   
   // Ability requirements state - each armament can have one ability requirement
   const [abilityRequirement, setAbilityRequirement] = useState<{ id: number; name: string; level: number } | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  const armamentArtEntity = useMemo(
+    () => armamentTypeToArtEntity(armamentType),
+    [armamentType]
+  );
 
   // Fetch item properties
   const { data: itemProperties = [], isLoading, error, refetch } = useItemProperties();
@@ -503,6 +510,8 @@ function ItemCreatorContent() {
     setIsEditMode(true);
     setName(itemToEdit.name);
     setDescription(itemToEdit.description || '');
+    const loadedImageUrl = (itemToEdit as { imageUrl?: string | null }).imageUrl;
+    setImageUrl(typeof loadedImageUrl === 'string' && loadedImageUrl.trim() ? loadedImageUrl : null);
     
     // Set armament type
     const itemType = itemToEdit.type?.charAt(0).toUpperCase() + itemToEdit.type?.slice(1).toLowerCase();
@@ -858,6 +867,7 @@ function ItemCreatorContent() {
       damage: damageToSave,
       costs,
       rarity,
+      ...(imageUrl ? { imageUrl } : {}),
       ...(armamentType === 'Weapon' && {
         isTwoHanded,
         rangeLevel,
@@ -881,7 +891,7 @@ function ItemCreatorContent() {
       }),
     };
     return { name: name.trim(), data: itemData };
-  }, [name, description, armamentType, propertiesPayload, damage, costs, rarity, isTwoHanded, rangeLevel, abilityRequirement, damageReduction, agilityReduction, criticalRangeIncrease, shieldDR, hasShieldDamage, shieldDamage]);
+  }, [name, description, armamentType, propertiesPayload, damage, costs, rarity, imageUrl, isTwoHanded, rangeLevel, abilityRequirement, damageReduction, agilityReduction, criticalRangeIncrease, shieldDR, hasShieldDamage, shieldDamage]);
 
   const save = useCreatorSave({
     type: 'items',
@@ -925,6 +935,7 @@ function ItemCreatorContent() {
     setHasShieldDamage(false);
     setShieldDamage({ amount: 1, size: 4 });
     setAbilityRequirement(null);
+    setImageUrl(null);
     save.setSaveMessage(null);
     // Clear localStorage cache
     try {
@@ -1171,6 +1182,17 @@ function ItemCreatorContent() {
                   className="w-full px-4 py-2 border border-border-light rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                 />
               </div>
+
+              {isAdmin && editItemId && armamentArtEntity && (
+                <CodexArtUploadField
+                  entityType={armamentArtEntity}
+                  entityId={editItemId}
+                  imageUrl={imageUrl}
+                  onImageUrlChange={setImageUrl}
+                  label="Armament card art"
+                  hint="Shown on guided creator loadout cards. Admin-only; stored on official armaments."
+                />
+              )}
               
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-2">

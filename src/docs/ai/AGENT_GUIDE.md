@@ -107,12 +107,72 @@ Task queue `related_files` may reference outdated paths. When implementing, pref
 | Base-skill selector (add sub-skill) | **SelectionToggle** | Unique UX; not GridListRow |
 | Species detail view, level-up wizard | Custom layouts | Justified exceptions |
 | Add-feat, add-skill, add-library-item modals | **GridListRow** or **UnifiedSelectionModal** | Consistent list selection |
+| Entity **thumbnail** in list row (left of name, click to preview) | **GridListRow** `thumbnail` + **ListRowThumbnail** | See § **Entity card art & list thumbnails** — species pilot shipped |
 
 **List item actions:** GridListRow and ItemCard use the same action set (view/edit/duplicate/delete, plus quantity where applicable). Use IconButton and the same placement pattern; see `src/docs/human/UI_COMPONENT_REFERENCE.md` for extended catalog details.
 
 **List modal layout (add-X, load, selection):** Use a consistent structure so modals match Codex/Library: (1) Header (title + close), (2) Search bar (`SearchInput`), (3) optional **FilterSection** for filters, (4) **ListHeader** (sortable), (5) scrollable list in a bordered container (`border border-border-light rounded-lg`) with **GridListRow** or selectable rows, (6) footer (selection count + Cancel + primary action). Use **EmptyState** and **LoadingState** (from `@/components/ui` or shared list-components) for empty and loading; avoid ad-hoc Spinner/divs. For search + sort state, **useModalListState** (`@/hooks/use-modal-list-state`) returns `search`, `setSearch`, `filteredItems`, `sortedItems`, `sortState`, `handleSort`, `reset` — use in load/add-X modals to reduce duplication.
 
 See `src/docs/human/UI_COMPONENT_REFERENCE.md` for extended component catalog (agents: prefer this guide + `realms-unification.mdc`).
+
+## Entity card art & expandable images (TASK-405 / TASK-415)
+
+**Product authority:** `REALMS_PRODUCT_OVERVIEW.md` §5.0.3 — three-layer image model (official/codex art, art bank, privileged user upload). **Schema authority:** `SUPABASE_SCHEMA.md` — nullable `image_url` on codex/official/user rows; **same column name and semantics everywhere** (not ad-hoc payload keys when a column exists).
+
+**Goal:** One resolution pipeline for placeholders + DB URLs; unified **click-to-enlarge** via `ExpandableImage`; list thumbs and choice-card heroes share the same preview modal. Agents must **extend** these building blocks — not fork per page.
+
+### Building blocks (use these)
+
+| Piece | Location | Role |
+|-------|----------|------|
+| **ExpandableImage** | `src/components/shared/expandable-image.tsx` | **Default** for any meaningful inline image — wraps visible image, click opens `ExpandableImageModal` (`object-contain`, `fullScreenOnMobile`). Use `stopPropagation` inside selectable cards/rows. |
+| **ExpandableImageModal** | same file | Controlled preview only (rare); prefer `ExpandableImage`. |
+| **readRecordImageUrl** / **resolveChoiceCardImage** | `src/components/guided-creator/guided-choice-image.ts` | Read `image_url` / `imageUrl` from any record; fall back to typed SVG placeholders |
+| **resolveListRowThumbnail** / **resolveSpeciesListRowThumbnail** | `src/lib/list-row-image.ts` | Wraps `resolveChoiceCardImage` → props for list thumbs |
+| **ListRowThumbnail** | `src/components/shared/list-row-thumbnail.tsx` | 44×44 list thumb — thin wrapper over `ExpandableImage` for `GridListRow.thumbnail` |
+| **GridListRow** `thumbnail` | `src/components/shared/grid-list-row.tsx` | D&D Beyond list style + `ListHeader` `hasThumbnailColumn` |
+| **GuidedChoiceCard** | `src/components/guided-creator/guided-choice-card.tsx` | Choice cards — hero art via `ExpandableImage` inside card |
+| **CodexArtUploadField** | `src/components/shared/codex-art-upload-field.tsx` | Admin crop/upload → `/api/upload/codex-art` |
+| **codex-art.ts** | `src/lib/codex-art.ts` | Entity types, storage paths, `uploadCodexArt()` |
+
+### Decision matrix — which surface?
+
+| User-facing surface | Implement with | Image resolution |
+|---------------------|----------------|------------------|
+| **Any inline image** (species art, portrait, card hero, list thumb) | **`ExpandableImage`** wrapping `next/image` or `img` | Pass `src`, `alt`, optional `isPlaceholder` |
+| Codex / Library / Admin **sortable list** | `GridListRow` `thumbnail` → `ListRowThumbnail` | `resolveListRowThumbnail(…)` |
+| Guided creator **choice card** | `GuidedChoiceCard` (uses `ExpandableImage` internally) | `imageKind` + `imageRecord` / `imageUrl` |
+| Species **reveal** / preview **portraits** | `ExpandableImage` directly | `resolveChoiceCardImage` or portrait URL |
+| Admin / official **authoring** | `CodexArtUploadField` | `codex-art.ts` upload API |
+| Decorative / redundant (`alt=""` only) | Plain `Image` / `img` — **no** expand | — |
+
+### Shipped vs extend later
+
+| Entity | List `thumbnail` | Choice card | Upload |
+|--------|------------------|-------------|--------|
+| **Species** | ✅ Codex + Admin species tabs | ✅ Guided species + reveal | ✅ Admin species editor |
+| Weapons / armor / shield | Extend when art exists | Future | ✅ Official Item Creator (`?edit=`) |
+| Powers / techniques / creatures | TASK-405 phase 2+ | Future | Planned |
+| Simple equipment (`codex_equipment`) | Art **bank** only (TASK-415) | Bank picker | No per-row codex column |
+
+When adding list thumbs for a new entity: (1) ensure API returns `image_url`, (2) pass `thumbnail={resolveListRowThumbnail('<kind>', row, row.name)}` on `GridListRow` — **do not** add a new grid column for art.
+
+### Agent checklist (before shipping UI with art)
+
+1. Grep `FEATURE_INDEX.md` + this section — do not add parallel thumb/modal/lightbox components.
+2. Placeholders only via `resolveChoiceCardImage` — never hardcode `/images/placeholder-*.svg` in feature pages.
+3. Wrap meaningful images in **`ExpandableImage`** (list thumbs use `ListRowThumbnail`; choice cards use `GuidedChoiceCard` or `ExpandableImage` directly).
+4. Use `thumbnail` on `GridListRow`, not `leftSlot` (leftSlot is for equip/innate toggles).
+5. `stopPropagation` on expand click when inside selectable rows/cards (`ExpandableImage` default `true`).
+6. Pair **`ListHeader` `hasThumbnailColumn`** with `GridListRow` `thumbnail`.
+7. For user-library parity / art bank, follow TASK-415.
+
+### Anti-patterns
+
+- Custom `<img>` + one-off lightbox / new preview modal per page.
+- Storing card art only in `payload` when `image_url` column exists for that table.
+- Different placeholder art per page.
+- `codex_equipment.image_url` — simple gear uses **bank** presets only (§5.0.3).
 
 ## Floating UI & contextual help (TASK-376 ✅ / TASK-392 ✅)
 
@@ -200,7 +260,7 @@ Use the dependency **inside `@/components/shared` or `@/components/ui`**, not ad
 | `children` | Optional custom trigger element |
 | `allowHTML` | **Deprecated** — no-op; kept for call-site compat |
 
-Implementation: `src/components/shared/info-tippy.tsx`. Types: `InfoTippyProps` exported from `@/components/shared`.
+Implementation: `src/components/shared/info-tippy.tsx` (product API) + shared Floating UI chrome in `src/lib/tooltips/floating-help.tsx` (arrow, transitions, placement — ported from Collin PR #14). Styleguide `Tooltip` in `@/components/ui` reuses the same primitive. Types: `InfoTippyProps` exported from `@/components/shared`.
 
 ### Do not use (removed / wrong tool)
 
@@ -225,6 +285,8 @@ Goal: "Learn once, use forever" — consistent UI across Library, Codex, Charact
 | Pattern | Where used |
 |---------|------------|
 | GridListRow | Library, Codex, add-feat-modal, add-library-item-modal, add-skill-modal, equipment-step, feats-tab, library-section, creature-creator |
+| ListRowThumbnail + `GridListRow.thumbnail` | Codex species, Admin species (pilot); extend per § Entity card art |
+| GuidedChoiceCard + guided-choice-image | Guided creator choice steps (species hero art) |
 | SkillRow | skills-section, skills-step, creature-creator |
 | ValueStepper | abilities-section, sheet-header, health-energy-allocator, dice-roller, all creators, encounters pages |
 | SectionHeader | feats-tab, proficiencies-tab, notes-tab, archetype-section, crafting pages |
@@ -249,6 +311,7 @@ Quick reference: `.cursor/rules/realms-unification.mdc`, `DESIGN_SYSTEM.md`.
 | Database types | `src/types/database.ts` (or Supabase-generated types) |
 | Codex API | `src/app/api/codex/` — fetches from Supabase |
 | **Game rules** | `src/docs/GAME_RULES.md` — terminology, formulas, display conventions; use when implementing validation, caps, tooltips, calculations |
+| **Entity card art (list thumb, choice cards, upload)** | `REALMS_PRODUCT_OVERVIEW.md` §5.0.3 + **this guide** § Entity card art & list thumbnails; `guided-choice-image.ts`, `list-row-image.ts`, `codex-art.ts` |
 | **Accessibility & contrast** | `src/docs/ACCESSIBILITY.md` — contrast tokens (success-700 + dark variant, power/martial-dark), form labels, headings, modals, touch targets; `src/docs/DESIGN_SYSTEM.md` — status and game-specific color tokens for light + dark mode. When editing UI, ensure new or changed text/controls follow these so both themes pass WCAG 2.1 AA. |
 | **User experience goals** | `src/docs/USER_EXPERIENCE_GOALS.md` — UX goals, terminology (Realms Codex/Library, My Library), what’s implemented vs backlog, and AI checklist for onboarding/retention/copy. Read when changing landing, creator, library, or onboarding flows. |
 | Architecture | `src/docs/ARCHITECTURE.md` |

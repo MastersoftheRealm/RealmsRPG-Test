@@ -1,232 +1,38 @@
 /**
  * Part Chip Components
  * ====================
- * Unified chip components for displaying parts (powers/techniques) and 
- * properties (items) with expandable descriptions and TP cost badges.
- * 
- * Used in: Library page (via GridListRow), Character Sheet, Codex (via GridListRow)
- * 
- * These components handle detailed part/property display with category-based styling.
+ * List helpers built on unified `ExpandableChip`.
  */
 
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { chipVariants, Chip } from '@/components/ui/chip';
-import { partChipVariant } from '@/lib/chip/part-chip-variant';
+import { ExpandableChip } from '@/components/ui';
+import { expandableChipPropsFromPartData } from '@/lib/chip/expandable-chip-props';
+import type { PartData } from '@/lib/chip/part-data';
 
-// =============================================================================
-// Types
-// =============================================================================
-
-export interface PartData {
-  /** Part/property name */
-  name: string;
-  /** Full text including option levels (e.g., "Elemental Damage (Opt1 3)") */
-  text?: string;
-  /** Part description */
-  description?: string;
-  /** TP cost of this part (0 if none) */
-  tpCost?: number;
-  /** Energy cost if applicable */
-  energyCost?: number;
-  /** Option levels if increased */
-  optionLevels?: {
-    opt1?: number;
-    opt2?: number;
-    opt3?: number;
-  };
-  /** Category for styling (action, activation, area, duration, target, special, restriction) */
-  category?: string;
-  /** Options with level > 0 (for expandable chip details) */
-  options?: Array<{ label: string; description?: string; level: number }>;
-}
-
-// =============================================================================
-// PartChip - Single chip that expands in place (same element, no separate panel)
-// Matches ExpandableChip and GridListRow chip behavior: one chip, content inside when expanded.
-// =============================================================================
+export type { PartData } from '@/lib/chip/part-data';
 
 interface PartChipProps {
   part: PartData;
   isExpanded?: boolean;
   onClick?: (e: React.MouseEvent) => void;
   size?: 'sm' | 'md';
-  /** When true, chip can grow to full width (e.g. in a flex-wrap list); set by parent when expanded */
   fullWidthWhenExpanded?: boolean;
   className?: string;
 }
 
-export function PartChip({
-  part,
-  isExpanded = false,
-  onClick,
-  size = 'md',
-  fullWidthWhenExpanded = false,
-  className,
-}: PartChipProps) {
-  const [optionsOpen, setOptionsOpen] = useState(false);
-  const hasTP = (part.tpCost ?? 0) > 0;
-  const hasDescription = !!part.description;
-  const hasOptions = (part.options?.length ?? 0) > 0;
-  const canExpand = (hasDescription || hasOptions) && !!onClick;
-  const category = part.category || (hasTP ? 'proficiency' : 'default');
-
-  return (
-    <div
-      className={cn(
-        'inline-flex flex-col rounded-xl text-sm font-medium',
-        chipVariants({ variant: partChipVariant(category) }),
-        size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-3 py-1.5 text-sm',
-        isExpanded && 'ring-2 ring-offset-1',
-        isExpanded && hasTP ? 'ring-info-400' : isExpanded && 'ring-primary-outline-border',
-        fullWidthWhenExpanded && isExpanded && 'w-full min-w-0',
-        className
-      )}
-    >
-      <button
-        type="button"
-        onClick={onClick}
-        disabled={!canExpand}
-        className={cn(
-          'flex items-center gap-1.5 text-left w-full',
-          canExpand && 'cursor-pointer hover:opacity-90',
-          !canExpand && 'cursor-default'
-        )}
-        aria-expanded={canExpand ? isExpanded : undefined}
-      >
-        <span>{part.name}</span>
-        {hasTP && (
-          <>
-            <span className="opacity-40">|</span>
-            <span className="text-xs font-semibold">
-              TP: {part.tpCost}
-            </span>
-          </>
-        )}
-        {part.energyCost !== undefined && part.energyCost > 0 && (
-          <>
-            <span className="opacity-40">|</span>
-            <span className="text-xs font-semibold text-energy">
-              {part.energyCost} EP
-            </span>
-          </>
-        )}
-        {canExpand && (
-          <ChevronDown
-            className={cn(
-              'w-3 h-3 ml-auto shrink-0 transition-transform duration-base ease-standard',
-              isExpanded && 'rotate-180'
-            )}
-          />
-        )}
-      </button>
-
-      {/* Expanded content inside the same chip (no separate panel) */}
-      {isExpanded && (hasDescription || hasOptions) && (
-        <div className="px-3 pb-2 pt-0 mt-1 border-t border-current/15 text-left">
-          {part.description && (
-            <p className="text-xs font-normal text-text-secondary dark:text-text-primary leading-relaxed whitespace-pre-line">
-              {part.description}
-            </p>
-          )}
-          {hasOptions && part.options && (
-            <div className="mt-2">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setOptionsOpen((o) => !o);
-                }}
-                className="flex items-center gap-1 text-xs font-medium text-text-secondary hover:text-text-primary"
-              >
-                <ChevronDown className={cn('w-3.5 h-3.5 transition-transform', optionsOpen && 'rotate-180')} />
-                Options ({part.options.length})
-              </button>
-              {optionsOpen && (
-                <ul className="mt-1.5 space-y-2 pl-4 border-l-2 border-current/20">
-                  {part.options.map((opt, oi) => (
-                    <li key={oi} className="text-xs py-1">
-                      <span className="font-medium text-text-primary">{opt.label}: Level {opt.level}</span>
-                      {opt.description && (
-                        <p className="mt-0.5 text-text-secondary dark:text-text-primary/80 leading-relaxed">
-                          {opt.description}
-                        </p>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
+/** @deprecated Prefer `ExpandableChip` + `expandableChipPropsFromPartData` directly. */
+export function PartChip(props: PartChipProps) {
+  return <ExpandableChip {...expandableChipPropsFromPartData(props.part, {
+    isExpanded: props.isExpanded,
+    onClick: props.onClick,
+    size: props.size,
+    fullWidthWhenExpanded: props.fullWidthWhenExpanded,
+    className: props.className,
+  })} />;
 }
-
-// =============================================================================
-// PartChipDetails - Expanded detail panel
-// =============================================================================
-
-interface PartChipDetailsProps {
-  part: PartData;
-  className?: string;
-}
-
-export function PartChipDetails({ part, className }: PartChipDetailsProps) {
-  const [optionsOpen, setOptionsOpen] = useState(false);
-  const hasOptions = (part.options?.length ?? 0) > 0;
-
-  return (
-    <div className={cn(
-      'mt-2 p-3 rounded-lg bg-surface border border-border shadow-sm',
-      className
-    )}>
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <h5 className="font-semibold text-text-primary">{part.name}</h5>
-        {(part.tpCost ?? 0) > 0 && (
-          <Chip variant="listCost" size="sm" className="font-semibold">
-            TP: {part.tpCost}
-          </Chip>
-        )}
-      </div>
-
-      {part.description && (
-        <p className="text-sm text-text-secondary mb-2">{part.description}</p>
-      )}
-
-      {hasOptions && part.options && (
-        <div className="mt-2">
-          <button
-            type="button"
-            onClick={() => setOptionsOpen(!optionsOpen)}
-            className="flex items-center gap-1 text-xs font-medium text-text-secondary hover:text-text-primary"
-          >
-            <ChevronDown className={cn('w-3.5 h-3.5 transition-transform', optionsOpen && 'rotate-180')} />
-            Options ({part.options.length})
-          </button>
-          {optionsOpen && (
-            <ul className="mt-1.5 space-y-2 pl-4 border-l-2 border-border-light dark:border-border">
-              {part.options.map((opt, oi) => (
-                <li key={oi} className="text-xs py-1">
-                  <span className="font-medium text-text-primary">{opt.label}: Level {opt.level}</span>
-                  {opt.description && <p className="mt-0.5 text-text-secondary leading-relaxed">{opt.description}</p>}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// =============================================================================
-// PartChipList - Container that manages expansion state
-// =============================================================================
 
 interface PartChipListProps {
   parts: PartData[];
@@ -235,11 +41,11 @@ interface PartChipListProps {
   className?: string;
 }
 
-export function PartChipList({ 
-  parts, 
+export function PartChipList({
+  parts,
   label = 'Parts & Properties',
   size = 'md',
-  className 
+  className,
 }: PartChipListProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
@@ -257,22 +63,19 @@ export function PartChipList({
           {label}
         </h3>
       )}
-
-      {/* Chips: each expands in place (same chip, no separate panel); wrapper gives full width when expanded */}
       <div className="flex flex-wrap gap-2 items-start">
         {parts.map((part, index) => {
           const isExpanded = expandedIndex === index;
-          const hasDescription = !!part.description;
-          const hasOptions = (part.options?.length ?? 0) > 0;
-          const canExpand = hasDescription || hasOptions;
+          const canExpand = !!(part.description || (part.options?.length ?? 0));
           return (
-            <PartChip
+            <ExpandableChip
               key={`${part.name}-${index}`}
-              part={part}
-              size={size}
-              isExpanded={isExpanded}
-              fullWidthWhenExpanded
-              onClick={canExpand ? (e) => handleChipClick(index, e) : undefined}
+              {...expandableChipPropsFromPartData(part, {
+                isExpanded,
+                onClick: canExpand ? (e) => handleChipClick(index, e) : undefined,
+                size,
+                fullWidthWhenExpanded: true,
+              })}
             />
           );
         })}
@@ -281,10 +84,6 @@ export function PartChipList({
   );
 }
 
-// =============================================================================
-// PropertyChipList - Simpler variant for item properties
-// =============================================================================
-
 interface PropertyChipListProps {
   properties: Array<string | { name: string; description?: string }>;
   label?: string;
@@ -292,30 +91,22 @@ interface PropertyChipListProps {
   className?: string;
 }
 
-export function PropertyChipList({ 
-  properties, 
+export function PropertyChipList({
+  properties,
   label = 'Properties',
-  size = 'sm',
-  className 
+  size = 'md',
+  className,
 }: PropertyChipListProps) {
-  // Convert string properties to PartData format
-  const parts: PartData[] = properties.map(prop => {
+  const parts: PartData[] = properties.map((prop) => {
     if (typeof prop === 'string') {
       return { name: prop, category: 'property' };
     }
-    return { 
-      name: prop.name, 
+    return {
+      name: prop.name,
       description: prop.description,
-      category: 'property' 
+      category: 'property',
     };
   });
 
-  return (
-    <PartChipList 
-      parts={parts} 
-      label={label} 
-      size={size}
-      className={className}
-    />
-  );
+  return <PartChipList parts={parts} label={label} size={size} className={className} />;
 }

@@ -15,16 +15,18 @@ import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/
 import { cn } from '@/lib/utils';
 import { GridListRow, InnateToggle, ListHeader, SegmentedControl, InfoTippy } from '@/components/shared';
 import { calculateArchetypeProgression } from '@/lib/game/formulas';
-import { Button, IconButton, Spinner, Chip, EmptyState } from '@/components/ui';
+import { Button, IconButton, Spinner, EmptyState, DescriptorChip } from '@/components/ui';
 import { useUserPowers, useUserTechniques, useUserEmpoweredTechniques, usePowerParts, useTechniqueParts, useOfficialLibrary, useItemProperties, useMergedSpecies, useCodexSkills, useTraits, useCreatorPathData, type PowerPart, type TechniquePart } from '@/hooks';
 import { getValidationIssuesForStep, getStepCompletion } from '@/lib/character-creator-validation';
 import type { UserPower, UserTechnique } from '@/hooks/use-user-library';
 import { SourceFilter, type SourceFilterValue } from '@/components/shared';
-import type { ChipData } from '@/components/shared/grid-list-row';
 import { derivePowerDisplay } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
+import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
+import { buildPartsAndMetadataDetailSections } from '@/lib/chip/list-row-metadata';
+import { buildEmpoweredPowerSelectableItem } from '@/hooks/add-library-item/build-empowered-selectable-item';
 import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
 import { CreatorResourceBar } from '@/components/character-creator/CreatorResourceBar';
@@ -348,12 +350,7 @@ export function PowersStep() {
           duration: power.duration as PowerDocument['duration'],
         };
         const display = derivePowerDisplay(doc, powerParts ?? []);
-        const partChips: ChipData[] = display.partChips.map((chip) => ({
-          name: chip.text.split(' | TP:')[0].trim(),
-          description: chip.description,
-          cost: chip.finalTP,
-          costLabel: 'TP',
-        }));
+        const partChips = partChipsFromDisplay(display.partChips);
         const damageStr = power.damage?.length
           ? power.damage.map((d: { type?: string }) => capitalize(d.type)).join(', ')
           : '-';
@@ -365,6 +362,10 @@ export function PowersStep() {
           options?.pathName &&
           options?.selectedIds &&
           options.selectedIds.has(itemId);
+        const detailSections = buildPartsAndMetadataDetailSections({
+          range: display.range,
+          partChips,
+        });
         return [{
           id: itemId,
           name: power.name,
@@ -375,7 +376,7 @@ export function PowersStep() {
             { key: 'TP', value: String(display.tp ?? '-'), align: 'center' as const },
             { key: 'Damage', value: damageStr, align: 'center' as const },
           ],
-          detailSections: partChips.length > 0 ? [{ label: 'Parts & Proficiencies', chips: partChips }] : undefined,
+          detailSections: detailSections.length > 0 ? detailSections : undefined,
           totalCost: display.tp > 0 ? display.tp : undefined,
           costLabel: display.tp > 0 ? 'TP' : undefined,
           badges: showPathBadge ? [{ label: `(${options!.pathName})`, color: 'gray' as const }] : undefined,
@@ -410,36 +411,24 @@ export function PowersStep() {
       list.flatMap((technique) => {
         const itemId = String(technique.docId ?? technique.id ?? '');
         if (!itemId) return [];
+        const base = buildEmpoweredPowerSelectableItem(technique);
         const raw = technique as unknown as Record<string, unknown>;
-        const powerData = (raw.power as Record<string, unknown> | undefined) ?? {};
         const totals = (raw.totals as Record<string, unknown> | undefined) ?? {};
-        const actionType = String(raw.actionType ?? '');
-        const isReaction = raw.isReaction === true;
-        const action = actionType
-          ? `${actionType.charAt(0).toUpperCase()}${actionType.slice(1)} ${isReaction ? 'Reaction' : 'Action'}`
-          : (isReaction ? 'Reaction' : '-');
-        const areaRaw = (powerData.area as Record<string, unknown> | undefined)?.type;
-        const areaValue = areaRaw ? String(areaRaw).replace(/\b\w/g, (c) => c.toUpperCase()) : '-';
-        const damageRows = Array.isArray(powerData.damage) ? (powerData.damage as Array<{ amount?: number; size?: number; type?: string }>) : [];
-        const damageValue = damageRows.length > 0
-          ? damageRows
-              .filter((row) => (row.amount ?? 0) > 0 && row.type && row.type !== 'none')
-              .map((row) => `${row.amount}d${row.size} ${row.type}`)
-              .join(', ')
-          : '-';
         const energy = Number(totals.energy ?? 0);
         const tp = Number(totals.trainingPoints ?? 0);
+        const actionCol = base.columns?.find((c) => c.key === 'Action');
+        const damageCol = base.columns?.find((c) => c.key === 'Damage');
         return [{
+          ...base,
           id: itemId,
-          name: technique.name,
-          description: technique.description,
           columns: [
-            { key: 'Action', value: action, align: 'center' as const },
+            { key: 'Action', value: actionCol?.value ?? '-', align: 'center' as const },
             { key: 'Energy', value: String(energy || '-'), align: 'center' as const },
             { key: 'TP', value: String(tp || '-'), align: 'center' as const },
-            { key: 'Damage', value: damageValue, align: 'center' as const },
+            { key: 'Damage', value: damageCol?.value ?? '-', align: 'center' as const },
           ],
-          badges: [{ label: 'Empowered', color: 'gray' as const }],
+          totalCost: tp > 0 ? tp : undefined,
+          costLabel: tp > 0 ? 'TP' : undefined,
           data: technique,
         }];
       }),
@@ -469,12 +458,7 @@ export function PowersStep() {
           weapon: tech.weapon as TechniqueDocument['weapon'],
         };
         const display = deriveTechniqueDisplay(doc, techniqueParts ?? []);
-        const partChips: ChipData[] = display.partChips.map((chip) => ({
-          name: chip.text.split(' | TP:')[0].trim(),
-          description: chip.description,
-          cost: chip.finalTP,
-          costLabel: 'TP',
-        }));
+        const partChips = partChipsFromDisplay(display.partChips);
         const isRecommended =
           recommendedTechniqueRefs.has(itemId.toLowerCase()) ||
           recommendedTechniqueRefs.has(String(tech.name).toLowerCase());
@@ -483,6 +467,10 @@ export function PowersStep() {
           options?.pathName &&
           options?.selectedIds &&
           options.selectedIds.has(itemId);
+        const detailSections = buildPartsAndMetadataDetailSections({
+          damage: display.damageStr !== '-' ? display.damageStr : undefined,
+          partChips,
+        });
         return [{
           id: itemId,
           name: tech.name,
@@ -492,7 +480,7 @@ export function PowersStep() {
             { key: 'Weapon', value: display.weaponName || '-', align: 'center' as const },
             { key: 'Training Pts', value: String(display.tp), align: 'center' as const },
           ],
-          detailSections: partChips.length > 0 ? [{ label: 'Parts & Proficiencies', chips: partChips }] : undefined,
+          detailSections: detailSections.length > 0 ? detailSections : undefined,
           totalCost: typeof display.tp === 'number' && display.tp > 0 ? display.tp : undefined,
           costLabel: typeof display.tp === 'number' && display.tp > 0 ? 'TP' : undefined,
           badges: showPathBadge ? [{ label: `(${options!.pathName})`, color: 'gray' as const }] : undefined,
@@ -764,13 +752,13 @@ export function PowersStep() {
               }}
             />
           ) : (
-            <Chip
+            <DescriptorChip
               variant={proficiencyTpSummary.remaining >= 0 ? 'tp' : 'danger'}
               size="md"
               className="font-semibold"
             >
               Proficiency TP: {proficiencyTpSummary.spent} / {proficiencyTpSummary.limit}
-            </Chip>
+            </DescriptorChip>
           )}
           {pathMode && (
             <div className="flex flex-wrap gap-2 justify-center">

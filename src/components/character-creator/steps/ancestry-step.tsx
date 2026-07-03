@@ -14,8 +14,10 @@
 
 import { useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { Chip, Button, Alert, Card } from '@/components/ui';
-import { SelectionToggle, ChoiceTraitOptionListPicker, InfoTippy } from '@/components/shared';
+import { Button, Alert, Card, DescriptorChip } from '@/components/ui';
+import { statusBadgeDescriptorVariant } from '@/lib/chip/descriptor-chip-variants';
+import { SelectionToggle, ChoiceTraitOptionListPicker, InfoTippy, SummaryChipList } from '@/components/shared';
+import { speciesSkillToSummaryChipItem } from '@/lib/chip/species-skill-chips';
 import {
   getChoiceOptionIds,
   resolveChoiceOptionTraits,
@@ -24,7 +26,7 @@ import {
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
 import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
-import { useMergedSpecies, useTraits, useCodexSkills, useCreatorPathData, resolveTraitIds, resolveSkillIdsToNames, type Trait, type Species } from '@/hooks';
+import { useMergedSpecies, useTraits, useCodexSkills, useCreatorPathData, resolveTraitIds, type Trait, type Species } from '@/hooks';
 import { Heart, AlertTriangle, Sparkles, Star } from 'lucide-react';
 import { chooseYourAncestryTraits } from '../../../../public/tooltip-text';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
@@ -64,17 +66,20 @@ export function AncestryStep() {
     return allSpecies.find((s: Species) => s.id === draft.ancestry?.speciesIds?.[1]) ?? null;
   }, [allSpecies, isMixed, draft.ancestry?.speciesIds]);
 
-  // Resolve species skill IDs to names (single or merged for mixed)
-  const speciesSkillNames = useMemo(() => {
-    if (!allSkills) return [];
-    if (selectedSpecies) return resolveSkillIdsToNames(selectedSpecies.skills || [], allSkills);
+  // Resolve species skill IDs for expandable summary chips
+  const speciesSkillIds = useMemo(() => {
+    if (selectedSpecies) return (selectedSpecies.skills || []).map(String);
     if (speciesA && speciesB) {
       const merged = [...(speciesA.skills || []), ...(speciesB.skills || [])];
-      const unique = Array.from(new Set(merged.map(String)));
-      return resolveSkillIdsToNames(unique, allSkills);
+      return Array.from(new Set(merged.map(String)));
     }
     return [];
-  }, [selectedSpecies, speciesA, speciesB, allSkills]);
+  }, [selectedSpecies, speciesA, speciesB]);
+
+  const speciesSkillChips = useMemo(() => {
+    if (!allSkills) return [];
+    return speciesSkillIds.map((id) => speciesSkillToSummaryChipItem(id, allSkills));
+  }, [speciesSkillIds, allSkills]);
 
   // Mixed only: unique skill IDs from both species for "choose 2" (id + name)
   const mixedSpeciesSkillOptions = useMemo(() => {
@@ -813,15 +818,11 @@ export function AncestryStep() {
         
         {/* Skills and Languages */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-border-light">
-          {speciesSkillNames.length > 0 && (
+          {speciesSkillChips.length > 0 && (
             <div>
               <span className="text-xs text-text-muted uppercase">Species Skills:</span>
-              <div className="flex flex-wrap gap-1 mt-1">
-                {speciesSkillNames.map(skillName => (
-                  <Chip key={skillName} variant="default" size="sm">
-                    {skillName}
-                  </Chip>
-                ))}
+              <div className="mt-1">
+                <SummaryChipList items={speciesSkillChips} />
               </div>
             </div>
           )}
@@ -830,9 +831,9 @@ export function AncestryStep() {
               <span className="text-xs text-text-muted uppercase">Languages:</span>
               <div className="flex flex-wrap gap-1 mt-1">
                 {selectedSpecies.languages.map((lang: string) => (
-                  <Chip key={lang} variant="primary" size="sm">
+                  <DescriptorChip key={lang} variant="primary" size="sm">
                     {lang}
-                  </Chip>
+                  </DescriptorChip>
                 ))}
               </div>
             </div>
@@ -852,14 +853,15 @@ export function AncestryStep() {
         )}>
           <div className="flex items-center justify-between mb-1">
             <span className="font-bold text-text-primary text-sm">Ancestry Traits</span>
-            <span className={cn(
-              'px-2 py-0.5 rounded-full text-xs font-bold',
-              selectedTraitIds.length === maxAncestryTraits
-                ? statusPanel.completeBadge
-                : statusPanel.warningBadge
-            )}>
+            <DescriptorChip
+              size="sm"
+              variant={statusBadgeDescriptorVariant(
+                selectedTraitIds.length === maxAncestryTraits ? 'complete' : 'warning'
+              )}
+              className="font-bold"
+            >
               {selectedTraitIds.length} / {maxAncestryTraits}
-            </span>
+            </DescriptorChip>
           </div>
           <p className="text-xs text-text-secondary">
             {selectedFlaw ? 'Flaw grants +1 trait!' : 'Select a flaw for +1 trait'}
@@ -874,14 +876,13 @@ export function AncestryStep() {
         )}>
           <div className="flex items-center justify-between mb-1">
             <span className="font-bold text-text-primary text-sm">Characteristic</span>
-            <span className={cn(
-              'px-2 py-0.5 rounded-full text-xs font-bold',
-              selectedCharacteristic
-                ? statusPanel.completeBadge
-                : statusPanel.infoBadge
-            )}>
+            <DescriptorChip
+              size="sm"
+              variant={statusBadgeDescriptorVariant(selectedCharacteristic ? 'complete' : 'info')}
+              className="font-bold"
+            >
               {selectedCharacteristic ? '1' : '0'} / 1
-            </span>
+            </DescriptorChip>
           </div>
           <p className="text-xs text-text-secondary">Optional bonus trait</p>
         </div>
@@ -894,14 +895,13 @@ export function AncestryStep() {
         )}>
           <div className="flex items-center justify-between mb-1">
             <span className="font-bold text-text-primary text-sm">Flaw</span>
-            <span className={cn(
-              'px-2 py-0.5 rounded-full text-xs font-bold',
-              selectedFlaw
-                ? statusPanel.dangerBadge
-                : 'bg-surface text-text-secondary'
-            )}>
+            <DescriptorChip
+              size="sm"
+              variant={statusBadgeDescriptorVariant(selectedFlaw ? 'danger' : 'neutral')}
+              className="font-bold"
+            >
               {selectedFlaw ? '1' : '0'} / 1
-            </span>
+            </DescriptorChip>
           </div>
           <p className="text-xs text-text-secondary">Optional, grants +1 trait</p>
         </div>

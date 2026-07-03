@@ -7,11 +7,11 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Chip, IconButton, Button, Input } from '@/components/ui';
+import { IconButton, Button, Input, DescriptorChip } from '@/components/ui';
 import { Plus, X, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SectionHeader, TabSummarySection, SummaryItem, SummaryRow, ValueStepper, PartChipComponent, ConfirmActionModal } from '@/components/shared';
-import type { PartData } from '@/components/shared/part-chip';
+import type { PartData } from '@/lib/chip/part-data';
 import { AddProficiencyModal, type AddProficiencyVariant } from './add-proficiency-modal';
 import type { CharacterPower, CharacterTechnique, Item, CharacterProficiency } from '@/types';
 import {
@@ -482,9 +482,9 @@ export function ProficienciesTab({
                                 }}
                               />
                             ) : (
-                              <Chip variant="proficiency" size="md">
+                              <DescriptorChip variant="listCost" size="md">
                                 {profChipLabel(prof)} | {calculateProficiencyTP(prof)} TP
-                              </Chip>
+                              </DescriptorChip>
                             )}
                             {isEditMode && (
                               <IconButton
@@ -521,9 +521,9 @@ export function ProficienciesTab({
           ) : (
             <div className="flex flex-wrap gap-2">
               {missing.map((prof) => (
-                <Chip key={prof.id} variant="danger" size="md">
+                <DescriptorChip key={prof.id} variant="danger" size="md">
                   {profChipLabel(prof)} | {calculateProficiencyTP(prof)} TP
-                </Chip>
+                </DescriptorChip>
               ))}
             </div>
           )}

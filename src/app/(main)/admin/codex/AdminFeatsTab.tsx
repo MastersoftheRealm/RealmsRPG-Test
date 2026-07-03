@@ -33,6 +33,7 @@ import {
   filterFeats,
   type FeatListFilters,
 } from '@/lib/codex/feat-list';
+import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 
 const COPY_NAME_SUFFIX = ' copy';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
@@ -72,7 +73,7 @@ function toOptNum(v: unknown): number | undefined {
 
 function featToFormState(feat: Feat): FeatFormState {
   const ext = feat as unknown as Record<string, unknown>;
-  const abilityArr = Array.isArray(feat.ability) ? feat.ability : feat.ability ? [String(feat.ability)] : [];
+  const abilityArr = normalizeFeatAbilities(feat.ability);
   return {
     name: feat.name,
     description: feat.description || '',
@@ -970,7 +971,7 @@ export function AdminFeatsTab() {
       description: form.description.trim(),
       req_desc: form.req_desc.trim() || undefined,
       category: form.category.trim() || undefined,
-      ability: form.ability.length > 0 ? (form.ability.length === 1 ? form.ability[0] : form.ability) : undefined,
+      ability: form.ability.length > 0 ? form.ability : undefined,
       ability_req: form.ability_req,
       abil_req_val: form.abil_req_val,
       tags: form.tags,
@@ -1023,7 +1024,7 @@ export function AdminFeatsTab() {
         description: form.description.trim(),
         req_desc: form.req_desc.trim() || undefined,
         category: form.category.trim() || undefined,
-        ability: form.ability.length > 0 ? (form.ability.length === 1 ? form.ability[0] : form.ability) : undefined,
+        ability: form.ability.length > 0 ? form.ability : undefined,
         ability_req: form.ability_req,
         abil_req_val: form.abil_req_val,
         tags: form.tags,

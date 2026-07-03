@@ -203,7 +203,8 @@ function ArchetypePathCard({
     },
   ];
 
-  const progressionLevels = archetype.path_data?.levels ?? [];
+  const pathData = parseArchetypePathData(archetype.path_data);
+  const progressionLevels = pathData?.levels ?? [];
 
   return (
     <GridListRow
@@ -244,7 +245,7 @@ function ArchetypePathCard({
 
           <PathRecommendationsBlock
             heading="Level 1 recommendations"
-            recommendations={archetype.path_data?.level1}
+            recommendations={pathData?.level1}
             lookups={lookups}
           />
 

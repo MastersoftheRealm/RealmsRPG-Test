@@ -12,6 +12,8 @@ import { useMemo } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { User } from 'lucide-react';
+import { DescriptorChip } from '@/components/ui';
+import { ExpandableImage } from '@/components/shared';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useMergedSpecies, useCodexFeats } from '@/hooks';
 import { useGuidedPathData } from './use-guided-path-data';
@@ -100,13 +102,20 @@ export function CharacterPreviewPanel({ className, variant = 'panel' }: Characte
         )}
         aria-label="Character preview"
       >
-        <span className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-alt">
-          {draft.portraitUrl ? (
+        {draft.portraitUrl ? (
+          <ExpandableImage
+            src={draft.portraitUrl}
+            alt={displayName}
+            stopPropagation={false}
+            className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-alt"
+          >
             <Image src={draft.portraitUrl} alt="" fill sizes="40px" className="object-cover" />
-          ) : (
+          </ExpandableImage>
+        ) : (
+          <span className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-alt">
             <User className="h-5 w-5 text-text-muted dark:text-text-secondary" aria-hidden="true" />
-          )}
-        </span>
+          </span>
+        )}
         <div className="min-w-0 flex-1">
           <div className="truncate font-display text-sm font-semibold text-text-primary sm:text-base">
             {displayName}
@@ -116,17 +125,12 @@ export function CharacterPreviewPanel({ className, variant = 'panel' }: Characte
         {(archetype?.name || topAbilities.length > 0) && (
           <div className="hidden shrink-0 items-center gap-2 sm:flex">
             {archetype?.name && (
-              <span className="rounded-pill bg-surface px-2.5 py-1 font-nunito text-xs font-medium text-text-secondary">
-                {archetype.name}
-              </span>
+              <DescriptorChip size="sm">{archetype.name}</DescriptorChip>
             )}
             {topAbilities.slice(0, 2).map(([ability, value]) => (
-              <span
-                key={ability}
-                className="rounded-pill bg-surface px-2 py-1 font-nunito text-xs font-medium text-text-primary"
-              >
+              <DescriptorChip key={ability} variant="primary" size="sm">
                 {ABILITY_ABBR[ability]} {value > 0 ? `+${value}` : value}
-              </span>
+              </DescriptorChip>
             ))}
           </div>
         )}
@@ -143,13 +147,20 @@ export function CharacterPreviewPanel({ className, variant = 'panel' }: Characte
       aria-label="Character preview"
     >
       <div className="flex items-center gap-3">
-        <span className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-card bg-surface-alt shadow-sm">
-          {draft.portraitUrl ? (
+        {draft.portraitUrl ? (
+          <ExpandableImage
+            src={draft.portraitUrl}
+            alt={displayName}
+            stopPropagation={false}
+            className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-card bg-surface-alt shadow-sm"
+          >
             <Image src={draft.portraitUrl} alt="" fill sizes="64px" className="object-cover" />
-          ) : (
+          </ExpandableImage>
+        ) : (
+          <span className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-card bg-surface-alt shadow-sm">
             <User className="h-8 w-8 text-text-muted dark:text-text-secondary" aria-hidden="true" />
-          )}
-        </span>
+          </span>
+        )}
         <div className="min-w-0">
           <div className="truncate font-display text-lg font-semibold text-text-primary">{displayName}</div>
           <div className="truncate font-nunito text-sm text-text-secondary">{subtitle}</div>

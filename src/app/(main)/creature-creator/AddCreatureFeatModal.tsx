@@ -20,7 +20,11 @@ import {
 import {
   checkFeatRequirements,
 } from '@/lib/game/feat-requirements';
-import { buildFeatLevelChips, getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
+import { buildFeatDetailSections } from '@/lib/codex/feat-list';
+import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
+import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
+import { buildUsesRecoveryDetailSections } from '@/lib/chip/list-row-metadata';
+import { getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
 import {
   creatureToFeatRequirementCharacter,
   creaturePointsForPlayerFeat,
@@ -71,38 +75,16 @@ function featToSelectableItem(
   skillIdToName: Map<string, string>,
   featPoints: number
 ): SelectableItem {
-  const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> = [];
-  const typeChips: ChipData[] = [];
-  if (feat.char_feat) typeChips.push({ name: 'Character feat', category: 'skill' });
-  else typeChips.push({ name: 'Archetype feat', category: 'archetype' });
-  if (feat.state_feat) typeChips.push({ name: 'State feat', category: 'archetype' });
-  if (typeChips.length > 0) detailSections.push({ label: 'Type', chips: typeChips, hideLabelIfSingle: true });
-  if (feat.category) {
-    detailSections.push({ label: 'Category', chips: [{ name: feat.category, category: 'default' }], hideLabelIfSingle: true });
-  }
-  const tagChips: ChipData[] = feat.tags?.map((tag) => ({ name: tag, category: 'tag' as const })) || [];
-  if (tagChips.length > 0) detailSections.push({ label: 'Tags', chips: tagChips, hideLabelIfSingle: true });
-  const abilityReqChips: ChipData[] = (feat.ability_req || []).map((a, i) => {
-    const val = feat.abil_req_val?.[i];
-    return { name: `${a}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'default' as const };
+  const detailSections = buildFeatDetailSections(feat, skillIdToName, familyLevels, {
+    isCharacterFeat: feat.char_feat,
   });
-  if (abilityReqChips.length > 0) detailSections.push({ label: 'Ability requirements', chips: abilityReqChips });
-  const skillReqChips: ChipData[] = (feat.skill_req || []).map((id, i) => {
-    const label = skillIdToName.get(String(id)) || String(id);
-    const val = feat.skill_req_val?.[i];
-    return { name: `${label}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'skill' as const };
+
+  const usesSections = buildUsesRecoveryDetailSections({
+    usesPerRec: feat.uses_per_rec,
+    maxUses: feat.max_uses,
+    recPeriod: feat.rec_period,
   });
-  if (skillReqChips.length > 0) detailSections.push({ label: 'Skill requirements', chips: skillReqChips });
-  const levelChips = buildFeatLevelChips(familyLevels, feat.id);
-  if (levelChips.length > 0) detailSections.push({ label: 'Feat levels', chips: levelChips });
-
-  const usesVal = feat.uses_per_rec ?? feat.max_uses;
-  const usesDisplay = usesVal === 0 || usesVal === undefined ? '-' : String(usesVal);
-
-  const usesChips: ChipData[] = [];
-  if (usesDisplay !== '-') usesChips.push({ name: `Uses / recovery: ${usesDisplay}${feat.rec_period ? ` / ${feat.rec_period}` : ''}`, category: 'default' });
-  else if (feat.rec_period) usesChips.push({ name: `Recovery: ${feat.rec_period}`, category: 'default' });
-  if (usesChips.length > 0) detailSections.unshift({ label: 'Uses', chips: usesChips, hideLabelIfSingle: true });
+  if (usesSections.length > 0) detailSections.unshift(...usesSections);
 
   const sourceTypeLabel: string = feat.char_feat ? 'Character' : 'Archetype';
   return {
@@ -196,10 +178,7 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
     feats.forEach((f) => {
       if (f.state_feat) return;
       cats.add(f.category);
-      if (f.ability) {
-        if (Array.isArray(f.ability)) f.ability.forEach((a) => abils.add(a));
-        else abils.add(f.ability);
-      }
+      normalizeFeatAbilities(f.ability).forEach((a) => abils.add(a));
     });
     return { categories: Array.from(cats).filter(Boolean).sort(), abilities: Array.from(abils).sort() };
   }, [feats]);
@@ -242,12 +221,7 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
       const { meets } = checkPlayerFeatRequirements(feat);
       if (!meets && !showBlocked) return false;
       if (selectedCategory && feat.category !== selectedCategory) return false;
-      if (selectedAbility) {
-        const ab = feat.ability;
-        if (Array.isArray(ab)) {
-          if (!ab.includes(selectedAbility)) return false;
-        } else if (ab !== selectedAbility) return false;
-      }
+      if (selectedAbility && !normalizeFeatAbilities(feat.ability).includes(selectedAbility)) return false;
       return true;
     });
 
@@ -296,25 +270,29 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
       const speciesTypeLabel = trait.flaw ? 'Flaw' : trait.characteristic ? 'Characteristic' : 'Trait';
       const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> = [];
       if (trait.flaw) {
-        detailSections.push({ label: 'Type', chips: [{ name: 'Species flaw', category: 'warning' }], hideLabelIfSingle: true });
+        detailSections.push({
+          label: 'Type',
+          chips: [descriptorChipData('Species flaw', 'warning')],
+          hideLabelIfSingle: true,
+        });
       } else if (trait.characteristic) {
         detailSections.push({
           label: 'Type',
-          chips: [{ name: 'Species characteristic', category: 'default' }],
+          chips: [descriptorChipData('Species characteristic', 'default')],
           hideLabelIfSingle: true,
         });
       } else {
-        detailSections.push({ label: 'Type', chips: [{ name: 'Species trait', category: 'skill' }], hideLabelIfSingle: true });
+        detailSections.push({
+          label: 'Type',
+          chips: [descriptorChipData('Species trait', 'skill')],
+          hideLabelIfSingle: true,
+        });
       }
-      const usesVal = trait.uses_per_rec;
-      const usesDisplay = usesVal === 0 || usesVal === undefined ? '-' : String(usesVal);
-      if (usesDisplay !== '-' || trait.rec_period) {
-        const line =
-          usesDisplay !== '-'
-            ? `Uses / recovery: ${usesDisplay}${trait.rec_period ? ` / ${trait.rec_period}` : ''}`
-            : `Recovery: ${trait.rec_period ?? ''}`;
-        detailSections.push({ label: 'Uses', chips: [{ name: line, category: 'default' }], hideLabelIfSingle: true });
-      }
+      const usesSections = buildUsesRecoveryDetailSections({
+        usesPerRec: trait.uses_per_rec,
+        recPeriod: trait.rec_period,
+      });
+      if (usesSections.length > 0) detailSections.push(...usesSections);
 
       items.push({
         id: `trt:${id}`,

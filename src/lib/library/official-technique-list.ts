@@ -6,6 +6,7 @@ import type { ChipData } from '@/components/shared';
 import type { TechniquePart } from '@/hooks/codex-types';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators/technique-calc';
+import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
 
 export const OFFICIAL_TECHNIQUE_GRID = '1.5fr 0.8fr 0.8fr 1fr 1fr 1fr 40px';
 
@@ -59,12 +60,7 @@ export function buildOfficialTechniqueRows(
     const display = deriveTechniqueDisplay(doc, partsDb);
     const totals = empowered ? getEmpoweredTechniqueTotals(t) : {};
     const damageStr = formatTechniqueDamage(doc.damage);
-    const parts: ChipData[] = display.partChips.map((chip) => ({
-      name: chip.text.split(' | TP:')[0].replace(/\s*\(Opt\d+ \d+\)/g, '').trim(),
-      description: chip.description,
-      cost: chip.finalTP,
-      costLabel: 'TP',
-    }));
+    const parts = partChipsFromDisplay(display.partChips, { stripOptionSuffix: true });
     return {
       id: String(t.id ?? t.docId ?? ''),
       raw: t,

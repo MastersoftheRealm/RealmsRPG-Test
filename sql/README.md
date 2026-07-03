@@ -1,82 +1,187 @@
 # SQL — Migrations & One-Off Scripts
 
-**Current schema reference:** [src/docs/SUPABASE_SCHEMA.md](../src/docs/SUPABASE_SCHEMA.md). All app tables live in the `public` schema. Do not duplicate table layout here. **Owner checklist for DB consistency:** [src/docs/DATABASE_CONSISTENCY_CHECKLIST.md](../src/docs/DATABASE_CONSISTENCY_CHECKLIST.md).
+**Schema reference:** [src/docs/SUPABASE_SCHEMA.md](../src/docs/SUPABASE_SCHEMA.md). All app tables live in **`public`**. **Owner checklist:** [src/docs/DATABASE_CONSISTENCY_CHECKLIST.md](../src/docs/DATABASE_CONSISTENCY_CHECKLIST.md).
+
+**Codex / reference data edits:** Audit → draft SQL here → **owner reviews** → then apply. See [.cursor/rules/realms-codex-data.mdc](../.cursor/rules/realms-codex-data.mdc).
+
+**Last parity audit:** 2026-07-03 against **RealmsRPG-Test** (`lbqhiwudvifmkjtkccdg`). Local files updated to match live DB state; no DB writes during audit.
+
+---
+
+## Applied Supabase migrations (schema_migrations)
+
+These are recorded in `supabase_migrations.schema_migrations` on RealmsRPG-Test. Local file = source to re-run on a **new** environment (idempotent where noted).
+
+| Migration (name) | Version | Local file |
+|------------------|---------|------------|
+| `security_hardening_2026_06` | 20260608131526 | [supabase-security-hardening-2026-06.sql](supabase-security-hardening-2026-06.sql) |
+| `prevent_role_self_escalation` | 20260613031807 | [supabase-role-escalation-fix-2026-06.sql](supabase-role-escalation-fix-2026-06.sql) |
+| `campaign_authz_hardening` | 20260613123003 | [supabase-campaign-authz-2026-06.sql](supabase-campaign-authz-2026-06.sql) |
+| `admin_role_audit_log` | 20260613123320 | [supabase-admin-role-audit-2026-06.sql](supabase-admin-role-audit-2026-06.sql) |
+| `storage_select_hardening_2026_06` | 20260613164156 | [supabase-storage-select-hardening-2026-06.sql](supabase-storage-select-hardening-2026-06.sql) |
+| `rls_initplan_fk_indexes_2026_06` | 20260613164211 | [supabase-rls-initplan-fk-indexes-2026-06.sql](supabase-rls-initplan-fk-indexes-2026-06.sql) |
+| `rls_initplan_batch2_2026_06` | 20260613165609 | [supabase-rls-initplan-batch2-2026-06.sql](supabase-rls-initplan-batch2-2026-06.sql) |
+| `campaign_rolls_select_initplan_2026_06` | 20260613165648 | *(no standalone file — SELECT initplan wraps bundled in initplan-fk-indexes campaign_rolls section)* |
+| `usernames_select_restrict_2026_06` | 20260613170126 | [supabase-usernames-select-restrict-2026-06.sql](supabase-usernames-select-restrict-2026-06.sql) |
+| `rls_consolidate_permissive_policies_2026_06` | 20260619002057 | [supabase-rls-consolidate-permissive-2026-06.sql](supabase-rls-consolidate-permissive-2026-06.sql) |
+| `rls_fix_campaign_members_recursion_2026_06` | 20260619030857 | [supabase-rls-fix-campaign-recursion-2026-06.sql](supabase-rls-fix-campaign-recursion-2026-06.sql) |
+| `storage_bucket_limits_2026_06` | 20260626210908 | [supabase-storage-bucket-limits-2026-06.sql](supabase-storage-bucket-limits-2026-06.sql) |
+| `campaign_rpc_revoke_anon_2026_06` | 20260626210951 | [supabase-campaign-rpc-revoke-anon-2026-06.sql](supabase-campaign-rpc-revoke-anon-2026-06.sql) |
+| `be01_unify_user_identity_text_fk` | 20260626215855 | [supabase-be01-unify-user-identity-2026-06.sql](supabase-be01-unify-user-identity-2026-06.sql) |
+| `be02_membership_single_source_part_a` | 20260626220504 | [supabase-be02-membership-single-source-2026-06.sql](supabase-be02-membership-single-source-2026-06.sql) |
+| `be02_membership_single_source_part_b` | 20260626221733 | *(same file — part B)* |
+| `be04_campaign_authz_private_schema` | 20260626222925 | [supabase-be04-campaign-authz-private-schema-2026-06.sql](supabase-be04-campaign-authz-private-schema-2026-06.sql) |
+| `codex_archetypes_creator_layer1_extensions` | 20260629050305 | [codex-archetypes-creator-layer1-extensions.sql](codex-archetypes-creator-layer1-extensions.sql) |
+| `drop_legacy_ui_tooltips` | 20260630184618 | [drop-legacy-ui-tooltips-2026-06.sql](drop-legacy-ui-tooltips-2026-06.sql) |
+| `guided_creator_schema_seed` | 20260630202719 | [guided-creator-schema-seed.sql](guided-creator-schema-seed.sql) |
+| `codex_art_species_image_url` | 20260702031831 | [codex-art-species-image-url.sql](codex-art-species-image-url.sql) |
+| `official_items_image_url` | 20260702143123 | [official-items-image-url.sql](official-items-image-url.sql) |
+| `normalize_codex_feat_ability_delimiters` | 20260703144039 | [normalize-codex-feat-ability-delimiters.sql](normalize-codex-feat-ability-delimiters.sql) |
+
+---
+
+## Applied ad-hoc (live DB, not in schema_migrations)
+
+| What | Local file(s) | Notes |
+|------|---------------|-------|
+| Feat tag unification (functions + `codex_feats.tags` data) | [feat-tags-unification-phase1.sql](feat-tags-unification-phase1.sql) → [phase2.sql](feat-tags-unification-phase2.sql) | Run **phase 1 then phase 2**. `normalize_feat_tags` is defined in phase 2 only. Data UPDATE commented out — owner approval required to re-run. |
+| Leveled feats (`base_feat_id` column + backfill) | [leveled-feats-add-base-feat-id.sql](leveled-feats-add-base-feat-id.sql), [leveled-feats-migrate-roman-to-base-id.sql](leveled-feats-migrate-roman-to-base-id.sql) | 202/203 `feat_lvl >= 2` rows have `base_feat_id` on Test. |
+| Archetype path columnar fields | [codex-archetypes-path-columns.sql](codex-archetypes-path-columns.sql) | `level1_*` columns + `codex_archetype_levels` present on Test. |
+| Unarmed prowess recommendation flag | [codex-archetypes-recommend-unarmed-prowess.sql](codex-archetypes-recommend-unarmed-prowess.sql) | `level1_recommend_unarmed_prowess` column present. |
+| Empowered technique tables | [empowered-techniques-separate-tables.sql](empowered-techniques-separate-tables.sql) | `user_empowered_techniques`, `official_empowered_techniques` exist. |
 
 ---
 
 ## When to use
 
-- **New project / fresh DB:** For one-time Path C consolidation (historical), see [ai/archive/SUPABASE_PATH_C_OPERATOR_GUIDE.md](../src/docs/ai/archive/SUPABASE_PATH_C_OPERATOR_GUIDE.md). Current schema is already in `public`; see [SUPABASE_SCHEMA.md](../src/docs/SUPABASE_SCHEMA.md).
-- **Existing project:** Schema is already in `public`. Run only scripts that match your target (e.g. Storage RLS, optional cleanup like dropping `_prisma_migrations`).
+- **New project / fresh DB:** Historical Path C consolidation: [ai/archive/SUPABASE_PATH_C_OPERATOR_GUIDE.md](../src/docs/ai/archive/SUPABASE_PATH_C_OPERATOR_GUIDE.md). Current schema is already in `public`.
+- **Existing RealmsRPG-Test:** Everything in the migration tables above is already applied. Run only scripts marked **optional** or for **new environments**.
 
 ---
 
-## File overview
+## File overview (by category)
 
-| File | Purpose | Status |
-|------|---------|--------|
-| **path-c-phase0-consolidate-to-public.sql** | Part 1a: Realtime drop, UserRole to public, move `users` schema → public | One-time; only if DB still has `users` schema |
-| **path-c-phase0-consolidate-to-public-part1b.sql** | Part 1b: Move campaigns + encounters → public | One-time |
-| **path-c-phase0-consolidate-to-public-part1c.sql** | Part 1c: Move codex_* tables → public | One-time |
-| **path-c-phase0-consolidate-to-public-part1c2.sql** | Part 1c2a: Move public_powers, public_techniques → public | One-time |
-| **path-c-phase0-consolidate-to-public-part1c2b.sql** | Part 1c2b: Move public_items, public_creatures → public | One-time |
-| **path-c-phase0-consolidate-to-public-part2.sql** | Part 2: RLS, Realtime add, drop empty schemas | One-time |
-| **create-public-core-rules.sql** | Create `public.core_rules` (id, data, updated_at) | Run after Part 2 if core_rules was dropped |
-| **supabase-storage-policies.sql** | RLS for Storage buckets (portraits, profile-pictures) | Run once per project |
-| **supabase-official-library-public-schema.sql** | Official library in **public** (columnar) + backfill from public_* | Run to create official_* in public and backfill from public_* (id+data). GET /api/public prefers official_*. |
-| **supabase-official-library-columnar-expansion.sql** | Official powers: add range_steps, duration_*, area_*, damage columns; backfill from payload | Run after official-library-public-schema; see [SUPABASE_SCHEMA.md](../src/docs/SUPABASE_SCHEMA.md) official_* tables. |
-| **supabase-user-species-columnar.sql** | user_species columnar (codex_species columns + user_id + payload) | Run once; backfill from data, then drop data. |
-| **supabase-user-species-grants-rls.sql** | `GRANT` + RLS on `user_species` for `authenticated` | Run if logs show **permission denied for table user_species** (missing table privileges after manual SQL). |
-| **supabase-campaign-members-grants.sql** | `GRANT` on `public.campaign_members` for `authenticated` (+ service_role) | Run if logs show **permission denied for table campaign_members** (join/upsert/member list fails). |
-| **supabase-characters-rls-cross-read.sql** | RLS SELECT on `public.characters` for **public** + **campaign** visibility (non-owners) | Run if viewers get **Character not found** for another player’s sheet: old RLS only allowed owner SELECT, so the API never received the row. |
-| **supabase-encounters-list-columns.sql** | Encounters: add name, type, status columns; backfill from data | Optional; list/filter by columns. |
-| **supabase-characters-list-columns.sql** | Characters: add name, level, archetype_name, ancestry_name, status, visibility; backfill from data | Hybrid list columns (TASK-282). |
-| **supabase-campaign-rolls-list-columns.sql** | Campaign rolls: add character_id, user_id, type, title; backfill from data | Hybrid list columns (TASK-283). |
-| **supabase-campaign-rolls-id-default.sql** | `campaign_rolls.id`: optional `DEFAULT gen_random_uuid()` (uuid or text column) | Run only if you want DB-side defaults; **app POST now always sets `id`**. Fixes logs: *null value in column "id"* on insert. |
-| **supabase-campaign-rolls-created-at-backfill.sql** | Backfill `created_at` from `data->>'timestamp'`; epoch for orphans | Run once if existing rows have **NULL** `created_at` (broke `ORDER BY created_at DESC` + `LIMIT` so new rolls disappeared from the API). **POST /rolls** now sets `created_at` on every insert. |
-| **supabase-codex-rls-public.sql** | RLS for codex_* (incl. `codex_archetype_levels`) and core_rules in public (SELECT TO public) | Run if GET /api/codex returns 500 (permission denied). |
-| **supabase-security-hardening-2026-06.sql** | Drop `_prisma_migrations`; pin `search_path` on trigger functions; RLS for `codex_archetype_levels` + `official_enhanced_items`; revoke `rls_auto_enable` RPC | Run once per environment after security advisor findings. |
-| **supabase-role-escalation-fix-2026-06.sql** | `BEFORE UPDATE OF role` trigger on `user_profiles` to block self-escalation | Run once; also recorded as migration `prevent_role_self_escalation`. |
-| **supabase-campaign-authz-2026-06.sql** | Harden campaign/roll RLS (no member UPDATE on campaigns; caller-bound roll INSERT) | Run once; also recorded as migration `campaign_authz_hardening`. |
-| **supabase-admin-role-audit-2026-06.sql** | Append-only `admin_role_audit` table + admins-read RLS | Run once; also recorded as migration `admin_role_audit_log`. Required for `/api/admin/users/update-role` audit rows. |
-| **supabase-campaign-members.sql** | campaign_members table | May already exist from consolidation |
-| **supabase-user-profiles-timestamps-default.sql** | user_profiles: set DEFAULT now() on created_at, updated_at | Run if inserts fail with "null value in column updated_at" |
-| **supabase-user-profiles-username-display.sql** | user_profiles: add `username_display` and backfill from canonical `username` | Run once to preserve entered username casing in UI while keeping lowercase canonical uniqueness |
-| **supabase-role-policies.sql** | Create `role_policies` table + seed defaults + RLS for admin-managed role quotas/permissions | Run once before enabling `/admin/roles` and quota enforcement |
-| **supabase-ui-tooltips.sql** | *(Historical)* Created `ui_tooltips` + `show_tooltips` — **superseded** | Do **not** run on new envs; use `drop-legacy-ui-tooltips-2026-06.sql` instead |
-| **drop-legacy-ui-tooltips-2026-06.sql** | DEV-376: drops `ui_tooltips`, `set_ui_tooltips_updated_at()`, `user_profiles.show_tooltips` | Applied 2026-06-30 on RealmsRPG-Test (`drop_legacy_ui_tooltips`) |
-| **codex-archetypes-path-columns.sql** | `codex_archetypes` level1 columnar path fields + `codex_archetype_levels` | Applied on RealmsRPG-Test |
-| **codex-archetypes-recommend-unarmed-prowess.sql** | Adds `level1_recommend_unarmed_prowess` to `codex_archetypes` | Applied on RealmsRPG-Test |
-| **codex-archetypes-creator-layer1-extensions.sql** | Adds `level1_recommended_species`, `level1_guidance_groups`; backfills from `path_data`; seeds Berserker reference groups | Applied 2026-06-29 via Supabase MCP migration `codex_archetypes_creator_layer1_extensions`; backup tables `codex_archetypes_backup_20260629` |
-| **supabase-storage-select-hardening-2026-06.sql** | TASK-326 (SEC-1): drop bucket-wide public Storage SELECT on `portraits` / `profile-pictures`; scope SELECT to own path; initplan wraps on writes | Run once after `supabase-storage-policies.sql`; buckets must stay **Public bucket** for CDN read-by-key |
-| **supabase-rls-initplan-fk-indexes-2026-06.sql** | TASK-327 (PERF-1): wrap `auth.uid()` as `(select auth.uid())` on admin/campaign-roll RLS; add FK indexes on `role_policies.updated_by`, `ui_tooltips.updated_by`, `usernames.user_id` | Run once per environment |
-| **supabase-rls-initplan-batch2-2026-06.sql** | TASK-354: initplan wraps on crafting_sessions, user_enhanced_items, campaigns INSERT, campaign_members self policies | Applied live 2026-06-13 |
-| **supabase-rls-consolidate-permissive-2026-06.sql** | TASK-352: merge duplicate permissive RLS on `campaign_members`, `campaigns`, `characters`, `role_policies` | Applied live 2026-06-18; **must** follow with recursion hotfix below |
-| **supabase-rls-fix-campaign-recursion-2026-06.sql** | Hotfix TASK-352 regression: `auth_is_campaign_owner` / `auth_is_campaign_participant` SECURITY DEFINER helpers; breaks 42P17 RLS cycle; adds `user_profiles.show_tooltips` if missing | Applied live 2026-06-19 as `rls_fix_campaign_members_recursion_2026_06` |
+### Path C consolidation (one-time — only if DB still has `users` / `codex` schemas)
 
-**Legacy scripts (do not run on current public-only DB)** are in [sql/archive/](archive/): codex-schema columnar, official-library in codex, user-library in users, multi-schema RLS, idempotent-full, force-drop-codex scripts.
+| File | Purpose |
+|------|---------|
+| path-c-phase0-consolidate-to-public.sql | Part 1a: Realtime, UserRole, move `users` → public |
+| path-c-phase0-consolidate-to-public-part1b.sql | Part 1b: campaigns + encounters → public |
+| path-c-phase0-consolidate-to-public-part1c.sql | Part 1c: codex_* → public |
+| path-c-phase0-consolidate-to-public-part1c2.sql | Part 1c2a: public_powers, public_techniques → public |
+| path-c-phase0-consolidate-to-public-part1c2b.sql | Part 1c2b: public_items, public_creatures → public |
+| path-c-phase0-consolidate-to-public-part2.sql | Part 2: RLS, Realtime, drop empty schemas |
+| create-public-core-rules.sql | Create `public.core_rules` if missing after Part 2 |
+
+### Codex & guided creator
+
+| File | Status on Test |
+|------|----------------|
+| codex-archetypes-path-columns.sql | Applied ad-hoc |
+| codex-archetypes-recommend-unarmed-prowess.sql | Applied ad-hoc |
+| codex-archetypes-creator-layer1-extensions.sql | Migration `codex_archetypes_creator_layer1_extensions` |
+| guided-creator-schema-seed.sql | Migration `guided_creator_schema_seed` |
+| codex-art-species-image-url.sql | Migration `codex_art_species_image_url` |
+| supabase-codex-rls-public.sql | Run if GET /api/codex returns permission denied |
+| supabase-codex-change-logs.sql | `codex_change_logs` table — present on Test |
+| supabase-codex-species-payload.sql | Species payload column work — verify before re-run |
+| feat-tags-unification-phase1.sql | Applied ad-hoc (functions + data) |
+| feat-tags-unification-phase2.sql | Applied ad-hoc — **canonical** `normalize_feat_tags` |
+| normalize-codex-feat-ability-delimiters.sql | Migration `normalize_codex_feat_ability_delimiters` |
+| leveled-feats-add-base-feat-id.sql | Applied ad-hoc |
+| leveled-feats-migrate-roman-to-base-id.sql | Applied ad-hoc |
+
+### Official / user library
+
+| File | Status on Test |
+|------|----------------|
+| supabase-official-library-public-schema.sql | Baseline `official_*` tables — present |
+| supabase-official-library-columnar-expansion.sql | Optional column promotion for `official_powers` |
+| official-items-image-url.sql | Migration `official_items_image_url` |
+| empowered-techniques-separate-tables.sql | Applied ad-hoc |
+| supabase-library-columnar-parity-expansion.sql | Promoted columns + sync trigger — verify before re-run |
+| supabase-promoted-columns-write-path-2026-06.sql | Write-path trigger — verify before re-run |
+| supabase-user-species-columnar.sql | `user_species` columnar — run on fresh env |
+| supabase-user-species-grants-rls.sql | GRANT + RLS if permission denied on `user_species` |
+
+### Auth, roles, security (2026-06 remediation)
+
+| File | Migration / status |
+|------|-------------------|
+| supabase-security-hardening-2026-06.sql | `security_hardening_2026_06` |
+| supabase-role-escalation-fix-2026-06.sql | `prevent_role_self_escalation` |
+| supabase-role-policies.sql | `role_policies` table — present on Test |
+| supabase-admin-role-audit-2026-06.sql | `admin_role_audit_log` |
+| supabase-be01-unify-user-identity-2026-06.sql | `be01_unify_user_identity_text_fk` |
+| supabase-be02-membership-single-source-2026-06.sql | `be02_*` (parts a+b); `campaigns.memberIds` **dropped** |
+| supabase-be04-campaign-authz-private-schema-2026-06.sql | `be04_campaign_authz_private_schema` |
+| supabase-usernames-select-restrict-2026-06.sql | `usernames_select_restrict_2026_06` |
+
+### Campaigns & characters
+
+| File | Purpose |
+|------|---------|
+| supabase-campaign-members.sql | `campaign_members` table |
+| supabase-campaign-members-grants.sql | GRANT if permission denied on `campaign_members` |
+| supabase-campaign-authz-2026-06.sql | Campaign/roll RLS hardening |
+| supabase-campaign-rpc-revoke-anon-2026-06.sql | Revoke anon on campaign RPCs |
+| supabase-characters-rls-cross-read.sql | Public + campaign visibility SELECT on `characters` |
+| supabase-characters-list-columns.sql | Optional list columns on `characters` |
+| supabase-campaign-rolls-list-columns.sql | Optional list columns on `campaign_rolls` |
+| supabase-campaign-rolls-id-default.sql | Optional DB default for `campaign_rolls.id` |
+| supabase-campaign-rolls-created-at-backfill.sql | Backfill `created_at` from JSON |
+
+### RLS performance & consolidation
+
+| File | Migration / notes |
+|------|-------------------|
+| supabase-rls-initplan-fk-indexes-2026-06.sql | `rls_initplan_fk_indexes_2026_06`; **ui_tooltips index removed** (table dropped DEV-376) |
+| supabase-rls-initplan-batch2-2026-06.sql | `rls_initplan_batch2_2026_06` |
+| supabase-rls-consolidate-permissive-2026-06.sql | `rls_consolidate_permissive_policies_2026_06` |
+| supabase-rls-fix-campaign-recursion-2026-06.sql | `rls_fix_campaign_members_recursion_2026_06` — run after consolidate |
+
+### Storage
+
+| File | Purpose |
+|------|---------|
+| supabase-storage-policies.sql | RLS for `portraits`, `profile-pictures` |
+| supabase-storage-select-hardening-2026-06.sql | Scoped SELECT on portrait buckets |
+| supabase-storage-bucket-limits-2026-06.sql | Bucket size limits |
+
+### Profiles & misc
+
+| File | Purpose |
+|------|---------|
+| supabase-user-profiles-timestamps-default.sql | DEFAULT `now()` on `created_at` / `updated_at` |
+| supabase-user-profiles-username-display.sql | `username_display` column |
+| supabase-encounters-list-columns.sql | Optional list columns on `encounters` |
+| supabase-ui-tooltips.sql | **Deprecated** — do not run; use `drop-legacy-ui-tooltips-2026-06.sql` |
+| drop-legacy-ui-tooltips-2026-06.sql | Migration `drop_legacy_ui_tooltips` |
+
+### Archive — do not run on current public-only DB
+
+[sql/archive/](archive/) — legacy codex-schema, multi-schema RLS, idempotent-full, force-drop-codex scripts.
 
 ---
 
-## Data migration: columnar and hybrid columns
+## Data migration order (fresh environment)
 
-After deploying app code that uses the new columnar or list-column schema, run the corresponding SQL in **Supabase Dashboard → SQL Editor** to create tables/columns and **backfill existing data**. Recommended order:
+1. Path C parts (only if consolidating legacy schemas)
+2. [supabase-official-library-public-schema.sql](supabase-official-library-public-schema.sql)
+3. Optional columnar / list-column scripts (official expansion, user_species, encounters, characters, campaign_rolls)
+4. Security & RLS scripts in migration table order
+5. Codex / guided creator migrations in version order
+6. Ad-hoc scripts as needed (empowered tables, leveled feats, feat tags — **owner approval for codex data**)
 
-1. **supabase-official-library-public-schema.sql** — Creates `official_*` in public and backfills from `public_*`. Run if you want GET /api/public to prefer official_*.
-2. **supabase-official-library-columnar-expansion.sql** — Adds range/duration/area/damage columns to `official_powers`; backfills from payload. Run after (1) for more columnar powers; optional.
-3. **supabase-user-species-columnar.sql** — Adds columnar columns to `user_species`, backfills, drops `data`. Run once per environment.
-4. **supabase-encounters-list-columns.sql** — Adds `name`, `type`, `status` to `encounters`; backfills. Optional.
-5. **supabase-characters-list-columns.sql** — Adds list columns to `characters`; backfills. Optional but recommended for list/filter.
-6. **supabase-campaign-rolls-list-columns.sql** — Adds list columns to `campaign_rolls`; backfills. Optional.
-
-**Back up** before running. Each script is idempotent where possible (ADD COLUMN IF NOT EXISTS, ON CONFLICT, or conditional backfill). See [SUPABASE_SCHEMA.md](../src/docs/SUPABASE_SCHEMA.md) §4 for status and task refs.
+**Back up** before running. See [SUPABASE_SCHEMA.md](../src/docs/SUPABASE_SCHEMA.md) §4.
 
 ---
 
 ## Best practices
 
-1. **Back up** before running any migration. Use Supabase Dashboard → Backups or export critical tables.
-2. **Run in order** when doing full consolidation (1a → 1b → 1c → 1c2a → 1c2b → 2); wait for Success between parts.
-3. **Do not** run path-c-phase0-* again if your DB already has only `public` schema.
-4. **Drop legacy table:** `DROP TABLE IF EXISTS public._prisma_migrations;` — safe if Prisma was removed (see SUPABASE_SCHEMA.md).
-5. **Supabase permissions:** Tables created or moved by raw SQL do **not** get automatic GRANTs. For the app (anon/authenticated) to access a table you need **both** (1) `GRANT SELECT` (or INSERT/UPDATE/DELETE) `ON public.<table> TO anon, authenticated` (as needed) and (2) RLS enabled with policies. See `supabase-codex-rls-public.sql` for the pattern.
+1. **Back up** before any migration.
+2. **Match local files to live DB** after MCP applies — add status header + row in this README.
+3. **Do not** re-run path-c-phase0-* if DB already has only `public`.
+4. **Codex data** (`codex_*` content): draft SQL here; owner reviews before `UPDATE`/`apply_migration` (see `realms-codex-data.mdc`).
+5. **GRANT + RLS:** Tables created via raw SQL need both grants and policies (`supabase-codex-rls-public.sql` pattern).
+6. **Drop legacy:** `DROP TABLE IF EXISTS public._prisma_migrations;` — safe if Prisma removed.

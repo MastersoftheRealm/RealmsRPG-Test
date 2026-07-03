@@ -107,6 +107,7 @@ These were migrated in Phase 1.1–1.2 **before** interactive-state audit. Re-au
 
 | ID | Date | Surface / state | Issue | Scope | Severity | Fix phase | Status |
 |----|------|-----------------|-------|-------|----------|-----------|--------|
+| VSEA-004 | 2026-07-02 | Expandable chips · descriptors · GridListRow metadata | Pill/`rounded-xl` expandable chips clip expanded text; 3–5 parallel descriptor patterns (Chip pill, BADGE_COLORS rect, floating italic, raw requirements div); redundant category/type metadata; missing-field rule not enforced | `duplicate-system` | `consistency` + `ux` | CHIP plan A–E | ✅ fixed (TASK-415, 2026-07-03) — see `CHIP_UNIFICATION_PLAN.md` |
 | VSEA-003 | 2026-06-27 | Chip systems · GridListRow | `CHIP_STYLES` parallel map duplicated `<Chip>` tokens; consolidated to `chipVariants` list-* variants | `duplicate-system` | `consistency` | 2.2 | ✅ fixed (GridListRow) |
 | VSEA-001 | 2026-06-27 | `GridListRow` chip styles · `warning` variant | Chip map key `warning` uses danger bg/border/text — fixed in 1.6, then full map removed in 2.2 | `repeated` | `consistency` | 2 (chip consolidation) | ✅ fixed |
 | VSEA-002 | 2026-06-27 | Styleguide · interactive states | Gallery shows static primitives only; modals/tabs/disabled/loading matrix not yet explorable in one place | `isolated` | `consistency` | VSEA automation | ✅ fixed — Interactive State Matrix section added to `/dev/styleguide`; 6 baselines updated |

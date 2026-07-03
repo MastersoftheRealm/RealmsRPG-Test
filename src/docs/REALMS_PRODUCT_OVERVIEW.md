@@ -264,7 +264,7 @@ Existing `path_data` already supports `guidance_groups`, `recommended_species` (
 - `codex_species.is_starter` (BOOLEAN) — curate the Layer-1 starter set.
 - Archetype **recommended abilities** (e.g. `codex_archetypes.level1_recommended_abilities`) — power the one-click recommended array.
 - Archetype **loadout options** (e.g. `codex_archetypes.level1_loadouts` JSONB: `{ id, title, why, armaments[], armor, equipment[] }`) — coherent weapon/armor kits for the equipment chapter.
-- **Choice-card art URLs** (TASK-405): `codex_species.image_url`; optional `image_url` on powers, techniques, and loadout JSON entries; Supabase Storage + admin upload. UI already supports hero/thumb via `GuidedChoiceCard` + placeholders until populated.
+- **Choice-card art URLs** (TASK-405, TASK-415): `image_url` on codex/official rows (layer 1) and matching `user_*` columns (layer 3 parity); **art bank** presets (layer 2) for all users. See §5.0.3 three-layer model. Optional `image_url` on loadout JSON entries; Supabase Storage + role-gated upload.
 
 Admin tooling (later phase): replace the archetype edit **modal** ([`AdminArchetypesTab.tsx`](<../app/(main)/admin/codex/AdminArchetypesTab.tsx>)) with a robust admin-only **archetype creator**, and improve species editing for trait options + the starter flag.
 
@@ -272,31 +272,58 @@ Admin tooling (later phase): replace the archetype edit **modal** ([`AdminArchet
 
 **Species art is a primary selling point**, not decoration. The guided creator's [`GuidedChoiceCard`](../components/guided-creator/guided-choice-card.tsx) must treat illustration as the hero of the card wherever it helps users imagine their character or gear.
 
+**Three-layer image model (long-term vision)**
+
+Card art is not one pipeline — it is three cooperating layers. All layers resolve to the same client field (`image_url` on the row) and the same UI primitives ([`guided-choice-image.ts`](../components/guided-creator/guided-choice-image.ts), [`GuidedChoiceCard`](../components/guided-creator/guided-choice-card.tsx), future bank picker). **Official and user library rows use the same column shape** so copying official → personal library preserves art and editors behave the same.
+
+| Layer | Who | What | Storage / DB | Shipped |
+|-------|-----|------|--------------|---------|
+| **1 — Official / codex art** | Admin (codex + official library authoring) | Entity-specific art tied to a codex or official row (species, armament, power, etc.) | `codex-art/{entityType}/{entityId}.jpg` → `image_url` on `codex_*` / `official_*` | **Partial** — species + official armaments (TASK-405); powers/techniques/creatures phase 2 |
+| **2 — Art bank** | **All users** | Curated preset images per category (species silhouettes, weapon motifs, spell icons, gear glyphs, etc.) — pick one when creating custom content | Bank catalog (e.g. `art_bank` table or manifest) + `codex-art/bank/{category}/{slug}.jpg` (or dedicated bucket) | **Not started** (TASK-415) |
+| **3 — User-creation upload** | **Privileged roles** (`developer`, `admin`) | Custom upload cropped to a **user-owned** row (armament, power, technique, species in personal library) | `user-creations/{userId}/{type}/{itemId}.jpg` (or equivalent) → `image_url` on `user_*` | **Not started** (TASK-415) |
+
+**Role policy (target):**
+
+- **Every signed-in user:** choose art from the **bank** when building custom species / armaments / powers / techniques (and equipment where applicable). No arbitrary file upload for creation art.
+- **`developer` + `admin`:** everything above, plus **custom upload** on their own user-library rows and full official/codex authoring uploads (layer 1).
+- **Portraits / profile pictures:** unchanged — any user, separate buckets (`portraits`, `profile-pictures`).
+
+**Library copy parity:** When a user adds an official item (or species template) that has `image_url`, the personal-library copy **must retain that URL** on create. On edit, the same image picker applies: bank (all users) or custom upload (privileged). Implement via matching `image_url` columns on `user_items`, `user_powers`, `user_techniques`, `user_species`, etc. — same name and semantics as `official_*` / `codex_species`, not a separate JSON shape.
+
 **What gets paired art (and what does not)**
 
-| Entity | Paired art? | Expected coverage | Storage path | DB field (phase) |
-|--------|-------------|-------------------|--------------|------------------|
-| **Species** | Yes | **High** — most species should have art | `codex-art/species/{id}.jpg` | `codex_species.image_url` |
-| **Creatures** | Yes | **High** — most creatures should have art | `codex-art/creature/{id}.jpg` | `official_creatures.image_url` (phase 2) |
-| **Weapons** | Yes | **Some** — iconic weapons only | `codex-art/weapon/{id}.jpg` | `codex_equipment.image_url` or payload (phase 2) |
-| **Armor** | Yes | **Low** — select pieces | `codex-art/armor/{id}.jpg` | `codex_equipment.image_url` (phase 2) |
-| **Shields** | Yes | **Low** — select pieces | `codex-art/shield/{id}.jpg` | `codex_equipment.image_url` (phase 2) |
-| **Powers** | Yes | **Low** — standout abilities only | `codex-art/power/{id}.jpg` | `official_powers.image_url` or payload (phase 2) |
-| **Techniques** | Yes | **Low** — standout abilities only | `codex-art/technique/{id}.jpg` | `official_techniques.image_url` (phase 2) |
+| Entity | Paired art? | Expected coverage | Storage path (layer 1) | DB field |
+|--------|-------------|-------------------|------------------------|----------|
+| **Species** | Yes | **High** — most species should have art | `codex-art/species/{id}.jpg` | `codex_species.image_url` / `user_species.image_url` |
+| **Creatures** | Yes | **High** — most creatures should have art | `codex-art/creature/{id}.jpg` | `official_creatures.image_url` / `user_creatures.image_url` |
+| **Weapons** | Yes | **Some** — iconic weapons only | `codex-art/weapon/{id}.jpg` | `official_items.image_url` / `user_items.image_url` |
+| **Armor** | Yes | **Low** — select pieces | `codex-art/armor/{id}.jpg` | `official_items.image_url` / `user_items.image_url` |
+| **Shields** | Yes | **Low** — select pieces | `codex-art/shield/{id}.jpg` | `official_items.image_url` / `user_items.image_url` |
+| **Equipment** (simple gear) | Bank only | **Bank** — generic gear glyphs, not per-codex-row art | `codex-art/bank/equipment/{slug}.jpg` | `user_items.image_url` or loadout JSON ref (no `codex_equipment.image_url`) |
+| **Powers** | Yes | **Low** — standout abilities only | `codex-art/power/{id}.jpg` | `official_powers.image_url` / `user_powers.image_url` |
+| **Techniques** | Yes | **Low** — standout abilities only | `codex-art/technique/{id}.jpg` | `official_techniques.image_url` / `user_techniques.image_url` |
 | Skills, feats, traits | **No** | — | — | — |
 
-**Upload policy:** Card art is **admin/developer only** (same as codex authoring). End users upload **portraits/profile pictures** only — not species or item art. Upload flow reuses [`ImageUploadModal`](../components/shared/image-upload-modal.tsx) (crop + compress) via [`CodexArtUploadField`](../components/shared/codex-art-upload-field.tsx); server route [`/api/upload/codex-art`](../app/api/upload/codex-art/route.ts) gates on `isAdmin()` and writes with service role to the **`codex-art`** bucket. The public URL is stored on the codex/official row (`image_url`).
+**Upload policy (layer 1 — shipped pattern):** Official/codex card art is **admin-only** today ([`/api/upload/codex-art`](../app/api/upload/codex-art/route.ts) gates on `isAdmin()`). Reuses [`ImageUploadModal`](../components/shared/image-upload-modal.tsx) via [`CodexArtUploadField`](../components/shared/codex-art-upload-field.tsx); service role writes to **`codex-art`**; public URL stored on the row. **Future:** extend privileged upload (layer 3) to `developer` role and user-owned paths; bank picker (layer 2) needs no upload route.
 
 | Surface | Layout | Art role | Backend |
 |---------|--------|----------|---------|
-| **Species** | Featured inline art (~80px) beside title + copy | Primary selling point without dominating the card | `codex_species.image_url` (+ admin upload) |
-| **Equipment / loadouts** | Featured inline art | Visual kit cue, same scale as species | `level1_loadouts[].image_url` or armament art refs |
-| **Powers / techniques** | Featured inline art (when guided step adds pickers) | Ability identity at a glance | `official_powers.image_url`, `official_techniques.image_url` (or library payload) |
+| **Species** | Featured inline art (~80px) beside title + copy | Primary selling point without dominating the card | `image_url` on codex or user species |
+| **Equipment / loadouts** | Featured inline art | Visual kit cue, same scale as species | Armament `image_url`; equipment via bank or loadout ref |
+| **Powers / techniques** | Featured inline art (when guided step adds pickers) | Ability identity at a glance | `image_url` on official or user row |
 | **Paths / feats / ancestry** | Thumb or optional hero | Icon/thumb until path art pipeline exists | Optional later |
 
-**Shipped now:** UI reads `image_url` when present; otherwise typed SVG placeholders under `public/images/placeholder-*-card.svg` via [`guided-choice-image.ts`](../components/guided-creator/guided-choice-image.ts). **Species:** `image_url` column + `codex-art` bucket + admin species editor upload (TASK-405 phase 1).
+**Shipped now:** UI reads `image_url` when present; otherwise typed SVG placeholders under `public/images/placeholder-*-card.svg`. **Layer 1 partial:** `codex_species.image_url` + admin species upload; `official_items.image_url` + admin armament upload in Item Creator (`?edit=`). User-library `image_url` columns and bank picker not yet built.
 
-**Implementation track:** TASK-405 phase 2 — `image_url` on creatures, equipment subtypes, powers/techniques; admin pickers on remaining codex tabs. Same card component and layout tokens across creators and library/codex pickers.
+**List rows (species pilot):** Codex and admin species lists use [`ListRowThumbnail`](../components/shared/list-row-thumbnail.tsx) on [`GridListRow`](../components/shared/grid-list-row.tsx) — 44×44px thumb, blank `ListHeader` column, NAME left-aligned. **Click-to-enlarge:** all meaningful images use [`ExpandableImage`](../components/shared/expandable-image.tsx) (choice cards, species reveal, portraits, list thumbs) — one preview modal site-wide.
+
+**Implementation track:**
+
+| Phase | Task | Scope |
+|-------|------|--------|
+| **405 phase 1** | TASK-405 | Species + official armaments — **done / partial** |
+| **405 phase 2** | TASK-405 | `image_url` on creatures, powers, techniques; admin upload on remaining official editors |
+| **415** | TASK-415 | Art bank + user `image_url` parity + copy-on-add + privileged user upload |
 
 > The subsections below (5.1–5.10) describe the **per-step UX vision** shared by both creators. The guided creator realizes them chapter-by-chapter per 5.0.1.
 

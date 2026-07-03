@@ -9,6 +9,7 @@
 import Link from 'next/link';
 import { Sparkles, SlidersHorizontal, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { DescriptorChip } from '@/components/ui';
 import { CreatorFunnelHero, MarketingLinkButton } from '@/components/landing';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 
@@ -60,9 +61,9 @@ export default function NewCharacterChooserPage() {
                     {mode.label}
                   </span>
                   {mode.showFirstTimerBadge && (
-                    <span className="ml-auto shrink-0 whitespace-nowrap rounded-pill bg-primary-subtle-bg px-2.5 py-1 text-xs font-semibold text-primary-fg">
+                    <DescriptorChip variant="primary" size="sm" className="ml-auto shrink-0 whitespace-nowrap font-semibold">
                       {copy.firstTimerBadge}
-                    </span>
+                    </DescriptorChip>
                   )}
                 </div>
                 <p className="font-nunito text-sm text-text-secondary">{mode.tagline}</p>

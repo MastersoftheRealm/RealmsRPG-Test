@@ -10,7 +10,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { Modal, Button, Chip, Spinner, SelectionCard } from '@/components/ui';
+import { Modal, Button, Spinner, SelectionCard, DescriptorChip } from '@/components/ui';
 import { ConfirmActionModal } from '@/components/shared';
 import { useCodexArchetypes } from '@/hooks';
 import { calculateProficiency } from '@/lib/game/formulas';
@@ -313,14 +313,14 @@ export function EditArchetypeModal({
               ) : null}
               <div className="flex flex-wrap gap-2">
                 {display.pow_abil ? (
-                  <Chip variant="power">
+                  <DescriptorChip variant="power">
                     Power: {capitalizeAbility(display.pow_abil)}
-                  </Chip>
+                  </DescriptorChip>
                 ) : null}
                 {display.mart_abil ? (
-                  <Chip variant="technique">
+                  <DescriptorChip variant="technique">
                     Martial: {capitalizeAbility(display.mart_abil)}
-                  </Chip>
+                  </DescriptorChip>
                 ) : null}
               </div>
               <p className="text-sm text-text-secondary">
@@ -527,14 +527,14 @@ export function EditArchetypeModal({
             {(selectedPowerAbility || selectedMartialAbility) && (
               <div className="flex flex-wrap gap-2">
                 {selectedPowerAbility && (
-                  <Chip variant="power">
+                  <DescriptorChip variant="power">
                     Power: {capitalizeAbility(selectedPowerAbility)}
-                  </Chip>
+                  </DescriptorChip>
                 )}
                 {selectedMartialAbility && (
-                  <Chip variant="technique">
+                  <DescriptorChip variant="technique">
                     Martial: {capitalizeAbility(selectedMartialAbility)}
-                  </Chip>
+                  </DescriptorChip>
                 )}
               </div>
             )}

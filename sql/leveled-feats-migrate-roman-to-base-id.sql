@@ -1,6 +1,6 @@
 -- Leveled Feats: strip roman numerals from names and set base_feat_id
--- Run AFTER leveled-feats-add-base-feat-id.sql. Run in Supabase SQL Editor.
--- See src/docs/LEVELED_FEATS_DESIGN.md.
+-- Status: Applied on RealmsRPG-Test (see leveled-feats-add-base-feat-id.sql).
+-- Run AFTER leveled-feats-add-base-feat-id.sql. See src/docs/LEVELED_FEATS_DESIGN.md.
 
 -- 1) Strip roman numeral suffix (II, III, IV, V, VI, VII, VIII, IX, X, XI) from name
 UPDATE public.codex_feats

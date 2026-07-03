@@ -51,7 +51,8 @@ function isTaskFilled(task: PickTask, draft: GuidedDraft): boolean {
     case 'characteristic':
       return Boolean(draft.selectedCharacteristicId);
     case 'flaw':
-      return Boolean(draft.selectedFlawId);
+      // null = not decided yet; '' = explicitly skipped; id = chosen
+      return draft.selectedFlawId !== null;
     case 'ancestry-trait-2':
       return draft.selectedAncestryTraitIds.length >= 2;
     default:
@@ -229,12 +230,23 @@ export function AncestryStep() {
     [currentTask, draft, updateDraft]
   );
 
-  const handleSkipFlaw = () => {
+  const advanceAfterPick = useCallback(() => {
+    const isLastTask = pickIndex >= totalPicks - 1;
+    if (isLastTask) {
+      nextSubStep();
+    } else {
+      setPhaseIndex((i) => i + 1);
+    }
+  }, [pickIndex, totalPicks, nextSubStep]);
+
+  const handleSkipFlaw = useCallback(() => {
     updateDraft({
-      selectedFlawId: null,
+      selectedFlawId: '',
       selectedAncestryTraitIds: draft.selectedAncestryTraitIds.slice(0, 1),
     });
-  };
+    // Skipping the optional flaw always completes ancestry (no bonus trait pick).
+    nextSubStep();
+  }, [draft.selectedAncestryTraitIds, updateDraft, nextSubStep]);
 
   const ancestryComplete = useMemo(() => {
     if (!species || !allTraits.length) return false;
@@ -285,18 +297,15 @@ export function AncestryStep() {
     }
 
     if (currentTask.optional && !hasCurrentPick) {
-      handleSkipFlaw();
+      updateDraft({
+        selectedFlawId: '',
+        selectedAncestryTraitIds: draft.selectedAncestryTraitIds.slice(0, 1),
+      });
       nextSubStep();
       return;
     }
 
-    const isLastTask = pickIndex >= totalPicks - 1;
-    if (isLastTask) {
-      nextSubStep();
-      return;
-    }
-
-    setPhaseIndex((i) => i + 1);
+    advanceAfterPick();
   };
 
   const footerCanContinue = isOverview
@@ -360,7 +369,7 @@ export function AncestryStep() {
           </div>
           {currentTask.optional && (
             <div className="mt-4">
-              <Button variant="secondary" onClick={handleSkipFlaw} className="min-h-11">
+              <Button type="button" variant="secondary" onClick={handleSkipFlaw} className="min-h-11">
                 {stepCopy.skipFlaw}
               </Button>
             </div>

@@ -12,8 +12,8 @@
 --   3) characters campaign visibility uses auth_is_campaign_participant()
 --   4) campaign_members owner checks use auth_is_campaign_owner()
 --
--- Also adds user_profiles.show_tooltips if missing (fixes /api/tooltips 500).
 -- Applied live 2026-06-19 as migration rls_fix_campaign_members_recursion_2026_06.
+-- Note: show_tooltips column was later dropped (DEV-376); ALTER omitted for current parity.
 -- =============================================================================
 
 CREATE OR REPLACE FUNCTION public.auth_is_campaign_owner(p_campaign_id text)
@@ -125,5 +125,6 @@ CREATE POLICY characters_select_authenticated ON public.characters
     )
   );
 
-ALTER TABLE public.user_profiles
-  ADD COLUMN IF NOT EXISTS show_tooltips BOOLEAN NOT NULL DEFAULT true;
+-- SUPERSEDED (DEV-376): show_tooltips dropped by drop-legacy-ui-tooltips-2026-06.sql
+-- ALTER TABLE public.user_profiles
+--   ADD COLUMN IF NOT EXISTS show_tooltips BOOLEAN NOT NULL DEFAULT true;

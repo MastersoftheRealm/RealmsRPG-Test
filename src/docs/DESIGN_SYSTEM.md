@@ -256,31 +256,62 @@ CSS classes available:
 
 ### Chips/Badges
 
-```tsx
-import { Chip } from '@/components/ui';
+Two chip **roles** (see `src/docs/ai/CHIP_UNIFICATION_PLAN.md`):
 
-// RECOMMENDED Variants
+| Role | Component | Shape | Use |
+|------|-----------|-------|-----|
+| **Descriptor** | `<DescriptorChip>` | `rounded-md`, opaque fill | Metadata only — feat type, tags, trait kind, requirements |
+| **Expandable** | `<ExpandableChip>` | `rounded-lg` | Parts/properties with descriptions (expand in place) |
+| **Filter / legacy** | `<Chip shape="pill">` | `rounded-full` | Removable tags, filter chips |
+
+**Size by role** (use consistently — do not mix expandable `sm` into summary/list contexts):
+
+| Context | Component | Size | Notes |
+|---------|-----------|------|-------|
+| GridListRow expanded sections, summary panels, creator part lists | `ExpandableChip` | **`md`** (default) | `text-sm` header; expanded body scales with size |
+| Inline metadata (tags, feat type, row badges, choice-card tags) | `DescriptorChip` | **`sm`** (default) | Compact opaque labels |
+| Summary counters, TP totals, step progress (e.g. "2 / 5 feats") | `DescriptorChip` | **`md`** | **Prominent descriptor** — not entity chips |
+| Hero emphasis (creator rarity badge) | `DescriptorChip` | **`lg`** | **Prominent descriptor** — single focal badge |
+| Filter / removable pills | `<Chip shape="pill">` | context-dependent | Often `sm` in dense toolbars |
+
+Use **`SummaryChipList`** (`@/components/shared`) for read-only entity lists (skills, traits, feats) in creators and modals.
+
+**Variant = meaning** — prefer semantic `variant` / `category` tokens (`list`, `listWarning`, `listCost`, `power`, `technique`, part categories) over ad-hoc `className` color overrides.
+
+```tsx
+import { Chip, DescriptorChip, ExpandableChip } from '@/components/ui';
+
+// Descriptor metadata (opaque, non-expandable)
+<DescriptorChip>Archetype Feat</DescriptorChip>
+<DescriptorChip variant="rarityRare">Rare</DescriptorChip>
+
+// Expandable part/property chip (single implementation — GridListRow, sheet, creators)
+// Default size is md — do not pass size="sm" for entity chips with descriptions
+<ExpandableChip
+  label="Elemental Damage"
+  category="action"
+  tpCost={2}
+  description="Adds 1d6 fire damage."
+  expanded={isOpen}
+  onToggle={handleToggle}
+/>
+
+// GridListRow: use expandableChipPropsFromChipData(chip, costLabel)
+
+// RECOMMENDED legacy Chip variants
 <Chip variant="default">Default</Chip>
 <Chip variant="primary">Primary (selected state)</Chip>
 
-// Category variants (domain-specific, keep using)
-<Chip variant="action">Action</Chip>
-<Chip variant="activation">Activation</Chip>
-<Chip variant="area">Area</Chip>
-<Chip variant="duration">Duration</Chip>
+// Category variants (domain-specific, keep using — often on ExpandableChip)
+<Chip variant="action" shape="expandable">Action</Chip>
+<Chip variant="activation" shape="expandable">Activation</Chip>
 
 // Status variants (for feedback only)
 <Chip variant="success">Success</Chip>
 <Chip variant="danger">Error</Chip>
 <Chip variant="warning">Warning</Chip>
 
-// DEPRECATED (avoid - will be removed)
-// <Chip variant="accent"> // Use 'default' instead
-// <Chip variant="info"> // Use 'default' instead
-// <Chip variant="secondary"> // Use 'default' instead
-// <Chip variant="outline"> // Use 'default' instead
-
-// Removable
+// Removable (pill shape default)
 <Chip onRemove={() => {}}>Removable</Chip>
 
 // Sizes
@@ -289,7 +320,7 @@ import { Chip } from '@/components/ui';
 <Chip size="lg">Large</Chip>
 ```
 
-**Chips are component-only.** The raw `.chip` / `.chip-*` utility classes were removed in Phase 0.4 — use the `<Chip>` component (with its `variant` prop) for all chips and badges.
+**Chips are component-only.** The raw `.chip` / `.chip-*` utility classes were removed in Phase 0.4 — use the `<Chip>` component (with its `variant` and `shape` props) for all chips and badges.
 
 ### Creator Summary Panel
 

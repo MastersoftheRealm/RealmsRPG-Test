@@ -53,6 +53,10 @@ export { ConfirmActionModal } from './confirm-action-modal';
 // - Creator pages (part selection)
 export { GridListRow } from './grid-list-row';
 export type { ColumnValue, ChipData, ChipOptionData, GridListRowProps } from './grid-list-row';
+export { ListRowThumbnail } from './list-row-thumbnail';
+export type { ListRowThumbnailProps } from './list-row-thumbnail';
+export { ExpandableImage, ExpandableImageModal } from './expandable-image';
+export type { ExpandableImageProps, ExpandableImageModalProps } from './expandable-image';
 
 export { ChoiceTraitOptionListPicker } from './choice-trait-option-select';
 
@@ -78,6 +82,12 @@ export type { TabSummarySectionProps, SummaryItemProps, SummaryRowProps } from '
 // Use for ALL list headers matching Codex/Library patterns
 export { ListHeader } from './list-header';
 export type { ListHeaderProps, ListColumn, ListHeaderRowChrome } from './list-header';
+export {
+  gridTemplateColumnsWithThumbnail,
+  prependThumbnailHeaderColumn,
+  GRID_LIST_ROW_THUMBNAIL_COLUMN_WIDTH,
+  THUMBNAIL_HEADER_COLUMN_KEY,
+} from './grid-list-row-chrome';
 
 // OfficialPowerList - shared Realms Library powers grid (Library browse + Admin)
 export { OfficialPowerList } from './official-power-list';
@@ -95,9 +105,23 @@ export type { OfficialItemListProps, OfficialItemRow } from './official-item-lis
 export { OfficialCreatureList } from './official-creature-list';
 export type { OfficialCreatureListProps, OfficialCreatureRow } from './official-creature-list';
 
-// Part/Property chip components (reusable across Library, Character Sheet, Codex)
-export { PartChip as PartChipComponent, PartChipDetails, PartChipList, PropertyChipList } from './part-chip';
-export type { PartData } from './part-chip';
+// Part/Property chip components (wrappers over unified ExpandableChip)
+export {
+  PartChip as PartChipComponent,
+  PartChipList,
+  PropertyChipList,
+} from './part-chip';
+export type { PartData } from '@/lib/chip/part-data';
+
+// GridListRow chip adapter
+export { GridListChip } from './grid-list-chip';
+export type { GridListChipProps } from './grid-list-chip';
+
+// Unified expandable chip (re-export from ui for convenience)
+export { ExpandableChip, ChipGroup } from '@/components/ui';
+export type { ExpandableChipProps, ExpandableChipOption } from '@/components/ui';
+export { SummaryChipList } from './summary-chip-list';
+export type { SummaryChipItem } from './summary-chip-list';
 
 // SkillRow - UNIFIED skill display component
 // Use for ALL skill rows across: character sheet, character creator, creature creator

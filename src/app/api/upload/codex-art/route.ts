@@ -25,12 +25,14 @@ const MAX_SIZE = 5 * 1024 * 1024;
 const ENTITY_TABLE: Record<CodexArtEntityType, string> = {
   species: 'codex_species',
   creature: 'official_creatures',
-  weapon: 'codex_equipment',
-  armor: 'codex_equipment',
-  shield: 'codex_equipment',
+  weapon: 'official_items',
+  armor: 'official_items',
+  shield: 'official_items',
   power: 'official_powers',
   technique: 'official_techniques',
 };
+
+const ARMAMENT_ART_ENTITY_TYPES = new Set<CodexArtEntityType>(['weapon', 'armor', 'shield']);
 
 async function entityExists(
   supabase: ReturnType<typeof createServiceRoleClient>,
@@ -38,12 +40,46 @@ async function entityExists(
   entityId: string
 ): Promise<boolean> {
   const table = ENTITY_TABLE[entityType];
+  if (ARMAMENT_ART_ENTITY_TYPES.has(entityType)) {
+    const { data, error } = await supabase
+      .from(table)
+      .select('id, type')
+      .eq('id', entityId)
+      .maybeSingle();
+    if (error) {
+      console.error(`[codex-art] armament lookup failed (${entityType}/${entityId}):`, error);
+      return false;
+    }
+    return Boolean(data && String(data.type).toLowerCase() === entityType);
+  }
   const { data, error } = await supabase.from(table).select('id').eq('id', entityId).maybeSingle();
   if (error) {
     console.error(`[codex-art] entity lookup failed (${entityType}/${entityId}):`, error);
     return false;
   }
   return Boolean(data);
+}
+
+async function persistImageUrl(
+  supabase: ReturnType<typeof createServiceRoleClient>,
+  entityType: CodexArtEntityType,
+  entityId: string,
+  publicUrl: string
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const table = ENTITY_TABLE[entityType];
+  let query = supabase
+    .from(table)
+    .update({ image_url: publicUrl, updated_at: new Date().toISOString() })
+    .eq('id', entityId);
+  if (ARMAMENT_ART_ENTITY_TYPES.has(entityType)) {
+    query = query.eq('type', entityType);
+  }
+  const { error } = await query;
+  if (error) {
+    console.error(`[codex-art] image_url persist failed (${entityType}/${entityId}):`, error);
+    return { ok: false, message: error.message };
+  }
+  return { ok: true };
 }
 
 export async function POST(request: NextRequest) {
@@ -119,6 +155,11 @@ export async function POST(request: NextRequest) {
     const {
       data: { publicUrl },
     } = supabase.storage.from(CODEX_ART_BUCKET).getPublicUrl(path);
+
+    const persisted = await persistImageUrl(supabase, entityType, entityId, publicUrl);
+    if (!persisted.ok) {
+      return NextResponse.json({ error: 'Upload succeeded but failed to save image URL' }, { status: 500 });
+    }
 
     return NextResponse.json({ url: publicUrl });
   } catch (err) {

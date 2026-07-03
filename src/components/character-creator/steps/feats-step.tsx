@@ -14,7 +14,8 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
-import { Spinner, Button, EmptyState } from '@/components/ui';
+import { Spinner, Button, EmptyState, DescriptorChip, ExpandableChip } from '@/components/ui';
+import { statusBadgeDescriptorVariant } from '@/lib/chip/descriptor-chip-variants';
 import { 
   GridListRow, 
   SearchInput, 
@@ -38,6 +39,7 @@ import type { CodexSkillForFeat } from '@/lib/game/formulas';
 import { formatAbilityList, formatListCellLabel } from '@/lib/utils';
 import { getFeatFamilyId, getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
 import { buildFeatDetailSections } from '@/lib/codex/feat-list';
+import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 import type { ArchetypeCategory } from '@/types';
 import { featSelectionHelp } from '../../../../public/tooltip-text';
 
@@ -68,6 +70,51 @@ interface FeatFilters {
   hideUnqualified: boolean;
   sortCol: string;
   sortDir: 1 | -1;
+}
+
+function SelectedFeatChipRow({
+  displayName,
+  description,
+  variant,
+  isExpanded,
+  onToggleExpand,
+  onRemove,
+}: {
+  displayName: string;
+  description?: string;
+  variant: 'listWarning' | 'list';
+  isExpanded: boolean;
+  onToggleExpand: () => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="inline-flex max-w-full items-start gap-1">
+      <ExpandableChip
+        label={displayName}
+        description={description}
+        variant={variant}
+        expanded={isExpanded}
+        onToggle={(e) => {
+          e.stopPropagation();
+          onToggleExpand();
+        }}
+        fullWidthWhenExpanded
+        interactiveHover
+        className="min-w-0 flex-1"
+      />
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove();
+        }}
+        aria-label={`Remove ${displayName}`}
+        className="min-h-[var(--touch-target-min,44px)] min-w-[var(--touch-target-min,44px)] shrink-0 font-bold text-danger-fg hover:opacity-80"
+      >
+        ×
+      </button>
+    </div>
+  );
 }
 
 export function FeatsStep() {
@@ -169,9 +216,7 @@ export function FeatsStep() {
     if (!feats) return [];
     const abils = new Set<string>();
     feats.forEach((f: Feat) => {
-      if (!f.ability) return;
-      if (Array.isArray(f.ability)) f.ability.forEach(a => abils.add(a));
-      else abils.add(f.ability);
+      normalizeFeatAbilities(f.ability).forEach((a) => abils.add(a));
     });
     return Array.from(abils).sort();
   }, [feats]);
@@ -235,9 +280,8 @@ export function FeatsStep() {
       
       // Ability filter (multi-select)
       if (filters.abilityFilter.length > 0) {
-        if (!feat.ability) return false;
-        const featAbilities = Array.isArray(feat.ability) ? feat.ability : [feat.ability];
-        if (!featAbilities.some(a => filters.abilityFilter.includes(a))) return false;
+        const featAbilities = normalizeFeatAbilities(feat.ability);
+        if (!featAbilities.some((a) => filters.abilityFilter.includes(a))) return false;
       }
       
       // Hide unqualified filter (auto-filter based on character stats)
@@ -501,7 +545,10 @@ export function FeatsStep() {
     const canSelect = (nextWeight <= maxForType || isSelected) && requirements.met;
     
     // Build detail sections (Type, Category, Tags, Requirements) — shared builder. (DUP-10)
-    const detailSections = buildFeatDetailSections(feat, skillIdToName, familyLevels, { isCharacterFeat });
+    const detailSections = buildFeatDetailSections(feat, skillIdToName, familyLevels, {
+      isCharacterFeat,
+      hideTypeSection: true,
+    });
 
     return (
       <GridListRow
@@ -747,14 +794,17 @@ export function FeatsStep() {
         )}>
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-bold text-text-primary">Archetype Feats</h3>
-            <span className={cn(
-              'px-3 py-1 rounded-full text-sm font-bold',
-              selectedArchetypeFeats.reduce((sum, f) => sum + getFeatLevel(featById.get(String(f.id))), 0) === maxArchetypeFeats
-                ? statusPanel.completeBadge
-                : statusPanel.warningBadge
-            )}>
+            <DescriptorChip
+              size="md"
+              variant={statusBadgeDescriptorVariant(
+                selectedArchetypeFeats.reduce((sum, f) => sum + getFeatLevel(featById.get(String(f.id))), 0) === maxArchetypeFeats
+                  ? 'complete'
+                  : 'warning'
+              )}
+              className="font-bold"
+            >
               {selectedArchetypeFeats.reduce((sum, f) => sum + getFeatLevel(featById.get(String(f.id))), 0)} / {maxArchetypeFeats}
-            </span>
+            </DescriptorChip>
           </div>
           <div className="flex flex-wrap gap-2">
             {selectedArchetypeFeats.length === 0 ? (
@@ -766,30 +816,15 @@ export function FeatsStep() {
                 const fullFeat = feats?.find(f => String(f.id) === String(feat.id));
                 const displayName = fullFeat ? formatFeatName(fullFeat) : feat.name;
                 return (
-                  <div key={feat.id} className="rounded-lg border border-warning-300 bg-surface overflow-hidden max-w-md">
-                    <div className="px-3 py-1.5 flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setExpandedSelectedId(isExpanded ? null : key)}
-                        className="text-warning-fg font-medium text-sm text-left flex-1 truncate"
-                      >
-                        {displayName}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); updateDraft({ feats: draft.feats?.filter(f => f.id !== feat.id) }); }}
-                        aria-label={`Remove ${displayName}`}
-                        className="text-danger-fg hover:opacity-80 font-bold flex-shrink-0 min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)]"
-                      >
-                        ×
-                      </button>
-                    </div>
-                    {isExpanded && feat.description && (
-                      <div className="px-3 pb-2 pt-0 text-xs text-text-secondary border-t border-warning-300">
-                        {feat.description}
-                      </div>
-                    )}
-                  </div>
+                  <SelectedFeatChipRow
+                    key={feat.id}
+                    displayName={displayName}
+                    description={fullFeat?.description ?? feat.description}
+                    variant="listWarning"
+                    isExpanded={isExpanded}
+                    onToggleExpand={() => setExpandedSelectedId(isExpanded ? null : key)}
+                    onRemove={() => updateDraft({ feats: draft.feats?.filter(f => f.id !== feat.id) })}
+                  />
                 );
               })
             )}
@@ -805,14 +840,17 @@ export function FeatsStep() {
         )}>
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-bold text-text-primary">Character Feats</h3>
-            <span className={cn(
-              'px-3 py-1 rounded-full text-sm font-bold',
-              selectedCharacterFeats.reduce((sum, f) => sum + getFeatLevel(featById.get(String(f.id))), 0) === maxCharacterFeats
-                ? statusPanel.completeBadge
-                : statusPanel.infoBadge
-            )}>
+            <DescriptorChip
+              size="md"
+              variant={statusBadgeDescriptorVariant(
+                selectedCharacterFeats.reduce((sum, f) => sum + getFeatLevel(featById.get(String(f.id))), 0) === maxCharacterFeats
+                  ? 'complete'
+                  : 'info'
+              )}
+              className="font-bold"
+            >
               {selectedCharacterFeats.reduce((sum, f) => sum + getFeatLevel(featById.get(String(f.id))), 0)} / {maxCharacterFeats}
-            </span>
+            </DescriptorChip>
           </div>
           <div className="flex flex-wrap gap-2">
             {selectedCharacterFeats.length === 0 ? (
@@ -824,30 +862,15 @@ export function FeatsStep() {
                 const fullFeat = feats?.find(f => String(f.id) === String(feat.id));
                 const displayName = fullFeat ? formatFeatName(fullFeat) : feat.name;
                 return (
-                  <div key={feat.id} className="rounded-lg border border-info-border bg-surface overflow-hidden max-w-md">
-                    <div className="px-3 py-1.5 flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setExpandedSelectedId(isExpanded ? null : key)}
-                        className="text-info-fg font-medium text-sm text-left flex-1 truncate"
-                      >
-                        {displayName}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); updateDraft({ feats: draft.feats?.filter(f => f.id !== feat.id) }); }}
-                        aria-label={`Remove ${displayName}`}
-                        className="text-danger-fg hover:opacity-80 font-bold flex-shrink-0 min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)]"
-                      >
-                        ×
-                      </button>
-                    </div>
-                    {isExpanded && feat.description && (
-                      <div className="px-3 pb-2 pt-0 text-xs text-text-secondary border-t border-info-border">
-                        {feat.description}
-                      </div>
-                    )}
-                  </div>
+                  <SelectedFeatChipRow
+                    key={feat.id}
+                    displayName={displayName}
+                    description={fullFeat?.description ?? feat.description}
+                    variant="list"
+                    isExpanded={isExpanded}
+                    onToggleExpand={() => setExpandedSelectedId(isExpanded ? null : key)}
+                    onRemove={() => updateDraft({ feats: draft.feats?.filter(f => f.id !== feat.id) })}
+                  />
                 );
               })
             )}

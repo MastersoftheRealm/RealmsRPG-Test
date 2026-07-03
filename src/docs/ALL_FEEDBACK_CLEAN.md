@@ -1605,6 +1605,14 @@ Notes
 - Expected: Player-defined `customName` (italic display, codex name preserved) and `note` (expanded-only) persist per character; visible in read-only campaign view; survive feat level-swaps.
 - Disposition: Implemented 2026-06-26 (TASK-377). Lean-save `customName`/`note` on `feats`/`archetypeFeats`; `traitCustomizations` map for traits; collapsible `FeatTraitCustomizationBlock`; trimming only on save (spaces allowed while typing). Audit fixes: `traitCustomizations` added to `SAVEABLE_FIELDS`; level-swap preserves customization; campaign read-only view passes trait map. No Supabase migration (JSONB `characters.data`).
 
+**Raw Feedback Log — 2026-07-02 (Chip taxonomy & metadata display unification)**
+- Date: 2026-07-02
+- Context: Post–UI-unification review; GridListRow / codex / character sheet / traits
+- Priority: High
+- Feedback: (1) Expandable chips use overly intense rounding (pill/oval) that clips words in corners when expanded — should feel like rounded rectangles, not capsules. (2) Descriptor/subtext chips (feat type, tags, requirements, trait kind) are inconsistent: codex chips vs rectangle pills on sheet/library vs floating plain text (e.g. trait "Flaw" italic under description while also in overview). (3) Redundant metadata — category on feats shown in collapsed column and expanded chips; trait type in bar and expanded text. (4) Governing rule: for grid-list/database items, every meaningful DB field must appear in collapsed column headers OR descriptor chips in expanded view (not missing, not duplicated). Example: power energy/TP if not in creator summary columns. Applies to armor, weapons, techniques, etc. (5) Unify to two clear roles — expandable vs non-expandable descriptor — with unique visual difference (opaque descriptor style suggested); simplify codebase, don't multiply overlapping types.
+- Expected: Two chip roles (ExpandableChip + DescriptorChip); rounded-rectangle expandable shape; opaque descriptor style; metadata visibility rule enforced; redundancy removed.
+- Disposition: Plan in `src/docs/ai/CHIP_UNIFICATION_PLAN.md`; **TASK-415** added. VSEA-004 logged.
+
 **Raw Feedback Log — 2026-06-28 (Product Experience Redesign clarifications)**
 - Date: 2026-06-28
 - Context: REALMS_PRODUCT_OVERVIEW.md vision doc; sitewide UX overhaul
@@ -1636,3 +1644,35 @@ Notes
 - Feedback: No perfect vision yet for exactly how Layer 1 power creator should work. Do not start implementation tasks (TASK-408–413) until owner locks exact spec.
 - Expected: TASK-414 owner spec; POWER_CREATOR_LAYER1_SPEC.md; TASK-408–413 blocked.
 - Disposition: TASK-414 filed (assignee: owner); TASK-408–413 blocked; REALMS §5.11 spec-lock gate; agent queue rule updated.
+
+**Raw Feedback Log — 2026-07-01 (Card art — three-layer model)**
+- Date: 2026-07-01
+- Context: Choice-card art; creators; user library; long-term image strategy
+- Priority: High
+- Feedback: (1) Art bank — curated preset images per category (armor, weapon, shield, equipment, power, technique, species) that any user can pick when making custom creations. (2) Custom uploads allowed for higher roles (developer, admin) tied to user-owned creations. (3) Official items with images keep image when added to personal library; user and official structures should match (same image_url field) so editing behaves consistently.
+- Expected: REALMS §5.0.3 documents three layers (official/codex, art bank, privileged user upload) + library copy parity; schema plan for user_* image_url; TASK-415 for implementation.
+- Disposition: Documented 2026-07-01 in REALMS §5.0.3, SUPABASE_SCHEMA user-library parity notes; TASK-415 filed; TASK-405 follow-up updated.
+
+**Raw Feedback Log — 2026-07-03 (Guided ancestry skip flaw)**
+- Date: 2026-07-03
+- Context: Guided character creator → Ancestry → optional flaw step
+- Priority: High
+- Feedback: "Skip — no flaw" button doesn't work, or works but doesn't actually skip by selecting it or moving on.
+- Expected: Skip clears flaw choice, records explicit decline, and advances to the next chapter (Abilities).
+- Disposition: Fixed 2026-07-03 in guided ancestry-step — skip now sets `selectedFlawId: ''`, advances via `nextSubStep()`, and `isTaskFilled` treats empty string as resolved.
+
+**Raw Feedback Log — 2026-07-03 (Guided skills step UX)**
+- Date: 2026-07-03
+- Context: Guided character creator → Skills step vs refined earlier steps
+- Priority: High
+- Feedback: Skills step feels like advanced creator table (prof marker, ability/bonus/value columns, floating Add Skill); skill point display unlabeled and not centered; doesn't mesh with path/species/abilities/feat steps. Want simplified list: bonus with ± around it, X to remove, labeled centered point budget.
+- Expected: Layer 1 guided-native skill list; path skill chips in help card; browse-all link; single point counter; advanced creator unchanged.
+- Disposition: TASK-419 implemented 2026-07-03 — `GuidedSkillsPanel`, `SkillSourceChip` path toggles, `PathHelpCard.actions`.
+
+**Raw Feedback Log — 2026-07-03 (Guided creator feat restriction notices)**
+- Date: 2026-07-03
+- Context: Guided character creator → Archetype Feats / Character Feat steps
+- Priority: Medium
+- Feedback: When a feat has restrictions (uses per recovery, state feat), show a brief notifier on the choice card — e.g. state feats explain Quick Action / Enter State, 1-minute duration, and uses per recovery; non-state feats with uses show "X times per Y Recovery".
+- Expected: Inline notice on guided feat choice cards when `state_feat` and/or `uses_per_rec` apply.
+- Disposition: Implemented 2026-07-03 — `getFeatRestrictionNotice`, `GuidedFeatRestrictionNotice` on archetype-feats-step and character-feat-step.

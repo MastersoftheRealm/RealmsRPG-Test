@@ -13,6 +13,10 @@ alwaysApply: false
 | Need | Import from |
 |------|-------------|
 | List rows (expandable) | `@/components/shared` → GridListRow |
+| List row entity thumb (44px, click preview) | `@/components/shared` → **ListRowThumbnail**; pass via `GridListRow` **`thumbnail`** prop — resolve with `resolveListRowThumbnail` / `resolveSpeciesListRowThumbnail` from `@/lib/list-row-image.ts` (see `AGENT_GUIDE.md` § Entity card art) |
+| Click-to-enlarge any inline image | `@/components/shared` → **ExpandableImage** — species art, portraits, choice cards, list thumbs; see `AGENT_GUIDE.md` § Entity card art |
+| Guided choice card hero art | `@/components/guided-creator` → **GuidedChoiceCard** + `guided-choice-image.ts` |
+| Admin codex card art upload | `@/components/shared` → **CodexArtUploadField** + `@/lib/codex-art.ts` |
 | Sortable column headers | `@/components/shared` → ListHeader (default styling; see below) |
 | List selection modal (add-X, pick from library) | `@/components/shared` → UnifiedSelectionModal |
 | Source scope: All / Realms Library / My Library | `@/components/shared` → SourceFilter (built on SegmentedControl) |
@@ -27,6 +31,7 @@ alwaysApply: false
 | Page layout | `@/components/ui` → PageContainer, PageHeader |
 | Modals, Buttons, Chips | `@/components/ui` |
 | Contextual help (optional rules / step info) | `@/components/shared` → **InfoTippy** + `public/tooltip-text.tsx` — **not** for menus/filters; see `AGENT_GUIDE.md` § Floating UI & contextual help |
+| Entity list thumb / choice-card art | **Do not** build per-page — `AGENT_GUIDE.md` § **Entity card art & list thumbnails**; `REALMS_PRODUCT_OVERVIEW.md` §5.0.3 |
 
 ### ListHeader in modals
 

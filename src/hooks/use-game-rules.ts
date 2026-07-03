@@ -262,7 +262,7 @@ export function useGameRules(): {
   const query = useQuery<Awaited<ReturnType<typeof fetchCodex>>, Error, CoreRulesMap, ['codex']>({
     queryKey: ['codex'],
     queryFn: fetchCodex,
-    select: (data) => mergeCoreRules((data?.coreRules as unknown as Record<string, unknown>) || {}),
+    select: (data) => mergeCoreRules(data.coreRules ?? {}),
     staleTime: 10 * 60 * 1000,   // 10 min — rules change infrequently
     gcTime: 60 * 60 * 1000,      // 1 hour cache
     retry: 1,

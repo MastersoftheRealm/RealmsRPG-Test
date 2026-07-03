@@ -8,10 +8,11 @@
 import { useState, useEffect, useMemo, useCallback, useId } from 'react';
 import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
 import { checkFeatRequirements } from '@/lib/game/feat-requirements';
-import { buildFeatLevelChips, getFeatFamilyId, getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
+import { buildFeatDetailSections } from '@/lib/codex/feat-list';
+import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
+import { getFeatFamilyId, getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
 import { Alert } from '@/components/ui';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
-import type { ChipData } from '@/components/shared/grid-list-row';
 import type { Character } from '@/types';
 import { formatListCellLabel } from '@/lib/utils';
 
@@ -36,28 +37,9 @@ function featToSelectableItem(
   warningMessage: string | undefined,
   skillIdToName: Map<string, string>
 ): SelectableItem {
-  const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> = [];
-  const typeChips: ChipData[] = [];
-  if (feat.char_feat) typeChips.push({ name: 'Character Feat', category: 'skill' });
-  else typeChips.push({ name: 'Archetype Feat', category: 'archetype' });
-  if (feat.state_feat) typeChips.push({ name: 'State Feat', category: 'archetype' });
-  if (typeChips.length > 0) detailSections.push({ label: 'Type', chips: typeChips, hideLabelIfSingle: true });
-  if (feat.category) detailSections.push({ label: 'Category', chips: [{ name: feat.category, category: 'default' }], hideLabelIfSingle: true });
-  const tagChips: ChipData[] = feat.tags?.map(tag => ({ name: tag, category: 'tag' as const })) || [];
-  if (tagChips.length > 0) detailSections.push({ label: 'Tags', chips: tagChips, hideLabelIfSingle: true });
-  const abilityReqChips: ChipData[] = (feat.ability_req || []).map((a, i) => {
-    const val = feat.abil_req_val?.[i];
-    return { name: `${a}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'default' as const };
+  const detailSections = buildFeatDetailSections(feat, skillIdToName, familyLevels, {
+    isCharacterFeat: feat.char_feat,
   });
-  if (abilityReqChips.length > 0) detailSections.push({ label: 'Ability Requirements', chips: abilityReqChips });
-  const skillReqChips: ChipData[] = (feat.skill_req || []).map((id, i) => {
-    const label = skillIdToName.get(String(id)) || String(id);
-    const val = feat.skill_req_val?.[i];
-    return { name: `${label}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'skill' as const };
-  });
-  if (skillReqChips.length > 0) detailSections.push({ label: 'Skill Requirements', chips: skillReqChips });
-  const levelChips = buildFeatLevelChips(familyLevels, feat.id);
-  if (levelChips.length > 0) detailSections.push({ label: 'Feat Levels', chips: levelChips });
 
   const usesVal = feat.uses_per_rec ?? (feat as FeatModal).max_uses;
   const usesDisplay = (usesVal === 0 || usesVal === undefined) ? '-' : String(usesVal);
@@ -128,10 +110,7 @@ export function AddFeatModal({
       if (featType === 'character' && !f.char_feat) return;
       if (featType === 'archetype' && f.char_feat) return;
       if (f.category) cats.add(f.category);
-      if (f.ability) {
-        if (Array.isArray(f.ability)) f.ability.forEach(a => abils.add(a));
-        else abils.add(f.ability);
-      }
+      normalizeFeatAbilities(f.ability).forEach((a) => abils.add(a));
     });
     return { categories: Array.from(cats).sort(), abilities: Array.from(abils).sort() };
   }, [feats, featType]);
@@ -163,7 +142,7 @@ export function AddFeatModal({
         const { meets } = checkRequirements(feat);
         if (!meets && !showBlocked) return false;
         if (selectedCategory && feat.category !== selectedCategory) return false;
-        if (selectedAbility && feat.ability !== selectedAbility) return false;
+        if (selectedAbility && !normalizeFeatAbilities(feat.ability).includes(selectedAbility)) return false;
         return true;
       });
 

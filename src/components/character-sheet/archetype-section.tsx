@@ -15,7 +15,8 @@ import { TableScroll } from '@/components/ui';
 import type { Character, Abilities, Item } from '@/types';
 import type { EnrichedItem } from '@/lib/data-enrichment';
 import { QuickArmorTable, QuickShieldsTable, QuickWeaponsTable } from '@/components/shared';
-import { Card } from '@/components/ui';
+import { Card, DescriptorChip } from '@/components/ui';
+import { profPointsDescriptorVariant } from '@/lib/chip/descriptor-chip-variants';
 
 interface ArchetypeSectionProps {
   character: Character;
@@ -381,11 +382,7 @@ export function ArchetypeSection({
   const archetypeChoices = character.archetypeChoices || {};
   
   // Three-state color for proficiency points
-  const getProfPointsColorClass = () => {
-    if (remainingProfPoints > 0) return 'bg-success-100 text-success-fg'; // Has points
-    if (remainingProfPoints < 0) return 'bg-danger-100 text-danger-fg'; // Over budget
-    return 'bg-primary-subtle-bg text-primary-fg'; // Perfect
-  };
+  const profPointsVariant = profPointsDescriptorVariant(remainingProfPoints);
   
   // Calculate Power Potency: 10 + pow_prof + pow_abil value
   const powAbilName = character.pow_abil?.toLowerCase() || 'charisma';
@@ -488,9 +485,9 @@ export function ArchetypeSection({
               size="sm"
               title="Decrease max prof points (cannot go below level-based total)"
             />
-            <span className={cn('px-3 py-1 rounded-full text-sm font-medium', getProfPointsColorClass())}>
+            <DescriptorChip variant={profPointsVariant} size="md" className="font-medium">
               {remainingProfPoints} / {totalProfPoints} prof. points
-            </span>
+            </DescriptorChip>
             <IncrementButton
               onClick={() =>
                 setMaxProfOverride(Math.min(12, totalProfPoints + 1))

@@ -17,13 +17,15 @@ export interface GuidedCuratedSkillsOptions {
   limit?: number;
 }
 
-function skillMatchesAbilities(skill: Skill, abilityKeys: Set<string>): boolean {
+/** True when the skill uses exactly the archetype ability — excludes multi-ability skills (ALL/ANY). */
+function skillMatchesSingleAbility(skill: Skill, abilityKeys: Set<string>): boolean {
   if (!skill.ability || abilityKeys.size === 0) return false;
-  return skill.ability
+  const parts = skill.ability
     .split(',')
     .map((a) => a.trim().toLowerCase())
-    .filter(Boolean)
-    .some((a) => abilityKeys.has(a));
+    .filter(Boolean);
+  if (parts.length !== 1) return false;
+  return abilityKeys.has(parts[0]);
 }
 
 /** Resolve which abilities to use when curating free picks. */
@@ -74,7 +76,7 @@ export function getGuidedCuratedSkillIds(options: GuidedCuratedSkillsOptions): s
       if (skill.base_skill_id !== undefined) return false;
       const id = String(skill.id);
       if (blocked.has(id)) return false;
-      return skillMatchesAbilities(skill, abilityKeys);
+      return skillMatchesSingleAbility(skill, abilityKeys);
     })
     .sort((a, b) => String(a.name ?? '').localeCompare(String(b.name ?? ''), undefined, { sensitivity: 'base' }))
     .slice(0, limit)

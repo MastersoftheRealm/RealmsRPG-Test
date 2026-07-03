@@ -60,11 +60,11 @@ const TYPE_COLORS: Record<EncounterType, string> = {
   mixed: 'bg-power-light text-power-fg',
 };
 
-const STATUS_COLORS: Record<EncounterStatus, string> = {
-  preparing: 'bg-surface-alt text-text-secondary',
-  active: 'bg-success-light text-success-fg',
-  paused: 'bg-warning-light text-warning-fg',
-  completed: 'bg-surface-alt text-text-muted',
+const STATUS_VARIANTS: Record<EncounterStatus, 'descriptor' | 'success' | 'warning'> = {
+  preparing: 'descriptor',
+  active: 'success',
+  paused: 'warning',
+  completed: 'descriptor',
 };
 
 type TabId = 'all' | 'active' | 'completed';
@@ -291,7 +291,7 @@ function EncountersContent() {
                 iconContainerClassName={TYPE_COLORS[encounter.type]}
                 title={encounter.name}
                 badge={encounter.status.charAt(0).toUpperCase() + encounter.status.slice(1)}
-                badgeClassName={STATUS_COLORS[encounter.status]}
+                badgeVariant={STATUS_VARIANTS[encounter.status]}
                 subtitle={[
                   TYPE_LABELS[encounter.type],
                   getParticipantLabel(encounter) && getParticipantLabel(encounter),

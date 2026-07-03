@@ -21,6 +21,8 @@ alwaysApply: true
 **New tasks:** Use format in `src/docs/ai/AI_REQUEST_TEMPLATE.md`. Add to `AI_TASK_QUEUE.md` with next TASK-### ID.
 **Schema/migrations:** Run SQL in Supabase Dashboard (see `src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md`); no Prisma migrate.
 
+**Codex / reference data:** See `.cursor/rules/realms-codex-data.mdc` — audit and draft SQL first; **do not execute codex `UPDATE`/`INSERT`/`DELETE` via MCP until the owner reviews and approves** (except a specific correction they direct in the same message).
+
 # Feedback Processing (when owner gives feedback)
 
 1. **Log:** Append raw feedback to `src/docs/ALL_FEEDBACK_CLEAN.md` under **Raw Feedback Log** (date, context, priority, text, expected behavior). Do this whether you create tasks or implement directly.

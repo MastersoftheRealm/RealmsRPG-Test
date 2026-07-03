@@ -30,6 +30,12 @@ Place your exported Google Sheets CSV files here. The script also checks `Codex 
 npm run db:seed
 ```
 
+After live codex tag edits, sync `feats.csv` from Supabase:
+
+```bash
+node scripts/sync-feat-tags-csv.js
+```
+
 ## Fixing Corrupted Data
 
 If descriptions were incorrectly split into arrays (e.g. from a previous bug), clear and re-seed:

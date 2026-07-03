@@ -9,7 +9,7 @@ import { useState, useMemo, useId } from 'react';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { formatCost } from '@/lib/game/creator-constants';
 import { partChipVariant } from '@/lib/chip/part-chip-variant';
-import { Chip, IconButton, Checkbox } from '@/components/ui';
+import { IconButton, Checkbox, DescriptorChip } from '@/components/ui';
 import { ValueStepper } from '@/components/shared';
 import type { PowerPart, TechniquePart } from '@/hooks';
 
@@ -98,14 +98,14 @@ export function PowerPartCard({
             {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </span>
           {part.category && (
-            <Chip
+            <DescriptorChip
               variant={partChipVariant(part.category)}
               size="sm"
               className="shrink-0 max-w-[7.5rem] truncate font-normal"
               title={part.category}
             >
               {part.category}
-            </Chip>
+            </DescriptorChip>
           )}
           <span className="font-medium text-text-primary truncate min-w-0">{part.name}</span>
           <span className="flex items-center gap-2 text-sm font-semibold flex-shrink-0">

@@ -15,7 +15,12 @@ import { derivePowerDisplay } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
-import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
+import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
+import {
+  buildPartsAndMetadataDetailSections,
+  propertiesProficienciesSection,
+} from '@/lib/chip/list-row-metadata';
+import type { PowerPart, TechniquePart, ItemProperty } from '@/hooks/codex-types';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
 
 export type LibraryItemType =
@@ -170,7 +175,7 @@ export function getListHeaderColumns(
 export interface BuildSelectableItemCodex {
   powerPartsDb: PowerPart[];
   techniquePartsDb: TechniquePart[];
-  itemPropertiesDb: Array<{ name?: string; base_tp?: number; tp_cost?: number; description?: string; [k: string]: unknown }>;
+  itemPropertiesDb: ItemProperty[];
 }
 
 /** Build one SelectableItem from a raw library item (user or public). Used by add and load modals. */
@@ -202,14 +207,8 @@ export function buildSelectableItem(
       duration: p.duration as PowerDocument['duration'],
     };
     const display = derivePowerDisplay(doc, powerPartsDb);
-    const partChips: ChipData[] = display.partChips.map((chip) => ({
-      name: chip.text.split(' | TP:')[0].trim(),
-      description: chip.description,
-      cost: chip.finalTP,
-      costLabel: 'TP',
-      category: (chip.finalTP && chip.finalTP > 0 ? 'cost' : 'default') as 'cost' | 'default',
-    }));
-    detailSections = partChips.length > 0 ? [{ label: 'Parts & Proficiencies', chips: partChips }] : undefined;
+    const partChips = partChipsFromDisplay(display.partChips);
+    detailSections = buildPartsAndMetadataDetailSections({ range: display.range, partChips });
     totalCost = display.tp > 0 ? display.tp : undefined;
   } else if (itemType === 'technique') {
     const t = item as UserTechnique;
@@ -222,14 +221,11 @@ export function buildSelectableItem(
     };
     const display = deriveTechniqueDisplay(doc, techniquePartsDb);
     techniqueDisplay = { energy: display.energy, weaponName: display.weaponName, tp: display.tp };
-    const partChips: ChipData[] = display.partChips.map((chip) => ({
-      name: chip.text.split(' | TP:')[0].trim(),
-      description: chip.description,
-      cost: chip.finalTP,
-      costLabel: 'TP',
-      category: (chip.finalTP && chip.finalTP > 0 ? 'cost' : 'default') as 'cost' | 'default',
-    }));
-    detailSections = partChips.length > 0 ? [{ label: 'Parts & Proficiencies', chips: partChips }] : undefined;
+    const partChips = partChipsFromDisplay(display.partChips);
+    detailSections = buildPartsAndMetadataDetailSections({
+      damage: display.damageStr !== '-' ? display.damageStr : undefined,
+      partChips,
+    });
     totalCost = typeof display.tp === 'number' && display.tp > 0 ? display.tp : undefined;
   } else if (
     itemType === 'weapon' ||
@@ -266,8 +262,8 @@ export function buildSelectableItem(
         level: lvl > 1 ? lvl : undefined,
       };
     });
-    detailSections =
-      propertyChips.length > 0 ? [{ label: 'Properties & Proficiencies', chips: propertyChips }] : undefined;
+    const propertySection = propertiesProficienciesSection(propertyChips);
+    detailSections = propertySection ? [propertySection] : undefined;
     totalCost = propertyChips.reduce((sum, c) => sum + (c.cost ?? 0), 0) || undefined;
   }
 

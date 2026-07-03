@@ -9,6 +9,8 @@ import { useMemo, useState, type KeyboardEvent, type ReactNode } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
+import { DescriptorChip } from '@/components/ui';
+import { ExpandableImage } from '@/components/shared';
 import { truncateAtWord, COMPACT_PREVIEW_LEN, shouldExpandTaglineBody } from './guided-text';
 import {
   defaultImageLayoutForKind,
@@ -40,8 +42,9 @@ export interface GuidedChoiceCardProps {
   className?: string;
   fullWidth?: boolean;
   /**
-   * standard — min-heights for species/path grids (self-start, no row stretch).
-   * compact — no forced min-heights; line-clamp cap (6 lines); use with COMPACT_GRID + h-full.
+   * standard — min-heights for species/path grids.
+   * compact — no forced min-heights; line-clamp cap (6 lines).
+   * Both stretch to equal row height when used inside GUIDED_CHOICE_GRID_CLASS.
    */
   density?: 'standard' | 'compact';
 }
@@ -168,7 +171,7 @@ export function GuidedChoiceCard({
       className={cn(
         'flex w-full cursor-pointer flex-col overflow-hidden rounded-card border bg-surface-alt/40 transition-shadow duration-base',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-        isCompact ? 'h-full' : 'self-start',
+        'h-full',
         !expanded && !isCompact && s.cardCollapsed,
         selected
           ? 'border-primary ring-2 ring-primary shadow-raised'
@@ -177,10 +180,16 @@ export function GuidedChoiceCard({
         className
       )}
     >
-      <div className={cn(s.selectButton, isCompact && 'h-full')}>
+      <div className={cn(s.selectButton, 'h-full')}>
         <div className={s.headerRow}>
           {showMedia && resolvedImage ? (
-            <span className={mediaClass}>
+            <ExpandableImage
+              src={resolvedImage.src}
+              alt={title}
+              isPlaceholder={resolvedImage.isPlaceholder}
+              stopPropagation
+              className={mediaClass}
+            >
               <Image
                 src={resolvedImage.src}
                 alt=""
@@ -188,14 +197,14 @@ export function GuidedChoiceCard({
                 sizes={imageSizes}
                 className="object-cover"
               />
-            </span>
+            </ExpandableImage>
           ) : showMedia && icon ? (
             <span className={s.iconWrap}>{icon}</span>
           ) : null}
           <div className={s.contentColumn}>
             <div className="flex flex-wrap items-start gap-2">
               <h3 className={s.title}>{title}</h3>
-              {badge && <span className={s.badge}>{badge}</span>}
+              {badge && <DescriptorChip size="sm">{badge}</DescriptorChip>}
             </div>
             {body.kind !== 'none' ? (
               <div className={s.bodyWrap}>
@@ -245,9 +254,9 @@ export function GuidedChoiceCard({
         {hasTags && (
           <div className={s.tagsRow}>
             {tags.map((tag) => (
-              <span key={tag} className={s.tag}>
+              <DescriptorChip key={tag} size="sm">
                 {tag}
-              </span>
+              </DescriptorChip>
             ))}
           </div>
         )}

@@ -28,8 +28,8 @@
 CREATE INDEX IF NOT EXISTS idx_role_policies_updated_by
   ON public.role_policies (updated_by);
 
-CREATE INDEX IF NOT EXISTS idx_ui_tooltips_updated_by
-  ON public.ui_tooltips (updated_by);
+-- ui_tooltips dropped by drop-legacy-ui-tooltips-2026-06.sql (DEV-376). Index omitted.
+-- CREATE INDEX IF NOT EXISTS idx_ui_tooltips_updated_by ON public.ui_tooltips (updated_by);
 
 CREATE INDEX IF NOT EXISTS idx_usernames_user_id
   ON public.usernames (user_id);
@@ -122,57 +122,12 @@ CREATE POLICY role_policies_admin_write
 
 -- -----------------------------------------------------------------------------
 -- 5) ui_tooltips — admin write policies
+-- SUPERSEDED: table dropped by drop-legacy-ui-tooltips-2026-06.sql (DEV-376).
+-- Policies were applied before drop; omitted for current DB parity.
 -- -----------------------------------------------------------------------------
 
-DROP POLICY IF EXISTS ui_tooltips_admin_insert ON public.ui_tooltips;
-CREATE POLICY ui_tooltips_admin_insert
-ON public.ui_tooltips
-FOR INSERT
-TO authenticated
-WITH CHECK (
-  EXISTS (
-    SELECT 1
-    FROM public.user_profiles up
-    WHERE up.id::text = (select auth.uid())::text
-      AND up.role = 'admin'
-  )
-);
-
-DROP POLICY IF EXISTS ui_tooltips_admin_update ON public.ui_tooltips;
-CREATE POLICY ui_tooltips_admin_update
-ON public.ui_tooltips
-FOR UPDATE
-TO authenticated
-USING (
-  EXISTS (
-    SELECT 1
-    FROM public.user_profiles up
-    WHERE up.id::text = (select auth.uid())::text
-      AND up.role = 'admin'
-  )
-)
-WITH CHECK (
-  EXISTS (
-    SELECT 1
-    FROM public.user_profiles up
-    WHERE up.id::text = (select auth.uid())::text
-      AND up.role = 'admin'
-  )
-);
-
-DROP POLICY IF EXISTS ui_tooltips_admin_delete ON public.ui_tooltips;
-CREATE POLICY ui_tooltips_admin_delete
-ON public.ui_tooltips
-FOR DELETE
-TO authenticated
-USING (
-  EXISTS (
-    SELECT 1
-    FROM public.user_profiles up
-    WHERE up.id::text = (select auth.uid())::text
-      AND up.role = 'admin'
-  )
-);
+-- DROP POLICY IF EXISTS ui_tooltips_admin_insert ON public.ui_tooltips;
+-- ... (see git history or supabase-ui-tooltips.sql if restoring legacy stack)
 
 -- -----------------------------------------------------------------------------
 -- 6) codex_change_logs — admin read

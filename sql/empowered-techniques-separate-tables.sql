@@ -1,13 +1,6 @@
--- =============================================================================
 -- Separate Empowered Technique tables (user + official)
--- =============================================================================
--- Creates:
---   - public.user_empowered_techniques
---   - public.official_empowered_techniques
--- Backfills empowered rows from existing *_techniques tables.
---
--- Run in Supabase SQL editor.
--- =============================================================================
+-- Status: Applied on RealmsRPG-Test (user_empowered_techniques + official_empowered_techniques exist).
+-- Run in Supabase SQL editor on fresh envs only.
 
 BEGIN;
 

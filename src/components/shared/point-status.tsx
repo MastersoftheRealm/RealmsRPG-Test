@@ -61,6 +61,8 @@ export interface PointStatusProps extends Omit<VariantProps<typeof pointStatusVa
   spent: number;
   /** Optional label prefix */
   label?: string;
+  /** Inline/compact: show spent vs remaining (default `remaining`) */
+  metric?: 'remaining' | 'spent';
   /** Show the "Total - Spent = Remaining" breakdown (only for block variant) */
   showCalculation?: boolean;
   /** Additional className */
@@ -84,12 +86,14 @@ export function PointStatus({
   total,
   spent,
   label,
+  metric = 'remaining',
   variant = 'inline',
   showCalculation = false,
   className,
 }: PointStatusProps) {
   const remaining = total - spent;
   const status = getStatus(remaining);
+  const displayValue = metric === 'spent' ? spent : remaining;
 
   // Block variant with calculation breakdown
   if (variant === 'block') {
@@ -133,7 +137,7 @@ export function PointStatus({
   if (variant === 'compact') {
     return (
       <span className={cn(pointStatusVariants({ variant, status }), className)}>
-        {remaining} / {total}
+        {displayValue} / {total}
       </span>
     );
   }
@@ -142,7 +146,7 @@ export function PointStatus({
   return (
     <span className={cn(pointStatusVariants({ variant, status }), className)}>
       {label && <span>{label}:</span>}
-      <span className="font-bold">{remaining}</span>
+      <span className="font-bold">{displayValue}</span>
       <span className="font-normal">/ {total}</span>
     </span>
   );

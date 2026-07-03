@@ -56,6 +56,8 @@ export function partChipVariant(category: string): ChipVariant {
       return 'listCost';
     case 'property':
       return 'default';
+    case 'skill':
+      return 'list';
     default:
       return 'default';
   }

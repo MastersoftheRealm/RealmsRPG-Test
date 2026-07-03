@@ -22,12 +22,14 @@ import { useState, memo, ReactNode } from 'react';
 import { Edit, Copy, Check, Plus, AlertCircle, X } from 'lucide-react';
 import { cn, formatColumnKeyLabel } from '@/lib/utils';
 import { formatCostDisplay } from '@/lib/game/creator-constants';
-import { Button, IconButton } from '@/components/ui';
+import { Button, IconButton, DescriptorChip } from '@/components/ui';
+import { GridListChip } from './grid-list-chip';
+import { descriptorChipVariantForBadgeColor } from '@/lib/chip/grid-list-chip-utils';
 import { SelectionToggle } from './selection-toggle';
 import { QuantitySelector, QuantityBadge } from './quantity-selector';
-import { GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH } from './grid-list-row-chrome';
-import { ExpandableGridListChip } from './expandable-grid-list-chip';
+import { GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH, gridTemplateColumnsWithThumbnail } from './grid-list-row-chrome';
 import type { ChipData, ChipOptionData } from './grid-list-row-types';
+import { ListRowThumbnail, type ListRowThumbnailProps } from './list-row-thumbnail';
 
 export type { ChipData, ChipOptionData } from './grid-list-row-types';
 
@@ -158,6 +160,8 @@ export interface GridListRowProps {
   // ===== Character Sheet Slots (Phase 1 Unification) =====
   /** Left slot content (e.g., innate toggle, equip checkbox) - renders before name */
   leftSlot?: ReactNode;
+  /** Small thumbnail left of name (D&D Beyond list style). Click opens preview modal. */
+  thumbnail?: ListRowThumbnailProps;
   /** Right slot content (e.g., use button, roll buttons) - renders after columns */
   rightSlot?: ReactNode;
   /** Visual state: item is equipped (green border/bg styling) */
@@ -191,19 +195,6 @@ export interface GridListRowProps {
 }
 
 // =============================================================================
-// Badge Color Map (using design tokens)
-// =============================================================================
-
-const BADGE_COLORS = {
-  blue: 'bg-info-100 dark:bg-info-900/40 text-info-fg',
-  purple: 'bg-power-light dark:bg-power-900/30 text-power-fg',
-  green: 'bg-success-100 dark:bg-success-900/40 text-success-fg',
-  amber: 'bg-tp-light dark:bg-warning-900/30 text-tp-text',
-  gray: 'bg-surface-alt text-text-secondary',
-  red: 'bg-danger-100 dark:bg-danger-900/40 text-danger-fg',
-};
-
-// =============================================================================
 // Component
 // =============================================================================
 
@@ -235,6 +226,7 @@ export const GridListRow = memo(function GridListRow({
   onAddToLibrary,
   // Character sheet slots (Phase 1 Unification)
   leftSlot,
+  thumbnail,
   rightSlot,
   equipped = false,
   innate = false,
@@ -332,9 +324,14 @@ export const GridListRow = memo(function GridListRow({
   // Keep gridTemplateColumns in style (must match headers), but move layout concerns to classes
   // so spacing/alignment are controlled by shared Tailwind utilities instead of inline styles.
   const useFlex = !gridColumns;
-  const explicitGridTracks = countGridTemplateTracks(gridColumns);
+  const useThumbnailColumn = Boolean(thumbnail && gridColumns);
+  const resolvedGridColumns =
+    useThumbnailColumn && gridColumns
+      ? gridTemplateColumnsWithThumbnail(gridColumns)
+      : gridColumns;
+  const explicitGridTracks = countGridTemplateTracks(resolvedGridColumns);
   /**
-   * How many tracks are consumed by the rendered grid items (Name + data columns),
+   * How many tracks are consumed by the rendered grid items (thumbnail + Name + data columns),
    * respecting `columnSpans`. This prevents us from mistakenly treating *unused*
    * data columns (e.g. Uses/Recovery when empty) as "action columns".
    *
@@ -344,7 +341,9 @@ export const GridListRow = memo(function GridListRow({
    * - Without this, we'd think there are 2 "extra" tracks and inline the delete button,
    *   which forces it onto a second grid row.
    */
-  const dataTracksUsed = 1 + columns.reduce((sum, _col, idx) => sum + (columnSpans?.[idx] ?? 1), 0);
+  const dataTracksUsed =
+    (useThumbnailColumn ? 2 : 1) +
+    columns.reduce((sum, _col, idx) => sum + (columnSpans?.[idx] ?? 1), 0);
   let remainingInlineActionTracks = Math.max(0, explicitGridTracks - dataTracksUsed);
 
   // Consume extra right-side grid tracks first for controls that normally render outside the grid.
@@ -389,8 +388,13 @@ export const GridListRow = memo(function GridListRow({
             isRowClickable && 'cursor-pointer',
             gridColumns && 'grid gap-2 items-center'
           )}
-          style={gridColumns ? { gridTemplateColumns: gridColumns } : undefined}
+          style={resolvedGridColumns ? { gridTemplateColumns: resolvedGridColumns } : undefined}
         >
+          {useThumbnailColumn && thumbnail && (
+            <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+              <ListRowThumbnail {...thumbnail} />
+            </div>
+          )}
           {/* Name column: full name visible on mobile (wrap), truncate on desktop */}
           <div
             className={cn(
@@ -398,6 +402,7 @@ export const GridListRow = memo(function GridListRow({
               useFlex && 'flex-1'
             )}
           >
+            {!useThumbnailColumn && thumbnail && <ListRowThumbnail {...thumbnail} />}
             <span className="break-words lg:truncate">{nameContent ?? name}</span>
             {/* Innate indicator (hidden when already in innate section) */}
             {innate && !hideInnateBadge && (
@@ -426,15 +431,13 @@ export const GridListRow = memo(function GridListRow({
             {compact && badges.length > 0 && (
               <span className="ml-2 inline-flex gap-1">
                 {badges.slice(0, 2).map((badge, i) => (
-                  <span 
-                    key={i} 
-                    className={cn(
-                      'px-1.5 py-0.5 rounded text-xs',
-                      BADGE_COLORS[badge.color || 'gray']
-                    )}
+                  <DescriptorChip
+                    key={i}
+                    variant={descriptorChipVariantForBadgeColor(badge.color)}
+                    className="shrink-0"
                   >
                     {badge.label}
-                  </span>
+                  </DescriptorChip>
                 ))}
               </span>
             )}
@@ -642,15 +645,9 @@ export const GridListRow = memo(function GridListRow({
               {badges.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-3">
                   {badges.map((badge, i) => (
-                    <span 
-                      key={i}
-                      className={cn(
-                        'px-2 py-1 rounded text-sm',
-                        BADGE_COLORS[badge.color || 'gray']
-                      )}
-                    >
+                    <DescriptorChip key={i} variant={descriptorChipVariantForBadgeColor(badge.color)}>
                       {badge.label}
-                    </span>
+                    </DescriptorChip>
                   ))}
                 </div>
               )}
@@ -672,9 +669,9 @@ export const GridListRow = memo(function GridListRow({
               {/* Total Cost */}
               {totalCost !== undefined && totalCost > 0 && (
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-info-50 dark:bg-info-900/30 text-info-fg border border-info-200 dark:border-info-800/50">
+                  <DescriptorChip variant="listCost" size="md">
                     Total {costLabel}: {formatCostDisplay(totalCost)}
-                  </span>
+                  </DescriptorChip>
                 </div>
               )}
               
@@ -702,18 +699,15 @@ export const GridListRow = memo(function GridListRow({
                       {sectionChips.map((chip, chipIdx) => {
                         const index = sectionOffset + chipIdx;
                         return (
-                          <ExpandableGridListChip
+                          <GridListChip
                             key={chipIdx}
                             chip={chip}
-                            index={index}
                             costLabel={costLabel}
-                            isExpanded={expandedChipIndex === index}
+                            expanded={expandedChipIndex === index}
+                            onToggle={(e) => handleChipClick(index, e)}
                             optionsOpen={expandedOptionsChipIndex === index}
-                            onChipClick={handleChipClick}
-                            onToggleOptions={(chipIndex) =>
-                              setExpandedOptionsChipIndex(
-                                expandedOptionsChipIndex === chipIndex ? null : chipIndex
-                              )
+                            onOptionsOpenChange={(open) =>
+                              setExpandedOptionsChipIndex(open ? index : null)
                             }
                           />
                         );
@@ -731,18 +725,15 @@ export const GridListRow = memo(function GridListRow({
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {chips.map((chip, index) => (
-                      <ExpandableGridListChip
+                      <GridListChip
                         key={`${chip.name}-${chip.category ?? 'default'}-${index}`}
                         chip={chip}
-                        index={index}
                         costLabel={costLabel}
-                        isExpanded={expandedChipIndex === index}
+                        expanded={expandedChipIndex === index}
+                        onToggle={(e) => handleChipClick(index, e)}
                         optionsOpen={expandedOptionsChipIndex === index}
-                        onChipClick={handleChipClick}
-                        onToggleOptions={(chipIndex) =>
-                          setExpandedOptionsChipIndex(
-                            expandedOptionsChipIndex === chipIndex ? null : chipIndex
-                          )
+                        onOptionsOpenChange={(open) =>
+                          setExpandedOptionsChipIndex(open ? index : null)
                         }
                       />
                     ))}

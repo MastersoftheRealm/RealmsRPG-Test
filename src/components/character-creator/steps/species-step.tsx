@@ -9,7 +9,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import type { KeyboardEvent } from 'react';
 import { cn } from '@/lib/utils';
-import { Chip, Button, Alert, Spinner, SelectionCardSurface } from '@/components/ui';
+import { Button, Alert, Spinner, SelectionCardSurface, DescriptorChip } from '@/components/ui';
 import { SegmentedControl, InfoTippy } from '@/components/shared';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useMergedSpecies, useUserSpecies, useTraits, useCodexSkills, useCreatorPathData, resolveSkillIdsToNames, type Species } from '@/hooks';
@@ -256,9 +256,9 @@ export function SpeciesStep() {
               {s.ability_bonuses && Object.keys(s.ability_bonuses).length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-2">
                   {Object.entries(s.ability_bonuses).map(([ability, bonus]) => (
-                    <Chip key={ability} variant="primary" size="sm">
+                    <DescriptorChip key={ability} variant="primary" size="sm">
                       {ability.substring(0, 3).toUpperCase()} +{bonus}
-                    </Chip>
+                    </DescriptorChip>
                   ))}
                 </div>
               )}

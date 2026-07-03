@@ -8,12 +8,15 @@
 import Image from 'next/image';
 import { useMemo, type ReactNode } from 'react';
 import { Heart, Sparkles } from 'lucide-react';
-import { SpeciesTraitCard } from '@/components/shared';
+import { SpeciesTraitCard, ExpandableImage } from '@/components/shared';
+import { DescriptorChip } from '@/components/ui';
 import { useCodexSkills, resolveTraitIds, type Species, type Trait } from '@/hooks';
 import { getChoiceOptionIds } from '@/lib/choice-trait';
 import { cn } from '@/lib/utils';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { GUIDED_CHOICE_STYLES, GUIDED_OVERVIEW_STYLES as o } from './guided-choice-styles';
+import { SummaryChipList, type SummaryChipItem } from '@/components/shared';
+import { speciesSkillToSummaryChipItem, ANY_SPECIES_SKILL_ID } from '@/lib/chip/species-skill-chips';
 import { resolveChoiceCardImage } from './guided-choice-image';
 import { titleCase } from './guided-text';
 
@@ -95,28 +98,6 @@ function OverviewSection({
   );
 }
 
-function OverviewPills({
-  items,
-  variant = 'default',
-  className,
-}: {
-  items: Array<{ key: string; label: string }>;
-  variant?: 'default' | 'primary';
-  className?: string;
-}) {
-  if (items.length === 0) return null;
-  const pillClass = variant === 'primary' ? o.pillPrimary : o.pill;
-  return (
-    <div className={cn('flex flex-wrap gap-2', className)}>
-      {items.map((item) => (
-        <span key={item.key} className={pillClass}>
-          {item.label}
-        </span>
-      ))}
-    </div>
-  );
-}
-
 export function SpeciesRevealPanel({ species, allTraits, className }: SpeciesRevealPanelProps) {
   const { data: allSkills = [] } = useCodexSkills();
   const image = resolveChoiceCardImage('species', species);
@@ -128,16 +109,10 @@ export function SpeciesRevealPanel({ species, allTraits, className }: SpeciesRev
 
   const { granted, choices } = useMemo(() => partitionSpeciesTraits(speciesTraits), [speciesTraits]);
 
-  const skillNames = useMemo(() => {
+  const skillItems = useMemo((): SummaryChipItem[] => {
     return (species.skills ?? [])
-      .filter((id) => String(id) !== '0')
-      .map((id) => {
-        const idStr = String(id);
-        const match = allSkills.find(
-          (s) => String(s.id) === idStr || String(s.name ?? '').toLowerCase() === idStr.toLowerCase()
-        );
-        return match?.name ?? idStr;
-      });
+      .filter((id) => String(id) !== ANY_SPECIES_SKILL_ID)
+      .map((id) => speciesSkillToSummaryChipItem(id, allSkills));
   }, [species.skills, allSkills]);
 
   const vitals = useMemo(() => buildVitals(species), [species]);
@@ -149,7 +124,13 @@ export function SpeciesRevealPanel({ species, allTraits, className }: SpeciesRev
     <div className={cn('space-y-6', className)}>
       <div className="overflow-hidden rounded-card border border-border-light bg-surface shadow-card">
         <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:gap-5 sm:p-5">
-          <div className="relative mx-auto h-28 w-28 shrink-0 overflow-hidden rounded-card bg-surface-alt shadow-sm sm:mx-0 sm:h-32 sm:w-32">
+          <ExpandableImage
+            src={image.src}
+            alt={species.name}
+            isPlaceholder={image.isPlaceholder}
+            stopPropagation={false}
+            className="relative mx-auto h-28 w-28 shrink-0 overflow-hidden rounded-card border border-border-light bg-surface-alt shadow-sm sm:mx-0 sm:h-32 sm:w-32"
+          >
             <Image
               src={image.src}
               alt=""
@@ -157,7 +138,7 @@ export function SpeciesRevealPanel({ species, allTraits, className }: SpeciesRev
               sizes="128px"
               className="object-cover"
             />
-          </div>
+          </ExpandableImage>
           <div className="min-w-0 flex-1 text-center sm:text-left">
             <h3 className={GUIDED_CHOICE_STYLES.title}>{species.name}</h3>
             {species.description?.trim() && (
@@ -188,24 +169,19 @@ export function SpeciesRevealPanel({ species, allTraits, className }: SpeciesRev
 
       {Object.keys(abilityBonuses).length > 0 && (
         <OverviewSection title={copy.abilityBonusesTitle}>
-          <OverviewPills
-            variant="primary"
-            items={Object.entries(abilityBonuses).map(([ability, bonus]) => ({
-              key: ability,
-              label: `${ability.substring(0, 3).toUpperCase()} +${bonus}`,
-            }))}
-          />
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(abilityBonuses).map(([ability, bonus]) => (
+              <DescriptorChip key={ability} variant="primary" size="sm">
+                {ability.substring(0, 3).toUpperCase()} +{bonus}
+              </DescriptorChip>
+            ))}
+          </div>
         </OverviewSection>
       )}
 
-      {skillNames.length > 0 && (
+      {skillItems.length > 0 && (
         <OverviewSection title={copy.skillsTitle}>
-          <OverviewPills
-            items={skillNames.map((name) => ({
-              key: name,
-              label: name,
-            }))}
-          />
+          <SummaryChipList items={skillItems} />
         </OverviewSection>
       )}
 

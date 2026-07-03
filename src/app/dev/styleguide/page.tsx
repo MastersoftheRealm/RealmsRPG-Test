@@ -32,6 +32,8 @@ import {
   CardFooter,
   SelectionCard,
   Chip,
+  DescriptorChip,
+  ExpandableChip,
   Alert,
   Spinner,
   LoadingState,
@@ -47,13 +49,26 @@ import {
 } from '@/components/ui';
 import { PointStatus } from '@/components/shared/point-status';
 import { TabSummarySection, SummaryItem } from '@/components/shared/tab-summary-section';
+import { GridListRow } from '@/components/shared/grid-list-row';
+import { buildFeatDetailSections } from '@/lib/codex/feat-list';
+import type { Feat } from '@/hooks';
+import { buildPartsAndMetadataDetailSections } from '@/lib/chip/list-row-metadata';
+import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
 import { Search, Inbox, Plus, Trash2, Pencil, Settings } from 'lucide-react';
 
 /* ---------------------------------------------------------------- helpers */
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+  id,
+}: {
+  title: string;
+  children: React.ReactNode;
+  id?: string;
+}) {
   return (
-    <section className="border-b border-border-light py-8">
+    <section id={id} className="border-b border-border-light py-8">
       <h2 className="text-xl font-semibold text-text-primary mb-4 font-display">{title}</h2>
       <div className="flex flex-col gap-4">{children}</div>
     </section>
@@ -426,6 +441,157 @@ export default function StyleguidePage() {
             <Chip size="md">Medium</Chip>
             <Chip size="lg">Large</Chip>
           </Row>
+          <Row label="Descriptor (metadata, non-expandable)">
+            <DescriptorChip>Archetype Feat</DescriptorChip>
+            <DescriptorChip>Character Feat</DescriptorChip>
+            <DescriptorChip variant="success">Trained</DescriptorChip>
+            <DescriptorChip variant="rarityRare">Rare</DescriptorChip>
+            <DescriptorChip>Ancestry</DescriptorChip>
+            <DescriptorChip>Flaw</DescriptorChip>
+          </Row>
+          <Row label="Descriptor vs pill (same text)">
+            <DescriptorChip>Fire damage</DescriptorChip>
+            <Chip variant="default">Fire damage</Chip>
+          </Row>
+        </Section>
+
+        <Section title="Expandable Chips">
+          <p className="text-sm text-text-secondary mb-4 max-w-3xl">
+            Rounded-rectangle geometry for expand-in-place parts and properties. Expanded chips grow to
+            full width without pill clipping on multi-line descriptions.
+          </p>
+          <Row label="Collapsed / expanded">
+            <ExpandableChip
+              label="Elemental Damage"
+              costSuffix={2}
+              description="Adds 1d6 fire damage to the power's base effect."
+              interactiveHover
+            />
+            <ExpandableChip
+              label="Extended Range"
+              costSuffix={1}
+              description="Increases the power's range by 30 feet. This line is intentionally longer to verify that expanded chips use rounded rectangles rather than pill caps that clip corner text."
+              defaultExpanded
+              interactiveHover
+            />
+          </Row>
+          <Row label="Size by role (md = default for lists; sm = dense only)">
+            <ExpandableChip
+              label="Stealth"
+              variant="list"
+              description="Move silently and remain unseen. Used for hiding, sneaking, and ambush setup."
+              interactiveHover
+            />
+            <ExpandableChip
+              label="Stealth"
+              variant="list"
+              size="sm"
+              description="Dense sm — avoid in GridListRow / summary panels; descriptor-sized expandable."
+              interactiveHover
+            />
+          </Row>
+          <Row label="Category tints">
+            <ExpandableChip
+              label="Action"
+              category="action"
+              description="Defines when and how the power is used during combat."
+              interactiveHover
+            />
+            <ExpandableChip
+              label="Area of Effect"
+              category="area"
+              description="Affects all creatures in a 15-foot radius."
+              defaultExpanded
+              interactiveHover
+            />
+          </Row>
+          <Row label="GridListRow patterns (descriptor + expandable)">
+            <ExpandableChip label="Archetype Feat" descriptor />
+            <ExpandableChip label="Fire" descriptor descriptorVariant="default" />
+            <ExpandableChip
+              label="Elemental Damage"
+              variant="listCost"
+              cost={2}
+              costLabel="TP"
+              expandOnCost
+              description="Adds 1d6 fire damage when expanded."
+            />
+          </Row>
+        </Section>
+
+        <Section title="GridListRow · expanded chip unification" id="chip-unification-rows">
+          <p className="text-sm text-text-secondary mb-4 max-w-3xl">
+            Canonical expanded rows for Playwright baselines: codex-style feat metadata (descriptor chips)
+            and character-sheet power library (metadata + expandable parts). Matches TASK-415 Phase E.
+          </p>
+          <div className="flex flex-col gap-6 max-w-3xl" data-testid="chip-unification-rows">
+            <div data-testid="chip-unification-feat-row">
+              <GridListRow
+                id="styleguide-feat"
+                name="Power Strike"
+                description="When you hit with a melee weapon attack, you can expend energy to deal extra damage."
+                expanded
+                gridColumns="1.5fr 0.8fr 1fr 0.8fr 0.8fr"
+                columns={[
+                  { key: 'Category', value: 'Combat', align: 'center' },
+                  { key: 'Ability', value: 'Strength', align: 'center' },
+                  { key: 'Recovery', value: 'Full', align: 'center' },
+                  { key: 'Uses', value: '2', align: 'center' },
+                ]}
+                detailSections={buildFeatDetailSections(
+                  {
+                    id: 'sg-feat',
+                    name: 'Power Strike',
+                    description: '',
+                    lvl_req: 1,
+                    category: 'Combat',
+                    ability: ['Strength'],
+                    rec_period: 'Full',
+                    uses_per_rec: 2,
+                    char_feat: false,
+                    state_feat: false,
+                    tags: ['Melee', 'Damage'],
+                    ability_req: ['Strength'],
+                    abil_req_val: [3],
+                    skill_req: [],
+                    skill_req_val: [],
+                  } satisfies Feat,
+                  new Map(),
+                  []
+                )}
+              />
+            </div>
+            <div data-testid="chip-unification-power-row">
+              <GridListRow
+                id="styleguide-power"
+                name="Flame Burst"
+                description="A burst of fire erupts from your hands, scorching foes in a line."
+                expanded
+                gridColumns="1.4fr 1fr 1fr 0.7fr 0.7fr"
+                columns={[
+                  { key: 'action', value: 'Basic Action', align: 'center' },
+                  { key: 'damage', value: '2d6 Fire', align: 'center' },
+                  { key: 'area', value: 'Line 3', align: 'center' },
+                  { key: 'duration', value: 'Instant', align: 'center' },
+                ]}
+                detailSections={buildPartsAndMetadataDetailSections({
+                  range: '30 spaces',
+                  partChips: [
+                    {
+                      name: 'Elemental Damage',
+                      description: 'Adds 1d6 fire damage to the power base effect.',
+                      cost: 2,
+                      costLabel: 'TP',
+                      category: 'cost',
+                    },
+                    descriptorChipData('Trained: Arcana', 'skill'),
+                  ],
+                })}
+                totalCost={2}
+                costLabel="TP"
+              />
+            </div>
+          </div>
         </Section>
 
         {/* Point status + tab summary (Phase 1.2 shared) */}
@@ -584,6 +750,7 @@ export default function StyleguidePage() {
             <Chip variant="primary">Static</Chip>
             <Chip variant="primary" interactive>Interactive</Chip>
             <Chip variant="success" onRemove={() => {}}>Removable</Chip>
+            <DescriptorChip>Descriptor</DescriptorChip>
           </Row>
           <Row label="Tabs — underline (active: {tab})">
             <div className="w-full max-w-xl">

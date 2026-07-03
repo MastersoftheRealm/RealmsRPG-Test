@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Sparkles, User } from 'lucide-react';
 import { Button, Input, Modal, Textarea, useToast } from '@/components/ui';
+import { ExpandableImage } from '@/components/shared';
 import { useAuth, useMergedSpecies, useCodexSkills, useTraits, useGameRules } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
@@ -152,12 +153,19 @@ export function RevealStep() {
             <div className="flex flex-col items-center gap-5 p-5 sm:flex-row sm:items-start">
               <div className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-card border-2 border-border-light bg-surface-alt shadow-sm">
                 {draft.portraitUrl ? (
-                  draft.portraitUrl.startsWith('data:') ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={draft.portraitUrl} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <Image src={draft.portraitUrl} alt="" fill sizes="96px" className="object-cover" />
-                  )
+                  <ExpandableImage
+                    src={draft.portraitUrl}
+                    alt={displayName}
+                    stopPropagation={false}
+                    className="relative h-full w-full"
+                  >
+                    {draft.portraitUrl.startsWith('data:') ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={draft.portraitUrl} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <Image src={draft.portraitUrl} alt="" fill sizes="96px" className="object-cover" />
+                    )}
+                  </ExpandableImage>
                 ) : (
                   <User className="h-10 w-10 text-text-muted dark:text-text-secondary" aria-hidden="true" />
                 )}

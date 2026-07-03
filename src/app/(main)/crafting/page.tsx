@@ -38,10 +38,10 @@ const STATUS_LABELS: Record<CraftingSessionStatus, string> = {
   completed: 'Completed',
 };
 
-const STATUS_COLORS: Record<CraftingSessionStatus, string> = {
-  planned: 'bg-surface-alt text-text-secondary',
-  in_progress: 'bg-success-light text-success-fg',
-  completed: 'bg-surface-alt text-text-muted dark:text-text-secondary',
+const STATUS_VARIANTS: Record<CraftingSessionStatus, 'descriptor' | 'success'> = {
+  planned: 'descriptor',
+  in_progress: 'success',
+  completed: 'descriptor',
 };
 
 type TabId = 'all' | 'in_progress' | 'completed';
@@ -230,7 +230,7 @@ function CraftingHubContent() {
                 iconContainerClassName="bg-warning-light text-warning-fg"
                 title={session.itemName}
                 badge={STATUS_LABELS[session.status]}
-                badgeClassName={STATUS_COLORS[session.status]}
+                badgeVariant={STATUS_VARIANTS[session.status]}
                 subtitle={
                   [
                     session.currencyCost > 0 && `${session.currencyCost} currency`,

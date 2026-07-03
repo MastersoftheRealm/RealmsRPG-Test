@@ -3,6 +3,7 @@
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { recordCodexChange } from '@/lib/codex-changelog';
+import { featTagsToNormalizeInput, parseFeatTagsFromDb } from '@/lib/codex/feat-tags';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
@@ -186,6 +187,24 @@ function getSupabaseAdmin() {
   return createServiceRoleClient();
 }
 
+/** Run DB `normalize_feat_tags` on admin feat saves so merges stay canonical. */
+async function applyFeatTagNormalization(
+  collection: CodexCollection,
+  data: Record<string, unknown>
+): Promise<Record<string, unknown>> {
+  if (collection !== 'codex_feats' || !('tags' in data)) return data;
+  const input = featTagsToNormalizeInput(parseFeatTagsFromDb(data.tags));
+  if (!input) return { ...data, tags: null };
+  const supabase = getSupabaseAdmin();
+  const { data: normalized, error } = await supabase.rpc('normalize_feat_tags', {
+    tag_string: input,
+  });
+  if (error || normalized == null || normalized === '') {
+    return data;
+  }
+  return { ...data, tags: normalized };
+}
+
 async function fetchRowById(table: string, id: string): Promise<Record<string, unknown> | null> {
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase.from(table).select('*').eq('id', id).maybeSingle();
@@ -249,7 +268,8 @@ export async function createCodexDoc(
     }
 
     if (COLUMNAR_COLLECTIONS.includes(collection)) {
-      const payload = toColumnarPayload(collection, data);
+      const normalizedData = await applyFeatTagNormalization(collection, data);
+      const payload = toColumnarPayload(collection, normalizedData);
       const dbPayload = toDbPayload(collection, { id: docId, ...payload });
       const { data: inserted, error } = await supabase.from(table).insert(dbPayload).select('*').single();
       if (error) throw new Error(error.message);
@@ -298,7 +318,8 @@ export async function updateCodexDoc(
     }
 
     if (COLUMNAR_COLLECTIONS.includes(collection)) {
-      const payload = toColumnarPayload(collection, data);
+      const normalizedData = await applyFeatTagNormalization(collection, data);
+      const payload = toColumnarPayload(collection, normalizedData);
       const dbPayload = toDbPayload(collection, payload);
       const { data: after, error } = await supabase.from(table).update(dbPayload).eq('id', id).select('*').single();
       if (error) throw new Error(error.message);

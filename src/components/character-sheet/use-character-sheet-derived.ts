@@ -5,8 +5,8 @@
 'use client';
 
 import { useMemo } from 'react';
-import type { Archetype, Character, CharacterFeat, Feat, Skill } from '@/types';
-import type { Species, Trait } from '@/hooks/codex-types';
+import type { Archetype, Character, CharacterFeat } from '@/types';
+import type { CodexFeat, CodexSkill, Species, Trait } from '@/hooks/codex-types';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 import { enrichCharacterData } from '@/lib/data-enrichment';
 import {
@@ -167,9 +167,9 @@ export interface UseCharacterSheetDerivedArgs {
   };
   allSpecies: Species[];
   traitsDb: Trait[];
-  codexSkills: Skill[];
+  codexSkills: CodexSkill[];
   codexArchetypes: Archetype[];
-  featsDb: Feat[];
+  featsDb: CodexFeat[];
   rules: Partial<CoreRulesMap> | undefined;
 }
 
@@ -397,7 +397,7 @@ export function useCharacterSheetDerived({
     const characterFeatSlots = calculateMaxCharacterFeats(level);
     const featLevelById = new Map<string, number>();
     (featsDb || []).forEach((f) => {
-      const feat = f as Feat & { feat_lvl?: number };
+      const feat = f as CodexFeat & { feat_lvl?: number };
       const lvl = feat.feat_lvl != null && feat.feat_lvl > 0 ? feat.feat_lvl : 1;
       featLevelById.set(String(feat.id), lvl);
     });
@@ -423,7 +423,7 @@ export function useCharacterSheetDerived({
   const { archetypeFeatsForDisplay, characterFeatsForDisplay, stateFeatsList } = useMemo(() => {
     const arch = character?.archetypeFeats || [];
     const char = character?.feats || [];
-    const db = featsDb as Array<Feat & { state_feat?: boolean }>;
+    const db = featsDb as Array<CodexFeat & { state_feat?: boolean }>;
     const isStateFeat = (feat: CharacterFeat) => {
       const codex =
         db.find((f) => f.id === String(feat.id)) ??
@@ -459,7 +459,7 @@ export function useCharacterSheetDerived({
       const ssLower = ssId.toLowerCase();
       if (rawSkillIds.has(ssLower) || rawSkillNames.has(ssLower)) continue;
       const codexSkill = codexSkills.find(
-        (s: Skill) =>
+        (s: CodexSkill) =>
           String(s.id).toLowerCase() === ssLower || String(s.name ?? '').toLowerCase() === ssLower
       );
       if (codexSkill) {
@@ -482,7 +482,7 @@ export function useCharacterSheetDerived({
 
     return merged.map((skill) => {
       const codexSkill = codexSkills.find(
-        (rs: Skill) =>
+        (rs: CodexSkill) =>
           String(rs.id) === String(skill.id) ||
           String(rs.name ?? '').toLowerCase() === String(skill.name ?? '').toLowerCase()
       );

@@ -1,6 +1,9 @@
 /**
  * Choice-card image resolution for the guided creator.
  * Uses DB `image_url` when present; otherwise typed placeholders until codex art ships.
+ *
+ * **Agents:** Also used by list rows via `@/lib/list-row-image.ts` → `ListRowThumbnail` → `ExpandableImage`.
+ * Do not duplicate placeholder paths, URL readers, or preview modals. See `AGENT_GUIDE.md` § Entity card art & expandable images.
  */
 
 export type ChoiceCardImageKind = 'species' | 'path' | 'equipment' | 'power' | 'technique';

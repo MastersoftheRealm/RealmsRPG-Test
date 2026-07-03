@@ -11,7 +11,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { ChevronLeft, Plus, Trash2 } from 'lucide-react';
-import { PageContainer, PageHeader, Button, TabNavigation, TabContentPanel, useTabGroup, Alert, LoadingState, Spinner, TableScroll } from '@/components/ui';
+import { PageContainer, PageHeader, Button, TabNavigation, TabContentPanel, useTabGroup, Alert, LoadingState, Spinner, TableScroll, Chip } from '@/components/ui';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { updateCodexDoc, createCodexDoc } from '../codex/actions';
 import type { CoreRulesMap, ProgressionCreatureRules } from '@/types/core-rules';
@@ -167,19 +167,18 @@ function DamageTypesEditor({
       <SectionTitle>All Damage Types ({all.length})</SectionTitle>
       <div className="flex flex-wrap gap-1.5 mb-3">
         {all.map((t) => (
-          <span key={t} className={`group px-2 py-0.5 rounded-full text-xs font-medium inline-flex items-center gap-1 ${exceptions.includes(t) ? 'bg-warning-light text-warning-fg' : 'bg-surface-alt text-text-secondary'}`}>
+          <Chip
+            key={t}
+            shape="rounded"
+            variant={exceptions.includes(t) ? 'warning' : 'descriptor'}
+            size="sm"
+            onRemove={() => {
+              set('all', all.filter((x) => x !== t));
+              if (exceptions.includes(t)) set('armorExceptions', exceptions.filter((x) => x !== t));
+            }}
+          >
             {t}{exceptions.includes(t) ? ' ⚡' : ''}
-            <button
-              type="button"
-              onClick={() => {
-                set('all', all.filter((x) => x !== t));
-                if (exceptions.includes(t)) set('armorExceptions', exceptions.filter((x) => x !== t));
-              }}
-              className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 ml-0.5"
-            >
-              <Trash2 className="w-3 h-3" />
-            </button>
-          </span>
+          </Chip>
         ))}
       </div>
       <div className="flex items-center gap-2 mb-4">
@@ -202,9 +201,13 @@ function DamageTypesEditor({
       <p className="text-sm text-text-muted dark:text-text-secondary mb-2">These damage types bypass armor damage reduction. Click to toggle.</p>
       <div className="flex flex-wrap gap-1.5">
         {all.map((t) => (
-          <button
-            type="button"
+          <Chip
             key={t}
+            shape="rounded"
+            variant={exceptions.includes(t) ? 'warning' : 'descriptor'}
+            size="sm"
+            interactive
+            className={exceptions.includes(t) ? 'ring-1 ring-warning-300' : undefined}
             onClick={() => {
               if (exceptions.includes(t)) {
                 set('armorExceptions', exceptions.filter((x) => x !== t));
@@ -212,10 +215,9 @@ function DamageTypesEditor({
                 set('armorExceptions', [...exceptions, t]);
               }
             }}
-            className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${exceptions.includes(t) ? 'bg-warning-light text-warning-fg ring-1 ring-warning-300' : `bg-surface-alt text-text-muted dark:text-text-secondary hover:bg-surface-alt/80`}`}
           >
             {t}{exceptions.includes(t) ? ' ⚡' : ''}
-          </button>
+          </Chip>
         ))}
       </div>
       <FieldRow label="Note"><TextInput wide value={(data.note as string) ?? ''} onChange={(v) => set('note', v)} /></FieldRow>

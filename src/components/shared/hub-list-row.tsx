@@ -9,8 +9,11 @@
 
 import { type ReactNode } from 'react';
 import { ChevronRight, Trash2 } from 'lucide-react';
-import { IconButton, Card } from '@/components/ui';
+import type { VariantProps } from 'class-variance-authority';
+import { IconButton, Card, DescriptorChip, type chipVariants } from '@/components/ui';
 import { cn } from '@/lib/utils';
+
+type DescriptorVariant = NonNullable<VariantProps<typeof chipVariants>['variant']>;
 
 const ROW_BASE_CLASS =
   'flex items-center gap-4 p-4 hover:border-primary-outline-border transition-colors cursor-pointer group shadow-none';
@@ -24,7 +27,9 @@ export interface HubListRowProps {
   title: string;
   /** Optional badge text (e.g. status) */
   badge?: string;
-  /** Badge container class (e.g. status colors) */
+  /** Semantic badge variant (preferred over badgeClassName) */
+  badgeVariant?: DescriptorVariant;
+  /** @deprecated Prefer badgeVariant */
   badgeClassName?: string;
   /** Subtitle / meta line (e.g. "100 currency · Mar 10, 2026") */
   subtitle?: ReactNode;
@@ -47,7 +52,8 @@ export function HubListRow({
   iconContainerClassName = 'bg-surface-alt text-text-secondary',
   title,
   badge,
-  badgeClassName = 'bg-surface-alt text-text-secondary',
+  badgeVariant = 'descriptor',
+  badgeClassName,
   subtitle,
   description,
   onClick,
@@ -87,14 +93,13 @@ export function HubListRow({
         <div className="flex items-center gap-2">
           <h2 className="font-semibold text-text-primary truncate">{title}</h2>
           {badge != null && badge !== '' && (
-            <span
-              className={cn(
-                'px-2 py-0.5 text-xs rounded-full font-medium',
-                badgeClassName
-              )}
+            <DescriptorChip
+              variant={badgeVariant}
+              size="sm"
+              className={badgeClassName}
             >
               {badge}
-            </span>
+            </DescriptorChip>
           )}
         </div>
         {subtitle != null && (

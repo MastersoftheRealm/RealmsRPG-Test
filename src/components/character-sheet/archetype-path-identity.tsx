@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Chip } from '@/components/ui';
+import { DescriptorChip } from '@/components/ui';
 import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
 import { getPathRecommendationsForLevel } from '@/lib/game/archetype-path';
 import { PathRemoveGuidance } from '@/components/character-sheet/path-level-guidance';
@@ -22,9 +22,9 @@ export function ArchetypeCreationBadge({ character }: { character: Character }) 
   const label = isPathCharacter(character) ? 'Archetype Path' : 'Forge Your Own Path';
 
   return (
-    <Chip variant="primary" size="sm" aria-label={`Creation style: ${label}`}>
+    <DescriptorChip variant="primary" size="sm" aria-label={`Creation style: ${label}`}>
       {label}
-    </Chip>
+    </DescriptorChip>
   );
 }
 

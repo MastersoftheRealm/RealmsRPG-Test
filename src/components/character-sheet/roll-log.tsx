@@ -17,6 +17,7 @@ import { useRolls, type RollEntry, type RollType, type DieResult } from './roll-
 import { useCampaignRolls } from '@/hooks/use-campaign-rolls';
 import { LoadingState, EmptyState, Card } from '@/components/ui';
 import type { CampaignRollEntry } from '@/types/campaign-roll';
+import { formatRollTimestamp } from '@/lib/roll-timestamp';
 
 // Re-export types for convenience
 export type { RollEntry, RollType, DieResult };
@@ -63,24 +64,6 @@ function rollDie(type: DieType): number {
 
 function generateRollId(): string {
   return `roll-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-}
-
-/** Normalize roll timestamp from API (Date serialized as ISO string), legacy ({ seconds }), or Date to a Date. */
-function normalizeRollTimestamp(
-  timestamp: Date | string | { seconds: number; nanoseconds?: number } | unknown
-): Date {
-  if (timestamp instanceof Date) return timestamp;
-  if (typeof timestamp === 'string') return new Date(timestamp);
-  const sec = (timestamp as { seconds?: number })?.seconds;
-  if (typeof sec === 'number') return new Date(sec * 1000);
-  return new Date();
-}
-
-/** Format roll timestamp for display: short date + time so "unavailable" is avoided. */
-function formatRollTimestamp(timestamp: Date | string | { seconds: number } | unknown): string {
-  const d = normalizeRollTimestamp(timestamp);
-  if (Number.isNaN(d.getTime())) return '-';
-  return d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 interface RollLogProps {

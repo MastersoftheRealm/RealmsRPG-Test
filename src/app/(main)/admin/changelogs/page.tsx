@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Button, Chip, Modal, PageContainer, PageHeader, LoadingState, EmptyState, TabNavigation, TabContentPanel, useTabGroup } from '@/components/ui';
+import { Button, Modal, PageContainer, PageHeader, LoadingState, EmptyState, TabNavigation, TabContentPanel, useTabGroup, DescriptorChip } from '@/components/ui';
 import { ErrorDisplay } from '@/components/shared';
 import { apiFetch } from '@/lib/api-client';
 
@@ -164,13 +164,13 @@ export default function AdminChangelogsPage() {
                     {readEntityName(entry)} <span className="text-text-secondary font-normal">({entry.entity_id})</span>
                   </h2>
                 </div>
-                <Chip
+                <DescriptorChip
                   variant={operationChipVariant(entry.operation)}
                   size="sm"
                   className="uppercase tracking-wide font-semibold"
                 >
                   {entry.operation}
-                </Chip>
+                </DescriptorChip>
               </div>
 
               <div className="mt-3 flex flex-wrap items-center justify-between gap-3">

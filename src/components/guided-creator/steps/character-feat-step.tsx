@@ -10,6 +10,7 @@ import { useCodexFeats } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
 import { GuidedChoiceCard } from '../guided-choice-card';
+import { GuidedFeatRestrictionNotice } from '../guided-feat-restriction-notice';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from '../guided-choice-styles';
 import { GuidedStepLayout } from '../guided-step-layout';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
@@ -73,7 +74,9 @@ export function CharacterFeatStep() {
                 description={feat.description}
                 selected={draft.characterFeatIds[0] === String(feat.id)}
                 onSelect={() => updateDraft({ characterFeatIds: [String(feat.id)] })}
-              />
+              >
+                <GuidedFeatRestrictionNotice feat={feat} />
+              </GuidedChoiceCard>
             ) : null
           )}
         </div>

@@ -23,6 +23,7 @@ import {
 import { useSort } from '@/hooks/use-sort';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators/technique-calc';
+import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
 import { useUserTechniques, useUserEmpoweredTechniques, useTechniqueParts, useDuplicateTechnique, useDuplicateEmpoweredTechnique } from '@/hooks';
 import { Button, IconButton, useToast } from '@/components/ui';
 import type { DisplayItem } from '@/types';
@@ -87,12 +88,7 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
       const syncResult = getTechniqueSyncResult(tech, partsDb);
       const totals = getEmpoweredTotals(tech);
       const damageStr = formatTechniqueDamage(doc.damage);
-      const parts: ChipData[] = display.partChips.map(chip => ({
-        name: chip.text.split(' | TP:')[0].replace(/\s*\(Opt\d+ \d+\)/g, '').trim(),
-        description: chip.description,
-        cost: chip.finalTP,
-        costLabel: 'TP',
-      }));
+      const parts = partChipsFromDisplay(display.partChips, { stripOptionSuffix: true });
       return {
         id: String(tech.docId ?? tech.id ?? ''),
         source: tech,

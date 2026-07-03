@@ -1,5 +1,6 @@
 -- Leveled Feats: add base_feat_id to codex_feats
--- Run in Supabase SQL Editor. See src/docs/LEVELED_FEATS_DESIGN.md.
+-- Status: Applied on RealmsRPG-Test (column exists; 202/203 feat_lvl>=2 rows have base_feat_id).
+-- Run BEFORE leveled-feats-migrate-roman-to-base-id.sql. See src/docs/LEVELED_FEATS_DESIGN.md.
 
 ALTER TABLE public.codex_feats
   ADD COLUMN IF NOT EXISTS base_feat_id TEXT;

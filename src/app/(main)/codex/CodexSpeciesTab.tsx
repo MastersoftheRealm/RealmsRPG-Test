@@ -32,6 +32,7 @@ const SPECIES_COLUMNS = [
   { key: '_desc', label: 'DESCRIPTION', sortable: false as const, align: 'left' as const },
 ];
 import { useSpecies, useUserSpecies, userSpeciesToSpecies, useTraits, useCodexSkills, resolveTraitIds, type Species, type Trait, type Skill } from '@/hooks';
+import { resolveSpeciesListRowThumbnail } from '@/lib/list-row-image';
 import { EmptyState } from '@/components/ui';
 
 interface SpeciesFilters {
@@ -80,6 +81,7 @@ function SpeciesCard({ species, allTraits, skillIdToName }: { species: Species; 
     <GridListRow
       id={String(species.id ?? '')}
       name={species.name}
+      thumbnail={resolveSpeciesListRowThumbnail(species)}
       description={species.description}
       gridColumns={SPECIES_GRID_COLUMNS}
       columns={columns}
@@ -306,6 +308,7 @@ export function CodexSpeciesTab({ codexMode = 'public' }: { codexMode?: 'public'
       <ListHeader
         columns={SPECIES_COLUMNS}
         gridColumns={SPECIES_GRID_COLUMNS}
+        hasThumbnailColumn
         sortState={sortState}
         onSort={handleSort}
       />

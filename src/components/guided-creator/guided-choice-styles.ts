@@ -14,10 +14,7 @@ export const GUIDED_CHOICE_STYLES = {
   bodyCollapsed: 'min-h-[5.25rem]',
   readMore:
     'flex w-fit items-center font-nunito text-sm font-semibold text-primary-link-fg hover:text-primary-fg-hover hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm min-h-11 py-0.5',
-  badge:
-    'shrink-0 rounded-pill bg-surface-alt px-2 py-0.5 text-xs font-medium text-text-secondary font-nunito',
   tagsRow: 'flex min-h-[1.625rem] flex-wrap gap-1.5',
-  tag: 'rounded-md bg-surface-alt px-2 py-0.5 text-xs font-medium text-text-secondary font-nunito',
   /** Default inline art (paths, feats). */
   media: 'relative h-12 w-12 shrink-0 overflow-hidden rounded-card bg-surface-alt',
   /** Larger selling-point art inline with title (species, equipment, powers). */
@@ -42,19 +39,16 @@ export const GUIDED_OVERVIEW_STYLES = {
   statLabel:
     'font-nunito text-xs font-medium uppercase tracking-wide text-text-secondary',
   statValue: 'mt-1 font-nunito text-sm font-semibold text-text-primary capitalize',
-  pill: 'rounded-lg border border-border-light bg-surface-alt/50 px-3 py-1.5 font-nunito text-sm font-medium text-text-primary',
-  pillPrimary:
-    'rounded-lg border border-primary-chip-border bg-primary-chip-bg px-3 py-1.5 font-nunito text-sm font-medium text-primary-chip-fg',
   callout: 'rounded-card border border-border-light bg-primary-subtle-bg/40 px-4 py-3',
 } as const;
 
-/** Two-column grid — items-start so expanded cards do not stretch neighbors. */
-export const GUIDED_CHOICE_GRID_CLASS = 'grid grid-cols-1 sm:grid-cols-2 gap-3 items-start';
-
 /**
- * Compact two-column grid for short comparable options (ancestry traits, feats).
- * items-stretch + card h-full = equal card height per row (content stays top-aligned).
+ * Two-column grid — items-stretch + card h-full = equal card height per row
+ * (content stays top-aligned within each card).
  */
+export const GUIDED_CHOICE_GRID_CLASS = 'grid grid-cols-1 sm:grid-cols-2 gap-3 items-stretch';
+
+/** Same layout as GUIDED_CHOICE_GRID_CLASS; use with density="compact" cards. */
 export const GUIDED_CHOICE_COMPACT_GRID_CLASS =
   'grid grid-cols-1 sm:grid-cols-2 gap-3 items-stretch';
 

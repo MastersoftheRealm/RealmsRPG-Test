@@ -60,7 +60,7 @@ All **columnar** (scalars + `payload` JSONB). Legacy `public_*` JSONB tables (`p
 | `official_powers` | Columnar | id (PK), name, description, action_type, is_reaction, innate, range/duration/area/damage columns, payload (JSONB), created_at, updated_at |
 | `official_techniques` | Columnar | id (PK), name, description, action_type, weapon_name, promoted columns, payload (JSONB), created_at, updated_at |
 | `official_empowered_techniques` | Columnar | Same shape as official_techniques |
-| `official_items` | Columnar | id (PK), name, description, type, rarity, armor_value, damage_reduction, promoted columns, payload (JSONB), created_at, updated_at |
+| `official_items` | Columnar | id (PK), name, description, type, rarity, armor_value, damage_reduction, promoted columns, **image_url (TEXT, nullable)** — armament card art (weapon/armor/shield) in `codex-art` bucket, payload (JSONB), created_at, updated_at |
 | `official_creatures` | Columnar | id (PK), name, description, level, type, size, hit_points, energy_points, payload (JSONB), created_at, updated_at |
 
 **API:** `GET /api/public/[type]` reads `official_*` only (returns `[]` if the table is missing). `POST`/`DELETE` require admin and write to `official_*`. Legacy `public_*` JSONB tables were dropped; do not reference them in app code.
@@ -75,12 +75,16 @@ All **columnar** (scalars + `payload` JSONB). Species matches codex_species colu
 
 | Table | Shape | Key columns |
 |-------|--------|-------------|
-| `user_powers` | Columnar | id (PK), user_id (FK), name, description, action_type, is_reaction, innate, created_at, updated_at, payload (JSONB) |
-| `user_techniques` | Columnar | id (PK), user_id (FK), name, description, action_type, weapon_name, created_at, updated_at, payload (JSONB) |
+| `user_powers` | Columnar | id (PK), user_id (FK), name, description, action_type, is_reaction, innate, created_at, updated_at, payload (JSONB); **planned:** `image_url (TEXT)` |
+| `user_techniques` | Columnar | id (PK), user_id (FK), name, description, action_type, weapon_name, created_at, updated_at, payload (JSONB); **planned:** `image_url (TEXT)` |
 | `user_empowered_techniques` | Columnar | id (PK), user_id (FK), name, description, action_type, weapon_name, created_at, updated_at, payload (JSONB) |
-| `user_items` | Columnar | id (PK), user_id (FK), name, description, type, rarity, armor_value, damage_reduction, created_at, updated_at, payload (JSONB) |
-| `user_creatures` | Columnar | id (PK), user_id (FK), name, description, level, type, size, hit_points, energy_points, created_at, updated_at, payload (JSONB) |
-| `user_species` | Columnar | id (PK), user_id (FK), name, description, type, sizes, skills, species_traits, ancestry_traits, flaws, characteristics, ave_hgt_cm, ave_wgt_kg, adulthood_lifespan, languages, created_at, updated_at, payload (JSONB) |
+| `user_items` | Columnar | id (PK), user_id (FK), name, description, type, rarity, armor_value, damage_reduction, created_at, updated_at, payload (JSONB); **planned:** `image_url (TEXT)` — same semantics as `official_items.image_url` (TASK-415) |
+| `user_creatures` | Columnar | id (PK), user_id (FK), name, description, level, type, size, hit_points, energy_points, created_at, updated_at, payload (JSONB); **planned:** `image_url (TEXT)` |
+| `user_species` | Columnar | id (PK), user_id (FK), name, description, type, sizes, skills, species_traits, ancestry_traits, flaws, characteristics, ave_hgt_cm, ave_wgt_kg, adulthood_lifespan, languages, created_at, updated_at, payload (JSONB); **planned:** `image_url (TEXT)` — same semantics as `codex_species.image_url` |
+
+**User-library image parity (TASK-415, REALMS §5.0.3):** `user_powers`, `user_techniques`, `user_items`, `user_creatures`, and `user_species` should each gain nullable `image_url` matching their official/codex counterparts. Copy official → user on add-to-library; creators and guided pickers read the same field. Simple gear (`codex_equipment`) uses **art bank** presets only — no per-row codex column.
+
+**Planned — art bank (TASK-415):** e.g. `art_bank` (id, category, slug, label, image_url, sort_order, is_active) or static manifest; categories: species, weapon, armor, shield, equipment, power, technique. Public read; admin maintains catalog.
 
 If Supabase logs show **`permission denied for table user_species`**, the `authenticated` role is missing table `GRANT`s (common after creating/moving the table without grants). Run **`sql/supabase-user-species-grants-rls.sql`** in the SQL Editor. This does not fix campaign invite lookup by itself (that is separate RLS on `campaigns`); it fixes species library / hooks that query `user_species`.
 
@@ -356,6 +360,6 @@ Supabase Dashboard → Logs shows **PostgREST** requests. Our app uses the **pub
 **Other schemas (reference only):**
 
 - **auth** — Supabase Auth (users, sessions, etc.). We don’t create or query these directly; we use Supabase Auth APIs and `user_profiles` / `usernames` in **public** for app profile data.
-- **storage** — Supabase Storage (buckets, objects). **Buckets:** `portraits`, `profile-pictures` (user uploads), **`codex-art`** (admin-only writes via `/api/upload/codex-art`; public read). RLS: `sql/supabase-storage-policies.sql`, `sql/codex-art-species-image-url.sql`. App row URLs stay in **public** codex/official columns (e.g. `codex_species.image_url`).
+- **storage** — Supabase Storage (buckets, objects). **Buckets:** `portraits`, `profile-pictures` (any user), **`codex-art`** (official/codex entity art + future **art bank**; admin/service-role writes for layer 1; public read), **`user-creations`** (planned — layer 3 privileged user uploads tied to `user_*` rows). RLS: `sql/supabase-storage-policies.sql`, `sql/codex-art-species-image-url.sql`. App row URLs stay in **public** columns (`image_url` on codex, official, and user library tables). See REALMS §5.0.3 three-layer model.
 
 If you see **404 or 500** on any `/rest/v1/codex_*` or `core_rules`, check that the table exists in **public** (Table Editor) and that RLS allows the anon/service role used by the API (see DEPLOYMENT_AND_SECRETS_SUPABASE.md).

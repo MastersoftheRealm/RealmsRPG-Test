@@ -41,6 +41,13 @@ export function codexArtStoragePath(entityType: CodexArtEntityType, entityId: st
   return `${entityType}/${sanitizeCodexArtEntityId(entityId)}.jpg`;
 }
 
+/** Map armament library type to codex-art entity folder (weapon | armor | shield). */
+export function armamentTypeToArtEntity(type: string): Extract<CodexArtEntityType, 'weapon' | 'armor' | 'shield'> | null {
+  const t = type.toLowerCase();
+  if (t === 'weapon' || t === 'armor' || t === 'shield') return t;
+  return null;
+}
+
 export interface UploadCodexArtResult {
   url: string;
 }

@@ -120,7 +120,8 @@ export interface Archetype {
   martial_prof_start?: number;
   power_prof_level5?: number;
   martial_prof_level5?: number;
-  path_data?: ArchetypePathData;
+  /** Parsed path recommendations; legacy rows may remain a loose JSON object until migrated. */
+  path_data?: ArchetypePathData | Record<string, unknown>;
   pow_abil?: AbilityName;
   mart_abil?: AbilityName;
   ability?: AbilityName; // Legacy field

@@ -1,6 +1,7 @@
 export { GuidedCreatorShell } from './guided-creator-shell';
 export { GuidedCreatorPageShell } from './guided-creator-page-shell';
 export { GuidedChoiceCard } from './guided-choice-card';
+export { GuidedFeatRestrictionNotice } from './guided-feat-restriction-notice';
 export { GUIDED_CHOICE_STYLES, GUIDED_CHOICE_GRID_CLASS, GUIDED_CHOICE_COMPACT_GRID_CLASS, GUIDED_CHOICE_LIST_CLASS } from './guided-choice-styles';
 export {
   resolveChoiceCardImage,
@@ -12,4 +13,5 @@ export { CharacterPreviewPanel } from './character-preview-panel';
 export { SpeciesRevealPanel } from './species-reveal-panel';
 export { GuidedStepLayout } from './guided-step-layout';
 export { GuidedStepFooter } from './guided-step-footer';
+export { GuidedSkillsPanel } from './guided-skills-panel';
 export { useGuidedPathData } from './use-guided-path-data';

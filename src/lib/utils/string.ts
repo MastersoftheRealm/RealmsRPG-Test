@@ -150,15 +150,14 @@ export function normalizeRangeDisplay(range: string | number | null | undefined)
   return s.replace(/\bSpaces\b/g, 'spaces').replace(/\bSpace\b/g, 'space');
 }
 
+import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
+
 /**
  * Format feat ability (sorting) for list display: "Strength, Intelligence" etc.
- * Handles array, comma-separated string, or concatenated names (e.g. "StrengthIntelligence" → "Strength, Intelligence").
+ * Handles array, comma-separated string, slash-separated legacy values, or concatenated names.
  */
 export function formatAbilityList(ability: string | string[] | null | undefined): string {
-  if (ability == null || ability === '') return '-';
-  if (Array.isArray(ability)) return ability.filter(Boolean).join(', ') || '-';
-  const s = String(ability).trim();
-  if (!s) return '-';
-  if (s.includes(',')) return s.split(',').map((a: string) => a.trim()).filter(Boolean).join(', ');
-  return s.replace(/([a-z])([A-Z])/g, '$1, $2');
+  const parts = normalizeFeatAbilities(ability);
+  if (parts.length === 0) return '-';
+  return parts.join(', ');
 }

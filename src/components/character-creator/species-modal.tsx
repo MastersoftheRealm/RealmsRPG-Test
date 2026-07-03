@@ -1,13 +1,15 @@
 
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
-import { Modal, Chip, Button, Card } from '@/components/ui';
-import { cn } from '@/lib/utils';
-import { useCodexSkills, resolveSkillIdsToNames } from '@/hooks';
-import type { Species, Trait, Skill } from '@/hooks';
+import { useMemo } from 'react';
+import { Modal, Button, Card, DescriptorChip } from '@/components/ui';
+import { SummaryChipList } from '@/components/shared';
+import { speciesSkillToSummaryChipItem } from '@/lib/chip/species-skill-chips';
+import { useCodexSkills } from '@/hooks';
+import type { Species, Trait } from '@/hooks';
 import { getChoiceOptionIds, resolveChoiceOptionTraits } from '@/lib/choice-trait';
 import { ChevronDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface SpeciesModalProps {
   species: Species | null;
@@ -108,9 +110,9 @@ function TraitSection({ title, traits, isFlaw = false, selectable = false }: Tra
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-sm text-text-primary">{trait.name}</span>
-                        <Chip variant="info" size="sm">
+                        <DescriptorChip variant="info" size="sm">
                           {optionTraits.length} options
-                        </Chip>
+                        </DescriptorChip>
                       </div>
                       <p className="text-xs mt-1 text-text-secondary">{trait.description}</p>
                     </div>
@@ -155,19 +157,7 @@ export function SpeciesModal({
   onSelect, 
   onClose 
 }: SpeciesModalProps) {
-  // Fetch skills for ID → name resolution
-  const { data: allSkills } = useCodexSkills();
-  // State for showing skill description
-  const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
-
-  // Clear skill description when viewing a different species or when modal closes (avoid carrying over)
-  useEffect(() => {
-    setSelectedSkill(null);
-  }, [species?.id]);
-
-  useEffect(() => {
-    if (!isOpen) setSelectedSkill(null);
-  }, [isOpen]);
+  const { data: allSkills = [] } = useCodexSkills();
 
   // Resolve all trait categories
   const resolvedTraits = useMemo(() => {
@@ -181,18 +171,9 @@ export function SpeciesModal({
     };
   }, [species, traits]);
 
-  // Resolve species skill IDs to display: id "0" = "Any" (extra skill point), others = codex skill
-  const speciesSkills = useMemo(() => {
-    if (!species?.skills || !allSkills) return [] as Array<Skill & { displayName: string }>;
-    return species.skills.map(skillId => {
-      const idStr = String(skillId);
-      if (idStr === '0') {
-        return { id: '0', name: 'Any', displayName: 'Any' } as Skill & { displayName: string };
-      }
-      const found = allSkills.find((s: Skill) => s.id === idStr || String(s.name ?? '').toLowerCase() === idStr.toLowerCase());
-      if (!found) return null;
-      return { ...found, displayName: found.name ?? idStr };
-    }).filter((s): s is Skill & { displayName: string } => s != null);
+  const speciesSkillChips = useMemo(() => {
+    if (!species?.skills?.length) return [];
+    return species.skills.map((skillId) => speciesSkillToSummaryChipItem(skillId, allSkills));
   }, [species?.skills, allSkills]);
 
   if (!species || !isOpen) return null;
@@ -260,9 +241,9 @@ export function SpeciesModal({
             </h4>
             <div className="flex flex-wrap gap-2">
               {Object.entries(species.ability_bonuses).map(([ability, bonus]) => (
-                <Chip key={ability} variant="primary">
+                <DescriptorChip key={ability} variant="primary">
                   {ability.substring(0, 3).toUpperCase()} +{bonus}
-                </Chip>
+                </DescriptorChip>
               ))}
             </div>
           </div>
@@ -271,50 +252,12 @@ export function SpeciesModal({
         {/* Skills and Languages - Main Details */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           {/* Species Skills - Clickable to show description */}
-          {speciesSkills.length > 0 && (
+          {speciesSkillChips.length > 0 && (
             <div>
               <h3 className="font-semibold text-sm uppercase tracking-wide text-text-secondary mb-2">
                 Species Skills
               </h3>
-              <div className="flex flex-wrap gap-2">
-                {speciesSkills.map(skill => (
-                  <Chip 
-                    key={String(skill.id)} 
-                    variant="info"
-                    className="cursor-pointer hover:ring-2 hover:ring-info-300 transition-all"
-                    onClick={() => setSelectedSkill(selectedSkill?.id === skill.id ? null : skill)}
-                  >
-                    {(skill as { displayName?: string; name?: string }).displayName ?? (skill as { name?: string }).name ?? String(skill.id)}
-                  </Chip>
-                ))}
-              </div>
-              {/* Show selected skill description */}
-              {selectedSkill && (
-                <div className="mt-2 p-3 bg-info-50 border border-info-200 rounded-lg">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium text-info-fg">{(selectedSkill as { displayName?: string; name?: string }).displayName ?? (selectedSkill as { name?: string }).name ?? 'Skill'}</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedSkill(null)}
-                      aria-label="Dismiss skill description"
-                      className="text-info-fg hover:opacity-80 h-auto py-0 px-1 min-w-0"
-                    >
-                      ✕
-                    </Button>
-                  </div>
-                  <p className="text-sm text-info-fg">
-                    {String(selectedSkill.id) === '0'
-                      ? 'Your choice: pick any one skill as your second species skill, or treat this as an extra skill point.'
-                      : ((selectedSkill as { description?: string }).description || 'No description available.')}
-                  </p>
-                  {selectedSkill.ability && (
-                    <p className="text-xs text-info-fg mt-1">
-                      Ability: {selectedSkill.ability}
-                    </p>
-                  )}
-                </div>
-              )}
+              <SummaryChipList items={speciesSkillChips} />
             </div>
           )}
 
@@ -326,9 +269,9 @@ export function SpeciesModal({
               </h4>
               <div className="flex flex-wrap gap-2">
                 {species.languages.map(lang => (
-                  <Chip key={lang} variant="primary">
+                  <DescriptorChip key={lang} variant="primary">
                     {lang}
-                  </Chip>
+                  </DescriptorChip>
                 ))}
               </div>
             </div>

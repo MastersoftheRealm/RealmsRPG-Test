@@ -5,6 +5,7 @@ import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import { getItemColumns } from './get-item-columns';
 import { partChipsFromDisplay } from './part-chips';
 import type { CodexDbRefs } from './types';
+import { buildPartsAndMetadataDetailSections } from '@/lib/chip/list-row-metadata';
 
 export function buildTechniqueSelectableItem(item: UserTechnique, dbs: CodexDbRefs): SelectableItem {
   const doc: TechniqueDocument = {
@@ -24,7 +25,10 @@ export function buildTechniqueSelectableItem(item: UserTechnique, dbs: CodexDbRe
     actionType: display.actionType,
   };
   const partChips = partChipsFromDisplay(display.partChips);
-  const detailSections = partChips.length > 0 ? [{ label: 'Parts & Proficiencies', chips: partChips }] : undefined;
+  const detailSections = buildPartsAndMetadataDetailSections({
+    damage: display.damageStr !== '-' ? display.damageStr : undefined,
+    partChips,
+  });
   const totalCost = typeof display.tp === 'number' && display.tp > 0 ? display.tp : undefined;
 
   return {
@@ -32,7 +36,7 @@ export function buildTechniqueSelectableItem(item: UserTechnique, dbs: CodexDbRe
     name: String(item.name ?? ''),
     description: String(item.description ?? '') || 'No description available.',
     columns: getItemColumns(item, 'technique', techniqueDisplay),
-    detailSections,
+    detailSections: detailSections.length > 0 ? detailSections : undefined,
     totalCost,
     costLabel: totalCost != null ? 'TP' : undefined,
     data: item,

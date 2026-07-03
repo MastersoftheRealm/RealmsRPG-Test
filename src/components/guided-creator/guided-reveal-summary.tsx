@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { cn } from '@/lib/utils';
+import { SummaryChipList, type SummaryChipItem } from '@/components/shared';
 import { AbilityScoreGrid } from '@/components/shared';
 import {
   useMergedSpecies,
@@ -54,31 +54,6 @@ function SummarySectionHeader({
   );
 }
 
-function ChipList({
-  items,
-  className,
-}: {
-  items: Array<{ key: string; label: string; className?: string }>;
-  className?: string;
-}) {
-  if (items.length === 0) return null;
-  return (
-    <div className={cn('flex flex-wrap gap-2', className)}>
-      {items.map((item) => (
-        <span
-          key={item.key}
-          className={cn(
-            'rounded-lg border border-border-light bg-surface-alt/50 px-3 py-1.5 font-nunito text-sm font-medium text-text-primary',
-            item.className
-          )}
-        >
-          {item.label}
-        </span>
-      ))}
-    </div>
-  );
-}
-
 export function GuidedRevealSummary() {
   const draft = useGuidedCreatorStore((s) => s.draft);
   const { archetype, pathData } = useGuidedPathData();
@@ -100,10 +75,9 @@ export function GuidedRevealSummary() {
   const speciesName = draft.speciesName ?? species?.name ?? null;
   const pathType = draft.archetypeType;
 
-  const traitName = (id: string) =>
-    allTraits.find((t) => String(t.id) === String(id))?.name ?? id;
+  const traitById = useMemo(() => new Map(allTraits.map((t) => [String(t.id), t])), [allTraits]);
 
-  const ancestryTraitNames = useMemo(() => {
+  const ancestryTraitNames = useMemo((): SummaryChipItem[] => {
     const resolvedSpeciesTraits = applySpeciesTraitChoiceSelections(
       species?.species_traits,
       draft.selectedSpeciesTraitChoices,
@@ -115,34 +89,55 @@ export function GuidedRevealSummary() {
       ...(draft.selectedCharacteristicId ? [draft.selectedCharacteristicId] : []),
       ...(draft.selectedFlawId ? [draft.selectedFlawId] : []),
     ];
-    return ids.map((id) => ({ key: String(id), label: traitName(String(id)) }));
-  }, [species, draft, allTraits]);
+    return ids.map((id) => {
+      const trait = traitById.get(String(id));
+      return {
+        key: String(id),
+        label: trait?.name ?? String(id),
+        description: trait?.description,
+        variant: 'list' as const,
+      };
+    });
+  }, [species, draft, allTraits, traitById]);
 
-  const skillNames = useMemo(() => {
+  const skillNames = useMemo((): SummaryChipItem[] => {
     const ids = new Set<string>();
     (species?.skills ?? []).forEach((id) => {
       if (String(id) !== '0') ids.add(String(id));
     });
     Object.keys(draft.skills ?? {}).forEach((id) => ids.add(String(id)));
-    return Array.from(ids).map((id) => ({
-      key: id,
-      label: codexSkills.find((s) => String(s.id) === id)?.name ?? id,
-    }));
+    return Array.from(ids).map((id) => {
+      const skill = codexSkills.find((s) => String(s.id) === id);
+      return {
+        key: id,
+        label: skill?.name ?? id,
+        description: skill?.description,
+        variant: 'list' as const,
+      };
+    });
   }, [draft.skills, species, codexSkills]);
 
   const featById = useMemo(() => new Map(feats.map((f) => [String(f.id), f])), [feats]);
 
-  const archetypeFeatChips = draft.archetypeFeatIds.map((id) => ({
-    key: id,
-    label: featById.get(String(id))?.name ?? id,
-    className: 'border-warning-200/60 bg-warning-light/40 text-warning-fg dark:border-warning-800/40',
-  }));
+  const archetypeFeatChips = draft.archetypeFeatIds.map((id) => {
+    const feat = featById.get(String(id));
+    return {
+      key: id,
+      label: feat?.name ?? id,
+      description: feat?.description,
+      variant: 'listWarning' as const,
+    };
+  });
 
-  const characterFeatChips = draft.characterFeatIds.map((id) => ({
-    key: id,
-    label: featById.get(String(id))?.name ?? id,
-    className: 'border-info-200/60 bg-info-light/40 text-info-fg dark:border-info-800/40',
-  }));
+  const characterFeatChips = draft.characterFeatIds.map((id) => {
+    const feat = featById.get(String(id));
+    return {
+      key: id,
+      label: feat?.name ?? id,
+      description: feat?.description,
+      variant: 'list' as const,
+    };
+  });
 
   const loadoutTitle = useMemo(() => {
     const loadouts = pathData?.level1?.loadouts ?? [];
@@ -154,27 +149,41 @@ export function GuidedRevealSummary() {
     return draft.loadoutId ?? copy.defaultLoadout;
   }, [pathData, draft.loadoutId, archetype?.name]);
 
-  const itemName = (id: string) =>
-    officialItems.find((i) => String(i.id) === String(id))?.name ?? id;
+  const itemById = useMemo(
+    () => new Map(officialItems.map((i) => [String(i.id), i])),
+    [officialItems]
+  );
 
-  const loadoutItems = useMemo(() => {
-    const items: Array<{ key: string; label: string }> = [];
+  const loadoutItems = useMemo((): SummaryChipItem[] => {
+    const items: SummaryChipItem[] = [];
     draft.armaments.forEach((a) => {
+      const item = itemById.get(String(a.id));
       const qty = a.quantity > 1 ? ` ×${a.quantity}` : '';
-      items.push({ key: `w-${a.id}`, label: `${itemName(a.id)}${qty}` });
+      items.push({
+        key: `w-${a.id}`,
+        label: `${item?.name ?? a.id}${qty}`,
+        description: item?.description ? String(item.description) : undefined,
+        variant: 'list' as const,
+      });
     });
     draft.equipment.forEach((e) => {
+      const item = itemById.get(String(e.id));
       const qty = e.quantity > 1 ? ` ×${e.quantity}` : '';
-      items.push({ key: `e-${e.id}`, label: `${itemName(e.id)}${qty}` });
+      items.push({
+        key: `e-${e.id}`,
+        label: `${item?.name ?? e.id}${qty}`,
+        description: item?.description ? String(item.description) : undefined,
+        variant: 'list' as const,
+      });
     });
     return items;
-  }, [draft.armaments, draft.equipment, officialItems]);
+  }, [draft.armaments, draft.equipment, itemById]);
 
-  const powerChips = useMemo(() => {
+  const powerChips = useMemo((): SummaryChipItem[] => {
     const byId = new Map(officialPowers.map((p) => [String(p.id), p]));
     return draft.powerIds.map((id) => {
       const raw = byId.get(String(id));
-      let enLabel = '';
+      let energyCost: number | undefined;
       if (raw) {
         try {
           const doc: PowerDocument = {
@@ -183,24 +192,26 @@ export function GuidedRevealSummary() {
             parts: Array.isArray(raw.parts) ? (raw.parts as PowerDocument['parts']) : [],
           };
           const disp = derivePowerDisplay(doc, powerPartsDb);
-          if (typeof disp.energy === 'number') enLabel = ` · ${disp.energy} EN`;
+          if (typeof disp.energy === 'number') energyCost = disp.energy;
         } catch {
           // ignore
         }
       }
       return {
         key: id,
-        label: `${raw?.name ?? id}${enLabel}`,
-        className: 'border-power/30 bg-power-light/50 text-power-fg dark:bg-power-900/30',
+        label: String(raw?.name ?? id),
+        description: raw?.description ? String(raw.description) : undefined,
+        energyCost,
+        variant: 'power' as const,
       };
     });
   }, [draft.powerIds, officialPowers, powerPartsDb]);
 
-  const techniqueChips = useMemo(() => {
+  const techniqueChips = useMemo((): SummaryChipItem[] => {
     const byId = new Map(officialTechniques.map((t) => [String(t.id), t]));
     return draft.techniqueIds.map((id) => {
       const raw = byId.get(String(id));
-      let enLabel = '';
+      let energyCost: number | undefined;
       if (raw) {
         try {
           const doc: TechniqueDocument = {
@@ -209,15 +220,17 @@ export function GuidedRevealSummary() {
             parts: Array.isArray(raw.parts) ? (raw.parts as TechniqueDocument['parts']) : [],
           };
           const disp = deriveTechniqueDisplay(doc, techniquePartsDb);
-          if (typeof disp.energy === 'number') enLabel = ` · ${disp.energy} EN`;
+          if (typeof disp.energy === 'number') energyCost = disp.energy;
         } catch {
           // ignore
         }
       }
       return {
         key: id,
-        label: `${raw?.name ?? id}${enLabel}`,
-        className: 'border-martial/30 bg-martial-light/50 text-martial-fg dark:bg-martial-900/30',
+        label: String(raw?.name ?? id),
+        description: raw?.description ? String(raw.description) : undefined,
+        energyCost,
+        variant: 'technique' as const,
       };
     });
   }, [draft.techniqueIds, officialTechniques, techniquePartsDb]);
@@ -322,14 +335,14 @@ export function GuidedRevealSummary() {
               title={copy.ancestryTitle}
               editSubSteps={[{ subStep: 'ancestry', label: 'ancestry' }]}
             />
-            <ChipList items={ancestryTraitNames} />
+            <SummaryChipList items={ancestryTraitNames} />
           </div>
         )}
 
         {skillNames.length > 0 && (
           <div>
             <SummarySectionHeader title={copy.skillsTitle} editSubSteps={[{ subStep: 'skills', label: 'skills' }]} />
-            <ChipList items={skillNames} />
+            <SummaryChipList items={skillNames} />
           </div>
         )}
 
@@ -342,7 +355,7 @@ export function GuidedRevealSummary() {
                 { subStep: 'character-feat', label: 'character feat' },
               ]}
             />
-            <ChipList items={[...archetypeFeatChips, ...characterFeatChips]} />
+            <SummaryChipList items={[...archetypeFeatChips, ...characterFeatChips]} />
           </div>
         )}
 
@@ -350,7 +363,7 @@ export function GuidedRevealSummary() {
           <div>
             <SummarySectionHeader title={copy.loadoutTitle} editSubSteps={[{ subStep: 'loadout', label: 'loadout' }]} />
             <p className="mb-2 font-display text-sm font-semibold text-text-primary">{loadoutTitle}</p>
-            <ChipList items={loadoutItems} />
+            <SummaryChipList items={loadoutItems} />
           </div>
         )}
 
@@ -360,7 +373,7 @@ export function GuidedRevealSummary() {
               title={copy.powersTitle}
               editSubSteps={[{ subStep: 'powers-techniques', label: 'powers' }]}
             />
-            <ChipList items={[...powerChips, ...techniqueChips]} />
+            <SummaryChipList items={[...powerChips, ...techniqueChips]} />
           </div>
         )}
       </div>

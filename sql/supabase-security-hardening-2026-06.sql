@@ -1,5 +1,6 @@
 -- Security hardening: drop legacy table, fix function search_path, RLS gaps, revoke rls_auto_enable RPC
--- Run in Supabase Dashboard → SQL Editor (or via Supabase MCP apply_migration).
+-- Status: Applied on RealmsRPG-Test — migration security_hardening_2026_06 (20260608131526).
+-- Post-DEV-376: ui_tooltips function block removed (table dropped in later migration).
 
 -- -----------------------------------------------------------------------------
 -- 1) Drop unused Prisma legacy table (RLS enabled, no policies)
@@ -20,16 +21,7 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.set_ui_tooltips_updated_at()
-RETURNS trigger
-LANGUAGE plpgsql
-SET search_path = public
-AS $$
-BEGIN
-  NEW.updated_at = now();
-  RETURN NEW;
-END;
-$$;
+-- set_ui_tooltips_updated_at removed with ui_tooltips (DEV-376 / drop-legacy-ui-tooltips-2026-06.sql)
 
 CREATE OR REPLACE FUNCTION public.prune_codex_change_logs_to_latest_ten()
 RETURNS trigger

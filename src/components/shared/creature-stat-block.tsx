@@ -37,6 +37,7 @@ import {
 } from '@/lib/game/formulas';
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
 import { formatListCellLabel, normalizeRangeDisplay } from '@/lib/utils';
+import { buildPartsAndMetadataDetailSections } from '@/lib/chip/list-row-metadata';
 import { ChevronDown } from 'lucide-react';
 import type { Abilities } from '@/types';
 
@@ -523,6 +524,12 @@ export function CreatureStatBlock({
 
       const partsChips = partsToChips(parts, powerPartsDb as unknown as CodexPart[]);
       const damageStr = formatPowerDamage(Array.isArray(damage) ? (damage as never) : undefined) || (typeof ref.damage === 'string' ? ref.damage : undefined);
+      const rangeValue =
+        derived.range && derived.range !== '-' ? derived.range : ref.range;
+      const detailSections = buildPartsAndMetadataDetailSections({
+        range: rangeValue,
+        partChips: partsChips,
+      });
 
       return {
         id: `${creature.id}-power-${refId ?? idx}`,
@@ -534,17 +541,8 @@ export function CreatureStatBlock({
         duration: derived.duration || ref.duration,
         energyCost: typeof derived.energy === 'number' ? derived.energy : ref.energy,
         innate: ref.innate,
-        partsChips,
+        detailSections: detailSections.length > 0 ? detailSections : undefined,
         totalTp: partsChips.reduce((sum, chip) => sum + (chip.cost ?? 0), 0),
-        requirements: derived.range && derived.range !== '-' ? (
-          <div className="text-sm text-text-secondary">
-            <span className="font-medium">Range:</span> {normalizeRangeDisplay(derived.range)}
-          </div>
-        ) : ref.range ? (
-          <div className="text-sm text-text-secondary">
-            <span className="font-medium">Range:</span> {normalizeRangeDisplay(ref.range)}
-          </div>
-        ) : undefined,
       };
     });
   }, [creature.id, creature.powers, officialPowers, powerPartsDb, userPowers]);
@@ -622,6 +620,12 @@ export function CreatureStatBlock({
       );
 
       const partsChips = partsToChips(parts, techniquePartsDb as unknown as CodexPart[]);
+      const damageStr =
+        derived.damageStr !== '-' ? derived.damageStr : typeof ref.damage === 'string' ? ref.damage : undefined;
+      const detailSections = buildPartsAndMetadataDetailSections({
+        damage: damageStr,
+        partChips: partsChips,
+      });
       return {
         id: `${creature.id}-tech-${refId ?? idx}`,
         name: baseName,
@@ -629,7 +633,7 @@ export function CreatureStatBlock({
         energyCost: typeof derived.energy === 'number' ? derived.energy : ref.energy,
         weaponName: derived.weaponName || ref.weapon,
         tp: derived.tp ?? ref.tp,
-        partsChips,
+        detailSections: detailSections.length > 0 ? detailSections : undefined,
         totalTp: partsChips.reduce((sum, chip) => sum + (chip.cost ?? 0), 0),
       };
     });

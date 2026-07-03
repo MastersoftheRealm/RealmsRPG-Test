@@ -101,6 +101,24 @@ export type {
   ExperienceRules,
 } from './core-rules';
 
+// Codex (GET /api/codex payload + entity collections)
+export type {
+  CodexPayload,
+  CodexPayloadKey,
+  CodexArchetype,
+  CodexFeat,
+  CodexSkill,
+  CodexSpecies,
+  CodexTrait,
+  CodexPowerPart,
+  CodexTechniquePart,
+  CodexPart,
+  CodexItemProperty,
+  CodexEquipmentItem,
+  CodexCreatureFeat,
+} from './codex';
+export { CODEX_PAYLOAD_KEYS } from './codex';
+
 // Item Display System
 export type {
   BaseGameItem,

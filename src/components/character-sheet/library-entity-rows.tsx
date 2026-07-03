@@ -46,6 +46,13 @@ import {
   resolveItemProperties,
   splitDamageDiceAndType,
 } from './library-list-helpers';
+import {
+  buildArmorRequirementMetadataChips,
+  buildPartsAndMetadataDetailSections,
+  mergeDetailSections,
+  metadataDetailSection,
+  propertiesProficienciesSection,
+} from '@/lib/chip/list-row-metadata';
 
 type RollContext = ReturnType<typeof useRollsOptional>;
 
@@ -163,21 +170,20 @@ export function mapPowerRows(powers: CharacterPower[], ctx: LibraryEntityRowCont
         />
       ) : undefined;
 
+    const detailSections = buildPartsAndMetadataDetailSections({
+      range: power.range,
+      partChips,
+    });
+
     return {
       id,
       name: power.name,
       description: power.description,
       columns,
       gridColumns: POWER_GRID,
-      partsChips: partChips,
-      chipsLabel: 'Parts',
+      detailSections: detailSections.length > 0 ? detailSections : undefined,
       badges: needsProfBadge(ctx, { powers: [power] }),
       totalTp: powerTotalTP > 0 ? powerTotalTP : undefined,
-      requirements: power.range ? (
-        <div className="text-sm text-text-secondary">
-          <span className="font-medium">Range:</span> {normalizeRangeDisplay(power.range)}
-        </div>
-      ) : undefined,
       innate: isInnate,
       hideInnateBadge: isInnate,
       leftSlot: innateToggle,
@@ -201,23 +207,14 @@ export function mapTechniqueRows(
     const totalTP =
       typeof techTP === 'number' ? techTP : typeof techTP === 'string' ? parseFloat(techTP) : undefined;
 
-    const rangeOrDamage = (tech.range || tech.damage) && (
-      <div className="flex flex-wrap gap-3 text-sm text-text-secondary">
-        {tech.range && (
-          <span>
-            <span className="font-medium">Range:</span> {normalizeRangeDisplay(tech.range)}
-          </span>
-        )}
-        {tech.damage && (
-          <span>
-            <span className="font-medium">Damage:</span> {tech.damage}
-          </span>
-        )}
-      </div>
-    );
-
     const techIsReaction = (tech as CharacterTechnique & { isReaction?: boolean }).isReaction;
     const actionDisplay = formatSavedActionTypeForDisplay(tech.actionType, techIsReaction);
+
+    const detailSections = buildPartsAndMetadataDetailSections({
+      range: tech.range,
+      damage: tech.damage,
+      partChips,
+    });
 
     return {
       id,
@@ -235,11 +232,9 @@ export function mapTechniqueRows(
         },
         { key: 'tp', value: techTP ?? '-', align: 'center' },
       ],
-      partsChips: partChips,
-      chipsLabel: 'Parts',
+      detailSections: detailSections.length > 0 ? detailSections : undefined,
       badges: needsProfBadge(ctx, { techniques: [tech] }),
       totalTp: totalTP && totalTP > 0 ? totalTP : undefined,
-      requirements: rangeOrDamage,
       rightSlot: buildEnergyButton(energyCost, canUse, ctx.onUseTechnique, id, 'success'),
       onDelete:
         ctx.showLibraryEditControls && ctx.onRemoveTechnique
@@ -302,6 +297,8 @@ export function mapWeaponRows(weapons: Item[], ctx: LibraryEntityRowContext): En
         </div>
       );
 
+    const propertySection = propertiesProficienciesSection(propertyChips);
+
     return {
       id,
       name: item.name,
@@ -312,8 +309,7 @@ export function mapWeaponRows(weapons: Item[], ctx: LibraryEntityRowContext): En
         { key: 'damage', value: damageButton, align: 'center' },
       ],
       gridColumns: CHARACTER_SHEET_WEAPON_GRID,
-      chips: propertyChips,
-      chipsLabel: 'Properties',
+      detailSections: propertySection ? [propertySection] : undefined,
       badges: needsProfBadge(ctx, { weapons: [item] }),
       equipped: item.equipped,
       leftSlot:
@@ -345,7 +341,9 @@ export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): En
     } = splitDamageDiceAndType(shieldDamageStr !== '-' ? String(shieldDamageStr) : item.damage);
     const propertyChips = partDataToChips(
       propertiesToPartData(resolveItemProperties(item as ItemWithLibrarySource), ctx.itemPropertiesDb)
-    );
+      );
+
+    const propertySection = propertiesProficienciesSection(propertyChips);
 
     const attackCell =
       shieldDamageStr !== '-' && ctx.rollContext?.canRoll !== false && ctx.rollContext ? (
@@ -419,8 +417,7 @@ export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): En
         },
       ],
       gridColumns: CHARACTER_SHEET_SHIELD_GRID,
-      chips: propertyChips,
-      chipsLabel: 'Properties',
+      detailSections: propertySection ? [propertySection] : undefined,
       badges: needsProfBadge(ctx, { shields: [item] }),
       equipped: item.equipped,
       leftSlot:
@@ -468,21 +465,11 @@ export function mapArmorRows(armor: Item[], ctx: LibraryEntityRowContext): Entit
     const baseEvasion = 10 + agility;
     const critThreshold = critRangeBonus > 0 ? baseEvasion + 10 + critRangeBonus : undefined;
 
-    const armorRequirements =
-      (abilityReq?.name && abilityReq?.level) || (agilityRed && agilityRed > 0) ? (
-        <div className="space-y-1 text-sm text-text-secondary">
-          {abilityReq?.name && abilityReq?.level && (
-            <p>
-              <span className="font-medium">Requires:</span> {abilityReq.name} {abilityReq.level}+
-            </p>
-          )}
-          {agilityRed && agilityRed > 0 && (
-            <p>
-              <span className="font-medium">Agility Reduction:</span> -{agilityRed}
-            </p>
-          )}
-        </div>
-      ) : undefined;
+    const armorMeta = metadataDetailSection(
+      buildArmorRequirementMetadataChips({ abilityRequirement: abilityReq, agilityReduction: agilityRed })
+    );
+    const propertySection = propertiesProficienciesSection(propertyChips);
+    const detailSections = mergeDetailSections(armorMeta, propertySection ? [propertySection] : undefined);
 
     return {
       id,
@@ -497,10 +484,8 @@ export function mapArmorRows(armor: Item[], ctx: LibraryEntityRowContext): Entit
         },
         { key: 'crit', value: critThreshold ?? '-', align: 'center' },
       ],
-      chips: propertyChips,
-      chipsLabel: 'Properties',
+      detailSections: detailSections.length > 0 ? detailSections : undefined,
       badges: needsProfBadge(ctx, { armor: [item] }),
-      requirements: armorRequirements,
       equipped: item.equipped,
       leftSlot:
         ctx.onToggleEquipArmor ? (
@@ -522,6 +507,7 @@ export function mapEquipmentRows(equipment: Item[], ctx: LibraryEntityRowContext
     const propertyChips = partDataToChips(
       propertiesToPartData(resolveItemProperties(item as ItemWithLibrarySource), ctx.itemPropertiesDb)
     );
+    const propertySection = propertiesProficienciesSection(propertyChips);
     const itemType = formatListCellLabel(item.type);
     const qty = item.quantity ?? 1;
     const quantityStepper = ctx.onEquipmentQuantityChange ? (
@@ -562,8 +548,7 @@ export function mapEquipmentRows(equipment: Item[], ctx: LibraryEntityRowContext
         { key: 'type', value: itemType, align: 'center' },
         { key: 'quantity', value: quantityStepper, align: 'center' },
       ],
-      chips: propertyChips,
-      chipsLabel: 'Properties',
+      detailSections: propertySection ? [propertySection] : undefined,
       badges,
       onDelete:
         ctx.showLibraryEditControls && ctx.onRemoveEquipment

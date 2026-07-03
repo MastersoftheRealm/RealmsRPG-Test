@@ -7,7 +7,17 @@
 import { NextResponse } from 'next/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
+import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
+import type { CodexPayload } from '@/types/codex';
+import type { ArchetypeCategory } from '@/types/archetype';
+
+/** Normalize DB archetype type to a known category (defaults to martial when missing/unknown). */
+function toArchetypeCategory(raw: unknown): ArchetypeCategory {
+  const t = String(raw ?? '').toLowerCase();
+  if (t === 'power' || t === 'powered-martial' || t === 'martial') return t;
+  return 'martial';
+}
 
 function toStrArray(val: unknown): string[] {
   if (!val) return [];
@@ -48,7 +58,7 @@ function parseJsonObject(val: unknown): Record<string, unknown> | undefined {
 /** DB row shape (snake_case from Supabase) */
 type Row = Record<string, unknown>;
 
-async function fetchCodexFromClient(supabase: SupabaseClient) {
+async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayload> {
   const [
     { data: feats, error: eFeats },
     { data: skills, error: eSkills },
@@ -117,7 +127,10 @@ async function fetchCodexFromClient(supabase: SupabaseClient) {
       name: r.name ?? '',
       description: r.description ?? '',
       category: r.category ?? '',
-      ability: r.ability ?? undefined,
+      ability: (() => {
+        const arr = normalizeFeatAbilities(r.ability as string | string[] | null | undefined);
+        return arr.length > 0 ? arr : undefined;
+      })(),
       ability_req: toStrArray(r.ability_req),
       abil_req_val: toNumArray(r.abil_req_val),
       tags: toStrArray(r.tags),
@@ -364,7 +377,7 @@ async function fetchCodexFromClient(supabase: SupabaseClient) {
       return {
         id: r.id,
         name: r.name ?? '',
-        type: r.type ?? '',
+        type: toArchetypeCategory(r.type),
         description: r.description ?? '',
         archetype_ability: (r.archetype_ability as string | undefined) ?? undefined,
         secondary_ability: (r.secondary_ability as string | undefined) ?? undefined,
@@ -432,7 +445,7 @@ async function fetchCodexFromClient(supabase: SupabaseClient) {
     archetypes: codexArchetypes,
     creatureFeats: codexCreatureFeats,
     coreRules,
-  };
+  } as unknown as CodexPayload;
 }
 
 /** Codex is admin-editable; long public cache caused stale archetypes/feats after saves. */

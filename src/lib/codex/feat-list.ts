@@ -8,7 +8,9 @@ import type { Feat, Skill } from '@/hooks';
 import { buildFeatLevelChips } from '@/lib/leveled-feats';
 import { checkFeatRequirements } from '@/lib/game/feat-requirements';
 import type { CodexSkillForFeat } from '@/lib/game/formulas';
+import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 import { formatAbilityList, formatListCellLabel } from '@/lib/utils';
+import { descriptorChipData, tagDescriptorChip } from '@/lib/chip/chip-data-helpers';
 import type { Character } from '@/types';
 
 export const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 0.8fr 1fr 40px';
@@ -71,11 +73,7 @@ export function buildFeatFilterOptions(feats: Feat[] | undefined): FeatFilterOpt
 
   feats.forEach((f) => {
     if (f.lvl_req > 0) levels.add(f.lvl_req);
-    if (Array.isArray(f.ability)) {
-      f.ability.forEach((a) => abilities.add(a));
-    } else if (f.ability) {
-      abilities.add(f.ability);
-    }
+    normalizeFeatAbilities(f.ability).forEach((a) => abilities.add(a));
     if (f.category) categories.add(f.category);
     f.tags?.forEach((t) => tags.add(t));
     f.ability_req?.forEach((a) => abilReqAbilities.add(a));
@@ -128,7 +126,7 @@ export function filterFeats(feats: Feat[], filters: FeatListFilters, options?: F
     if (filters.categories.length > 0 && !filters.categories.includes(f.category || '')) return false;
 
     if (filters.abilities.length > 0) {
-      const featAbilities = Array.isArray(f.ability) ? f.ability : f.ability ? [f.ability] : [];
+      const featAbilities = normalizeFeatAbilities(f.ability);
       if (!featAbilities.some((a) => filters.abilities.includes(a))) return false;
     }
 
@@ -156,37 +154,34 @@ export function buildFeatDetailSections(
   /**
    * Optional overrides. `isCharacterFeat` lets selection UIs (character creator)
    * drive the Type chip from their own character/archetype split instead of
-   * `feat.char_feat`.
+   * `feat.char_feat`. `hideTypeSection` omits Type chips when the list context
+   * already separates archetype vs character feats (no column duplication).
    */
-  opts?: { isCharacterFeat?: boolean }
+  opts?: { isCharacterFeat?: boolean; hideTypeSection?: boolean }
 ): Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> {
   const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> = [];
 
   const isCharacterFeat = opts?.isCharacterFeat ?? feat.char_feat;
-  const typeChips: ChipData[] = [];
-  if (isCharacterFeat) typeChips.push({ name: 'Character Feat', category: 'skill' });
-  else typeChips.push({ name: 'Archetype Feat', category: 'archetype' });
-  if (feat.state_feat) typeChips.push({ name: 'State Feat', category: 'archetype' });
-  if (typeChips.length > 0) {
-    detailSections.push({ label: 'Type', chips: typeChips, hideLabelIfSingle: true });
+  if (!opts?.hideTypeSection) {
+    const typeChips: ChipData[] = [];
+    if (isCharacterFeat) typeChips.push(descriptorChipData('Character Feat', 'skill'));
+    else typeChips.push(descriptorChipData('Archetype Feat', 'archetype'));
+    if (feat.state_feat) typeChips.push(descriptorChipData('State Feat', 'archetype'));
+    if (typeChips.length > 0) {
+      detailSections.push({ label: 'Type', chips: typeChips, hideLabelIfSingle: true });
+    }
   }
 
-  if (feat.category) {
-    detailSections.push({
-      label: 'Category',
-      chips: [{ name: formatListCellLabel(feat.category), category: 'default' }],
-      hideLabelIfSingle: true,
-    });
-  }
+  // Category omitted — already shown in collapsed row columns (redundancy rule).
 
-  const tagChips = feat.tags?.map((tag) => ({ name: tag, category: 'tag' as const })) || [];
+  const tagChips = feat.tags?.map((tag) => tagDescriptorChip(tag)) || [];
   if (tagChips.length > 0) {
     detailSections.push({ label: 'Tags', chips: tagChips, hideLabelIfSingle: true });
   }
 
   const abilityReqChips = (feat.ability_req || []).map((a, i) => {
     const val = feat.abil_req_val?.[i];
-    return { name: `${a}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'default' as const };
+    return descriptorChipData(`${a}${typeof val === 'number' ? ` ${val}+` : ''}`, 'default');
   });
   if (abilityReqChips.length > 0) {
     detailSections.push({ label: 'Ability Requirements', chips: abilityReqChips });
@@ -195,7 +190,7 @@ export function buildFeatDetailSections(
   const skillReqChips = (feat.skill_req || []).map((id, i) => {
     const label = skillIdToName.get(String(id)) || String(id);
     const val = feat.skill_req_val?.[i];
-    return { name: `${label}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'skill' as const };
+    return descriptorChipData(`${label}${typeof val === 'number' ? ` ${val}+` : ''}`, 'skill');
   });
   if (skillReqChips.length > 0) {
     detailSections.push({ label: 'Skill Requirements', chips: skillReqChips });

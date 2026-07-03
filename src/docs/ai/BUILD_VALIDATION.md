@@ -1166,6 +1166,30 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 ---
 
+## DEV-V-014 — Codex payload + roll timestamp (TASK-378)
+
+Automated via `npm test` (`src/lib/codex-payload.test.ts`, `src/lib/roll-timestamp.test.ts`).
+
+#### DEV-V-014-T001 — CodexPayload keys match GET /api/codex
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-014 |
+| **Automated** | `npm test` — codex-payload.test.ts |
+
+**Expected** — `CODEX_PAYLOAD_KEYS` matches every key on `CodexPayload`; all `useCodex*` selectors compile against typed slices.
+
+#### DEV-V-014-T002 — Roll timestamp legacy + ISO compat
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-014 |
+| **Automated** | `npm test` — roll-timestamp.test.ts |
+
+**Expected** — `normalizeRollTimestamp` / `formatRollTimestamp` handle ISO strings, `{ seconds }` legacy objects, and Date instances; invalid strings format as `-`.
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -1176,5 +1200,6 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | DEV-V-005 | RLS / DB migrations | DEV-T-005 | Planned |
 | DEV-V-006 | Resources PDF | DEV-T-006 | Planned |
 | DEV-V-007 | Auth UI (Google only) | DEV-T-007 | Planned |
+| DEV-V-014 | Codex typing + roll timestamp (TASK-378) | — | Automated (`npm test`) |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

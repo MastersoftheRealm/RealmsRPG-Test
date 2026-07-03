@@ -22,6 +22,26 @@ export const GRID_LIST_ROW_ICON_COLUMN_WIDTH = '2.25rem';
 /** Matches min-w-[44px] w-11 selection column */
 export const GRID_LIST_ROW_SELECTION_COLUMN_WIDTH = '2.75rem';
 
+/** Matches ListRowThumbnail button: w-11 h-11 (44px) — first grid track when `GridListRow.thumbnail` is set */
+export const GRID_LIST_ROW_THUMBNAIL_COLUMN_WIDTH = '2.75rem';
+
+export const THUMBNAIL_HEADER_COLUMN_KEY = '_thumbnail';
+
+/** Prepend fixed thumb track so name/data columns align with ListHeader when art column is present */
+export function gridTemplateColumnsWithThumbnail(gridColumns: string): string {
+  return `${GRID_LIST_ROW_THUMBNAIL_COLUMN_WIDTH} ${gridColumns}`;
+}
+
+/** Blank header cell aligned over list-row thumbnails (not sortable). */
+export function prependThumbnailHeaderColumn<
+  T extends { key: string; label: string; sortable?: boolean },
+>(columns: T[]): T[] {
+  return [
+    { key: THUMBNAIL_HEADER_COLUMN_KEY, label: '', sortable: false } as T,
+    ...columns,
+  ];
+}
+
 export interface ListHeaderRowChrome {
   /** GridListRow `leftSlot` (e.g. innate / equip toggle) — spacer before header grid */
   leftSlot?: boolean;

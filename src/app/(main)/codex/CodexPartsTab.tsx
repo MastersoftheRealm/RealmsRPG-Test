@@ -24,6 +24,7 @@ import { EmptyState } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { useParts } from '@/hooks';
+import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
 
 const PART_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 40px';
 const PART_COLUMNS = [
@@ -33,12 +34,6 @@ const PART_COLUMNS = [
   { key: 'tp', label: 'TP' },
   { key: '_actions', label: '', sortable: false as const },
 ];
-
-const CHIP_SECTION_STYLES: Record<string, string> = {
-  default: 'bg-primary-subtle-bg border-primary-subtle-border text-primary-subtle-fg',
-  archetype: 'bg-power-light border-power-border text-power-text',
-  skill: 'bg-info-50 border-info-200 text-info-fg',
-};
 
 function formatEnergyCost(en: number | undefined, isPercentage: boolean | undefined): string {
   if (en === undefined || en === 0) return '-';
@@ -54,13 +49,13 @@ type Part = NonNullable<ReturnType<typeof useParts>['data']>[number];
 
 function PartCard({ part }: { part: Part }) {
   const typeChips: ChipData[] = [
-    {
-      name: part.type === 'power' ? 'Power' : 'Technique',
-      category: part.type === 'power' ? 'archetype' : 'skill',
-    },
+    descriptorChipData(
+      part.type === 'power' ? 'Power' : 'Technique',
+      part.type === 'power' ? 'archetype' : 'skill'
+    ),
   ];
-  if (part.mechanic) typeChips.push({ name: 'Mechanic', category: 'default' });
-  if (part.percentage) typeChips.push({ name: 'Percentage Cost', category: 'archetype' });
+  if (part.mechanic) typeChips.push(descriptorChipData('Mechanic', 'default'));
+  if (part.percentage) typeChips.push(descriptorChipData('Percentage Cost', 'archetype'));
 
   const optionChips: ChipData[] = [];
   if (part.op_1_desc) {

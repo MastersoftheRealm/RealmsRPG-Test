@@ -67,15 +67,14 @@ export async function apiFetchOrNull<T>(url: string, options?: RequestInit): Pro
   return res.json();
 }
 
+import type { CodexPayload } from '@/types/codex';
+
 /**
  * Fetch full codex data from `/api/codex`.
  * Shared between React Query hooks and non-hook service code.
  *
- * Returns a loosely-typed record — individual hooks narrow the type
- * via `select` and the caller's generic parameter.
+ * Returns the canonical `CodexPayload` — individual hooks narrow via `select`.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function fetchCodex(): Promise<Record<string, any[]>> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return apiFetch<Record<string, any[]>>('/api/codex', { cache: 'no-store' });
+export async function fetchCodex(): Promise<CodexPayload> {
+  return apiFetch<CodexPayload>('/api/codex', { cache: 'no-store' });
 }

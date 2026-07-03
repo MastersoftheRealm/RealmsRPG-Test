@@ -7,11 +7,12 @@
 
 import { useMemo, useState, type ReactNode } from 'react';
 import { useCodexSkills, type Skill } from '@/hooks';
-import { Alert } from '@/components/ui';
+import { Alert, DescriptorChip } from '@/components/ui';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
 import type { ChipData } from '@/components/shared/grid-list-row';
 import { ABILITY_ABBR, ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
 import { getSkillExtraDescriptionDetailSections } from '@/lib/skill-extra-descriptions';
+import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
 
 export interface AddSkillModalProps {
   isOpen: boolean;
@@ -36,19 +37,16 @@ function buildAbilityDisplay(abilityString?: string): {
   columnValue: string | ReactNode;
 } {
   const abbrList = getAbilityAbbrList(abilityString);
-  const detailChips: ChipData[] = abbrList.map((abbr) => ({ name: abbr, category: 'skill' as const }));
+  const detailChips: ChipData[] = abbrList.map((abbr) => descriptorChipData(abbr, 'skill'));
   const columnValue: string | ReactNode =
     abbrList.length === 0 ? (
       '-'
     ) : (
       <span className="inline-flex flex-wrap gap-1">
         {abbrList.map((abbr) => (
-          <span
-            key={abbr}
-            className="inline-flex px-2 py-0.5 rounded text-xs font-semibold bg-info-50 dark:bg-info-900/30 border border-info-200 dark:border-info-800/50 text-info-fg"
-          >
+          <DescriptorChip key={abbr} variant="info">
             {abbr}
-          </span>
+          </DescriptorChip>
         ))}
       </span>
     );

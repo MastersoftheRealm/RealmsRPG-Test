@@ -1,15 +1,13 @@
 /**
- * Skills — species locked (free), path recommended (toggle/remove), skill points + free picks.
+ * Skills — species locked (free), path recommended (auto-added), skill points + free picks.
  */
 
 'use client';
 
 import React, { useMemo, useCallback } from 'react';
-import { Button } from '@/components/ui';
-import { SkillsAllocationPage } from '@/components/shared';
 import { GuidedChoiceCard } from '../guided-choice-card';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from '../guided-choice-styles';
-import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
+import { GuidedSkillsPanel } from '../guided-skills-panel';
 import { useMergedSpecies, useCodexSkills, useGameRules } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
@@ -30,7 +28,7 @@ export function SkillsStep() {
   const { draft, updateDraft, nextSubStep } = useGuidedCreatorStore();
   const { pathData, archetype } = useGuidedPathData();
   const { data: allSpecies = [] } = useMergedSpecies();
-  const { data: codexSkills = [], isLoading } = useCodexSkills();
+  const { data: codexSkills = [] } = useCodexSkills();
   const { rules } = useGameRules();
   const skillRules = resolveSkillAllocationRules(rules);
 
@@ -76,6 +74,7 @@ export function SkillsStep() {
     });
     return next;
   }, [allocations, speciesSkillIds, recommendedSkillIds, declinedPathSkillIds]);
+
   const skillMeta = useMemo(() => {
     const map = new Map<string, { isSubSkill: boolean }>();
     codexSkills.forEach((s: Skill) => {
@@ -127,24 +126,6 @@ export function SkillsStep() {
     [draft.declinedPathSkillIds, recommendedSkillIds, updateDraft]
   );
 
-  const handleApplyRecommended = useCallback(() => {
-    const next = { ...allocationsWithDefaults };
-    recommendedSkillIds.forEach((id) => {
-      const key = String(id);
-      if (key === '0') return;
-      next[key] = next[key] ?? 0;
-    });
-    updateDraft({ skills: next, declinedPathSkillIds: [] });
-  }, [allocationsWithDefaults, recommendedSkillIds, updateDraft]);
-
-  const recommendedSkillNames = useMemo(
-    () =>
-      recommendedSkillIds
-        .map((id) => codexSkills.find((s) => String(s.id) === String(id))?.name)
-        .filter((n): n is string => Boolean(n)),
-    [recommendedSkillIds, codexSkills]
-  );
-
   const selectedSkillIds = useMemo(
     () => new Set(Object.keys(allocationsWithDefaults)),
     [allocationsWithDefaults]
@@ -172,15 +153,6 @@ export function SkillsStep() {
     ]
   );
 
-  const hasMissingRecommended = useMemo(
-    () =>
-      recommendedSkillIds.some((id) => {
-        const key = String(id);
-        return key !== '0' && (declinedPathSkillIds.has(key) || !(key in allocationsWithDefaults));
-      }),
-    [recommendedSkillIds, declinedPathSkillIds, allocationsWithDefaults]
-  );
-
   const addCuratedSkill = (skillId: string) => {
     if (remainingPoints < skillRules.gainProficiencyCost) return;
     handleAllocationsChange({
@@ -196,18 +168,6 @@ export function SkillsStep() {
 
   const canContinue = remainingPoints === 0 && Object.keys(allocationsWithDefaults).length > 0;
 
-  const abilityDefenseBonuses = useMemo(
-    () => ({
-      might: abilities.strength,
-      fortitude: abilities.vitality,
-      reflex: abilities.agility,
-      discernment: abilities.acuity,
-      mentalFortitude: abilities.intelligence,
-      resolve: abilities.charisma,
-    }),
-    [abilities]
-  );
-
   return (
     <GuidedStepLayout
       subStep="skills"
@@ -217,57 +177,25 @@ export function SkillsStep() {
       continueLabel={stepCopy.continueLabel}
       footerContinue={handleContinue}
       completionHint={
-        <span className="font-nunito">
-          {spentPoints} / {totalPoints} skill points
-        </span>
+        remainingPoints > 0 ? (
+          <span className="font-nunito">{stepCopy.pointsRemaining(remainingPoints)}</span>
+        ) : (
+          <span className="font-nunito text-success-700 dark:text-success-400">
+            {stepCopy.pointsComplete}
+          </span>
+        )
       }
     >
-      {archetype?.name && recommendedSkillNames.length > 0 && (
-        <PathHelpCard pathName={archetype.name}>
-          {stepCopy.pathHelp(recommendedSkillNames)}
-        </PathHelpCard>
-      )}
-
-      {recommendedSkillIds.length > 0 && (
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleApplyRecommended}
-            className="min-h-11"
-            aria-label={stepCopy.applyRecommended}
-          >
-            {stepCopy.applyRecommended}
-          </Button>
-          {hasMissingRecommended && (
-            <span className="font-nunito text-sm text-text-secondary">{stepCopy.applyRecommendedHint}</span>
-          )}
-        </div>
-      )}
-
-      {!canContinue && remainingPoints > 0 && (
-        <p className="mb-4 font-nunito text-sm text-text-secondary">{stepCopy.pointsRemaining(remainingPoints)}</p>
-      )}
-
-      {isLoading ? null : (
-        <SkillsAllocationPage
-          entityType="character"
-          level={level}
-          abilities={abilities}
-          allocations={allocationsWithDefaults}
-          defenseSkills={DEFAULT_DEFENSE_SKILLS}
-          speciesSkillIds={speciesSkillIds}
-          pathSkillIds={pathSkillIds}
-          pathSourceLabel={archetype?.name}
-          extraSkillPoints={extraSkillPoints}
-          onAllocationsChange={handleAllocationsChange}
-          onDefenseChange={() => {}}
-          abilityDefenseBonuses={abilityDefenseBonuses}
-          hideDefenseBonuses
-          hideSubSkills
-          embeddedInShell
-        />
-      )}
+      <GuidedSkillsPanel
+        abilities={abilities}
+        allocations={allocationsWithDefaults}
+        speciesSkillIds={speciesSkillIds}
+        pathSkillIds={pathSkillIds}
+        pathSourceLabel={archetype?.name}
+        totalPoints={totalPoints}
+        spentPoints={spentPoints}
+        onAllocationsChange={handleAllocationsChange}
+      />
 
       {remainingPoints > 0 && curatedSkillIds.length > 0 && (
         <section className="mt-8">

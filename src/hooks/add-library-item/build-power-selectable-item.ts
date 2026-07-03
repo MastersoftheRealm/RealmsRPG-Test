@@ -5,6 +5,7 @@ import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { getItemColumns } from './get-item-columns';
 import { partChipsFromDisplay } from './part-chips';
 import type { CodexDbRefs } from './types';
+import { buildPartsAndMetadataDetailSections } from '@/lib/chip/list-row-metadata';
 
 export function buildPowerSelectableItem(item: UserPower, dbs: CodexDbRefs): SelectableItem {
   const doc: PowerDocument = {
@@ -20,7 +21,10 @@ export function buildPowerSelectableItem(item: UserPower, dbs: CodexDbRefs): Sel
   };
   const display = derivePowerDisplay(doc, dbs.powerPartsDb as Parameters<typeof derivePowerDisplay>[1]);
   const partChips = partChipsFromDisplay(display.partChips);
-  const detailSections = partChips.length > 0 ? [{ label: 'Parts & Proficiencies', chips: partChips }] : undefined;
+  const detailSections = buildPartsAndMetadataDetailSections({
+    range: display.range,
+    partChips,
+  });
   const totalCost = display.tp > 0 ? display.tp : undefined;
 
   return {
@@ -28,7 +32,7 @@ export function buildPowerSelectableItem(item: UserPower, dbs: CodexDbRefs): Sel
     name: String(item.name ?? ''),
     description: String(item.description ?? '') || 'No description available.',
     columns: getItemColumns(item, 'power'),
-    detailSections,
+    detailSections: detailSections.length > 0 ? detailSections : undefined,
     totalCost,
     costLabel: totalCost != null ? 'TP' : undefined,
     data: item,

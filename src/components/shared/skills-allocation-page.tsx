@@ -402,7 +402,11 @@ export function SkillsAllocationPage({
                   ? allSkills.find((s: Skill) => String(s.id) === String(skill.base_skill_id))
                   : null;
                 const baseValue = baseSkill ? (allocations[String(baseSkill.id)] ?? 0) : 0;
-                const baseProficient = baseSkill && (speciesSkillIds.has(String(baseSkill.id)) || (allocations[String(baseSkill.id)] ?? -1) >= 0);
+                const baseProficient = Boolean(
+                  baseSkill &&
+                    (speciesSkillIds.has(String(baseSkill.id)) ||
+                      (allocations[String(baseSkill.id)] ?? -1) >= 0)
+                );
                 const value = Math.max(0, allocations[String(skill.id)] ?? 0);
                 const isSpeciesSkill = speciesSkillIds.has(String(skill.id));
                 const isPathSkill = !isSpeciesSkill && (pathSkillIds?.has(String(skill.id)) ?? false);

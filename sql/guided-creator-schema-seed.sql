@@ -1,4 +1,5 @@
 -- Guided ("Simple") character creator — schema extensions + seed data.
+-- Status: Applied on RealmsRPG-Test — migration guided_creator_schema_seed (20260630202719).
 -- Agents: apply via Supabase MCP apply_migration (see AGENT_GUIDE.md § Database operations).
 -- Human fallback: Supabase SQL Editor (REALMS_PRODUCT_OVERVIEW.md §5.0.2).
 --

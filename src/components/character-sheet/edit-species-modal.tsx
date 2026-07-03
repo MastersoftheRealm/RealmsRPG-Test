@@ -8,7 +8,7 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { Modal, Button, Chip } from '@/components/ui';
+import { Modal, Button, Chip, DescriptorChip } from '@/components/ui';
 import { ChoiceTraitOptionListPicker } from '@/components/shared';
 import {
   getChoiceOptionIds,
@@ -375,9 +375,9 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
                     }
                     return (
                       <div key={t.id} className="rounded-lg border border-border-subtle p-2 bg-surface-alt">
-                        <Chip variant="default" size="sm">
+                        <DescriptorChip size="sm">
                           {t.name}
-                        </Chip>
+                        </DescriptorChip>
                         {t.description ? (
                           <p className="text-xs text-text-secondary mt-1">{t.description}</p>
                         ) : null}

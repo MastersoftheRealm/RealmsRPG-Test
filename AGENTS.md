@@ -30,6 +30,7 @@ Check the canonical source for the topic instead of trusting scattered/stale doc
 | Open tasks | `src/docs/ai/AI_TASK_QUEUE.md` (active only) / `src/docs/ai/DEVELOPER_TASK_QUEUE.md` |
 | Task & audit history | `src/docs/ai/archive/HISTORY_INDEX.md` — not current truth; paths listed in `.cursorignore` |
 | Contextual help tooltips | `AGENT_GUIDE.md` § **Floating UI & contextual help** — when to use `InfoTippy` vs Floating UI vs Modal/Select |
+| Entity card art (list thumbnails, choice cards, click-to-enlarge, upload) | `AGENT_GUIDE.md` § **Entity card art & expandable images** + `REALMS_PRODUCT_OVERVIEW.md` §5.0.3 + `FEATURE_INDEX.md` |
 | QA build validation (step-by-step) | `src/docs/ai/BUILD_VALIDATION.md` |
 | Current remediation status & known open gaps | `src/docs/ai/REMEDIATION_STATUS_2026-06.md` |
 | UI/UX unification roadmap (design-system migration) | `src/docs/ai/UI_UNIFICATION_PLAN.md` + `VISUAL_STATE_AUDIT.md` + AGENT_GUIDE § Design-system safety net |
@@ -65,3 +66,7 @@ Use `src/docs/ai/AI_REQUEST_TEMPLATE.md` format. Add to `AI_TASK_QUEUE.md` with 
 ## Deployment & Secrets
 
 See `src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md` — env vars, Vercel config, Supabase keys.
+
+## Codex & reference data (owner review)
+
+Bulk or policy changes to **`codex_*`** / **`core_rules`** (tags, merges, categories, seed parity): **audit → propose SQL in `sql/` → owner reviews → then apply**. Do not push live codex writes via Supabase MCP without approval. Full workflow: `.cursor/rules/realms-codex-data.mdc`.

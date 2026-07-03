@@ -23,6 +23,7 @@ import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { useSort } from '@/hooks/use-sort';
 import { useEquipment, useItemProperties, type ItemProperty } from '@/hooks';
 import { trainingPointsForItemPropertyRef } from '@/lib/calculators/item-calc';
+import { metadataDescriptorChip } from '@/lib/chip/list-row-metadata';
 import type { ChipData } from '@/components/shared/grid-list-row';
 
 const EQUIPMENT_GRID_COLUMNS = '1.5fr 1fr 0.8fr 1fr 40px';
@@ -76,10 +77,10 @@ function EquipmentCard({ item, propertiesDb = [] }: { item: Equipment; propertie
   if (propertyChips.length > 0) {
     detailSections.push({ label: 'Properties', chips: propertyChips, hideLabelIfSingle: true });
   }
-  const statsChips: { name: string; category: 'default' }[] = [];
-  if (item.damage) statsChips.push({ name: `Damage: ${formatDamageDisplay(item.damage)}`, category: 'default' });
-  if (item.armor_value !== undefined) statsChips.push({ name: `Armor: ${item.armor_value}`, category: 'default' });
-  if (item.weight !== undefined) statsChips.push({ name: `Weight: ${item.weight} kg`, category: 'default' });
+  const statsChips: ChipData[] = [];
+  if (item.damage) statsChips.push(metadataDescriptorChip(`Damage: ${formatDamageDisplay(item.damage)}`));
+  if (item.armor_value !== undefined) statsChips.push(metadataDescriptorChip(`Armor: ${item.armor_value}`));
+  if (item.weight !== undefined) statsChips.push(metadataDescriptorChip(`Weight: ${item.weight} kg`));
   if (statsChips.length > 0) {
     detailSections.push({ label: 'Stats', chips: statsChips, hideLabelIfSingle: true });
   }

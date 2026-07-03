@@ -1,5 +1,7 @@
 import type { SelectableItem } from '@/components/shared/unified-selection-modal';
 import type { UserTechnique } from '../use-user-library';
+import { formatPowerRangeFromSteps } from '@/lib/calculators/power-calc';
+import { buildEntityMetadataDetailSections } from '@/lib/chip/list-row-metadata';
 
 export function buildEmpoweredPowerSelectableItem(item: UserTechnique): SelectableItem {
   const raw = item as unknown as Record<string, unknown>;
@@ -23,6 +25,11 @@ export function buildEmpoweredPowerSelectableItem(item: UserTechnique): Selectab
           .join(', ')
       : '-';
 
+  const rangeSteps = (powerData.range as { steps?: number } | undefined)?.steps;
+  const rangeStr =
+    typeof rangeSteps === 'number' && rangeSteps > 0 ? formatPowerRangeFromSteps(rangeSteps) : undefined;
+  const detailSections = buildEntityMetadataDetailSections({ range: rangeStr });
+
   return {
     id: String(item.id),
     name: String(item.name ?? ''),
@@ -32,6 +39,7 @@ export function buildEmpoweredPowerSelectableItem(item: UserTechnique): Selectab
       { key: 'Damage', value: damageValue, align: 'center' as const },
       { key: 'Area', value: areaValue, align: 'center' as const },
     ],
+    detailSections: detailSections.length > 0 ? detailSections : undefined,
     badges: [{ label: 'Empowered', color: 'gray' as const }],
     totalCost: Number(totals.trainingPoints ?? 0) || undefined,
     costLabel: Number(totals.trainingPoints ?? 0) > 0 ? 'TP' : undefined,

@@ -16,7 +16,7 @@
 | Character sheet (view + edit) | `characters/[id]/page.tsx` — layout `CharacterSheetBody` (single library mount); derived `useCharacterSheetDerived`; handlers `useCharacterSheetActions`; library lists via `entity-library-sections` + `library-entity-rows`; feats tab via `FeatsTraitsListSection` + `library-feat-rows` (player feat/trait `customName` + `note` on save; trait map `traitCustomizations`) |
 | Character creator | `character-creator/` (wizard steps under `components/character-creator/steps/`) |
 | Character creator entry (Simple vs Advanced) | `characters/new/page.tsx` |
-| Guided ("Simple") character creator | `characters/new/guided/page.tsx`, `components/guided-creator/`, `stores/guided-creator-store.ts`, `lib/guided-creator/build-character.ts` |
+| Guided ("Simple") character creator | `characters/new/guided/page.tsx`, `components/guided-creator/` (incl. `GuidedSkillsPanel`, `GuidedChoiceCard`), `stores/guided-creator-store.ts`, `lib/guided-creator/build-character.ts` |
 | Advanced character creator (classic 9-step) | `characters/new/advanced/page.tsx` |
 | Library (user + official content browse) | `library/page.tsx` |
 | Codex (rules data browser) | `codex/page.tsx` |
@@ -63,6 +63,10 @@
 | Need | Component |
 |------|-----------|
 | Expandable list row (Library/Codex/sheet/creator) | `GridListRow` |
+| **Entity card art — click to enlarge (site-wide default)** | **`ExpandableImage`** (+ `ExpandableImageModal`); list thumbs: `ListRowThumbnail` |
+| **Entity card art — list thumb** (44px, D&D Beyond style) | `GridListRow.thumbnail` + `ListRowThumbnail`; `ListHeader.hasThumbnailColumn` |
+| **Entity card art — choice card hero** (guided creator) | `GuidedChoiceCard` (wraps `ExpandableImage`) |
+| **Entity card art — admin upload** | `CodexArtUploadField`, `lib/codex-art.ts`, `POST /api/upload/codex-art` |
 | Hub list row (Encounters/Crafting) | `HubListRow` |
 | Sortable column headers | `ListHeader` |
 | Selection modal (add/pick from library) | `UnifiedSelectionModal` |
@@ -75,7 +79,9 @@
 | Point allocation display | `PointStatus`; powered/martial split: `PoweredMartialSlider` |
 | Skill row / allocation | `SkillRow`, `SkillsAllocationPage`, `AddSkillModal`, `AddSubSkillModal` |
 | Tab summary header section | `TabSummarySection`, `SummaryItem`, `SummaryRow` |
-| Part/property chips | `PartChipComponent`, `PartChipList`, `PropertyChipList` |
+| Chip roles (descriptor vs expandable) | `DescriptorChip`, `ExpandableChip` (`@/components/ui`); `GridListChip` + `lib/chip/expandable-chip-props.ts`; `ChipData.kind` + `descriptorChipData()` in `lib/chip/chip-data-helpers.ts`; metadata builders in `lib/chip/list-row-metadata.ts` |
+| Feat tags (normalize + taxonomy) | `lib/codex/feat-tags.ts`, `lib/codex/feat-list.ts`; `sql/feat-tags-unification-phase*.sql` (phase 4 = live normalize chain); `docs/FEAT_TAGS.md` |
+| Part/property chips | `PartChipList`, `PartChipComponent` (thin aliases); `PartData` in `lib/chip/part-data.ts`; `partChipsFromDisplay` in `lib/chip/part-chips-from-display.ts` |
 | Part/property → PartData (library rows) | `lib/library/part-display.ts` — `computePartTrainingPoints`, `characterPartsToPartData`, `itemPropertiesToPartData` |
 | Entity list sections (powers/techniques/weapons/armor/etc.) | `*ListSection` from `entity-library-sections` |
 | Species trait cards | `SpeciesTraitCard`, `TraitGroup` |
@@ -88,7 +94,7 @@
 | Theme switch / onboarding | `ThemeToggle`, `OnboardingTour` |
 | Help tooltips | `InfoTippy` + `public/tooltip-text.tsx` — see `AGENT_GUIDE.md` § Floating UI & contextual help |
 
-> UI primitives (Modal, Button, Chip, PageContainer, PageHeader, TabNavigation, SearchInput, **TableScroll**) live in `@/components/ui`.
+> UI primitives (Modal, Button, Chip, **DescriptorChip**, **ExpandableChip**, PageContainer, PageHeader, TabNavigation, SearchInput, **TableScroll**) live in `@/components/ui`.
 
 ## Game logic / calculators (`src/lib/`)
 

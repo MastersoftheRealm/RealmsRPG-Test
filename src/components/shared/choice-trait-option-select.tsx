@@ -2,7 +2,7 @@
 
 import type { ChoiceTraitOptionSource } from '@/lib/choice-trait';
 import { cn } from '@/lib/utils';
-import { Chip, Button } from '@/components/ui';
+import { DescriptorChip, Button } from '@/components/ui';
 import { ChevronDown } from 'lucide-react';
 
 export interface ChoiceTraitOptionListPickerProps {
@@ -35,9 +35,9 @@ export function ChoiceTraitOptionListPicker({
           Options
         </p>
         {selected ? (
-          <Chip variant="info" size="sm">
+          <DescriptorChip variant="info">
             Selected: {selected.name}
-          </Chip>
+          </DescriptorChip>
         ) : (
           <span className="text-xs text-text-muted dark:text-text-secondary">{emptyLabel}</span>
         )}

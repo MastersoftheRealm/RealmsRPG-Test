@@ -31,7 +31,7 @@ import {
 } from '@/components/shared';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { FilterSection } from '@/components/codex';
-import { Spinner, Button, EmptyState, Card } from '@/components/ui';
+import { Spinner, Button, EmptyState, Card, DescriptorChip } from '@/components/ui';
 import { TabNavigation, TabContentPanel, useTabGroup } from '@/components/ui/tab-navigation';
 import { AlertCircle, Swords, Check, X, ShoppingBag, ChevronLeft } from 'lucide-react';
 import { IconButton } from '@/components/ui';
@@ -924,9 +924,9 @@ export function EquipmentStep() {
                   <div className="flex-1 min-w-0">
                     <span className="font-medium text-text-primary">{prowessLevel.name}</span>
                     {!isAvailable && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-surface-alt text-text-secondary ml-2">
+                      <DescriptorChip size="sm" className="ml-2">
                         Level {prowessLevel.charLevel}
-                      </span>
+                      </DescriptorChip>
                     )}
                   </div>
                   <div className={cn(
@@ -1108,9 +1108,9 @@ export function EquipmentStep() {
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-text-primary">{prowessLevel.name}</span>
                       {!isAvailable && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-surface-alt text-text-secondary">
+                        <DescriptorChip size="sm">
                           Requires Level {prowessLevel.charLevel}
-                        </span>
+                        </DescriptorChip>
                       )}
                     </div>
                     <p className="text-sm text-text-secondary mt-1">{prowessLevel.description}</p>
@@ -1240,13 +1240,15 @@ export function EquipmentStep() {
                       (p) => String(p.name ?? '').toLowerCase() === String(propName).toLowerCase()
                     );
                     const tp = trainingPointsForItemPropertyRef(prop, itemProperties ?? []);
-                    return {
+                    const chip: ChipData = {
                       name: dbProp?.name || propName,
                       description: dbProp?.description,
                       cost: tp > 0 ? tp : undefined,
                       costLabel: 'TP',
-                      category: (tp > 0 ? 'cost' : 'tag') as 'cost' | 'tag',
+                      category: tp > 0 ? 'cost' : 'default',
                     };
+                    if (!tp && !dbProp?.description) chip.kind = 'descriptor';
+                    return chip;
                   });
 
                   // Stepper on the right (unified with Library)

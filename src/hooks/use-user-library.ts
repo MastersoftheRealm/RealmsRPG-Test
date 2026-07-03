@@ -13,6 +13,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { apiFetch } from '@/lib/api-client';
 import { useCodexSpecies } from './use-codex';
 import type { Species } from './codex-types';
+import { readRecordImageUrl } from '@/components/guided-creator/guided-choice-image';
 
 // =============================================================================
 // Types
@@ -112,6 +113,7 @@ export interface UserSpecies {
   ave_height?: number;
   ave_weight?: number;
   adulthood_lifespan?: number[];
+  image_url?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -228,6 +230,7 @@ export const useUserSpecies = (options?: { enabled?: boolean }) =>
 /** Normalize user species to Species shape for use in character creator, sheet, and codex. */
 export function userSpeciesToSpecies(u: UserSpecies): Species {
   const sizes = u.sizes?.length ? u.sizes : (u.size ? [u.size] : ['Medium']);
+  const imageUrl = readRecordImageUrl(u);
   return {
     id: u.id,
     name: u.name,
@@ -246,6 +249,7 @@ export function userSpeciesToSpecies(u: UserSpecies): Species {
     ave_height: u.ave_height,
     ave_weight: u.ave_weight,
     adulthood_lifespan: u.adulthood_lifespan,
+    image_url: imageUrl,
   };
 }
 

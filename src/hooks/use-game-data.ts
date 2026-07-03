@@ -20,9 +20,8 @@ export function useArchetype(id: string | undefined) {
     queryKey: ['codex'],
     queryFn: fetchCodex,
     select: (data) => {
-      const list = (data.archetypes ?? []) as Array<Record<string, unknown> & { id?: string }>;
-      const found = list.find((a) => a.id === id);
-      return found ? ({ ...found, id: found.id } as Archetype) : null;
+      const found = data.archetypes.find((a) => a.id === id);
+      return found ? (found as Archetype) : null;
     },
     enabled: !!id,
     staleTime: 10 * 60 * 1000,

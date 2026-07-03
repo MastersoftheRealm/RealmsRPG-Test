@@ -39,6 +39,7 @@ export const SCALAR_KEYS: Record<ColumnarLibraryType, string[]> = {
     'criticalRangeIncrease',
     'shieldDR',
     'shieldDamage',
+    'imageUrl',
   ],
   creatures: ['name', 'description', 'level', 'type', 'size', 'hitPoints', 'energyPoints'],
 };
@@ -62,6 +63,7 @@ const BODY_TO_CAMEL: Record<string, string> = {
   critical_range_increase: 'criticalRangeIncrease',
   shield_dr: 'shieldDR',
   shield_damage: 'shieldDamage',
+  image_url: 'imageUrl',
 };
 
 const CAMEL_TO_SNAKE: Record<string, string> = {
@@ -83,6 +85,7 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   criticalRangeIncrease: 'critical_range_increase',
   shieldDR: 'shield_dr',
   shieldDamage: 'shield_damage',
+  imageUrl: 'image_url',
   createdAt: 'created_at',
   updatedAt: 'updated_at',
   userId: 'user_id',
@@ -188,6 +191,7 @@ export function rowToItem(
     assignIfPresent('criticalRangeIncrease', v(row, 'criticalRangeIncrease', 'critical_range_increase'));
     assignIfPresent('shieldDR', v(row, 'shieldDR', 'shield_dr'));
     assignIfPresent('shieldDamage', v(row, 'shieldDamage', 'shield_damage'));
+    assignIfPresent('imageUrl', v(row, 'imageUrl', 'image_url'));
 
     // Transition hardening:
     // If columns exist but are still default/empty (e.g. `damage = []`, `properties = []`)
@@ -298,6 +302,11 @@ export function bodyToColumnar(
     if (body.criticalRangeIncrease != null) scalars.criticalRangeIncrease = body.criticalRangeIncrease;
     if (body.shieldDR != null) scalars.shieldDR = body.shieldDR;
     if (body.shieldDamage != null) scalars.shieldDamage = body.shieldDamage;
+    if (typeof body.imageUrl === 'string' && body.imageUrl.trim()) {
+      scalars.imageUrl = body.imageUrl.split('?')[0];
+    } else if (body.imageUrl === null) {
+      scalars.imageUrl = null;
+    }
   }
 
   const skipKeys = new Set<string>([
@@ -317,6 +326,7 @@ export function bodyToColumnar(
           'criticalRangeIncrease',
           'shieldDR',
           'shieldDamage',
+          'imageUrl',
         ]
       : []),
   ]);

@@ -231,19 +231,7 @@ export function AdminArchetypesTab() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
-  type ArchetypeItem = {
-    id: string;
-    name?: string;
-    type?: string;
-    description?: string;
-    archetype_ability?: string;
-    secondary_ability?: string;
-    power_prof_start?: number;
-    martial_prof_start?: number;
-    power_prof_level5?: number;
-    martial_prof_level5?: number;
-    path_data?: Record<string, unknown> | string;
-  };
+  type ArchetypeItem = import('@/types/codex').CodexArchetype;
   const [editing, setEditing] = useState<ArchetypeItem | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);

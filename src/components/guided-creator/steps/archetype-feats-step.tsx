@@ -7,11 +7,12 @@
 import { useMemo, useCallback } from 'react';
 import { Spinner, EmptyState } from '@/components/ui';
 import { cn } from '@/lib/utils';
-import { useCodexFeats } from '@/hooks';
+import { useCodexFeats, type Feat } from '@/hooks';
 import { calculateMaxArchetypeFeats } from '@/lib/game/formulas';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
 import { GuidedChoiceCard } from '../guided-choice-card';
+import { GuidedFeatRestrictionNotice } from '../guided-feat-restriction-notice';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from '../guided-choice-styles';
 import { GuidedStepLayout } from '../guided-step-layout';
 import type { PathGuidanceGroup } from '@/types/archetype';
@@ -19,16 +20,14 @@ import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.archetypeFeats;
 
-function resolveFeat(
-  id: string,
-  featById: Map<string, { name?: string; description?: string | null }>
-) {
+function resolveFeat(id: string, featById: Map<string, Feat>) {
   const key = String(id);
   const feat = featById.get(key);
   return {
     id: key,
     name: feat?.name ?? key,
     description: feat?.description,
+    codex: feat,
   };
 }
 
@@ -75,7 +74,9 @@ export function ArchetypeFeatsStep() {
         onSelect={() => !atCap && toggleFeat(feat.id)}
         className={atCap ? 'opacity-60 cursor-not-allowed' : undefined}
         selectAriaLabel={`${selected ? 'Deselect' : 'Select'} ${feat.name}`}
-      />
+      >
+        {feat.codex ? <GuidedFeatRestrictionNotice feat={feat.codex} /> : null}
+      </GuidedChoiceCard>
     );
   };
 

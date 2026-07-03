@@ -58,6 +58,12 @@ import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import { trainingPointsForItemPropertyRef } from '@/lib/calculators';
 import type { ChipData } from '@/components/shared/grid-list-row';
+import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
+import {
+  buildPartsAndMetadataDetailSections,
+  propertiesProficienciesSection,
+} from '@/lib/chip/list-row-metadata';
+import { buildEmpoweredPowerSelectableItem } from '@/hooks/add-library-item/build-empowered-selectable-item';
 import { 
   calculateCreatureTrainingPoints, 
   calculateCreatureCurrency,
@@ -367,17 +373,15 @@ function CreatureCreatorContent() {
         duration: power.duration as PowerDocument['duration'],
       };
       const display = derivePowerDisplay(doc, powerPartsDb);
-      const partChips: ChipData[] = display.partChips.map((chip) => ({
-        name: chip.text.split(' | TP:')[0].trim(),
-        description: chip.description,
-        cost: chip.finalTP,
-        costLabel: 'TP',
-        category: chip.finalTP && chip.finalTP > 0 ? ('cost' as const) : ('default' as const),
-      }));
+      const partChips = partChipsFromDisplay(display.partChips);
       const base = displayItemToSelectableItem(displayItem, ['Energy', 'Action', 'Damage', 'Area']);
+      const detailSections = buildPartsAndMetadataDetailSections({
+        range: display.range,
+        partChips,
+      });
       return {
         ...base,
-        detailSections: partChips.length > 0 ? [{ label: 'Parts & Proficiencies', chips: partChips }] : undefined,
+        detailSections: detailSections.length > 0 ? detailSections : undefined,
         totalCost: display.tp > 0 ? display.tp : undefined,
         costLabel: display.tp > 0 ? 'TP' : undefined,
         data: displayItem,
@@ -386,33 +390,23 @@ function CreatureCreatorContent() {
   }, [powerList, powerPartsDb]);
   const empoweredTechniqueSelectableItems = useMemo(() => {
     return empoweredTechniqueList.map((technique: UserTechnique) => {
+      const empowered = buildEmpoweredPowerSelectableItem(technique);
       const raw = technique as unknown as Record<string, unknown>;
       const powerData = (raw.power as Record<string, unknown> | undefined) ?? {};
       const totals = (raw.totals as Record<string, unknown> | undefined) ?? {};
-      const actionType = String(raw.actionType ?? '');
-      const isReaction = raw.isReaction === true;
-      const action = actionType
-        ? `${actionType.charAt(0).toUpperCase()}${actionType.slice(1)} ${isReaction ? 'Reaction' : 'Action'}`
-        : (isReaction ? 'Reaction' : '-');
-      const areaRaw = (powerData.area as Record<string, unknown> | undefined)?.type;
-      const areaValue = areaRaw ? String(areaRaw).replace(/\b\w/g, (c) => c.toUpperCase()) : '-';
-      const damageRows = Array.isArray(powerData.damage) ? (powerData.damage as Array<{ amount?: number; size?: number; type?: string }>) : [];
-      const damageValue = damageRows.length > 0
-        ? damageRows
-            .filter((row) => (row.amount ?? 0) > 0 && row.type && row.type !== 'none')
-            .map((row) => `${row.amount}d${row.size} ${row.type}`)
-            .join(', ')
-        : '-';
       const energy = Number(totals.energy ?? 0);
       const tp = Number(totals.trainingPoints ?? 0);
+      const actionCol = empowered.columns?.find((c) => c.key === 'Action');
+      const damageCol = empowered.columns?.find((c) => c.key === 'Damage');
+      const areaCol = empowered.columns?.find((c) => c.key === 'Area');
       const displayItem = transformUserPowerToDisplayItem({
         id: technique.id,
         docId: technique.docId,
         name: technique.name,
         description: technique.description,
         parts: [],
-        actionType,
-        isReaction,
+        actionType: String(raw.actionType ?? ''),
+        isReaction: raw.isReaction === true,
         area: powerData.area as UserPower['area'],
         range: powerData.range as UserPower['range'],
         duration: powerData.duration as UserPower['duration'],
@@ -420,14 +414,16 @@ function CreatureCreatorContent() {
       }, powerPartsDb);
       const base = displayItemToSelectableItem(displayItem, ['Energy', 'Action', 'Damage', 'Area']);
       return {
+        ...empowered,
         ...base,
         columns: [
           { key: 'Energy', value: energy || '-', align: 'center' as const },
-          { key: 'Action', value: action, align: 'center' as const },
-          { key: 'Damage', value: damageValue || '-', align: 'center' as const },
-          { key: 'Area', value: areaValue, align: 'center' as const },
+          { key: 'Action', value: actionCol?.value ?? '-', align: 'center' as const },
+          { key: 'Damage', value: damageCol?.value ?? '-', align: 'center' as const },
+          { key: 'Area', value: areaCol?.value ?? '-', align: 'center' as const },
         ],
-        badges: [{ label: 'Empowered', color: 'gray' as const }],
+        totalCost: tp > 0 ? tp : undefined,
+        costLabel: tp > 0 ? 'TP' : undefined,
         data: {
           ...displayItem,
           sourceData: {
@@ -435,11 +431,11 @@ function CreatureCreatorContent() {
             name: technique.name,
             energy,
             tp,
-            action,
+            action: actionCol?.value ?? '-',
             duration: String((powerData.duration as Record<string, unknown> | undefined)?.type ?? '-'),
             range: String((powerData.range as Record<string, unknown> | undefined)?.steps ?? '-'),
-            area: areaValue,
-            damage: damageValue,
+            area: areaCol?.value ?? '-',
+            damage: damageCol?.value ?? '-',
             innate: false,
           } as unknown as Record<string, unknown>,
         },
@@ -457,17 +453,15 @@ function CreatureCreatorContent() {
         weapon: technique.weapon as TechniqueDocument['weapon'],
       };
       const display = deriveTechniqueDisplay(doc, techniquePartsDb);
-      const partChips: ChipData[] = display.partChips.map((chip) => ({
-        name: chip.text.split(' | TP:')[0].trim(),
-        description: chip.description,
-        cost: chip.finalTP,
-        costLabel: 'TP',
-        category: chip.finalTP && chip.finalTP > 0 ? ('cost' as const) : ('default' as const),
-      }));
+      const partChips = partChipsFromDisplay(display.partChips);
       const base = displayItemToSelectableItem(displayItem, ['Energy', 'Action', 'Weapon', 'Training Pts']);
+      const detailSections = buildPartsAndMetadataDetailSections({
+        damage: display.damageStr !== '-' ? display.damageStr : undefined,
+        partChips,
+      });
       return {
         ...base,
-        detailSections: partChips.length > 0 ? [{ label: 'Parts & Proficiencies', chips: partChips }] : undefined,
+        detailSections: detailSections.length > 0 ? detailSections : undefined,
         totalCost: typeof display.tp === 'number' && display.tp > 0 ? display.tp : undefined,
         costLabel: typeof display.tp === 'number' && display.tp > 0 ? 'TP' : undefined,
         data: displayItem,
@@ -496,11 +490,12 @@ function CreatureCreatorContent() {
           level: lvl > 1 ? lvl : undefined,
         };
       });
+      const propertySection = propertiesProficienciesSection(propertyChips);
       const totalCost = propertyChips.reduce((sum, c) => sum + (c.cost ?? 0), 0) || undefined;
       const base = displayItemToSelectableItem(displayItem, ['Type', 'TP', 'Cost']);
       return {
         ...base,
-        detailSections: propertyChips.length > 0 ? [{ label: 'Properties & Proficiencies', chips: propertyChips }] : undefined,
+        detailSections: propertySection ? [propertySection] : undefined,
         totalCost: totalCost ?? undefined,
         costLabel: totalCost != null ? 'TP' : undefined,
         data: displayItem,

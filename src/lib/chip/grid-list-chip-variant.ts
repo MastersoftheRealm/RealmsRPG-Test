@@ -4,7 +4,6 @@ import type { chipVariants } from '@/components/ui/chip';
 export type GridListChipCategory =
   | 'default'
   | 'cost'
-  | 'tag'
   | 'warning'
   | 'success'
   | 'archetype'

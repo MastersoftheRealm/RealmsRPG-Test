@@ -15,11 +15,13 @@ export interface PathHelpCardProps {
   pathName: string;
   /** Message content; can be a paragraph or list */
   children: ReactNode;
+  /** Optional controls below the guidance sentence (e.g. path skill chips). */
+  actions?: ReactNode;
   /** Optional className */
   className?: string;
 }
 
-export function PathHelpCard({ pathName, children, className }: PathHelpCardProps) {
+export function PathHelpCard({ pathName, children, actions, className }: PathHelpCardProps) {
   return (
     <div
       className={
@@ -32,6 +34,7 @@ export function PathHelpCard({ pathName, children, className }: PathHelpCardProp
       <p className="text-text-primary font-medium">
         As a <strong className="text-primary-fg">{pathName}</strong>, {children}
       </p>
+      {actions ? <div className="mt-3">{actions}</div> : null}
     </div>
   );
 }

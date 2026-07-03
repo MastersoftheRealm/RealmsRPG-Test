@@ -1,5 +1,5 @@
 -- Codex card art: species image_url column + codex-art storage bucket (TASK-405 phase 1)
--- Apply via Supabase MCP apply_migration or SQL Editor.
+-- Status: Applied on RealmsRPG-Test — migration codex_art_species_image_url (20260702031831).
 -- Writes: admin-only through /api/upload/codex-art (service role). Public read URLs.
 
 alter table public.codex_species
