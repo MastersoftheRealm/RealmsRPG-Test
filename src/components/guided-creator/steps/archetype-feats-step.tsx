@@ -13,6 +13,7 @@ import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
 import { GuidedChoiceCard } from '../guided-choice-card';
 import { GuidedFeatRestrictionNotice } from '../guided-feat-restriction-notice';
+import { getFeatRestrictionNotice } from '@/lib/codex/feat-restriction-notice';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from '../guided-choice-styles';
 import { GuidedStepLayout } from '../guided-step-layout';
 import type { PathGuidanceGroup } from '@/types/archetype';
@@ -74,9 +75,12 @@ export function ArchetypeFeatsStep() {
         onSelect={() => !atCap && toggleFeat(feat.id)}
         className={atCap ? 'opacity-60 cursor-not-allowed' : undefined}
         selectAriaLabel={`${selected ? 'Deselect' : 'Select'} ${feat.name}`}
-      >
-        {feat.codex ? <GuidedFeatRestrictionNotice feat={feat.codex} /> : null}
-      </GuidedChoiceCard>
+        expandedExtra={
+          feat.codex && getFeatRestrictionNotice(feat.codex) ? (
+            <GuidedFeatRestrictionNotice feat={feat.codex} />
+          ) : undefined
+        }
+      />
     );
   };
 

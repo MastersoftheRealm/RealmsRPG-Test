@@ -40,6 +40,7 @@ import { formatListCellLabel, normalizeRangeDisplay } from '@/lib/utils';
 import { buildPartsAndMetadataDetailSections } from '@/lib/chip/list-row-metadata';
 import { ChevronDown } from 'lucide-react';
 import type { Abilities } from '@/types';
+import type { LibraryPower, LibraryTechnique } from '@/types/library';
 
 // =============================================================================
 // Types
@@ -457,9 +458,9 @@ export function CreatureStatBlock({
       if (p.name) userByName.set(p.name.trim().toLowerCase(), p);
     });
 
-    const officialById = new Map<string, Record<string, unknown>>();
-    const officialByName = new Map<string, Record<string, unknown>>();
-    (officialPowers as Array<Record<string, unknown>>).forEach((p) => {
+    const officialById = new Map<string, LibraryPower>();
+    const officialByName = new Map<string, LibraryPower>();
+    officialPowers.forEach((p) => {
       const id = p.id != null ? String(p.id) : '';
       const name = p.name != null ? String(p.name) : '';
       if (id) officialById.set(id, p);
@@ -493,15 +494,15 @@ export function CreatureStatBlock({
           }
         : officialMatch
           ? {
-              name: String(officialMatch.name ?? refName),
-              description: officialMatch.description != null ? String(officialMatch.description) : undefined,
-              parts: ((officialMatch.parts ?? (officialMatch.payload as Record<string, unknown> | undefined)?.parts) as unknown[]) ?? [],
-              damage: (officialMatch.damage ?? (officialMatch.payload as Record<string, unknown> | undefined)?.damage) as unknown,
-              actionType: (officialMatch.actionType ?? (officialMatch.payload as Record<string, unknown> | undefined)?.actionType) as string | undefined,
-              isReaction: (officialMatch.isReaction ?? (officialMatch.payload as Record<string, unknown> | undefined)?.isReaction) as boolean | undefined,
-              range: (officialMatch.range ?? (officialMatch.payload as Record<string, unknown> | undefined)?.range) as unknown,
-              area: (officialMatch.area ?? (officialMatch.payload as Record<string, unknown> | undefined)?.area) as unknown,
-              duration: (officialMatch.duration ?? (officialMatch.payload as Record<string, unknown> | undefined)?.duration) as unknown,
+              name: officialMatch.name ?? refName,
+              description: officialMatch.description,
+              parts: officialMatch.parts ?? [],
+              damage: officialMatch.damage,
+              actionType: officialMatch.actionType,
+              isReaction: officialMatch.isReaction,
+              range: officialMatch.range,
+              area: officialMatch.area,
+              duration: officialMatch.duration,
             }
           : null;
 
@@ -559,9 +560,9 @@ export function CreatureStatBlock({
       if (t.name) userByName.set(t.name.trim().toLowerCase(), t);
     });
 
-    const officialById = new Map<string, Record<string, unknown>>();
-    const officialByName = new Map<string, Record<string, unknown>>();
-    (officialTechniques as Array<Record<string, unknown>>).forEach((t) => {
+    const officialById = new Map<string, LibraryTechnique>();
+    const officialByName = new Map<string, LibraryTechnique>();
+    officialTechniques.forEach((t) => {
       const id = t.id != null ? String(t.id) : '';
       const name = t.name != null ? String(t.name) : '';
       if (id) officialById.set(id, t);
@@ -591,13 +592,13 @@ export function CreatureStatBlock({
           }
         : officialMatch
           ? {
-              name: String(officialMatch.name ?? refName),
-              description: officialMatch.description != null ? String(officialMatch.description) : undefined,
-              parts: ((officialMatch.parts ?? (officialMatch.payload as Record<string, unknown> | undefined)?.parts) as unknown[]) ?? [],
-              damage: (officialMatch.damage ?? (officialMatch.payload as Record<string, unknown> | undefined)?.damage) as unknown,
-              weapon: (officialMatch.weapon ?? (officialMatch.payload as Record<string, unknown> | undefined)?.weapon) as unknown,
-              actionType: (officialMatch.actionType ?? (officialMatch.payload as Record<string, unknown> | undefined)?.actionType) as string | undefined,
-              isReaction: (officialMatch.isReaction ?? (officialMatch.payload as Record<string, unknown> | undefined)?.isReaction) as boolean | undefined,
+              name: officialMatch.name ?? refName,
+              description: officialMatch.description,
+              parts: officialMatch.parts ?? [],
+              damage: officialMatch.damage,
+              weapon: officialMatch.weapon,
+              actionType: officialMatch.actionType,
+              isReaction: officialMatch.isReaction,
             }
           : null;
 

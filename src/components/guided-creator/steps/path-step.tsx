@@ -15,6 +15,7 @@ import type { Archetype, ArchetypeCategory } from '@/types';
 import { GuidedChoiceCard } from '../guided-choice-card';
 import { GUIDED_CHOICE_GRID_CLASS, GUIDED_CHOICE_GRID_ITEM_CLASS } from '../guided-choice-grid';
 import { GuidedStepLayout } from '../guided-step-layout';
+import { GuidedLayerNav } from '@/components/shared';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.path;
@@ -87,18 +88,6 @@ export function PathStep() {
         </div>
       ) : (
         <>
-          {hasHybrid && !showHybrid && (
-            <div className="mb-4">
-              <button
-                type="button"
-                onClick={() => setShowHybrid(true)}
-                className="text-sm font-medium text-primary-fg hover:underline min-h-11 font-nunito"
-              >
-                {stepCopy.showHybridPaths}
-              </button>
-            </div>
-          )}
-
           {visiblePaths.length === 0 ? (
             <EmptyState title={stepCopy.emptyTitle} description={stepCopy.emptyDescription} />
           ) : (
@@ -115,6 +104,19 @@ export function PathStep() {
               ))}
             </div>
           )}
+
+          {hasHybrid && !showHybrid ? (
+            <GuidedLayerNav
+              expandLabel={stepCopy.showHybridPaths}
+              onExpand={() => setShowHybrid(true)}
+            />
+          ) : null}
+          {hasHybrid && showHybrid ? (
+            <GuidedLayerNav
+              collapseLabel={stepCopy.backToCorePaths}
+              onCollapse={() => setShowHybrid(false)}
+            />
+          ) : null}
         </>
       )}
     </GuidedStepLayout>

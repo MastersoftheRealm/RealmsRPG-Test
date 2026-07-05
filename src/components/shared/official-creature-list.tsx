@@ -8,6 +8,7 @@
 import { type ReactNode } from 'react';
 import { Users } from 'lucide-react';
 import { OfficialEntityList } from '@/components/shared/official-entity-list';
+import type { LibraryCreature } from '@/types/library';
 import {
   buildOfficialCreatureRows,
   filterOfficialCreatureRows,
@@ -20,7 +21,7 @@ import {
 export type { OfficialCreatureRow };
 
 export interface OfficialCreatureListProps {
-  items: Array<Record<string, unknown>>;
+  items: LibraryCreature[];
   isLoading: boolean;
   error: Error | null;
   onRetry: () => void;
@@ -57,7 +58,7 @@ export function OfficialCreatureList({
   onDelete,
 }: OfficialCreatureListProps) {
   return (
-    <OfficialEntityList<OfficialCreatureRow>
+    <OfficialEntityList<OfficialCreatureRow, LibraryCreature>
       items={items}
       isLoading={isLoading}
       error={error}

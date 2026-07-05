@@ -164,7 +164,7 @@ function TechniqueCreatorContent() {
   const { fullOptions: allWeaponOptions, visibleOptions } = useCreatorWeaponOptions({
     defaults: DEFAULT_WEAPON_OPTIONS,
     userItems,
-    officialWeaponItems: officialItems as Record<string, unknown>[],
+    officialWeaponItems: officialItems,
     itemPropertiesDb,
     librarySource: weaponLibrarySource,
   });

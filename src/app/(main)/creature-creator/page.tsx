@@ -225,11 +225,7 @@ function CreatureCreatorContent() {
         : [];
     const pub =
       loadSource === 'public' || loadSource === 'all'
-        ? (publicCreatures as Array<Record<string, unknown>>).map((c) => ({
-            ...c,
-            id: String(c.id ?? c.docId ?? ''),
-            docId: String(c.id ?? c.docId ?? ''),
-          }))
+        ? publicCreatures
         : [];
     return [...my, ...pub].map((c) => buildCreatureSelectableItem(c));
   }, [loadSource, userCreatures, publicCreatures]);
@@ -256,61 +252,10 @@ function CreatureCreatorContent() {
           ? 'Create a creature and save it to your library first.'
           : undefined;
 
-  // Normalize public API item to UserPower/UserTechnique/UserItem shape (with docId for transformers)
-  const normalizedPublicPowers = useMemo(() => 
-    (publicPowers as Record<string, unknown>[]).map((p) => ({
-      id: String(p.id ?? p.docId ?? ''),
-      docId: String(p.id ?? p.docId ?? ''),
-      name: String(p.name ?? ''),
-      description: String(p.description ?? ''),
-      parts: p.parts ?? [],
-      actionType: p.actionType,
-      isReaction: !!p.isReaction,
-      range: p.range,
-      area: p.area,
-      duration: p.duration,
-      damage: p.damage,
-    })) as UserPower[],
-    [publicPowers]
-  );
-  const normalizedPublicTechniques = useMemo(() => 
-    (publicTechniques as Record<string, unknown>[]).map((t) => ({
-      id: String(t.id ?? t.docId ?? ''),
-      docId: String(t.id ?? t.docId ?? ''),
-      name: String(t.name ?? ''),
-      description: String(t.description ?? ''),
-      parts: t.parts ?? [],
-      weapon: t.weapon,
-      damage: t.damage,
-    })) as UserTechnique[],
-    [publicTechniques]
-  );
-  const normalizedPublicEmpoweredTechniques = useMemo(() =>
-    (publicEmpoweredTechniques as Record<string, unknown>[]).map((t) => ({
-      id: String(t.id ?? t.docId ?? ''),
-      docId: String(t.id ?? t.docId ?? ''),
-      name: String(t.name ?? ''),
-      description: String(t.description ?? ''),
-      parts: t.parts ?? [],
-      weapon: t.weapon,
-      damage: t.damage,
-      ...t,
-    })) as UserTechnique[],
-    [publicEmpoweredTechniques]
-  );
-  const normalizedPublicItems = useMemo(() => 
-    (publicItems as Record<string, unknown>[]).map((i) => ({
-      id: String(i.id ?? i.docId ?? ''),
-      docId: String(i.id ?? i.docId ?? ''),
-      name: String(i.name ?? ''),
-      description: String(i.description ?? ''),
-      type: (i.type as string) || 'weapon',
-      properties: i.properties ?? [],
-      damage: i.damage,
-      armorValue: i.armorValue,
-    })) as UserItem[],
-    [publicItems]
-  );
+  const normalizedPublicPowers = publicPowers;
+  const normalizedPublicTechniques = publicTechniques;
+  const normalizedPublicEmpoweredTechniques = publicEmpoweredTechniques;
+  const normalizedPublicItems = publicItems;
   
   // Raw lists by source (for building selectable items with parts/properties chips)
   const powerList = useMemo(() => {
@@ -1011,13 +956,7 @@ function CreatureCreatorContent() {
 
   // Merged creatures (user + public) for ?edit= load from admin public library
   const mergedCreaturesForEdit = useMemo(() => {
-    const user = (userCreatures ?? []) as unknown as Array<Record<string, unknown> & { id?: string; docId?: string }>;
-    const pub = (publicCreatures as Array<Record<string, unknown>>).map((c) => ({
-      ...c,
-      id: String(c.id ?? c.docId ?? ''),
-      docId: String(c.id ?? c.docId ?? ''),
-    }));
-    return [...user, ...pub];
+    return [...(userCreatures ?? []), ...(publicCreatures ?? [])];
   }, [userCreatures, publicCreatures]);
 
   // Load creature for editing from URL (?edit=<id>)

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import type { UserItem } from '@/hooks/use-user-library';
+import type { UserItem, LibraryItem } from '@/hooks/use-user-library';
 import type { ItemPropertyTpRow } from '@/lib/calculators/item-calc';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 import {
@@ -13,7 +13,7 @@ import {
 export function useCreatorWeaponOptions(params: {
   defaults: Array<{ id: string | number; name: string; tp?: number }>;
   userItems: UserItem[];
-  officialWeaponItems: Record<string, unknown>[] | undefined;
+  officialWeaponItems: LibraryItem[] | undefined;
   itemPropertiesDb: ItemPropertyTpRow[];
   librarySource: SourceFilterValue;
 }): { fullOptions: CreatorWeaponOption[]; visibleOptions: CreatorWeaponOption[] } {

@@ -268,5 +268,5 @@ export type { CodexArtUploadFieldProps } from './codex-art-upload-field';
 export { OnboardingTour, getTourCompleted, setTourCompleted } from './onboarding-tour';
 
 // GuidedChoiceShell - Unified Layer 1/2/3 chrome for creator steps (three-layer model)
-export { GuidedChoiceShell } from './guided-choice';
-export type { GuidedChoiceShellProps, GuidedChoiceGroup } from './guided-choice';
+export { GuidedChoiceShell, GuidedLayerNav } from './guided-choice';
+export type { GuidedChoiceShellProps, GuidedChoiceGroup, GuidedLayerNavProps } from './guided-choice';

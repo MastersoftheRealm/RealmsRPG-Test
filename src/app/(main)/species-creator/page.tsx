@@ -67,7 +67,10 @@ function isSpeciesFormSaveReady(form: SpeciesFormState): boolean {
   );
 }
 
-function buildSpeciesSelectableItem(record: Record<string, unknown>, source: 'my' | 'public'): SelectableItem {
+function buildSpeciesSelectableItem(
+  record: { id?: string; docId?: string; name?: string; description?: string; type?: string },
+  source: 'my' | 'public'
+): SelectableItem {
   const id = String(record.id ?? record.docId ?? '');
   const name = String(record.name ?? 'Unnamed');
   const type = String(record.type ?? '');
@@ -390,22 +393,11 @@ export default function SpeciesCreatorPage() {
   const speciesLoadItems = useMemo((): SelectableItem[] => {
     const items: SelectableItem[] = [];
     if (loadSource === 'my' || loadSource === 'all') {
-      userSpeciesList.forEach((s) =>
-        items.push(buildSpeciesSelectableItem(s as unknown as Record<string, unknown>, 'my'))
-      );
+      userSpeciesList.forEach((s) => items.push(buildSpeciesSelectableItem(s, 'my')));
     }
     if (loadSource === 'public' || loadSource === 'all') {
-      (publicSpecies as Record<string, unknown>[]).forEach((s) =>
-        items.push(
-          buildSpeciesSelectableItem(
-            { ...s, id: String(s.id ?? s.docId ?? '') },
-            'public'
-          )
-        )
-      );
-      (codexSpecies as Species[]).forEach((s) =>
-        items.push(buildSpeciesSelectableItem(s as unknown as Record<string, unknown>, 'public'))
-      );
+      publicSpecies.forEach((s) => items.push(buildSpeciesSelectableItem(s, 'public')));
+      codexSpecies.forEach((s) => items.push(buildSpeciesSelectableItem(s, 'public')));
     }
     const seen = new Set<string>();
     return items.filter((item) => {

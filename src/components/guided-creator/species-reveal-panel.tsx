@@ -8,7 +8,7 @@
 import Image from 'next/image';
 import { useMemo, type ReactNode } from 'react';
 import { Heart, Sparkles } from 'lucide-react';
-import { SpeciesTraitCard, ExpandableImage } from '@/components/shared';
+import { SpeciesTraitCard, ExpandableImage, SegmentedControl } from '@/components/shared';
 import { DescriptorChip } from '@/components/ui';
 import { useCodexSkills, resolveTraitIds, type Species, type Trait } from '@/hooks';
 import { getChoiceOptionIds } from '@/lib/choice-trait';
@@ -19,6 +19,7 @@ import { SummaryChipList, type SummaryChipItem } from '@/components/shared';
 import { speciesSkillToSummaryChipItem, ANY_SPECIES_SKILL_ID } from '@/lib/chip/species-skill-chips';
 import { resolveChoiceCardImage } from './guided-choice-image';
 import { titleCase } from './guided-text';
+import { getSpeciesSizeOptions } from './guided-species-utils';
 
 const copy = GUIDED_CREATOR_COPY.steps.ancestry.speciesOverview;
 
@@ -26,6 +27,8 @@ export interface SpeciesRevealPanelProps {
   species: Species;
   allTraits: Trait[];
   className?: string;
+  selectedSize?: string | null;
+  onSizeChange?: (size: string) => void;
 }
 
 function formatSizes(species: Species): string | null {
@@ -42,10 +45,11 @@ interface VitalItem {
   value: string;
 }
 
-function buildVitals(species: Species): VitalItem[] {
+function buildVitals(species: Species, fixedSize: string | null): VitalItem[] {
   const items: VitalItem[] = [];
-  const size = formatSizes(species);
-  if (size) items.push({ key: 'size', label: copy.sizeLabel, value: size });
+  if (fixedSize) {
+    items.push({ key: 'size', label: copy.sizeLabel, value: titleCase(fixedSize) });
+  }
   if (species.type?.trim()) {
     items.push({ key: 'type', label: copy.typeLabel, value: titleCase(species.type.trim()) });
   }
@@ -98,9 +102,20 @@ function OverviewSection({
   );
 }
 
-export function SpeciesRevealPanel({ species, allTraits, className }: SpeciesRevealPanelProps) {
+export function SpeciesRevealPanel({
+  species,
+  allTraits,
+  className,
+  selectedSize = null,
+  onSizeChange,
+}: SpeciesRevealPanelProps) {
   const { data: allSkills = [] } = useCodexSkills();
   const image = resolveChoiceCardImage('species', species);
+
+  const sizeOptions = useMemo(() => getSpeciesSizeOptions(species), [species]);
+  const hasSizeChoice = sizeOptions.length > 1;
+  const fixedSize =
+    sizeOptions.length === 1 ? titleCase(sizeOptions[0]) : !hasSizeChoice ? formatSizes(species) : null;
 
   const speciesTraits = useMemo(
     () => resolveTraitIds(species.species_traits ?? [], allTraits),
@@ -115,7 +130,10 @@ export function SpeciesRevealPanel({ species, allTraits, className }: SpeciesRev
       .map((id) => speciesSkillToSummaryChipItem(id, allSkills));
   }, [species.skills, allSkills]);
 
-  const vitals = useMemo(() => buildVitals(species), [species]);
+  const vitals = useMemo(
+    () => buildVitals(species, fixedSize),
+    [species, fixedSize]
+  );
   const abilityBonuses = species.ability_bonuses ?? {};
   const languages = species.languages?.filter(Boolean) ?? [];
   const choiceNames = choices.map((t) => t.name);
@@ -166,6 +184,25 @@ export function SpeciesRevealPanel({ species, allTraits, className }: SpeciesRev
           </div>
         )}
       </div>
+
+      {hasSizeChoice && onSizeChange && (
+        <OverviewSection title={copy.sizeChoiceTitle} hint={copy.sizeChoiceHint}>
+          <SegmentedControl
+            value={selectedSize ?? ''}
+            onChange={onSizeChange}
+            options={sizeOptions.map((size) => ({
+              value: size,
+              label: titleCase(size),
+            }))}
+            aria-label="Species size"
+            equalWidth
+            className="max-w-md"
+          />
+          {!selectedSize && (
+            <p className="mt-2 font-nunito text-sm text-text-secondary">{copy.sizeChoiceRequired}</p>
+          )}
+        </OverviewSection>
+      )}
 
       {Object.keys(abilityBonuses).length > 0 && (
         <OverviewSection title={copy.abilityBonusesTitle}>

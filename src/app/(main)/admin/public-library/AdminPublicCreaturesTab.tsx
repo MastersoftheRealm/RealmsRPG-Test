@@ -40,7 +40,7 @@ export function AdminPublicCreaturesTab() {
   return (
     <>
       <OfficialCreatureList
-        items={items as Array<Record<string, unknown>>}
+        items={items}
         isLoading={isLoading}
         error={error}
         onRetry={() => { void refetch(); }}

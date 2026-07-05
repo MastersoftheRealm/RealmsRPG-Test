@@ -17,9 +17,9 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
-import { Button } from '@/components/ui';
 import type { CreatorLayer } from '@/stores/character-creator-store';
 import type { StepCompletion } from '@/lib/character-creator-validation';
+import { GuidedLayerNav } from './guided-layer-nav';
 
 export interface GuidedChoiceGroup {
   id: string;
@@ -133,18 +133,12 @@ export function GuidedChoiceShell({
       )}
 
       {(onExpandLayer || onCollapseLayer) && (
-        <div className="flex flex-wrap items-center gap-3 mt-5">
-          {layer < 3 && canExpand && onExpandLayer && (
-            <Button type="button" variant="outline" size="sm" onClick={onExpandLayer} className="min-h-11">
-              {resolvedExpandLabel}
-            </Button>
-          )}
-          {layer > 1 && onCollapseLayer && (
-            <Button type="button" variant="link" onClick={onCollapseLayer} className="min-h-11 px-0">
-              ← {collapseLabel}
-            </Button>
-          )}
-        </div>
+        <GuidedLayerNav
+          expandLabel={layer === 1 && canExpand && onExpandLayer ? resolvedExpandLabel : undefined}
+          onExpand={layer === 1 && canExpand ? onExpandLayer : undefined}
+          collapseLabel={collapseLabel}
+          onCollapse={layer > 1 ? onCollapseLayer : undefined}
+        />
       )}
     </div>
   );

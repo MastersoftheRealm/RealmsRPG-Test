@@ -7,18 +7,19 @@
 
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { fetchOfficialLibrary, addOfficialItemToLibrary } from '@/services/library-service';
+import type { LibraryItemType, LibraryRow } from '@/types/library';
 
 const OFFICIAL_LIBRARY_KEYS = {
   all: ['official-library'] as const,
   byType: (type: string) => ['official-library', type] as const,
 };
 
-export function useOfficialLibrary(
-  type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species',
+export function useOfficialLibrary<T extends LibraryItemType>(
+  type: T,
   options?: { enabled?: boolean }
-) {
+): UseQueryResult<LibraryRow<T>[], Error> {
   const enabled = options?.enabled ?? true;
   return useQuery({
     queryKey: OFFICIAL_LIBRARY_KEYS.byType(type),
@@ -29,7 +30,7 @@ export function useOfficialLibrary(
   });
 }
 
-const USER_LIBRARY_KEY_MAP: Record<string, string> = {
+const USER_LIBRARY_KEY_MAP: Record<LibraryItemType, string> = {
   powers: 'user-powers',
   techniques: 'user-techniques',
   'empowered-techniques': 'user-empowered-techniques',
@@ -38,13 +39,11 @@ const USER_LIBRARY_KEY_MAP: Record<string, string> = {
   species: 'user-species',
 };
 
-export function useAddOfficialToLibrary(
-  type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species'
-) {
+export function useAddOfficialToLibrary<T extends LibraryItemType>(type: T) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (item: Record<string, unknown>) => addOfficialItemToLibrary(type, item),
+    mutationFn: (item: LibraryRow<T>) => addOfficialItemToLibrary(type, item),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: OFFICIAL_LIBRARY_KEYS.byType(type),

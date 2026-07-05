@@ -41,7 +41,7 @@ export function AdminPublicItemsTab() {
   return (
     <>
       <OfficialItemList
-        items={items as Array<Record<string, unknown>>}
+        items={items}
         propertiesDb={propertiesDb}
         isLoading={isLoading}
         error={error}

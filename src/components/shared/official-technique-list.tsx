@@ -9,6 +9,7 @@ import { type ReactNode } from 'react';
 import { Swords } from 'lucide-react';
 import { OfficialEntityList } from '@/components/shared/official-entity-list';
 import type { TechniquePart } from '@/hooks/codex-types';
+import type { LibraryTechnique } from '@/types/library';
 import {
   buildOfficialTechniqueRows,
   filterOfficialTechniqueRows,
@@ -20,7 +21,7 @@ import {
 export type { OfficialTechniqueRow };
 
 export interface OfficialTechniqueListProps {
-  items: Array<Record<string, unknown>>;
+  items: LibraryTechnique[];
   partsDb: TechniquePart[];
   isLoading: boolean;
   error: Error | null;
@@ -62,7 +63,7 @@ export function OfficialTechniqueList({
 }: OfficialTechniqueListProps) {
   const empowered = mode === 'empowered';
   return (
-    <OfficialEntityList<OfficialTechniqueRow>
+    <OfficialEntityList<OfficialTechniqueRow, LibraryTechnique>
       items={items}
       isLoading={isLoading}
       error={error}

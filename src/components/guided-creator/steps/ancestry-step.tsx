@@ -16,6 +16,7 @@ import { GuidedChoiceCard } from '../guided-choice-card';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from '../guided-choice-styles';
 import { GuidedStepLayout } from '../guided-step-layout';
 import { SpeciesRevealPanel } from '../species-reveal-panel';
+import { getSpeciesSizeOptions } from '../guided-species-utils';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.ancestry;
@@ -156,6 +157,14 @@ export function AncestryStep() {
     phaseInitialized.current = false;
     setPhaseIndex(0);
   }, [draft.speciesId]);
+
+  useEffect(() => {
+    if (!species) return;
+    const sizes = getSpeciesSizeOptions(species);
+    if (sizes.length === 1 && !draft.selectedSize) {
+      updateDraft({ selectedSize: sizes[0] });
+    }
+  }, [species, draft.selectedSize, updateDraft]);
 
   useEffect(() => {
     if (phaseInitialized.current || !species) return;
@@ -308,8 +317,11 @@ export function AncestryStep() {
     advanceAfterPick();
   };
 
+  const sizeOptions = species ? getSpeciesSizeOptions(species) : [];
+  const sizeOk = sizeOptions.length <= 1 || Boolean(draft.selectedSize);
+
   const footerCanContinue = isOverview
-    ? totalPicks > 0 || ancestryComplete
+    ? (totalPicks > 0 || ancestryComplete) && sizeOk
     : currentTask
       ? currentTask.optional || hasCurrentPick
       : ancestryComplete;
@@ -350,7 +362,12 @@ export function AncestryStep() {
       ) : !species ? (
         <p className="font-nunito text-text-secondary">{stepCopy.selectSpeciesFirst}</p>
       ) : isOverview ? (
-        <SpeciesRevealPanel species={species as Species} allTraits={allTraits} />
+        <SpeciesRevealPanel
+          species={species as Species}
+          allTraits={allTraits}
+          selectedSize={draft.selectedSize}
+          onSizeChange={(size) => updateDraft({ selectedSize: size })}
+        />
       ) : !currentTask ? (
         <p className="font-nunito text-text-secondary">{stepCopy.emptyOptions}</p>
       ) : (

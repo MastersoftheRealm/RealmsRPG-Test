@@ -4,6 +4,7 @@
 
 import type { ChipData } from '@/components/shared';
 import type { ItemProperty } from '@/hooks/codex-types';
+import type { LibraryItem } from '@/types/library';
 import type { ItemPropertyPayload } from '@/lib/calculators/item-calc';
 import {
   calculateItemCosts,
@@ -28,7 +29,7 @@ export const OFFICIAL_ITEM_HEADER_COLUMNS = [
 
 export interface OfficialItemRow {
   id: string;
-  raw: Record<string, unknown>;
+  raw: LibraryItem;
   name: string;
   description: string;
   type: string;
@@ -41,7 +42,7 @@ export interface OfficialItemRow {
 }
 
 export function buildOfficialItemRows(
-  items: Array<Record<string, unknown>>,
+  items: LibraryItem[],
   propertiesDb: ItemProperty[]
 ): OfficialItemRow[] {
   return items.map((item) => {

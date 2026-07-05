@@ -20,6 +20,7 @@ import { derivePowerDisplay } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
+import type { LibraryPower, LibraryTechnique } from '@/types/library';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 
 const ptCopy = GUIDED_CREATOR_COPY.steps.powersTechniques;
@@ -40,10 +41,10 @@ function stepCopy(type: ArchetypeCategory | null): {
   return { ...ptCopy.power, kind: 'powers' as const };
 }
 
-type LibraryItem = Record<string, unknown> & { id?: string | number; name?: string; description?: string };
+type GuidedPathLibraryRow = LibraryPower | LibraryTechnique;
 
-function buildLookup(items: LibraryItem[]): Map<string, LibraryItem> {
-  const map = new Map<string, LibraryItem>();
+function buildLookup(items: GuidedPathLibraryRow[]): Map<string, GuidedPathLibraryRow> {
+  const map = new Map<string, GuidedPathLibraryRow>();
   items.forEach((item) => {
     const id = item.id != null ? String(item.id) : '';
     const name = item.name != null ? String(item.name) : '';
@@ -53,7 +54,7 @@ function buildLookup(items: LibraryItem[]): Map<string, LibraryItem> {
   return map;
 }
 
-function resolveLibraryItem(id: string, lookup: Map<string, LibraryItem>): LibraryItem | undefined {
+function resolveLibraryItem(id: string, lookup: Map<string, GuidedPathLibraryRow>): GuidedPathLibraryRow | undefined {
   return lookup.get(String(id).toLowerCase());
 }
 
@@ -74,7 +75,7 @@ export function PowersTechniquesStep() {
   const { data: techniquePartsDb = [] } = useTechniqueParts();
 
   const isLoading = isTechniques ? techniquesLoading : powersLoading;
-  const libraryItems = (isTechniques ? officialTechniques : officialPowers) as LibraryItem[];
+  const libraryItems = isTechniques ? officialTechniques : officialPowers;
   const lookup = useMemo(() => buildLookup(libraryItems), [libraryItems]);
 
   const recommendedIds = useMemo(() => {
@@ -141,25 +142,13 @@ export function PowersTechniquesStep() {
       if (raw) {
         try {
           if (isTechniques) {
+            const tech = raw as LibraryTechnique;
             const doc: TechniqueDocument = {
-              name: String(raw.name ?? ''),
-              description: String(raw.description ?? ''),
-              parts: Array.isArray(raw.parts) ? (raw.parts as TechniqueDocument['parts']) : [],
-              actionType: raw.action_type
-                ? String(raw.action_type)
-                : raw.actionType
-                  ? String(raw.actionType)
-                  : undefined,
-              weapon:
-                raw.weapon_name || raw.weapon
-                  ? {
-                      name: raw.weapon_name
-                        ? String(raw.weapon_name)
-                        : typeof raw.weapon === 'object' && raw.weapon && 'name' in raw.weapon
-                          ? String((raw.weapon as { name?: string }).name ?? '')
-                          : undefined,
-                    }
-                  : undefined,
+              name: String(tech.name ?? ''),
+              description: String(tech.description ?? ''),
+              parts: tech.parts ?? [],
+              actionType: tech.actionType,
+              weapon: tech.weapon?.name ? { name: tech.weapon.name } : undefined,
             };
             const disp = deriveTechniqueDisplay(doc, techniquePartsDb);
             const parts: string[] = [];
@@ -167,10 +156,11 @@ export function PowersTechniquesStep() {
             if (disp.actionType) parts.push(disp.actionType);
             tagline = parts.length > 0 ? parts.join(' · ') : undefined;
           } else {
+            const power = raw as LibraryPower;
             const doc: PowerDocument = {
-              name: String(raw.name ?? ''),
-              description: String(raw.description ?? ''),
-              parts: Array.isArray(raw.parts) ? (raw.parts as PowerDocument['parts']) : [],
+              name: String(power.name ?? ''),
+              description: String(power.description ?? ''),
+              parts: power.parts ?? [],
             };
             const disp = derivePowerDisplay(doc, powerPartsDb);
             if (typeof disp.energy === 'number') tagline = ptCopy.energyTag(disp.energy);

@@ -5,20 +5,24 @@
 
 'use client';
 
-import { useMemo, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useMemo, useState, useRef, useEffect, type KeyboardEvent, type ReactNode } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
 import { DescriptorChip } from '@/components/ui';
 import { ExpandableImage } from '@/components/shared';
-import { truncateAtWord, COMPACT_PREVIEW_LEN, shouldExpandTaglineBody } from './guided-text';
+import { shouldExpandTaglineBody } from './guided-text';
 import {
   defaultImageLayoutForKind,
   resolveChoiceCardImage,
   type ChoiceCardImageKind,
   type ChoiceCardImageLayout,
 } from './guided-choice-image';
-import { GUIDED_CHOICE_STYLES as s } from './guided-choice-styles';
+import {
+  GUIDED_CHOICE_STYLES as s,
+  GUIDED_CHOICE_CARD_PRESETS,
+  type GuidedChoiceCardDensity,
+} from './guided-choice-styles';
 
 export interface GuidedChoiceCardProps {
   title: string;
@@ -38,34 +42,35 @@ export interface GuidedChoiceCardProps {
   selected?: boolean;
   onSelect: () => void;
   children?: ReactNode;
+  /** Shown only when expanded (Read more) — e.g. feat restriction notices. */
+  expandedExtra?: ReactNode;
   selectAriaLabel?: string;
   className?: string;
   fullWidth?: boolean;
   /**
-   * standard — min-heights for species/path grids.
-   * compact — no forced min-heights; line-clamp cap (6 lines).
-   * Both stretch to equal row height when used inside GUIDED_CHOICE_GRID_CLASS.
+   * Per-step preview sizing (uniform within the step, not globally):
+   * - species — 5 lines (longer species flavor)
+   * - path — 4 lines (path cards)
+   * - compact — 3 lines (feats, traits, loadouts)
    */
-  density?: 'standard' | 'compact';
+  density?: GuidedChoiceCardDensity;
 }
 
 type BodyMode =
   | { kind: 'none' }
-  | { kind: 'plain'; collapsed: string; expanded: string; canExpand: boolean }
-  | { kind: 'rich'; collapsed: string; expanded: ReactNode; canExpand: true };
+  | { kind: 'plain'; text: string }
+  | { kind: 'rich'; collapsed: string; expanded: ReactNode; canExpand: boolean };
 
 function resolveBody(
   description: string | null | undefined,
   tagline: string | undefined,
-  fullDescription: ReactNode | undefined,
-  previewLen?: number
+  fullDescription: ReactNode | undefined
 ): BodyMode {
   const desc = description?.trim() ?? '';
   const tag = tagline?.trim() ?? '';
 
   if (desc) {
-    const { preview, isTruncated } = truncateAtWord(desc, previewLen);
-    return { kind: 'plain', collapsed: preview, expanded: desc, canExpand: isTruncated };
+    return { kind: 'plain', text: desc };
   }
 
   if (tag) {
@@ -79,30 +84,52 @@ function resolveBody(
     if (extra != null && extra !== '' && extra !== tag) {
       if (typeof extra === 'string') {
         const expanded = extra.startsWith(tag) ? extra : `${tag}\n\n${extra}`;
-        const canExpand = shouldExpandTaglineBody(tag, extra);
-        return { kind: 'plain', collapsed: tag, expanded, canExpand };
+        if (shouldExpandTaglineBody(tag, extra)) {
+          return { kind: 'plain', text: expanded };
+        }
+        return { kind: 'plain', text: tag };
       }
       return { kind: 'rich', collapsed: tag, expanded: extra, canExpand: true };
     }
 
-    const { preview, isTruncated } = truncateAtWord(tag, previewLen);
-    return { kind: 'plain', collapsed: preview, expanded: tag, canExpand: isTruncated };
+    return { kind: 'plain', text: tag };
   }
 
   if (fullDescription != null && fullDescription !== '') {
     if (typeof fullDescription === 'string') {
-      const { preview, isTruncated } = truncateAtWord(fullDescription, previewLen);
-      return {
-        kind: 'plain',
-        collapsed: preview,
-        expanded: fullDescription,
-        canExpand: isTruncated,
-      };
+      return { kind: 'plain', text: fullDescription.trim() };
     }
     return { kind: 'rich', collapsed: '', expanded: fullDescription, canExpand: true };
   }
 
   return { kind: 'none' };
+}
+
+/** Detect whether clamped body copy overflows its fixed preview area. */
+function useClampedOverflow(active: boolean, textKey: string) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [overflows, setOverflows] = useState(false);
+
+  useEffect(() => {
+    if (!active) {
+      setOverflows(false);
+      return;
+    }
+
+    const el = ref.current;
+    if (!el) return;
+
+    const measure = () => {
+      setOverflows(el.scrollHeight > el.clientHeight + 1);
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [active, textKey]);
+
+  return { ref, overflows };
 }
 
 export function GuidedChoiceCard({
@@ -120,15 +147,21 @@ export function GuidedChoiceCard({
   selected = false,
   onSelect,
   children,
+  expandedExtra,
   selectAriaLabel,
   className,
   fullWidth = false,
-  density = 'standard',
+  density = 'path',
 }: GuidedChoiceCardProps) {
   const [expanded, setExpanded] = useState(false);
   const hasTags = tags && tags.length > 0;
-  const isCompact = density === 'compact';
-  const previewLen = isCompact ? COMPACT_PREVIEW_LEN : undefined;
+  const preset = GUIDED_CHOICE_CARD_PRESETS[density];
+  const hasExpandedExtra = Boolean(expandedExtra);
+
+  useEffect(() => {
+    if (!hasExpandedExtra) return;
+    setExpanded(selected);
+  }, [selected, hasExpandedExtra]);
 
   const layout =
     imageLayout ?? (imageKind ? defaultImageLayoutForKind(imageKind) : imageUrl ? 'thumb' : 'thumb');
@@ -141,9 +174,30 @@ export function GuidedChoiceCard({
   }, [imageUrl, imageKind, imageRecord]);
 
   const body = useMemo(
-    () => resolveBody(description, tagline, fullDescription, previewLen),
-    [description, tagline, fullDescription, previewLen]
+    () => resolveBody(description, tagline, fullDescription),
+    [description, tagline, fullDescription]
   );
+
+  const clampKey =
+    body.kind === 'plain'
+      ? body.text
+      : body.kind === 'rich'
+        ? body.collapsed
+        : '';
+
+  const { ref: bodyRef, overflows: textOverflows } = useClampedOverflow(
+    body.kind !== 'none' && !expanded,
+    clampKey
+  );
+
+  const showReadMore =
+    !expanded &&
+    (hasExpandedExtra ||
+      (body.kind === 'rich'
+        ? body.canExpand || textOverflows
+        : body.kind === 'plain' && textOverflows));
+
+  const showBodySection = body.kind !== 'none' || hasExpandedExtra;
 
   const handleCardKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -154,6 +208,7 @@ export function GuidedChoiceCard({
 
   const toggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (selected) return;
     setExpanded((o) => !o);
   };
 
@@ -172,7 +227,7 @@ export function GuidedChoiceCard({
         'flex w-full cursor-pointer flex-col overflow-hidden rounded-card border bg-surface-alt/40 transition-shadow duration-base',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
         'h-full',
-        !expanded && !isCompact && s.cardCollapsed,
+        !expanded && preset.cardCollapsed,
         selected
           ? 'border-primary ring-2 ring-primary shadow-raised'
           : 'border-border-light dark:border-border hover:border-border hover:shadow-card',
@@ -206,49 +261,58 @@ export function GuidedChoiceCard({
               <h3 className={s.title}>{title}</h3>
               {badge && <DescriptorChip size="sm">{badge}</DescriptorChip>}
             </div>
-            {body.kind !== 'none' ? (
+            {showBodySection ? (
               <div className={s.bodyWrap}>
-                <p
-                  className={cn(
-                    s.body,
-                    !expanded && !isCompact && s.bodyCollapsed,
-                    !expanded && isCompact && 'line-clamp-6',
-                    expanded && 'whitespace-pre-wrap'
-                  )}
-                >
-                  {body.kind === 'plain' &&
-                    (expanded || !body.canExpand
-                      ? body.expanded
-                      : isCompact
-                        ? body.collapsed
-                        : `${body.collapsed}…`)}
-                  {body.kind === 'rich' &&
-                    (expanded
-                      ? body.expanded
-                      : isCompact
-                        ? body.collapsed || body.expanded
-                        : body.collapsed
-                          ? `${body.collapsed}…`
-                          : body.expanded)}
-                </p>
-                {body.canExpand && (
+                {body.kind !== 'none' ? (
+                  <p
+                    ref={bodyRef}
+                    className={cn(
+                      s.body,
+                      !expanded && preset.bodyCollapsed,
+                      expanded && 'whitespace-pre-wrap'
+                    )}
+                  >
+                    {body.kind === 'plain' && body.text}
+                    {body.kind === 'rich' &&
+                      (expanded ? body.expanded : body.collapsed || body.expanded)}
+                  </p>
+                ) : null}
+                {expanded && expandedExtra ? (
+                  <div className="mt-3">{expandedExtra}</div>
+                ) : null}
+                {!expanded && (
+                  <div className={s.readMoreSlot}>
+                    {showReadMore ? (
+                      <button
+                        type="button"
+                        onClick={toggleExpand}
+                        aria-expanded={false}
+                        className={s.readMore}
+                      >
+                        Read more…
+                      </button>
+                    ) : null}
+                  </div>
+                )}
+                {expanded && showBodySection && !selected ? (
                   <button
                     type="button"
                     onClick={toggleExpand}
                     aria-expanded={expanded}
                     className={s.readMore}
                   >
-                    {expanded ? 'Read less' : 'Read more…'}
+                    Read less
                   </button>
-                )}
+                ) : null}
               </div>
             ) : null}
           </div>
-          {selected && (
-            <span className={s.selectedCheck}>
-              <Check className="h-4 w-4" aria-hidden="true" />
-            </span>
-          )}
+          <span
+            className={cn(s.selectedCheck, !selected && 'invisible')}
+            aria-hidden={!selected}
+          >
+            <Check className="h-4 w-4" aria-hidden="true" />
+          </span>
         </div>
 
         {hasTags && (

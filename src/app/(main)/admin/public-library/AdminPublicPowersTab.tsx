@@ -41,7 +41,7 @@ export function AdminPublicPowersTab() {
   return (
     <>
       <OfficialPowerList
-        items={items as Array<Record<string, unknown>>}
+        items={items}
         partsDb={partsDb}
         isLoading={isLoading}
         error={error}

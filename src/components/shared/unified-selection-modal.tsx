@@ -251,6 +251,9 @@ export function UnifiedSelectionModal({
     [items, selectedIds]
   );
 
+  const atMaxSelections =
+    maxSelections !== undefined && selectedIds.size >= maxSelections;
+
   // Handle confirm — match by string id so codex number ids work
   const handleConfirm = () => {
     const selected = selectedItems;
@@ -341,6 +344,8 @@ export function UnifiedSelectionModal({
                   {filteredItems.map(item => {
                     const itemIdStr = String(item.id);
                     const isSelected = selectedIds.has(itemIdStr);
+                    const isSelectionDisabled =
+                      item.disabled || (atMaxSelections && !isSelected);
 
                     return (
                       <div key={itemIdStr} className="flex items-center gap-2 min-w-0">
@@ -359,7 +364,7 @@ export function UnifiedSelectionModal({
                             selectable
                             isSelected={isSelected}
                             onSelect={() => toggleSelection(item.id)}
-                            disabled={item.disabled}
+                            disabled={isSelectionDisabled}
                             warningMessage={item.warningMessage}
                             compact
                           />

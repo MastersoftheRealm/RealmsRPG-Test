@@ -2,9 +2,91 @@
 
 **Last slimmed:** 2026-06-26 (TASK-382). Full history: [`archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md`](archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md) and [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md).
 
-**Next task ID:** TASK-420
+**Next task ID:** TASK-424
 
 **Agent rules:** Skip `blocked` tasks and any task with `assignee:` set to a human (e.g. TASK-353, **TASK-414**). Skip human-only tasks (TASK-353 → `DEVELOPER_TASK_QUEUE.md` DEV-001). Pick highest-priority `not-started` or continue `partial`. **Do not start TASK-408–413** until TASK-414 spec is `done` (owner approval).
+
+---
+
+- id: TASK-422
+  title: Guided equipment step — loadout UX rework (§5.7)
+  created_at: 2026-07-05
+  created_by: agent
+  priority: high
+  status: partial
+  build_validation: DEV-V-013-T004, DEV-V-013-T006, DEV-V-013-T007
+  developer_test_plan: |
+    DEV-V-013-T004 — Berserker loadout sections with resolved item rows.
+    DEV-V-013-T006 — Mix and match gear opens Layer 2 with TP bar.
+    DEV-V-013-T007 — Admin path save rejects loadout exceeding TP budget.
+  description: |
+    Replace minimal guided loadout cards ("X items" only) with feat-style branching loadout groups +
+    skills-style expandable item rows (resolve names/stats from official library). Layer 1: pick a
+    pre-validated kit; weapon/armor sub-steps optional. Layer 2: mix/match with TP budget surfaced.
+    Unarmed prowess block only when path/loadout flags recommendUnarmedProwess. Wire build-character
+    with enriched item names. Extend path-validation for admin TP/currency checks on loadouts.
+    Seed loadouts for paths beyond Berserker; align guidance_groups kit vs level1_loadouts model.
+  related_files:
+    - src/components/guided-creator/steps/loadout-step.tsx
+    - src/components/guided-creator/guided-loadout-item-table.tsx
+    - src/lib/guided-creator/resolve-loadout-items.ts
+    - src/components/character-creator/steps/equipment-step.tsx
+    - src/lib/game/path-validation.ts
+    - src/lib/guided-creator/build-character.ts
+    - src/types/archetype.ts
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+  acceptance_criteria:
+    - Loadout step shows item names (expandable rows), not item count only.
+    - User can compare and select among path loadouts; selection updates draft armaments/equipment.
+    - Layer 2 expand opens customize path (TP limiter) — reuse or adapt advanced equipment-step patterns.
+    - Unarmed prowess UI appears only when level1_recommend_unarmed_prowess or loadout metadata says so.
+    - Reveal step and saved character show resolved item names (not raw UUIDs).
+    - validatePathDataForPublish warns/errors when loadout TP exceeds martial prof budget (admin).
+    - npm run build passes; BUILD_VALIDATION entries for guided loadout flow.
+  completed_work: |
+    Phase 1 (2026-07-05): resolve-loadout-items util; expandable item rows;
+    loadout-step resolves official+codex items; save payload uses resolved names/types.
+    Phase 2 (2026-07-05): GuidedLoadoutSection feat-style vertical sections (not cards);
+    weapons/armor/gear subgroups; GuidedUnarmedProwessPanel when path recommends unarmed;
+    guided draft unarmedProwess + build persist; Playwright audit `.guided-loadout-audit/`.
+    Phase 3 (2026-07-05): GuidedLoadoutCustomizePanel (Layer 2 path pool + CreatorResourceBar TP);
+    loadout-pool + loadout-tp utils; admin validatePathDataForPublish TP via AdminArchetypesTab;
+    reveal customLoadout copy; proposed Berserker SQL in sql/guided-berserker-loadout-fixes-proposed.sql;
+    unit tests loadout-pool.test.ts + resolve-loadout-items.test.ts; npm run build passes.
+  remaining_work: |
+    - Loadout content for 11/12 paths (owner data seed).
+    - Apply Berserker kit data fixes after owner approves proposed SQL.
+    - Layer 2 full equipment catalog (beyond path pool) — optional follow-up.
+  follow_up_tasks:
+    - TASK-404
+    - TASK-423
+  notes: |
+    Owner review 2026-07-05: TASK-401 shipped minimal cards; product vision in REALMS §5.7 not met.
+    Advanced equipment-step has weapon/armor phases + item resolution but does not read level1_loadouts.
+    Live DB: 1/12 paths have loadouts (Berserker only); Monk has unarmed flag but no loadouts.
+
+---
+
+- id: TASK-423
+  title: Guided loadout path content — seed kits for 11 paths + Berserker fixes
+  created_at: 2026-07-05
+  created_by: agent
+  priority: medium
+  status: not-started
+  assignee: owner
+  description: |
+    Author level1_loadouts JSON for remaining 11 archetype paths; apply proposed Berserker kit
+    title/item alignment and shared path gear (bandages/potions). Requires owner review before
+    live codex UPDATE (see sql/guided-berserker-loadout-fixes-proposed.sql).
+  related_files:
+    - sql/guided-berserker-loadout-fixes-proposed.sql
+    - src/docs/SUPABASE_SCHEMA.md
+  acceptance_criteria:
+    - All 12 paths have at least one valid level1_loadout kit within TP budget.
+    - Berserker kit titles match item contents; shared level1_equipment included in kits.
+    - DEV-V-013-T004 passes with corrected kit names.
+  notes: |
+    Follow-up from TASK-422 partial. Codex writes require owner approval per realms-codex-data.mdc.
 
 ---
 
@@ -158,9 +240,13 @@
     - `photoURL` semantics documented as active auth/profile alias.
     - `npm run build`, `npm test`, and `npm run lint` pass.
     - Build validation suite added/indexed for codex + roll-log compatibility checks.
+  follow_up_tasks:
+    - TASK-420
+    - TASK-421
   notes: |
     Planned from remediation close-out. Compatibility-first phases required.
     DONE 2026-07-03: `CodexPayload` in `src/types/codex.ts`; typed `fetchCodex` + server route; entity types moved from hooks/codex-types; roll timestamp util extracted; character sheet uses CodexFeat/CodexSkill; vitest shape + timestamp tests; build pass.
+    Follow-ups: TASK-420 done (library API typing); TASK-421 (enhanced items typing). Creator load `any` handlers → TASK-381.
 
 - id: TASK-379
   title: DUP-05/08 unify library selection pipelines and make LoadFromLibraryModal a thin wrapper
@@ -1235,5 +1321,59 @@
   notes: |
     Human-owned design task. Agents may help draft or facilitate review but must not implement TASK-410+ until done.
     2026-07-01: Owner — no perfect L1 vision yet; spec must be exact before build.
+
+- id: TASK-420
+  title: HYG-02 library API typing hardening (official + user fetch)
+  priority: high
+  status: done
+  created_at: 2026-07-04
+  created_by: agent
+  parent_task: TASK-378
+  build_validation: DEV-V-015
+  developer_test_plan: Automated via npm test (library-types.test.ts); smoke Library + Realms Library tabs + add-to-library confirm.
+  description: |
+    Replace `fetchOfficialLibrary` / loose `Record<string, unknown>[]` returns with canonical library
+    item types shared by user and official APIs. Align `library-service.ts`, `use-official-library`,
+    and official list helpers with `UserPower`/`UserTechnique`/etc. shapes from columnar rowToItem.
+  related_files:
+    - src/types/library.ts
+    - src/services/library-service.ts
+    - src/hooks/use-user-library.ts
+    - src/hooks/use-official-library.ts
+    - src/lib/library/official-power-list.ts
+    - src/lib/library/official-technique-list.ts
+    - src/lib/library/official-item-list.ts
+    - src/lib/library/official-creature-list.ts
+    - src/docs/DATA_HANDLING.md
+  acceptance_criteria:
+    - `fetchOfficialLibrary(type)` returns typed array per library kind (no `Record<string, unknown>[]`).
+    - `useOfficialLibrary` and `useAddOfficialToLibrary` use shared library types.
+    - Entity types live in `src/types/library.ts`; hooks re-export for backward compatibility.
+    - `npm run build`, `npm test`, and `npm run lint` pass.
+  notes: |
+    Follow-up to TASK-378. Complements TASK-379 (pipeline unification) — typing first, unification second.
+    DONE 2026-07-04: `src/types/library.ts` canonical shapes; typed `fetchOfficialLibrary`/`useOfficialLibrary`/`useAddOfficialToLibrary`; official list helpers + entity lists; removed `Record<string, unknown>` casts across library consumers (creators, crafting, character creator, guided creator, creature stat block); `library-types.test.ts`; build + test pass.
+
+- id: TASK-421
+  title: HYG-03 enhanced items payload typing
+  priority: medium
+  status: not-started
+  created_at: 2026-07-04
+  created_by: agent
+  parent_task: TASK-378
+  description: |
+    Replace `Record<string, any>` on `OfficialEnhancedItem.payload` and create mutation bodies with
+    a typed crafting payload interface aligned with `UserEnhancedItem` and `/api/official/enhanced-items`.
+  related_files:
+    - src/hooks/use-enhanced-items.ts
+    - src/types/crafting.ts
+    - src/services/enhanced-items-service.ts
+    - src/app/api/official/enhanced-items/route.ts
+  acceptance_criteria:
+    - No `@typescript-eslint/no-explicit-any` on enhanced-items hook/service.
+    - Payload type documents known fields; unknown extensions via `Record<string, unknown>` index if needed.
+    - `npm run build` and `npm test` pass.
+  notes: |
+    Smaller scope than TASK-420. Creator `handleLoad*(item: any)` deferred to TASK-381 god-file split.
 
 ---

@@ -6,14 +6,15 @@
  */
 
 import { apiFetch } from '@/lib/api-client';
+import type { LibraryItemByType, LibraryItemType, LibraryRow, LibrarySaveBody } from '@/types/library';
 
 const API_BASE = '/api/user/library';
 
-export type LibraryType = 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species';
+export type LibraryType = LibraryItemType;
 
 export async function saveToLibrary(
   type: LibraryType,
-  data: Record<string, unknown>,
+  data: LibrarySaveBody,
   options?: { existingId?: string }
 ): Promise<string> {
   if (options?.existingId) {
@@ -49,33 +50,30 @@ export async function findLibraryItemByName(
 }
 
 /** Fetch official library items (no auth). Uses columnar official_* tables; species reads codex_species. */
-export async function fetchOfficialLibrary(
-  type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species'
-): Promise<Array<Record<string, unknown>>> {
-  return apiFetch<Array<Record<string, unknown>>>(`/api/official/${type}`, { cache: 'no-store' });
+export async function fetchOfficialLibrary<T extends LibraryItemType>(
+  type: T
+): Promise<LibraryRow<T>[]> {
+  return apiFetch<LibraryRow<T>[]>(`/api/official/${type}`, { cache: 'no-store' });
 }
 
 /** Find an official library item by name (for replace-by-name when publishing). */
-export async function findOfficialLibraryItemByName(
-  type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species',
+export async function findOfficialLibraryItemByName<T extends LibraryItemType>(
+  type: T,
   name: string
 ): Promise<{ id: string } | null> {
   const items = await fetchOfficialLibrary(type);
   const normalized = (name || '').trim().toLowerCase();
-  const found = items.find(
-    (i) => String((i as Record<string, unknown>).name ?? '').trim().toLowerCase() === normalized
-  ) as { id: string } | undefined;
+  const found = items.find((i) => String(i.name ?? '').trim().toLowerCase() === normalized);
   return found ? { id: found.id } : null;
 }
 
 /** Copy an official library item to the user's library. Strips _source etc. */
-export async function addOfficialItemToLibrary(
-  type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species',
-  officialItem: Record<string, unknown>
+export async function addOfficialItemToLibrary<T extends LibraryItemType>(
+  type: T,
+  officialItem: LibraryRow<T>
 ): Promise<string> {
   /* eslint-disable @typescript-eslint/no-unused-vars -- strip official-library metadata before copy */
-  const { id, docId, _source, ...data } = officialItem as Record<string, unknown> & {
-    id?: unknown;
+  const { id, docId, _source, ...data } = officialItem as LibraryRow<T> & {
     docId?: unknown;
     _source?: unknown;
   };
@@ -85,8 +83,8 @@ export async function addOfficialItemToLibrary(
 
 /** Save to official library (admin only). Uses columnar official_* tables; species writes codex_species. */
 export async function saveToOfficialLibrary(
-  type: 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species',
-  data: Record<string, unknown>,
+  type: LibraryItemType,
+  data: LibrarySaveBody,
   options?: { existingId?: string }
 ): Promise<string> {
   const body = options?.existingId ? { ...data, id: options.existingId } : data;
@@ -96,3 +94,5 @@ export async function saveToOfficialLibrary(
   });
   return result.id;
 }
+
+export type { LibraryItemByType, LibraryItemType, LibraryRow, LibrarySaveBody };

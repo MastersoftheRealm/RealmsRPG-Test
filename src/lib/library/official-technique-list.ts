@@ -4,6 +4,7 @@
 
 import type { ChipData } from '@/components/shared';
 import type { TechniquePart } from '@/hooks/codex-types';
+import type { LibraryTechnique } from '@/types/library';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators/technique-calc';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
@@ -22,7 +23,7 @@ export const OFFICIAL_TECHNIQUE_HEADER_COLUMNS = [
 
 export interface OfficialTechniqueRow {
   id: string;
-  raw: Record<string, unknown>;
+  raw: LibraryTechnique;
   name: string;
   description: string;
   energy: string | number | undefined;
@@ -33,20 +34,20 @@ export interface OfficialTechniqueRow {
   parts: ChipData[];
 }
 
-export function getEmpoweredTechniqueTotals(item: unknown): { energy?: number; tp?: number } {
-  const raw = item as Record<string, unknown>;
-  const totals = raw.totals as Record<string, unknown> | undefined;
+export function getEmpoweredTechniqueTotals(item: LibraryTechnique & {
+  totals?: { energy?: number; trainingPoints?: number };
+}): { energy?: number; tp?: number } {
+  const totals = item.totals;
   const energy = typeof totals?.energy === 'number' ? totals.energy : undefined;
   const tp = typeof totals?.trainingPoints === 'number' ? totals.trainingPoints : undefined;
   return { energy, tp };
 }
 
 export function buildOfficialTechniqueRows(
-  items: Array<Record<string, unknown>>,
+  items: LibraryTechnique[],
   partsDb: TechniquePart[],
   mode: 'standard' | 'empowered' = 'standard'
 ): OfficialTechniqueRow[] {
-  const empowered = mode === 'empowered';
   return items.map((t) => {
     const doc: TechniqueDocument = {
       name: String(t.name ?? ''),
@@ -58,6 +59,7 @@ export function buildOfficialTechniqueRows(
       weapon: t.weapon as TechniqueDocument['weapon'],
     };
     const display = deriveTechniqueDisplay(doc, partsDb);
+    const empowered = mode === 'empowered';
     const totals = empowered ? getEmpoweredTechniqueTotals(t) : {};
     const damageStr = formatTechniqueDamage(doc.damage);
     const parts = partChipsFromDisplay(display.partChips, { stripOptionSuffix: true });

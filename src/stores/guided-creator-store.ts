@@ -123,6 +123,8 @@ export interface GuidedDraft {
   mart_abil: AbilityName | null;
   speciesId: string | null;
   speciesName: string | null;
+  /** When species offers multiple sizes, player picks one on the ancestry overview. */
+  selectedSize: string | null;
 
   // Chapter 2 — Ancestry
   /** parent species-trait id -> chosen option trait id (for `option_trait_ids` traits) */
@@ -147,6 +149,8 @@ export interface GuidedDraft {
   loadoutId: string | null;
   armaments: PathItemRecommendation[];
   equipment: PathItemRecommendation[];
+  /** 0 = not taken; level 1 at character creation when path recommends unarmed. */
+  unarmedProwess: number;
   powerIds: string[];
   techniqueIds: string[];
 
@@ -169,6 +173,7 @@ function createInitialDraft(): GuidedDraft {
     mart_abil: null,
     speciesId: null,
     speciesName: null,
+    selectedSize: null,
     selectedSpeciesTraitChoices: {},
     selectedAncestryTraitIds: [],
     selectedCharacteristicId: null,
@@ -182,6 +187,7 @@ function createInitialDraft(): GuidedDraft {
     loadoutId: null,
     armaments: [],
     equipment: [],
+    unarmedProwess: 0,
     powerIds: [],
     techniqueIds: [],
     name: '',
@@ -214,7 +220,7 @@ interface GuidedCreatorState {
 }
 
 /** Bump when persisted draft shape changes; old versions migrate forward. */
-const GUIDED_STORE_SCHEMA_VERSION = 3;
+const GUIDED_STORE_SCHEMA_VERSION = 4;
 
 export const useGuidedCreatorStore = create<GuidedCreatorState>()(
   persist(
@@ -305,6 +311,17 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
           };
         }
 
+        if (version < 4 && state.draft) {
+          state = {
+            ...state,
+            draft: {
+              ...state.draft,
+              unarmedProwess:
+                typeof state.draft.unarmedProwess === 'number' ? state.draft.unarmedProwess : 0,
+            },
+          };
+        }
+
         if (version < 3 && state.draft) {
           const legacy = state.draft;
           const skills: Record<string, number> = legacy.skills ?? {};
@@ -351,6 +368,9 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
         }
         if (!Array.isArray(draft.declinedPathSkillIds)) {
           draft.declinedPathSkillIds = [];
+        }
+        if (typeof draft.unarmedProwess !== 'number') {
+          draft.unarmedProwess = 0;
         }
         return {
           ...currentState,

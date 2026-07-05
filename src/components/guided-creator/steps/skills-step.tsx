@@ -18,7 +18,11 @@ import {
   getTotalSkillPoints,
   resolveSkillAllocationRules,
 } from '@/lib/game/skill-allocation';
-import { getGuidedCuratedSkillIds } from '@/lib/guided-creator/curated-skills';
+import { getGuidedPathAbilityKeys, formatGuidedAbilityKeysLabel } from '@/lib/guided-creator/curated-skills';
+import {
+  buildGuidedSkillSuggestions,
+  guidedSuggestionsToBadgeMap,
+} from '@/lib/guided-creator/guided-skill-recommendations';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import type { Skill } from '@/hooks';
 
@@ -131,29 +135,62 @@ export function SkillsStep() {
     [allocationsWithDefaults]
   );
 
-  const curatedSkillIds = useMemo(
+  const archetypeAbilityKeys = useMemo(
+    () => getGuidedPathAbilityKeys(draft.archetypeType, draft.pow_abil, draft.mart_abil),
+    [draft.archetypeType, draft.pow_abil, draft.mart_abil]
+  );
+
+  const archetypeAbilityLabel = useMemo(
+    () => formatGuidedAbilityKeysLabel(archetypeAbilityKeys),
+    [archetypeAbilityKeys]
+  );
+
+  const skillSuggestions = useMemo(
     () =>
-      getGuidedCuratedSkillIds({
+      buildGuidedSkillSuggestions({
         codexSkills,
+        declinedPathSkillIds: [...declinedPathSkillIds],
+        pathSourceLabel: archetype?.name,
         archetypeType: draft.archetypeType,
         powAbil: draft.pow_abil,
         martAbil: draft.mart_abil,
         pathSkillIds: [...pathSkillIds],
         speciesSkillIds: [...speciesSkillIds],
         selectedSkillIds,
+        includeAbilityMatches: remainingPoints > 0,
       }),
     [
       codexSkills,
+      declinedPathSkillIds,
+      archetype?.name,
       draft.archetypeType,
       draft.pow_abil,
       draft.mart_abil,
       pathSkillIds,
       speciesSkillIds,
       selectedSkillIds,
+      remainingPoints,
     ]
   );
 
-  const addCuratedSkill = (skillId: string) => {
+  const browseSkillBadgesById = useMemo(
+    () => guidedSuggestionsToBadgeMap(skillSuggestions),
+    [skillSuggestions]
+  );
+
+  const browseRecommendedSkillIds = useMemo(
+    () => skillSuggestions.map((s) => s.skillId),
+    [skillSuggestions]
+  );
+
+  const hasPathDeclinedSuggestions = skillSuggestions.some((s) =>
+    s.kinds.includes('path-declined')
+  );
+  const hasAbilitySuggestions = skillSuggestions.some((s) =>
+    s.kinds.includes('ability-match')
+  );
+
+  const addSuggestedSkill = (skillId: string) => {
     if (remainingPoints < skillRules.gainProficiencyCost) return;
     handleAllocationsChange({
       ...allocationsWithDefaults,
@@ -195,27 +232,40 @@ export function SkillsStep() {
         totalPoints={totalPoints}
         spentPoints={spentPoints}
         onAllocationsChange={handleAllocationsChange}
+        browseSkillBadgesById={browseSkillBadgesById}
+        browseRecommendedSkillIds={browseRecommendedSkillIds}
       />
 
-      {remainingPoints > 0 && curatedSkillIds.length > 0 && (
+      {skillSuggestions.length > 0 && (
         <section className="mt-8">
-          <h3 className="font-display text-lg font-semibold text-text-primary">{stepCopy.freePicksTitle}</h3>
+          <h3 className="font-display text-lg font-semibold text-text-primary">
+            {hasPathDeclinedSuggestions && !hasAbilitySuggestions
+              ? stepCopy.pathSkillSuggestionsTitle(archetype?.name ?? 'your path')
+              : hasPathDeclinedSuggestions && hasAbilitySuggestions
+                ? stepCopy.mixedSkillSuggestionsTitle
+                : stepCopy.abilitySkillSuggestionsTitle(archetypeAbilityLabel)}
+          </h3>
           <p className="mt-1 font-nunito text-sm text-text-secondary">
-            {stepCopy.freePicksHint(remainingPoints)}
+            {hasPathDeclinedSuggestions && !hasAbilitySuggestions
+              ? stepCopy.pathSkillSuggestionsHint(archetype?.name ?? 'your path')
+              : hasPathDeclinedSuggestions && hasAbilitySuggestions
+                ? stepCopy.mixedSkillSuggestionsHint(remainingPoints, archetypeAbilityLabel)
+                : stepCopy.abilitySkillSuggestionsHint(remainingPoints, archetypeAbilityLabel)}
           </p>
           <div className={`${GUIDED_CHOICE_COMPACT_GRID_CLASS} mt-3`}>
-            {curatedSkillIds.map((id) => {
-              const skill = codexSkills.find((s) => String(s.id) === id);
+            {skillSuggestions.map((suggestion) => {
+              const skill = codexSkills.find((s) => String(s.id) === suggestion.skillId);
               if (!skill) return null;
               return (
                 <GuidedChoiceCard
-                  key={id}
+                  key={suggestion.skillId}
                   density="compact"
-                  title={skill.name ?? id}
+                  title={skill.name ?? suggestion.skillId}
                   description={skill.description}
+                  tags={suggestion.tags}
                   selected={false}
-                  onSelect={() => addCuratedSkill(id)}
-                  selectAriaLabel={`Add ${skill.name ?? id}`}
+                  onSelect={() => addSuggestedSkill(suggestion.skillId)}
+                  selectAriaLabel={`Add ${skill.name ?? suggestion.skillId}`}
                 />
               );
             })}

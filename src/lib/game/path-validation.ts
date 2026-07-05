@@ -4,14 +4,25 @@
  */
 
 import type { ArchetypePathData, PathGuidanceGroup } from '@/types/archetype';
+import { flattenLoadoutEntries } from '@/lib/guided-creator/resolve-loadout-items';
 import { LAYER1_GOVERNANCE } from '@/lib/constants/creator-layer-governance';
+
+export interface PathValidationContext {
+  /** Resolve armament TP from codex/official library (admin save). Returns null if item not found. */
+  resolveItemTrainingPoints?: (itemId: string) => number | null;
+  /** Level-1 TP cap (typically from path recommended abilities). */
+  trainingPointLimit?: number;
+}
 
 export interface PathValidationIssue {
   severity: 'error' | 'warning';
   message: string;
 }
 
-export function validatePathDataForPublish(pathData: ArchetypePathData | undefined): PathValidationIssue[] {
+export function validatePathDataForPublish(
+  pathData: ArchetypePathData | undefined,
+  context?: PathValidationContext
+): PathValidationIssue[] {
   const issues: PathValidationIssue[] = [];
   if (!pathData?.level1) {
     issues.push({ severity: 'error', message: 'Level 1 recommendations are required for player-visible paths.' });
@@ -55,6 +66,55 @@ export function validatePathDataForPublish(pathData: ArchetypePathData | undefin
       severity: 'warning',
       message: 'Level 1 notes are very long — keep path guidance concise for Layer 1.',
     });
+  }
+
+  issues.push(...validateLoadoutTrainingPoints(level1, context));
+
+  return issues;
+}
+
+function validateLoadoutTrainingPoints(
+  level1: NonNullable<ArchetypePathData['level1']>,
+  context?: PathValidationContext
+): PathValidationIssue[] {
+  const issues: PathValidationIssue[] = [];
+  const loadouts = level1.loadouts ?? [];
+  if (loadouts.length === 0) return issues;
+
+  const resolveTp = context?.resolveItemTrainingPoints;
+  const limit = context?.trainingPointLimit;
+  if (!resolveTp || limit == null) {
+    issues.push({
+      severity: 'warning',
+      message: `${loadouts.length} loadout(s) authored — TP budget was not validated (missing item property data).`,
+    });
+    return issues;
+  }
+
+  for (const loadout of loadouts) {
+    const items = flattenLoadoutEntries(loadout);
+    let spent = 0;
+    const unknown: string[] = [];
+    for (const ref of items) {
+      const tp = resolveTp(ref.id);
+      if (tp == null || Number.isNaN(tp)) {
+        unknown.push(ref.id);
+        continue;
+      }
+      spent += tp * Math.max(1, ref.quantity);
+    }
+    if (unknown.length > 0) {
+      issues.push({
+        severity: 'warning',
+        message: `Loadout "${loadout.title}" references unknown items: ${unknown.slice(0, 3).join(', ')}${unknown.length > 3 ? '…' : ''}.`,
+      });
+    }
+    if (spent > limit) {
+      issues.push({
+        severity: 'error',
+        message: `Loadout "${loadout.title}" exceeds Training Point budget (${spent} / ${limit}).`,
+      });
+    }
   }
 
   return issues;

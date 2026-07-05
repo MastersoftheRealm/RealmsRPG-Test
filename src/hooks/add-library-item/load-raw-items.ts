@@ -1,4 +1,4 @@
-import type { UserItem, UserPower, UserTechnique } from '../use-user-library';
+import type { UserItem, UserPower, UserTechnique, LibraryPower, LibraryTechnique, LibraryItem } from '@/types/library';
 import { normalizePublicItem, normalizePublicPower, normalizePublicTechnique } from './normalize-public';
 import type { AddLibraryItemType, EqItem, WithSource } from './types';
 
@@ -8,9 +8,9 @@ export interface RawItemsInput {
   userTechniques: UserTechnique[];
   userItems: UserItem[];
   codexEquipment: Array<{ id: string; name?: string; description?: string; damage?: unknown; armor_value?: number; properties?: string[]; type?: string }>;
-  publicPowers: Record<string, unknown>[];
-  publicTechniques: Record<string, unknown>[];
-  publicItems: Record<string, unknown>[];
+  publicPowers: LibraryPower[];
+  publicTechniques: LibraryTechnique[];
+  publicItems: LibraryItem[];
   loading: {
     powersLoading: boolean;
     techniquesLoading: boolean;
@@ -114,19 +114,12 @@ export function loadRawItemsForType(input: RawItemsInput): { rawItems: unknown[]
 
 export function loadEmpoweredRawItems(input: {
   userEmpoweredTechniques: UserTechnique[];
-  publicEmpoweredTechniques: Record<string, unknown>[];
+  publicEmpoweredTechniques: LibraryTechnique[];
 }): unknown[] {
   const merged = [
     ...input.userEmpoweredTechniques.map((item) => ({ ...item, _source: 'my' as const })),
     ...input.publicEmpoweredTechniques.map((item) => ({
-      id: String(item.id ?? item.docId ?? ''),
-      docId: String(item.id ?? item.docId ?? ''),
-      name: String(item.name ?? ''),
-      description: String(item.description ?? ''),
-      parts: (item.parts ?? []) as UserTechnique['parts'],
-      weapon: item.weapon as UserTechnique['weapon'],
-      damage: item.damage as UserTechnique['damage'],
-      ...item,
+      ...normalizePublicTechnique(item),
       _source: 'public' as const,
     })),
   ];

@@ -94,47 +94,9 @@ export function PowersStep() {
   const { data: techniqueParts } = useTechniqueParts();
   const { data: itemPropertiesDb = [] } = useItemProperties();
   
-  const normalizedPublicPowers = useMemo(() => 
-    (publicPowers as Record<string, unknown>[]).map((p) => ({
-      id: String(p.id ?? p.docId ?? ''),
-      docId: String(p.id ?? p.docId ?? ''),
-      name: String(p.name ?? ''),
-      description: String(p.description ?? ''),
-      parts: p.parts ?? [],
-      actionType: p.actionType,
-      isReaction: !!p.isReaction,
-      range: p.range,
-      area: p.area,
-      duration: p.duration,
-      damage: p.damage,
-    })) as UserPower[],
-    [publicPowers]
-  );
-  const normalizedPublicTechniques = useMemo(() => 
-    (publicTechniques as Record<string, unknown>[]).map((t) => ({
-      id: String(t.id ?? t.docId ?? ''),
-      docId: String(t.id ?? t.docId ?? ''),
-      name: String(t.name ?? ''),
-      description: String(t.description ?? ''),
-      parts: t.parts ?? [],
-      weapon: t.weapon,
-      damage: t.damage,
-    })) as UserTechnique[],
-    [publicTechniques]
-  );
-  const normalizedPublicEmpoweredTechniques = useMemo(() =>
-    (publicEmpoweredTechniques as Record<string, unknown>[]).map((t) => ({
-      id: String(t.id ?? t.docId ?? ''),
-      docId: String(t.id ?? t.docId ?? ''),
-      name: String(t.name ?? ''),
-      description: String(t.description ?? ''),
-      parts: t.parts ?? [],
-      weapon: t.weapon,
-      damage: t.damage,
-      ...t,
-    })) as UserTechnique[],
-    [publicEmpoweredTechniques]
-  );
+  const normalizedPublicPowers = publicPowers;
+  const normalizedPublicTechniques = publicTechniques;
+  const normalizedPublicEmpoweredTechniques = publicEmpoweredTechniques;
   
   // Get selected powers and techniques from character draft
   const selectedPowers = draft.powers || [];

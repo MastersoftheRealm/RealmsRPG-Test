@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { SectionHeader, SearchInput, LoadingState, ErrorDisplay as ErrorState, GridListRow, ListEmptyState as EmptyState } from '@/components/shared';
 import { Modal, Button, Input, IconButton, useToast } from '@/components/ui';
 import { ChipSelect } from '@/components/shared';
-import { useCodexArchetypes, useCodexEquipment, useCodexFeats, useCodexSkills } from '@/hooks/use-codex';
+import { useCodexArchetypes, useCodexEquipment, useCodexFeats, useCodexSkills, useCodexItemProperties } from '@/hooks/use-codex';
 import { useMergedSpecies } from '@/hooks';
 import { useOfficialLibrary } from '@/hooks/use-official-library';
 import { useQueryClient } from '@tanstack/react-query';
@@ -14,6 +14,10 @@ import { getFeatLevel, formatFeatName } from '@/lib/leveled-feats';
 import { formatListCellLabel } from '@/lib/utils';
 import { parseArchetypePathData, pathHiddenFromPlayerPicker } from '@/lib/game/archetype-path';
 import { validatePathDataForPublish } from '@/lib/game/path-validation';
+import {
+  createItemTpResolver,
+  trainingPointLimitFromRecommendedAbilities,
+} from '@/lib/guided-creator/loadout-tp';
 
 const COPY_NAME_SUFFIX = ' copy';
 const ABILITY_OPTIONS = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'] as const;
@@ -228,6 +232,7 @@ export function AdminArchetypesTab() {
   const { data: officialPowers = [], isLoading: isLoadingOfficialPowers } = useOfficialLibrary('powers');
   const { data: officialTechniques = [], isLoading: isLoadingOfficialTechniques } = useOfficialLibrary('techniques');
   const { data: officialItems = [], isLoading: isLoadingOfficialItems } = useOfficialLibrary('items');
+  const { data: itemProperties = [] } = useCodexItemProperties();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
@@ -323,7 +328,7 @@ export function AdminArchetypesTab() {
 
   const powerOptions = useMemo<SelectionOption[]>(
     () =>
-      (officialPowers as Array<Record<string, unknown>>)
+      officialPowers
         .map((power) => ({
           value: String(power.id ?? ''),
           label: String(power.name ?? power.id ?? ''),
@@ -335,7 +340,7 @@ export function AdminArchetypesTab() {
 
   const techniqueOptions = useMemo<SelectionOption[]>(
     () =>
-      (officialTechniques as Array<Record<string, unknown>>)
+      officialTechniques
         .map((technique) => ({
           value: String(technique.id ?? ''),
           label: String(technique.name ?? technique.id ?? ''),
@@ -347,7 +352,7 @@ export function AdminArchetypesTab() {
 
   const armamentOptions = useMemo<SelectionOption[]>(
     () =>
-      (officialItems as Array<Record<string, unknown>>)
+      officialItems
         .filter((item) => {
           const type = String(item.type ?? '').toLowerCase();
           return type === 'weapon' || type === 'armor' || type === 'shield';
@@ -369,7 +374,7 @@ export function AdminArchetypesTab() {
       }))
       .filter((item) => item.value && item.label);
 
-    const official = (officialItems as Array<Record<string, unknown>>)
+    const official = officialItems
       .filter((item) => String(item.type ?? '').toLowerCase() === 'equipment')
       .map((item) => ({
         value: String(item.id ?? ''),
@@ -610,20 +615,15 @@ export function AdminArchetypesTab() {
       );
     }
 
-    if (structuredPathData) {
-      const publishIssues = validatePathDataForPublish(parseArchetypePathData(structuredPathData));
-      const publishErrors = publishIssues.filter((i) => i.severity === 'error');
-      if (publishErrors.length > 0) {
-        showToast(publishErrors.map((i) => i.message).join(' '), 'error');
-        return;
-      }
-      const publishWarnings = publishIssues.filter((i) => i.severity === 'warning');
-      if (publishWarnings.length > 0) {
-        showToast(
-          `Layer 1 governance: ${publishWarnings.map((i) => i.message).join(' ')}`,
-          'warning'
-        );
-      }
+    const abilitiesParseEarly = parseOptionalJsonField(form.guidedRecommendedAbilitiesJson, 'Recommended abilities');
+    if (!abilitiesParseEarly.ok) {
+      showToast(abilitiesParseEarly.error, 'error');
+      return;
+    }
+    const loadoutsParseEarly = parseOptionalJsonField(form.guidedLoadoutsJson, 'Guided loadouts');
+    if (!loadoutsParseEarly.ok) {
+      showToast(loadoutsParseEarly.error, 'error');
+      return;
     }
 
     let level1Override: Record<string, unknown> | undefined;
@@ -643,21 +643,48 @@ export function AdminArchetypesTab() {
       }
     }
 
-    const abilitiesParse = parseOptionalJsonField(form.guidedRecommendedAbilitiesJson, 'Recommended abilities');
-    if (!abilitiesParse.ok) {
-      showToast(abilitiesParse.error, 'error');
-      return;
-    }
-    const loadoutsParse = parseOptionalJsonField(form.guidedLoadoutsJson, 'Guided loadouts');
-    if (!loadoutsParse.ok) {
-      showToast(loadoutsParse.error, 'error');
-      return;
+    const previewLevel1 = level1Override || (structuredPathData?.level1 as Record<string, unknown> | undefined) || {};
+    const previewExistingLevel1 = editing ? parseArchetypePathData(editing.path_data)?.level1 : undefined;
+    const previewLoadouts =
+      loadoutsParseEarly.value ?? previewExistingLevel1?.loadouts ?? undefined;
+    const previewAbilities =
+      (abilitiesParseEarly.value as Record<string, number> | undefined) ??
+      previewExistingLevel1?.recommended_abilities;
+
+    const pathForValidation = parseArchetypePathData({
+      level1: {
+        ...previewLevel1,
+        ...(previewLoadouts ? { loadouts: previewLoadouts } : {}),
+        ...(previewAbilities ? { recommended_abilities: previewAbilities } : {}),
+      },
+    });
+    if (pathForValidation?.level1) {
+      const publishIssues = validatePathDataForPublish(pathForValidation, {
+        resolveItemTrainingPoints: createItemTpResolver(
+          officialItems,
+          codexEquipment,
+          itemProperties
+        ),
+        trainingPointLimit: trainingPointLimitFromRecommendedAbilities(previewAbilities),
+      });
+      const publishErrors = publishIssues.filter((i) => i.severity === 'error');
+      if (publishErrors.length > 0) {
+        showToast(publishErrors.map((i) => i.message).join(' '), 'error');
+        return;
+      }
+      const publishWarnings = publishIssues.filter((i) => i.severity === 'warning');
+      if (publishWarnings.length > 0) {
+        showToast(
+          `Layer 1 governance: ${publishWarnings.map((i) => i.message).join(' ')}`,
+          'warning'
+        );
+      }
     }
 
     setSaving(true);
-    const finalLevel1 = level1Override || (structuredPathData?.level1 as Record<string, unknown> | undefined) || {};
+    const finalLevel1 = previewLevel1;
     const finalLevels = levelsOverride || (structuredPathData?.levels as Record<string, unknown>[] | undefined) || [];
-    const existingLevel1 = editing ? parseArchetypePathData(editing.path_data)?.level1 : undefined;
+    const existingLevel1 = previewExistingLevel1;
     const preservedGuidanceGroups =
       Array.isArray(finalLevel1.guidance_groups) && finalLevel1.guidance_groups.length > 0
         ? finalLevel1.guidance_groups
@@ -668,11 +695,11 @@ export function AdminArchetypesTab() {
         : finalLevel1.recommended_species ?? existingLevel1?.recommended_species
     );
     const preservedRecommendedAbilities =
-      abilitiesParse.value ??
+      abilitiesParseEarly.value ??
       existingLevel1?.recommended_abilities ??
       null;
     const preservedLoadouts =
-      loadoutsParse.value ??
+      loadoutsParseEarly.value ??
       existingLevel1?.loadouts ??
       null;
 

@@ -43,7 +43,7 @@ export function AdminPublicTechniquesTab({ mode = 'standard' }: { mode?: 'standa
   return (
     <>
       <OfficialTechniqueList
-        items={items as Array<Record<string, unknown>>}
+        items={items}
         partsDb={partsDb}
         isLoading={isLoading}
         error={error}

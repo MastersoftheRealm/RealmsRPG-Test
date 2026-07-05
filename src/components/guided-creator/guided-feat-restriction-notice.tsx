@@ -23,7 +23,7 @@ export function GuidedFeatRestrictionNotice({
   return (
     <div
       className={cn(
-        'mt-2 flex gap-2 rounded-lg border border-border-light bg-primary-subtle-bg/30 px-3 py-2',
+        'flex gap-2 rounded-lg border border-border-light bg-primary-subtle-bg/30 px-3 py-2',
         className
       )}
       onClick={(e) => e.stopPropagation()}

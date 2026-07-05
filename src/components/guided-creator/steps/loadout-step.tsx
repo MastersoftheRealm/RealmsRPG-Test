@@ -1,18 +1,26 @@
 /**
- * Equipment loadout — coherent kits from path loadouts or level-1 armaments.
+ * Equipment loadout — Layer 1 kits + Layer 2 customize with TP budget.
  */
 
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useCallback, useState, useRef } from 'react';
 import { Spinner, EmptyState } from '@/components/ui';
+import { GuidedLayerNav } from '@/components/shared';
+import { useEquipment, useOfficialLibrary } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
-import { GuidedChoiceCard } from '../guided-choice-card';
-import { GUIDED_CHOICE_STYLES } from '../guided-choice-styles';
-import { GUIDED_CHOICE_GRID_CLASS, GUIDED_CHOICE_GRID_ITEM_CLASS } from '../guided-choice-grid';
 import { GuidedStepLayout } from '../guided-step-layout';
+import { GuidedLoadoutSection } from '../guided-loadout-section';
+import { GuidedUnarmedProwessPanel } from '../guided-unarmed-prowess-panel';
+import { GuidedLoadoutCustomizePanel } from '../guided-loadout-customize-panel';
 import type { PathLoadout } from '@/types/archetype';
+import {
+  buildEquipmentLookup,
+  loadoutDraftFromSelection,
+  resolveLoadoutItems,
+} from '@/lib/guided-creator/resolve-loadout-items';
+import { buildPathLoadoutPool } from '@/lib/guided-creator/loadout-pool';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.loadout;
@@ -20,6 +28,20 @@ const stepCopy = GUIDED_CREATOR_COPY.steps.loadout;
 export function LoadoutStep() {
   const { draft, updateDraft } = useGuidedCreatorStore();
   const { pathData, archetype } = useGuidedPathData();
+  const { data: officialItems = [], isLoading: officialLoading } = useOfficialLibrary('items');
+  const { data: codexEquipment = [], isLoading: codexLoading } = useEquipment();
+  const [customizing, setCustomizing] = useState(draft.loadoutId === 'custom');
+  const kitLoadoutIdRef = useRef<string | null>(
+    draft.loadoutId && draft.loadoutId !== 'custom' ? draft.loadoutId : null
+  );
+
+  const isLoading = officialLoading || codexLoading;
+  const recommendUnarmed = pathData?.level1?.recommendUnarmedProwess === true;
+
+  const equipmentLookup = useMemo(
+    () => buildEquipmentLookup(officialItems, codexEquipment),
+    [officialItems, codexEquipment]
+  );
 
   const loadouts: PathLoadout[] = useMemo(() => {
     const fromPath = pathData?.level1?.loadouts ?? [];
@@ -40,54 +62,130 @@ export function LoadoutStep() {
     ];
   }, [pathData, archetype?.name]);
 
+  const itemPool = useMemo(
+    () => buildPathLoadoutPool(loadouts, pathData?.level1),
+    [loadouts, pathData?.level1]
+  );
+
+  const resolvedByLoadoutId = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof resolveLoadoutItems>>();
+    for (const loadout of loadouts) {
+      map.set(
+        loadout.id,
+        resolveLoadoutItems(loadout, equipmentLookup, stepCopy.unresolvedItem)
+      );
+    }
+    return map;
+  }, [loadouts, equipmentLookup]);
+
   useEffect(() => {
     if (draft.loadoutId || loadouts.length === 0) return;
     const first = loadouts[0];
+    kitLoadoutIdRef.current = first.id;
     updateDraft({
       loadoutId: first.id,
-      armaments: first.armaments ?? [],
-      equipment: first.equipment ?? [],
+      ...loadoutDraftFromSelection(first),
     });
   }, [loadouts, draft.loadoutId, updateDraft]);
 
-  const selectLoadout = (loadout: PathLoadout) => {
-    updateDraft({
-      loadoutId: loadout.id,
-      armaments: loadout.armaments ?? [],
-      equipment: [...(loadout.equipment ?? []), ...(loadout.armor ?? [])],
-    });
-  };
+  const selectLoadout = useCallback(
+    (loadout: PathLoadout) => {
+      kitLoadoutIdRef.current = loadout.id;
+      updateDraft({
+        loadoutId: loadout.id,
+        ...loadoutDraftFromSelection(loadout),
+      });
+    },
+    [updateDraft]
+  );
+
+  const handleUnarmedChange = useCallback(
+    (level: number) => {
+      updateDraft({ unarmedProwess: level });
+    },
+    [updateDraft]
+  );
+
+  const openCustomize = useCallback(() => {
+    if (draft.loadoutId && draft.loadoutId !== 'custom') {
+      kitLoadoutIdRef.current = draft.loadoutId;
+    }
+    setCustomizing(true);
+  }, [draft.loadoutId]);
+
+  const backToKits = useCallback(() => {
+    const restoreId = kitLoadoutIdRef.current ?? loadouts[0]?.id;
+    const loadout = loadouts.find((l) => l.id === restoreId) ?? loadouts[0];
+    if (loadout) {
+      selectLoadout(loadout);
+    }
+    setCustomizing(false);
+  }, [loadouts, selectLoadout]);
+
+  const showGroupIntro = loadouts.length > 1 && !customizing;
+  const hasSelection =
+    draft.loadoutId === 'custom'
+      ? draft.armaments.length + draft.equipment.length > 0
+      : Boolean(draft.loadoutId);
 
   return (
     <GuidedStepLayout
       subStep="loadout"
       title={stepCopy.title}
-      description={stepCopy.description}
-      canContinue={Boolean(draft.loadoutId)}
+      description={customizing ? stepCopy.customize.description : stepCopy.description}
+      canContinue={hasSelection}
       continueLabel={stepCopy.continueLabel}
     >
-      {loadouts.length === 0 ? (
-        <EmptyState
-          title={stepCopy.emptyTitle}
-          description={stepCopy.emptyDescription}
+      {isLoading ? (
+        <div className="flex items-center justify-center gap-2 py-12 text-text-secondary">
+          <Spinner className="h-5 w-5" />
+          <span>{stepCopy.loadingItems}</span>
+        </div>
+      ) : loadouts.length === 0 ? (
+        <EmptyState title={stepCopy.emptyTitle} description={stepCopy.emptyDescription} />
+      ) : customizing ? (
+        <GuidedLoadoutCustomizePanel
+          draft={draft}
+          pool={itemPool}
+          officialItems={officialItems}
+          codexEquipment={codexEquipment}
+          onDraftChange={updateDraft}
+          onBackToKits={backToKits}
         />
       ) : (
-        <div className={GUIDED_CHOICE_GRID_CLASS}>
-          {loadouts.map((loadout) => (
-            <GuidedChoiceCard
-              key={loadout.id}
-              className={GUIDED_CHOICE_GRID_ITEM_CLASS}
-              title={loadout.title}
-              tagline={loadout.why ?? stepCopy.defaultWhy}
-              selected={draft.loadoutId === loadout.id}
-              onSelect={() => selectLoadout(loadout)}
-            >
-              <p className={GUIDED_CHOICE_STYLES.meta}>
-                {(loadout.armaments?.length ?? 0) + (loadout.armor?.length ?? 0) + (loadout.equipment?.length ?? 0)}{' '}
-                items
-              </p>
-            </GuidedChoiceCard>
-          ))}
+        <div className="space-y-8">
+          {showGroupIntro ? (
+            <p className="font-nunito text-sm text-text-secondary">{stepCopy.groupIntro}</p>
+          ) : null}
+
+          <div className="space-y-8" role="group" aria-label={stepCopy.loadoutGroupLabel}>
+            {loadouts.map((loadout) => (
+              <GuidedLoadoutSection
+                key={loadout.id}
+                loadoutId={loadout.id}
+                title={loadout.title}
+                why={loadout.why ?? stepCopy.defaultWhy}
+                items={resolvedByLoadoutId.get(loadout.id) ?? []}
+                selected={draft.loadoutId === loadout.id}
+                onSelect={() => selectLoadout(loadout)}
+              />
+            ))}
+          </div>
+
+          {draft.loadoutId === 'custom' ? (
+            <p className="font-nunito text-sm text-text-secondary">{stepCopy.customKitHint}</p>
+          ) : null}
+
+          {itemPool.length > 0 ? (
+            <GuidedLayerNav expandLabel={stepCopy.customize.expandLabel} onExpand={openCustomize} />
+          ) : null}
+
+          {recommendUnarmed ? (
+            <GuidedUnarmedProwessPanel
+              level={draft.unarmedProwess ?? 0}
+              onChange={handleUnarmedChange}
+            />
+          ) : null}
         </div>
       )}
     </GuidedStepLayout>

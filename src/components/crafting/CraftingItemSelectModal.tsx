@@ -19,7 +19,7 @@ import {
   type CodexEquipmentLike,
   type LibraryItemLike,
 } from '@/components/crafting/get-crafting-market-price';
-import type { UserItem } from '@/hooks/use-user-library';
+import type { UserItem, LibraryItem } from '@/hooks/use-user-library';
 import type { ItemProperty } from '@/hooks/codex-types';
 
 export type CraftingSelectedItem = {
@@ -75,14 +75,14 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
         } as CraftingSelectedItem,
       });
     };
-    const addPublic = (i: Record<string, unknown>) => {
+    const addPublic = (i: LibraryItem) => {
       const id = String(i.id ?? i.docId ?? '');
       const lib: LibraryItemLike = {
         id,
         name: String(i.name ?? ''),
         description: String(i.description ?? ''),
         type: String(i.type ?? ''),
-        armamentType: String(i.armamentType ?? i.type ?? ''),
+        armamentType: String(i.type ?? ''),
         properties: (Array.isArray(i.properties) ? i.properties : []) as LibraryItemLike['properties'],
         damage: i.damage,
       };
@@ -103,7 +103,7 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
     userItems
       .filter((i: UserItem) => isArmament(i.type as string))
       .forEach((i: UserItem) => addUser({ ...i, _source: 'my' }));
-    (publicItems as Record<string, unknown>[]).filter((i: Record<string, unknown>) => isArmament(String(i.type ?? ''))).forEach(addPublic);
+    publicItems.filter((i) => isArmament(i.type)).forEach(addPublic);
     return list;
   }, [userItems, publicItems, propertiesDb]);
 
@@ -141,7 +141,7 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
           } as CraftingSelectedItem,
         });
       });
-    (publicItems as Record<string, unknown>[]).filter((i: Record<string, unknown>) => isEquipmentType(String(i.type ?? 'equipment'))).forEach((i: Record<string, unknown>) => {
+    publicItems.filter((i) => isEquipmentType(i.type)).forEach((i) => {
       const id = String(i.id ?? i.docId ?? '');
       const lib: LibraryItemLike = {
         id,

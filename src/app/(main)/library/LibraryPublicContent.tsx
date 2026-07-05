@@ -25,6 +25,9 @@ import {
   useItemProperties,
 } from '@/hooks';
 import { useAuthStore } from '@/stores/auth-store';
+import type { LibraryCreature, LibraryItem, LibraryPower, LibraryTechnique } from '@/types/library';
+
+type AddableOfficialItem = LibraryPower | LibraryTechnique | LibraryItem | LibraryCreature;
 
 export type LibraryPublicTabId = 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures';
 
@@ -46,16 +49,16 @@ export function LibraryPublicContent({ activeTab, onLoginRequired, readOnly = fa
   return null;
 }
 
-function useAddToLibraryFlow(
+function useAddToLibraryFlow<T extends AddableOfficialItem>(
   readOnly: boolean,
   onLoginRequired: () => void,
   onSuccessMessage = 'Added to My Library. You can use it as-is or edit a copy.'
 ) {
   const { user } = useAuthStore();
   const { showToast } = useToast();
-  const [addConfirm, setAddConfirm] = useState<{ name: string; raw: Record<string, unknown> } | null>(null);
+  const [addConfirm, setAddConfirm] = useState<{ name: string; raw: T } | null>(null);
 
-  const openAddConfirm = (name: string, raw: Record<string, unknown>) => {
+  const openAddConfirm = (name: string, raw: T) => {
     if (readOnly || !user) {
       if (!user) onLoginRequired();
       return;
@@ -77,7 +80,12 @@ function useAddToLibraryFlow(
     />
   );
 
-  const wrapAddSuccess = (mutate: (raw: Record<string, unknown>, opts: { onSuccess: () => void; onError: (e: Error) => void }) => void) => {
+  const wrapAddSuccess = (
+    mutate: (
+      raw: T,
+      opts: { onSuccess: () => void; onError: (e: Error) => void }
+    ) => void
+  ) => {
     if (!addConfirm) return;
     mutate(addConfirm.raw, {
       onSuccess: () => {
@@ -97,12 +105,12 @@ function PublicPowersList({ onLoginRequired, readOnly = false }: { onLoginRequir
   const { data: items = [], isLoading, error, refetch } = useOfficialLibrary('powers');
   const { data: partsDb = [] } = usePowerParts();
   const addMutation = useAddOfficialToLibrary('powers');
-  const { openAddConfirm, confirmModal, wrapAddSuccess } = useAddToLibraryFlow(readOnly, onLoginRequired);
+  const { openAddConfirm, confirmModal, wrapAddSuccess } = useAddToLibraryFlow<LibraryPower>(readOnly, onLoginRequired);
 
   return (
     <>
       <OfficialPowerList
-        items={items as Array<Record<string, unknown>>}
+        items={items}
         partsDb={partsDb}
         isLoading={isLoading}
         error={error}
@@ -133,13 +141,13 @@ function PublicTechniquesList({
   const { data: items = [], isLoading, error, refetch } = useOfficialLibrary(libraryType);
   const { data: partsDb = [] } = useTechniqueParts();
   const addMutation = useAddOfficialToLibrary(libraryType);
-  const { openAddConfirm, confirmModal, wrapAddSuccess } = useAddToLibraryFlow(readOnly, onLoginRequired);
+  const { openAddConfirm, confirmModal, wrapAddSuccess } = useAddToLibraryFlow<LibraryTechnique>(readOnly, onLoginRequired);
   const empowered = mode === 'empowered';
 
   return (
     <>
       <OfficialTechniqueList
-        items={items as Array<Record<string, unknown>>}
+        items={items}
         partsDb={partsDb}
         isLoading={isLoading}
         error={error}
@@ -166,12 +174,12 @@ function PublicItemsList({ onLoginRequired, readOnly = false }: { onLoginRequire
   const { data: items = [], isLoading, error, refetch } = useOfficialLibrary('items');
   const { data: propertiesDb = [] } = useItemProperties();
   const addMutation = useAddOfficialToLibrary('items');
-  const { openAddConfirm, confirmModal, wrapAddSuccess } = useAddToLibraryFlow(readOnly, onLoginRequired);
+  const { openAddConfirm, confirmModal, wrapAddSuccess } = useAddToLibraryFlow<LibraryItem>(readOnly, onLoginRequired);
 
   return (
     <>
       <OfficialItemList
-        items={items as Array<Record<string, unknown>>}
+        items={items}
         propertiesDb={propertiesDb}
         isLoading={isLoading}
         error={error}
@@ -192,12 +200,12 @@ function PublicItemsList({ onLoginRequired, readOnly = false }: { onLoginRequire
 function PublicCreaturesList({ onLoginRequired, readOnly = false }: { onLoginRequired: () => void; readOnly?: boolean }) {
   const { data: items = [], isLoading, error, refetch } = useOfficialLibrary('creatures');
   const addMutation = useAddOfficialToLibrary('creatures');
-  const { openAddConfirm, confirmModal, wrapAddSuccess } = useAddToLibraryFlow(readOnly, onLoginRequired);
+  const { openAddConfirm, confirmModal, wrapAddSuccess } = useAddToLibraryFlow<LibraryCreature>(readOnly, onLoginRequired);
 
   return (
     <>
       <OfficialCreatureList
-        items={items as Array<Record<string, unknown>>}
+        items={items}
         isLoading={isLoading}
         error={error}
         onRetry={() => { void refetch(); }}

@@ -55,9 +55,9 @@ export function useAddLibraryItemData({
         userTechniques: userTechniques as UserTechnique[],
         userItems: userItems as UserItem[],
         codexEquipment: codexEquipment as Parameters<typeof loadRawItemsForType>[0]['codexEquipment'],
-        publicPowers: publicPowers as Record<string, unknown>[],
-        publicTechniques: publicTechniques as Record<string, unknown>[],
-        publicItems: publicItems as Record<string, unknown>[],
+        publicPowers,
+        publicTechniques,
+        publicItems,
         loading: {
           powersLoading,
           techniquesLoading,
@@ -91,7 +91,7 @@ export function useAddLibraryItemData({
     if (itemType !== 'power') return [];
     return loadEmpoweredRawItems({
       userEmpoweredTechniques: userEmpoweredTechniques as UserTechnique[],
-      publicEmpoweredTechniques: publicEmpoweredTechniques as Record<string, unknown>[],
+      publicEmpoweredTechniques,
     });
   }, [itemType, publicEmpoweredTechniques, userEmpoweredTechniques]);
 

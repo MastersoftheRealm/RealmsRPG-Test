@@ -14,11 +14,24 @@ import { ABILITY_ABBR, ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
 import { getSkillExtraDescriptionDetailSections } from '@/lib/skill-extra-descriptions';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
 
+import type { GridListBadgeColor } from '@/lib/chip/grid-list-chip-utils';
+
+export interface AddSkillModalSkillBadge {
+  label: string;
+  color?: GridListBadgeColor;
+}
+
 export interface AddSkillModalProps {
   isOpen: boolean;
   onClose: () => void;
   existingSkillNames: string[];
   onAdd: (skills: Skill[]) => void;
+  /** Inline descriptor chips for recommended skills (guided creator). Keyed by skill id. */
+  skillBadgesById?: Record<string, AddSkillModalSkillBadge[]>;
+  /** When set, recommended skills sort to the top of the list. */
+  recommendedSkillIds?: string[];
+  /** Max new skills selectable in this session (e.g. remaining skill points ÷ proficiency cost). */
+  maxSelections?: number;
 }
 
 /** Parse skill.ability (comma-separated) into list of abbreviated ability codes (STR, AGI, ...). */
@@ -53,7 +66,10 @@ function buildAbilityDisplay(abilityString?: string): {
   return { detailChips, columnValue };
 }
 
-function skillToSelectableItem(skill: Skill & { ability?: string }): SelectableItem {
+function skillToSelectableItem(
+  skill: Skill & { ability?: string },
+  skillBadgesById?: Record<string, AddSkillModalSkillBadge[]>
+): SelectableItem {
   const extraSections = getSkillExtraDescriptionDetailSections(skill);
   const { detailChips, columnValue } = buildAbilityDisplay(skill.ability);
   const detailSections: SelectableItem['detailSections'] = [];
@@ -63,12 +79,15 @@ function skillToSelectableItem(skill: Skill & { ability?: string }): SelectableI
   if (extraSections.length > 0) {
     detailSections.push(...extraSections);
   }
+  const skillId = String(skill.id);
+  const badges = skillBadgesById?.[skillId];
   return {
-    id: String(skill.id),
+    id: skillId,
     name: skill.name ?? '',
     description: skill.description,
     columns: [{ key: 'ability', value: columnValue, align: 'center' as const }],
     detailSections: detailSections.length > 0 ? detailSections : undefined,
+    badges: badges?.map((b) => ({ label: b.label, color: b.color })),
     data: skill,
   };
 }
@@ -78,6 +97,9 @@ export function AddSkillModal({
   onClose,
   existingSkillNames,
   onAdd,
+  skillBadgesById,
+  recommendedSkillIds,
+  maxSelections,
 }: AddSkillModalProps) {
   const { data: allSkills = [], isLoading: loading, error: queryError } = useCodexSkills();
   const [abilityFilter, setAbilityFilter] = useState('');
@@ -88,7 +110,10 @@ export function AddSkillModal({
 
   const items = useMemo((): SelectableItem[] => {
     const existingLower = existingSkillNames.map(n => n.toLowerCase());
-    return skills
+    const recommendedRank = new Map(
+      (recommendedSkillIds ?? []).map((id, index) => [String(id), index])
+    );
+    const filtered = skills
       .filter((skill: Skill) => {
         if (existingLower.includes(String(skill.name ?? '').toLowerCase())) return false;
         if (abilityFilter) {
@@ -97,9 +122,21 @@ export function AddSkillModal({
         }
         return true;
       })
-      .map((s: Skill) => ({ ...s, ability: s.ability || '' }))
-      .map(skillToSelectableItem);
-  }, [skills, existingSkillNames, abilityFilter]);
+      .map((s: Skill) => ({ ...s, ability: s.ability || '' }));
+
+    filtered.sort((a, b) => {
+      const ra = recommendedRank.get(String(a.id));
+      const rb = recommendedRank.get(String(b.id));
+      if (ra !== undefined && rb !== undefined) return ra - rb;
+      if (ra !== undefined) return -1;
+      if (rb !== undefined) return 1;
+      return String(a.name ?? '').localeCompare(String(b.name ?? ''), undefined, {
+        sensitivity: 'base',
+      });
+    });
+
+    return filtered.map((s) => skillToSelectableItem(s, skillBadgesById));
+  }, [skills, existingSkillNames, abilityFilter, skillBadgesById, recommendedSkillIds]);
 
   const error = queryError ? `Failed to load Skills: ${queryError.message}` : null;
 
@@ -135,6 +172,7 @@ export function AddSkillModal({
         items={items}
         isLoading={loading}
         onConfirm={(selected) => onAdd(selected.map(i => i.data as Skill))}
+        maxSelections={maxSelections}
         columns={[
           { key: 'name', label: 'Name' },
           { key: 'ability', label: 'Abilities', sortable: true },

@@ -1129,12 +1129,12 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-013-T004 — Berserker loadout + abilities
+#### DEV-V-013-T004 — Berserker loadout sections + item rows
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 — Guided Simple character creator |
-| **Related task** | TASK-399, TASK-401 |
+| **Related task** | TASK-399, TASK-422 |
 | **Where** | Guided creator with Berserker (id=1) |
 | **Needs** | DEV-004 seed applied |
 
@@ -1143,7 +1143,46 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 2. Advance to Loadout step.
 
 **Expected**
-- Recommended abilities apply without customize; loadout cards show Greataxe bruiser / Sword & shield kits.
+- Feat-style kit sections (not cards) show Greataxe bruiser / Sword & shield kits with **Use this kit** / **Selected**.
+- Item table lists resolved names (Battleaxe, Greatsword, etc.), TYPE, and STATS — not "X items" only.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T006 — Mix and match gear (Layer 2 + TP)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-422 |
+| **Where** | Guided creator → Loadout step (Berserker) |
+| **Needs** | DEV-004 seed applied |
+
+**Steps**
+1. On Loadout step, click **Mix and match gear**.
+2. Toggle items in the path pool; watch Training Points bar.
+
+**Expected**
+- Layer 2 panel opens with TP resource bar; pool rows show NAME / TYPE / TP / STATS.
+- Selecting items updates draft; items that would exceed TP budget are disabled.
+- **Back to kits** restores last selected kit.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T007 — Admin loadout TP validation
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-422 |
+| **Where** | Admin → Codex → Archetypes → edit path |
+| **Needs** | Admin role |
+
+**Steps**
+1. Edit Berserker (or any path with loadouts); paste loadout JSON whose items exceed level-1 TP budget.
+2. Attempt save.
+
+**Expected**
+- Save blocked with validation error naming the kit and TP overrun (not silent failure).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -1190,6 +1229,32 @@ Automated via `npm test` (`src/lib/codex-payload.test.ts`, `src/lib/roll-timesta
 
 ---
 
+## DEV-V-015 — Library API typing (TASK-420)
+
+Automated via `npm test` (`src/lib/library-types.test.ts`).
+
+#### DEV-V-015-T001 — Library item types cover all collection keys
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-015 |
+| **Automated** | `npm test` — library-types.test.ts |
+
+**Expected** — `LIBRARY_ITEM_TYPES` lists all six library kinds; `LibraryItemByType` maps each kind to a typed interface with required id/docId/name fields.
+
+#### DEV-V-015-T002 — Official library smoke (manual)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-015 |
+| **Manual** | Library → Realms Library tabs |
+
+**Expected** — Powers/Techniques/Armaments/Creatures load; "Add to library" confirm succeeds for a logged-in user.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -1201,5 +1266,6 @@ Automated via `npm test` (`src/lib/codex-payload.test.ts`, `src/lib/roll-timesta
 | DEV-V-006 | Resources PDF | DEV-T-006 | Planned |
 | DEV-V-007 | Auth UI (Google only) | DEV-T-007 | Planned |
 | DEV-V-014 | Codex typing + roll timestamp (TASK-378) | — | Automated (`npm test`) |
+| DEV-V-015 | Library API typing (TASK-420) | — | Automated (`npm test`) + manual smoke |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

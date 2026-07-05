@@ -70,6 +70,7 @@ import type {
   CraftingPowerRef,
 } from '@/types/crafting';
 import { derivePowerDisplay, type PowerDocument } from '@/lib/calculators/power-calc';
+import type { LibraryPower } from '@/types/library';
 import type { CraftingRules } from '@/types/core-rules';
 
 function toCraftingItemRef(c: CraftingSelectedItem): CraftingItemRef {
@@ -239,21 +240,17 @@ export default function CraftingToolPage() {
 
   const powerOptions = useMemo<PowerOption[]>(() => {
     const map = new Map<string, PowerOption>();
-    const toEnergyCost = (raw: Record<string, unknown>) => {
+    const toEnergyCost = (raw: LibraryPower) => {
       const doc: PowerDocument = {
-        name: String(raw.name ?? ''),
-        description: String(raw.description ?? ''),
-        parts: Array.isArray(raw.parts)
-          ? (raw.parts as PowerDocument['parts'])
-          : [],
-        damage: Array.isArray(raw.damage)
-          ? (raw.damage as PowerDocument['damage'])
-          : undefined,
-        actionType: typeof raw.actionType === 'string' ? raw.actionType : undefined,
-        isReaction: typeof raw.isReaction === 'boolean' ? raw.isReaction : undefined,
-        range: raw.range as PowerDocument['range'],
-        area: raw.area as PowerDocument['area'],
-        duration: raw.duration as PowerDocument['duration'],
+        name: raw.name,
+        description: raw.description,
+        parts: raw.parts,
+        damage: raw.damage,
+        actionType: raw.actionType,
+        isReaction: raw.isReaction,
+        range: raw.range,
+        area: raw.area,
+        duration: raw.duration,
       };
       return derivePowerDisplay(doc, powerPartsDb).energy;
     };
@@ -264,11 +261,11 @@ export default function CraftingToolPage() {
         source: 'library',
         id,
         name: p.name,
-        energyCost: toEnergyCost(p as unknown as Record<string, unknown>),
+        energyCost: toEnergyCost(p),
       });
     });
 
-    (officialPowers as Array<Record<string, unknown>>).forEach((p) => {
+    officialPowers.forEach((p) => {
       const id = String(p.id ?? '');
       if (!id || map.has(id)) return;
       map.set(id, {

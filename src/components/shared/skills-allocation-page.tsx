@@ -157,6 +157,9 @@ export function SkillsAllocationPage({
   );
 
   const remainingPoints = totalPoints - spentPoints;
+  const maxAddSkillSelections = Math.floor(
+    remainingPoints / skillRules.gainProficiencyCost
+  );
 
   const { subSkillsByBase, orderedSkills } = useMemo(() => {
     const subsByBase: Record<string, Skill[]> = {};
@@ -534,6 +537,7 @@ export function SkillsAllocationPage({
         onClose={() => setAddSkillModalOpen(false)}
         existingSkillNames={existingSkillNames}
         onAdd={handleAddSkills}
+        maxSelections={maxAddSkillSelections}
       />
 
       <AddSubSkillModal

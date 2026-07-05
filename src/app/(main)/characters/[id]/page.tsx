@@ -87,41 +87,14 @@ export default function CharacterSheetPage({ params }: PageParams) {
   const { data: publicTechniquesRaw = [] } = useOfficialLibrary('techniques');
   const { data: publicEmpoweredTechniquesRaw = [] } = useOfficialLibrary('empowered-techniques');
   const { data: publicItemsRaw = [] } = useOfficialLibrary('items');
-  const publicLibraries = useMemo(() => {
-    const powers = (publicPowersRaw as Record<string, unknown>[]).map((p) => ({
-      id: String(p.id ?? p.docId ?? ''),
-      docId: String(p.id ?? p.docId ?? ''),
-      name: String(p.name ?? ''),
-      description: String(p.description ?? ''),
-      parts: p.parts ?? [],
-      actionType: p.actionType,
-      isReaction: !!p.isReaction,
-      range: p.range,
-      area: p.area,
-      duration: p.duration,
-      damage: p.damage,
-    }));
-    const techniques = [...(publicTechniquesRaw as Record<string, unknown>[]), ...(publicEmpoweredTechniquesRaw as Record<string, unknown>[])].map((t) => ({
-      id: String(t.id ?? t.docId ?? ''),
-      docId: String(t.id ?? t.docId ?? ''),
-      name: String(t.name ?? ''),
-      description: String(t.description ?? ''),
-      parts: t.parts ?? [],
-      weapon: t.weapon,
-      damage: t.damage,
-    }));
-    const items = (publicItemsRaw as Record<string, unknown>[]).map((i) => ({
-      id: String(i.id ?? i.docId ?? ''),
-      docId: String(i.id ?? i.docId ?? ''),
-      name: String(i.name ?? ''),
-      description: String(i.description ?? ''),
-      type: (i.type as string) || 'weapon',
-      properties: i.properties ?? [],
-      damage: i.damage,
-      armorValue: i.armorValue,
-    }));
-    return { powers, techniques, items } as { powers: import('@/hooks/use-user-library').UserPower[]; techniques: import('@/hooks/use-user-library').UserTechnique[]; items: import('@/hooks/use-user-library').UserItem[] };
-  }, [publicPowersRaw, publicTechniquesRaw, publicEmpoweredTechniquesRaw, publicItemsRaw]);
+  const publicLibraries = useMemo(
+    () => ({
+      powers: publicPowersRaw,
+      techniques: [...publicTechniquesRaw, ...publicEmpoweredTechniquesRaw],
+      items: publicItemsRaw,
+    }),
+    [publicPowersRaw, publicTechniquesRaw, publicEmpoweredTechniquesRaw, publicItemsRaw]
+  );
   
   // Fetch all species data to look up species traits
   const { data: allSpecies = [] } = useMergedSpecies();

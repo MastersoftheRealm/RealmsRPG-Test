@@ -110,5 +110,6 @@ Spreadsheet and list edit modes in the Codex Editor persist via `createCodexDoc`
 | Official library hooks | `src/hooks/use-public-library.ts` (`useOfficialLibrary`), `src/app/api/official/[type]/route.ts` |
 | Legacy public API (deprecated) | `src/app/api/public/[type]/route.ts` |
 | Library service   | `src/services/library-service.ts` |
+| Library types     | `src/types/library.ts` (`LibraryItemByType` — user + official GET shapes) |
 | Admin codex actions | `src/app/(main)/admin/codex/actions.ts` — create/update/delete codex + core_rules |
 | Admin official library | `src/app/(main)/admin/public-library/` — uses /api/official (official_* tables) |

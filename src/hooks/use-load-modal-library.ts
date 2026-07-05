@@ -23,7 +23,7 @@ import {
   type LibraryItemType,
   type EqItem,
 } from '@/lib/library-selectable-builders';
-import type { UserPower, UserTechnique, UserItem } from './use-user-library';
+import type { UserPower, UserTechnique, UserItem, LibraryPower, LibraryTechnique, LibraryItem } from './use-user-library';
 
 export type LoadModalLibraryType = 'power' | 'technique' | 'empowered-technique' | 'item';
 
@@ -45,53 +45,24 @@ export interface UseLoadModalLibraryReturn {
   isPublicError: boolean;
 }
 
-function normalizePublicPower(p: Record<string, unknown>): UserPower {
-  const id = String(p.id ?? p.docId ?? '');
-  return {
-    id,
-    docId: id,
-    name: String(p.name ?? ''),
-    description: String(p.description ?? ''),
-    parts: (p.parts ?? []) as UserPower['parts'],
-    actionType: p.actionType as string,
-    isReaction: !!p.isReaction,
-    range: p.range as UserPower['range'],
-    area: p.area as UserPower['area'],
-    duration: p.duration as UserPower['duration'],
-    damage: p.damage as UserPower['damage'],
-  } as UserPower;
+function normalizePublicPower(p: LibraryPower): UserPower {
+  return p;
 }
 
-function normalizePublicTechnique(t: Record<string, unknown>): UserTechnique {
-  const id = String(t.id ?? t.docId ?? '');
-  const weaponFromPayload = t.weapon as UserTechnique['weapon'] | undefined;
-  const weaponName = typeof t.weaponName === 'string' ? t.weaponName : undefined;
+function normalizePublicTechnique(t: LibraryTechnique): UserTechnique {
+  const weaponName = typeof (t as LibraryTechnique & { weaponName?: string }).weaponName === 'string'
+    ? (t as LibraryTechnique & { weaponName?: string }).weaponName
+    : undefined;
   return {
-    ...(t as Record<string, unknown>),
-    id,
-    docId: id,
-    name: String(t.name ?? ''),
-    description: String(t.description ?? ''),
-    parts: (t.parts ?? []) as UserTechnique['parts'],
-    weapon: weaponFromPayload ?? (weaponName ? { name: weaponName } : undefined),
-    damage: t.damage as UserTechnique['damage'],
-    actionType: t.actionType as string | undefined,
-    isReaction: (t.isReaction as boolean | undefined) ?? false,
-  } as UserTechnique;
+    ...t,
+    docId: t.docId || t.id,
+    weapon: t.weapon ?? (weaponName ? { name: weaponName } : undefined),
+    isReaction: t.isReaction ?? false,
+  };
 }
 
-function normalizePublicItem(i: Record<string, unknown>): UserItem | EqItem {
-  const id = String(i.id ?? i.docId ?? '');
-  return {
-    id,
-    docId: id,
-    name: String(i.name ?? ''),
-    description: String(i.description ?? ''),
-    type: ((i.type as string) || 'weapon') as UserItem['type'],
-    properties: (i.properties ?? []) as UserItem['properties'],
-    damage: i.damage,
-    armorValue: i.armorValue as number | undefined,
-  } as UserItem;
+function normalizePublicItem(i: LibraryItem): UserItem | EqItem {
+  return i;
 }
 
 export function useLoadModalLibrary(type: LoadModalLibraryType): UseLoadModalLibraryReturn {
@@ -138,7 +109,7 @@ export function useLoadModalLibrary(type: LoadModalLibraryType): UseLoadModalLib
 
     if (type === 'power') {
       const my = (source === 'my' || source === 'all') ? (userPowers as (UserPower | UserTechnique | UserItem | EqItem)[]) : [];
-      const pub = (source === 'public' || source === 'all') ? (publicPowers as Record<string, unknown>[]).map(normalizePublicPower) : [];
+      const pub = (source === 'public' || source === 'all') ? publicPowers.map(normalizePublicPower) : [];
       const raw = [...my, ...pub];
       const loading = (source !== 'public' && powersLoading) || (source !== 'my' && publicPowersLoading);
       const items = raw.map((item) => buildSelectableItem(item, 'power', codex));
@@ -147,7 +118,7 @@ export function useLoadModalLibrary(type: LoadModalLibraryType): UseLoadModalLib
 
     if (type === 'technique') {
       const my = (source === 'my' || source === 'all') ? (userTechniques as (UserPower | UserTechnique | UserItem | EqItem)[]) : [];
-      const pub = (source === 'public' || source === 'all') ? (publicTechniques as Record<string, unknown>[]).map(normalizePublicTechnique) : [];
+      const pub = (source === 'public' || source === 'all') ? publicTechniques.map(normalizePublicTechnique) : [];
       const raw = [...my, ...pub];
       const loading = (source !== 'public' && techniquesLoading) || (source !== 'my' && publicTechniquesLoading);
       const items = raw.map((item) => buildSelectableItem(item, 'technique', codex));
@@ -156,7 +127,7 @@ export function useLoadModalLibrary(type: LoadModalLibraryType): UseLoadModalLib
 
     if (type === 'empowered-technique') {
       const my = (source === 'my' || source === 'all') ? (userEmpoweredTechniques as (UserPower | UserTechnique | UserItem | EqItem)[]) : [];
-      const pub = (source === 'public' || source === 'all') ? (publicEmpoweredTechniques as Record<string, unknown>[]).map(normalizePublicTechnique) : [];
+      const pub = (source === 'public' || source === 'all') ? publicEmpoweredTechniques.map(normalizePublicTechnique) : [];
       const raw = [...my, ...pub];
       const loading = (source !== 'public' && empoweredTechniquesLoading) || (source !== 'my' && publicEmpoweredTechniquesLoading);
       const items = raw.map((item) => buildSelectableItem(item, 'technique', codex));
@@ -170,8 +141,8 @@ export function useLoadModalLibrary(type: LoadModalLibraryType): UseLoadModalLib
         : [];
     const pub =
       source === 'public' || source === 'all'
-        ? (publicItems as Record<string, unknown>[])
-            .filter((i) => ['weapon', 'armor', 'shield'].includes(String(i.type || '').toLowerCase()))
+        ? publicItems
+            .filter((i) => ['weapon', 'armor', 'shield'].includes((i.type || '').toLowerCase()))
             .map(normalizePublicItem)
         : [];
     const raw = [...my, ...pub] as (UserPower | UserTechnique | UserItem | EqItem)[];

@@ -13,8 +13,10 @@ import { useMergedSpecies } from '@/hooks';
 import type { Species } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { GuidedChoiceCard } from '../guided-choice-card';
+import { getSpeciesSizeOptions } from '../guided-species-utils';
 import { GUIDED_CHOICE_GRID_CLASS, GUIDED_CHOICE_GRID_ITEM_CLASS } from '../guided-choice-grid';
 import { GuidedStepLayout } from '../guided-step-layout';
+import { GuidedLayerNav } from '@/components/shared';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.species;
@@ -33,12 +35,13 @@ export function SpeciesStep() {
 
   const handleSelect = (species: Species) => {
     const changed = draft.speciesId !== String(species.id);
+    const sizeOptions = getSpeciesSizeOptions(species);
     updateDraft({
       speciesId: String(species.id),
       speciesName: species.name,
-      // Reset ancestry selections (they are species-specific).
       ...(changed
         ? {
+            selectedSize: sizeOptions.length === 1 ? sizeOptions[0] : null,
             selectedSpeciesTraitChoices: {},
             selectedAncestryTraitIds: [],
             selectedCharacteristicId: null,
@@ -68,6 +71,7 @@ export function SpeciesStep() {
               <GuidedChoiceCard
                 key={species.id}
                 className={GUIDED_CHOICE_GRID_ITEM_CLASS}
+                density="species"
                 imageKind="species"
                 imageRecord={species}
                 title={species.name}
@@ -78,17 +82,15 @@ export function SpeciesStep() {
             ))}
           </div>
 
-          {hasStarters && !showAll && (
-            <div className="mt-4 text-center">
-              <button
-                type="button"
-                onClick={() => setShowAll(true)}
-                className="text-sm font-medium text-primary-fg hover:underline min-h-11"
-              >
-                {stepCopy.showAll}
-              </button>
-            </div>
-          )}
+          {hasStarters && !showAll ? (
+            <GuidedLayerNav expandLabel={stepCopy.showAll} onExpand={() => setShowAll(true)} />
+          ) : null}
+          {hasStarters && showAll ? (
+            <GuidedLayerNav
+              collapseLabel={stepCopy.backToStarters}
+              onCollapse={() => setShowAll(false)}
+            />
+          ) : null}
         </>
       )}
     </GuidedStepLayout>

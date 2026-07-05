@@ -4,6 +4,7 @@
 
 import type { ChipData } from '@/components/shared';
 import type { PowerPart } from '@/hooks/codex-types';
+import type { LibraryPower } from '@/types/library';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
@@ -23,7 +24,7 @@ export const OFFICIAL_POWER_HEADER_COLUMNS = [
 
 export interface OfficialPowerRow {
   id: string;
-  raw: Record<string, unknown>;
+  raw: LibraryPower;
   name: string;
   description: string;
   energy: string | number | undefined;
@@ -37,7 +38,7 @@ export interface OfficialPowerRow {
 }
 
 export function buildOfficialPowerRows(
-  items: Array<Record<string, unknown>>,
+  items: LibraryPower[],
   partsDb: PowerPart[]
 ): OfficialPowerRow[] {
   return items.map((p) => {
@@ -46,8 +47,8 @@ export function buildOfficialPowerRows(
       description: String(p.description ?? ''),
       parts: Array.isArray(p.parts) ? (p.parts as PowerDocument['parts']) : [],
       damage: p.damage as PowerDocument['damage'],
-      actionType: p.actionType as string | undefined,
-      isReaction: p.isReaction as boolean | undefined,
+      actionType: p.actionType,
+      isReaction: p.isReaction,
       range: p.range as PowerDocument['range'],
       area: p.area as PowerDocument['area'],
       duration: p.duration as PowerDocument['duration'],

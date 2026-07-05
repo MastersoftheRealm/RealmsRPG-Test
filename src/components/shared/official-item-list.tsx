@@ -9,6 +9,7 @@ import { type ReactNode } from 'react';
 import { Shield } from 'lucide-react';
 import { OfficialEntityList } from '@/components/shared/official-entity-list';
 import type { ItemProperty } from '@/hooks/codex-types';
+import type { LibraryItem } from '@/types/library';
 import {
   buildOfficialItemRows,
   filterOfficialItemRows,
@@ -20,7 +21,7 @@ import {
 export type { OfficialItemRow };
 
 export interface OfficialItemListProps {
-  items: Array<Record<string, unknown>>;
+  items: LibraryItem[];
   propertiesDb: ItemProperty[];
   isLoading: boolean;
   error: Error | null;
@@ -59,7 +60,7 @@ export function OfficialItemList({
   onDelete,
 }: OfficialItemListProps) {
   return (
-    <OfficialEntityList<OfficialItemRow>
+    <OfficialEntityList<OfficialItemRow, LibraryItem>
       items={items}
       isLoading={isLoading}
       error={error}

@@ -274,7 +274,7 @@ Implementation: `src/components/shared/info-tippy.tsx` (product API) + shared Fl
 
 ### Related patterns (not InfoTippy)
 
-- **`PathHelpCard` / `GuidedChoiceShell`** — path-mode prose and layer chrome; pair with InfoTippy on headings, do not duplicate rules in both.
+- **`PathHelpCard` / `GuidedChoiceShell` / `GuidedLayerNav`** — path-mode prose and **Layer 1 ↔ 2/3** chrome. **`GuidedLayerNav`**: expand = `outline` button below content; collapse = `secondary` button below content (same slot). Use on guided creator steps and any creator step with progressive disclosure.
 - **`Modal`** — Layer 2/3 selection, wizards; `fullScreenOnMobile` per `MOBILE_UX.md`.
 - **Marketing / landing copy** — `src/lib/constants/copy/*`; do not merge into `tooltip-text.tsx` (TASK-390).
 
@@ -287,6 +287,7 @@ Goal: "Learn once, use forever" — consistent UI across Library, Codex, Charact
 | GridListRow | Library, Codex, add-feat-modal, add-library-item-modal, add-skill-modal, equipment-step, feats-tab, library-section, creature-creator |
 | ListRowThumbnail + `GridListRow.thumbnail` | Codex species, Admin species (pilot); extend per § Entity card art |
 | GuidedChoiceCard + guided-choice-image | Guided creator choice steps (species hero art) |
+| GuidedLayerNav | Layer 1 expand / Layer 2+ collapse below step content — guided creator (path, species, abilities), GuidedChoiceShell (Advanced path mode) |
 | SkillRow | skills-section, skills-step, creature-creator |
 | ValueStepper | abilities-section, sheet-header, health-energy-allocator, dice-roller, all creators, encounters pages |
 | SectionHeader | feats-tab, proficiencies-tab, notes-tab, archetype-section, crafting pages |

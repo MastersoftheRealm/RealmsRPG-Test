@@ -2,6 +2,13 @@
  * Converts a guided creator draft into a lean Character payload for save.
  */
 
+import type { CodexEquipmentItem } from '@/types/codex';
+import type { LibraryItem } from '@/types/library';
+import {
+  buildEquipmentLookup,
+  inventoryTypeForResolvedItem,
+  resolveEquipmentRef,
+} from '@/lib/guided-creator/resolve-loadout-items';
 import type { Character, AbilityName } from '@/types';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types';
 import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
@@ -21,6 +28,8 @@ export interface BuildGuidedCharacterContext {
   allTraits?: Trait[];
   codexSkills?: Array<{ id: string | number; name?: string; ability?: string; category?: string }>;
   rules?: Parameters<typeof calculateMaxHealth>[5];
+  officialItems?: LibraryItem[];
+  codexEquipment?: CodexEquipmentItem[];
 }
 
 export function buildGuidedCharacterPayload(
@@ -61,6 +70,7 @@ export function buildGuidedCharacterPayload(
         selectedFlaw: draft.selectedFlawId,
         selectedCharacteristic: draft.selectedCharacteristicId,
         selectedSpeciesTraitChoices: draft.selectedSpeciesTraitChoices,
+        ...(draft.selectedSize ? { selectedSize: draft.selectedSize } : {}),
       }
     : undefined;
 
@@ -83,10 +93,24 @@ export function buildGuidedCharacterPayload(
   const powers = draft.powerIds.map((id) => ({ id, name: String(id) }));
   const techniques = draft.techniqueIds.map((id) => ({ id, name: String(id) }));
 
-  const inventory = [
-    ...draft.armaments.map((a) => ({ id: a.id, name: a.id, quantity: a.quantity, type: 'weapon' as const })),
-    ...draft.equipment.map((e) => ({ id: e.id, name: e.id, quantity: e.quantity, type: 'equipment' as const })),
-  ];
+  const inventory = (() => {
+    const lookup = buildEquipmentLookup(ctx.officialItems, ctx.codexEquipment);
+    const rows: Array<{ id: string; name: string; quantity: number; type: 'weapon' | 'armor' | 'equipment' }> = [];
+
+    const pushRow = (ref: { id: string; quantity: number }) => {
+      const resolved = resolveEquipmentRef(ref, lookup);
+      rows.push({
+        id: ref.id,
+        name: resolved.name,
+        quantity: ref.quantity,
+        type: inventoryTypeForResolvedItem(resolved),
+      });
+    };
+
+    draft.armaments.forEach(pushRow);
+    draft.equipment.forEach(pushRow);
+    return rows;
+  })();
 
   return {
     name: draft.name.trim() || 'Unnamed Character',
@@ -109,6 +133,7 @@ export function buildGuidedCharacterPayload(
     health: { current: maxHealth, max: maxHealth },
     energy: { current: maxEnergy, max: maxEnergy },
     currency: CHARACTER_STARTING_CURRENCY,
+    unarmedProwess: draft.unarmedProwess ?? 0,
     ancestry,
     skills: skillsArray as unknown as Character['skills'],
     archetypeFeats,

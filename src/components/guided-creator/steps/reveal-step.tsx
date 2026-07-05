@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import { Sparkles, User } from 'lucide-react';
 import { Button, Input, Modal, Textarea, useToast } from '@/components/ui';
 import { ExpandableImage } from '@/components/shared';
-import { useAuth, useMergedSpecies, useCodexSkills, useTraits, useGameRules } from '@/hooks';
+import { useAuth, useMergedSpecies, useCodexSkills, useTraits, useGameRules, useOfficialLibrary, useEquipment } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
 import { GuidedStepLayout } from '../guided-step-layout';
@@ -42,6 +42,8 @@ export function RevealStep() {
   const { data: allSpecies = [] } = useMergedSpecies();
   const { data: codexSkills = [] } = useCodexSkills();
   const { data: allTraits = [] } = useTraits();
+  const { data: officialItems = [] } = useOfficialLibrary('items');
+  const { data: codexEquipment = [] } = useEquipment();
 
   const [saving, setSaving] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
@@ -78,6 +80,8 @@ export function RevealStep() {
         allTraits,
         codexSkills,
         rules,
+        officialItems,
+        codexEquipment,
       });
       const lean = cleanForSave(payload as Character);
       const hasBase64Portrait =

@@ -30,13 +30,13 @@ export interface OfficialEntityRow {
   description?: string;
 }
 
-export interface OfficialEntityListProps<TRow extends OfficialEntityRow> {
-  items: Array<Record<string, unknown>>;
+export interface OfficialEntityListProps<TRow extends OfficialEntityRow, TItem> {
+  items: TItem[];
   isLoading: boolean;
   error: Error | null;
   onRetry: () => void;
   /** Build display rows from raw items. */
-  buildRows: (items: Array<Record<string, unknown>>) => TRow[];
+  buildRows: (items: TItem[]) => TRow[];
   /** Filter + sort built rows by the current search term. */
   filterRows: (
     rows: TRow[],
@@ -69,7 +69,7 @@ export interface OfficialEntityListProps<TRow extends OfficialEntityRow> {
   onDelete?: (id: string, name: string) => void;
 }
 
-export function OfficialEntityList<TRow extends OfficialEntityRow>({
+export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
   items,
   isLoading,
   error,
@@ -95,7 +95,7 @@ export function OfficialEntityList<TRow extends OfficialEntityRow>({
   onAddRequest,
   onEdit,
   onDelete,
-}: OfficialEntityListProps<TRow>) {
+}: OfficialEntityListProps<TRow, TItem>) {
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
 

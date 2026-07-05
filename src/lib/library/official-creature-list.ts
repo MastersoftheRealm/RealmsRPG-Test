@@ -3,6 +3,7 @@
  */
 
 import { formatListCellLabel } from '@/lib/utils';
+import type { LibraryCreature } from '@/types/library';
 
 export const OFFICIAL_CREATURE_GRID = '1.5fr 0.8fr 1fr 40px';
 
@@ -15,16 +16,14 @@ export const OFFICIAL_CREATURE_HEADER_COLUMNS = [
 
 export interface OfficialCreatureRow {
   id: string;
-  raw: Record<string, unknown>;
+  raw: LibraryCreature;
   name: string;
   description: string;
   level: number;
   type: string;
 }
 
-export function buildOfficialCreatureRows(
-  items: Array<Record<string, unknown>>
-): OfficialCreatureRow[] {
+export function buildOfficialCreatureRows(items: LibraryCreature[]): OfficialCreatureRow[] {
   return items.map((c) => ({
     id: String(c.id ?? c.docId ?? ''),
     raw: c,

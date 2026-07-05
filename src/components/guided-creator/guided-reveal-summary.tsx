@@ -143,6 +143,7 @@ export function GuidedRevealSummary() {
     const loadouts = pathData?.level1?.loadouts ?? [];
     const match = loadouts.find((l) => l.id === draft.loadoutId);
     if (match?.title) return match.title;
+    if (draft.loadoutId === 'custom') return copy.customLoadout;
     if (draft.loadoutId === 'path-default' && archetype?.name) {
       return `${archetype.name} loadout`;
     }

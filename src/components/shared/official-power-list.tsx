@@ -9,6 +9,7 @@ import { type ReactNode } from 'react';
 import { Wand2 } from 'lucide-react';
 import { OfficialEntityList } from '@/components/shared/official-entity-list';
 import type { PowerPart } from '@/hooks/codex-types';
+import type { LibraryPower } from '@/types/library';
 import {
   buildOfficialPowerRows,
   filterOfficialPowerRows,
@@ -20,7 +21,7 @@ import {
 export type { OfficialPowerRow };
 
 export interface OfficialPowerListProps {
-  items: Array<Record<string, unknown>>;
+  items: LibraryPower[];
   partsDb: PowerPart[];
   isLoading: boolean;
   error: Error | null;
@@ -59,7 +60,7 @@ export function OfficialPowerList({
   onDelete,
 }: OfficialPowerListProps) {
   return (
-    <OfficialEntityList<OfficialPowerRow>
+    <OfficialEntityList<OfficialPowerRow, LibraryPower>
       items={items}
       isLoading={isLoading}
       error={error}

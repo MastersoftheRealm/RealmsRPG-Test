@@ -329,13 +329,13 @@ export function EquipmentStep() {
 
     // Add public library items (weapons, armor, equipment) — same shape as user library
     if (publicItems.length > 0 && itemProperties) {
-      for (const pub of publicItems as Array<Record<string, unknown>>) {
-        const rawType = (pub.type || pub.armamentType || '') as string;
+      for (const pub of publicItems) {
+        const rawType = pub.type || '';
         const normalizedType = rawType ? rawType.charAt(0).toUpperCase() + rawType.slice(1).toLowerCase() : '';
         let type: 'weapon' | 'armor' | 'equipment';
-        if (normalizedType === 'Weapon' || normalizedType === 'Shield') {
+        if (rawType === 'weapon' || rawType === 'shield') {
           type = 'weapon';
-        } else if (normalizedType === 'Armor') {
+        } else if (rawType === 'armor') {
           type = 'armor';
         } else {
           type = 'equipment';
@@ -345,11 +345,11 @@ export function EquipmentStep() {
             name: String(pub.name ?? ''),
             description: String(pub.description ?? ''),
             armamentType: (normalizedType || 'Weapon') as 'Weapon' | 'Armor' | 'Shield',
-            properties: (Array.isArray(pub.properties) ? pub.properties : []).map((p: unknown) => {
-              const q = p as { id?: number | string; name?: string; op_1_lvl?: number };
-              const id = q.id != null ? (typeof q.id === 'number' ? q.id : parseInt(String(q.id), 10)) : undefined;
-              return { id: Number.isNaN(id as number) ? undefined : id, name: q.name, op_1_lvl: q.op_1_lvl };
-            }),
+            properties: (Array.isArray(pub.properties) ? pub.properties : []).map((p) => ({
+              id: p.id != null ? (typeof p.id === 'number' ? p.id : parseInt(String(p.id), 10)) : undefined,
+              name: p.name,
+              op_1_lvl: p.op_1_lvl,
+            })),
             damage: pub.damage as { amount: number; size: number; type: string }[] | undefined,
           },
           itemProperties
@@ -388,7 +388,7 @@ export function EquipmentStep() {
             };
           }),
           rarity: display.rarity,
-          category: (pub.category as string) || (type === 'equipment' ? 'Equipment' : undefined),
+          category: type === 'equipment' ? 'Equipment' : undefined,
           source: 'public',
         });
       }

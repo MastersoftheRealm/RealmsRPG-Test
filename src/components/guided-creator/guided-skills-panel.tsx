@@ -18,6 +18,7 @@ import {
   getSkillValueIncreaseCost,
   resolveSkillAllocationRules,
 } from '@/lib/game/skill-allocation';
+import type { AddSkillModalSkillBadge } from '@/components/shared/add-skill-modal';
 import { AddSkillModal, PointStatus } from '@/components/shared';
 import { Button, DescriptorChip, IconButton, Spinner } from '@/components/ui';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
@@ -34,6 +35,10 @@ export interface GuidedSkillsPanelProps {
   totalPoints: number;
   spentPoints: number;
   onAllocationsChange: (allocations: Record<string, number>) => void;
+  /** Descriptor chips for recommended skills in browse-all modal (Layer 2). */
+  browseSkillBadgesById?: Record<string, AddSkillModalSkillBadge[]>;
+  /** Skill ids to pin at top of browse-all modal. */
+  browseRecommendedSkillIds?: string[];
   className?: string;
 }
 
@@ -181,6 +186,8 @@ export function GuidedSkillsPanel({
   totalPoints,
   spentPoints,
   onAllocationsChange,
+  browseSkillBadgesById,
+  browseRecommendedSkillIds,
   className,
 }: GuidedSkillsPanelProps) {
   const { data: allSkills = [], isLoading } = useCodexSkills();
@@ -189,6 +196,9 @@ export function GuidedSkillsPanel({
   const [addSkillModalOpen, setAddSkillModalOpen] = useState(false);
 
   const remainingPoints = totalPoints - spentPoints;
+  const maxAddSkillSelections = Math.floor(
+    remainingPoints / skillRules.gainProficiencyCost
+  );
 
   const visibleSkillIds = useMemo(() => {
     const ids = new Set<string>();
@@ -359,7 +369,6 @@ export function GuidedSkillsPanel({
             type="button"
             variant="ghost"
             onClick={() => setAddSkillModalOpen(true)}
-            disabled={remainingPoints < skillRules.gainProficiencyCost}
             className="min-h-11 font-nunito text-primary-link-fg hover:text-primary-fg-hover"
           >
             {panelCopy.browseAll}
@@ -372,6 +381,9 @@ export function GuidedSkillsPanel({
         onClose={() => setAddSkillModalOpen(false)}
         existingSkillNames={existingSkillNames}
         onAdd={handleAddSkills}
+        skillBadgesById={browseSkillBadgesById}
+        recommendedSkillIds={browseRecommendedSkillIds}
+        maxSelections={maxAddSkillSelections}
       />
     </div>
   );

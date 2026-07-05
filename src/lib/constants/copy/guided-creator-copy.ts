@@ -61,6 +61,11 @@ export const GUIDED_CREATOR_COPY = {
     defaultSubtitle: 'Choices appear here as you go',
   },
 
+  /** Layer 1 ↔ 2/3 navigation — shared labels (REALMS §3). Expand/collapse always below content. */
+  layerNav: {
+    backToRecommendations: 'Back to recommendations',
+  },
+
   chapters: {
     foundation: { title: 'Foundation', subtitle: 'Choose your path and species' },
     ancestry: { title: 'Ancestry', subtitle: 'Make your species your own' },
@@ -76,6 +81,7 @@ export const GUIDED_CREATOR_COPY = {
       description:
         "Your path shapes your abilities, skills, feats, and gear. Pick one and we'll build a complete level-1 character around it.",
       showHybridPaths: 'Show hybrid (Powered-Martial) paths',
+      backToCorePaths: 'Back to power & martial paths',
       emptyTitle: 'No paths available',
       emptyDescription: 'Try a different filter or check back later.',
     },
@@ -84,6 +90,7 @@ export const GUIDED_CREATOR_COPY = {
       description:
         "This is who you're becoming. Any species works with any path, so pick the one that excites you.",
       showAll: 'Show all species',
+      backToStarters: 'Back to starter species',
       emptyTitle: 'No species available',
       emptyDescription: 'Check back later.',
     },
@@ -120,6 +127,10 @@ export const GUIDED_CREATOR_COPY = {
           return `You'll choose your variants for ${names.slice(0, -1).join(', ')}, and ${last} on the next screens.`;
         },
         continueLabel: 'Continue',
+        sizeChoiceTitle: 'Choose your size',
+        sizeChoiceHint:
+          'Some species can be more than one size. Pick the size that fits how you imagine this character — it affects reach, carrying capacity, and how you fit in the world.',
+        sizeChoiceRequired: 'Select a size to continue.',
       },
     },
     abilities: {
@@ -128,7 +139,7 @@ export const GUIDED_CREATOR_COPY = {
       recommendedHeading: (pathName: string) => `Recommended for ${pathName}`,
       recommendedHint: 'These scores are applied for your path. Customize if you want a different spread.',
       customize: 'Customize scores',
-      backToRecommended: 'Back to recommended',
+      abilityPointsLabel: 'Ability points',
     },
     skills: {
       title: 'Your skills',
@@ -146,9 +157,16 @@ export const GUIDED_CREATOR_COPY = {
       pointsRemaining: (n: number) =>
         `Spend ${n} more skill point${n === 1 ? '' : 's'} to continue.`,
       pointsComplete: 'All skill points spent',
-      freePicksTitle: 'Suggestions',
-      freePicksHint: (n: number) =>
-        `You have ${n} skill point${n === 1 ? '' : 's'} left — add a new skill below, increase a skill you already have, or browse the full list.`,
+      recommendedChip: 'Recommended',
+      abilitySkillSuggestionsTitle: (abilities: string) => `Skills using ${abilities}`,
+      abilitySkillSuggestionsHint: (remaining: number, abilities: string) =>
+        `You have ${remaining} skill point${remaining === 1 ? '' : 's'} left. These base skills use ${abilities} — pick one to add proficiency, raise a skill above, or browse the full list.`,
+      pathSkillSuggestionsTitle: (pathName: string) => `From ${pathName}`,
+      pathSkillSuggestionsHint: (pathName: string) =>
+        `You removed a skill recommended for ${pathName}. Tap a card to add it back, or browse the full list.`,
+      mixedSkillSuggestionsTitle: 'Recommended skills',
+      mixedSkillSuggestionsHint: (remaining: number, abilities: string) =>
+        `Path skills you removed and base skills using ${abilities}. You have ${remaining} skill point${remaining === 1 ? '' : 's'} left for new proficiencies.`,
       browseAll: 'Browse all skills',
       continueLabel: 'Looks good →',
     },
@@ -178,6 +196,37 @@ export const GUIDED_CREATOR_COPY = {
       defaultWhy: 'Included in your path',
       pathDefaultTitle: (pathName: string) => `${pathName} loadout`,
       pathDefaultWhy: 'Recommended gear for your path.',
+      groupIntro:
+        'Each section below is a complete loadout. Review the gear list, choose one kit, then continue.',
+      loadoutGroupLabel: 'Path loadout options',
+      selectKit: 'Use this kit',
+      selectedKit: 'Selected',
+      kitContentsLabel: 'Kit contents',
+      loadingItems: 'Loading equipment details…',
+      unresolvedItem: 'Unknown item',
+      andMoreItems: (count: number) => ` +${count} more`,
+      weaponsLabel: 'Weapons',
+      armorLabel: 'Armor',
+      gearLabel: 'Gear',
+      emptyKit: 'No items in this kit yet.',
+      customKitHint: 'You customized your gear — use Mix and match gear to adjust, or pick a kit above.',
+      customize: {
+        expandLabel: 'Mix and match gear',
+        title: 'Mix and match gear',
+        description:
+          'Choose items from your path recommendations. Training Points show how much armament proficiency your selections use.',
+        atCap: 'You are at your Training Point limit — deselect an item to swap.',
+        overBudget: 'Not enough Training Points remaining',
+        unresolvedItem: 'Unknown item',
+      },
+      unarmed: {
+        title: 'Unarmed combat',
+        description:
+          'Your path recommends fighting without weapons. Add Unarmed Prowess if you want unarmed strikes on your sheet.',
+        add: 'Add Unarmed Prowess',
+        remove: 'Remove Unarmed Prowess',
+        addedHint: 'Included on your character.',
+      },
     },
     powersTechniques: {
       martial: {
@@ -256,6 +305,7 @@ export const GUIDED_CREATOR_COPY = {
         loadoutTitle: 'Equipment',
         powersTitle: 'Powers & techniques',
         defaultLoadout: 'Path loadout',
+        customLoadout: 'Custom loadout',
       },
       loginModal: {
         title: 'Sign in to save',

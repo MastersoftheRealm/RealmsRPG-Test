@@ -119,6 +119,20 @@ export type {
 } from './codex';
 export { CODEX_PAYLOAD_KEYS } from './codex';
 
+// Library (user + official GET /api/* library)
+export type {
+  LibraryItemType,
+  LibraryItemByType,
+  LibraryRow,
+  LibraryPower,
+  LibraryTechnique,
+  LibraryItem,
+  LibrarySpecies,
+  LibraryCreature,
+  LibrarySaveBody,
+} from './library';
+export { LIBRARY_ITEM_TYPES } from './library';
+
 // Item Display System
 export type {
   BaseGameItem,

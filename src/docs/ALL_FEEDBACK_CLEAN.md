@@ -1676,3 +1676,19 @@ Notes
 - Feedback: When a feat has restrictions (uses per recovery, state feat), show a brief notifier on the choice card — e.g. state feats explain Quick Action / Enter State, 1-minute duration, and uses per recovery; non-state feats with uses show "X times per Y Recovery".
 - Expected: Inline notice on guided feat choice cards when `state_feat` and/or `uses_per_rec` apply.
 - Disposition: Implemented 2026-07-03 — `getFeatRestrictionNotice`, `GuidedFeatRestrictionNotice` on archetype-feats-step and character-feat-step.
+
+**Raw Feedback Log — 2026-07-04 (Guided creator cards, species overview, skill chips)**
+- Date: 2026-07-04
+- Context: Guided character creator — choice cards, species overview (ancestry step), species skills
+- Priority: High
+- Feedback: (1) Choice cards should have uniform height; show Read more only when description exceeds the preview area. (2) Species overview should let users pick species size when multiple sizes exist, with clear explanation. (3) Expanded species skill chips span the full page width — too wide for short descriptions.
+- Expected: Fixed-height card bodies with overflow-based Read more; size SegmentedControl on overview when `sizes[]` has 2+ options (blocks Continue until chosen); species skill chips expand within a grid column, not full page width.
+- Disposition: Implemented 2026-07-04 — `GuidedChoiceCard` line-clamp + ResizeObserver overflow; `SpeciesRevealPanel` size choice + `selectedSize` on guided draft; `SummaryChipList` `layout="grid"` on species skills.
+
+**Raw Feedback Log — 2026-07-05 (Guided equipment / loadout step)**
+- Date: 2026-07-05
+- Context: Guided character creator → Equipment (loadout) step vs REALMS §5.7 / §5.9
+- Priority: High
+- Feedback: Equipment step is unfinished vs product overview. Loadouts were added to path DB but current UI is card grid showing only "X items" — not enough. Want branching like archetype feat step + expandable list like skills step so users can inspect individual items per loadout. Pick among loadouts with TP as limiter (Layer 2 for mix/match). Show unarmed prowess only when loadout/path recommends it — no clutter otherwise. Request honest review of goals, DB, and codebase before implementation.
+- Expected: Role-based loadout kits with visible item detail; weapon-then-armor sub-flow optional; Layer 1 invisible TP (pre-validated kits); Layer 2 customize with TP budget; conditional unarmed prowess; admin TP validation on publish.
+- Disposition: TASK-422 Phase 1 implemented 2026-07-05 — enriched loadout cards + expandable item rows + save name resolution.

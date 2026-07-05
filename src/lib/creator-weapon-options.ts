@@ -1,6 +1,6 @@
 import { calculateItemCosts } from '@/lib/calculators/item-calc';
 import type { ItemPropertyPayload, ItemPropertyTpRow } from '@/lib/calculators/item-calc';
-import type { UserItem } from '@/hooks/use-user-library';
+import type { UserItem, LibraryItem } from '@/hooks/use-user-library';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 
 export type CreatorWeaponLibrary = 'builtin' | 'my' | 'official';
@@ -18,7 +18,7 @@ export interface CreatorWeaponOption {
 export function buildCreatorWeaponOptions(args: {
   defaults: Array<{ id: string | number; name: string; tp?: number }>;
   userItems: UserItem[];
-  officialWeaponRows?: Record<string, unknown>[] | null;
+  officialWeaponRows?: LibraryItem[] | null;
   itemPropertiesDb: ItemPropertyTpRow[];
 }): CreatorWeaponOption[] {
   const { defaults, userItems, officialWeaponRows, itemPropertiesDb } = args;
@@ -46,12 +46,11 @@ export function buildCreatorWeaponOptions(args: {
     });
 
   const official: CreatorWeaponOption[] = (officialWeaponRows || [])
-    .filter((row) => String((row as { type?: string }).type || '').toLowerCase() === 'weapon')
+    .filter((row) => (row.type || '').toLowerCase() === 'weapon')
     .map((row) => {
-      const r = row as { id?: unknown; docId?: unknown; name?: unknown; properties?: unknown };
-      const id = String(r.id ?? r.docId ?? '');
-      const name = String(r.name ?? '');
-      const props = (r.properties || []) as ItemPropertyPayload[];
+      const id = String(row.id ?? row.docId ?? '');
+      const name = String(row.name ?? '');
+      const props = (row.properties || []) as ItemPropertyPayload[];
       const costs = itemPropertiesDb.length ? calculateItemCosts(props, itemPropertiesDb) : { totalTP: 1 };
       const tp = Math.max(0, Math.round(costs.totalTP));
       return {

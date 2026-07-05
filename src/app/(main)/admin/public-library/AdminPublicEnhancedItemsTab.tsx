@@ -21,6 +21,7 @@ import {
 } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { Button, Modal, Select, Input } from '@/components/ui';
+import type { LibraryItem, LibraryPower } from '@/types/library';
 
 const GRID = '1.6fr 1.3fr 1.3fr 0.9fr 0.9fr 0.9fr 40px';
 
@@ -194,8 +195,8 @@ function EnhancedItemEditModal({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  items: Array<Record<string, unknown>>;
-  powers: Array<Record<string, unknown>>;
+  items: LibraryItem[];
+  powers: LibraryPower[];
   initial?: OfficialEnhancedItem;
   onSave: (body: EnhancedEditBody) => Promise<void>;
 }) {
@@ -208,19 +209,8 @@ function EnhancedItemEditModal({
   );
   const [usesCount, setUsesCount] = useState<number>(initial?.uses_count ?? 1);
 
-  const itemOptions = items as Array<{
-    id?: unknown;
-    name?: unknown;
-    description?: unknown;
-    currency?: unknown;
-    rarity?: unknown;
-  }>;
-  const powerOptions = powers as Array<{
-    id?: unknown;
-    name?: unknown;
-    description?: unknown;
-    energy?: unknown;
-  }>;
+  const itemOptions = items;
+  const powerOptions = powers;
 
   const handleSubmit = async () => {
     const power = powerOptions.find((p) => String(p.id) === selectedPowerId);

@@ -15,149 +15,41 @@ import { useCodexSpecies } from './use-codex';
 import type { Species } from './codex-types';
 import { readRecordImageUrl } from '@/components/guided-creator/guided-choice-image';
 
-// =============================================================================
-// Types
-// =============================================================================
+export type {
+  LibraryItemType,
+  LibraryItemByType,
+  LibraryRow,
+  SavedPart,
+  SavedDamage,
+  SavedProperty,
+  LibraryPower,
+  LibraryTechnique,
+  LibraryItem,
+  LibrarySpecies,
+  LibraryCreature,
+  UserPower,
+  UserTechnique,
+  UserItem,
+  UserSpecies,
+  UserCreature,
+} from '@/types/library';
 
-export interface SavedPart {
-  id?: number;
-  name?: string;
-  op_1_lvl?: number;
-  op_2_lvl?: number;
-  op_3_lvl?: number;
-  applyDuration?: boolean;
-}
-
-export interface SavedDamage {
-  amount?: number | string;
-  size?: number | string;
-  type?: string;
-  applyDuration?: boolean;
-}
-
-export interface UserPower {
-  id: string;
-  docId: string;
-  name: string;
-  description?: string;
-  parts: SavedPart[];
-  damage?: SavedDamage[];
-  actionType?: string;
-  isReaction?: boolean;
-  range?: { steps?: number; applyDuration?: boolean };
-  area?: { type?: string; level?: number; applyDuration?: boolean };
-  duration?: { type?: string; value?: number; focus?: boolean; noHarm?: boolean; endsOnActivation?: boolean; sustain?: number };
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-export interface UserTechnique {
-  id: string;
-  docId: string;
-  name: string;
-  description?: string;
-  parts: SavedPart[];
-  damage?: SavedDamage[];
-  weapon?: { id?: string | number; name?: string };
-  actionType?: string;
-  isReaction?: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-export interface SavedProperty {
-  id?: number;
-  name?: string;
-  op_1_lvl?: number;
-}
-
-export interface UserItem {
-  id: string;
-  docId: string;
-  name: string;
-  description?: string;
-  type: 'weapon' | 'armor' | 'equipment' | 'shield';
-  properties: SavedProperty[];
-  damage?: SavedDamage[];
-  isTwoHanded?: boolean;
-  rangeLevel?: number;
-  abilityRequirement?: { id?: string; name?: string; level?: number };
-  damageReduction?: number;
-  agilityReduction?: number;
-  criticalRangeIncrease?: number;
-  shieldDR?: { amount: number; size: number };
-  hasShieldDamage?: boolean;
-  shieldDamage?: { amount: number; size: number };
-  costs?: { totalTP?: number; totalCurrency?: number; totalIP?: number };
-  rarity?: string;
-  armorValue?: number;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-export interface UserSpecies {
-  id: string;
-  docId?: string;
-  name: string;
-  description?: string;
-  type?: string;
-  size?: string;
-  sizes?: string[];
-  speed?: number;
-  skills?: string[];
-  species_traits?: string[];
-  ancestry_traits?: string[];
-  flaws?: string[];
-  characteristics?: string[];
-  languages?: string[];
-  ave_height?: number;
-  ave_weight?: number;
-  adulthood_lifespan?: number[];
-  image_url?: string | null;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface UserCreature {
-  id: string;
-  docId: string;
-  name: string;
-  description?: string;
-  level: number;
-  type?: string;
-  size?: string;
-  hitPoints?: number;
-  energyPoints?: number;
-  abilities?: Record<string, number>;
-  defenses?: Record<string, number>;
-  powerProficiency?: number;
-  martialProficiency?: number;
-  resistances?: string[];
-  weaknesses?: string[];
-  immunities?: string[];
-  conditionImmunities?: string[];
-  senses?: string[];
-  movementTypes?: string[];
-  languages?: string[];
-  skills?: Array<{ name: string; value: number; proficient?: boolean }>;
-  powers?: Array<{ name: string; description?: string }>;
-  techniques?: Array<{ name: string; description?: string }>;
-  feats?: Array<{ name: string; description?: string }>;
-  armaments?: Array<{ name: string }>;
-  hp?: number;
-  attacks?: unknown[];
-  createdAt?: Date;
-  updatedAt?: Date;
-}
+import type {
+  LibraryItemType,
+  LibraryPower,
+  LibraryTechnique,
+  LibraryItem,
+  LibrarySpecies,
+  LibraryCreature,
+  UserSpecies,
+} from '@/types/library';
 
 // =============================================================================
 // Query Keys
 // =============================================================================
 
-type LibraryType = 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species';
-
 /** One canonical query key per library type, keyed by user id. */
-const libraryQueryKey = (type: LibraryType, userId: string) => [`user-${type}`, userId] as const;
+const libraryQueryKey = (type: LibraryItemType, userId: string) => [`user-${type}`, userId] as const;
 
 // =============================================================================
 // Fetch Functions
@@ -193,7 +85,7 @@ async function duplicateLibraryItem(type: string, docId: string): Promise<string
  * type-bound wrappers over this factory (previously six copy-paste hooks). (DUP-06)
  */
 export function useUserLibrary<T>(
-  type: LibraryType,
+  type: LibraryItemType,
   options?: { enabled?: boolean }
 ): UseQueryResult<T[], Error> {
   const { user } = useAuthStore();
@@ -210,26 +102,26 @@ export function useUserLibrary<T>(
 }
 
 export const useUserPowers = (options?: { enabled?: boolean }) =>
-  useUserLibrary<UserPower>('powers', options);
+  useUserLibrary<LibraryPower>('powers', options);
 
 export const useUserTechniques = (options?: { enabled?: boolean }) =>
-  useUserLibrary<UserTechnique>('techniques', options);
+  useUserLibrary<LibraryTechnique>('techniques', options);
 
 export const useUserEmpoweredTechniques = (options?: { enabled?: boolean }) =>
-  useUserLibrary<UserTechnique>('empowered-techniques', options);
+  useUserLibrary<LibraryTechnique>('empowered-techniques', options);
 
 export const useUserItems = (options?: { enabled?: boolean }) =>
-  useUserLibrary<UserItem>('items', options);
+  useUserLibrary<LibraryItem>('items', options);
 
 export const useUserCreatures = (options?: { enabled?: boolean }) =>
-  useUserLibrary<UserCreature>('creatures', options);
+  useUserLibrary<LibraryCreature>('creatures', options);
 
 export const useUserSpecies = (options?: { enabled?: boolean }) =>
-  useUserLibrary<UserSpecies>('species', options);
+  useUserLibrary<LibrarySpecies>('species', options);
 
 /** Normalize user species to Species shape for use in character creator, sheet, and codex. */
 export function userSpeciesToSpecies(u: UserSpecies): Species {
-  const sizes = u.sizes?.length ? u.sizes : (u.size ? [u.size] : ['Medium']);
+  const sizes = u.sizes?.length ? u.sizes : u.size ? [u.size] : ['Medium'];
   const imageUrl = readRecordImageUrl(u);
   return {
     id: u.id,
@@ -304,7 +196,7 @@ export function useMergedSpecies(): UseQueryResult<Species[], Error> {
 // =============================================================================
 
 /** Generic delete mutation for any library type */
-function useDeleteLibraryItem(type: LibraryType): UseMutationResult<void, Error, string> {
+function useDeleteLibraryItem(type: LibraryItemType): UseMutationResult<void, Error, string> {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
@@ -318,7 +210,7 @@ function useDeleteLibraryItem(type: LibraryType): UseMutationResult<void, Error,
 }
 
 /** Generic duplicate mutation for any library type */
-function useDuplicateLibraryItem(type: LibraryType): UseMutationResult<string, Error, string> {
+function useDuplicateLibraryItem(type: LibraryItemType): UseMutationResult<string, Error, string> {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
 

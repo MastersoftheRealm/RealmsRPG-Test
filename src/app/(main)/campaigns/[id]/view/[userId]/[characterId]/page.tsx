@@ -76,41 +76,14 @@ function CampaignCharacterViewContent() {
   const { data: publicPowersRaw = [] } = useOfficialLibrary('powers');
   const { data: publicTechniquesRaw = [] } = useOfficialLibrary('techniques');
   const { data: publicItemsRaw = [] } = useOfficialLibrary('items');
-  const publicLibraries = useMemo(() => {
-    const powers = (publicPowersRaw as Record<string, unknown>[]).map((p) => ({
-      id: String(p.id ?? p.docId ?? ''),
-      docId: String(p.id ?? p.docId ?? ''),
-      name: String(p.name ?? ''),
-      description: String(p.description ?? ''),
-      parts: p.parts ?? [],
-      actionType: p.actionType,
-      isReaction: !!p.isReaction,
-      range: p.range,
-      area: p.area,
-      duration: p.duration,
-      damage: p.damage,
-    }));
-    const techniques = (publicTechniquesRaw as Record<string, unknown>[]).map((t) => ({
-      id: String(t.id ?? t.docId ?? ''),
-      docId: String(t.id ?? t.docId ?? ''),
-      name: String(t.name ?? ''),
-      description: String(t.description ?? ''),
-      parts: t.parts ?? [],
-      weapon: t.weapon,
-      damage: t.damage,
-    }));
-    const items = (publicItemsRaw as Record<string, unknown>[]).map((i) => ({
-      id: String(i.id ?? i.docId ?? ''),
-      docId: String(i.id ?? i.docId ?? ''),
-      name: String(i.name ?? ''),
-      description: String(i.description ?? ''),
-      type: (i.type as string) || 'weapon',
-      properties: i.properties ?? [],
-      damage: i.damage,
-      armorValue: i.armorValue,
-    }));
-    return { powers, techniques, items } as { powers: UserPower[]; techniques: UserTechnique[]; items: UserItem[] };
-  }, [publicPowersRaw, publicTechniquesRaw, publicItemsRaw]);
+  const publicLibraries = useMemo(
+    () => ({
+      powers: publicPowersRaw,
+      techniques: publicTechniquesRaw,
+      items: publicItemsRaw,
+    }),
+    [publicPowersRaw, publicTechniquesRaw, publicItemsRaw]
+  );
   const { data: allSpecies = [] } = useSpecies();
   const { data: codexSkills = [] } = useCodexSkills();
   const { data: featsDb = [] } = useCodexFeats();

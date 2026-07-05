@@ -1,17 +1,47 @@
 /**
  * Unified typography and spacing for GuidedChoiceCard.
- * Collapsed min-heights keep grid cards aligned (species, paths, etc.).
+ * Collapsed min-heights keep grid cards aligned within each step (not globally).
+ *
+ * Preview line counts derived from codex description lengths (RealmsRPG-Test, 2026-07-04):
+ *   species  — median 159, p75 172, avg 377 (n=17)
+ *   paths    — median 215, p75 323 (codex_archetypes, n=11)
+ *   feats    — median 156, p75 220 (codex_feats, n=803)
+ *   traits   — median 127, p75 170 (codex_traits, n=210)
  */
 
+/** Per-step card preview sizing — uniform within a step, not across steps. */
+export type GuidedChoiceCardDensity = 'species' | 'path' | 'compact';
+
+export const GUIDED_CHOICE_CARD_PRESETS: Record<
+  GuidedChoiceCardDensity,
+  { cardCollapsed: string; bodyCollapsed: string }
+> = {
+  /** Species — longest flavor text; 5-line preview (~200 chars). */
+  species: {
+    cardCollapsed: 'min-h-[12.5rem] sm:min-h-[12rem]',
+    bodyCollapsed: 'min-h-[6.5rem] line-clamp-5',
+  },
+  /** Paths — medium copy; 4-line preview (~160 chars). */
+  path: {
+    cardCollapsed: 'min-h-[11rem] sm:min-h-[10.5rem]',
+    bodyCollapsed: 'min-h-[5.25rem] line-clamp-4',
+  },
+  /** Feats, traits, loadouts — short copy; 3-line preview (~120 chars). */
+  compact: {
+    cardCollapsed: 'min-h-[9.25rem] sm:min-h-[9rem]',
+    bodyCollapsed: 'min-h-[3.9rem] line-clamp-3',
+  },
+};
+
 export const GUIDED_CHOICE_STYLES = {
-  cardCollapsed: 'min-h-[11rem] sm:min-h-[10.5rem]',
   selectButton: 'flex min-h-0 w-full flex-1 flex-col gap-3 p-4 sm:p-5 text-left',
   headerRow: 'flex flex-1 gap-3 items-start',
   contentColumn: 'flex min-w-0 flex-1 flex-col',
   title: 'font-display text-lg sm:text-xl font-semibold text-text-primary',
   bodyWrap: 'mt-1.5 flex flex-col gap-1',
   body: 'font-nunito text-base text-text-secondary leading-relaxed',
-  bodyCollapsed: 'min-h-[5.25rem]',
+  /** Reserved on every collapsed card so Read more never changes row height. */
+  readMoreSlot: 'flex min-h-11 shrink-0 items-center',
   readMore:
     'flex w-fit items-center font-nunito text-sm font-semibold text-primary-link-fg hover:text-primary-fg-hover hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm min-h-11 py-0.5',
   tagsRow: 'flex min-h-[1.625rem] flex-wrap gap-1.5',
