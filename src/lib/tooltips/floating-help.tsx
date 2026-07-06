@@ -1,5 +1,15 @@
 'use client';
 
+/**
+ * Shared Floating UI panel + placement helpers for contextual help.
+ *
+ * Lineage: Collin PR #14 (`286064c6`) — Tippy removal, flip/shift/arrow, fallback
+ * placements. Refactored here during KadinBranch merge so `InfoTippy` and
+ * `@/components/ui/tooltip` share one implementation.
+ *
+ * Onboarding: `src/lib/tooltips/README.md`
+ */
+
 /* eslint-disable react-hooks/refs -- Floating UI positions with ref callbacks and arrow refs during render. */
 
 import {

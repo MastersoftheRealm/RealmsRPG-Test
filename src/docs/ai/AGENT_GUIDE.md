@@ -180,6 +180,18 @@ When adding list thumbs for a new entity: (1) ensure API returns `image_url`, (2
 
 **Owner decision (2026-06-25):** Static copy in `public/tooltip-text.tsx` is the **only** contextual-help standard. Legacy DB tooltips were removed in TASK-376 (Jun 2026). **Engine:** `@floating-ui/react` via `InfoTippy` (TASK-392, Jun 2026).
 
+### If you authored PR #14 (Collin-tooltipExperimentation)
+
+Your Floating UI work **is in the repo** — it was extracted into shared primitives during the KadinBranch + `master` merge (`0e62d157`). Read **`src/lib/tooltips/README.md`** first.
+
+| You remember… | Look here now |
+|---------------|---------------|
+| `tooltip.tsx` with inline `useFloating` | `floating-help.tsx` (panel/placement) + `tooltip.tsx` (thin wrapper) |
+| `ContextHelpTooltip` + `tooltipKey` | `InfoTippy` + `tooltip-text.tsx`; keys → `legacy-tooltip-key-map.ts` |
+| `HelpTooltip` | `InfoTippy` |
+| Skills help inside `skills-allocation-page.tsx` | Parent passes `headingAddon` / `addSubSkillAddon` (`skills-step.tsx`, creature creator) |
+| DB `/api/tooltips`, admin tooltips page | **Removed** — edit `tooltip-text.tsx` and deploy |
+
 ### Two layers — do not conflate them
 
 | Layer | What it is | When agents touch it |

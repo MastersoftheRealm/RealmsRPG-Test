@@ -109,8 +109,12 @@ export function getAbilityPointsHelp(level: number, rules: CoreRulesMap) {
   );
 }
 
-export function getSkillPointsHelp(level: number, rules: CoreRulesMap) {
-  const skillPoints = calculateSkillPointsForEntity(level, 'character', rules);
+export function getSkillPointsHelp(
+  level: number,
+  rules: CoreRulesMap,
+  entityType: 'character' | 'creature' = 'character',
+) {
+  const skillPoints = calculateSkillPointsForEntity(level, entityType, rules);
   const maxSkill = rules.SKILLS_AND_DEFENSES.maxSkillValue;
   const basePastCap = rules.SKILLS_AND_DEFENSES.baseSkillPastCapCost;
   const subPastCap = rules.SKILLS_AND_DEFENSES.subSkillPastCapCost;

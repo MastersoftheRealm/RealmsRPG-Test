@@ -10,7 +10,8 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { LoginPromptModal, ConfirmActionModal, UnifiedSelectionModal, ItemCard, GridListRow, ListHeader, SourceFilter, InnateToggle, SegmentedControl, SkillsAllocationPage, ValueStepper } from '@/components/shared';
+import { LoginPromptModal, ConfirmActionModal, UnifiedSelectionModal, ItemCard, GridListRow, ListHeader, SourceFilter, InnateToggle, SegmentedControl, SkillsAllocationPage, ValueStepper, InfoTippy } from '@/components/shared';
+import { getSkillPointsHelp, subSkillsHelp } from '../../../../public/tooltip-text';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { useAuthStore } from '@/stores/auth-store';
@@ -182,6 +183,11 @@ function CreatureCreatorContent() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [creature, setCreature] = useState<CreatureState>(initialState);
+  const creatureLevel = Math.max(1, Math.floor(creature.level));
+  const skillPointsHelp = useMemo(
+    () => getSkillPointsHelp(creatureLevel, rules, 'creature'),
+    [creatureLevel, rules],
+  );
   const [showPowerModal, setShowPowerModal] = useState(false);
   const [showTechniqueModal, setShowTechniqueModal] = useState(false);
   const [showFeatModal, setShowFeatModal] = useState(false);
@@ -1344,7 +1350,7 @@ function CreatureCreatorContent() {
           {/* Skills & defense bonuses (shared SkillsAllocationPage) */}
           <SkillsAllocationPage
             entityType="creature"
-            level={Math.max(1, Math.floor(creature.level))}
+            level={creatureLevel}
             abilities={creature.abilities}
             allocations={skillAllocations}
             defenseSkills={creature.defenses}
@@ -1353,6 +1359,23 @@ function CreatureCreatorContent() {
             onDefenseChange={handleDefenseSkillsChange}
             abilityDefenseBonuses={abilityDefenseBonuses}
             className="max-w-none"
+            headingAddon={
+              <InfoTippy
+                content={skillPointsHelp}
+                allowHTML
+                label="Skill allocation help"
+                size="inline"
+              />
+            }
+            addSubSkillAddon={
+              <InfoTippy
+                content={subSkillsHelp}
+                allowHTML
+                label="Sub-skill help"
+                placement="top"
+                size="inline"
+              />
+            }
           />
 
           {/* Resistances, Weaknesses, Immunities */}

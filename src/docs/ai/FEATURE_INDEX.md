@@ -108,7 +108,7 @@
 | Power / technique / item / empowered calc | `lib/calculators/*-calc.ts`, `mechanic-builder.ts` |
 | Data enrichment (minimal stored → full display) | `lib/data-enrichment.ts` |
 | Library columnar mapping & sync | `lib/library-columnar.ts`, `lib/library-sync.ts`, `lib/library-selectable-builders.ts` |
-| Tooltips (defaults + interpolation) | `lib/tooltips/` |
+| Tooltips (defaults + interpolation) | `lib/tooltips/` — **`lib/tooltips/README.md`** (PR #14 onboarding), `legacy-tooltip-key-map.ts` |
 | Roles / quotas / limits | `lib/role-policy.ts`, `lib/role-limits.ts`, `lib/role-quota-messages.ts`, `lib/admin.ts` |
 | API client / validation / rate limit | `lib/api-client.ts`, `lib/api-validation.ts`, `lib/validation/schemas.ts`, `lib/rate-limit.ts` |
 | Supabase clients (server/client/middleware) | `lib/supabase/*` |
