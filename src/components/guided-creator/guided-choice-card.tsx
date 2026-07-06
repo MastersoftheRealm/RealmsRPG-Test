@@ -159,9 +159,8 @@ export function GuidedChoiceCard({
   const hasExpandedExtra = Boolean(expandedExtra);
 
   useEffect(() => {
-    if (!hasExpandedExtra) return;
     setExpanded(selected);
-  }, [selected, hasExpandedExtra]);
+  }, [selected]);
 
   const layout =
     imageLayout ?? (imageKind ? defaultImageLayoutForKind(imageKind) : imageUrl ? 'thumb' : 'thumb');

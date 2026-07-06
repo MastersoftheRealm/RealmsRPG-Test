@@ -132,7 +132,7 @@ export function LoadoutStep() {
     <GuidedStepLayout
       subStep="loadout"
       title={stepCopy.title}
-      description={customizing ? stepCopy.customize.description : stepCopy.description}
+      description={customizing ? undefined : stepCopy.description}
       canContinue={hasSelection}
       continueLabel={stepCopy.continueLabel}
     >

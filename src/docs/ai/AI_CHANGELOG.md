@@ -1,4 +1,10 @@
 
+- 2026-07-06 | agent | Guided loadout grid column alignment | files: guided-loadout-item-table.tsx, guided-loadout-customize-panel.tsx, loadout-step.tsx | Summary: Kit + customize tables use fixed rem leading columns; customize grid adds inline selection track so headers line up with +/check rows; stats right-aligned; deduped customize description. npm run build pass.
+
+- 2026-07-06 | agent | Archetype ability tag dark mode contrast | files: ability-score-grid.tsx | Summary: Path ability pill ("Archetype Ability") uses solid theme-aware `bg-*-light text-*-fg` instead of 40% opacity backgrounds that vanished on dark surfaces. npm run build pass.
+
+- 2026-07-06 | agent | Guided choice card auto-expand on select | files: guided-choice-card.tsx | Summary: Selecting a choice card now expands Read more content for all cards (overflow text, rich body, feat notices), not only cards with `expandedExtra`. Deselect collapses preview. npm run build pass.
+
 - 2026-07-06 | agent | Collin PR #14 merge audit + creature skills help | files: `lib/tooltips/README.md`, `legacy-tooltip-key-map.ts`, `floating-help.tsx`, `AGENT_GUIDE.md`, `FEATURE_INDEX.md`, `tooltip-text.tsx`, `creature-creator/page.tsx` | Summary: Documented PR #14 → current file map for onboarding; legacy DB key → `tooltip-text` map; restored InfoTippy skill/sub-skill help on creature creator via `SkillsAllocationPage` addons; `getSkillPointsHelp` accepts entity type.
 
 - 2026-07-05 | agent | TASK-422 Phase 3 — Layer 2 customize + admin TP | files: guided-loadout-customize-panel.tsx, loadout-pool.ts, loadout-tp.ts, loadout-step.tsx, path-validation.ts, AdminArchetypesTab.tsx, guided-reveal-summary.tsx, guided-creator-copy.ts, loadout-pool.test.ts, sql/guided-berserker-loadout-fixes-proposed.sql, BUILD_VALIDATION DEV-V-013-T004/T006/T007 | Summary: Mix and match gear opens path-item pool with TP bar; admin save validates loadout TP budget; reveal shows custom loadout label. npm run build + 7 unit tests pass. Data seed for 11 paths remains owner follow-up.

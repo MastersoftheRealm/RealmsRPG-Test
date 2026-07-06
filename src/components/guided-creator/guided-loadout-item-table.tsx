@@ -5,14 +5,30 @@
 'use client';
 
 import { GridListRow, ListHeader } from '@/components/shared';
+import { GRID_LIST_ROW_SELECTION_COLUMN_WIDTH } from '@/components/shared/grid-list-row-chrome';
 import type { ResolvedLoadoutItem } from '@/lib/guided-creator/resolve-loadout-items';
 
-export const LOADOUT_ITEM_GRID_COLUMNS = '1.5fr minmax(5.5rem, auto) minmax(6.5rem, auto)';
+/**
+ * Fixed leading columns + flexible stats — rem tracks align across separate ListHeader /
+ * GridListRow grids; stats absorbs remaining width on the right.
+ */
+export const LOADOUT_ITEM_GRID_COLUMNS = '11rem 6.5rem minmax(0, 1fr)';
+
+/** Customize pool: name / type / TP / stats + inline selection column (matches GridListRow). */
+export const LOADOUT_CUSTOMIZE_GRID_COLUMNS = `11rem 6.5rem 3rem minmax(0, 1fr) ${GRID_LIST_ROW_SELECTION_COLUMN_WIDTH}`;
+
+export const LOADOUT_CUSTOMIZE_HEADER_COLUMNS = [
+  { key: 'name', label: 'NAME', align: 'left' as const, sortable: false as const },
+  { key: 'type', label: 'TYPE', align: 'center' as const, sortable: false as const },
+  { key: 'tp', label: 'TP', align: 'center' as const, sortable: false as const },
+  { key: 'stats', label: 'STATS', align: 'right' as const, sortable: false as const },
+  { key: '_select', label: '', sortable: false as const },
+] as const;
 
 export const LOADOUT_ITEM_HEADER_COLUMNS = [
   { key: 'name', label: 'NAME', align: 'left' as const, sortable: false as const },
   { key: 'type', label: 'TYPE', align: 'center' as const, sortable: false as const },
-  { key: 'stats', label: 'STATS', align: 'center' as const, sortable: false as const },
+  { key: 'stats', label: 'STATS', align: 'right' as const, sortable: false as const },
 ];
 
 function displayName(item: ResolvedLoadoutItem): string {
@@ -60,7 +76,7 @@ export function GuidedLoadoutItemTable({ items, className }: GuidedLoadoutItemTa
                 key: 'stats',
                 label: 'Stats',
                 value: statsCell(item),
-                align: 'center',
+                align: 'right',
                 className: item.statsLine ? 'text-text-primary font-medium' : 'text-text-muted',
               },
             ]}

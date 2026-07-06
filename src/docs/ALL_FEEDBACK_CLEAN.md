@@ -1692,3 +1692,27 @@ Notes
 - Feedback: Equipment step is unfinished vs product overview. Loadouts were added to path DB but current UI is card grid showing only "X items" — not enough. Want branching like archetype feat step + expandable list like skills step so users can inspect individual items per loadout. Pick among loadouts with TP as limiter (Layer 2 for mix/match). Show unarmed prowess only when loadout/path recommends it — no clutter otherwise. Request honest review of goals, DB, and codebase before implementation.
 - Expected: Role-based loadout kits with visible item detail; weapon-then-armor sub-flow optional; Layer 1 invisible TP (pre-validated kits); Layer 2 customize with TP budget; conditional unarmed prowess; admin TP validation on publish.
 - Disposition: TASK-422 Phase 1 implemented 2026-07-05 — enriched loadout cards + expandable item rows + save name resolution.
+
+**Raw Feedback Log — 2026-07-06 (Guided choice card Read more on select)**
+- Date: 2026-07-06
+- Context: Guided character creator — choice cards (feats, species, paths, etc.)
+- Priority: Medium
+- Feedback: When selecting a card that has Read more, the section should auto-expand. Currently selection leaves the Read more link visible instead of showing full copy.
+- Expected: Selecting a card expands its description (and any expandedExtra content); deselecting collapses back to preview.
+- Disposition: Implemented 2026-07-06 — `GuidedChoiceCard` syncs `expanded` to `selected` for all cards, not only those with `expandedExtra`.
+
+**Raw Feedback Log — 2026-07-06 (Archetype ability tag dark mode)**
+- Date: 2026-07-06
+- Context: Guided creator abilities step — `AbilityScoreGrid` path-ability pill ("Archetype Ability" / Power / Martial)
+- Priority: Medium
+- Feedback: In dark mode the archetype ability tag above the highlighted ability is almost invisible — transparent/low contrast.
+- Expected: Tag readable in dark mode with solid tinted background and light archetype text (WCAG AA).
+- Disposition: Implemented 2026-07-06 — `PathAbilityLabel` uses solid `bg-*-light` + `text-*-fg` + `border-*-border` (removed `dark:bg-*-light/40` transparency).
+
+**Raw Feedback Log — 2026-07-06 (Guided loadout grid spacing / header alignment)**
+- Date: 2026-07-06
+- Context: Guided creator → Equipment (loadout) step — kit item tables + Mix and match gear
+- Priority: Medium
+- Feedback: Layer 1 kit rows have too much space between name and type/stats; Mix and match column headers don't line up with row columns.
+- Expected: Tighter proportional columns on kit tables; customize ListHeader reserves selection-column chrome so headers align with selectable rows.
+- Disposition: Implemented 2026-07-06 — fixed rem column tracks in `guided-loadout-item-table.tsx`; customize grid includes inline selection column so ListHeader and GridListRow share five tracks.

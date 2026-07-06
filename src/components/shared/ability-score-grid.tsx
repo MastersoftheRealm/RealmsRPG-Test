@@ -98,10 +98,8 @@ function PathAbilityLabel({ role, hybrid }: { role: PathAbilityRole; hybrid: boo
     <span
       className={cn(
         'pointer-events-none absolute left-1/2 top-0 z-10 max-w-[calc(100%+0.5rem)] -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-pill border px-2 py-px text-[9px] font-semibold uppercase tracking-wide leading-tight font-nunito shadow-sm',
-        role === 'power' &&
-          'border-power bg-power-light text-power-dark dark:border-power-border dark:bg-power-light/40 dark:text-power-300',
-        role === 'martial' &&
-          'border-martial bg-martial-light text-martial-dark dark:border-martial-border dark:bg-martial-light/40 dark:text-martial-300'
+        role === 'power' && 'border-power-border bg-power-light text-power-fg',
+        role === 'martial' && 'border-martial-border bg-martial-light text-martial-fg'
       )}
     >
       {pathAbilityLabel(role, hybrid)}

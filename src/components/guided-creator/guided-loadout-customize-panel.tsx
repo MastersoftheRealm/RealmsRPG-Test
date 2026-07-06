@@ -28,17 +28,16 @@ import {
   wouldExceedLoadoutTp,
 } from '@/lib/guided-creator/loadout-tp';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import {
+  LOADOUT_CUSTOMIZE_GRID_COLUMNS,
+  LOADOUT_CUSTOMIZE_HEADER_COLUMNS,
+} from './guided-loadout-item-table';
 
 const panelCopy = GUIDED_CREATOR_COPY.steps.loadout.customize;
 const layerNavCopy = GUIDED_CREATOR_COPY.layerNav;
 
-const GRID_COLUMNS = '1.5fr minmax(5rem, auto) minmax(3.5rem, auto) minmax(6rem, auto)';
-const HEADER_COLUMNS = [
-  { key: 'name', label: 'NAME', align: 'left' as const, sortable: false as const },
-  { key: 'type', label: 'TYPE', align: 'center' as const, sortable: false as const },
-  { key: 'tp', label: 'TP', align: 'center' as const, sortable: false as const },
-  { key: 'stats', label: 'STATS', align: 'center' as const, sortable: false as const },
-];
+const GRID_COLUMNS = LOADOUT_CUSTOMIZE_GRID_COLUMNS;
+const HEADER_COLUMNS = [...LOADOUT_CUSTOMIZE_HEADER_COLUMNS];
 
 export interface GuidedLoadoutCustomizePanelProps {
   draft: GuidedDraft;
@@ -122,10 +121,8 @@ export function GuidedLoadoutCustomizePanel({
 
   return (
     <div className="space-y-4">
-      <div>
-        <h3 className="font-display text-lg font-semibold text-text-primary">{panelCopy.title}</h3>
-        <p className="mt-1 font-nunito text-sm text-text-secondary">{panelCopy.description}</p>
-      </div>
+      <h3 className="font-display text-lg font-semibold text-text-primary">{panelCopy.title}</h3>
+      <p className="mt-1 font-nunito text-sm text-text-secondary">{panelCopy.description}</p>
 
       <CreatorResourceBar
         layer={2}
@@ -186,7 +183,7 @@ export function GuidedLoadoutCustomizePanel({
                   key: 'stats',
                   label: 'Stats',
                   value: resolved.statsLine ?? '—',
-                  align: 'center',
+                  align: 'right',
                 },
               ]}
             />
