@@ -138,13 +138,27 @@ export function resolveLoadoutItems(
 }
 
 export function loadoutDraftFromSelection(loadout: PathLoadout): {
-  armaments: PathItemRecommendation[];
+  loadoutWeapons: PathItemRecommendation[];
+  loadoutArmor: PathItemRecommendation[];
   equipment: PathItemRecommendation[];
+  armaments: PathItemRecommendation[];
 } {
+  const loadoutWeapons = [...(loadout.armaments ?? [])];
+  const loadoutArmor = [...(loadout.armor ?? [])];
   return {
-    armaments: [...(loadout.armaments ?? []), ...(loadout.armor ?? [])],
+    loadoutWeapons,
+    loadoutArmor,
     equipment: loadout.equipment ?? [],
+    armaments: [...loadoutWeapons, ...loadoutArmor],
   };
+}
+
+/** Keep legacy `armaments` in sync with phased weapon + armor selections. */
+export function mergeLoadoutArmaments(draft: {
+  loadoutWeapons: PathItemRecommendation[];
+  loadoutArmor: PathItemRecommendation[];
+}): PathItemRecommendation[] {
+  return [...draft.loadoutWeapons, ...draft.loadoutArmor];
 }
 
 export function groupResolvedItemsByCategory(

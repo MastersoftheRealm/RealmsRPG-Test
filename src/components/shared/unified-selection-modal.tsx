@@ -24,6 +24,7 @@ import {
   GridListRow, 
   SearchInput, 
   ListHeader,
+  gridColumnsWithInlineSelection,
   FilterSection,
   QuantitySelector,
   ListEmptyState as EmptyState,
@@ -360,7 +361,9 @@ export function UnifiedSelectionModal({
                             totalCost={item.totalCost}
                             costLabel={item.costLabel}
                             badges={item.badges}
-                            gridColumns={gridColumns ? `${gridColumns} 2.5rem` : undefined}
+                            gridColumns={
+                              gridColumns ? gridColumnsWithInlineSelection(gridColumns) : undefined
+                            }
                             selectable
                             isSelected={isSelected}
                             onSelect={() => toggleSelection(item.id)}

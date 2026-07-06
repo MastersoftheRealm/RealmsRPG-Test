@@ -11,7 +11,7 @@
 import { useState, useMemo, useEffect, useRef, ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { SearchInput, IconButton, Alert, Modal, LoadingState, EmptyState, Button } from '@/components/ui';
-import { GridListRow, ListHeader } from '@/components/shared';
+import { GridListRow, ListHeader, gridColumnsWithInlineSelection } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import type { SelectableItem } from '@/components/shared/unified-selection-modal';
 
@@ -165,7 +165,9 @@ export function LoadFromLibraryModal({
                     totalCost={item.totalCost}
                     costLabel={item.costLabel}
                     badges={item.badges}
-                    gridColumns={gridColumns ? `${gridColumns} 2.5rem` : undefined}
+                    gridColumns={
+                      gridColumns ? gridColumnsWithInlineSelection(gridColumns) : undefined
+                    }
                     selectable
                     isSelected={isSelected}
                     onSelect={() => setSelectedId(isSelected ? null : itemIdStr)}

@@ -21,8 +21,11 @@ import type { AbilityName, ArchetypeCategory } from '@/types';
 import { DEFAULT_ABILITIES } from '@/types';
 import type { PathItemRecommendation } from '@/types/archetype';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
 
 const chapterCopy = GUIDED_CREATOR_COPY.chapters;
+
+export type GuidedEquipmentPhase = 'weapon' | 'armor' | 'gear';
 
 /** Chapters shown in the rail. */
 export type GuidedChapterId =
@@ -147,8 +150,17 @@ export interface GuidedDraft {
 
   // Chapter 5 — Equipment / Powers / Techniques
   loadoutId: string | null;
+  /** In-step equipment wizard phase (TASK-424). */
+  equipmentPhase: GuidedEquipmentPhase;
+  /** Weapons + shields selected in loadout step. */
+  loadoutWeapons: PathItemRecommendation[];
+  /** Armor selected in loadout step (empty when unarmored / power). */
+  loadoutArmor: PathItemRecommendation[];
+  /** Combined weapons/shields/armor — kept in sync for legacy callers. */
   armaments: PathItemRecommendation[];
   equipment: PathItemRecommendation[];
+  /** Remaining currency after weapon/armor purchases (starts at 200). */
+  currency: number;
   /** 0 = not taken; level 1 at character creation when path recommends unarmed. */
   unarmedProwess: number;
   powerIds: string[];
@@ -185,8 +197,12 @@ function createInitialDraft(): GuidedDraft {
     archetypeFeatIds: [],
     characterFeatIds: [],
     loadoutId: null,
+    equipmentPhase: 'weapon',
+    loadoutWeapons: [],
+    loadoutArmor: [],
     armaments: [],
     equipment: [],
+    currency: CHARACTER_STARTING_CURRENCY,
     unarmedProwess: 0,
     powerIds: [],
     techniqueIds: [],
@@ -220,7 +236,7 @@ interface GuidedCreatorState {
 }
 
 /** Bump when persisted draft shape changes; old versions migrate forward. */
-const GUIDED_STORE_SCHEMA_VERSION = 4;
+const GUIDED_STORE_SCHEMA_VERSION = 5;
 
 export const useGuidedCreatorStore = create<GuidedCreatorState>()(
   persist(
@@ -322,6 +338,25 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
           };
         }
 
+        if (version < 5 && state.draft) {
+          const legacy = state.draft;
+          const legacyArmaments = legacy.armaments ?? [];
+          state = {
+            ...state,
+            draft: {
+              ...legacy,
+              equipmentPhase: legacy.equipmentPhase ?? 'weapon',
+              loadoutWeapons: legacy.loadoutWeapons ?? legacyArmaments,
+              loadoutArmor: legacy.loadoutArmor ?? [],
+              armaments: legacyArmaments,
+              currency:
+                typeof legacy.currency === 'number'
+                  ? legacy.currency
+                  : CHARACTER_STARTING_CURRENCY,
+            },
+          };
+        }
+
         if (version < 3 && state.draft) {
           const legacy = state.draft;
           const skills: Record<string, number> = legacy.skills ?? {};
@@ -371,6 +406,18 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
         }
         if (typeof draft.unarmedProwess !== 'number') {
           draft.unarmedProwess = 0;
+        }
+        if (!draft.equipmentPhase) {
+          draft.equipmentPhase = 'weapon';
+        }
+        if (!Array.isArray(draft.loadoutWeapons)) {
+          draft.loadoutWeapons = [];
+        }
+        if (!Array.isArray(draft.loadoutArmor)) {
+          draft.loadoutArmor = [];
+        }
+        if (typeof draft.currency !== 'number') {
+          draft.currency = CHARACTER_STARTING_CURRENCY;
         }
         return {
           ...currentState,

@@ -22,6 +22,18 @@ export const GRID_LIST_ROW_ICON_COLUMN_WIDTH = '2.25rem';
 /** Matches min-w-[44px] w-11 selection column */
 export const GRID_LIST_ROW_SELECTION_COLUMN_WIDTH = '2.75rem';
 
+/**
+ * Grid track appended for inline selection toggles — pair with `ListHeader hasSelectionColumn`
+ * and `gridColumnsWithInlineSelection()` on `GridListRow` (UnifiedSelectionModal pattern).
+ * Matches `GridListRow` inline selection wrapper (`min-w-[44px] w-11`).
+ */
+export const GRID_LIST_INLINE_SELECTION_COLUMN_TRACK = GRID_LIST_ROW_SELECTION_COLUMN_WIDTH;
+
+/** Append the standard inline selection column track (must match ListHeader `hasSelectionColumn`). */
+export function gridColumnsWithInlineSelection(gridColumns: string): string {
+  return `${gridColumns} ${GRID_LIST_INLINE_SELECTION_COLUMN_TRACK}`;
+}
+
 /** Matches ListRowThumbnail button: w-11 h-11 (44px) — first grid track when `GridListRow.thumbnail` is set */
 export const GRID_LIST_ROW_THUMBNAIL_COLUMN_WIDTH = '2.75rem';
 

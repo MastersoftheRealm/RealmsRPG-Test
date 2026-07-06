@@ -10,7 +10,7 @@
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { Modal, Button, SearchInput } from '@/components/ui';
-import { GridListRow, ListHeader, ListEmptyState } from '@/components/shared';
+import { GridListRow, ListHeader, ListEmptyState, gridColumnsWithInlineSelection } from '@/components/shared';
 import { useModalListState } from '@/hooks/use-modal-list-state';
 import { calculateProficiencyTP, generateProficiencyId } from '@/lib/proficiencies';
 import type { CharacterProficiency } from '@/types';
@@ -276,7 +276,7 @@ export function AddProficiencyModal({
                         id={id}
                         name={raw.name ?? ''}
                         columns={rowColumns}
-                        gridColumns={gridColumns}
+                        gridColumns={gridColumnsWithInlineSelection(gridColumns)}
                         isSelected={isSelected}
                         onSelect={() => setSelectedId(isSelected ? null : id)}
                         selectable

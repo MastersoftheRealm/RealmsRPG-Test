@@ -85,6 +85,8 @@ export type { ListHeaderProps, ListColumn, ListHeaderRowChrome } from './list-he
 export {
   gridTemplateColumnsWithThumbnail,
   prependThumbnailHeaderColumn,
+  gridColumnsWithInlineSelection,
+  GRID_LIST_INLINE_SELECTION_COLUMN_TRACK,
   GRID_LIST_ROW_THUMBNAIL_COLUMN_WIDTH,
   THUMBNAIL_HEADER_COLUMN_KEY,
 } from './grid-list-row-chrome';

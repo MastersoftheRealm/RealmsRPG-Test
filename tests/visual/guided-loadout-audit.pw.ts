@@ -115,7 +115,7 @@ test('guided loadout step section layout audit', async ({ page, context }) => {
   }
 
   await page.getByRole('button', { name: 'Mix and match gear' }).click();
-  await page.getByRole('heading', { name: 'Mix and match gear', level: 2 }).waitFor({ timeout: 15_000 });
+  await page.getByRole('heading', { name: 'Mix and match gear', level: 3 }).waitFor({ timeout: 15_000 });
   await page.waitForTimeout(500);
   await snap(page, '06-customize-tp-bar', false);
 

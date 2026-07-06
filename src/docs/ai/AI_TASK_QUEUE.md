@@ -2,9 +2,52 @@
 
 **Last slimmed:** 2026-06-26 (TASK-382). Full history: [`archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md`](archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md) and [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md).
 
-**Next task ID:** TASK-424
+**Next task ID:** TASK-425
 
 **Agent rules:** Skip `blocked` tasks and any task with `assignee:` set to a human (e.g. TASK-353, **TASK-414**). Skip human-only tasks (TASK-353 → `DEVELOPER_TASK_QUEUE.md` DEV-001). Pick highest-priority `not-started` or continue `partial`. **Do not start TASK-408–413** until TASK-414 spec is `done` (owner approval).
+
+---
+
+- id: TASK-424
+  title: Guided equipment phased sub-flow (weapon → armor → gear)
+  created_at: 2026-07-06
+  created_by: agent
+  priority: high
+  status: partial
+  completed_work: |
+    Phase 0: GUIDED_EQUIPMENT_PHASED_SPEC.md; FEATURE_INDEX.
+    Phase 1: weapon-attack-ability.ts (+ thrown fix, sheet refactor); equipment-eligibility.ts;
+    equipment-phase-stats.ts; equipment-currency.ts; unit tests.
+    Phase 2: GuidedDraft schema v5; build-character currency + armor/shields; loadoutDraftFromSelection split;
+    archetype armorStep/sharedEquipment types.
+  remaining_work: |
+    Phase 3–7 UI (phase router, L1 cards, L2 modals, kits, remove customize panel).
+    Phase 8 admin; Phase 9 content (owner); Phase 10 BUILD_VALIDATION + Playwright.
+  description: |
+    Replace guided loadout kit picker + monolithic mix-and-match with three in-step phases per
+    REALMS §5.7 and GUIDED_EQUIPMENT_PHASED_SPEC.md. Layer 1 GuidedChoiceCard per phase; Layer 2
+    UnifiedSelectionModal with full filtered Common library. Reuse PointStatus, equipment-currency,
+    weapon-attack-ability, equipment-eligibility libs. Kits = quick presets. armorStep path metadata.
+  related_files:
+    - src/docs/ai/GUIDED_EQUIPMENT_PHASED_SPEC.md
+    - src/components/guided-creator/steps/loadout-step.tsx
+    - src/lib/guided-creator/equipment-eligibility.ts
+    - src/lib/guided-creator/equipment-phase-stats.ts
+    - src/lib/guided-creator/equipment-currency.ts
+    - src/lib/game/weapon-attack-ability.ts
+    - src/stores/guided-creator-store.ts
+    - src/lib/guided-creator/build-character.ts
+    - src/types/archetype.ts
+    - src/components/shared/unified-selection-modal.tsx
+  acceptance_criteria:
+    - Three phases (weapon/shield, armor, gear) with progress chips; armor skippable via armorStep.
+    - Layer 1 choice cards; Layer 2 per-phase UnifiedSelectionModal (full filtered eligible catalog).
+    - L2 filters: ability met, armamentMax per item, Common rarity, gear ≤50c; weapon ranking by path + archetype ability.
+    - Currency persists on draft after weapon/armor spend; shared components only (no CreatorResourceBar).
+    - Kits pre-fill all phases; Berserker pilot end-to-end; npm run build passes.
+  notes: |
+    Parent TASK-422. Spec in src/docs/ai/GUIDED_EQUIPMENT_PHASED_SPEC.md (human/ path cursorignored).
+    Phases 0–1 libs first; UI phases 3–7; content TASK-423 owner-gated.
 
 ---
 
@@ -54,12 +97,13 @@
     reveal customLoadout copy; proposed Berserker SQL in sql/guided-berserker-loadout-fixes-proposed.sql;
     unit tests loadout-pool.test.ts + resolve-loadout-items.test.ts; npm run build passes.
   remaining_work: |
-    - Loadout content for 11/12 paths (owner data seed).
+    - Superseded by TASK-424 phased sub-flow (weapon → armor → gear).
+    - Loadout content for 11/12 paths (owner data seed, TASK-423).
     - Apply Berserker kit data fixes after owner approves proposed SQL.
-    - Layer 2 full equipment catalog (beyond path pool) — optional follow-up.
   follow_up_tasks:
     - TASK-404
     - TASK-423
+    - TASK-424
   notes: |
     Owner review 2026-07-05: TASK-401 shipped minimal cards; product vision in REALMS §5.7 not met.
     Advanced equipment-step has weapon/armor phases + item resolution but does not read level1_loadouts.

@@ -354,6 +354,8 @@ export const GridListRow = memo(function GridListRow({
   const inlineEdit = !!onEdit && remainingInlineActionTracks > 0;
   if (inlineEdit) remainingInlineActionTracks -= 1;
   const inlineRightSlot = !!rightSlot && remainingInlineActionTracks > 0;
+  const inlineWarning = !!warningMessage && remainingInlineActionTracks > 0;
+  if (inlineWarning) remainingInlineActionTracks -= 1;
 
   return (
     <div className={rowStyles}>
@@ -476,8 +478,8 @@ export const GridListRow = memo(function GridListRow({
             </div>
           )}
           
-          {/* Warning indicator */}
-          {warningMessage && (
+          {/* Warning indicator — only when a grid track is free (full grids use expanded/title fallback) */}
+          {inlineWarning && (
             <div className="flex items-center text-warning-fg" title={warningMessage}>
               <AlertCircle className="w-4 h-4" />
             </div>
@@ -523,6 +525,7 @@ export const GridListRow = memo(function GridListRow({
               )}
               onClick={(e) => e.stopPropagation()}
               role="presentation"
+              title={disabled && warningMessage && !inlineWarning ? warningMessage : undefined}
             >
               <SelectionToggle
                 isSelected={!!isSelected}

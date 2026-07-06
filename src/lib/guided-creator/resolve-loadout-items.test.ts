@@ -58,6 +58,8 @@ describe('resolve-loadout-items', () => {
 
   it('maps loadout selection to draft armaments and equipment', () => {
     expect(loadoutDraftFromSelection(loadout)).toEqual({
+      loadoutWeapons: [{ id: '486b9ac9-16e3-49f8-80de-6d4c9ebbf3bc', quantity: 1 }],
+      loadoutArmor: [{ id: '8ca40c97-851c-4381-a6dd-e0724a6927cf', quantity: 1 }],
       armaments: [
         { id: '486b9ac9-16e3-49f8-80de-6d4c9ebbf3bc', quantity: 1 },
         { id: '8ca40c97-851c-4381-a6dd-e0724a6927cf', quantity: 1 },

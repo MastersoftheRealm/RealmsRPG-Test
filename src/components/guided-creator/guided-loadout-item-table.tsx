@@ -5,24 +5,22 @@
 'use client';
 
 import { GridListRow, ListHeader } from '@/components/shared';
-import { GRID_LIST_ROW_SELECTION_COLUMN_WIDTH } from '@/components/shared/grid-list-row-chrome';
 import type { ResolvedLoadoutItem } from '@/lib/guided-creator/resolve-loadout-items';
 
 /**
- * Fixed leading columns + flexible stats — rem tracks align across separate ListHeader /
- * GridListRow grids; stats absorbs remaining width on the right.
+ * Fractional tracks (equipment-step pattern) — shared on ListHeader + GridListRow.
+ * @see UnifiedSelectionModal — append `gridColumnsWithInlineSelection` + `hasSelectionColumn` when selectable.
  */
-export const LOADOUT_ITEM_GRID_COLUMNS = '11rem 6.5rem minmax(0, 1fr)';
+export const LOADOUT_ITEM_GRID_COLUMNS = '1.6fr 0.7fr 1fr';
 
-/** Customize pool: name / type / TP / stats + inline selection column (matches GridListRow). */
-export const LOADOUT_CUSTOMIZE_GRID_COLUMNS = `11rem 6.5rem 3rem minmax(0, 1fr) ${GRID_LIST_ROW_SELECTION_COLUMN_WIDTH}`;
+/** Base four-column grid for mix-and-match; selection column added via unified modal pattern. */
+export const LOADOUT_CUSTOMIZE_GRID_COLUMNS = '1.6fr 0.55fr 3.5rem 1fr';
 
 export const LOADOUT_CUSTOMIZE_HEADER_COLUMNS = [
   { key: 'name', label: 'NAME', align: 'left' as const, sortable: false as const },
   { key: 'type', label: 'TYPE', align: 'center' as const, sortable: false as const },
   { key: 'tp', label: 'TP', align: 'center' as const, sortable: false as const },
   { key: 'stats', label: 'STATS', align: 'right' as const, sortable: false as const },
-  { key: '_select', label: '', sortable: false as const },
 ] as const;
 
 export const LOADOUT_ITEM_HEADER_COLUMNS = [

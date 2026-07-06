@@ -87,6 +87,10 @@ export interface ArchetypePathRecommendations {
   equipmentRecommendations?: PathItemRecommendation[];
   /** When true, path recommends Unarmed Prowess proficiency (equipment step simplified view) */
   recommendUnarmedProwess?: boolean;
+  /** Guided equipment phase 2: skip armor, optional unarmored, or required. */
+  armorStep?: 'required' | 'optional' | 'none';
+  /** Gear included for all kits on this path (bandages, potions) — not repeated per loadout. */
+  sharedEquipment?: PathItemRecommendation[];
   removeFeats?: string[];
   removePowers?: string[];
   removeTechniques?: string[];

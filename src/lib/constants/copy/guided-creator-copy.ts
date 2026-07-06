@@ -213,6 +213,7 @@ export const GUIDED_CREATOR_COPY = {
       customize: {
         expandLabel: 'Mix and match gear',
         title: 'Mix and match gear',
+        trainingPointsLabel: 'Training points',
         description:
           'Choose items from your path recommendations. Training Points show how much armament proficiency your selections use.',
         atCap: 'You are at your Training Point limit — deselect an item to swap.',

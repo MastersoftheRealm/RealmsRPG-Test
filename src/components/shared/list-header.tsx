@@ -23,6 +23,7 @@ import {
   GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH,
   GRID_LIST_ROW_ICON_COLUMN_WIDTH,
   GRID_LIST_ROW_SELECTION_COLUMN_WIDTH,
+  GRID_LIST_INLINE_SELECTION_COLUMN_TRACK,
   gridTemplateColumnsWithThumbnail,
   prependThumbnailHeaderColumn,
   THUMBNAIL_HEADER_COLUMN_KEY,
@@ -117,8 +118,10 @@ export function ListHeader({
   const selectionColumnInGrid =
     !rightSlotWidth && hasSelectionColumn && !rowChrome?.externalSelection;
 
-  // Add selection column space when the selection toggle lives inside the row grid (e.g. modals append `2.5rem`)
-  const finalGridTemplate = selectionColumnInGrid ? `${gridTemplate} 2.5rem` : gridTemplate;
+  // Add selection column space when the selection toggle lives inside the row grid (inline track constant)
+  const finalGridTemplate = selectionColumnInGrid
+    ? `${gridTemplate} ${GRID_LIST_INLINE_SELECTION_COLUMN_TRACK}`
+    : gridTemplate;
 
   const handleColumnClick = (column: ListColumn) => {
     if (column.sortable !== false && onSort) {

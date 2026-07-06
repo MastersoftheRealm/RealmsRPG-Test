@@ -4,7 +4,8 @@ import { SectionHeader } from '@/components/shared/section-header';
 import { RollButton } from '@/components/shared/roll-button';
 import { TableScroll } from '@/components/ui';
 import { cn, formatDamageDisplay } from '@/lib/utils';
-import { deriveShieldAmountFromProperties, formatRange } from '@/lib/calculators/item-calc';
+import { deriveShieldAmountFromProperties } from '@/lib/calculators/item-calc';
+import { getWeaponAttackBonusFromProperties } from '@/lib/game/weapon-attack-ability';
 import { useRollsOptional } from '@/components/character-sheet/roll-context';
 
 export type QuickArmamentAbilities = {
@@ -38,14 +39,23 @@ function resolveQuickArmamentProperties(item: QuickArmamentItem): NonNullable<Qu
   return item.properties || [];
 }
 
-/** Attack bonus: Ability + martial proficiency. Finesse → Agility; Range (non-melee) → Acuity; else Strength. */
+/** Attack bonus: Ability + martial proficiency (shared weapon-attack-ability). */
 function getAttackBonus(item: QuickArmamentItem, abilities: QuickArmamentAbilities, martialProf: number): number {
   const rawProps = resolveQuickArmamentProperties(item);
-  const props = getPropertyNames(rawProps).map((p) => p.toLowerCase());
-  if (props.includes('finesse')) return (abilities.agility ?? 0) + martialProf;
-  const rangeStr = item.range ?? formatRange(rawProps as { id?: number; name?: string; op_1_lvl?: number }[]);
-  if (String(rangeStr).toLowerCase() !== 'melee') return (abilities.acuity ?? 0) + martialProf;
-  return (abilities.strength ?? 0) + martialProf;
+  const fullAbilities = {
+    strength: abilities.strength ?? 0,
+    agility: abilities.agility ?? 0,
+    acuity: abilities.acuity ?? 0,
+    vitality: 0,
+    intelligence: 0,
+    charisma: 0,
+  };
+  return getWeaponAttackBonusFromProperties(
+    rawProps,
+    fullAbilities,
+    martialProf,
+    item.range
+  ).bonus;
 }
 
 function parseDamageDiceAndType(damage: unknown): { dice: string; type: string; rollStr: string } {

@@ -5,8 +5,13 @@
 'use client';
 
 import { useMemo, useCallback } from 'react';
-import { GridListRow, ListHeader, GuidedLayerNav } from '@/components/shared';
-import { CreatorResourceBar } from '@/components/character-creator/CreatorResourceBar';
+import {
+  GridListRow,
+  ListHeader,
+  GuidedLayerNav,
+  gridColumnsWithInlineSelection,
+  PointStatus,
+} from '@/components/shared';
 import { useGameRules, useItemProperties } from '@/hooks';
 import type { PathItemRecommendation } from '@/types/archetype';
 import {
@@ -67,7 +72,7 @@ export function GuidedLoadoutCustomizePanel({
   const poolRows = useMemo(() => {
     return pool.map((ref) => {
       const resolved = resolveEquipmentRef(ref, lookup, panelCopy.unresolvedItem);
-          const tp = resolveItemTrainingPoints(ref.id, officialItems, codexEquipment, itemProperties) ?? 0;
+      const tp = resolveItemTrainingPoints(ref.id, officialItems, codexEquipment, itemProperties) ?? 0;
       return { ref, resolved, tp };
     });
   }, [pool, lookup, officialItems, codexEquipment, itemProperties]);
@@ -124,18 +129,26 @@ export function GuidedLoadoutCustomizePanel({
       <h3 className="font-display text-lg font-semibold text-text-primary">{panelCopy.title}</h3>
       <p className="mt-1 font-nunito text-sm text-text-secondary">{panelCopy.description}</p>
 
-      <CreatorResourceBar
-        layer={2}
-        creationMode="path"
-        trainingPoints={{ spent: tpSummary.spent, limit: tpSummary.limit }}
-        className="mb-0"
-      />
+      <div className="flex justify-center">
+        <PointStatus
+          total={tpSummary.limit}
+          spent={tpSummary.spent}
+          label={panelCopy.trainingPointsLabel}
+          variant="inline"
+          className="text-base"
+        />
+      </div>
 
       {atCap ? (
         <p className="font-nunito text-sm text-warning-700 dark:text-warning-400">{panelCopy.atCap}</p>
       ) : null}
 
-      <ListHeader columns={HEADER_COLUMNS} gridColumns={GRID_COLUMNS} compact />
+      <ListHeader
+        columns={HEADER_COLUMNS}
+        gridColumns={GRID_COLUMNS}
+        compact
+        hasSelectionColumn
+      />
 
       <div className="flex flex-col gap-1">
         {poolRows.map(({ ref, resolved, tp }) => {
@@ -158,7 +171,7 @@ export function GuidedLoadoutCustomizePanel({
               id={`${ref.id}-${ref.quantity}`}
               name={`${resolved.name}${qtySuffix}`}
               description={resolved.description}
-              gridColumns={GRID_COLUMNS}
+              gridColumns={gridColumnsWithInlineSelection(GRID_COLUMNS)}
               compact
               selectable
               isSelected={selected}

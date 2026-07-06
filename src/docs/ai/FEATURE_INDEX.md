@@ -17,6 +17,7 @@
 | Character creator | `character-creator/` (wizard steps under `components/character-creator/steps/`) |
 | Character creator entry (Simple vs Advanced) | `characters/new/page.tsx` |
 | Guided ("Simple") character creator | `characters/new/guided/page.tsx`, `components/guided-creator/` (incl. `GuidedSkillsPanel`, `GuidedChoiceCard`), `stores/guided-creator-store.ts`, `lib/guided-creator/build-character.ts` |
+| Guided equipment phased sub-flow (TASK-424) | `GUIDED_EQUIPMENT_PHASED_SPEC.md`, `lib/guided-creator/equipment-eligibility.ts`, `equipment-phase-stats.ts`, `equipment-currency.ts`, `lib/game/weapon-attack-ability.ts` |
 | Advanced character creator (classic 9-step) | `characters/new/advanced/page.tsx` |
 | Library (user + official content browse) | `library/page.tsx` |
 | Codex (rules data browser) | `codex/page.tsx` |

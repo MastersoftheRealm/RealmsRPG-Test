@@ -17,7 +17,8 @@ import type { TraitWithChoiceOptions } from '@/lib/choice-trait';
 import type { GuidedDraft } from '@/stores/guided-creator-store';
 import type { Archetype, ArchetypePathData } from '@/types/archetype';
 import type { Species, Trait } from '@/hooks';
-import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
+import { computeStartingCurrency } from '@/lib/guided-creator/equipment-currency';
+import { mergeLoadoutArmaments } from '@/lib/guided-creator/resolve-loadout-items';
 import { buildSuggestedAbilityArray } from '@/lib/game/suggested-abilities';
 import { buildGuidedSkillsArray } from '@/lib/guided-creator/build-skills';
 
@@ -95,22 +96,48 @@ export function buildGuidedCharacterPayload(
 
   const inventory = (() => {
     const lookup = buildEquipmentLookup(ctx.officialItems, ctx.codexEquipment);
-    const rows: Array<{ id: string; name: string; quantity: number; type: 'weapon' | 'armor' | 'equipment' }> = [];
+    const rows: Array<{
+      id: string;
+      name: string;
+      quantity: number;
+      type: 'weapon' | 'armor' | 'equipment' | 'shield';
+    }> = [];
 
     const pushRow = (ref: { id: string; quantity: number }) => {
       const resolved = resolveEquipmentRef(ref, lookup);
+      const key = String(ref.id).trim().toLowerCase();
+      const official = ctx.officialItems?.find(
+        (i) => String(i.id).trim().toLowerCase() === key
+      );
+      const codex = ctx.codexEquipment?.find(
+        (i) => String(i.id).trim().toLowerCase() === key
+      );
+      const rawType = String(official?.type ?? codex?.type ?? '').toLowerCase();
+      let type: 'weapon' | 'armor' | 'equipment' | 'shield' = inventoryTypeForResolvedItem(resolved);
+      if (rawType === 'shield') type = 'shield';
+
       rows.push({
         id: ref.id,
         name: resolved.name,
         quantity: ref.quantity,
-        type: inventoryTypeForResolvedItem(resolved),
+        type,
       });
     };
 
-    draft.armaments.forEach(pushRow);
+    const armamentRefs = mergeLoadoutArmaments({
+      loadoutWeapons: draft.loadoutWeapons ?? [],
+      loadoutArmor: draft.loadoutArmor ?? [],
+    });
+    const allRefs =
+      armamentRefs.length > 0 ? armamentRefs : draft.armaments;
+    allRefs.forEach(pushRow);
     draft.equipment.forEach(pushRow);
     return rows;
   })();
+
+  const startingCurrency = computeStartingCurrency(level);
+  const savedCurrency =
+    typeof draft.currency === 'number' ? draft.currency : startingCurrency;
 
   return {
     name: draft.name.trim() || 'Unnamed Character',
@@ -132,7 +159,7 @@ export function buildGuidedCharacterPayload(
     energyPoints: enAlloc,
     health: { current: maxHealth, max: maxHealth },
     energy: { current: maxEnergy, max: maxEnergy },
-    currency: CHARACTER_STARTING_CURRENCY,
+    currency: savedCurrency,
     unarmedProwess: draft.unarmedProwess ?? 0,
     ancestry,
     skills: skillsArray as unknown as Character['skills'],
@@ -143,9 +170,9 @@ export function buildGuidedCharacterPayload(
     equipment: {
       inventory,
       weapons: inventory.filter((i) => i.type === 'weapon'),
-      armor: [],
+      armor: inventory.filter((i) => i.type === 'armor'),
       items: inventory.filter((i) => i.type === 'equipment'),
-      shields: [],
+      shields: inventory.filter((i) => i.type === 'shield'),
     },
     defenseVals: { ...DEFAULT_DEFENSE_SKILLS },
     portrait: draft.portraitUrl ?? undefined,
