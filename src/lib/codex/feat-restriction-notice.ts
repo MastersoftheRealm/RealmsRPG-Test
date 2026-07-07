@@ -18,7 +18,8 @@ function formatUsesCount(uses: number): string {
   return uses === 1 ? 'once' : `${uses} times`;
 }
 
-function formatRecoveryPeriod(recPeriod: string | undefined): string {
+function formatRecoveryPeriod(recPeriod: string | undefined, forceFull = false): string {
+  if (forceFull) return 'Full';
   const label = formatListCellLabel(recPeriod);
   return label === '-' ? 'recovery' : label;
 }
@@ -43,7 +44,7 @@ export function getFeatRestrictionNotice(
   }
 
   if (hasFeatUses) {
-    const period = formatRecoveryPeriod(recPeriod);
+    const period = formatRecoveryPeriod(recPeriod, feat.state_feat === true);
     parts.push(
       `This feat can be used ${formatUsesCount(uses)} per ${period} Recovery.`
     );

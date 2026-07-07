@@ -12,7 +12,7 @@ import { deleteCodexDoc, saveArchetypeWithPath } from './actions';
 import { Pencil, Copy, X } from 'lucide-react';
 import { getFeatLevel, formatFeatName } from '@/lib/leveled-feats';
 import { formatListCellLabel } from '@/lib/utils';
-import { parseArchetypePathData, pathHiddenFromPlayerPicker } from '@/lib/game/archetype-path';
+import { parseArchetypePathData, pathHiddenFromPlayerPicker, parseLevel1LoadoutsField, serializeLevel1LoadoutsField, type Level1ArmorStep } from '@/lib/game/archetype-path';
 import { validatePathDataForPublish } from '@/lib/game/path-validation';
 import {
   createItemTpResolver,
@@ -24,9 +24,28 @@ const ABILITY_OPTIONS = ['strength', 'vitality', 'agility', 'acuity', 'intellige
 
 function guidedJsonFromPath(pathData: unknown, field: 'recommended_abilities' | 'loadouts'): string {
   const level1 = parseArchetypePathData(pathData)?.level1;
-  const value = field === 'recommended_abilities' ? level1?.recommended_abilities : level1?.loadouts;
-  if (value == null || (Array.isArray(value) && value.length === 0)) return '';
-  return JSON.stringify(value, null, 2);
+  if (field === 'recommended_abilities') {
+    const value = level1?.recommended_abilities;
+    if (value == null || Object.keys(value).length === 0) return '';
+    return JSON.stringify(value, null, 2);
+  }
+  const loadouts = level1?.loadouts;
+  if (!loadouts?.length) return '';
+  return JSON.stringify(loadouts, null, 2);
+}
+
+function guidedEquipmentMetaFromPath(pathData: unknown): {
+  armorStep: Level1ArmorStep | '';
+  sharedEquipmentEntries: PathItemEntry[];
+} {
+  const level1 = parseArchetypePathData(pathData)?.level1;
+  return {
+    armorStep: level1?.armorStep ?? '',
+    sharedEquipmentEntries: (level1?.sharedEquipment ?? []).map((entry) => ({
+      id: entry.id,
+      quantity: entry.quantity ?? 1,
+    })),
+  };
 }
 
 function parseOptionalJsonField(raw: string, label: string): { ok: true; value: unknown } | { ok: false; error: string } {
@@ -258,6 +277,8 @@ export function AdminArchetypesTab() {
     advancedPathJson: '',
     guidedRecommendedAbilitiesJson: '',
     guidedLoadoutsJson: '',
+    guidedArmorStep: '' as Level1ArmorStep | '',
+    guidedSharedEquipmentEntries: [] as PathItemEntry[],
   });
 
   const filtered = (archetypes || []).filter(
@@ -497,6 +518,8 @@ export function AdminArchetypesTab() {
       advancedPathJson: '',
       guidedRecommendedAbilitiesJson: '',
       guidedLoadoutsJson: '',
+      guidedArmorStep: '',
+      guidedSharedEquipmentEntries: [],
     });
     setModalOpen(true);
   };
@@ -516,6 +539,7 @@ export function AdminArchetypesTab() {
 
     setEditing(null);
     setCopySourceName(a.name || '');
+    const equipmentMeta = guidedEquipmentMetaFromPath(a.path_data);
     setForm({
       name: ((a.name || '').trim() || 'Archetype') + COPY_NAME_SUFFIX,
       type: (a.type || 'power') as 'power' | 'powered-martial' | 'martial',
@@ -531,6 +555,8 @@ export function AdminArchetypesTab() {
       advancedPathJson: '',
       guidedRecommendedAbilitiesJson: guidedJsonFromPath(a.path_data, 'recommended_abilities'),
       guidedLoadoutsJson: guidedJsonFromPath(a.path_data, 'loadouts'),
+      guidedArmorStep: equipmentMeta.armorStep,
+      guidedSharedEquipmentEntries: equipmentMeta.sharedEquipmentEntries,
     });
     setModalOpen(true);
   };
@@ -550,6 +576,7 @@ export function AdminArchetypesTab() {
 
     setEditing(a);
     setCopySourceName(null);
+    const equipmentMeta = guidedEquipmentMetaFromPath(a.path_data);
     setForm({
       name: a.name || '',
       type: (a.type || 'power') as 'power' | 'powered-martial' | 'martial',
@@ -565,6 +592,8 @@ export function AdminArchetypesTab() {
       advancedPathJson: '',
       guidedRecommendedAbilitiesJson: guidedJsonFromPath(a.path_data, 'recommended_abilities'),
       guidedLoadoutsJson: guidedJsonFromPath(a.path_data, 'loadouts'),
+      guidedArmorStep: equipmentMeta.armorStep,
+      guidedSharedEquipmentEntries: equipmentMeta.sharedEquipmentEntries,
     });
     setModalOpen(true);
   };
@@ -646,7 +675,9 @@ export function AdminArchetypesTab() {
     const previewLevel1 = level1Override || (structuredPathData?.level1 as Record<string, unknown> | undefined) || {};
     const previewExistingLevel1 = editing ? parseArchetypePathData(editing.path_data)?.level1 : undefined;
     const previewLoadouts =
-      loadoutsParseEarly.value ?? previewExistingLevel1?.loadouts ?? undefined;
+      loadoutsParseEarly.value != null
+        ? parseLevel1LoadoutsField(loadoutsParseEarly.value).loadouts
+        : previewExistingLevel1?.loadouts;
     const previewAbilities =
       (abilitiesParseEarly.value as Record<string, number> | undefined) ??
       previewExistingLevel1?.recommended_abilities;
@@ -656,6 +687,10 @@ export function AdminArchetypesTab() {
         ...previewLevel1,
         ...(previewLoadouts ? { loadouts: previewLoadouts } : {}),
         ...(previewAbilities ? { recommended_abilities: previewAbilities } : {}),
+        ...(form.guidedArmorStep ? { armorStep: form.guidedArmorStep } : {}),
+        ...(form.guidedSharedEquipmentEntries.length
+          ? { sharedEquipment: form.guidedSharedEquipmentEntries }
+          : {}),
       },
     });
     if (pathForValidation?.level1) {
@@ -698,10 +733,17 @@ export function AdminArchetypesTab() {
       abilitiesParseEarly.value ??
       existingLevel1?.recommended_abilities ??
       null;
-    const preservedLoadouts =
-      loadoutsParseEarly.value ??
-      existingLevel1?.loadouts ??
-      null;
+    const kitsFromJson =
+      loadoutsParseEarly.value != null
+        ? parseLevel1LoadoutsField(loadoutsParseEarly.value).loadouts
+        : previewExistingLevel1?.loadouts;
+    const preservedLoadouts = serializeLevel1LoadoutsField({
+      loadouts: kitsFromJson ?? undefined,
+      armorStep: form.guidedArmorStep || undefined,
+      sharedEquipment: form.guidedSharedEquipmentEntries.length
+        ? form.guidedSharedEquipmentEntries
+        : undefined,
+    });
 
     const result = await saveArchetypeWithPath({
       ...(editing ? { id: editing.id } : {}),
@@ -1164,8 +1206,99 @@ export function AdminArchetypesTab() {
             <div className="space-y-3 rounded-md border border-border-light p-3">
               <h4 className="text-sm font-medium text-text-primary">Guided creator (Simple)</h4>
               <p className="text-xs text-text-muted dark:text-text-secondary">
-                Powers the guided character creator: one-click ability arrays and equipment loadout cards.
+                Powers the guided character creator: one-click ability arrays and phased equipment loadouts.
               </p>
+              <div>
+                <label htmlFor="guided-armor-step" className="block text-sm font-medium text-text-secondary mb-1">
+                  Armor step (guided loadout)
+                </label>
+                <select
+                  id="guided-armor-step"
+                  value={form.guidedArmorStep}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      guidedArmorStep: e.target.value as Level1ArmorStep | '',
+                    }))
+                  }
+                  className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+                  aria-describedby="guided-armor-step-desc"
+                >
+                  <option value="">Default (power → none; martial → required)</option>
+                  <option value="required">Required — armor phase mandatory</option>
+                  <option value="optional">Optional — player may skip armor</option>
+                  <option value="none">None — skip armor phase</option>
+                </select>
+                <p id="guided-armor-step-desc" className="mt-1 text-xs text-text-muted dark:text-text-secondary">
+                  Controls whether the guided loadout step includes an armor sub-phase.
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">
+                  Shared path gear (merged into every kit)
+                </label>
+                <ChipSelect
+                  label="Add shared gear item"
+                  placeholder="Select equipment for all kits"
+                  options={equipmentOptions}
+                  selectedValues={[]}
+                  onSelect={(value) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      guidedSharedEquipmentEntries: [
+                        ...prev.guidedSharedEquipmentEntries,
+                        { id: value, quantity: 1 },
+                      ],
+                    }))
+                  }
+                  onRemove={() => {}}
+                />
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {form.guidedSharedEquipmentEntries.map((entry, idx) => {
+                    const label =
+                      equipmentOptions.find((o) => o.value === entry.id)?.label ?? entry.id;
+                    return (
+                      <div
+                        key={`${entry.id}-${idx}`}
+                        className="flex items-center gap-1 rounded-lg border border-border-light bg-surface px-2 py-1"
+                      >
+                        <span className="text-sm truncate max-w-[120px]">{label}</span>
+                        <Input
+                          type="number"
+                          min={1}
+                          value={String(entry.quantity)}
+                          onChange={(e) => {
+                            const q = Math.max(1, parseInt(e.target.value, 10) || 1);
+                            setForm((prev) => ({
+                              ...prev,
+                              guidedSharedEquipmentEntries: prev.guidedSharedEquipmentEntries.map(
+                                (item, i) => (i === idx ? { ...item, quantity: q } : item)
+                              ),
+                            }));
+                          }}
+                          className="w-14 text-center"
+                          aria-label={`Quantity for shared gear ${label}`}
+                        />
+                        <IconButton
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            setForm((prev) => ({
+                              ...prev,
+                              guidedSharedEquipmentEntries: prev.guidedSharedEquipmentEntries.filter(
+                                (_, i) => i !== idx
+                              ),
+                            }))
+                          }
+                          label={`Remove shared gear ${label}`}
+                        >
+                          <X className="w-4 h-4" />
+                        </IconButton>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
               <div>
                 <label htmlFor="guided-recommended-abilities" className="block text-sm font-medium text-text-secondary mb-1">
                   Recommended abilities (JSON object)

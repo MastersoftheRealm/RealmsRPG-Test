@@ -20,9 +20,18 @@
     equipment-phase-stats.ts; equipment-currency.ts; unit tests.
     Phase 2: GuidedDraft schema v5; build-character currency + armor/shields; loadoutDraftFromSelection split;
     archetype armorStep/sharedEquipment types.
+    Phase 3: equipment-phase-nav.ts; guided-equipment-phase-progress/layout; loadout-step phased router
+    (SegmentedControl, in-step footer nav, L2 See more); armorStep parse; armaments sync.
+    Phase 4–6: guided-equipment-l1-phase.tsx (unified weapon/armor/gear L1 GuidedChoiceCard);
+    guided-equipment-l2-modal.tsx + guided-equipment-l2.ts (UnifiedSelectionModal, PointStatus);
+    use-guided-equipment-catalog.ts hook; equipment-catalog-rows.ts; equipment-phase-candidates.ts.
+    Phase 7: guided-loadout-kit-presets.tsx (quick kit GuidedChoiceCard); removed customize panel + loadout section.
+    Phase 8: admin armorStep select + shared path gear; level1_loadouts object wrapper (kits + metadata);
+    parseLevel1LoadoutsField / serializeLevel1LoadoutsField; archetype-display loadouts column parity.
+    Final: guided-equipment-phase-selection.tsx; guided-equipment-l2-grid.ts; resolveRefUnitCost helper.
   remaining_work: |
-    Phase 3–7 UI (phase router, L1 cards, L2 modals, kits, remove customize panel).
-    Phase 8 admin; Phase 9 content (owner); Phase 10 BUILD_VALIDATION + Playwright.
+    Phase 9 path loadout content (owner, TASK-423).
+    Phase 10 BUILD_VALIDATION sign-off + Playwright audit run against live seed.
   description: |
     Replace guided loadout kit picker + monolithic mix-and-match with three in-step phases per
     REALMS §5.7 and GUIDED_EQUIPMENT_PHASED_SPEC.md. Layer 1 GuidedChoiceCard per phase; Layer 2
@@ -59,8 +68,8 @@
   status: partial
   build_validation: DEV-V-013-T004, DEV-V-013-T006, DEV-V-013-T007
   developer_test_plan: |
-    DEV-V-013-T004 — Berserker loadout sections with resolved item rows.
-    DEV-V-013-T006 — Mix and match gear opens Layer 2 with TP bar.
+    DEV-V-013-T004 — Berserker quick kits + phased weapon L1 cards.
+    DEV-V-013-T006 — See more opens Layer 2 modal with TP bar.
     DEV-V-013-T007 — Admin path save rejects loadout exceeding TP budget.
   description: |
     Replace minimal guided loadout cards ("X items" only) with feat-style branching loadout groups +
@@ -71,7 +80,11 @@
     Seed loadouts for paths beyond Berserker; align guidance_groups kit vs level1_loadouts model.
   related_files:
     - src/components/guided-creator/steps/loadout-step.tsx
-    - src/components/guided-creator/guided-loadout-item-table.tsx
+    - src/components/guided-creator/guided-equipment-l1-phase.tsx
+    - src/components/guided-creator/guided-equipment-l2-modal.tsx
+    - src/components/guided-creator/guided-equipment-l2-grid.ts
+    - src/components/guided-creator/guided-loadout-kit-presets.tsx
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
     - src/lib/guided-creator/resolve-loadout-items.ts
     - src/components/character-creator/steps/equipment-step.tsx
     - src/lib/game/path-validation.ts

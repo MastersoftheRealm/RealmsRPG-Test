@@ -46,8 +46,12 @@ function seedGuidedStorage(subStep: string, draft: Record<string, unknown>) {
         archetypeFeatIds: [],
         characterFeatIds: [],
         loadoutId: null,
+        equipmentPhase: 'weapon',
+        loadoutWeapons: [],
+        loadoutArmor: [],
         armaments: [],
         equipment: [],
+        currency: null,
         unarmedProwess: 0,
         powerIds: [],
         techniqueIds: [],
@@ -62,7 +66,7 @@ function seedGuidedStorage(subStep: string, draft: Record<string, unknown>) {
         ...draft,
       },
     },
-    version: 4,
+    version: 5,
   };
 }
 
@@ -76,7 +80,7 @@ async function snap(page: import('@playwright/test').Page, name: string, fullPag
   });
 }
 
-test('guided loadout step section layout audit', async ({ page, context }) => {
+test('guided loadout step phased layout audit', async ({ page, context }) => {
   await context.addInitScript(themeInit('light'), 'light');
 
   const storage = seedGuidedStorage('loadout', {
@@ -99,25 +103,29 @@ test('guided loadout step section layout audit', async ({ page, context }) => {
 
   await snap(page, '01-loadout-full-page');
 
-  const greataxeHeading = page.getByRole('heading', { name: 'Greataxe bruiser', level: 3 });
-  await greataxeHeading.scrollIntoViewIfNeeded();
-  await snap(page, '02-greataxe-section', false);
+  await page.getByRole('heading', { name: 'Quick kits', level: 3 }).scrollIntoViewIfNeeded();
+  await snap(page, '02-quick-kits', false);
 
-  await page.getByRole('button', { name: 'Use this kit' }).first().click();
-  await page.waitForTimeout(400);
-  await snap(page, '03-sword-shield-selected');
-
-  const battleaxeRow = page.getByRole('button', { name: /Battleaxe/i }).first();
-  if (await battleaxeRow.count()) {
-    await battleaxeRow.click();
-    await page.waitForTimeout(300);
-    await snap(page, '04-item-expanded', false);
+  const swordKit = page.getByLabel(/Apply kit Sword/i);
+  if (await swordKit.count()) {
+    await swordKit.first().click();
+    await page.waitForTimeout(400);
+    await snap(page, '03-sword-shield-selected');
   }
 
-  await page.getByRole('button', { name: 'Mix and match gear' }).click();
-  await page.getByRole('heading', { name: 'Mix and match gear', level: 3 }).waitFor({ timeout: 15_000 });
+  const battleaxeCard = page.getByLabel(/Select Battleaxe/i);
+  if (await battleaxeCard.count()) {
+    await battleaxeCard.first().click();
+    await page.waitForTimeout(300);
+    await snap(page, '04-weapon-l1-selected', false);
+  }
+
+  await page.getByRole('button', { name: 'See more' }).click();
+  await page.getByRole('heading', { name: 'Browse weapons & shields', level: 2 }).waitFor({
+    timeout: 15_000,
+  });
   await page.waitForTimeout(500);
-  await snap(page, '06-customize-tp-bar', false);
+  await snap(page, '06-l2-tp-bar', false);
 
   await page.setViewportSize({ width: 360, height: 800 });
   await page.goto('/characters/new/guided', { waitUntil: 'networkidle' });

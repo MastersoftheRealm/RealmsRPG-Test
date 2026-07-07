@@ -51,8 +51,11 @@ Default `armorStep` from `archetypeType` when omitted (power → none).
 
 ## Compliance checklist (per PR)
 
-- [ ] `npm run build`
-- [ ] Semantic tokens; mobile `fullScreenOnMobile` on L2 modals; 44px touch targets
-- [ ] Copy in `guided-creator-copy.ts`
-- [ ] `AI_CHANGELOG.md`; TASK status; `BUILD_VALIDATION` when user-facing
-- [ ] Codex path SQL: propose in `sql/` → owner approves → apply
+- [x] Unified L1 (`guided-equipment-l1-phase.tsx`); L2 `UnifiedSelectionModal` + `PointStatus`
+- [x] Quick kits demoted (`guided-loadout-kit-presets.tsx`); dead customize/section panels removed
+- [x] `use-guided-equipment-catalog` in `hooks/`; copy in `guided-creator-copy.ts`
+- [x] `npm run build` + unit tests (67 pass as of 2026-07-07)
+- [x] Semantic tokens; mobile via `UnifiedSelectionModal` fullScreenOnMobile; 44px touch targets on phase nav / cards
+- [x] Phase selection summary (`guided-equipment-phase-selection.tsx`)
+- [x] Admin `armorStep` + `sharedEquipment` (stored in `level1_loadouts` wrapper when set)
+- [ ] `BUILD_VALIDATION` sign-off (Phase 10); codex path SQL owner-approved (TASK-423)

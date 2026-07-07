@@ -20,6 +20,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import type { AbilityName, ArchetypeCategory } from '@/types';
 import { DEFAULT_ABILITIES } from '@/types';
 import type { PathItemRecommendation } from '@/types/archetype';
+import { mergeLoadoutArmaments } from '@/lib/guided-creator/resolve-loadout-items';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
 
@@ -286,7 +287,12 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
       },
 
       updateDraft: (partial) => {
-        set({ draft: { ...get().draft, ...partial } });
+        const prev = get().draft;
+        const next = { ...prev, ...partial };
+        if ('loadoutWeapons' in partial || 'loadoutArmor' in partial) {
+          next.armaments = mergeLoadoutArmaments(next);
+        }
+        set({ draft: next });
       },
 
       resetCreator: () => {

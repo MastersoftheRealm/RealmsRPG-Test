@@ -85,6 +85,47 @@ function parseLoadouts(value: unknown): PathLoadout[] | undefined {
   return loadouts.length > 0 ? loadouts : undefined;
 }
 
+export type Level1ArmorStep = 'required' | 'optional' | 'none';
+
+export interface Level1LoadoutsField {
+  loadouts?: PathLoadout[];
+  armorStep?: Level1ArmorStep;
+  sharedEquipment?: PathItemRecommendation[];
+}
+
+function parseArmorStep(value: unknown): Level1ArmorStep | undefined {
+  return value === 'required' || value === 'optional' || value === 'none' ? value : undefined;
+}
+
+/** Parse `level1_loadouts` column — plain kit array or `{ kits, armorStep?, sharedEquipment? }`. */
+export function parseLevel1LoadoutsField(value: unknown): Level1LoadoutsField {
+  if (value == null) return {};
+  if (Array.isArray(value)) {
+    return { loadouts: parseLoadouts(value) };
+  }
+  if (!isRecord(value)) return {};
+  const kitsRaw = value.kits ?? value.loadouts;
+  const shared = parseIdQuantityObjects(value.sharedEquipment);
+  return {
+    loadouts: parseLoadouts(kitsRaw),
+    armorStep: parseArmorStep(value.armorStep),
+    sharedEquipment: shared.length > 0 ? shared : undefined,
+  };
+}
+
+/** Serialize for `level1_loadouts` — array when no metadata; object wrapper when armor/shared gear set. */
+export function serializeLevel1LoadoutsField(field: Level1LoadoutsField): unknown | null {
+  const { loadouts, armorStep, sharedEquipment } = field;
+  const hasMeta = Boolean(armorStep) || (sharedEquipment?.length ?? 0) > 0;
+  if (!loadouts?.length && !hasMeta) return null;
+  if (!hasMeta) return loadouts ?? null;
+  return {
+    ...(loadouts?.length ? { kits: loadouts } : {}),
+    ...(armorStep ? { armorStep } : {}),
+    ...(sharedEquipment?.length ? { sharedEquipment } : {}),
+  };
+}
+
 function parseGuidanceGroups(value: unknown): PathGuidanceGroup[] | undefined {
   if (!Array.isArray(value)) return undefined;
   const groups = value
@@ -130,6 +171,8 @@ export function parseArchetypePathData(value: unknown): ArchetypePathData | unde
     ? (() => {
         const armamentsStr = toStringArray(level1Raw.armaments);
         const equipmentStr = toStringArray(level1Raw.equipment);
+        const loadoutsField = parseLevel1LoadoutsField(level1Raw.loadouts);
+        const sharedFromRaw = parseIdQuantityObjects(level1Raw.sharedEquipment);
         return {
         feats: toStringArray(level1Raw.feats),
         skills: toStringArray(level1Raw.skills),
@@ -140,6 +183,9 @@ export function parseArchetypePathData(value: unknown): ArchetypePathData | unde
         armamentRecommendations: parseIdQuantityArray(armamentsStr),
         equipmentRecommendations: parseIdQuantityArray(equipmentStr),
         recommendUnarmedProwess: level1Raw.recommendUnarmedProwess === true,
+        armorStep: parseArmorStep(level1Raw.armorStep) ?? loadoutsField.armorStep,
+        sharedEquipment:
+          sharedFromRaw.length > 0 ? sharedFromRaw : loadoutsField.sharedEquipment,
         removeFeats: toStringArray(level1Raw.removeFeats),
         removePowers: toStringArray(level1Raw.removePowers),
         removeTechniques: toStringArray(level1Raw.removeTechniques),
@@ -148,7 +194,7 @@ export function parseArchetypePathData(value: unknown): ArchetypePathData | unde
         recommended_species: toStringArray(level1Raw.recommended_species),
         guidance_groups: parseGuidanceGroups(level1Raw.guidance_groups),
         recommended_abilities: parseRecommendedAbilities(level1Raw.recommended_abilities),
-        loadouts: parseLoadouts(level1Raw.loadouts),
+        loadouts: loadoutsField.loadouts,
         proficiency: isRecord(level1Raw.proficiency)
           ? {
               power:

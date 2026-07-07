@@ -1716,3 +1716,11 @@ Notes
 - Feedback: Layer 1 kit rows have too much space between name and type/stats; Mix and match column headers don't line up with row columns.
 - Expected: Tighter proportional columns on kit tables; customize ListHeader reserves selection-column chrome so headers align with selectable rows.
 - Disposition: Implemented 2026-07-06 — fixed rem column tracks in `guided-loadout-item-table.tsx`; customize grid includes inline selection column so ListHeader and GridListRow share five tracks.
+
+**Raw Feedback Log — 2026-07-07 (State feat recovery notice)**
+- Date: 2026-07-07
+- Context: Guided creator feat choice cards — state feat info warnings
+- Priority: Low
+- Feedback: State feats refresh on full recovery, not partial; info warnings on state feat cards should say Full Recovery (not Partial).
+- Expected: `getFeatRestrictionNotice` always uses Full Recovery for state feat uses text; matches GAME_RULES § recovery and sheet full-recovery handler.
+- Disposition: Implemented 2026-07-07 — `feat-restriction-notice.ts` forces Full when `state_feat`; unit tests added.

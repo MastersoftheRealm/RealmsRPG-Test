@@ -157,16 +157,13 @@ export const GUIDED_CREATOR_COPY = {
       pointsRemaining: (n: number) =>
         `Spend ${n} more skill point${n === 1 ? '' : 's'} to continue.`,
       pointsComplete: 'All skill points spent',
-      recommendedChip: 'Recommended',
-      abilitySkillSuggestionsTitle: (abilities: string) => `Skills using ${abilities}`,
-      abilitySkillSuggestionsHint: (remaining: number, abilities: string) =>
-        `You have ${remaining} skill point${remaining === 1 ? '' : 's'} left. These base skills use ${abilities} — pick one to add proficiency, raise a skill above, or browse the full list.`,
+      suggestedSkillsTitle: 'Suggested skills',
       pathSkillSuggestionsTitle: (pathName: string) => `From ${pathName}`,
       pathSkillSuggestionsHint: (pathName: string) =>
         `You removed a skill recommended for ${pathName}. Tap a card to add it back, or browse the full list.`,
       mixedSkillSuggestionsTitle: 'Recommended skills',
-      mixedSkillSuggestionsHint: (remaining: number, abilities: string) =>
-        `Path skills you removed and base skills using ${abilities}. You have ${remaining} skill point${remaining === 1 ? '' : 's'} left for new proficiencies.`,
+      mixedSkillSuggestionsHint: (remaining: number) =>
+        `You have ${remaining} skill point${remaining === 1 ? '' : 's'} left. Restore a path skill or pick a suggestion below.`,
       browseAll: 'Browse all skills',
       continueLabel: 'Looks good →',
     },
@@ -189,7 +186,7 @@ export const GUIDED_CREATOR_COPY = {
     },
     loadout: {
       title: 'Your loadout',
-      description: 'Pick a coherent kit — weapons, armor, and gear that fit your path.',
+      description: 'Choose weapons, then armor, then adventuring gear — one step at a time.',
       continueLabel: 'Looks good →',
       emptyTitle: 'No loadouts yet',
       emptyDescription: 'Path loadouts can be authored in admin (level1_loadouts).',
@@ -209,17 +206,7 @@ export const GUIDED_CREATOR_COPY = {
       armorLabel: 'Armor',
       gearLabel: 'Gear',
       emptyKit: 'No items in this kit yet.',
-      customKitHint: 'You customized your gear — use Mix and match gear to adjust, or pick a kit above.',
-      customize: {
-        expandLabel: 'Mix and match gear',
-        title: 'Mix and match gear',
-        trainingPointsLabel: 'Training points',
-        description:
-          'Choose items from your path recommendations. Training Points show how much armament proficiency your selections use.',
-        atCap: 'You are at your Training Point limit — deselect an item to swap.',
-        overBudget: 'Not enough Training Points remaining',
-        unresolvedItem: 'Unknown item',
-      },
+      customKitHint: 'You customized your gear — use See more to adjust, or pick a quick kit above.',
       unarmed: {
         title: 'Unarmed combat',
         description:
@@ -227,6 +214,77 @@ export const GUIDED_CREATOR_COPY = {
         add: 'Add Unarmed Prowess',
         remove: 'Remove Unarmed Prowess',
         addedHint: 'Included on your character.',
+      },
+      phases: {
+        progressLabel: 'Equipment steps',
+        labels: {
+          weapon: '1. Weapons',
+          armor: '2. Armor',
+          gear: '3. Gear',
+        },
+        weapon: {
+          title: 'Weapons & shields',
+          description:
+            'Pick how you fight. Your path recommends options below — use See more to browse the full catalog.',
+        },
+        armor: {
+          title: 'Armor',
+          description:
+            'Confirm or choose armor. Some paths can fight unarmored — skip if that fits your hero.',
+        },
+        gear: {
+          title: 'Adventuring gear',
+          description:
+            'Bandages, rope, and other essentials. Spending on weapons and armor comes out of your starting currency first.',
+        },
+        quickKitsTitle: 'Quick kits',
+        quickKitsDescription: 'Pre-built loadouts from your path — apply one to fill all steps at once.',
+        selectedSummary: 'Your selection',
+        emptySelection: {
+          weapon: 'No weapons selected yet. Pick a quick kit or use See more.',
+          armor: 'No armor selected. Optional for your path — continue or pick armor below.',
+          gear: 'No extra gear yet. Path bundles and See more add items here.',
+        },
+        skipArmorLabel: 'Fight unarmored',
+        seeMoreLabel: 'See more',
+        backToPhase: 'Back to recommendations',
+        continueWeapon: 'Continue to armor →',
+        continueArmor: 'Continue to gear →',
+        continueGear: 'Looks good →',
+        currencyRemaining: (amount: number) => `${amount}c remaining for gear`,
+        unresolvedItem: 'Unknown item',
+        weaponPhase: {
+          emptyTitle: 'No eligible weapons on your path',
+          emptyDescription: 'Use See more to browse the full catalog.',
+          handBlocked: 'Two-handed weapons cannot be used with a shield.',
+          pathBadge: 'Path pick',
+        },
+        armorPhase: {
+          emptyTitle: 'No eligible armor on your path',
+          emptyDescription: 'Use See more to browse armor, or continue unarmored if your path allows.',
+          pathBadge: 'Path pick',
+        },
+        gearPhase: {
+          emptyTitle: 'No eligible gear on your path',
+          emptyDescription: 'Use See more to browse adventuring gear within your budget.',
+          pathBadge: 'Path pick',
+        },
+        l2: {
+          weaponTitle: 'Browse weapons & shields',
+          armorTitle: 'Browse armor',
+          gearTitle: 'Browse adventuring gear',
+          description:
+            'Common items you qualify for at level 1. Training points update as you select.',
+          gearDescription:
+            'Common gear costing 50c or less per item. Currency remaining updates as you select.',
+          tpLabel: 'Training points',
+          currencyLabel: 'Currency',
+          confirmError: 'Could not apply selection — check training points, hands, or currency.',
+          searchPlaceholder: (phase: 'weapon' | 'armor' | 'gear') =>
+            phase === 'gear' ? 'Search gear…' : `Search ${phase}…`,
+          emptyMessage: (phase: 'weapon' | 'armor' | 'gear') =>
+            phase === 'gear' ? 'No eligible gear found' : `No eligible ${phase} items found`,
+        },
       },
     },
     powersTechniques: {

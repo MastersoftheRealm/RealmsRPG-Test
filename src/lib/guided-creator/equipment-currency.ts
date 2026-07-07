@@ -37,6 +37,22 @@ export function computeRemainingCurrency(starting: number, spent: number): numbe
   return starting - spent;
 }
 
+/** Resolve unit cost for a path item ref from official + codex libraries. */
+export function resolveRefUnitCost(
+  ref: { id: string },
+  officialItems: Array<{ id?: string | number } & CurrencyLineItem>,
+  codexEquipment: Array<{ id?: string | number } & CurrencyLineItem>
+): number {
+  const key = String(ref.id).trim().toLowerCase();
+  const official = officialItems.find(
+    (i) => String(i.id).trim().toLowerCase() === key
+  );
+  if (official) return resolveItemUnitCost(official);
+  const codex = codexEquipment.find((i) => String(i.id).trim().toLowerCase() === key);
+  if (codex) return resolveItemUnitCost(codex);
+  return 0;
+}
+
 /** Whether adding qty units of an item would exceed remaining currency. */
 export function wouldExceedCurrency(
   remaining: number,

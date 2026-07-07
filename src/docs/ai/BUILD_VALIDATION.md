@@ -1143,28 +1143,28 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 2. Advance to Loadout step.
 
 **Expected**
-- Feat-style kit sections (not cards) show Greataxe bruiser / Sword & shield kits with **Use this kit** / **Selected**.
-- Item table lists resolved names (Battleaxe, Greatsword, etc.), TYPE, and STATS — not "X items" only.
+- Quick kit cards (GuidedChoiceCard) show Greataxe bruiser / Sword & shield kits; selecting applies the kit.
+- Weapon phase shows path-ranked choice cards with attack/damage stats (not monolithic kit tables).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-013-T006 — Mix and match gear (Layer 2 + TP)
+#### DEV-V-013-T006 — See more gear browse (Layer 2 + TP)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 — Guided Simple character creator |
-| **Related task** | TASK-422 |
-| **Where** | Guided creator → Loadout step (Berserker) |
+| **Related task** | TASK-422, TASK-424 |
+| **Where** | Guided creator → Loadout step (Berserker), weapon phase |
 | **Needs** | DEV-004 seed applied |
 
 **Steps**
-1. On Loadout step, click **Mix and match gear**.
-2. Toggle items in the path pool; watch Training Points bar.
+1. On Loadout step (weapon phase), click **See more**.
+2. Toggle items in the catalog modal; watch Training Points bar.
 
 **Expected**
-- Layer 2 panel opens with TP resource bar; pool rows show NAME / TYPE / TP / STATS.
+- Layer 2 `UnifiedSelectionModal` opens with TP `PointStatus`; rows show NAME / TYPE / TP / STATS.
 - Selecting items updates draft; items that would exceed TP budget are disabled.
-- **Back to kits** restores last selected kit.
+- **Back to recommendations** closes L2 and returns to phase L1 cards.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

@@ -26,6 +26,8 @@ describe('loadout-pool', () => {
 
   it('tracks draft selection by id', () => {
     const draft = {
+      loadoutWeapons: [{ id: 'w1', quantity: 1 }],
+      loadoutArmor: [],
       armaments: [{ id: 'w1', quantity: 1 }],
       equipment: [],
     };

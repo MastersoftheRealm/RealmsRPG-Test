@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { parseArchetypePathData } from '@/lib/game/archetype-path';
+import { parseArchetypePathData, parseLevel1LoadoutsField } from '@/lib/game/archetype-path';
 import type { Archetype, ArchetypeCategory, Character, CharacterArchetype } from '@/types';
 
 const FORGE_ARCHETYPE_IDS = new Set(['power', 'martial', 'powered-martial']);
@@ -87,7 +87,7 @@ export async function fetchCodexArchetypeById(
   const { data: row, error } = await supabase
     .from('codex_archetypes')
     .select(
-      'id, name, type, description, archetype_ability, secondary_ability, power_prof_start, martial_prof_start, power_prof_level5, martial_prof_level5, path_data, level1_feats, level1_skills, level1_powers, level1_techniques, level1_armaments, level1_equipment, level1_recommend_unarmed_prowess, level1_remove_feats, level1_remove_powers, level1_remove_techniques, level1_remove_armaments, level1_notes, level1_recommended_species, level1_guidance_groups'
+      'id, name, type, description, archetype_ability, secondary_ability, power_prof_start, martial_prof_start, power_prof_level5, martial_prof_level5, path_data, level1_feats, level1_skills, level1_powers, level1_techniques, level1_armaments, level1_equipment, level1_recommend_unarmed_prowess, level1_remove_feats, level1_remove_powers, level1_remove_techniques, level1_remove_armaments, level1_notes, level1_recommended_species, level1_guidance_groups, level1_recommended_abilities, level1_loadouts'
     )
     .eq('id', id.trim())
     .maybeSingle();
@@ -139,6 +139,10 @@ export async function fetchCodexArchetypeById(
       ? (legacyPath.level1 as Record<string, unknown>)
       : undefined;
 
+  const loadoutsField = parseLevel1LoadoutsField(
+    r.level1_loadouts ?? level1FromLegacy?.loadouts
+  );
+
   const level1Raw: Record<string, unknown> = {
     feats: toStrArray(r.level1_feats),
     skills: toStrArray(r.level1_skills),
@@ -156,6 +160,12 @@ export async function fetchCodexArchetypeById(
       r.level1_recommended_species ?? level1FromLegacy?.recommended_species
     ),
     guidance_groups: r.level1_guidance_groups ?? level1FromLegacy?.guidance_groups,
+    recommended_abilities:
+      r.level1_recommended_abilities ?? level1FromLegacy?.recommended_abilities,
+    loadouts: loadoutsField.loadouts,
+    armorStep: loadoutsField.armorStep ?? level1FromLegacy?.armorStep,
+    sharedEquipment:
+      loadoutsField.sharedEquipment ?? level1FromLegacy?.sharedEquipment,
   };
   const level1FromColumns = parseArchetypePathData({ level1: level1Raw })?.level1;
 
