@@ -1255,6 +1255,204 @@ Automated via `npm test` (`src/lib/library-types.test.ts`).
 
 ---
 
+## DEV-V-016 — Virtual tabletop V1
+
+**Related tasks:** User request — VTT V1
+**Start URL:** `/encounters/[id]/combat` or `/encounters/[id]/mixed`
+**Needs:** Logged-in Realm Master account, a campaign with at least one character, and a campaign-linked combat or mixed encounter.
+
+#### DEV-V-016-T001 — Open tabletop from a campaign-linked encounter
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Section** | Encounter → tabletop |
+| **Related task** | User request — VTT V1 |
+| **Where** | `/encounters/[id]/combat` or `/encounters/[id]/mixed` |
+| **Needs** | Realm Master; encounter has a campaign selected |
+
+**Steps**
+1. Open a combat or mixed encounter.
+2. Select a campaign in the encounter side panel if one is not already linked.
+3. Click **Open Tabletop**.
+
+**Expected**
+- The app opens `/campaigns/[id]/tabletop`.
+- The scene loads with encounter combatants seeded as tokens.
+- Unlinked encounters show an error asking the user to link a campaign first.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-016-T002 — RM uploads a map and adjusts grid
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Section** | Tabletop scene tools |
+| **Related task** | User request — VTT V1 |
+| **Where** | `/campaigns/[id]/tabletop` |
+| **Needs** | Realm Master; active tabletop scene |
+
+**Steps**
+1. Click **Map** and choose an image file.
+2. Change **Cell size**, **Offset X**, or **Offset Y**.
+
+**Expected**
+- The map appears on the canvas.
+- The grid updates without leaving the page.
+- Refreshing the page keeps the map and grid settings.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-016-T003 — RM controls tokens and move requests
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Section** | Tokens and actions |
+| **Related task** | User request — VTT V1 |
+| **Where** | `/campaigns/[id]/tabletop` |
+| **Needs** | Realm Master; active tabletop scene with tokens |
+
+**Steps**
+1. Drag a visible token to a new square.
+2. Select a token in the side panel and click **Hide**.
+3. When a player move request exists, click **Accept**.
+
+**Expected**
+- Dragged token persists after refresh.
+- Hidden token is removed from player view.
+- Accepted move request moves the target token and clears from pending requests.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-016-T004 — Player pings and requests movement
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Section** | Player tabletop |
+| **Related task** | User request — VTT V1 |
+| **Where** | `/campaigns/[id]/tabletop` |
+| **Needs** | Non-RM campaign member; active tabletop scene |
+
+**Steps**
+1. Open the campaign tabletop as a player.
+2. Click **Ping**, then click the map.
+3. Select a visible token, click **Request Move**, then click a destination.
+
+**Expected**
+- Ping appears on the map for campaign participants.
+- Move request appears as pending for the player and Realm Master.
+- Player cannot drag tokens directly.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-016-T005 — Mobile tabletop controls fit
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Section** | Mobile tabletop |
+| **Related task** | User request — VTT V1 |
+| **Where** | `/campaigns/[id]/tabletop` |
+| **Needs** | Active tabletop scene; browser at ~360px width |
+
+**Steps**
+1. Open the tabletop at phone width.
+2. Use **Select**, **Ping**, and the token side panel.
+
+**Expected**
+- Canvas remains usable without page-level horizontal scroll.
+- Toolbar buttons remain tappable.
+- Token and move request panels stack below the canvas.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-016-T006 — RM token movement syncs across sessions
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Section** | Realtime tabletop sync |
+| **Related task** | TASK-424 |
+| **Where** | `/campaigns/[id]/tabletop` |
+| **Needs** | Realm Master and non-RM player signed in to separate browser sessions; active tabletop scene with a visible token |
+
+**Steps**
+1. Open the same tabletop scene as the Realm Master and as the player.
+2. In the RM session, drag a visible token to a different grid square.
+3. Watch the player session without refreshing.
+
+**Expected**
+- The token moves in the player session without a manual refresh.
+- The player session does not show a loading state or full tabletop reload for the token move.
+- If the RM hides the token, it disappears from the player session without exposing hidden-token details.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-016-T007 — RM scene tools sync across sessions
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Section** | Realtime tabletop sync |
+| **Related task** | TASK-424 |
+| **Where** | `/campaigns/[id]/tabletop` |
+| **Needs** | Realm Master and non-RM player signed in to separate browser sessions; active tabletop scene |
+
+**Steps**
+1. Open the same tabletop scene as the Realm Master and as the player.
+2. In the RM session, change **Cell size** or a grid offset.
+3. Add a **Cover** fog box.
+4. Watch the player session without refreshing.
+
+**Expected**
+- Grid spacing/offset changes appear in the player session without a manual refresh.
+- The fog region appears in the player session without a manual refresh.
+- Enemy HP/EN/AP remains hidden from players unless **Show enemy HP/EN/AP to players** is enabled.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-016-T008 — Player actions sync to RM session
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Section** | Realtime tabletop sync |
+| **Related task** | TASK-424 |
+| **Where** | `/campaigns/[id]/tabletop` |
+| **Needs** | Realm Master and non-RM player signed in to separate browser sessions; active tabletop scene with a visible player token |
+
+**Steps**
+1. Open the same tabletop scene as the Realm Master and as the player.
+2. In the player session, click **Ping**, then click the map.
+3. In the player session, select a visible token, click **Request Move**, then click a destination.
+4. Watch the RM session without refreshing.
+
+**Expected**
+- The ping appears in the RM session without a manual refresh.
+- The move request appears in the RM session without a manual refresh.
+- When the RM accepts the request, the token movement and resolved request state update without a manual refresh.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |

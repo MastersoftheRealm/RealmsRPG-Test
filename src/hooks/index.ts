@@ -35,6 +35,15 @@ export {
 } from './use-campaigns';
 export { useCampaignRolls } from './use-campaign-rolls';
 
+// Tabletop
+export {
+  tabletopKeys,
+  useActiveCampaignTabletop,
+  useTabletopMutations,
+  useTabletopRealtime,
+  useTabletopScene,
+} from './use-tabletop';
+
 // Encounters
 export {
   encounterKeys,

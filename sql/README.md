@@ -123,6 +123,7 @@ These are recorded in `supabase_migrations.schema_migrations` on RealmsRPG-Test.
 |------|---------|
 | supabase-campaign-members.sql | `campaign_members` table |
 | supabase-campaign-members-grants.sql | GRANT if permission denied on `campaign_members` |
+| supabase-campaigns-owner-rls-hotfix-2026-07.sql | Restore owner SELECT/INSERT/UPDATE/DELETE policies if campaign creation hits RLS 42501 |
 | supabase-campaign-authz-2026-06.sql | Campaign/roll RLS hardening |
 | supabase-campaign-rpc-revoke-anon-2026-06.sql | Revoke anon on campaign RPCs |
 | supabase-characters-rls-cross-read.sql | Public + campaign visibility SELECT on `characters` |

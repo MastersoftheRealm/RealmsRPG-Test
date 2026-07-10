@@ -6,6 +6,7 @@
  */
 
 import Link from 'next/link';
+import type React from 'react';
 import { ChevronLeft, Cloud, CloudOff } from 'lucide-react';
 import { PageHeader } from '@/components/ui';
 
@@ -15,6 +16,7 @@ export interface EncounterPageHeaderProps {
   encounterType: EncounterTypeLabel;
   name: string;
   description?: string;
+  actions?: React.ReactNode;
   isEditingName: boolean;
   nameInput: string;
   onNameInputChange: (value: string) => void;
@@ -32,6 +34,7 @@ export function EncounterPageHeader({
   encounterType,
   name,
   description,
+  actions,
   isEditingName,
   nameInput,
   onNameInputChange,
@@ -68,13 +71,16 @@ export function EncounterPageHeader({
             autoFocus
           />
         ) : (
-          <PageHeader
-            title={name}
-            description={typeLine}
-            className="mb-0"
-            onTitleClick={onStartEditingName}
-            titleAriaLabel="Encounter name. Click to edit."
-          />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <PageHeader
+              title={name}
+              description={typeLine}
+              className="mb-0"
+              onTitleClick={onStartEditingName}
+              titleAriaLabel="Encounter name. Click to edit."
+            />
+            {actions && <div className="flex flex-wrap gap-2 sm:justify-end">{actions}</div>}
+          </div>
         )}
         {!isEditingName && (
           <p className="text-xs mt-1 flex items-center gap-1">

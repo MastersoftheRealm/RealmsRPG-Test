@@ -1716,3 +1716,27 @@ Notes
 - Feedback: Layer 1 kit rows have too much space between name and type/stats; Mix and match column headers don't line up with row columns.
 - Expected: Tighter proportional columns on kit tables; customize ListHeader reserves selection-column chrome so headers align with selectable rows.
 - Disposition: Implemented 2026-07-06 — fixed rem column tracks in `guided-loadout-item-table.tsx`; customize grid includes inline selection column so ListHeader and GridListRow share five tracks.
+
+**Raw Feedback Log — 2026-07-09 (VTT migration auth helper mismatch)**
+- Date: 2026-07-09
+- Context: VTT V1 SQL migration — `sql/vtt-v1-tabletop.sql`
+- Priority: High
+- Feedback: Running the VTT migration failed with `ERROR: 42883: function public.auth_is_campaign_participant(text) does not exist`.
+- Expected: VTT migration should work on databases where campaign auth helpers have moved out of the public schema.
+- Disposition: Fixed 2026-07-09 — VTT migration now creates private VTT-scoped campaign auth helpers and uses them in VTT RLS policies.
+
+**Raw Feedback Log — 2026-07-09 (Campaign create RLS during VTT smoke test)**
+- Date: 2026-07-09
+- Context: Local VTT testing against production database — campaign creation
+- Priority: High
+- Feedback: Creating a campaign failed with `42501` / `new row violates row-level security policy for table "campaigns"`.
+- Expected: Authenticated users can create campaigns where `owner_id = auth.uid()` and receive the inserted campaign id.
+- Disposition: Added `sql/supabase-campaigns-owner-rls-hotfix-2026-07.sql` to restore owner SELECT/INSERT/UPDATE/DELETE policies and documented the troubleshooting path.
+
+**Raw Feedback Log — 2026-07-09 (VTT realtime latency)**
+- Date: 2026-07-09
+- Context: Virtual tabletop — cross-player scene updates
+- Priority: High
+- Feedback: "There is about a second delay on the virtual tabletop before any changes made by a user are reflected on the other players' tabletops. Is there a way to make it so all players can view changes in real time?"
+- Expected: Tabletop token moves, scene tool changes, pings, and move requests appear in other campaign participants' open tabletop sessions without manual refresh or a full-scene reload delay.
+- Disposition: TASK-424 implemented 2026-07-09 — `useTabletopRealtime` now merges Supabase Realtime payloads directly into tabletop query cache with player-safe visibility filtering; server refetch fallback remains for signed map URLs and enemy-resource visibility setting changes.

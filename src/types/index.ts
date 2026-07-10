@@ -61,6 +61,25 @@ export type {
 // Campaign
 export type { Campaign, CampaignCharacter, CampaignSummary, ArchetypeDisplayName } from './campaign';
 
+// Tabletop
+export type {
+  VttAction,
+  VttActionStatus,
+  VttActionType,
+  VttFogMode,
+  VttFogRegion,
+  VttFogState,
+  VttGridConfig,
+  VttMapAsset,
+  VttPoint,
+  VttRole,
+  VttScene,
+  VttSceneSettings,
+  VttTabletopState,
+  VttToken,
+  VttTokenMetadata,
+} from './tabletop';
+
 // Character
 export type {
   CharacterStatus,

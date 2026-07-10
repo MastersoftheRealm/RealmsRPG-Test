@@ -30,6 +30,7 @@
 | Crafting (sessions + enhanced items) | `crafting/page.tsx`, `crafting/[id]/page.tsx` |
 | Encounters | `encounters/page.tsx`, `encounters/[id]/page.tsx`, `encounters/[id]/combat/page.tsx`, `encounters/[id]/mixed/page.tsx`, `encounters/[id]/skill/page.tsx` |
 | Campaigns | `campaigns/page.tsx` |
+| Virtual tabletop | `campaigns/[id]/tabletop/page.tsx`, `components/tabletop/tabletop-canvas.tsx`, `hooks/use-tabletop.ts`, `services/tabletop-service.ts`, `lib/tabletop/*` |
 | Admin (official content, users, tooltips) | `admin/page.tsx` |
 | Account / profile | `my-account/page.tsx` |
 | Rules / resources / about / privacy / terms | `rules`, `resources`, `about`, `privacy`, `terms` |
@@ -47,6 +48,7 @@
 | Characters CRUD | `useCharacters`, `useCharacter`, `useSaveCharacter`, `useCreateCharacter`, `useDeleteCharacter`, `useDuplicateCharacter` |
 | Campaigns | `useCampaigns*`, `useCampaign`, `useCampaignRolls` |
 | Encounters | `useEncounters`, `useEncounter`, `useCreate/Save/DeleteEncounter` |
+| Virtual tabletop | `useActiveCampaignTabletop`, `useTabletopScene`, `useTabletopRealtime`, `useTabletopMutations` |
 | Crafting + enhanced items | `useCraftingSession(s)`, `useEnhancedItems` + CRUD |
 | Save a creator's output | `useCreatorSave`; load into a modal: `useLoadModalLibrary` |
 | Character creator path recommendations | `useCreatorPathData` — resolves `path_data` from draft or codex by `archetypePathId` |

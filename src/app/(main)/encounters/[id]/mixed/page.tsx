@@ -19,6 +19,7 @@ import type { Encounter } from '@/types/encounter';
 import CombatEncounterView from '../_components/CombatEncounterView';
 import SkillEncounterView from '../_components/SkillEncounterView';
 import { EncounterPageHeader } from '../_components/EncounterPageHeader';
+import { OpenTabletopButton } from '../_components/OpenTabletopButton';
 type ViewTab = 'combat' | 'skill';
 
 interface PageParams {
@@ -76,7 +77,7 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
   }, [encounter?.name, isEditingName]);
 
   const { showToast } = useToast();
-  const { isSaving, hasUnsavedChanges } = useAutoSave({
+  const { isSaving, hasUnsavedChanges, saveNow } = useAutoSave({
     data: encounter,
     onSave: async (data) => {
       if (!data || !encounterId) return;
@@ -149,6 +150,13 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
           onCancelEdit={handleCancelEditName}
           isSaving={isSaving}
           hasUnsavedChanges={hasUnsavedChanges}
+          actions={
+            <OpenTabletopButton
+              encounterId={encounterId}
+              campaignId={encounter.campaignId}
+              onBeforeOpen={saveNow}
+            />
+          }
         />
 
         <SegmentedControl

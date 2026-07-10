@@ -20,6 +20,7 @@ import {
   ChevronLeft,
   ExternalLink,
   Dices,
+  Map as MapIcon,
   Pencil,
 } from 'lucide-react';
 import { ProtectedRoute } from '@/components/layout';
@@ -365,13 +366,19 @@ function CampaignDetailContent() {
               )
             )}
           </div>
-          {isRealmMaster && (
-            <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Button variant="secondary" size="sm" asChild>
+              <Link href={`/campaigns/${campaignId}/tabletop`}>
+                <MapIcon className="w-4 h-4" />
+                Tabletop
+              </Link>
+            </Button>
+            {isRealmMaster && (
               <Button variant="danger" size="sm" onClick={() => setDeleteConfirm(true)}>
                 Delete Campaign
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 

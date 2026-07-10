@@ -6,3 +6,4 @@
 
 export * from './character-service';
 export * from './library-service';
+export * from './tabletop-service';

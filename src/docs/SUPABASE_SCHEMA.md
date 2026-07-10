@@ -118,6 +118,8 @@ Membership source of truth: `campaign_members`. Realtime: `public.campaign_rolls
 
 **Join-by-invite (app behavior):** RLS on `campaigns` allows SELECT only for the owner or existing members, so a new player cannot load a campaign row with the normal user-scoped Supabase client. The app uses **`SUPABASE_SERVICE_ROLE_KEY`** (server-only) in `joinCampaignAction` and in `GET /api/campaigns/invite/[code]` to look up by `invite_code` and update roster/members after the user is authenticated and character ownership is verified.
 
+If campaign creation logs show **`new row violates row-level security policy for table "campaigns"`**, run **`sql/supabase-campaigns-owner-rls-hotfix-2026-07.sql`**. The app inserts `owner_id = auth.uid()` and returns the inserted `id`, so production needs both owner INSERT and owner SELECT policies on `campaigns`.
+
 If logs show **`permission denied for table campaign_members`**, run **`sql/supabase-campaign-members-grants.sql`** — the `authenticated` role needs explicit `GRANT` on the table (RLS does not replace table privileges).
 
 ---
@@ -127,6 +129,16 @@ If logs show **`permission denied for table campaign_members`**, run **`sql/supa
 | Table | Shape | Key columns |
 |-------|--------|-------------|
 | `encounters` | Hybrid | id (PK), user_id, data (JSONB), created_at, updated_at; list columns: name, type, status |
+
+### 2.8.1 Virtual Tabletop
+
+| Table | Shape | Key columns |
+|-------|--------|-------------|
+| `vtt_scenes` | Scalar + JSONB | id (PK), campaign_id (FK → campaigns), encounter_id (FK → encounters), name, is_active, map (JSONB), grid (JSONB), fog (JSONB), settings (JSONB), created_at, updated_at |
+| `vtt_tokens` | Scalar + JSONB | id (PK), scene_id (FK → vtt_scenes), combatant_id, name, x/y/size, visible, locked, combatant_type, source refs, metadata (JSONB), created_at, updated_at |
+| `vtt_actions` | Scalar | id (PK), scene_id (FK → vtt_scenes), user_id, type, status, token_id, from_x/from_y, to_x/to_y, message, created_at, updated_at |
+
+VTT maps use private Storage bucket `vtt-maps`; server APIs return signed URLs to campaign participants. Realtime: `public.vtt_scenes`, `public.vtt_tokens`, `public.vtt_actions`. Migration: `sql/vtt-v1-tabletop.sql`.
 
 ---
 

@@ -2,9 +2,40 @@
 
 **Last slimmed:** 2026-06-26 (TASK-382). Full history: [`archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md`](archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md) and [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md).
 
-**Next task ID:** TASK-424
+**Next task ID:** TASK-425
 
 **Agent rules:** Skip `blocked` tasks and any task with `assignee:` set to a human (e.g. TASK-353, **TASK-414**). Skip human-only tasks (TASK-353 → `DEVELOPER_TASK_QUEUE.md` DEV-001). Pick highest-priority `not-started` or continue `partial`. **Do not start TASK-408–413** until TASK-414 spec is `done` (owner approval).
+
+---
+
+- id: TASK-424
+  title: Virtual tabletop realtime latency — merge payloads into cache
+  created_at: 2026-07-09
+  created_by: owner
+  priority: high
+  status: done
+  build_validation: DEV-V-016-T006, DEV-V-016-T007, DEV-V-016-T008
+  developer_test_plan: |
+    DEV-V-016-T006 — RM token moves appear in a player session without refresh.
+    DEV-V-016-T007 — RM scene-tool changes appear in a player session without refresh.
+    DEV-V-016-T008 — Player pings/move requests appear in the RM session without refresh.
+  related_files:
+    - src/hooks/use-tabletop.ts
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  implemented_by: agent
+  description: |
+    Reduce the visible tabletop sync delay by applying Supabase Realtime payloads directly to the React Query
+    tabletop cache instead of using every realtime event only as a full-scene API refetch trigger.
+  acceptance_criteria:
+    - Token inserts/updates/deletes merge into cached tabletop state for every open scene/campaign tabletop query.
+    - Scene grid/fog/name/settings updates merge into cached tabletop state, with server refetch preserved for map signed URLs and enemy-resource visibility changes.
+    - Pings and move requests merge into cached action state while preserving player-safe action visibility.
+    - Player-safe filtering still hides invisible tokens and enemy HP/EN/AP unless the scene setting allows it.
+    - `npm run build` passes.
+  notes: |
+    Owner feedback 2026-07-09: tabletop changes felt roughly one second behind for other players.
+    Implemented by replacing broad realtime refetches with role-aware cache upserts/removals and mutation-success cache writes.
 
 ---
 
