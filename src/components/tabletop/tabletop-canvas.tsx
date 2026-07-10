@@ -1,9 +1,12 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Maximize2, Minimize2 } from 'lucide-react';
 import { Circle, Group, Image as KonvaImage, Layer, Line, Rect, Stage, Text } from 'react-konva';
 import type Konva from 'konva';
+import { IconButton } from '@/components/ui';
 import { clampPointToMap, measureGridDistance, snapPointToGrid } from '@/lib/tabletop/grid';
+import { cn } from '@/lib/utils/cn';
 import type { VttPoint, VttTabletopState, VttToken } from '@/types/tabletop';
 
 export type TabletopToolMode = 'select' | 'ping' | 'request-move';
@@ -75,6 +78,8 @@ export function TabletopCanvas({
   const { ref, size } = useElementSize();
   const stageRef = useRef<Konva.Stage>(null);
   const [scale, setScale] = useState(1);
+  const [fullscreenAvailable, setFullscreenAvailable] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const mapImage = useImage(state.scene.map?.signedUrl);
   const mapWidth = state.scene.map?.width ?? 1600;
   const mapHeight = state.scene.map?.height ?? 1000;
@@ -93,6 +98,32 @@ export function TabletopCanvas({
   const pings = state.actions
     .filter((action) => action.type === 'ping')
     .slice(0, 8);
+
+  useEffect(() => {
+    setFullscreenAvailable(Boolean(document.fullscreenEnabled && ref.current?.requestFullscreen));
+
+    const handleFullscreenChange = () => {
+      setIsFullscreen(document.fullscreenElement === ref.current);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, [ref]);
+
+  const toggleFullscreen = async () => {
+    const node = ref.current;
+    if (!node || !document.fullscreenEnabled) return;
+
+    try {
+      if (document.fullscreenElement === node) {
+        await document.exitFullscreen();
+      } else {
+        await node.requestFullscreen();
+      }
+    } catch {
+      setIsFullscreen(document.fullscreenElement === node);
+    }
+  };
 
   const stagePoint = (): VttPoint | null => {
     const stage = stageRef.current;
@@ -143,7 +174,25 @@ export function TabletopCanvas({
   };
 
   return (
-    <div ref={ref} className="h-[62vh] min-h-[420px] w-full overflow-hidden rounded-lg border border-border-light bg-surface-alt">
+    <div
+      ref={ref}
+      className={cn(
+        'relative h-[62vh] min-h-[420px] w-full overflow-hidden rounded-lg border border-border-light bg-surface-alt',
+        isFullscreen && 'h-screen min-h-screen rounded-none border-0'
+      )}
+    >
+      {fullscreenAvailable && (
+        <IconButton
+          type="button"
+          label={isFullscreen ? 'Exit fullscreen tabletop' : 'Enter fullscreen tabletop'}
+          variant="default"
+          size="lg"
+          onClick={toggleFullscreen}
+          className="absolute right-3 top-3 z-10 border border-border-light bg-surface/90 text-text-primary shadow-lg backdrop-blur-sm hover:bg-surface"
+        >
+          {isFullscreen ? <Minimize2 className="h-5 w-5" aria-hidden /> : <Maximize2 className="h-5 w-5" aria-hidden />}
+        </IconButton>
+      )}
       <Stage
         ref={stageRef}
         width={size.width}
