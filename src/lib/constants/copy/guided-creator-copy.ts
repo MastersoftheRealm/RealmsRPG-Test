@@ -96,6 +96,8 @@ export const GUIDED_CREATOR_COPY = {
     },
     ancestry: {
       skipFlaw: 'Skip — no flaw',
+      skipFlawDescription:
+        'Continue without a flaw. You will not gain an extra ancestry trait.',
       selectSpeciesFirst: 'Select a species first.',
       emptyOptions: 'No ancestry options are available for this species.',
       nextPick: 'Next pick',
@@ -165,6 +167,10 @@ export const GUIDED_CREATOR_COPY = {
       mixedSkillSuggestionsHint: (remaining: number) =>
         `You have ${remaining} skill point${remaining === 1 ? '' : 's'} left. Restore a path skill or pick a suggestion below.`,
       browseAll: 'Browse all skills',
+      browseOverLimit: (max: number) =>
+        max <= 0
+          ? "You don't have enough skill points to add more. Remove a skill or decrease a skill bonus, then try again."
+          : `You've selected more skills than you can afford (${max} remaining). Deselect some, or free skill points first.`,
       continueLabel: 'Looks good →',
     },
     archetypeFeats: {
@@ -175,14 +181,34 @@ export const GUIDED_CREATOR_COPY = {
           : `Pick ${count} archetype feat${count === 1 ? '' : 's'} that shape how you fight.`,
       groupIntro:
         'Groups are suggestions, not either/or — pick the feats you want until you reach your limit.',
+      seeMore: 'See more feats',
       emptyTitle: 'No feat recommendations',
       emptyDescription: 'Path data may need authoring in admin.',
     },
     characterFeat: {
       title: 'Who you are beyond the fight',
       description: 'Pick one character feat — usually about personality, background, or non-combat flair.',
+      seeMore: 'See more character feats',
       emptyTitle: 'No character feats found',
       emptyDescription: 'Codex may need character feats tagged.',
+    },
+    /** Shared Layer 2 browse chrome for archetype + character feat steps. */
+    featsBrowse: {
+      heading: 'Browse feats',
+      hint: (max: number) =>
+        max === 1
+          ? 'Filtered to feats you qualify for. Pick one — or show blocked feats to explore requirements.'
+          : `Filtered to feats you qualify for. Pick up to ${max} — selecting another swaps your most recent pick.`,
+      searchPlaceholder: 'Search feats…',
+      categoryLabel: 'Category',
+      abilityLabel: 'Ability',
+      allCategories: 'All categories',
+      allAbilities: 'All abilities',
+      showBlocked: "Show feats I don't qualify for",
+      recommendedBadge: 'Recommended',
+      requirementsNotMet: 'Requirements not met',
+      emptyTitle: 'No feats match',
+      emptyDescription: 'Try clearing filters or showing blocked feats.',
     },
     loadout: {
       title: 'Your loadout',

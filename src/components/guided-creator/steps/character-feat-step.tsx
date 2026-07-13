@@ -1,27 +1,33 @@
 /**
  * Character feat — identity / non-combat expression (1 at level 1).
+ * Layer 1: path-curated cards; Layer 2: filtered browse of all character feats.
  */
 
 'use client';
 
-import { useEffect, useMemo } from 'react';
-import { Spinner, EmptyState } from '@/components/ui';
+import { useEffect, useMemo, useState } from 'react';
+import { Spinner } from '@/components/ui';
+import { GuidedLayerNav } from '@/components/shared';
 import { useCodexFeats } from '@/hooks';
+import { guidedDraftToFeatRequirementCharacter } from '@/lib/guided-creator/feat-selection';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
 import { GuidedChoiceCard } from '../guided-choice-card';
 import { GuidedFeatRestrictionNotice } from '../guided-feat-restriction-notice';
+import { GuidedFeatsBrowsePanel } from '../guided-feats-browse-panel';
 import { getFeatRestrictionNotice } from '@/lib/codex/feat-restriction-notice';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from '../guided-choice-styles';
 import { GuidedStepLayout } from '../guided-step-layout';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.characterFeat;
+const layerNavCopy = GUIDED_CREATOR_COPY.layerNav;
 
 export function CharacterFeatStep() {
   const { draft, updateDraft } = useGuidedCreatorStore();
   const { pathData } = useGuidedPathData();
   const { data: feats = [], isLoading } = useCodexFeats();
+  const [browsing, setBrowsing] = useState(false);
 
   const characterFeatGroups =
     pathData?.level1?.guidance_groups?.filter((g) => g.feats?.length && g.title.toLowerCase().includes('character')) ??
@@ -51,6 +57,18 @@ export function CharacterFeatStep() {
       .filter(Boolean);
   }, [characterFeatGroups, characterFeatsFromCodex, feats]);
 
+  const recommendedIds = useMemo(
+    () => options.map((f) => (f ? String(f.id) : '')).filter(Boolean),
+    [options]
+  );
+
+  const requirementCharacter = useMemo(
+    () => guidedDraftToFeatRequirementCharacter(draft),
+    [draft]
+  );
+
+  const hasLayer1Options = options.length > 0;
+
   return (
     <GuidedStepLayout
       subStep="character-feat"
@@ -62,28 +80,47 @@ export function CharacterFeatStep() {
         <div className="flex justify-center py-12">
           <Spinner />
         </div>
-      ) : options.length === 0 ? (
-        <EmptyState title={stepCopy.emptyTitle} description={stepCopy.emptyDescription} />
+      ) : browsing || !hasLayer1Options ? (
+        <>
+          <GuidedFeatsBrowsePanel
+            featType="character"
+            feats={feats}
+            selectedIds={draft.characterFeatIds}
+            maxSelections={1}
+            onSelectionChange={(ids) => updateDraft({ characterFeatIds: ids })}
+            recommendedIds={recommendedIds}
+            requirementCharacter={requirementCharacter}
+          />
+          {hasLayer1Options ? (
+            <GuidedLayerNav
+              collapseLabel={layerNavCopy.backToRecommendations}
+              onCollapse={() => setBrowsing(false)}
+            />
+          ) : null}
+        </>
       ) : (
-        <div className={GUIDED_CHOICE_COMPACT_GRID_CLASS}>
-          {options.map((feat) =>
-            feat ? (
-              <GuidedChoiceCard
-                key={feat.id}
-                density="compact"
-                title={feat.name}
-                description={feat.description}
-                selected={draft.characterFeatIds[0] === String(feat.id)}
-                onSelect={() => updateDraft({ characterFeatIds: [String(feat.id)] })}
-                expandedExtra={
-                  getFeatRestrictionNotice(feat) ? (
-                    <GuidedFeatRestrictionNotice feat={feat} />
-                  ) : undefined
-                }
-              />
-            ) : null
-          )}
-        </div>
+        <>
+          <div className={GUIDED_CHOICE_COMPACT_GRID_CLASS}>
+            {options.map((feat) =>
+              feat ? (
+                <GuidedChoiceCard
+                  key={feat.id}
+                  density="compact"
+                  title={feat.name}
+                  description={feat.description}
+                  selected={draft.characterFeatIds[0] === String(feat.id)}
+                  onSelect={() => updateDraft({ characterFeatIds: [String(feat.id)] })}
+                  expandedExtra={
+                    getFeatRestrictionNotice(feat) ? (
+                      <GuidedFeatRestrictionNotice feat={feat} />
+                    ) : undefined
+                  }
+                />
+              ) : null
+            )}
+          </div>
+          <GuidedLayerNav expandLabel={stepCopy.seeMore} onExpand={() => setBrowsing(true)} />
+        </>
       )}
     </GuidedStepLayout>
   );

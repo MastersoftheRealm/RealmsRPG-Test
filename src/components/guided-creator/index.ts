@@ -14,4 +14,5 @@ export { SpeciesRevealPanel } from './species-reveal-panel';
 export { GuidedStepLayout } from './guided-step-layout';
 export { GuidedStepFooter } from './guided-step-footer';
 export { GuidedSkillsPanel } from './guided-skills-panel';
+export { GuidedFeatsBrowsePanel } from './guided-feats-browse-panel';
 export { useGuidedPathData } from './use-guided-path-data';

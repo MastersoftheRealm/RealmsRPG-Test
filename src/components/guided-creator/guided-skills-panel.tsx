@@ -384,6 +384,7 @@ export function GuidedSkillsPanel({
         skillBadgesById={browseSkillBadgesById}
         recommendedSkillIds={browseRecommendedSkillIds}
         maxSelections={maxAddSkillSelections}
+        selectionLimitMessage={panelCopy.browseOverLimit(maxAddSkillSelections)}
       />
     </div>
   );

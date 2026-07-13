@@ -1,4 +1,14 @@
 
+- 2026-07-11 | agent | TASK-429 Guided feat Layer 2 browse | files: guided-feats-browse-panel.tsx, archetype-feats-step.tsx, character-feat-step.tsx, feat-selection.ts, guided-creator-copy.ts | Summary: Abilities-style GuidedLayerNav expands to in-step filtered feat browse (eligible-first, path pinned); Back to recommendations; shared capped swap helper. DEV-V-013-T012.
+
+- 2026-07-11 | agent | TASK-428 Archetype feats swap at capacity | files: archetype-feats-step.tsx | Summary: At-max feat cards no longer grey out; picking another swaps in (replaces last selected), matching ancestry replace grammar. DEV-V-013-T011.
+
+- 2026-07-11 | agent | TASK-427 Add modal soft budget | files: unified-selection-modal.tsx, add-skill-modal.tsx, guided-skills-panel.tsx, skills-allocation-page.tsx, guided-creator-copy.ts | Summary: maxSelections no longer greys the list; browse/select stays readable with warning when over budget; Add Selected blocked until under limit. DEV-V-013-T010.
+
+- 2026-07-11 | agent | TASK-426 Skip — no flaw as choice card | files: ancestry-step.tsx, guided-creator-copy.ts, guided-flaw-audit.pw.ts, ALL_FEEDBACK_CLEAN.md, AI_TASK_QUEUE.md, BUILD_VALIDATION.md | Summary: Optional flaw Skip is a GuidedChoiceCard in the same grid (not a secondary button); select declines then Next pick advances. Screenshot audit `.guided-flaw-audit/`.
+
+- 2026-07-11 | agent | TASK-425 SegmentedControl idle clarity | files: segmented-control.tsx, AGENT_GUIDE.md, ALL_FEEDBACK_CLEAN.md, AI_TASK_QUEUE.md, BUILD_VALIDATION.md, DEVELOPER_TASK_QUEUE.md | Summary: Idle segments use `bg-surface` + `border-border-light`; track gets outer border so size (and all SegmentedControl) options are distinct before selection. DEV-V-013-T008.
+
 - 2026-07-07 | agent | State feat notices — full recovery only | files: feat-restriction-notice.ts, feat-restriction-notice.test.ts | Summary: Guided state feat info warnings always say Full Recovery for uses (ignores codex Partial on state feats); non-state feats unchanged. Matches sheet recovery behavior.
 
 

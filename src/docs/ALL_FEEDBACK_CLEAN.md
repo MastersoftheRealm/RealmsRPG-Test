@@ -1724,3 +1724,43 @@ Notes
 - Feedback: State feats refresh on full recovery, not partial; info warnings on state feat cards should say Full Recovery (not Partial).
 - Expected: `getFeatRestrictionNotice` always uses Full Recovery for state feat uses text; matches GAME_RULES § recovery and sheet full-recovery handler.
 - Disposition: Implemented 2026-07-07 — `feat-restriction-notice.ts` forces Full when `state_feat`; unit tests added.
+
+**Raw Feedback Log — 2026-07-11 (Guided species size SegmentedControl clarity)**
+- Date: 2026-07-11
+- Context: Guided character creator → Species overview — size choice section
+- Priority: Medium
+- Feedback: Size buttons have no clear distinction until selected — no border or separation; looks odd. Likely the shared SegmentedControl; that universal style may need to be clearer.
+- Expected: Unselected size options (and SegmentedControl segments site-wide) read as distinct clickable choices with visible borders/surfaces before selection; selected state remains primary.
+- Disposition: Implemented 2026-07-11 — `SegmentedControl` idle segments use `bg-surface` + `border-border-light`; track gets outer border (TASK-425).
+
+**Raw Feedback Log — 2026-07-11 (Guided ancestry Skip — no flaw card fit)**
+- Date: 2026-07-11
+- Context: Guided character creator → Ancestry → optional flaw step
+- Priority: Medium
+- Feedback: "Skip — no flaw" doesn't look like it fits with the flaw choice cards; make it fit better. Screenshots + fix.
+- Expected: Skip is a peer GuidedChoiceCard in the same grid (title + short description, selectable like flaws); footer Next pick advances. No orphan secondary button under the grid.
+- Disposition: Implemented 2026-07-11 — skip rendered as `GuidedChoiceCard` in flaw grid; select sets `selectedFlawId: ''` (TASK-426).
+
+**Raw Feedback Log — 2026-07-11 (Add modal — browse when budget exhausted)**
+- Date: 2026-07-11
+- Context: Guided character creator → Skills → Browse all skills (add modal); applies to any add modal at capacity
+- Priority: Medium
+- Feedback: When you've already added too much (e.g. skill points spent), greying out all selections makes it hard to read through skills when curious. Instead allow reading and even selecting; show a warning that you don't have enough skill points — remove or decrease a skill bonus to add more.
+- Expected: Add modals stay fully readable at zero/remaining budget; selection allowed with clear over-budget warning; confirm blocked until under limit / points freed.
+- Disposition: Implemented 2026-07-11 — TASK-427 soft `maxSelections` in `UnifiedSelectionModal`; skill warning copy.
+
+**Raw Feedback Log — 2026-07-11 (Guided archetype feats — swap like ancestry)**
+- Date: 2026-07-11
+- Context: Guided character creator → Archetype Feats (and similar choice-card steps)
+- Priority: Medium
+- Feedback: Odd difference vs other steps — selecting an archetype feat greys out other feat cards and blocks selection. Should work like ancestry traits: let you swap among choices even when you already have the required amount.
+- Expected: At-capacity choice cards stay fully interactive; picking another feat swaps into the selection (ancestry-style replace), not grey-out / hard lock. Unified selection grammar across guided steps.
+- Disposition: Implemented 2026-07-11 — TASK-428 swap-on-select (no grey-out) in archetype-feats-step.
+
+**Raw Feedback Log — 2026-07-11 (Guided feat steps — Layer 2)**
+- Date: 2026-07-11
+- Context: Guided character creator → Archetype Feats + Character Feat
+- Priority: High
+- Feedback: Add Layer 2 to feat selection pages — same button location/design as abilities go-deeper; view all feats (modal or in-step expand); same style/location button to go back. Follow product overview + shared modules.
+- Expected: GuidedLayerNav expand/collapse; L2 filtered ranked browse; selections persist when returning to L1.
+- Disposition: Implemented 2026-07-11 — TASK-429 GuidedFeatsBrowsePanel in-step L2 (not modal).

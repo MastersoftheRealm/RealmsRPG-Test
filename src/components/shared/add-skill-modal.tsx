@@ -32,6 +32,11 @@ export interface AddSkillModalProps {
   recommendedSkillIds?: string[];
   /** Max new skills selectable in this session (e.g. remaining skill points ÷ proficiency cost). */
   maxSelections?: number;
+  /**
+   * Soft capacity message when over maxSelections (or max is 0).
+   * Rows stay readable; Add Selected is blocked until under the limit.
+   */
+  selectionLimitMessage?: string;
 }
 
 /** Parse skill.ability (comma-separated) into list of abbreviated ability codes (STR, AGI, ...). */
@@ -100,6 +105,7 @@ export function AddSkillModal({
   skillBadgesById,
   recommendedSkillIds,
   maxSelections,
+  selectionLimitMessage,
 }: AddSkillModalProps) {
   const { data: allSkills = [], isLoading: loading, error: queryError } = useCodexSkills();
   const [abilityFilter, setAbilityFilter] = useState('');
@@ -140,6 +146,14 @@ export function AddSkillModal({
 
   const error = queryError ? `Failed to load Skills: ${queryError.message}` : null;
 
+  const resolvedLimitMessage =
+    selectionLimitMessage ??
+    (maxSelections !== undefined
+      ? maxSelections <= 0
+        ? "You don't have enough skill points to add more. Remove a skill or decrease a skill bonus, then try again."
+        : `You've selected more skills than you can afford (max ${maxSelections}). Deselect some, or free skill points first.`
+      : undefined);
+
   const filterContent = (
     <div className="flex gap-3 items-center">
       <label className="text-sm font-medium text-text-secondary">Filter by Ability:</label>
@@ -173,6 +187,7 @@ export function AddSkillModal({
         isLoading={loading}
         onConfirm={(selected) => onAdd(selected.map(i => i.data as Skill))}
         maxSelections={maxSelections}
+        selectionLimitMessage={resolvedLimitMessage}
         columns={[
           { key: 'name', label: 'Name' },
           { key: 'ability', label: 'Abilities', sortable: true },

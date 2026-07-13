@@ -7,7 +7,7 @@
 'use client';
 
 import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
-import { Button, Spinner } from '@/components/ui';
+import { Spinner } from '@/components/ui';
 import { useMergedSpecies, useTraits, resolveTraitIds } from '@/hooks';
 import type { Species, Trait } from '@/hooks';
 import { getChoiceOptionIds, resolveChoiceOptionTraits } from '@/lib/choice-trait';
@@ -196,10 +196,13 @@ export function AncestryStep() {
     [currentTask, draft]
   );
 
+  const skipFlawSelected = Boolean(currentTask?.optional && draft.selectedFlawId === '');
+
   const hasCurrentPick = useMemo(() => {
     if (!currentTask) return false;
+    if (skipFlawSelected) return true;
     return currentTask.options.some((t) => isSelected(t, currentTask));
-  }, [currentTask, isSelected]);
+  }, [currentTask, isSelected, skipFlawSelected]);
 
   const handlePick = useCallback(
     (trait: Trait) => {
@@ -248,14 +251,13 @@ export function AncestryStep() {
     }
   }, [pickIndex, totalPicks, nextSubStep]);
 
+  /** Explicit decline — same card pattern as flaw options; footer Continue advances. */
   const handleSkipFlaw = useCallback(() => {
     updateDraft({
       selectedFlawId: '',
       selectedAncestryTraitIds: draft.selectedAncestryTraitIds.slice(0, 1),
     });
-    // Skipping the optional flaw always completes ancestry (no bonus trait pick).
-    nextSubStep();
-  }, [draft.selectedAncestryTraitIds, updateDraft, nextSubStep]);
+  }, [draft.selectedAncestryTraitIds, updateDraft]);
 
   const ancestryComplete = useMemo(() => {
     if (!species || !allTraits.length) return false;
@@ -383,16 +385,21 @@ export function AncestryStep() {
                 onSelect={() => handlePick(trait)}
               />
             ))}
+            {currentTask.optional && (
+              <GuidedChoiceCard
+                density="compact"
+                title={stepCopy.skipFlaw}
+                description={stepCopy.skipFlawDescription}
+                selected={skipFlawSelected}
+                onSelect={handleSkipFlaw}
+                selectAriaLabel={stepCopy.skipFlaw}
+                className="sm:col-span-2"
+              />
+            )}
           </div>
-          {currentTask.optional && (
-            <div className="mt-4">
-              <Button type="button" variant="secondary" onClick={handleSkipFlaw} className="min-h-11">
-                {stepCopy.skipFlaw}
-              </Button>
-            </div>
-          )}
         </>
       )}
     </GuidedStepLayout>
   );
 }
+

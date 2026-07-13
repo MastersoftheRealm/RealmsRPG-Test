@@ -1203,6 +1203,122 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-013-T008 — Species size SegmentedControl clarity
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-425 |
+| **Where** | Guided creator → Species → overview (species with 2+ sizes) |
+| **Needs** | Starter species with multiple size options (e.g. Human if multi-size) |
+
+**Steps**
+1. Open guided creator, pick a species that offers more than one size, continue to overview.
+2. Before selecting a size, inspect the size SegmentedControl.
+3. Select a size; confirm selected vs idle contrast.
+
+**Expected**
+- Unselected size options show distinct borders/surfaces (not flat text on a track).
+- Selected option uses primary fill; other options remain bordered idle chips.
+- Continue stays blocked until a size is chosen (existing behavior).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T009 — Ancestry Skip — no flaw choice card
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-426 |
+| **Where** | Guided creator → Ancestry → Take a flaw? (optional) |
+| **Needs** | Species with at least one flaw option |
+
+**Steps**
+1. Reach the optional flaw pick after characteristic.
+2. Confirm Skip — no flaw appears as a card in the same grid as flaw options (not a small button below).
+3. Select Skip; confirm selected check; click Next pick.
+4. Confirm flow advances to Abilities (no bonus ancestry trait step).
+
+**Expected**
+- Skip uses GuidedChoiceCard styling (title + description) in the compact choice grid.
+- Selecting Skip then Next pick completes ancestry without the bonus trait pick.
+- Optional: Next pick with nothing selected still declines (existing footer skip path).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T010 — Skills browse modal when points spent
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-427 |
+| **Where** | Guided creator → Skills → Browse all skills |
+| **Needs** | Path + species chosen; skill points fully spent |
+
+**Steps**
+1. Reach Skills; spend all skill points (path/species defaults often do this).
+2. Click **Browse all skills**.
+3. Expand a few skill rows and read descriptions; tap + to select one or more skills.
+4. Confirm the warning banner and that **Add Selected** stays disabled.
+5. Close modal; decrease or remove a skill to free a point; reopen browse and add a skill successfully.
+
+**Expected**
+- Rows stay full opacity (not greyed out) with 0 points remaining.
+- Selection is allowed; warning explains needing to free skill points.
+- Add Selected disabled while over budget; works after freeing a point.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-013-T011 — Archetype feats swap at capacity
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-428 |
+| **Where** | Guided creator → Archetype Feats |
+| **Needs** | Path chosen (e.g. Berserker / martial so max feats ≥ 2) |
+
+**Steps**
+1. Reach Archetype Feats; note the X / max counter.
+2. Select feats until the counter is at max (Continue enabled).
+3. Confirm unselected cards are full opacity (not greyed) and still clickable.
+4. Click an unselected feat card; confirm it becomes selected and one previous pick drops (count stays at max).
+5. Click a selected card to deselect; confirm count drops and Continue disables until filled again.
+
+**Expected**
+- No grey-out / hard lock on unselected cards at capacity.
+- At-cap pick swaps in (replaces most recent selection); ancestry-style replace grammar.
+- Deselect still works; Continue requires exact max count.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-013-T012 — Feat steps Layer 2 browse
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-429 |
+| **Where** | Guided creator → Archetype Feats, then Character Feat |
+| **Needs** | Path + species + abilities + skills complete |
+
+**Steps**
+1. On Archetype Feats, confirm path guidance groups and **See more feats** below the grid.
+2. Click See more feats; confirm L1 groups are replaced by Browse feats (search + filters).
+3. Select a non-path feat; confirm counter updates (swap at max if already full).
+4. Click **← Back to recommendations**; confirm L1 groups return and selections remain.
+5. On Character Feat, repeat See more / back; confirm single-select replace works in L2.
+
+**Expected**
+- GuidedLayerNav expand/collapse matches abilities placement (below content).
+- L2 defaults to feats you qualify for; optional "Show feats I don't qualify for".
+- No modal overlay for Layer 2.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-014 — Codex payload + roll timestamp (TASK-378)

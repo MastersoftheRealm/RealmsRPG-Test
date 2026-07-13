@@ -2,9 +2,162 @@
 
 **Last slimmed:** 2026-06-26 (TASK-382). Full history: [`archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md`](archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md) and [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md).
 
-**Next task ID:** TASK-425
+**Next task ID:** TASK-430
 
 **Agent rules:** Skip `blocked` tasks and any task with `assignee:` set to a human (e.g. TASK-353, **TASK-414**). Skip human-only tasks (TASK-353 → `DEVELOPER_TASK_QUEUE.md` DEV-001). Pick highest-priority `not-started` or continue `partial`. **Do not start TASK-408–413** until TASK-414 spec is `done` (owner approval).
+
+---
+
+- id: TASK-429
+  title: Guided feat steps — Layer 2 browse (GuidedLayerNav)
+  created_at: 2026-07-11
+  created_by: agent
+  priority: high
+  status: done
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T012
+  developer_test_plan: |
+    DEV-V-013-T012 — Archetype + character feat See more → L2 browse; Back to recommendations.
+  related_files:
+    - src/components/guided-creator/guided-feats-browse-panel.tsx
+    - src/components/guided-creator/steps/archetype-feats-step.tsx
+    - src/components/guided-creator/steps/character-feat-step.tsx
+    - src/lib/guided-creator/feat-selection.ts
+    - src/lib/constants/copy/guided-creator-copy.ts
+  description: |
+    Add Layer 2 to guided archetype feats and character feat steps per REALMS §3 / §5.6.
+    Use abilities/species grammar: GuidedLayerNav below content expands to in-step filtered
+    ranked browse (not a modal); same slot collapses with Back to recommendations. L2 hides
+    unmet requirements by default; path recommendations pinned; selection uses capped swap.
+  acceptance_criteria:
+    - Both feat steps show GuidedLayerNav "See more…" below L1 cards.
+    - Expand replaces L1 with browse panel (search, category/ability filters, eligible feats).
+    - Collapse returns to L1 groups without clearing selections.
+    - Selections update live with swap-at-cap; Continue still requires exact max.
+  notes: |
+    Owner ask 2026-07-11 — Layer 2 like abilities go-deeper / go-back, not grey-out lock.
+  implemented_by: agent
+  evidence: |
+    GuidedFeatsBrowsePanel + feat-selection helpers; wired both feat steps; unit tests for swap helper.
+
+---
+
+- id: TASK-428
+  title: Guided archetype feats — swap selection like ancestry
+  created_at: 2026-07-11
+  created_by: agent
+  priority: medium
+  status: done
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T011
+  developer_test_plan: |
+    DEV-V-013-T011 — At-cap archetype feat cards stay interactive; pick another swaps (no grey-out).
+  related_files:
+    - src/components/guided-creator/steps/archetype-feats-step.tsx
+  description: |
+    Archetype feat GuidedChoiceCards grey out and block selection once maxFeats is filled,
+    unlike ancestry trait picks which replace the current choice. Align to ancestry-style swap:
+    under cap add; at cap selecting a new card replaces the most recent pick; selected cards
+    remain toggleable to deselect. No opacity/disabled lock on unselected cards.
+  acceptance_criteria:
+    - At max archetype feats, unselected cards are full opacity and clickable.
+    - Clicking an unselected card at capacity swaps it in (replaces last selected); count stays at max.
+    - Clicking a selected card still deselects; Continue requires count === maxFeats.
+    - Character feat step already replaces — no regression.
+  notes: |
+    Owner feedback 2026-07-11 — selection grammar unity with ancestry traits.
+  implemented_by: agent
+  evidence: |
+    Removed atCap grey-out; selectFeat adds under cap, swaps (drop last + add) at cap, toggles off when selected.
+
+---
+
+- id: TASK-427
+  title: Add modals — browse when selection budget exhausted
+  created_at: 2026-07-11
+  created_by: agent
+  priority: medium
+  status: done
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T010
+  developer_test_plan: |
+    DEV-V-013-T010 — Browse all skills with 0 points: readable rows, selectable + warning, Add blocked until points freed.
+  related_files:
+    - src/components/shared/unified-selection-modal.tsx
+    - src/components/shared/add-skill-modal.tsx
+    - src/components/guided-creator/guided-skills-panel.tsx
+    - src/components/shared/skills-allocation-page.tsx
+    - src/lib/constants/copy/guided-creator-copy.ts
+  description: |
+    When maxSelections is 0 (e.g. all skill points spent), UnifiedSelectionModal greys out every
+    row (opacity-50), making browse/read hard. Soften capacity: keep rows readable and selectable;
+    show a warning that budget is exhausted; block Add Selected until under the limit.
+  acceptance_criteria:
+    - With 0 skill points remaining, Browse all skills rows are full opacity and expandable.
+    - User can select skills; warning explains need to free points; Add Selected stays disabled while over limit.
+    - Same soft-limit behavior for any UnifiedSelectionModal with maxSelections (including max 0).
+  notes: |
+    Owner feedback 2026-07-11 — guided skills add modal; pattern applies to all add modals.
+  implemented_by: agent
+  evidence: |
+    Soft maxSelections in UnifiedSelectionModal; skill copy via selectionLimitMessage; advanced Add Skill opens at 0 pts.
+
+---
+
+- id: TASK-426
+  title: Guided ancestry — Skip no flaw as choice card
+  created_at: 2026-07-11
+  created_by: agent
+  priority: medium
+  status: done
+  build_validation: DEV-V-013-T009
+  developer_test_plan: |
+    DEV-V-013-T009 — Flaw step Skip card matches GuidedChoiceCard grid; select + Next pick advances.
+  related_files:
+    - src/components/guided-creator/steps/ancestry-step.tsx
+    - src/lib/constants/copy/guided-creator-copy.ts
+  description: |
+    Optional flaw step showed Skip as a small secondary Button under the card grid — visually
+    mismatched and easy to miss under the footer. Render Skip as a GuidedChoiceCard peer in the
+    same compact grid; selecting records explicit decline (selectedFlawId ''); Continue advances.
+  acceptance_criteria:
+    - Skip is a GuidedChoiceCard in the flaw options grid with title + description.
+    - Selecting Skip selects the card (check); Next pick leaves ancestry without bonus trait.
+    - No separate secondary Skip button below the grid.
+  notes: |
+    Owner feedback 2026-07-11 — screenshot audit `.guided-flaw-audit/`.
+
+---
+
+- id: TASK-425
+  title: SegmentedControl idle segments — clearer borders (species size)
+  created_at: 2026-07-11
+  created_by: agent
+  priority: medium
+  status: done
+  build_validation: DEV-V-013-T008
+  developer_test_plan: |
+    DEV-V-013-T008 — Species overview size SegmentedControl idle borders visible before selection.
+  related_files:
+    - src/components/shared/segmented-control.tsx
+    - src/components/guided-creator/species-reveal-panel.tsx
+  description: |
+    Guided species overview size picker (SegmentedControl) had no visible distinction between
+    unselected options until one was selected. Strengthen shared SegmentedControl idle/track
+    styling site-wide so segments read as distinct choices (borders + surface) while keeping
+    primary selected state.
+  acceptance_criteria:
+    - Idle segments have visible border and surface fill distinct from the track.
+    - Track has an outer border; selected segment remains primary-button fill.
+    - Species overview multi-size picker and Library/SourceFilter still use SegmentedControl.
+  notes: |
+    Owner feedback 2026-07-11 — size buttons unclear until selected; fix universal component.
 
 ---
 

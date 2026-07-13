@@ -16,8 +16,9 @@
 | Character sheet (view + edit) | `characters/[id]/page.tsx` — layout `CharacterSheetBody` (single library mount); derived `useCharacterSheetDerived`; handlers `useCharacterSheetActions`; library lists via `entity-library-sections` + `library-entity-rows`; feats tab via `FeatsTraitsListSection` + `library-feat-rows` (player feat/trait `customName` + `note` on save; trait map `traitCustomizations`) |
 | Character creator | `character-creator/` (wizard steps under `components/character-creator/steps/`) |
 | Character creator entry (Simple vs Advanced) | `characters/new/page.tsx` |
-| Guided ("Simple") character creator | `characters/new/guided/page.tsx`, `components/guided-creator/` (incl. `GuidedSkillsPanel`, `GuidedChoiceCard`), `stores/guided-creator-store.ts`, `lib/guided-creator/build-character.ts` |
+| Guided ("Simple") character creator | `characters/new/guided/page.tsx`, `components/guided-creator/` (incl. `GuidedSkillsPanel`, `GuidedChoiceCard`, `GuidedFeatsBrowsePanel`), `stores/guided-creator-store.ts`, `lib/guided-creator/build-character.ts` |
 | Guided skills suggestions (ability-tier curation) | `lib/guided-creator/curated-skills.ts` (`curateGuidedSkillIds`, `getGuidedAbilityRecommendationTiers`), `guided-skill-recommendations.ts` (`buildGuidedSkillSuggestions`); consumed by `steps/skills-step.tsx` + `AddSkillModal` badges via `guided-skills-panel.tsx` |
+| Guided feat Layer 2 browse | `guided-feats-browse-panel.tsx`, `lib/guided-creator/feat-selection.ts`; wired in `archetype-feats-step.tsx` + `character-feat-step.tsx` via `GuidedLayerNav` |
 | Guided equipment phased sub-flow (TASK-424) | `GUIDED_EQUIPMENT_PHASED_SPEC.md`, `lib/guided-creator/equipment-eligibility.ts`, `equipment-phase-stats.ts`, `equipment-currency.ts`, `equipment-phase-nav.ts`, `equipment-catalog-rows.ts`, `equipment-phase-candidates.ts`, `guided-equipment-l2.ts`, `guided-creator/guided-equipment-l1-phase.tsx`, `guided-equipment-l2-modal.tsx`, `guided-equipment-phase-selection.tsx`, `guided-loadout-kit-presets.tsx`, `guided-equipment-l2-grid.ts`, `lib/game/archetype-path.ts` (parseLevel1LoadoutsField), `hooks/use-guided-equipment-catalog.ts`, `lib/game/weapon-attack-ability.ts` |
 | Advanced character creator (classic 9-step) | `characters/new/advanced/page.tsx` |
 | Library (user + official content browse) | `library/page.tsx` |
@@ -71,7 +72,7 @@
 | **Entity card art — admin upload** | `CodexArtUploadField`, `lib/codex-art.ts`, `POST /api/upload/codex-art` |
 | Hub list row (Encounters/Crafting) | `HubListRow` |
 | Sortable column headers | `ListHeader` |
-| Selection modal (add/pick from library) | `UnifiedSelectionModal` |
+| Selection modal (add/pick from library) | `UnifiedSelectionModal` (`maxSelections` soft limit + `selectionLimitMessage`; no list grey-out at capacity) |
 | + → ✓ selection button | `SelectionToggle`; equipped toggle: `EquipToggle`; innate: `InnateToggle` |
 | Source scope All / Realms / My Library | `SourceFilter` (on `SegmentedControl`) |
 | 2–N pill toggle | `SegmentedControl` |

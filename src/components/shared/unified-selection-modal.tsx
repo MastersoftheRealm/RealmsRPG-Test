@@ -18,7 +18,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef, ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Modal, Button, IconButton } from '@/components/ui';
+import { Alert, Modal, Button, IconButton } from '@/components/ui';
 import { TabContentPanel } from '@/components/ui/tab-navigation';
 import { 
   GridListRow, 
@@ -95,6 +95,12 @@ export interface UnifiedSelectionModalProps {
   // Selection behavior
   onConfirm: (selectedItems: SelectableItem[]) => void;
   maxSelections?: number;
+  /**
+   * When set with maxSelections: soft capacity — rows stay readable/selectable over the limit;
+   * this message is shown and Add Selected is blocked until selection is within max.
+   * Prefer this over greying out the whole list when budget is exhausted (maxSelections === 0).
+   */
+  selectionLimitMessage?: string;
   initialSelectedIds?: Set<string>;
   /** Hide items that don't qualify instead of graying them out */
   hideDisabled?: boolean;
@@ -151,6 +157,7 @@ export function UnifiedSelectionModal({
   isLoading = false,
   onConfirm,
   maxSelections,
+  selectionLimitMessage,
   initialSelectedIds = new Set(),
   hideDisabled = false,
   columns = [],
@@ -218,7 +225,9 @@ export function UnifiedSelectionModal({
     return sortItems(result);
   }, [items, displayFilter, searchQuery, searchFields, sortState, hideDisabled, sortItems]);
   
-  // Toggle selection — normalize id to string so selection works when codex returns number ids
+  // Toggle selection — normalize id to string so selection works when codex returns number ids.
+  // Soft capacity: allow selecting past maxSelections; confirm is blocked + warning shown instead
+  // of greying out the list (important when maxSelections === 0 / budget exhausted).
   const toggleSelection = useCallback((id: string | number) => {
     const key = String(id);
     setSelectedIds(prev => {
@@ -232,10 +241,6 @@ export function UnifiedSelectionModal({
           return newQ;
         });
       } else {
-        // Check max selections
-        if (maxSelections && newSet.size >= maxSelections) {
-          return prev;
-        }
         newSet.add(key);
         // Initialize quantity for equipment
         if (showQuantity) {
@@ -244,7 +249,7 @@ export function UnifiedSelectionModal({
       }
       return newSet;
     });
-  }, [maxSelections, showQuantity]);
+  }, [showQuantity]);
   
   // Selected items (for footerExtra and confirmDisabled)
   const selectedItems = useMemo(
@@ -252,11 +257,21 @@ export function UnifiedSelectionModal({
     [items, selectedIds]
   );
 
-  const atMaxSelections =
-    maxSelections !== undefined && selectedIds.size >= maxSelections;
+  const overSelectionLimit =
+    maxSelections !== undefined && selectedIds.size > maxSelections;
+  const showSelectionLimitWarning =
+    maxSelections !== undefined &&
+    (maxSelections === 0 || overSelectionLimit);
+  const limitWarningText = showSelectionLimitWarning
+    ? selectionLimitMessage ??
+      (maxSelections === 0
+        ? 'You cannot add more right now. Free up capacity first, then try again.'
+        : `You've selected more than the limit (max ${maxSelections}). Deselect some to continue.`)
+    : undefined;
 
   // Handle confirm — match by string id so codex number ids work
   const handleConfirm = () => {
+    if (overSelectionLimit) return;
     const selected = selectedItems;
     // Attach quantities to items if needed
     if (showQuantity) {
@@ -268,7 +283,10 @@ export function UnifiedSelectionModal({
     onClose();
   };
 
-  const isConfirmDisabled = selectedIds.size === 0 || (confirmDisabled?.(selectedItems) ?? false);
+  const isConfirmDisabled =
+    selectedIds.size === 0 ||
+    overSelectionLimit ||
+    (confirmDisabled?.(selectedItems) ?? false);
   
   
   const sizeClasses = {
@@ -303,6 +321,12 @@ export function UnifiedSelectionModal({
         </div>
         
         {headerExtra && <div className="mb-4">{headerExtra}</div>}
+
+        {limitWarningText && (
+          <Alert variant="warning" className="mb-4">
+            {limitWarningText}
+          </Alert>
+        )}
         
         {/* Filters (optional) */}
         {showFilters && filterContent && (
@@ -345,8 +369,9 @@ export function UnifiedSelectionModal({
                   {filteredItems.map(item => {
                     const itemIdStr = String(item.id);
                     const isSelected = selectedIds.has(itemIdStr);
-                    const isSelectionDisabled =
-                      item.disabled || (atMaxSelections && !isSelected);
+                    // Only item.disabled greys a row — never capacity/maxSelections
+                    // (budget-exhausted lists stay readable for browsing).
+                    const isSelectionDisabled = Boolean(item.disabled);
 
                     return (
                       <div key={itemIdStr} className="flex items-center gap-2 min-w-0">
@@ -410,7 +435,7 @@ export function UnifiedSelectionModal({
           <div className="flex items-center justify-between">
             <span className="text-sm text-text-muted">
               {selectedIds.size} {itemLabel}{selectedIds.size !== 1 ? 's' : ''} selected
-              {maxSelections && ` (max ${maxSelections})`}
+              {maxSelections !== undefined && ` (max ${maxSelections})`}
             </span>
             <div className="flex gap-2">
               <Button variant="secondary" onClick={onClose}>
