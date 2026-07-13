@@ -104,7 +104,7 @@ function GuidedSkillRow({
           {hasDescription && (
             <ChevronDown
               className={cn(
-                'h-4 w-4 shrink-0 text-text-muted transition-transform',
+                'h-4 w-4 shrink-0 text-text-muted dark:text-text-secondary transition-transform',
                 expanded && 'rotate-180'
               )}
               aria-hidden

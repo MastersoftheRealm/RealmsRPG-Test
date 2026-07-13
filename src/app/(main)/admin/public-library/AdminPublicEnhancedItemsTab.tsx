@@ -15,9 +15,10 @@ import {
 import {
   useOfficialLibrary,
   useEnhancedItems,
-  useCreateEnhancedItem,
-  useDeleteEnhancedItem,
+  useCreateOfficialEnhancedItem,
+  useDeleteOfficialEnhancedItem,
   type OfficialEnhancedItem,
+  type CreateOfficialEnhancedItemInput,
 } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { Button, Modal, Select, Input } from '@/components/ui';
@@ -35,8 +36,8 @@ export function AdminPublicEnhancedItemsTab() {
   const [editTarget, setEditTarget] = useState<OfficialEnhancedItem | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  const createMutation = useCreateEnhancedItem('official');
-  const deleteMutation = useDeleteEnhancedItem('official');
+  const createMutation = useCreateOfficialEnhancedItem();
+  const deleteMutation = useDeleteOfficialEnhancedItem();
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const filtered = useMemo(() => {
@@ -170,20 +171,7 @@ export function AdminPublicEnhancedItemsTab() {
   );
 }
 
-type EnhancedEditBody = {
-  name: string;
-  description?: string;
-  baseItemSource: 'codex' | 'public' | 'custom';
-  baseItemId?: string;
-  baseItemName: string;
-  baseItemDescription?: string;
-  powerSource: 'official' | 'public' | 'library';
-  powerId: string;
-  powerName: string;
-  powerEnergy: number;
-  usesType: 'full' | 'partial' | 'permanent';
-  usesCount?: number;
-};
+type EnhancedEditBody = CreateOfficialEnhancedItemInput;
 
 function EnhancedItemEditModal({
   isOpen,

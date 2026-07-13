@@ -1,4 +1,16 @@
 
+- 2026-07-13 | agent | TASK-346 audit → done — globals + Button tokens | files: globals.css, button.tsx, AGENT_GUIDE, AI_TASK_QUEUE | Summary: Migrated leftover CSS utilities (tab/stepper/search/skeleton/shimmer/glow) off raw palette; Button text-on-dark; clarified AC for diagnostic console.error; marked done.
+
+- 2026-07-13 | agent | TASK-346 batch 4 — empty raw-color backlog | files: creators/sheet/item-creator/header/shared/roll-log/SkillEncounterView + raw-color-backlog.mjs | Summary: Migrated remaining allowlisted raw palette (white/amber/teal/blue/black overlays → semantic tokens); `RAW_COLOR_BACKLOG` now `[]` (0 ESLint violators outside auth/ui exemptions). Task stays partial for diagnostic console.*.
+
+- 2026-07-13 | agent | TASK-346 batch 3 — token cleanup + backlog ratchet | files: card, hub-list-row, encounters page, CodexParts/Properties, 9 Admin*Tabs, my-account, roll-log, raw-color-backlog | Summary: Semantic danger/info/energy/warning/surface tokens; removed 14 clean files from allowlist (63→49); task remains partial.
+
+- 2026-07-13 | agent | TASK-421 audit — hook split + null payload | files: use-enhanced-items.ts, crafting.ts, AdminPublicEnhancedItemsTab, AGENT_GUIDE | Summary: Split user vs official create/delete/update hooks (no unsafe scope unions); normalize null payload on fetch; note admin edit still POSTs create.
+
+- 2026-07-13 | agent | TASK-421 done — official enhanced items payload typing | files: crafting.ts, use-enhanced-items.ts, AdminPublicEnhancedItemsTab.tsx, crafting-enhanced-items.test.ts, FEATURE_INDEX, types/index | Summary: Replaced `Record<string, any>` with `OfficialEnhancedItemPayload` + create/patch inputs; hook/service free of explicit any; admin create body shares typed input.
+
+- 2026-07-13 | agent | Deep audit last-10 done tasks — mobile/a11y/docs gaps | files: LoadFromLibraryModal, add-library-item-modal, unified-selection-modal, add-skill-modal, guided-skills-panel, archetype-feats-step, feat/sub-skill/creature feat modals, species TraitListModal, TASK-422→done, BUILD_VALIDATION T004/T006, FEATURE_INDEX, AGENT_GUIDE | Summary: md-gated modal max-height (mobile full-screen); SearchInput aria-label; skill filter 44px; skills chevron contrast; feat continue === max; T006 Confirm-applies copy; TASK-422 closed (UI via 424).
+
 - 2026-07-13 | agent | Deferred + last-25 audit fixes | files: use-load-modal-library.ts, unified-selection-modal.tsx, species-creator TraitListModal, BUILD_VALIDATION T014–T015, DEVELOPER_TASK_QUEUE, AGENT_GUIDE, FEATURE_INDEX, CHIP_UNIFICATION_PLAN, AI_TASK_QUEUE 406/407/419/376 | Summary: Type-gated load fetches; TraitListModal → UnifiedSelectionModal + primaryActions; flexLayout default true; skills/reveal DEV-V coverage rewired; docs parity.
 
 - 2026-07-13 | agent | TASK-379 audit fixes — empowered load, L2 grid, dead adapters | files: use-load-modal-library.ts, guided-equipment-l2-modal.tsx, LoadFromLibraryModal.tsx, add-library-item-modal.tsx, unified-selection-modal.tsx, library-selectable-builders.ts, AGENT_GUIDE, CHIP_UNIFICATION_PLAN | Summary: Empowered load uses nested-doc builder + Action/Damage/Area; public error wired; removed unused build-*-selectable adapters; L2 no longer double-applies selection grid; Add modal flexLayout; docs/API corrected.

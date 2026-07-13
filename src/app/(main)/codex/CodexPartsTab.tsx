@@ -102,7 +102,7 @@ function PartCard({ part }: { part: Part }) {
       gridColumns={PART_GRID_COLUMNS}
       columns={[
         { key: 'Category', value: formatListCellLabel(part.category) },
-        { key: 'Energy', value: formatEnergyCost(part.base_en, part.percentage), className: 'text-blue-600' },
+        { key: 'Energy', value: formatEnergyCost(part.base_en, part.percentage), className: 'text-energy-text' },
         { key: 'TP', value: part.base_tp ? part.base_tp : '-', className: 'text-tp' },
       ]}
       detailSections={detailSections}

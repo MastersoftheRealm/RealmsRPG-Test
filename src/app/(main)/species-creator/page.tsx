@@ -766,7 +766,7 @@ export default function SpeciesCreatorPage() {
 
         <CollapsibleSection title={`Languages (up to ${MAX_LANGUAGES})`} collapsedSummary={languagesSummary} defaultExpanded={true}>
           <p className="text-sm text-text-muted dark:text-text-secondary mb-4">Universal can be included by default; add or remove as desired.</p>
-          <ChipList items={form.languages} onRemove={removeLanguage} color="bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-300" />
+          <ChipList items={form.languages} onRemove={removeLanguage} color="bg-info-100 dark:bg-info-900/30 text-info-800 dark:text-info-300" />
           <div className="flex gap-2 mt-2">
             <Input
               label="New language"

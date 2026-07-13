@@ -156,7 +156,7 @@ export const CombatantCard = memo(function CombatantCard({
           <div
             className={cn(
               'w-11 h-11 md:w-10 md:h-10 rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors',
-              isCurrentTurn ? 'bg-primary-button text-white' : 'bg-surface-alt text-text-secondary hover:bg-surface'
+              isCurrentTurn ? 'bg-primary-button text-text-on-dark' : 'bg-surface-alt text-text-secondary hover:bg-surface'
             )}
             onClick={() => setIsEditingInitiative(true)}
             title="Click to edit initiative"
@@ -525,7 +525,7 @@ export const CombatantCard = memo(function CombatantCard({
               onClick={() => setShowConditions(!showConditions)}
               className={cn(
                 'px-2 py-0.5 text-xs rounded touch-target-md-compact inline-flex items-center justify-center',
-                showConditions ? 'bg-warning-500 text-white' : 'bg-warning-light text-warning-fg hover:opacity-90'
+                showConditions ? 'bg-warning-500 text-text-on-dark' : 'bg-warning-light text-warning-fg hover:opacity-90'
               )}
             >
               {showConditions ? '▲' : '▼'} Conditions
@@ -574,7 +574,7 @@ export const CombatantCard = memo(function CombatantCard({
                 <Button
                   variant="primary"
                   size="sm"
-                  className="bg-amber-600 hover:bg-amber-700"
+                  className="bg-warning-600 hover:bg-warning-700"
                   onClick={handleAddCondition}
                   disabled={!selectedCondition}
                 >

@@ -499,7 +499,7 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
           </div>
         }
         size="xl"
-        className="max-h-[85vh]"
+        className="md:max-h-[85vh]"
       />
     </>
   );

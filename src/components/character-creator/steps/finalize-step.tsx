@@ -120,7 +120,7 @@ function ValidationModal({
         <Button
           onClick={onContinueAnyway}
           disabled={isSaving}
-          className="bg-warning-600 text-white hover:bg-warning-700 dark:bg-warning-500 dark:hover:bg-warning-600"
+          className="bg-warning-600 text-text-on-dark hover:bg-warning-700 dark:bg-warning-500 dark:hover:bg-warning-600"
         >
           Save Anyway
         </Button>
@@ -354,7 +354,7 @@ function PortraitUpload() {
                 type="button"
                 onClick={handleRemove}
                 aria-label="Remove portrait"
-                className="absolute top-1 right-1 min-h-11 min-w-11 rounded-full bg-danger-button text-white flex items-center justify-center text-sm hover:bg-danger-700"
+                className="absolute top-1 right-1 min-h-11 min-w-11 rounded-full bg-danger-button text-text-on-dark flex items-center justify-center text-sm hover:bg-danger-700"
               >
                 ×
               </button>
@@ -1110,7 +1110,7 @@ export function FinalizeStep() {
               'min-h-11 min-w-11 px-8',
               !saving &&
                 validationIssues.some((i) => i.severity === 'error') &&
-                'bg-warning-600 hover:bg-warning-700 dark:bg-warning-500 dark:hover:bg-warning-600 text-white'
+                'bg-warning-600 hover:bg-warning-700 dark:bg-warning-500 dark:hover:bg-warning-600 text-text-on-dark'
             )}
           >
             {validationIssues.length > 0 ? '📋 Review & Create' : '✓ Create Character'}

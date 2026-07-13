@@ -728,7 +728,7 @@ export function LibrarySection({
                         onCurrencyChange?.(newValue);
                       }
                     }}
-                    className="w-20 px-2 py-1 text-sm font-bold text-warning-fg border border-warning-300 dark:border-warning-600/50 rounded focus:ring-2 focus:ring-warning-500 bg-white dark:bg-surface"
+                    className="w-20 px-2 py-1 text-sm font-bold text-warning-fg border border-warning-300 dark:border-warning-600/50 rounded focus:ring-2 focus:ring-warning-500 bg-surface"
                     title="Use +5, -10, or a number"
                   />
                   <span className="text-sm font-medium text-text-muted dark:text-text-secondary">Currency</span>

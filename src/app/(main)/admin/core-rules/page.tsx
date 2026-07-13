@@ -970,7 +970,7 @@ export default function AdminCoreRulesPage() {
           >
             {saving ? <><Spinner size="sm" /> Saving...</> : 'Save Changes'}
           </Button>
-          {dirty && <span className="text-xs text-amber-600 dark:text-amber-400">Unsaved changes</span>}
+          {dirty && <span className="text-xs text-warning-700 dark:text-warning-400">Unsaved changes</span>}
         </div>
       </TabContentPanel>
     </PageContainer>

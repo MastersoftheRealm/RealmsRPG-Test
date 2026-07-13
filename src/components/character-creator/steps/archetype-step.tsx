@@ -64,8 +64,8 @@ function AbilityPickButton({
           'px-3 py-2 min-h-11 min-w-11 rounded-lg text-sm font-medium transition-colors',
           selected
             ? variant === 'power'
-              ? 'bg-power-dark text-white'
-              : 'bg-martial-dark text-white'
+              ? 'bg-power-dark text-text-on-dark'
+              : 'bg-martial-dark text-text-on-dark'
             : disabled
               ? 'bg-surface text-text-muted dark:text-text-secondary cursor-not-allowed'
               : 'bg-surface border border-border-light hover:border-border'

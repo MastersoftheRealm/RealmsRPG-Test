@@ -55,7 +55,7 @@ export function SheetActionToolbar({
           'flex items-center justify-center',
           'hover:scale-110 active:scale-95',
           isEditMode
-            ? 'bg-success-600 hover:bg-success-700 text-white'
+            ? 'bg-success-600 hover:bg-success-700 text-text-on-dark'
             : 'bg-surface border border-border-light text-text-secondary hover:text-text-primary hover:bg-surface-alt'
         )}
         title={isEditMode ? 'Done editing' : 'Edit character'}

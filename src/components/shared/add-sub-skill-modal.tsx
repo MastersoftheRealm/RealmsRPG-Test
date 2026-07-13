@@ -304,7 +304,7 @@ export function AddSubSkillModal({
         footerExtra={footerExtra}
         confirmDisabled={confirmDisabled}
         size="xl"
-        className="max-h-[85vh]"
+        className="md:max-h-[85vh]"
       />
     </>
   );

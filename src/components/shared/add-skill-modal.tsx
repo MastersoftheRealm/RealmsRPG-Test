@@ -160,7 +160,7 @@ export function AddSkillModal({
       <select
         value={abilityFilter}
         onChange={(e) => setAbilityFilter(e.target.value)}
-        className="px-3 py-1.5 text-sm rounded-lg border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-outline-border"
+        className="min-h-11 px-3 py-2 text-sm rounded-lg border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-outline-border"
         aria-label="Filter by ability"
       >
         <option value="">All Abilities</option>

@@ -316,7 +316,7 @@ function AccountDropdown({
         className="flex items-center gap-2 min-h-11 min-w-11"
         onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
       >
-        <div className="w-10 h-10 rounded-full bg-primary-button flex items-center justify-center text-white font-bold">
+        <div className="w-10 h-10 rounded-full bg-primary-button flex items-center justify-center text-text-on-dark font-bold">
           {profile?.username?.charAt(0).toUpperCase() ?? '?'}
         </div>
       </button>

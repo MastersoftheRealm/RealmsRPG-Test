@@ -283,7 +283,7 @@ function AdminFeatEditModal({
               <Button
                 variant="outline"
                 onClick={onRequestDelete}
-                className={deleteConfirm ? 'border-red-500 text-red-600' : ''}
+                className={deleteConfirm ? 'border-danger-500 text-danger-700 dark:text-danger-400' : ''}
               >
                 {deleteConfirm ? 'Click again to confirm delete' : 'Delete'}
               </Button>
@@ -1202,7 +1202,7 @@ export function AdminFeatsTab() {
                 <div className="flex items-center gap-1 pr-2">
                   {pendingDeleteId === feat.id ? (
                     <div className="flex items-center gap-1 text-xs">
-                      <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
+                      <span className="text-danger-700 dark:text-danger-400 font-medium whitespace-nowrap">Remove?</span>
                       <Button size="sm" variant="danger" onClick={() => handleInlineDelete(feat.id)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
                       <Button size="sm" variant="secondary" onClick={() => setPendingDeleteId(null)} className="text-xs px-2 py-0.5 h-6">No</Button>
                     </div>

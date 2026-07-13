@@ -1454,7 +1454,7 @@ function CreatureCreatorContent() {
                   items={creature.movementTypes} 
                   onRemove={(item) => removeFromArray('movementTypes', item)}
                   color="bg-warning-light text-warning-fg"
-                  rowHoverClass="hover:bg-amber-200 dark:hover:bg-amber-800/40"
+                  rowHoverClass="hover:bg-warning-200 dark:hover:bg-warning-800/40"
                   descriptions={movementDescriptions}
                   costLabel={getMovementCostLabel}
                 />

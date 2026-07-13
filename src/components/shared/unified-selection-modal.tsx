@@ -337,6 +337,7 @@ export function UnifiedSelectionModal({
             value={searchQuery}
             onChange={setSearchQuery}
             placeholder={searchPlaceholder || `Search ${itemLabel}s...`}
+            aria-label={searchPlaceholder || `Search ${itemLabel}s`}
           />
         </div>
         

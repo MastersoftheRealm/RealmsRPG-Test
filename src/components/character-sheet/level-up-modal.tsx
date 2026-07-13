@@ -200,7 +200,7 @@ export function LevelUpModal({
             description="Pool points"
           />
           <GainCard
-            icon={<Sword className="w-5 h-5 text-orange-500" />}
+            icon={<Sword className="w-5 h-5 text-warning-500" />}
             label="Training Points"
             value={formatDelta(gains.trainingPoints)}
             description="For powers/techniques"

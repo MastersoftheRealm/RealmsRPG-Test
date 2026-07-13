@@ -415,7 +415,7 @@ export function AdminPropertiesTab() {
                         typeof p.base_ip === 'number' && !Number.isNaN(p.base_ip)
                           ? String(p.base_ip)
                           : '-',
-                      className: 'text-blue-600',
+                      className: 'text-info-fg',
                     },
                     {
                       key: 'TP',
@@ -438,7 +438,7 @@ export function AdminPropertiesTab() {
                     <div className="flex items-center gap-1 pr-2">
                       {pendingDeleteId === p.id ? (
                         <div className="flex items-center gap-1 text-xs">
-                          <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
+                          <span className="text-danger-700 dark:text-danger-400 font-medium whitespace-nowrap">Remove?</span>
                           <Button
                             size="sm"
                             variant="danger"
@@ -489,7 +489,7 @@ export function AdminPropertiesTab() {
           <div className="flex justify-between">
             <div>
               {editing && (
-                <Button variant="outline" onClick={() => handleDelete(editing.id)} className={deleteConfirm === editing.id ? 'border-red-500 text-red-600' : ''}>
+                <Button variant="outline" onClick={() => handleDelete(editing.id)} className={deleteConfirm === editing.id ? 'border-danger-500 text-danger-700 dark:text-danger-400' : ''}>
                   {deleteConfirm === editing.id ? 'Click again to confirm delete' : 'Delete'}
                 </Button>
               )}

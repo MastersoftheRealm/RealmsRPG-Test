@@ -52,7 +52,7 @@ For **any UI / token / theme change**, use the automated net (TASK-383). The gui
 - **Contrast** (`scripts/check-contrast.mjs`): resolves every semantic fg/bg token pair (following `var()` indirection) in **both** themes vs WCAG AA. Baseline `scripts/contrast-baseline.json` is at 0 — keep it there. To add a token pairing, edit the `PAIRS` array.
 - **Visual regression** (`tests/visual/screenshots.pw.ts`): full-page baselines across mobile/tablet/desktop x light/dark for deterministic routes. After an **intentional** change, re-baseline with `npm run verify:visual:update`, **view the regenerated PNG(s)** (and any `*-diff.png`) to confirm the change is what you intended, then commit. Baselines are OS-specific (committed set is Windows; Linux CI baselines = DEV-002).
 - **Accessibility** (`tests/visual/a11y.pw.ts`): axe-core scan, ratcheted via `tests/visual/a11y-baseline.json`. Fix violations and **prune** the baseline (`verify:a11y:update`) — never use update to mask a new violation.
-- **No raw colors:** ESLint `realms/no-raw-color` (hard error) bans raw Tailwind palette / bare white-black / arbitrary hex in class strings. Use semantic tokens (`bg-surface`, `text-text-primary`, `bg-primary-600`, …). Exemptions: `(auth)/`, `components/auth/`, `components/ui/` primitives, and the shrinking `eslint-rules/raw-color-backlog.mjs` list — **delete** a file from that backlog when you migrate it off raw colors (audit with `node scripts/list-raw-color-backlog.mjs`).
+- **No raw colors:** ESLint `realms/no-raw-color` (hard error) bans raw Tailwind palette / bare white-black / arbitrary hex in class strings. Use semantic tokens (`bg-surface`, `text-text-primary`, `bg-primary-600`, …). Exemptions: `(auth)/`, `components/auth/`, `components/ui/` primitives. Audit with `node scripts/list-raw-color-backlog.mjs` (expect 0; `RAW_COLOR_BACKLOG` is empty).
 - **CI:** `.github/workflows/ui-verify.yml` runs all of the above as hard-blocking gates.
 
 ### Token architecture (Phase 0+)
@@ -308,7 +308,7 @@ Goal: "Learn once, use forever" — consistent UI across Library, Codex, Charact
 | library-selectable-builders | Add + Load library SelectableItem shaping (shared pipeline) |
 | useModalListState | Other list modals that need search/sort without UnifiedSelectionModal |
 
-**Intentional exceptions:** Auth pages use `gray-*`; AddSubSkillModal uses SelectionToggle (not GridListRow); footer uses `bg-neutral-400`; RollButton gradients use neutral tokens.
+**Intentional exceptions:** Auth pages use `gray-*` / brand social colors; AddSubSkillModal uses SelectionToggle (not GridListRow); filled primary/danger controls use `text-text-on-dark` on colored backgrounds.
 
 Quick reference: `.cursor/rules/realms-unification.mdc`, `DESIGN_SYSTEM.md`.
 
@@ -332,7 +332,7 @@ Quick reference: `.cursor/rules/realms-unification.mdc`, `DESIGN_SYSTEM.md`.
 | **Codex/library data** | `src/docs/DATA_HANDLING.md` — single codex fetch, query keys, cache headers, prefetch; read when adding or changing codex/library hooks or APIs |
 | **Character/creature math** | `src/lib/game/formulas.ts`, `src/lib/game/calculations.ts`, `src/lib/game/skill-allocation.ts` — all ability, defense, skill, and derived stats |
 | **Power/technique/item cost and display** | `src/lib/calculators/` — part costs, derive*Display helpers, filterSavedItemPropertiesForList; use for creator preview and library/codex display |
-| **Crafting requirements and outcome** | `src/lib/game/crafting-utils.ts` — getCraftingRequirements, getUpgradeRequirements, getEnhancedCraftingRequirements, calculateCraftingOutcome, optional modifiers; `src/types/crafting.ts` — session and enhanced item types |
+| **Crafting requirements and outcome** | `src/lib/game/crafting-utils.ts` — getCraftingRequirements, getUpgradeRequirements, getEnhancedCraftingRequirements, calculateCraftingOutcome, optional modifiers; `src/types/crafting.ts` — session types, `UserEnhancedItem`, `OfficialEnhancedItem` / `OfficialEnhancedItemPayload`, create/patch inputs; hooks in `use-enhanced-items.ts` |
 
 ## Hooks & Services
 
@@ -426,7 +426,9 @@ When loading a saved item/power/technique into a creator, follow this **three-st
 
 **Rule:** Mechanic-only entries (parts/properties driven by dedicated UI) are restored from dedicated state only. Never restore them into the user-selectable list.
 
-**Load modal state and data:** Use `useLoadModalLibrary('power' | 'technique' | 'item' | 'empowered-technique')` from `@/hooks` for load-modal visibility and library items. Returns `showLoadModal`, `openLoadModal`, `closeLoadModal`, `selectableItems`, `rawItems`, `isLoading`, `error`, `emptyMessage`, `emptySubMessage`, plus source-filter state (`source` / `setSource`) and `columns` / `gridColumns`. Render with **`LoadFromLibraryModal`** (thin `UnifiedSelectionModal` wrapper, `confirmLabel="Load"`, `maxSelections={1}`). Selectable shaping is shared with Add Library Item via **`@/lib/library-selectable-builders`** (empowered load uses `buildEmpoweredPowerSelectableItem`). Type-specific `handleLoad*` (reset → restore mechanics → restore filtered list) stays in each creator.
+**Load modal state and data:** Use `useLoadModalLibrary('power' | 'technique' | 'item' | 'empowered-technique')` from `@/hooks` for load-modal visibility and library items. Returns `showLoadModal`, `openLoadModal`, `closeLoadModal`, `selectableItems`, `rawItems`, `isLoading`, `error`, `emptyMessage`, `emptySubMessage`, plus source-filter state (`source` / `setSource`) and `columns` / `gridColumns`. Render with **`LoadFromLibraryModal`** (thin `UnifiedSelectionModal` wrapper, `confirmLabel="Load"`, `maxSelections={1}`). Selectable shaping is shared with Add Library Item via **`@/lib/library-selectable-builders`** (empowered load uses `buildEmpoweredPowerSelectableItem`). Canonical library row types: **`src/types/library.ts`**. Type-specific `handleLoad*` (reset → restore mechanics → restore filtered list) stays in each creator.
+
+Avoid `max-h-[…vh]` on UnifiedSelectionModal without an `md:` prefix — uncapped mobile full-screen needs the full viewport; use e.g. `className="md:max-h-[60vh]"`.
 
 ## Creator layout
 

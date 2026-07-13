@@ -911,7 +911,7 @@ export function EquipmentStep() {
                 >
                   <div className={cn(
                     'w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0',
-                    isSelected ? 'bg-primary-button text-white' : 'bg-surface border border-border-light'
+                    isSelected ? 'bg-primary-button text-text-on-dark' : 'bg-surface border border-border-light'
                   )}>
                     {isSelected && <Check className="w-4 h-4" />}
                   </div>
@@ -1092,7 +1092,7 @@ export function EquipmentStep() {
                   {/* Selection indicator */}
                   <div className={cn(
                     'w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0',
-                    isSelected ? 'bg-primary-button text-white' : 'bg-surface-alt border border-border-light'
+                    isSelected ? 'bg-primary-button text-text-on-dark' : 'bg-surface-alt border border-border-light'
                   )}>
                     {isSelected && <Check className="w-4 h-4" />}
                   </div>

@@ -287,7 +287,7 @@ function ResourceInput({
       </div>
       {/* Inline bar - dark mode track */}
       {showBar && (
-        <div className="relative h-2 mt-2 bg-surface dark:bg-black/30 rounded-full overflow-hidden">
+        <div className="relative h-2 mt-2 bg-surface dark:bg-text-primary/30 rounded-full overflow-hidden">
           <div
             className={cn('absolute inset-y-0 left-0 transition-all duration-slow ease-standard rounded-full', barColorClass)}
             style={{ width: `${percentage}%` }}
@@ -535,15 +535,15 @@ export function SheetHeader({
             />
             {/* Upload overlay in edit mode */}
             {isEditMode && onPortraitChange && (
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-                <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-3xl">
+              <div className="absolute inset-0 bg-transparent group-hover:bg-text-primary/40 transition-colors flex items-center justify-center">
+                <span className="text-text-on-dark opacity-0 group-hover:opacity-100 transition-opacity text-3xl">
                   📷
                 </span>
               </div>
             )}
             {/* Loading spinner */}
             {isUploadingPortrait && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+              <div className="absolute inset-0 flex items-center justify-center bg-text-primary/30">
                 <Spinner size="md" variant="white" />
               </div>
             )}

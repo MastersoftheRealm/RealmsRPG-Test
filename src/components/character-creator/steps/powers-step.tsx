@@ -789,7 +789,7 @@ export function PowersStep() {
           <div className="flex items-center justify-center gap-4">
             <Link
               href="/power-creator"
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-button text-white hover:bg-primary-button-hover transition-colors shadow-sm"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-button text-text-on-dark hover:bg-primary-button-hover transition-colors shadow-sm"
             >
               <Plus className="w-4 h-4" />
               Create Power

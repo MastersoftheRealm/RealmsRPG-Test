@@ -206,7 +206,7 @@ export function SpeciesStep() {
           <h3 className="font-bold text-text-primary">Mixed species</h3>
           <p className="text-sm text-text-secondary text-center mt-1">Combine two species</p>
           {isMixedSelected && (
-            <span className="text-xs px-2 py-0.5 bg-primary-button text-white rounded mt-2">✓ Selected</span>
+            <span className="text-xs px-2 py-0.5 bg-primary-button text-text-on-dark rounded mt-2">✓ Selected</span>
           )}
         </SelectionCardSurface>
 
@@ -242,7 +242,7 @@ export function SpeciesStep() {
                         {getSizesDisplay(s)}
                       </span>
                       {isSelected && (
-                        <span className="text-xs px-2 py-0.5 bg-primary-button text-white rounded">
+                        <span className="text-xs px-2 py-0.5 bg-primary-button text-text-on-dark rounded">
                           ✓ Selected
                         </span>
                       )}

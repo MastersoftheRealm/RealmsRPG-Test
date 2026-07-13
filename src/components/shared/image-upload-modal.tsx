@@ -278,7 +278,7 @@ export function ImageUploadModal({
           </div>
         ) : (
           <>
-            <div className="relative w-full h-[400px] bg-black/90 rounded-xl overflow-hidden">
+            <div className="relative w-full h-[400px] bg-text-primary/90 rounded-xl overflow-hidden">
               <Suspense fallback={<div className="flex items-center justify-center h-full text-text-muted">Loading editor...</div>}>
                 <Cropper
                   image={imageSrc}

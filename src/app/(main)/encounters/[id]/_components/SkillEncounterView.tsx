@@ -623,7 +623,7 @@ function SkillEncounterViewInner({
         <div className="space-y-6">
           <Card className="p-6">
             <h2 className="font-bold text-text-primary mb-4 flex items-center gap-2">
-              <Brain className="w-5 h-5 text-blue-500" /> Configuration
+              <Brain className="w-5 h-5 text-info-fg" /> Configuration
             </h2>
             <div className="space-y-4">
               <div>

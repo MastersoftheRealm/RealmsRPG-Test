@@ -229,14 +229,20 @@
   related_files:
     - src/docs/ai/GUIDED_EQUIPMENT_PHASED_SPEC.md
     - src/components/guided-creator/steps/loadout-step.tsx
+    - src/components/guided-creator/guided-equipment-l1-phase.tsx
+    - src/components/guided-creator/guided-equipment-l2-modal.tsx
+    - src/components/guided-creator/guided-equipment-phase-progress.tsx
+    - src/components/guided-creator/guided-loadout-kit-presets.tsx
     - src/lib/guided-creator/equipment-eligibility.ts
     - src/lib/guided-creator/equipment-phase-stats.ts
     - src/lib/guided-creator/equipment-currency.ts
+    - src/lib/guided-creator/resolve-loadout-items.ts
     - src/lib/game/weapon-attack-ability.ts
     - src/stores/guided-creator-store.ts
     - src/lib/guided-creator/build-character.ts
     - src/types/archetype.ts
     - src/components/shared/unified-selection-modal.tsx
+    - tests/visual/guided-loadout-audit.pw.ts
   acceptance_criteria:
     - Three phases (weapon/shield, armor, gear) with progress chips; armor skippable via armorStep.
     - Layer 1 choice cards; Layer 2 per-phase UnifiedSelectionModal (full filtered eligible catalog).
@@ -254,19 +260,17 @@
   created_at: 2026-07-05
   created_by: agent
   priority: high
-  status: partial
-  build_validation: DEV-V-013-T004, DEV-V-013-T006, DEV-V-013-T007
+  status: done
+  completed_at: 2026-07-13
+  build_validation: DEV-V-013-T004, DEV-V-013-T006, DEV-V-013-T007, DEV-V-013-T013
   developer_test_plan: |
-    DEV-V-013-T004 — Berserker quick kits + phased weapon L1 cards.
-    DEV-V-013-T006 — See more opens Layer 2 modal with TP bar.
+    DEV-V-013-T004 — Berserker phased loadout + quick kits.
+    DEV-V-013-T006 — See more opens Layer 2 modal with TP bar (Confirm applies).
     DEV-V-013-T007 — Admin path save rejects loadout exceeding TP budget.
+    DEV-V-013-T013 — Weapon → armor → gear phase walk.
   description: |
-    Replace minimal guided loadout cards ("X items" only) with feat-style branching loadout groups +
-    skills-style expandable item rows (resolve names/stats from official library). Layer 1: pick a
-    pre-validated kit; weapon/armor sub-steps optional. Layer 2: mix/match with TP budget surfaced.
-    Unarmed prowess block only when path/loadout flags recommendUnarmedProwess. Wire build-character
-    with enriched item names. Extend path-validation for admin TP/currency checks on loadouts.
-    Seed loadouts for paths beyond Berserker; align guidance_groups kit vs level1_loadouts model.
+    Replace minimal guided loadout cards with REALMS §5.7 equipment UX. Superseded UI path
+    completed via TASK-424 (phased weapon → armor → gear). Path content seeding remains TASK-423.
   related_files:
     - src/components/guided-creator/steps/loadout-step.tsx
     - src/components/guided-creator/guided-equipment-l1-phase.tsx
@@ -275,41 +279,25 @@
     - src/components/guided-creator/guided-loadout-kit-presets.tsx
     - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
     - src/lib/guided-creator/resolve-loadout-items.ts
-    - src/components/character-creator/steps/equipment-step.tsx
     - src/lib/game/path-validation.ts
     - src/lib/guided-creator/build-character.ts
-    - src/types/archetype.ts
-    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
   acceptance_criteria:
-    - Loadout step shows item names (expandable rows), not item count only.
-    - User can compare and select among path loadouts; selection updates draft armaments/equipment.
-    - Layer 2 expand opens customize path (TP limiter) — reuse or adapt advanced equipment-step patterns.
-    - Unarmed prowess UI appears only when level1_recommend_unarmed_prowess or loadout metadata says so.
-    - Reveal step and saved character show resolved item names (not raw UUIDs).
-    - validatePathDataForPublish warns/errors when loadout TP exceeds martial prof budget (admin).
-    - npm run build passes; BUILD_VALIDATION entries for guided loadout flow.
+    - Phased equipment flow (weapon/armor/gear) with quick kits and Layer 2 UnifiedSelectionModal.
+    - Reveal/saved character show resolved item names.
+    - Admin validatePathDataForPublish rejects loadout TP over martial budget.
+    - Path content for remaining archetypes tracked on TASK-423 (owner).
   completed_work: |
-    Phase 1 (2026-07-05): resolve-loadout-items util; expandable item rows;
-    loadout-step resolves official+codex items; save payload uses resolved names/types.
-    Phase 2 (2026-07-05): GuidedLoadoutSection feat-style vertical sections (not cards);
-    weapons/armor/gear subgroups; GuidedUnarmedProwessPanel when path recommends unarmed;
-    guided draft unarmedProwess + build persist; Playwright audit `.guided-loadout-audit/`.
-    Phase 3 (2026-07-05): GuidedLoadoutCustomizePanel (Layer 2 path pool + CreatorResourceBar TP);
-    loadout-pool + loadout-tp utils; admin validatePathDataForPublish TP via AdminArchetypesTab;
-    reveal customLoadout copy; proposed Berserker SQL in sql/guided-berserker-loadout-fixes-proposed.sql;
-    unit tests loadout-pool.test.ts + resolve-loadout-items.test.ts; npm run build passes.
+    Phases 1–3 (2026-07-05): item resolution, sections/unarmed, customize + admin TP.
+    Superseded by TASK-424 phased L1/L2 (customize panel removed Phase 7).
+    2026-07-13 audit: marked done — UI AC delivered by TASK-424; seed leftover = TASK-423 only.
   remaining_work: |
-    - Superseded by TASK-424 phased sub-flow (weapon → armor → gear).
-    - Loadout content for 11/12 paths (owner data seed, TASK-423).
-    - Apply Berserker kit data fixes after owner approves proposed SQL.
+    None for agent UI. Owner seed: TASK-423.
   follow_up_tasks:
-    - TASK-404
     - TASK-423
-    - TASK-424
   notes: |
     Owner review 2026-07-05: TASK-401 shipped minimal cards; product vision in REALMS §5.7 not met.
-    Advanced equipment-step has weapon/armor phases + item resolution but does not read level1_loadouts.
     Live DB: 1/12 paths have loadouts (Berserker only); Monk has unarmed flag but no loadouts.
+    2026-07-13: Closed as done — do not chase deleted GuidedLoadoutCustomizePanel / section UI.
 
 ---
 
@@ -418,27 +406,36 @@
 - id: TASK-346
   title: "Systemic token & console cleanup (batch by rule)"
   priority: low
-  status: partial
+  status: done
   created_at: 2026-06-12
   created_by: agent
+  completed_at: 2026-07-13
   description: |
     Repo-wide batch cleanup: status colors -600 → -700 in light mode; replace stray gray-*/neutral-* outside auth;
-    remove leftover client console.*. Do in small, rule-scoped batches with build between.
+    remove leftover client debug console.*. Do in small, rule-scoped batches with build between.
   related_files:
     - src/app/globals.css
     - src/components/layout/footer.tsx
     - src/components/shared/roll-button.tsx
+    - src/components/ui/card.tsx
+    - src/components/ui/button.tsx
+    - src/app/(main)/my-account/page.tsx
+    - eslint-rules/raw-color-backlog.mjs
   acceptance_criteria:
-    - Status/secondary text passes WCAG AA tokens in both modes; no stray gray-*/neutral- outside auth.
-    - No client console.* left; npm run build + lint pass.
+    - Status/secondary text passes WCAG AA tokens in both modes; no stray gray-*/neutral- utilities outside auth (theme `--color-neutral-*` ramps OK).
+    - No leftover client debug `console.log`/`debug`; diagnostic `console.error` in error boundaries / route error UI / OAuth failure handlers allowed.
+    - `realms/no-raw-color` reports 0 violators outside auth + `components/ui` exemptions; `RAW_COLOR_BACKLOG` empty.
+    - npm run build + lint pass.
   completed_work: |
-    - Batch 1: footer, roll-button, crafting console.*.
-    - Batch 2 (TASK-351): ~38 client console.* removed; home-page/item-creator neutral→semantic; shared status text -600→-700.
+    - Batch 1–2: footer/roll-button/console purge; status -600→-700; home/item-creator neutrals.
+    - Batch 3–4: emptied TSX backlog allowlist; semantic tokens across admin/codex/creators/sheet/shared.
+    - Audit 2026-07-13: globals.css tab/stepper/search/skeleton/shimmer/glow → semantic tokens; Button
+      primary/danger `text-text-on-dark`; AGENT_GUIDE exceptions corrected; AC clarified for diagnostic consoles.
   remaining_work: |
-    - Residual status -600 on hover/button backgrounds (intentional); some admin/codex body text.
-  follow_up_tasks:
-    - TASK-351
-  notes: "2026-06-13 batch 1."
+    (none for token migration)
+  notes: |
+    2026-07-13 done. Auth gray + ui primitive exemptions remain by design. Server/API console.error unchanged
+    (out of scope). Optional follow-up: shared client logger if product wants structured error reporting.
 
 - id: TASK-353
   title: Enable Supabase leaked-password protection (HIBP)
@@ -1626,9 +1623,10 @@
 - id: TASK-421
   title: HYG-03 enhanced items payload typing
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-07-04
   created_by: agent
+  completed_at: 2026-07-13
   parent_task: TASK-378
   description: |
     Replace `Record<string, any>` on `OfficialEnhancedItem.payload` and create mutation bodies with
@@ -1636,13 +1634,20 @@
   related_files:
     - src/hooks/use-enhanced-items.ts
     - src/types/crafting.ts
+    - src/types/crafting-enhanced-items.test.ts
     - src/services/enhanced-items-service.ts
     - src/app/api/official/enhanced-items/route.ts
+    - src/app/(main)/admin/public-library/AdminPublicEnhancedItemsTab.tsx
   acceptance_criteria:
     - No `@typescript-eslint/no-explicit-any` on enhanced-items hook/service.
     - Payload type documents known fields; unknown extensions via `Record<string, unknown>` index if needed.
     - `npm run build` and `npm test` pass.
   notes: |
     Smaller scope than TASK-420. Creator `handleLoad*(item: any)` deferred to TASK-381 god-file split.
+    2026-07-13: Done — `OfficialEnhancedItemPayload` + create/patch inputs in `crafting.ts`; hook uses
+    typed bodies (no `any`/eslint-disable); admin tab shares `CreateOfficialEnhancedItemInput`;
+    vitest shape coverage; FEATURE_INDEX updated.
+    2026-07-13 audit: scope overloads on create/update; null payload normalized on official fetch;
+    AGENT_GUIDE types note. Known pre-existing: admin "edit" still POSTs create (PATCH is name/uses/payload only).
 
 ---

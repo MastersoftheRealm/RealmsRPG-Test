@@ -253,7 +253,7 @@ export function AddFeatModal({
         showFilters={true}
         hideDisabled={false}
         size="xl"
-        className="max-h-[85vh]"
+        className="md:max-h-[85vh]"
       />
     </>
   );

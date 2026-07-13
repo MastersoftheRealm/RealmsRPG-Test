@@ -16,7 +16,7 @@ export const cardVariants = cva('rounded-xl bg-surface text-text-primary', {
       interactive:
         'border border-border-light shadow-sm transition-all duration-base ease-standard cursor-pointer hover:shadow-md hover:border-primary-outline-border hover:-translate-y-0.5',
       selectable:
-        'border-2 border-neutral-200 p-4 transition-all duration-base ease-standard cursor-pointer hover:border-primary-outline-border hover:shadow-md hover:-translate-y-0.5',
+        'border-2 border-border-light p-4 transition-all duration-base ease-standard cursor-pointer hover:border-primary-outline-border hover:shadow-md hover:-translate-y-0.5',
       selected:
         'border-2 border-primary-outline-border bg-primary-subtle-bg shadow-md ring-2 ring-primary-subtle-border p-4',
     },

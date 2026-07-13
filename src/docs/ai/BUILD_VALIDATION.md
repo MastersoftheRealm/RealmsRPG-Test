@@ -1129,7 +1129,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-013-T004 — Berserker loadout sections + item rows
+#### DEV-V-013-T004 — Berserker phased loadout + quick kits
 
 | Field | Value |
 |-------|-------|
@@ -1164,8 +1164,8 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Expected**
 - Layer 2 `UnifiedSelectionModal` opens with TP `PointStatus`; rows show NAME / TYPE / TP / STATS.
-- Selecting items updates draft; items that would exceed TP budget are disabled.
-- Closing L2 (Escape / back) returns to phase L1 cards.
+- Selecting updates TP/currency `PointStatus` in the footer; Confirm applies the selection to the draft. Items that would exceed TP budget are disabled or Confirm stays blocked.
+- Closing L2 without Confirm (Escape / Cancel) returns to phase L1 cards without changing the draft.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

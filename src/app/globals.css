@@ -731,8 +731,8 @@
   
   /* Glow animation for level-up indicator */
   @keyframes glow-green {
-    0%, 100% { box-shadow: 0 0 5px #22c55e, 0 0 10px #22c55e; }
-    50% { box-shadow: 0 0 15px #22c55e, 0 0 20px #22c55e; }
+    0%, 100% { box-shadow: 0 0 5px var(--color-success-500), 0 0 10px var(--color-success-500); }
+    50% { box-shadow: 0 0 15px var(--color-success-500), 0 0 20px var(--color-success-500); }
   }
   
   .animate-glow-green {
@@ -746,7 +746,12 @@
   }
   
   .animate-shimmer {
-    background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+    background: linear-gradient(
+      90deg,
+      var(--color-surface-secondary) 25%,
+      var(--color-surface-alt) 50%,
+      var(--color-surface-secondary) 75%
+    );
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
   }
@@ -784,8 +789,8 @@
   
   .tab-nav-trigger {
     @apply px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
-           border-transparent text-text-muted hover:text-text-primary hover:bg-neutral-100
-           dark:hover:bg-neutral-800
+           border-transparent text-text-muted hover:text-text-primary hover:bg-surface-alt
+           dark:hover:bg-surface-alt
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2
            min-h-[var(--touch-target-min,44px)] md:min-h-0;
   }
@@ -796,7 +801,7 @@
   
   /* Pill-style tabs (wizard steps, settings) */
   .tab-pill-list {
-    @apply inline-flex items-center p-1 rounded-lg bg-neutral-100 gap-1;
+    @apply inline-flex items-center p-1 rounded-lg bg-surface-alt gap-1;
   }
   
   .tab-pill-trigger {
@@ -814,26 +819,26 @@
   .btn-stepper {
     @apply flex items-center justify-center rounded-full font-bold border-2
            transition-colors
-           disabled:bg-neutral-100 disabled:text-neutral-400 disabled:border-neutral-200 disabled:cursor-not-allowed;
+           disabled:bg-surface-alt disabled:text-text-muted disabled:border-border-light disabled:cursor-not-allowed;
     transition-duration: var(--duration-fast);
   }
 
   .btn-stepper-danger {
-    @apply bg-red-50 text-red-600 border-red-200
-           hover:bg-red-100 hover:border-red-300 active:bg-red-200
-           dark:bg-red-950/50 dark:text-red-400 dark:border-red-900/50
-           dark:hover:bg-red-900/40 dark:hover:border-red-800/50
-           disabled:bg-neutral-100 disabled:text-neutral-400 disabled:border-neutral-200
-           dark:disabled:bg-neutral-800 dark:disabled:text-neutral-500;
+    @apply bg-danger-50 text-danger-700 border-danger-200
+           hover:bg-danger-100 hover:border-danger-300 active:bg-danger-200
+           dark:bg-danger-900/50 dark:text-danger-400 dark:border-danger-900/50
+           dark:hover:bg-danger-900/40 dark:hover:border-danger-800/50
+           disabled:bg-surface-alt disabled:text-text-muted disabled:border-border-light
+           dark:disabled:bg-surface-alt dark:disabled:text-text-muted;
   }
 
   .btn-stepper-success {
-    @apply bg-green-50 text-green-600 border-green-200
-           hover:bg-green-100 hover:border-green-300 active:bg-green-200
-           dark:bg-green-950/50 dark:text-green-400 dark:border-green-900/50
-           dark:hover:bg-green-900/40 dark:hover:border-green-800/50
-           disabled:bg-neutral-100 disabled:text-neutral-400 disabled:border-neutral-200
-           dark:disabled:bg-neutral-800 dark:disabled:text-neutral-500;
+    @apply bg-success-50 text-success-700 border-success-200
+           hover:bg-success-100 hover:border-success-300 active:bg-success-200
+           dark:bg-success-900/50 dark:text-success-400 dark:border-success-900/50
+           dark:hover:bg-success-900/40 dark:hover:border-success-800/50
+           disabled:bg-surface-alt disabled:text-text-muted disabled:border-border-light
+           dark:disabled:bg-surface-alt dark:disabled:text-text-muted;
   }
 
   /* ---------------------------------------------------------------------------
@@ -855,7 +860,7 @@
   
   .search-input-clear {
     @apply absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full
-           text-text-muted hover:text-text-primary hover:bg-neutral-100 transition-colors
+           text-text-muted hover:text-text-primary hover:bg-surface-alt transition-colors
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2;
   }
 
@@ -864,28 +869,48 @@
      --------------------------------------------------------------------------- */
   .skeleton {
     @apply rounded;
-    background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+    background: linear-gradient(
+      90deg,
+      var(--color-surface-secondary) 25%,
+      var(--color-surface-alt) 50%,
+      var(--color-surface-secondary) 75%
+    );
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
   }
   
   .skeleton-text {
     @apply h-4 rounded;
-    background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+    background: linear-gradient(
+      90deg,
+      var(--color-surface-secondary) 25%,
+      var(--color-surface-alt) 50%,
+      var(--color-surface-secondary) 75%
+    );
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
   }
   
   .skeleton-title {
     @apply h-6 rounded;
-    background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+    background: linear-gradient(
+      90deg,
+      var(--color-surface-secondary) 25%,
+      var(--color-surface-alt) 50%,
+      var(--color-surface-secondary) 75%
+    );
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
   }
   
   .skeleton-card {
     @apply h-32 rounded-xl;
-    background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+    background: linear-gradient(
+      90deg,
+      var(--color-surface-secondary) 25%,
+      var(--color-surface-alt) 50%,
+      var(--color-surface-secondary) 75%
+    );
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
   }

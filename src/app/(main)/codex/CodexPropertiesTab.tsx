@@ -72,7 +72,7 @@ function PropertyCard({ property }: { property: ItemProperty }) {
         {
           key: 'IP',
           value: typeof ip === 'number' && !Number.isNaN(ip) ? String(ip) : '-',
-          className: 'text-blue-600',
+          className: 'text-info-fg',
         },
         {
           key: 'TP',

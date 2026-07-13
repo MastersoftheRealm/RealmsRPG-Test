@@ -73,6 +73,10 @@ export {
   useUpdateOfficialEnhancedItem,
   type EnhancedItemsScope,
   type OfficialEnhancedItem,
+  type OfficialEnhancedItemPayload,
+  type CreateOfficialEnhancedItemInput,
+  type UpdateOfficialEnhancedItemInput,
+  type EnhancedItemUsesType,
 } from './use-enhanced-items';
 
 // Characters

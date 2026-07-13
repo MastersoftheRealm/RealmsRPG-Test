@@ -63,8 +63,7 @@ export function LoadFromLibraryModal({
       confirmLabel="Load"
       itemLabel="item"
       size="lg"
-      flexLayout
-      className="max-h-[60vh]"
+      className="md:max-h-[60vh]"
     />
   );
 }

@@ -226,16 +226,16 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-primary-button text-white">
+        <div className="flex items-center justify-between px-4 py-3 bg-primary-button text-text-on-dark">
           <div className="flex items-center gap-2">
             <h3 className="font-bold text-base tracking-wide">🎲 Roll Log</h3>
             {campaignId && (
-              <div className="flex rounded-lg overflow-hidden border border-white/30">
+              <div className="flex rounded-lg overflow-hidden border border-text-on-dark/30">
                 <button
                   onClick={() => setMode('personal')}
                   className={cn(
                     'px-2.5 py-1 text-xs font-medium transition-colors',
-                    mode === 'personal' ? 'bg-white/25 text-white' : 'bg-white/10 text-white/80 hover:bg-white/15 dark:bg-white/20 dark:text-white dark:hover:bg-white/30'
+                    mode === 'personal' ? 'bg-text-on-dark/25 text-text-on-dark' : 'bg-text-on-dark/10 text-text-on-dark/80 hover:bg-text-on-dark/15 dark:bg-text-on-dark/20 dark:text-text-on-dark dark:hover:bg-text-on-dark/30'
                   )}
                   title="Your personal rolls"
                 >
@@ -245,7 +245,7 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
                   onClick={() => setMode('campaign')}
                   className={cn(
                     'px-2.5 py-1 text-xs font-medium transition-colors',
-                    mode === 'campaign' ? 'bg-white/25 text-white' : 'bg-white/10 text-white/80 hover:bg-white/15 dark:bg-white/20 dark:text-white dark:hover:bg-white/30'
+                    mode === 'campaign' ? 'bg-text-on-dark/25 text-text-on-dark' : 'bg-text-on-dark/10 text-text-on-dark/80 hover:bg-text-on-dark/15 dark:bg-text-on-dark/20 dark:text-text-on-dark dark:hover:bg-text-on-dark/30'
                   )}
                   title="Campaign rolls (all players)"
                 >
@@ -257,7 +257,7 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
           {!isCampaignMode && (
             <button
               onClick={clearHistory}
-              className="px-3 py-1.5 rounded-lg bg-white/15 border-2 border-white/30 text-white text-xs font-semibold hover:bg-white/25 transition-colors flex items-center gap-1"
+              className="px-3 py-1.5 rounded-lg bg-text-on-dark/15 border-2 border-text-on-dark/30 text-text-on-dark text-xs font-semibold hover:bg-text-on-dark/25 transition-colors flex items-center gap-1"
             >
               <Trash2 className="w-3 h-3" />
               Clear
@@ -280,7 +280,7 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
               <button
                 type="button"
                 onClick={() => void refetchCampaignRolls()}
-                className="min-h-[44px] min-w-[44px] px-4 py-2 rounded-lg bg-primary-button text-white text-sm font-semibold hover:bg-primary-button-hover"
+                className="min-h-[44px] min-w-[44px] px-4 py-2 rounded-lg bg-primary-button text-text-on-dark text-sm font-semibold hover:bg-primary-button-hover"
                 aria-label="Retry loading campaign rolls"
               >
                 Retry
@@ -319,8 +319,8 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
                 onContextMenu={(e) => { e.preventDefault(); removeDie(die); }}
                 className={cn(
                   'relative flex flex-col items-center justify-center py-1.5 px-1 rounded-lg',
-                  'bg-white/10 hover:bg-white/25 transition-all cursor-pointer dark:bg-white/20 dark:hover:bg-white/35',
-                  dicePool[die] > 0 && 'ring-2 ring-yellow-400 bg-white/20'
+                  'bg-text-on-dark/10 hover:bg-text-on-dark/25 transition-all cursor-pointer dark:bg-text-on-dark/20 dark:hover:bg-text-on-dark/35',
+                  dicePool[die] > 0 && 'ring-2 ring-warning-400 bg-text-on-dark/20'
                 )}
                 title={`Left-click: add ${die} · Right-click: remove`}
               >
@@ -331,9 +331,9 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
                   height={32}
                   className="w-8 h-8 object-contain drop-shadow-md"
                 />
-                <span className="text-[10px] font-bold text-white/80 mt-0.5">{die}</span>
+                <span className="text-[10px] font-bold text-text-on-dark/80 mt-0.5">{die}</span>
                 {dicePool[die] > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-yellow-400 text-yellow-900 text-xs font-bold shadow">
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-warning-400 text-warning-900 text-xs font-bold shadow">
                     {dicePool[die]}
                   </span>
                 )}
@@ -344,20 +344,20 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
           {/* Modifier Row */}
           <div className="flex items-center justify-between gap-2 mb-3">
             <div className="flex items-center gap-1.5">
-              <span className="text-white/70 text-xs font-semibold">MOD</span>
+              <span className="text-text-on-dark/70 text-xs font-semibold">MOD</span>
               <button
                 onClick={() => setModifier(m => m - 1)}
-                className="w-7 h-7 rounded bg-white/10 hover:bg-white/20 dark:bg-white/20 dark:hover:bg-white/35 text-white flex items-center justify-center"
+                className="w-7 h-7 rounded bg-text-on-dark/10 hover:bg-text-on-dark/20 dark:bg-text-on-dark/20 dark:hover:bg-text-on-dark/35 text-text-on-dark flex items-center justify-center"
                 aria-label="Decrease modifier"
               >
                 <Minus className="w-3.5 h-3.5" />
               </button>
-              <span className="text-white font-bold min-w-[36px] text-center text-sm">
+              <span className="text-text-on-dark font-bold min-w-[36px] text-center text-sm">
                 {modifier >= 0 ? '+' : ''}{modifier}
               </span>
               <button
                 onClick={() => setModifier(m => m + 1)}
-                className="w-7 h-7 rounded bg-white/10 hover:bg-white/20 dark:bg-white/20 dark:hover:bg-white/35 text-white flex items-center justify-center"
+                className="w-7 h-7 rounded bg-text-on-dark/10 hover:bg-text-on-dark/20 dark:bg-text-on-dark/20 dark:hover:bg-text-on-dark/35 text-text-on-dark flex items-center justify-center"
                 aria-label="Increase modifier"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -366,7 +366,7 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
             {totalDice > 0 && (
               <button
                 onClick={clearPool}
-                className="text-white/60 hover:text-white text-xs underline"
+                className="text-text-on-dark/60 hover:text-text-on-dark text-xs underline"
               >
                 Clear pool
               </button>
@@ -378,7 +378,7 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
             onClick={executeRoll}
             disabled={totalDice === 0}
             className={cn(
-              'w-full py-2.5 rounded-lg font-bold text-white transition-all text-sm',
+              'w-full py-2.5 rounded-lg font-bold text-text-on-dark transition-all text-sm',
               'bg-success-600 hover:bg-success-700 focus-visible:ring-2 focus-visible:ring-success focus-visible:ring-offset-2',
               'disabled:bg-text-muted disabled:cursor-not-allowed disabled:opacity-70'
             )}
@@ -394,7 +394,7 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
         className={cn(
           'w-14 h-14 rounded-full shadow-lg transition-all duration-slow ease-standard',
           'flex items-center justify-center',
-          'bg-primary-button text-white hover:bg-primary-button-hover hover:scale-110 active:scale-95',
+          'bg-primary-button text-text-on-dark hover:bg-primary-button-hover hover:scale-110 active:scale-95',
           isOpen && 'bg-primary-button-hover'
         )}
         aria-label={isOpen ? 'Close roll log' : 'Open roll log'}
@@ -462,7 +462,7 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
         {/* Dice notation + roll value (light grey) */}
         {diceGroups.map((group, gi) => (
           <div key={gi} className="flex items-center gap-1">
-            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-surface-alt dark:bg-neutral-800 text-text-secondary dark:text-text-primary text-xs font-medium">
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-surface-alt dark:bg-surface text-text-secondary dark:text-text-primary text-xs font-medium">
               <Image
                 src={DIE_IMAGES[group.type]}
                 alt=""
@@ -482,12 +482,12 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
                         'border',
                         die.isMax && 'bg-success-100 border-success-500 text-success-fg',
                         die.isMin && 'bg-danger-100 border-danger-500 text-danger-fg',
-                        !die.isMax && !die.isMin && 'bg-surface-alt dark:bg-neutral-800 text-text-secondary dark:text-text-primary border-border-light'
+                        !die.isMax && !die.isMin && 'bg-surface-alt dark:bg-surface text-text-secondary dark:text-text-primary border-border-light'
                       )
                     : cn(
                         die.isMax ? 'bg-success-100 border border-success-400 text-success-fg' :
                         die.isMin ? 'bg-danger-100 border border-danger-400 text-danger-fg' :
-                        'bg-surface-alt dark:bg-neutral-800 text-text-secondary dark:text-text-primary border border-border-light'
+                        'bg-surface-alt dark:bg-surface text-text-secondary dark:text-text-primary border border-border-light'
                       )
                 )}
               >
@@ -531,7 +531,7 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
       {/* Crit Message */}
       {roll.critMessage && (
         <div className={cn(
-          'mt-2 inline-block px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide text-white',
+          'mt-2 inline-block px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide text-text-on-dark',
           roll.isCrit && 'bg-gradient-to-r from-success-500 to-success-600',
           roll.isCritFail && 'bg-gradient-to-r from-danger-500 to-danger-600',
         )}>

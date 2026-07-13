@@ -406,7 +406,7 @@ function CampaignCharactersTab({
                 >
                   <div className={cn(
                     'w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0',
-                    isSelected ? 'border-primary-outline-border bg-primary-button text-white' : 'border-border-light'
+                    isSelected ? 'border-primary-outline-border bg-primary-button text-text-on-dark' : 'border-border-light'
                   )}>
                     {isSelected && <span className="text-xs">&#10003;</span>}
                   </div>

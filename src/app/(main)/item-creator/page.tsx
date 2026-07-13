@@ -1099,7 +1099,7 @@ function ItemCreatorContent() {
                 : []),
               ...(armamentType === 'Armor' ? [
                 { label: 'Damage Reduction', value: String(damageReduction) },
-                ...(agilityReduction > 0 ? [{ label: 'Agility Reduction', value: `-${agilityReduction}`, valueColor: 'text-red-600' }] : []),
+                ...(agilityReduction > 0 ? [{ label: 'Agility Reduction', value: `-${agilityReduction}`, valueColor: 'text-danger-700 dark:text-danger-400' }] : []),
               ] : []),
               ...(armamentType === 'Shield'
                 ? [
@@ -1178,7 +1178,7 @@ function ItemCreatorContent() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Enter item name..."
-                  className="w-full px-4 py-2 border border-border-light rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  className="w-full px-4 py-2 border border-border-light rounded-lg focus:ring-2 focus:ring-warning-500 focus:border-warning-500"
                 />
               </div>
 
@@ -1205,7 +1205,7 @@ function ItemCreatorContent() {
                       className={cn(
                         'py-2 px-3 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-1',
                         armamentType === type.value
-                          ? 'bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-700 dark:text-white dark:hover:bg-amber-600'
+                          ? 'bg-warning-600 text-text-on-dark hover:bg-warning-700 dark:bg-warning-700 dark:text-text-on-dark dark:hover:bg-warning-600'
                           : 'bg-surface-alt dark:bg-surface hover:bg-surface text-text-primary'
                       )}
                     >
@@ -1225,7 +1225,7 @@ function ItemCreatorContent() {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Describe your item..."
                   rows={2}
-                  className="w-full px-4 py-2 border border-border-light rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  className="w-full px-4 py-2 border border-border-light rounded-lg focus:ring-2 focus:ring-warning-500 focus:border-warning-500"
                 />
               </div>
             </div>
@@ -1254,7 +1254,7 @@ function ItemCreatorContent() {
                       className={cn(
                         "px-4 py-2 text-sm font-medium transition-colors",
                         !isTwoHanded
-                          ? "bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-700 dark:text-white dark:hover:bg-amber-600"
+                          ? "bg-warning-600 text-text-on-dark hover:bg-warning-700 dark:bg-warning-700 dark:text-text-on-dark dark:hover:bg-warning-600"
                           : "bg-surface-alt dark:bg-surface text-text-primary hover:bg-surface"
                       )}
                     >
@@ -1266,7 +1266,7 @@ function ItemCreatorContent() {
                       className={cn(
                         "px-4 py-2 text-sm font-medium transition-colors",
                         isTwoHanded
-                          ? "bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-700 dark:text-white dark:hover:bg-amber-600"
+                          ? "bg-warning-600 text-text-on-dark hover:bg-warning-700 dark:bg-warning-700 dark:text-text-on-dark dark:hover:bg-warning-600"
                           : "bg-surface-alt dark:bg-surface text-text-primary hover:bg-surface"
                       )}
                     >
@@ -1598,7 +1598,7 @@ function ItemCreatorContent() {
             collapsedSummary={propertiesSummary}
             defaultExpanded={true}
             rightSlot={
-              <Button type="button" variant="primary" size="sm" className="flex items-center gap-1 bg-amber-600 hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-600 text-white" onClick={addProperty}>
+              <Button type="button" variant="primary" size="sm" className="flex items-center gap-1 bg-warning-600 hover:bg-warning-700 dark:bg-warning-700 dark:hover:bg-warning-600 text-text-on-dark" onClick={addProperty}>
                 <Plus className="w-4 h-4" />
                 Add Property
               </Button>

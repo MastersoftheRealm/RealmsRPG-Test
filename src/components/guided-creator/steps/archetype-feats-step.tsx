@@ -72,7 +72,7 @@ export function ArchetypeFeatsStep() {
     [draft.archetypeFeatIds, maxFeats, updateDraft]
   );
 
-  const canContinue = draft.archetypeFeatIds.length >= maxFeats;
+  const canContinue = draft.archetypeFeatIds.length === maxFeats;
 
   const renderFeatCard = (id: string) => {
     const feat = resolveFeat(id, featById);

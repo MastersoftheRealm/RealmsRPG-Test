@@ -665,7 +665,7 @@ export function AncestryStep() {
           <TraitSection
             title="Characteristic"
             subtitle="Choose 1 (optional)"
-            icon={<Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />}
+            icon={<Sparkles className="w-5 h-5 text-info-fg dark:text-info-400" />}
             traits={characteristics}
             selectable
             selectedIds={selectedCharacteristic ? [selectedCharacteristic] : []}
@@ -943,7 +943,7 @@ export function AncestryStep() {
         <TraitSection
           title="Characteristics"
           subtitle="Select 1 characteristic (optional)"
-          icon={<Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />}
+          icon={<Sparkles className="w-5 h-5 text-info-fg dark:text-info-400" />}
           traits={characteristics}
           selectable
           selectedIds={selectedCharacteristic ? [selectedCharacteristic] : []}

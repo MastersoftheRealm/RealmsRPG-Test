@@ -31,9 +31,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         // RECOMMENDED VARIANTS - clean solid/outline preferred over gradients
-        primary: 'bg-primary-button text-white hover:bg-primary-button-hover focus-visible:ring-primary-outline-border',
+        primary: 'bg-primary-button text-text-on-dark hover:bg-primary-button-hover focus-visible:ring-primary-outline-border',
         secondary: 'bg-surface text-text-secondary border border-border-light hover:bg-surface-alt focus-visible:ring-primary-outline-border dark:bg-surface-alt dark:border-border dark:hover:bg-surface',
-        danger: 'bg-danger-button text-white hover:bg-danger-700 focus-visible:ring-danger-border',
+        danger: 'bg-danger-button text-text-on-dark hover:bg-danger-700 focus-visible:ring-danger-border',
         ghost: 'text-text-secondary hover:bg-surface-alt hover:text-text-primary focus-visible:ring-primary-outline-border',
         link: 'text-primary-link-fg underline-offset-4 hover:underline focus-visible:ring-primary-outline-border',
         outline: 'border-2 border-primary-outline-border text-primary-outline-fg bg-transparent hover:bg-primary-subtle-bg focus-visible:ring-primary-outline-border',

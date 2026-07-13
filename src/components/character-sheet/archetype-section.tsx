@@ -517,7 +517,7 @@ export function ArchetypeSection({
                         className={cn(
                           'px-2 py-0.5 text-xs rounded transition-colors',
                           currentChoice === 'innate'
-                            ? 'bg-power-dark text-white'
+                            ? 'bg-power-dark text-text-on-dark'
                             : 'bg-power-light text-power-fg hover:bg-power-border/30'
                         )}
                         title="Gain +1 Innate Threshold & +1 Innate Pools"
@@ -529,7 +529,7 @@ export function ArchetypeSection({
                         className={cn(
                           'px-2 py-0.5 text-xs rounded transition-colors',
                           currentChoice === 'feat'
-                            ? 'bg-martial-dark text-white'
+                            ? 'bg-martial-dark text-text-on-dark'
                             : 'bg-martial-light text-martial-fg hover:bg-martial-border/30'
                         )}
                         title="Gain +1 Bonus Archetype Feat"
