@@ -21,6 +21,7 @@ import type { PathItemRecommendation, PathLoadout } from '@/types/archetype';
 import {
   buildEquipmentLookup,
   loadoutDraftFromSelection,
+  rebucketLoadoutByLookup,
   resolveLoadoutItems,
 } from '@/lib/guided-creator/resolve-loadout-items';
 import { buildPathLoadoutPool } from '@/lib/guided-creator/loadout-pool';
@@ -74,6 +75,17 @@ export function LoadoutStep() {
 
   const equipmentPhase = draft.equipmentPhase ?? 'weapon';
   const visiblePhases = visibleEquipmentPhases(armorMode);
+
+  const imageByItemId = useMemo(() => {
+    const map = new Map<string, unknown>();
+    for (const item of officialItems) {
+      map.set(String(item.id).trim().toLowerCase(), item);
+    }
+    for (const item of codexEquipment) {
+      map.set(String(item.id).trim().toLowerCase(), item);
+    }
+    return map;
+  }, [officialItems, codexEquipment]);
 
   const equipmentLookup = useMemo(
     () => buildEquipmentLookup(officialItems, codexEquipment),
@@ -167,20 +179,46 @@ export function LoadoutStep() {
   }, [armorMode, equipmentPhase, updateDraft]);
 
   useEffect(() => {
+    if (isLoading || equipmentLookup.size === 0) return;
     if (draft.loadoutId || loadouts.length === 0) return;
     const first = loadouts[0];
-    const fromKit = loadoutDraftFromSelection(first);
+    const fromKit = loadoutDraftFromSelection(first, equipmentLookup);
     updateDraft({
       loadoutId: first.id,
       equipmentPhase: 'weapon',
       ...fromKit,
       equipment: mergeSharedEquipment(fromKit.equipment, sharedEquipment),
     });
-  }, [loadouts, draft.loadoutId, updateDraft, sharedEquipment]);
+  }, [isLoading, loadouts, draft.loadoutId, updateDraft, sharedEquipment, equipmentLookup]);
+
+  /** Re-bucket weapons/armor once library lookup is ready (kits often nest armor in armaments[]). */
+  useEffect(() => {
+    if (isLoading || equipmentLookup.size === 0) return;
+    if (draft.loadoutWeapons.length === 0 && draft.loadoutArmor.length === 0) return;
+
+    const next = rebucketLoadoutByLookup(
+      draft.loadoutWeapons,
+      draft.loadoutArmor,
+      equipmentLookup
+    );
+    if (
+      JSON.stringify(next.loadoutWeapons) === JSON.stringify(draft.loadoutWeapons) &&
+      JSON.stringify(next.loadoutArmor) === JSON.stringify(draft.loadoutArmor)
+    ) {
+      return;
+    }
+    updateDraft(next);
+  }, [
+    isLoading,
+    draft.loadoutWeapons,
+    draft.loadoutArmor,
+    equipmentLookup,
+    updateDraft,
+  ]);
 
   const selectLoadout = useCallback(
     (loadout: PathLoadout) => {
-      const fromKit = loadoutDraftFromSelection(loadout);
+      const fromKit = loadoutDraftFromSelection(loadout, equipmentLookup);
       setL2Open(false);
       updateDraft({
         loadoutId: loadout.id,
@@ -189,7 +227,7 @@ export function LoadoutStep() {
         equipment: mergeSharedEquipment(fromKit.equipment, sharedEquipment),
       });
     },
-    [updateDraft, sharedEquipment]
+    [updateDraft, sharedEquipment, equipmentLookup]
   );
 
   const handleUnarmedChange = useCallback(
@@ -295,12 +333,20 @@ export function LoadoutStep() {
           />
 
           {!l2Open ? (
-            <GuidedLoadoutKitPresets
-              loadouts={loadouts}
-              resolvedByLoadoutId={resolvedByLoadoutId}
-              selectedLoadoutId={draft.loadoutId}
-              onSelect={selectLoadout}
-            />
+            <>
+              <GuidedLoadoutKitPresets
+                loadouts={loadouts}
+                resolvedByLoadoutId={resolvedByLoadoutId}
+                selectedLoadoutId={draft.loadoutId}
+                imageByItemId={imageByItemId}
+                onSelect={selectLoadout}
+              />
+              {draft.loadoutId === 'custom' ? (
+                <p className="font-nunito text-sm text-text-secondary" role="status">
+                  {stepCopy.customKitHint}
+                </p>
+              ) : null}
+            </>
           ) : null}
 
           <GuidedEquipmentPhaseLayout

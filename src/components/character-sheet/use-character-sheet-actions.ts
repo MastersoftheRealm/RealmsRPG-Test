@@ -170,7 +170,7 @@ const handlePortraitChange = useCallback(async (file: File) => {
     setCharacter(prev => prev ? { ...prev, portrait: url } : null);
     setPortraitRefreshKey(Date.now());
     await saveCharacter(character.id, { portrait: url });
-  } catch (err) {
+  } catch {
     setError('Failed to upload portrait');
   } finally {
     setUploadingPortrait(false);
@@ -1281,10 +1281,6 @@ const handleEnterState = useCallback(() => {
   setCharacter(prev => {
     if (!prev) return null;
     const db = featsDb as Array<CodexFeat & { state_feat?: boolean; uses_per_rec?: number }>;
-    const isStateFeat = (feat: CharacterFeat) => {
-      const codex = db.find(f => f.id === String(feat.id)) ?? db.find(f => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
-      return !!(codex?.state_feat);
-    };
     const getMaxUses = (feat: CharacterFeat) => {
       const codex = db.find(f => f.id === String(feat.id)) ?? db.find(f => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
       return feat.maxUses ?? codex?.uses_per_rec ?? 0;

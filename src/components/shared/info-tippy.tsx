@@ -126,6 +126,8 @@ export function InfoTippy({
     return children ?? null;
   }
 
+  // Floating UI merges ref callbacks into props; intended during render (not a stale-ref read).
+  // eslint-disable-next-line react-hooks/refs -- getReferenceProps ref merge is the documented pattern
   const referenceProps = getReferenceProps(touchHoldProps);
 
   const triggerClassName = cn(
@@ -141,6 +143,7 @@ export function InfoTippy({
   const trigger = isValidElement(children) ? (
     cloneElement(
       children,
+      // eslint-disable-next-line react-hooks/refs -- Floating UI reference prop merge during render
       getReferenceProps({
         ref: refs.setReference,
         ...touchHoldProps,

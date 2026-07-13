@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import path from 'path';
 import fs from 'fs';
 import { themeInit } from './targets';
@@ -73,14 +73,14 @@ function seedGuidedStorage(subStep: string, draft: Record<string, unknown>) {
 async function snap(page: import('@playwright/test').Page, name: string, fullPage = true) {
   fs.mkdirSync(OUT_DIR, { recursive: true });
   await page.evaluate(() => (document as Document).fonts?.ready);
-  await page.waitForTimeout(900);
+  await page.waitForTimeout(700);
   await page.screenshot({
     path: path.join(OUT_DIR, `${name}.png`),
     fullPage,
   });
 }
 
-test('guided loadout step phased layout audit', async ({ page, context }) => {
+test('guided loadout phased equipment audit (TASK-424 Phase 10)', async ({ page, context }) => {
   await context.addInitScript(themeInit('light'), 'light');
 
   const storage = seedGuidedStorage('loadout', {
@@ -101,17 +101,22 @@ test('guided loadout step phased layout audit', async ({ page, context }) => {
   await page.goto('/characters/new/guided', { waitUntil: 'networkidle' });
   await page.getByRole('heading', { name: /your loadout/i }).waitFor({ timeout: 45_000 });
 
+  const phaseGroup = page.getByRole('group', { name: /equipment steps/i });
+  await expect(phaseGroup).toBeVisible({ timeout: 15_000 });
+  await expect(phaseGroup.getByRole('button', { name: /1\.\s*Weapons/i })).toBeVisible();
+  await expect(phaseGroup.getByRole('button', { name: /2\.\s*Armor/i })).toBeVisible();
+  await expect(phaseGroup.getByRole('button', { name: /3\.\s*Gear/i })).toBeVisible();
+
   await snap(page, '01-loadout-full-page');
 
   await page.getByRole('heading', { name: 'Quick kits', level: 3 }).scrollIntoViewIfNeeded();
   await snap(page, '02-quick-kits', false);
 
-  const swordKit = page.getByLabel(/Apply kit Sword/i);
-  if (await swordKit.count()) {
-    await swordKit.first().click();
-    await page.waitForTimeout(400);
-    await snap(page, '03-sword-shield-selected');
-  }
+  const swordKit = page.getByLabel(/Apply kit Sword|Selected kit Sword/i);
+  await expect(swordKit.first()).toBeVisible({ timeout: 15_000 });
+  await swordKit.first().click();
+  await page.waitForTimeout(400);
+  await snap(page, '03-sword-shield-selected');
 
   const battleaxeCard = page.getByLabel(/Select Battleaxe/i);
   if (await battleaxeCard.count()) {
@@ -124,8 +129,34 @@ test('guided loadout step phased layout audit', async ({ page, context }) => {
   await page.getByRole('heading', { name: 'Browse weapons & shields', level: 2 }).waitFor({
     timeout: 15_000,
   });
-  await page.waitForTimeout(500);
-  await snap(page, '06-l2-tp-bar', false);
+  await page.waitForTimeout(400);
+  await snap(page, '06-l2-weapons', false);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+
+  await page.getByRole('button', { name: /Continue to armor/i }).click();
+  await expect(page.getByRole('heading', { name: /^Armor$/i })).toBeVisible({ timeout: 15_000 });
+  await snap(page, '07-armor-phase');
+
+  await page.getByRole('button', { name: 'See more' }).click();
+  await page.getByRole('heading', { name: 'Browse armor', level: 2 }).waitFor({ timeout: 15_000 });
+  await snap(page, '08-l2-armor', false);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+
+  await page.getByRole('button', { name: /Continue to gear/i }).click();
+  await expect(page.getByRole('heading', { name: /Adventuring gear/i })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByText(/c remaining for gear/i)).toBeVisible();
+  await snap(page, '09-gear-phase');
+
+  await page.getByRole('button', { name: 'See more' }).click();
+  await page.getByRole('heading', { name: 'Browse adventuring gear', level: 2 }).waitFor({
+    timeout: 15_000,
+  });
+  await snap(page, '10-l2-gear', false);
+  await page.keyboard.press('Escape');
 
   await page.setViewportSize({ width: 360, height: 800 });
   await page.goto('/characters/new/guided', { waitUntil: 'networkidle' });

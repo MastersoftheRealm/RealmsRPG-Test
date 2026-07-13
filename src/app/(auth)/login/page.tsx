@@ -26,7 +26,6 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [ready, setReady] = useState(true);
   const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [lastAttemptEmail, setLastAttemptEmail] = useState<string>('');
 
@@ -165,10 +164,10 @@ function LoginContent() {
         <Button
           type="submit"
           className="w-full"
-          disabled={isLoading || !ready}
+          disabled={isLoading}
           aria-label="Sign in"
         >
-          {!ready ? 'Loading...' : isLoading ? 'Signing in...' : 'Sign In'}
+          {isLoading ? 'Signing in...' : 'Sign In'}
         </Button>
       </form>
 
@@ -200,7 +199,7 @@ function LoginContent() {
         <SocialButton
           provider="google"
           onClick={handleGoogleSignIn}
-          disabled={isLoading || !ready}
+          disabled={isLoading}
         />
       </div>
 

@@ -360,8 +360,7 @@ export function formatPowerRangeFromSteps(steps: number): string {
  * Derive range string from parts
  */
 export function deriveRange(
-  partsPayload: PowerPartPayload[] = [],
-  _partsDb?: unknown
+  partsPayload: PowerPartPayload[] = []
 ): string {
   const pr = partsPayload.find((p) => {
     const partId = p.part?.id ?? p.id;
@@ -426,8 +425,7 @@ export function formatAreaForDisplay(areaType: string, areaLevel: number): strin
  * Derive area string from parts
  */
 export function deriveArea(
-  partsPayload: PowerPartPayload[] = [],
-  _partsDb?: unknown
+  partsPayload: PowerPartPayload[] = []
 ): string {
   const areaPartIds = [
     PART_IDS.SPHERE_OF_EFFECT,
@@ -455,8 +453,7 @@ export function deriveArea(
  * Uses shared formatDurationFromTypeAndValue for consistency with character sheet, library, codex.
  */
 export function deriveDuration(
-  partsPayload: PowerPartPayload[] = [],
-  _partsDb?: unknown
+  partsPayload: PowerPartPayload[] = []
 ): string {
   const findPartById = (partId: number, fallbackName: string) =>
     partsPayload.find((p) => {

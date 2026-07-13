@@ -108,7 +108,6 @@ export function SpeciesStep() {
   };
 
   const isMixedSelected = draft.ancestry?.mixed === true;
-  const isSingleSelected = draft.ancestry?.id && !draft.ancestry?.mixed;
   const canContinue = !!(draft.ancestry?.id);
   const completion = useMemo(
     () => getStepCompletion('species', draft, { allSpecies, codexSkills: codexSkills ?? null, allTraits: null }),

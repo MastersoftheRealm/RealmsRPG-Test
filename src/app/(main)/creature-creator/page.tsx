@@ -10,7 +10,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { LoginPromptModal, ConfirmActionModal, UnifiedSelectionModal, ItemCard, GridListRow, ListHeader, SourceFilter, InnateToggle, SegmentedControl, SkillsAllocationPage, ValueStepper, InfoTippy } from '@/components/shared';
+import { LoginPromptModal, ConfirmActionModal, UnifiedSelectionModal, GridListRow, ListHeader, SourceFilter, InnateToggle, SegmentedControl, SkillsAllocationPage, ValueStepper, InfoTippy } from '@/components/shared';
 import { getSkillPointsHelp, subSkillsHelp } from '../../../../public/tooltip-text';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
@@ -44,8 +44,6 @@ import {
   transformUserPowerToDisplayItem,
   transformUserTechniqueToDisplayItem,
   transformUserItemToDisplayItem,
-  creatureFeatToDisplayItem,
-  creatureArmamentToDisplayItem,
   displayItemToCreaturePower,
   displayItemToCreatureTechnique,
   displayItemToCreatureArmament,
@@ -92,7 +90,6 @@ import {
   CreatorSummaryPanel,
   CreatorSaveToolbar,
   CreatorLayout,
-  type ArchetypeType,
 } from '@/components/creator';
 import type { AbilityName } from '@/types';
 import type { DisplayItem } from '@/types/items';
@@ -292,21 +289,6 @@ function CreatureCreatorContent() {
     const selectedIds = new Set(creature.armaments.map((a: { id: string }) => String(a.id)).filter((id) => id.length > 0));
     return [...my, ...pub].filter((item: UserItem) => !selectedIds.has(item.docId)) as UserItem[];
   }, [userItems, normalizedPublicItems, librarySource, creature.armaments]);
-
-  // Transform library data to DisplayItem[] (for onConfirm payload)
-  const powerDisplayItems = useMemo(() =>
-    powerList.map((p: UserPower) => transformUserPowerToDisplayItem(p, powerPartsDb)),
-    [powerList, powerPartsDb]
-  );
-  const techniqueDisplayItems = useMemo(() =>
-    techniqueList.map((t: UserTechnique) => transformUserTechniqueToDisplayItem(t, techniquePartsDb)),
-    [techniqueList, techniquePartsDb]
-  );
-  
-  const armamentDisplayItems = useMemo(() =>
-    armamentList.map((item: UserItem) => transformUserItemToDisplayItem(item, itemPropertiesDb)),
-    [armamentList, itemPropertiesDb]
-  );
 
   // Build SelectableItems with detailSections (parts/properties chips) and area/range in expanded view — same logic as add-library-item-modal
   const powerSelectableItems = useMemo(() => {
@@ -980,7 +962,7 @@ function CreatureCreatorContent() {
     setCreature(loaded);
     try {
       localStorage.removeItem(CREATURE_CREATOR_CACHE_KEY);
-    } catch (_e) {
+    } catch {
       // ignore
     }
     save.setSaveMessage({ type: 'success', text: 'Creature loaded from Realms Library.' });

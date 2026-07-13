@@ -2,11 +2,36 @@
 
 **Last slimmed:** 2026-06-26 (TASK-382). Full history: [`archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md`](archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md) and [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md).
 
-**Next task ID:** TASK-430
+**Next task ID:** TASK-431
 
 **Agent rules:** Skip `blocked` tasks and any task with `assignee:` set to a human (e.g. TASK-353, **TASK-414**). Skip human-only tasks (TASK-353 → `DEVELOPER_TASK_QUEUE.md` DEV-001). Pick highest-priority `not-started` or continue `partial`. **Do not start TASK-408–413** until TASK-414 spec is `done` (owner approval).
 
 ---
+
+- id: TASK-430
+  title: React Compiler hook warnings — exhaustive-deps / set-state-in-effect / preserve-manual-memoization
+  created_at: 2026-07-13
+  created_by: agent
+  priority: low
+  status: not-started
+  parent_task: TASK-321
+  description: |
+    Follow-up from TASK-321. After clearing unused-vars / no-explicit-any / raw-color errors, remaining
+    ESLint noise is React Compiler hook rules (~171): set-state-in-effect (58), exhaustive-deps (104),
+    preserve-manual-memoization (9). eslint.config.mjs intentionally keeps these as warnings so lint
+    stays actionable without blocking. Fix in small, behavior-preserving batches with DEV-V where UI syncs.
+  related_files:
+    - eslint.config.mjs
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/app/(main)/encounters/
+    - src/components/guided-creator/
+  acceptance_criteria:
+    - Material reduction in react-hooks/* warnings without cascading re-render regressions.
+    - Prefer removing unnecessary effects over blanket eslint-disable.
+    - exhaustive-deps changes must not alter intentional mount-only / stable-ref patterns.
+    - npm run build + lint pass; no new errors.
+  notes: |
+    Do not mass-disable. High-blast files: character sheet, encounter views, guided reveal.
 
 - id: TASK-429
   title: Guided feat steps — Layer 2 browse (GuidedLayerNav)
@@ -166,7 +191,12 @@
   created_at: 2026-07-06
   created_by: agent
   priority: high
-  status: partial
+  status: done
+  build_validation: DEV-V-013-T004, DEV-V-013-T006, DEV-V-013-T013
+  developer_test_plan: |
+    DEV-V-013-T004 — Berserker quick kits + phased weapon L1 cards.
+    DEV-V-013-T006 — See more opens Layer 2 modal with TP bar.
+    DEV-V-013-T013 — Weapon → armor → gear phase walk + progress chips.
   completed_work: |
     Phase 0: GUIDED_EQUIPMENT_PHASED_SPEC.md; FEATURE_INDEX.
     Phase 1: weapon-attack-ability.ts (+ thrown fix, sheet refactor); equipment-eligibility.ts;
@@ -182,9 +212,15 @@
     Phase 8: admin armorStep select + shared path gear; level1_loadouts object wrapper (kits + metadata);
     parseLevel1LoadoutsField / serializeLevel1LoadoutsField; archetype-display loadouts column parity.
     Final: guided-equipment-phase-selection.tsx; guided-equipment-l2-grid.ts; resolveRefUnitCost helper.
+    Phase 10 (2026-07-13): DEV-V-013-T013 + expanded Playwright audit; fixed kit apply to split armor
+    nested in armaments[] via library lookup (blocked Continue to gear); re-split when catalog loads.
   remaining_work: |
-    Phase 9 path loadout content (owner, TASK-423).
-    Phase 10 BUILD_VALIDATION sign-off + Playwright audit run against live seed.
+    Path loadout content for remaining paths stays owner-gated (TASK-423).
+  follow_up_tasks:
+    - TASK-423
+  notes: |
+    Parent TASK-422. Spec in src/docs/ai/GUIDED_EQUIPMENT_PHASED_SPEC.md.
+    Agent UI/libs complete; owner seed for 11 paths + Berserker kit cleanup = TASK-423.
   description: |
     Replace guided loadout kit picker + monolithic mix-and-match with three in-step phases per
     REALMS §5.7 and GUIDED_EQUIPMENT_PHASED_SPEC.md. Layer 1 GuidedChoiceCard per phase; Layer 2
@@ -320,6 +356,9 @@
     - Path skills toggled via SkillSourceChip in path help card.
     - Advanced creator SkillsAllocationPage unchanged.
     - npm run build passes.
+  build_validation: DEV-V-013-T014
+  developer_test_plan: |
+    DEV-V-013-T014 — Guided skills Layer 1 (path chips + budget + browse).
   notes: |
     2026-07-03: Owner feedback on skills step UX mismatch vs other guided steps. npm run build pass.
 
@@ -328,7 +367,7 @@
 - id: TASK-321
   title: Reduce ESLint warnings (batch by rule)
   priority: low
-  status: partial
+  status: done
   created_at: 2026-06-12
   created_by: agent
   description: |
@@ -343,11 +382,16 @@
   completed_work: |
     - Batch 1 lint fix; 0 errors.
     - Batch 2 (TASK-350): lib/hooks no-unused-vars; character sheet page destructuring; ESLint 393→339 warnings.
+    - Batch 3–4 (2026-07-13): cleared all unused-vars (141→0); fixed 4 lint errors (raw color tokens,
+      InfoTippy Floating UI refs disables); removed dead PROPERTY_IDS re-export (batch-3 gap);
+      fixed agent gaps (login dead `ready` state, official-entity-list canAdd(row)→canAdd());
+      cleared admin no-explicit-any (40); a11y aria-sort; unused eslint-disable; dynamic img disables.
+      Baseline before: 360 warnings / 4 errors → after: ~171 warnings / 0 errors (react-hooks only).
   remaining_work: |
-    - ~339 ESLint warnings remain (mostly exhaustive-deps, set-state-in-effect, admin any).
+    - React Compiler hook warnings deferred to TASK-430 (eslint.config keeps them as warn on purpose).
   follow_up_tasks:
-    - TASK-350
-  notes: "2026-06-13 batch 1."
+    - TASK-430
+  notes: "2026-07-13 DONE for unused-vars/any/errors scope. Hook residuals → TASK-430."
 
 - id: TASK-326
   title: Tighten Supabase security advisors (bucket listing + leaked-password protection)
@@ -412,7 +456,8 @@
   created_at: 2026-06-25
   created_by: owner
   description: |
-    Collin's `@tippyjs/react` + `public/tooltip-text.tsx` is the only tooltip standard.
+    Contextual help uses `InfoTippy` + `public/tooltip-text.tsx` (Floating UI engine — see TASK-392).
+    Historical Tippy.js stack retired.
   related_files:
     - public/tooltip-text.tsx
     - src/components/shared/info-tippy.tsx
@@ -461,9 +506,10 @@
 - id: TASK-379
   title: DUP-05/08 unify library selection pipelines and make LoadFromLibraryModal a thin wrapper
   priority: high
-  status: not-started
+  status: done
   created_at: 2026-06-26
   created_by: agent
+  completed_at: 2026-07-13
   description: |
     Unify add/load library selection pipelines into one builder+normalizer path; refactor
     `LoadFromLibraryModal` into a thin wrapper over `UnifiedSelectionModal`.
@@ -480,8 +526,19 @@
     - No behavior regressions in powers/techniques/items/creatures/species load-add flows.
     - `npm run build`, `npm test`, and `npm run lint` pass.
     - Build validation coverage added for add/load parity per creator type.
+  build_validation: DEV-V-016-T001–T006
+  developer_test_plan: |
+    Run DEV-V-016 in BUILD_VALIDATION.md (power/technique/item/empowered/species+creature load + sheet add parity).
   notes: |
     Deferred from remediation waves. Requires QA-first execution.
+    2026-07-13: Done — LoadFromLibraryModal → UnifiedSelectionModal (confirmLabel Load, max 1);
+    add+load share library-selectable-builders + normalize-public (weaponName); technique Action
+    column on load matches add; DEV-V-016 added. Build/test/lint pass.
+    2026-07-13 audit: Empowered load uses buildEmpoweredPowerSelectableItem + EMPOWERED columns;
+    wired public-library error; deleted dead add-library-item adapters; L2 grid double-apply fixed;
+    AGENT_GUIDE API corrected; AddLibraryItemModal flexLayout.
+    2026-07-13 follow-up: type-gated fetches in useLoadModalLibrary; species TraitListModal →
+    UnifiedSelectionModal; flexLayout default true on UnifiedSelectionModal.
 
 - id: TASK-380
   title: DUP-11 + collapsible consolidation with CreatorPageShell rollout
@@ -1156,7 +1213,7 @@
     - src/components/guided-creator/character-preview-panel.tsx
     - src/lib/constants/copy/guided-creator-copy.ts
   acceptance_criteria:
-    - SkillsAllocationPage embedded with species/path locking, sub-skills hidden, defense hidden.
+    - GuidedSkillsPanel (not SkillsAllocationPage) with species/path locking, sub-skills hidden, defense hidden.
     - 3 L1 skill points (+ species "Any" extra) must be fully spent to continue.
     - Declining path skill frees 1 point; curated picks surface ability-aligned base skills.
     - Save payload uses skill_val from allocations (not hardcoded 1).
@@ -1164,9 +1221,10 @@
   build_validation: |
     suite: DEV-V-013
     tests:
-      - DEV-V-013-T003
+      - DEV-V-013-T014
   notes: |
     2026-06-30: Owner chose Option B — full allocation per REALMS §5.5. Store schema v3 (skillIds → skills). npm run build pass.
+    2026-07-13 audit: AC updated for GuidedSkillsPanel (TASK-419); build_validation rewired from wrong T003 → T014.
 
 - id: TASK-406
   title: Guided creator — Your Hero reveal redesign (§5.10)
@@ -1196,11 +1254,12 @@
   build_validation: |
     suite: DEV-V-013
     tests:
-      - DEV-V-013-T004
+      - DEV-V-013-T015
       - DEV-V-013-T005
   notes: |
     2026-06-30: Owner feedback — guided reveal was worst finalize step; redesign in stages.
     2026-06-30: Hero band, GuidedRevealSummary (names + edit links), identity block, portrait upload, smart HP/EN auto-allocate, shell hides strip on reveal. npm run build pass.
+    2026-07-13 audit: build_validation rewired from T004 (loadout) → T015 reveal + T005 save.
 
 - id: TASK-405
   title: Choice-card art — codex image_url fields + admin upload

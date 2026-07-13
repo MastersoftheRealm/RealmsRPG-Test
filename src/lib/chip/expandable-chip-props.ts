@@ -1,16 +1,11 @@
-import type { VariantProps } from 'class-variance-authority';
-import type { chipVariants } from '@/components/ui/chip';
 import type { ExpandableChipProps } from '@/components/ui/expandable-chip';
 import type { ChipData } from '@/components/shared/grid-list-row-types';
 import type { PartData } from '@/lib/chip/part-data';
-import { partChipVariant } from '@/lib/chip/part-chip-variant';
 import {
   formatGridListChipLabel,
   gridListChipStyleVariant,
   isGridListChipExpandable,
 } from '@/lib/chip/grid-list-chip-utils';
-
-type ChipVariant = NonNullable<VariantProps<typeof chipVariants>['variant']>;
 
 export function expandableChipPropsFromPartData(
   part: PartData,

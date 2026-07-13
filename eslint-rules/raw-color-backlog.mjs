@@ -72,7 +72,6 @@ export const RAW_COLOR_BACKLOG = [
   'src/components/shared/innate-toggle.tsx',
   'src/components/shared/powered-martial-slider.tsx',
   'src/components/shared/roll-button.tsx',
-  'src/components/shared/segmented-control.tsx',
   'src/components/shared/skill-row.tsx',
   'src/components/shared/tab-summary-section.tsx',
   'src/lib/game/creator-constants.ts',

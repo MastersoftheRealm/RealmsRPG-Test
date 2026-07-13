@@ -70,11 +70,6 @@ export function AdminSpeciesTab() {
     [skills],
   );
 
-  const traitOptions = useMemo(
-    () => (traits as Trait[]).map((t) => ({ value: String(t.id), label: t.name })),
-    [traits],
-  );
-
   const normalizeIds = (values: string[] = [], all: Array<{ id: string; name: string }>): string[] =>
     values.map((val) => {
       const byId = all.find((it) => String(it.id) === String(val));
@@ -324,7 +319,7 @@ export function AdminSpeciesTab() {
     }
   };
 
-  const handleInlineDelete = async (id: string, name: string) => {
+  const handleInlineDelete = async (id: string) => {
     if (pendingDeleteId !== id) {
       setPendingDeleteId(id);
       return;
@@ -465,7 +460,7 @@ export function AdminSpeciesTab() {
                           <Button
                             size="sm"
                             variant="danger"
-                            onClick={() => handleInlineDelete(s.id, s.name)}
+                            onClick={() => handleInlineDelete(s.id)}
                             className="text-xs px-2 py-0.5 h-6"
                           >
                             Yes

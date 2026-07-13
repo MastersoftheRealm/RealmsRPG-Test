@@ -243,11 +243,18 @@ export const GUIDED_CREATOR_COPY = {
       },
       phases: {
         progressLabel: 'Equipment steps',
+        phaseNames: {
+          weapon: 'Weapons',
+          armor: 'Armor',
+          gear: 'Gear',
+        },
+        /** @deprecated Prefer phaseNames + dynamic numbering from visible phases */
         labels: {
           weapon: '1. Weapons',
           armor: '2. Armor',
           gear: '3. Gear',
         },
+        phaseLockedHint: 'Finish the current equipment step before jumping ahead.',
         weapon: {
           title: 'Weapons & shields',
           description:
@@ -283,11 +290,13 @@ export const GUIDED_CREATOR_COPY = {
           emptyTitle: 'No eligible weapons on your path',
           emptyDescription: 'Use See more to browse the full catalog.',
           handBlocked: 'Two-handed weapons cannot be used with a shield.',
+          tpBlocked: 'Not enough training points for that item.',
           pathBadge: 'Path pick',
         },
         armorPhase: {
           emptyTitle: 'No eligible armor on your path',
           emptyDescription: 'Use See more to browse armor, or continue unarmored if your path allows.',
+          tpBlocked: 'Not enough training points for that item.',
           pathBadge: 'Path pick',
         },
         gearPhase: {

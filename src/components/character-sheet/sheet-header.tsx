@@ -397,49 +397,6 @@ function LargeStatBlock({
   );
 }
 
-/**
- * Small stat block for Terminal and Innate
- */
-function SmallStatBlock({ label, value, subValue }: { label: string; value: number | string; subValue?: string }) {
-  return (
-    <div className="flex flex-col items-center p-2 bg-surface-alt rounded-lg border border-border-light">
-      <span className="text-xs text-text-muted dark:text-text-secondary uppercase tracking-wide">{label}</span>
-      <span className="text-lg font-bold text-text-primary">{value}</span>
-      {subValue && <span className="text-xs text-text-muted dark:text-text-secondary">{subValue}</span>}
-    </div>
-  );
-}
-
-/**
- * Health bar with color states
- */
-function HealthBar({
-  current,
-  max,
-  terminal,
-}: {
-  current: number;
-  max: number;
-  terminal: number;
-}) {
-  const percentage = Math.max(0, Math.min(100, (current / max) * 100));
-  const healthColor = getHealthColor(current, max);
-  
-  const barColorClass = 
-    healthColor === 'green' ? 'bg-success-500' :
-    healthColor === 'orange' ? 'bg-warning-500' :
-    'bg-danger-700';
-  
-  return (
-    <div className="relative h-3 bg-surface rounded-full overflow-hidden">
-      <div
-        className={cn('absolute inset-y-0 left-0 transition-all duration-slow ease-standard rounded-full', barColorClass)}
-        style={{ width: `${percentage}%` }}
-      />
-    </div>
-  );
-}
-
 const DEFAULT_ACTION_POINTS = 4;
 
 export function SheetHeader({

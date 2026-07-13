@@ -1,4 +1,18 @@
 
+- 2026-07-13 | agent | Deferred + last-25 audit fixes | files: use-load-modal-library.ts, unified-selection-modal.tsx, species-creator TraitListModal, BUILD_VALIDATION T014–T015, DEVELOPER_TASK_QUEUE, AGENT_GUIDE, FEATURE_INDEX, CHIP_UNIFICATION_PLAN, AI_TASK_QUEUE 406/407/419/376 | Summary: Type-gated load fetches; TraitListModal → UnifiedSelectionModal + primaryActions; flexLayout default true; skills/reveal DEV-V coverage rewired; docs parity.
+
+- 2026-07-13 | agent | TASK-379 audit fixes — empowered load, L2 grid, dead adapters | files: use-load-modal-library.ts, guided-equipment-l2-modal.tsx, LoadFromLibraryModal.tsx, add-library-item-modal.tsx, unified-selection-modal.tsx, library-selectable-builders.ts, AGENT_GUIDE, CHIP_UNIFICATION_PLAN | Summary: Empowered load uses nested-doc builder + Action/Damage/Area; public error wired; removed unused build-*-selectable adapters; L2 no longer double-applies selection grid; Add modal flexLayout; docs/API corrected.
+
+- 2026-07-13 | agent | TASK-379 done — unify library add/load selection | files: unified-selection-modal.tsx, LoadFromLibraryModal.tsx, library-selectable-builders.ts, use-load-modal-library.ts, add-library-item/*, modal-config.ts, BUILD_VALIDATION DEV-V-016 | Summary: LoadFromLibraryModal is thin UnifiedSelectionModal wrapper (Load, max 1); add+load share builders/normalizers; technique Action column parity; DEV-V-016 QA suite.
+
+- 2026-07-13 | agent | Session audit fixes — equipment UX + SegmentedControl tokens | files: segmented-control.tsx, guided-equipment-phase-progress.tsx, loadout-step.tsx, resolve-loadout-items.ts, guided-loadout-kit-presets.tsx, guided-equipment-l1-phase.tsx, REALMS §5.7, GUIDED_EQUIPMENT_PHASED_SPEC, raw-color-backlog | Summary: Disabled locked phase chips + hint; rebucket armor for custom kits; text-text-on-dark on SegmentedControl; customKitHint; kit art + list role; TP blocked message; product/spec docs aligned.
+
+- 2026-07-13 | agent | TASK-424 Phase 10 done — phased loadout audit + kit armor split | files: resolve-loadout-items.ts, loadout-step.tsx, guided-loadout-audit.pw.ts, BUILD_VALIDATION T013, DEVELOPER_TASK_QUEUE | Summary: Playwright covers weapon→armor→gear + L2; fixed loadoutDraftFromSelection to place armor nested in armaments[] into loadoutArmor (unblocked Continue to gear). Unit + audit pass. Path seeds remain TASK-423.
+
+- 2026-07-13 | agent | TASK-321 done — ESLint unused-vars/any/errors cleared | files: ~70 across app/components/lib + AI_TASK_QUEUE TASK-430 | Summary: 360→171 warnings, 4→0 errors. Cleared all unused-vars + admin any; fixed raw-color + InfoTippy refs; audited batch-3 gaps (PROPERTY_IDS re-export, login ready, canAdd). Hook compiler residuals filed as TASK-430.
+
+- 2026-07-13 | agent | TASK-321 batch 3 — unused-vars (lib/guided) | files: power-calc.ts, equipment-eligibility.ts, expandable-chip-props.ts, types/codex.ts, guided-skills-panel.tsx, guided-step-layout.tsx | Summary: Removed dead imports/params/helpers (11 warnings). Baseline 360 warnings before batch; ESLint clean on touched files; power-calc vitest 6/6.
+
 - 2026-07-11 | agent | TASK-429 Guided feat Layer 2 browse | files: guided-feats-browse-panel.tsx, archetype-feats-step.tsx, character-feat-step.tsx, feat-selection.ts, guided-creator-copy.ts | Summary: Abilities-style GuidedLayerNav expands to in-step filtered feat browse (eligible-first, path pinned); Back to recommendations; shared capped swap helper. DEV-V-013-T012.
 
 - 2026-07-11 | agent | TASK-428 Archetype feats swap at capacity | files: archetype-feats-step.tsx | Summary: At-max feat cards no longer grey out; picking another swaps in (replaces last selected), matching ancestry replace grammar. DEV-V-013-T011.

@@ -111,7 +111,6 @@ export async function GET() {
 
     return NextResponse.json(data ?? []);
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error('[API Error] GET /api/official/enhanced-items:', err);
     return NextResponse.json(
       { error: 'Failed to load official enhanced items' },
@@ -171,7 +170,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error('[API Error] POST /api/official/enhanced-items:', err);
     return NextResponse.json(
       {
@@ -228,7 +226,6 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error('[API Error] PATCH /api/official/enhanced-items:', err);
     return NextResponse.json(
       {
@@ -263,7 +260,6 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error('[API Error] DELETE /api/official/enhanced-items:', err);
     return NextResponse.json(
       {

@@ -39,7 +39,6 @@ import {
   usePowerParts,
   useUserPowers,
   useOfficialLibrary,
-  useEnhancedItems,
 } from '@/hooks';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { useToast } from '@/components/ui';
@@ -172,7 +171,6 @@ export default function CraftingToolPage() {
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: userPowers = [] } = useUserPowers();
   const { data: officialPowers = [] } = useOfficialLibrary('powers');
-  const { data: enhancedItems = [] } = useEnhancedItems();
 
   useEffect(() => {
     if (sessionData && !initialized) {
@@ -1947,8 +1945,6 @@ export default function CraftingToolPage() {
                         const baseItem = session.data.customBaseItem ?? session.data.item;
                         if (!baseItem || !session.data.powerRef) return;
                         const name = `${'name' in baseItem ? baseItem.name : 'Item'} (${session.data.powerRef.name})`;
-                        const selectedUses =
-                          null;
                         const usesTypeToSave =
                           session.data.usesType ?? 'full';
                         const usesCountToSave =

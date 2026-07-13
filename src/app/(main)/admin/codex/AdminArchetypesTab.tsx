@@ -817,7 +817,7 @@ export function AdminArchetypesTab() {
     }
   };
 
-  const handleInlineDelete = async (id: string, name: string) => {
+  const handleInlineDelete = async (id: string) => {
     if (pendingDeleteId !== id) {
       setPendingDeleteId(id);
       return;
@@ -857,7 +857,7 @@ export function AdminArchetypesTab() {
                 {pendingDeleteId === a.id ? (
                   <div className="flex items-center gap-1 text-xs">
                     <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
-                    <Button size="sm" variant="danger" onClick={() => handleInlineDelete(a.id, a.name || '')} className="text-xs px-2 py-0.5 h-6">Yes</Button>
+                    <Button size="sm" variant="danger" onClick={() => handleInlineDelete(a.id)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
                     <Button size="sm" variant="secondary" onClick={() => setPendingDeleteId(null)} className="text-xs px-2 py-0.5 h-6">No</Button>
                   </div>
                 ) : (

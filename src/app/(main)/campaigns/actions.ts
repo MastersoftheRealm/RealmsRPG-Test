@@ -15,7 +15,7 @@ import { normalizeInviteCodeInput, isValidInviteCodeFormat, visibilityForCampaig
 import { buildRosterFieldsFromCharacterData } from '@/lib/campaign-roster';
 import { getRolePolicyForUser } from '@/lib/role-policy';
 import { formatRoleQuotaExceededMessage } from '@/lib/role-quota-messages';
-import type { Campaign, CampaignCharacter } from '@/types/campaign';
+import type { CampaignCharacter } from '@/types/campaign';
 import { MAX_CAMPAIGN_CHARACTERS, OWNER_MAX_CHARACTERS } from './constants';
 
 const INVITE_CODE_LENGTH = 8;

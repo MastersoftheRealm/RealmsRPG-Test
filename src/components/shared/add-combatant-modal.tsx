@@ -11,14 +11,14 @@
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { apiFetchOrNull } from '@/lib/api-client';
-import { BookOpen, Users, Search, Plus, Minus } from 'lucide-react';
-import { Modal, Button, Input, SearchInput, LoadingState, EmptyState } from '@/components/ui';
+import { BookOpen, Users } from 'lucide-react';
+import { Modal, Button, SearchInput, LoadingState, EmptyState } from '@/components/ui';
 import { SegmentedControl } from '@/components/shared';
 import { ValueStepper } from '@/components/shared/value-stepper';
 import { useUserCreatures, useCampaignsFull, type UserCreature } from '@/hooks';
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
 import type { TrackedCombatant, CombatantType, SkillParticipant } from '@/types/encounter';
-import type { Campaign, CampaignCharacter, CampaignCharacterEncounterData } from '@/types/campaign';
+import type { Campaign, CampaignCharacterEncounterData } from '@/types/campaign';
 
 type TabId = 'library' | 'campaign';
 

@@ -4,7 +4,6 @@ import { useMemo, useState, useCallback } from 'react';
 import {
   UnifiedSelectionModal,
   PointStatus,
-  gridColumnsWithInlineSelection,
   type SelectableItem,
 } from '@/components/shared';
 import type { GuidedDraft, GuidedEquipmentPhase } from '@/stores/guided-creator-store';
@@ -199,11 +198,7 @@ export function GuidedEquipmentL2Modal({
             ? GEAR_COLUMNS.map((c) => ({ ...c, label: c.label }))
             : LOADOUT_CUSTOMIZE_HEADER_COLUMNS.map((c) => ({ ...c, sortable: c.sortable }))
         }
-        gridColumns={
-          phase === 'gear'
-            ? gridColumnsWithInlineSelection(GEAR_GRID)
-            : gridColumnsWithInlineSelection(LOADOUT_CUSTOMIZE_GRID_COLUMNS)
-        }
+        gridColumns={phase === 'gear' ? GEAR_GRID : LOADOUT_CUSTOMIZE_GRID_COLUMNS}
         itemLabel={phase === 'gear' ? 'item' : phase}
         emptyMessage={l2Copy.emptyMessage(phase)}
         searchPlaceholder={l2Copy.searchPlaceholder(phase)}

@@ -135,6 +135,9 @@ export function GuidedEquipmentL1Phase({
             rules
           )
         ) {
+          setHandMessage(
+            phase === 'armor' ? phaseCopy.armorPhase.tpBlocked : phaseCopy.weaponPhase.tpBlocked
+          );
           return;
         }
       }

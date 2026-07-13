@@ -10,7 +10,6 @@
  */
 
 import { RotateCw } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 // Re-export SearchInput from UI for backward compatibility

@@ -15,7 +15,7 @@ import {
   deleteCharacter,
   duplicateCharacter,
 } from '@/services/character-service';
-import type { Character, CharacterSummary } from '@/types';
+import type { Character } from '@/types';
 
 /** Query keys for character data */
 export const characterKeys = {

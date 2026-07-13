@@ -181,11 +181,6 @@ function WeaponsSection({
   const weapons = enrichedWeapons || (character.equipment?.weapons || []) as Item[];
   const equippedWeapons = weapons.filter(w => w.equipped);
   
-  // Calculate bonuses for attack
-  const strBonus = (abilities.strength ?? 0) + martialProf;
-  const agiBonus = (abilities.agility ?? 0) + martialProf;
-  const acuBonus = (abilities.acuity ?? 0) + martialProf;
-  
   // Unarmed prowess uses STR or AGI (whichever is higher)
   const str = abilities.strength ?? 0;
   const agi = abilities.agility ?? 0;
@@ -274,8 +269,6 @@ function WeaponsSection({
 function ShieldsSection({
   character,
   martialProf,
-  onRollAttack,
-  onRollDamage,
   enrichedShields,
 }: {
   character: Character;
@@ -345,7 +338,6 @@ export function ArchetypeSection({
   onPowerProfChange,
   onMilestoneChoiceChange,
   unarmedProwess,
-  onUnarmedProwessChange,
   enrichedWeapons,
   enrichedShields,
   enrichedArmor,
@@ -391,25 +383,6 @@ export function ArchetypeSection({
   const martAbilValue = character.abilities?.[martAbilName as keyof Abilities] ?? 0;
   const powerPotency = 10 + powerProf + powAbilValue;
   const martialPotency = 10 + martialProf + martAbilValue;
-  
-  // Build archetype title with abilities
-  const getArchetypeTitle = (): string => {
-    const parts: string[] = [];
-    if (powerProf > 0) {
-      const abilName = character.pow_abil 
-        ? character.pow_abil.charAt(0).toUpperCase() + character.pow_abil.slice(1).toLowerCase()
-        : 'Charisma';
-      parts.push(`Power - ${abilName}`);
-    }
-    if (martialProf > 0) {
-      const abilName = character.mart_abil 
-        ? character.mart_abil.charAt(0).toUpperCase() + character.mart_abil.slice(1).toLowerCase()
-        : 'Strength';
-      parts.push(`Martial - ${abilName}`);
-    }
-    if (parts.length === 0) return 'Archetype';
-    return parts.join(' / ') + ' Archetype';
-  };
   
   // Handle attack bonus roll
   const handleRollBonus = (name: string, bonus: number) => {

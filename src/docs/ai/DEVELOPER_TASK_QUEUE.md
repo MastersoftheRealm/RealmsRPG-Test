@@ -43,7 +43,10 @@ Each suite is a **category** of step-by-step tests. Full steps live in [`BUILD_V
 | **DEV-V-010** | Feat/trait custom name + note | TASK-377 | T001–T004 (4) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-010--feattrait-custom-name--note-task-377) |
 | **DEV-V-011** | UI verification safety net | TASK-383, TASK-385 | T001–T006 (6) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-011--ui-verification-safety-net-task-383) |
 | **DEV-V-012** | Landing page rebuild | TASK-387 | T001–T006 (6) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-012--landing-page-rebuild-task-387) |
-| **DEV-V-013** | Guided Simple character creator | TASK-394–403, TASK-422, TASK-425–429 | T001–T012 (12) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-013--guided-simple-character-creator-task-394403) |
+| **DEV-V-013** | Guided Simple character creator | TASK-394–403, TASK-406–407, TASK-419, TASK-422, TASK-424–429 | T001–T015 (15) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-013--guided-simple-character-creator-task-394403) |
+| **DEV-V-014** | Codex payload + roll timestamp | TASK-378 | T001+ (automated) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-014--codex-payload--roll-timestamp-task-378) |
+| **DEV-V-015** | Library API typing | TASK-420 | T001–T002 | Ready — [open suite](BUILD_VALIDATION.md#dev-v-015--library-api-typing-task-420) |
+| **DEV-V-016** | Library add/load selection parity | TASK-379 | T001–T006 (6) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-016--library-addload-selection-parity-task-379) |
 | DEV-V-002 | Campaign & rolls security | TASK-329 | — | Planned (legacy DEV-T-002) |
 | DEV-V-003 | Admin role change safety | TASK-330 | — | Planned |
 | DEV-V-004 | Storage & account security | TASK-326, TASK-331 | — | Planned |

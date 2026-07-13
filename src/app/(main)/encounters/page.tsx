@@ -17,7 +17,6 @@ import {
   Plus,
   Trash2,
   ChevronRight,
-  Search,
   CheckCircle2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -27,7 +26,6 @@ import {
   Button,
   EmptyState,
   LoadingState,
-  Alert,
   Modal,
   Input,
   TabNavigation,

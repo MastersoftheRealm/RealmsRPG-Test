@@ -113,7 +113,7 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
     return <ListEmptyState icon={emptyIcon} title={emptyTitle} message={emptyMessage} />;
   }
 
-  const canAdd = (row: TRow) => variant === 'library' && !readOnly && !!onAddRequest;
+  const canAdd = () => variant === 'library' && !readOnly && !!onAddRequest;
 
   return (
     <div>
@@ -150,7 +150,7 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
                 costLabel={costLabel}
                 badges={variant === 'library' ? [{ label: 'Realms', color: 'blue' }] : undefined}
                 rightSlot={
-                  canAdd(row) ? (
+                  canAdd() ? (
                     <IconButton
                       variant="ghost"
                       size="sm"
@@ -165,7 +165,7 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
                     </IconButton>
                   ) : undefined
                 }
-                onAddToLibrary={canAdd(row) ? () => onAddRequest!(row) : undefined}
+                onAddToLibrary={canAdd() ? () => onAddRequest!(row) : undefined}
                 onEdit={variant === 'admin' && onEdit ? () => onEdit(row.id) : undefined}
                 onDelete={variant === 'admin' && onDelete ? () => onDelete(row.id, row.name) : undefined}
               />

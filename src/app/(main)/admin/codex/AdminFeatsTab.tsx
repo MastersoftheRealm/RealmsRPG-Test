@@ -7,7 +7,6 @@ import {
   TagFilter,
   SelectFilter,
   FilterSection,
-  type AbilityRequirement,
   CodexFeatRow,
 } from '@/components/codex';
 import {
@@ -128,7 +127,6 @@ function AdminFeatEditModal({
   feats,
   levelFeats,
   skills,
-  skillIdToName,
   filterOptions,
   abilityOptions,
   saving,
@@ -1075,7 +1073,7 @@ export function AdminFeatsTab() {
     }
   };
 
-  const handleInlineDelete = async (id: string, name: string) => {
+  const handleInlineDelete = async (id: string) => {
     if (pendingDeleteId !== id) {
       setPendingDeleteId(id);
       return;
@@ -1205,7 +1203,7 @@ export function AdminFeatsTab() {
                   {pendingDeleteId === feat.id ? (
                     <div className="flex items-center gap-1 text-xs">
                       <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
-                      <Button size="sm" variant="danger" onClick={() => handleInlineDelete(feat.id, feat.name)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
+                      <Button size="sm" variant="danger" onClick={() => handleInlineDelete(feat.id)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
                       <Button size="sm" variant="secondary" onClick={() => setPendingDeleteId(null)} className="text-xs px-2 py-0.5 h-6">No</Button>
                     </div>
                   ) : (

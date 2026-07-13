@@ -482,6 +482,7 @@ function JoinCampaignTab({
                 onChange={() => setSelectedCharacterId(c.id)}
                 className="sr-only"
               />
+              {/* eslint-disable-next-line @next/next/no-img-element -- dynamic portrait URL */}
               <img
                 src={getEffectivePortrait(c.portrait)}
                 alt=""

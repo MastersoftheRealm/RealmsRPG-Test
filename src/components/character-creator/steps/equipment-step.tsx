@@ -206,12 +206,6 @@ export function EquipmentStep() {
     return UNARMED_PROWESS_LEVELS.filter(up => up.charLevel <= charLevel);
   }, [draft.level]);
   
-  // Toggle unarmed prowess selection
-  const toggleUnarmedProwess = useCallback(() => {
-    const newLevel = currentUnarmedProwess === 0 ? 1 : 0;
-    updateDraft({ unarmedProwess: newLevel });
-  }, [currentUnarmedProwess, updateDraft]);
-
   // Upgrade unarmed prowess to a specific level
   const setUnarmedProwessLevel = useCallback((level: number) => {
     updateDraft({ unarmedProwess: level });
@@ -1069,7 +1063,7 @@ export function EquipmentStep() {
 
           {/* Prowess Levels - only show level 1 for character creation */}
           <div className="space-y-3">
-            {availableUnarmedLevels.map((prowessLevel, idx) => {
+            {availableUnarmedLevels.map((prowessLevel) => {
               const isAvailable = prowessLevel.charLevel <= (draft.level || 1);
               const isSelected = currentUnarmedProwess >= prowessLevel.level;
               const tpCost = prowessLevel.level === 1 ? UNARMED_PROWESS_BASE_TP : UNARMED_PROWESS_UPGRADE_TP;

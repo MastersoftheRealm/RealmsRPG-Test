@@ -54,7 +54,6 @@ const ARCHETYPE_INFO: Record<ArchetypeType, { title: string; description: string
 export function ArchetypeSelector({
   value,
   powerProficiency,
-  martialProficiency,
   maxProficiency,
   onTypeChange,
   onProficiencyChange,
@@ -127,7 +126,7 @@ export function ArchetypeSelector({
           powerValue={sliderValue}
           martialValue={maxProficiency - sliderValue}
           maxPoints={maxProficiency}
-          onChange={(power, _martial) => handleSliderChange(power)}
+          onChange={(power) => handleSliderChange(power)}
           disabled={disabled}
         />
       )}

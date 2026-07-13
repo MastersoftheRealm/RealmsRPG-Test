@@ -73,8 +73,6 @@ export function RecoveryModal({
   // Calculate deficits
   const hpDeficit = maxHealth - currentHealth;
   const enDeficit = maxEnergy - currentEnergy;
-  const hpDeficitPercent = maxHealth > 0 ? hpDeficit / maxHealth : 0;
-  const enDeficitPercent = maxEnergy > 0 ? enDeficit / maxEnergy : 0;
   
   // Calculate what each quarter restores
   const hpPerQuarter = roundUp(maxHealth / 4);

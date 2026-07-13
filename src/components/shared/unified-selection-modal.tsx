@@ -138,10 +138,24 @@ export interface UnifiedSelectionModalProps {
   };
   /** Optional: disable the confirm button based on selected items (e.g. missing required choices) */
   confirmDisabled?: (selectedItems: SelectableItem[]) => boolean;
+  /** Primary confirm button label (default: "Add Selected"). Use "Load" for creator load flows. */
+  confirmLabel?: string;
+  /** Optional error shown in the list region (e.g. load failures) */
+  error?: Error | null;
   
   // Styling
   size?: 'md' | 'lg' | 'xl';
   className?: string;
+  /**
+   * Flex column layout for sticky header/footer + scrollable list.
+   * Defaults to true — selection list modals need this on mobile.
+   */
+  flexLayout?: boolean;
+  /**
+   * When set, replaces the default primary confirm button (e.g. dual “Add as species / ancestry”).
+   * Cancel remains. Caller is responsible for closing the modal after actions.
+   */
+  primaryActions?: ReactNode | ((selectedItems: SelectableItem[]) => ReactNode);
 }
 
 // =============================================================================
@@ -174,9 +188,13 @@ export function UnifiedSelectionModal({
   showQuantity = false,
   footerExtra,
   confirmDisabled,
+  confirmLabel = 'Add Selected',
+  error = null,
   tabPanelA11y,
   size = 'lg',
   className,
+  flexLayout = true,
+  primaryActions,
 }: UnifiedSelectionModalProps) {
   // State
   const [searchQuery, setSearchQuery] = useState('');
@@ -226,30 +244,31 @@ export function UnifiedSelectionModal({
   }, [items, displayFilter, searchQuery, searchFields, sortState, hideDisabled, sortItems]);
   
   // Toggle selection — normalize id to string so selection works when codex returns number ids.
-  // Soft capacity: allow selecting past maxSelections; confirm is blocked + warning shown instead
-  // of greying out the list (important when maxSelections === 0 / budget exhausted).
+  // Soft capacity (maxSelections > 1 or 0): allow selecting past max; confirm blocked + warning.
+  // Single-select (maxSelections === 1): replace selection like radio (creator Load flows).
   const toggleSelection = useCallback((id: string | number) => {
     const key = String(id);
     setSelectedIds(prev => {
       const newSet = new Set(prev);
       if (newSet.has(key)) {
         newSet.delete(key);
-        // Remove quantity
         setQuantities(q => {
           const newQ = { ...q };
           delete newQ[key];
           return newQ;
         });
+      } else if (maxSelections === 1) {
+        setQuantities(showQuantity ? { [key]: 1 } : {});
+        return new Set([key]);
       } else {
         newSet.add(key);
-        // Initialize quantity for equipment
         if (showQuantity) {
           setQuantities(q => ({ ...q, [key]: 1 }));
         }
       }
       return newSet;
     });
-  }, [showQuantity]);
+  }, [showQuantity, maxSelections]);
   
   // Selected items (for footerExtra and confirmDisabled)
   const selectedItems = useMemo(
@@ -288,22 +307,23 @@ export function UnifiedSelectionModal({
     overSelectionLimit ||
     (confirmDisabled?.(selectedItems) ?? false);
   
-  
-  const sizeClasses = {
-    md: 'max-w-xl',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
-  };
-  
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size={size} showCloseButton={false} fullScreenOnMobile titleA11y={title}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size={size}
+      showCloseButton={false}
+      fullScreenOnMobile
+      flexLayout={flexLayout}
+      titleA11y={title}
+    >
       <div className={cn('flex flex-col flex-1 min-h-0 md:max-h-[70vh]', className)}>
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div>
             <h2 className="text-xl font-bold text-text-primary">{title}</h2>
             {description && (
-              <p className="text-sm text-text-muted mt-1">{description}</p>
+              <p className="text-sm text-text-muted dark:text-text-secondary mt-1">{description}</p>
             )}
           </div>
           <IconButton variant="ghost" size="sm" onClick={onClose} label="Close">
@@ -358,6 +378,10 @@ export function UnifiedSelectionModal({
             <>
               {isLoading ? (
                 <LoadingState message="Loading..." size="md" padding="md" />
+              ) : error ? (
+                <Alert variant="danger" className="mx-4">
+                  {error.message}
+                </Alert>
               ) : filteredItems.length === 0 ? (
                 <EmptyState
                   title={emptyMessage || `No ${itemLabel}s found`}
@@ -433,20 +457,26 @@ export function UnifiedSelectionModal({
         <div className="flex flex-col gap-3 pt-4 border-t border-border-light mt-4">
           {footerExtra?.(selectedItems)}
           <div className="flex items-center justify-between">
-            <span className="text-sm text-text-muted">
+            <span className="text-sm text-text-muted dark:text-text-secondary">
               {selectedIds.size} {itemLabel}{selectedIds.size !== 1 ? 's' : ''} selected
-              {maxSelections !== undefined && ` (max ${maxSelections})`}
+              {maxSelections !== undefined && maxSelections !== 1 && ` (max ${maxSelections})`}
             </span>
             <div className="flex gap-2">
               <Button variant="secondary" onClick={onClose}>
                 Cancel
               </Button>
-              <Button
-                onClick={handleConfirm}
-                disabled={isConfirmDisabled}
-              >
-                Add Selected {selectedIds.size > 0 && `(${selectedIds.size})`}
-              </Button>
+              {primaryActions ? (
+                typeof primaryActions === 'function' ? (
+                  primaryActions(selectedItems)
+                ) : (
+                  primaryActions
+                )
+              ) : (
+                <Button onClick={handleConfirm} disabled={isConfirmDisabled}>
+                  {confirmLabel}
+                  {selectedIds.size > 0 ? ` (${selectedIds.size})` : ''}
+                </Button>
+              )}
             </div>
           </div>
         </div>

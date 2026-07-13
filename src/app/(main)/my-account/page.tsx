@@ -16,7 +16,6 @@ import { useAuthStore } from '@/stores';
 import { useAdmin } from '@/hooks';
 import { ProtectedRoute } from '@/components/layout';
 import { cn } from '@/lib/utils';
-import { apiFetch } from '@/lib/api-client';
 import { LoadingState, Button, Input, Alert, PageContainer, Spinner, Card, PageHeader } from '@/components/ui';
 import { ImageUploadModal } from '@/components/shared';
 import { User as UserIcon, Mail, Lock, Trash2, AlertTriangle, AtSign, Camera } from 'lucide-react';
@@ -149,7 +148,7 @@ function AccountContent() {
       // Sync to Supabase Auth so header and any useAuth() consumer see the new picture
       const supabase = createClient();
       await supabase.auth.updateUser({ data: { avatar_url: url } });
-    } catch (err) {
+    } catch {
       setPictureMessage({ type: 'error', text: 'Failed to upload profile picture' });
     } finally {
       setUploadingPicture(false);
@@ -395,6 +394,7 @@ function AccountContent() {
         <div className="flex items-center gap-4 mb-6 pb-4 border-b border-border-subtle">
           <div className="relative w-20 h-20 rounded-full overflow-hidden bg-surface-alt border-2 border-border-light flex-shrink-0">
             {profile?.photoURL ? (
+              // eslint-disable-next-line @next/next/no-img-element -- dynamic profile photo URL
               <img src={profile.photoURL} alt="Profile" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-text-muted">

@@ -183,7 +183,6 @@ export function useCharacterSheetDerived({
   codexEquipment,
   powerPartsDb,
   techniquePartsDb,
-  itemPropertiesDb,
   publicLibraries,
   allSpecies,
   traitsDb,

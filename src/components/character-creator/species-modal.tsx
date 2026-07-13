@@ -75,7 +75,7 @@ interface TraitSectionProps {
   selectable?: boolean;
 }
 
-function TraitSection({ title, traits, isFlaw = false, selectable = false }: TraitSectionProps) {
+function TraitSection({ title, traits, selectable = false }: TraitSectionProps) {
   if (!traits || traits.length === 0) return null;
   
   return (

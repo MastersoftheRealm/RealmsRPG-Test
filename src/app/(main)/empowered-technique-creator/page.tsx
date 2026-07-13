@@ -59,7 +59,7 @@ import {
   CreatorWeaponPicker,
   AdvancedCalculationsPanel,
 } from '@/components/creator';
-import { Button, Checkbox, Input, Textarea, LoadingState, Alert, PageContainer, Card } from '@/components/ui';
+import { Button, Checkbox, Input, Textarea, LoadingState, PageContainer, Card } from '@/components/ui';
 import { ValueStepper, SectionCostBadge } from '@/components/shared';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
@@ -570,8 +570,6 @@ function EmpoweredTechniqueCreatorContent() {
     await save.handleSave();
   }, [save, user]);
 
-  const empoweredSelectableItems = load.selectableItems;
-
   const handleLoadEmpoweredTechnique = useCallback(
     (doc: unknown) => {
       const data = doc as {
@@ -950,12 +948,12 @@ function EmpoweredTechniqueCreatorContent() {
           <LoadFromLibraryModal
             isOpen={load.showLoadModal}
             onClose={load.closeLoadModal}
-            selectableItems={empoweredSelectableItems}
+            selectableItems={load.selectableItems}
             columns={load.columns}
             gridColumns={load.gridColumns}
             headerExtra={<SourceFilter value={load.source} onChange={load.setSource} />}
-            emptyMessage="No empowered techniques found."
-            emptySubMessage="Save an empowered technique from this creator to load it later."
+            emptyMessage={load.emptyMessage}
+            emptySubMessage={load.emptySubMessage}
             searchPlaceholder="Search empowered techniques..."
             isLoading={load.isLoading}
             error={load.error}

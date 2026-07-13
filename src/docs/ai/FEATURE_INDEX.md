@@ -72,7 +72,7 @@
 | **Entity card art — admin upload** | `CodexArtUploadField`, `lib/codex-art.ts`, `POST /api/upload/codex-art` |
 | Hub list row (Encounters/Crafting) | `HubListRow` |
 | Sortable column headers | `ListHeader` |
-| Selection modal (add/pick from library) | `UnifiedSelectionModal` (`maxSelections` soft limit + `selectionLimitMessage`; no list grey-out at capacity) |
+| Selection modal (add/pick from library) | `UnifiedSelectionModal` (default `flexLayout`; `maxSelections` soft limit when max ≠ 1; `maxSelections={1}` replaces selection; `confirmLabel` / optional `primaryActions`) |
 | + → ✓ selection button | `SelectionToggle`; equipped toggle: `EquipToggle`; innate: `InnateToggle` |
 | Source scope All / Realms / My Library | `SourceFilter` (on `SegmentedControl`) |
 | 2–N pill toggle | `SegmentedControl` |
@@ -80,7 +80,7 @@
 | Dice roll button | `RollButton` |
 | +/- steppers | `ValueStepper`, `DecrementButton`, `IncrementButton`; quantities: `QuantitySelector`, `QuantityBadge` |
 | Point allocation display | `PointStatus`; powered/martial split: `PoweredMartialSlider` |
-| Skill row / allocation | `SkillRow`, `SkillsAllocationPage`, `AddSkillModal`, `AddSubSkillModal` |
+| Skill row / allocation | Advanced/creature: `SkillRow`, `SkillsAllocationPage`, `AddSkillModal`, `AddSubSkillModal`. Guided L1: `GuidedSkillsPanel` (`guided-skills-panel.tsx`) |
 | Tab summary header section | `TabSummarySection`, `SummaryItem`, `SummaryRow` |
 | Chip roles (descriptor vs expandable) | `DescriptorChip`, `ExpandableChip` (`@/components/ui`); `GridListChip` + `lib/chip/expandable-chip-props.ts`; `ChipData.kind` + `descriptorChipData()` in `lib/chip/chip-data-helpers.ts`; metadata builders in `lib/chip/list-row-metadata.ts` |
 | Feat tags (normalize + taxonomy) | `lib/codex/feat-tags.ts`, `lib/codex/feat-list.ts`; `sql/feat-tags-unification-phase*.sql` (phase 4 = live normalize chain); `docs/FEAT_TAGS.md` |
@@ -110,7 +110,8 @@
 | Crafting / encounter helpers | `lib/game/crafting-utils.ts`, `lib/game/encounter-utils.ts` |
 | Power / technique / item / empowered calc | `lib/calculators/*-calc.ts`, `mechanic-builder.ts` |
 | Data enrichment (minimal stored → full display) | `lib/data-enrichment.ts` |
-| Library columnar mapping & sync | `lib/library-columnar.ts`, `lib/library-sync.ts`, `lib/library-selectable-builders.ts` |
+| Library columnar mapping & sync | `lib/library-columnar.ts`, `lib/library-sync.ts`, **`lib/library-selectable-builders.ts`** (shared add+load SelectableItem pipeline) |
+| Load from library (creators) | `LoadFromLibraryModal` thin wrapper over `UnifiedSelectionModal`; data via `useLoadModalLibrary` |
 | Tooltips (defaults + interpolation) | `lib/tooltips/` — **`lib/tooltips/README.md`** (PR #14 onboarding), `legacy-tooltip-key-map.ts` |
 | Roles / quotas / limits | `lib/role-policy.ts`, `lib/role-limits.ts`, `lib/role-quota-messages.ts`, `lib/admin.ts` |
 | API client / validation / rate limit | `lib/api-client.ts`, `lib/api-validation.ts`, `lib/validation/schemas.ts`, `lib/rate-limit.ts` |

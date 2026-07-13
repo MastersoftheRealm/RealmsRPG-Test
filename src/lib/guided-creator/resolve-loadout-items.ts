@@ -137,19 +137,89 @@ export function resolveLoadoutItems(
   );
 }
 
-export function loadoutDraftFromSelection(loadout: PathLoadout): {
+export function loadoutDraftFromSelection(
+  loadout: PathLoadout,
+  lookup?: Map<string, EquipmentLookupEntry>
+): {
   loadoutWeapons: PathItemRecommendation[];
   loadoutArmor: PathItemRecommendation[];
   equipment: PathItemRecommendation[];
   armaments: PathItemRecommendation[];
 } {
-  const loadoutWeapons = [...(loadout.armaments ?? [])];
-  const loadoutArmor = [...(loadout.armor ?? [])];
+  const loadoutWeapons: PathItemRecommendation[] = [];
+  const loadoutArmor: PathItemRecommendation[] = [...(loadout.armor ?? [])];
+  const armorIds = new Set(loadoutArmor.map((ref) => normalizeId(String(ref.id))));
+
+  for (const ref of loadout.armaments ?? []) {
+    const key = normalizeId(String(ref.id));
+    const category = lookup?.get(key)?.category;
+    // Live path kits often nest armor inside `armaments[]` (no separate `armor` field).
+    if (category === 'armor') {
+      if (!armorIds.has(key)) {
+        loadoutArmor.push(ref);
+        armorIds.add(key);
+      }
+      continue;
+    }
+    loadoutWeapons.push(ref);
+  }
+
   return {
     loadoutWeapons,
     loadoutArmor,
     equipment: loadout.equipment ?? [],
     armaments: [...loadoutWeapons, ...loadoutArmor],
+  };
+}
+
+/**
+ * Re-classify draft weapon/armor buckets using the library lookup.
+ * Fixes kits that nest armor inside `armaments[]`, including after the user
+ * has already customized (`loadoutId === 'custom'`).
+ */
+export function rebucketLoadoutByLookup(
+  loadoutWeapons: PathItemRecommendation[],
+  loadoutArmor: PathItemRecommendation[],
+  lookup: Map<string, EquipmentLookupEntry>
+): {
+  loadoutWeapons: PathItemRecommendation[];
+  loadoutArmor: PathItemRecommendation[];
+  armaments: PathItemRecommendation[];
+} {
+  if (lookup.size === 0) {
+    return {
+      loadoutWeapons,
+      loadoutArmor,
+      armaments: [...loadoutWeapons, ...loadoutArmor],
+    };
+  }
+
+  const weapons: PathItemRecommendation[] = [];
+  const armor: PathItemRecommendation[] = [];
+  const seenArmor = new Set<string>();
+
+  const pushArmor = (ref: PathItemRecommendation) => {
+    const key = normalizeId(String(ref.id));
+    if (seenArmor.has(key)) return;
+    seenArmor.add(key);
+    armor.push(ref);
+  };
+
+  for (const ref of loadoutWeapons) {
+    const key = normalizeId(String(ref.id));
+    if (lookup.get(key)?.category === 'armor') pushArmor(ref);
+    else weapons.push(ref);
+  }
+  for (const ref of loadoutArmor) {
+    const key = normalizeId(String(ref.id));
+    if (lookup.get(key)?.category === 'weapon') weapons.push(ref);
+    else pushArmor(ref);
+  }
+
+  return {
+    loadoutWeapons: weapons,
+    loadoutArmor: armor,
+    armaments: [...weapons, ...armor],
   };
 }
 

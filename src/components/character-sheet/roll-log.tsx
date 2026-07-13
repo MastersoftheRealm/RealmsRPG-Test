@@ -426,7 +426,6 @@ function groupDiceByType(dice: DieResult[]): { type: DieType; results: DieResult
 
 export function RollEntryCard({ roll, characterName }: { roll: RollEntry | CampaignRollEntry; characterName?: string }) {
   const diceGroups = groupDiceByType(roll.dice);
-  const diceSubtotal = roll.dice.reduce((sum, d) => sum + d.value, 0);
   const showModifier = roll.modifier !== 0;
   const showSubtotal = showModifier || roll.dice.length > 1;
   const timestampStr = formatRollTimestamp(roll.timestamp);

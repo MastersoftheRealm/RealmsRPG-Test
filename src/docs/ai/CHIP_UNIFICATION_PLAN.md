@@ -1,6 +1,6 @@
 # Chip & Metadata Display Unification Plan
 
-> **Status:** Planning (owner feedback 2026-07-02). Phase 2.2 consolidated *token maps*; this plan addresses the remaining **semantic taxonomy**, **shape**, **metadata coverage**, and **redundancy** gaps.
+> **Status:** Complete (TASK-415 phases A–E, 2026-07). Keep as historical reference; live chip rules live in `AGENT_GUIDE.md` / `FEATURE_INDEX.md`.
 > **Parent:** `UI_UNIFICATION_PLAN.md` · **Audit:** `VISUAL_STATE_AUDIT.md` (VSEA-004+)
 
 ## Problem statement
@@ -187,7 +187,7 @@ Add to `/dev/styleguide`:
 
 **Global audit fixes:** `creature-stat-block.tsx`, `library-selectable-builders.ts` (load modal), `creature-creator/page.tsx`, empowered technique range metadata, weapon/shield/equipment → `detailSections`, DRY part-chip mapping sitewide.
 
-**Files:** `list-row-metadata.ts`, `part-chips-from-display.ts`, `library-entity-rows.tsx`, `creature-stat-block.tsx`, `library-selectable-builders.ts`, `build-*-selectable-item.ts`, `feat-list.ts`, `feats-step.tsx`, `powers-step.tsx`, `creature-creator/page.tsx`, `LibraryPowersTab.tsx`, `LibraryTechniquesTab.tsx`, `official-*-list.ts`
+**Files:** `list-row-metadata.ts`, `part-chips-from-display.ts`, `library-entity-rows.tsx`, `creature-stat-block.tsx`, `library-selectable-builders.ts` (canonical add+load SelectableItem shaping), `build-empowered-selectable-item.ts`, `feat-list.ts`, `feats-step.tsx`, `powers-step.tsx`, `creature-creator/page.tsx`, `LibraryPowersTab.tsx`, `LibraryTechniquesTab.tsx`, `official-*-list.ts`
 
 **Priority entities:** Powers (energy/range), Techniques, Feats, Traits, Equipment properties
 
@@ -219,8 +219,8 @@ Add to `/dev/styleguide`:
 |--------|-----------------|---------|--------------|
 | Feat | `lib/codex/feat-list.ts`, `feats-step.tsx` | ✅ | Category chip removed Phase C; Type chips hidden in creator (split tabs); codex keeps Type |
 | Trait | `library-feat-rows.tsx`, `species-trait-card.tsx` | ✅ | Category in collapsed badge; customization in expanded block (not chip) |
-| Power | `library-entity-rows.tsx`, `official-power-list.ts`, `build-power-selectable-item.ts` | ✅ | Range → descriptor chip in expanded; energy in rightSlot (collapsed); official list has Range column |
-| Technique | `library-entity-rows.tsx`, `official-technique-list.ts`, `build-technique-selectable-item.ts` | ✅ | Range/damage → descriptor chips; official list has Damage column; energy column + use button OK |
+| Power | `library-entity-rows.tsx`, `official-power-list.ts`, `library-selectable-builders.ts` | ✅ | Range → descriptor chip in expanded; energy in rightSlot (collapsed); official list has Range column |
+| Technique | `library-entity-rows.tsx`, `official-technique-list.ts`, `library-selectable-builders.ts` | ✅ | Range/damage → descriptor chips; official list has Damage column; energy column + use button OK |
 | Weapon | `library-entity-rows.tsx` | ✅ | Range/damage/attack in columns; properties expandable |
 | Armor/Shield | `library-entity-rows.tsx` | ✅ | DR/crit in columns; armor reqs → descriptor chips; properties expandable |
 | Equipment | `library-entity-rows.tsx` | ✅ | Type/qty columns; rarity/cost badges; properties expandable |

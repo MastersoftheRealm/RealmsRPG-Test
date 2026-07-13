@@ -371,7 +371,8 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
               skills[String(id)] = 0;
             });
           }
-          const { skillIds: _removed, ...rest } = legacy;
+          const { skillIds, ...rest } = legacy;
+          void skillIds;
           state = {
             ...state,
             draft: {

@@ -126,7 +126,6 @@ export function AbilitiesSection({
   abilities,
   defenseSkills,
   level,
-  archetypeAbility,
   martialAbility,
   powerAbility,
   isEditMode = false,
@@ -153,12 +152,6 @@ export function AbilitiesSection({
       0
     );
   }, [abilities]);
-  
-  // Defense allocation cost: DEFENSE_INCREASE_COST skill points per +1 (core rules: 2)
-  const calculatedDefenseSpent = useMemo(() => {
-    if (!defenseSkills) return 0;
-    return Object.values(defenseSkills).reduce((sum, val) => sum + ((val || 0) * DEFENSE_INCREASE_COST), 0);
-  }, [defenseSkills]);
   
   const getDefenseValue = (defenseKey: keyof DefenseSkills): number => {
     return defenseSkills?.[defenseKey] ?? 0;
@@ -248,7 +241,6 @@ export function AbilitiesSection({
           const info = ABILITY_INFO[ability];
           const isPower = powerAbility?.toLowerCase() === ability;
           const isMartial = martialAbility?.toLowerCase() === ability;
-          const isArchetype = isPower || isMartial;
           const cost = getAbilityIncreaseCost(value);
           const canIncrease = value < maxAbility;
           const canDecrease = canDecreaseAbility(abilities, ability);

@@ -1134,7 +1134,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 — Guided Simple character creator |
-| **Related task** | TASK-399, TASK-422 |
+| **Related task** | TASK-399, TASK-422, TASK-424 |
 | **Where** | Guided creator with Berserker (id=1) |
 | **Needs** | DEV-004 seed applied |
 
@@ -1143,7 +1143,8 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 2. Advance to Loadout step.
 
 **Expected**
-- Quick kit cards (GuidedChoiceCard) show Greataxe bruiser / Sword & shield kits; selecting applies the kit.
+- Equipment phase SegmentedControl shows **1. Weapons / 2. Armor / 3. Gear**.
+- Quick kit cards (GuidedChoiceCard) show Greataxe bruiser / Sword & shield kits; selecting applies the kit across phases.
 - Weapon phase shows path-ranked choice cards with attack/damage stats (not monolithic kit tables).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
@@ -1164,7 +1165,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 **Expected**
 - Layer 2 `UnifiedSelectionModal` opens with TP `PointStatus`; rows show NAME / TYPE / TP / STATS.
 - Selecting items updates draft; items that would exceed TP budget are disabled.
-- **Back to recommendations** closes L2 and returns to phase L1 cards.
+- Closing L2 (Escape / back) returns to phase L1 cards.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -1321,6 +1322,71 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 ---
 
+#### DEV-V-013-T013 — Phased equipment walk (weapon → armor → gear)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-424 |
+| **Where** | Guided creator → Loadout (Berserker) |
+| **Needs** | DEV-004 seed; optional Playwright `npx playwright test -c playwright.loadout-audit.config.ts` |
+| **Automated** | `tests/visual/guided-loadout-audit.pw.ts` (screenshot audit → `.guided-loadout-audit/`) |
+
+**Steps**
+1. Open Loadout; confirm phase chips **1. Weapons / 2. Armor / 3. Gear**.
+2. Apply a quick kit (or keep auto-selected kit); click **Continue to armor →**.
+3. On Armor, click **See more** and confirm Browse armor modal; dismiss.
+4. Click **Continue to gear →**; confirm Adventuring gear heading and **Nc remaining for gear**.
+5. Click **See more**; confirm Browse adventuring gear modal.
+
+**Expected**
+- Three in-step phases with progress chips; footer continue advances phase (not next chapter) until gear complete.
+- Layer 2 per-phase titles match (weapons & shields / armor / adventuring gear).
+- Currency remaining shown on gear phase after weapons/armor spend.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T014 — Guided skills Layer 1 (path chips + budget + browse)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-407, TASK-419 |
+| **Where** | Guided creator → Skills |
+| **Needs** | Path with recommended skills |
+
+**Steps**
+1. Open Skills step. Confirm centered skill-point budget (not a spreadsheet table).
+2. Toggle path skills via path help chips; decline frees a point for curated/browse picks.
+3. Spend remaining points (browse-all if needed); confirm Continue requires full spend.
+4. Spot-check Advanced creator Skills still uses SkillsAllocationPage.
+
+**Expected**
+- GuidedSkillsPanel UX; species locks free; save uses skill_val from allocations; preview/reveal show skill names.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T015 — Your Hero reveal redesign
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-406 |
+| **Where** | Guided creator → Your Hero |
+| **Needs** | Complete prior steps; signed-in optional for save/portrait |
+
+**Steps**
+1. Open reveal: hero band + full summary with names (skills/traits/feats/loadout/powers) and edit jump-backs.
+2. Fill identity (name, optional demographics); upload portrait if signed in.
+3. Confirm HP/EN auto-allocate; Save (or guest login prompt).
+
+**Expected**
+- Finale layout (no duplicate preview strip); edit links navigate to prior steps; T005 save still works when signed in.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-014 — Codex payload + roll timestamp (TASK-378)
 
 Automated via `npm test` (`src/lib/codex-payload.test.ts`, `src/lib/roll-timestamp.test.ts`).
@@ -1371,6 +1437,78 @@ Automated via `npm test` (`src/lib/library-types.test.ts`).
 
 ---
 
+## DEV-V-016 — Library add/load selection parity (TASK-379)
+
+Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLibraryModal` as thin `UnifiedSelectionModal` wrapper. Confirm add (sheet) and load (creators) stay consistent.
+
+#### DEV-V-016-T001 — Power creator Load from Library
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 — Library add/load selection parity |
+| **Task** | TASK-379 |
+| **Where** | `/power-creator` → Load |
+| **Steps** | 1. Open Load. 2. Toggle All / My / Public. 3. Confirm Action/Damage/Area columns, expandable chips. 4. Select one power → Load. 5. Confirm form populates from selection. |
+| **Expected** | Modal uses UnifiedSelectionModal chrome (search, list, Load button max 1); load restores power fields without duplicate mechanic entries. |
+| **Report** | DEV-V-016-T001: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T002 — Technique creator Load from Library
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-379 |
+| **Where** | `/technique-creator` → Load |
+| **Steps** | 1. Open Load. 2. Confirm columns include Action, Energy, Weapon, Training Pts. 3. Select a technique → Load. |
+| **Expected** | Same list UX as add-technique modal columns; form restores parts/weapon/action correctly. |
+| **Report** | DEV-V-016-T002: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T003 — Item / armament creator Load from Library
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-379 |
+| **Where** | `/item-creator` → Load |
+| **Steps** | 1. Open Load. 2. Confirm Type + Damage/Armor/Block columns for mixed armaments. 3. Load a weapon and an armor separately. |
+| **Expected** | Combined armament list; each load restores the correct item type fields. |
+| **Report** | DEV-V-016-T003: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T004 — Empowered technique creator Load
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-379 |
+| **Where** | `/empowered-technique-creator` → Load |
+| **Steps** | 1. Open Load. 2. Confirm empowered techniques appear (My/Public). 3. Load one. |
+| **Expected** | List uses Action/Damage/Area columns + Empowered badge (same shaping as sheet Add → Empowered); creator restores nested empowered technique data. |
+| **Report** | DEV-V-016-T004: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T005 — Species + creature creator Load wrappers
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-379 |
+| **Where** | `/species-creator` and `/creature-creator` → Load |
+| **Steps** | 1. Open Load on each. 2. Select one entry → Load. |
+| **Expected** | Same UnifiedSelectionModal wrapper UX (search/sort/Load); type-specific columns still work; no parallel custom list chrome. |
+| **Report** | DEV-V-016-T005: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T006 — Character sheet Add library item parity
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-379 |
+| **Where** | `/characters/[id]` → Edit → Library → Add (Powers, Techniques, Weapon/Armor/Shield/Equipment) |
+| **Steps** | 1. Open add for power and technique. 2. Compare columns/chips to creator Load modals for the same type. 3. Add one of each; confirm sheet updates. |
+| **Expected** | Shared shaping: technique Action column present; property/part chips + TP match load modal; Add Selected still multi-select. |
+| **Report** | DEV-V-016-T006: PASS / FAIL / SKIP — |
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -1383,5 +1521,6 @@ Automated via `npm test` (`src/lib/library-types.test.ts`).
 | DEV-V-007 | Auth UI (Google only) | DEV-T-007 | Planned |
 | DEV-V-014 | Codex typing + roll timestamp (TASK-378) | — | Automated (`npm test`) |
 | DEV-V-015 | Library API typing (TASK-420) | — | Automated (`npm test`) + manual smoke |
+| DEV-V-016 | Library add/load selection parity (TASK-379) | — | Manual — see suite above |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

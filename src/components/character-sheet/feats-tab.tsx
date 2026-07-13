@@ -127,7 +127,6 @@ export function FeatsTab({
   stateUsesMax = 0,
   onStateUsesChange,
   onEnterState,
-  isEditMode: _isEditMode = false,
   showEditControls = false,
   maxArchetypeFeats,
   maxCharacterFeats,

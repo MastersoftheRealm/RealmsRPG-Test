@@ -47,7 +47,7 @@ Default `armorStep` from `archetypeType` when omitted (power → none).
 
 ## Shared components (mandatory)
 
-`GuidedChoiceCard`, `UnifiedSelectionModal`, `GuidedLayerNav`, `PointStatus`, `SegmentedControl`, `useModalListState`. No `CreatorResourceBar` in guided flow. See TASK-424 / phased equipment plan.
+`GuidedChoiceCard`, `UnifiedSelectionModal` (search/sort/filter inside the shared modal — not a parallel list stack), `GuidedLayerNav`, `PointStatus`, `SegmentedControl`. No `CreatorResourceBar` in guided flow. See TASK-424 / phased equipment plan.
 
 ## Compliance checklist (per PR)
 

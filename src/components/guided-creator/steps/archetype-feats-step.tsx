@@ -5,7 +5,7 @@
 'use client';
 
 import { useMemo, useCallback, useState } from 'react';
-import { Spinner, EmptyState } from '@/components/ui';
+import { Spinner } from '@/components/ui';
 import { GuidedLayerNav } from '@/components/shared';
 import { cn } from '@/lib/utils';
 import { useCodexFeats, type Feat } from '@/hooks';

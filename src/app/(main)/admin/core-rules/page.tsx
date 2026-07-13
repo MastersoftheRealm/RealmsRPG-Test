@@ -14,7 +14,7 @@ import { ChevronLeft, Plus, Trash2 } from 'lucide-react';
 import { PageContainer, PageHeader, Button, TabNavigation, TabContentPanel, useTabGroup, Alert, LoadingState, Spinner, TableScroll, Chip } from '@/components/ui';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { updateCodexDoc, createCodexDoc } from '../codex/actions';
-import type { CoreRulesMap, ProgressionCreatureRules } from '@/types/core-rules';
+import type { CoreRulesMap } from '@/types/core-rules';
 
 // =============================================================================
 // Types

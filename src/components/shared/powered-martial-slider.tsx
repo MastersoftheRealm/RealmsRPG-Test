@@ -38,7 +38,6 @@ export interface PoweredMartialSliderProps {
 }
 
 export function PoweredMartialSlider({
-  powerValue,
   martialValue,
   maxPoints,
   onChange,

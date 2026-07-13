@@ -24,7 +24,8 @@ export const GRID_LIST_ROW_SELECTION_COLUMN_WIDTH = '2.75rem';
 
 /**
  * Grid track appended for inline selection toggles — pair with `ListHeader hasSelectionColumn`
- * and `gridColumnsWithInlineSelection()` on `GridListRow` (UnifiedSelectionModal pattern).
+ * on **custom** Modal + GridListRow lists (e.g. add-proficiency). Do **not** pre-wrap columns
+ * passed into `UnifiedSelectionModal` — it applies `gridColumnsWithInlineSelection` internally.
  * Matches `GridListRow` inline selection wrapper (`min-w-[44px] w-11`).
  */
 export const GRID_LIST_INLINE_SELECTION_COLUMN_TRACK = GRID_LIST_ROW_SELECTION_COLUMN_WIDTH;

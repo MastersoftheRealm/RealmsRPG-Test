@@ -19,7 +19,7 @@
  */
 
 import { useState, memo, ReactNode } from 'react';
-import { Edit, Copy, Check, Plus, AlertCircle, X } from 'lucide-react';
+import { Edit, Copy, Plus, AlertCircle, X } from 'lucide-react';
 import { cn, formatColumnKeyLabel } from '@/lib/utils';
 import { formatCostDisplay } from '@/lib/game/creator-constants';
 import { Button, IconButton, DescriptorChip } from '@/components/ui';
@@ -28,7 +28,7 @@ import { descriptorChipVariantForBadgeColor } from '@/lib/chip/grid-list-chip-ut
 import { SelectionToggle } from './selection-toggle';
 import { QuantitySelector, QuantityBadge } from './quantity-selector';
 import { GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH, gridTemplateColumnsWithThumbnail } from './grid-list-row-chrome';
-import type { ChipData, ChipOptionData } from './grid-list-row-types';
+import type { ChipData } from './grid-list-row-types';
 import { ListRowThumbnail, type ListRowThumbnailProps } from './list-row-thumbnail';
 
 export type { ChipData, ChipOptionData } from './grid-list-row-types';
@@ -199,7 +199,6 @@ export interface GridListRowProps {
 // =============================================================================
 
 export const GridListRow = memo(function GridListRow({
-  id,
   name,
   nameContent,
   description,
@@ -228,7 +227,6 @@ export const GridListRow = memo(function GridListRow({
   leftSlot,
   thumbnail,
   rightSlot,
-  equipped = false,
   innate = false,
   hideInnateBadge = false,
   uses,

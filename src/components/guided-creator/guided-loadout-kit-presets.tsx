@@ -17,6 +17,8 @@ export interface GuidedLoadoutKitPresetsProps {
   loadouts: PathLoadout[];
   resolvedByLoadoutId: Map<string, ResolvedLoadoutItem[]>;
   selectedLoadoutId: string | null;
+  /** Optional library records keyed by id for kit card art */
+  imageByItemId?: Map<string, unknown>;
   onSelect: (loadout: PathLoadout) => void;
 }
 
@@ -24,15 +26,22 @@ function kitSummaryTags(items: ResolvedLoadoutItem[]): string[] {
   const groups = groupResolvedItemsByCategory(items);
   return groups.map((g) => {
     const count = g.items.reduce((sum, i) => sum + Math.max(1, i.quantity), 0);
-    const label = g.id === 'weapons' ? stepCopy.weaponsLabel : g.id === 'armor' ? stepCopy.armorLabel : stepCopy.gearLabel;
+    const label =
+      g.id === 'weapons' ? stepCopy.weaponsLabel : g.id === 'armor' ? stepCopy.armorLabel : stepCopy.gearLabel;
     return count > 1 ? `${count} ${label.toLowerCase()}` : label;
   });
+}
+
+function featuredItemId(items: ResolvedLoadoutItem[]): string | null {
+  const weapon = items.find((i) => i.category === 'weapon');
+  return (weapon ?? items[0])?.id ?? null;
 }
 
 export function GuidedLoadoutKitPresets({
   loadouts,
   resolvedByLoadoutId,
   selectedLoadoutId,
+  imageByItemId,
   onSelect,
 }: GuidedLoadoutKitPresetsProps) {
   const cards = useMemo(
@@ -61,23 +70,29 @@ export function GuidedLoadoutKitPresets({
       </div>
       <div
         className={GUIDED_CHOICE_COMPACT_GRID_CLASS}
-        role="group"
+        role="list"
         aria-label={stepCopy.loadoutGroupLabel}
       >
-        {cards.map(({ loadout, items }) => (
-          <div key={loadout.id} className={cn(GUIDED_CHOICE_GRID_ITEM_CLASS)} role="listitem">
-            <GuidedChoiceCard
-              density="compact"
-              imageKind="equipment"
-              title={loadout.title}
-              tagline={loadout.why ?? stepCopy.defaultWhy}
-              tags={kitSummaryTags(items)}
-              selected={selectedLoadoutId === loadout.id}
-              onSelect={() => onSelect(loadout)}
-              selectAriaLabel={`${selectedLoadoutId === loadout.id ? 'Selected' : 'Apply'} kit ${loadout.title}`}
-            />
-          </div>
-        ))}
+        {cards.map(({ loadout, items }) => {
+          const featuredId = featuredItemId(items);
+          const imageRecord =
+            featuredId && imageByItemId ? imageByItemId.get(String(featuredId).toLowerCase()) : undefined;
+          return (
+            <div key={loadout.id} className={cn(GUIDED_CHOICE_GRID_ITEM_CLASS)} role="listitem">
+              <GuidedChoiceCard
+                density="compact"
+                imageKind="equipment"
+                imageRecord={imageRecord}
+                title={loadout.title}
+                tagline={loadout.why ?? stepCopy.defaultWhy}
+                tags={kitSummaryTags(items)}
+                selected={selectedLoadoutId === loadout.id}
+                onSelect={() => onSelect(loadout)}
+                selectAriaLabel={`${selectedLoadoutId === loadout.id ? 'Selected' : 'Apply'} kit ${loadout.title}`}
+              />
+            </div>
+          );
+        })}
       </div>
     </section>
   );

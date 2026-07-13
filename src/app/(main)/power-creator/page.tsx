@@ -32,7 +32,7 @@ import {
 import { useAuthStore } from '@/stores';
 import { LoginPromptModal, ConfirmActionModal, ErrorDisplay } from '@/components/shared';
 import { CreatorSaveToolbar, CreatorLayout, CreatorWeaponPicker, AdvancedCalculationsPanel } from '@/components/creator';
-import { LoadingState, Checkbox, Button, Input, Textarea, Alert, PageContainer, Card } from '@/components/ui';
+import { LoadingState, Checkbox, Button, Input, Textarea, PageContainer, Card } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
@@ -121,7 +121,6 @@ function PowerCreatorContent() {
   const [actionType, setActionType] = useState('basic');
   const [isReaction, setIsReaction] = useState(false);
   const [damages, setDamages] = useState<DamageConfig[]>([{ amount: 0, size: 6, type: 'none', applyDuration: false }]);
-  const damage = damages[0] ?? { amount: 0, size: 6, type: 'none' };
   // Range state (0 = melee/1 space, 1+ = ranged increments)
   const [range, setRange] = useState<RangeConfig>({ steps: 0 });
   // Area of effect state

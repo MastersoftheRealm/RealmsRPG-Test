@@ -12,7 +12,6 @@ import Link from 'next/link';
 import { Plus, Wand2, Swords, X, ExternalLink } from 'lucide-react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
-import { cn } from '@/lib/utils';
 import { GridListRow, InnateToggle, ListHeader, SegmentedControl, InfoTippy } from '@/components/shared';
 import { calculateArchetypeProgression } from '@/lib/game/formulas';
 import { Button, IconButton, Spinner, EmptyState, DescriptorChip } from '@/components/ui';
@@ -228,15 +227,6 @@ export function PowersStep() {
       return true;
     });
   }, [userTechniques, normalizedPublicTechniques]);
-  const allEmpoweredTechniquesForLookup = useMemo(() => {
-    const seen = new Set<string>();
-    return [...userEmpoweredTechniques, ...normalizedPublicEmpoweredTechniques].filter((technique: UserTechnique) => {
-      const id = String(technique.docId ?? technique.id ?? '');
-      if (!id || seen.has(id)) return false;
-      seen.add(id);
-      return true;
-    });
-  }, [userEmpoweredTechniques, normalizedPublicEmpoweredTechniques]);
 
   // Path mode: waiting for public library so we can resolve and auto-add recommended powers/techniques
   const pathRecommendationsLoading =

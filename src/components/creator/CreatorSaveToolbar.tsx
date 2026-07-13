@@ -44,7 +44,6 @@ export function CreatorSaveToolbar({
   saveDisabled = false,
   showPublicPrivate = false,
   user,
-  className,
 }: CreatorSaveToolbarProps) {
   return (
     <div className="flex flex-wrap items-center gap-2">

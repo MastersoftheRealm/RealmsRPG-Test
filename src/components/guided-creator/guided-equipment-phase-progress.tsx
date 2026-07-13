@@ -27,28 +27,32 @@ export function GuidedEquipmentPhaseProgress({
 }: GuidedEquipmentPhaseProgressProps) {
   const phases = visibleEquipmentPhases(armorMode);
 
-  const options = phases.map((phase) => ({
-    value: phase,
-    label: phaseCopy.labels[phase],
-  }));
+  const options = phases.map((phase, index) => {
+    const canOpen = canNavigateToEquipmentPhase(phase, value, armorMode, completion);
+    return {
+      value: phase,
+      label: `${index + 1}. ${phaseCopy.phaseNames[phase]}`,
+      disabled: !canOpen,
+    };
+  });
 
-  const handleChange = (next: GuidedEquipmentPhase) => {
-    if (
-      !canNavigateToEquipmentPhase(next, value, armorMode, completion)
-    ) {
-      return;
-    }
-    onChange(next);
-  };
+  const lockedAhead = options.some((o) => o.disabled);
 
   return (
-    <SegmentedControl
-      value={value}
-      onChange={handleChange}
-      options={options}
-      aria-label={phaseCopy.progressLabel}
-      equalWidth
-      className="w-full"
-    />
+    <div className="space-y-2">
+      <SegmentedControl
+        value={value}
+        onChange={onChange}
+        options={options}
+        aria-label={phaseCopy.progressLabel}
+        equalWidth
+        className="w-full"
+      />
+      {lockedAhead ? (
+        <p className="font-nunito text-sm text-text-secondary" role="status">
+          {phaseCopy.phaseLockedHint}
+        </p>
+      ) : null}
+    </div>
   );
 }

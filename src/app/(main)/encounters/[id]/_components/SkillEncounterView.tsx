@@ -441,7 +441,6 @@ function SkillEncounterViewInner({
   };
   const rollInitiativeForParticipant = (id: string) => {
     if (!skill) return;
-    const p = skill.participants.find((x) => x.id === id);
     const initiative = rollInitiative(0);
     updateParticipantInitiative(id, initiative);
   };
@@ -929,7 +928,6 @@ function ParticipantCard({
   onClearRoll,
   onSetHelping,
   onRemove,
-  onUpdateInitiative,
   onUpdateParticipantType,
   onRollInitiative,
   onDragStart,

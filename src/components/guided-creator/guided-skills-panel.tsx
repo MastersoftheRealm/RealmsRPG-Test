@@ -238,7 +238,8 @@ export function GuidedSkillsPanel({
   const handleRemove = useCallback(
     (skillId: string) => {
       if (speciesSkillIds.has(skillId)) return;
-      const { [skillId]: _, ...rest } = allocations;
+      const rest = { ...allocations };
+      delete rest[skillId];
       onAllocationsChange(rest);
     },
     [allocations, speciesSkillIds, onAllocationsChange]

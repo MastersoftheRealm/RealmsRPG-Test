@@ -14,8 +14,7 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { X, Plus, Swords, Zap, Target, Info } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Plus, Swords, Zap, Target, Info } from 'lucide-react';
 import {
   useTechniqueParts,
   useUserItems,
@@ -30,7 +29,7 @@ import {
 } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { LoginPromptModal, ConfirmActionModal, ErrorDisplay } from '@/components/shared';
-import { LoadingState, IconButton, Checkbox, Button, Input, Textarea, Alert, PageContainer, Card } from '@/components/ui';
+import { LoadingState, Checkbox, Button, Input, Textarea, PageContainer, Card } from '@/components/ui';
 import {
   LoadFromLibraryModal,
   CreatorSaveToolbar,

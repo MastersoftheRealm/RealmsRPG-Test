@@ -10,8 +10,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getMyCampaigns, getMyCampaignsFull, getCampaign, getCampaignByInviteCode } from '@/services/campaign-service';
 import { normalizeInviteCodeInput, isValidInviteCodeFormat } from '@/lib/campaign-invite';
 import { useAuthStore } from '@/stores/auth-store';
-import type { Campaign, CampaignSummary } from '@/types/campaign';
-
 export const campaignKeys = {
   all: ['campaigns'] as const,
   lists: () => [...campaignKeys.all, 'list'] as const,

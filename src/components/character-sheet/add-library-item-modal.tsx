@@ -103,6 +103,7 @@ export function AddLibraryItemModal({
       searchPlaceholder={getSearchPlaceholder(itemType, powerSelectionMode)}
       showQuantity={itemType === 'equipment'}
       size="lg"
+      flexLayout
       className="max-h-[60vh]"
     />
   );

@@ -5,7 +5,12 @@
 
 import type { ColumnValue, ChipData } from '@/components/shared/grid-list-row';
 import type { SelectableItem } from '@/components/shared/unified-selection-modal';
-import { formatDamageDisplay, formatSavedActionTypeForDisplay, formatListCellLabel } from '@/lib/utils';
+import {
+  formatDamageDisplay,
+  formatSavedActionTypeForDisplay,
+  formatActionTypeForDisplay,
+  formatListCellLabel,
+} from '@/lib/utils';
 import {
   deriveShieldAmountFromProperties,
   deriveShieldDamageFromProperties,
@@ -38,7 +43,9 @@ export type EqItem = {
   description?: string;
   damage?: unknown;
   armorValue?: number;
-  properties?: string[] | Array<{ id?: string | number; name?: string; op_1_lvl?: number }>;
+  properties?: Array<
+    string | { id?: string | number; name?: string; op_1_lvl?: number; base_tp?: number; op_1_tp?: number }
+  >;
   type?: string;
 };
 
@@ -47,10 +54,17 @@ function capitalize(s: string | undefined): string {
   return s.replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+export type TechniqueColumnDisplay = {
+  energy: number;
+  weaponName: string;
+  tp: number;
+  actionType: string;
+};
+
 export function getItemColumns(
   item: UserPower | UserTechnique | UserItem | EqItem,
   itemType: LibraryItemType,
-  techniqueDisplay?: { energy: number; weaponName: string; tp: number }
+  techniqueDisplay?: TechniqueColumnDisplay
 ): ColumnValue[] {
   if (itemType === 'power') {
     const power = item as UserPower;
@@ -64,6 +78,7 @@ export function getItemColumns(
   }
   if (itemType === 'technique' && techniqueDisplay) {
     return [
+      { key: 'Action', value: techniqueDisplay.actionType || '-', align: 'center' as const },
       { key: 'Energy', value: String(techniqueDisplay.energy), align: 'center' as const },
       { key: 'Weapon', value: techniqueDisplay.weaponName || '-', align: 'center' as const },
       { key: 'Training Pts', value: String(techniqueDisplay.tp), align: 'center' as const },
@@ -72,6 +87,7 @@ export function getItemColumns(
   if (itemType === 'technique') {
     const technique = item as UserTechnique;
     return [
+      { key: 'Action', value: formatActionTypeForDisplay(technique.actionType ?? ''), align: 'center' as const },
       { key: 'Weapon', value: technique.weapon?.name || '-', align: 'center' as const },
       { key: 'Training Pts', value: '-', align: 'center' as const },
     ];
@@ -118,7 +134,7 @@ export function getModalGridColumns(itemType: LibraryItemType): string {
     case 'power':
       return '1.4fr 0.8fr 0.8fr 0.7fr';
     case 'technique':
-      return '1.4fr 0.7fr 1fr 0.8fr';
+      return '1.4fr 1fr 0.7fr 1fr 0.8fr';
     case 'weapon':
     case 'shield':
     case 'armor':
@@ -137,40 +153,49 @@ export function getListHeaderColumns(
   const base = [{ key: 'name', label: 'Name', align: 'left' as const }];
   switch (itemType) {
     case 'power':
-    return [
-      ...base,
-      { key: 'Action', label: 'Action', align: 'center' as const },
-      { key: 'Damage', label: 'Damage', align: 'center' as const },
-      { key: 'Area', label: 'Area', align: 'center' as const },
-    ];
+      return [
+        ...base,
+        { key: 'Action', label: 'Action', align: 'center' as const },
+        { key: 'Damage', label: 'Damage', align: 'center' as const },
+        { key: 'Area', label: 'Area', align: 'center' as const },
+      ];
     case 'technique':
-    return [
-      ...base,
-      { key: 'Energy', label: 'Energy', align: 'center' as const },
-      { key: 'Weapon', label: 'Weapon', align: 'center' as const },
-      { key: 'Training Pts', label: 'Training Pts', align: 'center' as const },
-    ];
+      return [
+        ...base,
+        { key: 'Action', label: 'Action', align: 'center' as const },
+        { key: 'Energy', label: 'Energy', align: 'center' as const },
+        { key: 'Weapon', label: 'Weapon', align: 'center' as const },
+        { key: 'Training Pts', label: 'Training Pts', align: 'center' as const },
+      ];
     case 'weapon':
-    return [...base, { key: 'damage', label: 'Damage', align: 'center' as const }];
+      return [...base, { key: 'damage', label: 'Damage', align: 'center' as const }];
     case 'shield':
-    return [
-      ...base,
-      { key: 'Block', label: 'Block', align: 'center' as const },
-      { key: 'Damage', label: 'Damage', align: 'center' as const },
-    ];
+      return [
+        ...base,
+        { key: 'Block', label: 'Block', align: 'center' as const },
+        { key: 'Damage', label: 'Damage', align: 'center' as const },
+      ];
     case 'armor':
-    return [...base, { key: 'armor', label: 'Armor', align: 'center' as const }];
+      return [...base, { key: 'armor', label: 'Armor', align: 'center' as const }];
     case 'item':
-    return [
-      ...base,
-      { key: 'type', label: 'Type', align: 'center' as const },
-      { key: 'stat', label: 'Damage / Armor / Block', align: 'center' as const },
-    ];
+      return [
+        ...base,
+        { key: 'type', label: 'Type', align: 'center' as const },
+        { key: 'stat', label: 'Damage / Armor / Block', align: 'center' as const },
+      ];
     case 'equipment':
     default:
       return base;
   }
 }
+
+/** Columns for empowered technique rows (sheet add + creator load). */
+export const EMPOWERED_POWER_COLUMNS = [
+  { key: 'name', label: 'Name' },
+  { key: 'Action', label: 'Action' },
+  { key: 'Damage', label: 'Damage' },
+  { key: 'Area', label: 'Area' },
+];
 
 export interface BuildSelectableItemCodex {
   powerPartsDb: PowerPart[];
@@ -184,14 +209,16 @@ export function buildSelectableItem(
   itemType: LibraryItemType,
   codex: BuildSelectableItemCodex
 ): SelectableItem {
-  let techniqueDisplay: { energy: number; weaponName: string; tp: number } | undefined;
+  let techniqueDisplay: TechniqueColumnDisplay | undefined;
   let detailSections: SelectableItem['detailSections'];
   let totalCost: number | undefined;
   const costLabel = 'TP';
   const { powerPartsDb, techniquePartsDb, itemPropertiesDb } = codex;
 
   const effectiveType: LibraryItemType =
-    itemType === 'item' ? ((item as UserItem | EqItem).type?.toLowerCase() as 'weapon' | 'armor' | 'shield') || 'weapon' : itemType;
+    itemType === 'item'
+      ? ((item as UserItem | EqItem).type?.toLowerCase() as 'weapon' | 'armor' | 'shield') || 'weapon'
+      : itemType;
 
   if (itemType === 'power') {
     const p = item as UserPower;
@@ -218,9 +245,16 @@ export function buildSelectableItem(
       parts: Array.isArray(t.parts) ? (t.parts as TechniqueDocument['parts']) : [],
       damage: Array.isArray(t.damage) && t.damage[0] ? t.damage[0] : (t.damage as TechniqueDocument['damage']),
       weapon: t.weapon as TechniqueDocument['weapon'],
+      actionType: t.actionType,
+      isReaction: t.isReaction,
     };
     const display = deriveTechniqueDisplay(doc, techniquePartsDb);
-    techniqueDisplay = { energy: display.energy, weaponName: display.weaponName, tp: display.tp };
+    techniqueDisplay = {
+      energy: display.energy,
+      weaponName: display.weaponName,
+      tp: display.tp,
+      actionType: display.actionType,
+    };
     const partChips = partChipsFromDisplay(display.partChips);
     detailSections = buildPartsAndMetadataDetailSections({
       damage: display.damageStr !== '-' ? display.damageStr : undefined,

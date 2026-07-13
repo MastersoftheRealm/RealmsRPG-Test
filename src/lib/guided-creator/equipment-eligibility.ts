@@ -2,19 +2,15 @@
  * Guided equipment Layer 2 — eligibility filters and weapon ranking.
  */
 
-import type { ItemPropertyPayload } from '@/lib/calculators/item-calc';
 import { getArmamentMax } from '@/lib/game/formulas';
 import {
-  getWeaponAttackAbility,
   hasTwoHandedProperty,
   weaponMatchesArchetypeAbilities,
   type WeaponPropertyRef,
 } from '@/lib/game/weapon-attack-ability';
 import { GUIDED_GEAR_L2_MAX_UNIT_COST } from '@/lib/guided-creator/equipment-currency';
-import type { LoadoutItemCategory } from '@/lib/guided-creator/resolve-loadout-items';
 import type { Abilities, AbilityName } from '@/types';
 import type { ArchetypeCategory } from '@/types/archetype';
-import { PROPERTY_IDS } from '@/lib/id-constants';
 
 export type EquipmentPhase = 'weapon' | 'armor' | 'gear';
 
@@ -118,14 +114,6 @@ export function shouldSkipArmorPhase(mode: ArmorStepMode): boolean {
 
 function rowUnitCost(row: EligibleEquipmentRow): number {
   return Number(row.gold_cost ?? row.currency ?? row.cost ?? 0) || 0;
-}
-
-function mapRowTypeToPhaseCategory(type: string): LoadoutItemCategory | 'shield' | null {
-  const t = type.toLowerCase();
-  if (t === 'weapon' || t === 'shield') return 'weapon';
-  if (t === 'armor') return 'armor';
-  if (t === 'equipment') return 'equipment';
-  return null;
 }
 
 function matchesPhase(row: EligibleEquipmentRow, phase: EquipmentPhase): boolean {
@@ -258,6 +246,3 @@ export function ineligibilityReason(
 
   return 'Not eligible';
 }
-
-/** Property ids useful for filter UI (re-export for tests). */
-export { PROPERTY_IDS };

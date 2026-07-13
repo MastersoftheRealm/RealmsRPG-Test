@@ -21,7 +21,7 @@
  * - Species skill highlighting
  */
 
-import { memo, ReactNode } from 'react';
+import { memo } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ABILITY_ABBR, ABILITY_OPTIONS } from '@/lib/constants/skills';
@@ -111,7 +111,6 @@ export interface SkillRowProps {
 // =============================================================================
 
 export const SkillRow = memo(function SkillRow({
-  id,
   name,
   isSubSkill = false,
   baseSkillName,

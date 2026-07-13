@@ -19,7 +19,7 @@ import { X, Plus, ChevronDown, ChevronUp, Shield, Sword, Target, Info, Coins } f
 import { cn } from '@/lib/utils';
 import { useItemProperties, useAdmin, useCreatorSave, useLoadModalLibrary, type ItemProperty, type UserItem } from '@/hooks';
 import { LoginPromptModal, ConfirmActionModal, ErrorDisplay, CodexArtUploadField } from '@/components/shared';
-import { LoadingState, IconButton, Checkbox, Button, Alert, PageContainer, Card, TableScroll, DescriptorChip } from '@/components/ui';
+import { LoadingState, IconButton, Checkbox, Button, PageContainer, Card, TableScroll, DescriptorChip } from '@/components/ui';
 import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout, CollapsibleSection, AdvancedCalculationsPanel } from '@/components/creator';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
 import { ValueStepper, SectionCostBadge } from '@/components/shared';
@@ -59,7 +59,6 @@ interface DamageConfig {
 // =============================================================================
 
 import {
-  ALL_DAMAGE_TYPES as DAMAGE_TYPES,
   WEAPON_DAMAGE_TYPES,
   DIE_SIZES,
   CREATOR_CACHE_KEYS,
@@ -367,7 +366,7 @@ function ItemCreatorContent() {
   
   // State
   const [isInitialized, setIsInitialized] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
+  const [, setIsEditMode] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');

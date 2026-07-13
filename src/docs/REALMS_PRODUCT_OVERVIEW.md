@@ -445,10 +445,13 @@ Equipment selection follows archetype guidance and is split into one decision at
 |-------------|--------|
 | Role-based loadouts | The path suggests a coherent loadout (sword and shield, greataxe, and so on) |
 | Simple visual grouping | Weapon types and armor types as chips or cards |
-| Sub-step split (target) | Weapon decision first, then armor decision |
-| Layer 1 | The path loadout fits naturally; Training Points and currency are invisible in the guided flow |
+| Sub-step split (target) | Weapon decision first, then armor, then gear |
+| Layer 1 | Path kits + choice cards; Training Points stay in Layer 2; currency remainder on gear step |
+| Layer 2 | Full filtered Common catalog via UnifiedSelectionModal |
 
-**Current gap:** A single [`equipment-step.tsx`](../components/character-creator/steps/equipment-step.tsx) with manual add and visible Training Points.
+**Shipped (guided):** Phased loadout in [`loadout-step.tsx`](../components/guided-creator/steps/loadout-step.tsx) (TASK-424) — weapon → armor → gear with L1 cards, L2 browse, quick kits. Path kit content for non-Berserker paths remains TASK-423.
+
+**Advanced still:** [`equipment-step.tsx`](../components/character-creator/steps/equipment-step.tsx) with manual add and visible Training Points.
 
 ### 5.8 Powers / Techniques Selection
 

@@ -7,7 +7,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { cn, formatListCellLabel } from '@/lib/utils';
+import { formatListCellLabel } from '@/lib/utils';
 import {
   SelectFilter,
   FilterSection,

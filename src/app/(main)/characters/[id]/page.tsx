@@ -179,7 +179,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
         }
         setCharacter(data.character);
         setLibraryForView(data.libraryForView);
-      } catch (err) {
+      } catch {
         setError('Failed to load character');
       } finally {
         setLoading(false);
