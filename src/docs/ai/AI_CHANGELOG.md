@@ -1,4 +1,8 @@
 
+- 2026-07-14 | agent | TASK-390 audit → gaps fixed + screenshot audit | files: shared/privacy/terms-copy, root+route layouts, about creator note, auth/footer contact email, site-copy-audit.pw + .site-copy-audit | Summary: Fixed motto AC3 in root layout; SEO from copy modules; privacy/terms migrated; creator-note period; Playwright 4/4 PASS.
+
+- 2026-07-14 | agent | TASK-390 done — per-page site copy modules | files: about-copy, about-slide-body, about/page, nav/rules/resources-copy, header, site-copy, BUILD_VALIDATION DEV-V-017, FEATURE_INDEX | Summary: Migrated About carousel bodies + nav/rules/resources prose into `src/lib/constants/copy/`; thin About page + renderer; site-copy editor table updated; build passes.
+
 - 2026-07-13 | agent | TASK-346 audit → done — globals + Button tokens | files: globals.css, button.tsx, AGENT_GUIDE, AI_TASK_QUEUE | Summary: Migrated leftover CSS utilities (tab/stepper/search/skeleton/shimmer/glow) off raw palette; Button text-on-dark; clarified AC for diagnostic console.error; marked done.
 
 - 2026-07-13 | agent | TASK-346 batch 4 — empty raw-color backlog | files: creators/sheet/item-creator/header/shared/roll-log/SkillEncounterView + raw-color-backlog.mjs | Summary: Migrated remaining allowlisted raw palette (white/amber/teal/blue/black overlays → semantic tokens); `RAW_COLOR_BACKLOG` now `[]` (0 ESLint violators outside auth/ui exemptions). Task stays partial for diagnostic console.*.

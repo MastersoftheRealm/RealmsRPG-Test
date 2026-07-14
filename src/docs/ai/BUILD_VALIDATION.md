@@ -1509,6 +1509,123 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 
 ---
 
+## DEV-V-017 — Site copy modules (TASK-390)
+
+Verifies owner-editable marketing prose lives in `src/lib/constants/copy/` and still renders on major routes. Edit strings in the named `*-copy.ts` file — pages should not need JSX string edits for migrated sections.
+
+#### DEV-V-017-T001 — About carousel from about-copy
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-017 — Site copy modules |
+| **Related task** | TASK-390 |
+| **Where** | `/about` |
+| **Needs** | — |
+
+**Steps**
+1. Open `/about` at desktop width and scroll/navigate the dice carousel.
+2. Spot-check one slide title and body (e.g. first slide) against `ABOUT_CAROUSEL_SLIDES` in `about-copy.ts`.
+3. Resize to ~360px and confirm mobile slide body still renders (compact lists/CTAs).
+
+**Expected**
+- Carousel titles/bodies match copy module; Discord/community CTAs still open the shared invite URL.
+- No horizontal page scroll; interactive controls remain usable on mobile.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-017-T002 — Header nav labels from nav-copy
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-017 — Site copy modules |
+| **Related task** | TASK-390 |
+| **Where** | Any authenticated page with main header |
+| **Needs** | — |
+
+**Steps**
+1. Compare header link labels (Characters, Library, Codex, Creators…, About) to `NAV_COPY.links` in `nav-copy.ts`.
+2. Open Creators / Rules dropdowns and confirm child labels match.
+
+**Expected**
+- Labels match `nav-copy.ts`; Library/Codex InfoTippy aria labels use `NAV_COPY.tippy`.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-017-T003 — Rules page copy + embed
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-017 — Site copy modules |
+| **Related task** | TASK-390 |
+| **Where** | `/rules` |
+| **Needs** | — |
+
+**Steps**
+1. Open `/rules`.
+2. Confirm page title/description and “open in new tab” link text match `rules-copy.ts`.
+3. Confirm iframe loads (or trouble link opens the view URL).
+
+**Expected**
+- Copy and URLs come from `RULES_COPY`; iframe `title` is accessible.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-017-T004 — Resources download copy
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-017 — Site copy modules |
+| **Related task** | TASK-390 |
+| **Where** | `/resources` |
+| **Needs** | — |
+
+**Steps**
+1. Open `/resources`.
+2. Confirm character-sheet card title/body/download label and coming-soon list match `resources-copy.ts`.
+
+**Expected**
+- Prose matches module; download control remains labeled and ≥44px tap target.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-017-T005 — Privacy policy from privacy-copy
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-017 — Site copy modules |
+| **Related task** | TASK-390 |
+| **Where** | `/privacy` |
+| **Needs** | — |
+
+**Steps**
+1. Open `/privacy`.
+2. Confirm title, intro site URL, section headings, and contact email match `privacy-copy.ts` / `SITE_CONTACT_EMAIL`.
+
+**Expected**
+- Prose and mailto use copy modules; heading hierarchy h1 → h2 with no skip.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-017-T006 — Terms from terms-copy
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-017 — Site copy modules |
+| **Related task** | TASK-390 |
+| **Where** | `/terms` |
+| **Needs** | — |
+
+**Steps**
+1. Open `/terms`.
+2. Confirm section 2 has prohibited-use list between the two service paragraphs (ownership paragraph after the list).
+
+**Expected**
+- Matches `TERMS_COPY`; list mid-section order preserved.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -1522,5 +1639,6 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | DEV-V-014 | Codex typing + roll timestamp (TASK-378) | — | Automated (`npm test`) |
 | DEV-V-015 | Library API typing (TASK-420) | — | Automated (`npm test`) + manual smoke |
 | DEV-V-016 | Library add/load selection parity (TASK-379) | — | Manual — see suite above |
+| DEV-V-017 | Site copy modules (TASK-390) | — | Manual — see suite above |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

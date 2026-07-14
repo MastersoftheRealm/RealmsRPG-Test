@@ -882,12 +882,10 @@
   created_at: 2026-06-28
   created_by: owner
   priority: medium
-  status: in-progress
+  status: done
   description: |
     Owner wants all user-editable marketing/UI strings in `src/lib/constants/copy/`
-    — one module per page or area for easy editing while viewing a route. Landing,
-    auth, and about headers/CTAs are migrated; carousel slide bodies, footer, nav,
-    rules/resources pages, creators, and tooltips remain scattered.
+    — one module per page or area for easy editing while viewing a route.
   related_files:
     - src/lib/constants/copy/
     - src/lib/constants/site-copy.ts
@@ -895,25 +893,31 @@
     - public/tooltip-text.tsx
     - src/components/layout/footer.tsx
     - src/components/layout/header.tsx
+    - src/components/about/
+    - src/app/(main)/about/page.tsx
+    - src/app/(main)/rules/page.tsx
+    - src/app/(main)/resources/page.tsx
+    - src/app/(main)/privacy/page.tsx
+    - src/app/(main)/terms/page.tsx
+    - tests/visual/site-copy-audit.pw.ts
   acceptance_criteria:
     - `src/lib/constants/copy/` holds per-page modules; `site-copy.ts` re-exports (backward compatible).
     - Each major route with owner-editable prose has a dedicated `*-copy.ts` file documented in `site-copy.ts` header table.
     - No duplicate hardcoded motto/Discord URL outside copy modules (except tooltip-text.tsx per TASK-376).
     - Pages import copy from constants; no marketing string changes required in JSX for migrated sections.
     - `npm run build` passes.
-  completed_work: |
-    - Created `src/lib/constants/copy/` (shared, landing, auth, about + index barrel).
-    - Refactored `site-copy.ts` to re-export from `copy/` with editor map in header comment.
-    - Migrated About page header + creator note + bottom CTAs to `about-copy.ts` (TASK-390 partial).
-    - Added `footer-copy.ts`; redesigned `footer.tsx` (grouped columns, Discord CTA, copyright); auth shell uses `Footer variant="minimal"`.
-  remaining_work: |
-    - Migrate About dice-carousel slide bodies from `about/page.tsx` to `about-copy.ts` (or structured slide data).
-    - Add `nav-copy.ts`, `rules-copy.ts`, etc. incrementally per page touched.
-    - Optional: split long About carousel into `src/components/about/` + copy-only slide definitions.
-  follow_up_tasks: []
+  build_validation: DEV-V-017
+  developer_test_plan: |
+    Run DEV-V-017-T001–T006 in BUILD_VALIDATION.md (About, nav, rules, resources, privacy, terms).
+    Optional screenshot audit: `npx playwright test -c playwright.site-copy-audit.config.ts` → `.site-copy-audit/`.
   notes: |
-    Do not merge game mechanics (`skills.ts`) or Collin tooltip migration (`public/tooltip-text.tsx`) into marketing copy modules.
-    Migrate incrementally when editing a page — avoid one giant PR moving every string.
+    2026-07-14: Done — About carousel → structured `ABOUT_CAROUSEL_SLIDES` + `AboutSlideBodyView`;
+    `nav-copy`, `rules-copy`, `resources-copy`; footer/landing/auth/guided already migrated.
+    Audit pass: fixed root-layout motto AC3 gap; creator-note punctuation; SEO meta from copy;
+    `privacy-copy` + `terms-copy`; shared `SITE_CONTACT_EMAIL` / `ROOT_META_DESCRIPTION`;
+    auth headline derives from `REALMS_MOTTO`. Playwright audit 4/4 PASS (screenshots in `.site-copy-audit/`).
+    Rules Google Docs iframe may be blank in headless/third-party frames — “Open in new tab” still works.
+    Tooltips stay in `public/tooltip-text.tsx`; game mechanics stay in `skills.ts`.
 
 - id: TASK-391
   title: "Admin path builder — guidance_groups UI + seed remaining paths"

@@ -14,39 +14,9 @@ import { cn } from '@/lib/utils';
 import { useAuth, useAdmin, useProfile } from '@/hooks';
 import { ThemeToggle, InfoTippy } from '@/components/shared';
 import { navbarCodex, navbarLibrary } from '../../../public/tooltip-text';
+import { NAV_COPY, type NavLink } from '@/lib/constants/site-copy';
 
-const navLinks: Array<{ href: string; label: string; external?: boolean } | { label: string; dropdown: { href: string; label: string }[] }> = [
-  { href: '/characters', label: 'Characters' },
-  { href: '/library', label: 'Library' },
-  { href: '/codex', label: 'Codex' },
-  {
-    label: 'Creators',
-    dropdown: [
-      { href: '/power-creator', label: 'Powers' },
-      { href: '/technique-creator', label: 'Techniques' },
-      { href: '/empowered-technique-creator', label: 'Empowered Techniques' },
-      { href: '/item-creator', label: 'Armaments' },
-      { href: '/species-creator', label: 'Species' },
-    ],
-  },
-  {
-    label: 'Rules',
-    dropdown: [
-      { href: '/rules', label: 'Core Rulebook' },
-      { href: '/resources', label: 'Resources' },
-    ],
-  },
-  {
-    label: 'RM Tools',
-    dropdown: [
-      { href: '/encounters', label: 'Encounters' },
-      { href: '/crafting', label: 'Crafting' },
-      { href: '/creature-creator', label: 'Creature Creator' },
-    ],
-  },
-  { href: '/campaigns', label: 'Campaigns' },
-  { href: '/about', label: 'About' },
-];
+const navLinks: NavLink[] = NAV_COPY.links;
 
 const MOBILE_NAV_ID = 'mobile-nav-panel';
 const FOCUSABLE_SELECTOR =
@@ -177,10 +147,10 @@ export function Header() {
                     {item.label}
                   </Link>
                   {item.href === '/library' && (
-                    <InfoTippy content={navbarLibrary} label="About Realms Library" placement="bottom" />
+                    <InfoTippy content={navbarLibrary} label={NAV_COPY.tippy.library} placement="bottom" />
                   )}
                   {item.href === '/codex' && (
-                    <InfoTippy content={navbarCodex} label="About Realms Codex" placement="bottom" />
+                    <InfoTippy content={navbarCodex} label={NAV_COPY.tippy.codex} placement="bottom" />
                   )}
                 </span>
               )

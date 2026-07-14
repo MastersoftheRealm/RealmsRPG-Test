@@ -9,6 +9,7 @@ import { Nunito, Nunito_Sans, Nova_Flat } from 'next/font/google';
 import { AuthProvider, QueryProvider, ThemeProvider } from '@/components/providers';
 import { ToastProvider } from '@/components/ui';
 import { SelectionGuard } from '@/components/layout';
+import { ROOT_META_DESCRIPTION } from '@/lib/constants/site-copy';
 import './globals.css';
 
 // Primary font - Nunito for headings and brand text
@@ -42,7 +43,7 @@ export const metadata: Metadata = {
     default: 'RealmsRPG',
     template: '%s | RealmsRPG',
   },
-  description: 'Your new favorite roleplaying game. Create and manage your tabletop RPG characters with RealmsRPG.',
+  description: ROOT_META_DESCRIPTION,
   keywords: ['RPG', 'tabletop', 'character creator', 'character sheet', 'roleplaying'],
   authors: [{ name: 'RealmsRPG Team' }],
   creator: 'RealmsRPG',

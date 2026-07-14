@@ -1,104 +1,84 @@
 ﻿/**
  * Privacy Policy Page
  * =====================
+ * Edit prose in privacy-copy.ts.
  */
 
 import type { Metadata } from 'next';
 import { PageContainer, PageHeader } from '@/components/ui';
+import { PRIVACY_COPY } from '@/lib/constants/site-copy';
+import type { LegalListItem } from '@/lib/constants/copy/privacy-copy';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy',
-  description: 'How RealmsRPG collects, uses, and protects your account and game data on our free tabletop RPG web app.',
+  title: PRIVACY_COPY.pageTitle,
+  description: PRIVACY_COPY.seoDescription,
 };
 
-export default function PrivacyPage() {  return (
+function LegalList({ items }: { items?: readonly LegalListItem[] }) {
+  if (!items?.length) return null;
+  return (
+    <ul className="list-disc list-inside text-text-secondary space-y-1">
+      {items.map((item) =>
+        typeof item === 'string' ? (
+          <li key={item}>{item}</li>
+        ) : (
+          <li key={item.label}>
+            <strong>{item.label}</strong> – {item.text}
+          </li>
+        )
+      )}
+    </ul>
+  );
+}
+
+export default function PrivacyPage() {
+  const email = PRIVACY_COPY.contactEmail;
+  return (
     <PageContainer size="prose">
-      <PageHeader title="Privacy Policy" />
-      
+      <PageHeader title={PRIVACY_COPY.pageTitle} />
+
       <div className="prose prose-gray max-w-none space-y-8">
         <p className="text-text-secondary">
-          Your privacy is important to us. It is Realms&apos; policy to respect your privacy regarding any 
-          information we may collect from you across our website,{' '}
-          <a href="https://realmsroleplaygame.com" className="text-primary-link-fg underline underline-offset-2 hover:opacity-90">
-            https://realmsroleplaygame.com
+          {PRIVACY_COPY.intro.beforeLink}{' '}
+          <a
+            href={PRIVACY_COPY.siteUrl}
+            className="text-primary-link-fg underline underline-offset-2 hover:opacity-90"
+          >
+            {PRIVACY_COPY.siteUrl}
           </a>
-          , and other sites we own and operate.
+          {PRIVACY_COPY.intro.afterLink}
         </p>
 
-        <section>
-          <h2 className="text-xl font-semibold text-text-primary mb-4">1. Information We Collect</h2>
-          <p className="text-text-secondary">
-            We only collect information about you if we have a reason to do so (for example, to provide
-            our services, to communicate with you, or to make our services better).
-          </p>
-        </section>
-
-        <section>
-          <h2 className="text-xl font-semibold text-text-primary mb-4">2. How We Use Information</h2>
-          <p className="text-text-secondary mb-3">
-            We use the information we collect to operate RealmsRPG as a free tabletop RPG web app, including to:
-          </p>
-          <ul className="list-disc list-inside text-text-secondary space-y-1">
-            <li>Provide, operate, and maintain your account, characters, library content, campaigns, and encounters</li>
-            <li>Authenticate you and keep your session secure</li>
-            <li>Improve site performance, usability, and accessibility</li>
-            <li>Understand how features are used so we can fix bugs and improve tools</li>
-            <li>Communicate with you about your account, support requests, or important service updates</li>
-            <li>Send optional emails such as account confirmation or password reset messages</li>
-            <li>Detect, prevent, and address abuse, fraud, or security issues</li>
-          </ul>
-        </section>
-        <section>
-          <h2 className="text-xl font-semibold text-text-primary mb-4">3. Data Retention</h2>
-          <p className="text-text-secondary">
-            We will retain your personal information only for as long as is necessary for the purposes 
-            set out in this Privacy Policy. We will retain and use your information to the extent necessary 
-            to comply with our legal obligations, resolve disputes, and enforce our policies.
-          </p>
-        </section>
-
-        <section>
-          <h2 className="text-xl font-semibold text-text-primary mb-4">4. Data Security</h2>
-          <p className="text-text-secondary">
-            We take the security of your personal information seriously and use reasonable electronic, 
-            personnel, and physical measures to protect it from loss, theft, alteration, or misuse.
-          </p>
-        </section>
-
-        <section>
-          <h2 className="text-xl font-semibold text-text-primary mb-4">5. Your Data Protection Rights</h2>
-          <p className="text-text-secondary mb-3">
-            Depending on your location, you may have the following rights regarding your personal information:
-          </p>
-          <ul className="list-disc list-inside text-text-secondary space-y-1">
-            <li><strong>The right to access</strong> – You have the right to request copies of your personal data.</li>
-            <li><strong>The right to rectification</strong> – You have the right to request that we correct any information you believe is inaccurate or complete information you believe is incomplete.</li>
-            <li><strong>The right to erasure</strong> – You have the right to request that we erase your personal data, under certain conditions.</li>
-            <li><strong>The right to restrict processing</strong> – You have the right to request that we restrict the processing of your personal data, under certain conditions.</li>
-            <li><strong>The right to object to processing</strong> – You have the right to object to our processing of your personal data, under certain conditions.</li>
-            <li><strong>The right to data portability</strong> – You have the right to request that we transfer the data that we have collected to another organization, or directly to you, under certain conditions.</li>
-          </ul>
-        </section>
-
-        <section>
-          <h2 className="text-xl font-semibold text-text-primary mb-4">6. Changes to This Policy</h2>
-          <p className="text-text-secondary">
-            We may update our Privacy Policy from time to time. We will notify you of any changes by 
-            posting the new Privacy Policy on this page. You are advised to review this Privacy Policy 
-            periodically for any changes. Changes to this Privacy Policy are effective when they are 
-            posted on this page.
-          </p>
-        </section>
-
-        <section>
-          <h2 className="text-xl font-semibold text-text-primary mb-4">7. Contact Us</h2>
-          <p className="text-text-secondary">
-            If you have any questions about this Privacy Policy, please contact us at{' '}
-            <a href="mailto:RealmsRoleplayGame@gmail.com" className="text-primary-link-fg underline underline-offset-2 hover:opacity-90">
-              RealmsRoleplayGame@gmail.com
-            </a>.
-          </p>
-        </section>
+        {PRIVACY_COPY.sections.map((section) => (
+          <section key={section.heading}>
+            <h2 className="text-xl font-semibold text-text-primary mb-4">{section.heading}</h2>
+            {section.paragraphs.map((para, i) => (
+              <p
+                key={`${section.heading}-p-${i}`}
+                className={
+                  i < section.paragraphs.length - 1 || section.list || section.contactEmail
+                    ? 'text-text-secondary mb-3'
+                    : 'text-text-secondary'
+                }
+              >
+                {para}
+                {section.contactEmail && i === section.paragraphs.length - 1 ? (
+                  <>
+                    {' '}
+                    <a
+                      href={`mailto:${email}`}
+                      className="text-primary-link-fg underline underline-offset-2 hover:opacity-90"
+                    >
+                      {email}
+                    </a>
+                    .
+                  </>
+                ) : null}
+              </p>
+            ))}
+            <LegalList items={section.list} />
+          </section>
+        ))}
       </div>
     </PageContainer>
   );

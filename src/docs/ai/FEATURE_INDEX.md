@@ -36,6 +36,7 @@
 | Admin (official content, users, tooltips) | `admin/page.tsx` |
 | Account / profile | `my-account/page.tsx` |
 | Rules / resources / about / privacy / terms | `rules`, `resources`, `about`, `privacy`, `terms` |
+| Site / marketing copy (edit prose here) | `lib/constants/copy/*-copy.ts` via `lib/constants/site-copy.ts` (landing, auth, about + carousel, nav, rules, resources, privacy, terms, footer, guided creator; Discord URL + motto + contact email in `shared-copy.ts`). Tooltips: `public/tooltip-text.tsx`. Screenshot audit: `playwright.site-copy-audit.config.ts`. |
 
 ## Data hooks (`src/hooks/`, import from `@/hooks`)
 
