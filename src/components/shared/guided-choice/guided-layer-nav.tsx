@@ -35,12 +35,12 @@ export function GuidedLayerNav({
   return (
     <div className={cn('mt-5 flex flex-wrap items-center gap-3', className)}>
       {onExpand && expandLabel ? (
-        <Button type="button" variant="outline" size="sm" onClick={onExpand} className="min-h-11">
+        <Button type="button" variant="outline" size="sm" onClick={onExpand} className="min-h-11 min-w-[44px]">
           {expandLabel}
         </Button>
       ) : null}
       {onCollapse ? (
-        <Button type="button" variant="secondary" size="sm" onClick={onCollapse} className="min-h-11">
+        <Button type="button" variant="secondary" size="sm" onClick={onCollapse} className="min-h-11 min-w-[44px]">
           ← {collapseLabel}
         </Button>
       ) : null}

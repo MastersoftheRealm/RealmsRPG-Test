@@ -101,7 +101,7 @@ export function CollapsibleSection({
         <button
           type="button"
           onClick={() => setIsExpanded((prev) => !prev)}
-          className="min-h-[44px] min-w-0 flex-1 flex items-start gap-3 hover:bg-surface-alt -m-2 p-2 rounded-lg transition-colors text-left"
+          className="min-h-[44px] min-w-0 flex-1 flex items-center gap-3 hover:bg-surface-alt -m-2 p-2 rounded-lg transition-colors text-left"
           aria-expanded={isExpanded}
           aria-label={isExpanded ? `Collapse ${title}` : `Expand ${title}`}
         >
@@ -141,7 +141,7 @@ export function CollapsibleSection({
         </button>
 
         {(rightSlot || optional) && (
-          <div className="flex items-center gap-2 flex-shrink-0 self-start mt-1">
+          <div className="flex items-center gap-2 flex-shrink-0 self-stretch min-h-[44px]">
             {rightSlot}
             {optional && (
               <Button
