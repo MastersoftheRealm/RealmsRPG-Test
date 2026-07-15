@@ -118,9 +118,10 @@ export function CharacterSheetModals({
 }: CharacterSheetModalsProps) {
   return (
     <>
-      {character && (
+      {character && showEditArchetypeModal && (
         <EditArchetypeModal
-          isOpen={showEditArchetypeModal}
+          key={`${character.id}:${character.pow_abil ?? ''}:${character.mart_abil ?? ''}:${displayCharacter?.archetypePathId ?? character.archetypePathId ?? ''}`}
+          isOpen
           onClose={() => setShowEditArchetypeModal(false)}
           character={character}
           displayCharacter={displayCharacter ?? character}

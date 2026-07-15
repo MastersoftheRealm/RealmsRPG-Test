@@ -37,6 +37,7 @@ import { AlertCircle, Swords, Check, X, ShoppingBag, ChevronLeft } from 'lucide-
 import { IconButton } from '@/components/ui';
 import type { Item } from '@/types';
 import type { CharacterPower, CharacterTechnique } from '@/types';
+import type { PathItemRecommendation } from '@/types/archetype';
 import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
 import { CreatorResourceBar } from '@/components/character-creator/CreatorResourceBar';
@@ -76,6 +77,8 @@ const SELECTED_EQUIPMENT_COLUMNS: ListColumn[] = [
   { key: 'cost', label: 'Cost', width: '0.6fr', align: 'right' },
 ];
 const SELECTED_EQUIPMENT_GRID = '1.6fr 0.7fr 0.6fr';
+
+const EMPTY_PATH_RECOMMENDATIONS: PathItemRecommendation[] = [];
 
 // Match GridListRow right slot (w-[4rem] mr-2) so header columns align with row columns
 const RIGHT_SLOT_WIDTH = '4.5rem';
@@ -178,8 +181,10 @@ export function EquipmentStep() {
     () => new Set((pathData?.level1?.equipment || []).map((v: string) => String(v).toLowerCase())),
     [pathData?.level1?.equipment]
   );
-  const pathArmamentRecommendations = pathData?.level1?.armamentRecommendations ?? [];
-  const pathEquipmentRecommendations = pathData?.level1?.equipmentRecommendations ?? [];
+  const pathArmamentRecs = pathData?.level1?.armamentRecommendations;
+  const pathEquipmentRecs = pathData?.level1?.equipmentRecommendations;
+  const pathArmamentRecommendations = pathArmamentRecs ?? EMPTY_PATH_RECOMMENDATIONS;
+  const pathEquipmentRecommendations = pathEquipmentRecs ?? EMPTY_PATH_RECOMMENDATIONS;
   const pathRecommendsUnarmedProwess = pathData?.level1?.recommendUnarmedProwess === true;
 
   // Resolve path recommendations to full items (depends on allEquipment, so after it's defined)

@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Plus, Wand2, Swords, Shield, Users, LogIn, Sparkles } from 'lucide-react';
@@ -71,29 +71,23 @@ function LibraryContent() {
   const { user, initialized: authInitialized } = useAuth();
   const isGuest = !user;
   const { showToast } = useToast();
-  const [libraryMode, setLibraryMode] = useState<LibraryMode>('public');
-  const [modeInitialized, setModeInitialized] = useState(false);
+  /** Null until the user picks a scope; until then derive from auth / ?view=. */
+  const [libraryModeOverride, setLibraryModeOverride] = useState<LibraryMode | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>('powers');
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: TabId; item: DisplayItem | UserEnhancedItem } | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
-  useEffect(() => {
-    if (!authInitialized) return;
-    if (!modeInitialized) {
-      if (viewParam === 'realms') {
-        setLibraryMode('public');
-      } else {
-        setLibraryMode(user ? 'my' : 'public');
-      }
-      setModeInitialized(true);
-    }
-  }, [authInitialized, user, modeInitialized, viewParam]);
+  const libraryMode: LibraryMode =
+    libraryModeOverride ?? (viewParam === 'realms' ? 'public' : user ? 'my' : 'public');
 
-  // The Enhanced tab only exists in My Library; if we switch to Realms mode
-  // while it's active, fall back to a valid tab so content doesn't go blank.
-  useEffect(() => {
-    if (libraryMode === 'public' && activeTab === 'enhanced') setActiveTab('powers');
-  }, [libraryMode, activeTab]);
+  // Enhanced exists only in My Library — clamp while Realms is active.
+  const resolvedActiveTab: TabId =
+    libraryMode === 'public' && activeTab === 'enhanced' ? 'powers' : activeTab;
+
+  const handleLibraryModeChange = (mode: LibraryMode) => {
+    setLibraryModeOverride(mode);
+    if (mode === 'public' && activeTab === 'enhanced') setActiveTab('powers');
+  };
 
   const fetchMyLibrary = libraryMode === 'my' && !!user;
   const fetchPublicLibrary = libraryMode === 'public';
@@ -138,7 +132,7 @@ function LibraryContent() {
   };
 
   const counts = libraryMode === 'my' ? myCounts : publicCounts;
-  const currentTab = TABS.find(t => t.id === activeTab)!;
+  const currentTab = TABS.find(t => t.id === resolvedActiveTab)!;
 
   const isDeleting = deletePower.isPending || deleteTechnique.isPending || deleteEmpoweredTechnique.isPending ||
     deleteItem.isPending || deleteCreature.isPending || deleteEnhancedItem.isPending;
@@ -182,7 +176,7 @@ function LibraryContent() {
 
   const isPublic = libraryMode === 'public';
 
-  if (!authInitialized || !modeInitialized) {
+  if (!authInitialized) {
     return (
       <PageContainer size="xl">
         <PageHeader title="Library" />
@@ -226,7 +220,7 @@ function LibraryContent() {
         {!isGuest && (
           <SegmentedControl
             value={libraryMode}
-            onChange={setLibraryMode}
+            onChange={handleLibraryModeChange}
             options={[
               { value: 'my', label: 'My Library' },
               { value: 'public', label: 'Realms Library' },
@@ -240,7 +234,7 @@ function LibraryContent() {
       <div className="min-w-0 mb-6">
         <TabNavigation
           tabs={tabsWithCounts}
-          activeTab={activeTab}
+          activeTab={resolvedActiveTab}
           onTabChange={(tabId) => setActiveTab(tabId as TabId)}
           variant="underline"
           tabGroupId={tabGroupId}
@@ -248,21 +242,21 @@ function LibraryContent() {
         />
       </div>
 
-      <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab}>
+      <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={resolvedActiveTab}>
       {isPublic ? (
         <LibraryPublicContent
-          activeTab={activeTab as LibraryPublicTabId}
+          activeTab={resolvedActiveTab as LibraryPublicTabId}
           onLoginRequired={() => setShowLoginPrompt(true)}
           readOnly={isGuest}
         />
       ) : (
         <>
-          {activeTab === 'powers' && <LibraryPowersTab onDelete={(item) => setDeleteConfirm({ type: 'powers', item })} />}
-          {activeTab === 'techniques' && <LibraryTechniquesTab onDelete={(item) => setDeleteConfirm({ type: 'techniques', item })} mode="standard" />}
-          {activeTab === 'empowered-techniques' && <LibraryTechniquesTab onDelete={(item) => setDeleteConfirm({ type: 'empowered-techniques', item })} mode="empowered" />}
-          {activeTab === 'items' && <LibraryItemsTab onDelete={(item) => setDeleteConfirm({ type: 'items', item })} />}
-          {activeTab === 'creatures' && <LibraryCreaturesTab onDelete={(item) => setDeleteConfirm({ type: 'creatures', item })} />}
-          {activeTab === 'enhanced' && <LibraryEnhancedTab onDelete={(item) => setDeleteConfirm({ type: 'enhanced', item })} />}
+          {resolvedActiveTab === 'powers' && <LibraryPowersTab onDelete={(item) => setDeleteConfirm({ type: 'powers', item })} />}
+          {resolvedActiveTab === 'techniques' && <LibraryTechniquesTab onDelete={(item) => setDeleteConfirm({ type: 'techniques', item })} mode="standard" />}
+          {resolvedActiveTab === 'empowered-techniques' && <LibraryTechniquesTab onDelete={(item) => setDeleteConfirm({ type: 'empowered-techniques', item })} mode="empowered" />}
+          {resolvedActiveTab === 'items' && <LibraryItemsTab onDelete={(item) => setDeleteConfirm({ type: 'items', item })} />}
+          {resolvedActiveTab === 'creatures' && <LibraryCreaturesTab onDelete={(item) => setDeleteConfirm({ type: 'creatures', item })} />}
+          {resolvedActiveTab === 'enhanced' && <LibraryEnhancedTab onDelete={(item) => setDeleteConfirm({ type: 'enhanced', item })} />}
         </>
       )}
       </TabContentPanel>

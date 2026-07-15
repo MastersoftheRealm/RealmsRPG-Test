@@ -1826,6 +1826,45 @@ Verifies behavior parity after removing setState-in-effect / fixing exhaustive-d
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-019-T004 — Library scope + enhanced tab clamp
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-019 |
+| **Related task** | TASK-430 |
+| **Where** | `/library` |
+| **Needs** | Signed-in user with at least one Enhanced item (or empty Enhanced tab OK) |
+
+**Steps**
+1. Open `/library` signed in — defaults to My Library (unless `?view=realms`).
+2. Switch to Enhanced tab, then SegmentedControl → Realms Library — active tab falls back to Powers (Enhanced hidden).
+3. Switch back to My Library — can open Enhanced again.
+4. Open `/library?view=realms` in a fresh load — starts on Realms Library.
+
+**Expected**
+- No blank content when Enhanced was selected under Realms mode.
+- Scope follows auth / `?view=` until the user picks a SegmentedControl value.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-019-T005 — Edit archetype modal resets per open
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-019 |
+| **Related task** | TASK-430 |
+| **Where** | Character sheet → edit archetype |
+| **Needs** | Character in edit mode |
+
+**Steps**
+1. Open Edit Archetype; change type or an ability (do not save); Close.
+2. Open Edit Archetype again — selections match the character, not the abandoned draft.
+
+**Expected**
+- Remount-on-open clears local modal state (same pattern as admin feat modal).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## Planned suites (split from legacy DEV-T)

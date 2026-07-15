@@ -49,7 +49,7 @@ Each suite is a **category** of step-by-step tests. Full steps live in [`BUILD_V
 | **DEV-V-016** | Library add/load selection parity | TASK-379 | T001–T006 (6) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-016--library-addload-selection-parity-task-379) |
 | **DEV-V-017** | Site copy modules | TASK-390 | T001–T006 (6) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-017--site-copy-modules-task-390) |
 | **DEV-V-018** | CreatorPageShell parity | TASK-380, TASK-431 | T001–T007 (7) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-018--creatorpageshell-parity-task-380) |
-| **DEV-V-019** | React Compiler hook cleanup | TASK-430 | T001–T003 (3) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-019--react-compiler-hook-cleanup-task-430) |
+| **DEV-V-019** | React Compiler hook cleanup | TASK-430 | T001–T005 (5) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-019--react-compiler-hook-cleanup-task-430) |
 | DEV-V-002 | Campaign & rolls security | TASK-329 | — | Planned (legacy DEV-T-002) |
 | DEV-V-003 | Admin role change safety | TASK-330 | — | Planned |
 | DEV-V-004 | Storage & account security | TASK-326, TASK-331 | — | Planned |

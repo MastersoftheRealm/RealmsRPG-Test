@@ -26,6 +26,8 @@ import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import type { Skill } from '@/hooks';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.skills;
+const EMPTY_SKILL_IDS: string[] = [];
+const EMPTY_ALLOCATIONS: Record<string, number> = {};
 
 export function SkillsStep() {
   const { draft, updateDraft, nextSubStep } = useGuidedCreatorStore();
@@ -50,15 +52,16 @@ export function SkillsStep() {
     [pathData]
   );
 
-  const recommendedSkillIds = pathData?.level1?.skills ?? [];
+  const pathLevel1Skills = pathData?.level1?.skills;
+  const recommendedSkillIds = pathLevel1Skills ?? EMPTY_SKILL_IDS;
 
   const declinedPathSkillIds = useMemo(
     () => new Set(draft.declinedPathSkillIds.map(String)),
     [draft.declinedPathSkillIds]
   );
 
-  const allocations = draft.skills ?? {};
-  const abilities = draft.abilities ?? { ...DEFAULT_ABILITIES };
+  const allocations = draft.skills ?? EMPTY_ALLOCATIONS;
+  const abilities = draft.abilities ?? DEFAULT_ABILITIES;
   const level = 1;
   const extraSkillPoints = speciesSkillIds.has('0') ? 1 : 0;
   const totalPoints = getTotalSkillPoints(level, 'character') + extraSkillPoints;

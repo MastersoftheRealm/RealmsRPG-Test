@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Modal, Button, Spinner, SelectionCard, DescriptorChip } from '@/components/ui';
 import { ConfirmActionModal } from '@/components/shared';
@@ -183,15 +183,7 @@ export function EditArchetypeModal({
   const martProf = redistributeProficiency(effectiveTotal, selectedType).mart_prof;
   const powProf = redistributeProficiency(effectiveTotal, selectedType).pow_prof;
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const path = isPathCharacter(displayCharacter ?? character);
-    setUiMode(path ? 'path-view' : 'forge-edit');
-    setPendingConfirm(null);
-    setSelectedType(getArchetypeTypeFromCharacter(character));
-    setSelectedPowerAbility(character.pow_abil || null);
-    setSelectedMartialAbility(character.mart_abil || null);
-  }, [isOpen, character.id, character.pow_abil, character.mart_abil, displayCharacter]);
+  // Fresh state per open via remount key in CharacterSheetModals (no reset effect).
 
   const handleTypeSelect = (type: ArchetypeCategory) => {
     setSelectedType(type);

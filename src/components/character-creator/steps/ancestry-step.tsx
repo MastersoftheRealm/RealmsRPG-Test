@@ -40,6 +40,8 @@ function resolveTraits(ids: (string | number)[], allTraits: Trait[]): ResolvedTr
   return resolveTraitIds(ids, allTraits).map(t => ({ ...t, found: t.id !== t.name }));
 }
 
+const EMPTY_SELECTED_TRAIT_IDS: string[] = [];
+
 export function AncestryStep() {
   const { draft, nextStep, prevStep, setStep, updateDraft } = useCharacterCreatorStore();
   const { data: allSpecies = [] } = useMergedSpecies();
@@ -97,8 +99,8 @@ export function AncestryStep() {
     return options;
   }, [speciesA, speciesB, allSkills]);
 
-  // Current selections from draft
-  const selectedTraitIds = draft.ancestry?.selectedTraits || [];
+  // Current selections from draft (stable empty array for hook deps)
+  const selectedTraitIds = draft.ancestry?.selectedTraits ?? EMPTY_SELECTED_TRAIT_IDS;
   const selectedFlaw = draft.ancestry?.selectedFlaw || null;
   const selectedCharacteristic = draft.ancestry?.selectedCharacteristic || null;
   const selectedSpeciesTraits = draft.ancestry?.selectedSpeciesTraits;

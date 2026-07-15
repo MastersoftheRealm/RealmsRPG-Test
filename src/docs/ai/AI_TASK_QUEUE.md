@@ -23,9 +23,14 @@
     stays actionable without blocking. Fix in small, behavior-preserving batches with DEV-V where UI syncs.
   related_files:
     - eslint.config.mjs
-    - src/app/(main)/characters/[id]/page.tsx
-    - src/app/(main)/encounters/
-    - src/components/guided-creator/
+    - src/app/(main)/library/page.tsx
+    - src/components/guided-creator/steps/skills-step.tsx
+    - src/components/character-creator/steps/ancestry-step.tsx
+    - src/components/character-creator/steps/equipment-step.tsx
+    - src/components/character-sheet/library-section.tsx
+    - src/components/character-sheet/edit-archetype-modal.tsx
+    - src/app/(main)/characters/[id]/CharacterSheetModals.tsx
+    - src/hooks/use-creator-save.ts
     - src/components/guided-creator/guided-choice-card.tsx
     - src/app/(main)/species-creator/page.tsx
     - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
@@ -38,7 +43,7 @@
     - npm run build + lint pass; no new errors.
   build_validation: DEV-V-019
   developer_test_plan: |
-    Run DEV-V-019-T001–T003 in BUILD_VALIDATION.md (choice-card expand, login ?error=, admin feat modal remount).
+    Run DEV-V-019-T001–T005 in BUILD_VALIDATION.md (choice-card, login, admin feat remount, library clamp, edit-archetype remount).
   completed_work: |
     Batch 1 (2026-07-15): 168 → 158 hook warnings (−10).
     - guided-choice-card: derive inactive overflow; sync expand via render when selected changes.
@@ -48,8 +53,15 @@
     - login: derive auth query error (no setState-in-effect); dismiss URL message on new attempt (parity with old setError(null)).
     - empowered getPayload: add missing isReaction dep.
     - Audit follow-up: DEV-V-019 T001–T003; drop unused skillIdToName on AdminFeatEditModal.
+    Batch 2 (2026-07-15): 158 → 138 hook warnings (−20).
+    - library page: derive mode from auth/?view=; clamp Enhanced tab without effects.
+    - guided/advanced ancestry+equipment + guided skills: stable empty fallbacks for hook deps.
+    - library-section: memoize tabs; derive active tab / edit-mode sync without effects.
+    - EditArchetypeModal: remount-on-open key (CharacterSheetModals); remove reset effect.
+    - useCreatorSave: add queryClient + setShowPublishConfirm deps.
+    - DEV-V-019 T004–T005.
   remaining_work: |
-    - ~158 left: set-state-in-effect 53, exhaustive-deps 96, preserve-manual-memoization 9.
+    - ~138 left: set-state-in-effect 48, exhaustive-deps 81, preserve-manual-memoization 9.
     - High-blast next: character-sheet actions (45), advanced skills/powers steps, encounter views,
       creator cache/?edit hydrations (prefer lazy init / remount keys where safe).
   notes: |

@@ -1,4 +1,6 @@
 
+- 2026-07-15 | agent | TASK-430 batch 2 — React Compiler hook warnings | files: library page, guided skills-step, ancestry/equipment steps, library-section, edit-archetype-modal, CharacterSheetModals, use-creator-save, DEV-V-019 T004–T005 | Summary: Cleared 20 warnings (158→138); derive/remount/stable-empty patterns; no eslint-disable. Task stays partial.
+
 - 2026-07-15 | agent | TASK-430 batch 1 audit → gaps fixed | files: login dismiss parity, AdminFeatsTab unused prop, DEV-V-019 T001–T003, DEVELOPER_TASK_QUEUE, AI_TASK_QUEUE | Summary: Restored login ?error= dismiss-on-retry; wired build_validation; removed unused skillIdToName on feat edit modal.
 
 - 2026-07-15 | agent | TASK-430 batch 1 — React Compiler hook warnings | files: guided-choice-card, species-creator, AdminArchetypesTab, AdminFeatsTab, login, empowered getPayload | Summary: Cleared 10 warnings (168→158) without eslint-disable; modal remount + derive/sync patterns; build passes. Task stays partial.
