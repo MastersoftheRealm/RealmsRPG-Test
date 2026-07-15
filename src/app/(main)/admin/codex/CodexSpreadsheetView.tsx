@@ -100,19 +100,8 @@ function generateNextNumericId(existingIds: Set<string>): string {
   return String(next);
 }
 
-function generateNewId(existingIds: Set<string>, baseName?: string): string {
-  const base = (baseName || 'item')
-    .toLowerCase()
-    .replace(/\s+/g, '_')
-    .replace(/[^a-z0-9_-]/g, '')
-    .slice(0, 80) || 'item';
-  let id = base;
-  let n = 0;
-  while (existingIds.has(id)) {
-    n += 1;
-    id = `${base}_${n}`;
-  }
-  return id.slice(0, 150);
+function rowDataWithoutId(row: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(row).filter(([key]) => key !== 'id'));
 }
 
 /** Preferred column order: id, name, description first, then known short/narrow columns, then rest alphabetically. */
@@ -368,11 +357,11 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
       if (!id || id.startsWith('__new')) {
         const newId = generateNextNumericId(usedIds);
         usedIds.add(newId);
-        const { id: _x, ...data } = row;
+        const data = rowDataWithoutId(row);
         const result = await createCodexDoc(collection, newId, data);
         if (!result.success) errors.push(`Create ${newId}: ${result.error}`);
       } else {
-        const { id: _x, ...data } = row;
+        const data = rowDataWithoutId(row);
         const result = await updateCodexDoc(collection, id, data);
         if (!result.success) errors.push(`Update ${id}: ${result.error}`);
       }
@@ -420,7 +409,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
       let err: string | null | undefined = null;
       if (isNew) {
         const newId = generateNextNumericId(usedIds);
-        const { id: _x, ...data } = row;
+        const data = rowDataWithoutId(row);
         const result = await createCodexDoc(collection, newId, data);
         if (!result.success) err = result.error ?? null;
         else {
@@ -430,7 +419,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
           });
         }
       } else {
-        const { id: _x, ...data } = row;
+        const data = rowDataWithoutId(row);
         const result = await updateCodexDoc(collection, id, data);
         if (!result.success) err = result.error ?? null;
       }
@@ -477,8 +466,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
     return <LoadingState size="lg" padding="lg" />;
   }
   const idColIndex = columns.indexOf('id');
-  const nameColIndex = columns.indexOf('name');
-  const stickyLeftFor = (colKey: string, colIndex: number): number | undefined => {
+  const stickyLeftFor = (colKey: string): number | undefined => {
     if (colKey === 'id') return 48;
     if (colKey === 'name' && idColIndex >= 0) return 48 + columnWidths[idColIndex];
     return undefined;
@@ -612,12 +600,11 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
               </th>
               {columns.map((col, colIndex) => {
                 const isSortKey = sortKey === col;
-                const left = stickyLeftFor(col, colIndex);
+                const left = stickyLeftFor(col);
                 const isSticky = left !== undefined;
                 return (
                   <th
                     key={col}
-                    role="button"
                     tabIndex={0}
                     onClick={() => handleSort(col)}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort(col); } }}
@@ -627,7 +614,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
                       minWidth: columnWidths[colIndex],
                       ...(isSticky ? { left } : {}),
                     }}
-                    aria-sort={isSortKey ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined}
+                    aria-sort={isSortKey ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
                     aria-label={isSortKey ? `Sort by ${col} ${sortDir === 'asc' ? 'ascending' : 'descending'}. Click to reverse.` : `Sort by ${col}`}
                   >
                     <span className="inline-flex items-center gap-1">
@@ -657,7 +644,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
                   const value = row[colKey];
                   const str = cellValueToString(value);
                   const isFocused = focusedCell?.row === rowIndex && focusedCell?.col === colIndex;
-                  const left = stickyLeftFor(colKey, colIndex);
+                  const left = stickyLeftFor(colKey);
                   const isSticky = left !== undefined;
                   const isNumCol = NUMERIC_COLUMNS.has(colKey);
                   const isBool = BOOLEAN_COLUMNS.has(colKey);

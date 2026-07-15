@@ -104,7 +104,7 @@ function GuidedSkillRow({
           {hasDescription && (
             <ChevronDown
               className={cn(
-                'h-4 w-4 shrink-0 text-text-muted transition-transform',
+                'h-4 w-4 shrink-0 text-text-muted dark:text-text-secondary transition-transform',
                 expanded && 'rotate-180'
               )}
               aria-hidden
@@ -238,7 +238,8 @@ export function GuidedSkillsPanel({
   const handleRemove = useCallback(
     (skillId: string) => {
       if (speciesSkillIds.has(skillId)) return;
-      const { [skillId]: _, ...rest } = allocations;
+      const rest = { ...allocations };
+      delete rest[skillId];
       onAllocationsChange(rest);
     },
     [allocations, speciesSkillIds, onAllocationsChange]
@@ -331,7 +332,7 @@ export function GuidedSkillsPanel({
         <PointStatus
           total={totalPoints}
           spent={spentPoints}
-          label="Skill points"
+          label="Skill Points"
           variant="inline"
           className="text-base"
         />
@@ -376,15 +377,18 @@ export function GuidedSkillsPanel({
         </div>
       </div>
 
-      <AddSkillModal
-        isOpen={addSkillModalOpen}
-        onClose={() => setAddSkillModalOpen(false)}
-        existingSkillNames={existingSkillNames}
-        onAdd={handleAddSkills}
-        skillBadgesById={browseSkillBadgesById}
-        recommendedSkillIds={browseRecommendedSkillIds}
-        maxSelections={maxAddSkillSelections}
-      />
+      {addSkillModalOpen ? (
+        <AddSkillModal
+          isOpen
+          onClose={() => setAddSkillModalOpen(false)}
+          existingSkillNames={existingSkillNames}
+          onAdd={handleAddSkills}
+          skillBadgesById={browseSkillBadgesById}
+          recommendedSkillIds={browseRecommendedSkillIds}
+          maxSelections={maxAddSkillSelections}
+          selectionLimitMessage={panelCopy.browseOverLimit(maxAddSkillSelections)}
+        />
+      ) : null}
     </div>
   );
 }

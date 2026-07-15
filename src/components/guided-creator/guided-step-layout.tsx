@@ -26,7 +26,6 @@ export interface GuidedStepLayoutProps {
 }
 
 export function GuidedStepLayout({
-  subStep,
   title,
   description,
   guidance,

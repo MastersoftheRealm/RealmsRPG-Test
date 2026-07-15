@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Modal, Button, Spinner, SelectionCard, DescriptorChip } from '@/components/ui';
 import { ConfirmActionModal } from '@/components/shared';
@@ -40,7 +40,7 @@ const ARCHETYPE_INFO: Record<ArchetypeCategory, { title: string; description: st
 };
 
 const PATH_SWITCH_WARNING =
-  'Changing your archetype path updates your identity and abilities. Existing feats, powers, techniques, armaments, and equipment may no longer match the new path. Nothing is removed automatically — review your sheet afterward.';
+  'Changing your archetype path updates your identity and abilities. Existing feats, powers, techniques, armaments, and equipment may no longer match the new path. Nothing is removed automatically. Review your sheet afterward.';
 
 const FORGE_SWITCH_WARNING =
   'Switching to Forge Your Own removes archetype path guidance. Your existing selections are kept, but they may no longer match path recommendations. Path progression notes will no longer appear on your sheet or at level-up.';
@@ -183,15 +183,7 @@ export function EditArchetypeModal({
   const martProf = redistributeProficiency(effectiveTotal, selectedType).mart_prof;
   const powProf = redistributeProficiency(effectiveTotal, selectedType).pow_prof;
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const path = isPathCharacter(displayCharacter ?? character);
-    setUiMode(path ? 'path-view' : 'forge-edit');
-    setPendingConfirm(null);
-    setSelectedType(getArchetypeTypeFromCharacter(character));
-    setSelectedPowerAbility(character.pow_abil || null);
-    setSelectedMartialAbility(character.mart_abil || null);
-  }, [isOpen, character.id, character.pow_abil, character.mart_abil, displayCharacter]);
+  // Fresh state per open via editArchetypeSessionKey remount in CharacterSheetModals (no reset effect).
 
   const handleTypeSelect = (type: ArchetypeCategory) => {
     setSelectedType(type);
@@ -460,7 +452,7 @@ export function EditArchetypeModal({
                           className={cn(
                             'px-3 py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] min-w-[44px]',
                             selectedPowerAbility === ability
-                              ? 'bg-power-dark text-white'
+                              ? 'bg-power-dark text-text-on-dark'
                               : selectedMartialAbility === ability
                                 ? 'bg-surface-alt text-text-muted dark:text-text-secondary cursor-not-allowed'
                                 : 'bg-surface border border-border-light hover:border-border'
@@ -485,7 +477,7 @@ export function EditArchetypeModal({
                           className={cn(
                             'px-3 py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] min-w-[44px]',
                             selectedMartialAbility === ability
-                              ? 'bg-martial-dark text-white'
+                              ? 'bg-martial-dark text-text-on-dark'
                               : selectedPowerAbility === ability
                                 ? 'bg-surface-alt text-text-muted dark:text-text-secondary cursor-not-allowed'
                                 : 'bg-surface border border-border-light hover:border-border'
@@ -513,7 +505,7 @@ export function EditArchetypeModal({
                         (selectedType === 'power'
                           ? selectedPowerAbility === ability
                           : selectedMartialAbility === ability)
-                          ? 'bg-primary-button text-white'
+                          ? 'bg-primary-button text-text-on-dark'
                           : 'bg-surface border border-border-light hover:border-border'
                       )}
                     >

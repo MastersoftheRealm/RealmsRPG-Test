@@ -13,10 +13,9 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Alert, Select } from '@/components/ui';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
-import { FilterSection } from '@/components/shared';
 import { useCodexSkills, type Skill } from '@/hooks';
 import { ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
 import { getSkillExtraDescriptionDetailSections } from '@/lib/skill-extra-descriptions';
@@ -104,13 +103,7 @@ export function AddSubSkillModal({
       .sort((a, b) => String(a.name ?? '').localeCompare(String(b.name ?? '')));
   }, [allSubSkills, skillById]);
 
-  useEffect(() => {
-    if (isOpen) {
-      setAbilityFilter('');
-      setBaseSkillFilter('');
-      setAnyBaseSkillSelections({});
-    }
-  }, [isOpen]);
+  // Filter state seeds empty; parents remount while the modal is open.
 
   const filteredSkills = useMemo(() => {
     return allSubSkills.filter((skill: Skill) => {
@@ -305,7 +298,7 @@ export function AddSubSkillModal({
         footerExtra={footerExtra}
         confirmDisabled={confirmDisabled}
         size="xl"
-        className="max-h-[85vh]"
+        className="md:max-h-[85vh]"
       />
     </>
   );

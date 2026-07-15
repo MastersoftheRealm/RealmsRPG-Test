@@ -8,7 +8,7 @@
 
 /* eslint-disable react-hooks/refs -- Floating UI positions with ref callbacks and arrow refs during render. */
 
-import type { CSSProperties, HTMLAttributes, ReactElement, ReactNode } from 'react';
+import type { HTMLAttributes, ReactElement, ReactNode } from 'react';
 import { isValidElement, useMemo, useState } from 'react';
 import {
   useClick,

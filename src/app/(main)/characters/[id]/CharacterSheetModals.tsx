@@ -77,6 +77,8 @@ interface CharacterSheetModalsProps {
   onPartialRecovery: (hpRestored: number, enRestored: number, resetPartialFeats: boolean) => void;
   showEditArchetypeModal: boolean;
   setShowEditArchetypeModal: (v: boolean) => void;
+  /** Bumps on each open so EditArchetypeModal remounts with fresh local state. */
+  editArchetypeSessionKey: number;
   onArchetypeSave: (result: EditArchetypeResult) => void;
   showEditSpeciesModal: boolean;
   setShowEditSpeciesModal: (v: boolean) => void;
@@ -111,6 +113,7 @@ export function CharacterSheetModals({
   onPartialRecovery,
   showEditArchetypeModal,
   setShowEditArchetypeModal,
+  editArchetypeSessionKey,
   onArchetypeSave,
   showEditSpeciesModal,
   setShowEditSpeciesModal,
@@ -118,9 +121,10 @@ export function CharacterSheetModals({
 }: CharacterSheetModalsProps) {
   return (
     <>
-      {character && (
+      {character && showEditArchetypeModal && (
         <EditArchetypeModal
-          isOpen={showEditArchetypeModal}
+          key={editArchetypeSessionKey}
+          isOpen
           onClose={() => setShowEditArchetypeModal(false)}
           character={character}
           displayCharacter={displayCharacter ?? character}
@@ -161,7 +165,8 @@ export function CharacterSheetModals({
 
       {character && featModalType && (
         <AddFeatModal
-          isOpen={!!featModalType}
+          key={featModalType}
+          isOpen
           onClose={() => setFeatModalType(null)}
           featType={featModalType}
           character={character}
@@ -192,9 +197,10 @@ export function CharacterSheetModals({
         />
       )}
 
-      {character && (
+      {character && showLevelUpModal && (
         <LevelUpModal
-          isOpen={showLevelUpModal}
+          key={`${character.id}:${character.level ?? 1}`}
+          isOpen
           onClose={() => setShowLevelUpModal(false)}
           character={character}
           displayCharacter={displayCharacter ?? character}

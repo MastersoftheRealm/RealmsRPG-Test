@@ -120,7 +120,7 @@ function ValidationModal({
         <Button
           onClick={onContinueAnyway}
           disabled={isSaving}
-          className="bg-warning-600 text-white hover:bg-warning-700 dark:bg-warning-500 dark:hover:bg-warning-600"
+          className="bg-warning-600 text-text-on-dark hover:bg-warning-700 dark:bg-warning-500 dark:hover:bg-warning-600"
         >
           Save Anyway
         </Button>
@@ -234,7 +234,7 @@ function HealthEnergyAllocationSection() {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <p className="text-xs text-text-muted dark:text-text-secondary">
-          Base HP: {baseHealth} | Base EN: {baseEnergy}
+          Base Health: {baseHealth} | Base Energy: {baseEnergy}
         </p>
         <Button
           type="button"
@@ -354,7 +354,7 @@ function PortraitUpload() {
                 type="button"
                 onClick={handleRemove}
                 aria-label="Remove portrait"
-                className="absolute top-1 right-1 min-h-11 min-w-11 rounded-full bg-danger-button text-white flex items-center justify-center text-sm hover:bg-danger-700"
+                className="absolute top-1 right-1 min-h-11 min-w-11 rounded-full bg-danger-button text-text-on-dark flex items-center justify-center text-sm hover:bg-danger-700"
               >
                 ×
               </button>
@@ -790,7 +790,7 @@ export function FinalizeStep() {
         <div className="px-5 py-4 border-b border-border-light bg-surface-alt flex flex-wrap items-start justify-between gap-2">
           <div>
             <h3 className="text-lg font-bold text-text-primary">Build Summary</h3>
-            <p className="text-sm text-text-secondary mt-0.5">Every choice at a glance — jump back to edit any step.</p>
+            <p className="text-sm text-text-secondary mt-0.5">Every choice at a glance. Jump back to edit any step.</p>
           </div>
         </div>
 
@@ -1110,7 +1110,7 @@ export function FinalizeStep() {
               'min-h-11 min-w-11 px-8',
               !saving &&
                 validationIssues.some((i) => i.severity === 'error') &&
-                'bg-warning-600 hover:bg-warning-700 dark:bg-warning-500 dark:hover:bg-warning-600 text-white'
+                'bg-warning-600 hover:bg-warning-700 dark:bg-warning-500 dark:hover:bg-warning-600 text-text-on-dark'
             )}
           >
             {validationIssues.length > 0 ? '📋 Review & Create' : '✓ Create Character'}

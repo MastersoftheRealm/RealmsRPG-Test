@@ -30,14 +30,18 @@ import {
   type CreatorWeaponOption,
 } from '@/hooks';
 import { useAuthStore } from '@/stores';
-import { LoginPromptModal, ConfirmActionModal, ErrorDisplay } from '@/components/shared';
-import { CreatorSaveToolbar, CreatorLayout, CreatorWeaponPicker, AdvancedCalculationsPanel } from '@/components/creator';
-import { LoadingState, Checkbox, Button, Input, Textarea, Alert, PageContainer, Card } from '@/components/ui';
-import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { ValueStepper, SectionCostBadge } from '@/components/shared';
-import { CreatorSummaryPanel, CollapsibleSection } from '@/components/creator';
+import {
+  CreatorPageShell,
+  CreatorWeaponPicker,
+  AdvancedCalculationsPanel,
+  CreatorSummaryPanel,
+  CollapsibleSection,
+  PowerPartCard,
+} from '@/components/creator';
+import { LoadingState, Checkbox, Button, Input, Textarea, Card } from '@/components/ui';
 import {
   calculatePowerCosts,
   computePowerActionTypeFromSelection,
@@ -64,7 +68,6 @@ import {
 import { formatDurationFromTypeAndValue } from '@/lib/utils/duration';
 import type { SelectedPart, AdvancedPart, DamageConfig, RangeConfig } from './power-creator-types';
 import { POWER_CREATOR_CACHE_KEY, ADVANCED_CATEGORIES, EXCLUDED_PARTS } from './power-creator-constants';
-import { PowerPartCard } from '@/components/creator';
 import { shouldPersistCreatorWeaponId } from '@/lib/creator-weapon-persistence';
 
 // =============================================================================
@@ -113,7 +116,6 @@ function PowerCreatorContent() {
   
   // State
   const [isInitialized, setIsInitialized] = useState(false);
-  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedParts, setSelectedParts] = useState<SelectedPart[]>([]);
@@ -121,7 +123,6 @@ function PowerCreatorContent() {
   const [actionType, setActionType] = useState('basic');
   const [isReaction, setIsReaction] = useState(false);
   const [damages, setDamages] = useState<DamageConfig[]>([{ amount: 0, size: 6, type: 'none', applyDuration: false }]);
-  const damage = damages[0] ?? { amount: 0, size: 6, type: 'none' };
   // Range state (0 = melee/1 space, 1+ = ranged increments)
   const [range, setRange] = useState<RangeConfig>({ steps: 0 });
   // Area of effect state
@@ -623,16 +624,7 @@ function PowerCreatorContent() {
     },
   });
 
-  const handleSave = useCallback(async () => {
-    if (!user) {
-      setShowLoginPrompt(true);
-      return;
-    }
-    await save.handleSave();
-  }, [user, save]);
-
-  const handleReset = useCallback(() => {
-    setName('');
+  const handleReset = useCallback(() => {    setName('');
     setDescription('');
     setSelectedParts([]);
     setSelectedAdvancedParts([]);
@@ -828,9 +820,10 @@ function PowerCreatorContent() {
   // Load power for editing from URL parameter (?edit=<id>)
   useEffect(() => {
     if (!editPowerId || !load.rawItems.length || powerParts.length === 0 || editLoadedRef.current) return;
-    const powerToEdit = load.rawItems.find(
-      (p: { docId?: string; id?: string }) => String(p.docId) === editPowerId || String(p.id) === editPowerId
-    ) as Parameters<typeof handleLoadPower>[0] | undefined;
+    const powerToEdit = load.rawItems.find((p) => {
+      const row = p as { docId?: string; id?: string };
+      return String(row.docId) === editPowerId || String(row.id) === editPowerId;
+    }) as Parameters<typeof handleLoadPower>[0] | undefined;
     editLoadedRef.current = true;
     if (!powerToEdit) {
       setIsInitialized(true);
@@ -841,104 +834,81 @@ function PowerCreatorContent() {
     setIsInitialized(true);
   }, [editPowerId, load.rawItems, powerParts, handleLoadPower]);
 
-  if (isLoading) {
-    return (
-      <PageContainer size="xl">
-        <LoadingState message="Loading power parts..." />
-      </PageContainer>
-    );
-  }
-
-  if (error) {
-    return (
-      <PageContainer size="xl">
-        <ErrorDisplay
-          message={`Failed to load power parts: ${error.message}`}
-          onRetry={() => { void refetch(); }}
-        />
-      </PageContainer>
-    );
-  }
-
   return (
-    <CreatorLayout
+    <CreatorPageShell
       icon={<Wand2 className="w-8 h-8 text-primary-link-fg" />}
       title="Power Creator"
       description="Design custom powers by combining power parts. Each part contributes to the total energy cost and training point requirements."
-      actions={
-        <div className="flex items-center gap-2">
-          <CreatorSaveToolbar
-            saveTarget={save.saveTarget}
-            onSaveTargetChange={save.setSaveTarget}
-            onSave={handleSave}
-            onLoad={() => (user ? load.openLoadModal() : setShowLoginPrompt(true))}
-            onReset={handleReset}
-            saving={save.saving}
-            saveDisabled={!name.trim()}
-            showPublicPrivate={isAdmin}
-            user={user}
-          />
-        </div>
-      }
+      user={user}
+      auth={{ returnPath: '/power-creator', contentType: 'power' }}
+      showPublicPrivate={isAdmin}
+      saveTarget={save.saveTarget}
+      onSaveTargetChange={save.setSaveTarget}
+      onSave={save.handleSave}
+      onLoad={load.openLoadModal}
+      onReset={handleReset}
+      saving={save.saving}
+      saveDisabled={!name.trim()}
+      loading={{
+        isLoading,
+        loadingMessage: 'Loading power parts...',
+        error: error ?? null,
+        onRetry: () => {
+          void refetch();
+        },
+        errorMessage: error ? `Failed to load power parts: ${error.message}` : undefined,
+      }}
+      publish={{
+        isOpen: save.showPublishConfirm,
+        onClose: () => save.setShowPublishConfirm(false),
+        onConfirm: () => save.confirmPublish(),
+        title: save.publishConfirmTitle,
+        description:
+          save.publishConfirmDescription?.(name.trim(), {
+            existingInPublic: save.publishExistingInPublic,
+          }) ?? '',
+      }}
+      loadModal={{
+        isOpen: load.showLoadModal,
+        onClose: load.closeLoadModal,
+        selectableItems: load.selectableItems,
+        columns: load.columns,
+        gridColumns: load.gridColumns,
+        headerExtra: <SourceFilter value={load.source} onChange={load.setSource} />,
+        emptyMessage: load.emptyMessage,
+        emptySubMessage: load.emptySubMessage,
+        searchPlaceholder: 'Search powers...',
+        isLoading: load.isLoading,
+        error: load.error,
+        title: 'Load Power from Library',
+        onSelect: (selected) =>
+          handleLoadPower(selected.data as Parameters<typeof handleLoadPower>[0]),
+      }}
       sidebar={
-        <div className="self-start sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-6">
-          <CreatorSummaryPanel
-            title="Power Summary"
-            costStats={[
-              { label: 'Energy Cost', value: costs.totalEnergy, icon: <Zap className="w-6 h-6" />, color: 'energy' },
-              { label: 'Training Points', value: costs.totalTP, icon: <Target className="w-6 h-6" />, color: 'tp' },
-            ]}
-            statRows={[
-              { label: 'Action', value: actionTypeDisplay },
-              { label: 'Weapon', value: weapon.name },
-              { label: 'Range', value: rangeDisplay },
-              { label: 'Area', value: areaDisplay },
-              { label: 'Duration', value: durationDisplay },
-            ]}
-            breakdowns={costs.tpSources.length > 0 ? [
-              { title: 'TP Breakdown', items: costs.tpSources }
-            ] : undefined}
-          >
-            <AdvancedCalculationsPanel
-              rows={advancedCalcRows}
-              ruleText="Rule: Final energy is the ceiling of raw energy; TP sums part contributions."
-            />
-          </CreatorSummaryPanel>
-        </div>
-      }
-      modals={
-        <>
-          <LoadFromLibraryModal
-            isOpen={load.showLoadModal}
-            onClose={load.closeLoadModal}
-            selectableItems={load.selectableItems}
-            columns={load.columns}
-            gridColumns={load.gridColumns}
-            headerExtra={<SourceFilter value={load.source} onChange={load.setSource} />}
-            emptyMessage={load.emptyMessage}
-            emptySubMessage={load.emptySubMessage}
-            searchPlaceholder="Search powers..."
-            isLoading={load.isLoading}
-            error={load.error}
-            title="Load Power from Library"
-            onSelect={(selected) => handleLoadPower(selected.data as Parameters<typeof handleLoadPower>[0])}
+        <CreatorSummaryPanel
+          title="Power Summary"
+          costStats={[
+            { label: 'Energy Cost', value: costs.totalEnergy, icon: <Zap className="w-6 h-6" />, color: 'energy' },
+            { label: 'Training Points', value: costs.totalTP, icon: <Target className="w-6 h-6" />, color: 'tp' },
+          ]}
+          statRows={[
+            { label: 'Action', value: actionTypeDisplay },
+            { label: 'Weapon', value: weapon.name },
+            { label: 'Range', value: rangeDisplay },
+            { label: 'Area', value: areaDisplay },
+            { label: 'Duration', value: durationDisplay },
+          ]}
+          breakdowns={
+            costs.tpSources.length > 0
+              ? [{ title: 'TP Breakdown', items: costs.tpSources }]
+              : undefined
+          }
+        >
+          <AdvancedCalculationsPanel
+            rows={advancedCalcRows}
+            ruleText="Rule: Final energy is the ceiling of raw energy; TP sums part contributions."
           />
-          <LoginPromptModal
-            isOpen={showLoginPrompt}
-            onClose={() => setShowLoginPrompt(false)}
-            returnPath="/power-creator"
-            contentType="power"
-          />
-          <ConfirmActionModal
-            isOpen={save.showPublishConfirm}
-            onClose={() => save.setShowPublishConfirm(false)}
-            onConfirm={() => save.confirmPublish()}
-            title={save.publishConfirmTitle}
-            description={save.publishConfirmDescription?.(name.trim(), { existingInPublic: save.publishExistingInPublic }) ?? ''}
-            confirmLabel="Publish"
-            icon="publish"
-          />
-        </>
+        </CreatorSummaryPanel>
       }
     >
       {/* Main Editor */}
@@ -1282,7 +1252,7 @@ function PowerCreatorContent() {
             {selectedAdvancedParts.length === 0 ? (
               <div className="text-center py-8 text-text-muted dark:text-text-secondary">
                 <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>No mechanics added yet. Click &quot;Add Part&quot; to add range, area, duration modifiers, and other mechanic parts.</p>
+                <p>No mechanics added yet. Click &quot;Add Part&quot; to add range, area, duration adjustments, and other mechanic parts.</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -1403,7 +1373,7 @@ function PowerCreatorContent() {
               </p>
             )}
           </CollapsibleSection>
-    </CreatorLayout>
+    </CreatorPageShell>
   );
 }
 

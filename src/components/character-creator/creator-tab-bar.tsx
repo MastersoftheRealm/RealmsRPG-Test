@@ -134,7 +134,7 @@ export function CreatorTabBar() {
             aria-current={isActive ? 'step' : undefined}
             className={cn(
               'px-3 py-2 min-h-11 min-w-11 rounded-lg text-sm font-medium transition-all shrink-0',
-              isActive && 'bg-primary-button text-white shadow-md',
+              isActive && 'bg-primary-button text-text-on-dark shadow-md',
               !isActive && isComplete && 'bg-success-light text-success-fg hover:bg-success-200/80 dark:bg-success-900/30 dark:hover:bg-success-800/40',
               !isActive && !isComplete && canNavigate && 'bg-surface text-text-secondary hover:bg-surface-alt',
               !isActive && !isComplete && !canNavigate && 'bg-surface text-text-muted dark:text-text-secondary cursor-not-allowed'

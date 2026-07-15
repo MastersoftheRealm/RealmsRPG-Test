@@ -1,0 +1,252 @@
+import { describe, expect, it } from 'vitest';
+import {
+  applyGuidedEquipmentL2Selection,
+  buildGuidedEquipmentL2Items,
+  computeL2TpSpent,
+} from '@/lib/guided-creator/guided-equipment-l2';
+import type {
+  EligibleEquipmentRow,
+  EquipmentEligibilityContext,
+} from '@/lib/guided-creator/equipment-eligibility';
+import type { GuidedDraft } from '@/stores/guided-creator-store';
+import { PROPERTY_IDS } from '@/lib/id-constants';
+import {
+  ARMOR_L2_HEADER_COLUMNS,
+  GEAR_L2_HEADER_COLUMNS,
+  WEAPON_L2_HEADER_COLUMNS,
+} from '@/components/guided-creator/guided-equipment-l2-grid';
+
+const baseDraft: GuidedDraft = {
+  archetypePathId: '1',
+  archetypeType: 'martial',
+  pow_abil: null,
+  mart_abil: 'strength',
+  speciesId: null,
+  speciesName: null,
+  selectedSize: null,
+  selectedSpeciesTraitChoices: {},
+  selectedAncestryTraitIds: [],
+  selectedCharacteristicId: null,
+  selectedFlawId: null,
+  abilities: {
+    strength: 3,
+    vitality: 2,
+    agility: 1,
+    acuity: 1,
+    intelligence: 0,
+    charisma: 0,
+  },
+  abilitiesMode: null,
+  skills: {},
+  declinedPathSkillIds: [],
+  archetypeFeatIds: [],
+  characterFeatIds: [],
+  equipmentPhase: 'weapon',
+  loadoutWeapons: [],
+  loadoutArmor: [],
+  armaments: [],
+  equipment: [],
+  currency: 200,
+  unarmedProwess: 0,
+  powerIds: [],
+  techniqueIds: [],
+  name: '',
+  age: '',
+  heightCm: null,
+  weightKg: null,
+  appearanceNotes: '',
+  portraitUrl: null,
+  hpAllocated: null,
+  energyAllocated: null,
+};
+
+describe('guided-equipment-l2', () => {
+  const catalog = new Map<string, EligibleEquipmentRow>([
+    [
+      'w1',
+      {
+        id: 'w1',
+        name: 'Axe',
+        type: 'weapon',
+        rarity: 'common',
+        trainingPoints: 4,
+        gold_cost: 25,
+        properties: [],
+      },
+    ],
+    [
+      'w2',
+      {
+        id: 'w2',
+        name: 'Greataxe',
+        type: 'weapon',
+        rarity: 'common',
+        trainingPoints: 6,
+        properties: [{ id: PROPERTY_IDS.TWO_HANDED, name: 'Two-Handed' }],
+      },
+    ],
+    [
+      's1',
+      {
+        id: 's1',
+        name: 'Shield',
+        type: 'shield',
+        rarity: 'common',
+        trainingPoints: 2,
+        properties: [],
+      },
+    ],
+    [
+      'a1',
+      {
+        id: 'a1',
+        name: 'Chain',
+        type: 'armor',
+        rarity: 'common',
+        trainingPoints: 10,
+        gold_cost: 40,
+        properties: [],
+      },
+    ],
+    [
+      'g1',
+      {
+        id: 'g1',
+        name: 'Rope',
+        type: 'equipment',
+        rarity: 'common',
+        trainingPoints: 0,
+        gold_cost: 5,
+        properties: [],
+      },
+    ],
+  ]);
+
+  const ctx: EquipmentEligibilityContext = {
+    phase: 'weapon',
+    abilities: baseDraft.abilities,
+    martAbil: 'strength',
+    powAbil: null,
+    archetypeType: 'martial',
+    pathRecommendedIds: new Set(),
+    selectedTpSpent: 0,
+    tpLimit: 30,
+  };
+
+  it('rejects two-handed weapon with shield', () => {
+    const selected = [
+      {
+        id: 'w2',
+        name: 'Greataxe',
+        data: { ref: { id: 'w2', quantity: 1 }, category: 'weapon', row: catalog.get('w2')! },
+      },
+      {
+        id: 's1',
+        name: 'Shield',
+        data: { ref: { id: 's1', quantity: 1 }, category: 'weapon', row: catalog.get('s1')! },
+      },
+    ];
+    const result = applyGuidedEquipmentL2Selection(
+      'weapon',
+      baseDraft,
+      selected,
+      catalog,
+      30,
+      200
+    );
+    expect(result.ok).toBe(false);
+  });
+
+  it('includes armor TP when evaluating weapon phase spend', () => {
+    const draft = {
+      ...baseDraft,
+      loadoutArmor: [{ id: 'a1', quantity: 1 }],
+    };
+    const spent = computeL2TpSpent(
+      'weapon',
+      draft,
+      [
+        {
+          id: 'w1',
+          name: 'Axe',
+          data: { ref: { id: 'w1', quantity: 1 }, category: 'weapon', row: catalog.get('w1')! },
+        },
+      ],
+      catalog
+    );
+    expect(spent).toBe(14);
+  });
+
+  it('weapon L2 row columns match header keys (except name)', () => {
+    const items = buildGuidedEquipmentL2Items('weapon', catalog, ctx, [], []);
+    const axe = items.find((i) => i.id === 'w1');
+    expect(axe).toBeTruthy();
+    const rowKeys = (axe!.columns ?? []).map((c) => c.key);
+    const headerKeys = WEAPON_L2_HEADER_COLUMNS.filter((c) => c.key !== 'name').map(
+      (c) => c.key
+    );
+    expect(rowKeys).toEqual(headerKeys);
+    expect(axe!.columns?.find((c) => c.key === 'currency')?.value).toBe('25');
+  });
+
+  it('armor and gear L2 columns match their headers', () => {
+    const armorItems = buildGuidedEquipmentL2Items(
+      'armor',
+      catalog,
+      { ...ctx, phase: 'armor' },
+      [],
+      []
+    );
+    const chain = armorItems.find((i) => i.id === 'a1');
+    expect((chain!.columns ?? []).map((c) => c.key)).toEqual(
+      ARMOR_L2_HEADER_COLUMNS.filter((c) => c.key !== 'name').map((c) => c.key)
+    );
+
+    const gearItems = buildGuidedEquipmentL2Items(
+      'gear',
+      catalog,
+      { ...ctx, phase: 'gear', remainingCurrency: 200 },
+      [],
+      []
+    );
+    const rope = gearItems.find((i) => i.id === 'g1');
+    expect((rope!.columns ?? []).map((c) => c.key)).toEqual(
+      GEAR_L2_HEADER_COLUMNS.filter((c) => c.key !== 'name').map((c) => c.key)
+    );
+  });
+
+  it('gear Confirm allows spend up to full gear budget (reclaims current gear)', () => {
+    const draft = {
+      ...baseDraft,
+      equipment: [{ id: 'g1', quantity: 1 }],
+      currency: 195,
+    };
+    // Arms spent 0 → gear budget 200; replacing rope(5) with itself still ok.
+    const result = applyGuidedEquipmentL2Selection(
+      'gear',
+      draft,
+      [
+        {
+          id: 'g1',
+          name: 'Rope',
+          data: { ref: { id: 'g1', quantity: 1 }, category: 'equipment', row: catalog.get('g1')! },
+        },
+      ],
+      catalog,
+      30,
+      200
+    );
+    expect(result.ok).toBe(true);
+  });
+
+  it('weapon eligibility keeps room after reclaiming current-phase TP', () => {
+    const tight = {
+      ...ctx,
+      selectedTpSpent: 0, // cross-phase only (armor empty)
+      tpLimit: 6,
+    };
+    const items = buildGuidedEquipmentL2Items('weapon', catalog, tight, [], []);
+    // Greataxe 6 TP alone still fits when cross-phase spend is 0
+    expect(items.some((i) => i.id === 'w2')).toBe(true);
+  });
+});

@@ -19,14 +19,16 @@ export function expandableChipShellClass({
   className?: string;
 }) {
   return cn(
-    'inline-flex flex-col items-start font-medium transition-all duration-base ease-standard',
+    'inline-flex flex-col items-start font-medium transition-[box-shadow,background-color,border-color,padding,ring] duration-base ease-standard',
     chipVariants({ variant, shape: 'expandable' }),
     size === 'sm' ? 'text-xs' : 'text-sm',
+    // Do not force w-full when expanded — that reboots flex-wrap and jumps the toggle.
+    // ExpandableChip sets a measured width that fits the remaining row space.
     expanded
-      ? 'w-full min-w-0 ring-2 ring-offset-1 ring-primary-outline-border px-3 py-2'
-      : size === 'sm'
-        ? 'px-2 py-0.5'
-        : 'px-3 py-1.5',
+      ? 'min-w-0 max-w-full ring-2 ring-inset ring-primary-outline-border align-top'
+      : '',
+    // Same vertical padding collapsed/expanded so the header Y does not nudge on toggle.
+    size === 'sm' ? 'px-2 py-0.5' : 'px-3 py-1.5',
     className
   );
 }

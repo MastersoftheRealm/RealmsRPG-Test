@@ -39,6 +39,7 @@ export { ItemCard } from './item-card';
 
 // Modal components
 export { LoginPromptModal } from './login-prompt-modal';
+export type { LoginPromptReason } from './login-prompt-modal';
 export { DiscordIcon } from './discord-icon';
 export { DeleteConfirmModal } from './delete-confirm-modal';
 export { ConfirmActionModal } from './confirm-action-modal';
@@ -57,6 +58,10 @@ export { ListRowThumbnail } from './list-row-thumbnail';
 export type { ListRowThumbnailProps } from './list-row-thumbnail';
 export { ExpandableImage, ExpandableImageModal } from './expandable-image';
 export type { ExpandableImageProps, ExpandableImageModalProps } from './expandable-image';
+
+// DetailOptionList — elongated deep-dive / trait catalog rows (GuidedEntityDetailModal, species modal)
+export { DetailOptionList } from './detail-option-list';
+export type { DetailOptionItem, DetailOptionListProps } from './detail-option-list';
 
 export { ChoiceTraitOptionListPicker } from './choice-trait-option-select';
 
@@ -85,6 +90,8 @@ export type { ListHeaderProps, ListColumn, ListHeaderRowChrome } from './list-he
 export {
   gridTemplateColumnsWithThumbnail,
   prependThumbnailHeaderColumn,
+  gridColumnsWithInlineSelection,
+  GRID_LIST_INLINE_SELECTION_COLUMN_TRACK,
   GRID_LIST_ROW_THUMBNAIL_COLUMN_WIDTH,
   THUMBNAIL_HEADER_COLUMN_KEY,
 } from './grid-list-row-chrome';

@@ -100,7 +100,7 @@ function SelectedFeatChipRow({
         }}
         fullWidthWhenExpanded
         interactiveHover
-        className="min-w-0 flex-1"
+        className="min-w-0"
       />
       <button
         type="button"
@@ -577,7 +577,7 @@ export function FeatsStep() {
     pathMode && draft.archetype?.name ? (
       <>
         <PathHelpCard pathName={draft.archetype.name}>
-          the recommended feats are shown below — expand to choose your own from the full catalog.
+          the recommended feats are shown below. Expand to choose your own from the full catalog.
         </PathHelpCard>
         <PathNotes pathName={draft.archetype.name} notes={pathData?.level1?.notes} />
       </>
@@ -806,7 +806,7 @@ export function FeatsStep() {
               {selectedArchetypeFeats.reduce((sum, f) => sum + getFeatLevel(featById.get(String(f.id))), 0)} / {maxArchetypeFeats}
             </DescriptorChip>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div data-chip-group className="flex flex-wrap gap-2 items-start">
             {selectedArchetypeFeats.length === 0 ? (
               <span className="text-sm text-text-muted dark:text-text-secondary italic">None selected</span>
             ) : (
@@ -852,7 +852,7 @@ export function FeatsStep() {
               {selectedCharacterFeats.reduce((sum, f) => sum + getFeatLevel(featById.get(String(f.id))), 0)} / {maxCharacterFeats}
             </DescriptorChip>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div data-chip-group className="flex flex-wrap gap-2 items-start">
             {selectedCharacterFeats.length === 0 ? (
               <span className="text-sm text-text-muted dark:text-text-secondary italic">None selected</span>
             ) : (

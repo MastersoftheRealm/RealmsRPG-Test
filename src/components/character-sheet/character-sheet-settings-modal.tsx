@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Modal, Select, Button } from '@/components/ui';
 import type { CharacterVisibility } from '@/types';
 
@@ -56,15 +56,9 @@ export function CharacterSheetSettingsModal({
   onSpeedDisplayUnitChange,
   onConfirm,
 }: CharacterSheetSettingsModalProps) {
+  // Fresh drafts per open — parent mounts only while showSettingsModal is true.
   const [selectedVisibility, setSelectedVisibility] = useState<CharacterVisibility>(visibility);
   const [selectedSpeedUnit, setSelectedSpeedUnit] = useState<SpeedDisplayUnit>(speedDisplayUnit);
-
-  useEffect(() => {
-    if (isOpen) {
-      setSelectedVisibility(visibility);
-      setSelectedSpeedUnit(speedDisplayUnit);
-    }
-  }, [isOpen, visibility, speedDisplayUnit]);
 
   const visibilityOptions = VISIBILITY_OPTIONS.map((opt) => ({
     ...opt,
@@ -129,7 +123,7 @@ export function CharacterSheetSettingsModal({
             Controls who can view this character sheet. Realm Masters can view campaign members&apos; sheets when set to Campaign or Public.
           </p>
           {isInCampaign && (
-            <p className="text-xs text-amber-600 dark:text-amber-400 mb-2">
+            <p className="text-xs text-warning-700 dark:text-warning-400 mb-2">
               This character is in a campaign. To set visibility to Private, remove them from the campaign first.
             </p>
           )}

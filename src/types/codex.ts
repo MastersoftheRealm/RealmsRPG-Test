@@ -5,7 +5,7 @@
  * Entity shapes match the normalized response from `src/app/api/codex/route.ts`.
  */
 
-import type { Archetype, ArchetypePathData, PathGuidanceGroup } from './archetype';
+import type { Archetype, PathGuidanceGroup } from './archetype';
 
 // =============================================================================
 // Entity types (codex collections)

@@ -63,7 +63,7 @@ export function PartChipList({
           {label}
         </h3>
       )}
-      <div className="flex flex-wrap gap-2 items-start">
+      <div data-chip-group className="flex flex-wrap gap-2 items-start">
         {parts.map((part, index) => {
           const isExpanded = expandedIndex === index;
           const canExpand = !!(part.description || (part.options?.length ?? 0));

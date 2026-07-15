@@ -41,7 +41,6 @@ function seedGuidedStorage(subStep: string, draft: Record<string, unknown>) {
         declinedPathSkillIds: [],
         archetypeFeatIds: [],
         characterFeatIds: [],
-        loadoutId: null,
         armaments: [],
         equipment: [],
         powerIds: [],

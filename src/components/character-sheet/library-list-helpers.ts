@@ -2,7 +2,7 @@
  * Shared enrichment + display helpers for character sheet library lists.
  */
 
-import { formatRange } from '@/lib/calculators/item-calc';
+import { getWeaponAttackBonusFromProperties } from '@/lib/game/weapon-attack-ability';
 import { formatDamageDisplay } from '@/lib/utils';
 import {
   characterPartsToPartData,
@@ -91,23 +91,13 @@ export function getWeaponAttackBonus(
   abilities?: Abilities,
   martialProficiency?: number
 ): { bonus: number; abilityName: string } {
-  const prof = martialProficiency ?? 0;
-  if (!abilities) return { bonus: prof, abilityName: 'Strength' };
-
-  const props = (weapon.properties || []).map((p) =>
-    typeof p === 'string' ? p : (p as { name?: string }).name || ''
+  const props = resolveItemProperties(weapon) ?? weapon.properties ?? [];
+  const { bonus, abilityName } = getWeaponAttackBonusFromProperties(
+    props as { id?: number; name?: string; op_1_lvl?: number }[],
+    abilities,
+    martialProficiency
   );
-
-  if (props.some((p) => p.toLowerCase() === 'finesse')) {
-    return { bonus: (abilities.agility ?? 0) + prof, abilityName: 'Agility' };
-  }
-
-  const rangeStr = formatRange((weapon.properties || []) as { id?: number; name?: string; op_1_lvl?: number }[]);
-  if (rangeStr.toLowerCase() !== 'melee') {
-    return { bonus: (abilities.acuity ?? 0) + prof, abilityName: 'Acuity' };
-  }
-
-  return { bonus: (abilities.strength ?? 0) + prof, abilityName: 'Strength' };
+  return { bonus, abilityName };
 }
 
 export function partDataToChips(parts: PartData[]) {

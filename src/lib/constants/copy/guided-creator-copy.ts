@@ -10,26 +10,26 @@
 export const GUIDED_CREATOR_COPY = {
   chooser: {
     title: 'Create a New Character',
-    subtitle: 'Both paths create a full character — choose the experience you want today.',
+    subtitle: 'How do you want to build?',
     backToHome: 'Back to home',
     /** Soft nudge on the guided card only; both options are valid peers. Keep short — single-line pill. */
     firstTimerBadge: 'New player recommended',
     modes: {
       guided: {
         label: 'Guided',
-        tagline: 'Chapter-by-chapter, with your path doing the heavy lifting.',
+        tagline: 'Become your character with path recommendations.',
         bullets: [
-          'Pick a path and we create a complete level-1 character',
-          'One clear decision at a time, with a live preview',
-          'Great for your first character or a quick start',
+          'Pick a path, then choose species, Feats, and gear from its options',
+          'Watch your character take shape as you go',
+          'Great for your first character, or anytime you want a guided start',
         ],
       },
       custom: {
         label: 'Custom',
-        tagline: 'The full nine-step builder when you want every option from the start.',
+        tagline: 'The full builder when you want every option up front.',
         bullets: [
-          'Same rules engine — all steps, all choices',
-          'Forge your own archetype or fine-tune every detail',
+          'All catalogs available while you build',
+          'Forge your own archetype, or fine-tune every pick',
           'Ideal if you already know the system or want full control',
         ],
       },
@@ -66,37 +66,116 @@ export const GUIDED_CREATOR_COPY = {
     backToRecommendations: 'Back to recommendations',
   },
 
+  /**
+   * Choice-card disclosure labels (Ladder A). Catalog breadth uses layerNav / “See more options”.
+   * - See more / See less — in-card deepen (truncated description, expandedExtra on the card).
+   * - More details / Less details — entity modal (`onDetails`) or lots of chip/fact disclosure.
+   */
+  choiceCard: {
+    seeMore: 'See more…',
+    seeLess: 'See less',
+    moreDetails: 'More details',
+    lessDetails: 'Less details',
+  },
+
+  entityDetail: {
+    close: 'Close',
+    overviewHeading: 'Overview',
+    optionsRegionLabel: 'What you can choose later',
+  },
+
   chapters: {
     foundation: { title: 'Foundation', subtitle: 'Choose your path and species' },
     ancestry: { title: 'Ancestry', subtitle: 'Make your species your own' },
-    abilities: { title: 'Abilities', subtitle: 'Who you are, naturally' },
-    archetype: { title: 'Your Archetype', subtitle: 'Skills, feats, and training' },
-    equipment: { title: 'Equipment', subtitle: 'Your loadout and abilities' },
-    reveal: { title: 'Your Hero', subtitle: 'Review and bring them to life' },
+    abilities: { title: 'Abilities', subtitle: 'Who you are' },
+    archetype: { title: 'Your Archetype', subtitle: 'Skills and Feats' },
+    equipment: { title: 'Equipment', subtitle: 'Gear, then Powers or Techniques' },
+    reveal: { title: 'Your Hero', subtitle: 'Bring them to life' },
   },
 
   steps: {
     path: {
       title: 'Choose your path',
       description:
-        "Your path shapes your abilities, skills, feats, and gear. Pick one and we'll build a complete level-1 character around it.",
+        'Your path suggests Abilities, Skills, Feats, and gear. Then you choose among those options.',
       showHybridPaths: 'Show hybrid (Powered-Martial) paths',
-      backToCorePaths: 'Back to power & martial paths',
+      backToCorePaths: 'Back to Power and Martial paths',
       emptyTitle: 'No paths available',
       emptyDescription: 'Try a different filter or check back later.',
+      /** Modal chrome: preview only; card select still chooses the path. */
+      detailModalHint: 'This is a preview. Choose the path from its card.',
+      detail: {
+        noDescription: 'No description is available for this path yet.',
+        loadingCatalogs: 'Loading path options…',
+        typePower: 'Power',
+        typeMartial: 'Martial',
+        typePoweredMartial: 'Powered-Martial',
+        proficiencyTitle: 'Proficiency',
+        proficiencyPower: (n: number) => `Archetype Power Proficiency ${n}`,
+        proficiencyMartial: (n: number) => `Archetype Martial Proficiency ${n}`,
+        pathAbilitiesTitle: 'Path Abilities',
+        archetypeAbility: (label: string) => `Archetype Ability ${label}`,
+        archetypePowerAbility: (label: string) => `Archetype Power Ability ${label}`,
+        archetypeMartialAbility: (label: string) => `Archetype Martial Ability ${label}`,
+        secondaryAbility: (label: string) => `Secondary Recommended Ability ${label}`,
+        recommendedAbilitiesTitle: 'Recommended Abilities',
+        recommendedSkillsTitle: 'Recommended Skills',
+        pathOptionsTitle: 'Path Options',
+        pathOptionsIntro:
+          'Here are choices this path offers during character creation.',
+        pathOptionsNotesOnlyIntro: 'Notes for this path during character creation.',
+        archetypeFeatsTitle: 'Archetype Feat Options',
+        archetypeFeatsIntro:
+          'Combat-focused Feats from this path. You choose among them in Your Archetype.',
+        characterFeatsTitle: 'Character Feat Options',
+        characterFeatsIntro:
+          'Character Feats tied to this path. You pick one in Your Archetype.',
+        weaponsTitle: 'Weapon Options',
+        weaponsIntro:
+          'Weapons and shields recommended for this path. Expand a row for Damage, Range, and properties.',
+        unarmedProwessName: 'Unarmed Prowess',
+        unarmedProwessDescription:
+          'This path recommends Unarmed Prowess so you can fight effectively without a weapon.',
+        unarmedProwessStats: 'Unarmed',
+        armorTitle: 'Armor Options',
+        armorIntro: 'Armor recommended for this path. Expand a row for Damage Reduction and other details.',
+        gearTitle: 'Adventuring Gear',
+        gearIntro: 'Gear recommended for this path.',
+        techniquesTitle: 'Technique Options',
+        techniquesIntro: 'Techniques this Martial path recommends.',
+        powersTitle: 'Power Options',
+        powersIntro: 'Powers this path recommends.',
+      },
     },
     species: {
       title: 'Choose your species',
-      description:
-        "This is who you're becoming. Any species works with any path, so pick the one that excites you.",
+      description: 'Any species works with any path. Pick the one that excites you.',
       showAll: 'Show all species',
       backToStarters: 'Back to starter species',
       emptyTitle: 'No species available',
       emptyDescription: 'Check back later.',
+      detailModalHint: 'This is a preview. Choose the species from its card.',
+      detail: {
+        loadingTraits: 'Loading species options…',
+        speciesTraitOptionsTitle: 'Species Trait Options',
+        speciesTraitOptionsIntro:
+          'These Species Traits ask you to pick a variant during Ancestry. Expand a row for the full description.',
+        speciesTraitOptionPickHint: 'Pick one of these options during Ancestry.',
+        ancestryTraitsTitle: 'Ancestry Trait Options',
+        ancestryTraitsIntro:
+          'You will choose one Ancestry Trait (two if you take a Flaw). Expand any row to read more.',
+        characteristicsTitle: 'Characteristic Options',
+        characteristicsIntro: 'You will choose one Characteristic during Ancestry.',
+        flawsTitle: 'Flaw Options',
+        flawsIntro:
+          'Flaws are optional. Taking one grants an extra Ancestry Trait. Expand a row for details.',
+      },
     },
     ancestry: {
-      skipFlaw: 'Skip — no flaw',
-      selectSpeciesFirst: 'Select a species first.',
+      skipFlaw: 'No Flaw',
+      skipFlawDescription:
+        'Continue without a Flaw. You will not gain an extra Ancestry Trait.',
+      selectSpeciesFirst: 'Choose a species first.',
       emptyOptions: 'No ancestry options are available for this species.',
       nextPick: 'Next pick',
       speciesOverview: {
@@ -110,11 +189,11 @@ export const GUIDED_CREATOR_COPY = {
         avgWeightLabel: 'Avg weight',
         adulthoodLabel: 'Adulthood',
         lifespanLabel: 'Lifespan',
-        abilityBonusesTitle: 'Ability bonuses',
-        skillsTitle: 'Species skills',
+        abilityBonusesTitle: 'Ability Bonuses',
+        skillsTitle: 'Species Skills',
         languagesTitle: 'Languages',
-        grantedTitle: 'Species traits',
-        grantedHint: 'Granted automatically — no choice needed.',
+        grantedTitle: 'Species Traits',
+        grantedHint: 'Granted with your species. No choice needed here.',
         choiceTeaserTitle: 'Choices ahead',
         choiceTeaserHint: (names: string[]) => {
           if (names.length === 1) {
@@ -129,140 +208,202 @@ export const GUIDED_CREATOR_COPY = {
         continueLabel: 'Continue',
         sizeChoiceTitle: 'Choose your size',
         sizeChoiceHint:
-          'Some species can be more than one size. Pick the size that fits how you imagine this character — it affects reach, carrying capacity, and how you fit in the world.',
+          'Some species can be more than one size. Pick the size that fits how you imagine this character.',
         sizeChoiceRequired: 'Select a size to continue.',
       },
     },
     abilities: {
-      title: 'Your natural abilities',
-      description: 'Abilities describe who you are — how strong, quick, or sharp you are naturally.',
+      title: 'Your Abilities',
+      description: 'Abilities describe how strong, quick, or sharp you are.',
       recommendedHeading: (pathName: string) => `Recommended for ${pathName}`,
-      recommendedHint: 'These scores are applied for your path. Customize if you want a different spread.',
-      customize: 'Customize scores',
-      abilityPointsLabel: 'Ability points',
+      recommendedHint:
+        'These Abilities match your path. Continue to keep them, or customize if you prefer different values.',
+      customize: 'Customize Abilities',
+      abilityPointsLabel: 'Ability Points',
     },
     skills: {
-      title: 'Your skills',
+      title: 'Your Skills',
       description:
-        'You have 3 skill points at level 1. Species skills are free; each other skill costs 1 point for proficiency (then more to raise its value).',
-      pathHelp: (names: string[]) =>
-        names.length === 1
-          ? `we recommend ${names[0]} — toggle it off to spend that point elsewhere.`
-          : names.length === 2
-            ? `we recommend ${names[0]} and ${names[1]} — toggle either off to pick a different skill.`
-            : `we recommend ${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]} — adjust as you like.`,
-      applyRecommended: 'Restore path skills',
-      applyRecommendedHint: 'Re-adds path skill proficiencies you removed.',
-      emptySkills: 'No skills yet — use suggestions below or browse the full list.',
+        'Species Skills are free. Spend Skill Points to gain proficiency in other Skills and to raise their value. The counter shows how many you have left.',
+      applyRecommended: 'Restore path Skills',
+      applyRecommendedHint: 'Puts back path Skill proficiencies you removed.',
+      emptySkills: 'No Skills yet. Use suggestions below or browse the full list.',
       pointsRemaining: (n: number) =>
-        `Spend ${n} more skill point${n === 1 ? '' : 's'} to continue.`,
-      pointsComplete: 'All skill points spent',
-      recommendedChip: 'Recommended',
-      abilitySkillSuggestionsTitle: (abilities: string) => `Skills using ${abilities}`,
-      abilitySkillSuggestionsHint: (remaining: number, abilities: string) =>
-        `You have ${remaining} skill point${remaining === 1 ? '' : 's'} left. These base skills use ${abilities} — pick one to add proficiency, raise a skill above, or browse the full list.`,
+        `Spend ${n} more Skill Point${n === 1 ? '' : 's'} to continue.`,
+      pointsComplete: 'All Skill Points spent',
+      suggestedSkillsTitle: 'Suggested Skills',
       pathSkillSuggestionsTitle: (pathName: string) => `From ${pathName}`,
       pathSkillSuggestionsHint: (pathName: string) =>
-        `You removed a skill recommended for ${pathName}. Tap a card to add it back, or browse the full list.`,
-      mixedSkillSuggestionsTitle: 'Recommended skills',
-      mixedSkillSuggestionsHint: (remaining: number, abilities: string) =>
-        `Path skills you removed and base skills using ${abilities}. You have ${remaining} skill point${remaining === 1 ? '' : 's'} left for new proficiencies.`,
-      browseAll: 'Browse all skills',
+        `You removed a Skill recommended for ${pathName}. Tap a card to add it back, or browse the full list.`,
+      mixedSkillSuggestionsTitle: 'Recommended Skills',
+      mixedSkillSuggestionsHint: (remaining: number) =>
+        `You have ${remaining} Skill Point${remaining === 1 ? '' : 's'} left. Restore a path Skill or pick a suggestion below.`,
+      browseAll: 'Browse all Skills',
+      browseOverLimit: (max: number) =>
+        max <= 0
+          ? 'No Skill Points left to add more. Remove a Skill or lower a value, then try again.'
+          : `You can add up to ${max} more Skill${max === 1 ? '' : 's'} with your remaining points. Deselect some if you need room.`,
       continueLabel: 'Looks good →',
     },
     archetypeFeats: {
       title: 'How you excel in combat',
       description: (count: number, pathName?: string) =>
         pathName
-          ? `Pick ${count} archetype feat${count === 1 ? '' : 's'} for your ${pathName}. Each group below is a different fighting style — choose feats from any group.`
-          : `Pick ${count} archetype feat${count === 1 ? '' : 's'} that shape how you fight.`,
+          ? `Pick ${count} Archetype Feat${count === 1 ? '' : 's'} for your ${pathName}. Groups suggest styles; you can mix picks across groups.`
+          : `Pick ${count} Archetype Feat${count === 1 ? '' : 's'} that shape how you fight.`,
       groupIntro:
-        'Groups are suggestions, not either/or — pick the feats you want until you reach your limit.',
-      emptyTitle: 'No feat recommendations',
-      emptyDescription: 'Path data may need authoring in admin.',
+        'Groups are suggestions, not either/or. Keep picking until you reach your limit.',
+      seeMore: 'See more Feats',
+      emptyTitle: 'No Feat recommendations',
+      emptyDescription:
+        'This path does not list Archetype Feats yet. Use See more Feats, or pick another path.',
     },
     characterFeat: {
       title: 'Who you are beyond the fight',
-      description: 'Pick one character feat — usually about personality, background, or non-combat flair.',
-      emptyTitle: 'No character feats found',
-      emptyDescription: 'Codex may need character feats tagged.',
+      description: 'Pick one Character Feat, usually about personality, background, or non-combat flair.',
+      seeMore: 'See more Character Feats',
+      emptyTitle: 'No Character Feats found',
+      emptyDescription:
+        'None are available right now. Use See more Character Feats, or pick another path.',
+    },
+    /** Shared Layer 2 browse chrome for archetype + character feat steps. */
+    featsBrowse: {
+      heading: 'Browse Feats',
+      hint: (max: number) =>
+        max === 1
+          ? 'Showing Feats you qualify for. Pick one, or show locked Feats to see their requirements.'
+          : `Showing Feats you qualify for. Pick up to ${max}. Selecting another swaps your most recent pick.`,
+      searchPlaceholder: 'Search Feats…',
+      categoryLabel: 'Category',
+      abilityLabel: 'Ability',
+      allCategories: 'All categories',
+      allAbilities: 'All Abilities',
+      showBlocked: "Show Feats I don't qualify for",
+      recommendedBadge: 'Recommended',
+      requirementsNotMet: 'Requirements not met',
+      emptyTitle: 'No Feats match',
+      emptyDescription: 'Try clearing filters or showing locked Feats.',
     },
     loadout: {
-      title: 'Your loadout',
-      description: 'Pick a coherent kit — weapons, armor, and gear that fit your path.',
+      title: 'Your equipment',
+      description: 'Choose weapons, armor, and adventuring gear from your path options.',
       continueLabel: 'Looks good →',
-      emptyTitle: 'No loadouts yet',
-      emptyDescription: 'Path loadouts can be authored in admin (level1_loadouts).',
-      defaultWhy: 'Included in your path',
-      pathDefaultTitle: (pathName: string) => `${pathName} loadout`,
-      pathDefaultWhy: 'Recommended gear for your path.',
-      groupIntro:
-        'Each section below is a complete loadout. Review the gear list, choose one kit, then continue.',
-      loadoutGroupLabel: 'Path loadout options',
-      selectKit: 'Use this kit',
-      selectedKit: 'Selected',
-      kitContentsLabel: 'Kit contents',
-      loadingItems: 'Loading equipment details…',
+      emptyTitle: 'No equipment recommendations yet',
+      emptyDescription:
+        'This path has no recommended weapons, armor, or gear yet. Use See more options to browse common items, or pick another path.',
+      loadingItems: 'Loading equipment…',
       unresolvedItem: 'Unknown item',
-      andMoreItems: (count: number) => ` +${count} more`,
-      weaponsLabel: 'Weapons',
-      armorLabel: 'Armor',
-      gearLabel: 'Gear',
-      emptyKit: 'No items in this kit yet.',
-      customKitHint: 'You customized your gear — use Mix and match gear to adjust, or pick a kit above.',
-      customize: {
-        expandLabel: 'Mix and match gear',
-        title: 'Mix and match gear',
-        description:
-          'Choose items from your path recommendations. Training Points show how much armament proficiency your selections use.',
-        atCap: 'You are at your Training Point limit — deselect an item to swap.',
-        overBudget: 'Not enough Training Points remaining',
-        unresolvedItem: 'Unknown item',
-      },
       unarmed: {
         title: 'Unarmed combat',
         description:
-          'Your path recommends fighting without weapons. Add Unarmed Prowess if you want unarmed strikes on your sheet.',
+          'Your path favors fighting without weapons. Add Unarmed Prowess if you want unarmed strikes on your character.',
         add: 'Add Unarmed Prowess',
         remove: 'Remove Unarmed Prowess',
-        addedHint: 'Included on your character.',
+        addedHint: 'Unarmed Prowess will be on your character.',
+      },
+      phases: {
+        weapon: {
+          title: 'Weapons & shields',
+          description:
+            'Pick from your path options. Use See more for requirements and traits.',
+        },
+        armor: {
+          title: 'Armor',
+          description: 'Pick armor from your path, or continue without armor when that is allowed.',
+        },
+        gear: {
+          title: 'Adventuring gear',
+          description:
+            'Pick recommended gear, or add all at once. Currency spent on weapons and armor already counts against your total.',
+        },
+        skipArmorLabel: 'Fight unarmored',
+        seeMoreLabel: 'See more options',
+        backToPhase: 'Back to recommendations',
+        continueWeapon: 'Continue to armor →',
+        continueToGear: 'Continue to gear →',
+        currencyLabel: 'Currency',
+        unresolvedItem: 'Unknown item',
+        weaponPhase: {
+          emptyTitle: 'No weapons on your path',
+          emptyDescription: 'Use See more options to browse more weapons and shields.',
+          handBlocked: 'A two-handed weapon cannot be used with a shield.',
+          tpBlocked: 'Not enough Training Points for that item.',
+        },
+        armorPhase: {
+          emptyTitle: 'No armor on your path',
+          emptyDescription:
+            'Use See more options to browse armor, or continue without armor if your path allows.',
+          tpBlocked: 'Not enough Training Points for that item.',
+        },
+        gearPhase: {
+          emptyTitle: 'No gear on your path',
+          emptyDescription: 'Use See more options to browse adventuring gear within your budget.',
+          addAllRecommended: 'Add all recommended gear',
+          currencyBlocked: 'Not enough Currency remaining for that gear.',
+        },
+        l2: {
+          weaponTitle: 'Browse weapons & shields',
+          armorTitle: 'Browse armor',
+          gearTitle: 'Browse adventuring gear',
+          description: 'Common items you can take. Training Points update as you select.',
+          gearDescription:
+            'Common gear costing 50 Currency or less each. Remaining Currency updates as you select.',
+          tpLabel: 'Training Points',
+          currencyLabel: 'Currency',
+          confirmError: 'That selection does not fit. Check Training Points, hands, or Currency.',
+          searchPlaceholder: (phase: 'weapon' | 'armor' | 'gear') =>
+            phase === 'gear' ? 'Search gear…' : `Search ${phase}…`,
+          emptyMessage: (phase: 'weapon' | 'armor' | 'gear') =>
+            phase === 'gear'
+              ? 'No matching gear found'
+              : phase === 'armor'
+                ? 'No matching armor found'
+                : 'No matching weapons or shields found',
+        },
       },
     },
     powersTechniques: {
       martial: {
-        title: 'Your techniques',
-        description: 'Techniques are your martial abilities — trained moves that define how you fight.',
+        title: 'Your Techniques',
+        description: 'Techniques are trained combat moves that define how you fight.',
       },
       poweredMartial: {
-        title: 'Your powers',
-        description: 'Pick the powers that complement your hybrid fighting style.',
+        title: 'Your Powers',
+        description: 'Powers that fit your hybrid fighting style.',
       },
       power: {
-        title: 'Your powers',
-        description: 'Powers are your supernatural or extraordinary abilities.',
+        title: 'Your Powers',
+        description: 'Powers are supernatural or extraordinary effects you can use.',
       },
-      groupIntro: (kind: string) =>
-        `These ${kind} are recommended for your path. Select the ones you want on your character.`,
-      energyTag: (energy: number) => `${energy} EN`,
-      emptyTitle: (kind: string) => `No ${kind} on this path`,
-      emptyDescription: (kind: string) =>
-        `This path has no level-1 ${kind} recommendations yet. You can add ${kind} from your library later.`,
+      /** `kind` is "powers" | "techniques" from the step; labels are capitalized for display. */
+      groupIntro: (kind: string) => {
+        const label = kind === 'techniques' ? 'Techniques' : 'Powers';
+        return `Recommended ${label} for your path. Highlighted cards are selected. Tap to turn one off if you prefer.`;
+      },
+      energyTag: (energy: number) => `${energy} Energy`,
+      emptyTitle: (kind: string) => {
+        const label = kind === 'techniques' ? 'Techniques' : 'Powers';
+        return `No ${label} on this path`;
+      },
+      emptyDescription: (kind: string) => {
+        const label = kind === 'techniques' ? 'Techniques' : 'Powers';
+        return `This path has no ${label} recommendations yet. You can add ${label} later on your character sheet.`;
+      },
     },
     reveal: {
       title: 'Meet your hero',
-      description: 'Review your build, add who they are, then bring them to life.',
-      heroLevel: 'Level 1',
+      description: 'Review your build, name them, then create your character.',
       heroUnnamed: 'Unnamed Hero',
       identityTitle: 'Identity',
       nameLabel: 'Character name',
       namePlaceholder: 'Give your hero a name',
       ageLabel: 'Age (optional)',
-      heightLabel: 'Height cm (optional)',
-      weightLabel: 'Weight kg (optional)',
+      heightLabel: 'Height (cm, optional)',
+      weightLabel: 'Weight (kg, optional)',
       appearanceLabel: 'Appearance (optional)',
       appearancePlaceholder: 'Hair, eyes, distinguishing features…',
       allocateHint: (remaining: number) =>
-        `Allocate ${remaining} more point${remaining === 1 ? '' : 's'} between health and energy.`,
+        `Allocate ${remaining} more point${remaining === 1 ? '' : 's'} between Health and Energy.`,
       save: 'Create character',
       saving: 'Creating…',
       portrait: {
@@ -273,39 +414,38 @@ export const GUIDED_CREATOR_COPY = {
         hint: 'Upload and crop a portrait. JPG, PNG, or GIF. Max 5MB.',
         modalTitle: 'Character portrait',
         removeLabel: 'Remove portrait',
-        tooLarge: 'Image is still too large. Please use a smaller image.',
-        processError: 'Failed to process image',
+        tooLarge: 'That image is still too large. Try a smaller file.',
+        processError: 'Could not process that image.',
       },
       healthEnergy: {
-        title: 'Health & energy',
-        description: 'Split your bonus points between max health and max energy.',
-        baseStats: (hp: number, en: number) => `Base HP: ${hp} · Base EN: ${en}`,
+        title: 'Health & Energy',
+        description: 'Split your bonus points between max Health and max Energy.',
+        baseStats: (hp: number, en: number) => `Base Health: ${hp} · Base Energy: ${en}`,
         autoAllocate: 'Auto-allocate',
         autoAllocateAria:
-          'Auto-allocate points so max energy matches highest power or technique cost, rest to health',
+          'Set Energy to cover your highest Power or Technique cost, and put the rest into Health',
         highestCostHint: (cost: number) =>
-          `Your highest ability costs ${cost} EN — auto-allocate sets energy to match when possible.`,
+          `Your costliest Power or Technique needs ${cost} Energy. Auto-allocate can cover that cost first.`,
         allocateHint: (remaining: number) =>
           `Allocate ${remaining} more point${remaining === 1 ? '' : 's'} to continue.`,
       },
       summary: {
         title: 'Your build',
-        description: 'Every choice at a glance — jump back to edit any step.',
+        description: 'Everything at a glance. Jump back anytime to edit.',
         coreTitle: 'Core choices',
-        levelLabel: 'Level',
         pathLabel: 'Path',
         speciesLabel: 'Species',
         typeLabel: 'Type',
-        powerAbilityLabel: 'Power ability',
-        martialAbilityLabel: 'Martial ability',
+        powerAbilityLabel: 'Power Ability',
+        martialAbilityLabel: 'Martial Ability',
         abilitiesTitle: 'Abilities',
-        ancestryTitle: 'Ancestry & traits',
+        ancestryTitle: 'Ancestry & Traits',
         skillsTitle: 'Skills',
         featsTitle: 'Feats',
         loadoutTitle: 'Equipment',
-        powersTitle: 'Powers & techniques',
-        defaultLoadout: 'Path loadout',
-        customLoadout: 'Custom loadout',
+        powersTitle: 'Powers & Techniques',
+        defaultLoadout: 'No equipment selected',
+        customLoadout: 'Selected equipment',
       },
       loginModal: {
         title: 'Sign in to save',
@@ -315,7 +455,7 @@ export const GUIDED_CREATOR_COPY = {
       },
       playTogetherModal: {
         title: "You're ready to play!",
-        description: 'Realms is most fun with a party. Join a group or start a campaign as Realm Master.',
+        description: 'Realms is most fun with a party. Join Discord, browse campaigns, or run games as Realm Master.',
         viewCharacter: 'View my character',
         discord: 'Join Discord',
         campaigns: 'Browse campaigns',

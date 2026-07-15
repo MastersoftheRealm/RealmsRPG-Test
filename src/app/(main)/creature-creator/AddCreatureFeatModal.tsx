@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, useId, type ReactNode } from 'react';
+import { useState, useMemo, useCallback, useId, type ReactNode } from 'react';
 import {
   useCreatureFeats,
   useCodexFeats,
@@ -127,15 +127,7 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
   const [showStateFeats, setShowStateFeats] = useState(false);
   const [showBlocked, setShowBlocked] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      setActiveTab('creature');
-      setSelectedCategory('');
-      setSelectedAbility('');
-      setShowStateFeats(false);
-      setShowBlocked(false);
-    }
-  }, [isOpen]);
+  // Filter state seeds defaults; parent remounts while showFeatModal is true.
 
   const creatureLevel = Number(creature.level) || 1;
   const existingFeatIdSet = useMemo(
@@ -499,7 +491,7 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
           </div>
         }
         size="xl"
-        className="max-h-[85vh]"
+        className="md:max-h-[85vh]"
       />
     </>
   );

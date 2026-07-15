@@ -101,7 +101,7 @@ export function ArchetypePathGuidance({ character }: { character: Character }) {
           </p>
           <p className="text-sm text-text-primary whitespace-pre-wrap">{levelNotes}</p>
           <p className="text-xs text-text-muted dark:text-text-secondary mt-2">
-            Admin path notes — not your personal archetype description.
+            Admin path notes. Not your personal archetype description.
           </p>
         </div>
       ) : null}

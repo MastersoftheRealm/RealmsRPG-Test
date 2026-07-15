@@ -18,6 +18,7 @@ import { CreatorStepFooter } from '@/components/character-creator/creator-step-f
 import { Button } from '@/components/ui';
 import { getSkillPointsHelp, subSkillsHelp } from '../../../../public/tooltip-text';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
+import { EMPTY_NUMBER_RECORD, EMPTY_STRING_ARRAY } from '@/lib/empty';
 
 function pathHelpContent(_pathName: string, names: string[]): React.ReactNode {
   if (names.length === 0) return null;
@@ -102,9 +103,12 @@ export function SkillsStep() {
     return new Set<string>((species?.skills || []).map((id: string | number) => String(id)));
   }, [draft.ancestry?.id, draft.ancestry?.name, draft.ancestry?.mixed, draft.ancestry?.speciesIds, draft.ancestry?.selectedSpeciesSkillIds, draft.species, allSpecies]);
 
-  const allocations = draft.skills || {};
-  const defenseVals = draft.defenseVals || draft.defenseSkills || { ...DEFAULT_DEFENSE_SKILLS };
-  const abilities = draft.abilities || { ...DEFAULT_ABILITIES };
+  const allocations = draft.skills ?? EMPTY_NUMBER_RECORD;
+  const defenseVals = draft.defenseVals || draft.defenseSkills || DEFAULT_DEFENSE_SKILLS;
+  const abilities = useMemo(
+    () => draft.abilities ?? { ...DEFAULT_ABILITIES },
+    [draft.abilities]
+  );
   const level = draft.level || 1;
   const skillPointsHelp = useMemo(
     () => getSkillPointsHelp(level, rules),
@@ -113,7 +117,8 @@ export function SkillsStep() {
 
   const mergedSkillAbilities = draft.skillAbilities ?? {};
   const pathData = useCreatorPathData();
-  const recommendedSkillIds = pathData?.level1?.skills ?? [];
+  const pathLevel1Skills = pathData?.level1?.skills;
+  const recommendedSkillIds = pathLevel1Skills ?? EMPTY_STRING_ARRAY;
 
   const declinedPathSkillIds = useMemo(
     () => new Set((draft.declinedPathSkillIds ?? []).map(String)),
@@ -261,7 +266,7 @@ export function SkillsStep() {
   ]);
 
   const handleContinue = () => {
-    updateDraft({ skills: allocationsWithSpecies, defenseVals });
+    updateDraft({ skills: allocationsWithSpecies, defenseVals: { ...defenseVals } });
     nextStep();
   };
 

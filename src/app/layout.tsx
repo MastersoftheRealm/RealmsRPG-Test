@@ -9,6 +9,7 @@ import { Nunito, Nunito_Sans, Nova_Flat } from 'next/font/google';
 import { AuthProvider, QueryProvider, ThemeProvider } from '@/components/providers';
 import { ToastProvider } from '@/components/ui';
 import { SelectionGuard } from '@/components/layout';
+import { ROOT_META_DESCRIPTION } from '@/lib/constants/site-copy';
 import './globals.css';
 
 // Primary font - Nunito for headings and brand text
@@ -42,7 +43,7 @@ export const metadata: Metadata = {
     default: 'RealmsRPG',
     template: '%s | RealmsRPG',
   },
-  description: 'Your new favorite roleplaying game. Create and manage your tabletop RPG characters with RealmsRPG.',
+  description: ROOT_META_DESCRIPTION,
   keywords: ['RPG', 'tabletop', 'character creator', 'character sheet', 'roleplaying'],
   authors: [{ name: 'RealmsRPG Team' }],
   creator: 'RealmsRPG',
@@ -79,7 +80,7 @@ export default function RootLayout({
         {/* Skip-to-content link for keyboard/screen-reader accessibility */}
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-skip-link focus:px-4 focus:py-2 focus:bg-primary-button focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-skip-link focus:px-4 focus:py-2 focus:bg-primary-button focus:text-text-on-dark focus:rounded-lg focus:shadow-lg focus:outline-none"
         >
           Skip to main content
         </a>

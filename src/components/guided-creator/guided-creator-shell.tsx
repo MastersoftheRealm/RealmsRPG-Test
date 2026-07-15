@@ -91,7 +91,7 @@ function ChapterRail({ className }: { className?: string }) {
                   className={cn(
                     'flex h-6 w-6 items-center justify-center rounded-pill font-display text-xs font-bold',
                     isActive
-                      ? 'bg-white/20 text-text-on-dark'
+                      ? 'bg-text-on-dark/20 text-text-on-dark'
                       : isComplete
                         ? 'bg-success-fg/15 text-success-fg'
                         : 'bg-surface-alt text-text-secondary'

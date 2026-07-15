@@ -98,8 +98,6 @@ export function AbilityScoreEditor({
   }, [abilities]);
 
   const remainingPoints = totalPoints - spentPoints;
-  const isOverspent = remainingPoints < 0;
-  const isComplete = remainingPoints === 0;
 
   const canIncrease = (ability: AbilityName) => {
     if (!isEditMode) return false;

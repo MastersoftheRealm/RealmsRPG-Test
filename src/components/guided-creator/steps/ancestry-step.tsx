@@ -7,17 +7,19 @@
 'use client';
 
 import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
-import { Button, Spinner } from '@/components/ui';
+import { Spinner } from '@/components/ui';
 import { useMergedSpecies, useTraits, resolveTraitIds } from '@/hooks';
 import type { Species, Trait } from '@/hooks';
 import { getChoiceOptionIds, resolveChoiceOptionTraits } from '@/lib/choice-trait';
 import { useGuidedCreatorStore, type GuidedDraft } from '@/stores/guided-creator-store';
 import { GuidedChoiceCard } from '../guided-choice-card';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from '../guided-choice-styles';
+import { GuidedTraitRestrictionNotice } from '../guided-restriction-notice';
 import { GuidedStepLayout } from '../guided-step-layout';
 import { SpeciesRevealPanel } from '../species-reveal-panel';
 import { getSpeciesSizeOptions } from '../guided-species-utils';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import { getTraitRestrictionNotice } from '@/lib/codex/feat-restriction-notice';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.ancestry;
 const overviewCopy = stepCopy.speciesOverview;
@@ -127,7 +129,7 @@ export function AncestryStep() {
     list.push({
       phase: 'flaw',
       title: 'Take a flaw? (optional)',
-      description: 'Flaws add depth — and grant an extra ancestry trait.',
+      description: 'Flaws add depth, and grant an extra ancestry trait.',
       options: resolveTraits(species.flaws || [], allTraits),
       optional: true,
     });
@@ -196,10 +198,13 @@ export function AncestryStep() {
     [currentTask, draft]
   );
 
+  const skipFlawSelected = Boolean(currentTask?.optional && draft.selectedFlawId === '');
+
   const hasCurrentPick = useMemo(() => {
     if (!currentTask) return false;
+    if (skipFlawSelected) return true;
     return currentTask.options.some((t) => isSelected(t, currentTask));
-  }, [currentTask, isSelected]);
+  }, [currentTask, isSelected, skipFlawSelected]);
 
   const handlePick = useCallback(
     (trait: Trait) => {
@@ -248,14 +253,13 @@ export function AncestryStep() {
     }
   }, [pickIndex, totalPicks, nextSubStep]);
 
+  /** Explicit decline — same card pattern as flaw options; footer Continue advances. */
   const handleSkipFlaw = useCallback(() => {
     updateDraft({
       selectedFlawId: '',
       selectedAncestryTraitIds: draft.selectedAncestryTraitIds.slice(0, 1),
     });
-    // Skipping the optional flaw always completes ancestry (no bonus trait pick).
-    nextSubStep();
-  }, [draft.selectedAncestryTraitIds, updateDraft, nextSubStep]);
+  }, [draft.selectedAncestryTraitIds, updateDraft]);
 
   const ancestryComplete = useMemo(() => {
     if (!species || !allTraits.length) return false;
@@ -381,18 +385,28 @@ export function AncestryStep() {
                 description={trait.description}
                 selected={isSelected(trait)}
                 onSelect={() => handlePick(trait)}
+                expandedExtra={
+                  getTraitRestrictionNotice(trait) ? (
+                    <GuidedTraitRestrictionNotice trait={trait} />
+                  ) : undefined
+                }
               />
             ))}
+            {currentTask.optional && (
+              <GuidedChoiceCard
+                density="compact"
+                title={stepCopy.skipFlaw}
+                description={stepCopy.skipFlawDescription}
+                selected={skipFlawSelected}
+                onSelect={handleSkipFlaw}
+                selectAriaLabel={stepCopy.skipFlaw}
+                className="sm:col-span-2"
+              />
+            )}
           </div>
-          {currentTask.optional && (
-            <div className="mt-4">
-              <Button type="button" variant="secondary" onClick={handleSkipFlaw} className="min-h-11">
-                {stepCopy.skipFlaw}
-              </Button>
-            </div>
-          )}
         </>
       )}
     </GuidedStepLayout>
   );
 }
+

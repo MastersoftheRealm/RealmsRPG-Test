@@ -108,7 +108,6 @@ export function SpeciesStep() {
   };
 
   const isMixedSelected = draft.ancestry?.mixed === true;
-  const isSingleSelected = draft.ancestry?.id && !draft.ancestry?.mixed;
   const canContinue = !!(draft.ancestry?.id);
   const completion = useMemo(
     () => getStepCompletion('species', draft, { allSpecies, codexSkills: codexSkills ?? null, allTraits: null }),
@@ -138,7 +137,7 @@ export function SpeciesStep() {
         <>
           <PathHelpCard pathName={draft.archetype.name}>
             {hasRecommendedSpecies
-              ? 'These species fit your path — pick one, or browse all species below.'
+              ? 'These species fit your path. Pick one, or browse all species below.'
               : 'Choose the species that fits your character, or browse the full list.'}
           </PathHelpCard>
           <PathNotes pathName={draft.archetype.name} notes={pathData?.level1?.notes} />
@@ -207,7 +206,7 @@ export function SpeciesStep() {
           <h3 className="font-bold text-text-primary">Mixed species</h3>
           <p className="text-sm text-text-secondary text-center mt-1">Combine two species</p>
           {isMixedSelected && (
-            <span className="text-xs px-2 py-0.5 bg-primary-button text-white rounded mt-2">✓ Selected</span>
+            <span className="text-xs px-2 py-0.5 bg-primary-button text-text-on-dark rounded mt-2">✓ Selected</span>
           )}
         </SelectionCardSurface>
 
@@ -243,7 +242,7 @@ export function SpeciesStep() {
                         {getSizesDisplay(s)}
                       </span>
                       {isSelected && (
-                        <span className="text-xs px-2 py-0.5 bg-primary-button text-white rounded">
+                        <span className="text-xs px-2 py-0.5 bg-primary-button text-text-on-dark rounded">
                           ✓ Selected
                         </span>
                       )}

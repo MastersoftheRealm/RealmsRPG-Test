@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Eye, EyeOff } from 'lucide-react';
 import { useRollsOptional } from './roll-context';
@@ -222,6 +222,31 @@ const DEFAULT_TAB_VISIBILITY: Record<TabType, boolean> = {
   notes: true,
 };
 
+/** Tab order used for visibility fallbacks (sheet owns active-tab state). */
+export const LIBRARY_TAB_ORDER: TabType[] = [
+  'feats',
+  'powers',
+  'techniques',
+  'inventory',
+  'proficiencies',
+  'notes',
+];
+
+/** Resolve a visible library tab when the active tab is hidden outside edit mode. */
+export function resolveLibraryActiveTab(
+  activeTab: TabType,
+  options: {
+    isEditMode: boolean;
+    tabVisibility?: Partial<Record<TabType, boolean>>;
+  }
+): TabType {
+  const visibility = { ...DEFAULT_TAB_VISIBILITY, ...(options.tabVisibility ?? {}) };
+  const visible = options.isEditMode
+    ? LIBRARY_TAB_ORDER
+    : LIBRARY_TAB_ORDER.filter((id) => visibility[id] !== false);
+  return visible.includes(activeTab) ? activeTab : (visible[0] ?? 'feats');
+}
+
 export function LibrarySection({
   powers,
   techniques,
@@ -323,16 +348,18 @@ export function LibrarySection({
 }: LibrarySectionProps) {
   const ctx = useCharacterSheetOptional();
   const isEditMode = ctx?.isEditMode ?? isEditModeProp;
-  const onAddPower = onAddPowerProp ?? (ctx ? () => ctx.setAddModalType('power') : undefined);
-  const onAddInnatePower = ctx ? () => ctx.setAddModalType('innate-power') : undefined;
-  const onAddTechnique = onAddTechniqueProp ?? (ctx ? () => ctx.setAddModalType('technique') : undefined);
-  const onAddWeapon = onAddWeaponProp ?? (ctx ? () => ctx.setAddModalType('weapon') : undefined);
-  const onAddShield = onAddShieldProp ?? (ctx ? () => ctx.setAddModalType('shield') : undefined);
-  const onAddArmor = onAddArmorProp ?? (ctx ? () => ctx.setAddModalType('armor') : undefined);
-  const onAddEquipment = onAddEquipmentProp ?? (ctx ? () => ctx.setAddModalType('equipment') : undefined);
-  const onAddArchetypeFeat = onAddArchetypeFeatProp ?? (ctx ? () => ctx.setFeatModalType('archetype') : undefined);
-  const onAddCharacterFeat = onAddCharacterFeatProp ?? (ctx ? () => ctx.setFeatModalType('character') : undefined);
-  const onAddStateFeat = onAddStateFeatProp ?? (ctx ? () => ctx.setFeatModalType('state') : undefined);
+  const setAddModalType = ctx?.setAddModalType;
+  const setFeatModalType = ctx?.setFeatModalType;
+  const onAddPower = onAddPowerProp ?? (setAddModalType ? () => setAddModalType('power') : undefined);
+  const onAddInnatePower = setAddModalType ? () => setAddModalType('innate-power') : undefined;
+  const onAddTechnique = onAddTechniqueProp ?? (setAddModalType ? () => setAddModalType('technique') : undefined);
+  const onAddWeapon = onAddWeaponProp ?? (setAddModalType ? () => setAddModalType('weapon') : undefined);
+  const onAddShield = onAddShieldProp ?? (setAddModalType ? () => setAddModalType('shield') : undefined);
+  const onAddArmor = onAddArmorProp ?? (setAddModalType ? () => setAddModalType('armor') : undefined);
+  const onAddEquipment = onAddEquipmentProp ?? (setAddModalType ? () => setAddModalType('equipment') : undefined);
+  const onAddArchetypeFeat = onAddArchetypeFeatProp ?? (setFeatModalType ? () => setFeatModalType('archetype') : undefined);
+  const onAddCharacterFeat = onAddCharacterFeatProp ?? (setFeatModalType ? () => setFeatModalType('character') : undefined);
+  const onAddStateFeat = onAddStateFeatProp ?? (setFeatModalType ? () => setFeatModalType('state') : undefined);
 
   const [internalActiveTab, setInternalActiveTab] = useState<TabType>('feats');
   const activeTab = activeTabProp ?? internalActiveTab;
@@ -345,7 +372,12 @@ export function LibrarySection({
     },
     [activeTabProp, onActiveTabChange]
   );
-  const [isSectionEditing, setIsSectionEditing] = useState(false);
+  const [isSectionEditing, setIsSectionEditing] = useState(isEditMode);
+  const [prevIsEditMode, setPrevIsEditMode] = useState(isEditMode);
+  if (isEditMode !== prevIsEditMode) {
+    setPrevIsEditMode(isEditMode);
+    setIsSectionEditing(isEditMode);
+  }
   const [currencyInput, setCurrencyInput] = useState(currency.toString());
   const rollContext = useRollsOptional();
 
@@ -508,14 +540,25 @@ export function LibrarySection({
 
   // NOTE: Unarmed Prowess is now shown in the Archetype section, not here
 
-  const tabs: { id: TabType; label: string; onAdd?: () => void }[] = [
-    { id: 'feats', label: 'Feats' },
-    { id: 'powers', label: 'Powers', onAdd: onAddPower },
-    { id: 'techniques', label: 'Techniques', onAdd: onAddTechnique },
-    { id: 'inventory', label: 'Inventory' },
-    { id: 'proficiencies', label: 'Proficiencies' },
-    { id: 'notes', label: 'Notes' },
-  ];
+  const tabs = useMemo(
+    (): { id: TabType; label: string; onAdd?: () => void }[] => [
+      { id: 'feats', label: 'Feats' },
+      {
+        id: 'powers',
+        label: 'Powers',
+        onAdd: onAddPowerProp ?? (setAddModalType ? () => setAddModalType('power') : undefined),
+      },
+      {
+        id: 'techniques',
+        label: 'Techniques',
+        onAdd: onAddTechniqueProp ?? (setAddModalType ? () => setAddModalType('technique') : undefined),
+      },
+      { id: 'inventory', label: 'Inventory' },
+      { id: 'proficiencies', label: 'Proficiencies' },
+      { id: 'notes', label: 'Notes' },
+    ],
+    [onAddPowerProp, onAddTechniqueProp, setAddModalType]
+  );
 
   const resolvedTabVisibility = useMemo<Record<TabType, boolean>>(
     () => ({ ...DEFAULT_TAB_VISIBILITY, ...(tabVisibility ?? {}) }),
@@ -527,19 +570,13 @@ export function LibrarySection({
     [isEditMode, tabs, resolvedTabVisibility]
   );
 
-  useEffect(() => {
-    if (isEditMode) {
-      setIsSectionEditing(true);
-      return;
-    }
-    setIsSectionEditing(false);
-  }, [isEditMode]);
+  const resolvedActiveTab: TabType = visibleTabs.some((tab) => tab.id === activeTab)
+    ? activeTab
+    : (visibleTabs[0]?.id ?? 'feats');
 
-  useEffect(() => {
-    if (visibleTabs.some((tab) => tab.id === activeTab)) return;
-    const fallback = visibleTabs[0]?.id ?? 'feats';
-    setActiveTab(fallback);
-  }, [activeTab, visibleTabs]);
+  if (activeTabProp === undefined && internalActiveTab !== resolvedActiveTab) {
+    setInternalActiveTab(resolvedActiveTab);
+  }
 
   const handleToggleTabVisibility = useCallback((tabId: TabType) => {
     if (!onTabVisibilityChange) return;
@@ -623,7 +660,7 @@ export function LibrarySection({
       {/* Tabs */}
       <TabNavigation
         tabs={navigationTabs}
-        activeTab={activeTab}
+        activeTab={resolvedActiveTab}
         onTabChange={(tabId) => setActiveTab(tabId as TabType)}
         variant="underline"
         size="md"
@@ -632,7 +669,7 @@ export function LibrarySection({
 
       {/* Content */}
       <div className="space-y-2 flex-1 min-h-0 overflow-y-auto">
-        {activeTab === 'powers' && (
+        {resolvedActiveTab === 'powers' && (
           <>
             {/* Innate Energy Summary */}
             {innateEnergy > 0 && (
@@ -686,7 +723,7 @@ export function LibrarySection({
           </>
         )}
 
-        {activeTab === 'techniques' && (
+        {resolvedActiveTab === 'techniques' && (
           <>
             <TechniquesListSection
               items={techniqueRows}
@@ -704,7 +741,7 @@ export function LibrarySection({
           </>
         )}
 
-        {activeTab === 'inventory' && (
+        {resolvedActiveTab === 'inventory' && (
           <div className="space-y-6">
             {/* Inventory Summary: Currency */}
             <TabSummarySection variant="currency">
@@ -728,7 +765,7 @@ export function LibrarySection({
                         onCurrencyChange?.(newValue);
                       }
                     }}
-                    className="w-20 px-2 py-1 text-sm font-bold text-warning-fg border border-warning-300 dark:border-warning-600/50 rounded focus:ring-2 focus:ring-warning-500 bg-white dark:bg-surface"
+                    className="w-20 px-2 py-1 text-sm font-bold text-warning-fg border border-warning-300 dark:border-warning-600/50 rounded focus:ring-2 focus:ring-warning-500 bg-surface"
                     title="Use +5, -10, or a number"
                   />
                   <span className="text-sm font-medium text-text-muted dark:text-text-secondary">Currency</span>
@@ -805,7 +842,7 @@ export function LibrarySection({
           </div>
         )}
 
-        {activeTab === 'feats' && (
+        {resolvedActiveTab === 'feats' && (
           <FeatsTab
             ancestry={ancestry}
             vanillaTraits={vanillaTraits}
@@ -838,7 +875,7 @@ export function LibrarySection({
           />
         )}
 
-        {activeTab === 'proficiencies' && (
+        {resolvedActiveTab === 'proficiencies' && (
           <ProficienciesTab
             powers={powers}
             techniques={techniques}
@@ -858,7 +895,7 @@ export function LibrarySection({
           />
         )}
 
-        {activeTab === 'notes' && abilities && (
+        {resolvedActiveTab === 'notes' && abilities && (
           <NotesTab
             visibility={visibility}
             onVisibilityChange={onVisibilityChange}
@@ -882,7 +919,7 @@ export function LibrarySection({
           />
         )}
 
-        {activeTab === 'notes' && !abilities && (
+        {resolvedActiveTab === 'notes' && !abilities && (
           <p className="text-text-muted dark:text-text-secondary text-sm italic text-center py-4">
             Character abilities not loaded
           </p>

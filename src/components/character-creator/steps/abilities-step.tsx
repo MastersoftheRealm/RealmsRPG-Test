@@ -18,7 +18,7 @@ import { calculateAbilityPoints, calculateAbilityScoreCost } from '@/lib/game/fo
 import { buildSuggestedAbilityArray } from '@/lib/game/suggested-abilities';
 import { ABILITY_EFFECT_BLURBS, formatAbilityLabel } from '@/lib/constants/ability-effect-blurbs';
 import { getStepCompletion } from '@/lib/character-creator-validation';
-import type { AbilityName } from '@/types';
+import { DEFAULT_ABILITIES, type AbilityName } from '@/types';
 import { getAbilityPointsHelp } from '../../../../public/tooltip-text';
 import { useGameRules, useCreatorPathData } from '@/hooks';
 
@@ -36,14 +36,10 @@ export function AbilitiesStep() {
   const { rules } = useGameRules();
   const level = draft.level || 1;
   const layer = getStepLayer('abilities');
-  const abilities = draft.abilities || {
-    strength: 0,
-    vitality: 0,
-    agility: 0,
-    acuity: 0,
-    intelligence: 0,
-    charisma: 0,
-  };
+  const abilities = useMemo(
+    () => draft.abilities ?? { ...DEFAULT_ABILITIES },
+    [draft.abilities]
+  );
 
   const totalPoints = useMemo(() => calculateAbilityPoints(level), [level]);
 
@@ -83,7 +79,7 @@ export function AbilitiesStep() {
               {pathSecondaryAbility ? (
                 <> and <strong className="text-primary-fg capitalize">{pathSecondaryAbility}</strong></>
               ) : null}
-              — use the suggested array or customize below.
+              . Use the suggested array or customize below.
             </>
           ) : (
             'Use the suggested array or assign points yourself.'

@@ -39,7 +39,7 @@ import { RollEntryCard } from '@/components/character-sheet';
 import { useCampaign, useCharacters, useInvalidateCampaigns, useAuth, useCampaignRolls } from '@/hooks';
 import { addCharacterToCampaignAction, removeCharacterFromCampaignAction, deleteCampaignAction, updateCampaignAction } from '../actions';
 import { MAX_CAMPAIGN_CHARACTERS, OWNER_MAX_CHARACTERS } from '../constants';
-import type { Campaign, CampaignCharacter } from '@/types/campaign';
+import type { CampaignCharacter } from '@/types/campaign';
 
 import { getEffectivePortrait } from '@/lib/portrait';
 
@@ -674,6 +674,7 @@ function AddCharacterModal({
             disabled={loading}
             className="flex items-center gap-3 w-full p-3 rounded-lg border border-border-light hover:bg-surface-alt text-left transition-colors disabled:opacity-50"
           >
+            {/* eslint-disable-next-line @next/next/no-img-element -- dynamic portrait URL */}
             <img src={getEffectivePortrait(c.portrait)} alt="" className="w-12 h-12 rounded-lg object-cover" />
             <div>
               <p className="font-medium">{c.name}</p>

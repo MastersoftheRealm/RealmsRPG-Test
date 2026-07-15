@@ -10,8 +10,16 @@ export { useAdmin } from './use-admin';
 export { useCreatorSave } from './use-creator-save';
 export type { CreatorLibraryType, CreatorSavePayload, UseCreatorSaveOptions, UseCreatorSaveReturn } from './use-creator-save';
 export { useCreatorPathData } from './use-creator-path-data';
+export {
+  buildGuidedEquipmentEligibilityContext,
+  useGuidedEquipmentCatalog,
+} from './use-guided-equipment-catalog';
 export { useLoadModalLibrary } from './use-load-modal-library';
-export type { LoadModalLibraryType, UseLoadModalLibraryReturn } from './use-load-modal-library';
+export type {
+  LoadModalLibraryType,
+  UseLoadModalLibraryReturn,
+  UseLoadModalLibraryOptions,
+} from './use-load-modal-library';
 export { useAddLibraryItemData } from './use-add-library-item-data';
 export type {
   AddLibraryItemType,
@@ -69,6 +77,10 @@ export {
   useUpdateOfficialEnhancedItem,
   type EnhancedItemsScope,
   type OfficialEnhancedItem,
+  type OfficialEnhancedItemPayload,
+  type CreateOfficialEnhancedItemInput,
+  type UpdateOfficialEnhancedItemInput,
+  type EnhancedItemUsesType,
 } from './use-enhanced-items';
 
 // Characters

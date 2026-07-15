@@ -5,11 +5,13 @@
 
 import type { Skill } from '@/hooks';
 import type { GridListBadgeColor } from '@/lib/chip/grid-list-chip-utils';
-import type { AbilityName, ArchetypeCategory } from '@/types';
-import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
-import { getGuidedCuratedSkillIds } from './curated-skills';
-
-const recommendedChipLabel = GUIDED_CREATOR_COPY.steps.skills.recommendedChip;
+import type { Abilities, AbilityName, Archetype, ArchetypeCategory } from '@/types';
+import {
+  curateGuidedSkillIds,
+  formatGuidedSkillAbilityTag,
+  resolveGuidedArchetypeAbilities,
+  type GuidedCuratedSkillsResult,
+} from './curated-skills';
 
 export type GuidedSkillSuggestionKind = 'path-declined' | 'ability-match';
 
@@ -30,9 +32,14 @@ export interface GuidedSkillSuggestion {
 
 export interface BuildGuidedSkillSuggestionsOptions {
   codexSkills: Skill[];
+  abilities: Abilities;
   declinedPathSkillIds: string[];
   pathSourceLabel?: string;
   archetypeType: ArchetypeCategory | null;
+  archetype?: Pick<
+    Archetype,
+    'archetype_ability' | 'secondary_ability' | 'pow_abil' | 'mart_abil'
+  > | null;
   powAbil?: AbilityName | null;
   martAbil?: AbilityName | null;
   pathSkillIds: string[];
@@ -42,12 +49,17 @@ export interface BuildGuidedSkillSuggestionsOptions {
   includeAbilityMatches?: boolean;
 }
 
+export interface BuildGuidedSkillSuggestionsResult {
+  suggestions: GuidedSkillSuggestion[];
+  curation: GuidedCuratedSkillsResult;
+}
+
 function pathDeclinedBadge(pathSourceLabel: string): GuidedSkillSuggestionBadge {
   return { label: pathSourceLabel, color: 'purple' };
 }
 
-function abilityMatchBadge(): GuidedSkillSuggestionBadge {
-  return { label: recommendedChipLabel, color: 'green' };
+function abilityTagBadge(label: string): GuidedSkillSuggestionBadge {
+  return { label, color: 'blue' };
 }
 
 function mergeSuggestion(
@@ -76,14 +88,32 @@ function mergeSuggestion(
   };
 }
 
+function abilityMatchEntry(
+  skillId: string,
+  codexSkills: Skill[],
+  abilities: Abilities
+): Omit<GuidedSkillSuggestion, 'skillId'> {
+  const skill = codexSkills.find((s) => String(s.id) === skillId);
+  const label = (skill && formatGuidedSkillAbilityTag(skill, abilities)) ?? 'Skill';
+
+  return {
+    kinds: ['ability-match'],
+    tags: [label],
+    badges: [abilityTagBadge(label)],
+    sortRank: 1,
+  };
+}
+
 export function buildGuidedSkillSuggestions(
   options: BuildGuidedSkillSuggestionsOptions
-): GuidedSkillSuggestion[] {
+): BuildGuidedSkillSuggestionsResult {
   const {
     codexSkills,
+    abilities,
     declinedPathSkillIds,
     pathSourceLabel,
     archetypeType,
+    archetype,
     powAbil,
     martAbil,
     pathSkillIds,
@@ -116,24 +146,35 @@ export function buildGuidedSkillSuggestions(
     );
   }
 
-  if (includeAbilityMatches) {
-    const curatedIds = getGuidedCuratedSkillIds({
-      codexSkills,
-      archetypeType,
-      powAbil,
-      martAbil,
-      pathSkillIds,
-      speciesSkillIds,
-      selectedSkillIds,
-    });
+  const { primary } = resolveGuidedArchetypeAbilities(archetypeType, {
+    archetype,
+    powAbil,
+    martAbil,
+  });
 
-    for (const skillId of curatedIds) {
-      const entry: Omit<GuidedSkillSuggestion, 'skillId'> = {
-        kinds: ['ability-match'],
-        tags: [recommendedChipLabel],
-        badges: [abilityMatchBadge()],
-        sortRank: 1,
-      };
+  const emptyCuration: GuidedCuratedSkillsResult = {
+    skillIds: [],
+    abilityKeysUsed: [],
+    skillAbilityById: {},
+  };
+
+  const curation = includeAbilityMatches
+    ? curateGuidedSkillIds({
+        codexSkills,
+        abilities,
+        archetypeType,
+        primaryAbility: primary,
+        powAbil,
+        martAbil,
+        pathSkillIds,
+        speciesSkillIds,
+        selectedSkillIds,
+      })
+    : emptyCuration;
+
+  if (includeAbilityMatches) {
+    for (const skillId of curation.skillIds) {
+      const entry = abilityMatchEntry(skillId, codexSkills, abilities);
       const prev = byId.get(skillId);
       byId.set(
         skillId,
@@ -144,12 +185,17 @@ export function buildGuidedSkillSuggestions(
     }
   }
 
-  return [...byId.values()].sort((a, b) => {
+  const suggestions = [...byId.values()].sort((a, b) => {
     if (a.sortRank !== b.sortRank) return a.sortRank - b.sortRank;
+    const rankA = curation.skillIds.indexOf(a.skillId);
+    const rankB = curation.skillIds.indexOf(b.skillId);
+    if (rankA !== -1 && rankB !== -1 && rankA !== rankB) return rankA - rankB;
     const nameA = codexSkills.find((s) => String(s.id) === a.skillId)?.name ?? '';
     const nameB = codexSkills.find((s) => String(s.id) === b.skillId)?.name ?? '';
     return nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
   });
+
+  return { suggestions, curation };
 }
 
 /** Map for AddSkillModal badge lookup by skill id. */
@@ -161,20 +207,4 @@ export function guidedSuggestionsToBadgeMap(
     map[s.skillId] = s.badges;
   }
   return map;
-}
-
-/** Sort skill ids so recommended suggestions appear first (preserves suggestion order). */
-export function sortSkillIdsWithSuggestionsFirst(
-  skillIds: string[],
-  suggestions: GuidedSkillSuggestion[]
-): string[] {
-  const rank = new Map(suggestions.map((s, i) => [s.skillId, i]));
-  return [...skillIds].sort((a, b) => {
-    const ra = rank.get(a);
-    const rb = rank.get(b);
-    if (ra !== undefined && rb !== undefined) return ra - rb;
-    if (ra !== undefined) return -1;
-    if (rb !== undefined) return 1;
-    return a.localeCompare(b);
-  });
 }

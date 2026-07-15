@@ -1,6 +1,9 @@
 /**
  * GuidedChoiceCard — shared selectable card for the guided creator.
- * Supports thumb or hero image layouts; inline Read more for long copy.
+ * Supports thumb or hero image layouts; inline See more for long copy;
+ * optional More details opens a read-only deep-dive modal (not card select)
+ * or expands lots of chip/fact disclosure.
+ * When both expand and modal More details exist: More details only after expand/select.
  */
 
 'use client';
@@ -11,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
 import { DescriptorChip } from '@/components/ui';
 import { ExpandableImage } from '@/components/shared';
+import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { shouldExpandTaglineBody } from './guided-text';
 import {
   defaultImageLayoutForKind,
@@ -42,8 +46,26 @@ export interface GuidedChoiceCardProps {
   selected?: boolean;
   onSelect: () => void;
   children?: ReactNode;
-  /** Shown only when expanded (Read more) — e.g. feat restriction notices. */
+  /** Shown only when expanded (See more) — e.g. feat restriction notices. */
   expandedExtra?: ReactNode;
+  /**
+   * When true, string `tags` are hidden while the card is expanded (use expandable
+   * chips in `expandedExtra` instead to avoid duplicating the same facts).
+   */
+  hideTagsWhenExpanded?: boolean;
+  /** Label for the in-card expand control (default: “See more…”). */
+  expandLabel?: string;
+  /** Label for the in-card collapse control when not selected (default: “See less”). */
+  collapseLabel?: string;
+  /**
+   * Opens choice-card deep-dive (GuidedEntityDetailModal). Does not select the card.
+   * Distinct from catalog Layer 2 (`GuidedLayerNav` “See more options”).
+   * When the card also offers inline See more, this control appears only once expanded
+   * (or selected, which auto-expands).
+   */
+  onDetails?: () => void;
+  /** Visible label for the details control (default: guided copy “More details”). */
+  detailsLabel?: string;
   selectAriaLabel?: string;
   className?: string;
   fullWidth?: boolean;
@@ -105,22 +127,23 @@ function resolveBody(
   return { kind: 'none' };
 }
 
-/** Detect whether clamped body copy overflows its fixed preview area. */
+/**
+ * Detect whether clamped body copy overflows its fixed preview area.
+ * Keeps the last measurement while expanded so callers can still know
+ * whether inline See more was (or would be) offered.
+ */
 function useClampedOverflow(active: boolean, textKey: string) {
   const ref = useRef<HTMLParagraphElement>(null);
-  const [overflows, setOverflows] = useState(false);
+  const [measuredOverflows, setMeasuredOverflows] = useState(false);
 
   useEffect(() => {
-    if (!active) {
-      setOverflows(false);
-      return;
-    }
+    if (!active) return;
 
     const el = ref.current;
     if (!el) return;
 
     const measure = () => {
-      setOverflows(el.scrollHeight > el.clientHeight + 1);
+      setMeasuredOverflows(el.scrollHeight > el.clientHeight + 1);
     };
 
     measure();
@@ -129,7 +152,7 @@ function useClampedOverflow(active: boolean, textKey: string) {
     return () => observer.disconnect();
   }, [active, textKey]);
 
-  return { ref, overflows };
+  return { ref, overflows: measuredOverflows };
 }
 
 export function GuidedChoiceCard({
@@ -148,19 +171,27 @@ export function GuidedChoiceCard({
   onSelect,
   children,
   expandedExtra,
+  hideTagsWhenExpanded = false,
+  expandLabel,
+  collapseLabel,
+  onDetails,
+  detailsLabel,
   selectAriaLabel,
   className,
   fullWidth = false,
   density = 'path',
 }: GuidedChoiceCardProps) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(selected);
+  const [prevSelected, setPrevSelected] = useState(selected);
+  // Sync expand when selection changes (adjust state during render — no effect).
+  if (selected !== prevSelected) {
+    setPrevSelected(selected);
+    setExpanded(selected);
+  }
   const hasTags = tags && tags.length > 0;
+  const showTags = hasTags && !(hideTagsWhenExpanded && expanded);
   const preset = GUIDED_CHOICE_CARD_PRESETS[density];
   const hasExpandedExtra = Boolean(expandedExtra);
-
-  useEffect(() => {
-    setExpanded(selected);
-  }, [selected]);
 
   const layout =
     imageLayout ?? (imageKind ? defaultImageLayoutForKind(imageKind) : imageUrl ? 'thumb' : 'thumb');
@@ -189,14 +220,29 @@ export function GuidedChoiceCard({
     clampKey
   );
 
-  const showReadMore =
-    !expanded &&
-    (hasExpandedExtra ||
-      (body.kind === 'rich'
-        ? body.canExpand || textOverflows
-        : body.kind === 'plain' && textOverflows));
+  /** Card has (or had) an inline expand control — distinct from More details. */
+  const canInlineExpand =
+    hasExpandedExtra ||
+    (body.kind === 'rich'
+      ? body.canExpand || textOverflows
+      : body.kind === 'plain' && textOverflows);
 
   const showBodySection = body.kind !== 'none' || hasExpandedExtra;
+  const showReadMore = !expanded && canInlineExpand;
+  const showCollapse = expanded && showBodySection && !selected;
+
+  /**
+   * Progressive disclosure: truncated → See more → More details.
+   * When both exist, hide More details until the card is expanded (or selected).
+   * Cards with only More details (no overflow) still show it collapsed.
+   */
+  const showDetails = Boolean(onDetails) && (expanded || !canInlineExpand);
+  /**
+   * Always reserve the action-row height while a body section exists.
+   * Collapsed cards reserved min-h-11 even when empty; selected cards used to drop it
+   * (no See less when selected, no More details) and short options like Skip — no flaw shrank.
+   */
+  const showActionRow = showBodySection;
 
   const handleCardKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -210,6 +256,28 @@ export function GuidedChoiceCard({
     if (selected) return;
     setExpanded((o) => !o);
   };
+
+  const handleDetailsClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onDetails?.();
+  };
+
+  const handleDetailsKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
+  const resolvedDetailsLabel =
+    detailsLabel ?? GUIDED_CREATOR_COPY.choiceCard.moreDetails;
+  /** Visible text is the control name; aria-label adds which entity (screen readers). */
+  const detailsAriaLabel = `${resolvedDetailsLabel} for ${title}`;
+  const resolvedExpandLabel =
+    expandLabel ?? GUIDED_CREATOR_COPY.choiceCard.seeMore;
+  const resolvedCollapseLabel =
+    collapseLabel ?? GUIDED_CREATOR_COPY.choiceCard.seeLess;
 
   const showMedia = Boolean(resolvedImage || icon);
   const mediaClass = isFeatured && resolvedImage ? s.mediaFeatured : s.media;
@@ -226,7 +294,9 @@ export function GuidedChoiceCard({
         'flex w-full cursor-pointer flex-col overflow-hidden rounded-card border bg-surface-alt/40 transition-shadow duration-base',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
         'h-full',
-        !expanded && preset.cardCollapsed,
+        // Always keep density min-height — selected/expanded cards auto-expand and
+        // previously dropped this class, so short options (e.g. Skip — no flaw) shrank.
+        preset.cardCollapsed,
         selected
           ? 'border-primary ring-2 ring-primary shadow-raised'
           : 'border-border-light dark:border-border hover:border-border hover:shadow-card',
@@ -267,7 +337,9 @@ export function GuidedChoiceCard({
                     ref={bodyRef}
                     className={cn(
                       s.body,
-                      !expanded && preset.bodyCollapsed,
+                      // Keep body floor when selected/expanded so More details stays put.
+                      preset.bodyMinHeight,
+                      !expanded && preset.bodyClamp,
                       expanded && 'whitespace-pre-wrap'
                     )}
                   >
@@ -279,8 +351,12 @@ export function GuidedChoiceCard({
                 {expanded && expandedExtra ? (
                   <div className="mt-3">{expandedExtra}</div>
                 ) : null}
-                {!expanded && (
-                  <div className={s.readMoreSlot}>
+                {/*
+                  See more / See less / More details stay below body copy (product
+                  placement). Shared min-h-11 row so deep-dive does not add a second strip.
+                */}
+                {showActionRow ? (
+                  <div className={s.actionRow}>
                     {showReadMore ? (
                       <button
                         type="button"
@@ -288,20 +364,31 @@ export function GuidedChoiceCard({
                         aria-expanded={false}
                         className={s.readMore}
                       >
-                        Read more…
+                        {resolvedExpandLabel}
+                      </button>
+                    ) : null}
+                    {showCollapse ? (
+                      <button
+                        type="button"
+                        onClick={toggleExpand}
+                        aria-expanded={expanded}
+                        className={s.readMore}
+                      >
+                        {resolvedCollapseLabel}
+                      </button>
+                    ) : null}
+                    {showDetails ? (
+                      <button
+                        type="button"
+                        onClick={handleDetailsClick}
+                        onKeyDown={handleDetailsKeyDown}
+                        aria-label={detailsAriaLabel}
+                        className={s.detailsLink}
+                      >
+                        {resolvedDetailsLabel}
                       </button>
                     ) : null}
                   </div>
-                )}
-                {expanded && showBodySection && !selected ? (
-                  <button
-                    type="button"
-                    onClick={toggleExpand}
-                    aria-expanded={expanded}
-                    className={s.readMore}
-                  >
-                    Read less
-                  </button>
                 ) : null}
               </div>
             ) : null}
@@ -314,15 +401,15 @@ export function GuidedChoiceCard({
           </span>
         </div>
 
-        {hasTags && (
+        {showTags ? (
           <div className={s.tagsRow}>
-            {tags.map((tag) => (
+            {tags!.map((tag) => (
               <DescriptorChip key={tag} size="sm">
                 {tag}
               </DescriptorChip>
             ))}
           </div>
-        )}
+        ) : null}
 
         {children}
       </div>

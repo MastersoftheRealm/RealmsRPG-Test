@@ -209,16 +209,24 @@ export function Modal({
         {!title && hasCustomHeader && (
           <span id="modal-title" className="sr-only">{titleA11y ?? 'Dialog'}</span>
         )}
-        {/* Simple Header (title/description mode) */}
+        {/* Simple Header (title/description mode) — shrink-0 keeps it sticky outside scroll body */}
         {hasSimpleHeader && (
-          <div className="mx-4 mt-4 mb-2 px-4 py-3 bg-primary-subtle-bg rounded-xl border-b border-border-light">
+          <div
+            className={cn(
+              'shrink-0 mx-4 mt-4 mb-2 px-4 py-3 bg-primary-subtle-bg rounded-xl border-b border-border-light',
+              showCloseButton && 'pr-12'
+            )}
+          >
             {title && (
               <h2 id="modal-title" className="text-xl font-semibold text-text-primary">
                 {title}
               </h2>
             )}
             {description && (
-              <p id="modal-description" className="mt-1 text-sm text-text-muted">
+              <p
+                id="modal-description"
+                className="mt-1 text-sm text-text-secondary dark:text-text-secondary"
+              >
                 {description}
               </p>
             )}
@@ -226,7 +234,9 @@ export function Modal({
         )}
         
         {/* Custom Header (slot mode) */}
-        {hasCustomHeader && header}
+        {hasCustomHeader && (
+          <div className="shrink-0">{header}</div>
+        )}
         
         {/* Close button */}
         {showCloseButton && !hasCustomHeader && (
@@ -234,7 +244,7 @@ export function Modal({
             variant="ghost"
             onClick={onClose}
             label="Close modal"
-            className="absolute right-4 top-4"
+            className="absolute right-4 top-4 z-10"
           >
             <X className="h-5 w-5" />
           </IconButton>
@@ -248,8 +258,8 @@ export function Modal({
           {children}
         </div>
         
-        {/* Footer (optional slot) */}
-        {footer && footer}
+        {/* Footer (optional slot) — shrink-0 keeps sticky when flexLayout / fullScreenOnMobile */}
+        {footer ? <div className="shrink-0">{footer}</div> : null}
       </div>
     </div>
   );

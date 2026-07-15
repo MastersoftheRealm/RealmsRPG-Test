@@ -18,12 +18,16 @@ import { useSearchParams } from 'next/navigation';
 import { X, Plus, ChevronDown, ChevronUp, Shield, Sword, Target, Info, Coins } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useItemProperties, useAdmin, useCreatorSave, useLoadModalLibrary, type ItemProperty, type UserItem } from '@/hooks';
-import { LoginPromptModal, ConfirmActionModal, ErrorDisplay, CodexArtUploadField } from '@/components/shared';
-import { LoadingState, IconButton, Checkbox, Button, Alert, PageContainer, Card, TableScroll, DescriptorChip } from '@/components/ui';
-import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout, CollapsibleSection, AdvancedCalculationsPanel } from '@/components/creator';
+import { CodexArtUploadField } from '@/components/shared';
+import { LoadingState, IconButton, Checkbox, Button, Card, TableScroll, DescriptorChip } from '@/components/ui';
+import {
+  CreatorPageShell,
+  CollapsibleSection,
+  AdvancedCalculationsPanel,
+  CreatorSummaryPanel,
+} from '@/components/creator';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
 import { ValueStepper, SectionCostBadge } from '@/components/shared';
-import { CreatorSummaryPanel } from '@/components/creator';
 import { useAuthStore } from '@/stores';
 import {
   calculateItemCosts,
@@ -59,7 +63,6 @@ interface DamageConfig {
 // =============================================================================
 
 import {
-  ALL_DAMAGE_TYPES as DAMAGE_TYPES,
   WEAPON_DAMAGE_TYPES,
   DIE_SIZES,
   CREATOR_CACHE_KEYS,
@@ -367,8 +370,7 @@ function ItemCreatorContent() {
   
   // State
   const [isInitialized, setIsInitialized] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [, setIsEditMode] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [armamentType, setArmamentType] = useState<ArmamentType>('Weapon');
@@ -912,14 +914,6 @@ function ItemCreatorContent() {
     },
   });
 
-  const handleSave = useCallback(async () => {
-    if (!user) {
-      setShowLoginPrompt(true);
-      return;
-    }
-    await save.handleSave();
-  }, [user, save]);
-
   const handleReset = useCallback(() => {
     setName('');
     setDescription('');
@@ -1036,49 +1030,61 @@ function ItemCreatorContent() {
     
     // Close modal
     load.closeLoadModal();
-  }, [itemProperties, handleReset, load]);
-
-  if (isLoading) {
-    return (
-      <PageContainer size="xl">
-        <LoadingState message="Loading item properties..." />
-      </PageContainer>
-    );
-  }
-
-  if (error) {
-    return (
-      <PageContainer size="xl">
-        <ErrorDisplay
-          message={`Failed to load item properties: ${error.message}`}
-          onRetry={() => { void refetch(); }}
-        />
-      </PageContainer>
-    );
-  }
+    save.setSaveMessage({ type: 'success', text: 'Armament loaded successfully!' });
+    setTimeout(() => save.setSaveMessage(null), 2000);
+  }, [itemProperties, handleReset, load, save]);
 
   return (
-    <CreatorLayout
+    <CreatorPageShell
       icon={<Sword className="w-8 h-8 text-tp-text" />}
       title="Armament Creator"
       description="Design custom weapons, armor, and shields by combining item properties. Properties determine the item's rarity and cost."
-      actions={
-        <div className="flex items-center gap-2">
-          <CreatorSaveToolbar
-            saveTarget={save.saveTarget}
-            onSaveTargetChange={save.setSaveTarget}
-            onSave={handleSave}
-            onLoad={() => (user ? load.openLoadModal() : setShowLoginPrompt(true))}
-            onReset={handleReset}
-            saving={save.saving}
-            saveDisabled={!name.trim()}
-            showPublicPrivate={isAdmin}
-            user={user}
-          />
-        </div>
-      }
+      user={user}
+      auth={{ returnPath: '/item-creator', contentType: 'armament' }}
+      showPublicPrivate={isAdmin}
+      saveTarget={save.saveTarget}
+      onSaveTargetChange={save.setSaveTarget}
+      onSave={save.handleSave}
+      onLoad={load.openLoadModal}
+      onReset={handleReset}
+      saving={save.saving}
+      saveDisabled={!name.trim()}
+      loading={{
+        isLoading,
+        loadingMessage: 'Loading item properties...',
+        error: error ?? null,
+        onRetry: () => {
+          void refetch();
+        },
+        errorMessage: error ? `Failed to load item properties: ${error.message}` : undefined,
+      }}
+      publish={{
+        isOpen: save.showPublishConfirm,
+        onClose: () => save.setShowPublishConfirm(false),
+        onConfirm: () => save.confirmPublish(),
+        title: save.publishConfirmTitle,
+        description:
+          save.publishConfirmDescription?.(name.trim(), {
+            existingInPublic: save.publishExistingInPublic,
+          }) ?? '',
+      }}
+      loadModal={{
+        isOpen: load.showLoadModal,
+        onClose: load.closeLoadModal,
+        selectableItems: load.selectableItems,
+        columns: load.columns,
+        gridColumns: load.gridColumns,
+        headerExtra: <SourceFilter value={load.source} onChange={load.setSource} />,
+        emptyMessage: load.emptyMessage,
+        emptySubMessage: load.emptySubMessage,
+        searchPlaceholder: 'Search armaments...',
+        isLoading: load.isLoading,
+        error: load.error,
+        title: 'Load Armament from Library',
+        onSelect: (selected) => handleLoadItem(selected.data),
+      }}
       sidebar={
-        <div className="self-start sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-6">
+        <>
           <CreatorSummaryPanel
             title="Item Summary"
             badge={{
@@ -1100,7 +1106,7 @@ function ItemCreatorContent() {
                 : []),
               ...(armamentType === 'Armor' ? [
                 { label: 'Damage Reduction', value: String(damageReduction) },
-                ...(agilityReduction > 0 ? [{ label: 'Agility Reduction', value: `-${agilityReduction}`, valueColor: 'text-red-600' }] : []),
+                ...(agilityReduction > 0 ? [{ label: 'Agility Reduction', value: `-${agilityReduction}`, valueColor: 'text-danger-700 dark:text-danger-400' }] : []),
               ] : []),
               ...(armamentType === 'Shield'
                 ? [
@@ -1129,40 +1135,6 @@ function ItemCreatorContent() {
             />
           </CreatorSummaryPanel>
           <RarityReferenceTable currentIP={costs.totalIP} />
-        </div>
-      }
-      modals={
-        <>
-          <LoadFromLibraryModal
-            isOpen={load.showLoadModal}
-            onClose={load.closeLoadModal}
-            selectableItems={load.selectableItems}
-            columns={load.columns}
-            gridColumns={load.gridColumns}
-            headerExtra={<SourceFilter value={load.source} onChange={load.setSource} />}
-            emptyMessage={load.emptyMessage}
-            emptySubMessage={load.emptySubMessage}
-            searchPlaceholder="Search armaments..."
-            isLoading={load.isLoading}
-            error={load.error}
-            title="Load Armament from Library"
-            onSelect={(selected) => handleLoadItem(selected.data)}
-          />
-          <LoginPromptModal
-            isOpen={showLoginPrompt}
-            onClose={() => setShowLoginPrompt(false)}
-            returnPath="/item-creator"
-            contentType="armament"
-          />
-          <ConfirmActionModal
-            isOpen={save.showPublishConfirm}
-            onClose={() => save.setShowPublishConfirm(false)}
-            onConfirm={() => save.confirmPublish()}
-            title={save.publishConfirmTitle}
-            description={save.publishConfirmDescription?.(name.trim(), { existingInPublic: save.publishExistingInPublic }) ?? ''}
-            confirmLabel="Publish"
-            icon="publish"
-          />
         </>
       }
     >
@@ -1179,7 +1151,7 @@ function ItemCreatorContent() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Enter item name..."
-                  className="w-full px-4 py-2 border border-border-light rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  className="w-full px-4 py-2 border border-border-light rounded-lg focus:ring-2 focus:ring-warning-500 focus:border-warning-500"
                 />
               </div>
 
@@ -1206,7 +1178,7 @@ function ItemCreatorContent() {
                       className={cn(
                         'py-2 px-3 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-1',
                         armamentType === type.value
-                          ? 'bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-700 dark:text-white dark:hover:bg-amber-600'
+                          ? 'bg-warning-600 text-text-on-dark hover:bg-warning-700 dark:bg-warning-700 dark:text-text-on-dark dark:hover:bg-warning-600'
                           : 'bg-surface-alt dark:bg-surface hover:bg-surface text-text-primary'
                       )}
                     >
@@ -1226,7 +1198,7 @@ function ItemCreatorContent() {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Describe your item..."
                   rows={2}
-                  className="w-full px-4 py-2 border border-border-light rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  className="w-full px-4 py-2 border border-border-light rounded-lg focus:ring-2 focus:ring-warning-500 focus:border-warning-500"
                 />
               </div>
             </div>
@@ -1255,7 +1227,7 @@ function ItemCreatorContent() {
                       className={cn(
                         "px-4 py-2 text-sm font-medium transition-colors",
                         !isTwoHanded
-                          ? "bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-700 dark:text-white dark:hover:bg-amber-600"
+                          ? "bg-warning-600 text-text-on-dark hover:bg-warning-700 dark:bg-warning-700 dark:text-text-on-dark dark:hover:bg-warning-600"
                           : "bg-surface-alt dark:bg-surface text-text-primary hover:bg-surface"
                       )}
                     >
@@ -1267,7 +1239,7 @@ function ItemCreatorContent() {
                       className={cn(
                         "px-4 py-2 text-sm font-medium transition-colors",
                         isTwoHanded
-                          ? "bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-700 dark:text-white dark:hover:bg-amber-600"
+                          ? "bg-warning-600 text-text-on-dark hover:bg-warning-700 dark:bg-warning-700 dark:text-text-on-dark dark:hover:bg-warning-600"
                           : "bg-surface-alt dark:bg-surface text-text-primary hover:bg-surface"
                       )}
                     >
@@ -1599,7 +1571,7 @@ function ItemCreatorContent() {
             collapsedSummary={propertiesSummary}
             defaultExpanded={true}
             rightSlot={
-              <Button type="button" variant="primary" size="sm" className="flex items-center gap-1 bg-amber-600 hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-600 text-white" onClick={addProperty}>
+              <Button type="button" variant="primary" size="sm" className="flex items-center gap-1 bg-warning-600 hover:bg-warning-700 dark:bg-warning-700 dark:hover:bg-warning-600 text-text-on-dark" onClick={addProperty}>
                 <Plus className="w-4 h-4" />
                 Add Property
               </Button>
@@ -1625,7 +1597,7 @@ function ItemCreatorContent() {
               </div>
             )}
           </CollapsibleSection>
-    </CreatorLayout>
+    </CreatorPageShell>
   );
 }
 

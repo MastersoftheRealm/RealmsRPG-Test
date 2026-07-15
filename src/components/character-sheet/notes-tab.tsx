@@ -13,8 +13,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Plus, X, Pencil } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { X, Pencil } from 'lucide-react';
 import { Button, IconButton, Textarea } from '@/components/ui';
 import { useRollsOptional } from './roll-context';
 import { SectionHeader, TabSummarySection, SummaryItem, SummaryRow } from '@/components/shared';
@@ -151,8 +150,6 @@ export function NotesTab({
   namedNotes = [],
   abilities,
   isEditMode = false,
-  visibility = 'private',
-  onVisibilityChange,
   speedDisplayUnit = 'spaces',
   onWeightChange,
   onHeightChange,
@@ -175,8 +172,6 @@ export function NotesTab({
   const agility = abilities.agility || 0;
   const vitality = abilities.vitality || 0;
 
-  // Helpers
-  const pluralize = (n: number, s: string, p: string) => (n === 1 ? `${n} ${s}` : `${n} ${p}`);
   const upMin1 = (v: number) => Math.max(1, Math.ceil(v));
 
   // Calculate movement values (round up, minimum 1)
@@ -231,7 +226,7 @@ export function NotesTab({
                     value={weightInput}
                     onChange={(e) => setWeightInput(e.target.value)}
                     onBlur={handleWeightBlur}
-                    className="w-16 px-2 py-0.5 text-sm border border-border-light rounded focus:ring-2 focus:ring-primary-outline-border bg-white dark:bg-surface"
+                    className="w-16 px-2 py-0.5 text-sm border border-border-light rounded focus:ring-2 focus:ring-primary-outline-border bg-surface"
                     aria-label="Weight in kg"
                   />
                   <span className="text-sm text-text-muted dark:text-text-secondary">kg</span>
@@ -252,7 +247,7 @@ export function NotesTab({
                     value={heightInput}
                     onChange={(e) => setHeightInput(e.target.value)}
                     onBlur={handleHeightBlur}
-                    className="w-16 px-2 py-0.5 text-sm border border-border-light rounded focus:ring-2 focus:ring-primary-outline-border bg-white dark:bg-surface"
+                    className="w-16 px-2 py-0.5 text-sm border border-border-light rounded focus:ring-2 focus:ring-primary-outline-border bg-surface"
                     aria-label="Height in cm"
                   />
                   <span className="text-sm text-text-muted dark:text-text-secondary">cm</span>

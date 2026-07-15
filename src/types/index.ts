@@ -133,6 +133,24 @@ export type {
 } from './library';
 export { LIBRARY_ITEM_TYPES } from './library';
 
+// Crafting + enhanced items
+export type {
+  CraftingSessionStatus,
+  CraftingRollSession,
+  CraftingItemRef,
+  CraftingCustomBaseItem,
+  CraftingPowerRef,
+  CraftingSessionData,
+  CraftingSession,
+  CraftingSessionSummary,
+  UserEnhancedItem,
+  EnhancedItemUsesType,
+  OfficialEnhancedItemPayload,
+  OfficialEnhancedItem,
+  CreateOfficialEnhancedItemInput,
+  UpdateOfficialEnhancedItemInput,
+} from './crafting';
+
 // Item Display System
 export type {
   BaseGameItem,

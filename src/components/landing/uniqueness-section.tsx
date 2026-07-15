@@ -13,7 +13,6 @@ import {
   CharacterVarietyTriptych,
   GearShowcasePanel,
   RulesBookPanel,
-  PlaceholderMediaPanel,
 } from './landing-art-frame';
 
 const ICONS = [Sparkles, Wand2, Dices] as const;

@@ -147,7 +147,7 @@ export function AdminPropertiesTab() {
           : rawType.toLowerCase() === 'weapon'
             ? 'Weapon'
             : 'Armor';
-    const op1 = (p as any).op_1_desc?.trim();
+    const op1 = p.op_1_desc?.trim();
     const raw = (v: unknown) => (v != null && v !== '' ? v : undefined);
     setOptionSlotCount(op1 ? 1 : 0);
     setForm({
@@ -158,10 +158,10 @@ export function AdminPropertiesTab() {
       base_tp: p.base_tp,
       base_c: p.base_c,
       op_1_desc: op1 || '',
-      op_1_ip: op1 ? (raw((p as any).op_1_ip) as number | undefined) : undefined,
-      op_1_tp: op1 ? (raw((p as any).op_1_tp) as number | undefined) : undefined,
-      op_1_c: op1 ? (raw((p as any).op_1_c) as number | undefined) : undefined,
-      mechanic: Boolean((p as any).mechanic),
+      op_1_ip: op1 ? (raw(p.op_1_ip) as number | undefined) : undefined,
+      op_1_tp: op1 ? (raw(p.op_1_tp) as number | undefined) : undefined,
+      op_1_c: op1 ? (raw(p.op_1_c) as number | undefined) : undefined,
+      mechanic: Boolean(p.mechanic),
     });
     setModalOpen(true);
   };
@@ -178,7 +178,7 @@ export function AdminPropertiesTab() {
           : rawType.toLowerCase() === 'weapon'
             ? 'Weapon'
             : 'Armor';
-    const op1 = (p as any).op_1_desc?.trim();
+    const op1 = p.op_1_desc?.trim();
     const raw = (v: unknown) => (v != null && v !== '' ? v : undefined);
     setOptionSlotCount(op1 ? 1 : 0);
     setForm({
@@ -189,10 +189,10 @@ export function AdminPropertiesTab() {
       base_tp: p.base_tp,
       base_c: p.base_c,
       op_1_desc: op1 || '',
-      op_1_ip: op1 ? (raw((p as any).op_1_ip) as number | undefined) : undefined,
-      op_1_tp: op1 ? (raw((p as any).op_1_tp) as number | undefined) : undefined,
-      op_1_c: op1 ? (raw((p as any).op_1_c) as number | undefined) : undefined,
-      mechanic: Boolean((p as any).mechanic),
+      op_1_ip: op1 ? (raw(p.op_1_ip) as number | undefined) : undefined,
+      op_1_tp: op1 ? (raw(p.op_1_tp) as number | undefined) : undefined,
+      op_1_c: op1 ? (raw(p.op_1_c) as number | undefined) : undefined,
+      mechanic: Boolean(p.mechanic),
     });
     setModalOpen(true);
   };
@@ -291,7 +291,7 @@ export function AdminPropertiesTab() {
     }
   };
 
-  const handleInlineDelete = async (id: string, name: string) => {
+  const handleInlineDelete = async (id: string) => {
     if (pendingDeleteId !== id) {
       setPendingDeleteId(id);
       return;
@@ -379,9 +379,9 @@ export function AdminPropertiesTab() {
                         name: (() => {
                           const parts: string[] = [];
                           // Include explicit 0 values so "0" is distinguishable from "unset".
-                          if ((p as any).op_1_ip !== undefined) parts.push(`IP ${(p as any).op_1_ip}`);
-                          if ((p as any).op_1_tp !== undefined) parts.push(`TP ${(p as any).op_1_tp}`);
-                          if ((p as any).op_1_c !== undefined) parts.push(`C ${(p as any).op_1_c}`);
+                          if (p.op_1_ip !== undefined) parts.push(`IP ${p.op_1_ip}`);
+                          if (p.op_1_tp !== undefined) parts.push(`TP ${p.op_1_tp}`);
+                          if (p.op_1_c !== undefined) parts.push(`C ${p.op_1_c}`);
                           return parts.length ? `Option (${parts.join(', ')})` : 'Option';
                         })(),
                         description: p.op_1_desc,
@@ -415,7 +415,7 @@ export function AdminPropertiesTab() {
                         typeof p.base_ip === 'number' && !Number.isNaN(p.base_ip)
                           ? String(p.base_ip)
                           : '-',
-                      className: 'text-blue-600',
+                      className: 'text-info-fg',
                     },
                     {
                       key: 'TP',
@@ -438,11 +438,11 @@ export function AdminPropertiesTab() {
                     <div className="flex items-center gap-1 pr-2">
                       {pendingDeleteId === p.id ? (
                         <div className="flex items-center gap-1 text-xs">
-                          <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
+                          <span className="text-danger-700 dark:text-danger-400 font-medium whitespace-nowrap">Remove?</span>
                           <Button
                             size="sm"
                             variant="danger"
-                            onClick={() => handleInlineDelete(p.id, p.name)}
+                            onClick={() => handleInlineDelete(p.id)}
                             className="text-xs px-2 py-0.5 h-6"
                           >
                             Yes
@@ -489,7 +489,7 @@ export function AdminPropertiesTab() {
           <div className="flex justify-between">
             <div>
               {editing && (
-                <Button variant="outline" onClick={() => handleDelete(editing.id)} className={deleteConfirm === editing.id ? 'border-red-500 text-red-600' : ''}>
+                <Button variant="outline" onClick={() => handleDelete(editing.id)} className={deleteConfirm === editing.id ? 'border-danger-500 text-danger-700 dark:text-danger-400' : ''}>
                   {deleteConfirm === editing.id ? 'Click again to confirm delete' : 'Delete'}
                 </Button>
               )}

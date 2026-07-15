@@ -3,10 +3,7 @@
  * and load-from-library state mapping (TASK-357).
  */
 
-import { formatListCellLabel } from '@/lib/utils';
-import type { SelectableItem } from '@/components/shared/unified-selection-modal';
 import type { Skill } from '@/hooks';
-import type { UserCreature } from '@/hooks/use-user-library';
 import { initialState } from './creature-creator-constants';
 import type { CreatureSkill, CreatureState } from './creature-creator-types';
 
@@ -103,21 +100,5 @@ export function rawRecordToCreatureState(c: Record<string, unknown>): CreatureSt
     techniques: (c.techniques as CreatureState['techniques']) ?? [],
     feats: (c.feats as CreatureState['feats']) ?? [],
     armaments: (c.armaments as CreatureState['armaments']) ?? [],
-  };
-}
-
-export function buildCreatureSelectableItem(
-  c: UserCreature | Record<string, unknown>
-): SelectableItem {
-  const id = String(c.docId ?? c.id ?? '');
-  return {
-    id,
-    name: String(c.name ?? 'Unnamed'),
-    description: typeof c.description === 'string' ? c.description : undefined,
-    data: c,
-    columns: [
-      { key: 'level', value: String(c.level ?? '-'), align: 'center' },
-      { key: 'type', value: formatListCellLabel(String(c.type ?? 'creature')), align: 'center' },
-    ],
   };
 }

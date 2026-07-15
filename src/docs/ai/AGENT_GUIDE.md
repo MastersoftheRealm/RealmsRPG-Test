@@ -52,7 +52,7 @@ For **any UI / token / theme change**, use the automated net (TASK-383). The gui
 - **Contrast** (`scripts/check-contrast.mjs`): resolves every semantic fg/bg token pair (following `var()` indirection) in **both** themes vs WCAG AA. Baseline `scripts/contrast-baseline.json` is at 0 — keep it there. To add a token pairing, edit the `PAIRS` array.
 - **Visual regression** (`tests/visual/screenshots.pw.ts`): full-page baselines across mobile/tablet/desktop x light/dark for deterministic routes. After an **intentional** change, re-baseline with `npm run verify:visual:update`, **view the regenerated PNG(s)** (and any `*-diff.png`) to confirm the change is what you intended, then commit. Baselines are OS-specific (committed set is Windows; Linux CI baselines = DEV-002).
 - **Accessibility** (`tests/visual/a11y.pw.ts`): axe-core scan, ratcheted via `tests/visual/a11y-baseline.json`. Fix violations and **prune** the baseline (`verify:a11y:update`) — never use update to mask a new violation.
-- **No raw colors:** ESLint `realms/no-raw-color` (hard error) bans raw Tailwind palette / bare white-black / arbitrary hex in class strings. Use semantic tokens (`bg-surface`, `text-text-primary`, `bg-primary-600`, …). Exemptions: `(auth)/`, `components/auth/`, `components/ui/` primitives, and the shrinking `eslint-rules/raw-color-backlog.mjs` list — **delete** a file from that backlog when you migrate it off raw colors (audit with `node scripts/list-raw-color-backlog.mjs`).
+- **No raw colors:** ESLint `realms/no-raw-color` (hard error) bans raw Tailwind palette / bare white-black / arbitrary hex in class strings. Use semantic tokens (`bg-surface`, `text-text-primary`, `bg-primary-600`, …). Exemptions: `(auth)/`, `components/auth/`, `components/ui/` primitives. Audit with `node scripts/list-raw-color-backlog.mjs` (expect 0; `RAW_COLOR_BACKLOG` is empty).
 - **CI:** `.github/workflows/ui-verify.yml` runs all of the above as hard-blocking gates.
 
 ### Token architecture (Phase 0+)
@@ -91,7 +91,7 @@ Task queue `related_files` may reference outdated paths. When implementing, pref
 
 | Pattern | Component | When |
 |---------|-----------|------|
-| My Library ↔ Realms Library; All ↔ Realms ↔ My (modals) | **SourceFilter** or **SegmentedControl** | Short mutually exclusive scopes; same pill styling site-wide |
+| My Library ↔ Realms Library; All ↔ Realms ↔ My (modals) | **SourceFilter** or **SegmentedControl** | Short mutually exclusive scopes; same pill styling site-wide (`bg-surface-alt` track + bordered idle segments) |
 | Two equal-width segments with optional icons (e.g. Combat/Skill, library/campaign) | **SegmentedControl** `equalWidth` + per-option `icon` | Same primary selected state as Library; non-tab segments get `aria-pressed` |
 | Feat source / other modal sub-modes needing `role="tab"` | **SegmentedControl** with `tabs` + `tabPanelId` | A11y tablist when acting as tabs |
 | Powers / Techniques / … primary navigation | **TabNavigation** (`variant="underline"`) | Long tab sets; keep underline tabs, do not swap for SegmentedControl |
@@ -111,7 +111,7 @@ Task queue `related_files` may reference outdated paths. When implementing, pref
 
 **List item actions:** GridListRow and ItemCard use the same action set (view/edit/duplicate/delete, plus quantity where applicable). Use IconButton and the same placement pattern; see `src/docs/human/UI_COMPONENT_REFERENCE.md` for extended catalog details.
 
-**List modal layout (add-X, load, selection):** Use a consistent structure so modals match Codex/Library: (1) Header (title + close), (2) Search bar (`SearchInput`), (3) optional **FilterSection** for filters, (4) **ListHeader** (sortable), (5) scrollable list in a bordered container (`border border-border-light rounded-lg`) with **GridListRow** or selectable rows, (6) footer (selection count + Cancel + primary action). Use **EmptyState** and **LoadingState** (from `@/components/ui` or shared list-components) for empty and loading; avoid ad-hoc Spinner/divs. For search + sort state, **useModalListState** (`@/hooks/use-modal-list-state`) returns `search`, `setSearch`, `filteredItems`, `sortedItems`, `sortState`, `handleSort`, `reset` — use in load/add-X modals to reduce duplication.
+**List modal layout (add-X, load, selection):** Prefer **`UnifiedSelectionModal`** (or thin wrappers: `AddLibraryItemModal`, `LoadFromLibraryModal`, `AddFeatModal`, `AddSkillModal`) so search/sort/list/footer stay consistent. `UnifiedSelectionModal` defaults to **`flexLayout`** (sticky header/footer + scrollable list on mobile). For rare custom lists that cannot use UnifiedSelectionModal, use **useModalListState** (`@/hooks/use-modal-list-state`) for search/sort state — and apply `gridColumnsWithInlineSelection` yourself (do not pre-wrap grids passed into UnifiedSelectionModal). Structure: (1) Header (title + close), (2) Search, (3) optional filters, (4) **ListHeader**, (5) scrollable **GridListRow** list, (6) footer. Use **EmptyState** / **LoadingState**; avoid ad-hoc Spinner/divs.
 
 See `src/docs/human/UI_COMPONENT_REFERENCE.md` for extended component catalog (agents: prefer this guide + `realms-unification.mdc`).
 
@@ -287,7 +287,29 @@ Implementation: `src/components/shared/info-tippy.tsx` (product API) + shared Fl
 ### Related patterns (not InfoTippy)
 
 - **`PathHelpCard` / `GuidedChoiceShell` / `GuidedLayerNav`** — path-mode prose and **Layer 1 ↔ 2/3** chrome. **`GuidedLayerNav`**: expand = `outline` button below content; collapse = `secondary` button below content (same slot). Use on guided creator steps and any creator step with progressive disclosure.
-- **`Modal`** — Layer 2/3 selection, wizards; `fullScreenOnMobile` per `MOBILE_UX.md`.
+- **Selection grammar (cards ↔ GridListRow)** — Canonical rules in [`REALMS_PRODUCT_OVERVIEW.md`](../REALMS_PRODUCT_OVERVIEW.md) **§3.1**:
+  - **Ladder A (entity depth):** Glance → **See more** (in-card) → **More details** (modal or lots of chip/fact disclosure). Same facts whether chrome is a card or a GridListRow.
+  - **Ladder B (catalog breadth):** Curated cards → **See more options** (filtered GridListRow browse) → **See all** / Forge.
+  - **When:** few curated picks → `GuidedChoiceCard`; many / searchable → `GridListRow`. Do not densify cards into column grids.
+  - **Layer 1 choice principle:** identity and fighting-style steps still require deliberate picks (no weapon/armor quick kits). Soft defaults OK for ability arrays and optional gear Add-all.
+- **Choice-card disclosure vs catalog Layer 2** — Do **not** conflate (subset of §3.1). Copy: `GUIDED_CREATOR_COPY.choiceCard`.
+  | Affordance | Component | Opens |
+  |------------|-----------|--------|
+  | **See more…** / **See less** | `GuidedChoiceCard` inline expand | Truncated description, notices, content that stays *on the card* |
+  | **More details** / **Less details** | `onDetails` → `GuidedEntityDetailModal`, **or** heavy chip/fact expand (e.g. equipment mechanic chips) | Entity modal / lots of fact chips — modal path does **not** select |
+  | **See more options** / browse | `GuidedLayerNav` / `UnifiedSelectionModal` | Catalog Layer 2–3 (more *choices*) |
+  Do **not** invent specialist verbs (“Property details”, “Read more”, “Hide properties”). REALMS §3.1 / §5.0.1 / §5.7.
+  **Option rows inside deep-dive (and remodeled legacy lists):** use `DetailOptionList` + builders in `@/lib/detail-option` (`traitToDetailOption`, `featToDetailOption`, `equipmentRefToDetailOption`, `powerToDetailOption` / `techniqueToDetailOption` / `resolveCombatDetailOption`, `propertyChipsFromRefs`). Prefer flat equipment recommendation builders over kit helpers after TASK-442. Do not fork parallel GridListRow markup for the same catalogs.
+  **GridListRow fact policy (sitewide):** If a fact would normally be a list column (Damage, Range, Damage Reduction, Action Type, Energy, Uses, Duration, etc.), either keep a real column with a header **or** put a **self-describing expanded chip** that states the label and value together (e.g. `Damage Reduction 2`, `Range Melee`). Never demote a column to an unlabeled or context-free chip.
+  - **Dense browse lists** (Library, Codex, add modals, sheet library): keep **ListHeader** columns when space allows; chips supplement (properties/parts), they do not replace column facts.
+  - **Deep-dive / progressive-disclosure catalogs** (`DetailOptionList`, choice-card More details): Name + Description only is fine (`showColumnHeaders={false}`); every omitted column fact must appear as a labeled chip in the expanded row.
+  - **Audit inventory (TASK-437):** Library / Official / sheet sections column-complete. Codex + Admin Equipment: Damage + Dmg. Red. columns (Weight chip). Add/load powers: Energy/Action/Duration/Area/Damage + `Range:` chip. Creator powers: compact columns + Duration/Area/Range chips; techniques keep Action; empowered remap preserves Duration/Area as chips. Creature creator: power Duration chip; armament Damage/Range/DR chips. Sheet inventory cost badge = `Cost Nc`. Equipment-step weapons: Range chip. Do not strip browse columns to chip-ify them.
+- **Stable expand toggle (sitewide, TASK-445):** Click-to-expand controls must keep the toggle under the pointer so a second click closes without mouse travel. Expanding may push siblings and grow content; the opened control’s origin (especially vertical) must not jump. Aligns with accordion best practice (whole header is the target; animate/grow the panel below — CMS DS, NN/g Fitts’s law) and WCAG target-size guidance.
+  - **ExpandableChip / ChipGroup:** Host wrap groups with `data-chip-group` (ChipGroup does this). Do **not** force `w-full` on expand inside flex-wrap — that reboots the wrap row. ExpandableChip measures remaining row width (`measureStableExpandWidth`) from the collapsed left edge; equal collapsed/expanded header padding; header labels truncate (no wrap).
+  - **GridListRow / CollapsibleSection:** Expand content below the header/trigger; keep the trigger fixed (`items-start`; fixed one-line meta slot).
+  - **GuidedChoiceCard:** See more / See less / More details sit **below** body copy (product placement). Card height is stabilized via density min-height; chip/row expands still follow stable-toggle.
+  - **Avoid:** Wrapping an expanded chip in `w-full` / `flex-1` solely to “make room.” Putting “See more” under growing text.
+- **`Modal`** — Layer 2/3 selection, wizards, and choice-card deep-dive; `fullScreenOnMobile` per `MOBILE_UX.md`.
 - **Marketing / landing copy** — `src/lib/constants/copy/*`; do not merge into `tooltip-text.tsx` (TASK-390).
 
 ## Unified patterns (verified Jun 2026)
@@ -298,16 +320,21 @@ Goal: "Learn once, use forever" — consistent UI across Library, Codex, Charact
 |---------|------------|
 | GridListRow | Library, Codex, add-feat-modal, add-library-item-modal, add-skill-modal, equipment-step, feats-tab, library-section, creature-creator |
 | ListRowThumbnail + `GridListRow.thumbnail` | Codex species, Admin species (pilot); extend per § Entity card art |
-| GuidedChoiceCard + guided-choice-image | Guided creator choice steps (species hero art) |
+| GuidedChoiceCard + guided-choice-image | Guided creator choice steps (species hero art); optional `onDetails` for deep-dive |
+| GuidedEntityDetailModal | Choice-card deep-dive (read-only overview + CollapsibleSection catalogs) — not catalog Layer 2 |
+| GuidedSpeciesDetailModal + GuidedTraitOptionList | Species deep-dive: SpeciesRevealPanel overview + DetailOptionList trait catalogs (TASK-433/435) |
+| GuidedPathDetailModal + GuidedDetailOptionList | Path deep-dive: proficiency / abilities / skills overview + feat / weapon / armor / gear / power|technique catalogs (TASK-434/435; kits removed TASK-442) |
+| DetailOptionList + lib/detail-option | Shared elongated option-row toolkit for deep-dive + remodeled species-modal / SpeciesRevealPanel granted traits (TASK-435) |
 | GuidedLayerNav | Layer 1 expand / Layer 2+ collapse below step content — guided creator (path, species, abilities), GuidedChoiceShell (Advanced path mode) |
 | SkillRow | skills-section, skills-step, creature-creator |
 | ValueStepper | abilities-section, sheet-header, health-energy-allocator, dice-roller, all creators, encounters pages |
 | SectionHeader | feats-tab, proficiencies-tab, notes-tab, archetype-section, crafting pages |
 | ListHeader | All Codex/Library/Admin list views, feats-step, UnifiedSelectionModal |
-| UnifiedSelectionModal | AddFeatModal, AddSkillModal, AddLibraryItemModal (thin wrappers) |
-| useModalListState | LoadFromLibraryModal |
+| UnifiedSelectionModal | AddFeatModal, AddSkillModal, AddLibraryItemModal, LoadFromLibraryModal (thin wrappers) |
+| library-selectable-builders | Add + Load library SelectableItem shaping (shared pipeline) |
+| useModalListState | Other list modals that need search/sort without UnifiedSelectionModal |
 
-**Intentional exceptions:** Auth pages use `gray-*`; AddSubSkillModal uses SelectionToggle (not GridListRow); footer uses `bg-neutral-400`; RollButton gradients use neutral tokens.
+**Intentional exceptions:** Auth pages use `gray-*` / brand social colors; AddSubSkillModal uses SelectionToggle (not GridListRow); filled primary/danger controls use `text-text-on-dark` on colored backgrounds.
 
 Quick reference: `.cursor/rules/realms-unification.mdc`, `DESIGN_SYSTEM.md`.
 
@@ -323,7 +350,7 @@ Quick reference: `.cursor/rules/realms-unification.mdc`, `DESIGN_SYSTEM.md`.
 | **Database schema (single source of truth)** | `src/docs/SUPABASE_SCHEMA.md` — all public tables, columnar vs JSONB, API→tables; do not duplicate elsewhere |
 | Database types | `src/types/database.ts` (or Supabase-generated types) |
 | Codex API | `src/app/api/codex/` — fetches from Supabase |
-| **Game rules** | `src/docs/GAME_RULES.md` — terminology, formulas, display conventions; use when implementing validation, caps, tooltips, calculations |
+| **Game rules + user-facing terms** | `src/docs/GAME_RULES.md` — formulas, caps, **Terminology & Definitions** (capitalize game terms; **named Bonuses Title Case** e.g. Attack Bonus, Martial Bonus, Power Bonus; prefer/avoid vocab; Score = Bonus + 10; no em dash in new UI copy; **spell game terms in full on Layer 1/2**, e.g. Currency not `c`). Read before writing labels, tips, or guided copy. |
 | **Entity card art (list thumb, choice cards, upload)** | `REALMS_PRODUCT_OVERVIEW.md` §5.0.3 + **this guide** § Entity card art & list thumbnails; `guided-choice-image.ts`, `list-row-image.ts`, `codex-art.ts` |
 | **Accessibility & contrast** | `src/docs/ACCESSIBILITY.md` — contrast tokens (success-700 + dark variant, power/martial-dark), form labels, headings, modals, touch targets; `src/docs/DESIGN_SYSTEM.md` — status and game-specific color tokens for light + dark mode. When editing UI, ensure new or changed text/controls follow these so both themes pass WCAG 2.1 AA. |
 | **User experience goals** | `src/docs/USER_EXPERIENCE_GOALS.md` — UX goals, terminology (Realms Codex/Library, My Library), what’s implemented vs backlog, and AI checklist for onboarding/retention/copy. Read when changing landing, creator, library, or onboarding flows. |
@@ -331,7 +358,7 @@ Quick reference: `.cursor/rules/realms-unification.mdc`, `DESIGN_SYSTEM.md`.
 | **Codex/library data** | `src/docs/DATA_HANDLING.md` — single codex fetch, query keys, cache headers, prefetch; read when adding or changing codex/library hooks or APIs |
 | **Character/creature math** | `src/lib/game/formulas.ts`, `src/lib/game/calculations.ts`, `src/lib/game/skill-allocation.ts` — all ability, defense, skill, and derived stats |
 | **Power/technique/item cost and display** | `src/lib/calculators/` — part costs, derive*Display helpers, filterSavedItemPropertiesForList; use for creator preview and library/codex display |
-| **Crafting requirements and outcome** | `src/lib/game/crafting-utils.ts` — getCraftingRequirements, getUpgradeRequirements, getEnhancedCraftingRequirements, calculateCraftingOutcome, optional modifiers; `src/types/crafting.ts` — session and enhanced item types |
+| **Crafting requirements and outcome** | `src/lib/game/crafting-utils.ts` — getCraftingRequirements, getUpgradeRequirements, getEnhancedCraftingRequirements, calculateCraftingOutcome, optional modifiers; `src/types/crafting.ts` — session types, `UserEnhancedItem`, `OfficialEnhancedItem` / `OfficialEnhancedItemPayload`, create/patch inputs; hooks in `use-enhanced-items.ts` |
 
 ## Hooks & Services
 
@@ -359,7 +386,7 @@ See **`REALMS_PRODUCT_OVERVIEW.md` §5.0** for product intent. Two creators coex
 
 **User-facing copy:** Edit static prose in `src/lib/constants/copy/guided-creator-copy.ts` (chooser labels, step titles/descriptions, chapter rail, modals). Codex names (paths, species, feats) still come from the database.
 
-**Guided DB fields** (see `SUPABASE_SCHEMA.md`): `codex_species.is_starter`, `codex_archetypes.level1_recommended_abilities`, `level1_loadouts`. Seed: `sql/guided-creator-schema-seed.sql` (applied as migration `guided_creator_schema_seed`).
+**Guided DB fields** (see `SUPABASE_SCHEMA.md`): `codex_species.is_starter`, `codex_archetypes.level1_recommended_abilities`, `level1_loadouts` (metadata: `armorStep` / `sharedEquipment` only — no kits). Seed: `sql/guided-creator-schema-seed.sql` (applied as migration `guided_creator_schema_seed`; kit payload later cleared TASK-442).
 
 **Advanced step order** (unchanged):
 
@@ -425,15 +452,21 @@ When loading a saved item/power/technique into a creator, follow this **three-st
 
 **Rule:** Mechanic-only entries (parts/properties driven by dedicated UI) are restored from dedicated state only. Never restore them into the user-selectable list.
 
-**Load modal state and data:** Use `useLoadModalLibrary('powers' | 'techniques' | 'items' | 'empowered-technique')` from `@/hooks` for load-modal visibility and library items. Returns `showLoadModal`, `setShowLoadModal`, `openLoadModal`, `closeLoadModal`, `selectableItems`, `rawItems`, `isLoading`, `error`, plus source-filter state. Type-specific `handleLoad*` (reset → restore mechanics → restore filtered list) stays in each creator.
+**Load modal state and data:** Use `useLoadModalLibrary('power' | 'technique' | 'item' | 'empowered-technique' | 'species' | 'creature')` from `@/hooks` for load-modal visibility and library items. Optional `{ prefetch: true }` keeps rows fetching while the modal is closed (creature `?edit=`). Returns `showLoadModal`, `openLoadModal`, `closeLoadModal`, `selectableItems`, `rawItems`, `isLoading`, `error`, `emptyMessage`, `emptySubMessage`, plus source-filter state (`source` / `setSource`) and `columns` / `gridColumns`. Species/creature row builders live in `@/lib/library/creator-load-selectables` (not duplicated in pages). Render with **`LoadFromLibraryModal`** (thin `UnifiedSelectionModal` wrapper, `confirmLabel="Load"`, `maxSelections={1}`). Other selectable shaping is shared with Add Library Item via **`@/lib/library-selectable-builders`** (empowered load uses `buildEmpoweredPowerSelectableItem`). Canonical library row types: **`src/types/library.ts`**. Type-specific `handleLoad*` stays in each creator; load-success toasts use `save.setSaveMessage({ type: 'success', text: '… loaded successfully!' })` across all six.
+
+Avoid `max-h-[…vh]` on UnifiedSelectionModal without an `md:` prefix — uncapped mobile full-screen needs the full viewport; use e.g. `className="md:max-h-[60vh]"`.
 
 ## Creator layout
 
-All four creators (power, technique, item, creature) use **CreatorLayout** from `@/components/creator` for consistent structure.
+Standalone creators (power, technique, empowered technique, item/armament, species, creature) use **`CreatorPageShell`** from `@/components/creator` for shared auth/load/save chrome.
 
-- **Props:** `icon`, `title`, `description`, `actions`, `children` (main editor), `sidebar`, `modals`, `size`, `headerClassName`
-- **Structure:** `PageContainer` → `PageHeader` → optional modals → grid (`lg:grid-cols-3`) with main (`lg:col-span-2 space-y-6`) and sidebar.
-- **Usage:** Main content in `children`, summary panel in `sidebar`, Load/Login/Publish (and selection) modals in `modals`. Actions use `CreatorSaveToolbar`.
+- **Shell** (`CreatorPageShell`): loading/error early UI (gate on critical codex deps — parts/properties/skills/traits/feats as each page needs), `CreatorSaveToolbar`, sticky sidebar (`lg:sticky` only), `LoginPromptModal` with save vs load `reason`, publish confirm, optional `LoadFromLibraryModal` + `resetConfirm`, `extraModals`.
+- **Not the same as** `GuidedCreatorPageShell` (`components/guided-creator/`) — funnel hero chrome only; do not merge.
+- **Layout** (`CreatorLayout`): inner `PageContainer` → `PageHeader` → grid. Prefer shell for load/save routes; crafting may use layout alone (Back vs Load/Save).
+- **Auth:** Soft gate (login modal) — no hard redirect. Species Load stays ungated (`requireAuthToLoad: false`); toolbar Load label follows that flag.
+- **Sidebar:** Default sticky on `lg+`; pass `stickySidebar={false}` for short summaries (species).
+- **Collapsibles:** Use **`CollapsibleSection`** only (`ui/Collapsible` removed). Expand control is a dedicated `<button>`; `rightSlot`/Remove sit outside it; section titles are `h2` (under page `h1`). Ad-hoc chrome screenshot audit: `npm run verify:shell-creators-audit` → `.shell-creators-audit/`.
+- **Domain logic** (cost math, `handleLoad*`, section islands) stays in each page `children`.
 
 ## Allocation UI consistency
 

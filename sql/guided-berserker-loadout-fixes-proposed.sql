@@ -1,32 +1,10 @@
--- Proposed Berserker loadout content fixes (owner review before apply).
--- Aligns kit titles with official item names and adds shared path gear to each kit.
--- Do NOT execute on live DB until approved (see .cursor/rules/realms-codex-data.mdc).
+-- SUPERSEDED 2026-07-15 by TASK-442 (sql/guided-remove-loadout-kits-proposed.sql applied).
+-- Do not apply. Quick kits removed; Berserker uses flat level1_armaments / level1_equipment.
+-- Kept for history only.
 
 -- Item refs (verify in official_items / codex_equipment before apply):
 --   Battleaxe:  3a4ce0e0-aa9e-4429-a55d-86fdbd6bfdcb
 --   Greatsword: 486b9ac9-16e3-49f8-80de-6d4c9ebbf3bc
---   Scalemail:  8ca40c97-851c-4381-a6dd-e0724a6927cf
+--   Scalemail:  8ca40c97-851c-4381-a6dd-e0724a7507cf
 --   Bandage:    codex id 3 (qty 4)
 --   Health Pot: codex id 5 (qty 2)
-
--- update public.codex_archetypes
--- set level1_loadouts = '[
---   {
---     "id": "berserker-battleaxe",
---     "title": "Battleaxe bruiser",
---     "why": "Maximum damage with a heavy one-handed weapon.",
---     "armaments": [{"id": "3a4ce0e0-aa9e-4429-a55d-86fdbd6bfdcb", "quantity": 1}],
---     "equipment": [{"id": "3", "quantity": 4}, {"id": "5", "quantity": 2}]
---   },
---   {
---     "id": "berserker-greatsword-mail",
---     "title": "Greatsword & mail",
---     "why": "Two-handed offense with light armor.",
---     "armaments": [
---       {"id": "486b9ac9-16e3-49f8-80de-6d4c9ebbf3bc", "quantity": 1},
---       {"id": "8ca40c97-851c-4381-a6dd-e0724a6927cf", "quantity": 1}
---     ],
---     "equipment": [{"id": "3", "quantity": 4}, {"id": "5", "quantity": 2}]
---   }
--- ]'::jsonb
--- where id = '1';

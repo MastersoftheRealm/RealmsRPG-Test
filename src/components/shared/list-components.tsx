@@ -10,7 +10,6 @@
  */
 
 import { RotateCw } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 // Re-export SearchInput from UI for backward compatibility
@@ -68,7 +67,7 @@ export function ErrorDisplay({ message, subMessage, onRetry, retryLabel = 'Try a
       </div>
       <p className="text-danger-fg font-medium">{message}</p>
       {subMessage && (
-        <p className="text-text-muted text-sm mt-1">{subMessage}</p>
+        <p className="text-text-muted dark:text-text-secondary text-sm mt-1">{subMessage}</p>
       )}
       {onRetry && (
         <Button variant="secondary" size="sm" onClick={onRetry} className="mt-4">

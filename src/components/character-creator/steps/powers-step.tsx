@@ -12,7 +12,6 @@ import Link from 'next/link';
 import { Plus, Wand2, Swords, X, ExternalLink } from 'lucide-react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
-import { cn } from '@/lib/utils';
 import { GridListRow, InnateToggle, ListHeader, SegmentedControl, InfoTippy } from '@/components/shared';
 import { calculateArchetypeProgression } from '@/lib/game/formulas';
 import { Button, IconButton, Spinner, EmptyState, DescriptorChip } from '@/components/ui';
@@ -20,12 +19,16 @@ import { useUserPowers, useUserTechniques, useUserEmpoweredTechniques, usePowerP
 import { getValidationIssuesForStep, getStepCompletion } from '@/lib/character-creator-validation';
 import type { UserPower, UserTechnique } from '@/hooks/use-user-library';
 import { SourceFilter, type SourceFilterValue } from '@/components/shared';
-import { derivePowerDisplay } from '@/lib/calculators/power-calc';
+import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
-import { buildPartsAndMetadataDetailSections } from '@/lib/chip/list-row-metadata';
+import {
+  buildEntityMetadataDetailSections,
+  buildPartsAndMetadataDetailSections,
+  mergeDetailSections,
+} from '@/lib/chip/list-row-metadata';
 import { buildEmpoweredPowerSelectableItem } from '@/hooks/add-library-item/build-empowered-selectable-item';
 import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
@@ -34,13 +37,10 @@ import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProfic
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 import { powersSelectionHelp } from '../../../../public/tooltip-text';
 
-/** Capitalize first letter of each word for display */
-function capitalize(s: string | undefined): string {
-  if (!s) return '-';
-  return s.replace(/\b\w/g, (c) => c.toUpperCase());
-}
+const EMPTY_POWERS: CharacterPower[] = [];
+const EMPTY_TECHNIQUES: CharacterTechnique[] = [];
 
-// Select powers modal: name, action, en, tp, damage only for legibility
+// Select powers modal: compact columns; Duration/Area/Range as labeled chips when omitted
 const POWER_MODAL_COLUMNS = [
   { key: 'name', label: 'NAME', sortable: true },
   { key: 'Action', label: 'ACTION', sortable: false, align: 'center' as const },
@@ -52,11 +52,12 @@ const POWER_GRID_COLUMNS = '1.4fr 0.8fr 0.5fr 0.5fr 0.7fr';
 
 const TECHNIQUE_MODAL_COLUMNS = [
   { key: 'name', label: 'NAME', sortable: true },
+  { key: 'Action', label: 'ACTION', sortable: false, align: 'center' as const },
   { key: 'Energy', label: 'ENERGY', sortable: false, align: 'center' as const },
   { key: 'Weapon', label: 'WEAPON', sortable: false, align: 'center' as const },
   { key: 'Training Pts', label: 'TRAINING PTS', sortable: false, align: 'center' as const },
 ];
-const TECHNIQUE_GRID_COLUMNS = '1.4fr 0.7fr 1fr 0.8fr';
+const TECHNIQUE_GRID_COLUMNS = '1.3fr 0.75fr 0.55fr 1fr 0.75fr';
 type PowerModalTab = 'powers' | 'empowered';
 
 export function PowersStep() {
@@ -98,9 +99,9 @@ export function PowersStep() {
   const normalizedPublicTechniques = publicTechniques;
   const normalizedPublicEmpoweredTechniques = publicEmpoweredTechniques;
   
-  // Get selected powers and techniques from character draft
-  const selectedPowers = draft.powers || [];
-  const selectedTechniques = draft.techniques || [];
+  // Get selected powers and techniques from character draft (stable empties for hook deps)
+  const selectedPowers = draft.powers ?? EMPTY_POWERS;
+  const selectedTechniques = draft.techniques ?? EMPTY_TECHNIQUES;
 
   const archetypeProgression = useMemo(() => {
     const archType = draft.archetype?.type;
@@ -228,15 +229,6 @@ export function PowersStep() {
       return true;
     });
   }, [userTechniques, normalizedPublicTechniques]);
-  const allEmpoweredTechniquesForLookup = useMemo(() => {
-    const seen = new Set<string>();
-    return [...userEmpoweredTechniques, ...normalizedPublicEmpoweredTechniques].filter((technique: UserTechnique) => {
-      const id = String(technique.docId ?? technique.id ?? '');
-      if (!id || seen.has(id)) return false;
-      seen.add(id);
-      return true;
-    });
-  }, [userEmpoweredTechniques, normalizedPublicEmpoweredTechniques]);
 
   // Path mode: waiting for public library so we can resolve and auto-add recommended powers/techniques
   const pathRecommendationsLoading =
@@ -313,9 +305,7 @@ export function PowersStep() {
         };
         const display = derivePowerDisplay(doc, powerParts ?? []);
         const partChips = partChipsFromDisplay(display.partChips);
-        const damageStr = power.damage?.length
-          ? power.damage.map((d: { type?: string }) => capitalize(d.type)).join(', ')
-          : '-';
+        const damageStr = formatPowerDamage(power.damage) || '-';
         const isRecommended =
           recommendedPowerRefs.has(itemId.toLowerCase()) ||
           recommendedPowerRefs.has(String(power.name).toLowerCase());
@@ -324,8 +314,11 @@ export function PowersStep() {
           options?.pathName &&
           options?.selectedIds &&
           options.selectedIds.has(itemId);
+        // Duration/Area/Range omitted from compact modal columns → labeled expanded chips
         const detailSections = buildPartsAndMetadataDetailSections({
           range: display.range,
+          duration: display.duration,
+          area: display.area,
           partChips,
         });
         return [{
@@ -380,6 +373,13 @@ export function PowersStep() {
         const tp = Number(totals.trainingPoints ?? 0);
         const actionCol = base.columns?.find((c) => c.key === 'Action');
         const damageCol = base.columns?.find((c) => c.key === 'Damage');
+        const durationCol = base.columns?.find((c) => c.key === 'Duration');
+        const areaCol = base.columns?.find((c) => c.key === 'Area');
+        // Compact modal drops Duration/Area columns → keep them as labeled chips
+        const omittedFacts = buildEntityMetadataDetailSections({
+          duration: durationCol?.value != null ? String(durationCol.value) : undefined,
+          area: areaCol?.value != null ? String(areaCol.value) : undefined,
+        });
         return [{
           ...base,
           id: itemId,
@@ -389,6 +389,7 @@ export function PowersStep() {
             { key: 'TP', value: String(tp || '-'), align: 'center' as const },
             { key: 'Damage', value: damageCol?.value ?? '-', align: 'center' as const },
           ],
+          detailSections: mergeDetailSections(omittedFacts, base.detailSections),
           totalCost: tp > 0 ? tp : undefined,
           costLabel: tp > 0 ? 'TP' : undefined,
           data: technique,
@@ -438,6 +439,7 @@ export function PowersStep() {
           name: tech.name,
           description: tech.description,
           columns: [
+            { key: 'Action', value: display.actionType || '-', align: 'center' as const },
             { key: 'Energy', value: String(display.energy), align: 'center' as const },
             { key: 'Weapon', value: display.weaponName || '-', align: 'center' as const },
             { key: 'Training Pts', value: String(display.tp), align: 'center' as const },
@@ -755,9 +757,9 @@ export function PowersStep() {
         <>
           <PathHelpCard pathName={draft.archetype.name}>
             {hasPathPowerRecs && hasPathTechniqueRecs && !minimizeTechniques
-              ? 'Recommended powers and techniques fit your build — keep what you like.'
+              ? 'Recommended powers and techniques fit your build. Keep what you like.'
               : hasPathPowerRecs
-                ? 'Recommended powers fit your build — innate vs regular marked where applicable.'
+                ? 'Recommended powers fit your build. Innate vs regular marked where applicable.'
                 : 'Recommended techniques fit your build.'}
           </PathHelpCard>
           <PathNotes pathName={draft.archetype.name} notes={pathData?.level1?.notes} />
@@ -799,7 +801,7 @@ export function PowersStep() {
           <div className="flex items-center justify-center gap-4">
             <Link
               href="/power-creator"
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-button text-white hover:bg-primary-button-hover transition-colors shadow-sm"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-button text-text-on-dark hover:bg-primary-button-hover transition-colors shadow-sm"
             >
               <Plus className="w-4 h-4" />
               Create Power

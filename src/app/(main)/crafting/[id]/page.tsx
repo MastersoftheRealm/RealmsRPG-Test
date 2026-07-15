@@ -39,7 +39,6 @@ import {
   usePowerParts,
   useUserPowers,
   useOfficialLibrary,
-  useEnhancedItems,
 } from '@/hooks';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { useToast } from '@/components/ui';
@@ -172,7 +171,6 @@ export default function CraftingToolPage() {
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: userPowers = [] } = useUserPowers();
   const { data: officialPowers = [] } = useOfficialLibrary('powers');
-  const { data: enhancedItems = [] } = useEnhancedItems();
 
   useEffect(() => {
     if (sessionData && !initialized) {
@@ -1587,21 +1585,21 @@ export default function CraftingToolPage() {
             </div>
           </CollapsibleSection>
 
-          {/* Modifiers: DS modifier + additional successes/failures */}
+          {/* Adjustments: Difficulty Score bonus + additional successes/failures */}
           {!isCompleted && (item || customBaseItem) && (
             <CollapsibleSection
-              title="Modifiers"
+              title="Adjustments"
               defaultExpanded
-              collapsedSummary={`DS modifier ${session.data.dsModifier ?? 0}, bonus S/F`}
+              collapsedSummary={`Difficulty Score Bonus ${session.data.dsModifier ?? 0}, bonus S/F`}
             >
               <p className="text-sm text-text-muted dark:text-text-secondary mb-4">
-                Adjust the effective DS or add bonus successes/failures (finer tools, help,
-                environmental bonuses).
+                Adjust the effective Difficulty Score or add bonus successes/failures (finer tools, help,
+                environmental Bonuses).
               </p>
               <div className="flex flex-wrap gap-6">
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">
-                    DS modifier
+                    Difficulty Score Bonus
                   </label>
                   <ValueStepper
                     value={session.data.dsModifier ?? 0}
@@ -1611,11 +1609,11 @@ export default function CraftingToolPage() {
                     step={1}
                     formatValue={(v) => (v >= 0 ? `+${v}` : `${v}`)}
                     colorValue
-                    decrementTitle="Decrease DS modifier"
-                    incrementTitle="Increase DS modifier"
+                    decrementTitle="Decrease Difficulty Score Bonus"
+                    incrementTitle="Increase Difficulty Score Bonus"
                   />
                   <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
-                    Effective DS: {effectiveDS}
+                    Effective Difficulty Score: {effectiveDS}
                   </p>
                 </div>
                 <div>
@@ -1659,7 +1657,7 @@ export default function CraftingToolPage() {
             >
               <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <p className="text-sm text-text-muted dark:text-text-secondary">
-                  Enter each roll total (d20 + modifiers). Results auto-calculate against DS{' '}
+                  Enter each roll total (d20 + Bonuses). Results auto-calculate against Difficulty Score{' '}
                   {effectiveDS}.
                 </p>
                 {craftSubSkills.length > 0 && (
@@ -1947,8 +1945,6 @@ export default function CraftingToolPage() {
                         const baseItem = session.data.customBaseItem ?? session.data.item;
                         if (!baseItem || !session.data.powerRef) return;
                         const name = `${'name' in baseItem ? baseItem.name : 'Item'} (${session.data.powerRef.name})`;
-                        const selectedUses =
-                          null;
                         const usesTypeToSave =
                           session.data.usesType ?? 'full';
                         const usesCountToSave =

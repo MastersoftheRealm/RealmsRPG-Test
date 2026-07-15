@@ -5,13 +5,18 @@
 
 import type { ColumnValue, ChipData } from '@/components/shared/grid-list-row';
 import type { SelectableItem } from '@/components/shared/unified-selection-modal';
-import { formatDamageDisplay, formatSavedActionTypeForDisplay, formatListCellLabel } from '@/lib/utils';
+import {
+  formatDamageDisplay,
+  formatSavedActionTypeForDisplay,
+  formatActionTypeForDisplay,
+  formatListCellLabel,
+} from '@/lib/utils';
 import {
   deriveShieldAmountFromProperties,
   deriveShieldDamageFromProperties,
   trainingPointsForItemPropertyRef,
 } from '@/lib/calculators';
-import { derivePowerDisplay } from '@/lib/calculators/power-calc';
+import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
@@ -38,7 +43,9 @@ export type EqItem = {
   description?: string;
   damage?: unknown;
   armorValue?: number;
-  properties?: string[] | Array<{ id?: string | number; name?: string; op_1_lvl?: number }>;
+  properties?: Array<
+    string | { id?: string | number; name?: string; op_1_lvl?: number; base_tp?: number; op_1_tp?: number }
+  >;
   type?: string;
 };
 
@@ -47,23 +54,56 @@ function capitalize(s: string | undefined): string {
   return s.replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+export type TechniqueColumnDisplay = {
+  energy: number;
+  weaponName: string;
+  tp: number;
+  actionType: string;
+};
+
+/** Collapsed power columns for add/load modals (Range stays a labeled expanded chip). */
+export type PowerColumnDisplay = {
+  energy: number | string;
+  actionType: string;
+  duration: string;
+  damage: string;
+  area: string;
+};
+
 export function getItemColumns(
   item: UserPower | UserTechnique | UserItem | EqItem,
   itemType: LibraryItemType,
-  techniqueDisplay?: { energy: number; weaponName: string; tp: number }
+  techniqueDisplay?: TechniqueColumnDisplay,
+  powerDisplay?: PowerColumnDisplay
 ): ColumnValue[] {
   if (itemType === 'power') {
+    if (powerDisplay) {
+      return [
+        { key: 'Energy', value: String(powerDisplay.energy ?? '-'), align: 'center' as const },
+        { key: 'Action', value: powerDisplay.actionType || '-', align: 'center' as const },
+        { key: 'Duration', value: powerDisplay.duration || '-', align: 'center' as const },
+        { key: 'Area', value: powerDisplay.area || '-', align: 'center' as const },
+        { key: 'Damage', value: powerDisplay.damage || '-', align: 'center' as const },
+      ];
+    }
     const power = item as UserPower;
-    const damageStr = power.damage?.length ? power.damage.map((d) => capitalize(d.type)).join(', ') : '-';
+    const damageStr = formatPowerDamage(power.damage) || '-';
     const areaStr = power.area?.type ? capitalize(power.area.type) : '-';
     return [
-      { key: 'Action', value: formatSavedActionTypeForDisplay(power.actionType, power.isReaction), align: 'center' as const },
-      { key: 'Damage', value: damageStr, align: 'center' as const },
+      { key: 'Energy', value: '-', align: 'center' as const },
+      {
+        key: 'Action',
+        value: formatSavedActionTypeForDisplay(power.actionType, power.isReaction),
+        align: 'center' as const,
+      },
+      { key: 'Duration', value: '-', align: 'center' as const },
       { key: 'Area', value: areaStr, align: 'center' as const },
+      { key: 'Damage', value: damageStr, align: 'center' as const },
     ];
   }
   if (itemType === 'technique' && techniqueDisplay) {
     return [
+      { key: 'Action', value: techniqueDisplay.actionType || '-', align: 'center' as const },
       { key: 'Energy', value: String(techniqueDisplay.energy), align: 'center' as const },
       { key: 'Weapon', value: techniqueDisplay.weaponName || '-', align: 'center' as const },
       { key: 'Training Pts', value: String(techniqueDisplay.tp), align: 'center' as const },
@@ -72,6 +112,7 @@ export function getItemColumns(
   if (itemType === 'technique') {
     const technique = item as UserTechnique;
     return [
+      { key: 'Action', value: formatActionTypeForDisplay(technique.actionType ?? ''), align: 'center' as const },
       { key: 'Weapon', value: technique.weapon?.name || '-', align: 'center' as const },
       { key: 'Training Pts', value: '-', align: 'center' as const },
     ];
@@ -87,9 +128,9 @@ export function getItemColumns(
   }
   if (itemType === 'armor' || (itemType === 'item' && (item as EqItem).type?.toLowerCase() === 'armor')) {
     const armor = item as UserItem | EqItem;
-    const val = armor.armorValue ? `+${armor.armorValue}` : null;
+    const val = armor.armorValue != null ? String(armor.armorValue) : null;
     return itemType === 'item' && val
-      ? [{ key: 'stat', value: val, highlight: true }]
+      ? [{ key: 'stat', value: `Damage Reduction ${val}`, highlight: true }]
       : val
         ? [{ key: 'Armor', value: val, highlight: true }]
         : [];
@@ -102,7 +143,10 @@ export function getItemColumns(
       deriveShieldDamageFromProperties(props) ??
       (shield.damage ? formatDamageDisplay(shield.damage) : null);
     if (itemType === 'item') {
-      const parts = [block !== '-' ? `Block ${block}` : null, dmg].filter(Boolean);
+      const parts = [
+        block !== '-' ? `Block ${block}` : null,
+        dmg ? (String(dmg).toLowerCase().startsWith('damage') ? dmg : `Damage ${dmg}`) : null,
+      ].filter(Boolean);
       return [{ key: 'stat', value: parts.join(' · ') || '-', highlight: true }];
     }
     const cols: ColumnValue[] = [];
@@ -116,9 +160,10 @@ export function getItemColumns(
 export function getModalGridColumns(itemType: LibraryItemType): string {
   switch (itemType) {
     case 'power':
-      return '1.4fr 0.8fr 0.8fr 0.7fr';
+      // Name, Energy, Action, Duration, Area, Damage — Range is a labeled expanded chip
+      return '1.2fr 0.55fr 0.75fr 0.75fr 0.65fr 1fr';
     case 'technique':
-      return '1.4fr 0.7fr 1fr 0.8fr';
+      return '1.4fr 1fr 0.7fr 1fr 0.8fr';
     case 'weapon':
     case 'shield':
     case 'armor':
@@ -137,40 +182,53 @@ export function getListHeaderColumns(
   const base = [{ key: 'name', label: 'Name', align: 'left' as const }];
   switch (itemType) {
     case 'power':
-    return [
-      ...base,
-      { key: 'Action', label: 'Action', align: 'center' as const },
-      { key: 'Damage', label: 'Damage', align: 'center' as const },
-      { key: 'Area', label: 'Area', align: 'center' as const },
-    ];
+      return [
+        ...base,
+        { key: 'Energy', label: 'Energy', align: 'center' as const },
+        { key: 'Action', label: 'Action', align: 'center' as const },
+        { key: 'Duration', label: 'Duration', align: 'center' as const },
+        { key: 'Area', label: 'Area', align: 'center' as const },
+        { key: 'Damage', label: 'Damage', align: 'center' as const },
+      ];
     case 'technique':
-    return [
-      ...base,
-      { key: 'Energy', label: 'Energy', align: 'center' as const },
-      { key: 'Weapon', label: 'Weapon', align: 'center' as const },
-      { key: 'Training Pts', label: 'Training Pts', align: 'center' as const },
-    ];
+      return [
+        ...base,
+        { key: 'Action', label: 'Action', align: 'center' as const },
+        { key: 'Energy', label: 'Energy', align: 'center' as const },
+        { key: 'Weapon', label: 'Weapon', align: 'center' as const },
+        { key: 'Training Pts', label: 'Training Pts', align: 'center' as const },
+      ];
     case 'weapon':
-    return [...base, { key: 'damage', label: 'Damage', align: 'center' as const }];
+      return [...base, { key: 'damage', label: 'Damage', align: 'center' as const }];
     case 'shield':
-    return [
-      ...base,
-      { key: 'Block', label: 'Block', align: 'center' as const },
-      { key: 'Damage', label: 'Damage', align: 'center' as const },
-    ];
+      return [
+        ...base,
+        { key: 'Block', label: 'Block', align: 'center' as const },
+        { key: 'Damage', label: 'Damage', align: 'center' as const },
+      ];
     case 'armor':
-    return [...base, { key: 'armor', label: 'Armor', align: 'center' as const }];
+      return [...base, { key: 'armor', label: 'Dmg. Red.', align: 'center' as const }];
     case 'item':
-    return [
-      ...base,
-      { key: 'type', label: 'Type', align: 'center' as const },
-      { key: 'stat', label: 'Damage / Armor / Block', align: 'center' as const },
-    ];
+      return [
+        ...base,
+        { key: 'type', label: 'Type', align: 'center' as const },
+        { key: 'stat', label: 'Damage / Damage Reduction / Block', align: 'center' as const },
+      ];
     case 'equipment':
     default:
       return base;
   }
 }
+
+/** Columns for empowered technique rows (sheet add + creator load). */
+export const EMPOWERED_POWER_COLUMNS = [
+  { key: 'name', label: 'Name' },
+  { key: 'Energy', label: 'Energy' },
+  { key: 'Action', label: 'Action' },
+  { key: 'Duration', label: 'Duration' },
+  { key: 'Area', label: 'Area' },
+  { key: 'Damage', label: 'Damage' },
+];
 
 export interface BuildSelectableItemCodex {
   powerPartsDb: PowerPart[];
@@ -184,15 +242,18 @@ export function buildSelectableItem(
   itemType: LibraryItemType,
   codex: BuildSelectableItemCodex
 ): SelectableItem {
-  let techniqueDisplay: { energy: number; weaponName: string; tp: number } | undefined;
+  let techniqueDisplay: TechniqueColumnDisplay | undefined;
   let detailSections: SelectableItem['detailSections'];
   let totalCost: number | undefined;
   const costLabel = 'TP';
   const { powerPartsDb, techniquePartsDb, itemPropertiesDb } = codex;
 
   const effectiveType: LibraryItemType =
-    itemType === 'item' ? ((item as UserItem | EqItem).type?.toLowerCase() as 'weapon' | 'armor' | 'shield') || 'weapon' : itemType;
+    itemType === 'item'
+      ? ((item as UserItem | EqItem).type?.toLowerCase() as 'weapon' | 'armor' | 'shield') || 'weapon'
+      : itemType;
 
+  let powerDisplay: PowerColumnDisplay | undefined;
   if (itemType === 'power') {
     const p = item as UserPower;
     const doc: PowerDocument = {
@@ -208,8 +269,16 @@ export function buildSelectableItem(
     };
     const display = derivePowerDisplay(doc, powerPartsDb);
     const partChips = partChipsFromDisplay(display.partChips);
+    // Range omitted from dense modal columns → labeled expanded chip (TASK-437)
     detailSections = buildPartsAndMetadataDetailSections({ range: display.range, partChips });
     totalCost = display.tp > 0 ? display.tp : undefined;
+    powerDisplay = {
+      energy: display.energy,
+      actionType: display.actionType || formatSavedActionTypeForDisplay(p.actionType, p.isReaction),
+      duration: display.duration || '-',
+      damage: formatPowerDamage(doc.damage) || '-',
+      area: display.area || '-',
+    };
   } else if (itemType === 'technique') {
     const t = item as UserTechnique;
     const doc: TechniqueDocument = {
@@ -218,9 +287,16 @@ export function buildSelectableItem(
       parts: Array.isArray(t.parts) ? (t.parts as TechniqueDocument['parts']) : [],
       damage: Array.isArray(t.damage) && t.damage[0] ? t.damage[0] : (t.damage as TechniqueDocument['damage']),
       weapon: t.weapon as TechniqueDocument['weapon'],
+      actionType: t.actionType,
+      isReaction: t.isReaction,
     };
     const display = deriveTechniqueDisplay(doc, techniquePartsDb);
-    techniqueDisplay = { energy: display.energy, weaponName: display.weaponName, tp: display.tp };
+    techniqueDisplay = {
+      energy: display.energy,
+      weaponName: display.weaponName,
+      tp: display.tp,
+      actionType: display.actionType,
+    };
     const partChips = partChipsFromDisplay(display.partChips);
     detailSections = buildPartsAndMetadataDetailSections({
       damage: display.damageStr !== '-' ? display.damageStr : undefined,
@@ -267,7 +343,12 @@ export function buildSelectableItem(
     totalCost = propertyChips.reduce((sum, c) => sum + (c.cost ?? 0), 0) || undefined;
   }
 
-  const columns = getItemColumns(item, itemType === 'item' ? effectiveType : itemType, techniqueDisplay);
+  const columns = getItemColumns(
+    item,
+    itemType === 'item' ? effectiveType : itemType,
+    techniqueDisplay,
+    powerDisplay
+  );
   if (itemType === 'item') {
     const typeLabel = formatListCellLabel((item as EqItem).type);
     columns.unshift({ key: 'type', value: typeLabel, align: 'center' as const });

@@ -98,7 +98,7 @@ export function CharacterCard({
       {onDelete ? (
         <IconButton
           onClick={handleDelete}
-          className="absolute top-2 right-2 z-10 bg-danger/80 hover:bg-danger text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+          className="absolute top-2 right-2 z-10 bg-danger/80 hover:bg-danger text-text-on-dark opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
           label="Delete character"
           variant="danger"
         >

@@ -17,7 +17,6 @@ import {
   Plus,
   Trash2,
   ChevronRight,
-  Search,
   CheckCircle2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -27,7 +26,6 @@ import {
   Button,
   EmptyState,
   LoadingState,
-  Alert,
   Modal,
   Input,
   TabNavigation,
@@ -242,7 +240,7 @@ function EncountersContent() {
                 className={cn(
                   'px-3 py-1.5 text-sm rounded-lg font-medium transition-colors',
                   typeFilter === type
-                    ? 'bg-primary-button text-white'
+                    ? 'bg-primary-button text-text-on-dark'
                     : 'bg-surface-alt text-text-secondary hover:bg-surface-alt/80'
                 )}
               >
@@ -330,7 +328,7 @@ function EncountersContent() {
                       variant="ghost"
                       size="sm"
                       label={`Delete encounter ${encounter.name}`}
-                      className="opacity-0 group-hover:opacity-100 text-text-muted dark:text-text-secondary hover:text-danger-fg hover:bg-red-50 dark:hover:bg-danger-900/20 min-w-[44px] min-h-[44px]"
+                      className="opacity-0 group-hover:opacity-100 text-text-muted dark:text-text-secondary hover:text-danger-fg hover:bg-danger-50 dark:hover:bg-danger-900/20 min-w-[44px] min-h-[44px]"
                       onClick={(e) => {
                         e.stopPropagation();
                         setDeleteTarget(encounter);
@@ -428,7 +426,7 @@ function CreateEncounterModal({
                 </span>
                 <span className="text-xs text-text-muted dark:text-text-secondary text-center">
                   {t === 'combat'
-                    ? 'Initiative, HP, conditions'
+                    ? 'Initiative, Health, conditions'
                     : t === 'skill'
                       ? 'Skill rolls, DS, successes'
                       : 'Combat + skill combined'}

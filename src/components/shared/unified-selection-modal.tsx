@@ -18,12 +18,13 @@
 import { useState, useEffect, useMemo, useCallback, useRef, ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Modal, Button, IconButton } from '@/components/ui';
+import { Alert, Modal, Button, IconButton } from '@/components/ui';
 import { TabContentPanel } from '@/components/ui/tab-navigation';
 import { 
   GridListRow, 
   SearchInput, 
   ListHeader,
+  gridColumnsWithInlineSelection,
   FilterSection,
   QuantitySelector,
   ListEmptyState as EmptyState,
@@ -94,6 +95,12 @@ export interface UnifiedSelectionModalProps {
   // Selection behavior
   onConfirm: (selectedItems: SelectableItem[]) => void;
   maxSelections?: number;
+  /**
+   * When set with maxSelections: soft capacity — rows stay readable/selectable over the limit;
+   * this message is shown and Add Selected is blocked until selection is within max.
+   * Prefer this over greying out the whole list when budget is exhausted (maxSelections === 0).
+   */
+  selectionLimitMessage?: string;
   initialSelectedIds?: Set<string>;
   /** Hide items that don't qualify instead of graying them out */
   hideDisabled?: boolean;
@@ -131,10 +138,24 @@ export interface UnifiedSelectionModalProps {
   };
   /** Optional: disable the confirm button based on selected items (e.g. missing required choices) */
   confirmDisabled?: (selectedItems: SelectableItem[]) => boolean;
+  /** Primary confirm button label (default: "Add Selected"). Use "Load" for creator load flows. */
+  confirmLabel?: string;
+  /** Optional error shown in the list region (e.g. load failures) */
+  error?: Error | null;
   
   // Styling
   size?: 'md' | 'lg' | 'xl';
   className?: string;
+  /**
+   * Flex column layout for sticky header/footer + scrollable list.
+   * Defaults to true — selection list modals need this on mobile.
+   */
+  flexLayout?: boolean;
+  /**
+   * When set, replaces the default primary confirm button (e.g. dual “Add as species / ancestry”).
+   * Cancel remains. Caller is responsible for closing the modal after actions.
+   */
+  primaryActions?: ReactNode | ((selectedItems: SelectableItem[]) => ReactNode);
 }
 
 // =============================================================================
@@ -150,6 +171,7 @@ export function UnifiedSelectionModal({
   isLoading = false,
   onConfirm,
   maxSelections,
+  selectionLimitMessage,
   initialSelectedIds = new Set(),
   hideDisabled = false,
   columns = [],
@@ -166,9 +188,13 @@ export function UnifiedSelectionModal({
   showQuantity = false,
   footerExtra,
   confirmDisabled,
+  confirmLabel = 'Add Selected',
+  error = null,
   tabPanelA11y,
   size = 'lg',
   className,
+  flexLayout = true,
+  primaryActions,
 }: UnifiedSelectionModalProps) {
   // State
   const [searchQuery, setSearchQuery] = useState('');
@@ -213,37 +239,36 @@ export function UnifiedSelectionModal({
       });
     }
     
-    // Sort
+    // Sort (sortItems already closes over sortState from useSort)
     return sortItems(result);
-  }, [items, displayFilter, searchQuery, searchFields, sortState, hideDisabled, sortItems]);
+  }, [items, displayFilter, searchQuery, searchFields, hideDisabled, sortItems]);
   
-  // Toggle selection — normalize id to string so selection works when codex returns number ids
+  // Toggle selection — normalize id to string so selection works when codex returns number ids.
+  // Soft capacity (maxSelections > 1 or 0): allow selecting past max; confirm blocked + warning.
+  // Single-select (maxSelections === 1): replace selection like radio (creator Load flows).
   const toggleSelection = useCallback((id: string | number) => {
     const key = String(id);
     setSelectedIds(prev => {
       const newSet = new Set(prev);
       if (newSet.has(key)) {
         newSet.delete(key);
-        // Remove quantity
         setQuantities(q => {
           const newQ = { ...q };
           delete newQ[key];
           return newQ;
         });
+      } else if (maxSelections === 1) {
+        setQuantities(showQuantity ? { [key]: 1 } : {});
+        return new Set([key]);
       } else {
-        // Check max selections
-        if (maxSelections && newSet.size >= maxSelections) {
-          return prev;
-        }
         newSet.add(key);
-        // Initialize quantity for equipment
         if (showQuantity) {
           setQuantities(q => ({ ...q, [key]: 1 }));
         }
       }
       return newSet;
     });
-  }, [maxSelections, showQuantity]);
+  }, [showQuantity, maxSelections]);
   
   // Selected items (for footerExtra and confirmDisabled)
   const selectedItems = useMemo(
@@ -251,11 +276,21 @@ export function UnifiedSelectionModal({
     [items, selectedIds]
   );
 
-  const atMaxSelections =
-    maxSelections !== undefined && selectedIds.size >= maxSelections;
+  const overSelectionLimit =
+    maxSelections !== undefined && selectedIds.size > maxSelections;
+  const showSelectionLimitWarning =
+    maxSelections !== undefined &&
+    (maxSelections === 0 || overSelectionLimit);
+  const limitWarningText = showSelectionLimitWarning
+    ? selectionLimitMessage ??
+      (maxSelections === 0
+        ? 'You cannot add more right now. Free up capacity first, then try again.'
+        : `You've selected more than the limit (max ${maxSelections}). Deselect some to continue.`)
+    : undefined;
 
   // Handle confirm — match by string id so codex number ids work
   const handleConfirm = () => {
+    if (overSelectionLimit) return;
     const selected = selectedItems;
     // Attach quantities to items if needed
     if (showQuantity) {
@@ -267,24 +302,28 @@ export function UnifiedSelectionModal({
     onClose();
   };
 
-  const isConfirmDisabled = selectedIds.size === 0 || (confirmDisabled?.(selectedItems) ?? false);
-  
-  
-  const sizeClasses = {
-    md: 'max-w-xl',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
-  };
+  const isConfirmDisabled =
+    selectedIds.size === 0 ||
+    overSelectionLimit ||
+    (confirmDisabled?.(selectedItems) ?? false);
   
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size={size} showCloseButton={false} fullScreenOnMobile titleA11y={title}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size={size}
+      showCloseButton={false}
+      fullScreenOnMobile
+      flexLayout={flexLayout}
+      titleA11y={title}
+    >
       <div className={cn('flex flex-col flex-1 min-h-0 md:max-h-[70vh]', className)}>
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div>
             <h2 className="text-xl font-bold text-text-primary">{title}</h2>
             {description && (
-              <p className="text-sm text-text-muted mt-1">{description}</p>
+              <p className="text-sm text-text-muted dark:text-text-secondary mt-1">{description}</p>
             )}
           </div>
           <IconButton variant="ghost" size="sm" onClick={onClose} label="Close">
@@ -298,10 +337,17 @@ export function UnifiedSelectionModal({
             value={searchQuery}
             onChange={setSearchQuery}
             placeholder={searchPlaceholder || `Search ${itemLabel}s...`}
+            aria-label={searchPlaceholder || `Search ${itemLabel}s`}
           />
         </div>
         
         {headerExtra && <div className="mb-4">{headerExtra}</div>}
+
+        {limitWarningText && (
+          <Alert variant="warning" className="mb-4">
+            {limitWarningText}
+          </Alert>
+        )}
         
         {/* Filters (optional) */}
         {showFilters && filterContent && (
@@ -333,6 +379,10 @@ export function UnifiedSelectionModal({
             <>
               {isLoading ? (
                 <LoadingState message="Loading..." size="md" padding="md" />
+              ) : error ? (
+                <Alert variant="danger" className="mx-4">
+                  {error.message}
+                </Alert>
               ) : filteredItems.length === 0 ? (
                 <EmptyState
                   title={emptyMessage || `No ${itemLabel}s found`}
@@ -344,8 +394,9 @@ export function UnifiedSelectionModal({
                   {filteredItems.map(item => {
                     const itemIdStr = String(item.id);
                     const isSelected = selectedIds.has(itemIdStr);
-                    const isSelectionDisabled =
-                      item.disabled || (atMaxSelections && !isSelected);
+                    // Only item.disabled greys a row — never capacity/maxSelections
+                    // (budget-exhausted lists stay readable for browsing).
+                    const isSelectionDisabled = Boolean(item.disabled);
 
                     return (
                       <div key={itemIdStr} className="flex items-center gap-2 min-w-0">
@@ -360,7 +411,9 @@ export function UnifiedSelectionModal({
                             totalCost={item.totalCost}
                             costLabel={item.costLabel}
                             badges={item.badges}
-                            gridColumns={gridColumns ? `${gridColumns} 2.5rem` : undefined}
+                            gridColumns={
+                              gridColumns ? gridColumnsWithInlineSelection(gridColumns) : undefined
+                            }
                             selectable
                             isSelected={isSelected}
                             onSelect={() => toggleSelection(item.id)}
@@ -405,20 +458,26 @@ export function UnifiedSelectionModal({
         <div className="flex flex-col gap-3 pt-4 border-t border-border-light mt-4">
           {footerExtra?.(selectedItems)}
           <div className="flex items-center justify-between">
-            <span className="text-sm text-text-muted">
+            <span className="text-sm text-text-muted dark:text-text-secondary">
               {selectedIds.size} {itemLabel}{selectedIds.size !== 1 ? 's' : ''} selected
-              {maxSelections && ` (max ${maxSelections})`}
+              {maxSelections !== undefined && maxSelections !== 1 && ` (max ${maxSelections})`}
             </span>
             <div className="flex gap-2">
               <Button variant="secondary" onClick={onClose}>
                 Cancel
               </Button>
-              <Button
-                onClick={handleConfirm}
-                disabled={isConfirmDisabled}
-              >
-                Add Selected {selectedIds.size > 0 && `(${selectedIds.size})`}
-              </Button>
+              {primaryActions ? (
+                typeof primaryActions === 'function' ? (
+                  primaryActions(selectedItems)
+                ) : (
+                  primaryActions
+                )
+              ) : (
+                <Button onClick={handleConfirm} disabled={isConfirmDisabled}>
+                  {confirmLabel}
+                  {selectedIds.size > 0 ? ` (${selectedIds.size})` : ''}
+                </Button>
+              )}
             </div>
           </div>
         </div>

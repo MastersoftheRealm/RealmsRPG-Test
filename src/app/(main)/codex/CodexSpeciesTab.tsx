@@ -7,8 +7,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChevronDown } from 'lucide-react';
-import { cn, formatListCellLabel } from '@/lib/utils';
+import { formatListCellLabel } from '@/lib/utils';
 import {
   ChipSelect,
   FilterSection,

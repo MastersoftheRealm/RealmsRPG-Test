@@ -137,14 +137,109 @@ export function resolveLoadoutItems(
   );
 }
 
-export function loadoutDraftFromSelection(loadout: PathLoadout): {
-  armaments: PathItemRecommendation[];
+export function loadoutDraftFromSelection(
+  loadout: PathLoadout,
+  lookup?: Map<string, EquipmentLookupEntry>
+): {
+  loadoutWeapons: PathItemRecommendation[];
+  loadoutArmor: PathItemRecommendation[];
   equipment: PathItemRecommendation[];
+  armaments: PathItemRecommendation[];
 } {
+  const loadoutWeapons: PathItemRecommendation[] = [];
+  const loadoutArmor: PathItemRecommendation[] = [...(loadout.armor ?? [])];
+  const armorIds = new Set(loadoutArmor.map((ref) => normalizeId(String(ref.id))));
+
+  for (const ref of loadout.armaments ?? []) {
+    const key = normalizeId(String(ref.id));
+    const category = lookup?.get(key)?.category;
+    // Live path kits often nest armor inside `armaments[]` (no separate `armor` field).
+    if (category === 'armor') {
+      if (!armorIds.has(key)) {
+        loadoutArmor.push(ref);
+        armorIds.add(key);
+      }
+      continue;
+    }
+    loadoutWeapons.push(ref);
+  }
+
   return {
-    armaments: [...(loadout.armaments ?? []), ...(loadout.armor ?? [])],
+    loadoutWeapons,
+    loadoutArmor,
     equipment: loadout.equipment ?? [],
+    armaments: [...loadoutWeapons, ...loadoutArmor],
   };
+}
+
+/**
+ * Drop draft loadout refs that no longer resolve in the library/codex lookup
+ * (stale kit auto-apply, renamed ids, etc.).
+ */
+export function pruneUnresolvedLoadoutRefs(
+  refs: PathItemRecommendation[],
+  lookup: Map<string, EquipmentLookupEntry>
+): PathItemRecommendation[] {
+  if (lookup.size === 0) return refs;
+  return refs.filter((ref) => lookup.has(normalizeId(String(ref.id))));
+}
+
+/**
+ * Re-classify draft weapon/armor buckets using the library lookup.
+ * Fixes path recommendations that nest armor inside `armaments[]`.
+ */
+export function rebucketLoadoutByLookup(
+  loadoutWeapons: PathItemRecommendation[],
+  loadoutArmor: PathItemRecommendation[],
+  lookup: Map<string, EquipmentLookupEntry>
+): {
+  loadoutWeapons: PathItemRecommendation[];
+  loadoutArmor: PathItemRecommendation[];
+  armaments: PathItemRecommendation[];
+} {
+  if (lookup.size === 0) {
+    return {
+      loadoutWeapons,
+      loadoutArmor,
+      armaments: [...loadoutWeapons, ...loadoutArmor],
+    };
+  }
+
+  const weapons: PathItemRecommendation[] = [];
+  const armor: PathItemRecommendation[] = [];
+  const seenArmor = new Set<string>();
+
+  const pushArmor = (ref: PathItemRecommendation) => {
+    const key = normalizeId(String(ref.id));
+    if (seenArmor.has(key)) return;
+    seenArmor.add(key);
+    armor.push(ref);
+  };
+
+  for (const ref of loadoutWeapons) {
+    const key = normalizeId(String(ref.id));
+    if (lookup.get(key)?.category === 'armor') pushArmor(ref);
+    else weapons.push(ref);
+  }
+  for (const ref of loadoutArmor) {
+    const key = normalizeId(String(ref.id));
+    if (lookup.get(key)?.category === 'weapon') weapons.push(ref);
+    else pushArmor(ref);
+  }
+
+  return {
+    loadoutWeapons: weapons,
+    loadoutArmor: armor,
+    armaments: [...weapons, ...armor],
+  };
+}
+
+/** Keep legacy `armaments` in sync with phased weapon + armor selections. */
+export function mergeLoadoutArmaments(draft: {
+  loadoutWeapons: PathItemRecommendation[];
+  loadoutArmor: PathItemRecommendation[];
+}): PathItemRecommendation[] {
+  return [...draft.loadoutWeapons, ...draft.loadoutArmor];
 }
 
 export function groupResolvedItemsByCategory(

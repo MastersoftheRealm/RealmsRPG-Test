@@ -7,12 +7,11 @@
 
 'use client';
 
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { LoginPromptModal, ConfirmActionModal, UnifiedSelectionModal, ItemCard, GridListRow, ListHeader, SourceFilter, InnateToggle, SegmentedControl, SkillsAllocationPage, ValueStepper, InfoTippy } from '@/components/shared';
+import { UnifiedSelectionModal, GridListRow, ListHeader, SourceFilter, InnateToggle, SegmentedControl, SkillsAllocationPage, ValueStepper, InfoTippy } from '@/components/shared';
 import { getSkillPointsHelp, subSkillsHelp } from '../../../../public/tooltip-text';
-import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { useAuthStore } from '@/stores/auth-store';
 import {
@@ -20,7 +19,6 @@ import {
   useUserTechniques,
   useUserEmpoweredTechniques,
   useUserItems,
-  useUserCreatures,
   usePowerParts,
   useTechniqueParts,
   useCreatureFeats,
@@ -30,6 +28,7 @@ import {
   useTraits,
   useAdmin,
   useCreatorSave,
+  useLoadModalLibrary,
   useOfficialLibrary,
   useGameRules,
   type CreatureFeat as CodexCreatureFeatRow,
@@ -44,8 +43,6 @@ import {
   transformUserPowerToDisplayItem,
   transformUserTechniqueToDisplayItem,
   transformUserItemToDisplayItem,
-  creatureFeatToDisplayItem,
-  creatureArmamentToDisplayItem,
   displayItemToCreaturePower,
   displayItemToCreatureTechnique,
   displayItemToCreatureArmament,
@@ -61,7 +58,11 @@ import { trainingPointsForItemPropertyRef } from '@/lib/calculators';
 import type { ChipData } from '@/components/shared/grid-list-row';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
 import {
+  buildEntityMetadataDetailSections,
   buildPartsAndMetadataDetailSections,
+  mergeDetailSections,
+  metadataDescriptorChip,
+  metadataDetailSection,
   propertiesProficienciesSection,
 } from '@/lib/chip/list-row-metadata';
 import { buildEmpoweredPowerSelectableItem } from '@/hooks/add-library-item/build-empowered-selectable-item';
@@ -78,7 +79,7 @@ import {
 } from '@/lib/game/formulas';
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
 import { useSort } from '@/hooks/use-sort';
-import { Button, Input, Select, Textarea, IconButton, Card } from '@/components/ui';
+import { Button, Input, Select, Textarea, IconButton, Card, LoadingState } from '@/components/ui';
 import { Skull, X } from 'lucide-react';
 import { RollLog, RollProvider } from '@/components/character-sheet';
 import { formatDamageDisplay, formatListCellLabel, normalizeRangeDisplay } from '@/lib/utils';
@@ -90,9 +91,7 @@ import {
   ArchetypeSelector,
   CollapsibleSection,
   CreatorSummaryPanel,
-  CreatorSaveToolbar,
-  CreatorLayout,
-  type ArchetypeType,
+  CreatorPageShell,
 } from '@/components/creator';
 import type { AbilityName } from '@/types';
 import type { DisplayItem } from '@/types/items';
@@ -116,7 +115,6 @@ import {
 } from './CreatureCreatorHelpers';
 import {
   allocationsToCreatureSkills,
-  buildCreatureSelectableItem,
   creatureSkillsToAllocations,
   rawRecordToCreatureState,
 } from './creature-skill-utils';
@@ -153,10 +151,10 @@ function CreatureCreatorContent() {
   const { user } = useAuthStore();
   const { rules } = useGameRules();
   const { isAdmin } = useAdmin();
-  const { data: creatureFeatsData = [] } = useCreatureFeats();
-  const { data: codexFeatsData = [] } = useCodexFeats();
-  const { data: codexTraitsData = [] } = useTraits();
-  const { data: skillsData = [] } = useCodexSkills();
+  const { data: creatureFeatsData = [], isLoading: creatureFeatsLoading } = useCreatureFeats();
+  const { data: codexFeatsData = [], isLoading: codexFeatsLoading } = useCodexFeats();
+  const { data: codexTraitsData = [], isLoading: traitsLoading } = useTraits();
+  const { data: skillsData = [], isLoading: skillsLoading } = useCodexSkills();
 
   const creatureFeatSourceLookup = useMemo(
     () => ({
@@ -179,9 +177,9 @@ function CreatureCreatorContent() {
   const searchParams = useSearchParams();
   const editCreatureId = searchParams.get('edit');
   const editLoadedRef = useRef(false);
+  const load = useLoadModalLibrary('creature', { prefetch: !!editCreatureId });
 
   const [isInitialized, setIsInitialized] = useState(false);
-  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [creature, setCreature] = useState<CreatureState>(initialState);
   const creatureLevel = Math.max(1, Math.floor(creature.level));
   const skillPointsHelp = useMemo(
@@ -192,20 +190,16 @@ function CreatureCreatorContent() {
   const [showTechniqueModal, setShowTechniqueModal] = useState(false);
   const [showFeatModal, setShowFeatModal] = useState(false);
   const [showArmamentModal, setShowArmamentModal] = useState(false);
-  const [showLoadModal, setShowLoadModal] = useState(false);
-  const [loadSource, setLoadSource] = useState<SourceFilterValue>('all');
   const [newLanguage, setNewLanguage] = useState('');
   const [librarySource, setLibrarySource] = useState<SourceFilterValue>('all');
   const [inventoryTab, setInventoryTab] = useState<InventoryTab>('all');
   const [powerModalTab, setPowerModalTab] = useState<PowerModalTab>('powers');
 
-  /** Defer user/public library fetches until a selection or load modal opens (or edit preload). */
+  /** Defer power/technique/item library fetches until their selection modals open. */
   const libraryQueriesEnabled =
     showPowerModal ||
     showTechniqueModal ||
-    showArmamentModal ||
-    showLoadModal ||
-    !!editCreatureId;
+    showArmamentModal;
 
   // Data for item selection modals (lazy-enabled)
   const { data: userPowers = [] } = useUserPowers({ enabled: libraryQueriesEnabled });
@@ -221,42 +215,6 @@ function CreatureCreatorContent() {
     enabled: libraryQueriesEnabled,
   });
   const { data: publicItems = [] } = useOfficialLibrary('items', { enabled: libraryQueriesEnabled });
-  const { data: publicCreatures = [], isLoading: publicCreaturesLoading, isError: publicCreaturesError } = useOfficialLibrary('creatures', { enabled: libraryQueriesEnabled });
-  const { data: userCreatures = [], isLoading: userCreaturesLoading } = useUserCreatures({ enabled: libraryQueriesEnabled });
-  
-  const creatureLoadItems = useMemo((): SelectableItem[] => {
-    const my =
-      loadSource === 'my' || loadSource === 'all'
-        ? userCreatures
-        : [];
-    const pub =
-      loadSource === 'public' || loadSource === 'all'
-        ? publicCreatures
-        : [];
-    return [...my, ...pub].map((c) => buildCreatureSelectableItem(c));
-  }, [loadSource, userCreatures, publicCreatures]);
-
-  const creatureLoadLoading =
-    (loadSource !== 'public' && userCreaturesLoading) ||
-    (loadSource !== 'my' && publicCreaturesLoading);
-
-  const creatureLoadEmptyMessage =
-    creatureLoadItems.length === 0
-      ? loadSource === 'public'
-        ? 'No public creatures in the Realms Library'
-        : loadSource === 'my'
-          ? 'No creatures in your library'
-          : 'No creatures found'
-      : 'No matching creatures';
-
-  const creatureLoadEmptySubMessage =
-    creatureLoadItems.length === 0 && loadSource === 'public' && publicCreaturesError
-      ? 'Failed to load Realms Library. Try again later.'
-      : creatureLoadItems.length === 0 && loadSource === 'public'
-        ? 'Official creatures can be added by admins via Admin → Realms Library Editor.'
-        : creatureLoadItems.length === 0 && loadSource !== 'public'
-          ? 'Create a creature and save it to your library first.'
-          : undefined;
 
   const normalizedPublicPowers = publicPowers;
   const normalizedPublicTechniques = publicTechniques;
@@ -293,21 +251,6 @@ function CreatureCreatorContent() {
     return [...my, ...pub].filter((item: UserItem) => !selectedIds.has(item.docId)) as UserItem[];
   }, [userItems, normalizedPublicItems, librarySource, creature.armaments]);
 
-  // Transform library data to DisplayItem[] (for onConfirm payload)
-  const powerDisplayItems = useMemo(() =>
-    powerList.map((p: UserPower) => transformUserPowerToDisplayItem(p, powerPartsDb)),
-    [powerList, powerPartsDb]
-  );
-  const techniqueDisplayItems = useMemo(() =>
-    techniqueList.map((t: UserTechnique) => transformUserTechniqueToDisplayItem(t, techniquePartsDb)),
-    [techniqueList, techniquePartsDb]
-  );
-  
-  const armamentDisplayItems = useMemo(() =>
-    armamentList.map((item: UserItem) => transformUserItemToDisplayItem(item, itemPropertiesDb)),
-    [armamentList, itemPropertiesDb]
-  );
-
   // Build SelectableItems with detailSections (parts/properties chips) and area/range in expanded view — same logic as add-library-item-modal
   const powerSelectableItems = useMemo(() => {
     return powerList.map((power: UserPower) => {
@@ -326,8 +269,10 @@ function CreatureCreatorContent() {
       const display = derivePowerDisplay(doc, powerPartsDb);
       const partChips = partChipsFromDisplay(display.partChips);
       const base = displayItemToSelectableItem(displayItem, ['Energy', 'Action', 'Damage', 'Area']);
+      // Duration omitted from modal columns → labeled chip (Range already chipped)
       const detailSections = buildPartsAndMetadataDetailSections({
         range: display.range,
+        duration: display.duration,
         partChips,
       });
       return {
@@ -350,6 +295,7 @@ function CreatureCreatorContent() {
       const actionCol = empowered.columns?.find((c) => c.key === 'Action');
       const damageCol = empowered.columns?.find((c) => c.key === 'Damage');
       const areaCol = empowered.columns?.find((c) => c.key === 'Area');
+      const durationCol = empowered.columns?.find((c) => c.key === 'Duration');
       const displayItem = transformUserPowerToDisplayItem({
         id: technique.id,
         docId: technique.docId,
@@ -364,6 +310,9 @@ function CreatureCreatorContent() {
         damage: powerData.damage as UserPower['damage'],
       }, powerPartsDb);
       const base = displayItemToSelectableItem(displayItem, ['Energy', 'Action', 'Damage', 'Area']);
+      const durationFacts = buildEntityMetadataDetailSections({
+        duration: durationCol?.value != null ? String(durationCol.value) : undefined,
+      });
       return {
         ...empowered,
         ...base,
@@ -373,6 +322,7 @@ function CreatureCreatorContent() {
           { key: 'Damage', value: damageCol?.value ?? '-', align: 'center' as const },
           { key: 'Area', value: areaCol?.value ?? '-', align: 'center' as const },
         ],
+        detailSections: mergeDetailSections(durationFacts, empowered.detailSections),
         totalCost: tp > 0 ? tp : undefined,
         costLabel: tp > 0 ? 'TP' : undefined,
         data: {
@@ -444,9 +394,30 @@ function CreatureCreatorContent() {
       const propertySection = propertiesProficienciesSection(propertyChips);
       const totalCost = propertyChips.reduce((sum, c) => sum + (c.cost ?? 0), 0) || undefined;
       const base = displayItemToSelectableItem(displayItem, ['Type', 'TP', 'Cost']);
+      const source = displayItem.sourceData as {
+        type?: string;
+        damage?: string;
+        range?: string;
+        damageReduction?: number;
+        armorValue?: number;
+      } | undefined;
+      const type = String(source?.type ?? '').toLowerCase();
+      const dr = source?.damageReduction ?? source?.armorValue;
+      const factChips: ChipData[] = [];
+      if ((type === 'weapon' || type === 'shield') && source?.damage) {
+        factChips.push(metadataDescriptorChip(`Damage: ${source.damage}`));
+      }
+      if ((type === 'weapon' || type === 'shield') && source?.range) {
+        const rangeStr = normalizeRangeDisplay(source.range);
+        if (rangeStr) factChips.push(metadataDescriptorChip(`Range: ${rangeStr}`));
+      }
+      if (type === 'armor' && dr != null) {
+        factChips.push(metadataDescriptorChip(`Damage Reduction ${dr}`));
+      }
+      const factSection = metadataDetailSection(factChips);
       return {
         ...base,
-        detailSections: propertySection ? [propertySection] : undefined,
+        detailSections: mergeDetailSections(factSection, propertySection),
         totalCost: totalCost ?? undefined,
         costLabel: totalCost != null ? 'TP' : undefined,
         data: displayItem,
@@ -952,23 +923,15 @@ function CreatureCreatorContent() {
 
   const handleLoadCreature = useCallback((item: SelectableItem) => {
     setCreature(rawRecordToCreatureState(item.data as Record<string, unknown>));
-    setLoadSource('all');
-  }, []);
-
-  const closeLoadModal = useCallback(() => {
-    setShowLoadModal(false);
-    setLoadSource('all');
-  }, []);
-
-  // Merged creatures (user + public) for ?edit= load from admin public library
-  const mergedCreaturesForEdit = useMemo(() => {
-    return [...(userCreatures ?? []), ...(publicCreatures ?? [])];
-  }, [userCreatures, publicCreatures]);
+    load.closeLoadModal();
+    save.setSaveMessage({ type: 'success', text: 'Creature loaded successfully!' });
+    setTimeout(() => save.setSaveMessage(null), 2000);
+  }, [load, save]);
 
   // Load creature for editing from URL (?edit=<id>)
   useEffect(() => {
-    if (!editCreatureId || !mergedCreaturesForEdit.length || editLoadedRef.current) return;
-    const c = mergedCreaturesForEdit.find(
+    if (!editCreatureId || !load.rawItems.length || editLoadedRef.current) return;
+    const c = load.rawItems.find(
       (x) => String((x as { id?: string; docId?: string }).id) === editCreatureId || String((x as { id?: string; docId?: string }).docId) === editCreatureId
     ) as Record<string, unknown> | undefined;
     editLoadedRef.current = true;
@@ -980,19 +943,15 @@ function CreatureCreatorContent() {
     setCreature(loaded);
     try {
       localStorage.removeItem(CREATURE_CREATOR_CACHE_KEY);
-    } catch (_e) {
+    } catch {
       // ignore
     }
-    save.setSaveMessage({ type: 'success', text: 'Creature loaded from Realms Library.' });
+    save.setSaveMessage({ type: 'success', text: 'Creature loaded successfully!' });
     setTimeout(() => save.setSaveMessage(null), 2000);
     setIsInitialized(true);
-  }, [editCreatureId, mergedCreaturesForEdit, save]);
+  }, [editCreatureId, load.rawItems, save]);
 
   const handleSave = useCallback(async () => {
-    if (!user) {
-      setShowLoginPrompt(true);
-      return;
-    }
     if (isOverBudget) {
       save.setSaveMessage({
         type: 'error',
@@ -1002,7 +961,7 @@ function CreatureCreatorContent() {
       return;
     }
     await save.handleSave();
-  }, [user, save, isOverBudget]);
+  }, [save, isOverBudget]);
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
@@ -1018,75 +977,112 @@ function CreatureCreatorContent() {
   };
 
   return (
-    <CreatorLayout
+    <CreatorPageShell
       icon={<Skull className="w-8 h-8 text-primary-link-fg" />}
       title="Creature Creator"
       description="Design custom creatures, monsters, and NPCs. Configure abilities, defenses, skills, and combat options."
-      actions={
-        <div className="flex items-center gap-2">
-          <CreatorSaveToolbar
-            saveTarget={save.saveTarget}
-            onSaveTargetChange={save.setSaveTarget}
-            onSave={handleSave}
-            onLoad={() => (user ? setShowLoadModal(true) : setShowLoginPrompt(true))}
-            onReset={handleReset}
-            saving={save.saving}
-            saveDisabled={!creature.name.trim() || isOverBudget}
-            showPublicPrivate={isAdmin}
-            user={user}
-          />
-        </div>
-      }
+      user={user}
+      auth={{ returnPath: '/creature-creator', contentType: 'creature' }}
+      showPublicPrivate={isAdmin}
+      saveTarget={save.saveTarget}
+      onSaveTargetChange={save.setSaveTarget}
+      onSave={handleSave}
+      onLoad={load.openLoadModal}
+      onReset={handleReset}
+      saving={save.saving}
+      saveDisabled={!creature.name.trim() || isOverBudget}
+      loading={{
+        isLoading: skillsLoading || traitsLoading || creatureFeatsLoading || codexFeatsLoading,
+        loadingMessage: 'Loading creature creator...',
+      }}
+      publish={{
+        isOpen: save.showPublishConfirm,
+        onClose: () => save.setShowPublishConfirm(false),
+        onConfirm: () => save.confirmPublish(),
+        title: save.publishConfirmTitle,
+        description:
+          save.publishConfirmDescription?.(creature.name.trim(), {
+            existingInPublic: save.publishExistingInPublic,
+          }) ?? '',
+      }}
+      resetConfirm={{
+        isOpen: showResetConfirm,
+        onClose: () => setShowResetConfirm(false),
+        onConfirm: () => {
+          setCreature(initialState);
+          try {
+            localStorage.removeItem(CREATURE_CREATOR_CACHE_KEY);
+          } catch {
+          }
+          setShowResetConfirm(false);
+        },
+        title: 'Restart Creature',
+        description: 'Are you sure you want to reset all creature data? This will clear all fields and cannot be undone.',
+        confirmLabel: 'Reset',
+      }}
+      loadModal={{
+        isOpen: load.showLoadModal,
+        onClose: load.closeLoadModal,
+        selectableItems: load.selectableItems,
+        columns: load.columns,
+        gridColumns: load.gridColumns,
+        onSelect: handleLoadCreature,
+        isLoading: load.isLoading,
+        error: load.error,
+        title: 'Load Creature',
+        headerExtra: <SourceFilter value={load.source} onChange={load.setSource} />,
+        searchPlaceholder: 'Search creatures by name, type, or level...',
+        emptyMessage: load.emptyMessage,
+        emptySubMessage: load.emptySubMessage,
+      }}
       sidebar={
-        <div className="self-start sticky top-24 space-y-6">
-          <CreatorSummaryPanel
-            title="Creature Summary"
-            badge={creature.name ? { label: creature.name, className: 'bg-primary-subtle-bg text-primary-fg' } : undefined}
-            resourceBoxes={[
-              { label: 'Ability Pts', value: `${stats.abilityRemaining}/${stats.abilityPoints}`, variant: stats.abilityRemaining < 0 ? 'danger' : stats.abilityRemaining === 0 ? 'success' : 'info' },
-              { label: 'Skill Pts', value: `${stats.skillRemaining}/${stats.skillPoints}`, variant: stats.skillRemaining < 0 ? 'danger' : stats.skillRemaining === 0 ? 'success' : 'info' },
-              { label: 'Feat Pts', value: `${stats.featRemaining}/${stats.featPoints}`, variant: stats.featRemaining < 0 ? 'danger' : stats.featRemaining === 0 ? 'success' : 'warning' },
-              { label: 'Training Pts', value: `${stats.trainingRemaining}/${stats.trainingPoints}`, variant: stats.trainingRemaining < 0 ? 'danger' : stats.trainingRemaining === 0 ? 'success' : 'warning' },
-              { label: 'Currency', value: `${stats.currencyRemaining}/${stats.currency}`, variant: stats.currencyRemaining < 0 ? 'danger' : stats.currencyRemaining === 0 ? 'success' : 'warning' },
-            ]}
-            quickStats={[
-              { label: 'HP', value: stats.maxHealth, color: 'bg-health-light text-health border border-border-light' },
-              { label: 'EN', value: stats.maxEnergy, color: 'bg-energy-light text-energy border border-border-light' },
-              { label: 'SPD', value: stats.speed, color: 'bg-surface-alt border border-border-light' },
-              { label: 'EVA', value: stats.evasion, color: 'bg-surface-alt border border-border-light' },
-              { label: 'PROF', value: `+${stats.proficiency}`, color: 'bg-surface-alt border border-border-light' },
-            ]}
-            abilitiesChips={(['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'] as const).map((k, i) => {
-              const abbr = ['STR', 'VIT', 'AGI', 'ACU', 'INT', 'CHA'][i];
-              const v = creature.abilities[k];
-              return { abbr, value: v };
-            })}
-            statRows={[
-              { label: 'Archetype', value: formatListCellLabel(creature.archetypeType) },
-              { label: 'Level', value: creature.level },
-              { label: 'Type', value: formatListCellLabel(creature.type) },
-              { label: 'Size', value: formatListCellLabel(creature.size) },
-            ]}
-            lineItems={[
-              {
-                label: 'Skills',
-                items: creature.skills.map((s: CreatureSkill) => {
-                  const b = getCreatureSkillBonus(s);
-                  return `${s.name} ${b >= 0 ? '+' : ''}${b}`;
-                }),
-              },
-              { label: 'Resistances', items: creature.resistances },
-              { label: 'Immunities', items: creature.immunities },
-              { label: 'Weaknesses', items: creature.weaknesses },
-              { label: 'Senses', items: creature.senses },
-              { label: 'Movement', items: creature.movementTypes },
-              { label: 'Languages', items: creature.languages },
-              { label: 'Inventory Cost', items: [`${stats.currencySpent}c spent / ${stats.currency}c max`] },
-            ]}
-          />
-        </div>
+        <CreatorSummaryPanel
+          title="Creature Summary"
+          badge={creature.name ? { label: creature.name, className: 'bg-primary-subtle-bg text-primary-fg' } : undefined}
+          resourceBoxes={[
+            { label: 'Ability Pts', value: `${stats.abilityRemaining}/${stats.abilityPoints}`, variant: stats.abilityRemaining < 0 ? 'danger' : stats.abilityRemaining === 0 ? 'success' : 'info' },
+            { label: 'Skill Pts', value: `${stats.skillRemaining}/${stats.skillPoints}`, variant: stats.skillRemaining < 0 ? 'danger' : stats.skillRemaining === 0 ? 'success' : 'info' },
+            { label: 'Feat Pts', value: `${stats.featRemaining}/${stats.featPoints}`, variant: stats.featRemaining < 0 ? 'danger' : stats.featRemaining === 0 ? 'success' : 'warning' },
+            { label: 'Training Pts', value: `${stats.trainingRemaining}/${stats.trainingPoints}`, variant: stats.trainingRemaining < 0 ? 'danger' : stats.trainingRemaining === 0 ? 'success' : 'warning' },
+            { label: 'Currency', value: `${stats.currencyRemaining}/${stats.currency}`, variant: stats.currencyRemaining < 0 ? 'danger' : stats.currencyRemaining === 0 ? 'success' : 'warning' },
+          ]}
+          quickStats={[
+            { label: 'HP', value: stats.maxHealth, color: 'bg-health-light text-health border border-border-light' },
+            { label: 'EN', value: stats.maxEnergy, color: 'bg-energy-light text-energy border border-border-light' },
+            { label: 'SPD', value: stats.speed, color: 'bg-surface-alt border border-border-light' },
+            { label: 'EVA', value: stats.evasion, color: 'bg-surface-alt border border-border-light' },
+            { label: 'PROF', value: `+${stats.proficiency}`, color: 'bg-surface-alt border border-border-light' },
+          ]}
+          abilitiesChips={(['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'] as const).map((k, i) => {
+            const abbr = ['STR', 'VIT', 'AGI', 'ACU', 'INT', 'CHA'][i];
+            const v = creature.abilities[k];
+            return { abbr, value: v };
+          })}
+          statRows={[
+            { label: 'Archetype', value: formatListCellLabel(creature.archetypeType) },
+            { label: 'Level', value: creature.level },
+            { label: 'Type', value: formatListCellLabel(creature.type) },
+            { label: 'Size', value: formatListCellLabel(creature.size) },
+          ]}
+          lineItems={[
+            {
+              label: 'Skills',
+              items: creature.skills.map((s: CreatureSkill) => {
+                const b = getCreatureSkillBonus(s);
+                return `${s.name} ${b >= 0 ? '+' : ''}${b}`;
+              }),
+            },
+            { label: 'Resistances', items: creature.resistances },
+            { label: 'Immunities', items: creature.immunities },
+            { label: 'Weaknesses', items: creature.weaknesses },
+            { label: 'Senses', items: creature.senses },
+            { label: 'Movement', items: creature.movementTypes },
+            { label: 'Languages', items: creature.languages },
+            { label: 'Inventory Cost', items: [`${stats.currencySpent}c spent / ${stats.currency}c max`] },
+          ]}
+        />
       }
-      modals={
+      extraModals={
         <>
           <UnifiedSelectionModal
             isOpen={showPowerModal}
@@ -1154,17 +1150,19 @@ function CreatureCreatorContent() {
             gridColumns="1.25fr 0.55fr 0.72fr 0.9fr 0.65fr"
             size="xl"
           />
-          <AddCreatureFeatModal
-            isOpen={showFeatModal}
-            onClose={() => setShowFeatModal(false)}
-            creature={creature}
-            onAdd={(feats) =>
-              setCreature((prev) => ({
-                ...prev,
-                feats: mergeCreatureFeatsOnAdd(prev.feats, feats, codexFeatsById),
-              }))
-            }
-          />
+          {showFeatModal ? (
+            <AddCreatureFeatModal
+              isOpen
+              onClose={() => setShowFeatModal(false)}
+              creature={creature}
+              onAdd={(feats) =>
+                setCreature((prev) => ({
+                  ...prev,
+                  feats: mergeCreatureFeatsOnAdd(prev.feats, feats, codexFeatsById),
+                }))
+              }
+            />
+          ) : null}
           <UnifiedSelectionModal
             isOpen={showArmamentModal}
             onClose={() => setShowArmamentModal(false)}
@@ -1202,55 +1200,6 @@ function CreatureCreatorContent() {
             gridColumns="1.5fr 0.6fr 0.5fr 0.6fr"
             size="xl"
             className="min-h-0"
-          />
-          <LoadFromLibraryModal
-            isOpen={showLoadModal}
-            onClose={closeLoadModal}
-            selectableItems={creatureLoadItems}
-            columns={[
-              { key: 'name', label: 'Name', sortable: true },
-              { key: 'level', label: 'Level', sortable: true },
-              { key: 'type', label: 'Type', sortable: true },
-            ]}
-            gridColumns="1.5fr 0.5fr 1fr"
-            onSelect={handleLoadCreature}
-            isLoading={creatureLoadLoading}
-            title="Load Creature"
-            headerExtra={<SourceFilter value={loadSource} onChange={setLoadSource} />}
-            searchPlaceholder="Search creatures by name, type, or level..."
-            emptyMessage={creatureLoadEmptyMessage}
-            emptySubMessage={creatureLoadEmptySubMessage}
-          />
-          <LoginPromptModal
-            isOpen={showLoginPrompt}
-            onClose={() => setShowLoginPrompt(false)}
-            returnPath="/creature-creator"
-            contentType="creature"
-          />
-          <ConfirmActionModal
-            isOpen={showResetConfirm}
-            onClose={() => setShowResetConfirm(false)}
-            onConfirm={() => {
-              setCreature(initialState);
-              try {
-                localStorage.removeItem(CREATURE_CREATOR_CACHE_KEY);
-              } catch {
-              }
-              setShowResetConfirm(false);
-            }}
-            title="Restart Creature"
-            description="Are you sure you want to reset all creature data? This will clear all fields and cannot be undone."
-            confirmLabel="Reset"
-            confirmVariant="danger"
-          />
-          <ConfirmActionModal
-            isOpen={save.showPublishConfirm}
-            onClose={() => save.setShowPublishConfirm(false)}
-            onConfirm={() => save.confirmPublish()}
-            title={save.publishConfirmTitle}
-            description={save.publishConfirmDescription?.(creature.name.trim(), { existingInPublic: save.publishExistingInPublic }) ?? ''}
-            confirmLabel="Publish"
-            icon="publish"
           />
         </>
       }
@@ -1380,7 +1329,7 @@ function CreatureCreatorContent() {
 
           {/* Resistances, Weaknesses, Immunities */}
           <Card className="shadow-md p-6">
-            <h2 className="text-lg font-bold text-text-primary mb-4">Damage Modifiers</h2>
+            <h2 className="text-lg font-bold text-text-primary mb-4">Resistances, Weaknesses & Immunities</h2>
             <p className="text-sm text-text-muted dark:text-text-secondary mb-3">Each type costs feat points as shown. Resistances and immunities cost points; weaknesses grant points.</p>
             <div className="grid md:grid-cols-3 gap-4">
               <div>
@@ -1472,7 +1421,7 @@ function CreatureCreatorContent() {
                   items={creature.movementTypes} 
                   onRemove={(item) => removeFromArray('movementTypes', item)}
                   color="bg-warning-light text-warning-fg"
-                  rowHoverClass="hover:bg-amber-200 dark:hover:bg-amber-800/40"
+                  rowHoverClass="hover:bg-warning-200 dark:hover:bg-warning-800/40"
                   descriptions={movementDescriptions}
                   costLabel={getMovementCostLabel}
                 />
@@ -1920,15 +1869,17 @@ function CreatureCreatorContent() {
               Add Inventory Item
             </Button>
           </CollapsibleSection>
-    </CreatorLayout>
+    </CreatorPageShell>
   );
 }
 
 export default function CreatureCreatorPage() {
   return (
-    <RollProvider canRoll>
-      <CreatureCreatorContent />
-      <RollLog />
-    </RollProvider>
+    <Suspense fallback={<LoadingState message="Loading..." padding="md" />}>
+      <RollProvider canRoll>
+        <CreatureCreatorContent />
+        <RollLog />
+      </RollProvider>
+    </Suspense>
   );
 }

@@ -9,15 +9,16 @@
 
 import { useMemo, useState } from 'react';
 import { Spinner, EmptyState } from '@/components/ui';
+import { GuidedLayerNav } from '@/components/shared';
 import { useMergedSpecies } from '@/hooks';
 import type { Species } from '@/hooks';
+import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { GuidedChoiceCard } from '../guided-choice-card';
 import { getSpeciesSizeOptions } from '../guided-species-utils';
 import { GUIDED_CHOICE_GRID_CLASS, GUIDED_CHOICE_GRID_ITEM_CLASS } from '../guided-choice-grid';
+import { GuidedSpeciesDetailModal } from '../guided-species-detail-modal';
 import { GuidedStepLayout } from '../guided-step-layout';
-import { GuidedLayerNav } from '@/components/shared';
-import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.species;
 
@@ -25,6 +26,7 @@ export function SpeciesStep() {
   const { draft, updateDraft } = useGuidedCreatorStore();
   const { data: allSpecies = [], isLoading } = useMergedSpecies();
   const [showAll, setShowAll] = useState(false);
+  const [detailSpeciesId, setDetailSpeciesId] = useState<string | null>(null);
 
   const hasStarters = useMemo(() => allSpecies.some((s) => (s as Species).is_starter), [allSpecies]);
 
@@ -32,6 +34,13 @@ export function SpeciesStep() {
     if (!hasStarters || showAll) return allSpecies;
     return allSpecies.filter((s) => (s as Species).is_starter);
   }, [allSpecies, hasStarters, showAll]);
+
+  // Lookup against full list so "Back to starters" does not dismiss an open non-starter modal.
+  const detailSpecies = useMemo(
+    () =>
+      (allSpecies.find((s) => String(s.id) === detailSpeciesId) as Species | undefined) ?? null,
+    [allSpecies, detailSpeciesId]
+  );
 
   const handleSelect = (species: Species) => {
     const changed = draft.speciesId !== String(species.id);
@@ -78,6 +87,7 @@ export function SpeciesStep() {
                 description={species.description}
                 selected={draft.speciesId === String(species.id)}
                 onSelect={() => handleSelect(species as Species)}
+                onDetails={() => setDetailSpeciesId(String(species.id))}
               />
             ))}
           </div>
@@ -91,6 +101,12 @@ export function SpeciesStep() {
               onCollapse={() => setShowAll(false)}
             />
           ) : null}
+
+          <GuidedSpeciesDetailModal
+            isOpen={detailSpecies != null}
+            onClose={() => setDetailSpeciesId(null)}
+            species={detailSpecies}
+          />
         </>
       )}
     </GuidedStepLayout>

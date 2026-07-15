@@ -1,11 +1,14 @@
 'use client';
 
 /**
- * SpeciesTraitCard - Unified Trait Display Component
- * ===================================================
- * Consistent trait display for species modal, codex, and character creator.
- * Supports all trait categories with appropriate color coding.
- * Supports limited uses tracking with +/- controls.
+ * SpeciesTraitCard - Trait Display Component
+ * ==========================================
+ * @deprecated For read-only catalogs and deep-dive lists prefer `DetailOptionList` +
+ * `traitToDetailOption` (`@/lib/detail-option`). For selectable ancestry/path picks use
+ * `GuidedChoiceCard`. Keep this component only when interactive uses steppers / SelectionToggle
+ * are required.
+ *
+ * Supports trait categories, color coding, and limited-uses tracking with +/- controls.
  */
 
 import { Heart, Star, Sparkles, AlertTriangle } from 'lucide-react';

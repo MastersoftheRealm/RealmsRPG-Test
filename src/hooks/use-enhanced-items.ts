@@ -13,29 +13,27 @@ import {
   deleteEnhancedItem,
   updateEnhancedItem,
 } from '@/services/enhanced-items-service';
-import type { UserEnhancedItem } from '@/types/crafting';
+import type {
+  CreateOfficialEnhancedItemInput,
+  OfficialEnhancedItem,
+  OfficialEnhancedItemPayload,
+  UpdateOfficialEnhancedItemInput,
+  UserEnhancedItem,
+} from '@/types/crafting';
 import { apiFetch } from '@/lib/api-client';
 
 export type EnhancedItemsScope = 'user' | 'official';
 
-export interface OfficialEnhancedItem {
-  id: string;
-  name: string;
-  description?: string | null;
-  currency_cost: number;
-  rarity: string;
-  base_item_source: string;
-  base_item_id: string | null;
-  base_item_name: string;
-  base_item_description?: string | null;
-  power_source: string;
-  power_id: string;
-  power_name: string;
-  uses_type: string;
-  uses_count: number | null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  payload: Record<string, any>;
-}
+export type {
+  OfficialEnhancedItem,
+  OfficialEnhancedItemPayload,
+  CreateOfficialEnhancedItemInput,
+  UpdateOfficialEnhancedItemInput,
+  EnhancedItemUsesType,
+} from '@/types/crafting';
+
+type UserEnhancedItemCreate = Omit<UserEnhancedItem, 'id' | 'createdAt' | 'updatedAt'>;
+type UserEnhancedItemPatch = { potency?: number; name?: string };
 
 const OFFICIAL_API = '/api/official/enhanced-items';
 
@@ -45,11 +43,17 @@ export const enhancedItemsKeys = {
   list: (scope: EnhancedItemsScope) => enhancedItemsKeys.lists(scope),
 };
 
+function normalizeOfficialRow(row: OfficialEnhancedItem): OfficialEnhancedItem {
+  const payload = (row.payload ?? {}) as OfficialEnhancedItemPayload;
+  return { ...row, payload };
+}
+
 async function fetchEnhancedItems(scope: EnhancedItemsScope) {
   if (scope === 'user') {
     return getEnhancedItems();
   }
-  return apiFetch<OfficialEnhancedItem[]>(OFFICIAL_API);
+  const rows = await apiFetch<OfficialEnhancedItem[]>(OFFICIAL_API);
+  return rows.map(normalizeOfficialRow);
 }
 
 export function useEnhancedItems(
@@ -72,80 +76,76 @@ export function useOfficialEnhancedItems() {
   return useEnhancedItems('official');
 }
 
-export function useCreateEnhancedItem(scope: EnhancedItemsScope = 'user') {
+/** Create a user library enhanced item (from crafting). */
+export function useCreateEnhancedItem() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (
-      body:
-        | Omit<UserEnhancedItem, 'id' | 'createdAt' | 'updatedAt'>
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        | Record<string, any>
-    ) => {
-      if (scope === 'user') {
-        return createEnhancedItem(
-          body as Omit<UserEnhancedItem, 'id' | 'createdAt' | 'updatedAt'>
-        );
-      }
-      return apiFetch(OFFICIAL_API, {
-        method: 'POST',
-        body: JSON.stringify(body),
-      });
-    },
+    mutationFn: (body: UserEnhancedItemCreate) => createEnhancedItem(body),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: enhancedItemsKeys.lists(scope) });
+      queryClient.invalidateQueries({ queryKey: enhancedItemsKeys.lists('user') });
     },
   });
 }
 
+/** Create an official enhanced item (admin Realms Library). */
 export function useCreateOfficialEnhancedItem() {
-  return useCreateEnhancedItem('official');
-}
-
-export function useDeleteEnhancedItem(scope: EnhancedItemsScope = 'user') {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => {
-      if (scope === 'user') {
-        return deleteEnhancedItem(id);
-      }
-      return apiFetch(`${OFFICIAL_API}?id=${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-      });
-    },
+    mutationFn: (body: CreateOfficialEnhancedItemInput) =>
+      apiFetch(OFFICIAL_API, {
+        method: 'POST',
+        body: JSON.stringify(body),
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: enhancedItemsKeys.lists(scope) });
+      queryClient.invalidateQueries({ queryKey: enhancedItemsKeys.lists('official') });
+    },
+  });
+}
+
+export function useDeleteEnhancedItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteEnhancedItem(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: enhancedItemsKeys.lists('user') });
     },
   });
 }
 
 export function useDeleteOfficialEnhancedItem() {
-  return useDeleteEnhancedItem('official');
-}
-
-export function useUpdateEnhancedItem(scope: EnhancedItemsScope = 'user') {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      id,
-      patch,
-    }: {
-      id: string;
-      patch: { potency?: number; name?: string } | Record<string, unknown>;
-    }) => {
-      if (scope === 'user') {
-        return updateEnhancedItem(id, patch as { potency?: number; name?: string });
-      }
-      return apiFetch(`${OFFICIAL_API}?id=${encodeURIComponent(id)}`, {
-        method: 'PATCH',
-        body: JSON.stringify(patch),
-      });
-    },
+    mutationFn: (id: string) =>
+      apiFetch(`${OFFICIAL_API}?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: enhancedItemsKeys.lists(scope) });
+      queryClient.invalidateQueries({ queryKey: enhancedItemsKeys.lists('official') });
+    },
+  });
+}
+
+export function useUpdateEnhancedItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: UserEnhancedItemPatch }) =>
+      updateEnhancedItem(id, patch),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: enhancedItemsKeys.lists('user') });
     },
   });
 }
 
 export function useUpdateOfficialEnhancedItem() {
-  return useUpdateEnhancedItem('official');
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: UpdateOfficialEnhancedItemInput }) =>
+      apiFetch(`${OFFICIAL_API}?id=${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        body: JSON.stringify(patch),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: enhancedItemsKeys.lists('official') });
+    },
+  });
 }

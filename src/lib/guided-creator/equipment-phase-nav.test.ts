@@ -1,0 +1,65 @@
+import { describe, expect, it } from 'vitest';
+import {
+  canCompleteEquipmentPhase,
+  canNavigateToEquipmentPhase,
+  nextEquipmentPhase,
+  prevEquipmentPhase,
+  resolveEquipmentPhaseVisibility,
+  visibleEquipmentPhases,
+} from '@/lib/guided-creator/equipment-phase-nav';
+
+describe('equipment-phase-nav', () => {
+  it('skips armor phase for power paths', () => {
+    expect(visibleEquipmentPhases('none')).toEqual(['weapon', 'gear']);
+    expect(nextEquipmentPhase('weapon', 'none')).toBe('gear');
+    expect(prevEquipmentPhase('gear', 'none')).toBe('weapon');
+  });
+
+  it('includes armor for martial paths', () => {
+    expect(visibleEquipmentPhases('required')).toEqual(['weapon', 'armor', 'gear']);
+    expect(nextEquipmentPhase('weapon', 'required')).toBe('armor');
+  });
+
+  it('requires weapons unless unarmed prowess taken', () => {
+    const ctx = {
+      loadoutWeapons: [],
+      loadoutArmor: [],
+      recommendUnarmed: true,
+      unarmedProwess: 0,
+      armorMode: 'required' as const,
+    };
+    expect(canCompleteEquipmentPhase('weapon', ctx)).toBe(false);
+    expect(
+      canCompleteEquipmentPhase('weapon', { ...ctx, unarmedProwess: 1 })
+    ).toBe(true);
+  });
+
+  it('omits weapon and armor when path has no options', () => {
+    const visibility = resolveEquipmentPhaseVisibility('required', {
+      hasWeaponOptions: false,
+      hasArmorOptions: false,
+      recommendUnarmed: false,
+    });
+    expect(visibleEquipmentPhases('required', visibility)).toEqual(['gear']);
+  });
+
+  it('keeps weapon phase for unarmed paths without weapon options', () => {
+    const visibility = resolveEquipmentPhaseVisibility('none', {
+      hasWeaponOptions: false,
+      hasArmorOptions: false,
+      recommendUnarmed: true,
+    });
+    expect(visibleEquipmentPhases('none', visibility)).toEqual(['weapon', 'gear']);
+  });
+
+  it('blocks jumping ahead before completing current phase', () => {
+    const ctx = {
+      loadoutWeapons: [],
+      loadoutArmor: [],
+      recommendUnarmed: false,
+      unarmedProwess: 0,
+      armorMode: 'required' as const,
+    };
+    expect(canNavigateToEquipmentPhase('armor', 'weapon', 'required', ctx)).toBe(false);
+  });
+});

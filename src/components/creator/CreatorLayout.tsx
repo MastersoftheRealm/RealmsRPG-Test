@@ -1,10 +1,11 @@
 'use client';
 
 /**
- * CreatorLayout — Shared layout for all creators
- * ===============================================
- * Enforces consistent structure: PageContainer, PageHeader, grid with main (2/3) + sidebar (1/3).
- * Use for power, technique, item, and creature creators to avoid layout drift.
+ * CreatorLayout — Shared page chrome for standalone creators (and crafting)
+ * ========================================================================
+ * PageContainer + PageHeader + main/sidebar grid. Prefer wrapping routes with
+ * CreatorPageShell for auth/load/save; use CreatorLayout directly when actions
+ * differ (e.g. crafting Back button).
  */
 
 import { ReactNode } from 'react';

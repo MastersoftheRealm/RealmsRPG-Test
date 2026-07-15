@@ -1,17 +1,12 @@
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 import type { SelectableItem } from '@/components/shared/unified-selection-modal';
+import type { EqItem as SharedEqItem } from '@/lib/library-selectable-builders';
 
 export type AddLibraryItemType = 'power' | 'technique' | 'weapon' | 'shield' | 'armor' | 'equipment';
 export type PowerSelectionMode = 'powers' | 'empowered';
 
-export type EqItem = {
-  id: string;
-  name?: string;
-  description?: string;
-  damage?: unknown;
-  armorValue?: number;
-  properties?: Array<string | { id?: string | number; name?: string; op_1_lvl?: number; base_tp?: number; op_1_tp?: number }>;
-};
+/** Shared with load modal builders — see `@/lib/library-selectable-builders`. */
+export type EqItem = SharedEqItem;
 
 export type WithSource<T> = T & { _source: 'my' | 'public' };
 

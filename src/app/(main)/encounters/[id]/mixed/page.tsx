@@ -80,7 +80,9 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
     data: encounter,
     onSave: async (data) => {
       if (!data || !encounterId) return;
-      const { id: _id, createdAt: _ca, ...rest } = data;
+      const { id, createdAt, ...rest } = data;
+      void id;
+      void createdAt;
       await saveMutation.mutateAsync({ id: encounterId, data: rest });
     },
     delay: 1500,

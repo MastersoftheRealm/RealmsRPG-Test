@@ -140,7 +140,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
         setSaving(false);
       }
     },
-    [type, getPayload, successMessage, publicSuccessMessage, onSaveSuccess]
+    [type, getPayload, successMessage, publicSuccessMessage, onSaveSuccess, queryClient]
   );
 
   const handleSave = useCallback(async () => {
@@ -162,7 +162,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
     const existingId = publishExistingId;
     setShowPublishConfirm(false);
     await executeSave('public', existingId ?? undefined);
-  }, [executeSave, publishExistingId]);
+  }, [executeSave, publishExistingId, setShowPublishConfirm]);
 
   return {
     saveMessage,

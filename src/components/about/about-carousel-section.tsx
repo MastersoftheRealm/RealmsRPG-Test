@@ -4,6 +4,7 @@
 
 'use client';
 
+import type { ReactNode } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { Swords } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
@@ -14,8 +15,8 @@ const FADE_IN_MS = 220;
 
 export type AboutCarouselSlide = {
   title: string;
-  content: React.ReactNode;
-  contentMobile?: React.ReactNode;
+  content: ReactNode;
+  contentMobile?: ReactNode;
 };
 
 type AboutCarouselSectionProps = {

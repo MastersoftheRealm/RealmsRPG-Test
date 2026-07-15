@@ -1,11 +1,12 @@
 /**
  * Expandable Chip — unified expand-in-place chip for parts, properties, and GridListRow chips.
+ * Expanded chips grow into remaining row space without jumping the toggle under the pointer.
  */
 
 'use client';
 
 import * as React from 'react';
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import type { VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils/cn';
@@ -14,6 +15,7 @@ import { DescriptorChip, type chipVariants } from '@/components/ui/chip';
 import { ChipOptionsPanel } from '@/lib/chip/chip-options-panel';
 import { partChipVariant } from '@/lib/chip/part-chip-variant';
 import { expandableChipShellClass } from '@/lib/chip/expandable-chip-shell';
+import { measureStableExpandWidth } from '@/lib/chip/measure-stable-expand-width';
 
 export interface ExpandableChipOption {
   label: string;
@@ -31,6 +33,10 @@ export interface ExpandableChipProps {
   variant?: ChipVariant;
   size?: 'sm' | 'md';
   className?: string;
+  /**
+   * When expanded, grow to the remaining width of the chip group row (stable under cursor).
+   * Default true. When false, expand height-only at the header’s intrinsic width.
+   */
   fullWidthWhenExpanded?: boolean;
 
   /** TP cost — renders `TP: N` in header */
@@ -76,7 +82,7 @@ export function ExpandableChip({
   variant,
   size = 'md',
   className,
-  fullWidthWhenExpanded = false,
+  fullWidthWhenExpanded = true,
   tpCost,
   energyCost,
   cost,
@@ -96,8 +102,11 @@ export function ExpandableChip({
   descriptorVariant,
   interactiveHover = false,
 }: ExpandableChipProps) {
+  const shellRef = useRef<HTMLDivElement>(null);
+  const expandLeftRef = useRef<number | null>(null);
   const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
   const [internalOptionsOpen, setInternalOptionsOpen] = useState(false);
+  const [stableWidthPx, setStableWidthPx] = useState<number | undefined>(undefined);
 
   const styleVariant = variant ?? partChipVariant(category);
   const isExpanded = expanded !== undefined ? expanded : internalExpanded;
@@ -113,6 +122,43 @@ export function ExpandableChip({
   const canExpandByContent = hasDescription || hasOptions || (expandOnCost && hasHeaderCost);
   const canExpand = !descriptor && expandable !== false && canExpandByContent;
 
+  const lockStableWidth = (el: HTMLElement) => {
+    const left = el.getBoundingClientRect().left;
+    expandLeftRef.current = left;
+    setStableWidthPx(measureStableExpandWidth(el, { leftOverride: left }));
+  };
+
+  useLayoutEffect(() => {
+    if (!isExpanded || !canExpand || !fullWidthWhenExpanded) {
+      if (!isExpanded) {
+        expandLeftRef.current = null;
+        setStableWidthPx(undefined);
+      }
+      return;
+    }
+
+    const el = shellRef.current;
+    if (!el) return;
+
+    const update = () => {
+      const left = expandLeftRef.current ?? el.getBoundingClientRect().left;
+      if (expandLeftRef.current == null) expandLeftRef.current = left;
+      setStableWidthPx(measureStableExpandWidth(el, { leftOverride: left }));
+    };
+
+    update();
+
+    const group =
+      (el.closest('[data-chip-group]') as HTMLElement | null) ?? el.parentElement;
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null;
+    if (group && ro) ro.observe(group);
+    window.addEventListener('resize', update);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener('resize', update);
+    };
+  }, [isExpanded, canExpand, fullWidthWhenExpanded, label, description, sublabel]);
+
   if (descriptor) {
     return (
       <DescriptorChip variant={descriptorVariant ?? styleVariant} size="sm">
@@ -124,11 +170,18 @@ export function ExpandableChip({
 
   const handleHeaderClick = (e: React.MouseEvent) => {
     if (!canExpand) return;
+    const next = !isExpanded;
+    if (next && fullWidthWhenExpanded && shellRef.current) {
+      // Capture while still collapsed so flex-wrap does not reboot before width locks.
+      lockStableWidth(shellRef.current);
+    } else if (!next) {
+      expandLeftRef.current = null;
+      setStableWidthPx(undefined);
+    }
     if (onToggle) {
       onToggle(e);
       return;
     }
-    const next = !isExpanded;
     setInternalExpanded(next);
     onExpandedChange?.(next);
   };
@@ -137,6 +190,12 @@ export function ExpandableChip({
     if ((e.key === 'Enter' || e.key === ' ') && canExpand && !onToggle) {
       e.preventDefault();
       const next = !isExpanded;
+      if (next && fullWidthWhenExpanded && shellRef.current) {
+        lockStableWidth(shellRef.current);
+      } else if (!next) {
+        expandLeftRef.current = null;
+        setStableWidthPx(undefined);
+      }
       setInternalExpanded(next);
       onExpandedChange?.(next);
     }
@@ -156,18 +215,23 @@ export function ExpandableChip({
 
   return (
     <div
+      ref={shellRef}
       className={expandableChipShellClass({
         variant: styleVariant,
         expanded: isExpanded,
         size,
         className: cn(
-          fullWidthWhenExpanded && isExpanded && 'w-full min-w-0',
           interactiveHover && canExpand && 'hover:shadow-md',
           isExpanded && interactiveHover && 'shadow-md',
           !useButtonHeader && canExpand && 'cursor-pointer',
           className
         ),
       })}
+      style={
+        isExpanded && fullWidthWhenExpanded && stableWidthPx != null
+          ? { width: stableWidthPx }
+          : undefined
+      }
       onClick={!useButtonHeader && canExpand ? handleHeaderClick : undefined}
       onKeyDown={!useButtonHeader && canExpand ? handleHeaderKeyDown : undefined}
       tabIndex={!useButtonHeader && canExpand ? 0 : undefined}
@@ -279,30 +343,32 @@ function ChipHeaderContent({
   const hasEnergy = (energyCost ?? 0) > 0;
 
   return (
-    <span className="inline-flex items-center gap-1.5 min-w-0 flex-1 flex-wrap">
-      <span className={labelClassName}>{label}</span>
+    <span className="inline-flex items-center gap-1.5 min-w-0 flex-1 flex-nowrap overflow-hidden">
+      <span className={cn('truncate', labelClassName)}>{label}</span>
       {level && level > 1 && (
-        <span className="text-xs text-text-secondary">(Lv.{level})</span>
+        <span className="text-xs text-text-secondary shrink-0">(Lv.{level})</span>
       )}
       {costSuffix !== undefined && (
-        <span className="text-xs text-text-muted dark:text-text-secondary">({costSuffix})</span>
+        <span className="text-xs text-text-muted dark:text-text-secondary shrink-0">
+          ({costSuffix})
+        </span>
       )}
       {hasTp && (
         <>
-          <span className="opacity-40">|</span>
-          <span className="text-xs font-semibold">TP: {tpCost}</span>
+          <span className="opacity-40 shrink-0">|</span>
+          <span className="text-xs font-semibold shrink-0">TP: {tpCost}</span>
         </>
       )}
       {hasEnergy && (
         <>
-          <span className="opacity-40">|</span>
-          <span className="text-xs font-semibold text-energy">{energyCost} EP</span>
+          <span className="opacity-40 shrink-0">|</span>
+          <span className="text-xs font-semibold text-energy shrink-0">{energyCost} EP</span>
         </>
       )}
       {hasNumericCost && cost !== undefined && !hasTp && (
         <>
-          <span className="opacity-40">|</span>
-          <span className="text-xs font-semibold text-text-secondary dark:text-text-primary">
+          <span className="opacity-40 shrink-0">|</span>
+          <span className="text-xs font-semibold text-text-secondary dark:text-text-primary shrink-0">
             {costLabel}: {typeof cost === 'number' ? formatCostDisplay(cost) : cost}
           </span>
         </>
@@ -311,14 +377,19 @@ function ChipHeaderContent({
   );
 }
 
-export interface ChipGroupProps {
+export interface ChipGroupProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;
 }
 
-export function ChipGroup({ children, className }: ChipGroupProps) {
+/** Flex-wrap host for ExpandableChip — marks the measurement boundary for stable expand. */
+export function ChipGroup({ children, className, ...rest }: ChipGroupProps) {
   return (
-    <div className={cn('flex flex-wrap gap-2', className)}>
+    <div
+      {...rest}
+      data-chip-group
+      className={cn('flex flex-wrap gap-2 items-start', className)}
+    >
       {children}
     </div>
   );

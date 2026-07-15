@@ -10,8 +10,7 @@ import Link from 'next/link';
 import { Mail, ArrowLeft } from 'lucide-react';
 import { AuthCard } from '@/components/auth';
 import { Button } from '@/components/ui';
-
-const SUPPORT_EMAIL = 'RealmsRoleplayGame@gmail.com';
+import { SITE_CONTACT_EMAIL } from '@/lib/constants/site-copy';
 
 export default function ForgotUsernamePage() {
   return (
@@ -24,8 +23,8 @@ export default function ForgotUsernamePage() {
           If you forgot your username, email us from the address on your account and we can help you recover it.
         </p>
         <Button asChild className="w-full min-h-[44px]">
-          <a href={`mailto:${SUPPORT_EMAIL}?subject=Username%20recovery%20request`}>
-            Email {SUPPORT_EMAIL}
+          <a href={`mailto:${SITE_CONTACT_EMAIL}?subject=Username%20recovery%20request`}>
+            Email {SITE_CONTACT_EMAIL}
           </a>
         </Button>
       </div>

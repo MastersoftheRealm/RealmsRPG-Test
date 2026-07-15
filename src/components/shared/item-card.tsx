@@ -8,7 +8,7 @@
  */
 
 import { useState, memo } from 'react';
-import { Check, Edit, Copy, Eye, AlertCircle, X } from 'lucide-react';
+import { Edit, Copy, Eye, AlertCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IconButton, DescriptorChip } from '@/components/ui';
 import { itemBadgeToDescriptorVariant } from '@/lib/chip/descriptor-chip-variants';

@@ -300,7 +300,7 @@ export function SkillsSection({
               <Button
                 size="sm"
                 onClick={onAddSubSkill}
-                className="bg-teal-100 hover:bg-teal-200 text-teal-700"
+                className="bg-info-100 hover:bg-info-200 text-info-700 dark:bg-info-900/30 dark:text-info-300"
               >
                 <Plus size={14} />
                 Sub-Skill

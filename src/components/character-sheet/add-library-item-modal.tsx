@@ -103,7 +103,7 @@ export function AddLibraryItemModal({
       searchPlaceholder={getSearchPlaceholder(itemType, powerSelectionMode)}
       showQuantity={itemType === 'equipment'}
       size="lg"
-      className="max-h-[60vh]"
+      className="md:max-h-[60vh]"
     />
   );
 }

@@ -1,7 +1,9 @@
 /** Site footer copy and link groups — edit for global footer / auth shell. */
 
+import { SITE_CONTACT_EMAIL } from './shared-copy';
+
 export const FOOTER_COPY = {
-  contactEmail: 'RealmsRoleplayGame@gmail.com',
+  contactEmail: SITE_CONTACT_EMAIL,
   discordCta: 'Join the Discord',
   copyright: (year: number) => `© ${year} Realms RPG`,
   groups: {

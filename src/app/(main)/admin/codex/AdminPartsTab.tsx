@@ -272,9 +272,9 @@ export function AdminPartsTab() {
     setEditing(null);
     setCopySourceName(p.name);
     const raw = (v: unknown) => (v != null && v !== '' ? v : undefined);
-    const op1 = (p as any).op_1_desc?.trim();
-    const op2 = (p as any).op_2_desc?.trim();
-    const op3 = (p as any).op_3_desc?.trim();
+    const op1 = p.op_1_desc?.trim();
+    const op2 = p.op_2_desc?.trim();
+    const op3 = p.op_3_desc?.trim();
     setOptionSlotCount([op1, op2, op3].filter(Boolean).length || 0);
     setForm({
       name: (p.name || '').trim() + COPY_NAME_SUFFIX,
@@ -283,19 +283,19 @@ export function AdminPartsTab() {
       type: ((p.type || 'power').toLowerCase() === 'technique' ? 'technique' : 'power') as 'power' | 'technique',
       base_en: p.base_en,
       base_tp: p.base_tp,
-      mechanic: Boolean((p as any).mechanic),
-      percentage: Boolean((p as any).percentage),
-      duration: Boolean((p as any).duration),
+      mechanic: Boolean(p.mechanic),
+      percentage: Boolean(p.percentage),
+      duration: Boolean(p.duration),
       defense: normalizePartTargetedDefenses(p.defense),
       op_1_desc: op1 || '',
-      op_1_en: op1 ? raw((p as any).op_1_en) as number | undefined : undefined,
-      op_1_tp: op1 ? raw((p as any).op_1_tp) as number | undefined : undefined,
+      op_1_en: op1 ? raw(p.op_1_en) as number | undefined : undefined,
+      op_1_tp: op1 ? raw(p.op_1_tp) as number | undefined : undefined,
       op_2_desc: op2 || '',
-      op_2_en: op2 ? raw((p as any).op_2_en) as number | undefined : undefined,
-      op_2_tp: op2 ? raw((p as any).op_2_tp) as number | undefined : undefined,
+      op_2_en: op2 ? raw(p.op_2_en) as number | undefined : undefined,
+      op_2_tp: op2 ? raw(p.op_2_tp) as number | undefined : undefined,
       op_3_desc: op3 || '',
-      op_3_en: op3 ? raw((p as any).op_3_en) as number | undefined : undefined,
-      op_3_tp: op3 ? raw((p as any).op_3_tp) as number | undefined : undefined,
+      op_3_en: op3 ? raw(p.op_3_en) as number | undefined : undefined,
+      op_3_tp: op3 ? raw(p.op_3_tp) as number | undefined : undefined,
     });
     setModalOpen(true);
   };
@@ -304,9 +304,9 @@ export function AdminPartsTab() {
     setEditing(p);
     setCopySourceName(null);
     const raw = (v: unknown) => (v != null && v !== '' ? v : undefined);
-    const op1 = (p as any).op_1_desc?.trim();
-    const op2 = (p as any).op_2_desc?.trim();
-    const op3 = (p as any).op_3_desc?.trim();
+    const op1 = p.op_1_desc?.trim();
+    const op2 = p.op_2_desc?.trim();
+    const op3 = p.op_3_desc?.trim();
     setOptionSlotCount([op1, op2, op3].filter(Boolean).length || 0);
     setForm({
       name: p.name,
@@ -315,19 +315,19 @@ export function AdminPartsTab() {
       type: ((p.type || 'power').toLowerCase() === 'technique' ? 'technique' : 'power') as 'power' | 'technique',
       base_en: p.base_en,
       base_tp: p.base_tp,
-      mechanic: Boolean((p as any).mechanic),
-      percentage: Boolean((p as any).percentage),
-      duration: Boolean((p as any).duration),
+      mechanic: Boolean(p.mechanic),
+      percentage: Boolean(p.percentage),
+      duration: Boolean(p.duration),
       defense: normalizePartTargetedDefenses(p.defense),
       op_1_desc: op1 || '',
-      op_1_en: op1 ? raw((p as any).op_1_en) as number | undefined : undefined,
-      op_1_tp: op1 ? raw((p as any).op_1_tp) as number | undefined : undefined,
+      op_1_en: op1 ? raw(p.op_1_en) as number | undefined : undefined,
+      op_1_tp: op1 ? raw(p.op_1_tp) as number | undefined : undefined,
       op_2_desc: op2 || '',
-      op_2_en: op2 ? raw((p as any).op_2_en) as number | undefined : undefined,
-      op_2_tp: op2 ? raw((p as any).op_2_tp) as number | undefined : undefined,
+      op_2_en: op2 ? raw(p.op_2_en) as number | undefined : undefined,
+      op_2_tp: op2 ? raw(p.op_2_tp) as number | undefined : undefined,
       op_3_desc: op3 || '',
-      op_3_en: op3 ? raw((p as any).op_3_en) as number | undefined : undefined,
-      op_3_tp: op3 ? raw((p as any).op_3_tp) as number | undefined : undefined,
+      op_3_en: op3 ? raw(p.op_3_en) as number | undefined : undefined,
+      op_3_tp: op3 ? raw(p.op_3_tp) as number | undefined : undefined,
     });
     setModalOpen(true);
   };
@@ -439,7 +439,7 @@ export function AdminPartsTab() {
     }
   };
 
-  const handleInlineDelete = async (id: string, name: string) => {
+  const handleInlineDelete = async (id: string) => {
     if (pendingDeleteId !== id) {
       setPendingDeleteId(id);
       return;
@@ -589,7 +589,7 @@ export function AdminPartsTab() {
                     {
                       key: 'EN',
                       value: formatEnergyCost(p.base_en, p.percentage),
-                      className: 'text-blue-600',
+                      className: 'text-energy-text',
                     },
                     { key: 'TP', value: p.base_tp != null ? String(p.base_tp) : '-', className: 'text-tp' },
                   ]}
@@ -598,11 +598,11 @@ export function AdminPartsTab() {
                     <div className="flex items-center gap-1 pr-2">
                       {pendingDeleteId === p.id ? (
                         <div className="flex items-center gap-1 text-xs">
-                          <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
+                          <span className="text-danger-700 dark:text-danger-400 font-medium whitespace-nowrap">Remove?</span>
                           <Button
                             size="sm"
                             variant="danger"
-                            onClick={() => handleInlineDelete(p.id, p.name)}
+                            onClick={() => handleInlineDelete(p.id)}
                             className="text-xs px-2 py-0.5 h-6"
                           >
                             Yes
@@ -649,7 +649,7 @@ export function AdminPartsTab() {
           <div className="flex justify-between">
             <div>
               {editing && (
-                <Button variant="outline" onClick={() => handleDelete(editing.id)} className={deleteConfirm === editing.id ? 'border-red-500 text-red-600' : ''}>
+                <Button variant="outline" onClick={() => handleDelete(editing.id)} className={deleteConfirm === editing.id ? 'border-danger-500 text-danger-700 dark:text-danger-400' : ''}>
                   {deleteConfirm === editing.id ? 'Click again to confirm delete' : 'Delete'}
                 </Button>
               )}
@@ -835,7 +835,7 @@ export function AdminPartsTab() {
                     <div className="grid grid-cols-2 gap-4 max-w-xs">
                       <div>
                         <label className="block text-sm font-medium text-text-secondary mb-1">
-                          EN cost {form.percentage ? '(±% modifier)' : ''}
+                          EN cost {form.percentage ? '(±%)' : ''}
                         </label>
                         {form.percentage ? (
                           <div className="flex items-center gap-2">

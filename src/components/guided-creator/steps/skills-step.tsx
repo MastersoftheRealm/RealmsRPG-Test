@@ -18,13 +18,14 @@ import {
   getTotalSkillPoints,
   resolveSkillAllocationRules,
 } from '@/lib/game/skill-allocation';
-import { getGuidedPathAbilityKeys, formatGuidedAbilityKeysLabel } from '@/lib/guided-creator/curated-skills';
 import {
   buildGuidedSkillSuggestions,
   guidedSuggestionsToBadgeMap,
 } from '@/lib/guided-creator/guided-skill-recommendations';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import type { Skill } from '@/hooks';
+
+import { EMPTY_NUMBER_RECORD, EMPTY_STRING_ARRAY } from '@/lib/empty';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.skills;
 
@@ -51,15 +52,20 @@ export function SkillsStep() {
     [pathData]
   );
 
-  const recommendedSkillIds = pathData?.level1?.skills ?? [];
+  const pathLevel1Skills = pathData?.level1?.skills;
+  const recommendedSkillIds = pathLevel1Skills ?? EMPTY_STRING_ARRAY;
 
   const declinedPathSkillIds = useMemo(
     () => new Set(draft.declinedPathSkillIds.map(String)),
     [draft.declinedPathSkillIds]
   );
 
-  const allocations = draft.skills ?? {};
-  const abilities = draft.abilities ?? { ...DEFAULT_ABILITIES };
+  const allocations = draft.skills ?? EMPTY_NUMBER_RECORD;
+  // Stable when draft.abilities is missing; never share a mutable DEFAULT_ABILITIES reference.
+  const abilities = useMemo(
+    () => draft.abilities ?? { ...DEFAULT_ABILITIES },
+    [draft.abilities]
+  );
   const level = 1;
   const extraSkillPoints = speciesSkillIds.has('0') ? 1 : 0;
   const totalPoints = getTotalSkillPoints(level, 'character') + extraSkillPoints;
@@ -135,23 +141,15 @@ export function SkillsStep() {
     [allocationsWithDefaults]
   );
 
-  const archetypeAbilityKeys = useMemo(
-    () => getGuidedPathAbilityKeys(draft.archetypeType, draft.pow_abil, draft.mart_abil),
-    [draft.archetypeType, draft.pow_abil, draft.mart_abil]
-  );
-
-  const archetypeAbilityLabel = useMemo(
-    () => formatGuidedAbilityKeysLabel(archetypeAbilityKeys),
-    [archetypeAbilityKeys]
-  );
-
-  const skillSuggestions = useMemo(
+  const { suggestions: skillSuggestions } = useMemo(
     () =>
       buildGuidedSkillSuggestions({
         codexSkills,
+        abilities,
         declinedPathSkillIds: [...declinedPathSkillIds],
         pathSourceLabel: archetype?.name,
         archetypeType: draft.archetypeType,
+        archetype,
         powAbil: draft.pow_abil,
         martAbil: draft.mart_abil,
         pathSkillIds: [...pathSkillIds],
@@ -161,8 +159,9 @@ export function SkillsStep() {
       }),
     [
       codexSkills,
+      abilities,
       declinedPathSkillIds,
-      archetype?.name,
+      archetype,
       draft.archetypeType,
       draft.pow_abil,
       draft.mart_abil,
@@ -243,15 +242,15 @@ export function SkillsStep() {
               ? stepCopy.pathSkillSuggestionsTitle(archetype?.name ?? 'your path')
               : hasPathDeclinedSuggestions && hasAbilitySuggestions
                 ? stepCopy.mixedSkillSuggestionsTitle
-                : stepCopy.abilitySkillSuggestionsTitle(archetypeAbilityLabel)}
+                : stepCopy.suggestedSkillsTitle}
           </h3>
-          <p className="mt-1 font-nunito text-sm text-text-secondary">
-            {hasPathDeclinedSuggestions && !hasAbilitySuggestions
-              ? stepCopy.pathSkillSuggestionsHint(archetype?.name ?? 'your path')
-              : hasPathDeclinedSuggestions && hasAbilitySuggestions
-                ? stepCopy.mixedSkillSuggestionsHint(remainingPoints, archetypeAbilityLabel)
-                : stepCopy.abilitySkillSuggestionsHint(remainingPoints, archetypeAbilityLabel)}
-          </p>
+          {hasPathDeclinedSuggestions && (
+            <p className="mt-1 font-nunito text-sm text-text-secondary">
+              {hasAbilitySuggestions
+                ? stepCopy.mixedSkillSuggestionsHint(remainingPoints)
+                : stepCopy.pathSkillSuggestionsHint(archetype?.name ?? 'your path')}
+            </p>
+          )}
           <div className={`${GUIDED_CHOICE_COMPACT_GRID_CLASS} mt-3`}>
             {skillSuggestions.map((suggestion) => {
               const skill = codexSkills.find((s) => String(s.id) === suggestion.skillId);

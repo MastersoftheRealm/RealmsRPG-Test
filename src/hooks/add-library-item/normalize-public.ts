@@ -6,7 +6,16 @@ export function normalizePublicPower(p: LibraryPower): UserPower {
 }
 
 export function normalizePublicTechnique(t: LibraryTechnique): UserTechnique {
-  return { ...t, docId: t.docId || t.id, isReaction: t.isReaction ?? false };
+  const weaponName =
+    typeof (t as LibraryTechnique & { weaponName?: string }).weaponName === 'string'
+      ? (t as LibraryTechnique & { weaponName?: string }).weaponName
+      : undefined;
+  return {
+    ...t,
+    docId: t.docId || t.id,
+    weapon: t.weapon ?? (weaponName ? { name: weaponName } : undefined),
+    isReaction: t.isReaction ?? false,
+  };
 }
 
 export function normalizePublicItem(i: LibraryItem): UserItem | EqItem {

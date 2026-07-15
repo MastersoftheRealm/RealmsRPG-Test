@@ -364,7 +364,6 @@ export function CreatureStatBlock({
   badges,
   showActions = true,
   expanded: initialExpanded = false,
-  compact = false,
   className,
 }: CreatureStatBlockProps) {
   const rollContext = useRollsOptional();

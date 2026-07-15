@@ -34,7 +34,7 @@ export function ExpandableImageModal({
       onClose={onClose}
       title={alt}
       description={
-        isPlaceholder ? 'Placeholder art — full illustration coming later.' : undefined
+        isPlaceholder ? 'Placeholder art. Full illustration coming later.' : undefined
       }
       size="lg"
       fullScreenOnMobile

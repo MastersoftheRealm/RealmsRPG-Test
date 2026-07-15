@@ -73,8 +73,6 @@ export function RecoveryModal({
   // Calculate deficits
   const hpDeficit = maxHealth - currentHealth;
   const enDeficit = maxEnergy - currentEnergy;
-  const hpDeficitPercent = maxHealth > 0 ? hpDeficit / maxHealth : 0;
-  const enDeficitPercent = maxEnergy > 0 ? enDeficit / maxEnergy : 0;
   
   // Calculate what each quarter restores
   const hpPerQuarter = roundUp(maxHealth / 4);
@@ -231,7 +229,7 @@ export function RecoveryModal({
             
             <div className="grid grid-cols-2 gap-4">
               {/* HP Recovery */}
-              <div className="flex items-center gap-3 p-3 bg-white dark:bg-surface rounded-lg">
+              <div className="flex items-center gap-3 p-3 bg-surface rounded-lg">
                 <Heart className="w-6 h-6 text-success-fg" />
                 <div>
                   <div className="text-xs text-text-muted dark:text-text-secondary">Health</div>
@@ -242,7 +240,7 @@ export function RecoveryModal({
               </div>
               
               {/* EN Recovery */}
-              <div className="flex items-center gap-3 p-3 bg-white dark:bg-surface rounded-lg">
+              <div className="flex items-center gap-3 p-3 bg-surface rounded-lg">
                 <Zap className="w-6 h-6 text-info-fg" />
                 <div>
                   <div className="text-xs text-text-muted dark:text-text-secondary">Energy</div>
@@ -372,7 +370,7 @@ export function RecoveryModal({
               
               <div className="grid grid-cols-2 gap-4">
                 {/* HP Recovery */}
-                <div className="flex items-center gap-3 p-3 bg-white dark:bg-surface rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-surface rounded-lg">
                   <Heart className="w-6 h-6 text-success-fg" />
                   <div>
                     <div className="text-xs text-text-muted dark:text-text-secondary">Health</div>
@@ -386,7 +384,7 @@ export function RecoveryModal({
                 </div>
                 
                 {/* EN Recovery */}
-                <div className="flex items-center gap-3 p-3 bg-white dark:bg-surface rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-surface rounded-lg">
                   <Zap className="w-6 h-6 text-info-fg" />
                   <div>
                     <div className="text-xs text-text-muted dark:text-text-secondary">Energy</div>
@@ -427,7 +425,7 @@ export function RecoveryModal({
           <Button 
             variant="primary" 
             onClick={handleConfirm}
-            className={cn(mode === 'full' ? 'bg-primary-button hover:bg-primary-button-hover text-white' : 'bg-warning-600 hover:bg-warning-700 dark:bg-warning-600 dark:text-white dark:hover:bg-warning-700')}
+            className={cn(mode === 'full' ? 'bg-primary-button hover:bg-primary-button-hover text-text-on-dark' : 'bg-warning-600 hover:bg-warning-700 dark:bg-warning-600 dark:text-text-on-dark dark:hover:bg-warning-700')}
           >
             {mode === 'full' ? 'Full Recovery' : `Recover (${hours}h)`}
           </Button>

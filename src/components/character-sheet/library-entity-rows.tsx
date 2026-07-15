@@ -537,7 +537,7 @@ export function mapEquipmentRows(equipment: Item[], ctx: LibraryEntityRowContext
       badges.push({ label: item.rarity.charAt(0).toUpperCase() + item.rarity.slice(1), color: rarityColor });
     }
     if (item.cost !== undefined && item.cost > 0) {
-      badges.push({ label: `${item.cost}g`, color: 'amber' });
+      badges.push({ label: `Cost ${item.cost}c`, color: 'amber' });
     }
 
     return {

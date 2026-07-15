@@ -31,6 +31,7 @@ import { Heart, AlertTriangle, Sparkles, Star } from 'lucide-react';
 import { chooseYourAncestryTraits } from '../../../../public/tooltip-text';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
 import { getValidationIssuesForStep, getStepCompletion } from '@/lib/character-creator-validation';
+import { EMPTY_STRING_ARRAY } from '@/lib/empty';
 
 interface ResolvedTrait extends Trait {
   found: boolean;
@@ -97,8 +98,8 @@ export function AncestryStep() {
     return options;
   }, [speciesA, speciesB, allSkills]);
 
-  // Current selections from draft
-  const selectedTraitIds = draft.ancestry?.selectedTraits || [];
+  // Current selections from draft (stable empty array for hook deps)
+  const selectedTraitIds = draft.ancestry?.selectedTraits ?? EMPTY_STRING_ARRAY;
   const selectedFlaw = draft.ancestry?.selectedFlaw || null;
   const selectedCharacteristic = draft.ancestry?.selectedCharacteristic || null;
   const selectedSpeciesTraits = draft.ancestry?.selectedSpeciesTraits;
@@ -456,7 +457,7 @@ export function AncestryStep() {
       {draft.creationMode === 'path' && draft.archetype?.name && (
         <>
           <PathHelpCard pathName={draft.archetype.name}>
-            Complete each ancestry choice below — the checklist updates as you go.
+            Complete each ancestry choice below. The checklist updates as you go.
           </PathHelpCard>
           <PathNotes pathName={draft.archetype.name} notes={ancestryPathNotes} />
         </>
@@ -471,7 +472,7 @@ export function AncestryStep() {
       >
         <h3 className="font-semibold text-text-primary mb-2">What to choose</h3>
         {ancestryIssues.length === 0 ? (
-          <p className="text-sm text-success-fg">✓ Your ancestry is complete — nothing left to pick.</p>
+          <p className="text-sm text-success-fg">✓ Your ancestry is complete. Nothing left to pick.</p>
         ) : (
           <ul className="space-y-1.5">
             {ancestryIssues.map((issue, i) => (
@@ -665,7 +666,7 @@ export function AncestryStep() {
           <TraitSection
             title="Characteristic"
             subtitle="Choose 1 (optional)"
-            icon={<Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />}
+            icon={<Sparkles className="w-5 h-5 text-info-fg dark:text-info-400" />}
             traits={characteristics}
             selectable
             selectedIds={selectedCharacteristic ? [selectedCharacteristic] : []}
@@ -943,7 +944,7 @@ export function AncestryStep() {
         <TraitSection
           title="Characteristics"
           subtitle="Select 1 characteristic (optional)"
-          icon={<Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />}
+          icon={<Sparkles className="w-5 h-5 text-info-fg dark:text-info-400" />}
           traits={characteristics}
           selectable
           selectedIds={selectedCharacteristic ? [selectedCharacteristic] : []}

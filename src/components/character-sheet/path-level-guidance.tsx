@@ -160,7 +160,7 @@ export function PathRemoveGuidance({
   const content = (
     <>
       <p className="text-xs font-medium text-text-secondary">
-        Optional guidance — nothing is removed automatically.
+        Optional guidance. Nothing is removed automatically.
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <GuidanceSection title="Feats" items={resolved.removeFeats} variant="remove" />
@@ -263,10 +263,10 @@ export function PathLevelGuidance({ archetype, pathName, targetLevel }: PathLeve
         <MapPin className="w-5 h-5 text-primary-fg flex-shrink-0 mt-0.5" aria-hidden />
         <div>
           <h3 className="text-sm font-semibold text-text-primary">
-            {displayName} — Level {targetLevel} guidance
+            {displayName}: Level {targetLevel} guidance
           </h3>
           <p className="text-xs text-text-secondary mt-0.5">
-            Suggested picks from your archetype path (optional — add manually on your sheet).
+            Suggested picks from your archetype path (optional; add manually on your sheet).
           </p>
         </div>
       </div>
@@ -278,10 +278,10 @@ export function PathLevelGuidance({ archetype, pathName, targetLevel }: PathLeve
       ) : null}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <GuidanceSection title="Recommended feats" items={resolved.feats} />
-        <GuidanceSection title="Recommended skills" items={resolved.skills} />
-        <GuidanceSection title="Recommended powers" items={resolved.powers} />
-        <GuidanceSection title="Recommended techniques" items={resolved.techniques} />
+        <GuidanceSection title="Recommended Feats" items={resolved.feats} />
+        <GuidanceSection title="Recommended Skills" items={resolved.skills} />
+        <GuidanceSection title="Recommended Powers" items={resolved.powers} />
+        <GuidanceSection title="Recommended Techniques" items={resolved.techniques} />
         <GuidanceSection title="Recommended armaments" items={resolved.armaments} />
         <GuidanceSection title="Recommended equipment" items={resolved.equipment} />
       </div>

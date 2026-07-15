@@ -6,18 +6,19 @@
 'use client';
 
 import Image from 'next/image';
-import { useMemo, type ReactNode } from 'react';
+import { useMemo } from 'react';
 import { Heart, Sparkles } from 'lucide-react';
-import { SpeciesTraitCard, ExpandableImage, SegmentedControl } from '@/components/shared';
+import { ExpandableImage, SegmentedControl, SummaryChipList, type SummaryChipItem } from '@/components/shared';
 import { DescriptorChip } from '@/components/ui';
-import { useCodexSkills, resolveTraitIds, type Species, type Trait } from '@/hooks';
+import { useCodexSkills, findTraitByIdOrName, type Species, type Trait } from '@/hooks';
 import { getChoiceOptionIds } from '@/lib/choice-trait';
 import { cn } from '@/lib/utils';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { GUIDED_CHOICE_STYLES, GUIDED_OVERVIEW_STYLES as o } from './guided-choice-styles';
-import { SummaryChipList, type SummaryChipItem } from '@/components/shared';
 import { speciesSkillToSummaryChipItem, ANY_SPECIES_SKILL_ID } from '@/lib/chip/species-skill-chips';
 import { resolveChoiceCardImage } from './guided-choice-image';
+import { GuidedTraitOptionList } from './guided-trait-option-list';
+import { GuidedOverviewSection } from './guided-overview-section';
 import { titleCase } from './guided-text';
 import { getSpeciesSizeOptions } from './guided-species-utils';
 
@@ -29,6 +30,13 @@ export interface SpeciesRevealPanelProps {
   className?: string;
   selectedSize?: string | null;
   onSizeChange?: (size: string) => void;
+  /**
+   * Deep-dive modal mode (TASK-433): no size picker; multi-size shown as vitals text;
+   * optional title hide (modal already titles the entity).
+   */
+  readOnlyDetail?: boolean;
+  /** Hide the “Choices ahead” teaser when option catalogs are listed below. */
+  hideChoiceTeaser?: boolean;
 }
 
 function formatSizes(species: Species): string | null {
@@ -45,10 +53,16 @@ interface VitalItem {
   value: string;
 }
 
-function buildVitals(species: Species, fixedSize: string | null): VitalItem[] {
+function buildVitals(
+  species: Species,
+  fixedSize: string | null,
+  sizeOptionsLabel: string | null
+): VitalItem[] {
   const items: VitalItem[] = [];
   if (fixedSize) {
     items.push({ key: 'size', label: copy.sizeLabel, value: titleCase(fixedSize) });
+  } else if (sizeOptionsLabel) {
+    items.push({ key: 'size', label: copy.sizeLabel, value: sizeOptionsLabel });
   }
   if (species.type?.trim()) {
     items.push({ key: 'type', label: copy.typeLabel, value: titleCase(species.type.trim()) });
@@ -82,32 +96,14 @@ function partitionSpeciesTraits(speciesTraits: Trait[]) {
   return { granted, choices };
 }
 
-function OverviewSection({
-  title,
-  hint,
-  children,
-  className,
-}: {
-  title: string;
-  hint?: string;
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <section className={className}>
-      <h4 className={o.sectionTitle}>{title}</h4>
-      {hint ? <p className={o.sectionHint}>{hint}</p> : null}
-      <div className={hint ? 'mt-3' : 'mt-2'}>{children}</div>
-    </section>
-  );
-}
-
 export function SpeciesRevealPanel({
   species,
   allTraits,
   className,
   selectedSize = null,
   onSizeChange,
+  readOnlyDetail = false,
+  hideChoiceTeaser = false,
 }: SpeciesRevealPanelProps) {
   const { data: allSkills = [] } = useCodexSkills();
   const image = resolveChoiceCardImage('species', species);
@@ -116,11 +112,18 @@ export function SpeciesRevealPanel({
   const hasSizeChoice = sizeOptions.length > 1;
   const fixedSize =
     sizeOptions.length === 1 ? titleCase(sizeOptions[0]) : !hasSizeChoice ? formatSizes(species) : null;
+  const sizeOptionsLabel =
+    readOnlyDetail && hasSizeChoice
+      ? sizeOptions.map((s) => titleCase(s)).join(' / ')
+      : null;
 
-  const speciesTraits = useMemo(
-    () => resolveTraitIds(species.species_traits ?? [], allTraits),
-    [species.species_traits, allTraits]
-  );
+  const speciesTraits = useMemo(() => {
+    const ids = species.species_traits ?? [];
+    if (!ids.length || !allTraits.length) return [];
+    return ids
+      .map((id) => findTraitByIdOrName(allTraits, id))
+      .filter((t): t is Trait => Boolean(t));
+  }, [species.species_traits, allTraits]);
 
   const { granted, choices } = useMemo(() => partitionSpeciesTraits(speciesTraits), [speciesTraits]);
 
@@ -131,12 +134,14 @@ export function SpeciesRevealPanel({
   }, [species.skills, allSkills]);
 
   const vitals = useMemo(
-    () => buildVitals(species, fixedSize),
-    [species, fixedSize]
+    () => buildVitals(species, fixedSize, sizeOptionsLabel),
+    [species, fixedSize, sizeOptionsLabel]
   );
   const abilityBonuses = species.ability_bonuses ?? {};
   const languages = species.languages?.filter(Boolean) ?? [];
   const choiceNames = choices.map((t) => t.name);
+  const showSizePicker = !readOnlyDetail && hasSizeChoice && Boolean(onSizeChange);
+  const showChoiceTeaser = !hideChoiceTeaser && choiceNames.length > 0;
 
   return (
     <div className={cn('space-y-6', className)}>
@@ -158,9 +163,17 @@ export function SpeciesRevealPanel({
             />
           </ExpandableImage>
           <div className="min-w-0 flex-1 text-center sm:text-left">
-            <h3 className={GUIDED_CHOICE_STYLES.title}>{species.name}</h3>
+            {!readOnlyDetail ? (
+              <h3 className={GUIDED_CHOICE_STYLES.title}>{species.name}</h3>
+            ) : null}
             {species.description?.trim() && (
-              <p className={cn('mt-1.5', GUIDED_CHOICE_STYLES.body)}>
+              <p
+                className={cn(
+                  GUIDED_CHOICE_STYLES.body,
+                  !readOnlyDetail && 'mt-1.5',
+                  'whitespace-pre-wrap'
+                )}
+              >
                 {species.description.trim()}
               </p>
             )}
@@ -169,7 +182,7 @@ export function SpeciesRevealPanel({
 
         {vitals.length > 0 && (
           <div className="border-t border-border-light bg-surface-alt/50 px-4 py-4 sm:px-5">
-            <h4 className={o.sectionTitle}>{copy.vitalsTitle}</h4>
+            <div className={o.sectionTitle}>{copy.vitalsTitle}</div>
             <dl className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {vitals.map((item) => (
                 <div
@@ -185,8 +198,8 @@ export function SpeciesRevealPanel({
         )}
       </div>
 
-      {hasSizeChoice && onSizeChange && (
-        <OverviewSection title={copy.sizeChoiceTitle} hint={copy.sizeChoiceHint}>
+      {showSizePicker && onSizeChange ? (
+        <GuidedOverviewSection title={copy.sizeChoiceTitle} hint={copy.sizeChoiceHint}>
           <SegmentedControl
             value={selectedSize ?? ''}
             onChange={onSizeChange}
@@ -201,11 +214,11 @@ export function SpeciesRevealPanel({
           {!selectedSize && (
             <p className="mt-2 font-nunito text-sm text-text-secondary">{copy.sizeChoiceRequired}</p>
           )}
-        </OverviewSection>
-      )}
+        </GuidedOverviewSection>
+      ) : null}
 
       {Object.keys(abilityBonuses).length > 0 && (
-        <OverviewSection title={copy.abilityBonusesTitle}>
+        <GuidedOverviewSection title={copy.abilityBonusesTitle}>
           <div className="flex flex-wrap gap-2">
             {Object.entries(abilityBonuses).map(([ability, bonus]) => (
               <DescriptorChip key={ability} variant="primary" size="sm">
@@ -213,19 +226,19 @@ export function SpeciesRevealPanel({
               </DescriptorChip>
             ))}
           </div>
-        </OverviewSection>
+        </GuidedOverviewSection>
       )}
 
       {skillItems.length > 0 && (
-        <OverviewSection title={copy.skillsTitle}>
+        <GuidedOverviewSection title={copy.skillsTitle}>
           <SummaryChipList items={skillItems} />
-        </OverviewSection>
+        </GuidedOverviewSection>
       )}
 
       {languages.length > 0 && (
-        <OverviewSection title={copy.languagesTitle}>
+        <GuidedOverviewSection title={copy.languagesTitle}>
           <p className={o.body}>{languages.join(', ')}</p>
-        </OverviewSection>
+        </GuidedOverviewSection>
       )}
 
       {granted.length > 0 && (
@@ -233,38 +246,25 @@ export function SpeciesRevealPanel({
           <div className="mb-3 flex items-start gap-2">
             <Heart className="mt-0.5 h-5 w-5 shrink-0 text-info-fg" aria-hidden="true" />
             <div>
-              <h4 className={o.sectionTitle}>{copy.grantedTitle}</h4>
+              <div className={o.sectionTitle}>{copy.grantedTitle}</div>
               <p className={o.sectionHint}>{copy.grantedHint}</p>
             </div>
           </div>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {granted.map((trait) => (
-              <SpeciesTraitCard
-                key={trait.id}
-                trait={{
-                  id: String(trait.id),
-                  name: trait.name,
-                  description: trait.description,
-                }}
-                category="species"
-                neutralStyle
-              />
-            ))}
-          </div>
+          <GuidedTraitOptionList traits={granted} />
         </section>
       )}
 
-      {choiceNames.length > 0 && (
+      {showChoiceTeaser ? (
         <section className={o.callout} aria-live="polite">
           <div className="flex items-start gap-2">
             <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-primary-fg" aria-hidden="true" />
             <div>
-              <h4 className={o.sectionTitle}>{copy.choiceTeaserTitle}</h4>
+              <div className={o.sectionTitle}>{copy.choiceTeaserTitle}</div>
               <p className={o.sectionHint}>{copy.choiceTeaserHint(choiceNames)}</p>
             </div>
           </div>
         </section>
-      )}
+      ) : null}
     </div>
   );
 }

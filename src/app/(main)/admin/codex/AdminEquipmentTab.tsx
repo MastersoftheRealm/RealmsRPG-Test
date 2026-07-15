@@ -17,11 +17,13 @@ import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Copy, X } from 'lucide-react';
-import { formatListCellLabel } from '@/lib/utils';
+import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
+import { metadataDescriptorChip } from '@/lib/chip/list-row-metadata';
+import type { ChipData } from '@/components/shared/grid-list-row';
 
 const COPY_NAME_SUFFIX = ' copy';
 
-const EQUIPMENT_GRID_COLUMNS = '1.5fr 1fr 0.8fr 1fr 40px';
+const EQUIPMENT_GRID_COLUMNS = '1.3fr 0.9fr 0.65fr 0.75fr 1fr 0.7fr 40px';
 
 interface EquipmentListItem {
   id: string;
@@ -32,6 +34,9 @@ interface EquipmentListItem {
   gold_cost?: number;
   currency?: number;
   rarity?: string;
+  damage?: string;
+  armor_value?: number;
+  weight?: number;
 }
 
 interface EquipmentFilters {
@@ -195,7 +200,7 @@ export function AdminEquipmentTab() {
     }
   };
 
-  const handleInlineDelete = async (id: string, name: string) => {
+  const handleInlineDelete = async (id: string) => {
     if (pendingDeleteId !== id) {
       setPendingDeleteId(id);
       return;
@@ -249,6 +254,8 @@ export function AdminEquipmentTab() {
           { key: 'category', label: 'CATEGORY' },
           { key: 'cost', label: 'COST' },
           { key: 'rarity', label: 'RARITY' },
+          { key: 'damage', label: 'DAMAGE' },
+          { key: 'dr', label: 'DMG. RED.' },
           { key: '_actions', label: '', sortable: false as const },
         ]}
         gridColumns={EQUIPMENT_GRID_COLUMNS}
@@ -268,7 +275,16 @@ export function AdminEquipmentTab() {
               size="sm"
             />
           ) : (
-            filteredEquipment.map((e: EquipmentListItem & { category: string; cost: number; rarity: string }) => (
+            filteredEquipment.map((e: EquipmentListItem & { category: string; cost: number; rarity: string }) => {
+              const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> = [];
+              if (e.weight !== undefined) {
+                detailSections.push({
+                  label: 'Details',
+                  chips: [metadataDescriptorChip(`Weight ${e.weight} kg`)],
+                  hideLabelIfSingle: true,
+                });
+              }
+              return (
               <GridListRow
                 key={e.id}
                 id={e.id}
@@ -283,13 +299,24 @@ export function AdminEquipmentTab() {
                     highlight: true,
                   },
                   { key: 'Rarity', value: formatListCellLabel(e.rarity) },
+                  {
+                    key: 'Damage',
+                    value: e.damage ? formatDamageDisplay(e.damage) : '-',
+                    align: 'center' as const,
+                  },
+                  {
+                    key: 'Dmg. Red.',
+                    value: e.armor_value != null ? String(e.armor_value) : '-',
+                    align: 'center' as const,
+                  },
                 ]}
+                detailSections={detailSections.length > 0 ? detailSections : undefined}
                 rightSlot={
                   <div className="flex items-center gap-1 pr-2">
                     {pendingDeleteId === e.id ? (
                       <div className="flex items-center gap-1 text-xs">
-                        <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
-                        <Button size="sm" variant="danger" onClick={() => handleInlineDelete(e.id, e.name)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
+                        <span className="text-danger-700 dark:text-danger-400 font-medium whitespace-nowrap">Remove?</span>
+                        <Button size="sm" variant="danger" onClick={() => handleInlineDelete(e.id)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
                         <Button size="sm" variant="secondary" onClick={() => setPendingDeleteId(null)} className="text-xs px-2 py-0.5 h-6">No</Button>
                       </div>
                     ) : (
@@ -314,7 +341,8 @@ export function AdminEquipmentTab() {
                   </div>
                 }
               />
-            ))
+              );
+            })
           )}
         </div>
       )}
@@ -324,7 +352,7 @@ export function AdminEquipmentTab() {
           <div className="flex justify-between">
             <div>
               {editing && (
-                <Button variant="outline" onClick={() => handleDelete(editing.id)} className={deleteConfirm === editing.id ? 'border-red-500 text-red-600' : ''}>
+                <Button variant="outline" onClick={() => handleDelete(editing.id)} className={deleteConfirm === editing.id ? 'border-danger-500 text-danger-700 dark:text-danger-400' : ''}>
                   {deleteConfirm === editing.id ? 'Click again to confirm delete' : 'Delete'}
                 </Button>
               )}

@@ -140,15 +140,22 @@ export function GuidedRevealSummary() {
   });
 
   const loadoutTitle = useMemo(() => {
-    const loadouts = pathData?.level1?.loadouts ?? [];
-    const match = loadouts.find((l) => l.id === draft.loadoutId);
-    if (match?.title) return match.title;
-    if (draft.loadoutId === 'custom') return copy.customLoadout;
-    if (draft.loadoutId === 'path-default' && archetype?.name) {
-      return `${archetype.name} loadout`;
-    }
-    return draft.loadoutId ?? copy.defaultLoadout;
-  }, [pathData, draft.loadoutId, archetype?.name]);
+    const hasGear =
+      draft.loadoutWeapons.length > 0 ||
+      draft.loadoutArmor.length > 0 ||
+      draft.equipment.length > 0 ||
+      (draft.unarmedProwess ?? 0) > 0;
+    if (!hasGear) return copy.defaultLoadout;
+    return archetype?.name
+      ? `${archetype.name} equipment`
+      : copy.customLoadout;
+  }, [
+    archetype?.name,
+    draft.loadoutWeapons.length,
+    draft.loadoutArmor.length,
+    draft.equipment.length,
+    draft.unarmedProwess,
+  ]);
 
   const itemById = useMemo(
     () => new Map(officialItems.map((i) => [String(i.id), i])),
@@ -261,12 +268,6 @@ export function GuidedRevealSummary() {
             ]}
           />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <div className="rounded-lg border border-border-light bg-surface-alt/50 p-3">
-              <p className="font-nunito text-xs font-medium uppercase tracking-wide text-text-secondary">
-                {copy.levelLabel}
-              </p>
-              <p className="mt-0.5 font-display text-lg font-bold text-text-primary">1</p>
-            </div>
             {archetype?.name && (
               <div className="rounded-lg border border-border-light bg-surface-alt/50 p-3">
                 <p className="font-nunito text-xs font-medium uppercase tracking-wide text-text-secondary">

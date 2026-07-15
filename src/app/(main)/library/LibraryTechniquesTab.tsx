@@ -18,7 +18,6 @@ import {
   ErrorDisplay,
   ListEmptyState,
   ConfirmActionModal,
-  type ChipData,
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';

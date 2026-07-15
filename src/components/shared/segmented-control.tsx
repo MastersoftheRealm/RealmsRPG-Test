@@ -15,6 +15,8 @@ export interface SegmentedOption<T extends string = string> {
   id?: string;
   /** Optional leading icon (e.g. Lucide) */
   icon?: ReactNode;
+  /** When true, segment is non-interactive and visually muted */
+  disabled?: boolean;
 }
 
 export interface SegmentedControlProps<T extends string> {
@@ -50,21 +52,24 @@ export function SegmentedControl<T extends string>({
     <div
       {...wrapperProps}
       className={cn(
-        // Keep pill groups compact; segments still enforce 44px touch target.
-        'flex flex-wrap items-center gap-1 p-0.5 rounded-lg bg-surface-alt',
+        // Track + bordered idle segments so options read as distinct choices before selection.
+        'flex flex-wrap items-center gap-1 p-1 rounded-lg bg-surface-alt border border-border-light',
         equalWidth && 'w-full',
         className
       )}
     >
       {options.map((opt) => {
         const selected = value === opt.value;
+        const disabled = opt.disabled === true;
         const baseBtn =
           // min-h maintains touch target; keep vertical padding tight so control doesn't feel "tall".
-          'min-h-[44px] px-3 py-1 rounded text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:ring-offset-background inline-flex items-center justify-center gap-2';
+          'min-h-[44px] px-3 py-1 rounded text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:ring-offset-background inline-flex items-center justify-center gap-2 border';
         const selectedCls =
-          'bg-primary-button text-white';
+          'bg-primary-button text-text-on-dark border-primary-button hover:bg-primary-button-hover';
         const idleCls =
-          'text-text-secondary hover:text-text-primary';
+          'bg-surface text-text-secondary border-border-light hover:text-text-primary hover:border-border';
+        const disabledCls =
+          'bg-surface-alt text-text-muted dark:text-text-secondary border-border-light opacity-60 cursor-not-allowed hover:text-text-muted dark:hover:text-text-secondary hover:border-border-light';
         const widthCls = equalWidth ? 'flex-1 min-w-0' : '';
 
         const inner = (
@@ -72,6 +77,12 @@ export function SegmentedControl<T extends string>({
             {opt.icon ? <span className="shrink-0 [&_svg]:shrink-0">{opt.icon}</span> : null}
             <span className={cn(opt.icon && 'min-w-0 truncate')}>{opt.label}</span>
           </>
+        );
+
+        const classNameBtn = cn(
+          baseBtn,
+          widthCls,
+          disabled ? disabledCls : selected ? selectedCls : idleCls
         );
 
         if (tabs) {
@@ -82,9 +93,14 @@ export function SegmentedControl<T extends string>({
               type="button"
               role="tab"
               aria-selected={selected}
+              aria-disabled={disabled || undefined}
+              disabled={disabled}
               {...(tabPanelId ? { 'aria-controls': tabPanelId } : {})}
-              onClick={() => onChange(opt.value)}
-              className={cn(baseBtn, widthCls, selected ? selectedCls : idleCls)}
+              onClick={() => {
+                if (disabled) return;
+                onChange(opt.value);
+              }}
+              className={classNameBtn}
             >
               {inner}
             </button>
@@ -96,8 +112,13 @@ export function SegmentedControl<T extends string>({
             key={opt.value}
             type="button"
             aria-pressed={selected}
-            onClick={() => onChange(opt.value)}
-            className={cn(baseBtn, widthCls, selected ? selectedCls : idleCls)}
+            aria-disabled={disabled || undefined}
+            disabled={disabled}
+            onClick={() => {
+              if (disabled) return;
+              onChange(opt.value);
+            }}
+            className={classNameBtn}
           >
             {inner}
           </button>

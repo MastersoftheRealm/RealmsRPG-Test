@@ -36,7 +36,7 @@ const rollButtonVariants = cva(
       variant: {
         // Standard roll button - solid primary; dark mode for contrast
         primary: [
-          'text-white',
+          'text-text-on-dark',
           'bg-primary-button hover:bg-primary-button-hover focus-visible:ring-primary-outline-border',
           'hover:scale-105 active:scale-95',
         ].join(' '),
@@ -51,21 +51,21 @@ const rollButtonVariants = cva(
         
         // Defense roll - solid utility blue
         defense: [
-          'text-white',
+          'text-text-on-dark',
           'bg-utility-500 hover:bg-utility-600 focus-visible:ring-utility-400',
           'hover:scale-105 active:scale-95',
         ].join(' '),
         
         // Success/green variant (for healing, etc.)
         success: [
-          'text-white',
+          'text-text-on-dark',
           'bg-success-600 hover:bg-success-700 focus-visible:ring-success',
           'hover:scale-105 active:scale-95',
         ].join(' '),
         
         // Danger/red variant (for damage, etc.)
         danger: [
-          'text-white',
+          'text-text-on-dark',
           'bg-danger-600 hover:bg-danger-700 focus-visible:ring-danger',
           'hover:scale-105 active:scale-95',
         ].join(' '),

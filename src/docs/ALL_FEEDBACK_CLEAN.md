@@ -48,6 +48,12 @@ How to use
 - Ensure parts/properties load their TP/IP/C values from Codex and are used to compute EN/TP/C when rendering lists or summaries.
 - Wire option levels and part selections to update calculated costs (EN/TP/C) in UI immediately.
 - Consistent layout: fixed compact summary + scrolling inputs/values.
+- **Guided choice-card disclosure (2026-07-15):** **See more…** = in-card deepen (truncated copy / card content). **More details** = entity modal and/or lots of chip/fact disclosure. **See more options** = catalog Layer 2 only. Do not invent specialist verbs (Property details, Read more, Hide properties). When a card has both See more and modal More details, show modal More details only after expand/select. TASK-432–436.
+- **GridListRow fact chips (2026-07-15):** Column facts must stay as columns or self-describing expanded chips (e.g. Damage Reduction 2). Sitewide audit **TASK-437 done**.
+- **Guided L1 = curated picks, not silent kits (2026-07-15):** Layer 1 still requires deliberate user choice for identity and fighting-style decisions (path, species, ancestry, feats, weapons, armor). Soften prior “accept defaults / barely touch middle chapters” and remove quick loadout kits; weapon/armor are individual path cards. Gear may offer optional “Add all recommended.” Selection grammar: cards (few/curated) vs GridListRow (many/browse); entity depth ladder vs catalog breadth ladder — see `REALMS_PRODUCT_OVERVIEW.md` §3.1. TASK-442–443.
+- **Card ↔ GLR selection grammar (2026-07-15 session):** Cards are the quieter Layer‑A presentation of the same entity facts as GridListRow; See more / row expand and More details / rich expand are the same depth ladder. “See more options” is catalog breadth only. Share fact builders and labels sitewide; do not force one chrome component.
+- **Agent user-facing copy (2026-07-15):** Game-term capitalization + prefer/avoid vocab (no Check/Save/Class/DC; Abilities not Ability Scores in UI; Score = Bonus + 10; no em dash in UI). Guide = **TASK-438 done**. Sitewide string audit = **TASK-439 done**; residuals **TASK-440**.
+- **Named Bonuses Title Case (2026-07-15):** Capitalize Attack Bonus and essentially every named Bonus (Power Bonus, Martial Bonus, Ranged Attack Bonus, Skill Bonus, Defense Bonus, …). Documented in `GAME_RULES.md` Terminology.
 - **Creature Creator (2026-02-24):** (1) Show feat point cost for damage modifiers (resistance, immunity, weakness), senses, movement, condition immunities — before and after adding (chip or label). TASK-270. (2) Use AddSkillModal and AddSubSkillModal instead of skills dropdown. TASK-271. (3) Separate Add Feat and Add Negative Feat modals (negative = feats with negative feat point cost). TASK-272. (4) Add power/technique/armament modals and displayed lists: parts, properties, options as chips; area, range, etc in expanded view; use same logic as add-library-item-modal and library/codex. TASK-273.
 - **2026-03-07 (barfight):** Power creator: allow multiple damage types per power (add row; save/load array). TASK-286. Creators: show explicit energy (EN) per item. TASK-287. Remove "(optional)" from damage in creators. TASK-288.
 
@@ -69,6 +75,7 @@ How to use
 - Implement modern thin scrollbars sitewide.
 - **Buttons:** Use solid colors with clear white font (btn-solid, btn-outline-clean) — no gradients. Match about page styles site-wide.
 - **Roll Log:** Single-row layout (1d20 X + Bonus = Total in boxes); roll=light grey, bonus=green, total=blue; smaller timestamp.
+- **Stable expand toggle (2026-07-15):** Expand-in-place controls (especially ExpandableChip in wrap groups) must keep the toggle target under the pointer. Expanding may push siblings away / grow content, but the opened control’s vertical (and preferably horizontal) click position must not jump so a second click closes without mouse travel. Sitewide standard → **TASK-445 done**.
 
 ### 7) Modals & Lists
 - Shared modal/list components should include: rounded headers, header spacing, sortable columns, and right-aligned add/select controls.
@@ -1716,3 +1723,203 @@ Notes
 - Feedback: Layer 1 kit rows have too much space between name and type/stats; Mix and match column headers don't line up with row columns.
 - Expected: Tighter proportional columns on kit tables; customize ListHeader reserves selection-column chrome so headers align with selectable rows.
 - Disposition: Implemented 2026-07-06 — fixed rem column tracks in `guided-loadout-item-table.tsx`; customize grid includes inline selection column so ListHeader and GridListRow share five tracks.
+
+**Raw Feedback Log — 2026-07-07 (State feat recovery notice)**
+- Date: 2026-07-07
+- Context: Guided creator feat choice cards — state feat info warnings
+- Priority: Low
+- Feedback: State feats refresh on full recovery, not partial; info warnings on state feat cards should say Full Recovery (not Partial).
+- Expected: `getFeatRestrictionNotice` always uses Full Recovery for state feat uses text; matches GAME_RULES § recovery and sheet full-recovery handler.
+- Disposition: Implemented 2026-07-07 — `feat-restriction-notice.ts` forces Full when `state_feat`; unit tests added.
+
+**Raw Feedback Log — 2026-07-11 (Guided species size SegmentedControl clarity)**
+- Date: 2026-07-11
+- Context: Guided character creator → Species overview — size choice section
+- Priority: Medium
+- Feedback: Size buttons have no clear distinction until selected — no border or separation; looks odd. Likely the shared SegmentedControl; that universal style may need to be clearer.
+- Expected: Unselected size options (and SegmentedControl segments site-wide) read as distinct clickable choices with visible borders/surfaces before selection; selected state remains primary.
+- Disposition: Implemented 2026-07-11 — `SegmentedControl` idle segments use `bg-surface` + `border-border-light`; track gets outer border (TASK-425).
+
+**Raw Feedback Log — 2026-07-11 (Guided ancestry Skip — no flaw card fit)**
+- Date: 2026-07-11
+- Context: Guided character creator → Ancestry → optional flaw step
+- Priority: Medium
+- Feedback: "Skip — no flaw" doesn't look like it fits with the flaw choice cards; make it fit better. Screenshots + fix.
+- Expected: Skip is a peer GuidedChoiceCard in the same grid (title + short description, selectable like flaws); footer Next pick advances. No orphan secondary button under the grid.
+- Disposition: Implemented 2026-07-11 — skip rendered as `GuidedChoiceCard` in flaw grid; select sets `selectedFlawId: ''` (TASK-426).
+
+**Raw Feedback Log — 2026-07-11 (Add modal — browse when budget exhausted)**
+- Date: 2026-07-11
+- Context: Guided character creator → Skills → Browse all skills (add modal); applies to any add modal at capacity
+- Priority: Medium
+- Feedback: When you've already added too much (e.g. skill points spent), greying out all selections makes it hard to read through skills when curious. Instead allow reading and even selecting; show a warning that you don't have enough skill points — remove or decrease a skill bonus to add more.
+- Expected: Add modals stay fully readable at zero/remaining budget; selection allowed with clear over-budget warning; confirm blocked until under limit / points freed.
+- Disposition: Implemented 2026-07-11 — TASK-427 soft `maxSelections` in `UnifiedSelectionModal`; skill warning copy.
+
+**Raw Feedback Log — 2026-07-11 (Guided archetype feats — swap like ancestry)**
+- Date: 2026-07-11
+- Context: Guided character creator → Archetype Feats (and similar choice-card steps)
+- Priority: Medium
+- Feedback: Odd difference vs other steps — selecting an archetype feat greys out other feat cards and blocks selection. Should work like ancestry traits: let you swap among choices even when you already have the required amount.
+- Expected: At-capacity choice cards stay fully interactive; picking another feat swaps into the selection (ancestry-style replace), not grey-out / hard lock. Unified selection grammar across guided steps.
+- Disposition: Implemented 2026-07-11 — TASK-428 swap-on-select (no grey-out) in archetype-feats-step.
+
+**Raw Feedback Log — 2026-07-11 (Guided feat steps — Layer 2)**
+- Date: 2026-07-11
+- Context: Guided character creator → Archetype Feats + Character Feat
+- Priority: High
+- Feedback: Add Layer 2 to feat selection pages — same button location/design as abilities go-deeper; view all feats (modal or in-step expand); same style/location button to go back. Follow product overview + shared modules.
+- Expected: GuidedLayerNav expand/collapse; L2 filtered ranked browse; selections persist when returning to L1.
+- Disposition: Implemented 2026-07-11 — TASK-429 GuidedFeatsBrowsePanel in-step L2 (not modal).
+
+**Raw Feedback Log — 2026-07-15 (Guided choice-card deep-dive / “Layer 2 Cards”)**
+- Date: 2026-07-15
+- Context: Guided character creator — Path + Species choice cards (progressive disclosure); product overview “see as much as you want”
+- Priority: High
+- Feedback: Across the guided creator, Layer 1 uses simple edible cards with inline expand/read-more for longer descriptions or warnings. For some cards we also need a pathway that expands into an information modal so the user can go deeper on that specific card — opened only via an explicit “more details” control, never by selecting/choosing the card. Species: more details → modal with species overview (same info as post-select overview before traits) including language, avg height/weight, full description, etc., clean and well-separated; below overview, expandable sections for trait / characteristic / flaw options with hover tooltips explaining how many of each you pick. Path: more details → overview (description, proficiency, primary/secondary recommended abilities, recommended skills) plus expandable sections for archetype feats, character feats, weapons (incl. unarmed prowess when relevant), armor, equipment loadout, techniques, powers, etc. Expanding option sections shows elongated cards / GridListRow lists (uses, energy/range/damage, handedness, DR, crit, ability req, property chips, expand-for-more) matching guided UX—not legacy dense modals. Remodel reused advanced-creator pieces globally to match home/guided product rework. Do not ship all at once — phased tasks, implement → audit → next phase.
+- Expected: Explicit “More details” on relevant GuidedChoiceCards; read-only deep-dive modals (species + path first); shared shell + GridListRow option lists; naming distinct from catalog Layer 2 (GuidedLayerNav “See more options”).
+- Disposition: Tasks TASK-432–435 (phased) — **all done 2026-07-15** (shell → species modal → path modal → shared `DetailOptionList` + builders; epic audit fixes CollapsibleSection a11y/touch, removed Phase-1 demo shell). Human QA: DEV-V-013 T016–T019.
+
+**Raw Feedback Log — 2026-07-15 (Guided deep-dive polish + global GridListRow + copy rules)**
+- Date: 2026-07-15
+- Context: Guided creator → Path / Species More details; also sitewide GridListRow + agent writing rules
+- Priority: High (guided now); High/Medium (global follow-ups)
+- Feedback:
+  (1) Path overview: do not show proficiency the path does not use (Martial → no Power Proficiency 0); cleaner single line e.g. Archetype Power Proficiency 2. Path abilities: Archetype Ability {Name} plus secondary recommended ability. Recommended Abilities (not scores); game terms capitalized. Recommended Skills as expandable chips with descriptions. Rename Path notes → Path Options with intro about choices from this Archetype Path during creation.
+  (2) Deep-dive section tooltips: remove redundant tip titles that repeat the section name.
+  (3) Expanded option lists / GridListRow (universal): if a fact would be a column, it must remain a column or become a self-describing chip (Damage Reduction X, Range, Damage/type, Action Type, Duration, etc.). For these deep-dive options: remove Stats header; Name + Description only; hide column headers for cleaner lists.
+  (4) Agent writing: no hyphens in user-facing AI text; avoid stock AI phrasing; capitalize game terms only in game-term context; ban non-rules vocab (Ability Score for Abilities UI, Check, Save, Class, DC/Difficulty Class → use Difficulty Score / Skill Roll per GAME_RULES). Need game-term list for agents; global doc + audit work separate from guided fix-now.
+- Expected: Guided path/species deep-dives polished now; file global GridListRow policy task + terminology/copy guide task; ask owner clarifying questions before broad audits.
+- Disposition: Guided polish → **TASK-436 done**; global GridListRow → **TASK-437 done**; agent copy/game terms → **TASK-438 done** (GAME_RULES Terminology refined). Human QA: DEV-V-013-T020; DEV-V-016-T007/T008.
+
+**Raw Feedback Log — 2026-07-15 (answers on Path Abilities, Path Options, terms, GridListRow)**
+- Date: 2026-07-15
+- Context: Follow-up Q&A on TASK-436–438
+- Priority: High
+- Feedback:
+  (1) Powered-Martial: call out Power Ability and Martial Ability specifically; both are Archetype Abilities / both primary (no primary/secondary split for those).
+  (2) Path Options placement: agent decide from goals/context.
+  (3) Em dash ban only (`—`); hyphens fine.
+  (4) TASK-437: Library → Codex → sheet → add modals; dense browse keeps column headers when space allows; labeled chips for deep-dive-style lists.
+  (5) TASK-438: expand/refine existing GAME_RULES + agent pointers; do not create parallel docs.
+  (6) Score = Bonus + 10; Bonus not modifier; soft whitelist/blacklist (no Spell/AC/Race/Class/Check/Save/DC as product terms) without extremely limiting agents.
+- Expected: Update guided Powered-Martial labels; Path Options above catalogs; lock 437/438 notes; refine Terminology section.
+- Disposition: Implemented guided + Path Options move; TASK-438 done; TASK-437 done after sitewide re-audit (creators, creature-creator, admin equipment, sheet cost badge).
+
+**Raw Feedback Log — 2026-07-15 (Guided traits uses + equipment kit removal / remodel)**
+- Date: 2026-07-15
+- Context: Guided character creator — ancestry trait choice cards; Equipment loadout (weapon → armor → gear)
+- Priority: High
+- Feedback:
+  (1) Traits with uses should show uses-per-recovery info when selected/expanded on guided choice cards, exactly like feats; share components/code with feat uses notices (no duplication).
+  (2) Equipment step numbering stays 1 / 2 / 3 even when a path has no armor and/or no weapon options — numbering should only reflect visible phases.
+  (3) Remove all quick kits (Layer 1 and everywhere): no quick-kit frontend or backend/database functionality. Users specifically select weapons/armor from path options when those steps apply.
+  (4) Weapon step: cards with description chips (ability requirement, handedness, damage and type, other properties) plus currency cost; expand via More details so the same chips become expandable chips with property descriptions (progressive disclosure). Currency remaining visible across all three equipment phases.
+  (5) Armor step: same card/chip/expand pattern as weapons.
+  (6) Equipment (gear) step: “Add all recommended equipment” button; chip-style cards; users can pick individual recommended items and quantities without opening Layer 2; Layer 2 still available to browse all common gear. This is the only kit-like affordance (bulk add recommended), and it is optional.
+- Expected: Shared limited-uses notice on trait cards; no quick kits; dynamic equipment phases from path options; remodeled weapon/armor/gear L1 UX as above.
+- Disposition: TASK-441 (trait uses), TASK-442 (remove kits FE+BE — **done**, SQL applied + audit cleaned), TASK-443 (phase visibility + card remodel — done).
+
+**Raw Feedback Log — 2026-07-15 (Choice-card More details vs Read more)**
+- Date: 2026-07-15
+- Context: Guided creator — choice cards with both deep-dive and inline expand (Path / Species)
+- Priority: Medium
+- Feedback: For cards with both **More details** and see more / Read more, only show **More details** after the card is expanded (see more selected).
+- Expected: Progressive disclosure — collapsed offers Read more only; expanded (or selected) then shows More details for the deep-dive modal. Cards with More details but no overflow still show More details collapsed.
+- Disposition: Implemented in GuidedChoiceCard (`showDetails` gated on `expanded || !canInlineExpand`).
+
+**Raw Feedback Log — 2026-07-15 (Guided Skills copy — no fixed point count)**
+- Date: 2026-07-15
+- Context: Guided creator Skills step copy
+- Priority: Medium
+- Feedback: Do not hardcode “3 Skill Points” in user-facing copy. Base is often 3, but species can raise the budget (e.g. 4 or 5). Use clear non-specific language; let the current/max counter show the real numbers.
+- Expected: Skills step description explains free Species Skills + spending Skill Points without asserting a total; PointStatus remains source of truth.
+- Disposition: Updated `guided-creator-copy.ts` skills.description (+ related guided copy accuracy pass).
+
+**Raw Feedback Log — 2026-07-15 (Selection grammar + Layer 1 choice vs automation)**
+- Date: 2026-07-15
+- Context: Product vision — guided creator cards vs GridListRow; reconcile REALMS with recent guided equipment feedback
+- Priority: High (docs / north-star)
+- Feedback:
+  (1) GuidedChoiceCards are a quieter Layer‑A presentation of the same entities as GridListRow: name, description, image; Read more deepens copy and key facts (state feat, uses); More details opens a read-only info modal (entity Layer‑A deepen), analogous to expanded GLR + chips. Catalog “See more options” is a separate ladder (more choices). Unify commonalities / fact builders so card ↔ GLR feel like one system sitewide.
+  (2) Owner no longer wants extreme L1 automation: even Layer 1 should require some real user choice (not “accept path and barely touch middle chapters”). Especially equipment: no weapon/armor quick kits; pick individually from curated path cards. Optional gear “Add all recommended” is fine. Reconcile product overview with TASK-442–443 and this session without losing prior progress (deep-dive, phases, fact chips).
+- Expected: REALMS §3 / §5 updated (selection grammar + L1 choice principle); equipment kits removed from vision language; AGENT_GUIDE / phased equipment spec aligned.
+- Disposition: Docs revised 2026-07-15 — `REALMS_PRODUCT_OVERVIEW.md` §3.1 + §5.0/§5.7; `GUIDED_EQUIPMENT_PHASED_SPEC.md`; `AGENT_GUIDE.md` pointer. Powers/techniques L2 + visible confirm filed as **TASK-444**.
+
+**Raw Feedback Log — 2026-07-15 (Stable expand / click-open click-close)**
+- Date: 2026-07-15
+- Context: Expandable chips (and expand-in-place UI generally) — pointer stability on toggle
+- Priority: High (sitewide UX standard)
+- Feedback: When you click open to expand something, you should be able to click again without moving the mouse to close it. Expanded chips often reflow / move to make room for other chips, so the click target jumps. Prefer expanding and moving *other* chips without changing the vertical location of the expanded chip. Should be a standard for all expandable things sitewide for clean, intuitive UI.
+- Expected: Expand keeps the opened control’s toggle under the cursor; siblings may reflow; document + implement sitewide (chips first, then other expanders).
+- Disposition: Logged; curated §6; filed **TASK-445**. Confirmed as UX best practice (spatial stability / Fitts for toggles); GridListRow already closer to this; ChipGroup + `fullWidthWhenExpanded` is the main offender.
+
+**Raw Feedback Log — 2026-07-15 (Guided flaw Skip card shrinks when selected)**
+- Date: 2026-07-15
+- Context: Guided creator → Ancestry → Take a flaw? → Skip — no flaw card
+- Priority: Medium
+- Feedback: When you click the Skip — no flaw card in its selected mode it shrinks instead of retaining height, which is odd and not intuitive; other cards don’t do that.
+- Expected: Selected Skip card keeps the same height as other choice cards in the grid.
+- Disposition: Implemented — GuidedChoiceCard always applies density `cardCollapsed` min-height (selected/expanded no longer drops it). DEV-V-013-T009 updated.
+
+**Raw Feedback Log — 2026-07-15 (Equipment L1 glitchy / cluttered vs other guided steps)**
+- Date: 2026-07-15
+- Context: Guided creator → Loadout after kit removal remodel
+- Priority: High
+- Feedback: Equipment step feels glitchy (e.g. “2 weapons selected” with missing cards) and overly chrome’d vs path/species/feats. Want card-first like other chapters: selection ring on cards is enough; quieter phase copy/currency; few collapsed tags with depth under More details; See more options for catalog; fix orphan selection vs card grid desync.
+- Expected: Drop Your selection summary; quiet chrome; quieter collapsed chips; orphan prune / keep selected path cards visible.
+- Disposition: Implemented as **TASK-446** (done).
+
+**Raw Feedback Log — 2026-07-15 (Equipment L1 chrome, PointStatus, cards, chips)**
+- Date: 2026-07-15
+- Context: Guided creator → Loadout after TASK-446
+- Priority: High
+- Feedback:
+  (1) Remove the weapon/armor/gear progress bar at the top — other in-step phases only use Next/Back; the bar clutters and pulls focus.
+  (2) Currency should use shared `PointStatus` (like abilities/skills), not plain “Xc remaining”; write out **Currency** (full term). L1/L2 should not abbreviate game rules/terms for new users.
+  (3) No “Path pick” badges on weapon/armor — implied by curated cards.
+  (4) Currency desc chip shows 0 instead of real cost (bug).
+  (5) Weapon/armor cards: image, title, Description, plus desc chips.
+  (6) Weapon desc chips: non-mechanic property names (Cleave, Topple, Finesse, …); chips with descriptions hover for tooltip.
+- Expected: Progress strip gone; PointStatus Currency; fixed costs; description + property chips with hover tips; no Path pick badge; L1/L2 terminology norm.
+- Disposition: Implementing as **TASK-447**.
+
+**Raw Feedback Log — 2026-07-15 (Equipment dual titles)**
+- Date: 2026-07-15
+- Context: Guided creator → Loadout
+- Priority: Medium
+- Feedback: Equipment shows two titles (“Your equipment” + per-phase Weapons/Armor/Gear). Should feel like ancestry: one page-specific title per screen, not a chapter title plus a phase title.
+- Expected: GuidedStepLayout title/description = current equipment phase only; no nested h3 phase header.
+- Disposition: Implemented with TASK-447 (done); one-title-per-phase follow-up applied 2026-07-15.
+
+**Raw Feedback Log — 2026-07-15 (Equipment L2 browse columns wrong)**
+- Date: 2026-07-15
+- Context: Guided creator → Loadout → See more options (weapon/armor/gear modal)
+- Priority: High
+- Feedback: Add/browse modal columns and rows are wrong / misaligned (“none of the right stuff”).
+- Expected: Headers match row values; weapons/armor/gear show the same useful columns as advanced equipment browse (Damage / Damage Reduction / Currency / Training Points), not broken TYPE/STATS mapping.
+- Disposition: Fixed — per-phase L2 headers aligned with row columns; remove stale TYPE/STATS mismatch.
+
+**Raw Feedback Log — 2026-07-15 (Card disclosure labels: See more vs More details)**
+- Date: 2026-07-15
+- Context: Guided choice cards / equipment chip expand wording
+- Priority: Medium (docs + copy consistency)
+- Feedback: Stop inventing specialist verbs like “Property details”. Use blankets: **More details** for things that open a modal or show lots of chip details; **See more** when the card itself will contain the more info (truncated descriptions, chips, etc.). Record in card usage docs.
+- Expected: See more / See less = in-card deepen; More details / Less details = modal or heavy chip disclosure; See more options = catalog L2 only. Update REALMS §3.1 + AGENT_GUIDE + copy.
+- Disposition: Implemented — See more / More details blankets in REALMS §3.1, AGENT_GUIDE, FEATURE_INDEX, choiceCard copy; removed Property details / Hide properties / Read more defaults.
+
+**Raw Feedback Log — 2026-07-15 (Guided L2 Currency column shows multiplier)**
+- Date: 2026-07-15
+- Context: Guided creator → Equipment → See more options GridListRow Currency column
+- Priority: High
+- Feedback: Currency in the GLR is not calculating properly — looks like currency multiplier instead of actual Currency cost (as elsewhere). Proper constraints / protocol for GLR not followed.
+- Expected: Currency column = market cost via `calculateCurrencyCostAndRarity` (same as Library OfficialItemList), not raw `costs.totalCurrency` (property C sum). L1 chips and spend math match.
+- Disposition: Fixed — `rowFromOfficial` + `resolveItemUnitCost` use Library GLR protocol; catalog `gold_cost` is market Currency.
+
+**Raw Feedback Log — 2026-07-15 (Audit: equipment L2/L1 budget + disclosure consistency)**
+- Date: 2026-07-15
+- Context: Owner asked for audit of recent guided equipment / disclosure work
+- Priority: High
+- Feedback: Look for oversight, overcomplication, shared-use gaps, rule compliance; fix issues.
+- Expected: Replacement budgets reclaimable; L1 Currency gated; See more for in-card deepen; shared cost helpers; docs/tests match shipped UI.
+- Disposition: Fixed — L2 gear/TP cross-phase reclaim; L1 currency gates; disclosure labels; DRY cost; type filter parity; T025/spec/copy cleanup.

@@ -18,6 +18,11 @@
 /blob-report/
 /.playwright/
 /.creator-audit-screenshots/
+/.site-copy-audit/
+/.shell-creators-audit/
+/.guided-flaw-audit/
+/.guided-loadout-audit/
+/.ability-tag-audit/
 /tests/visual/.auth/
 .last-run.json
 

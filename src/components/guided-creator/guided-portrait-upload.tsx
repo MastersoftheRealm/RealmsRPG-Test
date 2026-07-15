@@ -55,7 +55,7 @@ export function GuidedPortraitUpload() {
                 type="button"
                 onClick={handleRemove}
                 aria-label={copy.removeLabel}
-                className="absolute right-1 top-1 flex min-h-11 min-w-11 items-center justify-center rounded-full bg-danger-button text-sm text-white hover:bg-danger-700"
+                className="absolute right-1 top-1 flex min-h-11 min-w-11 items-center justify-center rounded-full bg-danger-button text-sm text-text-on-dark hover:bg-danger-700"
               >
                 ×
               </button>

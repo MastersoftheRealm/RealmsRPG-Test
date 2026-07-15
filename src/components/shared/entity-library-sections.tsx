@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { GridListRow, type ColumnValue, type ChipData } from '@/components/shared/grid-list-row';
 import { ListHeader, type ListColumn, type SortState } from '@/components/shared/list-header';
 import type { ListHeaderRowChrome } from '@/components/shared/grid-list-row-chrome';

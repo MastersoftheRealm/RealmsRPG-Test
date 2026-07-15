@@ -457,17 +457,14 @@ export function ProficienciesTab({
                 return (
                   <div key={cat}>
                     <h3 className="text-sm font-medium text-text-secondary mb-2">{sectionTitle}</h3>
-                    <div className="flex flex-wrap gap-2 items-start">
+                    <div data-chip-group className="flex flex-wrap gap-2 items-start">
                       {list.map((prof) => {
                         const partData = ownedPartDataById.get(prof.id);
                         const isExpanded = expandedProfId === prof.id;
                         return (
                           <div
                             key={prof.id}
-                            className={cn(
-                              'inline-flex items-center gap-1',
-                              isExpanded && 'w-full min-w-0'
-                            )}
+                            className="inline-flex items-start gap-1 max-w-full"
                           >
                             {partData ? (
                               <PartChipComponent
@@ -475,7 +472,7 @@ export function ProficienciesTab({
                                 size="md"
                                 isExpanded={isExpanded}
                                 fullWidthWhenExpanded
-                                className={cn(isExpanded && 'flex-1 min-w-0')}
+                                className="min-w-0"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setExpandedProfId(isExpanded ? null : prof.id);
@@ -530,9 +527,10 @@ export function ProficienciesTab({
         </div>
       </div>
 
-      {addProficiencyVariant && (
+      {addProficiencyVariant ? (
         <AddProficiencyModal
-          isOpen={!!addProficiencyVariant}
+          key={addProficiencyVariant}
+          isOpen
           onClose={() => setAddProficiencyVariant(null)}
           variant={addProficiencyVariant}
           parts={addProficiencyVariant === 'power_part' ? powerPartsDb : addProficiencyVariant === 'technique_part' ? techniquePartsDb : undefined}
@@ -545,7 +543,7 @@ export function ProficienciesTab({
           }
           onAdd={addProficiency}
         />
-      )}
+      ) : null}
 
       <ConfirmActionModal
         isOpen={showSyncConfirm}

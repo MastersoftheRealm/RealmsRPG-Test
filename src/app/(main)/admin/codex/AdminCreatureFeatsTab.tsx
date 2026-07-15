@@ -146,7 +146,7 @@ export function AdminCreatureFeatsTab() {
     }
   };
 
-  const handleInlineDelete = async (id: string, name: string) => {
+  const handleInlineDelete = async (id: string) => {
     if (pendingDeleteId !== id) {
       setPendingDeleteId(id);
       return;
@@ -212,8 +212,8 @@ export function AdminCreatureFeatsTab() {
                   <div className="flex items-center gap-1 pr-2">
                     {pendingDeleteId === f.id ? (
                       <div className="flex items-center gap-1 text-xs">
-                        <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
-                        <Button size="sm" variant="danger" onClick={() => handleInlineDelete(f.id, f.name)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
+                        <span className="text-danger-700 dark:text-danger-400 font-medium whitespace-nowrap">Remove?</span>
+                        <Button size="sm" variant="danger" onClick={() => handleInlineDelete(f.id)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
                         <Button size="sm" variant="secondary" onClick={() => setPendingDeleteId(null)} className="text-xs px-2 py-0.5 h-6">No</Button>
                       </div>
                     ) : (
@@ -248,7 +248,7 @@ export function AdminCreatureFeatsTab() {
           <div className="flex justify-between">
             <div>
               {editing && (
-                <Button variant="outline" onClick={() => handleDelete(editing.id)} className={deleteConfirm === editing.id ? 'border-red-500 text-red-600' : ''}>
+                <Button variant="outline" onClick={() => handleDelete(editing.id)} className={deleteConfirm === editing.id ? 'border-danger-500 text-danger-700 dark:text-danger-400' : ''}>
                   {deleteConfirm === editing.id ? 'Click again to confirm delete' : 'Delete'}
                 </Button>
               )}

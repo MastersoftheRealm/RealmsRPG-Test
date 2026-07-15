@@ -16,7 +16,6 @@ import { useAuthStore } from '@/stores';
 import { useAdmin } from '@/hooks';
 import { ProtectedRoute } from '@/components/layout';
 import { cn } from '@/lib/utils';
-import { apiFetch } from '@/lib/api-client';
 import { LoadingState, Button, Input, Alert, PageContainer, Spinner, Card, PageHeader } from '@/components/ui';
 import { ImageUploadModal } from '@/components/shared';
 import { User as UserIcon, Mail, Lock, Trash2, AlertTriangle, AtSign, Camera } from 'lucide-react';
@@ -149,7 +148,7 @@ function AccountContent() {
       // Sync to Supabase Auth so header and any useAuth() consumer see the new picture
       const supabase = createClient();
       await supabase.auth.updateUser({ data: { avatar_url: url } });
-    } catch (err) {
+    } catch {
       setPictureMessage({ type: 'error', text: 'Failed to upload profile picture' });
     } finally {
       setUploadingPicture(false);
@@ -395,6 +394,7 @@ function AccountContent() {
         <div className="flex items-center gap-4 mb-6 pb-4 border-b border-border-subtle">
           <div className="relative w-20 h-20 rounded-full overflow-hidden bg-surface-alt border-2 border-border-light flex-shrink-0">
             {profile?.photoURL ? (
+              // eslint-disable-next-line @next/next/no-img-element -- dynamic profile photo URL
               <img src={profile.photoURL} alt="Profile" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-text-muted">
@@ -402,7 +402,7 @@ function AccountContent() {
               </div>
             )}
             {uploadingPicture && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+              <div className="absolute inset-0 flex items-center justify-center bg-text-primary/40">
                 <Spinner size="sm" variant="white" />
               </div>
             )}
@@ -419,7 +419,7 @@ function AccountContent() {
             </Button>
             <p className="text-xs text-text-muted mt-1">JPG, PNG, GIF, or WebP. Max 5MB.</p>
             {pictureMessage && (
-              <p className={cn('text-xs mt-1', pictureMessage.type === 'success' ? 'text-green-600' : 'text-red-600')}>
+              <p className={cn('text-xs mt-1', pictureMessage.type === 'success' ? 'text-success-700 dark:text-success-400' : 'text-danger-700 dark:text-danger-400')}>
                 {pictureMessage.text}
               </p>
             )}
@@ -611,8 +611,8 @@ function AccountContent() {
         </Card>
       )}
 
-      <Card className="shadow-md p-6 border-2 border-red-200">
-        <h2 className="text-lg font-bold text-red-700 mb-4 flex items-center gap-2">
+      <Card className="shadow-md p-6 border-2 border-danger-200 dark:border-danger-700/50">
+        <h2 className="text-lg font-bold text-danger-700 dark:text-danger-400 mb-4 flex items-center gap-2">
           <AlertTriangle className="w-5 h-5" />
           Danger Zone
         </h2>
@@ -628,31 +628,31 @@ function AccountContent() {
             Delete My Account
           </Button>
         ) : (
-          <div className="bg-red-50 rounded-lg p-4 space-y-4">
-            <p className="text-sm text-red-700 font-medium">
+          <div className="bg-danger-50 dark:bg-danger-900/30 rounded-lg p-4 space-y-4">
+            <p className="text-sm text-danger-700 dark:text-danger-400 font-medium">
               {canChangeEmailPassword
                 ? 'To confirm deletion, enter your password and type DELETE below:'
                 : 'To confirm deletion, type DELETE below:'}
             </p>
             {canChangeEmailPassword && (
               <div>
-                <label className="block text-sm font-medium text-red-700 mb-1">Password</label>
+                <label className="block text-sm font-medium text-danger-700 dark:text-danger-400 mb-1">Password</label>
                 <Input
                   type="password"
                   value={deletePassword}
                   onChange={(e) => setDeletePassword(e.target.value)}
-                  className="border-red-300 focus:ring-red-500"
+                  className="border-danger-300 focus:ring-danger-500"
                   placeholder="Enter your password"
                 />
               </div>
             )}
             <div>
-              <label className="block text-sm font-medium text-red-700 mb-1">Type DELETE to confirm</label>
+              <label className="block text-sm font-medium text-danger-700 dark:text-danger-400 mb-1">Type DELETE to confirm</label>
               <Input
                 type="text"
                 value={deleteConfirmText}
                 onChange={(e) => setDeleteConfirmText(e.target.value)}
-                className="border-red-300 focus:ring-red-500"
+                className="border-danger-300 focus:ring-danger-500"
                 placeholder="DELETE"
               />
             </div>

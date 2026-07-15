@@ -50,9 +50,8 @@ export interface PathGuidanceGroup {
 }
 
 /**
- * A coherent weapon/armor/gear kit a path offers in the guided creator's equipment chapter
- * (REALMS_PRODUCT_OVERVIEW.md §5.0.2). A path may offer several loadouts (e.g. "Sword & Shield",
- * "Two-handed"). Seeded by SQL first, promoted to the admin archetype creator later.
+ * Legacy kit shape previously stored in `level1_loadouts` (guided quick kits, removed TASK-442).
+ * Still parsed for backward-compat / path-validation if stale JSON appears; not authored in admin.
  */
 export interface PathLoadout {
   id: string;
@@ -77,7 +76,7 @@ export interface ArchetypePathRecommendations {
    * Map of ability name -> value (e.g. { strength: 3, vitality: 2, ... }).
    */
   recommended_abilities?: Partial<Record<AbilityName, number>>;
-  /** Coherent equipment kits offered in the guided creator's equipment chapter. */
+  /** @deprecated Quick kits removed (TASK-442). Parsed only for legacy JSON / publish validation. */
   loadouts?: PathLoadout[];
   /** Optional species IDs/names recommended for this path (species step Layer 1). */
   recommended_species?: string[];
@@ -87,6 +86,10 @@ export interface ArchetypePathRecommendations {
   equipmentRecommendations?: PathItemRecommendation[];
   /** When true, path recommends Unarmed Prowess proficiency (equipment step simplified view) */
   recommendUnarmedProwess?: boolean;
+  /** Guided equipment phase 2: skip armor, optional unarmored, or required. */
+  armorStep?: 'required' | 'optional' | 'none';
+  /** Recommended adventuring gear for the path (guided gear phase L1 + Add all). */
+  sharedEquipment?: PathItemRecommendation[];
   removeFeats?: string[];
   removePowers?: string[];
   removeTechniques?: string[];

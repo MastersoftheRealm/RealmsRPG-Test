@@ -127,7 +127,6 @@ export function FeatsTab({
   stateUsesMax = 0,
   onStateUsesChange,
   onEnterState,
-  isEditMode: _isEditMode = false,
   showEditControls = false,
   maxArchetypeFeats,
   maxCharacterFeats,
@@ -461,7 +460,7 @@ export function FeatsTab({
             className={cn(
               'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
               (stateUsesCurrent ?? stateUsesMax) > 0
-                ? 'bg-primary-button text-white hover:bg-primary-button-hover'
+                ? 'bg-primary-button text-text-on-dark hover:bg-primary-button-hover'
                 : 'bg-surface-alt text-text-muted dark:text-text-secondary cursor-not-allowed'
             )}
           >

@@ -154,3 +154,69 @@ export interface UserEnhancedItem {
   createdAt?: string;
   updatedAt?: string;
 }
+
+/** Recovery / uses mode for official + admin enhanced items */
+export type EnhancedItemUsesType = 'full' | 'partial' | 'permanent';
+
+/**
+ * JSONB `payload` on `official_enhanced_items`.
+ * Known optional snapshot fields used by crafting/admin; open index for forward-compatible extensions.
+ */
+export interface OfficialEnhancedItemPayload {
+  powerEnergy?: number;
+  materialCost?: number;
+  currencyCost?: number;
+  rarity?: string;
+  potency?: number | 'creator';
+  multipleUseTableIndex?: number;
+  craftBaseItemAlso?: boolean;
+  [key: string]: unknown;
+}
+
+/** Row from GET `/api/official/enhanced-items` (admin Realms Library). */
+export interface OfficialEnhancedItem {
+  id: string;
+  name: string;
+  description?: string | null;
+  currency_cost: number;
+  rarity: string;
+  base_item_source: string;
+  base_item_id: string | null;
+  base_item_name: string;
+  base_item_description?: string | null;
+  power_source: string;
+  power_id: string;
+  power_name: string;
+  uses_type: string;
+  uses_count: number | null;
+  /** JSONB; may be null from DB — hook normalizes to `{}` on fetch. */
+  payload: OfficialEnhancedItemPayload | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/** POST body for creating an official enhanced item (admin). */
+export interface CreateOfficialEnhancedItemInput {
+  name: string;
+  description?: string;
+  baseItemSource: 'codex' | 'public' | 'custom';
+  baseItemId?: string;
+  baseItemName: string;
+  baseItemDescription?: string;
+  powerSource: 'official' | 'public' | 'library';
+  powerId: string;
+  powerName: string;
+  powerEnergy: number;
+  usesType: EnhancedItemUsesType;
+  usesCount?: number;
+  payload?: OfficialEnhancedItemPayload;
+}
+
+/** PATCH body for updating an official enhanced item (admin). */
+export interface UpdateOfficialEnhancedItemInput {
+  name?: string;
+  description?: string | null;
+  usesType?: EnhancedItemUsesType;
+  usesCount?: number | null;
+  payload?: OfficialEnhancedItemPayload;
+}

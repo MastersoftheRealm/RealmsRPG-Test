@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import {
   ChipSelect,
   AbilityRequirementFilter,
   TagFilter,
   SelectFilter,
   FilterSection,
-  type AbilityRequirement,
   CodexFeatRow,
 } from '@/components/codex';
 import {
@@ -128,7 +127,6 @@ function AdminFeatEditModal({
   feats,
   levelFeats,
   skills,
-  skillIdToName,
   filterOptions,
   abilityOptions,
   saving,
@@ -139,7 +137,6 @@ function AdminFeatEditModal({
   onSaveAll,
   initialForm,
   initialEditId,
-  sessionKey,
   enableAddLevel,
   onAddLevel,
 }: {
@@ -151,7 +148,6 @@ function AdminFeatEditModal({
   /** When editing a leveled feat family, this contains all feats in that family (sorted). */
   levelFeats: Feat[];
   skills: Skill[];
-  skillIdToName: Map<string, string>;
   filterOptions: { levels: number[]; abilities: string[]; categories: string[]; tags: string[]; abilReqAbilities: string[] };
   abilityOptions: { value: string; label: string }[];
   saving: boolean;
@@ -162,23 +158,16 @@ function AdminFeatEditModal({
   onSaveAll: (editsById: Record<string, FeatFormState>) => void;
   initialForm: FeatFormState;
   initialEditId: string | null;
-  sessionKey: number;
   enableAddLevel: boolean;
   onAddLevel?: (form: FeatFormState, sourceDbFeatId: string) => void;
 }) {
+  // Fresh state per open: parent remounts with key={modalSessionKey}.
   const [form, setForm] = useState<FeatFormState>(initialForm);
   const [selectedEditId, setSelectedEditId] = useState<string | null>(initialEditId);
-  const [draftsById, setDraftsById] = useState<Record<string, FeatFormState>>({});
+  const [draftsById, setDraftsById] = useState<Record<string, FeatFormState>>(() =>
+    initialEditId ? { [initialEditId]: initialForm } : {}
+  );
   const [dirtyIds, setDirtyIds] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    if (!isOpen) return;
-    setForm(initialForm);
-    setSelectedEditId(initialEditId);
-    setDraftsById({});
-    setDirtyIds(new Set());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, sessionKey]);
 
   const hasLevels = levelFeats.length > 1;
   const levelOptions = useMemo(() => {
@@ -241,14 +230,6 @@ function AdminFeatEditModal({
     [hasLevels, selectedEditId, markDirty],
   );
 
-  // Ensure current selected level always has an entry in drafts, so switching away preserves it.
-  useEffect(() => {
-    if (!hasLevels) return;
-    if (!selectedEditId) return;
-    setDraftsById((d) => (d[selectedEditId] ? d : { ...d, [selectedEditId]: form }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasLevels, selectedEditId]);
-
   const handleSelectLevel = (nextId: string) => {
     // Persist current level draft before switching
     if (hasLevels && selectedEditId) {
@@ -285,7 +266,7 @@ function AdminFeatEditModal({
               <Button
                 variant="outline"
                 onClick={onRequestDelete}
-                className={deleteConfirm ? 'border-red-500 text-red-600' : ''}
+                className={deleteConfirm ? 'border-danger-500 text-danger-700 dark:text-danger-400' : ''}
               >
                 {deleteConfirm ? 'Click again to confirm delete' : 'Delete'}
               </Button>
@@ -1075,7 +1056,7 @@ export function AdminFeatsTab() {
     }
   };
 
-  const handleInlineDelete = async (id: string, name: string) => {
+  const handleInlineDelete = async (id: string) => {
     if (pendingDeleteId !== id) {
       setPendingDeleteId(id);
       return;
@@ -1204,8 +1185,8 @@ export function AdminFeatsTab() {
                 <div className="flex items-center gap-1 pr-2">
                   {pendingDeleteId === feat.id ? (
                     <div className="flex items-center gap-1 text-xs">
-                      <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
-                      <Button size="sm" variant="danger" onClick={() => handleInlineDelete(feat.id, feat.name)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
+                      <span className="text-danger-700 dark:text-danger-400 font-medium whitespace-nowrap">Remove?</span>
+                      <Button size="sm" variant="danger" onClick={() => handleInlineDelete(feat.id)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
                       <Button size="sm" variant="secondary" onClick={() => setPendingDeleteId(null)} className="text-xs px-2 py-0.5 h-6">No</Button>
                     </div>
                   ) : (
@@ -1239,29 +1220,30 @@ export function AdminFeatsTab() {
         )}
       </div>
 
-      <AdminFeatEditModal
-        isOpen={modalOpen}
-        onClose={closeModal}
-        title={editing ? 'Edit Feat' : 'Add Feat'}
-        copySourceName={copySourceName}
-        feats={feats}
-        levelFeats={editing ? modalLevelFeats : []}
-        skills={skills as Skill[]}
-        skillIdToName={skillIdToName}
-        filterOptions={filterOptions}
-        abilityOptions={ABILITY_OPTIONS}
-        saving={saving}
-        canDelete={!!editing}
-        deleteConfirm={editing ? (deleteConfirm === editing.id ? editing.id : null) : null}
-        onRequestDelete={() => editing && handleDelete(editing.id)}
-        onSave={handleSave}
-        onSaveAll={handleSaveAllLevels}
-        initialForm={modalInitialForm}
-        initialEditId={modalInitialEditId}
-        sessionKey={modalSessionKey}
-        enableAddLevel={!!editing}
-        onAddLevel={openAddLevelFromEditModal}
-      />
+      {modalOpen ? (
+        <AdminFeatEditModal
+          key={modalSessionKey}
+          isOpen
+          onClose={closeModal}
+          title={editing ? 'Edit Feat' : 'Add Feat'}
+          copySourceName={copySourceName}
+          feats={feats}
+          levelFeats={editing ? modalLevelFeats : []}
+          skills={skills as Skill[]}
+          filterOptions={filterOptions}
+          abilityOptions={ABILITY_OPTIONS}
+          saving={saving}
+          canDelete={!!editing}
+          deleteConfirm={editing ? (deleteConfirm === editing.id ? editing.id : null) : null}
+          onRequestDelete={() => editing && handleDelete(editing.id)}
+          onSave={handleSave}
+          onSaveAll={handleSaveAllLevels}
+          initialForm={modalInitialForm}
+          initialEditId={modalInitialEditId}
+          enableAddLevel={!!editing}
+          onAddLevel={openAddLevelFromEditModal}
+        />
+      ) : null}
     </div>
   );
 }

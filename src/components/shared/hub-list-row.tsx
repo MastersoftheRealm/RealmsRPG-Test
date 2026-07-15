@@ -125,7 +125,7 @@ export function HubListRow({
                   onDelete();
                 }}
                 label={deleteAriaLabel}
-                className="opacity-0 group-hover:opacity-100 text-text-muted dark:text-text-secondary hover:text-danger-fg hover:bg-red-50 dark:hover:bg-danger-900/20 min-w-[44px] min-h-[44px]"
+                className="opacity-0 group-hover:opacity-100 text-text-muted dark:text-text-secondary hover:text-danger-fg hover:bg-danger-50 dark:hover:bg-danger-900/20 min-w-[44px] min-h-[44px]"
               >
                 <Trash2 className="w-4 h-4" />
               </IconButton>

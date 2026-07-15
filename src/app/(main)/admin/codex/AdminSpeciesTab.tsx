@@ -70,11 +70,6 @@ export function AdminSpeciesTab() {
     [skills],
   );
 
-  const traitOptions = useMemo(
-    () => (traits as Trait[]).map((t) => ({ value: String(t.id), label: t.name })),
-    [traits],
-  );
-
   const normalizeIds = (values: string[] = [], all: Array<{ id: string; name: string }>): string[] =>
     values.map((val) => {
       const byId = all.find((it) => String(it.id) === String(val));
@@ -324,7 +319,7 @@ export function AdminSpeciesTab() {
     }
   };
 
-  const handleInlineDelete = async (id: string, name: string) => {
+  const handleInlineDelete = async (id: string) => {
     if (pendingDeleteId !== id) {
       setPendingDeleteId(id);
       return;
@@ -461,11 +456,11 @@ export function AdminSpeciesTab() {
                     <div className="flex items-center gap-1 pr-2">
                       {pendingDeleteId === s.id ? (
                         <div className="flex items-center gap-1 text-xs">
-                          <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
+                          <span className="text-danger-700 dark:text-danger-400 font-medium whitespace-nowrap">Remove?</span>
                           <Button
                             size="sm"
                             variant="danger"
-                            onClick={() => handleInlineDelete(s.id, s.name)}
+                            onClick={() => handleInlineDelete(s.id)}
                             className="text-xs px-2 py-0.5 h-6"
                           >
                             Yes
@@ -512,7 +507,7 @@ export function AdminSpeciesTab() {
           <div className="flex justify-between">
             <div>
               {editing && (
-                <Button variant="outline" onClick={() => handleDelete(editing.id)} className={deleteConfirm === editing.id ? 'border-red-500 text-red-600' : ''}>
+                <Button variant="outline" onClick={() => handleDelete(editing.id)} className={deleteConfirm === editing.id ? 'border-danger-500 text-danger-700 dark:text-danger-400' : ''}>
                   {deleteConfirm === editing.id ? 'Click again to confirm delete' : 'Delete'}
                 </Button>
               )}

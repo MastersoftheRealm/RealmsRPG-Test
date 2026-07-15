@@ -59,7 +59,7 @@ export default function AdminPage() {
         <section className="rounded-lg border border-border bg-surface p-6">
           <h2 className="text-lg font-semibold text-text-primary mb-2">Core Rules</h2>
           <p className="text-text-secondary mb-4">
-            Edit game rules: progression, combat, archetypes, conditions, sizes, rarities, ability scores, skills, recovery, experience, and damage types.
+            Edit game rules: progression, combat, archetypes, conditions, sizes, rarities, abilities, skills, recovery, experience, and damage types.
           </p>
           <Button asChild>
             <Link href="/admin/core-rules">Open Core Rules Editor</Link>

@@ -8,36 +8,28 @@
 'use client';
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { Users, Plus, AlertTriangle } from 'lucide-react';
+import { Users, Plus } from 'lucide-react';
 import { useAuthStore } from '@/stores';
 import {
-  useSpecies,
   useCodexSkills,
   useTraits,
-  useUserSpecies,
-  useOfficialLibrary,
   useAdmin,
   useCreatorSave,
+  useLoadModalLibrary,
   type Species,
   type Trait,
   type Skill,
 } from '@/hooks';
 import { CREATURE_TYPES, CREATOR_CACHE_KEYS, CACHE_EXPIRY_MS } from '@/lib/game/creator-constants';
-import { CreatorLayout, CreatorSaveToolbar, CreatorSummaryPanel, CollapsibleSection } from '@/components/creator';
-import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
-import { SourceFilter, type SourceFilterValue } from '@/components/shared/filters/source-filter';
-import type { SelectableItem } from '@/components/shared/unified-selection-modal';
-import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
-import { Button, Input, Textarea, Modal, LoadingState } from '@/components/ui';
+import { CreatorPageShell, CreatorSummaryPanel, CollapsibleSection } from '@/components/creator';
+import { SourceFilter } from '@/components/shared/filters/source-filter';
 import {
-  SearchInput,
-  ListHeader,
-  GridListRow,
-  ListEmptyState as EmptyState,
-} from '@/components/shared';
-import { useSort } from '@/hooks/use-sort';
+  UnifiedSelectionModal,
+  type SelectableItem,
+} from '@/components/shared/unified-selection-modal';
+import { ConfirmActionModal } from '@/components/shared';
+import { Button, Input, Textarea } from '@/components/ui';
 import { ChipList } from '../creature-creator/CreatureCreatorHelpers';
-import { cn } from '@/lib/utils/cn';
 import { formatListCellLabel } from '@/lib/utils';
 
 const MAX_SPECIES_TRAITS = 3;
@@ -55,6 +47,15 @@ const SPECIES_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.SPECIES;
 const SPECIES_TRAIT_WARNING =
   'Most species only have 2 species traits; the 3rd is almost always used for a type of natural weapon, if any. Are you sure you wish to add this trait?';
 
+type TraitCategory = 'species_traits' | 'ancestry_traits' | 'characteristics' | 'flaws';
+
+const TRAIT_LIMITS: Record<TraitCategory, number> = {
+  species_traits: MAX_SPECIES_TRAITS,
+  ancestry_traits: MAX_ANCESTRY_TRAITS,
+  characteristics: MAX_CHARACTERISTICS,
+  flaws: MAX_FLAWS,
+};
+
 function isSpeciesFormSaveReady(form: SpeciesFormState): boolean {
   return (
     !!form.name.trim() &&
@@ -66,24 +67,6 @@ function isSpeciesFormSaveReady(form: SpeciesFormState): boolean {
     form.adulthood_lifespan[1] !== ''
   );
 }
-
-function buildSpeciesSelectableItem(
-  record: { id?: string; docId?: string; name?: string; description?: string; type?: string },
-  source: 'my' | 'public'
-): SelectableItem {
-  const id = String(record.id ?? record.docId ?? '');
-  const name = String(record.name ?? 'Unnamed');
-  const type = String(record.type ?? '');
-  return {
-    id,
-    name,
-    description: String(record.description ?? ''),
-    columns: type ? [{ key: 'Type', value: type }] : undefined,
-    data: { source, raw: record },
-  };
-}
-
-type TraitCategory = 'species_traits' | 'ancestry_traits' | 'characteristics' | 'flaws';
 
 interface SpeciesFormState {
   name: string;
@@ -205,9 +188,7 @@ function mergeCachedSpeciesForm(
 
 export default function SpeciesCreatorPage() {
   const { user } = useAuthStore();
-  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
-  const [showLoadModal, setShowLoadModal] = useState(false);
-  const [loadSource, setLoadSource] = useState<SourceFilterValue>('all');
+  const load = useLoadModalLibrary('species');
   const [showAddSpeciesAncestryModal, setShowAddSpeciesAncestryModal] = useState(false);
   const [showAddFlawModal, setShowAddFlawModal] = useState(false);
   const [showAddCharacteristicModal, setShowAddCharacteristicModal] = useState(false);
@@ -220,16 +201,6 @@ export default function SpeciesCreatorPage() {
   const cacheBootstrapRef = useRef(false);
   const [cacheReady, setCacheReady] = useState(false);
 
-  const { data: codexSpecies = [] } = useSpecies();
-  const loadQueriesEnabled = showLoadModal;
-  const { data: userSpeciesList = [], isLoading: userSpeciesLoading } = useUserSpecies({
-    enabled: loadQueriesEnabled,
-  });
-  const {
-    data: publicSpecies = [],
-    isLoading: publicSpeciesLoading,
-    isError: publicSpeciesError,
-  } = useOfficialLibrary('species', { enabled: loadQueriesEnabled });
   const { data: skills = [], isLoading: skillsLoading } = useCodexSkills();
   const { data: traits = [], isLoading: traitsLoading } = useTraits();
   const { isAdmin } = useAdmin();
@@ -266,13 +237,6 @@ export default function SpeciesCreatorPage() {
       // ignore quota / private mode
     }
   }, [cacheReady, form]);
-
-  const traitLimits: Record<TraitCategory, number> = {
-    species_traits: MAX_SPECIES_TRAITS,
-    ancestry_traits: MAX_ANCESTRY_TRAITS,
-    characteristics: MAX_CHARACTERISTICS,
-    flaws: MAX_FLAWS,
-  };
 
   // Base skills only (no sub-skills) for species skill selection
   const skillOptions = useMemo(() => {
@@ -333,15 +297,11 @@ export default function SpeciesCreatorPage() {
   });
 
   const handleSave = useCallback(async () => {
-    if (!user) {
-      setShowLoginPrompt(true);
-      return;
-    }
     if (!isSpeciesFormSaveReady(form)) {
       return;
     }
     await save.handleSave();
-  }, [user, save, form]);
+  }, [save, form]);
 
   const handleReset = useCallback(() => {
     try {
@@ -354,10 +314,10 @@ export default function SpeciesCreatorPage() {
   }, [save]);
 
   const loadSpeciesIntoForm = useCallback(
-    (s: Species | (typeof userSpeciesList)[0]) => {
+    (s: Species | Record<string, unknown>) => {
       const allTraitsArr = traits as Trait[];
       const allSkillsArr = skills as Skill[];
-      const data = 'data' in s ? (s as { data: Record<string, unknown> }).data : s;
+      const data = 'data' in s && s.data && typeof s.data === 'object' ? (s as { data: Record<string, unknown> }).data : s;
       const d = (data || s) as Record<string, unknown>;
       const species_traits = normalizeTraitIds((d.species_traits || d.species_trait_ids) as (string | number)[], allTraitsArr);
       const ancestry_traits = normalizeTraitIds((d.ancestry_traits || d.ancestry_trait_ids) as (string | number)[], allTraitsArr);
@@ -385,66 +345,11 @@ export default function SpeciesCreatorPage() {
         ave_weight: d.ave_weight != null ? Number(d.ave_weight) : '',
         adulthood_lifespan: lifespan && lifespan.length >= 2 ? [lifespan[0], lifespan[1]] : ['', ''],
       });
-      setShowLoadModal(false);
+      load.closeLoadModal();
+      save.setSaveMessage({ type: 'success', text: 'Species loaded successfully!' });
+      setTimeout(() => save.setSaveMessage(null), 2000);
     },
-    [traits, skills]
-  );
-
-  const speciesLoadItems = useMemo((): SelectableItem[] => {
-    const items: SelectableItem[] = [];
-    if (loadSource === 'my' || loadSource === 'all') {
-      userSpeciesList.forEach((s) => items.push(buildSpeciesSelectableItem(s, 'my')));
-    }
-    if (loadSource === 'public' || loadSource === 'all') {
-      publicSpecies.forEach((s) => items.push(buildSpeciesSelectableItem(s, 'public')));
-      codexSpecies.forEach((s) => items.push(buildSpeciesSelectableItem(s, 'public')));
-    }
-    const seen = new Set<string>();
-    return items.filter((item) => {
-      const key = `${item.name}:${item.id}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  }, [loadSource, userSpeciesList, publicSpecies, codexSpecies]);
-
-  const speciesLoadLoading =
-    (loadSource !== 'public' && userSpeciesLoading) ||
-    (loadSource !== 'my' && publicSpeciesLoading);
-
-  const speciesLoadEmptyMessage =
-    speciesLoadItems.length === 0
-      ? loadSource === 'public'
-        ? 'No species in the Realms Library'
-        : loadSource === 'my'
-          ? 'No species in your library'
-          : 'No species found'
-      : 'No matching species';
-
-  const speciesLoadEmptySubMessage =
-    speciesLoadItems.length === 0 && loadSource === 'public' && publicSpeciesError
-      ? 'Failed to load Realms Library. Try again later.'
-      : speciesLoadItems.length === 0 && loadSource === 'my'
-        ? 'Save a species to My Codex first.'
-        : undefined;
-
-  const addTraitToCategory = useCallback(
-    (traitId: string, category: TraitCategory) => {
-      const key = category;
-      const current = form[key];
-      if (current.length >= traitLimits[category]) return;
-      if (category === 'species_traits' && current.length === 2) {
-        setPendingTraitAdd({ traitId, category });
-        setShowThirdSpeciesTraitConfirm(true);
-        return;
-      }
-      if (current.includes(traitId)) return;
-      setForm((prev) => ({ ...prev, [key]: [...prev[key], traitId] }));
-      setShowAddSpeciesAncestryModal(false);
-      setShowAddFlawModal(false);
-      setShowAddCharacteristicModal(false);
-    },
-    [form, traitLimits]
+    [traits, skills, load, save]
   );
 
   /** Add multiple traits at once; respects limits and shows third-species-trait confirm when needed. */
@@ -452,7 +357,7 @@ export default function SpeciesCreatorPage() {
     (traitIds: string[], category: TraitCategory) => {
       if (!traitIds.length) return;
       const key = category;
-      const limit = traitLimits[category];
+      const limit = TRAIT_LIMITS[category];
       setForm((prev) => {
         const current = prev[key];
         const toAdd: string[] = [];
@@ -482,7 +387,7 @@ export default function SpeciesCreatorPage() {
       setShowAddFlawModal(false);
       setShowAddCharacteristicModal(false);
     },
-    [form, traitLimits]
+    []
   );
 
   const confirmThirdSpeciesTrait = useCallback(() => {
@@ -492,7 +397,7 @@ export default function SpeciesCreatorPage() {
           pendingBatch?.category === 'species_traits'
             ? pendingBatch.traitIds
             : [pendingTraitAdd.traitId];
-        const limit = traitLimits.species_traits;
+        const limit = TRAIT_LIMITS.species_traits;
         const seen = new Set(prev.species_traits);
         const additions: string[] = [];
         for (const id of idsToAdd) {
@@ -509,7 +414,7 @@ export default function SpeciesCreatorPage() {
     setPendingBatch(null);
     setShowThirdSpeciesTraitConfirm(false);
     setShowAddSpeciesAncestryModal(false);
-  }, [pendingTraitAdd, pendingBatch, traitLimits]);
+  }, [pendingTraitAdd, pendingBatch]);
 
   const removeTrait = useCallback((category: TraitCategory, traitId: string) => {
     setForm((prev) => ({
@@ -602,23 +507,53 @@ export default function SpeciesCreatorPage() {
   }, [form.ave_height, form.ave_weight, form.adulthood_lifespan]);
 
   return (
-    <CreatorLayout
+    <CreatorPageShell
       icon={<Users className="w-8 h-8 text-primary-link-fg" />}
       title="Species Creator"
       description="Create custom species. Add traits (species, ancestry, characteristic, flaw), choose base skills and sizes, and set languages. Load from Realms Codex or My Codex; save to My Codex."
-      actions={
-        <CreatorSaveToolbar
-          saveTarget={save.saveTarget}
-          onSaveTargetChange={save.setSaveTarget}
-          onSave={handleSave}
-          onLoad={() => setShowLoadModal(true)}
-          onReset={handleReset}
-          saving={save.saving}
-          saveDisabled={!isSpeciesFormSaveReady(form)}
-          showPublicPrivate={isAdmin}
-          user={user}
-        />
-      }
+      user={user}
+      auth={{ returnPath: '/species-creator', contentType: 'species', requireAuthToLoad: false }}
+      showPublicPrivate={isAdmin}
+      saveTarget={save.saveTarget}
+      onSaveTargetChange={save.setSaveTarget}
+      onSave={handleSave}
+      onLoad={load.openLoadModal}
+      onReset={handleReset}
+      saving={save.saving}
+      saveDisabled={!isSpeciesFormSaveReady(form)}
+      stickySidebar={false}
+      loading={{
+        isLoading: skillsLoading || traitsLoading,
+        loadingMessage: 'Loading species creator...',
+      }}
+      publish={{
+        isOpen: save.showPublishConfirm,
+        onClose: () => save.setShowPublishConfirm(false),
+        onConfirm: () => void save.confirmPublish(),
+        title: save.publishConfirmTitle,
+        description:
+          save.publishConfirmDescription?.(form.name.trim(), {
+            existingInPublic: save.publishExistingInPublic,
+          }) ?? '',
+      }}
+      loadModal={{
+        isOpen: load.showLoadModal,
+        onClose: load.closeLoadModal,
+        title: 'Load species',
+        selectableItems: load.selectableItems,
+        columns: load.columns,
+        gridColumns: load.gridColumns,
+        isLoading: load.isLoading,
+        error: load.error,
+        headerExtra: <SourceFilter value={load.source} onChange={load.setSource} />,
+        emptyMessage: load.emptyMessage,
+        emptySubMessage: load.emptySubMessage,
+        searchPlaceholder: 'Search species...',
+        onSelect: (item) => {
+          const raw = (item.data as { raw?: Species | Record<string, unknown> })?.raw;
+          if (raw) loadSpeciesIntoForm(raw as Species);
+        },
+      }}
       sidebar={
         <CreatorSummaryPanel
           title="Summary"
@@ -630,9 +565,8 @@ export default function SpeciesCreatorPage() {
           ]}
         />
       }
-      modals={
+      extraModals={
         <>
-          <LoginPromptModal isOpen={showLoginPrompt} onClose={() => setShowLoginPrompt(false)} returnPath="/species-creator" />
           <ConfirmActionModal
             isOpen={showThirdSpeciesTraitConfirm}
             onClose={() => { setShowThirdSpeciesTraitConfirm(false); setPendingTraitAdd(null); setPendingBatch(null); }}
@@ -641,77 +575,43 @@ export default function SpeciesCreatorPage() {
             description={SPECIES_TRAIT_WARNING}
             confirmLabel="Add anyway"
           />
-          <ConfirmActionModal
-            isOpen={save.showPublishConfirm}
-            onClose={() => save.setShowPublishConfirm(false)}
-            onConfirm={() => void save.confirmPublish()}
-            title={save.publishConfirmTitle}
-            description={save.publishConfirmDescription?.(form.name.trim(), { existingInPublic: save.publishExistingInPublic }) ?? ''}
-            confirmLabel="Publish"
-            icon="publish"
-          />
-
-          <LoadFromLibraryModal
-            isOpen={showLoadModal}
-            onClose={() => setShowLoadModal(false)}
-            title="Load species"
-            selectableItems={speciesLoadItems}
-            columns={[
-              { key: 'name', label: 'Name' },
-              { key: 'Type', label: 'Type', sortable: true },
-            ]}
-            gridColumns="1.4fr 0.8fr"
-            isLoading={speciesLoadLoading}
-            headerExtra={<SourceFilter value={loadSource} onChange={setLoadSource} />}
-            emptyMessage={speciesLoadEmptyMessage}
-            emptySubMessage={speciesLoadEmptySubMessage}
-            searchPlaceholder="Search species..."
-            onSelect={(item) => {
-              const raw = (item.data as { raw?: Species | Record<string, unknown> })?.raw;
-              if (raw) loadSpeciesIntoForm(raw as Species);
+          <TraitListModal
+            isOpen={showAddSpeciesAncestryModal}
+            onClose={() => setShowAddSpeciesAncestryModal(false)}
+            title="Add species or ancestry trait"
+            traits={traits as Trait[]}
+            filter={(t) => !t.flaw && !t.characteristic}
+            form={form}
+            traitLimits={TRAIT_LIMITS}
+            mode="species_ancestry"
+            onAddBatch={addTraitBatchToCategory}
+            onThirdSpeciesTrait={(traitId) => {
+              setPendingTraitAdd({ traitId, category: 'species_traits' });
+              setShowThirdSpeciesTraitConfirm(true);
             }}
           />
-
-          <Modal isOpen={showAddSpeciesAncestryModal} onClose={() => setShowAddSpeciesAncestryModal(false)} title="Add species or ancestry trait" size="lg" fullScreenOnMobile>
-            <TraitListModal
-              traits={traits as Trait[]}
-              filter={(t) => !t.flaw && !t.characteristic}
-              form={form}
-              traitLimits={traitLimits}
-              mode="species_ancestry"
-              onAdd={addTraitToCategory}
-              onAddBatch={addTraitBatchToCategory}
-              onClose={() => setShowAddSpeciesAncestryModal(false)}
-              onThirdSpeciesTrait={(traitId) => {
-                setPendingTraitAdd({ traitId, category: 'species_traits' });
-                setShowThirdSpeciesTraitConfirm(true);
-              }}
-            />
-          </Modal>
-          <Modal isOpen={showAddFlawModal} onClose={() => setShowAddFlawModal(false)} title="Add flaw" size="lg" fullScreenOnMobile>
-            <TraitListModal
-              traits={traits as Trait[]}
-              filter={(t) => t.flaw === true}
-              form={form}
-              traitLimits={traitLimits}
-              mode="flaw"
-              onAdd={addTraitToCategory}
-              onAddBatch={addTraitBatchToCategory}
-              onClose={() => setShowAddFlawModal(false)}
-            />
-          </Modal>
-          <Modal isOpen={showAddCharacteristicModal} onClose={() => setShowAddCharacteristicModal(false)} title="Add characteristic" size="lg" fullScreenOnMobile>
-            <TraitListModal
-              traits={traits as Trait[]}
-              filter={(t) => t.characteristic === true}
-              form={form}
-              traitLimits={traitLimits}
-              mode="characteristic"
-              onAdd={addTraitToCategory}
-              onAddBatch={addTraitBatchToCategory}
-              onClose={() => setShowAddCharacteristicModal(false)}
-            />
-          </Modal>
+          <TraitListModal
+            isOpen={showAddFlawModal}
+            onClose={() => setShowAddFlawModal(false)}
+            title="Add flaw"
+            traits={traits as Trait[]}
+            filter={(t) => t.flaw === true}
+            form={form}
+            traitLimits={TRAIT_LIMITS}
+            mode="flaw"
+            onAddBatch={addTraitBatchToCategory}
+          />
+          <TraitListModal
+            isOpen={showAddCharacteristicModal}
+            onClose={() => setShowAddCharacteristicModal(false)}
+            title="Add characteristic"
+            traits={traits as Trait[]}
+            filter={(t) => t.characteristic === true}
+            form={form}
+            traitLimits={TRAIT_LIMITS}
+            mode="characteristic"
+            onAddBatch={addTraitBatchToCategory}
+          />
         </>
       }
     >
@@ -793,7 +693,7 @@ export default function SpeciesCreatorPage() {
 
         <CollapsibleSection title={`Languages (up to ${MAX_LANGUAGES})`} collapsedSummary={languagesSummary} defaultExpanded={true}>
           <p className="text-sm text-text-muted dark:text-text-secondary mb-4">Universal can be included by default; add or remove as desired.</p>
-          <ChipList items={form.languages} onRemove={removeLanguage} color="bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-300" />
+          <ChipList items={form.languages} onRemove={removeLanguage} color="bg-info-100 dark:bg-info-900/30 text-info-800 dark:text-info-300" />
           <div className="flex gap-2 mt-2">
             <Input
               label="New language"
@@ -890,7 +790,7 @@ export default function SpeciesCreatorPage() {
           </div>
         </CollapsibleSection>
       </div>
-    </CreatorLayout>
+    </CreatorPageShell>
   );
 }
 
@@ -926,201 +826,143 @@ function TraitBlock({
   );
 }
 
-const TRAIT_GRID_COLUMNS = '1.5fr 0.6fr 0.6fr 40px';
+const TRAIT_GRID_COLUMNS = '1.5fr 0.6fr 0.6fr';
 const TRAIT_LIST_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'uses_per_rec', label: 'USES' },
   { key: 'rec_period', label: 'RECOVERY' },
-  { key: '_actions', label: '', sortable: false as const },
 ];
 
 interface TraitListModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
   traits: Trait[];
   filter: (t: Trait) => boolean;
   form: SpeciesFormState;
   traitLimits: Record<TraitCategory, number>;
   mode: 'species_ancestry' | 'flaw' | 'characteristic';
-  onAdd: (traitId: string, category: TraitCategory) => void;
   onAddBatch: (traitIds: string[], category: TraitCategory) => void;
-  onClose: () => void;
   onThirdSpeciesTrait?: (traitId: string) => void;
 }
 
 function TraitListModal({
+  isOpen,
+  onClose,
+  title,
   traits,
   filter,
   form,
   traitLimits,
   mode,
-  onAdd,
   onAddBatch,
-  onClose,
   onThirdSpeciesTrait,
 }: TraitListModalProps) {
-  const [search, setSearch] = useState('');
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const { sortState, handleSort, sortItems } = useSort('name');
-
   const alreadyUsed = useMemo(
     () => new Set([...form.species_traits, ...form.ancestry_traits, ...form.characteristics, ...form.flaws]),
     [form]
   );
 
-  const filtered = useMemo(() => {
-    const list = traits.filter((t) => filter(t) && !alreadyUsed.has(String(t.id)));
-    const searched =
-      !search.trim()
-        ? list
-        : list.filter(
-            (t) =>
-              t.name.toLowerCase().includes(search.toLowerCase()) ||
-              (t.description ?? '').toLowerCase().includes(search.toLowerCase())
-          );
-    return sortItems<Trait>(searched);
-  }, [traits, filter, alreadyUsed, search, sortState, sortItems]);
+  const items: SelectableItem[] = useMemo(() => {
+    return traits
+      .filter((t) => filter(t) && !alreadyUsed.has(String(t.id)))
+      .map((t) => ({
+        id: String(t.id),
+        name: t.name,
+        description: t.description ?? '',
+        columns: [
+          {
+            key: 'uses_per_rec',
+            value: t.uses_per_rec != null && t.uses_per_rec > 0 ? String(t.uses_per_rec) : '-',
+            align: 'center' as const,
+          },
+          {
+            key: 'rec_period',
+            value: t.rec_period ? formatListCellLabel(t.rec_period) : '-',
+            align: 'center' as const,
+          },
+        ],
+        data: t,
+      }));
+  }, [traits, filter, alreadyUsed]);
 
   const canAddSpecies = form.species_traits.length < traitLimits.species_traits;
   const canAddAncestry = form.ancestry_traits.length < traitLimits.ancestry_traits;
   const canAddFlaw = form.flaws.length < traitLimits.flaws;
   const canAddCharacteristic = form.characteristics.length < traitLimits.characteristics;
 
-  const toggleSelection = useCallback((id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
+  const description =
+    mode === 'species_ancestry'
+      ? 'Select one or more traits, then add as species traits or ancestry traits. Expand a row to see full description.'
+      : mode === 'flaw'
+        ? 'Select one or more flaws to add. Expand a row to see full description.'
+        : 'Select one or more characteristics to add. Expand a row to see full description.';
 
-  const handleAddAsSpecies = () => {
-    const ids = Array.from(selectedIds);
-    if (!ids.length || !canAddSpecies) return;
-    if (ids.length === 1 && form.species_traits.length === 2) {
+  const addIds = (selected: SelectableItem[], category: TraitCategory) => {
+    const ids = selected.map((s) => String(s.id));
+    if (!ids.length) return;
+    if (category === 'species_traits' && ids.length === 1 && form.species_traits.length === 2) {
       onThirdSpeciesTrait?.(ids[0]);
+      onClose();
       return;
     }
-    onAddBatch(ids, 'species_traits');
-    setSelectedIds(new Set());
-  };
-
-  const handleAddAsAncestry = () => {
-    const ids = Array.from(selectedIds);
-    if (!ids.length || !canAddAncestry) return;
-    onAddBatch(ids, 'ancestry_traits');
-    setSelectedIds(new Set());
-  };
-
-  const handleAddFlaw = () => {
-    const ids = Array.from(selectedIds);
-    if (!ids.length || !canAddFlaw) return;
-    onAddBatch(ids, 'flaws');
-    setSelectedIds(new Set());
-  };
-
-  const handleAddCharacteristic = () => {
-    const ids = Array.from(selectedIds);
-    if (!ids.length || !canAddCharacteristic) return;
-    onAddBatch(ids, 'characteristics');
-    setSelectedIds(new Set());
+    onAddBatch(ids, category);
+    onClose();
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <p className="text-sm text-text-muted dark:text-text-secondary">
-        {mode === 'species_ancestry' &&
-          'Select one or more traits, then add as species traits or ancestry traits. Expand a row to see full description.'}
-        {mode === 'flaw' && 'Select one or more flaws to add. Expand a row to see full description.'}
-        {mode === 'characteristic' && 'Select one or more characteristics to add. Expand a row to see full description.'}
-      </p>
-      <SearchInput value={search} onChange={setSearch} placeholder="Search traits..." />
-      <ListHeader
-        columns={TRAIT_LIST_COLUMNS}
-        gridColumns={TRAIT_GRID_COLUMNS}
-        sortState={sortState}
-        onSort={handleSort}
-      />
-      <div className="border border-border-light rounded-lg overflow-hidden max-h-[50vh] overflow-y-auto">
-        {filtered.length === 0 ? (
-          <EmptyState title="No traits found" description="Try adjusting your search or check limits." size="sm" />
-        ) : (
-          <div className="flex flex-col gap-0.5 p-1">
-            {filtered.map((t) => {
-              const idStr = String(t.id);
-              const isSelected = selectedIds.has(idStr);
-              return (
-                <div
-                  key={t.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => toggleSelection(idStr)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      toggleSelection(idStr);
-                    }
-                  }}
-                  className={cn(
-                    'min-h-[var(--touch-target-min,44px)] flex items-center rounded-lg',
-                    isSelected ? 'ring-2 ring-primary-subtle-border' : ''
-                  )}
-                  aria-pressed={isSelected}
-                  aria-label={isSelected ? `Selected: ${t.name}. Click to deselect.` : `Select ${t.name}`}
+    <UnifiedSelectionModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={title}
+      description={description}
+      items={items}
+      onConfirm={(selected) => {
+        if (mode === 'flaw') addIds(selected, 'flaws');
+        else if (mode === 'characteristic') addIds(selected, 'characteristics');
+      }}
+      columns={TRAIT_LIST_COLUMNS}
+      gridColumns={TRAIT_GRID_COLUMNS}
+      itemLabel={mode === 'flaw' ? 'flaw' : mode === 'characteristic' ? 'characteristic' : 'trait'}
+      emptyMessage="No traits found"
+      emptySubMessage="Try adjusting your search or check limits."
+      searchPlaceholder="Search traits..."
+      confirmLabel={
+        mode === 'flaw'
+          ? 'Add selected'
+          : mode === 'characteristic'
+            ? 'Add selected'
+            : 'Add Selected'
+      }
+      confirmDisabled={
+        mode === 'flaw'
+          ? () => !canAddFlaw
+          : mode === 'characteristic'
+            ? () => !canAddCharacteristic
+            : undefined
+      }
+      primaryActions={
+        mode === 'species_ancestry'
+          ? (selected) => (
+              <>
+                <Button
+                  onClick={() => addIds(selected, 'species_traits')}
+                  disabled={selected.length === 0 || !canAddSpecies}
                 >
-                  <GridListRow
-                  id={t.id}
-                  name={t.name}
-                  description={t.description ?? ''}
-                  gridColumns={TRAIT_GRID_COLUMNS}
-                  columns={[
-                    {
-                      key: 'uses_per_rec',
-                      label: 'Uses',
-                      value: t.uses_per_rec != null && t.uses_per_rec > 0 ? String(t.uses_per_rec) : '-',
-                    },
-                    { key: 'rec_period', label: 'Recovery', value: t.rec_period ? formatListCellLabel(t.rec_period) : '-' },
-                  ]}
-                />
-              </div>
-            );
-            })}
-          </div>
-        )}
-      </div>
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border-light pt-3">
-        <span className="text-sm text-text-muted dark:text-text-secondary">{selectedIds.size} selected</span>
-        <div className="flex flex-wrap items-center justify-end gap-2">
-        <Button variant="outline" onClick={onClose}>
-          Cancel
-        </Button>
-        {mode === 'species_ancestry' && (
-          <>
-            <Button
-              onClick={handleAddAsSpecies}
-              disabled={selectedIds.size === 0 || !canAddSpecies}
-            >
-              Add selected as species trait{selectedIds.size !== 1 ? 's' : ''}
-            </Button>
-            <Button
-              onClick={handleAddAsAncestry}
-              disabled={selectedIds.size === 0 || !canAddAncestry}
-            >
-              Add selected as ancestry trait{selectedIds.size !== 1 ? 's' : ''}
-            </Button>
-          </>
-        )}
-        {mode === 'flaw' && (
-          <Button onClick={handleAddFlaw} disabled={selectedIds.size === 0 || !canAddFlaw}>
-            Add selected flaw{selectedIds.size !== 1 ? 's' : ''}
-          </Button>
-        )}
-        {mode === 'characteristic' && (
-          <Button onClick={handleAddCharacteristic} disabled={selectedIds.size === 0 || !canAddCharacteristic}>
-            Add selected characteristic{selectedIds.size !== 1 ? 's' : ''}
-          </Button>
-        )}
-        </div>
-      </div>
-    </div>
+                  Add selected as species trait{selected.length !== 1 ? 's' : ''}
+                </Button>
+                <Button
+                  onClick={() => addIds(selected, 'ancestry_traits')}
+                  disabled={selected.length === 0 || !canAddAncestry}
+                >
+                  Add selected as ancestry trait{selected.length !== 1 ? 's' : ''}
+                </Button>
+              </>
+            )
+          : undefined
+      }
+      size="lg"
+      className="max-h-[60vh]"
+    />
   );
 }

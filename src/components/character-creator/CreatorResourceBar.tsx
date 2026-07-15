@@ -38,7 +38,7 @@ export function CreatorResourceBar({
     >
       {pathIncluded && (
         <span className="w-full text-xs font-medium text-primary-fg mb-1">
-          Included in your path — expand options to see Training Points and currency details.
+          Included in your path. Expand options to see Training Points and currency details.
         </span>
       )}
       {trainingPoints && (!pathIncluded || layer > 1) && (

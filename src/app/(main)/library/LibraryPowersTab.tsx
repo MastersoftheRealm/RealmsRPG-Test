@@ -18,7 +18,6 @@ import {
   ErrorDisplay,
   ListEmptyState,
   ConfirmActionModal,
-  type ChipData,
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';

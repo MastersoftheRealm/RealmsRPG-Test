@@ -32,11 +32,34 @@ export function metadataDescriptorChip(label: string): ChipData {
   return descriptorChipData(label, 'default');
 }
 
+function pushLabeledFact(
+  chips: ChipData[],
+  label: string,
+  value: string | number | null | undefined
+) {
+  if (value == null) return;
+  const text = String(value).trim();
+  if (!text || text === '-') return;
+  chips.push(metadataDescriptorChip(`${label} ${text}`));
+}
+
 export function buildRangeDamageMetadataChips(opts: {
   range?: string | number | null;
   damage?: string | null;
+  /** When Energy is omitted from collapsed columns (e.g. slim modal layouts). */
+  energy?: string | number | null;
+  /** When Duration is omitted from collapsed columns. */
+  duration?: string | null;
+  /** When Area is omitted from collapsed columns. */
+  area?: string | null;
+  /** When Action Type is omitted from collapsed columns. */
+  actionType?: string | null;
 }): ChipData[] {
   const chips: ChipData[] = [];
+  pushLabeledFact(chips, 'Energy', opts.energy);
+  pushLabeledFact(chips, 'Action Type', opts.actionType);
+  pushLabeledFact(chips, 'Duration', opts.duration);
+  pushLabeledFact(chips, 'Area', opts.area);
   if (opts.range != null && opts.range !== '') {
     const rangeStr = normalizeRangeDisplay(opts.range);
     if (rangeStr) chips.push(metadataDescriptorChip(`Range: ${rangeStr}`));
@@ -85,10 +108,14 @@ export function mergeDetailSections(
   return flat;
 }
 
-/** Metadata (range/damage) + optional parts/properties sections for expanded rows. */
+/** Metadata fact chips + optional parts/properties sections for expanded rows. */
 export function buildEntityMetadataDetailSections(opts: {
   range?: string | number | null;
   damage?: string | null;
+  energy?: string | number | null;
+  duration?: string | null;
+  area?: string | null;
+  actionType?: string | null;
   extraSections?: MetadataDetailSection[];
 }): MetadataDetailSection[] {
   const meta = metadataDetailSection(buildRangeDamageMetadataChips(opts));
@@ -99,12 +126,20 @@ export function buildEntityMetadataDetailSections(opts: {
 export function buildPartsAndMetadataDetailSections(opts: {
   range?: string | number | null;
   damage?: string | null;
+  energy?: string | number | null;
+  duration?: string | null;
+  area?: string | null;
+  actionType?: string | null;
   partChips: ChipData[];
 }): MetadataDetailSection[] {
   const parts = partsProficienciesSection(opts.partChips);
   return buildEntityMetadataDetailSections({
     range: opts.range,
     damage: opts.damage,
+    energy: opts.energy,
+    duration: opts.duration,
+    area: opts.area,
+    actionType: opts.actionType,
     extraSections: parts ? [parts] : undefined,
   });
 }

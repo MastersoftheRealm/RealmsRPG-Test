@@ -8,15 +8,16 @@
 
 import { useMemo, useState } from 'react';
 import { Spinner, EmptyState } from '@/components/ui';
+import { GuidedLayerNav } from '@/components/shared';
 import { useCodexArchetypes } from '@/hooks';
 import { parseArchetypePathData, pathHasPlayerVisibleLevel1 } from '@/lib/game/archetype-path';
+import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import type { Archetype, ArchetypeCategory } from '@/types';
 import { GuidedChoiceCard } from '../guided-choice-card';
 import { GUIDED_CHOICE_GRID_CLASS, GUIDED_CHOICE_GRID_ITEM_CLASS } from '../guided-choice-grid';
+import { GuidedPathDetailModal } from '../guided-path-detail-modal';
 import { GuidedStepLayout } from '../guided-step-layout';
-import { GuidedLayerNav } from '@/components/shared';
-import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.path;
 
@@ -38,6 +39,7 @@ export function PathStep() {
   const { draft, updateDraft } = useGuidedCreatorStore();
   const { data: codexArchetypes = [], isLoading } = useCodexArchetypes();
   const [showHybrid, setShowHybrid] = useState(false);
+  const [detailPathId, setDetailPathId] = useState<string | null>(null);
 
   const paths = useMemo(() => {
     return (codexArchetypes as Archetype[])
@@ -53,6 +55,12 @@ export function PathStep() {
       .slice()
       .sort(sortPaths);
   }, [paths, showHybrid]);
+
+  // Lookup against full player-visible list so LayerNav hybrid toggle does not unmount the modal.
+  const detailPath = useMemo(
+    () => paths.find((p) => String(p.id) === detailPathId) ?? null,
+    [paths, detailPathId]
+  );
 
   const handleSelect = (path: Archetype) => {
     const type = (path.type || 'power') as ArchetypeCategory;
@@ -100,6 +108,7 @@ export function PathStep() {
                   description={path.description}
                   selected={draft.archetypePathId === String(path.id)}
                   onSelect={() => handleSelect(path)}
+                  onDetails={() => setDetailPathId(String(path.id))}
                 />
               ))}
             </div>
@@ -117,6 +126,12 @@ export function PathStep() {
               onCollapse={() => setShowHybrid(false)}
             />
           ) : null}
+
+          <GuidedPathDetailModal
+            isOpen={detailPath != null}
+            onClose={() => setDetailPathId(null)}
+            path={detailPath}
+          />
         </>
       )}
     </GuidedStepLayout>

@@ -16,7 +16,16 @@ import { cn, formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useEquipment, useUserItems, useItemProperties, useOfficialLibrary, usePowerParts, useTechniqueParts, useMergedSpecies, useCodexSkills, useTraits, useCreatorPathData } from '@/hooks';
-import { deriveItemDisplay, trainingPointsForItemPropertyRef } from '@/lib/calculators/item-calc';
+import {
+  deriveItemDisplay,
+  formatRange,
+  trainingPointsForItemPropertyRef,
+  type ItemPropertyPayload,
+} from '@/lib/calculators/item-calc';
+import {
+  buildEntityMetadataDetailSections,
+  mergeDetailSections,
+} from '@/lib/chip/list-row-metadata';
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 import {
   InfoTippy,
@@ -37,6 +46,7 @@ import { AlertCircle, Swords, Check, X, ShoppingBag, ChevronLeft } from 'lucide-
 import { IconButton } from '@/components/ui';
 import type { Item } from '@/types';
 import type { CharacterPower, CharacterTechnique } from '@/types';
+import type { PathItemRecommendation } from '@/types/archetype';
 import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
 import { CreatorResourceBar } from '@/components/character-creator/CreatorResourceBar';
@@ -76,6 +86,8 @@ const SELECTED_EQUIPMENT_COLUMNS: ListColumn[] = [
   { key: 'cost', label: 'Cost', width: '0.6fr', align: 'right' },
 ];
 const SELECTED_EQUIPMENT_GRID = '1.6fr 0.7fr 0.6fr';
+
+const EMPTY_PATH_RECOMMENDATIONS: PathItemRecommendation[] = [];
 
 // Match GridListRow right slot (w-[4rem] mr-2) so header columns align with row columns
 const RIGHT_SLOT_WIDTH = '4.5rem';
@@ -178,8 +190,10 @@ export function EquipmentStep() {
     () => new Set((pathData?.level1?.equipment || []).map((v: string) => String(v).toLowerCase())),
     [pathData?.level1?.equipment]
   );
-  const pathArmamentRecommendations = pathData?.level1?.armamentRecommendations ?? [];
-  const pathEquipmentRecommendations = pathData?.level1?.equipmentRecommendations ?? [];
+  const pathArmamentRecs = pathData?.level1?.armamentRecommendations;
+  const pathEquipmentRecs = pathData?.level1?.equipmentRecommendations;
+  const pathArmamentRecommendations = pathArmamentRecs ?? EMPTY_PATH_RECOMMENDATIONS;
+  const pathEquipmentRecommendations = pathEquipmentRecs ?? EMPTY_PATH_RECOMMENDATIONS;
   const pathRecommendsUnarmedProwess = pathData?.level1?.recommendUnarmedProwess === true;
 
   // Resolve path recommendations to full items (depends on allEquipment, so after it's defined)
@@ -206,12 +220,6 @@ export function EquipmentStep() {
     return UNARMED_PROWESS_LEVELS.filter(up => up.charLevel <= charLevel);
   }, [draft.level]);
   
-  // Toggle unarmed prowess selection
-  const toggleUnarmedProwess = useCallback(() => {
-    const newLevel = currentUnarmedProwess === 0 ? 1 : 0;
-    updateDraft({ unarmedProwess: newLevel });
-  }, [currentUnarmedProwess, updateDraft]);
-
   // Upgrade unarmed prowess to a specific level
   const setUnarmedProwessLevel = useCallback((level: number) => {
     updateDraft({ unarmedProwess: level });
@@ -760,8 +768,8 @@ export function EquipmentStep() {
             {showFullEquipmentList
               ? 'Browse the full equipment catalog, or return to your path loadout.'
               : loadoutPhase === 'weapon'
-                ? 'Choose your weapon first — included in your path loadout.'
-                : 'Now choose armor — one decision at a time.'}
+                ? 'Choose your weapon first. Included in your path loadout.'
+                : 'Now choose armor, one decision at a time.'}
           </PathHelpCard>
           <PathNotes pathName={draft.archetype.name} notes={pathData?.level1?.notes} />
         </>
@@ -796,9 +804,9 @@ export function EquipmentStep() {
               </h3>
               <p className="text-sm text-text-secondary mt-0.5">
                 {pathConfirmMode
-                  ? 'Included in your path — review your loadout below. Expand to swap gear or browse the full catalog.'
+                  ? 'Included in your path. Review your loadout below. Expand to swap gear or browse the full catalog.'
                   : pathRecommendedForPhase.length > 0
-                    ? 'Included in your path — click to add, or add all at once.'
+                    ? 'Included in your path. Click to add, or add all at once.'
                     : publicItemsLoading
                       ? 'Loading recommended equipment from the library…'
                       : 'Recommended items could not be found in the library.'}
@@ -917,7 +925,7 @@ export function EquipmentStep() {
                 >
                   <div className={cn(
                     'w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0',
-                    isSelected ? 'bg-primary-button text-white' : 'bg-surface border border-border-light'
+                    isSelected ? 'bg-primary-button text-text-on-dark' : 'bg-surface border border-border-light'
                   )}>
                     {isSelected && <Check className="w-4 h-4" />}
                   </div>
@@ -1069,7 +1077,7 @@ export function EquipmentStep() {
 
           {/* Prowess Levels - only show level 1 for character creation */}
           <div className="space-y-3">
-            {availableUnarmedLevels.map((prowessLevel, idx) => {
+            {availableUnarmedLevels.map((prowessLevel) => {
               const isAvailable = prowessLevel.charLevel <= (draft.level || 1);
               const isSelected = currentUnarmedProwess >= prowessLevel.level;
               const tpCost = prowessLevel.level === 1 ? UNARMED_PROWESS_BASE_TP : UNARMED_PROWESS_UPGRADE_TP;
@@ -1098,7 +1106,7 @@ export function EquipmentStep() {
                   {/* Selection indicator */}
                   <div className={cn(
                     'w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0',
-                    isSelected ? 'bg-primary-button text-white' : 'bg-surface-alt border border-border-light'
+                    isSelected ? 'bg-primary-button text-text-on-dark' : 'bg-surface-alt border border-border-light'
                   )}>
                     {isSelected && <Check className="w-4 h-4" />}
                   </div>
@@ -1285,7 +1293,17 @@ export function EquipmentStep() {
                     align: 'center' as const,
                   };
 
+                  const propertySection =
+                    chips.length > 0
+                      ? [{ label: 'Properties', chips, hideLabelIfSingle: true as const }]
+                      : undefined;
+
                   if (activeTab === 'weapon') {
+                    const propPayloads = (item.properties ?? []) as ItemPropertyPayload[];
+                    const rangeLabel = formatRange(propPayloads);
+                    const rangeFacts = buildEntityMetadataDetailSections({
+                      range: rangeLabel && rangeLabel.toLowerCase() !== 'melee' ? rangeLabel : 'Melee',
+                    });
                     return (
                       <GridListRow
                         key={item.id}
@@ -1299,7 +1317,7 @@ export function EquipmentStep() {
                         ]}
                         gridColumns={WEAPON_LIST_GRID}
                         badges={badges}
-                        detailSections={chips.length > 0 ? [{ label: 'Properties', chips, hideLabelIfSingle: true }] : undefined}
+                        detailSections={mergeDetailSections(rangeFacts, propertySection)}
                         rightSlot={rightSlotContent}
                         compact
                       />
@@ -1313,13 +1331,17 @@ export function EquipmentStep() {
                         name={item.name}
                         description={item.description}
                         columns={[
-                          { key: 'armor_value', value: item.armor_value != null ? `+${item.armor_value}` : '-', align: 'center' },
+                          {
+                            key: 'armor_value',
+                            value: item.armor_value != null ? String(item.armor_value) : '-',
+                            align: 'center',
+                          },
                           costColumn,
                           sourceColumn,
                         ]}
                         gridColumns={ARMOR_LIST_GRID}
                         badges={badges}
-                        detailSections={chips.length > 0 ? [{ label: 'Properties', chips, hideLabelIfSingle: true }] : undefined}
+                        detailSections={propertySection}
                         rightSlot={rightSlotContent}
                         compact
                       />
