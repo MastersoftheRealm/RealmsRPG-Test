@@ -2,8 +2,8 @@
  * DetailOptionList — shared elongated expandable option rows for deep-dive catalogs
  * (Traits, Feats, Weapons, Armor, Powers, Techniques) and remodeled legacy trait lists.
  *
- * Collapsed row shows name + truncated description. Fact/stats that would normally be
- * columns (Damage Reduction, Range, Uses, Energy, etc.) belong as labeled chips in the
+ * Collapsed row shows name + truncated description (mobile: prose below name, no column label).
+ * Fact/stats that would normally be columns (Damage Reduction, Range, Uses, Energy, etc.) belong as labeled chips in the
  * expanded body so the label states the value (e.g. "Damage Reduction 2"), not bare numbers.
  */
 
@@ -101,7 +101,7 @@ export function DetailOptionList({
                     key: 'description',
                     label: 'Description',
                     align: 'left',
-                    hideOnMobile: false,
+                    hideOnMobile: true,
                     value: desc ? (
                       <span className="line-clamp-2 text-left text-text-secondary">{desc}</span>
                     ) : (

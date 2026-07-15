@@ -60,6 +60,19 @@ function columnDisplayLabel(col: ColumnValue): string {
   return formatColumnKeyLabel(col.key);
 }
 
+/** Columns hidden from the mobile grid (`hideOnMobile` default true). */
+function columnsForMobileSummary(columns: ColumnValue[]): ColumnValue[] {
+  return columns.filter((col) => col.hideOnMobile !== false).slice(0, 3);
+}
+
+/** Stat columns for expanded mobile — skip description when the body already shows it. */
+function columnsForExpandedMobileStats(
+  columns: ColumnValue[],
+  hasDescriptionBody: boolean
+): ColumnValue[] {
+  return columns.filter((col) => !(col.key === 'description' && hasDescriptionBody));
+}
+
 /**
  * Count explicit tracks in a grid-template-columns string.
  * Supports basic tracks, minmax(), fit-content(), and repeat(<n>, ...).
@@ -355,6 +368,9 @@ export const GridListRow = memo(function GridListRow({
   const inlineWarning = !!warningMessage && remainingInlineActionTracks > 0;
   if (inlineWarning) remainingInlineActionTracks -= 1;
 
+  const mobileSummaryColumns = columnsForMobileSummary(columns);
+  const expandedMobileStatColumns = columnsForExpandedMobileStats(columns, !!descTrimmed);
+
   return (
     <div className={rowStyles}>
       {/* Main Row */}
@@ -599,19 +615,34 @@ export const GridListRow = memo(function GridListRow({
         )}
       </div>
 
-      {/* Mobile summary row (only when grid mode with columns) */}
-      {gridColumns && columns.length > 0 && (
+      {/* Mobile summary — stats hidden from the collapsed grid (not duplicate prose) */}
+      {gridColumns && mobileSummaryColumns.length > 0 && (
         <div className="lg:hidden px-4 pb-2 flex flex-wrap gap-2 text-xs text-text-secondary">
-          {columns.slice(0, 3).map((col) => (
-            col.value && (
-              <span key={col.key} className="flex items-center gap-1">
-                <span className="text-text-muted dark:text-text-secondary">{(columnDisplayLabel(col))}:</span>
-                <span className={cn(col.highlight && 'text-primary-link-fg font-medium')}>
+          {mobileSummaryColumns.map((col) =>
+            col.value ? (
+              col.key === 'description' ? (
+                <div
+                  key={col.key}
+                  className={cn(
+                    'w-full min-w-0 text-text-secondary',
+                    col.className,
+                    col.highlight && 'text-primary-link-fg font-medium'
+                  )}
+                >
                   {col.value}
+                </div>
+              ) : (
+                <span key={col.key} className="flex items-center gap-1">
+                  <span className="text-text-muted dark:text-text-secondary">
+                    {columnDisplayLabel(col)}:
+                  </span>
+                  <span className={cn(col.highlight && 'text-primary-link-fg font-medium')}>
+                    {col.value}
+                  </span>
                 </span>
-              </span>
-            )
-          ))}
+              )
+            ) : null
+          )}
         </div>
       )}
       
@@ -653,13 +684,20 @@ export const GridListRow = memo(function GridListRow({
                 </div>
               )}
 
-              {/* All stats on mobile */}
-              {gridColumns && columns.length > 0 && (
+              {/* Numeric / stat columns on mobile (description body renders above) */}
+              {gridColumns && expandedMobileStatColumns.length > 0 && (
                 <div className="lg:hidden grid grid-cols-2 gap-2 mb-4 text-sm">
-                  {columns.map((col) => (
+                  {expandedMobileStatColumns.map((col) => (
                     <div key={col.key} className="flex items-center gap-2">
-                      <span className="text-text-muted dark:text-text-secondary">{(columnDisplayLabel(col))}:</span>
-                      <span className={cn('font-medium text-text-primary', col.highlight && 'text-primary-link-fg')}>
+                      <span className="text-text-muted dark:text-text-secondary">
+                        {columnDisplayLabel(col)}:
+                      </span>
+                      <span
+                        className={cn(
+                          'font-medium text-text-primary',
+                          col.highlight && 'text-primary-link-fg'
+                        )}
+                      >
                         {col.value ?? '-'}
                       </span>
                     </div>
