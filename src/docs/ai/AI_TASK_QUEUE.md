@@ -2,11 +2,749 @@
 
 **Last slimmed:** 2026-06-26 (TASK-382). Full history: [`archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md`](archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md) and [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md).
 
-**Next task ID:** TASK-432
+**Next task ID:** TASK-448
 
-**Agent rules:** Skip `blocked` tasks and any task with `assignee:` set to a human (e.g. TASK-353, **TASK-414**). Skip human-only tasks (TASK-353 → `DEVELOPER_TASK_QUEUE.md` DEV-001). Pick highest-priority `not-started` or continue `partial`. **Do not start TASK-408–413** until TASK-414 spec is `done` (owner approval).
+**Agent rules:** Skip `blocked` tasks and any task with `assignee:` set to a human (e.g. TASK-353, **TASK-414**, **TASK-423**). Skip human-only tasks (TASK-353 → `DEVELOPER_TASK_QUEUE.md` DEV-001). Pick highest-priority `not-started` or continue `partial`. **Do not start TASK-408–413** until TASK-414 spec is `done` (owner approval). **Choice-card deep-dive:** TASK-432–436 done. Global GridListRow = TASK-437 done. Copy guide = TASK-438 done; **sitewide copy audit = TASK-439 done** (residuals → TASK-440). Guided equipment kits removed → TASK-441–443; L1 simplify → TASK-446; equipment chrome/cards/terms → **TASK-447**. Vision §3.1 selection grammar updated 2026-07-15. Stable expand toggles → **TASK-445 done**.
 
 ---
+
+- id: TASK-447
+  title: Guided equipment — drop phase bar, PointStatus Currency, card chips + cost fix
+  created_at: 2026-07-15
+  created_by: agent
+  priority: high
+  status: done
+  implemented_by: agent
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T004
+      - DEV-V-013-T026
+  developer_test_plan: |
+    DEV-V-013-T004 updated; T026 PointStatus + property chips + no progress bar.
+  related_files:
+    - src/components/guided-creator/steps/loadout-step.tsx
+    - src/components/guided-creator/guided-equipment-phase-layout.tsx
+    - src/components/guided-creator/guided-equipment-l1-phase.tsx
+    - src/components/guided-creator/guided-equipment-fact-chips.tsx
+    - src/lib/guided-creator/equipment-phase-stats.ts
+    - src/lib/guided-creator/equipment-currency.ts
+  description: |
+    Remove equipment phase SegmentedControl; show Currency via PointStatus like skills/abilities;
+    spell Currency fully in L1/L2; remove Path pick badges; fix cost chip 0 bug (costs.totalCurrency);
+    cards show image/title/description + named property chips with hover tips.
+  acceptance_criteria:
+    - No weapon/armor/gear progress strip; Next/Back + footer fraction only.
+    - PointStatus label Currency with total/spent on every equipment phase.
+    - No Path pick badge on path cards.
+    - Currency chip shows real unit cost (not 0 when costs.totalCurrency set).
+    - Weapons/armor: description + named property chips; hover tip when property has description.
+    - L1/L2 copy does not use "c" for Currency.
+  evidence: |
+    Deleted guided-equipment-phase-progress; PointStatus in phase layout; resolveItemUnitCost
+    reads costs.totalCurrency; cardChips + InfoTippy hover; GAME_RULES L1/L2 abbreviation note.
+  notes: |
+    Owner 2026-07-15 — agree L1/L2 should spell game terms; dense L3 may abbreviate.
+
+- id: TASK-446
+  title: Guided equipment L1 — card-first simplify + orphan selection fix
+  created_at: 2026-07-15
+  created_by: agent
+  priority: high
+  status: done
+  implemented_by: agent
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T004
+      - DEV-V-013-T025
+  developer_test_plan: |
+    DEV-V-013-T004 (path picks, no summary chrome); T025 card-first + orphan prune.
+  related_files:
+    - src/components/guided-creator/steps/loadout-step.tsx
+    - src/components/guided-creator/guided-equipment-l1-phase.tsx
+    - src/components/guided-creator/guided-equipment-phase-layout.tsx
+    - src/lib/guided-creator/equipment-phase-candidates.ts
+    - src/lib/guided-creator/equipment-phase-stats.ts
+    - src/lib/guided-creator/resolve-loadout-items.ts
+  description: |
+    Align equipment L1 with feats/path: drop “Your selection” summary chips; quieter phase
+    copy + currency; collapsed cards show few tags (damage/handedness/cost) with depth under
+    More details; See more options for catalog. Fix selection/grid desync by always showing
+    path L1 picks (no ability eligibility filter on L1), merging selected catalog rows into
+    the grid, and pruning unresolved draft refs.
+  acceptance_criteria:
+    - No “Your selection” summary strip on weapon/armor/gear L1.
+    - Collapsed weapon/armor cards show a small quiet tag set; More details has full fact chips.
+    - Currency is a quiet secondary line; phase descriptions are short.
+    - Path pool cards always appear on L1; selected items stay visible even if outside pool.
+    - Unresolved draft weapon/armor/gear ids are cleared when library lookup loads.
+  evidence: |
+    Removed guided-equipment-phase-selection; getPhaseL1Candidates no L2 eligibility on path
+    rows + selectedId merge; pruneUnresolvedLoadoutRefs in loadout-step; quiet tags in
+    equipment-phase-stats; See more options label.
+    Cleanup 2026-07-15: dead selectedSummary/emptySelection/phaseLockedHint copy removed;
+    L1 uses PhaseL1RankContext only; equipment More details exception documented in
+    FEATURE_INDEX / AGENT_GUIDE / REALMS §5.7 / GUIDED_SPEC.
+  notes: |
+    Owner 2026-07-15 — equipment felt glitchy/cluttered vs other guided steps.
+
+- id: TASK-445
+  title: Stable expand toggle — expand without moving the click target (sitewide)
+  created_at: 2026-07-15
+  created_by: owner
+  priority: high
+  status: done
+  implemented_by: agent
+  build_validation: |
+    suite: DEV-V-021
+    tests:
+      - DEV-V-021-T001
+      - DEV-V-021-T002
+      - DEV-V-021-T003
+  developer_test_plan: |
+    Suite DEV-V-021 T001–T003 — see BUILD_VALIDATION.md
+  related_files:
+    - src/components/ui/expandable-chip.tsx
+    - src/lib/chip/expandable-chip-shell.ts
+    - src/lib/chip/measure-stable-expand-width.ts
+    - src/components/shared/summary-chip-list.tsx
+    - src/components/shared/grid-list-row.tsx
+    - src/components/shared/part-chip.tsx
+    - src/components/character-sheet/proficiencies-tab.tsx
+    - src/components/character-creator/steps/feats-step.tsx
+    - src/components/guided-creator/guided-equipment-fact-chips.tsx
+    - src/components/guided-creator/guided-choice-card.tsx
+    - src/components/creator/collapsible-section.tsx
+    - src/docs/ai/AGENT_GUIDE.md
+    - src/docs/MOBILE_UX.md
+    - src/app/dev/styleguide/page.tsx
+  description: |
+    Sitewide UX rule: click-to-expand controls must keep the toggle under the pointer so a
+    second click closes without mouse travel. Expandable chips in wrap groups often jump when
+    `fullWidthWhenExpanded` forces a new flex-wrap row. Fix ExpandableChip / ChipGroup first,
+    document the standard for GridListRow, cards, and other expand-in-place UI, then audit
+    offenders. Prefer growing content and pushing siblings while the opened control’s origin
+    (especially vertical) stays put.
+  acceptance_criteria:
+    - Document “stable expand toggle” in AGENT_GUIDE (and brief MOBILE_UX note): opened
+      control’s click target does not shift under the cursor; siblings may move.
+    - ExpandableChip in ChipGroup / SummaryChipList / part lists: expand then immediately
+      re-click same screen position collapses (styleguide + one production surface proof).
+    - fullWidthWhenExpanded (or replacement pattern) no longer relocates the expanded chip’s
+      header to a different wrap row solely due to width:100%.
+    - GridListRow / guided card inline expand verified or fixed to the same rule.
+    - Styleguide demo of wrap chips expanding without pointer jump.
+    - npm run build; build-validation tests for chip + at least one row expander.
+  evidence: |
+    Chips: measured remaining-row width from collapsed left edge; no shell w-full; equal
+    padding; header truncate; ChipGroup hosts. GuidedChoiceCard: Read more/less above body.
+    CollapsibleSection: items-start + fixed meta line. Docs cite accordion/Fitts best practice.
+    DEV-V-021 T001–T003. Build passes.  notes: |
+    Owner feedback 2026-07-15. Best practice = spatial stability for disclosure toggles
+    (same family as accordion headers staying put while panels open below).
+
+- id: TASK-444
+  title: Guided powers/techniques — visible confirm + Layer 2 browse (§3.1 / §5.8)
+  created_at: 2026-07-15
+  created_by: agent
+  priority: medium
+  status: not-started
+  related_files:
+    - src/components/guided-creator/steps/powers-techniques-step.tsx
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - src/lib/constants/copy/guided-creator-copy.ts
+  description: |
+    Align guided powers/techniques with Layer 1 choice principle (§3.1): user should see and
+    own path recommendations (cards + toggle/confirm), not silent auto-select of every ID.
+    Add catalog Layer 2 via GuidedLayerNav + browse (feat/loadout parity) with GridListRow /
+    UnifiedSelectionModal as appropriate. REALMS §5.8 gap from 2026-07-15 vision reconcile.
+  acceptance_criteria:
+    - Path recommendations shown as selectable GuidedChoiceCards; selection state is explicit.
+    - No silent select-all on mount that the user cannot see as their choice (pre-check OK if visible).
+    - GuidedLayerNav “See more options” opens filtered browse; “Back to recommendations” returns to L1.
+    - Martial → techniques only; Power → powers only; naming per existing copy.
+    - npm run build; DEV-V-013 test(s) for powers L1 confirm + L2 expand/collapse.
+  notes: |
+    Do not block on TASK-423 seeds. Follow §3.1 labels (More details vs See more options).
+
+- id: TASK-441
+  title: Guided ancestry traits — shared limited-uses notice (like feats)
+  created_at: 2026-07-15
+  created_by: agent
+  priority: high
+  status: done
+  implemented_by: agent
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T021
+  developer_test_plan: |
+    DEV-V-013-T021 — Ancestry trait cards with uses_per_rec show uses notice when selected/expanded (same shell as feats).
+  related_files:
+    - src/lib/codex/feat-restriction-notice.ts
+    - src/components/guided-creator/guided-restriction-notice.tsx
+    - src/components/guided-creator/steps/ancestry-step.tsx
+  description: |
+    Traits with limited uses must show recovery notice on guided choice cards when selected/expanded,
+    sharing code with feat restriction notices (no parallel copy/UI).
+  acceptance_criteria:
+    - Ancestry GuidedChoiceCards use GuidedTraitRestrictionNotice / getLimitedUsesNotice shared with feats.
+    - Selecting a limited-use trait expands and shows uses-per-recovery copy.
+    - npm run build passes.
+  evidence: |
+    getLimitedUsesNotice shared; GuidedRestrictionNotice shell; trait wiring on ancestry-step;
+    unit tests for feat/trait wording parity.
+
+- id: TASK-442
+  title: Guided equipment — remove quick kits (FE + admin; DB migration proposed)
+  created_at: 2026-07-15
+  created_by: agent
+  priority: high
+  status: done
+  completed_at: 2026-07-15
+  implemented_by: agent
+  parent_task: TASK-422
+  completed_work: |
+    - Removed GuidedLoadoutKitPresets UI and auto-apply first kit.
+    - Admin no longer authors kit JSON; shared gear renamed recommended adventuring gear.
+    - Path deep-dive kit catalog section removed (gear items only).
+    - Draft loadoutId cleared on picks; reveal summary no longer kit-titled.
+    - Applied sql/guided-remove-loadout-kits-proposed.sql on RealmsRPG-Test (Berserker kits cleared;
+      flat level1_armaments/equipment retained). Pool no longer reads kits.
+  remaining_work: |
+    None for kit removal. Path content seeding for non-Berserker paths = TASK-423.
+  follow_up_tasks:
+    - TASK-423
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T004
+      - DEV-V-013-T022
+  developer_test_plan: |
+    DEV-V-013-T004 updated (no kits); DEV-V-013-T022 — admin has no kit JSON field.
+  related_files:
+    - src/components/guided-creator/steps/loadout-step.tsx
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - sql/guided-remove-loadout-kits-proposed.sql
+  description: |
+    Remove all quick-kit frontend and backend authoring. Users pick weapons/armor individually.
+    Live DB kits flattened via owner-approved SQL.
+  acceptance_criteria:
+    - No Quick kits UI on guided loadout.
+    - Admin cannot author kits; saves do not create new kits.
+    - Owner-approved SQL flattens kits into level1_armaments/equipment and strips kit arrays.
+  evidence: |
+    Live DB: 0 rows with level1_loadouts after UPDATE; Berserker armaments/equipment CSV intact.
+    Audit 2026-07-15: Removed loadoutId draft field; pool API flat-only; deleted loadoutKitToDetailOption;
+    Playwright loadout audit no longer expects Quick kits; FEATURE_INDEX / REALMS / GUIDED_SPEC /
+    AGENT_GUIDE / GAME_RULES / SUPABASE_SCHEMA / seed SQL comments updated; serialize never writes kits;
+    berserker kit SQL marked superseded.
+
+- id: TASK-443
+  title: Guided equipment — phase visibility + weapon/armor/gear card remodel
+  created_at: 2026-07-15
+  created_by: agent
+  priority: high
+  status: done
+  implemented_by: agent
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T004
+      - DEV-V-013-T013
+      - DEV-V-013-T023
+      - DEV-V-013-T024
+  developer_test_plan: |
+    DEV-V-013-T004/T013 updated; T023 phase skip numbering; T024 gear add-all + quantity.
+  related_files:
+    - src/lib/guided-creator/equipment-phase-nav.ts
+    - src/lib/guided-creator/equipment-phase-stats.ts
+    - src/components/guided-creator/guided-equipment-l1-phase.tsx
+    - src/components/guided-creator/guided-equipment-fact-chips.tsx
+    - src/components/guided-creator/guided-equipment-phase-layout.tsx
+    - src/components/guided-creator/guided-choice-card.tsx
+  description: |
+    Skip weapon/armor phases when path has no options; renumber SegmentedControl dynamically.
+    Weapon/armor cards: fact chips + More details → expandable property chips; currency on all phases.
+    Gear: Add all recommended + per-item quantity; L2 browse retained.
+  acceptance_criteria:
+    - Visible phases only; labels 1..N for present phases (no phantom Armor/Weapons).
+    - Weapon/armor chips cover ability req, handedness, damage/type, properties, cost.
+    - More details expands to ExpandableChips with descriptions.
+    - Currency remaining shown on weapon, armor, and gear phases.
+    - Gear has Add all recommended + quantity steppers without requiring L2.
+  evidence: |
+    resolveEquipmentPhaseVisibility; GuidedEquipmentFactChips; currency on phase layout;
+    addAllRecommendedEquipment + setItemQuantityInGuidedDraft.
+
+- id: TASK-432
+  title: Guided choice-card deep-dive — Phase 1 foundation (affordance + modal shell)
+  created_at: 2026-07-15
+  created_by: agent
+  priority: high
+  status: done
+  implemented_by: agent
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T016
+  developer_test_plan: |
+    DEV-V-013-T016 — Path + Species More details opens modal without selecting; card click still selects.
+  follow_up_tasks:
+    - TASK-433
+    - TASK-434
+    - TASK-435
+  evidence: |
+    GuidedChoiceCard onDetails (stopPropagation); GuidedEntityDetailModal shell (fullScreenOnMobile,
+    CollapsibleSection + InfoTippy tip slot); wired path + species with description overview + demo
+    option section; docs/naming in REALMS §5.0.1, AGENT_GUIDE, FEATURE_INDEX, guided-creator-copy.
+    Audit 2026-07-15: detail lookup uses full lists (not LayerNav-filtered); modal remount key per
+    entity; Modal sticky shrink-0 header/footer + description contrast + close padding; DRY
+    guided-entity-detail-shell helpers; DEV-V-013-T016 tightened.
+  description: |
+    Owner feedback 2026-07-15 (“Layer 2 Cards”): progressive disclosure on choice cards needs an
+    explicit path from Layer 1 card → read-only information modal for that entity — opened only via
+    a “More details” control, never by selecting the card. Inline Read more / expandedExtra stay as
+    light in-card disclosure.
+
+    IMPORTANT naming (document in REALMS + AGENT_GUIDE):
+    - Catalog Layer 2 = GuidedLayerNav “See more options” / browse / UnifiedSelectionModal (existing).
+    - Choice-card deep-dive = “More details” on a GuidedChoiceCard → GuidedEntityDetailModal (this epic).
+    Do not reuse “See more” wording that opens catalog L2; prefer “More details” / “View details”.
+
+    Phase 1 ships the shared primitives only (no species/path content yet):
+    1) GuidedChoiceCard optional details affordance (link/button; stopPropagation; ≥44px; aria-label).
+    2) Shared GuidedEntityDetailModal shell: Modal + fullScreenOnMobile, sticky header/footer,
+       scrollable body, title/description slots, overview slot, CollapsibleSection list slot,
+       semantic tokens, readable type, not overwhelming.
+    3) Product/docs: § progressive disclosure on cards in REALMS_PRODUCT_OVERVIEW; FEATURE_INDEX +
+       AGENT_GUIDE pointers; copy keys in guided-creator-copy.
+  related_files:
+    - src/components/guided-creator/guided-choice-card.tsx
+    - src/components/guided-creator/guided-entity-detail-modal.tsx
+    - src/components/ui/modal.tsx
+    - src/components/creator/collapsible-section.tsx
+    - src/lib/constants/copy/guided-creator-copy.ts
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - src/docs/ai/AGENT_GUIDE.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/MOBILE_UX.md
+    - src/docs/ACCESSIBILITY.md
+  acceptance_criteria:
+    - GuidedChoiceCard accepts optional onDetails / detailsLabel; clicking it does not call onSelect.
+    - Selecting the card body still selects; Read more still expands in-card only.
+    - GuidedEntityDetailModal uses Modal fullScreenOnMobile; sticky header/footer; accessible name.
+    - Shell renders overview + N collapsible sections with placeholder/demo content in isolation
+      (Story-less: temporary wire on one path or species card behind a feature flag OR unit/visual
+      smoke in guided only — prefer wiring both steps with empty sections deferred to 433/434).
+    - Docs clarify deep-dive vs catalog Layer 2; copy keys exist; contrast + touch-target checklists pass.
+    - npm run build passes; no regression to existing choice-card select/expand behavior.
+  notes: |
+    Epic sequencing: 432 foundation → 433 species content → 434 path content → 435 shared
+    GridListRow option presets + remodel of legacy overview surfaces reused from advanced creator.
+    Prefer remodel-in-place of shared primitives over forking parallel “guided-only” row components.
+    Reference SpeciesRevealPanel + home/guided visual language; avoid copying dense species-modal UX as-is.
+
+- id: TASK-433
+  title: Guided choice-card deep-dive — Phase 2 species detail modal
+  created_at: 2026-07-15
+  created_by: agent
+  priority: high
+  status: done
+  implemented_by: agent
+  parent_task: TASK-432
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T017
+  developer_test_plan: |
+    DEV-V-013-T017 — Species More details: overview parity + trait/characteristic/flaw catalogs; selection independent.
+  follow_up_tasks:
+    - TASK-434
+    - TASK-435
+  evidence: |
+    GuidedSpeciesDetailModal + GuidedTraitOptionList (GridListRow); SpeciesRevealPanel readOnlyDetail /
+    hideChoiceTeaser; pick-count InfoTippy copy in tooltip-text; empty sections omitted; DEV-V-013-T017.
+    Audit 2026-07-15: overview renders while traits load; known-trait resolve (no phantoms); truncated
+    description columns; single itemCount on sections; granted trait uses/recovery displayed.
+  description: |
+    Wire species GuidedChoiceCards to GuidedEntityDetailModal. Overview in the modal mirrors the
+    guided species overview experience (SpeciesRevealPanel / ancestry species overview): hero art,
+    vitals (language, avg height/weight, size/type, adulthood/lifespan as available), full description
+    — clean sections, readable type, not overwhelming. Size picker / draft mutation stay on the
+    post-select overview step (modal is read-only preview unless product later opts in).
+
+    Below overview: CollapsibleSections for trait options, characteristic options, flaw options.
+    Section headers use InfoTippy tooltips explaining how many of each the player picks during
+    species/ancestry creation (copy in tooltip-text.tsx). Expanding a section lists options as
+    elongated expandable rows (prefer GridListRow / existing SpeciesTraitCard patterns remodeled
+    for clarity — full remodel of row chrome can land in TASK-435 if needed; Phase 2 must be usable).
+  related_files:
+    - src/components/guided-creator/steps/species-step.tsx
+    - src/components/guided-creator/species-reveal-panel.tsx
+    - src/components/guided-creator/guided-entity-detail-modal.tsx
+    - src/components/guided-creator/guided-choice-card.tsx
+    - src/components/character-creator/species-modal.tsx
+    - src/components/shared/species-trait-card.tsx
+    - src/components/shared/grid-list-row.tsx
+    - public/tooltip-text.tsx
+    - src/lib/constants/copy/guided-creator-copy.ts
+  acceptance_criteria:
+    - Species cards show “More details”; opens modal; does not change selection.
+    - Overview content parity with post-select species overview fields (description + vitals + art).
+    - Expandable sections: traits / characteristics / flaws with pick-count tooltips.
+    - Option rows expandable with truncated descriptions; uses / key facts visible when available.
+    - Modal closes cleanly; keyboard/focus + fullScreenOnMobile OK; WCAG contrast tokens.
+    - npm run build; add DEV-V-013 tests for species deep-dive open/close + selection independence.
+  notes: |
+    Depends on TASK-432. Do not block on perfect GridListRow column presets — TASK-435 unifies.
+    Extract shared overview blocks from SpeciesRevealPanel where it reduces duplication.
+
+- id: TASK-434
+  title: Guided choice-card deep-dive — Phase 3 path detail modal
+  created_at: 2026-07-15
+  created_by: agent
+  priority: high
+  status: done
+  implemented_by: agent
+  parent_task: TASK-432
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T018
+  developer_test_plan: |
+    DEV-V-013-T018 — Path More details: overview + feat/weapon/armor/loadout/power|technique catalogs; selection independent.
+  follow_up_tasks:
+    - TASK-435
+  evidence: |
+    GuidedPathDetailModal + GuidedPathDetailOverview + GuidedDetailOptionList (GridListRow); feats split by
+    char_feat; equipment via buildEquipmentLookup/catalog-rows; unarmed when recommendUnarmedProwess;
+    martial→techniques, power/powered-martial→powers; path-step wired; copy + tooltip-text tips;
+    DEV-V-013-T018; npm run build.
+    Audit 2026-07-15: overview-while-loading catalogs; omit power/tech/feat phantoms; feat id|name resolve;
+    martial ability labeling (no Secondary mislabel); expandable property chips via useItemProperties;
+    shield stats not forced through weapon damage; skill id phantoms omitted; T018 tightened.
+  description: |
+    Wire path GuidedChoiceCards to GuidedEntityDetailModal. Overview: full description, proficiency,
+    primary/secondary recommended abilities, recommended skills — well separated, readable.
+    CollapsibleSections for path catalog slices that exist on the path (omit empty):
+    archetype feat options, character feat options, weapon options (incl. unarmed prowess when
+    flagged), armor options, equipment loadout(s), technique options, power options.
+    Expanding a section lists related items as elongated expandable rows / GridListRow with
+    truncated descriptions and domain stats (uses; energy/range/damage; handedness/range/damage/type;
+    DR / crit / ability req; property chips with existing expand-chip behavior).
+  related_files:
+    - src/components/guided-creator/steps/path-step.tsx
+    - src/components/guided-creator/guided-entity-detail-modal.tsx
+    - src/lib/game/archetype-path.ts
+    - src/types/archetype.ts
+    - src/components/shared/grid-list-row.tsx
+    - src/lib/guided-creator/equipment-phase-stats.ts
+    - src/lib/guided-creator/equipment-catalog-rows.ts
+    - public/tooltip-text.tsx
+    - src/lib/constants/copy/guided-creator-copy.ts
+  acceptance_criteria:
+    - Path cards show “More details”; opens modal; does not change path selection.
+    - Overview shows description + proficiency + recommended abilities/skills when data exists.
+    - Only non-empty option sections appear; each expands to a usable list with truncated copy + stats.
+    - Unarmed prowess appears only when path recommends it (same rule as equipment L1).
+    - Property chips / expand-for-more parity with guided list UX (reuse shared chips).
+    - npm run build; DEV-V-013 tests for path deep-dive + selection independence.
+  notes: |
+    Depends on TASK-432; ideally after TASK-433 so species proves the shell. Reuse path_data parsers
+    and equipment-catalog-rows / feat helpers — remodel presentation, don’t invent parallel data paths.
+
+- id: TASK-435
+  title: Guided choice-card deep-dive — Phase 4 shared option rows + remodel legacy surfaces
+  created_at: 2026-07-15
+  created_by: agent
+  priority: medium
+  status: done
+  implemented_by: agent
+  parent_task: TASK-432
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T019
+  developer_test_plan: |
+    DEV-V-013-T019 — Shared DetailOptionList on species/path deep-dives + SpeciesRevealPanel granted + species-modal trait sections.
+  evidence: |
+    DetailOptionList + lib/detail-option builders (trait/feat/equipment/loadout/power/technique + property
+    chips); GuidedTraitOptionList + GuidedDetailOptionList thin wrappers; SpeciesRevealPanel granted
+    traits remodeled; advanced species-modal TraitSection → DetailOptionList; AGENT_GUIDE/FEATURE_INDEX/
+    REALMS; DEV-V-013-T019; npm run build.
+    Audit 2026-07-15: extracted equipmentRefToDetailOption / combat builders from path modal; FEATURE_INDEX
+    triad wording; species-modal !found dimming + choice-option uses; stable list keys.
+  description: |
+    After species + path deep-dives work end-to-end, unify the elongated option lists and remodel
+    any reused advanced-creator / modal code so presentation matches the home + guided product
+    rework (clarity, progressive disclosure, semantic tokens, GridListRow + chip expand patterns).
+    Goal: one shared “detail option row” toolkit for traits, feats, weapons, armor, powers,
+    techniques — column stats appropriate per entity; used inside GuidedEntityDetailModal and
+    adopted where SpeciesRevealPanel / species-modal / add-modals still look legacy when showing
+    the same entities.
+  related_files:
+    - src/components/shared/grid-list-row.tsx
+    - src/components/guided-creator/guided-entity-detail-modal.tsx
+    - src/components/guided-creator/species-reveal-panel.tsx
+    - src/components/character-creator/species-modal.tsx
+    - src/components/shared/species-trait-card.tsx
+    - src/docs/ai/AGENT_GUIDE.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+  acceptance_criteria:
+    - Shared builders/presets for detail-modal option rows (traits/feats/weapons/armor/powers/techs).
+    - Species + path deep-dive modals consume the shared presets (no one-off row markup left).
+    - At least one legacy surface (species-modal and/or SpeciesRevealPanel lists) remodeled to the
+      same visual/interaction language — audit before/after; no behavior regression.
+    - AGENT_GUIDE + FEATURE_INDEX document when to use deep-dive modal vs catalog L2 vs Read more.
+    - npm run build; extend DEV-V-013; spot-check light + dark contrast.
+  notes: |
+    Depends on TASK-433 + TASK-434. Do not expand scope to all choice-card kinds (feats, loadouts)
+    unless leftover capacity — file follow-up TASK-### for additional entity deep-dives.
+
+- id: TASK-436
+  title: Guided deep-dive polish — path overview, tip bodies, labeled fact chips
+  created_at: 2026-07-15
+  created_by: agent
+  priority: high
+  status: done
+  implemented_by: agent
+  parent_task: TASK-434
+  follow_up_tasks:
+    - TASK-437
+    - TASK-438
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T020
+  developer_test_plan: |
+    DEV-V-013-T020 — Path overview polish + tip bodies + Name/Description-only option lists.
+  related_files:
+    - src/components/guided-creator/guided-path-detail-overview.tsx
+    - src/components/guided-creator/guided-path-detail-modal.tsx
+    - src/components/shared/detail-option-list.tsx
+    - src/lib/detail-option/
+    - src/lib/constants/copy/guided-creator-copy.ts
+    - public/tooltip-text.tsx
+  description: |
+    Owner polish after TASK-432–435: hide irrelevant path proficiency lines; Archetype Ability
+    labels (Powered-Martial: Archetype Power Ability + Archetype Martial Ability, both primary;
+    Power paths may show Secondary Recommended Ability); Recommended Abilities (not scores);
+    expandable Recommended Skills chips; Path Options preamble above catalogs; title-less
+    InfoTippy tips; Name+Description option lists with self-describing expanded fact chips.
+  acceptance_criteria:
+    - Martial path More details does not show Power Proficiency 0 (or any unused proficiency).
+    - Path abilities: Archetype Ability; Powered-Martial dual Power/Martial Archetype Abilities;
+      Power secondary recommended when present.
+    - Recommended Skills use SummaryChipList with descriptions.
+    - Path Options title + intro above catalogs (notes-only paths still show Path Options).
+    - Deep-dive tips have no redundant titles.
+    - DetailOptionList catalogs hide column headers; facts are labeled chips (no Stats column API).
+    - npm run build; DEV-V-013-T020.
+  evidence: |
+    Audit 2026-07-15 closed gaps: abilities recommendedHint (Abilities not scores); removed dead
+    Stats/uses/items copy + statsColumnLabel; Path Options for notes-only; labeled Use chips for
+    gear; tip Action Type wording; species detail capitalize Traits/Flaw; title-less tips restored;
+    showColumnHeaders=false on guided + species-modal; T020 updated for Powered-Martial.
+
+- id: TASK-437
+  title: Sitewide GridListRow — labeled fact chips when columns are omitted
+  created_at: 2026-07-15
+  created_by: agent
+  priority: high
+  status: done
+  implemented_by: agent
+  parent_task: TASK-436
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T007
+      - DEV-V-016-T008
+      - DEV-V-016-T009
+      - DEV-V-016-T010
+  developer_test_plan: |
+    DEV-V-016-T007 — Sheet Add Power columns + Range chip.
+    DEV-V-016-T008 — Codex Equipment Damage / Dmg. Red. + Weight chip.
+    DEV-V-016-T009 — Creator powers/techniques omitted fact chips.
+    DEV-V-016-T010 — Creature creator Duration + armament fact chips.
+  related_files:
+    - src/lib/library-selectable-builders.ts
+    - src/lib/chip/list-row-metadata.ts
+    - src/hooks/add-library-item/build-empowered-selectable-item.ts
+    - src/app/(main)/codex/CodexEquipmentTab.tsx
+    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
+    - src/components/character-creator/steps/powers-step.tsx
+    - src/components/character-creator/steps/equipment-step.tsx
+    - src/app/(main)/creature-creator/page.tsx
+    - src/components/character-sheet/library-entity-rows.tsx
+    - src/lib/detail-option/equipment-builder.ts
+    - src/docs/ai/AGENT_GUIDE.md
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    Universal policy: if information would normally sit under a ListHeader column (Damage,
+    Range, Damage Reduction, Action Type, Energy, Uses, Duration, handedness, crit, requirements,
+    etc.), then either keep that column with a header OR show a self-describing expanded chip that
+    includes both the label and the value (e.g. Damage Reduction 2). Do not drop a column and leave
+    only an unlabeled or ambiguous chip.
+
+    Owner lock (2026-07-15): **Dense browse lists keep column headers when space allows**; labeled
+    chips for omitted-column facts apply primarily to **deep-dive / progressive-disclosure** lists
+    (`DetailOptionList`). Audit order: Library → Codex → character sheet library → add modals.
+  acceptance_criteria:
+    - Policy documented (AGENT_GUIDE + FEATURE_INDEX) with browse-vs-deep-dive distinction.
+    - Audit inventory of GridListRow consumers with column-vs-chip gaps.
+    - Fix priority surfaces in order: Library, Codex, sheet library, add-library-item (and peers).
+    - npm run build; add or extend DEV-V tests for touched surfaces.
+  evidence: |
+    Phase 1: Library/Official/sheet column-complete; add/load powers Energy/Duration/Area/Damage +
+    Range chip; Codex Equipment Damage/Dmg. Red.; deep-dive Handedness/Block; docs.
+    Phase 2 re-audit (owner asked sitewide): closed creator powers Area + empowered Duration/Area
+    chips; technique Action column; creature-creator Duration + armament Damage/Range/DR chips;
+    Admin Equipment parity; equipment-step Range chip; sheet `Cost Nc` badge.
+    DEV-V-016-T007–T010; npm run build passed after both phases.
+  notes: |
+    Guided deep-dive already compliant (TASK-436). Do not strip columns from dense browse UIs.
+
+- id: TASK-438
+  title: Agent user-facing copy guide — game terms capitalization + preferred vocabulary
+  created_at: 2026-07-15
+  created_by: agent
+  priority: medium
+  status: done
+  implemented_by: agent
+  parent_task: TASK-436
+  follow_up_tasks:
+    - TASK-439
+  related_files:
+    - src/docs/GAME_RULES.md
+    - src/docs/ai/AGENT_GUIDE.md
+    - AGENTS.md
+    - src/lib/constants/copy/guided-creator-copy.ts
+  description: |
+    Refine existing GAME_RULES Terminology (do not invent a parallel doc): soft prefer/avoid
+    vocabulary, Score = Bonus + 10, Bonus not modifier, capitalize game terms in game-term context,
+    no em dash in new UI copy (hyphens fine). Point AGENT_GUIDE + AGENTS.md at that section.
+    Soft guide only — do not over-constrain agent writing.
+  acceptance_criteria:
+    - GAME_RULES Terminology expanded with prefer/avoid + writing notes; Score/Bonus clarified.
+    - AGENT_GUIDE + AGENTS.md point agents there for user-facing strings.
+    - Light guided copy fixes for obvious drift (e.g. Customize Abilities not scores).
+    - Changelog note.
+  evidence: |
+    GAME_RULES Terminology expanded; AGENT_GUIDE/AGENTS pointers; Customize Abilities copy fix;
+    Powered-Martial Archetype Power/Martial Ability labels (guided overview). Em dash ban
+    (not hyphen ban) documented. Historical full-site rewrite deferred → **TASK-439**.
+  notes: |
+    Owner: expand what exists; whitelist/blacklist soft; Score = Bonus+10; avoid Spell/AC/Race/Class/
+    Check/Save/DC/modifier; do not extremely limit agents.
+    Scope clarification 2026-07-15: TASK-438 = guide + light guided fixes only. Sitewide scan/
+    rewrite of existing user-facing strings is TASK-439 (was never run under 438).
+
+- id: TASK-439
+  title: Sitewide user-facing copy audit — Realms terms + em dash + AI-artifact hygiene
+  created_at: 2026-07-15
+  created_by: agent
+  priority: medium
+  status: done
+  implemented_by: agent
+  parent_task: TASK-438
+  follow_up_tasks:
+    - TASK-440
+  related_files:
+    - src/docs/GAME_RULES.md
+    - src/lib/constants/copy/
+    - public/tooltip-text.tsx
+    - src/docs/ai/AGENT_GUIDE.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/components/character-creator/
+    - src/components/guided-creator/
+  description: |
+    Follow-up to TASK-438 (guide only). Scan and fix existing user-facing product strings so they
+    respect GAME_RULES Terminology: capitalize game terms in game-term context; prefer/avoid
+    vocabulary (Abilities not Ability Scores UI label; Bonus not modifier; Difficulty Score not DC;
+    Skill Roll not Check/Save; Archetype Path not Class; Species not Race; Power not Spell; no AC;
+    Health/Energy vs inventing mana/HP jargon where Realms terms apply); remove em dashes (`—`)
+    from UI/marketing/tooltip copy (hyphens fine); tone down stock AI phrasing where it reads fake.
+
+    Soft guide, not a muzzle: ordinary English stays OK when not naming a rules concept. Do not
+    rewrite in-world flavor that intentionally uses fiction words. Do not rewrite the rules book
+    extract wholesale unless a UI string cites it wrongly.
+
+    Phased (inventory → fix → next phase):
+    1) Inventory: `src/lib/constants/copy/*` + `public/tooltip-text.tsx` (em dash + avoid-term hits).
+    2) Guided + advanced character creator copy + tips (highest product traffic).
+    3) Marketing/legal surfaces (landing, about, rules, resources, auth, nav, footer, privacy, terms).
+    4) In-app UI not yet in copy modules (sheet, library, campaigns, creators, encounters) — grep
+       hardcoded user strings; migrate or fix in place per TASK-390 patterns when practical.
+    5) Spot-check capitalisation of Species/Feat/Skill/Power etc. in the strings touched.
+
+    Baseline known debt (2026-07-15 spot check): em dashes still present across copy modules
+    (guided-creator-copy ~27) and tooltip-text; full banned-term scan not completed.
+  acceptance_criteria:
+    - Phase 1 inventory checked in (counts + file list of em dash / prefer-avoid hits) in task evidence.
+    - Phases 2–3 copy modules + tooltip-text cleaned of em dashes and clear prefer/avoid violations
+      (or explicit keep-exceptions noted).
+    - Phase 4: either fixed high-traffic hardcoded strings or follow-up TASK-### filed with remaining
+      surface list (do not boil the ocean in one PR if sheet/creators explode scope).
+    - AGENT_GUIDE note that new copy must follow GAME_RULES Terminology (already present; keep true).
+    - npm run build; add a small DEV-V suite or checklist for sample pages (landing + guided path +
+      one sheet string if touched).
+  evidence: |
+    Phase 1 inventory (2026-07-15):
+    - Em dash in *user string literals*: guided-creator-copy.ts = 22; marketing *-copy.ts* + tooltip-text
+      = 0 (hits were file-header / developer comments only).
+    - Prefer/avoid in copy+tooltip: no Ability Scores/DC/Class/Race/Spell/Check hits; Base HP → fixed.
+    Keep-exceptions: developer comments; empty-field placeholder glyph `—`; dense creature/encounter
+    HUD label HP (allowed abbr per GAME_RULES).
+    Phases 2–3: guided-creator-copy em dashes removed; Base Health/Energy; Ability Bonuses/Points;
+    Power/Martial Ability labels; marketing modules already clean of user-facing em dashes/banned terms.
+    Phase 4 high-traffic: advanced creator step strings; roll-log aria Bonus; CodexFeatsTab; admin
+    Abilities/Health labels; encounters meta; crafting Difficulty Score Bonus; power-creator mechanics
+    copy. Residuals → TASK-440.
+    Audit follow-up (2026-07-15, post-"done"): closed misses (ability-effect-blurbs, format-recovery,
+    path-validation messages, sheet path/edit-archetype copy, expandable-image placeholder, styleguide
+    labels, AdminPartsTab ±%, creature-creator "Damage Modifiers" → Resistances/Weaknesses/Immunities).
+    Re-scan: 0 Ability Scores / Difficulty Class / Skill Check / Saving Throw / Armor Class /
+    Damage Modifiers in UI tree; remaining em dashes are comments or `—` placeholders only.
+  build_validation: |
+    suite: DEV-V-020
+    tests:
+      - DEV-V-020-T001
+      - DEV-V-020-T002
+      - DEV-V-020-T003
+  developer_test_plan: |
+    Suite DEV-V-020 T001–T003 — landing + guided chooser + roll-log Bonus aria; see BUILD_VALIDATION.md
+  notes: |
+    Distinct from TASK-390 (copy module migration — done). Distinct from TASK-437 (GridListRow facts).
+    Owner asked 2026-07-15 whether 438 included sitewide audit — it did not; this task owns that work.
+
+- id: TASK-440
+  title: Copy compliance residuals — dense HP HUD abbreviation decision
+  created_at: 2026-07-15
+  created_by: agent
+  priority: low
+  status: not-started
+  parent_task: TASK-439
+  related_files:
+    - src/app/(main)/library/LibraryCreaturesTab.tsx
+    - src/components/encounters/CombatantCard.tsx
+    - src/app/(main)/creature-creator/page.tsx
+  description: |
+    Follow-up to TASK-439 after sitewide audit. Styleguide em dashes and admin ±% modifier
+    wording are already cleaned. Remaining product question only:
+    - Dense HUD still shows HP (Library creatures column, encounter CombatantCard, creature
+      creator quickStats). GAME_RULES allows established dense abbreviations; full "Health"
+      would be more consistent if owner prefers.
+    Do not rewrite code comments or empty-state `—` placeholders.
+  acceptance_criteria:
+    - Owner decides: keep HP in dense HUD, or rename to Health (and EN→Energy where paired).
+    - Apply decision sitewide to listed surfaces (and peers if found).
+    - npm run build if UI touched.
+  notes: |
+    Low priority. Audit 2026-07-15: no other clear prefer/avoid UI hits remaining in src/app +
+    src/components + copy modules + tooltip-text.
 
 - id: TASK-430
   title: React Compiler hook warnings — exhaustive-deps / set-state-in-effect / preserve-manual-memoization
@@ -29,8 +767,10 @@
     - src/components/character-creator/steps/equipment-step.tsx
     - src/components/character-sheet/library-section.tsx
     - src/components/character-sheet/edit-archetype-modal.tsx
+    - src/app/(main)/characters/[id]/page.tsx
     - src/app/(main)/characters/[id]/CharacterSheetModals.tsx
     - src/hooks/use-creator-save.ts
+    - src/lib/empty.ts
     - src/components/guided-creator/guided-choice-card.tsx
     - src/app/(main)/species-creator/page.tsx
     - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
@@ -43,7 +783,8 @@
     - npm run build + lint pass; no new errors.
   build_validation: DEV-V-019
   developer_test_plan: |
-    Run DEV-V-019-T001–T005 in BUILD_VALIDATION.md (choice-card, login, admin feat remount, library clamp, edit-archetype remount).
+    Run DEV-V-019-T001–T007 in BUILD_VALIDATION.md (choice-card, login, admin feat remount,
+    library clamp, edit-archetype session remount, sheet library tab visibility, modal remounts).
   completed_work: |
     Batch 1 (2026-07-15): 168 → 158 hook warnings (−10).
     - guided-choice-card: derive inactive overflow; sync expand via render when selected changes.
@@ -54,19 +795,61 @@
     - empowered getPayload: add missing isReaction dep.
     - Audit follow-up: DEV-V-019 T001–T003; drop unused skillIdToName on AdminFeatEditModal.
     Batch 2 (2026-07-15): 158 → 138 hook warnings (−20).
-    - library page: derive mode from auth/?view=; clamp Enhanced tab without effects.
+    - library page: one-time scope lock after auth (render adjust); clamp Enhanced tab state.
     - guided/advanced ancestry+equipment + guided skills: stable empty fallbacks for hook deps.
-    - library-section: memoize tabs; derive active tab / edit-mode sync without effects.
-    - EditArchetypeModal: remount-on-open key (CharacterSheetModals); remove reset effect.
+    - library-section: memoize tabs; edit-mode sync without effects; display fallback for active tab.
+    - EditArchetypeModal: remount-on-open via editArchetypeSessionKey; remove reset effect.
     - useCreatorSave: add queryClient + setShowPublishConfirm deps.
     - DEV-V-019 T004–T005.
+    Batch 2 audit (2026-07-15):
+    - Restored one-time library mode lock (not continuous auth/?view= follow).
+    - Controlled sheet tab: page clamps via resolveLibraryActiveTab (parent state parity).
+    - Edit archetype uses sessionKey (not ability-field key mid-edit).
+    - DEV-V-019 T004–T006 tightened / T006 added.
+    Full TASK-430 functional audit (2026-07-15):
+    - Batch 1 patterns OK (choice-card, login dismiss, admin feat remount, isReaction dep).
+    - Hardened: guest→always Realms scope; Enhanced displayTab belt-and-suspenders;
+      guided skills abilities via stable useMemo copy (no shared DEFAULT_ABILITIES mutate).
+    - No infinite-loop / RoH breaks found; build clean.
+    Batch 3 (2026-07-15): 138 → 108 hook warnings (−30). Careful pass; no eslint-disable.
+    - Stable empties / useMemo: advanced skills+powers steps, guided feat steps, abilities-step.
+    - Remount-on-open (drop reset effects): level-up, settings, add-feat, add-proficiency,
+      add-sub-skill, AddCreatureFeatModal (+ parent conditionals/keys).
+    - unified-selection-modal: drop redundant sortState dep (sortItems closes over it).
+    - Deferred: use-character-sheet-actions (45), creator cache/?edit hydrates, encounters, Modal.tsx.
+    - DEV-V-019 T007.
+    Batch 3 audit (2026-07-15):
+    - AddSkillModal remount parity (skills-allocation + guided-skills-panel).
+    - Shared `src/lib/empty.ts` (dedupe EMPTY_* across skills/feats/ancestry).
+    - skills Continue copies defenseVals (never persist DEFAULT_DEFENSE_SKILLS ref).
+    - Settings modal uses isOpen while conditionally mounted.
   remaining_work: |
-    - ~138 left: set-state-in-effect 48, exhaustive-deps 81, preserve-manual-memoization 9.
-    - High-blast next: character-sheet actions (45), advanced skills/powers steps, encounter views,
-      creator cache/?edit hydrations (prefer lazy init / remount keys where safe).
+    Status stays **partial** until residual hook warnings are materially flattened (or owner
+    explicitly closes leftovers as intentional). Baseline after batch 3: **~108**
+    (set-state-in-effect 42, exhaustive-deps 57, preserve-manual-memoization 9).
+
+    Still to finish (safe batches — continue TASK-430):
+    - Creator cache / `?edit=` hydrate effects (power, technique, empowered, item, creature) —
+      prefer remount keys / lazy init; smoke with DEV-V-019.
+    - Encounter views + encounter route pages (Skill/Combat/Mixed) — careful; sync UI has DEV-V.
+    - Crafting `[id]` page effects/deps.
+    - Shared `components/ui/modal.tsx` (2) — high reuse; parity-test every fullScreenOnMobile modal.
+    - Smaller leftovers as they appear in lint dumps (admin pages, use-profile, etc.).
+
+    Do **not** drive remaining work through `use-character-sheet-actions.ts` (~45 warnings) while
+    it remains a god-file — see sequencing below / **TASK-381**.
+  follow_up_tasks:
+    - TASK-381
   notes: |
-    Do not mass-disable. High-blast files: character sheet, encounter views, guided reveal.
-    Keep status partial until warning count is materially flattened or owner closes residual as intentional.
+    Do not mass-disable. Prefer derive / remount / stable empties (`lib/empty.ts`).
+    **Sequencing (owner-friendly):** Batches 1–3 cleared the safer surfaces (~168→108).
+    The largest remaining pile (~45) sits in `use-character-sheet-actions.ts`. Cleaning that
+    file with surgical hook edits while it is still huge is high-risk. Prefer **TASK-381**
+    (split sheet/creator god files into smaller modules) *before* or *as* that pile is
+    reduced — same domain boundaries make exhaustive-deps / set-state-in-effect fixes
+    safer and reviewable. Creator hydrates / encounters / Modal can still proceed as
+    separate careful TASK-430 batches in parallel with TASK-381.
+    Keep status partial until warning count is materially flattened or owner closes residual.
 
 - id: TASK-429
   title: Guided feat steps — Layer 2 browse (GuidedLayerNav)
@@ -337,25 +1120,31 @@
 ---
 
 - id: TASK-423
-  title: Guided loadout path content — seed kits for 11 paths + Berserker fixes
+  title: Guided loadout path content — seed flat recommendations for remaining paths
   created_at: 2026-07-05
   created_by: agent
   priority: medium
-  status: not-started
+  status: partial
   assignee: owner
+  completed_work: |
+    - Kit flatten applied 2026-07-15 (TASK-442): Berserker level1_loadouts NULL; weapons/armor/gear
+      already in level1_armaments / level1_equipment.
+  remaining_work: |
+    - Author flat level1_armaments / level1_equipment (and armorStep / sharedEquipment as needed)
+      for the other 11 archetype paths so guided L1 has path picks.
+    - Optional: supersede sql/guided-berserker-loadout-fixes-proposed.sql (kit-era; no longer needed).
   description: |
-    Author level1_loadouts JSON for remaining 11 archetype paths; apply proposed Berserker kit
-    title/item alignment and shared path gear (bandages/potions). Requires owner review before
-    live codex UPDATE (see sql/guided-berserker-loadout-fixes-proposed.sql).
+    Owner content work: seed flat weapon/armor/gear recommendations for remaining paths
+    (no quick kits). Kit column cleanup shipped with TASK-442.
   related_files:
-    - sql/guided-berserker-loadout-fixes-proposed.sql
+    - sql/guided-remove-loadout-kits-proposed.sql
     - src/docs/SUPABASE_SCHEMA.md
   acceptance_criteria:
-    - All 12 paths have at least one valid level1_loadout kit within TP budget.
-    - Berserker kit titles match item contents; shared level1_equipment included in kits.
-    - DEV-V-013-T004 passes with corrected kit names.
+    - Live DB has no selectable kit arrays in level1_loadouts. (done)
+    - Remaining martial/power paths that should offer L1 gear have flat recommendations authored.
+    - DEV-V-013-T004 passes without Quick kits UI.
   notes: |
-    Follow-up from TASK-422 partial. Codex writes require owner approval per realms-codex-data.mdc.
+    Codex writes require owner approval. Frontend kit UI removed in TASK-442.
 
 ---
 
@@ -666,6 +1455,8 @@
   created_by: agent
   description: |
     Decompose large character-sheet/creator files via phased extractions with test-backed parity checkpoints.
+    Splitting first makes follow-on React Compiler hook cleanup (TASK-430) safer — especially the
+    ~45 react-hooks warnings concentrated in `use-character-sheet-actions.ts`.
   related_files:
     - src/components/character-sheet/use-character-sheet-actions.ts
     - src/app/(main)/characters/[id]/page.tsx
@@ -676,9 +1467,14 @@
     - Targeted large creator/sheet routes decomposed into stable shells/islands in phases.
     - Each phase ships with explicit parity validation and rollback plan.
     - `npm run build`, `npm test`, and `npm run lint` pass per phase.
+  follow_up_tasks:
+    - TASK-430
   notes: |
     High blast radius — proceed only with expanded DEV-V validation and small-scope PRs.
     2026-07-01: Owner — start with power-creator and item-creator pages first; species/creature deferred from beginner funnel.
+    2026-07-15: Cross-link TASK-430 — recommend sheet actions split (this task) before / alongside
+    mass hook cleanup in `use-character-sheet-actions.ts`. God-file → smaller domain modules
+    (powers, techniques, inventory, feats, resources, etc.) with clear ownership + DEV-V per phase.
 
 - id: TASK-382
   title: Docs compaction pass (active queue slimming + stale-reference pruning)

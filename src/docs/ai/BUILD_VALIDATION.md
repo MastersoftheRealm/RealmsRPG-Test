@@ -1129,12 +1129,12 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-013-T004 — Berserker phased loadout + quick kits
+#### DEV-V-013-T004 — Berserker phased loadout (path picks, no quick kits)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 — Guided Simple character creator |
-| **Related task** | TASK-399, TASK-422, TASK-424 |
+| **Related task** | TASK-399, TASK-422, TASK-424, TASK-442, TASK-443, TASK-446 |
 | **Where** | Guided creator with Berserker (id=1) |
 | **Needs** | DEV-004 seed applied |
 
@@ -1143,13 +1143,17 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 2. Advance to Loadout step.
 
 **Expected**
-- Equipment phase SegmentedControl shows **1. Weapons / 2. Armor / 3. Gear**.
-- Quick kit cards (GuidedChoiceCard) show Greataxe bruiser / Sword & shield kits; selecting applies the kit across phases.
-- Weapon phase shows path-ranked choice cards with attack/damage stats (not monolithic kit tables).
+- Equipment phase advances with footer **Continue** / **Back** only (no SegmentedControl progress strip at top).
+- No Quick kits section or kit cards.
+- No **Your selection** summary strip — selected state is the card ring only.
+- No **Path pick** badge on weapon/armor cards.
+- Weapon cards show image, title, description, named property chips (hover for property description), and a **Currency N** chip with the real cost (not 0).
+- **PointStatus** labeled **Currency** (spent / total) on Weapons, Armor, and Gear.
+- Catalog control reads **See more options**.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-013-T006 — See more gear browse (Layer 2 + TP)
+#### DEV-V-013-T006 — See more options gear browse (Layer 2 + TP)
 
 | Field | Value |
 |-------|-------|
@@ -1159,7 +1163,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | **Needs** | DEV-004 seed applied |
 
 **Steps**
-1. On Loadout step (weapon phase), click **See more**.
+1. On Loadout step (weapon phase), click **See more options**.
 2. Toggle items in the catalog modal; watch Training Points bar.
 
 **Expected**
@@ -1225,7 +1229,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-013-T009 — Ancestry Skip — no flaw choice card
+#### DEV-V-013-T009 — Ancestry No Flaw choice card
 
 | Field | Value |
 |-------|-------|
@@ -1236,12 +1240,13 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Steps**
 1. Reach the optional flaw pick after characteristic.
-2. Confirm Skip — no flaw appears as a card in the same grid as flaw options (not a small button below).
+2. Confirm **No Flaw** appears as a card in the same grid as Flaw options (not a small button below).
 3. Select Skip; confirm selected check; click Next pick.
 4. Confirm flow advances to Abilities (no bonus ancestry trait step).
 
 **Expected**
 - Skip uses GuidedChoiceCard styling (title + description) in the compact choice grid.
+- Selecting Skip keeps the same card height as before selection (action-row slot stays reserved; does not shrink).
 - Selecting Skip then Next pick completes ancestry without the bonus trait pick.
 - Optional: Next pick with nothing selected still declines (existing footer skip path).
 
@@ -1327,22 +1332,22 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 — Guided Simple character creator |
-| **Related task** | TASK-424 |
+| **Related task** | TASK-424, TASK-443 |
 | **Where** | Guided creator → Loadout (Berserker) |
 | **Needs** | DEV-004 seed; optional Playwright `npx playwright test -c playwright.loadout-audit.config.ts` |
 | **Automated** | `tests/visual/guided-loadout-audit.pw.ts` (screenshot audit → `.guided-loadout-audit/`) |
 
 **Steps**
-1. Open Loadout; confirm phase chips **1. Weapons / 2. Armor / 3. Gear**.
-2. Apply a quick kit (or keep auto-selected kit); click **Continue to armor →**.
-3. On Armor, click **See more** and confirm Browse armor modal; dismiss.
-4. Click **Continue to gear →**; confirm Adventuring gear heading and **Nc remaining for gear**.
-5. Click **See more**; confirm Browse adventuring gear modal.
+1. Open Loadout; confirm no phase progress strip (footer may still show 1 / N); no Quick kits.
+2. Select a weapon card; confirm description + named property chips; hover a property chip for its tip; expand **More details** for mechanic facts (handedness, damage, …).
+3. Click **Continue to armor →**. On Armor, click **See more options** and confirm Browse armor modal; dismiss.
+4. Click **Continue to gear →**; confirm Adventuring gear heading, **Currency** PointStatus, and **Add all recommended equipment**.
+5. Click **See more options**; confirm Browse adventuring gear modal.
 
 **Expected**
-- Three in-step phases with progress chips; footer continue advances phase (not next chapter) until gear complete.
+- In-step phases with footer continue (not next chapter) until gear complete; no top phase strip.
 - Layer 2 per-phase titles match (weapons & shields / armor / adventuring gear).
-- Currency remaining shown on gear phase after weapons/armor spend.
+- Currency shown via PointStatus on all three phases.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -1382,6 +1387,250 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Expected**
 - Finale layout (no duplicate preview strip); edit links navigate to prior steps; T005 save still works when signed in.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-013-T016 — Choice-card deep-dive shell (More details)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-432 |
+| **Where** | Guided creator → Path, then Species |
+| **Needs** | None |
+
+**Steps**
+1. On Path, for a card with long copy: confirm collapsed state shows **Read more…** below the truncated body and does **not** show **More details** yet. Expand via Read more (or select the card) and confirm **More details** appears in the same action row below the body (not labeled “See more”).
+2. Click **More details** on an unselected-but-expanded path; confirm a full-screen-on-mobile modal opens with Overview + a collapsible Option lists section; confirm the path is still **not** selected.
+3. Close the modal; click the path card body; confirm the path **selects** and **More details** remains available (selected = expanded).
+4. With a path selected, open **More details** again; confirm selection stays selected after close.
+5. Show hybrid paths → expand / select → **More details** on a hybrid → Close → collapse hybrids → Show hybrids again → **More details** on the same hybrid still opens (detail lookup is against the full path list).
+6. Species: repeat steps 1–4 for selection independence (content checked in T017).
+
+**Expected**
+- Progressive disclosure: truncated → **Read more…** → **More details** (deep-dive). Cards without overflow may show **More details** while collapsed.
+- **More details** never toggles selection; card click still selects.
+- Path modal opens (content checked in T018); Close dismisses.
+- Catalog Layer 2 controls (`Show hybrid…` / `Show all species`) remain separate below the grid.
+- Switching entities remounts the modal (collapse state resets per entity).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-013-T017 — Species deep-dive modal (overview + option catalogs)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-433 |
+| **Where** | Guided creator → Species |
+| **Needs** | Codex species + traits loaded |
+
+**Steps**
+1. Open **More details** on an unselected species card; confirm the species is still not selected.
+2. Confirm Overview shows hero art + description + vitals immediately (even if trait catalogs are still loading); languages, ability bonuses, skills, granted traits (with uses when limited) match post-select overview — no size SegmentedControl; multi-size appears as vitals text.
+3. Expand **Ancestry trait options** (and Characteristics / Flaws / Species trait options when present); confirm InfoTippy tips explain pick counts; collapsed rows show truncated descriptions; expand for full copy; Uses column when any trait in the list has limited uses.
+4. Confirm section headers show a single count (e.g. `(6)`), not duplicated “6 options (6)”.
+5. Close modal; select the species via the card; reopen **More details** and confirm selection stays.
+
+**Expected**
+- Deep-dive is read-only (does not pick traits or set size).
+- Empty catalogs omitted; no “Trait not found” placeholder rows.
+- `fullScreenOnMobile`; Close returns focus usable on the page.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-013-T018 — Path deep-dive modal (overview + option catalogs)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-434 |
+| **Where** | Guided creator → Path |
+| **Needs** | Codex archetypes + feats + equipment / powers / techniques loaded |
+
+**Steps**
+1. Open **More details** on an unselected path card; confirm the path is still not selected.
+2. Confirm Overview shows type chip + full description immediately; while options load, a “Loading path options…” line may appear under overview, then sections populate (no blank flash without feedback).
+3. Confirm proficiency (when present), path abilities (martial = one ability chip, not mislabeled Secondary; hybrid = Primary + Secondary), recommended ability scores, and recommended skills when data exists.
+4. Expand each listed catalog section (omit empty ones): archetype feats, character feats, weapons (Unarmed Prowess only when that path recommends it), armor, adventuring gear, techniques (martial) or powers (power / powered-martial). Confirm InfoTippy tips; collapsed rows show truncated descriptions + stats; expand for full copy; weapon/armor property chips expand for description/TP when codex properties are known.
+5. Confirm no raw-id “phantom” rows for missing powers/techniques/feats (unresolved refs omitted).
+6. Close modal; select the path via the card; reopen **More details** and confirm selection stays.
+7. Hybrid path: Show hybrids → **More details** on a hybrid → confirm powers section (not techniques) when powered-martial; selection independence still holds.
+
+**Expected**
+- Deep-dive is read-only (does not select the path or apply equipment).
+- Empty catalogs omitted; unarmed prowess appears only when flagged.
+- `fullScreenOnMobile`; Close returns focus usable on the page.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-013-T019 — Shared detail option rows + remodeled legacy trait lists
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-435 |
+| **Where** | Guided creator → Path / Species deep-dives; Advanced creator species modal (if opened from Advanced flow) |
+| **Needs** | Codex species + archetypes |
+
+**Steps**
+1. Guided Species → **More details** → expand an option catalog; confirm GridListRow name + truncated description + Uses when limited; expand row for full copy / uses hint.
+2. Guided Path → **More details** → expand weapons (or armor); expand a row with properties; confirm chips expand for description/TP (same language as species trait rows). Optionally expand powers/techniques and confirm energy stats via shared combat builders.
+3. Select a species → Ancestry overview (`SpeciesRevealPanel`): granted species traits render as the same elongated expandable list (not card grid).
+4. Optional Advanced: open species info modal → trait sections use expandable DetailOptionList rows (choice traits group options under the parent name; limited-use options show Uses). Unresolved trait placeholders (if any) appear dimmed. Confirm Select Species still works; Close dismisses.
+5. Spot-check light + dark: description/`text-text-secondary` readable; muted uses `dark:text-text-secondary` where applicable.
+
+**Expected**
+- One visual/interaction language for deep-dive catalogs and remodeled legacy trait lists (shared `@/lib/detail-option` builders for traits/feats/equipment/powers/techniques).
+- No regression to card select / **More details** independence (T016–T018).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T020 — Path deep-dive polish (overview, tips, labeled chips)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-436 |
+| **Where** | Guided creator → Path **More details** (compare Martial vs Power); Species **More details** tip hover |
+| **Needs** | Codex archetypes with Martial + Power paths; recommended skills on at least one path |
+
+**Steps**
+1. Open a **Martial** path → **More details**. Confirm overview shows Martial proficiency only (no Power Proficiency 0). Path abilities read `Archetype Ability …`. Section title is **Recommended Abilities** (not scores). Recommended Skills chips expand for descriptions.
+2. Open a **Powered-Martial** path → **More details**. Path Abilities show both `Archetype Power Ability …` and `Archetype Martial Ability …` (both primary chips; no Primary/Secondary wording between them).
+3. Confirm **Path Options** title + intro sit **above the expandable catalogs** (not inside Overview). Expand Archetype Feat Options (or similar); hover the InfoTippy: tip body must **not** repeat the section title as a heading.
+4. Expand Weapons / Armor / Powers or Techniques: list shows name + description only (no Stats column, no visible column header bar). Expand a row: fact chips are self-describing (`Damage Reduction N`, `Range …`, `Energy N`, `Action Type …`, `Uses N`, property chips with descriptions).
+5. Spot-check Species **More details** tips the same way (no redundant tip titles). Light + dark readable.
+
+**Expected**
+- Unused proficiency lines omitted; Powered-Martial dual Archetype Abilities; Path Options bridges into catalogs; title-less tips; Name/Description catalogs with labeled fact chips.
+- Card select still independent of **More details** (T016–T018).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T021 — Ancestry trait limited uses (shared with feats)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-441 |
+| **Where** | Guided creator → Ancestry (species with a limited-use trait option) |
+| **Needs** | Trait option with `uses_per_rec` > 0 |
+
+**Steps**
+1. Reach an ancestry/characteristic/flaw pick whose options include a trait with uses.
+2. Select that trait card (or expand it).
+
+**Expected**
+- Info callout appears: “This trait can be used … per … Recovery.” (same shell styling as feat restriction notices).
+- Traits without uses show no notice.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T022 — Admin archetype: no kit authoring
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-442 |
+| **Where** | Admin → Codex → Archetypes → edit path |
+| **Needs** | Admin access |
+
+**Steps**
+1. Open Guided creator (Simple) section on an archetype edit form.
+
+**Expected**
+- No “Loadout kits (JSON array)” field.
+- Armor step + recommended adventuring gear controls remain.
+- Save does not introduce new kit cards in guided Loadout.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T023 — Equipment phase numbering when options missing
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-443 |
+| **Where** | Guided creator → Loadout on a path with no armor (and/or no weapons) |
+| **Needs** | Power path or path with armorStep none / empty armament recommendations |
+
+**Steps**
+1. Open Loadout for a path without armor options (and separately one without weapons if available).
+
+**Expected**
+- Progress chips only list visible phases (e.g. **1. Weapons / 2. Gear** or gear-only). No phantom **3. Gear** when armor was never shown.
+- Footer fraction matches visible phase count.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T024 — Gear: add all recommended + quantity
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-443 |
+| **Where** | Guided creator → Loadout → Gear |
+| **Needs** | Path with recommended gear |
+
+**Steps**
+1. Reach Gear phase.
+2. Click **Add all recommended equipment**.
+3. Adjust quantity on one selected gear card.
+4. Confirm individual select/deselect still works; open **See more options** for common gear browse.
+
+**Expected**
+- All recommended gear selected after bulk add; quantities editable on cards without Layer 2.
+- Layer 2 still browses broader common gear.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T025 — Equipment L1 card-first + no orphan selection chrome
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-446 |
+| **Where** | Guided creator → Loadout (Berserker or similar with path weapon/armor picks) |
+| **Needs** | DEV-004 seed; optional clear site data if prior kit draft existed |
+
+**Steps**
+1. Open Loadout → Weapons. Confirm path pick cards appear (selected ring on cards only — **no** “Your selection” chip strip).
+2. Confirm collapsed cards show a few quiet tags (e.g. ability, handedness, damage, cost), not a full property wall; expand **More details** for expandable fact chips.
+3. Confirm quiet **Nc remaining** line and **See more options** catalog control.
+4. If you previously had a broken draft (selected count without cards), reload once after this build — unresolved ids clear; path cards remain selectable.
+
+**Expected**
+- Equipment L1 feels like feats: cards first, More details for depth, See more options for breadth.
+- Selection and visible cards stay in sync.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T026 — Equipment PointStatus + property chips (no phase bar)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-447 |
+| **Where** | Guided creator → Loadout |
+| **Needs** | DEV-004 seed |
+
+**Steps**
+1. Confirm no 1. Weapons / 2. Armor / 3. Gear strip under the step title.
+2. Confirm centered **Currency: remaining / total** PointStatus (same family as Skill points).
+3. On a weapon card, expand description if needed; hover Cleave/Finesse/etc. chips for property tips; confirm cost chip is not 0 when the item has a library cost.
+4. Open **See more options** on gear; confirm PointStatus still says Currency (not “c”).
+
+**Expected**
+- Matches abilities/skills resource chrome; full **Currency** wording in L1/L2.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -1448,8 +1697,8 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Suite** | DEV-V-016 — Library add/load selection parity |
 | **Task** | TASK-379 |
 | **Where** | `/power-creator` → Load |
-| **Steps** | 1. Open Load. 2. Toggle All / My / Public. 3. Confirm Action/Damage/Area columns, expandable chips. 4. Select one power → Load. 5. Confirm form populates from selection. |
-| **Expected** | Modal uses UnifiedSelectionModal chrome (search, list, Load button max 1); load restores power fields without duplicate mechanic entries. |
+| **Steps** | 1. Open Load. 2. Toggle All / My / Public. 3. Confirm Energy/Action/Duration/Area/Damage columns (dice under Damage, not type-only). 4. Expand a row → labeled `Range:` chip (not bare value). 5. Select one power → Load. 6. Confirm form populates from selection. |
+| **Expected** | Modal uses UnifiedSelectionModal chrome (search, list, Load button max 1); columns match sheet Add Power; load restores power fields without duplicate mechanic entries. |
 | **Report** | DEV-V-016-T001: PASS / FAIL / SKIP — |
 
 #### DEV-V-016-T002 — Technique creator Load from Library
@@ -1481,8 +1730,8 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Suite** | DEV-V-016 |
 | **Task** | TASK-379 |
 | **Where** | `/empowered-technique-creator` → Load |
-| **Steps** | 1. Open Load. 2. Confirm empowered techniques appear (My/Public). 3. Load one. |
-| **Expected** | List uses Action/Damage/Area columns + Empowered badge (same shaping as sheet Add → Empowered); creator restores nested empowered technique data. |
+| **Steps** | 1. Open Load. 2. Confirm empowered techniques appear (My/Public). 3. Confirm Energy/Action/Duration/Area/Damage columns + Empowered badge. 4. Load one. |
+| **Expected** | Same shaping as sheet Add → Empowered; creator restores nested empowered technique data. |
 | **Report** | DEV-V-016-T004: PASS / FAIL / SKIP — |
 
 #### DEV-V-016-T005 — Species + creature creator Load wrappers
@@ -1504,8 +1753,52 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Task** | TASK-379 |
 | **Where** | `/characters/[id]` → Edit → Library → Add (Powers, Techniques, Weapon/Armor/Shield/Equipment) |
 | **Steps** | 1. Open add for power and technique. 2. Compare columns/chips to creator Load modals for the same type. 3. Add one of each; confirm sheet updates. |
-| **Expected** | Shared shaping: technique Action column present; property/part chips + TP match load modal; Add Selected still multi-select. |
+| **Expected** | Shared shaping: technique Action column present; power Energy/Duration columns + dice Damage; property/part chips + TP match load modal; Add Selected still multi-select. |
 | **Report** | DEV-V-016-T006: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T007 — Add Power modal fact columns (TASK-437)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-437 |
+| **Where** | `/characters/[id]` → Edit → Library → Powers → Add |
+| **Steps** | 1. Open Add Power. 2. Confirm ListHeader: Energy, Action, Duration, Area, Damage. 3. Confirm a damaging power shows dice (e.g. `1d8 Fire`), not type alone. 4. Expand the row → `Range:` labeled chip present when ranged/melee applies. |
+| **Expected** | No omitted Energy/Duration without a column or labeled chip; Damage cell is self-describing under its header. |
+| **Report** | DEV-V-016-T007: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T008 — Codex Equipment Damage / Dmg. Red. columns (TASK-437)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-437 |
+| **Where** | `/codex` → Equipment |
+| **Steps** | 1. Open Equipment tab. 2. Confirm Damage and Dmg. Red. column headers. 3. Spot-check a weapon (damage filled) and armor (Dmg. Red. filled). 4. Expand a row with weight → `Weight N kg` labeled chip (not a bare number). |
+| **Expected** | Dense browse keeps Damage / Damage Reduction as columns; Weight uses a labeled chip when present. |
+| **Report** | DEV-V-016-T008: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T009 — Creator powers/techniques omitted facts (TASK-437)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-437 |
+| **Where** | `/characters/new/advanced` → Powers |
+| **Steps** | 1. Open Select Powers → expand a power with area → confirm labeled `Area …` / `Duration …` / `Range:` chips. 2. Empowered tab → expand → Duration/Area not dropped unlabeled. 3. Select Techniques → confirm Action column present. |
+| **Expected** | Omitted column facts appear as labeled chips; technique Action matches add-library parity. |
+| **Report** | DEV-V-016-T009: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T010 — Creature creator select fact chips (TASK-437)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-437 |
+| **Where** | `/creature-creator` |
+| **Steps** | 1. Select Powers → expand → `Duration …` chip when duration exists. 2. Select Inventory → expand a weapon → `Damage:` / `Range:` chips; armor → `Damage Reduction N`. |
+| **Expected** | Modal Type/TP/Cost layout still works; combat facts remain self-describing when expanded. |
+| **Report** | DEV-V-016-T010: PASS / FAIL / SKIP — |
 
 ---
 
@@ -1837,13 +2130,15 @@ Verifies behavior parity after removing setState-in-effect / fixing exhaustive-d
 
 **Steps**
 1. Open `/library` signed in — defaults to My Library (unless `?view=realms`).
-2. Switch to Enhanced tab, then SegmentedControl → Realms Library — active tab falls back to Powers (Enhanced hidden).
-3. Switch back to My Library — can open Enhanced again.
-4. Open `/library?view=realms` in a fresh load — starts on Realms Library.
+2. Switch to Enhanced tab, then SegmentedControl → Realms Library — active tab becomes Powers (Enhanced hidden); content is not blank.
+3. Switch back to My Library — Enhanced is available again; if you left Realms with Powers selected, Enhanced is not auto-restored (state was clamped).
+4. Fresh load of `/library?view=realms` — starts on Realms Library.
+5. (Parity) After initial scope is set, changing only the URL `?view=` without reload need not re-lock scope — SegmentedControl is the user override (one-time init after auth).
 
 **Expected**
-- No blank content when Enhanced was selected under Realms mode.
-- Scope follows auth / `?view=` until the user picks a SegmentedControl value.
+- No blank Enhanced-under-Realms content; tab state clamps to Powers (display also derives Powers).
+- Initial scope locked once auth is ready (auth + `?view=`), then signed-in SegmentedControl changes.
+- Guests always see Realms Library (including after sign-out without full remount).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -1859,9 +2154,184 @@ Verifies behavior parity after removing setState-in-effect / fixing exhaustive-d
 **Steps**
 1. Open Edit Archetype; change type or an ability (do not save); Close.
 2. Open Edit Archetype again — selections match the character, not the abandoned draft.
+3. Optional: while modal is open, confirm that unrelated character refresh (abilities unchanged) does not wipe an in-progress forge edit.
 
 **Expected**
-- Remount-on-open clears local modal state (same pattern as admin feat modal).
+- Remount-on-open via `editArchetypeSessionKey` (AdminFeats-style session key), not mid-edit remount tied to every ability field change.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-019-T006 — Sheet library tab visibility fallback
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-019 |
+| **Related task** | TASK-430 |
+| **Where** | Character sheet Library section |
+| **Needs** | Owned character; edit mode |
+
+**Steps**
+1. Enter edit mode → Library → hide the currently selected tab (eye off) while leaving at least one tab visible.
+2. Leave edit mode — content shows a still-visible tab (not blank); that tab stays selected if you re-enter edit briefly.
+
+**Expected**
+- Parent `libraryActiveTab` clamps via `resolveLibraryActiveTab` (controlled tab state stays valid).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-019-T007 — Modal filter / draft reset on reopen (batch 3 remounts)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-019 |
+| **Related task** | TASK-430 |
+| **Where** | Character sheet + creature creator + advanced skills |
+| **Needs** | Owned character; optional creature draft |
+
+**Steps**
+1. Sheet → Add Feat: change a filter; Close; reopen — filters start clear.
+2. Sheet → Level Up: change target level; Close; reopen — target resets to current+1.
+3. Sheet → Settings (gear): change visibility/speed without Confirm; Close; reopen — drafts match saved character.
+4. Sheet → Proficiencies → Add (any variant): select an item; Close; reopen — selection empty.
+5. Advanced/guided skills → Add Skill: set ability filter; Close; reopen — filter clears.
+6. Advanced/guided skills → Add Sub-Skill: set a filter; Close; reopen — filters clear.
+7. Creature creator → Add Feat: change tab/filter; Close; reopen — defaults restore.
+
+**Expected**
+- Each open is a fresh mount (same AdminFeats / edit-archetype remount pattern); abandoned UI state does not stick.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+## DEV-V-020 — Sitewide copy compliance (TASK-439)
+
+Spot-checks Realms terminology and em-dash hygiene on high-traffic surfaces after TASK-439.
+
+#### DEV-V-020-T001 — Landing hero has no em dash
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-020 — Sitewide copy compliance |
+| **Related task** | TASK-439 |
+| **Where** | `/` |
+| **Needs** | — |
+
+**Steps**
+1. Open `/` and read the hero headline + subline.
+2. Confirm copy matches `LANDING_COPY` in `landing-copy.ts` (no em dash `—` in visible hero text).
+3. Confirm How it Works step 1 names **Archetype Path** (not Class).
+
+**Expected**
+- No em dashes in visible hero/how-it-works copy.
+- Game terms use Realms vocabulary.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-020-T002 — Guided chooser Custom bullet has no em dash
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-020 |
+| **Related task** | TASK-439 |
+| **Where** | `/characters/new` |
+| **Needs** | — |
+
+**Steps**
+1. Open `/characters/new`.
+2. On the Custom mode card, read the bullets.
+3. Confirm the first Custom bullet reads "Same rules engine: all steps, all choices" (colon, not em dash).
+
+**Expected**
+- Custom card bullets match `GUIDED_CREATOR_COPY.chooser` without em dashes.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-020-T003 — Roll log bonus steppers say Bonus not modifier
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-020 |
+| **Related task** | TASK-439 |
+| **Where** | Character sheet (any owned character) → open dice / roll log |
+| **Needs** | Signed-in character owner |
+
+**Steps**
+1. Open a character sheet and open the roll log / custom roll panel.
+2. Inspect the +/- controls that adjust the addend on a custom roll (screen reader / accessibility tree or hover titles).
+3. Confirm accessible names are **Decrease bonus** / **Increase bonus** (not "modifier").
+
+**Expected**
+- aria-labels use Bonus (Realms term), not modifier.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+## DEV-V-021 — Stable expand toggle (TASK-445)
+
+Click-open / click-close without moving the pointer. Expandable chips grow into remaining row space; toggle must not jump vertically.
+
+#### DEV-V-021-T001 — Styleguide wrap chips: expand then collapse in place
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-021 — Stable expand toggle |
+| **Related task** | TASK-445 |
+| **Where** | `/dev/styleguide` → **Expandable Chips** |
+| **Needs** | — |
+
+**Steps**
+1. Open `/dev/styleguide` and scroll to **Expandable Chips**.
+2. In the first ChipGroup (Elemental Damage / Extended Range / Versatile), note the screen position of the **Versatile** chip header.
+3. Click **Versatile** once to expand. Do not move the mouse.
+4. Click again in the same place to collapse.
+
+**Expected**
+- On expand, the **Versatile** header does not jump to a new vertical position (siblings may wrap below).
+- Second click in the same spot collapses the chip.
+- Expanded description is readable (chip grows into remaining row width, not a wrap-row reboot).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-021-T002 — Library / sheet property chips stay under cursor
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-021 |
+| **Related task** | TASK-445 |
+| **Where** | Library or character sheet → expand a power/technique/weapon with multiple property chips |
+| **Needs** | Signed-in account; item with ≥3 expandable property/part chips |
+
+**Steps**
+1. Expand a library or sheet row that shows a wrap of property/part chips.
+2. Click a chip that is **not** the first on its row.
+3. Without moving the pointer, click again to collapse.
+4. Optionally expand a GridListRow itself and confirm the row header stays put while details open below.
+
+**Expected**
+- Chip toggle stays under the pointer across open/close.
+- Row expand opens content below without moving the row header/chevrons upward.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-021-T003 — Guided choice card Read more placement
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-021 |
+| **Related task** | TASK-445 |
+| **Where** | `/characters/new/guided` → any step with long choice-card copy (Path / Species) |
+| **Needs** | — |
+
+**Steps**
+1. Open Guided creator and reach Path or Species cards with truncated descriptions.
+2. Confirm order: title → description (clamped) → **Read more…** (not between title and body).
+3. Expand via **Read more…**; confirm **Read less** (and **More details** when applicable) remain below the body.
+
+**Expected**
+- Disclosure controls are below card body copy, never between title and description.
+- Selected short cards (e.g. No Flaw) still keep density min-height.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -1883,5 +2353,6 @@ Verifies behavior parity after removing setState-in-effect / fixing exhaustive-d
 | DEV-V-017 | Site copy modules (TASK-390) | — | Manual — see suite above |
 | DEV-V-018 | CreatorPageShell parity (TASK-380 / TASK-431) | — | Manual — see suite above |
 | DEV-V-019 | React Compiler hook cleanup (TASK-430) | — | Manual — see suite above |
+| DEV-V-020 | Sitewide copy compliance (TASK-439) | — | Manual — see suite above |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

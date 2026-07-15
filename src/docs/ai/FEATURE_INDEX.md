@@ -13,13 +13,15 @@
 | Feature | Route / page |
 |---------|--------------|
 | Character list / dashboard | `characters/page.tsx` |
-| Character sheet (view + edit) | `characters/[id]/page.tsx` — layout `CharacterSheetBody` (single library mount); derived `useCharacterSheetDerived`; handlers `useCharacterSheetActions`; library lists via `entity-library-sections` + `library-entity-rows`; feats tab via `FeatsTraitsListSection` + `library-feat-rows` (player feat/trait `customName` + `note` on save; trait map `traitCustomizations`) |
+| Character sheet (view + edit) | `characters/[id]/page.tsx` — layout `CharacterSheetBody` (single library mount); derived `useCharacterSheetDerived`; handlers `useCharacterSheetActions`; library lists via `entity-library-sections` + `library-entity-rows`; feats tab via `FeatsTraitsListSection` + `library-feat-rows` (player feat/trait `customName` + `note` on save; trait map `traitCustomizations`); library tab clamp `resolveLibraryActiveTab`; edit-archetype remount via `editArchetypeSessionKey` |
 | Character creator | `character-creator/` (wizard steps under `components/character-creator/steps/`) |
 | Character creator entry (Simple vs Advanced) | `characters/new/page.tsx` |
-| Guided ("Simple") character creator | `characters/new/guided/page.tsx`, `components/guided-creator/` (incl. `GuidedSkillsPanel`, `GuidedChoiceCard`, `GuidedFeatsBrowsePanel`), `stores/guided-creator-store.ts`, `lib/guided-creator/build-character.ts` |
+| Guided ("Simple") character creator | `characters/new/guided/page.tsx`, `components/guided-creator/` (incl. `GuidedSkillsPanel`, `GuidedChoiceCard`, `GuidedEntityDetailModal`, `GuidedFeatsBrowsePanel`), `stores/guided-creator-store.ts`, `lib/guided-creator/build-character.ts` |
+| Selection grammar (cards ↔ GridListRow; entity depth vs catalog breadth) | `REALMS_PRODUCT_OVERVIEW.md` §3.1; `AGENT_GUIDE.md` § Floating UI related patterns; components: `GuidedChoiceCard`, `GuidedEntityDetailModal`, `GridListRow`, `GuidedLayerNav`, `DetailOptionList` |
+| Guided choice-card deep-dive (TASK-432+) | **Read more…** = in-card copy; **More details** = `onDetails` → `GuidedEntityDetailModal` (does not select); **See more options** = catalog Layer 2 (`GuidedLayerNav` / browse). **Equipment exception (§5.7):** L1 cards use the More details label for **in-card expandable fact chips** (not the entity modal). Shared rows: `DetailOptionList` + `@/lib/detail-option` (`traitToDetailOption`, `featToDetailOption`, `equipmentRefToDetailOption`, `powerToDetailOption` / `techniqueToDetailOption`, `propertyChipsFromRefs`). Wrappers: `GuidedTraitOptionList` / `GuidedDetailOptionList`. Legacy remodel: `SpeciesRevealPanel` granted + advanced `species-modal` TraitSection. |
 | Guided skills suggestions (ability-tier curation) | `lib/guided-creator/curated-skills.ts` (`curateGuidedSkillIds`, `getGuidedAbilityRecommendationTiers`), `guided-skill-recommendations.ts` (`buildGuidedSkillSuggestions`); consumed by `steps/skills-step.tsx` + `AddSkillModal` badges via `guided-skills-panel.tsx` |
 | Guided feat Layer 2 browse | `guided-feats-browse-panel.tsx`, `lib/guided-creator/feat-selection.ts`; wired in `archetype-feats-step.tsx` + `character-feat-step.tsx` via `GuidedLayerNav` |
-| Guided equipment phased sub-flow (TASK-424) | `GUIDED_EQUIPMENT_PHASED_SPEC.md`, `lib/guided-creator/equipment-eligibility.ts`, `equipment-phase-stats.ts`, `equipment-currency.ts`, `equipment-phase-nav.ts`, `equipment-catalog-rows.ts`, `equipment-phase-candidates.ts`, `guided-equipment-l2.ts`, `guided-creator/guided-equipment-l1-phase.tsx`, `guided-equipment-l2-modal.tsx`, `guided-equipment-phase-selection.tsx`, `guided-loadout-kit-presets.tsx`, `guided-equipment-l2-grid.ts`, `lib/game/archetype-path.ts` (parseLevel1LoadoutsField), `hooks/use-guided-equipment-catalog.ts`, `lib/game/weapon-attack-ability.ts` |
+| Guided equipment phased sub-flow (TASK-424 / 442 / 443 / 446 / 447) | `GUIDED_EQUIPMENT_PHASED_SPEC.md`, `lib/guided-creator/equipment-eligibility.ts`, `equipment-phase-stats.ts`, `equipment-currency.ts`, `equipment-phase-nav.ts`, `equipment-catalog-rows.ts`, `equipment-phase-candidates.ts`, `guided-equipment-l2.ts`, `guided-creator/guided-equipment-l1-phase.tsx`, `guided-equipment-fact-chips.tsx`, `guided-equipment-l2-modal.tsx`, `guided-equipment-l2-grid.ts`, `lib/game/archetype-path.ts` (`parseLevel1LoadoutsField` metadata), `hooks/use-guided-equipment-catalog.ts`, `lib/game/weapon-attack-ability.ts`. Card-first L1; PointStatus Currency; named property chips + hover tips; no phase progress strip; no Path pick badge. No quick kits. |
 | Advanced character creator (classic 9-step) | `characters/new/advanced/page.tsx` |
 | Library (user + official content browse) | `library/page.tsx` |
 | Codex (rules data browser) | `codex/page.tsx` |
@@ -66,7 +68,7 @@
 
 | Need | Component |
 |------|-----------|
-| Expandable list row (Library/Codex/sheet/creator) | `GridListRow` |
+| Expandable list row (Library/Codex/sheet/creator) | `GridListRow` — **fact policy (TASK-437):** dense browse keeps `ListHeader` columns when space allows; deep-dive/`DetailOptionList` may omit columns but every omitted column fact must be a **labeled** expanded chip (`Damage Reduction 2`, not bare `2`). Helpers: `lib/chip/list-row-metadata.ts`, `lib/detail-option` `factChip` / combat+equipment builders. |
 | **Entity card art — click to enlarge (site-wide default)** | **`ExpandableImage`** (+ `ExpandableImageModal`); list thumbs: `ListRowThumbnail` |
 | **Entity card art — list thumb** (44px, D&D Beyond style) | `GridListRow.thumbnail` + `ListRowThumbnail`; `ListHeader.hasThumbnailColumn` |
 | **Entity card art — choice card hero** (guided creator) | `GuidedChoiceCard` (wraps `ExpandableImage`) |
@@ -84,11 +86,12 @@
 | Skill row / allocation | Advanced/creature: `SkillRow`, `SkillsAllocationPage`, `AddSkillModal`, `AddSubSkillModal`. Guided L1: `GuidedSkillsPanel` (`guided-skills-panel.tsx`) |
 | Tab summary header section | `TabSummarySection`, `SummaryItem`, `SummaryRow` |
 | Chip roles (descriptor vs expandable) | `DescriptorChip`, `ExpandableChip` (`@/components/ui`); `GridListChip` + `lib/chip/expandable-chip-props.ts`; `ChipData.kind` + `descriptorChipData()` in `lib/chip/chip-data-helpers.ts`; metadata builders in `lib/chip/list-row-metadata.ts` |
+| Stable expand toggle (chips) | `ExpandableChip` + `ChipGroup` (`data-chip-group`); `measureStableExpandWidth` — grow into remaining row width; do not force `w-full` on wrap expand (TASK-445) |
 | Feat tags (normalize + taxonomy) | `lib/codex/feat-tags.ts`, `lib/codex/feat-list.ts`; `sql/feat-tags-unification-phase*.sql` (phase 4 = live normalize chain); `docs/FEAT_TAGS.md` |
 | Part/property chips | `PartChipList`, `PartChipComponent` (thin aliases); `PartData` in `lib/chip/part-data.ts`; `partChipsFromDisplay` in `lib/chip/part-chips-from-display.ts` |
 | Part/property → PartData (library rows) | `lib/library/part-display.ts` — `computePartTrainingPoints`, `characterPartsToPartData`, `itemPropertiesToPartData` |
 | Entity list sections (powers/techniques/weapons/armor/etc.) | `*ListSection` from `entity-library-sections` |
-| Species trait cards | `SpeciesTraitCard`, `TraitGroup` |
+| Species trait cards | **Deprecated for catalogs** — use `DetailOptionList` + `traitToDetailOption` (deep-dive / species-modal). Selection picks: `GuidedChoiceCard`. `SpeciesTraitCard` / `TraitGroup` remain exported for rare interactive use-tracking UIs only — do not use for new read-only lists. |
 | Creature stat block | `CreatureStatBlock` |
 | Filters | `ChipSelect`, `TagFilter`, `CheckboxFilter`, `SelectFilter`, `AbilityRequirementFilter` |
 | List states | `ListEmptyState`, `LoadingState`, `ErrorDisplay` |
@@ -119,6 +122,7 @@
 | API client / validation / rate limit | `lib/api-client.ts`, `lib/api-validation.ts`, `lib/validation/schemas.ts`, `lib/rate-limit.ts` |
 | Supabase clients (server/client/middleware) | `lib/supabase/*` |
 | Generic utils (cn, string, number, object, motion, duration display) | `lib/utils/*` — list column labels: `formatColumnKeyLabel()` in `string.ts`; motion timing: `MOTION_DURATION_SLOW_MS` in `motion.ts` |
+| Stable empty fallbacks for hook deps | `lib/empty.ts` (`EMPTY_STRING_ARRAY`, `EMPTY_NUMBER_RECORD`, `EMPTY_GUIDANCE_GROUPS`) — never mutate |
 
 ## Services (`src/services/`, import from `@/services`)
 
