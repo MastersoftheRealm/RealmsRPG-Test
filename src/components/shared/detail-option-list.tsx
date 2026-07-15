@@ -3,6 +3,7 @@
  * (Traits, Feats, Weapons, Armor, Powers, Techniques) and remodeled legacy trait lists.
  *
  * Collapsed row shows name + truncated description (mobile: prose below name, no column label).
+ * When expanded, GridListRow hides the truncated description teaser so the full description only appears in the panel.
  * Fact/stats that would normally be columns (Damage Reduction, Range, Uses, Energy, etc.) belong as labeled chips in the
  * expanded body so the label states the value (e.g. "Damage Reduction 2"), not bare numbers.
  */

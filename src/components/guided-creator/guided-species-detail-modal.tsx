@@ -30,6 +30,8 @@ export interface GuidedSpeciesDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   species: Species | null;
+  /** Apply this species from the detail footer Select. */
+  onSelect?: () => void;
 }
 
 interface SpeciesChoiceGroup {
@@ -66,6 +68,7 @@ export function GuidedSpeciesDetailModal({
   isOpen,
   onClose,
   species,
+  onSelect,
 }: GuidedSpeciesDetailModalProps) {
   const { data: allTraits = [], isLoading: traitsLoading } = useTraits();
 
@@ -158,6 +161,7 @@ export function GuidedSpeciesDetailModal({
       onClose={onClose}
       title={species?.name ?? ''}
       description={GUIDED_CREATOR_COPY.steps.species.detailModalHint}
+      onSelect={onSelect}
       overview={
         species ? (
           <>

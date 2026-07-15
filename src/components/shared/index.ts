@@ -21,6 +21,7 @@ export {
   AbilityScoreGrid,
   ABILITY_DISPLAY_ORDER,
   ABILITY_DISPLAY_INFO,
+  resolveDistinctSecondaryAbility,
   type AbilityScoreGridProps,
 } from './ability-score-grid';
 

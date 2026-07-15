@@ -80,6 +80,7 @@ export const GUIDED_CREATOR_COPY = {
 
   entityDetail: {
     close: 'Close',
+    select: 'Select',
     overviewHeading: 'Overview',
     optionsRegionLabel: 'What you can choose later',
   },
@@ -102,8 +103,8 @@ export const GUIDED_CREATOR_COPY = {
       backToCorePaths: 'Back to Power and Martial paths',
       emptyTitle: 'No paths available',
       emptyDescription: 'Try a different filter or check back later.',
-      /** Modal chrome: preview only; card select still chooses the path. */
-      detailModalHint: 'This is a preview. Choose the path from its card.',
+      /** Modal chrome: preview; Select in footer applies the path. */
+      detailModalHint: 'Preview this path, then Select if it fits your character.',
       detail: {
         noDescription: 'No description is available for this path yet.',
         loadingCatalogs: 'Loading path options…',
@@ -154,7 +155,7 @@ export const GUIDED_CREATOR_COPY = {
       backToStarters: 'Back to starter species',
       emptyTitle: 'No species available',
       emptyDescription: 'Check back later.',
-      detailModalHint: 'This is a preview. Choose the species from its card.',
+      detailModalHint: 'Preview this species, then Select if it fits your character.',
       detail: {
         loadingTraits: 'Loading species options…',
         speciesTraitOptionsTitle: 'Species Trait Options',

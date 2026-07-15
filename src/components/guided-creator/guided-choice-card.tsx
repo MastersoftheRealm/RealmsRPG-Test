@@ -237,12 +237,20 @@ export function GuidedChoiceCard({
    * Cards with only More details (no overflow) still show it collapsed.
    */
   const showDetails = Boolean(onDetails) && (expanded || !canInlineExpand);
+  const hasVisibleActions = showReadMore || showCollapse || showDetails;
   /**
-   * Always reserve the action-row height while a body section exists.
-   * Collapsed cards reserved min-h-11 even when empty; selected cards used to drop it
-   * (no See less when selected, no More details) and short options like Skip — no flaw shrank.
+   * Reserve action-row height while collapsed (stable See more / More details placement).
+   * When expanded, only render the row if a control is visible — an empty min-h-11 under
+   * info notices (feats/traits) looked like wasted space below the callout.
+   * Short selected options without notices still rely on density `cardCollapsed` min-height.
    */
-  const showActionRow = showBodySection;
+  const showActionRow = showBodySection && (hasVisibleActions || !expanded);
+  /**
+   * Keep the collapsed body floor unless the card is expanded with an info notice and no
+   * More details control — that combination was the sparse gap under restriction callouts.
+   * Path/species (More details) and short cards like No Flaw keep the floor.
+   */
+  const keepBodyFloor = !expanded || showDetails || !hasExpandedExtra;
 
   const handleCardKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -267,6 +275,7 @@ export function GuidedChoiceCard({
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       e.stopPropagation();
+      onDetails?.();
     }
   };
 
@@ -337,8 +346,7 @@ export function GuidedChoiceCard({
                     ref={bodyRef}
                     className={cn(
                       s.body,
-                      // Keep body floor when selected/expanded so More details stays put.
-                      preset.bodyMinHeight,
+                      keepBodyFloor && preset.bodyMinHeight,
                       !expanded && preset.bodyClamp,
                       expanded && 'whitespace-pre-wrap'
                     )}
@@ -349,7 +357,7 @@ export function GuidedChoiceCard({
                   </p>
                 ) : null}
                 {expanded && expandedExtra ? (
-                  <div className="mt-3">{expandedExtra}</div>
+                  <div className="mt-2">{expandedExtra}</div>
                 ) : null}
                 {/*
                   See more / See less / More details stay below body copy (product

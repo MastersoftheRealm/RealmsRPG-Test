@@ -1,8 +1,9 @@
 /**
- * GuidedEntityDetailModal — read-only deep-dive for a choice-card entity.
+ * GuidedEntityDetailModal — deep-dive for a choice-card entity.
  *
  * Progressive disclosure on the card:
  *   truncated copy → inline See more → More details (this modal).
+ * Catalogs stay read-only; optional `onSelect` adds Close | Select in the footer.
  * Distinct from catalog Layer 2 (`GuidedLayerNav` / browse panels).
  */
 
@@ -43,7 +44,14 @@ export interface GuidedEntityDetailModalProps {
    * Rendered only when `sections` is non-empty so overview stays about the entity itself.
    */
   optionsPreamble?: ReactNode;
-  /** Override footer actions (default: Close). */
+  /**
+   * When set, footer is Close (left) + Select (right). Select applies the entity
+   * (caller should close). Distinct from catalog Layer 2 browse confirms.
+   */
+  onSelect?: () => void;
+  selectLabel?: string;
+  selectDisabled?: boolean;
+  /** Override footer actions entirely (default: Close, or Close + Select when onSelect set). */
   footer?: ReactNode;
   size?: 'md' | 'lg' | 'xl' | '2xl' | 'full';
   className?: string;
@@ -57,6 +65,9 @@ export function GuidedEntityDetailModal({
   overview,
   sections = [],
   optionsPreamble,
+  onSelect,
+  selectLabel,
+  selectDisabled,
   footer,
   size = '2xl',
   className,
@@ -64,6 +75,33 @@ export function GuidedEntityDetailModal({
   const copy = GUIDED_CREATOR_COPY.entityDetail;
   const hasSections = sections.length > 0;
   const hasOptionsRegion = hasSections || Boolean(optionsPreamble);
+
+  const handleSelect = () => {
+    onSelect?.();
+    onClose();
+  };
+
+  const defaultFooter = onSelect ? (
+    <div className="flex shrink-0 justify-between gap-2 border-t border-border-light bg-surface px-4 py-3 sm:px-6">
+      <Button variant="secondary" onClick={onClose} className="min-h-[44px] min-w-[44px]">
+        {copy.close}
+      </Button>
+      <Button
+        variant="primary"
+        onClick={handleSelect}
+        disabled={selectDisabled}
+        className="min-h-[44px] min-w-[44px]"
+      >
+        {selectLabel ?? copy.select}
+      </Button>
+    </div>
+  ) : (
+    <div className="flex shrink-0 justify-end gap-2 border-t border-border-light bg-surface px-4 py-3 sm:px-6">
+      <Button variant="secondary" onClick={onClose} className="min-h-[44px] min-w-[44px]">
+        {copy.close}
+      </Button>
+    </div>
+  );
 
   return (
     <Modal
@@ -76,15 +114,7 @@ export function GuidedEntityDetailModal({
       fullScreenOnMobile
       className={className}
       contentClassName="px-4 pb-4 pt-2 sm:px-6 sm:pb-6"
-      footer={
-        footer ?? (
-          <div className="flex shrink-0 justify-end gap-2 border-t border-border-light bg-surface px-4 py-3 sm:px-6">
-            <Button variant="secondary" onClick={onClose} className="min-h-[44px]">
-              {copy.close}
-            </Button>
-          </div>
-        )
-      }
+      footer={footer ?? defaultFooter}
     >
       <div className="flex flex-col gap-6">
         {/*
@@ -110,7 +140,7 @@ export function GuidedEntityDetailModal({
                 defaultExpanded={section.defaultExpanded ?? false}
                 itemCount={section.itemCount}
                 headingLevel={3}
-                rightSlot={
+                titleAddon={
                   section.tip ? (
                     <InfoTippy
                       content={section.tip}

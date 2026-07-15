@@ -52,6 +52,8 @@ export interface GuidedPathDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   path: Archetype | null;
+  /** Apply this path from the detail footer Select. */
+  onSelect?: () => void;
 }
 
 function parseItemRef(raw: string): PathItemRecommendation {
@@ -126,6 +128,7 @@ export function GuidedPathDetailModal({
   isOpen,
   onClose,
   path,
+  onSelect,
 }: GuidedPathDetailModalProps) {
   const pathData = useMemo(
     () => (path ? parseArchetypePathData(path.path_data) : undefined),
@@ -409,6 +412,7 @@ export function GuidedPathDetailModal({
       onClose={onClose}
       title={path?.name ?? ''}
       description={GUIDED_CREATOR_COPY.steps.path.detailModalHint}
+      onSelect={onSelect}
       overview={
         path ? (
           <>

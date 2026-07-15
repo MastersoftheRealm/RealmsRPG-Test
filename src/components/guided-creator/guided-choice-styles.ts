@@ -48,8 +48,8 @@ export const GUIDED_CHOICE_STYLES = {
   body: 'font-nunito text-base text-text-secondary leading-relaxed',
   /**
    * Shared slot for See more / See less / More details below body copy.
-   * Always reserved when the card has a body section (including when selected with
-   * no visible controls) so short options do not shrink on select.
+   * Reserved while collapsed; when expanded, only rendered if a control is visible
+   * (avoids empty min-h-11 under restriction info notices).
    */
   actionRow: 'flex min-h-11 shrink-0 flex-wrap items-center gap-x-4 gap-y-1',
   readMore:

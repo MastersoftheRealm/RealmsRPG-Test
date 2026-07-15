@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useEffect, useMemo, useCallback, useState } from 'react';
+import { useEffect, useMemo, useCallback, useState, useRef } from 'react';
 import { Spinner } from '@/components/ui';
 import { useEquipment, useOfficialLibrary, useGuidedEquipmentCatalog } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
@@ -49,7 +49,14 @@ function normalizeEqId(id: string): string {
 }
 
 export function LoadoutStep() {
-  const { draft, updateDraft, prevSubStep, nextSubStep } = useGuidedCreatorStore();
+  const {
+    draft,
+    updateDraft,
+    prevSubStep,
+    nextSubStep,
+    navigationIntent,
+    entryNonce,
+  } = useGuidedCreatorStore();
   const { pathData } = useGuidedPathData();
   const { data: officialItems = [], isLoading: officialLoading } = useOfficialLibrary('items');
   const { data: codexEquipment = [], isLoading: codexLoading } = useEquipment();
@@ -163,6 +170,17 @@ export function LoadoutStep() {
       updateDraft({ equipmentPhase: visiblePhases[0] ?? 'gear' });
     }
   }, [visiblePhases, equipmentPhase, updateDraft]);
+
+  // Chapter rail / edit jump onto loadout: land on first equipment phase (weapon…).
+  const lastLoadoutJumpNonce = useRef<number | null>(null);
+  useEffect(() => {
+    if (navigationIntent !== 'first') return;
+    if (lastLoadoutJumpNonce.current === entryNonce) return;
+    lastLoadoutJumpNonce.current = entryNonce;
+    const first = visiblePhases[0] ?? 'weapon';
+    updateDraft({ equipmentPhase: first });
+    setL2Open(false);
+  }, [navigationIntent, entryNonce, visiblePhases, updateDraft]);
 
   /** Re-bucket weapons/armor and drop unresolved (stale) refs once lookup is ready. */
   useEffect(() => {

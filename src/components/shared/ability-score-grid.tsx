@@ -1,6 +1,8 @@
 /**
  * AbilityScoreGrid — unified six-ability tile row (character sheet layout).
  * Display mode: name + score (no roll buttons). Edit mode: +/- steppers.
+ * Mobile: short ability labels + wrapping path pills; edit uses a roomier grid so
+ * 44px steppers are not forced into 3-col phone tiles.
  */
 
 'use client';
@@ -34,6 +36,8 @@ export interface AbilityScoreGridProps {
   abilities: Abilities;
   powerAbility?: AbilityName;
   martialAbility?: AbilityName;
+  /** Path secondary recommended ability (pill when distinct from power/martial). */
+  secondaryAbility?: AbilityName;
   mode?: 'display' | 'edit';
   onAbilityChange?: (ability: AbilityName, value: number) => void;
   canIncrease?: (ability: AbilityName) => boolean;
@@ -43,10 +47,27 @@ export interface AbilityScoreGridProps {
   className?: string;
 }
 
-type PathAbilityRole = 'power' | 'martial';
+type PathAbilityRole = 'power' | 'martial' | 'secondary';
 
 function normalizeAbilityKey(value?: AbilityName | null): string | null {
   return value ? value.toLowerCase() : null;
+}
+
+/**
+ * Secondary recommended ability for grid pills when distinct from power/martial tiles.
+ * Shared by abilities step + reveal (and any other AbilityScoreGrid call sites).
+ */
+export function resolveDistinctSecondaryAbility(
+  secondaryAbility?: AbilityName | null,
+  powerAbility?: AbilityName | null,
+  martialAbility?: AbilityName | null
+): AbilityName | undefined {
+  if (!secondaryAbility) return undefined;
+  const key = normalizeAbilityKey(secondaryAbility);
+  if (!key) return undefined;
+  if (normalizeAbilityKey(powerAbility) === key) return undefined;
+  if (normalizeAbilityKey(martialAbility) === key) return undefined;
+  return secondaryAbility;
 }
 
 function isHybridPath(powerAbility?: AbilityName, martialAbility?: AbilityName): boolean {
@@ -59,19 +80,26 @@ function isHybridPath(powerAbility?: AbilityName, martialAbility?: AbilityName):
 function getPathAbilityHighlight(
   ability: AbilityName,
   powerAbility?: AbilityName,
-  martialAbility?: AbilityName
+  martialAbility?: AbilityName,
+  secondaryAbility?: AbilityName
 ): PathAbilityRole | null {
   const key = ability.toLowerCase();
   const pow = normalizeAbilityKey(powerAbility);
   const mart = normalizeAbilityKey(martialAbility);
+  const secondary = normalizeAbilityKey(secondaryAbility);
   if (pow && key === pow) return 'power';
   if (mart && key === mart) return 'martial';
+  // Secondary only when it is not already the power/martial archetype ability.
+  if (secondary && key === secondary && secondary !== pow && secondary !== mart) {
+    return 'secondary';
+  }
   return null;
 }
 
 function abilityBorderClass(role: PathAbilityRole | null): string {
   if (role === 'power') return 'border-power dark:border-power-border';
   if (role === 'martial') return 'border-martial dark:border-martial-border';
+  if (role === 'secondary') return 'border-primary-subtle-border dark:border-primary-border';
   return 'border-border-light';
 }
 
@@ -82,24 +110,43 @@ function abilityGradientClass(role: PathAbilityRole | null): string {
   if (role === 'martial') {
     return 'from-martial-light via-martial-light/60 to-surface-alt dark:from-martial-light/35 dark:via-martial-light/20 dark:to-surface-alt';
   }
+  if (role === 'secondary') {
+    return 'from-primary-subtle-bg via-primary-subtle-bg/60 to-surface-alt dark:from-primary-900/25 dark:via-primary-900/15 dark:to-surface-alt';
+  }
   return 'from-surface to-surface-alt';
 }
 
-function pathRoleLabel(role: PathAbilityRole): string {
-  return role === 'power' ? 'Power' : 'Martial';
+/** Visible pill text — short enough for ~360px tiles; wrap allowed. */
+function pathAbilityLabel(role: PathAbilityRole, hybrid: boolean): string {
+  if (role === 'secondary') return 'Secondary Ability';
+  if (role === 'power') return hybrid ? 'Power' : 'Archetype Ability';
+  if (role === 'martial') return hybrid ? 'Martial' : 'Archetype Ability';
+  return 'Archetype Ability';
 }
 
-function pathAbilityLabel(role: PathAbilityRole, hybrid: boolean): string {
-  return hybrid ? pathRoleLabel(role) : 'Archetype Ability';
+/** Full game term for screen readers / hover (matches path overview wording). */
+function pathAbilityAccessibleName(role: PathAbilityRole, hybrid: boolean): string {
+  if (role === 'secondary') return 'Secondary Recommended Ability';
+  if (role === 'power') return hybrid ? 'Power Archetype Ability' : 'Archetype Ability';
+  if (role === 'martial') return hybrid ? 'Martial Archetype Ability' : 'Archetype Ability';
+  return 'Archetype Ability';
 }
 
 function PathAbilityLabel({ role, hybrid }: { role: PathAbilityRole; hybrid: boolean }) {
+  const accessible = pathAbilityAccessibleName(role, hybrid);
   return (
     <span
+      aria-label={accessible}
+      title={accessible}
       className={cn(
-        'pointer-events-none absolute left-1/2 top-0 z-10 max-w-[calc(100%+0.5rem)] -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-pill border px-2 py-px text-[9px] font-semibold uppercase tracking-wide leading-tight font-nunito shadow-sm',
+        'pointer-events-none absolute left-1/2 top-0 z-10 max-w-full -translate-x-1/2 -translate-y-1/2',
+        'rounded-pill border px-1.5 py-0.5 text-center text-[8px] font-semibold uppercase leading-tight tracking-wide',
+        'font-nunito shadow-sm sm:px-2 sm:text-[9px]',
+        // Allow wrap so long labels stay inside the tile (no whitespace-nowrap spill).
         role === 'power' && 'border-power-border bg-power-light text-power-fg',
-        role === 'martial' && 'border-martial-border bg-martial-light text-martial-fg'
+        role === 'martial' && 'border-martial-border bg-martial-light text-martial-fg',
+        role === 'secondary' &&
+          'border-primary-subtle-border bg-primary-subtle-bg text-primary-subtle-fg dark:border-primary-border dark:bg-primary-900/40 dark:text-primary-subtle-fg'
       )}
     >
       {pathAbilityLabel(role, hybrid)}
@@ -117,6 +164,7 @@ export function AbilityScoreGrid({
   abilities,
   powerAbility,
   martialAbility,
+  secondaryAbility,
   mode = 'display',
   onAbilityChange,
   canIncrease,
@@ -128,56 +176,106 @@ export function AbilityScoreGrid({
   const hybrid = isHybridPath(powerAbility, martialAbility);
 
   return (
-    <div className={cn('grid grid-cols-3 sm:grid-cols-6 gap-3 pt-3 md:gap-4', className)}>
+    <div
+      className={cn(
+        'grid gap-3 pt-3 md:gap-4',
+        // Display: compact 3×2 phone grid. Edit: wider cells so 44px steppers fit.
+        isEdit
+          ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6'
+          : 'grid-cols-3 sm:grid-cols-6',
+        className
+      )}
+    >
       {ABILITY_DISPLAY_ORDER.map((ability) => {
         const value = abilities[ability] ?? 0;
         const info = ABILITY_DISPLAY_INFO[ability];
-        const highlight = getPathAbilityHighlight(ability, powerAbility, martialAbility);
+        const highlight = getPathAbilityHighlight(
+          ability,
+          powerAbility,
+          martialAbility,
+          secondaryAbility
+        );
         const canInc = isEdit ? (canIncrease?.(ability) ?? false) : false;
         const canDec = isEdit ? (canDecrease?.(ability) ?? false) : false;
         const increaseCost = getIncreaseCost?.(ability) ?? 1;
 
         return (
-          <div key={ability} className="relative">
+          <div key={ability} className="relative min-w-0">
             {highlight ? <PathAbilityLabel role={highlight} hybrid={hybrid} /> : null}
             <div
               className={cn(
-                'flex h-full flex-col items-center rounded-xl border-2 bg-gradient-to-b px-2 py-2 transition-all',
+                'flex h-full rounded-xl border-2 bg-gradient-to-b transition-all',
                 abilityGradientClass(highlight),
                 abilityBorderClass(highlight),
-                !isEdit && 'hover:shadow-md'
+                !isEdit && 'hover:shadow-md',
+                isEdit
+                  ? 'flex-row items-center justify-between gap-2 px-3 py-2 sm:flex-col sm:justify-center sm:px-2 sm:py-2'
+                  : 'flex-col items-center px-2 py-2'
               )}
+              aria-label={`${info.name} ${formatBonus(value)}`}
             >
-              <span className="text-[11px] font-bold uppercase tracking-wider text-text-muted dark:text-text-secondary">
-                {info.name}
+              <span
+                className={cn(
+                  'font-bold uppercase text-text-muted dark:text-text-secondary',
+                  isEdit
+                    ? 'text-xs tracking-wide sm:text-[11px] sm:tracking-wider'
+                    : 'text-center text-[11px] tracking-wider'
+                )}
+                aria-hidden={!isEdit ? true : undefined}
+              >
+                {isEdit ? (
+                  info.name
+                ) : (
+                  <>
+                    <span className="sm:hidden">{info.shortName}</span>
+                    <span className="hidden sm:inline">{info.name}</span>
+                  </>
+                )}
               </span>
 
-              <div className="mt-1 flex min-h-[2.25rem] items-center justify-center">
+              <div
+                className={cn(
+                  'flex items-center justify-center',
+                  isEdit ? 'min-h-11 shrink-0' : 'mt-1 min-h-[2.25rem]'
+                )}
+              >
                 {isEdit ? (
-                  <div className="flex items-center gap-1">
-                    <DecrementButton
-                      onClick={() => onAbilityChange?.(ability, value - 1)}
-                      disabled={!canDec}
-                      size="sm"
-                    />
-                    <span
-                      className={cn(
-                        'min-w-[2.75rem] text-center text-2xl font-bold',
-                        abilityValueClass(value)
-                      )}
-                    >
-                      {formatBonus(value)}
-                    </span>
-                    <IncrementButton
-                      onClick={() => onAbilityChange?.(ability, value + 1)}
-                      disabled={!canInc}
-                      size="sm"
-                      title={
-                        canInc && increaseCost > 1
-                          ? `Cost: ${increaseCost} point${increaseCost > 1 ? 's' : ''}`
-                          : undefined
-                      }
-                    />
+                  <div className="flex flex-col items-center gap-0.5">
+                    <div className="flex items-center gap-1">
+                      <DecrementButton
+                        onClick={() => onAbilityChange?.(ability, value - 1)}
+                        disabled={!canDec}
+                        size="sm"
+                      />
+                      <span
+                        className={cn(
+                          'min-w-[2.75rem] text-center text-2xl font-bold',
+                          abilityValueClass(value)
+                        )}
+                      >
+                        {formatBonus(value)}
+                      </span>
+                      <IncrementButton
+                        onClick={() => onAbilityChange?.(ability, value + 1)}
+                        disabled={!canInc}
+                        size="sm"
+                        title={
+                          canInc && increaseCost > 1
+                            ? `Cost: ${increaseCost} point${increaseCost > 1 ? 's' : ''}`
+                            : undefined
+                        }
+                      />
+                    </div>
+                    {getIncreaseCost ? (
+                      <span
+                        className={cn(
+                          'h-3.5 text-[10px] font-medium leading-none',
+                          increaseCost > 1 && canInc ? 'text-warning-fg' : 'invisible'
+                        )}
+                      >
+                        Next: {increaseCost} Points
+                      </span>
+                    ) : null}
                   </div>
                 ) : (
                   <span
@@ -190,17 +288,6 @@ export function AbilityScoreGrid({
                   </span>
                 )}
               </div>
-
-              {isEdit && getIncreaseCost ? (
-                <span
-                  className={cn(
-                    'mt-0.5 h-3.5 text-[10px] font-medium leading-none',
-                    increaseCost > 1 && canInc ? 'text-warning-fg' : 'invisible'
-                  )}
-                >
-                  Next: {increaseCost} Points
-                </span>
-              ) : null}
             </div>
           </div>
         );

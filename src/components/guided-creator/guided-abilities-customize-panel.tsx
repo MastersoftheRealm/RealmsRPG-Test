@@ -20,6 +20,7 @@ export interface GuidedAbilitiesCustomizePanelProps {
   onAbilityChange: (ability: AbilityName, value: number) => void;
   powerAbility?: AbilityName;
   martialAbility?: AbilityName;
+  secondaryAbility?: AbilityName;
   className?: string;
 }
 
@@ -30,6 +31,7 @@ export function GuidedAbilitiesCustomizePanel({
   onAbilityChange,
   powerAbility,
   martialAbility,
+  secondaryAbility,
   className,
 }: GuidedAbilitiesCustomizePanelProps) {
   return (
@@ -51,6 +53,7 @@ export function GuidedAbilitiesCustomizePanel({
           onAbilityChange={onAbilityChange}
           powerAbility={powerAbility}
           martialAbility={martialAbility}
+          secondaryAbility={secondaryAbility}
           hidePointsStatus
           variant="sheet"
         />

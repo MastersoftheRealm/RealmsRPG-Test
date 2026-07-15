@@ -2,11 +2,194 @@
 
 **Last slimmed:** 2026-06-26 (TASK-382). Full history: [`archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md`](archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md) and [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md).
 
-**Next task ID:** TASK-448
+**Next task ID:** TASK-454
 
-**Agent rules:** Skip `blocked` tasks and any task with `assignee:` set to a human (e.g. TASK-353, **TASK-414**, **TASK-423**). Skip human-only tasks (TASK-353 → `DEVELOPER_TASK_QUEUE.md` DEV-001). Pick highest-priority `not-started` or continue `partial`. **Do not start TASK-408–413** until TASK-414 spec is `done` (owner approval). **Choice-card deep-dive:** TASK-432–436 done. Global GridListRow = TASK-437 done. Copy guide = TASK-438 done; **sitewide copy audit = TASK-439 done** (residuals → TASK-440). Guided equipment kits removed → TASK-441–443; L1 simplify → TASK-446; equipment chrome/cards/terms → **TASK-447**. Vision §3.1 selection grammar updated 2026-07-15. Stable expand toggles → **TASK-445 done**.
+**Agent rules:** Skip `blocked` tasks and any task with `assignee:` set to a human (e.g. TASK-353, **TASK-414**, **TASK-423**). Skip human-only tasks (TASK-353 → `DEVELOPER_TASK_QUEUE.md` DEV-001). Pick highest-priority `not-started` or continue `partial`. **Do not start TASK-408–413** until TASK-414 spec is `done` (owner approval). **Choice-card deep-dive:** TASK-432–436 done. Global GridListRow = TASK-437 done. Copy guide = TASK-438 done; **sitewide copy audit = TASK-439 done** (residuals → TASK-440). Guided equipment kits removed → TASK-441–443; L1 simplify → TASK-446; equipment chrome/cards/terms → **TASK-447**. Vision §3.1 selection grammar updated 2026-07-15. Stable expand toggles → **TASK-445 done**. Guided detail Select + jump-vs-Back → **TASK-448**. Retain picks / skills L2 / secondary ability pill → **TASK-451**. Guided mobile AbilityScoreGrid → **TASK-452 done**; footer hints → **TASK-453 done**.
 
 ---
+
+- id: TASK-452
+  title: AbilityScoreGrid — mobile labels, Archetype Ability pill, edit layout
+  created_at: 2026-07-15
+  created_by: agent
+  priority: high
+  status: done
+  implemented_by: agent
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T035
+      - DEV-V-013-T036
+      - DEV-V-013-T037
+  developer_test_plan: |
+    DEV-V-013-T035 short ability labels + no pill spill at ~360px; T036 edit steppers fit;
+    T037 path change resets ability scores.
+  related_files:
+    - src/components/shared/ability-score-grid.tsx
+    - src/components/guided-creator/steps/abilities-step.tsx
+    - src/components/guided-creator/guided-abilities-customize-panel.tsx
+    - src/components/guided-creator/guided-reveal-summary.tsx
+    - src/components/guided-creator/steps/path-step.tsx
+    - src/components/guided-creator/guided-entity-detail-modal.tsx
+    - src/components/creator/ability-score-editor.tsx
+  description: |
+    Owner mobile feedback + guided-creator audit: on ~360px, Intelligence (longest full name)
+    is crammed in AbilityScoreGrid 3-col tiles (`grid-cols-3`, full `info.name` + tracking-wider,
+    unused shortName INT). Non-hybrid path highlight pill uses whitespace-nowrap "Archetype Ability"
+    which spills outside the tile. Customize/edit mode packs 44px ± steppers into the same ~75px
+    cells. Same grid is reused on abilities display, customize, and reveal summary — fix once in
+    AbilityScoreGrid (do not fork guided layouts).
+  acceptance_criteria:
+    - At ~360px width, all six ability labels fit their tiles without overflow or ugliness
+      (prefer shortName below sm, or wrap/smaller type; Charisma must also fit).
+    - Archetype Ability / Secondary Ability / Power / Martial pills do not spill into neighbors
+      (shorter copy, wrap, or truncate with accessible name; hybrid short labels remain OK).
+    - Edit mode at ~360px: ± controls remain ≥44px and do not collide (stack, 2-col, or list layout
+      below sm — not forced into 3-col with horizontal 44px steppers).
+    - Reveal summary and abilities step both look correct after the shared fix.
+    - npm run build passes; add BUILD_VALIDATION checks under DEV-V-013 (or sheet suite if shared).
+  evidence: |
+    Display: shortName below sm + tile aria-label. Pills: wrap (no whitespace-nowrap), max-w-full,
+    title/aria-label Secondary Recommended Ability; primary-subtle-fg contrast.
+    Edit: 1/2/3/6 col breakpoints + horizontal row tiles on phone.
+    Compliance extras: path change resets abilities; detail InfoTippy size=icon; restored
+    resolveDistinctSecondaryAbility export.
+  notes: |
+    Audit + compliance pass 2026-07-15. Follow-up footer hints = TASK-453 (open).
+
+- id: TASK-453
+  title: Guided creator — mobile completion hints + residual density polish
+  created_at: 2026-07-15
+  created_by: agent
+  priority: medium
+  status: done
+  implemented_by: agent
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T038
+  developer_test_plan: |
+    DEV-V-013-T038 — completion hints visible above Back/Continue at ~360px; mid-footer on sm+.
+  related_files:
+    - src/components/guided-creator/guided-step-footer.tsx
+    - src/components/guided-creator/guided-step-layout.tsx
+    - src/components/guided-creator/steps/skills-step.tsx
+    - src/components/guided-creator/steps/ancestry-step.tsx
+    - src/components/guided-creator/steps/archetype-feats-step.tsx
+    - src/components/guided-creator/steps/loadout-step.tsx
+    - src/components/guided-creator/steps/character-feat-step.tsx
+    - src/components/guided-creator/guided-skills-panel.tsx
+    - src/components/guided-creator/steps/abilities-step.tsx
+  description: |
+    From guided-creator mobile audit (after TASK-452): GuidedStepFooter hides completionHint below
+    sm (`hidden sm:flex`), so phones lose points-left / selection-count / progress that skills,
+    ancestry, feats, and loadout put in the footer. Also residual Low/Med density notes: dense skill
+    rows with long path chips, nested ability-card padding if still tight after 452, equipment fact
+    chip density, species vitals 2-col wrap. Prefer surfacing hints in-step on mobile or adapting
+    the footer so progress is visible without crowding Back/Continue.
+  acceptance_criteria:
+    - On viewports < sm, users still see relevant completion/progress (points left, pick counts,
+      etc.) either in the footer or as an in-step banner/status — not silent.
+    - Skills/ancestry/feats/loadout verified at ~360px: progress visible; no new horizontal overflow.
+    - Optional residual density polish from audit notes only if still painful after TASK-452.
+    - npm run build; BUILD_VALIDATION entries for footer/in-step hints on mobile.
+  evidence: |
+    GuidedStepFooter: single completionHint mount; phone stacks via flex order, sm+ mid-bar;
+    aria-live=polite. GuidedStepLayout pb-32 when hint present. Character feat N/1 hint.
+    Light density: abilities card p-4 sm:p-5; path skill chip max-w truncate. Skills PointStatus
+    already in-step.
+  notes: |
+    Owner UX choice: stack above Back/Continue. Sanity 2026-07-15 fixed dual-mount of same React node.
+
+- id: TASK-451
+  title: Guided creator — retain picks, skills L2 browse, secondary ability pill
+  created_at: 2026-07-15
+  created_by: agent
+  priority: high
+  status: done
+  implemented_by: agent
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T010
+      - DEV-V-013-T032
+      - DEV-V-013-T033
+      - DEV-V-013-T034
+  developer_test_plan: |
+    DEV-V-013-T032 retain picks on Back; T033 Browse all Skills below recommendations;
+    T034 Secondary Ability pill; T010 browse modal still works from new placement.
+  related_files:
+    - src/components/guided-creator/steps/path-step.tsx
+    - src/components/guided-creator/steps/ancestry-step.tsx
+    - src/components/guided-creator/steps/abilities-step.tsx
+    - src/components/guided-creator/steps/skills-step.tsx
+    - src/components/guided-creator/guided-skills-panel.tsx
+    - src/components/shared/ability-score-grid.tsx
+    - src/components/creator/ability-score-editor.tsx
+    - src/components/guided-creator/guided-abilities-customize-panel.tsx
+    - src/components/guided-creator/guided-reveal-summary.tsx
+  description: |
+    Owner feedback: (1) going back must not forget traits/feats/skills/etc.;
+    clear only when an upstream choice invalidates them (e.g. new path/species);
+    (2) Skills Browse all Skills is Layer 2 below recommended cards, not attached to the list;
+    (3) Secondary Ability gets a clear grid pill like Archetype Ability.
+  acceptance_criteria:
+    - Back / chapter navigation preserves ancestry, skills, feats, abilities unless path or species changes.
+    - Changing path clears dependent skills/feats/loadout/powers; same-path re-select keeps them.
+    - Skills: recommended cards then GuidedLayerNav Browse all Skills (not footer of skill list).
+    - Abilities grid shows Secondary Ability pill when path has a distinct secondary_ability.
+  evidence: |
+    Ancestry trait-1 re-select preserves trait-2; abilities effect skips overwrite when mode recommended/custom;
+    path change invalidates downstream + resets ability scores; skills L2 via GuidedLayerNav;
+    AbilityScoreGrid secondaryAbility + resolveDistinctSecondaryAbility (abilities step + reveal).
+  notes: |
+    Owner 2026-07-15 guided creator feedback; logged in ALL_FEEDBACK_CLEAN.md.
+    Mobile pill overflow / AbilityScoreGrid density = TASK-452 (done); footer hints = TASK-453 (done).
+    Audit 2026-07-15: restored corrupted ALL_FEEDBACK encoding; subtle-fg secondary pill token.
+
+- id: TASK-448
+  title: Guided creator — detail Select/Close + chapter-jump first screen
+  created_at: 2026-07-15
+  created_by: agent
+  priority: high
+  status: done
+  implemented_by: agent
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T027
+      - DEV-V-013-T028
+      - DEV-V-013-T029
+      - DEV-V-013-T030
+      - DEV-V-013-T031
+  developer_test_plan: |
+    DEV-V-013-T027/T028 Close|Select on species and path More details; T029 Foundation rail → Path;
+    T030 Ancestry rail → species overview; T031 footer Back stays sequential.
+  related_files:
+    - src/components/guided-creator/guided-entity-detail-modal.tsx
+    - src/components/guided-creator/guided-species-detail-modal.tsx
+    - src/components/guided-creator/guided-path-detail-modal.tsx
+    - src/components/guided-creator/steps/path-step.tsx
+    - src/components/guided-creator/steps/species-step.tsx
+    - src/components/guided-creator/steps/ancestry-step.tsx
+    - src/components/guided-creator/steps/loadout-step.tsx
+    - src/stores/guided-creator-store.ts
+    - src/lib/constants/copy/guided-creator-copy.ts
+  description: |
+    Owner feedback: species/path More details footers Close (left) + Select (right);
+    chapter rail jumps to first sub-screen of target; footer Back stays sequential.
+  acceptance_criteria:
+    - Species and path detail modals show Close left, Select right; Select applies entity and closes.
+    - Chapter rail to Foundation lands on path (not species).
+    - Chapter rail to Ancestry lands on species overview (not mid flaw/trait).
+    - Footer Back from next chapter still lands on last sequential ancestry/equipment screen.
+  evidence: |
+    GuidedEntityDetailModal onSelect footer; store navigationIntent first|sequential + entryNonce;
+    ancestry/loadout apply first-screen landing on jump.
+  notes: |
+    Owner 2026-07-15 guided creator feedback; implemented directly.
+    Audit 2026-07-15: REALMS §3.1 updated (More details open ≠ select; footer Select OK);
+    Select closes via modal onClose; T023 aligned after phase-strip removal (TASK-447).
 
 - id: TASK-447
   title: Guided equipment — drop phase bar, PointStatus Currency, card chips + cost fix
@@ -304,8 +487,9 @@
     guided-entity-detail-shell helpers; DEV-V-013-T016 tightened.
   description: |
     Owner feedback 2026-07-15 (“Layer 2 Cards”): progressive disclosure on choice cards needs an
-    explicit path from Layer 1 card → read-only information modal for that entity — opened only via
-    a “More details” control, never by selecting the card. Inline Read more / expandedExtra stay as
+    explicit path from Layer 1 card → information modal for that entity — opened only via a
+    “More details” control, never by selecting the card. Opening More details must not select;
+    footer Select on path/species (TASK-448) is a later add. Inline See more / expandedExtra stay as
     light in-card disclosure.
 
     IMPORTANT naming (document in REALMS + AGENT_GUIDE):

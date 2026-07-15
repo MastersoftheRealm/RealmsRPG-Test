@@ -1,11 +1,12 @@
 /**
  * GuidedSkillsPanel — Layer 1 skill allocation for the guided creator.
  * Simplified rows: name + source chip, bonus ±, X remove on right, tap to expand description.
+ * Layer 2 browse lives in the parent step (below recommended skills), not on this list.
  */
 
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState } from 'react';
 import { X, ChevronDown } from 'lucide-react';
 import { cn, formatBonus } from '@/lib/utils';
 import { useCodexSkills, useGameRules, type Skill } from '@/hooks';
@@ -18,9 +19,8 @@ import {
   getSkillValueIncreaseCost,
   resolveSkillAllocationRules,
 } from '@/lib/game/skill-allocation';
-import type { AddSkillModalSkillBadge } from '@/components/shared/add-skill-modal';
-import { AddSkillModal, PointStatus } from '@/components/shared';
-import { Button, DescriptorChip, IconButton, Spinner } from '@/components/ui';
+import { PointStatus } from '@/components/shared';
+import { DescriptorChip, IconButton, Spinner } from '@/components/ui';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import type { Abilities } from '@/types';
 
@@ -35,10 +35,6 @@ export interface GuidedSkillsPanelProps {
   totalPoints: number;
   spentPoints: number;
   onAllocationsChange: (allocations: Record<string, number>) => void;
-  /** Descriptor chips for recommended skills in browse-all modal (Layer 2). */
-  browseSkillBadgesById?: Record<string, AddSkillModalSkillBadge[]>;
-  /** Skill ids to pin at top of browse-all modal. */
-  browseRecommendedSkillIds?: string[];
   className?: string;
 }
 
@@ -97,7 +93,14 @@ function GuidedSkillRow({
                 <DescriptorChip variant="descriptor" size="sm">Species</DescriptorChip>
               )}
               {isPath && pathSourceLabel && (
-                <DescriptorChip variant="primary" size="sm">{pathSourceLabel}</DescriptorChip>
+                <DescriptorChip
+                  variant="primary"
+                  size="sm"
+                  className="max-w-[9rem] truncate"
+                  title={pathSourceLabel}
+                >
+                  {pathSourceLabel}
+                </DescriptorChip>
               )}
             </div>
           </div>
@@ -186,19 +189,13 @@ export function GuidedSkillsPanel({
   totalPoints,
   spentPoints,
   onAllocationsChange,
-  browseSkillBadgesById,
-  browseRecommendedSkillIds,
   className,
 }: GuidedSkillsPanelProps) {
   const { data: allSkills = [], isLoading } = useCodexSkills();
   const { rules } = useGameRules();
   const skillRules = resolveSkillAllocationRules(rules);
-  const [addSkillModalOpen, setAddSkillModalOpen] = useState(false);
 
   const remainingPoints = totalPoints - spentPoints;
-  const maxAddSkillSelections = Math.floor(
-    remainingPoints / skillRules.gainProficiencyCost
-  );
 
   const visibleSkillIds = useMemo(() => {
     const ids = new Set<string>();
@@ -226,15 +223,6 @@ export function GuidedSkillsPanel({
     });
   }, [allSkills, visibleSkillIds, speciesSkillIds, pathSkillIds]);
 
-  const existingSkillNames = useMemo(
-    () =>
-      allSkills
-        .filter((s) => visibleSkillIds.has(String(s.id)))
-        .map((s) => s.name)
-        .filter((n): n is string => Boolean(n)),
-    [allSkills, visibleSkillIds]
-  );
-
   const handleRemove = useCallback(
     (skillId: string) => {
       if (speciesSkillIds.has(skillId)) return;
@@ -261,19 +249,6 @@ export function GuidedSkillsPanel({
       }
     },
     [allocations, allSkills, remainingPoints, onAllocationsChange, skillRules]
-  );
-
-  const handleAddSkills = useCallback(
-    (skills: Skill[]) => {
-      const next = { ...allocations };
-      skills.forEach((s) => {
-        const key = String(s.id);
-        if (!(key in next)) next[key] = 0;
-      });
-      onAllocationsChange(next);
-      setAddSkillModalOpen(false);
-    },
-    [allocations, onAllocationsChange]
   );
 
   const rowItems = useMemo((): GuidedSkillRowItem[] => {
@@ -364,31 +339,7 @@ export function GuidedSkillsPanel({
             })}
           </ul>
         )}
-
-        <div className="border-t border-border-light px-4 py-3 flex justify-center">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => setAddSkillModalOpen(true)}
-            className="min-h-11 font-nunito text-primary-link-fg hover:text-primary-fg-hover"
-          >
-            {panelCopy.browseAll}
-          </Button>
-        </div>
       </div>
-
-      {addSkillModalOpen ? (
-        <AddSkillModal
-          isOpen
-          onClose={() => setAddSkillModalOpen(false)}
-          existingSkillNames={existingSkillNames}
-          onAdd={handleAddSkills}
-          skillBadgesById={browseSkillBadgesById}
-          recommendedSkillIds={browseRecommendedSkillIds}
-          maxSelections={maxAddSkillSelections}
-          selectionLimitMessage={panelCopy.browseOverLimit(maxAddSkillSelections)}
-        />
-      ) : null}
     </div>
   );
 }

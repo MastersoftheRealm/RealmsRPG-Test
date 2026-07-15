@@ -2,7 +2,8 @@
  * Collapsible Section
  * ===================
  * Expandable card section for creator optional/primary blocks.
- * Expand control is a dedicated <button>; rightSlot/Remove sit outside it (no nested interactives).
+ * Expand control is a dedicated <button> (full-header hit target via overlay).
+ * titleAddon / rightSlot / Remove sit above it with pointer-events (no nested interactives).
  * Header stays put on expand (stable expand toggle — content opens below).
  */
 
@@ -24,6 +25,11 @@ export interface CollapsibleSectionProps {
   itemCount?: number;
   points?: { spent: number; total: number };
   icon?: ReactNode;
+  /**
+   * Inline content immediately after the title (e.g. compact InfoTippy).
+   * Rendered outside the expand control so it stays interactive without nesting.
+   */
+  titleAddon?: ReactNode;
   /** Actions next to the expand control (not nested inside it) */
   rightSlot?: ReactNode;
   children: ReactNode;
@@ -46,6 +52,7 @@ export function CollapsibleSection({
   itemCount,
   points,
   icon,
+  titleAddon,
   rightSlot,
   children,
   className,
@@ -57,6 +64,7 @@ export function CollapsibleSection({
   const metaText = isExpanded
     ? subtitle?.trim() || ''
     : (collapsedSummary?.trim() || subtitle?.trim() || '');
+  const hasTrailingActions = Boolean(rightSlot || optional);
 
   if (optional && !enabled) {
     return (
@@ -97,18 +105,22 @@ export function CollapsibleSection({
 
   return (
     <Card className={cn('overflow-hidden p-0', className)}>
-      <div className="p-4 flex items-start gap-2">
+      <div className="relative p-4">
         <button
           type="button"
           onClick={() => setIsExpanded((prev) => !prev)}
-          className="min-h-[44px] min-w-0 flex-1 flex items-center gap-3 hover:bg-surface-alt -m-2 p-2 rounded-lg transition-colors text-left"
+          className="absolute inset-0 z-0 rounded-lg hover:bg-surface-alt/80 transition-colors"
           aria-expanded={isExpanded}
           aria-label={isExpanded ? `Collapse ${title}` : `Expand ${title}`}
-        >
-          {icon && <span className="text-xl flex-shrink-0 mt-0.5">{icon}</span>}
+        />
+        <div className="relative z-10 flex items-center gap-2 pointer-events-none">
+          {icon && <span className="text-xl flex-shrink-0">{icon}</span>}
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <HeadingTag className="font-bold text-primary-fg">{title}</HeadingTag>
+              {titleAddon ? (
+                <span className="inline-flex items-center pointer-events-auto">{titleAddon}</span>
+              ) : null}
               {points && (
                 <span
                   className={cn(
@@ -133,28 +145,32 @@ export function CollapsibleSection({
             ) : null}
           </div>
           <span
-            className="flex-shrink-0 mt-0.5 text-text-muted dark:text-text-secondary"
+            className="flex-shrink-0 text-text-muted dark:text-text-secondary"
             aria-hidden
           >
             {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </span>
-        </button>
-
-        {(rightSlot || optional) && (
-          <div className="flex items-center gap-2 flex-shrink-0 self-stretch min-h-[44px]">
-            {rightSlot}
-            {optional && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onEnabledChange?.(false)}
-                className="min-h-[44px] text-danger-fg hover:bg-danger-light dark:hover:bg-danger-900/20"
-              >
-                Remove
-              </Button>
-            )}
-          </div>
-        )}
+          {hasTrailingActions ? (
+            <div
+              className={cn(
+                'flex items-center gap-2 flex-shrink-0 pointer-events-auto',
+                optional ? 'self-stretch min-h-[44px]' : 'self-center'
+              )}
+            >
+              {rightSlot}
+              {optional && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onEnabledChange?.(false)}
+                  className="min-h-[44px] text-danger-fg hover:bg-danger-light dark:hover:bg-danger-900/20"
+                >
+                  Remove
+                </Button>
+              )}
+            </div>
+          ) : null}
+        </div>
       </div>
 
       {isExpanded && <div className="p-4 pt-0">{children}</div>}

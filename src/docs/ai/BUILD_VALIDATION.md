@@ -1070,7 +1070,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 ---
 
-## DEV-V-013 — Guided Simple character creator (TASK-394–403)
+## DEV-V-013 — Guided Simple character creator (TASK-394–403+)
 
 **Category:** End-to-end guided creator funnel — entry chooser, chapters, save.  
 **Prerequisite:** Run **DEV-004** (`sql/guided-creator-schema-seed.sql`) so starter species and Berserker loadouts/abilities exist.
@@ -1134,7 +1134,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 — Guided Simple character creator |
-| **Related task** | TASK-399, TASK-422, TASK-424, TASK-442, TASK-443, TASK-446 |
+| **Related task** | TASK-399, TASK-422, TASK-424, TASK-442, TASK-443, TASK-446, TASK-447 |
 | **Where** | Guided creator with Berserker (id=1) |
 | **Needs** | DEV-004 seed applied |
 
@@ -1242,13 +1242,13 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Steps**
 1. Reach the optional flaw pick after characteristic.
-2. Confirm **No Flaw** appears as a card in the same grid as Flaw options (not a small button below).
-3. Select Skip; confirm selected check; click Next pick.
+2. Confirm **No Flaw** appears as a **peer** card in the same 2-column grid as Flaw options (same width as one Flaw card — not a full-row span, not a small button below).
+3. Select No Flaw; confirm selected check; click Next pick.
 4. Confirm flow advances to Abilities (no bonus ancestry trait step).
 
 **Expected**
-- Skip uses GuidedChoiceCard styling (title + description) in the compact choice grid.
-- Selecting Skip keeps the same card height as before selection (action-row slot stays reserved; does not shrink).
+- Skip uses GuidedChoiceCard styling (title + description) in the compact choice grid at the same card footprint as other options.
+- Selecting Skip keeps density `cardCollapsed` min-height (does not shrink to a stub); empty disclosure action-row is not required once selected.
 - Selecting Skip then Next pick completes ancestry without the bonus trait pick.
 - Optional: Next pick with nothing selected still declines (existing footer skip path).
 
@@ -1259,18 +1259,20 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 — Guided Simple character creator |
-| **Related task** | TASK-427 |
-| **Where** | Guided creator → Skills → Browse all skills |
+| **Related task** | TASK-427, TASK-451 |
+| **Where** | Guided creator → Skills → **Browse all Skills** (below recommended Skills, not on the skill list card) |
 | **Needs** | Path + species chosen; skill points fully spent |
 
 **Steps**
 1. Reach Skills; spend all skill points (path/species defaults often do this).
-2. Click **Browse all skills**.
-3. Expand a few skill rows and read descriptions; tap + to select one or more skills.
-4. Confirm the warning banner and that **Add Selected** stays disabled.
-5. Close modal; decrease or remove a skill to free a point; reopen browse and add a skill successfully.
+2. Confirm **Browse all Skills** sits below any recommended/suggested skill cards (GuidedLayerNav), not attached to the allocated skill list.
+3. Click **Browse all Skills**.
+4. Expand a few skill rows and read descriptions; tap + to select one or more skills.
+5. Confirm the warning banner and that **Add Selected** stays disabled.
+6. Close modal; decrease or remove a skill to free a point; reopen browse and add a skill successfully.
 
 **Expected**
+- Browse control is Layer 2 under recommendations (not a primary CTA on the skill list).
 - Rows stay full opacity (not greyed out) with 0 points remaining.
 - Selection is allowed; warning explains needing to free skill points.
 - Add Selected disabled while over budget; works after freeing a point.
@@ -1341,7 +1343,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Steps**
 1. Open Loadout; confirm no phase progress strip (footer may still show 1 / N); no Quick kits.
-2. Select a weapon card; confirm description + named property chips; hover a property chip for its tip; expand **More details** for mechanic facts (handedness, damage, …).
+2. Select a weapon card; confirm description + named property chips; hover a property chip for its tip; expand **See more…** for mechanic facts (handedness, damage, …).
 3. Click **Continue to armor →**. On Armor, click **See more options** and confirm Browse armor modal; dismiss.
 4. Click **Continue to gear →**; confirm Adventuring gear as the page title (only one page title), **Currency** PointStatus, and **Add all recommended equipment**.
 5. Click **See more options**; confirm Browse adventuring gear modal.
@@ -1440,7 +1442,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 5. Close modal; select the species via the card; reopen **More details** and confirm selection stays.
 
 **Expected**
-- Deep-dive is read-only (does not pick traits or set size).
+- Catalogs remain read-only (do not pick traits or set size). Footer **Select** applies the species (see **T027**); browsing alone still does not select.
 - Empty catalogs omitted; no “Trait not found” placeholder rows.
 - `fullScreenOnMobile`; Close returns focus usable on the page.
 
@@ -1467,7 +1469,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 7. Hybrid path: Show hybrids → **More details** on a hybrid → confirm powers section (not techniques) when powered-martial; selection independence still holds.
 
 **Expected**
-- Deep-dive is read-only (does not select the path or apply equipment).
+- Catalogs remain read-only (do not apply equipment). Footer **Select** applies the path (see **T028**); browsing alone still does not select.
 - Empty catalogs omitted; unarmed prowess appears only when flagged.
 - `fullScreenOnMobile`; Close returns focus usable on the page.
 
@@ -1570,8 +1572,8 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 1. Open Loadout for a path without armor options (and separately one without weapons if available).
 
 **Expected**
-- Progress chips only list visible phases (e.g. **1. Weapons / 2. Gear** or gear-only). No phantom **3. Gear** when armor was never shown.
-- Footer fraction matches visible phase count.
+- No top phase progress strip (TASK-447). Phases advance only via Next/Back.
+- Footer fraction (e.g. **1 / 2**) matches visible phase count only — no phantom third phase when armor was never shown.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -1636,6 +1638,259 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 **Expected**
 - Matches abilities/skills resource chrome; full **Currency** wording in L1/L2; ancestry-like one title per screen.
 
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T027 — Species More details footer Select
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-448 |
+| **Where** | Guided creator → Species → **More details** |
+| **Needs** | DEV-004 seed (starter species) |
+
+**Steps**
+1. Complete Path; on Species expand a card and open **More details** on an unselected species.
+2. Confirm the modal footer shows **Close** on the left and **Select** on the right.
+3. Click **Close**; confirm the modal dismisses and the species remains unselected.
+4. Reopen **More details** on the same (or another) unselected species; click **Select**.
+
+**Expected**
+- Footer layout is Close | Select (not Close-only right-aligned).
+- **Select** applies that species (selected ring / preview updates) and closes the modal.
+- Catalog browsing alone still does not select.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T028 — Path More details footer Select
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-448 |
+| **Where** | Guided creator → Path → **More details** |
+| **Needs** | Codex archetypes loaded |
+
+**Steps**
+1. On Path, expand a card and open **More details** on an unselected path.
+2. Confirm the modal footer shows **Close** on the left and **Select** on the right.
+3. Click **Close**; confirm the modal dismisses and the path remains unselected.
+4. Reopen **More details**; click **Select**.
+
+**Expected**
+- Footer layout is Close | Select.
+- **Select** applies that path (selected ring / preview updates) and closes the modal.
+- Catalog browsing alone still does not select or apply equipment.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T029 — Chapter rail Foundation lands on Path
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-448 |
+| **Where** | `/characters/new/guided` chapter rail |
+| **Needs** | Enough progress to open later chapters (complete Path + Species at minimum) |
+
+**Steps**
+1. Select a path and continue to Species (or further).
+2. Click **Foundation** on the chapter rail.
+
+**Expected**
+- Lands on the Path step (**Choose your path**), not Species.
+- Active chapter highlight is Foundation.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T030 — Chapter rail Ancestry lands on species overview
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-448 |
+| **Where** | Guided creator → Ancestry micro-flow |
+| **Needs** | Species selected; ancestry picks available |
+
+**Steps**
+1. Complete Foundation; enter Ancestry and advance past the species overview into a later pick (flaw, ancestry trait, or characteristic).
+2. Optionally continue into Abilities so Ancestry is complete.
+3. Click **Ancestry** on the chapter rail.
+
+**Expected**
+- Lands on the species overview (**Your {Species} heritage** / overview panel), not the mid-flow flaw or trait pick.
+- Does **not** reopen the last sequential ancestry screen.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T031 — Footer Back stays sequential (not first-of-step)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-448 |
+| **Where** | Guided creator footer **Back** (vs chapter rail) |
+| **Needs** | Same setup as T030 — deep into Ancestry, then Abilities |
+
+**Steps**
+1. On Ancestry, advance to a late pick (e.g. flaw or second ancestry trait) so you are past the species overview.
+2. Continue into **Abilities**.
+3. Click footer **Back** (do not use the chapter rail).
+
+**Expected**
+- Returns to the last Ancestry screen you were on (that late pick), **not** the species overview first screen.
+- Contrast with T030: rail jump = first-of-step; footer Back = sequential history.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T032 — Retain guided picks when going back
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-451 |
+| **Where** | Guided creator — Ancestry / Abilities / Skills / Feats |
+| **Needs** | Progress through Ancestry (with flaw + second trait if available), Abilities, Skills, Archetype Feat |
+
+**Steps**
+1. Complete Foundation; on Ancestry pick traits/characteristic/flaw (and second ancestry trait if flaw taken).
+2. Continue through Abilities (optionally customize), Skills (spend points / add a suggestion), and pick an Archetype Feat.
+3. Use footer **Back** several times to return through Feats → Skills → Abilities → Ancestry late pick.
+4. Confirm each screen still shows the same selections.
+5. Optionally jump via chapter rail and confirm draft picks still match (landing screen may be first-of-step per T030, but values remain).
+6. Return to Path and re-select the **same** path; confirm downstream picks remain. Then select a **different** path; confirm skills/feats/loadout/powers cleared.
+
+**Expected**
+- Going back does not forget traits, abilities mode/values, skills, or feats.
+- Same path re-select keeps dependents; new path invalidates skills/feats/equipment/powers and resets ability scores/`abilitiesMode` (Abilities step then soft-applies the new path recommended array).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T033 — Skills Browse all below recommended (L1/L2)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-451 |
+| **Where** | Guided creator → Skills |
+| **Needs** | Path with skill recommendations; some Skill Points remaining so suggestions appear when possible |
+
+**Steps**
+1. Open Skills.
+2. Note order: allocated skill list (PointStatus + rows) → recommended/suggested skill cards (if any) → **Browse all Skills**.
+3. Confirm Browse is not a footer inside the skill list card.
+4. Open Browse; add or cancel; confirm Layer 2 modal still works.
+
+**Expected**
+- Catalog browse is below curated recommendations (REALMS §3.1 Layer 2), using GuidedLayerNav styling consistent with other guided steps.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T034 — Secondary Ability pill on abilities grid
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-451 |
+| **Where** | Guided creator → Abilities (and optionally Your Hero summary) |
+| **Needs** | A Power path with a distinct `secondary_ability` (not equal to Archetype Ability) |
+
+**Steps**
+1. Choose a Power path that lists a Secondary Recommended Ability in Path **More details**.
+2. Continue to Abilities.
+3. On the ability grid, confirm the archetype ability tile has an **Archetype Ability** pill and the secondary ability tile has a **Secondary Ability** pill (similar clear pill treatment).
+4. Optionally Customize Abilities and confirm both pills remain; check Your Hero summary grid if reached.
+
+**Expected**
+- Secondary Ability pill visible and distinct when path secondary ≠ archetype ability.
+- Hybrid Power/Martial paths still use Power / Martial pills; no duplicate Secondary when it equals one of those.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T035 — AbilityScoreGrid mobile labels + path pills
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-452 |
+| **Where** | Guided creator → Abilities (and Your Hero summary grid) |
+| **Needs** | DevTools ~360px width; path with Archetype Ability (+ Secondary if available) |
+
+**Steps**
+1. Resize viewport to ~360px width.
+2. On Abilities recommended grid, confirm each tile shows a short ability label (e.g. **INT**, not cramped **INTELLIGENCE**).
+3. Confirm **Archetype Ability** (and **Secondary Ability** if present) pills wrap within the tile and do not spill into neighbor tiles.
+4. Continue to Your Hero and confirm the same grid behaves.
+
+**Expected**
+- No overflow/spill from labels or pills at ~360px.
+- At `sm+`, full ability names still appear.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T036 — AbilityScoreGrid customize edit layout on mobile
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-452 |
+| **Where** | Guided creator → Abilities → Customize |
+| **Needs** | DevTools ~360px width |
+
+**Steps**
+1. On Abilities, open Customize.
+2. Confirm ability rows use a roomier layout (not 3 cramped columns with colliding ±).
+3. Confirm Decrement/Increment targets are ≥44px and usable without zoom.
+
+**Expected**
+- Steppers do not overflow or overlap neighboring ability values.
+- Point-buy remains usable with recommended Back via LayerNav.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T037 — Path change resets ability scores
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-451, TASK-452 |
+| **Where** | Guided creator → Path → Abilities |
+| **Needs** | Two paths with different recommended ability arrays |
+
+**Steps**
+1. Pick Path A; continue to Abilities (recommended applied).
+2. Back to Path; pick Path B.
+3. Return to Abilities (or open character preview abilities).
+
+**Expected**
+- Abilities soft-default to Path B’s recommended array (not Path A leftovers).
+- Skills/feats/loadout still clear as on path change.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T038 — Mobile footer completion hints visible
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-453 |
+| **Where** | Guided creator sticky footer (ancestry picks, skills, feats, loadout, powers) |
+| **Needs** | DevTools ~360px width |
+
+**Steps**
+1. Resize to ~360px.
+2. Ancestry (mid pick): confirm footer shows `N / M picks` above Back/Continue.
+3. Skills: confirm points remaining / complete hint appears above actions (in addition to in-step PointStatus).
+4. Archetype feats: confirm `N / max` above actions.
+5. Equipment with multiple phases: confirm `N / M` phase hint above actions.
+6. Resize to `sm+`: confirm hint is centered between Back and Continue (not duplicated above).
+7. Character feat step: confirm `N / 1` appears the same way.
+
+**Expected**
+- Phone: completion progress is visible (stacked above actions); Back/Continue remain ≥44px and untangled.
+- Desktop/tablet `sm+`: single mid-footer hint; **one React mount** (not a hidden duplicate).
+- Content not covered by taller footer (`pb-32` on steps with hints).
+- Character feat shows `0 / 1` or `1 / 1` like archetype feats.
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
 ---

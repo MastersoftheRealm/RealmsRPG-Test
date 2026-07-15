@@ -1,6 +1,6 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-03-07
+Last updated: 2026-07-15
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -1923,3 +1923,56 @@ Notes
 - Feedback: Look for oversight, overcomplication, shared-use gaps, rule compliance; fix issues.
 - Expected: Replacement budgets reclaimable; L1 Currency gated; See more for in-card deepen; shared cost helpers; docs/tests match shipped UI.
 - Disposition: Fixed — L2 gear/TP cross-phase reclaim; L1 currency gates; disclosure labels; DRY cost; type filter parity; T025/spec/copy cleanup.
+
+**Raw Feedback Log — 2026-07-15 (No Flaw card too wide)**
+- Date: 2026-07-15
+- Context: Guided creator → Ancestry → Take a flaw? → No Flaw card
+- Priority: Medium
+- Feedback: No Flaw is a long card dimensionally; it doesn’t fit well with the other cards.
+- Expected: Peer card in the same grid footprint as Flaw options (no full-row span).
+- Disposition: Fixed — removed `sm:col-span-2` from ancestry No Flaw GuidedChoiceCard.
+
+**Raw Feedback Log — 2026-07-15 (GridListRow description duplicate on expand)**
+- Date: 2026-07-15
+- Context: GridListRow / guided creator DetailOptionList (and all expandable list rows)
+- Priority: Medium
+- Feedback: When description is the only thing visible in the non-expanded list item, expanding feels redundant — description still shows on the non-expanded header portion AND in the expanded panel.
+- Expected: Best practice from research (NN/g accordion, Carbon expandable tables, progressive disclosure): header keeps identity (name); expanded panel owns the full description. Do not show truncated teaser and full text at the same time.
+- Disposition: Implemented in GridListRow — while default expanded body shows `description`, hide `key: 'description'` teaser from desktop columns, mobile summary, and flex stats; description-only layouts span name across vacated tracks.
+
+**Raw Feedback Log — 2026-07-15 (Guided creator: detail Select/Close + step-nav landing)**
+- Date: 2026-07-15
+- Context: Guided creator → species / archetype path more-details; chapter rail vs Back
+- Priority: High
+- Feedback:
+  (1) In more-details for species and archetype path, bottom-right button should be **Select**, bottom-left **Close**, so users can select the entity they are viewing without exiting, scrolling, clicking the card, then Continue.
+  (2) When going back via the step navigator/progress, land on the **first** sub-step of that target step (abilities → Foundation = path selection, not species; equipment → Ancestry = species overview, not flaw/trait). Back button should stay sequential (last screen before).
+- Expected: Detail modals Close | Select; chapter rail / jump = first sub-screen; footer Back = sequential history.
+- Disposition: Implemented as **TASK-448** (done) — Close|Select on path/species detail; navigationIntent first vs sequential for chapter rail vs Back.
+
+**Raw Feedback Log — 2026-07-15 (Guided choice cards: space below info notices)**
+- Date: 2026-07-15
+- Context: Guided creator — feat (and other) choice cards with restriction info boxes
+- Priority: Medium
+- Feedback: Feat cards with info boxes have too much vertical space below the info box when expanded.
+- Expected: Expanded cards with restriction/uses notices should sit tight under the callout (no empty reserved disclosure row / body floor gap).
+- Disposition: Fixed in GuidedChoiceCard — drop empty action-row reservation when expanded with no controls; drop body min-height when expanded unless More details is shown; slightly tighter notice spacing. Applies to all guided notices (feats, traits, L2 browse).
+
+**Raw Feedback Log — 2026-07-15 (Guided creator mobile UX audit)**
+- Date: 2026-07-15
+- Context: Guided creator — all steps (mobile)
+- Priority: High
+- Feedback: Do an audit of mobile UX/UI on all parts of the guided creator. Specific issues: Intelligence is crammed in its box on mobile; archetype ability pill text spills over on the abilities page.
+- Expected: Full-pass mobile concerns logged; owner-reported AbilityScoreGrid issues root-caused and queued for fix; other medium/low findings filed.
+- Disposition: Audit only initially → **TASK-452 done** (AbilityScoreGrid mobile) + **TASK-453 done** (footer completion hints stack above actions on phone).
+
+**Raw Feedback Log — 2026-07-15 (Guided creator: retain choices, skills L2, secondary ability pill)**
+- Date: 2026-07-15
+- Context: Guided Creator
+- Priority: High
+- Feedback:
+  (1) Retain choices made while working through the creator so going back a step does not forget selections (traits, feats, skills, etc.).
+  (2) Skills screen: **Browse all Skills** should sit below recommended skills (L1/L2 pattern), not attached to the skill list itself (feels like a primary CTA).
+  (3) Abilities: secondary ability should have a clear pill like the Archetype Ability pill on the archetype ability tile.
+- Expected: Back/rail navigation preserves prior picks unless an upstream choice changes and invalidates them; Skills uses curated recommendations then Layer 2 browse; secondary ability has an analogous grid pill.
+- Disposition: Implemented as **TASK-451**. Audit follow-up: restored feedback log encoding; path change resets ability scores (not only mode); shared `resolveDistinctSecondaryAbility`; secondary pill uses `text-primary-subtle-fg`.

@@ -4,6 +4,7 @@ import {
   getPhaseL1Candidates,
 } from '@/lib/guided-creator/equipment-phase-candidates';
 import type { EligibleEquipmentRow } from '@/lib/guided-creator/equipment-eligibility';
+import type { AbilityName } from '@/types';
 import type { LibraryItem } from '@/types/library';
 
 describe('equipment-phase-candidates', () => {
@@ -55,8 +56,8 @@ describe('equipment-phase-candidates', () => {
 
   const rankCtx = {
     pathRecommendedIds: new Set(['w1']),
-    martAbil: 'strength' as string | null,
-    powAbil: null as string | null,
+    martAbil: 'strength' as AbilityName | null,
+    powAbil: null as AbilityName | null,
   };
 
   it('filters pool to weapon phase refs', () => {

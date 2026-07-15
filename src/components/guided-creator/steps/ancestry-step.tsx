@@ -78,11 +78,20 @@ function resolveInitialPhaseIndex(
 }
 
 export function AncestryStep() {
-  const { draft, updateDraft, prevSubStep, nextSubStep, completedSubSteps } = useGuidedCreatorStore();
+  const {
+    draft,
+    updateDraft,
+    prevSubStep,
+    nextSubStep,
+    completedSubSteps,
+    navigationIntent,
+    entryNonce,
+  } = useGuidedCreatorStore();
   const { data: allSpecies = [], isLoading: speciesLoading } = useMergedSpecies();
   const { data: allTraits = [], isLoading: traitsLoading } = useTraits();
   const [phaseIndex, setPhaseIndex] = useState(0);
   const phaseInitialized = useRef(false);
+  const lastEntryNonce = useRef<number | null>(null);
   const ancestryChapterComplete = completedSubSteps.includes('ancestry');
 
   const species = useMemo(
@@ -157,6 +166,7 @@ export function AncestryStep() {
 
   useEffect(() => {
     phaseInitialized.current = false;
+    lastEntryNonce.current = null;
     setPhaseIndex(0);
   }, [draft.speciesId]);
 
@@ -169,10 +179,24 @@ export function AncestryStep() {
   }, [species, draft.selectedSize, updateDraft]);
 
   useEffect(() => {
-    if (phaseInitialized.current || !species) return;
+    if (!species) return;
+
+    // Chapter rail / edit jump: always land on species overview.
+    if (navigationIntent === 'first') {
+      if (lastEntryNonce.current !== entryNonce) {
+        lastEntryNonce.current = entryNonce;
+        setPhaseIndex(0);
+        phaseInitialized.current = true;
+      }
+      return;
+    }
+
+    // Sequential Back/Continue (or first mount): resume progress / last screen.
+    if (lastEntryNonce.current === entryNonce && phaseInitialized.current) return;
+    lastEntryNonce.current = entryNonce;
     setPhaseIndex(resolveInitialPhaseIndex(tasks, draft, ancestryChapterComplete));
     phaseInitialized.current = true;
-  }, [tasks, draft, ancestryChapterComplete, species]);
+  }, [tasks, draft, ancestryChapterComplete, species, navigationIntent, entryNonce]);
 
   const isSelected = useCallback(
     (trait: Trait, task: PickTask | undefined = currentTask): boolean => {
@@ -222,9 +246,13 @@ export function AncestryStep() {
             });
           }
           break;
-        case 'ancestry-trait-1':
+        case 'ancestry-trait-1': {
+          // Re-selecting the same first trait must not wipe a second trait from a flaw.
+          const prev = draft.selectedAncestryTraitIds;
+          if (prev[0] === id) break;
           updateDraft({ selectedAncestryTraitIds: [id] });
           break;
+        }
         case 'characteristic':
           updateDraft({ selectedCharacteristicId: id });
           break;
@@ -400,7 +428,6 @@ export function AncestryStep() {
                 selected={skipFlawSelected}
                 onSelect={handleSkipFlaw}
                 selectAriaLabel={stepCopy.skipFlaw}
-                className="sm:col-span-2"
               />
             )}
           </div>
