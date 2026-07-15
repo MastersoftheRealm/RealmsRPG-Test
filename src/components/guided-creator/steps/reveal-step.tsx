@@ -1,5 +1,5 @@
 /**
- * Your Hero — reveal, identity, build summary, HP/EN, save.
+ * Your Hero — reveal, identity, build summary, Health/Energy, save.
  */
 
 'use client';

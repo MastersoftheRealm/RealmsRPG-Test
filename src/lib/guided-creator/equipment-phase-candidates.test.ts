@@ -4,12 +4,13 @@ import {
   getPhaseL1Candidates,
 } from '@/lib/guided-creator/equipment-phase-candidates';
 import type { EligibleEquipmentRow } from '@/lib/guided-creator/equipment-eligibility';
-import type { EquipmentEligibilityContext } from '@/lib/guided-creator/equipment-eligibility';
+import type { LibraryItem } from '@/types/library';
 
 describe('equipment-phase-candidates', () => {
   const officialItems = [
     {
       id: 'w1',
+      docId: 'w1',
       name: 'Battleaxe',
       type: 'weapon' as const,
       properties: [],
@@ -18,13 +19,14 @@ describe('equipment-phase-candidates', () => {
     },
     {
       id: 'a1',
+      docId: 'a1',
       name: 'Chain shirt',
       type: 'armor' as const,
       properties: [],
       rarity: 'common',
       costs: { totalTP: 3 },
     },
-  ];
+  ] as unknown as LibraryItem[];
 
   const catalog = new Map<string, EligibleEquipmentRow>([
     [
@@ -51,22 +53,10 @@ describe('equipment-phase-candidates', () => {
     ],
   ]);
 
-  const ctx: EquipmentEligibilityContext = {
-    phase: 'weapon',
-    abilities: {
-      strength: 3,
-      vitality: 2,
-      agility: 1,
-      acuity: 1,
-      intelligence: 0,
-      charisma: 0,
-    },
-    martAbil: 'strength',
-    powAbil: null,
-    archetypeType: 'martial',
+  const rankCtx = {
     pathRecommendedIds: new Set(['w1']),
-    selectedTpSpent: 0,
-    tpLimit: 30,
+    martAbil: 'strength' as string | null,
+    powAbil: null as string | null,
   };
 
   it('filters pool to weapon phase refs', () => {
@@ -78,9 +68,23 @@ describe('equipment-phase-candidates', () => {
     expect(weapons.map((p) => p.id)).toEqual(['w1']);
   });
 
-  it('returns ranked eligible L1 weapon candidates from path pool', () => {
+  it('returns path L1 weapon candidates without eligibility filtering', () => {
     const pool = [{ id: 'w1', quantity: 1 }];
-    const candidates = getPhaseL1Candidates(pool, 'weapon', catalog, ctx, officialItems, []);
+    const candidates = getPhaseL1Candidates(pool, 'weapon', catalog, rankCtx, officialItems, []);
+    expect(candidates.map((c) => c.id)).toEqual(['w1']);
+  });
+
+  it('keeps selected items visible even when not in the path pool', () => {
+    const pool: { id: string; quantity: number }[] = [];
+    const candidates = getPhaseL1Candidates(
+      pool,
+      'weapon',
+      catalog,
+      rankCtx,
+      officialItems,
+      [],
+      ['w1']
+    );
     expect(candidates.map((c) => c.id)).toEqual(['w1']);
   });
 });

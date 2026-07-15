@@ -45,7 +45,6 @@ function seedGuidedStorage(subStep: string, draft: Record<string, unknown>) {
         declinedPathSkillIds: [],
         archetypeFeatIds: [],
         characterFeatIds: [],
-        loadoutId: null,
         equipmentPhase: 'weapon',
         loadoutWeapons: [],
         loadoutArmor: [],
@@ -80,7 +79,7 @@ async function snap(page: import('@playwright/test').Page, name: string, fullPag
   });
 }
 
-test('guided loadout phased equipment audit (TASK-424 Phase 10)', async ({ page, context }) => {
+test('guided loadout phased equipment audit (TASK-442/443)', async ({ page, context }) => {
   await context.addInitScript(themeInit('light'), 'light');
 
   const storage = seedGuidedStorage('loadout', {
@@ -101,28 +100,23 @@ test('guided loadout phased equipment audit (TASK-424 Phase 10)', async ({ page,
   await page.goto('/characters/new/guided', { waitUntil: 'networkidle' });
   await page.getByRole('heading', { name: /your loadout/i }).waitFor({ timeout: 45_000 });
 
+  await expect(page.getByRole('heading', { name: 'Quick kits', level: 3 })).toHaveCount(0);
+
   const phaseGroup = page.getByRole('group', { name: /equipment steps/i });
   await expect(phaseGroup).toBeVisible({ timeout: 15_000 });
   await expect(phaseGroup.getByRole('button', { name: /1\.\s*Weapons/i })).toBeVisible();
   await expect(phaseGroup.getByRole('button', { name: /2\.\s*Armor/i })).toBeVisible();
   await expect(phaseGroup.getByRole('button', { name: /3\.\s*Gear/i })).toBeVisible();
 
+  await expect(page.getByText(/c remaining/i).first()).toBeVisible();
+
   await snap(page, '01-loadout-full-page');
-
-  await page.getByRole('heading', { name: 'Quick kits', level: 3 }).scrollIntoViewIfNeeded();
-  await snap(page, '02-quick-kits', false);
-
-  const swordKit = page.getByLabel(/Apply kit Sword|Selected kit Sword/i);
-  await expect(swordKit.first()).toBeVisible({ timeout: 15_000 });
-  await swordKit.first().click();
-  await page.waitForTimeout(400);
-  await snap(page, '03-sword-shield-selected');
 
   const battleaxeCard = page.getByLabel(/Select Battleaxe/i);
   if (await battleaxeCard.count()) {
     await battleaxeCard.first().click();
     await page.waitForTimeout(300);
-    await snap(page, '04-weapon-l1-selected', false);
+    await snap(page, '02-weapon-l1-selected', false);
   }
 
   await page.getByRole('button', { name: 'See more' }).click();
@@ -130,17 +124,17 @@ test('guided loadout phased equipment audit (TASK-424 Phase 10)', async ({ page,
     timeout: 15_000,
   });
   await page.waitForTimeout(400);
-  await snap(page, '06-l2-weapons', false);
+  await snap(page, '03-l2-weapons', false);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(300);
 
   await page.getByRole('button', { name: /Continue to armor/i }).click();
   await expect(page.getByRole('heading', { name: /^Armor$/i })).toBeVisible({ timeout: 15_000 });
-  await snap(page, '07-armor-phase');
+  await snap(page, '04-armor-phase');
 
   await page.getByRole('button', { name: 'See more' }).click();
   await page.getByRole('heading', { name: 'Browse armor', level: 2 }).waitFor({ timeout: 15_000 });
-  await snap(page, '08-l2-armor', false);
+  await snap(page, '05-l2-armor', false);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(300);
 
@@ -148,18 +142,19 @@ test('guided loadout phased equipment audit (TASK-424 Phase 10)', async ({ page,
   await expect(page.getByRole('heading', { name: /Adventuring gear/i })).toBeVisible({
     timeout: 15_000,
   });
-  await expect(page.getByText(/c remaining for gear/i)).toBeVisible();
-  await snap(page, '09-gear-phase');
+  await expect(page.getByRole('button', { name: /Add all recommended equipment/i })).toBeVisible();
+  await expect(page.getByText(/c remaining/i).first()).toBeVisible();
+  await snap(page, '06-gear-phase');
 
   await page.getByRole('button', { name: 'See more' }).click();
   await page.getByRole('heading', { name: 'Browse adventuring gear', level: 2 }).waitFor({
     timeout: 15_000,
   });
-  await snap(page, '10-l2-gear', false);
+  await snap(page, '07-l2-gear', false);
   await page.keyboard.press('Escape');
 
   await page.setViewportSize({ width: 360, height: 800 });
   await page.goto('/characters/new/guided', { waitUntil: 'networkidle' });
   await page.getByRole('heading', { name: /your loadout/i }).waitFor({ timeout: 45_000 });
-  await snap(page, '05-loadout-mobile');
+  await snap(page, '08-loadout-mobile');
 });

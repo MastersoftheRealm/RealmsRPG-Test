@@ -377,16 +377,18 @@ export function GuidedSkillsPanel({
         </div>
       </div>
 
-      <AddSkillModal
-        isOpen={addSkillModalOpen}
-        onClose={() => setAddSkillModalOpen(false)}
-        existingSkillNames={existingSkillNames}
-        onAdd={handleAddSkills}
-        skillBadgesById={browseSkillBadgesById}
-        recommendedSkillIds={browseRecommendedSkillIds}
-        maxSelections={maxAddSkillSelections}
-        selectionLimitMessage={panelCopy.browseOverLimit(maxAddSkillSelections)}
-      />
+      {addSkillModalOpen ? (
+        <AddSkillModal
+          isOpen
+          onClose={() => setAddSkillModalOpen(false)}
+          existingSkillNames={existingSkillNames}
+          onAdd={handleAddSkills}
+          skillBadgesById={browseSkillBadgesById}
+          recommendedSkillIds={browseRecommendedSkillIds}
+          maxSelections={maxAddSkillSelections}
+          selectionLimitMessage={panelCopy.browseOverLimit(maxAddSkillSelections)}
+        />
+      ) : null}
     </div>
   );
 }

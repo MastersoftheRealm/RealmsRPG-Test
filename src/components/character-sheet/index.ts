@@ -8,7 +8,11 @@ export { SheetHeader } from './sheet-header';
 export { AbilitiesSection } from './abilities-section';
 export { SkillsSection } from './skills-section';
 export { ArchetypeSection } from './archetype-section';
-export { LibrarySection } from './library-section';
+export {
+  LibrarySection,
+  resolveLibraryActiveTab,
+  LIBRARY_TAB_ORDER,
+} from './library-section';
 export { NotesTab } from './notes-tab';
 export { ProficienciesTab } from './proficiencies-tab';
 export { DiceRoller, type DieRoll } from './dice-roller';

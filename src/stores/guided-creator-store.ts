@@ -150,7 +150,6 @@ export interface GuidedDraft {
   characterFeatIds: string[];
 
   // Chapter 5 — Equipment / Powers / Techniques
-  loadoutId: string | null;
   /** In-step equipment wizard phase (TASK-424). */
   equipmentPhase: GuidedEquipmentPhase;
   /** Weapons + shields selected in loadout step. */
@@ -197,7 +196,6 @@ function createInitialDraft(): GuidedDraft {
     declinedPathSkillIds: [],
     archetypeFeatIds: [],
     characterFeatIds: [],
-    loadoutId: null,
     equipmentPhase: 'weapon',
     loadoutWeapons: [],
     loadoutArmor: [],

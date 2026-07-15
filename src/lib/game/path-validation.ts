@@ -64,7 +64,7 @@ export function validatePathDataForPublish(
   if (level1.notes && level1.notes.length > LAYER1_GOVERNANCE.maxWhyCopyLength * 4) {
     issues.push({
       severity: 'warning',
-      message: 'Level 1 notes are very long — keep path guidance concise for Layer 1.',
+      message: 'Level 1 notes are very long. Keep path guidance concise for Layer 1.',
     });
   }
 
@@ -86,7 +86,7 @@ function validateLoadoutTrainingPoints(
   if (!resolveTp || limit == null) {
     issues.push({
       severity: 'warning',
-      message: `${loadouts.length} loadout(s) authored — TP budget was not validated (missing item property data).`,
+      message: `${loadouts.length} loadout(s) authored. TP budget was not validated (missing item property data).`,
     });
     return issues;
   }

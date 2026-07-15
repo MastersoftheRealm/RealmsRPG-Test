@@ -26,12 +26,14 @@ import { trainingPointsForItemPropertyRef } from '@/lib/calculators/item-calc';
 import { metadataDescriptorChip } from '@/lib/chip/list-row-metadata';
 import type { ChipData } from '@/components/shared/grid-list-row';
 
-const EQUIPMENT_GRID_COLUMNS = '1.5fr 1fr 0.8fr 1fr 40px';
+const EQUIPMENT_GRID_COLUMNS = '1.3fr 0.9fr 0.65fr 0.75fr 1fr 0.7fr 40px';
 const EQUIPMENT_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'category', label: 'CATEGORY' },
   { key: 'cost', label: 'COST' },
   { key: 'rarity', label: 'RARITY' },
+  { key: 'damage', label: 'DAMAGE' },
+  { key: 'dr', label: 'DMG. RED.' },
   { key: '_actions', label: '', sortable: false as const },
 ];
 
@@ -77,13 +79,17 @@ function EquipmentCard({ item, propertiesDb = [] }: { item: Equipment; propertie
   if (propertyChips.length > 0) {
     detailSections.push({ label: 'Properties', chips: propertyChips, hideLabelIfSingle: true });
   }
-  const statsChips: ChipData[] = [];
-  if (item.damage) statsChips.push(metadataDescriptorChip(`Damage: ${formatDamageDisplay(item.damage)}`));
-  if (item.armor_value !== undefined) statsChips.push(metadataDescriptorChip(`Armor: ${item.armor_value}`));
-  if (item.weight !== undefined) statsChips.push(metadataDescriptorChip(`Weight: ${item.weight} kg`));
-  if (statsChips.length > 0) {
-    detailSections.push({ label: 'Stats', chips: statsChips, hideLabelIfSingle: true });
+  // Weight omitted from dense browse columns → labeled expanded chip (TASK-437)
+  if (item.weight !== undefined) {
+    detailSections.push({
+      label: 'Details',
+      chips: [metadataDescriptorChip(`Weight ${item.weight} kg`)],
+      hideLabelIfSingle: true,
+    });
   }
+
+  const damageStr = item.damage ? formatDamageDisplay(item.damage) : '-';
+  const drStr = item.armor_value != null ? String(item.armor_value) : '-';
 
   return (
     <GridListRow
@@ -99,6 +105,8 @@ function EquipmentCard({ item, propertiesDb = [] }: { item: Equipment; propertie
           highlight: true,
         },
         { key: 'Rarity', value: formatListCellLabel(item.rarity) },
+        { key: 'Damage', value: damageStr, align: 'center' as const },
+        { key: 'Dmg. Red.', value: drStr, align: 'center' as const },
       ]}
       detailSections={detailSections.length > 0 ? detailSections : undefined}
     />
@@ -142,13 +150,23 @@ export function CodexEquipmentTab({ codexMode = 'public' }: { codexMode?: 'publi
       if (filters.rarityFilter && e.rarity !== filters.rarityFilter) return false;
       return true;
     });
-    type FilteredItem = Equipment & { category: string; cost: number; rarity: string };
-    return sortItems<FilteredItem>(filtered.map((e: Equipment) => ({
-      ...e,
-      category: e.category || '',
-      cost: e.currency ?? e.gold_cost ?? 0,
-      rarity: e.rarity || '',
-    })));
+    type FilteredItem = Equipment & {
+      category: string;
+      cost: number;
+      rarity: string;
+      damage: string;
+      dr: number | string;
+    };
+    return sortItems<FilteredItem>(
+      filtered.map((e: Equipment) => ({
+        ...e,
+        category: e.category || '',
+        cost: e.currency ?? e.gold_cost ?? 0,
+        rarity: e.rarity || '',
+        damage: e.damage ? formatDamageDisplay(e.damage) : '',
+        dr: e.armor_value ?? '',
+      }))
+    );
   }, [equipment, filters, sortItems]);
 
   if (codexMode === 'my') {
@@ -201,7 +219,7 @@ export function CodexEquipmentTab({ codexMode = 'public' }: { codexMode?: 'publi
         ) : filteredEquipment.length === 0 ? (
           <EmptyState title="No equipment found." size="sm" />
         ) : (
-          filteredEquipment.map((item: Equipment & { category: string; cost: number; rarity: string }) => (
+          filteredEquipment.map((item) => (
             <EquipmentCard key={item.id} item={item} propertiesDb={propertiesDb} />
           ))
         )}

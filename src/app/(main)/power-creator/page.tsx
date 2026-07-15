@@ -1252,7 +1252,7 @@ function PowerCreatorContent() {
             {selectedAdvancedParts.length === 0 ? (
               <div className="text-center py-8 text-text-muted dark:text-text-secondary">
                 <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>No mechanics added yet. Click &quot;Add Part&quot; to add range, area, duration modifiers, and other mechanic parts.</p>
+                <p>No mechanics added yet. Click &quot;Add Part&quot; to add range, area, duration adjustments, and other mechanic parts.</p>
               </div>
             ) : (
               <div className="space-y-4">

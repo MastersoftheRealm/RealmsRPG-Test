@@ -529,21 +529,25 @@ export function SkillsAllocationPage({
         </div>
       )}
 
-      <AddSkillModal
-        isOpen={addSkillModalOpen}
-        onClose={() => setAddSkillModalOpen(false)}
-        existingSkillNames={existingSkillNames}
-        onAdd={handleAddSkills}
-        maxSelections={maxAddSkillSelections}
-      />
+      {addSkillModalOpen ? (
+        <AddSkillModal
+          isOpen
+          onClose={() => setAddSkillModalOpen(false)}
+          existingSkillNames={existingSkillNames}
+          onAdd={handleAddSkills}
+          maxSelections={maxAddSkillSelections}
+        />
+      ) : null}
 
-      <AddSubSkillModal
-        isOpen={addSubSkillModalOpen}
-        onClose={() => setAddSubSkillModalOpen(false)}
-        characterSkills={characterSkillsForSubModal}
-        existingSkillNames={existingSkillNames}
-        onAdd={handleAddSubSkills}
-      />
+      {addSubSkillModalOpen ? (
+        <AddSubSkillModal
+          isOpen
+          onClose={() => setAddSubSkillModalOpen(false)}
+          characterSkills={characterSkillsForSubModal}
+          existingSkillNames={existingSkillNames}
+          onAdd={handleAddSubSkills}
+        />
+      ) : null}
     </div>
   );
 }

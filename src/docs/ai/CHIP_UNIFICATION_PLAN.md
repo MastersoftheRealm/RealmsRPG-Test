@@ -11,7 +11,7 @@ After UI unification, chips still behave like **3–5 overlapping systems** with
 
 | Role | Purpose | Interaction | Shape | Visual signature |
 |------|---------|-------------|-------|------------------|
-| **ExpandableChip** | Parts, properties, proficiencies — anything with a description and/or option levels | Click to expand in place; chevron when expandable | **Rounded rectangle** (`--radius-control` / `rounded-lg`); expanded → full-width block, same radius | Border + optional category tint; ring on expand; chevron |
+| **ExpandableChip** | Parts, properties, proficiencies — anything with a description and/or option levels | Click to expand in place; chevron when expandable | **Rounded rectangle** (`--radius-control` / `rounded-lg`); expanded → grow into remaining chip-group row width (stable toggle; **not** CSS `w-full` wrap reboot), same radius | Border + optional category tint; inset ring on expand; chevron |
 | **DescriptorChip** | Metadata labels: feat type, category, tags, requirements, trait kind, rarity, status | **Never** expands | **Rounded rectangle**, compact (`rounded-md`) | **Opaque filled** surface (`bg-surface` or semantic `-light` solid); no chevron; no expand ring |
 
 **Not chips** (keep separate components; do not force into chip taxonomy):

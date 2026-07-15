@@ -13,7 +13,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Alert, Select } from '@/components/ui';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
 import { useCodexSkills, type Skill } from '@/hooks';
@@ -103,13 +103,7 @@ export function AddSubSkillModal({
       .sort((a, b) => String(a.name ?? '').localeCompare(String(b.name ?? '')));
   }, [allSubSkills, skillById]);
 
-  useEffect(() => {
-    if (isOpen) {
-      setAbilityFilter('');
-      setBaseSkillFilter('');
-      setAnyBaseSkillSelections({});
-    }
-  }, [isOpen]);
+  // Filter state seeds empty; parents remount while the modal is open.
 
   const filteredSkills = useMemo(() => {
     return allSubSkills.filter((skill: Skill) => {

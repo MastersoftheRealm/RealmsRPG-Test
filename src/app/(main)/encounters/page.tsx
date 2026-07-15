@@ -426,7 +426,7 @@ function CreateEncounterModal({
                 </span>
                 <span className="text-xs text-text-muted dark:text-text-secondary text-center">
                   {t === 'combat'
-                    ? 'Initiative, HP, conditions'
+                    ? 'Initiative, Health, conditions'
                     : t === 'skill'
                       ? 'Skill rolls, DS, successes'
                       : 'Combat + skill combined'}

@@ -137,7 +137,7 @@ export function SpeciesStep() {
         <>
           <PathHelpCard pathName={draft.archetype.name}>
             {hasRecommendedSpecies
-              ? 'These species fit your path — pick one, or browse all species below.'
+              ? 'These species fit your path. Pick one, or browse all species below.'
               : 'Choose the species that fits your character, or browse the full list.'}
           </PathHelpCard>
           <PathNotes pathName={draft.archetype.name} notes={pathData?.level1?.notes} />

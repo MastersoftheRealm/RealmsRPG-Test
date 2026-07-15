@@ -25,6 +25,7 @@ import {
   useCharacterSheetDerived,
   buildCharacterSheetLibraryProps,
   useCharacterSheetActions,
+  resolveLibraryActiveTab,
 } from '@/components/character-sheet';
 import { useToast } from '@/components/ui';
 import { createClient } from '@/lib/supabase/client';
@@ -63,7 +64,12 @@ export default function CharacterSheetPage({ params }: PageParams) {
   const [featToRemove, setFeatToRemove] = useState<{ id: string; name: string } | null>(null);
   const [uploadingPortrait, setUploadingPortrait] = useState(false);
   const [portraitRefreshKey, setPortraitRefreshKey] = useState<number | null>(null);
-  const [showEditArchetypeModal, setShowEditArchetypeModal] = useState(false);
+  const [showEditArchetypeModal, setShowEditArchetypeModalState] = useState(false);
+  const [editArchetypeSessionKey, setEditArchetypeSessionKey] = useState(0);
+  const setShowEditArchetypeModal = useCallback((open: boolean) => {
+    if (open) setEditArchetypeSessionKey((k) => k + 1);
+    setShowEditArchetypeModalState(open);
+  }, []);
   const [showEditSpeciesModal, setShowEditSpeciesModal] = useState(false);
   
   // Fetch user's library for data enrichment
@@ -222,6 +228,17 @@ export default function CharacterSheetPage({ params }: PageParams) {
   
   const isOwner = Boolean(character && user && character.userId === user.uid);
   const effectiveEditMode = isEditMode && isOwner;
+
+  // Keep controlled library tab in sync when visibility hides the active tab (TASK-430 parity).
+  if (character) {
+    const resolvedLibraryTab = resolveLibraryActiveTab(libraryActiveTab, {
+      isEditMode: effectiveEditMode,
+      tabVisibility: character.libraryTabVisibility,
+    });
+    if (resolvedLibraryTab !== libraryActiveTab) {
+      setLibraryActiveTab(resolvedLibraryTab);
+    }
+  }
 
   useCharacterResourceSync(character, isOwner);
 
@@ -415,6 +432,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
       setFeatModalType,
       setSkillModalType,
       setLibraryActiveTab,
+      setShowEditArchetypeModal,
+      setShowEditSpeciesModal,
       handleAbilityChange,
       handleDefenseChange,
       handleSkillChange,
@@ -472,7 +491,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
 
         {showSettingsModal && character && (
           <CharacterSheetSettingsModal
-            isOpen={showSettingsModal}
+            isOpen
             onClose={() => setShowSettingsModal(false)}
             visibility={character.visibility}
             onVisibilityChange={(v) => setCharacter(prev => prev ? { ...prev, visibility: v } : null)}
@@ -570,6 +589,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
           onPartialRecovery={handlePartialRecovery}
           showEditArchetypeModal={showEditArchetypeModal}
           setShowEditArchetypeModal={setShowEditArchetypeModal}
+          editArchetypeSessionKey={editArchetypeSessionKey}
           onArchetypeSave={handleArchetypeSave}
           showEditSpeciesModal={showEditSpeciesModal}
           setShowEditSpeciesModal={setShowEditSpeciesModal}

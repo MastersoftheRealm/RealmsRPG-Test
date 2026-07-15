@@ -58,7 +58,11 @@ import { trainingPointsForItemPropertyRef } from '@/lib/calculators';
 import type { ChipData } from '@/components/shared/grid-list-row';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
 import {
+  buildEntityMetadataDetailSections,
   buildPartsAndMetadataDetailSections,
+  mergeDetailSections,
+  metadataDescriptorChip,
+  metadataDetailSection,
   propertiesProficienciesSection,
 } from '@/lib/chip/list-row-metadata';
 import { buildEmpoweredPowerSelectableItem } from '@/hooks/add-library-item/build-empowered-selectable-item';
@@ -265,8 +269,10 @@ function CreatureCreatorContent() {
       const display = derivePowerDisplay(doc, powerPartsDb);
       const partChips = partChipsFromDisplay(display.partChips);
       const base = displayItemToSelectableItem(displayItem, ['Energy', 'Action', 'Damage', 'Area']);
+      // Duration omitted from modal columns → labeled chip (Range already chipped)
       const detailSections = buildPartsAndMetadataDetailSections({
         range: display.range,
+        duration: display.duration,
         partChips,
       });
       return {
@@ -289,6 +295,7 @@ function CreatureCreatorContent() {
       const actionCol = empowered.columns?.find((c) => c.key === 'Action');
       const damageCol = empowered.columns?.find((c) => c.key === 'Damage');
       const areaCol = empowered.columns?.find((c) => c.key === 'Area');
+      const durationCol = empowered.columns?.find((c) => c.key === 'Duration');
       const displayItem = transformUserPowerToDisplayItem({
         id: technique.id,
         docId: technique.docId,
@@ -303,6 +310,9 @@ function CreatureCreatorContent() {
         damage: powerData.damage as UserPower['damage'],
       }, powerPartsDb);
       const base = displayItemToSelectableItem(displayItem, ['Energy', 'Action', 'Damage', 'Area']);
+      const durationFacts = buildEntityMetadataDetailSections({
+        duration: durationCol?.value != null ? String(durationCol.value) : undefined,
+      });
       return {
         ...empowered,
         ...base,
@@ -312,6 +322,7 @@ function CreatureCreatorContent() {
           { key: 'Damage', value: damageCol?.value ?? '-', align: 'center' as const },
           { key: 'Area', value: areaCol?.value ?? '-', align: 'center' as const },
         ],
+        detailSections: mergeDetailSections(durationFacts, empowered.detailSections),
         totalCost: tp > 0 ? tp : undefined,
         costLabel: tp > 0 ? 'TP' : undefined,
         data: {
@@ -383,9 +394,30 @@ function CreatureCreatorContent() {
       const propertySection = propertiesProficienciesSection(propertyChips);
       const totalCost = propertyChips.reduce((sum, c) => sum + (c.cost ?? 0), 0) || undefined;
       const base = displayItemToSelectableItem(displayItem, ['Type', 'TP', 'Cost']);
+      const source = displayItem.sourceData as {
+        type?: string;
+        damage?: string;
+        range?: string;
+        damageReduction?: number;
+        armorValue?: number;
+      } | undefined;
+      const type = String(source?.type ?? '').toLowerCase();
+      const dr = source?.damageReduction ?? source?.armorValue;
+      const factChips: ChipData[] = [];
+      if ((type === 'weapon' || type === 'shield') && source?.damage) {
+        factChips.push(metadataDescriptorChip(`Damage: ${source.damage}`));
+      }
+      if ((type === 'weapon' || type === 'shield') && source?.range) {
+        const rangeStr = normalizeRangeDisplay(source.range);
+        if (rangeStr) factChips.push(metadataDescriptorChip(`Range: ${rangeStr}`));
+      }
+      if (type === 'armor' && dr != null) {
+        factChips.push(metadataDescriptorChip(`Damage Reduction ${dr}`));
+      }
+      const factSection = metadataDetailSection(factChips);
       return {
         ...base,
-        detailSections: propertySection ? [propertySection] : undefined,
+        detailSections: mergeDetailSections(factSection, propertySection),
         totalCost: totalCost ?? undefined,
         costLabel: totalCost != null ? 'TP' : undefined,
         data: displayItem,
@@ -1118,17 +1150,19 @@ function CreatureCreatorContent() {
             gridColumns="1.25fr 0.55fr 0.72fr 0.9fr 0.65fr"
             size="xl"
           />
-          <AddCreatureFeatModal
-            isOpen={showFeatModal}
-            onClose={() => setShowFeatModal(false)}
-            creature={creature}
-            onAdd={(feats) =>
-              setCreature((prev) => ({
-                ...prev,
-                feats: mergeCreatureFeatsOnAdd(prev.feats, feats, codexFeatsById),
-              }))
-            }
-          />
+          {showFeatModal ? (
+            <AddCreatureFeatModal
+              isOpen
+              onClose={() => setShowFeatModal(false)}
+              creature={creature}
+              onAdd={(feats) =>
+                setCreature((prev) => ({
+                  ...prev,
+                  feats: mergeCreatureFeatsOnAdd(prev.feats, feats, codexFeatsById),
+                }))
+              }
+            />
+          ) : null}
           <UnifiedSelectionModal
             isOpen={showArmamentModal}
             onClose={() => setShowArmamentModal(false)}
@@ -1295,7 +1329,7 @@ function CreatureCreatorContent() {
 
           {/* Resistances, Weaknesses, Immunities */}
           <Card className="shadow-md p-6">
-            <h2 className="text-lg font-bold text-text-primary mb-4">Damage Modifiers</h2>
+            <h2 className="text-lg font-bold text-text-primary mb-4">Resistances, Weaknesses & Immunities</h2>
             <p className="text-sm text-text-muted dark:text-text-secondary mb-3">Each type costs feat points as shown. Resistances and immunities cost points; weaknesses grant points.</p>
             <div className="grid md:grid-cols-3 gap-4">
               <div>

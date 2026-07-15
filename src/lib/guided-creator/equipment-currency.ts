@@ -14,6 +14,7 @@ export interface CurrencyLineItem {
   quantity?: number;
   gold_cost?: number;
   currency?: number;
+  costs?: { totalCurrency?: number };
 }
 
 /** Starting currency by level (matches equipment-step). */
@@ -23,7 +24,11 @@ export function computeStartingCurrency(level = 1): number {
 }
 
 export function resolveItemUnitCost(item: CurrencyLineItem): number {
-  return Number(item.gold_cost ?? item.currency ?? item.cost ?? 0) || 0;
+  return (
+    Number(
+      item.gold_cost ?? item.currency ?? item.cost ?? item.costs?.totalCurrency ?? 0
+    ) || 0
+  );
 }
 
 export function computeSpentCurrency(items: CurrencyLineItem[]): number {

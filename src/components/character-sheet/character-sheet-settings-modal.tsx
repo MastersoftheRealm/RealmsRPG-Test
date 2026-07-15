@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Modal, Select, Button } from '@/components/ui';
 import type { CharacterVisibility } from '@/types';
 
@@ -56,15 +56,9 @@ export function CharacterSheetSettingsModal({
   onSpeedDisplayUnitChange,
   onConfirm,
 }: CharacterSheetSettingsModalProps) {
+  // Fresh drafts per open — parent mounts only while showSettingsModal is true.
   const [selectedVisibility, setSelectedVisibility] = useState<CharacterVisibility>(visibility);
   const [selectedSpeedUnit, setSelectedSpeedUnit] = useState<SpeedDisplayUnit>(speedDisplayUnit);
-
-  useEffect(() => {
-    if (isOpen) {
-      setSelectedVisibility(visibility);
-      setSelectedSpeedUnit(speedDisplayUnit);
-    }
-  }, [isOpen, visibility, speedDisplayUnit]);
 
   const visibilityOptions = VISIBILITY_OPTIONS.map((opt) => ({
     ...opt,

@@ -234,7 +234,7 @@ function HealthEnergyAllocationSection() {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <p className="text-xs text-text-muted dark:text-text-secondary">
-          Base HP: {baseHealth} | Base EN: {baseEnergy}
+          Base Health: {baseHealth} | Base Energy: {baseEnergy}
         </p>
         <Button
           type="button"
@@ -790,7 +790,7 @@ export function FinalizeStep() {
         <div className="px-5 py-4 border-b border-border-light bg-surface-alt flex flex-wrap items-start justify-between gap-2">
           <div>
             <h3 className="text-lg font-bold text-text-primary">Build Summary</h3>
-            <p className="text-sm text-text-secondary mt-0.5">Every choice at a glance — jump back to edit any step.</p>
+            <p className="text-sm text-text-secondary mt-0.5">Every choice at a glance. Jump back to edit any step.</p>
           </div>
         </div>
 

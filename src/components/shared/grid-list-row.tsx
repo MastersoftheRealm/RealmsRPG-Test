@@ -696,7 +696,7 @@ export const GridListRow = memo(function GridListRow({
                         {section.label}
                       </h3>
                     )}
-                    <div className="flex flex-wrap gap-2">
+                    <div data-chip-group className="flex flex-wrap gap-2 items-start">
                       {sectionChips.map((chip, chipIdx) => {
                         const index = sectionOffset + chipIdx;
                         return (
@@ -724,7 +724,7 @@ export const GridListRow = memo(function GridListRow({
                   <h3 className="text-xs font-semibold text-text-muted dark:text-text-secondary uppercase tracking-wider">
                     {chipsLabel}
                   </h3>
-                  <div className="flex flex-wrap gap-2">
+                  <div data-chip-group className="flex flex-wrap gap-2 items-start">
                     {chips.map((chip, index) => (
                       <GridListChip
                         key={`${chip.name}-${chip.category ?? 'default'}-${index}`}

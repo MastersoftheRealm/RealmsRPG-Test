@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   canCompleteEquipmentPhase,
+  canNavigateToEquipmentPhase,
   nextEquipmentPhase,
   prevEquipmentPhase,
+  resolveEquipmentPhaseVisibility,
   visibleEquipmentPhases,
 } from '@/lib/guided-creator/equipment-phase-nav';
 
@@ -30,5 +32,34 @@ describe('equipment-phase-nav', () => {
     expect(
       canCompleteEquipmentPhase('weapon', { ...ctx, unarmedProwess: 1 })
     ).toBe(true);
+  });
+
+  it('omits weapon and armor when path has no options', () => {
+    const visibility = resolveEquipmentPhaseVisibility('required', {
+      hasWeaponOptions: false,
+      hasArmorOptions: false,
+      recommendUnarmed: false,
+    });
+    expect(visibleEquipmentPhases('required', visibility)).toEqual(['gear']);
+  });
+
+  it('keeps weapon phase for unarmed paths without weapon options', () => {
+    const visibility = resolveEquipmentPhaseVisibility('none', {
+      hasWeaponOptions: false,
+      hasArmorOptions: false,
+      recommendUnarmed: true,
+    });
+    expect(visibleEquipmentPhases('none', visibility)).toEqual(['weapon', 'gear']);
+  });
+
+  it('blocks jumping ahead before completing current phase', () => {
+    const ctx = {
+      loadoutWeapons: [],
+      loadoutArmor: [],
+      recommendUnarmed: false,
+      unarmedProwess: 0,
+      armorMode: 'required' as const,
+    };
+    expect(canNavigateToEquipmentPhase('armor', 'weapon', 'required', ctx)).toBe(false);
   });
 });

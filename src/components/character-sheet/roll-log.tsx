@@ -348,7 +348,7 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
               <button
                 onClick={() => setModifier(m => m - 1)}
                 className="w-7 h-7 rounded bg-text-on-dark/10 hover:bg-text-on-dark/20 dark:bg-text-on-dark/20 dark:hover:bg-text-on-dark/35 text-text-on-dark flex items-center justify-center"
-                aria-label="Decrease modifier"
+                aria-label="Decrease bonus"
               >
                 <Minus className="w-3.5 h-3.5" />
               </button>
@@ -358,7 +358,7 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
               <button
                 onClick={() => setModifier(m => m + 1)}
                 className="w-7 h-7 rounded bg-text-on-dark/10 hover:bg-text-on-dark/20 dark:bg-text-on-dark/20 dark:hover:bg-text-on-dark/35 text-text-on-dark flex items-center justify-center"
-                aria-label="Increase modifier"
+                aria-label="Increase bonus"
               >
                 <Plus className="w-3.5 h-3.5" />
               </button>

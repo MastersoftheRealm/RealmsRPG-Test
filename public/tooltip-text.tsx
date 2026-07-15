@@ -202,3 +202,96 @@ Use source filters in creators and selectors to combine My, Realms, or All.`;
 
 export const codexModeHelp = `The Codex is the master reference for Skills, Feats, Species, Equipment, Parts, and Properties.
 Use Advanced to reveal deeper rule sections for parts/properties and creature feats.`;
+
+// Guided choice-card deep-dive (InfoTippy bodies — no redundant section titles)
+
+export const guidedSpeciesDetailSpeciesTraitOptions = (
+  <div>
+    <div>
+      Some Species Traits ask you to pick a variant during Ancestry. Expand a row for the full
+      description.
+    </div>
+  </div>
+);
+
+export const guidedSpeciesDetailAncestryTraits = (
+  <div>
+    <div>
+      You choose one Ancestry Trait by default. Taking a Flaw grants one extra Ancestry Trait.
+      Expand any row to read more.
+    </div>
+  </div>
+);
+
+export const guidedSpeciesDetailCharacteristics = (
+  <div>
+    <div>You choose one Characteristic during Ancestry. Expand a row for details.</div>
+  </div>
+);
+
+export const guidedSpeciesDetailFlaws = (
+  <div>
+    <div>
+      Flaws are optional. Taking one grants an extra Ancestry Trait. Expand a row for details.
+    </div>
+  </div>
+);
+
+export const guidedPathDetailArchetypeFeats = (
+  <div>
+    <div>
+      These combat focused Feats come from this Archetype Path. You choose among them during Your
+      Archetype.
+    </div>
+  </div>
+);
+
+export const guidedPathDetailCharacterFeats = (
+  <div>
+    <div>
+      These Character Feats are tied to this Archetype Path. You pick one during Your Archetype.
+    </div>
+  </div>
+);
+
+export const guidedPathDetailWeapons = (
+  <div>
+    <div>
+      Weapons and shields recommended for this path, including kits. Expand a row for Damage, Range,
+      and properties.
+    </div>
+  </div>
+);
+
+export const guidedPathDetailArmor = (
+  <div>
+    <div>
+      Armor recommended across this path kits. Expand a row for Damage Reduction and other details.
+    </div>
+  </div>
+);
+
+export const guidedPathDetailLoadouts = (
+  <div>
+    <div>
+      Coherent kits this Archetype Path offers. Gear listed elsewhere may also be shared across kits.
+    </div>
+  </div>
+);
+
+export const guidedPathDetailTechniques = (
+  <div>
+    <div>
+      Techniques this Martial path recommends. Expand a row for Action Type, Energy, and Damage.
+    </div>
+  </div>
+);
+
+export const guidedPathDetailPowers = (
+  <div>
+    <div>
+      Powers this Archetype Path recommends. Expand a row for Energy, Action Type, Range, and
+      Duration.
+    </div>
+  </div>
+);

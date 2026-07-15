@@ -8,7 +8,7 @@
  * - Character Creator (ability points, skill points)
  * - Character Sheet edit mode (ability allocation)
  * - Creature Creator (point allocation)
- * - Ability Score Editor
+ * - Ability Editor
  * 
  * @example
  * // Block display with calculation breakdown

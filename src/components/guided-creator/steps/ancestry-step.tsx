@@ -14,10 +14,12 @@ import { getChoiceOptionIds, resolveChoiceOptionTraits } from '@/lib/choice-trai
 import { useGuidedCreatorStore, type GuidedDraft } from '@/stores/guided-creator-store';
 import { GuidedChoiceCard } from '../guided-choice-card';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from '../guided-choice-styles';
+import { GuidedTraitRestrictionNotice } from '../guided-restriction-notice';
 import { GuidedStepLayout } from '../guided-step-layout';
 import { SpeciesRevealPanel } from '../species-reveal-panel';
 import { getSpeciesSizeOptions } from '../guided-species-utils';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import { getTraitRestrictionNotice } from '@/lib/codex/feat-restriction-notice';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.ancestry;
 const overviewCopy = stepCopy.speciesOverview;
@@ -127,7 +129,7 @@ export function AncestryStep() {
     list.push({
       phase: 'flaw',
       title: 'Take a flaw? (optional)',
-      description: 'Flaws add depth — and grant an extra ancestry trait.',
+      description: 'Flaws add depth, and grant an extra ancestry trait.',
       options: resolveTraits(species.flaws || [], allTraits),
       optional: true,
     });
@@ -383,6 +385,11 @@ export function AncestryStep() {
                 description={trait.description}
                 selected={isSelected(trait)}
                 onSelect={() => handlePick(trait)}
+                expandedExtra={
+                  getTraitRestrictionNotice(trait) ? (
+                    <GuidedTraitRestrictionNotice trait={trait} />
+                  ) : undefined
+                }
               />
             ))}
             {currentTask.optional && (

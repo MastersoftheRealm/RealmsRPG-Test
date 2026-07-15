@@ -59,6 +59,10 @@ export type { ListRowThumbnailProps } from './list-row-thumbnail';
 export { ExpandableImage, ExpandableImageModal } from './expandable-image';
 export type { ExpandableImageProps, ExpandableImageModalProps } from './expandable-image';
 
+// DetailOptionList — elongated deep-dive / trait catalog rows (GuidedEntityDetailModal, species modal)
+export { DetailOptionList } from './detail-option-list';
+export type { DetailOptionItem, DetailOptionListProps } from './detail-option-list';
+
 export { ChoiceTraitOptionListPicker } from './choice-trait-option-select';
 
 // SectionCostBadge - EN/TP/IP cost display next to section labels

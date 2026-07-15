@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, useId } from 'react';
+import { useState, useMemo, useCallback, useId } from 'react';
 import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
 import { checkFeatRequirements } from '@/lib/game/feat-requirements';
 import { buildFeatDetailSections } from '@/lib/codex/feat-list';
@@ -87,15 +87,7 @@ export function AddFeatModal({
     }));
   }, [codexFeats]);
 
-  useEffect(() => {
-    if (isOpen) {
-      setSelectedCategory('');
-      setSelectedAbility('');
-      setShowStateFeats(false);
-      setShowBlocked(false);
-      setShowUpgradeableOnly(false);
-    }
-  }, [isOpen]);
+  // Filter state seeds empty; parent remounts via key={featType} / conditional open.
 
   const skillIdToName = useMemo(() => {
     const map = new Map<string, string>();

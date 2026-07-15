@@ -31,6 +31,7 @@ import { Heart, AlertTriangle, Sparkles, Star } from 'lucide-react';
 import { chooseYourAncestryTraits } from '../../../../public/tooltip-text';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
 import { getValidationIssuesForStep, getStepCompletion } from '@/lib/character-creator-validation';
+import { EMPTY_STRING_ARRAY } from '@/lib/empty';
 
 interface ResolvedTrait extends Trait {
   found: boolean;
@@ -39,8 +40,6 @@ interface ResolvedTrait extends Trait {
 function resolveTraits(ids: (string | number)[], allTraits: Trait[]): ResolvedTrait[] {
   return resolveTraitIds(ids, allTraits).map(t => ({ ...t, found: t.id !== t.name }));
 }
-
-const EMPTY_SELECTED_TRAIT_IDS: string[] = [];
 
 export function AncestryStep() {
   const { draft, nextStep, prevStep, setStep, updateDraft } = useCharacterCreatorStore();
@@ -100,7 +99,7 @@ export function AncestryStep() {
   }, [speciesA, speciesB, allSkills]);
 
   // Current selections from draft (stable empty array for hook deps)
-  const selectedTraitIds = draft.ancestry?.selectedTraits ?? EMPTY_SELECTED_TRAIT_IDS;
+  const selectedTraitIds = draft.ancestry?.selectedTraits ?? EMPTY_STRING_ARRAY;
   const selectedFlaw = draft.ancestry?.selectedFlaw || null;
   const selectedCharacteristic = draft.ancestry?.selectedCharacteristic || null;
   const selectedSpeciesTraits = draft.ancestry?.selectedSpeciesTraits;
@@ -458,7 +457,7 @@ export function AncestryStep() {
       {draft.creationMode === 'path' && draft.archetype?.name && (
         <>
           <PathHelpCard pathName={draft.archetype.name}>
-            Complete each ancestry choice below — the checklist updates as you go.
+            Complete each ancestry choice below. The checklist updates as you go.
           </PathHelpCard>
           <PathNotes pathName={draft.archetype.name} notes={ancestryPathNotes} />
         </>
@@ -473,7 +472,7 @@ export function AncestryStep() {
       >
         <h3 className="font-semibold text-text-primary mb-2">What to choose</h3>
         {ancestryIssues.length === 0 ? (
-          <p className="text-sm text-success-fg">✓ Your ancestry is complete — nothing left to pick.</p>
+          <p className="text-sm text-success-fg">✓ Your ancestry is complete. Nothing left to pick.</p>
         ) : (
           <ul className="space-y-1.5">
             {ancestryIssues.map((issue, i) => (

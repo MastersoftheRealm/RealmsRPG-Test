@@ -1,4 +1,5 @@
 export { expandableChipShellClass, type ExpandableChipShellSize } from './expandable-chip-shell';
+export { measureStableExpandWidth } from './measure-stable-expand-width';
 export {
   expandableChipPropsFromPartData,
   expandableChipPropsFromChipData,

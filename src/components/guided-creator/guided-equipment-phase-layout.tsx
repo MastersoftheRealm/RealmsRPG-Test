@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { GuidedLayerNav } from '@/components/shared';
+import { GuidedLayerNav, PointStatus } from '@/components/shared';
 import type { GuidedEquipmentPhase } from '@/stores/guided-creator-store';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 
@@ -10,8 +10,10 @@ const phaseCopy = GUIDED_CREATOR_COPY.steps.loadout.phases;
 export interface GuidedEquipmentPhaseLayoutProps {
   phase: GuidedEquipmentPhase;
   children: ReactNode;
-  /** Remaining currency — shown on gear phase when provided. */
-  currencyRemaining?: number;
+  /** Starting Currency for PointStatus (abilities/skills pattern). */
+  currencyTotal?: number;
+  /** Currency spent so far (weapons + armor + gear). */
+  currencySpent?: number;
   expandLabel?: string;
   onExpand?: () => void;
   collapseLabel?: string;
@@ -21,27 +23,36 @@ export interface GuidedEquipmentPhaseLayoutProps {
 export function GuidedEquipmentPhaseLayout({
   phase,
   children,
-  currencyRemaining,
+  currencyTotal,
+  currencySpent,
   expandLabel,
   onExpand,
   collapseLabel,
   onCollapse,
 }: GuidedEquipmentPhaseLayoutProps) {
   const copy = phaseCopy[phase];
+  const showCurrency = currencyTotal != null && currencySpent != null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div>
         <h3 className="font-display text-lg font-semibold text-text-primary">{copy.title}</h3>
-        <p className="mt-1 font-nunito text-sm text-text-secondary leading-relaxed">
+        <p className="mt-0.5 font-nunito text-sm text-text-secondary leading-snug">
           {copy.description}
         </p>
-        {phase === 'gear' && currencyRemaining != null ? (
-          <p className="mt-2 font-nunito text-sm font-medium text-text-primary">
-            {phaseCopy.currencyRemaining(currencyRemaining)}
-          </p>
-        ) : null}
       </div>
+
+      {showCurrency ? (
+        <div className="flex justify-center">
+          <PointStatus
+            total={currencyTotal}
+            spent={currencySpent}
+            label={phaseCopy.currencyLabel}
+            variant="inline"
+            className="text-base"
+          />
+        </div>
+      ) : null}
 
       {children}
 

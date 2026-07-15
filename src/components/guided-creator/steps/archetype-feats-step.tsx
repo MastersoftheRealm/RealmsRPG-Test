@@ -22,8 +22,9 @@ import { GuidedFeatsBrowsePanel } from '../guided-feats-browse-panel';
 import { getFeatRestrictionNotice } from '@/lib/codex/feat-restriction-notice';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from '../guided-choice-styles';
 import { GuidedStepLayout } from '../guided-step-layout';
-import type { PathGuidanceGroup } from '@/types/archetype';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import { EMPTY_GUIDANCE_GROUPS, EMPTY_STRING_ARRAY } from '@/lib/empty';
+import type { PathGuidanceGroup } from '@/types/archetype';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.archetypeFeats;
 const layerNavCopy = GUIDED_CREATOR_COPY.layerNav;
@@ -46,8 +47,13 @@ export function ArchetypeFeatsStep() {
   const [browsing, setBrowsing] = useState(false);
 
   const maxFeats = calculateMaxArchetypeFeats(1, draft.archetypeType ?? undefined);
-  const groups = pathData?.level1?.guidance_groups?.filter((g) => g.feats?.length) ?? [];
-  const fallbackFeatIds = pathData?.level1?.feats ?? [];
+  const guidanceGroups = pathData?.level1?.guidance_groups;
+  const pathFeats = pathData?.level1?.feats;
+  const groups = useMemo(
+    () => guidanceGroups?.filter((g) => g.feats?.length) ?? EMPTY_GUIDANCE_GROUPS,
+    [guidanceGroups]
+  );
+  const fallbackFeatIds = pathFeats ?? EMPTY_STRING_ARRAY;
 
   const featById = useMemo(() => new Map(feats.map((f) => [String(f.id), f])), [feats]);
 

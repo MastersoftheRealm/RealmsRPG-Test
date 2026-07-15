@@ -32,7 +32,7 @@ const TABS: TabDef[] = [
   { id: 'progression', label: 'Progression', category: 'PROGRESSION_PLAYER' },
   { id: 'combat', label: 'Combat', category: 'COMBAT' },
   { id: 'archetypes', label: 'Archetypes', category: 'ARCHETYPES' },
-  { id: 'abilities', label: 'Ability Scores', category: 'ABILITY_RULES' },
+  { id: 'abilities', label: 'Abilities', category: 'ABILITY_RULES' },
   { id: 'skills', label: 'Skills & Defenses', category: 'SKILLS_AND_DEFENSES' },
   { id: 'conditions', label: 'Conditions', category: 'CONDITIONS' },
   { id: 'sizes', label: 'Sizes', category: 'SIZES' },
@@ -126,7 +126,7 @@ function ProgressionPreview({ data }: { data: Record<string, unknown> }) {
             <th className="text-center py-1 px-2">Lvl</th>
             <th className="text-center py-1 px-2">Ability Pts</th>
             <th className="text-center py-1 px-2">Skill Pts</th>
-            <th className="text-center py-1 px-2">HP/EN Pool</th>
+            <th className="text-center py-1 px-2">Health/Energy Pool</th>
             <th className="text-center py-1 px-2">Prof</th>
             <th className="text-center py-1 px-2">Training Pts</th>
           </tr>
@@ -266,8 +266,8 @@ function CategoryEditor({
           <FieldRow label="Ability Points Every N Levels"><NumInput value={data.abilityPointsEveryNLevels as number ?? 3} onChange={v => set('abilityPointsEveryNLevels', v)} /></FieldRow>
           <FieldRow label="Ability Points Per Increase"><NumInput value={data.abilityPointsPerIncrease as number ?? 1} onChange={v => set('abilityPointsPerIncrease', v)} /></FieldRow>
           <FieldRow label="Skill Points / Level"><NumInput value={data.skillPointsPerLevel as number ?? 3} onChange={v => set('skillPointsPerLevel', v)} /></FieldRow>
-          <FieldRow label="Base HP/EN Pool"><NumInput value={data.baseHitEnergyPool as number ?? 18} onChange={v => set('baseHitEnergyPool', v)} /></FieldRow>
-          <FieldRow label="HP/EN Per Level"><NumInput value={data.hitEnergyPerLevel as number ?? 12} onChange={v => set('hitEnergyPerLevel', v)} /></FieldRow>
+          <FieldRow label="Base Health/Energy Pool"><NumInput value={data.baseHitEnergyPool as number ?? 18} onChange={v => set('baseHitEnergyPool', v)} /></FieldRow>
+          <FieldRow label="Health/Energy Per Level"><NumInput value={data.hitEnergyPerLevel as number ?? 12} onChange={v => set('hitEnergyPerLevel', v)} /></FieldRow>
           <FieldRow label="Base Proficiency"><NumInput value={data.baseProficiency as number ?? 2} onChange={v => set('baseProficiency', v)} /></FieldRow>
           <FieldRow label="Proficiency Every N Levels"><NumInput value={data.proficiencyEveryNLevels as number ?? 5} onChange={v => set('proficiencyEveryNLevels', v)} /></FieldRow>
           <FieldRow label="Proficiency Per Increase"><NumInput value={data.proficiencyPerIncrease as number ?? 1} onChange={v => set('proficiencyPerIncrease', v)} /></FieldRow>
@@ -287,8 +287,8 @@ function CategoryEditor({
               <FieldRow label="Ability Points Every N Levels"><NumInput value={creatureData.abilityPointsEveryNLevels as number ?? 3} onChange={v => setCreature('abilityPointsEveryNLevels', v)} /></FieldRow>
               <FieldRow label="Skill Points at Level 1"><NumInput value={creatureData.skillPointsAtLevel1 as number ?? 5} onChange={v => setCreature('skillPointsAtLevel1', v)} /></FieldRow>
               <FieldRow label="Skill Points / Level"><NumInput value={creatureData.skillPointsPerLevel as number ?? 3} onChange={v => setCreature('skillPointsPerLevel', v)} /></FieldRow>
-              <FieldRow label="Base HP/EN Pool"><NumInput value={creatureData.baseHitEnergyPool as number ?? 26} onChange={v => setCreature('baseHitEnergyPool', v)} /></FieldRow>
-              <FieldRow label="HP/EN Per Level"><NumInput value={creatureData.hitEnergyPerLevel as number ?? 12} onChange={v => setCreature('hitEnergyPerLevel', v)} /></FieldRow>
+              <FieldRow label="Base Health/Energy Pool"><NumInput value={creatureData.baseHitEnergyPool as number ?? 26} onChange={v => setCreature('baseHitEnergyPool', v)} /></FieldRow>
+              <FieldRow label="Health/Energy Per Level"><NumInput value={creatureData.hitEnergyPerLevel as number ?? 12} onChange={v => setCreature('hitEnergyPerLevel', v)} /></FieldRow>
               <FieldRow label="Base Proficiency"><NumInput value={creatureData.baseProficiency as number ?? 2} onChange={v => setCreature('baseProficiency', v)} /></FieldRow>
               <FieldRow label="Proficiency Every N Levels"><NumInput value={creatureData.proficiencyEveryNLevels as number ?? 5} onChange={v => setCreature('proficiencyEveryNLevels', v)} /></FieldRow>
               <FieldRow label="Base Training Points"><NumInput value={creatureData.baseTrainingPoints as number ?? 22} onChange={v => setCreature('baseTrainingPoints', v)} /></FieldRow>
@@ -368,7 +368,7 @@ function CategoryEditor({
       const arrays = (data.standardArrays || {}) as Record<string, number[]>;
       return (
         <>
-          <SectionTitle>Ability Score Limits</SectionTitle>
+          <SectionTitle>Ability Limits</SectionTitle>
           <FieldRow label="Minimum"><NumInput value={data.min as number ?? -2} onChange={v => set('min', v)} /></FieldRow>
           <FieldRow label="Max at Creation"><NumInput value={data.maxStarting as number ?? 3} onChange={v => set('maxStarting', v)} /></FieldRow>
           <FieldRow label="Max (Characters)"><NumInput value={data.maxAbsoluteCharacter as number ?? 10} onChange={v => set('maxAbsoluteCharacter', v)} /></FieldRow>

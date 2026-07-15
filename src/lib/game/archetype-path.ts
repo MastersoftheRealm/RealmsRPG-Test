@@ -97,10 +97,11 @@ function parseArmorStep(value: unknown): Level1ArmorStep | undefined {
   return value === 'required' || value === 'optional' || value === 'none' ? value : undefined;
 }
 
-/** Parse `level1_loadouts` column — plain kit array or `{ kits, armorStep?, sharedEquipment? }`. */
+/** Parse `level1_loadouts` column — metadata `{ armorStep?, sharedEquipment? }` or legacy kit array. */
 export function parseLevel1LoadoutsField(value: unknown): Level1LoadoutsField {
   if (value == null) return {};
   if (Array.isArray(value)) {
+    // Legacy kit arrays (cleared in live DB — TASK-442). Still parsed for stale offline JSON.
     return { loadouts: parseLoadouts(value) };
   }
   if (!isRecord(value)) return {};
@@ -113,14 +114,13 @@ export function parseLevel1LoadoutsField(value: unknown): Level1LoadoutsField {
   };
 }
 
-/** Serialize for `level1_loadouts` — array when no metadata; object wrapper when armor/shared gear set. */
+/** Serialize for `level1_loadouts` — prefer metadata-only; omit empty kit arrays. */
 export function serializeLevel1LoadoutsField(field: Level1LoadoutsField): unknown | null {
-  const { loadouts, armorStep, sharedEquipment } = field;
+  const { armorStep, sharedEquipment } = field;
+  // Do not persist kit arrays (TASK-442). Metadata only.
   const hasMeta = Boolean(armorStep) || (sharedEquipment?.length ?? 0) > 0;
-  if (!loadouts?.length && !hasMeta) return null;
-  if (!hasMeta) return loadouts ?? null;
+  if (!hasMeta) return null;
   return {
-    ...(loadouts?.length ? { kits: loadouts } : {}),
     ...(armorStep ? { armorStep } : {}),
     ...(sharedEquipment?.length ? { sharedEquipment } : {}),
   };

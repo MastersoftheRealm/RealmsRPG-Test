@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState } from 'react';
 import { Modal, Button, SearchInput } from '@/components/ui';
 import { GridListRow, ListHeader, ListEmptyState, gridColumnsWithInlineSelection } from '@/components/shared';
 import { useModalListState } from '@/hooks/use-modal-list-state';
@@ -143,16 +143,7 @@ export function AddProficiencyModal({
     return rawItems.find((p) => String((p as PropertyLike).id) === selectedId) as PropertyLike | undefined;
   }, [selectedId, isPart, rawItems]);
 
-  const resetSelection = useCallback(() => {
-    setSelectedId(null);
-    setOp1Level(0);
-    setOp2Level(0);
-    setOp3Level(0);
-  }, []);
-
-  useEffect(() => {
-    if (!isOpen) resetSelection();
-  }, [isOpen, resetSelection]);
+  // Selection seeds empty; parent remounts via key={variant} while open.
 
   const handleAdd = () => {
     if (isPart && selectedPart) {

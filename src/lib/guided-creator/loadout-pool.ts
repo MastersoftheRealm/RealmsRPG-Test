@@ -1,8 +1,9 @@
 /**
- * Path loadout item pool — union of all kits + flat path recommendations for Layer 2 customize.
+ * Path equipment recommendation pool for guided L1/L2.
+ * Flat armament / equipment / sharedEquipment columns only (quick kits removed).
  */
 
-import type { ArchetypePathData, PathItemRecommendation, PathLoadout } from '@/types/archetype';
+import type { ArchetypePathData, PathItemRecommendation } from '@/types/archetype';
 import { mergeLoadoutArmaments } from '@/lib/guided-creator/resolve-loadout-items';
 
 function refKey(ref: PathItemRecommendation): string {
@@ -10,7 +11,6 @@ function refKey(ref: PathItemRecommendation): string {
 }
 
 export function buildPathLoadoutPool(
-  loadouts: PathLoadout[],
   pathData: ArchetypePathData['level1'] | undefined
 ): PathItemRecommendation[] {
   const seen = new Set<string>();
@@ -22,16 +22,6 @@ export function buildPathLoadoutPool(
     seen.add(key);
     out.push({ id: String(ref.id), quantity: ref.quantity });
   };
-
-  for (const loadout of loadouts) {
-    for (const ref of [
-      ...(loadout.armaments ?? []),
-      ...(loadout.armor ?? []),
-      ...(loadout.equipment ?? []),
-    ]) {
-      push(ref);
-    }
-  }
 
   for (const ref of pathData?.armamentRecommendations ?? []) push(ref);
   for (const ref of pathData?.equipmentRecommendations ?? []) push(ref);
@@ -105,6 +95,64 @@ export function addItemToGuidedDraft(
     equipment,
     armaments: mergeLoadoutArmaments({ loadoutWeapons: nextWeapons, loadoutArmor }),
   };
+}
+
+/** Update quantity for a selected gear/weapon/armor ref (min 1). */
+export function setItemQuantityInGuidedDraft(
+  draft: GuidedLoadoutDraftSelection,
+  itemId: string,
+  quantity: number,
+  category: 'weapon' | 'armor' | 'equipment'
+): GuidedLoadoutDraftSelection {
+  const key = String(itemId).trim().toLowerCase();
+  const qty = Math.max(1, Math.floor(quantity) || 1);
+
+  if (category === 'equipment') {
+    const equipment = draft.equipment.map((e) =>
+      String(e.id).trim().toLowerCase() === key ? { ...e, quantity: qty } : e
+    );
+    return { ...draft, equipment };
+  }
+
+  if (category === 'armor') {
+    const loadoutArmor = draft.loadoutArmor.map((a) =>
+      String(a.id).trim().toLowerCase() === key ? { ...a, quantity: qty } : a
+    );
+    return {
+      ...draft,
+      loadoutArmor,
+      armaments: mergeLoadoutArmaments({
+        loadoutWeapons: draft.loadoutWeapons,
+        loadoutArmor,
+      }),
+    };
+  }
+
+  const loadoutWeapons = draft.loadoutWeapons.map((w) =>
+    String(w.id).trim().toLowerCase() === key ? { ...w, quantity: qty } : w
+  );
+  return {
+    ...draft,
+    loadoutWeapons,
+    armaments: mergeLoadoutArmaments({
+      loadoutWeapons,
+      loadoutArmor: draft.loadoutArmor,
+    }),
+  };
+}
+
+/** Add every recommended gear ref that is not already selected. */
+export function addAllRecommendedEquipment(
+  draft: GuidedLoadoutDraftSelection,
+  recommended: PathItemRecommendation[]
+): GuidedLoadoutDraftSelection {
+  let next = draft;
+  for (const ref of recommended) {
+    const key = String(ref.id).trim().toLowerCase();
+    if (next.equipment.some((e) => String(e.id).trim().toLowerCase() === key)) continue;
+    next = addItemToGuidedDraft(next, ref, 'equipment');
+  }
+  return next;
 }
 
 export function removeItemFromGuidedDraft(

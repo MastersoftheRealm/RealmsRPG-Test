@@ -84,7 +84,7 @@ Several rules use **½** or "half":
 
 ### Obscurity & Modifiers
 
-**Apply modifiers to the active party only** — the one making the roll. Do not apply the same modifier to both attacker and defender (e.g., -2 to attack from darkness is enough; don't also give +2 Evasion to the defender).
+**Apply Bonuses and Penalties to the active party only** (the one making the roll). Do not apply the same Bonus or Penalty to both attacker and defender (e.g., -2 to attack from darkness is enough; do not also give +2 Evasion to the defender).
 
 ### Ranged Attack Penalties
 
@@ -119,9 +119,11 @@ A creature can have only **one instance** of a given Condition at a time. Levele
 
 ## Terminology & Definitions
 
+**Authority for user-facing product copy and agent writing.** Capitalize the terms below when they name a Realms rules concept. Do not capitalize the same English word when it is used in ordinary language (e.g. "the power level of your story" vs "spend Energy on Powers").
+
 ### Official Game Terms (Capitalize These)
 
-These terms are used consistently across all Realms resources. Capitalize them in UI and documentation:
+These terms are used consistently across all Realms resources. Capitalize them in UI and documentation when used as game terms:
 
 | Term | Definition |
 |------|------------|
@@ -130,18 +132,56 @@ These terms are used consistently across all Realms resources. Capitalize them i
 | **Creature** | NPCs, monsters, companions, summoned entities |
 | **Realm Master (RM)** | The game moderator who runs the adventure |
 | **Encounter** | A structured challenge: Skill Encounter, Combat Encounter, or social interaction |
-| **Power** | Supernatural/magical ability (spells, mana, divine favor, etc.) |
-| **Technique** | Physical or martial ability (weapon attacks, unarmed prowess, etc.) |
-| **Feat** | Archetype Feat or Character Feat—a discrete ability or talent |
-| **Species** | Character lineage (Human, Elf, Dwarf, etc.) |
-| **Archetype** | Character class/role: Power, Martial, or Powered-Martial |
-| **Score** | A numerical representation used passively or reactively (Skill Score, Defense Score, Evasion) |
-| **Bonus** | A number added to rolls (Skill Bonus, Attack Bonus, Defense Bonus) |
+| **Power** | Supernatural ability granted by an Archetype Path (or similar). Not a "spell". |
+| **Technique** | Physical or martial ability (weapon attacks, Unarmed Prowess, etc.) |
+| **Feat** | Archetype Feat or Character Feat: a discrete ability or talent |
+| **Trait** | Species Trait, Ancestry Trait, Characteristic, Flaw, and related Species options |
+| **Skill** / **Skills** | Trained competence; spent with Skill Points; used on Skill Rolls |
+| **Species** | Character lineage (Human, Elf, Dwarf, etc.). Not "race". |
+| **Archetype** / **Archetype Path** | Path type that guides Feats, Skills, and Loadout: Power, Martial, or Powered-Martial. Not "class". |
+| **Archetype Ability** | Governing Ability for a path. Powered-Martial paths have two primary Archetype Abilities: **Archetype Power Ability** and **Archetype Martial Ability** (never primary/secondary between those two). |
+| **Score** | Passive target or passive total = **Bonus + 10** (Defense Score, Skill Score, Difficulty Score, Evasion, etc.). See Score Pattern above. |
+| **Bonus** | A number added to rolled dice (Skill Bonus, Attack Bonus, Defense Bonus). Other games call this a "modifier"; Realms does not. |
 | **Penalty** | A number subtracted from rolls |
-| **Overcome** | When a roll meets or exceeds a target Score, or Vice Versa |
+| **Difficulty Score (DS)** | The target number for many rolls. Not DC / Difficulty Class. |
+| **Energy** | Resource spent to use Powers (and some Techniques / items) |
+| **Health** | Damage capacity |
+| **Speed** | Movement measure from rules |
+| **Loadout** | Character's selected weapons, armor, and gear (path-recommended picks in guided creator) |
+| **Overcome** | When a roll meets or exceeds a target Score, or vice versa |
 | **Action** | Something a creature does during its turn (Basic, Quick, Free, Movement, etc.) |
 | **Reaction** | Something a creature does outside its turn in response to a trigger |
 | **Determination Die** | Session resource: spend to re-roll any roll and choose which result to keep |
+
+### Preferred vs avoided vocabulary (soft guide)
+
+This is a **guide**, not a muzzle. Prefer Realms terms; avoid importing other systems' jargon when a Realms term already exists. Ordinary English is fine when you are not naming a rules concept.
+
+| Prefer (Realms) | Avoid in product UI / rules copy |
+|-----------------|----------------------------------|
+| Abilities | Ability Scores (as the UI label for Abilities) |
+| Bonus / Penalty | Modifier / Mod |
+| Score (Bonus + 10) | Using "Score" for an Ability value |
+| Difficulty Score (DS) | DC, Difficulty Class |
+| Skill Roll / Attack Roll / Defense Roll | Check, Saving Throw, Save |
+| Archetype Path / Archetype | Class |
+| Species | Race |
+| Power | Spell (unless flavor text clearly means in-world magic as fiction) |
+| Energy | Mana / Spell slots |
+| Defense / Evasion / Damage Reduction | Armor Class (AC) |
+| Health | HP (user unless a dense HUD abbreviation is already established) |
+| Currency | c / gold shorthand in Layer 1 or Layer 2 UI |
+
+**Layer 1 / Layer 2 copy:** Spell game terms in full for new players (**Currency**, **Training Points**, **Damage Reduction**, …). Do not use compact abbreviations like `c` or `TP` in guided L1/L2 chrome, choice cards, or resource bars. Dense Layer 3 / advanced / table columns may keep short labels when the column header already names the term.
+
+**Also avoid:** inventing systems we do not have. When unsure, match `GAME_RULES.md` and existing UI copy.
+
+### Agent writing notes (user-facing strings)
+
+- Capitalize game terms only in game-term context (table above).
+- Do **not** use em dashes (`—`) in new user-facing copy. Hyphens (`-`) in compounds (e.g. Powered-Martial, one-handed) are fine.
+- Prefer plain, specific wording over stock AI phrasing.
+- Display Abilities as "Abilities", not "Ability Scores". Scores are for Bonus + 10 targets.
 
 ### How We Refer to Rolls
 

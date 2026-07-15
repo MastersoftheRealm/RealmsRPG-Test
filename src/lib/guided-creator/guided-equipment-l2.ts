@@ -95,7 +95,7 @@ export function buildGuidedEquipmentL2Items(
             {
               key: 'cost',
               label: 'Cost',
-              value: `${unitCost}c`,
+              value: String(unitCost),
               align: 'right' as const,
             },
           ]
@@ -217,7 +217,6 @@ export function applyGuidedEquipmentL2Selection(
       ok: true,
       partial: {
         loadoutWeapons: refs,
-        loadoutId: 'custom',
         armaments: mergeLoadoutArmaments({
           loadoutWeapons: refs,
           loadoutArmor: draft.loadoutArmor,
@@ -235,7 +234,6 @@ export function applyGuidedEquipmentL2Selection(
       ok: true,
       partial: {
         loadoutArmor: refs,
-        loadoutId: 'custom',
         armaments: mergeLoadoutArmaments({
           loadoutWeapons: draft.loadoutWeapons,
           loadoutArmor: refs,
@@ -253,7 +251,6 @@ export function applyGuidedEquipmentL2Selection(
     ok: true,
     partial: {
       equipment: refs,
-      loadoutId: 'custom',
     },
   };
 }

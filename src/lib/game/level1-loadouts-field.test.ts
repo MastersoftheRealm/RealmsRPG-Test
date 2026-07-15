@@ -5,7 +5,7 @@ import {
 } from '@/lib/game/archetype-path';
 
 describe('level1 loadouts field', () => {
-  it('parses plain kit array', () => {
+  it('parses legacy kit array for compat', () => {
     const parsed = parseLevel1LoadoutsField([
       { id: 'kit-a', title: 'Greataxe', armaments: [{ id: '1', quantity: 1 }] },
     ]);
@@ -24,19 +24,23 @@ describe('level1 loadouts field', () => {
     expect(parsed.loadouts?.[0]?.id).toBe('kit-b');
   });
 
-  it('serializes metadata as object wrapper', () => {
+  it('serializes metadata only (never persists kits)', () => {
     const serialized = serializeLevel1LoadoutsField({
       loadouts: [{ id: 'k1', title: 'Kit', armaments: [] }],
       armorStep: 'none',
+      sharedEquipment: [{ id: '3', quantity: 4 }],
     });
-    expect(serialized).toMatchObject({
-      kits: [{ id: 'k1', title: 'Kit', armaments: [] }],
+    expect(serialized).toEqual({
       armorStep: 'none',
+      sharedEquipment: [{ id: '3', quantity: 4 }],
     });
   });
 
-  it('serializes kits-only as array', () => {
-    const kits = [{ id: 'k1', title: 'Kit', armaments: [] }];
-    expect(serializeLevel1LoadoutsField({ loadouts: kits })).toEqual(kits);
+  it('serializes empty when no metadata', () => {
+    expect(
+      serializeLevel1LoadoutsField({
+        loadouts: [{ id: 'k1', title: 'Kit', armaments: [] }],
+      })
+    ).toBeNull();
   });
 });

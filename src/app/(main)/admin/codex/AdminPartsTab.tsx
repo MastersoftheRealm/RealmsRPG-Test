@@ -835,7 +835,7 @@ export function AdminPartsTab() {
                     <div className="grid grid-cols-2 gap-4 max-w-xs">
                       <div>
                         <label className="block text-sm font-medium text-text-secondary mb-1">
-                          EN cost {form.percentage ? '(±% modifier)' : ''}
+                          EN cost {form.percentage ? '(±%)' : ''}
                         </label>
                         {form.percentage ? (
                           <div className="flex items-center gap-2">

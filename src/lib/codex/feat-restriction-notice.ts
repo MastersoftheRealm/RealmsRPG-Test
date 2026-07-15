@@ -1,8 +1,8 @@
 /**
- * Player-facing notices for feat usage restrictions (state feats, uses per recovery).
+ * Player-facing notices for feat/trait usage restrictions (state feats, uses per recovery).
  */
 
-import type { Feat } from '@/types/codex';
+import type { Feat, Trait } from '@/types/codex';
 import { calculateProficiency } from '@/lib/game/formulas';
 import { formatListCellLabel } from '@/lib/utils';
 
@@ -13,6 +13,8 @@ export type FeatRestrictionNoticeOpts = {
   /** Character level — used for default Enter State uses when the feat has no per-feat limit. */
   level?: number;
 };
+
+export type LimitedUseEntity = 'feat' | 'trait';
 
 function formatUsesCount(uses: number): string {
   return uses === 1 ? 'once' : `${uses} times`;
@@ -25,17 +27,30 @@ function formatRecoveryPeriod(recPeriod: string | undefined, forceFull = false):
 }
 
 /**
+ * Shared limited-uses copy for feats and traits (guided choice cards, etc.).
+ * Returns null when the entity has no limited uses.
+ */
+export function getLimitedUsesNotice(
+  entity: LimitedUseEntity,
+  usesPerRec: number | null | undefined,
+  recPeriod: string | null | undefined,
+  opts?: { forceFullRecovery?: boolean }
+): string | null {
+  const uses = usesPerRec;
+  if (uses == null || uses <= 0) return null;
+  const period = formatRecoveryPeriod(recPeriod?.trim(), opts?.forceFullRecovery === true);
+  return `This ${entity} can be used ${formatUsesCount(uses)} per ${period} Recovery.`;
+}
+
+/**
  * Returns a brief notice when a feat is a state feat and/or has limited uses per recovery.
  * Returns null when no restriction applies.
  */
 export function getFeatRestrictionNotice(
-  feat: Pick<Feat, 'state_feat' | 'uses_per_rec' | 'rec_period'>,
+  feat: Pick<Feat, 'state_feat'> & Partial<Pick<Feat, 'uses_per_rec' | 'rec_period'>>,
   opts?: FeatRestrictionNoticeOpts
 ): string | null {
   const parts: string[] = [];
-  const uses = feat.uses_per_rec;
-  const hasFeatUses = uses != null && uses > 0;
-  const recPeriod = feat.rec_period?.trim();
 
   if (feat.state_feat) {
     parts.push(
@@ -43,11 +58,11 @@ export function getFeatRestrictionNotice(
     );
   }
 
-  if (hasFeatUses) {
-    const period = formatRecoveryPeriod(recPeriod, feat.state_feat === true);
-    parts.push(
-      `This feat can be used ${formatUsesCount(uses)} per ${period} Recovery.`
-    );
+  const usesNotice = getLimitedUsesNotice('feat', feat.uses_per_rec, feat.rec_period, {
+    forceFullRecovery: feat.state_feat === true,
+  });
+  if (usesNotice) {
+    parts.push(usesNotice);
   } else if (feat.state_feat && opts?.level != null) {
     const enterStateUses = calculateProficiency(opts.level);
     if (enterStateUses > 0) {
@@ -58,4 +73,14 @@ export function getFeatRestrictionNotice(
   }
 
   return parts.length > 0 ? parts.join(' ') : null;
+}
+
+/**
+ * Returns a brief notice when a trait has limited uses per recovery.
+ * Returns null when no restriction applies.
+ */
+export function getTraitRestrictionNotice(
+  trait: Partial<Pick<Trait, 'uses_per_rec' | 'rec_period'>>
+): string | null {
+  return getLimitedUsesNotice('trait', trait.uses_per_rec, trait.rec_period);
 }

@@ -4,6 +4,7 @@ import {
   buildEquipmentLookup,
   groupResolvedItemsByCategory,
   loadoutDraftFromSelection,
+  pruneUnresolvedLoadoutRefs,
   rebucketLoadoutByLookup,
   resolveLoadoutItems,
 } from '@/lib/guided-creator/resolve-loadout-items';
@@ -153,6 +154,31 @@ describe('resolve-loadout-items', () => {
         { id: SCALEMAIL, quantity: 1 },
       ],
     });
+  });
+
+  it('prunes unresolved loadout refs when lookup is ready', () => {
+    const lookup = buildEquipmentLookup(
+      [
+        {
+          id: GREATSword,
+          docId: GREATSword,
+          name: 'Greatsword',
+          type: 'weapon',
+          properties: [],
+          damage: [{ amount: 1, size: 8, type: 'slashing' }],
+        },
+      ],
+      []
+    );
+    expect(
+      pruneUnresolvedLoadoutRefs(
+        [
+          { id: GREATSword, quantity: 1 },
+          { id: 'stale-kit-id', quantity: 1 },
+        ],
+        lookup
+      )
+    ).toEqual([{ id: GREATSword, quantity: 1 }]);
   });
 
   it('groups resolved items by category for section display', () => {

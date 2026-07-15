@@ -239,9 +239,9 @@ export function UnifiedSelectionModal({
       });
     }
     
-    // Sort
+    // Sort (sortItems already closes over sortState from useSort)
     return sortItems(result);
-  }, [items, displayFilter, searchQuery, searchFields, sortState, hideDisabled, sortItems]);
+  }, [items, displayFilter, searchQuery, searchFields, hideDisabled, sortItems]);
   
   // Toggle selection — normalize id to string so selection works when codex returns number ids.
   // Soft capacity (maxSelections > 1 or 0): allow selecting past max; confirm blocked + warning.

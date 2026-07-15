@@ -3,11 +3,13 @@
 import { useCallback, useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui';
+import { ValueStepper } from '@/components/shared';
 import type { PathItemRecommendation } from '@/types/archetype';
 import type { LibraryItem } from '@/types/library';
 import type { CodexEquipmentItem } from '@/types/codex';
 import type { GuidedDraft, GuidedEquipmentPhase } from '@/stores/guided-creator-store';
 import { GuidedChoiceCard } from './guided-choice-card';
+import { GuidedEquipmentFactChips } from './guided-equipment-fact-chips';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from './guided-choice-styles';
 import { GUIDED_CHOICE_GRID_ITEM_CLASS } from './guided-choice-grid';
 import {
@@ -17,20 +19,21 @@ import {
   weaponDamageLineForRef,
 } from '@/lib/guided-creator/equipment-catalog-rows';
 import {
+  filterPoolToPhase,
   getPhaseL1Candidates,
   pathRecommendedIdSet,
 } from '@/lib/guided-creator/equipment-phase-candidates';
 import { validateWeaponHandSelection } from '@/lib/guided-creator/equipment-eligibility';
 import { buildEquipmentPhaseCardStats } from '@/lib/guided-creator/equipment-phase-stats';
+import { resolveRefUnitCost } from '@/lib/guided-creator/equipment-currency';
 import {
+  addAllRecommendedEquipment,
   addItemToGuidedDraft,
   removeItemFromGuidedDraft,
+  setItemQuantityInGuidedDraft,
 } from '@/lib/guided-creator/loadout-pool';
 import { wouldExceedLoadoutTp } from '@/lib/guided-creator/loadout-tp';
-import {
-  buildGuidedEquipmentEligibilityContext,
-  useGuidedEquipmentCatalog,
-} from '@/hooks/use-guided-equipment-catalog';
+import { useGuidedEquipmentCatalog } from '@/hooks/use-guided-equipment-catalog';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 
 const phaseCopy = GUIDED_CREATOR_COPY.steps.loadout.phases;
@@ -54,6 +57,21 @@ function isSelectedInPhase(
   return draft.equipment.some((e) => normalizeId(e.id) === key);
 }
 
+function selectedQuantity(
+  phase: GuidedEquipmentPhase,
+  draft: GuidedDraft,
+  itemId: string
+): number {
+  const key = normalizeId(itemId);
+  const list =
+    phase === 'weapon'
+      ? draft.loadoutWeapons
+      : phase === 'armor'
+        ? draft.loadoutArmor
+        : draft.equipment;
+  return list.find((r) => normalizeId(r.id) === key)?.quantity ?? 1;
+}
+
 export interface GuidedEquipmentL1PhaseProps {
   phase: GuidedEquipmentPhase;
   draft: GuidedDraft;
@@ -61,7 +79,6 @@ export interface GuidedEquipmentL1PhaseProps {
   officialItems: LibraryItem[];
   codexEquipment: CodexEquipmentItem[];
   armorOptional?: boolean;
-  currencyRemaining?: number;
   onDraftChange: (partial: Partial<GuidedDraft>) => void;
 }
 
@@ -72,11 +89,10 @@ export function GuidedEquipmentL1Phase({
   officialItems,
   codexEquipment,
   armorOptional = false,
-  currencyRemaining,
   onDraftChange,
 }: GuidedEquipmentL1PhaseProps) {
   const copy = phaseCopy[`${phase}Phase` as 'weaponPhase' | 'armorPhase' | 'gearPhase'];
-  const { catalog, tpSummary, itemProperties, rules } = useGuidedEquipmentCatalog(
+  const { catalog, itemProperties, rules } = useGuidedEquipmentCatalog(
     draft,
     officialItems,
     codexEquipment
@@ -88,17 +104,26 @@ export function GuidedEquipmentL1Phase({
     [pool, phase, officialItems, codexEquipment]
   );
 
-  const eligibilityCtx = useMemo(
-    () =>
-      buildGuidedEquipmentEligibilityContext(
-        phase,
-        draft,
-        phase === 'gear' ? { spent: 0, limit: 0 } : tpSummary,
-        pathRecommendedIds,
-        phase === 'gear' ? currencyRemaining : undefined
-      ),
-    [phase, draft, tpSummary, pathRecommendedIds, currencyRemaining]
+  const recommendedGearRefs = useMemo(
+    () => filterPoolToPhase(pool, 'gear', officialItems, codexEquipment),
+    [pool, officialItems, codexEquipment]
   );
+
+  /** L1 ranks by path/attack ability only — full eligibility (ability/TP/currency) stays L2. */
+  const rankCtx = useMemo(
+    () => ({
+      pathRecommendedIds,
+      martAbil: draft.mart_abil,
+      powAbil: draft.pow_abil,
+    }),
+    [pathRecommendedIds, draft.mart_abil, draft.pow_abil]
+  );
+
+  const selectedIds = useMemo(() => {
+    if (phase === 'weapon') return draft.loadoutWeapons.map((w) => w.id);
+    if (phase === 'armor') return draft.loadoutArmor.map((a) => a.id);
+    return draft.equipment.map((e) => e.id);
+  }, [phase, draft.loadoutWeapons, draft.loadoutArmor, draft.equipment]);
 
   const candidates = useMemo(
     () =>
@@ -106,12 +131,20 @@ export function GuidedEquipmentL1Phase({
         pool,
         phase,
         catalog,
-        eligibilityCtx,
+        rankCtx,
         officialItems,
-        codexEquipment
+        codexEquipment,
+        selectedIds
       ),
-    [pool, phase, catalog, eligibilityCtx, officialItems, codexEquipment]
+    [pool, phase, catalog, rankCtx, officialItems, codexEquipment, selectedIds]
   );
+
+  const allRecommendedSelected =
+    phase === 'gear' &&
+    recommendedGearRefs.length > 0 &&
+    recommendedGearRefs.every((ref) =>
+      draft.equipment.some((e) => normalizeId(e.id) === normalizeId(ref.id))
+    );
 
   const toggleSelection = useCallback(
     (ref: PathItemRecommendation) => {
@@ -120,7 +153,7 @@ export function GuidedEquipmentL1Phase({
 
       if (selected) {
         const next = removeItemFromGuidedDraft(draft, ref.id);
-        onDraftChange({ ...next, loadoutId: 'custom' });
+        onDraftChange({ ...next });
         return;
       }
 
@@ -149,7 +182,7 @@ export function GuidedEquipmentL1Phase({
           armaments: draft.loadoutWeapons,
         };
         const next = addItemToGuidedDraft(cleared, ref, 'armor');
-        onDraftChange({ ...next, loadoutId: 'custom' });
+        onDraftChange({ ...next });
         return;
       }
 
@@ -163,18 +196,33 @@ export function GuidedEquipmentL1Phase({
           setHandMessage(handCheck.message ?? phaseCopy.weaponPhase.handBlocked);
           return;
         }
-        onDraftChange({ ...nextDraft, loadoutId: 'custom' });
+        onDraftChange({ ...nextDraft });
         return;
       }
 
       const next = addItemToGuidedDraft(draft, ref, 'equipment');
-      onDraftChange({ ...next, loadoutId: 'custom' });
+      onDraftChange({ ...next });
     },
     [phase, draft, onDraftChange, officialItems, codexEquipment, itemProperties, rules, catalog]
   );
 
+  const handleQuantityChange = useCallback(
+    (ref: PathItemRecommendation, quantity: number) => {
+      const category =
+        phase === 'weapon' ? 'weapon' : phase === 'armor' ? 'armor' : 'equipment';
+      const next = setItemQuantityInGuidedDraft(draft, ref.id, quantity, category);
+      onDraftChange({ ...next });
+    },
+    [draft, onDraftChange, phase]
+  );
+
+  const handleAddAllRecommended = useCallback(() => {
+    const next = addAllRecommendedEquipment(draft, recommendedGearRefs);
+    onDraftChange({ ...next });
+  }, [draft, onDraftChange, recommendedGearRefs]);
+
   const handleUnarmored = useCallback(() => {
-    onDraftChange({ loadoutArmor: [], loadoutId: 'custom' });
+    onDraftChange({ loadoutArmor: [] });
   }, [onDraftChange]);
 
   if (candidates.length === 0) {
@@ -201,15 +249,32 @@ export function GuidedEquipmentL1Phase({
         </p>
       ) : null}
 
+      {phase === 'gear' && recommendedGearRefs.length > 0 ? (
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={handleAddAllRecommended}
+          disabled={allRecommendedSelected}
+          className="min-h-11"
+        >
+          {phaseCopy.gearPhase.addAllRecommended}
+        </Button>
+      ) : null}
+
       <div className={GUIDED_CHOICE_COMPACT_GRID_CLASS} role="list">
         {candidates.map((row) => {
-          const ref = pool.find((p) => normalizeId(p.id) === normalizeId(row.id)) ?? {
+          const poolRef = pool.find((p) => normalizeId(p.id) === normalizeId(row.id));
+          const ref: PathItemRecommendation = poolRef ?? {
             id: row.id,
             quantity: 1,
           };
           const selected = isSelectedInPhase(phase, draft, row.id);
-          const isPathPick = pathRecommendedIds.has(normalizeId(row.id));
           const libraryRow = libraryRowForRef(row.id, officialItems, codexEquipment);
+          const unitCost = resolveRefUnitCost(ref, officialItems, codexEquipment);
+          const description =
+            libraryRow && 'description' in libraryRow
+              ? String(libraryRow.description ?? '').trim() || undefined
+              : undefined;
 
           let stats = buildEquipmentPhaseCardStats({ category: 'equipment' });
           if (phase === 'weapon') {
@@ -217,6 +282,9 @@ export function GuidedEquipmentL1Phase({
               category: 'weapon',
               properties: row.properties,
               damageLine: weaponDamageLineForRef(row.id, officialItems, codexEquipment),
+              unitCost,
+              abilityRequirement: row.abilityRequirement,
+              itemProperties,
             });
           } else if (phase === 'armor') {
             const armorStats = armorStatsForRef(row.id, officialItems, codexEquipment);
@@ -225,20 +293,18 @@ export function GuidedEquipmentL1Phase({
               properties: row.properties,
               damageReduction: armorStats.damageReduction,
               agilityPenalty: armorStats.agilityPenalty,
+              unitCost,
+              itemProperties,
             });
           } else {
             stats = buildEquipmentPhaseCardStats({
               category: 'equipment',
               shortUse: gearShortUseForRef(row.id, officialItems, codexEquipment),
+              unitCost,
             });
           }
 
-          const description = stats.primaryLine;
-          const tagline =
-            stats.secondaryLine ??
-            (phase === 'gear'
-              ? gearShortUseForRef(row.id, officialItems, codexEquipment)
-              : undefined);
+          const qty = selectedQuantity(phase, draft, row.id);
 
           return (
             <div key={row.id} className={cn(GUIDED_CHOICE_GRID_ITEM_CLASS)} role="listitem">
@@ -249,13 +315,44 @@ export function GuidedEquipmentL1Phase({
                 imageRecord={libraryRow}
                 title={row.name}
                 description={description}
-                tagline={tagline !== description ? tagline : undefined}
-                tags={stats.tags}
-                badge={isPathPick ? copy.pathBadge : undefined}
+                hideTagsWhenExpanded
+                expandLabel={
+                  stats.detailChips.length > 0 ? phaseCopy.cardPropertyExpand : undefined
+                }
+                collapseLabel={
+                  stats.detailChips.length > 0 ? phaseCopy.cardPropertyCollapse : undefined
+                }
                 selected={selected}
                 onSelect={() => toggleSelection(ref)}
                 selectAriaLabel={`${selected ? 'Deselect' : 'Select'} ${row.name}`}
-              />
+                expandedExtra={
+                  stats.detailChips.length > 0 ? (
+                    <GuidedEquipmentFactChips chips={stats.detailChips} mode="expand" />
+                  ) : undefined
+                }
+              >
+                {stats.cardChips.length > 0 ? (
+                  <div className="mt-2 px-1">
+                    <GuidedEquipmentFactChips chips={stats.cardChips} mode="tooltip" />
+                  </div>
+                ) : null}
+                {phase === 'gear' && selected ? (
+                  <div
+                    className="mt-2 flex items-center justify-between gap-2 px-1"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                  >
+                    <span className="font-nunito text-sm text-text-secondary">Quantity</span>
+                    <ValueStepper
+                      value={qty}
+                      min={1}
+                      max={99}
+                      onChange={(next) => handleQuantityChange(ref, next)}
+                      label={`Quantity for ${row.name}`}
+                    />
+                  </div>
+                ) : null}
+              </GuidedChoiceCard>
             </div>
           );
         })}

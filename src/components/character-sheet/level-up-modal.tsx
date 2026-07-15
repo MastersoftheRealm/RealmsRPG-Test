@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { ArrowUp, ArrowDown, Star, Heart, Shield, Sword, Check } from 'lucide-react';
 import { Modal, Button } from '@/components/ui';
 import { PathLevelGuidance } from '@/components/character-sheet/path-level-guidance';
@@ -90,14 +90,11 @@ export function LevelUpModal({
   const { rules } = useGameRules();
   const currentLevel = character.level || 1;
   const maxLevel = 20; // Max level cap
-  const [targetLevel, setTargetLevel] = useState(Math.min(maxLevel, currentLevel + 1));
+  // Fresh target per open — parent remounts when showLevelUpModal becomes true.
+  const [targetLevel, setTargetLevel] = useState(() =>
+    Math.min(maxLevel, Math.max(1, currentLevel + 1))
+  );
 
-  useEffect(() => {
-    if (isOpen) {
-      setTargetLevel(Math.min(maxLevel, Math.max(1, currentLevel + 1)));
-    }
-  }, [isOpen, currentLevel, maxLevel]);
-  
   const minLevel = 1;
   const isLevelChange = targetLevel !== currentLevel;
   const isLevelDown = targetLevel < currentLevel;

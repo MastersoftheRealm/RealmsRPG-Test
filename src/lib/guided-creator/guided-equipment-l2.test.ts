@@ -32,7 +32,6 @@ const baseDraft: GuidedDraft = {
   declinedPathSkillIds: [],
   archetypeFeatIds: [],
   characterFeatIds: [],
-  loadoutId: 'custom',
   equipmentPhase: 'weapon',
   loadoutWeapons: [],
   loadoutArmor: [],

@@ -75,11 +75,12 @@ When **creating or editing** a page or modal:
 
 3. **List/table**
    - Use `ListHeader` (hidden on mobile) and `GridListRow` with sensible `hideOnMobile` columns so mobile sees name + key info, details on expand.
+   - **Stable expand toggle:** Expand-in-place chips and rows must keep the click target under the finger/cursor (open → close without re-aiming). Prefer growing content and wrapping siblings; do not force wrap-row jumps with `w-full` on expand. See AGENT_GUIDE → Stable expand toggle.
 
 4. **Verification**
    - Resize to 360px width (or use DevTools device mode); confirm no pinch-zoom needed, modals usable, controls tappable.
    - For accessibility: contrast and labels per `src/docs/ACCESSIBILITY.md`; touch targets ≥ 44px on mobile (above).
-
+   - Expand a chip mid-row: confirm the header does not jump and a second tap in the same place collapses.
 ---
 
 ## Key components
@@ -89,6 +90,7 @@ When **creating or editing** a page or modal:
 | Modal | `src/components/ui/modal.tsx` | `fullScreenOnMobile` prop → full-screen below `md`. |
 | Collapsible section pattern | `src/components/creator/collapsible-section.tsx` | Use for within-panel sub-sections or lighter pages. |
 | ListHeader | `src/components/shared/list-header.tsx` | Desktop: column header grid. Mobile: expandable "Sort by [criteria] (A→Z)" using same sortState/onSort; no column headers. |
+| ExpandableChip / ChipGroup | `src/components/ui/expandable-chip.tsx` | Wrap groups use `items-start`; expand grows into remaining row width (stable toggle). |
 | GridListRow | `src/components/shared/grid-list-row.tsx` | `hideOnMobile` on column values. |
 | TabNavigation | `src/components/ui/tab-navigation.tsx` | Tabs use `overflow-x-auto` in globals; triggers have `min-h` touch target below `md`. |
 | TableScroll | `src/components/ui/table-scroll.tsx` | Wrap data tables for horizontal scroll on narrow viewports. |

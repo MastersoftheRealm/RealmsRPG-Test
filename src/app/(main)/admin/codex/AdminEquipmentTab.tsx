@@ -17,11 +17,13 @@ import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Copy, X } from 'lucide-react';
-import { formatListCellLabel } from '@/lib/utils';
+import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
+import { metadataDescriptorChip } from '@/lib/chip/list-row-metadata';
+import type { ChipData } from '@/components/shared/grid-list-row';
 
 const COPY_NAME_SUFFIX = ' copy';
 
-const EQUIPMENT_GRID_COLUMNS = '1.5fr 1fr 0.8fr 1fr 40px';
+const EQUIPMENT_GRID_COLUMNS = '1.3fr 0.9fr 0.65fr 0.75fr 1fr 0.7fr 40px';
 
 interface EquipmentListItem {
   id: string;
@@ -32,6 +34,9 @@ interface EquipmentListItem {
   gold_cost?: number;
   currency?: number;
   rarity?: string;
+  damage?: string;
+  armor_value?: number;
+  weight?: number;
 }
 
 interface EquipmentFilters {
@@ -249,6 +254,8 @@ export function AdminEquipmentTab() {
           { key: 'category', label: 'CATEGORY' },
           { key: 'cost', label: 'COST' },
           { key: 'rarity', label: 'RARITY' },
+          { key: 'damage', label: 'DAMAGE' },
+          { key: 'dr', label: 'DMG. RED.' },
           { key: '_actions', label: '', sortable: false as const },
         ]}
         gridColumns={EQUIPMENT_GRID_COLUMNS}
@@ -268,7 +275,16 @@ export function AdminEquipmentTab() {
               size="sm"
             />
           ) : (
-            filteredEquipment.map((e: EquipmentListItem & { category: string; cost: number; rarity: string }) => (
+            filteredEquipment.map((e: EquipmentListItem & { category: string; cost: number; rarity: string }) => {
+              const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> = [];
+              if (e.weight !== undefined) {
+                detailSections.push({
+                  label: 'Details',
+                  chips: [metadataDescriptorChip(`Weight ${e.weight} kg`)],
+                  hideLabelIfSingle: true,
+                });
+              }
+              return (
               <GridListRow
                 key={e.id}
                 id={e.id}
@@ -283,7 +299,18 @@ export function AdminEquipmentTab() {
                     highlight: true,
                   },
                   { key: 'Rarity', value: formatListCellLabel(e.rarity) },
+                  {
+                    key: 'Damage',
+                    value: e.damage ? formatDamageDisplay(e.damage) : '-',
+                    align: 'center' as const,
+                  },
+                  {
+                    key: 'Dmg. Red.',
+                    value: e.armor_value != null ? String(e.armor_value) : '-',
+                    align: 'center' as const,
+                  },
                 ]}
+                detailSections={detailSections.length > 0 ? detailSections : undefined}
                 rightSlot={
                   <div className="flex items-center gap-1 pr-2">
                     {pendingDeleteId === e.id ? (
@@ -314,7 +341,8 @@ export function AdminEquipmentTab() {
                   </div>
                 }
               />
-            ))
+              );
+            })
           )}
         </div>
       )}

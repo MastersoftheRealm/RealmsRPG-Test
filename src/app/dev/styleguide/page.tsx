@@ -34,6 +34,7 @@ import {
   Chip,
   DescriptorChip,
   ExpandableChip,
+  ChipGroup,
   Alert,
   Spinner,
   LoadingState,
@@ -165,7 +166,7 @@ const SEMANTIC_FG_TOKENS = [
 /** Solid fills — show as background swatches, not text samples */
 const BUTTON_SURFACE_TOKENS = ['--color-primary-button', '--color-danger-button'];
 
-/** Text on solid fills — sample on appropriate background */
+/** Text on solid fills: sample on appropriate background */
 const ON_FILL_TEXT_TOKENS: Array<{ token: string; fill: string }> = [
   { token: '--color-primary-chip-fg', fill: '--color-primary-button' },
   { token: '--color-primary-subtle-fg', fill: '--color-primary-subtle-bg' },
@@ -277,17 +278,17 @@ export default function StyleguidePage() {
 
         {/* Semantic foreground (theme-aware) */}
         <Section title="Semantic Foreground (theme-aware)">
-          <Row label="Status & archetype text on tinted backgrounds — use text-*-fg, not ramp + dark:">
+          <Row label="Status & archetype text on tinted backgrounds: use text-*-fg, not ramp + dark:">
             {SEMANTIC_FG_TOKENS.map((t) => (
               <TextSwatch key={t} token={t} />
             ))}
           </Row>
-          <Row label="Solid button fills — background swatches only">
+          <Row label="Solid button fills: background swatches only">
             {BUTTON_SURFACE_TOKENS.map((t) => (
               <Swatch key={t} token={t} />
             ))}
           </Row>
-          <Row label="Text on solid fills — sample on matching background">
+          <Row label="Text on solid fills: sample on matching background">
             {ON_FILL_TEXT_TOKENS.map(({ token, fill }) => (
               <OnFillTextSwatch key={token} token={token} fillToken={fill} />
             ))}
@@ -457,65 +458,80 @@ export default function StyleguidePage() {
 
         <Section title="Expandable Chips">
           <p className="text-sm text-text-secondary mb-4 max-w-3xl">
-            Rounded-rectangle geometry for expand-in-place parts and properties. Expanded chips grow to
-            full width without pill clipping on multi-line descriptions.
+            Rounded-rectangle geometry for expand-in-place parts and properties. Expanded chips grow into
+            the remaining width of their chip group row without jumping the toggle — click open, click
+            close without moving the pointer (stable expand toggle).
           </p>
           <Row label="Collapsed / expanded">
-            <ExpandableChip
-              label="Elemental Damage"
-              costSuffix={2}
-              description="Adds 1d6 fire damage to the power's base effect."
-              interactiveHover
-            />
-            <ExpandableChip
-              label="Extended Range"
-              costSuffix={1}
-              description="Increases the power's range by 30 feet. This line is intentionally longer to verify that expanded chips use rounded rectangles rather than pill caps that clip corner text."
-              defaultExpanded
-              interactiveHover
-            />
+            <ChipGroup className="w-full max-w-3xl" data-testid="styleguide-stable-expand-chips">
+              <ExpandableChip
+                label="Elemental Damage"
+                costSuffix={2}
+                description="Adds 1d6 fire damage to the power's base effect."
+                interactiveHover
+              />
+              <ExpandableChip
+                label="Extended Range"
+                costSuffix={1}
+                description="Increases the power's range by 30 feet. This line is intentionally longer to verify that expanded chips use rounded rectangles rather than pill caps that clip corner text."
+                defaultExpanded
+                interactiveHover
+              />
+              <ExpandableChip
+                label="Versatile"
+                costSuffix={1}
+                description="Click this chip, leave the mouse still, then click again to collapse. The header should not jump vertically when siblings reflow."
+                interactiveHover
+              />
+            </ChipGroup>
           </Row>
           <Row label="Size by role (md = default for lists; sm = dense only)">
-            <ExpandableChip
-              label="Stealth"
-              variant="list"
-              description="Move silently and remain unseen. Used for hiding, sneaking, and ambush setup."
-              interactiveHover
-            />
-            <ExpandableChip
-              label="Stealth"
-              variant="list"
-              size="sm"
-              description="Dense sm — avoid in GridListRow / summary panels; descriptor-sized expandable."
-              interactiveHover
-            />
+            <ChipGroup>
+              <ExpandableChip
+                label="Stealth"
+                variant="list"
+                description="Move silently and remain unseen. Used for hiding, sneaking, and ambush setup."
+                interactiveHover
+              />
+              <ExpandableChip
+                label="Stealth"
+                variant="list"
+                size="sm"
+                description="Dense sm: avoid in GridListRow / summary panels; descriptor-sized expandable."
+                interactiveHover
+              />
+            </ChipGroup>
           </Row>
           <Row label="Category tints">
-            <ExpandableChip
-              label="Action"
-              category="action"
-              description="Defines when and how the power is used during combat."
-              interactiveHover
-            />
-            <ExpandableChip
-              label="Area of Effect"
-              category="area"
-              description="Affects all creatures in a 15-foot radius."
-              defaultExpanded
-              interactiveHover
-            />
+            <ChipGroup>
+              <ExpandableChip
+                label="Action"
+                category="action"
+                description="Defines when and how the power is used during combat."
+                interactiveHover
+              />
+              <ExpandableChip
+                label="Area of Effect"
+                category="area"
+                description="Affects all creatures in a 15-foot radius."
+                defaultExpanded
+                interactiveHover
+              />
+            </ChipGroup>
           </Row>
           <Row label="GridListRow patterns (descriptor + expandable)">
-            <ExpandableChip label="Archetype Feat" descriptor />
-            <ExpandableChip label="Fire" descriptor descriptorVariant="default" />
-            <ExpandableChip
-              label="Elemental Damage"
-              variant="listCost"
-              cost={2}
-              costLabel="TP"
-              expandOnCost
-              description="Adds 1d6 fire damage when expanded."
-            />
+            <ChipGroup>
+              <ExpandableChip label="Archetype Feat" descriptor />
+              <ExpandableChip label="Fire" descriptor descriptorVariant="default" />
+              <ExpandableChip
+                label="Elemental Damage"
+                variant="listCost"
+                cost={2}
+                costLabel="TP"
+                expandOnCost
+                description="Adds 1d6 fire damage when expanded."
+              />
+            </ChipGroup>
           </Row>
         </Section>
 
@@ -736,23 +752,23 @@ export default function StyleguidePage() {
 
         {/* Interactive state matrix (VSEA-002) */}
         <Section title="Interactive State Matrix">
-          <Row label="Buttons — default / disabled / loading">
+          <Row label="Buttons: default / disabled / loading">
             <Button>Default</Button>
             <Button disabled>Disabled</Button>
             <Button isLoading>Loading</Button>
           </Row>
-          <Row label="Form — default / disabled / error">
+          <Row label="Form: default / disabled / error">
             <Input label="Enabled" placeholder="Editable" />
             <Input label="Disabled" placeholder="Locked" disabled />
             <Input label="Error" placeholder="Invalid" error="Required field" />
           </Row>
-          <Row label="Chips — static / interactive">
+          <Row label="Chips: static / interactive">
             <Chip variant="primary">Static</Chip>
             <Chip variant="primary" interactive>Interactive</Chip>
             <Chip variant="success" onRemove={() => {}}>Removable</Chip>
             <DescriptorChip>Descriptor</DescriptorChip>
           </Row>
-          <Row label="Tabs — underline (active: {tab})">
+          <Row label="Tabs: underline (active: {tab})">
             <div className="w-full max-w-xl">
               <TabNavigation
                 associatePanels={false}
@@ -765,12 +781,12 @@ export default function StyleguidePage() {
               />
             </div>
           </Row>
-          <Row label="Toast — trigger">
+          <Row label="Toast: trigger">
             <Button variant="secondary" onClick={() => showToast('Example notification', 'success')}>
               Show toast
             </Button>
           </Row>
-          <Row label="Overlays — tooltip + modal trigger">
+          <Row label="Overlays: tooltip + modal trigger">
             <Tooltip content="Tooltip on hover/focus">
               <Button variant="secondary">Tooltip target</Button>
             </Tooltip>

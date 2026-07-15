@@ -40,7 +40,7 @@ const ARCHETYPE_INFO: Record<ArchetypeCategory, { title: string; description: st
 };
 
 const PATH_SWITCH_WARNING =
-  'Changing your archetype path updates your identity and abilities. Existing feats, powers, techniques, armaments, and equipment may no longer match the new path. Nothing is removed automatically — review your sheet afterward.';
+  'Changing your archetype path updates your identity and abilities. Existing feats, powers, techniques, armaments, and equipment may no longer match the new path. Nothing is removed automatically. Review your sheet afterward.';
 
 const FORGE_SWITCH_WARNING =
   'Switching to Forge Your Own removes archetype path guidance. Your existing selections are kept, but they may no longer match path recommendations. Path progression notes will no longer appear on your sheet or at level-up.';
@@ -183,7 +183,7 @@ export function EditArchetypeModal({
   const martProf = redistributeProficiency(effectiveTotal, selectedType).mart_prof;
   const powProf = redistributeProficiency(effectiveTotal, selectedType).pow_prof;
 
-  // Fresh state per open via remount key in CharacterSheetModals (no reset effect).
+  // Fresh state per open via editArchetypeSessionKey remount in CharacterSheetModals (no reset effect).
 
   const handleTypeSelect = (type: ArchetypeCategory) => {
     setSelectedType(type);

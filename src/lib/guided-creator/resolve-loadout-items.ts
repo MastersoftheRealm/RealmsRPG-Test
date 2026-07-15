@@ -173,9 +173,20 @@ export function loadoutDraftFromSelection(
 }
 
 /**
+ * Drop draft loadout refs that no longer resolve in the library/codex lookup
+ * (stale kit auto-apply, renamed ids, etc.).
+ */
+export function pruneUnresolvedLoadoutRefs(
+  refs: PathItemRecommendation[],
+  lookup: Map<string, EquipmentLookupEntry>
+): PathItemRecommendation[] {
+  if (lookup.size === 0) return refs;
+  return refs.filter((ref) => lookup.has(normalizeId(String(ref.id))));
+}
+
+/**
  * Re-classify draft weapon/armor buckets using the library lookup.
- * Fixes kits that nest armor inside `armaments[]`, including after the user
- * has already customized (`loadoutId === 'custom'`).
+ * Fixes path recommendations that nest armor inside `armaments[]`.
  */
 export function rebucketLoadoutByLookup(
   loadoutWeapons: PathItemRecommendation[],

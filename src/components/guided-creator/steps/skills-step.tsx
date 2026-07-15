@@ -25,9 +25,9 @@ import {
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import type { Skill } from '@/hooks';
 
+import { EMPTY_NUMBER_RECORD, EMPTY_STRING_ARRAY } from '@/lib/empty';
+
 const stepCopy = GUIDED_CREATOR_COPY.steps.skills;
-const EMPTY_SKILL_IDS: string[] = [];
-const EMPTY_ALLOCATIONS: Record<string, number> = {};
 
 export function SkillsStep() {
   const { draft, updateDraft, nextSubStep } = useGuidedCreatorStore();
@@ -53,15 +53,19 @@ export function SkillsStep() {
   );
 
   const pathLevel1Skills = pathData?.level1?.skills;
-  const recommendedSkillIds = pathLevel1Skills ?? EMPTY_SKILL_IDS;
+  const recommendedSkillIds = pathLevel1Skills ?? EMPTY_STRING_ARRAY;
 
   const declinedPathSkillIds = useMemo(
     () => new Set(draft.declinedPathSkillIds.map(String)),
     [draft.declinedPathSkillIds]
   );
 
-  const allocations = draft.skills ?? EMPTY_ALLOCATIONS;
-  const abilities = draft.abilities ?? DEFAULT_ABILITIES;
+  const allocations = draft.skills ?? EMPTY_NUMBER_RECORD;
+  // Stable when draft.abilities is missing; never share a mutable DEFAULT_ABILITIES reference.
+  const abilities = useMemo(
+    () => draft.abilities ?? { ...DEFAULT_ABILITIES },
+    [draft.abilities]
+  );
   const level = 1;
   const extraSkillPoints = speciesSkillIds.has('0') ? 1 : 0;
   const totalPoints = getTotalSkillPoints(level, 'character') + extraSkillPoints;

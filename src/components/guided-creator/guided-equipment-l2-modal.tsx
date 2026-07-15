@@ -18,7 +18,6 @@ import {
 } from '@/lib/guided-creator/guided-equipment-l2';
 import { pathRecommendedIdSet } from '@/lib/guided-creator/equipment-phase-candidates';
 import { buildPathLoadoutPool } from '@/lib/guided-creator/loadout-pool';
-import type { PathLoadout } from '@/types/archetype';
 import {
   buildGuidedEquipmentEligibilityContext,
   useGuidedEquipmentCatalog,
@@ -31,18 +30,21 @@ const l2Copy = GUIDED_CREATOR_COPY.steps.loadout.phases.l2;
 const GEAR_GRID = '1.6fr 0.7fr';
 const GEAR_COLUMNS = [
   { key: 'name', label: 'NAME', align: 'left' as const, sortable: false as const },
-  { key: 'cost', label: 'COST', align: 'right' as const, sortable: false as const },
+  { key: 'cost', label: 'CURRENCY', align: 'right' as const, sortable: false as const },
 ];
 
 export interface GuidedEquipmentL2ModalProps {
   isOpen: boolean;
   phase: GuidedEquipmentPhase;
   draft: GuidedDraft;
-  loadouts: PathLoadout[];
-  pathLevel1: Parameters<typeof buildPathLoadoutPool>[1];
+  pathLevel1: Parameters<typeof buildPathLoadoutPool>[0];
   officialItems: LibraryItem[];
   codexEquipment: CodexEquipmentItem[];
   currencyRemaining: number;
+  /** Level-1 starting Currency (PointStatus total). */
+  currencyStarting: number;
+  /** Currency spent on weapons/armor (gear PointStatus budget base). */
+  armsSpent: number;
   onClose: () => void;
   onDraftChange: (partial: Partial<GuidedDraft>) => void;
 }
@@ -51,21 +53,19 @@ export function GuidedEquipmentL2Modal({
   isOpen,
   phase,
   draft,
-  loadouts,
   pathLevel1,
   officialItems,
   codexEquipment,
   currencyRemaining,
+  currencyStarting,
+  armsSpent,
   onClose,
   onDraftChange,
 }: GuidedEquipmentL2ModalProps) {
   const [error, setError] = useState<string | null>(null);
   const { catalog, tpSummary } = useGuidedEquipmentCatalog(draft, officialItems, codexEquipment);
 
-  const pool = useMemo(
-    () => buildPathLoadoutPool(loadouts, pathLevel1),
-    [loadouts, pathLevel1]
-  );
+  const pool = useMemo(() => buildPathLoadoutPool(pathLevel1), [pathLevel1]);
 
   const pathRecommendedIds = useMemo(
     () => pathRecommendedIdSet(pool, phase, officialItems, codexEquipment),
@@ -143,7 +143,7 @@ export function GuidedEquipmentL2Modal({
           {phase === 'gear' ? (
             <div className="flex justify-center">
               <PointStatus
-                total={currencyRemaining}
+                total={currencyStarting - armsSpent}
                 spent={computeL2GearSpend(selected)}
                 label={l2Copy.currencyLabel}
                 variant="inline"
@@ -166,7 +166,7 @@ export function GuidedEquipmentL2Modal({
       );
       return status;
     },
-    [phase, draft, catalog, tpSummary.limit, currencyRemaining, error]
+    [phase, draft, catalog, tpSummary.limit, currencyStarting, armsSpent, error]
   );
 
   const confirmDisabled = useCallback(

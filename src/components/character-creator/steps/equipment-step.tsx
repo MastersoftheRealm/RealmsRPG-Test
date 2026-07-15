@@ -16,7 +16,16 @@ import { cn, formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useEquipment, useUserItems, useItemProperties, useOfficialLibrary, usePowerParts, useTechniqueParts, useMergedSpecies, useCodexSkills, useTraits, useCreatorPathData } from '@/hooks';
-import { deriveItemDisplay, trainingPointsForItemPropertyRef } from '@/lib/calculators/item-calc';
+import {
+  deriveItemDisplay,
+  formatRange,
+  trainingPointsForItemPropertyRef,
+  type ItemPropertyPayload,
+} from '@/lib/calculators/item-calc';
+import {
+  buildEntityMetadataDetailSections,
+  mergeDetailSections,
+} from '@/lib/chip/list-row-metadata';
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 import {
   InfoTippy,
@@ -759,8 +768,8 @@ export function EquipmentStep() {
             {showFullEquipmentList
               ? 'Browse the full equipment catalog, or return to your path loadout.'
               : loadoutPhase === 'weapon'
-                ? 'Choose your weapon first — included in your path loadout.'
-                : 'Now choose armor — one decision at a time.'}
+                ? 'Choose your weapon first. Included in your path loadout.'
+                : 'Now choose armor, one decision at a time.'}
           </PathHelpCard>
           <PathNotes pathName={draft.archetype.name} notes={pathData?.level1?.notes} />
         </>
@@ -795,9 +804,9 @@ export function EquipmentStep() {
               </h3>
               <p className="text-sm text-text-secondary mt-0.5">
                 {pathConfirmMode
-                  ? 'Included in your path — review your loadout below. Expand to swap gear or browse the full catalog.'
+                  ? 'Included in your path. Review your loadout below. Expand to swap gear or browse the full catalog.'
                   : pathRecommendedForPhase.length > 0
-                    ? 'Included in your path — click to add, or add all at once.'
+                    ? 'Included in your path. Click to add, or add all at once.'
                     : publicItemsLoading
                       ? 'Loading recommended equipment from the library…'
                       : 'Recommended items could not be found in the library.'}
@@ -1284,7 +1293,17 @@ export function EquipmentStep() {
                     align: 'center' as const,
                   };
 
+                  const propertySection =
+                    chips.length > 0
+                      ? [{ label: 'Properties', chips, hideLabelIfSingle: true as const }]
+                      : undefined;
+
                   if (activeTab === 'weapon') {
+                    const propPayloads = (item.properties ?? []) as ItemPropertyPayload[];
+                    const rangeLabel = formatRange(propPayloads);
+                    const rangeFacts = buildEntityMetadataDetailSections({
+                      range: rangeLabel && rangeLabel.toLowerCase() !== 'melee' ? rangeLabel : 'Melee',
+                    });
                     return (
                       <GridListRow
                         key={item.id}
@@ -1298,7 +1317,7 @@ export function EquipmentStep() {
                         ]}
                         gridColumns={WEAPON_LIST_GRID}
                         badges={badges}
-                        detailSections={chips.length > 0 ? [{ label: 'Properties', chips, hideLabelIfSingle: true }] : undefined}
+                        detailSections={mergeDetailSections(rangeFacts, propertySection)}
                         rightSlot={rightSlotContent}
                         compact
                       />
@@ -1312,13 +1331,17 @@ export function EquipmentStep() {
                         name={item.name}
                         description={item.description}
                         columns={[
-                          { key: 'armor_value', value: item.armor_value != null ? `+${item.armor_value}` : '-', align: 'center' },
+                          {
+                            key: 'armor_value',
+                            value: item.armor_value != null ? String(item.armor_value) : '-',
+                            align: 'center',
+                          },
                           costColumn,
                           sourceColumn,
                         ]}
                         gridColumns={ARMOR_LIST_GRID}
                         badges={badges}
-                        detailSections={chips.length > 0 ? [{ label: 'Properties', chips, hideLabelIfSingle: true }] : undefined}
+                        detailSections={propertySection}
                         rightSlot={rightSlotContent}
                         compact
                       />

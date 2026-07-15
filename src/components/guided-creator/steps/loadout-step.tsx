@@ -1,38 +1,36 @@
 /**
- * Equipment loadout — phased weapon → armor → gear (TASK-424).
+ * Equipment loadout — phased weapon → armor → gear (no quick kits).
  */
 
 'use client';
 
 import { useEffect, useMemo, useCallback, useState } from 'react';
-import { Spinner, EmptyState } from '@/components/ui';
+import { Spinner } from '@/components/ui';
 import { useEquipment, useOfficialLibrary } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
 import { GuidedStepLayout } from '../guided-step-layout';
 import { GuidedUnarmedProwessPanel } from '../guided-unarmed-prowess-panel';
-import { GuidedEquipmentPhaseProgress } from '../guided-equipment-phase-progress';
 import { GuidedEquipmentPhaseLayout } from '../guided-equipment-phase-layout';
 import { GuidedEquipmentL1Phase } from '../guided-equipment-l1-phase';
-import { GuidedEquipmentPhaseSelection } from '../guided-equipment-phase-selection';
-import { GuidedLoadoutKitPresets } from '../guided-loadout-kit-presets';
 import { GuidedEquipmentL2Modal } from '../guided-equipment-l2-modal';
-import type { PathItemRecommendation, PathLoadout } from '@/types/archetype';
 import {
   buildEquipmentLookup,
-  loadoutDraftFromSelection,
+  pruneUnresolvedLoadoutRefs,
   rebucketLoadoutByLookup,
-  resolveLoadoutItems,
 } from '@/lib/guided-creator/resolve-loadout-items';
 import { buildPathLoadoutPool } from '@/lib/guided-creator/loadout-pool';
 import { resolveArmorStepMode } from '@/lib/guided-creator/equipment-eligibility';
+import { filterPoolToPhase } from '@/lib/guided-creator/equipment-phase-candidates';
 import {
   canCompleteEquipmentPhase,
   equipmentPhaseIndex,
   isLastEquipmentPhase,
   nextEquipmentPhase,
   prevEquipmentPhase,
+  resolveEquipmentPhaseVisibility,
   visibleEquipmentPhases,
+  type EquipmentPhaseVisibility,
 } from '@/lib/guided-creator/equipment-phase-nav';
 import {
   computeRemainingCurrency,
@@ -45,25 +43,9 @@ import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 const stepCopy = GUIDED_CREATOR_COPY.steps.loadout;
 const phaseCopy = stepCopy.phases;
 
-function mergeSharedEquipment(
-  equipment: PathItemRecommendation[],
-  shared: PathItemRecommendation[] | undefined
-): PathItemRecommendation[] {
-  if (!shared?.length) return equipment;
-  const seen = new Set(equipment.map((e) => String(e.id).trim().toLowerCase()));
-  const merged = [...equipment];
-  for (const ref of shared) {
-    const key = String(ref.id).trim().toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
-    merged.push(ref);
-  }
-  return merged;
-}
-
 export function LoadoutStep() {
   const { draft, updateDraft, prevSubStep, nextSubStep } = useGuidedCreatorStore();
-  const { pathData, archetype } = useGuidedPathData();
+  const { pathData } = useGuidedPathData();
   const { data: officialItems = [], isLoading: officialLoading } = useOfficialLibrary('items');
   const { data: codexEquipment = [], isLoading: codexLoading } = useEquipment();
   const [l2Open, setL2Open] = useState(false);
@@ -71,61 +53,43 @@ export function LoadoutStep() {
   const isLoading = officialLoading || codexLoading;
   const recommendUnarmed = pathData?.level1?.recommendUnarmedProwess === true;
   const armorMode = resolveArmorStepMode(pathData?.level1?.armorStep, draft.archetypeType);
-  const sharedEquipment = pathData?.level1?.sharedEquipment;
 
   const equipmentPhase = draft.equipmentPhase ?? 'weapon';
-  const visiblePhases = visibleEquipmentPhases(armorMode);
-
-  const imageByItemId = useMemo(() => {
-    const map = new Map<string, unknown>();
-    for (const item of officialItems) {
-      map.set(String(item.id).trim().toLowerCase(), item);
-    }
-    for (const item of codexEquipment) {
-      map.set(String(item.id).trim().toLowerCase(), item);
-    }
-    return map;
-  }, [officialItems, codexEquipment]);
 
   const equipmentLookup = useMemo(
     () => buildEquipmentLookup(officialItems, codexEquipment),
     [officialItems, codexEquipment]
   );
 
-  const loadouts: PathLoadout[] = useMemo(() => {
-    const fromPath = pathData?.level1?.loadouts ?? [];
-    if (fromPath.length > 0) return fromPath;
-
-    const armaments = pathData?.level1?.armamentRecommendations ?? [];
-    const equipment = pathData?.level1?.equipmentRecommendations ?? [];
-    if (armaments.length === 0 && equipment.length === 0) return [];
-
-    return [
-      {
-        id: 'path-default',
-        title: stepCopy.pathDefaultTitle(archetype?.name ?? 'Path'),
-        why: stepCopy.pathDefaultWhy,
-        armaments,
-        equipment,
-      },
-    ];
-  }, [pathData, archetype?.name]);
-
+  /**
+   * Recommendation pool from flat path columns only (quick kits removed from DB).
+   * L2 modal still accepts an empty loadouts array for API compatibility.
+   */
   const itemPool = useMemo(
-    () => buildPathLoadoutPool(loadouts, pathData?.level1),
-    [loadouts, pathData?.level1]
+    () => buildPathLoadoutPool(pathData?.level1),
+    [pathData?.level1]
   );
 
-  const resolvedByLoadoutId = useMemo(() => {
-    const map = new Map<string, ReturnType<typeof resolveLoadoutItems>>();
-    for (const loadout of loadouts) {
-      map.set(
-        loadout.id,
-        resolveLoadoutItems(loadout, equipmentLookup, stepCopy.unresolvedItem)
-      );
-    }
-    return map;
-  }, [loadouts, equipmentLookup]);
+  const hasWeaponOptions = useMemo(
+    () => filterPoolToPhase(itemPool, 'weapon', officialItems, codexEquipment).length > 0,
+    [itemPool, officialItems, codexEquipment]
+  );
+  const hasArmorOptions = useMemo(
+    () => filterPoolToPhase(itemPool, 'armor', officialItems, codexEquipment).length > 0,
+    [itemPool, officialItems, codexEquipment]
+  );
+
+  const phaseVisibility: EquipmentPhaseVisibility = useMemo(
+    () =>
+      resolveEquipmentPhaseVisibility(armorMode, {
+        hasWeaponOptions,
+        hasArmorOptions,
+        recommendUnarmed,
+      }),
+    [armorMode, hasWeaponOptions, hasArmorOptions, recommendUnarmed]
+  );
+
+  const visiblePhases = visibleEquipmentPhases(armorMode, phaseVisibility);
 
   const phaseCompletion = useMemo(
     () => ({
@@ -145,7 +109,7 @@ export function LoadoutStep() {
   );
 
   const phaseComplete = canCompleteEquipmentPhase(equipmentPhase, phaseCompletion);
-  const onLastPhase = isLastEquipmentPhase(equipmentPhase, armorMode);
+  const onLastPhase = isLastEquipmentPhase(equipmentPhase, armorMode, phaseVisibility);
 
   const armsSpent = useMemo(() => {
     const refs = [...draft.loadoutWeapons, ...draft.loadoutArmor];
@@ -167,80 +131,61 @@ export function LoadoutStep() {
     [draft.equipment, officialItems, codexEquipment]
   );
 
-  const currencyRemaining = useMemo(() => {
-    const starting = computeStartingCurrency(1);
-    return computeRemainingCurrency(starting, armsSpent + gearSpent);
-  }, [armsSpent, gearSpent]);
+  const currencyStarting = useMemo(() => computeStartingCurrency(1), []);
+
+  const currencySpent = useMemo(() => armsSpent + gearSpent, [armsSpent, gearSpent]);
+
+  const currencyRemaining = useMemo(
+    () => computeRemainingCurrency(currencyStarting, currencySpent),
+    [currencyStarting, currencySpent]
+  );
 
   useEffect(() => {
-    if (armorMode === 'none' && equipmentPhase === 'armor') {
-      updateDraft({ equipmentPhase: 'gear' });
+    if (!visiblePhases.includes(equipmentPhase)) {
+      updateDraft({ equipmentPhase: visiblePhases[0] ?? 'gear' });
     }
-  }, [armorMode, equipmentPhase, updateDraft]);
+  }, [visiblePhases, equipmentPhase, updateDraft]);
 
+  /** Re-bucket weapons/armor and drop unresolved (stale) refs once lookup is ready. */
   useEffect(() => {
     if (isLoading || equipmentLookup.size === 0) return;
-    if (draft.loadoutId || loadouts.length === 0) return;
-    const first = loadouts[0];
-    const fromKit = loadoutDraftFromSelection(first, equipmentLookup);
-    updateDraft({
-      loadoutId: first.id,
-      equipmentPhase: 'weapon',
-      ...fromKit,
-      equipment: mergeSharedEquipment(fromKit.equipment, sharedEquipment),
-    });
-  }, [isLoading, loadouts, draft.loadoutId, updateDraft, sharedEquipment, equipmentLookup]);
-
-  /** Re-bucket weapons/armor once library lookup is ready (kits often nest armor in armaments[]). */
-  useEffect(() => {
-    if (isLoading || equipmentLookup.size === 0) return;
-    if (draft.loadoutWeapons.length === 0 && draft.loadoutArmor.length === 0) return;
-
-    const next = rebucketLoadoutByLookup(
-      draft.loadoutWeapons,
-      draft.loadoutArmor,
-      equipmentLookup
-    );
     if (
-      JSON.stringify(next.loadoutWeapons) === JSON.stringify(draft.loadoutWeapons) &&
-      JSON.stringify(next.loadoutArmor) === JSON.stringify(draft.loadoutArmor)
+      draft.loadoutWeapons.length === 0 &&
+      draft.loadoutArmor.length === 0 &&
+      draft.equipment.length === 0
     ) {
       return;
     }
-    updateDraft(next);
+
+    const prunedWeapons = pruneUnresolvedLoadoutRefs(draft.loadoutWeapons, equipmentLookup);
+    const prunedArmor = pruneUnresolvedLoadoutRefs(draft.loadoutArmor, equipmentLookup);
+    const prunedGear = pruneUnresolvedLoadoutRefs(draft.equipment, equipmentLookup);
+    const next = rebucketLoadoutByLookup(prunedWeapons, prunedArmor, equipmentLookup);
+    const gearChanged =
+      JSON.stringify(prunedGear) !== JSON.stringify(draft.equipment);
+    if (
+      JSON.stringify(next.loadoutWeapons) === JSON.stringify(draft.loadoutWeapons) &&
+      JSON.stringify(next.loadoutArmor) === JSON.stringify(draft.loadoutArmor) &&
+      !gearChanged
+    ) {
+      return;
+    }
+    updateDraft({
+      ...next,
+      equipment: prunedGear,
+    });
   }, [
     isLoading,
     draft.loadoutWeapons,
     draft.loadoutArmor,
+    draft.equipment,
     equipmentLookup,
     updateDraft,
   ]);
 
-  const selectLoadout = useCallback(
-    (loadout: PathLoadout) => {
-      const fromKit = loadoutDraftFromSelection(loadout, equipmentLookup);
-      setL2Open(false);
-      updateDraft({
-        loadoutId: loadout.id,
-        equipmentPhase: 'weapon',
-        ...fromKit,
-        equipment: mergeSharedEquipment(fromKit.equipment, sharedEquipment),
-      });
-    },
-    [updateDraft, sharedEquipment, equipmentLookup]
-  );
-
   const handleUnarmedChange = useCallback(
     (level: number) => {
       updateDraft({ unarmedProwess: level });
-    },
-    [updateDraft]
-  );
-
-  const handlePhaseChange = useCallback(
-    (phase: typeof equipmentPhase) => {
-      setL2Open(false);
-      updateDraft({ equipmentPhase: phase });
     },
     [updateDraft]
   );
@@ -250,13 +195,13 @@ export function LoadoutStep() {
       setL2Open(false);
       return;
     }
-    const prev = prevEquipmentPhase(equipmentPhase, armorMode);
+    const prev = prevEquipmentPhase(equipmentPhase, armorMode, phaseVisibility);
     if (prev) {
       updateDraft({ equipmentPhase: prev });
       return;
     }
     prevSubStep();
-  }, [l2Open, equipmentPhase, armorMode, updateDraft, prevSubStep]);
+  }, [l2Open, equipmentPhase, armorMode, phaseVisibility, updateDraft, prevSubStep]);
 
   const handleLoadoutContinue = useCallback(() => {
     if (l2Open) {
@@ -264,7 +209,7 @@ export function LoadoutStep() {
       return;
     }
     if (!phaseComplete) return;
-    const next = nextEquipmentPhase(equipmentPhase, armorMode);
+    const next = nextEquipmentPhase(equipmentPhase, armorMode, phaseVisibility);
     if (next) {
       updateDraft({ equipmentPhase: next });
       return;
@@ -276,6 +221,7 @@ export function LoadoutStep() {
     phaseComplete,
     equipmentPhase,
     armorMode,
+    phaseVisibility,
     updateDraft,
     currencyRemaining,
     nextSubStep,
@@ -285,13 +231,11 @@ export function LoadoutStep() {
     ? phaseCopy.backToPhase
     : onLastPhase
       ? stepCopy.continueLabel
-      : equipmentPhase === 'weapon'
-        ? armorMode === 'none'
-          ? phaseCopy.continueArmor
-          : phaseCopy.continueWeapon
-        : phaseCopy.continueArmor;
+      : nextEquipmentPhase(equipmentPhase, armorMode, phaseVisibility) === 'armor'
+        ? phaseCopy.continueWeapon
+        : phaseCopy.continueToGear;
 
-  const phaseIdx = equipmentPhaseIndex(equipmentPhase, armorMode);
+  const phaseIdx = equipmentPhaseIndex(equipmentPhase, armorMode, phaseVisibility);
   const completionHint =
     visiblePhases.length > 1 ? (
       <span className="font-nunito">
@@ -299,11 +243,7 @@ export function LoadoutStep() {
       </span>
     ) : undefined;
 
-  const hasStepSelection =
-    draft.loadoutWeapons.length + draft.loadoutArmor.length + draft.equipment.length > 0 ||
-    (recommendUnarmed && (draft.unarmedProwess ?? 0) > 0);
-
-  const footerCanContinue = l2Open ? true : onLastPhase ? phaseComplete && hasStepSelection : phaseComplete;
+  const footerCanContinue = l2Open ? true : phaseComplete;
 
   return (
     <GuidedStepLayout
@@ -321,56 +261,22 @@ export function LoadoutStep() {
           <Spinner className="h-5 w-5" />
           <span>{stepCopy.loadingItems}</span>
         </div>
-      ) : loadouts.length === 0 ? (
-        <EmptyState title={stepCopy.emptyTitle} description={stepCopy.emptyDescription} />
       ) : (
-        <div className="space-y-8">
-          <GuidedEquipmentPhaseProgress
-            value={equipmentPhase}
-            armorMode={armorMode}
-            completion={phaseCompletion}
-            onChange={handlePhaseChange}
-          />
-
-          {!l2Open ? (
-            <>
-              <GuidedLoadoutKitPresets
-                loadouts={loadouts}
-                resolvedByLoadoutId={resolvedByLoadoutId}
-                selectedLoadoutId={draft.loadoutId}
-                imageByItemId={imageByItemId}
-                onSelect={selectLoadout}
-              />
-              {draft.loadoutId === 'custom' ? (
-                <p className="font-nunito text-sm text-text-secondary" role="status">
-                  {stepCopy.customKitHint}
-                </p>
-              ) : null}
-            </>
-          ) : null}
-
+        <div className="space-y-5">
           <GuidedEquipmentPhaseLayout
             phase={equipmentPhase}
-            currencyRemaining={equipmentPhase === 'gear' ? currencyRemaining : undefined}
+            currencyTotal={currencyStarting}
+            currencySpent={currencySpent}
             expandLabel={phaseCopy.seeMoreLabel}
             onExpand={() => setL2Open(true)}
           >
-            {!l2Open ? (
-              <GuidedEquipmentPhaseSelection
-                phase={equipmentPhase}
-                draft={draft}
-                officialItems={officialItems}
-                codexEquipment={codexEquipment}
-              />
-            ) : null}
             <GuidedEquipmentL1Phase
               phase={equipmentPhase}
               draft={draft}
               pool={itemPool}
               officialItems={officialItems}
               codexEquipment={codexEquipment}
-              armorOptional={armorMode === 'optional'}
-              currencyRemaining={currencyRemaining}
+              armorOptional={armorMode === 'optional' || !phaseVisibility.includeArmor}
               onDraftChange={updateDraft}
             />
           </GuidedEquipmentPhaseLayout>
@@ -386,11 +292,12 @@ export function LoadoutStep() {
             isOpen={l2Open}
             phase={equipmentPhase}
             draft={draft}
-            loadouts={loadouts}
             pathLevel1={pathData?.level1}
             officialItems={officialItems}
             codexEquipment={codexEquipment}
             currencyRemaining={currencyRemaining}
+            currencyStarting={currencyStarting}
+            armsSpent={armsSpent}
             onClose={() => setL2Open(false)}
             onDraftChange={updateDraft}
           />

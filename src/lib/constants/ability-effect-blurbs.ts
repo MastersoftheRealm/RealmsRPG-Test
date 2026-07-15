@@ -7,17 +7,17 @@ import type { AbilityName } from '@/types';
 
 export const ABILITY_EFFECT_BLURBS: Record<AbilityName, string> = {
   strength:
-    'Physical power — affects Might defense, melee damage, and feats that rely on raw force.',
+    'Physical power. Affects Might defense, melee damage, and feats that rely on raw force.',
   vitality:
-    'Life and endurance — affects Fortitude defense, maximum Health, and staying power in combat.',
+    'Life and endurance. Affects Fortitude defense, maximum Health, and staying power in combat.',
   agility:
-    'Speed and reflexes — affects Reflex defense, Evasion, and finesse-based actions.',
+    'Speed and reflexes. Affects Reflex defense, Evasion, and finesse-based actions.',
   acuity:
-    'Perception and precision — affects Discernment defense and ranged accuracy.',
+    'Perception and precision. Affects Discernment defense and ranged accuracy.',
   intelligence:
-    'Knowledge and focus — affects Mental Fortitude defense and analytical skills.',
+    'Knowledge and focus. Affects Mental Fortitude defense and analytical skills.',
   charisma:
-    'Presence and will — affects Resolve defense, social skills, and leadership.',
+    'Presence and will. Affects Resolve defense, social skills, and leadership.',
 };
 
 export function formatAbilityLabel(name: AbilityName): string {

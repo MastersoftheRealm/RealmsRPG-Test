@@ -117,8 +117,8 @@ export function CodexFeatsTab({
             <span className="font-semibold text-text-primary">
               {activeCharacter?.name ?? 'this character'}
             </span>{' '}
-            {showUnqualified ? 'can take, including those not yet qualified for' : 'qualifies for'} —
-            filtered by level, abilities, skills, and speed.
+            {showUnqualified ? 'can take, including those not yet qualified for' : 'qualifies for'},
+            filtered by level, Abilities, Skills, and Speed.
           </p>
           <button
             type="button"

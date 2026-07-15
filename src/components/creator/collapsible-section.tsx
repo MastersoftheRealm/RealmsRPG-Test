@@ -3,11 +3,12 @@
  * ===================
  * Expandable card section for creator optional/primary blocks.
  * Expand control is a dedicated <button>; rightSlot/Remove sit outside it (no nested interactives).
+ * Header stays put on expand (stable expand toggle — content opens below).
  */
 
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useState, type ElementType, type ReactNode } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button, Card } from '@/components/ui';
@@ -27,6 +28,11 @@ export interface CollapsibleSectionProps {
   rightSlot?: ReactNode;
   children: ReactNode;
   className?: string;
+  /**
+   * Heading level for the section title. Default `2` for page sections under an `h1`.
+   * Use `3` inside dialogs whose accessible name / title is already an `h2` (e.g. deep-dive modals).
+   */
+  headingLevel?: 2 | 3 | 4;
 }
 
 export function CollapsibleSection({
@@ -43,8 +49,14 @@ export function CollapsibleSection({
   rightSlot,
   children,
   className,
+  headingLevel = 2,
 }: CollapsibleSectionProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const HeadingTag = `h${headingLevel}` as ElementType;
+  const showMetaLine = Boolean(subtitle || collapsedSummary);
+  const metaText = isExpanded
+    ? subtitle?.trim() || ''
+    : (collapsedSummary?.trim() || subtitle?.trim() || '');
 
   if (optional && !enabled) {
     return (
@@ -62,13 +74,20 @@ export function CollapsibleSection({
               </span>
             )}
             <div className="min-w-0">
-              <h2 className="font-bold text-text-secondary dark:text-text-primary">{title}</h2>
+              <HeadingTag className="font-bold text-text-secondary dark:text-text-primary">
+                {title}
+              </HeadingTag>
               {subtitle && (
                 <p className="text-sm text-text-muted dark:text-text-secondary">{subtitle}</p>
               )}
             </div>
           </div>
-          <Button variant="secondary" size="sm" onClick={() => onEnabledChange?.(true)}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => onEnabledChange?.(true)}
+            className="min-h-[44px]"
+          >
             + Enable {title}
           </Button>
         </div>
@@ -82,19 +101,14 @@ export function CollapsibleSection({
         <button
           type="button"
           onClick={() => setIsExpanded((prev) => !prev)}
-          className="min-w-0 flex-1 flex items-center gap-3 hover:bg-surface-alt -m-2 p-2 rounded-lg transition-colors text-left"
+          className="min-h-[44px] min-w-0 flex-1 flex items-start gap-3 hover:bg-surface-alt -m-2 p-2 rounded-lg transition-colors text-left"
           aria-expanded={isExpanded}
           aria-label={isExpanded ? `Collapse ${title}` : `Expand ${title}`}
         >
-          {icon && <span className="text-xl flex-shrink-0">{icon}</span>}
+          {icon && <span className="text-xl flex-shrink-0 mt-0.5">{icon}</span>}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="font-bold text-primary-fg">{title}</h2>
-              {!isExpanded && collapsedSummary && (
-                <span className="text-sm font-medium text-text-secondary dark:text-text-primary truncate">
-                  {collapsedSummary}
-                </span>
-              )}
+              <HeadingTag className="font-bold text-primary-fg">{title}</HeadingTag>
               {points && (
                 <span
                   className={cn(
@@ -111,24 +125,30 @@ export function CollapsibleSection({
                 <span className="text-xs text-text-muted dark:text-text-secondary">({itemCount})</span>
               )}
             </div>
-            {isExpanded && subtitle && (
-              <p className="text-sm text-text-muted dark:text-text-secondary mt-0.5">{subtitle}</p>
-            )}
+            {/* Fixed one-line meta slot — swaps collapsed summary / subtitle without shifting chevron. */}
+            {showMetaLine ? (
+              <p className="text-sm text-text-muted dark:text-text-secondary mt-0.5 min-h-[1.25rem] truncate">
+                {metaText || '\u00a0'}
+              </p>
+            ) : null}
           </div>
-          <span className="flex-shrink-0 text-text-muted dark:text-text-secondary" aria-hidden>
+          <span
+            className="flex-shrink-0 mt-0.5 text-text-muted dark:text-text-secondary"
+            aria-hidden
+          >
             {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </span>
         </button>
 
         {(rightSlot || optional) && (
-          <div className="flex items-center gap-2 flex-shrink-0 pt-0.5">
+          <div className="flex items-center gap-2 flex-shrink-0 self-start mt-1">
             {rightSlot}
             {optional && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => onEnabledChange?.(false)}
-                className="text-danger-fg hover:bg-danger-light dark:hover:bg-danger-900/20"
+                className="min-h-[44px] text-danger-fg hover:bg-danger-light dark:hover:bg-danger-900/20"
               >
                 Remove
               </Button>
