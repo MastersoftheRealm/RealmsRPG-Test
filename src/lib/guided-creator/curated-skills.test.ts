@@ -103,7 +103,7 @@ describe('curateGuidedSkillIds', () => {
     skill({ id: '24', name: 'Intimidate', ability: 'Charisma, Strength, Vitality' }),
     skill({ id: '13', name: 'Craft', ability: 'Acuity, Agility, Charisma, Intelligence, Strength, Vitality' }),
     skill({ id: '7', name: 'Arcana', ability: 'Intelligence' }),
-    skill({ id: '3', name: 'Act', ability: 'Charisma', base_skill_id: '14' }),
+    skill({ id: '3', name: 'Act', ability: 'Charisma', base_skill_id: 14 }),
     skill({ id: '30', name: 'Endurance', ability: 'Vitality' }),
     skill({ id: '31', name: 'Fortitude', ability: 'Vitality' }),
     skill({ id: '40', name: 'Acrobatics', ability: 'Agility' }),

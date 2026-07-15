@@ -1,4 +1,28 @@
 
+- 2026-07-15 | agent | Sanity TASK-452/453 | files: guided-step-footer (single hint mount + aria-live), character-feat-step hint, FEATURE_INDEX, BUILD_VALIDATION T038 | Summary: Fixed dual React-element mount of completionHint; CSS reorder for mobile stack / sm+ mid-bar; character feat N/1 progress; FEATURE_INDEX footer + AbilityScoreGrid mobile notes.
+
+- 2026-07-15 | agent | TASK-453 done — mobile footer completion hints | files: guided-step-footer, guided-step-layout, skills-panel, abilities-step, BUILD_VALIDATION T038, AI_TASK_QUEUE, DEVELOPER_TASK_QUEUE | Summary: Stack completionHint above Back/Continue below sm; mid-footer on sm+; pb-32 when hint present; light density (abilities padding, path chip truncate). TASK-452 already shipped.
+
+- 2026-07-15 | agent | Session WIP compliance + TASK-452 | files: ability-score-grid, path-step, entity-detail-modal, BUILD_VALIDATION T035–T037, AI_TASK_QUEUE | Summary: Audit fixed path ability score reset, detail InfoTippy size=icon (44px), AbilityScoreGrid mobile shortName + wrapping pills + edit roomier grid; restored resolveDistinctSecondaryAbility; build pass. TASK-453 footer hints still open.
+
+- 2026-07-15 | agent | Guided creator mobile UX audit | files: ability-score-grid, guided-step-footer, ALL_FEEDBACK, AI_TASK_QUEUE TASK-452/453 | Summary: Owner reports confirmed (Intelligence crammed; Archetype Ability pill spill) in AbilityScoreGrid 3-col phone tiles. Audit also flagged edit-mode steppers in same cells, footer completionHint hidden &lt;sm, residual density notes. Choice cards / fullscreen modals / shell touch targets largely OK. Queued TASK-452 (high) + TASK-453 (medium); no UI fixes this pass.
+
+- 2026-07-15 | agent | Guided cards — info-notice spacing sanity | files: guided-choice-card, BUILD_VALIDATION T009, AGENT_GUIDE | Summary: Keep body floor unless expanded+notice (No Flaw / More details paths safe); More details keyboard activates; T009 expects density min-height not empty action-row.
+
+- 2026-07-15 | agent | Guided cards — tighten space under info notices | files: guided-choice-card, guided-choice-styles, ALL_FEEDBACK | Summary: Expanded cards no longer reserve empty min-h-11 action row or keep body floor under restriction callouts (feats/traits/browse).
+
+- 2026-07-15 | agent | Audit TASK-451 | files: ALL_FEEDBACK (restore encoding + re-append logs), ability-score-grid (`resolveDistinctSecondaryAbility`, subtle-fg pill), abilities-step, guided-reveal-summary, shared index, FEATURE_INDEX, path-step abilities reset, curated-skills/equipment-phase-candidates tests | Summary: Fixed corrupted feedback doc; DRY secondary pill helper; contrast token; confirm path change resets ability scores; clear unrelated guided test TS errors.
+
+- 2026-07-15 | agent | TASK-451 done — retain picks, skills L2, secondary pill | files: ability-score-grid, ability-score-editor, abilities-step, skills-step, guided-skills-panel, path-step, ancestry-step, customize/reveal panels, ALL_FEEDBACK, BUILD_VALIDATION T010/T032–T034, DEVELOPER_TASK_QUEUE | Summary: Back keeps traits/skills/feats; path change clears dependents; Browse all Skills below recommendations via GuidedLayerNav; Secondary Ability pill on grid.
+
+- 2026-07-15 | agent | Audit TASK-447/448 | files: REALMS §3.1, AGENT_GUIDE, FEATURE_INDEX, BUILD_VALIDATION T004/T013/T023, entity detail modal, path/species steps, ALL_FEEDBACK | Summary: Fixed SoT contradiction (More details open never selects; footer Select applies); Select always closes modal; T023 no longer expects removed phase chips; TASK-447 disposition marked done.
+
+- 2026-07-15 | agent | TASK-448 build validation | files: BUILD_VALIDATION T027–T031, DEVELOPER_TASK_QUEUE DEV-V-013, AI_TASK_QUEUE | Summary: Suite covers Close|Select on species/path More details; chapter rail first-of-step (Foundation→Path, Ancestry→overview); footer Back stays sequential.
+
+- 2026-07-15 | agent | TASK-448 done — detail Select + jump landing | files: entity/path/species detail modals, path/species/ancestry/loadout steps, guided-creator-store, guided-creator-copy, AGENT_GUIDE, ALL_FEEDBACK | Summary: More details footers Close|Select for path/species; navigationIntent first (chapter rail) vs sequential (Back) so Foundation→path, Ancestry→overview, Equipment→first phase.
+
+- 2026-07-15 | agent | GridListRow — hide desc teaser when expanded | files: grid-list-row, detail-option-list, AGENT_GUIDE, ALL_FEEDBACK | Summary: Research (NN/g, Carbon): expanded panel = full/supplementary text, not a second copy of the collapsed teaser. Auto-hide `key: 'description'` columns + mobile summary while default expanded body shows description; name spans when description was the only column.
+
 - 2026-07-15 | agent | Ancestry No Flaw card peer width | files: ancestry-step, BUILD_VALIDATION T009, ALL_FEEDBACK | Summary: Remove sm:col-span-2 so No Flaw matches other flaw cards in the compact 2-column grid.
 
 - 2026-07-15 | agent | Guided creator mobile touch targets | files: expandable-chip, chip-options-panel, collapsible-section, guided-choice-styles, guided-skills-panel, guided-layer-nav, expandable-image, grid-list-row, detail-option-list | Summary: 44px tap targets on expand chips, chip options, See more/More details, collapsible section tips, layer nav, image preview; dedupe path detail descriptions on mobile.

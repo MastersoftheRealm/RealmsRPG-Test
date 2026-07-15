@@ -5,6 +5,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 import { GuidedStepFooter } from './guided-step-footer';
 import { useGuidedCreatorStore, type GuidedSubStep } from '@/stores/guided-creator-store';
 
@@ -41,7 +42,7 @@ export function GuidedStepLayout({
   const { prevSubStep, nextSubStep } = useGuidedCreatorStore();
 
   return (
-    <div className="flex flex-col pb-24">
+    <div className={cn('flex flex-col', completionHint ? 'pb-32 sm:pb-24' : 'pb-24')}>
       <header className="mb-4">
         <h2 className="font-display text-2xl sm:text-3xl font-bold text-text-primary">{title}</h2>
         {description && (

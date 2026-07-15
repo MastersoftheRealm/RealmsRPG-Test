@@ -13,7 +13,8 @@ import { useCodexArchetypes } from '@/hooks';
 import { parseArchetypePathData, pathHasPlayerVisibleLevel1 } from '@/lib/game/archetype-path';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
-import type { Archetype, ArchetypeCategory } from '@/types';
+import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
+import { DEFAULT_ABILITIES, type Archetype, type ArchetypeCategory } from '@/types';
 import { GuidedChoiceCard } from '../guided-choice-card';
 import { GUIDED_CHOICE_GRID_CLASS, GUIDED_CHOICE_GRID_ITEM_CLASS } from '../guided-choice-grid';
 import { GuidedPathDetailModal } from '../guided-path-detail-modal';
@@ -68,6 +69,7 @@ export function PathStep() {
     const primaryAbility = path.archetype_ability ?? path.pow_abil ?? null;
     const secondaryAbility = path.mart_abil ?? path.secondary_ability ?? null;
 
+    // Same path re-tap: keep all downstream picks. New path: invalidate dependents.
     updateDraft({
       archetypePathId: String(path.id),
       archetypeType: type,
@@ -78,7 +80,27 @@ export function PathStep() {
           : type === 'powered-martial'
             ? secondaryAbility
             : secondaryAbility ?? primaryAbility,
-      ...(pathChanged ? { abilitiesMode: null } : {}),
+      ...(pathChanged
+        ? {
+            // Soft-default only runs when Abilities mounts with abilitiesMode null —
+            // reset scores so chapter-jump / skip cannot keep the previous path array.
+            abilities: { ...DEFAULT_ABILITIES },
+            abilitiesMode: null,
+            skills: {},
+            declinedPathSkillIds: [],
+            archetypeFeatIds: [],
+            characterFeatIds: [],
+            equipmentPhase: 'weapon' as const,
+            loadoutWeapons: [],
+            loadoutArmor: [],
+            armaments: [],
+            equipment: [],
+            currency: CHARACTER_STARTING_CURRENCY,
+            unarmedProwess: 0,
+            powerIds: [],
+            techniqueIds: [],
+          }
+        : {}),
     });
   };
 
@@ -131,6 +153,7 @@ export function PathStep() {
             isOpen={detailPath != null}
             onClose={() => setDetailPathId(null)}
             path={detailPath}
+            onSelect={detailPath ? () => handleSelect(detailPath) : undefined}
           />
         </>
       )}

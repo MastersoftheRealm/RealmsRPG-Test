@@ -5,7 +5,11 @@
 'use client';
 
 import { useMemo, useState, useCallback, useEffect } from 'react';
-import { AbilityScoreGrid, GuidedLayerNav } from '@/components/shared';
+import {
+  AbilityScoreGrid,
+  GuidedLayerNav,
+  resolveDistinctSecondaryAbility,
+} from '@/components/shared';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
 import { GuidedStepLayout } from '../guided-step-layout';
@@ -26,15 +30,28 @@ export function AbilitiesStep() {
   const [customizing, setCustomizing] = useState(draft.abilitiesMode === 'custom');
 
   const primary = draft.pow_abil ?? draft.mart_abil ?? archetype?.archetype_ability ?? null;
-  const secondary = draft.mart_abil ?? archetype?.secondary_ability ?? null;
+  const secondary =
+    (archetype?.secondary_ability as AbilityName | null | undefined) ??
+    (draft.archetypeType === 'power' ? null : draft.mart_abil) ??
+    null;
   const powerAbilityProp =
     draft.archetypeType === 'martial' ? undefined : (draft.pow_abil ?? primary ?? undefined);
   const martialAbilityProp =
     draft.archetypeType === 'power'
       ? undefined
       : draft.archetypeType === 'powered-martial'
-        ? (draft.mart_abil ?? secondary ?? undefined)
+        ? (draft.mart_abil ?? undefined)
         : (draft.mart_abil ?? primary ?? undefined);
+  // Secondary pill when path lists a secondary recommended ability distinct from archetype tiles.
+  const secondaryAbilityProp = useMemo(
+    () =>
+      resolveDistinctSecondaryAbility(
+        archetype?.secondary_ability as AbilityName | undefined,
+        powerAbilityProp,
+        martialAbilityProp
+      ),
+    [archetype?.secondary_ability, powerAbilityProp, martialAbilityProp]
+  );
 
   const recommended = useMemo(
     () => resolveGuidedRecommendedAbilities(pathData, primary, secondary),
@@ -53,8 +70,11 @@ export function AbilitiesStep() {
     [draft.abilities]
   );
 
+  // Soft default: apply path recommended only when not customizing and mode is not custom.
+  // Going back keeps custom (or prior recommended) selections; changing path resets abilitiesMode.
   useEffect(() => {
     if (!recommended || customizing || draft.abilitiesMode === 'custom') return;
+    if (draft.abilitiesMode === 'recommended') return;
     updateDraft({ abilities: recommended, abilitiesMode: 'recommended' });
   }, [recommended, customizing, draft.abilitiesMode, updateDraft]);
 
@@ -84,7 +104,7 @@ export function AbilitiesStep() {
     >
       {!customizing && recommended && (
         <>
-          <div className="rounded-card border border-primary-subtle-border bg-primary-subtle-bg/60 p-5">
+          <div className="rounded-card border border-primary-subtle-border bg-primary-subtle-bg/60 p-4 sm:p-5">
             <p className="font-display text-lg font-semibold text-text-primary">
               {stepCopy.recommendedHeading(archetype?.name ?? 'your path')}
             </p>
@@ -94,6 +114,7 @@ export function AbilitiesStep() {
                 abilities={displayAbilities}
                 powerAbility={powerAbilityProp}
                 martialAbility={martialAbilityProp}
+                secondaryAbility={secondaryAbilityProp}
                 mode="display"
               />
             </div>
@@ -114,6 +135,7 @@ export function AbilitiesStep() {
             onAbilityChange={handleAbilityChange}
             powerAbility={powerAbilityProp}
             martialAbility={martialAbilityProp}
+            secondaryAbility={secondaryAbilityProp}
           />
           {recommended ? (
             <GuidedLayerNav

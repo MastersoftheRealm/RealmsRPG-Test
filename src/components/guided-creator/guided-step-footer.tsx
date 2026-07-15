@@ -1,6 +1,7 @@
 /**
  * GuidedStepFooter — landing-cohesive sticky actions for the guided creator.
  * Frosted bar + larger touch targets; distinct from the Advanced creator chrome.
+ * Mobile: completionHint sits above Back/Continue (one React mount; CSS reorders on sm+).
  */
 
 'use client';
@@ -33,14 +34,41 @@ export function GuidedStepFooter({
   className,
 }: GuidedStepFooterProps) {
   const soloPrimary = Boolean(primaryAction && !onBack && !onContinue);
+  const hasHint = completionHint != null && completionHint !== false && completionHint !== '';
+
+  const backButton = onBack ? (
+    <Button
+      variant="outline"
+      onClick={onBack}
+      disabled={backDisabled}
+      size="lg"
+      className={cn(
+        'min-h-11 shrink-0',
+        'border-primary-outline-border text-primary-outline-fg',
+        'dark:border-border dark:text-text-primary'
+      )}
+    >
+      {backLabel}
+    </Button>
+  ) : null;
+
+  const continueSlot =
+    primaryAction ??
+    (onContinue ? (
+      <Button
+        onClick={onContinue}
+        disabled={continueDisabled}
+        size="lg"
+        className="min-h-11 shrink-0"
+      >
+        {continueLabel}
+      </Button>
+    ) : null);
 
   return (
     <div
       data-testid="guided-step-footer"
-      className={cn(
-        'fixed bottom-0 inset-x-0 z-30 pointer-events-none',
-        className
-      )}
+      className={cn('fixed bottom-0 inset-x-0 z-30 pointer-events-none', className)}
     >
       <div
         className={cn(
@@ -50,40 +78,52 @@ export function GuidedStepFooter({
       >
         <div
           className={cn(
-            'layout-shell-wide px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-4',
-            soloPrimary ? 'justify-end' : 'justify-between'
+            'layout-shell-wide px-4 sm:px-6',
+            hasHint ? 'pt-2.5 pb-3 sm:py-4' : 'py-3 sm:py-4'
           )}
         >
-          {onBack ? (
-            <Button
-              variant="outline"
-              onClick={onBack}
-              disabled={backDisabled}
-              size="lg"
+          {/*
+            One completionHint mount only (same React element must not appear twice).
+            Phone: hint above; actions in a row. sm+: back | hint | continue via order.
+            REALMS §2.2 / §2.4 — visible step progress on every viewport.
+          */}
+          <div
+            className={cn(
+              'flex flex-col gap-2.5',
+              'sm:flex-row sm:items-center sm:gap-4',
+              soloPrimary ? 'sm:justify-end' : 'sm:justify-between'
+            )}
+          >
+            {hasHint ? (
+              <div
+                data-testid="guided-step-footer-hint"
+                aria-live="polite"
+                className={cn(
+                  'order-1 text-center text-sm font-nunito text-text-secondary',
+                  'sm:order-2 sm:flex-1'
+                )}
+              >
+                {completionHint}
+              </div>
+            ) : null}
+
+            <div
               className={cn(
-                'min-h-11',
-                'border-primary-outline-border text-primary-outline-fg',
-                'dark:border-border dark:text-text-primary'
+                'order-2 flex w-full items-center gap-4',
+                soloPrimary ? 'justify-end' : 'justify-between',
+                // Promote Back/Continue into the sm row beside the hint.
+                hasHint && 'sm:contents'
               )}
             >
-              {backLabel}
-            </Button>
-          ) : !soloPrimary ? (
-            <span />
-          ) : null}
+              {backButton ? (
+                <div className="sm:order-1">{backButton}</div>
+              ) : !soloPrimary ? (
+                <span className="sm:order-1" aria-hidden />
+              ) : null}
 
-          {completionHint && (
-            <div className="hidden sm:flex items-center text-sm font-nunito text-text-secondary mx-auto">
-              {completionHint}
+              {continueSlot ? <div className="sm:order-3">{continueSlot}</div> : null}
             </div>
-          )}
-
-          {primaryAction ??
-            (onContinue ? (
-              <Button onClick={onContinue} disabled={continueDisabled} size="lg" className="min-h-11">
-                {continueLabel}
-              </Button>
-            ) : null)}
+          </div>
         </div>
       </div>
     </div>

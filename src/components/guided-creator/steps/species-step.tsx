@@ -106,6 +106,7 @@ export function SpeciesStep() {
             isOpen={detailSpecies != null}
             onClose={() => setDetailSpeciesId(null)}
             species={detailSpecies}
+            onSelect={detailSpecies ? () => handleSelect(detailSpecies) : undefined}
           />
         </>
       )}

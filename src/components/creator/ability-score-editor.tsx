@@ -42,6 +42,8 @@ export interface AbilityScoreEditorProps {
   powerAbility?: AbilityName;
   /** Martial archetype ability name (for red highlight) */
   martialAbility?: AbilityName;
+  /** Path secondary recommended ability (pill when distinct from power/martial) */
+  secondaryAbility?: AbilityName;
   /** DEPRECATED: Use powerAbility/martialAbility instead */
   highlightedAbilities?: AbilityName[];
   /** Compact layout - 3 columns with short names (default: false) */
@@ -75,6 +77,7 @@ export function AbilityScoreEditor({
   isEditMode = true,
   powerAbility,
   martialAbility,
+  secondaryAbility,
   highlightedAbilities = [],
   compact = false,
   hidePointsStatus = false,
@@ -134,6 +137,7 @@ export function AbilityScoreEditor({
           abilities={abilities}
           powerAbility={powerAbility}
           martialAbility={martialAbility}
+          secondaryAbility={secondaryAbility}
           mode={isEditMode ? 'edit' : 'display'}
           onAbilityChange={onAbilityChange}
           canIncrease={canIncrease}

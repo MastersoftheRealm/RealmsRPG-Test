@@ -1,10 +1,11 @@
 /**
  * Skills — species locked (free), path recommended (auto-added), skill points + free picks.
+ * L1: allocated list + recommended skill cards. L2: Browse all Skills below recommendations.
  */
 
 'use client';
 
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import { GuidedChoiceCard } from '../guided-choice-card';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from '../guided-choice-styles';
 import { GuidedSkillsPanel } from '../guided-skills-panel';
@@ -12,6 +13,7 @@ import { useMergedSpecies, useCodexSkills, useGameRules } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
 import { GuidedStepLayout } from '../guided-step-layout';
+import { AddSkillModal, GuidedLayerNav } from '@/components/shared';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
 import {
   calculateSimpleSkillPointsSpent,
@@ -36,6 +38,7 @@ export function SkillsStep() {
   const { data: codexSkills = [] } = useCodexSkills();
   const { rules } = useGameRules();
   const skillRules = resolveSkillAllocationRules(rules);
+  const [browseOpen, setBrowseOpen] = useState(false);
 
   const species = useMemo(
     () => allSpecies.find((s) => String(s.id) === String(draft.speciesId)),
@@ -106,6 +109,9 @@ export function SkillsStep() {
   );
 
   const remainingPoints = totalPoints - spentPoints;
+  const maxAddSkillSelections = Math.floor(
+    remainingPoints / skillRules.gainProficiencyCost
+  );
 
   const handleAllocationsChange = useCallback(
     (newAllocations: Record<string, number>) => {
@@ -139,6 +145,15 @@ export function SkillsStep() {
   const selectedSkillIds = useMemo(
     () => new Set(Object.keys(allocationsWithDefaults)),
     [allocationsWithDefaults]
+  );
+
+  const existingSkillNames = useMemo(
+    () =>
+      codexSkills
+        .filter((s) => selectedSkillIds.has(String(s.id)))
+        .map((s) => s.name)
+        .filter((n): n is string => Boolean(n)),
+    [codexSkills, selectedSkillIds]
   );
 
   const { suggestions: skillSuggestions } = useMemo(
@@ -197,6 +212,19 @@ export function SkillsStep() {
     });
   };
 
+  const handleAddSkills = useCallback(
+    (skills: Skill[]) => {
+      const next = { ...allocationsWithDefaults };
+      skills.forEach((s) => {
+        const key = String(s.id);
+        if (!(key in next)) next[key] = 0;
+      });
+      handleAllocationsChange(next);
+      setBrowseOpen(false);
+    },
+    [allocationsWithDefaults, handleAllocationsChange]
+  );
+
   const handleContinue = useCallback(() => {
     updateDraft({ skills: allocationsWithDefaults });
     nextSubStep();
@@ -231,8 +259,6 @@ export function SkillsStep() {
         totalPoints={totalPoints}
         spentPoints={spentPoints}
         onAllocationsChange={handleAllocationsChange}
-        browseSkillBadgesById={browseSkillBadgesById}
-        browseRecommendedSkillIds={browseRecommendedSkillIds}
       />
 
       {skillSuggestions.length > 0 && (
@@ -271,6 +297,25 @@ export function SkillsStep() {
           </div>
         </section>
       )}
+
+      {/* Layer 2: catalog browse below curated recommendations (REALMS §3.1). */}
+      <GuidedLayerNav
+        expandLabel={stepCopy.browseAll}
+        onExpand={() => setBrowseOpen(true)}
+      />
+
+      {browseOpen ? (
+        <AddSkillModal
+          isOpen
+          onClose={() => setBrowseOpen(false)}
+          existingSkillNames={existingSkillNames}
+          onAdd={handleAddSkills}
+          skillBadgesById={browseSkillBadgesById}
+          recommendedSkillIds={browseRecommendedSkillIds}
+          maxSelections={maxAddSkillSelections}
+          selectionLimitMessage={stepCopy.browseOverLimit(maxAddSkillSelections)}
+        />
+      ) : null}
     </GuidedStepLayout>
   );
 }

@@ -1,8 +1,12 @@
 'use client';
 
 import { useMemo } from 'react';
-import { SummaryChipList, type SummaryChipItem } from '@/components/shared';
-import { AbilityScoreGrid } from '@/components/shared';
+import {
+  AbilityScoreGrid,
+  SummaryChipList,
+  resolveDistinctSecondaryAbility,
+  type SummaryChipItem,
+} from '@/components/shared';
 import {
   useMergedSpecies,
   useCodexSkills,
@@ -247,6 +251,11 @@ export function GuidedRevealSummary() {
   const showMartialAbility = Boolean(draft.mart_abil && pathType !== 'power');
   const gridPowerAbility = pathType === 'martial' ? undefined : (draft.pow_abil ?? undefined);
   const gridMartialAbility = pathType === 'power' ? undefined : (draft.mart_abil ?? undefined);
+  const gridSecondaryAbility = resolveDistinctSecondaryAbility(
+    archetype?.secondary_ability,
+    gridPowerAbility,
+    gridMartialAbility
+  );
 
   return (
     <div className="overflow-hidden rounded-card border border-border-light bg-surface shadow-sm">
@@ -327,6 +336,7 @@ export function GuidedRevealSummary() {
             abilities={draft.abilities}
             powerAbility={gridPowerAbility}
             martialAbility={gridMartialAbility}
+            secondaryAbility={gridSecondaryAbility}
             mode="display"
           />
         </div>

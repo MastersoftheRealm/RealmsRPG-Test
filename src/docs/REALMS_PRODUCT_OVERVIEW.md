@@ -153,11 +153,11 @@ Same entity; more information over time. **Two card labels, used sitewide** (do 
 |-------|------|-------------|
 | **Glance** | Name, short description, art (if selling) | Name (+ short columns / thumb) |
 | **Inline deepen (on the card)** | **See more…** / **See less** — truncated description, notices, chips that stay on the card | Row expand: description + **labeled** chips / detail sections |
-| **Deep understand** | **More details** / **Less details** — read-only [`GuidedEntityDetailModal`](../components/guided-creator/guided-entity-detail-modal.tsx) (path/species). Heavy in-card fact chips (e.g. equipment) deepen via **See more…** / expand | Richer expand / same catalogs and chip builders; not a second product language |
+| **Deep understand** | **More details** / **Less details** — [`GuidedEntityDetailModal`](../components/guided-creator/guided-entity-detail-modal.tsx) (path/species): overview + read-only option catalogs; footer **Close** \| **Select** applies the entity. Heavy in-card fact chips (e.g. equipment) deepen via **See more…** / expand | Richer expand / same catalogs and chip builders; not a second product language |
 
 - Primary click on a selectable surface = **select** (when the step is picking).
 - **See more** = deepen *on the card*; never navigates away and never means “open catalog.”
-- **More details** = entity modal deep-dive (`onDetails`); **must never select**. When a card has both See more and modal More details, show modal More details only after inline expand (or when there is no overflow) — settled 2026-07-15. In-card chip deepen (equipment) uses **See more…**, not a specialist label.
+- **More details** = entity modal deep-dive (`onDetails`); **opening it must never select**. Path/species footers offer **Close** (left) + **Select** (right) so the viewer can apply without returning to the card (TASK-448). When a card has both See more and modal More details, show modal More details only after inline expand (or when there is no overflow) — settled 2026-07-15. In-card chip deepen (equipment) uses **See more…**, not a specialist label.
 - Prefer these blankets only. Collapse pairs: **See less** / **Less details**.
 
 Shared fact builders (`@/lib/detail-option`, list-row chip helpers) should feed cards, deep-dives, and expanded rows. Fact policy stays as in [`AGENT_GUIDE.md`](./ai/AGENT_GUIDE.md): every meaningful fact is a labeled column **or** a self-describing chip — never unlabeled leftovers.
@@ -304,7 +304,7 @@ Decisions baked into this model:
 - **Abilities = who you are** (natural aptitude; e.g. high INT → naturally better at History); **Skills = what you can do** (learned capabilities). They are distinct themes, so abilities is its own chapter; skills sits in the "build your archetype" chapter where it belongs mechanically.
 - **Species are path-ambiguous.** There are **no recommended species per path**. Instead, a **starter-species** flag curates a small Layer-1 set; "show all species" reveals the rest.
 - **Shared card format** across Path, Species, ancestry picks, feats, and equipment (and reused elsewhere): short eye-catcher description on the card, full description behind inline **See more…**, key facts as labeled chips where needed, and **hero art** where the entity is a visual selling point (species first). Consistency between steps is a goal — see §3.1.
-- **Choice-card deep-dive = entity depth, not catalog Layer 2:** **More details** opens read-only [`GuidedEntityDetailModal`](../components/guided-creator/guided-entity-detail-modal.tsx) (overview + expandable option catalogs). Selecting the card still chooses it; **More details** must never select. Catalog expand remains `GuidedLayerNav` **See more options**. Shipped: TASK-432–436.
+- **Choice-card deep-dive = entity depth, not catalog Layer 2:** **More details** opens [`GuidedEntityDetailModal`](../components/guided-creator/guided-entity-detail-modal.tsx) (overview + expandable read-only option catalogs). Selecting the card still chooses it; opening **More details** never selects. Path/species modals add footer **Select** to apply from the deep-dive (TASK-448). Catalog expand remains `GuidedLayerNav` **See more options**. Shipped: TASK-432–436, TASK-448.
 - **Ancestry** is a post-species, one-pick-at-a-time flow (full-width cards mimicking earlier steps): auto-granted species traits (some are "trait-with-options" requiring a pick via `option_trait_ids`), one ancestry trait of ~6, one characteristic of ~6, and an **optional** flaw of ~3 that grants an **extra** ancestry trait. Limited-use traits show the same uses notice pattern as feats (TASK-441). Mixed/make-your-own species is deferred.
 - **Equipment has no quick kits.** Weapon and armor phases (when present) are individual curated picks from the path pool; gear may offer optional **Add all recommended**. Phases renumber to visible steps only (TASK-442–443). See §5.7.
 - **Chapter 5 step is named "Powers" OR "Techniques"** (never both), chosen by archetype. **Powered-Martial** path options are hidden behind an easy expand affordance at first (same pattern as "show all species").
@@ -426,7 +426,7 @@ The user begins by choosing an archetype (a **path**).
 | No prior terminology required | Plain language ("Choose your path") over system jargon ("Select archetype category") |
 | Minimal scrolling or searching | Grouped by Power / Powered-Martial / Martial; paginated if the list is long |
 | Layer 1 default | Path selection is primary; "Forge Your Own" is the Layer 3 entry point |
-| Card deep-dive | **More details** → read-only path modal (overview + feat / weapon / armor / gear / power|technique catalogs). Entity depth (§3.1), not catalog Layer 2. |
+| Card deep-dive | **More details** → path modal (overview + feat / weapon / armor / gear / power|technique catalogs; Close \| Select). Entity depth (§3.1), not catalog Layer 2. |
 
 **Current gap:** Advanced [`archetype-step.tsx`](../components/character-creator/steps/archetype-step.tsx) still weak on card previews. **Guided:** path deep-dive shipped (TASK-434/435); hybrid paths remain behind LayerNav expand.
 
@@ -439,7 +439,7 @@ The user selects a species. The feeling to evoke: "I see who I am becoming."
 | Images are essential | **Featured inline art** on each species card (see §5.0.3); identity at a glance without a full-bleed banner |
 | Hover and tooltips for detail | No modal required to understand the basics |
 | Layer 1 | Grid cards: art + short copy + See more; stats/tags stay out of the default card unless they add real value |
-| Card deep-dive | **More details** → read-only entity modal (overview + trait/characteristic/flaw option lists). Not catalog Layer 2. |
+| Card deep-dive | **More details** → species modal (overview + trait/characteristic/flaw option lists; Close \| Select). Not catalog Layer 2. |
 
 **Current gap:** Advanced creator still denser than guided elsewhere. **Guided creator:** hero layout + deep-dive shell (TASK-432); species (TASK-433) + path (TASK-434) modals + shared `DetailOptionList` rows (TASK-435, also remodeled species-modal trait lists); **codex art fields** pending TASK-405.
 

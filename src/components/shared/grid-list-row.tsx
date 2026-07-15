@@ -74,6 +74,29 @@ function columnsForExpandedMobileStats(
 }
 
 /**
+ * When the expanded panel shows the full description, drop truncated description previews
+ * from the collapsed header (desktop columns, mobile summary, flex stats).
+ * Progressive disclosure: teaser → full text below — not both at once (Carbon/NN/g).
+ */
+function columnsWithoutDescriptionPreview(
+  columns: ColumnValue[],
+  suppressDescriptionPreview: boolean
+): ColumnValue[] {
+  if (!suppressDescriptionPreview) return columns;
+  return columns.filter((col) => col.key !== 'description');
+}
+
+function descriptionColumnTrackCount(
+  columns: ColumnValue[],
+  columnSpans?: (number | undefined)[]
+): number {
+  return columns.reduce((sum, col, idx) => {
+    if (col.key !== 'description') return sum;
+    return sum + (columnSpans?.[idx] ?? 1);
+  }, 0);
+}
+
+/**
  * Count explicit tracks in a grid-template-columns string.
  * Supports basic tracks, minmax(), fit-content(), and repeat(<n>, ...).
  * This lets GridListRow detect when callers already reserved trailing action columns.
@@ -122,7 +145,11 @@ export interface GridListRowProps {
   name: string;
   /** Optional rich name content (overrides plain name text when set) */
   nameContent?: ReactNode;
-  /** Item description (shown in default expanded view) */
+  /**
+   * Item description (shown in default expanded view).
+   * When expanded, any collapsed-row column with `key: 'description'` (or the mobile
+   * description summary) is hidden so the full text is not duplicated in the header.
+   */
   description?: string;
   /** Column values to display in collapsed row */
   columns?: ColumnValue[];
@@ -368,7 +395,22 @@ export const GridListRow = memo(function GridListRow({
   const inlineWarning = !!warningMessage && remainingInlineActionTracks > 0;
   if (inlineWarning) remainingInlineActionTracks -= 1;
 
-  const mobileSummaryColumns = columnsForMobileSummary(columns);
+  // Default expanded body owns the full description — suppress the teaser while open.
+  const suppressDescriptionPreview =
+    isExpanded && !!descTrimmed && !expandedContent;
+  const headerColumns = columnsWithoutDescriptionPreview(columns, suppressDescriptionPreview);
+  const allDataColumnsAreDescription =
+    columns.length > 0 && columns.every((col) => col.key === 'description');
+  /** Name-only header when expand replaces a description-only column set (avoids empty dead space). */
+  const nameGridColumnSpan =
+    suppressDescriptionPreview && allDataColumnsAreDescription
+      ? 1 + descriptionColumnTrackCount(columns, columnSpans)
+      : undefined;
+
+  const mobileSummaryColumns = columnsWithoutDescriptionPreview(
+    columnsForMobileSummary(columns),
+    suppressDescriptionPreview
+  );
   const expandedMobileStatColumns = columnsForExpandedMobileStats(columns, !!descTrimmed);
 
   return (
@@ -413,6 +455,7 @@ export const GridListRow = memo(function GridListRow({
           )}
           {/* Name column: full name visible on mobile (wrap), truncate on desktop */}
           <div
+            style={nameGridColumnSpan ? { gridColumn: `span ${nameGridColumnSpan}` } : undefined}
             className={cn(
               'font-medium text-text-primary flex items-center gap-2 min-w-0',
               useFlex && 'flex-1'
@@ -459,29 +502,47 @@ export const GridListRow = memo(function GridListRow({
             )}
           </div>
           
-          {/* Data columns (non-name) */}
-          {columns.map((col, colIndex) => (
-            <div
-              key={col.key}
-              style={columnSpans?.[colIndex] ? { gridColumn: `span ${columnSpans[colIndex]}` } : undefined}
-              className={cn(
-                'text-sm truncate min-w-0',
-                col.hideOnMobile !== false && 'hidden lg:block',
-                col.className,
-                col.highlight ? 'text-primary-link-fg font-medium' : 'text-text-primary',
-                col.align === 'left' && 'text-left',
-                col.align === 'right' && 'text-right',
-                (!col.align || col.align === 'center') && 'text-center'
-              )}
-            >
-              {col.value ?? '-'}
-            </div>
-          ))}
+          {/* Data columns (non-name). Description teaser clears while expanded when body has the full text. */}
+          {columns.map((col, colIndex) => {
+            if (suppressDescriptionPreview && col.key === 'description') {
+              // Description-only layouts: name spans those tracks (no empty hole).
+              if (allDataColumnsAreDescription) return null;
+              // Mixed layouts: keep an empty cell so Uses/Energy/etc. stay aligned.
+              return (
+                <div
+                  key={col.key}
+                  style={columnSpans?.[colIndex] ? { gridColumn: `span ${columnSpans[colIndex]}` } : undefined}
+                  className={cn(
+                    'text-sm min-w-0',
+                    col.hideOnMobile !== false && 'hidden lg:block'
+                  )}
+                  aria-hidden
+                />
+              );
+            }
+            return (
+              <div
+                key={col.key}
+                style={columnSpans?.[colIndex] ? { gridColumn: `span ${columnSpans[colIndex]}` } : undefined}
+                className={cn(
+                  'text-sm truncate min-w-0',
+                  col.hideOnMobile !== false && 'hidden lg:block',
+                  col.className,
+                  col.highlight ? 'text-primary-link-fg font-medium' : 'text-text-primary',
+                  col.align === 'left' && 'text-left',
+                  col.align === 'right' && 'text-right',
+                  (!col.align || col.align === 'center') && 'text-center'
+                )}
+              >
+                {col.value ?? '-'}
+              </div>
+            );
+          })}
           
           {/* Flex mode: show key stats inline */}
-          {useFlex && columns.length > 0 && (
+          {useFlex && headerColumns.length > 0 && (
             <div className="hidden md:flex items-center gap-4 text-sm text-text-secondary">
-              {columns.slice(0, 3).map((col) => (
+              {headerColumns.slice(0, 3).map((col) => (
                 <span key={col.key} className="whitespace-nowrap">
                   <span className="text-text-muted dark:text-text-secondary">{(columnDisplayLabel(col))}:</span>{' '}
                   <span className={cn(col.highlight && 'text-primary-link-fg font-medium', col.className)}>
@@ -615,7 +676,7 @@ export const GridListRow = memo(function GridListRow({
         )}
       </div>
 
-      {/* Mobile summary — stats hidden from the collapsed grid (not duplicate prose) */}
+      {/* Mobile summary — stats hidden from the collapsed grid; description teaser hides while expanded */}
       {gridColumns && mobileSummaryColumns.length > 0 && (
         <div className="lg:hidden px-4 pb-2 flex flex-wrap gap-2 text-xs text-text-secondary">
           {mobileSummaryColumns.map((col) =>

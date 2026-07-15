@@ -81,6 +81,11 @@ export function CharacterFeatStep() {
       title={stepCopy.title}
       description={stepCopy.description}
       canContinue={draft.characterFeatIds.length === 1}
+      completionHint={
+        <span className="font-nunito">
+          {draft.characterFeatIds.length} / 1
+        </span>
+      }
     >
       {isLoading ? (
         <div className="flex justify-center py-12">
