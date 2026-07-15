@@ -25,7 +25,7 @@ function DescriptorWithOptionalTip({ chip }: { chip: ChipData }) {
   const tip = chip.description?.trim();
   const chipNode = (
     <ExpandableChip
-      {...expandableChipPropsFromChipData(chip, chip.costLabel || 'TP')}
+      {...expandableChipPropsFromChipData(chip, chip.costLabel || 'Training Points')}
       size="sm"
     />
   );
@@ -68,7 +68,7 @@ export function GuidedEquipmentFactChips({
           return (
             <ExpandableChip
               key={`${chip.name}-${index}`}
-              {...expandableChipPropsFromChipData(chip, chip.costLabel || 'TP')}
+              {...expandableChipPropsFromChipData(chip, chip.costLabel || 'Training Points')}
               size="sm"
             />
           );
@@ -78,7 +78,7 @@ export function GuidedEquipmentFactChips({
         return (
           <ExpandableChip
             key={`${chip.name}-${index}`}
-            {...expandableChipPropsFromChipData(chip, chip.costLabel || 'TP')}
+            {...expandableChipPropsFromChipData(chip, chip.costLabel || 'Training Points')}
             size="sm"
             expanded={isExpanded}
             fullWidthWhenExpanded

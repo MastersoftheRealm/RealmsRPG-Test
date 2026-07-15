@@ -23,15 +23,16 @@ import {
   useGuidedEquipmentCatalog,
 } from '@/hooks/use-guided-equipment-catalog';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
-import { LOADOUT_CUSTOMIZE_GRID_COLUMNS, LOADOUT_CUSTOMIZE_HEADER_COLUMNS } from './guided-equipment-l2-grid';
+import {
+  l2GridColumnsForPhase,
+  l2HeaderColumnsForPhase,
+} from './guided-equipment-l2-grid';
 
 const l2Copy = GUIDED_CREATOR_COPY.steps.loadout.phases.l2;
 
-const GEAR_GRID = '1.6fr 0.7fr';
-const GEAR_COLUMNS = [
-  { key: 'name', label: 'NAME', align: 'left' as const, sortable: false as const },
-  { key: 'cost', label: 'CURRENCY', align: 'right' as const, sortable: false as const },
-];
+function normalizeId(id: string): string {
+  return String(id).trim().toLowerCase();
+}
 
 export interface GuidedEquipmentL2ModalProps {
   isOpen: boolean;
@@ -40,7 +41,6 @@ export interface GuidedEquipmentL2ModalProps {
   pathLevel1: Parameters<typeof buildPathLoadoutPool>[0];
   officialItems: LibraryItem[];
   codexEquipment: CodexEquipmentItem[];
-  currencyRemaining: number;
   /** Level-1 starting Currency (PointStatus total). */
   currencyStarting: number;
   /** Currency spent on weapons/armor (gear PointStatus budget base). */
@@ -56,14 +56,17 @@ export function GuidedEquipmentL2Modal({
   pathLevel1,
   officialItems,
   codexEquipment,
-  currencyRemaining,
   currencyStarting,
   armsSpent,
   onClose,
   onDraftChange,
 }: GuidedEquipmentL2ModalProps) {
   const [error, setError] = useState<string | null>(null);
-  const { catalog, tpSummary } = useGuidedEquipmentCatalog(draft, officialItems, codexEquipment);
+  const { catalog, tpSummary, itemProperties } = useGuidedEquipmentCatalog(
+    draft,
+    officialItems,
+    codexEquipment
+  );
 
   const pool = useMemo(() => buildPathLoadoutPool(pathLevel1), [pathLevel1]);
 
@@ -72,16 +75,32 @@ export function GuidedEquipmentL2Modal({
     [phase, pool, officialItems, codexEquipment]
   );
 
+  /** Gear L2 replaces draft.equipment — ceiling is starting − arms (not − current gear). */
+  const gearBudget = currencyStarting - armsSpent;
+
+  /**
+   * Cross-phase TP only — current-phase draft spend is reclaimable when Confirm replaces
+   * that phase's selection.
+   */
+  const crossPhaseTpSpent = useMemo(() => {
+    const refs =
+      phase === 'weapon' ? draft.loadoutArmor : phase === 'armor' ? draft.loadoutWeapons : [];
+    return refs.reduce((sum, ref) => {
+      const row = catalog.get(normalizeId(ref.id));
+      return sum + (row?.trainingPoints ?? 0) * Math.max(1, ref.quantity);
+    }, 0);
+  }, [phase, draft.loadoutArmor, draft.loadoutWeapons, catalog]);
+
   const eligibilityCtx = useMemo(
     () =>
       buildGuidedEquipmentEligibilityContext(
         phase,
         draft,
-        tpSummary,
+        { spent: crossPhaseTpSpent, limit: tpSummary.limit },
         pathRecommendedIds,
-        currencyRemaining
+        phase === 'gear' ? gearBudget : undefined
       ),
-    [phase, draft, tpSummary, pathRecommendedIds, currencyRemaining]
+    [phase, draft, crossPhaseTpSpent, tpSummary.limit, pathRecommendedIds, gearBudget]
   );
 
   const items = useMemo(
@@ -91,15 +110,19 @@ export function GuidedEquipmentL2Modal({
         catalog,
         eligibilityCtx,
         officialItems,
-        codexEquipment
+        codexEquipment,
+        itemProperties
       ),
-    [phase, catalog, eligibilityCtx, officialItems, codexEquipment]
+    [phase, catalog, eligibilityCtx, officialItems, codexEquipment, itemProperties]
   );
 
   const initialSelectedIds = useMemo(
     () => initialSelectedIdsForPhase(phase, draft),
     [phase, draft]
   );
+
+  const headerColumns = useMemo(() => l2HeaderColumnsForPhase(phase), [phase]);
+  const gridColumns = useMemo(() => l2GridColumnsForPhase(phase), [phase]);
 
   const title =
     phase === 'weapon'
@@ -119,7 +142,7 @@ export function GuidedEquipmentL2Modal({
         selected,
         catalog,
         tpSummary.limit,
-        currencyRemaining
+        gearBudget
       );
       if (!result.ok) {
         setError(result.message ?? l2Copy.confirmError);
@@ -128,7 +151,7 @@ export function GuidedEquipmentL2Modal({
       setError(null);
       if (result.partial) onDraftChange(result.partial);
     },
-    [phase, draft, catalog, tpSummary.limit, currencyRemaining, onDraftChange]
+    [phase, draft, catalog, tpSummary.limit, gearBudget, onDraftChange]
   );
 
   const footerExtra = useCallback(
@@ -136,14 +159,17 @@ export function GuidedEquipmentL2Modal({
       const status = (
         <div className="flex flex-col gap-2">
           {error ? (
-            <p className="font-nunito text-sm text-warning-700 dark:text-warning-400 text-center" role="alert">
+            <p
+              className="font-nunito text-sm text-warning-700 dark:text-warning-400 text-center"
+              role="alert"
+            >
               {error}
             </p>
           ) : null}
           {phase === 'gear' ? (
             <div className="flex justify-center">
               <PointStatus
-                total={currencyStarting - armsSpent}
+                total={gearBudget}
                 spent={computeL2GearSpend(selected)}
                 label={l2Copy.currencyLabel}
                 variant="inline"
@@ -166,17 +192,17 @@ export function GuidedEquipmentL2Modal({
       );
       return status;
     },
-    [phase, draft, catalog, tpSummary.limit, currencyStarting, armsSpent, error]
+    [phase, draft, catalog, tpSummary.limit, gearBudget, error]
   );
 
   const confirmDisabled = useCallback(
     (selected: SelectableItem[]) => {
       if (phase === 'gear') {
-        return computeL2GearSpend(selected) > currencyRemaining;
+        return computeL2GearSpend(selected) > gearBudget;
       }
       return computeL2TpSpent(phase, draft, selected, catalog) > tpSummary.limit;
     },
-    [phase, draft, catalog, tpSummary.limit, currencyRemaining]
+    [phase, draft, catalog, tpSummary.limit, gearBudget]
   );
 
   return (
@@ -186,24 +212,20 @@ export function GuidedEquipmentL2Modal({
         setError(null);
         onClose();
       }}
-        title={title}
-        description={description}
-        items={items}
-        onConfirm={handleConfirm}
-        initialSelectedIds={initialSelectedIds}
-        maxSelections={phase === 'armor' ? 1 : undefined}
-        showQuantity={phase === 'gear'}
-        columns={
-          phase === 'gear'
-            ? GEAR_COLUMNS.map((c) => ({ ...c, label: c.label }))
-            : LOADOUT_CUSTOMIZE_HEADER_COLUMNS.map((c) => ({ ...c, sortable: c.sortable }))
-        }
-        gridColumns={phase === 'gear' ? GEAR_GRID : LOADOUT_CUSTOMIZE_GRID_COLUMNS}
-        itemLabel={phase === 'gear' ? 'item' : phase}
-        emptyMessage={l2Copy.emptyMessage(phase)}
-        searchPlaceholder={l2Copy.searchPlaceholder(phase)}
-        footerExtra={footerExtra}
-        confirmDisabled={confirmDisabled}
+      title={title}
+      description={description}
+      items={items}
+      onConfirm={handleConfirm}
+      initialSelectedIds={initialSelectedIds}
+      maxSelections={phase === 'armor' ? 1 : undefined}
+      showQuantity={phase === 'gear'}
+      columns={headerColumns}
+      gridColumns={gridColumns}
+      itemLabel={phase === 'gear' ? 'item' : phase}
+      emptyMessage={l2Copy.emptyMessage(phase)}
+      searchPlaceholder={l2Copy.searchPlaceholder(phase)}
+      footerExtra={footerExtra}
+      confirmDisabled={confirmDisabled}
       size="xl"
     />
   );

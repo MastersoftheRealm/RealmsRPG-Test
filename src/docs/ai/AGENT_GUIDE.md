@@ -288,18 +288,17 @@ Implementation: `src/components/shared/info-tippy.tsx` (product API) + shared Fl
 
 - **`PathHelpCard` / `GuidedChoiceShell` / `GuidedLayerNav`** — path-mode prose and **Layer 1 ↔ 2/3** chrome. **`GuidedLayerNav`**: expand = `outline` button below content; collapse = `secondary` button below content (same slot). Use on guided creator steps and any creator step with progressive disclosure.
 - **Selection grammar (cards ↔ GridListRow)** — Canonical rules in [`REALMS_PRODUCT_OVERVIEW.md`](../REALMS_PRODUCT_OVERVIEW.md) **§3.1**:
-  - **Ladder A (entity depth):** Glance → **Read more** / row expand → **More details** / rich chips. Same facts whether chrome is a card or a GridListRow.
+  - **Ladder A (entity depth):** Glance → **See more** (in-card) → **More details** (modal or lots of chip/fact disclosure). Same facts whether chrome is a card or a GridListRow.
   - **Ladder B (catalog breadth):** Curated cards → **See more options** (filtered GridListRow browse) → **See all** / Forge.
   - **When:** few curated picks → `GuidedChoiceCard`; many / searchable → `GridListRow`. Do not densify cards into column grids.
   - **Layer 1 choice principle:** identity and fighting-style steps still require deliberate picks (no weapon/armor quick kits). Soft defaults OK for ability arrays and optional gear Add-all.
-- **Choice-card deep-dive vs catalog Layer 2** — Do **not** conflate (subset of §3.1):
+- **Choice-card disclosure vs catalog Layer 2** — Do **not** conflate (subset of §3.1). Copy: `GUIDED_CREATOR_COPY.choiceCard`.
   | Affordance | Component | Opens |
   |------------|-----------|--------|
-  | **Read more…** | `GuidedChoiceCard` inline | Longer in-card copy / `expandedExtra` |
-  | **More details** | `GuidedChoiceCard` `onDetails` → `GuidedEntityDetailModal` | Read-only entity overview + collapsible option catalogs (does **not** select the card) |
-  | **Property details** / **Hide properties** | Equipment L1 `GuidedChoiceCard` expand | In-card property chips only — do **not** reuse **More details** for this (that label is deep-dive modal) |
-  | **See more options** / browse | `GuidedLayerNav` / browse panels / `UnifiedSelectionModal` | Catalog Layer 2–3 (more choices to pick from) |
-  Label deep-dive **More details** (see `GUIDED_CREATOR_COPY.choiceCard`); never reuse **See more** for the modal path. REALMS §3.1 / §5.0.1 / §5.7; TASK-432+.
+  | **See more…** / **See less** | `GuidedChoiceCard` inline expand | Truncated description, notices, content that stays *on the card* |
+  | **More details** / **Less details** | `onDetails` → `GuidedEntityDetailModal`, **or** heavy chip/fact expand (e.g. equipment mechanic chips) | Entity modal / lots of fact chips — modal path does **not** select |
+  | **See more options** / browse | `GuidedLayerNav` / `UnifiedSelectionModal` | Catalog Layer 2–3 (more *choices*) |
+  Do **not** invent specialist verbs (“Property details”, “Read more”, “Hide properties”). REALMS §3.1 / §5.0.1 / §5.7.
   **Option rows inside deep-dive (and remodeled legacy lists):** use `DetailOptionList` + builders in `@/lib/detail-option` (`traitToDetailOption`, `featToDetailOption`, `equipmentRefToDetailOption`, `powerToDetailOption` / `techniqueToDetailOption` / `resolveCombatDetailOption`, `propertyChipsFromRefs`). Prefer flat equipment recommendation builders over kit helpers after TASK-442. Do not fork parallel GridListRow markup for the same catalogs.
   **GridListRow fact policy (sitewide):** If a fact would normally be a list column (Damage, Range, Damage Reduction, Action Type, Energy, Uses, Duration, etc.), either keep a real column with a header **or** put a **self-describing expanded chip** that states the label and value together (e.g. `Damage Reduction 2`, `Range Melee`). Never demote a column to an unlabeled or context-free chip.
   - **Dense browse lists** (Library, Codex, add modals, sheet library): keep **ListHeader** columns when space allows; chips supplement (properties/parts), they do not replace column facts.
@@ -308,8 +307,8 @@ Implementation: `src/components/shared/info-tippy.tsx` (product API) + shared Fl
 - **Stable expand toggle (sitewide, TASK-445):** Click-to-expand controls must keep the toggle under the pointer so a second click closes without mouse travel. Expanding may push siblings and grow content; the opened control’s origin (especially vertical) must not jump. Aligns with accordion best practice (whole header is the target; animate/grow the panel below — CMS DS, NN/g Fitts’s law) and WCAG target-size guidance.
   - **ExpandableChip / ChipGroup:** Host wrap groups with `data-chip-group` (ChipGroup does this). Do **not** force `w-full` on expand inside flex-wrap — that reboots the wrap row. ExpandableChip measures remaining row width (`measureStableExpandWidth`) from the collapsed left edge; equal collapsed/expanded header padding; header labels truncate (no wrap).
   - **GridListRow / CollapsibleSection:** Expand content below the header/trigger; keep the trigger fixed (`items-start`; fixed one-line meta slot).
-  - **GuidedChoiceCard:** Read more / Read less / More details sit **below** body copy (product placement). Card height is stabilized via density min-height; chip/row expands still follow stable-toggle.
-  - **Avoid:** Wrapping an expanded chip in `w-full` / `flex-1` solely to “make room.” Putting “Read more” under growing text.
+  - **GuidedChoiceCard:** See more / See less / More details sit **below** body copy (product placement). Card height is stabilized via density min-height; chip/row expands still follow stable-toggle.
+  - **Avoid:** Wrapping an expanded chip in `w-full` / `flex-1` solely to “make room.” Putting “See more” under growing text.
 - **`Modal`** — Layer 2/3 selection, wizards, and choice-card deep-dive; `fullScreenOnMobile` per `MOBILE_UX.md`.
 - **Marketing / landing copy** — `src/lib/constants/copy/*`; do not merge into `tooltip-text.tsx` (TASK-390).
 
@@ -351,7 +350,7 @@ Quick reference: `.cursor/rules/realms-unification.mdc`, `DESIGN_SYSTEM.md`.
 | **Database schema (single source of truth)** | `src/docs/SUPABASE_SCHEMA.md` — all public tables, columnar vs JSONB, API→tables; do not duplicate elsewhere |
 | Database types | `src/types/database.ts` (or Supabase-generated types) |
 | Codex API | `src/app/api/codex/` — fetches from Supabase |
-| **Game rules + user-facing terms** | `src/docs/GAME_RULES.md` — formulas, caps, **Terminology & Definitions** (capitalize game terms; prefer/avoid vocab; Score = Bonus + 10; no em dash in new UI copy; **spell game terms in full on Layer 1/2**, e.g. Currency not `c`). Read before writing labels, tips, or guided copy. |
+| **Game rules + user-facing terms** | `src/docs/GAME_RULES.md` — formulas, caps, **Terminology & Definitions** (capitalize game terms; **named Bonuses Title Case** e.g. Attack Bonus, Martial Bonus, Power Bonus; prefer/avoid vocab; Score = Bonus + 10; no em dash in new UI copy; **spell game terms in full on Layer 1/2**, e.g. Currency not `c`). Read before writing labels, tips, or guided copy. |
 | **Entity card art (list thumb, choice cards, upload)** | `REALMS_PRODUCT_OVERVIEW.md` §5.0.3 + **this guide** § Entity card art & list thumbnails; `guided-choice-image.ts`, `list-row-image.ts`, `codex-art.ts` |
 | **Accessibility & contrast** | `src/docs/ACCESSIBILITY.md` — contrast tokens (success-700 + dark variant, power/martial-dark), form labels, headings, modals, touch targets; `src/docs/DESIGN_SYSTEM.md` — status and game-specific color tokens for light + dark mode. When editing UI, ensure new or changed text/controls follow these so both themes pass WCAG 2.1 AA. |
 | **User experience goals** | `src/docs/USER_EXPERIENCE_GOALS.md` — UX goals, terminology (Realms Codex/Library, My Library), what’s implemented vs backlog, and AI checklist for onboarding/retention/copy. Read when changing landing, creator, library, or onboarding flows. |

@@ -332,7 +332,7 @@ export function GuidedSkillsPanel({
         <PointStatus
           total={totalPoints}
           spent={spentPoints}
-          label="Skill points"
+          label="Skill Points"
           variant="inline"
           className="text-base"
         />

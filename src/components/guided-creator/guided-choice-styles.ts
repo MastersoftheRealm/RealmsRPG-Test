@@ -47,14 +47,14 @@ export const GUIDED_CHOICE_STYLES = {
   bodyWrap: 'mt-1.5 flex flex-col gap-1',
   body: 'font-nunito text-base text-text-secondary leading-relaxed',
   /**
-   * Shared slot for Read more / Read less / More details below body copy.
+   * Shared slot for See more / See less / More details below body copy.
    * Always reserved when the card has a body section (including when selected with
    * no visible controls) so short options do not shrink on select.
    */
   actionRow: 'flex min-h-11 shrink-0 flex-wrap items-center gap-x-4 gap-y-0',
   readMore:
     'flex w-fit items-center font-nunito text-sm font-semibold text-primary-link-fg hover:text-primary-fg-hover hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm min-h-11 py-0.5',
-  /** Explicit deep-dive control — same row as Read more; must not look like catalog Layer 2 “See more”. */
+  /** Explicit deep-dive control — same row as See more; must not look like catalog Layer 2 “See more options”. */
   detailsLink:
     'flex w-fit items-center font-nunito text-sm font-semibold text-primary-link-fg hover:text-primary-fg-hover hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm min-h-11 min-w-[44px] py-0.5',
   tagsRow: 'flex min-h-[1.625rem] flex-wrap gap-1.5',

@@ -2,7 +2,7 @@
  * GuidedEntityDetailModal — read-only deep-dive for a choice-card entity.
  *
  * Progressive disclosure on the card:
- *   truncated copy → inline Read more → More details (this modal).
+ *   truncated copy → inline See more → More details (this modal).
  * Distinct from catalog Layer 2 (`GuidedLayerNav` / browse panels).
  */
 

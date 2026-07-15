@@ -48,11 +48,12 @@ How to use
 - Ensure parts/properties load their TP/IP/C values from Codex and are used to compute EN/TP/C when rendering lists or summaries.
 - Wire option levels and part selections to update calculated costs (EN/TP/C) in UI immediately.
 - Consistent layout: fixed compact summary + scrolling inputs/values.
-- **Guided choice-card deep-dive (2026-07-15):** Explicit “More details” on path/species cards → read-only info modal (overview + expandable option lists via DetailOptionList). Not catalog Layer 2 (`GuidedLayerNav`). When a card also has inline Read more, More details appears only after expand/select. TASK-432–435 done; polish TASK-436 done (proficiency lines, Path Options, title-less tips, Name/Description lists + labeled fact chips).
+- **Guided choice-card disclosure (2026-07-15):** **See more…** = in-card deepen (truncated copy / card content). **More details** = entity modal and/or lots of chip/fact disclosure. **See more options** = catalog Layer 2 only. Do not invent specialist verbs (Property details, Read more, Hide properties). When a card has both See more and modal More details, show modal More details only after expand/select. TASK-432–436.
 - **GridListRow fact chips (2026-07-15):** Column facts must stay as columns or self-describing expanded chips (e.g. Damage Reduction 2). Sitewide audit **TASK-437 done**.
 - **Guided L1 = curated picks, not silent kits (2026-07-15):** Layer 1 still requires deliberate user choice for identity and fighting-style decisions (path, species, ancestry, feats, weapons, armor). Soften prior “accept defaults / barely touch middle chapters” and remove quick loadout kits; weapon/armor are individual path cards. Gear may offer optional “Add all recommended.” Selection grammar: cards (few/curated) vs GridListRow (many/browse); entity depth ladder vs catalog breadth ladder — see `REALMS_PRODUCT_OVERVIEW.md` §3.1. TASK-442–443.
-- **Card ↔ GLR selection grammar (2026-07-15 session):** Cards are the quieter Layer‑A presentation of the same entity facts as GridListRow; Read more / row expand and More details / rich expand are the same depth ladder. “See more options” is catalog breadth only. Share fact builders and labels sitewide; do not force one chrome component.
+- **Card ↔ GLR selection grammar (2026-07-15 session):** Cards are the quieter Layer‑A presentation of the same entity facts as GridListRow; See more / row expand and More details / rich expand are the same depth ladder. “See more options” is catalog breadth only. Share fact builders and labels sitewide; do not force one chrome component.
 - **Agent user-facing copy (2026-07-15):** Game-term capitalization + prefer/avoid vocab (no Check/Save/Class/DC; Abilities not Ability Scores in UI; Score = Bonus + 10; no em dash in UI). Guide = **TASK-438 done**. Sitewide string audit = **TASK-439 done**; residuals **TASK-440**.
+- **Named Bonuses Title Case (2026-07-15):** Capitalize Attack Bonus and essentially every named Bonus (Power Bonus, Martial Bonus, Ranged Attack Bonus, Skill Bonus, Defense Bonus, …). Documented in `GAME_RULES.md` Terminology.
 - **Creature Creator (2026-02-24):** (1) Show feat point cost for damage modifiers (resistance, immunity, weakness), senses, movement, condition immunities — before and after adding (chip or label). TASK-270. (2) Use AddSkillModal and AddSubSkillModal instead of skills dropdown. TASK-271. (3) Separate Add Feat and Add Negative Feat modals (negative = feats with negative feat point cost). TASK-272. (4) Add power/technique/armament modals and displayed lists: parts, properties, options as chips; area, range, etc in expanded view; use same logic as add-library-item-modal and library/codex. TASK-273.
 - **2026-03-07 (barfight):** Power creator: allow multiple damage types per power (add row; save/load array). TASK-286. Creators: show explicit energy (EN) per item. TASK-287. Remove "(optional)" from damage in creators. TASK-288.
 
@@ -1827,6 +1828,14 @@ Notes
 - Expected: Progressive disclosure — collapsed offers Read more only; expanded (or selected) then shows More details for the deep-dive modal. Cards with More details but no overflow still show More details collapsed.
 - Disposition: Implemented in GuidedChoiceCard (`showDetails` gated on `expanded || !canInlineExpand`).
 
+**Raw Feedback Log — 2026-07-15 (Guided Skills copy — no fixed point count)**
+- Date: 2026-07-15
+- Context: Guided creator Skills step copy
+- Priority: Medium
+- Feedback: Do not hardcode “3 Skill Points” in user-facing copy. Base is often 3, but species can raise the budget (e.g. 4 or 5). Use clear non-specific language; let the current/max counter show the real numbers.
+- Expected: Skills step description explains free Species Skills + spending Skill Points without asserting a total; PointStatus remains source of truth.
+- Disposition: Updated `guided-creator-copy.ts` skills.description (+ related guided copy accuracy pass).
+
 **Raw Feedback Log — 2026-07-15 (Selection grammar + Layer 1 choice vs automation)**
 - Date: 2026-07-15
 - Context: Product vision — guided creator cards vs GridListRow; reconcile REALMS with recent guided equipment feedback
@@ -1874,3 +1883,43 @@ Notes
   (6) Weapon desc chips: non-mechanic property names (Cleave, Topple, Finesse, …); chips with descriptions hover for tooltip.
 - Expected: Progress strip gone; PointStatus Currency; fixed costs; description + property chips with hover tips; no Path pick badge; L1/L2 terminology norm.
 - Disposition: Implementing as **TASK-447**.
+
+**Raw Feedback Log — 2026-07-15 (Equipment dual titles)**
+- Date: 2026-07-15
+- Context: Guided creator → Loadout
+- Priority: Medium
+- Feedback: Equipment shows two titles (“Your equipment” + per-phase Weapons/Armor/Gear). Should feel like ancestry: one page-specific title per screen, not a chapter title plus a phase title.
+- Expected: GuidedStepLayout title/description = current equipment phase only; no nested h3 phase header.
+- Disposition: Implemented with TASK-447 (done); one-title-per-phase follow-up applied 2026-07-15.
+
+**Raw Feedback Log — 2026-07-15 (Equipment L2 browse columns wrong)**
+- Date: 2026-07-15
+- Context: Guided creator → Loadout → See more options (weapon/armor/gear modal)
+- Priority: High
+- Feedback: Add/browse modal columns and rows are wrong / misaligned (“none of the right stuff”).
+- Expected: Headers match row values; weapons/armor/gear show the same useful columns as advanced equipment browse (Damage / Damage Reduction / Currency / Training Points), not broken TYPE/STATS mapping.
+- Disposition: Fixed — per-phase L2 headers aligned with row columns; remove stale TYPE/STATS mismatch.
+
+**Raw Feedback Log — 2026-07-15 (Card disclosure labels: See more vs More details)**
+- Date: 2026-07-15
+- Context: Guided choice cards / equipment chip expand wording
+- Priority: Medium (docs + copy consistency)
+- Feedback: Stop inventing specialist verbs like “Property details”. Use blankets: **More details** for things that open a modal or show lots of chip details; **See more** when the card itself will contain the more info (truncated descriptions, chips, etc.). Record in card usage docs.
+- Expected: See more / See less = in-card deepen; More details / Less details = modal or heavy chip disclosure; See more options = catalog L2 only. Update REALMS §3.1 + AGENT_GUIDE + copy.
+- Disposition: Implemented — See more / More details blankets in REALMS §3.1, AGENT_GUIDE, FEATURE_INDEX, choiceCard copy; removed Property details / Hide properties / Read more defaults.
+
+**Raw Feedback Log — 2026-07-15 (Guided L2 Currency column shows multiplier)**
+- Date: 2026-07-15
+- Context: Guided creator → Equipment → See more options GridListRow Currency column
+- Priority: High
+- Feedback: Currency in the GLR is not calculating properly — looks like currency multiplier instead of actual Currency cost (as elsewhere). Proper constraints / protocol for GLR not followed.
+- Expected: Currency column = market cost via `calculateCurrencyCostAndRarity` (same as Library OfficialItemList), not raw `costs.totalCurrency` (property C sum). L1 chips and spend math match.
+- Disposition: Fixed — `rowFromOfficial` + `resolveItemUnitCost` use Library GLR protocol; catalog `gold_cost` is market Currency.
+
+**Raw Feedback Log — 2026-07-15 (Audit: equipment L2/L1 budget + disclosure consistency)**
+- Date: 2026-07-15
+- Context: Owner asked for audit of recent guided equipment / disclosure work
+- Priority: High
+- Feedback: Look for oversight, overcomplication, shared-use gaps, rule compliance; fix issues.
+- Expected: Replacement budgets reclaimable; L1 Currency gated; See more for in-card deepen; shared cost helpers; docs/tests match shipped UI.
+- Disposition: Fixed — L2 gear/TP cross-phase reclaim; L1 currency gates; disclosure labels; DRY cost; type filter parity; T025/spec/copy cleanup.

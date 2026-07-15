@@ -175,9 +175,6 @@ export function RevealStep() {
                 )}
               </div>
               <div className="min-w-0 flex-1 text-center sm:text-left">
-                <p className="font-nunito text-xs font-medium uppercase tracking-wide text-primary-fg">
-                  {stepCopy.heroLevel}
-                </p>
                 <h3 className="truncate font-display text-2xl font-bold text-text-primary">{displayName}</h3>
                 {heroSubtitle && (
                   <p className="mt-1 font-nunito text-sm text-text-secondary">{heroSubtitle}</p>
@@ -216,7 +213,7 @@ export function RevealStep() {
                   min={1}
                   value={draft.age}
                   onChange={(e) => updateDraft({ age: e.target.value })}
-                  placeholder="—"
+                  placeholder=""
                   className="font-nunito"
                 />
               </div>
@@ -232,7 +229,7 @@ export function RevealStep() {
                   onChange={(e) =>
                     updateDraft({ heightCm: e.target.value ? Number(e.target.value) : null })
                   }
-                  placeholder="—"
+                  placeholder=""
                   className="font-nunito"
                 />
               </div>
@@ -248,7 +245,7 @@ export function RevealStep() {
                   onChange={(e) =>
                     updateDraft({ weightKg: e.target.value ? Number(e.target.value) : null })
                   }
-                  placeholder="—"
+                  placeholder=""
                   className="font-nunito"
                 />
               </div>

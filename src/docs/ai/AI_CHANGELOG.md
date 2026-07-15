@@ -1,4 +1,14 @@
 
+- 2026-07-15 | agent | Guided equipment audit fixes | files: l2-modal, l1-phase, eligibility, catalog-rows, phase-stats, copy, GUIDED_SPEC, BUILD_VALIDATION T025, REALMS §5.7, tests | Summary: L2 gear/TP budgets reclaim current-phase spend; L1 Currency gates; See more (not mislabeled More details) for in-card facts; DRY cost via resolveItemUnitCost; unify gear type filter; drop dead phase-progress copy.
+
+- 2026-07-15 | agent | Guided equipment Currency = market cost | files: equipment-currency, equipment-catalog-rows, loadout-step, guided-equipment-l1-phase, tests | Summary: L2 GLR was showing costs.totalCurrency (property C sum). Align with OfficialItemList: calculateCurrencyCostAndRarity → gold_cost; resolveItemUnitCost converts C+IP; L1/spend use catalog rows.
+
+- 2026-07-15 | agent | Card disclosure labels — See more / More details | files: guided-creator-copy, guided-choice-card, guided-equipment-l1-phase, REALMS §3.1, AGENT_GUIDE, FEATURE_INDEX, GUIDED_SPEC, BUILD_VALIDATION T016/T021, ALL_FEEDBACK | Summary: Blanket verbs only: See more = in-card deepen; More details = modal or lots of chip details; See more options = catalog. Removed Property details / Hide properties / Read more defaults.
+
+- 2026-07-15 | agent | Guided equipment L2 columns fix | files: guided-equipment-l2-grid, guided-equipment-l2, guided-equipment-l2-modal, tests, BUILD_VALIDATION T006 | Summary: Headers were NAME/TYPE/TP/STATS but rows only emitted TP+Stats (misaligned junk). Per-phase columns now match advanced browse: weapons Damage+Currency+TP; armor DR+Currency+TP; gear Currency; properties on expand.
+
+- 2026-07-15 | agent | Equipment loadout — one title per phase | files: loadout-step, guided-equipment-phase-layout, ALL_FEEDBACK, BUILD_VALIDATION T013/T026 | Summary: Drop nested phase h3; GuidedStepLayout title/description switch with weapon/armor/gear like ancestry picks.
+
 - 2026-07-15 | agent | TASK-447 done — equipment PointStatus + chips | files: loadout-step, phase-layout, l1-phase, fact-chips, equipment-phase-stats/currency, l2 modal, remove phase-progress, GAME_RULES Terminology, copy, DEV-V-013-T026 | Summary: Drop phase progress bar; Currency via PointStatus; full Currency wording L1/L2; fix cost chip (costs.totalCurrency); cards show description + named property hover chips; no Path pick badge.
 
 - 2026-07-15 | agent | TASK-446 cleanup — dead copy / L1 rank ctx / docs | files: guided-creator-copy, equipment-phase-candidates, guided-equipment-l1-phase, loadout-step, FEATURE_INDEX, REALMS §5.7, GUIDED_SPEC, BUILD_VALIDATION T013 | Summary: Removed unused selection/locked-hint copy; L1 uses slim rankCtx (no eligibility/currency); document equipment More details = in-card chips; See more options consistency.
@@ -10,6 +20,16 @@
 - 2026-07-15 | agent | TASK-445 done — stable expand toggle | files: expandable-chip, expandable-chip-shell, measure-stable-expand-width, ChipGroup, grid-list-row, part-chip, proficiencies-tab, feats-step, guided-equipment-fact-chips, styleguide, AGENT_GUIDE, MOBILE_UX, FEATURE_INDEX, DEV-V-021 | Summary: Expanded chips no longer force w-full wrap jumps; measure remaining row width so click-open/click-close stays under the pointer; document sitewide standard.
 
 - 2026-07-15 | agent | Guided creator copy audit | files: guided-creator-copy, guided-equipment-l1-phase, AGENT_GUIDE, BUILD_VALIDATION T009/T018 | Summary: Fix chooser/path oversell of automation; remove admin/codex empty strings; stop reusing More details for equipment chip expand; powers copy matches auto-select; dead kit strings removed.
+
+- 2026-07-15 | agent | Terminology — capitalize named Bonuses | files: GAME_RULES Terminology, AGENT_GUIDE, AGENTS.md | Summary: Attack Bonus + rule that all named Bonuses (Martial/Power/Skill/Defense/Ranged Attack Bonus, etc.) are Title Case in UI copy.
+
+- 2026-07-15 | agent | Guided UI copy — em dash + L1/L2 term rules | files: guided-creator-copy, reveal-step, equipment-eligibility, guided-equipment-l2, l2-grid, fact-chips | Summary: Remove user-facing em dashes; Energy/Training Points spelled out (not EN/TP) on guided L1/L2 per GAME_RULES.
+
+- 2026-07-15 | agent | Guided copy — restore cheer, keep process light | files: guided-creator-copy | Summary: Owner: cheerleading OK; avoid over-emphasizing step-by-step. Warm chooser/reveal/chapter lines restored; still no Level 1 noise or “one decision at a time” process talk.
+
+- 2026-07-15 | agent | Guided copy — cut Level 1 & soft marketing | files: guided-creator-copy, reveal-step, guided-reveal-summary, equipment-eligibility | Summary: Remove pointless Level 1 UI/copy; tone down chooser/chapter cheerleading; natural chooser bullets and reveal CTAs.
+
+- 2026-07-15 | agent | Guided creator copy accuracy pass | files: guided-creator-copy.ts, guided-skills-panel | Summary: Drop hardcoded “3 Skill Points” (counter shows budget); fix UI mismatched labels (Property details, See more Feats); user-voice for powers selection; loadout title → equipment; Skill Points label.
 
 - 2026-07-15 | agent | Vision reconcile — selection grammar + L1 choice | files: REALMS_PRODUCT_OVERVIEW §3.1/§5.0/§5.7, GUIDED_EQUIPMENT_PHASED_SPEC, AGENT_GUIDE, FEATURE_INDEX, ALL_FEEDBACK | Summary: Document cards vs GridListRow (entity depth vs catalog breadth); Layer 1 requires deliberate picks (no weapon/armor kits); align with TASK-442–443 owner feedback; powers L2/auto-all noted as gap.
 

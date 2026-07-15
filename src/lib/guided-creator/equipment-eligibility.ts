@@ -8,7 +8,10 @@ import {
   weaponMatchesArchetypeAbilities,
   type WeaponPropertyRef,
 } from '@/lib/game/weapon-attack-ability';
-import { GUIDED_GEAR_L2_MAX_UNIT_COST } from '@/lib/guided-creator/equipment-currency';
+import {
+  GUIDED_GEAR_L2_MAX_UNIT_COST,
+  resolveItemUnitCost,
+} from '@/lib/guided-creator/equipment-currency';
 import type { Abilities, AbilityName } from '@/types';
 import type { ArchetypeCategory } from '@/types/archetype';
 
@@ -112,15 +115,13 @@ export function shouldSkipArmorPhase(mode: ArmorStepMode): boolean {
   return mode === 'none';
 }
 
-function rowUnitCost(row: EligibleEquipmentRow): number {
-  return Number(row.gold_cost ?? row.currency ?? row.cost ?? 0) || 0;
-}
-
 function matchesPhase(row: EligibleEquipmentRow, phase: EquipmentPhase): boolean {
   const t = row.type.toLowerCase();
   if (phase === 'weapon') return t === 'weapon' || t === 'shield';
   if (phase === 'armor') return t === 'armor';
-  if (phase === 'gear') return t === 'equipment';
+  if (phase === 'gear') {
+    return t === 'equipment' || t === 'item' || t === 'consumable' || t === 'tool';
+  }
   return false;
 }
 
@@ -140,15 +141,19 @@ export function isEligibleForGuidedEquipmentL2(
 
   if (ctx.phase === 'weapon' || ctx.phase === 'armor') {
     if (itemTp > armamentMax) return false;
-    const addTp = itemTp;
+    /**
+     * selectedTpSpent must be CROSS-PHASE only (e.g. armor TP while browsing weapons).
+     * Current-phase draft spend is reclaimable when L2 replaces the selection.
+     */
     const spent = ctx.selectedTpSpent ?? 0;
     const limit = ctx.tpLimit ?? Infinity;
-    if (spent + addTp > limit) return false;
+    if (spent + itemTp > limit) return false;
   }
 
   if (ctx.phase === 'gear') {
-    const unit = rowUnitCost(row);
+    const unit = resolveItemUnitCost(row);
     if (unit > GUIDED_GEAR_L2_MAX_UNIT_COST) return false;
+    /** remainingCurrency = gear budget ceiling (starting − arms), not after current gear. */
     if (ctx.remainingCurrency != null && unit > ctx.remainingCurrency) return false;
   }
 
@@ -233,11 +238,11 @@ export function ineligibilityReason(
   const armamentMax = getArmamentMax(ctx.archetypeType ?? 'power');
   const itemTp = row.trainingPoints ?? 0;
   if ((ctx.phase === 'weapon' || ctx.phase === 'armor') && itemTp > armamentMax) {
-    return `Exceeds armament proficiency max (${armamentMax} TP)`;
+    return `Exceeds armament proficiency max (${armamentMax} Training Points)`;
   }
 
   if (!isCommonRarity(row.rarity)) {
-    return 'Common items only at level 1';
+    return 'Common items only during character creation';
   }
 
   if (ctx.phase === 'gear' && rowUnitCost(row) > GUIDED_GEAR_L2_MAX_UNIT_COST) {

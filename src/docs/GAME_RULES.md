@@ -141,8 +141,14 @@ These terms are used consistently across all Realms resources. Capitalize them i
 | **Archetype** / **Archetype Path** | Path type that guides Feats, Skills, and Loadout: Power, Martial, or Powered-Martial. Not "class". |
 | **Archetype Ability** | Governing Ability for a path. Powered-Martial paths have two primary Archetype Abilities: **Archetype Power Ability** and **Archetype Martial Ability** (never primary/secondary between those two). |
 | **Score** | Passive target or passive total = **Bonus + 10** (Defense Score, Skill Score, Difficulty Score, Evasion, etc.). See Score Pattern above. |
-| **Bonus** | A number added to rolled dice (Skill Bonus, Attack Bonus, Defense Bonus). Other games call this a "modifier"; Realms does not. |
-| **Penalty** | A number subtracted from rolls |
+| **Bonus** | A number added to rolled dice. Other games call this a "modifier"; Realms does not. **Capitalize every named Bonus** when it is a rules label (same for related compounds). |
+| **Attack Bonus** | Bonus on an Attack Roll (often Martial Bonus or Power Bonus, including ranged or other specific Attack Bonuses). Capitalize as a game term. |
+| **Martial Bonus** | Relevant Ability + Martial Proficiency (weapon / Technique Attack Bonus family). |
+| **Power Bonus** | Power Ability + Power Proficiency (Power Attack Bonus / healing-from-Power addends, etc.). |
+| **Skill Bonus** | Bonus used on Skill Rolls (proficient or unproficient Skill Bonus / Sub-Skill Bonus). |
+| **Defense Bonus** | Bonus for Defense Rolls and Defense Score (ability + Skill Point increases, etc.). |
+| **Ranged Attack Bonus** | Attack Bonus when using ranged (and similar specific Attack Bonus labels: capitalize the full phrase). |
+| **Penalty** | A number subtracted from rolls. Named Penalties follow the same capitalization pattern when used as rules labels. |
 | **Difficulty Score (DS)** | The target number for many rolls. Not DC / Difficulty Class. |
 | **Energy** | Resource spent to use Powers (and some Techniques / items) |
 | **Health** | Damage capacity |
@@ -160,7 +166,7 @@ This is a **guide**, not a muzzle. Prefer Realms terms; avoid importing other sy
 | Prefer (Realms) | Avoid in product UI / rules copy |
 |-----------------|----------------------------------|
 | Abilities | Ability Scores (as the UI label for Abilities) |
-| Bonus / Penalty | Modifier / Mod |
+| Bonus / Penalty (capitalized named labels: Attack Bonus, Martial Bonus, Power Bonus, Skill Bonus, Defense Bonus, Ranged Attack Bonus, …) | Modifier / Mod; lowercase "attack bonus" when naming the rules concept |
 | Score (Bonus + 10) | Using "Score" for an Ability value |
 | Difficulty Score (DS) | DC, Difficulty Class |
 | Skill Roll / Attack Roll / Defense Roll | Check, Saving Throw, Save |
@@ -179,6 +185,7 @@ This is a **guide**, not a muzzle. Prefer Realms terms; avoid importing other sy
 ### Agent writing notes (user-facing strings)
 
 - Capitalize game terms only in game-term context (table above).
+- **Named Bonuses are always Title Case in UI:** Attack Bonus, Martial Bonus, Power Bonus, Skill Bonus, Defense Bonus, Ranged Attack Bonus, Sub-Skill Bonus, and any new "… Bonus" rules label. Same idea for named Penalties. Do not write "attack bonus" / "martial bonus" when referring to the game concept.
 - Do **not** use em dashes (`—`) in new user-facing copy. Hyphens (`-`) in compounds (e.g. Powered-Martial, one-handed) are fine.
 - Prefer plain, specific wording over stock AI phrasing.
 - Display Abilities as "Abilities", not "Ability Scores". Scores are for Bonus + 10 targets.
@@ -335,7 +342,7 @@ D20 + Skill Bonus = Total
 | Increase skill value | 1:1 | 1 pt per +1 up to cap of 3 |
 | Increase past cap (base skill) | 3 Skill Points | Per +1 above 3 |
 | Increase past cap (sub-skill) | 2 Skill Points | Per +1 above 3 |
-| Increase Defense Bonus | 2 Skill Points | +1 to a Defense; total defense bonus cannot exceed level |
+| Increase Defense Bonus | 2 Skill Points | +1 to a Defense; total Defense Bonus from Skill Points cannot exceed level |
 
 **Defense bonus cap:** Defense bonuses from **skill point allocation** cannot exceed character level. Ability-derived defense bonus is unrestricted.
 

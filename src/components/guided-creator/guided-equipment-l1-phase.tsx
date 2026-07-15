@@ -25,7 +25,7 @@ import {
 } from '@/lib/guided-creator/equipment-phase-candidates';
 import { validateWeaponHandSelection } from '@/lib/guided-creator/equipment-eligibility';
 import { buildEquipmentPhaseCardStats } from '@/lib/guided-creator/equipment-phase-stats';
-import { resolveRefUnitCost } from '@/lib/guided-creator/equipment-currency';
+import { resolveItemUnitCost, wouldExceedCurrency } from '@/lib/guided-creator/equipment-currency';
 import {
   addAllRecommendedEquipment,
   addItemToGuidedDraft,
@@ -79,6 +79,8 @@ export interface GuidedEquipmentL1PhaseProps {
   officialItems: LibraryItem[];
   codexEquipment: CodexEquipmentItem[];
   armorOptional?: boolean;
+  /** Remaining Currency after arms + current gear (PointStatus). */
+  currencyRemaining: number;
   onDraftChange: (partial: Partial<GuidedDraft>) => void;
 }
 
@@ -89,6 +91,7 @@ export function GuidedEquipmentL1Phase({
   officialItems,
   codexEquipment,
   armorOptional = false,
+  currencyRemaining,
   onDraftChange,
 }: GuidedEquipmentL1PhaseProps) {
   const copy = phaseCopy[`${phase}Phase` as 'weaponPhase' | 'armorPhase' | 'gearPhase'];
@@ -200,26 +203,72 @@ export function GuidedEquipmentL1Phase({
         return;
       }
 
+      const unitCost = resolveItemUnitCost(catalog.get(normalizeId(ref.id)) ?? {});
+      const qty = Math.max(1, ref.quantity ?? 1);
+      if (wouldExceedCurrency(currencyRemaining, unitCost, qty)) {
+        setHandMessage(phaseCopy.gearPhase.currencyBlocked);
+        return;
+      }
+
       const next = addItemToGuidedDraft(draft, ref, 'equipment');
       onDraftChange({ ...next });
     },
-    [phase, draft, onDraftChange, officialItems, codexEquipment, itemProperties, rules, catalog]
+    [
+      phase,
+      draft,
+      onDraftChange,
+      officialItems,
+      codexEquipment,
+      itemProperties,
+      rules,
+      catalog,
+      currencyRemaining,
+    ]
   );
 
   const handleQuantityChange = useCallback(
     (ref: PathItemRecommendation, quantity: number) => {
+      const qty = Math.max(1, quantity);
+      if (phase === 'gear') {
+        const unitCost = resolveItemUnitCost(catalog.get(normalizeId(ref.id)) ?? {});
+        const currentQty = selectedQuantity(phase, draft, ref.id);
+        const deltaCost = unitCost * (qty - currentQty);
+        if (deltaCost > 0 && deltaCost > currencyRemaining) {
+          setHandMessage(phaseCopy.gearPhase.currencyBlocked);
+          return;
+        }
+      }
       const category =
         phase === 'weapon' ? 'weapon' : phase === 'armor' ? 'armor' : 'equipment';
-      const next = setItemQuantityInGuidedDraft(draft, ref.id, quantity, category);
+      const next = setItemQuantityInGuidedDraft(draft, ref.id, qty, category);
       onDraftChange({ ...next });
     },
-    [draft, onDraftChange, phase]
+    [draft, onDraftChange, phase, catalog, currencyRemaining]
   );
 
   const handleAddAllRecommended = useCallback(() => {
-    const next = addAllRecommendedEquipment(draft, recommendedGearRefs);
+    let remaining = currencyRemaining;
+    const affordable: PathItemRecommendation[] = [];
+    for (const ref of recommendedGearRefs) {
+      const key = normalizeId(ref.id);
+      if (draft.equipment.some((e) => normalizeId(e.id) === key)) continue;
+      const unitCost = resolveItemUnitCost(catalog.get(key) ?? {});
+      const qty = Math.max(1, ref.quantity ?? 1);
+      const line = unitCost * qty;
+      if (line > remaining) continue;
+      affordable.push(ref);
+      remaining -= line;
+    }
+    if (affordable.length === 0 && recommendedGearRefs.some((ref) => {
+      const key = normalizeId(ref.id);
+      return !draft.equipment.some((e) => normalizeId(e.id) === key);
+    })) {
+      setHandMessage(phaseCopy.gearPhase.currencyBlocked);
+      return;
+    }
+    const next = addAllRecommendedEquipment(draft, affordable);
     onDraftChange({ ...next });
-  }, [draft, onDraftChange, recommendedGearRefs]);
+  }, [draft, onDraftChange, recommendedGearRefs, catalog, currencyRemaining]);
 
   const handleUnarmored = useCallback(() => {
     onDraftChange({ loadoutArmor: [] });
@@ -270,7 +319,7 @@ export function GuidedEquipmentL1Phase({
           };
           const selected = isSelectedInPhase(phase, draft, row.id);
           const libraryRow = libraryRowForRef(row.id, officialItems, codexEquipment);
-          const unitCost = resolveRefUnitCost(ref, officialItems, codexEquipment);
+          const unitCost = resolveItemUnitCost(row);
           const description =
             libraryRow && 'description' in libraryRow
               ? String(libraryRow.description ?? '').trim() || undefined
@@ -316,12 +365,6 @@ export function GuidedEquipmentL1Phase({
                 title={row.name}
                 description={description}
                 hideTagsWhenExpanded
-                expandLabel={
-                  stats.detailChips.length > 0 ? phaseCopy.cardPropertyExpand : undefined
-                }
-                collapseLabel={
-                  stats.detailChips.length > 0 ? phaseCopy.cardPropertyCollapse : undefined
-                }
                 selected={selected}
                 onSelect={() => toggleSelection(ref)}
                 selectAriaLabel={`${selected ? 'Deselect' : 'Select'} ${row.name}`}

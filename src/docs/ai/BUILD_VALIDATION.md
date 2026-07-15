@@ -1143,7 +1143,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 2. Advance to Loadout step.
 
 **Expected**
-- Equipment phase advances with footer **Continue** / **Back** only (no SegmentedControl progress strip at top).
+- One page title per equipment phase (Weapons & shields / Armor / Adventuring gear), like ancestry picks — not “Your equipment” plus a nested phase heading.
 - No Quick kits section or kit cards.
 - No **Your selection** summary strip — selected state is the card ring only.
 - No **Path pick** badge on weapon/armor cards.
@@ -1164,11 +1164,13 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Steps**
 1. On Loadout step (weapon phase), click **See more options**.
-2. Toggle items in the catalog modal; watch Training Points bar.
+2. Confirm header columns **Name | Damage | Currency | Training Points** and row values align under those headers (not TYPE/STATS mismatch).
+3. Toggle items in the catalog modal; watch Training Points PointStatus.
 
 **Expected**
-- Layer 2 `UnifiedSelectionModal` opens with TP `PointStatus`; rows show NAME / TYPE / TP / STATS.
-- Selecting updates TP/currency `PointStatus` in the footer; Confirm applies the selection to the draft. Items that would exceed TP budget are disabled or Confirm stays blocked.
+- Layer 2 `UnifiedSelectionModal` opens with Training Points `PointStatus`; weapon rows show **Name | Damage | Currency | Training Points** aligned under those headers.
+- Armor browse uses **Damage Reduction**; gear browse uses **Name | Currency**.
+- Selecting updates Training Points / Currency `PointStatus` in the footer; Confirm applies the selection to the draft. Items that would exceed budget are disabled or Confirm stays blocked.
 - Closing L2 without Confirm (Escape / Cancel) returns to phase L1 cards without changing the draft.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
@@ -1341,13 +1343,14 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 1. Open Loadout; confirm no phase progress strip (footer may still show 1 / N); no Quick kits.
 2. Select a weapon card; confirm description + named property chips; hover a property chip for its tip; expand **More details** for mechanic facts (handedness, damage, …).
 3. Click **Continue to armor →**. On Armor, click **See more options** and confirm Browse armor modal; dismiss.
-4. Click **Continue to gear →**; confirm Adventuring gear heading, **Currency** PointStatus, and **Add all recommended equipment**.
+4. Click **Continue to gear →**; confirm Adventuring gear as the page title (only one page title), **Currency** PointStatus, and **Add all recommended equipment**.
 5. Click **See more options**; confirm Browse adventuring gear modal.
 
 **Expected**
 - In-step phases with footer continue (not next chapter) until gear complete; no top phase strip.
 - Layer 2 per-phase titles match (weapons & shields / armor / adventuring gear).
 - Currency shown via PointStatus on all three phases.
+- One page title per phase (e.g. Weapons & shields), not “Your equipment” plus a nested phase heading.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -1402,7 +1405,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | **Needs** | None |
 
 **Steps**
-1. On Path, for a card with long copy: confirm collapsed state shows **Read more…** below the truncated body and does **not** show **More details** yet. Expand via Read more (or select the card) and confirm **More details** appears in the same action row below the body (not labeled “See more”).
+1. On Path, for a card with long copy: confirm collapsed state shows **See more…** below the truncated body and does **not** show **More details** yet. Expand via See more (or select the card) and confirm **More details** appears in the same action row below the body (not labeled “See more options”).
 2. Click **More details** on an unselected-but-expanded path; confirm a full-screen-on-mobile modal opens with Overview + a collapsible Option lists section; confirm the path is still **not** selected.
 3. Close the modal; click the path card body; confirm the path **selects** and **More details** remains available (selected = expanded).
 4. With a path selected, open **More details** again; confirm selection stays selected after close.
@@ -1410,7 +1413,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 6. Species: repeat steps 1–4 for selection independence (content checked in T017).
 
 **Expected**
-- Progressive disclosure: truncated → **Read more…** → **More details** (deep-dive). Cards without overflow may show **More details** while collapsed.
+- Progressive disclosure: truncated → **See more…** → **More details** (deep-dive). Cards without overflow may show **More details** while collapsed.
 - **More details** never toggles selection; card click still selects.
 - Path modal opens (content checked in T018); Close dismisses.
 - Catalog Layer 2 controls (`Show hybrid…` / `Show all species`) remain separate below the grid.
@@ -1604,12 +1607,12 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Steps**
 1. Open Loadout → Weapons. Confirm path pick cards appear (selected ring on cards only — **no** “Your selection” chip strip).
-2. Confirm collapsed cards show a few quiet tags (e.g. ability, handedness, damage, cost), not a full property wall; expand **More details** for expandable fact chips.
-3. Confirm quiet **Nc remaining** line and **See more options** catalog control.
+2. Confirm collapsed cards show named property chips + Currency (not a full mechanic wall); expand **See more…** for handedness / damage / ability facts.
+3. Confirm centered **Currency** PointStatus and **See more options** catalog control.
 4. If you previously had a broken draft (selected count without cards), reload once after this build — unresolved ids clear; path cards remain selectable.
 
 **Expected**
-- Equipment L1 feels like feats: cards first, More details for depth, See more options for breadth.
+- Equipment L1 feels like feats: cards first, See more for in-card depth, See more options for breadth.
 - Selection and visible cards stay in sync.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
@@ -1624,13 +1627,14 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | **Needs** | DEV-004 seed |
 
 **Steps**
-1. Confirm no 1. Weapons / 2. Armor / 3. Gear strip under the step title.
-2. Confirm centered **Currency: remaining / total** PointStatus (same family as Skill points).
-3. On a weapon card, expand description if needed; hover Cleave/Finesse/etc. chips for property tips; confirm cost chip is not 0 when the item has a library cost.
-4. Open **See more options** on gear; confirm PointStatus still says Currency (not “c”).
+1. Confirm a single page title for the current phase (e.g. **Weapons & shields**) — not “Your equipment” above a second phase heading.
+2. Confirm no 1. Weapons / 2. Armor / 3. Gear strip under the step title.
+3. Confirm centered **Currency: remaining / total** PointStatus (same family as Skill points).
+4. On a weapon card, expand description if needed; hover Cleave/Finesse/etc. chips for property tips; confirm cost chip is not 0 when the item has a library cost.
+5. Open **See more options** on gear; confirm PointStatus still says Currency (not “c”).
 
 **Expected**
-- Matches abilities/skills resource chrome; full **Currency** wording in L1/L2.
+- Matches abilities/skills resource chrome; full **Currency** wording in L1/L2; ancestry-like one title per screen.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -2071,7 +2075,7 @@ Verifies behavior parity after removing setState-in-effect / fixing exhaustive-d
 
 **Steps**
 1. Open a guided step that shows selectable `GuidedChoiceCard`s.
-2. Select card A — card expands (Read more / details visible when applicable).
+2. Select card A — card expands (See more / details visible when applicable).
 3. Select a different card B — A collapses (or exits selected expand state); B expands.
 
 **Expected**
@@ -2315,7 +2319,7 @@ Click-open / click-close without moving the pointer. Expandable chips grow into 
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-021-T003 — Guided choice card Read more placement
+#### DEV-V-021-T003 — Guided choice card See more placement
 
 | Field | Value |
 |-------|-------|
@@ -2326,8 +2330,8 @@ Click-open / click-close without moving the pointer. Expandable chips grow into 
 
 **Steps**
 1. Open Guided creator and reach Path or Species cards with truncated descriptions.
-2. Confirm order: title → description (clamped) → **Read more…** (not between title and body).
-3. Expand via **Read more…**; confirm **Read less** (and **More details** when applicable) remain below the body.
+2. Confirm order: title → description (clamped) → **See more…** (not between title and body).
+3. Expand via **See more…**; confirm **See less** (and **More details** when applicable) remain below the body.
 
 **Expected**
 - Disclosure controls are below card body copy, never between title and description.

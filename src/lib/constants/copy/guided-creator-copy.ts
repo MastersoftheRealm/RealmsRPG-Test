@@ -17,19 +17,19 @@ export const GUIDED_CREATOR_COPY = {
     modes: {
       guided: {
         label: 'Guided',
-        tagline: 'Chapter-by-chapter choices, shaped by your path.',
+        tagline: 'Become your character with path recommendations.',
         bullets: [
-          'Pick a path, then make clear choices for species, feats, and gear',
-          'One decision at a time, with a live preview as you go',
-          'Great for your first character or a focused start',
+          'Pick a path, then choose species, Feats, and gear from its options',
+          'Watch your character take shape as you go',
+          'Great for your first character, or anytime you want a guided start',
         ],
       },
       custom: {
         label: 'Custom',
-        tagline: 'The full builder when you want every option from the start.',
+        tagline: 'The full builder when you want every option up front.',
         bullets: [
-          'All steps and catalogs available as you build',
-          'Forge your own archetype or fine-tune every detail',
+          'All catalogs available while you build',
+          'Forge your own archetype, or fine-tune every pick',
           'Ideal if you already know the system or want full control',
         ],
       },
@@ -67,14 +67,15 @@ export const GUIDED_CREATOR_COPY = {
   },
 
   /**
-   * Choice-card deep-dive (TASK-432+). Not catalog Layer 2 — use “More details”, not “See more”.
-   * Opens GuidedEntityDetailModal for a single entity (path, species, …).
+   * Choice-card disclosure labels (Ladder A). Catalog breadth uses layerNav / “See more options”.
+   * - See more / See less — in-card deepen (truncated description, expandedExtra on the card).
+   * - More details / Less details — entity modal (`onDetails`) or lots of chip/fact disclosure.
    */
   choiceCard: {
-    /** Entity deep-dive modal (path, species). Not for inline chip expand. */
+    seeMore: 'See more…',
+    seeLess: 'See less',
     moreDetails: 'More details',
-    /** Legacy alias; prefer loadout.phases.cardPropertyCollapse for equipment chips. */
-    lessDetails: 'Hide properties',
+    lessDetails: 'Less details',
   },
 
   entityDetail: {
@@ -86,17 +87,17 @@ export const GUIDED_CREATOR_COPY = {
   chapters: {
     foundation: { title: 'Foundation', subtitle: 'Choose your path and species' },
     ancestry: { title: 'Ancestry', subtitle: 'Make your species your own' },
-    abilities: { title: 'Abilities', subtitle: 'Who you are, naturally' },
-    archetype: { title: 'Your Archetype', subtitle: 'Skills and feats' },
-    equipment: { title: 'Equipment', subtitle: 'Gear, then powers or techniques' },
-    reveal: { title: 'Your Hero', subtitle: 'Review and bring them to life' },
+    abilities: { title: 'Abilities', subtitle: 'Who you are' },
+    archetype: { title: 'Your Archetype', subtitle: 'Skills and Feats' },
+    equipment: { title: 'Equipment', subtitle: 'Gear, then Powers or Techniques' },
+    reveal: { title: 'Your Hero', subtitle: 'Bring them to life' },
   },
 
   steps: {
     path: {
       title: 'Choose your path',
       description:
-        'Your path shapes recommended Abilities, Skills, Feats, and gear. You still choose among those options as you go.',
+        'Your path suggests Abilities, Skills, Feats, and gear. Then you choose among those options.',
       showHybridPaths: 'Show hybrid (Powered-Martial) paths',
       backToCorePaths: 'Back to Power and Martial paths',
       emptyTitle: 'No paths available',
@@ -148,8 +149,7 @@ export const GUIDED_CREATOR_COPY = {
     },
     species: {
       title: 'Choose your species',
-      description:
-        "This is who you're becoming. Any species works with any path, so pick the one that excites you.",
+      description: 'Any species works with any path. Pick the one that excites you.',
       showAll: 'Show all species',
       backToStarters: 'Back to starter species',
       emptyTitle: 'No species available',
@@ -213,18 +213,18 @@ export const GUIDED_CREATOR_COPY = {
       },
     },
     abilities: {
-      title: 'Your natural Abilities',
-      description: 'Abilities describe who you are: how strong, quick, or sharp you are naturally.',
+      title: 'Your Abilities',
+      description: 'Abilities describe how strong, quick, or sharp you are.',
       recommendedHeading: (pathName: string) => `Recommended for ${pathName}`,
       recommendedHint:
-        'These Abilities match your path. Continue to keep them, or customize the spread.',
+        'These Abilities match your path. Continue to keep them, or customize if you prefer different values.',
       customize: 'Customize Abilities',
       abilityPointsLabel: 'Ability Points',
     },
     skills: {
       title: 'Your Skills',
       description:
-        'You have 3 Skill Points at level 1. Species Skills are free. Spending 1 point makes another skill proficient; raise its value with more points if you want.',
+        'Species Skills are free. Spend Skill Points to gain proficiency in other Skills and to raise their value. The counter shows how many you have left.',
       applyRecommended: 'Restore path Skills',
       applyRecommendedHint: 'Puts back path Skill proficiencies you removed.',
       emptySkills: 'No Skills yet. Use suggestions below or browse the full list.',
@@ -241,8 +241,8 @@ export const GUIDED_CREATOR_COPY = {
       browseAll: 'Browse all Skills',
       browseOverLimit: (max: number) =>
         max <= 0
-          ? "You don't have enough Skill Points to add more. Remove a Skill or lower a skill value, then try again."
-          : `You've selected more Skills than you can afford (${max} remaining). Deselect some, or free Skill Points first.`,
+          ? 'No Skill Points left to add more. Remove a Skill or lower a value, then try again.'
+          : `You can add up to ${max} more Skill${max === 1 ? '' : 's'} with your remaining points. Deselect some if you need room.`,
       continueLabel: 'Looks good →',
     },
     archetypeFeats: {
@@ -255,14 +255,16 @@ export const GUIDED_CREATOR_COPY = {
         'Groups are suggestions, not either/or. Keep picking until you reach your limit.',
       seeMore: 'See more Feats',
       emptyTitle: 'No Feat recommendations',
-      emptyDescription: 'This path does not list Archetype Feats yet. Try Browse, or pick another path.',
+      emptyDescription:
+        'This path does not list Archetype Feats yet. Use See more Feats, or pick another path.',
     },
     characterFeat: {
       title: 'Who you are beyond the fight',
       description: 'Pick one Character Feat, usually about personality, background, or non-combat flair.',
       seeMore: 'See more Character Feats',
       emptyTitle: 'No Character Feats found',
-      emptyDescription: 'None are available right now. Try Browse, or continue after checking another path.',
+      emptyDescription:
+        'None are available right now. Use See more Character Feats, or pick another path.',
     },
     /** Shared Layer 2 browse chrome for archetype + character feat steps. */
     featsBrowse: {
@@ -283,8 +285,8 @@ export const GUIDED_CREATOR_COPY = {
       emptyDescription: 'Try clearing filters or showing locked Feats.',
     },
     loadout: {
-      title: 'Your loadout',
-      description: 'Choose weapons, armor, and adventuring gear from your path recommendations.',
+      title: 'Your equipment',
+      description: 'Choose weapons, armor, and adventuring gear from your path options.',
       continueLabel: 'Looks good →',
       emptyTitle: 'No equipment recommendations yet',
       emptyDescription:
@@ -294,41 +296,31 @@ export const GUIDED_CREATOR_COPY = {
       unarmed: {
         title: 'Unarmed combat',
         description:
-          'Your path favors fighting without weapons. Add Unarmed Prowess if you want unarmed strikes ready on your sheet.',
+          'Your path favors fighting without weapons. Add Unarmed Prowess if you want unarmed strikes on your character.',
         add: 'Add Unarmed Prowess',
         remove: 'Remove Unarmed Prowess',
         addedHint: 'Unarmed Prowess will be on your character.',
       },
       phases: {
-        progressLabel: 'Equipment steps',
-        phaseNames: {
-          weapon: 'Weapons',
-          armor: 'Armor',
-          gear: 'Gear',
-        },
         weapon: {
           title: 'Weapons & shields',
-          description: 'Pick from your path options. Read more on a card for property details.',
+          description:
+            'Pick from your path options. Use See more for requirements and traits.',
         },
         armor: {
           title: 'Armor',
-          description: 'Pick armor from your path, or fight unarmored when allowed.',
+          description: 'Pick armor from your path, or continue without armor when that is allowed.',
         },
         gear: {
           title: 'Adventuring gear',
           description:
-            'Pick recommended gear, or add all at once. Currency already spent on weapons and armor is counted first.',
+            'Pick recommended gear, or add all at once. Currency spent on weapons and armor already counts against your total.',
         },
-        /** Inline expand on weapon/armor cards (property chips). Not the entity More details modal. */
-        cardPropertyExpand: 'Property details',
-        cardPropertyCollapse: 'Hide properties',
         skipArmorLabel: 'Fight unarmored',
         seeMoreLabel: 'See more options',
         backToPhase: 'Back to recommendations',
         continueWeapon: 'Continue to armor →',
         continueToGear: 'Continue to gear →',
-        continueArmor: 'Continue to gear →',
-        continueGear: 'Looks good →',
         currencyLabel: 'Currency',
         unresolvedItem: 'Unknown item',
         weaponPhase: {
@@ -339,20 +331,21 @@ export const GUIDED_CREATOR_COPY = {
         },
         armorPhase: {
           emptyTitle: 'No armor on your path',
-          emptyDescription: 'Use See more options to browse armor, or continue unarmored if your path allows.',
+          emptyDescription:
+            'Use See more options to browse armor, or continue without armor if your path allows.',
           tpBlocked: 'Not enough Training Points for that item.',
         },
         gearPhase: {
           emptyTitle: 'No gear on your path',
           emptyDescription: 'Use See more options to browse adventuring gear within your budget.',
           addAllRecommended: 'Add all recommended gear',
+          currencyBlocked: 'Not enough Currency remaining for that gear.',
         },
         l2: {
           weaponTitle: 'Browse weapons & shields',
           armorTitle: 'Browse armor',
           gearTitle: 'Browse adventuring gear',
-          description:
-            'Common items you can take at level 1. Training Points update as you select.',
+          description: 'Common items you can take. Training Points update as you select.',
           gearDescription:
             'Common gear costing 50 Currency or less each. Remaining Currency updates as you select.',
           tpLabel: 'Training Points',
@@ -361,7 +354,11 @@ export const GUIDED_CREATOR_COPY = {
           searchPlaceholder: (phase: 'weapon' | 'armor' | 'gear') =>
             phase === 'gear' ? 'Search gear…' : `Search ${phase}…`,
           emptyMessage: (phase: 'weapon' | 'armor' | 'gear') =>
-            phase === 'gear' ? 'No matching gear found' : `No matching ${phase} items found`,
+            phase === 'gear'
+              ? 'No matching gear found'
+              : phase === 'armor'
+                ? 'No matching armor found'
+                : 'No matching weapons or shields found',
         },
       },
     },
@@ -372,23 +369,30 @@ export const GUIDED_CREATOR_COPY = {
       },
       poweredMartial: {
         title: 'Your Powers',
-        description: 'Powers that work with your hybrid fighting style.',
+        description: 'Powers that fit your hybrid fighting style.',
       },
       power: {
         title: 'Your Powers',
         description: 'Powers are supernatural or extraordinary effects you can use.',
       },
-      groupIntro: (kind: string) =>
-        `These ${kind} are recommended for your path and selected for you. Tap a card to deselect one you do not want.`,
-      energyTag: (energy: number) => `${energy} EN`,
-      emptyTitle: (kind: string) => `No ${kind} on this path`,
-      emptyDescription: (kind: string) =>
-        `This path has no level 1 ${kind} recommendations yet. You can add ${kind} later from your library.`,
+      /** `kind` is "powers" | "techniques" from the step; labels are capitalized for display. */
+      groupIntro: (kind: string) => {
+        const label = kind === 'techniques' ? 'Techniques' : 'Powers';
+        return `Recommended ${label} for your path. Highlighted cards are selected. Tap to turn one off if you prefer.`;
+      },
+      energyTag: (energy: number) => `${energy} Energy`,
+      emptyTitle: (kind: string) => {
+        const label = kind === 'techniques' ? 'Techniques' : 'Powers';
+        return `No ${label} on this path`;
+      },
+      emptyDescription: (kind: string) => {
+        const label = kind === 'techniques' ? 'Techniques' : 'Powers';
+        return `This path has no ${label} recommendations yet. You can add ${label} later on your character sheet.`;
+      },
     },
     reveal: {
       title: 'Meet your hero',
       description: 'Review your build, name them, then create your character.',
-      heroLevel: 'Level 1',
       heroUnnamed: 'Unnamed Hero',
       identityTitle: 'Identity',
       nameLabel: 'Character name',
@@ -419,17 +423,16 @@ export const GUIDED_CREATOR_COPY = {
         baseStats: (hp: number, en: number) => `Base Health: ${hp} · Base Energy: ${en}`,
         autoAllocate: 'Auto-allocate',
         autoAllocateAria:
-          'Auto-allocate so Energy covers your highest Power or Technique cost, with the rest to Health',
+          'Set Energy to cover your highest Power or Technique cost, and put the rest into Health',
         highestCostHint: (cost: number) =>
-          `Your costliest Power or Technique needs ${cost} EN. Auto-allocate can set Energy to match when possible.`,
+          `Your costliest Power or Technique needs ${cost} Energy. Auto-allocate can cover that cost first.`,
         allocateHint: (remaining: number) =>
           `Allocate ${remaining} more point${remaining === 1 ? '' : 's'} to continue.`,
       },
       summary: {
         title: 'Your build',
-        description: 'Every choice at a glance. Jump back to edit any step.',
+        description: 'Everything at a glance. Jump back anytime to edit.',
         coreTitle: 'Core choices',
-        levelLabel: 'Level',
         pathLabel: 'Path',
         speciesLabel: 'Species',
         typeLabel: 'Type',
@@ -452,7 +455,7 @@ export const GUIDED_CREATOR_COPY = {
       },
       playTogetherModal: {
         title: "You're ready to play!",
-        description: 'Realms is most fun with a party. Join a group or start a campaign as Realm Master.',
+        description: 'Realms is most fun with a party. Join Discord, browse campaigns, or run games as Realm Master.',
         viewCharacter: 'View my character',
         discord: 'Join Discord',
         campaigns: 'Browse campaigns',

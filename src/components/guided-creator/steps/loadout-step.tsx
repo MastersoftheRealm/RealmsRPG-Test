@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useCallback, useState } from 'react';
 import { Spinner } from '@/components/ui';
-import { useEquipment, useOfficialLibrary } from '@/hooks';
+import { useEquipment, useOfficialLibrary, useGuidedEquipmentCatalog } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
 import { GuidedStepLayout } from '../guided-step-layout';
@@ -36,6 +36,7 @@ import {
   computeRemainingCurrency,
   computeSpentCurrency,
   computeStartingCurrency,
+  resolveItemUnitCost,
   resolveRefUnitCost,
 } from '@/lib/guided-creator/equipment-currency';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
@@ -43,11 +44,20 @@ import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 const stepCopy = GUIDED_CREATOR_COPY.steps.loadout;
 const phaseCopy = stepCopy.phases;
 
+function normalizeEqId(id: string): string {
+  return String(id).trim().toLowerCase();
+}
+
 export function LoadoutStep() {
   const { draft, updateDraft, prevSubStep, nextSubStep } = useGuidedCreatorStore();
   const { pathData } = useGuidedPathData();
   const { data: officialItems = [], isLoading: officialLoading } = useOfficialLibrary('items');
   const { data: codexEquipment = [], isLoading: codexLoading } = useEquipment();
+  const { catalog, itemProperties } = useGuidedEquipmentCatalog(
+    draft,
+    officialItems,
+    codexEquipment
+  );
   const [l2Open, setL2Open] = useState(false);
 
   const isLoading = officialLoading || codexLoading;
@@ -111,24 +121,32 @@ export function LoadoutStep() {
   const phaseComplete = canCompleteEquipmentPhase(equipmentPhase, phaseCompletion);
   const onLastPhase = isLastEquipmentPhase(equipmentPhase, armorMode, phaseVisibility);
 
+  const resolveSpendCost = useCallback(
+    (ref: { id: string }) => {
+      const row = catalog.get(normalizeEqId(ref.id));
+      if (row) return resolveItemUnitCost(row);
+      return resolveRefUnitCost(ref, officialItems, codexEquipment, itemProperties);
+    },
+    [catalog, officialItems, codexEquipment, itemProperties]
+  );
+
   const armsSpent = useMemo(() => {
     const refs = [...draft.loadoutWeapons, ...draft.loadoutArmor];
     return refs.reduce(
-      (sum, ref) =>
-        sum + resolveRefUnitCost(ref, officialItems, codexEquipment) * Math.max(1, ref.quantity),
+      (sum, ref) => sum + resolveSpendCost(ref) * Math.max(1, ref.quantity),
       0
     );
-  }, [draft.loadoutWeapons, draft.loadoutArmor, officialItems, codexEquipment]);
+  }, [draft.loadoutWeapons, draft.loadoutArmor, resolveSpendCost]);
 
   const gearSpent = useMemo(
     () =>
       computeSpentCurrency(
         draft.equipment.map((ref) => ({
           ...ref,
-          cost: resolveRefUnitCost(ref, officialItems, codexEquipment),
+          cost: resolveSpendCost(ref),
         }))
       ),
-    [draft.equipment, officialItems, codexEquipment]
+    [draft.equipment, resolveSpendCost]
   );
 
   const currencyStarting = useMemo(() => computeStartingCurrency(1), []);
@@ -245,11 +263,13 @@ export function LoadoutStep() {
 
   const footerCanContinue = l2Open ? true : phaseComplete;
 
+  const phaseTitleCopy = phaseCopy[equipmentPhase];
+
   return (
     <GuidedStepLayout
       subStep="loadout"
-      title={stepCopy.title}
-      description={stepCopy.description}
+      title={phaseTitleCopy.title}
+      description={phaseTitleCopy.description}
       canContinue={footerCanContinue}
       continueLabel={continueLabel}
       footerBack={handleLoadoutBack}
@@ -264,7 +284,6 @@ export function LoadoutStep() {
       ) : (
         <div className="space-y-5">
           <GuidedEquipmentPhaseLayout
-            phase={equipmentPhase}
             currencyTotal={currencyStarting}
             currencySpent={currencySpent}
             expandLabel={phaseCopy.seeMoreLabel}
@@ -277,6 +296,7 @@ export function LoadoutStep() {
               officialItems={officialItems}
               codexEquipment={codexEquipment}
               armorOptional={armorMode === 'optional' || !phaseVisibility.includeArmor}
+              currencyRemaining={currencyRemaining}
               onDraftChange={updateDraft}
             />
           </GuidedEquipmentPhaseLayout>
@@ -295,7 +315,6 @@ export function LoadoutStep() {
             pathLevel1={pathData?.level1}
             officialItems={officialItems}
             codexEquipment={codexEquipment}
-            currencyRemaining={currencyRemaining}
             currencyStarting={currencyStarting}
             armsSpent={armsSpent}
             onClose={() => setL2Open(false)}

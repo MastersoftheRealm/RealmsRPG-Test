@@ -147,18 +147,18 @@ flowchart LR
 
 #### Ladder A — Entity depth (what is this thing?)
 
-Same entity; more information over time. Labels stay stable sitewide:
+Same entity; more information over time. **Two card labels, used sitewide** (do not invent “Property details”, “Read more”, etc.):
 
 | Stage | Card | GridListRow |
 |-------|------|-------------|
 | **Glance** | Name, short description, art (if selling) | Name (+ short columns / thumb) |
-| **Inline deepen** | **Read more…** (full description + key notices: state feat, uses, path facts) | Row expand: description + **labeled** chips / detail sections |
-| **Deep understand** | **More details** → read-only [`GuidedEntityDetailModal`](../components/guided-creator/guided-entity-detail-modal.tsx) (overview + option catalogs via `DetailOptionList`) | Richer expand / same catalogs and chip builders; not a second product language |
+| **Inline deepen (on the card)** | **See more…** / **See less** — truncated description, notices, chips that stay on the card | Row expand: description + **labeled** chips / detail sections |
+| **Deep understand** | **More details** / **Less details** — read-only [`GuidedEntityDetailModal`](../components/guided-creator/guided-entity-detail-modal.tsx) (path/species). Heavy in-card fact chips (e.g. equipment) deepen via **See more…** / expand | Richer expand / same catalogs and chip builders; not a second product language |
 
 - Primary click on a selectable surface = **select** (when the step is picking).
-- **Read more** / row chevron = deepen copy; never navigates away and never means “open catalog.”
-- **More details** = read-only understand; **must never select**. When a card has both Read more and More details, show More details only after inline expand (or when there is no overflow) — settled 2026-07-15.
-- Prefer labels **More details** / **View details**. Never reuse **See more** for deep-dive.
+- **See more** = deepen *on the card*; never navigates away and never means “open catalog.”
+- **More details** = entity modal deep-dive (`onDetails`); **must never select**. When a card has both See more and modal More details, show modal More details only after inline expand (or when there is no overflow) — settled 2026-07-15. In-card chip deepen (equipment) uses **See more…**, not a specialist label.
+- Prefer these blankets only. Collapse pairs: **See less** / **Less details**.
 
 Shared fact builders (`@/lib/detail-option`, list-row chip helpers) should feed cards, deep-dives, and expanded rows. Fact policy stays as in [`AGENT_GUIDE.md`](./ai/AGENT_GUIDE.md): every meaningful fact is a labeled column **or** a self-describing chip — never unlabeled leftovers.
 
@@ -303,7 +303,7 @@ Decisions baked into this model:
 - **Path frames the build; the player still chooses.** A chosen path supplies recommended abilities, skills, archetype feat options (1–3, usually combat), a character feat option set (usually non-combat), **curated weapon / armor / gear recommendation pools**, and recommended powers/techniques. Layer 1 keeps those pools small and explained — it does **not** one-click the whole character. See §3.1 Layer 1 choice principle.
 - **Abilities = who you are** (natural aptitude; e.g. high INT → naturally better at History); **Skills = what you can do** (learned capabilities). They are distinct themes, so abilities is its own chapter; skills sits in the "build your archetype" chapter where it belongs mechanically.
 - **Species are path-ambiguous.** There are **no recommended species per path**. Instead, a **starter-species** flag curates a small Layer-1 set; "show all species" reveals the rest.
-- **Shared card format** across Path, Species, ancestry picks, feats, and equipment (and reused elsewhere): short eye-catcher description on the card, full description behind inline **Read more…**, key facts as labeled chips where needed, and **hero art** where the entity is a visual selling point (species first). Consistency between steps is a goal — see §3.1.
+- **Shared card format** across Path, Species, ancestry picks, feats, and equipment (and reused elsewhere): short eye-catcher description on the card, full description behind inline **See more…**, key facts as labeled chips where needed, and **hero art** where the entity is a visual selling point (species first). Consistency between steps is a goal — see §3.1.
 - **Choice-card deep-dive = entity depth, not catalog Layer 2:** **More details** opens read-only [`GuidedEntityDetailModal`](../components/guided-creator/guided-entity-detail-modal.tsx) (overview + expandable option catalogs). Selecting the card still chooses it; **More details** must never select. Catalog expand remains `GuidedLayerNav` **See more options**. Shipped: TASK-432–436.
 - **Ancestry** is a post-species, one-pick-at-a-time flow (full-width cards mimicking earlier steps): auto-granted species traits (some are "trait-with-options" requiring a pick via `option_trait_ids`), one ancestry trait of ~6, one characteristic of ~6, and an **optional** flaw of ~3 that grants an **extra** ancestry trait. Limited-use traits show the same uses notice pattern as feats (TASK-441). Mixed/make-your-own species is deferred.
 - **Equipment has no quick kits.** Weapon and armor phases (when present) are individual curated picks from the path pool; gear may offer optional **Add all recommended**. Phases renumber to visible steps only (TASK-442–443). See §5.7.
@@ -438,7 +438,7 @@ The user selects a species. The feeling to evoke: "I see who I am becoming."
 |-------------|--------|
 | Images are essential | **Featured inline art** on each species card (see §5.0.3); identity at a glance without a full-bleed banner |
 | Hover and tooltips for detail | No modal required to understand the basics |
-| Layer 1 | Grid cards: art + short copy + Read more; stats/tags stay out of the default card unless they add real value |
+| Layer 1 | Grid cards: art + short copy + See more; stats/tags stay out of the default card unless they add real value |
 | Card deep-dive | **More details** → read-only entity modal (overview + trait/characteristic/flaw option lists). Not catalog Layer 2. |
 
 **Current gap:** Advanced creator still denser than guided elsewhere. **Guided creator:** hero layout + deep-dive shell (TASK-432); species (TASK-433) + path (TASK-434) modals + shared `DetailOptionList` rows (TASK-435, also remodeled species-modal trait lists); **codex art fields** pending TASK-405.
@@ -502,7 +502,7 @@ Equipment follows archetype guidance and is split into **one decision at a time*
 | Curated path pools | Path lists coherent weapon/shield options, armor options (when applicable), and recommended adventuring gear — not a single bundled kit the user must accept |
 | Deliberate L1 picks | User selects weapon (and armor when the phase exists) from path choice cards; Continue does not auto-fill arms from a kit |
 | Sub-step split | Weapon → armor → gear; **skip and renumber** phases the path does not offer |
-| Card facts | Ability requirement, handedness, damage/type, properties, currency cost as chips; **More details** deepens to expandable property chips (§3.1) |
+| Card facts | Ability requirement, handedness, damage/type, properties, currency cost as chips; **See more…** deepens mechanic facts on the card (§3.1) |
 | Layer 1 | Path cards + currency remaining on every visible phase; Training Points stay in Layer 2 |
 | Gear assist | Optional **Add all recommended** + per-item quantity — the only bulk shortcut; still toggleable |
 | Layer 2 | Full filtered Common catalog via `UnifiedSelectionModal` (GridListRow) |
@@ -681,7 +681,7 @@ Consistency across **all surfaces** is **mandatory** — this is a **sitewide** 
 - The same step-by-step structure where applicable
 - The same progression logic (guided → semi-guided → full)
 - The same "recommended plus expand for more" pattern (**catalog** Ladder B in §3.1)
-- The same **selection grammar**: cards for curated few, GridListRow for browse many, one entity depth ladder (Read more / expand → More details / rich chips) — §3.1
+- The same **selection grammar**: cards for curated few, GridListRow for browse many, one entity depth ladder (See more → More details) — §3.1
 - Familiar layouts and unified components ([`DESIGN_SYSTEM.md`](./DESIGN_SYSTEM.md), [`ai/UI_UNIFICATION_PLAN.md`](./ai/UI_UNIFICATION_PLAN.md)) even as each page is redesigned
 
 ### Implementation strategy: one page at a time

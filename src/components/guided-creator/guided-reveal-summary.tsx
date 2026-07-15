@@ -268,12 +268,6 @@ export function GuidedRevealSummary() {
             ]}
           />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <div className="rounded-lg border border-border-light bg-surface-alt/50 p-3">
-              <p className="font-nunito text-xs font-medium uppercase tracking-wide text-text-secondary">
-                {copy.levelLabel}
-              </p>
-              <p className="mt-0.5 font-display text-lg font-bold text-text-primary">1</p>
-            </div>
             {archetype?.name && (
               <div className="rounded-lg border border-border-light bg-surface-alt/50 p-3">
                 <p className="font-nunito text-xs font-medium uppercase tracking-wide text-text-secondary">

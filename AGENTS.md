@@ -21,7 +21,7 @@ Check the canonical source for the topic instead of trusting scattered/stale doc
 | **Product vision, UX philosophy, onboarding/creator flow, three-layer model, card↔GridListRow selection grammar** | `src/docs/REALMS_PRODUCT_OVERVIEW.md` (desired experience; **§3.1** selection grammar + Layer 1 choice principle) — pair with `src/docs/human/USER_EXPERIENCE_GOALS.md` (shipped-UX checklist) |
 | **Does this already exist?** (features, components, hooks, services) | `src/docs/ai/FEATURE_INDEX.md` → then `src/components/shared/index.ts`, `src/hooks/index.ts` |
 | DB tables / columns | `src/docs/SUPABASE_SCHEMA.md` (only) |
-| Game formulas, terminology, caps, display, user-facing vocabulary | `src/docs/GAME_RULES.md` (**Terminology & Definitions**: capitalize game terms; prefer/avoid list; Score = Bonus + 10; Bonus not modifier; no em dash in new UI copy) |
+| Game formulas, terminology, caps, display, user-facing vocabulary | `src/docs/GAME_RULES.md` (**Terminology & Definitions**: capitalize game terms; named Bonuses Title Case e.g. Attack Bonus / Martial Bonus / Power Bonus; prefer/avoid list; Score = Bonus + 10; Bonus not modifier; no em dash in new UI copy) |
 | Data flow, enrichment, hooks/services | `src/docs/ARCHITECTURE.md` |
 | Shared UI components & usage | `.cursor/rules/realms-unification.mdc` + `src/docs/ai/AGENT_GUIDE.md` (Unified patterns section) |
 | Design tokens / colors | `src/docs/DESIGN_SYSTEM.md` |

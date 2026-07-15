@@ -1,8 +1,9 @@
 /**
  * GuidedChoiceCard — shared selectable card for the guided creator.
- * Supports thumb or hero image layouts; inline Read more for long copy;
- * optional More details opens a read-only deep-dive modal (not card select).
- * When both expand and More details exist: More details only after expand/select.
+ * Supports thumb or hero image layouts; inline See more for long copy;
+ * optional More details opens a read-only deep-dive modal (not card select)
+ * or expands lots of chip/fact disclosure.
+ * When both expand and modal More details exist: More details only after expand/select.
  */
 
 'use client';
@@ -45,21 +46,21 @@ export interface GuidedChoiceCardProps {
   selected?: boolean;
   onSelect: () => void;
   children?: ReactNode;
-  /** Shown only when expanded (Read more) — e.g. feat restriction notices. */
+  /** Shown only when expanded (See more) — e.g. feat restriction notices. */
   expandedExtra?: ReactNode;
   /**
    * When true, string `tags` are hidden while the card is expanded (use expandable
    * chips in `expandedExtra` instead to avoid duplicating the same facts).
    */
   hideTagsWhenExpanded?: boolean;
-  /** Label for the in-card expand control (default: “Read more…”). */
+  /** Label for the in-card expand control (default: “See more…”). */
   expandLabel?: string;
-  /** Label for the in-card collapse control when not selected (default: “Read less”). */
+  /** Label for the in-card collapse control when not selected (default: “See less”). */
   collapseLabel?: string;
   /**
    * Opens choice-card deep-dive (GuidedEntityDetailModal). Does not select the card.
    * Distinct from catalog Layer 2 (`GuidedLayerNav` “See more options”).
-   * When the card also offers inline Read more, this control appears only once expanded
+   * When the card also offers inline See more, this control appears only once expanded
    * (or selected, which auto-expands).
    */
   onDetails?: () => void;
@@ -129,7 +130,7 @@ function resolveBody(
 /**
  * Detect whether clamped body copy overflows its fixed preview area.
  * Keeps the last measurement while expanded so callers can still know
- * whether inline Read more was (or would be) offered.
+ * whether inline See more was (or would be) offered.
  */
 function useClampedOverflow(active: boolean, textKey: string) {
   const ref = useRef<HTMLParagraphElement>(null);
@@ -231,7 +232,7 @@ export function GuidedChoiceCard({
   const showCollapse = expanded && showBodySection && !selected;
 
   /**
-   * Progressive disclosure: truncated → Read more → More details.
+   * Progressive disclosure: truncated → See more → More details.
    * When both exist, hide More details until the card is expanded (or selected).
    * Cards with only More details (no overflow) still show it collapsed.
    */
@@ -239,7 +240,7 @@ export function GuidedChoiceCard({
   /**
    * Always reserve the action-row height while a body section exists.
    * Collapsed cards reserved min-h-11 even when empty; selected cards used to drop it
-   * (no Read less when selected, no More details) and short options like Skip — no flaw shrank.
+   * (no See less when selected, no More details) and short options like Skip — no flaw shrank.
    */
   const showActionRow = showBodySection;
 
@@ -273,8 +274,10 @@ export function GuidedChoiceCard({
     detailsLabel ?? GUIDED_CREATOR_COPY.choiceCard.moreDetails;
   /** Visible text is the control name; aria-label adds which entity (screen readers). */
   const detailsAriaLabel = `${resolvedDetailsLabel} for ${title}`;
-  const resolvedExpandLabel = expandLabel ?? 'Read more…';
-  const resolvedCollapseLabel = collapseLabel ?? 'Read less';
+  const resolvedExpandLabel =
+    expandLabel ?? GUIDED_CREATOR_COPY.choiceCard.seeMore;
+  const resolvedCollapseLabel =
+    collapseLabel ?? GUIDED_CREATOR_COPY.choiceCard.seeLess;
 
   const showMedia = Boolean(resolvedImage || icon);
   const mediaClass = isFeatured && resolvedImage ? s.mediaFeatured : s.media;
@@ -349,7 +352,7 @@ export function GuidedChoiceCard({
                   <div className="mt-3">{expandedExtra}</div>
                 ) : null}
                 {/*
-                  Read more / Read less / More details stay below body copy (product
+                  See more / See less / More details stay below body copy (product
                   placement). Shared min-h-11 row so deep-dive does not add a second strip.
                 */}
                 {showActionRow ? (

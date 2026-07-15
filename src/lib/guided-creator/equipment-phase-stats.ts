@@ -55,7 +55,7 @@ function abilityReqChip(req: AbilityRequirement | undefined | null): ChipData | 
 
 function currencyChip(cost: number | null | undefined): ChipData | null {
   if (cost == null || Number.isNaN(cost)) return null;
-  const n = Math.max(0, Math.round(Number(cost)));
+  const n = Math.max(0, Math.floor(Number(cost)));
   return factChip(`Currency ${n}`);
 }
 
@@ -181,14 +181,12 @@ export function buildEquipmentPhaseCardStats(input: BuildPhaseCardStatsInput): E
 
   if (shortUse) {
     const labeled = /^use\b/i.test(shortUse) ? shortUse : `Use ${shortUse}`;
-    detailChips.push(factChip(labeled));
     cardChips.push(factChip(labeled));
   }
   if (cost) {
     cardChips.push(cost);
   }
-  factChips.push(...detailChips);
-  if (cost) factChips.push(cost);
+  factChips.push(...cardChips);
 
   return {
     tags: cardChips.map((c) => c.name),
