@@ -24,12 +24,12 @@
 | Library (user + official content browse) | `library/page.tsx` |
 | Codex (rules data browser) | `codex/page.tsx` |
 | Realms Library, guest read-only | `library/page.tsx` + `library/LibraryPublicContent.tsx` — guests see official "Realms" content with the My-Library toggle + "Add to library" hidden. (Former `/browse` was a redundant duplicate; removed and redirected to `/library` — TASK-336.) |
-| Power creator | `power-creator/page.tsx` (advanced); guided: `power-creator/guided/page.tsx` (TASK-410+) |
-| Technique creator | `technique-creator/page.tsx` |
-| Empowered technique creator | `empowered-technique-creator/page.tsx` |
-| Item creator | `item-creator/page.tsx` |
-| Species creator | `species-creator/page.tsx` |
-| Creature creator | `creature-creator/page.tsx`, `creature-skill-utils.ts` (skills ↔ allocations, load mapping) |
+| Power creator | `power-creator/page.tsx` (advanced); guided: `power-creator/guided/page.tsx` (TASK-410+) — shell: `CreatorPageShell` |
+| Technique creator | `technique-creator/page.tsx` (`CreatorPageShell`) |
+| Empowered technique creator | `empowered-technique-creator/page.tsx` (`CreatorPageShell`) |
+| Item creator | `item-creator/page.tsx` (`CreatorPageShell`) |
+| Species creator | `species-creator/page.tsx` (`CreatorPageShell`, Load ungated) |
+| Creature creator | `creature-creator/page.tsx`, `creature-skill-utils.ts` (skills ↔ allocations, load mapping); `CreatorPageShell` + reset confirm |
 | Crafting (sessions + enhanced items) | `crafting/page.tsx`, `crafting/[id]/page.tsx` |
 | Encounters | `encounters/page.tsx`, `encounters/[id]/page.tsx`, `encounters/[id]/combat/page.tsx`, `encounters/[id]/mixed/page.tsx`, `encounters/[id]/skill/page.tsx` |
 | Campaigns | `campaigns/page.tsx` |
@@ -52,7 +52,7 @@
 | Campaigns | `useCampaigns*`, `useCampaign`, `useCampaignRolls` |
 | Encounters | `useEncounters`, `useEncounter`, `useCreate/Save/DeleteEncounter` |
 | Crafting + enhanced items | `useCraftingSession(s)`, `useEnhancedItems` + CRUD |
-| Save a creator's output | `useCreatorSave`; load into a modal: `useLoadModalLibrary` |
+| Save a creator's output | `useCreatorSave`; load into a modal: `useLoadModalLibrary` (incl. species/creature + `prefetch`) |
 | Character creator path recommendations | `useCreatorPathData` — resolves `path_data` from draft or codex by `archetypePathId` |
 | Guided creator path data | `useGuidedPathData` in `components/guided-creator/use-guided-path-data.ts` |
 | Autosave (debounced) | `useAutoSave` |
@@ -94,6 +94,7 @@
 | List states | `ListEmptyState`, `LoadingState`, `ErrorDisplay` |
 | Search box | `SearchInput` |
 | Confirm/delete/login modals | `ConfirmActionModal`, `DeleteConfirmModal`, `LoginPromptModal` |
+| Standalone creator page shell (auth/load/save) | `CreatorPageShell` (+ `CreatorLayout`, `CreatorSaveToolbar`, `CollapsibleSection`) from `@/components/creator` |
 | Image upload + crop | `ImageUploadModal` |
 | Theme switch / onboarding | `ThemeToggle`, `OnboardingTour` |
 | Help tooltips | `InfoTippy` + `public/tooltip-text.tsx` — see `AGENT_GUIDE.md` § Floating UI & contextual help |
@@ -112,7 +113,7 @@
 | Power / technique / item / empowered calc | `lib/calculators/*-calc.ts`, `mechanic-builder.ts` |
 | Data enrichment (minimal stored → full display) | `lib/data-enrichment.ts` |
 | Library columnar mapping & sync | `lib/library-columnar.ts`, `lib/library-sync.ts`, **`lib/library-selectable-builders.ts`** (shared add+load SelectableItem pipeline) |
-| Load from library (creators) | `LoadFromLibraryModal` thin wrapper over `UnifiedSelectionModal`; data via `useLoadModalLibrary` |
+| Load from library (creators) | `LoadFromLibraryModal` + `useLoadModalLibrary`; species/creature rows: `@/lib/library/creator-load-selectables` |
 | Tooltips (defaults + interpolation) | `lib/tooltips/` — **`lib/tooltips/README.md`** (PR #14 onboarding), `legacy-tooltip-key-map.ts` |
 | Roles / quotas / limits | `lib/role-policy.ts`, `lib/role-limits.ts`, `lib/role-quota-messages.ts`, `lib/admin.ts` |
 | API client / validation / rate limit | `lib/api-client.ts`, `lib/api-validation.ts`, `lib/validation/schemas.ts`, `lib/rate-limit.ts` |

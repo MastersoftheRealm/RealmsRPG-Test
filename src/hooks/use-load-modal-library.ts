@@ -1,18 +1,26 @@
 /**
- * useLoadModalLibrary — Unified load-from-library state and data for power/technique/item creators.
- * Same selectable shaping as Add Library Item: shared `library-selectable-builders` + normalize-public.
- * Fetches only the library type requested (plus matching codex refs).
+ * useLoadModalLibrary — Unified load-from-library state for standalone creators.
+ * Power/technique/item/empowered share selectable builders; species/creature use
+ * entity-specific row builders with the same modal chrome (source filter, empty copy).
  */
 
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { useUserPowers, useUserTechniques, useUserEmpoweredTechniques, useUserItems } from './use-user-library';
+import {
+  useUserPowers,
+  useUserTechniques,
+  useUserEmpoweredTechniques,
+  useUserItems,
+  useUserSpecies,
+  useUserCreatures,
+} from './use-user-library';
 import { useOfficialLibrary } from './use-official-library';
 import {
   useCodexPowerParts,
   useCodexTechniqueParts,
   useCodexItemProperties,
+  useCodexSpecies,
 } from './use-codex';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 import type { SelectableItem } from '@/components/shared/unified-selection-modal';
@@ -30,9 +38,28 @@ import {
   normalizePublicItem,
 } from './add-library-item/normalize-public';
 import { buildEmpoweredPowerSelectableItem } from './add-library-item/build-empowered-selectable-item';
-import type { UserPower, UserTechnique, UserItem } from './use-user-library';
+import {
+  buildCreatureSelectableItem,
+  buildSpeciesSelectableItem,
+} from '@/lib/library/creator-load-selectables';
+import type { UserPower, UserTechnique, UserItem, UserSpecies, UserCreature } from './use-user-library';
 
-export type LoadModalLibraryType = 'power' | 'technique' | 'empowered-technique' | 'item';
+export type LoadModalLibraryType =
+  | 'power'
+  | 'technique'
+  | 'empowered-technique'
+  | 'item'
+  | 'species'
+  | 'creature';
+
+export type UseLoadModalLibraryOptions = {
+  /**
+   * Keep library rows fetching while the load modal is closed
+   * (e.g. creature `?edit=` preload). Default false for species/creature;
+   * power/technique/item/empowered always fetch.
+   */
+  prefetch?: boolean;
+};
 
 export interface UseLoadModalLibraryReturn {
   showLoadModal: boolean;
@@ -40,7 +67,7 @@ export interface UseLoadModalLibraryReturn {
   closeLoadModal: () => void;
   selectableItems: SelectableItem[];
   /** Raw merged items (user + public by source) for ?edit= lookup */
-  rawItems: (UserPower | UserTechnique | UserItem | EqItem)[];
+  rawItems: unknown[];
   isLoading: boolean;
   error: Error | null;
   source: SourceFilterValue;
@@ -52,7 +79,10 @@ export interface UseLoadModalLibraryReturn {
   isPublicError: boolean;
 }
 
-export function useLoadModalLibrary(type: LoadModalLibraryType): UseLoadModalLibraryReturn {
+export function useLoadModalLibrary(
+  type: LoadModalLibraryType,
+  options?: UseLoadModalLibraryOptions
+): UseLoadModalLibraryReturn {
   const [showLoadModal, setShowLoadModal] = useState(false);
   const [source, setSource] = useState<SourceFilterValue>('all');
 
@@ -66,41 +96,69 @@ export function useLoadModalLibrary(type: LoadModalLibraryType): UseLoadModalLib
   const needTechniques = type === 'technique';
   const needEmpowered = type === 'empowered-technique';
   const needItems = type === 'item';
+  const needSpecies = type === 'species';
+  const needCreatures = type === 'creature';
 
-  const { data: userPowers = [], isLoading: powersLoading } = useUserPowers({ enabled: needPowers });
+  const alwaysFetch = needPowers || needTechniques || needEmpowered || needItems;
+  const fetchEnabled = alwaysFetch || showLoadModal || !!options?.prefetch;
+
+  const { data: userPowers = [], isLoading: powersLoading } = useUserPowers({
+    enabled: needPowers && fetchEnabled,
+  });
   const { data: userTechniques = [], isLoading: techniquesLoading } = useUserTechniques({
-    enabled: needTechniques,
+    enabled: needTechniques && fetchEnabled,
   });
   const { data: userEmpoweredTechniques = [], isLoading: empoweredTechniquesLoading } =
-    useUserEmpoweredTechniques({ enabled: needEmpowered });
-  const { data: userItems = [], isLoading: itemsLoading } = useUserItems({ enabled: needItems });
+    useUserEmpoweredTechniques({ enabled: needEmpowered && fetchEnabled });
+  const { data: userItems = [], isLoading: itemsLoading } = useUserItems({
+    enabled: needItems && fetchEnabled,
+  });
+  const { data: userSpeciesList = [], isLoading: userSpeciesLoading } = useUserSpecies({
+    enabled: needSpecies && fetchEnabled,
+  });
+  const { data: userCreatures = [], isLoading: userCreaturesLoading } = useUserCreatures({
+    enabled: needCreatures && fetchEnabled,
+  });
 
   const {
     data: publicPowers = [],
     isLoading: publicPowersLoading,
     isError: publicPowersError,
-  } = useOfficialLibrary('powers', { enabled: needPowers });
+  } = useOfficialLibrary('powers', { enabled: needPowers && fetchEnabled });
   const {
     data: publicTechniques = [],
     isLoading: publicTechniquesLoading,
     isError: publicTechniquesError,
-  } = useOfficialLibrary('techniques', { enabled: needTechniques });
+  } = useOfficialLibrary('techniques', { enabled: needTechniques && fetchEnabled });
   const {
     data: publicEmpoweredTechniques = [],
     isLoading: publicEmpoweredTechniquesLoading,
     isError: publicEmpoweredTechniquesError,
-  } = useOfficialLibrary('empowered-techniques', { enabled: needEmpowered });
+  } = useOfficialLibrary('empowered-techniques', { enabled: needEmpowered && fetchEnabled });
   const {
     data: publicItems = [],
     isLoading: publicItemsLoading,
     isError: publicItemsError,
-  } = useOfficialLibrary('items', { enabled: needItems });
+  } = useOfficialLibrary('items', { enabled: needItems && fetchEnabled });
+  const {
+    data: publicSpecies = [],
+    isLoading: publicSpeciesLoading,
+    isError: publicSpeciesError,
+  } = useOfficialLibrary('species', { enabled: needSpecies && fetchEnabled });
+  const {
+    data: publicCreatures = [],
+    isLoading: publicCreaturesLoading,
+    isError: publicCreaturesError,
+  } = useOfficialLibrary('creatures', { enabled: needCreatures && fetchEnabled });
 
-  const { data: powerPartsDb = [] } = useCodexPowerParts({ enabled: needPowers });
+  const { data: codexSpecies = [] } = useCodexSpecies({ enabled: needSpecies && fetchEnabled });
+  const { data: powerPartsDb = [] } = useCodexPowerParts({ enabled: needPowers && fetchEnabled });
   const { data: techniquePartsDb = [] } = useCodexTechniqueParts({
-    enabled: needTechniques || needEmpowered,
+    enabled: (needTechniques || needEmpowered) && fetchEnabled,
   });
-  const { data: itemPropertiesDb = [] } = useCodexItemProperties({ enabled: needItems });
+  const { data: itemPropertiesDb = [] } = useCodexItemProperties({
+    enabled: needItems && fetchEnabled,
+  });
 
   const codex = useMemo(
     () => ({
@@ -116,7 +174,9 @@ export function useLoadModalLibrary(type: LoadModalLibraryType): UseLoadModalLib
       (type === 'power' && publicPowersError) ||
       (type === 'technique' && publicTechniquesError) ||
       (type === 'empowered-technique' && publicEmpoweredTechniquesError) ||
-      (type === 'item' && publicItemsError);
+      (type === 'item' && publicItemsError) ||
+      (type === 'species' && publicSpeciesError) ||
+      (type === 'creature' && publicCreaturesError);
 
     if (type === 'power') {
       const my =
@@ -158,6 +218,53 @@ export function useLoadModalLibrary(type: LoadModalLibraryType): UseLoadModalLib
       return { selectableItems: items, rawItems: raw, isLoading: loading, isPublicError: !!publicError };
     }
 
+    if (type === 'species') {
+      const items: SelectableItem[] = [];
+      const raw: unknown[] = [];
+      if (source === 'my' || source === 'all') {
+        (userSpeciesList as UserSpecies[]).forEach((s) => {
+          items.push(buildSpeciesSelectableItem(s, 'my'));
+          raw.push(s);
+        });
+      }
+      if (source === 'public' || source === 'all') {
+        publicSpecies.forEach((s) => {
+          items.push(buildSpeciesSelectableItem(s as { id?: string; name?: string }, 'public'));
+          raw.push(s);
+        });
+        codexSpecies.forEach((s) => {
+          items.push(buildSpeciesSelectableItem(s as { id?: string; name?: string }, 'public'));
+          raw.push(s);
+        });
+      }
+      const seen = new Set<string>();
+      const selectable = items.filter((item) => {
+        const key = `${item.name}:${item.id}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      const loading =
+        (source !== 'public' && userSpeciesLoading) || (source !== 'my' && publicSpeciesLoading);
+      return {
+        selectableItems: selectable,
+        rawItems: raw,
+        isLoading: loading,
+        isPublicError: !!publicError,
+      };
+    }
+
+    if (type === 'creature') {
+      const my =
+        source === 'my' || source === 'all' ? (userCreatures as UserCreature[]) : [];
+      const pub = source === 'public' || source === 'all' ? publicCreatures : [];
+      const raw = [...my, ...pub];
+      const loading =
+        (source !== 'public' && userCreaturesLoading) || (source !== 'my' && publicCreaturesLoading);
+      const items = raw.map((c) => buildCreatureSelectableItem(c));
+      return { selectableItems: items, rawItems: raw, isLoading: loading, isPublicError: !!publicError };
+    }
+
     const my =
       source === 'my' || source === 'all'
         ? (userItems as UserItem[]).filter((i) =>
@@ -181,31 +288,62 @@ export function useLoadModalLibrary(type: LoadModalLibraryType): UseLoadModalLib
     userTechniques,
     userEmpoweredTechniques,
     userItems,
+    userSpeciesList,
+    userCreatures,
     publicPowers,
     publicTechniques,
     publicEmpoweredTechniques,
     publicItems,
+    publicSpecies,
+    publicCreatures,
+    codexSpecies,
     powersLoading,
     techniquesLoading,
     empoweredTechniquesLoading,
     itemsLoading,
+    userSpeciesLoading,
+    userCreaturesLoading,
     publicPowersLoading,
     publicTechniquesLoading,
     publicEmpoweredTechniquesLoading,
     publicItemsLoading,
+    publicSpeciesLoading,
+    publicCreaturesLoading,
     publicPowersError,
     publicTechniquesError,
     publicEmpoweredTechniquesError,
     publicItemsError,
+    publicSpeciesError,
+    publicCreaturesError,
     codex,
   ]);
 
-  const libraryType: LibraryItemType =
-    type === 'item' ? 'item' : type === 'empowered-technique' ? 'power' : type;
   const columns =
-    type === 'empowered-technique' ? EMPOWERED_POWER_COLUMNS : getListHeaderColumns(libraryType);
+    type === 'empowered-technique'
+      ? EMPOWERED_POWER_COLUMNS
+      : type === 'species'
+        ? [
+            { key: 'name', label: 'Name' },
+            { key: 'Type', label: 'Type', sortable: true },
+          ]
+        : type === 'creature'
+          ? [
+              { key: 'name', label: 'Name', sortable: true },
+              { key: 'level', label: 'Level', sortable: true },
+              { key: 'type', label: 'Type', sortable: true },
+            ]
+          : getListHeaderColumns(
+              type === 'item' ? 'item' : (type as LibraryItemType)
+            );
+
   const gridColumns =
-    type === 'empowered-technique' ? getModalGridColumns('power') : getModalGridColumns(libraryType);
+    type === 'empowered-technique'
+      ? getModalGridColumns('power')
+      : type === 'species'
+        ? '1.4fr 0.8fr'
+        : type === 'creature'
+          ? '1.5fr 0.5fr 1fr'
+          : getModalGridColumns(type === 'item' ? 'item' : (type as LibraryItemType));
 
   const typeLabel =
     type === 'power'
@@ -214,27 +352,55 @@ export function useLoadModalLibrary(type: LoadModalLibraryType): UseLoadModalLib
         ? 'armaments'
         : type === 'empowered-technique'
           ? 'empowered techniques'
-          : 'techniques';
+          : type === 'species'
+            ? 'species'
+            : type === 'creature'
+              ? 'creatures'
+              : 'techniques';
+
   const emptyMessage =
     selectableItems.length === 0
       ? source === 'public'
-        ? `No public ${typeLabel} in the community library`
-        : `No ${typeLabel} in your library`
-      : 'No matching items';
+        ? type === 'species'
+          ? 'No species in the Realms Library'
+          : type === 'creature'
+            ? 'No public creatures in the Realms Library'
+            : `No public ${typeLabel} in the community library`
+        : source === 'my'
+          ? type === 'species'
+            ? 'No species in your library'
+            : `No ${typeLabel} in your library`
+          : `No ${typeLabel} found`
+      : type === 'species'
+        ? 'No matching species'
+        : type === 'creature'
+          ? 'No matching creatures'
+          : 'No matching items';
+
   const emptySubMessage =
     selectableItems.length === 0 && source === 'public' && isPublicError
       ? 'Failed to load Realms Library. Try again later.'
       : selectableItems.length === 0 && source === 'public'
-        ? 'Official content can be added by admins via Admin → Realms Library Editor.'
-        : selectableItems.length === 0
-          ? type === 'power'
-            ? 'Create some in the Power Creator first!'
-            : type === 'empowered-technique'
-              ? 'Create some in the Empowered Technique Creator first!'
-              : type === 'technique'
-                ? 'Create some in the Technique Creator first!'
-                : 'Create some in the Armament Creator first!'
-          : undefined;
+        ? type === 'species'
+          ? undefined
+          : type === 'creature'
+            ? 'Official creatures can be added by admins via Admin → Realms Library Editor.'
+            : 'Official content can be added by admins via Admin → Realms Library Editor.'
+        : selectableItems.length === 0 && source === 'my' && type === 'species'
+          ? 'Save a species to My Codex first.'
+          : selectableItems.length === 0 && type === 'creature' && source !== 'public'
+            ? 'Create a creature and save it to your library first.'
+            : selectableItems.length === 0
+              ? type === 'power'
+                ? 'Create some in the Power Creator first!'
+                : type === 'empowered-technique'
+                  ? 'Create some in the Empowered Technique Creator first!'
+                  : type === 'technique'
+                    ? 'Create some in the Technique Creator first!'
+                    : type === 'item'
+                      ? 'Create some in the Armament Creator first!'
+                      : undefined
+              : undefined;
 
   const error =
     source === 'public' && isPublicError

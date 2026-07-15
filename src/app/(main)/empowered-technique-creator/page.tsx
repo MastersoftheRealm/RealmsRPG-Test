@@ -51,20 +51,17 @@ import {
   POWER_DAMAGE_TYPES,
 } from '@/lib/game/creator-constants';
 import {
-  CreatorLayout,
-  CreatorSaveToolbar,
+  CreatorPageShell,
   CollapsibleSection,
   CreatorSummaryPanel,
-  LoadFromLibraryModal,
   CreatorWeaponPicker,
   AdvancedCalculationsPanel,
+  PowerPartCard,
 } from '@/components/creator';
-import { Button, Checkbox, Input, Textarea, LoadingState, PageContainer, Card } from '@/components/ui';
+import { Button, Checkbox, Input, Textarea, LoadingState, Card } from '@/components/ui';
 import { ValueStepper, SectionCostBadge } from '@/components/shared';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
-import { ConfirmActionModal, LoginPromptModal, ErrorDisplay } from '@/components/shared';
-import { PowerPartCard } from '@/components/creator';
 import { EXCLUDED_PARTS } from '@/app/(main)/power-creator/power-creator-constants';
 import {
   inferEmpoweredWeaponTpFromPowerPayload,
@@ -130,7 +127,6 @@ function EmpoweredTechniqueCreatorContent() {
   const load = useLoadModalLibrary('empowered-technique');
 
   const [isInitialized, setIsInitialized] = useState(false);
-  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [actionType, setActionType] = useState('basic');
@@ -536,6 +532,7 @@ function EmpoweredTechniqueCreatorContent() {
     costs.totalTP,
     description,
     duration,
+    isReaction,
     name,
     powerDamages,
     powerMechanicParts,
@@ -555,20 +552,12 @@ function EmpoweredTechniqueCreatorContent() {
     publishConfirmTitle: 'Publish to Realms Library',
     publishConfirmDescription: (itemName, { existingInPublic }) =>
       existingInPublic
-        ? `Are you sure you want to override "${itemName}" (empowered technique)? The existing public technique with this name will be replaced.`
+        ? `Are you sure you want to override "${itemName}" (empowered technique)? The existing public empowered technique with this name will be replaced.`
         : `Are you sure you wish to publish this empowered technique "${itemName}" to the Realms Library?`,
     successMessage: 'Empowered technique saved successfully!',
     publicSuccessMessage: 'Empowered technique saved to Realms Library!',
     onSaveSuccess: resetState,
   });
-
-  const handleSave = useCallback(async () => {
-    if (!user) {
-      setShowLoginPrompt(true);
-      return;
-    }
-    await save.handleSave();
-  }, [save, user]);
 
   const handleLoadEmpoweredTechnique = useCallback(
     (doc: unknown) => {
@@ -675,8 +664,11 @@ function EmpoweredTechniqueCreatorContent() {
         } satisfies SelectedTechniquePart;
       }).filter((row): row is SelectedTechniquePart => row !== null);
       setSelectedTechniqueParts(loadedTechniqueParts);
+
+      save.setSaveMessage({ type: 'success', text: 'Empowered technique loaded successfully!' });
+      setTimeout(() => save.setSaveMessage(null), 2000);
     },
-    [allWeaponOptions, powerParts, resetState, techniqueParts]
+    [allWeaponOptions, powerParts, resetState, techniqueParts, save]
   );
 
   useEffect(() => {
@@ -822,7 +814,11 @@ function EmpoweredTechniqueCreatorContent() {
 
   useEffect(() => {
     if (!editId || !load.rawItems.length || powerParts.length === 0 || techniqueParts.length === 0 || editLoadedRef.current) return;
-    const match = load.rawItems.find((item: { docId?: string; id?: string }) => String(item.docId) === editId || String(item.id) === editId);
+    const match = load.rawItems.find(
+      (item) =>
+        String((item as { docId?: string; id?: string }).docId) === editId ||
+        String((item as { docId?: string; id?: string }).id) === editId
+    );
     editLoadedRef.current = true;
     if (!match) {
       setIsInitialized(true);
@@ -877,105 +873,88 @@ function EmpoweredTechniqueCreatorContent() {
     ]);
   }, [nonMechanicTechniqueParts]);
 
-  if (powerPartsLoading || techniquePartsLoading) {
-    return (
-      <PageContainer size="xl">
-        <LoadingState message="Loading empowered technique creator..." />
-      </PageContainer>
-    );
-  }
-  if (powerPartsError || techniquePartsError) {
-    const loadError = powerPartsError || techniquePartsError;
-    return (
-      <PageContainer size="xl">
-        <ErrorDisplay
-          message={`Failed to load creator data: ${loadError?.message ?? 'Unknown error'}`}
-          onRetry={() => {
-            void refetchPowerParts();
-            void refetchTechniqueParts();
-          }}
-        />
-      </PageContainer>
-    );
-  }
+  const loadError =
+    powerPartsError && techniquePartsError
+      ? new Error(
+          `Failed to load power parts (${powerPartsError.message}) and technique parts (${techniquePartsError.message}).`
+        )
+      : powerPartsError
+        ? new Error(`Failed to load power parts: ${powerPartsError.message}`)
+        : techniquePartsError
+          ? new Error(`Failed to load technique parts: ${techniquePartsError.message}`)
+          : null;
 
   return (
-    <CreatorLayout
+    <CreatorPageShell
       icon={<Wand2 className="w-8 h-8 text-primary-link-fg" />}
       title="Empowered Technique Creator"
       description="Build an empowered technique by combining power and technique parts in one shared action profile."
-      actions={
-        <div className="flex items-center gap-2">
-          <CreatorSaveToolbar
-            saveTarget={save.saveTarget}
-            onSaveTargetChange={save.setSaveTarget}
-            onSave={handleSave}
-            onLoad={() => (user ? load.openLoadModal() : setShowLoginPrompt(true))}
-            onReset={resetState}
-            saving={save.saving}
-            saveDisabled={!name.trim()}
-            showPublicPrivate={isAdmin}
-            user={user}
-          />
-        </div>
-      }
+      user={user}
+      auth={{ returnPath: '/empowered-technique-creator', contentType: 'empowered technique' }}
+      showPublicPrivate={isAdmin}
+      saveTarget={save.saveTarget}
+      onSaveTargetChange={save.setSaveTarget}
+      onSave={save.handleSave}
+      onLoad={load.openLoadModal}
+      onReset={resetState}
+      saving={save.saving}
+      saveDisabled={!name.trim()}
+      loading={{
+        isLoading: powerPartsLoading || techniquePartsLoading,
+        loadingMessage: 'Loading empowered technique creator...',
+        error: loadError,
+        onRetry: () => {
+          void refetchPowerParts();
+          void refetchTechniqueParts();
+        },
+        errorMessage: loadError?.message,
+      }}
+      publish={{
+        isOpen: save.showPublishConfirm,
+        onClose: () => save.setShowPublishConfirm(false),
+        onConfirm: () => save.confirmPublish(),
+        title: save.publishConfirmTitle,
+        description:
+          save.publishConfirmDescription?.(name.trim(), {
+            existingInPublic: save.publishExistingInPublic,
+          }) ?? '',
+      }}
+      loadModal={{
+        isOpen: load.showLoadModal,
+        onClose: load.closeLoadModal,
+        selectableItems: load.selectableItems,
+        columns: load.columns,
+        gridColumns: load.gridColumns,
+        headerExtra: <SourceFilter value={load.source} onChange={load.setSource} />,
+        emptyMessage: load.emptyMessage,
+        emptySubMessage: load.emptySubMessage,
+        searchPlaceholder: 'Search empowered techniques...',
+        isLoading: load.isLoading,
+        error: load.error,
+        title: 'Load Empowered Technique',
+        onSelect: (selected) => handleLoadEmpoweredTechnique(selected.data),
+      }}
       sidebar={
-        <div className="self-start sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-6">
-          <CreatorSummaryPanel
-            title="Empowered Technique Summary"
-            costStats={[
-              { label: 'Energy Cost', value: costs.totalEnergy, icon: <Zap className="w-6 h-6" />, color: 'energy' },
-              { label: 'Training Points', value: costs.totalTP, icon: <Target className="w-6 h-6" />, color: 'tp' },
-            ]}
-            statRows={[
-              { label: 'Action', value: actionDisplay },
-              { label: 'Weapon', value: weapon.name },
-              { label: 'Range', value: rangeDisplay },
-              { label: 'Area', value: areaDisplay },
-              { label: 'Duration', value: durationDisplay },
-            ]}
-            breakdowns={costs.tpSources.length > 0 ? [{ title: 'TP Breakdown', items: costs.tpSources }] : undefined}
-          >
-            <AdvancedCalculationsPanel
-              rows={advancedCalcRows}
-              ruleText="Rule: Technique percentage parts multiply the power side before adding technique energy; TP is the sum of both sides."
-            />
-          </CreatorSummaryPanel>
-        </div>
-      }
-      modals={
-        <>
-          <LoadFromLibraryModal
-            isOpen={load.showLoadModal}
-            onClose={load.closeLoadModal}
-            selectableItems={load.selectableItems}
-            columns={load.columns}
-            gridColumns={load.gridColumns}
-            headerExtra={<SourceFilter value={load.source} onChange={load.setSource} />}
-            emptyMessage={load.emptyMessage}
-            emptySubMessage={load.emptySubMessage}
-            searchPlaceholder="Search empowered techniques..."
-            isLoading={load.isLoading}
-            error={load.error}
-            title="Load Empowered Technique"
-            onSelect={(selected) => handleLoadEmpoweredTechnique(selected.data)}
+        <CreatorSummaryPanel
+          title="Empowered Technique Summary"
+          costStats={[
+            { label: 'Energy Cost', value: costs.totalEnergy, icon: <Zap className="w-6 h-6" />, color: 'energy' },
+            { label: 'Training Points', value: costs.totalTP, icon: <Target className="w-6 h-6" />, color: 'tp' },
+          ]}
+          statRows={[
+            { label: 'Action', value: actionDisplay },
+            { label: 'Weapon', value: weapon.name },
+            { label: 'Range', value: rangeDisplay },
+            { label: 'Area', value: areaDisplay },
+            { label: 'Duration', value: durationDisplay },
+          ]}
+          breakdowns={costs.tpSources.length > 0 ? [{ title: 'TP Breakdown', items: costs.tpSources }] : undefined}
+        >
+          <AdvancedCalculationsPanel
+            rows={advancedCalcRows}
+            ruleText="Rule: Technique percentage parts multiply the power side before adding technique energy; TP is the sum of both sides."
           />
-          <LoginPromptModal
-            isOpen={showLoginPrompt}
-            onClose={() => setShowLoginPrompt(false)}
-            returnPath="/empowered-technique-creator"
-            contentType="technique"
-          />
-          <ConfirmActionModal
-            isOpen={save.showPublishConfirm}
-            onClose={() => save.setShowPublishConfirm(false)}
-            onConfirm={() => save.confirmPublish()}
-            title={save.publishConfirmTitle}
-            description={save.publishConfirmDescription?.(name.trim(), { existingInPublic: save.publishExistingInPublic }) ?? ''}
-            confirmLabel="Publish"
-            icon="publish"
-          />
-        </>
+        </CreatorSummaryPanel>
       }
     >
       <Card className="shadow-md p-6 space-y-4">
@@ -1381,7 +1360,7 @@ function EmpoweredTechniqueCreatorContent() {
           </div>
         </div>
       </CollapsibleSection>
-    </CreatorLayout>
+    </CreatorPageShell>
   );
 }
 

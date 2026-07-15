@@ -28,21 +28,18 @@ import {
   type CreatorWeaponOption,
 } from '@/hooks';
 import { useAuthStore } from '@/stores';
-import { LoginPromptModal, ConfirmActionModal, ErrorDisplay } from '@/components/shared';
-import { LoadingState, Checkbox, Button, Input, Textarea, PageContainer, Card } from '@/components/ui';
+import { LoadingState, Checkbox, Button, Input, Textarea, Card } from '@/components/ui';
 import {
-  LoadFromLibraryModal,
-  CreatorSaveToolbar,
-  CreatorLayout,
+  CreatorPageShell,
   CollapsibleSection,
   CreatorWeaponPicker,
   AdvancedCalculationsPanel,
   PowerPartCard,
+  CreatorSummaryPanel,
 } from '@/components/creator';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { ValueStepper, SectionCostBadge } from '@/components/shared';
-import { CreatorSummaryPanel } from '@/components/creator';
 import {
   calculateTechniqueCosts,
   computeTechniqueActionTypeFromSelection,
@@ -139,7 +136,6 @@ function TechniqueCreatorContent() {
   
   // State
   const [isInitialized, setIsInitialized] = useState(false);
-  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedParts, setSelectedParts] = useState<SelectedPart[]>([]);
@@ -447,14 +443,6 @@ function TechniqueCreatorContent() {
     },
   });
 
-  const handleSave = useCallback(async () => {
-    if (!user) {
-      setShowLoginPrompt(true);
-      return;
-    }
-    await save.handleSave();
-  }, [user, save]);
-
   const handleReset = useCallback(() => {
     setName('');
     setDescription('');
@@ -564,9 +552,10 @@ function TechniqueCreatorContent() {
   // Load technique for editing from URL parameter (?edit=<id>)
   useEffect(() => {
     if (!editTechniqueId || !load.rawItems.length || techniqueParts.length === 0 || editLoadedRef.current) return;
-    const techniqueToEdit = load.rawItems.find(
-      (t: { docId?: string; id?: string }) => String(t.docId) === editTechniqueId || String(t.id) === editTechniqueId
-    );
+    const techniqueToEdit = load.rawItems.find((t) => {
+      const row = t as { docId?: string; id?: string };
+      return String(row.docId) === editTechniqueId || String(row.id) === editTechniqueId;
+    });
     editLoadedRef.current = true;
     if (!techniqueToEdit) {
       setIsInitialized(true);
@@ -577,102 +566,76 @@ function TechniqueCreatorContent() {
     setIsInitialized(true);
   }, [editTechniqueId, load.rawItems, techniqueParts, handleLoadTechnique]);
 
-  if (isLoading) {
-    return (
-      <PageContainer size="xl">
-        <LoadingState message="Loading technique parts..." />
-      </PageContainer>
-    );
-  }
-
-  if (error) {
-    return (
-      <PageContainer size="xl">
-        <ErrorDisplay
-          message={`Failed to load technique parts: ${error.message}`}
-          onRetry={() => { void refetch(); }}
-        />
-      </PageContainer>
-    );
-  }
-
   return (
-    <CreatorLayout
+    <CreatorPageShell
       icon={<Swords className="w-8 h-8 text-energy-text" />}
       title="Technique Creator"
       description="Design custom martial techniques by combining technique parts. Each part contributes to the total energy cost and training point requirements."
-      actions={
-        <div className="flex items-center gap-2">
-          <CreatorSaveToolbar
-            saveTarget={save.saveTarget}
-            onSaveTargetChange={save.setSaveTarget}
-            onSave={handleSave}
-            onLoad={() => (user ? load.openLoadModal() : setShowLoginPrompt(true))}
-            onReset={handleReset}
-            saving={save.saving}
-            saveDisabled={!name.trim()}
-            showPublicPrivate={isAdmin}
-            user={user}
-          />
-        </div>
-      }
+      user={user}
+      auth={{ returnPath: '/technique-creator', contentType: 'technique' }}
+      showPublicPrivate={isAdmin}
+      saveTarget={save.saveTarget}
+      onSaveTargetChange={save.setSaveTarget}
+      onSave={save.handleSave}
+      onLoad={load.openLoadModal}
+      onReset={handleReset}
+      saving={save.saving}
+      saveDisabled={!name.trim()}
+      loading={{
+        isLoading,
+        loadingMessage: 'Loading technique parts...',
+        error: error ?? null,
+        onRetry: () => {
+          void refetch();
+        },
+        errorMessage: error ? `Failed to load technique parts: ${error.message}` : undefined,
+      }}
+      publish={{
+        isOpen: save.showPublishConfirm,
+        onClose: () => save.setShowPublishConfirm(false),
+        onConfirm: () => save.confirmPublish(),
+        title: save.publishConfirmTitle,
+        description:
+          save.publishConfirmDescription?.(name.trim(), {
+            existingInPublic: save.publishExistingInPublic,
+          }) ?? '',
+      }}
+      loadModal={{
+        isOpen: load.showLoadModal,
+        onClose: load.closeLoadModal,
+        selectableItems: load.selectableItems,
+        columns: load.columns,
+        gridColumns: load.gridColumns,
+        headerExtra: <SourceFilter value={load.source} onChange={load.setSource} />,
+        emptyMessage: load.emptyMessage,
+        emptySubMessage: load.emptySubMessage,
+        searchPlaceholder: 'Search techniques...',
+        isLoading: load.isLoading,
+        error: load.error,
+        title: 'Load Technique from Library',
+        onSelect: (selected) => handleLoadTechnique(selected.data),
+      }}
       sidebar={
-        <div className="self-start sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-6">
-          <CreatorSummaryPanel
-            title="Technique Summary"
-            costStats={[
-              { label: 'Energy Cost', value: costs.totalEnergy, icon: <Zap className="w-6 h-6" />, color: 'energy' },
-              { label: 'Training Points', value: costs.totalTP, icon: <Target className="w-6 h-6" />, color: 'tp' },
-            ]}
-            statRows={[
-              { label: 'Action', value: actionTypeDisplay },
-              { label: 'Weapon', value: weapon.name },
-              ...(damageDisplay ? [{ label: 'Damage', value: damageDisplay }] : []),
-            ]}
-            breakdowns={costs.tpSources.length > 0 ? [
-              { title: 'TP Breakdown', items: costs.tpSources }
-            ] : undefined}
-          >
-            <AdvancedCalculationsPanel
-              rows={advancedCalcRows}
-              ruleText="Rule: Mechanic parts are auto-generated from action, reaction, damage, and weapon; costs match standalone technique math."
-            />
-          </CreatorSummaryPanel>
-        </div>
-      }
-      modals={
-        <>
-          <LoadFromLibraryModal
-            isOpen={load.showLoadModal}
-            onClose={load.closeLoadModal}
-            selectableItems={load.selectableItems}
-            columns={load.columns}
-            gridColumns={load.gridColumns}
-            headerExtra={<SourceFilter value={load.source} onChange={load.setSource} />}
-            emptyMessage={load.emptyMessage}
-            emptySubMessage={load.emptySubMessage}
-            searchPlaceholder="Search techniques..."
-            isLoading={load.isLoading}
-            error={load.error}
-            title="Load Technique from Library"
-            onSelect={(selected) => handleLoadTechnique(selected.data)}
+        <CreatorSummaryPanel
+          title="Technique Summary"
+          costStats={[
+            { label: 'Energy Cost', value: costs.totalEnergy, icon: <Zap className="w-6 h-6" />, color: 'energy' },
+            { label: 'Training Points', value: costs.totalTP, icon: <Target className="w-6 h-6" />, color: 'tp' },
+          ]}
+          statRows={[
+            { label: 'Action', value: actionTypeDisplay },
+            { label: 'Weapon', value: weapon.name },
+            ...(damageDisplay ? [{ label: 'Damage', value: damageDisplay }] : []),
+          ]}
+          breakdowns={costs.tpSources.length > 0 ? [
+            { title: 'TP Breakdown', items: costs.tpSources }
+          ] : undefined}
+        >
+          <AdvancedCalculationsPanel
+            rows={advancedCalcRows}
+            ruleText="Rule: Mechanic parts are auto-generated from action, reaction, damage, and weapon; costs match standalone technique math."
           />
-          <LoginPromptModal
-            isOpen={showLoginPrompt}
-            onClose={() => setShowLoginPrompt(false)}
-            returnPath="/technique-creator"
-            contentType="technique"
-          />
-          <ConfirmActionModal
-            isOpen={save.showPublishConfirm}
-            onClose={() => save.setShowPublishConfirm(false)}
-            onConfirm={() => save.confirmPublish()}
-            title={save.publishConfirmTitle}
-            description={save.publishConfirmDescription?.(name.trim(), { existingInPublic: save.publishExistingInPublic }) ?? ''}
-            confirmLabel="Publish"
-            icon="publish"
-          />
-        </>
+        </CreatorSummaryPanel>
       }
     >
       {/* Main Editor */}
@@ -836,13 +799,13 @@ function TechniqueCreatorContent() {
               </p>
             )}
           </CollapsibleSection>
-    </CreatorLayout>
+    </CreatorPageShell>
   );
 }
 
 export default function TechniqueCreatorPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center py-12"><LoadingState message="Loading..." /></div>}>
+    <Suspense fallback={<LoadingState message="Loading..." padding="md" />}>
       <TechniqueCreatorContent />
     </Suspense>
   );

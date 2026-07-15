@@ -1,15 +1,11 @@
 /**
  * Creator Components
  * ==================
- * Shared components used across Power, Technique, Item, and Creature creator tools.
- * 
- * These components provide consistent UI patterns for:
- * - Number stepping controls
- * - Load from library modal
- * - Health/Energy allocation
- * - Ability editing
- * - Archetype selection
- * - Collapsible sections
+ * Shared UI for standalone Power, Technique, Empowered Technique, Armament,
+ * Species, and Creature creators (plus Crafting layout consumers).
+ *
+ * Prefer CreatorPageShell for auth/load/save chrome. Collapsible sections:
+ * CollapsibleSection only (do not reintroduce ui/Collapsible).
  */
 
 export { LoadFromLibraryModal } from './LoadFromLibraryModal';
@@ -20,6 +16,14 @@ export { CollapsibleSection, type CollapsibleSectionProps } from './collapsible-
 export { CreatorSummaryPanel, type CreatorSummaryPanelProps } from './creator-summary-panel';
 export { CreatorSaveToolbar, type CreatorSaveToolbarProps } from './CreatorSaveToolbar';
 export { CreatorLayout, type CreatorLayoutProps } from './CreatorLayout';
+export {
+  CreatorPageShell,
+  type CreatorPageShellProps,
+  type CreatorPageAuthConfig,
+  type CreatorPageLoadingConfig,
+  type CreatorPagePublishConfig,
+  type CreatorPageResetConfirmConfig,
+} from './CreatorPageShell';
 export { WeaponSelector, type WeaponOption } from './weapon-selector';
 export { CreatorWeaponPicker, type CreatorWeaponPickerProps } from './creator-weapon-picker';
 export { AdvancedCalculationsPanel, type AdvancedCalculationRow } from './advanced-calculations-panel';

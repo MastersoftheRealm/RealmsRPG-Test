@@ -108,19 +108,16 @@ function resolveBody(
 /** Detect whether clamped body copy overflows its fixed preview area. */
 function useClampedOverflow(active: boolean, textKey: string) {
   const ref = useRef<HTMLParagraphElement>(null);
-  const [overflows, setOverflows] = useState(false);
+  const [measuredOverflows, setMeasuredOverflows] = useState(false);
 
   useEffect(() => {
-    if (!active) {
-      setOverflows(false);
-      return;
-    }
+    if (!active) return;
 
     const el = ref.current;
     if (!el) return;
 
     const measure = () => {
-      setOverflows(el.scrollHeight > el.clientHeight + 1);
+      setMeasuredOverflows(el.scrollHeight > el.clientHeight + 1);
     };
 
     measure();
@@ -129,7 +126,8 @@ function useClampedOverflow(active: boolean, textKey: string) {
     return () => observer.disconnect();
   }, [active, textKey]);
 
-  return { ref, overflows };
+  // Derive false when inactive so we never sync that case through setState-in-effect.
+  return { ref, overflows: active && measuredOverflows };
 }
 
 export function GuidedChoiceCard({
@@ -153,14 +151,16 @@ export function GuidedChoiceCard({
   fullWidth = false,
   density = 'path',
 }: GuidedChoiceCardProps) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(selected);
+  const [prevSelected, setPrevSelected] = useState(selected);
+  // Sync expand when selection changes (adjust state during render — no effect).
+  if (selected !== prevSelected) {
+    setPrevSelected(selected);
+    setExpanded(selected);
+  }
   const hasTags = tags && tags.length > 0;
   const preset = GUIDED_CHOICE_CARD_PRESETS[density];
   const hasExpandedExtra = Boolean(expandedExtra);
-
-  useEffect(() => {
-    setExpanded(selected);
-  }, [selected]);
 
   const layout =
     imageLayout ?? (imageKind ? defaultImageLayoutForKind(imageKind) : imageUrl ? 'thumb' : 'thumb');

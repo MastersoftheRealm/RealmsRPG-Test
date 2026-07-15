@@ -22,6 +22,11 @@ import {
 const COPY_NAME_SUFFIX = ' copy';
 const ABILITY_OPTIONS = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'] as const;
 
+type CodexFeatLike = { id?: string; name?: string; feat_lvl?: number; base_feat_id?: string; lvl_req?: number };
+function toLeveledFeatLike(f: CodexFeatLike) {
+  return { ...f, id: f.id ?? '' };
+}
+
 function guidedJsonFromPath(pathData: unknown, field: 'recommended_abilities' | 'loadouts'): string {
   const level1 = parseArchetypePathData(pathData)?.level1;
   if (field === 'recommended_abilities') {
@@ -288,8 +293,6 @@ export function AdminArchetypesTab() {
       (a.description || '').toLowerCase().includes(search.toLowerCase())
   );
 
-  type CodexFeatLike = { id?: string; name?: string; feat_lvl?: number; base_feat_id?: string; lvl_req?: number };
-  const toLeveledFeatLike = (f: CodexFeatLike) => ({ ...f, id: f.id ?? '' });
   const featOptions = useMemo<SelectionOption[]>(
     () =>
       (codexFeats as CodexFeatLike[])

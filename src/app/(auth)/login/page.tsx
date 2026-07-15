@@ -6,8 +6,7 @@
 
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, Suspense } from 'react';import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -28,6 +27,14 @@ function LoginContent() {
   const [error, setError] = useState<string | null>(null);
   const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [lastAttemptEmail, setLastAttemptEmail] = useState<string>('');
+  /** When true, ignore ?error= from the URL (user started a new sign-in attempt). */
+  const [ignoreAuthParam, setIgnoreAuthParam] = useState(false);
+  const errorParam = searchParams.get('error');
+  const [prevErrorParam, setPrevErrorParam] = useState(errorParam);
+  if (errorParam !== prevErrorParam) {
+    setPrevErrorParam(errorParam);
+    setIgnoreAuthParam(false);
+  }
 
   const getRedirectPath = () => {
     const urlRedirect = searchParams.get('redirect') ?? searchParams.get('returnTo');
@@ -35,14 +42,18 @@ function LoginContent() {
     return sanitizeRedirectPath(urlRedirect || sessionRedirect || '/');
   };
 
-  useEffect(() => {
-    const e = searchParams.get('error');
-    if (e === 'confirm') {
-      setError('Email confirmation failed or expired. Please sign in again, or request a new confirmation email.');
-    } else if (e === 'auth_callback') {
-      setError('Sign-in failed. Please try again.');
-    }
-  }, [searchParams]);
+  const authParamError =
+    !ignoreAuthParam && errorParam === 'confirm'
+      ? 'Email confirmation failed or expired. Please sign in again, or request a new confirmation email.'
+      : !ignoreAuthParam && errorParam === 'auth_callback'
+        ? 'Sign-in failed. Please try again.'
+        : null;
+  const displayError = error ?? authParamError;
+
+  const clearDisplayedError = () => {
+    setError(null);
+    setIgnoreAuthParam(true);
+  };
 
   const {
     register,
@@ -54,7 +65,7 @@ function LoginContent() {
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
-    setError(null);
+    clearDisplayedError();
     setResendStatus('idle');
     setLastAttemptEmail(data.email);
 
@@ -81,7 +92,7 @@ function LoginContent() {
       return;
     }
     setResendStatus('sending');
-    setError(null);
+    clearDisplayedError();
     try {
       const redirectPath = getRedirectPath();
       const result = await resendConfirmationAction(email, redirectPath);
@@ -95,7 +106,7 @@ function LoginContent() {
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
-    setError(null);
+    clearDisplayedError();
 
     try {
       const supabase = createClient();
@@ -120,9 +131,9 @@ function LoginContent() {
       title="Welcome Back"
       subtitle="Sign in to continue your adventure"
     >
-      {error ? (
+      {displayError ? (
         <Alert variant="danger" className="mb-6">
-          {error}
+          {displayError}
         </Alert>
       ) : null}
 

@@ -2,7 +2,7 @@
 
 **Last slimmed:** 2026-06-26 (TASK-382). Full history: [`archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md`](archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md) and [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md).
 
-**Next task ID:** TASK-431
+**Next task ID:** TASK-432
 
 **Agent rules:** Skip `blocked` tasks and any task with `assignee:` set to a human (e.g. TASK-353, **TASK-414**). Skip human-only tasks (TASK-353 → `DEVELOPER_TASK_QUEUE.md` DEV-001). Pick highest-priority `not-started` or continue `partial`. **Do not start TASK-408–413** until TASK-414 spec is `done` (owner approval).
 
@@ -13,8 +13,9 @@
   created_at: 2026-07-13
   created_by: agent
   priority: low
-  status: not-started
+  status: partial
   parent_task: TASK-321
+
   description: |
     Follow-up from TASK-321. After clearing unused-vars / no-explicit-any / raw-color errors, remaining
     ESLint noise is React Compiler hook rules (~171): set-state-in-effect (58), exhaustive-deps (104),
@@ -25,13 +26,35 @@
     - src/app/(main)/characters/[id]/page.tsx
     - src/app/(main)/encounters/
     - src/components/guided-creator/
+    - src/components/guided-creator/guided-choice-card.tsx
+    - src/app/(main)/species-creator/page.tsx
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - src/app/(auth)/login/page.tsx
   acceptance_criteria:
     - Material reduction in react-hooks/* warnings without cascading re-render regressions.
     - Prefer removing unnecessary effects over blanket eslint-disable.
     - exhaustive-deps changes must not alter intentional mount-only / stable-ref patterns.
     - npm run build + lint pass; no new errors.
+  build_validation: DEV-V-019
+  developer_test_plan: |
+    Run DEV-V-019-T001–T003 in BUILD_VALIDATION.md (choice-card expand, login ?error=, admin feat modal remount).
+  completed_work: |
+    Batch 1 (2026-07-15): 168 → 158 hook warnings (−10).
+    - guided-choice-card: derive inactive overflow; sync expand via render when selected changes.
+    - species-creator: module TRAIT_LIMITS; drop unnecessary form/traitLimits deps.
+    - AdminArchetypesTab: hoist toLeveledFeatLike.
+    - AdminFeatsTab: remount edit modal with key={sessionKey}; seed drafts in useState; remove reset effects.
+    - login: derive auth query error (no setState-in-effect); dismiss URL message on new attempt (parity with old setError(null)).
+    - empowered getPayload: add missing isReaction dep.
+    - Audit follow-up: DEV-V-019 T001–T003; drop unused skillIdToName on AdminFeatEditModal.
+  remaining_work: |
+    - ~158 left: set-state-in-effect 53, exhaustive-deps 96, preserve-manual-memoization 9.
+    - High-blast next: character-sheet actions (45), advanced skills/powers steps, encounter views,
+      creator cache/?edit hydrations (prefer lazy init / remount keys where safe).
   notes: |
     Do not mass-disable. High-blast files: character sheet, encounter views, guided reveal.
+    Keep status partial until warning count is materially flattened or owner closes residual as intentional.
 
 - id: TASK-429
   title: Guided feat steps — Layer 2 browse (GuidedLayerNav)
@@ -540,19 +563,22 @@
 - id: TASK-380
   title: DUP-11 + collapsible consolidation with CreatorPageShell rollout
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-06-26
   created_by: agent
+  completed_at: 2026-07-14
   description: |
     Introduce shared creator-page shell scaffolding and consolidate collapsible patterns after parity tests exist.
   related_files:
+    - src/components/creator/CreatorPageShell.tsx
+    - src/components/creator/CreatorLayout.tsx
+    - src/components/creator/collapsible-section.tsx
     - src/app/(main)/power-creator/page.tsx
     - src/app/(main)/technique-creator/page.tsx
     - src/app/(main)/empowered-technique-creator/page.tsx
     - src/app/(main)/item-creator/page.tsx
     - src/app/(main)/species-creator/page.tsx
     - src/app/(main)/creature-creator/page.tsx
-    - src/components/creator/
     - src/docs/ai/BUILD_VALIDATION.md
   acceptance_criteria:
     - Shared CreatorPageShell removes duplicated auth/load/save scaffolding.
@@ -560,9 +586,65 @@
     - Creator page behavior equivalent across all six routes.
     - `npm run build`, `npm test`, and `npm run lint` pass.
     - Dedicated creator parity validation suite added before merge.
+  build_validation: DEV-V-018
+  developer_test_plan: |
+    Run DEV-V-018-T001–T006 in BUILD_VALIDATION.md (six creators + mobile shell).
   notes: |
-    Execute after TASK-379 and associated QA harness.
-    2026-07-01: Owner — Phase 1b prerequisite for standalone guided creators (REALMS §5.11). Bump priority when starting power guided work.
+    2026-07-14: Done — CreatorPageShell on all six standalone creators; CollapsibleSection is the only
+    collapse pattern (ui/Collapsible already gone). Species Load remains ungated; creature keeps
+    reset confirm + over-budget save. CreatorLayout retained as inner layout primitive.
+    2026-07-14 audit: Fixed creature Suspense/?edit; LoginPrompt save|load reason; species + empowered
+    contentType; ungated Load toolbar labels; lg-only sticky sidebar. Remaining → TASK-431.
+    2026-07-01: Owner — Phase 1b prerequisite for standalone guided creators (REALMS §5.11).
+
+- id: TASK-431
+  title: Creator chrome follow-ups — a11y, load-hook parity, empowered copy/errors
+  created_at: 2026-07-14
+  created_by: agent
+  priority: medium
+  status: done
+  parent_task: TASK-380
+
+  description: |
+    Follow-ups from CreatorPageShell (TASK-380) audits. Shell chrome/auth/publish wiring is green
+    across all six creators; remaining work is CollapsibleSection a11y, heading hierarchy,
+    species/creature load-hook convergence, and a few empowered/species parity nits.
+  related_files:
+    - src/components/creator/collapsible-section.tsx
+    - src/components/creator/CreatorPageShell.tsx
+    - src/hooks/use-load-modal-library.ts
+    - src/lib/library/creator-load-selectables.ts
+    - src/app/(main)/species-creator/page.tsx
+    - src/app/(main)/creature-creator/page.tsx
+    - src/app/(main)/empowered-technique-creator/page.tsx
+    - src/app/(main)/item-creator/page.tsx
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/technique-creator/page.tsx
+    - src/docs/ai/AGENT_GUIDE.md
+  acceptance_criteria:
+    - CollapsibleSection: no nested interactive controls inside a role=button / expand header; move rightSlot/Remove outside the disclosure control (or equivalent pattern); fix misleading comment that claims nesting is OK.
+    - Section titles use heading level that does not skip (h1 PageHeader → h2 sections), or an equivalent a11y-compliant pattern documented in AGENT_GUIDE.
+    - Species and/or creature load lists use an extended useLoadModalLibrary (or dedicated shared hook) with SourceFilter parity — no bespoke fetch/shape duplication beyond entity-specific columns/handleLoad.
+    - Empowered publish override copy says "empowered technique" (not "technique") when replacing an existing public item.
+    - Empowered dual-load errors identify which dataset(s) failed (power parts / technique parts) and surface both messages when both fail; retry still refetches both.
+    - Optional: shell `loading` gate (or documented intentional skip) for species skills/traits and creature critical codex deps — align with power/tech/item or document "show UI immediately" in AGENT_GUIDE.
+    - Optional: consistent load-success toast (or explicit none) across all six creators (today: power/technique yes; item/empowered/species no; creature only on ?edit= path).
+    - npm run build + lint pass; update DEV-V-018 or add targeted tests if UI changes.
+  notes: |
+    From TASK-380 audits 2026-07-14 (initial + second-pass sanity).
+    Already fixed outside this task: creature Suspense/?edit; LoginPrompt save|load reason;
+    species/empowered contentType; ungated Load toolbar labels; lg-only sticky sidebar.
+    Intentional / not in scope: species ungated Load + stickySidebar=false; creature resetConfirm +
+    over-budget save; crafting on CreatorLayout without shell; GuidedCreatorPageShell separate.
+    Second-pass confirmed healthy: shell onSave/onLoad/publish wiring, no double Load modal,
+    showPublicPrivate + returnPath/contentType on all six, TraitListModal/extraModals, rarity sidebar,
+    RollProvider inside Suspense, no leftover page-level LoginPrompt/CreatorSaveToolbar.
+    2026-07-14: Done — CollapsibleSection a11y (dedicated expand button, h2 titles); useLoadModalLibrary
+    extended for species/creature + prefetch; creator-load-selectables shared builders; shell loading
+    gates + load-success toast parity; empowered publish/dual-error copy; DEV-V-018-T007.
+  build_validation: DEV-V-018
+  developer_test_plan: |
+    Run DEV-V-018-T001–T007 in BUILD_VALIDATION.md (chrome + load-hook/Collapsible a11y).
 
 - id: TASK-381
   title: BIG-01/02 phased decomposition of character-sheet and creator god files

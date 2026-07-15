@@ -19,6 +19,7 @@
 /.playwright/
 /.creator-audit-screenshots/
 /.site-copy-audit/
+/.shell-creators-audit/
 /.guided-flaw-audit/
 /.guided-loadout-audit/
 /.ability-tag-audit/

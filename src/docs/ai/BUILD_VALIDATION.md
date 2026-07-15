@@ -1626,6 +1626,208 @@ Verifies owner-editable marketing prose lives in `src/lib/constants/copy/` and s
 
 ---
 
+## DEV-V-018 — CreatorPageShell parity (TASK-380)
+
+Verifies shared auth/load/save chrome on standalone creators after `CreatorPageShell` rollout. Domain cost math is out of scope — focus on chrome parity.
+
+#### DEV-V-018-T001 — Power creator chrome
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 — CreatorPageShell parity |
+| **Related task** | TASK-380 |
+| **Where** | `/power-creator` |
+| **Needs** | Signed out for login-prompt check; signed-in account for save/load |
+
+**Steps**
+1. Open `/power-creator` signed out. Click Save (with a name filled) and Load.
+2. Confirm Login prompt opens (soft gate, no hard redirect).
+3. Sign in. Click Load — library modal opens. Reset clears fields. Save private succeeds when name set.
+
+**Expected**
+- Same toolbar (Load / Reset / Save); sticky summary sidebar; CollapsibleSection sections still expand/collapse.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-018-T002 — Item (armament) creator chrome
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 |
+| **Related task** | TASK-380 |
+| **Where** | `/item-creator` |
+| **Needs** | — |
+
+**Steps**
+1. Repeat login-gate / Load / Reset / Save smoke as T001.
+2. Confirm rarity sidebar still renders with summary.
+
+**Expected**
+- Parity with power chrome; armament type sections still collapsible.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-018-T003 — Technique + empowered technique
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 |
+| **Related task** | TASK-380 |
+| **Where** | `/technique-creator`, `/empowered-technique-creator` |
+| **Needs** | — |
+
+**Steps**
+1. Open each route; confirm Load / Reset / Save toolbar and login soft-gate.
+2. Empowered: wait for dual parts load (no permanent loading/error unless network fails).
+
+**Expected**
+- Chrome matches other creators; editor sections unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-018-T004 — Species Load ungated
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 |
+| **Related task** | TASK-380 |
+| **Where** | `/species-creator` |
+| **Needs** | Signed out |
+
+**Steps**
+1. Signed out, click Load — modal opens without login prompt.
+2. Click Save with incomplete form — stays blocked by form readiness; with ready form when signed out — login prompt.
+
+**Expected**
+- Load ungated; Save still auth-gated via shell.
+- Load button aria/tooltip says “Load from library” (not “Log in to load…”) when signed out.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-018-T005 — Creature reset confirm + over-budget save
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 |
+| **Related task** | TASK-380 |
+| **Where** | `/creature-creator` |
+| **Needs** | Signed in |
+
+**Steps**
+1. Click Reset — confirm modal appears; cancel leaves data; confirm clears.
+2. Exceed a point budget if feasible — Save disabled and/or error toast; under budget Save works.
+
+**Expected**
+- Reset confirm preserved; budget gate preserved; login soft-gate on Load/Save when signed out.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-018-T006 — Mobile (~360px) creator shell
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 |
+| **Related task** | TASK-380 |
+| **Where** | `/power-creator` at 360px |
+| **Needs** | DevTools responsive |
+
+**Steps**
+1. Open power creator at 360px width; use toolbar + one collapsed section.
+
+**Expected**
+- No horizontal page scroll; toolbar buttons usable (≥44px touch); sidebar stacks above main (order).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-018-T007 — Load hook parity + Collapsible a11y (TASK-431)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 |
+| **Related task** | TASK-431 |
+| **Where** | `/species-creator`, `/creature-creator`, `/empowered-technique-creator`, any creator with CollapsibleSection |
+| **Needs** | Signed in (species Load also works signed out) |
+
+**Steps**
+1. Species + creature: open Load — SourceFilter My/Public/All; pick an item — form fills and success toast (“… loaded successfully!”).
+2. Creature with `?edit=<id>` — loads from library with success toast; power/technique/item pickers still lazy-fetch only when those modals open.
+3. Empowered: if both power and technique parts fail to load, error names both datasets; publish override copy says “empowered technique”.
+4. CollapsibleSection: expand/collapse; with a rightSlot/Remove visible — only one interactive expand control (no nested button inside button); section title is under page h1 as h2.
+
+**Expected**
+- Shared `useLoadModalLibrary` chrome for species/creature; no duplicate load-list fetch UI.
+- Load toast parity across creators; shell loading gate for critical codex deps on species/creature.
+- Collapsible a11y: dedicated expand button; no heading skip.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+## DEV-V-019 — React Compiler hook cleanup (TASK-430)
+
+Verifies behavior parity after removing setState-in-effect / fixing exhaustive-deps in small batches. Domain math out of scope.
+
+#### DEV-V-019-T001 — Guided choice card expand follows selection
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-019 — React Compiler hook cleanup |
+| **Related task** | TASK-430 |
+| **Where** | `/characters/new/guided` (species or archetype path step with choice cards) |
+| **Needs** | Dev server |
+
+**Steps**
+1. Open a guided step that shows selectable `GuidedChoiceCard`s.
+2. Select card A — card expands (Read more / details visible when applicable).
+3. Select a different card B — A collapses (or exits selected expand state); B expands.
+
+**Expected**
+- Expand state tracks selection without needing a full page refresh.
+- No console errors when toggling selection.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-019-T002 — Login `?error=` then retry clears URL-derived message
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-019 |
+| **Related task** | TASK-430 |
+| **Where** | `/login?error=confirm` then `/login?error=auth_callback` |
+| **Needs** | Signed out |
+
+**Steps**
+1. Open `/login?error=confirm` — danger alert about confirmation failed is visible.
+2. Submit any email/password attempt (or start Google sign-in) — URL-derived confirm alert clears when clearing for a new attempt (submit failures may show a new local error).
+3. Open `/login?error=auth_callback` — “Sign-in failed” alert shows again (param change restores URL message).
+
+**Expected**
+- `?error=` surfaces on load; starting a new attempt dismisses that URL message (same as old effect + `setError(null)`).
+- Changing to a different `?error=` shows the matching copy again.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-019-T003 — Admin feat edit modal resets per open
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-019 |
+| **Related task** | TASK-430 |
+| **Where** | `/admin/codex` → Feats tab |
+| **Needs** | Admin account |
+
+**Steps**
+1. Edit a feat; change a field (do not save); Close.
+2. Edit the same feat again — form shows stored values, not the abandoned draft.
+3. If leveled family: switch levels, edit, switch back — draft for the other level still restores within the same open session.
+
+**Expected**
+- Each open is a fresh session (remount via `sessionKey`); within one open, level-switch drafts still work.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -1640,5 +1842,7 @@ Verifies owner-editable marketing prose lives in `src/lib/constants/copy/` and s
 | DEV-V-015 | Library API typing (TASK-420) | — | Automated (`npm test`) + manual smoke |
 | DEV-V-016 | Library add/load selection parity (TASK-379) | — | Manual — see suite above |
 | DEV-V-017 | Site copy modules (TASK-390) | — | Manual — see suite above |
+| DEV-V-018 | CreatorPageShell parity (TASK-380 / TASK-431) | — | Manual — see suite above |
+| DEV-V-019 | React Compiler hook cleanup (TASK-430) | — | Manual — see suite above |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

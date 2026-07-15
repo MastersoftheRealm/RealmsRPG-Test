@@ -426,17 +426,21 @@ When loading a saved item/power/technique into a creator, follow this **three-st
 
 **Rule:** Mechanic-only entries (parts/properties driven by dedicated UI) are restored from dedicated state only. Never restore them into the user-selectable list.
 
-**Load modal state and data:** Use `useLoadModalLibrary('power' | 'technique' | 'item' | 'empowered-technique')` from `@/hooks` for load-modal visibility and library items. Returns `showLoadModal`, `openLoadModal`, `closeLoadModal`, `selectableItems`, `rawItems`, `isLoading`, `error`, `emptyMessage`, `emptySubMessage`, plus source-filter state (`source` / `setSource`) and `columns` / `gridColumns`. Render with **`LoadFromLibraryModal`** (thin `UnifiedSelectionModal` wrapper, `confirmLabel="Load"`, `maxSelections={1}`). Selectable shaping is shared with Add Library Item via **`@/lib/library-selectable-builders`** (empowered load uses `buildEmpoweredPowerSelectableItem`). Canonical library row types: **`src/types/library.ts`**. Type-specific `handleLoad*` (reset → restore mechanics → restore filtered list) stays in each creator.
+**Load modal state and data:** Use `useLoadModalLibrary('power' | 'technique' | 'item' | 'empowered-technique' | 'species' | 'creature')` from `@/hooks` for load-modal visibility and library items. Optional `{ prefetch: true }` keeps rows fetching while the modal is closed (creature `?edit=`). Returns `showLoadModal`, `openLoadModal`, `closeLoadModal`, `selectableItems`, `rawItems`, `isLoading`, `error`, `emptyMessage`, `emptySubMessage`, plus source-filter state (`source` / `setSource`) and `columns` / `gridColumns`. Species/creature row builders live in `@/lib/library/creator-load-selectables` (not duplicated in pages). Render with **`LoadFromLibraryModal`** (thin `UnifiedSelectionModal` wrapper, `confirmLabel="Load"`, `maxSelections={1}`). Other selectable shaping is shared with Add Library Item via **`@/lib/library-selectable-builders`** (empowered load uses `buildEmpoweredPowerSelectableItem`). Canonical library row types: **`src/types/library.ts`**. Type-specific `handleLoad*` stays in each creator; load-success toasts use `save.setSaveMessage({ type: 'success', text: '… loaded successfully!' })` across all six.
 
 Avoid `max-h-[…vh]` on UnifiedSelectionModal without an `md:` prefix — uncapped mobile full-screen needs the full viewport; use e.g. `className="md:max-h-[60vh]"`.
 
 ## Creator layout
 
-All four creators (power, technique, item, creature) use **CreatorLayout** from `@/components/creator` for consistent structure.
+Standalone creators (power, technique, empowered technique, item/armament, species, creature) use **`CreatorPageShell`** from `@/components/creator` for shared auth/load/save chrome.
 
-- **Props:** `icon`, `title`, `description`, `actions`, `children` (main editor), `sidebar`, `modals`, `size`, `headerClassName`
-- **Structure:** `PageContainer` → `PageHeader` → optional modals → grid (`lg:grid-cols-3`) with main (`lg:col-span-2 space-y-6`) and sidebar.
-- **Usage:** Main content in `children`, summary panel in `sidebar`, Load/Login/Publish (and selection) modals in `modals`. Actions use `CreatorSaveToolbar`.
+- **Shell** (`CreatorPageShell`): loading/error early UI (gate on critical codex deps — parts/properties/skills/traits/feats as each page needs), `CreatorSaveToolbar`, sticky sidebar (`lg:sticky` only), `LoginPromptModal` with save vs load `reason`, publish confirm, optional `LoadFromLibraryModal` + `resetConfirm`, `extraModals`.
+- **Not the same as** `GuidedCreatorPageShell` (`components/guided-creator/`) — funnel hero chrome only; do not merge.
+- **Layout** (`CreatorLayout`): inner `PageContainer` → `PageHeader` → grid. Prefer shell for load/save routes; crafting may use layout alone (Back vs Load/Save).
+- **Auth:** Soft gate (login modal) — no hard redirect. Species Load stays ungated (`requireAuthToLoad: false`); toolbar Load label follows that flag.
+- **Sidebar:** Default sticky on `lg+`; pass `stickySidebar={false}` for short summaries (species).
+- **Collapsibles:** Use **`CollapsibleSection`** only (`ui/Collapsible` removed). Expand control is a dedicated `<button>`; `rightSlot`/Remove sit outside it; section titles are `h2` (under page `h1`). Ad-hoc chrome screenshot audit: `npm run verify:shell-creators-audit` → `.shell-creators-audit/`.
+- **Domain logic** (cost math, `handleLoad*`, section islands) stays in each page `children`.
 
 ## Allocation UI consistency
 

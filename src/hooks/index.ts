@@ -15,7 +15,11 @@ export {
   useGuidedEquipmentCatalog,
 } from './use-guided-equipment-catalog';
 export { useLoadModalLibrary } from './use-load-modal-library';
-export type { LoadModalLibraryType, UseLoadModalLibraryReturn } from './use-load-modal-library';
+export type {
+  LoadModalLibraryType,
+  UseLoadModalLibraryReturn,
+  UseLoadModalLibraryOptions,
+} from './use-load-modal-library';
 export { useAddLibraryItemData } from './use-add-library-item-data';
 export type {
   AddLibraryItemType,

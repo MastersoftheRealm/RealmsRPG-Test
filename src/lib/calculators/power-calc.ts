@@ -496,7 +496,7 @@ export function deriveDuration(
     return formatDurationFromTypeAndValue('days', days);
   }
 
-  return formatDurationFromTypeAndValue('rounds', 1);
+  return formatDurationFromTypeAndValue('instant', 0);
 }
 
 // =============================================================================

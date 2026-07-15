@@ -1,4 +1,18 @@
 
+- 2026-07-15 | agent | TASK-430 batch 1 audit → gaps fixed | files: login dismiss parity, AdminFeatsTab unused prop, DEV-V-019 T001–T003, DEVELOPER_TASK_QUEUE, AI_TASK_QUEUE | Summary: Restored login ?error= dismiss-on-retry; wired build_validation; removed unused skillIdToName on feat edit modal.
+
+- 2026-07-15 | agent | TASK-430 batch 1 — React Compiler hook warnings | files: guided-choice-card, species-creator, AdminArchetypesTab, AdminFeatsTab, login, empowered getPayload | Summary: Cleared 10 warnings (168→158) without eslint-disable; modal remount + derive/sync patterns; build passes. Task stays partial.
+
+- 2026-07-15 | agent | TASK-380/431 screenshot audit + Instant duration fix | files: shell-creators-audit.pw + config, power-calc deriveDuration, package.json, .gitignore | Summary: Playwright chrome audit 8/8 PASS across six creators; nested expand buttons=0; species Load ungated; creature reset confirm. Fixed deriveDuration empty fallback Instant (was misleading 1 Round).
+
+- 2026-07-14 | agent | TASK-431 done — creator chrome follow-ups | files: collapsible-section, use-load-modal-library, creator-load-selectables, species/creature/item/empowered pages, AGENT_GUIDE, FEATURE_INDEX, DEV-V-018-T007 | Summary: Collapsible a11y (dedicated expand + h2); species/creature on shared load hook + prefetch; shell loading gates; load-success toast parity; empowered publish/dual-error copy.
+
+- 2026-07-14 | agent | TASK-380 second-pass sanity → expanded TASK-431 | files: AI_TASK_QUEUE TASK-431 | Summary: Confirmed shell wiring healthy across six creators; added AC for empowered publish copy + dual-load errors, Collapsible comment overclaim, optional loading/toast parity.
+
+- 2026-07-14 | agent | TASK-380 audit — quick fixes + TASK-431 | files: LoginPromptModal reason, CreatorSaveToolbar, CreatorPageShell lg-sticky, creature Suspense, species/empowered contentType, AI_TASK_QUEUE | Summary: Fixed Suspense/?edit, save|load login copy, ungated Load labels; filed TASK-431 for Collapsible a11y + load-hook convergence.
+
+- 2026-07-14 | agent | TASK-380 done — CreatorPageShell on six creators | files: CreatorPageShell.tsx, power/technique/empowered/item/species/creature pages, AGENT_GUIDE, FEATURE_INDEX, DEV-V-018 | Summary: Shared auth/load/save/loading chrome; CollapsibleSection-only collapse; species ungated Load + creature resetConfirm preserved; build passes.
+
 - 2026-07-14 | agent | TASK-390 audit → gaps fixed + screenshot audit | files: shared/privacy/terms-copy, root+route layouts, about creator note, auth/footer contact email, site-copy-audit.pw + .site-copy-audit | Summary: Fixed motto AC3 in root layout; SEO from copy modules; privacy/terms migrated; creator-note period; Playwright 4/4 PASS.
 
 - 2026-07-14 | agent | TASK-390 done — per-page site copy modules | files: about-copy, about-slide-body, about/page, nav/rules/resources-copy, header, site-copy, BUILD_VALIDATION DEV-V-017, FEATURE_INDEX | Summary: Migrated About carousel bodies + nav/rules/resources prose into `src/lib/constants/copy/`; thin About page + renderer; site-copy editor table updated; build passes.
