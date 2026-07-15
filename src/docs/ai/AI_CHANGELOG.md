@@ -1,4 +1,6 @@
 
+- 2026-07-15 | agent | Guided creator mobile touch targets | files: expandable-chip, chip-options-panel, collapsible-section, guided-choice-styles, guided-skills-panel, guided-layer-nav, expandable-image, grid-list-row, detail-option-list | Summary: 44px tap targets on expand chips, chip options, See more/More details, collapsible section tips, layer nav, image preview; dedupe path detail descriptions on mobile.
+
 - 2026-07-15 | agent | Path detail mobile — dedupe option descriptions | files: detail-option-list, grid-list-row | Summary: DetailOptionList hides description column on mobile grid; GridListRow mobile summary shows prose without "Description:" label; expanded stats skip description when body already renders it. Fixes tripled copy in guided path More details option sections.
 
 - 2026-07-15 | agent | Guided equipment audit fixes | files: l2-modal, l1-phase, eligibility, catalog-rows, phase-stats, copy, GUIDED_SPEC, BUILD_VALIDATION T025, REALMS §5.7, tests | Summary: L2 gear/TP budgets reclaim current-phase spend; L1 Currency gates; See more (not mislabeled More details) for in-card facts; DRY cost via resolveItemUnitCost; unify gear type filter; drop dead phase-progress copy.
