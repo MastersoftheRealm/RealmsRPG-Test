@@ -12,6 +12,7 @@ import {
 } from '@/lib/guided-creator/equipment-eligibility';
 import { catalogRowForRef } from '@/lib/guided-creator/equipment-catalog-rows';
 import { resolvePoolItemCategory } from '@/lib/guided-creator/loadout-tp';
+import type { AbilityName } from '@/types';
 
 function normalizeId(id: string): string {
   return String(id).trim().toLowerCase();
@@ -75,8 +76,8 @@ function rowsForPool(
 /** Fields needed to rank L1 weapon cards — not L2 eligibility (ability/TP/currency). */
 export type PhaseL1RankContext = {
   pathRecommendedIds?: Set<string>;
-  martAbil?: string | null;
-  powAbil?: string | null;
+  martAbil?: AbilityName | null;
+  powAbil?: AbilityName | null;
 };
 
 /**

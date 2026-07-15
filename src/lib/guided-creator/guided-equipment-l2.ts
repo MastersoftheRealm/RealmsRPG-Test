@@ -29,7 +29,7 @@ import {
 } from '@/lib/guided-creator/equipment-eligibility';
 import { buildEquipmentPhaseCardStats } from '@/lib/guided-creator/equipment-phase-stats';
 import { mergeLoadoutArmaments } from '@/lib/guided-creator/resolve-loadout-items';
-import { resolveItemUnitCost } from '@/lib/guided-creator/equipment-currency';
+import { resolveCatalogRowUnitCost } from '@/lib/guided-creator/equipment-currency';
 import type { ChipData } from '@/components/shared/grid-list-row-types';
 
 export interface GuidedEquipmentL2ItemData {
@@ -99,7 +99,7 @@ export function buildGuidedEquipmentL2Items(
   return ranked.map((row) => {
     const eligibleNow = isEligibleForGuidedEquipmentL2(row, ctx);
     const category = mapCategory(phase);
-    const unitCost = resolveItemUnitCost(row);
+    const unitCost = resolveCatalogRowUnitCost(row);
     const description = itemDescription(row.id, officialItems, codexEquipment);
     const stats = buildEquipmentPhaseCardStats({
       category: phase === 'gear' ? 'equipment' : phase === 'armor' ? 'armor' : 'weapon',
@@ -246,7 +246,7 @@ export function computeL2GearSpend(selected: SelectableItem[]): number {
   return selected.reduce((sum, item) => {
     const data = item.data as GuidedEquipmentL2ItemData | undefined;
     const qty = (item as SelectableItem & { quantity?: number }).quantity ?? 1;
-    return sum + resolveItemUnitCost(data?.row ?? {}) * Math.max(1, qty);
+    return sum + resolveCatalogRowUnitCost(data?.row) * Math.max(1, qty);
   }, 0);
 }
 

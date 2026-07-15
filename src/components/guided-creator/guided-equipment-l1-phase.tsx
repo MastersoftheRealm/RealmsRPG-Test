@@ -25,7 +25,10 @@ import {
 } from '@/lib/guided-creator/equipment-phase-candidates';
 import { validateWeaponHandSelection } from '@/lib/guided-creator/equipment-eligibility';
 import { buildEquipmentPhaseCardStats } from '@/lib/guided-creator/equipment-phase-stats';
-import { resolveItemUnitCost, wouldExceedCurrency } from '@/lib/guided-creator/equipment-currency';
+import {
+  resolveCatalogRowUnitCost,
+  wouldExceedCurrency,
+} from '@/lib/guided-creator/equipment-currency';
 import {
   addAllRecommendedEquipment,
   addItemToGuidedDraft,
@@ -203,7 +206,7 @@ export function GuidedEquipmentL1Phase({
         return;
       }
 
-      const unitCost = resolveItemUnitCost(catalog.get(normalizeId(ref.id)) ?? {});
+      const unitCost = resolveCatalogRowUnitCost(catalog.get(normalizeId(ref.id)));
       const qty = Math.max(1, ref.quantity ?? 1);
       if (wouldExceedCurrency(currencyRemaining, unitCost, qty)) {
         setHandMessage(phaseCopy.gearPhase.currencyBlocked);
@@ -230,7 +233,7 @@ export function GuidedEquipmentL1Phase({
     (ref: PathItemRecommendation, quantity: number) => {
       const qty = Math.max(1, quantity);
       if (phase === 'gear') {
-        const unitCost = resolveItemUnitCost(catalog.get(normalizeId(ref.id)) ?? {});
+        const unitCost = resolveCatalogRowUnitCost(catalog.get(normalizeId(ref.id)));
         const currentQty = selectedQuantity(phase, draft, ref.id);
         const deltaCost = unitCost * (qty - currentQty);
         if (deltaCost > 0 && deltaCost > currencyRemaining) {
@@ -252,7 +255,7 @@ export function GuidedEquipmentL1Phase({
     for (const ref of recommendedGearRefs) {
       const key = normalizeId(ref.id);
       if (draft.equipment.some((e) => normalizeId(e.id) === key)) continue;
-      const unitCost = resolveItemUnitCost(catalog.get(key) ?? {});
+      const unitCost = resolveCatalogRowUnitCost(catalog.get(key));
       const qty = Math.max(1, ref.quantity ?? 1);
       const line = unitCost * qty;
       if (line > remaining) continue;
@@ -319,7 +322,7 @@ export function GuidedEquipmentL1Phase({
           };
           const selected = isSelectedInPhase(phase, draft, row.id);
           const libraryRow = libraryRowForRef(row.id, officialItems, codexEquipment);
-          const unitCost = resolveItemUnitCost(row);
+          const unitCost = resolveCatalogRowUnitCost(row);
           const description =
             libraryRow && 'description' in libraryRow
               ? String(libraryRow.description ?? '').trim() || undefined

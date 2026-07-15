@@ -30,6 +30,21 @@ export interface CurrencyLineItem {
   properties?: ItemPropertyPayload[];
 }
 
+/** Pre-derived catalog row cost fields (avoids WeaponPropertyRef vs ItemPropertyPayload clash). */
+export type CatalogRowCostFields = Pick<
+  CurrencyLineItem,
+  'gold_cost' | 'currency' | 'cost' | 'costs'
+>;
+
+export type RefCostLookupItem = { id?: string | number } & CatalogRowCostFields;
+
+export function resolveCatalogRowUnitCost(
+  row: CatalogRowCostFields | null | undefined
+): number {
+  if (!row) return 0;
+  return resolveItemUnitCost(row);
+}
+
 /** Starting currency by level (matches equipment-step). */
 export function computeStartingCurrency(level = 1): number {
   if (level <= 1) return CHARACTER_STARTING_CURRENCY;
@@ -82,8 +97,8 @@ export function computeRemainingCurrency(starting: number, spent: number): numbe
 /** Resolve unit cost for a path item ref from official + codex libraries. */
 export function resolveRefUnitCost(
   ref: { id: string },
-  officialItems: Array<{ id?: string | number } & CurrencyLineItem>,
-  codexEquipment: Array<{ id?: string | number } & CurrencyLineItem>,
+  officialItems: Array<RefCostLookupItem & Pick<CurrencyLineItem, 'properties'>>,
+  codexEquipment: RefCostLookupItem[],
   itemProperties: ItemPropertyTpRow[] = []
 ): number {
   const key = String(ref.id).trim().toLowerCase();
@@ -92,7 +107,7 @@ export function resolveRefUnitCost(
   );
   if (official) return resolveItemUnitCost(official, itemProperties);
   const codex = codexEquipment.find((i) => String(i.id).trim().toLowerCase() === key);
-  if (codex) return resolveItemUnitCost(codex, itemProperties);
+  if (codex) return resolveCatalogRowUnitCost(codex);
   return 0;
 }
 

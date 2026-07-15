@@ -36,7 +36,7 @@ import {
   computeRemainingCurrency,
   computeSpentCurrency,
   computeStartingCurrency,
-  resolveItemUnitCost,
+  resolveCatalogRowUnitCost,
   resolveRefUnitCost,
 } from '@/lib/guided-creator/equipment-currency';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
@@ -124,7 +124,7 @@ export function LoadoutStep() {
   const resolveSpendCost = useCallback(
     (ref: { id: string }) => {
       const row = catalog.get(normalizeEqId(ref.id));
-      if (row) return resolveItemUnitCost(row);
+      if (row) return resolveCatalogRowUnitCost(row);
       return resolveRefUnitCost(ref, officialItems, codexEquipment, itemProperties);
     },
     [catalog, officialItems, codexEquipment, itemProperties]

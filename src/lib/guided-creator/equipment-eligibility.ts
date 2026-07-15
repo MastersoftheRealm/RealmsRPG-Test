@@ -10,7 +10,7 @@ import {
 } from '@/lib/game/weapon-attack-ability';
 import {
   GUIDED_GEAR_L2_MAX_UNIT_COST,
-  resolveItemUnitCost,
+  resolveCatalogRowUnitCost,
 } from '@/lib/guided-creator/equipment-currency';
 import type { Abilities, AbilityName } from '@/types';
 import type { ArchetypeCategory } from '@/types/archetype';
@@ -151,7 +151,7 @@ export function isEligibleForGuidedEquipmentL2(
   }
 
   if (ctx.phase === 'gear') {
-    const unit = resolveItemUnitCost(row);
+    const unit = resolveCatalogRowUnitCost(row);
     if (unit > GUIDED_GEAR_L2_MAX_UNIT_COST) return false;
     /** remainingCurrency = gear budget ceiling (starting − arms), not after current gear. */
     if (ctx.remainingCurrency != null && unit > ctx.remainingCurrency) return false;
@@ -189,10 +189,11 @@ export function validateWeaponHandSelection(
 
 export function rankWeaponCandidates(
   rows: EligibleEquipmentRow[],
-  ctx: Pick<
-    EquipmentEligibilityContext,
-    'pathRecommendedIds' | 'martAbil' | 'powAbil'
-  >
+  ctx: {
+    pathRecommendedIds?: Set<string>;
+    martAbil?: AbilityName | null;
+    powAbil?: AbilityName | null;
+  }
 ): EligibleEquipmentRow[] {
   const rec = ctx.pathRecommendedIds ?? new Set<string>();
   return [...rows].sort((a, b) => {
@@ -245,7 +246,7 @@ export function ineligibilityReason(
     return 'Common items only during character creation';
   }
 
-  if (ctx.phase === 'gear' && rowUnitCost(row) > GUIDED_GEAR_L2_MAX_UNIT_COST) {
+  if (ctx.phase === 'gear' && resolveCatalogRowUnitCost(row) > GUIDED_GEAR_L2_MAX_UNIT_COST) {
     return `Gear must cost ${GUIDED_GEAR_L2_MAX_UNIT_COST} Currency or less`;
   }
 
