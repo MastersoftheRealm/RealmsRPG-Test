@@ -1242,12 +1242,12 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Steps**
 1. Reach the optional flaw pick after characteristic.
-2. Confirm **No Flaw** appears as a card in the same grid as Flaw options (not a small button below).
-3. Select Skip; confirm selected check; click Next pick.
+2. Confirm **No Flaw** appears as a **peer** card in the same 2-column grid as Flaw options (same width as one Flaw card — not a full-row span, not a small button below).
+3. Select No Flaw; confirm selected check; click Next pick.
 4. Confirm flow advances to Abilities (no bonus ancestry trait step).
 
 **Expected**
-- Skip uses GuidedChoiceCard styling (title + description) in the compact choice grid.
+- Skip uses GuidedChoiceCard styling (title + description) in the compact choice grid at the same card footprint as other options.
 - Selecting Skip keeps the same card height as before selection (action-row slot stays reserved; does not shrink).
 - Selecting Skip then Next pick completes ancestry without the bonus trait pick.
 - Optional: Next pick with nothing selected still declines (existing footer skip path).

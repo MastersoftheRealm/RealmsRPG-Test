@@ -1,4 +1,6 @@
 
+- 2026-07-15 | agent | Ancestry No Flaw card peer width | files: ancestry-step, BUILD_VALIDATION T009, ALL_FEEDBACK | Summary: Remove sm:col-span-2 so No Flaw matches other flaw cards in the compact 2-column grid.
+
 - 2026-07-15 | agent | Guided creator mobile touch targets | files: expandable-chip, chip-options-panel, collapsible-section, guided-choice-styles, guided-skills-panel, guided-layer-nav, expandable-image, grid-list-row, detail-option-list | Summary: 44px tap targets on expand chips, chip options, See more/More details, collapsible section tips, layer nav, image preview; dedupe path detail descriptions on mobile.
 
 - 2026-07-15 | agent | Path detail mobile — dedupe option descriptions | files: detail-option-list, grid-list-row | Summary: DetailOptionList hides description column on mobile grid; GridListRow mobile summary shows prose without "Description:" label; expanded stats skip description when body already renders it. Fixes tripled copy in guided path More details option sections.

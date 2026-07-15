@@ -400,7 +400,6 @@ export function AncestryStep() {
                 selected={skipFlawSelected}
                 onSelect={handleSkipFlaw}
                 selectAriaLabel={stepCopy.skipFlaw}
-                className="sm:col-span-2"
               />
             )}
           </div>

@@ -1923,3 +1923,11 @@ Notes
 - Feedback: Look for oversight, overcomplication, shared-use gaps, rule compliance; fix issues.
 - Expected: Replacement budgets reclaimable; L1 Currency gated; See more for in-card deepen; shared cost helpers; docs/tests match shipped UI.
 - Disposition: Fixed — L2 gear/TP cross-phase reclaim; L1 currency gates; disclosure labels; DRY cost; type filter parity; T025/spec/copy cleanup.
+
+**Raw Feedback Log — 2026-07-15 (No Flaw card too wide)**
+- Date: 2026-07-15
+- Context: Guided creator → Ancestry → Take a flaw? → No Flaw card
+- Priority: Medium
+- Feedback: No Flaw is a long card dimensionally; it doesn’t fit well with the other cards.
+- Expected: Peer card in the same grid footprint as Flaw options (no full-row span).
+- Disposition: Fixed — removed `sm:col-span-2` from ancestry No Flaw GuidedChoiceCard.
