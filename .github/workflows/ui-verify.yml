@@ -58,8 +58,8 @@ jobs:
       - name: Build
         run: npm run build
       - name: Visual + accessibility (Playwright)
-        # Playwright's webServer starts `npm run start` automatically.
-        run: npx playwright test
+        # Core gate only: screenshots.pw.ts + a11y.pw.ts (audit suites use dedicated configs).
+        run: npm run verify:visual && npm run verify:a11y
       - name: Authenticated visual + a11y (optional — DEV-003 secrets)
         env:
           E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}

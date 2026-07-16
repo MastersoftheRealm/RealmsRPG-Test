@@ -50,6 +50,15 @@ export function useAuth() {
   useEffect(() => {
     if (!supabaseReady) return;
 
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY) {
+      if (mountedRef.current) {
+        setUser(null);
+        setInitialized(true);
+        setLoading(false);
+      }
+      return;
+    }
+
     const supabase = createClient();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
