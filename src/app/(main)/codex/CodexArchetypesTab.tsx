@@ -28,7 +28,7 @@ const ARCHETYPE_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'type', label: 'TYPE' },
   { key: 'abilities', label: 'ABILITIES' },
-  { key: '_desc', label: 'DESCRIPTION', sortable: false as const, align: 'left' as const },
+  { key: '_desc', label: 'DESCRIPTION', align: 'left' as const },
 ];
 
 function capitalizeAbility(value?: string): string {

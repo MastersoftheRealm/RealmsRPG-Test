@@ -6,7 +6,7 @@
 
 'use client';
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Plus, Wand2, Zap, Target, Info } from 'lucide-react';
 import {
@@ -22,6 +22,7 @@ import {
   type PowerPart,
   type TechniquePart,
   type CreatorWeaponOption,
+  type UseLoadModalLibraryReturn,
 } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { findByIdOrName, PART_IDS } from '@/lib/id-constants';
@@ -44,7 +45,6 @@ import {
 import {
   ACTION_OPTIONS,
   AREA_TYPES,
-  CREATOR_CACHE_KEYS,
   DIE_SIZES,
   DURATION_TYPES,
   DURATION_VALUES,
@@ -59,61 +59,25 @@ import {
   PowerPartCard,
 } from '@/components/creator';
 import { Button, Checkbox, Input, Textarea, LoadingState, Card } from '@/components/ui';
-import { ValueStepper, SectionCostBadge } from '@/components/shared';
+import { ValueStepper, SectionCostBadge, ErrorDisplay } from '@/components/shared';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { EXCLUDED_PARTS } from '@/app/(main)/power-creator/power-creator-constants';
+import { shouldPersistCreatorWeaponId } from '@/lib/creator-weapon-persistence';
+
 import {
-  inferEmpoweredWeaponTpFromPowerPayload,
-  shouldPersistCreatorWeaponId,
-} from '@/lib/creator-weapon-persistence';
+  bootstrapEmpoweredTechniqueFormState,
+  empoweredLibraryRecordToFormState,
+  EMPOWERED_TECHNIQUE_CREATOR_CACHE_KEY as CACHE_KEY,
+  type EmpoweredTechniqueCache,
+  type EmpoweredTechniqueFormState,
+  type EmpoweredDamageConfig as DamageConfig,
+  type EmpoweredRangeConfig as RangeConfig,
+  type SelectedPowerPart,
+  type SelectedTechniquePart,
+} from './empowered-technique-bootstrap';
+import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
 
-interface DamageConfig {
-  amount: number;
-  size: number;
-  type: string;
-  applyDuration?: boolean;
-}
-
-interface RangeConfig {
-  steps: number;
-}
-
-interface SelectedPowerPart {
-  part: PowerPart;
-  op_1_lvl: number;
-  op_2_lvl: number;
-  op_3_lvl: number;
-  applyDuration: boolean;
-  selectedCategory: string;
-}
-
-interface SelectedTechniquePart {
-  part: TechniquePart;
-  op_1_lvl: number;
-  op_2_lvl: number;
-  op_3_lvl: number;
-  selectedCategory: string;
-}
-
-interface EmpoweredTechniqueCache {
-  name: string;
-  description: string;
-  actionType: string;
-  isReaction: boolean;
-  powerDamages: DamageConfig[];
-  techniqueDamage: { amount: number; size: number };
-  weaponId: string | number;
-  range: RangeConfig;
-  area: AreaConfig;
-  duration: DurationConfig;
-  selectedPowerParts: Array<{ partId: string | number; op_1_lvl: number; op_2_lvl: number; op_3_lvl: number; applyDuration: boolean; selectedCategory: string }>;
-  selectedPowerAdvancedParts: Array<{ partId: string | number; op_1_lvl: number; op_2_lvl: number; op_3_lvl: number; applyDuration: boolean; selectedCategory: string }>;
-  selectedTechniqueParts: Array<{ partId: string | number; op_1_lvl: number; op_2_lvl: number; op_3_lvl: number; selectedCategory: string }>;
-  timestamp: number;
-}
-
-const CACHE_KEY = CREATOR_CACHE_KEYS.EMPOWERED_TECHNIQUE;
 const DEFAULT_WEAPON_OPTIONS: CreatorWeaponOption[] = [
   { id: 0, name: 'Unarmed Prowess', tp: 0, weaponLibrary: 'builtin' },
 ];
@@ -123,38 +87,15 @@ function EmpoweredTechniqueCreatorContent() {
   const { isAdmin } = useAdmin();
   const searchParams = useSearchParams();
   const editId = searchParams.get('edit');
-  const editLoadedRef = useRef(false);
   const load = useLoadModalLibrary('empowered-technique');
-
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [actionType, setActionType] = useState('basic');
-  const [isReaction, setIsReaction] = useState(false);
-  const [powerDamages, setPowerDamages] = useState<DamageConfig[]>([{ amount: 0, size: 6, type: 'none', applyDuration: false }]);
-  const [techniqueDamage, setTechniqueDamage] = useState<{ amount: number; size: number }>({ amount: 0, size: 6 });
-  const [range, setRange] = useState<RangeConfig>({ steps: 0 });
-  const [area, setArea] = useState<AreaConfig>({ type: 'none', level: 1, applyDuration: false });
-  const [duration, setDuration] = useState<DurationConfig>({
-    type: 'instant',
-    value: 1,
-    applyDuration: false,
-    focus: false,
-    noHarm: false,
-    endsOnActivation: false,
-    sustain: 0,
-  });
-  const [weapon, setWeapon] = useState<CreatorWeaponOption>(DEFAULT_WEAPON_OPTIONS[0]);
-  const [weaponLibrarySource, setWeaponLibrarySource] = useState<SourceFilterValue>('my');
-  const [selectedPowerParts, setSelectedPowerParts] = useState<SelectedPowerPart[]>([]);
-  const [selectedPowerAdvancedParts, setSelectedPowerAdvancedParts] = useState<SelectedPowerPart[]>([]);
-  const [selectedTechniqueParts, setSelectedTechniqueParts] = useState<SelectedTechniquePart[]>([]);
 
   const { data: powerParts = [], isLoading: powerPartsLoading, error: powerPartsError, refetch: refetchPowerParts } = usePowerParts();
   const { data: techniqueParts = [], isLoading: techniquePartsLoading, error: techniquePartsError, refetch: refetchTechniqueParts } = useTechniqueParts();
   const { data: userItems = [] } = useUserItems();
   const { data: itemPropertiesDb = [] } = useItemProperties();
   const { data: officialItems = [] } = useOfficialLibrary('items');
+
+  const [weaponLibrarySource, setWeaponLibrarySource] = useState<SourceFilterValue>('my');
 
   const { fullOptions: allWeaponOptions, visibleOptions } = useCreatorWeaponOptions({
     defaults: DEFAULT_WEAPON_OPTIONS,
@@ -163,6 +104,150 @@ function EmpoweredTechniqueCreatorContent() {
     itemPropertiesDb,
     librarySource: weaponLibrarySource,
   });
+
+  const sessionKey = editId ?? 'draft';
+  // Ready once both part databases exist; in ?edit= mode also wait for the
+  // library fetch to settle (rawItems may legitimately stay empty — fall back to blank form).
+  const bootstrapReady =
+    powerParts.length > 0 &&
+    techniqueParts.length > 0 &&
+    allWeaponOptions.length > 0 &&
+    (!editId || !load.isLoading);
+
+  // One-time render adjust per sessionKey: compute the initial form state exactly
+  // once when data is ready (no hydrate effect, no recompute on later re-renders).
+  const [bootstrapState, setBootstrapState] = useState<{
+    key: string;
+    form: EmpoweredTechniqueFormState;
+  } | null>(null);
+  if (bootstrapReady && bootstrapState?.key !== sessionKey) {
+    setBootstrapState({
+      key: sessionKey,
+      form: bootstrapEmpoweredTechniqueFormState({
+        editId,
+        powerParts,
+        techniqueParts,
+        allWeaponOptions,
+        defaultWeapon: DEFAULT_WEAPON_OPTIONS[0],
+        rawItems: load.rawItems,
+      }),
+    });
+  }
+  const initialFormState = bootstrapState?.key === sessionKey ? bootstrapState.form : null;
+
+  const partsError = powerPartsError ?? techniquePartsError ?? null;
+  if (partsError) {
+    return (
+      <div className="min-h-screen bg-background">
+        <ErrorDisplay
+          message={`Failed to load empowered technique creator: ${partsError.message}`}
+          onRetry={() => {
+            void refetchPowerParts();
+            void refetchTechniqueParts();
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (!initialFormState) {
+    return (
+      <div className="min-h-screen bg-background">
+        <LoadingState message="Loading empowered technique creator..." padding="lg" />
+      </div>
+    );
+  }
+
+  return (
+    <EmpoweredTechniqueWorkspace
+      key={sessionKey}
+      initialFormState={initialFormState}
+      editId={editId}
+      user={user}
+      isAdmin={isAdmin}
+      powerParts={powerParts}
+      techniqueParts={techniqueParts}
+      allWeaponOptions={allWeaponOptions}
+      visibleOptions={visibleOptions}
+      weaponLibrarySource={weaponLibrarySource}
+      setWeaponLibrarySource={setWeaponLibrarySource}
+      load={load}
+      powerPartsLoading={powerPartsLoading}
+      techniquePartsLoading={techniquePartsLoading}
+      powerPartsError={powerPartsError ?? null}
+      techniquePartsError={techniquePartsError ?? null}
+      refetchPowerParts={refetchPowerParts}
+      refetchTechniqueParts={refetchTechniqueParts}
+    />
+  );
+}
+
+interface EmpoweredTechniqueWorkspaceProps {
+  initialFormState: EmpoweredTechniqueFormState;
+  editId: string | null;
+  user: ReturnType<typeof useAuthStore.getState>['user'];
+  isAdmin: boolean;
+  powerParts: PowerPart[];
+  techniqueParts: TechniquePart[];
+  allWeaponOptions: CreatorWeaponOption[];
+  visibleOptions: CreatorWeaponOption[];
+  weaponLibrarySource: SourceFilterValue;
+  setWeaponLibrarySource: (value: SourceFilterValue) => void;
+  load: UseLoadModalLibraryReturn;
+  powerPartsLoading: boolean;
+  techniquePartsLoading: boolean;
+  powerPartsError: Error | null;
+  techniquePartsError: Error | null;
+  refetchPowerParts: () => void;
+  refetchTechniqueParts: () => void;
+}
+
+function EmpoweredTechniqueWorkspace({
+  initialFormState,
+  editId,
+  user,
+  isAdmin,
+  powerParts,
+  techniqueParts,
+  allWeaponOptions,
+  visibleOptions,
+  weaponLibrarySource,
+  setWeaponLibrarySource,
+  load,
+  powerPartsLoading,
+  techniquePartsLoading,
+  powerPartsError,
+  techniquePartsError,
+  refetchPowerParts,
+  refetchTechniqueParts,
+}: EmpoweredTechniqueWorkspaceProps) {
+  const [name, setName] = useState(initialFormState.name);
+  const [description, setDescription] = useState(initialFormState.description);
+  const [actionType, setActionType] = useState(initialFormState.actionType);
+  const [isReaction, setIsReaction] = useState(initialFormState.isReaction);
+  const [powerDamages, setPowerDamages] = useState<DamageConfig[]>(initialFormState.powerDamages);
+  const [techniqueDamage, setTechniqueDamage] = useState<{ amount: number; size: number }>(
+    initialFormState.techniqueDamage,
+  );
+  const [range, setRange] = useState<RangeConfig>(initialFormState.range);
+  const [area, setArea] = useState<AreaConfig>(initialFormState.area);
+  const [duration, setDuration] = useState<DurationConfig>(initialFormState.duration);
+  const [weapon, setWeapon] = useState<CreatorWeaponOption>(initialFormState.weapon);
+  const [selectedPowerParts, setSelectedPowerParts] = useState<SelectedPowerPart[]>(
+    initialFormState.selectedPowerParts,
+  );
+  const [selectedPowerAdvancedParts, setSelectedPowerAdvancedParts] = useState<SelectedPowerPart[]>(
+    initialFormState.selectedPowerAdvancedParts,
+  );
+  const [selectedTechniqueParts, setSelectedTechniqueParts] = useState<SelectedTechniquePart[]>(
+    initialFormState.selectedTechniqueParts,
+  );
+
+  // ?edit= mode: clear any stale draft once on mount (parity with the old hydrate
+  // effect, which removed the cache after loading the edit target).
+  useEffect(() => {
+    if (editId) clearCreatorCache(CACHE_KEY);
+  }, [editId]);
 
   const nonMechanicPowerParts = useMemo(
     () => powerParts.filter((part: PowerPart) => !part.mechanic),
@@ -459,7 +544,23 @@ function EmpoweredTechniqueCreatorContent() {
     setSelectedPowerParts([]);
     setSelectedPowerAdvancedParts([]);
     setSelectedTechniqueParts([]);
-    localStorage.removeItem(CACHE_KEY);
+    clearCreatorCache(CACHE_KEY);
+  }, []);
+
+  const applyFormState = useCallback((next: EmpoweredTechniqueFormState) => {
+    setName(next.name);
+    setDescription(next.description);
+    setActionType(next.actionType);
+    setIsReaction(next.isReaction);
+    setPowerDamages(next.powerDamages);
+    setTechniqueDamage(next.techniqueDamage);
+    setRange(next.range);
+    setArea(next.area);
+    setDuration(next.duration);
+    setWeapon(next.weapon);
+    setSelectedPowerParts(next.selectedPowerParts);
+    setSelectedPowerAdvancedParts(next.selectedPowerAdvancedParts);
+    setSelectedTechniqueParts(next.selectedTechniqueParts);
   }, []);
 
   const getPayload = useCallback(() => {
@@ -561,203 +662,24 @@ function EmpoweredTechniqueCreatorContent() {
 
   const handleLoadEmpoweredTechnique = useCallback(
     (doc: unknown) => {
-      const data = doc as {
-        name?: string;
-        description?: string;
-        empoweredTechnique?: boolean;
-        actionType?: string;
-        isReaction?: boolean;
-        power?: {
-          parts?: Array<{ id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number; applyDuration?: boolean }>;
-          mechanics?: Array<{ id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number; applyDuration?: boolean }>;
-          autoMechanics?: Array<{ id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number; applyDuration?: boolean }>;
-          damage?: DamageConfig[];
-          range?: RangeConfig;
-          area?: AreaConfig;
-          duration?: DurationConfig;
-          addWeapon?: CreatorWeaponOption | null;
-          addWeaponPowerPart?: { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number } | null;
-        };
-        technique?: {
-          parts?: Array<{ id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }>;
-          additionalDamage?: Array<{ amount?: number; size?: number }>;
-        };
-      };
-
-      if (!data.empoweredTechnique) return;
-      resetState();
-      setName(data.name || '');
-      setDescription(data.description || '');
-      setActionType(data.actionType || 'basic');
-      setIsReaction(Boolean(data.isReaction));
-      setPowerDamages(data.power?.damage && data.power.damage.length > 0 ? data.power.damage : [{ amount: 0, size: 6, type: 'none', applyDuration: false }]);
-      setRange(data.power?.range || { steps: 0 });
-      setArea(data.power?.area || { type: 'none', level: 1, applyDuration: false });
-      setDuration(
-        data.power?.duration || {
-          type: 'instant',
-          value: 1,
-          applyDuration: false,
-          focus: false,
-          noHarm: false,
-          endsOnActivation: false,
-          sustain: 0,
-        }
+      const next = empoweredLibraryRecordToFormState(
+        doc,
+        powerParts,
+        techniqueParts,
+        allWeaponOptions,
+        DEFAULT_WEAPON_OPTIONS[0],
       );
-
-      const additionalDamage = data.technique?.additionalDamage?.[0];
-      setTechniqueDamage({
-        amount: additionalDamage?.amount ?? 0,
-        size: additionalDamage?.size ?? 6,
-      });
-
-      if (data.power?.addWeapon) {
-        const foundWeapon = allWeaponOptions.find(
-          (option) => String(option.id) === String(data.power?.addWeapon?.id) || option.name === data.power?.addWeapon?.name
-        );
-        if (foundWeapon) setWeapon(foundWeapon);
-      } else {
-        const requiredWeaponTp = inferEmpoweredWeaponTpFromPowerPayload(data.power);
-        if (requiredWeaponTp > 0) {
-          const tpMatch = allWeaponOptions.find((option) => (option.tp ?? 0) === requiredWeaponTp);
-          if (tpMatch) setWeapon(tpMatch);
-        }
-      }
-
-      const loadedPowerParts = (data.power?.parts || []).map((part) => {
-        const match = powerParts.find((dbPart) => String(dbPart.id) === String(part.id) || dbPart.name === part.name);
-        if (!match) return null;
-        return {
-          part: match,
-          op_1_lvl: part.op_1_lvl || 0,
-          op_2_lvl: part.op_2_lvl || 0,
-          op_3_lvl: part.op_3_lvl || 0,
-          applyDuration: part.applyDuration || false,
-          selectedCategory: match.category || 'any',
-        } satisfies SelectedPowerPart;
-      }).filter((row): row is SelectedPowerPart => row !== null);
-      setSelectedPowerParts(loadedPowerParts);
-
-      const loadedPowerMechanics = (data.power?.mechanics || []).map((part) => {
-        const match = powerParts.find((dbPart) => String(dbPart.id) === String(part.id) || dbPart.name === part.name);
-        if (!match) return null;
-        return {
-          part: match,
-          op_1_lvl: part.op_1_lvl || 0,
-          op_2_lvl: part.op_2_lvl || 0,
-          op_3_lvl: part.op_3_lvl || 0,
-          applyDuration: part.applyDuration || false,
-          selectedCategory: match.category || 'any',
-        } satisfies SelectedPowerPart;
-      }).filter((row): row is SelectedPowerPart => row !== null);
-      setSelectedPowerAdvancedParts(loadedPowerMechanics);
-
-      const loadedTechniqueParts = (data.technique?.parts || []).map((part) => {
-        const match = techniqueParts.find((dbPart) => String(dbPart.id) === String(part.id) || dbPart.name === part.name);
-        if (!match) return null;
-        return {
-          part: match,
-          op_1_lvl: part.op_1_lvl || 0,
-          op_2_lvl: part.op_2_lvl || 0,
-          op_3_lvl: part.op_3_lvl || 0,
-          selectedCategory: match.category || 'any',
-        } satisfies SelectedTechniquePart;
-      }).filter((row): row is SelectedTechniquePart => row !== null);
-      setSelectedTechniqueParts(loadedTechniqueParts);
-
+      if (!next) return;
+      applyFormState(next);
       save.setSaveMessage({ type: 'success', text: 'Empowered technique loaded successfully!' });
       setTimeout(() => save.setSaveMessage(null), 2000);
     },
-    [allWeaponOptions, powerParts, resetState, techniqueParts, save]
+    [allWeaponOptions, powerParts, techniqueParts, applyFormState, save]
   );
 
+  // Auto-save draft to localStorage (skip when editing an existing library row via ?edit=)
   useEffect(() => {
-    if (isInitialized || powerParts.length === 0 || techniqueParts.length === 0 || editId) return;
-    try {
-      const raw = localStorage.getItem(CACHE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as EmpoweredTechniqueCache;
-        const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-        if (Date.now() - parsed.timestamp < thirtyDays) {
-          setName(parsed.name || '');
-          setDescription(parsed.description || '');
-          setActionType(parsed.actionType || 'basic');
-          setIsReaction(Boolean(parsed.isReaction));
-          setPowerDamages(parsed.powerDamages || [{ amount: 0, size: 6, type: 'none', applyDuration: false }]);
-          setTechniqueDamage(parsed.techniqueDamage || { amount: 0, size: 6 });
-          setRange(parsed.range || { steps: 0 });
-          setArea(parsed.area || { type: 'none', level: 1, applyDuration: false });
-          setDuration(parsed.duration || {
-            type: 'instant',
-            value: 1,
-            applyDuration: false,
-            focus: false,
-            noHarm: false,
-            endsOnActivation: false,
-            sustain: 0,
-          });
-          const selectedWeapon = allWeaponOptions.find((option) => String(option.id) === String(parsed.weaponId));
-          if (selectedWeapon) setWeapon(selectedWeapon);
-
-          setSelectedPowerParts(
-            (parsed.selectedPowerParts || [])
-              .map((row) => {
-                const part = powerParts.find((dbPart) => String(dbPart.id) === String(row.partId));
-                if (!part) return null;
-                return {
-                  part,
-                  op_1_lvl: row.op_1_lvl,
-                  op_2_lvl: row.op_2_lvl,
-                  op_3_lvl: row.op_3_lvl,
-                  applyDuration: row.applyDuration,
-                  selectedCategory: row.selectedCategory,
-                } satisfies SelectedPowerPart;
-              })
-              .filter((row): row is SelectedPowerPart => row !== null)
-          );
-          setSelectedPowerAdvancedParts(
-            (parsed.selectedPowerAdvancedParts || [])
-              .map((row) => {
-                const part = powerParts.find((dbPart) => String(dbPart.id) === String(row.partId));
-                if (!part) return null;
-                return {
-                  part,
-                  op_1_lvl: row.op_1_lvl,
-                  op_2_lvl: row.op_2_lvl,
-                  op_3_lvl: row.op_3_lvl,
-                  applyDuration: row.applyDuration,
-                  selectedCategory: row.selectedCategory,
-                } satisfies SelectedPowerPart;
-              })
-              .filter((row): row is SelectedPowerPart => row !== null)
-          );
-          setSelectedTechniqueParts(
-            (parsed.selectedTechniqueParts || [])
-              .map((row) => {
-                const part = techniqueParts.find((dbPart) => String(dbPart.id) === String(row.partId));
-                if (!part) return null;
-                return {
-                  part,
-                  op_1_lvl: row.op_1_lvl,
-                  op_2_lvl: row.op_2_lvl,
-                  op_3_lvl: row.op_3_lvl,
-                  selectedCategory: row.selectedCategory,
-                } satisfies SelectedTechniquePart;
-              })
-              .filter((row): row is SelectedTechniquePart => row !== null)
-          );
-        } else {
-          localStorage.removeItem(CACHE_KEY);
-        }
-      }
-    } catch {
-    } finally {
-      setIsInitialized(true);
-    }
-  }, [allWeaponOptions, editId, isInitialized, powerParts, techniqueParts]);
-
-  useEffect(() => {
-    if (!isInitialized) return;
+    if (editId) return;
     const cache: EmpoweredTechniqueCache = {
       name,
       description,
@@ -794,13 +716,13 @@ function EmpoweredTechniqueCreatorContent() {
       })),
       timestamp: Date.now(),
     };
-    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+    writeCreatorCache(CACHE_KEY, cache);
   }, [
     actionType,
     area,
     description,
     duration,
-    isInitialized,
+    editId,
     isReaction,
     name,
     powerDamages,
@@ -811,23 +733,6 @@ function EmpoweredTechniqueCreatorContent() {
     techniqueDamage,
     weapon.id,
   ]);
-
-  useEffect(() => {
-    if (!editId || !load.rawItems.length || powerParts.length === 0 || techniqueParts.length === 0 || editLoadedRef.current) return;
-    const match = load.rawItems.find(
-      (item) =>
-        String((item as { docId?: string; id?: string }).docId) === editId ||
-        String((item as { docId?: string; id?: string }).id) === editId
-    );
-    editLoadedRef.current = true;
-    if (!match) {
-      setIsInitialized(true);
-      return;
-    }
-    handleLoadEmpoweredTechnique(match);
-    localStorage.removeItem(CACHE_KEY);
-    setIsInitialized(true);
-  }, [editId, handleLoadEmpoweredTechnique, load.rawItems, powerParts.length, techniqueParts.length]);
 
   const addPowerPart = useCallback(() => {
     if (nonMechanicPowerParts.length === 0) return;

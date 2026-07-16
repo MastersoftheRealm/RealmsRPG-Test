@@ -13,8 +13,8 @@ Agents must **not** load WAITING, the done archive, or historical dumps at sessi
 1. Pick highest-priority open task in `ACTIVE_TASKS.md` (`not-started` / continue `partial` / `in-progress`).
 2. Blocked or human `assignee:` work stays in `WAITING_TASKS.md` until unblocked.
 3. Set `status: in-progress` while working.
-4. Mark **`done` only** when all acceptance criteria pass (see constitution Definition of Done). Otherwise **`partial`** + `completed_work` / `remaining_work` / `follow_up_tasks`.
-5. When marking `done`: move the task block from `ACTIVE_TASKS.md` into `archive/TASK_QUEUE_DONE.md` (append). Prefer keeping ACTIVE under ~20 KB / ≤40 items.
+4. Mark **`done`** when all implementable acceptance criteria pass (build, targeted tests, docs — see constitution Definition of Done). Set **`verification_status`** on archive (see Verification gate). Otherwise **`partial`** + `completed_work` / `remaining_work` / `follow_up_tasks`.
+5. When marking `done`: move the task block from `ACTIVE_TASKS.md` into `archive/TASK_QUEUE_DONE.md` (append). If user-facing and manual QA not yet run → `verification_status: pending-qa` and add to `DEVELOPER_TASK_QUEUE.md` → Pending owner QA. Prefer keeping ACTIVE under ~20 KB / ≤40 items.
 6. Append `AI_CHANGELOG.md`. User-facing: `BUILD_VALIDATION.md` + `developer_test_plan` as required.
 7. Human-only steps → `DEVELOPER_TASK_QUEUE.md`.
 

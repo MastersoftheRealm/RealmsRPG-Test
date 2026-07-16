@@ -23,6 +23,7 @@ import {
   toDbRowSpecies,
   type ColumnarLibraryType,
 } from '@/lib/library-columnar';
+import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
 
 const VALID_TYPES = ['powers', 'techniques', 'empowered-techniques', 'items', 'creatures', 'species'] as const;
 type LibraryType = (typeof VALID_TYPES)[number];
@@ -97,6 +98,7 @@ export async function GET(
         .select('*')
         .eq('user_id', user.uid);
       const list = (rows ?? []) as Record<string, unknown>[];
+      await enrichRowsWithBankImageUrls(supabase, list);
       const items = list.map((r) => rowToItem(type, r, 'user'));
       items.sort((a, b) => {
         const na = String((a as Record<string, unknown>).name ?? '');

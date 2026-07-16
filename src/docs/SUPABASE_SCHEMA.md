@@ -39,11 +39,11 @@ All codex tables are **columnar** and live in **public** (no `codex` schema). Ar
 |-------|--------|------------------------|
 | `codex_feats` | Columnar | id (PK), name, description, req_desc, ability_req (TEXT), abil_req_val (TEXT), skill_req (TEXT), skill_req_val (TEXT), feat_cat_req, pow_abil_req, mart_abil_req, pow_prof_req, mart_prof_req, speed_req, feat_lvl, lvl_req, uses_per_rec, rec_period, category, ability, tags (TEXT), char_feat, state_feat, base_feat_id (TEXT, nullable) |
 | `codex_skills` | Columnar | id (PK), name, description, ability, base_skill (TEXT), success_desc, failure_desc, ds_calc, craft_failure_desc, craft_success_desc |
-| `codex_species` | Columnar | id (PK), name, description, type, sizes (TEXT), skills (TEXT), species_traits (TEXT), ancestry_traits (TEXT), flaws (TEXT), characteristics (TEXT), ave_hgt_cm, ave_wgt_kg, adulthood_lifespan (TEXT), languages (TEXT), **is_starter (BOOLEAN)**, **image_url (TEXT, nullable)** — public URL for card art in `codex-art` Storage bucket |
+| `codex_species` | Columnar | id (PK), name, description, type, sizes (TEXT), skills (TEXT), species_traits (TEXT), ancestry_traits (TEXT), flaws (TEXT), characteristics (TEXT), ave_hgt_cm, ave_wgt_kg, adulthood_lifespan (TEXT), languages (TEXT), **is_starter (BOOLEAN)**, **image_id (UUID, nullable FK → realms_images)**, **image_url (TEXT, nullable)** — denormalized cache; interim entity-tied `codex-art` URLs until TASK-498 backfill (ADR-0003 / TASK-494) |
 | `codex_traits` | Columnar | id (PK), name, description, uses_per_rec, rec_period, flaw, characteristic, option_trait_ids (TEXT) |
 | `codex_parts` | Columnar | id (PK), name, description, category, base_en, base_tp, op_1_desc, op_1_en, op_1_tp, op_2_desc, op_2_en, op_2_tp, op_3_desc, op_3_en, op_3_tp, type, mechanic, percentage, duration, defense (TEXT) |
 | `codex_properties` | Columnar | id (PK), name, description, base_ip, base_tp, base_c, op_1_desc, op_1_ip, op_1_tp, op_1_c, type, mechanic |
-| `codex_equipment` | Columnar | id (PK), name, description, category, currency, rarity |
+| `codex_equipment` | Columnar | id (PK), name, description, category, currency, rarity, **image_id (UUID, nullable FK → realms_images)**, **image_url (TEXT, nullable)** — equipment is a first-class Image Library category (TASK-494) |
 | `codex_archetypes` | Columnar | id (PK), name, type, description, archetype_ability, secondary_ability, power_prof_start, martial_prof_start, power_prof_level5, martial_prof_level5, level1_feats (TEXT), level1_skills (TEXT), level1_powers (TEXT), **level1_innate_powers (TEXT, applied TASK-473 2026-07-15)** — CSV → `path_data.level1.innatePowers`, level1_techniques (TEXT), level1_armaments (TEXT), level1_equipment (TEXT), level1_recommend_unarmed_prowess (BOOLEAN), level1_remove_feats (TEXT), level1_remove_powers (TEXT), level1_remove_techniques (TEXT), level1_remove_armaments (TEXT), level1_notes (TEXT), level1_recommended_species (TEXT), level1_guidance_groups (JSONB), **level1_recommended_abilities (JSONB)**, **level1_loadouts (JSONB)** (optional metadata `{ armorStep?, sharedEquipment? }` only; kit arrays removed TASK-442; weapon/armor/gear picks use `level1_armaments` / `level1_equipment`); **legacy:** `path_data` (JSONB, optional — pre-columnar compat; GET /api/codex composes `path_data` from level1 columns + `codex_archetype_levels`). **Player picker visibility:** paths appear in creator/codex/sheet switcher only when level 1 has at least one add recommendation (feats/skills/powers/innatePowers/techniques/armaments/equipment); see `src/docs/human/CODEX_SCHEMA_REFERENCE.md` and `pathHasPlayerVisibleLevel1()` |
 | `codex_archetype_levels` | Columnar | id (PK), archetype_id (FK → codex_archetypes.id), level, feats (TEXT), skills (TEXT), powers (TEXT), techniques (TEXT), armaments (TEXT), equipment (TEXT), remove_feats (TEXT), remove_powers (TEXT), remove_techniques (TEXT), remove_armaments (TEXT), notes |
 | `codex_creature_feats` | Columnar | id (PK), name, description, feat_points, feat_lvl, lvl_req, mechanic |
@@ -57,11 +57,11 @@ All **columnar** (scalars + `payload` JSONB). Legacy `public_*` JSONB tables (`p
 
 | Table | Shape | Key columns |
 |-------|--------|-------------|
-| `official_powers` | Columnar | id (PK), name, description, action_type, is_reaction, innate, range/duration/area/damage columns, payload (JSONB), created_at, updated_at |
-| `official_techniques` | Columnar | id (PK), name, description, action_type, weapon_name, promoted columns, payload (JSONB), created_at, updated_at |
-| `official_empowered_techniques` | Columnar | Same shape as official_techniques |
-| `official_items` | Columnar | id (PK), name, description, type, rarity, armor_value, damage_reduction, promoted columns, **image_url (TEXT, nullable)** — armament card art (weapon/armor/shield) in `codex-art` bucket, payload (JSONB), created_at, updated_at |
-| `official_creatures` | Columnar | id (PK), name, description, level, type, size, hit_points, energy_points, payload (JSONB), created_at, updated_at |
+| `official_powers` | Columnar | id (PK), name, description, action_type, is_reaction, innate, range/duration/area/damage columns, **image_id (UUID, nullable FK → realms_images)**, **image_url (TEXT, nullable)** cache, payload (JSONB), created_at, updated_at |
+| `official_techniques` | Columnar | id (PK), name, description, action_type, weapon_name, promoted columns, **image_id**, **image_url** cache, payload (JSONB), created_at, updated_at |
+| `official_empowered_techniques` | Columnar | Same shape as official_techniques + **image_id** (picker uses power\|technique tags — no separate category), **image_url** cache |
+| `official_items` | Columnar | id (PK), name, description, type, rarity, armor_value, damage_reduction, promoted columns, **image_id (UUID, nullable FK → realms_images)**, **image_url (TEXT, nullable)** — armament/equipment art cache, payload (JSONB), created_at, updated_at |
+| `official_creatures` | Columnar | id (PK), name, description, level, type, size, hit_points, energy_points, **image_id**, **image_url** cache, payload (JSONB), created_at, updated_at |
 
 **API:** `GET /api/public/[type]` reads `official_*` only (returns `[]` if the table is missing). `POST`/`DELETE` require admin and write to `official_*`. Legacy `public_*` JSONB tables were dropped; do not reference them in app code.
 
@@ -75,16 +75,43 @@ All **columnar** (scalars + `payload` JSONB). Species matches codex_species colu
 
 | Table | Shape | Key columns |
 |-------|--------|-------------|
-| `user_powers` | Columnar | id (PK), user_id (FK), name, description, action_type, is_reaction, innate, created_at, updated_at, payload (JSONB); **planned:** `image_url (TEXT)` |
-| `user_techniques` | Columnar | id (PK), user_id (FK), name, description, action_type, weapon_name, created_at, updated_at, payload (JSONB); **planned:** `image_url (TEXT)` |
-| `user_empowered_techniques` | Columnar | id (PK), user_id (FK), name, description, action_type, weapon_name, created_at, updated_at, payload (JSONB) |
-| `user_items` | Columnar | id (PK), user_id (FK), name, description, type, rarity, armor_value, damage_reduction, created_at, updated_at, payload (JSONB); **planned:** `image_url (TEXT)` — same semantics as `official_items.image_url` (TASK-415) |
-| `user_creatures` | Columnar | id (PK), user_id (FK), name, description, level, type, size, hit_points, energy_points, created_at, updated_at, payload (JSONB); **planned:** `image_url (TEXT)` |
-| `user_species` | Columnar | id (PK), user_id (FK), name, description, type, sizes, skills, species_traits, ancestry_traits, flaws, characteristics, ave_hgt_cm, ave_wgt_kg, adulthood_lifespan, languages, created_at, updated_at, payload (JSONB); **planned:** `image_url (TEXT)` — same semantics as `codex_species.image_url` |
+| `user_powers` | Columnar | id (PK), user_id (FK), name, description, action_type, is_reaction, innate, created_at, updated_at, payload (JSONB); **planned:** `image_id` FK → `realms_images` (+ optional `image_url` cache) |
+| `user_techniques` | Columnar | id (PK), user_id (FK), name, description, action_type, weapon_name, created_at, updated_at, payload (JSONB); **planned:** `image_id` FK → `realms_images` (+ optional `image_url` cache) |
+| `user_empowered_techniques` | Columnar | id (PK), user_id (FK), name, description, action_type, weapon_name, created_at, updated_at, payload (JSONB); **planned:** `image_id` (power\|technique picker tags) |
+| `user_items` | Columnar | id (PK), user_id (FK), name, description, type, rarity, armor_value, damage_reduction, created_at, updated_at, payload (JSONB); **planned:** `image_id` FK → `realms_images` (+ optional `image_url` cache) — same semantics as `official_items` (TASK-497) |
+| `user_creatures` | Columnar | id (PK), user_id (FK), name, description, level, type, size, hit_points, energy_points, created_at, updated_at, payload (JSONB); **planned:** `image_id` FK → `realms_images` (+ optional `image_url` cache) |
+| `user_species` | Columnar | id (PK), user_id (FK), name, description, type, sizes, skills, species_traits, ancestry_traits, flaws, characteristics, ave_hgt_cm, ave_wgt_kg, adulthood_lifespan, languages, created_at, updated_at, payload (JSONB); **planned:** `image_id` FK → `realms_images` (+ optional `image_url` cache) — same semantics as `codex_species` |
 
-**User-library image parity (TASK-415, REALMS §5.0.3):** `user_powers`, `user_techniques`, `user_items`, `user_creatures`, and `user_species` should each gain nullable `image_url` matching their official/codex counterparts. Copy official → user on add-to-library; creators and guided pickers read the same field. Simple gear (`codex_equipment`) uses **art bank** presets only — no per-row codex column.
+**User-library image parity (TASK-497, ADR-0003, REALMS §5.0.3):** `user_powers`, `user_techniques`, `user_empowered_techniques`, `user_items`, `user_creatures`, and `user_species` gain nullable `image_id` matching official/codex counterparts. Copy official → user on add-to-library copies `image_id` (and cache URL). Creators/pickers attach bank images; non-admins do not upload into the bank. No art columns on feats/skills/archetypes/parts/properties/creature feats/traits.
 
-**Planned — art bank (TASK-415):** e.g. `art_bank` (id, category, slug, label, image_url, sort_order, is_active) or static manifest; categories: species, weapon, armor, shield, equipment, power, technique. Public read; admin maintains catalog.
+### 2.5a Realms Image Library (ADR-0003, TASK-492)
+
+| Table / object | Shape | Key columns / notes |
+|----------------|--------|---------------------|
+| `realms_images` | Columnar | id (UUID PK), name, storage_path (unique), public_url, created_at, updated_at, created_by (nullable FK → auth.users) — **one Storage object per row** |
+| `realms_image_category` | ENUM | Locked: `species`, `creature`, `weapon`, `armor`, `shield`, `equipment`, `power`, `technique`. No `empowered` tag. |
+| `realms_image_categories` | Join | (image_id, category) PK — multi-select tags on master |
+| Storage | Bucket `codex-art` | Bank paths: `library/{id}.{ext}`. Interim entity-tied `{entityType}/{entityId}.jpg` until TASK-498. Public read; admin writes via service role. |
+| Consumers | FK (TASK-494 official/codex; TASK-497 user_*) | Nullable `image_id` → `realms_images.id`; optional denormalized `image_url` synced on replace |
+| SQL (entity columns) | — | `sql/realms-image-entity-columns.sql` — **applied** on RealmsRPG-Test (`realms_image_entity_columns`, 2026-07-16, owner-approved) |
+| RLS | — | Guest + authenticated **SELECT**; **admin-only** write/replace/delete via `/api/images*` (service role after `isAdmin()`) |
+| SQL | — | `sql/realms-image-library.sql` — **applied** on RealmsRPG-Test (`realms_image_library`, 2026-07-16) |
+
+**API (TASK-492):**
+
+| Method | Path | Auth | Purpose |
+|--------|------|------|---------|
+| GET | `/api/images?category=&q=` | Public | List/filter by category (comma OR) + name search |
+| GET | `/api/images/[id]` | Public | Single asset |
+| POST | `/api/images` | Admin | Create: multipart `file` + `name` + `categories` (JSON/CSV) |
+| PATCH | `/api/images/[id]` | Admin | Update name and/or categories |
+| POST | `/api/images/[id]/replace` | Admin | Replace master file; sync consumer `image_url` caches |
+| GET | `/api/images/[id]/usage` | Admin | Entities referencing `image_id` (warn UI) |
+| DELETE | `/api/images/[id]` | Admin | Clear all refs → remove Storage object + row |
+
+Helpers: `src/lib/realms-images.ts` (client + types), `src/lib/realms-images-server.ts`, `src/lib/realms-image-consumers.ts`, `src/lib/entity-image-url.ts`, `src/lib/entity-image-enrich-server.ts`. Uploads via `apiUpload` only.
+
+**Interim:** `/api/upload/codex-art` + entity-tied paths remain until TASK-496/498.
 
 If Supabase logs show **`permission denied for table user_species`**, the `authenticated` role is missing table `GRANT`s (common after creating/moving the table without grants). Run **`sql/supabase-user-species-grants-rls.sql`** in the SQL Editor. This does not fix campaign invite lookup by itself (that is separate RLS on `campaigns`); it fixes species library / hooks that query `user_species`.
 
@@ -360,6 +387,6 @@ Supabase Dashboard → Logs shows **PostgREST** requests. Our app uses the **pub
 **Other schemas (reference only):**
 
 - **auth** — Supabase Auth (users, sessions, etc.). We don’t create or query these directly; we use Supabase Auth APIs and `user_profiles` / `usernames` in **public** for app profile data.
-- **storage** — Supabase Storage (buckets, objects). **Buckets:** `portraits`, `profile-pictures` (any user), **`codex-art`** (official/codex entity art + future **art bank**; admin/service-role writes for layer 1; public read), **`user-creations`** (planned — layer 3 privileged user uploads tied to `user_*` rows). RLS: `sql/supabase-storage-policies.sql`, `sql/codex-art-species-image-url.sql`. App row URLs stay in **public** columns (`image_url` on codex, official, and user library tables). See REALMS §5.0.3 three-layer model.
+- **storage** — Supabase Storage (buckets, objects). **Buckets:** `portraits`, `profile-pictures` (any user; may also **pick** Realms Image Library assets tagged species/creature — TASK-499), **`codex-art`** (Realms Image Library master objects under `library/{id}.{ext}` + interim entity-tied art — ADR-0003 / TASK-492). Public read; admin/service-role writes for bank. RLS: `sql/supabase-storage-policies.sql`, `sql/codex-art-species-image-url.sql`, `sql/realms-image-library.sql`. Consumers store **`image_id`** (+ optional `image_url` cache). See REALMS §5.0.3.
 
 If you see **404 or 500** on any `/rest/v1/codex_*` or `core_rules`, check that the table exists in **public** (Table Editor) and that RLS allows the anon/service role used by the API (see DEPLOYMENT_AND_SECRETS_SUPABASE.md).

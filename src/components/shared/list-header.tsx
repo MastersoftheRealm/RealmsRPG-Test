@@ -129,7 +129,21 @@ export function ListHeader({
     }
   };
 
-  const sortableColumns = displayColumns.filter((c) => c.sortable !== false && onSort && c.key !== THUMBNAIL_HEADER_COLUMN_KEY);
+  const sortableColumns = [
+    ...displayColumns.filter((c) => c.sortable !== false && onSort && c.key !== THUMBNAIL_HEADER_COLUMN_KEY),
+    ...(rowChrome?.rightSlot &&
+    rowChrome.rightSlotLabel &&
+    rowChrome.rightSlotSortKey &&
+    onSort
+      ? [
+          {
+            key: rowChrome.rightSlotSortKey,
+            label: rowChrome.rightSlotLabel,
+            align: 'center' as const,
+          },
+        ]
+      : []),
+  ];
   const hasSortable = sortableColumns.length > 0;
   const currentCol = sortState && hasSortable ? sortableColumns.find((c) => c.key === sortState.col) : sortableColumns[0];
   const currentLabel = currentCol?.label ?? sortState?.col ?? 'Name';
@@ -303,6 +317,11 @@ export function ListHeader({
   }
 
   if (useRowChrome && rowChrome) {
+    const rightSlotSortKey = rowChrome.rightSlotSortKey;
+    const rightSlotLabel = rowChrome.rightSlotLabel;
+    const rightSlotIsSortable = !!(rightSlotLabel && rightSlotSortKey && onSort);
+    const rightSlotActive = rightSlotIsSortable && sortState?.col === rightSlotSortKey;
+
     return (
       <>
         <div
@@ -328,10 +347,31 @@ export function ListHeader({
           </div>
           {rowChrome.rightSlot && (
             <div
-              className="flex-shrink-0 self-stretch"
+              className="flex-shrink-0 self-stretch flex items-center justify-center px-0.5"
               style={{ width: GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH }}
-              aria-hidden
-            />
+              aria-hidden={!rightSlotLabel || undefined}
+            >
+              {rightSlotIsSortable ? (
+                <button
+                  type="button"
+                  onClick={() => onSort!(rightSlotSortKey!)}
+                  className={cn(
+                    'w-full inline-flex items-center justify-center gap-1 transition-colors hover:text-primary-fg-hover',
+                    rightSlotActive && 'text-primary-fg'
+                  )}
+                >
+                  {rightSlotLabel!.toUpperCase()}
+                  {rightSlotActive &&
+                    (sortState!.dir === 1 ? (
+                      <ChevronUp className="w-3 h-3" />
+                    ) : (
+                      <ChevronDown className="w-3 h-3" />
+                    ))}
+                </button>
+              ) : rightSlotLabel ? (
+                <span className="text-center">{rightSlotLabel.toUpperCase()}</span>
+              ) : null}
+            </div>
           )}
           {rowChrome.edit && (
             <div
@@ -401,11 +441,12 @@ export function ListHeader({
                       )}
                     >
                       <span>{column.label}</span>
-                      {isActive && (
-                        sortState.dir === 1
-                          ? <ChevronUp className="w-4 h-4 text-primary-link-fg" />
-                          : <ChevronDown className="w-4 h-4 text-primary-link-fg" />
-                      )}
+                      {isActive &&
+                        (sortState!.dir === 1 ? (
+                          <ChevronUp className="w-4 h-4 shrink-0" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 shrink-0" />
+                        ))}
                     </button>
                   );
                 })}

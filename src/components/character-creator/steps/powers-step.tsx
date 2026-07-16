@@ -43,19 +43,19 @@ const EMPTY_TECHNIQUES: CharacterTechnique[] = [];
 // Select powers modal: compact columns; Duration/Area/Range as labeled chips when omitted
 const POWER_MODAL_COLUMNS = [
   { key: 'name', label: 'NAME', sortable: true },
-  { key: 'Action', label: 'ACTION', sortable: false, align: 'center' as const },
-  { key: 'Energy', label: 'EN', sortable: false, align: 'center' as const },
-  { key: 'Training Points', label: 'Training Points', sortable: false, align: 'center' as const },
-  { key: 'Damage', label: 'DAMAGE', sortable: false, align: 'center' as const },
+  { key: 'Action', label: 'ACTION', sortable: true, align: 'center' as const },
+  { key: 'Energy', label: 'EN', sortable: true, align: 'center' as const },
+  { key: 'Training Points', label: 'Training Points', sortable: true, align: 'center' as const },
+  { key: 'Damage', label: 'DAMAGE', sortable: true, align: 'center' as const },
 ];
 const POWER_GRID_COLUMNS = '1.4fr 0.8fr 0.5fr 0.5fr 0.7fr';
 
 const TECHNIQUE_MODAL_COLUMNS = [
   { key: 'name', label: 'NAME', sortable: true },
-  { key: 'Action', label: 'ACTION', sortable: false, align: 'center' as const },
-  { key: 'Energy', label: 'ENERGY', sortable: false, align: 'center' as const },
-  { key: 'Weapon', label: 'WEAPON', sortable: false, align: 'center' as const },
-  { key: 'Training Points', label: 'Training Points', sortable: false, align: 'center' as const },
+  { key: 'Action', label: 'ACTION', sortable: true, align: 'center' as const },
+  { key: 'Energy', label: 'ENERGY', sortable: true, align: 'center' as const },
+  { key: 'Weapon', label: 'WEAPON', sortable: true, align: 'center' as const },
+  { key: 'Training Points', label: 'Training Points', sortable: true, align: 'center' as const },
 ];
 const TECHNIQUE_GRID_COLUMNS = '1.3fr 0.75fr 0.55fr 1fr 0.75fr';
 type PowerModalTab = 'powers' | 'empowered';

@@ -12,14 +12,17 @@ export const SCALAR_KEYS: Record<ColumnarLibraryType, string[]> = {
   powers: [
     'name', 'description', 'actionType', 'isReaction', 'innate',
     'rangeSteps', 'durationType', 'durationValue', 'areaType', 'areaLevel', 'damage',
+    'imageId', 'imageUrl',
   ],
   techniques: [
     'name', 'description', 'actionType', 'weaponName',
     'rangeSteps', 'durationType', 'durationValue', 'damage',
+    'imageId', 'imageUrl',
   ],
   'empowered-techniques': [
     'name', 'description', 'actionType', 'weaponName',
     'rangeSteps', 'durationType', 'durationValue', 'damage',
+    'imageId', 'imageUrl',
   ],
   items: [
     'name',
@@ -39,9 +42,10 @@ export const SCALAR_KEYS: Record<ColumnarLibraryType, string[]> = {
     'criticalRangeIncrease',
     'shieldDR',
     'shieldDamage',
+    'imageId',
     'imageUrl',
   ],
-  creatures: ['name', 'description', 'level', 'type', 'size', 'hitPoints', 'energyPoints'],
+  creatures: ['name', 'description', 'level', 'type', 'size', 'hitPoints', 'energyPoints', 'imageId', 'imageUrl'],
 };
 
 const BODY_TO_CAMEL: Record<string, string> = {
@@ -63,6 +67,7 @@ const BODY_TO_CAMEL: Record<string, string> = {
   critical_range_increase: 'criticalRangeIncrease',
   shield_dr: 'shieldDR',
   shield_damage: 'shieldDamage',
+  image_id: 'imageId',
   image_url: 'imageUrl',
 };
 
@@ -85,6 +90,7 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   criticalRangeIncrease: 'critical_range_increase',
   shieldDR: 'shield_dr',
   shieldDamage: 'shield_damage',
+  imageId: 'image_id',
   imageUrl: 'image_url',
   createdAt: 'created_at',
   updatedAt: 'updated_at',
@@ -104,6 +110,30 @@ export function toDbRow(obj: Record<string, unknown>): Record<string, unknown> {
 /** Get value from row (camel or snake_case for Supabase compatibility). */
 function v(row: Record<string, unknown>, camel: string, snake?: string): unknown {
   return row[camel] ?? (snake ? row[snake] : undefined);
+}
+
+function assignImageScalars(base: Record<string, unknown>, row: Record<string, unknown>): void {
+  const imageId = v(row, 'imageId', 'image_id');
+  if (imageId !== undefined && imageId !== null) base.imageId = imageId;
+  const imageUrl = v(row, 'imageUrl', 'image_url');
+  if (typeof imageUrl === 'string' && imageUrl.trim()) {
+    base.imageUrl = imageUrl.split('?')[0];
+  } else if (imageUrl === null) {
+    base.imageUrl = null;
+  }
+}
+
+function applyImageScalarsFromBody(scalars: Record<string, unknown>, body: Record<string, unknown>): void {
+  if (typeof body.imageId === 'string' && body.imageId.trim()) {
+    scalars.imageId = body.imageId.trim();
+  } else if (body.imageId === null) {
+    scalars.imageId = null;
+  }
+  if (typeof body.imageUrl === 'string' && body.imageUrl.trim()) {
+    scalars.imageUrl = body.imageUrl.split('?')[0];
+  } else if (body.imageUrl === null) {
+    scalars.imageUrl = null;
+  }
 }
 
 /** Build client-shaped item from a columnar row (official or user). Row may be camelCase or snake_case (Supabase). */
@@ -143,6 +173,7 @@ export function rowToItem(
     if (areaType != null || areaLevel != null)
       base.area = { ...payArea, type: areaType ?? payArea?.type, level: areaLevel ?? payArea?.level };
     if (damageCol != null && Array.isArray(damageCol)) base.damage = damageCol;
+    assignImageScalars(base, row);
   }
   if (type === 'techniques' || type === 'empowered-techniques') {
     assignIfPresent('actionType', v(row, 'actionType', 'action_type'));
@@ -176,6 +207,7 @@ export function rowToItem(
       };
     }
     if (damageCol != null && Array.isArray(damageCol)) base.damage = damageCol;
+    assignImageScalars(base, row);
   }
   if (type === 'items') {
     // IMPORTANT: Only assign scalar-backed fields when present on the row.
@@ -191,7 +223,7 @@ export function rowToItem(
     assignIfPresent('criticalRangeIncrease', v(row, 'criticalRangeIncrease', 'critical_range_increase'));
     assignIfPresent('shieldDR', v(row, 'shieldDR', 'shield_dr'));
     assignIfPresent('shieldDamage', v(row, 'shieldDamage', 'shield_damage'));
-    assignIfPresent('imageUrl', v(row, 'imageUrl', 'image_url'));
+    assignImageScalars(base, row);
 
     // Transition hardening:
     // If columns exist but are still default/empty (e.g. `damage = []`, `properties = []`)
@@ -232,6 +264,7 @@ export function rowToItem(
     assignIfPresent('size', v(row, 'size'));
     assignIfPresent('hitPoints', v(row, 'hitPoints', 'hit_points'));
     assignIfPresent('energyPoints', v(row, 'energyPoints', 'energy_points'));
+    assignImageScalars(base, row);
   }
   assignIfPresent('createdAt', v(row, 'createdAt', 'created_at'));
   assignIfPresent('updatedAt', v(row, 'updatedAt', 'updated_at'));
@@ -302,12 +335,15 @@ export function bodyToColumnar(
     if (body.criticalRangeIncrease != null) scalars.criticalRangeIncrease = body.criticalRangeIncrease;
     if (body.shieldDR != null) scalars.shieldDR = body.shieldDR;
     if (body.shieldDamage != null) scalars.shieldDamage = body.shieldDamage;
-    if (typeof body.imageUrl === 'string' && body.imageUrl.trim()) {
-      scalars.imageUrl = body.imageUrl.split('?')[0];
-    } else if (body.imageUrl === null) {
-      scalars.imageUrl = null;
-    }
+    applyImageScalarsFromBody(scalars, body);
   }
+
+  applyImageScalarsFromBody(
+    scalars,
+    type === 'powers' || type === 'techniques' || type === 'empowered-techniques' || type === 'creatures'
+      ? body
+      : {}
+  );
 
   const skipKeys = new Set<string>([
     ...(type === 'powers' ? ['range', 'duration', 'area', 'damage'] : []),
@@ -326,6 +362,7 @@ export function bodyToColumnar(
           'criticalRangeIncrease',
           'shieldDR',
           'shieldDamage',
+          'imageId',
           'imageUrl',
         ]
       : []),
@@ -404,6 +441,12 @@ export function rowToItemSpecies(row: Record<string, unknown>): Record<string, u
       .map((s) => parseFloat(s.trim()))
       .filter((n) => !Number.isNaN(n));
   }
+  // Species consumers read the codex-like snake_case shape (types/codex.ts, list-row-image);
+  // readRecordImageUrl/-Id also handle it. Do not add a redundant camelCase copy here.
+  const imageId = v(row, 'imageId', 'image_id');
+  if (typeof imageId === 'string' && imageId.trim()) base.image_id = imageId.trim();
+  const imageUrl = v(row, 'imageUrl', 'image_url');
+  if (typeof imageUrl === 'string' && imageUrl.trim()) base.image_url = imageUrl.trim();
   return { ...base, ...payload };
 }
 
@@ -426,6 +469,8 @@ export function bodyToColumnarSpecies(body: Record<string, unknown>): {
     'ave_wgt_kg',
     'adulthood_lifespan',
     'languages',
+    'image_id',
+    'image_url',
   ]);
   const scalars: Record<string, unknown> = {};
   const payload: Record<string, unknown> = {};
@@ -443,6 +488,7 @@ export function bodyToColumnarSpecies(body: Record<string, unknown>): {
       payload[k] = v;
     }
   }
+  applyImageScalarsFromBody(scalars, body);
   return { scalars, payload };
 }
 

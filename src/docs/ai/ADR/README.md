@@ -24,3 +24,5 @@ Lightweight process for **Architect**-role changes. Keep each ADR short.
 |----|-------|--------|
 | 0000 | Template | — |
 | 0001 | User Library entity tab shell | Accepted |
+| 0002 | Unified ValueStepper chrome | Accepted |
+| 0003 | Realms Image Library (shared bank + image_id) | Accepted |

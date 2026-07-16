@@ -816,34 +816,20 @@
   }
 
   /* Stepper buttons for +/- controls — sleek/neutral default (skill bonus style, TASK-468) */
+  /**
+   * Unified ± stepper chrome (ADR-0002 / TASK-487).
+   * Matches guided skills bonus steppers: soft surface-alt, no invasive border,
+   * rounded-lg, bold glyphs. Do not hand-roll ± buttons — use ValueStepper /
+   * DecrementButton / IncrementButton (QuantitySelector wraps ValueStepper).
+   */
   .btn-stepper {
-    @apply flex items-center justify-center rounded font-bold border
-           bg-surface text-text-secondary border-border-light
-           hover:bg-surface-alt
+    @apply flex items-center justify-center rounded-lg font-bold
+           bg-surface-alt text-text-secondary
+           hover:bg-surface
            transition-colors
-           disabled:bg-surface disabled:text-border-light disabled:border-border-light disabled:cursor-not-allowed
-           dark:disabled:bg-surface dark:disabled:text-border-light;
+           disabled:bg-transparent disabled:text-border-light disabled:cursor-not-allowed
+           dark:disabled:bg-transparent dark:disabled:text-border-light;
     transition-duration: var(--duration-fast);
-  }
-
-  /** @deprecated Prefer default `.btn-stepper` (neutral). Kept for rare call sites still opting into red/green. */
-  .btn-stepper-danger {
-    @apply bg-danger-50 text-danger-700 border-danger-200
-           hover:bg-danger-100 hover:border-danger-300 active:bg-danger-200
-           dark:bg-danger-900/50 dark:text-danger-400 dark:border-danger-900/50
-           dark:hover:bg-danger-900/40 dark:hover:border-danger-800/50
-           disabled:bg-surface-alt disabled:text-text-muted disabled:border-border-light
-           dark:disabled:bg-surface-alt dark:disabled:text-text-muted;
-  }
-
-  /** @deprecated Prefer default `.btn-stepper` (neutral). Kept for rare call sites still opting into red/green. */
-  .btn-stepper-success {
-    @apply bg-success-50 text-success-700 border-success-200
-           hover:bg-success-100 hover:border-success-300 active:bg-success-200
-           dark:bg-success-900/50 dark:text-success-400 dark:border-success-900/50
-           dark:hover:bg-success-900/40 dark:hover:border-success-800/50
-           disabled:bg-surface-alt disabled:text-text-muted disabled:border-border-light
-           dark:disabled:bg-surface-alt dark:disabled:text-text-muted;
   }
 
   /* ---------------------------------------------------------------------------

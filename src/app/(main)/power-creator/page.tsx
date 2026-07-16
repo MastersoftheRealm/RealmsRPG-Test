@@ -12,7 +12,7 @@
 
 'use client';
 
-import { useState, useMemo, useCallback, useEffect, useRef, Suspense } from 'react';
+import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, Wand2, Zap, Target, Info, Trash2 } from 'lucide-react';
@@ -28,11 +28,12 @@ import {
   useCreatorWeaponOptions,
   type PowerPart,
   type CreatorWeaponOption,
+  type UseLoadModalLibraryReturn,
 } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
-import { ValueStepper, SectionCostBadge } from '@/components/shared';
+import { ValueStepper, SectionCostBadge, ErrorDisplay } from '@/components/shared';
 import {
   CreatorPageShell,
   CreatorWeaponPicker,
@@ -67,41 +68,19 @@ import {
 } from '@/lib/game/creator-constants';
 import { formatDurationFromTypeAndValue } from '@/lib/utils/duration';
 import type { SelectedPart, AdvancedPart, DamageConfig, RangeConfig } from './power-creator-types';
-import { POWER_CREATOR_CACHE_KEY, ADVANCED_CATEGORIES, EXCLUDED_PARTS } from './power-creator-constants';
+import { POWER_CREATOR_CACHE_KEY, EXCLUDED_PARTS } from './power-creator-constants';
+import {
+  bootstrapPowerCreatorFormState,
+  powerLibraryRecordToFormState,
+  type PowerCreatorCache,
+  type PowerCreatorFormState,
+} from './power-creator-bootstrap';
+import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
 import { shouldPersistCreatorWeaponId } from '@/lib/creator-weapon-persistence';
 
 // =============================================================================
 // Main Component
 // =============================================================================
-
-// Cache interface for localStorage
-interface PowerCreatorCache {
-  name: string;
-  description: string;
-  selectedParts: Array<{
-    partId: string | number;
-    op_1_lvl: number;
-    op_2_lvl: number;
-    op_3_lvl: number;
-    applyDuration: boolean;
-    selectedCategory: string;
-  }>;
-  selectedAdvancedParts: Array<{
-    partId: string | number;
-    op_1_lvl: number;
-    op_2_lvl: number;
-    op_3_lvl: number;
-    applyDuration: boolean;
-  }>;
-  actionType: string;
-  isReaction: boolean;
-  damage: DamageConfig | DamageConfig[];
-  range: RangeConfig;
-  area: AreaConfig;
-  duration: DurationConfig;
-  weaponId: string | number;
-  timestamp: number;
-}
 
 const DEFAULT_WEAPON_OPTIONS: CreatorWeaponOption[] = [
   { id: 0, name: 'Unarmed Prowess', tp: 0, weaponLibrary: 'builtin' },
@@ -112,40 +91,14 @@ function PowerCreatorContent() {
   const { isAdmin } = useAdmin();
   const searchParams = useSearchParams();
   const editPowerId = searchParams.get('edit');
-  const editLoadedRef = useRef(false);
-  
-  // State
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [selectedParts, setSelectedParts] = useState<SelectedPart[]>([]);
-  const [selectedAdvancedParts, setSelectedAdvancedParts] = useState<AdvancedPart[]>([]);
-  const [actionType, setActionType] = useState('basic');
-  const [isReaction, setIsReaction] = useState(false);
-  const [damages, setDamages] = useState<DamageConfig[]>([{ amount: 0, size: 6, type: 'none', applyDuration: false }]);
-  // Range state (0 = melee/1 space, 1+ = ranged increments)
-  const [range, setRange] = useState<RangeConfig>({ steps: 0 });
-  // Area of effect state
-  const [area, setArea] = useState<AreaConfig>({ type: 'none', level: 1, applyDuration: false });
-  // Duration state
-  const [duration, setDuration] = useState<DurationConfig>({
-    type: 'instant',
-    value: 1,
-    applyDuration: false,
-    focus: false,
-    noHarm: false,
-    endsOnActivation: false,
-    sustain: 0,
-  });
-  const [weapon, setWeapon] = useState<CreatorWeaponOption>(DEFAULT_WEAPON_OPTIONS[0]);
-  const [weaponLibrarySource, setWeaponLibrarySource] = useState<SourceFilterValue>('my');
   const load = useLoadModalLibrary('power');
 
-  // Fetch power parts
   const { data: powerParts = [], isLoading, error, refetch } = usePowerParts();
   const { data: userItems = [] } = useUserItems();
   const { data: itemPropertiesDb = [] } = useItemProperties();
   const { data: officialItems = [] } = useOfficialLibrary('items');
+
+  const [weaponLibrarySource, setWeaponLibrarySource] = useState<SourceFilterValue>('my');
 
   const { fullOptions: allWeaponOptions, visibleOptions } = useCreatorWeaponOptions({
     defaults: DEFAULT_WEAPON_OPTIONS,
@@ -155,128 +108,172 @@ function PowerCreatorContent() {
     librarySource: weaponLibrarySource,
   });
 
-  // Load cached state from localStorage on mount
-  useEffect(() => {
-    // Prevent re-running after initial load to avoid overwriting user input
-    if (isInitialized || powerParts.length === 0 || editPowerId) return;
-    
-    try {
-      const cached = localStorage.getItem(POWER_CREATOR_CACHE_KEY);
-      if (cached) {
-        const parsed: PowerCreatorCache = JSON.parse(cached);
-        // Only use cache if it's less than 30 days old
-        const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-        if (Date.now() - parsed.timestamp < thirtyDays) {
-          setName(parsed.name || '');
-          setDescription(parsed.description || '');
-          setActionType(parsed.actionType || 'basic');
-          setIsReaction(parsed.isReaction || false);
-          const d = parsed.damage;
-          setDamages(
-            Array.isArray(d) && d.length > 0
-              ? d.map((x: DamageConfig) => ({ ...x, applyDuration: x.applyDuration ?? false }))
-              : d && !Array.isArray(d)
-                ? [{ ...d, amount: d.amount ?? 0, size: d.size ?? 6, type: d.type ?? 'none', applyDuration: (d as DamageConfig).applyDuration ?? false }]
-                : [{ amount: 0, size: 6, type: 'none', applyDuration: false }]
-          );
-          setRange(parsed.range || { steps: 0 });
-          setArea(parsed.area || { type: 'none', level: 1, applyDuration: false });
-          setDuration(parsed.duration || {
-            type: 'instant',
-            value: 1,
-            applyDuration: false,
-            focus: false,
-            noHarm: false,
-            endsOnActivation: false,
-            sustain: 0,
-          });
-          if (parsed.weaponId !== undefined) {
-            const restoredWeapon = allWeaponOptions.find((option) => String(option.id) === String(parsed.weaponId));
-            if (restoredWeapon) setWeapon(restoredWeapon);
-          }
-          
-          // Restore selected parts by finding them in powerParts
-          if (parsed.selectedParts && parsed.selectedParts.length > 0) {
-            const restoredParts: SelectedPart[] = [];
-            for (const savedPart of parsed.selectedParts) {
-              const foundPart = powerParts.find((p: PowerPart) => String(p.id) === String(savedPart.partId));
-              if (foundPart) {
-                restoredParts.push({
-                  part: foundPart,
-                  op_1_lvl: savedPart.op_1_lvl,
-                  op_2_lvl: savedPart.op_2_lvl,
-                  op_3_lvl: savedPart.op_3_lvl,
-                  applyDuration: savedPart.applyDuration,
-                  selectedCategory: savedPart.selectedCategory,
-                });
-              }
-            }
-            setSelectedParts(restoredParts);
-          }
-          
-          // Restore advanced parts
-          if (parsed.selectedAdvancedParts && parsed.selectedAdvancedParts.length > 0) {
-            const restoredAdvanced: AdvancedPart[] = [];
-            for (const savedPart of parsed.selectedAdvancedParts) {
-              const foundPart = powerParts.find((p: PowerPart) => String(p.id) === String(savedPart.partId));
-              if (foundPart) {
-                restoredAdvanced.push({
-                  part: foundPart,
-                  op_1_lvl: savedPart.op_1_lvl,
-                  op_2_lvl: savedPart.op_2_lvl,
-                  op_3_lvl: savedPart.op_3_lvl,
-                  applyDuration: savedPart.applyDuration,
-                  selectedCategory: foundPart.category || 'any',
-                });
-              }
-            }
-            setSelectedAdvancedParts(restoredAdvanced);
-          }
-        } else {
-          localStorage.removeItem(POWER_CREATOR_CACHE_KEY);
-        }
-      }
-    } catch {
-    }
-    setIsInitialized(true);
-  }, [powerParts, allWeaponOptions, isInitialized, editPowerId]);
+  const sessionKey = editPowerId ?? 'draft';
+  // Ready once parts + weapon options exist; in ?edit= mode also wait for the
+  // library fetch to settle (rawItems may legitimately stay empty — fall back to blank form).
+  const bootstrapReady =
+    powerParts.length > 0 &&
+    allWeaponOptions.length > 0 &&
+    (!editPowerId || !load.isLoading);
 
-  // Auto-save to localStorage when state changes
+  // One-time render adjust per sessionKey: compute the initial form state exactly
+  // once when data is ready (no hydrate effect, no recompute on later re-renders).
+  const [bootstrapState, setBootstrapState] = useState<{
+    key: string;
+    form: PowerCreatorFormState;
+  } | null>(null);
+  if (bootstrapReady && bootstrapState?.key !== sessionKey) {
+    setBootstrapState({
+      key: sessionKey,
+      form: bootstrapPowerCreatorFormState({
+        editPowerId,
+        powerParts,
+        allWeaponOptions,
+        defaultWeapon: DEFAULT_WEAPON_OPTIONS[0],
+        rawItems: load.rawItems,
+      }),
+    });
+  }
+  const initialFormState = bootstrapState?.key === sessionKey ? bootstrapState.form : null;
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <ErrorDisplay
+          message={`Failed to load power parts: ${error.message}`}
+          onRetry={() => {
+            void refetch();
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (!initialFormState) {
+    return (
+      <div className="min-h-screen bg-background">
+        <LoadingState message="Loading power parts..." padding="lg" />
+      </div>
+    );
+  }
+
+  return (
+    <PowerCreatorWorkspace
+      key={sessionKey}
+      initialFormState={initialFormState}
+      editPowerId={editPowerId}
+      user={user}
+      isAdmin={isAdmin}
+      powerParts={powerParts}
+      allWeaponOptions={allWeaponOptions}
+      visibleOptions={visibleOptions}
+      weaponLibrarySource={weaponLibrarySource}
+      setWeaponLibrarySource={setWeaponLibrarySource}
+      load={load}
+      isLoading={isLoading}
+      error={error}
+      refetch={refetch}
+    />
+  );
+}
+
+interface PowerCreatorWorkspaceProps {
+  initialFormState: PowerCreatorFormState;
+  editPowerId: string | null;
+  user: ReturnType<typeof useAuthStore.getState>['user'];
+  isAdmin: boolean;
+  powerParts: PowerPart[];
+  allWeaponOptions: CreatorWeaponOption[];
+  visibleOptions: CreatorWeaponOption[];
+  weaponLibrarySource: SourceFilterValue;
+  setWeaponLibrarySource: (value: SourceFilterValue) => void;
+  load: UseLoadModalLibraryReturn;
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => void;
+}
+
+function PowerCreatorWorkspace({
+  initialFormState,
+  editPowerId,
+  user,
+  isAdmin,
+  powerParts,
+  allWeaponOptions,
+  visibleOptions,
+  weaponLibrarySource,
+  setWeaponLibrarySource,
+  load,
+  isLoading,
+  error,
+  refetch,
+}: PowerCreatorWorkspaceProps) {
+  const [name, setName] = useState(initialFormState.name);
+  const [description, setDescription] = useState(initialFormState.description);
+  const [selectedParts, setSelectedParts] = useState<SelectedPart[]>(initialFormState.selectedParts);
+  const [selectedAdvancedParts, setSelectedAdvancedParts] = useState<AdvancedPart[]>(
+    initialFormState.selectedAdvancedParts,
+  );
+  const [actionType, setActionType] = useState(initialFormState.actionType);
+  const [isReaction, setIsReaction] = useState(initialFormState.isReaction);
+  const [damages, setDamages] = useState<DamageConfig[]>(initialFormState.damages);
+  const [range, setRange] = useState<RangeConfig>(initialFormState.range);
+  const [area, setArea] = useState<AreaConfig>(initialFormState.area);
+  const [duration, setDuration] = useState<DurationConfig>(initialFormState.duration);
+  const [weapon, setWeapon] = useState<CreatorWeaponOption>(initialFormState.weapon);
+
+  // ?edit= mode: clear any stale draft once on mount (parity with the old hydrate
+  // effect, which removed the cache after loading the edit target).
   useEffect(() => {
-    if (!isInitialized) return;
-    
-    try {
-      const cache: PowerCreatorCache = {
-        name,
-        description,
-        selectedParts: selectedParts.map(sp => ({
-          partId: sp.part.id,
-          op_1_lvl: sp.op_1_lvl,
-          op_2_lvl: sp.op_2_lvl,
-          op_3_lvl: sp.op_3_lvl,
-          applyDuration: sp.applyDuration,
-          selectedCategory: sp.selectedCategory,
-        })),
-        selectedAdvancedParts: selectedAdvancedParts.map(ap => ({
-          partId: ap.part.id,
-          op_1_lvl: ap.op_1_lvl,
-          op_2_lvl: ap.op_2_lvl,
-          op_3_lvl: ap.op_3_lvl,
-          applyDuration: ap.applyDuration,
-        })),
-        actionType,
-        isReaction,
-        damage: damages,
-        range,
-        area,
-        duration,
-        weaponId: weapon.id,
-        timestamp: Date.now(),
-      };
-      localStorage.setItem(POWER_CREATOR_CACHE_KEY, JSON.stringify(cache));
-    } catch {
-    }
-  }, [isInitialized, name, description, selectedParts, selectedAdvancedParts, actionType, isReaction, damages, range, area, duration, weapon.id]);
+    if (editPowerId) clearCreatorCache(POWER_CREATOR_CACHE_KEY);
+  }, [editPowerId]);
+
+  // Auto-save draft to localStorage (skip when editing an existing library row via ?edit=)
+  useEffect(() => {
+    if (editPowerId) return;
+
+    const cache: PowerCreatorCache = {
+      name,
+      description,
+      selectedParts: selectedParts.map((sp) => ({
+        partId: sp.part.id,
+        op_1_lvl: sp.op_1_lvl,
+        op_2_lvl: sp.op_2_lvl,
+        op_3_lvl: sp.op_3_lvl,
+        applyDuration: sp.applyDuration,
+        selectedCategory: sp.selectedCategory,
+      })),
+      selectedAdvancedParts: selectedAdvancedParts.map((ap) => ({
+        partId: ap.part.id,
+        op_1_lvl: ap.op_1_lvl,
+        op_2_lvl: ap.op_2_lvl,
+        op_3_lvl: ap.op_3_lvl,
+        applyDuration: ap.applyDuration,
+      })),
+      actionType,
+      isReaction,
+      damage: damages,
+      range,
+      area,
+      duration,
+      weaponId: weapon.id,
+      timestamp: Date.now(),
+    };
+    writeCreatorCache(POWER_CREATOR_CACHE_KEY, cache);
+  }, [
+    editPowerId,
+    name,
+    description,
+    selectedParts,
+    selectedAdvancedParts,
+    actionType,
+    isReaction,
+    damages,
+    range,
+    area,
+    duration,
+    weapon.id,
+  ]);
 
   // Filter out mechanic parts for the "Add Part" dropdown
   // Mechanic parts are handled by basic mechanics UI (action, damage, range, area, duration)
@@ -644,195 +641,37 @@ function PowerCreatorContent() {
     });
     setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
     save.setSaveMessage(null);
-    // Clear localStorage cache
-    try {
-      localStorage.removeItem(POWER_CREATOR_CACHE_KEY);
-    } catch {
-    }
+    clearCreatorCache(POWER_CREATOR_CACHE_KEY);
   }, [save]);
+
+  const applyFormState = useCallback((next: PowerCreatorFormState) => {
+    setName(next.name);
+    setDescription(next.description);
+    setSelectedParts(next.selectedParts);
+    setSelectedAdvancedParts(next.selectedAdvancedParts);
+    setActionType(next.actionType);
+    setIsReaction(next.isReaction);
+    setDamages(next.damages);
+    setRange(next.range);
+    setArea(next.area);
+    setDuration(next.duration);
+    setWeapon(next.weapon);
+  }, []);
 
   // Load a power from the library
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleLoadPower = useCallback((power: any) => {
-    // Reset all state first to avoid corruption from any existing edits
-    handleReset();
-    // Set name and description
-    setName(power.name || '');
-    setDescription(power.description || '');
-    
-    // Load parts - the data structure from API may vary
-    const savedParts = (power.parts || power.powerParts || []) as Array<{
-      id?: number | string;
-      name?: string;
-      op_1_lvl?: number;
-      op_2_lvl?: number;
-      op_3_lvl?: number;
-      applyDuration?: boolean;
-      isAdvanced?: boolean;
-    }>;
-    
-    const loadedParts: SelectedPart[] = [];
-    const loadedAdvancedParts: AdvancedPart[] = [];
-    
-    for (const savedPart of savedParts) {
-      // Find the matching part in powerParts by id or name
-      const matchedPart = powerParts.find(
-        (p: PowerPart) => p.id === String(savedPart.id) || p.name === savedPart.name
-      );
-      
-      if (matchedPart) {
-        // Skip parts that are handled by basic mechanics UI
-        // (these are now auto-generated from actionType, damage, range, area, duration)
-        if (EXCLUDED_PARTS.has(matchedPart.name)) {
-          continue;
-        }
-        
-        const partData = {
-          part: matchedPart,
-          op_1_lvl: savedPart.op_1_lvl || 0,
-          op_2_lvl: savedPart.op_2_lvl || 0,
-          op_3_lvl: savedPart.op_3_lvl || 0,
-          applyDuration: savedPart.applyDuration || false,
-        };
-        
-        // Check if it's an advanced mechanic part
-        if (savedPart.isAdvanced || (matchedPart.mechanic && ADVANCED_CATEGORIES.includes(matchedPart.category as typeof ADVANCED_CATEGORIES[number]))) {
-          loadedAdvancedParts.push({
-            ...partData,
-            selectedCategory: matchedPart.category || 'any',
-          });
-        } else if (!matchedPart.mechanic) {
-          // Only add non-mechanic parts to regular parts section
-          loadedParts.push({
-            ...partData,
-            selectedCategory: matchedPart.category || 'any',
-          });
-        }
-      }
-    }
-    setSelectedParts(loadedParts);
-    setSelectedAdvancedParts(loadedAdvancedParts);
-    
-    // Load damage - handle both array and object formats
-    let damageData: Array<{ amount?: number; size?: number; type?: string; applyDuration?: boolean }> = [];
-    if (Array.isArray(power.damage)) {
-      damageData = power.damage;
-    } else if (power.damage && typeof power.damage === 'object') {
-      // Convert object format to array
-      const d = power.damage as { dice?: number; amount?: number; sides?: number; size?: number; type?: string; applyDuration?: boolean };
-      damageData = [{
-        amount: d.dice ?? d.amount ?? 0,
-        size: d.sides ?? d.size ?? 6,
-        type: d.type ?? 'none',
-        applyDuration: d.applyDuration ?? false,
-      }];
-    }
-    
-    if (damageData.length > 0) {
-      setDamages(
-        damageData.map((dmg) => ({
-          amount: dmg.amount ?? 0,
-          size: dmg.size ?? 6,
-          type: dmg.type ?? 'none',
-          applyDuration: (dmg as { applyDuration?: boolean }).applyDuration ?? false,
-        }))
-      );
-    } else {
-      setDamages([{ amount: 0, size: 6, type: 'none', applyDuration: false }]);
-    }
-    
-    // Load action type and reaction
-    setActionType(power.actionType || 'basic');
-    setIsReaction(power.isReaction || false);
-
-    // Load Add Weapon selection
-    if (power.weapon) {
-      const weaponMatch = allWeaponOptions.find(
-        (option) =>
-          String(option.id) === String(power.weapon.id) ||
-          option.name === power.weapon.name
-      );
-      if (weaponMatch) {
-        setWeapon(weaponMatch);
-      }
-    } else {
-      const addWeaponPart = savedParts.find((savedPart) => {
-        const byId = String(savedPart.id) === String(PART_IDS.ADD_WEAPON_TO_POWER);
-        const byName = savedPart.name === 'Add Weapon to Power';
-        return byId || byName;
-      });
-      if (addWeaponPart) {
-        const requiredTp = (addWeaponPart.op_1_lvl || 0) + 1;
-        const tpMatch = allWeaponOptions.find((option) => (option.tp ?? 0) === requiredTp);
-        setWeapon(tpMatch || DEFAULT_WEAPON_OPTIONS[0]);
-      } else {
-        setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
-      }
-    }
-    
-    // Load range
-    if (power.range) {
-      setRange({
-        steps: power.range.steps || 0,
-      });
-    } else {
-      setRange({ steps: 0 });
-    }
-    
-    // Load area of effect
-    if (power.area) {
-      setArea({
-        type: power.area.type || 'none',
-        level: power.area.level || 1,
-        applyDuration: power.area.applyDuration || false,
-      });
-    } else {
-      setArea({ type: 'none', level: 1, applyDuration: false });
-    }
-    
-    // Load duration
-    if (power.duration) {
-      setDuration({
-        type: power.duration.type || 'instant',
-        value: power.duration.value || 1,
-        applyDuration: power.duration.applyDuration || false,
-        focus: power.duration.focus || false,
-        noHarm: power.duration.noHarm || false,
-        endsOnActivation: power.duration.endsOnActivation || false,
-        sustain: power.duration.sustain || 0,
-      });
-    } else {
-      setDuration({
-        type: 'instant',
-        value: 1,
-        applyDuration: false,
-        focus: false,
-        noHarm: false,
-        endsOnActivation: false,
-        sustain: 0,
-      });
-    }
-    
+    applyFormState(
+      powerLibraryRecordToFormState(
+        power,
+        powerParts,
+        allWeaponOptions,
+        DEFAULT_WEAPON_OPTIONS[0],
+      ),
+    );
     save.setSaveMessage({ type: 'success', text: 'Power loaded successfully!' });
     setTimeout(() => save.setSaveMessage(null), 2000);
-  }, [powerParts, allWeaponOptions, handleReset, save]);
-
-  // Load power for editing from URL parameter (?edit=<id>)
-  useEffect(() => {
-    if (!editPowerId || !load.rawItems.length || powerParts.length === 0 || editLoadedRef.current) return;
-    const powerToEdit = load.rawItems.find((p) => {
-      const row = p as { docId?: string; id?: string };
-      return String(row.docId) === editPowerId || String(row.id) === editPowerId;
-    }) as Parameters<typeof handleLoadPower>[0] | undefined;
-    editLoadedRef.current = true;
-    if (!powerToEdit) {
-      setIsInitialized(true);
-      return;
-    }
-    handleLoadPower(powerToEdit);
-    localStorage.removeItem(POWER_CREATOR_CACHE_KEY);
-    setIsInitialized(true);
-  }, [editPowerId, load.rawItems, powerParts, handleLoadPower]);
+  }, [powerParts, allWeaponOptions, applyFormState, save]);
 
   return (
     <CreatorPageShell

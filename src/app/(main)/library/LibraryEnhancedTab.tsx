@@ -42,7 +42,7 @@ const HEADER_COLUMNS = [
   { key: 'power', label: 'POWER' },
   { key: 'rarity', label: 'RARITY', align: 'center' as const },
   { key: 'cost', label: 'COST (C)', align: 'right' as const },
-  { key: 'uses', label: 'USES', sortable: false as const, align: 'right' as const },
+  { key: 'uses', label: 'USES', align: 'right' as const },
 ];
 
 export function LibraryEnhancedTab({

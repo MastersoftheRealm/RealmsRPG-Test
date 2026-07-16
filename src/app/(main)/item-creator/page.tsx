@@ -13,12 +13,19 @@
 
 'use client';
 
-import { useState, useMemo, useCallback, useEffect, useRef, Suspense } from 'react';
+import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { X, Plus, ChevronDown, ChevronUp, Shield, Sword, Target, Info, Coins } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useItemProperties, useAdmin, useCreatorSave, useLoadModalLibrary, type ItemProperty, type UserItem } from '@/hooks';
-import { CodexArtUploadField } from '@/components/shared';
+import {
+  useItemProperties,
+  useAdmin,
+  useCreatorSave,
+  useLoadModalLibrary,
+  type ItemProperty,
+  type UseLoadModalLibraryReturn,
+} from '@/hooks';
+import { CodexArtUploadField, ErrorDisplay } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Card, TableScroll, DescriptorChip } from '@/components/ui';
 import {
   CreatorPageShell,
@@ -34,7 +41,6 @@ import {
   calculateCurrencyCostAndRarity,
   isGeneralProperty,
   isMechanicProperty,
-  filterSavedItemPropertiesForList,
   type ItemPropertyPayload,
   type ItemDamage,
 } from '@/lib/calculators';
@@ -45,18 +51,17 @@ import { armamentTypeToArtEntity } from '@/lib/codex-art';
 // Types
 // =============================================================================
 
-type ArmamentType = 'Weapon' | 'Armor' | 'Shield';
-
-interface SelectedProperty {
-  property: ItemProperty;
-  op_1_lvl: number;
-}
-
-interface DamageConfig {
-  amount: number;
-  size: number;
-  type: string;
-}
+import {
+  bootstrapItemCreatorFormState,
+  itemLibraryRecordToFormState,
+  ITEM_CREATOR_CACHE_KEY,
+  type ArmamentType,
+  type ItemCreatorCache,
+  type ItemCreatorFormState,
+  type ItemSelectedProperty as SelectedProperty,
+  type ItemDamageConfig as DamageConfig,
+} from './item-creator-bootstrap';
+import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
 
 // =============================================================================
 // Shared Constants (imported from central location)
@@ -65,14 +70,10 @@ interface DamageConfig {
 import {
   WEAPON_DAMAGE_TYPES,
   DIE_SIZES,
-  CREATOR_CACHE_KEYS,
   formatCost,
 } from '@/lib/game/creator-constants';
 import { rarityChipVariant } from '@/lib/chip/rarity-chip-variant';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
-
-// LocalStorage key for caching item creator state
-const ITEM_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.ITEM;
 
 // =============================================================================
 // Item-specific Constants
@@ -339,123 +340,147 @@ function RarityReferenceTable({ currentIP }: { currentIP: number }) {
 // Main Component
 // =============================================================================
 
-// Cache interface for localStorage
-interface ItemCreatorCache {
-  name: string;
-  description: string;
-  armamentType: ArmamentType;
-  selectedProperties: Array<{
-    propertyId: string | number;
-    op_1_lvl: number;
-  }>;
-  damage: DamageConfig;
-  isTwoHanded: boolean;
-  rangeLevel: number;
-  damageReduction: number;
-  agilityReduction: number;
-  criticalRangeIncrease: number;
-  shieldDR: { amount: number; size: number };
-  hasShieldDamage: boolean;
-  shieldDamage: { amount: number; size: number };
-  abilityRequirement: { id: number; name: string; level: number } | null;
-  timestamp: number;
-}
-
 function ItemCreatorContent() {
   const { user } = useAuthStore();
   const { isAdmin } = useAdmin();
   const searchParams = useSearchParams();
   const editItemId = searchParams.get('edit');
-  const editLoadedRef = useRef(false);
-  
-  // State
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [, setIsEditMode] = useState(false);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [armamentType, setArmamentType] = useState<ArmamentType>('Weapon');
-  const [selectedProperties, setSelectedProperties] = useState<SelectedProperty[]>([]);
-  const [damage, setDamage] = useState<DamageConfig>({ amount: 1, size: 4, type: 'slashing' });
   const load = useLoadModalLibrary('item');
-  const [isTwoHanded, setIsTwoHanded] = useState(false);
-  const [rangeLevel, setRangeLevel] = useState(0); // 0 = melee, 1+ = ranged (8 spaces per level)
-  
+
+  const { data: itemProperties = [], isLoading, error, refetch } = useItemProperties();
+
+  const sessionKey = editItemId ?? 'draft';
+  // Ready once properties exist; in ?edit= mode also wait for the library fetch
+  // to settle (rawItems may legitimately stay empty — fall back to blank form).
+  const bootstrapReady =
+    itemProperties.length > 0 && (!editItemId || !load.isLoading);
+
+  // One-time render adjust per sessionKey: compute the initial form state exactly
+  // once when data is ready (no hydrate effect, no recompute on later re-renders).
+  const [bootstrapState, setBootstrapState] = useState<{
+    key: string;
+    form: ItemCreatorFormState;
+  } | null>(null);
+  if (bootstrapReady && bootstrapState?.key !== sessionKey) {
+    setBootstrapState({
+      key: sessionKey,
+      form: bootstrapItemCreatorFormState({
+        editItemId,
+        itemProperties,
+        rawItems: load.rawItems,
+      }),
+    });
+  }
+  const initialFormState = bootstrapState?.key === sessionKey ? bootstrapState.form : null;
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <ErrorDisplay
+          message={`Failed to load item properties: ${error.message}`}
+          onRetry={() => {
+            void refetch();
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (!initialFormState) {
+    return (
+      <div className="min-h-screen bg-background">
+        <LoadingState message="Loading item properties..." padding="lg" />
+      </div>
+    );
+  }
+
+  return (
+    <ItemCreatorWorkspace
+      key={sessionKey}
+      initialFormState={initialFormState}
+      editItemId={editItemId}
+      user={user}
+      isAdmin={isAdmin}
+      itemProperties={itemProperties}
+      load={load}
+      isLoading={isLoading}
+      error={error}
+      refetch={refetch}
+    />
+  );
+}
+
+interface ItemCreatorWorkspaceProps {
+  initialFormState: ItemCreatorFormState;
+  editItemId: string | null;
+  user: ReturnType<typeof useAuthStore.getState>['user'];
+  isAdmin: boolean;
+  itemProperties: ItemProperty[];
+  load: UseLoadModalLibraryReturn;
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => void;
+}
+
+function ItemCreatorWorkspace({
+  initialFormState,
+  editItemId,
+  user,
+  isAdmin,
+  itemProperties,
+  load,
+  isLoading,
+  error,
+  refetch,
+}: ItemCreatorWorkspaceProps) {
+  const [name, setName] = useState(initialFormState.name);
+  const [description, setDescription] = useState(initialFormState.description);
+  const [armamentType, setArmamentType] = useState<ArmamentType>(initialFormState.armamentType);
+  const [selectedProperties, setSelectedProperties] = useState<SelectedProperty[]>(
+    initialFormState.selectedProperties,
+  );
+  const [damage, setDamage] = useState<DamageConfig>(initialFormState.damage);
+  const [isTwoHanded, setIsTwoHanded] = useState(initialFormState.isTwoHanded);
+  const [rangeLevel, setRangeLevel] = useState(initialFormState.rangeLevel); // 0 = melee, 1+ = ranged (8 spaces per level)
+
   // Armor-specific state
-  const [damageReduction, setDamageReduction] = useState(0); // Armor damage reduction (default 0)
-  const [agilityReduction, setAgilityReduction] = useState(0); // Armor agility reduction
-  const [criticalRangeIncrease, setCriticalRangeIncrease] = useState(0); // Armor critical range increase (default 0)
-  
+  const [damageReduction, setDamageReduction] = useState(initialFormState.damageReduction);
+  const [agilityReduction, setAgilityReduction] = useState(initialFormState.agilityReduction);
+  const [criticalRangeIncrease, setCriticalRangeIncrease] = useState(
+    initialFormState.criticalRangeIncrease,
+  );
+
   // Shield-specific state - dice-based like weapon damage
-  const [shieldDR, setShieldDR] = useState<{ amount: number; size: number }>({ amount: 1, size: 4 }); // Shield damage reduction (1d4 base)
-  const [hasShieldDamage, setHasShieldDamage] = useState(false); // Optional shield damage
-  const [shieldDamage, setShieldDamage] = useState<{ amount: number; size: number }>({ amount: 1, size: 4 }); // 1d4 bludgeoning
-  
+  const [shieldDR, setShieldDR] = useState<{ amount: number; size: number }>(
+    initialFormState.shieldDR,
+  );
+  const [hasShieldDamage, setHasShieldDamage] = useState(initialFormState.hasShieldDamage);
+  const [shieldDamage, setShieldDamage] = useState<{ amount: number; size: number }>(
+    initialFormState.shieldDamage,
+  );
+
   // Ability requirements state - each armament can have one ability requirement
-  const [abilityRequirement, setAbilityRequirement] = useState<{ id: number; name: string; level: number } | null>(null);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [abilityRequirement, setAbilityRequirement] = useState<{ id: number; name: string; level: number } | null>(
+    initialFormState.abilityRequirement,
+  );
+  const [imageUrl, setImageUrl] = useState<string | null>(initialFormState.imageUrl);
 
   const armamentArtEntity = useMemo(
     () => armamentTypeToArtEntity(armamentType),
     [armamentType]
   );
 
-  // Fetch item properties
-  const { data: itemProperties = [], isLoading, error, refetch } = useItemProperties();
-
-  // Load cached state from localStorage on mount
+  // ?edit= mode: clear any stale draft once on mount (parity with the old hydrate
+  // effect, which removed the cache after loading the edit target).
   useEffect(() => {
-    // Prevent re-running after initial load to avoid overwriting user input
-    if (isInitialized || itemProperties.length === 0 || editItemId) return;
-    
-    try {
-      const cached = localStorage.getItem(ITEM_CREATOR_CACHE_KEY);
-      if (cached) {
-        const parsed: ItemCreatorCache = JSON.parse(cached);
-        // Only use cache if it's less than 30 days old
-        const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-        if (Date.now() - parsed.timestamp < thirtyDays) {
-          setName(parsed.name || '');
-          setDescription(parsed.description || '');
-          setArmamentType(parsed.armamentType || 'Weapon');
-          setDamage(parsed.damage || { amount: 1, size: 4, type: 'slashing' });
-          setIsTwoHanded(parsed.isTwoHanded || false);
-          setRangeLevel(parsed.rangeLevel || 0);
-          setDamageReduction(parsed.damageReduction || 0);
-          setAgilityReduction(parsed.agilityReduction || 0);
-          setCriticalRangeIncrease(parsed.criticalRangeIncrease || 0);
-          setShieldDR(parsed.shieldDR || { amount: 1, size: 4 });
-          setHasShieldDamage(parsed.hasShieldDamage || false);
-          setShieldDamage(parsed.shieldDamage || { amount: 1, size: 4 });
-          setAbilityRequirement(parsed.abilityRequirement || null);
-          
-          // Restore selected properties by finding them in itemProperties
-          if (parsed.selectedProperties && parsed.selectedProperties.length > 0) {
-            const restoredProps: SelectedProperty[] = [];
-            for (const savedProp of parsed.selectedProperties) {
-              const foundProp = itemProperties.find((p: { id: string }) => String(p.id) === String(savedProp.propertyId));
-              if (foundProp) {
-                restoredProps.push({
-                  property: foundProp,
-                  op_1_lvl: savedProp.op_1_lvl,
-                });
-              }
-            }
-            setSelectedProperties(restoredProps);
-          }
-        } else {
-          localStorage.removeItem(ITEM_CREATOR_CACHE_KEY);
-        }
-      }
-    } catch {
-    }
-    setIsInitialized(true);
-  }, [itemProperties, isInitialized, editItemId]);
+    if (editItemId) clearCreatorCache(ITEM_CREATOR_CACHE_KEY);
+  }, [editItemId]);
 
-  // Auto-save to localStorage when state changes
+  // Auto-save draft to localStorage (skip when editing an existing library row via ?edit=)
   useEffect(() => {
-    if (!isInitialized) return;
-    
-    try {
+    if (editItemId) return;
+
+    {
       const cache: ItemCreatorCache = {
         name,
         description,
@@ -476,15 +501,18 @@ function ItemCreatorContent() {
         abilityRequirement,
         timestamp: Date.now(),
       };
-      localStorage.setItem(ITEM_CREATOR_CACHE_KEY, JSON.stringify(cache));
-    } catch {
+      writeCreatorCache(ITEM_CREATOR_CACHE_KEY, cache);
     }
-  }, [isInitialized, name, description, armamentType, selectedProperties, damage, isTwoHanded, rangeLevel, damageReduction, agilityReduction, criticalRangeIncrease, shieldDR, hasShieldDamage, shieldDamage, abilityRequirement]);
+  }, [editItemId, name, description, armamentType, selectedProperties, damage, isTwoHanded, rangeLevel, damageReduction, agilityReduction, criticalRangeIncrease, shieldDR, hasShieldDamage, shieldDamage, abilityRequirement]);
 
-  // When armament type changes, filter out incompatible properties
-  useEffect(() => {
-    const armamentTypeLower = armamentType.toLowerCase();
-    setSelectedProperties(prev => 
+  // Change armament type: filter out incompatible properties and clear the
+  // ability requirement (different types have different requirements). Event
+  // handler instead of a reactive effect — bootstrap/load paths already set
+  // consistent property lists.
+  const changeArmamentType = useCallback((next: ArmamentType) => {
+    setArmamentType(next);
+    const armamentTypeLower = next.toLowerCase();
+    setSelectedProperties(prev =>
       prev.filter(sp => {
         const propType = (sp.property.type || '').toLowerCase();
         // Keep properties with no type, general type, or matching type
@@ -492,90 +520,8 @@ function ItemCreatorContent() {
         return propType === armamentTypeLower;
       })
     );
-    // Clear ability requirement when armament type changes (different types have different requirements)
     setAbilityRequirement(null);
-  }, [armamentType]);
-
-  // Load item for editing from URL parameter
-  useEffect(() => {
-    if (!editItemId || !load.rawItems.length || !itemProperties.length || editLoadedRef.current) return;
-    const itemToEdit = (load.rawItems as UserItem[]).find(
-      (item: UserItem) => String(item.docId) === editItemId || String(item.id) === editItemId
-    );
-    editLoadedRef.current = true;
-    if (!itemToEdit) {
-      setIsInitialized(true);
-      return;
-    }
-    
-    // Populate form with item data
-    setIsEditMode(true);
-    setName(itemToEdit.name);
-    setDescription(itemToEdit.description || '');
-    const loadedImageUrl = (itemToEdit as { imageUrl?: string | null }).imageUrl;
-    setImageUrl(typeof loadedImageUrl === 'string' && loadedImageUrl.trim() ? loadedImageUrl : null);
-    
-    // Set armament type
-    const itemType = itemToEdit.type?.charAt(0).toUpperCase() + itemToEdit.type?.slice(1).toLowerCase();
-    if (itemType === 'Weapon' || itemType === 'Armor' || itemType === 'Shield') {
-      setArmamentType(itemType as ArmamentType);
-    }
-    
-    // Restore damage config (for weapons)
-    if (itemToEdit.damage && Array.isArray(itemToEdit.damage) && itemToEdit.damage.length > 0) {
-      const dmg = itemToEdit.damage[0];
-      setDamage({
-        amount: Number(dmg.amount) || 1,
-        size: Number(dmg.size) || 4,
-        type: dmg.type || 'slashing',
-      });
-    }
-    
-    // Restore two-handed
-    setIsTwoHanded(itemToEdit.isTwoHanded || false);
-    
-    // Restore range
-    setRangeLevel(itemToEdit.rangeLevel || 0);
-    
-    // Restore armor-specific fields
-    if (itemToEdit.armorValue !== undefined) {
-      setDamageReduction(itemToEdit.armorValue);
-    }
-    if (itemToEdit.agilityReduction !== undefined) {
-      setAgilityReduction(itemToEdit.agilityReduction);
-    }
-    if (itemToEdit.criticalRangeIncrease !== undefined) {
-      setCriticalRangeIncrease(itemToEdit.criticalRangeIncrease);
-    }
-    
-    // Restore ability requirement (preserve saved id so dropdown and save work)
-    if (itemToEdit.abilityRequirement) {
-      const ar = itemToEdit.abilityRequirement;
-      setAbilityRequirement({
-        id: typeof ar.id === 'number' ? ar.id : Number(ar.id) || 0,
-        name: ar.name || '',
-        level: ar.level || 0,
-      });
-    } else if (itemType === 'Weapon' || itemType === 'Armor') {
-      setAbilityRequirement(null);
-    }
-    
-    // Restore properties
-    if (itemToEdit.properties && itemToEdit.properties.length > 0) {
-      // Only non-mechanic properties belong in the selectable list; mechanic properties are driven
-      // by dedicated UI fields (damage, rangeLevel, DR, etc.) and should never be duplicated here.
-      const loadedProperties = filterSavedItemPropertiesForList(
-        itemToEdit.properties as Array<{ id?: number | string; name?: string; op_1_lvl?: number }>,
-        itemProperties
-      );
-      setSelectedProperties(loadedProperties);
-    }
-    
-    // Clear localStorage cache when loading for edit (don't want to mix with cached data)
-    localStorage.removeItem(ITEM_CREATOR_CACHE_KEY);
-    
-    setIsInitialized(true);
-  }, [editItemId, load.rawItems, itemProperties]);
+  }, []);
 
   // Range display string
   const rangeDisplay = useMemo(() => {
@@ -931,108 +877,35 @@ function ItemCreatorContent() {
     setAbilityRequirement(null);
     setImageUrl(null);
     save.setSaveMessage(null);
-    // Clear localStorage cache
-    try {
-      localStorage.removeItem(ITEM_CREATOR_CACHE_KEY);
-    } catch {
-    }
+    clearCreatorCache(ITEM_CREATOR_CACHE_KEY);
   }, [save]);
+
+  const applyFormState = useCallback((next: ItemCreatorFormState) => {
+    setName(next.name);
+    setDescription(next.description);
+    setArmamentType(next.armamentType);
+    setSelectedProperties(next.selectedProperties);
+    setDamage(next.damage);
+    setIsTwoHanded(next.isTwoHanded);
+    setRangeLevel(next.rangeLevel);
+    setDamageReduction(next.damageReduction);
+    setAgilityReduction(next.agilityReduction);
+    setCriticalRangeIncrease(next.criticalRangeIncrease);
+    setShieldDR(next.shieldDR);
+    setHasShieldDamage(next.hasShieldDamage);
+    setShieldDamage(next.shieldDamage);
+    setAbilityRequirement(next.abilityRequirement);
+    setImageUrl(next.imageUrl);
+  }, []);
 
   // Load an item from the library
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleLoadItem = useCallback((item: any) => {
-    // Reset all state first to avoid corruption from any existing edits
-    handleReset();
-    // Set basic fields
-    setName(item.name || '');
-    setDescription(item.description || '');
-    
-    // Set armament type - map from stored type to ArmamentType
-    const typeMap: Record<string, ArmamentType> = {
-      'weapon': 'Weapon',
-      'armor': 'Armor',
-      'shield': 'Shield',
-    };
-    const loadedType = typeMap[item.type?.toLowerCase()] || 'Weapon';
-    setArmamentType(loadedType);
-    
-    // Load properties - only non-mechanic ones go in the list (mechanic are in damage, DR, etc.)
-    if (item.properties && Array.isArray(item.properties) && itemProperties.length > 0) {
-      const loadedProperties = filterSavedItemPropertiesForList(
-        item.properties as Array<{ id?: number | string; name?: string; op_1_lvl?: number }>,
-        itemProperties
-      );
-      setSelectedProperties(loadedProperties);
-    } else {
-      setSelectedProperties([]);
-    }
-    
-    // Load damage configuration
-    if (item.damage && Array.isArray(item.damage) && item.damage.length > 0) {
-      const dmg = item.damage[0];
-      setDamage({
-        amount: dmg.amount || 1,
-        size: dmg.size || 6,
-        type: dmg.type || 'slashing',
-      });
-    } else {
-      setDamage({ amount: 1, size: 6, type: 'slashing' });
-    }
-    
-    // Load weapon-specific fields
-    if (loadedType === 'Weapon') {
-      setIsTwoHanded(item.isTwoHanded || false);
-      setRangeLevel(item.rangeLevel || 0);
-      if (item.abilityRequirement) {
-        setAbilityRequirement({
-          id: item.abilityRequirement.id,
-          name: item.abilityRequirement.name,
-          level: item.abilityRequirement.level || 0,
-        });
-      } else {
-        setAbilityRequirement(null);
-      }
-    }
-    
-    // Load armor-specific fields
-    if (loadedType === 'Armor') {
-      setDamageReduction(item.damageReduction ?? item.armorValue ?? 0);
-      setAgilityReduction(item.agilityReduction || 0);
-      setCriticalRangeIncrease(item.criticalRangeIncrease || 0);
-      if (item.abilityRequirement) {
-        setAbilityRequirement({
-          id: item.abilityRequirement.id,
-          name: item.abilityRequirement.name,
-          level: item.abilityRequirement.level || 0,
-        });
-      } else {
-        setAbilityRequirement(null);
-      }
-    }
-    
-    // Load shield-specific fields
-    if (loadedType === 'Shield') {
-      setIsTwoHanded(item.isTwoHanded || false);
-      if (item.shieldDR) {
-        setShieldDR({
-          amount: item.shieldDR.amount || 1,
-          size: item.shieldDR.size || 4,
-        });
-      }
-      setHasShieldDamage(item.hasShieldDamage || false);
-      if (item.shieldDamage) {
-        setShieldDamage({
-          amount: item.shieldDamage.amount || 1,
-          size: item.shieldDamage.size || 4,
-        });
-      }
-    }
-    
-    // Close modal
+    applyFormState(itemLibraryRecordToFormState(item, itemProperties));
     load.closeLoadModal();
     save.setSaveMessage({ type: 'success', text: 'Armament loaded successfully!' });
     setTimeout(() => save.setSaveMessage(null), 2000);
-  }, [itemProperties, handleReset, load, save]);
+  }, [itemProperties, applyFormState, load, save]);
 
   return (
     <CreatorPageShell
@@ -1174,7 +1047,7 @@ function ItemCreatorContent() {
                   {ARMAMENT_TYPES.map((type) => (
                     <button
                       key={type.value}
-                      onClick={() => setArmamentType(type.value)}
+                      onClick={() => changeArmamentType(type.value)}
                       className={cn(
                         'py-2 px-3 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-1',
                         armamentType === type.value

@@ -10,6 +10,7 @@ describe('buildPowerTechniqueCardFacts disclosure', () => {
   it('puts Training Points in titleChips and Action Type / Energy in detailChips', () => {
     const power = {
       id: 'p1',
+      docId: 'p1',
       name: 'Test Bolt',
       description: 'A test power.',
       parts: [],
@@ -31,6 +32,7 @@ describe('buildPowerTechniqueCardFacts disclosure', () => {
   it('innate titleBudget puts Energy title-adjacent and keeps Action Type value-only in detail', () => {
     const power = {
       id: 'p2',
+      docId: 'p2',
       name: 'Innate Spark',
       description: 'A small innate.',
       parts: [],

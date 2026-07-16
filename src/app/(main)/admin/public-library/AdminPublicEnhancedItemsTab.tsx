@@ -40,19 +40,32 @@ export function AdminPublicEnhancedItemsTab() {
   const deleteMutation = useDeleteOfficialEnhancedItem();
   const { sortState, handleSort, sortItems } = useSort('name');
 
+  const cardData = useMemo(() => {
+    return enhanced.map((e) => ({
+      ...e,
+      base: e.base_item_name,
+      power: e.power_name,
+      cost: e.currency_cost,
+      uses:
+        e.uses_type === 'permanent'
+          ? 'Permanent'
+          : `${e.uses_count ?? 1} / ${e.uses_type === 'full' ? 'Full' : 'Partial'}`,
+    }));
+  }, [enhanced]);
+
   const filtered = useMemo(() => {
-    let list = [...enhanced];
+    let list = [...cardData];
     if (search.trim()) {
       const s = search.toLowerCase();
       list = list.filter(
         (e) =>
           e.name.toLowerCase().includes(s) ||
-          e.base_item_name.toLowerCase().includes(s) ||
-          e.power_name.toLowerCase().includes(s)
+          e.base.toLowerCase().includes(s) ||
+          e.power.toLowerCase().includes(s)
       );
     }
     return sortItems(list);
-  }, [enhanced, search, sortItems]);
+  }, [cardData, search, sortItems]);
 
   if (error) {
     return <ErrorDisplay message="Failed to load official enhanced items" onRetry={() => { void refetch(); }} />;
@@ -87,7 +100,7 @@ export function AdminPublicEnhancedItemsTab() {
           { key: 'power', label: 'POWER' },
           { key: 'rarity', label: 'RARITY' },
           { key: 'cost', label: 'COST (C)' },
-          { key: 'uses', label: 'USES', sortable: false },
+          { key: 'uses', label: 'USES' },
           { key: '_actions', label: '', sortable: false as const },
         ]}
         gridColumns={GRID}
@@ -113,18 +126,13 @@ export function AdminPublicEnhancedItemsTab() {
               description={e.description ?? undefined}
               gridColumns={GRID}
               columns={[
-                { key: 'Base', value: e.base_item_name },
-                { key: 'Power', value: e.power_name },
-                { key: 'Rarity', value: e.rarity },
-                { key: 'Cost', value: e.currency_cost, align: 'right' },
+                { key: 'base', value: e.base },
+                { key: 'power', value: e.power },
+                { key: 'rarity', value: e.rarity },
+                { key: 'cost', value: e.cost, align: 'right' },
                 {
-                  key: 'Uses',
-                  value:
-                    e.uses_type === 'permanent'
-                      ? 'Permanent'
-                      : `${e.uses_count ?? 1} / ${
-                          e.uses_type === 'full' ? 'Full' : 'Partial'
-                        }`,
+                  key: 'uses',
+                  value: e.uses,
                   align: 'right',
                 },
               ]}

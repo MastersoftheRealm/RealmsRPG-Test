@@ -1,34 +1,22 @@
 /**
  * ValueStepper Component
  * ======================
- * Unified increment/decrement control used across the entire site.
- * Replaces various inline +/- button patterns with a consistent component.
- * 
+ * Unified increment/decrement control used across the entire site (ADR-0002).
+ * Visual chrome matches guided creator skills bonus steppers: soft surface-alt,
+ * no invasive border, rounded-lg, bold ± glyphs.
+ *
  * Features:
- * - Hold-to-repeat with exponential acceleration (uses Pointer Events so touch does not double-fire with synthetic mouse events)
- * - Touch support via pointer events (single stream vs touch + mouse)
- * - Color variants for different contexts (health, energy, neutral)
- * - Consistent styling across all pages
- * 
- * Used in:
- * - Character Sheet: ability editing, skill values, defense skills, health/energy
- * - Character Creator: ability allocation, skill points, health/energy allocation
- * - Creature Creator: stats, quantities
- * - All creators: level selection, quantities
- * - Encounter Tracker: combatant stats
- * 
+ * - Hold-to-repeat with exponential acceleration (Pointer Events; touch-safe)
+ * - Size / layout variants only — button chrome is always neutral
+ * - Optional value coloring (health / energy / signed bonus) — not button tints
+ *
+ * Prefer this + DecrementButton / IncrementButton. For quantities in list rows,
+ * use QuantitySelector (thin wrapper). Do not hand-roll ± buttons.
+ *
  * @example
- * // Basic usage
  * <ValueStepper value={5} onChange={setValue} />
- * 
- * // With formatted display (+/- for bonuses)
- * <ValueStepper value={3} onChange={setValue} formatValue={v => v >= 0 ? `+${v}` : `${v}`} />
- * 
- * // Compact inline style
- * <ValueStepper value={2} onChange={setValue} variant="inline" size="sm" />
- * 
- * // Health/Energy with hold-to-repeat and color
- * <ValueStepper value={hp} onChange={setHp} max={maxHp} colorVariant="health" enableHoldRepeat />
+ * <ValueStepper value={3} onChange={setValue} formatValue={v => v >= 0 ? `+${v}` : `${v}`} colorValue />
+ * <ValueStepper value={hp} onChange={setHp} colorVariant="health" enableHoldRepeat />
  */
 
 'use client';
@@ -43,7 +31,7 @@ import { cn } from '@/lib/utils/cn';
 // =============================================================================
 
 /**
- * Hook for handling hold-to-repeat with exponential acceleration.
+ * Hold-to-repeat with exponential acceleration.
  * Single tap = one step (initial delay before repeat). Hold = repeat after delay, then accelerating intervals.
  */
 function useHoldRepeat(
@@ -61,7 +49,7 @@ function useHoldRepeat(
   const isHoldingRef = useRef(false);
   const hasRepeatedRef = useRef(false);
   const callbackRef = useRef(callback);
-  
+
   useEffect(() => {
     callbackRef.current = callback;
   }, [callback]);
@@ -71,7 +59,7 @@ function useHoldRepeat(
     isHoldingRef.current = true;
     hasRepeatedRef.current = false;
     delayRef.current = maxDelay;
-    
+
     initialTimeoutRef.current = setTimeout(() => {
       initialTimeoutRef.current = null;
       hasRepeatedRef.current = true;
@@ -115,28 +103,21 @@ function useHoldRepeat(
 // =============================================================================
 
 const stepperButtonVariants = cva(
-  // Base: 44px min on touch viewports (below md), compact on desktop per MOBILE_UX.md
-  // touch-manipulation: avoid 300ms delay and reduce accidental double-tap zoom on hold buttons
-  // Sleek default: rounded (not pill), surface/neutral — matches skill bonus steppers (TASK-468)
-  'touch-manipulation flex items-center justify-center font-bold rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed select-none min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] md:min-w-0 md:min-h-0 border',
+  // 44px min on touch viewports (below md), compact on desktop per MOBILE_UX.md
+  // Chrome comes from `.btn-stepper` (ADR-0002) — keep sizing here only
+  'btn-stepper touch-manipulation select-none min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] md:min-w-0 md:min-h-0',
   {
     variants: {
       size: {
-        xs: 'w-11 h-11 md:w-5 md:h-5 text-xs',
-        sm: 'w-11 h-11 md:w-6 md:h-6 text-sm',
-        md: 'w-11 h-11 md:w-8 md:h-8 text-base',
-        lg: 'w-12 h-12 md:w-10 md:h-10 text-lg',
-        xl: 'w-14 h-14 md:w-12 md:h-12 text-xl',
-      },
-      colorVariant: {
-        default: '',
-        health: '',
-        energy: '',
+        xs: 'w-11 h-11 md:w-5 md:h-5 text-sm',
+        sm: 'w-11 h-11 md:w-6 md:h-6 text-base',
+        md: 'w-11 h-11 md:w-8 md:h-8 text-lg',
+        lg: 'w-12 h-12 md:w-10 md:h-10 text-xl',
+        xl: 'w-14 h-14 md:w-12 md:h-12 text-2xl',
       },
     },
     defaultVariants: {
       size: 'md',
-      colorVariant: 'default',
     },
   }
 );
@@ -188,11 +169,14 @@ export interface ValueStepperProps extends VariantProps<typeof stepperButtonVari
   formatValue?: (value: number) => string;
   /** Color the value based on positive/negative */
   colorValue?: boolean;
-  /** Color variant for health/energy contexts */
+  /**
+   * Colors the **value** text for health/energy contexts.
+   * Buttons always use neutral `.btn-stepper` chrome (ADR-0002).
+   */
   colorVariant?: 'default' | 'health' | 'energy';
-  /** Enable hold-to-repeat with exponential acceleration */
+  /** Enable hold-to-repeat with exponential acceleration (HP/EN pools only) */
   enableHoldRepeat?: boolean;
-  /** Style variant */
+  /** Layout density */
   variant?: 'default' | 'inline' | 'compact';
   /** Additional class name */
   className?: string;
@@ -203,9 +187,7 @@ export interface ValueStepperProps extends VariantProps<typeof stepperButtonVari
 }
 
 /**
- * Unified value stepper component.
- * Provides consistent +/- controls across the entire site.
- * Supports hold-to-repeat with exponential acceleration for health/energy.
+ * Unified value stepper. Buttons always use shared neutral chrome.
  */
 export function ValueStepper({
   value,
@@ -241,43 +223,18 @@ export function ValueStepper({
     }
   }, [disabled, value, max, step, onChange]);
 
-  // Hold-to-repeat handlers
   const decrementHold = useHoldRepeat(handleDecrement, enableHoldRepeat && canDecrement);
   const incrementHold = useHoldRepeat(handleIncrement, enableHoldRepeat && canIncrement);
 
-  // Determine value state for coloring
-  const valueState: 'positive' | 'negative' | 'neutral' | 'health' | 'energy' = 
+  const valueState: 'positive' | 'negative' | 'neutral' | 'health' | 'energy' =
     colorVariant === 'health' ? 'health' :
     colorVariant === 'energy' ? 'energy' :
-    colorValue 
+    colorValue
       ? value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral'
       : 'neutral';
 
-  // Button color classes — default is sleek/neutral (skill bonus style); health/energy keep soft tints
-  const getDecrementButtonClass = () => {
-    if (colorVariant === 'health') {
-      return 'bg-success-100 dark:bg-success-900/40 hover:bg-success-200 dark:hover:bg-success-800/50 text-success-700 dark:text-success-400 border-success-200 dark:border-success-800/50';
-    }
-    if (colorVariant === 'energy') {
-      return 'bg-info-100 dark:bg-info-900/40 hover:bg-info-200 dark:hover:bg-info-800/50 text-info-700 dark:text-info-400 border-info-200 dark:border-info-800/50';
-    }
-    return 'btn-stepper';
-  };
-
-  const getIncrementButtonClass = () => {
-    if (colorVariant === 'health') {
-      return 'bg-success-100 dark:bg-success-900/40 hover:bg-success-200 dark:hover:bg-success-800/50 text-success-700 dark:text-success-400 border-success-200 dark:border-success-800/50';
-    }
-    if (colorVariant === 'energy') {
-      return 'bg-info-100 dark:bg-info-900/40 hover:bg-info-200 dark:hover:bg-info-800/50 text-info-700 dark:text-info-400 border-info-200 dark:border-info-800/50';
-    }
-    return 'btn-stepper';
-  };
-
-  // Format the display value
   const displayValue = formatValue ? formatValue(value) : String(value);
 
-  // Container classes based on variant
   const containerClasses = cn(
     'flex items-center',
     variant === 'default' && 'gap-2',
@@ -286,7 +243,6 @@ export function ValueStepper({
     className
   );
 
-  // Label size classes
   const labelClasses = cn(
     'font-medium text-text-secondary',
     size === 'sm' && 'text-xs',
@@ -298,8 +254,7 @@ export function ValueStepper({
   return (
     <div className={containerClasses}>
       {label && <span className={labelClasses}>{label}</span>}
-      
-      {/* Decrement button */}
+
       <button
         type="button"
         onClick={enableHoldRepeat ? undefined : handleDecrement}
@@ -341,22 +296,20 @@ export function ValueStepper({
         disabled={!canDecrement}
         title={decrementTitle}
         aria-label={decrementTitle}
-        className={cn(
-          stepperButtonVariants({ size }),
-          getDecrementButtonClass()
-        )}
+        className={stepperButtonVariants({ size })}
       >
         −
       </button>
 
-      {/* Value display */}
       {!hideValue && (
-        <span className={valueDisplayVariants({ size, valueState })}>
+        <span
+          className={valueDisplayVariants({ size, valueState })}
+          aria-live="polite"
+        >
           {displayValue}
         </span>
       )}
 
-      {/* Increment button */}
       <button
         type="button"
         onClick={enableHoldRepeat ? undefined : handleIncrement}
@@ -398,10 +351,7 @@ export function ValueStepper({
         disabled={!canIncrement}
         title={incrementTitle}
         aria-label={incrementTitle}
-        className={cn(
-          stepperButtonVariants({ size }),
-          getIncrementButtonClass()
-        )}
+        className={stepperButtonVariants({ size })}
       >
         +
       </button>
@@ -424,15 +374,14 @@ export interface StepperButtonProps {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   /** Button title for accessibility */
   title?: string;
-  /** Enable hold-to-repeat */
+  /** Enable hold-to-repeat (HP/EN pools only) */
   enableHoldRepeat?: boolean;
   /** Additional className */
   className?: string;
 }
 
 /**
- * Standalone decrement button for custom layouts.
- * Use when you need the stepper buttons but want custom value display between them.
+ * Standalone decrement button for custom layouts (e.g. bonus display between ±).
  */
 export function DecrementButton({
   onClick,
@@ -486,11 +435,7 @@ export function DecrementButton({
       disabled={disabled}
       title={title}
       aria-label={title}
-      className={cn(
-        stepperButtonVariants({ size }),
-        'btn-stepper',
-        className
-      )}
+      className={cn(stepperButtonVariants({ size }), className)}
     >
       −
     </button>
@@ -498,8 +443,7 @@ export function DecrementButton({
 }
 
 /**
- * Standalone increment button for custom layouts.
- * Use when you need the stepper buttons but want custom value display between them.
+ * Standalone increment button for custom layouts (e.g. bonus display between ±).
  */
 export function IncrementButton({
   onClick,
@@ -553,11 +497,7 @@ export function IncrementButton({
       disabled={disabled}
       title={title}
       aria-label={title}
-      className={cn(
-        stepperButtonVariants({ size }),
-        'btn-stepper',
-        className
-      )}
+      className={cn(stepperButtonVariants({ size }), className)}
     >
       +
     </button>

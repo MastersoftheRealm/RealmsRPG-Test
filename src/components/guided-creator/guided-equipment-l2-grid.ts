@@ -2,6 +2,7 @@
  * Grid column definitions for guided equipment L2 `UnifiedSelectionModal`.
  * Headers must match GridListRow `columns` keys (name is the row `name` prop, still
  * listed in headers for alignment with `gridColumns`).
+ * Data columns are sortable (asc/desc via ListHeader); only spacer/action keys omit sort.
  */
 
 import type { GuidedEquipmentPhase } from '@/stores/guided-creator-store';
@@ -15,26 +16,26 @@ export type L2ColumnHeader = {
 
 /** Weapons & shields — Name | Damage | Currency | Training Points */
 export const WEAPON_L2_HEADER_COLUMNS: L2ColumnHeader[] = [
-  { key: 'name', label: 'Name', align: 'left', sortable: false },
-  { key: 'damage', label: 'Damage', align: 'center', sortable: false },
-  { key: 'currency', label: 'Currency', align: 'right', sortable: false },
-  { key: 'tp', label: 'Training Points', align: 'center', sortable: false },
+  { key: 'name', label: 'Name', align: 'left', sortable: true },
+  { key: 'damage', label: 'Damage', align: 'center', sortable: true },
+  { key: 'currency', label: 'Currency', align: 'right', sortable: true },
+  { key: 'tp', label: 'Training Points', align: 'center', sortable: true },
 ];
 export const WEAPON_L2_GRID = '1.6fr 0.9fr 0.7fr 0.9fr';
 
 /** Armor — Name | Damage Reduction | Currency | Training Points */
 export const ARMOR_L2_HEADER_COLUMNS: L2ColumnHeader[] = [
-  { key: 'name', label: 'Name', align: 'left', sortable: false },
-  { key: 'dr', label: 'Damage Reduction', align: 'center', sortable: false },
-  { key: 'currency', label: 'Currency', align: 'right', sortable: false },
-  { key: 'tp', label: 'Training Points', align: 'center', sortable: false },
+  { key: 'name', label: 'Name', align: 'left', sortable: true },
+  { key: 'dr', label: 'Damage Reduction', align: 'center', sortable: true },
+  { key: 'currency', label: 'Currency', align: 'right', sortable: true },
+  { key: 'tp', label: 'Training Points', align: 'center', sortable: true },
 ];
 export const ARMOR_L2_GRID = '1.6fr 1fr 0.7fr 0.9fr';
 
 /** Gear — Name | Currency */
 export const GEAR_L2_HEADER_COLUMNS: L2ColumnHeader[] = [
-  { key: 'name', label: 'Name', align: 'left', sortable: false },
-  { key: 'currency', label: 'Currency', align: 'right', sortable: false },
+  { key: 'name', label: 'Name', align: 'left', sortable: true },
+  { key: 'currency', label: 'Currency', align: 'right', sortable: true },
 ];
 export const GEAR_L2_GRID = '1.6fr 0.7fr';
 

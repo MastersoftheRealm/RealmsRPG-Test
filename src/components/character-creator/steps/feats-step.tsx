@@ -49,8 +49,8 @@ const FEAT_HEADER_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'category', label: 'CATEGORY' },
   { key: 'ability', label: 'ABILITY' },
-  { key: 'rec_period', label: 'RECOVERY', sortable: false as const },
-  { key: 'uses_per_rec', label: 'USES', sortable: false as const },
+  { key: 'rec_period', label: 'RECOVERY' },
+  { key: 'uses_per_rec', label: 'USES' },
   { key: '_actions', label: '', sortable: false as const },
 ];
 

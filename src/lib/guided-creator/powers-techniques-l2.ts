@@ -25,10 +25,10 @@ import { TRAINING_POINTS_COST_LABEL } from '@/lib/detail-option/compact-facts';
 export type PowersTechniquesL2Mode = 'regular' | 'innate';
 
 export const POWERS_TECHNIQUES_L2_HEADER_COLUMNS = [
-  { key: 'name', label: 'Name', align: 'left' as const, sortable: false },
-  { key: 'action', label: 'Action Type', align: 'center' as const, sortable: false },
-  { key: 'energy', label: 'Energy', align: 'center' as const, sortable: false },
-  { key: 'tp', label: 'Training Points', align: 'center' as const, sortable: false },
+  { key: 'name', label: 'Name', align: 'left' as const, sortable: true },
+  { key: 'action', label: 'Action Type', align: 'center' as const, sortable: true },
+  { key: 'energy', label: 'Energy', align: 'center' as const, sortable: true },
+  { key: 'tp', label: 'Training Points', align: 'center' as const, sortable: true },
 ];
 
 export const POWERS_TECHNIQUES_L2_GRID = '1.6fr 1fr 0.7fr 0.9fr';

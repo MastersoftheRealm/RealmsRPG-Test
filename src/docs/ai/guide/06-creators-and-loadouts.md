@@ -12,7 +12,9 @@ See **`REALMS_PRODUCT_OVERVIEW.md` §5.0** for product intent. Two creators coex
 | **Advanced (Classic)** | `/characters/new/advanced` | `character-creator-store.ts` | 9 steps — `src/components/character-creator/steps/` |
 | **Entry chooser** | `/characters/new` | — | Simple vs Advanced cards; home CTAs land here |
 
-**Guided shell:** `GuidedCreatorShell` — chapter rail, `CharacterPreviewPanel`, `GuidedStepFooter`, landing-cohesive `CreatorFunnelHero`. Path data via `useGuidedPathData`. Save via `buildGuidedCharacterPayload` → `createCharacter`.
+**Guided shell:** `GuidedCreatorShell` — chapter rail, `CharacterPreviewPanel`, `GuidedStepFooter`, landing-cohesive `CreatorFunnelHero`. Path data via `useGuidedPathData`. Save via `buildGuidedCharacterPayload` → `cleanForSave` → `createCharacter` (same lean schema as custom finalize). Payload builds required `proficiencies` from official library parts/properties via `buildRequiredProficiencies` before lean strip — custom `getCharacter` parity. Both save paths set `libraryTabVisibility` via `defaultLibraryTabVisibilityForArchetype` (power/martial-only hides the opposite sheet Library tab; eye toggle can unhide). Guest save uses shared `LoginPromptModal` (same as Advanced). `?returnTo=` forwarded by chooser and honored on finish (`sanitizeRedirectPath`); skips play-together when set.
+
+**Save → sheet handoff (TASK-489):** Do **not** call `resetCreator()` before create succeeds or before navigation is scheduled. Use `navigateThenResetCreator` from `@/lib/creator-save-handoff` (guided `reveal-step`, advanced `finalize-step`). Keep Finish/Create disabled after success (including while the play-together modal is open) so a second create cannot fire. On failure, leave the draft and step intact.
 
 **User-facing copy:** Edit static prose in `src/lib/constants/copy/guided-creator-copy.ts` (chooser labels, step titles/descriptions, chapter rail, modals). Codex names (paths, species, feats) still come from the database.
 
@@ -66,7 +68,7 @@ Ability, defense, skill, and health/energy allocation should use shared componen
 
 - **Ability / defense editing:** `AbilityScoreEditor` (creators, character sheet) or `AbilitiesSection` (sheet) — both use `PointStatus`, `DecrementButton`, `IncrementButton` from `@/components/shared`.
 - **Skill point allocation:** `SkillsAllocationPage` (character/creature creator) or skills section with `PointStatus` (character sheet).
-- **Health/Energy pool:** `HealthEnergyAllocator` (creators, character sheet) with `ValueStepper`; use `enableHoldRepeat` only for pool allocation, not for ability/defense steppers.
+- **Health/Energy pool:** `HealthEnergyAllocator` (creators, character sheet) with `ValueStepper` (ADR-0002 neutral button chrome; `colorVariant` colors the value only); use `enableHoldRepeat` only for pool allocation, not for ability/defense steppers.
 - **Powered-martial proficiency:** `PoweredMartialSlider` from `@/components/shared` in creature creator and character sheet (ArchetypeSection) when both power and martial proficiency are present.
 
 Use design tokens for colors; avoid raw `blue-*` / `green-*` outside auth.

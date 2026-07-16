@@ -39,7 +39,7 @@ Task `related_files` may reference outdated paths. When implementing, prefer the
 | Category | Location | Notes |
 |----------|----------|-------|
 | UI primitives | `src/components/ui/` | Button, IconButton, Input, Select, Checkbox, Textarea, Modal, Chip, etc. |
-| Shared patterns | `src/components/shared/` | GridListRow, SkillRow, ValueStepper, RollButton, PointStatus, SectionHeader, **SegmentedControl**, **UnifiedSelectionModal**, **SourceFilter** |
+| Shared patterns | `src/components/shared/` | GridListRow, SkillRow, **ValueStepper** / Dec/Inc (ADR-0002; QuantitySelector wraps it), RollButton, PointStatus, SectionHeader, **SegmentedControl**, **UnifiedSelectionModal**, **SourceFilter** |
 | List utilities | `src/components/shared/list-components.tsx` | SearchInput, FilterSection, ResultsCount, EmptyState, LoadingState. **List headers:** use `ListHeader` from `src/components/shared/list-header.tsx` for all sortable list views (single source of truth; Option B). SortHeader/SortHeaderRow in list-components are legacy and unused in list views. **Do not** override ListHeader with transparent/flat `className` in modals unless there is a documented exception — keep the same bar styling as Codex/Library. |
 | Character sheet | `src/components/character-sheet/` | library-section, abilities-section, skills-section, feats-tab, modals |
 | Creators | `src/components/creator/` | ability-score-editor, health-energy-allocator, creator-summary-panel |

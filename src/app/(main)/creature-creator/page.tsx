@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useMemo, useCallback, useEffect, useRef, Suspense } from 'react';
+import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { UnifiedSelectionModal, GridListRow, ListHeader, SourceFilter, InnateToggle, SegmentedControl, SkillsAllocationPage, ValueStepper, InfoTippy } from '@/components/shared';
@@ -118,6 +118,8 @@ import {
   creatureSkillsToAllocations,
   rawRecordToCreatureState,
 } from './creature-skill-utils';
+import { bootstrapCreatureState } from './creature-creator-bootstrap';
+import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
 import {
   codexFeatToCreatureFeat,
   creatureToFeatRequirementCharacter,
@@ -176,10 +178,8 @@ function CreatureCreatorContent() {
 
   const searchParams = useSearchParams();
   const editCreatureId = searchParams.get('edit');
-  const editLoadedRef = useRef(false);
   const load = useLoadModalLibrary('creature', { prefetch: !!editCreatureId });
 
-  const [isInitialized, setIsInitialized] = useState(false);
   const [creature, setCreature] = useState<CreatureState>(initialState);
   const creatureLevel = Math.max(1, Math.floor(creature.level));
   const skillPointsHelp = useMemo(
@@ -431,39 +431,37 @@ function CreatureCreatorContent() {
     return normalizeInventoryType(sourceData?.type) === inventoryTab;
   }, [inventoryTab]);
 
-  // Load cached state from localStorage on mount (skip when ?edit= will load from library)
+  // One-time render adjust per sessionKey: seed creature state exactly once when
+  // reference data is ready (no hydrate effect). The creator form is behind the
+  // shell's loading flag until then, so nothing user-entered can be clobbered.
+  const sessionKey = editCreatureId ?? 'draft';
+  const bootstrapReady =
+    !skillsLoading &&
+    !traitsLoading &&
+    !creatureFeatsLoading &&
+    !codexFeatsLoading &&
+    (!editCreatureId || !load.isLoading);
+  const [bootstrapKey, setBootstrapKey] = useState<string | null>(null);
+  if (bootstrapReady && bootstrapKey !== sessionKey) {
+    setBootstrapKey(sessionKey);
+    setCreature(bootstrapCreatureState({ editCreatureId, rawItems: load.rawItems }));
+  }
+  const bootstrapApplied = bootstrapKey === sessionKey;
+
+  // ?edit= mode: clear any stale draft once on mount (parity with the old edit
+  // effect, which removed the cache after loading the edit target).
   useEffect(() => {
-    if (editCreatureId) return;
-    try {
-      const cached = localStorage.getItem(CREATURE_CREATOR_CACHE_KEY);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        // Only use cache if it's less than 30 days old
-        const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-        if (parsed.timestamp && Date.now() - parsed.timestamp < thirtyDays) {
-          setCreature(parsed.creature || initialState);
-        } else {
-          localStorage.removeItem(CREATURE_CREATOR_CACHE_KEY);
-        }
-      }
-    } catch {
-    }
-    setIsInitialized(true);
+    if (editCreatureId) clearCreatorCache(CREATURE_CREATOR_CACHE_KEY);
   }, [editCreatureId]);
 
-  // Auto-save to localStorage when creature changes
+  // Auto-save draft to localStorage (skip when editing an existing library row via ?edit=)
   useEffect(() => {
-    if (!isInitialized) return;
-    
-    try {
-      const cache = {
-        creature,
-        timestamp: Date.now(),
-      };
-      localStorage.setItem(CREATURE_CREATOR_CACHE_KEY, JSON.stringify(cache));
-    } catch {
-    }
-  }, [isInitialized, creature]);
+    if (editCreatureId || !bootstrapApplied) return;
+    writeCreatorCache(CREATURE_CREATOR_CACHE_KEY, {
+      creature,
+      timestamp: Date.now(),
+    });
+  }, [editCreatureId, bootstrapApplied, creature]);
   
   // Create lookup map for feat point costs by ID
   const featPointsMap = useMemo(() => {
@@ -619,9 +617,45 @@ function CreatureCreatorContent() {
     [featsWithTypeLabel, sortFeatItems]
   );
 
+  /** Enrich armaments with display sort keys so RANGE/ATTACK/DAMAGE headers work. */
+  const armamentsWithSortKeys = useMemo(() => {
+    const prof = creature.martialProficiency ?? 0;
+    const str = creature.abilities.strength ?? 0;
+    const agi = creature.abilities.agility ?? 0;
+    const acu = creature.abilities.acuity ?? 0;
+    return creature.armaments.map((armament) => {
+      const isWeapon = String(armament.type ?? '').toLowerCase() === 'weapon';
+      const isShield = String(armament.type ?? '').toLowerCase() === 'shield';
+      const propNames = (armament.properties || [])
+        .map((p: unknown) => (typeof p === 'string' ? p : (p as { name?: string }).name || ''))
+        .filter(Boolean);
+      const finesse = propNames.some((p: string) => p.toLowerCase() === 'finesse');
+      const range =
+        normalizeRangeDisplay((armament as { range?: string }).range) ||
+        (isWeapon ? 'Melee' : '-');
+      const isRanged = range.toLowerCase() !== 'melee';
+      const attackBonus = isWeapon ? (finesse ? agi : isRanged ? acu : str) + prof : null;
+      const attack =
+        attackBonus != null ? `${attackBonus >= 0 ? '+' : ''}${attackBonus}` : '-';
+      const damage =
+        isWeapon || isShield
+          ? formatDamageDisplay((armament as { damage?: unknown }).damage) || '-'
+          : '-';
+      return {
+        ...armament,
+        range,
+        attack,
+        damage,
+        type: formatListCellLabel(armament.type),
+        tp: armament.tp != null ? armament.tp : '-',
+        currency: armament.currency != null ? `${armament.currency}c` : '-',
+      };
+    });
+  }, [creature.armaments, creature.abilities, creature.martialProficiency]);
+
   const sortedArmaments = useMemo(
-    () => sortArmamentItems(creature.armaments),
-    [creature.armaments, sortArmamentItems]
+    () => sortArmamentItems(armamentsWithSortKeys),
+    [armamentsWithSortKeys, sortArmamentItems]
   );
   
   // Skill bonus: sub-skills add parent base skill value (GAME_RULES)
@@ -928,29 +962,6 @@ function CreatureCreatorContent() {
     setTimeout(() => save.setSaveMessage(null), 2000);
   }, [load, save]);
 
-  // Load creature for editing from URL (?edit=<id>)
-  useEffect(() => {
-    if (!editCreatureId || !load.rawItems.length || editLoadedRef.current) return;
-    const c = load.rawItems.find(
-      (x) => String((x as { id?: string; docId?: string }).id) === editCreatureId || String((x as { id?: string; docId?: string }).docId) === editCreatureId
-    ) as Record<string, unknown> | undefined;
-    editLoadedRef.current = true;
-    if (!c) {
-      setIsInitialized(true);
-      return;
-    }
-    const loaded = rawRecordToCreatureState(c);
-    setCreature(loaded);
-    try {
-      localStorage.removeItem(CREATURE_CREATOR_CACHE_KEY);
-    } catch {
-      // ignore
-    }
-    save.setSaveMessage({ type: 'success', text: 'Creature loaded successfully!' });
-    setTimeout(() => save.setSaveMessage(null), 2000);
-    setIsInitialized(true);
-  }, [editCreatureId, load.rawItems, save]);
-
   const handleSave = useCallback(async () => {
     if (isOverBudget) {
       save.setSaveMessage({
@@ -992,7 +1003,7 @@ function CreatureCreatorContent() {
       saving={save.saving}
       saveDisabled={!creature.name.trim() || isOverBudget}
       loading={{
-        isLoading: skillsLoading || traitsLoading || creatureFeatsLoading || codexFeatsLoading,
+        isLoading: !bootstrapApplied,
         loadingMessage: 'Loading creature creator...',
       }}
       publish={{
@@ -1010,10 +1021,7 @@ function CreatureCreatorContent() {
         onClose: () => setShowResetConfirm(false),
         onConfirm: () => {
           setCreature(initialState);
-          try {
-            localStorage.removeItem(CREATURE_CREATOR_CACHE_KEY);
-          } catch {
-          }
+          clearCreatorCache(CREATURE_CREATOR_CACHE_KEY);
           setShowResetConfirm(false);
         },
         title: 'Restart Creature',
@@ -1117,10 +1125,10 @@ function CreatureCreatorContent() {
             searchPlaceholder={powerModalTab === 'empowered' ? 'Search empowered techniques...' : 'Search powers...'}
             columns={[
               { key: 'name', label: 'Name', sortable: true },
-              { key: 'Energy', label: 'Energy', sortable: false },
-              { key: 'Action', label: 'Action', sortable: false },
-              { key: 'Damage', label: 'Damage', sortable: false },
-              { key: 'Area', label: 'Area', sortable: false },
+              { key: 'Energy', label: 'Energy', sortable: true },
+              { key: 'Action', label: 'Action', sortable: true },
+              { key: 'Damage', label: 'Damage', sortable: true },
+              { key: 'Area', label: 'Area', sortable: true },
             ]}
             gridColumns="1.15fr 0.42fr 0.62fr 0.62fr 0.55fr"
             size="xl"
@@ -1142,10 +1150,10 @@ function CreatureCreatorContent() {
             searchPlaceholder="Search techniques..."
             columns={[
               { key: 'name', label: 'Name', sortable: true },
-              { key: 'Energy', label: 'Energy', sortable: false },
-              { key: 'Action', label: 'ACTION', sortable: false },
-              { key: 'Weapon', label: 'Weapon', sortable: false },
-              { key: 'Training Pts', label: 'Training pts', sortable: false },
+              { key: 'Energy', label: 'Energy', sortable: true },
+              { key: 'Action', label: 'ACTION', sortable: true },
+              { key: 'Weapon', label: 'Weapon', sortable: true },
+              { key: 'Training Pts', label: 'Training pts', sortable: true },
             ]}
             gridColumns="1.25fr 0.55fr 0.72fr 0.9fr 0.65fr"
             size="xl"
@@ -1767,9 +1775,9 @@ function CreatureCreatorContent() {
                   columns={[
                     { key: 'name', label: 'NAME' },
                     { key: 'type', label: 'TYPE', width: 'minmax(72px, 0.55fr)', align: 'center' },
-                    { key: 'range', label: 'RANGE', width: 'minmax(92px, 7.5rem)', align: 'center', sortable: false as const },
-                    { key: 'attack', label: 'ATTACK', width: 'minmax(64px, 4.25rem)', align: 'center', sortable: false as const },
-                    { key: 'damage', label: 'DAMAGE', width: 'minmax(92px, 6.75rem)', align: 'center', sortable: false as const },
+                    { key: 'range', label: 'RANGE', width: 'minmax(92px, 7.5rem)', align: 'center' },
+                    { key: 'attack', label: 'ATTACK', width: 'minmax(64px, 4.25rem)', align: 'center' },
+                    { key: 'damage', label: 'DAMAGE', width: 'minmax(92px, 6.75rem)', align: 'center' },
                     { key: 'tp', label: 'TP', width: '0.5fr', align: 'center' },
                     { key: 'currency', label: 'COST', width: '0.6fr', align: 'center' },
                     { key: '_actions', label: '', sortable: false as const },
@@ -1780,28 +1788,6 @@ function CreatureCreatorContent() {
                 />
                 <div className="space-y-1">
                   {sortedArmaments.map((armament) => {
-                    const isWeapon = String(armament.type ?? '').toLowerCase() === 'weapon';
-                    const isShield = String(armament.type ?? '').toLowerCase() === 'shield';
-                    const prof = creature.martialProficiency ?? 0;
-                    const propNames = (armament.properties || [])
-                      .map((p: unknown) => (typeof p === 'string' ? p : (p as { name?: string }).name || ''))
-                      .filter(Boolean);
-                    const finesse = propNames.some((p: string) => p.toLowerCase() === 'finesse');
-                    const rangeStr =
-                      normalizeRangeDisplay((armament as { range?: string }).range) ||
-                      (isWeapon ? 'Melee' : '-');
-                    const isRanged = rangeStr.toLowerCase() !== 'melee';
-                    const str = creature.abilities.strength ?? 0;
-                    const agi = creature.abilities.agility ?? 0;
-                    const acu = creature.abilities.acuity ?? 0;
-                    const attackBonus = isWeapon ? (finesse ? agi : isRanged ? acu : str) + prof : null;
-                    const attackDisplay =
-                      attackBonus != null ? `${attackBonus >= 0 ? '+' : ''}${attackBonus}` : '-';
-                    const damageDisplay =
-                      isWeapon || isShield
-                        ? formatDamageDisplay((armament as { damage?: unknown }).damage) || '-'
-                        : '-';
-
                     return (
                     <GridListRow
                       key={armament.id}
@@ -1811,32 +1797,32 @@ function CreatureCreatorContent() {
                       columns={[
                         {
                           key: 'type',
-                          value: formatListCellLabel(armament.type),
+                          value: armament.type,
                           align: 'center',
                         },
                         {
                           key: 'range',
-                          value: rangeStr,
+                          value: armament.range,
                           align: 'center',
                         },
                         {
                           key: 'attack',
-                          value: attackDisplay,
+                          value: armament.attack,
                           align: 'center',
                         },
                         {
                           key: 'damage',
-                          value: damageDisplay,
+                          value: armament.damage,
                           align: 'center',
                         },
                         {
                           key: 'tp',
-                          value: armament.tp != null ? armament.tp : '-',
+                          value: armament.tp,
                           align: 'center',
                         },
                         {
                           key: 'currency',
-                          value: armament.currency != null ? `${armament.currency}c` : '-',
+                          value: armament.currency,
                           align: 'center',
                         },
                       ]}

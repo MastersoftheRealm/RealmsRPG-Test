@@ -94,15 +94,18 @@ const TECHNIQUE_COLUMNS: ListColumn[] = [
 ];
 const TECHNIQUE_GRID = '1.4fr 0.7fr 1fr 0.8fr';
 
-/** Character sheet techniques tab includes Action column */
+/**
+ * Character sheet techniques tab: Action + Weapon + TP.
+ * Energy cost lives only in the row rightSlot spend button (not a static value column).
+ * ListHeader shows Energy via `CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME` over that control.
+ */
 export const CHARACTER_SHEET_TECHNIQUE_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1.4fr' },
   { key: 'action', label: 'Action', width: '1fr', align: 'center' },
-  { key: 'energy', label: 'Energy', width: '0.7fr', align: 'center' },
   { key: 'weapon', label: 'Weapon', width: '1fr', align: 'center' },
   { key: 'tp', label: 'Training Pts', width: '0.8fr', align: 'center' },
 ];
-export const CHARACTER_SHEET_TECHNIQUE_GRID = '1.4fr 1fr 0.7fr 1fr 0.8fr';
+export const CHARACTER_SHEET_TECHNIQUE_GRID = '1.4fr 1fr 1fr 0.8fr';
 
 // Weapons / Shields / Armor / Equipment (matches Character Sheet -> Library -> Inventory)
 const WEAPON_COLUMNS: ListColumn[] = [
@@ -156,7 +159,7 @@ const EQUIPMENT_GRID = '1fr 0.6fr 4rem';
 // Feats/Traits (matches Character Sheet -> FeatsTab columns)
 const FEAT_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: 'minmax(140px, 1.6fr)' },
-  { key: 'description', label: 'Description', width: '2.5fr', sortable: false },
+  { key: 'description', label: 'Description', width: '2.5fr' },
   { key: 'uses', label: 'Uses', width: '5rem', align: 'center' },
   { key: 'recovery', label: 'Recovery', width: '4rem', align: 'center' },
 ];
@@ -164,7 +167,7 @@ const FEAT_GRID = 'minmax(140px, 1.6fr) 2.5fr 5rem 4rem';
 
 const FEAT_COLUMNS_WITH_LEVEL: ListColumn[] = [
   { key: 'name', label: 'Name', width: 'minmax(140px, 1.6fr)' },
-  { key: 'description', label: 'Description', width: '2fr', sortable: false },
+  { key: 'description', label: 'Description', width: '2fr' },
   { key: 'level', label: 'Lvl', width: '3.5rem', align: 'center' },
   { key: 'uses', label: 'Uses', width: '5rem', align: 'center' },
   { key: 'recovery', label: 'Recovery', width: '4rem', align: 'center' },
@@ -265,6 +268,10 @@ export function PowersListSection({
   items,
   showListHeader = true,
   compactRows = true,
+  /**
+   * When true, show a static Energy column (browse/stat-block).
+   * Character sheet play lists must leave this false — energy cost is the row `rightSlot` spend button only.
+   */
   includeEnergyColumn = false,
   showTitle = true,
   sortState,
@@ -349,6 +356,12 @@ export function TechniquesListSection({
   showListHeader = true,
   compactRows = true,
   showTitle = true,
+  /**
+   * Character-sheet play mode: Action + Weapon + TP columns (no Energy column).
+   * Energy cost must live only on the row `rightSlot` spend button.
+   * Omit (false) for browse/stat-block lists that show a static Energy column and have no spend button.
+   * Do not combine browse Energy columns with spend `rightSlot` — that recreates the duplicate UX.
+   */
   includeActionColumn = false,
   sortState,
   onSort,
@@ -380,14 +393,18 @@ export function TechniquesListSection({
             grid,
             (tech) => {
               const row = tech as EntityTechniqueRow;
-              const base: ColumnValue[] = includeActionColumn
-                ? [{ key: 'action', value: row.actionType ?? '-', align: 'center' }]
-                : [];
+              // Character sheet (includeActionColumn): energy is rightSlot only — no Energy column.
+              if (includeActionColumn) {
+                return [
+                  { key: 'action', value: row.actionType ?? '-', align: 'center' as const },
+                  { key: 'weapon', value: row.weaponName ?? '-', align: 'center' as const },
+                  { key: 'tp', value: row.tp ?? '-', align: 'center' as const },
+                ];
+              }
               return [
-                ...base,
-                { key: 'energy', value: row.energyCost ?? '-', align: 'center' },
-                { key: 'weapon', value: row.weaponName ?? '-', align: 'center' },
-                { key: 'tp', value: row.tp ?? '-', align: 'center' },
+                { key: 'energy', value: row.energyCost ?? '-', align: 'center' as const },
+                { key: 'weapon', value: row.weaponName ?? '-', align: 'center' as const },
+                { key: 'tp', value: row.tp ?? '-', align: 'center' as const },
               ];
             },
             compactRows

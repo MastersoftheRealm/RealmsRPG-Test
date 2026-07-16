@@ -9,7 +9,7 @@ import type { LibraryItem } from '@/types/library';
 import type { CodexEquipmentItem } from '@/types/codex';
 import type { GuidedDraft, GuidedEquipmentPhase } from '@/stores/guided-creator-store';
 import { GuidedChoiceCard } from './guided-choice-card';
-import { GuidedEquipmentFactChips } from './guided-equipment-fact-chips';
+import { GuidedFactChipRow } from './guided-equipment-fact-chips';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from './guided-choice-styles';
 import { GUIDED_CHOICE_GRID_ITEM_CLASS } from './guided-choice-grid';
 import {
@@ -370,12 +370,12 @@ export function GuidedEquipmentL1Phase({
                 selectAriaLabel={`${selected ? 'Deselect' : 'Select'} ${row.name}`}
                 titleMeta={
                   stats.titleChips.length > 0 ? (
-                    <GuidedEquipmentFactChips chips={stats.titleChips} />
+                    <GuidedFactChipRow chips={stats.titleChips} />
                   ) : undefined
                 }
                 expandedExtra={
                   stats.detailChips.length > 0 ? (
-                    <GuidedEquipmentFactChips chips={stats.detailChips} />
+                    <GuidedFactChipRow chips={stats.detailChips} />
                   ) : undefined
                 }
                 beforeDisclosure={

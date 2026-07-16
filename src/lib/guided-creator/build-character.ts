@@ -1,15 +1,23 @@
 /**
  * Converts a guided creator draft into a lean Character payload for save.
+ * Mirrors custom creator `getCharacter()` save practices: lean refs + computed
+ * proficiencies from library parts/properties (powers/items are stripped by cleanForSave).
  */
 
 import type { CodexEquipmentItem } from '@/types/codex';
-import type { LibraryItem } from '@/types/library';
+import type { LibraryItem, LibraryPower, LibraryTechnique } from '@/types/library';
 import {
   buildEquipmentLookup,
   inventoryTypeForResolvedItem,
   resolveEquipmentRef,
 } from '@/lib/guided-creator/resolve-loadout-items';
-import type { Character, AbilityName } from '@/types';
+import type {
+  AbilityName,
+  Character,
+  CharacterPower,
+  CharacterTechnique,
+  Item,
+} from '@/types';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types';
 import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
 import { applySpeciesTraitChoiceSelections } from '@/lib/choice-trait';
@@ -21,6 +29,25 @@ import { computeStartingCurrency } from '@/lib/guided-creator/equipment-currency
 import { mergeLoadoutArmaments } from '@/lib/guided-creator/resolve-loadout-items';
 import { buildSuggestedAbilityArray } from '@/lib/game/suggested-abilities';
 import { buildGuidedSkillsArray } from '@/lib/guided-creator/build-skills';
+import { buildRequiredProficiencies } from '@/lib/proficiencies';
+import { defaultLibraryTabVisibilityForArchetype } from '@/lib/character-library-tab-visibility';
+import { normalizeId } from '@/lib/utils';
+
+interface CodexPartLike {
+  id?: string | number;
+  name?: string;
+  base_tp?: number;
+  op_1_tp?: number;
+  op_2_tp?: number;
+  op_3_tp?: number;
+}
+
+interface CodexPropertyLike {
+  id?: string | number;
+  name?: string;
+  base_tp?: number;
+  op_1_tp?: number;
+}
 
 export interface BuildGuidedCharacterContext {
   archetype?: Archetype;
@@ -28,9 +55,100 @@ export interface BuildGuidedCharacterContext {
   species?: Species | null;
   allTraits?: Trait[];
   codexSkills?: Array<{ id: string | number; name?: string; ability?: string; category?: string }>;
+  /** Codex feats — resolve archetype/character feat display names on save. */
+  codexFeats?: Array<{ id?: string | number; name?: string }>;
   rules?: Parameters<typeof calculateMaxHealth>[5];
   officialItems?: LibraryItem[];
   codexEquipment?: CodexEquipmentItem[];
+  /** Official library powers — needed to resolve parts for proficiency build. */
+  officialPowers?: LibraryPower[];
+  /** Official library techniques — needed to resolve parts for proficiency build. */
+  officialTechniques?: LibraryTechnique[];
+  powerPartsDb?: CodexPartLike[];
+  techniquePartsDb?: CodexPartLike[];
+  itemPropertiesDb?: CodexPropertyLike[];
+}
+
+function findByNormalizedId<T extends { id?: string | number }>(
+  list: T[] | undefined,
+  id: string | number
+): T | undefined {
+  const key = normalizeId(id);
+  if (!key) return undefined;
+  return list?.find((row) => normalizeId(row.id) === key);
+}
+
+/** Resolve draft power ids to CharacterPower shapes with parts/damage for proficiency TP. */
+function resolvePowersForProficiency(
+  draft: GuidedDraft,
+  officialPowers: LibraryPower[] = []
+): CharacterPower[] {
+  const innateKeys = new Set(draft.innatePowerIds.map((id) => normalizeId(id)));
+  const orderedIds = [
+    ...draft.innatePowerIds,
+    ...draft.powerIds.filter((id) => !innateKeys.has(normalizeId(id))),
+  ];
+
+  return orderedIds.map((id) => {
+    const lib = findByNormalizedId(officialPowers, id);
+    return {
+      id,
+      name: lib?.name ?? String(id),
+      innate: innateKeys.has(normalizeId(id)),
+      parts: lib?.parts ?? [],
+      damage: lib?.damage,
+    } as CharacterPower;
+  });
+}
+
+function resolveTechniquesForProficiency(
+  draft: GuidedDraft,
+  officialTechniques: LibraryTechnique[] = []
+): CharacterTechnique[] {
+  return draft.techniqueIds.map((id) => {
+    const lib = findByNormalizedId(officialTechniques, id);
+    return {
+      id,
+      name: lib?.name ?? String(id),
+      parts: lib?.parts ?? [],
+      damage: lib?.damage,
+    } as CharacterTechnique;
+  });
+}
+
+/** Armaments with properties/damage so buildRequiredProficiencies can compute TP. */
+function resolveArmamentsForProficiency(
+  inventory: Array<{ id: string; name: string; type: string }>,
+  officialItems: LibraryItem[] = [],
+  codexEquipment: CodexEquipmentItem[] = []
+): { weapons: Item[]; shields: Item[]; armor: Item[] } {
+  const toItem = (row: { id: string; name: string }): Item => {
+    const official = findByNormalizedId(officialItems, row.id);
+    if (official) {
+      return {
+        id: row.id,
+        name: official.name || row.name,
+        properties: (official.properties ?? []) as Item['properties'],
+        damage: official.damage as Item['damage'],
+      } as Item;
+    }
+    const codex = findByNormalizedId(codexEquipment, row.id);
+    if (codex) {
+      return {
+        id: row.id,
+        name: codex.name || row.name,
+        properties: (codex.properties ?? []).map((name) => ({ name })),
+        damage: codex.damage,
+      } as Item;
+    }
+    return { id: row.id, name: row.name, properties: [] } as Item;
+  };
+
+  return {
+    weapons: inventory.filter((i) => i.type === 'weapon').map(toItem),
+    shields: inventory.filter((i) => i.type === 'shield').map(toItem),
+    armor: inventory.filter((i) => i.type === 'armor').map(toItem),
+  };
 }
 
 export function buildGuidedCharacterPayload(
@@ -88,21 +206,36 @@ export function buildGuidedCharacterPayload(
 
   const skillsArray = buildGuidedSkillsArray(skillsForSave, speciesSkillIds, ctx.codexSkills ?? []);
 
-  const archetypeFeats = draft.archetypeFeatIds.map((id) => ({ id, name: String(id) }));
-  const characterFeats = draft.characterFeatIds.map((id) => ({ id, name: String(id) }));
+  // Lean save refs — resolve feat names from codex (same pattern as powers/techniques).
+  const resolveFeatRef = (id: string) => {
+    const feat = findByNormalizedId(ctx.codexFeats, id);
+    return { id, name: feat?.name?.trim() || String(id) };
+  };
+  const archetypeFeats = draft.archetypeFeatIds.map(resolveFeatRef);
+  const characterFeats = draft.characterFeatIds.map(resolveFeatRef);
 
-  const powers = [
-    ...draft.innatePowerIds.map((id) => ({ id, name: String(id), innate: true as const })),
+  // Lean save refs (parts stripped by cleanForSave) — resolve names from official library.
+  const powersForSave: CharacterPower[] = [
+    ...draft.innatePowerIds.map((id) => {
+      const lib = findByNormalizedId(ctx.officialPowers, id);
+      return { id, name: lib?.name ?? String(id), innate: true as const };
+    }),
     ...draft.powerIds
       .filter(
         (id) =>
           !draft.innatePowerIds.some(
-            (iid) => String(iid).toLowerCase() === String(id).toLowerCase()
+            (iid) => normalizeId(iid) === normalizeId(id)
           )
       )
-      .map((id) => ({ id, name: String(id), innate: false as const })),
+      .map((id) => {
+        const lib = findByNormalizedId(ctx.officialPowers, id);
+        return { id, name: lib?.name ?? String(id), innate: false as const };
+      }),
   ];
-  const techniques = draft.techniqueIds.map((id) => ({ id, name: String(id) }));
+  const techniquesForSave: CharacterTechnique[] = draft.techniqueIds.map((id) => {
+    const lib = findByNormalizedId(ctx.officialTechniques, id);
+    return { id, name: lib?.name ?? String(id) };
+  });
 
   const inventory = (() => {
     const lookup = buildEquipmentLookup(ctx.officialItems, ctx.codexEquipment);
@@ -115,13 +248,8 @@ export function buildGuidedCharacterPayload(
 
     const pushRow = (ref: { id: string; quantity: number }) => {
       const resolved = resolveEquipmentRef(ref, lookup);
-      const key = String(ref.id).trim().toLowerCase();
-      const official = ctx.officialItems?.find(
-        (i) => String(i.id).trim().toLowerCase() === key
-      );
-      const codex = ctx.codexEquipment?.find(
-        (i) => String(i.id).trim().toLowerCase() === key
-      );
+      const official = findByNormalizedId(ctx.officialItems, ref.id);
+      const codex = findByNormalizedId(ctx.codexEquipment, ref.id);
       const rawType = String(official?.type ?? codex?.type ?? '').toLowerCase();
       let type: 'weapon' | 'armor' | 'equipment' | 'shield' = inventoryTypeForResolvedItem(resolved);
       if (rawType === 'shield') type = 'shield';
@@ -145,13 +273,39 @@ export function buildGuidedCharacterPayload(
     return rows;
   })();
 
+  // DESIGN_INTENT: Guided drafts store lean ids only. Resolve parts/properties from
+  // official/codex libraries here so buildRequiredProficiencies matches custom
+  // getCharacter(), then persist the computed list — cleanForSave strips power/item
+  // parts but keeps `proficiencies` (SAVEABLE_FIELDS).
+  const powersForProf = resolvePowersForProficiency(draft, ctx.officialPowers);
+  const techniquesForProf = resolveTechniquesForProficiency(draft, ctx.officialTechniques);
+  const armamentsForProf = resolveArmamentsForProficiency(
+    inventory,
+    ctx.officialItems,
+    ctx.codexEquipment
+  );
+  const proficiencies = buildRequiredProficiencies({
+    powers: powersForProf,
+    techniques: techniquesForProf,
+    weapons: armamentsForProf.weapons,
+    shields: armamentsForProf.shields,
+    armor: armamentsForProf.armor,
+    powerPartsDb: ctx.powerPartsDb ?? [],
+    techniquePartsDb: ctx.techniquePartsDb ?? [],
+    itemPropertiesDb: ctx.itemPropertiesDb ?? [],
+  });
+
   const startingCurrency = computeStartingCurrency(level);
   const savedCurrency =
     typeof draft.currency === 'number' ? draft.currency : startingCurrency;
 
+  // DESIGN_INTENT: same libraryTabVisibility prefs as sheet eye toggle (TASK-501).
+  const libraryTabVisibility = defaultLibraryTabVisibilityForArchetype(type);
+
   return {
     name: draft.name.trim() || 'Unnamed Character',
     level,
+    status: 'complete',
     abilities,
     creationMode: 'path',
     ...(draft.archetypePathId && { archetypePathId: draft.archetypePathId }),
@@ -167,6 +321,8 @@ export function buildGuidedCharacterPayload(
     pow_prof: type === 'power' ? 2 : type === 'powered-martial' ? 1 : 0,
     healthPoints: hpAlloc,
     energyPoints: enAlloc,
+    currentHealth: maxHealth,
+    currentEnergy: maxEnergy,
     health: { current: maxHealth, max: maxHealth },
     energy: { current: maxEnergy, max: maxEnergy },
     currency: savedCurrency,
@@ -175,8 +331,8 @@ export function buildGuidedCharacterPayload(
     skills: skillsArray as unknown as Character['skills'],
     archetypeFeats,
     feats: characterFeats,
-    powers,
-    techniques,
+    powers: powersForSave,
+    techniques: techniquesForSave,
     equipment: {
       inventory,
       weapons: inventory.filter((i) => i.type === 'weapon'),
@@ -184,6 +340,8 @@ export function buildGuidedCharacterPayload(
       items: inventory.filter((i) => i.type === 'equipment'),
       shields: inventory.filter((i) => i.type === 'shield'),
     },
+    proficiencies,
+    ...(libraryTabVisibility && { libraryTabVisibility }),
     defenseVals: { ...DEFAULT_DEFENSE_SKILLS },
     portrait: draft.portraitUrl ?? undefined,
     height: draft.heightCm ?? undefined,

@@ -15,6 +15,7 @@ import {
   GEAR_L2_HEADER_COLUMNS,
   WEAPON_L2_HEADER_COLUMNS,
 } from '@/components/guided-creator/guided-equipment-l2-grid';
+import { POWERS_TECHNIQUES_L2_HEADER_COLUMNS } from '@/lib/guided-creator/powers-techniques-l2';
 
 const baseDraft: GuidedDraft = {
   archetypePathId: '1',
@@ -49,12 +50,14 @@ const baseDraft: GuidedDraft = {
   currency: 200,
   unarmedProwess: 0,
   powerIds: [],
+  innatePowerIds: [],
   techniqueIds: [],
   name: '',
   age: '',
   heightCm: null,
   weightKg: null,
   appearanceNotes: '',
+  description: '',
   portraitUrl: null,
   hpAllocated: null,
   energyAllocated: null,
@@ -187,6 +190,17 @@ describe('guided-equipment-l2', () => {
     );
     expect(rowKeys).toEqual(headerKeys);
     expect(axe!.columns?.find((c) => c.key === 'currency')?.value).toBe('25');
+  });
+
+  it('L2 header data columns are sortable', () => {
+    for (const col of [
+      ...WEAPON_L2_HEADER_COLUMNS,
+      ...ARMOR_L2_HEADER_COLUMNS,
+      ...GEAR_L2_HEADER_COLUMNS,
+      ...POWERS_TECHNIQUES_L2_HEADER_COLUMNS,
+    ]) {
+      expect(col.sortable).toBe(true);
+    }
   });
 
   it('armor and gear L2 columns match their headers', () => {

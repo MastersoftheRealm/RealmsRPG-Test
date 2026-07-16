@@ -60,6 +60,16 @@ export interface ListHeaderRowChrome {
   leftSlot?: boolean;
   /** GridListRow `rightSlot` (energy / use button) — spacer after header grid */
   rightSlot?: boolean;
+  /**
+   * Label over the rightSlot track (e.g. "Energy" on character sheet powers/techniques).
+   * Requires `rightSlot: true`. Prefer this over a duplicate static Energy data column.
+   */
+  rightSlotLabel?: string;
+  /**
+   * Sort key for `rightSlotLabel` (e.g. character `cost`). Requires `onSort` on ListHeader.
+   * Included in the mobile "Sort by" menu when set.
+   */
+  rightSlotSortKey?: string;
   /** GridListRow `onEdit` pencil */
   edit?: boolean;
   /** GridListRow `onDelete` X */
@@ -70,6 +80,16 @@ export interface ListHeaderRowChrome {
    */
   externalSelection?: boolean;
 }
+
+/** Character sheet Powers/Techniques: Energy label + sort over far-right spend buttons (not a mid-row value column). */
+export const CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME: Pick<
+  ListHeaderRowChrome,
+  'rightSlot' | 'rightSlotLabel' | 'rightSlotSortKey'
+> = {
+  rightSlot: true,
+  rightSlotLabel: 'Energy',
+  rightSlotSortKey: 'cost',
+};
 
 export function hasListHeaderRowChrome(rowChrome?: ListHeaderRowChrome): boolean {
   if (!rowChrome) return false;

@@ -1,10 +1,12 @@
 /**
  * Choice-card image resolution for the guided creator.
- * Uses DB `image_url` when present; otherwise typed placeholders until codex art ships.
+ * Uses DB `image_url` cache or bank `image_id` resolution when present; otherwise typed placeholders.
  *
  * **Agents:** Also used by list rows via `@/lib/list-row-image.ts` → `ListRowThumbnail` → `ExpandableImage`.
  * Do not duplicate placeholder paths, URL readers, or preview modals. See `AGENT_GUIDE.md` § Entity card art & expandable images.
  */
+
+import { readRecordImageUrl } from '@/lib/entity-image-url';
 
 export type ChoiceCardImageKind = 'species' | 'path' | 'equipment' | 'power' | 'technique';
 
@@ -16,20 +18,7 @@ const PLACEHOLDER_BY_KIND: Record<ChoiceCardImageKind, string> = {
   technique: '/images/placeholder-technique-card.svg',
 };
 
-/** Read optional image_url from codex/library records (column or payload). */
-export function readRecordImageUrl(record: unknown): string | null {
-  if (!record || typeof record !== 'object') return null;
-  const r = record as Record<string, unknown>;
-  const direct = r.image_url ?? r.imageUrl ?? r.card_art_url ?? r.cardArtUrl;
-  if (typeof direct === 'string' && direct.trim()) return direct.trim();
-  const payload = r.payload;
-  if (payload && typeof payload === 'object') {
-    const p = payload as Record<string, unknown>;
-    const nested = p.image_url ?? p.imageUrl ?? p.card_art_url;
-    if (typeof nested === 'string' && nested.trim()) return nested.trim();
-  }
-  return null;
-}
+export { readRecordImageUrl } from '@/lib/entity-image-url';
 
 export function resolveChoiceCardImage(
   kind: ChoiceCardImageKind,

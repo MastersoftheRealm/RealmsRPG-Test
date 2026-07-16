@@ -28,7 +28,7 @@ const SPECIES_COLUMNS = [
   { key: 'type', label: 'TYPE' },
   { key: 'sizes', label: 'SIZES' },
   // Description column should be left-aligned while other non-name columns are centered
-  { key: '_desc', label: 'DESCRIPTION', sortable: false as const, align: 'left' as const },
+  { key: '_desc', label: 'DESCRIPTION', align: 'left' as const },
 ];
 import { useSpecies, useUserSpecies, userSpeciesToSpecies, useTraits, useCodexSkills, resolveTraitIds, type Species, type Trait, type Skill } from '@/hooks';
 import { resolveSpeciesListRowThumbnail } from '@/lib/list-row-image';
@@ -264,6 +264,16 @@ export function CodexSpeciesTab({ codexMode = 'public' }: { codexMode?: 'public'
         const bIdx = getMinSizeIndex(b.sizes);
         return sortState.dir * (aIdx - bIdx);
       });
+    }
+
+    if (sortState.col === '_desc') {
+      return filtered.sort(
+        (a: Species, b: Species) =>
+          sortState.dir *
+          String(a.description ?? '').localeCompare(String(b.description ?? ''), undefined, {
+            numeric: true,
+          })
+      );
     }
 
     return sortByColumn(filtered, sortState);

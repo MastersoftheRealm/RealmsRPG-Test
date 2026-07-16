@@ -21,6 +21,8 @@ import { useCharacterCreatorStore, CHARACTER_STARTING_CURRENCY, type CreatorStep
 import { getAllValidationIssues, type ValidationIssue } from '@/lib/character-creator-validation';
 import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
 import { calculateHealthEnergyPool } from '@/lib/game/formulas';
+import { navigateThenResetCreator } from '@/lib/creator-save-handoff';
+import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { ABILITY_DISPLAY_NAMES } from '@/lib/game/constants';
 import { LoginPromptModal, ImageUploadModal, InfoTippy } from '@/components/shared';
 import { finalizeSummaryHelp } from '../../../../public/tooltip-text';
@@ -510,6 +512,8 @@ export function FinalizeStep() {
       setShowLoginPrompt(true);
       return;
     }
+
+    if (saving) return;
     
     if (!draft.name?.trim()) {
       setError('Please enter a character name');
@@ -609,9 +613,12 @@ export function FinalizeStep() {
         ...sanitizedCharacter,
         userId: user.uid,
       });
+      if (!characterId?.trim()) {
+        throw new Error('Character was created but no id was returned');
+      }
 
       // Upload base64 portrait to Supabase Storage and save the URL
-      if (base64Portrait && characterId) {
+      if (base64Portrait) {
         try {
           const blob = dataUrlToBlob(base64Portrait);
           const file = new File([blob], 'portrait.jpg', {
@@ -637,24 +644,27 @@ export function FinalizeStep() {
         }
       }
 
-      // Clear the creator store
-      resetCreator();
-
-      // Navigate: returnTo param (e.g. from campaigns Join tab) or new character sheet
+      // Navigate first, then clear — see navigateThenResetCreator DESIGN_INTENT.
       const returnTo = searchParams.get('returnTo');
+      const safeReturnTo =
+        returnTo && returnTo.startsWith('/')
+          ? sanitizeRedirectPath(returnTo, '')
+          : '';
       showToast('Your character is ready!', 'success');
-      if (returnTo && returnTo.startsWith('/')) {
-        router.push(returnTo);
-      } else {
-        router.push(`/characters/${characterId}`);
-      }
+      navigateThenResetCreator(() => {
+        if (safeReturnTo) {
+          router.push(safeReturnTo);
+        } else {
+          router.push(`/characters/${characterId}`);
+        }
+      }, resetCreator);
+      // Leave `saving` true so Create stays disabled until the route changes.
     } catch (err) {
       const message =
         err instanceof Error && err.message.trim()
           ? err.message
           : 'Failed to save character. Please try again.';
       setError(message);
-    } finally {
       setSaving(false);
     }
   };

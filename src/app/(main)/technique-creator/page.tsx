@@ -12,7 +12,7 @@
 
 'use client';
 
-import { useState, useMemo, useCallback, useEffect, useRef, Suspense } from 'react';
+import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Plus, Swords, Zap, Target, Info } from 'lucide-react';
 import {
@@ -26,6 +26,7 @@ import {
   useCreatorWeaponOptions,
   type TechniquePart,
   type CreatorWeaponOption,
+  type UseLoadModalLibraryReturn,
 } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { LoadingState, Checkbox, Button, Input, Textarea, Card } from '@/components/ui';
@@ -39,7 +40,7 @@ import {
 } from '@/components/creator';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
-import { ValueStepper, SectionCostBadge } from '@/components/shared';
+import { ValueStepper, SectionCostBadge, ErrorDisplay } from '@/components/shared';
 import {
   calculateTechniqueCosts,
   computeTechniqueActionTypeFromSelection,
@@ -47,28 +48,22 @@ import {
   formatTechniqueDamage,
   type TechniquePartPayload,
 } from '@/lib/calculators';
-import {
-  inferTechniqueWeaponTpFromSavedParts,
-  shouldPersistCreatorWeaponId,
-} from '@/lib/creator-weapon-persistence';
+import { shouldPersistCreatorWeaponId } from '@/lib/creator-weapon-persistence';
 
 // =============================================================================
 // Types
 // =============================================================================
 
-interface SelectedPart {
-  part: TechniquePart;
-  op_1_lvl: number;
-  op_2_lvl: number;
-  op_3_lvl: number;
-  selectedCategory: string;
-}
-
-interface DamageConfig {
-  amount: number;
-  size: number;
-  type: string;
-}
+import {
+  bootstrapTechniqueCreatorFormState,
+  techniqueLibraryRecordToFormState,
+  TECHNIQUE_CREATOR_CACHE_KEY,
+  type TechniqueCreatorCache,
+  type TechniqueCreatorFormState,
+  type TechniqueSelectedPart as SelectedPart,
+  type TechniqueDamageConfig as DamageConfig,
+} from './technique-creator-bootstrap';
+import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
 
 function toTechniquePartPayload(part: {
   id: string | number;
@@ -93,11 +88,7 @@ function toTechniquePartPayload(part: {
 import {
   ACTION_OPTIONS,
   DIE_SIZES,
-  CREATOR_CACHE_KEYS,
 } from '@/lib/game/creator-constants';
-
-// LocalStorage key for caching technique creator state
-const TECHNIQUE_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.TECHNIQUE;
 
 // Default weapon options (always available)
 const DEFAULT_WEAPON_OPTIONS: CreatorWeaponOption[] = [
@@ -109,52 +100,21 @@ const DEFAULT_WEAPON_OPTIONS: CreatorWeaponOption[] = [
 // Main Component
 // =============================================================================
 
-// Cache interface for localStorage
-interface TechniqueCreatorCache {
-  name: string;
-  description: string;
-  selectedParts: Array<{
-    partId: string | number;
-    op_1_lvl: number;
-    op_2_lvl: number;
-    op_3_lvl: number;
-    selectedCategory: string;
-  }>;
-  actionType: string;
-  isReaction: boolean;
-  damage: DamageConfig;
-  weaponId: string | number;
-  timestamp: number;
-}
-
 function TechniqueCreatorContent() {
   const { user } = useAuthStore();
   const { isAdmin } = useAdmin();
   const searchParams = useSearchParams();
   const editTechniqueId = searchParams.get('edit');
-  const editLoadedRef = useRef(false);
-  
-  // State
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [selectedParts, setSelectedParts] = useState<SelectedPart[]>([]);
-  const [actionType, setActionType] = useState('basic');
-  const [isReaction, setIsReaction] = useState(false);
-  const [damage, setDamage] = useState<DamageConfig>({ amount: 0, size: 6, type: 'none' });
-  const [weapon, setWeapon] = useState<CreatorWeaponOption>(DEFAULT_WEAPON_OPTIONS[0]);
-  const [weaponLibrarySource, setWeaponLibrarySource] = useState<SourceFilterValue>('my');
   const load = useLoadModalLibrary('technique');
 
-  // Fetch technique parts
   const { data: techniqueParts = [], isLoading, error, refetch } = useTechniqueParts();
-  
-  // Fetch user's saved techniques for loading (only if user is logged in)
 
   // Fetch user's saved items (weapons) and codex properties (for weapon TP calculation)
   const { data: userItems = [] } = useUserItems();
   const { data: itemPropertiesDb = [] } = useItemProperties();
   const { data: officialItems = [] } = useOfficialLibrary('items');
+
+  const [weaponLibrarySource, setWeaponLibrarySource] = useState<SourceFilterValue>('my');
 
   const { fullOptions: allWeaponOptions, visibleOptions } = useCreatorWeaponOptions({
     defaults: DEFAULT_WEAPON_OPTIONS,
@@ -164,81 +124,142 @@ function TechniqueCreatorContent() {
     librarySource: weaponLibrarySource,
   });
 
-  // Load cached state from localStorage on mount (only once when parts are available)
-  useEffect(() => {
-    // Only load once - when we have parts and haven't initialized yet
-    if (isInitialized || techniqueParts.length === 0 || editTechniqueId) return;
-    
-    try {
-      const cached = localStorage.getItem(TECHNIQUE_CREATOR_CACHE_KEY);
-      if (cached) {
-        const parsed: TechniqueCreatorCache = JSON.parse(cached);
-        // Only use cache if it's less than 30 days old
-        const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-        if (Date.now() - parsed.timestamp < thirtyDays) {
-          setName(parsed.name || '');
-          setDescription(parsed.description || '');
-          setActionType(parsed.actionType || 'basic');
-          setIsReaction(parsed.isReaction || false);
-          setDamage(parsed.damage || { amount: 0, size: 6, type: 'none' });
-          
-          // Restore weapon selection
-          if (parsed.weaponId) {
-            const foundWeapon = allWeaponOptions.find(w => String(w.id) === String(parsed.weaponId));
-            if (foundWeapon) setWeapon(foundWeapon);
-          }
-          
-          // Restore selected parts by finding them in techniqueParts
-          if (parsed.selectedParts && parsed.selectedParts.length > 0) {
-            const restoredParts: SelectedPart[] = [];
-            for (const savedPart of parsed.selectedParts) {
-              const foundPart = techniqueParts.find((p: { id: string }) => String(p.id) === String(savedPart.partId));
-              if (foundPart) {
-                restoredParts.push({
-                  part: foundPart,
-                  op_1_lvl: savedPart.op_1_lvl,
-                  op_2_lvl: savedPart.op_2_lvl,
-                  op_3_lvl: savedPart.op_3_lvl,
-                  selectedCategory: savedPart.selectedCategory,
-                });
-              }
-            }
-            setSelectedParts(restoredParts);
-          }
-        } else {
-          localStorage.removeItem(TECHNIQUE_CREATOR_CACHE_KEY);
-        }
-      }
-    } catch {
-    }
-    setIsInitialized(true);
-  }, [techniqueParts, allWeaponOptions, isInitialized, editTechniqueId]);
+  const sessionKey = editTechniqueId ?? 'draft';
+  // Ready once parts + weapon options exist; in ?edit= mode also wait for the
+  // library fetch to settle (rawItems may legitimately stay empty — fall back to blank form).
+  const bootstrapReady =
+    techniqueParts.length > 0 &&
+    allWeaponOptions.length > 0 &&
+    (!editTechniqueId || !load.isLoading);
 
-  // Auto-save to localStorage when state changes
+  // One-time render adjust per sessionKey: compute the initial form state exactly
+  // once when data is ready (no hydrate effect, no recompute on later re-renders).
+  const [bootstrapState, setBootstrapState] = useState<{
+    key: string;
+    form: TechniqueCreatorFormState;
+  } | null>(null);
+  if (bootstrapReady && bootstrapState?.key !== sessionKey) {
+    setBootstrapState({
+      key: sessionKey,
+      form: bootstrapTechniqueCreatorFormState({
+        editTechniqueId,
+        techniqueParts,
+        allWeaponOptions,
+        defaultWeapon: DEFAULT_WEAPON_OPTIONS[0],
+        rawItems: load.rawItems,
+      }),
+    });
+  }
+  const initialFormState = bootstrapState?.key === sessionKey ? bootstrapState.form : null;
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <ErrorDisplay
+          message={`Failed to load technique parts: ${error.message}`}
+          onRetry={() => {
+            void refetch();
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (!initialFormState) {
+    return (
+      <div className="min-h-screen bg-background">
+        <LoadingState message="Loading technique parts..." padding="lg" />
+      </div>
+    );
+  }
+
+  return (
+    <TechniqueCreatorWorkspace
+      key={sessionKey}
+      initialFormState={initialFormState}
+      editTechniqueId={editTechniqueId}
+      user={user}
+      isAdmin={isAdmin}
+      techniqueParts={techniqueParts}
+      allWeaponOptions={allWeaponOptions}
+      visibleOptions={visibleOptions}
+      weaponLibrarySource={weaponLibrarySource}
+      setWeaponLibrarySource={setWeaponLibrarySource}
+      load={load}
+      isLoading={isLoading}
+      error={error}
+      refetch={refetch}
+    />
+  );
+}
+
+interface TechniqueCreatorWorkspaceProps {
+  initialFormState: TechniqueCreatorFormState;
+  editTechniqueId: string | null;
+  user: ReturnType<typeof useAuthStore.getState>['user'];
+  isAdmin: boolean;
+  techniqueParts: TechniquePart[];
+  allWeaponOptions: CreatorWeaponOption[];
+  visibleOptions: CreatorWeaponOption[];
+  weaponLibrarySource: SourceFilterValue;
+  setWeaponLibrarySource: (value: SourceFilterValue) => void;
+  load: UseLoadModalLibraryReturn;
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => void;
+}
+
+function TechniqueCreatorWorkspace({
+  initialFormState,
+  editTechniqueId,
+  user,
+  isAdmin,
+  techniqueParts,
+  allWeaponOptions,
+  visibleOptions,
+  weaponLibrarySource,
+  setWeaponLibrarySource,
+  load,
+  isLoading,
+  error,
+  refetch,
+}: TechniqueCreatorWorkspaceProps) {
+  const [name, setName] = useState(initialFormState.name);
+  const [description, setDescription] = useState(initialFormState.description);
+  const [selectedParts, setSelectedParts] = useState<SelectedPart[]>(initialFormState.selectedParts);
+  const [actionType, setActionType] = useState(initialFormState.actionType);
+  const [isReaction, setIsReaction] = useState(initialFormState.isReaction);
+  const [damage, setDamage] = useState<DamageConfig>(initialFormState.damage);
+  const [weapon, setWeapon] = useState<CreatorWeaponOption>(initialFormState.weapon);
+
+  // ?edit= mode: clear any stale draft once on mount (parity with the old hydrate
+  // effect, which removed the cache after loading the edit target).
   useEffect(() => {
-    if (!isInitialized) return;
-    
-    try {
-      const cache: TechniqueCreatorCache = {
-        name,
-        description,
-        selectedParts: selectedParts.map(sp => ({
-          partId: sp.part.id,
-          op_1_lvl: sp.op_1_lvl,
-          op_2_lvl: sp.op_2_lvl,
-          op_3_lvl: sp.op_3_lvl,
-          selectedCategory: sp.selectedCategory,
-        })),
-        actionType,
-        isReaction,
-        damage,
-        weaponId: weapon.id,
-        timestamp: Date.now(),
-      };
-      localStorage.setItem(TECHNIQUE_CREATOR_CACHE_KEY, JSON.stringify(cache));
-    } catch {
-    }
-  }, [isInitialized, name, description, selectedParts, actionType, isReaction, damage, weapon]);
+    if (editTechniqueId) clearCreatorCache(TECHNIQUE_CREATOR_CACHE_KEY);
+  }, [editTechniqueId]);
+
+  // Auto-save draft to localStorage (skip when editing an existing library row via ?edit=)
+  useEffect(() => {
+    if (editTechniqueId) return;
+
+    const cache: TechniqueCreatorCache = {
+      name,
+      description,
+      selectedParts: selectedParts.map(sp => ({
+        partId: sp.part.id,
+        op_1_lvl: sp.op_1_lvl,
+        op_2_lvl: sp.op_2_lvl,
+        op_3_lvl: sp.op_3_lvl,
+        selectedCategory: sp.selectedCategory,
+      })),
+      actionType,
+      isReaction,
+      damage,
+      weaponId: weapon.id,
+      timestamp: Date.now(),
+    };
+    writeCreatorCache(TECHNIQUE_CREATOR_CACHE_KEY, cache);
+  }, [editTechniqueId, name, description, selectedParts, actionType, isReaction, damage, weapon.id]);
 
   // Build mechanic parts from action type, damage, and weapon selections
   const weaponAttackMode = useMemo(
@@ -452,119 +473,33 @@ function TechniqueCreatorContent() {
     setDamage({ amount: 0, size: 6, type: 'none' });
     setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
     save.setSaveMessage(null);
-    // Clear localStorage cache
-    try {
-      localStorage.removeItem(TECHNIQUE_CREATOR_CACHE_KEY);
-    } catch {
-    }
+    clearCreatorCache(TECHNIQUE_CREATOR_CACHE_KEY);
   }, [save]);
+
+  const applyFormState = useCallback((next: TechniqueCreatorFormState) => {
+    setName(next.name);
+    setDescription(next.description);
+    setSelectedParts(next.selectedParts);
+    setActionType(next.actionType);
+    setIsReaction(next.isReaction);
+    setDamage(next.damage);
+    setWeapon(next.weapon);
+  }, []);
 
   // Load a technique from the library
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleLoadTechnique = useCallback((technique: any) => {
-    // Reset all state first to avoid corruption from any existing edits
-    handleReset();
-    // Set name and description
-    setName(technique.name || '');
-    setDescription(technique.description || '');
-    
-    // Load parts
-    const savedParts = (technique.parts || technique.techniqueParts || []) as Array<{
-      id?: number | string;
-      name?: string;
-      op_1_lvl?: number;
-      op_2_lvl?: number;
-      op_3_lvl?: number;
-    }>;
-
-    // If the saved technique explicitly included the No Attack mechanic part (415),
-    // reflect that in the creator's Weapon selection.
-    const savedHasNoAttack = savedParts.some(
-      (p) => String(p.id) === '415' || String(p.name || '').toLowerCase() === 'no attack'
+    applyFormState(
+      techniqueLibraryRecordToFormState(
+        technique,
+        techniqueParts,
+        allWeaponOptions,
+        DEFAULT_WEAPON_OPTIONS[0],
+      ),
     );
-    const requiredWeaponTPFromParts = inferTechniqueWeaponTpFromSavedParts(savedParts);
-    
-    const loadedParts: SelectedPart[] = [];
-    for (const savedPart of savedParts) {
-      const matchedPart = techniqueParts.find(
-        (p: { id: string; name: string; mechanic?: boolean }) =>
-          p.id === String(savedPart.id) || p.name === savedPart.name
-      );
-
-      // Skip mechanic-only parts when loading; these are auto-generated
-      // from action / damage / weapon and should not appear as editable rows.
-      // They will be re-created by buildMechanicParts.
-      if (matchedPart && !matchedPart.mechanic) {
-        loadedParts.push({
-          part: matchedPart,
-          op_1_lvl: savedPart.op_1_lvl || 0,
-          op_2_lvl: savedPart.op_2_lvl || 0,
-          op_3_lvl: savedPart.op_3_lvl || 0,
-          selectedCategory: matchedPart.category || 'any',
-        });
-      }
-    }
-    setSelectedParts(loadedParts);
-    
-    // Load action type and reaction. Saved payloads persist `isReaction`
-    // (see getPayload); keep `reaction` as a fallback for legacy/enriched shapes.
-    setActionType(technique.actionTypeSelection || technique.actionType || 'basic');
-    setIsReaction(technique.isReaction ?? technique.reaction ?? false);
-    
-    // Load weapon
-    if (savedHasNoAttack) {
-      const noAttackOption = allWeaponOptions.find((w) => String(w.id) === 'no-attack');
-      if (noAttackOption) setWeapon(noAttackOption);
-    } else if (technique.weapon) {
-      const weaponMatch = allWeaponOptions.find(
-        (w) => String(w.id) === String(technique.weapon.id) || w.name === technique.weapon.name
-      );
-      if (weaponMatch) {
-        setWeapon(weaponMatch);
-      } else if (requiredWeaponTPFromParts > 0) {
-        const tpMatch = allWeaponOptions.find((option) => (option.tp ?? 0) === requiredWeaponTPFromParts);
-        setWeapon(tpMatch || DEFAULT_WEAPON_OPTIONS[0]);
-      }
-    } else if (requiredWeaponTPFromParts > 0) {
-      const tpMatch = allWeaponOptions.find((option) => (option.tp ?? 0) === requiredWeaponTPFromParts);
-      setWeapon(tpMatch || DEFAULT_WEAPON_OPTIONS[0]);
-    } else {
-      setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
-    }
-    
-    // Load damage. getPayload persists damage as an array ([{ amount, size }]);
-    // tolerate both the array form and a legacy single-object form.
-    const rawDamage = Array.isArray(technique.damage) ? technique.damage[0] : technique.damage;
-    if (rawDamage) {
-      setDamage({
-        amount: rawDamage.amount || rawDamage.dice || 0,
-        size: rawDamage.size || rawDamage.sides || 6,
-        type: rawDamage.type || 'none',
-      });
-    } else {
-      setDamage({ amount: 0, size: 6, type: 'none' });
-    }
-    
     save.setSaveMessage({ type: 'success', text: 'Technique loaded successfully!' });
     setTimeout(() => save.setSaveMessage(null), 2000);
-  }, [techniqueParts, allWeaponOptions, handleReset, save]);
-
-  // Load technique for editing from URL parameter (?edit=<id>)
-  useEffect(() => {
-    if (!editTechniqueId || !load.rawItems.length || techniqueParts.length === 0 || editLoadedRef.current) return;
-    const techniqueToEdit = load.rawItems.find((t) => {
-      const row = t as { docId?: string; id?: string };
-      return String(row.docId) === editTechniqueId || String(row.id) === editTechniqueId;
-    });
-    editLoadedRef.current = true;
-    if (!techniqueToEdit) {
-      setIsInitialized(true);
-      return;
-    }
-    handleLoadTechnique(techniqueToEdit);
-    localStorage.removeItem(TECHNIQUE_CREATOR_CACHE_KEY);
-    setIsInitialized(true);
-  }, [editTechniqueId, load.rawItems, techniqueParts, handleLoadTechnique]);
+  }, [techniqueParts, allWeaponOptions, applyFormState, save]);
 
   return (
     <CreatorPageShell

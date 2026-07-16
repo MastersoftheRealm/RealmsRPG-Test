@@ -5,10 +5,23 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Sparkles } from 'lucide-react';
 import { Button, Input, Modal, Textarea, useToast } from '@/components/ui';
-import { useAuth, useMergedSpecies, useCodexSkills, useTraits, useGameRules, useOfficialLibrary, useEquipment } from '@/hooks';
+import {
+  useAuth,
+  useMergedSpecies,
+  useCodexSkills,
+  useCodexFeats,
+  useTraits,
+  useGameRules,
+  useOfficialLibrary,
+  useEquipment,
+  usePowerParts,
+  useTechniqueParts,
+  useItemProperties,
+} from '@/hooks';
+import { LoginPromptModal } from '@/components/shared';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
 import { GuidedStepLayout } from '../guided-step-layout';
@@ -20,11 +33,13 @@ import { cleanForSave } from '@/lib/data-enrichment';
 import { createCharacter, saveCharacter } from '@/services/character-service';
 import { dataUrlToBlob } from '@/lib/portrait';
 import { apiUpload } from '@/lib/api-client';
+import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import type { Character } from '@/types';
 import { MarketingExternalButton, MarketingLinkButton } from '@/components/landing/marketing-button';
 import { DISCORD_URL } from '@/lib/constants/site-copy';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { calculateHealthEnergyPool } from '@/lib/game/formulas';
+import { navigateThenResetCreator, scheduleCreatorReset } from '@/lib/creator-save-handoff';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.reveal;
 
@@ -38,6 +53,7 @@ function speciesAvgNumber(value: unknown): number | undefined {
 
 export function RevealStep() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const { showToast } = useToast();
   const { rules } = useGameRules();
@@ -45,14 +61,33 @@ export function RevealStep() {
   const { archetype, pathData } = useGuidedPathData();
   const { data: allSpecies = [] } = useMergedSpecies();
   const { data: codexSkills = [] } = useCodexSkills();
+  const { data: codexFeats = [] } = useCodexFeats();
   const { data: allTraits = [] } = useTraits();
   const { data: officialItems = [] } = useOfficialLibrary('items');
+  const { data: officialPowers = [] } = useOfficialLibrary('powers');
+  const { data: officialTechniques = [] } = useOfficialLibrary('techniques');
   const { data: codexEquipment = [] } = useEquipment();
+  const { data: powerPartsDb = [] } = usePowerParts();
+  const { data: techniquePartsDb = [] } = useTechniqueParts();
+  const { data: itemPropertiesDb = [] } = useItemProperties();
 
   const [saving, setSaving] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [showPlayTogether, setShowPlayTogether] = useState(false);
   const [savedCharacterId, setSavedCharacterId] = useState<string | null>(null);
+
+  const creatorReturnPath = useMemo(() => {
+    const qs = searchParams.toString();
+    return qs ? `/characters/new/guided?${qs}` : '/characters/new/guided';
+  }, [searchParams]);
+
+  /** Same gate as custom finalize: only same-origin relative paths. */
+  const postSaveReturnTo = useMemo(() => {
+    const raw = searchParams.get('returnTo');
+    if (!raw || !raw.startsWith('/')) return null;
+    const safe = sanitizeRedirectPath(raw, '');
+    return safe || null;
+  }, [searchParams]);
 
   const species = useMemo(
     () => allSpecies.find((s) => String(s.id) === String(draft.speciesId)) ?? null,
@@ -79,11 +114,23 @@ export function RevealStep() {
 
   const canSave = draft.name.trim().length > 0 && remaining === 0;
 
+  /** Navigate only after a confirmed create; clear draft as we leave. Honors ?returnTo= like custom finalize. */
+  const goAfterSave = (characterId: string) => {
+    navigateThenResetCreator(() => {
+      if (postSaveReturnTo) {
+        router.push(postSaveReturnTo);
+      } else {
+        router.push(`/characters/${characterId}`);
+      }
+    }, resetCreator);
+  };
+
   const handleSave = async () => {
     if (!user) {
       setShowLogin(true);
       return;
     }
+    if (savedCharacterId || saving) return;
     setSaving(true);
     try {
       const payload = buildGuidedCharacterPayload(draft, {
@@ -92,9 +139,15 @@ export function RevealStep() {
         species,
         allTraits,
         codexSkills,
+        codexFeats,
         rules,
         officialItems,
+        officialPowers,
+        officialTechniques,
         codexEquipment,
+        powerPartsDb,
+        techniquePartsDb,
+        itemPropertiesDb,
       });
       const lean = cleanForSave(payload as Character);
       const hasBase64Portrait =
@@ -107,8 +160,11 @@ export function RevealStep() {
       }
 
       const characterId = await createCharacter({ ...lean, userId: user.uid });
+      if (!characterId?.trim()) {
+        throw new Error('Character was created but no id was returned');
+      }
 
-      if (base64Portrait && characterId) {
+      if (base64Portrait) {
         try {
           const blob = dataUrlToBlob(base64Portrait);
           const file = new File([blob], 'portrait.jpg', {
@@ -118,26 +174,39 @@ export function RevealStep() {
           formData.append('file', file);
           formData.append('characterId', characterId);
           const uploadRes = await apiUpload<{ url: string }>('/api/upload/portrait', formData);
-          if (uploadRes.url) {
+          if (!uploadRes.url) {
+            showToast(
+              'Portrait upload returned no URL. Add a portrait from your character sheet.',
+              'error'
+            );
+          } else {
             await saveCharacter(characterId, { portrait: uploadRes.url });
           }
         } catch {
-          showToast('Character saved. Add a portrait from your character sheet.', 'error');
+          showToast(
+            'Could not process or upload your portrait. Your character was created. Add a portrait from the sheet.',
+            'error'
+          );
         }
       }
 
+      // Keep the guided draft until create succeeded — only clear when leaving for the sheet.
       setSavedCharacterId(characterId);
-      resetCreator();
       showToast('Your character is ready!', 'success');
+      // Campaign/join returnTo skips play-together (custom finalize goes straight to returnTo).
       const seen = localStorage.getItem(PLAY_TOGETHER_KEY);
-      if (!seen) {
+      if (!postSaveReturnTo && !seen) {
         setShowPlayTogether(true);
+        // Leave `saving` true so Finish stays disabled while play-together is open.
       } else {
-        router.push(`/characters/${characterId}`);
+        goAfterSave(characterId);
       }
-    } catch {
-      showToast('Failed to save character. Please try again.', 'error');
-    } finally {
+    } catch (err) {
+      const message =
+        err instanceof Error && err.message.trim()
+          ? err.message
+          : 'Failed to save character. Please try again.';
+      showToast(message, 'error');
       setSaving(false);
     }
   };
@@ -146,8 +215,11 @@ export function RevealStep() {
     localStorage.setItem(PLAY_TOGETHER_KEY, '1');
     setShowPlayTogether(false);
     if (goSheet && savedCharacterId) {
-      router.push(`/characters/${savedCharacterId}`);
+      goAfterSave(savedCharacterId);
+      return;
     }
+    // Character already created — clear the wizard even if the user leaves via another CTA.
+    scheduleCreatorReset(resetCreator);
   };
 
   return (
@@ -158,7 +230,11 @@ export function RevealStep() {
         description={stepCopy.description}
         hideBack={false}
         primaryAction={
-          <Button onClick={handleSave} disabled={!canSave || saving} className="min-h-11">
+          <Button
+            onClick={handleSave}
+            disabled={!canSave || saving || !!savedCharacterId}
+            className="min-h-11"
+          >
             <Sparkles className="mr-1.5 h-4 w-4" aria-hidden="true" />
             {saving ? stepCopy.saving : stepCopy.save}
           </Button>
@@ -274,27 +350,12 @@ export function RevealStep() {
         </div>
       </GuidedStepLayout>
 
-      <Modal
+      <LoginPromptModal
         isOpen={showLogin}
         onClose={() => setShowLogin(false)}
-        title={stepCopy.loginModal.title}
-        description={stepCopy.loginModal.description}
-        fullScreenOnMobile
-      >
-        <div className="flex flex-col gap-3 p-4">
-          <MarketingLinkButton href="/login?next=/characters/new/guided" size="lg" className="w-full">
-            {stepCopy.loginModal.signIn}
-          </MarketingLinkButton>
-          <MarketingLinkButton
-            href="/register?next=/characters/new/guided"
-            variant="outline"
-            size="lg"
-            className="w-full"
-          >
-            {stepCopy.loginModal.register}
-          </MarketingLinkButton>
-        </div>
-      </Modal>
+        returnPath={creatorReturnPath}
+        contentType="character"
+      />
 
       <Modal
         isOpen={showPlayTogether}
@@ -312,14 +373,31 @@ export function RevealStep() {
       >
         <div className="space-y-3 p-4">
           {DISCORD_URL && (
-            <MarketingExternalButton href={DISCORD_URL} size="lg" className="w-full">
+            <MarketingExternalButton
+              href={DISCORD_URL}
+              size="lg"
+              className="w-full"
+              onClick={() => localStorage.setItem(PLAY_TOGETHER_KEY, '1')}
+            >
               {stepCopy.playTogetherModal.discord}
             </MarketingExternalButton>
           )}
-          <MarketingLinkButton href="/campaigns" variant="outline" size="lg" className="w-full">
+          <MarketingLinkButton
+            href="/campaigns"
+            variant="outline"
+            size="lg"
+            className="w-full"
+            onClick={() => dismissPlayTogether(false)}
+          >
             {stepCopy.playTogetherModal.campaigns}
           </MarketingLinkButton>
-          <MarketingLinkButton href="/campaigns?tab=create" variant="outline" size="lg" className="w-full">
+          <MarketingLinkButton
+            href="/campaigns?tab=create"
+            variant="outline"
+            size="lg"
+            className="w-full"
+            onClick={() => dismissPlayTogether(false)}
+          >
             {stepCopy.playTogetherModal.runGames}
           </MarketingLinkButton>
         </div>

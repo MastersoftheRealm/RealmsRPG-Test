@@ -244,7 +244,12 @@ export function FeatsTab({
         dbFeat = featsDb.find((f) => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
       }
       const featLvl = dbFeat?.feat_lvl;
-      const name = feat.name || dbFeat?.name || String(feat.id);
+      // Prefer codex name: guided saves historically stored id as name.
+      const storedName = feat.name?.trim();
+      const name =
+        dbFeat?.name ||
+        (storedName && storedName !== String(feat.id) ? storedName : undefined) ||
+        String(feat.id);
       const codexName =
         featLvl != null && featLvl > 1
           ? formatFeatName({ id: String(feat.id ?? name), name, feat_lvl: featLvl })

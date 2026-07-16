@@ -19,7 +19,7 @@ import {
   getSkillValueIncreaseCost,
   resolveSkillAllocationRules,
 } from '@/lib/game/skill-allocation';
-import { PointStatus } from '@/components/shared';
+import { DecrementButton, IncrementButton, PointStatus } from '@/components/shared';
 import { DescriptorChip, IconButton, Spinner } from '@/components/ui';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import type { Abilities } from '@/types';
@@ -65,9 +65,9 @@ function GuidedSkillRow({
   const { skill, bonus, isSpecies, isPath, canIncrease, canDecrease } = item;
   const bonusTone =
     bonus > 0
-      ? 'text-success-700 dark:text-success-400'
+      ? 'text-success-fg'
       : bonus < 0
-        ? 'text-danger-700 dark:text-danger-400'
+        ? 'text-danger-fg'
         : 'text-text-secondary';
 
   const hasDescription = Boolean(skill.description);
@@ -116,20 +116,12 @@ function GuidedSkillRow({
         </button>
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
-          <button
-            type="button"
+          <DecrementButton
             onClick={onDecrease}
             disabled={!canDecrease}
-            aria-label={`Decrease ${skill.name ?? 'skill'} bonus`}
-            className={cn(
-              'flex h-11 w-11 items-center justify-center rounded-lg text-lg font-bold transition-colors',
-              canDecrease
-                ? 'bg-surface-alt text-text-secondary hover:bg-surface'
-                : 'cursor-not-allowed text-border-light'
-            )}
-          >
-            −
-          </button>
+            size="md"
+            title={`Decrease ${skill.name ?? 'skill'} bonus`}
+          />
           <span
             className={cn(
               'min-w-[2.75rem] text-center font-display text-lg font-bold tabular-nums',
@@ -138,20 +130,12 @@ function GuidedSkillRow({
           >
             {formatBonus(bonus)}
           </span>
-          <button
-            type="button"
+          <IncrementButton
             onClick={onIncrease}
             disabled={!canIncrease}
-            aria-label={`Increase ${skill.name ?? 'skill'} bonus`}
-            className={cn(
-              'flex h-11 w-11 items-center justify-center rounded-lg text-lg font-bold transition-colors',
-              canIncrease
-                ? 'bg-surface-alt text-text-secondary hover:bg-surface'
-                : 'cursor-not-allowed text-border-light'
-            )}
-          >
-            +
-          </button>
+            size="md"
+            title={`Increase ${skill.name ?? 'skill'} bonus`}
+          />
         </div>
 
         {onRemove ? (

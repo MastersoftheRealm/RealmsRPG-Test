@@ -1,6 +1,10 @@
 /**
  * Codex card art — storage paths and entity types (TASK-405).
  * Admin-only uploads via /api/upload/codex-art (service role); public read URLs in DB.
+ *
+ * DESIGN_INTENT: Interim entity-tied upload path. Long-term art is the Realms Image Library
+ * (ADR-0003 / TASK-492+): master `realms_images` row + entity `image_id`. Keep this module until
+ * TASK-496/498 migrate callers; do not fork a third upload pipeline.
  */
 
 import { apiUpload } from '@/lib/api-client';

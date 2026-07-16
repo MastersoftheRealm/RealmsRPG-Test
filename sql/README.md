@@ -37,6 +37,7 @@ These are recorded in `supabase_migrations.schema_migrations` on RealmsRPG-Test.
 | `codex_art_species_image_url` | 20260702031831 | [codex-art-species-image-url.sql](codex-art-species-image-url.sql) |
 | `official_items_image_url` | 20260702143123 | [official-items-image-url.sql](official-items-image-url.sql) |
 | `normalize_codex_feat_ability_delimiters` | 20260703144039 | [normalize-codex-feat-ability-delimiters.sql](normalize-codex-feat-ability-delimiters.sql) |
+| `realms_image_library` | 20260716 (MCP) | [realms-image-library.sql](realms-image-library.sql) |
 
 ---
 
@@ -77,6 +78,7 @@ These are recorded in `supabase_migrations.schema_migrations` on RealmsRPG-Test.
 
 | File | Status on Test |
 |------|----------------|
+| realms-image-library.sql | Applied — migration `realms_image_library` (TASK-492) |
 | codex-archetypes-path-columns.sql | Applied ad-hoc |
 | codex-archetypes-recommend-unarmed-prowess.sql | Applied ad-hoc |
 | codex-archetypes-creator-layer1-extensions.sql | Migration `codex_archetypes_creator_layer1_extensions` |
