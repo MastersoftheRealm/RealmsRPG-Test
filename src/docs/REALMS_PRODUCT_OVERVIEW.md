@@ -12,7 +12,7 @@
 
 > **Document status (read before building):** This is **intention-driven design** — a system philosophy, onboarding architecture, and product direction doc. It is **not** a validated UX system, behavior-tested flow, or production-ready interaction spec until Layer 1 is playtested and revised from real user behavior. See **Appendix I** before expanding speculative scope. **Owner reconciliations from guided playtest / TASK feedback** (e.g. §3.1 selection grammar, Layer 1 choice principle, kit removal) **are in-bounds** and supersede older automation language in this file. Prefer revising settled sections over inventing new speculative phases (Appendix I §I.6).
 
-**Last updated:** 2026-07-15 (§3.1 selection grammar; §5.0 / §5.7 Layer 1 choice vs automation; kit removal reconciled with TASK-442–443)
+**Last updated:** 2026-07-15 (§5.7–§5.9 Loadout budgets: optional picks + visible Training Points; §3.1 selection grammar)
 
 ---
 
@@ -160,7 +160,9 @@ Same entity; more information over time. **Two card labels, used sitewide** (do 
 - **More details** = entity modal deep-dive (`onDetails`); **opening it must never select**. Path/species footers offer **Close** (left) + **Select** (right) so the viewer can apply without returning to the card (TASK-448). When a card has both See more and modal More details, show modal More details only after inline expand (or when there is no overflow) — settled 2026-07-15. In-card chip deepen (equipment) uses **See more…**, not a specialist label.
 - Prefer these blankets only. Collapse pairs: **See less** / **Less details**.
 
-Shared fact builders (`@/lib/detail-option`, list-row chip helpers) should feed cards, deep-dives, and expanded rows. Fact policy stays as in [`AGENT_GUIDE.md`](./ai/AGENT_GUIDE.md): every meaningful fact is a labeled column **or** a self-describing chip — never unlabeled leftovers.
+Shared fact builders (`@/lib/detail-option`, including **`compact-facts`**, plus list-row chip helpers) should feed cards, deep-dives, and expanded rows. Fact policy stays as in [`AGENT_GUIDE.md`](./ai/AGENT_GUIDE.md): every meaningful fact is a labeled column **or** a self-describing chip — never unlabeled leftovers and never "Header: value" chip language. **Do not repeat** a mechanic that is already represented (e.g. no Weapon Damage property chip beside `XdY Type Damage`; no Armor Base on armor cards). Contextual **i** help for a chip or resource label sits **inside** that control, not as a detached sibling.
+
+**Card anatomy (disclosure boundary):** Glance content, title-adjacent metadata (e.g. Currency / Training Points), and in-card facts belong **before** See more / See less / More details. Do not append orphan chips, costs, or controls below that disclosure row.
 
 #### Ladder B — Catalog breadth (which things can I choose from?)
 
@@ -199,7 +201,7 @@ Components still being absorbed: Advanced [`feats-step.tsx`](../components/chara
 
 | Surface | Target layers | Current default |
 |---------|---------------|-----------------|
-| Character creator — Guided (`/characters/new/guided`) | L1 + per-step L2 (most steps); powers L2 still thin | In progress; kits removed |
+| Character creator — Guided (`/characters/new/guided`) | L1 + per-step L2 (incl. powers/techniques browse) | In progress; kits removed |
 | Character creator — Advanced / Custom | Evolve to L2 face + L3 expand / Forge | Mostly L3; Forge = L3 |
 | Power / technique / item creators | L1 guided routes → L2 filtered → L3 advanced builder | **L3 only** |
 | Species / creature creators | L3 only (deferred from beginner funnel) | **L3 only** |
@@ -293,7 +295,7 @@ flowchart LR
   G2["Ch2 Ancestry: species-trait options, ancestry trait, characteristic, optional flaw"]
   G3["Ch3 Abilities: recommended array or customize"]
   G4["Ch4 Your Archetype: Skills then Archetype Feat(s) then Character Feat"]
-  G5["Ch5 Equipment then Powers OR Techniques"]
+  G5["Ch5 Loadout: weapons, armor, Equipment, then Powers OR Techniques"]
   G6["Ch6 Your Hero: reveal, name, portrait, HP/EN, save"]
   G1 --> G2 --> G3 --> G4 --> G5 --> G6
 ```
@@ -306,7 +308,7 @@ Decisions baked into this model:
 - **Shared card format** across Path, Species, ancestry picks, feats, and equipment (and reused elsewhere): short eye-catcher description on the card, full description behind inline **See more…**, key facts as labeled chips where needed, and **hero art** where the entity is a visual selling point (species first). Consistency between steps is a goal — see §3.1.
 - **Choice-card deep-dive = entity depth, not catalog Layer 2:** **More details** opens [`GuidedEntityDetailModal`](../components/guided-creator/guided-entity-detail-modal.tsx) (overview + expandable read-only option catalogs). Selecting the card still chooses it; opening **More details** never selects. Path/species modals add footer **Select** to apply from the deep-dive (TASK-448). Catalog expand remains `GuidedLayerNav` **See more options**. Shipped: TASK-432–436, TASK-448.
 - **Ancestry** is a post-species, one-pick-at-a-time flow (full-width cards mimicking earlier steps): auto-granted species traits (some are "trait-with-options" requiring a pick via `option_trait_ids`), one ancestry trait of ~6, one characteristic of ~6, and an **optional** flaw of ~3 that grants an **extra** ancestry trait. Limited-use traits show the same uses notice pattern as feats (TASK-441). Mixed/make-your-own species is deferred.
-- **Equipment has no quick kits.** Weapon and armor phases (when present) are individual curated picks from the path pool; gear may offer optional **Add all recommended**. Phases renumber to visible steps only (TASK-442–443). See §5.7.
+- **Loadout has no quick kits.** Weapon and armor phases (when present) are individual curated picks from the path pool; the Equipment phase may offer optional **Add all recommended Equipment**. Phases renumber to visible steps only (TASK-442–443). See §5.7. Chapter rail title is **Loadout** (TASK-459).
 - **Chapter 5 step is named "Powers" OR "Techniques"** (never both), chosen by archetype. **Powered-Martial** path options are hidden behind an easy expand affordance at first (same pattern as "show all species").
 - "How you fight" framing is avoided; character feats are usually **non-combat**, and copy reflects that.
 - Chapter count/naming (5 vs 6) is the working backbone and may be refined during playtest.
@@ -317,7 +319,7 @@ Existing `path_data` already supports `guidance_groups`, `recommended_species` (
 
 - `codex_species.is_starter` (BOOLEAN) — curate the Layer-1 starter set.
 - Archetype **recommended abilities** (e.g. `codex_archetypes.level1_recommended_abilities`) — power the editable recommended array (soft default).
-- Archetype **level-1 equipment recommendation pools** — flat curated lists of weapons/shields, armor, and adventuring gear (plus `armorStep` / shared gear metadata on `level1_loadouts`). **Not** bundled “quick kit” presets (removed TASK-442).
+- Archetype **level-1 Loadout recommendation pools** - flat curated lists of weapons/shields, armor, and Equipment (plus `armorStep` / shared Equipment metadata on `level1_loadouts`). **Not** bundled “quick kit” presets (removed TASK-442).
 - **Choice-card art URLs** (TASK-405, TASK-415): `image_url` on codex/official rows (layer 1) and matching `user_*` columns (layer 3 parity); **art bank** presets (layer 2) for all users. See §5.0.3 three-layer model.
 
 Admin tooling (later phase): replace the archetype edit **modal** ([`AdminArchetypesTab.tsx`](<../app/(main)/admin/codex/AdminArchetypesTab.tsx>)) with a robust admin-only **archetype creator**, and improve species editing for trait options + the starter flag.
@@ -493,21 +495,21 @@ Feat selection must be heavily guided.
 
 **Current gap:** [`feats-step.tsx`](../components/character-creator/steps/feats-step.tsx) uses a Layer 1 filter and auto-apply but has no build-goal groups.
 
-### 5.7 Equipment Selection
+### 5.7 Loadout Selection (weapons, armor, Equipment)
 
-Equipment follows archetype guidance and is split into **one decision at a time**. Owner revision 2026-07-15: **no quick kits** — the path curates options; the player picks weapons and armor.
+Loadout follows archetype guidance and is split into **one decision at a time**. Owner revision 2026-07-15: **no quick kits** - the path curates options; the player picks weapons and armor. Owner revision 2026-07-15 (TASK-459): chapter title is **Loadout**; the non-weapon/armor phase is **Equipment** (not Adventuring Gear).
 
 | Requirement | Target |
 |-------------|--------|
-| Curated path pools | Path lists coherent weapon/shield options, armor options (when applicable), and recommended adventuring gear — not a single bundled kit the user must accept |
-| Deliberate L1 picks | User selects weapon (and armor when the phase exists) from path choice cards; Continue does not auto-fill arms from a kit |
-| Sub-step split | Weapon → armor → gear; **skip and renumber** phases the path does not offer |
-| Card facts | Ability requirement, handedness, damage/type, properties, currency cost as chips; **See more…** deepens mechanic facts on the card (§3.1) |
-| Layer 1 | Path cards + currency remaining on every visible phase; Training Points stay in Layer 2 |
-| Gear assist | Optional **Add all recommended** + per-item quantity — the only bulk shortcut; still toggleable |
-| Layer 2 | Full filtered Common catalog via `UnifiedSelectionModal` (GridListRow) |
+| Curated path pools | Path lists coherent weapon/shield options, armor options (when applicable), and recommended Equipment - not a single bundled kit the user must accept |
+| Deliberate L1 picks | User may select weapon/armor/Equipment from path choice cards or Continue with zero picks; Continue does not auto-fill arms from a kit |
+| Sub-step split | Weapon → armor → Equipment; **skip and renumber** phases the path does not offer |
+| Card facts | Ability requirement, handedness, damage/type, properties, Currency + Training Points as chips; **See more…** deepens mechanic facts on the card (§3.1) |
+| Layer 1 | Optional path cards; **PointStatus** Currency and Training Points on every visible phase (same totals as L2) |
+| Equipment assist | Optional **Add all recommended Equipment** + per-item quantity - the only bulk shortcut; still toggleable |
+| Layer 2 | Full filtered Common catalog via `UnifiedSelectionModal` (GridListRow); Currency + Training Points in footer |
 
-**Shipped (guided):** Phased flow in [`loadout-step.tsx`](../components/guided-creator/steps/loadout-step.tsx) (TASK-424 / TASK-442 / TASK-443 / TASK-446 / TASK-447) — Next/Back phases (no progress strip); **PointStatus** Currency; card-first path picks with description + property hover chips; L2 browse via See more options; gear add-all / qty. Quick kits removed. Spec: [`GUIDED_EQUIPMENT_PHASED_SPEC.md`](./ai/GUIDED_EQUIPMENT_PHASED_SPEC.md). Path recommendation seeds for remaining archetypes: TASK-423 (owner).
+**Shipped (guided):** Phased flow in [`loadout-step.tsx`](../components/guided-creator/steps/loadout-step.tsx) (TASK-424 / TASK-442 / TASK-443 / TASK-446 / TASK-447 / TASK-456 / TASK-459) - Next/Back phases (no progress strip); optional weapon/armor/Equipment picks; **PointStatus** Currency + Training Points; card-first path picks with Currency/Training Points chips; L2 browse via See more options; Equipment add-all / qty. Chapter rail **Loadout**. Quick kits removed. Spec: [`GUIDED_EQUIPMENT_PHASED_SPEC.md`](./ai/GUIDED_EQUIPMENT_PHASED_SPEC.md). Path recommendation seeds for remaining archetypes: TASK-423 (owner).
 
 **Advanced still:** [`equipment-step.tsx`](../components/character-creator/steps/equipment-step.tsx) with manual add and visible Training Points.
 
@@ -518,39 +520,42 @@ Powers and techniques follow the same unified pattern as the other steps (§3.1)
 | Requirement | Target |
 |-------------|--------|
 | Same unified pattern | Path-recommended cards/groups; user confirms or toggles; expand to filtered then full catalog |
-| Prefer visible choice over silent auto-all | Layer 1 may pre-check path recommendations, but the user should still see and own the selection (align with §3.1 choice principle) |
-| Powered-martial clarity | Clear distinction between innate and regular; lower-energy recommendations for hybrids |
+| Prefer visible choice over silent auto-all | Layer 1 may soft-seed affordable recommendations; regular picks stay optional (align with §3.1 choice principle) |
+| Training Points | Shared budget with Loadout on **regular** powers/techniques; per-choice cost visible; overspend blocked with a clear reason |
+| Innate vs regular (Power / Powered-Martial) | Separate L1 lists: **Innate Powers** (Innate Energy / Threshold) vs **Powers** (Training Points); techniques step has no innate track |
+| Innate Energy fill | Continue blocked until remaining Innate Energy is 0; budget from `calculateArchetypeProgression(...).innateEnergy` (L1 Power 16 / PM 6) — not `getInnateEnergyMax` |
 | Contextual synergy copy | Why a power fits the build's role |
-| Layer 2 gap (guided) | Guided powers/techniques step still needs catalog **See more options** parity with feats/loadout |
+| Layer 2 (guided) | **See more options** → `UnifiedSelectionModal` + GridListRow (Energy ≤ theoretical L1 max; fallback Energy > 20 excluded); innate See more → threshold-filtered modal |
 
-**Current gap:** Guided [`powers-techniques-step.tsx`](../components/guided-creator/steps/powers-techniques-step.tsx) shows path cards but auto-selects all recommended IDs and lacks Layer 2 browse. Advanced [`powers-step.tsx`](../components/character-creator/steps/powers-step.tsx) auto-merges with limited grouping and copy.
+**Shipped (guided):** [`powers-techniques-step.tsx`](../components/guided-creator/steps/powers-techniques-step.tsx) — Loadout-style L1 cards (title-adjacent Training Points; Action Type value-only + Energy in See more); dual innate/regular lists for Power users; shared **LoadoutBudgetBar** TP + **PointStatus** Innate Energy; L2 via [`GuidedPowersTechniquesL2Modal`](../components/guided-creator/guided-powers-techniques-l2-modal.tsx) (TASK-463/470–472). Path recommended innates from `level1.innatePowers` when authored (TASK-473 admin field). Advanced [`powers-step.tsx`](../components/character-creator/steps/powers-step.tsx) unchanged.
 
 ### 5.9 Resource Clarity (Training Points / Energy / Currency) — cross-cutting
 
-Resource systems are explained where they first appear (across the abilities-adjacent steps: equipment, powers, finalize).
+Resource systems are explained where they first appear (Loadout, powers/techniques, finalize). Layer 1 shows the same constrained budgets as Layer 2 - users must see spent/remaining and cannot silently overspend.
 
 | Requirement | Target |
 |-------------|--------|
-| Visible but not overwhelming | A compact resource bar; explained on first encounter |
-| Path auto-validation | Archetype paths are pre-validated in admin; a Layer 1 player never overspends |
-| No manual calculation | "Included in your path" framing in Layer 1 |
-| Tooltips | Training Points, currency, and Energy defined in context |
+| Visible budgets | Currency and Training Points use PointStatus-style total/spent/remaining in Layer 1 and Layer 2 |
+| Path guidance | Paths recommend affordable options; selection still validates against the live budget |
+| Tooltips | Training Points, Currency, and Energy defined in context (InfoTippy) |
 
 **Data need:** Admin path-builder validation (Appendix C).
 
 ### 5.10 Final Character Summary
 
-The final step delivers a fulfilling character reveal, then the identity details.
+The final step delivers a fulfilling character reveal, then the identity details. It should feel like the cherry on top: as much of the finished build as needed to feel proud, and as little clutter as possible (no unchosen options, no redundant system jargon, no re-teaching of earlier steps).
 
 | Requirement | Target |
 |-------------|--------|
-| Full overview | Every choice is visible — species, path, feats, gear, powers |
-| Editable adjustments | Jump back to any step without penalty |
-| Identity fields | Name, age, height, weight (optional), portrait (from a library or uploaded) |
-| Health / Energy allocation | Clear and guided ([`health-energy-allocator.tsx`](../components/creator/health-energy-allocator.tsx)) |
+| Full overview | Chosen species, path, abilities, feats, loadout, powers/techniques — hide empty or redundant sections |
+| Editable adjustments | Revisit via chapter rail / step navigator; no inline Edit links on the reveal summary |
+| Identity fields | Name + portrait in the hero band; age, height, weight (optional, with species average placeholders), appearance, and background/description |
+| Health / Energy allocation | Clear and quiet ([`health-energy-allocator.tsx`](../components/creator/health-energy-allocator.tsx)); near identity, above the build summary |
 | Feel | "This is my finished character." |
 
-**Current gap:** [`finalize-step.tsx`](../components/character-creator/steps/finalize-step.tsx) has a functional save flow but is not yet a fulfilling reveal.
+**Guided creator:** [`reveal-step.tsx`](../components/guided-creator/steps/reveal-step.tsx) + [`guided-reveal-summary.tsx`](../components/guided-creator/guided-reveal-summary.tsx) (TASK-462). Path + species live only in the hero subtitle (not repeated as Core cards); no Type / standalone archetype-ability cards; powers section title is Powers, Techniques, or both.
+
+**Current gap (advanced):** [`finalize-step.tsx`](../components/character-creator/steps/finalize-step.tsx) has a functional save flow but is not yet a fulfilling reveal.
 
 ### 5.11 Standalone creators (power, technique, item) — DECIDED 2026-07-01
 
@@ -923,6 +928,7 @@ Only changes that the UX requires. Do not expand the data model beyond reducing 
 | Grouped feat / power recommendations with copy | A `guidance_groups` structure on the path, or extend `ArchetypePathRecommendations` | New |
 | Per-step path flavor text | A per-step `guidance` object, or surface the existing `level1_notes` | `level1_notes` exists but is **not shown in the creator** |
 | Species path hints | An optional `recommended_species[]` on the path | Missing |
+| Recommended Innate Powers (distinct from Powers) | `level1_innate_powers` TEXT (CSV) → `path_data.level1.innatePowers`; admin Appendix G validation (TASK-473). Applied 2026-07-15 on RealmsRPG-Test (`sql/codex-archetypes-level1-innate-powers-proposed.sql`) | Applied |
 | Admin Training Points / currency validation | Validate that path loadouts stay within budget before publish | Missing in admin |
 | Ability effect blurbs | A frontend constants map | New (no database change) |
 | Equipment sub-steps | UI only; `armaments` and `equipment` are already separate fields | Ready |
@@ -1003,7 +1009,7 @@ Everything else stays on current UI until each phase validates the pattern.
 | Skills plus sub-skills plus defenses | Three systems on one screen | Layer 1: skills only; sub-skills in Layer 2; defenses deferred for path users |
 | Feat requirement gating | Codex requirement rules overwhelm | Layer 1: pre-validated groups; requirements hidden until expand |
 | Mixed species ancestry | Many parallel pickers | Layer 1: discourage mixed; full mixed in Layer 3 only |
-| Training Points / currency / proficiency math | Resource anxiety | Path builds are pre-validated; present resources as "included" in Layer 1 |
+| Training Points / currency / proficiency math | Resource anxiety | Visible PointStatus Currency and Training Points in Layer 1 and Layer 2; overspend blocked with clear reasons (see §5.9) |
 | Powered-martial dual track | Two proficiencies plus innate powers | Split sections with path copy |
 | Equipment catalog size | Scroll fatigue | Weapon then armor sub-steps |
 | Empty path content in the database | The picker is empty | Content is a prerequisite; gate publish in admin |

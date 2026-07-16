@@ -1,91 +1,56 @@
 /**
- * Layer 1 card stats for guided equipment.
- * Visible chips: named item properties + Currency; mechanic facts live under More details.
+ * Layer 1 card stats for guided equipment (TASK-457).
+ * Title-adjacent: Currency + Training Points.
+ * See more: mechanic facts + named property descriptors (TASK-454 grammar).
+ * Collapsed body: no expandable chips.
  */
 
+import {
+  abilityRequirementChip,
+  agilityReductionFactChip,
+  currencyFactChip,
+  damageFactChip,
+  damageReductionFactChip,
+  formatAgilityReductionFact,
+  formatDamageFact,
+  formatDamageReductionFact,
+  formatWeaponAbilityFactFromProperties,
+  handednessChip,
+  namedPropertyDescriptorChips,
+  rangeFactChip,
+  trainingPointsFactChip,
+  weaponAbilityChip,
+} from '@/lib/detail-option/compact-facts';
 import { formatDamageDisplay } from '@/lib/utils';
 import { formatRange, type ItemPropertyPayload, type ItemPropertyTpRow } from '@/lib/calculators/item-calc';
-import {
-  getWeaponAttackAbility,
-  hasThrownProperty,
-  hasTwoHandedProperty,
-  weaponAttackAbilityLabel,
-  type WeaponPropertyRef,
-} from '@/lib/game/weapon-attack-ability';
+import type { WeaponPropertyRef } from '@/lib/game/weapon-attack-ability';
 import {
   deriveAbilityRequirementFromProperties,
   type AbilityRequirement,
 } from '@/lib/guided-creator/equipment-eligibility';
 import type { LoadoutItemCategory } from '@/lib/guided-creator/resolve-loadout-items';
 import type { ChipData } from '@/components/shared/grid-list-row-types';
-import { factChip, propertyChipsFromRefs } from '@/lib/detail-option/builders';
-
-/** Properties that are pure mechanic labels — keep under More details, not card chips. */
-const MECHANIC_PROPERTY_NAMES = new Set([
-  'one-handed',
-  'two-handed',
-  'thrown',
-  'ranged',
-  'melee',
-]);
-
-function normalizePropName(ref: WeaponPropertyRef): string {
-  if (typeof ref === 'string') return ref.trim().toLowerCase();
-  return String(ref.name ?? '').trim().toLowerCase();
-}
-
-function handednessLabel(properties: WeaponPropertyRef[] | undefined): string {
-  if (hasTwoHandedProperty(properties)) return 'Two-handed';
-  if (hasThrownProperty(properties)) return 'Thrown';
-  const range = formatRange((properties ?? []) as ItemPropertyPayload[]);
-  if (range.toLowerCase() !== 'melee') return 'Ranged';
-  return 'One-handed';
-}
-
-function rangeLabel(properties: WeaponPropertyRef[] | undefined): string | undefined {
-  const range = formatRange((properties ?? []) as ItemPropertyPayload[]);
-  if (range.toLowerCase() === 'melee') return undefined;
-  return range;
-}
-
-function abilityReqChip(req: AbilityRequirement | undefined | null): ChipData | null {
-  if (!req) return null;
-  return factChip(`${req.name} ${req.level}+`);
-}
-
-function currencyChip(cost: number | null | undefined): ChipData | null {
-  if (cost == null || Number.isNaN(cost)) return null;
-  const n = Math.max(0, Math.floor(Number(cost)));
-  return factChip(`Currency ${n}`);
-}
-
-function isMechanicPropertyName(name: string): boolean {
-  const n = name.trim().toLowerCase();
-  if (!n) return true;
-  if (n.includes('requirement')) return true;
-  return MECHANIC_PROPERTY_NAMES.has(n);
-}
-
-/** Named item properties for card desc chips (Cleave, Finesse, …). */
-function namedPropertyChips(
-  properties: WeaponPropertyRef[] | undefined,
-  itemProperties: ItemPropertyTpRow[]
-): ChipData[] {
-  return propertyChipsFromRefs(properties as never, itemProperties).filter(
-    (chip) => !isMechanicPropertyName(chip.name)
-  );
-}
 
 export interface EquipmentPhaseCardStats {
-  /** Collapsed string tags (legacy); prefer cardChips. */
+  /** Collapsed string tags (legacy); prefer titleChips / detailChips. */
   tags: string[];
-  /** Visible card desc chips: named properties + Currency. */
+  /**
+   * Title-adjacent budget descriptors (Currency, Training Points).
+   * Always visible; never under the disclosure row.
+   */
+  titleChips: ChipData[];
+  /**
+   * Named property descriptors (Graze, Cleave, …) — for L2 expand sections
+   * and See more (also included in detailChips for weapon/armor).
+   */
   cardChips: ChipData[];
-  /** Mechanic facts for More details (ability, handedness, damage, …). */
+  /**
+   * See more facts: mechanics + named properties (non-expanding chips).
+   */
   detailChips: ChipData[];
   primaryLine?: string;
   secondaryLine?: string;
-  /** Full fact chips (card + detail) for L2/deep-dive consumers. */
+  /** Full fact chips (title + detail) for L2/deep-dive consumers. */
   factChips: ChipData[];
 }
 
@@ -95,13 +60,16 @@ export interface BuildPhaseCardStatsInput {
   damageLine?: string;
   damageReduction?: number | null;
   agilityPenalty?: number | null;
+  /** @deprecated Do not chip duplicate description text; keep description on the card. */
   shortUse?: string;
   unitCost?: number | null;
+  /** Armament Training Points cost. */
+  trainingPoints?: number | null;
   abilityRequirement?: AbilityRequirement | null;
   itemProperties?: ItemPropertyTpRow[];
 }
 
-/** Build card chips + expandable fact chips for GuidedChoiceCard. */
+/** Build title / See more / L2 fact chips for GuidedChoiceCard. */
 export function buildEquipmentPhaseCardStats(input: BuildPhaseCardStatsInput): EquipmentPhaseCardStats {
   const {
     category,
@@ -109,95 +77,103 @@ export function buildEquipmentPhaseCardStats(input: BuildPhaseCardStatsInput): E
     damageLine,
     damageReduction,
     agilityPenalty,
-    shortUse,
     unitCost,
+    trainingPoints,
     abilityRequirement,
     itemProperties = [],
   } = input;
 
   const factChips: ChipData[] = [];
+  const titleChips: ChipData[] = [];
   const cardChips: ChipData[] = [];
   const detailChips: ChipData[] = [];
-  const cost = currencyChip(unitCost);
-  const named = namedPropertyChips(properties, itemProperties);
+  const cost = currencyFactChip(unitCost);
+  const tpChip = trainingPointsFactChip(trainingPoints);
+  const named = namedPropertyDescriptorChips(properties as never, itemProperties);
+
+  const pushBudgetChips = (target: ChipData[]) => {
+    if (cost) target.push(cost);
+    if (tpChip) target.push(tpChip);
+  };
 
   if (category === 'weapon') {
     const req =
       abilityRequirement ?? deriveAbilityRequirementFromProperties(properties);
-    const reqChip = abilityReqChip(req);
+    const reqChip = abilityRequirementChip(req);
     if (reqChip) detailChips.push(reqChip);
 
-    const hand = handednessLabel(properties);
-    detailChips.push(factChip(`Handedness ${hand}`));
+    detailChips.push(handednessChip(properties));
 
-    const range = rangeLabel(properties);
-    if (range) detailChips.push(factChip(`Range ${range}`));
+    const range = formatRange((properties ?? []) as ItemPropertyPayload[]);
+    const rangeChip = rangeFactChip(range);
+    if (rangeChip) detailChips.push(rangeChip);
 
-    if (damageLine) detailChips.push(factChip(`Damage ${damageLine}`));
+    const dmgChip = damageFactChip(damageLine);
+    if (dmgChip) detailChips.push(dmgChip);
 
-    const attack = getWeaponAttackAbility(properties);
-    detailChips.push(factChip(`${weaponAttackAbilityLabel(attack)} attack`));
+    detailChips.push(weaponAbilityChip(properties));
+    detailChips.push(...named);
 
     cardChips.push(...named);
-    if (cost) cardChips.push(cost);
+    pushBudgetChips(titleChips);
 
-    factChips.push(...detailChips, ...named);
-    if (cost) factChips.push(cost);
+    factChips.push(...detailChips);
+    pushBudgetChips(factChips);
 
     return {
-      tags: cardChips.map((c) => c.name),
+      tags: titleChips.map((c) => c.name),
+      titleChips,
       cardChips,
       detailChips,
-      primaryLine: damageLine ? `Damage: ${damageLine}` : undefined,
-      secondaryLine: `${weaponAttackAbilityLabel(attack)} attack`,
+      primaryLine: formatDamageFact(damageLine),
+      secondaryLine: formatWeaponAbilityFactFromProperties(properties),
       factChips,
     };
   }
 
   if (category === 'armor') {
-    if (damageReduction != null) {
-      detailChips.push(factChip(`Damage Reduction ${damageReduction}`));
-    }
-    if (agilityPenalty != null && agilityPenalty !== 0) {
-      detailChips.push(
-        factChip(`Agility ${agilityPenalty > 0 ? '+' : ''}${agilityPenalty}`)
-      );
-    }
-    cardChips.push(...named);
-    if (cost) cardChips.push(cost);
+    const req =
+      abilityRequirement ?? deriveAbilityRequirementFromProperties(properties);
+    const reqChip = abilityRequirementChip(req);
+    if (reqChip) detailChips.push(reqChip);
 
-    factChips.push(...detailChips, ...named);
-    if (cost) factChips.push(cost);
+    const drChip = damageReductionFactChip(damageReduction);
+    if (drChip) detailChips.push(drChip);
+    const agilityChip = agilityReductionFactChip(agilityPenalty);
+    if (agilityChip) detailChips.push(agilityChip);
+
+    detailChips.push(...named);
+    cardChips.push(...named);
+    pushBudgetChips(titleChips);
+
+    factChips.push(...detailChips);
+    pushBudgetChips(factChips);
 
     return {
-      tags: cardChips.map((c) => c.name),
+      tags: titleChips.map((c) => c.name),
+      titleChips,
       cardChips,
       detailChips,
-      primaryLine:
-        damageReduction != null ? `Damage reduction ${damageReduction}` : undefined,
+      primaryLine: formatDamageReductionFact(damageReduction),
+      secondaryLine: formatAgilityReductionFact(agilityPenalty),
       factChips,
     };
   }
 
-  if (shortUse) {
-    const labeled = /^use\b/i.test(shortUse) ? shortUse : `Use ${shortUse}`;
-    cardChips.push(factChip(labeled));
-  }
-  if (cost) {
-    cardChips.push(cost);
-  }
-  factChips.push(...cardChips);
+  // Equipment (gear): description stays on the card — do not duplicate as a Use chip.
+  pushBudgetChips(titleChips);
+  pushBudgetChips(factChips);
 
   return {
-    tags: cardChips.map((c) => c.name),
+    tags: titleChips.map((c) => c.name),
+    titleChips,
     cardChips,
     detailChips,
-    primaryLine: shortUse,
     factChips,
   };
 }
 
-/** Format library damage array for card display. */
+/** Format library damage array for labeled column values (bare XdY Type; chips add "Damage"). */
 export function formatWeaponDamageLine(
   damage: Array<{ amount?: number | string; size?: number | string; type?: string }> | undefined
 ): string | undefined {

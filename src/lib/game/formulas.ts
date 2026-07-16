@@ -471,6 +471,10 @@ export function getArchetypeFeatLimit(archetype: ArchetypeCategory | { type?: Ar
 
 /**
  * Get the maximum innate energy for an archetype.
+ *
+ * @deprecated Misnamed: returns ARCHETYPE_CONFIGS.innateEnergy which is the
+ * **Innate Threshold** for Power (8), not Innate Energy (Threshold × Pools = 16 at L1).
+ * Prefer `calculateArchetypeProgression(...).innateEnergy` (character sheet / guided creator).
  */
 export function getInnateEnergyMax(archetype: ArchetypeCategory | { type?: ArchetypeCategory }, rules?: Rules): number {
   const type = typeof archetype === 'string' ? archetype : archetype?.type;

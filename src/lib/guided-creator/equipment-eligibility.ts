@@ -14,6 +14,7 @@ import {
 } from '@/lib/guided-creator/equipment-currency';
 import type { Abilities, AbilityName } from '@/types';
 import type { ArchetypeCategory } from '@/types/archetype';
+import { normalizeId } from '@/lib/utils';
 
 export type EquipmentPhase = 'weapon' | 'armor' | 'gear';
 
@@ -51,10 +52,6 @@ export interface EquipmentEligibilityContext {
   selectedTpSpent?: number;
   tpLimit?: number;
   remainingCurrency?: number;
-}
-
-function normalizeId(id: string): string {
-  return String(id).trim().toLowerCase();
 }
 
 function normalizeRarity(rarity: string | null | undefined): string {

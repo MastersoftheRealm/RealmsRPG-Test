@@ -1,12 +1,17 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { SectionHeader } from '@/components/shared/section-header';
 import { RollButton } from '@/components/shared/roll-button';
 import { TableScroll } from '@/components/ui';
 import { cn, formatDamageDisplay } from '@/lib/utils';
+import { isMechanicPropertyName } from '@/lib/detail-option/compact-facts';
 import { deriveShieldAmountFromProperties } from '@/lib/calculators/item-calc';
 import { getWeaponAttackBonusFromProperties } from '@/lib/game/weapon-attack-ability';
 import { useRollsOptional } from '@/components/character-sheet/roll-context';
+
+/** Named props already shown as table columns (not in MECHANIC_PROPERTY_NAMES). */
+const QUICK_ARMAMENT_COLUMN_PROP_NAMES = new Set(['Critical Range +1']);
 
 export type QuickArmamentAbilities = {
   strength?: number;
@@ -30,6 +35,25 @@ export type QuickArmamentItem = {
 
 function getPropertyNames(props: QuickArmamentItem['properties']): string[] {
   return (props || []).map((p) => (typeof p === 'string' ? p : p?.name || '')).filter(Boolean);
+}
+
+function displayNamedProperties(props: QuickArmamentItem['properties']): string[] {
+  return getPropertyNames(props).filter(
+    (name) => name && !isMechanicPropertyName(name) && !QUICK_ARMAMENT_COLUMN_PROP_NAMES.has(name)
+  );
+}
+
+/** One `• Property` per line under the armament name (avoids cramped inline joins). */
+function NamedPropertiesUnderName({ names }: { names: string[] }) {
+  if (names.length === 0) return null;
+  // Stacked lines (not a semantic list): literal bullets are visual only; index keys allow duplicate names.
+  return (
+    <div className="mt-0.5 text-xs font-normal text-text-muted dark:text-text-secondary">
+      {names.map((p, i) => (
+        <div key={`${p}-${i}`}>• {p}</div>
+      ))}
+    </div>
+  );
 }
 
 /** Use library source when enriched armaments only stored property names on `properties`. */
@@ -84,6 +108,8 @@ export function QuickWeaponsTable({
   filterEquipped = false,
   rollTitlePrefix,
   showHeader = true,
+  /** Extra tbody rows (e.g. Unarmed Prowess) — same column layout as weapon rows. */
+  trailingRows,
 }: {
   title?: string;
   items: QuickArmamentItem[];
@@ -96,11 +122,12 @@ export function QuickWeaponsTable({
   rollTitlePrefix?: string;
   /** When false, omit the SectionHeader wrapper (caller provides its own) */
   showHeader?: boolean;
+  trailingRows?: ReactNode;
 }) {
   const rollContext = useRollsOptional();
   const rows = filterEquipped ? items.filter((w) => w.equipped) : items;
 
-  if (rows.length === 0) return null;
+  if (rows.length === 0 && !trailingRows) return null;
 
   return (
     <div className={cn('bg-surface-alt rounded-lg p-3 mb-4', className)}>
@@ -120,18 +147,13 @@ export function QuickWeaponsTable({
             const attackBonus = getAttackBonus(weapon, abilities, martialProf);
             const { dice, type, rollStr } = parseDamageDiceAndType(weapon.damage);
 
-            const excludedProps = ['Damage Reduction', 'Split Damage Dice', 'Range', 'Shield Base', 'Armor Base', 'Weapon Damage'];
-            const displayProps = getPropertyNames(resolveQuickArmamentProperties(weapon)).filter((p) => p && !excludedProps.includes(p));
+            const displayProps = displayNamedProperties(resolveQuickArmamentProperties(weapon));
 
             return (
               <tr key={String(weapon.id ?? idx)} className="border-b border-border-subtle last:border-0 align-top">
                 <td className="py-2 font-medium text-text-secondary">
                   {weapon.name}
-                  {displayProps.length > 0 && (
-                    <div className="text-xs text-text-muted dark:text-text-secondary font-normal">
-                      {displayProps.map((p) => `• ${p}`).join(' ')}
-                    </div>
-                  )}
+                  <NamedPropertiesUnderName names={displayProps} />
                 </td>
                 <td className="text-center py-2 text-text-muted dark:text-text-secondary">
                   {weapon.range || 'Melee'}
@@ -182,6 +204,7 @@ export function QuickWeaponsTable({
               </tr>
             );
           })}
+          {trailingRows}
         </tbody>
       </table>
       </TableScroll>
@@ -239,18 +262,13 @@ export function QuickShieldsTable({
             const hasDamage = rollStr !== '-';
             const damageRollStr = hasDamage ? (String(rollStr).includes('Bludgeoning') ? String(rollStr) : `${rollStr} Bludgeoning`) : '';
 
-            const excludedProps = ['Damage Reduction', 'Split Damage Dice', 'Range', 'Shield Base', 'Armor Base', 'Weapon Damage'];
-            const displayProps = getPropertyNames(resolveQuickArmamentProperties(shield)).filter((p) => p && !excludedProps.includes(p));
+            const displayProps = displayNamedProperties(resolveQuickArmamentProperties(shield));
 
             return (
               <tr key={String(shield.id ?? idx)} className="border-b border-border-subtle last:border-0 align-top">
                 <td className="py-2 font-medium text-text-secondary">
                   {shield.name}
-                  {displayProps.length > 0 && (
-                    <div className="text-xs text-text-muted dark:text-text-secondary font-normal">
-                      {displayProps.map((p) => `• ${p}`).join(' ')}
-                    </div>
-                  )}
+                  <NamedPropertiesUnderName names={displayProps} />
                 </td>
                 <td className="text-center py-2">
                   {blockStr !== '-' && rollContext?.canRoll !== false && rollContext ? (
@@ -378,30 +396,13 @@ export function QuickArmorTable({
 
             const critRange = baseEvasion + 10 + critRangeBonus;
 
-            const excludedProps = [
-              'Damage Reduction',
-              'Split Damage Dice',
-              'Range',
-              'Shield Base',
-              'Armor Base',
-              'Weapon Damage',
-              'Critical Range +1',
-              'Armor Strength Requirement',
-              'Armor Agility Requirement',
-              'Armor Vitality Requirement',
-            ];
-            const propNames = getPropertyNames(properties);
-            const displayProps = propNames.filter((n) => n && !excludedProps.includes(n));
+            const displayProps = displayNamedProperties(properties);
 
             return (
-              <tr key={String(armorItem.id ?? idx)} className="border-b border-border-subtle last:border-0">
+              <tr key={String(armorItem.id ?? idx)} className="border-b border-border-subtle last:border-0 align-top">
                 <td className="py-1 font-medium text-text-secondary">
                   {armorItem.name}
-                  {displayProps.length > 0 && (
-                    <div className="text-xs text-text-muted dark:text-text-secondary font-normal">
-                      {displayProps.map((p) => `• ${p}`).join(' ')}
-                    </div>
-                  )}
+                  <NamedPropertiesUnderName names={displayProps} />
                 </td>
                 <td className="text-center py-1 font-mono">{damageReduction || 0}</td>
                 <td className="text-center py-1 font-mono">{critRange}</td>

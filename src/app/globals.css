@@ -815,14 +815,18 @@
     @apply bg-surface text-text-primary shadow-sm;
   }
 
-  /* Stepper buttons for +/- controls - unified, less stark colors */
+  /* Stepper buttons for +/- controls — sleek/neutral default (skill bonus style, TASK-468) */
   .btn-stepper {
-    @apply flex items-center justify-center rounded-full font-bold border-2
+    @apply flex items-center justify-center rounded font-bold border
+           bg-surface text-text-secondary border-border-light
+           hover:bg-surface-alt
            transition-colors
-           disabled:bg-surface-alt disabled:text-text-muted disabled:border-border-light disabled:cursor-not-allowed;
+           disabled:bg-surface disabled:text-border-light disabled:border-border-light disabled:cursor-not-allowed
+           dark:disabled:bg-surface dark:disabled:text-border-light;
     transition-duration: var(--duration-fast);
   }
 
+  /** @deprecated Prefer default `.btn-stepper` (neutral). Kept for rare call sites still opting into red/green. */
   .btn-stepper-danger {
     @apply bg-danger-50 text-danger-700 border-danger-200
            hover:bg-danger-100 hover:border-danger-300 active:bg-danger-200
@@ -832,6 +836,7 @@
            dark:disabled:bg-surface-alt dark:disabled:text-text-muted;
   }
 
+  /** @deprecated Prefer default `.btn-stepper` (neutral). Kept for rare call sites still opting into red/green. */
   .btn-stepper-success {
     @apply bg-success-50 text-success-700 border-success-200
            hover:bg-success-100 hover:border-success-300 active:bg-success-200

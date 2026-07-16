@@ -164,6 +164,10 @@ export interface GuidedDraft {
   /** 0 = not taken; level 1 at character creation when path recommends unarmed. */
   unarmedProwess: number;
   powerIds: string[];
+  /**
+   * Innate power picks (Power / Powered-Martial) — separate from regular `powerIds` (TASK-471).
+   */
+  innatePowerIds: string[];
   techniqueIds: string[];
 
   // Chapter 6 — Your Hero
@@ -172,6 +176,8 @@ export interface GuidedDraft {
   heightCm: number | null;
   weightKg: number | null;
   appearanceNotes: string;
+  /** General background / personality (maps to Character.description). */
+  description: string;
   portraitUrl: string | null;
   hpAllocated: number | null;
   energyAllocated: number | null;
@@ -204,12 +210,14 @@ function createInitialDraft(): GuidedDraft {
     currency: CHARACTER_STARTING_CURRENCY,
     unarmedProwess: 0,
     powerIds: [],
+    innatePowerIds: [],
     techniqueIds: [],
     name: '',
     age: '',
     heightCm: null,
     weightKg: null,
     appearanceNotes: '',
+    description: '',
     portraitUrl: null,
     hpAllocated: null,
     energyAllocated: null,
@@ -243,7 +251,7 @@ interface GuidedCreatorState {
 }
 
 /** Bump when persisted draft shape changes; old versions migrate forward. */
-const GUIDED_STORE_SCHEMA_VERSION = 5;
+const GUIDED_STORE_SCHEMA_VERSION = 6;
 
 export const useGuidedCreatorStore = create<GuidedCreatorState>()(
   persist(
@@ -390,6 +398,18 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
           };
         }
 
+        if (version < 6 && state.draft) {
+          state = {
+            ...state,
+            draft: {
+              ...state.draft,
+              innatePowerIds: Array.isArray(state.draft.innatePowerIds)
+                ? state.draft.innatePowerIds
+                : [],
+            },
+          };
+        }
+
         if (version < 3 && state.draft) {
           const legacy = state.draft;
           const skills: Record<string, number> = legacy.skills ?? {};
@@ -452,6 +472,12 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
         }
         if (typeof draft.currency !== 'number') {
           draft.currency = CHARACTER_STARTING_CURRENCY;
+        }
+        if (typeof draft.description !== 'string') {
+          draft.description = '';
+        }
+        if (!Array.isArray(draft.innatePowerIds)) {
+          draft.innatePowerIds = [];
         }
         return {
           ...currentState,

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo } from 'react';
 import { saveCharacter } from '@/services/character-service';
+import { apiUpload } from '@/lib/api-client';
 import { getArchetypeAbilityScore } from '@/lib/game/calculations';
 import { getArchetypeCodexLookupId, applyPathProficiencyForLevel } from '@/lib/game/archetype-display';
 import { calculateProficiency } from '@/lib/game/formulas';
@@ -155,17 +156,8 @@ const handlePortraitChange = useCallback(async (file: File) => {
     formData.append('file', file);
     formData.append('characterId', character.id);
 
-    const res = await fetch('/api/upload/portrait', {
-      method: 'POST',
-      body: formData,
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ error: res.statusText }));
-      throw new Error((err as { error?: string }).error ?? 'Upload failed');
-    }
-
-    const { url } = (await res.json()) as { url: string };
+    // DESIGN_INTENT: all multipart uploads go through apiUpload for shared error parsing.
+    const { url } = await apiUpload<{ url: string }>('/api/upload/portrait', formData);
 
     setCharacter(prev => prev ? { ...prev, portrait: url } : null);
     setPortraitRefreshKey(Date.now());

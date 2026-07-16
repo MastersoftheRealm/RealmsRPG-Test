@@ -12,7 +12,6 @@ import type { ItemPropertyPayload } from '@/lib/calculators/item-calc';
 import { deriveShieldAmountFromProperties } from '@/lib/calculators';
 import {
   armorStatsForRef,
-  gearShortUseForRef,
   libraryRowForRef,
   rowsForEquipmentPhase,
   weaponDamageLineForRef,
@@ -31,15 +30,12 @@ import { buildEquipmentPhaseCardStats } from '@/lib/guided-creator/equipment-pha
 import { mergeLoadoutArmaments } from '@/lib/guided-creator/resolve-loadout-items';
 import { resolveCatalogRowUnitCost } from '@/lib/guided-creator/equipment-currency';
 import type { ChipData } from '@/components/shared/grid-list-row-types';
+import { normalizeId } from '@/lib/utils';
 
 export interface GuidedEquipmentL2ItemData {
   ref: PathItemRecommendation;
   category: 'weapon' | 'armor' | 'equipment';
   row: EligibleEquipmentRow;
-}
-
-function normalizeId(id: string): string {
-  return String(id).trim().toLowerCase();
 }
 
 function mapCategory(phase: EquipmentPhase): GuidedEquipmentL2ItemData['category'] {
@@ -116,20 +112,22 @@ export function buildGuidedEquipmentL2Items(
         phase === 'armor'
           ? armorStatsForRef(row.id, officialItems, codexEquipment).agilityPenalty
           : undefined,
-      shortUse:
-        phase === 'gear'
-          ? gearShortUseForRef(row.id, officialItems, codexEquipment)
-          : undefined,
       unitCost,
+      trainingPoints: phase === 'gear' ? undefined : row.trainingPoints,
       itemProperties,
     });
 
-    const propertyChips: ChipData[] = stats.cardChips.filter(
-      (c) => !/^currency\s/i.test(c.name)
-    );
+    /** Expand chips match card See more, minus facts already shown as labeled columns. */
+    const expandChips = stats.detailChips.filter((c) => {
+      const n = c.name.toLowerCase();
+      if (/^currency\s/.test(n) || /^training points\s/.test(n)) return false;
+      if (phase === 'weapon' && /\bdamage\b/.test(n) && /\dd\d/.test(n)) return false;
+      if (phase === 'armor' && /^damage reduction\b/.test(n)) return false;
+      return true;
+    });
     const detailSections =
-      propertyChips.length > 0
-        ? [{ label: 'Properties', chips: propertyChips, hideLabelIfSingle: true as const }]
+      expandChips.length > 0
+        ? [{ label: 'Details', chips: expandChips, hideLabelIfSingle: true as const }]
         : undefined;
 
     let columns: NonNullable<SelectableItem['columns']>;
@@ -248,6 +246,41 @@ export function computeL2GearSpend(selected: SelectableItem[]): number {
     const qty = (item as SelectableItem & { quantity?: number }).quantity ?? 1;
     return sum + resolveCatalogRowUnitCost(data?.row) * Math.max(1, qty);
   }, 0);
+}
+
+function refCurrency(
+  ref: PathItemRecommendation,
+  catalog: Map<string, EligibleEquipmentRow>
+): number {
+  const row = catalog.get(normalizeId(ref.id));
+  return resolveCatalogRowUnitCost(row) * Math.max(1, ref.quantity);
+}
+
+/**
+ * Preview Currency spent across all phases while L2 is open.
+ * Current-phase draft spend is replaced by the live selection.
+ */
+export function computeL2CurrencySpent(
+  phase: EquipmentPhase,
+  draft: GuidedDraft,
+  selected: SelectableItem[],
+  catalog: Map<string, EligibleEquipmentRow>
+): number {
+  const selectedSpend = computeL2GearSpend(selected);
+  if (phase === 'weapon') {
+    const armor = draft.loadoutArmor.reduce((sum, ref) => sum + refCurrency(ref, catalog), 0);
+    const gear = draft.equipment.reduce((sum, ref) => sum + refCurrency(ref, catalog), 0);
+    return selectedSpend + armor + gear;
+  }
+  if (phase === 'armor') {
+    const weapons = draft.loadoutWeapons.reduce((sum, ref) => sum + refCurrency(ref, catalog), 0);
+    const gear = draft.equipment.reduce((sum, ref) => sum + refCurrency(ref, catalog), 0);
+    return weapons + selectedSpend + gear;
+  }
+  const arms =
+    draft.loadoutWeapons.reduce((sum, ref) => sum + refCurrency(ref, catalog), 0) +
+    draft.loadoutArmor.reduce((sum, ref) => sum + refCurrency(ref, catalog), 0);
+  return arms + selectedSpend;
 }
 
 export interface ApplyL2Result {

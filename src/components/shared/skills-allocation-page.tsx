@@ -33,10 +33,8 @@ import {
 } from '@/lib/game/skill-allocation';
 import { useGameRules } from '@/hooks';
 import { formatBonus } from '@/lib/utils';
-import { SkillRow } from '@/components/shared';
+import { SkillRow, PointStatus, AddSkillModal, AddSubSkillModal, ValueStepper } from '@/components/shared';
 import { Button, Spinner, Alert, Card, PageHeader, TableScroll } from '@/components/ui';
-import { PointStatus } from '@/components/shared';
-import { AddSkillModal, AddSubSkillModal } from '@/components/shared';
 import type { Abilities, DefenseSkills } from '@/types';
 
 const DEFENSE_KEYS: (keyof DefenseSkills)[] = [
@@ -486,24 +484,21 @@ export function SkillsAllocationPage({
               >
                 <span className="font-medium text-text-primary mb-1">{DEFENSE_LABELS[key]}</span>
                 <div className="flex items-center justify-between gap-2">
-                  <button
-                    onClick={() => handleDefenseChange(key, -1)}
-                    disabled={current <= 0}
-                    className="w-6 h-6 rounded flex items-center justify-center text-sm font-bold bg-surface hover:bg-surface-alt disabled:opacity-50"
-                  >
-                    −
-                  </button>
-                  <span className="text-sm font-bold min-w-[36px] text-center text-primary-link-fg">
-                    {formatBonus(totalBonus)}
-                  </span>
-                  <button
-                    onClick={() => handleDefenseChange(key, 1)}
-                    disabled={!canInc}
-                    className="w-6 h-6 rounded flex items-center justify-center text-sm font-bold bg-surface hover:bg-surface-alt disabled:opacity-50"
-                    title={canInc ? `Cost: ${skillRules.defenseIncreaseCost} Skill points` : `Max at level ${level}`}
-                  >
-                    +
-                  </button>
+                  <ValueStepper
+                    value={current}
+                    onChange={(next) => handleDefenseChange(key, next - current)}
+                    min={0}
+                    max={canInc ? Infinity : current}
+                    size="sm"
+                    formatValue={() => formatBonus(totalBonus)}
+                    decrementTitle={`Decrease ${DEFENSE_LABELS[key]}`}
+                    incrementTitle={
+                      canInc
+                        ? `Increase ${DEFENSE_LABELS[key]} (Cost: ${skillRules.defenseIncreaseCost} Skill points)`
+                        : `Increase ${DEFENSE_LABELS[key]} (Max at level ${level})`
+                    }
+                    className="w-full justify-between"
+                  />
                 </div>
                 {current > 0 && (
                   <span className="text-[9px] text-primary-link-fg font-medium mt-0.5">

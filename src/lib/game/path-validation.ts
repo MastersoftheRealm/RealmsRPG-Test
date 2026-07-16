@@ -3,15 +3,25 @@
  * Validates path_data before a path is player-visible.
  */
 
-import type { ArchetypePathData, PathGuidanceGroup } from '@/types/archetype';
+import type { ArchetypeCategory, ArchetypePathData, PathGuidanceGroup } from '@/types/archetype';
 import { flattenLoadoutEntries } from '@/lib/guided-creator/resolve-loadout-items';
 import { LAYER1_GOVERNANCE } from '@/lib/constants/creator-layer-governance';
+import {
+  validateRecommendedInnatePowers,
+  type InnatePowerSnapshot,
+} from '@/lib/game/innate-eligibility';
 
 export interface PathValidationContext {
   /** Resolve armament TP from codex/official library (admin save). Returns null if item not found. */
   resolveItemTrainingPoints?: (itemId: string) => number | null;
   /** Level-1 TP cap (typically from path recommended abilities). */
   trainingPointLimit?: number;
+  /** Archetype category for Innate Energy / Threshold (TASK-473). */
+  archetypeType?: ArchetypeCategory;
+  powerProfStart?: number | null;
+  martialProfStart?: number | null;
+  /** Resolve official power snapshot for innate eligibility. */
+  resolveInnatePower?: (powerId: string) => InnatePowerSnapshot | null;
 }
 
 export interface PathValidationIssue {
@@ -47,6 +57,7 @@ export function validatePathDataForPublish(
     ['feats', level1.feats?.length ?? 0],
     ['skills', level1.skills?.length ?? 0],
     ['powers', level1.powers?.length ?? 0],
+    ['innate powers', level1.innatePowers?.length ?? 0],
     ['techniques', level1.techniques?.length ?? 0],
     ['armaments', level1.armaments?.length ?? 0],
     ['equipment', level1.equipment?.length ?? 0],
@@ -69,8 +80,46 @@ export function validatePathDataForPublish(
   }
 
   issues.push(...validateLoadoutTrainingPoints(level1, context));
+  issues.push(...validateInnatePowerRecommendations(level1, context));
 
   return issues;
+}
+
+function validateInnatePowerRecommendations(
+  level1: NonNullable<ArchetypePathData['level1']>,
+  context?: PathValidationContext
+): PathValidationIssue[] {
+  const innateIds = level1.innatePowers ?? [];
+  if (innateIds.length === 0) return [];
+
+  const archetypeType = context?.archetypeType;
+  if (!archetypeType) {
+    return [
+      {
+        severity: 'warning',
+        message:
+          'Recommended innate powers authored but archetype type was not provided for eligibility validation.',
+      },
+    ];
+  }
+
+  const resolve = context?.resolveInnatePower;
+  if (!resolve) {
+    return [
+      {
+        severity: 'warning',
+        message:
+          'Recommended innate powers authored but power library data was unavailable for Appendix G eligibility checks.',
+      },
+    ];
+  }
+
+  return validateRecommendedInnatePowers(innateIds, {
+    archetypeType,
+    powerProfStart: context?.powerProfStart,
+    martialProfStart: context?.martialProfStart,
+    resolvePower: resolve,
+  });
 }
 
 function validateLoadoutTrainingPoints(

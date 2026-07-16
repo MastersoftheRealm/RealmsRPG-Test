@@ -1,10 +1,10 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { SectionHeader, SearchInput, LoadingState, ErrorDisplay as ErrorState, GridListRow, ListEmptyState as EmptyState } from '@/components/shared';
+import { SectionHeader, SearchInput, LoadingState, ErrorDisplay as ErrorState, GridListRow, ListEmptyState as EmptyState, ValueStepper } from '@/components/shared';
 import { Modal, Button, Input, IconButton, useToast } from '@/components/ui';
 import { ChipSelect } from '@/components/shared';
-import { useCodexArchetypes, useCodexEquipment, useCodexFeats, useCodexSkills, useCodexItemProperties } from '@/hooks/use-codex';
+import { useCodexArchetypes, useCodexEquipment, useCodexFeats, useCodexSkills, useCodexItemProperties, useCodexPowerParts } from '@/hooks/use-codex';
 import { useMergedSpecies } from '@/hooks';
 import { useOfficialLibrary } from '@/hooks/use-official-library';
 import { useQueryClient } from '@tanstack/react-query';
@@ -12,26 +12,53 @@ import { deleteCodexDoc, saveArchetypeWithPath } from './actions';
 import { Pencil, Copy, X } from 'lucide-react';
 import { getFeatLevel, formatFeatName } from '@/lib/leveled-feats';
 import { formatListCellLabel } from '@/lib/utils';
-import { parseArchetypePathData, pathHiddenFromPlayerPicker, parseLevel1LoadoutsField, serializeLevel1LoadoutsField, type Level1ArmorStep } from '@/lib/game/archetype-path';
+import {
+  parseArchetypePathData,
+  pathHiddenFromPlayerPicker,
+  serializeLevel1LoadoutsField,
+  coerceJsonRecord,
+  parseOptionalJsonField,
+  parseIdQuantityStrings,
+  serializeIdQuantityStrings,
+  type Level1ArmorStep,
+} from '@/lib/game/archetype-path';
 import { validatePathDataForPublish } from '@/lib/game/path-validation';
+import { snapshotOfficialPowerForInnate } from '@/lib/game/innate-eligibility';
 import {
   createItemTpResolver,
   trainingPointLimitFromRecommendedAbilities,
 } from '@/lib/guided-creator/loadout-tp';
+import type { PowerPart } from '@/hooks/codex-types';
+import type { LibraryPower } from '@/types/library';
+import type { AbilityName } from '@/types/abilities';
 
 const COPY_NAME_SUFFIX = ' copy';
 const ABILITY_OPTIONS = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'] as const;
+/** Level-1 ability cap mirrors the character creator (ABILITY_CONSTRAINTS.getMaxAbility(1)). */
+const RECOMMENDED_ABILITY_MAX = 3;
+
+type RecommendedAbilities = Partial<Record<AbilityName, number>>;
+
+function labelForAbility(ability: string): string {
+  return ability.charAt(0).toUpperCase() + ability.slice(1);
+}
 
 type CodexFeatLike = { id?: string; name?: string; feat_lvl?: number; base_feat_id?: string; lvl_req?: number };
 function toLeveledFeatLike(f: CodexFeatLike) {
   return { ...f, id: f.id ?? '' };
 }
 
-function guidedJsonFromPath(pathData: unknown): string {
+function guidedAbilitiesFromPath(pathData: unknown): RecommendedAbilities {
   const level1 = parseArchetypePathData(pathData)?.level1;
-  const value = level1?.recommended_abilities;
-  if (value == null || Object.keys(value).length === 0) return '';
-  return JSON.stringify(value, null, 2);
+  return level1?.recommended_abilities ?? {};
+}
+
+/** Build the persisted recommended-abilities object (only non-zero entries); null when none set. */
+function serializeRecommendedAbilities(abilities: RecommendedAbilities): RecommendedAbilities | null {
+  const entries = ABILITY_OPTIONS.map((ability) => [ability, abilities[ability] ?? 0] as const).filter(
+    ([, value]) => value > 0
+  );
+  return entries.length > 0 ? (Object.fromEntries(entries) as RecommendedAbilities) : null;
 }
 
 function guidedEquipmentMetaFromPath(pathData: unknown): {
@@ -48,16 +75,6 @@ function guidedEquipmentMetaFromPath(pathData: unknown): {
   };
 }
 
-function parseOptionalJsonField(raw: string, label: string): { ok: true; value: unknown } | { ok: false; error: string } {
-  const trimmed = raw.trim();
-  if (!trimmed) return { ok: true, value: null };
-  try {
-    return { ok: true, value: JSON.parse(trimmed) as unknown };
-  } catch {
-    return { ok: false, error: `${label} must be valid JSON.` };
-  }
-}
-
 type PathItemEntry = { id: string; quantity: number };
 
 type PathLevelForm = {
@@ -66,6 +83,8 @@ type PathLevelForm = {
   feats: string[];
   skills: string[];
   powers: string[];
+  /** Level 1 only: recommended Innate Powers (distinct from powers). */
+  innatePowers: string[];
   techniques: string[];
   armaments: string[];
   equipment: string[];
@@ -83,20 +102,6 @@ type PathLevelForm = {
   /** Level 1 only: species IDs/names recommended on the species step */
   recommendedSpecies: string[];
 };
-
-function parseIdQuantityStrings(arr: string[]): PathItemEntry[] {
-  return arr.map((s) => {
-    const colon = s.indexOf(':');
-    if (colon < 0) return { id: s.trim(), quantity: 1 };
-    const id = s.slice(0, colon).trim();
-    const q = parseInt(s.slice(colon + 1).trim(), 10);
-    return { id, quantity: Number.isFinite(q) && q >= 1 ? q : 1 };
-  }).filter((e) => e.id.length > 0);
-}
-
-function toIdQuantityStrings(entries: PathItemEntry[]): string[] {
-  return entries.map((e) => (e.quantity > 1 ? `${e.id}:${e.quantity}` : e.id));
-}
 
 type SelectionOption = { value: string; label: string };
 
@@ -138,18 +143,7 @@ function resolveSelectedValues(values: string[], options: SelectionOption[]): st
 }
 
 function parsePathData(value: unknown): Record<string, unknown> | undefined {
-  if (!value) return undefined;
-  if (typeof value === 'string') {
-    try {
-      const parsed = JSON.parse(value);
-      if (typeof parsed === 'object' && parsed !== null) return parsed as Record<string, unknown>;
-      return undefined;
-    } catch {
-      return undefined;
-    }
-  }
-  if (typeof value === 'object' && value !== null) return value as Record<string, unknown>;
-  return undefined;
+  return coerceJsonRecord(value);
 }
 
 function makeLevelRow(level = 2): PathLevelForm {
@@ -159,6 +153,7 @@ function makeLevelRow(level = 2): PathLevelForm {
     feats: [],
     skills: [],
     powers: [],
+    innatePowers: [],
     techniques: [],
     armaments: [],
     equipment: [],
@@ -189,6 +184,10 @@ function toLevelForm(
     feats: resolveSelectedValues(toSelectionArray(raw.feats), optionsByKey?.feats ?? []),
     skills: resolveSelectedValues(toSelectionArray(raw.skills), optionsByKey?.skills ?? []),
     powers: resolveSelectedValues(toSelectionArray(raw.powers), optionsByKey?.powers ?? []),
+    innatePowers: resolveSelectedValues(
+      toSelectionArray(raw.innatePowers ?? raw.innate_powers),
+      optionsByKey?.innatePowers ?? optionsByKey?.powers ?? []
+    ),
     techniques: resolveSelectedValues(toSelectionArray(raw.techniques), optionsByKey?.techniques ?? []),
     armaments: armamentEntries.map((e) => e.id),
     equipment: equipmentEntries.map((e) => e.id),
@@ -210,13 +209,14 @@ function buildLevelPayload(level: PathLevelForm, includeLevel: boolean): Record<
   const feats = dedupeStrings(level.feats);
   const skills = dedupeStrings(level.skills);
   const powers = dedupeStrings(level.powers);
+  const innatePowers = dedupeStrings(level.innatePowers);
   const techniques = dedupeStrings(level.techniques);
   const isLevel1 = !includeLevel;
   const armaments = isLevel1 && level.armamentEntries?.length
-    ? toIdQuantityStrings(level.armamentEntries)
+    ? serializeIdQuantityStrings(level.armamentEntries)
     : dedupeStrings(level.armaments);
   const equipment = isLevel1 && level.equipmentEntries?.length
-    ? toIdQuantityStrings(level.equipmentEntries)
+    ? serializeIdQuantityStrings(level.equipmentEntries)
     : dedupeStrings(level.equipment);
   const removeFeats = dedupeStrings(level.removeFeats);
   const removePowers = dedupeStrings(level.removePowers);
@@ -225,6 +225,7 @@ function buildLevelPayload(level: PathLevelForm, includeLevel: boolean): Record<
   if (feats.length) payload.feats = feats;
   if (skills.length) payload.skills = skills;
   if (powers.length) payload.powers = powers;
+  if (isLevel1 && innatePowers.length) payload.innatePowers = innatePowers;
   if (techniques.length) payload.techniques = techniques;
   if (armaments.length) payload.armaments = armaments;
   if (equipment.length) payload.equipment = equipment;
@@ -248,6 +249,7 @@ export function AdminArchetypesTab() {
   const { data: codexSkills = [] } = useCodexSkills();
   const { data: allSpecies = [] } = useMergedSpecies();
   const { data: codexEquipment = [] } = useCodexEquipment();
+  const { data: powerPartsDb = [] } = useCodexPowerParts();
   const { data: officialPowers = [], isLoading: isLoadingOfficialPowers } = useOfficialLibrary('powers');
   const { data: officialTechniques = [], isLoading: isLoadingOfficialTechniques } = useOfficialLibrary('techniques');
   const { data: officialItems = [], isLoading: isLoadingOfficialItems } = useOfficialLibrary('items');
@@ -275,7 +277,7 @@ export function AdminArchetypesTab() {
     level1Path: makeLevelRow(1),
     levelPathRows: [makeLevelRow(2)],
     advancedPathJson: '',
-    guidedRecommendedAbilitiesJson: '',
+    guidedRecommendedAbilities: {} as RecommendedAbilities,
     guidedArmorStep: '' as Level1ArmorStep | '',
     guidedSharedEquipmentEntries: [] as PathItemEntry[],
   });
@@ -411,6 +413,7 @@ export function AdminArchetypesTab() {
       feats: featOptions,
       skills: skillOptions,
       powers: powerOptions,
+      innatePowers: powerOptions,
       techniques: techniqueOptions,
       armaments: armamentOptions,
       equipment: equipmentOptions,
@@ -429,6 +432,7 @@ export function AdminArchetypesTab() {
     | 'feats'
     | 'skills'
     | 'powers'
+    | 'innatePowers'
     | 'techniques'
     | 'armaments'
     | 'equipment'
@@ -441,6 +445,7 @@ export function AdminArchetypesTab() {
     { key: 'feats', label: 'Feats', placeholder: 'Select recommended feats' },
     { key: 'skills', label: 'Skills', placeholder: 'Select recommended skills' },
     { key: 'powers', label: 'Powers', placeholder: 'Select recommended powers' },
+    { key: 'innatePowers', label: 'Innate Powers', placeholder: 'Select recommended innate powers' },
     { key: 'techniques', label: 'Techniques', placeholder: 'Select recommended techniques' },
     { key: 'armaments', label: 'Armaments', placeholder: 'Select recommended armaments' },
     { key: 'equipment', label: 'Equipment', placeholder: 'Select recommended equipment' },
@@ -484,6 +489,7 @@ export function AdminArchetypesTab() {
     checkField('feats', 'Feats');
     checkField('skills', 'Skills');
     checkField('powers', 'Powers');
+    checkField('innatePowers', 'Innate Powers');
     checkField('techniques', 'Techniques');
     if (levelForm.armamentEntries?.length) checkEntries(levelForm.armamentEntries, 'Armaments');
     else checkField('armaments', 'Armaments');
@@ -513,7 +519,7 @@ export function AdminArchetypesTab() {
       level1Path: makeLevelRow(1),
       levelPathRows: [makeLevelRow(2)],
       advancedPathJson: '',
-      guidedRecommendedAbilitiesJson: '',
+      guidedRecommendedAbilities: {},
       guidedArmorStep: '',
       guidedSharedEquipmentEntries: [],
     });
@@ -549,7 +555,7 @@ export function AdminArchetypesTab() {
       level1Path: toLevelForm(rawLevel1, 1, optionsByField),
       levelPathRows: levelRows.length ? levelRows : [makeLevelRow(2)],
       advancedPathJson: '',
-      guidedRecommendedAbilitiesJson: guidedJsonFromPath(a.path_data),
+      guidedRecommendedAbilities: guidedAbilitiesFromPath(a.path_data),
       guidedArmorStep: equipmentMeta.armorStep,
       guidedSharedEquipmentEntries: equipmentMeta.sharedEquipmentEntries,
     });
@@ -585,7 +591,7 @@ export function AdminArchetypesTab() {
       level1Path: toLevelForm(rawLevel1, 1, optionsByField),
       levelPathRows: levelRows.length ? levelRows : [makeLevelRow(2)],
       advancedPathJson: '',
-      guidedRecommendedAbilitiesJson: guidedJsonFromPath(a.path_data),
+      guidedRecommendedAbilities: guidedAbilitiesFromPath(a.path_data),
       guidedArmorStep: equipmentMeta.armorStep,
       guidedSharedEquipmentEntries: equipmentMeta.sharedEquipmentEntries,
     });
@@ -633,39 +639,34 @@ export function AdminArchetypesTab() {
     if (structuredPathData && pathHiddenFromPlayerPicker(parseArchetypePathData(structuredPathData))) {
       showToast(
         'Level 1 has notes, remove lists, or Unarmed Prowess only; no add recommendations. ' +
-          'This path will not appear in the character creator picker or public codex path list until you add level 1 feats, skills, powers, techniques, armaments, or equipment.',
+          'This path will not appear in the character creator picker or public codex path list until you add level 1 feats, skills, powers, innate powers, techniques, armaments, or equipment.',
         'warning'
       );
     }
 
-    const abilitiesParseEarly = parseOptionalJsonField(form.guidedRecommendedAbilitiesJson, 'Recommended abilities');
-    if (!abilitiesParseEarly.ok) {
-      showToast(abilitiesParseEarly.error, 'error');
-      return;
-    }
+    const recommendedAbilitiesValue = serializeRecommendedAbilities(form.guidedRecommendedAbilities);
 
     let level1Override: Record<string, unknown> | undefined;
     let levelsOverride: Record<string, unknown>[] | undefined;
     if (form.advancedPathJson.trim()) {
-      try {
-        const override = JSON.parse(form.advancedPathJson) as Record<string, unknown>;
-        if (override.level1 && typeof override.level1 === 'object') level1Override = override.level1 as Record<string, unknown>;
-        if (Array.isArray(override.levels)) {
-          levelsOverride = override.levels.filter(
-            (entry): entry is Record<string, unknown> => typeof entry === 'object' && entry !== null
-          );
-        }
-      } catch {
-        showToast('Advanced Path JSON must be valid JSON.', 'error');
+      const advancedParse = parseOptionalJsonField(form.advancedPathJson, 'Advanced Path JSON');
+      if (!advancedParse.ok) {
+        showToast(advancedParse.error, 'error');
         return;
+      }
+      const override = (advancedParse.value ?? {}) as Record<string, unknown>;
+      if (override.level1 && typeof override.level1 === 'object') level1Override = override.level1 as Record<string, unknown>;
+      if (Array.isArray(override.levels)) {
+        levelsOverride = override.levels.filter(
+          (entry): entry is Record<string, unknown> => typeof entry === 'object' && entry !== null
+        );
       }
     }
 
     const previewLevel1 = level1Override || (structuredPathData?.level1 as Record<string, unknown> | undefined) || {};
     const previewExistingLevel1 = editing ? parseArchetypePathData(editing.path_data)?.level1 : undefined;
     const previewAbilities =
-      (abilitiesParseEarly.value as Record<string, number> | undefined) ??
-      previewExistingLevel1?.recommended_abilities;
+      recommendedAbilitiesValue ?? previewExistingLevel1?.recommended_abilities;
 
     const pathForValidation = parseArchetypePathData({
       level1: {
@@ -678,6 +679,9 @@ export function AdminArchetypesTab() {
       },
     });
     if (pathForValidation?.level1) {
+      const officialById = new Map(
+        (officialPowers as LibraryPower[]).map((p) => [String(p.id ?? ''), p])
+      );
       const publishIssues = validatePathDataForPublish(pathForValidation, {
         resolveItemTrainingPoints: createItemTpResolver(
           officialItems,
@@ -685,6 +689,14 @@ export function AdminArchetypesTab() {
           itemProperties
         ),
         trainingPointLimit: trainingPointLimitFromRecommendedAbilities(previewAbilities),
+        archetypeType: form.type,
+        powerProfStart: form.powerProfStart,
+        martialProfStart: form.martialProfStart,
+        resolveInnatePower: (powerId) => {
+          const power = officialById.get(powerId);
+          if (!power) return null;
+          return snapshotOfficialPowerForInnate(power, powerPartsDb as PowerPart[]);
+        },
       });
       const publishErrors = publishIssues.filter((i) => i.severity === 'error');
       if (publishErrors.length > 0) {
@@ -714,7 +726,7 @@ export function AdminArchetypesTab() {
         : finalLevel1.recommended_species ?? existingLevel1?.recommended_species
     );
     const preservedRecommendedAbilities =
-      abilitiesParseEarly.value ??
+      recommendedAbilitiesValue ??
       existingLevel1?.recommended_abilities ??
       null;
     // Kits removed from live DB (TASK-442). Persist armorStep + recommended gear only.
@@ -739,6 +751,7 @@ export function AdminArchetypesTab() {
       level1_feats: toCsv(finalLevel1.feats),
       level1_skills: toCsv(finalLevel1.skills),
       level1_powers: toCsv(finalLevel1.powers),
+      level1_innate_powers: toCsv(finalLevel1.innatePowers),
       level1_techniques: toCsv(finalLevel1.techniques),
       level1_armaments: toCsv(finalLevel1.armaments),
       level1_equipment: toCsv(finalLevel1.equipment),
@@ -899,7 +912,22 @@ export function AdminArchetypesTab() {
           </div>
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Type</label>
-            <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as 'power' | 'powered-martial' | 'martial' }))} className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary" aria-label="Archetype type">
+            <select
+              value={form.type}
+              onChange={(e) => {
+                const nextType = e.target.value as 'power' | 'powered-martial' | 'martial';
+                setForm((f) => ({
+                  ...f,
+                  type: nextType,
+                  level1Path:
+                    nextType === 'martial'
+                      ? { ...f.level1Path, innatePowers: [] }
+                      : f.level1Path,
+                }));
+              }}
+              className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+              aria-label="Archetype type"
+            >
               <option value="power">Power</option>
               <option value="powered-martial">Powered-Martial</option>
               <option value="martial">Martial</option>
@@ -996,7 +1024,13 @@ export function AdminArchetypesTab() {
                 Only level 1 feats can be recommended at level 1. For each progression level, only feats with level requirement ≤ that level are shown.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {selectionFieldConfig.filter((f) => f.key !== 'armaments' && f.key !== 'equipment').map((field) => {
+                {selectionFieldConfig
+                  .filter((f) => {
+                    if (f.key === 'armaments' || f.key === 'equipment') return false;
+                    if (f.key === 'innatePowers' && form.type === 'martial') return false;
+                    return true;
+                  })
+                  .map((field) => {
                   const options = field.key === 'feats' ? featOptionsLevel1 : optionsByField[field.key];
                   return (
                   <ChipSelect
@@ -1030,6 +1064,13 @@ export function AdminArchetypesTab() {
                   );
                 })}
               </div>
+              {form.type !== 'martial' && (
+                <p className="text-xs text-text-muted dark:text-text-secondary">
+                  Innate Powers are separate from Powers. Save validates Appendix G: Energy ≤ Innate
+                  Threshold, Basic/Basic Reaction only, no healing or energy-gain parts, and total Energy
+                  ≤ Innate Energy (Power 16 / Powered-Martial 6 at level 1).
+                </p>
+              )}
               {/* Level 1: Armaments & Equipment with quantity */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-border-light">
                 <div className="space-y-2">
@@ -1156,7 +1197,12 @@ export function AdminArchetypesTab() {
                   Selected Feats: {getSelectedLabels(form.level1Path.feats, featOptions).join(', ')}
                 </p>
               )}
-              <Input value={form.level1Path.notes} onChange={(e) => setForm((f) => ({ ...f, level1Path: { ...f.level1Path, notes: e.target.value } }))} placeholder="Level 1 notes (optional)" />
+              <Input
+                value={form.level1Path.notes}
+                onChange={(e) => setForm((f) => ({ ...f, level1Path: { ...f.level1Path, notes: e.target.value } }))}
+                placeholder="Level 1 notes (optional)"
+                aria-label="Level 1 path notes"
+              />
               <ChipSelect
                 label="Recommended species (Layer 1 species step)"
                 placeholder="Select species recommended for this path"
@@ -1279,18 +1325,49 @@ export function AdminArchetypesTab() {
                   })}
                 </div>
               </div>
-              <div>
-                <label htmlFor="guided-recommended-abilities" className="block text-sm font-medium text-text-secondary mb-1">
-                  Recommended abilities (JSON object)
-                </label>
-                <textarea
-                  id="guided-recommended-abilities"
-                  value={form.guidedRecommendedAbilitiesJson}
-                  onChange={(e) => setForm((f) => ({ ...f, guidedRecommendedAbilitiesJson: e.target.value }))}
-                  placeholder='{"strength": 3, "vitality": 2, "agility": 1, "acuity": 1, "intelligence": 0, "charisma": 0}'
-                  className="w-full min-h-[100px] px-3 py-2 rounded-md border border-border bg-background text-text-primary font-mono text-xs"
-                  rows={5}
-                />
+              <div
+                role="group"
+                aria-labelledby="guided-recommended-abilities-label"
+                aria-describedby="guided-recommended-abilities-desc"
+              >
+                <span
+                  id="guided-recommended-abilities-label"
+                  className="block text-sm font-medium text-text-secondary mb-1"
+                >
+                  Recommended abilities
+                </span>
+                <p id="guided-recommended-abilities-desc" className="text-xs text-text-muted dark:text-text-secondary mb-2">
+                  Suggested level 1 ability spread applied in one click during guided creation. Leave all at
+                  0 to skip the recommendation.
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {ABILITY_OPTIONS.map((ability) => {
+                    const value = form.guidedRecommendedAbilities[ability] ?? 0;
+                    const abilityLabel = labelForAbility(ability);
+                    return (
+                      <div
+                        key={`rec-ability-${ability}`}
+                        className="flex items-center justify-between gap-2 rounded-md border border-border-light bg-surface px-3 py-2"
+                      >
+                        <span className="text-sm font-medium text-text-primary">{abilityLabel}</span>
+                        <ValueStepper
+                          value={value}
+                          min={0}
+                          max={RECOMMENDED_ABILITY_MAX}
+                          formatValue={(v) => `+${v}`}
+                          decrementTitle={`Decrease recommended ${abilityLabel}`}
+                          incrementTitle={`Increase recommended ${abilityLabel}`}
+                          onChange={(next) =>
+                            setForm((f) => ({
+                              ...f,
+                              guidedRecommendedAbilities: { ...f.guidedRecommendedAbilities, [ability]: next },
+                            }))
+                          }
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
@@ -1420,14 +1497,25 @@ export function AdminArchetypesTab() {
                       );
                     })}
                   </div>
-                  <Input value={row.notes} onChange={(e) => setForm((f) => ({ ...f, levelPathRows: f.levelPathRows.map((candidate) => candidate.rowId === row.rowId ? { ...candidate, notes: e.target.value } : candidate) }))} placeholder="Level notes (optional)" />
+                  <Input
+                    value={row.notes}
+                    onChange={(e) => setForm((f) => ({ ...f, levelPathRows: f.levelPathRows.map((candidate) => candidate.rowId === row.rowId ? { ...candidate, notes: e.target.value } : candidate) }))}
+                    placeholder="Level notes (optional)"
+                    aria-label={`Notes for level ${row.level}`}
+                  />
                 </div>
               ))}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Advanced Path JSON Override (optional)</label>
+              <label
+                htmlFor="admin-archetype-advanced-path-json"
+                className="block text-sm font-medium text-text-secondary mb-1"
+              >
+                Advanced Path JSON Override (optional)
+              </label>
               <textarea
+                id="admin-archetype-advanced-path-json"
                 value={form.advancedPathJson}
                 onChange={(e) => setForm((f) => ({ ...f, advancedPathJson: e.target.value }))}
                 placeholder="Optional: paste full path_data JSON to override builder output."

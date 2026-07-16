@@ -44,6 +44,11 @@ export interface PathGuidanceGroup {
   why?: string;
   feats?: string[];
   powers?: string[];
+  /**
+   * Recommended innate powers (Power / Powered-Martial). Distinct from `powers`.
+   * Populated from path_data / level1_innate_powers when authored (TASK-473).
+   */
+  innatePowers?: string[];
   techniques?: string[];
   armaments?: string[];
   equipment?: string[];
@@ -66,6 +71,11 @@ export interface ArchetypePathRecommendations {
   feats?: string[];
   skills?: string[];
   powers?: string[];
+  /**
+   * Recommended Innate Powers (distinct from `powers`). From `level1_innate_powers` CSV
+   * or path_data.level1.innatePowers. Empty until authored (TASK-473 / TASK-471).
+   */
+  innatePowers?: string[];
   techniques?: string[];
   armaments?: string[];
   equipment?: string[];

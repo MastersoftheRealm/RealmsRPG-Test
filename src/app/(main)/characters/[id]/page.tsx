@@ -195,6 +195,22 @@ export default function CharacterSheetPage({ params }: PageParams) {
     loadCharacter();
   }, [id, authLoading]);
 
+  // Tab title: CharacterName | RealmsRPG (matches root title.template); fallback while loading/error
+  useEffect(() => {
+    const previousTitle = document.title;
+    return () => {
+      document.title = previousTitle;
+    };
+  }, []);
+
+  useEffect(() => {
+    // Prefer fallback while loading/error so soft-nav between ids doesn't leave a stale name
+    document.title =
+      !loading && !error && character?.name
+        ? `${character.name} | RealmsRPG`
+        : 'Characters | RealmsRPG';
+  }, [character?.name, loading, error]);
+
   // Realtime: when this character is updated (e.g. from encounter tracker), sync HP/EN/AP to local state
   useEffect(() => {
     if (!character?.id) return;

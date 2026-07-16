@@ -2,9 +2,15 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import noRawColor from "./eslint-rules/no-raw-color.mjs";
+import noRawUploadFetch from "./eslint-rules/no-raw-upload-fetch.mjs";
 import { RAW_COLOR_BACKLOG } from "./eslint-rules/raw-color-backlog.mjs";
 
-const realmsPlugin = { rules: { "no-raw-color": noRawColor } };
+const realmsPlugin = {
+  rules: {
+    "no-raw-color": noRawColor,
+    "no-raw-upload-fetch": noRawUploadFetch,
+  },
+};
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -49,6 +55,7 @@ const eslintConfig = defineConfig([
     plugins: { realms: realmsPlugin },
     rules: {
       "realms/no-raw-color": "error",
+      "realms/no-raw-upload-fetch": "error",
     },
   },
   // Exemptions:

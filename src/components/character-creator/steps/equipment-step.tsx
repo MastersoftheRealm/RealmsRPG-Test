@@ -1252,7 +1252,7 @@ export function EquipmentStep() {
                       name: dbProp?.name || propName,
                       description: dbProp?.description,
                       cost: tp > 0 ? tp : undefined,
-                      costLabel: 'TP',
+                      costLabel: 'Training Points',
                       category: tp > 0 ? 'cost' : 'default',
                     };
                     if (!tp && !dbProp?.description) chip.kind = 'descriptor';

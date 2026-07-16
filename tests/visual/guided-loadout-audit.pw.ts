@@ -138,16 +138,16 @@ test('guided loadout phased equipment audit (TASK-442/443)', async ({ page, cont
   await page.keyboard.press('Escape');
   await page.waitForTimeout(300);
 
-  await page.getByRole('button', { name: /Continue to gear/i }).click();
-  await expect(page.getByRole('heading', { name: /Adventuring gear/i })).toBeVisible({
+  await page.getByRole('button', { name: /Continue to Equipment/i }).click();
+  await expect(page.getByRole('heading', { name: /^Equipment$/i })).toBeVisible({
     timeout: 15_000,
   });
-  await expect(page.getByRole('button', { name: /Add all recommended equipment/i })).toBeVisible();
-  await expect(page.getByText(/c remaining/i).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /Add all recommended Equipment/i })).toBeVisible();
+  await expect(page.getByText(/Currency/i).first()).toBeVisible();
   await snap(page, '06-gear-phase');
 
   await page.getByRole('button', { name: 'See more' }).click();
-  await page.getByRole('heading', { name: 'Browse adventuring gear', level: 2 }).waitFor({
+  await page.getByRole('heading', { name: 'Browse Equipment', level: 2 }).waitFor({
     timeout: 15_000,
   });
   await snap(page, '07-l2-gear', false);
@@ -155,6 +155,6 @@ test('guided loadout phased equipment audit (TASK-442/443)', async ({ page, cont
 
   await page.setViewportSize({ width: 360, height: 800 });
   await page.goto('/characters/new/guided', { waitUntil: 'networkidle' });
-  await page.getByRole('heading', { name: /your loadout/i }).waitFor({ timeout: 45_000 });
+  await page.getByRole('heading', { name: /^Equipment$/i }).waitFor({ timeout: 45_000 });
   await snap(page, '08-loadout-mobile');
 });

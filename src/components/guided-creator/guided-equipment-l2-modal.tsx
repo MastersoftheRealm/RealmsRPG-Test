@@ -3,7 +3,6 @@
 import { useMemo, useState, useCallback } from 'react';
 import {
   UnifiedSelectionModal,
-  PointStatus,
   type SelectableItem,
 } from '@/components/shared';
 import type { GuidedDraft, GuidedEquipmentPhase } from '@/stores/guided-creator-store';
@@ -12,6 +11,7 @@ import type { CodexEquipmentItem } from '@/types/codex';
 import {
   applyGuidedEquipmentL2Selection,
   buildGuidedEquipmentL2Items,
+  computeL2CurrencySpent,
   computeL2GearSpend,
   computeL2TpSpent,
   initialSelectedIdsForPhase,
@@ -23,16 +23,14 @@ import {
   useGuidedEquipmentCatalog,
 } from '@/hooks/use-guided-equipment-catalog';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import { normalizeId } from '@/lib/utils';
 import {
   l2GridColumnsForPhase,
   l2HeaderColumnsForPhase,
 } from './guided-equipment-l2-grid';
+import { LoadoutBudgetBar } from './loadout-budget-bar';
 
 const l2Copy = GUIDED_CREATOR_COPY.steps.loadout.phases.l2;
-
-function normalizeId(id: string): string {
-  return String(id).trim().toLowerCase();
-}
 
 export interface GuidedEquipmentL2ModalProps {
   isOpen: boolean;
@@ -121,6 +119,15 @@ export function GuidedEquipmentL2Modal({
     [phase, draft]
   );
 
+  const initialQuantities = useMemo(() => {
+    if (phase !== 'gear') return {};
+    const next: Record<string, number> = {};
+    for (const row of draft.equipment) {
+      next[String(row.id)] = Math.max(1, Math.floor(Number(row.quantity)) || 1);
+    }
+    return next;
+  }, [phase, draft.equipment]);
+
   const headerColumns = useMemo(() => l2HeaderColumnsForPhase(phase), [phase]);
   const gridColumns = useMemo(() => l2GridColumnsForPhase(phase), [phase]);
 
@@ -156,8 +163,17 @@ export function GuidedEquipmentL2Modal({
 
   const footerExtra = useCallback(
     (selected: SelectableItem[]) => {
-      const status = (
-        <div className="flex flex-col gap-2">
+      const currencySpent = computeL2CurrencySpent(phase, draft, selected, catalog);
+      const tpSpent = computeL2TpSpent(phase, draft, selected, catalog);
+      return (
+        <LoadoutBudgetBar
+          currencyTotal={currencyStarting}
+          currencySpent={currencySpent}
+          tpTotal={tpSummary.limit}
+          tpSpent={tpSpent}
+          currencyLabel={l2Copy.currencyLabel}
+          trainingPointsLabel={l2Copy.tpLabel}
+        >
           {error ? (
             <p
               className="font-nunito text-sm text-warning-700 dark:text-warning-400 text-center"
@@ -166,33 +182,10 @@ export function GuidedEquipmentL2Modal({
               {error}
             </p>
           ) : null}
-          {phase === 'gear' ? (
-            <div className="flex justify-center">
-              <PointStatus
-                total={gearBudget}
-                spent={computeL2GearSpend(selected)}
-                label={l2Copy.currencyLabel}
-                variant="inline"
-                metric="remaining"
-                className="text-base"
-              />
-            </div>
-          ) : (
-            <div className="flex justify-center">
-              <PointStatus
-                total={tpSummary.limit}
-                spent={computeL2TpSpent(phase, draft, selected, catalog)}
-                label={l2Copy.tpLabel}
-                variant="inline"
-                className="text-base"
-              />
-            </div>
-          )}
-        </div>
+        </LoadoutBudgetBar>
       );
-      return status;
     },
-    [phase, draft, catalog, tpSummary.limit, gearBudget, error]
+    [phase, draft, catalog, tpSummary.limit, currencyStarting, error]
   );
 
   const confirmDisabled = useCallback(
@@ -219,6 +212,7 @@ export function GuidedEquipmentL2Modal({
       initialSelectedIds={initialSelectedIds}
       maxSelections={phase === 'armor' ? 1 : undefined}
       showQuantity={phase === 'gear'}
+      initialQuantities={initialQuantities}
       columns={headerColumns}
       gridColumns={gridColumns}
       itemLabel={phase === 'gear' ? 'item' : phase}

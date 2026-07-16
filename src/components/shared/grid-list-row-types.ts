@@ -9,7 +9,9 @@
  *
  * ## Metadata visibility rule
  * Every meaningful field appears in **collapsed columns** OR **expanded descriptor chips**, not
- * neither and not both. See `lib/chip/list-row-metadata.ts` and `CHIP_UNIFICATION_PLAN.md`.
+ * neither and not both. See `lib/chip/list-row-metadata.ts`, `lib/detail-option/compact-facts.ts`,
+ * and `CHIP_UNIFICATION_PLAN.md`. When compacting a column into a chip, use natural self-describing
+ * language (e.g. `2d6 Slashing Damage`), not `Damage: 2d6…`.
  *
  * ## `category` (styling only — not expandability)
  * Semantic tint for expandable and descriptor chips: `default`, `cost`, `warning`, `success`,
@@ -35,7 +37,7 @@ export interface ChipData {
   description?: string;
   /** Cost value (TP, IP, etc.) */
   cost?: number;
-  /** Cost label (default: 'TP') */
+  /** Cost label (default: Training Points for L1/L2; dense L3 columns may still use TP) */
   costLabel?: string;
   /** Optional level indicator */
   level?: number;

@@ -10,6 +10,7 @@ import {
   type CodexPartRow,
   type CodexPropertyRow,
 } from '@/lib/library/part-display';
+import { TRAINING_POINTS_COST_LABEL } from '@/lib/detail-option/compact-facts';
 import type { PartData } from '@/components/shared';
 import type { Abilities, CharacterPower, CharacterTechnique, Item } from '@/types';
 
@@ -101,17 +102,24 @@ export function getWeaponAttackBonus(
 }
 
 export function partDataToChips(parts: PartData[]) {
-  return parts.map((p) => ({
-    name: p.name,
-    description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
-    cost: p.tpCost,
-    costLabel: 'TP',
-    category: p.tpCost && p.tpCost > 0 ? ('cost' as const) : ('default' as const),
-    level: p.optionLevels
-      ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) || undefined
-      : undefined,
-    options: p.options,
-  }));
+  return parts.map((p) => {
+    const hasOptions = (p.options?.length ?? 0) > 0;
+    const hasCost = (p.tpCost ?? 0) > 0;
+    return {
+      name: p.name,
+      description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
+      cost: p.tpCost,
+      costLabel: TRAINING_POINTS_COST_LABEL,
+      category: hasCost ? ('cost' as const) : ('default' as const),
+      level: p.optionLevels
+        ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) ||
+          undefined
+        : undefined,
+      options: p.options,
+      // Expand only when option levels need disclosure; otherwise descriptor + InfoTippy.
+      kind: hasOptions ? ('expandable' as const) : ('descriptor' as const),
+    };
+  });
 }
 
 export function splitDamageDiceAndType(damage: unknown): { dice: string; type: string; rollStr: string } {

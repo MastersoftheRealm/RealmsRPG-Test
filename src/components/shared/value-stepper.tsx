@@ -117,7 +117,8 @@ function useHoldRepeat(
 const stepperButtonVariants = cva(
   // Base: 44px min on touch viewports (below md), compact on desktop per MOBILE_UX.md
   // touch-manipulation: avoid 300ms delay and reduce accidental double-tap zoom on hold buttons
-  'touch-manipulation flex items-center justify-center font-bold rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed select-none min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] md:min-w-0 md:min-h-0',
+  // Sleek default: rounded (not pill), surface/neutral — matches skill bonus steppers (TASK-468)
+  'touch-manipulation flex items-center justify-center font-bold rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed select-none min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] md:min-w-0 md:min-h-0 border',
   {
     variants: {
       size: {
@@ -252,17 +253,25 @@ export function ValueStepper({
       ? value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral'
       : 'neutral';
 
-  // Button color classes based on colorVariant
+  // Button color classes — default is sleek/neutral (skill bonus style); health/energy keep soft tints
   const getDecrementButtonClass = () => {
-    if (colorVariant === 'health') return 'bg-success-200 dark:bg-success-900/50 hover:bg-success-300 dark:hover:bg-success-800/50 text-success-fg';
-    if (colorVariant === 'energy') return 'bg-info-200 dark:bg-info-900/50 hover:bg-info-300 dark:hover:bg-info-800/50 text-info-fg';
-    return 'btn-stepper btn-stepper-danger';
+    if (colorVariant === 'health') {
+      return 'bg-success-100 dark:bg-success-900/40 hover:bg-success-200 dark:hover:bg-success-800/50 text-success-700 dark:text-success-400 border-success-200 dark:border-success-800/50';
+    }
+    if (colorVariant === 'energy') {
+      return 'bg-info-100 dark:bg-info-900/40 hover:bg-info-200 dark:hover:bg-info-800/50 text-info-700 dark:text-info-400 border-info-200 dark:border-info-800/50';
+    }
+    return 'btn-stepper';
   };
 
   const getIncrementButtonClass = () => {
-    if (colorVariant === 'health') return 'bg-success-200 dark:bg-success-900/50 hover:bg-success-300 dark:hover:bg-success-800/50 text-success-fg';
-    if (colorVariant === 'energy') return 'bg-info-200 dark:bg-info-900/50 hover:bg-info-300 dark:hover:bg-info-800/50 text-info-fg';
-    return 'btn-stepper btn-stepper-success';
+    if (colorVariant === 'health') {
+      return 'bg-success-100 dark:bg-success-900/40 hover:bg-success-200 dark:hover:bg-success-800/50 text-success-700 dark:text-success-400 border-success-200 dark:border-success-800/50';
+    }
+    if (colorVariant === 'energy') {
+      return 'bg-info-100 dark:bg-info-900/40 hover:bg-info-200 dark:hover:bg-info-800/50 text-info-700 dark:text-info-400 border-info-200 dark:border-info-800/50';
+    }
+    return 'btn-stepper';
   };
 
   // Format the display value
@@ -479,7 +488,7 @@ export function DecrementButton({
       aria-label={title}
       className={cn(
         stepperButtonVariants({ size }),
-        'btn-stepper btn-stepper-danger',
+        'btn-stepper',
         className
       )}
     >
@@ -546,7 +555,7 @@ export function IncrementButton({
       aria-label={title}
       className={cn(
         stepperButtonVariants({ size }),
-        'btn-stepper btn-stepper-success',
+        'btn-stepper',
         className
       )}
     >

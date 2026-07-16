@@ -1,5 +1,5 @@
 /**
- * Equipment loadout — phased weapon → armor → gear (no quick kits).
+ * Loadout — phased weapon → armor → Equipment (internal phase id `gear`; no quick kits).
  */
 
 'use client';
@@ -60,7 +60,7 @@ export function LoadoutStep() {
   const { pathData } = useGuidedPathData();
   const { data: officialItems = [], isLoading: officialLoading } = useOfficialLibrary('items');
   const { data: codexEquipment = [], isLoading: codexLoading } = useEquipment();
-  const { catalog, itemProperties } = useGuidedEquipmentCatalog(
+  const { catalog, itemProperties, tpSummary } = useGuidedEquipmentCatalog(
     draft,
     officialItems,
     codexEquipment
@@ -304,6 +304,8 @@ export function LoadoutStep() {
           <GuidedEquipmentPhaseLayout
             currencyTotal={currencyStarting}
             currencySpent={currencySpent}
+            tpTotal={tpSummary.limit}
+            tpSpent={tpSummary.spent}
             expandLabel={phaseCopy.seeMoreLabel}
             onExpand={() => setL2Open(true)}
           >

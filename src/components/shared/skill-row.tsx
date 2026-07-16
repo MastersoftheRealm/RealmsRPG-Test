@@ -13,12 +13,12 @@
  * 
  * Design Patterns:
  * - Consistent proficiency dot styling (blue=proficient, orange=not)
- * - Sub-skill indentation with "└" or "↳" prefix
+ * - Sub-skill indentation with "└" or "↳" prefix (table: same text color as base + italic)
  * - Ability badge/abbreviation display
  * - Bonus display with +/- coloring
  * - Edit controls (+/- steppers) when in edit mode
  * - Roll button integration (optional)
- * - Species skill highlighting
+ * - Source markers ("(species)", path sourceLabel) and locked/species affordances: table play view hides them; edit/creator keep them
  */
 
 import { memo } from 'react';
@@ -86,9 +86,9 @@ export interface SkillRowProps {
   onRoll?: () => void;
   
   // ----- Special States -----
-  /** Is this a species-granted skill? */
+  /** Species-granted skill. Table: lock + "(species)" / dimmed prof only when isEditing; play view matches other proficient rows. */
   isSpeciesSkill?: boolean;
-  /** Optional source label (e.g. archetype path name); shown like "(species)" but skill can be removed */
+  /** Optional source label (e.g. archetype path name). Table: shown only when isEditing (creator/allocation); hidden on sheet play view. */
   sourceLabel?: string;
   /** Is this skill locked (can't be edited)? */
   isLocked?: boolean;
@@ -158,7 +158,7 @@ export const SkillRow = memo(function SkillRow({
           className
         )}
       >
-        {/* Proficiency Dot */}
+        {/* Proficiency Dot — play view: identical styling for species vs other proficient skills */}
         <td className="py-2 text-center">
           {!isSubSkill && (
             <button
@@ -170,30 +170,31 @@ export const SkillRow = memo(function SkillRow({
                   ? 'bg-primary-button border-2 border-primary-outline-border' 
                   : 'bg-warning-400 border-2 border-warning-400',
                 canToggleProficiency && !isLocked && !isSpeciesSkill && 'cursor-pointer hover:scale-110',
-                (isLocked || isSpeciesSkill) && 'opacity-70'
+                isEditing && (isLocked || isSpeciesSkill) && 'opacity-70'
               )}
-              title={isSpeciesSkill 
-                ? 'Species Skill (locked)' 
-                : proficient 
-                  ? 'Proficient (click to toggle)' 
-                  : 'Not proficient (click to toggle)'
+              title={
+                isEditing && isSpeciesSkill
+                  ? 'Species Skill (locked)'
+                  : proficient
+                    ? (canToggleProficiency ? 'Proficient (click to toggle)' : 'Proficient')
+                    : (canToggleProficiency ? 'Not proficient (click to toggle)' : 'Not proficient')
               }
             />
           )}
         </td>
         
-        {/* Skill Name */}
+        {/* DESIGN_INTENT: sheet play view = uniform skill list; source/lock chrome only while editing */}
         <td className={cn(
-          'py-2 pl-2 font-medium',
-          isSubSkill ? 'text-text-muted dark:text-text-secondary italic' : 'text-text-primary',
+          'py-2 pl-2 font-medium text-text-primary',
+          isSubSkill && 'italic',
           !isUnlocked && 'text-text-muted dark:text-text-secondary'
         )}>
-          {isSubSkill && <span className="text-text-muted dark:text-text-secondary mr-1">└</span>}
+          {isSubSkill && <span className="text-text-muted dark:text-text-secondary mr-1" aria-hidden="true">└</span>}
           {name}
-          {isSpeciesSkill && (
+          {isEditing && isSpeciesSkill && (
             <span className="ml-1 text-xs text-text-muted dark:text-text-secondary">(species)</span>
           )}
-          {sourceLabel && !isSpeciesSkill && (
+          {isEditing && sourceLabel && !isSpeciesSkill && (
             <span className="ml-1 text-xs text-text-muted dark:text-text-secondary">({sourceLabel})</span>
           )}
         </td>
@@ -238,50 +239,36 @@ export const SkillRow = memo(function SkillRow({
           )}
         </td>
         
-        {/* Value Stepper (edit mode) */}
+        {/* Value Stepper (edit mode) — shared ValueStepper (TASK-468 audit) */}
         {isEditing && onValueChange && (
           <td className="py-2 text-center">
-            <div className="flex items-center justify-center gap-1">
-              <button
-                onClick={() => onValueChange(-1)}
-                disabled={value <= minValue && !proficient}
-                className={cn(
-                  'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
-                  (value > minValue || proficient)
-                    ? 'bg-surface hover:bg-surface-alt text-text-secondary'
-                    : 'bg-surface text-border-light cursor-not-allowed'
-                )}
-              >
-                −
-              </button>
-              <span className="w-6 text-center font-mono text-sm">
-                {value}
-              </span>
-              <button
-                onClick={() => canIncrease && onValueChange(1)}
-                disabled={!canIncrease}
-                className={cn(
-                  'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
-                  canIncrease
-                    ? 'bg-surface hover:bg-surface-alt text-text-secondary'
-                    : 'bg-surface text-border-light cursor-not-allowed'
-                )}
-              >
-                +
-              </button>
-            </div>
+            <ValueStepper
+              value={value}
+              onChange={(newValue) => onValueChange(newValue - value)}
+              min={proficient ? -Infinity : minValue}
+              max={canIncrease ? undefined : value}
+              size="sm"
+              decrementTitle={`Decrease ${name}`}
+              incrementTitle={`Increase ${name}`}
+              className="justify-center"
+            />
           </td>
         )}
         
-        {/* Remove button (edit mode) - simple red X matching add button style */}
-        {isEditing && onRemove && (
+        {/* Remove button (edit mode) — species/locked show disabled affordance; keep column aligned */}
+        {isEditing && (onRemove || isSpeciesSkill) && (
           <td className="py-2 text-center">
             <IconButton
               variant="ghost"
               size="sm"
-              onClick={() => onRemove()}
-              label="Remove skill"
-              className="text-danger-fg hover:opacity-80 hover:bg-transparent"
+              onClick={() => !isSpeciesSkill && !isLocked && onRemove?.()}
+              label={isSpeciesSkill ? 'Species Skill (cannot remove)' : 'Remove skill'}
+              disabled={isSpeciesSkill || isLocked || !onRemove}
+              className={cn(
+                isSpeciesSkill || isLocked || !onRemove
+                  ? 'text-text-muted dark:text-text-secondary opacity-50 cursor-not-allowed'
+                  : 'text-danger-fg hover:opacity-80 hover:bg-transparent'
+              )}
             >
               <X className="w-4 h-4" />
             </IconButton>

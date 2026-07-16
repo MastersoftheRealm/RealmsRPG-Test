@@ -1,0 +1,99 @@
+import { describe, expect, it } from 'vitest';
+import {
+  evaluateInnatePowerEligibility,
+  getLevel1InnateBudget,
+  isHealingOrEnergyGainPart,
+  isInnateEligibleActionType,
+  validateRecommendedInnatePowers,
+  type InnatePowerSnapshot,
+} from './innate-eligibility';
+
+function snap(partial: Partial<InnatePowerSnapshot> & { id: string }): InnatePowerSnapshot {
+  return {
+    energy: 0,
+    partIds: [],
+    partNames: [],
+    actionType: 'basic',
+    ...partial,
+  };
+}
+
+describe('innate-eligibility', () => {
+  it('getLevel1InnateBudget uses progression (Power 16 / PM 6), not getInnateEnergyMax', () => {
+    expect(getLevel1InnateBudget('power')).toEqual({
+      innateThreshold: 8,
+      innatePools: 2,
+      innateEnergy: 16,
+    });
+    expect(getLevel1InnateBudget('powered-martial')).toEqual({
+      innateThreshold: 6,
+      innatePools: 1,
+      innateEnergy: 6,
+    });
+    expect(getLevel1InnateBudget('martial').innateEnergy).toBe(0);
+  });
+
+  it('allows Basic Action and Basic Reaction only', () => {
+    expect(isInnateEligibleActionType('basic')).toBe(true);
+    expect(isInnateEligibleActionType('basic', true)).toBe(true);
+    expect(isInnateEligibleActionType('Basic Action')).toBe(true);
+    expect(isInnateEligibleActionType('Basic Reaction')).toBe(true);
+    expect(isInnateEligibleActionType('reaction')).toBe(true);
+    expect(isInnateEligibleActionType('quick')).toBe(false);
+    expect(isInnateEligibleActionType('Quick Action')).toBe(false);
+    expect(isInnateEligibleActionType('Free Reaction')).toBe(false);
+  });
+
+  it('flags healing and energy-gain parts', () => {
+    expect(isHealingOrEnergyGainPart({ id: '307', name: 'Heal' })).toBe(true);
+    expect(isHealingOrEnergyGainPart({ id: '250', name: 'Damage Siphon' })).toBe(true);
+    expect(isHealingOrEnergyGainPart({ name: 'True Overheal' })).toBe(true);
+    expect(isHealingOrEnergyGainPart({ name: 'Suppress Healing' })).toBe(false);
+    expect(isHealingOrEnergyGainPart({ name: 'Fire Damage' })).toBe(false);
+  });
+
+  it('blocks over-threshold, wrong action, and healing parts', () => {
+    const issues = evaluateInnatePowerEligibility(
+      snap({
+        id: 'p1',
+        name: 'Big Blast',
+        energy: 10,
+        actionType: 'quick',
+        partIds: ['307'],
+        partNames: ['Heal'],
+      }),
+      8
+    );
+    expect(issues.some((i) => i.message.includes('exceeds Innate Threshold'))).toBe(true);
+    expect(issues.some((i) => i.message.includes('Basic or Basic Reaction'))).toBe(true);
+    expect(issues.some((i) => i.message.includes('healing or energy-gain'))).toBe(true);
+  });
+
+  it('blocks recommended innate Energy sum over Innate Energy', () => {
+    const issues = validateRecommendedInnatePowers(['a', 'b', 'c'], {
+      archetypeType: 'powered-martial',
+      resolvePower: (id) =>
+        snap({
+          id,
+          name: id,
+          energy: 3,
+          actionType: 'basic',
+        }),
+    });
+    expect(issues.some((i) => i.message.includes('exceeds Innate Energy'))).toBe(true);
+  });
+
+  it('allows a valid Power L1 innate set within budget', () => {
+    const issues = validateRecommendedInnatePowers(['a', 'b'], {
+      archetypeType: 'power',
+      resolvePower: (id) =>
+        snap({
+          id,
+          name: id,
+          energy: 8,
+          actionType: 'Basic Action',
+        }),
+    });
+    expect(issues.filter((i) => i.severity === 'error')).toHaveLength(0);
+  });
+});

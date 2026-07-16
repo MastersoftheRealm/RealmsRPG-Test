@@ -281,7 +281,7 @@ function partsToChips(parts: Array<string | { id?: string | number; name?: strin
       name: codexPart?.name || partName,
       description: codexPart?.description,
       cost: tp > 0 ? tp : undefined,
-      costLabel: 'TP',
+      costLabel: 'Training Points',
       category: tp > 0 ? ('cost' as const) : ('default' as const),
       options: options.length > 0 ? options : undefined,
     };
@@ -313,7 +313,7 @@ function propertiesToChips(
       name: codexProp?.name || p.name || 'Property',
       description: codexProp?.description,
       cost: tp > 0 ? tp : undefined,
-      costLabel: 'TP',
+      costLabel: 'Training Points',
       category: tp > 0 ? ('cost' as const) : ('default' as const),
       level: level > 1 ? level : undefined,
     };

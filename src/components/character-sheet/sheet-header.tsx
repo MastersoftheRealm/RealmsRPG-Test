@@ -20,14 +20,14 @@ import { formatSpeedForDisplay } from '@/lib/utils/number';
 import { Spinner } from '@/components/ui/spinner';
 import { Card } from '@/components/ui';
 import { HealthEnergyAllocator } from '@/components/creator';
-import { ValueStepper, ImageUploadModal, EditSectionToggle } from '@/components/shared';
+import { ValueStepper, DecrementButton, IncrementButton, ImageUploadModal, EditSectionToggle } from '@/components/shared';
 import { useGameRules } from '@/hooks';
 import { calculateHealthEnergyPool } from '@/lib/game/formulas';
 import { useCharacterSheetOptional } from './character-sheet-context';
 import type { Character } from '@/types';
 import { getEffectivePortrait, FALLBACK_PORTRAIT_DATA_URL } from '@/lib/portrait';
 import { resolveArchetypeDisplayName } from '@/lib/game/archetype-display';
-import { ArchetypeCreationBadge, ArchetypePathGuidance } from './archetype-path-identity';
+import { ArchetypePathGuidance } from './archetype-path-identity';
 
 interface CalculatedStats {
   maxHealth: number;
@@ -360,37 +360,30 @@ function LargeStatBlock({
       
       {showEditControls && (
         <div className="flex items-center gap-1 mt-2">
-          <button
+          <DecrementButton
+            size="sm"
             onClick={() => onChange(Math.max(minBase, baseValue! - 1))}
             disabled={baseValue! <= minBase}
+            title={`Decrease ${label} base`}
+          />
+          <span
             className={cn(
-              'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
-              baseValue! > minBase
-                ? 'bg-surface hover:bg-border-light text-text-secondary'
-                : 'bg-surface text-text-muted dark:text-text-secondary cursor-not-allowed'
+              'text-xs min-w-[3rem] text-center',
+              pencilState === 'over-budget'
+                ? 'text-danger-fg font-bold'
+                : pencilState === 'has-points'
+                  ? 'text-success-fg font-bold'
+                  : 'text-text-muted dark:text-text-secondary'
             )}
           >
-            −
-          </button>
-          <span className={cn(
-            'text-xs min-w-[3rem] text-center',
-            pencilState === 'over-budget' ? 'text-danger-fg font-bold' :
-            pencilState === 'has-points' ? 'text-success-fg font-bold' : 'text-text-muted dark:text-text-secondary'
-          )}>
             Base: {baseValue}
           </span>
-          <button
+          <IncrementButton
+            size="sm"
             onClick={() => onChange(Math.min(maxBase, baseValue! + 1))}
             disabled={baseValue! >= maxBase}
-            className={cn(
-              'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
-              baseValue! < maxBase
-                ? 'bg-surface hover:bg-border-light text-text-secondary'
-                : 'bg-surface text-text-muted dark:text-text-secondary cursor-not-allowed'
-            )}
-          >
-            +
-          </button>
+            title={`Increase ${label} base`}
+          />
         </div>
       )}
     </Card>
@@ -598,7 +591,7 @@ export function SheetHeader({
               )}
             </p>
             
-            {/* Archetype: name, creation badge, abilities */}
+            {/* Archetype: name and abilities */}
             <div className="text-base text-text-primary">
               <p className="flex flex-wrap items-center gap-2">
                 <span>
@@ -618,7 +611,6 @@ export function SheetHeader({
                     <span className="text-martial-fg capitalize">{character.mart_abil}</span>
                   )}
                 </span>
-                <ArchetypeCreationBadge character={character} />
                 {onEditArchetype && (
                   <button
                     onClick={onEditArchetype}

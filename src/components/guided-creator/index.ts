@@ -30,4 +30,6 @@ export { GuidedStepLayout } from './guided-step-layout';
 export { GuidedStepFooter } from './guided-step-footer';
 export { GuidedSkillsPanel } from './guided-skills-panel';
 export { GuidedFeatsBrowsePanel } from './guided-feats-browse-panel';
+export { GuidedPowersTechniquesL2Modal } from './guided-powers-techniques-l2-modal';
+export type { PowersTechniquesKind } from '@/lib/guided-creator/power-technique-display';
 export { useGuidedPathData } from './use-guided-path-data';

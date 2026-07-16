@@ -10,12 +10,13 @@ import {
   calculateItemCosts,
   calculateCurrencyCostAndRarity,
   formatRange,
-  trainingPointsForItemPropertyRef,
 } from '@/lib/calculators/item-calc';
+import { namedPropertyDescriptorChips } from '@/lib/detail-option/compact-facts';
 import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 
 export const OFFICIAL_ITEM_GRID = '1.5fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr 40px';
 
+/** Dense L3 browse may keep short TP column headers (GAME_RULES). */
 export const OFFICIAL_ITEM_HEADER_COLUMNS = [
   { key: 'name', label: 'NAME', align: 'left' as const },
   { key: 'type', label: 'TYPE', align: 'center' as const },
@@ -51,21 +52,19 @@ export function buildOfficialItemRows(
     const { currencyCost, rarity } = calculateCurrencyCostAndRarity(costs.totalCurrency, costs.totalIP);
     const rangeStr = formatRange(props);
     const damageStr = formatDamageDisplay(item.damage) || '';
-    const parts: ChipData[] = (
-      (item.properties as Array<string | { id?: unknown; name?: string; op_1_lvl?: number }>) || []
-    ).map((prop) => {
-      const propName = typeof prop === 'string' ? prop : (prop.name || '');
-      const dbProp = propertiesDb.find(
-        (p) => p.name?.toLowerCase() === String(propName).toLowerCase()
-      );
-      const cost = trainingPointsForItemPropertyRef(prop, propertiesDb);
-      const lvl = typeof prop === 'object' && prop && prop.op_1_lvl != null ? prop.op_1_lvl : 0;
+    const parts: ChipData[] = namedPropertyDescriptorChips(
+      (item.properties as Array<string | { id?: unknown; name?: string; op_1_lvl?: number }>) || [],
+      propertiesDb
+    ).map((chip) => {
+      const prop = (
+        (item.properties as Array<string | { id?: unknown; name?: string; op_1_lvl?: number }>) || []
+      ).find((p) => {
+        const n = typeof p === 'string' ? p : String(p?.name ?? '');
+        return n.toLowerCase() === chip.name.toLowerCase();
+      });
+      const lvl = typeof prop === 'object' && prop && prop.op_1_lvl != null ? Number(prop.op_1_lvl) : 0;
       return {
-        name: dbProp?.name || propName || '',
-        description: dbProp?.description || '',
-        cost: cost > 0 ? cost : undefined,
-        costLabel: 'TP',
-        category: (cost > 0 ? 'cost' : 'default') as 'cost' | 'default',
+        ...chip,
         level: lvl > 1 ? lvl : undefined,
       };
     });

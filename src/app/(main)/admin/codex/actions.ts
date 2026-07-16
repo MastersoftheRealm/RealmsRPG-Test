@@ -418,6 +418,7 @@ type SaveArchetypeWithPathInput = {
   level1_feats?: string;
   level1_skills?: string;
   level1_powers?: string;
+  level1_innate_powers?: string;
   level1_techniques?: string;
   level1_armaments?: string;
   level1_equipment?: string;
@@ -457,6 +458,7 @@ export async function saveArchetypeWithPath(
       level1_feats: payload.level1_feats ?? null,
       level1_skills: payload.level1_skills ?? null,
       level1_powers: payload.level1_powers ?? null,
+      level1_innate_powers: payload.level1_innate_powers ?? null,
       level1_techniques: payload.level1_techniques ?? null,
       level1_armaments: payload.level1_armaments ?? null,
       level1_equipment: payload.level1_equipment ?? null,

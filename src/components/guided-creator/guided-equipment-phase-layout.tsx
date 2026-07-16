@@ -1,10 +1,8 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { GuidedLayerNav, PointStatus } from '@/components/shared';
-import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
-
-const phaseCopy = GUIDED_CREATOR_COPY.steps.loadout.phases;
+import { GuidedLayerNav } from '@/components/shared';
+import { LoadoutBudgetBar } from './loadout-budget-bar';
 
 export interface GuidedEquipmentPhaseLayoutProps {
   children: ReactNode;
@@ -12,6 +10,10 @@ export interface GuidedEquipmentPhaseLayoutProps {
   currencyTotal?: number;
   /** Currency spent so far (weapons + armor + gear). */
   currencySpent?: number;
+  /** Training Points limit (same pool L1/L2). */
+  tpTotal?: number;
+  /** Training Points spent on current loadout selections. */
+  tpSpent?: number;
   expandLabel?: string;
   onExpand?: () => void;
   collapseLabel?: string;
@@ -26,26 +28,21 @@ export function GuidedEquipmentPhaseLayout({
   children,
   currencyTotal,
   currencySpent,
+  tpTotal,
+  tpSpent,
   expandLabel,
   onExpand,
   collapseLabel,
   onCollapse,
 }: GuidedEquipmentPhaseLayoutProps) {
-  const showCurrency = currencyTotal != null && currencySpent != null;
-
   return (
     <div className="space-y-3">
-      {showCurrency ? (
-        <div className="flex justify-center">
-          <PointStatus
-            total={currencyTotal}
-            spent={currencySpent}
-            label={phaseCopy.currencyLabel}
-            variant="inline"
-            className="text-base"
-          />
-        </div>
-      ) : null}
+      <LoadoutBudgetBar
+        currencyTotal={currencyTotal}
+        currencySpent={currencySpent}
+        tpTotal={tpTotal}
+        tpSpent={tpSpent}
+      />
 
       {children}
 

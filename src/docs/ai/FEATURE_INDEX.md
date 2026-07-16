@@ -2,7 +2,9 @@
 
 **Purpose:** The anti-re-implementation guardrail. Before building a new component, hook, service, route, or util, scan this index first. Most accidental duplication in this repo came from agents not knowing a feature already existed.
 
-**How to use:** Find your topic below → open the listed file/barrel → extend it (add a prop/variant) rather than forking a parallel copy. If you add a new top-level feature/hook/shared component, add a line here.
+**Also check:** generated barrel inventory [`FEATURE_INDEX_BARRELS.generated.md`](FEATURE_INDEX_BARRELS.generated.md) (`npm run tasks:generate-index` after changing barrel exports). CI fails if that file is stale.
+
+**How to use:** Find your topic below → open the listed file/barrel → extend it (add a prop/variant) rather than forking a parallel copy. If you add a new top-level feature/hook/shared component, add a line here **and** regenerate the barrel file if you changed an index.ts export.
 
 > This is a map, not the source of truth for behavior. For schema use `SUPABASE_SCHEMA.md`, for formulas `GAME_RULES.md`, for data flow `ARCHITECTURE.md`.
 
@@ -12,18 +14,20 @@
 
 | Feature | Route / page |
 |---------|--------------|
-| Character list / dashboard | `characters/page.tsx` |
+| Character list / dashboard | `characters/page.tsx` — square portrait cards (1:1 crop); no search/ListHeader |
 | Character sheet (view + edit) | `characters/[id]/page.tsx` — layout `CharacterSheetBody` (single library mount); derived `useCharacterSheetDerived`; handlers `useCharacterSheetActions`; library lists via `entity-library-sections` + `library-entity-rows`; feats tab via `FeatsTraitsListSection` + `library-feat-rows` (player feat/trait `customName` + `note` on save; trait map `traitCustomizations`); library tab clamp `resolveLibraryActiveTab`; edit-archetype remount via `editArchetypeSessionKey` |
 | Character creator | `character-creator/` (wizard steps under `components/character-creator/steps/`) |
 | Character creator entry (Simple vs Advanced) | `characters/new/page.tsx` |
-| Guided ("Simple") character creator | `characters/new/guided/page.tsx`, `components/guided-creator/` (incl. `GuidedSkillsPanel`, `GuidedChoiceCard`, `GuidedEntityDetailModal`, `GuidedFeatsBrowsePanel`), `stores/guided-creator-store.ts`, `lib/guided-creator/build-character.ts` |
-| Selection grammar (cards ↔ GridListRow; entity depth vs catalog breadth) | `REALMS_PRODUCT_OVERVIEW.md` §3.1; `AGENT_GUIDE.md` § Floating UI related patterns; components: `GuidedChoiceCard`, `GuidedEntityDetailModal`, `GridListRow`, `GuidedLayerNav`, `DetailOptionList` |
+| Guided ("Simple") character creator | `characters/new/guided/page.tsx`, `components/guided-creator/` (incl. `GuidedSkillsPanel`, `GuidedChoiceCard`, `GuidedEntityDetailModal`, `GuidedFeatsBrowsePanel`, `GuidedPowersTechniquesL2Modal`, `reveal-step` / `GuidedRevealSummary` / `GuidedPortraitUpload` / `GuidedHealthEnergySection`), `stores/guided-creator-store.ts`, `lib/guided-creator/build-character.ts` |
+| Selection grammar (cards ↔ GridListRow; entity depth vs catalog breadth) | `REALMS_PRODUCT_OVERVIEW.md` §3.1; `guide/04-floating-ui-tooltips.md` § Related patterns; components: `GuidedChoiceCard`, `GuidedEntityDetailModal`, `GridListRow`, `GuidedLayerNav`, `DetailOptionList` |
 | Guided choice-card deep-dive (TASK-432+) | **See more…** = in-card deepen (truncated copy, expandedExtra / equipment mechanic chips); **More details** = entity modal (`onDetails` → `GuidedEntityDetailModal`, path/species Close \| Select via TASK-448); **See more options** = catalog Layer 2 (`GuidedLayerNav` / browse). Do not invent specialist verbs. Shared rows: `DetailOptionList` + `@/lib/detail-option`. Wrappers: `GuidedTraitOptionList` / `GuidedDetailOptionList`. |
 | Guided skills suggestions (ability-tier curation) | `lib/guided-creator/curated-skills.ts` (`curateGuidedSkillIds`, `getGuidedAbilityRecommendationTiers`), `guided-skill-recommendations.ts` (`buildGuidedSkillSuggestions`); consumed by `steps/skills-step.tsx` + `AddSkillModal` badges via `guided-skills-panel.tsx` |
 | Guided feat Layer 2 browse | `guided-feats-browse-panel.tsx`, `lib/guided-creator/feat-selection.ts`; wired in `archetype-feats-step.tsx` + `character-feat-step.tsx` via `GuidedLayerNav` |
-| Guided equipment phased sub-flow (TASK-424 / 442 / 443 / 446 / 447) | `GUIDED_EQUIPMENT_PHASED_SPEC.md`, `lib/guided-creator/equipment-eligibility.ts`, `equipment-phase-stats.ts`, `equipment-currency.ts`, `equipment-phase-nav.ts`, `equipment-catalog-rows.ts`, `equipment-phase-candidates.ts`, `guided-equipment-l2.ts`, `guided-creator/guided-equipment-l1-phase.tsx`, `guided-equipment-fact-chips.tsx`, `guided-equipment-l2-modal.tsx`, `guided-equipment-l2-grid.ts`, `lib/game/archetype-path.ts` (`parseLevel1LoadoutsField` metadata), `hooks/use-guided-equipment-catalog.ts`, `lib/game/weapon-attack-ability.ts`. Card-first L1; PointStatus Currency; named property chips + hover tips; no phase progress strip; no Path pick badge. No quick kits. |
+| Guided equipment phased sub-flow (TASK-424 / 442 / 443 / 446 / 447 / 456 / 457 / 458 / 460 / 461 / 464–468) | `GUIDED_EQUIPMENT_PHASED_SPEC.md`, `lib/guided-creator/equipment-eligibility.ts`, `equipment-phase-stats.ts`, `equipment-currency.ts`, `equipment-phase-nav.ts`, `loadout-tp.ts`, `equipment-catalog-rows.ts`, `equipment-phase-candidates.ts`, `guided-equipment-l2.ts`, `guided-creator/guided-equipment-l1-phase.tsx`, `guided-equipment-phase-layout.tsx`, `guided-equipment-fact-chips.tsx`, `loadout-budget-bar.tsx`, `guided-equipment-l2-modal.tsx`, `guided-equipment-l2-grid.ts`, `lib/game/archetype-path.ts` (`parseLevel1LoadoutsField` metadata), `hooks/use-guided-equipment-catalog.ts`, `lib/game/weapon-attack-ability.ts`. Card-first L1; optional picks; shared **`LoadoutBudgetBar`** (Currency optional + Training Points + tip **inside** PointStatus label) on L1/L2; weapon/armor/Equipment title-adjacent Currency + Training Points; See more = mechanic + named property InfoTippy chips (**i inside** chip; name-only props; no Weapon Damage / Armor Base redundancies); L2 selected items promoted onto L1 cards; Equipment Quantity adjacent on L1; L2 **in-row quantity-first** via UnifiedSelectionModal; sleek ValueStepper; no phase progress strip; no Path pick badge. No quick kits. |
+| Guided powers/techniques L1 + L2 (TASK-444 / TASK-456 / TASK-458 / TASK-461 / TASK-463 / TASK-470–472) | `steps/powers-techniques-step.tsx`, `guided-powers-techniques-l2-modal.tsx`, `powers-techniques-l1-candidates.ts`, `powers-techniques-l2.ts`, `powers-techniques-energy-filter.ts`, `power-technique-display.ts`, `loadout-tp.ts`, `LoadoutBudgetBar`; L1 path cards (innate vs regular for Power); Training Points shared with Loadout on regular picks; Innate Energy PointStatus + threshold gate; innate cards title-adjacent Energy; L2 `UnifiedSelectionModal` (Energy ≤ theoretical L1 max / innate ≤ threshold); L2→L1 promotion; Action Type value-only desc chips. |
 | Advanced character creator (classic 9-step) | `characters/new/advanced/page.tsx` |
 | Library (user + official content browse) | `library/page.tsx` |
+| My Library entity tabs (sync/duplicate shell) | `library/components/UserLibraryEntityTabShell.tsx`, `library/hooks/use-library-entity-sync.ts`, `library/hooks/use-library-duplicate-confirm.ts` — used by `LibraryItemsTab` / `LibraryPowersTab` / `LibraryTechniquesTab` / `LibraryCreaturesTab` (ADR-0001) |
 | Codex (rules data browser) | `codex/page.tsx` |
 | Realms Library, guest read-only | `library/page.tsx` + `library/LibraryPublicContent.tsx` — guests see official "Realms" content with the My-Library toggle + "Add to library" hidden. (Former `/browse` was a redundant duplicate; removed and redirected to `/library` — TASK-336.) |
 | Power creator | `power-creator/page.tsx` (advanced); guided: `power-creator/guided/page.tsx` (TASK-410+) — shell: `CreatorPageShell` |
@@ -59,8 +63,8 @@
 | Guided creator path data | `useGuidedPathData` in `components/guided-creator/use-guided-path-data.ts` |
 | Autosave (debounced) | `useAutoSave` |
 | List sorting / modal list state | `useSort`, `sortByColumn`, `useModalListState` |
-| Tooltips (canonical) | `InfoTippy` + `public/tooltip-text.tsx` — **`AGENT_GUIDE.md` § Floating UI & contextual help** (decision matrix) |
-| Floating UI (`@floating-ui/react`) | Engine inside `InfoTippy` only today; new anchored UI → shared primitive first — see same AGENT_GUIDE section |
+| Tooltips (canonical) | `InfoTippy` + `public/tooltip-text.tsx` — **`guide/04-floating-ui-tooltips.md`** (decision matrix) |
+| Floating UI (`@floating-ui/react`) | Engine inside `InfoTippy` only today; new anchored UI → shared primitive first — see same guide appendix |
 
 > There is **one** codex fetch shared by all `useCodex*` and `useGameRules` (see `use-codex.ts`). Do not add a parallel codex fetch.
 
@@ -68,7 +72,9 @@
 
 | Need | Component |
 |------|-----------|
-| Expandable list row (Library/Codex/sheet/creator) | `GridListRow` — **fact policy (TASK-437):** dense browse keeps `ListHeader` columns when space allows; deep-dive/`DetailOptionList` may omit columns but every omitted column fact must be a **labeled** expanded chip (`Damage Reduction 2`, not bare `2`). Helpers: `lib/chip/list-row-metadata.ts`, `lib/detail-option` `factChip` / combat+equipment builders. |
+| Expandable list row (Library/Codex/sheet/creator) | `GridListRow` — **fact policy (TASK-437/454/461):** dense browse keeps `ListHeader` columns when space allows (short **TP** headers OK on L3 tables); deep-dive/`DetailOptionList` omit columns → self-describing chips. Helpers: `lib/chip/list-row-metadata.ts`, `lib/detail-option` `compact-facts` (`TRAINING_POINTS_COST_LABEL`, `namedPropertyDescriptorChips`, combat+equipment builders). Chip `costLabel` defaults to **Training Points**. |
+| Descriptor chip + property tip | `DescriptorChipWithTip` — non-expanding chip with **InfoTippy inside** the chip when description exists (TASK-454/465); guided cards use `GuidedFactChipRow` (`GuidedEquipmentFactChips` alias); GridListRow descriptors use the same tip path via `GridListChip` (TASK-461) |
+| Guided Loadout budget chrome | `LoadoutBudgetBar` — shared Currency (optional) + Training Points PointStatus with tip via `labelAccessory` (phase layout, L2 footer, powers/techniques) |
 | **Entity card art — click to enlarge (site-wide default)** | **`ExpandableImage`** (+ `ExpandableImageModal`); list thumbs: `ListRowThumbnail` |
 | **Entity card art — list thumb** (44px, D&D Beyond style) | `GridListRow.thumbnail` + `ListRowThumbnail`; `ListHeader.hasThumbnailColumn` |
 | **Entity card art — choice card hero** (guided creator) | `GuidedChoiceCard` (wraps `ExpandableImage`) |
@@ -81,10 +87,10 @@
 | 2–N pill toggle | `SegmentedControl` |
 | Section header with + | `SectionHeader`; cost badge: `SectionCostBadge` |
 | Dice roll button | `RollButton` |
-| +/- steppers | `ValueStepper`, `DecrementButton`, `IncrementButton`; quantities: `QuantitySelector`, `QuantityBadge` |
-| Point allocation display | `PointStatus`; powered/martial split: `PoweredMartialSlider` |
-| Skill row / allocation | Advanced/creature: `SkillRow`, `SkillsAllocationPage`, `AddSkillModal`, `AddSubSkillModal`. Guided L1: `GuidedSkillsPanel`; Guided L2 browse: `skills-step` + `GuidedLayerNav` → `AddSkillModal` (below recommended cards, not on the list) |
-| Ability score grid | `AbilityScoreGrid` (`ability-score-grid.tsx`): display/edit tiles; `powerAbility` / `martialAbility` / `secondaryAbility` pills; `resolveDistinctSecondaryAbility`; mobile display uses `shortName` below `sm`, wrapping path pills, roomier edit grid (TASK-452) |
+| +/- steppers | `ValueStepper`, `DecrementButton`, `IncrementButton` (sleek neutral default, TASK-468); quantities: `QuantitySelector`, `QuantityBadge`; `UnifiedSelectionModal` `showQuantity` = in-row quantity-first |
+| Point allocation display | `PointStatus`; guided Loadout/powers: `LoadoutBudgetBar`; powered/martial split: `PoweredMartialSlider` |
+| Skill row / allocation | Advanced/creature: `SkillRow`, `SkillsAllocationPage`, `AddSkillModal`, `AddSubSkillModal`. Table `variant`: play view (`isEditing` false) hides `(species)` / `sourceLabel` and species-dimmed prof dots; edit/creator keep them (TASK-485). Guided L1: `GuidedSkillsPanel`; Guided L2 browse: `skills-step` + `GuidedLayerNav` → `AddSkillModal` (below recommended cards, not on the list) |
+| Ability score grid | `AbilityScoreGrid` (`ability-score-grid.tsx`): display/edit tiles; `powerAbility` / `martialAbility` / `secondaryAbility` pills; `resolveDistinctSecondaryAbility`; mobile display uses `shortName` below `sm`; path pills use short single-line copy (Archetype / Secondary) with full aria-label + tile top padding so wrap cannot cover the name (TASK-452, TASK-455); roomier edit grid |
 | Guided step footer | `GuidedStepFooter`: sticky Back/Continue; `completionHint` stacks above actions below `sm`, centered mid-bar on `sm+` (one mount; TASK-453) |
 | Tab summary header section | `TabSummarySection`, `SummaryItem`, `SummaryRow` |
 | Chip roles (descriptor vs expandable) | `DescriptorChip`, `ExpandableChip` (`@/components/ui`); `GridListChip` + `lib/chip/expandable-chip-props.ts`; `ChipData.kind` + `descriptorChipData()` in `lib/chip/chip-data-helpers.ts`; metadata builders in `lib/chip/list-row-metadata.ts` |
@@ -102,7 +108,7 @@
 | Standalone creator page shell (auth/load/save) | `CreatorPageShell` (+ `CreatorLayout`, `CreatorSaveToolbar`, `CollapsibleSection`) from `@/components/creator` |
 | Image upload + crop | `ImageUploadModal` |
 | Theme switch / onboarding | `ThemeToggle`, `OnboardingTour` |
-| Help tooltips | `InfoTippy` + `public/tooltip-text.tsx` — see `AGENT_GUIDE.md` § Floating UI & contextual help |
+| Help tooltips | `InfoTippy` + `public/tooltip-text.tsx` — see `guide/04-floating-ui-tooltips.md` |
 
 > UI primitives (Modal, Button, Chip, **DescriptorChip**, **ExpandableChip**, PageContainer, PageHeader, TabNavigation, SearchInput, **TableScroll**) live in `@/components/ui`.
 
@@ -113,7 +119,7 @@
 | Health/skill/derived calculations (current source) | `lib/game/calculations.ts` |
 | Game constants / formulas | `lib/game/constants.ts`, `lib/game/formulas.ts` |
 | Skill allocation | `lib/game/skill-allocation.ts` |
-| Archetype path / progression | `lib/game/archetype-path.ts` (incl. `pathHasPlayerVisibleLevel1`, `pathHiddenFromPlayerPicker`), `lib/game/archetype-display.ts`, `components/character-sheet/path-level-guidance.tsx`, `components/character-sheet/archetype-path-identity.tsx`, `components/character-sheet/edit-archetype-modal.tsx`, `app/(main)/codex/CodexArchetypesTab.tsx`, creator `skills-step` / `feats-step` apply actions |
+| Archetype path / progression | `lib/game/archetype-path.ts` (incl. `pathHasPlayerVisibleLevel1`, `pathHiddenFromPlayerPicker`, `innatePowers`; shared admin parsers `parseOptionalJsonField` / `parseIdQuantityStrings` / `serializeIdQuantityStrings` / `parseRecommendedAbilities` — TASK-476), `lib/game/archetype-display.ts`, `lib/game/innate-eligibility.ts`, `lib/game/path-validation.ts` (Appendix G innate publish checks), `components/character-sheet/path-level-guidance.tsx`, `components/character-sheet/archetype-path-identity.tsx`, `components/character-sheet/edit-archetype-modal.tsx`, `app/(main)/codex/CodexArchetypesTab.tsx`, `app/(main)/admin/codex/AdminArchetypesTab.tsx` (structured recommended-ability `ValueStepper`s + loadout controls — TASK-404; Advanced Path JSON escape hatch only), creator `skills-step` / `feats-step` apply actions |
 | Crafting / encounter helpers | `lib/game/crafting-utils.ts`, `lib/game/encounter-utils.ts` |
 | Power / technique / item / empowered calc | `lib/calculators/*-calc.ts`, `mechanic-builder.ts` |
 | Data enrichment (minimal stored → full display) | `lib/data-enrichment.ts` |

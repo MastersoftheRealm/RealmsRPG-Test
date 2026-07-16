@@ -1,32 +1,31 @@
 ---
-description: Agent task workflow - where to read tasks, how to update, feedback processing
+description: Agent task workflow - ACTIVE_TASKS, WAITING, DoD
 alwaysApply: true
 ---
 
 # Task Workflow
 
+**Session start:** `ARCHITECTURE_CONSTITUTION.md` + `ACTIVE_TASKS.md` (not `WAITING_TASKS.md`, not done archive, not full `AGENT_GUIDE.md`).
+
 **Before implementing:**
-1. Read `src/docs/ai/AI_TASK_QUEUE.md` — pick highest-priority `not-started` task. **Skip `blocked` tasks and any task with `assignee:` set to a human** (e.g. TASK-353).
-2. Read `src/docs/ai/FEATURE_INDEX.md` — confirm the feature/hook/component doesn't already exist.
-3. Read `src/docs/ai/AGENT_GUIDE.md` — sources of truth, component locations.
-3. For validation, caps, tooltips, calculations, or **user-facing copy**: reference `src/docs/GAME_RULES.md` (formulas + **Terminology & Definitions**: capitalize game terms in context; prefer/avoid vocab; Score = Bonus + 10; no em dash in new UI strings).
-4. For UI work: check `src/docs/MOBILE_UX.md`; ensure new/edited modals and pages follow mobile patterns (fullScreenOnMobile, side-scroll or collapse for dense sections, touch targets).
+1. Pick highest-priority open task in `src/docs/ai/ACTIVE_TASKS.md`.
+2. Search `FEATURE_INDEX.md` + barrels (+ generated barrel inventory) — confirm it doesn't already exist.
+3. Game copy / caps / formulas → `GAME_RULES.md`. UI → `MOBILE_UX.md` + a11y rule.
 
-**When implementing:**
-- Update task `status` to `in-progress`, then `done` when all acceptance criteria pass, or `partial` with `completed_work` / `remaining_work` / `follow_up_tasks`.
-- Human-only steps go in `src/docs/ai/DEVELOPER_TASK_QUEUE.md` (required actions + **DEV-V-###** build validation index).
-- For user-facing `done`/`partial`: add granular tests to `src/docs/ai/BUILD_VALIDATION.md`, set `build_validation` + `developer_test_plan` on the task, index suite in `DEVELOPER_TASK_QUEUE.md`.
-- Append entry to `src/docs/ai/AI_CHANGELOG.md`.
+**While implementing:**
+- `in-progress` → `done` only if **all** AC met; else `partial` + `completed_work` / `remaining_work` / `follow_up_tasks`.
+- Move `done` blocks from `ACTIVE_TASKS.md` → `archive/TASK_QUEUE_DONE.md`.
+- Blocked / human-owned → `WAITING_TASKS.md`. Human-only steps → `DEVELOPER_TASK_QUEUE.md`.
+- User-facing: `BUILD_VALIDATION.md` + changelog.
+- New shared/ui file → ADR + update `scripts/shared-ui-allowlist.json` (`npm run tasks:validate-shared-ui`).
+- Barrel export changes → `npm run tasks:generate-index`.
 
-**New tasks:** Use format in `src/docs/ai/AI_REQUEST_TEMPLATE.md`. Add to `AI_TASK_QUEUE.md` with next TASK-### ID.
-**Schema/migrations:** Run SQL in Supabase Dashboard (see `src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md`); no Prisma migrate.
+**New tasks:** `AI_REQUEST_TEMPLATE.md` → `ACTIVE_TASKS.md` (next TASK-###). Process: `AI_TASK_QUEUE.md`.
 
-**Codex / reference data:** See `.cursor/rules/realms-codex-data.mdc` — audit and draft SQL first; **do not execute codex `UPDATE`/`INSERT`/`DELETE` via MCP until the owner reviews and approves** (except a specific correction they direct in the same message).
+**Migrations:** Prefer Supabase MCP `apply_migration`; else Dashboard SQL. SQL in `sql/`. Codex: `realms-codex-data.mdc`.
 
-# Feedback Processing (when owner gives feedback)
+# Feedback Processing
 
-1. **Log:** Append raw feedback to `src/docs/ALL_FEEDBACK_CLEAN.md` under **Raw Feedback Log** (date, context, priority, text, expected behavior). Do this whether you create tasks or implement directly.
-2. **Extract:** Split into discrete actionable items (one sentence can be 2–3 items).
-3. **Cross-reference:** For each item, check `AI_TASK_QUEUE.md` (by keyword) and curated sections of `ALL_FEEDBACK_CLEAN.md`; verify in code if unsure.
-4. **Gaps:** Add new tasks to `AI_TASK_QUEUE.md` (next TASK-### ID, from `AI_REQUEST_TEMPLATE.md`) and/or curated entries; implement directly when appropriate.
-5. **Summary:** Brief checklist: item → disposition (existing task, new task, implemented, or already done).
+1. Log raw feedback in `ALL_FEEDBACK_CLEAN.md`.
+2. Extract discrete items; cross-ref `ACTIVE_TASKS.md` / `WAITING_TASKS.md`.
+3. Add tasks or implement; summarize dispositions.

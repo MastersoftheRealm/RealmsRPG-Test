@@ -1,0 +1,307 @@
+# FEATURE_INDEX — barrel inventory (generated)
+
+> **Do not edit by hand.** Run `npm run tasks:generate-index` after changing barrel exports.
+> Curated narrative map: [`FEATURE_INDEX.md`](FEATURE_INDEX.md).
+
+Generated: 2026-07-16
+
+## `src/components/shared/index.ts`
+
+- ABILITY_DISPLAY_INFO
+- ABILITY_DISPLAY_ORDER
+- AbilityRequirementFilter
+- AbilityScoreGrid
+- AddSkillModal
+- AddSubSkillModal
+- ArmorListSection
+- CheckboxFilter
+- ChipGroup
+- ChipSelect
+- ChoiceTraitOptionListPicker
+- CodexArtUploadField
+- ConfirmActionModal
+- CreatureStatBlock
+- DecrementButton
+- DeleteConfirmModal
+- DescriptorChipWithTip
+- DetailOptionList
+- DiscordIcon
+- EditSectionToggle
+- EquipmentListSection
+- EquipToggle
+- ErrorDisplay
+- ExpandableChip
+- ExpandableImage
+- ExpandableImageModal
+- FeatsTraitsListSection
+- FilterSection
+- getEditState
+- getTourCompleted
+- GRID_LIST_INLINE_SELECTION_COLUMN_TRACK
+- GRID_LIST_ROW_THUMBNAIL_COLUMN_WIDTH
+- gridColumnsWithInlineSelection
+- GridListChip
+- GridListRow
+- gridTemplateColumnsWithThumbnail
+- GuidedChoiceShell
+- GuidedLayerNav
+- HubListRow
+- ImageUploadModal
+- IncrementButton
+- InfoTippy
+- InnateToggle
+- ItemCard
+- ListEmptyState
+- ListHeader
+- ListRowThumbnail
+- LoadingState
+- LoginPromptModal
+- OfficialCreatureList
+- OfficialItemList
+- OfficialPowerList
+- OfficialTechniqueList
+- OnboardingTour
+- PartChipComponent
+- PartChipList
+- PointStatus
+- PoweredMartialSlider
+- PowersListSection
+- prependThumbnailHeaderColumn
+- PropertyChipList
+- QuantityBadge
+- QuantitySelector
+- QuickArmorTable
+- QuickShieldsTable
+- QuickWeaponsTable
+- resolveDistinctSecondaryAbility
+- RollButton
+- rollButtonVariants
+- SearchInput
+- SectionCostBadge
+- SectionHeader
+- SegmentedControl
+- SelectFilter
+- SelectionToggle
+- setTourCompleted
+- ShieldsListSection
+- SkillRow
+- SkillsAllocationPage
+- SkillSourceChip
+- SourceFilter
+- SpeciesTraitCard
+- splitDamageDiceAndType
+- SummaryChipList
+- SummaryItem
+- SummaryRow
+- TabSummarySection
+- TagFilter
+- TechniquesListSection
+- ThemeToggle
+- THUMBNAIL_HEADER_COLUMN_KEY
+- TraitGroup
+- type AbilityRequirement
+- type AbilityScoreGridProps
+- type DescriptorChipWithTipProps
+- type EditState
+- type PointStatusProps
+- type RollButtonProps
+- type SegmentedControlProps
+- type SegmentedOption
+- type SkillSourceChipProps
+- type SkillSourceKind
+- type SourceFilterValue
+- type StepperButtonProps
+- type ValueStepperProps
+- UnifiedSelectionModal
+- ValueStepper
+- WeaponsListSection
+
+## `src/components/ui/index.ts`
+
+- Alert
+- Button
+- buttonVariants
+- Card
+- CardContent
+- CardDescription
+- CardFooter
+- CardHeader
+- CardTitle
+- cardVariants
+- Checkbox
+- Chip
+- ChipGroup
+- chipVariants
+- DescriptorChip
+- EmptyState
+- ExpandableChip
+- IconButton
+- iconButtonVariants
+- Input
+- LoadingOverlay
+- LoadingState
+- Modal
+- PageContainer
+- PageHeader
+- SearchInput
+- Select
+- SelectionCard
+- SelectionCardSurface
+- Spinner
+- tabButtonId
+- TabContentPanel
+- TableScroll
+- TabNavigation
+- TabPanel
+- tabPanelIdForTab
+- Textarea
+- ToastProvider
+- Tooltip
+- type AlertProps
+- type ButtonProps
+- type CardProps
+- type CheckboxProps
+- type ChipGroupProps
+- type ChipProps
+- type ContainerSize
+- type ExpandableChipOption
+- type ExpandableChipProps
+- type IconButtonProps
+- type InputProps
+- type SelectionCardProps
+- type SelectionCardSurfaceProps
+- type SelectOption
+- type SelectProps
+- type Tab
+- type TabContentPanelProps
+- type TabPanelProps
+- type TextareaProps
+- useTabGroup
+- useToast
+
+## `src/hooks/index.ts`
+
+- buildGuidedEquipmentEligibilityContext
+- buildSkillIdToNameMap
+- campaignKeys
+- characterKeys
+- craftingKeys
+- encounterKeys
+- enhancedItemsKeys
+- findTraitByIdOrName
+- getGameRulesFallback
+- resolveSkillIdsToNames
+- resolveTraitIds
+- sortByColumn
+- toggleSort
+- type CreateOfficialEnhancedItemInput
+- type CreatureFeat
+- type EnhancedItemsScope
+- type EnhancedItemUsesType
+- type EquipmentItem
+- type Feat
+- type ItemProperty
+- type OfficialEnhancedItem
+- type OfficialEnhancedItemPayload
+- type Part
+- type PowerPart
+- type SavedDamage
+- type SavedPart
+- type Skill
+- type Species
+- type TechniquePart
+- type Trait
+- type UpdateOfficialEnhancedItemInput
+- type UserCreature
+- type UserItem
+- type UserPower
+- type UserSpecies
+- type UserTechnique
+- useAddLibraryItemData
+- useAddOfficialToLibrary
+- useAdmin
+- useArchetype
+- useArchetypes
+- useAuth
+- useAuthStore
+- useAutoSave
+- useCampaign
+- useCampaignByInviteCode
+- useCampaignRolls
+- useCampaigns
+- useCampaignsFull
+- useCharacter
+- useCharacterResourceSync
+- useCharacters
+- useCodexArchetypes
+- useCodexFeats
+- useCodexFull
+- useCodexSkills
+- useCraftingSession
+- useCraftingSessions
+- useCreateCharacter
+- useCreateCraftingSession
+- useCreateEncounter
+- useCreateEnhancedItem
+- useCreateOfficialEnhancedItem
+- useCreatorPathData
+- useCreatorSave
+- useCreatorWeaponOptions
+- useCreatureFeats
+- useDeleteCharacter
+- useDeleteCraftingSession
+- useDeleteCreature
+- useDeleteEmpoweredTechnique
+- useDeleteEncounter
+- useDeleteEnhancedItem
+- useDeleteItem
+- useDeleteOfficialEnhancedItem
+- useDeletePower
+- useDeleteSpecies
+- useDeleteTechnique
+- useDuplicateCharacter
+- useDuplicateCreature
+- useDuplicateEmpoweredTechnique
+- useDuplicateItem
+- useDuplicatePower
+- useDuplicateSpecies
+- useDuplicateTechnique
+- useEncounter
+- useEncounters
+- useEnhancedItems
+- useEquipment
+- useGameRules
+- useGuidedEquipmentCatalog
+- useInvalidateCampaigns
+- useInvalidateEncounters
+- useItemProperties
+- useLoadModalLibrary
+- useMergedSpecies
+- useModalListState
+- useOfficialEnhancedItems
+- useOfficialLibrary
+- useParts
+- usePowerParts
+- useProfile
+- useResolvedSkillNames
+- useResolvedTraits
+- userSpeciesToSpecies
+- useSaveCharacter
+- useSaveCraftingSession
+- useSaveEncounter
+- useSkillIdToNameMap
+- useSort
+- useSpecies
+- useTechniqueParts
+- useTraits
+- useUpdateEnhancedItem
+- useUpdateOfficialEnhancedItem
+- useUserCreatures
+- useUserEmpoweredTechniques
+- useUserItems
+- useUserLibrary
+- useUserPowers
+- useUserSpecies
+- useUserTechniques
+
+## `src/services/index.ts`

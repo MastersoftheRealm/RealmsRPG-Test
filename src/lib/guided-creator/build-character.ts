@@ -91,7 +91,17 @@ export function buildGuidedCharacterPayload(
   const archetypeFeats = draft.archetypeFeatIds.map((id) => ({ id, name: String(id) }));
   const characterFeats = draft.characterFeatIds.map((id) => ({ id, name: String(id) }));
 
-  const powers = draft.powerIds.map((id) => ({ id, name: String(id) }));
+  const powers = [
+    ...draft.innatePowerIds.map((id) => ({ id, name: String(id), innate: true as const })),
+    ...draft.powerIds
+      .filter(
+        (id) =>
+          !draft.innatePowerIds.some(
+            (iid) => String(iid).toLowerCase() === String(id).toLowerCase()
+          )
+      )
+      .map((id) => ({ id, name: String(id), innate: false as const })),
+  ];
   const techniques = draft.techniqueIds.map((id) => ({ id, name: String(id) }));
 
   const inventory = (() => {
@@ -176,14 +186,12 @@ export function buildGuidedCharacterPayload(
     },
     defenseVals: { ...DEFAULT_DEFENSE_SKILLS },
     portrait: draft.portraitUrl ?? undefined,
-    appearance: [
-      draft.age ? `Age: ${draft.age}` : '',
-      draft.heightCm ? `Height: ${draft.heightCm} cm` : '',
-      draft.weightKg ? `Weight: ${draft.weightKg} kg` : '',
-      draft.appearanceNotes?.trim() ?? '',
-    ]
+    height: draft.heightCm ?? undefined,
+    weight: draft.weightKg ?? undefined,
+    appearance: [draft.age ? `Age: ${draft.age}` : '', draft.appearanceNotes?.trim() ?? '']
       .filter(Boolean)
       .join('\n'),
+    description: draft.description?.trim() || undefined,
   };
 }
 

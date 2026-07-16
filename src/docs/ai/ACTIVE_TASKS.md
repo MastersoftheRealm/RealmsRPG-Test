@@ -1,0 +1,540 @@
+# Active AI Tasks
+
+**Hot path only** — agent-eligible open work: `not-started` | `in-progress` | `partial`.
+Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
+Do **not** read the done archive at session start.
+
+**Next task ID:** TASK-487
+**Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
+**Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
+**Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
+
+**Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`.
+
+**Counts:** 18 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+
+**Debt from AI workflow audit (2026-07-15):** TASK-477–481 — address alongside product work. TASK-476/482/484/486 done.
+
+---
+
+- id: TASK-475
+  title: Optional — adopt UserLibraryEntityTabShell basic variant in LibraryEnhancedTab
+  created_at: 2026-07-15
+  created_by: agent
+  priority: low
+  status: not-started
+  related_files:
+    - src/app/(main)/library/LibraryEnhancedTab.tsx
+    - src/app/(main)/library/components/UserLibraryEntityTabShell.tsx
+  description: |
+    LibraryEnhancedTab shares search/sort list scaffold but has no patch-sync/duplicate.
+    Optional follow-up to ADR-0001: add enableSync=false / basic mode to the shell, or a slim
+    UserLibraryListShell, and migrate Enhanced without behavior change.
+  acceptance_criteria:
+    - Enhanced tab uses shared list chrome without regressing delete/load UX.
+    - No sync/duplicate UI introduced for enhanced items.
+    - npm run build.
+
+---
+
+- id: TASK-461
+  title: Sitewide compact fact rollout — cards and GridListRow parity
+  created_at: 2026-07-15
+  created_by: agent
+  priority: medium
+  status: partial
+  completed_at: 2026-07-15
+  implemented_by: agent
+  parent_task: TASK-454
+  follow_up_tasks:
+    - TASK-463
+  completed_work: |
+    - Library/Codex/selectable builders + combat-builder use namedPropertyDescriptorChips /
+      TRAINING_POINTS_COST_LABEL.
+    - LoadoutBudgetBar shared across guided equipment L1/L2 and powers/techniques.
+    - GuidedFactChipRow (ex GuidedEquipmentFactChips) — no expand path.
+    - GridListChip descriptor path uses DescriptorChipWithTip (InfoTippy) for property tips.
+    - Sheet partDataToChips: descriptor kind when no options; Training Points costLabel.
+    - Advanced powers/techniques add-modal columns spell Training Points.
+    - normalizeId used by powers L1 candidates; formatDamageReductionFact added.
+  remaining_work: |
+    - Powers/techniques L2 still card browse — GridListRow bridge tracked as TASK-463.
+    - Soft residuals: styleguide demos / dense admin TP headers (allowed by GAME_RULES).
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T048
+  developer_test_plan: |
+    Suite DEV-V-013 T048 — see BUILD_VALIDATION.md
+  related_files:
+    - src/lib/detail-option/compact-facts.ts
+    - src/components/shared/grid-list-chip.tsx
+    - src/components/guided-creator/loadout-budget-bar.tsx
+    - src/components/guided-creator/guided-equipment-fact-chips.tsx
+    - src/components/character-sheet/library-list-helpers.ts
+    - src/components/character-creator/steps/powers-step.tsx
+  description: |
+    Roll TASK-454’s compact-fact grammar beyond the guided equipment pilot so weapons, armor,
+    powers, and techniques use the same fact language across cards, GridListRow expansions, add
+    modals, Library, Codex, and character surfaces.
+  acceptance_criteria:
+    - Audit compact card/row facts for weapons, armor, powers, and techniques; migrate one-off
+      formatter strings to shared builders without removing useful dense comparison columns.
+    - Equivalent facts use equivalent language across card and row presentations; structured
+      Action Type, Range, Spaces, Ability Requirement, damage, Currency, and Training Points follow
+      GAME_RULES capitalization.
+    - Named non-mechanic properties use the shared descriptor-chip + accessible InfoTippy pattern
+      wherever descriptions are helpful but expansion would add noise.
+    - No description is simultaneously repeated as a collapsed chip/column and expanded body.
+    - Split implementation into independent domain batches after TASK-454 (weapons/armor and
+      powers/techniques may proceed in parallel); each batch has focused tests.
+    - Update FEATURE_INDEX/AGENT_GUIDE if shared exports or usage guidance changes; npm run build.
+  notes: |
+    2026-07-15 audit: marked partial — core builders + LoadoutBudgetBar + GLR InfoTippy shipped;
+    powers/techniques §3.1 GridListRow L2 remains TASK-463.
+  evidence: |
+    npm run build; DEV-V-013-T048 updated for descriptor+InfoTippy.
+
+---
+
+- id: TASK-440
+  title: Copy compliance residuals — dense HP HUD abbreviation decision
+  created_at: 2026-07-15
+  created_by: agent
+  priority: low
+  status: not-started
+  parent_task: TASK-439
+  related_files:
+    - src/app/(main)/library/LibraryCreaturesTab.tsx
+    - src/components/encounters/CombatantCard.tsx
+    - src/app/(main)/creature-creator/page.tsx
+  description: |
+    Follow-up to TASK-439 after sitewide audit. Styleguide em dashes and admin ±% modifier
+    wording are already cleaned. Remaining product question only:
+    - Dense HUD still shows HP (Library creatures column, encounter CombatantCard, creature
+      creator quickStats). GAME_RULES allows established dense abbreviations; full "Health"
+      would be more consistent if owner prefers.
+    Do not rewrite code comments or empty-state `—` placeholders.
+  acceptance_criteria:
+    - Owner decides: keep HP in dense HUD, or rename to Health (and EN→Energy where paired).
+    - Apply decision sitewide to listed surfaces (and peers if found).
+    - npm run build if UI touched.
+  notes: |
+    Low priority. Audit 2026-07-15: no other clear prefer/avoid UI hits remaining in src/app +
+    src/components + copy modules + tooltip-text.
+
+---
+
+- id: TASK-430
+  title: React Compiler hook warnings — exhaustive-deps / set-state-in-effect / preserve-manual-memoization
+  created_at: 2026-07-13
+  created_by: agent
+  priority: low
+  status: partial
+  parent_task: TASK-321
+
+  description: |
+    Follow-up from TASK-321. After clearing unused-vars / no-explicit-any / raw-color errors, remaining
+    ESLint noise is React Compiler hook rules (~171): set-state-in-effect (58), exhaustive-deps (104),
+    preserve-manual-memoization (9). eslint.config.mjs intentionally keeps these as warnings so lint
+    stays actionable without blocking. Fix in small, behavior-preserving batches with DEV-V where UI syncs.
+  related_files:
+    - eslint.config.mjs
+    - src/app/(main)/library/page.tsx
+    - src/components/guided-creator/steps/skills-step.tsx
+    - src/components/character-creator/steps/ancestry-step.tsx
+    - src/components/character-creator/steps/equipment-step.tsx
+    - src/components/character-sheet/library-section.tsx
+    - src/components/character-sheet/edit-archetype-modal.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/app/(main)/characters/[id]/CharacterSheetModals.tsx
+    - src/hooks/use-creator-save.ts
+    - src/lib/empty.ts
+    - src/components/guided-creator/guided-choice-card.tsx
+    - src/app/(main)/species-creator/page.tsx
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - src/app/(auth)/login/page.tsx
+  acceptance_criteria:
+    - Material reduction in react-hooks/* warnings without cascading re-render regressions.
+    - Prefer removing unnecessary effects over blanket eslint-disable.
+    - exhaustive-deps changes must not alter intentional mount-only / stable-ref patterns.
+    - npm run build + lint pass; no new errors.
+  build_validation: DEV-V-019
+  developer_test_plan: |
+    Run DEV-V-019-T001–T007 in BUILD_VALIDATION.md (choice-card, login, admin feat remount,
+    library clamp, edit-archetype session remount, sheet library tab visibility, modal remounts).
+  completed_work: |
+    Batch 1 (2026-07-15): 168 → 158 hook warnings (−10).
+    - guided-choice-card: derive inactive overflow; sync expand via render when selected changes.
+    - species-creator: module TRAIT_LIMITS; drop unnecessary form/traitLimits deps.
+    - AdminArchetypesTab: hoist toLeveledFeatLike.
+    - AdminFeatsTab: remount edit modal with key={sessionKey}; seed drafts in useState; remove reset effects.
+    - login: derive auth query error (no setState-in-effect); dismiss URL message on new attempt (parity with old setError(null)).
+    - empowered getPayload: add missing isReaction dep.
+    - Audit follow-up: DEV-V-019 T001–T003; drop unused skillIdToName on AdminFeatEditModal.
+    Batch 2 (2026-07-15): 158 → 138 hook warnings (−20).
+    - library page: one-time scope lock after auth (render adjust); clamp Enhanced tab state.
+    - guided/advanced ancestry+equipment + guided skills: stable empty fallbacks for hook deps.
+    - library-section: memoize tabs; edit-mode sync without effects; display fallback for active tab.
+    - EditArchetypeModal: remount-on-open via editArchetypeSessionKey; remove reset effect.
+    - useCreatorSave: add queryClient + setShowPublishConfirm deps.
+    - DEV-V-019 T004–T005.
+    Batch 2 audit (2026-07-15):
+    - Restored one-time library mode lock (not continuous auth/?view= follow).
+    - Controlled sheet tab: page clamps via resolveLibraryActiveTab (parent state parity).
+    - Edit archetype uses sessionKey (not ability-field key mid-edit).
+    - DEV-V-019 T004–T006 tightened / T006 added.
+    Full TASK-430 functional audit (2026-07-15):
+    - Batch 1 patterns OK (choice-card, login dismiss, admin feat remount, isReaction dep).
+    - Hardened: guest→always Realms scope; Enhanced displayTab belt-and-suspenders;
+      guided skills abilities via stable useMemo copy (no shared DEFAULT_ABILITIES mutate).
+    - No infinite-loop / RoH breaks found; build clean.
+    Batch 3 (2026-07-15): 138 → 108 hook warnings (−30). Careful pass; no eslint-disable.
+    - Stable empties / useMemo: advanced skills+powers steps, guided feat steps, abilities-step.
+    - Remount-on-open (drop reset effects): level-up, settings, add-feat, add-proficiency,
+      add-sub-skill, AddCreatureFeatModal (+ parent conditionals/keys).
+    - unified-selection-modal: drop redundant sortState dep (sortItems closes over it).
+    - Deferred: use-character-sheet-actions (45), creator cache/?edit hydrates, encounters, Modal.tsx.
+    - DEV-V-019 T007.
+    Batch 3 audit (2026-07-15):
+    - AddSkillModal remount parity (skills-allocation + guided-skills-panel).
+    - Shared `src/lib/empty.ts` (dedupe EMPTY_* across skills/feats/ancestry).
+    - skills Continue copies defenseVals (never persist DEFAULT_DEFENSE_SKILLS ref).
+    - Settings modal uses isOpen while conditionally mounted.
+  remaining_work: |
+    Status stays **partial** until residual hook warnings are materially flattened (or owner
+    explicitly closes leftovers as intentional). Baseline after batch 3: **~108**
+    (set-state-in-effect 42, exhaustive-deps 57, preserve-manual-memoization 9).
+
+    Still to finish (safe batches — continue TASK-430):
+    - Creator cache / `?edit=` hydrate effects (power, technique, empowered, item, creature) —
+      prefer remount keys / lazy init; smoke with DEV-V-019.
+    - Encounter views + encounter route pages (Skill/Combat/Mixed) — careful; sync UI has DEV-V.
+    - Crafting `[id]` page effects/deps.
+    - Shared `components/ui/modal.tsx` (2) — high reuse; parity-test every fullScreenOnMobile modal.
+    - Smaller leftovers as they appear in lint dumps (admin pages, use-profile, etc.).
+
+    Do **not** drive remaining work through `use-character-sheet-actions.ts` (~45 warnings) while
+    it remains a god-file — see sequencing below / **TASK-381**.
+  follow_up_tasks:
+    - TASK-381
+  notes: |
+    Do not mass-disable. Prefer derive / remount / stable empties (`lib/empty.ts`).
+    **Sequencing (owner-friendly):** Batches 1–3 cleared the safer surfaces (~168→108).
+    The largest remaining pile (~45) sits in `use-character-sheet-actions.ts`. Cleaning that
+    file with surgical hook edits while it is still huge is high-risk. Prefer **TASK-381**
+    (split sheet/creator god files into smaller modules) *before* or *as* that pile is
+    reduced — same domain boundaries make exhaustive-deps / set-state-in-effect fixes
+    safer and reviewable. Creator hydrates / encounters / Modal can still proceed as
+    separate careful TASK-430 batches in parallel with TASK-381.
+    Keep status partial until warning count is materially flattened or owner closes residual.
+
+---
+
+- id: TASK-326
+  title: Tighten Supabase security advisors (bucket listing + leaked-password protection)
+  priority: medium
+  status: partial
+  created_at: 2026-06-12
+  created_by: agent
+  description: |
+    Storage SELECT policies scoped; enable HIBP leaked-password check in Supabase Auth.
+  related_files:
+    - src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md
+  acceptance_criteria:
+    - Storage SELECT policies scoped so buckets aren't broadly listable (read-by-key still works).
+    - Leaked-password protection enabled in Supabase Auth.
+    - SQL/migration documented; advisors re-checked.
+  completed_work: |
+    - Storage SELECT hardening applied live (MCP).
+  remaining_work: |
+    - Enable HIBP in Supabase Auth (DEV-001).
+  follow_up_tasks:
+    - TASK-353
+  notes: "2026-06-13. See DEVELOPER_TASK_QUEUE."
+
+---
+
+- id: TASK-381
+  title: BIG-01/02 phased decomposition of character-sheet and creator god files
+  priority: medium
+  status: not-started
+  created_at: 2026-06-26
+  created_by: agent
+  description: |
+    Decompose large character-sheet/creator files via phased extractions with test-backed parity checkpoints.
+    Splitting first makes follow-on React Compiler hook cleanup (TASK-430) safer — especially the
+    ~45 react-hooks warnings concentrated in `use-character-sheet-actions.ts`.
+  related_files:
+    - src/components/character-sheet/use-character-sheet-actions.ts
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/app/(main)/*-creator/page.tsx
+    - src/docs/ai/BUILD_VALIDATION.md
+  acceptance_criteria:
+    - `use-character-sheet-actions` split by domain boundaries without behavior regressions.
+    - Targeted large creator/sheet routes decomposed into stable shells/islands in phases.
+    - Each phase ships with explicit parity validation and rollback plan.
+    - `npm run build`, `npm test`, and `npm run lint` pass per phase.
+  follow_up_tasks:
+    - TASK-430
+  notes: |
+    High blast radius — proceed only with expanded DEV-V validation and small-scope PRs.
+    2026-07-01: Owner — start with power-creator and item-creator pages first; species/creature deferred from beginner funnel.
+    2026-07-15: Cross-link TASK-430 — recommend sheet actions split (this task) before / alongside
+    mass hook cleanup in `use-character-sheet-actions.ts`. God-file → smaller domain modules
+    (powers, techniques, inventory, feats, resources, etc.) with clear ownership + DEV-V per phase.
+
+---
+
+- id: TASK-388
+  title: "Post-activation onboarding (play together, sheet tour, level-up milestones)"
+  created_at: 2026-06-28
+  created_by: owner
+  priority: medium
+  status: not-started
+  description: |
+    Section 11 of REALMS_PRODUCT_OVERVIEW.md. After first character save, guide users
+    toward playing together (Discord, campaign invite). Optional post-save sheet tour.
+    Contextual level-up tutorials for milestones (first level-up, first ability point,
+    etc.) — delta-only, skippable, global tutorials on/off preference.
+  related_files:
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - src/components/character-creator/steps/finalize-step.tsx
+    - src/components/character-sheet/
+    - src/components/shared/onboarding-tour.tsx
+  acceptance_criteria:
+    - After first character save: dismissible play-together prompt (Discord + start campaign).
+    - Optional sheet tour offered once post-save (Skip + Don't show again); not on home page.
+    - First level-up shows contextual guide for fields that changed only.
+    - First ability-point level (e.g. level 3) shows where to allocate on sheet.
+    - User can disable all tutorials (setting or preference flag).
+    - Milestone flags stored (profile or character JSON); no repeat on subsequent level-ups of same type.
+    - `npm run build` passes.
+  notes: |
+    Replaces pre-creation home OnboardingTour with post-activation guidance.
+    Prefer InfoTippy/highlight chains over modal-heavy tours.
+
+---
+
+- id: TASK-391
+  title: "Admin path builder — guidance_groups UI + seed remaining paths"
+  created_at: 2026-06-29
+  created_by: agent
+  priority: medium
+  status: not-started
+  description: |
+    Character creator Layer 1 uses `level1_guidance_groups` (JSONB) and `level1_recommended_species`
+    (TEXT) on `codex_archetypes`. Berserker reference path seeded; admin can edit via Advanced Path JSON
+    and recommended-species ChipSelect today. Add a structured admin UI for guidance group authoring
+    and optionally seed Warrior/Monk/power paths with grouped recommendations.
+  related_files:
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - sql/codex-archetypes-creator-layer1-extensions.sql
+    - src/lib/constants/creator-layer-governance.ts
+  acceptance_criteria:
+    - Admin can add/edit/remove guidance groups without raw JSON (title, why, feat/power/armament picks per group).
+    - Layer 1 governance caps enforced in UI (max 3 groups, 7 items, 120-char why).
+    - Optional: at least one additional martial path seeded with guidance groups in Supabase.
+    - npm run build passes.
+
+---
+
+- id: TASK-403
+  title: Guided Simple Creator — Phase 8 admin & species starter flag
+  created_at: 2026-06-30
+  created_by: agent
+  priority: high
+  status: partial
+  description: |
+    Admin species is_starter checkbox; admin archetype JSON fields for level1_recommended_abilities and level1_loadouts; save via saveArchetypeWithPath.
+  related_files:
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/app/(main)/admin/codex/actions.ts
+  acceptance_criteria:
+    - isStarter persists on species; guided JSON fields editable and saved to DB columns.
+  completed_work: |
+    - isStarter checkbox wired in AdminSpeciesTab (openAdd/openEdit/save).
+    - Guided recommended abilities + loadouts persisted via saveArchetypeWithPath.
+    - TASK-404 (2026-07-16): structured admin abilities steppers + existing structured loadout controls
+      (raw JSON textareas removed for those fields; Advanced Path JSON escape hatch retained).
+  remaining_work: |
+    - Species trait-option editing improvements beyond existing AdminSpeciesTab pickers (if needed for guided ancestry QA).
+  follow_up_tasks:
+    - TASK-404
+  notes: |
+    2026-06-30: JSON fields sufficient for prototype; full archetype creator UI deferred to TASK-404.
+    2026-07-16: TASK-404 delivered the structured admin loadout/abilities builder (no raw JSON). Remaining residual is only optional species trait-option editing; 403 stays partial for that narrow item.
+
+---
+
+- id: TASK-405
+  title: Choice-card art — codex image_url fields + admin upload
+  created_at: 2026-06-30
+  created_by: owner
+  priority: high
+  status: partial
+  description: |
+    Species (and later equipment, powers, techniques) use hero art on GuidedChoiceCard as a primary selling point (REALMS §5.0.3). UI resolves image_url from records with typed SVG placeholders until art exists. Add codex columns, Storage upload, admin pickers, and seed real species art for starters.
+  related_files:
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - src/components/guided-creator/guided-choice-card.tsx
+    - src/components/guided-creator/guided-choice-image.ts
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/components/shared/codex-art-upload-field.tsx
+    - src/app/api/upload/codex-art/route.ts
+    - src/lib/codex-art.ts
+    - sql/codex-art-species-image-url.sql
+    - public/images/placeholder-*-card.svg
+  acceptance_criteria:
+    - codex_species.image_url (TEXT, nullable) + documented in SUPABASE_SCHEMA.md; migration applied.
+    - Admin species editor: upload or URL for card art; preview matches guided hero layout.
+    - Guided species step shows real art when image_url set; placeholders otherwise.
+    - Plan documented for powers/techniques/loadout image_url (column or JSON) as follow-up sub-task or phase 2.
+  completed_work: |
+    Phase 1 (2026-07-01): codex_species.image_url + codex-art bucket (migration applied). Admin species editor CodexArtUploadField (crop + upload). /api/upload/codex-art (isAdmin + service role). REALMS §5.0.3 coverage matrix (species/creature high, weapon some, armor/shield/power/technique low; no skills/feats/traits).
+  remaining_work: |
+    Seed starter species art. Phase 2 image_url columns + admin upload on creatures, powers, techniques. Equipment uses art bank only (no codex_equipment.image_url).     Follow-on TASK-417 for bank + user-library parity.
+  follow_up_tasks:
+    - TASK-417
+  notes: |
+    2026-06-30: Product owner — species art is main marketing hook on cards. Prototype placeholders + GuidedChoiceCard hero layout landed first.
+    2026-07-01: Phase 1 species pipeline shipped; guided UI already reads image_url.
+    2026-07-01: official_items.image_url + armament admin upload (weapon/armor/shield). REALMS §5.0.3 expanded with three-layer image model (official / bank / user upload).
+
+---
+
+- id: TASK-417
+  title: Art bank + user-library image_url parity + copy-on-add
+  created_at: 2026-07-01
+  created_by: owner
+  priority: medium
+  status: not-started
+  description: |
+    Long-term card-art model (REALMS §5.0.3): (1) curated art bank all users pick from when creating custom species/armaments/powers/techniques/equipment; (2) privileged roles (developer, admin) may upload custom art tied to user-owned rows; (3) official items with image_url keep art when copied to personal library — user_* tables mirror official/codex image_url column shape.
+  related_files:
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/lib/library-columnar.ts
+    - src/lib/codex-art.ts
+    - src/components/shared/codex-art-upload-field.tsx
+    - src/components/guided-creator/guided-choice-image.ts
+    - src/app/api/upload/codex-art/route.ts
+    - src/app/api/user/library/[type]/route.ts
+    - src/app/api/official/[type]/route.ts
+  acceptance_criteria:
+    - art_bank catalog (table or manifest) with categories: species, weapon, armor, shield, equipment, power, technique; admin CRUD; public read.
+    - Shared ArtBankPicker (or extend CodexArtUploadField) in species/item/power/technique creators — all users can pick bank image.
+    - image_url columns on user_powers, user_techniques, user_items, user_creatures, user_species (migrations + library-columnar + API).
+    - Add official/public item to user library copies image_url to new user row.
+    - /api/upload/user-creation-art (or equivalent) for developer+admin; writes user-creations bucket; sets user_* image_url.
+    - Creators and GuidedChoiceCard resolve image_url identically for official and user rows.
+  notes: |
+    2026-07-01: Owner direction — three-layer model documented in REALMS §5.0.3. Depends on TASK-405 phase 2 for full official coverage. codex_equipment stays bank-only (no per-row image).
+
+---
+
+- id: TASK-477
+  title: Unify duration display helpers (formatDuration layers)
+  created_at: 2026-07-15
+  created_by: agent
+  priority: low
+  status: not-started
+  related_files:
+    - src/lib/utils/duration.ts
+    - src/components/character-sheet/library-list-helpers.ts
+    - src/hooks/add-library-item/build-empowered-selectable-item.ts
+  description: |
+    Audit residual: local formatDuration helpers duplicate concepts from lib/utils/duration.ts
+    with different input shapes. Document layers or consolidate display fallbacks behind one API.
+  acceptance_criteria:
+    - One documented layering (structured duration vs raw string display) or shared wrappers.
+    - No third ad-hoc formatDuration in feature code without reusing the layer.
+    - npm run build.
+
+---
+
+- id: TASK-478
+  title: ExpandableImage adoption audit + enforcement checklist
+  created_at: 2026-07-15
+  created_by: agent
+  priority: medium
+  status: not-started
+  related_files:
+    - src/components/shared/expandable-image.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/DESIGN_INTENT.md
+    - src/docs/ai/guide/03-entity-card-art.md
+  description: |
+    Audit residual: ExpandableImage is the default for meaningful inline art but adoption is
+    pathway-specific. Audit feature surfaces for custom lightbox/img preview forks; migrate or
+    document justified exceptions.
+  acceptance_criteria:
+    - Inventory of meaningful images not using ExpandableImage/ListRowThumbnail.
+    - Migrate clear forks; document exceptions in DESIGN_INTENT or guide appendix.
+    - FEATURE_INDEX / art guide stay accurate; npm run build if code changes.
+
+---
+
+- id: TASK-479
+  title: Standardize client error-handling at API/Supabase boundaries
+  created_at: 2026-07-15
+  created_by: agent
+  priority: low
+  status: not-started
+  related_files:
+    - src/lib/api-client.ts
+    - src/docs/ai/ARCHITECTURE_CONSTITUTION.md
+    - src/docs/ARCHITECTURE.md
+  description: |
+    Audit residual: throw (apiFetch), Supabase { error }, toast catch, and silent catch coexist.
+    Write a short boundary convention and migrate the worst silent swallows on account/library paths.
+  acceptance_criteria:
+    - Convention documented in ARCHITECTURE.md or constitution pointer.
+    - At least account + one library path follow the convention (no silent catch on user actions).
+    - npm run build.
+
+---
+
+- id: TASK-480
+  title: Automate high-value BUILD_VALIDATION behaviors (vitest/Playwright growth)
+  created_at: 2026-07-15
+  created_by: agent
+  priority: medium
+  status: not-started
+  related_files:
+    - src/docs/ai/BUILD_VALIDATION.md
+    - tests/
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  description: |
+    Audit residual: BUILD_VALIDATION.md (~132KB) is a manual human catalog, not a regression net.
+    Keep it for owner smoke; add automated tests for highest-churn guided/library/sheet behaviors.
+  acceptance_criteria:
+    - Identify top 10 DEV-V tests that should be automated; file follow-ups or implement first 3.
+    - Document which suites stay human-only vs CI-covered in DEVELOPER_TASK_QUEUE.
+    - At least 3 new automated tests merge; npm test / relevant Playwright green.
+
+---
+
+- id: TASK-481
+  title: Recurring AI debt cleanup sprint (cadence)
+  created_at: 2026-07-15
+  created_by: agent
+  priority: medium
+  status: not-started
+  related_files:
+    - src/docs/ai/ARCHITECTURE_CONSTITUTION.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/WAITING_TASKS.md
+  description: |
+    Constitution anti-debt: scheduled cleanup over eternal compat docs. Delete parallel systems,
+    slim ACTIVE_TASKS, archive changelog older than 60 days, re-run duplication greps.
+  acceptance_criteria:
+    - First sprint completed with a changelog entry listing deletions/consolidations.
+    - ACTIVE_TASKS hot path stays lean (prefer <20KB agent-eligible).
+    - AI_CHANGELOG rotation applied once (older entries to archive).
+    - Re-queue next sprint notes on this task or a successor.
+
+---

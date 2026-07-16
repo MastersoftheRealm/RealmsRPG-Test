@@ -102,25 +102,15 @@ export function equipmentPhaseIndex(
   return visibleEquipmentPhases(armorMode, visibility).indexOf(phase);
 }
 
+/**
+ * Weapon, armor, and Equipment picks are optional (TASK-456).
+ * Selection validation (hands, Currency, Training Points) still applies when items are chosen.
+ */
 export function canCompleteEquipmentPhase(
-  phase: GuidedEquipmentPhase,
-  ctx: EquipmentPhaseCompletionContext
+  _phase: GuidedEquipmentPhase,
+  _ctx: EquipmentPhaseCompletionContext
 ): boolean {
-  switch (phase) {
-    case 'weapon':
-      return (
-        ctx.loadoutWeapons.length > 0 ||
-        (ctx.recommendUnarmed && (ctx.unarmedProwess ?? 0) > 0)
-      );
-    case 'armor':
-      if (shouldSkipArmorPhase(ctx.armorMode)) return true;
-      if (ctx.armorMode === 'optional') return true;
-      return ctx.loadoutArmor.length > 0;
-    case 'gear':
-      return true;
-    default:
-      return false;
-  }
+  return true;
 }
 
 export function canNavigateToEquipmentPhase(

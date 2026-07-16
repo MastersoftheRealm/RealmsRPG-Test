@@ -2,11 +2,21 @@
  * Helpers for opaque metadata in GridListRow detailSections (Phase D/E).
  * Use `metadataDescriptorChip` or `descriptorChipData` (`kind: 'descriptor'`) so chips
  * render as non-expandable DescriptorChips.
+ *
+ * Compact-fact grammar (TASK-454): when a column is omitted, prefer formatters in
+ * `@/lib/detail-option/compact-facts` so chips read as natural language
+ * ("2d6 Slashing damage", "Range 16 Spaces") rather than "Header: value".
  */
 
 import type { ChipData } from '@/components/shared/grid-list-row-types';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
-import { normalizeRangeDisplay } from '@/lib/utils';
+import {
+  abilityRequirementChip,
+  agilityReductionFactChip,
+  damageFactChip,
+  formatActionTypeFact,
+  rangeFactChip,
+} from '@/lib/detail-option/compact-facts';
 
 export type MetadataDetailSection = {
   label: string;
@@ -57,16 +67,14 @@ export function buildRangeDamageMetadataChips(opts: {
 }): ChipData[] {
   const chips: ChipData[] = [];
   pushLabeledFact(chips, 'Energy', opts.energy);
-  pushLabeledFact(chips, 'Action Type', opts.actionType);
+  const actionLabel = formatActionTypeFact(opts.actionType ?? undefined);
+  if (actionLabel) chips.push(metadataDescriptorChip(actionLabel));
   pushLabeledFact(chips, 'Duration', opts.duration);
   pushLabeledFact(chips, 'Area', opts.area);
-  if (opts.range != null && opts.range !== '') {
-    const rangeStr = normalizeRangeDisplay(opts.range);
-    if (rangeStr) chips.push(metadataDescriptorChip(`Range: ${rangeStr}`));
-  }
-  if (opts.damage) {
-    chips.push(metadataDescriptorChip(`Damage: ${opts.damage}`));
-  }
+  const rangeChip = rangeFactChip(opts.range);
+  if (rangeChip) chips.push(rangeChip);
+  const dmgChip = damageFactChip(opts.damage);
+  if (dmgChip) chips.push(dmgChip);
   return chips;
 }
 
@@ -76,14 +84,15 @@ export function buildArmorRequirementMetadataChips(opts: {
 }): ChipData[] {
   const chips: ChipData[] = [];
   if (opts.abilityRequirement?.name && opts.abilityRequirement?.level) {
-    chips.push(
-      metadataDescriptorChip(
-        `Requires: ${opts.abilityRequirement.name} ${opts.abilityRequirement.level}+`
-      )
-    );
+    const reqChip = abilityRequirementChip({
+      name: opts.abilityRequirement.name,
+      level: opts.abilityRequirement.level,
+    });
+    if (reqChip) chips.push(reqChip);
   }
-  if (opts.agilityReduction && opts.agilityReduction > 0) {
-    chips.push(metadataDescriptorChip(`Agility Reduction: -${opts.agilityReduction}`));
+    if (opts.agilityReduction && opts.agilityReduction > 0) {
+    const agilityChip = agilityReductionFactChip(-opts.agilityReduction);
+    if (agilityChip) chips.push(agilityChip);
   }
   return chips;
 }

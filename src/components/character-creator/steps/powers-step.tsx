@@ -45,7 +45,7 @@ const POWER_MODAL_COLUMNS = [
   { key: 'name', label: 'NAME', sortable: true },
   { key: 'Action', label: 'ACTION', sortable: false, align: 'center' as const },
   { key: 'Energy', label: 'EN', sortable: false, align: 'center' as const },
-  { key: 'TP', label: 'TP', sortable: false, align: 'center' as const },
+  { key: 'Training Points', label: 'Training Points', sortable: false, align: 'center' as const },
   { key: 'Damage', label: 'DAMAGE', sortable: false, align: 'center' as const },
 ];
 const POWER_GRID_COLUMNS = '1.4fr 0.8fr 0.5fr 0.5fr 0.7fr';
@@ -55,7 +55,7 @@ const TECHNIQUE_MODAL_COLUMNS = [
   { key: 'Action', label: 'ACTION', sortable: false, align: 'center' as const },
   { key: 'Energy', label: 'ENERGY', sortable: false, align: 'center' as const },
   { key: 'Weapon', label: 'WEAPON', sortable: false, align: 'center' as const },
-  { key: 'Training Pts', label: 'TRAINING PTS', sortable: false, align: 'center' as const },
+  { key: 'Training Points', label: 'Training Points', sortable: false, align: 'center' as const },
 ];
 const TECHNIQUE_GRID_COLUMNS = '1.3fr 0.75fr 0.55fr 1fr 0.75fr';
 type PowerModalTab = 'powers' | 'empowered';
@@ -328,12 +328,12 @@ export function PowersStep() {
           columns: [
             { key: 'Action', value: display.actionType ?? '-', align: 'center' as const },
             { key: 'Energy', value: String(display.energy ?? '-'), align: 'center' as const },
-            { key: 'TP', value: String(display.tp ?? '-'), align: 'center' as const },
+            { key: 'Training Points', value: String(display.tp ?? '-'), align: 'center' as const },
             { key: 'Damage', value: damageStr, align: 'center' as const },
           ],
           detailSections: detailSections.length > 0 ? detailSections : undefined,
           totalCost: display.tp > 0 ? display.tp : undefined,
-          costLabel: display.tp > 0 ? 'TP' : undefined,
+          costLabel: display.tp > 0 ? 'Training Points' : undefined,
           badges: showPathBadge ? [{ label: `(${options!.pathName})`, color: 'gray' as const }] : undefined,
           data: power,
         }];
@@ -386,12 +386,12 @@ export function PowersStep() {
           columns: [
             { key: 'Action', value: actionCol?.value ?? '-', align: 'center' as const },
             { key: 'Energy', value: String(energy || '-'), align: 'center' as const },
-            { key: 'TP', value: String(tp || '-'), align: 'center' as const },
+            { key: 'Training Points', value: String(tp || '-'), align: 'center' as const },
             { key: 'Damage', value: damageCol?.value ?? '-', align: 'center' as const },
           ],
           detailSections: mergeDetailSections(omittedFacts, base.detailSections),
           totalCost: tp > 0 ? tp : undefined,
-          costLabel: tp > 0 ? 'TP' : undefined,
+          costLabel: tp > 0 ? 'Training Points' : undefined,
           data: technique,
         }];
       }),
@@ -442,11 +442,11 @@ export function PowersStep() {
             { key: 'Action', value: display.actionType || '-', align: 'center' as const },
             { key: 'Energy', value: String(display.energy), align: 'center' as const },
             { key: 'Weapon', value: display.weaponName || '-', align: 'center' as const },
-            { key: 'Training Pts', value: String(display.tp), align: 'center' as const },
+            { key: 'Training Points', value: String(display.tp), align: 'center' as const },
           ],
           detailSections: detailSections.length > 0 ? detailSections : undefined,
           totalCost: typeof display.tp === 'number' && display.tp > 0 ? display.tp : undefined,
-          costLabel: typeof display.tp === 'number' && display.tp > 0 ? 'TP' : undefined,
+          costLabel: typeof display.tp === 'number' && display.tp > 0 ? 'Training Points' : undefined,
           badges: showPathBadge ? [{ label: `(${options!.pathName})`, color: 'gray' as const }] : undefined,
           data: tech,
         }];

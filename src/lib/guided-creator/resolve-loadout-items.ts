@@ -5,6 +5,7 @@
 import type { CodexEquipmentItem } from '@/types/codex';
 import type { LibraryItem } from '@/types/library';
 import type { PathItemRecommendation, PathLoadout } from '@/types/archetype';
+import { normalizeId } from '@/lib/utils';
 
 export type LoadoutItemCategory = 'weapon' | 'armor' | 'equipment';
 
@@ -32,10 +33,6 @@ const CATEGORY_LABELS: Record<LoadoutItemCategory, string> = {
   armor: 'Armor',
   equipment: 'Gear',
 };
-
-function normalizeId(id: string): string {
-  return String(id).trim().toLowerCase();
-}
 
 function mapLibraryType(type: string | undefined): LoadoutItemCategory {
   const t = String(type ?? '').toLowerCase();

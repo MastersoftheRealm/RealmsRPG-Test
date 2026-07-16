@@ -14,7 +14,6 @@ import {
 import {
   deriveShieldAmountFromProperties,
   deriveShieldDamageFromProperties,
-  trainingPointsForItemPropertyRef,
 } from '@/lib/calculators';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
@@ -25,6 +24,10 @@ import {
   buildPartsAndMetadataDetailSections,
   propertiesProficienciesSection,
 } from '@/lib/chip/list-row-metadata';
+import {
+  namedPropertyDescriptorChips,
+  TRAINING_POINTS_COST_LABEL,
+} from '@/lib/detail-option/compact-facts';
 import type { PowerPart, TechniquePart, ItemProperty } from '@/hooks/codex-types';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
 
@@ -245,7 +248,7 @@ export function buildSelectableItem(
   let techniqueDisplay: TechniqueColumnDisplay | undefined;
   let detailSections: SelectableItem['detailSections'];
   let totalCost: number | undefined;
-  const costLabel = 'TP';
+  const costLabel = TRAINING_POINTS_COST_LABEL;
   const { powerPartsDb, techniquePartsDb, itemPropertiesDb } = codex;
 
   const effectiveType: LibraryItemType =
@@ -316,28 +319,22 @@ export function buildSelectableItem(
       name?: string;
       op_1_lvl?: number;
     }>;
-    const propertyChips: ChipData[] = props.map((prop) => {
-      const propName = typeof prop === 'string' ? prop : prop?.name ?? '';
-      const dbProp = itemPropertiesDb.find((p) => p.name?.toLowerCase() === String(propName).toLowerCase());
-      const cost = trainingPointsForItemPropertyRef(prop, itemPropertiesDb);
-      const lvl = typeof prop === 'object' && prop?.op_1_lvl != null ? prop.op_1_lvl : 0;
-      const baseDesc = dbProp?.description;
-      const descWithOpt = baseDesc?.trim()
-        ? lvl > 1
-          ? `${baseDesc.trim()}\n\nOption 1: Lv.${lvl}`
-          : baseDesc.trim()
-        : lvl > 1
-          ? `Option 1: Lv.${lvl}`
-          : undefined;
-      return {
-        name: dbProp?.name || propName,
-        description: descWithOpt,
-        cost: cost > 0 ? cost : undefined,
-        costLabel: 'TP',
-        category: (cost > 0 ? 'cost' : 'default') as 'cost' | 'default',
-        level: lvl > 1 ? lvl : undefined,
-      };
-    });
+    const propertyChips: ChipData[] = namedPropertyDescriptorChips(props, itemPropertiesDb).map(
+      (chip) => {
+        const prop = props.find((p) => {
+          const n = typeof p === 'string' ? p : String(p?.name ?? '');
+          return n.toLowerCase() === chip.name.toLowerCase();
+        });
+        const lvl = typeof prop === 'object' && prop?.op_1_lvl != null ? Number(prop.op_1_lvl) : 0;
+        if (lvl <= 1) return chip;
+        const base = chip.description?.trim();
+        return {
+          ...chip,
+          description: base ? `${base}\n\nOption 1: Lv.${lvl}` : `Option 1: Lv.${lvl}`,
+          level: lvl,
+        };
+      }
+    );
     const propertySection = propertiesProficienciesSection(propertyChips);
     detailSections = propertySection ? [propertySection] : undefined;
     totalCost = propertyChips.reduce((sum, c) => sum + (c.cost ?? 0), 0) || undefined;

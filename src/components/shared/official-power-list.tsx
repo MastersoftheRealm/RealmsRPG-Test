@@ -80,7 +80,7 @@ export function OfficialPowerList({
       getChips={(p) => p.parts}
       chipsLabel="Parts"
       getTotalCost={(p) => p.tp}
-      costLabel="TP"
+      costLabel="Training Points"
       errorMessage={errorMessage}
       sectionTitle={sectionTitle}
       searchPlaceholder={searchPlaceholder}

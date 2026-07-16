@@ -86,9 +86,7 @@ export async function fetchCodexArchetypeById(
 
   const { data: row, error } = await supabase
     .from('codex_archetypes')
-    .select(
-      'id, name, type, description, archetype_ability, secondary_ability, power_prof_start, martial_prof_start, power_prof_level5, martial_prof_level5, path_data, level1_feats, level1_skills, level1_powers, level1_techniques, level1_armaments, level1_equipment, level1_recommend_unarmed_prowess, level1_remove_feats, level1_remove_powers, level1_remove_techniques, level1_remove_armaments, level1_notes, level1_recommended_species, level1_guidance_groups, level1_recommended_abilities, level1_loadouts'
-    )
+    .select('*')
     .eq('id', id.trim())
     .maybeSingle();
 
@@ -147,6 +145,11 @@ export async function fetchCodexArchetypeById(
     feats: toStrArray(r.level1_feats),
     skills: toStrArray(r.level1_skills),
     powers: toStrArray(r.level1_powers),
+    innatePowers: toStrArray(
+      r.level1_innate_powers ??
+        level1FromLegacy?.innate_powers ??
+        level1FromLegacy?.innatePowers
+    ),
     techniques: toStrArray(r.level1_techniques),
     armaments: toStrArray(r.level1_armaments),
     equipment: toStrArray(r.level1_equipment),

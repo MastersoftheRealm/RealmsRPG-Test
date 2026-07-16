@@ -1,4 +1,5 @@
 import type { ChipData } from '@/components/shared/grid-list-row-types';
+import { TRAINING_POINTS_COST_LABEL } from '@/lib/detail-option/compact-facts';
 
 export type DisplayPartChip = { text: string; description?: string; finalTP?: number };
 
@@ -16,7 +17,7 @@ export function partChipsFromDisplay(
       name,
       description: chip.description,
       cost: chip.finalTP,
-      costLabel: 'TP',
+      costLabel: TRAINING_POINTS_COST_LABEL,
       category: chip.finalTP && chip.finalTP > 0 ? ('cost' as const) : ('default' as const),
     };
   });
