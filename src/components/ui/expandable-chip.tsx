@@ -86,7 +86,7 @@ export function ExpandableChip({
   tpCost,
   energyCost,
   cost,
-  costLabel = 'TP',
+  costLabel = 'Training Points',
   expandOnCost = false,
   costSuffix,
   level,

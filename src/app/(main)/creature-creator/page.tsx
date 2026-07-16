@@ -279,7 +279,7 @@ function CreatureCreatorContent() {
         ...base,
         detailSections: detailSections.length > 0 ? detailSections : undefined,
         totalCost: display.tp > 0 ? display.tp : undefined,
-        costLabel: display.tp > 0 ? 'TP' : undefined,
+        costLabel: display.tp > 0 ? 'Training Points' : undefined,
         data: displayItem,
       };
     });
@@ -324,7 +324,7 @@ function CreatureCreatorContent() {
         ],
         detailSections: mergeDetailSections(durationFacts, empowered.detailSections),
         totalCost: tp > 0 ? tp : undefined,
-        costLabel: tp > 0 ? 'TP' : undefined,
+        costLabel: tp > 0 ? 'Training Points' : undefined,
         data: {
           ...displayItem,
           sourceData: {
@@ -364,7 +364,7 @@ function CreatureCreatorContent() {
         ...base,
         detailSections: detailSections.length > 0 ? detailSections : undefined,
         totalCost: typeof display.tp === 'number' && display.tp > 0 ? display.tp : undefined,
-        costLabel: typeof display.tp === 'number' && display.tp > 0 ? 'TP' : undefined,
+        costLabel: typeof display.tp === 'number' && display.tp > 0 ? 'Training Points' : undefined,
         data: displayItem,
       };
     });
@@ -386,7 +386,7 @@ function CreatureCreatorContent() {
           name: dbProp?.name || propName,
           description: descWithOpt,
           cost: cost > 0 ? cost : undefined,
-          costLabel: 'TP',
+          costLabel: 'Training Points',
           category: cost > 0 ? ('cost' as const) : ('default' as const),
           level: lvl > 1 ? lvl : undefined,
         };
@@ -419,7 +419,7 @@ function CreatureCreatorContent() {
         ...base,
         detailSections: mergeDetailSections(factSection, propertySection),
         totalCost: totalCost ?? undefined,
-        costLabel: totalCost != null ? 'TP' : undefined,
+        costLabel: totalCost != null ? 'Training Points' : undefined,
         data: displayItem,
       };
     });

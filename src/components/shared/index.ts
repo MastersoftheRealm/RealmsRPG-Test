@@ -257,6 +257,10 @@ export {
 export { ThemeToggle } from './theme-toggle';
 export { InfoTippy } from './info-tippy';
 export type { InfoTippyProps } from './info-tippy';
+export {
+  DescriptorChipWithTip,
+  type DescriptorChipWithTipProps,
+} from './descriptor-chip-with-tip';
 
 // PoweredMartialSlider - Allocation slider for powered-martial characters
 export { PoweredMartialSlider } from './powered-martial-slider';

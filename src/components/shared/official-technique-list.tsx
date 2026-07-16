@@ -82,7 +82,7 @@ export function OfficialTechniqueList({
       getChips={(t) => t.parts}
       chipsLabel="Parts"
       getTotalCost={(t) => t.tp}
-      costLabel="TP"
+      costLabel="Training Points"
       errorMessage={
         errorMessage ?? `Failed to load ${empowered ? 'empowered techniques' : 'techniques'}`
       }

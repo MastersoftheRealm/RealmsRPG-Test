@@ -7,14 +7,13 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CharacterCard, AddCharacterCard } from '@/components/character';
 import { PageContainer, PageHeader, EmptyState, useToast } from '@/components/ui';
 import { Alert } from '@/components/ui/alert';
-import { DeleteConfirmModal, SearchInput, ListHeader, ErrorDisplay } from '@/components/shared';
+import { DeleteConfirmModal, ErrorDisplay } from '@/components/shared';
 import { useCharacters, useDeleteCharacter, useDuplicateCharacter, useAuth } from '@/hooks';
-import { useSort } from '@/hooks/use-sort';
 import { UserPlus } from 'lucide-react';
 
 export default function CharactersPage() {
@@ -28,8 +27,6 @@ function CharactersContent() {
   const { data: characters = [], isLoading, error, refetch } = useCharacters({ enabled: !!user });
   const deleteCharacter = useDeleteCharacter();
   const duplicateCharacter = useDuplicateCharacter();
-  const [search, setSearch] = useState('');
-  const { sortState, handleSort, sortItems } = useSort('name');
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
@@ -78,34 +75,20 @@ function CharactersContent() {
     }
   };
 
-  const filteredCharacters = useMemo(() => {
-    let result = characters;
-
-    if (search.trim()) {
-      const searchLower = search.toLowerCase();
-      result = result.filter(
-        (c) =>
-          c.name.toLowerCase().includes(searchLower) ||
-          (c.archetypeName?.toLowerCase().includes(searchLower) ?? false) ||
-          (c.ancestryName?.toLowerCase().includes(searchLower) ?? false)
-      );
-    }
-
-    return sortItems(result);
-  }, [characters, search, sortItems]);
-
   // Show skeleton until auth resolves too, so logged-in users don't briefly
   // see the guest empty state before their characters query is enabled.
   if (!authInitialized || isLoading) {
     return (
       <PageContainer size="xl">
         <PageHeader title="Characters" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="animate-pulse">
-              <div className="aspect-[3/4] skeleton rounded-xl" />
-              <div className="mt-4 h-5 skeleton rounded w-3/4" />
-              <div className="mt-2 h-4 skeleton rounded w-1/2" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="animate-pulse rounded-xl overflow-hidden bg-surface shadow-md">
+              <div className="aspect-square skeleton" />
+              <div className="p-4 space-y-2">
+                <div className="h-5 skeleton rounded w-3/4" />
+                <div className="h-4 skeleton rounded w-1/2" />
+              </div>
             </div>
           ))}
         </div>
@@ -141,40 +124,19 @@ function CharactersContent() {
       )}
 
       {hasCharacters ? (
-        <div className="space-y-4">
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder="Search characters..."
-          />
-          <ListHeader
-            columns={[
-              { key: 'name', label: 'NAME' },
-              { key: 'level', label: 'LEVEL' },
-              { key: 'updatedAt', label: 'UPDATED' },
-            ]}
-            gridColumns="1fr 0.5fr 0.5fr"
-            sortState={sortState}
-            onSort={handleSort}
-          />
-          {filteredCharacters.length === 0 ? (
-            <EmptyState title="No characters match your search." size="sm" />
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {filteredCharacters.map((character) => (
-                <CharacterCard
-                  key={character.id}
-                  character={character}
-                  onDelete={handleDeleteCharacter}
-                  onDuplicate={handleDuplicateCharacter}
-                  isDeleting={deletingId === character.id}
-                  isDuplicating={duplicatingId === character.id}
-                />
-              ))}
+        <div className="grid grid-cols-1 items-stretch sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {characters.map((character) => (
+            <CharacterCard
+              key={character.id}
+              character={character}
+              onDelete={handleDeleteCharacter}
+              onDuplicate={handleDuplicateCharacter}
+              isDeleting={deletingId === character.id}
+              isDuplicating={duplicatingId === character.id}
+            />
+          ))}
 
-              <AddCharacterCard onClick={handleCreateCharacter} />
-            </div>
-          )}
+          <AddCharacterCard onClick={handleCreateCharacter} />
         </div>
       ) : (
         <EmptyState

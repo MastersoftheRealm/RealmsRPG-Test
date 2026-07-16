@@ -82,7 +82,7 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
   getChips,
   chipsLabel,
   getTotalCost,
-  costLabel = 'TP',
+  costLabel = 'Training Points',
   errorMessage,
   sectionTitle,
   searchPlaceholder,

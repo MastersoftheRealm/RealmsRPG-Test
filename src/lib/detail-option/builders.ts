@@ -3,16 +3,17 @@
  * Keep free of JSX so both server and client modules can import.
  *
  * Facts that used to sit in a Stats column must be labeled chips in the expanded row
- * (e.g. "Uses: 2", "Damage Reduction 3") so values are self-describing.
+ * so values are self-describing. Prefer `@/lib/detail-option/compact-facts` formatters
+ * (TASK-454) for Ability Requirement, handedness, damage, weapon Ability, Range,
+ * Spaces, Action Type, Currency, and Training Points — do not recreate those strings
+ * in feature components.
  */
 
 import type { ChipData } from '@/components/shared/grid-list-row-types';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
-import {
-  trainingPointsForItemPropertyRef,
-  type ItemPropertyTpRow,
-} from '@/lib/calculators/item-calc';
+import type { ItemPropertyTpRow } from '@/lib/calculators/item-calc';
 import type { CodexFeat } from '@/types/codex';
+import { namedPropertyDescriptorChips } from './compact-facts';
 import {
   formatLimitedUsesExpandedHint,
   formatTraitRecoveryLabel,
@@ -88,28 +89,13 @@ export function featToDetailOption(feat: CodexFeat): DetailOptionItemModel {
   };
 }
 
+/**
+ * @deprecated Prefer `namedPropertyDescriptorChips` from compact-facts.
+ * Thin alias so callers share mechanic filtering and "Training Points" cost labels.
+ */
 export function propertyChipsFromRefs(
   properties: Array<string | { name?: string; id?: unknown; op_1_lvl?: number }> | undefined,
   itemProperties: ItemPropertyTpRow[]
 ): ChipData[] {
-  if (!properties?.length) return [];
-  return properties
-    .map((prop) => {
-      const propName = typeof prop === 'string' ? prop : String(prop?.name ?? '');
-      if (!propName.trim()) return null;
-      const dbProp = itemProperties.find(
-        (p) => String(p.name ?? '').toLowerCase() === propName.toLowerCase()
-      );
-      const tp = trainingPointsForItemPropertyRef(prop, itemProperties);
-      const chip: ChipData = {
-        name: dbProp?.name || propName,
-        description: dbProp?.description,
-        cost: tp > 0 ? tp : undefined,
-        costLabel: 'TP',
-        category: tp > 0 ? 'cost' : 'default',
-      };
-      if (!tp && !dbProp?.description) chip.kind = 'descriptor';
-      return chip;
-    })
-    .filter((c): c is ChipData => Boolean(c));
+  return namedPropertyDescriptorChips(properties, itemProperties);
 }

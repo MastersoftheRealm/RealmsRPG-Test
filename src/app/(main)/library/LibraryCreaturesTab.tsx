@@ -1,32 +1,33 @@
 /**
- * Library Creatures Tab
- * =====================
- * User's creatures with search and sort. Full CreatureStatBlock display.
+ * Library Creatures Tab — entity mapping + rows; shell from ADR-0001.
+ * Full CreatureStatBlock display with roll support.
  */
 
 'use client';
 
-import { useState, useMemo } from 'react';
-import Link from 'next/link';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, RefreshCw, Users } from 'lucide-react';
-import {
-  CreatureStatBlock,
-  SearchInput,
-  ListHeader,
-  LoadingState,
-  ErrorDisplay,
-  ListEmptyState,
-  ConfirmActionModal,
-} from '@/components/shared';
+import { Users } from 'lucide-react';
+import { CreatureStatBlock } from '@/components/shared';
 import { RollLog, RollProvider } from '@/components/character-sheet';
 import { useSort } from '@/hooks/use-sort';
-import { useUserCreatures, useDuplicateCreature, usePowerParts, useTechniqueParts, useItemProperties } from '@/hooks';
-import { Button, IconButton, useToast } from '@/components/ui';
+import {
+  useUserCreatures,
+  useDuplicateCreature,
+  usePowerParts,
+  useTechniqueParts,
+  useItemProperties,
+} from '@/hooks';
 import type { DisplayItem } from '@/types';
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
 import { getCreatureSyncResult, sanitizeCreatureForSync } from '@/lib/library-sync';
-import { saveToLibrary } from '@/services/library-service';
+import {
+  LibrarySyncRowAction,
+  UserLibraryEntityTabShell,
+} from './components/UserLibraryEntityTabShell';
+import { CREATURE_LIBRARY_LABELS } from './components/library-entity-tab.types';
+import { useLibraryEntitySync } from './hooks/use-library-entity-sync';
+import { useLibraryDuplicateConfirm } from './hooks/use-library-duplicate-confirm';
 
 const CREATURE_GRID_COLUMNS = '1.8fr 0.6fr 0.8fr 1fr 1fr 0.6fr 0.6fr';
 const CREATURE_HEADER_COLUMNS = [
@@ -45,263 +46,173 @@ interface LibraryCreaturesTabProps {
 
 export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
   const router = useRouter();
-  const { showToast } = useToast();
   const { data: creatures = [], isLoading, error, refetch } = useUserCreatures();
-  const duplicateCreature = useDuplicateCreature();
-  const [search, setSearch] = useState('');
-  const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set());
-  const [syncingAll, setSyncingAll] = useState(false);
-  const [duplicateConfirm, setDuplicateConfirm] = useState<{ id: string; name: string } | null>(null);
-  const [showSyncAllConfirm, setShowSyncAllConfirm] = useState(false);
-  const { sortState, handleSort, sortItems } = useSort('name');
-
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
   const { data: itemPropertiesDb = [] } = useItemProperties();
+  const duplicateCreature = useDuplicateCreature();
+  const [search, setSearch] = useState('');
+  const { sortState, handleSort, sortItems } = useSort('name');
 
-  const myOnlyCreatures = useMemo(() => {
-    if (!creatures.length) return [];
-    const filtered = creatures.filter(c => {
-      if (!search) return true;
-      const searchLower = search.toLowerCase();
-      return (
-        c.name?.toLowerCase().includes(searchLower) ||
-        c.type?.toLowerCase().includes(searchLower) ||
-        c.description?.toLowerCase().includes(searchLower)
-      );
-    });
-    return sortItems(
-      filtered.map(c => {
-        const power = c.powerProficiency ?? 0;
-        const martial = c.martialProficiency ?? 0;
-        const archetype = power > 0 && martial > 0 ? 'Powered-Martial' : power > 0 ? 'Power' : martial > 0 ? 'Martial' : 'None';
-        const level = c.level ?? 1;
-        const abil = c.abilities || {};
-        const hpAlloc = c.hitPoints ?? c.hp ?? 0;
-        const enAlloc = c.energyPoints ?? 0;
-        return {
-          ...c,
-          name: c.name || '',
-          level: c.level ?? 0,
-          size: c.size ?? '',
-          type: c.type ?? '',
-          hp: calculateCreatureMaxHealth(level, abil, hpAlloc),
-          en: calculateCreatureMaxEnergy(level, abil, enAlloc),
-          archetype,
-        };
-      })
-    );
-  }, [creatures, search, sortItems]);
-
-  const driftById = useMemo(() => {
-    const map = new Map<string, { hasDrift: boolean; message?: string }>();
-    for (const c of creatures) {
+  const cardData = useMemo(() => {
+    return creatures.map((c) => {
+      const power = c.powerProficiency ?? 0;
+      const martial = c.martialProficiency ?? 0;
+      const archetype =
+        power > 0 && martial > 0 ? 'Powered-Martial' : power > 0 ? 'Power' : martial > 0 ? 'Martial' : 'None';
+      const level = c.level ?? 1;
+      const abil = c.abilities || {};
+      const hpAlloc = c.hitPoints ?? c.hp ?? 0;
+      const enAlloc = c.energyPoints ?? 0;
       const id = String(c.docId ?? c.id ?? '');
-      if (!id) continue;
-      const r = getCreatureSyncResult(c as unknown as Record<string, unknown> as never, powerPartsDb as never, techniquePartsDb as never, itemPropertiesDb as never);
-      map.set(id, { hasDrift: r.hasDrift, message: r.issues[0]?.message });
-    }
-    return map;
+      const syncResult = getCreatureSyncResult(
+        c as unknown as Record<string, unknown> as never,
+        powerPartsDb as never,
+        techniquePartsDb as never,
+        itemPropertiesDb as never
+      );
+      return {
+        ...c,
+        id,
+        name: c.name || '',
+        level: c.level ?? 0,
+        size: c.size ?? '',
+        type: c.type ?? '',
+        hp: calculateCreatureMaxHealth(level, abil, hpAlloc),
+        en: calculateCreatureMaxEnergy(level, abil, enAlloc),
+        archetype,
+        hasDrift: syncResult.hasDrift,
+        syncMessage: syncResult.issues[0]?.message,
+      };
+    });
   }, [creatures, powerPartsDb, techniquePartsDb, itemPropertiesDb]);
 
-  const driftedCount = useMemo(() => {
-    let n = 0;
-    for (const v of driftById.values()) if (v.hasDrift) n += 1;
-    return n;
-  }, [driftById]);
+  const driftedIds = useMemo(
+    () => cardData.filter((c) => c.hasDrift).map((c) => c.id),
+    [cardData]
+  );
 
-  const handleSyncOne = async (creatureId: string) => {
-    const source = creatures.find((c) => String(c.docId ?? c.id ?? '') === creatureId);
-    if (!source) return;
-    const sanitized = sanitizeCreatureForSync(source as unknown as never, powerPartsDb as never, techniquePartsDb as never, itemPropertiesDb as never);
-    if (!sanitized.hasDrift || !sanitized.changed) return;
+  const sync = useLibraryEntitySync({
+    saveType: 'creatures',
+    sources: creatures,
+    getRowId: (c) => String(c.docId ?? c.id ?? ''),
+    getRowName: (c) => String(c.name ?? ''),
+    driftedIds,
+    sanitize: (source) =>
+      sanitizeCreatureForSync(
+        source as unknown as Record<string, unknown> as never,
+        powerPartsDb as never,
+        techniquePartsDb as never,
+        itemPropertiesDb as never
+      ),
+    refetch,
+    entitySingular: CREATURE_LIBRARY_LABELS.entitySingular,
+    entityPlural: CREATURE_LIBRARY_LABELS.entityPlural,
+  });
 
-    setSyncingIds((prev) => new Set(prev).add(creatureId));
-    try {
-      await saveToLibrary('creatures', sanitized.value as unknown as Record<string, unknown>, { existingId: creatureId });
-      await refetch();
-      showToast(`Synced "${source.name}" to current patch rules.`, 'success');
-    } catch (e) {
-      showToast((e as Error)?.message ?? 'Failed to sync creature', 'error');
-    } finally {
-      setSyncingIds((prev) => {
-        const next = new Set(prev);
-        next.delete(creatureId);
-        return next;
-      });
+  const dup = useLibraryDuplicateConfirm({
+    duplicateTitle: CREATURE_LIBRARY_LABELS.duplicateTitle,
+    isPending: duplicateCreature.isPending,
+    mutate: (id, handlers) => duplicateCreature.mutate(id, handlers),
+  });
+
+  const filteredData = useMemo(() => {
+    let result = cardData;
+    if (search) {
+      const searchLower = search.toLowerCase();
+      result = result.filter(
+        (c) =>
+          c.name?.toLowerCase().includes(searchLower) ||
+          c.type?.toLowerCase().includes(searchLower) ||
+          c.description?.toLowerCase().includes(searchLower)
+      );
     }
-  };
-
-  const handleSyncAll = async () => {
-    if (driftedCount === 0) return;
-    setSyncingAll(true);
-    let synced = 0;
-    try {
-      for (const c of creatures) {
-        const id = String(c.docId ?? c.id ?? '');
-        if (!id) continue;
-        const info = driftById.get(id);
-        if (!info?.hasDrift) continue;
-        const sanitized = sanitizeCreatureForSync(c as unknown as never, powerPartsDb as never, techniquePartsDb as never, itemPropertiesDb as never);
-        if (!sanitized.hasDrift || !sanitized.changed) continue;
-        await saveToLibrary('creatures', sanitized.value as unknown as Record<string, unknown>, { existingId: id });
-        synced += 1;
-      }
-      await refetch();
-      showToast(synced > 0 ? `Synced ${synced} creature${synced === 1 ? '' : 's'} with current patch.` : 'All creatures are already in sync.', 'success');
-    } catch (e) {
-      showToast((e as Error)?.message ?? 'Failed to sync all creatures', 'error');
-    } finally {
-      setSyncingAll(false);
-    }
-  };
-
-  if (error) {
-    return <ErrorDisplay message="Failed to load creatures" subMessage="Please try again later" onRetry={() => refetch()} />;
-  }
-
-  if (!isLoading && (!creatures || creatures.length === 0)) {
-    return (
-      <ListEmptyState
-        icon={<Users className="w-8 h-8" />}
-        title="No creatures yet"
-        message="Create your first creature to see it here in your library."
-        action={
-          <Button asChild>
-            <Link href="/creature-creator">
-              <Plus className="w-4 h-4" />
-              Create Creature
-            </Link>
-          </Button>
-        }
-      />
-    );
-  }
+    return sortItems(result);
+  }, [cardData, search, sortItems]);
 
   return (
     <RollProvider canRoll>
-      <div>
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <SearchInput value={search} onChange={setSearch} placeholder="Search creatures..." />
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setShowSyncAllConfirm(true)}
-            disabled={driftedCount === 0 || syncingAll}
-          >
-            <RefreshCw className={`w-4 h-4 ${syncingAll ? 'animate-spin' : ''}`} />
-            Sync with current patch
-            {driftedCount > 0 ? ` (${driftedCount})` : ''}
-          </Button>
+      <UserLibraryEntityTabShell
+        labels={CREATURE_LIBRARY_LABELS}
+        isLoading={isLoading}
+        error={error}
+        onRetry={() => void refetch()}
+        totalCount={cardData.length}
+        emptyIcon={<Users className="w-8 h-8" />}
+        search={search}
+        onSearchChange={setSearch}
+        sortState={sortState}
+        onSort={handleSort}
+        headerColumns={CREATURE_HEADER_COLUMNS}
+        gridColumns={CREATURE_GRID_COLUMNS}
+        filteredCount={filteredData.length}
+        driftedCount={sync.driftedCount}
+        syncingAll={sync.syncingAll}
+        showSyncAllConfirm={sync.showSyncAllConfirm}
+        onOpenSyncAllConfirm={() => sync.setShowSyncAllConfirm(true)}
+        onCloseSyncAllConfirm={() => sync.setShowSyncAllConfirm(false)}
+        onConfirmSyncAll={() => {
+          sync.setShowSyncAllConfirm(false);
+          void sync.handleSyncAll();
+        }}
+        duplicateConfirm={dup.duplicateConfirm}
+        onCloseDuplicate={dup.closeDuplicateConfirm}
+        onConfirmDuplicate={dup.onConfirmDuplicate}
+        duplicatePending={dup.isPending}
+        listClassName=""
+        afterList={<RollLog />}
+      >
+        <div className="space-y-3">
+          {filteredData.map((creature) => (
+            <CreatureStatBlock
+              key={creature.docId}
+              creature={{
+                id: creature.docId,
+                name: creature.name,
+                description: creature.description,
+                level: creature.level,
+                type: creature.type,
+                size: creature.size,
+                hp: creature.hp,
+                hitPoints: creature.hitPoints,
+                energyPoints: creature.energyPoints,
+                abilities: creature.abilities,
+                defenses: creature.defenses,
+                powerProficiency: creature.powerProficiency,
+                martialProficiency: creature.martialProficiency,
+                resistances: creature.resistances,
+                weaknesses: creature.weaknesses,
+                immunities: creature.immunities,
+                conditionImmunities: creature.conditionImmunities,
+                senses: creature.senses,
+                movementTypes: creature.movementTypes,
+                languages: creature.languages,
+                skills: creature.skills,
+                powers: creature.powers,
+                techniques: creature.techniques,
+                feats: creature.feats,
+                armaments: creature.armaments,
+              }}
+              badges={creature.hasDrift ? [{ label: 'Needs sync', color: 'amber' }] : undefined}
+              warningMessage={creature.syncMessage}
+              rightSlot={
+                creature.hasDrift ? (
+                  <LibrarySyncRowAction
+                    syncing={sync.syncingIds.has(creature.id)}
+                    onSync={() => void sync.handleSyncOne(creature.id)}
+                  />
+                ) : undefined
+              }
+              onEdit={() => {
+                const id = creature.docId ?? creature.id;
+                router.push(`/creature-creator?edit=${encodeURIComponent(String(id))}`);
+              }}
+              onDelete={() => onDelete({ id: creature.docId, name: creature.name } as DisplayItem)}
+              onDuplicate={() => dup.openDuplicateConfirm(String(creature.docId), creature.name)}
+            />
+          ))}
         </div>
-        <ListHeader
-          columns={CREATURE_HEADER_COLUMNS}
-          gridColumns={CREATURE_GRID_COLUMNS}
-          sortState={sortState}
-          onSort={handleSort}
-        />
-        {isLoading ? (
-          <LoadingState />
-        ) : myOnlyCreatures.length === 0 ? (
-          <ListEmptyState title="No creatures match your search." size="sm" />
-        ) : (
-          <div className="space-y-3">
-            {myOnlyCreatures.map(creature => (
-              <CreatureStatBlock
-                key={creature.docId}
-                creature={{
-                  id: creature.docId,
-                  name: creature.name,
-                  description: creature.description,
-                  level: creature.level,
-                  type: creature.type,
-                  size: creature.size,
-                  hp: creature.hp,
-                  hitPoints: creature.hitPoints,
-                  energyPoints: creature.energyPoints,
-                  abilities: creature.abilities,
-                  defenses: creature.defenses,
-                  powerProficiency: creature.powerProficiency,
-                  martialProficiency: creature.martialProficiency,
-                  resistances: creature.resistances,
-                  weaknesses: creature.weaknesses,
-                  immunities: creature.immunities,
-                  conditionImmunities: creature.conditionImmunities,
-                  senses: creature.senses,
-                  movementTypes: creature.movementTypes,
-                  languages: creature.languages,
-                  skills: creature.skills,
-                  powers: creature.powers,
-                  techniques: creature.techniques,
-                  feats: creature.feats,
-                  armaments: creature.armaments,
-                }}
-                badges={driftById.get(String(creature.docId))?.hasDrift ? [{ label: 'Needs sync', color: 'amber' }] : undefined}
-                warningMessage={driftById.get(String(creature.docId))?.message}
-                rightSlot={driftById.get(String(creature.docId))?.hasDrift ? (
-                  <IconButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      void handleSyncOne(String(creature.docId));
-                    }}
-                    label="Sync with current patch"
-                    className="text-warning-fg hover:opacity-80"
-                  >
-                    <RefreshCw className={`w-4 h-4 ${syncingIds.has(String(creature.docId)) ? 'animate-spin' : ''}`} />
-                  </IconButton>
-                ) : undefined}
-                onEdit={() => {
-                  const id = creature.docId ?? creature.id;
-                  router.push(`/creature-creator?edit=${encodeURIComponent(String(id))}`);
-                }}
-                onDelete={() => onDelete({ id: creature.docId, name: creature.name } as DisplayItem)}
-                onDuplicate={() => setDuplicateConfirm({ id: String(creature.docId), name: creature.name })}
-              />
-            ))}
-          </div>
-        )}
-        <RollLog />
-
-        <ConfirmActionModal
-          isOpen={!!duplicateConfirm}
-          onClose={() => setDuplicateConfirm(null)}
-          onConfirm={() => {
-            if (!duplicateConfirm) return;
-            duplicateCreature.mutate(duplicateConfirm.id, {
-              onSuccess: () => {
-                showToast(`Duplicated "${duplicateConfirm.name}"`, 'success');
-                setDuplicateConfirm(null);
-              },
-              onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error'),
-            });
-          }}
-          title="Duplicate creature?"
-          description={
-            duplicateConfirm
-              ? `Create a copy of "${duplicateConfirm.name}" in your library?`
-              : ''
-          }
-          confirmLabel="Duplicate"
-          loadingLabel="Duplicating..."
-          isLoading={duplicateCreature.isPending}
-        />
-
-        <ConfirmActionModal
-          isOpen={showSyncAllConfirm}
-          onClose={() => setShowSyncAllConfirm(false)}
-          onConfirm={() => {
-            setShowSyncAllConfirm(false);
-            void handleSyncAll();
-          }}
-          title="Sync with current patch?"
-          description={`Sync ${driftedCount} creature${driftedCount === 1 ? '' : 's'} to current patch rules. Parts, techniques, or properties that no longer exist in the codex may be removed.`}
-          confirmLabel="Sync all"
-          loadingLabel="Syncing..."
-          isLoading={syncingAll}
-        />
-      </div>
+      </UserLibraryEntityTabShell>
     </RollProvider>
   );
 }

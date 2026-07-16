@@ -241,7 +241,7 @@ function renderInteractiveGridRows(
         (item.partsChips?.length || item.chips?.length ? 'Parts & Proficiencies' : undefined)
       }
       totalCost={item.totalTp && item.totalTp > 0 ? item.totalTp : undefined}
-      costLabel={item.totalTp && item.totalTp > 0 ? 'TP' : undefined}
+      costLabel={item.totalTp && item.totalTp > 0 ? 'Training Points' : undefined}
       requirements={!item.columns ? item.requirements : undefined}
       innate={item.innate === true}
       hideInnateBadge={item.hideInnateBadge}

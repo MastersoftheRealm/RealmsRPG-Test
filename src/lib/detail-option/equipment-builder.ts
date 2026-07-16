@@ -8,7 +8,6 @@ import {
   armorStatsForRef,
   catalogRowForRef,
   buildEquipmentCatalogRows,
-  gearShortUseForRef,
   libraryRowForRef,
   weaponDamageLineForRef,
 } from '@/lib/guided-creator/equipment-catalog-rows';
@@ -23,7 +22,17 @@ import type { LibraryItem } from '@/types/library';
 import type { ChipData } from '@/components/shared/grid-list-row-types';
 import { deriveShieldAmountFromProperties } from '@/lib/calculators';
 import type { ItemPropertyPayload } from '@/lib/calculators/item-calc';
-import { factChip, propertyChipsFromRefs, type DetailOptionItemModel } from './builders';
+import { factChip, type DetailOptionItemModel } from './builders';
+import { damageFactChip } from './compact-facts';
+
+function isBudgetChip(name: string): boolean {
+  const n = name.toLowerCase();
+  return /^currency\s/.test(n) || /^training points\s/.test(n);
+}
+
+function isDamageDiceChip(name: string): boolean {
+  return /\bdamage\b/i.test(name) && /\dd\d/i.test(name);
+}
 
 export function equipmentRefToDetailOption(
   ref: PathItemRecommendation,
@@ -39,10 +48,6 @@ export function equipmentRefToDetailOption(
   const lib = libraryRowForRef(ref.id, officialItems, codexEquipment ?? []);
   const properties =
     (lib && 'properties' in lib ? lib.properties : row?.properties) ?? [];
-  const propertyChips = propertyChipsFromRefs(
-    properties as Array<string | { name?: string; id?: unknown; op_1_lvl?: number }>,
-    itemProperties
-  );
   const itemType = String(
     (lib && 'type' in lib ? lib.type : row?.type) ?? ''
   ).toLowerCase();
@@ -55,12 +60,12 @@ export function equipmentRefToDetailOption(
       category: 'weapon',
       properties: properties as never,
       damageLine: damage,
+      itemProperties,
     });
-    if (damage) factChips.push(factChip(`Damage ${damage}`));
+    const dmgChip = damageFactChip(damage);
+    if (dmgChip) factChips.push(dmgChip);
     for (const chip of phase.factChips) {
-      const n = chip.name.toLowerCase();
-      if (n.startsWith('damage ')) continue;
-      if (/^currency\s/i.test(n)) continue;
+      if (isDamageDiceChip(chip.name) || isBudgetChip(chip.name)) continue;
       factChips.push(chip);
     }
   } else if (isShield) {
@@ -72,39 +77,43 @@ export function equipmentRefToDetailOption(
     const phase = buildEquipmentPhaseCardStats({
       category: 'weapon',
       properties: properties as never,
+      itemProperties,
     });
     for (const chip of phase.factChips) {
       const n = chip.name.toLowerCase();
-      if (n === 'handedness one-handed') continue;
-      if (/^currency\s/i.test(n)) continue;
+      if (n === 'one-handed' || isBudgetChip(chip.name)) continue;
       factChips.push(chip);
     }
   } else if (resolved.category === 'armor') {
     const armor = armorStatsForRef(ref.id, officialItems, codexEquipment ?? []);
-    if (armor.damageReduction != null) {
-      factChips.push(factChip(`Damage Reduction ${armor.damageReduction}`));
-    }
-    if (armor.agilityPenalty != null && armor.agilityPenalty !== 0) {
-      const n = armor.agilityPenalty;
-      factChips.push(
-        factChip(`Agility ${n > 0 ? '+' : ''}${n}`)
-      );
+    const phase = buildEquipmentPhaseCardStats({
+      category: 'armor',
+      properties: properties as never,
+      damageReduction: armor.damageReduction,
+      agilityPenalty: armor.agilityPenalty,
+      itemProperties,
+    });
+    for (const chip of phase.detailChips) {
+      factChips.push(chip);
     }
   } else {
-    const shortUse = gearShortUseForRef(ref.id, officialItems, codexEquipment ?? []);
-    if (shortUse) {
-      const labeled = /^use\b/i.test(shortUse) ? shortUse : `Use ${shortUse}`;
-      factChips.push(factChip(labeled));
+    // Equipment: description on the row — no Use-duplicate chip.
+    const phase = buildEquipmentPhaseCardStats({
+      category: 'equipment',
+      properties: properties as never,
+      itemProperties,
+    });
+    for (const chip of phase.detailChips) {
+      factChips.push(chip);
     }
   }
 
-  const chips = [...factChips, ...propertyChips];
   const qtySuffix = ref.quantity > 1 ? ` ×${ref.quantity}` : '';
   return {
     id: String(ref.id),
     name: `${resolved.name}${qtySuffix}`,
     description: resolved.description,
-    chips: chips.length > 0 ? chips : undefined,
+    chips: factChips.length > 0 ? factChips : undefined,
     chipsLabel: 'Details',
   };
 }

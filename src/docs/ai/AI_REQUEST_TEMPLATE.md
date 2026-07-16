@@ -1,6 +1,6 @@
 # AI Request Template
 
-Use this template when converting raw feedback into an actionable request to be added to `AI_TASK_QUEUE.md`.
+Use this template when converting raw feedback into an actionable request to be added to `ACTIVE_TASKS.md`.
 
 ---
 - id: TASK-###
@@ -66,4 +66,4 @@ Example:
     - Run `npm run build` successfully
     - Manual verification: create character, add skill, save, reload
   notes: |
-    Reference AGENT_GUIDE.md (Unified patterns) and DESIGN_SYSTEM.md for component patterns.
+    Reference ARCHITECTURE_CONSTITUTION.md + AGENT_GUIDE.md (on demand) and DESIGN_SYSTEM.md for component patterns.

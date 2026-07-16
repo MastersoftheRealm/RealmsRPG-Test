@@ -1,0 +1,158 @@
+> Back: [`AGENT_GUIDE.md`](../AGENT_GUIDE.md) · Core: [`ARCHITECTURE_CONSTITUTION.md`](../ARCHITECTURE_CONSTITUTION.md)
+
+# Floating UI & Contextual Help (TASK-376 ✅ / TASK-392 ✅)
+
+**Authority for agents:** This appendix is the decision guide for `@floating-ui/react`, `InfoTippy`, and related patterns. Product vision context: `REALMS_PRODUCT_OVERVIEW.md` § 2.6.
+
+**Owner decision (2026-06-25):** Static copy in `public/tooltip-text.tsx` is the **only** contextual-help standard. Legacy DB tooltips were removed in TASK-376 (Jun 2026). **Engine:** `@floating-ui/react` via `InfoTippy` (TASK-392, Jun 2026).
+
+## If you authored PR #14 (Collin-tooltipExperimentation)
+
+Your Floating UI work **is in the repo** — it was extracted into shared primitives during the KadinBranch + `master` merge (`0e62d157`). Read **`src/lib/tooltips/README.md`** first.
+
+| You remember… | Look here now |
+|---------------|---------------|
+| `tooltip.tsx` with inline `useFloating` | `floating-help.tsx` (panel/placement) + `tooltip.tsx` (thin wrapper) |
+| `ContextHelpTooltip` + `tooltipKey` | `InfoTippy` + `tooltip-text.tsx`; keys → `legacy-tooltip-key-map.ts` |
+| `HelpTooltip` | `InfoTippy` |
+| Skills help inside `skills-allocation-page.tsx` | Parent passes `headingAddon` / `addSubSkillAddon` (`skills-step.tsx`, creature creator) |
+| DB `/api/tooltips`, admin tooltips page | **Removed** — edit `tooltip-text.tsx` and deploy |
+
+## Two layers — do not conflate them
+
+| Layer | What it is | When agents touch it |
+|-------|------------|----------------------|
+| **`@floating-ui/react`** | Positioning + interaction **engine** (flip/shift, portal, hover/focus/dismiss, ARIA). Successor to Popper/Tippy. | Import **only inside shared primitives** (`InfoTippy` today). Do **not** sprinkle `useFloating` across feature pages unless adding a **new shared** anchored component (see below). |
+| **`InfoTippy`** | **Product component** for contextual **help**: Info trigger (or custom child), copy from `tooltip-text.tsx`, mobile touch-hold, interactive JSX lists. | Any time you add optional "what is this?" / rules help on a page or step. |
+
+`InfoTippy` is **not** a generic tooltip primitive. It is opinionated help chrome. Do not use it for nav menus, filters, or dynamic stat breakdowns.
+
+## Decision matrix — what to use when
+
+| User need | Use | Do **not** use |
+|-----------|-----|----------------|
+| Optional rules / step help beside a heading | **`InfoTippy`** + export in `tooltip-text.tsx` | Raw Floating UI on the page, `Tooltip` from `@/components/ui`, `title=` only |
+| Help on a non-Info control (e.g. ability pick button) | **`InfoTippy`** with `children` + `label` / child `aria-label` | Separate tooltip library |
+| Level-aware help copy (points at level N) | Helper in **`tooltip-text.tsx`** (e.g. `getAbilityPointsHelp`) → **`InfoTippy`** | Inline paragraph duplicating rules |
+| Rich help (bullets, bold, JSX) | JSX export in **`tooltip-text.tsx`** → **`InfoTippy`** `content` | DB tooltips, markdown in random components |
+| Full-screen or multi-step flow | **`Modal`** (`fullScreenOnMobile` on mobile) | InfoTippy |
+| Pick one option from a list (filters, sort) | **`Select`**, **`SelectFilter`**, **`ChipSelect`**, native `<select>` | InfoTippy |
+| Nav dropdown (Library links, account menu) | Existing header / menu pattern; **future:** shared **`AnchoredMenu`** on Floating UI | InfoTippy |
+| Click-to-open panel (actions, compact picker) | **Future:** shared **`AnchoredPopover`** on Floating UI; until then, extend nearest existing pattern | InfoTippy, one-off `absolute top-full` without a plan to unify |
+| Post-activation sheet tour / highlight chain (TASK-388) | Dedicated tour/highlight system (not built) | InfoTippy chain for walkthroughs |
+| Primary step guidance (Path mode) | **`PathHelpCard`**, **`GuidedChoiceShell`** `guidance` slot, step description prose | InfoTippy alone as the only guidance |
+| Styleguide / demo only | **`Tooltip`** from `@/components/ui` | InfoTippy |
+
+**Rule of thumb:** If the user can **ignore it and still complete the task**, and copy is **static and reviewable**, use **`InfoTippy`**. If the UI **must be used to proceed** or is **navigation**, use the appropriate modal/menu/select pattern.
+
+## When to use `InfoTippy` (all should be true)
+
+1. Copy lives in (or is returned from) **`public/tooltip-text.tsx`**
+2. Help is **supplementary** — not the only explanation of a required action
+3. Panel is **small** (~320px max; strings or short JSX)
+4. Trigger is the **Info icon** (default) or a **single DOM element** via `children`
+
+## When to use `@floating-ui/react` directly
+
+Use the dependency **inside `@/components/shared` or `@/components/ui`**, not ad hoc on feature pages, when:
+
+- Adding a **new reusable** anchored pattern (popover, menu, combobox, context menu)
+- Refactoring an existing **manual `absolute` + portal** floater that appears in **multiple** places (e.g. header dropdowns)
+
+**Before creating a new Floating UI wrapper:** grep for existing components; extend with a prop/variant first. Name future primitives clearly (`AnchoredPopover`, `AnchoredMenu`) — not `InfoTippy`.
+
+**Not yet in the repo:** `AnchoredPopover` / `AnchoredMenu`. Until they exist, do not block feature work — but avoid copying positioning logic; note a follow-up to consolidate.
+
+## Surfaces — wired today vs planned
+
+| Surface | Status | Notes |
+|---------|--------|-------|
+| Character creator (all steps) | ✅ Wired | `size="inline"` on step headings; archetype ability buttons use `children` |
+| `characters/new` page header | ✅ Wired | |
+| Navbar Library / Codex | ✅ Wired | `placement="bottom"` |
+| Campaigns hub | ✅ Wired | |
+| Character sheet | ⬜ Planned | First-exposure help per `REALMS_PRODUCT_OVERVIEW.md` § 11 |
+| Standalone creators (power, technique, item, …) | ⬜ Planned | When Layer 1 UX lands |
+| Encounters, crafting, Codex/Library browse | ⬜ Planned | Scoped section help only where dense |
+
+## How to add contextual help (agent checklist)
+
+1. **Search** — grep `tooltip-text.tsx` and existing `InfoTippy` on the same surface; reuse or extend copy.
+2. **Copy** — add a string, JSX export, or helper to `public/tooltip-text.tsx` (one file; no DB).
+3. **Wire** — import `InfoTippy` from `@/components/shared`:
+   - Page/step title: `<InfoTippy content={…} label="…" size="inline" />`
+   - Default icon trigger: omit `children`; **`label` is required** (becomes `aria-label`).
+   - Custom trigger: pass `children` (single element); child needs its own `aria-label`; keep `label` for consistency.
+4. **Mobile** — default touch-hold (~400ms) is built in; do not add parallel click handlers.
+5. **A11y** — every trigger has a discernable name; do not rely on `title` alone.
+6. **Verify** — hover, keyboard focus, touch-hold on ~360px width; JSX lists allow pointer into panel.
+
+## `InfoTippy` API (quick reference)
+
+| Prop | Purpose |
+|------|---------|
+| `content` | `string` or JSX from `tooltip-text.tsx` |
+| `label` | Accessible name (required) |
+| `size` | `'icon'` (default, 44px touch) or `'inline'` (compact, step headings) |
+| `placement` | `'top' \| 'bottom' \| 'left' \| 'right'` |
+| `children` | Optional custom trigger element |
+| `allowHTML` | **Deprecated** — no-op; kept for call-site compat |
+
+Implementation: `src/components/shared/info-tippy.tsx` (product API) + shared Floating UI chrome in `src/lib/tooltips/floating-help.tsx` (arrow, transitions, placement — ported from Collin PR #14). Styleguide `Tooltip` in `@/components/ui` reuses the same primitive. Types: `InfoTippyProps` exported from `@/components/shared`.
+
+## Do not use (removed / wrong tool)
+
+| Legacy or wrong | Replacement |
+|-----------------|-------------|
+| `useTooltipByKey`, `useTooltips`, `ContextHelpTooltip`, `HelpTooltip` | `InfoTippy` + `tooltip-text.tsx` |
+| Admin `/admin/tooltips`, `/api/tooltips`, user show-tooltips toggle | Edit `tooltip-text.tsx`; deploy |
+| `ui_tooltips` table / `show_tooltips` column | Dropped 2026-06-30 (DEV-376) — `sql/drop-legacy-ui-tooltips-2026-06.sql` |
+| `@tippyjs/react`, `tippy.js` | Removed (TASK-392) |
+| `Tooltip` from `@/components/ui` for product help | `InfoTippy` only |
+
+## Related patterns (not InfoTippy)
+
+- **`PathHelpCard` / `GuidedChoiceShell` / `GuidedLayerNav`** — path-mode prose and **Layer 1 ↔ 2/3** chrome. **`GuidedLayerNav`**: expand = `outline` button below content; collapse = `secondary` button below content (same slot). Use on guided creator steps and any creator step with progressive disclosure.
+- **Selection grammar (cards ↔ GridListRow)** — Canonical rules in [`REALMS_PRODUCT_OVERVIEW.md`](../../REALMS_PRODUCT_OVERVIEW.md) **§3.1**:
+  - **Ladder A (entity depth):** Glance → **See more** (in-card) → **More details** (modal or lots of chip/fact disclosure). Same facts whether chrome is a card or a GridListRow.
+  - **Ladder B (catalog breadth):** Curated cards → **See more options** (filtered GridListRow browse) → **See all** / Forge.
+  - **When:** few curated picks → `GuidedChoiceCard`; many / searchable → `GridListRow`. Do not densify cards into column grids.
+  - **Layer 1 choice principle:** identity and fighting-style steps still require deliberate picks (no weapon/armor quick kits). Soft defaults OK for ability arrays and optional gear Add-all.
+- **Choice-card disclosure vs catalog Layer 2** — Do **not** conflate (subset of §3.1). Copy: `GUIDED_CREATOR_COPY.choiceCard`.
+  | Affordance | Component | Opens |
+  |------------|-----------|--------|
+  | **See more…** / **See less** | `GuidedChoiceCard` inline expand | Truncated description, notices, content that stays *on the card* |
+  | **More details** / **Less details** | `onDetails` → `GuidedEntityDetailModal` | Entity modal — opening More details alone does **not** select; path/species detail footers offer **Close** (left) + **Select** (right) to apply without returning to the card |
+  | **See more options** / browse | `GuidedLayerNav` / `UnifiedSelectionModal` | Catalog Layer 2–3 (more *choices*) |
+  Do **not** invent specialist verbs ("Property details", "Read more", "Hide properties"). REALMS §3.1 / §5.0.1 / §5.7.
+  **Chapter rail vs Back:** `setSubStep` (chapter chrome / edit jump) sets `navigationIntent: 'first'` so multi-screen steps land on their first inner screen (Foundation → path; Ancestry → species overview; Archetype → skills; Loadout → loadout's first phase). Footer **Back** / **Continue** use `prevSubStep` / `nextSubStep` (`navigationIntent: 'sequential'`) and keep sequential history.
+  **Option rows inside deep-dive (and remodeled legacy lists):** use `DetailOptionList` + builders in `@/lib/detail-option` (`traitToDetailOption`, `featToDetailOption`, `equipmentRefToDetailOption`, `powerToDetailOption` / `techniqueToDetailOption` / `resolveCombatDetailOption`, `propertyChipsFromRefs`, **`compact-facts` formatters**). Prefer flat equipment recommendation builders over kit helpers after TASK-442. Do not fork parallel GridListRow markup for the same catalogs.
+  **GridListRow fact policy (sitewide) — column vs chip (TASK-454 / TASK-461):** If a fact would normally be a list column (Damage, Range, Damage Reduction, Action Type, Energy, Uses, Duration, etc.), either keep a real column with a header **or** put a **self-describing** chip using natural language — never "Header: value" and never an unlabeled leftover.
+  - **Keep columns** in dense comparison / browse views (Library, Codex, add modals, sheet library, L2 equipment grids): `ListHeader` columns when space allows; chips supplement (properties/parts), they do not replace column facts. Do **not** flatten full comparison tables into chips. Dense L3 table headers may keep short **TP**; chip `costLabel` / L1–L2 chrome use full **Training Points** (`TRAINING_POINTS_COST_LABEL`).
+  - **Compact into chips** when columns are omitted (deep-dive catalogs, choice cards, progressive disclosure). Use `@/lib/detail-option/compact-facts` — do not recreate these strings in feature components:
+    | Fact | Chip language |
+    |------|----------------|
+    | Ability Requirement | `Strength Requirement 3+` (never "Ability Requirement Strength…", never "Weapon/Armor …") |
+    | Handedness | `Two-handed` (never "Handedness: Two-handed") |
+    | Damage | `2d6 Slashing Damage` (capitalize Damage; do not also chip Weapon Damage) |
+    | Weapon Ability | `Strength Weapon` / `Agility Weapon` (Finesse) / `Acuity Weapon` (ranged non-Finesse) |
+    | Range / Spaces | `Range 16 Spaces` / `3 Spaces` (capitalize Spaces) |
+    | Action Type (desc chip) | Value only: `Quick Action` / `Basic Reaction` (`actionTypeFactChip` / `formatActionTypeValue`) — column header or ListHeader keeps the **Action Type** label; use `formatActionTypeFact` only for labeled metadata when no Action Type column exists |
+    | Energy | `Energy 4` (`energyFactChip`) |
+    | Currency / Training Points | `Currency 12` / `Training Points 4` (full words in L1/L2) |
+  - **Do not repeat if already represented:** When a dedicated compact-fact / column covers a mechanic (Damage, Damage Reduction, Range, Ability Requirement), omit the matching named property chip. **Armor Base** / **Shield Base** are calculation-only — never user-facing chips.
+  - **L1 named property chips:** property **name only** (Graze, Cleave) — do not append Training Points on those desc chips; budgets stay in title-adjacent Currency / Training Points. Pass `includeCost: true` only for dense browse surfaces that still need TP on the chip.
+  - **Non-mechanic properties** (Graze, Cleave, …): non-expanding `kind: 'descriptor'` chips via `namedPropertyDescriptorChips` / `propertyDescriptorChip`. When a description exists, render with **`DescriptorChipWithTip`** — InfoTippy `size="inline"` **inside** the chip (not a sibling beside it). Guided cards: `GuidedFactChipRow`. GridListRow: `GridListChip` routes descriptors through `DescriptorChipWithTip`. Same inside-pattern for section help (e.g. Training Points `InfoTippy` via `PointStatus.labelAccessory` in `LoadoutBudgetBar`).
+  - **Guided Loadout budgets:** reuse `LoadoutBudgetBar` (Currency optional + Training Points + tip inside label) — do not fork PointStatus chrome in phase layout / L2 footer / powers step.
+  - **Deep-dive / progressive-disclosure catalogs** (`DetailOptionList`, choice-card More details): Name + Description only is fine (`showColumnHeaders={false}`); every omitted column fact must appear as a self-describing chip in the expanded row.
+  - **Card anatomy / disclosure boundary:** Supporting facts, chips, and controls belong **above** See more / See less / More details. Do **not** append orphan facts or controls below that disclosure row. Guided weapon/armor cards (TASK-457): **Currency** / **Training Points** are `titleMeta` beside the name; mechanic + named-property chips live in `expandedExtra` (See more) via `DescriptorChipWithTip` — never expandable chips in the collapsed body, never chips under the disclosure row.
+  - **Audit inventory (TASK-437 / TASK-461):** Library / Official / sheet sections column-complete; expand property/part chips use Training Points cost labels. Codex + Admin Equipment: Damage + Dmg. Red. columns (Weight chip). Add/load powers: Energy/Action/Duration/Area/Damage + Range chip. Creator powers: compact columns + Duration/Area/Range chips; techniques keep Action; empowered remap preserves Duration/Area as chips. Creature creator: power Duration chip; armament Damage/Range/DR chips. Sheet inventory cost badge = `Cost Nc`. Equipment-step weapons: Range chip. Do not strip browse columns to chip-ify them.
+  - **Id keys:** prefer `normalizeId` from `@/lib/utils` for trim+lowercase map/Set keys (guided equipment catalog helpers).
+- **Stable expand toggle (sitewide, TASK-445):** Click-to-expand controls must keep the toggle under the pointer so a second click closes without mouse travel. Expanding may push siblings and grow content; the opened control's origin (especially vertical) must not jump. Aligns with accordion best practice (whole header is the target; animate/grow the panel below — CMS DS, NN/g Fitts's law) and WCAG target-size guidance.
+  - **ExpandableChip / ChipGroup:** Host wrap groups with `data-chip-group` (ChipGroup does this). Do **not** force `w-full` on expand inside flex-wrap — that reboots the wrap row. ExpandableChip measures remaining row width (`measureStableExpandWidth`) from the collapsed left edge; equal collapsed/expanded header padding; header labels truncate (no wrap).
+  - **GridListRow / CollapsibleSection:** Expand content below the header/trigger; keep the trigger fixed (`items-start`; fixed one-line meta slot).
+  - **GridListRow description teaser:** Collapsed rows may show a truncated `columns` entry with `key: 'description'`. When the default expanded body also renders `description`, GridListRow **hides that teaser while expanded** (desktop column, mobile summary, flex stats) so the full text appears once in the panel — Carbon/NN/g progressive disclosure (expanded panel = supplementary detail, not a second copy). Description-only column layouts span the name across the vacated tracks.
+  - **GuidedChoiceCard:** See more / See less / More details sit **below** body copy (product placement). **Nothing** (facts, chips, quantity, cost) may render **under** that disclosure row. Use `titleMeta` for title-adjacent budget chips; `expandedExtra` for See more facts; `beforeDisclosure` for controls that must stay visible above the row (e.g. Equipment quantity). Card height is stabilized via density min-height; empty disclosure action-row is reserved while collapsed, not when expanded with only an info notice (feats/traits). Chip/row expands still follow stable-toggle.
+  - **Avoid:** Wrapping an expanded chip in `w-full` / `flex-1` solely to "make room." Putting "See more" under growing text.
+- **`Modal`** — Layer 2/3 selection, wizards, and choice-card deep-dive; `fullScreenOnMobile` per `MOBILE_UX.md`.
+- **Marketing / landing copy** — `src/lib/constants/copy/*`; do not merge into `tooltip-text.tsx` (TASK-390).

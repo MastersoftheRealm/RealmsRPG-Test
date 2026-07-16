@@ -18,49 +18,29 @@ import {
 } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from './use-guided-path-data';
-import { GuidedStepEditLink } from './guided-step-edit-link';
 import { applySpeciesTraitChoiceSelections } from '@/lib/choice-trait';
 import type { TraitWithChoiceOptions } from '@/lib/choice-trait';
 import { derivePowerDisplay } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
-import type { ArchetypeCategory } from '@/types';
-import type { GuidedSubStep } from '@/stores/guided-creator-store';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 
 const copy = GUIDED_CREATOR_COPY.steps.reveal.summary;
 
-const PATH_TYPE_LABELS: Record<ArchetypeCategory, string> = {
-  power: 'Power',
-  martial: 'Martial',
-  'powered-martial': 'Hybrid',
-};
-
-function SummarySectionHeader({
-  title,
-  editSubSteps,
-}: {
-  title: string;
-  editSubSteps?: Array<{ subStep: GuidedSubStep; label: string }>;
-}) {
+function SummarySectionHeader({ title }: { title: string }) {
   return (
-    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-      <p className="font-nunito text-xs font-medium uppercase tracking-wide text-text-secondary">{title}</p>
-      {editSubSteps && editSubSteps.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {editSubSteps.map((link) => (
-            <GuidedStepEditLink key={link.subStep} subStep={link.subStep} label={link.label} />
-          ))}
-        </div>
-      )}
+    <div className="mb-3">
+      <p className="font-nunito text-xs font-medium uppercase tracking-wide text-text-secondary">
+        {title}
+      </p>
     </div>
   );
 }
 
 export function GuidedRevealSummary() {
   const draft = useGuidedCreatorStore((s) => s.draft);
-  const { archetype, pathData } = useGuidedPathData();
+  const { archetype } = useGuidedPathData();
   const { data: allSpecies = [] } = useMergedSpecies();
   const { data: codexSkills = [] } = useCodexSkills();
   const { data: feats = [] } = useCodexFeats();
@@ -76,7 +56,6 @@ export function GuidedRevealSummary() {
     [allSpecies, draft.speciesId]
   );
 
-  const speciesName = draft.speciesName ?? species?.name ?? null;
   const pathType = draft.archetypeType;
 
   const traitById = useMemo(() => new Map(allTraits.map((t) => [String(t.id), t])), [allTraits]);
@@ -143,24 +122,6 @@ export function GuidedRevealSummary() {
     };
   });
 
-  const loadoutTitle = useMemo(() => {
-    const hasGear =
-      draft.loadoutWeapons.length > 0 ||
-      draft.loadoutArmor.length > 0 ||
-      draft.equipment.length > 0 ||
-      (draft.unarmedProwess ?? 0) > 0;
-    if (!hasGear) return copy.defaultLoadout;
-    return archetype?.name
-      ? `${archetype.name} equipment`
-      : copy.customLoadout;
-  }, [
-    archetype?.name,
-    draft.loadoutWeapons.length,
-    draft.loadoutArmor.length,
-    draft.equipment.length,
-    draft.unarmedProwess,
-  ]);
-
   const itemById = useMemo(
     () => new Map(officialItems.map((i) => [String(i.id), i])),
     [officialItems]
@@ -188,8 +149,15 @@ export function GuidedRevealSummary() {
         variant: 'list' as const,
       });
     });
+    if ((draft.unarmedProwess ?? 0) > 0) {
+      items.push({
+        key: 'unarmed',
+        label: `Unarmed Prowess ${draft.unarmedProwess}`,
+        variant: 'list' as const,
+      });
+    }
     return items;
-  }, [draft.armaments, draft.equipment, itemById]);
+  }, [draft.armaments, draft.equipment, draft.unarmedProwess, itemById]);
 
   const powerChips = useMemo((): SummaryChipItem[] => {
     const byId = new Map(officialPowers.map((p) => [String(p.id), p]));
@@ -247,8 +215,13 @@ export function GuidedRevealSummary() {
     });
   }, [draft.techniqueIds, officialTechniques, techniquePartsDb]);
 
-  const showPowerAbility = Boolean(draft.pow_abil && pathType !== 'martial');
-  const showMartialAbility = Boolean(draft.mart_abil && pathType !== 'power');
+  const powersSectionTitle =
+    powerChips.length > 0 && techniqueChips.length > 0
+      ? copy.powersTitle
+      : powerChips.length > 0
+        ? copy.powersOnlyTitle
+        : copy.techniquesOnlyTitle;
+
   const gridPowerAbility = pathType === 'martial' ? undefined : (draft.pow_abil ?? undefined);
   const gridMartialAbility = pathType === 'power' ? undefined : (draft.mart_abil ?? undefined);
   const gridSecondaryAbility = resolveDistinctSecondaryAbility(
@@ -256,6 +229,8 @@ export function GuidedRevealSummary() {
     gridPowerAbility,
     gridMartialAbility
   );
+
+  const hasPowersOrTechniques = powerChips.length > 0 || techniqueChips.length > 0;
 
   return (
     <div className="overflow-hidden rounded-card border border-border-light bg-surface shadow-sm">
@@ -266,72 +241,7 @@ export function GuidedRevealSummary() {
 
       <div className="space-y-6 p-5">
         <div>
-          <SummarySectionHeader
-            title={copy.coreTitle}
-            editSubSteps={[
-              { subStep: 'path', label: 'path' },
-              { subStep: 'species', label: 'species' },
-              { subStep: 'ancestry', label: 'ancestry' },
-              { subStep: 'abilities', label: 'abilities' },
-              { subStep: 'skills', label: 'skills' },
-            ]}
-          />
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {archetype?.name && (
-              <div className="rounded-lg border border-border-light bg-surface-alt/50 p-3">
-                <p className="font-nunito text-xs font-medium uppercase tracking-wide text-text-secondary">
-                  {copy.pathLabel}
-                </p>
-                <p className="mt-0.5 truncate font-display text-lg font-bold text-text-primary">
-                  {archetype.name}
-                </p>
-              </div>
-            )}
-            {speciesName && (
-              <div className="rounded-lg border border-border-light bg-surface-alt/50 p-3">
-                <p className="font-nunito text-xs font-medium uppercase tracking-wide text-text-secondary">
-                  {copy.speciesLabel}
-                </p>
-                <p className="mt-0.5 truncate font-display text-lg font-bold text-text-primary">
-                  {speciesName}
-                </p>
-              </div>
-            )}
-            {pathType && (
-              <div className="rounded-lg border border-border-light bg-surface-alt/50 p-3">
-                <p className="font-nunito text-xs font-medium uppercase tracking-wide text-text-secondary">
-                  {copy.typeLabel}
-                </p>
-                <p className="mt-0.5 font-display text-lg font-bold capitalize text-text-primary">
-                  {PATH_TYPE_LABELS[pathType]}
-                </p>
-              </div>
-            )}
-            {showPowerAbility && draft.pow_abil && (
-              <div className="rounded-lg border border-power bg-power-light/40 p-3 dark:bg-power-900/20">
-                <p className="font-nunito text-xs font-medium uppercase tracking-wide text-power-fg">
-                  {copy.powerAbilityLabel}
-                </p>
-                <p className="mt-0.5 font-display text-lg font-bold capitalize text-power-fg">
-                  {draft.pow_abil}
-                </p>
-              </div>
-            )}
-            {showMartialAbility && draft.mart_abil && (
-              <div className="rounded-lg border border-martial bg-martial-light/40 p-3 dark:bg-martial-900/20">
-                <p className="font-nunito text-xs font-medium uppercase tracking-wide text-martial-fg">
-                  {copy.martialAbilityLabel}
-                </p>
-                <p className="mt-0.5 font-display text-lg font-bold capitalize text-martial-fg">
-                  {draft.mart_abil}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div>
-          <SummarySectionHeader title={copy.abilitiesTitle} editSubSteps={[{ subStep: 'abilities', label: 'abilities' }]} />
+          <SummarySectionHeader title={copy.abilitiesTitle} />
           <AbilityScoreGrid
             abilities={draft.abilities}
             powerAbility={gridPowerAbility}
@@ -343,48 +253,35 @@ export function GuidedRevealSummary() {
 
         {ancestryTraitNames.length > 0 && (
           <div>
-            <SummarySectionHeader
-              title={copy.ancestryTitle}
-              editSubSteps={[{ subStep: 'ancestry', label: 'ancestry' }]}
-            />
+            <SummarySectionHeader title={copy.ancestryTitle} />
             <SummaryChipList items={ancestryTraitNames} />
           </div>
         )}
 
         {skillNames.length > 0 && (
           <div>
-            <SummarySectionHeader title={copy.skillsTitle} editSubSteps={[{ subStep: 'skills', label: 'skills' }]} />
+            <SummarySectionHeader title={copy.skillsTitle} />
             <SummaryChipList items={skillNames} />
           </div>
         )}
 
         {(archetypeFeatChips.length > 0 || characterFeatChips.length > 0) && (
           <div>
-            <SummarySectionHeader
-              title={copy.featsTitle}
-              editSubSteps={[
-                { subStep: 'archetype-feats', label: 'archetype feats' },
-                { subStep: 'character-feat', label: 'character feat' },
-              ]}
-            />
+            <SummarySectionHeader title={copy.featsTitle} />
             <SummaryChipList items={[...archetypeFeatChips, ...characterFeatChips]} />
           </div>
         )}
 
-        {(loadoutTitle || loadoutItems.length > 0) && (
+        {loadoutItems.length > 0 && (
           <div>
-            <SummarySectionHeader title={copy.loadoutTitle} editSubSteps={[{ subStep: 'loadout', label: 'loadout' }]} />
-            <p className="mb-2 font-display text-sm font-semibold text-text-primary">{loadoutTitle}</p>
+            <SummarySectionHeader title={copy.loadoutTitle} />
             <SummaryChipList items={loadoutItems} />
           </div>
         )}
 
-        {(powerChips.length > 0 || techniqueChips.length > 0) && (
+        {hasPowersOrTechniques && (
           <div>
-            <SummarySectionHeader
-              title={copy.powersTitle}
-              editSubSteps={[{ subStep: 'powers-techniques', label: 'powers' }]}
-            />
+            <SummarySectionHeader title={powersSectionTitle} />
             <SummaryChipList items={[...powerChips, ...techniqueChips]} />
           </div>
         )}

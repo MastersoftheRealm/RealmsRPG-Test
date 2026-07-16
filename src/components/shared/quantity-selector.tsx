@@ -2,10 +2,11 @@
  * QuantitySelector Component
  * ==========================
  * Unified quantity +/- controls for equipment, items, etc.
- * 
+ * Uses the same `.btn-stepper` chrome as ValueStepper (TASK-468).
+ *
  * Used by:
  * - GridListRow (when quantity prop provided)
- * - UnifiedSelectionModal (for equipment selection)
+ * - UnifiedSelectionModal (for equipment selection — quantity-first)
  * - AddLibraryItemModal (for adding equipment)
  * - LibrarySection (for equipment quantity editing)
  */
@@ -13,7 +14,6 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { Minus, Plus } from 'lucide-react';
 
 export interface QuantitySelectorProps {
   /** Current quantity value */
@@ -32,6 +32,10 @@ export interface QuantitySelectorProps {
   className?: string;
   /** Disabled state */
   disabled?: boolean;
+  /** Accessible name for decrement (default: Decrease quantity) */
+  decrementLabel?: string;
+  /** Accessible name for increment (default: Increase quantity) */
+  incrementLabel?: string;
 }
 
 export function QuantitySelector({
@@ -43,18 +47,18 @@ export function QuantitySelector({
   showWhenOne = true,
   className,
   disabled = false,
+  decrementLabel = 'Decrease quantity',
+  incrementLabel = 'Increase quantity',
 }: QuantitySelectorProps) {
   // Touch targets min 44px on mobile (below md), compact on desktop per MOBILE_UX.md
   const sizeClasses = {
     sm: {
       button: 'min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] w-11 h-11 md:min-w-0 md:min-h-0 md:w-5 md:h-5 text-xs',
       text: 'w-6 text-xs',
-      icon: 'w-2.5 h-2.5',
     },
     md: {
       button: 'min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] w-11 h-11 md:min-w-0 md:min-h-0 md:w-6 md:h-6 text-sm',
       text: 'w-8 text-sm',
-      icon: 'w-3 h-3',
     },
   };
 
@@ -66,51 +70,46 @@ export function QuantitySelector({
   }
 
   return (
-    <div 
+    <div
       className={cn('flex items-center gap-1', className)}
       onClick={(e) => e.stopPropagation()}
+      role="group"
+      aria-label="Quantity"
     >
       <button
         type="button"
-        onClick={(e) => { 
-          e.stopPropagation(); 
-          onChange(Math.max(min, quantity - 1)); 
+        onClick={(e) => {
+          e.stopPropagation();
+          onChange(Math.max(min, quantity - 1));
         }}
         disabled={disabled || quantity <= min}
-        className={cn(
-          'rounded-full flex items-center justify-center font-bold transition-colors',
-          sizes.button,
-          !disabled && quantity > min
-            ? 'bg-surface-alt hover:bg-border-light text-text-secondary'
-            : 'bg-surface text-text-muted cursor-not-allowed'
-        )}
-        title="Decrease quantity"
+        className={cn('btn-stepper', sizes.button)}
+        title={decrementLabel}
+        aria-label={decrementLabel}
       >
-        <Minus className={sizes.icon} />
+        −
       </button>
-      <span className={cn(
-        'text-center font-medium text-text-primary',
-        sizes.text
-      )}>
+      <span
+        className={cn(
+          'text-center font-medium text-text-primary tabular-nums',
+          sizes.text
+        )}
+        aria-live="polite"
+      >
         {quantity}
       </span>
       <button
         type="button"
-        onClick={(e) => { 
-          e.stopPropagation(); 
-          onChange(Math.min(max, quantity + 1)); 
+        onClick={(e) => {
+          e.stopPropagation();
+          onChange(Math.min(max, quantity + 1));
         }}
         disabled={disabled || quantity >= max}
-        className={cn(
-          'rounded-full flex items-center justify-center font-bold transition-colors',
-          sizes.button,
-          !disabled && quantity < max
-            ? 'bg-surface-alt hover:bg-border-light text-text-secondary'
-            : 'bg-surface text-text-muted cursor-not-allowed'
-        )}
-        title="Increase quantity"
+        className={cn('btn-stepper', sizes.button)}
+        title={incrementLabel}
+        aria-label={incrementLabel}
       >
-        <Plus className={sizes.icon} />
+        +
       </button>
     </div>
   );
@@ -127,9 +126,9 @@ export interface QuantityBadgeProps {
 
 export function QuantityBadge({ quantity, className }: QuantityBadgeProps) {
   if (quantity <= 1) return null;
-  
+
   return (
-    <span className={cn('text-xs text-text-muted', className)}>
+    <span className={cn('text-xs text-text-muted dark:text-text-secondary', className)}>
       ×{quantity}
     </span>
   );

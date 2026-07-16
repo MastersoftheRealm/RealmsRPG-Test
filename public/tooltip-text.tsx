@@ -177,6 +177,23 @@ export const equipmentCurrencyHelp = (
   </div>
 );
 
+/** Guided Loadout + powers/techniques — shared Training Points budget (TASK-456). */
+export const trainingPointsHelp = (
+  <div>
+    <div>
+      <strong>Training Points</strong> are a shared budget for weapons, armor, Powers, and
+      Techniques.
+    </div>
+    <div>
+      Your total comes from level and your highest Archetype Ability. Spent updates when you add
+      or remove a selection; remaining is what you can still afford.
+    </div>
+    <div>
+      If a choice is unavailable, you do not have enough Training Points remaining for its cost.
+    </div>
+  </div>
+);
+
 export const finalizeSummaryHelp = (
   <div>
     <div>Finalize Checklist</div>

@@ -13,10 +13,7 @@ import {
 import { catalogRowForRef } from '@/lib/guided-creator/equipment-catalog-rows';
 import { resolvePoolItemCategory } from '@/lib/guided-creator/loadout-tp';
 import type { AbilityName } from '@/types';
-
-function normalizeId(id: string): string {
-  return String(id).trim().toLowerCase();
-}
+import { normalizeId } from '@/lib/utils';
 
 function rowMatchesPhase(row: EligibleEquipmentRow, phase: EquipmentPhase): boolean {
   const t = row.type.toLowerCase();

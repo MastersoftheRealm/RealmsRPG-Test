@@ -13,10 +13,7 @@ import type { EligibleEquipmentRow, EquipmentPhase } from '@/lib/guided-creator/
 import { resolveItemUnitCost } from '@/lib/guided-creator/equipment-currency';
 import { resolveItemTrainingPoints } from '@/lib/guided-creator/loadout-tp';
 import { formatWeaponDamageLine } from '@/lib/guided-creator/equipment-phase-stats';
-
-function normalizeId(id: string): string {
-  return String(id).trim().toLowerCase();
-}
+import { normalizeId } from '@/lib/utils';
 
 /**
  * Official rows: Currency column = market cost (OfficialItemList / Library GLR protocol),

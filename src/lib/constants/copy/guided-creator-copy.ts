@@ -19,7 +19,7 @@ export const GUIDED_CREATOR_COPY = {
         label: 'Guided',
         tagline: 'Become your character with path recommendations.',
         bullets: [
-          'Pick a path, then choose species, Feats, and gear from its options',
+          'Pick a path, then choose species, Feats, and Loadout options',
           'Watch your character take shape as you go',
           'Great for your first character, or anytime you want a guided start',
         ],
@@ -90,7 +90,10 @@ export const GUIDED_CREATOR_COPY = {
     ancestry: { title: 'Ancestry', subtitle: 'Make your species your own' },
     abilities: { title: 'Abilities', subtitle: 'Who you are' },
     archetype: { title: 'Your Archetype', subtitle: 'Skills and Feats' },
-    equipment: { title: 'Equipment', subtitle: 'Gear, then Powers or Techniques' },
+    equipment: {
+      title: 'Loadout',
+      subtitle: 'Weapons, armor, Equipment, then Powers or Techniques',
+    },
     reveal: { title: 'Your Hero', subtitle: 'Bring them to life' },
   },
 
@@ -98,7 +101,7 @@ export const GUIDED_CREATOR_COPY = {
     path: {
       title: 'Choose your path',
       description:
-        'Your path suggests Abilities, Skills, Feats, and gear. Then you choose among those options.',
+        'Your path suggests Abilities, Skills, Feats, and Loadout options. Then you choose among those options.',
       showHybridPaths: 'Show hybrid (Powered-Martial) paths',
       backToCorePaths: 'Back to Power and Martial paths',
       emptyTitle: 'No paths available',
@@ -140,8 +143,8 @@ export const GUIDED_CREATOR_COPY = {
         unarmedProwessStats: 'Unarmed',
         armorTitle: 'Armor Options',
         armorIntro: 'Armor recommended for this path. Expand a row for Damage Reduction and other details.',
-        gearTitle: 'Adventuring Gear',
-        gearIntro: 'Gear recommended for this path.',
+        gearTitle: 'Equipment',
+        gearIntro: 'Equipment recommended for this path.',
         techniquesTitle: 'Technique Options',
         techniquesIntro: 'Techniques this Martial path recommends.',
         powersTitle: 'Power Options',
@@ -286,13 +289,13 @@ export const GUIDED_CREATOR_COPY = {
       emptyDescription: 'Try clearing filters or showing locked Feats.',
     },
     loadout: {
-      title: 'Your equipment',
-      description: 'Choose weapons, armor, and adventuring gear from your path options.',
+      title: 'Loadout',
+      description: 'Choose weapons, armor, and Equipment from your path options.',
       continueLabel: 'Looks good →',
-      emptyTitle: 'No equipment recommendations yet',
+      emptyTitle: 'No Loadout recommendations yet',
       emptyDescription:
-        'This path has no recommended weapons, armor, or gear yet. Use See more options to browse common items, or pick another path.',
-      loadingItems: 'Loading equipment…',
+        'This path has no recommended weapons, armor, or Equipment yet. Use See more options to browse common items, or pick another path.',
+      loadingItems: 'Loading items…',
       unresolvedItem: 'Unknown item',
       unarmed: {
         title: 'Unarmed combat',
@@ -306,23 +309,25 @@ export const GUIDED_CREATOR_COPY = {
         weapon: {
           title: 'Weapons & shields',
           description:
-            'Pick from your path options. Use See more for requirements and traits.',
+            'Optional picks from your path. Currency and Training Points update as you select. Use See more for requirements and traits.',
         },
         armor: {
           title: 'Armor',
-          description: 'Pick armor from your path, or continue without armor when that is allowed.',
+          description:
+            'Optional armor from your path, or continue without any. Currency and Training Points stay shared across Loadout.',
         },
         gear: {
-          title: 'Adventuring gear',
+          title: 'Equipment',
           description:
-            'Pick recommended gear, or add all at once. Currency spent on weapons and armor already counts against your total.',
+            'Optional Equipment picks, or add all recommended at once. Currency and Training Points already spent on weapons and armor still count.',
         },
         skipArmorLabel: 'Fight unarmored',
         seeMoreLabel: 'See more options',
         backToPhase: 'Back to recommendations',
         continueWeapon: 'Continue to armor →',
-        continueToGear: 'Continue to gear →',
+        continueToGear: 'Continue to Equipment →',
         currencyLabel: 'Currency',
+        trainingPointsLabel: 'Training Points',
         unresolvedItem: 'Unknown item',
         weaponPhase: {
           emptyTitle: 'No weapons on your path',
@@ -337,26 +342,30 @@ export const GUIDED_CREATOR_COPY = {
           tpBlocked: 'Not enough Training Points for that item.',
         },
         gearPhase: {
-          emptyTitle: 'No gear on your path',
-          emptyDescription: 'Use See more options to browse adventuring gear within your budget.',
-          addAllRecommended: 'Add all recommended gear',
-          currencyBlocked: 'Not enough Currency remaining for that gear.',
+          emptyTitle: 'No Equipment on your path',
+          emptyDescription: 'Use See more options to browse Equipment within your budget.',
+          addAllRecommended: 'Add all recommended Equipment',
+          currencyBlocked: 'Not enough Currency remaining for that Equipment.',
         },
         l2: {
           weaponTitle: 'Browse weapons & shields',
           armorTitle: 'Browse armor',
-          gearTitle: 'Browse adventuring gear',
+          gearTitle: 'Browse Equipment',
           description: 'Common items you can take. Training Points update as you select.',
           gearDescription:
-            'Common gear costing 50 Currency or less each. Remaining Currency updates as you select.',
+            'Common Equipment costing 50 Currency or less each. Remaining Currency updates as you select.',
           tpLabel: 'Training Points',
           currencyLabel: 'Currency',
           confirmError: 'That selection does not fit. Check Training Points, hands, or Currency.',
           searchPlaceholder: (phase: 'weapon' | 'armor' | 'gear') =>
-            phase === 'gear' ? 'Search gear…' : `Search ${phase}…`,
+            phase === 'gear'
+              ? 'Search Equipment…'
+              : phase === 'armor'
+                ? 'Search Armor…'
+                : 'Search Weapons…',
           emptyMessage: (phase: 'weapon' | 'armor' | 'gear') =>
             phase === 'gear'
-              ? 'No matching gear found'
+              ? 'No matching Equipment found'
               : phase === 'armor'
                 ? 'No matching armor found'
                 : 'No matching weapons or shields found',
@@ -379,74 +388,112 @@ export const GUIDED_CREATOR_COPY = {
       /** `kind` is "powers" | "techniques" from the step; labels are capitalized for display. */
       groupIntro: (kind: string) => {
         const label = kind === 'techniques' ? 'Techniques' : 'Powers';
-        return `Recommended ${label} for your path. Highlighted cards are selected. Tap to turn one off if you prefer.`;
+        return `Recommended ${label} for your path. Cards are optional - pick what fits your Training Points budget.`;
       },
+      seeMore: 'See more options',
       energyTag: (energy: number) => `${energy} Energy`,
+      trainingPointsLabel: 'Training Points',
+      tpBlocked: 'Not enough Training Points remaining for that choice.',
+      /** Subtle title-adjacent chip when L1 mixes path + catalog picks (TASK-458). */
+      pathRecommendedChip: 'Path',
+      otherPicksHeading: (kind: string) =>
+        kind === 'techniques' ? 'Your other Techniques' : 'Your other Powers',
+      otherPicksHint: 'Picks from See more options stay here so you can review or remove them.',
       emptyTitle: (kind: string) => {
         const label = kind === 'techniques' ? 'Techniques' : 'Powers';
         return `No ${label} on this path`;
       },
       emptyDescription: (kind: string) => {
         const label = kind === 'techniques' ? 'Techniques' : 'Powers';
-        return `This path has no ${label} recommendations yet. You can add ${label} later on your character sheet.`;
+        return `This path has no ${label} recommendations yet. Use See more options to browse, or add ${label} later on your character sheet.`;
+      },
+      /** Innate Powers section (Power / Powered-Martial) — TASK-471 / TASK-472. */
+      innateHeading: 'Innate Powers',
+      innateIntro:
+        'Path-recommended innate powers. Each must fit your Innate Threshold; spend all Innate Energy before continuing.',
+      innateEmpty:
+        'No innate power recommendations on this path yet. Use See more Innate Powers to browse eligible options.',
+      innateSeeMore: 'See more Innate Powers',
+      innateEnergyLabel: 'Innate Energy',
+      innateThresholdHint: (threshold: number) => `Innate Threshold ${threshold}`,
+      innateEnergyBlocked: 'Not enough Innate Energy remaining for that choice.',
+      innateThresholdBlocked: 'That power exceeds your Innate Threshold.',
+      innateMustFill: 'Spend all Innate Energy to continue.',
+      powersHeading: 'Powers',
+      techniquesHeading: 'Techniques',
+      l2: {
+        powersTitle: 'Browse Powers',
+        techniquesTitle: 'Browse Techniques',
+        innateTitle: 'Browse Innate Powers',
+        description: (kind: string) => {
+          const label = kind === 'techniques' ? 'Techniques' : 'Powers';
+          return `Official ${label} within your theoretical Energy at level 1. Confirm to add picks to your recommendations.`;
+        },
+        innateDescription:
+          'Powers eligible as innate (Energy at or below your Innate Threshold). Confirm to update your innate picks.',
+        emptyMessage: (kind: string, mode: string) => {
+          if (mode === 'innate') return 'No innate-eligible Powers match.';
+          return kind === 'techniques' ? 'No Techniques match.' : 'No Powers match.';
+        },
+        searchPlaceholder: (kind: string) =>
+          kind === 'techniques' ? 'Search Techniques…' : 'Search Powers…',
       },
     },
     reveal: {
       title: 'Meet your hero',
-      description: 'Review your build, name them, then create your character.',
+      description: 'Name them, set the finishing touches, then create your character.',
       heroUnnamed: 'Unnamed Hero',
-      identityTitle: 'Identity',
       nameLabel: 'Character name',
       namePlaceholder: 'Give your hero a name',
+      identityTitle: 'Identity',
       ageLabel: 'Age (optional)',
       heightLabel: 'Height (cm, optional)',
       weightLabel: 'Weight (kg, optional)',
+      agePlaceholder: (adulthood?: number, lifespan?: number) => {
+        if (adulthood != null && lifespan != null) return `Avg adulthood ${adulthood} · lifespan ${lifespan}`;
+        if (adulthood != null) return `Avg adulthood ${adulthood}`;
+        if (lifespan != null) return `Avg lifespan ${lifespan}`;
+        return '';
+      },
+      heightPlaceholder: (avg?: number) => (avg != null && avg > 0 ? `Avg ${avg} cm` : ''),
+      weightPlaceholder: (avg?: number) => (avg != null && avg > 0 ? `Avg ${avg} kg` : ''),
       appearanceLabel: 'Appearance (optional)',
       appearancePlaceholder: 'Hair, eyes, distinguishing features…',
+      descriptionLabel: 'Background (optional)',
+      descriptionPlaceholder: 'Personality, history, or what drives them…',
       allocateHint: (remaining: number) =>
         `Allocate ${remaining} more point${remaining === 1 ? '' : 's'} between Health and Energy.`,
       save: 'Create character',
       saving: 'Creating…',
       portrait: {
-        label: 'Portrait (optional)',
-        emptyHint: 'No image',
-        uploadButton: (hasPortrait: boolean) => (hasPortrait ? 'Change image' : 'Upload image'),
-        processing: 'Processing…',
-        hint: 'Upload and crop a portrait. JPG, PNG, or GIF. Max 5MB.',
+        emptyHint: 'Add portrait',
         modalTitle: 'Character portrait',
         removeLabel: 'Remove portrait',
+        changeAria: (hasPortrait: boolean) =>
+          hasPortrait ? 'Change character portrait' : 'Add character portrait',
         tooLarge: 'That image is still too large. Try a smaller file.',
         processError: 'Could not process that image.',
       },
       healthEnergy: {
         title: 'Health & Energy',
-        description: 'Split your bonus points between max Health and max Energy.',
-        baseStats: (hp: number, en: number) => `Base Health: ${hp} · Base Energy: ${en}`,
+        description: 'Split your bonus points between Health and Energy.',
         autoAllocate: 'Auto-allocate',
         autoAllocateAria:
           'Set Energy to cover your highest Power or Technique cost, and put the rest into Health',
-        highestCostHint: (cost: number) =>
-          `Your costliest Power or Technique needs ${cost} Energy. Auto-allocate can cover that cost first.`,
         allocateHint: (remaining: number) =>
           `Allocate ${remaining} more point${remaining === 1 ? '' : 's'} to continue.`,
       },
       summary: {
         title: 'Your build',
-        description: 'Everything at a glance. Jump back anytime to edit.',
-        coreTitle: 'Core choices',
-        pathLabel: 'Path',
-        speciesLabel: 'Species',
-        typeLabel: 'Type',
-        powerAbilityLabel: 'Power Ability',
-        martialAbilityLabel: 'Martial Ability',
+        description: 'Everything you chose, at a glance.',
         abilitiesTitle: 'Abilities',
         ancestryTitle: 'Ancestry & Traits',
         skillsTitle: 'Skills',
         featsTitle: 'Feats',
-        loadoutTitle: 'Equipment',
+        loadoutTitle: 'Loadout',
         powersTitle: 'Powers & Techniques',
-        defaultLoadout: 'No equipment selected',
-        customLoadout: 'Selected equipment',
+        powersOnlyTitle: 'Powers',
+        techniquesOnlyTitle: 'Techniques',
       },
       loginModal: {
         title: 'Sign in to save',

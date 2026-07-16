@@ -1,6 +1,10 @@
 ﻿# Historical docs — out of default AI indexing (still in git for humans)
 src/docs/ai/archive/**
+
+# Human docs — keep large catalogs ignored; allow product-critical UX intent
 src/docs/human/**
+!src/docs/human/USER_EXPERIENCE_GOALS.md
+!src/docs/human/README.md
 
 # Build output
 .next/**

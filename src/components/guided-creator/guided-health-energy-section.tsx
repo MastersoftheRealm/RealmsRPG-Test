@@ -29,22 +29,12 @@ export function GuidedHealthEnergySection() {
   const powAbil = draft.pow_abil ?? undefined;
   const martAbil = draft.mart_abil ?? undefined;
 
-  const baseHealth = calculateMaxHealth(
-    0,
-    abilities.vitality || 0,
-    level,
-    powAbil,
-    abilities,
-    rules,
-    martAbil
-  );
   const baseEnergy = calculateMaxEnergy(0, powAbil || martAbil, abilities, level);
   const hePool = calculateHealthEnergyPool(level, 'PLAYER', false, rules);
 
   const hpBonus = draft.hpAllocated ?? 0;
   const enBonus = draft.energyAllocated ?? 0;
-  const spent = hpBonus + enBonus;
-  const remaining = hePool - spent;
+  const remaining = hePool - (hpBonus + enBonus);
 
   const maxHp = calculateMaxHealth(
     hpBonus,
@@ -115,32 +105,22 @@ export function GuidedHealthEnergySection() {
 
   return (
     <div className="rounded-card border border-border-light bg-surface p-5 shadow-sm">
-      <div className="mb-4">
-        <h3 className="font-display text-lg font-bold text-text-primary">{copy.title}</h3>
-        <p className="mt-1 font-nunito text-sm text-text-secondary">{copy.description}</p>
-      </div>
-
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <p className="font-nunito text-xs text-text-muted dark:text-text-secondary">
-          {copy.baseStats(baseHealth, baseEnergy)}
-        </p>
+      <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h3 className="font-display text-lg font-bold text-text-primary">{copy.title}</h3>
+          <p className="mt-1 font-nunito text-sm text-text-secondary">{copy.description}</p>
+        </div>
         <Button
           type="button"
           variant="secondary"
           size="sm"
           onClick={onAutoAllocate}
           aria-label={copy.autoAllocateAria}
-          className="min-h-11"
+          className="min-h-11 shrink-0"
         >
           {copy.autoAllocate}
         </Button>
       </div>
-
-      {highestEnergyCost > 0 && (
-        <p className="mb-3 font-nunito text-sm text-text-secondary">
-          {copy.highestCostHint(highestEnergyCost)}
-        </p>
-      )}
 
       <HealthEnergyAllocator
         hpBonus={hpBonus}

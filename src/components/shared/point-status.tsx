@@ -61,6 +61,11 @@ export interface PointStatusProps extends Omit<VariantProps<typeof pointStatusVa
   spent: number;
   /** Optional label prefix */
   label?: string;
+  /**
+   * Optional content immediately after the label (inside the status pill),
+   * e.g. InfoTippy for Training Points help (TASK-465).
+   */
+  labelAccessory?: React.ReactNode;
   /** Inline/compact: show spent vs remaining (default `remaining`) */
   metric?: 'remaining' | 'spent';
   /** Show the "Total - Spent = Remaining" breakdown (only for block variant) */
@@ -86,6 +91,7 @@ export function PointStatus({
   total,
   spent,
   label,
+  labelAccessory,
   metric = 'remaining',
   variant = 'inline',
   showCalculation = false,
@@ -94,6 +100,14 @@ export function PointStatus({
   const remaining = total - spent;
   const status = getStatus(remaining);
   const displayValue = metric === 'spent' ? spent : remaining;
+
+  const labelNode = label ? (
+    <span className="inline-flex items-center gap-0.5 mr-1">
+      <span>{label}</span>
+      {labelAccessory}
+      <span aria-hidden="true">:</span>
+    </span>
+  ) : null;
 
   // Block variant with calculation breakdown
   if (variant === 'block') {
@@ -125,7 +139,7 @@ export function PointStatus({
           </>
         ) : (
           <span>
-            {label && <span className="mr-1">{label}:</span>}
+            {labelNode}
             <span className="font-bold">{remaining}</span> / {total}
           </span>
         )}
@@ -145,7 +159,7 @@ export function PointStatus({
   // Inline variant (default)
   return (
     <span className={cn(pointStatusVariants({ variant, status }), className)}>
-      {label && <span>{label}:</span>}
+      {labelNode}
       <span className="font-bold">{displayValue}</span>
       <span className="font-normal">/ {total}</span>
     </span>

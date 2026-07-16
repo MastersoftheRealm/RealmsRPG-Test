@@ -7,6 +7,38 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+/** Coerce JSON string or object to a plain record (admin/raw path_data editing). */
+export function coerceJsonRecord(value: unknown): Record<string, unknown> | undefined {
+  if (!value) return undefined;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return isRecord(parsed) ? parsed : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+  return isRecord(value) ? value : undefined;
+}
+
+export type ParseJsonFieldResult =
+  | { ok: true; value: unknown }
+  | { ok: false; error: string };
+
+/**
+ * Safe JSON parse for optional admin fields. Empty/whitespace string → `{ ok: true, value: null }`.
+ * Invalid JSON → `{ ok: false, error: "<label> must be valid JSON." }`.
+ */
+export function parseOptionalJsonField(raw: string, label: string): ParseJsonFieldResult {
+  const trimmed = raw.trim();
+  if (!trimmed) return { ok: true, value: null };
+  try {
+    return { ok: true, value: JSON.parse(trimmed) as unknown };
+  } catch {
+    return { ok: false, error: `${label} must be valid JSON.` };
+  }
+}
+
 function toStringArray(value: unknown): string[] {
   if (!value) return [];
   if (Array.isArray(value)) return value.map(String).filter(Boolean);
@@ -20,7 +52,7 @@ function toStringArray(value: unknown): string[] {
 }
 
 /** Parse "id" or "id:qty" strings into { id, quantity } (qty default 1). */
-function parseIdQuantityArray(arr: string[]): PathItemRecommendation[] {
+export function parseIdQuantityStrings(arr: string[]): PathItemRecommendation[] {
   return arr.map((s) => {
     const colon = s.indexOf(':');
     if (colon < 0) return { id: s.trim(), quantity: 1 };
@@ -30,12 +62,23 @@ function parseIdQuantityArray(arr: string[]): PathItemRecommendation[] {
   }).filter((e) => e.id.length > 0);
 }
 
+/** Serialize { id, quantity } entries into "id" or "id:qty" strings (qty>1 keeps the suffix). */
+export function serializeIdQuantityStrings(entries: PathItemRecommendation[]): string[] {
+  return entries.map((e) => (e.quantity > 1 ? `${e.id}:${e.quantity}` : e.id));
+}
+
 function parseLevel(value: unknown): number | null {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function parseRecommendedAbilities(value: unknown): Partial<Record<AbilityName, number>> | undefined {
+/**
+ * Parse a recommended-abilities map (`{ strength: 3, ... }`) from JSON/object input.
+ * Ignores unknown keys and non-finite values; returns `undefined` when nothing valid remains.
+ */
+export function parseRecommendedAbilities(
+  value: unknown
+): Partial<Record<AbilityName, number>> | undefined {
   if (!isRecord(value)) return undefined;
   const result: Partial<Record<AbilityName, number>> = {};
   for (const ability of ABILITY_NAMES) {
@@ -60,7 +103,7 @@ function parseIdQuantityObjects(value: unknown): PathItemRecommendation[] {
       .filter((entry): entry is PathItemRecommendation => entry !== null);
     if (fromObjects.length > 0) return fromObjects;
   }
-  return parseIdQuantityArray(toStringArray(value));
+  return parseIdQuantityStrings(toStringArray(value));
 }
 
 function parseLoadouts(value: unknown): PathLoadout[] | undefined {
@@ -177,11 +220,14 @@ export function parseArchetypePathData(value: unknown): ArchetypePathData | unde
         feats: toStringArray(level1Raw.feats),
         skills: toStringArray(level1Raw.skills),
         powers: toStringArray(level1Raw.powers),
+        innatePowers: toStringArray(
+          level1Raw.innatePowers ?? level1Raw.innate_powers
+        ),
         techniques: toStringArray(level1Raw.techniques),
         armaments: armamentsStr,
         equipment: equipmentStr,
-        armamentRecommendations: parseIdQuantityArray(armamentsStr),
-        equipmentRecommendations: parseIdQuantityArray(equipmentStr),
+        armamentRecommendations: parseIdQuantityStrings(armamentsStr),
+        equipmentRecommendations: parseIdQuantityStrings(equipmentStr),
         recommendUnarmedProwess: level1Raw.recommendUnarmedProwess === true,
         armorStep: parseArmorStep(level1Raw.armorStep) ?? loadoutsField.armorStep,
         sharedEquipment:
@@ -256,6 +302,7 @@ export function pathLevel1HasAddRecommendations(
     level1.feats?.length ||
       level1.skills?.length ||
       level1.powers?.length ||
+      level1.innatePowers?.length ||
       level1.techniques?.length ||
       level1.armaments?.length ||
       level1.equipment?.length

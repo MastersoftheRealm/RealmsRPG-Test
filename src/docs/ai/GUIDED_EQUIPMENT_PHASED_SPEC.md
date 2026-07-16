@@ -5,28 +5,30 @@
 
 ## UX summary
 
-Within the guided **loadout** sub-step, users complete **visible** phases only (renumbered 1…N):
+Within the guided **Loadout** chapter (`loadout` sub-step), users complete **visible** phases only (renumbered 1…N):
 
 1. **Weapons + shields** (if path has weapon options) — Layer 1: path choice cards; Layer 2: full filtered shop (`UnifiedSelectionModal`)
 2. **Armor** (if `armorStep` is not `none` and options exist) — pick from path cards; skip when absent
-3. **Adventuring gear** — recommended items + remaining currency; optional **Add all recommended**
+3. **Equipment** — recommended items + remaining currency; optional **Add all recommended Equipment**
+
+Chapter rail title is **Loadout** (weapons, armor, Equipment, then Powers or Techniques). Internal phase id remains `gear`.
 
 **No quick kits.** Users pick weapons and armor individually from curated path pools. Live DB strip applied (TASK-442): `level1_loadouts` is metadata-only (`armorStep` / `sharedEquipment`); path picks use `level1_armaments` / `level1_equipment`.
 
-**Card-first (TASK-446 / TASK-447):** No phase progress strip (Next/Back only). Page title = current phase only. **PointStatus** Currency. Collapsed cards: image, title, description, named property chips (hover) + Currency. **See more…** deepens truncated copy and mechanic fact chips on the card; **See more options** opens catalog L2. Entity modals use **More details** elsewhere (path/species).
+**Card-first (TASK-446 / TASK-447 / TASK-456 / TASK-457):** No phase progress strip (Next/Back only). Page title = current phase only. Weapon, armor, and Equipment picks are **optional**. **PointStatus** Currency and Training Points on every phase. Collapsed weapon/armor cards: image, title, title-adjacent **Currency** + **Training Points** descriptors, description — no property/mechanic chips in the collapsed body. **See more…** reveals non-expanding mechanic facts (Ability Requirement, handedness, damage/type, Strength/Agility/Acuity Weapon) plus named property descriptors with InfoTippy; nothing renders under the disclosure row. **See more options** opens catalog L2. Entity modals use **More details** elsewhere (path/species).
 
 ## Layer rules
 
-| Layer | Weapons / armor | Gear |
-|-------|-----------------|------|
-| **1** | Image + title + description + named property chips (hover tips) + Currency chip; See more = mechanic facts; PointStatus Currency; TP hidden | Recommended cards + qty; optional Add all (budget-aware); PointStatus Currency |
-| **2** | `UnifiedSelectionModal` (GridListRow): weapons Name/Damage/Currency/Training Points; armor Damage Reduction; gear Currency; properties on expand | Modal; PointStatus Currency |
+| Layer | Weapons / armor | Equipment (`gear` phase) |
+|-------|-----------------|-------------------------|
+| **1** | Optional picks; image + title + title-adjacent Currency + Training Points; See more = mechanic facts + named property InfoTippy chips (no expand); PointStatus Currency + Training Points | Optional recommended cards + qty (above disclosure); optional Add all (budget-aware); PointStatus Currency + Training Points |
+| **2** | `UnifiedSelectionModal` (GridListRow): weapons Name/Damage/Currency/Training Points; armor Damage Reduction; Equipment Currency; properties on expand; footer PointStatus Currency + Training Points | Modal; PointStatus Currency + Training Points |
 
 Entity depth vs catalog breadth: see REALMS §3.1. Cards = quieter presentation of the same facts as browse rows.
 
 **Currency column / chips (Library GLR protocol):** Display market cost via `calculateCurrencyCostAndRarity(totalC, totalIP)` — never raw `costs.totalCurrency` (property C sum). Catalog rows set `gold_cost` to that market cost (`equipment-catalog-rows` / `resolveItemUnitCost`).
 
-**L2 replacement budgets:** Gear Confirm ceiling = starting Currency − arms spend (current gear is reclaimable). Weapon/armor eligibility filters against **cross-phase** TP only (same reclaim rule).
+**L2 replacement budgets:** Equipment Confirm ceiling = starting Currency − arms spend (current Equipment is reclaimable). Weapon/armor eligibility filters against **cross-phase** TP only (same reclaim rule).
 
 ## L2 eligibility (all phases)
 
@@ -34,7 +36,7 @@ Entity depth vs catalog breadth: see REALMS §3.1. Cards = quieter presentation 
 - Ability requirements met (hide req in UI when met)
 - Per-item property TP ≤ archetype `armamentMax` (3 / 8 / 12)
 - Total selected TP ≤ training point limit
-- Gear: each item ≤ **50 Currency**; total ≤ gear budget (starting − arms)
+- Equipment: each item ≤ **50 Currency**; total ≤ Equipment budget (starting − arms)
 
 ## L2 weapon ranking
 
@@ -66,10 +68,13 @@ Default `armorStep` from `archetypeType` when omitted (power → none). Flat rec
 - [x] Quick kits removed from UI/admin/DB (TASK-442 applied)
 - [x] `use-guided-equipment-catalog` in `hooks/`; copy in `guided-creator-copy.ts`
 - [x] Phase skip + Next/Back (no SegmentedControl progress strip)
-- [x] Weapon/armor quiet collapsed chips + See more mechanic facts; Currency PointStatus (TASK-446 / TASK-447)
+- [x] Weapon/armor title-adjacent Currency + Training Points; See more mechanic + property facts (no chips under disclosure) (TASK-457)
+- [x] Weapon/armor quiet collapsed chips + See more mechanic facts; Currency + Training Points PointStatus (TASK-446 / TASK-447 / TASK-456)
+- [x] Optional weapon/armor/Equipment continuation; shared TP visible L1/L2 + powers/techniques (TASK-456)
 - [x] No selection-summary chrome; path L1 always shown; orphan unresolved draft prune (TASK-446)
-- [x] Gear Add all recommended + quantity steppers (Currency-gated)
-- [x] L2 gear/TP budgets treat replacements as reclaiming current-phase spend
+- [x] Equipment Add all recommended + quantity steppers (Currency-gated)
+- [x] L2 Equipment/TP budgets treat replacements as reclaiming current-phase spend
+- [x] Chapter title **Loadout**; Equipment phase (not Adventuring Gear) in user-facing copy (TASK-459)
 - [x] Semantic tokens; mobile via `UnifiedSelectionModal` fullScreenOnMobile; 44px touch targets
 - [x] Pool builders use flat recommendations only (no kit arrays)
 - [ ] `BUILD_VALIDATION` sign-off; codex path recommendation seeds for remaining paths (TASK-423)

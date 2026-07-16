@@ -16,10 +16,7 @@ import { useCodexArchetypes } from '@/hooks';
 import { calculateProficiency } from '@/lib/game/formulas';
 import { parseArchetypePathData, pathHasPlayerVisibleLevel1 } from '@/lib/game/archetype-path';
 import { applyPathProficiencyForLevel, resolveArchetypeDisplayName } from '@/lib/game/archetype-display';
-import {
-  ArchetypeCreationBadge,
-  isPathCharacter,
-} from '@/components/character-sheet/archetype-path-identity';
+import { isPathCharacter } from '@/components/character-sheet/archetype-path-identity';
 import type { Character, ArchetypeCategory, AbilityName, Archetype } from '@/types';
 
 const ABILITIES: AbilityName[] = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'];
@@ -296,10 +293,7 @@ export function EditArchetypeModal({
               role="region"
               aria-label={`Archetype path: ${pathName}`}
             >
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-lg font-semibold text-text-primary">{pathName}</h3>
-                <ArchetypeCreationBadge character={display} />
-              </div>
+              <h3 className="text-lg font-semibold text-text-primary">{pathName}</h3>
               {pathDescription ? (
                 <p className="text-sm text-text-secondary">{pathDescription}</p>
               ) : null}

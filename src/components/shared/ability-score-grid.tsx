@@ -1,8 +1,8 @@
 /**
  * AbilityScoreGrid — unified six-ability tile row (character sheet layout).
  * Display mode: name + score (no roll buttons). Edit mode: +/- steppers.
- * Mobile: short ability labels + wrapping path pills; edit uses a roomier grid so
- * 44px steppers are not forced into 3-col phone tiles.
+ * Mobile: short ability labels + short single-line path pills (full terms on aria-label);
+ * edit uses a roomier grid so 44px steppers are not forced into 3-col phone tiles.
  */
 
 'use client';
@@ -116,12 +116,15 @@ function abilityGradientClass(role: PathAbilityRole | null): string {
   return 'from-surface to-surface-alt';
 }
 
-/** Visible pill text — short enough for ~360px tiles; wrap allowed. */
-function pathAbilityLabel(role: PathAbilityRole, hybrid: boolean): string {
-  if (role === 'secondary') return 'Secondary Ability';
-  if (role === 'power') return hybrid ? 'Power' : 'Archetype Ability';
-  if (role === 'martial') return hybrid ? 'Martial' : 'Archetype Ability';
-  return 'Archetype Ability';
+/**
+ * Visible pill copy — keep single-line and short on narrow tiles so wrapping cannot
+ * grow the straddling pill into the ability name. Full terms stay on aria-label/title.
+ */
+function pathAbilityVisibleLabel(role: PathAbilityRole, hybrid: boolean): string {
+  if (role === 'secondary') return 'Secondary';
+  if (role === 'power') return hybrid ? 'Power' : 'Archetype';
+  if (role === 'martial') return hybrid ? 'Martial' : 'Archetype';
+  return 'Archetype';
 }
 
 /** Full game term for screen readers / hover (matches path overview wording). */
@@ -139,17 +142,16 @@ function PathAbilityLabel({ role, hybrid }: { role: PathAbilityRole; hybrid: boo
       aria-label={accessible}
       title={accessible}
       className={cn(
-        'pointer-events-none absolute left-1/2 top-0 z-10 max-w-full -translate-x-1/2 -translate-y-1/2',
-        'rounded-pill border px-1.5 py-0.5 text-center text-[8px] font-semibold uppercase leading-tight tracking-wide',
+        'pointer-events-none absolute left-1/2 top-0 z-10 max-w-[calc(100%-0.25rem)] -translate-x-1/2 -translate-y-1/2',
+        'truncate whitespace-nowrap rounded-pill border px-1.5 py-0.5 text-center text-[8px] font-semibold uppercase leading-none tracking-wide',
         'font-nunito shadow-sm sm:px-2 sm:text-[9px]',
-        // Allow wrap so long labels stay inside the tile (no whitespace-nowrap spill).
         role === 'power' && 'border-power-border bg-power-light text-power-fg',
         role === 'martial' && 'border-martial-border bg-martial-light text-martial-fg',
         role === 'secondary' &&
           'border-primary-subtle-border bg-primary-subtle-bg text-primary-subtle-fg dark:border-primary-border dark:bg-primary-900/40 dark:text-primary-subtle-fg'
       )}
     >
-      {pathAbilityLabel(role, hybrid)}
+      {pathAbilityVisibleLabel(role, hybrid)}
     </span>
   );
 }
@@ -178,7 +180,8 @@ export function AbilityScoreGrid({
   return (
     <div
       className={cn(
-        'grid gap-3 pt-3 md:gap-4',
+        // Extra top padding clears straddling path pills above the tile edge.
+        'grid gap-3 pt-4 md:gap-4',
         // Display: compact 3×2 phone grid. Edit: wider cells so 44px steppers fit.
         isEdit
           ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6'
@@ -210,7 +213,9 @@ export function AbilityScoreGrid({
                 !isEdit && 'hover:shadow-md',
                 isEdit
                   ? 'flex-row items-center justify-between gap-2 px-3 py-2 sm:flex-col sm:justify-center sm:px-2 sm:py-2'
-                  : 'flex-col items-center px-2 py-2'
+                  : 'flex-col items-center px-2 py-2',
+                // After py-* so twMerge keeps clear-space under the straddling pill (incl. sm:py-2).
+                highlight && 'pt-3 sm:pt-3'
               )}
               aria-label={`${info.name} ${formatBonus(value)}`}
             >

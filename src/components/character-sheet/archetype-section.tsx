@@ -200,6 +200,55 @@ function WeaponsSection({
         : String(unarmedAttackBonus)) // Prowess I: full Attack Bonus, no dice
     : String(Math.max(1, Math.floor(unarmedAbility / 2)));
 
+  // Same table as weapons so Name/Range/Attack/Damage columns share widths.
+  const unarmedRow = (
+    <tr className="border-t border-border-light align-top">
+      <td className="py-2 font-medium text-text-secondary">
+        Unarmed Prowess
+        {hasProwess && (
+          <span className="text-xs text-primary-link-fg ml-1">(Proficient)</span>
+        )}
+      </td>
+      <td className="text-center py-2 text-text-muted dark:text-text-secondary">Melee</td>
+      <td className="text-center py-2">
+        {onRollAttack ? (
+          <RollButton
+            value={unarmedAttackBonus}
+            variant={hasProwess ? 'primary' : 'unproficient'}
+            onClick={() => onRollAttack('Unarmed Prowess', unarmedAttackBonus)}
+            size="sm"
+            title={`Roll unarmed attack (${hasProwess ? 'proficient' : 'unproficient'})`}
+          />
+        ) : (
+          <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{unarmedAttackBonus >= 0 ? '+' : ''}{unarmedAttackBonus}</span>
+        )}
+      </td>
+      <td className="text-center py-2">
+        <div className="flex flex-col items-center gap-0.5">
+          {onRollDamage ? (
+            <RollButton
+              value={0}
+              displayValue={unarmedDamageDisplay}
+              variant={hasProwess ? 'danger' : 'unproficient'}
+              onClick={() => {
+                // Roll expects dice pattern; at prowess 1 damage is Attack Bonus only (no dice)
+                const rollStr = hasProwess && !prowessData.damage
+                  ? `0d4 Bludgeoning`
+                  : `${unarmedDamageDisplay} Bludgeoning`;
+                onRollDamage(rollStr, unarmedAttackBonus);
+              }}
+              size="sm"
+              title="Roll unarmed damage"
+            />
+          ) : (
+            <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{unarmedDamageDisplay}</span>
+          )}
+          <span className="text-[10px] text-text-muted dark:text-text-secondary">Bludgeoning</span>
+        </div>
+      </td>
+    </tr>
+  );
+
   return (
     <div className="bg-surface-alt rounded-lg p-3 mb-4">
       <QuickWeaponsTable
@@ -208,59 +257,8 @@ function WeaponsSection({
         martialProf={martialProf}
         filterEquipped={false}
         className="bg-transparent p-0 mb-0"
+        trailingRows={unarmedRow}
       />
-      {/* Unarmed Prowess - always shown, styled based on proficiency */}
-      <TableScroll>
-      <table className="w-full text-sm">
-        <tbody>
-          <tr className="border-t border-border-light align-top">
-            <td className="py-2 font-medium text-text-secondary">
-              Unarmed Prowess
-              {hasProwess && (
-                <span className="text-xs text-primary-link-fg ml-1">(Proficient)</span>
-              )}
-            </td>
-            <td className="text-center py-2">
-              {onRollAttack ? (
-                <RollButton
-                  value={unarmedAttackBonus}
-                  variant={hasProwess ? 'primary' : 'unproficient'}
-                  onClick={() => onRollAttack('Unarmed Prowess', unarmedAttackBonus)}
-                  size="sm"
-                  title={`Roll unarmed attack (${hasProwess ? 'proficient' : 'unproficient'})`}
-                />
-              ) : (
-                <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{unarmedAttackBonus >= 0 ? '+' : ''}{unarmedAttackBonus}</span>
-              )}
-            </td>
-            <td className="text-center py-2">
-              <div className="flex flex-col items-center gap-0.5">
-                {onRollDamage ? (
-                  <RollButton
-                    value={0}
-                    displayValue={unarmedDamageDisplay}
-                    variant={hasProwess ? 'danger' : 'unproficient'}
-                    onClick={() => {
-                      // Roll expects dice pattern; at prowess 1 damage is Attack Bonus only (no dice)
-                      const rollStr = hasProwess && !prowessData.damage
-                        ? `0d4 Bludgeoning`
-                        : `${unarmedDamageDisplay} Bludgeoning`;
-                      onRollDamage(rollStr, unarmedAttackBonus);
-                    }}
-                    size="sm"
-                    title="Roll unarmed damage"
-                  />
-                ) : (
-                  <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{unarmedDamageDisplay}</span>
-                )}
-                <span className="text-[10px] text-text-muted dark:text-text-secondary">Bludgeoning</span>
-              </div>
-            </td>
-            <td className="text-center py-2 text-text-muted dark:text-text-secondary">Melee</td>
-          </tr>
-        </tbody>
-      </table>
-      </TableScroll>
     </div>
   );
 }

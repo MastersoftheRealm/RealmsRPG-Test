@@ -1,5 +1,5 @@
 /**
- * Training Point helpers for guided loadout customize (Layer 2).
+ * Training Point helpers for guided Loadout (L1 + L2) and powers/techniques budgets.
  */
 
 import type { CodexEquipmentItem } from '@/types/codex';
@@ -20,6 +20,7 @@ import {
   type LoadoutItemCategory,
 } from '@/lib/guided-creator/resolve-loadout-items';
 import { isItemSelectedInDraft } from '@/lib/guided-creator/loadout-pool';
+import { normalizeId } from '@/lib/utils';
 
 export { isItemSelectedInDraft };
 
@@ -60,10 +61,10 @@ function findLibraryRow(
   officialItems: LibraryItem[],
   codexEquipment: CodexEquipmentItem[]
 ): LibraryItem | CodexEquipmentItem | undefined {
-  const key = String(id).trim().toLowerCase();
+  const key = normalizeId(id);
   return (
-    officialItems.find((i) => String(i.id).trim().toLowerCase() === key) ??
-    codexEquipment.find((i) => String(i.id).trim().toLowerCase() === key)
+    officialItems.find((i) => normalizeId(i.id) === key) ??
+    codexEquipment.find((i) => normalizeId(i.id) === key)
   );
 }
 
@@ -189,4 +190,29 @@ export function trainingPointLimitFromRecommendedAbilities(
   }
   const highest = Math.max(...Object.values(recommended).map((v) => Number(v) || 0), 0);
   return getTrainingPointLimit(1, highest, rules);
+}
+
+/**
+ * Combine equipment loadout spend with powers/techniques spend against the same TP limit.
+ * `combatTpSpent` is the sum of selected power/technique Training Points (part totals).
+ */
+export function combineGuidedTpBudgets(
+  loadout: { spent: number; limit: number; remaining: number },
+  combatTpSpent: number
+): { spent: number; limit: number; remaining: number } {
+  const combat = Math.max(0, Math.floor(Number(combatTpSpent) || 0));
+  const spent = loadout.spent + combat;
+  return { spent, limit: loadout.limit, remaining: loadout.limit - spent };
+}
+
+/** True when adding `addTp` would exceed the shared Training Points budget. */
+export function wouldExceedSharedTp(
+  spent: number,
+  limit: number,
+  addTp: number,
+  opts?: { alreadySelected?: boolean }
+): boolean {
+  if (opts?.alreadySelected) return false;
+  const add = Math.max(0, Math.floor(Number(addTp) || 0));
+  return spent + add > limit;
 }

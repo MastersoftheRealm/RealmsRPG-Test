@@ -22,6 +22,7 @@ export function useCreatorPathData(): ArchetypePathData | undefined {
         (fromDraft.level1.feats?.length ||
           fromDraft.level1.skills?.length ||
           fromDraft.level1.powers?.length ||
+          fromDraft.level1.innatePowers?.length ||
           fromDraft.level1.techniques?.length ||
           fromDraft.level1.armaments?.length ||
           fromDraft.level1.equipment?.length ||

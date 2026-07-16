@@ -184,6 +184,8 @@ export interface CodexArchetype extends Archetype {
   level1_feats?: string[];
   level1_skills?: string[];
   level1_powers?: string[];
+  /** Recommended Innate Powers (CSV column `level1_innate_powers`; TASK-473). */
+  level1_innate_powers?: string[];
   level1_techniques?: string[];
   level1_armaments?: string[];
   level1_equipment?: string[];

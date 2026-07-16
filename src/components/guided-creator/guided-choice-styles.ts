@@ -33,7 +33,8 @@ export const GUIDED_CHOICE_CARD_PRESETS: Record<
   },
   /** Feats, traits, loadouts — short copy; 3-line preview (~120 chars). */
   compact: {
-    cardCollapsed: 'min-h-[9.25rem] sm:min-h-[9rem]',
+    // Includes reserved action-row slot so short selected cards (No Flaw) match peers.
+    cardCollapsed: 'min-h-[10.75rem] sm:min-h-[10.5rem]',
     bodyMinHeight: 'min-h-[3.9rem]',
     bodyClamp: 'line-clamp-3',
   },

@@ -20,18 +20,17 @@ describe('equipment-phase-nav', () => {
     expect(nextEquipmentPhase('weapon', 'required')).toBe('armor');
   });
 
-  it('requires weapons unless unarmed prowess taken', () => {
+  it('allows zero weapon/armor/Equipment picks (optional phases)', () => {
     const ctx = {
       loadoutWeapons: [],
       loadoutArmor: [],
-      recommendUnarmed: true,
+      recommendUnarmed: false,
       unarmedProwess: 0,
       armorMode: 'required' as const,
     };
-    expect(canCompleteEquipmentPhase('weapon', ctx)).toBe(false);
-    expect(
-      canCompleteEquipmentPhase('weapon', { ...ctx, unarmedProwess: 1 })
-    ).toBe(true);
+    expect(canCompleteEquipmentPhase('weapon', ctx)).toBe(true);
+    expect(canCompleteEquipmentPhase('armor', ctx)).toBe(true);
+    expect(canCompleteEquipmentPhase('gear', ctx)).toBe(true);
   });
 
   it('omits weapon and armor when path has no options', () => {
@@ -52,7 +51,7 @@ describe('equipment-phase-nav', () => {
     expect(visibleEquipmentPhases('none', visibility)).toEqual(['weapon', 'gear']);
   });
 
-  it('blocks jumping ahead before completing current phase', () => {
+  it('allows advancing to the next phase with zero selections', () => {
     const ctx = {
       loadoutWeapons: [],
       loadoutArmor: [],
@@ -60,6 +59,7 @@ describe('equipment-phase-nav', () => {
       unarmedProwess: 0,
       armorMode: 'required' as const,
     };
-    expect(canNavigateToEquipmentPhase('armor', 'weapon', 'required', ctx)).toBe(false);
+    expect(canNavigateToEquipmentPhase('armor', 'weapon', 'required', ctx)).toBe(true);
+    expect(canNavigateToEquipmentPhase('gear', 'armor', 'required', ctx)).toBe(true);
   });
 });

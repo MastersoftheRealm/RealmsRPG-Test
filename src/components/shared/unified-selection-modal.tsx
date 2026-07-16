@@ -26,7 +26,6 @@ import {
   ListHeader,
   gridColumnsWithInlineSelection,
   FilterSection,
-  QuantitySelector,
   ListEmptyState as EmptyState,
   LoadingState,
   type ColumnValue,
@@ -51,7 +50,7 @@ export interface SelectableItem {
   detailSections?: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }>;
   /** Total cost (TP, etc.) to show in expanded view */
   totalCost?: number;
-  /** Cost label (e.g. "TP") */
+  /** Cost label (e.g. "Training Points"; dense L3 columns may still use "TP") */
   costLabel?: string;
   /** Badges to display */
   badges?: Array<{ label: string; color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' }>;
@@ -127,6 +126,8 @@ export interface UnifiedSelectionModalProps {
   
   // Quantity support (for equipment)
   showQuantity?: boolean;
+  /** Seed quantities when the modal opens (keys = string item ids). */
+  initialQuantities?: Record<string, number>;
   
   /** Optional extra content in footer (e.g. per-item options for selected items) */
   footerExtra?: (selectedItems: SelectableItem[]) => ReactNode;
@@ -186,6 +187,7 @@ export function UnifiedSelectionModal({
   filterContent,
   showFilters = false,
   showQuantity = false,
+  initialQuantities = {},
   footerExtra,
   confirmDisabled,
   confirmLabel = 'Add Selected',
@@ -210,11 +212,24 @@ export function UnifiedSelectionModal({
     const justOpened = isOpen && !prevOpenRef.current;
     prevOpenRef.current = isOpen;
     if (justOpened) {
-      setSelectedIds(new Set([...initialSelectedIds].map((id) => String(id))));
-      setQuantities({});
+      const ids = new Set([...initialSelectedIds].map((id) => String(id)));
+      setSelectedIds(ids);
+      if (showQuantity) {
+        const next: Record<string, number> = {};
+        for (const id of ids) {
+          const seeded =
+            initialQuantities[id] ??
+            initialQuantities[id.toLowerCase()] ??
+            1;
+          next[id] = Math.max(1, Math.floor(Number(seeded)) || 1);
+        }
+        setQuantities(next);
+      } else {
+        setQuantities({});
+      }
       setSearchQuery('');
     }
-  }, [isOpen, initialSelectedIds]);
+  }, [isOpen, initialSelectedIds, initialQuantities, showQuantity]);
   
   // Filter items for display (displayFilter e.g. by source tab; selection still uses full items)
   const filteredItems = useMemo(() => {
@@ -397,39 +412,77 @@ export function UnifiedSelectionModal({
                     // Only item.disabled greys a row — never capacity/maxSelections
                     // (budget-exhausted lists stay readable for browsing).
                     const isSelectionDisabled = Boolean(item.disabled);
+                    const qty = showQuantity
+                      ? quantities[itemIdStr] ?? (isSelected ? 1 : 0)
+                      : undefined;
 
                     return (
-                      <div key={itemIdStr} className="flex items-center gap-2 min-w-0">
-                        <div className="flex-1 min-w-0">
-                          <GridListRow
-                            id={itemIdStr}
-                            name={item.name}
-                            description={item.description}
-                            columns={item.columns}
-                            chips={item.chips}
-                            detailSections={item.detailSections}
-                            totalCost={item.totalCost}
-                            costLabel={item.costLabel}
-                            badges={item.badges}
-                            gridColumns={
-                              gridColumns ? gridColumnsWithInlineSelection(gridColumns) : undefined
-                            }
-                            selectable
-                            isSelected={isSelected}
-                            onSelect={() => toggleSelection(item.id)}
-                            disabled={isSelectionDisabled}
-                            warningMessage={item.warningMessage}
-                            compact
-                          />
-                        </div>
-                        {showQuantity && isSelected && (
-                          <div className="flex-shrink-0 px-2">
-                            <QuantitySelector
-                              quantity={quantities[itemIdStr] || 1}
-                              onChange={(qty) => setQuantities(q => ({ ...q, [itemIdStr]: qty }))}
-                            />
-                          </div>
-                        )}
+                      <div key={itemIdStr} className="min-w-0">
+                        <GridListRow
+                          id={itemIdStr}
+                          name={item.name}
+                          description={item.description}
+                          columns={item.columns}
+                          chips={item.chips}
+                          detailSections={item.detailSections}
+                          totalCost={item.totalCost}
+                          costLabel={item.costLabel}
+                          badges={item.badges}
+                          gridColumns={
+                            gridColumns ? gridColumnsWithInlineSelection(gridColumns) : undefined
+                          }
+                          selectable
+                          isSelected={isSelected}
+                          onSelect={() => toggleSelection(item.id)}
+                          disabled={isSelectionDisabled}
+                          warningMessage={item.warningMessage}
+                          compact
+                          quantity={qty}
+                          quantityMin={showQuantity ? 0 : 1}
+                          quantityDecrementLabel={
+                            showQuantity
+                              ? `Decrease quantity for ${item.name}`
+                              : undefined
+                          }
+                          quantityIncrementLabel={
+                            showQuantity
+                              ? `Increase quantity for ${item.name}`
+                              : undefined
+                          }
+                          onQuantityChange={
+                            showQuantity && !isSelectionDisabled
+                              ? (delta) => {
+                                  const current = quantities[itemIdStr] ?? (isSelected ? 1 : 0);
+                                  const next = Math.max(0, Math.min(99, current + delta));
+                                  if (next <= 0) {
+                                    setSelectedIds((prev) => {
+                                      const nextSet = new Set(prev);
+                                      nextSet.delete(itemIdStr);
+                                      return nextSet;
+                                    });
+                                    setQuantities((q) => {
+                                      const nextQ = { ...q };
+                                      delete nextQ[itemIdStr];
+                                      return nextQ;
+                                    });
+                                    return;
+                                  }
+                                  if (maxSelections === 1) {
+                                    setSelectedIds(new Set([itemIdStr]));
+                                    setQuantities({ [itemIdStr]: next });
+                                    return;
+                                  }
+                                  setQuantities((q) => ({ ...q, [itemIdStr]: next }));
+                                  setSelectedIds((prev) => {
+                                    if (prev.has(itemIdStr)) return prev;
+                                    const nextSet = new Set(prev);
+                                    nextSet.add(itemIdStr);
+                                    return nextSet;
+                                  });
+                                }
+                              : undefined
+                          }
+                        />
                       </div>
                     );
                   })}

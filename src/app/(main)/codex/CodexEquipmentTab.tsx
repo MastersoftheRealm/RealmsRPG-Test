@@ -22,8 +22,8 @@ import { EmptyState } from '@/components/ui';
 import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { useSort } from '@/hooks/use-sort';
 import { useEquipment, useItemProperties, type ItemProperty } from '@/hooks';
-import { trainingPointsForItemPropertyRef } from '@/lib/calculators/item-calc';
 import { metadataDescriptorChip } from '@/lib/chip/list-row-metadata';
+import { namedPropertyDescriptorChips } from '@/lib/detail-option/compact-facts';
 import type { ChipData } from '@/components/shared/grid-list-row';
 
 const EQUIPMENT_GRID_COLUMNS = '1.3fr 0.9fr 0.65fr 0.75fr 1fr 0.7fr 40px';
@@ -62,17 +62,7 @@ function EquipmentCard({ item, propertiesDb = [] }: { item: Equipment; propertie
 
   const propertyChips = useMemo((): ChipData[] => {
     if (!item.properties || item.properties.length === 0) return [];
-    return item.properties.map((propName: string) => {
-      const match = propertiesDb.find((p: ItemProperty) => p.name.toLowerCase() === propName.toLowerCase());
-      const cost = trainingPointsForItemPropertyRef(propName, propertiesDb);
-      return {
-        name: match?.name || propName,
-        description: match?.description,
-        cost: cost > 0 ? cost : undefined,
-        costLabel: 'TP',
-        category: (cost > 0 ? 'cost' : 'default') as 'cost' | 'default',
-      };
-    });
+    return namedPropertyDescriptorChips(item.properties, propertiesDb);
   }, [item.properties, propertiesDb]);
 
   const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> = [];

@@ -153,7 +153,8 @@ These terms are used consistently across all Realms resources. Capitalize them i
 | **Energy** | Resource spent to use Powers (and some Techniques / items) |
 | **Health** | Damage capacity |
 | **Speed** | Movement measure from rules |
-| **Loadout** | Character's selected weapons, armor, and gear (path-recommended picks in guided creator) |
+| **Loadout** | Guided chapter and character kit covering weapons, armor, Equipment, Powers, and Techniques |
+| **Equipment** | Adventuring items that are not weapons or armor (guided Loadout phase; capitalize as a game term) |
 | **Overcome** | When a roll meets or exceeds a target Score, or vice versa |
 | **Action** | Something a creature does during its turn (Basic, Quick, Free, Movement, etc.) |
 | **Reaction** | Something a creature does outside its turn in response to a trigger |
@@ -180,11 +181,32 @@ This is a **guide**, not a muzzle. Prefer Realms terms; avoid importing other sy
 
 **Layer 1 / Layer 2 copy:** Spell game terms in full for new players (**Currency**, **Training Points**, **Damage Reduction**, …). Do not use compact abbreviations like `c` or `TP` in guided L1/L2 chrome, choice cards, or resource bars. Dense Layer 3 / advanced / table columns may keep short labels when the column header already names the term.
 
+**Guided budgets (TASK-456):** Currency and Training Points are visible constrained resources in Layer 1 and Layer 2 (PointStatus total/spent/remaining). Do not hide Training Points behind “Layer 2 only” or “included in your path” framing when the user is making constrained Loadout or Powers/Techniques selections.
+
 **Also avoid:** inventing systems we do not have. When unsure, match `GAME_RULES.md` and existing UI copy.
+
+### Mechanic labels in columns and chips (TASK-454)
+
+Capitalize rules terms and structured values in **column headers**, **collapsed list cells**, and **descriptor chips**. Do **not** title-case ordinary prose descriptions.
+
+| Context | Capitalize | Example |
+|---------|------------|---------|
+| Range / distance | **Range**, **Spaces** / **Space** | `Range 16 Spaces`, `3 Spaces` |
+| Action Type (**column / labeled metadata**) | **Action Type** + value | Column header `Action Type` + cell `Basic Reaction`; or labeled metadata `Action Type Basic Reaction` via `formatActionTypeFact` |
+| Action Type (**desc chip**) | Value only | Chip `Quick Action` / `Basic Reaction` via `actionTypeFactChip` / `formatActionTypeValue` — do **not** prefix “Action Type” on the chip |
+| Ability Requirement | **Abilityname Requirement** + level | `Strength Requirement 3+` (never "Ability Requirement Strength…", never "Weapon/Armor …") |
+| Damage | Die expression + capitalized damage type + **Damage** | `2d6 Slashing Damage` (do not also chip Weapon Damage) |
+| Weapon Ability | Ability name + **Weapon** | `Strength Weapon`, `Agility Weapon`, `Acuity Weapon` |
+| Handedness | Bare label | `Two-handed` (not "Handedness: Two-handed") |
+| Budgets | **Currency**, **Training Points** | `Currency 12`, `Training Points 4` |
+| Energy | **Energy** + amount | `Energy 4` |
+| Redundant mechanics | Suppress when already represented | No separate chips for **Weapon Damage**, **Damage Reduction** (property), **Armor Base**, **Shield Base** when dedicated facts/columns exist |
+
+Shared formatters live in `src/lib/detail-option/compact-facts.ts`. Feature UI must not invent parallel strings.
 
 ### Agent writing notes (user-facing strings)
 
-- Capitalize game terms only in game-term context (table above).
+- Capitalize game terms only in game-term context (table above and mechanic-label table).
 - **Named Bonuses are always Title Case in UI:** Attack Bonus, Martial Bonus, Power Bonus, Skill Bonus, Defense Bonus, Ranged Attack Bonus, Sub-Skill Bonus, and any new "… Bonus" rules label. Same idea for named Penalties. Do not write "attack bonus" / "martial bonus" when referring to the game concept.
 - Do **not** use em dashes (`—`) in new user-facing copy. Hyphens (`-`) in compounds (e.g. Powered-Martial, one-handed) are fine.
 - Prefer plain, specific wording over stock AI phrasing.

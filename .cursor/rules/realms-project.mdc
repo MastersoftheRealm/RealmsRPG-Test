@@ -1,17 +1,14 @@
 ---
-description: RealmsRPG project structure and tech stack
+description: RealmsRPG stack pointers — details in constitution / AGENTS.md
 alwaysApply: true
 ---
 
 # RealmsRPG Project
 
-**Stack:** Next.js (App Router), React, Tailwind, **Supabase** (PostgreSQL, Auth, Storage), **Vercel**. Database: Supabase client + raw SQL; all tables in `public`; no Prisma. **Schema source of truth:** `src/docs/SUPABASE_SCHEMA.md`.
+**Stack:** Next.js App Router, React, Tailwind, Supabase, Vercel. No Prisma. Schema: `SUPABASE_SCHEMA.md`.
 
-**Key directories:**
-- `src/app/` — Routes: `(main)/` (characters, library, codex, creators), `(auth)/` (login, register)
-- `src/components/` — `ui/` (primitives), `shared/` (reusable), `character-sheet/`, `creator/`, `codex/`
-- `src/hooks/`, `src/stores/`, `src/lib/`, `src/services/`, `src/types/`
+**Dirs:** `src/app/`, `src/components/{ui,shared,...}/`, `src/hooks/`, `src/stores/`, `src/lib/`, `src/services/`.
 
-**Deploy:** `vercel deploy` or push to connected repo — Vercel only.
+**Agent OS:** `ARCHITECTURE_CONSTITUTION.md` · tasks `ACTIVE_TASKS.md` · SoT map in root `AGENTS.md`.
 
-**Before PR:** Run `npm run build`. CI runs build + `scripts/reconcile_tasks.js`.
+**Before PR:** `npm run build`. CI: build + task reconcile (strict) + UI gates.

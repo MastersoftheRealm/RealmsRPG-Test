@@ -334,6 +334,9 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
         feats: toStrArray(r.level1_feats),
         skills: toStrArray(r.level1_skills),
         powers: toStrArray(r.level1_powers),
+        innatePowers: toStrArray(
+          r.level1_innate_powers ?? level1FromLegacy?.innatePowers ?? level1FromLegacy?.innate_powers
+        ),
         techniques: toStrArray(r.level1_techniques),
         armaments: toStrArray(r.level1_armaments),
         equipment: toStrArray(r.level1_equipment),
@@ -354,6 +357,7 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
         feats: level1Raw.feats as string[],
         skills: level1Raw.skills as string[],
         powers: level1Raw.powers as string[],
+        innatePowers: level1Raw.innatePowers as string[],
         techniques: level1Raw.techniques as string[],
         armaments: level1Raw.armaments as string[],
         equipment: level1Raw.equipment as string[],
@@ -395,6 +399,9 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
         level1_feats: toStrArray(r.level1_feats),
         level1_skills: toStrArray(r.level1_skills),
         level1_powers: toStrArray(r.level1_powers),
+        level1_innate_powers: toStrArray(
+          r.level1_innate_powers ?? level1FromLegacy?.innatePowers ?? level1FromLegacy?.innate_powers
+        ),
         level1_techniques: toStrArray(r.level1_techniques),
         level1_armaments: toStrArray(r.level1_armaments),
         level1_equipment: toStrArray(r.level1_equipment),

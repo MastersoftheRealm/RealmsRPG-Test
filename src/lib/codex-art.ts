@@ -3,6 +3,8 @@
  * Admin-only uploads via /api/upload/codex-art (service role); public read URLs in DB.
  */
 
+import { apiUpload } from '@/lib/api-client';
+
 export const CODEX_ART_BUCKET = 'codex-art';
 
 /** Entity kinds that may have paired card art. Skills, feats, and traits are excluded. */
@@ -63,15 +65,8 @@ export async function uploadCodexArt(
   formData.append('entityType', entityType);
   formData.append('entityId', entityId);
 
-  const res = await fetch('/api/upload/codex-art', {
-    method: 'POST',
-    body: formData,
-  });
-
-  const json = (await res.json()) as { url?: string; error?: string };
-  if (!res.ok || !json.url) {
-    throw new Error(json.error ?? 'Upload failed');
-  }
+  // DESIGN_INTENT: use apiUpload — same error surface as portrait/profile uploads.
+  const json = await apiUpload<{ url: string }>('/api/upload/codex-art', formData);
   const base = json.url.split('?')[0];
   return { url: `${base}?v=${Date.now()}` };
 }

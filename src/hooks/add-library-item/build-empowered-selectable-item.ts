@@ -56,7 +56,7 @@ export function buildEmpoweredPowerSelectableItem(item: UserTechnique): Selectab
     detailSections: detailSections.length > 0 ? detailSections : undefined,
     badges: [{ label: 'Empowered', color: 'gray' as const }],
     totalCost: Number(totals.trainingPoints ?? 0) || undefined,
-    costLabel: Number(totals.trainingPoints ?? 0) > 0 ? 'TP' : undefined,
+    costLabel: Number(totals.trainingPoints ?? 0) > 0 ? 'Training Points' : undefined,
     data: item,
   };
 }

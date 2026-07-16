@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { cn } from '@/lib/utils';
+import { cn, normalizeId } from '@/lib/utils';
 import { Button } from '@/components/ui';
 import { ValueStepper } from '@/components/shared';
 import type { PathItemRecommendation } from '@/types/archetype';
@@ -14,7 +14,6 @@ import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from './guided-choice-styles';
 import { GUIDED_CHOICE_GRID_ITEM_CLASS } from './guided-choice-grid';
 import {
   armorStatsForRef,
-  gearShortUseForRef,
   libraryRowForRef,
   weaponDamageLineForRef,
 } from '@/lib/guided-creator/equipment-catalog-rows';
@@ -40,10 +39,6 @@ import { useGuidedEquipmentCatalog } from '@/hooks/use-guided-equipment-catalog'
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 
 const phaseCopy = GUIDED_CREATOR_COPY.steps.loadout.phases;
-
-function normalizeId(id: string): string {
-  return String(id).trim().toLowerCase();
-}
 
 function isSelectedInPhase(
   phase: GuidedEquipmentPhase,
@@ -335,6 +330,7 @@ export function GuidedEquipmentL1Phase({
               properties: row.properties,
               damageLine: weaponDamageLineForRef(row.id, officialItems, codexEquipment),
               unitCost,
+              trainingPoints: row.trainingPoints,
               abilityRequirement: row.abilityRequirement,
               itemProperties,
             });
@@ -346,13 +342,14 @@ export function GuidedEquipmentL1Phase({
               damageReduction: armorStats.damageReduction,
               agilityPenalty: armorStats.agilityPenalty,
               unitCost,
+              trainingPoints: row.trainingPoints,
               itemProperties,
             });
           } else {
             stats = buildEquipmentPhaseCardStats({
               category: 'equipment',
-              shortUse: gearShortUseForRef(row.id, officialItems, codexEquipment),
               unitCost,
+              trainingPoints: row.trainingPoints,
             });
           }
 
@@ -371,34 +368,42 @@ export function GuidedEquipmentL1Phase({
                 selected={selected}
                 onSelect={() => toggleSelection(ref)}
                 selectAriaLabel={`${selected ? 'Deselect' : 'Select'} ${row.name}`}
-                expandedExtra={
-                  stats.detailChips.length > 0 ? (
-                    <GuidedEquipmentFactChips chips={stats.detailChips} mode="expand" />
+                titleMeta={
+                  stats.titleChips.length > 0 ? (
+                    <GuidedEquipmentFactChips chips={stats.titleChips} />
                   ) : undefined
                 }
-              >
-                {stats.cardChips.length > 0 ? (
-                  <div className="mt-2 px-1">
-                    <GuidedEquipmentFactChips chips={stats.cardChips} mode="tooltip" />
-                  </div>
-                ) : null}
-                {phase === 'gear' && selected ? (
-                  <div
-                    className="mt-2 flex items-center justify-between gap-2 px-1"
-                    onClick={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => e.stopPropagation()}
-                  >
-                    <span className="font-nunito text-sm text-text-secondary">Quantity</span>
-                    <ValueStepper
-                      value={qty}
-                      min={1}
-                      max={99}
-                      onChange={(next) => handleQuantityChange(ref, next)}
-                      label={`Quantity for ${row.name}`}
-                    />
-                  </div>
-                ) : null}
-              </GuidedChoiceCard>
+                expandedExtra={
+                  stats.detailChips.length > 0 ? (
+                    <GuidedEquipmentFactChips chips={stats.detailChips} />
+                  ) : undefined
+                }
+                beforeDisclosure={
+                  phase === 'gear' && selected ? (
+                    <div
+                      className="flex items-center gap-2"
+                      role="group"
+                      aria-label={`Quantity for ${row.name}`}
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    >
+                      <span className="font-nunito text-sm text-text-secondary shrink-0" aria-hidden="true">
+                        Quantity
+                      </span>
+                      <ValueStepper
+                        value={qty}
+                        min={1}
+                        max={99}
+                        size="sm"
+                        variant="inline"
+                        onChange={(next) => handleQuantityChange(ref, next)}
+                        decrementTitle={`Decrease quantity for ${row.name}`}
+                        incrementTitle={`Increase quantity for ${row.name}`}
+                      />
+                    </div>
+                  ) : undefined
+                }
+              />
             </div>
           );
         })}

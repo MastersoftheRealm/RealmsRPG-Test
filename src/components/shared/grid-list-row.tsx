@@ -218,6 +218,12 @@ export interface GridListRowProps {
   quantity?: number;
   /** Callback when quantity changes (enables +/- controls) */
   onQuantityChange?: (delta: number) => void;
+  /** Minimum quantity when steppers are shown (default 1; use 0 for quantity-first selection) */
+  quantityMin?: number;
+  /** Accessible decrement label for quantity steppers */
+  quantityDecrementLabel?: string;
+  /** Accessible increment label for quantity steppers */
+  quantityIncrementLabel?: string;
   
   // ===== UI Options =====
   /** Start expanded */
@@ -249,7 +255,7 @@ export const GridListRow = memo(function GridListRow({
   chipsLabel = 'Details',
   detailSections,
   totalCost,
-  costLabel = 'TP',
+  costLabel = 'Training Points',
   badges = [],
   requirements,
   expandedContent,
@@ -273,6 +279,9 @@ export const GridListRow = memo(function GridListRow({
   hideUsesInName = false,
   quantity,
   onQuantityChange,
+  quantityMin = 1,
+  quantityDecrementLabel,
+  quantityIncrementLabel,
   // UI options
   defaultExpanded = false,
   expanded: controlledExpanded,
@@ -473,14 +482,16 @@ export const GridListRow = memo(function GridListRow({
                 {uses.max > 0 ? `(${uses.current}/${uses.max})` : '-'}
               </span>
             )}
-            {/* Quantity display - editable if onQuantityChange provided */}
-            {quantity !== undefined && quantity > 0 && (
+            {/* Quantity display - editable if onQuantityChange provided (allows 0 for quantity-first) */}
+            {quantity !== undefined && (onQuantityChange || quantity > 0) && (
               onQuantityChange ? (
                 <QuantitySelector
                   quantity={quantity}
                   onChange={(val) => onQuantityChange(val - quantity)}
                   size="sm"
-                  min={1}
+                  min={quantityMin}
+                  decrementLabel={quantityDecrementLabel}
+                  incrementLabel={quantityIncrementLabel}
                 />
               ) : (
                 <QuantityBadge quantity={quantity} className="flex-shrink-0" />

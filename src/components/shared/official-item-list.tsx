@@ -80,7 +80,7 @@ export function OfficialItemList({
       getChips={(i) => i.parts}
       chipsLabel="Properties"
       getTotalCost={(i) => i.tp}
-      costLabel="TP"
+      costLabel="Training Points"
       errorMessage={errorMessage}
       sectionTitle={sectionTitle}
       searchPlaceholder={searchPlaceholder}

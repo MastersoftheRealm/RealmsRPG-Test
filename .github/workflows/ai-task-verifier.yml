@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -24,12 +26,23 @@ jobs:
       - name: Build
         run: npm run build --if-present
 
-      # Report-only: generates task-reconcile-report.json; use --strict locally to fail when done tasks have no matching commits
-      - name: Run reconcile (dry-run)
-        run: |
-          node scripts/reconcile_tasks.js
+      - name: Reconcile tasks (strict)
+        run: node scripts/reconcile_tasks.js --strict --strict-since=2026-07-15
+
+      - name: Validate agent doc links
+        run: node scripts/validate-agent-docs.js
+
+      - name: Validate FEATURE_INDEX paths
+        run: node scripts/validate-feature-index.js
+
+      - name: Validate related_files on open tasks
+        run: node scripts/validate-related-files.js
+
+      - name: Validate shared/ui allowlist
+        run: node scripts/validate-shared-ui-allowlist.js
 
       - name: Upload reconcile report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: reconcile-report

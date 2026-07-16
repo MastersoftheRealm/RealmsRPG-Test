@@ -88,4 +88,32 @@ describe('equipment-phase-candidates', () => {
     );
     expect(candidates.map((c) => c.id)).toEqual(['w1']);
   });
+
+  it('dedupes path + selected by id and skips wrong-phase selected rows', () => {
+    const pool = [{ id: 'w1', quantity: 1 }];
+    const candidates = getPhaseL1Candidates(
+      pool,
+      'weapon',
+      catalog,
+      rankCtx,
+      officialItems,
+      [],
+      ['W1', 'a1', 'missing']
+    );
+    expect(candidates.map((c) => c.id)).toEqual(['w1']);
+  });
+
+  it('promotes selected armor not in the path pool onto L1', () => {
+    const pool: { id: string; quantity: number }[] = [];
+    const candidates = getPhaseL1Candidates(
+      pool,
+      'armor',
+      catalog,
+      { pathRecommendedIds: new Set(), martAbil: null, powAbil: null },
+      officialItems,
+      [],
+      ['a1']
+    );
+    expect(candidates.map((c) => c.id)).toEqual(['a1']);
+  });
 });

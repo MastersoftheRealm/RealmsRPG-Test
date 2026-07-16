@@ -13,8 +13,8 @@ alwaysApply: false
 | Need | Import from |
 |------|-------------|
 | List rows (expandable) | `@/components/shared` → GridListRow |
-| List row entity thumb (44px, click preview) | `@/components/shared` → **ListRowThumbnail**; pass via `GridListRow` **`thumbnail`** prop — resolve with `resolveListRowThumbnail` / `resolveSpeciesListRowThumbnail` from `@/lib/list-row-image.ts` (see `AGENT_GUIDE.md` § Entity card art) |
-| Click-to-enlarge any inline image | `@/components/shared` → **ExpandableImage** — species art, portraits, choice cards, list thumbs; see `AGENT_GUIDE.md` § Entity card art |
+| List row entity thumb (44px, click preview) | `@/components/shared` → **ListRowThumbnail**; pass via `GridListRow` **`thumbnail`** prop — resolve with `resolveListRowThumbnail` / `resolveSpeciesListRowThumbnail` from `@/lib/list-row-image.ts` (see `guide/03-entity-card-art.md`) |
+| Click-to-enlarge any inline image | `@/components/shared` → **ExpandableImage** — species art, portraits, choice cards, list thumbs; see `guide/03-entity-card-art.md` |
 | Guided choice card hero art | `@/components/guided-creator` → **GuidedChoiceCard** + `guided-choice-image.ts` |
 | Admin codex card art upload | `@/components/shared` → **CodexArtUploadField** + `@/lib/codex-art.ts` |
 | Sortable column headers | `@/components/shared` → ListHeader (default styling; see below) |
@@ -30,8 +30,8 @@ alwaysApply: false
 | Primary nav tabs (underline, badges) | `@/components/ui` → TabNavigation |
 | Page layout | `@/components/ui` → PageContainer, PageHeader |
 | Modals, Buttons, Chips | `@/components/ui` |
-| Contextual help (optional rules / step info) | `@/components/shared` → **InfoTippy** + `public/tooltip-text.tsx` — **not** for menus/filters; see `AGENT_GUIDE.md` § Floating UI & contextual help |
-| Entity list thumb / choice-card art | **Do not** build per-page — `AGENT_GUIDE.md` § **Entity card art & list thumbnails**; `REALMS_PRODUCT_OVERVIEW.md` §5.0.3 |
+| Contextual help (optional rules / step info) | `@/components/shared` → **InfoTippy** + `public/tooltip-text.tsx` — **not** for menus/filters; see `guide/04-floating-ui-tooltips.md` |
+| Entity list thumb / choice-card art | **Do not** build per-page — `guide/03-entity-card-art.md`; `REALMS_PRODUCT_OVERVIEW.md` §5.0.3 |
 
 ### ListHeader in modals
 
@@ -54,8 +54,9 @@ Before creating **any** new component, hook, service, API route, or util, confir
 2. Grep the barrels: `src/components/shared/index.ts`, `src/components/ui/index.ts`, `src/hooks/index.ts`, `src/services/index.ts`.
 3. Grep `src/lib/` for calculators/formulas/utils by keyword.
 4. If something similar exists, **extend it with a prop/variant** rather than forking a parallel copy.
+5. New shared/ui file or zustand store → Architect path (`ARCHITECTURE_CONSTITUTION.md` + ADR or owner ack).
 
-This is the main guardrail against re-implementation — the most common multi-agent failure mode in this repo (e.g. parallel `Library*Tab` vs `AdminPublic*Tab`, duplicate load hooks, duplicate official/public APIs).
+This is the main guardrail against re-implementation — e.g. do not fork another My Library tab; use `UserLibraryEntityTabShell` under `library/components/` (ADR-0001).
 
 ## Before adding a new component
 

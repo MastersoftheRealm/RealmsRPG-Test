@@ -34,6 +34,11 @@ export interface GuidedChoiceCardProps {
   tagline?: string;
   fullDescription?: ReactNode;
   tags?: string[];
+  /**
+   * Title-adjacent metadata (e.g. Currency / Training Points chips).
+   * Renders beside the title — never under the disclosure row.
+   */
+  titleMeta?: ReactNode;
   /** Explicit image URL (overrides imageKind/imageRecord resolution). */
   imageUrl?: string | null;
   /** Codex record to read image_url from when imageUrl is omitted. */
@@ -46,6 +51,11 @@ export interface GuidedChoiceCardProps {
   selected?: boolean;
   onSelect: () => void;
   children?: ReactNode;
+  /**
+   * Content above See more / See less / More details (e.g. quantity stepper).
+   * Prefer this over `children` so nothing sits under the disclosure boundary.
+   */
+  beforeDisclosure?: ReactNode;
   /** Shown only when expanded (See more) — e.g. feat restriction notices. */
   expandedExtra?: ReactNode;
   /**
@@ -161,6 +171,7 @@ export function GuidedChoiceCard({
   tagline,
   fullDescription,
   tags,
+  titleMeta,
   imageUrl,
   imageRecord,
   imageKind,
@@ -170,6 +181,7 @@ export function GuidedChoiceCard({
   selected = false,
   onSelect,
   children,
+  beforeDisclosure,
   expandedExtra,
   hideTagsWhenExpanded = false,
   expandLabel,
@@ -227,7 +239,7 @@ export function GuidedChoiceCard({
       ? body.canExpand || textOverflows
       : body.kind === 'plain' && textOverflows);
 
-  const showBodySection = body.kind !== 'none' || hasExpandedExtra;
+  const showBodySection = body.kind !== 'none' || hasExpandedExtra || Boolean(beforeDisclosure);
   const showReadMore = !expanded && canInlineExpand;
   const showCollapse = expanded && showBodySection && !selected;
 
@@ -239,18 +251,17 @@ export function GuidedChoiceCard({
   const showDetails = Boolean(onDetails) && (expanded || !canInlineExpand);
   const hasVisibleActions = showReadMore || showCollapse || showDetails;
   /**
-   * Reserve action-row height while collapsed (stable See more / More details placement).
-   * When expanded, only render the row if a control is visible — an empty min-h-11 under
-   * info notices (feats/traits) looked like wasted space below the callout.
-   * Short selected options without notices still rely on density `cardCollapsed` min-height.
-   */
-  const showActionRow = showBodySection && (hasVisibleActions || !expanded);
-  /**
    * Keep the collapsed body floor unless the card is expanded with an info notice and no
    * More details control — that combination was the sparse gap under restriction callouts.
    * Path/species (More details) and short cards like No Flaw keep the floor.
    */
   const keepBodyFloor = !expanded || showDetails || !hasExpandedExtra;
+  /**
+   * Reserve action-row height while collapsed, and for selected/expanded cards that keep
+   * the body floor (e.g. No Flaw). Dropping the empty min-h-11 only when expanded with an
+   * info notice — otherwise short selected cards shrink when alone on a grid row.
+   */
+  const showActionRow = showBodySection && (hasVisibleActions || keepBodyFloor);
 
   const handleCardKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -338,6 +349,15 @@ export function GuidedChoiceCard({
             <div className="flex flex-wrap items-start gap-2">
               <h3 className={s.title}>{title}</h3>
               {badge && <DescriptorChip size="sm">{badge}</DescriptorChip>}
+              {titleMeta ? (
+                <div
+                  className="flex min-w-0 flex-wrap items-center gap-1.5"
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
+                >
+                  {titleMeta}
+                </div>
+              ) : null}
             </div>
             {showBodySection ? (
               <div className={s.bodyWrap}>
@@ -359,6 +379,7 @@ export function GuidedChoiceCard({
                 {expanded && expandedExtra ? (
                   <div className="mt-2">{expandedExtra}</div>
                 ) : null}
+                {beforeDisclosure ? <div className="mt-2">{beforeDisclosure}</div> : null}
                 {/*
                   See more / See less / More details stay below body copy (product
                   placement). Shared min-h-11 row so deep-dive does not add a second strip.

@@ -11,13 +11,22 @@ import { deriveTechniqueDisplay, type TechniqueDocument } from '@/lib/calculator
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import type { LibraryPower, LibraryTechnique } from '@/types/library';
 import type { ChipData } from '@/components/shared/grid-list-row-types';
-import { factChip, type DetailOptionItemModel } from './builders';
+import { type DetailOptionItemModel } from './builders';
+import {
+  actionTypeFactChip,
+  compactFactChip,
+  damageFactChip,
+  energyFactChip,
+  rangeFactChip,
+  trainingPointsFactChip,
+} from './compact-facts';
 
 function pushFact(chips: ChipData[], label: string, value: string | number | null | undefined) {
   if (value == null) return;
   const text = String(value).trim();
   if (!text || text === '—' || text.toLowerCase() === 'none') return;
-  chips.push(factChip(`${label} ${text}`));
+  const chip = compactFactChip(`${label} ${text}`);
+  if (chip) chips.push(chip);
 }
 
 export function buildCombatLookup(
@@ -47,13 +56,21 @@ export function powerToDetailOption(
       } satisfies PowerDocument,
       powerPartsDb
     );
-    if (typeof disp.energy === 'number') pushFact(chips, 'Energy', disp.energy);
-    if (disp.actionType) pushFact(chips, 'Action Type', disp.actionType);
-    if (disp.range) pushFact(chips, 'Range', disp.range);
+    const tpChip = trainingPointsFactChip(disp.tp);
+    if (tpChip) chips.push(tpChip);
+    const energyChip = energyFactChip(
+      typeof disp.energy === 'number' ? disp.energy : undefined
+    );
+    if (energyChip) chips.push(energyChip);
+    const actionChip = actionTypeFactChip(disp.actionType);
+    if (actionChip) chips.push(actionChip);
+    const rangeChip = rangeFactChip(disp.range);
+    if (rangeChip) chips.push(rangeChip);
     if (disp.area) pushFact(chips, 'Area', disp.area);
     if (disp.duration) pushFact(chips, 'Duration', disp.duration);
     const damage = formatPowerDamage(power.damage);
-    if (damage) pushFact(chips, 'Damage', damage);
+    const dmgChip = damageFactChip(damage);
+    if (dmgChip) chips.push(dmgChip);
     void energyTag;
   } catch {
     // still return the resolved row
@@ -85,9 +102,16 @@ export function techniqueToDetailOption(
       } satisfies TechniqueDocument,
       techniquePartsDb
     );
-    if (typeof disp.energy === 'number') pushFact(chips, 'Energy', disp.energy);
-    if (disp.actionType) pushFact(chips, 'Action Type', disp.actionType);
-    if (disp.damageStr) pushFact(chips, 'Damage', disp.damageStr);
+    const tpChip = trainingPointsFactChip(disp.tp);
+    if (tpChip) chips.push(tpChip);
+    const energyChip = energyFactChip(
+      typeof disp.energy === 'number' ? disp.energy : undefined
+    );
+    if (energyChip) chips.push(energyChip);
+    const actionChip = actionTypeFactChip(disp.actionType);
+    if (actionChip) chips.push(actionChip);
+    const dmgChip = damageFactChip(disp.damageStr);
+    if (dmgChip) chips.push(dmgChip);
     if (disp.weaponName) pushFact(chips, 'Weapon', disp.weaponName);
     void energyTag;
   } catch {

@@ -11,6 +11,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import type { AuthUser } from '@/types/auth';
 import { createClient } from '@/lib/supabase/client';
+import { apiUpload } from '@/lib/api-client';
 import { changeUsernameAction, getUserProfileAction, deleteAccountAction } from '@/app/(auth)/actions';
 import { useAuthStore } from '@/stores';
 import { useAdmin } from '@/hooks';
@@ -131,17 +132,7 @@ function AccountContent() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const res = await fetch('/api/upload/profile-picture', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: res.statusText }));
-        throw new Error((err as { error?: string }).error ?? 'Upload failed');
-      }
-
-      const { url } = (await res.json()) as { url: string };
+      const { url } = await apiUpload<{ url: string }>('/api/upload/profile-picture', formData);
       // Cache-bust so the browser shows the new image (same path is overwritten in storage)
       setProfile((prev) => (prev ? { ...prev, photoURL: `${url}?t=${Date.now()}` } : null));
       setPictureMessage({ type: 'success', text: 'Profile picture updated!' });

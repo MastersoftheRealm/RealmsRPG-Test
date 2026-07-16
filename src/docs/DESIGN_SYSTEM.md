@@ -225,10 +225,13 @@ import { Button } from '@/components/ui';
 <Button isLoading>Loading...</Button>
 ```
 
-**Always use the `<Button>` component for buttons.** Legacy gradient utilities (`.btn-primary`, etc.) and raw link button classes (`.btn-solid`, `.btn-outline-clean`) were removed in Phase 0.4 / Phase 2.1. For links styled as buttons, use `<Button asChild><Link …></Button>`. Stepper buttons still use:
-- `.btn-stepper`, `.btn-stepper-danger`, `.btn-stepper-success` - +/- stepper buttons
+**Always use the `<Button>` component for buttons.** Legacy gradient utilities (`.btn-primary`, etc.) and raw link button classes (`.btn-solid`, `.btn-outline-clean`) were removed in Phase 0.4 / Phase 2.1. For links styled as buttons, use `<Button asChild><Link …></Button>`. Stepper buttons:
 
-> **Note:** Navigation buttons (back/continue) now use the `<Button>` component with `variant="secondary"` for back and default for continue.
+- **Default (preferred):** `.btn-stepper` — sleek/neutral surface buttons (rounded, not red/green circles). Shared `ValueStepper`, `DecrementButton` / `IncrementButton`, and `QuantitySelector` use this class sitewide (aligns with skill bonus steppers). Do not hand-roll ± buttons.
+- Soft domain tints: `ValueStepper` `colorVariant="health" | "energy"` only where HP/EN context needs it.
+- Deprecated: `.btn-stepper-danger` / `.btn-stepper-success` (keep for rare legacy call sites; do not use for new UI).
+
+Touch targets remain ≥44px on viewports below `md` (see `MOBILE_UX.md`).
 
 ### Cards
 
@@ -264,12 +267,17 @@ Two chip **roles** (see `src/docs/ai/CHIP_UNIFICATION_PLAN.md`):
 | **Expandable** | `<ExpandableChip>` | `rounded-lg` | Parts/properties with descriptions (expand in place) |
 | **Filter / legacy** | `<Chip shape="pill">` | `rounded-full` | Removable tags, filter chips |
 
+**Descriptor + help (TASK-454):** When a non-mechanic property needs a description but must **not** expand, use **`DescriptorChipWithTip`** from `@/components/shared` — `DescriptorChip` + compact `InfoTippy` (`size="inline"`). Hover, focus, and touch-hold follow the Floating UI / InfoTippy standard. Do not turn these into ExpandableChips.
+
+**Compact facts:** Prefer formatters in `@/lib/detail-option/compact-facts` for Ability Requirement, handedness, damage, weapon Ability, Range, Spaces, Action Type, Currency, and Training Points. Dense GridListRow browse keeps labeled **columns**; chips are for when columns are omitted (see AGENT_GUIDE fact policy).
+
 **Size by role** (use consistently — do not mix expandable `sm` into summary/list contexts):
 
 | Context | Component | Size | Notes |
 |---------|-----------|------|-------|
 | GridListRow expanded sections, summary panels, creator part lists | `ExpandableChip` | **`md`** (default) | `text-sm` header; expanded body scales with size |
 | Inline metadata (tags, feat type, row badges, choice-card tags) | `DescriptorChip` | **`sm`** (default) | Compact opaque labels |
+| Property name + optional description tip | `DescriptorChipWithTip` | **`sm`** | Non-expanding; InfoTippy for description |
 | Summary counters, TP totals, step progress (e.g. "2 / 5 feats") | `DescriptorChip` | **`md`** | **Prominent descriptor** — not entity chips |
 | Hero emphasis (creator rarity badge) | `DescriptorChip` | **`lg`** | **Prominent descriptor** — single focal badge |
 | Filter / removable pills | `<Chip shape="pill">` | context-dependent | Often `sm` in dense toolbars |
@@ -280,10 +288,16 @@ Use **`SummaryChipList`** (`@/components/shared`) for read-only entity lists (sk
 
 ```tsx
 import { Chip, DescriptorChip, ExpandableChip } from '@/components/ui';
+import { DescriptorChipWithTip } from '@/components/shared';
 
 // Descriptor metadata (opaque, non-expandable)
 <DescriptorChip>Archetype Feat</DescriptorChip>
 <DescriptorChip variant="rarityRare">Rare</DescriptorChip>
+
+// Non-mechanic property with tip (never expands)
+<DescriptorChipWithTip
+  chip={{ name: 'Graze', description: 'Deal half damage on a miss.', kind: 'descriptor' }}
+/>
 
 // Expandable part/property chip (single implementation — GridListRow, sheet, creators)
 // Default size is md — do not pass size="sm" for entity chips with descriptions

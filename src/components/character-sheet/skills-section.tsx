@@ -380,9 +380,10 @@ export function SkillsSection({
                     }
                   }}
                   canIncrease={canIncreaseSkill(skill)}
-                  onRemove={showEditControls && onRemoveSkill 
-                    ? () => onRemoveSkill(skill.id) 
-                    : undefined
+                  onRemove={
+                    showEditControls && onRemoveSkill && !isFromSpecies
+                      ? () => onRemoveSkill(skill.id)
+                      : undefined
                   }
                   showRollButton={!showEditControls && rollContext?.canRoll !== false}
                   onRoll={() => rollContext?.rollSkill?.(skill.name, bonus, skill.ability ? ABILITY_ABBR[skill.ability.toLowerCase()] : undefined)}
