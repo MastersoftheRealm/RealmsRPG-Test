@@ -5,6 +5,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { parseRelatedFilesFromBlock } = require('./parse-related-files');
 
 const repoRoot = path.resolve(__dirname, '..');
 const queueFiles = ['src/docs/ai/ACTIVE_TASKS.md', 'src/docs/ai/WAITING_TASKS.md'];
@@ -23,12 +24,8 @@ for (const queueRel of queueFiles) {
     const id = block.match(/- id:\s*(TASK-\d+)/)?.[1];
     const status = block.match(/\n\s*status:\s*(.+)/)?.[1]?.trim();
     if (!['not-started', 'in-progress', 'partial', 'blocked'].includes(status || '')) continue;
-    const relatedMatch = block.match(/\n\s*related_files:\n([\s\S]*?)(\n\S|$)/);
-    if (!relatedMatch) continue;
-    const files = relatedMatch[1]
-      .split('\n')
-      .map((l) => l.replace(/^\s*-\s*/, '').trim())
-      .filter(Boolean);
+    const files = parseRelatedFilesFromBlock(block);
+    if (!files.length) continue;
     for (const f of files) {
       if (f.includes('*') || f.includes('…') || f.startsWith('http')) continue;
       const abs = path.join(repoRoot, f);
