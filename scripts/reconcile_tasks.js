@@ -8,6 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const { parseRelatedFilesFromBlock } = require('./parse-related-files');
 
 const repoRoot = path.resolve(__dirname, '..');
 const aiDir = path.join(repoRoot, 'src', 'docs', 'ai');
@@ -41,14 +42,7 @@ function parseTasksFromFile(filePath) {
     const title = block.match(/\n\s*title:\s*(.+)/)?.[1]?.trim() || '';
     const status = block.match(/\n\s*status:\s*(.+)/)?.[1]?.trim() || '';
     const completed_at = block.match(/\n\s*completed_at:\s*(.+)/)?.[1]?.trim() || '';
-    const relatedMatch = block.match(/\n\s*related_files:\n([\s\S]*?)(\n\S|$)/);
-    let related_files = [];
-    if (relatedMatch) {
-      related_files = relatedMatch[1]
-        .split('\n')
-        .map((l) => l.replace(/^\s*-\s*/, '').trim())
-        .filter(Boolean);
-    }
+    const related_files = parseRelatedFilesFromBlock(block);
     return { id, title, status, completed_at, related_files, source: path.relative(repoRoot, filePath), raw: block };
   });
 }

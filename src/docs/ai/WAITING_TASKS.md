@@ -108,7 +108,7 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
     Add /power-creator entry chooser (Guided vs Advanced) and /power-creator/guided route shell reusing guided-creator chrome (GuidedStepLayout, footer, preview slot). Advanced remains current builder at /power-creator/advanced or equivalent. No wizard steps yet — navigation scaffold only.
   related_files:
     - src/app/(main)/power-creator/page.tsx
-    - src/app/(main)/power-creator/guided/page.tsx
+    - src/app/(main)/characters/new/page.tsx
     - src/components/guided-creator/
     - src/docs/REALMS_PRODUCT_OVERVIEW.md
   acceptance_criteria:
@@ -132,7 +132,7 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
   description: |
     Implement guided power wizard steps 1–3 (REALMS §5.11): (1) audience — pick saved character OR generic Power vs Powered-Martial + level; (2) innate intent toggle with InfoTippy and constraint preview; (3) power category cards mapped to codex part categories (Offense, Defense, Utility, Control, etc.). Store in guided-power-creator-store or equivalent; preserve handoff shape for advanced editor.
   related_files:
-    - src/app/(main)/power-creator/guided/
+    - src/app/(main)/power-creator/page.tsx
     - src/components/guided-creator/
     - public/tooltip-text.tsx
     - src/docs/GAME_RULES.md
@@ -158,8 +158,8 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
   description: |
     Complete guided power wizard steps 4–7: delivery (melee/ranged/area), damage yes/no + presets, template pick from official_powers (curated per category — e.g. Fireball, Icebolt, Healing Incantation, Protective Ward, Charm Creature, Fog Cloud) or start blank, name/description + live preview, save to My Library or open Advanced with state handoff. Reuse existing calculators and useCreatorSave.
   related_files:
-    - src/app/(main)/power-creator/guided/
-    - src/hooks/useOfficialLibrary.ts
+    - src/app/(main)/power-creator/page.tsx
+    - src/hooks/use-official-library.ts
     - src/lib/calculators/
     - src/docs/REALMS_PRODUCT_OVERVIEW.md
   acceptance_criteria:
