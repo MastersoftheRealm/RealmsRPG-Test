@@ -18,7 +18,16 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests/visual',
   testMatch: /.*\.pw\.ts/,
-  testIgnore: [/auth-screenshots\.pw\.ts/, /auth-a11y\.pw\.ts/],
+  testIgnore: [
+    /auth-screenshots\.pw\.ts/,
+    /auth-a11y\.pw\.ts/,
+    // Audit suites run via dedicated playwright.*.config.ts (npm run verify:*-audit).
+    /shell-creators-audit\.pw\.ts/,
+    /site-copy-audit\.pw\.ts/,
+    /guided-.*-audit\.pw\.ts/,
+    /creator-ux-audit\.pw\.ts/,
+    /chip-unification\.pw\.ts/,
+  ],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

@@ -21,6 +21,9 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
 
   return (
     <html lang="en">
+      <head>
+        <title>RealmsRPG — Error</title>
+      </head>
       <body className="min-h-screen bg-surface text-text-primary font-sans antialiased flex items-center justify-center px-4">
         <main id="main-content" className="max-w-md text-center space-y-4">
           <h1 className="text-xl font-semibold">Something went wrong</h1>
