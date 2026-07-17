@@ -2512,8 +2512,8 @@ Convention: `ARCHITECTURE.md` § Client error handling. Automated helper coverag
 | **Suite** | DEV-V-024 |
 | **Task** | TASK-479 |
 | **Where** | `/my-account` |
-| **Steps** | 1. Sign in. 2. Open My Account with a forced profile-load failure (e.g. temporary network block on the profile action) or confirm that a successful load shows no danger Alert. 3. Trigger password-reset email / picture upload error paths if easy. |
-| **Expected** | Profile load failure shows a danger Alert (not a blank page with silent incomplete data). User actions show inline error text — never succeed silently when Supabase returns `{ error }`. |
+| **Steps** | 1. Sign in. 2. Open My Account with a forced profile-load failure (e.g. temporary network block on the profile action) or confirm that a successful load shows no danger Alert. 3. On failure, press Retry and confirm reload is attempted without a full browser refresh. 4. Trigger password-reset email / picture upload error paths if easy. |
+| **Expected** | Profile load failure shows a danger Alert + Retry (≥44px). User actions show inline error text — never succeed silently when Supabase returns `{ error }`. |
 | **Report** | DEV-V-024-T002: PASS / FAIL / SKIP — |
 
 #### DEV-V-024-T003 — Library delete/sync/add toast on failure

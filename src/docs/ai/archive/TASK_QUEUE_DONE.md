@@ -27,6 +27,9 @@ Firebase/RTDB - the project is Supabase-only.
     - src/docs/ARCHITECTURE.md
     - src/docs/ai/ARCHITECTURE_CONSTITUTION.md
     - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AI_CHANGELOG.md
   description: |
     Audit residual: throw (apiFetch), Supabase { error }, toast catch, and silent catch coexist.
     Write a short boundary convention and migrate the worst silent swallows on account/library paths.
@@ -40,6 +43,7 @@ Firebase/RTDB - the project is Supabase-only.
     Account: profile load / auth reset / avatar sync check Supabase {error} or action error; no empty catch.
     Library: findLibraryItemByName no longer swallows API failures; delete/sync/duplicate/add toasts use getErrorMessage.
     BUILD_VALIDATION DEV-V-024 added. npm run build + targeted vitest green.
+    Cleanup: profile-load Retry control; archive related_files include FEATURE_INDEX/DEV queue/changelog.
   developer_test_plan: |
     DEV-V-024-T001 automated; T002-T003 manual smoke on /my-account and /library.
 

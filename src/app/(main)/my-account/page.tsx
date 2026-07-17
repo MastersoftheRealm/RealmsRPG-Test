@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import type { AuthUser } from '@/types/auth';
 import { createClient } from '@/lib/supabase/client';
@@ -64,6 +64,7 @@ function AccountContent() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileLoadError, setProfileLoadError] = useState<string | null>(null);
+  const [profileRetrying, setProfileRetrying] = useState(false);
 
   const [newEmail, setNewEmail] = useState('');
   const [emailPassword, setEmailPassword] = useState('');
@@ -90,53 +91,55 @@ function AccountContent() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadProfile() {
-      if (!user) return;
+  const loadProfile = useCallback(async (opts?: { isRetry?: boolean }) => {
+    if (!user) return;
 
-      setProfileLoadError(null);
-      try {
-        const { profile: p, error } = await getUserProfileAction();
-        if (error) {
-          setProfileLoadError(error);
-          setProfile({
-            email: user.email ?? undefined,
-            photoURL: user.photoURL ?? undefined,
-          });
-          return;
-        }
-        if (p) {
-          const rawPhoto = (p.photoUrl as string) ?? undefined;
-          const photoURL = rawPhoto
-            ? `${rawPhoto}?t=${p.updatedAt ? new Date(p.updatedAt as string | number | Date).getTime() : Date.now()}`
-            : (user.photoURL ?? undefined);
-          setProfile({
-            username: (p.usernameDisplay as string | undefined) ?? (p.username as string | undefined) ?? undefined,
-            email: (p.email as string | undefined) ?? user.email ?? undefined,
-            createdAt: p.createdAt instanceof Date ? p.createdAt : p.createdAt ? new Date(p.createdAt as string | number | Date) : undefined,
-            photoURL,
-            role: (p.role as UserProfile['role']) ?? undefined,
-            rolePolicy: (p.rolePolicy as UserProfile['rolePolicy']) ?? undefined,
-          });
-        } else {
-          setProfile({
-            email: user.email ?? undefined,
-            photoURL: user.photoURL ?? undefined,
-          });
-        }
-      } catch (err: unknown) {
-        setProfileLoadError(getErrorMessage(err, 'Failed to load profile'));
+    if (opts?.isRetry) setProfileRetrying(true);
+    setProfileLoadError(null);
+    try {
+      const { profile: p, error } = await getUserProfileAction();
+      if (error) {
+        setProfileLoadError(error);
         setProfile({
           email: user.email ?? undefined,
           photoURL: user.photoURL ?? undefined,
         });
-      } finally {
-        setLoading(false);
+        return;
       }
+      if (p) {
+        const rawPhoto = (p.photoUrl as string) ?? undefined;
+        const photoURL = rawPhoto
+          ? `${rawPhoto}?t=${p.updatedAt ? new Date(p.updatedAt as string | number | Date).getTime() : Date.now()}`
+          : (user.photoURL ?? undefined);
+        setProfile({
+          username: (p.usernameDisplay as string | undefined) ?? (p.username as string | undefined) ?? undefined,
+          email: (p.email as string | undefined) ?? user.email ?? undefined,
+          createdAt: p.createdAt instanceof Date ? p.createdAt : p.createdAt ? new Date(p.createdAt as string | number | Date) : undefined,
+          photoURL,
+          role: (p.role as UserProfile['role']) ?? undefined,
+          rolePolicy: (p.rolePolicy as UserProfile['rolePolicy']) ?? undefined,
+        });
+      } else {
+        setProfile({
+          email: user.email ?? undefined,
+          photoURL: user.photoURL ?? undefined,
+        });
+      }
+    } catch (err: unknown) {
+      setProfileLoadError(getErrorMessage(err, 'Failed to load profile'));
+      setProfile({
+        email: user.email ?? undefined,
+        photoURL: user.photoURL ?? undefined,
+      });
+    } finally {
+      setLoading(false);
+      setProfileRetrying(false);
     }
-
-    loadProfile();
   }, [user]);
+
+  useEffect(() => {
+    void loadProfile();
+  }, [loadProfile]);
 
   const handleProfilePictureUpload = async (blob: Blob) => {
     if (!user) return;
@@ -355,9 +358,21 @@ function AccountContent() {
       />
 
       {profileLoadError && (
-        <Alert variant="danger">
-          {profileLoadError}. Some account details may be incomplete — refresh to try again.
-        </Alert>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+          <Alert variant="danger" className="flex-1 min-w-0">
+            {profileLoadError}. Some account details may be incomplete.
+          </Alert>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => void loadProfile({ isRetry: true })}
+            disabled={profileRetrying}
+            aria-label="Retry loading account profile"
+            className="min-h-[var(--touch-target-min,44px)] shrink-0 self-stretch sm:self-auto"
+          >
+            {profileRetrying ? 'Retrying…' : 'Retry'}
+          </Button>
+        </div>
       )}
 
       <Card className="shadow-md p-6">
