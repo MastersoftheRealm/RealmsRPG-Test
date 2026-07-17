@@ -41,6 +41,8 @@ export interface ImageUploadModalProps {
   title?: string;
   /** Max file size in bytes. Default 5MB */
   maxFileSize?: number;
+  /** Optional handoff to the shared Realms Image Library picker. */
+  onChooseFromLibrary?: () => void;
 }
 
 // =============================================================================
@@ -69,6 +71,7 @@ export function ImageUploadModal({
   aspect,
   title = 'Upload Image',
   maxFileSize = DEFAULT_MAX_SIZE,
+  onChooseFromLibrary,
 }: ImageUploadModalProps) {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
@@ -108,6 +111,12 @@ export function ImageUploadModal({
     resetState();
     onClose();
   }, [resetState, onClose]);
+
+  const handleChooseFromLibrary = useCallback(() => {
+    resetState();
+    onClose();
+    onChooseFromLibrary?.();
+  }, [onChooseFromLibrary, onClose, resetState]);
 
   const validateAndLoadFile = useCallback(async (file: File) => {
     setError(null);
@@ -239,43 +248,54 @@ export function ImageUploadModal({
             Preparing image…
           </div>
         ) : !imageSrc ? (
-          <div
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            className={cn(
-              'flex flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed p-12 transition-colors cursor-pointer',
-              isDragging
-                ? 'border-primary-outline-border bg-primary-subtle-bg'
-                : 'border-border-light bg-surface-alt hover:border-primary-outline-border hover:bg-primary-subtle-bg-hover/50'
-            )}
-            onClick={() => fileInputRef.current?.click()}
-          >
+          <>
             <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
               className={cn(
-                'w-16 h-16 rounded-full flex items-center justify-center transition-colors',
-                isDragging ? 'bg-primary-subtle-bg text-primary-link-fg' : 'bg-surface text-text-muted'
+                'flex cursor-pointer flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed p-12 transition-colors',
+                isDragging
+                  ? 'border-primary-outline-border bg-primary-subtle-bg'
+                  : 'border-border-light bg-surface-alt hover:border-primary-outline-border hover:bg-primary-subtle-bg-hover/50'
               )}
+              onClick={() => fileInputRef.current?.click()}
             >
-              {isDragging ? <Upload className="w-8 h-8" /> : <ImageIcon className="w-8 h-8" />}
+              <div
+                className={cn(
+                  'flex h-16 w-16 items-center justify-center rounded-full transition-colors',
+                  isDragging ? 'bg-primary-subtle-bg text-primary-link-fg' : 'bg-surface text-text-muted dark:text-text-secondary'
+                )}
+              >
+                {isDragging ? <Upload className="h-8 w-8" aria-hidden /> : <ImageIcon className="h-8 w-8" aria-hidden />}
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-medium text-text-primary">
+                  {isDragging ? 'Drop image here' : 'Click to upload or drag and drop'}
+                </p>
+                <p className="mt-1 text-xs text-text-muted dark:text-text-secondary">
+                  {ACCEPTED_EXTENSIONS} &middot; Max {formatFileSize(maxFileSize)}
+                </p>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={ACCEPTED_TYPES.join(',')}
+                onChange={handleFileSelect}
+                className="hidden"
+                aria-label="Choose image file"
+              />
             </div>
-            <div className="text-center">
-              <p className="text-sm font-medium text-text-primary">
-                {isDragging ? 'Drop image here' : 'Click to upload or drag and drop'}
-              </p>
-              <p className="text-xs text-text-muted mt-1">
-                {ACCEPTED_EXTENSIONS} &middot; Max {formatFileSize(maxFileSize)}
-              </p>
-            </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept={ACCEPTED_TYPES.join(',')}
-              onChange={handleFileSelect}
-              className="hidden"
-              aria-label="Choose image file"
-            />
-          </div>
+            {onChooseFromLibrary && (
+              <div className="flex flex-col items-center gap-2 text-center">
+                <span className="text-xs text-text-secondary">or</span>
+                <Button type="button" variant="outline" className="min-h-11" onClick={handleChooseFromLibrary}>
+                  Choose from Realms Image Library
+                </Button>
+                <p className="text-xs text-text-secondary">Browse shared species and creature art.</p>
+              </div>
+            )}
+          </>
         ) : (
           <>
             <div className="relative w-full h-[400px] bg-text-primary/90 rounded-xl overflow-hidden">

@@ -14,35 +14,24 @@
 
 import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { Plus, Wand2, Zap, Target, Info, Trash2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Wand2, Zap, Target } from 'lucide-react';
 import {
   usePowerParts,
-  useUserItems,
-  useItemProperties,
   useAdmin,
   useCreatorSave,
   useLoadModalLibrary,
-  useOfficialLibrary,
-  useCreatorWeaponOptions,
   type PowerPart,
-  type CreatorWeaponOption,
   type UseLoadModalLibraryReturn,
 } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
-import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
-import { ValueStepper, SectionCostBadge, ErrorDisplay } from '@/components/shared';
+import { ErrorDisplay } from '@/components/shared';
 import {
   CreatorPageShell,
-  CreatorWeaponPicker,
   AdvancedCalculationsPanel,
   CreatorSummaryPanel,
-  CollapsibleSection,
-  PowerPartCard,
 } from '@/components/creator';
-import { LoadingState, Checkbox, Button, Input, Textarea, Card } from '@/components/ui';
+import { LoadingState } from '@/components/ui';
 import {
   calculatePowerCosts,
   computePowerActionTypeFromSelection,
@@ -52,22 +41,18 @@ import {
   deriveDuration,
   formatPowerRangeFromSteps,
   getAreaPartForDisplay,
-  formatAreaForDisplay,
   type PowerPartPayload,
   type AreaConfig,
   type DurationConfig,
 } from '@/lib/calculators';
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
-import {
-  ACTION_OPTIONS,
-  POWER_DAMAGE_TYPES as DAMAGE_TYPES,
-  DIE_SIZES,
-  AREA_TYPES,
-  DURATION_TYPES,
-  DURATION_VALUES,
-} from '@/lib/game/creator-constants';
 import { formatDurationFromTypeAndValue } from '@/lib/utils/duration';
-import type { SelectedPart, AdvancedPart, DamageConfig, RangeConfig } from './power-creator-types';
+import type {
+  SelectedPart,
+  AdvancedPart,
+  DamageConfig,
+  RangeConfig,
+} from './power-creator-types';
 import { POWER_CREATOR_CACHE_KEY, EXCLUDED_PARTS } from './power-creator-constants';
 import {
   bootstrapPowerCreatorFormState,
@@ -75,16 +60,13 @@ import {
   type PowerCreatorCache,
   type PowerCreatorFormState,
 } from './power-creator-bootstrap';
+import { PowerCreatorEditor } from './power-creator-editor';
 import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
-import { shouldPersistCreatorWeaponId } from '@/lib/creator-weapon-persistence';
+import { attackModeColumnLabel, type AttackMode } from '@/lib/attack-mode';
 
 // =============================================================================
 // Main Component
 // =============================================================================
-
-const DEFAULT_WEAPON_OPTIONS: CreatorWeaponOption[] = [
-  { id: 0, name: 'Unarmed Prowess', tp: 0, weaponLibrary: 'builtin' },
-];
 
 function PowerCreatorContent() {
   const { user } = useAuthStore();
@@ -94,26 +76,12 @@ function PowerCreatorContent() {
   const load = useLoadModalLibrary('power');
 
   const { data: powerParts = [], isLoading, error, refetch } = usePowerParts();
-  const { data: userItems = [] } = useUserItems();
-  const { data: itemPropertiesDb = [] } = useItemProperties();
-  const { data: officialItems = [] } = useOfficialLibrary('items');
-
-  const [weaponLibrarySource, setWeaponLibrarySource] = useState<SourceFilterValue>('my');
-
-  const { fullOptions: allWeaponOptions, visibleOptions } = useCreatorWeaponOptions({
-    defaults: DEFAULT_WEAPON_OPTIONS,
-    userItems,
-    officialWeaponItems: officialItems,
-    itemPropertiesDb,
-    librarySource: weaponLibrarySource,
-  });
 
   const sessionKey = editPowerId ?? 'draft';
-  // Ready once parts + weapon options exist; in ?edit= mode also wait for the
-  // library fetch to settle (rawItems may legitimately stay empty — fall back to blank form).
+  // Ready once parts exist; in ?edit= mode also wait for the library fetch to
+  // settle (rawItems may legitimately stay empty — fall back to blank form).
   const bootstrapReady =
     powerParts.length > 0 &&
-    allWeaponOptions.length > 0 &&
     (!editPowerId || !load.isLoading);
 
   // One-time render adjust per sessionKey: compute the initial form state exactly
@@ -128,8 +96,6 @@ function PowerCreatorContent() {
       form: bootstrapPowerCreatorFormState({
         editPowerId,
         powerParts,
-        allWeaponOptions,
-        defaultWeapon: DEFAULT_WEAPON_OPTIONS[0],
         rawItems: load.rawItems,
       }),
     });
@@ -165,10 +131,6 @@ function PowerCreatorContent() {
       user={user}
       isAdmin={isAdmin}
       powerParts={powerParts}
-      allWeaponOptions={allWeaponOptions}
-      visibleOptions={visibleOptions}
-      weaponLibrarySource={weaponLibrarySource}
-      setWeaponLibrarySource={setWeaponLibrarySource}
       load={load}
       isLoading={isLoading}
       error={error}
@@ -183,10 +145,6 @@ interface PowerCreatorWorkspaceProps {
   user: ReturnType<typeof useAuthStore.getState>['user'];
   isAdmin: boolean;
   powerParts: PowerPart[];
-  allWeaponOptions: CreatorWeaponOption[];
-  visibleOptions: CreatorWeaponOption[];
-  weaponLibrarySource: SourceFilterValue;
-  setWeaponLibrarySource: (value: SourceFilterValue) => void;
   load: UseLoadModalLibraryReturn;
   isLoading: boolean;
   error: Error | null;
@@ -199,10 +157,6 @@ function PowerCreatorWorkspace({
   user,
   isAdmin,
   powerParts,
-  allWeaponOptions,
-  visibleOptions,
-  weaponLibrarySource,
-  setWeaponLibrarySource,
   load,
   isLoading,
   error,
@@ -220,7 +174,9 @@ function PowerCreatorWorkspace({
   const [range, setRange] = useState<RangeConfig>(initialFormState.range);
   const [area, setArea] = useState<AreaConfig>(initialFormState.area);
   const [duration, setDuration] = useState<DurationConfig>(initialFormState.duration);
-  const [weapon, setWeapon] = useState<CreatorWeaponOption>(initialFormState.weapon);
+  const [attackMode, setAttackMode] = useState<AttackMode>(initialFormState.attackMode);
+  const [imageId, setImageId] = useState<string | null>(initialFormState.imageId);
+  const [imageUrl, setImageUrl] = useState<string | null>(initialFormState.imageUrl);
 
   // ?edit= mode: clear any stale draft once on mount (parity with the old hydrate
   // effect, which removed the cache after loading the edit target).
@@ -256,7 +212,9 @@ function PowerCreatorWorkspace({
       range,
       area,
       duration,
-      weaponId: weapon.id,
+      attackMode,
+      imageId,
+      imageUrl,
       timestamp: Date.now(),
     };
     writeCreatorCache(POWER_CREATOR_CACHE_KEY, cache);
@@ -272,7 +230,9 @@ function PowerCreatorWorkspace({
     range,
     area,
     duration,
-    weapon.id,
+    attackMode,
+    imageId,
+    imageUrl,
   ]);
 
   // Filter out mechanic parts for the "Add Part" dropdown
@@ -316,8 +276,10 @@ function PowerCreatorWorkspace({
     [actionType, isReaction, damages, range, area, duration, powerParts]
   );
 
+  // Weapon Attack adds a flat-cost "Add Weapon to Power" part (no options, no
+  // weapon id). No Weapon/Attack (default) and Unarmed add nothing on powers.
   const addWeaponToPowerPart = useMemo(() => {
-    if ((weapon.tp ?? 0) < 1) return null;
+    if (attackMode !== 'weapon') return null;
     const part = findByIdOrName(powerParts, {
       id: PART_IDS.ADD_WEAPON_TO_POWER,
       name: 'Add Weapon to Power',
@@ -326,21 +288,14 @@ function PowerCreatorWorkspace({
     return {
       id: part.id,
       name: part.name,
-      op_1_lvl: Math.max(0, (weapon.tp ?? 1) - 1),
+      op_1_lvl: 0,
       op_2_lvl: 0,
       op_3_lvl: 0,
       applyDuration: false,
     };
-  }, [weapon.tp, powerParts]);
+  }, [attackMode, powerParts]);
 
-  const shouldPersistSelectedWeapon = useMemo(
-    () =>
-      shouldPersistCreatorWeaponId({
-        weaponId: weapon.id,
-        allowNoAttack: true,
-      }),
-    [weapon.id]
-  );
+  const attackModeLabel = useMemo(() => attackModeColumnLabel(attackMode), [attackMode]);
 
   // Convert selected parts to payload format for calculator
   const partsPayload: PowerPartPayload[] = useMemo(
@@ -582,10 +537,12 @@ function PowerCreatorWorkspace({
         range,
         area,
         duration,
-        weapon: shouldPersistSelectedWeapon ? weapon : null,
+        attackMode,
+        ...(imageId ? { imageId } : {}),
+        ...(imageUrl ? { imageUrl } : {}),
       },
     };
-  }, [name, description, selectedParts, selectedAdvancedParts, mechanicParts, addWeaponToPowerPart, damages, actionType, isReaction, range, area, duration, shouldPersistSelectedWeapon, weapon]);
+  }, [name, description, selectedParts, selectedAdvancedParts, mechanicParts, addWeaponToPowerPart, damages, actionType, isReaction, range, area, duration, attackMode, imageId, imageUrl]);
 
   const save = useCreatorSave({
     type: 'powers',
@@ -617,7 +574,9 @@ function PowerCreatorWorkspace({
         endsOnActivation: false,
         sustain: 0,
       });
-      setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
+      setAttackMode('none');
+      setImageId(null);
+      setImageUrl(null);
     },
   });
 
@@ -639,7 +598,9 @@ function PowerCreatorWorkspace({
       endsOnActivation: false,
       sustain: 0,
     });
-    setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
+    setAttackMode('none');
+    setImageId(null);
+    setImageUrl(null);
     save.setSaveMessage(null);
     clearCreatorCache(POWER_CREATOR_CACHE_KEY);
   }, [save]);
@@ -655,7 +616,9 @@ function PowerCreatorWorkspace({
     setRange(next.range);
     setArea(next.area);
     setDuration(next.duration);
-    setWeapon(next.weapon);
+    setAttackMode(next.attackMode);
+    setImageId(next.imageId);
+    setImageUrl(next.imageUrl);
   }, []);
 
   // Load a power from the library
@@ -665,13 +628,11 @@ function PowerCreatorWorkspace({
       powerLibraryRecordToFormState(
         power,
         powerParts,
-        allWeaponOptions,
-        DEFAULT_WEAPON_OPTIONS[0],
       ),
     );
     save.setSaveMessage({ type: 'success', text: 'Power loaded successfully!' });
     setTimeout(() => save.setSaveMessage(null), 2000);
-  }, [powerParts, allWeaponOptions, applyFormState, save]);
+  }, [powerParts, applyFormState, save]);
 
   return (
     <CreatorPageShell
@@ -732,7 +693,7 @@ function PowerCreatorWorkspace({
           ]}
           statRows={[
             { label: 'Action', value: actionTypeDisplay },
-            { label: 'Weapon', value: weapon.name },
+            { label: 'Attack', value: attackModeLabel },
             { label: 'Range', value: rangeDisplay },
             { label: 'Area', value: areaDisplay },
             { label: 'Duration', value: durationDisplay },
@@ -750,468 +711,51 @@ function PowerCreatorWorkspace({
         </CreatorSummaryPanel>
       }
     >
-      {/* Main Editor */}
-          {/* Name & Description */}
-          <Card className="shadow-md p-6">
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm text-text-secondary">
-                  Building a hybrid? Use the dedicated empowered creator for combined power + technique rules.
-                </p>
-                <Link
-                  href="/empowered-technique-creator"
-                  className="inline-flex items-center rounded-lg border border-border-light bg-surface-alt px-3 py-2 text-sm font-medium text-text-primary hover:bg-surface min-h-[44px]"
-                >
-                  Open Empowered Creator
-                </Link>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  Power Name *
-                </label>
-                <Input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter power name..."
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  Description
-                </label>
-                <Textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Describe what your power does..."
-                  rows={3}
-                />
-              </div>
-            </div>
-          </Card>
-
-          {/* Action Type */}
-          <CollapsibleSection
-            title="Action Type"
-            collapsedSummary={actionTypeDisplay}
-            defaultExpanded={true}
-            rightSlot={<SectionCostBadge en={sectionCosts.action.energyRaw} tp={sectionCosts.action.totalTP} />}
-          >
-            <div className="flex flex-wrap gap-4">
-              <select
-                aria-label="Action type"
-                value={actionType}
-                onChange={(e) => setActionType(e.target.value)}
-                className="px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-              >
-                {ACTION_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-              <Checkbox
-                  checked={isReaction}
-                  onChange={(e) => setIsReaction(e.target.checked)}
-                  label="Reaction"
-                />
-            </div>
-          </CollapsibleSection>
-
-          {/* Add Weapon to Power */}
-          <CollapsibleSection
-            title="Add Weapon to Power"
-            collapsedSummary={weapon.name}
-            defaultExpanded={true}
-            rightSlot={<SectionCostBadge en={sectionCosts.weapon.energyRaw} tp={sectionCosts.weapon.totalTP} />}
-          >
-            <CreatorWeaponPicker
-              librarySource={weaponLibrarySource}
-              onLibrarySourceChange={setWeaponLibrarySource}
-              fullOptions={allWeaponOptions}
-              visibleOptions={visibleOptions}
-              weapon={weapon}
-              onWeaponChange={setWeapon}
-              label="Weapon"
-              ariaLabel="Power weapon"
-            />
-            <p className="mt-2 text-sm text-text-secondary">
-              Uses the Add Weapon to Power mechanic and scales from the selected weapon&apos;s TP.
-            </p>
-          </CollapsibleSection>
-
-          {/* Range */}
-          <CollapsibleSection
-            title="Range"
-            collapsedSummary={rangeSummary}
-            defaultExpanded={true}
-            rightSlot={<SectionCostBadge en={sectionCosts.range.energyRaw} tp={sectionCosts.range.totalTP} />}
-          >
-            <div className="flex flex-wrap items-center gap-4">
-              <ValueStepper
-                value={range.steps}
-                onChange={(v) => setRange((r) => ({ ...r, steps: v }))}
-                label="Range:"
-                min={0}
-                max={10}
-              />
-              <span className="text-sm text-text-secondary">
-                {range.steps === 0 ? '(1 Space / Melee)' : `(${range.steps * 3} spaces)`}
-              </span>
-            </div>
-          </CollapsibleSection>
-
-          {/* Area of Effect */}
-          <CollapsibleSection
-            title="Area of Effect"
-            collapsedSummary={area.type === 'none' ? 'Single target' : formatAreaForDisplay(area.type, area.level)}
-            defaultExpanded={true}
-            rightSlot={<SectionCostBadge en={sectionCosts.area.energyRaw} tp={sectionCosts.area.totalTP} />}
-          >
-            <div className="flex flex-wrap items-center gap-4 mb-4">
-              <select
-                aria-label="Area of effect"
-                value={area.type}
-                onChange={(e) => setArea((a) => ({ ...a, type: e.target.value as AreaConfig['type'] }))}
-                className="px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-              >
-                {AREA_TYPES.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-              {area.type !== 'none' && (
-                <ValueStepper
-                  value={area.level}
-                  onChange={(v) => setArea((a) => ({ ...a, level: v }))}
-                  label="Level:"
-                  min={1}
-                  max={10}
-                />
-              )}
-            </div>
-            {area.type !== 'none' && (
-              <div className="mt-4">
-                <Checkbox
-                  checked={area.applyDuration ?? false}
-                  onChange={(e) => setArea((a) => ({ ...a, applyDuration: e.target.checked }))}
-                  label="Apply duration"
-                />
-              </div>
-            )}
-            {areaPartInfo && (
-              <div className="mt-4 p-4 rounded-lg bg-surface-alt border border-border-light">
-                <p className="text-sm text-text-primary leading-relaxed">{areaPartInfo.description}</p>
-                {areaPartInfo.op1Desc && areaPartInfo.op1Level > 0 && (
-                  <div className="mt-3 pt-3 border-t border-border-light">
-                    <p className="text-sm font-medium text-text-secondary dark:text-text-primary mb-1">
-                      Option 1 (Level {areaPartInfo.op1Level + 1}):
-                    </p>
-                    <p className="text-sm text-text-primary">{areaPartInfo.op1Desc}</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </CollapsibleSection>
-
-          {/* Duration */}
-          <CollapsibleSection
-            title="Duration"
-            collapsedSummary={durationSummary}
-            defaultExpanded={true}
-            rightSlot={<SectionCostBadge en={sectionCosts.duration.energyRaw} tp={sectionCosts.duration.totalTP} />}
-          >
-            <div className="flex flex-wrap items-center gap-4 mb-4">
-              <select
-                aria-label="Duration type"
-                value={duration.type}
-                onChange={(e) => {
-                  const newType = e.target.value as DurationConfig['type'];
-                  // Reset value to first option when changing type
-                  const newValue = DURATION_VALUES[newType]?.[0]?.value || 1;
-                  // Clear duration modifiers if duration is less than 2 rounds
-                  const isShortDuration = newType === 'instant' || (newType === 'rounds' && newValue === 1);
-                  if (isShortDuration) {
-                    setDuration({
-                      type: newType,
-                      value: newValue,
-                      applyDuration: false,
-                      focus: false,
-                      noHarm: false,
-                      endsOnActivation: false,
-                      sustain: 0,
-                    });
-                  } else {
-                    setDuration((d) => ({ ...d, type: newType, value: newValue }));
-                  }
-                }}
-                className="px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-              >
-                {DURATION_TYPES.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-              {duration.type !== 'instant' && duration.type !== 'permanent' && DURATION_VALUES[duration.type] && (
-                <select
-                  aria-label="Duration value"
-                  value={duration.value}
-                  onChange={(e) => {
-                    const newValue = parseInt(e.target.value);
-                    // Clear duration modifiers if duration becomes 1 round
-                    if (duration.type === 'rounds' && newValue === 1) {
-                      setDuration({
-                        type: duration.type,
-                        value: newValue,
-                        applyDuration: duration.applyDuration ?? false,
-                        focus: false,
-                        noHarm: false,
-                        endsOnActivation: false,
-                        sustain: 0,
-                      });
-                    } else {
-                      setDuration((d) => ({ ...d, value: newValue }));
-                    }
-                  }}
-                  className="px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-                >
-                  {DURATION_VALUES[duration.type].map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-            {/* Duration Modifiers - only enabled for durations of 2+ rounds */}
-            {(() => {
-              const isShortDuration = duration.type === 'instant' || (duration.type === 'rounds' && duration.value === 1);
-              return (
-                <div className={cn(
-                  'flex flex-wrap items-center gap-4 pt-3 border-t border-border-light',
-                  isShortDuration && 'opacity-50'
-                )}>
-                  <Checkbox
-                    checked={duration.focus || false}
-                    onChange={(e) => setDuration((d) => ({ ...d, focus: e.target.checked }))}
-                    label="Focus"
-                    disabled={isShortDuration}
-                  />
-                  <Checkbox
-                    checked={duration.noHarm || false}
-                    onChange={(e) => setDuration((d) => ({ ...d, noHarm: e.target.checked }))}
-                    label="No Harm or Adaptation Parts"
-                    disabled={isShortDuration}
-                  />
-                  <Checkbox
-                    checked={duration.endsOnActivation || false}
-                    onChange={(e) => setDuration((d) => ({ ...d, endsOnActivation: e.target.checked }))}
-                    label="Ends on Activation"
-                    disabled={isShortDuration}
-                  />
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-text-secondary">Sustain:</span>
-                    <select
-                      aria-label="Sustain cost in action points"
-                      value={duration.sustain || 0}
-                      onChange={(e) => setDuration((d) => ({ ...d, sustain: parseInt(e.target.value) }))}
-                      className="px-2 py-1 border border-border-light rounded text-sm text-text-primary bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={isShortDuration}
-                    >
-                      <option value={0}>None</option>
-                      <option value={1}>1 AP</option>
-                      <option value={2}>2 AP</option>
-                      <option value={3}>3 AP</option>
-                      <option value={4}>4 AP</option>
-                    </select>
-                  </div>
-                  {isShortDuration && (
-                    <span className="text-xs text-text-muted dark:text-text-secondary italic">
-                      (Requires 2+ rounds)
-                    </span>
-                  )}
-                </div>
-              );
-            })()}
-          </CollapsibleSection>
-
-          {/* Power Parts */}
-          <CollapsibleSection
-            title={`Power Parts (${selectedParts.length})`}
-            collapsedSummary={powerPartsSummary}
-            defaultExpanded={true}
-            rightSlot={
-              <>
-                <SectionCostBadge en={sectionCosts.powerParts.energyRaw} tp={sectionCosts.powerParts.totalTP} />
-                <Button type="button" variant="primary" size="sm" className="flex items-center gap-1" onClick={addPart}>
-                  <Plus className="w-4 h-4" />
-                  Add Part
-                </Button>
-              </>
-            }
-          >
-            {selectedParts.length === 0 ? (
-              <div className="text-center py-8 text-text-muted dark:text-text-secondary">
-                <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>No parts added yet. Click &quot;Add Part&quot; to begin building your power.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {selectedParts.map((sp, idx) => (
-                  <PowerPartCard
-                    key={idx}
-                    selectedPart={sp}
-                    _index={idx}
-                    onRemove={() => removePart(idx)}
-                    onUpdate={(updates) => updatePart(idx, updates as Partial<SelectedPart>)}
-                    allParts={nonMechanicParts}
-                  />
-                ))}
-              </div>
-            )}
-          </CollapsibleSection>
-
-          {/* Power Mechanics — same add/select UX as Power Parts */}
-          <CollapsibleSection
-            title={`Power Mechanics (${selectedAdvancedParts.length})`}
-            collapsedSummary={powerMechanicsSummary}
-            defaultExpanded={true}
-            rightSlot={
-              <>
-                <SectionCostBadge en={sectionCosts.powerMechanics.energyRaw} tp={sectionCosts.powerMechanics.totalTP} />
-                <Button type="button" variant="primary" size="sm" className="flex items-center gap-1" onClick={addMechanicPart}>
-                  <Plus className="w-4 h-4" />
-                  Add Part
-                </Button>
-              </>
-            }
-          >
-            {selectedAdvancedParts.length === 0 ? (
-              <div className="text-center py-8 text-text-muted dark:text-text-secondary">
-                <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>No mechanics added yet. Click &quot;Add Part&quot; to add range, area, duration adjustments, and other mechanic parts.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {selectedAdvancedParts.map((sp, idx) => (
-                  <PowerPartCard
-                    key={idx}
-                    selectedPart={sp}
-                    _index={idx}
-                    onRemove={() => removeAdvancedPart(idx)}
-                    onUpdate={(updates) => updateAdvancedPart(idx, updates as Partial<AdvancedPart>)}
-                    allParts={mechanicPartsForList}
-                  />
-                ))}
-              </div>
-            )}
-          </CollapsibleSection>
-
-          {/* Damage — multiple rows (TASK-286) */}
-          <CollapsibleSection
-            title="Damage"
-            collapsedSummary={damageSummary}
-            defaultExpanded={true}
-            rightSlot={<SectionCostBadge en={sectionCosts.damage.energyRaw} tp={sectionCosts.damage.totalTP} />}
-          >
-            {damages.map((d, index) => (
-              <div key={index} className="flex flex-wrap items-center gap-4 mb-4 p-3 rounded-lg bg-surface-alt border border-border-light">
-                {d.type !== 'none' && d.amount > 0 && (
-                  <Checkbox
-                    checked={d.applyDuration ?? false}
-                    onChange={(e) =>
-                      setDamages((prev) =>
-                        prev.map((x, i) => (i === index ? { ...x, applyDuration: e.target.checked } : x))
-                      )
-                    }
-                    label="Apply duration"
-                  />
-                )}
-                <ValueStepper
-                  value={d.amount}
-                  onChange={(v) =>
-                    setDamages((prev) =>
-                      prev.map((x, i) => (i === index ? { ...x, amount: v } : x))
-                    )
-                  }
-                  label="Dice:"
-                  min={0}
-                  max={20}
-                />
-                <div className="flex items-center gap-1">
-                  <span className="font-bold text-lg">d</span>
-                  <select
-                    aria-label={`Damage die size, row ${index + 1}`}
-                    value={d.size}
-                    onChange={(e) =>
-                      setDamages((prev) =>
-                        prev.map((x, i) =>
-                          i === index ? { ...x, size: parseInt(e.target.value) } : x
-                        )
-                      )
-                    }
-                    className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-                  >
-                    {DIE_SIZES.map((size) => (
-                      <option key={size} value={size}>
-                        {size}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <select
-                  aria-label={`Damage type, row ${index + 1}`}
-                  value={d.type}
-                  onChange={(e) =>
-                    setDamages((prev) =>
-                      prev.map((x, i) => (i === index ? { ...x, type: e.target.value } : x))
-                    )
-                  }
-                  className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-                >
-                  {DAMAGE_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type === 'none' ? 'No damage' : type.charAt(0).toUpperCase() + type.slice(1)}
-                    </option>
-                  ))}
-                </select>
-                {damages.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setDamages((prev) => prev.filter((_, i) => i !== index))
-                    }
-                    className="p-2 rounded-lg text-danger-fg hover:bg-danger-100 dark:hover:bg-danger-900/30 min-h-[44px] min-w-[44px] flex items-center justify-center"
-                    aria-label={`Remove damage type row ${index + 1}`}
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
-                )}
-              </div>
-            ))}
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() =>
-                setDamages((prev) => [...prev, { amount: 0, size: 6, type: 'none', applyDuration: false }])
-              }
-              className="mt-2 min-h-[44px]"
-            >
-              <Plus className="w-4 h-4 mr-1 inline" aria-hidden />
-              Add damage type
-            </Button>
-            {damages.some((d) => d.type !== 'none' && d.amount > 0) && (
-              <p className="mt-2 text-sm text-text-secondary">
-                {damages
-                  .filter((d) => d.type !== 'none' && d.amount > 0)
-                  .map((d) => `${d.amount}d${d.size} ${d.type}`)
-                  .join(', ')}
-              </p>
-            )}
-          </CollapsibleSection>
+      <PowerCreatorEditor
+        isAdmin={isAdmin}
+        name={name}
+        onNameChange={setName}
+        description={description}
+        onDescriptionChange={setDescription}
+        imageId={imageId}
+        imageUrl={imageUrl}
+        onImageChange={(selection) => {
+          setImageId(selection.imageId);
+          setImageUrl(selection.imageUrl);
+        }}
+        actionType={actionType}
+        onActionTypeChange={setActionType}
+        isReaction={isReaction}
+        onIsReactionChange={setIsReaction}
+        actionTypeDisplay={actionTypeDisplay}
+        attackMode={attackMode}
+        onAttackModeChange={setAttackMode}
+        range={range}
+        onRangeChange={setRange}
+        rangeSummary={rangeSummary}
+        area={area}
+        onAreaChange={setArea}
+        areaPartInfo={areaPartInfo}
+        duration={duration}
+        onDurationChange={setDuration}
+        durationSummary={durationSummary}
+        selectedParts={selectedParts}
+        nonMechanicParts={nonMechanicParts}
+        powerPartsSummary={powerPartsSummary}
+        onAddPart={addPart}
+        onRemovePart={removePart}
+        onUpdatePart={updatePart}
+        selectedAdvancedParts={selectedAdvancedParts}
+        mechanicPartsForList={mechanicPartsForList}
+        powerMechanicsSummary={powerMechanicsSummary}
+        onAddMechanicPart={addMechanicPart}
+        onRemoveAdvancedPart={removeAdvancedPart}
+        onUpdateAdvancedPart={updateAdvancedPart}
+        damages={damages}
+        onDamagesChange={setDamages}
+        damageSummary={damageSummary}
+        sectionCosts={sectionCosts}
+      />
     </CreatorPageShell>
   );
 }

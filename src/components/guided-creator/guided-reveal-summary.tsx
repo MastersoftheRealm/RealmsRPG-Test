@@ -102,25 +102,19 @@ export function GuidedRevealSummary() {
 
   const featById = useMemo(() => new Map(feats.map((f) => [String(f.id), f])), [feats]);
 
-  const archetypeFeatChips = draft.archetypeFeatIds.map((id) => {
-    const feat = featById.get(String(id));
-    return {
-      key: id,
-      label: feat?.name ?? id,
-      description: feat?.description,
-      variant: 'listWarning' as const,
-    };
-  });
+  const featChipsForIds = (ids: string[]): SummaryChipItem[] =>
+    ids.map((id) => {
+      const feat = featById.get(String(id));
+      return {
+        key: id,
+        label: feat?.name ?? id,
+        description: feat?.description,
+        variant: 'list' as const,
+      };
+    });
 
-  const characterFeatChips = draft.characterFeatIds.map((id) => {
-    const feat = featById.get(String(id));
-    return {
-      key: id,
-      label: feat?.name ?? id,
-      description: feat?.description,
-      variant: 'list' as const,
-    };
-  });
+  const archetypeFeatChips = featChipsForIds(draft.archetypeFeatIds);
+  const characterFeatChips = featChipsForIds(draft.characterFeatIds);
 
   const itemById = useMemo(
     () => new Map(officialItems.map((i) => [String(i.id), i])),
@@ -139,16 +133,7 @@ export function GuidedRevealSummary() {
         variant: 'list' as const,
       });
     });
-    draft.equipment.forEach((e) => {
-      const item = itemById.get(String(e.id));
-      const qty = e.quantity > 1 ? ` ×${e.quantity}` : '';
-      items.push({
-        key: `e-${e.id}`,
-        label: `${item?.name ?? e.id}${qty}`,
-        description: item?.description ? String(item.description) : undefined,
-        variant: 'list' as const,
-      });
-    });
+    // Omit draft.equipment — reveal Loadout is weapons/armor (+ Unarmed Prowess) only.
     if ((draft.unarmedProwess ?? 0) > 0) {
       items.push({
         key: 'unarmed',
@@ -157,7 +142,7 @@ export function GuidedRevealSummary() {
       });
     }
     return items;
-  }, [draft.armaments, draft.equipment, draft.unarmedProwess, itemById]);
+  }, [draft.armaments, draft.unarmedProwess, itemById]);
 
   const powerChips = useMemo((): SummaryChipItem[] => {
     const byId = new Map(officialPowers.map((p) => [String(p.id), p]));

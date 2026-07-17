@@ -8,7 +8,7 @@
 // ARCH-01: combatant domain types live here (in src/types), not in a component.
 // The encounter-tracker component re-exports these for its own imports.
 
-export type CombatantType = 'ally' | 'enemy' | 'companion';
+export type CombatantType = "ally" | "enemy" | "companion";
 
 export interface CombatantCondition {
   name: string;
@@ -41,13 +41,16 @@ export interface ConditionDef {
 }
 
 /** Type of encounter */
-export type EncounterType = 'combat' | 'skill' | 'mixed';
+export type EncounterType = "combat" | "skill" | "mixed";
 
 /** Status of an encounter */
-export type EncounterStatus = 'preparing' | 'active' | 'paused' | 'completed';
+export type EncounterStatus = "preparing" | "active" | "paused" | "completed";
 
 /** Source type for combatants added from library/campaign */
-export type CombatantSource = 'manual' | 'creature-library' | 'campaign-character';
+export type CombatantSource =
+  | "manual"
+  | "creature-library"
+  | "campaign-character";
 
 /** Extended combatant with source tracking */
 export interface TrackedCombatant extends Combatant {
@@ -60,7 +63,7 @@ export interface TrackedCombatant extends Combatant {
 }
 
 /** Participant side in skill encounter (when using initiative) */
-export type SkillParticipantType = 'ally' | 'enemy';
+export type SkillParticipantType = "ally" | "enemy";
 
 /** A participant in a skill encounter */
 export interface SkillParticipant {
@@ -161,35 +164,38 @@ export interface EncounterSummary {
   createdAt?: Date | string;
 }
 
+/** Fresh skill-encounter state (shared by encounter creation and route bootstrap defaults). */
+export function defaultSkillEncounterState(): SkillEncounterState {
+  return {
+    difficultyScore: 10,
+    participants: [],
+    currentSuccesses: 0,
+    currentFailures: 0,
+    additionalSuccesses: 0,
+    additionalFailures: 0,
+    requiredSuccesses: 1,
+    maxFailures: 3,
+  };
+}
+
 /** Default values for creating a new encounter */
 export function createDefaultEncounter(
   type: EncounterType,
   name: string,
-  description?: string
-): Omit<Encounter, 'id'> {
+  description?: string,
+): Omit<Encounter, "id"> {
   return {
     name,
     description,
     type,
-    status: 'preparing',
+    status: "preparing",
     combatants: [],
     round: 0,
     currentTurnIndex: -1,
     isActive: false,
     applySurprise: false,
-    ...(type === 'skill' || type === 'mixed'
-      ? {
-          skillEncounter: {
-            difficultyScore: 10,
-            participants: [],
-            currentSuccesses: 0,
-            currentFailures: 0,
-            additionalSuccesses: 0,
-            additionalFailures: 0,
-            requiredSuccesses: 1,
-            maxFailures: 3,
-          },
-        }
+    ...(type === "skill" || type === "mixed"
+      ? { skillEncounter: defaultSkillEncounterState() }
       : {}),
   };
 }

@@ -35,8 +35,8 @@ Apply per entity type (examples):
 | Entity | Collapsed columns (preferred) | Expanded descriptors (if not in columns) |
 |--------|------------------------------|------------------------------------------|
 | Power | Action, Damage, Area, Duration; **play sheet:** Energy header + far-right spend `rightSlot` only (never a static Energy *value* column). **Browse/stat-block:** Energy column OK when there is no spend button | Range, TP total, part-level energy not in part chips |
-| Technique | **Play sheet** (`includeActionColumn`): Action, Weapon, Training Pts + Energy header over spend `rightSlot`. **Browse:** Action/Energy/Weapon (or Energy/Weapon/TP) when no spend button | Range, damage breakdown, TP when not in columns |
-| Weapon/Armor | DR, crit, type, etc. | Properties without descriptions as descriptors; with descriptions as expandable |
+| Technique | **Play sheet** (`includeActionColumn`): Action, Weapon, **TP** + Energy header over spend `rightSlot`. **Browse:** Action/Energy/Weapon (or Energy/Weapon/TP) when no spend button | Range, damage breakdown; parts/properties as expandable chips with `TP: N` (not descriptor + InfoTippy) |
+| Weapon/Armor | DR, crit, type, etc. | Sheet parts/properties: expandable with `TP: N`. Guided L1/L2 metadata may stay descriptor + tip |
 | Feat | Req level, Category, Ability, Uses, Recovery | Tags, type (character/archetype/state), requirements **only if not already in columns** |
 | Trait | Description, Uses, Recovery | Trait kind (ancestry/flaw/characteristic) **only if not in overview/header** |
 | Species part/property | As codex defines | Same rule |

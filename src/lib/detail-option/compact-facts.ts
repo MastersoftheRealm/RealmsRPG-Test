@@ -225,8 +225,15 @@ export function formatCurrencyFact(
   return `Currency ${n}`;
 }
 
-/** Training Points N — full word for L1/L2 (GAME_RULES). */
+/** Training Points — full word for guided L1/L2 (GAME_RULES). */
 export const TRAINING_POINTS_COST_LABEL = 'Training Points';
+
+/**
+ * Dense sheet / play / L3 column + expandable chip cost label.
+ * Character sheet and other non-creator surfaces prefer `TP: N` over spelling out
+ * Training Points (full term remains for guided creator L1/L2).
+ */
+export const TP_COST_LABEL = 'TP';
 
 /** Training Points N — full word for L1/L2 (GAME_RULES). */
 export function formatTrainingPointsFact(

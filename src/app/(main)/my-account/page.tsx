@@ -7,18 +7,18 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import type { AuthUser } from '@/types/auth';
 import { createClient } from '@/lib/supabase/client';
-import { apiUpload, getErrorMessage } from '@/lib/api-client';
+import { apiUpload } from '@/lib/api-client';
 import { changeUsernameAction, getUserProfileAction, deleteAccountAction } from '@/app/(auth)/actions';
 import { useAuthStore } from '@/stores';
 import { useAdmin } from '@/hooks';
 import { ProtectedRoute } from '@/components/layout';
 import { cn } from '@/lib/utils';
 import { LoadingState, Button, Input, Alert, PageContainer, Spinner, Card, PageHeader } from '@/components/ui';
-import { ExpandableImage, ImageUploadModal } from '@/components/shared';
+import { ExpandableImage, ImageUploadModal, RealmsImagePicker } from '@/components/shared';
 import { User as UserIcon, Mail, Lock, Trash2, AlertTriangle, AtSign, Camera } from 'lucide-react';
 
 function hasPasswordProvider(authUser: AuthUser | null): boolean {
@@ -63,8 +63,6 @@ function AccountContent() {
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profileLoadError, setProfileLoadError] = useState<string | null>(null);
-  const [profileRetrying, setProfileRetrying] = useState(false);
 
   const [newEmail, setNewEmail] = useState('');
   const [emailPassword, setEmailPassword] = useState('');
@@ -78,6 +76,7 @@ function AccountContent() {
   const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const [showPictureModal, setShowPictureModal] = useState(false);
+  const [showPictureBank, setShowPictureBank] = useState(false);
   const [uploadingPicture, setUploadingPicture] = useState(false);
   const [pictureMessage, setPictureMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -91,55 +90,39 @@ function AccountContent() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const loadProfile = useCallback(async (opts?: { isRetry?: boolean }) => {
-    if (!user) return;
-
-    if (opts?.isRetry) setProfileRetrying(true);
-    setProfileLoadError(null);
-    try {
-      const { profile: p, error } = await getUserProfileAction();
-      if (error) {
-        setProfileLoadError(error);
-        setProfile({
-          email: user.email ?? undefined,
-          photoURL: user.photoURL ?? undefined,
-        });
-        return;
-      }
-      if (p) {
-        const rawPhoto = (p.photoUrl as string) ?? undefined;
-        const photoURL = rawPhoto
-          ? `${rawPhoto}?t=${p.updatedAt ? new Date(p.updatedAt as string | number | Date).getTime() : Date.now()}`
-          : (user.photoURL ?? undefined);
-        setProfile({
-          username: (p.usernameDisplay as string | undefined) ?? (p.username as string | undefined) ?? undefined,
-          email: (p.email as string | undefined) ?? user.email ?? undefined,
-          createdAt: p.createdAt instanceof Date ? p.createdAt : p.createdAt ? new Date(p.createdAt as string | number | Date) : undefined,
-          photoURL,
-          role: (p.role as UserProfile['role']) ?? undefined,
-          rolePolicy: (p.rolePolicy as UserProfile['rolePolicy']) ?? undefined,
-        });
-      } else {
-        setProfile({
-          email: user.email ?? undefined,
-          photoURL: user.photoURL ?? undefined,
-        });
-      }
-    } catch (err: unknown) {
-      setProfileLoadError(getErrorMessage(err, 'Failed to load profile'));
-      setProfile({
-        email: user.email ?? undefined,
-        photoURL: user.photoURL ?? undefined,
-      });
-    } finally {
-      setLoading(false);
-      setProfileRetrying(false);
-    }
-  }, [user]);
-
   useEffect(() => {
-    void loadProfile();
-  }, [loadProfile]);
+    async function loadProfile() {
+      if (!user) return;
+
+      try {
+        const { profile: p } = await getUserProfileAction();
+        if (p) {
+          const rawPhoto = (p.photoUrl as string) ?? undefined;
+          const photoURL = rawPhoto
+            ? `${rawPhoto}?t=${p.updatedAt ? new Date(p.updatedAt as string | number | Date).getTime() : Date.now()}`
+            : (user.photoURL ?? undefined);
+          setProfile({
+            username: (p.usernameDisplay as string | undefined) ?? (p.username as string | undefined) ?? undefined,
+            email: (p.email as string | undefined) ?? user.email ?? undefined,
+            createdAt: p.createdAt instanceof Date ? p.createdAt : p.createdAt ? new Date(p.createdAt as string | number | Date) : undefined,
+            photoURL,
+            role: (p.role as UserProfile['role']) ?? undefined,
+            rolePolicy: (p.rolePolicy as UserProfile['rolePolicy']) ?? undefined,
+          });
+        } else {
+          setProfile({
+            email: user.email ?? undefined,
+            photoURL: user.photoURL ?? undefined,
+          });
+        }
+      } catch {
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadProfile();
+  }, [user]);
 
   const handleProfilePictureUpload = async (blob: Blob) => {
     if (!user) return;
@@ -153,22 +136,34 @@ function AccountContent() {
       const { url } = await apiUpload<{ url: string }>('/api/upload/profile-picture', formData);
       // Cache-bust so the browser shows the new image (same path is overwritten in storage)
       setProfile((prev) => (prev ? { ...prev, photoURL: `${url}?t=${Date.now()}` } : null));
+      setPictureMessage({ type: 'success', text: 'Profile picture updated!' });
       // Sync to Supabase Auth so header and any useAuth() consumer see the new picture
       const supabase = createClient();
-      const { error: authSyncError } = await supabase.auth.updateUser({ data: { avatar_url: url } });
-      if (authSyncError) {
-        setPictureMessage({
-          type: 'error',
-          text: 'Picture uploaded, but account avatar sync failed. Refresh or try again.',
-        });
-        return;
-      }
+      await supabase.auth.updateUser({ data: { avatar_url: url } });
+    } catch {
+      setPictureMessage({ type: 'error', text: 'Failed to upload profile picture' });
+    } finally {
+      setUploadingPicture(false);
+    }
+  };
+
+  const handleBankProfilePicture = async (url: string) => {
+    if (!user) return;
+    setUploadingPicture(true);
+    setPictureMessage(null);
+    try {
+      const supabase = createClient();
+      const { error: profileError } = await supabase.from('user_profiles').upsert(
+        { id: user.uid, photo_url: url, updated_at: new Date().toISOString() },
+        { onConflict: 'id' }
+      );
+      if (profileError) throw profileError;
+      const { error: authError } = await supabase.auth.updateUser({ data: { avatar_url: url } });
+      if (authError) throw authError;
+      setProfile((prev) => (prev ? { ...prev, photoURL: `${url}?t=${Date.now()}` } : null));
       setPictureMessage({ type: 'success', text: 'Profile picture updated!' });
-    } catch (err: unknown) {
-      setPictureMessage({
-        type: 'error',
-        text: getErrorMessage(err, 'Failed to upload profile picture'),
-      });
+    } catch {
+      setPictureMessage({ type: 'error', text: 'Failed to update profile picture' });
     } finally {
       setUploadingPicture(false);
     }
@@ -222,16 +217,16 @@ function AccountContent() {
       setEmailPassword('');
       setEmailMessage({ type: 'success', text: 'Email updated successfully!' });
     } catch (err: unknown) {
-      const raw = getErrorMessage(err, 'Failed to update email');
+      const error = err as { message?: string };
       let message = 'Failed to update email';
-      if (raw.includes('wrong') || raw.includes('password') || raw.includes('incorrect')) {
+      if (error.message?.includes('wrong') || error.message?.includes('password')) {
         message = 'Incorrect password';
-      } else if (raw.includes('already in use')) {
+      } else if (error.message?.includes('already in use')) {
         message = 'Email already in use';
-      } else if (raw.toLowerCase().includes('invalid')) {
+      } else if (error.message?.includes('invalid')) {
         message = 'Invalid email address';
-      } else {
-        message = raw;
+      } else if (error.message) {
+        message = error.message;
       }
       setEmailMessage({ type: 'error', text: message });
     } finally {
@@ -271,14 +266,14 @@ function AccountContent() {
       setConfirmPassword('');
       setPasswordMessage({ type: 'success', text: 'Password updated successfully!' });
     } catch (err: unknown) {
-      const raw = getErrorMessage(err, 'Failed to update password');
+      const error = err as { message?: string };
       let message = 'Failed to update password';
-      if (raw.includes('wrong') || raw.includes('incorrect')) {
+      if (error.message?.includes('wrong') || error.message?.includes('incorrect')) {
         message = 'Current password is incorrect';
-      } else if (raw.includes('weak')) {
+      } else if (error.message?.includes('weak')) {
         message = 'Password is too weak';
-      } else {
-        message = raw;
+      } else if (error.message) {
+        message = error.message;
       }
       setPasswordMessage({ type: 'error', text: message });
     } finally {
@@ -291,14 +286,10 @@ function AccountContent() {
 
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.resetPasswordForEmail(user.email);
-      if (error) throw error;
+      await supabase.auth.resetPasswordForEmail(user.email);
       setPasswordMessage({ type: 'success', text: 'Password reset email sent!' });
-    } catch (err: unknown) {
-      setPasswordMessage({
-        type: 'error',
-        text: getErrorMessage(err, 'Failed to send reset email'),
-      });
+    } catch {
+      setPasswordMessage({ type: 'error', text: 'Failed to send reset email' });
     }
   };
 
@@ -328,12 +319,12 @@ function AccountContent() {
       }
       router.push('/');
     } catch (err: unknown) {
-      const raw = getErrorMessage(err, 'Failed to delete account');
+      const error = err as { message?: string };
       let message = 'Failed to delete account';
-      if (raw.includes('wrong') || raw.includes('Invalid') || raw.includes('incorrect')) {
+      if (error.message?.includes('wrong') || error.message?.includes('Invalid')) {
         message = 'Incorrect password';
-      } else {
-        message = raw;
+      } else if (error.message) {
+        message = error.message;
       }
       setDeleteError(message);
       setDeleting(false);
@@ -357,23 +348,6 @@ function AccountContent() {
         className="mb-0 min-w-0"
       />
 
-      {profileLoadError && (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-          <Alert variant="danger" className="flex-1 min-w-0">
-            {profileLoadError}. Some account details may be incomplete.
-          </Alert>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => void loadProfile({ isRetry: true })}
-            disabled={profileRetrying}
-            aria-label="Retry loading account profile"
-            className="min-h-[var(--touch-target-min,44px)] shrink-0 self-stretch sm:self-auto"
-          >
-            {profileRetrying ? 'Retrying…' : 'Retry'}
-          </Button>
-        </div>
-      )}
 
       <Card className="shadow-md p-6">
         <h2 className="text-lg font-bold text-text-primary mb-3">Role &amp; Limits</h2>
@@ -432,30 +406,27 @@ function AccountContent() {
         <h2 className="text-lg font-bold text-text-primary mb-4">Profile Information</h2>
 
         <div className="flex items-center gap-4 mb-6 pb-4 border-b border-border-subtle">
-          {profile?.photoURL ? (
-            <ExpandableImage
-              src={profile.photoURL}
-              alt="Profile"
-              className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-full border-2 border-border-light bg-surface-alt"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element -- dynamic profile photo URL */}
-              <img src={profile.photoURL} alt="" className="h-full w-full object-cover" />
-              {uploadingPicture && (
-                <div className="absolute inset-0 flex items-center justify-center bg-text-primary/40">
-                  <Spinner size="sm" variant="white" />
-                </div>
-              )}
-            </ExpandableImage>
-          ) : (
-            <div className="relative flex h-20 w-20 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-border-light bg-surface-alt text-text-muted dark:text-text-secondary">
-              <UserIcon className="h-8 w-8" aria-hidden />
-              {uploadingPicture && (
-                <div className="absolute inset-0 flex items-center justify-center bg-text-primary/40">
-                  <Spinner size="sm" variant="white" />
-                </div>
-              )}
-            </div>
-          )}
+          <div className="relative h-20 w-20 flex-shrink-0">
+            {profile?.photoURL ? (
+              <ExpandableImage
+                src={profile.photoURL}
+                alt="Profile picture"
+                className="relative h-20 w-20 overflow-hidden rounded-full border-2 border-border-light bg-surface-alt"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element -- dynamic profile photo URL */}
+                <img src={profile.photoURL} alt="" className="h-full w-full object-cover" />
+              </ExpandableImage>
+            ) : (
+              <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-border-light bg-surface-alt text-text-muted">
+                <UserIcon className="w-8 h-8" />
+              </div>
+            )}
+            {uploadingPicture && (
+              <div className="absolute inset-0 flex items-center justify-center rounded-full bg-text-primary/40">
+                <Spinner size="sm" variant="white" />
+              </div>
+            )}
+          </div>
           <div>
             <Button
               variant="secondary"
@@ -463,12 +434,10 @@ function AccountContent() {
               onClick={() => setShowPictureModal(true)}
               disabled={uploadingPicture}
             >
-              <Camera className="w-4 h-4" aria-hidden />
+              <Camera className="w-4 h-4" />
               {profile?.photoURL ? 'Change Picture' : 'Add Picture'}
             </Button>
-            <p className="mt-1 text-xs text-text-muted dark:text-text-secondary">
-              JPG, PNG, GIF, or WebP. Max 5MB.
-            </p>
+            <p className="text-xs text-text-muted mt-1">JPG, PNG, GIF, or WebP. Max 5MB.</p>
             {pictureMessage && (
               <p className={cn('text-xs mt-1', pictureMessage.type === 'success' ? 'text-success-700 dark:text-success-400' : 'text-danger-700 dark:text-danger-400')}>
                 {pictureMessage.text}
@@ -745,9 +714,19 @@ function AccountContent() {
         isOpen={showPictureModal}
         onClose={() => setShowPictureModal(false)}
         onConfirm={handleProfilePictureUpload}
+        onChooseFromLibrary={() => setShowPictureBank(true)}
         cropShape="round"
         aspect={1}
         title="Upload Profile Picture"
+      />
+      <RealmsImagePicker
+        isOpen={showPictureBank}
+        onClose={() => setShowPictureBank(false)}
+        onSelect={({ image }) => { void handleBankProfilePicture(image.publicUrl); }}
+        categories="portrait"
+        allowAdminUpload={false}
+        title="Choose Profile Picture"
+        description="Pick species or creature art from the Realms Image Library."
       />
     </PageContainer>
   );

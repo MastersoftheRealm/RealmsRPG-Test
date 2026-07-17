@@ -8,6 +8,7 @@ import { SectionHeader } from '@/components/shared/section-header';
 import { QuantitySelector } from '@/components/shared/quantity-selector';
 import { RollButton } from '@/components/shared/roll-button';
 import { deriveShieldAmountFromProperties } from '@/lib/calculators/item-calc';
+import { TP_COST_LABEL } from '@/lib/detail-option/compact-facts';
 import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { useRollsOptional } from '@/components/character-sheet/roll-context';
 
@@ -89,8 +90,8 @@ const POWER_GRID_WITH_ENERGY = '1.2fr 0.7fr 1fr 1fr 0.7fr 0.7fr';
 const TECHNIQUE_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1.4fr' },
   { key: 'energy', label: 'Energy', width: '0.7fr', align: 'center' },
-  { key: 'weapon', label: 'Weapon', width: '1fr', align: 'center' },
-  { key: 'tp', label: 'Training Pts', width: '0.8fr', align: 'center' },
+  { key: 'weapon', label: 'Attack', width: '1fr', align: 'center' },
+  { key: 'tp', label: 'TP', width: '0.8fr', align: 'center' },
 ];
 const TECHNIQUE_GRID = '1.4fr 0.7fr 1fr 0.8fr';
 
@@ -102,8 +103,8 @@ const TECHNIQUE_GRID = '1.4fr 0.7fr 1fr 0.8fr';
 export const CHARACTER_SHEET_TECHNIQUE_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1.4fr' },
   { key: 'action', label: 'Action', width: '1fr', align: 'center' },
-  { key: 'weapon', label: 'Weapon', width: '1fr', align: 'center' },
-  { key: 'tp', label: 'Training Pts', width: '0.8fr', align: 'center' },
+  { key: 'weapon', label: 'Attack', width: '1fr', align: 'center' },
+  { key: 'tp', label: 'TP', width: '0.8fr', align: 'center' },
 ];
 export const CHARACTER_SHEET_TECHNIQUE_GRID = '1.4fr 1fr 1fr 0.8fr';
 
@@ -244,7 +245,7 @@ function renderInteractiveGridRows(
         (item.partsChips?.length || item.chips?.length ? 'Parts & Proficiencies' : undefined)
       }
       totalCost={item.totalTp && item.totalTp > 0 ? item.totalTp : undefined}
-      costLabel={item.totalTp && item.totalTp > 0 ? 'Training Points' : undefined}
+      costLabel={item.totalTp && item.totalTp > 0 ? TP_COST_LABEL : undefined}
       requirements={!item.columns ? item.requirements : undefined}
       innate={item.innate === true}
       hideInnateBadge={item.hideInnateBadge}

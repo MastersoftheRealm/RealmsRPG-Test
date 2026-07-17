@@ -78,6 +78,8 @@ export function rawRecordToCreatureState(c: Record<string, unknown>): CreatureSt
     type: String(c.type ?? 'Humanoid'),
     size: String(c.size ?? 'medium'),
     description: String(c.description ?? ''),
+    imageId: typeof (c.imageId ?? c.image_id) === 'string' ? String(c.imageId ?? c.image_id) : null,
+    imageUrl: typeof (c.imageUrl ?? c.image_url) === 'string' ? String(c.imageUrl ?? c.image_url) : null,
     archetypeType: row.archetypeType ?? 'power',
     abilities: (c.abilities as CreatureState['abilities']) ?? initialState.abilities,
     defenses: (c.defenses as CreatureState['defenses']) ?? initialState.defenses,

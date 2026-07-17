@@ -356,7 +356,7 @@ All card/list art comes from the **Realms Image Library**: one master Storage ob
 
 **Library copy parity:** Official/codex → personal library copies **`image_id`** (and cache URL if present) so editors share the same shape. Users change art by picking another bank image — not by uploading a private copy into the shared bank.
 
-**Interim (shipped today):** Species + official armaments still use entity-tied `/api/upload/codex-art` → row `image_url` until TASK-496/498 migrate into the bank. UI already reads `image_url` with typed SVG placeholders; list thumbs use [`ListRowThumbnail`](../components/shared/list-row-thumbnail.tsx) / [`ExpandableImage`](../components/shared/expandable-image.tsx).
+**Authoring (TASK-496 / TASK-498):** Codex species/equipment and admin creator publish flows use `RealmsImageField` → `RealmsImagePicker`, storing `image_id` plus the URL cache. Legacy entity-tied Storage objects were cataloged into the bank (TASK-498); the old `/api/upload/codex-art` path is removed. List thumbs use [`ListRowThumbnail`](../components/shared/list-row-thumbnail.tsx) / [`ExpandableImage`](../components/shared/expandable-image.tsx).
 
 | Surface | Layout | Art role |
 |---------|--------|----------|
@@ -373,7 +373,7 @@ All card/list art comes from the **Realms Image Library**: one master Storage ob
 | 2 | TASK-492 | Schema, Storage, CRUD API |
 | 3 | TASK-493 ‖ TASK-495 | Admin `/admin/images` ‖ shared `RealmsImagePicker` |
 | 4 | TASK-494 / 496 / 497 / 499 | Entity `image_id`, wire editors/publish, user-library parity, portrait pick |
-| 5 | TASK-498 | Migrate existing `codex-art` entity files into the bank |
+| 5 | TASK-498 | Migrate existing `codex-art` entity files into the bank — **done** |
 | later | TASK-500 | Enhanced-item images (deferred) |
 
 > The subsections below (5.1–5.10) describe the **per-step UX vision** shared by both creators. The guided creator realizes them chapter-by-chapter per 5.0.1.

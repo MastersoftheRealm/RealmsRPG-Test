@@ -462,16 +462,18 @@ export const GridListRow = memo(function GridListRow({
               <ListRowThumbnail {...thumbnail} />
             </div>
           )}
-          {/* Name column: full name visible on mobile (wrap), truncate on desktop */}
+          {/* Name column: full name visible on mobile (wrap), truncate on desktop.
+              @container so inline type tags hide based on *column* width (narrow sheet
+              panels), not viewport — name wins space before truncating. */}
           <div
             style={nameGridColumnSpan ? { gridColumn: `span ${nameGridColumnSpan}` } : undefined}
             className={cn(
-              'font-medium text-text-primary flex items-center gap-2 min-w-0',
+              '@container font-medium text-text-primary flex items-center gap-2 min-w-0',
               useFlex && 'flex-1'
             )}
           >
             {!useThumbnailColumn && thumbnail && <ListRowThumbnail {...thumbnail} />}
-            <span className="break-words lg:truncate">{nameContent ?? name}</span>
+            <span className="min-w-0 break-words lg:truncate">{nameContent ?? name}</span>
             {/* Innate indicator (hidden when already in innate section) */}
             {innate && !hideInnateBadge && (
               <span className="text-[10px] px-1 py-0.5 rounded bg-power-light text-power-fg border border-power-border flex-shrink-0">★</span>
@@ -497,9 +499,10 @@ export const GridListRow = memo(function GridListRow({
                 <QuantityBadge quantity={quantity} className="flex-shrink-0" />
               )
             )}
-            {/* Inline badges for compact view */}
+            {/* Inline badges for compact view. Hidden when the name column is narrow so the
+                name keeps room; reappear at ≥13rem column width. Full tag stays in expanded view. */}
             {compact && badges.length > 0 && (
-              <span className="ml-2 inline-flex gap-1">
+              <span className="ml-2 hidden @[13rem]:inline-flex gap-1">
                 {badges.slice(0, 2).map((badge, i) => (
                   <DescriptorChip
                     key={i}

@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Camera, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui';
-import { ImageUploadModal } from '@/components/shared';
+import { ImageUploadModal, RealmsImagePicker } from '@/components/shared';
 import { blobToCompressedBase64 } from '@/lib/portrait';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
@@ -20,6 +20,7 @@ export interface GuidedPortraitUploadProps {
 export function GuidedPortraitUpload({ className }: GuidedPortraitUploadProps) {
   const { draft, updateDraft } = useGuidedCreatorStore();
   const [showModal, setShowModal] = useState(false);
+  const [showBankPicker, setShowBankPicker] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -125,9 +126,22 @@ export function GuidedPortraitUpload({ className }: GuidedPortraitUploadProps) {
           setError(null);
         }}
         onConfirm={handleCropped}
+        onChooseFromLibrary={() => setShowBankPicker(true)}
         cropShape="rect"
         aspect={1}
         title={copy.modalTitle}
+      />
+      <RealmsImagePicker
+        isOpen={showBankPicker}
+        onClose={() => setShowBankPicker(false)}
+        onSelect={({ image }) => {
+          updateDraft({ portraitUrl: image.publicUrl });
+          setError(null);
+        }}
+        categories="portrait"
+        allowAdminUpload={false}
+        title="Choose Character Portrait"
+        description="Pick species or creature art from the Realms Image Library."
       />
     </div>
   );

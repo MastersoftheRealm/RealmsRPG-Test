@@ -89,6 +89,8 @@ export const initialState: CreatureState = {
   type: 'Humanoid',
   size: 'medium',
   description: '',
+  imageId: null,
+  imageUrl: null,
   archetypeType: 'power',
   abilities: {
     strength: 0,

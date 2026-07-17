@@ -199,7 +199,7 @@ export function transformUserTechniqueToDisplayItem(
   const stats: ItemStat[] = [
     { label: 'Energy', value: display.energy },
     { label: 'Action', value: display.actionType },
-    { label: 'Weapon', value: display.weaponName || '-' },
+    { label: 'Attack', value: display.weaponName || '-' },
     { label: 'Training Pts', value: display.tp },
   ];
 
@@ -390,7 +390,7 @@ export function creatureTechniqueToDisplayItem(technique: CreatureTechnique): Di
       { label: 'EN', value: technique.energy },
       { label: 'TP', value: technique.tp },
       { label: 'Action', value: technique.action },
-      ...(technique.weapon ? [{ label: 'Weapon', value: technique.weapon }] : []),
+      ...(technique.weapon ? [{ label: 'Attack', value: technique.weapon }] : []),
     ],
     details: [
       ...(technique.damage ? [{ label: 'Damage', value: technique.damage }] : []),

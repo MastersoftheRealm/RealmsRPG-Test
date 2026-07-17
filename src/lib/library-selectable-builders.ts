@@ -19,6 +19,7 @@ import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-c
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
+import { attackModeColumnLabel, deriveTechniqueAttackMode } from '@/lib/attack-mode';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
 import {
   buildPartsAndMetadataDetailSections,
@@ -108,15 +109,23 @@ export function getItemColumns(
     return [
       { key: 'Action', value: techniqueDisplay.actionType || '-', align: 'center' as const },
       { key: 'Energy', value: String(techniqueDisplay.energy), align: 'center' as const },
-      { key: 'Weapon', value: techniqueDisplay.weaponName || '-', align: 'center' as const },
+      { key: 'Attack', value: techniqueDisplay.weaponName || '-', align: 'center' as const },
       { key: 'Training Pts', value: String(techniqueDisplay.tp), align: 'center' as const },
     ];
   }
   if (itemType === 'technique') {
     const technique = item as UserTechnique;
+    const attackLabel = attackModeColumnLabel(
+      deriveTechniqueAttackMode({
+        attackMode: technique.attackMode,
+        parts: technique.parts,
+        weaponName: technique.weaponName,
+        weapon: technique.weapon,
+      }),
+    );
     return [
       { key: 'Action', value: formatActionTypeForDisplay(technique.actionType ?? ''), align: 'center' as const },
-      { key: 'Weapon', value: technique.weapon?.name || '-', align: 'center' as const },
+      { key: 'Attack', value: attackLabel, align: 'center' as const },
       { key: 'Training Pts', value: '-', align: 'center' as const },
     ];
   }
@@ -198,7 +207,7 @@ export function getListHeaderColumns(
         ...base,
         { key: 'Action', label: 'Action', align: 'center' as const },
         { key: 'Energy', label: 'Energy', align: 'center' as const },
-        { key: 'Weapon', label: 'Weapon', align: 'center' as const },
+        { key: 'Attack', label: 'Attack', align: 'center' as const },
         { key: 'Training Pts', label: 'Training Pts', align: 'center' as const },
       ];
     case 'weapon':
@@ -289,6 +298,8 @@ export function buildSelectableItem(
       description: String(t.description ?? ''),
       parts: Array.isArray(t.parts) ? (t.parts as TechniqueDocument['parts']) : [],
       damage: Array.isArray(t.damage) && t.damage[0] ? t.damage[0] : (t.damage as TechniqueDocument['damage']),
+      attackMode: t.attackMode,
+      weaponName: t.weaponName,
       weapon: t.weapon as TechniqueDocument['weapon'],
       actionType: t.actionType,
       isReaction: t.isReaction,

@@ -4,10 +4,10 @@
  * All functions are pure / render-safe (no localStorage writes).
  */
 
-import type { TechniquePart, CreatorWeaponOption } from '@/hooks';
+import type { TechniquePart } from '@/hooks';
 import { CREATOR_CACHE_KEYS } from '@/lib/game/creator-constants';
 import { readCreatorCache } from '@/lib/game/creator-cache';
-import { inferTechniqueWeaponTpFromSavedParts } from '@/lib/creator-weapon-persistence';
+import { deriveTechniqueAttackMode, normalizeAttackMode, type AttackMode } from '@/lib/attack-mode';
 
 export const TECHNIQUE_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.TECHNIQUE;
 
@@ -38,7 +38,9 @@ export interface TechniqueCreatorCache {
   actionType: string;
   isReaction: boolean;
   damage: TechniqueDamageConfig;
-  weaponId: string | number;
+  attackMode: AttackMode;
+  imageId?: string | null;
+  imageUrl?: string | null;
   timestamp: number;
 }
 
@@ -49,7 +51,9 @@ export interface TechniqueCreatorFormState {
   actionType: string;
   isReaction: boolean;
   damage: TechniqueDamageConfig;
-  weapon: CreatorWeaponOption;
+  attackMode: AttackMode;
+  imageId: string | null;
+  imageUrl: string | null;
 }
 
 type TechniqueLibraryRecord = {
@@ -61,13 +65,17 @@ type TechniqueLibraryRecord = {
   actionTypeSelection?: string;
   isReaction?: boolean;
   reaction?: boolean;
+  attackMode?: unknown;
   weapon?: { id?: string | number; name?: string };
+  weaponName?: string;
   damage?: unknown;
+  imageId?: string | null;
+  image_id?: string | null;
+  imageUrl?: string | null;
+  image_url?: string | null;
 };
 
-export function emptyTechniqueCreatorFormState(
-  defaultWeapon: CreatorWeaponOption,
-): TechniqueCreatorFormState {
+export function emptyTechniqueCreatorFormState(): TechniqueCreatorFormState {
   return {
     name: '',
     description: '',
@@ -75,23 +83,17 @@ export function emptyTechniqueCreatorFormState(
     actionType: 'basic',
     isReaction: false,
     damage: { amount: 0, size: 6, type: 'none' },
-    weapon: defaultWeapon,
+    attackMode: 'unarmed',
+    imageId: null,
+    imageUrl: null,
   };
 }
 
 export function restoreTechniqueCreatorFromCache(
   techniqueParts: TechniquePart[],
-  allWeaponOptions: CreatorWeaponOption[],
-  defaultWeapon: CreatorWeaponOption,
 ): TechniqueCreatorFormState | null {
   const parsed = readCreatorCache<TechniqueCreatorCache>(TECHNIQUE_CREATOR_CACHE_KEY);
   if (!parsed) return null;
-
-  let weapon = defaultWeapon;
-  if (parsed.weaponId !== undefined && parsed.weaponId !== null) {
-    const foundWeapon = allWeaponOptions.find((w) => String(w.id) === String(parsed.weaponId));
-    if (foundWeapon) weapon = foundWeapon;
-  }
 
   const selectedParts: TechniqueSelectedPart[] = [];
   for (const savedPart of parsed.selectedParts ?? []) {
@@ -114,15 +116,15 @@ export function restoreTechniqueCreatorFromCache(
     actionType: parsed.actionType || 'basic',
     isReaction: parsed.isReaction || false,
     damage: parsed.damage || { amount: 0, size: 6, type: 'none' },
-    weapon,
+    attackMode: normalizeAttackMode(parsed.attackMode) ?? 'unarmed',
+    imageId: parsed.imageId ?? null,
+    imageUrl: parsed.imageUrl ?? null,
   };
 }
 
 export function techniqueLibraryRecordToFormState(
   technique: TechniqueLibraryRecord,
   techniqueParts: TechniquePart[],
-  allWeaponOptions: CreatorWeaponOption[],
-  defaultWeapon: CreatorWeaponOption,
 ): TechniqueCreatorFormState {
   const savedParts = (technique.parts || technique.techniqueParts || []) as Array<{
     id?: number | string;
@@ -132,15 +134,8 @@ export function techniqueLibraryRecordToFormState(
     op_3_lvl?: number;
   }>;
 
-  // If the saved technique explicitly included the No Attack mechanic part (415),
-  // reflect that in the creator's Weapon selection.
-  const savedHasNoAttack = savedParts.some(
-    (p) => String(p.id) === '415' || String(p.name || '').toLowerCase() === 'no attack',
-  );
-  const requiredWeaponTPFromParts = inferTechniqueWeaponTpFromSavedParts(savedParts);
-
   // Skip mechanic-only parts when loading; these are auto-generated from
-  // action / damage / weapon and are re-created by buildMechanicParts.
+  // action / damage / attack mode and are re-created by buildMechanicParts.
   const loadedParts: TechniqueSelectedPart[] = [];
   for (const savedPart of savedParts) {
     const matchedPart = techniqueParts.find(
@@ -157,25 +152,12 @@ export function techniqueLibraryRecordToFormState(
     }
   }
 
-  let weapon = defaultWeapon;
-  const savedWeapon = technique.weapon;
-  if (savedHasNoAttack) {
-    const noAttackOption = allWeaponOptions.find((w) => String(w.id) === 'no-attack');
-    if (noAttackOption) weapon = noAttackOption;
-  } else if (savedWeapon) {
-    const weaponMatch = allWeaponOptions.find(
-      (w) => String(w.id) === String(savedWeapon.id) || w.name === savedWeapon.name,
-    );
-    if (weaponMatch) {
-      weapon = weaponMatch;
-    } else if (requiredWeaponTPFromParts > 0) {
-      const tpMatch = allWeaponOptions.find((option) => (option.tp ?? 0) === requiredWeaponTPFromParts);
-      weapon = tpMatch || defaultWeapon;
-    }
-  } else if (requiredWeaponTPFromParts > 0) {
-    const tpMatch = allWeaponOptions.find((option) => (option.tp ?? 0) === requiredWeaponTPFromParts);
-    weapon = tpMatch || defaultWeapon;
-  }
+  const attackMode = deriveTechniqueAttackMode({
+    attackMode: technique.attackMode,
+    parts: savedParts,
+    weaponName: technique.weaponName,
+    weapon: technique.weapon,
+  });
 
   // getPayload persists damage as an array ([{ amount, size }]);
   // tolerate both the array form and a legacy single-object form.
@@ -200,18 +182,18 @@ export function techniqueLibraryRecordToFormState(
     actionType: technique.actionTypeSelection || technique.actionType || 'basic',
     isReaction: technique.isReaction ?? technique.reaction ?? false,
     damage,
-    weapon,
+    attackMode,
+    imageId: technique.imageId ?? technique.image_id ?? null,
+    imageUrl: technique.imageUrl ?? technique.image_url ?? null,
   };
 }
 
 export function bootstrapTechniqueCreatorFormState(options: {
   editTechniqueId: string | null;
   techniqueParts: TechniquePart[];
-  allWeaponOptions: CreatorWeaponOption[];
-  defaultWeapon: CreatorWeaponOption;
   rawItems: unknown[];
 }): TechniqueCreatorFormState {
-  const { editTechniqueId, techniqueParts, allWeaponOptions, defaultWeapon, rawItems } = options;
+  const { editTechniqueId, techniqueParts, rawItems } = options;
 
   if (editTechniqueId) {
     const techniqueToEdit = rawItems.find((t) => {
@@ -219,18 +201,16 @@ export function bootstrapTechniqueCreatorFormState(options: {
       return String(row.docId) === editTechniqueId || String(row.id) === editTechniqueId;
     });
     if (!techniqueToEdit) {
-      return emptyTechniqueCreatorFormState(defaultWeapon);
+      return emptyTechniqueCreatorFormState();
     }
     return techniqueLibraryRecordToFormState(
       techniqueToEdit as TechniqueLibraryRecord,
       techniqueParts,
-      allWeaponOptions,
-      defaultWeapon,
     );
   }
 
   return (
-    restoreTechniqueCreatorFromCache(techniqueParts, allWeaponOptions, defaultWeapon) ??
-    emptyTechniqueCreatorFormState(defaultWeapon)
+    restoreTechniqueCreatorFromCache(techniqueParts) ??
+    emptyTechniqueCreatorFormState()
   );
 }

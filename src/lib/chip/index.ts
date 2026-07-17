@@ -1,5 +1,6 @@
 export { expandableChipShellClass, type ExpandableChipShellSize } from './expandable-chip-shell';
-export { measureStableExpandWidth } from './measure-stable-expand-width';
+// Capture/snapshot halves are internal to ExpandableChip — do not re-implement per call site.
+export { applyFullRowExpandLayout } from './full-row-expand-layout';
 export {
   expandableChipPropsFromPartData,
   expandableChipPropsFromChipData,

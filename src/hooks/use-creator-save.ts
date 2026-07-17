@@ -106,6 +106,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
   const executeSave = useCallback(
     async (target: 'private' | 'public', existingPublicId?: string) => {
       const { name, data } = getPayload();
+      // Private + public saves persist image_id / image_url cache (TASK-497 user_* parity).
       const payload = { ...data, createdAt: new Date().toISOString(), updatedAt: new Date() };
       setSaving(true);
       setSaveMessage(null);

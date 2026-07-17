@@ -772,13 +772,13 @@ export function CreatureStatBlock({
                 <ExpandableImage
                   src={creature.imageUrl}
                   alt={`${creature.name} portrait`}
-                  className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border border-border-light bg-surface-alt"
+                  className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border border-border-light bg-surface-alt"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={creature.imageUrl} alt="" className="h-full w-full object-cover" />
                 </ExpandableImage>
               ) : (
-                <div className="h-20 w-20 flex-shrink-0 rounded-lg border border-border-light bg-surface-alt" />
+                <div className="w-20 h-20 rounded-lg border border-border-light bg-surface-alt flex-shrink-0" />
               )}
 
               <div className="flex-1 min-w-0">

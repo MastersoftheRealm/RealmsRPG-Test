@@ -4,11 +4,11 @@
  * out of useEffect. All functions are pure / render-safe (no localStorage writes).
  */
 
-import type { PowerPart, TechniquePart, CreatorWeaponOption } from '@/hooks';
+import type { PowerPart, TechniquePart } from '@/hooks';
 import type { AreaConfig, DurationConfig } from '@/lib/calculators';
 import { CREATOR_CACHE_KEYS } from '@/lib/game/creator-constants';
 import { readCreatorCache } from '@/lib/game/creator-cache';
-import { inferEmpoweredWeaponTpFromPowerPayload } from '@/lib/creator-weapon-persistence';
+import { derivePowerAttackMode, normalizeAttackMode, type AttackMode } from '@/lib/attack-mode';
 
 export const EMPOWERED_TECHNIQUE_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.EMPOWERED_TECHNIQUE;
 
@@ -47,13 +47,15 @@ export interface EmpoweredTechniqueCache {
   isReaction: boolean;
   powerDamages: EmpoweredDamageConfig[];
   techniqueDamage: { amount: number; size: number };
-  weaponId: string | number;
+  attackMode: AttackMode;
   range: EmpoweredRangeConfig;
   area: AreaConfig;
   duration: DurationConfig;
   selectedPowerParts: Array<{ partId: string | number; op_1_lvl: number; op_2_lvl: number; op_3_lvl: number; applyDuration: boolean; selectedCategory: string }>;
   selectedPowerAdvancedParts: Array<{ partId: string | number; op_1_lvl: number; op_2_lvl: number; op_3_lvl: number; applyDuration: boolean; selectedCategory: string }>;
   selectedTechniqueParts: Array<{ partId: string | number; op_1_lvl: number; op_2_lvl: number; op_3_lvl: number; selectedCategory: string }>;
+  imageId?: string | null;
+  imageUrl?: string | null;
   timestamp: number;
 }
 
@@ -67,10 +69,12 @@ export interface EmpoweredTechniqueFormState {
   range: EmpoweredRangeConfig;
   area: AreaConfig;
   duration: DurationConfig;
-  weapon: CreatorWeaponOption;
+  attackMode: AttackMode;
   selectedPowerParts: SelectedPowerPart[];
   selectedPowerAdvancedParts: SelectedPowerPart[];
   selectedTechniqueParts: SelectedTechniquePart[];
+  imageId: string | null;
+  imageUrl: string | null;
 }
 
 export type EmpoweredLibraryRecord = {
@@ -79,6 +83,11 @@ export type EmpoweredLibraryRecord = {
   empoweredTechnique?: boolean;
   actionType?: string;
   isReaction?: boolean;
+  attackMode?: unknown;
+  imageId?: string | null;
+  image_id?: string | null;
+  imageUrl?: string | null;
+  image_url?: string | null;
   power?: {
     parts?: Array<{ id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number; applyDuration?: boolean }>;
     mechanics?: Array<{ id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number; applyDuration?: boolean }>;
@@ -86,7 +95,8 @@ export type EmpoweredLibraryRecord = {
     range?: EmpoweredRangeConfig;
     area?: AreaConfig;
     duration?: DurationConfig;
-    addWeapon?: CreatorWeaponOption | null;
+    /** @deprecated Legacy persisted weapon reference; read-only for older rows. */
+    addWeapon?: { id?: string | number; name?: string } | null;
     addWeaponPowerPart?: { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number } | null;
   };
   technique?: {
@@ -105,9 +115,7 @@ const DEFAULT_DURATION: DurationConfig = {
   sustain: 0,
 };
 
-export function emptyEmpoweredTechniqueFormState(
-  defaultWeapon: CreatorWeaponOption,
-): EmpoweredTechniqueFormState {
+export function emptyEmpoweredTechniqueFormState(): EmpoweredTechniqueFormState {
   return {
     name: '',
     description: '',
@@ -118,10 +126,12 @@ export function emptyEmpoweredTechniqueFormState(
     range: { steps: 0 },
     area: { type: 'none', level: 1, applyDuration: false },
     duration: DEFAULT_DURATION,
-    weapon: defaultWeapon,
+    attackMode: 'none',
     selectedPowerParts: [],
     selectedPowerAdvancedParts: [],
     selectedTechniqueParts: [],
+    imageId: null,
+    imageUrl: null,
   };
 }
 
@@ -177,19 +187,11 @@ function mapTechniqueRows(
 export function restoreEmpoweredTechniqueFromCache(
   powerParts: PowerPart[],
   techniqueParts: TechniquePart[],
-  allWeaponOptions: CreatorWeaponOption[],
-  defaultWeapon: CreatorWeaponOption,
 ): EmpoweredTechniqueFormState | null {
   const parsed = readCreatorCache<EmpoweredTechniqueCache>(EMPOWERED_TECHNIQUE_CREATOR_CACHE_KEY);
   if (!parsed) return null;
 
-  const base = emptyEmpoweredTechniqueFormState(defaultWeapon);
-
-  let weapon = defaultWeapon;
-  const selectedWeapon = allWeaponOptions.find(
-    (option) => String(option.id) === String(parsed.weaponId),
-  );
-  if (selectedWeapon) weapon = selectedWeapon;
+  const base = emptyEmpoweredTechniqueFormState();
 
   return {
     name: parsed.name || '',
@@ -201,7 +203,7 @@ export function restoreEmpoweredTechniqueFromCache(
     range: parsed.range || base.range,
     area: parsed.area || base.area,
     duration: parsed.duration || base.duration,
-    weapon,
+    attackMode: normalizeAttackMode(parsed.attackMode) ?? 'none',
     selectedPowerParts: mapPowerRows(parsed.selectedPowerParts || [], powerParts, false),
     selectedPowerAdvancedParts: mapPowerRows(
       parsed.selectedPowerAdvancedParts || [],
@@ -213,6 +215,8 @@ export function restoreEmpoweredTechniqueFromCache(
       techniqueParts,
       false,
     ),
+    imageId: parsed.imageId ?? null,
+    imageUrl: parsed.imageUrl ?? null,
   };
 }
 
@@ -221,29 +225,22 @@ export function empoweredLibraryRecordToFormState(
   doc: unknown,
   powerParts: PowerPart[],
   techniqueParts: TechniquePart[],
-  allWeaponOptions: CreatorWeaponOption[],
-  defaultWeapon: CreatorWeaponOption,
 ): EmpoweredTechniqueFormState | null {
   const data = doc as EmpoweredLibraryRecord;
   if (!data.empoweredTechnique) return null;
 
-  const base = emptyEmpoweredTechniqueFormState(defaultWeapon);
+  const base = emptyEmpoweredTechniqueFormState();
 
-  let weapon = defaultWeapon;
-  if (data.power?.addWeapon) {
-    const foundWeapon = allWeaponOptions.find(
-      (option) =>
-        String(option.id) === String(data.power?.addWeapon?.id) ||
-        option.name === data.power?.addWeapon?.name,
-    );
-    if (foundWeapon) weapon = foundWeapon;
-  } else {
-    const requiredWeaponTp = inferEmpoweredWeaponTpFromPowerPayload(data.power);
-    if (requiredWeaponTp > 0) {
-      const tpMatch = allWeaponOptions.find((option) => (option.tp ?? 0) === requiredWeaponTp);
-      if (tpMatch) weapon = tpMatch;
-    }
-  }
+  const addWeaponPowerPart = data.power?.addWeaponPowerPart;
+  const attackMode = derivePowerAttackMode({
+    attackMode: data.attackMode,
+    parts: [
+      ...(data.power?.parts ?? []),
+      ...(data.power?.mechanics ?? []),
+      ...(addWeaponPowerPart ? [addWeaponPowerPart] : []),
+    ],
+    weapon: data.power?.addWeapon ?? null,
+  });
 
   const additionalDamage = data.technique?.additionalDamage?.[0];
 
@@ -261,10 +258,12 @@ export function empoweredLibraryRecordToFormState(
     range: data.power?.range || base.range,
     area: data.power?.area || base.area,
     duration: data.power?.duration || base.duration,
-    weapon,
+    attackMode,
     selectedPowerParts: mapPowerRows(data.power?.parts || [], powerParts, true),
     selectedPowerAdvancedParts: mapPowerRows(data.power?.mechanics || [], powerParts, true),
     selectedTechniqueParts: mapTechniqueRows(data.technique?.parts || [], techniqueParts, true),
+    imageId: data.imageId ?? data.image_id ?? null,
+    imageUrl: data.imageUrl ?? data.image_url ?? null,
   };
 }
 
@@ -272,11 +271,9 @@ export function bootstrapEmpoweredTechniqueFormState(options: {
   editId: string | null;
   powerParts: PowerPart[];
   techniqueParts: TechniquePart[];
-  allWeaponOptions: CreatorWeaponOption[];
-  defaultWeapon: CreatorWeaponOption;
   rawItems: unknown[];
 }): EmpoweredTechniqueFormState {
-  const { editId, powerParts, techniqueParts, allWeaponOptions, defaultWeapon, rawItems } = options;
+  const { editId, powerParts, techniqueParts, rawItems } = options;
 
   if (editId) {
     const match = rawItems.find(
@@ -285,21 +282,19 @@ export function bootstrapEmpoweredTechniqueFormState(options: {
         String((item as { docId?: string; id?: string }).id) === editId,
     );
     if (!match) {
-      return emptyEmpoweredTechniqueFormState(defaultWeapon);
+      return emptyEmpoweredTechniqueFormState();
     }
     return (
       empoweredLibraryRecordToFormState(
         match,
         powerParts,
         techniqueParts,
-        allWeaponOptions,
-        defaultWeapon,
-      ) ?? emptyEmpoweredTechniqueFormState(defaultWeapon)
+      ) ?? emptyEmpoweredTechniqueFormState()
     );
   }
 
   return (
-    restoreEmpoweredTechniqueFromCache(powerParts, techniqueParts, allWeaponOptions, defaultWeapon) ??
-    emptyEmpoweredTechniqueFormState(defaultWeapon)
+    restoreEmpoweredTechniqueFromCache(powerParts, techniqueParts) ??
+    emptyEmpoweredTechniqueFormState()
   );
 }

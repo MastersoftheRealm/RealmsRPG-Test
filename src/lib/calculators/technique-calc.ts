@@ -9,6 +9,7 @@ import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
 import { computePartTrainingPoints } from '@/lib/library/part-display';
 import type { TechniquePart } from '@/hooks/codex-types';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
+import { attackModeColumnLabel, deriveTechniqueAttackMode, type AttackMode } from '@/lib/attack-mode';
 import { deriveActionType, actionTypeFromSelection } from './action-type';
 
 // Re-export for convenience
@@ -59,7 +60,12 @@ export interface TechniqueDocument {
   description?: string;
   parts?: TechniquePartPayload[];
   damage?: { amount?: number | string; size?: number | string; type?: string };
+  /** Attack mode (none | unarmed | weapon). Preferred over legacy `weapon`. */
+  attackMode?: AttackMode;
+  /** @deprecated Legacy weapon reference; kept for reading older library rows. */
   weapon?: { id?: string | number; name?: string };
+  /** @deprecated Legacy columnar label; kept for reading older library rows. */
+  weaponName?: string;
   /** Saved action type (basic, full, bonus, etc.) — used to avoid recalculation */
   actionType?: string;
   /** Whether the technique can be used as a reaction */
@@ -69,8 +75,7 @@ export interface TechniqueDocument {
 export interface MechanicContext {
   actionTypeSelection?: string;
   reaction?: boolean;
-  weaponTP?: number;
-  weaponAttackMode?: 'attack' | 'no_attack';
+  attackMode?: AttackMode;
   diceAmt?: number;
   dieSize?: number;
   partsDb?: TechniquePart[];
@@ -274,10 +279,13 @@ export function deriveTechniqueDisplay(
     : null;
   const actionType = formatActionTypeForDisplay(savedAction || derivedAction);
   const damageStr = formatTechniqueDamage(techniqueDoc.damage);
-  const weaponName =
-    techniqueDoc.weapon && (techniqueDoc.weapon.name || techniqueDoc.weapon.id)
-      ? techniqueDoc.weapon.name || `Weapon #${techniqueDoc.weapon.id}`
-      : 'Unarmed';
+  const attackMode = deriveTechniqueAttackMode({
+    attackMode: techniqueDoc.attackMode,
+    parts: partsPayload,
+    weaponName: techniqueDoc.weaponName,
+    weapon: techniqueDoc.weapon,
+  });
+  const weaponName = attackModeColumnLabel(attackMode);
 
   const partChips: TechniqueChipData[] = partsPayload
     .map((pl) => {

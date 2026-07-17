@@ -5,7 +5,6 @@
     "src/components/shared/add-skill-modal.tsx",
     "src/components/shared/add-sub-skill-modal.tsx",
     "src/components/shared/choice-trait-option-select.tsx",
-    "src/components/shared/codex-art-upload-field.tsx",
     "src/components/shared/confirm-action-modal.tsx",
     "src/components/shared/creature-stat-block.tsx",
     "src/components/shared/delete-confirm-modal.tsx",

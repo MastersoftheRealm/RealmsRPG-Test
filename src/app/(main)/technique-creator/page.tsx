@@ -14,33 +14,24 @@
 
 import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Plus, Swords, Zap, Target, Info } from 'lucide-react';
+import { Swords, Zap, Target } from 'lucide-react';
 import {
   useTechniqueParts,
-  useUserItems,
-  useItemProperties,
   useAdmin,
   useCreatorSave,
   useLoadModalLibrary,
-  useOfficialLibrary,
-  useCreatorWeaponOptions,
   type TechniquePart,
-  type CreatorWeaponOption,
   type UseLoadModalLibraryReturn,
 } from '@/hooks';
 import { useAuthStore } from '@/stores';
-import { LoadingState, Checkbox, Button, Input, Textarea, Card } from '@/components/ui';
+import { LoadingState } from '@/components/ui';
 import {
   CreatorPageShell,
-  CollapsibleSection,
-  CreatorWeaponPicker,
   AdvancedCalculationsPanel,
-  PowerPartCard,
   CreatorSummaryPanel,
 } from '@/components/creator';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
-import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
-import { ValueStepper, SectionCostBadge, ErrorDisplay } from '@/components/shared';
+import { ErrorDisplay } from '@/components/shared';
 import {
   calculateTechniqueCosts,
   computeTechniqueActionTypeFromSelection,
@@ -48,7 +39,8 @@ import {
   formatTechniqueDamage,
   type TechniquePartPayload,
 } from '@/lib/calculators';
-import { shouldPersistCreatorWeaponId } from '@/lib/creator-weapon-persistence';
+import { attackModeColumnLabel, type AttackMode } from '@/lib/attack-mode';
+import { TechniqueCreatorEditor } from './technique-creator-editor';
 
 // =============================================================================
 // Types
@@ -82,21 +74,6 @@ function toTechniquePartPayload(part: {
 }
 
 // =============================================================================
-// Shared Constants (imported from central location)
-// =============================================================================
-
-import {
-  ACTION_OPTIONS,
-  DIE_SIZES,
-} from '@/lib/game/creator-constants';
-
-// Default weapon options (always available)
-const DEFAULT_WEAPON_OPTIONS: CreatorWeaponOption[] = [
-  { id: 0, name: 'Unarmed Prowess', tp: 0, weaponLibrary: 'builtin' },
-  { id: 'no-attack', name: 'No Attack', tp: 0, weaponLibrary: 'builtin' },
-];
-
-// =============================================================================
 // Main Component
 // =============================================================================
 
@@ -109,27 +86,11 @@ function TechniqueCreatorContent() {
 
   const { data: techniqueParts = [], isLoading, error, refetch } = useTechniqueParts();
 
-  // Fetch user's saved items (weapons) and codex properties (for weapon TP calculation)
-  const { data: userItems = [] } = useUserItems();
-  const { data: itemPropertiesDb = [] } = useItemProperties();
-  const { data: officialItems = [] } = useOfficialLibrary('items');
-
-  const [weaponLibrarySource, setWeaponLibrarySource] = useState<SourceFilterValue>('my');
-
-  const { fullOptions: allWeaponOptions, visibleOptions } = useCreatorWeaponOptions({
-    defaults: DEFAULT_WEAPON_OPTIONS,
-    userItems,
-    officialWeaponItems: officialItems,
-    itemPropertiesDb,
-    librarySource: weaponLibrarySource,
-  });
-
   const sessionKey = editTechniqueId ?? 'draft';
-  // Ready once parts + weapon options exist; in ?edit= mode also wait for the
-  // library fetch to settle (rawItems may legitimately stay empty — fall back to blank form).
+  // Ready once parts exist; in ?edit= mode also wait for the library fetch to
+  // settle (rawItems may legitimately stay empty — fall back to blank form).
   const bootstrapReady =
     techniqueParts.length > 0 &&
-    allWeaponOptions.length > 0 &&
     (!editTechniqueId || !load.isLoading);
 
   // One-time render adjust per sessionKey: compute the initial form state exactly
@@ -144,8 +105,6 @@ function TechniqueCreatorContent() {
       form: bootstrapTechniqueCreatorFormState({
         editTechniqueId,
         techniqueParts,
-        allWeaponOptions,
-        defaultWeapon: DEFAULT_WEAPON_OPTIONS[0],
         rawItems: load.rawItems,
       }),
     });
@@ -181,10 +140,6 @@ function TechniqueCreatorContent() {
       user={user}
       isAdmin={isAdmin}
       techniqueParts={techniqueParts}
-      allWeaponOptions={allWeaponOptions}
-      visibleOptions={visibleOptions}
-      weaponLibrarySource={weaponLibrarySource}
-      setWeaponLibrarySource={setWeaponLibrarySource}
       load={load}
       isLoading={isLoading}
       error={error}
@@ -199,10 +154,6 @@ interface TechniqueCreatorWorkspaceProps {
   user: ReturnType<typeof useAuthStore.getState>['user'];
   isAdmin: boolean;
   techniqueParts: TechniquePart[];
-  allWeaponOptions: CreatorWeaponOption[];
-  visibleOptions: CreatorWeaponOption[];
-  weaponLibrarySource: SourceFilterValue;
-  setWeaponLibrarySource: (value: SourceFilterValue) => void;
   load: UseLoadModalLibraryReturn;
   isLoading: boolean;
   error: Error | null;
@@ -215,10 +166,6 @@ function TechniqueCreatorWorkspace({
   user,
   isAdmin,
   techniqueParts,
-  allWeaponOptions,
-  visibleOptions,
-  weaponLibrarySource,
-  setWeaponLibrarySource,
   load,
   isLoading,
   error,
@@ -230,7 +177,9 @@ function TechniqueCreatorWorkspace({
   const [actionType, setActionType] = useState(initialFormState.actionType);
   const [isReaction, setIsReaction] = useState(initialFormState.isReaction);
   const [damage, setDamage] = useState<DamageConfig>(initialFormState.damage);
-  const [weapon, setWeapon] = useState<CreatorWeaponOption>(initialFormState.weapon);
+  const [attackMode, setAttackMode] = useState<AttackMode>(initialFormState.attackMode);
+  const [imageId, setImageId] = useState<string | null>(initialFormState.imageId);
+  const [imageUrl, setImageUrl] = useState<string | null>(initialFormState.imageUrl);
 
   // ?edit= mode: clear any stale draft once on mount (parity with the old hydrate
   // effect, which removed the cache after loading the edit target).
@@ -255,41 +204,24 @@ function TechniqueCreatorWorkspace({
       actionType,
       isReaction,
       damage,
-      weaponId: weapon.id,
+      attackMode,
+      imageId,
+      imageUrl,
       timestamp: Date.now(),
     };
     writeCreatorCache(TECHNIQUE_CREATOR_CACHE_KEY, cache);
-  }, [editTechniqueId, name, description, selectedParts, actionType, isReaction, damage, weapon.id]);
+  }, [editTechniqueId, name, description, selectedParts, actionType, isReaction, damage, attackMode, imageId, imageUrl]);
 
-  // Build mechanic parts from action type, damage, and weapon selections
-  const weaponAttackMode = useMemo(
-    () => (String(weapon.id) === 'no-attack' ? ('no_attack' as const) : ('attack' as const)),
-    [weapon.id]
-  );
-
-  const weaponTPForMechanics = useMemo(() => {
-    if (weaponAttackMode === 'no_attack') return 0;
-    return weapon.tp ?? (weapon.id !== 0 ? 1 : 0); // Use weapon TP if available
-  }, [weapon.id, weapon.tp, weaponAttackMode]);
-
-  const shouldPersistSelectedWeapon = useMemo(
-    () =>
-      shouldPersistCreatorWeaponId({
-        weaponId: weapon.id,
-        allowNoAttack: false,
-      }),
-    [weapon.id]
-  );
-
+  // Build mechanic parts from action type, damage, and attack mode.
   const mechanicParts = useMemo(
     () => buildMechanicParts({
       creatorType: 'technique',
       partsDb: techniqueParts,
       action: { type: actionType, isReaction },
       techniqueDamage: { diceAmount: damage.amount, dieSize: damage.size },
-      weapon: { tp: weaponTPForMechanics, attackMode: weaponAttackMode },
+      attackMode,
     }),
-    [actionType, isReaction, damage.amount, damage.size, weaponAttackMode, weaponTPForMechanics, techniqueParts]
+    [actionType, isReaction, damage.amount, damage.size, attackMode, techniqueParts]
   );
 
   // Convert selected parts to payload format for calculator
@@ -334,9 +266,10 @@ function TechniqueCreatorWorkspace({
   );
 
   // Collapsed summaries for collapsible sections
+  const attackModeLabel = useMemo(() => attackModeColumnLabel(attackMode), [attackMode]);
   const combatConfigSummary = useMemo(
-    () => `${weapon.name} • ${actionTypeDisplay}`,
-    [weapon.name, actionTypeDisplay]
+    () => `${attackModeLabel} • ${actionTypeDisplay}`,
+    [attackModeLabel, actionTypeDisplay]
   );
   const techniquePartsSummary = useMemo(() => {
     if (selectedParts.length === 0) return 'No parts';
@@ -366,7 +299,9 @@ function TechniqueCreatorWorkspace({
   }, [mechanicParts, techniqueParts]);
 
   const weaponCost = useMemo(() => {
-    const weaponParts = mechanicParts.filter((mp) => mp.name === 'Add Weapon Attack' || mp.name === 'No Attack');
+    const weaponParts = mechanicParts.filter(
+      (mp) => mp.name === 'Add Weapon to Technique' || mp.name === 'Add Weapon Attack' || mp.name === 'No Attack'
+    );
     return calculateTechniqueCosts(weaponParts.map(toTechniquePartPayload), techniqueParts);
   }, [mechanicParts, techniqueParts]);
 
@@ -435,12 +370,14 @@ function TechniqueCreatorWorkspace({
         description: description.trim(),
         parts: partsToSave,
         damage: damageToSave,
-        weapon: shouldPersistSelectedWeapon ? weapon : null,
+        attackMode,
         actionType,
         isReaction,
+        ...(imageId ? { imageId } : {}),
+        ...(imageUrl ? { imageUrl } : {}),
       },
     };
-  }, [name, description, selectedParts, mechanicParts, damage, shouldPersistSelectedWeapon, weapon, actionType, isReaction]);
+  }, [name, description, selectedParts, mechanicParts, damage, attackMode, actionType, isReaction, imageId, imageUrl]);
 
   const save = useCreatorSave({
     type: 'techniques',
@@ -460,7 +397,9 @@ function TechniqueCreatorWorkspace({
       setActionType('basic');
       setIsReaction(false);
       setDamage({ amount: 0, size: 6, type: 'none' });
-      setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
+      setAttackMode('unarmed');
+      setImageId(null);
+      setImageUrl(null);
     },
   });
 
@@ -471,7 +410,9 @@ function TechniqueCreatorWorkspace({
     setActionType('basic');
     setIsReaction(false);
     setDamage({ amount: 0, size: 6, type: 'none' });
-    setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
+    setAttackMode('unarmed');
+    setImageId(null);
+    setImageUrl(null);
     save.setSaveMessage(null);
     clearCreatorCache(TECHNIQUE_CREATOR_CACHE_KEY);
   }, [save]);
@@ -483,7 +424,9 @@ function TechniqueCreatorWorkspace({
     setActionType(next.actionType);
     setIsReaction(next.isReaction);
     setDamage(next.damage);
-    setWeapon(next.weapon);
+    setAttackMode(next.attackMode);
+    setImageId(next.imageId);
+    setImageUrl(next.imageUrl);
   }, []);
 
   // Load a technique from the library
@@ -493,13 +436,11 @@ function TechniqueCreatorWorkspace({
       techniqueLibraryRecordToFormState(
         technique,
         techniqueParts,
-        allWeaponOptions,
-        DEFAULT_WEAPON_OPTIONS[0],
       ),
     );
     save.setSaveMessage({ type: 'success', text: 'Technique loaded successfully!' });
     setTimeout(() => save.setSaveMessage(null), 2000);
-  }, [techniqueParts, allWeaponOptions, applyFormState, save]);
+  }, [techniqueParts, applyFormState, save]);
 
   return (
     <CreatorPageShell
@@ -559,7 +500,7 @@ function TechniqueCreatorWorkspace({
           ]}
           statRows={[
             { label: 'Action', value: actionTypeDisplay },
-            { label: 'Weapon', value: weapon.name },
+            { label: 'Attack', value: attackModeLabel },
             ...(damageDisplay ? [{ label: 'Damage', value: damageDisplay }] : []),
           ]}
           breakdowns={costs.tpSources.length > 0 ? [
@@ -568,172 +509,45 @@ function TechniqueCreatorWorkspace({
         >
           <AdvancedCalculationsPanel
             rows={advancedCalcRows}
-            ruleText="Rule: Mechanic parts are auto-generated from action, reaction, damage, and weapon; costs match standalone technique math."
+            ruleText="Rule: Mechanic parts are auto-generated from action, reaction, damage, and attack mode; costs match standalone technique math."
           />
         </CreatorSummaryPanel>
       }
     >
-      {/* Main Editor */}
-          {/* Name & Description */}
-          <Card className="shadow-md p-6">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  Technique Name *
-                </label>
-                <Input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter technique name..."
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  Description
-                </label>
-                <Textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Describe what your technique does..."
-                  rows={3}
-                />
-              </div>
-            </div>
-          </Card>
-
-          {/* Weapon & Action Type */}
-          <CollapsibleSection
-            title="Combat Configuration"
-            collapsedSummary={combatConfigSummary}
-            defaultExpanded={true}
-            rightSlot={<SectionCostBadge en={combatConfigCost.energyRaw} tp={combatConfigCost.totalTP} />}
-          >
-            <div className="grid md:grid-cols-2 gap-4">
-              <CreatorWeaponPicker
-                librarySource={weaponLibrarySource}
-                onLibrarySourceChange={setWeaponLibrarySource}
-                fullOptions={allWeaponOptions}
-                visibleOptions={visibleOptions}
-                weapon={weapon}
-                onWeaponChange={setWeapon}
-                label="Weapon"
-                ariaLabel="Weapon"
-                badgeEn={weaponCost.energyRaw}
-                badgeTp={weaponCost.totalTP}
-              />
-              <div>
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <label className="block text-sm font-medium text-text-secondary">
-                    Action Type
-                  </label>
-                  <SectionCostBadge
-                    en={actionTypeCost.energyRaw}
-                    tp={actionTypeCost.totalTP}
-                  />
-                </div>
-                <select
-                  value={actionType}
-                  onChange={(e) => setActionType(e.target.value)}
-                  className="w-full px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-                  aria-label="Action type"
-                >
-                  {ACTION_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className="mt-4">
-              <div className="flex items-center justify-between gap-3">
-                <Checkbox
-                  checked={isReaction}
-                  onChange={(e) => setIsReaction(e.target.checked)}
-                  label="Can be used as a Reaction"
-                />
-                {isReaction && (
-                  <SectionCostBadge en={reactionCost.energyRaw} tp={reactionCost.totalTP} />
-                )}
-              </div>
-            </div>
-          </CollapsibleSection>
-
-          {/* Technique Parts */}
-          <CollapsibleSection
-            title={`Technique Parts (${selectedParts.length})`}
-            collapsedSummary={techniquePartsSummary}
-            defaultExpanded={true}
-            rightSlot={
-              <Button type="button" variant="primary" size="sm" className="flex items-center gap-1" onClick={addPart}>
-                <Plus className="w-4 h-4" />
-                Add Part
-              </Button>
-            }
-          >
-            {selectedParts.length === 0 ? (
-              <div className="text-center py-8 text-text-muted dark:text-text-secondary">
-                <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>No parts added yet. Click &quot;Add Part&quot; to begin building your technique.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {selectedParts.map((sp, idx) => (
-                  <PowerPartCard
-                    key={idx}
-                    selectedPart={sp}
-                    _index={idx}
-                    onRemove={() => removePart(idx)}
-                    onUpdate={(updates) => updatePart(idx, updates)}
-                    allParts={techniqueParts}
-                    showApplyDuration={false}
-                  />
-                ))}
-              </div>
-            )}
-          </CollapsibleSection>
-
-          {/* Additional Damage */}
-          <CollapsibleSection
-            title="Additional Damage"
-            collapsedSummary={damageSummary}
-            defaultExpanded={true}
-            rightSlot={<SectionCostBadge en={damageSectionCost.energyRaw} tp={damageSectionCost.totalTP} />}
-          >
-            <p className="text-sm text-text-secondary mb-4">
-              Add extra damage dice to your technique. The damage type matches the weapon&apos;s damage type.
-            </p>
-            <div className="flex flex-wrap items-center gap-4">
-              <ValueStepper
-                value={damage.amount}
-                onChange={(v) => setDamage((d) => ({ ...d, amount: v }))}
-                label="Dice:"
-                min={0}
-                max={20}
-              />
-              <div className="flex items-center gap-1">
-                <span className="font-bold text-lg">d</span>
-                <select
-                  value={damage.size}
-                  onChange={(e) => setDamage((d) => ({ ...d, size: parseInt(e.target.value) }))}
-                  className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-                  aria-label="Damage die size"
-                >
-                  {DIE_SIZES.map((size) => (
-                    <option key={size} value={size}>
-                      {size}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            {damage.amount > 0 && (
-              <p className="mt-2 text-sm text-text-secondary">
-                Additional Damage: <strong>+{damage.amount}d{damage.size}</strong>
-              </p>
-            )}
-          </CollapsibleSection>
+      <TechniqueCreatorEditor
+        isAdmin={isAdmin}
+        name={name}
+        onNameChange={setName}
+        description={description}
+        onDescriptionChange={setDescription}
+        imageId={imageId}
+        imageUrl={imageUrl}
+        onImageChange={(selection) => {
+          setImageId(selection.imageId);
+          setImageUrl(selection.imageUrl);
+        }}
+        combatConfigSummary={combatConfigSummary}
+        combatConfigCost={combatConfigCost}
+        attackMode={attackMode}
+        onAttackModeChange={setAttackMode}
+        weaponCost={weaponCost}
+        actionType={actionType}
+        onActionTypeChange={setActionType}
+        actionTypeCost={actionTypeCost}
+        isReaction={isReaction}
+        onIsReactionChange={setIsReaction}
+        reactionCost={reactionCost}
+        selectedParts={selectedParts}
+        techniqueParts={techniqueParts}
+        techniquePartsSummary={techniquePartsSummary}
+        onAddPart={addPart}
+        onRemovePart={removePart}
+        onUpdatePart={updatePart}
+        damage={damage}
+        onDamageChange={setDamage}
+        damageSummary={damageSummary}
+        damageSectionCost={damageSectionCost}
+      />
     </CreatorPageShell>
   );
 }

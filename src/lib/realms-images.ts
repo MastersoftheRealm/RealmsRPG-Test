@@ -3,8 +3,10 @@
  * Master assets live in `realms_images` + `realms_image_categories`; Storage under
  * `codex-art/library/{id}.{ext}`. Client uploads go through apiUpload only.
  *
- * DESIGN_INTENT: One shared bank. Entity-tied /api/upload/codex-art remains until
- * TASK-496/498 migrate callers — do not fork a third upload pipeline.
+ * DESIGN_INTENT: One shared bank. Authoring uses this API only (TASK-498 retired
+ * the entity-tied /api/upload/codex-art path). Legacy Storage objects under
+ * `{entityType}/{entityId}.jpg` remain valid catalog rows until admin replace
+ * moves them to `library/{id}.{ext}`.
  */
 
 import { apiFetch, apiUpload } from '@/lib/api-client';

@@ -5,16 +5,21 @@
  * Ported from encounter-tracker with persistence via encounter-service.
  */
 
-'use client';
+"use client";
 
-import { useState, useEffect, use } from 'react';
-import Link from 'next/link';
-import { LoadingState, PageContainer, Alert, useToast } from '@/components/ui';
-import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
-import { RollProvider } from '@/components/character-sheet';
-import type { Encounter } from '@/types/encounter';
-import CombatEncounterView from '../_components/CombatEncounterView';
-import { EncounterPageHeader } from '../_components/EncounterPageHeader';
+import { useState, use } from "react";
+import Link from "next/link";
+import { LoadingState, PageContainer, Alert, useToast } from "@/components/ui";
+import {
+  useEncounter,
+  useSaveEncounter,
+  useAutoSave,
+  useCampaignsFull,
+} from "@/hooks";
+import { RollProvider } from "@/components/character-sheet";
+import type { Encounter } from "@/types/encounter";
+import CombatEncounterView from "../_components/CombatEncounterView";
+import { EncounterPageHeader } from "../_components/EncounterPageHeader";
 
 interface PageParams {
   params: Promise<{ id: string }>;
@@ -24,27 +29,27 @@ export default function CombatEncounterPage({ params }: PageParams) {
   return <CombatEncounterContent params={params} />;
 }
 
-function CombatEncounterContent({ params }: { params: Promise<{ id: string }> }) {
+function CombatEncounterContent({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id: encounterId } = use(params);
   const { data: encounterData, isLoading, error } = useEncounter(encounterId);
   const saveMutation = useSaveEncounter();
   const [encounter, setEncounter] = useState<Encounter | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [initializedEncounterId, setInitializedEncounterId] = useState<
+    string | null
+  >(null);
   const [isEditingName, setIsEditingName] = useState(false);
-  const [nameInput, setNameInput] = useState('');
+  const [nameInput, setNameInput] = useState("");
   const { data: campaignsFull = [] } = useCampaignsFull();
 
-  useEffect(() => {
-    if (encounterData && !isInitialized) {
-      setEncounter(encounterData);
-      setNameInput(encounterData.name || '');
-      setIsInitialized(true);
-    }
-  }, [encounterData, isInitialized]);
-
-  useEffect(() => {
-    if (encounter?.name && !isEditingName) setNameInput(encounter.name);
-  }, [encounter?.name, isEditingName]);
+  if (encounterData && initializedEncounterId !== encounterId) {
+    setEncounter(encounterData);
+    setInitializedEncounterId(encounterId);
+  }
+  const isInitialized = initializedEncounterId === encounterId;
 
   const { showToast } = useToast();
   const { isSaving, hasUnsavedChanges } = useAutoSave({
@@ -59,7 +64,10 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
     delay: 1500,
     enabled: isInitialized && !!encounter,
     onSaveError: () => {
-      showToast('Failed to save encounter. Your latest changes may not be stored.', 'error');
+      showToast(
+        "Failed to save encounter. Your latest changes may not be stored.",
+        "error",
+      );
     },
   });
 
@@ -77,7 +85,10 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
         <Alert variant="danger" title="Encounter not found">
           This encounter may have been deleted or you may not have access.
         </Alert>
-        <Link href="/encounters" className="mt-4 inline-block text-primary-link-fg hover:underline">
+        <Link
+          href="/encounters"
+          className="mt-4 inline-block text-primary-link-fg hover:underline"
+        >
           Back to Encounters
         </Link>
       </PageContainer>
@@ -97,13 +108,13 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
     if (trimmed && trimmed !== encounter.name) {
       setEncounter((prev) => (prev ? { ...prev, name: trimmed } : prev));
     } else {
-      setNameInput(encounter.name || '');
+      setNameInput(encounter.name || "");
     }
     setIsEditingName(false);
   };
 
   const handleCancelEditName = () => {
-    setNameInput(encounter.name || '');
+    setNameInput(encounter.name || "");
     setIsEditingName(false);
   };
 
@@ -117,7 +128,10 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
           isEditingName={isEditingName}
           nameInput={nameInput}
           onNameInputChange={setNameInput}
-          onStartEditingName={() => setIsEditingName(true)}
+          onStartEditingName={() => {
+            setNameInput(encounter.name || "");
+            setIsEditingName(true);
+          }}
           onCommitName={handleCommitName}
           onCancelEdit={handleCancelEditName}
           isSaving={isSaving}

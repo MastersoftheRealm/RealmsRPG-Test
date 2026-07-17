@@ -8,20 +8,15 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Plus, Wand2, Zap, Target, Info } from 'lucide-react';
+import { Wand2, Zap, Target } from 'lucide-react';
 import {
   usePowerParts,
   useTechniqueParts,
-  useUserItems,
-  useItemProperties,
   useAdmin,
   useCreatorSave,
   useLoadModalLibrary,
-  useOfficialLibrary,
-  useCreatorWeaponOptions,
   type PowerPart,
   type TechniquePart,
-  type CreatorWeaponOption,
   type UseLoadModalLibraryReturn,
 } from '@/hooks';
 import { useAuthStore } from '@/stores';
@@ -35,35 +30,23 @@ import {
   deriveRange,
   deriveArea,
   deriveDuration,
-  formatAreaForDisplay,
-  formatDurationFromTypeAndValue,
   type PowerPartPayload,
   type TechniquePartPayload,
   type AreaConfig,
   type DurationConfig,
 } from '@/lib/calculators';
-import {
-  ACTION_OPTIONS,
-  AREA_TYPES,
-  DIE_SIZES,
-  DURATION_TYPES,
-  DURATION_VALUES,
-  POWER_DAMAGE_TYPES,
-} from '@/lib/game/creator-constants';
+import { DURATION_VALUES } from '@/lib/game/creator-constants';
 import {
   CreatorPageShell,
-  CollapsibleSection,
   CreatorSummaryPanel,
-  CreatorWeaponPicker,
   AdvancedCalculationsPanel,
-  PowerPartCard,
 } from '@/components/creator';
-import { Button, Checkbox, Input, Textarea, LoadingState, Card } from '@/components/ui';
-import { ValueStepper, SectionCostBadge, ErrorDisplay } from '@/components/shared';
+import { LoadingState } from '@/components/ui';
+import { ErrorDisplay } from '@/components/shared';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
-import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { EXCLUDED_PARTS } from '@/app/(main)/power-creator/power-creator-constants';
-import { shouldPersistCreatorWeaponId } from '@/lib/creator-weapon-persistence';
+import { attackModeColumnLabel, type AttackMode } from '@/lib/attack-mode';
+import { EmpoweredTechniqueCreatorEditor } from './empowered-technique-creator-editor';
 
 import {
   bootstrapEmpoweredTechniqueFormState,
@@ -78,10 +61,6 @@ import {
 } from './empowered-technique-bootstrap';
 import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
 
-const DEFAULT_WEAPON_OPTIONS: CreatorWeaponOption[] = [
-  { id: 0, name: 'Unarmed Prowess', tp: 0, weaponLibrary: 'builtin' },
-];
-
 function EmpoweredTechniqueCreatorContent() {
   const { user } = useAuthStore();
   const { isAdmin } = useAdmin();
@@ -91,19 +70,6 @@ function EmpoweredTechniqueCreatorContent() {
 
   const { data: powerParts = [], isLoading: powerPartsLoading, error: powerPartsError, refetch: refetchPowerParts } = usePowerParts();
   const { data: techniqueParts = [], isLoading: techniquePartsLoading, error: techniquePartsError, refetch: refetchTechniqueParts } = useTechniqueParts();
-  const { data: userItems = [] } = useUserItems();
-  const { data: itemPropertiesDb = [] } = useItemProperties();
-  const { data: officialItems = [] } = useOfficialLibrary('items');
-
-  const [weaponLibrarySource, setWeaponLibrarySource] = useState<SourceFilterValue>('my');
-
-  const { fullOptions: allWeaponOptions, visibleOptions } = useCreatorWeaponOptions({
-    defaults: DEFAULT_WEAPON_OPTIONS,
-    userItems,
-    officialWeaponItems: officialItems,
-    itemPropertiesDb,
-    librarySource: weaponLibrarySource,
-  });
 
   const sessionKey = editId ?? 'draft';
   // Ready once both part databases exist; in ?edit= mode also wait for the
@@ -111,7 +77,6 @@ function EmpoweredTechniqueCreatorContent() {
   const bootstrapReady =
     powerParts.length > 0 &&
     techniqueParts.length > 0 &&
-    allWeaponOptions.length > 0 &&
     (!editId || !load.isLoading);
 
   // One-time render adjust per sessionKey: compute the initial form state exactly
@@ -127,8 +92,6 @@ function EmpoweredTechniqueCreatorContent() {
         editId,
         powerParts,
         techniqueParts,
-        allWeaponOptions,
-        defaultWeapon: DEFAULT_WEAPON_OPTIONS[0],
         rawItems: load.rawItems,
       }),
     });
@@ -167,10 +130,6 @@ function EmpoweredTechniqueCreatorContent() {
       isAdmin={isAdmin}
       powerParts={powerParts}
       techniqueParts={techniqueParts}
-      allWeaponOptions={allWeaponOptions}
-      visibleOptions={visibleOptions}
-      weaponLibrarySource={weaponLibrarySource}
-      setWeaponLibrarySource={setWeaponLibrarySource}
       load={load}
       powerPartsLoading={powerPartsLoading}
       techniquePartsLoading={techniquePartsLoading}
@@ -189,10 +148,6 @@ interface EmpoweredTechniqueWorkspaceProps {
   isAdmin: boolean;
   powerParts: PowerPart[];
   techniqueParts: TechniquePart[];
-  allWeaponOptions: CreatorWeaponOption[];
-  visibleOptions: CreatorWeaponOption[];
-  weaponLibrarySource: SourceFilterValue;
-  setWeaponLibrarySource: (value: SourceFilterValue) => void;
   load: UseLoadModalLibraryReturn;
   powerPartsLoading: boolean;
   techniquePartsLoading: boolean;
@@ -209,10 +164,6 @@ function EmpoweredTechniqueWorkspace({
   isAdmin,
   powerParts,
   techniqueParts,
-  allWeaponOptions,
-  visibleOptions,
-  weaponLibrarySource,
-  setWeaponLibrarySource,
   load,
   powerPartsLoading,
   techniquePartsLoading,
@@ -232,7 +183,7 @@ function EmpoweredTechniqueWorkspace({
   const [range, setRange] = useState<RangeConfig>(initialFormState.range);
   const [area, setArea] = useState<AreaConfig>(initialFormState.area);
   const [duration, setDuration] = useState<DurationConfig>(initialFormState.duration);
-  const [weapon, setWeapon] = useState<CreatorWeaponOption>(initialFormState.weapon);
+  const [attackMode, setAttackMode] = useState<AttackMode>(initialFormState.attackMode);
   const [selectedPowerParts, setSelectedPowerParts] = useState<SelectedPowerPart[]>(
     initialFormState.selectedPowerParts,
   );
@@ -242,6 +193,8 @@ function EmpoweredTechniqueWorkspace({
   const [selectedTechniqueParts, setSelectedTechniqueParts] = useState<SelectedTechniquePart[]>(
     initialFormState.selectedTechniqueParts,
   );
+  const [imageId, setImageId] = useState<string | null>(initialFormState.imageId);
+  const [imageUrl, setImageUrl] = useState<string | null>(initialFormState.imageUrl);
 
   // ?edit= mode: clear any stale draft once on mount (parity with the old hydrate
   // effect, which removed the cache after loading the edit target).
@@ -309,7 +262,7 @@ function EmpoweredTechniqueWorkspace({
   );
 
   const addWeaponToPowerPart = useMemo(() => {
-    if ((weapon.tp ?? 0) < 1) return null;
+    if (attackMode !== 'weapon') return null;
     const part = findByIdOrName(powerParts, {
       id: PART_IDS.ADD_WEAPON_TO_POWER,
       name: 'Add Weapon to Power',
@@ -318,12 +271,12 @@ function EmpoweredTechniqueWorkspace({
     return {
       id: part.id,
       name: part.name,
-      op_1_lvl: Math.max(0, (weapon.tp ?? 1) - 1),
+      op_1_lvl: 0,
       op_2_lvl: 0,
       op_3_lvl: 0,
       applyDuration: false,
     };
-  }, [powerParts, weapon.tp]);
+  }, [powerParts, attackMode]);
 
   const powerPayload: PowerPartPayload[] = useMemo(
     () => [
@@ -540,10 +493,12 @@ function EmpoweredTechniqueWorkspace({
       endsOnActivation: false,
       sustain: 0,
     });
-    setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
+    setAttackMode('none');
     setSelectedPowerParts([]);
     setSelectedPowerAdvancedParts([]);
     setSelectedTechniqueParts([]);
+    setImageId(null);
+    setImageUrl(null);
     clearCreatorCache(CACHE_KEY);
   }, []);
 
@@ -557,10 +512,12 @@ function EmpoweredTechniqueWorkspace({
     setRange(next.range);
     setArea(next.area);
     setDuration(next.duration);
-    setWeapon(next.weapon);
+    setAttackMode(next.attackMode);
     setSelectedPowerParts(next.selectedPowerParts);
     setSelectedPowerAdvancedParts(next.selectedPowerAdvancedParts);
     setSelectedTechniqueParts(next.selectedTechniqueParts);
+    setImageId(next.imageId);
+    setImageUrl(next.imageUrl);
   }, []);
 
   const getPayload = useCallback(() => {
@@ -597,6 +554,9 @@ function EmpoweredTechniqueWorkspace({
         empoweredTechnique: true,
         actionType,
         isReaction,
+        attackMode,
+        ...(imageId ? { imageId } : {}),
+        ...(imageUrl ? { imageUrl } : {}),
         power: {
           parts: powerPartsToSave,
           mechanics: powerAdvancedToSave,
@@ -605,13 +565,6 @@ function EmpoweredTechniqueWorkspace({
           range,
           area,
           duration,
-          addWeapon:
-            shouldPersistCreatorWeaponId({
-              weaponId: weapon.id,
-              allowNoAttack: true,
-            })
-              ? weapon
-              : null,
           addWeaponPowerPart: addWeaponToPowerPart,
         },
         technique: {
@@ -629,11 +582,14 @@ function EmpoweredTechniqueWorkspace({
     actionType,
     addWeaponToPowerPart,
     area,
+    attackMode,
     costs.totalEnergy,
     costs.totalTP,
     description,
     duration,
     isReaction,
+    imageId,
+    imageUrl,
     name,
     powerDamages,
     powerMechanicParts,
@@ -643,7 +599,6 @@ function EmpoweredTechniqueWorkspace({
     selectedTechniqueParts,
     techniqueDamage,
     techniqueDamageMechanicParts,
-    weapon,
   ]);
 
   const save = useCreatorSave({
@@ -666,15 +621,13 @@ function EmpoweredTechniqueWorkspace({
         doc,
         powerParts,
         techniqueParts,
-        allWeaponOptions,
-        DEFAULT_WEAPON_OPTIONS[0],
       );
       if (!next) return;
       applyFormState(next);
       save.setSaveMessage({ type: 'success', text: 'Empowered technique loaded successfully!' });
       setTimeout(() => save.setSaveMessage(null), 2000);
     },
-    [allWeaponOptions, powerParts, techniqueParts, applyFormState, save]
+    [powerParts, techniqueParts, applyFormState, save]
   );
 
   // Auto-save draft to localStorage (skip when editing an existing library row via ?edit=)
@@ -687,7 +640,7 @@ function EmpoweredTechniqueWorkspace({
       isReaction,
       powerDamages,
       techniqueDamage,
-      weaponId: weapon.id,
+      attackMode,
       range,
       area,
       duration,
@@ -714,6 +667,8 @@ function EmpoweredTechniqueWorkspace({
         op_3_lvl: row.op_3_lvl,
         selectedCategory: row.selectedCategory,
       })),
+      imageId,
+      imageUrl,
       timestamp: Date.now(),
     };
     writeCreatorCache(CACHE_KEY, cache);
@@ -724,6 +679,8 @@ function EmpoweredTechniqueWorkspace({
     duration,
     editId,
     isReaction,
+    imageId,
+    imageUrl,
     name,
     powerDamages,
     range,
@@ -731,7 +688,7 @@ function EmpoweredTechniqueWorkspace({
     selectedPowerParts,
     selectedTechniqueParts,
     techniqueDamage,
-    weapon.id,
+    attackMode,
   ]);
 
   const addPowerPart = useCallback(() => {
@@ -777,6 +734,78 @@ function EmpoweredTechniqueWorkspace({
       },
     ]);
   }, [nonMechanicTechniqueParts]);
+
+  const updatePowerPart = useCallback((index: number, updates: Partial<SelectedPowerPart>) => {
+    setSelectedPowerParts((previous) =>
+      previous.map((row, rowIndex) =>
+        rowIndex === index
+          ? {
+              ...row,
+              part: (updates.part as PowerPart) ?? row.part,
+              op_1_lvl: updates.op_1_lvl ?? row.op_1_lvl,
+              op_2_lvl: updates.op_2_lvl ?? row.op_2_lvl,
+              op_3_lvl: updates.op_3_lvl ?? row.op_3_lvl,
+              applyDuration: updates.applyDuration ?? row.applyDuration,
+              selectedCategory: updates.selectedCategory ?? row.selectedCategory,
+            }
+          : row,
+      ),
+    );
+  }, []);
+
+  const updatePowerAdvancedPart = useCallback(
+    (index: number, updates: Partial<SelectedPowerPart>) => {
+      setSelectedPowerAdvancedParts((previous) =>
+        previous.map((row, rowIndex) =>
+          rowIndex === index
+            ? {
+                ...row,
+                part: (updates.part as PowerPart) ?? row.part,
+                op_1_lvl: updates.op_1_lvl ?? row.op_1_lvl,
+                op_2_lvl: updates.op_2_lvl ?? row.op_2_lvl,
+                op_3_lvl: updates.op_3_lvl ?? row.op_3_lvl,
+                applyDuration: updates.applyDuration ?? row.applyDuration,
+                selectedCategory: updates.selectedCategory ?? row.selectedCategory,
+              }
+            : row,
+        ),
+      );
+    },
+    [],
+  );
+
+  const updateTechniquePart = useCallback(
+    (index: number, updates: Partial<SelectedTechniquePart>) => {
+      setSelectedTechniqueParts((previous) =>
+        previous.map((row, rowIndex) =>
+          rowIndex === index
+            ? {
+                ...row,
+                part: (updates.part as TechniquePart) ?? row.part,
+                op_1_lvl: updates.op_1_lvl ?? row.op_1_lvl,
+                op_2_lvl: updates.op_2_lvl ?? row.op_2_lvl,
+                op_3_lvl: updates.op_3_lvl ?? row.op_3_lvl,
+                selectedCategory: updates.selectedCategory ?? row.selectedCategory,
+              }
+            : row,
+        ),
+      );
+    },
+    [],
+  );
+
+  const handleDurationTypeChange = useCallback((nextType: DurationConfig['type']) => {
+    const nextValue = DURATION_VALUES[nextType]?.[0]?.value || 1;
+    setDuration((previous) => ({
+      ...previous,
+      type: nextType,
+      value: nextValue,
+      focus: nextType === 'instant' ? false : previous.focus,
+      noHarm: nextType === 'instant' ? false : previous.noHarm,
+      endsOnActivation: nextType === 'instant' ? false : previous.endsOnActivation,
+      sustain: nextType === 'instant' ? 0 : previous.sustain,
+    }));
+  }, []);
 
   const loadError =
     powerPartsError && techniquePartsError
@@ -848,7 +877,7 @@ function EmpoweredTechniqueWorkspace({
           ]}
           statRows={[
             { label: 'Action', value: actionDisplay },
-            { label: 'Weapon', value: weapon.name },
+            { label: 'Attack', value: attackModeColumnLabel(attackMode) },
             { label: 'Range', value: rangeDisplay },
             { label: 'Area', value: areaDisplay },
             { label: 'Duration', value: durationDisplay },
@@ -862,409 +891,66 @@ function EmpoweredTechniqueWorkspace({
         </CreatorSummaryPanel>
       }
     >
-      <Card className="shadow-md p-6 space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Empowered Technique Name *</label>
-          <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Enter empowered technique name..." />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
-          <Textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={3} placeholder="Describe your empowered technique..." />
-        </div>
-      </Card>
-
-      <CollapsibleSection
-        title="Shared Action Profile"
-        collapsedSummary={`${actionDisplay} • ${weapon.name}`}
-        defaultExpanded={true}
-        rightSlot={
-          <>
-            <SectionCostBadge en={sectionCosts.action.energyRaw} tp={sectionCosts.action.totalTP} />
-            <SectionCostBadge en={sectionCosts.weapon.energyRaw} tp={sectionCosts.weapon.totalTP} />
-          </>
+      <EmpoweredTechniqueCreatorEditor
+        isAdmin={isAdmin}
+        name={name}
+        onNameChange={setName}
+        description={description}
+        onDescriptionChange={setDescription}
+        imageId={imageId}
+        imageUrl={imageUrl}
+        onImageChange={(selection) => {
+          setImageId(selection.imageId);
+          setImageUrl(selection.imageUrl);
+        }}
+        actionDisplay={actionDisplay}
+        actionType={actionType}
+        onActionTypeChange={setActionType}
+        isReaction={isReaction}
+        onIsReactionChange={setIsReaction}
+        attackMode={attackMode}
+        onAttackModeChange={setAttackMode}
+        rangeDisplay={rangeDisplay}
+        range={range}
+        onRangeStepsChange={(steps) => setRange({ steps })}
+        area={area}
+        onAreaChange={setArea}
+        duration={duration}
+        onDurationChange={setDuration}
+        onDurationTypeChange={handleDurationTypeChange}
+        powerDamages={powerDamages}
+        onPowerDamagesChange={setPowerDamages}
+        powerDamageSummary={powerDamageSummary}
+        selectedPowerParts={selectedPowerParts}
+        nonMechanicPowerParts={nonMechanicPowerParts}
+        onAddPowerPart={addPowerPart}
+        onRemovePowerPart={(index) =>
+          setSelectedPowerParts((previous) => previous.filter((_, rowIndex) => rowIndex !== index))
         }
-      >
-        <div className="grid md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Action Type</label>
-            <select
-              value={actionType}
-              onChange={(event) => setActionType(event.target.value)}
-              className="w-full px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-              aria-label="Empowered technique action type"
-            >
-              {ACTION_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <CreatorWeaponPicker
-            librarySource={weaponLibrarySource}
-            onLibrarySourceChange={setWeaponLibrarySource}
-            fullOptions={allWeaponOptions}
-            visibleOptions={visibleOptions}
-            weapon={weapon}
-            onWeaponChange={setWeapon}
-            label="Weapon (Add Weapon to Power)"
-            ariaLabel="Empowered technique weapon"
-          />
-        </div>
-        <div className="mt-4">
-          <Checkbox checked={isReaction} onChange={(event) => setIsReaction(event.target.checked)} label="Can be used as a Reaction" />
-        </div>
-      </CollapsibleSection>
-
-      <CollapsibleSection
-        title="Power Configuration"
-        collapsedSummary={`${rangeDisplay} • ${area.type === 'none' ? 'Single target' : formatAreaForDisplay(area.type, area.level)} • ${duration.type === 'instant' ? 'Instant' : formatDurationFromTypeAndValue(duration.type, duration.value)}`}
-        defaultExpanded={true}
-      >
-        <div className="space-y-4">
-          <div className="flex flex-wrap items-center gap-4">
-            <SectionCostBadge en={sectionCosts.range.energyRaw} tp={sectionCosts.range.totalTP} />
-            <ValueStepper value={range.steps} onChange={(value) => setRange({ steps: value })} label="Range:" min={0} max={10} />
-          </div>
-          <div className="flex flex-wrap items-center gap-4">
-            <SectionCostBadge en={sectionCosts.area.energyRaw} tp={sectionCosts.area.totalTP} />
-            <select
-              value={area.type}
-              onChange={(event) => setArea((previous) => ({ ...previous, type: event.target.value as AreaConfig['type'] }))}
-              className="px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-              aria-label="Empowered technique area type"
-            >
-              {AREA_TYPES.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            {area.type !== 'none' && (
-              <>
-                <ValueStepper value={area.level} onChange={(value) => setArea((previous) => ({ ...previous, level: value }))} label="Area Level:" min={1} max={10} />
-                <Checkbox
-                  checked={area.applyDuration ?? false}
-                  onChange={(event) => setArea((previous) => ({ ...previous, applyDuration: event.target.checked }))}
-                  label="Apply duration"
-                />
-              </>
-            )}
-          </div>
-          <div className="space-y-3 pt-2 border-t border-border-light">
-            <div className="flex flex-wrap items-center gap-4">
-              <SectionCostBadge en={sectionCosts.duration.energyRaw} tp={sectionCosts.duration.totalTP} />
-              <select
-                value={duration.type}
-                onChange={(event) => {
-                  const nextType = event.target.value as DurationConfig['type'];
-                  const nextValue = DURATION_VALUES[nextType]?.[0]?.value || 1;
-                  setDuration((previous) => ({
-                    ...previous,
-                    type: nextType,
-                    value: nextValue,
-                    focus: nextType === 'instant' ? false : previous.focus,
-                    noHarm: nextType === 'instant' ? false : previous.noHarm,
-                    endsOnActivation: nextType === 'instant' ? false : previous.endsOnActivation,
-                    sustain: nextType === 'instant' ? 0 : previous.sustain,
-                  }));
-                }}
-                className="px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-                aria-label="Empowered technique duration type"
-              >
-                {DURATION_TYPES.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              {duration.type !== 'instant' && duration.type !== 'permanent' && DURATION_VALUES[duration.type] && (
-                <select
-                  value={duration.value}
-                  onChange={(event) => setDuration((previous) => ({ ...previous, value: Number(event.target.value) }))}
-                  className="px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-                  aria-label="Empowered technique duration value"
-                >
-                  {DURATION_VALUES[duration.type].map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-            {duration.type !== 'instant' && (
-              <div className="flex flex-wrap items-center gap-4">
-                <Checkbox checked={duration.focus || false} onChange={(event) => setDuration((previous) => ({ ...previous, focus: event.target.checked }))} label="Focus" />
-                <Checkbox checked={duration.noHarm || false} onChange={(event) => setDuration((previous) => ({ ...previous, noHarm: event.target.checked }))} label="No Harm or Adaptation Parts" />
-                <Checkbox checked={duration.endsOnActivation || false} onChange={(event) => setDuration((previous) => ({ ...previous, endsOnActivation: event.target.checked }))} label="Ends on Activation" />
-                <select
-                  value={duration.sustain || 0}
-                  onChange={(event) => setDuration((previous) => ({ ...previous, sustain: Number(event.target.value) }))}
-                  className="px-2 py-1 border border-border-light rounded text-sm text-text-primary bg-surface"
-                  aria-label="Empowered technique sustain action points"
-                >
-                  <option value={0}>Sustain: None</option>
-                  <option value={1}>Sustain: 1 AP</option>
-                  <option value={2}>Sustain: 2 AP</option>
-                  <option value={3}>Sustain: 3 AP</option>
-                  <option value={4}>Sustain: 4 AP</option>
-                </select>
-              </div>
-            )}
-          </div>
-        </div>
-      </CollapsibleSection>
-
-      <CollapsibleSection
-        title="Power Damage (Add Damage)"
-        collapsedSummary={powerDamageSummary}
-        defaultExpanded={true}
-        rightSlot={<SectionCostBadge en={sectionCosts.powerDamage.energyRaw} tp={sectionCosts.powerDamage.totalTP} />}
-      >
-        {powerDamages.map((damage, index) => (
-          <div key={index} className="flex flex-wrap items-center gap-4 mb-4 p-3 rounded-lg bg-surface-alt border border-border-light">
-            {damage.type !== 'none' && damage.amount > 0 && (
-              <Checkbox
-                checked={damage.applyDuration ?? false}
-                onChange={(event) =>
-                  setPowerDamages((previous) => previous.map((row, rowIndex) => (rowIndex === index ? { ...row, applyDuration: event.target.checked } : row)))
-                }
-                label="Apply duration"
-              />
-            )}
-            <ValueStepper
-              value={damage.amount}
-              onChange={(value) => setPowerDamages((previous) => previous.map((row, rowIndex) => (rowIndex === index ? { ...row, amount: value } : row)))}
-              label="Dice:"
-              min={0}
-              max={20}
-            />
-            <div className="flex items-center gap-1">
-              <span className="font-bold text-lg">d</span>
-              <select
-                value={damage.size}
-                onChange={(event) => setPowerDamages((previous) => previous.map((row, rowIndex) => (rowIndex === index ? { ...row, size: Number(event.target.value) } : row)))}
-                className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-                aria-label={`Power damage die size row ${index + 1}`}
-              >
-                {DIE_SIZES.map((size) => (
-                  <option key={size} value={size}>
-                    {size}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <select
-              value={damage.type}
-              onChange={(event) => setPowerDamages((previous) => previous.map((row, rowIndex) => (rowIndex === index ? { ...row, type: event.target.value } : row)))}
-              className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-              aria-label={`Power damage type row ${index + 1}`}
-            >
-              {POWER_DAMAGE_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {type === 'none' ? 'No damage' : type.charAt(0).toUpperCase() + type.slice(1)}
-                </option>
-              ))}
-            </select>
-            {powerDamages.length > 1 && (
-              <Button type="button" variant="danger" size="sm" onClick={() => setPowerDamages((previous) => previous.filter((_, rowIndex) => rowIndex !== index))}>
-                Remove
-              </Button>
-            )}
-          </div>
-        ))}
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          onClick={() => setPowerDamages((previous) => [...previous, { amount: 0, size: 6, type: 'none', applyDuration: false }])}
-          className="min-h-[44px]"
-        >
-          <Plus className="w-4 h-4 mr-1 inline" aria-hidden />
-          Add damage type
-        </Button>
-      </CollapsibleSection>
-
-      <CollapsibleSection
-        title={`Power Parts (${selectedPowerParts.length})`}
-        collapsedSummary={selectedPowerParts.length > 0 ? `${selectedPowerParts.slice(0, 3).map((row) => row.part.name).join(', ')}${selectedPowerParts.length > 3 ? ` +${selectedPowerParts.length - 3} more` : ''}` : 'No parts'}
-        defaultExpanded={true}
-        rightSlot={
-          <>
-            <SectionCostBadge en={sectionCosts.powerParts.energyRaw} tp={sectionCosts.powerParts.totalTP} />
-            <Button type="button" variant="primary" size="sm" className="flex items-center gap-1" onClick={addPowerPart}>
-              <Plus className="w-4 h-4" />
-              Add Part
-            </Button>
-          </>
+        onUpdatePowerPart={updatePowerPart}
+        selectedPowerAdvancedParts={selectedPowerAdvancedParts}
+        powerMechanicsForList={powerMechanicsForList}
+        onAddPowerMechanicPart={addPowerMechanicPart}
+        onRemovePowerAdvancedPart={(index) =>
+          setSelectedPowerAdvancedParts((previous) =>
+            previous.filter((_, rowIndex) => rowIndex !== index),
+          )
         }
-      >
-        {selectedPowerParts.length === 0 ? (
-          <div className="text-center py-8 text-text-muted dark:text-text-secondary">
-            <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p>No power parts added yet.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {selectedPowerParts.map((selected, index) => (
-              <PowerPartCard
-                key={`power-part-${index}`}
-                selectedPart={selected}
-                _index={index}
-                onRemove={() => setSelectedPowerParts((previous) => previous.filter((_, rowIndex) => rowIndex !== index))}
-                onUpdate={(updates) =>
-                  setSelectedPowerParts((previous) =>
-                    previous.map((row, rowIndex) =>
-                      rowIndex === index
-                        ? {
-                            ...row,
-                            part: (updates.part as PowerPart) ?? row.part,
-                            op_1_lvl: updates.op_1_lvl ?? row.op_1_lvl,
-                            op_2_lvl: updates.op_2_lvl ?? row.op_2_lvl,
-                            op_3_lvl: updates.op_3_lvl ?? row.op_3_lvl,
-                            applyDuration: updates.applyDuration ?? row.applyDuration,
-                            selectedCategory: updates.selectedCategory ?? row.selectedCategory,
-                          }
-                        : row
-                    )
-                  )
-                }
-                allParts={nonMechanicPowerParts}
-              />
-            ))}
-          </div>
-        )}
-      </CollapsibleSection>
-
-      <CollapsibleSection
-        title={`Power Mechanics (${selectedPowerAdvancedParts.length})`}
-        collapsedSummary={selectedPowerAdvancedParts.length > 0 ? `${selectedPowerAdvancedParts.slice(0, 3).map((row) => row.part.name).join(', ')}${selectedPowerAdvancedParts.length > 3 ? ` +${selectedPowerAdvancedParts.length - 3} more` : ''}` : 'No mechanics'}
-        defaultExpanded={true}
-        rightSlot={
-          <>
-            <SectionCostBadge en={sectionCosts.powerMechanics.energyRaw} tp={sectionCosts.powerMechanics.totalTP} />
-            <Button type="button" variant="primary" size="sm" className="flex items-center gap-1" onClick={addPowerMechanicPart}>
-              <Plus className="w-4 h-4" />
-              Add Part
-            </Button>
-          </>
+        onUpdatePowerAdvancedPart={updatePowerAdvancedPart}
+        selectedTechniqueParts={selectedTechniqueParts}
+        nonMechanicTechniqueParts={nonMechanicTechniqueParts}
+        onAddTechniquePart={addTechniquePart}
+        onRemoveTechniquePart={(index) =>
+          setSelectedTechniqueParts((previous) =>
+            previous.filter((_, rowIndex) => rowIndex !== index),
+          )
         }
-      >
-        {selectedPowerAdvancedParts.length === 0 ? (
-          <div className="text-center py-8 text-text-muted dark:text-text-secondary">
-            <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p>No additional power mechanics added yet.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {selectedPowerAdvancedParts.map((selected, index) => (
-              <PowerPartCard
-                key={`power-mechanic-${index}`}
-                selectedPart={selected}
-                _index={index}
-                onRemove={() => setSelectedPowerAdvancedParts((previous) => previous.filter((_, rowIndex) => rowIndex !== index))}
-                onUpdate={(updates) =>
-                  setSelectedPowerAdvancedParts((previous) =>
-                    previous.map((row, rowIndex) =>
-                      rowIndex === index
-                        ? {
-                            ...row,
-                            part: (updates.part as PowerPart) ?? row.part,
-                            op_1_lvl: updates.op_1_lvl ?? row.op_1_lvl,
-                            op_2_lvl: updates.op_2_lvl ?? row.op_2_lvl,
-                            op_3_lvl: updates.op_3_lvl ?? row.op_3_lvl,
-                            applyDuration: updates.applyDuration ?? row.applyDuration,
-                            selectedCategory: updates.selectedCategory ?? row.selectedCategory,
-                          }
-                        : row
-                    )
-                  )
-                }
-                allParts={powerMechanicsForList}
-              />
-            ))}
-          </div>
-        )}
-      </CollapsibleSection>
-
-      <CollapsibleSection
-        title={`Technique Parts (${selectedTechniqueParts.length})`}
-        collapsedSummary={selectedTechniqueParts.length > 0 ? `${selectedTechniqueParts.slice(0, 3).map((row) => row.part.name).join(', ')}${selectedTechniqueParts.length > 3 ? ` +${selectedTechniqueParts.length - 3} more` : ''}` : 'No parts'}
-        defaultExpanded={true}
-        rightSlot={
-          <>
-            <SectionCostBadge en={sectionCosts.techniqueParts.energyRaw} tp={sectionCosts.techniqueParts.totalTP} />
-            <Button type="button" variant="primary" size="sm" className="flex items-center gap-1" onClick={addTechniquePart}>
-              <Plus className="w-4 h-4" />
-              Add Part
-            </Button>
-          </>
-        }
-      >
-        {selectedTechniqueParts.length === 0 ? (
-          <div className="text-center py-8 text-text-muted dark:text-text-secondary">
-            <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p>No technique parts added yet.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {selectedTechniqueParts.map((selected, index) => (
-              <PowerPartCard
-                key={`technique-part-${index}`}
-                selectedPart={{ ...selected, applyDuration: false }}
-                _index={index}
-                onRemove={() => setSelectedTechniqueParts((previous) => previous.filter((_, rowIndex) => rowIndex !== index))}
-                onUpdate={(updates) =>
-                  setSelectedTechniqueParts((previous) =>
-                    previous.map((row, rowIndex) =>
-                      rowIndex === index
-                        ? {
-                            ...row,
-                            part: (updates.part as TechniquePart) ?? row.part,
-                            op_1_lvl: updates.op_1_lvl ?? row.op_1_lvl,
-                            op_2_lvl: updates.op_2_lvl ?? row.op_2_lvl,
-                            op_3_lvl: updates.op_3_lvl ?? row.op_3_lvl,
-                            selectedCategory: updates.selectedCategory ?? row.selectedCategory,
-                          }
-                        : row
-                    )
-                  )
-                }
-                allParts={nonMechanicTechniqueParts}
-                showApplyDuration={false}
-              />
-            ))}
-          </div>
-        )}
-      </CollapsibleSection>
-
-      <CollapsibleSection
-        title="Additional Damage (Technique)"
-        collapsedSummary={techniqueDamageSummary}
-        defaultExpanded={true}
-        rightSlot={<SectionCostBadge en={sectionCosts.techniqueDamage.energyRaw} tp={sectionCosts.techniqueDamage.totalTP} />}
-      >
-        <p className="text-sm text-text-secondary mb-4">This is the technique additional-damage mechanic (separate from power Add Damage).</p>
-        <div className="flex flex-wrap items-center gap-4">
-          <ValueStepper value={techniqueDamage.amount} onChange={(value) => setTechniqueDamage((previous) => ({ ...previous, amount: value }))} label="Dice:" min={0} max={20} />
-          <div className="flex items-center gap-1">
-            <span className="font-bold text-lg">d</span>
-            <select
-              value={techniqueDamage.size}
-              onChange={(event) => setTechniqueDamage((previous) => ({ ...previous, size: Number(event.target.value) }))}
-              className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-              aria-label="Technique additional damage die size"
-            >
-              {DIE_SIZES.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </CollapsibleSection>
+        onUpdateTechniquePart={updateTechniquePart}
+        techniqueDamage={techniqueDamage}
+        onTechniqueDamageChange={setTechniqueDamage}
+        techniqueDamageSummary={techniqueDamageSummary}
+        sectionCosts={sectionCosts}
+      />
     </CreatorPageShell>
   );
 }

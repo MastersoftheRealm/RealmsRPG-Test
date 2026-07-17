@@ -33,7 +33,7 @@ Steps live in `src/components/character-creator/steps/` (e.g., `species-step.tsx
 When loading a saved item/power/technique into a creator, follow this **three-step pattern** so mechanic-driven UI and the user-selectable list stay in sync:
 
 1. **Reset state** — Clear all creator state (or call the creator's reset handler).
-2. **Restore dedicated UI fields** — Load mechanic-driven fields from saved data (e.g. damage, DR, range, duration, actionType, weapon) into their dedicated state. Do **not** put these into the parts/properties list.
+2. **Restore dedicated UI fields** — Load mechanic-driven fields from saved data (e.g. damage, DR, range, duration, actionType, **attackMode**) into their dedicated state. Do **not** put these into the parts/properties list. (Legacy rows may still carry `weapon` / `weaponName`; derive mode via `lib/attack-mode.ts` — do not restore a weapon picker.)
 3. **Restore the list from filtered saved data** — Build the user-selectable parts/properties list from saved data **filtered to non-mechanic entries only**. Mechanic-only entries must not appear in the list or they show twice.
 
 **Reusable helpers (single source of truth):**
@@ -60,7 +60,8 @@ Standalone creators (power, technique, empowered technique, item/armament, speci
 - **Auth:** Soft gate (login modal) — no hard redirect. Species Load stays ungated (`requireAuthToLoad: false`); toolbar Load label follows that flag.
 - **Sidebar:** Default sticky on `lg+`; pass `stickySidebar={false}` for short summaries (species).
 - **Collapsibles:** Use **`CollapsibleSection`** only (`ui/Collapsible` removed). Expand control is a dedicated `<button>`; `rightSlot`/Remove sit outside it; section titles are `h2` (under page `h1`). Ad-hoc chrome screenshot audit: `npm run verify:shell-creators-audit` → `.shell-creators-audit/`.
-- **Domain logic** (cost math, `handleLoad*`, section islands) stays in each page `children`.
+- **Domain logic** (cost math, `handleLoad*`) stays in each page workspace. **Section islands** (TASK-381): power → `power-creator-editor.tsx`; item → `item-creator-editor.tsx` + helpers; technique → `technique-creator-editor.tsx`; empowered → `empowered-technique-creator-editor.tsx` — presentational only; page owns state/save/load.
+- **Character sheet actions** (TASK-381 Phase 2): facade `useCharacterSheetActions` composes domain hooks — auto-proficiencies, library, resources/recovery/level-up, feats/traits/state, skills/identity; equipment id/name/index match via `sheet-item-match.ts`. Public return shape stays stable for `characters/[id]/page.tsx`.
 
 ## Allocation UI consistency
 

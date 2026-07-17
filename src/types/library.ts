@@ -5,6 +5,8 @@
  * GET responses from `/api/user/library/*` and `/api/official/*` share rowToItem output.
  */
 
+import type { AttackMode } from '@/lib/attack-mode';
+
 /** Library collection keys (user + official APIs). */
 export type LibraryItemType =
   | 'powers'
@@ -71,6 +73,11 @@ export interface LibraryTechnique {
   description?: string;
   parts: SavedPart[];
   damage?: SavedDamage[];
+  /** Attack mode (none | unarmed | weapon); preferred over legacy `weapon`. */
+  attackMode?: AttackMode;
+  /** Display label ("No Attack" | "Unarmed" | "Weapon") reused from the weapon_name column. */
+  weaponName?: string;
+  /** @deprecated Legacy weapon reference; retained for reading older rows. */
   weapon?: { id?: string | number; name?: string; tp?: number };
   actionType?: string;
   isReaction?: boolean;

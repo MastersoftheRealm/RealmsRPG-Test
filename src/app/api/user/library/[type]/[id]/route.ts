@@ -16,6 +16,7 @@ import {
   bodyToColumnar,
   toDbRow,
   rowToItemSpecies,
+  mergeLegacySpeciesRowWithImageColumns,
   bodyToColumnarSpecies,
   toDbRowSpecies,
   type ColumnarLibraryType,
@@ -76,8 +77,7 @@ export async function GET(
     const r = row as Record<string, unknown>;
     await enrichRowsWithBankImageUrls(supabase, [r]);
     if (r.data !== undefined && r.data !== null) {
-      const d = (r.data as Record<string, unknown>) ?? {};
-      return NextResponse.json({ id: r.id, docId: r.id, ...d });
+      return NextResponse.json(mergeLegacySpeciesRowWithImageColumns(r));
     }
     return NextResponse.json(rowToItemSpecies(r));
   } catch (err) {

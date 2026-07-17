@@ -28,8 +28,6 @@ export type {
   UseAddLibraryItemDataOptions,
   UseAddLibraryItemDataReturn,
 } from './use-add-library-item-data';
-export { useCreatorWeaponOptions } from './use-creator-weapon-options';
-export type { CreatorWeaponOption } from '@/lib/creator-weapon-options';
 export { useProfile } from './use-profile';
 
 // Campaigns

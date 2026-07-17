@@ -1,18 +1,93 @@
 {
-  "generated_at": "2026-07-16T17:38:07.205Z",
+  "generated_at": "2026-07-17T13:53:49.272Z",
   "tasks": [
+    {
+      "id": "TASK-504",
+      "title": "Sitewide expandable chips — full-width, vertically stable expansion",
+      "status": "partial",
+      "completed_at": "",
+      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
+      "matches": [],
+      "related_files": [
+        "src/components/ui/expandable-chip.tsx",
+        "src/lib/chip/full-row-expand-layout.ts",
+        "src/docs/MOBILE_UX.md",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/guide/04-floating-ui-tooltips.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ],
+      "related_overlap": []
+    },
     {
       "id": "TASK-475",
       "title": "Optional — adopt UserLibraryEntityTabShell basic variant in LibraryEnhancedTab",
       "status": "not-started",
       "completed_at": "",
       "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
+      "matches": [
+        {
+          "hash": "10c634f0a93b702e641f688b352555cb8f970d39",
+          "subject": "Merge pull request #26 from MastersoftheRealm/cursor/task-475-enhanced-shell-5dc2",
+          "files": []
+        },
+        {
+          "hash": "ee90258f4c0885caea6c4ebf0f40613776dc731c",
+          "subject": "Merge origin/master into cursor/task-475-enhanced-shell-5dc2",
+          "files": [
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        },
+        {
+          "hash": "7cb27a6c235d347ea374d419f54ae3ed5ade98e2",
+          "subject": "TASK-475 cleanup: archive and DEV-V-016 index honesty",
+          "files": [
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        },
+        {
+          "hash": "08afaef0c625333c0dcd8b3b4350f846bb95430c",
+          "subject": "TASK-475 cleanup: basic-mode toolbar + doc honesty",
+          "files": [
+            "src/app/(main)/library/components/UserLibraryEntityTabShell.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/ADR/0001-user-library-entity-tab-shell.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/FEATURE_INDEX.md"
+          ]
+        },
+        {
+          "hash": "5151ab5647a59a3b92c5895132e2925b6eb43ade",
+          "subject": "TASK-475: LibraryEnhancedTab uses shell basic mode (no sync)",
+          "files": [
+            "src/app/(main)/library/LibraryEnhancedTab.tsx",
+            "src/app/(main)/library/components/UserLibraryEntityTabShell.tsx",
+            "src/app/(main)/library/components/library-entity-tab.types.ts",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/ADR/0001-user-library-entity-tab-shell.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        }
+      ],
       "related_files": [
         "src/app/(main)/library/LibraryEnhancedTab.tsx",
         "src/app/(main)/library/components/UserLibraryEntityTabShell.tsx"
       ],
-      "related_overlap": []
+      "related_overlap": [
+        "src/app/(main)/library/LibraryEnhancedTab.tsx",
+        "src/app/(main)/library/components/UserLibraryEntityTabShell.tsx"
+      ]
     },
     {
       "id": "TASK-461",
@@ -130,21 +205,6 @@
       "related_overlap": []
     },
     {
-      "id": "TASK-381",
-      "title": "BIG-01/02 phased decomposition of character-sheet and creator god files",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/components/character-sheet/use-character-sheet-actions.ts",
-        "src/app/(main)/characters/[id]/page.tsx",
-        "src/app/(main)/*-creator/page.tsx",
-        "src/docs/ai/BUILD_VALIDATION.md"
-      ],
-      "related_overlap": []
-    },
-    {
       "id": "TASK-388",
       "title": "\"Post-activation onboarding (play together, sheet tour, level-up milestones)\"",
       "status": "not-started",
@@ -214,28 +274,151 @@
       "status": "not-started",
       "completed_at": "",
       "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
+      "matches": [
+        {
+          "hash": "ee90258f4c0885caea6c4ebf0f40613776dc731c",
+          "subject": "Merge origin/master into cursor/task-475-enhanced-shell-5dc2",
+          "files": [
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        },
+        {
+          "hash": "02c90bceaf8ba4e9cb64b515ae1dfc2f50a39706",
+          "subject": "Merge pull request #25 from MastersoftheRealm/cursor/unify-duration-display-helpers-2d3f",
+          "files": []
+        },
+        {
+          "hash": "18f18ab4052020f7c8c36fcd52b1bd61e2b92655",
+          "subject": "Merge origin/master into cursor/unify-duration-display-helpers-2d3f",
+          "files": [
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        },
+        {
+          "hash": "8a5893069074f4f38960a8719c07636a4789696b",
+          "subject": "TASK-477 cleanup: drop formatDuration alias and unused re-exports.",
+          "files": [
+            "src/components/character-sheet/library-entity-rows.tsx",
+            "src/components/character-sheet/library-list-helpers.ts",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/lib/calculators/index.ts"
+          ]
+        },
+        {
+          "hash": "b9277cb60b7e4923d639e9075eed92137339edba",
+          "subject": "Unify duration display helpers behind one documented API (TASK-477).",
+          "files": [
+            "src/components/character-sheet/library-list-helpers.ts",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/hooks/add-library-item/build-empowered-selectable-item.ts",
+            "src/lib/calculators/index.ts",
+            "src/lib/utils/duration.test.ts",
+            "src/lib/utils/duration.ts"
+          ]
+        }
+      ],
       "related_files": [
         "src/lib/utils/duration.ts",
         "src/components/character-sheet/library-list-helpers.ts",
         "src/hooks/add-library-item/build-empowered-selectable-item.ts"
       ],
-      "related_overlap": []
+      "related_overlap": [
+        "src/lib/utils/duration.ts",
+        "src/components/character-sheet/library-list-helpers.ts",
+        "src/hooks/add-library-item/build-empowered-selectable-item.ts"
+      ]
     },
     {
       "id": "TASK-478",
       "title": "ExpandableImage adoption audit + enforcement checklist",
-      "status": "not-started",
+      "status": "partial",
       "completed_at": "",
       "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
+      "matches": [
+        {
+          "hash": "1a021b2f47b978da536e99c878725b3635a03ec8",
+          "subject": "Merge pull request #27 from MastersoftheRealm/cursor/expandable-image-adoption-478-3bc2",
+          "files": []
+        },
+        {
+          "hash": "380bdb91e9a26e210599f1584236640b2d266df5",
+          "subject": "TASK-478 cleanup: camera icon, contrast, guide/02 lag",
+          "files": [
+            "src/app/(main)/my-account/page.tsx",
+            "src/components/character-sheet/sheet-header.tsx",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/ai/guide/02-components-and-lists.md"
+          ]
+        },
+        {
+          "hash": "5e3c43a5f057cc8c3b45e4b605dc84d57f3b7a2c",
+          "subject": "TASK-478 cleanup: fix audit gaps and small polish",
+          "files": [
+            "src/app/(main)/campaigns/[id]/page.tsx",
+            "src/components/character-sheet/sheet-header.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        },
+        {
+          "hash": "9469d679efb3ec38234977e1e9ffdd4230481e71",
+          "subject": "Complete TASK-478 ExpandableImage adoption audit",
+          "files": [
+            "src/app/(main)/campaigns/[id]/page.tsx",
+            "src/app/(main)/my-account/page.tsx",
+            "src/components/character-sheet/sheet-header.tsx",
+            "src/components/character/character-card.tsx",
+            "src/components/shared/codex-art-upload-field.tsx",
+            "src/components/shared/creature-stat-block.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DESIGN_INTENT.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/ai/guide/03-entity-card-art.md"
+          ]
+        }
+      ],
       "related_files": [
         "src/components/shared/expandable-image.tsx",
+        "src/components/shared/creature-stat-block.tsx",
+        "src/components/character-sheet/sheet-header.tsx",
+        "src/app/(main)/campaigns/[id]/page.tsx",
+        "src/app/(main)/my-account/page.tsx",
         "src/docs/ai/FEATURE_INDEX.md",
         "src/docs/ai/DESIGN_INTENT.md",
-        "src/docs/ai/guide/03-entity-card-art.md"
+        "src/docs/ai/guide/03-entity-card-art.md",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "src/docs/ai/DEVELOPER_TASK_QUEUE.md"
       ],
-      "related_overlap": []
+      "related_overlap": [
+        "src/components/shared/creature-stat-block.tsx",
+        "src/components/character-sheet/sheet-header.tsx",
+        "src/app/(main)/campaigns/[id]/page.tsx",
+        "src/app/(main)/my-account/page.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/DESIGN_INTENT.md",
+        "src/docs/ai/guide/03-entity-card-art.md",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "src/docs/ai/DEVELOPER_TASK_QUEUE.md"
+      ]
     },
     {
       "id": "TASK-479",
@@ -243,13 +426,63 @@
       "status": "not-started",
       "completed_at": "",
       "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
+      "matches": [
+        {
+          "hash": "6b124784168524a619871a00b902d1c0d7646edd",
+          "subject": "Merge origin/master into cursor/expandable-image-adoption-478-3bc2",
+          "files": [
+            "src/app/(main)/my-account/page.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        },
+        {
+          "hash": "18f18ab4052020f7c8c36fcd52b1bd61e2b92655",
+          "subject": "Merge origin/master into cursor/unify-duration-display-helpers-2d3f",
+          "files": [
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        },
+        {
+          "hash": "327ebb8a0dd72679d50ed06ed525142e812802ca",
+          "subject": "TASK-479: Standardize client API/Supabase error handling (#24)",
+          "files": [
+            "src/app/(main)/library/LibraryPublicContent.tsx",
+            "src/app/(main)/library/hooks/use-library-duplicate-confirm.ts",
+            "src/app/(main)/library/hooks/use-library-entity-sync.ts",
+            "src/app/(main)/library/page.tsx",
+            "src/app/(main)/my-account/page.tsx",
+            "src/docs/ARCHITECTURE.md",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/ARCHITECTURE_CONSTITUTION.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/lib/api-client.test.ts",
+            "src/lib/api-client.ts",
+            "src/services/library-service.ts"
+          ]
+        }
+      ],
       "related_files": [
         "src/lib/api-client.ts",
         "src/docs/ai/ARCHITECTURE_CONSTITUTION.md",
         "src/docs/ARCHITECTURE.md"
       ],
-      "related_overlap": []
+      "related_overlap": [
+        "src/lib/api-client.ts",
+        "src/docs/ai/ARCHITECTURE_CONSTITUTION.md",
+        "src/docs/ARCHITECTURE.md"
+      ]
     },
     {
       "id": "TASK-480",
@@ -262,134 +495,6 @@
         "src/docs/ai/BUILD_VALIDATION.md",
         "tests/",
         "src/docs/ai/DEVELOPER_TASK_QUEUE.md"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-492",
-      "title": "Realms Image Library — schema, storage, CRUD API",
-      "status": "partial",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "sql/realms-image-library.sql",
-        "src/docs/SUPABASE_SCHEMA.md",
-        "src/lib/realms-images.ts",
-        "src/lib/realms-images-server.ts",
-        "src/lib/realms-image-consumers.ts",
-        "src/app/api/images/route.ts",
-        "src/app/api/images/[id]/route.ts",
-        "src/app/api/images/[id]/replace/route.ts",
-        "src/app/api/images/[id]/usage/route.ts",
-        "src/lib/codex-art.ts",
-        "src/app/api/upload/codex-art/route.ts"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-493",
-      "title": "Admin Realms Image Library management UI (/admin/images)",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/app/(main)/admin/page.tsx",
-        "src/components/shared/image-upload-modal.tsx",
-        "src/docs/MOBILE_UX.md"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-494",
-      "title": "Entity image_id columns — creatures, powers, techniques, equipment (+ empowered via tags)",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/docs/SUPABASE_SCHEMA.md",
-        "src/lib/library-columnar.ts",
-        "src/lib/codex-art.ts",
-        "src/app/(main)/admin/public-library/",
-        "src/app/(main)/admin/codex/AdminEquipmentTab.tsx"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-495",
-      "title": "Shared RealmsImagePicker (guest-readable bank browse + admin upload-into-bank)",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/components/shared/codex-art-upload-field.tsx",
-        "src/components/shared/image-upload-modal.tsx",
-        "src/components/shared/index.ts",
-        "scripts/shared-ui-allowlist.json",
-        "src/docs/ai/FEATURE_INDEX.md"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-496",
-      "title": "Wire admin editors + creator publish-to-Realms into the Image Library",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/app/(main)/admin/codex/AdminSpeciesTab.tsx",
-        "src/app/(main)/admin/codex/AdminEquipmentTab.tsx",
-        "src/app/(main)/admin/public-library/",
-        "src/components/creator/",
-        "src/lib/codex-art.ts"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-497",
-      "title": "User/official row image_id parity + copy-on-add + creator bank picker",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/lib/library-columnar.ts",
-        "src/app/api/user/library/[type]/route.ts",
-        "src/app/api/official/[type]/route.ts",
-        "src/docs/SUPABASE_SCHEMA.md"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-498",
-      "title": "Migrate existing codex-art entity files into Realms Image Library catalog",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "sql/",
-        "src/lib/codex-art.ts",
-        "src/docs/SUPABASE_SCHEMA.md"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-499",
-      "title": "Portrait + profile picture — pick species/creature bank images",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/components/shared/image-upload-modal.tsx",
-        "src/app/(main)/my-account/page.tsx",
-        "src/components/character-creator/steps/finalize-step.tsx",
-        "src/app/api/upload/"
       ],
       "related_overlap": []
     },
@@ -407,17 +512,206 @@
       "related_overlap": []
     },
     {
+      "id": "TASK-381",
+      "title": "BIG-01/02 phased decomposition of character-sheet and creator god files",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/components/character-sheet/use-character-sheet-actions.ts",
+        "src/components/character-sheet/use-sheet-library-actions.ts",
+        "src/components/character-sheet/use-sheet-auto-proficiencies.ts",
+        "src/components/character-sheet/use-sheet-resource-actions.ts",
+        "src/components/character-sheet/use-sheet-feat-actions.ts",
+        "src/components/character-sheet/use-sheet-skill-identity-actions.ts",
+        "src/components/character-sheet/sheet-item-match.ts",
+        "src/components/character-sheet/sheet-item-match.test.ts",
+        "src/app/(main)/characters/[id]/page.tsx",
+        "src/app/(main)/power-creator/page.tsx",
+        "src/app/(main)/power-creator/power-creator-editor.tsx",
+        "src/app/(main)/item-creator/page.tsx",
+        "src/app/(main)/item-creator/item-creator-editor.tsx",
+        "src/app/(main)/item-creator/item-creator-helpers.tsx",
+        "src/app/(main)/technique-creator/page.tsx",
+        "src/app/(main)/technique-creator/technique-creator-editor.tsx",
+        "src/app/(main)/empowered-technique-creator/page.tsx",
+        "src/app/(main)/empowered-technique-creator/empowered-technique-creator-editor.tsx",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-505",
+      "title": "Character sheet - TP headers + expandable part chips (not descriptor tips)",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-499",
+      "title": "Portrait + profile picture — pick species/creature bank images",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-497",
+      "title": "User/official row image_id parity + copy-on-add + creator bank picker",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-496",
+      "title": "Wire admin editors + creator publish-to-Realms into the Image Library",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-417",
+      "title": "Art bank + user-library image_url parity + copy-on-add",
+      "status": "done",
+      "completed_at": "2026-07-16",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "cf1343b3342f0ab4e3345e20924502cb6ce73c74",
+          "subject": "Fix master CI: no-raw-color + restore task reconcile evidence",
+          "files": [
+            "src/components/shared/realms-image-picker.tsx",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        }
+      ],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-491",
+      "title": "Architect - Realms Image Library model (ADR + REALMS section 5.0.3)",
+      "status": "done",
+      "completed_at": "2026-07-16",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "cf1343b3342f0ab4e3345e20924502cb6ce73c74",
+          "subject": "Fix master CI: no-raw-color + restore task reconcile evidence",
+          "files": [
+            "src/components/shared/realms-image-picker.tsx",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        }
+      ],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-493",
+      "title": "Admin Realms Image Library management UI (/admin/images)",
+      "status": "done",
+      "completed_at": "2026-07-16",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "cf1343b3342f0ab4e3345e20924502cb6ce73c74",
+          "subject": "Fix master CI: no-raw-color + restore task reconcile evidence",
+          "files": [
+            "src/components/shared/realms-image-picker.tsx",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        }
+      ],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-494",
+      "title": "Entity image_id columns - creatures, powers, techniques, equipment (+ empowered via tags)",
+      "status": "done",
+      "completed_at": "2026-07-16",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "cf1343b3342f0ab4e3345e20924502cb6ce73c74",
+          "subject": "Fix master CI: no-raw-color + restore task reconcile evidence",
+          "files": [
+            "src/components/shared/realms-image-picker.tsx",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        }
+      ],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-495",
+      "title": "Shared RealmsImagePicker (guest-readable bank browse + admin upload-into-bank)",
+      "status": "done",
+      "completed_at": "2026-07-16",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "cf1343b3342f0ab4e3345e20924502cb6ce73c74",
+          "subject": "Fix master CI: no-raw-color + restore task reconcile evidence",
+          "files": [
+            "src/components/shared/realms-image-picker.tsx",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        }
+      ],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-492",
+      "title": "Realms Image Library - schema, storage, CRUD API",
+      "status": "done",
+      "completed_at": "2026-07-16",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "cf1343b3342f0ab4e3345e20924502cb6ce73c74",
+          "subject": "Fix master CI: no-raw-color + restore task reconcile evidence",
+          "files": [
+            "src/components/shared/realms-image-picker.tsx",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        }
+      ],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
       "id": "TASK-481",
       "title": "Recurring AI debt cleanup sprint (cadence)",
       "status": "done",
       "completed_at": "2026-07-16",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
-      "matches": [],
-      "related_files": [
-        ".cursor/commands/debt.md",
-        "src/docs/ai/PR_CHECKLIST.md",
-        "src/docs/ai/ARCHITECTURE_CONSTITUTION.md"
+      "matches": [
+        {
+          "hash": "cf1343b3342f0ab4e3345e20924502cb6ce73c74",
+          "subject": "Fix master CI: no-raw-color + restore task reconcile evidence",
+          "files": [
+            "src/components/shared/realms-image-picker.tsx",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        }
       ],
+      "related_files": [],
       "related_overlap": []
     },
     {
@@ -426,15 +720,17 @@
       "status": "done",
       "completed_at": "2026-07-16",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
-      "matches": [],
-      "related_files": [
-        "src/lib/character-library-tab-visibility.ts",
-        "src/lib/character-library-tab-visibility.test.ts",
-        "src/lib/guided-creator/build-character.ts",
-        "src/stores/character-creator-store.ts",
-        "src/docs/ai/BUILD_VALIDATION.md",
-        "src/docs/ai/FEATURE_INDEX.md"
+      "matches": [
+        {
+          "hash": "cf1343b3342f0ab4e3345e20924502cb6ce73c74",
+          "subject": "Fix master CI: no-raw-color + restore task reconcile evidence",
+          "files": [
+            "src/components/shared/realms-image-picker.tsx",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        }
       ],
+      "related_files": [],
       "related_overlap": []
     },
     {
@@ -443,7 +739,16 @@
       "status": "done",
       "completed_at": "2026-07-16",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
-      "matches": [],
+      "matches": [
+        {
+          "hash": "cf1343b3342f0ab4e3345e20924502cb6ce73c74",
+          "subject": "Fix master CI: no-raw-color + restore task reconcile evidence",
+          "files": [
+            "src/components/shared/realms-image-picker.tsx",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        }
+      ],
       "related_files": [],
       "related_overlap": []
     },
@@ -453,13 +758,22 @@
       "status": "done",
       "completed_at": "2026-07-16",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
-      "matches": [],
+      "matches": [
+        {
+          "hash": "cf1343b3342f0ab4e3345e20924502cb6ce73c74",
+          "subject": "Fix master CI: no-raw-color + restore task reconcile evidence",
+          "files": [
+            "src/components/shared/realms-image-picker.tsx",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        }
+      ],
       "related_files": [],
       "related_overlap": []
     },
     {
       "id": "TASK-486",
-      "title": "Weapons property density Ã¢â‚¬â€ one bullet per line under name",
+      "title": "Weapons property density ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â one bullet per line under name",
       "status": "done",
       "completed_at": "2026-07-16",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -767,7 +1081,7 @@
     },
     {
       "id": "TASK-007",
-      "title": "Library â€” Show weapon damage and enable in-place Edit/Duplicate",
+      "title": "Library Ã¢â‚¬â€ Show weapon damage and enable in-place Edit/Duplicate",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -777,7 +1091,7 @@
     },
     {
       "id": "TASK-008",
-      "title": "RTDB Enrichment â€” Resolve part IDs and compute costs in creators",
+      "title": "RTDB Enrichment Ã¢â‚¬â€ Resolve part IDs and compute costs in creators",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -787,7 +1101,7 @@
     },
     {
       "id": "TASK-009",
-      "title": "Character Sheet â€” Innate toggle hit area & alignment (duplicate check)",
+      "title": "Character Sheet Ã¢â‚¬â€ Innate toggle hit area & alignment (duplicate check)",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -797,7 +1111,7 @@
     },
     {
       "id": "TASK-010",
-      "title": "Powers/Techniques/Armaments â€” Fix missing/incorrect EN/TP display (duplicate)",
+      "title": "Powers/Techniques/Armaments Ã¢â‚¬â€ Fix missing/incorrect EN/TP display (duplicate)",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -817,7 +1131,7 @@
     },
     {
       "id": "TASK-012",
-      "title": "My Account â€” Security audit and feature review",
+      "title": "My Account Ã¢â‚¬â€ Security audit and feature review",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1237,7 +1551,7 @@
     },
     {
       "id": "TASK-054",
-      "title": "Documentation â€” add agent verification guidelines",
+      "title": "Documentation Ã¢â‚¬â€ add agent verification guidelines",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1307,7 +1621,7 @@
     },
     {
       "id": "TASK-061",
-      "title": "TASK-012 completion â€” close security audit with sub-task references",
+      "title": "TASK-012 completion Ã¢â‚¬â€ close security audit with sub-task references",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1337,7 +1651,7 @@
     },
     {
       "id": "TASK-064",
-      "title": "Game rules audit â€” fix terminology and CreatureStatBlock ability schema",
+      "title": "Game rules audit Ã¢â‚¬â€ fix terminology and CreatureStatBlock ability schema",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1417,7 +1731,7 @@
     },
     {
       "id": "TASK-072",
-      "title": "Health/Energy edit mode â€” bump current when at max and increasing max",
+      "title": "Health/Energy edit mode Ã¢â‚¬â€ bump current when at max and increasing max",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1427,7 +1741,7 @@
     },
     {
       "id": "TASK-073",
-      "title": "Speed/Evasion base editing â€” pencil icon, hide by default, red/green validation",
+      "title": "Speed/Evasion base editing Ã¢â‚¬â€ pencil icon, hide by default, red/green validation",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1437,7 +1751,7 @@
     },
     {
       "id": "TASK-074",
-      "title": "Dark mode â€” soften contrasting colors for easier viewing",
+      "title": "Dark mode Ã¢â‚¬â€ soften contrasting colors for easier viewing",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1467,7 +1781,7 @@
     },
     {
       "id": "TASK-077",
-      "title": "Fix username regex â€” invalid character class in pattern attribute",
+      "title": "Fix username regex Ã¢â‚¬â€ invalid character class in pattern attribute",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1477,7 +1791,7 @@
     },
     {
       "id": "TASK-078",
-      "title": "\"Dice roller â€” replace Lucide icons with custom dice PNGs\"",
+      "title": "\"Dice roller Ã¢â‚¬â€ replace Lucide icons with custom dice PNGs\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1487,7 +1801,7 @@
     },
     {
       "id": "TASK-079",
-      "title": "\"Weapon columns â€” add attack bonus column\"",
+      "title": "\"Weapon columns Ã¢â‚¬â€ add attack bonus column\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1497,7 +1811,7 @@
     },
     {
       "id": "TASK-080",
-      "title": "\"Unified Selection Modal â€” remove 'Add' column header text\"",
+      "title": "\"Unified Selection Modal Ã¢â‚¬â€ remove 'Add' column header text\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1507,7 +1821,7 @@
     },
     {
       "id": "TASK-081",
-      "title": "\"Add Skill / Add Sub-Skill modals â€” adopt ListHeader + sort\"",
+      "title": "\"Add Skill / Add Sub-Skill modals Ã¢â‚¬â€ adopt ListHeader + sort\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1517,7 +1831,7 @@
     },
     {
       "id": "TASK-082",
-      "title": "\"LoadFromLibraryModal â€” remove item count from footer\"",
+      "title": "\"LoadFromLibraryModal Ã¢â‚¬â€ remove item count from footer\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1537,7 +1851,7 @@
     },
     {
       "id": "TASK-084",
-      "title": "\"Dark mode â€” comprehensive pass on remaining hardcoded light colors\"",
+      "title": "\"Dark mode Ã¢â‚¬â€ comprehensive pass on remaining hardcoded light colors\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1547,7 +1861,7 @@
     },
     {
       "id": "TASK-085",
-      "title": "\"Creator summaries â€” add sticky positioning to power/technique/item creators\"",
+      "title": "\"Creator summaries Ã¢â‚¬â€ add sticky positioning to power/technique/item creators\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1557,7 +1871,7 @@
     },
     {
       "id": "TASK-086",
-      "title": "\"Full recovery â€” filter feat resets by recovery type\"",
+      "title": "\"Full recovery Ã¢â‚¬â€ filter feat resets by recovery type\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1567,7 +1881,7 @@
     },
     {
       "id": "TASK-087",
-      "title": "\"Remove dead code â€” unused imports and deprecated definitions\"",
+      "title": "\"Remove dead code Ã¢â‚¬â€ unused imports and deprecated definitions\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1577,7 +1891,7 @@
     },
     {
       "id": "TASK-088",
-      "title": "\"Fix chevron layout shift â€” use single icon with rotation\"",
+      "title": "\"Fix chevron layout shift Ã¢â‚¬â€ use single icon with rotation\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1587,7 +1901,7 @@
     },
     {
       "id": "TASK-089",
-      "title": "\"Power/Technique/Item creator modals â€” unify LoadFromLibraryModal with shared patterns\"",
+      "title": "\"Power/Technique/Item creator modals Ã¢â‚¬â€ unify LoadFromLibraryModal with shared patterns\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1597,7 +1911,7 @@
     },
     {
       "id": "TASK-090",
-      "title": "\"Codebase health audit â€” dead code removal, deduplication, shared component unification, best practices\"",
+      "title": "\"Codebase health audit Ã¢â‚¬â€ dead code removal, deduplication, shared component unification, best practices\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1607,7 +1921,7 @@
     },
     {
       "id": "TASK-091",
-      "title": "\"Extract shared useSort hook â€” eliminate 20+ duplicate toggleSort/handleSort implementations\"",
+      "title": "\"Extract shared useSort hook Ã¢â‚¬â€ eliminate 20+ duplicate toggleSort/handleSort implementations\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1667,7 +1981,7 @@
     },
     {
       "id": "TASK-097",
-      "title": "\"Unify filter component className patterns â€” extract filter-group class\"",
+      "title": "\"Unify filter component className patterns Ã¢â‚¬â€ extract filter-group class\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1677,7 +1991,7 @@
     },
     {
       "id": "TASK-098",
-      "title": "\"Fix dark mode contrast and missing variants â€” audit follow-up\"",
+      "title": "\"Fix dark mode contrast and missing variants Ã¢â‚¬â€ audit follow-up\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1687,7 +2001,7 @@
     },
     {
       "id": "TASK-099",
-      "title": "Campaigns â€” return to Join tab after creating character",
+      "title": "Campaigns Ã¢â‚¬â€ return to Join tab after creating character",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1697,7 +2011,7 @@
     },
     {
       "id": "TASK-100",
-      "title": "Campaigns â€” real-time updates via Firestore onSnapshot",
+      "title": "Campaigns Ã¢â‚¬â€ real-time updates via Firestore onSnapshot",
       "status": "cancelled",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1707,7 +2021,7 @@
     },
     {
       "id": "TASK-101",
-      "title": "Archetype prof slider â€” hide unless pencil clicked; show simple values otherwise",
+      "title": "Archetype prof slider Ã¢â‚¬â€ hide unless pencil clicked; show simple values otherwise",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1717,7 +2031,7 @@
     },
     {
       "id": "TASK-102",
-      "title": "Encounter Tracker â€” add creatures from library (auto HP/EN, quantity)",
+      "title": "Encounter Tracker Ã¢â‚¬â€ add creatures from library (auto HP/EN, quantity)",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1727,7 +2041,7 @@
     },
     {
       "id": "TASK-103",
-      "title": "Encounters hub â€” rename to Encounters; list/create/filter/search/sort",
+      "title": "Encounters hub Ã¢â‚¬â€ rename to Encounters; list/create/filter/search/sort",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -1777,7 +2091,7 @@
     },
     {
       "id": "TASK-108",
-      "title": "Campaign integration â€” add characters from campaigns to encounters",
+      "title": "Campaign integration Ã¢â‚¬â€ add characters from campaigns to encounters",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2047,7 +2361,7 @@
     },
     {
       "id": "TASK-135",
-      "title": "Admin Codex UI polish â€” consistent design",
+      "title": "Admin Codex UI polish Ã¢â‚¬â€ consistent design",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2067,7 +2381,7 @@
     },
     {
       "id": "TASK-137",
-      "title": "Admin Save to library â€” public vs private toggle in creators",
+      "title": "Admin Save to library Ã¢â‚¬â€ public vs private toggle in creators",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2137,7 +2451,7 @@
     },
     {
       "id": "TASK-144",
-      "title": "Documentation migration audit â€” update all docs for Supabase stack",
+      "title": "Documentation migration audit Ã¢â‚¬â€ update all docs for Supabase stack",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2217,7 +2531,7 @@
     },
     {
       "id": "TASK-152",
-      "title": "Audit skill encounter page â€” verify completeness vs feedback",
+      "title": "Audit skill encounter page Ã¢â‚¬â€ verify completeness vs feedback",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2227,7 +2541,7 @@
     },
     {
       "id": "TASK-153",
-      "title": "Navbar â€” Move Campaigns to right of RM Tools, left of About",
+      "title": "Navbar Ã¢â‚¬â€ Move Campaigns to right of RM Tools, left of About",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2237,7 +2551,7 @@
     },
     {
       "id": "TASK-154",
-      "title": "Admin Codex â€” Display \"-\" for feat level 0 in list",
+      "title": "Admin Codex Ã¢â‚¬â€ Display \"-\" for feat level 0 in list",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2247,7 +2561,7 @@
     },
     {
       "id": "TASK-155",
-      "title": "Admin Codex â€” List refresh after delete; unify UI with Codex",
+      "title": "Admin Codex Ã¢â‚¬â€ List refresh after delete; unify UI with Codex",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2257,7 +2571,7 @@
     },
     {
       "id": "TASK-156",
-      "title": "Feat Editing â€” Ability dropdown (6 abilities + 6 defenses)",
+      "title": "Feat Editing Ã¢â‚¬â€ Ability dropdown (6 abilities + 6 defenses)",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2267,7 +2581,7 @@
     },
     {
       "id": "TASK-157",
-      "title": "Feat Editing â€” Add all missing editable fields",
+      "title": "Feat Editing Ã¢â‚¬â€ Add all missing editable fields",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2277,7 +2591,7 @@
     },
     {
       "id": "TASK-158",
-      "title": "Centralized codex data schema â€” AI reference doc",
+      "title": "Centralized codex data schema Ã¢â‚¬â€ AI reference doc",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2287,7 +2601,7 @@
     },
     {
       "id": "TASK-159",
-      "title": "Admin Codex â€” Reduce input lag in edit mode",
+      "title": "Admin Codex Ã¢â‚¬â€ Reduce input lag in edit mode",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2297,7 +2611,7 @@
     },
     {
       "id": "TASK-160",
-      "title": "Admin Codex â€” Array fields use dropdowns, not raw IDs",
+      "title": "Admin Codex Ã¢â‚¬â€ Array fields use dropdowns, not raw IDs",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2307,7 +2621,7 @@
     },
     {
       "id": "TASK-161",
-      "title": "Campaignâ€”Encounter attachment and \"Add all Characters\"",
+      "title": "CampaignÃ¢â‚¬â€Encounter attachment and \"Add all Characters\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2337,7 +2651,7 @@
     },
     {
       "id": "TASK-164",
-      "title": "Roll log consistency â€” styles, date display across encounter/campaign/sheet",
+      "title": "Roll log consistency Ã¢â‚¬â€ styles, date display across encounter/campaign/sheet",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2367,7 +2681,7 @@
     },
     {
       "id": "TASK-167",
-      "title": "Character visibility â€” public link, campaign-only, private?campaign on join",
+      "title": "Character visibility Ã¢â‚¬â€ public link, campaign-only, private?campaign on join",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2377,7 +2691,7 @@
     },
     {
       "id": "TASK-168",
-      "title": "Character-derived content visibility â€” library items view-only for viewers",
+      "title": "Character-derived content visibility Ã¢â‚¬â€ library items view-only for viewers",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2387,7 +2701,7 @@
     },
     {
       "id": "TASK-169",
-      "title": "Admin Feats â€” remove prereq_text and rely on req_desc",
+      "title": "Admin Feats Ã¢â‚¬â€ remove prereq_text and rely on req_desc",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2397,7 +2711,7 @@
     },
     {
       "id": "TASK-170",
-      "title": "Admin Codex â€” unify Skills, Parts, Properties, and Equipment tabs with Codex layout",
+      "title": "Admin Codex Ã¢â‚¬â€ unify Skills, Parts, Properties, and Equipment tabs with Codex layout",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2407,7 +2721,7 @@
     },
     {
       "id": "TASK-171",
-      "title": "Admin Skills â€” base skill dropdown resolves base_skill_id",
+      "title": "Admin Skills Ã¢â‚¬â€ base skill dropdown resolves base_skill_id",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2417,7 +2731,7 @@
     },
     {
       "id": "TASK-172",
-      "title": "Admin Skills â€” expose additional description fields",
+      "title": "Admin Skills Ã¢â‚¬â€ expose additional description fields",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2427,7 +2741,7 @@
     },
     {
       "id": "TASK-173",
-      "title": "Skills â€” render extra descriptions as expandable chips in item cards",
+      "title": "Skills Ã¢â‚¬â€ render extra descriptions as expandable chips in item cards",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2437,7 +2751,7 @@
     },
     {
       "id": "TASK-174",
-      "title": "Codex schema â€” add Use column and align fields",
+      "title": "Codex schema Ã¢â‚¬â€ add Use column and align fields",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2447,7 +2761,7 @@
     },
     {
       "id": "TASK-175",
-      "title": "Codex skills â€” remove invalid trained_only field",
+      "title": "Codex skills Ã¢â‚¬â€ remove invalid trained_only field",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2457,7 +2771,7 @@
     },
     {
       "id": "TASK-176",
-      "title": "Codex seeding â€” wipe and reseed from canonical CSVs",
+      "title": "Codex seeding Ã¢â‚¬â€ wipe and reseed from canonical CSVs",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2467,7 +2781,7 @@
     },
     {
       "id": "TASK-177",
-      "title": "Codex schema usage audit â€” IDs, equipment, mechanic properties",
+      "title": "Codex schema usage audit Ã¢â‚¬â€ IDs, equipment, mechanic properties",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2477,7 +2791,7 @@
     },
     {
       "id": "TASK-178",
-      "title": "Armament creator â€” hide mechanic properties from add-property lists",
+      "title": "Armament creator Ã¢â‚¬â€ hide mechanic properties from add-property lists",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2487,7 +2801,7 @@
     },
     {
       "id": "TASK-179",
-      "title": "Feat skill_req â€” convert to ID-based everywhere",
+      "title": "Feat skill_req Ã¢â‚¬â€ convert to ID-based everywhere",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2497,7 +2811,7 @@
     },
     {
       "id": "TASK-180",
-      "title": "Species skills/traits/flaws/characteristics â€” enforce ID-based usage",
+      "title": "Species skills/traits/flaws/characteristics Ã¢â‚¬â€ enforce ID-based usage",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2507,7 +2821,7 @@
     },
     {
       "id": "TASK-181",
-      "title": "Admin Skills â€” ability multi-select aligned with schema",
+      "title": "Admin Skills Ã¢â‚¬â€ ability multi-select aligned with schema",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2517,7 +2831,7 @@
     },
     {
       "id": "TASK-182",
-      "title": "Admin Equipment â€” align fields with codex_equipment schema",
+      "title": "Admin Equipment Ã¢â‚¬â€ align fields with codex_equipment schema",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2577,7 +2891,7 @@
     },
     {
       "id": "TASK-189",
-      "title": "Fix save/display pipeline â€” item auto-gen properties, technique actionType, enrichment",
+      "title": "Fix save/display pipeline Ã¢â‚¬â€ item auto-gen properties, technique actionType, enrichment",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2587,7 +2901,7 @@
     },
     {
       "id": "TASK-183",
-      "title": "Admin Parts â€” edit defense targets",
+      "title": "Admin Parts Ã¢â‚¬â€ edit defense targets",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2597,7 +2911,7 @@
     },
     {
       "id": "TASK-190",
-      "title": "Admin Creature Feats â€” level, requirement, mechanic flags",
+      "title": "Admin Creature Feats Ã¢â‚¬â€ level, requirement, mechanic flags",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2607,7 +2921,7 @@
     },
     {
       "id": "TASK-191",
-      "title": "Admin Equipment â€” currency, category, and type alignment",
+      "title": "Admin Equipment Ã¢â‚¬â€ currency, category, and type alignment",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2617,7 +2931,7 @@
     },
     {
       "id": "TASK-192",
-      "title": "Admin Properties & Parts â€” mechanic/duration flags, percentage display, option chips",
+      "title": "Admin Properties & Parts Ã¢â‚¬â€ mechanic/duration flags, percentage display, option chips",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2627,7 +2941,7 @@
     },
     {
       "id": "TASK-193",
-      "title": "Admin Traits & Species â€” flaw/characteristic flags, sizes, trait chips",
+      "title": "Admin Traits & Species Ã¢â‚¬â€ flaw/characteristic flags, sizes, trait chips",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -2637,7 +2951,7 @@
     },
     {
       "id": "TASK-194",
-      "title": "Admin Skills & Feats â€” base skill display and filter â€”Allâ€” options",
+      "title": "Admin Skills & Feats Ã¢â‚¬â€ base skill display and filter Ã¢â‚¬â€AllÃ¢â‚¬â€ options",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3047,7 +3361,7 @@
     },
     {
       "id": "TASK-235",
-      "title": "About page â€” dice carousel redesign (center, 7 dice, wrap, no brackets)",
+      "title": "About page Ã¢â‚¬â€ dice carousel redesign (center, 7 dice, wrap, no brackets)",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3072,7 +3386,7 @@
     },
     {
       "id": "TASK-236",
-      "title": "Skill encounter â€” Successes UI, DS post-roll, RM bonus, additional success/failure",
+      "title": "Skill encounter Ã¢â‚¬â€ Successes UI, DS post-roll, RM bonus, additional success/failure",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3082,7 +3396,7 @@
     },
     {
       "id": "TASK-237",
-      "title": "Combat tracker â€” surprised checkbox, initiative select-all, delete turn, auto-sort",
+      "title": "Combat tracker Ã¢â‚¬â€ surprised checkbox, initiative select-all, delete turn, auto-sort",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3092,7 +3406,7 @@
     },
     {
       "id": "TASK-238",
-      "title": "\"Codebase Audit 2026-02-13 â€” Phase 1-3 implementation\"",
+      "title": "\"Codebase Audit 2026-02-13 Ã¢â‚¬â€ Phase 1-3 implementation\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3102,7 +3416,7 @@
     },
     {
       "id": "TASK-239",
-      "title": "\"Audit Phase 2 â€” Complete design token migration (blue/green/red/amber ? tokens)\"",
+      "title": "\"Audit Phase 2 Ã¢â‚¬â€ Complete design token migration (blue/green/red/amber ? tokens)\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3112,7 +3426,7 @@
     },
     {
       "id": "TASK-240",
-      "title": "\"Audit Phase 2 â€” Standardize modal/error/loading patterns\"",
+      "title": "\"Audit Phase 2 Ã¢â‚¬â€ Standardize modal/error/loading patterns\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3122,7 +3436,7 @@
     },
     {
       "id": "TASK-241",
-      "title": "\"Audit Phase 1 â€” Add Zod input validation to API routes\"",
+      "title": "\"Audit Phase 1 Ã¢â‚¬â€ Add Zod input validation to API routes\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3132,7 +3446,7 @@
     },
     {
       "id": "TASK-242",
-      "title": "\"Audit Phase 1 â€” Add rate limiting to API routes\"",
+      "title": "\"Audit Phase 1 Ã¢â‚¬â€ Add rate limiting to API routes\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3142,7 +3456,7 @@
     },
     {
       "id": "TASK-243",
-      "title": "\"Audit Phase 4 â€” Add loading.tsx and error.tsx route handlers\"",
+      "title": "\"Audit Phase 4 Ã¢â‚¬â€ Add loading.tsx and error.tsx route handlers\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3152,7 +3466,7 @@
     },
     {
       "id": "TASK-244",
-      "title": "\"Audit Phase 5 â€” Add missing Prisma indexes\"",
+      "title": "\"Audit Phase 5 Ã¢â‚¬â€ Add missing Prisma indexes\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3162,7 +3476,7 @@
     },
     {
       "id": "TASK-245",
-      "title": "\"Audit Phase 6 â€” Public character view page (frontend)\"",
+      "title": "\"Audit Phase 6 Ã¢â‚¬â€ Public character view page (frontend)\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3172,7 +3486,7 @@
     },
     {
       "id": "TASK-246",
-      "title": "\"Audit Phase 6 â€” Character creator skill auto-save on tab switch\"",
+      "title": "\"Audit Phase 6 Ã¢â‚¬â€ Character creator skill auto-save on tab switch\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3182,7 +3496,7 @@
     },
     {
       "id": "TASK-247",
-      "title": "\"Audit Phase 4 â€” Optimize React Query stale times for codex data\"",
+      "title": "\"Audit Phase 4 Ã¢â‚¬â€ Optimize React Query stale times for codex data\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3212,7 +3526,7 @@
     },
     {
       "id": "TASK-250",
-      "title": "\"Character creator â€” Species modal skill description clear when switching species\"",
+      "title": "\"Character creator Ã¢â‚¬â€ Species modal skill description clear when switching species\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3222,7 +3536,7 @@
     },
     {
       "id": "TASK-251",
-      "title": "\"Character creator â€” Step check mark when navigating away with 'Continue anyway'\"",
+      "title": "\"Character creator Ã¢â‚¬â€ Step check mark when navigating away with 'Continue anyway'\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3232,7 +3546,7 @@
     },
     {
       "id": "TASK-252",
-      "title": "\"Unify add power/technique modals â€” character creator and creature creator\"",
+      "title": "\"Unify add power/technique modals Ã¢â‚¬â€ character creator and creature creator\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3242,7 +3556,7 @@
     },
     {
       "id": "TASK-253",
-      "title": "\"Finalize step â€” display ability names as full text (min 3-letter)\"",
+      "title": "\"Finalize step Ã¢â‚¬â€ display ability names as full text (min 3-letter)\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3252,7 +3566,7 @@
     },
     {
       "id": "TASK-254",
-      "title": "Creators â€” description/option contrast + dropdown dark mode",
+      "title": "Creators Ã¢â‚¬â€ description/option contrast + dropdown dark mode",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3262,7 +3576,7 @@
     },
     {
       "id": "TASK-255",
-      "title": "Accessibility audit â€” color contrast WCAG 2.1 AA",
+      "title": "Accessibility audit Ã¢â‚¬â€ color contrast WCAG 2.1 AA",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3272,7 +3586,7 @@
     },
     {
       "id": "TASK-256",
-      "title": "Species height/weight/lifespan â€” API mapping and display everywhere",
+      "title": "Species height/weight/lifespan Ã¢â‚¬â€ API mapping and display everywhere",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3282,7 +3596,7 @@
     },
     {
       "id": "TASK-257",
-      "title": "Skill admin â€” governing ability is abilities-only (not defenses)",
+      "title": "Skill admin Ã¢â‚¬â€ governing ability is abilities-only (not defenses)",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3292,7 +3606,7 @@
     },
     {
       "id": "TASK-258",
-      "title": "Public codex â€” add Traits tab and Advanced tabs toggle",
+      "title": "Public codex Ã¢â‚¬â€ add Traits tab and Advanced tabs toggle",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3302,7 +3616,7 @@
     },
     {
       "id": "TASK-259",
-      "title": "Public vs admin codex unification â€” layouts, chips, descriptions",
+      "title": "Public vs admin codex unification Ã¢â‚¬â€ layouts, chips, descriptions",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3312,7 +3626,7 @@
     },
     {
       "id": "TASK-260",
-      "title": "Edit property â€” option cost labels (IP/TP/c) and larger description field",
+      "title": "Edit property Ã¢â‚¬â€ option cost labels (IP/TP/c) and larger description field",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3322,7 +3636,7 @@
     },
     {
       "id": "TASK-261",
-      "title": "Edit equipment â€” category dropdown with add-new and existing list",
+      "title": "Edit equipment Ã¢â‚¬â€ category dropdown with add-new and existing list",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3332,7 +3646,7 @@
     },
     {
       "id": "TASK-262",
-      "title": "Single list header component â€” migrate SortHeader views to ListHeader",
+      "title": "Single list header component Ã¢â‚¬â€ migrate SortHeader views to ListHeader",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3342,7 +3656,7 @@
     },
     {
       "id": "TASK-263",
-      "title": "Shared creator load helper â€” useCreatorLoad(type, options)",
+      "title": "Shared creator load helper Ã¢â‚¬â€ useCreatorLoad(type, options)",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3352,7 +3666,7 @@
     },
     {
       "id": "TASK-264",
-      "title": "Modal unification â€” implement audit recommendations (list modals)",
+      "title": "Modal unification Ã¢â‚¬â€ implement audit recommendations (list modals)",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3372,7 +3686,7 @@
     },
     {
       "id": "TASK-266",
-      "title": "Mobile-first UX overhaul (Phases 2â€”4)",
+      "title": "Mobile-first UX overhaul (Phases 2Ã¢â‚¬â€4)",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3487,7 +3801,7 @@
     },
     {
       "id": "TASK-274",
-      "title": "Creature Creator â€” Show feat point cost for damage modifiers, senses, movement, condition immunities",
+      "title": "Creature Creator Ã¢â‚¬â€ Show feat point cost for damage modifiers, senses, movement, condition immunities",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3497,7 +3811,7 @@
     },
     {
       "id": "TASK-275",
-      "title": "Creature Creator â€” Use AddSkillModal and AddSubSkillModal instead of skills dropdown",
+      "title": "Creature Creator Ã¢â‚¬â€ Use AddSkillModal and AddSubSkillModal instead of skills dropdown",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3507,7 +3821,7 @@
     },
     {
       "id": "TASK-276",
-      "title": "Creature Creator â€” Separate Add Feat and Add Negative Feat modals",
+      "title": "Creature Creator Ã¢â‚¬â€ Separate Add Feat and Add Negative Feat modals",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3517,7 +3831,7 @@
     },
     {
       "id": "TASK-277",
-      "title": "Creature Creator â€” Power/technique/armament modals and lists show parts, properties, options as chips; use site-wide display logic",
+      "title": "Creature Creator Ã¢â‚¬â€ Power/technique/armament modals and lists show parts, properties, options as chips; use site-wide display logic",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3527,7 +3841,7 @@
     },
     {
       "id": "TASK-278",
-      "title": "Fix username change â€” new username replaced by Player### instead of kept",
+      "title": "Fix username change Ã¢â‚¬â€ new username replaced by Player### instead of kept",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3557,7 +3871,7 @@
     },
     {
       "id": "TASK-281",
-      "title": "Encounters â€” add list columns (name, type, status) for filtering",
+      "title": "Encounters Ã¢â‚¬â€ add list columns (name, type, status) for filtering",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3567,7 +3881,7 @@
     },
     {
       "id": "TASK-282",
-      "title": "Characters â€” add list columns (name, level, archetype_name, etc.); keep data JSONB",
+      "title": "Characters Ã¢â‚¬â€ add list columns (name, level, archetype_name, etc.); keep data JSONB",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3577,7 +3891,7 @@
     },
     {
       "id": "TASK-283",
-      "title": "Campaign rolls â€” add list columns (character_id, user_id, type, title); keep data JSONB",
+      "title": "Campaign rolls Ã¢â‚¬â€ add list columns (character_id, user_id, type, title); keep data JSONB",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3587,7 +3901,7 @@
     },
     {
       "id": "TASK-285",
-      "title": "Species steps â€” sticky Continue button",
+      "title": "Species steps Ã¢â‚¬â€ sticky Continue button",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3619,7 +3933,7 @@
     },
     {
       "id": "TASK-286",
-      "title": "Power creator â€” support multiple damage types per power",
+      "title": "Power creator Ã¢â‚¬â€ support multiple damage types per power",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3651,7 +3965,7 @@
     },
     {
       "id": "TASK-287",
-      "title": "Creators â€” explicit energy (EN) display per item",
+      "title": "Creators Ã¢â‚¬â€ explicit energy (EN) display per item",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3715,7 +4029,7 @@
     },
     {
       "id": "TASK-289",
-      "title": "Official library â€” fix save for powers, techniques, armaments",
+      "title": "Official library Ã¢â‚¬â€ fix save for powers, techniques, armaments",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3747,7 +4061,7 @@
     },
     {
       "id": "TASK-290",
-      "title": "Range display â€” consistent spacing for powers and armaments across views",
+      "title": "Range display Ã¢â‚¬â€ consistent spacing for powers and armaments across views",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -3829,7 +4143,7 @@
     },
     {
       "id": "TASK-296",
-      "title": "Creator resource colors â€” shift TP to lime and keep IP/C distinct",
+      "title": "Creator resource colors Ã¢â‚¬â€ shift TP to lime and keep IP/C distinct",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4033,7 +4347,7 @@
     },
     {
       "id": "TASK-473",
-      "title": "Admin path â€” recommended innate powers + eligibility validation",
+      "title": "Admin path Ã¢â‚¬â€ recommended innate powers + eligibility validation",
       "status": "done",
       "completed_at": "2026-07-15",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4043,7 +4357,7 @@
     },
     {
       "id": "TASK-472",
-      "title": "Guided innate powers â€” threshold gate + fully use Innate Energy",
+      "title": "Guided innate powers Ã¢â‚¬â€ threshold gate + fully use Innate Energy",
       "status": "done",
       "completed_at": "2026-07-15",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4053,7 +4367,7 @@
     },
     {
       "id": "TASK-471",
-      "title": "Guided powers â€” separate innate vs regular L1 lists",
+      "title": "Guided powers Ã¢â‚¬â€ separate innate vs regular L1 lists",
       "status": "done",
       "completed_at": "2026-07-15",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4063,7 +4377,7 @@
     },
     {
       "id": "TASK-470",
-      "title": "Guided powers/techniques L1 â€” Loadout card + desc-chip parity",
+      "title": "Guided powers/techniques L1 Ã¢â‚¬â€ Loadout card + desc-chip parity",
       "status": "done",
       "completed_at": "2026-07-15",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4073,7 +4387,7 @@
     },
     {
       "id": "TASK-469",
-      "title": "Characters list â€” square portraits, drop search/ListHeader",
+      "title": "Characters list Ã¢â‚¬â€ square portraits, drop search/ListHeader",
       "status": "done",
       "completed_at": "2026-07-15",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4123,7 +4437,7 @@
     },
     {
       "id": "TASK-464",
-      "title": "Compact-facts polish â€” Ability Requirement, Damage, suppress redundancies",
+      "title": "Compact-facts polish Ã¢â‚¬â€ Ability Requirement, Damage, suppress redundancies",
       "status": "done",
       "completed_at": "2026-07-15",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4133,7 +4447,7 @@
     },
     {
       "id": "TASK-463",
-      "title": "Guided powers/techniques L2 â€” UnifiedSelectionModal + energy filter",
+      "title": "Guided powers/techniques L2 Ã¢â‚¬â€ UnifiedSelectionModal + energy filter",
       "status": "done",
       "completed_at": "2026-07-15",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4143,7 +4457,7 @@
     },
     {
       "id": "TASK-462",
-      "title": "Guided Your Hero reveal â€” cherry-on-top finalize overhaul",
+      "title": "Guided Your Hero reveal Ã¢â‚¬â€ cherry-on-top finalize overhaul",
       "status": "done",
       "completed_at": "2026-07-15",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4153,7 +4467,7 @@
     },
     {
       "id": "TASK-454",
-      "title": "Shared compact fact grammar â€” semantic chips, tooltips, capitalization",
+      "title": "Shared compact fact grammar Ã¢â‚¬â€ semantic chips, tooltips, capitalization",
       "status": "done",
       "completed_at": "2026-07-15",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4163,7 +4477,7 @@
     },
     {
       "id": "TASK-455",
-      "title": "Guided card regressions â€” No Flaw height and Archetype Ability pill collision",
+      "title": "Guided card regressions Ã¢â‚¬â€ No Flaw height and Archetype Ability pill collision",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4173,7 +4487,7 @@
     },
     {
       "id": "TASK-456",
-      "title": "Guided Loadout budgets â€” optional picks, Currency and Training Points",
+      "title": "Guided Loadout budgets Ã¢â‚¬â€ optional picks, Currency and Training Points",
       "status": "done",
       "completed_at": "2026-07-15",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4183,7 +4497,7 @@
     },
     {
       "id": "TASK-457",
-      "title": "Guided weapon and armor cards â€” disclosure-safe fact layout",
+      "title": "Guided weapon and armor cards Ã¢â‚¬â€ disclosure-safe fact layout",
       "status": "done",
       "completed_at": "2026-07-15",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4193,7 +4507,7 @@
     },
     {
       "id": "TASK-458",
-      "title": "Guided catalog picks â€” return selected items as visible cards",
+      "title": "Guided catalog picks Ã¢â‚¬â€ return selected items as visible cards",
       "status": "done",
       "completed_at": "2026-07-15",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4203,7 +4517,7 @@
     },
     {
       "id": "TASK-459",
-      "title": "Guided chapter terminology â€” Loadout chapter and Equipment screen",
+      "title": "Guided chapter terminology Ã¢â‚¬â€ Loadout chapter and Equipment screen",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4213,7 +4527,7 @@
     },
     {
       "id": "TASK-460",
-      "title": "Guided Equipment screen â€” card copy, quantity, and add-modal polish",
+      "title": "Guided Equipment screen Ã¢â‚¬â€ card copy, quantity, and add-modal polish",
       "status": "done",
       "completed_at": "2026-07-15",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4223,7 +4537,7 @@
     },
     {
       "id": "TASK-452",
-      "title": "AbilityScoreGrid â€” mobile labels, Archetype Ability pill, edit layout",
+      "title": "AbilityScoreGrid Ã¢â‚¬â€ mobile labels, Archetype Ability pill, edit layout",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4275,7 +4589,7 @@
     },
     {
       "id": "TASK-453",
-      "title": "Guided creator â€” mobile completion hints + residual density polish",
+      "title": "Guided creator Ã¢â‚¬â€ mobile completion hints + residual density polish",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4327,7 +4641,7 @@
     },
     {
       "id": "TASK-451",
-      "title": "Guided creator â€” retain picks, skills L2 browse, secondary ability pill",
+      "title": "Guided creator Ã¢â‚¬â€ retain picks, skills L2 browse, secondary ability pill",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4337,7 +4651,7 @@
     },
     {
       "id": "TASK-448",
-      "title": "Guided creator â€” detail Select/Close + chapter-jump first screen",
+      "title": "Guided creator Ã¢â‚¬â€ detail Select/Close + chapter-jump first screen",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4347,7 +4661,7 @@
     },
     {
       "id": "TASK-447",
-      "title": "Guided equipment â€” drop phase bar, PointStatus Currency, card chips + cost fix",
+      "title": "Guided equipment Ã¢â‚¬â€ drop phase bar, PointStatus Currency, card chips + cost fix",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4357,7 +4671,7 @@
     },
     {
       "id": "TASK-446",
-      "title": "Guided equipment L1 â€” card-first simplify + orphan selection fix",
+      "title": "Guided equipment L1 Ã¢â‚¬â€ card-first simplify + orphan selection fix",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4367,7 +4681,7 @@
     },
     {
       "id": "TASK-445",
-      "title": "Stable expand toggle â€” expand without moving the click target (sitewide)",
+      "title": "Stable expand toggle Ã¢â‚¬â€ expand without moving the click target (sitewide)",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4377,7 +4691,7 @@
     },
     {
       "id": "TASK-444",
-      "title": "Guided powers/techniques â€” visible confirm + Layer 2 browse (â€”3.1 / â€”5.8)",
+      "title": "Guided powers/techniques Ã¢â‚¬â€ visible confirm + Layer 2 browse (Ã¢â‚¬â€3.1 / Ã¢â‚¬â€5.8)",
       "status": "done",
       "completed_at": "2026-07-15",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4387,7 +4701,7 @@
     },
     {
       "id": "TASK-441",
-      "title": "Guided ancestry traits â€” shared limited-uses notice (like feats)",
+      "title": "Guided ancestry traits Ã¢â‚¬â€ shared limited-uses notice (like feats)",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4397,7 +4711,7 @@
     },
     {
       "id": "TASK-442",
-      "title": "Guided equipment â€” remove quick kits (FE + admin; DB migration proposed)",
+      "title": "Guided equipment Ã¢â‚¬â€ remove quick kits (FE + admin; DB migration proposed)",
       "status": "done",
       "completed_at": "2026-07-15",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4407,7 +4721,7 @@
     },
     {
       "id": "TASK-443",
-      "title": "Guided equipment â€” phase visibility + weapon/armor/gear card remodel",
+      "title": "Guided equipment Ã¢â‚¬â€ phase visibility + weapon/armor/gear card remodel",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4417,7 +4731,7 @@
     },
     {
       "id": "TASK-432",
-      "title": "Guided choice-card deep-dive â€” Phase 1 foundation (affordance + modal shell)",
+      "title": "Guided choice-card deep-dive Ã¢â‚¬â€ Phase 1 foundation (affordance + modal shell)",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4427,7 +4741,7 @@
     },
     {
       "id": "TASK-433",
-      "title": "Guided choice-card deep-dive â€” Phase 2 species detail modal",
+      "title": "Guided choice-card deep-dive Ã¢â‚¬â€ Phase 2 species detail modal",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4437,7 +4751,7 @@
     },
     {
       "id": "TASK-434",
-      "title": "Guided choice-card deep-dive â€” Phase 3 path detail modal",
+      "title": "Guided choice-card deep-dive Ã¢â‚¬â€ Phase 3 path detail modal",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4447,7 +4761,7 @@
     },
     {
       "id": "TASK-435",
-      "title": "Guided choice-card deep-dive â€” Phase 4 shared option rows + remodel legacy surfaces",
+      "title": "Guided choice-card deep-dive Ã¢â‚¬â€ Phase 4 shared option rows + remodel legacy surfaces",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4457,7 +4771,7 @@
     },
     {
       "id": "TASK-436",
-      "title": "Guided deep-dive polish â€” path overview, tip bodies, labeled fact chips",
+      "title": "Guided deep-dive polish Ã¢â‚¬â€ path overview, tip bodies, labeled fact chips",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4467,7 +4781,7 @@
     },
     {
       "id": "TASK-437",
-      "title": "Sitewide GridListRow â€” labeled fact chips when columns are omitted",
+      "title": "Sitewide GridListRow Ã¢â‚¬â€ labeled fact chips when columns are omitted",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4477,7 +4791,7 @@
     },
     {
       "id": "TASK-438",
-      "title": "Agent user-facing copy guide â€” game terms capitalization + preferred vocabulary",
+      "title": "Agent user-facing copy guide Ã¢â‚¬â€ game terms capitalization + preferred vocabulary",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4487,7 +4801,7 @@
     },
     {
       "id": "TASK-439",
-      "title": "Sitewide user-facing copy audit â€” Realms terms + em dash + AI-artifact hygiene",
+      "title": "Sitewide user-facing copy audit Ã¢â‚¬â€ Realms terms + em dash + AI-artifact hygiene",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4497,7 +4811,7 @@
     },
     {
       "id": "TASK-429",
-      "title": "Guided feat steps â€” Layer 2 browse (GuidedLayerNav)",
+      "title": "Guided feat steps Ã¢â‚¬â€ Layer 2 browse (GuidedLayerNav)",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4507,7 +4821,7 @@
     },
     {
       "id": "TASK-428",
-      "title": "Guided archetype feats â€” swap selection like ancestry",
+      "title": "Guided archetype feats Ã¢â‚¬â€ swap selection like ancestry",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4517,7 +4831,7 @@
     },
     {
       "id": "TASK-427",
-      "title": "Add modals â€” browse when selection budget exhausted",
+      "title": "Add modals Ã¢â‚¬â€ browse when selection budget exhausted",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4527,7 +4841,7 @@
     },
     {
       "id": "TASK-426",
-      "title": "Guided ancestry â€” Skip no flaw as choice card",
+      "title": "Guided ancestry Ã¢â‚¬â€ Skip no flaw as choice card",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4537,7 +4851,7 @@
     },
     {
       "id": "TASK-425",
-      "title": "SegmentedControl idle segments â€” clearer borders (species size)",
+      "title": "SegmentedControl idle segments Ã¢â‚¬â€ clearer borders (species size)",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4641,7 +4955,7 @@
     },
     {
       "id": "TASK-422",
-      "title": "Guided equipment step â€” loadout UX rework (â€”5.7)",
+      "title": "Guided equipment step Ã¢â‚¬â€ loadout UX rework (Ã¢â‚¬â€5.7)",
       "status": "done",
       "completed_at": "2026-07-13",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4651,7 +4965,7 @@
     },
     {
       "id": "TASK-419",
-      "title": "Guided skills step â€” Layer 1 presentation (â€”5.5)",
+      "title": "Guided skills step Ã¢â‚¬â€ Layer 1 presentation (Ã¢â‚¬â€5.5)",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4762,7 +5076,7 @@
     },
     {
       "id": "TASK-376",
-      "title": "Retire DB tooltips â€” full migration to Collin Tippy + tooltip-text.tsx",
+      "title": "Retire DB tooltips Ã¢â‚¬â€ full migration to Collin Tippy + tooltip-text.tsx",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4857,7 +5171,7 @@
     },
     {
       "id": "TASK-431",
-      "title": "Creator chrome follow-ups â€” a11y, load-hook parity, empowered copy/errors",
+      "title": "Creator chrome follow-ups Ã¢â‚¬â€ a11y, load-hook parity, empowered copy/errors",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -4910,7 +5224,7 @@
     },
     {
       "id": "TASK-383",
-      "title": "\"UI unification â€” Phase 0a: automated visual + a11y + contrast safety net\"",
+      "title": "\"UI unification Ã¢â‚¬â€ Phase 0a: automated visual + a11y + contrast safety net\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -5324,7 +5638,7 @@
     },
     {
       "id": "TASK-389",
-      "title": "\"Landing visual assets â€” replace uniqueness placeholder panels\"",
+      "title": "\"Landing visual assets Ã¢â‚¬â€ replace uniqueness placeholder panels\"",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -5428,7 +5742,7 @@
     },
     {
       "id": "TASK-393",
-      "title": "Guided Simple Creator â€” docs & product model (REALMS â€”5.0)",
+      "title": "Guided Simple Creator Ã¢â‚¬â€ docs & product model (REALMS Ã¢â‚¬â€5.0)",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -5438,7 +5752,7 @@
     },
     {
       "id": "TASK-394",
-      "title": "Guided Simple Creator â€” Phase 0 entry chooser & routes",
+      "title": "Guided Simple Creator Ã¢â‚¬â€ Phase 0 entry chooser & routes",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -5448,7 +5762,7 @@
     },
     {
       "id": "TASK-395",
-      "title": "Guided Simple Creator â€” Phase 1 shell (rail, preview, footer)",
+      "title": "Guided Simple Creator Ã¢â‚¬â€ Phase 1 shell (rail, preview, footer)",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -5458,7 +5772,7 @@
     },
     {
       "id": "TASK-396",
-      "title": "Guided Simple Creator â€” schema fields & seed SQL",
+      "title": "Guided Simple Creator Ã¢â‚¬â€ schema fields & seed SQL",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -5468,7 +5782,7 @@
     },
     {
       "id": "TASK-397",
-      "title": "Guided Simple Creator â€” Phase 2 Foundation (path + species)",
+      "title": "Guided Simple Creator Ã¢â‚¬â€ Phase 2 Foundation (path + species)",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -5478,7 +5792,7 @@
     },
     {
       "id": "TASK-398",
-      "title": "Guided Simple Creator â€” Phase 3 Ancestry micro-flow",
+      "title": "Guided Simple Creator Ã¢â‚¬â€ Phase 3 Ancestry micro-flow",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -5488,7 +5802,7 @@
     },
     {
       "id": "TASK-399",
-      "title": "Guided Simple Creator â€” Phase 4 Abilities",
+      "title": "Guided Simple Creator Ã¢â‚¬â€ Phase 4 Abilities",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -5498,7 +5812,7 @@
     },
     {
       "id": "TASK-400",
-      "title": "Guided Simple Creator â€” Phase 4 Your Archetype (skills + feats)",
+      "title": "Guided Simple Creator Ã¢â‚¬â€ Phase 4 Your Archetype (skills + feats)",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -5508,7 +5822,7 @@
     },
     {
       "id": "TASK-401",
-      "title": "Guided Simple Creator â€” Phase 5 Equipment + Powers/Techniques",
+      "title": "Guided Simple Creator Ã¢â‚¬â€ Phase 5 Equipment + Powers/Techniques",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -5518,7 +5832,7 @@
     },
     {
       "id": "TASK-402",
-      "title": "Guided Simple Creator â€” Phase 6 Your Hero (reveal + save)",
+      "title": "Guided Simple Creator Ã¢â‚¬â€ Phase 6 Your Hero (reveal + save)",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -5528,7 +5842,7 @@
     },
     {
       "id": "TASK-407",
-      "title": "Guided creator â€” skills step full allocation (â€”5.5 Option B)",
+      "title": "Guided creator Ã¢â‚¬â€ skills step full allocation (Ã¢â‚¬â€5.5 Option B)",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -5538,7 +5852,7 @@
     },
     {
       "id": "TASK-406",
-      "title": "Guided creator â€” Your Hero reveal redesign (â€”5.10)",
+      "title": "Guided creator Ã¢â‚¬â€ Your Hero reveal redesign (Ã¢â‚¬â€5.10)",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -5558,7 +5872,7 @@
     },
     {
       "id": "TASK-416",
-      "title": "Feat tag unification â€” taxonomy cleanup + untagged feats",
+      "title": "Feat tag unification Ã¢â‚¬â€ taxonomy cleanup + untagged feats",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -5568,7 +5882,7 @@
     },
     {
       "id": "TASK-418",
-      "title": "Feat tag unification â€” Phase 4 singleton merges",
+      "title": "Feat tag unification Ã¢â‚¬â€ Phase 4 singleton merges",
       "status": "done",
       "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -5781,7 +6095,7 @@
     },
     {
       "id": "TASK-474",
-      "title": "AI agent workflow overhaul â€” constitution, ACTIVE_TASKS, CI, Library shell",
+      "title": "AI agent workflow overhaul Ã¢â‚¬â€ constitution, ACTIVE_TASKS, CI, Library shell",
       "status": "done",
       "completed_at": "2026-07-15",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
@@ -6524,31 +6838,20 @@
       "related_overlap": []
     },
     {
-      "id": "TASK-417",
-      "title": "Art bank + user-library image_url parity + copy-on-add",
+      "id": "TASK-498",
+      "title": "Migrate existing codex-art entity files into Realms Image Library catalog",
       "status": "done",
-      "completed_at": "2026-07-16",
+      "completed_at": "",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
       "matches": [],
       "related_files": [
-        "src/docs/REALMS_PRODUCT_OVERVIEW.md",
+        "sql/realms-image-catalog-legacy-entity-art.sql",
+        "src/lib/realms-images.ts",
+        "src/components/shared/index.ts",
+        "scripts/shared-ui-allowlist.json",
         "src/docs/SUPABASE_SCHEMA.md",
+        "src/docs/ai/BUILD_VALIDATION.md",
         "src/docs/ai/ADR/0003-realms-image-library.md"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-491",
-      "title": "Architect - Realms Image Library model (ADR + REALMS section 5.0.3)",
-      "status": "done",
-      "completed_at": "2026-07-16",
-      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
-      "matches": [],
-      "related_files": [
-        "src/docs/ai/ADR/0003-realms-image-library.md",
-        "src/docs/REALMS_PRODUCT_OVERVIEW.md",
-        "src/docs/SUPABASE_SCHEMA.md",
-        "src/docs/ai/guide/03-entity-card-art.md"
       ],
       "related_overlap": []
     }

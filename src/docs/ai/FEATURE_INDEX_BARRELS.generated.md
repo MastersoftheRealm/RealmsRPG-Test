@@ -3,7 +3,7 @@
 > **Do not edit by hand.** Run `npm run tasks:generate-index` after changing barrel exports.
 > Curated narrative map: [`FEATURE_INDEX.md`](FEATURE_INDEX.md).
 
-Generated: 2026-07-16
+Generated: 2026-07-17
 
 ## `src/components/shared/index.ts`
 
@@ -19,7 +19,6 @@ Generated: 2026-07-16
 - ChipGroup
 - ChipSelect
 - ChoiceTraitOptionListPicker
-- CodexArtUploadField
 - ConfirmActionModal
 - CreatureStatBlock
 - DecrementButton
@@ -74,6 +73,7 @@ Generated: 2026-07-16
 - QuickArmorTable
 - QuickShieldsTable
 - QuickWeaponsTable
+- RealmsImageField
 - RealmsImagePicker
 - resolveDistinctSecondaryAbility
 - RollButton
@@ -248,7 +248,6 @@ Generated: 2026-07-16
 - useCreateOfficialEnhancedItem
 - useCreatorPathData
 - useCreatorSave
-- useCreatorWeaponOptions
 - useCreatureFeats
 - useDeleteCharacter
 - useDeleteCraftingSession

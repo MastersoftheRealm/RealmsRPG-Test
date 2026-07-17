@@ -112,7 +112,7 @@ export function techniqueToDetailOption(
     if (actionChip) chips.push(actionChip);
     const dmgChip = damageFactChip(disp.damageStr);
     if (dmgChip) chips.push(dmgChip);
-    if (disp.weaponName) pushFact(chips, 'Weapon', disp.weaponName);
+    if (disp.weaponName) pushFact(chips, 'Attack', disp.weaponName);
     void energyTag;
   } catch {
     // still return the resolved row

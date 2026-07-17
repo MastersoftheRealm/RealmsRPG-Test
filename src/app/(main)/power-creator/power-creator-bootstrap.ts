@@ -3,9 +3,9 @@
  * Used at workspace mount (remount key) so hydrate logic stays out of useEffect.
  */
 
-import type { PowerPart, CreatorWeaponOption } from '@/hooks';
+import type { PowerPart } from '@/hooks';
 import type { AreaConfig, DurationConfig } from '@/lib/calculators';
-import { PART_IDS } from '@/lib/id-constants';
+import { derivePowerAttackMode, normalizeAttackMode, type AttackMode } from '@/lib/attack-mode';
 import { readCreatorCache } from '@/lib/game/creator-cache';
 import {
   ADVANCED_CATEGORIES,
@@ -22,6 +22,7 @@ type PowerLibraryRecord = {
   damage?: unknown;
   actionType?: string;
   isReaction?: boolean;
+  attackMode?: unknown;
   weapon?: { id?: string | number; name?: string };
   range?: { steps?: number };
   area?: { type?: string; level?: number; applyDuration?: boolean };
@@ -34,6 +35,10 @@ type PowerLibraryRecord = {
     endsOnActivation?: boolean;
     sustain?: number;
   };
+  imageId?: string | null;
+  image_id?: string | null;
+  imageUrl?: string | null;
+  image_url?: string | null;
 };
 
 export interface PowerCreatorCache {
@@ -60,7 +65,9 @@ export interface PowerCreatorCache {
   range: RangeConfig;
   area: AreaConfig;
   duration: DurationConfig;
-  weaponId: string | number;
+  attackMode: AttackMode;
+  imageId?: string | null;
+  imageUrl?: string | null;
   timestamp: number;
 }
 
@@ -75,7 +82,9 @@ export interface PowerCreatorFormState {
   range: RangeConfig;
   area: AreaConfig;
   duration: DurationConfig;
-  weapon: CreatorWeaponOption;
+  attackMode: AttackMode;
+  imageId: string | null;
+  imageUrl: string | null;
 }
 
 const DEFAULT_DURATION: DurationConfig = {
@@ -88,9 +97,7 @@ const DEFAULT_DURATION: DurationConfig = {
   sustain: 0,
 };
 
-export function emptyPowerCreatorFormState(
-  defaultWeapon: CreatorWeaponOption,
-): PowerCreatorFormState {
+export function emptyPowerCreatorFormState(): PowerCreatorFormState {
   return {
     name: '',
     description: '',
@@ -102,7 +109,9 @@ export function emptyPowerCreatorFormState(
     range: { steps: 0 },
     area: { type: 'none', level: 1, applyDuration: false },
     duration: DEFAULT_DURATION,
-    weapon: defaultWeapon,
+    attackMode: 'none',
+    imageId: null,
+    imageUrl: null,
   };
 }
 
@@ -150,13 +159,11 @@ function restoreAdvancedFromCache(
 
 export function restorePowerCreatorFromCache(
   powerParts: PowerPart[],
-  allWeaponOptions: CreatorWeaponOption[],
-  defaultWeapon: CreatorWeaponOption,
 ): PowerCreatorFormState | null {
   const parsed = readCreatorCache<PowerCreatorCache>(POWER_CREATOR_CACHE_KEY);
   if (!parsed) return null;
 
-  const base = emptyPowerCreatorFormState(defaultWeapon);
+  const base = emptyPowerCreatorFormState();
   const d = parsed.damage;
   const damages =
     Array.isArray(d) && d.length > 0
@@ -173,14 +180,6 @@ export function restorePowerCreatorFromCache(
           ]
         : base.damages;
 
-  let weapon = defaultWeapon;
-  if (parsed.weaponId !== undefined) {
-    const restoredWeapon = allWeaponOptions.find(
-      (option) => String(option.id) === String(parsed.weaponId),
-    );
-    if (restoredWeapon) weapon = restoredWeapon;
-  }
-
   return {
     name: parsed.name || '',
     description: parsed.description || '',
@@ -196,15 +195,15 @@ export function restorePowerCreatorFromCache(
     range: parsed.range || base.range,
     area: parsed.area || base.area,
     duration: parsed.duration || base.duration,
-    weapon,
+    attackMode: normalizeAttackMode(parsed.attackMode) ?? 'none',
+    imageId: parsed.imageId ?? null,
+    imageUrl: parsed.imageUrl ?? null,
   };
 }
 
 export function powerLibraryRecordToFormState(
   power: PowerLibraryRecord,
   powerParts: PowerPart[],
-  allWeaponOptions: CreatorWeaponOption[],
-  defaultWeapon: CreatorWeaponOption,
 ): PowerCreatorFormState {
   const savedParts = (power.parts || power.powerParts || []) as Array<{
     id?: number | string;
@@ -286,26 +285,11 @@ export function powerLibraryRecordToFormState(
         }))
       : [{ amount: 0, size: 6, type: 'none', applyDuration: false }];
 
-  let weapon = defaultWeapon;
-  const savedWeapon = power.weapon;
-  if (savedWeapon) {
-    const weaponMatch = allWeaponOptions.find(
-      (option) =>
-        String(option.id) === String(savedWeapon.id) || option.name === savedWeapon.name,
-    );
-    if (weaponMatch) weapon = weaponMatch;
-  } else {
-    const addWeaponPart = savedParts.find((savedPart) => {
-      const byId = String(savedPart.id) === String(PART_IDS.ADD_WEAPON_TO_POWER);
-      const byName = savedPart.name === 'Add Weapon to Power';
-      return byId || byName;
-    });
-    if (addWeaponPart) {
-      const requiredTp = (addWeaponPart.op_1_lvl || 0) + 1;
-      const tpMatch = allWeaponOptions.find((option) => (option.tp ?? 0) === requiredTp);
-      weapon = tpMatch || defaultWeapon;
-    }
-  }
+  const attackMode = derivePowerAttackMode({
+    attackMode: power.attackMode,
+    parts: savedParts,
+    weapon: power.weapon,
+  });
 
   return {
     name: power.name || '',
@@ -334,7 +318,9 @@ export function powerLibraryRecordToFormState(
           sustain: power.duration.sustain || 0,
         }
       : DEFAULT_DURATION,
-    weapon,
+    attackMode,
+    imageId: power.imageId ?? power.image_id ?? null,
+    imageUrl: power.imageUrl ?? power.image_url ?? null,
   };
 }
 
@@ -345,11 +331,9 @@ export function powerLibraryRecordToFormState(
 export function bootstrapPowerCreatorFormState(options: {
   editPowerId: string | null;
   powerParts: PowerPart[];
-  allWeaponOptions: CreatorWeaponOption[];
-  defaultWeapon: CreatorWeaponOption;
   rawItems: unknown[];
 }): PowerCreatorFormState {
-  const { editPowerId, powerParts, allWeaponOptions, defaultWeapon, rawItems } = options;
+  const { editPowerId, powerParts, rawItems } = options;
 
   if (editPowerId) {
     const powerToEdit = rawItems.find((p) => {
@@ -357,18 +341,16 @@ export function bootstrapPowerCreatorFormState(options: {
       return String(row.docId) === editPowerId || String(row.id) === editPowerId;
     });
     if (!powerToEdit) {
-      return emptyPowerCreatorFormState(defaultWeapon);
+      return emptyPowerCreatorFormState();
     }
     return powerLibraryRecordToFormState(
       powerToEdit as PowerLibraryRecord,
       powerParts,
-      allWeaponOptions,
-      defaultWeapon,
     );
   }
 
   return (
-    restorePowerCreatorFromCache(powerParts, allWeaponOptions, defaultWeapon) ??
-    emptyPowerCreatorFormState(defaultWeapon)
+    restorePowerCreatorFromCache(powerParts) ??
+    emptyPowerCreatorFormState()
   );
 }

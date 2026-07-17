@@ -48,6 +48,8 @@ export interface ItemCreatorCache {
   hasShieldDamage: boolean;
   shieldDamage: { amount: number; size: number };
   abilityRequirement: ItemAbilityRequirement | null;
+  imageId?: string | null;
+  imageUrl?: string | null;
   timestamp: number;
 }
 
@@ -66,6 +68,7 @@ export interface ItemCreatorFormState {
   hasShieldDamage: boolean;
   shieldDamage: { amount: number; size: number };
   abilityRequirement: ItemAbilityRequirement | null;
+  imageId: string | null;
   imageUrl: string | null;
 }
 
@@ -73,7 +76,10 @@ type ItemLibraryRecord = {
   name?: string;
   description?: string;
   type?: string;
+  imageId?: string | null;
+  image_id?: string | null;
   imageUrl?: string | null;
+  image_url?: string | null;
   properties?: unknown;
   damage?: unknown;
   isTwoHanded?: boolean;
@@ -104,6 +110,7 @@ export function emptyItemCreatorFormState(): ItemCreatorFormState {
     hasShieldDamage: false,
     shieldDamage: { amount: 1, size: 4 },
     abilityRequirement: null,
+    imageId: null,
     imageUrl: null,
   };
 }
@@ -140,6 +147,8 @@ export function restoreItemCreatorFromCache(
     hasShieldDamage: parsed.hasShieldDamage || false,
     shieldDamage: parsed.shieldDamage || base.shieldDamage,
     abilityRequirement: parsed.abilityRequirement || null,
+    imageId: parsed.imageId ?? null,
+    imageUrl: parsed.imageUrl ?? null,
   };
 }
 
@@ -200,8 +209,11 @@ export function itemLibraryRecordToFormState(
     armamentType,
     selectedProperties,
     damage,
+    imageId: item.imageId ?? item.image_id ?? null,
     imageUrl:
-      typeof item.imageUrl === 'string' && item.imageUrl.trim() ? item.imageUrl : null,
+      typeof (item.imageUrl ?? item.image_url) === 'string' && (item.imageUrl ?? item.image_url)?.trim()
+        ? (item.imageUrl ?? item.image_url) as string
+        : null,
     isTwoHanded:
       armamentType === 'Weapon' || armamentType === 'Shield' ? item.isTwoHanded || false : false,
     rangeLevel: armamentType === 'Weapon' ? item.rangeLevel || 0 : 0,

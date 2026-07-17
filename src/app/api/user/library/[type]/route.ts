@@ -19,6 +19,7 @@ import {
   bodyToColumnar,
   toDbRow,
   rowToItemSpecies,
+  mergeLegacySpeciesRowWithImageColumns,
   bodyToColumnarSpecies,
   toDbRowSpecies,
   type ColumnarLibraryType,
@@ -110,10 +111,10 @@ export async function GET(
 
     const { data: rows } = await supabase.from('user_species').select('*').eq('user_id', user.uid);
     const list = (rows ?? []) as Record<string, unknown>[];
+    await enrichRowsWithBankImageUrls(supabase, list);
     const items = list.map((r) => {
       if (r.data !== undefined && r.data !== null) {
-        const d = (r.data as Record<string, unknown>) ?? {};
-        return { id: r.id, docId: r.id, ...d };
+        return mergeLegacySpeciesRowWithImageColumns(r);
       }
       return rowToItemSpecies(r);
     });
