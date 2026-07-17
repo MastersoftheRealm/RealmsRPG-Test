@@ -6,6 +6,7 @@
 
 import type { ReactNode } from 'react';
 import {
+  formatDurationCompact,
   formatSavedActionTypeForDisplay,
   formatListCellLabel,
   normalizeRangeDisplay,
@@ -46,7 +47,6 @@ import {
   resolveItemProperties,
   splitDamageDiceAndType,
 } from './library-list-helpers';
-import { formatDurationCompact } from '@/lib/utils';
 import {
   buildArmorRequirementMetadataChips,
   buildPartsAndMetadataDetailSections,
