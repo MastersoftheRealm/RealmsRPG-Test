@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import { useToast } from '@/components/ui';
+import { getErrorMessage } from '@/lib/api-client';
 import { saveToLibrary, type LibraryType } from '@/services/library-service';
 
 export interface LibrarySyncSanitizeResult {
@@ -57,7 +58,7 @@ export function useLibraryEntitySync<TSource>(options: UseLibraryEntitySyncOptio
         await refetch();
         showToast(`Synced "${getRowName(source)}" to current patch rules.`, 'success');
       } catch (e) {
-        showToast((e as Error)?.message ?? `Failed to sync ${entitySingular}`, 'error');
+        showToast(getErrorMessage(e, `Failed to sync ${entitySingular}`), 'error');
       } finally {
         setSyncingIds((prev) => {
           const next = new Set(prev);
@@ -92,7 +93,7 @@ export function useLibraryEntitySync<TSource>(options: UseLibraryEntitySyncOptio
         'success'
       );
     } catch (e) {
-      showToast((e as Error)?.message ?? `Failed to sync all ${entityPlural}`, 'error');
+      showToast(getErrorMessage(e, `Failed to sync all ${entityPlural}`), 'error');
     } finally {
       setSyncingAll(false);
     }

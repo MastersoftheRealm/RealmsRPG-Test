@@ -6,6 +6,49 @@ Firebase/RTDB - the project is Supabase-only.
 
 ---
 
+- id: TASK-479
+  title: Standardize client error-handling at API/Supabase boundaries
+  created_at: 2026-07-15
+  created_by: agent
+  completed_at: 2026-07-17
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/lib/api-client.ts
+    - src/lib/api-client.test.ts
+    - src/services/library-service.ts
+    - src/app/(main)/my-account/page.tsx
+    - src/app/(main)/library/page.tsx
+    - src/app/(main)/library/hooks/use-library-entity-sync.ts
+    - src/app/(main)/library/hooks/use-library-duplicate-confirm.ts
+    - src/app/(main)/library/LibraryPublicContent.tsx
+    - src/docs/ARCHITECTURE.md
+    - src/docs/ai/ARCHITECTURE_CONSTITUTION.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AI_CHANGELOG.md
+  description: |
+    Audit residual: throw (apiFetch), Supabase { error }, toast catch, and silent catch coexist.
+    Write a short boundary convention and migrate the worst silent swallows on account/library paths.
+  acceptance_criteria:
+    - Convention documented in ARCHITECTURE.md or constitution pointer.
+    - At least account + one library path follow the convention (no silent catch on user actions).
+    - npm run build.
+  evidence: |
+    Documented client error convention in ARCHITECTURE.md; constitution pointer added.
+    getErrorMessage exported from api-client (+ vitest).
+    Account: profile load / auth reset / avatar sync check Supabase {error} or action error; no empty catch.
+    Library: findLibraryItemByName no longer swallows API failures; delete/sync/duplicate/add toasts use getErrorMessage.
+    BUILD_VALIDATION DEV-V-024 added. npm run build + targeted vitest green.
+    Cleanup: profile-load Retry control; archive related_files include FEATURE_INDEX/DEV queue/changelog.
+  developer_test_plan: |
+    DEV-V-024-T001 automated; T002-T003 manual smoke on /my-account and /library.
+
+---
+
 
 
 - id: TASK-492

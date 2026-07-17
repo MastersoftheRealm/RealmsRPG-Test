@@ -480,26 +480,6 @@ Do **not** read the done archive at session start.
 
 ---
 
-- id: TASK-479
-  title: Standardize client error-handling at API/Supabase boundaries
-  created_at: 2026-07-15
-  created_by: agent
-  priority: low
-  status: not-started
-  related_files:
-    - src/lib/api-client.ts
-    - src/docs/ai/ARCHITECTURE_CONSTITUTION.md
-    - src/docs/ARCHITECTURE.md
-  description: |
-    Audit residual: throw (apiFetch), Supabase { error }, toast catch, and silent catch coexist.
-    Write a short boundary convention and migrate the worst silent swallows on account/library paths.
-  acceptance_criteria:
-    - Convention documented in ARCHITECTURE.md or constitution pointer.
-    - At least account + one library path follow the convention (no silent catch on user actions).
-    - npm run build.
-
----
-
 - id: TASK-480
   title: Automate high-value BUILD_VALIDATION behaviors (vitest/Playwright growth)
   created_at: 2026-07-15

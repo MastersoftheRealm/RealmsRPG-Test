@@ -116,3 +116,28 @@ Codex reference data comes from Supabase via `/api/codex`. Hooks like `useCodexP
 1. **List views with costs:** Load library + Codex parts, then enrich before rendering. Do not block render on `!partsDb.length` — show data as soon as library loads; costs update when parts are available.
 2. **Character sheet:** Uses `useCharacters`, `useUserLibrary`, Codex hooks. Enrichment happens in `library-section.tsx` and similar components.
 3. **Creators:** Use Codex hooks for part/property options. Save to Supabase via `useUserLibrary` mutations.
+
+---
+
+## Client error handling (API / Supabase boundaries)
+
+**Authority for client-side failure UX.** Keep one pattern per boundary; do not mix silent swallows with toast/inline feedback on the same user action.
+
+| Boundary | Convention |
+|----------|------------|
+| **`apiFetch` / `apiUpload` / `apiFetchOrNull`** (`@/lib/api-client`) | Failures **throw** `Error` with a parsed message. Callers `catch` and surface (toast or inline Alert). Prefer these over raw `fetch` for `/api/*`. |
+| **Supabase JS client** (`createClient()` / server client) | Always inspect `{ data, error }`. On `error`, **throw** or return a typed failure — Supabase does **not** throw by default. |
+| **Server actions** returning `{ success, error }` / `{ profile, error }` | Check the `error` / `success` field; do not treat a null payload as success when `error` is set. |
+| **React Query mutations** | Prefer `onError` → `showToast(...)`, or `mutateAsync` inside `try/catch` with toast/Alert. Load errors → `ErrorDisplay` + retry (library tabs). |
+
+### Rules
+
+1. **User-initiated actions** (save, delete, sync, upload, account change): never empty `catch {}` / `.catch(() => {})`. Show toast or inline message with `getErrorMessage(err, fallback)`.
+2. **Not-found vs failure:** Helpers that return `null` for “no row” (e.g. name lookup) must still **throw** on network/HTTP failure — `null` means not found only.
+3. **Best-effort background work** (optional migrate, non-critical sync): silent catch is allowed only with an adjacent comment explaining why the user is not notified.
+4. **Parse once:** Use `getErrorMessage` from `@/lib/api-client` instead of ad-hoc `(e as Error)?.message ?? '…'` at each callsite when touching a file.
+
+### Reference migrations (TASK-479)
+
+- Account: `my-account/page.tsx` — profile load and auth updates surface errors (no silent catch).
+- Library: `findLibraryItemByName` in `library-service.ts` — lookup miss → `null`; API failure → throw (callers toast).
