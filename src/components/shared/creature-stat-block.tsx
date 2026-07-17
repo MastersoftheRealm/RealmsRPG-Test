@@ -778,7 +778,7 @@ export function CreatureStatBlock({
                   <img src={creature.imageUrl} alt="" className="h-full w-full object-cover" />
                 </ExpandableImage>
               ) : (
-                <div className="w-20 h-20 rounded-lg border border-border-light bg-surface-alt flex-shrink-0" />
+                <div className="h-20 w-20 flex-shrink-0 rounded-lg border border-border-light bg-surface-alt" />
               )}
 
               <div className="flex-1 min-w-0">

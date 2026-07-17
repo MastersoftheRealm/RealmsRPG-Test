@@ -14,13 +14,21 @@
 
 import { useState, useRef, useEffect, KeyboardEvent, ChangeEvent } from 'react';
 import Image from 'next/image';
-import { Pencil } from 'lucide-react';
+import { Camera, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatSpeedForDisplay } from '@/lib/utils/number';
 import { Spinner } from '@/components/ui/spinner';
 import { Card } from '@/components/ui';
 import { HealthEnergyAllocator } from '@/components/creator';
-import { ValueStepper, DecrementButton, IncrementButton, ExpandableImage, ImageUploadModal, RealmsImagePicker, EditSectionToggle } from '@/components/shared';
+import {
+  ValueStepper,
+  DecrementButton,
+  IncrementButton,
+  ImageUploadModal,
+  RealmsImagePicker,
+  EditSectionToggle,
+  ExpandableImage,
+} from '@/components/shared';
 import { useGameRules } from '@/hooks';
 import { calculateHealthEnergyPool } from '@/lib/game/formulas';
 import { useCharacterSheetOptional } from './character-sheet-context';
@@ -472,6 +480,54 @@ export function SheetHeader({
   // Get health color for styling
   const healthColor = getHealthColor(currentHealth, calculatedStats.maxHealth);
 
+  const canChangePortrait = Boolean(isEditMode && onPortraitChange);
+  const effectivePortrait = getEffectivePortrait(character.portrait);
+  const portraitSrc =
+    effectivePortrait === FALLBACK_PORTRAIT_DATA_URL
+      ? effectivePortrait
+      : `${effectivePortrait}${portraitRefreshKey != null ? `?t=${portraitRefreshKey}` : ''}`;
+  const portraitFrameClass = cn(
+    'relative h-28 w-28 flex-shrink-0 overflow-hidden rounded-xl border-3 bg-surface shadow-lg md:h-36 md:w-36',
+    healthColor === 'green' && 'border-success-400',
+    healthColor === 'orange' && 'border-warning-400',
+    healthColor === 'red' && 'border-danger-600',
+    canChangePortrait && 'group cursor-pointer'
+  );
+  const portraitImage = (
+    <>
+      <Image
+        key={`portrait-${character.portrait ?? ''}-${portraitRefreshKey ?? ''}`}
+        src={portraitSrc}
+        alt=""
+        fill
+        unoptimized
+        priority
+        className={cn(
+          'object-cover transition-opacity',
+          isUploadingPortrait && 'opacity-50'
+        )}
+        sizes="(max-width: 768px) 112px, 144px"
+        onError={(e) => {
+          (e.target as HTMLImageElement).src = FALLBACK_PORTRAIT_DATA_URL;
+        }}
+      />
+      {/* Upload overlay in edit mode — click opens ImageUploadModal, not ExpandableImage */}
+      {canChangePortrait && (
+        <div className="absolute inset-0 flex items-center justify-center bg-transparent transition-colors group-hover:bg-text-primary/40">
+          <Camera
+            className="h-8 w-8 text-text-on-dark opacity-0 transition-opacity group-hover:opacity-100"
+            aria-hidden
+          />
+        </div>
+      )}
+      {isUploadingPortrait && (
+        <div className="absolute inset-0 flex items-center justify-center bg-text-primary/30">
+          <Spinner size="md" variant="white" />
+        </div>
+      )}
+    </>
+  );
+
   // Speed display (spaces → value + unit per settings)
   const speedDisplay = formatSpeedForDisplay(calculatedStats.speed, speedDisplayUnit);
   const speedDisplayValue = typeof speedDisplay.value === 'number' && speedDisplay.value % 1 !== 0
@@ -490,73 +546,35 @@ export function SheetHeader({
   const showPowerAbility = Boolean(character.pow_abil?.trim());
   const showMartialAbility = Boolean(character.mart_abil)
     && normalizedMartialAbility !== normalizedPowerAbility;
-  const effectivePortrait = getEffectivePortrait(character.portrait);
-  const portraitSrc =
-    effectivePortrait === FALLBACK_PORTRAIT_DATA_URL
-      ? effectivePortrait
-      : `${effectivePortrait}${portraitRefreshKey != null ? `?t=${portraitRefreshKey}` : ''}`;
-  const portraitImage = (
-    <Image
-      key={`portrait-${character.portrait ?? ''}-${portraitRefreshKey ?? ''}`}
-      src={portraitSrc}
-      alt=""
-      fill
-      unoptimized
-      priority
-      className={cn(
-        "object-cover transition-opacity",
-        isUploadingPortrait && "opacity-50"
-      )}
-      sizes="(max-width: 768px) 112px, 144px"
-      onError={(e) => {
-        (e.target as HTMLImageElement).src = FALLBACK_PORTRAIT_DATA_URL;
-      }}
-    />
-  );
 
   return (
     <Card className="shadow-md p-4 md:p-6 mb-4">
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Left: Portrait and Identity */}
         <div className="flex gap-4 flex-shrink-0 items-center">
-          {/* Portrait - Larger and vertically centered */}
-          {isEditMode && onPortraitChange ? (
-            <button
-              type="button"
-              className={cn(
-                "group relative h-28 w-28 flex-shrink-0 cursor-pointer overflow-hidden rounded-xl border-3 bg-surface shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:h-36 md:w-36",
-                healthColor === 'green' && 'border-success-400',
-                healthColor === 'orange' && 'border-warning-400',
-                healthColor === 'red' && 'border-danger-600'
-              )}
+          {/* Portrait — ExpandableImage in play view; edit mode click opens upload */}
+          {canChangePortrait ? (
+            <div
+              role="button"
+              tabIndex={0}
+              className={portraitFrameClass}
               onClick={handlePortraitClick}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handlePortraitClick();
+                }
+              }}
+              title="Click to change portrait"
               aria-label={`Change portrait for ${character.name}`}
             >
               {portraitImage}
-              <div className="absolute inset-0 bg-transparent group-hover:bg-text-primary/40 group-focus-visible:bg-text-primary/40 transition-colors flex items-center justify-center">
-                <span className="text-text-on-dark opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity text-3xl">
-                  📷
-                </span>
-              </div>
-              {isUploadingPortrait && (
-                <div className="absolute inset-0 flex items-center justify-center bg-text-primary/30">
-                  <Spinner size="md" variant="white" />
-                </div>
-              )}
-            </button>
+            </div>
           ) : (
             <ExpandableImage
               src={portraitSrc}
-              alt={`${character.name} portrait`}
-              stopPropagation={false}
-              disabled={effectivePortrait === FALLBACK_PORTRAIT_DATA_URL}
-              isPlaceholder={effectivePortrait === FALLBACK_PORTRAIT_DATA_URL}
-              className={cn(
-                "relative h-28 w-28 flex-shrink-0 overflow-hidden rounded-xl border-3 bg-surface shadow-lg md:h-36 md:w-36",
-                healthColor === 'green' && 'border-success-400',
-                healthColor === 'orange' && 'border-warning-400',
-                healthColor === 'red' && 'border-danger-600'
-              )}
+              alt={character.name}
+              className={portraitFrameClass}
             >
               {portraitImage}
             </ExpandableImage>

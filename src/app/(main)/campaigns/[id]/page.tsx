@@ -10,7 +10,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
   Crown,
   Copy,
@@ -602,14 +601,8 @@ function CharacterChip({
         isPlaceholder={isFallbackPortrait}
         className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-primary-button"
       >
-        <Image
-          src={portraitSrc}
-          alt=""
-          width={56}
-          height={56}
-          className="object-cover w-full h-full"
-          unoptimized
-        />
+        {/* eslint-disable-next-line @next/next/no-img-element -- dynamic portrait URL */}
+        <img src={portraitSrc} alt="" className="h-full w-full object-cover" />
       </ExpandableImage>
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-text-primary truncate">{character.characterName}</p>
@@ -683,6 +676,7 @@ function AddCharacterModal({
             disabled={loading}
             className="flex items-center gap-3 w-full p-3 rounded-lg border border-border-light hover:bg-surface-alt text-left transition-colors disabled:opacity-50"
           >
+            {/* DESIGN_INTENT: No ExpandableImage — decorative identity thumb inside a selectable row button (nested button invalid). */}
             {/* eslint-disable-next-line @next/next/no-img-element -- dynamic portrait URL */}
             <img src={getEffectivePortrait(c.portrait)} alt="" className="w-12 h-12 rounded-lg object-cover" />
             <div>
