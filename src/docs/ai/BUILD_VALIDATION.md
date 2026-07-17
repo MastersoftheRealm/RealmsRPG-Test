@@ -2503,6 +2503,43 @@ Automated via `npm test` (`src/lib/library-types.test.ts`).
 
 ---
 
+## DEV-V-024 — Client error handling (TASK-479)
+
+Convention: `ARCHITECTURE.md` § Client error handling. Automated helper coverage via `src/lib/api-client.test.ts`.
+
+#### DEV-V-024-T001 — getErrorMessage unit coverage
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-024 |
+| **Automated** | `npm test` — api-client.test.ts |
+
+**Expected** — `getErrorMessage` returns Error/string/object messages and falls back when empty.
+
+#### DEV-V-024-T002 — My Account surfaces profile load failure
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-024 |
+| **Task** | TASK-479 |
+| **Where** | `/my-account` |
+| **Steps** | 1. Sign in. 2. Open My Account with a forced profile-load failure (e.g. temporary network block on the profile action) or confirm that a successful load shows no danger Alert. 3. On failure, press Retry and confirm reload is attempted without a full browser refresh. 4. Trigger password-reset email / picture upload error paths if easy. |
+| **Expected** | Profile load failure shows a danger Alert + Retry (≥44px). User actions show inline error text — never succeed silently when Supabase returns `{ error }`. |
+| **Report** | DEV-V-024-T002: PASS / FAIL / SKIP — |
+
+#### DEV-V-024-T003 — Library delete/sync/add toast on failure
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-024 |
+| **Task** | TASK-479 |
+| **Where** | `/library` (My Library delete; Realms Library add; sync if available) |
+| **Steps** | Force a failing mutation (offline or invalid id) on delete, duplicate, or add-to-library. |
+| **Expected** | Error toast with a useful message; no silent no-op. Name lookup failures during creator save must not masquerade as “create new” when the API is down. |
+| **Report** | DEV-V-024-T003: PASS / FAIL / SKIP — |
+
+---
+
 ## DEV-V-016 — Library add/load selection parity (TASK-379)
 
 Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLibraryModal` as thin `UnifiedSelectionModal` wrapper. Confirm add (sheet) and load (creators) stay consistent.
@@ -2616,6 +2653,18 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Steps** | 1. Select Powers → expand → `Duration …` chip when duration exists. 2. Select Inventory → expand a weapon → `Damage:` / `Range:` chips; armor → `Damage Reduction N`. |
 | **Expected** | Modal Type/TP/Cost layout still works; combat facts remain self-describing when expanded. |
 | **Report** | DEV-V-016-T010: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T011 — My Library Enhanced tab shell (no sync/duplicate) (TASK-475)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-475 |
+| **Where** | `/library` → My Library → Enhanced |
+| **Needs** | Signed-in user; empty Enhanced tab OK, or at least one enhanced item for row actions |
+| **Steps** | 1. Open Enhanced — search + column headers present; no “Sync with current patch” button (search is not paired with an empty sync gutter). 2. Empty state (if none): “Go to Crafting” CTA; with items: expand a row, Edit opens `/crafting/<id>`, Delete still prompts via parent. 3. Search filters by name/base/power; no Duplicate action on rows. 4. While loading, search/header may show with inline spinner (same as other My Library tabs — not a full-page-only spinner). |
+| **Expected** | Shared list chrome only; no sync-all or duplicate UI; delete/edit unchanged; loading/error match other My Library shell tabs. |
+| **Report** | DEV-V-016-T011: PASS / FAIL / SKIP — |
 
 ---
 
@@ -3406,15 +3455,15 @@ Portrait cards match square crop; no search or ListHeader chrome; Add Character 
 
 ---
 
-## DEV-V-024 — ExpandableImage adoption (TASK-478)
+## DEV-V-025 — ExpandableImage adoption (TASK-478)
 
 Meaningful inline art uses shared click-to-enlarge; justified exceptions stay documented in `guide/03-entity-card-art.md`.
 
-#### DEV-V-024-T001 — Creature stat-block portrait expands
+#### DEV-V-025-T001 — Creature stat-block portrait expands
 
 | Field | Value |
 |-------|-------|
-| **Suite** | DEV-V-024 |
+| **Suite** | DEV-V-025 |
 | **Related task** | TASK-478 |
 | **Where** | Encounter or creature view that shows `CreatureStatBlock` with art |
 | **Needs** | Creature (or encounter creature) with an `imageUrl` |
@@ -3428,11 +3477,11 @@ Meaningful inline art uses shared click-to-enlarge; justified exceptions stay do
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-024-T002 — Campaign roster chip portrait expands
+#### DEV-V-025-T002 — Campaign roster chip portrait expands
 
 | Field | Value |
 |-------|-------|
-| **Suite** | DEV-V-024 |
+| **Suite** | DEV-V-025 |
 | **Related task** | TASK-478 |
 | **Where** | `/campaigns/[id]` |
 | **Needs** | Campaign with at least one character that has a portrait |
@@ -3446,11 +3495,11 @@ Meaningful inline art uses shared click-to-enlarge; justified exceptions stay do
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-024-T003 — Account profile photo expands
+#### DEV-V-025-T003 — Account profile photo expands
 
 | Field | Value |
 |-------|-------|
-| **Suite** | DEV-V-024 |
+| **Suite** | DEV-V-025 |
 | **Related task** | TASK-478 |
 | **Where** | `/my-account` |
 | **Needs** | Signed-in user with a profile picture |
@@ -3479,13 +3528,14 @@ Meaningful inline art uses shared click-to-enlarge; justified exceptions stay do
 | DEV-V-007 | Auth UI (Google only) | DEV-T-007 | Planned |
 | DEV-V-014 | Codex typing + roll timestamp (TASK-378) | — | Automated (`npm test`) |
 | DEV-V-015 | Library API typing (TASK-420) | — | Automated (`npm test`) + manual smoke |
-| DEV-V-016 | Library add/load selection parity (TASK-379) | — | Manual — see suite above |
+| DEV-V-016 | Library add/load selection parity (TASK-379, TASK-437, TASK-475) | — | Manual — see suite above (T001–T011) |
 | DEV-V-017 | Site copy modules (TASK-390) | — | Manual — see suite above |
 | DEV-V-018 | CreatorPageShell parity (TASK-380 / TASK-431) | — | Manual — see suite above |
 | DEV-V-019 | React Compiler hook cleanup (TASK-430) | — | Manual — see suite above |
 | DEV-V-020 | Sitewide copy compliance (TASK-439) | — | Manual — see suite above |
 | DEV-V-022 | Characters list page (TASK-469) | — | Manual — see suite above |
 | DEV-V-023 | Admin Realms Image Library (TASK-493) | — | Manual — see suite above |
-| DEV-V-024 | ExpandableImage adoption (TASK-478) | — | Manual — see suite above |
+| DEV-V-024 | Client error handling (TASK-479) | — | Automated (`npm test`) + manual smoke |
+| DEV-V-025 | ExpandableImage adoption (TASK-478) | — | Manual — see suite above |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

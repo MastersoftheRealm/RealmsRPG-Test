@@ -24,6 +24,7 @@ import {
   useTechniqueParts,
   useItemProperties,
 } from '@/hooks';
+import { getErrorMessage } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth-store';
 import type { LibraryCreature, LibraryItem, LibraryPower, LibraryTechnique } from '@/types/library';
 
@@ -93,7 +94,7 @@ function useAddToLibraryFlow<T extends AddableOfficialItem>(
         setAddConfirm(null);
       },
       onError: (e) => {
-        showToast(e?.message ?? 'Failed to add to library', 'error');
+        showToast(getErrorMessage(e, 'Failed to add to library'), 'error');
       },
     });
   };

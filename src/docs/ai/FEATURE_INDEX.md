@@ -27,7 +27,7 @@
 | Guided powers/techniques L1 + L2 (TASK-444 / TASK-456 / TASK-458 / TASK-461 / TASK-463 / TASK-470–472) | `steps/powers-techniques-step.tsx`, `guided-powers-techniques-l2-modal.tsx`, `powers-techniques-l1-candidates.ts`, `powers-techniques-l2.ts`, `powers-techniques-energy-filter.ts`, `power-technique-display.ts`, `loadout-tp.ts`, `LoadoutBudgetBar`; L1 path cards (innate vs regular for Power); Training Points shared with Loadout on regular picks; Innate Energy PointStatus + threshold gate; innate cards title-adjacent Energy; L2 `UnifiedSelectionModal` (Energy ≤ theoretical L1 max / innate ≤ threshold); L2→L1 promotion; Action Type value-only desc chips. |
 | Advanced character creator (classic 9-step) | `characters/new/advanced/page.tsx`, `stores/character-creator-store.ts` (`getCharacter` sets `libraryTabVisibility` via `defaultLibraryTabVisibilityForArchetype`) |
 | Library (user + official content browse) | `library/page.tsx` |
-| My Library entity tabs (sync/duplicate shell) | `library/components/UserLibraryEntityTabShell.tsx`, `library/hooks/use-library-entity-sync.ts`, `library/hooks/use-library-duplicate-confirm.ts` — used by `LibraryItemsTab` / `LibraryPowersTab` / `LibraryTechniquesTab` / `LibraryCreaturesTab` (ADR-0001) |
+| My Library entity tabs (sync/duplicate shell) | `library/components/UserLibraryEntityTabShell.tsx` (`enableSync` default true; `enableSync={false}` = list chrome only — no sync-all **or** duplicate modals), `library/hooks/use-library-entity-sync.ts`, `library/hooks/use-library-duplicate-confirm.ts` — sync tabs: `LibraryItemsTab` / `LibraryPowersTab` / `LibraryTechniquesTab` / `LibraryCreaturesTab`; basic: `LibraryEnhancedTab` (ADR-0001 / TASK-475) |
 | Codex (rules data browser) | `codex/page.tsx` |
 | Realms Library, guest read-only | `library/page.tsx` + `library/LibraryPublicContent.tsx` — guests see official "Realms" content with the My-Library toggle + "Add to library" hidden. (Former `/browse` was a redundant duplicate; removed and redirected to `/library` — TASK-336.) |
 | Power creator | `power-creator/page.tsx` (advanced); guided: `power-creator/guided/page.tsx` (TASK-410+) — shell: `CreatorPageShell` |
@@ -131,9 +131,9 @@
 | Load from library (creators) | `LoadFromLibraryModal` + `useLoadModalLibrary`; species/creature rows: `@/lib/library/creator-load-selectables` |
 | Tooltips (defaults + interpolation) | `lib/tooltips/` — **`lib/tooltips/README.md`** (PR #14 onboarding), `legacy-tooltip-key-map.ts` |
 | Roles / quotas / limits | `lib/role-policy.ts`, `lib/role-limits.ts`, `lib/role-quota-messages.ts`, `lib/admin.ts` |
-| API client / validation / rate limit | `lib/api-client.ts`, `lib/api-validation.ts`, `lib/validation/schemas.ts`, `lib/rate-limit.ts` |
+| API client / validation / rate limit | `lib/api-client.ts` (`apiFetch`, `apiUpload`, `getErrorMessage`), `lib/api-validation.ts`, `lib/validation/schemas.ts`, `lib/rate-limit.ts` — client error convention: `ARCHITECTURE.md` § Client error handling |
 | Supabase clients (server/client/middleware) | `lib/supabase/*` |
-| Generic utils (cn, string, number, object, motion, duration display) | `lib/utils/*` — list column labels: `formatColumnKeyLabel()` in `string.ts`; motion timing: `MOTION_DURATION_SLOW_MS` in `motion.ts` |
+| Generic utils (cn, string, number, object, motion, duration display) | `lib/utils/*` — list column labels: `formatColumnKeyLabel()` in `string.ts`; motion timing: `MOTION_DURATION_SLOW_MS` in `motion.ts`; duration layers in `duration.ts`: structured `formatDurationFromTypeAndValue` / `formatDurationWithModifiers`, any-shape `formatDurationDisplay`, compact list `formatDurationCompact` (TASK-477) |
 | Stable empty fallbacks for hook deps | `lib/empty.ts` (`EMPTY_STRING_ARRAY`, `EMPTY_NUMBER_RECORD`, `EMPTY_GUIDANCE_GROUPS`) — never mutate |
 
 ## Services (`src/services/`, import from `@/services`)

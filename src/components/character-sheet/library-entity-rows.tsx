@@ -6,6 +6,7 @@
 
 import type { ReactNode } from 'react';
 import {
+  formatDurationCompact,
   formatSavedActionTypeForDisplay,
   formatListCellLabel,
   normalizeRangeDisplay,
@@ -41,7 +42,6 @@ import {
   propertiesToPartData,
   partDataToChips,
   formatArea,
-  formatDuration,
   formatDamageType,
   getWeaponAttackBonus,
   resolveItemProperties,
@@ -173,7 +173,7 @@ export function mapPowerRows(powers: CharacterPower[], ctx: LibraryEntityRowCont
       { key: 'action', value: actionDisplay, align: 'center' },
       { key: 'damage', value: damageCell, align: 'center' },
       { key: 'area', value: formatArea(power.area), align: 'center' },
-      { key: 'duration', value: formatDuration(power.duration), align: 'center' },
+      { key: 'duration', value: formatDurationCompact(power.duration), align: 'center' },
     ];
 
     const innateToggle =

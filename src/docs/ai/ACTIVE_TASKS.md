@@ -11,31 +11,13 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`.
 
-**Counts:** 18 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 15 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
 **Realms Image Library epic (2026-07-16):** **TASK-491/492/493/494/495 done**. Next: **496** → 497/499 → 498. TASK-500 deferred.
 
-**Debt from AI workflow audit (2026-07-15):** TASK-477/479/480 — address alongside product work; repo-wide cadence → `/debt`. TASK-476/478/482/484/486/487/488/489/490 done; TASK-481 superseded by `/debt`.
+**Debt from AI workflow audit (2026-07-15):** TASK-480 — address alongside product work; repo-wide cadence → `/debt`. TASK-476/477/478/482/484/486/487/488/489/490 done; TASK-481 superseded by `/debt`. TASK-475 done (Enhanced shell basic mode). TASK-479 done (client error handling).
 
----
 
-- id: TASK-475
-  title: Optional — adopt UserLibraryEntityTabShell basic variant in LibraryEnhancedTab
-  created_at: 2026-07-15
-  created_by: agent
-  priority: low
-  status: not-started
-  related_files:
-    - src/app/(main)/library/LibraryEnhancedTab.tsx
-    - src/app/(main)/library/components/UserLibraryEntityTabShell.tsx
-  description: |
-    LibraryEnhancedTab shares search/sort list scaffold but has no patch-sync/duplicate.
-    Optional follow-up to ADR-0001: add enableSync=false / basic mode to the shell, or a slim
-    UserLibraryListShell, and migrate Enhanced without behavior change.
-  acceptance_criteria:
-    - Enhanced tab uses shared list chrome without regressing delete/load UX.
-    - No sync/duplicate UI introduced for enhanced items.
-    - npm run build.
 
 ---
 
@@ -435,46 +417,6 @@ Do **not** read the done archive at session start.
     2026-07-01: Phase 1 species pipeline shipped; guided UI already reads image_url.
     2026-07-01: official_items.image_url + armament admin upload (weapon/armor/shield).
     2026-07-16: Realms Image Library epic (TASK-491–500); ADR-0003 replaces three-layer framing. TASK-417 archived (superseded).
-
----
-
-- id: TASK-477
-  title: Unify duration display helpers (formatDuration layers)
-  created_at: 2026-07-15
-  created_by: agent
-  priority: low
-  status: not-started
-  related_files:
-    - src/lib/utils/duration.ts
-    - src/components/character-sheet/library-list-helpers.ts
-    - src/hooks/add-library-item/build-empowered-selectable-item.ts
-  description: |
-    Audit residual: local formatDuration helpers duplicate concepts from lib/utils/duration.ts
-    with different input shapes. Document layers or consolidate display fallbacks behind one API.
-  acceptance_criteria:
-    - One documented layering (structured duration vs raw string display) or shared wrappers.
-    - No third ad-hoc formatDuration in feature code without reusing the layer.
-    - npm run build.
-
----
-
-- id: TASK-479
-  title: Standardize client error-handling at API/Supabase boundaries
-  created_at: 2026-07-15
-  created_by: agent
-  priority: low
-  status: not-started
-  related_files:
-    - src/lib/api-client.ts
-    - src/docs/ai/ARCHITECTURE_CONSTITUTION.md
-    - src/docs/ARCHITECTURE.md
-  description: |
-    Audit residual: throw (apiFetch), Supabase { error }, toast catch, and silent catch coexist.
-    Write a short boundary convention and migrate the worst silent swallows on account/library paths.
-  acceptance_criteria:
-    - Convention documented in ARCHITECTURE.md or constitution pointer.
-    - At least account + one library path follow the convention (no silent catch on user actions).
-    - npm run build.
 
 ---
 

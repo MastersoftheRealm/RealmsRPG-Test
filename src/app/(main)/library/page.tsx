@@ -15,6 +15,7 @@ import { Plus, Wand2, Swords, Shield, Users, LogIn, Sparkles } from 'lucide-reac
 import { useAuth } from '@/hooks';
 import { PageContainer, PageHeader, TabNavigation, TabContentPanel, useTabGroup, Button, useToast } from '@/components/ui';
 import { DeleteConfirmModal, LoginPromptModal, SegmentedControl, LoadingState } from '@/components/shared';
+import { getErrorMessage } from '@/lib/api-client';
 import {
   useUserPowers,
   useUserTechniques,
@@ -166,7 +167,7 @@ function LibraryContent() {
       }
       setDeleteConfirm(null);
     } catch (error) {
-      showToast((error as Error)?.message ?? 'Failed to delete item', 'error');
+      showToast(getErrorMessage(error, 'Failed to delete item'), 'error');
     }
   };
 
