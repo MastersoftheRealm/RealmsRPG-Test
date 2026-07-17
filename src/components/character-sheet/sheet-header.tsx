@@ -25,6 +25,7 @@ import {
   DecrementButton,
   IncrementButton,
   ImageUploadModal,
+  RealmsImagePicker,
   EditSectionToggle,
   ExpandableImage,
 } from '@/components/shared';
@@ -57,6 +58,7 @@ interface SheetHeaderProps {
   onHealthPointsChange?: (value: number) => void;
   onEnergyPointsChange?: (value: number) => void;
   onPortraitChange?: (file: File) => void | Promise<void>;
+  onPortraitUrlChange?: (url: string) => void | Promise<void>;
   isUploadingPortrait?: boolean;
   /** After upload, pass a timestamp so the portrait image reloads (cache-bust). */
   portraitRefreshKey?: number | null;
@@ -409,6 +411,7 @@ export function SheetHeader({
   onHealthPointsChange,
   onEnergyPointsChange,
   onPortraitChange,
+  onPortraitUrlChange,
   isUploadingPortrait = false,
   portraitRefreshKey = null,
   onNameChange,
@@ -459,6 +462,7 @@ export function SheetHeader({
 
   // Image upload modal state
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showBankPicker, setShowBankPicker] = useState(false);
   
   // Handle portrait click - open the upload modal
   const handlePortraitClick = () => {
@@ -816,10 +820,22 @@ export function SheetHeader({
         isOpen={showUploadModal}
         onClose={() => setShowUploadModal(false)}
         onConfirm={handleCroppedImage}
+        onChooseFromLibrary={onPortraitUrlChange ? () => setShowBankPicker(true) : undefined}
         cropShape="rect"
         aspect={1}
         title="Upload Character Portrait"
       />
+      {onPortraitUrlChange && (
+        <RealmsImagePicker
+          isOpen={showBankPicker}
+          onClose={() => setShowBankPicker(false)}
+          onSelect={({ image }) => { void onPortraitUrlChange(image.publicUrl); }}
+          categories="portrait"
+          allowAdminUpload={false}
+          title="Choose Character Portrait"
+          description="Pick species or creature art from the Realms Image Library."
+        />
+      )}
     </Card>
   );
 }

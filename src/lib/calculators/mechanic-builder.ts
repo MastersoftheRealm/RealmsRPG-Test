@@ -8,6 +8,7 @@
  */
 
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
+import type { AttackMode } from '@/lib/attack-mode';
 import { computeSplits } from './dice-splits';
 
 export { computeSplits };
@@ -78,12 +79,6 @@ export interface DurationConfig {
   sustain?: number; // 0 = no sustain, 1+ = sustain level
 }
 
-/** Weapon configuration (technique only) */
-export interface WeaponConfig {
-  tp: number;
-  attackMode?: 'attack' | 'no_attack';
-}
-
 /** Full context for building mechanic parts */
 export interface MechanicBuilderContext {
   creatorType: CreatorType;
@@ -100,7 +95,12 @@ export interface MechanicBuilderContext {
   
   // Technique-specific
   techniqueDamage?: TechniqueDamageConfig;
-  weapon?: WeaponConfig;
+  /**
+   * Technique attack mode. `none` adds the "No Attack" reduction part,
+   * `weapon` adds "Add Weapon to Technique" (flat base cost, no options),
+   * `unarmed` adds nothing. Powers handle their weapon part separately.
+   */
+  attackMode?: AttackMode;
 }
 
 // =============================================================================
@@ -376,12 +376,14 @@ export function buildMechanicParts(ctx: MechanicBuilderContext): MechanicPartRes
     }
   }
 
-  // ----- Weapon (technique only) -----
-  if (ctx.weapon) {
-    if (ctx.weapon.attackMode === 'no_attack') {
+  // ----- Attack Mode (technique only) -----
+  // `none` → No Attack reduction part; `weapon` → Add Weapon to Technique
+  // (flat base cost, no option levels); `unarmed` → nothing.
+  if (ctx.attackMode) {
+    if (ctx.attackMode === 'none') {
       addPart(PART_IDS.NO_ATTACK, 'No Attack', 0);
-    } else if (ctx.weapon.tp >= 1) {
-      addPart(PART_IDS.ADD_WEAPON_ATTACK, 'Add Weapon Attack', ctx.weapon.tp - 1);
+    } else if (ctx.attackMode === 'weapon') {
+      addPart(PART_IDS.ADD_WEAPON_TO_TECHNIQUE, 'Add Weapon to Technique', 0);
     }
   }
 
@@ -420,7 +422,7 @@ export interface LegacyTechniqueMechanicContext {
   reaction?: boolean;
   diceAmt?: number;
   dieSize?: number;
-  weaponTP?: number;
+  attackMode?: AttackMode;
   partsDb?: PartDbItem[];
 }
 
@@ -482,8 +484,6 @@ export function buildTechniqueMechanicParts(ctx: LegacyTechniqueMechanicContext)
       diceAmount: ctx.diceAmt,
       dieSize: ctx.dieSize,
     } : undefined,
-    weapon: ctx.weaponTP !== undefined ? {
-      tp: ctx.weaponTP,
-    } : undefined,
+    attackMode: ctx.attackMode,
   });
 }

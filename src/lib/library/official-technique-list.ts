@@ -16,7 +16,7 @@ export const OFFICIAL_TECHNIQUE_HEADER_COLUMNS = [
   { key: 'energy', label: 'ENERGY', align: 'center' as const },
   { key: 'tp', label: 'TP', align: 'center' as const },
   { key: 'action', label: 'ACTION', align: 'center' as const },
-  { key: 'weapon', label: 'WEAPON', align: 'center' as const },
+  { key: 'weapon', label: 'ATTACK', align: 'center' as const },
   { key: 'damage', label: 'DAMAGE', align: 'center' as const },
   { key: '_actions', label: '', sortable: false as const },
 ];
@@ -56,6 +56,8 @@ export function buildOfficialTechniqueRows(
       damage: Array.isArray(t.damage)
         ? (t.damage[0] as TechniqueDocument['damage'])
         : (t.damage as TechniqueDocument['damage']),
+      attackMode: t.attackMode,
+      weaponName: t.weaponName,
       weapon: t.weapon as TechniqueDocument['weapon'],
     };
     const display = deriveTechniqueDisplay(doc, partsDb);

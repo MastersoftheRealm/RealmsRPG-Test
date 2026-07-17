@@ -40,7 +40,7 @@ import { addCharacterToCampaignAction, removeCharacterFromCampaignAction, delete
 import { MAX_CAMPAIGN_CHARACTERS, OWNER_MAX_CHARACTERS } from '../constants';
 import type { CampaignCharacter } from '@/types/campaign';
 
-import { getEffectivePortrait } from '@/lib/portrait';
+import { FALLBACK_PORTRAIT_DATA_URL, getEffectivePortrait } from '@/lib/portrait';
 
 export default function CampaignDetailPage() {
   return (
@@ -590,12 +590,16 @@ function CharacterChip({
   onViewSheet?: string;
 }) {
   const portraitSrc = getEffectivePortrait(character.portrait);
+  const isFallbackPortrait = portraitSrc === FALLBACK_PORTRAIT_DATA_URL;
+
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg border border-border-light bg-surface-alt min-w-[200px]">
       <ExpandableImage
         src={portraitSrc}
-        alt={character.characterName}
-        className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-primary-button"
+        alt={`${character.characterName} portrait`}
+        disabled={isFallbackPortrait}
+        isPlaceholder={isFallbackPortrait}
+        className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-primary-button"
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- dynamic portrait URL */}
         <img src={portraitSrc} alt="" className="h-full w-full object-cover" />

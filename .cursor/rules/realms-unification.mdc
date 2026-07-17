@@ -16,7 +16,7 @@ alwaysApply: false
 | List row entity thumb (44px, click preview) | `@/components/shared` → **ListRowThumbnail**; pass via `GridListRow` **`thumbnail`** prop — resolve with `resolveListRowThumbnail` / `resolveSpeciesListRowThumbnail` from `@/lib/list-row-image.ts` (see `guide/03-entity-card-art.md`) |
 | Click-to-enlarge any inline image | `@/components/shared` → **ExpandableImage** — species art, portraits, choice cards, list thumbs; see `guide/03-entity-card-art.md` |
 | Guided choice card hero art | `@/components/guided-creator` → **GuidedChoiceCard** + `guided-choice-image.ts` |
-| Admin codex card art upload | `@/components/shared` → **CodexArtUploadField** + `@/lib/codex-art.ts` |
+| Admin / official card art | `@/components/shared` → **RealmsImageField** / **RealmsImagePicker** (`realms-images.ts`, ADR-0003) |
 | Sortable column headers | `@/components/shared` → ListHeader (default styling; see below) |
 | List selection modal (add-X, pick from library) | `@/components/shared` → UnifiedSelectionModal |
 | Source scope: All / Realms Library / My Library | `@/components/shared` → SourceFilter (built on SegmentedControl) |

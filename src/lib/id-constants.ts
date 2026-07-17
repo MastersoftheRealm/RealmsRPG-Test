@@ -26,7 +26,9 @@ export const PART_IDS = {
   POWER_QUICK_OR_FREE_ACTION: 83,
 
   // Weapon/Attack Parts
-  ADD_WEAPON_ATTACK: 7,
+  // id 7 is named "Add Weapon to Technique" in codex_parts (was historically
+  // referenced as "Add Weapon Attack" in code).
+  ADD_WEAPON_TO_TECHNIQUE: 7,
   ADD_WEAPON_TO_POWER: 369,
   RECKLESS: 8,
   PASS_THROUGH: 9,

@@ -312,6 +312,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
     handleExperienceChange,
     handleNameChange,
     handlePortraitChange,
+    handlePortraitUrlChange,
     handleAbilityChange,
     handleDefenseChange,
     handleHealthPointsChange,
@@ -557,6 +558,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 onHealthPointsChange={handleHealthPointsChange}
                 onEnergyPointsChange={handleEnergyPointsChange}
                 onPortraitChange={handlePortraitChange}
+                onPortraitUrlChange={handlePortraitUrlChange}
                 isUploadingPortrait={uploadingPortrait}
                 portraitRefreshKey={portraitRefreshKey}
                 onNameChange={effectiveEditMode ? handleNameChange : undefined}

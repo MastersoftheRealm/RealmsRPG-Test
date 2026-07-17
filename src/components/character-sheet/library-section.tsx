@@ -744,11 +744,13 @@ export function LibrarySection({
 
         {resolvedActiveTab === 'inventory' && (
           <div className="space-y-6">
-            {/* Inventory Summary: Currency */}
+            {/* Inventory Summary: Currency + Armament Proficiency */}
             <TabSummarySection variant="currency">
-              <SummaryRow>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm">💰</span>
+              <div className="flex w-full flex-wrap items-center gap-y-2">
+                <div className="flex min-w-0 flex-1 items-center justify-start gap-2">
+                  <span aria-hidden="true" className="text-sm">
+                    💰
+                  </span>
                   <input
                     type="text"
                     value={currencyInput}
@@ -768,24 +770,28 @@ export function LibrarySection({
                     }}
                     className="w-20 px-2 py-1 text-sm font-bold text-warning-fg border border-warning-300 dark:border-warning-600/50 rounded focus:ring-2 focus:ring-warning-500 bg-surface"
                     title="Use +5, -10, or a number"
+                    aria-label="Currency"
                   />
                   <span className="text-sm font-medium text-text-muted dark:text-text-secondary">Currency</span>
                 </div>
-              </SummaryRow>
-              {martialProficiency !== undefined && (
-                <>
-                  <div className="border-t border-border-light my-2" />
-                  <SummaryRow>
-                    <SummaryItem 
-                      icon="⚔️" 
-                      label="Armament Proficiency" 
-                      value={`${calculateArmamentProficiency(martialProficiency)} TP`}
-                      highlight
-                      highlightColor="warning"
+                {martialProficiency !== undefined && (
+                  <>
+                    <div
+                      aria-hidden="true"
+                      className="mx-2 h-6 w-px shrink-0 self-center bg-border-light"
                     />
-                  </SummaryRow>
-                </>
-              )}
+                    <div className="flex min-w-0 flex-1 items-center justify-end">
+                      <SummaryItem
+                        icon="⚔️"
+                        label="Armament Proficiency"
+                        value={`${calculateArmamentProficiency(martialProficiency)} TP`}
+                        highlight
+                        highlightColor="warning"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
             </TabSummarySection>
 
             <WeaponsListSection

@@ -27,7 +27,7 @@ import {
   UnifiedSelectionModal,
   type SelectableItem,
 } from '@/components/shared/unified-selection-modal';
-import { ConfirmActionModal } from '@/components/shared';
+import { ConfirmActionModal, RealmsImageField } from '@/components/shared';
 import { Button, Input, Textarea } from '@/components/ui';
 import { ChipList } from '../creature-creator/CreatureCreatorHelpers';
 import { formatListCellLabel } from '@/lib/utils';
@@ -82,6 +82,8 @@ interface SpeciesFormState {
   ave_height: number | '';
   ave_weight: number | '';
   adulthood_lifespan: [number | '', number | '']; // [adulthood_years, lifespan_years]
+  imageId: string | null;
+  imageUrl: string | null;
 }
 
 const initialState: SpeciesFormState = {
@@ -98,6 +100,8 @@ const initialState: SpeciesFormState = {
   ave_height: '',
   ave_weight: '',
   adulthood_lifespan: ['', ''],
+  imageId: null,
+  imageUrl: null,
 };
 
 interface SpeciesCreatorCache {
@@ -183,6 +187,8 @@ function mergeCachedSpeciesForm(
     ave_height: coerceNumberOrEmpty(f.ave_height),
     ave_weight: coerceNumberOrEmpty(f.ave_weight),
     adulthood_lifespan,
+    imageId: typeof (f.imageId ?? f.image_id) === 'string' ? String(f.imageId ?? f.image_id) : null,
+    imageUrl: typeof (f.imageUrl ?? f.image_url) === 'string' ? String(f.imageUrl ?? f.image_url) : null,
   };
 }
 
@@ -271,6 +277,8 @@ export default function SpeciesCreatorPage() {
         ave_height: form.ave_height !== '' ? Number(form.ave_height) : undefined,
         ave_weight: form.ave_weight !== '' ? Number(form.ave_weight) : undefined,
         adulthood_lifespan: adulthood,
+        ...(form.imageId ? { imageId: form.imageId } : {}),
+        ...(form.imageUrl ? { imageUrl: form.imageUrl } : {}),
       },
     };
   }, [form]);
@@ -344,6 +352,8 @@ export default function SpeciesCreatorPage() {
         ave_height: d.ave_height != null ? Number(d.ave_height) : '',
         ave_weight: d.ave_weight != null ? Number(d.ave_weight) : '',
         adulthood_lifespan: lifespan && lifespan.length >= 2 ? [lifespan[0], lifespan[1]] : ['', ''],
+        imageId: typeof (d.imageId ?? d.image_id) === 'string' ? String(d.imageId ?? d.image_id) : null,
+        imageUrl: typeof (d.imageUrl ?? d.image_url) === 'string' ? String(d.imageUrl ?? d.image_url) : null,
       });
       load.closeLoadModal();
       save.setSaveMessage({ type: 'success', text: 'Species loaded successfully!' });
@@ -654,6 +664,21 @@ export default function SpeciesCreatorPage() {
               aria-label="Species description"
             />
           </div>
+          {isAdmin && (
+            <div className="mt-4">
+              <RealmsImageField
+                categories="species"
+                imageId={form.imageId}
+                imageUrl={form.imageUrl}
+                onChange={({ imageId, imageUrl }) =>
+                  setForm((previous) => ({ ...previous, imageId, imageUrl }))
+                }
+                entityName={form.name}
+                label="Species card art"
+                hint="Uploads are saved to the shared image bank."
+              />
+            </div>
+          )}
         </CollapsibleSection>
 
         <CollapsibleSection title={`Sizes (up to ${MAX_SIZES})`} collapsedSummary={sizesSummary} defaultExpanded={true}>

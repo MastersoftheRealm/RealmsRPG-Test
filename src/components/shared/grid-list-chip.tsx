@@ -17,8 +17,8 @@ export interface GridListChipProps {
 
 /**
  * GridListRow chip — expandable when the chip has expandable content;
- * otherwise DescriptorChipWithTip so property descriptions stay on InfoTippy
- * (TASK-454/461 compact-fact grammar).
+ * otherwise DescriptorChipWithTip (guided L1/metadata facts with InfoTippy).
+ * Character sheet parts/properties should pass `kind: 'expandable'` + `costLabel: 'TP'`.
  */
 export function GridListChip({
   chip,

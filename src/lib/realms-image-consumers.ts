@@ -1,7 +1,8 @@
 /**
  * Realms Image Library — consumer table helpers (server-only).
  * Usage report + clear-on-delete + cache URL sync on replace (ADR-0003).
- * Tables gain `image_id` in TASK-494 / TASK-497; missing columns are skipped.
+ * Official/codex columns: TASK-494. User_* columns: TASK-497.
+ * Missing columns are skipped (probe + cache) for forward/backward safety.
  */
 
 import type { createServiceRoleClient } from '@/lib/supabase/server';

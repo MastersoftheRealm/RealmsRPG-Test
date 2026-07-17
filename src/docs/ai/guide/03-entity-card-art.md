@@ -17,12 +17,10 @@
 | **ListRowThumbnail** | `src/components/shared/list-row-thumbnail.tsx` | 44×44 list thumb — thin wrapper over `ExpandableImage` for `GridListRow.thumbnail` |
 | **GridListRow** `thumbnail` | `src/components/shared/grid-list-row.tsx` | D&D Beyond list style + `ListHeader` `hasThumbnailColumn` |
 | **GuidedChoiceCard** | `src/components/guided-creator/guided-choice-card.tsx` | Choice cards — hero art via `ExpandableImage` inside card |
-| **CodexArtUploadField** | `src/components/shared/codex-art-upload-field.tsx` | **Interim** admin crop/upload → `/api/upload/codex-art` (entity-tied). Replace with bank upload + picker in TASK-495/496. |
-| **codex-art.ts** | `src/lib/codex-art.ts` | Interim entity types / storage paths; keep until TASK-496/498. |
-| **realms-images.ts** | `src/lib/realms-images.ts` | Bank types, category enum, client CRUD helpers (`apiUpload` / `apiFetch`) — TASK-492 |
+| **realms-images.ts** | `src/lib/realms-images.ts` | Bank types, category enum, client CRUD helpers (`apiUpload` / `apiFetch`) — TASK-492; sole authoring upload path after TASK-498 |
 | **`/api/images*`** | `src/app/api/images/` | Bank list (public), create/replace/delete/usage (admin) |
 | **Admin Image Library** | `/admin/images` (TASK-493) | Admin browse/upload/rename/retag/replace/delete for bank assets; dashboard card under **Admin** |
-| **RealmsImagePicker** | `src/components/shared/realms-image-picker.tsx` | Shared bank browse + select; admin-only upload-into-bank (TASK-495). Set `image_id` via `onSelect`. Filter with `categories` or `'empowered-technique'` / `'portrait'`. |
+| **RealmsImagePicker / RealmsImageField** | `src/components/shared/realms-image-picker.tsx` | Shared bank browse + select and compact entity binding; admin-only upload-into-bank. Set `image_id` plus URL cache. Filter with `categories` or `'empowered-technique'` / `'portrait'`. |
 
 ## Decision matrix — which surface?
 
@@ -32,10 +30,39 @@
 | Codex / Library / Admin **sortable list** | `GridListRow` `thumbnail` → `ListRowThumbnail` | `resolveListRowThumbnail(…)` |
 | Guided creator **choice card** | `GuidedChoiceCard` (uses `ExpandableImage` internally) | `imageKind` + `imageRecord` / `imageUrl` |
 | Species **reveal** / preview **portraits** | `ExpandableImage` directly | `resolveChoiceCardImage` or portrait URL |
-| Admin / official **authoring** (target) | `RealmsImagePicker` (+ admin upload into bank) | Set `image_id`; do not fork upload fields |
+| Admin / official **authoring** | `RealmsImageField` → `RealmsImagePicker` (+ admin upload into bank) | Set `image_id`; do not fork upload fields |
 | Admin **bank management** | `/admin/images` | Upload/rename/tag/replace/delete master assets (TASK-493) |
-| Admin **authoring** (interim) | `CodexArtUploadField` | Until TASK-496 migrates callers |
 | Decorative / redundant (`alt=""` only) | Plain `Image` / `img` — **no** expand | — |
+
+## Adoption inventory (TASK-478)
+
+Audited all direct `<Image>` / `<img>` call sites on 2026-07-17. The meaningful,
+standalone display surfaces use `ExpandableImage` directly or through
+`ListRowThumbnail` / `GuidedChoiceCard`:
+
+- Entity art: sortable list thumbnails, guided choice cards, species reveal,
+  creature stat blocks, and the admin image preview.
+- Portraits: guided preview panels, read-only character-sheet header, campaign
+  roster chips, and the account profile photo.
+
+Plain images remain intentional in these cases:
+
+- **Primary-action images:** character cards navigate; campaign join/add rows select;
+  guided/advanced portrait controls and editable sheet portraits open the image
+  chooser; RealmsImagePicker tiles select an asset. Do not nest an expand button
+  inside those links/buttons.
+- **Authoring-only previews:** crop/output previews inside `ImageUploadModal` show
+  the pending edit and are not content-browse surfaces.
+- **Decorative, branding, and control graphics:** header/auth logos, landing/about
+  compositions, dice/roll graphics, provider icons, and decorative art use plain
+  images. Their role is identity, layout, or redundant control feedback—not
+  inspectable entity content.
+- **Fallback / missing portraits:** `FALLBACK_PORTRAIT_DATA_URL` (“?” SVG) must use
+  `ExpandableImage` `disabled` (optionally `isPlaceholder`) — do not open a preview
+  of the placeholder.
+
+When a primary-action surface also needs enlargement, add a separate, explicitly
+labelled preview action; do not make one click perform both behaviors.
 
 ## Entities with / without art
 
@@ -47,6 +74,8 @@
 | Empowered techniques | Yes | filter `power` **OR** `technique` (no empowered tag) |
 | Feats, skills, archetypes, parts, properties, creature feats, traits | **No** | — |
 | Enhanced items | Deferred | TASK-500 |
+
+**User library consumers (TASK-497):** `user_species`, `user_creatures`, `user_items`, `user_powers`, `user_techniques`, and `user_empowered_techniques` store the same nullable `image_id` (+ `image_url` cache) as official/codex. Creators pick bank art; private save and add-to-library copy preserve the master ref. Non-admins do not upload into the bank.
 
 When adding list thumbs: (1) ensure API returns resolvable art (`image_id` / cache `image_url`), (2) pass `thumbnail={resolveListRowThumbnail('<kind>', row, row.name)}` on `GridListRow` — **do not** add a new grid column for art.
 

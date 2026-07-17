@@ -273,6 +273,8 @@ export function enrichTechniques(
           name: libraryItem.name,
           description: libraryItem.description,
           parts: libraryItem.parts || [],
+          attackMode: (libraryItem as { attackMode?: unknown }).attackMode as never,
+          weaponName: (libraryItem as { weaponName?: string }).weaponName,
           weapon: libraryItem.weapon,
           damage: damageObj,
         },

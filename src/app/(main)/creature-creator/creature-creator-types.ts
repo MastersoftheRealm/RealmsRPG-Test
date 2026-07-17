@@ -20,6 +20,8 @@ export interface CreatureState {
   type: string;
   size: string;
   description: string;
+  imageId: string | null;
+  imageUrl: string | null;
   archetypeType: ArchetypeType;
   abilities: {
     strength: number;

@@ -68,7 +68,10 @@ export async function findOfficialLibraryItemByName<T extends LibraryItemType>(
   return found ? { id: found.id } : null;
 }
 
-/** Copy an official library item to the user's library. Strips _source etc. */
+/**
+ * Copy an official library item to the user's library. Strips _source etc.
+ * Preserves image_id / imageUrl so the user row references the same bank master (no re-upload).
+ */
 export async function addOfficialItemToLibrary<T extends LibraryItemType>(
   type: T,
   officialItem: LibraryRow<T>

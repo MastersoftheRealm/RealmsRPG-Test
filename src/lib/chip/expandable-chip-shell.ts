@@ -22,8 +22,8 @@ export function expandableChipShellClass({
     'inline-flex flex-col items-start font-medium transition-[box-shadow,background-color,border-color,padding,ring] duration-base ease-standard',
     chipVariants({ variant, shape: 'expandable' }),
     size === 'sm' ? 'text-xs' : 'text-sm',
-    // Do not force w-full when expanded — that reboots flex-wrap and jumps the toggle.
-    // ExpandableChip sets a measured width that fits the remaining row space.
+    // ExpandableChip's shared layout promotes this shell (or its local action wrapper)
+    // to a full-width flex row while preserving the collapsed row's vertical origin.
     expanded
       ? 'min-w-0 max-w-full ring-2 ring-inset ring-primary-outline-border align-top'
       : '',

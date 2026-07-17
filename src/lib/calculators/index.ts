@@ -24,7 +24,6 @@ export {
   type RangeConfig,
   type AreaConfig,
   type DurationConfig,
-  type WeaponConfig as MechanicWeaponConfig,
   type LegacyPowerMechanicContext,
   type LegacyTechniqueMechanicContext,
 } from './mechanic-builder';

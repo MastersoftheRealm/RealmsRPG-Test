@@ -95,6 +95,8 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
   notes: |
     Blocks TASK-410–412. Species/creature creators out of scope for this phase.
     **Blocked until TASK-414 done** (2026-07-01 owner gate).
+    2026-07-17: Engineering AC largely met via TASK-380 + TASK-381 (power/item shells +
+    DEV-V-024). Keep blocked only for the TASK-414 product gate before guided power work.
 
 ---
 

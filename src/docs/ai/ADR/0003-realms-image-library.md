@@ -37,12 +37,13 @@ TASK-405 shipped entity-tied uploads (`codex-art/{entityType}/{entityId}.jpg` �
 
 - **Write into bank:** admin only — (a) `/admin/images`, or (b) admin publish-to-Realms / official editors (auto name = entity name, auto tag = entity category).
 - **Pick / attach:** guests + all signed-in users (read only into bank). Non-admins do **not** upload into the bank.
-- **Portrait / profile:** may pick bank images tagged `species` or `creature` (TASK-499); personal photo upload paths remain.
+- **Portrait / profile:** may pick bank images tagged `species` or `creature` (TASK-499); personal photo upload paths remain. These surfaces set `allowAdminUpload={false}` on the picker so they are strictly pick-only (no upload-into-bank UI even for admins); they store the master public URL since character/profile schemas hold URL fields, not `image_id`.
 - UI: reuse **`ImageUploadModal`** (5MB, jpeg/png/gif/webp, square crop) — no fork. Shared picker: **`RealmsImagePicker`** (`src/components/shared/realms-image-picker.tsx`, TASK-495) — guest-readable browse, `onSelect` sets `image_id`, admin upload-into-bank only.
 
-### Interim code
+### Legacy migration code
 
-- Keep `/api/upload/codex-art` + `CodexArtUploadField` until TASK-496/498 migrate callers to bank upload + `image_id`.
+- TASK-496 moved all active official authoring callers to `RealmsImageField` / `RealmsImagePicker`.
+- TASK-498 cataloged existing entity-tied Storage objects into `realms_images` (same path), set consumer `image_id`, and removed `/api/upload/codex-art` + `CodexArtUploadField`. Legacy paths remain valid until admin replace moves them to `library/{id}.{ext}`.
 
 ## Consequences
 

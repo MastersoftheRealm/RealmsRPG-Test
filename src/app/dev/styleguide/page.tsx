@@ -458,9 +458,9 @@ export default function StyleguidePage() {
 
         <Section title="Expandable Chips">
           <p className="text-sm text-text-secondary mb-4 max-w-3xl">
-            Rounded-rectangle geometry for expand-in-place parts and properties. Expanded chips grow into
-            the remaining width of their chip group row without jumping the toggle — click open, click
-            close without moving the pointer (stable expand toggle).
+            Rounded-rectangle geometry for expand-in-place parts and properties. An expanded chip keeps
+            its vertical row, moves to the group&apos;s left edge, and takes the full width while the other
+            chips reflow below it. Click open, then click close without moving vertically.
           </p>
           <Row label="Collapsed / expanded">
             <ChipGroup className="w-full max-w-3xl" data-testid="styleguide-stable-expand-chips">
@@ -480,7 +480,7 @@ export default function StyleguidePage() {
               <ExpandableChip
                 label="Versatile"
                 costSuffix={1}
-                description="Click this chip, leave the mouse still, then click again to collapse. The header should not jump vertically when siblings reflow."
+                description="Click this chip and leave the mouse at the same height. It moves left to fill the row while every other chip reflows below it."
                 interactiveHover
               />
             </ChipGroup>

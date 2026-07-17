@@ -9,6 +9,7 @@ import {
   GridListRow,
   ListEmptyState as EmptyState,
   ListHeader,
+  RealmsImageField,
 } from '@/components/shared';
 import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
 import { SelectFilter, FilterSection } from '@/components/codex';
@@ -37,6 +38,8 @@ interface EquipmentListItem {
   damage?: string;
   armor_value?: number;
   weight?: number;
+  image_id?: string | null;
+  image_url?: string | null;
 }
 
 interface EquipmentFilters {
@@ -68,6 +71,8 @@ export function AdminEquipmentTab() {
     category: '',
     currency: 0,
     rarity: 'Common',
+    imageId: null as string | null,
+    imageUrl: null as string | null,
   });
   const [categoryIsNew, setCategoryIsNew] = useState(false);
 
@@ -115,7 +120,7 @@ export function AdminEquipmentTab() {
   const openAdd = () => {
     setEditing(null);
     setCopySourceName(null);
-    setForm({ name: '', description: '', category: '', currency: 0, rarity: 'Common' });
+    setForm({ name: '', description: '', category: '', currency: 0, rarity: 'Common', imageId: null, imageUrl: null });
     setCategoryIsNew(false);
     setModalOpen(true);
   };
@@ -130,6 +135,8 @@ export function AdminEquipmentTab() {
       category: cat,
       currency: e.currency ?? e.gold_cost ?? 0,
       rarity: e.rarity || 'Common',
+      imageId: e.image_id ?? null,
+      imageUrl: e.image_url ?? null,
     });
     const existingCats = new Set((equipment || []).map((eq: EquipmentListItem) => eq.category).filter(Boolean));
     setCategoryIsNew(cat !== '' && !existingCats.has(cat));
@@ -146,6 +153,8 @@ export function AdminEquipmentTab() {
       category: cat,
       currency: e.currency ?? e.gold_cost ?? 0,
       rarity: e.rarity || 'Common',
+      imageId: e.image_id ?? null,
+      imageUrl: e.image_url ?? null,
     });
     const existingCats = new Set((equipment || []).map((eq: EquipmentListItem) => eq.category).filter(Boolean));
     setCategoryIsNew(cat !== '' && !existingCats.has(cat));
@@ -169,6 +178,8 @@ export function AdminEquipmentTab() {
       category: form.category.trim() || undefined,
       currency: form.currency,
       rarity: form.rarity.trim() || undefined,
+      imageId: form.imageId,
+      imageUrl: form.imageUrl,
     };
 
     const result = editing
@@ -390,6 +401,16 @@ export function AdminEquipmentTab() {
               rows={4}
             />
           </div>
+          <RealmsImageField
+            categories="equipment"
+            imageId={form.imageId}
+            imageUrl={form.imageUrl}
+            onChange={({ imageId, imageUrl }) =>
+              setForm((f) => ({ ...f, imageId, imageUrl }))
+            }
+            entityName={form.name}
+            label="Equipment card art"
+          />
           <div className="grid grid-cols-3 gap-4">
             <div className="col-span-1">
               <label className="block text-sm font-medium text-text-secondary mb-1">Category</label>

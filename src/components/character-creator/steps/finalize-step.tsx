@@ -24,7 +24,7 @@ import { calculateHealthEnergyPool } from '@/lib/game/formulas';
 import { navigateThenResetCreator } from '@/lib/creator-save-handoff';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { ABILITY_DISPLAY_NAMES } from '@/lib/game/constants';
-import { LoginPromptModal, ImageUploadModal, InfoTippy } from '@/components/shared';
+import { LoginPromptModal, ImageUploadModal, InfoTippy, RealmsImagePicker } from '@/components/shared';
 import { finalizeSummaryHelp } from '../../../../public/tooltip-text';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
 import { CreatorResourceBar } from '@/components/character-creator/CreatorResourceBar';
@@ -310,6 +310,7 @@ async function blobToCompressedBase64(blob: Blob, maxSize = 700 * 1024): Promise
 function PortraitUpload() {
   const { draft, updateDraft } = useCharacterCreatorStore();
   const [showModal, setShowModal] = useState(false);
+  const [showBankPicker, setShowBankPicker] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -403,9 +404,22 @@ function PortraitUpload() {
         isOpen={showModal}
         onClose={() => { setShowModal(false); setError(null); }}
         onConfirm={handleCropped}
+        onChooseFromLibrary={() => setShowBankPicker(true)}
         cropShape="rect"
         aspect={1}
         title="Character Portrait"
+      />
+      <RealmsImagePicker
+        isOpen={showBankPicker}
+        onClose={() => setShowBankPicker(false)}
+        onSelect={({ image }) => {
+          updateDraft({ portrait: image.publicUrl });
+          setError(null);
+        }}
+        categories="portrait"
+        allowAdminUpload={false}
+        title="Choose Character Portrait"
+        description="Pick species or creature art from the Realms Image Library."
       />
     </div>
   );

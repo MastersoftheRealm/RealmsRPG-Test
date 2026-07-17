@@ -1,6 +1,6 @@
 # ALL_FEEDBACK ? Consolidated & Curated
 
-Last updated: 2026-07-16
+Last updated: 2026-07-17
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -75,7 +75,7 @@ How to use
 - Implement modern thin scrollbars sitewide.
 - **Buttons:** Use solid colors with clear white font (btn-solid, btn-outline-clean) ? no gradients. Match about page styles site-wide.
 - **Roll Log:** Single-row layout (1d20 X + Bonus = Total in boxes); roll=light grey, bonus=green, total=blue; smaller timestamp.
-- **Stable expand toggle (2026-07-15):** Expand-in-place controls (especially ExpandableChip in wrap groups) must keep the toggle target under the pointer. Expanding may push siblings away / grow content, but the opened control?s vertical (and preferably horizontal) click position must not jump so a second click closes without mouse travel. Sitewide standard ? **TASK-445 done**.
+- **Stable vertical chip expand (updated 2026-07-17):** ExpandableChip keeps its collapsed vertical row but intentionally moves to the chip group’s left edge and takes the full width. All chips from that row onward move below it. The pointer remains vertically aligned; preserving horizontal position is no longer the goal. Sitewide shared standard — **TASK-445 / TASK-504**.
 
 ### 7) Modals & Lists
 - Shared modal/list components should include: rounded headers, header spacing, sortable columns, and right-aligned add/select controls.
@@ -2182,4 +2182,72 @@ Notes
   Created a new character on guided creator, the feat names are ID's instead of actual feat names.
 - Expected: Archetype and character feats show Codex display names on the sheet (and in saved character data), not raw ids.
 - Disposition: Implemented as **TASK-503**. Root cause: `buildGuidedCharacterPayload` set `name: String(id)`. Now resolves names from `codexFeats`; sheet enrichFeat also prefers Codex when stored name equals id.
+
+**Raw Feedback Log — 2026-07-17 (Expandable chips full-width, vertical stability)**
+- Date: 2026-07-17
+- Context: Global/shared ExpandableChip behavior and documentation
+- Priority: High
+- Feedback (verbatim): Regarding expanding chip functionality, we have it so the chip remains in the same place so you don't have to move around, and while that is useful it looks bad, so instead of having it remain in the same place vertically and horizontally, just have it remain in the same place vertically, pushing all chips to below it while it's expanded, you mouse will always be inline vertically but the chip will move to be left aligned fully taking the width instead of being pushed to the side by previous chips. This is a global/shared component/logic and needs to be clear in the documentation and all use cases updated in one.
+- Expected: Shared expansion logic preserves the chip’s vertical row, left-aligns it at full group width, and moves same-row/later chips below; no call-site forks.
+- Disposition: Implemented as **TASK-504** through `ExpandableChip` + shared full-row layout logic; docs and DEV-V-021 updated.
+
+**Raw Feedback Log — 2026-07-17 (Your Hero feat chip color)**
+- Date: 2026-07-17
+- Context: Guided character creator → Your Hero → Your Build
+- Priority: Low
+- Feedback (verbatim):
+  for the your hero step in guided creator I notice the archetype feats are yellow, that's unneeded, make them the same color.
+- Expected: Archetype and character feat chips use the same neutral list color in the Your Hero summary.
+- Disposition: Implemented in `guided-reveal-summary.tsx`; archetype feats now use the standard `list` chip variant.
+
+**Raw Feedback Log — 2026-07-17 (Your Hero loadout equipment ID chips)**
+- Date: 2026-07-17
+- Context: Guided character creator → Your Hero → Your Build → Loadout
+- Priority: Low
+- Feedback (verbatim):
+  for the your hero step in guided creator I notice the loadout has weapons/armor displayed nicely, but then after it has tiny chips that read [YxZ] or something like that, likely equipment ID's and quantitiy values, simply don't display equipment in the your build section since they mostly care about weapons and armor.
+- Expected: Loadout section in the Your Build summary shows only weapons/armor (and Unarmed Prowess), not general equipment chips.
+- Disposition: Implemented in `guided-reveal-summary.tsx`; `loadoutItems` no longer includes `draft.equipment`, so only armaments + Unarmed Prowess render.
+
+**Raw Feedback Log — 2026-07-17 (Power/Technique attack mode — drop weapon tying)**
+- Date: 2026-07-17
+- Context: Power / Technique / Empowered Technique creators; Add Weapon mechanic parts
+- Priority: High
+- Feedback (verbatim):
+  I updated the add weapon part(s) to only cost a base energy cost, no more/less or options increases. Adding a weapon to a Power/Technique should only be 3 options now, 1. No Weapon/Attack 2. Unarmed Attack 3. Weapon Attack, 1. adds the no weapon mechanic (which I can't seem to find in the database?) 2. adds nothing 3. adds the creator specific add weapon part with no option to increase the costs.
+
+  With this in mind we don't need weapons tied to techniques/powers anymore, no TP to option calculation, no ids tied, etc.
+
+  this is a large cleanup and refine task
+- Expected: Creators expose three attack modes only; no library weapon picker / TP scaling / weapon IDs on saves. Display uses attack mode labels. Cleanup across creators, calcs, columnar mapping, lists.
+- Disposition: Implemented as **TASK-507** (Architect proceed from owner). Shared `lib/attack-mode.ts`; creators use 3-mode Attack select; display column renamed Attack; dead creator-weapon picker/options/persistence removed. Owner QA: DEV-V-026.
+
+**Raw Feedback Log — 2026-07-17 (Sheet TP header + expandable part chips)**
+- Date: 2026-07-17
+- Context: Character sheet → Library → Techniques (powers/parts globally on sheet)
+- Priority: High
+- Feedback (verbatim):
+  Technique tab column header should say TP not Training PTs (same for powers if TP is listed)
+
+  I expanded a technique on the character sheet (likely a global issue) but some things had trainingpoints listed in parts and proficiencies as a descriptor chip, with training points, and an info tooltip, this is not the way we want the character sheet items to work, instead parts/proficiencies should have all expandable chips with some listing TP, the rule for not having TP abbrivated and other things not abbreviated was only true for guided creator so expandable chips are better off having TP: # instead of it written out entirely, there's an odd mix of the expandable chips and the desc chips with i loaded in, the desc chips with i are for the guided creator or L1 views, the character sheet is a flowing non-creator that is always in a state of beingable to delve deeper, it's L1/2/3 aren't as strictly enforced since it's an environment a user works around in
+- Expected: Sheet Techniques column = TP; Parts & Proficiencies = expandable chips with TP: N (not descriptor + InfoTippy / spelled-out Training Points). Full-term Training Points stays for guided creator L1/L2.
+- Disposition: Implemented as **TASK-505**.
+
+**Raw Feedback Log — 2026-07-17 (Inventory summary horizontal layout)**
+- Date: 2026-07-17
+- Context: Character sheet → Library → Inventory
+- Priority: Low
+- Feedback (verbatim):
+  Inventory tab: Currency and armament proficiency can be on the same line instead of vertically spaced, separated horizontally instead of vertically.
+- Expected: Currency stays left while Armament Proficiency is right-aligned in the same wrapping summary row, separated by a vertically centered divider at the row midpoint.
+- Disposition: Implemented in `library-section.tsx` with equal flex sides and one shared divider (no absolute/dual-divider hack); Currency input has `aria-label`.
+
+**Raw Feedback Log — 2026-07-17 (GLR name vs type descriptor tag)**
+- Date: 2026-07-17
+- Context: Character sheet → Feats/Traits (GridListRow compact rows with type badges)
+- Priority: Medium
+- Feedback (verbatim):
+  character sheet: GLR names get truncated with smaller pages, it should first hide the trait/feat type descriptor tag to avoid this.
+- Expected: When the name column is tight, hide the inline trait/feat type descriptor tag before truncating the name; tag remains available in the expanded row. Prefer column-width (container) over viewport breakpoints so narrow sheet panels on large screens behave correctly.
+- Disposition: Implemented in `grid-list-row.tsx` — name column is `@container`; compact inline badges use `hidden @[13rem]:inline-flex`. QA: DEV-V-009-T014.
 

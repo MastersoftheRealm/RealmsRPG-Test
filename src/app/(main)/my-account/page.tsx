@@ -18,7 +18,7 @@ import { useAdmin } from '@/hooks';
 import { ProtectedRoute } from '@/components/layout';
 import { cn } from '@/lib/utils';
 import { LoadingState, Button, Input, Alert, PageContainer, Spinner, Card, PageHeader } from '@/components/ui';
-import { ExpandableImage, ImageUploadModal } from '@/components/shared';
+import { ExpandableImage, ImageUploadModal, RealmsImagePicker } from '@/components/shared';
 import { User as UserIcon, Mail, Lock, Trash2, AlertTriangle, AtSign, Camera } from 'lucide-react';
 
 function hasPasswordProvider(authUser: AuthUser | null): boolean {
@@ -78,6 +78,7 @@ function AccountContent() {
   const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const [showPictureModal, setShowPictureModal] = useState(false);
+  const [showPictureBank, setShowPictureBank] = useState(false);
   const [uploadingPicture, setUploadingPicture] = useState(false);
   const [pictureMessage, setPictureMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -169,6 +170,28 @@ function AccountContent() {
         type: 'error',
         text: getErrorMessage(err, 'Failed to upload profile picture'),
       });
+    } finally {
+      setUploadingPicture(false);
+    }
+  };
+
+  const handleBankProfilePicture = async (url: string) => {
+    if (!user) return;
+    setUploadingPicture(true);
+    setPictureMessage(null);
+    try {
+      const supabase = createClient();
+      const { error: profileError } = await supabase.from('user_profiles').upsert(
+        { id: user.uid, photo_url: url, updated_at: new Date().toISOString() },
+        { onConflict: 'id' }
+      );
+      if (profileError) throw profileError;
+      const { error: authError } = await supabase.auth.updateUser({ data: { avatar_url: url } });
+      if (authError) throw authError;
+      setProfile((prev) => (prev ? { ...prev, photoURL: `${url}?t=${Date.now()}` } : null));
+      setPictureMessage({ type: 'success', text: 'Profile picture updated!' });
+    } catch {
+      setPictureMessage({ type: 'error', text: 'Failed to update profile picture' });
     } finally {
       setUploadingPicture(false);
     }
@@ -435,7 +458,7 @@ function AccountContent() {
           {profile?.photoURL ? (
             <ExpandableImage
               src={profile.photoURL}
-              alt="Profile"
+              alt="Profile picture"
               className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-full border-2 border-border-light bg-surface-alt"
             >
               {/* eslint-disable-next-line @next/next/no-img-element -- dynamic profile photo URL */}
@@ -745,9 +768,19 @@ function AccountContent() {
         isOpen={showPictureModal}
         onClose={() => setShowPictureModal(false)}
         onConfirm={handleProfilePictureUpload}
+        onChooseFromLibrary={() => setShowPictureBank(true)}
         cropShape="round"
         aspect={1}
         title="Upload Profile Picture"
+      />
+      <RealmsImagePicker
+        isOpen={showPictureBank}
+        onClose={() => setShowPictureBank(false)}
+        onSelect={({ image }) => { void handleBankProfilePicture(image.publicUrl); }}
+        categories="portrait"
+        allowAdminUpload={false}
+        title="Choose Profile Picture"
+        description="Pick species or creature art from the Realms Image Library."
       />
     </PageContainer>
   );

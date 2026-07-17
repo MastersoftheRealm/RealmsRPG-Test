@@ -179,7 +179,7 @@ This is a **guide**, not a muzzle. Prefer Realms terms; avoid importing other sy
 | Health | HP (user unless a dense HUD abbreviation is already established) |
 | Currency | c / gold shorthand in Layer 1 or Layer 2 UI |
 
-**Layer 1 / Layer 2 copy:** Spell game terms in full for new players (**Currency**, **Training Points**, **Damage Reduction**, …). Do not use compact abbreviations like `c` or `TP` in guided L1/L2 chrome, choice cards, or resource bars. Dense Layer 3 / advanced / table columns may keep short labels when the column header already names the term.
+**Layer 1 / Layer 2 copy:** Spell game terms in full for new players (**Currency**, **Training Points**, **Damage Reduction**, …). Do not use compact abbreviations like `c` or `TP` in guided L1/L2 chrome, choice cards, or resource bars. Dense Layer 3 / advanced / table columns, and **character sheet / play lists**, may use short labels (`TP`, expandable chip `TP: N`) — the sheet is a working surface, not a guided creator disclosure ladder.
 
 **Guided budgets (TASK-456):** Currency and Training Points are visible constrained resources in Layer 1 and Layer 2 (PointStatus total/spent/remaining). Do not hide Training Points behind “Layer 2 only” or “included in your path” framing when the user is making constrained Loadout or Powers/Techniques selections.
 

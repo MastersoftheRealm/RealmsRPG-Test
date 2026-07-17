@@ -45,6 +45,8 @@ export interface RealmsImagePickerProps {
   selectedImageId?: string | null;
   title?: string;
   description?: string;
+  /** Set false for pick-only surfaces such as portraits/profile pictures. */
+  allowAdminUpload?: boolean;
   /**
    * Admin upload-into-bank defaults. `name` pre-fills the upload form; `extraCategories`
    * are merged with resolved `categories` (deduped) as initial tags.
@@ -55,6 +57,78 @@ export interface RealmsImagePickerProps {
   };
 }
 
+export interface RealmsImageFieldProps {
+  categories: RealmsImagePickerFilter;
+  imageId: string | null;
+  imageUrl: string | null;
+  onChange: (selection: { imageId: string | null; imageUrl: string | null }) => void;
+  entityName?: string;
+  label?: string;
+  hint?: string;
+}
+
+/**
+ * Compact entity binding field for official editors and admin creator flows.
+ * The picker owns bank upload; this field only stores the selected master reference.
+ */
+export function RealmsImageField({
+  categories,
+  imageId,
+  imageUrl,
+  onChange,
+  entityName,
+  label = 'Card art',
+  hint = 'Choose shared art from the Realms Image Library. Anyone can pick; only admins can upload new bank images.',
+}: RealmsImageFieldProps) {
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+
+  return (
+    <div className="space-y-2">
+      <div>
+        <p className="text-sm font-medium text-text-secondary">{label}</p>
+        <p className="text-xs text-text-secondary">{hint}</p>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        {imageUrl ? (
+          <div className="h-20 w-20 overflow-hidden rounded-card border border-border-light bg-surface-alt">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={imageUrl} alt="" className="h-full w-full object-contain" />
+          </div>
+        ) : (
+          <div className="flex h-20 w-20 items-center justify-center rounded-card border border-border-light bg-surface-alt">
+            <ImageIcon className="h-8 w-8 text-text-muted dark:text-text-secondary" aria-hidden />
+          </div>
+        )}
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="outline" className="min-h-11" onClick={() => setIsPickerOpen(true)}>
+            {imageId || imageUrl ? 'Change image' : 'Choose image'}
+          </Button>
+          {(imageId || imageUrl) && (
+            <Button
+              type="button"
+              variant="ghost"
+              className="min-h-11 text-text-secondary"
+              onClick={() => onChange({ imageId: null, imageUrl: null })}
+            >
+              Remove
+            </Button>
+          )}
+        </div>
+      </div>
+      <RealmsImagePicker
+        isOpen={isPickerOpen}
+        onClose={() => setIsPickerOpen(false)}
+        onSelect={({ imageId: selectedId, image }) =>
+          onChange({ imageId: selectedId, imageUrl: image.publicUrl })
+        }
+        categories={categories}
+        selectedImageId={imageId}
+        uploadDefaults={{ name: entityName }}
+      />
+    </div>
+  );
+}
+
 export function RealmsImagePicker({
   isOpen,
   onClose,
@@ -63,9 +137,11 @@ export function RealmsImagePicker({
   selectedImageId,
   title = 'Choose image',
   description = 'Pick shared card art from the Realms Image Library.',
+  allowAdminUpload = true,
   uploadDefaults,
 }: RealmsImagePickerProps) {
   const { isAdmin } = useAdmin();
+  const canUpload = isAdmin && allowAdminUpload;
   const filterCategories = useMemo(
     () => resolveRealmsImagePickerCategories(categories),
     [categories]
@@ -228,7 +304,7 @@ export function RealmsImagePicker({
                   Select image
                 </Button>
               )}
-              {showUploadPanel && isAdmin && (
+              {showUploadPanel && canUpload && (
                 <Button
                   onClick={() => { void handleUploadAndSelect(); }}
                   disabled={isUploading || !uploadName.trim()}
@@ -265,7 +341,7 @@ export function RealmsImagePicker({
               aria-label="Search library images by name"
               className="sm:max-w-xs"
             />
-            {isAdmin && !showUploadPanel && (
+            {canUpload && !showUploadPanel && (
               <Button
                 type="button"
                 variant="secondary"
@@ -281,7 +357,7 @@ export function RealmsImagePicker({
             )}
           </div>
 
-          {showUploadPanel && isAdmin && (
+          {showUploadPanel && canUpload && (
             <div className="space-y-3 rounded-card border border-border-light bg-surface-alt p-4">
               <p className="text-sm font-medium text-text-primary">New library image</p>
               <div className="flex flex-wrap items-start gap-4">
@@ -344,7 +420,7 @@ export function RealmsImagePicker({
                 <ImageIcon className="h-10 w-10 text-text-muted dark:text-text-secondary" aria-hidden />
                 <p className="font-nunito text-sm font-medium text-text-primary">No images found</p>
                 <p className="max-w-sm font-nunito text-xs text-text-secondary">
-                  {isAdmin
+                  {canUpload
                     ? 'Upload a new image to the library or adjust your search.'
                     : 'Try a different search, or ask an admin to add art to the library.'}
                 </p>
@@ -407,7 +483,7 @@ export function RealmsImagePicker({
         </div>
       </Modal>
 
-      {isAdmin && (
+      {canUpload && (
         <ImageUploadModal
           isOpen={showUploadModal}
           onClose={() => !isUploading && setShowUploadModal(false)}

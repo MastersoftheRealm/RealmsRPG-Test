@@ -15,8 +15,7 @@
 
 import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { X, Plus, ChevronDown, ChevronUp, Shield, Sword, Target, Info, Coins } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Sword, Target, Coins } from 'lucide-react';
 import {
   useItemProperties,
   useAdmin,
@@ -25,16 +24,14 @@ import {
   type ItemProperty,
   type UseLoadModalLibraryReturn,
 } from '@/hooks';
-import { CodexArtUploadField, ErrorDisplay } from '@/components/shared';
-import { LoadingState, IconButton, Checkbox, Button, Card, TableScroll, DescriptorChip } from '@/components/ui';
+import { ErrorDisplay } from '@/components/shared';
+import { LoadingState } from '@/components/ui';
 import {
   CreatorPageShell,
-  CollapsibleSection,
   AdvancedCalculationsPanel,
   CreatorSummaryPanel,
 } from '@/components/creator';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
-import { ValueStepper, SectionCostBadge } from '@/components/shared';
 import { useAuthStore } from '@/stores';
 import {
   calculateItemCosts,
@@ -45,12 +42,6 @@ import {
   type ItemDamage,
 } from '@/lib/calculators';
 import { PROPERTY_IDS } from '@/lib/id-constants';
-import { armamentTypeToArtEntity } from '@/lib/codex-art';
-
-// =============================================================================
-// Types
-// =============================================================================
-
 import {
   bootstrapItemCreatorFormState,
   itemLibraryRecordToFormState,
@@ -61,280 +52,15 @@ import {
   type ItemSelectedProperty as SelectedProperty,
   type ItemDamageConfig as DamageConfig,
 } from './item-creator-bootstrap';
-import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
-
-// =============================================================================
-// Shared Constants (imported from central location)
-// =============================================================================
-
+import { ItemCreatorEditor } from './item-creator-editor';
 import {
-  WEAPON_DAMAGE_TYPES,
-  DIE_SIZES,
-  formatCost,
-} from '@/lib/game/creator-constants';
+  WEAPON_ABILITY_REQUIREMENTS,
+  ARMOR_ABILITY_REQUIREMENTS,
+  RarityReferenceTable,
+} from './item-creator-helpers';
+import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
+import { formatCost } from '@/lib/game/creator-constants';
 import { rarityChipVariant } from '@/lib/chip/rarity-chip-variant';
-import { statusPanel } from '@/lib/ui/status-surface-classes';
-
-// =============================================================================
-// Item-specific Constants
-// =============================================================================
-
-const ARMAMENT_TYPES: { value: ArmamentType; label: string; icon: typeof Sword }[] = [
-  { value: 'Weapon', label: 'Weapon', icon: Sword },
-  { value: 'Armor', label: 'Armor', icon: Shield },
-  { value: 'Shield', label: 'Shield', icon: Shield },
-];
-
-// Ability requirement configurations for different armament types
-const WEAPON_ABILITY_REQUIREMENTS = [
-  { id: PROPERTY_IDS.WEAPON_STRENGTH_REQUIREMENT, name: 'Weapon Strength Requirement', label: 'STR' },
-  { id: PROPERTY_IDS.WEAPON_AGILITY_REQUIREMENT, name: 'Weapon Agility Requirement', label: 'AGI' },
-  { id: PROPERTY_IDS.WEAPON_VITALITY_REQUIREMENT, name: 'Weapon Vitality Requirement', label: 'VIT' },
-  { id: PROPERTY_IDS.WEAPON_ACUITY_REQUIREMENT, name: 'Weapon Acuity Requirement', label: 'ACU' },
-  { id: PROPERTY_IDS.WEAPON_INTELLIGENCE_REQUIREMENT, name: 'Weapon Intelligence Requirement', label: 'INT' },
-  { id: PROPERTY_IDS.WEAPON_CHARISMA_REQUIREMENT, name: 'Weapon Charisma Requirement', label: 'CHA' },
-];
-
-const ARMOR_ABILITY_REQUIREMENTS = [
-  { id: PROPERTY_IDS.ARMOR_STRENGTH_REQUIREMENT, name: 'Armor Strength Requirement', label: 'STR' },
-  { id: PROPERTY_IDS.ARMOR_AGILITY_REQUIREMENT, name: 'Armor Agility Requirement', label: 'AGI' },
-  { id: PROPERTY_IDS.ARMOR_VITALITY_REQUIREMENT, name: 'Armor Vitality Requirement', label: 'VIT' },
-];
-
-// =============================================================================
-// Subcomponents
-// =============================================================================
-
-function PropertyCard({
-  selectedProperty,
-  onRemove,
-  onUpdate,
-  allProperties,
-  armamentType,
-}: {
-  selectedProperty: SelectedProperty;
-  onRemove: () => void;
-  onUpdate: (updates: Partial<SelectedProperty>) => void;
-  allProperties: ItemProperty[];
-  armamentType: ArmamentType;
-}) {
-  const [expanded, setExpanded] = useState(true);
-  const { property } = selectedProperty;
-
-  // Filter to selectable (non-general) properties that match the armament type
-  const selectableProperties = useMemo(() => {
-    const armamentTypeLower = armamentType.toLowerCase();
-    return allProperties
-      .filter((p) => {
-        // Exclude general properties
-        if (isGeneralProperty(p)) return false;
-        // Include properties that match the armament type or have no type specified
-        const propType = (p.type || '').toLowerCase();
-        if (!propType || propType === 'general') return true;
-        return propType === armamentTypeLower;
-      })
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [allProperties, armamentType]);
-
-  // Calculate property's individual contribution
-  const propIP =
-    ((property.base_ip as number | undefined) || 0) +
-    (((property.op_1_ip as number | undefined) || 0) * selectedProperty.op_1_lvl);
-  const propTP =
-    (property.base_tp || property.tp_cost || 0) +
-    (property.op_1_tp || 0) * selectedProperty.op_1_lvl;
-
-  const hasOption = property.op_1_desc && property.op_1_desc.trim() !== '';
-
-  return (
-    <div className="bg-surface rounded-lg border border-border-light shadow-sm overflow-hidden">
-      {/* Header - entire header clickable except X button */}
-      <div className="bg-surface-alt px-4 py-3 flex items-center justify-between">
-        <button
-          type="button"
-          onClick={() => setExpanded(!expanded)}
-          className="flex items-center gap-2 flex-1 min-w-0 text-left hover:bg-surface-alt/80 -ml-2 pl-2 py-1 rounded transition-colors"
-        >
-          <span className="text-text-muted dark:text-text-secondary">
-            {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-          </span>
-          <span className="font-medium text-text-primary truncate">{property.name}</span>
-          <span className="flex items-center gap-2 text-sm font-semibold flex-shrink-0">
-            {propIP > 0 && (
-              <span className="text-ip-text">
-                IP: {formatCost(propIP)}
-              </span>
-            )}
-            {propTP > 0 && (
-              <span className="text-tp-text">TP: {formatCost(propTP)}</span>
-            )}
-            {(property.base_c || (property.op_1_c && selectedProperty.op_1_lvl > 0)) && (
-              <span className="text-currency-text">
-                C: {formatCost((property.base_c || 0) + (property.op_1_c || 0) * selectedProperty.op_1_lvl)}
-              </span>
-            )}
-          </span>
-        </button>
-        <IconButton
-          onClick={onRemove}
-          label="Remove property"
-          variant="danger"
-          size="sm"
-        >
-          <X className="w-5 h-5" />
-        </IconButton>
-      </div>
-
-      {/* Expanded Content */}
-      {expanded && (
-        <div className="px-4 py-4 space-y-4">
-          {/* Property Selection */}
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
-              Property
-            </label>
-            <select
-              value={selectableProperties.findIndex((p) => p.id === property.id)}
-              onChange={(e) => {
-                const idx = parseInt(e.target.value);
-                const newProp = selectableProperties[idx];
-                if (newProp) {
-                  onUpdate({ property: newProp, op_1_lvl: 0 });
-                }
-              }}
-              className="w-full px-3 py-2 border border-border-light rounded-lg text-sm text-text-primary bg-surface"
-              aria-label="Property"
-            >
-              {selectableProperties.map((p, idx) => (
-                <option key={p.id} value={idx}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Description */}
-          <p className="text-base text-text-primary leading-relaxed">{property.description}</p>
-
-          {/* Option Level */}
-          {hasOption && (
-            <div className={cn('rounded-lg p-3', statusPanel.warning)}>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-tp-text">Option</span>
-                  {property.op_1_tp && (
-                    <span className="text-sm font-medium text-tp-text">
-                      TP +{formatCost(property.op_1_tp)}/level
-                    </span>
-                  )}
-                  {property.op_1_c && (
-                    <span className="text-sm font-medium text-currency-text">
-                      C +{formatCost(property.op_1_c)}/level
-                    </span>
-                  )}
-                </div>
-                <ValueStepper
-                  value={selectedProperty.op_1_lvl}
-                  onChange={(v) => onUpdate({ op_1_lvl: v })}
-                  label="Level:"
-                  min={0}
-                />
-              </div>
-              <p className="text-sm text-text-primary">{property.op_1_desc}</p>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// =============================================================================
-// Rarity Reference Table Component
-// =============================================================================
-
-const RARITY_REFERENCE = [
-  { name: 'Common', ipRange: '0 – 4', baseCost: 25 },
-  { name: 'Uncommon', ipRange: '4 – 6', baseCost: 100 },
-  { name: 'Rare', ipRange: '6 – 8', baseCost: 500 },
-  { name: 'Epic', ipRange: '8 – 11', baseCost: 2500 },
-  { name: 'Legendary', ipRange: '11 – 14', baseCost: 10000 },
-  { name: 'Mythic', ipRange: '14 – 16', baseCost: 50000 },
-  { name: 'Ascended', ipRange: '16+', baseCost: 100000 },
-];
-
-function RarityReferenceTable({ currentIP }: { currentIP: number }) {
-  const [expanded, setExpanded] = useState(false);
-  
-  // Find current rarity based on IP
-  const getCurrentRarity = () => {
-    if (currentIP <= 4) return 'Common';
-    if (currentIP <= 6) return 'Uncommon';
-    if (currentIP <= 8) return 'Rare';
-    if (currentIP <= 11) return 'Epic';
-    if (currentIP <= 14) return 'Legendary';
-    if (currentIP <= 16) return 'Mythic';
-    return 'Ascended';
-  };
-  const currentRarity = getCurrentRarity();
-
-  return (
-    <Card className="shadow-md overflow-hidden p-0">
-      <button
-        type="button"
-        onClick={() => setExpanded(!expanded)}
-        className="w-full px-4 py-3 flex items-center justify-between bg-surface-alt hover:bg-surface-alt/80 transition-colors text-text-primary"
-      >
-        <div className="flex items-center gap-2">
-          <Info className="w-4 h-4 text-ip-text" />
-          <span className="font-medium text-text-primary">Rarity Reference</span>
-        </div>
-        {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-      </button>
-      
-      {expanded && (
-        <div className="p-4">
-          <p className="text-xs text-text-muted dark:text-text-secondary mb-3">
-            IP (Item Power) determines rarity. Currency cost = Base Cost × (1 + 0.125 × C multiplier)
-          </p>
-          <TableScroll>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border-light">
-                <th className="text-left py-1 font-medium text-text-secondary">Rarity</th>
-                <th className="text-right py-1 font-medium text-text-secondary">IP Range</th>
-                <th className="text-right py-1 font-medium text-text-secondary">Base Currency</th>
-              </tr>
-            </thead>
-            <tbody>
-              {RARITY_REFERENCE.map((r) => (
-                <tr 
-                  key={r.name} 
-                  className={cn(
-                    'border-b border-border-light last:border-0',
-                    currentRarity === r.name && 'font-semibold'
-                  )}
-                >
-                  <td className="py-1.5">
-                    <DescriptorChip variant={rarityChipVariant(r.name)} size="sm">
-                      {r.name}
-                    </DescriptorChip>
-                    {currentRarity === r.name && (
-                      <span className="ml-1 text-xs text-ip-text">← Current</span>
-                    )}
-                  </td>
-                  <td className="text-right py-1.5 text-text-secondary">{r.ipRange}</td>
-                  <td className="text-right py-1.5 text-currency-text">{r.baseCost.toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </TableScroll>
-        </div>
-      )}
-    </Card>
-  );
-}
 
 // =============================================================================
 // Main Component
@@ -463,12 +189,10 @@ function ItemCreatorWorkspace({
   const [abilityRequirement, setAbilityRequirement] = useState<{ id: number; name: string; level: number } | null>(
     initialFormState.abilityRequirement,
   );
+  const [imageId, setImageId] = useState<string | null>(initialFormState.imageId);
   const [imageUrl, setImageUrl] = useState<string | null>(initialFormState.imageUrl);
 
-  const armamentArtEntity = useMemo(
-    () => armamentTypeToArtEntity(armamentType),
-    [armamentType]
-  );
+  const imageCategory = armamentType.toLowerCase() as 'weapon' | 'armor' | 'shield';
 
   // ?edit= mode: clear any stale draft once on mount (parity with the old hydrate
   // effect, which removed the cache after loading the edit target).
@@ -499,11 +223,13 @@ function ItemCreatorWorkspace({
         hasShieldDamage,
         shieldDamage,
         abilityRequirement,
+        imageId,
+        imageUrl,
         timestamp: Date.now(),
       };
       writeCreatorCache(ITEM_CREATOR_CACHE_KEY, cache);
     }
-  }, [editItemId, name, description, armamentType, selectedProperties, damage, isTwoHanded, rangeLevel, damageReduction, agilityReduction, criticalRangeIncrease, shieldDR, hasShieldDamage, shieldDamage, abilityRequirement]);
+  }, [editItemId, name, description, armamentType, selectedProperties, damage, isTwoHanded, rangeLevel, damageReduction, agilityReduction, criticalRangeIncrease, shieldDR, hasShieldDamage, shieldDamage, abilityRequirement, imageId, imageUrl]);
 
   // Change armament type: filter out incompatible properties and clear the
   // ability requirement (different types have different requirements). Event
@@ -815,6 +541,7 @@ function ItemCreatorWorkspace({
       damage: damageToSave,
       costs,
       rarity,
+      ...(imageId ? { imageId } : {}),
       ...(imageUrl ? { imageUrl } : {}),
       ...(armamentType === 'Weapon' && {
         isTwoHanded,
@@ -839,7 +566,7 @@ function ItemCreatorWorkspace({
       }),
     };
     return { name: name.trim(), data: itemData };
-  }, [name, description, armamentType, propertiesPayload, damage, costs, rarity, imageUrl, isTwoHanded, rangeLevel, abilityRequirement, damageReduction, agilityReduction, criticalRangeIncrease, shieldDR, hasShieldDamage, shieldDamage]);
+  }, [name, description, armamentType, propertiesPayload, damage, costs, rarity, imageId, imageUrl, isTwoHanded, rangeLevel, abilityRequirement, damageReduction, agilityReduction, criticalRangeIncrease, shieldDR, hasShieldDamage, shieldDamage]);
 
   const save = useCreatorSave({
     type: 'items',
@@ -857,6 +584,8 @@ function ItemCreatorWorkspace({
       setDescription('');
       setSelectedProperties([]);
       setDamage({ amount: 1, size: 6, type: 'slashing' });
+      setImageId(null);
+      setImageUrl(null);
     },
   });
 
@@ -875,6 +604,7 @@ function ItemCreatorWorkspace({
     setHasShieldDamage(false);
     setShieldDamage({ amount: 1, size: 4 });
     setAbilityRequirement(null);
+    setImageId(null);
     setImageUrl(null);
     save.setSaveMessage(null);
     clearCreatorCache(ITEM_CREATOR_CACHE_KEY);
@@ -895,6 +625,7 @@ function ItemCreatorWorkspace({
     setHasShieldDamage(next.hasShieldDamage);
     setShieldDamage(next.shieldDamage);
     setAbilityRequirement(next.abilityRequirement);
+    setImageId(next.imageId);
     setImageUrl(next.imageUrl);
   }, []);
 
@@ -1011,465 +742,56 @@ function ItemCreatorWorkspace({
         </>
       }
     >
-      {/* Main Editor */}
-          {/* Name & Type */}
-          <Card className="shadow-md p-6">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  Item Name *
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter item name..."
-                  className="w-full px-4 py-2 border border-border-light rounded-lg focus:ring-2 focus:ring-warning-500 focus:border-warning-500"
-                />
-              </div>
-
-              {isAdmin && editItemId && armamentArtEntity && (
-                <CodexArtUploadField
-                  entityType={armamentArtEntity}
-                  entityId={editItemId}
-                  imageUrl={imageUrl}
-                  onImageUrlChange={setImageUrl}
-                  label="Armament card art"
-                  hint="Shown on guided creator loadout cards. Admin-only; stored on official armaments."
-                />
-              )}
-              
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-2">
-                  Item Type
-                </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {ARMAMENT_TYPES.map((type) => (
-                    <button
-                      key={type.value}
-                      onClick={() => changeArmamentType(type.value)}
-                      className={cn(
-                        'py-2 px-3 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-1',
-                        armamentType === type.value
-                          ? 'bg-warning-600 text-text-on-dark hover:bg-warning-700 dark:bg-warning-700 dark:text-text-on-dark dark:hover:bg-warning-600'
-                          : 'bg-surface-alt dark:bg-surface hover:bg-surface text-text-primary'
-                      )}
-                    >
-                      <type.icon className="w-4 h-4" />
-                      {type.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  Description
-                </label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Describe your item..."
-                  rows={2}
-                  className="w-full px-4 py-2 border border-border-light rounded-lg focus:ring-2 focus:ring-warning-500 focus:border-warning-500"
-                />
-              </div>
-            </div>
-          </Card>
-
-          {/* Weapon / Shield Configuration - Handedness & (Weapon) Range */}
-          {(armamentType === 'Weapon' || armamentType === 'Shield') && (
-            <CollapsibleSection
-              title={armamentType === 'Weapon' ? 'Weapon Configuration' : 'Shield Configuration'}
-              collapsedSummary={weaponShieldConfigSummary}
-              defaultExpanded={true}
-            >
-              <div className="flex flex-wrap items-center gap-6">
-                {/* Handedness Toggle */}
-                <div className="flex items-center gap-3 flex-wrap">
-                  <span className="text-sm font-medium text-text-secondary">Handedness:</span>
-                  <SectionCostBadge
-                    ip={itemSectionCosts.handedness.totalIP}
-                    tp={itemSectionCosts.handedness.totalTP}
-                    currency={itemSectionCosts.handedness.totalCurrency}
-                  />
-                  <div className="flex rounded-lg border border-border-light overflow-hidden">
-                    <button
-                      type="button"
-                      onClick={() => setIsTwoHanded(false)}
-                      className={cn(
-                        "px-4 py-2 text-sm font-medium transition-colors",
-                        !isTwoHanded
-                          ? "bg-warning-600 text-text-on-dark hover:bg-warning-700 dark:bg-warning-700 dark:text-text-on-dark dark:hover:bg-warning-600"
-                          : "bg-surface-alt dark:bg-surface text-text-primary hover:bg-surface"
-                      )}
-                    >
-                      One-Handed
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setIsTwoHanded(true)}
-                      className={cn(
-                        "px-4 py-2 text-sm font-medium transition-colors",
-                        isTwoHanded
-                          ? "bg-warning-600 text-text-on-dark hover:bg-warning-700 dark:bg-warning-700 dark:text-text-on-dark dark:hover:bg-warning-600"
-                          : "bg-surface-alt dark:bg-surface text-text-primary hover:bg-surface"
-                      )}
-                    >
-                      Two-Handed
-                    </button>
-                  </div>
-                </div>
-
-                {/* Range Control (Weapons only) */}
-                {armamentType === 'Weapon' && (
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <span className="text-sm font-medium text-text-secondary">Range:</span>
-                    <span className="font-medium text-tp-text min-w-[80px]">{rangeDisplay}</span>
-                    <SectionCostBadge
-                      ip={itemSectionCosts.range.totalIP}
-                      tp={itemSectionCosts.range.totalTP}
-                      currency={itemSectionCosts.range.totalCurrency}
-                    />
-                    <ValueStepper
-                      value={rangeLevel}
-                      onChange={setRangeLevel}
-                      min={0}
-                      max={20}
-                      size="sm"
-                    />
-                    {rangeLevel > 0 && (
-                      <span className="text-xs text-text-muted dark:text-text-secondary">(8 spaces per level)</span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </CollapsibleSection>
-          )}
-
-          {/* Weapon Damage */}
-          {armamentType === 'Weapon' && (
-            <CollapsibleSection
-              title="Base Damage"
-              collapsedSummary={baseDamageSummary}
-              defaultExpanded={true}
-              rightSlot={
-                <SectionCostBadge
-                  ip={itemSectionCosts.damage.totalIP}
-                  tp={itemSectionCosts.damage.totalTP}
-                  currency={itemSectionCosts.damage.totalCurrency}
-                />
-              }
-            >
-              <div className="flex flex-wrap items-center gap-4">
-                <ValueStepper
-                  value={damage.amount}
-                  onChange={(v) => setDamage((d) => ({ ...d, amount: v }))}
-                  label="Dice:"
-                  min={1}
-                  max={10}
-                />
-                <div className="flex items-center gap-1">
-                  <span className="font-bold text-lg">d</span>
-                  <select
-                    value={damage.size}
-                    onChange={(e) => setDamage((d) => ({ ...d, size: parseInt(e.target.value) }))}
-                    className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-                    aria-label="Damage die size"
-                  >
-                    {DIE_SIZES.map((size) => (
-                      <option key={size} value={size}>
-                        {size}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <select
-                  value={damage.type}
-                  onChange={(e) => setDamage((d) => ({ ...d, type: e.target.value }))}
-                  className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-                  aria-label="Damage type"
-                >
-                  {WEAPON_DAMAGE_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type.charAt(0).toUpperCase() + type.slice(1)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </CollapsibleSection>
-          )}
-
-          {/* Armor Configuration */}
-          {armamentType === 'Armor' && (
-            <CollapsibleSection
-              title="Armor Configuration"
-              collapsedSummary={armorConfigSummary}
-              defaultExpanded={true}
-            >
-              <div className="grid md:grid-cols-3 gap-6">
-                {/* Damage Reduction */}
-                <div>
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <label className="text-sm font-medium text-text-secondary">
-                      Damage Reduction
-                    </label>
-                    <SectionCostBadge
-                      ip={itemSectionCosts.damageReduction.totalIP}
-                      tp={itemSectionCosts.damageReduction.totalTP}
-                      currency={itemSectionCosts.damageReduction.totalCurrency}
-                    />
-                  </div>
-                  <ValueStepper
-                    value={damageReduction}
-                    onChange={setDamageReduction}
-                    min={0}
-                    max={10}
-                    size="lg"
-                  />
-                  <p className="text-xs text-text-muted dark:text-text-secondary mt-1">Reduces physical damage taken</p>
-                </div>
-                
-                {/* Agility Reduction */}
-                <div>
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <label className="text-sm font-medium text-text-secondary">
-                      Agility Reduction
-                    </label>
-                    <SectionCostBadge
-                      ip={itemSectionCosts.agilityReduction.totalIP}
-                      tp={itemSectionCosts.agilityReduction.totalTP}
-                      currency={itemSectionCosts.agilityReduction.totalCurrency}
-                    />
-                  </div>
-                  <ValueStepper
-                    value={agilityReduction}
-                    onChange={setAgilityReduction}
-                    min={0}
-                    max={6}
-                    size="lg"
-                  />
-                  <p className="text-xs text-text-muted dark:text-text-secondary mt-1">Reduces Agility for wearing this armor</p>
-                </div>
-                
-                {/* Critical Range Increase */}
-                <div>
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <label className="text-sm font-medium text-text-secondary">
-                      Critical Range Increase
-                    </label>
-                    <SectionCostBadge
-                      ip={itemSectionCosts.criticalRange.totalIP}
-                      tp={itemSectionCosts.criticalRange.totalTP}
-                      currency={itemSectionCosts.criticalRange.totalCurrency}
-                    />
-                  </div>
-                  <ValueStepper
-                    value={criticalRangeIncrease}
-                    onChange={setCriticalRangeIncrease}
-                    min={0}
-                    max={6}
-                    size="lg"
-                  />
-                  <p className="text-xs text-text-muted dark:text-text-secondary mt-1">Increases critical hit range</p>
-                </div>
-              </div>
-            </CollapsibleSection>
-          )}
-
-          {/* Shield Configuration */}
-          {armamentType === 'Shield' && (
-            <>
-              {/* Shield Damage Reduction */}
-              <CollapsibleSection
-                title="Shield Block (Damage Reduction)"
-                collapsedSummary={shieldBlockSummary}
-                defaultExpanded={true}
-                rightSlot={
-                  <SectionCostBadge
-                    ip={itemSectionCosts.shieldDR.totalIP}
-                    tp={itemSectionCosts.shieldDR.totalTP}
-                    currency={itemSectionCosts.shieldDR.totalCurrency}
-                  />
-                }
-              >
-                <div className="flex flex-wrap items-center gap-4">
-                  <ValueStepper
-                    value={shieldDR.amount}
-                    onChange={(v) => setShieldDR((d) => ({ ...d, amount: v }))}
-                    label="Dice:"
-                    min={1}
-                    max={10}
-                  />
-                  <div className="flex items-center gap-1">
-                    <span className="font-bold text-lg">d</span>
-                    <select
-                      value={shieldDR.size}
-                      onChange={(e) => setShieldDR((d) => ({ ...d, size: parseInt(e.target.value) }))}
-                      className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-                      aria-label="Shield damage reduction die size"
-                    >
-                      {DIE_SIZES.map((size) => (
-                        <option key={size} value={size}>
-                          {size}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <span className="text-sm text-text-secondary">
-                    ({shieldDR.amount}d{shieldDR.size} damage blocked)
-                  </span>
-                </div>
-                <p className="text-xs text-text-muted dark:text-text-secondary mt-2">Damage blocked when using Shield reaction</p>
-              </CollapsibleSection>
-
-              {/* Shield Damage */}
-              <CollapsibleSection
-                title="Shield Damage"
-                collapsedSummary={shieldDamageSummary}
-                defaultExpanded={true}
-                rightSlot={
-                  <SectionCostBadge
-                    ip={itemSectionCosts.shieldDamage.totalIP}
-                    tp={itemSectionCosts.shieldDamage.totalTP}
-                    currency={itemSectionCosts.shieldDamage.totalCurrency}
-                  />
-                }
-              >
-                <div className="flex items-center justify-between gap-3 mb-4">
-                  <Checkbox
-                    id="hasShieldDamage"
-                    checked={hasShieldDamage}
-                    onChange={(e) => setHasShieldDamage(e.target.checked)}
-                    label="Shield Damage"
-                    className="text-lg font-bold"
-                  />
-                </div>
-                {hasShieldDamage && (
-                  <>
-                    <div className="flex flex-wrap items-center gap-4">
-                      <ValueStepper
-                        value={shieldDamage.amount}
-                        onChange={(v) => setShieldDamage((d) => ({ ...d, amount: v }))}
-                        label="Dice:"
-                        min={1}
-                        max={10}
-                      />
-                      <div className="flex items-center gap-1">
-                        <span className="font-bold text-lg">d</span>
-                        <select
-                          value={shieldDamage.size}
-                          onChange={(e) => setShieldDamage((d) => ({ ...d, size: parseInt(e.target.value) }))}
-                          className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-                          aria-label="Shield damage die size"
-                        >
-                          {DIE_SIZES.map((size) => (
-                            <option key={size} value={size}>
-                              {size}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <span className="text-sm text-text-secondary">Bludgeoning</span>
-                    </div>
-                    <p className="text-xs text-text-muted dark:text-text-secondary mt-2">This shield can deal {shieldDamage.amount}d{shieldDamage.size} bludgeoning damage as a melee weapon attack</p>
-                  </>
-                )}
-                {!hasShieldDamage && (
-                  <p className="text-sm text-text-muted dark:text-text-secondary">Enable to allow this shield to be used as a weapon</p>
-                )}
-              </CollapsibleSection>
-            </>
-          )}
-
-          {/* Ability Requirement (Optional) */}
-          <CollapsibleSection
-            title="Ability Requirement"
-            collapsedSummary={abilityReqSummary}
-            defaultExpanded={true}
-            rightSlot={
-              <SectionCostBadge
-                ip={itemSectionCosts.abilityReq.totalIP}
-                tp={itemSectionCosts.abilityReq.totalTP}
-                currency={itemSectionCosts.abilityReq.totalCurrency}
-              />
-            }
-          >
-            <p className="text-sm text-text-secondary mb-4">
-              Require a minimum Ability to use this {armamentType.toLowerCase()} effectively.
-            </p>
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex-1 min-w-[200px]">
-                <select
-                  value={abilityRequirement?.id || ''}
-                  onChange={(e) => {
-                    if (!e.target.value) {
-                      setAbilityRequirement(null);
-                    } else {
-                      const reqs = armamentType === 'Armor' ? ARMOR_ABILITY_REQUIREMENTS : WEAPON_ABILITY_REQUIREMENTS;
-                      const req = reqs.find(r => r.id === parseInt(e.target.value));
-                      if (req) {
-                        setAbilityRequirement({ id: req.id, name: req.name, level: 1 });
-                      }
-                    }
-                  }}
-                  className="w-full px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-                  aria-label="Ability requirement"
-                >
-                  <option value="">None</option>
-                  {(armamentType === 'Armor' ? ARMOR_ABILITY_REQUIREMENTS : WEAPON_ABILITY_REQUIREMENTS).map((req) => (
-                    <option key={req.id} value={req.id}>
-                      {req.label} ({req.name.replace(/Weapon |Armor /g, '').replace(' Requirement', '')})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {abilityRequirement && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-text-secondary">Level:</span>
-                  <ValueStepper
-                    value={abilityRequirement.level}
-                    onChange={(v) => setAbilityRequirement(prev => prev ? { ...prev, level: v } : null)}
-                    min={1}
-                    max={6}
-                  />
-                </div>
-              )}
-            </div>
-          </CollapsibleSection>
-
-          {/* Item Properties */}
-          <CollapsibleSection
-            title={`Properties (${selectedProperties.length})`}
-            collapsedSummary={propertiesSummary}
-            defaultExpanded={true}
-            rightSlot={
-              <Button type="button" variant="primary" size="sm" className="flex items-center gap-1 bg-warning-600 hover:bg-warning-700 dark:bg-warning-700 dark:hover:bg-warning-600 text-text-on-dark" onClick={addProperty}>
-                <Plus className="w-4 h-4" />
-                Add Property
-              </Button>
-            }
-          >
-            {selectedProperties.length === 0 ? (
-              <div className="text-center py-8 text-text-muted dark:text-text-secondary">
-                <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>No properties added yet. Click &quot;Add Property&quot; to enhance your item.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {selectedProperties.map((sp, idx) => (
-                  <PropertyCard
-                    key={idx}
-                    selectedProperty={sp}
-                    onRemove={() => removeProperty(idx)}
-                    onUpdate={(updates) => updateProperty(idx, updates)}
-                    allProperties={itemProperties}
-                    armamentType={armamentType}
-                  />
-                ))}
-              </div>
-            )}
-          </CollapsibleSection>
+      <ItemCreatorEditor
+        isAdmin={isAdmin}
+        name={name}
+        onNameChange={setName}
+        description={description}
+        onDescriptionChange={setDescription}
+        imageId={imageId}
+        imageUrl={imageUrl}
+        onImageChange={(selection) => {
+          setImageId(selection.imageId);
+          setImageUrl(selection.imageUrl);
+        }}
+        imageCategory={imageCategory}
+        armamentType={armamentType}
+        onArmamentTypeChange={changeArmamentType}
+        isTwoHanded={isTwoHanded}
+        onIsTwoHandedChange={setIsTwoHanded}
+        rangeLevel={rangeLevel}
+        onRangeLevelChange={setRangeLevel}
+        rangeDisplay={rangeDisplay}
+        weaponShieldConfigSummary={weaponShieldConfigSummary}
+        damage={damage}
+        onDamageChange={setDamage}
+        baseDamageSummary={baseDamageSummary}
+        damageReduction={damageReduction}
+        onDamageReductionChange={setDamageReduction}
+        agilityReduction={agilityReduction}
+        onAgilityReductionChange={setAgilityReduction}
+        criticalRangeIncrease={criticalRangeIncrease}
+        onCriticalRangeIncreaseChange={setCriticalRangeIncrease}
+        armorConfigSummary={armorConfigSummary}
+        shieldDR={shieldDR}
+        onShieldDRChange={setShieldDR}
+        shieldBlockSummary={shieldBlockSummary}
+        hasShieldDamage={hasShieldDamage}
+        onHasShieldDamageChange={setHasShieldDamage}
+        shieldDamage={shieldDamage}
+        onShieldDamageChange={setShieldDamage}
+        shieldDamageSummary={shieldDamageSummary}
+        abilityRequirement={abilityRequirement}
+        onAbilityRequirementChange={setAbilityRequirement}
+        abilityReqSummary={abilityReqSummary}
+        selectedProperties={selectedProperties}
+        itemProperties={itemProperties}
+        propertiesSummary={propertiesSummary}
+        onAddProperty={addProperty}
+        onRemoveProperty={removeProperty}
+        onUpdateProperty={updateProperty}
+        itemSectionCosts={itemSectionCosts}
+      />
     </CreatorPageShell>
   );
 }

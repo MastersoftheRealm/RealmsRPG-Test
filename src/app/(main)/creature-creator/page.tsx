@@ -10,7 +10,7 @@
 import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { UnifiedSelectionModal, GridListRow, ListHeader, SourceFilter, InnateToggle, SegmentedControl, SkillsAllocationPage, ValueStepper, InfoTippy } from '@/components/shared';
+import { UnifiedSelectionModal, GridListRow, ListHeader, SourceFilter, InnateToggle, SegmentedControl, SkillsAllocationPage, ValueStepper, InfoTippy, RealmsImageField } from '@/components/shared';
 import { getSkillPointsHelp, subSkillsHelp } from '../../../../public/tooltip-text';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { useAuthStore } from '@/stores/auth-store';
@@ -1152,7 +1152,7 @@ function CreatureCreatorContent() {
               { key: 'name', label: 'Name', sortable: true },
               { key: 'Energy', label: 'Energy', sortable: true },
               { key: 'Action', label: 'ACTION', sortable: true },
-              { key: 'Weapon', label: 'Weapon', sortable: true },
+              { key: 'Weapon', label: 'Attack', sortable: true },
               { key: 'Training Pts', label: 'Training pts', sortable: true },
             ]}
             gridColumns="1.25fr 0.55fr 0.72fr 0.9fr 0.65fr"
@@ -1234,6 +1234,17 @@ function CreatureCreatorContent() {
                   rows={3}
                 />
               </div>
+              {isAdmin && (
+                <RealmsImageField
+                  categories="creature"
+                  imageId={creature.imageId}
+                  imageUrl={creature.imageUrl}
+                  onChange={({ imageId, imageUrl }) => updateCreature({ imageId, imageUrl })}
+                  entityName={creature.name}
+                  label="Creature card art"
+                  hint="Uploads are saved to the shared image bank."
+                />
+              )}
               <div className="grid grid-cols-3 gap-4">
                 <Select
                   label="Level"
@@ -1695,7 +1706,7 @@ function CreatureCreatorContent() {
                   columns={[
                     { key: 'name', label: 'Name', width: '1.4fr' },
                     { key: 'Energy', label: 'Energy', width: '0.7fr', align: 'center' },
-                    { key: 'Weapon', label: 'Weapon', width: '1fr', align: 'center' },
+                    { key: 'Weapon', label: 'Attack', width: '1fr', align: 'center' },
                     { key: 'Training Pts', label: 'Training Pts', width: '0.8fr', align: 'center' },
                   ]}
                   gridColumns="1.4fr 0.7fr 1fr 0.8fr"

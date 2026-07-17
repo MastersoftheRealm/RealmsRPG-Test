@@ -1,6 +1,6 @@
 /**
  * Expandable Chip — unified expand-in-place chip for parts, properties, and GridListRow chips.
- * Expanded chips grow into remaining row space without jumping the toggle under the pointer.
+ * Expanded chips keep their row, move left, and take the full chip-group width.
  */
 
 'use client';
@@ -15,7 +15,11 @@ import { DescriptorChip, type chipVariants } from '@/components/ui/chip';
 import { ChipOptionsPanel } from '@/lib/chip/chip-options-panel';
 import { partChipVariant } from '@/lib/chip/part-chip-variant';
 import { expandableChipShellClass } from '@/lib/chip/expandable-chip-shell';
-import { measureStableExpandWidth } from '@/lib/chip/measure-stable-expand-width';
+import {
+  applyFullRowExpandLayout,
+  captureFullRowExpandLayout,
+  type FullRowExpandSnapshot,
+} from '@/lib/chip/full-row-expand-layout';
 
 export interface ExpandableChipOption {
   label: string;
@@ -34,7 +38,7 @@ export interface ExpandableChipProps {
   size?: 'sm' | 'md';
   className?: string;
   /**
-   * When expanded, grow to the remaining width of the chip group row (stable under cursor).
+   * When expanded, keep the collapsed row but move to the group’s left edge at full width.
    * Default true. When false, expand height-only at the header’s intrinsic width.
    */
   fullWidthWhenExpanded?: boolean;
@@ -103,10 +107,10 @@ export function ExpandableChip({
   interactiveHover = false,
 }: ExpandableChipProps) {
   const shellRef = useRef<HTMLDivElement>(null);
-  const expandLeftRef = useRef<number | null>(null);
+  const capturedLayoutRef = useRef<FullRowExpandSnapshot | null>(null);
+  const restoreLayoutRef = useRef<(() => void) | null>(null);
   const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
   const [internalOptionsOpen, setInternalOptionsOpen] = useState(false);
-  const [stableWidthPx, setStableWidthPx] = useState<number | undefined>(undefined);
 
   const styleVariant = variant ?? partChipVariant(category);
   const isExpanded = expanded !== undefined ? expanded : internalExpanded;
@@ -122,40 +126,32 @@ export function ExpandableChip({
   const canExpandByContent = hasDescription || hasOptions || (expandOnCost && hasHeaderCost);
   const canExpand = !descriptor && expandable !== false && canExpandByContent;
 
-  const lockStableWidth = (el: HTMLElement) => {
-    const left = el.getBoundingClientRect().left;
-    expandLeftRef.current = left;
-    setStableWidthPx(measureStableExpandWidth(el, { leftOverride: left }));
+  const captureCollapsedLayout = (el: HTMLElement) => {
+    capturedLayoutRef.current = captureFullRowExpandLayout(el);
+  };
+
+  const restoreFullRowLayout = () => {
+    restoreLayoutRef.current?.();
+    restoreLayoutRef.current = null;
+    capturedLayoutRef.current = null;
   };
 
   useLayoutEffect(() => {
     if (!isExpanded || !canExpand || !fullWidthWhenExpanded) {
-      if (!isExpanded) {
-        expandLeftRef.current = null;
-        setStableWidthPx(undefined);
-      }
+      restoreFullRowLayout();
       return;
     }
 
     const el = shellRef.current;
     if (!el) return;
 
-    const update = () => {
-      const left = expandLeftRef.current ?? el.getBoundingClientRect().left;
-      if (expandLeftRef.current == null) expandLeftRef.current = left;
-      setStableWidthPx(measureStableExpandWidth(el, { leftOverride: left }));
-    };
+    restoreLayoutRef.current?.();
+    restoreLayoutRef.current = applyFullRowExpandLayout(el, capturedLayoutRef.current);
+    capturedLayoutRef.current = null;
 
-    update();
-
-    const group =
-      (el.closest('[data-chip-group]') as HTMLElement | null) ?? el.parentElement;
-    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null;
-    if (group && ro) ro.observe(group);
-    window.addEventListener('resize', update);
     return () => {
-      ro?.disconnect();
-      window.removeEventListener('resize', update);
+      restoreLayoutRef.current?.();
+      restoreLayoutRef.current = null;
     };
   }, [isExpanded, canExpand, fullWidthWhenExpanded, label, description, sublabel]);
 
@@ -172,11 +168,9 @@ export function ExpandableChip({
     if (!canExpand) return;
     const next = !isExpanded;
     if (next && fullWidthWhenExpanded && shellRef.current) {
-      // Capture while still collapsed so flex-wrap does not reboot before width locks.
-      lockStableWidth(shellRef.current);
+      captureCollapsedLayout(shellRef.current);
     } else if (!next) {
-      expandLeftRef.current = null;
-      setStableWidthPx(undefined);
+      restoreFullRowLayout();
     }
     if (onToggle) {
       onToggle(e);
@@ -191,10 +185,9 @@ export function ExpandableChip({
       e.preventDefault();
       const next = !isExpanded;
       if (next && fullWidthWhenExpanded && shellRef.current) {
-        lockStableWidth(shellRef.current);
+        captureCollapsedLayout(shellRef.current);
       } else if (!next) {
-        expandLeftRef.current = null;
-        setStableWidthPx(undefined);
+        restoreFullRowLayout();
       }
       setInternalExpanded(next);
       onExpandedChange?.(next);
@@ -228,11 +221,6 @@ export function ExpandableChip({
           className
         ),
       })}
-      style={
-        isExpanded && fullWidthWhenExpanded && stableWidthPx != null
-          ? { width: stableWidthPx }
-          : undefined
-      }
       onClick={!useButtonHeader && canExpand ? handleHeaderClick : undefined}
       onKeyDown={!useButtonHeader && canExpand ? handleHeaderKeyDown : undefined}
       tabIndex={!useButtonHeader && canExpand ? 0 : undefined}
@@ -383,7 +371,7 @@ export interface ChipGroupProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
 }
 
-/** Flex-wrap host for ExpandableChip — marks the measurement boundary for stable expand. */
+/** Flex-wrap host for ExpandableChip — marks the full-row expansion boundary. */
 export function ChipGroup({ children, className, ...rest }: ChipGroupProps) {
   return (
     <div

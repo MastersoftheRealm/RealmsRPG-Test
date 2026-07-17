@@ -5,8 +5,37 @@
  * Same column set: scalars + one payload JSONB.
  */
 
+import {
+  attackModeColumnLabel,
+  derivePowerAttackMode,
+  deriveTechniqueAttackMode,
+  type AttackMode,
+} from '@/lib/attack-mode';
+
 export const COLUMNAR_LIBRARY_TYPES = ['powers', 'techniques', 'empowered-techniques', 'items', 'creatures'] as const;
 export type ColumnarLibraryType = (typeof COLUMNAR_LIBRARY_TYPES)[number];
+
+type PartLike = { id?: string | number; name?: string };
+
+/** Collect saved parts from a technique / empowered-technique payload for attack-mode derivation. */
+function collectPayloadParts(payload: Record<string, unknown>): PartLike[] {
+  const parts: PartLike[] = [];
+  const push = (value: unknown) => {
+    if (Array.isArray(value)) parts.push(...(value as PartLike[]));
+    else if (value && typeof value === 'object') parts.push(value as PartLike);
+  };
+  push(payload.parts);
+  push(payload.techniqueParts);
+  const power = payload.power as Record<string, unknown> | undefined;
+  if (power) {
+    push(power.parts);
+    push(power.mechanics);
+    push(power.addWeaponPowerPart);
+  }
+  const technique = payload.technique as Record<string, unknown> | undefined;
+  if (technique) push(technique.parts);
+  return parts;
+}
 
 export const SCALAR_KEYS: Record<ColumnarLibraryType, string[]> = {
   powers: [
@@ -124,14 +153,16 @@ function assignImageScalars(base: Record<string, unknown>, row: Record<string, u
 }
 
 function applyImageScalarsFromBody(scalars: Record<string, unknown>, body: Record<string, unknown>): void {
-  if (typeof body.imageId === 'string' && body.imageId.trim()) {
-    scalars.imageId = body.imageId.trim();
-  } else if (body.imageId === null) {
+  const imageId = body.imageId !== undefined ? body.imageId : body.image_id;
+  if (typeof imageId === 'string' && imageId.trim()) {
+    scalars.imageId = imageId.trim();
+  } else if (imageId === null) {
     scalars.imageId = null;
   }
-  if (typeof body.imageUrl === 'string' && body.imageUrl.trim()) {
-    scalars.imageUrl = body.imageUrl.split('?')[0];
-  } else if (body.imageUrl === null) {
+  const imageUrl = body.imageUrl !== undefined ? body.imageUrl : body.image_url;
+  if (typeof imageUrl === 'string' && imageUrl.trim()) {
+    scalars.imageUrl = imageUrl.split('?')[0];
+  } else if (imageUrl === null) {
     scalars.imageUrl = null;
   }
 }
@@ -177,21 +208,26 @@ export function rowToItem(
   }
   if (type === 'techniques' || type === 'empowered-techniques') {
     assignIfPresent('actionType', v(row, 'actionType', 'action_type'));
-    const weaponName = v(row, 'weaponName', 'weapon_name');
-    assignIfPresent('weaponName', weaponName);
-    if (weaponName && !payload.weapon) base.weapon = { name: weaponName };
-    if (
-      type === 'empowered-techniques' &&
-      weaponName &&
-      payload.power &&
-      typeof payload.power === 'object' &&
-      !(payload.power as Record<string, unknown>).addWeapon
-    ) {
-      base.power = {
-        ...(payload.power as Record<string, unknown>),
-        addWeapon: { name: weaponName },
-      };
-    }
+    const legacyWeaponName = v(row, 'weaponName', 'weapon_name') as string | undefined | null;
+    const savedParts = collectPayloadParts(payload);
+    const attackMode: AttackMode =
+      type === 'empowered-techniques'
+        ? derivePowerAttackMode({
+            attackMode: payload.attackMode,
+            parts: savedParts,
+            weapon: (payload.power as Record<string, unknown> | undefined)?.addWeapon as
+              | { id?: string | number; name?: string }
+              | undefined,
+          })
+        : deriveTechniqueAttackMode({
+            attackMode: payload.attackMode,
+            parts: savedParts,
+            weaponName: legacyWeaponName ?? undefined,
+            weapon: payload.weapon as { id?: string | number; name?: string } | undefined,
+          });
+    base.attackMode = attackMode;
+    // DESIGN_INTENT: weapon_name stores Attack labels (No Attack / Unarmed / Weapon), not weapon names.
+    base.weaponName = attackModeColumnLabel(attackMode);
     const rangeSteps = v(row, 'rangeSteps', 'range_steps') as number | undefined | null;
     const durationType = v(row, 'durationType', 'duration_type') as string | undefined | null;
     const durationValue = v(row, 'durationValue', 'duration_value') as number | undefined | null;
@@ -298,15 +334,24 @@ export function bodyToColumnar(
   }
 
   if (type === 'techniques' || type === 'empowered-techniques') {
-    const weaponRef = (
-      body.weapon ??
-      ((body.power as Record<string, unknown> | undefined)?.addWeapon)
-    ) as Record<string, unknown> | undefined;
-    if (typeof body.weaponName === 'string' && body.weaponName.trim()) {
-      scalars.weaponName = body.weaponName.trim();
-    } else if (weaponRef && typeof weaponRef.name === 'string' && weaponRef.name.trim()) {
-      scalars.weaponName = weaponRef.name.trim();
-    }
+    const savedParts = collectPayloadParts(body);
+    const attackMode: AttackMode =
+      type === 'empowered-techniques'
+        ? derivePowerAttackMode({
+            attackMode: body.attackMode,
+            parts: savedParts,
+            weapon: (body.power as Record<string, unknown> | undefined)?.addWeapon as
+              | { id?: string | number; name?: string }
+              | undefined,
+          })
+        : deriveTechniqueAttackMode({
+            attackMode: body.attackMode,
+            parts: savedParts,
+            weaponName: typeof body.weaponName === 'string' ? body.weaponName : undefined,
+            weapon: body.weapon as { id?: string | number; name?: string } | undefined,
+          });
+    // DESIGN_INTENT: weapon_name stores Attack labels (No Attack / Unarmed / Weapon), not weapon names.
+    scalars.weaponName = attackModeColumnLabel(attackMode);
     const range = (body.range ?? (body.power as Record<string, unknown> | undefined)?.range) as
       | Record<string, unknown>
       | undefined;
@@ -335,17 +380,16 @@ export function bodyToColumnar(
     if (body.criticalRangeIncrease != null) scalars.criticalRangeIncrease = body.criticalRangeIncrease;
     if (body.shieldDR != null) scalars.shieldDR = body.shieldDR;
     if (body.shieldDamage != null) scalars.shieldDamage = body.shieldDamage;
-    applyImageScalarsFromBody(scalars, body);
   }
 
-  applyImageScalarsFromBody(
-    scalars,
-    type === 'powers' || type === 'techniques' || type === 'empowered-techniques' || type === 'creatures'
-      ? body
-      : {}
-  );
+  applyImageScalarsFromBody(scalars, body);
 
   const skipKeys = new Set<string>([
+    // Image refs always go through applyImageScalarsFromBody → columnar columns only.
+    'imageId',
+    'imageUrl',
+    'image_id',
+    'image_url',
     ...(type === 'powers' ? ['range', 'duration', 'area', 'damage'] : []),
     ...((type === 'techniques' || type === 'empowered-techniques') ? ['range', 'duration', 'damage'] : []),
     ...(type === 'items'
@@ -362,8 +406,6 @@ export function bodyToColumnar(
           'criticalRangeIncrease',
           'shieldDR',
           'shieldDamage',
-          'imageId',
-          'imageUrl',
         ]
       : []),
   ]);
@@ -412,6 +454,23 @@ function toStrArray(val: unknown): string[] {
   if (Array.isArray(val)) return val.map(String);
   if (typeof val === 'string') return val.split(',').map((s) => s.trim()).filter(Boolean);
   return [];
+}
+
+/**
+ * Legacy user_species rows may still store fields in `data` JSON while image refs live in columns.
+ * Prefer columnar image_id / image_url (and bank enrichment) over the blob.
+ */
+export function mergeLegacySpeciesRowWithImageColumns(row: Record<string, unknown>): Record<string, unknown> {
+  const d = (row.data as Record<string, unknown>) ?? {};
+  const imageId = row.image_id ?? row.imageId ?? d.image_id ?? d.imageId;
+  const imageUrl = row.image_url ?? row.imageUrl ?? d.image_url ?? d.imageUrl;
+  return {
+    id: row.id,
+    docId: row.id,
+    ...d,
+    ...(typeof imageId === 'string' && imageId.trim() ? { image_id: imageId.trim() } : {}),
+    ...(typeof imageUrl === 'string' && imageUrl.trim() ? { image_url: imageUrl.trim() } : {}),
+  };
 }
 
 /** Build client-shaped species from columnar row (user_species). */
@@ -469,13 +528,13 @@ export function bodyToColumnarSpecies(body: Record<string, unknown>): {
     'ave_wgt_kg',
     'adulthood_lifespan',
     'languages',
-    'image_id',
-    'image_url',
   ]);
   const scalars: Record<string, unknown> = {};
   const payload: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(body)) {
     if (k === 'id' || k === 'docId' || k === '_source') continue;
+    // Image refs are columnar only (camel or snake) — never duplicate into payload JSONB.
+    if (k === 'imageId' || k === 'imageUrl' || k === 'image_id' || k === 'image_url') continue;
     if (scalarKeys.has(k)) {
       if (SPECIES_ARRAY_KEYS.includes(k as (typeof SPECIES_ARRAY_KEYS)[number]) && Array.isArray(v)) {
         scalars[k] = (v as unknown[]).map(String).join(',');

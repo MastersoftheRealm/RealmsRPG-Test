@@ -54,7 +54,7 @@ const TECHNIQUE_MODAL_COLUMNS = [
   { key: 'name', label: 'NAME', sortable: true },
   { key: 'Action', label: 'ACTION', sortable: true, align: 'center' as const },
   { key: 'Energy', label: 'ENERGY', sortable: true, align: 'center' as const },
-  { key: 'Weapon', label: 'WEAPON', sortable: true, align: 'center' as const },
+  { key: 'Weapon', label: 'ATTACK', sortable: true, align: 'center' as const },
   { key: 'Training Points', label: 'Training Points', sortable: true, align: 'center' as const },
 ];
 const TECHNIQUE_GRID_COLUMNS = '1.3fr 0.75fr 0.55fr 1fr 0.75fr';

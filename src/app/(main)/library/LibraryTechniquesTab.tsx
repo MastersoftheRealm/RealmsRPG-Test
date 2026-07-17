@@ -39,7 +39,7 @@ const TECHNIQUE_HEADER_COLUMNS = [
   { key: 'energy', label: 'ENERGY' },
   { key: 'tp', label: 'TP' },
   { key: 'action', label: 'ACTION' },
-  { key: 'weapon', label: 'WEAPON' },
+  { key: 'weapon', label: 'ATTACK' },
   { key: 'damage', label: 'DAMAGE' },
   { key: '_actions', label: '', sortable: false as const },
 ];
@@ -86,6 +86,8 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
         damage: Array.isArray(tech.damage)
           ? (tech.damage[0] as TechniqueDocument['damage'])
           : (tech.damage as TechniqueDocument['damage']),
+        attackMode: tech.attackMode,
+        weaponName: tech.weaponName,
         weapon: tech.weapon as TechniqueDocument['weapon'],
       };
       const display = deriveTechniqueDisplay(doc, partsDb);

@@ -274,10 +274,12 @@ export type { InnateToggleProps } from './innate-toggle';
 // ImageUploadModal - Upload and crop images for portraits/profile pictures
 export { ImageUploadModal } from './image-upload-modal';
 export type { ImageUploadModalProps, CropShape } from './image-upload-modal';
-export { CodexArtUploadField } from './codex-art-upload-field';
-export type { CodexArtUploadFieldProps } from './codex-art-upload-field';
-export { RealmsImagePicker } from './realms-image-picker';
-export type { RealmsImagePickerProps, RealmsImagePickerSelection } from './realms-image-picker';
+export { RealmsImageField, RealmsImagePicker } from './realms-image-picker';
+export type {
+  RealmsImageFieldProps,
+  RealmsImagePickerProps,
+  RealmsImagePickerSelection,
+} from './realms-image-picker';
 
 // OnboardingTour - Optional first-time guided tour (Codex → Library → Creator)
 export { OnboardingTour, getTourCompleted, setTourCompleted } from './onboarding-tour';

@@ -37,7 +37,10 @@ export interface ChipData {
   description?: string;
   /** Cost value (TP, IP, etc.) */
   cost?: number;
-  /** Cost label (default: Training Points for L1/L2; dense L3 columns may still use TP) */
+  /**
+   * Cost label on expandable chips (`{costLabel}: N`).
+   * Guided L1/L2: `Training Points`. Character sheet / dense play lists: `TP`.
+   */
   costLabel?: string;
   /** Optional level indicator */
   level?: number;
