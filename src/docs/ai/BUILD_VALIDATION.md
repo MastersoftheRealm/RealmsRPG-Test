@@ -2614,8 +2614,8 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Task** | TASK-475 |
 | **Where** | `/library` → My Library → Enhanced |
 | **Needs** | Signed-in user; empty Enhanced tab OK, or at least one enhanced item for row actions |
-| **Steps** | 1. Open Enhanced — search + column headers present; no “Sync with current patch” button. 2. Empty state (if none): “Go to Crafting” CTA; with items: expand a row, Edit opens `/crafting/<id>`, Delete still prompts via parent. 3. Search filters by name/base/power; no Duplicate action on rows. |
-| **Expected** | Shared list chrome only; no sync-all or duplicate UI; delete/edit unchanged. |
+| **Steps** | 1. Open Enhanced — search + column headers present; no “Sync with current patch” button (search is not paired with an empty sync gutter). 2. Empty state (if none): “Go to Crafting” CTA; with items: expand a row, Edit opens `/crafting/<id>`, Delete still prompts via parent. 3. Search filters by name/base/power; no Duplicate action on rows. 4. While loading, search/header may show with inline spinner (same as other My Library tabs — not a full-page-only spinner). |
+| **Expected** | Shared list chrome only; no sync-all or duplicate UI; delete/edit unchanged; loading/error match other My Library shell tabs. |
 | **Report** | DEV-V-016-T011: PASS / FAIL / SKIP — |
 
 ---

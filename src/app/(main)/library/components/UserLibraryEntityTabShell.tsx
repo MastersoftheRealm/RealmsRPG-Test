@@ -52,7 +52,10 @@ type UserLibraryEntityTabShellSyncProps = UserLibraryEntityTabShellBaseProps & {
 };
 
 type UserLibraryEntityTabShellBasicProps = UserLibraryEntityTabShellBaseProps & {
-  /** Search/sort/list chrome only — no sync-all or duplicate modals (Enhanced tab). */
+  /**
+   * List chrome only (Enhanced tab): search / sort / empty / error / rows.
+   * Omits sync-all toolbar **and** duplicate confirm modals (no patch-sync entity).
+   */
   enableSync: false;
   labels: LibraryEntityTabBasicLabels;
 };
@@ -67,7 +70,10 @@ function isSyncMode(
   return props.enableSync !== false;
 }
 
-/** Shared My Library toolbar + list chrome; sync/duplicate optional via enableSync (ADR-0001). */
+/**
+ * Shared My Library toolbar + list chrome (ADR-0001).
+ * Default = sync + duplicate; `enableSync={false}` = list chrome only (no sync-all, no duplicate).
+ */
 export function UserLibraryEntityTabShell(props: UserLibraryEntityTabShellProps) {
   const {
     labels,
@@ -119,7 +125,13 @@ export function UserLibraryEntityTabShell(props: UserLibraryEntityTabShellProps)
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+      <div
+        className={
+          syncEnabled
+            ? 'mb-4 flex flex-wrap items-center justify-between gap-2'
+            : 'mb-4'
+        }
+      >
         <SearchInput
           value={search}
           onChange={onSearchChange}

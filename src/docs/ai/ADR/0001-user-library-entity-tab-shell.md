@@ -26,4 +26,4 @@ Entity-specific row mapping, sanitize, and Creatures’ `CreatureStatBlock` stay
 
 ## Follow-up (TASK-475)
 
-`UserLibraryEntityTabShell` accepts `enableSync={false}` for list chrome only (search / sort / empty / error / rows) without sync-all or duplicate modals. `LibraryEnhancedTab` uses this basic mode — enhanced items have no patch-sync or duplicate flows.
+`UserLibraryEntityTabShell` accepts `enableSync={false}` for list chrome only (search / sort / empty / error / rows). That flag omits **both** the sync-all toolbar and duplicate confirm modals (naming is historical; Enhanced has neither flow). `LibraryEnhancedTab` uses this basic mode.
