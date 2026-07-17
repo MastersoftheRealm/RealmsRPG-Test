@@ -4,8 +4,10 @@
  * Centralized fetch wrapper for all client-side API calls.
  * Handles JSON headers, error parsing, and 204 responses.
  *
+ * Error boundary convention: see `src/docs/ARCHITECTURE.md` § Client error handling.
+ *
  * Usage:
- *   import { apiFetch } from '@/lib/api-client';
+ *   import { apiFetch, getErrorMessage } from '@/lib/api-client';
  *   const data = await apiFetch<MyType>('/api/endpoint', { method: 'POST', body: JSON.stringify(payload) });
  */
 
@@ -15,6 +17,17 @@ function parseApiErrorBody(err: unknown, fallback: string): string {
     return `${payload.error ?? fallback}: ${payload.details}`;
   }
   return payload.error ?? fallback;
+}
+
+/** Normalize unknown catch values for toasts / inline Alerts. */
+export function getErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof Error && err.message.trim()) return err.message;
+  if (typeof err === 'string' && err.trim()) return err;
+  if (err && typeof err === 'object' && 'message' in err) {
+    const message = (err as { message?: unknown }).message;
+    if (typeof message === 'string' && message.trim()) return message;
+  }
+  return fallback;
 }
 
 export async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {

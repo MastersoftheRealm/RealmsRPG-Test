@@ -88,6 +88,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 | **TASK-493** | DEV-V-023 **T001–T006** | Admin `/admin/images` upload, rename/retag, replace, delete with usage warning, search/filter |
 | **TASK-494** | Schema smoke | Migration `realms_image_entity_columns` **applied 2026-07-16** (owner-approved, via Supabase MCP); confirm species/equipment/power cards still resolve art via cache or bank |
 | **TASK-495** | Deferred to TASK-496 QA | Shared RealmsImagePicker has no user-reachable surface until TASK-496 wires editors; verify picker (guest browse/select, admin upload-into-bank) as part of TASK-496 QA |
+| **TASK-479** | DEV-V-024 **T001–T003** | Account profile-load Alert on failure; library delete/sync/add toasts; convention in ARCHITECTURE.md |
 | **TASK-501** | DEV-V-019 **T008** | Power/martial create → opposite Library tab hidden by default; edit eye-toggle unhides |
 
 _Add rows when archiving user-facing work with `verification_status: pending-qa`. Remove when `verified` or `failed`._

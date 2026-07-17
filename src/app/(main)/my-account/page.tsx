@@ -11,7 +11,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import type { AuthUser } from '@/types/auth';
 import { createClient } from '@/lib/supabase/client';
-import { apiUpload } from '@/lib/api-client';
+import { apiUpload, getErrorMessage } from '@/lib/api-client';
 import { changeUsernameAction, getUserProfileAction, deleteAccountAction } from '@/app/(auth)/actions';
 import { useAuthStore } from '@/stores';
 import { useAdmin } from '@/hooks';
@@ -63,6 +63,7 @@ function AccountContent() {
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoadError, setProfileLoadError] = useState<string | null>(null);
 
   const [newEmail, setNewEmail] = useState('');
   const [emailPassword, setEmailPassword] = useState('');
@@ -93,8 +94,17 @@ function AccountContent() {
     async function loadProfile() {
       if (!user) return;
 
+      setProfileLoadError(null);
       try {
-        const { profile: p } = await getUserProfileAction();
+        const { profile: p, error } = await getUserProfileAction();
+        if (error) {
+          setProfileLoadError(error);
+          setProfile({
+            email: user.email ?? undefined,
+            photoURL: user.photoURL ?? undefined,
+          });
+          return;
+        }
         if (p) {
           const rawPhoto = (p.photoUrl as string) ?? undefined;
           const photoURL = rawPhoto
@@ -114,7 +124,12 @@ function AccountContent() {
             photoURL: user.photoURL ?? undefined,
           });
         }
-      } catch {
+      } catch (err: unknown) {
+        setProfileLoadError(getErrorMessage(err, 'Failed to load profile'));
+        setProfile({
+          email: user.email ?? undefined,
+          photoURL: user.photoURL ?? undefined,
+        });
       } finally {
         setLoading(false);
       }
@@ -135,12 +150,22 @@ function AccountContent() {
       const { url } = await apiUpload<{ url: string }>('/api/upload/profile-picture', formData);
       // Cache-bust so the browser shows the new image (same path is overwritten in storage)
       setProfile((prev) => (prev ? { ...prev, photoURL: `${url}?t=${Date.now()}` } : null));
-      setPictureMessage({ type: 'success', text: 'Profile picture updated!' });
       // Sync to Supabase Auth so header and any useAuth() consumer see the new picture
       const supabase = createClient();
-      await supabase.auth.updateUser({ data: { avatar_url: url } });
-    } catch {
-      setPictureMessage({ type: 'error', text: 'Failed to upload profile picture' });
+      const { error: authSyncError } = await supabase.auth.updateUser({ data: { avatar_url: url } });
+      if (authSyncError) {
+        setPictureMessage({
+          type: 'error',
+          text: 'Picture uploaded, but account avatar sync failed. Refresh or try again.',
+        });
+        return;
+      }
+      setPictureMessage({ type: 'success', text: 'Profile picture updated!' });
+    } catch (err: unknown) {
+      setPictureMessage({
+        type: 'error',
+        text: getErrorMessage(err, 'Failed to upload profile picture'),
+      });
     } finally {
       setUploadingPicture(false);
     }
@@ -194,16 +219,16 @@ function AccountContent() {
       setEmailPassword('');
       setEmailMessage({ type: 'success', text: 'Email updated successfully!' });
     } catch (err: unknown) {
-      const error = err as { message?: string };
+      const raw = getErrorMessage(err, 'Failed to update email');
       let message = 'Failed to update email';
-      if (error.message?.includes('wrong') || error.message?.includes('password')) {
+      if (raw.includes('wrong') || raw.includes('password') || raw.includes('incorrect')) {
         message = 'Incorrect password';
-      } else if (error.message?.includes('already in use')) {
+      } else if (raw.includes('already in use')) {
         message = 'Email already in use';
-      } else if (error.message?.includes('invalid')) {
+      } else if (raw.toLowerCase().includes('invalid')) {
         message = 'Invalid email address';
-      } else if (error.message) {
-        message = error.message;
+      } else {
+        message = raw;
       }
       setEmailMessage({ type: 'error', text: message });
     } finally {
@@ -243,14 +268,14 @@ function AccountContent() {
       setConfirmPassword('');
       setPasswordMessage({ type: 'success', text: 'Password updated successfully!' });
     } catch (err: unknown) {
-      const error = err as { message?: string };
+      const raw = getErrorMessage(err, 'Failed to update password');
       let message = 'Failed to update password';
-      if (error.message?.includes('wrong') || error.message?.includes('incorrect')) {
+      if (raw.includes('wrong') || raw.includes('incorrect')) {
         message = 'Current password is incorrect';
-      } else if (error.message?.includes('weak')) {
+      } else if (raw.includes('weak')) {
         message = 'Password is too weak';
-      } else if (error.message) {
-        message = error.message;
+      } else {
+        message = raw;
       }
       setPasswordMessage({ type: 'error', text: message });
     } finally {
@@ -263,10 +288,14 @@ function AccountContent() {
 
     try {
       const supabase = createClient();
-      await supabase.auth.resetPasswordForEmail(user.email);
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email);
+      if (error) throw error;
       setPasswordMessage({ type: 'success', text: 'Password reset email sent!' });
-    } catch {
-      setPasswordMessage({ type: 'error', text: 'Failed to send reset email' });
+    } catch (err: unknown) {
+      setPasswordMessage({
+        type: 'error',
+        text: getErrorMessage(err, 'Failed to send reset email'),
+      });
     }
   };
 
@@ -296,12 +325,12 @@ function AccountContent() {
       }
       router.push('/');
     } catch (err: unknown) {
-      const error = err as { message?: string };
+      const raw = getErrorMessage(err, 'Failed to delete account');
       let message = 'Failed to delete account';
-      if (error.message?.includes('wrong') || error.message?.includes('Invalid')) {
+      if (raw.includes('wrong') || raw.includes('Invalid') || raw.includes('incorrect')) {
         message = 'Incorrect password';
-      } else if (error.message) {
-        message = error.message;
+      } else {
+        message = raw;
       }
       setDeleteError(message);
       setDeleting(false);
@@ -325,6 +354,11 @@ function AccountContent() {
         className="mb-0 min-w-0"
       />
 
+      {profileLoadError && (
+        <Alert variant="danger">
+          {profileLoadError}. Some account details may be incomplete — refresh to try again.
+        </Alert>
+      )}
 
       <Card className="shadow-md p-6">
         <h2 className="text-lg font-bold text-text-primary mb-3">Role &amp; Limits</h2>
