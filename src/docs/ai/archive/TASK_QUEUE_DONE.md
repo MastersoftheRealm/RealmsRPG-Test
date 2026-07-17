@@ -21,6 +21,7 @@ Firebase/RTDB - the project is Supabase-only.
     - src/lib/utils/duration.ts
     - src/lib/utils/duration.test.ts
     - src/components/character-sheet/library-list-helpers.ts
+    - src/components/character-sheet/library-entity-rows.tsx
     - src/hooks/add-library-item/build-empowered-selectable-item.ts
     - src/docs/ai/FEATURE_INDEX.md
   description: |

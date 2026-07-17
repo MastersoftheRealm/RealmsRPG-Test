@@ -3,7 +3,7 @@
  */
 
 import { getWeaponAttackBonusFromProperties } from '@/lib/game/weapon-attack-ability';
-import { formatDamageDisplay, formatDurationCompact } from '@/lib/utils';
+import { formatDamageDisplay } from '@/lib/utils';
 import {
   characterPartsToPartData,
   itemPropertiesToPartData,
@@ -13,9 +13,6 @@ import {
 import { TRAINING_POINTS_COST_LABEL } from '@/lib/detail-option/compact-facts';
 import type { PartData } from '@/components/shared';
 import type { Abilities, CharacterPower, CharacterTechnique, Item } from '@/types';
-
-/** Compact list-column duration; shared implementation in `@/lib/utils/duration`. */
-export const formatDuration = formatDurationCompact;
 
 export type CodexPart = CodexPartRow;
 export type CodexProperty = CodexPropertyRow;

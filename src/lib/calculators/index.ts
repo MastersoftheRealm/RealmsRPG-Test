@@ -53,12 +53,7 @@ export {
 } from './power-calc';
 
 // Duration display (shared: character sheet, library, codex)
-export {
-  formatDurationFromTypeAndValue,
-  formatDurationWithModifiers,
-  formatDurationDisplay,
-  formatDurationCompact,
-} from '@/lib/utils/duration';
+export { formatDurationFromTypeAndValue, formatDurationWithModifiers } from '@/lib/utils/duration';
 
 // Technique Calculator
 export {
