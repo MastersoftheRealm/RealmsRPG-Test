@@ -8,6 +8,36 @@ Firebase/RTDB - the project is Supabase-only.
 
 
 
+- id: TASK-477
+  title: Unify duration display helpers (formatDuration layers)
+  created_at: 2026-07-15
+  created_by: agent
+  completed_at: 2026-07-17
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/lib/utils/duration.ts
+    - src/lib/utils/duration.test.ts
+    - src/components/character-sheet/library-list-helpers.ts
+    - src/hooks/add-library-item/build-empowered-selectable-item.ts
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    Audit residual: local formatDuration helpers duplicate concepts from lib/utils/duration.ts
+    with different input shapes. Document layers or consolidate display fallbacks behind one API.
+  acceptance_criteria:
+    - One documented layering (structured duration vs raw string display) or shared wrappers.
+    - No third ad-hoc formatDuration in feature code without reusing the layer.
+    - npm run build.
+  evidence: |
+    Documented three layers in duration.ts (structured / display-any-shape / compact list).
+    Added formatDurationDisplay + formatDurationCompact; migrated library-list-helpers and
+    build-empowered-selectable-item off local formatDuration forks. Vitest duration.test.ts;
+    FEATURE_INDEX pointer. verification_status n/a — internal helper consolidation.
+
+---
+
 - id: TASK-492
   title: Realms Image Library - schema, storage, CRUD API
   created_at: 2026-07-16

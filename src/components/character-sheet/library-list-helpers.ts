@@ -3,7 +3,7 @@
  */
 
 import { getWeaponAttackBonusFromProperties } from '@/lib/game/weapon-attack-ability';
-import { formatDamageDisplay } from '@/lib/utils';
+import { formatDamageDisplay, formatDurationCompact } from '@/lib/utils';
 import {
   characterPartsToPartData,
   itemPropertiesToPartData,
@@ -13,6 +13,9 @@ import {
 import { TRAINING_POINTS_COST_LABEL } from '@/lib/detail-option/compact-facts';
 import type { PartData } from '@/components/shared';
 import type { Abilities, CharacterPower, CharacterTechnique, Item } from '@/types';
+
+/** Compact list-column duration; shared implementation in `@/lib/utils/duration`. */
+export const formatDuration = formatDurationCompact;
 
 export type CodexPart = CodexPartRow;
 export type CodexProperty = CodexPropertyRow;
@@ -56,24 +59,6 @@ export function formatArea(area: string | undefined): string {
   const lower = area.toLowerCase().trim();
   if (lower === '1 target' || lower === 'single target' || lower === 'target') return 'Target';
   return capitalizeWords(area);
-}
-
-export function formatDuration(duration: string | undefined): string {
-  if (!duration) return '-';
-  const lower = duration.toLowerCase().trim();
-  const withoutParens = lower.replace(/\s*\(.*?\)\s*/g, '').trim();
-  if (withoutParens === 'instant' || withoutParens === 'instantaneous') return 'Instant';
-  if (withoutParens === 'concentration') return 'Conc.';
-  const minMatch = withoutParens.match(/^(\d+)\s*min(ute)?s?$/);
-  if (minMatch) return `${minMatch[1]} MIN`;
-  const rndMatch = withoutParens.match(/^(\d+)\s*rounds?$/);
-  if (rndMatch) return rndMatch[1] === '1' ? '1 RND' : `${rndMatch[1]} RNDS`;
-  const hrMatch = withoutParens.match(/^(\d+)\s*hours?$/);
-  if (hrMatch) return hrMatch[1] === '1' ? '1 HR' : `${hrMatch[1]} HRS`;
-  const dayMatch = withoutParens.match(/^(\d+)\s*days?$/);
-  if (dayMatch) return dayMatch[1] === '1' ? '1 Day' : `${dayMatch[1]} Days`;
-  if (withoutParens === 'permanent') return 'Permanent';
-  return capitalizeWords(withoutParens);
 }
 
 export function formatDamageType(damage: string | undefined): string {
