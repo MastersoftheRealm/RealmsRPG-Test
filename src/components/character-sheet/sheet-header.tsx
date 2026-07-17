@@ -14,7 +14,7 @@
 
 import { useState, useRef, useEffect, KeyboardEvent, ChangeEvent } from 'react';
 import Image from 'next/image';
-import { Pencil } from 'lucide-react';
+import { Camera, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatSpeedForDisplay } from '@/lib/utils/number';
 import { Spinner } from '@/components/ui/spinner';
@@ -510,9 +510,10 @@ export function SheetHeader({
       {/* Upload overlay in edit mode — click opens ImageUploadModal, not ExpandableImage */}
       {canChangePortrait && (
         <div className="absolute inset-0 flex items-center justify-center bg-transparent transition-colors group-hover:bg-text-primary/40">
-          <span className="text-3xl text-text-on-dark opacity-0 transition-opacity group-hover:opacity-100">
-            📷
-          </span>
+          <Camera
+            className="h-8 w-8 text-text-on-dark opacity-0 transition-opacity group-hover:opacity-100"
+            aria-hidden
+          />
         </div>
       )}
       {isUploadingPortrait && (

@@ -28,6 +28,7 @@ Firebase/RTDB - the project is Supabase-only.
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/ai/DESIGN_INTENT.md
     - src/docs/ai/guide/03-entity-card-art.md
+    - src/docs/ai/guide/02-components-and-lists.md
     - src/docs/ai/BUILD_VALIDATION.md
     - src/docs/ai/DEVELOPER_TASK_QUEUE.md
     - src/docs/ai/AI_CHANGELOG.md

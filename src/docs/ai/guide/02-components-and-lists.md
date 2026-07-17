@@ -25,7 +25,7 @@ Quick location table: [`AGENT_GUIDE.md`](../AGENT_GUIDE.md) § Components. Unifi
 | Base-skill selector (add sub-skill) | **SelectionToggle** | Unique UX; not GridListRow |
 | Species detail view, level-up wizard | Custom layouts | Justified exceptions |
 | Add-feat, add-skill, add-library-item modals | **GridListRow** or **UnifiedSelectionModal** | Consistent list selection |
-| Entity **thumbnail** in list row (left of name, click to preview) | **GridListRow** `thumbnail` + **ListRowThumbnail** | See [`03-entity-card-art.md`](03-entity-card-art.md) — species pilot shipped |
+| Entity **thumbnail** in list row (left of name, click to preview) | **GridListRow** `thumbnail` + **ListRowThumbnail** | See [`03-entity-card-art.md`](03-entity-card-art.md) § Adoption inventory (TASK-478) |
 
 **List item actions:** GridListRow and ItemCard use the same action set (view/edit/duplicate/delete, plus quantity where applicable). Use IconButton and the same placement pattern; see `src/docs/human/UI_COMPONENT_REFERENCE.md` for extended catalog details.
 
@@ -42,7 +42,7 @@ Goal: "Learn once, use forever" — consistent UI across Library, Codex, Charact
 | Pattern | Where used |
 |---------|------------|
 | GridListRow | Library, Codex, add-feat-modal, add-library-item-modal, add-skill-modal, equipment-step, feats-tab, library-section, creature-creator |
-| ListRowThumbnail + `GridListRow.thumbnail` | Codex species, Admin species (pilot); extend per [`03-entity-card-art.md`](03-entity-card-art.md) |
+| ListRowThumbnail + `GridListRow.thumbnail` | Codex/Admin species lists; expand other art entities per [`03-entity-card-art.md`](03-entity-card-art.md) § Adoption inventory |
 | GuidedChoiceCard + guided-choice-image | Guided creator choice steps (species hero art); optional `onDetails` for deep-dive |
 | GuidedEntityDetailModal | Choice-card deep-dive (overview + read-only CollapsibleSection catalogs; optional Close \| Select footer) — not catalog Layer 2 |
 | GuidedSpeciesDetailModal + GuidedTraitOptionList | Species deep-dive: SpeciesRevealPanel overview + DetailOptionList trait catalogs (TASK-433/435) |
