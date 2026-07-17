@@ -11,11 +11,11 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`.
 
-**Counts:** 20 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 19 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
 **Realms Image Library epic (2026-07-16):** **TASK-491/492/493/494/495 done**. Next: **496** → 497/499 → 498. TASK-500 deferred.
 
-**Debt from AI workflow audit (2026-07-15):** TASK-477–480 — address alongside product work; repo-wide cadence → `/debt`. TASK-476/482/484/486/487/488/489/490 done; TASK-481 superseded by `/debt`.
+**Debt from AI workflow audit (2026-07-15):** TASK-478–480 — address alongside product work; repo-wide cadence → `/debt`. TASK-476/477/482/484/486/487/488/489/490 done; TASK-481 superseded by `/debt`.
 
 ---
 
@@ -435,26 +435,6 @@ Do **not** read the done archive at session start.
     2026-07-01: Phase 1 species pipeline shipped; guided UI already reads image_url.
     2026-07-01: official_items.image_url + armament admin upload (weapon/armor/shield).
     2026-07-16: Realms Image Library epic (TASK-491–500); ADR-0003 replaces three-layer framing. TASK-417 archived (superseded).
-
----
-
-- id: TASK-477
-  title: Unify duration display helpers (formatDuration layers)
-  created_at: 2026-07-15
-  created_by: agent
-  priority: low
-  status: not-started
-  related_files:
-    - src/lib/utils/duration.ts
-    - src/components/character-sheet/library-list-helpers.ts
-    - src/hooks/add-library-item/build-empowered-selectable-item.ts
-  description: |
-    Audit residual: local formatDuration helpers duplicate concepts from lib/utils/duration.ts
-    with different input shapes. Document layers or consolidate display fallbacks behind one API.
-  acceptance_criteria:
-    - One documented layering (structured duration vs raw string display) or shared wrappers.
-    - No third ad-hoc formatDuration in feature code without reusing the layer.
-    - npm run build.
 
 ---
 

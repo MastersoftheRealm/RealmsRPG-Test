@@ -2,18 +2,7 @@ import type { SelectableItem } from '@/components/shared/unified-selection-modal
 import type { UserTechnique } from '../use-user-library';
 import { formatPowerDamage, formatPowerRangeFromSteps } from '@/lib/calculators/power-calc';
 import { buildEntityMetadataDetailSections } from '@/lib/chip/list-row-metadata';
-import { formatSavedActionTypeForDisplay } from '@/lib/utils';
-
-function formatDuration(raw: unknown): string {
-  if (raw == null) return '-';
-  if (typeof raw === 'string') return raw.trim() || '-';
-  if (typeof raw === 'object') {
-    const obj = raw as { type?: string; value?: string | number; unit?: string };
-    if (obj.type) return String(obj.type).replace(/\b\w/g, (c) => c.toUpperCase());
-    if (obj.value != null && obj.unit) return `${obj.value} ${obj.unit}`;
-  }
-  return '-';
-}
+import { formatDurationDisplay, formatSavedActionTypeForDisplay } from '@/lib/utils';
 
 export function buildEmpoweredPowerSelectableItem(item: UserTechnique): SelectableItem {
   const raw = item as unknown as Record<string, unknown>;
@@ -34,7 +23,7 @@ export function buildEmpoweredPowerSelectableItem(item: UserTechnique): Selectab
     typeof energyRaw === 'number' || (typeof energyRaw === 'string' && energyRaw.trim())
       ? String(energyRaw)
       : '-';
-  const durationValue = formatDuration(powerData.duration ?? raw.duration);
+  const durationValue = formatDurationDisplay(powerData.duration ?? raw.duration);
 
   const rangeSteps = (powerData.range as { steps?: number } | undefined)?.steps;
   const rangeStr =

@@ -58,24 +58,6 @@ export function formatArea(area: string | undefined): string {
   return capitalizeWords(area);
 }
 
-export function formatDuration(duration: string | undefined): string {
-  if (!duration) return '-';
-  const lower = duration.toLowerCase().trim();
-  const withoutParens = lower.replace(/\s*\(.*?\)\s*/g, '').trim();
-  if (withoutParens === 'instant' || withoutParens === 'instantaneous') return 'Instant';
-  if (withoutParens === 'concentration') return 'Conc.';
-  const minMatch = withoutParens.match(/^(\d+)\s*min(ute)?s?$/);
-  if (minMatch) return `${minMatch[1]} MIN`;
-  const rndMatch = withoutParens.match(/^(\d+)\s*rounds?$/);
-  if (rndMatch) return rndMatch[1] === '1' ? '1 RND' : `${rndMatch[1]} RNDS`;
-  const hrMatch = withoutParens.match(/^(\d+)\s*hours?$/);
-  if (hrMatch) return hrMatch[1] === '1' ? '1 HR' : `${hrMatch[1]} HRS`;
-  const dayMatch = withoutParens.match(/^(\d+)\s*days?$/);
-  if (dayMatch) return dayMatch[1] === '1' ? '1 Day' : `${dayMatch[1]} Days`;
-  if (withoutParens === 'permanent') return 'Permanent';
-  return capitalizeWords(withoutParens);
-}
-
 export function formatDamageType(damage: string | undefined): string {
   if (!damage) return '-';
   return capitalizeWords(damage);

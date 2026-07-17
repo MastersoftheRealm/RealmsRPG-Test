@@ -133,7 +133,7 @@
 | Roles / quotas / limits | `lib/role-policy.ts`, `lib/role-limits.ts`, `lib/role-quota-messages.ts`, `lib/admin.ts` |
 | API client / validation / rate limit | `lib/api-client.ts` (`apiFetch`, `apiUpload`, `getErrorMessage`), `lib/api-validation.ts`, `lib/validation/schemas.ts`, `lib/rate-limit.ts` — client error convention: `ARCHITECTURE.md` § Client error handling |
 | Supabase clients (server/client/middleware) | `lib/supabase/*` |
-| Generic utils (cn, string, number, object, motion, duration display) | `lib/utils/*` — list column labels: `formatColumnKeyLabel()` in `string.ts`; motion timing: `MOTION_DURATION_SLOW_MS` in `motion.ts` |
+| Generic utils (cn, string, number, object, motion, duration display) | `lib/utils/*` — list column labels: `formatColumnKeyLabel()` in `string.ts`; motion timing: `MOTION_DURATION_SLOW_MS` in `motion.ts`; duration layers in `duration.ts`: structured `formatDurationFromTypeAndValue` / `formatDurationWithModifiers`, any-shape `formatDurationDisplay`, compact list `formatDurationCompact` (TASK-477) |
 | Stable empty fallbacks for hook deps | `lib/empty.ts` (`EMPTY_STRING_ARRAY`, `EMPTY_NUMBER_RECORD`, `EMPTY_GUIDANCE_GROUPS`) — never mutate |
 
 ## Services (`src/services/`, import from `@/services`)
