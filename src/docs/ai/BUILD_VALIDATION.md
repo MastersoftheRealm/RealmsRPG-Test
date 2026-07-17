@@ -3419,7 +3419,7 @@ Portrait cards match square crop; no search or ListHeader chrome; Add Character 
 | DEV-V-007 | Auth UI (Google only) | DEV-T-007 | Planned |
 | DEV-V-014 | Codex typing + roll timestamp (TASK-378) | — | Automated (`npm test`) |
 | DEV-V-015 | Library API typing (TASK-420) | — | Automated (`npm test`) + manual smoke |
-| DEV-V-016 | Library add/load selection parity (TASK-379) | — | Manual — see suite above |
+| DEV-V-016 | Library add/load selection parity (TASK-379, TASK-437, TASK-475) | — | Manual — see suite above (T001–T011) |
 | DEV-V-017 | Site copy modules (TASK-390) | — | Manual — see suite above |
 | DEV-V-018 | CreatorPageShell parity (TASK-380 / TASK-431) | — | Manual — see suite above |
 | DEV-V-019 | React Compiler hook cleanup (TASK-430) | — | Manual — see suite above |

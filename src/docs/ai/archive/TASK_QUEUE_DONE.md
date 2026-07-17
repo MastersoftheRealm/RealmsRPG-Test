@@ -34,8 +34,9 @@ Firebase/RTDB - the project is Supabase-only.
     - LibraryEntityTabBasicLabels + ENHANCED_LIBRARY_LABELS; LibraryEnhancedTab migrated.
     - No sync-all button or duplicate modal on Enhanced; edit/delete row actions unchanged.
     - BUILD_VALIDATION DEV-V-016-T011; FEATURE_INDEX + ADR-0001 follow-up note.
+    - Cleanup: basic-mode toolbar has no empty sync gutter; docs clarify enableSync=false also omits duplicate; ACTIVE_TASKS Counts 18.
   evidence: |
-    npm run build green. Reconcile subject TASK-475.
+    npm run build green. Reconcile subject TASK-475. Cleanup commit on same branch.
   build_validation: |
     suite: DEV-V-016
     tests:
