@@ -78,7 +78,7 @@
 | **Entity card art — click to enlarge (site-wide default)** | **`ExpandableImage`** (+ `ExpandableImageModal`); list thumbs: `ListRowThumbnail`. Also: sheet portrait (play), creature stat-block, campaign chips, account profile. Exceptions: `guide/03-entity-card-art.md` § Adoption inventory (TASK-478) |
 | **Entity card art — list thumb** (44px, D&D Beyond style) | `GridListRow.thumbnail` + `ListRowThumbnail`; `ListHeader.hasThumbnailColumn` |
 | **Entity card art — choice card hero** (guided creator) | `GuidedChoiceCard` (wraps `ExpandableImage`) |
-| **Entity card art — admin upload** | Interim: `CodexArtUploadField`, `lib/codex-art.ts`, `POST /api/upload/codex-art`. Bank: `POST /api/images` (+ replace/delete/usage); helpers `lib/realms-images.ts`. **`RealmsImagePicker`** (TASK-495) |
+| **Entity card art — admin / creator** | **`RealmsImageField`** / **`RealmsImagePicker`** (`realms-image-picker.tsx`); bank APIs `POST /api/images` (+ replace/delete/usage); helpers `lib/realms-images.ts` (ADR-0003 / TASK-495–498). Legacy `CodexArtUploadField` + `/api/upload/codex-art` removed. |
 | **Realms Image Library (bank)** | `realms_images` + `realms_image_categories`; `GET/POST /api/images`, `GET/PATCH/DELETE /api/images/[id]`, `POST …/replace`, `GET …/usage` (`ADR-0003`, TASK-492). Admin UI: `/admin/images` (TASK-493). Schema: `SUPABASE_SCHEMA.md` §2.5a; SQL `sql/realms-image-library.sql` |
 | **Entity card art — product/schema** | REALMS §5.0.3 + `guide/03-entity-card-art.md` + `SUPABASE_SCHEMA.md` §2.5a |
 | Hub list row (Encounters/Crafting) | `HubListRow` |
@@ -96,7 +96,7 @@
 | Guided step footer | `GuidedStepFooter`: sticky Back/Continue; `completionHint` stacks above actions below `sm`, centered mid-bar on `sm+` (one mount; TASK-453) |
 | Tab summary header section | `TabSummarySection`, `SummaryItem`, `SummaryRow` |
 | Chip roles (descriptor vs expandable) | `DescriptorChip`, `ExpandableChip` (`@/components/ui`); `GridListChip` + `lib/chip/expandable-chip-props.ts`; `ChipData.kind` + `descriptorChipData()` in `lib/chip/chip-data-helpers.ts`; metadata builders in `lib/chip/list-row-metadata.ts` |
-| Stable expand toggle (chips) | `ExpandableChip` + `ChipGroup` (`data-chip-group`); `measureStableExpandWidth` — grow into remaining row width; do not force `w-full` on wrap expand (TASK-445) |
+| Stable expand toggle (chips) | `ExpandableChip` + `ChipGroup` (`data-chip-group`); `applyFullRowExpandLayout` (`lib/chip/full-row-expand-layout.ts`) — grow into remaining row width; do not force `w-full` on wrap expand (TASK-445) |
 | Feat tags (normalize + taxonomy) | `lib/codex/feat-tags.ts`, `lib/codex/feat-list.ts`; `sql/feat-tags-unification-phase*.sql` (phase 4 = live normalize chain); `docs/FEAT_TAGS.md` |
 | Part/property chips | `PartChipList`, `PartChipComponent` (thin aliases); `PartData` in `lib/chip/part-data.ts`; `partChipsFromDisplay` in `lib/chip/part-chips-from-display.ts` |
 | Part/property → PartData (library rows) | `lib/library/part-display.ts` — `computePartTrainingPoints`, `characterPartsToPartData`, `itemPropertiesToPartData` |

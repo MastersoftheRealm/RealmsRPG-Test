@@ -11042,7 +11042,6 @@ Firebase/RTDB - the project is Supabase-only.
     - Exported from shared barrel; allowlist + FEATURE_INDEX + guide/03 + ADR-0003 updated.
   related_files:
     - src/components/shared/realms-image-picker.tsx
-    - src/components/shared/codex-art-upload-field.tsx
     - src/components/shared/image-upload-modal.tsx
     - src/components/shared/index.ts
     - src/lib/realms-images.ts
@@ -11070,3 +11069,170 @@ Firebase/RTDB - the project is Supabase-only.
   evidence: |
     npx tsc --noEmit + npm run build + targeted vitest (realms-images, compact-facts,
     power-technique-display) green (2026-07-16).
+
+
+---
+
+- id: TASK-405
+  title: Choice-card art — codex image_url fields + admin upload
+  created_at: 2026-06-30
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-17
+  implemented_by: agent
+  verification_status: pending-qa
+  follow_up_tasks:
+    - TASK-491
+    - TASK-494
+    - TASK-496
+    - TASK-498
+  related_files:
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - src/components/guided-creator/guided-choice-card.tsx
+    - src/components/guided-creator/guided-choice-image.ts
+    - src/components/shared/realms-image-picker.tsx
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/docs/SUPABASE_SCHEMA.md
+    - sql/codex-art-species-image-url.sql
+  completed_work: |
+    Phase 1 shipped image_url + guided resolution. Realms Image Library epic (TASK-491–498)
+    superseded entity-tied CodexArtUploadField with RealmsImageField/Picker + image_id bank model.
+    Admin species editor and creators use shared bank picker; legacy codex-art upload path removed.
+  notes: |
+    Archived 2026-07-17 with KadinBranch merge readiness — remaining phase-2 scope delivered via TASK-494/496/498.
+  evidence: |
+    npm run build; npm test; ADR-0003 + SUPABASE_SCHEMA §2.5a.
+
+---
+
+- id: TASK-496
+  title: Wire admin editors + creator publish-to-Realms into the Image Library
+  created_at: 2026-07-16
+  created_by: agent
+  priority: high
+  status: done
+  completed_at: 2026-07-17
+  implemented_by: agent
+  verification_status: pending-qa
+  parent_task: TASK-495
+  follow_up_tasks:
+    - TASK-498
+  related_files:
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
+    - src/components/shared/realms-image-picker.tsx
+    - src/app/(main)/species-creator/page.tsx
+    - src/app/(main)/creature-creator/page.tsx
+    - src/app/(main)/item-creator/item-creator-editor.tsx
+    - src/app/(main)/power-creator/power-creator-editor.tsx
+    - src/app/(main)/technique-creator/technique-creator-editor.tsx
+    - src/app/(main)/empowered-technique-creator/empowered-technique-creator-editor.tsx
+  completed_work: |
+    Admin species/equipment + creator editors (species, creature, item, power, technique, empowered)
+    use RealmsImageField / RealmsImagePicker. Entity-tied CodexArtUploadField and /api/upload/codex-art
+    removed. Publish/upload-into-bank lands in realms_images with category tags + image_id.
+  build_validation: |
+    suite: DEV-V-026
+    tests:
+      - DEV-V-026-T001
+      - DEV-V-026-T002
+  developer_test_plan: |
+    Suite DEV-V-026 T001–T002 — see BUILD_VALIDATION.md
+  evidence: |
+    npm run build; npm test; npm run tasks:validate.
+
+---
+
+- id: TASK-497
+  title: User/official row image_id parity + copy-on-add + creator bank picker
+  created_at: 2026-07-16
+  created_by: agent
+  priority: medium
+  status: done
+  completed_at: 2026-07-17
+  implemented_by: agent
+  verification_status: pending-qa
+  parent_task: TASK-495
+  related_files:
+    - sql/realms-image-user-entity-columns.sql
+    - src/lib/library-columnar.ts
+    - src/services/library-service.ts
+    - src/app/api/user/library/[type]/route.ts
+    - src/docs/SUPABASE_SCHEMA.md
+  completed_work: |
+    Applied user_* image_id columns (realms_image_user_entity_columns, 2026-07-17). Columnar/API
+    mapping + addOfficialItemToLibrary preserves image_id. Creators pick bank images; non-admins
+    cannot upload into the bank (allowAdminUpload gated on RealmsImagePicker).
+  build_validation: |
+    suite: DEV-V-026
+    tests:
+      - DEV-V-026-T003
+  developer_test_plan: |
+    Suite DEV-V-026 T003 — see BUILD_VALIDATION.md
+  notes: |
+    Migration applied 2026-07-17 via Supabase MCP (owner-approved path documented in SQL header).
+  evidence: |
+    npm run build; npm test; SUPABASE_SCHEMA user-library image parity section.
+
+---
+
+- id: TASK-498
+  title: Migrate existing codex-art entity files into Realms Image Library catalog
+  created_at: 2026-07-16
+  created_by: agent
+  priority: medium
+  status: done
+  completed_at: 2026-07-17
+  implemented_by: agent
+  verification_status: pending-qa
+  parent_task: TASK-492
+  related_files:
+    - sql/realms-image-catalog-legacy-entity-art.sql
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/docs/ai/ADR/0003-realms-image-library.md
+  completed_work: |
+    Catalog migration realms_image_catalog_legacy_entity_art applied (owner-approved 2026-07-17):
+    registered legacy entity-tied Storage objects into realms_images (same path), set consumer
+    image_id, removed CodexArtUploadField + /api/upload/codex-art. Schema + ADR updated.
+  build_validation: |
+    suite: DEV-V-026
+    tests:
+      - DEV-V-026-T004
+  developer_test_plan: |
+    Suite DEV-V-026 T004 — see BUILD_VALIDATION.md
+  evidence: |
+    SQL applied note + post-apply counts in sql/realms-image-catalog-legacy-entity-art.sql.
+
+---
+
+- id: TASK-499
+  title: Portrait + profile picture — pick species/creature bank images
+  created_at: 2026-07-16
+  created_by: agent
+  priority: medium
+  status: done
+  completed_at: 2026-07-17
+  implemented_by: agent
+  verification_status: pending-qa
+  parent_task: TASK-495
+  related_files:
+    - src/components/shared/image-upload-modal.tsx
+    - src/components/shared/realms-image-picker.tsx
+    - src/app/(main)/my-account/page.tsx
+    - src/components/character-sheet/sheet-header.tsx
+    - src/components/character-creator/steps/finalize-step.tsx
+    - src/components/guided-creator/guided-portrait-upload.tsx
+  completed_work: |
+    ImageUploadModal onChooseFromLibrary + RealmsImagePicker (categories=portrait / species|creature)
+    on my-account, sheet-header, finalize-step, guided-portrait-upload. Surfaces set
+    allowAdminUpload={false} (pick-only). Custom crop upload retained.
+  build_validation: |
+    suite: DEV-V-026
+    tests:
+      - DEV-V-026-T005
+      - DEV-V-026-T006
+  developer_test_plan: |
+    Suite DEV-V-026 T005–T006 — see BUILD_VALIDATION.md
+  evidence: |
+    npm run build; npm test; TASK-479 getErrorMessage on bank profile update path.

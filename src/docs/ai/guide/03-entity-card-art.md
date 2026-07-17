@@ -122,7 +122,7 @@ When adding list thumbs: (1) ensure API returns resolvable art (`image_id` / cac
 | **Character list cards** (`character-card.tsx`) | Portrait is inside a `Link` to the sheet — nested expand button is invalid HTML; primary action is navigate. |
 | **Sheet portrait in edit mode** | Click opens `ImageUploadModal` (change portrait), not preview. |
 | **Campaign “add character” picker thumbs** | Decorative (`alt=""`) inside a selectable row `button`. |
-| **Authoring / crop previews** (`CodexArtUploadField`, `ImageUploadModal`, guided/advanced portrait upload slots) | Upload/crop affordance, not browse-to-enlarge. |
+| **Authoring / crop previews** (`RealmsImageField`, `ImageUploadModal`, guided/advanced portrait upload slots) | Upload/crop affordance, not browse-to-enlarge. |
 | **RealmsImagePicker upload preview** | Bank picker authoring chrome (TASK-495+). |
 | **Landing / auth / layout chrome** (logo, hero, dice decor, OAuth icons) | Branding / decorative — not entity art. |
 | **Dice roller / roll-log faces** | Game chrome, not entity art. |
