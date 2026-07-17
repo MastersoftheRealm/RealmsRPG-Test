@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import { useToast } from '@/components/ui';
+import { getErrorMessage } from '@/lib/api-client';
 
 export interface UseLibraryDuplicateConfirmOptions {
   duplicateTitle: string;
@@ -30,7 +31,7 @@ export function useLibraryDuplicateConfirm(options: UseLibraryDuplicateConfirmOp
         showToast(`Duplicated "${duplicateConfirm.name}"`, 'success');
         setDuplicateConfirm(null);
       },
-      onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error'),
+      onError: (e) => showToast(getErrorMessage(e, 'Failed to duplicate'), 'error'),
     });
   }, [duplicateConfirm, mutate, showToast]);
 

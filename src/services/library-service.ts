@@ -32,21 +32,22 @@ export async function saveToLibrary(
   return result.id;
 }
 
+/**
+ * Find a user-library row by exact name.
+ * Returns `null` when no row matches. API/network failures **throw** (do not
+ * treat transport errors as "not found" — see ARCHITECTURE.md client errors).
+ */
 export async function findLibraryItemByName(
   type: LibraryType,
   name: string
 ): Promise<{ id: string } | null> {
-  try {
-    // PERF-01: server-side name lookup returns only matching `{ id, name }`
-    // rows instead of the whole library.
-    const matches = await apiFetch<Array<{ id: string; name?: string }>>(
-      `${API_BASE}/${type}?name=${encodeURIComponent(name.trim())}`
-    );
-    const found = matches[0];
-    return found ? { id: found.id } : null;
-  } catch {
-    return null;
-  }
+  // PERF-01: server-side name lookup returns only matching `{ id, name }`
+  // rows instead of the whole library.
+  const matches = await apiFetch<Array<{ id: string; name?: string }>>(
+    `${API_BASE}/${type}?name=${encodeURIComponent(name.trim())}`
+  );
+  const found = matches[0];
+  return found ? { id: found.id } : null;
 }
 
 /** Fetch official library items (no auth). Uses columnar official_* tables; species reads codex_species. */
