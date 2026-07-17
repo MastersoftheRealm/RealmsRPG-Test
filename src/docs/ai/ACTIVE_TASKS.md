@@ -11,31 +11,11 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`.
 
-**Counts:** 20 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 19 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
 **Realms Image Library epic (2026-07-16):** **TASK-491/492/493/494/495 done**. Next: **496** → 497/499 → 498. TASK-500 deferred.
 
-**Debt from AI workflow audit (2026-07-15):** TASK-477–480 — address alongside product work; repo-wide cadence → `/debt`. TASK-476/482/484/486/487/488/489/490 done; TASK-481 superseded by `/debt`.
-
----
-
-- id: TASK-475
-  title: Optional — adopt UserLibraryEntityTabShell basic variant in LibraryEnhancedTab
-  created_at: 2026-07-15
-  created_by: agent
-  priority: low
-  status: not-started
-  related_files:
-    - src/app/(main)/library/LibraryEnhancedTab.tsx
-    - src/app/(main)/library/components/UserLibraryEntityTabShell.tsx
-  description: |
-    LibraryEnhancedTab shares search/sort list scaffold but has no patch-sync/duplicate.
-    Optional follow-up to ADR-0001: add enableSync=false / basic mode to the shell, or a slim
-    UserLibraryListShell, and migrate Enhanced without behavior change.
-  acceptance_criteria:
-    - Enhanced tab uses shared list chrome without regressing delete/load UX.
-    - No sync/duplicate UI introduced for enhanced items.
-    - npm run build.
+**Debt from AI workflow audit (2026-07-15):** TASK-477–480 — address alongside product work; repo-wide cadence → `/debt`. TASK-476/482/484/486/487/488/489/490 done; TASK-481 superseded by `/debt`. TASK-475 done (Enhanced shell basic mode).
 
 ---
 

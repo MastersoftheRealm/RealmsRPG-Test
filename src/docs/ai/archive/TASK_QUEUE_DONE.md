@@ -8,6 +8,43 @@ Firebase/RTDB - the project is Supabase-only.
 
 
 
+- id: TASK-475
+  title: Optional - adopt UserLibraryEntityTabShell basic variant in LibraryEnhancedTab
+  created_at: 2026-07-15
+  created_by: agent
+  completed_at: 2026-07-17
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/(main)/library/LibraryEnhancedTab.tsx
+    - src/app/(main)/library/components/UserLibraryEntityTabShell.tsx
+    - src/app/(main)/library/components/library-entity-tab.types.ts
+  description: |
+    LibraryEnhancedTab shares search/sort list scaffold but has no patch-sync/duplicate.
+    Optional follow-up to ADR-0001: add enableSync=false / basic mode to the shell, or a slim
+    UserLibraryListShell, and migrate Enhanced without behavior change.
+  acceptance_criteria:
+    - Enhanced tab uses shared list chrome without regressing delete/load UX.
+    - No sync/duplicate UI introduced for enhanced items.
+    - npm run build.
+  completed_work: |
+    - UserLibraryEntityTabShell: enableSync={false} basic mode (search/sort/empty/error/list only).
+    - LibraryEntityTabBasicLabels + ENHANCED_LIBRARY_LABELS; LibraryEnhancedTab migrated.
+    - No sync-all button or duplicate modal on Enhanced; edit/delete row actions unchanged.
+    - BUILD_VALIDATION DEV-V-016-T011; FEATURE_INDEX + ADR-0001 follow-up note.
+  evidence: |
+    npm run build green. Reconcile subject TASK-475.
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T011
+  developer_test_plan: |
+    Suite DEV-V-016 T011 - see BUILD_VALIDATION.md
+
+---
+
 - id: TASK-492
   title: Realms Image Library - schema, storage, CRUD API
   created_at: 2026-07-16

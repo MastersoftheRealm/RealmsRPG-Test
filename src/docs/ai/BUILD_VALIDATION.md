@@ -2606,6 +2606,18 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Expected** | Modal Type/TP/Cost layout still works; combat facts remain self-describing when expanded. |
 | **Report** | DEV-V-016-T010: PASS / FAIL / SKIP — |
 
+#### DEV-V-016-T011 — My Library Enhanced tab shell (no sync/duplicate) (TASK-475)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-475 |
+| **Where** | `/library` → My Library → Enhanced |
+| **Needs** | Signed-in user; empty Enhanced tab OK, or at least one enhanced item for row actions |
+| **Steps** | 1. Open Enhanced — search + column headers present; no “Sync with current patch” button. 2. Empty state (if none): “Go to Crafting” CTA; with items: expand a row, Edit opens `/crafting/<id>`, Delete still prompts via parent. 3. Search filters by name/base/power; no Duplicate action on rows. |
+| **Expected** | Shared list chrome only; no sync-all or duplicate UI; delete/edit unchanged. |
+| **Report** | DEV-V-016-T011: PASS / FAIL / SKIP — |
+
 ---
 
 ## DEV-V-017 — Site copy modules (TASK-390)
