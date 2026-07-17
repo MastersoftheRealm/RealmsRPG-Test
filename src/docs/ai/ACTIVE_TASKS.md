@@ -11,13 +11,11 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`.
 
-**Counts:** 15 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 10 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Realms Image Library epic (2026-07-16):** **TASK-491/492/493/494/495 done**. Next: **496** → 497/499 → 498. TASK-500 deferred.
+**Realms Image Library epic (2026-07-16):** **TASK-491–499 done**. TASK-500 deferred.
 
 **Debt from AI workflow audit (2026-07-15):** TASK-480 — address alongside product work; repo-wide cadence → `/debt`. TASK-476/477/478/482/484/486/487/488/489/490 done; TASK-481 superseded by `/debt`. TASK-475 done (Enhanced shell basic mode). TASK-479 done (client error handling).
-
-
 
 ---
 
@@ -379,47 +377,6 @@ Do **not** read the done archive at session start.
 
 ---
 
-- id: TASK-405
-  title: Choice-card art — codex image_url fields + admin upload
-  created_at: 2026-06-30
-  created_by: owner
-  priority: high
-  status: partial
-  description: |
-    Species (and later equipment, powers, techniques) use hero art on GuidedChoiceCard as a primary selling point (REALMS §5.0.3). UI resolves image_url from records with typed SVG placeholders until art exists. Add codex columns, Storage upload, admin pickers, and seed real species art for starters.
-  related_files:
-    - src/docs/REALMS_PRODUCT_OVERVIEW.md
-    - src/components/guided-creator/guided-choice-card.tsx
-    - src/components/guided-creator/guided-choice-image.ts
-    - src/docs/SUPABASE_SCHEMA.md
-    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
-    - src/components/shared/codex-art-upload-field.tsx
-    - src/app/api/upload/codex-art/route.ts
-    - src/lib/codex-art.ts
-    - sql/codex-art-species-image-url.sql
-    - public/images/placeholder-*-card.svg
-  acceptance_criteria:
-    - codex_species.image_url (TEXT, nullable) + documented in SUPABASE_SCHEMA.md; migration applied.
-    - Admin species editor: upload or URL for card art; preview matches guided hero layout.
-    - Guided species step shows real art when image_url set; placeholders otherwise.
-    - Plan documented for powers/techniques/loadout image_url (column or JSON) as follow-up sub-task or phase 2.
-  completed_work: |
-    Phase 1 (2026-07-01): codex_species.image_url + codex-art bucket (migration applied). Admin species editor CodexArtUploadField (crop + upload). /api/upload/codex-art (isAdmin + service role). REALMS §5.0.3 coverage matrix (species/creature high, weapon some, armor/shield/power/technique low; no skills/feats/traits).
-  remaining_work: |
-    Phase 2 entity columns moved to TASK-494 (image_id on creatures/powers/techniques/equipment/empowered;
-    bank model per locked TASK-491 decisions). Seed/migrate existing art via TASK-498.
-    Do not extend entity-tied-only upload — Realms Image Library epic supersedes.
-  follow_up_tasks:
-    - TASK-491
-    - TASK-494
-  notes: |
-    2026-06-30: Product owner — species art is main marketing hook on cards. Prototype placeholders + GuidedChoiceCard hero layout landed first.
-    2026-07-01: Phase 1 species pipeline shipped; guided UI already reads image_url.
-    2026-07-01: official_items.image_url + armament admin upload (weapon/armor/shield).
-    2026-07-16: Realms Image Library epic (TASK-491–500); ADR-0003 replaces three-layer framing. TASK-417 archived (superseded).
-
----
-
 - id: TASK-480
   title: Automate high-value BUILD_VALIDATION behaviors (vitest/Playwright growth)
   created_at: 2026-07-15
@@ -441,117 +398,7 @@ Do **not** read the done archive at session start.
 ---
 
 # Realms Image Library epic (TASK-491–500)
-# TASK-491/492/493/494/495 done. Next: 496 → 497/499 → 498; TASK-500 deferred.
-
----
-
-- id: TASK-496
-  title: Wire admin editors + creator publish-to-Realms into the Image Library
-  created_at: 2026-07-16
-  created_by: agent
-  priority: high
-  status: not-started
-  parent_task: TASK-495
-  related_files:
-    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
-    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
-    - src/app/(main)/admin/public-library/
-    - src/components/creator/
-    - src/lib/codex-art.ts
-  description: |
-    Depends on TASK-493, TASK-494, TASK-495. Admin official/codex editors and admin publish-from-creator
-    flows use RealmsImagePicker. On publish with a new upload: create bank asset named after the entity,
-    auto-tag with that entity category (admin may add more tags), set entity.image_id. No parallel
-    entity-tied-only upload paths remain on image-capable surfaces.
-  acceptance_criteria:
-    - Species, creatures, weapons, armor, shields, powers, techniques, empowered, equipment editors
-      use shared picker.
-    - Admin creator publish-to-Realms uploads land in bank with auto name + auto category tag.
-    - Existing species/armament art still displays (via migration or dual-read until TASK-498).
-    - BUILD_VALIDATION + npm run build.
-
----
-
-- id: TASK-497
-  title: User/official row image_id parity + copy-on-add + creator bank picker
-  created_at: 2026-07-16
-  created_by: agent
-  priority: medium
-  status: not-started
-  parent_task: TASK-495
-  related_files:
-    - src/lib/library-columnar.ts
-    - src/app/api/user/library/[type]/route.ts
-    - src/app/api/official/[type]/route.ts
-    - src/docs/SUPABASE_SCHEMA.md
-  description: |
-    Depends on TASK-492 + TASK-495 (+ TASK-494). User_* tables get image_id (same semantics as
-    official/codex). Copy official→user copies image_id (same master bank file — no duplicate upload).
-    Creators: guests and signed-in users pick from bank by category; only admins upload-into-bank
-    (from admin surfaces / publish-to-Realms). Delivers original TASK-417 scope (user_* parity + copy-on-add + picker).
-  acceptance_criteria:
-    - Migrations + columnar/API for user_powers, user_techniques, user_empowered_techniques,
-      user_items, user_creatures, user_species image_id (+ equipment when that path exists).
-    - Add-to-library / copy preserves image_id.
-    - Creators can pick bank images; non-admins cannot upload into the bank.
-    - GuidedChoiceCard resolves official and user rows identically; npm run build; BUILD_VALIDATION.
-  notes: |
-    No general-user custom card-art upload into a private bucket for this epic — shared bank only.
-    Personal portrait/profile custom upload remains separate (TASK-499 adds bank pick option).
-
----
-
-- id: TASK-498
-  title: Migrate existing codex-art entity files into Realms Image Library catalog
-  created_at: 2026-07-16
-  created_by: agent
-  priority: medium
-  status: not-started
-  parent_task: TASK-492
-  related_files:
-    - sql/
-    - src/lib/codex-art.ts
-    - src/docs/SUPABASE_SCHEMA.md
-  description: |
-    Depends on TASK-492 and after TASK-494/496 wiring. One-time migration: register existing
-    codex-art/{entityType}/{entityId}.jpg as bank assets (name from entity, category from type),
-    set entity.image_id, retire entity-tied-only paths. Prefer moving/referencing the same Storage
-    object (no visual churn). Codex data: propose → owner approve → apply.
-  acceptance_criteria:
-    - Migration proposed and owner-approved before apply.
-    - Existing species/armament (and phase-2) images appear in /admin/images with correct tags.
-    - Entities resolve via image_id; no broken cards.
-    - Old entity-tied upload route deprecated or removed after callers gone.
-    - AI_CHANGELOG + schema notes updated.
-  notes: |
-    Run last among 491–499. Do not delete Storage objects until catalog + refs verified.
-
----
-
-- id: TASK-499
-  title: Portrait + profile picture — pick species/creature bank images
-  created_at: 2026-07-16
-  created_by: agent
-  priority: medium
-  status: not-started
-  parent_task: TASK-495
-  related_files:
-    - src/components/shared/image-upload-modal.tsx
-    - src/app/(main)/my-account/page.tsx
-    - src/components/character-creator/steps/finalize-step.tsx
-    - src/app/api/upload/
-  description: |
-    Depends on TASK-495. Character portrait and account profile-picture flows gain choose from
-    Realms Image Library filtered to species + creature tags (guests/signed-in may pick). Keep
-    existing custom crop upload for personal photos. Selecting a bank image stores a reference or
-    copies the public URL into the portrait/profile field per ADR (portraits buckets may still hold
-    custom uploads only).
-  acceptance_criteria:
-    - Portrait + profile modals offer bank pick (species|creature) alongside custom upload.
-    - Picking a bank image works for guests where portrait staging already allows guest flow.
-    - No bank write from these surfaces; BUILD_VALIDATION; npm run build.
-  notes: |
-    Do not require admin. Custom upload remains; bank pick is additive.
+# TASK-491–499 done. TASK-500 deferred.
 
 ---
 
