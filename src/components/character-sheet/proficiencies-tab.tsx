@@ -10,7 +10,7 @@ import { useMemo, useState } from 'react';
 import { IconButton, Button, Input, DescriptorChip } from '@/components/ui';
 import { Plus, X, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { SectionHeader, TabSummarySection, SummaryItem, SummaryRow, ValueStepper, PartChipComponent, ConfirmActionModal } from '@/components/shared';
+import { TabSummarySection, SummaryItem, SummaryRow, ValueStepper, PartChipComponent, ConfirmActionModal, LibraryCollapsibleSection } from '@/components/shared';
 import type { PartData } from '@/lib/chip/part-data';
 import { AddProficiencyModal, type AddProficiencyVariant } from './add-proficiency-modal';
 import type { CharacterPower, CharacterTechnique, Item, CharacterProficiency } from '@/types';
@@ -429,11 +429,11 @@ export function ProficienciesTab({
         </div>
       )}
 
-      <div>
-        <SectionHeader
-          title="Owned Proficiencies"
-          rightContent={<span className="text-xs text-text-muted">{owned.length} total</span>}
-        />
+      <LibraryCollapsibleSection
+        title="Owned Proficiencies"
+        itemCount={owned.length}
+        rightContent={<span className="text-xs text-text-muted">{owned.length} total</span>}
+      >
         <div className="px-2 py-3 space-y-4">
           {owned.length === 0 ? (
             <p className="text-sm text-text-muted italic text-center py-2">No proficiencies saved.</p>
@@ -455,8 +455,7 @@ export function ProficienciesTab({
                             ? 'Built-in'
                           : 'Custom';
                 return (
-                  <div key={cat}>
-                    <h3 className="text-sm font-medium text-text-secondary mb-2">{sectionTitle}</h3>
+                  <LibraryCollapsibleSection key={cat} title={sectionTitle} itemCount={list.length}>
                     <div data-chip-group className="flex flex-wrap gap-2 items-start">
                       {list.map((prof) => {
                         const partData = ownedPartDataById.get(prof.id);
@@ -497,19 +496,19 @@ export function ProficienciesTab({
                         );
                       })}
                     </div>
-                  </div>
+                  </LibraryCollapsibleSection>
                 );
               })}
             </>
           )}
         </div>
-      </div>
+      </LibraryCollapsibleSection>
 
-      <div>
-        <SectionHeader
-          title="Missing For Current Loadout"
-          rightContent={<span className="text-xs text-danger-fg">{missing.length} missing</span>}
-        />
+      <LibraryCollapsibleSection
+        title="Missing For Current Loadout"
+        itemCount={missing.length}
+        rightContent={<span className="text-xs text-danger-fg">{missing.length} missing</span>}
+      >
         <div className="px-2 py-3">
           {missing.length === 0 ? (
             <p className="text-sm text-success-fg italic text-center py-2">
@@ -525,7 +524,7 @@ export function ProficienciesTab({
             </div>
           )}
         </div>
-      </div>
+      </LibraryCollapsibleSection>
 
       {addProficiencyVariant ? (
         <AddProficiencyModal

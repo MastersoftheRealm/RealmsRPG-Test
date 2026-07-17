@@ -708,6 +708,7 @@ export function LibrarySection({
                 onSort={(col) => setPowerSort(toggleSort(powerSort, col))}
                 rowChrome={powerRowChrome}
                 emptyMessage="No innate powers. Enter edit mode (click the pencil) to mark powers as innate."
+                collapsible={innateEnergy > 0}
               />
             </div>
 
@@ -720,6 +721,7 @@ export function LibrarySection({
               onSort={(col) => setPowerSort(toggleSort(powerSort, col))}
               rowChrome={powerRowChrome}
               emptyMessage="No powers learned"
+              collapsible={innateEnergy > 0}
             />
           </>
         )}
@@ -806,6 +808,7 @@ export function LibrarySection({
                 delete: !!(showLibraryEditControls && onRemoveWeapon),
               }}
               emptyMessage="No weapons (see Unarmed Prowess in Archetype section)"
+              collapsible
             />
 
             <ShieldsListSection
@@ -819,6 +822,7 @@ export function LibrarySection({
                 leftSlot: true,
                 delete: !!(showLibraryEditControls && onRemoveShield),
               }}
+              collapsible
             />
 
             <ArmorListSection
@@ -832,6 +836,7 @@ export function LibrarySection({
                 leftSlot: true,
                 delete: !!(showLibraryEditControls && onRemoveArmor),
               }}
+              collapsible
             />
 
             <EquipmentListSection
@@ -844,6 +849,7 @@ export function LibrarySection({
               rowChrome={{
                 delete: !!(showLibraryEditControls && onRemoveEquipment),
               }}
+              collapsible
             />
 
           </div>

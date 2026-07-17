@@ -87,7 +87,7 @@
 | + → ✓ selection button | `SelectionToggle`; equipped toggle: `EquipToggle`; innate: `InnateToggle` |
 | Source scope All / Realms / My Library | `SourceFilter` (on `SegmentedControl`) |
 | 2–N pill toggle | `SegmentedControl` |
-| Section header with + | `SectionHeader`; cost badge: `SectionCostBadge` |
+| Section header with + / collapse | `SectionHeader` (`collapsible`, `expanded`, `onExpandedChange`); `useLibrarySectionCollapse`; `LibraryCollapsibleSection`; entity list sections `collapsible` prop; cost badge: `SectionCostBadge` |
 | Dice roll button | `RollButton` |
 | +/- steppers | `ValueStepper`, `DecrementButton`, `IncrementButton` (ADR-0002 / TASK-487 — guided skills bonus chrome); quantities: `QuantitySelector` (wraps ValueStepper), `QuantityBadge`; `UnifiedSelectionModal` `showQuantity` = in-row quantity-first |
 | Point allocation display | `PointStatus`; guided Loadout/powers: `LoadoutBudgetBar`; powered/martial split: `PoweredMartialSlider` |
@@ -100,7 +100,7 @@
 | Feat tags (normalize + taxonomy) | `lib/codex/feat-tags.ts`, `lib/codex/feat-list.ts`; `sql/feat-tags-unification-phase*.sql` (phase 4 = live normalize chain); `docs/FEAT_TAGS.md` |
 | Part/property chips | `PartChipList`, `PartChipComponent` (thin aliases); `PartData` in `lib/chip/part-data.ts`; `partChipsFromDisplay` in `lib/chip/part-chips-from-display.ts` |
 | Part/property → PartData (library rows) | `lib/library/part-display.ts` — `computePartTrainingPoints`, `characterPartsToPartData`, `itemPropertiesToPartData` |
-| Entity list sections (powers/techniques/weapons/armor/etc.) | `*ListSection` from `entity-library-sections` |
+| Entity list sections (powers/techniques/weapons/armor/etc.) | `*ListSection` from `entity-library-sections`; multi-section tabs use `useLibrarySectionCollapse` + `SectionHeader` collapsible (empty closed; + Add expands) |
 | Species trait cards | **Deprecated for catalogs** — use `DetailOptionList` + `traitToDetailOption` (deep-dive / species-modal). Selection picks: `GuidedChoiceCard`. `SpeciesTraitCard` / `TraitGroup` remain exported for rare interactive use-tracking UIs only — do not use for new read-only lists. |
 | Creature stat block | `CreatureStatBlock` |
 | Filters | `ChipSelect`, `TagFilter`, `CheckboxFilter`, `SelectFilter`, `AbilityRequirementFilter` |
@@ -122,6 +122,7 @@
 | Health/skill/derived calculations (current source) | `lib/game/calculations.ts` |
 | Game constants / formulas | `lib/game/constants.ts`, `lib/game/formulas.ts` |
 | Skill allocation | `lib/game/skill-allocation.ts` |
+| Equipment equipped rules (single armor, create auto-equip) | `lib/game/equipment-equipped.ts` |
 | Archetype path / progression | `lib/game/archetype-path.ts` (incl. `pathHasPlayerVisibleLevel1`, `pathHiddenFromPlayerPicker`, `innatePowers`; shared admin parsers `parseOptionalJsonField` / `parseIdQuantityStrings` / `serializeIdQuantityStrings` / `parseRecommendedAbilities` — TASK-476), `lib/game/archetype-display.ts`, `lib/game/innate-eligibility.ts`, `lib/game/path-validation.ts` (Appendix G innate publish checks), `components/character-sheet/path-level-guidance.tsx`, `components/character-sheet/archetype-path-identity.tsx`, `components/character-sheet/edit-archetype-modal.tsx`, `app/(main)/codex/CodexArchetypesTab.tsx`, `app/(main)/admin/codex/AdminArchetypesTab.tsx` (structured recommended-ability `ValueStepper`s + loadout controls — TASK-404; Advanced Path JSON escape hatch only), creator `skills-step` / `feats-step` apply actions |
 | Crafting / encounter helpers | `lib/game/crafting-utils.ts`, `lib/game/encounter-utils.ts` |
 | Power / technique / item / empowered calc | `lib/calculators/*-calc.ts`, `mechanic-builder.ts` |

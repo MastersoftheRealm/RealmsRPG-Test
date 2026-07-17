@@ -483,6 +483,7 @@ export function FeatsTab({
         sortState={traitSort}
         onSort={(col) => setTraitSort(toggleSort(traitSort, col))}
         emptyMessage="No traits"
+        collapsible
       />
 
       <FeatsTraitsListSection
@@ -512,6 +513,7 @@ export function FeatsTab({
         onSort={(col) => setArchetypeFeatSort(toggleSort(archetypeFeatSort, col))}
         rowChrome={{ delete: !!(showEditControls && onRemoveFeat) }}
         emptyMessage="No archetype feats selected"
+        collapsible
       />
 
       <FeatsTraitsListSection
@@ -541,6 +543,7 @@ export function FeatsTab({
         onSort={(col) => setCharacterFeatSort(toggleSort(characterFeatSort, col))}
         rowChrome={{ delete: !!(showEditControls && onRemoveFeat) }}
         emptyMessage="No character feats selected"
+        collapsible
       />
 
       {hasStateFeats && (
@@ -553,6 +556,7 @@ export function FeatsTab({
           sortState={stateFeatSort}
           onSort={(col) => setStateFeatSort(toggleSort(stateFeatSort, col))}
           rowChrome={{ delete: !!(showEditControls && onRemoveFeat) }}
+          collapsible
         />
       )}
 

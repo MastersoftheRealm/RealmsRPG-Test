@@ -441,6 +441,30 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
+#### DEV-V-008-T015 — Sheet header armor DR + Critical Range (TASK-512)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Character sheet header |
+| **Where** | `/characters/[id]` |
+| **Needs** | Character with armor equipped vs unarmored |
+
+**Steps**
+1. Open a character with **no** equipped armor — confirm **Damage Reduction** and **Critical Range** do not appear in the header vitals row (Speed/Evasion area).
+2. Equip armor with known DR (and optional Critical Range +1 property). Confirm header shows **Damage Reduction** and **Critical Range** next to Speed/Evasion.
+3. Compare values to the armor row in the library list (DR column; Critical Range column when the armor has a crit bonus — header Critical Range = sheet **Evasion + 10 +** stacked crit bonus).
+4. Toggle dark mode; confirm labels readable and values use theme tokens.
+
+**Expected**
+- Unarmored: no DR / Critical Range blocks.
+- Armored: values match equipped armor math from shared helpers.
+- Accessible labels on stat values.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 #### DEV-V-008-T002 — Characters list shows path name column
 
 | Field | Value |
@@ -732,7 +756,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats.
 
@@ -852,9 +876,9 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-009 — Character sheet refactor |
-| **Task** | TASK-502 |
+| **Task** | TASK-502, TASK-513 |
 | **Where** | `/characters/[id]` → Library → Powers and Techniques (desktop) |
-| **Steps** | 1. Open Techniques with at least one technique that has an energy cost. 2. Confirm list headers are **Name \| Action \| Weapon \| Training Pts** plus a far-right **Energy** header over the spend buttons (no separate static Energy *value* column in the middle). 3. Confirm each paid technique shows a single far-right spend button labeled with the cost number (RollButton style), and no duplicate static energy number in the data columns. 4. Click the spend button; confirm current Energy decreases by that cost. 5. Open Powers; confirm the same pattern (Energy header over rightSlot spend buttons only). 6. Optional: open a campaign member character view; confirm energy costs still appear as disabled far-right buttons under Energy (not a static mid-row Energy column, and not clickable no-op spend). |
+| **Steps** | 1. Open Techniques with at least one technique that has an energy cost. 2. Confirm list headers are **Name \| Action \| Attack** plus a far-right **Energy** header over the spend buttons (no separate static Energy *value* column in the middle; no collapsed **TP** column — TP may still appear on expanded part chips). 3. Confirm each paid technique shows a single far-right spend button labeled with the cost number (RollButton style), and no duplicate static energy number in the data columns. 4. Click the spend button; confirm current Energy decreases by that cost. 5. Open Powers; confirm the same pattern (Energy header over rightSlot spend buttons only). 6. Optional: open a campaign member character view; confirm energy costs still appear as disabled far-right buttons under Energy (not a static mid-row Energy column, and not clickable no-op spend). |
 | **Expected** | Energy cost appears only as the far-right spend control under an **Energy** ListHeader label; no duplicate static Energy data column beside it. View-only campaign sheet uses the same rightSlot chrome disabled. Creature/library browse lists that lack spend buttons may still show an Energy data column. Creator selected lists may keep an Energy column for budgeting (remove affordance only — not spend). |
 | **Report** | DEV-V-009-T011: PASS / FAIL / SKIP — |
 
@@ -868,6 +892,50 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Steps** | 1. Open sheet in normal (non-edit) view. 2. Click the portrait. 3. Confirm a preview modal opens with the enlarged portrait; close it. 4. Toggle edit mode. 5. Click the portrait. |
 | **Expected** | Play view: click opens ExpandableImage preview (not navigation). Edit mode: click opens **Upload Character Portrait** crop modal instead of preview. |
 | **Report** | DEV-V-009-T012: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T013 — Library tab section collapse + add expands
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-510 |
+| **Where** | `/characters/[id]` → Library → Feats, Powers (with innate energy), Inventory, Proficiencies, Notes |
+| **Steps** | 1. Open Feats; confirm Traits / Archetype Feats / Character Feats each show chevron + title (+ Add where applicable); empty sections start collapsed, sections with items start expanded. 2. Collapse a section; confirm list/empty text hides but header + chevron + Add remain. 3. Expand via chevron; collapse again. 4. With a section collapsed, click + Add and complete add; confirm that section expands after add. 5. Inventory: weapons/shields/armor/equipment sections behave the same. 6. Techniques tab: confirm no chevron (single section). 7. Notes: Appearance / Archetype / General / Custom Notes collapse; Custom Notes + expands after add note. 8. Proficiencies: Owned + Missing sections and owned category groups collapse. |
+| **Expected** | Session-only collapse state; empty default closed, non-empty default open; content hidden when collapsed; add-via-+ expands target section; techniques single-section has no chevron. |
+| **Report** | DEV-V-009-T013: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T014 — Auto-proficiency over-cap toast (no render warning)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-508 |
+| **Where** | `/characters/[id]` with proficiencies near/over TP budget |
+| **Steps** | 1. Open sheet; open browser console. 2. Add or change equipment/powers so auto-proficiency sync would exceed TP (or use a character already over soft cap). 3. Confirm warning toast still appears when over limit. 4. Confirm no React warning: "Cannot update ToastProvider while rendering CharacterSheetPage". |
+| **Expected** | Toast after commit only; no setState-during-render console error. |
+| **Report** | DEV-V-009-T014: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T015 — Single armor equip + create auto-equip (TASK-509)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-509 |
+| **Where** | `/characters/[id]` Inventory; guided/advanced create |
+| **Steps** | 1. On sheet, equip one armor via toggle; equip a second — first unequips. 2. Create a new character (guided or advanced); on sheet confirm weapons/shields/general gear equipped and exactly one armor (highest DR if multiple). 3. Reload an old save — equip flags unchanged unless user toggles. |
+| **Expected** | At most one equipped armor; starter equip on create only; weapons/shields/gear equipped per applyStarterEquippedFlags. |
+| **Report** | DEV-V-009-T015: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T016 — Archetype armaments empty hide + milestone edit-only (TASK-511)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-511 |
+| **Where** | `/characters/[id]` → Archetype |
+| **Steps** | 1. Character with no equipped shields/armor — confirm Shields/Armor blocks not shown (no empty tables). 2. Equip shield/armor — tables appear with compact range where applicable. 3. Powered-Martial mixed archetype: milestone Innate/Feat toggles visible in section edit only; play view read-only. 4. Dark mode: milestone labels readable. |
+| **Expected** | Empty quick-armament sections hidden; milestone controls gated to edit; unarmed row label/range polish intact. |
+| **Report** | DEV-V-009-T016: PASS / FAIL / SKIP — |
 
 ---
 

@@ -8,18 +8,24 @@
 'use client';
 
 import { useCallback } from 'react';
+import { toggleSheetArmorEquipped } from '@/lib/game/equipment-equipped';
 import { mergeEquipmentIntoInventory } from '@/lib/game/skill-allocation';
 import type { Character, CharacterPower, CharacterTechnique, Item } from '@/types';
 import type { CharacterSheetStats } from './use-character-sheet-derived';
 import type { AddModalType } from './character-sheet-context';
 import { matchesSheetEquipmentItem } from './sheet-item-match';
+import {
+  deferProficiencyOverLimitToast,
+  type ApplyAutoProficienciesResult,
+} from './use-sheet-auto-proficiencies';
 
 type UseSheetLibraryActionsArgs = {
   character: Character | null;
   setCharacter: React.Dispatch<React.SetStateAction<Character | null>>;
   calculatedStats: CharacterSheetStats | null;
   addModalType: AddModalType;
-  applyAutoProficiencies: (next: Character, reason: string) => Character | null;
+  applyAutoProficiencies: (next: Character, reason: string) => ApplyAutoProficienciesResult;
+  showToast: (message: string, variant?: 'success' | 'error' | 'warning' | 'info') => void;
 };
 
 export function useSheetLibraryActions({
@@ -28,20 +34,21 @@ export function useSheetLibraryActions({
   calculatedStats,
   addModalType,
   applyAutoProficiencies,
+  showToast,
 }: UseSheetLibraryActionsArgs) {
   const handleAddPowers = useCallback(
     (powers: CharacterPower[], asInnate = false) => {
-      setCharacter((prev) => {
-        if (!prev) return prev;
-        const toAdd = asInnate ? powers.map((p) => ({ ...p, innate: true })) : powers;
-        const candidate: Character = {
-          ...prev,
-          powers: [...(prev.powers || []), ...toAdd],
-        };
-        return applyAutoProficiencies(candidate, 'Adding powers');
-      });
+      if (!character) return;
+      const toAdd = asInnate ? powers.map((p) => ({ ...p, innate: true })) : powers;
+      const candidate: Character = {
+        ...character,
+        powers: [...(character.powers || []), ...toAdd],
+      };
+      const result = applyAutoProficiencies(candidate, 'Adding powers');
+      setCharacter(result.character);
+      deferProficiencyOverLimitToast(showToast, result.overLimitWarning);
     },
-    [applyAutoProficiencies, setCharacter],
+    [character, applyAutoProficiencies, setCharacter, showToast],
   );
 
   const handleRemovePower = useCallback(
@@ -95,16 +102,16 @@ export function useSheetLibraryActions({
 
   const handleAddTechniques = useCallback(
     (techniques: CharacterTechnique[]) => {
-      setCharacter((prev) => {
-        if (!prev) return prev;
-        const candidate: Character = {
-          ...prev,
-          techniques: [...(prev.techniques || []), ...techniques],
-        };
-        return applyAutoProficiencies(candidate, 'Adding techniques');
-      });
+      if (!character) return;
+      const candidate: Character = {
+        ...character,
+        techniques: [...(character.techniques || []), ...techniques],
+      };
+      const result = applyAutoProficiencies(candidate, 'Adding techniques');
+      setCharacter(result.character);
+      deferProficiencyOverLimitToast(showToast, result.overLimitWarning);
     },
-    [applyAutoProficiencies, setCharacter],
+    [character, applyAutoProficiencies, setCharacter, showToast],
   );
 
   const handleRemoveTechnique = useCallback(
@@ -147,11 +154,11 @@ export function useSheetLibraryActions({
           weapons: [...((character.equipment?.weapons as Item[]) || []), ...items],
         },
       };
-      const next = applyAutoProficiencies(candidate, 'Adding weapons');
-      if (!next) return;
-      setCharacter(next);
+      const result = applyAutoProficiencies(candidate, 'Adding weapons');
+      setCharacter(result.character);
+      deferProficiencyOverLimitToast(showToast, result.overLimitWarning);
     },
-    [character, applyAutoProficiencies, setCharacter],
+    [character, applyAutoProficiencies, setCharacter, showToast],
   );
 
   const handleRemoveWeapon = useCallback(
@@ -206,11 +213,11 @@ export function useSheetLibraryActions({
           armor: [...((character.equipment?.armor as Item[]) || []), ...items],
         },
       };
-      const next = applyAutoProficiencies(candidate, 'Adding armor');
-      if (!next) return;
-      setCharacter(next);
+      const result = applyAutoProficiencies(candidate, 'Adding armor');
+      setCharacter(result.character);
+      deferProficiencyOverLimitToast(showToast, result.overLimitWarning);
     },
-    [character, applyAutoProficiencies, setCharacter],
+    [character, applyAutoProficiencies, setCharacter, showToast],
   );
 
   const handleRemoveArmor = useCallback(
@@ -242,10 +249,10 @@ export function useSheetLibraryActions({
               ...prev,
               equipment: {
                 ...prev.equipment,
-                armor: ((prev.equipment?.armor as Item[]) || []).map((a, idx) =>
-                  matchesSheetEquipmentItem(a, itemId, idx)
-                    ? { ...a, equipped: !a.equipped }
-                    : a,
+                armor: toggleSheetArmorEquipped(
+                  (prev.equipment?.armor as Item[]) || [],
+                  itemId,
+                  matchesSheetEquipmentItem,
                 ),
               },
             }
@@ -265,11 +272,11 @@ export function useSheetLibraryActions({
           shields: [...((character.equipment?.shields as Item[]) || []), ...items],
         },
       };
-      const next = applyAutoProficiencies(candidate, 'Adding shields');
-      if (!next) return;
-      setCharacter(next);
+      const result = applyAutoProficiencies(candidate, 'Adding shields');
+      setCharacter(result.character);
+      deferProficiencyOverLimitToast(showToast, result.overLimitWarning);
     },
-    [character, applyAutoProficiencies, setCharacter],
+    [character, applyAutoProficiencies, setCharacter, showToast],
   );
 
   const handleRemoveShield = useCallback(
@@ -325,11 +332,11 @@ export function useSheetLibraryActions({
           items: mergeEquipmentIntoInventory(currentItems, items),
         },
       };
-      const next = applyAutoProficiencies(candidate, 'Adding equipment');
-      if (!next) return;
-      setCharacter(next);
+      const result = applyAutoProficiencies(candidate, 'Adding equipment');
+      setCharacter(result.character);
+      deferProficiencyOverLimitToast(showToast, result.overLimitWarning);
     },
-    [character, applyAutoProficiencies, setCharacter],
+    [character, applyAutoProficiencies, setCharacter, showToast],
   );
 
   const handleRemoveEquipment = useCallback(

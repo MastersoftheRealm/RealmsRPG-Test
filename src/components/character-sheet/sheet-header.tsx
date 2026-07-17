@@ -12,7 +12,7 @@
 
 'use client';
 
-import { useState, useRef, useEffect, KeyboardEvent, ChangeEvent } from 'react';
+import { useState, useRef, useEffect, KeyboardEvent, ChangeEvent, useMemo } from 'react';
 import Image from 'next/image';
 import { Camera, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -32,7 +32,8 @@ import {
 import { useGameRules } from '@/hooks';
 import { calculateHealthEnergyPool } from '@/lib/game/formulas';
 import { useCharacterSheetOptional } from './character-sheet-context';
-import type { Character } from '@/types';
+import { getEquippedArmorQuickRef } from './library-list-helpers';
+import type { Character, Item } from '@/types';
 import { getEffectivePortrait, FALLBACK_PORTRAIT_DATA_URL } from '@/lib/portrait';
 import { resolveArchetypeDisplayName } from '@/lib/game/archetype-display';
 import { ArchetypePathGuidance } from './archetype-path-identity';
@@ -399,6 +400,28 @@ function LargeStatBlock({
   );
 }
 
+/** Compact read-only vitals for equipped armor (DR + Critical Range threshold). */
+function ArmorQuickRefStat({
+  label,
+  value,
+  valueAriaLabel,
+}: {
+  label: string;
+  value: number;
+  valueAriaLabel: string;
+}) {
+  return (
+    <Card className="flex flex-col items-center p-3 bg-surface-alt min-w-[72px] max-w-[100px] shadow-none">
+      <span className="text-xs font-semibold text-text-secondary uppercase tracking-wide text-center leading-tight">
+        {label}
+      </span>
+      <span className="text-2xl font-bold text-martial-fg mt-1" aria-label={valueAriaLabel}>
+        {value}
+      </span>
+    </Card>
+  );
+}
+
 const DEFAULT_ACTION_POINTS = 4;
 
 export function SheetHeader({
@@ -532,6 +555,12 @@ export function SheetHeader({
   const speedDisplay = formatSpeedForDisplay(calculatedStats.speed, speedDisplayUnit);
   const speedDisplayValue = typeof speedDisplay.value === 'number' && speedDisplay.value % 1 !== 0
     ? speedDisplay.value.toFixed(1) : String(speedDisplay.value);
+
+  const armorQuickRef = useMemo(() => {
+    const raw = character.equipment?.armor ?? character.armor;
+    const armorItems: Item[] = Array.isArray(raw) ? raw : raw ? [raw as Item] : [];
+    return getEquippedArmorQuickRef(armorItems, calculatedStats.evasion);
+  }, [character.equipment?.armor, character.armor, calculatedStats.evasion]);
 
   // Handle name editing
   const handleNameSubmit = () => {
@@ -716,7 +745,7 @@ export function SheetHeader({
         </div>
 
         {/* Center section with Speed/Evasion - grows to fill available space */}
-        <div className="flex-1 flex items-center justify-center gap-4">
+        <div className="flex-1 flex flex-wrap items-center justify-center gap-3 md:gap-4">
           <LargeStatBlock 
             label="Speed" 
             value={speedDisplayValue}
@@ -738,6 +767,20 @@ export function SheetHeader({
             minBase={0}
             maxBase={20}
           />
+          {armorQuickRef && (
+            <>
+              <ArmorQuickRefStat
+                label="Damage Reduction"
+                value={armorQuickRef.damageReduction}
+                valueAriaLabel={`Damage Reduction ${armorQuickRef.damageReduction}`}
+              />
+              <ArmorQuickRefStat
+                label="Critical Range"
+                value={armorQuickRef.criticalRange}
+                valueAriaLabel={`Critical Range ${armorQuickRef.criticalRange}`}
+              />
+            </>
+          )}
         </div>
 
         {/* Right: Action Points (left, spans vertically) + Health & Energy (right) */}

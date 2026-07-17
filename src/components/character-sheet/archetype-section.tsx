@@ -205,9 +205,6 @@ function WeaponsSection({
     <tr className="border-t border-border-light align-top">
       <td className="py-2 font-medium text-text-secondary">
         Unarmed Prowess
-        {hasProwess && (
-          <span className="text-xs text-primary-link-fg ml-1">(Proficient)</span>
-        )}
       </td>
       <td className="text-center py-2 text-text-muted dark:text-text-secondary">Melee</td>
       <td className="text-center py-2">
@@ -280,20 +277,12 @@ function ShieldsSection({
   const equippedShields = shields.filter(s => s.equipped);
 
   return (
-    <>
-      <QuickShieldsTable
-        items={equippedShields as unknown as import('@/components/shared').QuickArmamentItem[]}
-        abilities={abilities}
-        martialProf={martialProf}
-        filterEquipped={false}
-      />
-      {equippedShields.length === 0 && (
-        <div className="bg-surface-alt rounded-lg p-3 mb-4">
-          <SectionHeader title="Shields" className="mb-2" />
-          <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-2">No shield equipped</p>
-        </div>
-      )}
-    </>
+    <QuickShieldsTable
+      items={equippedShields as unknown as import('@/components/shared').QuickArmamentItem[]}
+      abilities={abilities}
+      martialProf={martialProf}
+      filterEquipped={false}
+    />
   );
 }
 
@@ -313,19 +302,11 @@ function ArmorSection({
   const equippedArmor = armorArray.filter((a): a is Item => a !== null && a !== undefined && (a as Item).equipped === true);
 
   return (
-    <>
-      <QuickArmorTable
-        items={equippedArmor as unknown as import('@/components/shared').QuickArmamentItem[]}
-        abilities={abilities}
-        filterEquipped={false}
-      />
-      {equippedArmor.length === 0 && (
-        <div className="bg-surface-alt rounded-lg p-3 mb-4">
-          <SectionHeader title="Armor" className="mb-2" />
-          <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-2">No armor equipped</p>
-        </div>
-      )}
-    </>
+    <QuickArmorTable
+      items={equippedArmor as unknown as import('@/components/shared').QuickArmamentItem[]}
+      abilities={abilities}
+      filterEquipped={false}
+    />
   );
 }
 
@@ -487,7 +468,7 @@ export function ArchetypeSection({
           {martialProf > 0 && (
             <div className={cn(
               'flex-1 rounded-lg px-3 py-2 flex flex-col gap-0.5 min-w-0',
-              'bg-martial-light dark:bg-martial-light'
+              'bg-martial-light'
             )}>
               <span className="text-sm font-medium text-martial-fg">Martial</span>
               <span className="text-sm text-martial-fg" title="Prof: proficiency bonus · Potency: 10 + Prof + Ability">
@@ -498,9 +479,9 @@ export function ArchetypeSection({
         </div>
       )}
       
-      {/* Mixed Archetype Milestone Choices */}
-      {archetypeType === 'mixed' && milestoneLevels.length > 0 && (
-        <div className="mb-4 p-3 bg-gradient-to-r from-warning-50 to-power-light border border-warning-200 rounded-lg">
+      {/* Mixed Archetype Milestone Choices — edit mode only */}
+      {archetypeType === 'mixed' && milestoneLevels.length > 0 && showEditControls && (
+        <div className="mb-4 p-3 bg-gradient-to-r from-warning-light to-power-light border border-warning-border rounded-lg">
           <SectionHeader title="Milestone Choices" className="mb-2" />
           <div className="flex flex-wrap gap-2">
             {milestoneLevels.map((milestoneLevel) => {
@@ -508,9 +489,10 @@ export function ArchetypeSection({
               return (
                 <div key={milestoneLevel} className="flex items-center gap-1">
                   <span className="text-xs text-text-muted dark:text-text-secondary min-w-[32px]">Lv.{milestoneLevel}:</span>
-                  {showEditControls && onMilestoneChoiceChange ? (
+                  {onMilestoneChoiceChange ? (
                     <div className="flex gap-1">
                       <button
+                        type="button"
                         onClick={() => onMilestoneChoiceChange(milestoneLevel, 'innate')}
                         className={cn(
                           'px-2 py-0.5 text-xs rounded transition-colors',
@@ -523,6 +505,7 @@ export function ArchetypeSection({
                         ✨ Innate
                       </button>
                       <button
+                        type="button"
                         onClick={() => onMilestoneChoiceChange(milestoneLevel, 'feat')}
                         className={cn(
                           'px-2 py-0.5 text-xs rounded transition-colors',
@@ -535,19 +518,7 @@ export function ArchetypeSection({
                         🎯 Feat
                       </button>
                     </div>
-                  ) : (
-                    <span className={cn(
-                      'px-2 py-0.5 text-xs rounded',
-                      currentChoice === 'innate'
-                        ? 'bg-power-light text-power-fg'
-                        : currentChoice === 'feat'
-                          ? 'bg-martial-light text-martial-fg'
-                          : 'bg-surface text-text-muted dark:text-text-secondary italic'
-                    )}>
-                      {currentChoice === 'innate' ? '✨ Innate' : 
-                       currentChoice === 'feat' ? '🎯 Feat' : 'Not chosen'}
-                    </span>
-                  )}
+                  ) : null}
                 </div>
               );
             })}

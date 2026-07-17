@@ -178,6 +178,7 @@ export {
   ArmorListSection,
   EquipmentListSection,
   FeatsTraitsListSection,
+  LibraryCollapsibleSection,
   splitDamageDiceAndType,
 } from './entity-library-sections';
 export type {

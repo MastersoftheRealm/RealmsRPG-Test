@@ -31,6 +31,10 @@ import { buildSuggestedAbilityArray } from '@/lib/game/suggested-abilities';
 import { buildGuidedSkillsArray } from '@/lib/guided-creator/build-skills';
 import { buildRequiredProficiencies } from '@/lib/proficiencies';
 import { defaultLibraryTabVisibilityForArchetype } from '@/lib/character-library-tab-visibility';
+import {
+  applyStarterEquippedFlags,
+  itemDamageReduction,
+} from '@/lib/game/equipment-equipped';
 import { normalizeId } from '@/lib/utils';
 
 interface CodexPartLike {
@@ -273,6 +277,21 @@ export function buildGuidedCharacterPayload(
     return rows;
   })();
 
+  const drForInventoryRow = (row: { id: string }) => {
+    const official = findByNormalizedId(ctx.officialItems, row.id);
+    if (official) return itemDamageReduction(official);
+    const codex = findByNormalizedId(ctx.codexEquipment, row.id);
+    if (codex) {
+      return itemDamageReduction({
+        armorValue: codex.armor_value,
+        properties: codex.properties?.map((name) => ({ name })),
+      });
+    }
+    return 0;
+  };
+
+  const equippedInventory = applyStarterEquippedFlags(inventory, drForInventoryRow);
+
   // DESIGN_INTENT: Guided drafts store lean ids only. Resolve parts/properties from
   // official/codex libraries here so buildRequiredProficiencies matches custom
   // getCharacter(), then persist the computed list — cleanForSave strips power/item
@@ -280,7 +299,7 @@ export function buildGuidedCharacterPayload(
   const powersForProf = resolvePowersForProficiency(draft, ctx.officialPowers);
   const techniquesForProf = resolveTechniquesForProficiency(draft, ctx.officialTechniques);
   const armamentsForProf = resolveArmamentsForProficiency(
-    inventory,
+    equippedInventory,
     ctx.officialItems,
     ctx.codexEquipment
   );
@@ -334,11 +353,11 @@ export function buildGuidedCharacterPayload(
     powers: powersForSave,
     techniques: techniquesForSave,
     equipment: {
-      inventory,
-      weapons: inventory.filter((i) => i.type === 'weapon'),
-      armor: inventory.filter((i) => i.type === 'armor'),
-      items: inventory.filter((i) => i.type === 'equipment'),
-      shields: inventory.filter((i) => i.type === 'shield'),
+      inventory: equippedInventory,
+      weapons: equippedInventory.filter((i) => i.type === 'weapon'),
+      armor: equippedInventory.filter((i) => i.type === 'armor'),
+      items: equippedInventory.filter((i) => i.type === 'equipment'),
+      shields: equippedInventory.filter((i) => i.type === 'shield'),
     },
     proficiencies,
     ...(libraryTabVisibility && { libraryTabVisibility }),

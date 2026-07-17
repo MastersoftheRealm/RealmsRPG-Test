@@ -19,6 +19,7 @@ import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations'
 import type { CoreRulesMap } from '@/types/core-rules';
 import { buildRequiredProficiencies } from '@/lib/proficiencies';
 import { defaultLibraryTabVisibilityForArchetype } from '@/lib/character-library-tab-visibility';
+import { applyStarterEquippedFlags, itemDamageReduction } from '@/lib/game/equipment-equipped';
 
 export const CHARACTER_STARTING_CURRENCY = 200;
 
@@ -456,7 +457,10 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
         
         // Transform equipment from inventory format to weapons/armor/items format
         // for compatibility with character sheet
-        const inventory = draft.equipment?.inventory || [];
+        const inventory = applyStarterEquippedFlags(
+          draft.equipment?.inventory || [],
+          (row) => itemDamageReduction(row as Item),
+        );
         const weapons = inventory.filter(item => item.type === 'weapon');
         const armor = inventory.filter(item => item.type === 'armor');
         const items = inventory.filter(item => item.type === 'equipment' || (!item.type));

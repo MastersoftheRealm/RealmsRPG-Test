@@ -2251,3 +2251,26 @@ Notes
 - Expected: When the name column is tight, hide the inline trait/feat type descriptor tag before truncating the name; tag remains available in the expanded row. Prefer column-width (container) over viewport breakpoints so narrow sheet panels on large screens behave correctly.
 - Disposition: Implemented in `grid-list-row.tsx` — name column is `@container`; compact inline badges use `hidden @[13rem]:inline-flex`. QA: DEV-V-009-T014.
 
+**Raw Feedback Log — 2026-07-17 (character sheet toast console error)**
+- Date: 2026-07-17
+- Context: Character sheet open / auto-proficiency sync
+- Priority: High
+- Feedback (verbatim):
+  Console error: Cannot update ToastProvider while rendering CharacterSheetPage. Stack points to showToast in toast.tsx from character sheet flow (useSheetAutoProficiencies / applyAutoProficiencies inside setCharacter updater).
+- Expected: No React setState-while-rendering warning; over-cap proficiency warning toast still appears when TP exceeds limit.
+- Disposition: Implemented as **TASK-508** — pure `computeAutoProficiencies` + deferred toast (`queueMicrotask`) after commit (not TASK-504; TASK-504 is expandable chips).
+
+**Raw Feedback Log — 2026-07-17 (Character sheet feedback batch — coordinator)**
+- Date: 2026-07-17
+- Context: Character sheet — parallel agent pass (toast, equip, collapse, archetype polish, header vitals, techniques columns)
+- Priority: High (mixed)
+- Feedback (themes):
+  - Fix React console error when auto-proficiency sync shows over-cap toast.
+  - Armor equip toggle must swap single equipped armor; new characters auto-equip starter gear (one armor by highest DR).
+  - Library subsections (Feats, Inventory, Notes, Proficiencies) collapsible; empty closed; + Add expands target section.
+  - Archetype: hide empty shields/armor blocks; weapon range compact; milestone choices edit-only; dark token polish.
+  - Header quick ref: Damage Reduction + Critical Range when armored.
+  - Techniques tab: no collapsed TP column (TP on expanded parts only).
+- Expected: Behaviors above on `/characters/[id]`; no ToastProvider render warning; existing saves unchanged on load except user equip actions.
+- Disposition: **TASK-508** toast · **TASK-509** equip/auto-equip · **TASK-510** section collapse · **TASK-511** archetype/milestone · **TASK-512** header DR/crit · **TASK-513** techniques TP column. Owner QA: DEV-V-008-T015, DEV-V-009-T011/T013–T016.
+

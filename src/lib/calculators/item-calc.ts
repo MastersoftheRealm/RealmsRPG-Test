@@ -360,6 +360,18 @@ export function deriveDamageReductionFromProperties(properties: ItemPropertyPayl
   return 1 + (drProp.op_1_lvl || 0);
 }
 
+/**
+ * Derive Critical Range +1 levels from properties (1 + op_1_lvl per stack).
+ */
+export function deriveCriticalRangeIncreaseFromProperties(properties: ItemPropertyPayload[]): number {
+  const critProp = (properties || []).find((p) => {
+    if (p.id === PROPERTY_IDS.CRITICAL_RANGE_PLUS_1) return true;
+    return p.name === 'Critical Range +1';
+  });
+  if (!critProp) return 0;
+  return 1 + (critProp.op_1_lvl || 0);
+}
+
 /** Dice sizes for shield amount display (level % 3 → d4, d6, d8) */
 const SHIELD_DICE_SIZES = [4, 6, 8] as const;
 
