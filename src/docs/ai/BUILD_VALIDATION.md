@@ -2492,6 +2492,43 @@ Automated via `npm test` (`src/lib/library-types.test.ts`).
 
 ---
 
+## DEV-V-024 — Client error handling (TASK-479)
+
+Convention: `ARCHITECTURE.md` § Client error handling. Automated helper coverage via `src/lib/api-client.test.ts`.
+
+#### DEV-V-024-T001 — getErrorMessage unit coverage
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-024 |
+| **Automated** | `npm test` — api-client.test.ts |
+
+**Expected** — `getErrorMessage` returns Error/string/object messages and falls back when empty.
+
+#### DEV-V-024-T002 — My Account surfaces profile load failure
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-024 |
+| **Task** | TASK-479 |
+| **Where** | `/my-account` |
+| **Steps** | 1. Sign in. 2. Open My Account with a forced profile-load failure (e.g. temporary network block on the profile action) or confirm that a successful load shows no danger Alert. 3. On failure, press Retry and confirm reload is attempted without a full browser refresh. 4. Trigger password-reset email / picture upload error paths if easy. |
+| **Expected** | Profile load failure shows a danger Alert + Retry (≥44px). User actions show inline error text — never succeed silently when Supabase returns `{ error }`. |
+| **Report** | DEV-V-024-T002: PASS / FAIL / SKIP — |
+
+#### DEV-V-024-T003 — Library delete/sync/add toast on failure
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-024 |
+| **Task** | TASK-479 |
+| **Where** | `/library` (My Library delete; Realms Library add; sync if available) |
+| **Steps** | Force a failing mutation (offline or invalid id) on delete, duplicate, or add-to-library. |
+| **Expected** | Error toast with a useful message; no silent no-op. Name lookup failures during creator save must not masquerade as “create new” when the API is down. |
+| **Report** | DEV-V-024-T003: PASS / FAIL / SKIP — |
+
+---
+
 ## DEV-V-016 — Library add/load selection parity (TASK-379)
 
 Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLibraryModal` as thin `UnifiedSelectionModal` wrapper. Confirm add (sheet) and load (creators) stay consistent.
@@ -3426,5 +3463,6 @@ Portrait cards match square crop; no search or ListHeader chrome; Add Character 
 | DEV-V-020 | Sitewide copy compliance (TASK-439) | — | Manual — see suite above |
 | DEV-V-022 | Characters list page (TASK-469) | — | Manual — see suite above |
 | DEV-V-023 | Admin Realms Image Library (TASK-493) | — | Manual — see suite above |
+| DEV-V-024 | Client error handling (TASK-479) | — | Automated (`npm test`) + manual smoke |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
