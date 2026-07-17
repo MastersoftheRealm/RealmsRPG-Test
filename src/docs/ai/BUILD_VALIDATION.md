@@ -732,7 +732,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats.
 
@@ -857,6 +857,17 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Steps** | 1. Open Techniques with at least one technique that has an energy cost. 2. Confirm list headers are **Name \| Action \| Weapon \| Training Pts** plus a far-right **Energy** header over the spend buttons (no separate static Energy *value* column in the middle). 3. Confirm each paid technique shows a single far-right spend button labeled with the cost number (RollButton style), and no duplicate static energy number in the data columns. 4. Click the spend button; confirm current Energy decreases by that cost. 5. Open Powers; confirm the same pattern (Energy header over rightSlot spend buttons only). 6. Optional: open a campaign member character view; confirm energy costs still appear as disabled far-right buttons under Energy (not a static mid-row Energy column, and not clickable no-op spend). |
 | **Expected** | Energy cost appears only as the far-right spend control under an **Energy** ListHeader label; no duplicate static Energy data column beside it. View-only campaign sheet uses the same rightSlot chrome disabled. Creature/library browse lists that lack spend buttons may still show an Energy data column. Creator selected lists may keep an Energy column for budgeting (remove affordance only — not spend). |
 | **Report** | DEV-V-009-T011: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T012 — Sheet portrait expands in play; upload in edit
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-478 |
+| **Where** | `/characters/[id]` (character with a portrait) |
+| **Steps** | 1. Open sheet in normal (non-edit) view. 2. Click the portrait. 3. Confirm a preview modal opens with the enlarged portrait; close it. 4. Toggle edit mode. 5. Click the portrait. |
+| **Expected** | Play view: click opens ExpandableImage preview (not navigation). Edit mode: click opens **Upload Character Portrait** crop modal instead of preview. |
+| **Report** | DEV-V-009-T012: PASS / FAIL / SKIP — |
 
 ---
 
@@ -3444,6 +3455,67 @@ Portrait cards match square crop; no search or ListHeader chrome; Add Character 
 
 ---
 
+## DEV-V-025 — ExpandableImage adoption (TASK-478)
+
+Meaningful inline art uses shared click-to-enlarge; justified exceptions stay documented in `guide/03-entity-card-art.md`.
+
+#### DEV-V-025-T001 — Creature stat-block portrait expands
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-025 |
+| **Related task** | TASK-478 |
+| **Where** | Encounter or creature view that shows `CreatureStatBlock` with art |
+| **Needs** | Creature (or encounter creature) with an `imageUrl` |
+
+**Steps**
+1. Open a creature/stat-block surface that shows a portrait.
+2. Click the portrait.
+
+**Expected**
+- Preview modal opens with the enlarged creature art (`ExpandableImage`).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-025-T002 — Campaign roster chip portrait expands
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-025 |
+| **Related task** | TASK-478 |
+| **Where** | `/campaigns/[id]` |
+| **Needs** | Campaign with at least one character that has a portrait |
+
+**Steps**
+1. Open the campaign detail roster.
+2. Click a character chip portrait (not the sheet link).
+
+**Expected**
+- Preview modal opens; View sheet / remove controls still work.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-025-T003 — Account profile photo expands
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-025 |
+| **Related task** | TASK-478 |
+| **Where** | `/my-account` |
+| **Needs** | Signed-in user with a profile picture |
+
+**Steps**
+1. Open **My Account**.
+2. Click the circular profile photo.
+3. Confirm **Change Picture** still opens the crop upload modal.
+
+**Expected**
+- Photo click opens ExpandableImage preview; Change Picture remains the upload path.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -3464,5 +3536,6 @@ Portrait cards match square crop; no search or ListHeader chrome; Add Character 
 | DEV-V-022 | Characters list page (TASK-469) | — | Manual — see suite above |
 | DEV-V-023 | Admin Realms Image Library (TASK-493) | — | Manual — see suite above |
 | DEV-V-024 | Client error handling (TASK-479) | — | Automated (`npm test`) + manual smoke |
+| DEV-V-025 | ExpandableImage adoption (TASK-478) | — | Manual — see suite above |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

@@ -22,5 +22,6 @@ Use when the “why” is non-obvious (browser bugs, intentional asymmetry, prod
 | Quantity selection | Quantity-first in-row stepper — not a side column that shoves the row | `guide/02-components-and-lists.md` |
 | ± steppers | One chrome sitewide (guided skills bonus style via `ValueStepper` / Dec/Inc; `QuantitySelector` wraps it) | ADR-0002 · `DESIGN_SYSTEM.md` |
 | Codex writes | Audit → SQL propose → owner approve before live mutate | `realms-codex-data.mdc` |
+| ExpandableImage | Default for meaningful inline art; skip when nested in Link/button, edit-upload click, or decorative chrome | `guide/03-entity-card-art.md` § Adoption inventory |
 
 When you discover a hard-won constraint, add **one** row here and a `// DESIGN_INTENT:` at the code site.

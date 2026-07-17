@@ -11,11 +11,12 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`.
 
-**Counts:** 18 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 15 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
 **Realms Image Library epic (2026-07-16):** **TASK-491/492/493/494/495 done**. Next: **496** → 497/499 → 498. TASK-500 deferred.
 
-**Debt from AI workflow audit (2026-07-15):** TASK-478–480 — address alongside product work; repo-wide cadence → `/debt`. TASK-476/477/482/484/486/487/488/489/490 done; TASK-481 superseded by `/debt`. TASK-475 done (Enhanced shell basic mode).
+**Debt from AI workflow audit (2026-07-15):** TASK-480 — address alongside product work; repo-wide cadence → `/debt`. TASK-476/477/478/482/484/486/487/488/489/490 done; TASK-481 superseded by `/debt`. TASK-475 done (Enhanced shell basic mode). TASK-479 done (client error handling).
+
 
 
 ---
@@ -416,28 +417,6 @@ Do **not** read the done archive at session start.
     2026-07-01: Phase 1 species pipeline shipped; guided UI already reads image_url.
     2026-07-01: official_items.image_url + armament admin upload (weapon/armor/shield).
     2026-07-16: Realms Image Library epic (TASK-491–500); ADR-0003 replaces three-layer framing. TASK-417 archived (superseded).
-
----
-
-- id: TASK-478
-  title: ExpandableImage adoption audit + enforcement checklist
-  created_at: 2026-07-15
-  created_by: agent
-  priority: medium
-  status: not-started
-  related_files:
-    - src/components/shared/expandable-image.tsx
-    - src/docs/ai/FEATURE_INDEX.md
-    - src/docs/ai/DESIGN_INTENT.md
-    - src/docs/ai/guide/03-entity-card-art.md
-  description: |
-    Audit residual: ExpandableImage is the default for meaningful inline art but adoption is
-    pathway-specific. Audit feature surfaces for custom lightbox/img preview forks; migrate or
-    document justified exceptions.
-  acceptance_criteria:
-    - Inventory of meaningful images not using ExpandableImage/ListRowThumbnail.
-    - Migrate clear forks; document exceptions in DESIGN_INTENT or guide appendix.
-    - FEATURE_INDEX / art guide stay accurate; npm run build if code changes.
 
 ---
 

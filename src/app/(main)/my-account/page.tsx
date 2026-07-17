@@ -18,7 +18,7 @@ import { useAdmin } from '@/hooks';
 import { ProtectedRoute } from '@/components/layout';
 import { cn } from '@/lib/utils';
 import { LoadingState, Button, Input, Alert, PageContainer, Spinner, Card, PageHeader } from '@/components/ui';
-import { ImageUploadModal } from '@/components/shared';
+import { ExpandableImage, ImageUploadModal } from '@/components/shared';
 import { User as UserIcon, Mail, Lock, Trash2, AlertTriangle, AtSign, Camera } from 'lucide-react';
 
 function hasPasswordProvider(authUser: AuthUser | null): boolean {
@@ -432,21 +432,30 @@ function AccountContent() {
         <h2 className="text-lg font-bold text-text-primary mb-4">Profile Information</h2>
 
         <div className="flex items-center gap-4 mb-6 pb-4 border-b border-border-subtle">
-          <div className="relative w-20 h-20 rounded-full overflow-hidden bg-surface-alt border-2 border-border-light flex-shrink-0">
-            {profile?.photoURL ? (
-              // eslint-disable-next-line @next/next/no-img-element -- dynamic profile photo URL
-              <img src={profile.photoURL} alt="Profile" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-text-muted">
-                <UserIcon className="w-8 h-8" />
-              </div>
-            )}
-            {uploadingPicture && (
-              <div className="absolute inset-0 flex items-center justify-center bg-text-primary/40">
-                <Spinner size="sm" variant="white" />
-              </div>
-            )}
-          </div>
+          {profile?.photoURL ? (
+            <ExpandableImage
+              src={profile.photoURL}
+              alt="Profile"
+              className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-full border-2 border-border-light bg-surface-alt"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- dynamic profile photo URL */}
+              <img src={profile.photoURL} alt="" className="h-full w-full object-cover" />
+              {uploadingPicture && (
+                <div className="absolute inset-0 flex items-center justify-center bg-text-primary/40">
+                  <Spinner size="sm" variant="white" />
+                </div>
+              )}
+            </ExpandableImage>
+          ) : (
+            <div className="relative flex h-20 w-20 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-border-light bg-surface-alt text-text-muted dark:text-text-secondary">
+              <UserIcon className="h-8 w-8" aria-hidden />
+              {uploadingPicture && (
+                <div className="absolute inset-0 flex items-center justify-center bg-text-primary/40">
+                  <Spinner size="sm" variant="white" />
+                </div>
+              )}
+            </div>
+          )}
           <div>
             <Button
               variant="secondary"
@@ -454,10 +463,12 @@ function AccountContent() {
               onClick={() => setShowPictureModal(true)}
               disabled={uploadingPicture}
             >
-              <Camera className="w-4 h-4" />
+              <Camera className="w-4 h-4" aria-hidden />
               {profile?.photoURL ? 'Change Picture' : 'Add Picture'}
             </Button>
-            <p className="text-xs text-text-muted mt-1">JPG, PNG, GIF, or WebP. Max 5MB.</p>
+            <p className="mt-1 text-xs text-text-muted dark:text-text-secondary">
+              JPG, PNG, GIF, or WebP. Max 5MB.
+            </p>
             {pictureMessage && (
               <p className={cn('text-xs mt-1', pictureMessage.type === 'success' ? 'text-success-700 dark:text-success-400' : 'text-danger-700 dark:text-danger-400')}>
                 {pictureMessage.text}
