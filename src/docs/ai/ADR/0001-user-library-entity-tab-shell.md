@@ -23,3 +23,7 @@ Entity-specific row mapping, sanitize, and Creatures’ `CreatureStatBlock` stay
 - Positive: one sync/duplicate UX; less re-implementation surface.
 - Negative: Techniques `mode` and Creatures drift Map remain tab-local complexity.
 - Rejected: putting this in `src/components/shared/` (would invite admin/user mashups).
+
+## Follow-up (TASK-475)
+
+`UserLibraryEntityTabShell` accepts `enableSync={false}` for list chrome only (search / sort / empty / error / rows). That flag omits **both** the sync-all toolbar and duplicate confirm modals (naming is historical; Enhanced has neither flow). `LibraryEnhancedTab` uses this basic mode.

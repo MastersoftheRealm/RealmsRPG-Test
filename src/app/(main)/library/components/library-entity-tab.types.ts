@@ -2,9 +2,8 @@
  * Shared types/labels for My Library entity tabs (ADR-0001).
  */
 
-export interface LibraryEntityTabLabels {
-  entitySingular: string;
-  entityPlural: string;
+/** Labels for search/sort/list chrome only (`enableSync={false}`). */
+export interface LibraryEntityTabBasicLabels {
   searchPlaceholder: string;
   loadErrorMessage: string;
   emptyTitle: string;
@@ -12,6 +11,11 @@ export interface LibraryEntityTabLabels {
   createHref: string;
   createLabel: string;
   searchEmptyTitle: string;
+}
+
+export interface LibraryEntityTabLabels extends LibraryEntityTabBasicLabels {
+  entitySingular: string;
+  entityPlural: string;
   duplicateTitle: string;
   /** Tail of sync-all description after the count phrase. */
   syncAllRemovedRefsHint: string;
@@ -86,4 +90,16 @@ export const CREATURE_LIBRARY_LABELS: LibraryEntityTabLabels = {
   duplicateTitle: 'Duplicate creature?',
   syncAllRemovedRefsHint:
     'Parts, techniques, or properties that no longer exist in the codex may be removed.',
+};
+
+/** Enhanced equipment — list chrome only (no patch sync / duplicate). */
+export const ENHANCED_LIBRARY_LABELS: LibraryEntityTabBasicLabels = {
+  searchPlaceholder: 'Search by name, base item, or power...',
+  loadErrorMessage: 'Failed to load enhanced items',
+  emptyTitle: 'No enhanced items yet',
+  emptyMessage:
+    'Complete an enhanced crafting session and choose "Save to Library" to add enhanced equipment here.',
+  createHref: '/crafting',
+  createLabel: 'Go to Crafting',
+  searchEmptyTitle: 'No enhanced items match your search.',
 };

@@ -14,10 +14,9 @@ import {
   type SortState,
 } from '@/components/shared';
 import { Button, IconButton } from '@/components/ui';
-import type { LibraryEntityTabLabels } from './library-entity-tab.types';
+import type { LibraryEntityTabBasicLabels, LibraryEntityTabLabels } from './library-entity-tab.types';
 
-export interface UserLibraryEntityTabShellProps {
-  labels: LibraryEntityTabLabels;
+type UserLibraryEntityTabShellBaseProps = {
   isLoading: boolean;
   error: unknown;
   onRetry: () => void;
@@ -31,6 +30,15 @@ export interface UserLibraryEntityTabShellProps {
   gridColumns: string;
   filteredCount: number;
   children: ReactNode;
+  listClassName?: string;
+  /** Optional content after the list (e.g. RollLog). */
+  afterList?: ReactNode;
+};
+
+type UserLibraryEntityTabShellSyncProps = UserLibraryEntityTabShellBaseProps & {
+  /** Full sync/duplicate chrome (default). */
+  enableSync?: true;
+  labels: LibraryEntityTabLabels;
   driftedCount: number;
   syncingAll: boolean;
   showSyncAllConfirm: boolean;
@@ -41,40 +49,52 @@ export interface UserLibraryEntityTabShellProps {
   onCloseDuplicate: () => void;
   onConfirmDuplicate: () => void;
   duplicatePending: boolean;
-  listClassName?: string;
-  /** Optional content after the list (e.g. RollLog). */
-  afterList?: ReactNode;
+};
+
+type UserLibraryEntityTabShellBasicProps = UserLibraryEntityTabShellBaseProps & {
+  /**
+   * List chrome only (Enhanced tab): search / sort / empty / error / rows.
+   * Omits sync-all toolbar **and** duplicate confirm modals (no patch-sync entity).
+   */
+  enableSync: false;
+  labels: LibraryEntityTabBasicLabels;
+};
+
+export type UserLibraryEntityTabShellProps =
+  | UserLibraryEntityTabShellSyncProps
+  | UserLibraryEntityTabShellBasicProps;
+
+function isSyncMode(
+  props: UserLibraryEntityTabShellProps
+): props is UserLibraryEntityTabShellSyncProps {
+  return props.enableSync !== false;
 }
 
-/** Shared My Library toolbar + list chrome + sync/duplicate modals (ADR-0001). */
-export function UserLibraryEntityTabShell({
-  labels,
-  isLoading,
-  error,
-  onRetry,
-  totalCount,
-  emptyIcon,
-  search,
-  onSearchChange,
-  sortState,
-  onSort,
-  headerColumns,
-  gridColumns,
-  filteredCount,
-  children,
-  driftedCount,
-  syncingAll,
-  showSyncAllConfirm,
-  onOpenSyncAllConfirm,
-  onCloseSyncAllConfirm,
-  onConfirmSyncAll,
-  duplicateConfirm,
-  onCloseDuplicate,
-  onConfirmDuplicate,
-  duplicatePending,
-  listClassName = 'flex flex-col gap-1 mt-2',
-  afterList,
-}: UserLibraryEntityTabShellProps) {
+/**
+ * Shared My Library toolbar + list chrome (ADR-0001).
+ * Default = sync + duplicate; `enableSync={false}` = list chrome only (no sync-all, no duplicate).
+ */
+export function UserLibraryEntityTabShell(props: UserLibraryEntityTabShellProps) {
+  const {
+    labels,
+    isLoading,
+    error,
+    onRetry,
+    totalCount,
+    emptyIcon,
+    search,
+    onSearchChange,
+    sortState,
+    onSort,
+    headerColumns,
+    gridColumns,
+    filteredCount,
+    children,
+    listClassName = 'flex flex-col gap-1 mt-2',
+    afterList,
+  } = props;
+  const syncEnabled = isSyncMode(props);
+
   if (error) {
     return (
       <ErrorDisplay
@@ -105,22 +125,30 @@ export function UserLibraryEntityTabShell({
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+      <div
+        className={
+          syncEnabled
+            ? 'mb-4 flex flex-wrap items-center justify-between gap-2'
+            : 'mb-4'
+        }
+      >
         <SearchInput
           value={search}
           onChange={onSearchChange}
           placeholder={labels.searchPlaceholder}
         />
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={onOpenSyncAllConfirm}
-          disabled={driftedCount === 0 || syncingAll}
-        >
-          <RefreshCw className={`w-4 h-4 ${syncingAll ? 'animate-spin' : ''}`} />
-          Sync with current patch
-          {driftedCount > 0 ? ` (${driftedCount})` : ''}
-        </Button>
+        {syncEnabled ? (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={props.onOpenSyncAllConfirm}
+            disabled={props.driftedCount === 0 || props.syncingAll}
+          >
+            <RefreshCw className={`w-4 h-4 ${props.syncingAll ? 'animate-spin' : ''}`} />
+            Sync with current patch
+            {props.driftedCount > 0 ? ` (${props.driftedCount})` : ''}
+          </Button>
+        ) : null}
       </div>
 
       <ListHeader
@@ -142,33 +170,39 @@ export function UserLibraryEntityTabShell({
 
       {afterList}
 
-      <ConfirmActionModal
-        isOpen={!!duplicateConfirm}
-        onClose={onCloseDuplicate}
-        onConfirm={onConfirmDuplicate}
-        title={labels.duplicateTitle}
-        description={
-          duplicateConfirm
-            ? `Create a copy of "${duplicateConfirm.name}" in your library?`
-            : ''
-        }
-        confirmLabel="Duplicate"
-        loadingLabel="Duplicating..."
-        isLoading={duplicatePending}
-      />
+      {syncEnabled ? (
+        <>
+          <ConfirmActionModal
+            isOpen={!!props.duplicateConfirm}
+            onClose={props.onCloseDuplicate}
+            onConfirm={props.onConfirmDuplicate}
+            title={props.labels.duplicateTitle}
+            description={
+              props.duplicateConfirm
+                ? `Create a copy of "${props.duplicateConfirm.name}" in your library?`
+                : ''
+            }
+            confirmLabel="Duplicate"
+            loadingLabel="Duplicating..."
+            isLoading={props.duplicatePending}
+          />
 
-      <ConfirmActionModal
-        isOpen={showSyncAllConfirm}
-        onClose={onCloseSyncAllConfirm}
-        onConfirm={onConfirmSyncAll}
-        title="Sync with current patch?"
-        description={`Sync ${driftedCount} ${
-          driftedCount === 1 ? labels.entitySingular : labels.entityPlural
-        } to current patch rules. ${labels.syncAllRemovedRefsHint}`}
-        confirmLabel="Sync all"
-        loadingLabel="Syncing..."
-        isLoading={syncingAll}
-      />
+          <ConfirmActionModal
+            isOpen={props.showSyncAllConfirm}
+            onClose={props.onCloseSyncAllConfirm}
+            onConfirm={props.onConfirmSyncAll}
+            title="Sync with current patch?"
+            description={`Sync ${props.driftedCount} ${
+              props.driftedCount === 1
+                ? props.labels.entitySingular
+                : props.labels.entityPlural
+            } to current patch rules. ${props.labels.syncAllRemovedRefsHint}`}
+            confirmLabel="Sync all"
+            loadingLabel="Syncing..."
+            isLoading={props.syncingAll}
+          />
+        </>
+      ) : null}
     </div>
   );
 }
