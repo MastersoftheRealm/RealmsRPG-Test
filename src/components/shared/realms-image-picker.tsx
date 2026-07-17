@@ -387,7 +387,7 @@ export function RealmsImagePicker({
                           />
                           {isSelected && (
                             <span
-                              className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-primary-600 text-white shadow-sm"
+                              className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-primary-button text-text-on-dark shadow-sm"
                               aria-hidden
                             >
                               <Check className="h-4 w-4" />
