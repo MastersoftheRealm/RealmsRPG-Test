@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-17T17:10:05.641Z",
+  "generated_at": "2026-07-17T17:10:11.034Z",
   "tasks": [
     {
       "id": "TASK-461",
@@ -9515,6 +9515,13 @@
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
         {
+          "hash": "d7e7892f1b47f9578bb1cedfd8487cfbce666feb",
+          "subject": "Refresh task-reconcile report after KadinBranch merge (TASK-508 TASK-509 TASK-510 TASK-511 TASK-512 TASK-513)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
+        {
           "hash": "81c16106fe2b788a66d9cfefaf3d4f469de2ab0e",
           "subject": "Ship character sheet feedback (TASK-508–513): collapse, equip rules, header DR/crit, toast fix.",
           "files": [
@@ -9572,7 +9579,15 @@
       "status": "done",
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
-      "matches": [],
+      "matches": [
+        {
+          "hash": "d7e7892f1b47f9578bb1cedfd8487cfbce666feb",
+          "subject": "Refresh task-reconcile report after KadinBranch merge (TASK-508 TASK-509 TASK-510 TASK-511 TASK-512 TASK-513)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        }
+      ],
       "related_files": [
         "src/lib/game/equipment-equipped.ts",
         "src/lib/game/equipment-equipped.test.ts",
@@ -9589,7 +9604,15 @@
       "status": "done",
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
-      "matches": [],
+      "matches": [
+        {
+          "hash": "d7e7892f1b47f9578bb1cedfd8487cfbce666feb",
+          "subject": "Refresh task-reconcile report after KadinBranch merge (TASK-508 TASK-509 TASK-510 TASK-511 TASK-512 TASK-513)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        }
+      ],
       "related_files": [
         "src/components/shared/section-header.tsx",
         "src/hooks/use-library-section-collapse.ts",
@@ -9607,7 +9630,15 @@
       "status": "done",
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
-      "matches": [],
+      "matches": [
+        {
+          "hash": "d7e7892f1b47f9578bb1cedfd8487cfbce666feb",
+          "subject": "Refresh task-reconcile report after KadinBranch merge (TASK-508 TASK-509 TASK-510 TASK-511 TASK-512 TASK-513)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        }
+      ],
       "related_files": [
         "src/components/shared/quick-armaments-sections.tsx",
         "src/components/character-sheet/archetype-section.tsx",
@@ -9621,7 +9652,15 @@
       "status": "done",
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
-      "matches": [],
+      "matches": [
+        {
+          "hash": "d7e7892f1b47f9578bb1cedfd8487cfbce666feb",
+          "subject": "Refresh task-reconcile report after KadinBranch merge (TASK-508 TASK-509 TASK-510 TASK-511 TASK-512 TASK-513)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        }
+      ],
       "related_files": [
         "src/components/character-sheet/sheet-header.tsx",
         "src/components/character-sheet/library-list-helpers.ts",
@@ -9637,7 +9676,15 @@
       "status": "done",
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
-      "matches": [],
+      "matches": [
+        {
+          "hash": "d7e7892f1b47f9578bb1cedfd8487cfbce666feb",
+          "subject": "Refresh task-reconcile report after KadinBranch merge (TASK-508 TASK-509 TASK-510 TASK-511 TASK-512 TASK-513)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        }
+      ],
       "related_files": [
         "src/components/shared/entity-library-sections.tsx",
         "src/components/character-sheet/library-entity-rows.tsx",
