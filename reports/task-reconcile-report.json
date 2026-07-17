@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-17T14:49:58.343Z",
+  "generated_at": "2026-07-17T14:50:56.245Z",
   "tasks": [
     {
       "id": "TASK-461",
@@ -296,6 +296,21 @@
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "55419038633bf2582027c09e19b5545e1184ca92",
+          "subject": "Prepare KadinBranch for master merge (TASK-405 TASK-496 TASK-497 TASK-498 TASK-499)",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/app/(main)/my-account/page.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/ai/guide/03-entity-card-art.md"
+          ]
+        },
         {
           "hash": "9232e559faa2f17cb43da12907c55d642f8cccbe",
           "subject": "Restore remote code lost in rebase conflict resolution",
@@ -9038,7 +9053,6 @@
       ],
       "related_files": [
         "src/components/shared/realms-image-picker.tsx",
-        "src/components/shared/codex-art-upload-field.tsx",
         "src/components/shared/image-upload-modal.tsx",
         "src/components/shared/index.ts",
         "src/lib/realms-images.ts",
@@ -9057,7 +9071,23 @@
       "status": "done",
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
-      "matches": [],
+      "matches": [
+        {
+          "hash": "55419038633bf2582027c09e19b5545e1184ca92",
+          "subject": "Prepare KadinBranch for master merge (TASK-405 TASK-496 TASK-497 TASK-498 TASK-499)",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/app/(main)/my-account/page.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/ai/guide/03-entity-card-art.md"
+          ]
+        }
+      ],
       "related_files": [
         "src/docs/REALMS_PRODUCT_OVERVIEW.md",
         "src/components/guided-creator/guided-choice-card.tsx",
@@ -9075,7 +9105,23 @@
       "status": "done",
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
-      "matches": [],
+      "matches": [
+        {
+          "hash": "55419038633bf2582027c09e19b5545e1184ca92",
+          "subject": "Prepare KadinBranch for master merge (TASK-405 TASK-496 TASK-497 TASK-498 TASK-499)",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/app/(main)/my-account/page.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/ai/guide/03-entity-card-art.md"
+          ]
+        }
+      ],
       "related_files": [
         "src/app/(main)/admin/codex/AdminSpeciesTab.tsx",
         "src/app/(main)/admin/codex/AdminEquipmentTab.tsx",
@@ -9095,7 +9141,23 @@
       "status": "done",
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
-      "matches": [],
+      "matches": [
+        {
+          "hash": "55419038633bf2582027c09e19b5545e1184ca92",
+          "subject": "Prepare KadinBranch for master merge (TASK-405 TASK-496 TASK-497 TASK-498 TASK-499)",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/app/(main)/my-account/page.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/ai/guide/03-entity-card-art.md"
+          ]
+        }
+      ],
       "related_files": [
         "sql/realms-image-user-entity-columns.sql",
         "src/lib/library-columnar.ts",
@@ -9111,7 +9173,23 @@
       "status": "done",
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
-      "matches": [],
+      "matches": [
+        {
+          "hash": "55419038633bf2582027c09e19b5545e1184ca92",
+          "subject": "Prepare KadinBranch for master merge (TASK-405 TASK-496 TASK-497 TASK-498 TASK-499)",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/app/(main)/my-account/page.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/ai/guide/03-entity-card-art.md"
+          ]
+        }
+      ],
       "related_files": [
         "sql/realms-image-catalog-legacy-entity-art.sql",
         "src/docs/SUPABASE_SCHEMA.md",
@@ -9125,7 +9203,23 @@
       "status": "done",
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
-      "matches": [],
+      "matches": [
+        {
+          "hash": "55419038633bf2582027c09e19b5545e1184ca92",
+          "subject": "Prepare KadinBranch for master merge (TASK-405 TASK-496 TASK-497 TASK-498 TASK-499)",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/app/(main)/my-account/page.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/ai/guide/03-entity-card-art.md"
+          ]
+        }
+      ],
       "related_files": [
         "src/components/shared/image-upload-modal.tsx",
         "src/components/shared/realms-image-picker.tsx",
@@ -9134,7 +9228,9 @@
         "src/components/character-creator/steps/finalize-step.tsx",
         "src/components/guided-creator/guided-portrait-upload.tsx"
       ],
-      "related_overlap": []
+      "related_overlap": [
+        "src/app/(main)/my-account/page.tsx"
+      ]
     }
   ]
 }
