@@ -68,6 +68,7 @@ export function CharacterCard({
         )}
       >
         {/* Portrait — 1:1 matches ImageUploadModal crop (aspect={1}) */}
+        {/* DESIGN_INTENT: No ExpandableImage — portrait lives inside a Link; primary action is open sheet (invalid nested button). */}
         <div className="relative aspect-square shrink-0 bg-primary-button">
           <Image
             src={getEffectivePortrait(character.portrait)}

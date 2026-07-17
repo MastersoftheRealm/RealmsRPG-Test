@@ -10,7 +10,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
   Crown,
   Copy,
@@ -34,7 +33,7 @@ import {
   PageHeader,
   useToast,
 } from '@/components/ui';
-import { DeleteConfirmModal } from '@/components/shared';
+import { DeleteConfirmModal, ExpandableImage } from '@/components/shared';
 import { RollEntryCard } from '@/components/character-sheet';
 import { useCampaign, useCharacters, useInvalidateCampaigns, useAuth, useCampaignRolls } from '@/hooks';
 import { addCharacterToCampaignAction, removeCharacterFromCampaignAction, deleteCampaignAction, updateCampaignAction } from '../actions';
@@ -592,16 +591,18 @@ function CharacterChip({
 }) {
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg border border-border-light bg-surface-alt min-w-[200px]">
-      <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-primary-button">
-        <Image
+      <ExpandableImage
+        src={getEffectivePortrait(character.portrait)}
+        alt={character.characterName}
+        className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-primary-button"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- dynamic portrait URL */}
+        <img
           src={getEffectivePortrait(character.portrait)}
-          alt={character.characterName}
-          width={56}
-          height={56}
-          className="object-cover w-full h-full"
-          unoptimized
+          alt=""
+          className="h-full w-full object-cover"
         />
-      </div>
+      </ExpandableImage>
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-text-primary truncate">{character.characterName}</p>
         <p className="text-sm text-text-muted dark:text-text-secondary">
@@ -674,6 +675,7 @@ function AddCharacterModal({
             disabled={loading}
             className="flex items-center gap-3 w-full p-3 rounded-lg border border-border-light hover:bg-surface-alt text-left transition-colors disabled:opacity-50"
           >
+            {/* DESIGN_INTENT: No ExpandableImage — decorative identity thumb inside a selectable row button (nested button invalid). */}
             {/* eslint-disable-next-line @next/next/no-img-element -- dynamic portrait URL */}
             <img src={getEffectivePortrait(c.portrait)} alt="" className="w-12 h-12 rounded-lg object-cover" />
             <div>

@@ -16,6 +16,7 @@ import {
   type EntityTechniqueRow,
 } from './entity-library-sections';
 import { SectionHeader } from './section-header';
+import { ExpandableImage } from './expandable-image';
 import { Card } from '@/components/ui';
 import { ListHeader, type ListColumn } from './list-header';
 import { RollButton } from './roll-button';
@@ -768,12 +769,16 @@ export function CreatureStatBlock({
           <Card className="shadow-md p-4 md:p-6">
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-stretch">
               {creature.imageUrl ? (
-                <div className="w-20 h-20 rounded-lg overflow-hidden border border-border-light bg-surface-alt flex-shrink-0">
+                <ExpandableImage
+                  src={creature.imageUrl}
+                  alt={`${creature.name} portrait`}
+                  className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border border-border-light bg-surface-alt"
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={creature.imageUrl} alt={`${creature.name} portrait`} className="w-full h-full object-cover" />
-                </div>
+                  <img src={creature.imageUrl} alt="" className="h-full w-full object-cover" />
+                </ExpandableImage>
               ) : (
-                <div className="w-20 h-20 rounded-lg border border-border-light bg-surface-alt flex-shrink-0" />
+                <div className="h-20 w-20 flex-shrink-0 rounded-lg border border-border-light bg-surface-alt" />
               )}
 
               <div className="flex-1 min-w-0">

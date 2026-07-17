@@ -8,6 +8,41 @@ Firebase/RTDB - the project is Supabase-only.
 
 
 
+- id: TASK-478
+  title: ExpandableImage adoption audit + enforcement checklist
+  created_at: 2026-07-15
+  created_by: agent
+  completed_at: 2026-07-17
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/shared/expandable-image.tsx
+    - src/components/shared/creature-stat-block.tsx
+    - src/components/character-sheet/sheet-header.tsx
+    - src/app/(main)/campaigns/[id]/page.tsx
+    - src/app/(main)/my-account/page.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/DESIGN_INTENT.md
+    - src/docs/ai/guide/03-entity-card-art.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Audit residual: ExpandableImage is the default for meaningful inline art but adoption is
+    pathway-specific. Audit feature surfaces for custom lightbox/img preview forks; migrate or
+    document justified exceptions.
+  acceptance_criteria:
+    - Inventory of meaningful images not using ExpandableImage/ListRowThumbnail.
+    - Migrate clear forks; document exceptions in DESIGN_INTENT or guide appendix.
+    - FEATURE_INDEX / art guide stay accurate; npm run build if code changes.
+  evidence: |
+    Inventory + exceptions in guide/03-entity-card-art.md section Adoption inventory; DESIGN_INTENT row.
+    Migrated: CreatureStatBlock, sheet-header (play), campaign CharacterChip, my-account profile.
+    Exceptions documented (character-card Link, edit-upload, authoring previews, decorative).
+    QA: DEV-V-009-T012 + DEV-V-024 T001-T003. Did not edit Image Library / creator god files.
+
+---
+
 - id: TASK-492
   title: Realms Image Library - schema, storage, CRUD API
   created_at: 2026-07-16

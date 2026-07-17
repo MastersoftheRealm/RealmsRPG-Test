@@ -11,11 +11,11 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`.
 
-**Counts:** 20 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 19 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
 **Realms Image Library epic (2026-07-16):** **TASK-491/492/493/494/495 done**. Next: **496** → 497/499 → 498. TASK-500 deferred.
 
-**Debt from AI workflow audit (2026-07-15):** TASK-477–480 — address alongside product work; repo-wide cadence → `/debt`. TASK-476/482/484/486/487/488/489/490 done; TASK-481 superseded by `/debt`.
+**Debt from AI workflow audit (2026-07-15):** TASK-477/479/480 — address alongside product work; repo-wide cadence → `/debt`. TASK-476/478/482/484/486/487/488/489/490 done; TASK-481 superseded by `/debt`.
 
 ---
 
@@ -455,28 +455,6 @@ Do **not** read the done archive at session start.
     - One documented layering (structured duration vs raw string display) or shared wrappers.
     - No third ad-hoc formatDuration in feature code without reusing the layer.
     - npm run build.
-
----
-
-- id: TASK-478
-  title: ExpandableImage adoption audit + enforcement checklist
-  created_at: 2026-07-15
-  created_by: agent
-  priority: medium
-  status: not-started
-  related_files:
-    - src/components/shared/expandable-image.tsx
-    - src/docs/ai/FEATURE_INDEX.md
-    - src/docs/ai/DESIGN_INTENT.md
-    - src/docs/ai/guide/03-entity-card-art.md
-  description: |
-    Audit residual: ExpandableImage is the default for meaningful inline art but adoption is
-    pathway-specific. Audit feature surfaces for custom lightbox/img preview forks; migrate or
-    document justified exceptions.
-  acceptance_criteria:
-    - Inventory of meaningful images not using ExpandableImage/ListRowThumbnail.
-    - Migrate clear forks; document exceptions in DESIGN_INTENT or guide appendix.
-    - FEATURE_INDEX / art guide stay accurate; npm run build if code changes.
 
 ---
 

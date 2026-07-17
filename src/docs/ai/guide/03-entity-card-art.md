@@ -68,3 +68,34 @@ When adding list thumbs: (1) ensure API returns resolvable art (`image_id` / cac
 - Duplicating Storage files per entity use (copy-on-attach).
 - Non-admin uploads into the shared bank.
 - Citing TASK-415 for the image bank — chip unification; bank epic is TASK-491+ (TASK-417 archived).
+
+## Adoption inventory + justified exceptions (TASK-478)
+
+**Default:** meaningful inline art → `ExpandableImage` (or `ListRowThumbnail` / `GuidedChoiceCard`).
+
+### Adopted (click-to-enlarge)
+
+| Surface | Implementation |
+|---------|----------------|
+| Guided choice card heroes | `GuidedChoiceCard` → `ExpandableImage` |
+| Species reveal / character preview portraits | `ExpandableImage` directly |
+| Codex / Admin species list thumbs | `GridListRow.thumbnail` → `ListRowThumbnail` |
+| Creature stat-block portrait | `CreatureStatBlock` → `ExpandableImage` |
+| Character sheet portrait (play / non-edit) | `sheet-header` → `ExpandableImage` |
+| Campaign roster character chip | `campaigns/[id]` `CharacterChip` → `ExpandableImage` |
+| Account profile photo | `/my-account` → `ExpandableImage` |
+| Admin Image Library list thumbs | `ListRowThumbnail` (bank UI) |
+
+### Justified exceptions (do **not** wrap in `ExpandableImage`)
+
+| Surface | Why |
+|---------|-----|
+| **Character list cards** (`character-card.tsx`) | Portrait is inside a `Link` to the sheet — nested expand button is invalid HTML; primary action is navigate. |
+| **Sheet portrait in edit mode** | Click opens `ImageUploadModal` (change portrait), not preview. |
+| **Campaign “add character” picker thumbs** | Decorative (`alt=""`) inside a selectable row `button`. |
+| **Authoring / crop previews** (`CodexArtUploadField`, `ImageUploadModal`, guided/advanced portrait upload slots) | Upload/crop affordance, not browse-to-enlarge. |
+| **RealmsImagePicker upload preview** | Bank picker authoring chrome (TASK-495+). |
+| **Landing / auth / layout chrome** (logo, hero, dice decor, OAuth icons) | Branding / decorative — not entity art. |
+| **Dice roller / roll-log faces** | Game chrome, not entity art. |
+
+When adding a new exception, add a `// DESIGN_INTENT:` at the call site **and** a row in `DESIGN_INTENT.md` (ExpandableImage exceptions).

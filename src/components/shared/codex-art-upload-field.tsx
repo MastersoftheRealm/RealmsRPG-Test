@@ -102,6 +102,7 @@ export function CodexArtUploadField({
       <div className="flex flex-wrap items-start gap-4">
         <div className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-card border border-border-light bg-surface-alt shadow-sm">
           {previewSrc ? (
+            /* DESIGN_INTENT: No ExpandableImage — authoring crop preview, not browse-to-enlarge. */
             /* Native img + object-contain: exact crop pixels, no Next/Image re-crop */
             // eslint-disable-next-line @next/next/no-img-element
             <img src={previewSrc} alt="" className="h-full w-full object-contain" />
