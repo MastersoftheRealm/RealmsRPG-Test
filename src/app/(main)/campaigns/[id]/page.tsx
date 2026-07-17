@@ -589,19 +589,16 @@ function CharacterChip({
   onRemove: () => void;
   onViewSheet?: string;
 }) {
+  const portraitSrc = getEffectivePortrait(character.portrait);
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg border border-border-light bg-surface-alt min-w-[200px]">
       <ExpandableImage
-        src={getEffectivePortrait(character.portrait)}
+        src={portraitSrc}
         alt={character.characterName}
         className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-primary-button"
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- dynamic portrait URL */}
-        <img
-          src={getEffectivePortrait(character.portrait)}
-          alt=""
-          className="h-full w-full object-cover"
-        />
+        <img src={portraitSrc} alt="" className="h-full w-full object-cover" />
       </ExpandableImage>
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-text-primary truncate">{character.characterName}</p>

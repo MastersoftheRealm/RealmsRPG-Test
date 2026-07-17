@@ -550,9 +550,18 @@ export function SheetHeader({
           {/* Portrait — ExpandableImage in play view; edit mode click opens upload */}
           {canChangePortrait ? (
             <div
+              role="button"
+              tabIndex={0}
               className={portraitFrameClass}
               onClick={handlePortraitClick}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handlePortraitClick();
+                }
+              }}
               title="Click to change portrait"
+              aria-label={`Change portrait for ${character.name}`}
             >
               {portraitImage}
             </div>

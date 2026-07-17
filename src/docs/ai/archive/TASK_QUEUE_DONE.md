@@ -20,13 +20,17 @@ Firebase/RTDB - the project is Supabase-only.
   related_files:
     - src/components/shared/expandable-image.tsx
     - src/components/shared/creature-stat-block.tsx
+    - src/components/shared/codex-art-upload-field.tsx
     - src/components/character-sheet/sheet-header.tsx
+    - src/components/character/character-card.tsx
     - src/app/(main)/campaigns/[id]/page.tsx
     - src/app/(main)/my-account/page.tsx
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/ai/DESIGN_INTENT.md
     - src/docs/ai/guide/03-entity-card-art.md
     - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AI_CHANGELOG.md
   description: |
     Audit residual: ExpandableImage is the default for meaningful inline art but adoption is
     pathway-specific. Audit feature surfaces for custom lightbox/img preview forks; migrate or
