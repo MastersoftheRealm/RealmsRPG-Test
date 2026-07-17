@@ -45,6 +45,7 @@ import {
   formatDamageType,
   getWeaponAttackBonus,
   resolveItemProperties,
+  deriveArmorItemCombatStats,
   splitDamageDiceAndType,
 } from './library-list-helpers';
 import {
@@ -245,7 +246,6 @@ export function mapTechniqueRows(
           highlight: tech.weaponName !== undefined,
           align: 'center',
         },
-        { key: 'tp', value: techTP ?? '-', align: 'center' },
       ],
       gridColumns: CHARACTER_SHEET_TECHNIQUE_GRID,
       detailSections: detailSections.length > 0 ? detailSections : undefined,
@@ -459,27 +459,10 @@ export function mapArmorRows(armor: Item[], ctx: LibraryEntityRowContext): Entit
     const abilityReq = (item as Item & { abilityRequirement?: { name?: string; level?: number } }).abilityRequirement;
     const agilityRed = (item as Item & { agilityReduction?: number }).agilityReduction;
 
-    const itemWithArmor = item as { armorValue?: number; armor?: number };
-    let damageReduction = itemWithArmor.armorValue ?? itemWithArmor.armor ?? 0;
-    let critRangeBonus = 0;
-    const armorProps = resolveItemProperties(item as ItemWithLibrarySource);
-    if (armorProps) {
-      for (const prop of armorProps) {
-        if (!prop) continue;
-        const propName = typeof prop === 'string' ? prop : prop.name || '';
-        const op1Lvl =
-          typeof prop === 'object' && 'op_1_lvl' in prop ? Number((prop as Record<string, unknown>).op_1_lvl) || 0 : 0;
-        if (propName === 'Damage Reduction' && damageReduction === 0) {
-          damageReduction = 1 + op1Lvl;
-        }
-        if (propName === 'Critical Range +1') {
-          critRangeBonus = 1 + op1Lvl;
-        }
-      }
-    }
+    const { damageReduction, criticalRangeIncrease } = deriveArmorItemCombatStats(item as ItemWithLibrarySource);
     const agility = ctx.abilities?.agility ?? 0;
-    const baseEvasion = 10 + agility;
-    const critThreshold = critRangeBonus > 0 ? baseEvasion + 10 + critRangeBonus : undefined;
+    const critThreshold =
+      criticalRangeIncrease > 0 ? 10 + agility + 10 + criticalRangeIncrease : undefined;
 
     const armorMeta = metadataDetailSection(
       buildArmorRequirementMetadataChips({ abilityRequirement: abilityReq, agilityReduction: agilityRed })

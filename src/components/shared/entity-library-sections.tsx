@@ -11,6 +11,7 @@ import { deriveShieldAmountFromProperties } from '@/lib/calculators/item-calc';
 import { TP_COST_LABEL } from '@/lib/detail-option/compact-facts';
 import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { useRollsOptional } from '@/components/character-sheet/roll-context';
+import { useLibrarySectionCollapse } from '@/hooks/use-library-section-collapse';
 
 // =============================================================================
 // Shared list sections (character sheet + creatures + elsewhere)
@@ -47,7 +48,58 @@ export type EntityListControls = {
   onAdd?: () => void;
   addLabel?: string;
   emptyMessage?: string;
+  /** Multi-section character sheet library tabs: session collapse (empty → closed). */
+  collapsible?: boolean;
 };
+
+/** Collapsible block for library tabs that are not entity list sections (notes, proficiencies). */
+export function LibraryCollapsibleSection({
+  title,
+  itemCount,
+  onAdd,
+  addLabel,
+  rightContent,
+  addButtonClassName,
+  children,
+  className,
+}: {
+  title: string;
+  itemCount: number;
+  onAdd?: () => void;
+  addLabel?: string;
+  rightContent?: ReactNode;
+  addButtonClassName?: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  const { isContentVisible, onAdd: onAddWrapped, headerCollapseProps } = useLibrarySectionCollapse(
+    true,
+    itemCount,
+    onAdd
+  );
+  return (
+    <div className={className}>
+      <SectionHeader
+        title={title}
+        size="sm"
+        onAdd={onAddWrapped}
+        addLabel={addLabel}
+        rightContent={rightContent}
+        addButtonClassName={addButtonClassName}
+        {...headerCollapseProps}
+      />
+      {isContentVisible ? children : null}
+    </div>
+  );
+}
+
+function useEntityListSectionCollapse(
+  collapsible: boolean | undefined,
+  itemCount: number,
+  onAdd?: () => void
+) {
+  return useLibrarySectionCollapse(collapsible ?? false, itemCount, onAdd);
+}
 
 export function splitDamageDiceAndType(damage: unknown): { dice: string; type: string; rollStr: string } {
   if (!damage) return { dice: '-', type: '', rollStr: '-' };
@@ -96,17 +148,17 @@ const TECHNIQUE_COLUMNS: ListColumn[] = [
 const TECHNIQUE_GRID = '1.4fr 0.7fr 1fr 0.8fr';
 
 /**
- * Character sheet techniques tab: Action + Weapon + TP.
+ * Character sheet techniques tab: Action + Attack (weapon).
  * Energy cost lives only in the row rightSlot spend button (not a static value column).
  * ListHeader shows Energy via `CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME` over that control.
+ * TP stays on expanded part chips / proficiency budget — not a collapsed GLR column.
  */
 export const CHARACTER_SHEET_TECHNIQUE_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1.4fr' },
   { key: 'action', label: 'Action', width: '1fr', align: 'center' },
   { key: 'weapon', label: 'Attack', width: '1fr', align: 'center' },
-  { key: 'tp', label: 'TP', width: '0.8fr', align: 'center' },
 ];
-export const CHARACTER_SHEET_TECHNIQUE_GRID = '1.4fr 1fr 1fr 0.8fr';
+export const CHARACTER_SHEET_TECHNIQUE_GRID = '1.4fr 1fr 1fr';
 
 // Weapons / Shields / Armor / Equipment (matches Character Sheet -> Library -> Inventory)
 const WEAPON_COLUMNS: ListColumn[] = [
@@ -281,6 +333,7 @@ export function PowersListSection({
   onAdd,
   addLabel,
   emptyMessage = 'No powers',
+  collapsible,
 }: {
   title?: string;
   items: EntityPowerRow[];
@@ -291,11 +344,26 @@ export function PowersListSection({
   showTitle?: boolean;
 } & EntityListControls) {
   const hasAny = items.length > 0;
+  const { isContentVisible, onAdd: onAddWrapped, headerCollapseProps } = useEntityListSectionCollapse(
+    collapsible,
+    items.length,
+    onAdd
+  );
   const cols = includeEnergyColumn ? POWER_COLUMNS_WITH_ENERGY : POWER_COLUMNS;
   const grid = includeEnergyColumn ? POWER_GRID_WITH_ENERGY : POWER_GRID;
   return (
     <div>
-      {showTitle && <SectionHeader title={title} size="sm" onAdd={onAdd} addLabel={addLabel} />}
+      {showTitle && (
+        <SectionHeader
+          title={title}
+          size="sm"
+          onAdd={onAddWrapped}
+          addLabel={addLabel}
+          {...headerCollapseProps}
+        />
+      )}
+      {isContentVisible && (
+        <>
       {showListHeader && hasAny && (
         <ListHeader
           columns={cols}
@@ -335,6 +403,8 @@ export function PowersListSection({
       ) : (
         <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
       )}
+        </>
+      )}
     </div>
   );
 }
@@ -358,7 +428,7 @@ export function TechniquesListSection({
   compactRows = true,
   showTitle = true,
   /**
-   * Character-sheet play mode: Action + Weapon + TP columns (no Energy column).
+   * Character-sheet play mode: Action + Attack columns (no Energy or TP columns).
    * Energy cost must live only on the row `rightSlot` spend button.
    * Omit (false) for browse/stat-block lists that show a static Energy column and have no spend button.
    * Do not combine browse Energy columns with spend `rightSlot` — that recreates the duplicate UX.
@@ -370,6 +440,7 @@ export function TechniquesListSection({
   onAdd,
   addLabel,
   emptyMessage = 'No techniques',
+  collapsible,
 }: {
   title?: string;
   items: EntityTechniqueRow[];
@@ -379,11 +450,26 @@ export function TechniquesListSection({
   includeActionColumn?: boolean;
 } & EntityListControls) {
   const hasAny = items.length > 0;
+  const { isContentVisible, onAdd: onAddWrapped, headerCollapseProps } = useEntityListSectionCollapse(
+    collapsible,
+    items.length,
+    onAdd
+  );
   const cols = includeActionColumn ? CHARACTER_SHEET_TECHNIQUE_COLUMNS : TECHNIQUE_COLUMNS;
   const grid = includeActionColumn ? CHARACTER_SHEET_TECHNIQUE_GRID : TECHNIQUE_GRID;
   return (
     <div>
-      {showTitle && <SectionHeader title={title} size="sm" onAdd={onAdd} addLabel={addLabel} />}
+      {showTitle && (
+        <SectionHeader
+          title={title}
+          size="sm"
+          onAdd={onAddWrapped}
+          addLabel={addLabel}
+          {...headerCollapseProps}
+        />
+      )}
+      {isContentVisible && (
+        <>
       {showListHeader && hasAny && (
         <ListHeader columns={cols} gridColumns={grid} sortState={sortState} onSort={onSort} rowChrome={rowChrome} />
       )}
@@ -399,7 +485,6 @@ export function TechniquesListSection({
                 return [
                   { key: 'action', value: row.actionType ?? '-', align: 'center' as const },
                   { key: 'weapon', value: row.weaponName ?? '-', align: 'center' as const },
-                  { key: 'tp', value: row.tp ?? '-', align: 'center' as const },
                 ];
               }
               return [
@@ -413,6 +498,8 @@ export function TechniquesListSection({
         </div>
       ) : (
         <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
+      )}
+        </>
       )}
     </div>
   );
@@ -442,6 +529,7 @@ export function WeaponsListSection({
   onAdd,
   addLabel,
   emptyMessage = 'No weapons',
+  collapsible,
 }: {
   title?: string;
   items: EntityWeaponRow[];
@@ -453,32 +541,23 @@ export function WeaponsListSection({
 } & EntityListControls) {
   const rollContext = useRollsOptional();
   const hasAny = items.length > 0;
+  const { isContentVisible, onAdd: onAddWrapped, headerCollapseProps } = useEntityListSectionCollapse(
+    collapsible,
+    items.length,
+    onAdd
+  );
   const cols = layout === 'characterSheet' ? CHARACTER_SHEET_WEAPON_COLUMNS : WEAPON_COLUMNS;
   const grid = layout === 'characterSheet' ? CHARACTER_SHEET_WEAPON_GRID : WEAPON_GRID;
 
-  if (layout === 'characterSheet') {
-    return (
-      <div>
-        {showTitle && <SectionHeader title={title} size="sm" onAdd={onAdd} addLabel={addLabel} />}
-        {showListHeader && hasAny && (
-          <ListHeader columns={cols} gridColumns={grid} sortState={sortState} onSort={onSort} rowChrome={rowChrome} />
-        )}
-        {hasAny ? (
-          <div className="space-y-1">{renderInteractiveGridRows(items, grid, () => [], compactRows)}</div>
-        ) : (
-          <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      {showTitle && <SectionHeader title={title} size="sm" onAdd={onAdd} addLabel={addLabel} />}
+  const listBody = (
+    <>
       {showListHeader && hasAny && (
         <ListHeader columns={cols} gridColumns={grid} sortState={sortState} onSort={onSort} rowChrome={rowChrome} />
       )}
       {hasAny ? (
+        layout === 'characterSheet' ? (
+          <div className="space-y-1">{renderInteractiveGridRows(items, grid, () => [], compactRows)}</div>
+        ) : (
         <div className="space-y-1">
           {items.map((w, idx) => {
             const attack = typeof w.attackBonus === 'number' ? w.attackBonus : 0;
@@ -539,9 +618,25 @@ export function WeaponsListSection({
             );
           })}
         </div>
+        )
       ) : (
         <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
       )}
+    </>
+  );
+
+  return (
+    <div>
+      {showTitle && (
+        <SectionHeader
+          title={title}
+          size="sm"
+          onAdd={onAddWrapped}
+          addLabel={addLabel}
+          {...headerCollapseProps}
+        />
+      )}
+      {isContentVisible ? listBody : null}
     </div>
   );
 }
@@ -568,6 +663,7 @@ export function ShieldsListSection({
   onAdd,
   addLabel,
   emptyMessage = 'No shields',
+  collapsible,
 }: {
   title?: string;
   items: EntityShieldRow[];
@@ -577,58 +673,65 @@ export function ShieldsListSection({
   layout?: 'creature' | 'characterSheet';
 } & EntityListControls) {
   const hasAny = items.length > 0;
+  const { isContentVisible, onAdd: onAddWrapped, headerCollapseProps } = useEntityListSectionCollapse(
+    collapsible,
+    items.length,
+    onAdd
+  );
   const cols = layout === 'characterSheet' ? CHARACTER_SHEET_SHIELD_COLUMNS : SHIELD_COLUMNS;
   const grid = layout === 'characterSheet' ? CHARACTER_SHEET_SHIELD_GRID : SHIELD_GRID;
 
-  if (layout === 'characterSheet') {
-    return (
-      <div>
-        {showTitle && <SectionHeader title={title} size="sm" onAdd={onAdd} addLabel={addLabel} />}
-        {showListHeader && hasAny && (
-          <ListHeader columns={cols} gridColumns={grid} sortState={sortState} onSort={onSort} rowChrome={rowChrome} />
-        )}
-        {hasAny ? (
-          <div className="space-y-1">{renderInteractiveGridRows(items, grid, () => [], compactRows)}</div>
-        ) : (
-          <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      {showTitle && <SectionHeader title={title} size="sm" onAdd={onAdd} addLabel={addLabel} />}
+  const listBody = (
+    <>
       {showListHeader && hasAny && (
         <ListHeader columns={cols} gridColumns={grid} sortState={sortState} onSort={onSort} rowChrome={rowChrome} />
       )}
       {hasAny ? (
-        <div className="space-y-1">
-          {items.map((s, idx) => {
-            const block = deriveShieldAmountFromProperties(s.properties || []);
-            const columns: ColumnValue[] = [
-              { key: 'attack', value: '-', align: 'center' },
-              { key: 'damage', value: s.damage ?? '-', align: 'center' },
-              { key: 'block', value: block ?? '-', align: 'center' },
-            ];
-            return (
-              <GridListRow
-                key={String(s.id ?? `${s.name}-${idx}`)}
-                id={String(s.id ?? idx)}
-                name={s.name}
-                description={s.description}
-                columns={columns}
-                gridColumns={grid}
-                chips={s.chips}
-                chipsLabel={s.chips?.length ? 'Properties & Proficiencies' : undefined}
-                compact={compactRows}
-              />
-            );
-          })}
-        </div>
+        layout === 'characterSheet' ? (
+          <div className="space-y-1">{renderInteractiveGridRows(items, grid, () => [], compactRows)}</div>
+        ) : (
+          <div className="space-y-1">
+            {items.map((s, idx) => {
+              const block = deriveShieldAmountFromProperties(s.properties || []);
+              const columns: ColumnValue[] = [
+                { key: 'attack', value: '-', align: 'center' },
+                { key: 'damage', value: s.damage ?? '-', align: 'center' },
+                { key: 'block', value: block ?? '-', align: 'center' },
+              ];
+              return (
+                <GridListRow
+                  key={String(s.id ?? `${s.name}-${idx}`)}
+                  id={String(s.id ?? idx)}
+                  name={s.name}
+                  description={s.description}
+                  columns={columns}
+                  gridColumns={grid}
+                  chips={s.chips}
+                  chipsLabel={s.chips?.length ? 'Properties & Proficiencies' : undefined}
+                  compact={compactRows}
+                />
+              );
+            })}
+          </div>
+        )
       ) : (
         <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
       )}
+    </>
+  );
+
+  return (
+    <div>
+      {showTitle && (
+        <SectionHeader
+          title={title}
+          size="sm"
+          onAdd={onAddWrapped}
+          addLabel={addLabel}
+          {...headerCollapseProps}
+        />
+      )}
+      {isContentVisible ? listBody : null}
     </div>
   );
 }
@@ -655,6 +758,7 @@ export function ArmorListSection({
   onAdd,
   addLabel,
   emptyMessage = 'No armor',
+  collapsible,
 }: {
   title?: string;
   items: EntityArmorRow[];
@@ -664,58 +768,65 @@ export function ArmorListSection({
   layout?: 'creature' | 'characterSheet';
 } & EntityListControls) {
   const hasAny = items.length > 0;
+  const { isContentVisible, onAdd: onAddWrapped, headerCollapseProps } = useEntityListSectionCollapse(
+    collapsible,
+    items.length,
+    onAdd
+  );
   const grid = ARMOR_GRID;
 
-  if (layout === 'characterSheet') {
-    return (
-      <div>
-        {showTitle && <SectionHeader title={title} size="sm" onAdd={onAdd} addLabel={addLabel} />}
-        {showListHeader && hasAny && (
-          <ListHeader
-            columns={ARMOR_COLUMNS}
-            gridColumns={grid}
-            sortState={sortState}
-            onSort={onSort}
-            rowChrome={rowChrome}
-          />
-        )}
-        {hasAny ? (
-          <div className="space-y-1">{renderInteractiveGridRows(items, grid, () => [], compactRows)}</div>
-        ) : (
-          <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      {showTitle && <SectionHeader title={title} size="sm" onAdd={onAdd} addLabel={addLabel} />}
+  const listBody = (
+    <>
       {showListHeader && hasAny && (
-        <ListHeader columns={ARMOR_COLUMNS} gridColumns={grid} sortState={sortState} onSort={onSort} rowChrome={rowChrome} />
+        <ListHeader
+          columns={ARMOR_COLUMNS}
+          gridColumns={grid}
+          sortState={sortState}
+          onSort={onSort}
+          rowChrome={rowChrome}
+        />
       )}
       {hasAny ? (
-        <div className="space-y-1">
-          {items.map((a, idx) => (
-            <GridListRow
-              key={String(a.id ?? `${a.name}-${idx}`)}
-              id={String(a.id ?? idx)}
-              name={a.name}
-              description={a.description}
-              columns={[
-                { key: 'dr', value: a.damageReduction ?? a.armorValue ?? '-', align: 'center' },
-                { key: 'crit', value: '-', align: 'center' },
-              ]}
-              gridColumns={grid}
-              chips={a.chips}
-              chipsLabel={a.chips?.length ? 'Properties & Proficiencies' : undefined}
-              compact={compactRows}
-            />
-          ))}
-        </div>
+        layout === 'characterSheet' ? (
+          <div className="space-y-1">{renderInteractiveGridRows(items, grid, () => [], compactRows)}</div>
+        ) : (
+          <div className="space-y-1">
+            {items.map((a, idx) => (
+              <GridListRow
+                key={String(a.id ?? `${a.name}-${idx}`)}
+                id={String(a.id ?? idx)}
+                name={a.name}
+                description={a.description}
+                columns={[
+                  { key: 'dr', value: a.damageReduction ?? a.armorValue ?? '-', align: 'center' },
+                  { key: 'crit', value: '-', align: 'center' },
+                ]}
+                gridColumns={grid}
+                chips={a.chips}
+                chipsLabel={a.chips?.length ? 'Properties & Proficiencies' : undefined}
+                compact={compactRows}
+              />
+            ))}
+          </div>
+        )
       ) : (
         <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
       )}
+    </>
+  );
+
+  return (
+    <div>
+      {showTitle && (
+        <SectionHeader
+          title={title}
+          size="sm"
+          onAdd={onAddWrapped}
+          addLabel={addLabel}
+          {...headerCollapseProps}
+        />
+      )}
+      {isContentVisible ? listBody : null}
     </div>
   );
 }
@@ -741,6 +852,7 @@ export function EquipmentListSection({
   onAdd,
   addLabel,
   emptyMessage = 'No equipment',
+  collapsible,
 }: {
   title?: string;
   items: EntityEquipmentRow[];
@@ -750,66 +862,67 @@ export function EquipmentListSection({
   layout?: 'creature' | 'characterSheet';
 } & EntityListControls) {
   const hasAny = items.length > 0;
+  const { isContentVisible, onAdd: onAddWrapped, headerCollapseProps } = useEntityListSectionCollapse(
+    collapsible,
+    items.length,
+    onAdd
+  );
   const grid = EQUIPMENT_GRID;
 
-  if (layout === 'characterSheet') {
-    return (
-      <div>
-        {showTitle && <SectionHeader title={title} size="sm" onAdd={onAdd} addLabel={addLabel} />}
-        {showListHeader && hasAny && (
-          <ListHeader
-            columns={EQUIPMENT_COLUMNS}
-            gridColumns={grid}
-            sortState={sortState}
-            onSort={onSort}
-            rowChrome={rowChrome}
-          />
-        )}
-        {hasAny ? (
-          <div className="space-y-1">{renderInteractiveGridRows(items, grid, () => [], compactRows)}</div>
-        ) : (
-          <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <SectionHeader title={title} size="sm" onAdd={onAdd} addLabel={addLabel} />
+  const listBody = (
+    <>
       {showListHeader && hasAny && (
-        <ListHeader columns={EQUIPMENT_COLUMNS} gridColumns={grid} sortState={sortState} onSort={onSort} rowChrome={rowChrome} />
+        <ListHeader
+          columns={EQUIPMENT_COLUMNS}
+          gridColumns={grid}
+          sortState={sortState}
+          onSort={onSort}
+          rowChrome={rowChrome}
+        />
       )}
       {hasAny ? (
-        <div className="space-y-1">
-          {items.map((e, idx) => {
-            const itemType = formatListCellLabel(e.type);
-            const qty = e.quantity ?? 1;
-            const qtyCell = (
-              <div className="flex items-center justify-center" onClick={(ev) => ev.stopPropagation()}>
-                <QuantitySelector quantity={qty} min={0} max={99} size="sm" onChange={() => {}} />
-              </div>
-            );
-            const columns: ColumnValue[] = [
-              { key: 'type', value: itemType, align: 'center' },
-              { key: 'quantity', value: qtyCell, align: 'center' },
-            ];
-            return (
-              <GridListRow
-                key={String(e.id ?? `${e.name}-${idx}`)}
-                id={String(e.id ?? idx)}
-                name={e.name}
-                description={e.description}
-                columns={columns}
-                gridColumns={grid}
-                compact={compactRows}
-              />
-            );
-          })}
-        </div>
+        layout === 'characterSheet' ? (
+          <div className="space-y-1">{renderInteractiveGridRows(items, grid, () => [], compactRows)}</div>
+        ) : (
+          <div className="space-y-1">
+            {items.map((e, idx) => {
+              const itemType = formatListCellLabel(e.type);
+              const qty = e.quantity ?? 1;
+              const qtyCell = (
+                <div className="flex items-center justify-center" onClick={(ev) => ev.stopPropagation()}>
+                  <QuantitySelector quantity={qty} min={0} max={99} size="sm" onChange={() => {}} />
+                </div>
+              );
+              const columns: ColumnValue[] = [
+                { key: 'type', value: itemType, align: 'center' },
+                { key: 'quantity', value: qtyCell, align: 'center' },
+              ];
+              return (
+                <GridListRow
+                  key={String(e.id ?? `${e.name}-${idx}`)}
+                  id={String(e.id ?? idx)}
+                  name={e.name}
+                  description={e.description}
+                  columns={columns}
+                  gridColumns={grid}
+                  compact={compactRows}
+                />
+              );
+            })}
+          </div>
+        )
       ) : (
         <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
       )}
+    </>
+  );
+
+  return (
+    <div>
+      {(showTitle || layout !== 'characterSheet') && (
+        <SectionHeader title={title} size="sm" onAdd={onAddWrapped} addLabel={addLabel} {...headerCollapseProps} />
+      )}
+      {isContentVisible ? listBody : null}
     </div>
   );
 }
@@ -838,6 +951,7 @@ export function FeatsTraitsListSection({
   headerRightContent,
   addButtonClassName,
   emptyMessage = 'No feats',
+  collapsible,
 }: {
   title?: string;
   items: EntityFeatRow[];
@@ -853,56 +967,18 @@ export function FeatsTraitsListSection({
   const useInteractiveRows = items.some((item) => item.columns != null);
   const featColumns = includeLevelColumn ? FEAT_COLUMNS_WITH_LEVEL : FEAT_COLUMNS;
   const featGrid = includeLevelColumn ? FEAT_GRID_WITH_LEVEL : FEAT_GRID;
+  const { isContentVisible, onAdd: onAddWrapped, headerCollapseProps } = useEntityListSectionCollapse(
+    collapsible,
+    items.length,
+    onAdd
+  );
 
-  if (useInteractiveRows) {
-    return (
-      <div>
-        {showTitle && (
-          <SectionHeader
-            title={title}
-            size="sm"
-            onAdd={onAdd}
-            addLabel={addLabel}
-            rightContent={headerRightContent}
-            addButtonClassName={addButtonClassName}
-          />
-        )}
-        {showListHeader && hasAny && (
-          <ListHeader
-            columns={featColumns}
-            gridColumns={featGrid}
-            sortState={sortState}
-            onSort={onSort}
-            rowChrome={rowChrome}
-          />
-        )}
-        {hasAny ? (
-          <div className="space-y-1">
-            {renderInteractiveGridRows(items, featGrid, () => [], compactRows)}
-          </div>
-        ) : (
-          <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      {showTitle && (
-        <SectionHeader
-          title={title}
-          size="sm"
-          onAdd={onAdd}
-          addLabel={addLabel}
-          rightContent={headerRightContent}
-          addButtonClassName={addButtonClassName}
-        />
-      )}
+  const listBody = (
+    <>
       {showListHeader && hasAny && (
         <ListHeader
-          columns={FEAT_COLUMNS}
-          gridColumns={FEAT_GRID}
+          columns={useInteractiveRows ? featColumns : FEAT_COLUMNS}
+          gridColumns={useInteractiveRows ? featGrid : FEAT_GRID}
           sortState={sortState}
           onSort={onSort}
           rowChrome={rowChrome}
@@ -910,40 +986,63 @@ export function FeatsTraitsListSection({
       )}
       {hasAny ? (
         <div className="space-y-1">
-          {items.map((feat, index) => {
-            const uses =
-              (feat.maxUses ?? 0) > 0
-                ? { current: feat.currentUses ?? feat.maxUses ?? 0, max: feat.maxUses ?? 0 }
-                : undefined;
-            const usesDisplay = uses ? `${uses.current}/${uses.max}` : '-';
-            const recoveryDisplay = formatRecoveryAbbrev(feat.recovery);
-            const noUsesOrRecovery = !uses && recoveryDisplay === '-';
-            return (
-              <GridListRow
-                key={String(feat.id ?? `${feat.name}-${index}`)}
-                id={String(feat.id ?? index)}
-                name={feat.name}
-                description={feat.description}
-                gridColumns={FEAT_GRID}
-                columns={
-                  noUsesOrRecovery
-                    ? [{ key: 'description', value: truncateText(feat.description, 220), hideOnMobile: true }]
-                    : [
-                        { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
-                        { key: 'uses', value: usesDisplay, align: 'center' },
-                        { key: 'recovery', value: recoveryDisplay, align: 'center' },
-                      ]
-                }
-                columnSpans={noUsesOrRecovery ? [3] : undefined}
-                uses={uses}
-                compact={compactRows}
-              />
-            );
-          })}
+          {useInteractiveRows
+            ? renderInteractiveGridRows(items, featGrid, () => [], compactRows)
+            : items.map((feat, index) => {
+                const uses =
+                  (feat.maxUses ?? 0) > 0
+                    ? { current: feat.currentUses ?? feat.maxUses ?? 0, max: feat.maxUses ?? 0 }
+                    : undefined;
+                const usesDisplay = uses ? `${uses.current}/${uses.max}` : '-';
+                const recoveryDisplay = formatRecoveryAbbrev(feat.recovery);
+                const noUsesOrRecovery = !uses && recoveryDisplay === '-';
+                return (
+                  <GridListRow
+                    key={String(feat.id ?? `${feat.name}-${index}`)}
+                    id={String(feat.id ?? index)}
+                    name={feat.name}
+                    description={feat.description}
+                    gridColumns={FEAT_GRID}
+                    columns={
+                      noUsesOrRecovery
+                        ? [{ key: 'description', value: truncateText(feat.description, 220), hideOnMobile: true }]
+                        : [
+                            {
+                              key: 'description',
+                              value: truncateText(feat.description, uses ? 60 : 100),
+                              hideOnMobile: true,
+                            },
+                            { key: 'uses', value: usesDisplay, align: 'center' },
+                            { key: 'recovery', value: recoveryDisplay, align: 'center' },
+                          ]
+                    }
+                    columnSpans={noUsesOrRecovery ? [3] : undefined}
+                    uses={uses}
+                    compact={compactRows}
+                  />
+                );
+              })}
         </div>
       ) : (
         <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
       )}
+    </>
+  );
+
+  return (
+    <div>
+      {showTitle && (
+        <SectionHeader
+          title={title}
+          size="sm"
+          onAdd={onAddWrapped}
+          addLabel={addLabel}
+          rightContent={headerRightContent}
+          addButtonClassName={addButtonClassName}
+          {...headerCollapseProps}
+        />
+      )}
+      {isContentVisible ? listBody : null}
     </div>
   );
 }

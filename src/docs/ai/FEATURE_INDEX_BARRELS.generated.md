@@ -51,6 +51,7 @@ Generated: 2026-07-17
 - InfoTippy
 - InnateToggle
 - ItemCard
+- LibraryCollapsibleSection
 - ListEmptyState
 - ListHeader
 - ListRowThumbnail
@@ -203,6 +204,7 @@ Generated: 2026-07-17
 - type EquipmentItem
 - type Feat
 - type ItemProperty
+- type LibrarySectionCollapseHeaderProps
 - type OfficialEnhancedItem
 - type OfficialEnhancedItemPayload
 - type Part
@@ -276,6 +278,7 @@ Generated: 2026-07-17
 - useInvalidateCampaigns
 - useInvalidateEncounters
 - useItemProperties
+- useLibrarySectionCollapse
 - useLoadModalLibrary
 - useMergedSpecies
 - useModalListState

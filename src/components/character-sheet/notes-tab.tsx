@@ -16,7 +16,7 @@ import { useState, useCallback } from 'react';
 import { X, Pencil } from 'lucide-react';
 import { Button, IconButton, Textarea } from '@/components/ui';
 import { useRollsOptional } from './roll-context';
-import { SectionHeader, TabSummarySection, SummaryItem, SummaryRow } from '@/components/shared';
+import { TabSummarySection, SummaryItem, SummaryRow, LibraryCollapsibleSection } from '@/components/shared';
 import { formatSpeedString, type SpeedDisplayUnit } from '@/lib/utils/number';
 import type { Abilities } from '@/types';
 import type { CharacterVisibility } from '@/types';
@@ -284,47 +284,39 @@ export function NotesTab({
         </div>
       </TabSummarySection>
 
-      {/* Appearance - always editable */}
-      <div>
-        <SectionHeader title="Appearance" />
+      <LibraryCollapsibleSection title="Appearance" itemCount={appearance.trim() ? 1 : 0}>
         <Textarea
           value={appearance}
           onChange={(e) => onAppearanceChange?.(e.target.value)}
           placeholder="Describe your character's appearance..."
           className="min-h-[80px]"
         />
-      </div>
+      </LibraryCollapsibleSection>
 
-      {/* Archetype Description - always editable */}
-      <div>
-        <SectionHeader title="Archetype Description" />
+      <LibraryCollapsibleSection title="Archetype Description" itemCount={archetypeDesc.trim() ? 1 : 0}>
         <Textarea
           value={archetypeDesc}
           onChange={(e) => onArchetypeDescChange?.(e.target.value)}
           placeholder="Describe your character's archetype background..."
           className="min-h-[80px]"
         />
-      </div>
+      </LibraryCollapsibleSection>
 
-      {/* General Notes - always editable */}
-      <div>
-        <SectionHeader title="General Notes" />
+      <LibraryCollapsibleSection title="General Notes" itemCount={notes.trim() ? 1 : 0}>
         <Textarea
           value={notes}
           onChange={(e) => onNotesChange?.(e.target.value)}
           placeholder="Additional notes, backstory, goals..."
           className="min-h-[120px]"
         />
-      </div>
+      </LibraryCollapsibleSection>
 
-      {/* Named Notes Section */}
-      <div>
-        <SectionHeader 
-          title="Custom Notes" 
-          onAdd={onAddNote}
-          addLabel="Add new note"
-        />
-        
+      <LibraryCollapsibleSection
+        title="Custom Notes"
+        itemCount={namedNotes.length}
+        onAdd={onAddNote}
+        addLabel="Add new note"
+      >
         {namedNotes.length > 0 ? (
           <div className="space-y-3">
             {namedNotes.map((note) => (
@@ -342,7 +334,7 @@ export function NotesTab({
             No custom notes yet. Click + to add one.
           </p>
         )}
-      </div>
+      </LibraryCollapsibleSection>
     </div>
   );
 }

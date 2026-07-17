@@ -150,6 +150,19 @@ export function normalizeRangeDisplay(range: string | number | null | undefined)
   return s.replace(/\bSpaces\b/g, 'spaces').replace(/\bSpace\b/g, 'space');
 }
 
+/**
+ * Compact weapon range for dense table cells (matches sheet settings "Spaces (sp)").
+ * Melee unchanged; "16 spaces" → "16 sp".
+ */
+export function formatWeaponRangeCompact(range: string | number | null | undefined): string {
+  const normalized = normalizeRangeDisplay(range);
+  if (!normalized) return 'Melee';
+  if (/^melee$/i.test(normalized)) return 'Melee';
+  const match = normalized.match(/^(\d+(?:\.\d+)?)\s*(?:spaces?|sp)?$/i);
+  if (match) return `${match[1]} sp`;
+  return normalized.replace(/\bspaces?\b/gi, 'sp');
+}
+
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 
 /**

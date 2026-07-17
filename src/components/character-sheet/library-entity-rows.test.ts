@@ -48,7 +48,8 @@ describe('mapPowerRows / mapTechniqueRows — Energy is rightSlot only (TASK-502
     ];
     const [row] = mapTechniqueRows(techniques, baseCtx);
     expect(columnKeys(row)).not.toContain('energy');
-    expect(columnKeys(row)).toEqual(['action', 'weapon', 'tp']);
+    expect(columnKeys(row)).toEqual(['action', 'weapon']);
+    expect(row.totalTp).toBe(2);
     expect(row.rightSlot).toBeTruthy();
   });
 

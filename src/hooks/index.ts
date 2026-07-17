@@ -177,3 +177,9 @@ export { useCharacterResourceSync } from './use-character-resource-sync';
 export { useSort, toggleSort, sortByColumn } from './use-sort';
 export { useModalListState } from './use-modal-list-state';
 export type { UseModalListStateOptions } from './use-modal-list-state';
+
+// Character sheet library UI
+export {
+  useLibrarySectionCollapse,
+  type LibrarySectionCollapseHeaderProps,
+} from './use-library-section-collapse';

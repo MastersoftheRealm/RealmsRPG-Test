@@ -3,6 +3,11 @@
  */
 
 import { getWeaponAttackBonusFromProperties } from '@/lib/game/weapon-attack-ability';
+import {
+  deriveCriticalRangeIncreaseFromProperties,
+  deriveDamageReductionFromProperties,
+  type ItemPropertyPayload,
+} from '@/lib/calculators';
 import { formatDamageDisplay } from '@/lib/utils';
 import {
   characterPartsToPartData,
@@ -67,6 +72,67 @@ export function resolveItemProperties(item: ItemWithLibrarySource): Item['proper
   const fromLib = item.libraryItem?.properties;
   if (fromLib && fromLib.length > 0) return fromLib as Item['properties'];
   return item.properties;
+}
+
+type ArmorScalarFields = Item & {
+  armorValue?: number;
+  armor?: number;
+  damageReduction?: number;
+  criticalRangeIncrease?: number;
+  critRange?: number;
+};
+
+export interface ArmorItemCombatStats {
+  damageReduction: number;
+  criticalRangeIncrease: number;
+}
+
+/** Damage Reduction and Critical Range +1 bonus for one armor item (matches library armor rows). */
+export function deriveArmorItemCombatStats(item: ItemWithLibrarySource): ArmorItemCombatStats {
+  const typed = item as ArmorScalarFields;
+  let damageReduction = typed.damageReduction ?? typed.armorValue ?? typed.armor ?? 0;
+  let criticalRangeIncrease =
+    typed.criticalRangeIncrease ?? typed.critRange ?? 0;
+
+  const props = resolveItemProperties(item);
+  const payload = (props ?? []) as ItemPropertyPayload[];
+  if (damageReduction === 0) {
+    damageReduction = deriveDamageReductionFromProperties(payload);
+  }
+  if (criticalRangeIncrease === 0) {
+    criticalRangeIncrease = deriveCriticalRangeIncreaseFromProperties(payload);
+  }
+
+  return { damageReduction, criticalRangeIncrease };
+}
+
+const STANDARD_CRIT_OVER_EVASION = 10;
+
+export interface EquippedArmorQuickRef {
+  damageReduction: number;
+  criticalRange: number;
+}
+
+/** Aggregated DR and effective Critical Range threshold for equipped armor (null if none equipped). */
+export function getEquippedArmorQuickRef(
+  armor: Item[] | undefined,
+  evasion: number
+): EquippedArmorQuickRef | null {
+  const equipped = (armor ?? []).filter((a) => a?.equipped);
+  if (equipped.length === 0) return null;
+
+  let damageReduction = 0;
+  let criticalRangeIncrease = 0;
+  for (const piece of equipped) {
+    const stats = deriveArmorItemCombatStats(piece as ItemWithLibrarySource);
+    damageReduction += stats.damageReduction;
+    criticalRangeIncrease += stats.criticalRangeIncrease;
+  }
+
+  return {
+    damageReduction,
+    criticalRange: evasion + STANDARD_CRIT_OVER_EVASION + criticalRangeIncrease,
+  };
 }
 
 export function getWeaponAttackBonus(

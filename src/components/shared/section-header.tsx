@@ -19,11 +19,12 @@
  */
 
 import { ReactNode } from 'react';
-import { Plus } from 'lucide-react';
+import { ChevronDown, Plus } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 import { cn } from '@/lib/utils';
+import type { LibrarySectionCollapseHeaderProps } from '@/hooks/use-library-section-collapse';
 
-export interface SectionHeaderProps {
+interface SectionHeaderBaseProps {
   /** Section title */
   title: string;
   /** Callback for add button - if provided, shows + button on far right */
@@ -40,6 +41,8 @@ export interface SectionHeaderProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
+export type SectionHeaderProps = SectionHeaderBaseProps & LibrarySectionCollapseHeaderProps;
+
 const sizeStyles = {
   sm: 'text-xs py-1.5',
   md: 'text-sm py-2',
@@ -54,7 +57,25 @@ export function SectionHeader({
   addButtonClassName,
   className,
   size = 'sm',
+  collapsible = false,
+  expanded = true,
+  onExpandedChange,
 }: SectionHeaderProps) {
+  const collapseToggle =
+    collapsible && onExpandedChange ? (
+      <button
+        type="button"
+        onClick={() => onExpandedChange(!expanded)}
+        className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full border border-border-light text-text-muted hover:bg-surface-alt hover:text-text-primary transition-colors"
+        aria-expanded={expanded}
+        aria-label={expanded ? `Collapse ${title}` : `Expand ${title}`}
+      >
+        <ChevronDown
+          className={cn('w-4 h-4 transition-transform', expanded ? 'rotate-180' : 'rotate-0')}
+        />
+      </button>
+    ) : null;
+
   return (
     <div 
       className={cn(
@@ -68,9 +89,10 @@ export function SectionHeader({
         {title}
       </h2>
       
-      {/* Right: Custom content and/or add button */}
+      {/* Right: Collapse, custom content, and/or add button */}
       <div className="flex items-center gap-2">
         {rightContent}
+        {collapseToggle}
         {onAdd && (
           <IconButton
             variant="ghost"

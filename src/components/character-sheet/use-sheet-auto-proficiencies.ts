@@ -20,13 +20,52 @@ import {
 import type { Character, Item } from '@/types';
 import type { LibrarySectionProps } from './library-section';
 
+export type ApplyAutoProficienciesResult = {
+  character: Character;
+  overLimitWarning?: string;
+};
+
+type ShowToast = (message: string, variant?: 'success' | 'error' | 'warning' | 'info') => void;
+
+/** Toast must not run inside setState updaters or render — defer to a microtask. */
+export function deferProficiencyOverLimitToast(showToast: ShowToast, warning: string | undefined) {
+  if (!warning) return;
+  queueMicrotask(() => showToast(warning, 'warning'));
+}
+
+export function computeAutoProficiencies(
+  next: Character,
+  reason: string,
+  buildRequiredForCharacter: (c: Character) => ReturnType<typeof buildRequiredProficiencies>,
+): ApplyAutoProficienciesResult {
+  const required = buildRequiredForCharacter(next);
+  const merged = mergeOwnedWithRequired(next.proficiencies || [], required);
+  const deduped = dedupeHighestProficiencies(merged);
+  const newSpent = deduped.reduce((sum, p) => sum + calculateProficiencyTP(p), 0);
+  const currentDeduped = dedupeHighestProficiencies(next.proficiencies || []);
+  const currentSpent = currentDeduped.reduce((sum, p) => sum + calculateProficiencyTP(p), 0);
+  const ability = getArchetypeAbilityScore(next);
+  const max = getTrainingPointLimit(next.level || 1, ability);
+  const overLimit = newSpent > max;
+  const thisActionAddedTp = newSpent > currentSpent;
+  const overLimitWarning =
+    overLimit && thisActionAddedTp
+      ? `${reason} puts proficiency TP over the limit (${newSpent}/${max}). Adjust in the Proficiencies tab.`
+      : undefined;
+
+  return {
+    character: { ...next, proficiencies: deduped },
+    overLimitWarning,
+  };
+}
+
 type UseSheetAutoProficienciesArgs = {
   character: Character | null;
   setCharacter: React.Dispatch<React.SetStateAction<Character | null>>;
   powerPartsDb: LibrarySectionProps['powerPartsDb'];
   techniquePartsDb: LibrarySectionProps['techniquePartsDb'];
   itemPropertiesDb: LibrarySectionProps['itemPropertiesDb'];
-  showToast: (message: string, variant?: 'success' | 'error' | 'warning' | 'info') => void;
+  showToast: ShowToast;
 };
 
 export function useSheetAutoProficiencies({
@@ -73,29 +112,10 @@ export function useSheetAutoProficiencies({
   );
 
   const applyAutoProficiencies = useCallback(
-    (next: Character, reason: string): Character | null => {
-      const required = buildRequiredForCharacter(next);
-      const merged = mergeOwnedWithRequired(next.proficiencies || [], required);
-      const deduped = dedupeHighestProficiencies(merged);
-      const newSpent = deduped.reduce((sum, p) => sum + calculateProficiencyTP(p), 0);
-      const currentDeduped = dedupeHighestProficiencies(next.proficiencies || []);
-      const currentSpent = currentDeduped.reduce((sum, p) => sum + calculateProficiencyTP(p), 0);
-      const ability = getArchetypeAbilityScore(next);
-      const max = getTrainingPointLimit(next.level || 1, ability);
-      const overLimit = newSpent > max;
-      const thisActionAddedTp = newSpent > currentSpent;
-      if (overLimit && thisActionAddedTp) {
-        // Soft cap: the TP limit is visibly flagged on the sheet and recoverable in
-        // the Proficiencies tab, so we apply the change and warn rather than block
-        // with a modal/confirm (TASK-338).
-        showToast(
-          `${reason} puts proficiency TP over the limit (${newSpent}/${max}). Adjust in the Proficiencies tab.`,
-          'warning',
-        );
-      }
-      return { ...next, proficiencies: deduped };
+    (next: Character, reason: string): ApplyAutoProficienciesResult => {
+      return computeAutoProficiencies(next, reason, buildRequiredForCharacter);
     },
-    [buildRequiredForCharacter, showToast],
+    [buildRequiredForCharacter],
   );
 
   useEffect(() => {
@@ -104,10 +124,10 @@ export function useSheetAutoProficiencies({
     const required = buildRequiredForCharacter(character);
     const missing = getMissingRequiredProficiencies(required, character.proficiencies || []);
     if (missing.length === 0) return;
-    setCharacter((prev) => {
-      if (!prev) return prev;
-      return applyAutoProficiencies(prev, 'Sync proficiencies');
-    });
+
+    const result = applyAutoProficiencies(character, 'Sync proficiencies');
+    setCharacter(result.character);
+    deferProficiencyOverLimitToast(showToast, result.overLimitWarning);
     // Parity with pre-split facade deps (avoid re-running on unrelated character fields).
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional subset (match prior facade)
   }, [
@@ -121,6 +141,7 @@ export function useSheetAutoProficiencies({
     itemPropertiesDb,
     buildRequiredForCharacter,
     applyAutoProficiencies,
+    showToast,
   ]);
 
   return {

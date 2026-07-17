@@ -90,6 +90,7 @@ export {
   formatDamage as formatItemDamage,
   formatRange,
   deriveDamageReductionFromProperties,
+  deriveCriticalRangeIncreaseFromProperties,
   deriveShieldAmountFromProperties,
   deriveShieldDamageFromProperties,
   extractProficiencies,

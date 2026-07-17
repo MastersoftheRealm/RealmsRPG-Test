@@ -107,7 +107,7 @@ describe('buildGuidedCharacterPayload', () => {
 
     // Lean power refs keep library names (parts stay off the save shape until cleanForSave).
     expect(payload.powers?.[0]).toMatchObject({ id: 'p1', name: 'Firebolt' });
-    expect(payload.equipment?.weapons?.[0]).toMatchObject({ id: 'w1', name: 'Greataxe' });
+    expect(payload.equipment?.weapons?.[0]).toMatchObject({ id: 'w1', name: 'Greataxe', equipped: true });
 
     const lean = cleanForSave(payload as Character);
     expect(lean.proficiencies?.length).toBe(payload.proficiencies?.length);
@@ -174,5 +174,38 @@ describe('buildGuidedCharacterPayload', () => {
     const lean = cleanForSave(payload as Character);
     expect(lean.archetypeFeats?.[0]).toMatchObject({ id: 'feat-a', name: 'Weapon Focus' });
     expect(lean.feats?.[0]).toMatchObject({ id: 'feat-c', name: 'Lucky' });
+  });
+
+  it('auto-equips starter gear with a single armor piece by DR', () => {
+    const officialItems: LibraryItem[] = [
+      { id: 'w1', docId: 'w1', name: 'Sword', type: 'weapon' },
+      { id: 'a-light', docId: 'a-light', name: 'Leather', type: 'armor', armorValue: 1 },
+      { id: 'a-heavy', docId: 'a-heavy', name: 'Plate', type: 'armor', armorValue: 4 },
+      { id: 's1', docId: 's1', name: 'Buckler', type: 'shield' },
+    ];
+
+    const payload = buildGuidedCharacterPayload(
+      minimalDraft({
+        loadoutWeapons: [{ id: 'w1', quantity: 1 }],
+        loadoutArmor: [
+          { id: 'a-light', quantity: 1 },
+          { id: 'a-heavy', quantity: 1 },
+        ],
+        armaments: [
+          { id: 'w1', quantity: 1 },
+          { id: 'a-light', quantity: 1 },
+          { id: 'a-heavy', quantity: 1 },
+        ],
+        equipment: [{ id: 's1', quantity: 1 }],
+      }),
+      { officialItems },
+    );
+
+    expect(payload.equipment?.weapons?.[0]?.equipped).toBe(true);
+    expect(payload.equipment?.shields?.[0]?.equipped).toBe(true);
+    const armor = payload.equipment?.armor ?? [];
+    expect(armor.filter((a) => a.equipped).length).toBe(1);
+    expect(armor.find((a) => a.id === 'a-heavy')?.equipped).toBe(true);
+    expect(armor.find((a) => a.id === 'a-light')?.equipped).toBe(false);
   });
 });

@@ -110,6 +110,7 @@ export function useCharacterSheetActions(args: UseCharacterSheetActionsArgs) {
     calculatedStats,
     addModalType,
     applyAutoProficiencies,
+    showToast,
   });
 
   const feats = useSheetFeatActions({

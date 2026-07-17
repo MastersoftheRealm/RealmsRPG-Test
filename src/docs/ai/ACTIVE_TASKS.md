@@ -4,7 +4,7 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-504
+**Next task ID:** TASK-514
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
@@ -14,6 +14,8 @@ Do **not** read the done archive at session start.
 **Counts:** 10 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
 **Realms Image Library epic (2026-07-16):** **TASK-491–499 done**. TASK-500 deferred.
+
+**Character sheet feedback (2026-07-17):** **TASK-508–513 done** (archived; owner QA in DEVELOPER_TASK_QUEUE). TASK-504 remains expandable chips (not toast).
 
 **Debt from AI workflow audit (2026-07-15):** TASK-480 — address alongside product work; repo-wide cadence → `/debt`. TASK-476/477/478/482/484/486/487/488/489/490 done; TASK-481 superseded by `/debt`. TASK-475 done (Enhanced shell basic mode). TASK-479 done (client error handling).
 
