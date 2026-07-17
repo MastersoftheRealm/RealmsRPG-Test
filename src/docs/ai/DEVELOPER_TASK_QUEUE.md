@@ -89,7 +89,12 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 | ---- | ------------- | -------------- |
 | **TASK-493** | DEV-V-023 **T001–T006** | Admin `/admin/images` upload, rename/retag, replace, delete with usage warning, search/filter |
 | **TASK-494** | Schema smoke | Migration `realms_image_entity_columns` **applied 2026-07-16** (owner-approved, via Supabase MCP); confirm species/equipment/power cards still resolve art via cache or bank |
-| **TASK-495** | Deferred to TASK-496 QA | Shared RealmsImagePicker has no user-reachable surface until TASK-496 wires editors; verify picker (guest browse/select, admin upload-into-bank) as part of TASK-496 QA |
+| **TASK-495** | DEV-V-026 **T001–T002** (with 496) | Shared RealmsImagePicker now reachable via admin/creator wiring — verify guest browse/select + admin upload-into-bank |
+| **TASK-496** | DEV-V-026 **T001–T002** | Admin species/equipment + creators use RealmsImageField/Picker; no legacy codex-art upload |
+| **TASK-497** | DEV-V-026 **T002–T003** | user_* image_id parity; add-to-library preserves bank image_id; non-admin pick-only |
+| **TASK-498** | DEV-V-026 **T004** | Legacy entity art cataloged into `/admin/images`; guided species cards still resolve |
+| **TASK-499** | DEV-V-026 **T005–T006** | Portrait + profile bank pick (species\|creature) alongside custom upload |
+| **TASK-405** | DEV-V-026 **T001** (+ guided species art) | Choice-card art pipeline superseded by Image Library epic; smoke admin + guided art |
 | **TASK-479** | DEV-V-024 **T001–T003** | Account profile-load Alert + Retry on failure; library delete/sync/add toasts; convention in ARCHITECTURE.md |
 | **TASK-501** | DEV-V-019 **T008** | Power/martial create → opposite Library tab hidden by default; edit eye-toggle unhides |
 | **TASK-475** | DEV-V-016 **T011** | My Library Enhanced — shared list chrome; no Sync/Duplicate; edit → crafting; delete still works |

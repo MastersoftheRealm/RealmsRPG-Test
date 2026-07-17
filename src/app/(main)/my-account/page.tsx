@@ -190,8 +190,11 @@ function AccountContent() {
       if (authError) throw authError;
       setProfile((prev) => (prev ? { ...prev, photoURL: `${url}?t=${Date.now()}` } : null));
       setPictureMessage({ type: 'success', text: 'Profile picture updated!' });
-    } catch {
-      setPictureMessage({ type: 'error', text: 'Failed to update profile picture' });
+    } catch (err: unknown) {
+      setPictureMessage({
+        type: 'error',
+        text: getErrorMessage(err, 'Failed to update profile picture'),
+      });
     } finally {
       setUploadingPicture(false);
     }

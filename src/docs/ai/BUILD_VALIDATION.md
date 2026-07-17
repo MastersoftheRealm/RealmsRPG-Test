@@ -3516,6 +3516,124 @@ Meaningful inline art uses shared click-to-enlarge; justified exceptions stay do
 
 ---
 
+## DEV-V-026 — Realms Image Library wiring (TASK-496–499)
+
+Admin/creator editors, user `image_id` parity, legacy catalog migration, and portrait/profile bank pick.
+
+#### DEV-V-026-T001 — Admin species/equipment use RealmsImageField
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-026 |
+| **Related task** | TASK-496 |
+| **Where** | `/admin/codex` → Species / Equipment |
+| **Needs** | Admin account |
+
+**Steps**
+1. Open Species editor for a row with art (or upload via picker).
+2. Confirm **Choose from library** / picker opens (not a legacy entity-tied-only upload field).
+3. Repeat for Equipment (weapon/armor/shield path).
+
+**Expected**
+- Shared `RealmsImageField` / `RealmsImagePicker`; selecting sets `image_id` and art previews on save/reload.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-026-T002 — Creators pick bank art (non-admin cannot upload into bank)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-026 |
+| **Related task** | TASK-496 / TASK-497 |
+| **Where** | `/creature-creator`, `/power-creator`, `/technique-creator`, `/item-creator` (and peers) |
+| **Needs** | Signed-in non-admin (and optionally admin) |
+
+**Steps**
+1. As non-admin, open a creator image field → pick from bank.
+2. Confirm no upload-into-bank control.
+3. As admin (optional), confirm upload-into-bank is available on admin/publish paths.
+
+**Expected**
+- Guests/signed-in can pick; non-admins cannot write to the bank.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-026-T003 — Add-to-library preserves image_id
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-026 |
+| **Related task** | TASK-497 |
+| **Where** | `/library` → Realms Library → add power/technique/creature with art |
+| **Needs** | Signed-in user; official row with `image_id` |
+
+**Steps**
+1. Add an official art-bearing entity to My Library.
+2. Open My Library row / creator edit and confirm the same art resolves (same bank master).
+
+**Expected**
+- User row keeps `image_id`; no re-upload; art still displays.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-026-T004 — Legacy cataloged species art appears in Image Library
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-026 |
+| **Related task** | TASK-498 |
+| **Where** | `/admin/images` + guided species step |
+| **Needs** | Admin; RealmsRPG-Test after `realms_image_catalog_legacy_entity_art` |
+
+**Steps**
+1. Open `/admin/images` and find cataloged starter species (e.g. Human / Halfling / Erethi).
+2. Confirm guided Choose-a-Path / species cards still show art.
+
+**Expected**
+- Bank rows tagged `species`; consumer `image_id` set; no broken cards. Legacy Storage paths may remain until replace.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-026-T005 — Character portrait bank pick
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-026 |
+| **Related task** | TASK-499 |
+| **Where** | Character sheet (edit) or creator finalize / guided portrait |
+| **Needs** | Character draft or saved character |
+
+**Steps**
+1. Open portrait upload → **Choose from library**.
+2. Pick a species/creature bank image.
+3. Confirm portrait updates; custom crop upload still works.
+
+**Expected**
+- Bank pick is additive; surfaces are pick-only (`allowAdminUpload={false}`).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-026-T006 — My Account profile picture bank pick
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-026 |
+| **Related task** | TASK-499 |
+| **Where** | `/my-account` |
+| **Needs** | Signed-in user |
+
+**Steps**
+1. Change Picture → Choose from library → select a bank portrait.
+2. Confirm profile photo updates and ExpandableImage preview still works.
+3. (Optional) Force a failing update and confirm error text surfaces (not a silent failure).
+
+**Expected**
+- Bank pick updates `photo_url` / avatar; custom upload remains; errors use `getErrorMessage`.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -3537,5 +3655,6 @@ Meaningful inline art uses shared click-to-enlarge; justified exceptions stay do
 | DEV-V-023 | Admin Realms Image Library (TASK-493) | — | Manual — see suite above |
 | DEV-V-024 | Client error handling (TASK-479) | — | Automated (`npm test`) + manual smoke |
 | DEV-V-025 | ExpandableImage adoption (TASK-478) | — | Manual — see suite above |
+| DEV-V-026 | Realms Image Library wiring (TASK-496–499) | — | Manual — see suite above |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
