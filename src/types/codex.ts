@@ -135,6 +135,7 @@ export interface CodexSpecies {
   ave_weight?: number;
   adulthood_lifespan?: number[];
   is_starter?: boolean;
+  image_id?: string | null;
   image_url?: string | null;
 }
 
@@ -164,6 +165,8 @@ export interface CodexEquipmentItem {
   properties: string[];
   rarity?: string;
   weight?: number;
+  image_id?: string | null;
+  image_url?: string | null;
 }
 
 export interface CodexCreatureFeat {

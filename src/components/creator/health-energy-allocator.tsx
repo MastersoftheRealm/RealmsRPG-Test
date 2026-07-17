@@ -4,10 +4,10 @@
  * Shared component for allocating HP and Energy points from a shared pool.
  * Used in character creator, character sheet, and creature creator.
  * 
- * Uses the unified ValueStepper component with hold-to-repeat support.
- * 
- * Design Updates:
- * - Health uses GREEN colors (intuitive for HP)
+ * Uses unified ValueStepper (ADR-0002) with hold-to-repeat for pool allocation.
+ *
+ * Design notes:
+ * - Domain color on totals / value text (HP green, EN blue) — stepper **buttons** stay neutral
  * - Shows TOTAL value prominently, "points" allocated shown secondary
  * - Renamed "bonus" to "points" for clarity
  * 
@@ -99,7 +99,7 @@ export function HealthEnergyAllocator({
         </div>
         
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 px-4 py-3">
-          {/* Health Points - Green colors, show total prominently */}
+          {/* Health — total uses success-fg; stepper buttons stay neutral (ADR-0002) */}
           <div className="flex-1 flex items-center gap-2 min-w-0">
             <span className="text-lg font-bold text-success-fg min-w-[60px] shrink-0">{maxHp} HP</span>
             <ValueStepper
@@ -121,7 +121,7 @@ export function HealthEnergyAllocator({
           {/* Divider - hidden on narrow mobile */}
           <div className="hidden sm:block w-px h-10 bg-border-light shrink-0" />
           
-          {/* Energy Points - Blue colors, show total prominently */}
+          {/* Energy — total uses info-fg; stepper buttons stay neutral (ADR-0002) */}
           <div className="flex-1 flex items-center gap-2 min-w-0">
             <span className="text-lg font-bold text-info-fg min-w-[60px] shrink-0">{maxEnergy} EN</span>
             <ValueStepper

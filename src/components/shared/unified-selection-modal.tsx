@@ -62,7 +62,10 @@ export interface SelectableItem {
   data?: unknown;
 }
 
-/** Column header definition for sorting */
+/** Column header definition for sorting.
+ * Data columns should be sortable (default true in ListHeader). Only set
+ * `sortable: false` for spacer/action columns (empty label, `_actions`, thumbnails).
+ */
 export interface ColumnHeader {
   key: string;
   label: string;

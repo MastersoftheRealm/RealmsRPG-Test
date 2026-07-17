@@ -2068,8 +2068,8 @@ Notes
   (8) Desc chips for technique/power cards should match armor/weapons positioning/grammar: e.g. Action Type chip shows only "Quick Action" not "Action Type Quick Action" ? note in rules/docs as for GLR/Card desc chips (align with prior compact-facts / chip grammar work).
 - Expected: Powers/Techniques L1 cards match Loadout weapon/armor anatomy and chip grammar; shared Training Points continue to gate picks; innate vs regular powers are separate curated lists with Layer 2 UnifiedSelectionModal (not dump-all cards); L2 catalogs filter by theoretical L1 max energy (or ?20 fallback); path-recommended innates fill Innate Energy within threshold; Action Type desc chips are value-only; admin path authoring validates innate eligibility separately.
 - Disposition:
-  Cross-ref: TASK-444 done (L1 cards + interim in-step L2); TASK-456 done (shared TP); TASK-458 done (L2?L1 promotion); TASK-463 not-started (GLR modal bridge ? **updated**); chip grammar TASK-454/461/464 done for equipment (Action Type still prefixed ? revise). New work: **TASK-470** (L1 card/chip parity + Action Type value-only docs), **TASK-471** (innate vs powers L1 split), **TASK-472** (innate energy fill + threshold), **TASK-473** (admin path recommended innates + eligibility). TP already shipped ? verify only. No implementation this pass beyond queue/docs filing. Spec audit 2026-07-15: Innate Energy = progression ThresholdùPools (not getInnateEnergyMax); Action Type chip vs column; 463?471 after 470; Appendix G on TASK-473; browse-panel removal AC on TASK-463.
-**Raw Feedback Log ù 2026-07-16 (Character sheet: Unarmed Prowess column order)**
+  Cross-ref: TASK-444 done (L1 cards + interim in-step L2); TASK-456 done (shared TP); TASK-458 done (L2?L1 promotion); TASK-463 not-started (GLR modal bridge ? **updated**); chip grammar TASK-454/461/464 done for equipment (Action Type still prefixed ? revise). New work: **TASK-470** (L1 card/chip parity + Action Type value-only docs), **TASK-471** (innate vs powers L1 split), **TASK-472** (innate energy fill + threshold), **TASK-473** (admin path recommended innates + eligibility). TP already shipped ? verify only. No implementation this pass beyond queue/docs filing. Spec audit 2026-07-15: Innate Energy = progression Threshold?Pools (not getInnateEnergyMax); Action Type chip vs column; 463?471 after 470; Appendix G on TASK-473; browse-panel removal AC on TASK-463.
+**Raw Feedback Log ? 2026-07-16 (Character sheet: Unarmed Prowess column order)**
 - Date: 2026-07-16
 - Context: Character sheet ? Archetype ? Weapons / Unarmed Prowess
 - Priority: Medium
@@ -2077,15 +2077,15 @@ Notes
   Unarmed Prowess shows Range on the far right, shifting Attack and Damage left. Align Unarmed with weapons columns: Name | Range | Attack | Damage.
 - Expected: Unarmed row cells match QuickWeaponsTable order; Attack/Damage not displaced; no regression to unarmed roll math or proficient display.
 - Disposition: Implemented as **TASK-483** (done).
-**Raw Feedback Log ù 2026-07-16 (Character sheet: weapon property density)**
+**Raw Feedback Log ? 2026-07-16 (Character sheet: weapon property density)**
 - Date: 2026-07-16
 - Context: Character sheet ? Archetype ? Weapons (martial example with multiple named properties); shared QuickWeaponsTable
 - Priority: Medium
 - Feedback (verbatim themes):
-  Weapon named properties under the name are a cramped inline `ù a ù b ù c` string. Prefer one `ù Property` per line under the name (layout A). Apply globally via QuickWeaponsTable (character + creature consumers). Do not switch to descriptor chips this pass (chips remain TASK-461).
+  Weapon named properties under the name are a cramped inline `? a ? b ? c` string. Prefer one `? Property` per line under the name (layout A). Apply globally via QuickWeaponsTable (character + creature consumers). Do not switch to descriptor chips this pass (chips remain TASK-461).
 - Expected: Stacked bullets under name; columns Name | Range | Attack | Damage stable; readable at desktop and ~360px; Unarmed alignment not regressed.
 - Disposition: Implemented as **TASK-486** (done). Shields/armor siblings shared the identical join and use the same helper. Creature stat block currently uses WeaponsListSection (chips), not QuickWeaponsTable. Post-impl audit: stacked divs (a11y), T009 tightened for Unarmed `trailingRows` + creature chip path; live screenshot QA still owner (`verification_status: unverified`).
-**Raw Feedback Log ó 2026-07-16 (Character sheet skills play-view chrome)**
+**Raw Feedback Log ? 2026-07-16 (Character sheet skills play-view chrome)**
 - Date: 2026-07-16
 - Context: Character sheet ? Skills (normal view vs section pencil edit); Advanced creator Skills allocation
 - Priority: Medium
@@ -2093,3 +2093,93 @@ Notes
   In normal (non-edit) view: sub-skills keep ? + italic but same text color as base skills; no source suffixes like `(species)` or path labels; species proficient dots match other proficient dots. In section edit mode, source markers and locked/species affordances may remain. Do not weaken lock behavior when editing. Creator/allocation may still show source labels.
 - Expected: Clean play view; edit keeps locked/species identifiable and non-removable/non-toggleable; allocation source labels unchanged.
 - Disposition: Implemented as **TASK-485** (done). Gated via shared `SkillRow` `isEditing` (table). Post-impl audit: FEATURE_INDEX + guide usage note, DEV-V-009-T008, suite header/index anchor, DESIGN_INTENT + ? `aria-hidden`.
+**Raw Feedback Log ? 2026-07-16 (GLR column header sort in add modals)**
+- Date: 2026-07-16
+- Context: Guided creator add modals (and other GLR + ListHeader surfaces)
+- Priority: High
+- Feedback (verbatim themes):
+  All instances of GLR with column headers should allow ascending/descending sorting ? e.g. guided creator add modals for Action Type, Energy, Training Points, Name, etc. May already be reflected in rules.
+- Expected: Clicking any labeled data column header (desktop) or Sort by (mobile) toggles asc/desc; spacer/action columns stay non-sortable; rules/docs reinforce the default.
+- Disposition: Implemented as **TASK-488** (done). Flipped guided L2 + peer add-modal columns to sortable; strengthened guide/02 + realms-unification; DEV-V-013-T058. **Audit 2026-07-16:** closed holes ? creature armament RANGE/ATTACK/DAMAGE sort keys, Admin enhanced header/row key alignment, Codex DESCRIPTION + entity-library/stat-block Description sortable.
+
+**Raw Feedback Log ? 2026-07-16 (Stepper unification)**
+- Date: 2026-07-16
+- Context: Sitewide ? steppers; reference = guided creator skills bonus steppers
+- Priority: High
+- Feedback (verbatim themes):
+  Across the codebase are many different types of steppers; unify them all into one UI style that can be used universally ? the skills bonus steppers in the guided creator (non-invasive borders, non-opaque, clear bold -/+). Re-write the rules regarding steppers UI and create a shared component for them all while removing other iterations. Props such as size/color OK but as unified as possible.
+- Expected: One shared chrome + component family; docs/rules updated; parallel hand-rolled / colored-button steppers removed.
+- Disposition: Implemented as **TASK-487** (ADR-0002). `ValueStepper` / Dec/Inc + `QuantitySelector` wrapper; `.btn-stepper` matches guided skills; health/energy button tints and `.btn-stepper-danger`/`success` removed.
+
+**Raw Feedback Log ? 2026-07-16 (Guided finish ? character sheet)**
+- Date: 2026-07-16
+- Context: Guided character creator ? Your Hero / Finish
+- Priority: High
+- Feedback (verbatim themes):
+  When finishing your character it should take you to the finished character after hitting finish and it confirming it finished properly; it also shouldn't clear the guided character creator until it confirms the character was successfully created.
+- Expected: Keep wizard draft until create returns success; then navigate to `/characters/{id}` (play-together may appear first, then View character ? sheet). On failure, draft remains.
+- Disposition: Implemented as **TASK-489** (done). Root cause: `resetCreator()` remounted PathStep before navigation and dropped the play-together success handoff.
+
+**Raw Feedback Log ? 2026-07-16 (Site footer Play / Create links)**
+- Date: 2026-07-16
+- Context: Site footer ? Play and Create sections
+- Priority: Low
+- Feedback (verbatim themes):
+  In the site footer is the Play section, should have Characters, Campaigns, and Encounters. Learn is fine. Create should be Power Creator, Armament Creator, and Technique Creator.
+- Expected: Play = Characters, Campaigns, Encounters; Create = Power Creator, Armament Creator, Technique Creator; Learn unchanged.
+- Disposition: Implemented in `footer-copy.ts` (removed Create a Character; renamed Item Creator ? Armament Creator; added Encounters + Technique Creator).
+
+**Raw Feedback Log ? 2026-07-16 (Guided save proficiencies + custom-creator parity)**
+- Date: 2026-07-16
+- Context: Guided character creator save vs working custom creator
+- Priority: High
+- Feedback (verbatim themes):
+  When a character is saved, like the custom creator, the proficiencies need to be saved also. Also, analyze all the functions of the custom creator to ensure we are using those good/best practices for character creation data, saving, progress saving, error handling, etc. We made the guided creator to improve UX/UI of creators and implement our product overview, but it doesn't change the fact that it's a replacement of a working tool, so look at the working tool (custom creator) to ensure we follow best practice for our database, code, character sheet creation, and so on.
+- Expected: Guided save includes required proficiencies; save/progress/error/handoff practices match custom creator where applicable.
+- Disposition: Implemented as **TASK-490** (done). Root gap: `buildGuidedCharacterPayload` omitted `proficiencies` while custom `getCharacter` calls `buildRequiredProficiencies`. Also aligned status, currentHealth/Energy, library names, and `?returnTo=`. Intentional guided differences kept: lighter pre-save validation (name + HP/EN), play-together modal.
+
+**Raw Feedback Log ? 2026-07-16 (Realms Image Library / multi-category admin media)**
+- Date: 2026-07-16
+- Context: Admin tooling; choice-card art; REALMS ?5.0.3; TASK-405 / TASK-417
+- Priority: High
+- Feedback (verbatim themes):
+  Need a place where admins can upload and manage database images. Same size/file-type restrictions and crop-to-aspect as other images. Images should be designated (and designations altered) into different sections ? e.g. a species image may also be usable for creatures, so it appears in the Realms image library picker for users creating creatures and for admins adding creatures to the Realms Library. Same for weapons, armor, shields, powers, techniques, equipment, empowered techniques. Upload may happen on the admin image page or when creating/publishing an entity (e.g. power with a mushroom image) ? either way the image lands in the library and is designated in that category. Must be easy to multi-designate, rename, etc. Entities with images: species, creatures, weapons, armor, shields, powers, techniques, equipment, empowered techniques. Without images: feats, skills, archetypes, parts, properties, creature feats, traits.
+- Expected: Shared Realms Image Library (catalog + multi-category tags) + admin management UI + picker in creators/admin editors; entity `image_url` parity; supersedes narrow ?art bank only? framing of TASK-417.
+- Disposition: Filed TASK-491‚Äì500 (2026-07-16). Architect gate TASK-491 done ‚Äî ADR-0003 + REALMS ¬ß5.0.3 / schema / art-guide. Implement from TASK-492 when asked.
+
+**Raw Feedback Log ? 2026-07-16 (Realms Image Library ? owner clarifications)**
+- Date: 2026-07-16
+- Context: Follow-up to Realms Image Library epic; TASK-491 questions
+- Priority: High
+- Feedback (decisions):
+  (1) Binding ? one master file in the shared bank; reusable in many places without duplicating instances; use best practice. (2) Delete ? warn listing all uses; support replace so all uses point to the new image; hard-delete without replace clears the image everywhere. (3) One image bank with name + multi-category ?libraries? tags (e.g. dagger ? equipment+weapon+shield+technique); pickers filter by those tags for users and admins. (4) Empowered techniques share power/technique designations (no separate tag). (5) Enhanced items ? no images for now; yes eventually. (6) Upload into bank ? admin only (admin Images page, or admin publishing via creators to Realms Library ? auto name from entity + auto category tag). (7) Pick from bank ? guests and all signed-in users; species/creature bank images also pickable for profile picture and character portrait. (8) Admin UI ? `/admin/images` card on admin dashboard.
+- Expected: Tasks/ADR encode master-asset + `image_id` refs, replace/delete-everywhere, category matrix, guest-readable picker, portrait integration, deferred enhanced images.
+- Disposition: Locked into TASK-491‚Äì500 (2026-07-16). TASK-491 Architect done ‚Äî ADR-0003 + REALMS ¬ß5.0.3 / schema / art-guide rewrite. Implement from TASK-492 when asked.
+
+**Raw Feedback Log ? 2026-07-16 (Hide opposite Library tab on create)**
+- Date: 2026-07-16
+- Context: Character sheet Library tabs after create
+- Priority: Medium
+- Feedback (verbatim themes):
+  For when a character is made as only a martial/only power character initially, hide the opposite power/technique tab by default using our already existing hide mechanics (can be unhidden by user in edit mode as normal) ie if I make a level 1 power character, when I get to the character sheet, have the powers tab hidden, and vice versa.
+- Expected: Power-only ? Techniques hidden by default; Martial-only ? Powers hidden; unhide via existing edit-mode eye toggle. (Example wording said "powers tab" for a power character; interpreted as hide the opposite tab per the first sentence.)
+- Disposition: Implemented as **TASK-501** (done).
+
+**Raw Feedback Log ? 2026-07-16 (Sheet techniques Energy duplicates)**
+- Date: 2026-07-16
+- Context: Character sheet Library ? Techniques (and Powers)
+- Priority: Medium
+- Feedback (verbatim themes):
+  Character sheet techniques (and possibly powers) tab: the only section for energy listed should be the far right energy spend button (right now there are duplicate headers/columns, a static energy value and the roll button).
+- Expected: Powers/Techniques show energy cost only via the far-right spend RollButton; no static Energy column/header beside it.
+- Disposition: Implemented as **TASK-502**. Techniques still had Energy column + rightSlot button; powers already spend-button-only. Removed sheet Energy *value* column; cost is far-right spend button under an **Energy** ListHeader label (`rowChrome.rightSlotLabel`). Audit: campaign view omits noop `onUse*`; mapper regression tests; play-vs-browse docs.
+
+**Raw Feedback Log ? 2026-07-16 (Guided creator feat names are IDs)**
+- Date: 2026-07-16
+- Context: Guided character creator ? save ? character sheet Feats
+- Priority: High
+- Feedback (verbatim themes):
+  Created a new character on guided creator, the feat names are ID's instead of actual feat names.
+- Expected: Archetype and character feats show Codex display names on the sheet (and in saved character data), not raw ids.
+- Disposition: Implemented as **TASK-503**. Root cause: `buildGuidedCharacterPayload` set `name: String(id)`. Now resolves names from `codexFeats`; sheet enrichFeat also prefers Codex when stored name equals id.
+

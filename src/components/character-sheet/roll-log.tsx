@@ -12,9 +12,10 @@
 import * as React from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils/cn';
-import { Minus, Plus, Trash2, Users, User } from 'lucide-react';
+import { Trash2, Users, User } from 'lucide-react';
 import { useRolls, type RollEntry, type RollType, type DieResult } from './roll-context';
 import { useCampaignRolls } from '@/hooks/use-campaign-rolls';
+import { DecrementButton, IncrementButton } from '@/components/shared';
 import { LoadingState, EmptyState, Card } from '@/components/ui';
 import type { CampaignRollEntry } from '@/types/campaign-roll';
 import { formatRollTimestamp } from '@/lib/roll-timestamp';
@@ -345,23 +346,20 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
           <div className="flex items-center justify-between gap-2 mb-3">
             <div className="flex items-center gap-1.5">
               <span className="text-text-on-dark/70 text-xs font-semibold">MOD</span>
-              <button
-                onClick={() => setModifier(m => m - 1)}
-                className="w-7 h-7 rounded bg-text-on-dark/10 hover:bg-text-on-dark/20 dark:bg-text-on-dark/20 dark:hover:bg-text-on-dark/35 text-text-on-dark flex items-center justify-center"
-                aria-label="Decrease bonus"
-              >
-                <Minus className="w-3.5 h-3.5" />
-              </button>
-              <span className="text-text-on-dark font-bold min-w-[36px] text-center text-sm">
-                {modifier >= 0 ? '+' : ''}{modifier}
+              <DecrementButton
+                onClick={() => setModifier((m) => m - 1)}
+                size="sm"
+                title="Decrease bonus"
+              />
+              <span className="text-text-on-dark font-bold min-w-[36px] text-center text-sm tabular-nums">
+                {modifier >= 0 ? '+' : ''}
+                {modifier}
               </span>
-              <button
-                onClick={() => setModifier(m => m + 1)}
-                className="w-7 h-7 rounded bg-text-on-dark/10 hover:bg-text-on-dark/20 dark:bg-text-on-dark/20 dark:hover:bg-text-on-dark/35 text-text-on-dark flex items-center justify-center"
-                aria-label="Increase bonus"
-              >
-                <Plus className="w-3.5 h-3.5" />
-              </button>
+              <IncrementButton
+                onClick={() => setModifier((m) => m + 1)}
+                size="sm"
+                title="Increase bonus"
+              />
             </div>
             {totalDice > 0 && (
               <button

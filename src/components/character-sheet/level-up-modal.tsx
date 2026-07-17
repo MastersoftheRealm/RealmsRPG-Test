@@ -9,6 +9,7 @@
 import { useState, useMemo } from 'react';
 import { ArrowUp, ArrowDown, Star, Heart, Shield, Sword, Check } from 'lucide-react';
 import { Modal, Button } from '@/components/ui';
+import { DecrementButton, IncrementButton } from '@/components/shared';
 import { PathLevelGuidance } from '@/components/character-sheet/path-level-guidance';
 import {
   calculateAbilityPoints,
@@ -149,24 +150,22 @@ export function LevelUpModal({
             {character.name} • Level {currentLevel}
           </p>
           <div className="flex items-center justify-center gap-4">
-            <button
+            <DecrementButton
               onClick={() => setTargetLevel(Math.max(minLevel, targetLevel - 1))}
               disabled={targetLevel <= minLevel}
-              className="w-10 h-10 rounded-full bg-surface-alt text-text-secondary hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-              -
-            </button>
+              size="lg"
+              title="Decrease level"
+            />
             <div className="text-center">
               <div className="text-5xl font-bold text-primary-link-fg">{targetLevel}</div>
               <div className="text-sm text-text-muted">New Level</div>
             </div>
-            <button
+            <IncrementButton
               onClick={() => setTargetLevel(Math.min(maxLevel, targetLevel + 1))}
               disabled={targetLevel >= maxLevel}
-              className="w-10 h-10 rounded-full bg-surface-alt text-text-secondary hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-              +
-            </button>
+              size="lg"
+              title="Increase level"
+            />
           </div>
         </div>
         

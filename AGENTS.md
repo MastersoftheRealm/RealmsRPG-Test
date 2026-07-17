@@ -34,7 +34,8 @@ Do **not** load full historical queues, full `AGENT_GUIDE.md`, or archive audits
 | Open tasks | `ACTIVE_TASKS.md` · waiting `WAITING_TASKS.md` · process `AI_TASK_QUEUE.md` · human `DEVELOPER_TASK_QUEUE.md` |
 | Design constraints | `DESIGN_INTENT.md` |
 | ADRs | `src/docs/ai/ADR/` |
-| PR failure-mode checklist | `src/docs/ai/PR_CHECKLIST.md` |
+| PR failure-mode checklist | `src/docs/ai/PR_CHECKLIST.md` (incl. owner commands) |
+| Owner commands | `/audit` → `/cleanup` (session); `/debt` (repo) — `.cursor/commands/` |
 | Barrel inventory (generated) | `FEATURE_INDEX_BARRELS.generated.md` (`npm run tasks:generate-index`) |
 | QA steps | `BUILD_VALIDATION.md` |
 | Deploy / secrets | `DEPLOYMENT_AND_SECRETS_SUPABASE.md` |
@@ -53,7 +54,7 @@ Rules under `.cursor/rules/` are terse pointers. If a rule and an authority disa
 
 ## Definition of Done (summary)
 
-Build + targeted tests + all AC met + no new parallel pattern + update `ACTIVE_TASKS` (move `done` to archive) + changelog. Incomplete → `partial` + follow-ups. Never mark `done` early.
+Build + targeted tests + all implementable AC met + no new parallel pattern + update `ACTIVE_TASKS` (move `done` to archive with `verification_status`) + changelog. User-facing work: `pending-qa` until owner runs `BUILD_VALIDATION` (see `DEVELOPER_TASK_QUEUE`). Incomplete → `partial` + follow-ups. Never mark `done` early.
 
 ## Migrations (one policy)
 

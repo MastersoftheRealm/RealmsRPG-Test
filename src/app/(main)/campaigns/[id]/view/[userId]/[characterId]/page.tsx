@@ -292,10 +292,8 @@ function CampaignCharacterViewContent() {
                   onAddPower={() => {}}
                   onRemovePower={() => {}}
                   onTogglePowerInnate={() => {}}
-                  onUsePower={() => {}}
                   onAddTechnique={() => {}}
                   onRemoveTechnique={() => {}}
-                  onUseTechnique={() => {}}
                   onAddWeapon={() => {}}
                   onRemoveWeapon={() => {}}
                   onToggleEquipWeapon={() => {}}

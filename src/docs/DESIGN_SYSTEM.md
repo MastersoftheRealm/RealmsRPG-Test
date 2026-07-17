@@ -225,11 +225,14 @@ import { Button } from '@/components/ui';
 <Button isLoading>Loading...</Button>
 ```
 
-**Always use the `<Button>` component for buttons.** Legacy gradient utilities (`.btn-primary`, etc.) and raw link button classes (`.btn-solid`, `.btn-outline-clean`) were removed in Phase 0.4 / Phase 2.1. For links styled as buttons, use `<Button asChild><Link …></Button>`. Stepper buttons:
+**Always use the `<Button>` component for buttons.** Legacy gradient utilities (`.btn-primary`, etc.) and raw link button classes (`.btn-solid`, `.btn-outline-clean`) were removed in Phase 0.4 / Phase 2.1. For links styled as buttons, use `<Button asChild><Link …></Button>`.
 
-- **Default (preferred):** `.btn-stepper` — sleek/neutral surface buttons (rounded, not red/green circles). Shared `ValueStepper`, `DecrementButton` / `IncrementButton`, and `QuantitySelector` use this class sitewide (aligns with skill bonus steppers). Do not hand-roll ± buttons.
-- Soft domain tints: `ValueStepper` `colorVariant="health" | "energy"` only where HP/EN context needs it.
-- Deprecated: `.btn-stepper-danger` / `.btn-stepper-success` (keep for rare legacy call sites; do not use for new UI).
+**± Steppers (ADR-0002 — one chrome sitewide):**
+
+- **Use:** `ValueStepper`, or `DecrementButton` / `IncrementButton` when the value display is custom (e.g. skill bonus between ±). Quantities in list rows: `QuantitySelector` (thin wrapper over `ValueStepper`).
+- **Chrome:** `.btn-stepper` — soft `bg-surface-alt`, no invasive border, `rounded-lg`, bold ± glyphs; disabled = muted text on transparent. Matches guided skills bonus steppers.
+- **Allowed props:** `size`, layout `variant` (`default` | `inline` | `compact`), `enableHoldRepeat` (HP/EN pools only), and **value** coloring (`colorVariant` / `colorValue` for the number only). Buttons stay neutral everywhere.
+- **Do not:** hand-roll ± buttons; tint stepper buttons green/red/blue; reintroduce `.btn-stepper-danger` / `.btn-stepper-success`.
 
 Touch targets remain ≥44px on viewports below `md` (see `MOBILE_UX.md`).
 

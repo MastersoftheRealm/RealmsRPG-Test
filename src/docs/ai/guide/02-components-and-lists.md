@@ -20,6 +20,7 @@ Quick location table: [`AGENT_GUIDE.md`](../AGENT_GUIDE.md) § Components. Unifi
 | Use Case | Component | Notes |
 |----------|-----------|-------|
 | Powers, techniques, feats, equipment in lists | **GridListRow** | Sortable columns, leftSlot/rightSlot, expandable rows |
+| Character sheet Powers/Techniques energy cost | **GridListRow** `rightSlot` spend `RollButton` + **`CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME`** (`rowChrome.rightSlotLabel: 'Energy'`) | Play lists: cost **only** on the far-right spend control under an **Energy** header — no static Energy value column in the middle (`mapPowerRows` / `mapTechniqueRows` + `CHARACTER_SHEET_TECHNIQUE_*`). Browse/creator/stat-block lists may keep an Energy column when there is no spend button. Do not pass noop `onUse*` handlers (omit them for view-only). |
 | Codex/Library browse, item cards | **ItemCard** (and GridListRow list rows) | Card layout, view/edit/duplicate/delete actions |
 | Base-skill selector (add sub-skill) | **SelectionToggle** | Unique UX; not GridListRow |
 | Species detail view, level-up wizard | Custom layouts | Justified exceptions |
@@ -29,6 +30,8 @@ Quick location table: [`AGENT_GUIDE.md`](../AGENT_GUIDE.md) § Components. Unifi
 **List item actions:** GridListRow and ItemCard use the same action set (view/edit/duplicate/delete, plus quantity where applicable). Use IconButton and the same placement pattern; see `src/docs/human/UI_COMPONENT_REFERENCE.md` for extended catalog details.
 
 **List modal layout (add-X, load, selection):** Prefer **`UnifiedSelectionModal`** (or thin wrappers: `AddLibraryItemModal`, `LoadFromLibraryModal`, `AddFeatModal`, `AddSkillModal`) so search/sort/list/footer stay consistent. `UnifiedSelectionModal` defaults to **`flexLayout`** (sticky header/footer + scrollable list on mobile). For rare custom lists that cannot use UnifiedSelectionModal, use **useModalListState** (`@/hooks/use-modal-list-state`) for search/sort state — and apply `gridColumnsWithInlineSelection` yourself (do not pre-wrap grids passed into UnifiedSelectionModal). Structure: (1) Header (title + close), (2) Search, (3) optional filters, (4) **ListHeader**, (5) scrollable **GridListRow** list, (6) footer. Use **EmptyState** / **LoadingState**; avoid ad-hoc Spinner/divs. **Quantity (`showQuantity`):** in-row **`QuantitySelector`** (quantity-first: raise qty from 0 to select, lower to 0 to deselect) — do not place a side-column stepper that shoves the row.
+
+**Sortable ListHeader columns:** Every data column (Name, Action Type, Energy, Training Points, Currency, Damage, Description, etc.) must be sortable ascending/descending. `ListHeader` / `UnifiedSelectionModal` default `sortable !== false`. Only spacer/action columns (`_actions`, empty label, thumbnails, `_sel`, `_innate`) use `sortable: false`. Mobile uses the same sort state via ListHeader’s “Sort by” control (`MOBILE_UX.md`). **Exception:** `DetailOptionList` deep-dive rows are not ListHeader sort chrome (no column-sort affordance).
 
 See `src/docs/human/UI_COMPONENT_REFERENCE.md` for extended component catalog (agents: prefer this guide + `realms-unification.mdc`).
 
@@ -47,7 +50,7 @@ Goal: "Learn once, use forever" — consistent UI across Library, Codex, Charact
 | DetailOptionList + lib/detail-option | Shared elongated option-row toolkit for deep-dive + remodeled species-modal / SpeciesRevealPanel granted traits (TASK-435) |
 | GuidedLayerNav | Layer 1 expand / Layer 2+ collapse below step content — guided creator (path, species, abilities), GuidedChoiceShell (Advanced path mode) |
 | SkillRow | skills-section, skills-step, creature-creator, SkillsAllocationPage. Table play view gates source chrome via `isEditing` (TASK-485) |
-| ValueStepper | abilities-section, sheet-header, health-energy-allocator, dice-roller, all creators, encounters pages |
+| ValueStepper (ADR-0002) | abilities-section, sheet-header, health-energy-allocator, GuidedSkillsPanel Dec/Inc, dice-roller, all creators, encounters; QuantitySelector wraps it |
 | SectionHeader | feats-tab, proficiencies-tab, notes-tab, archetype-section, crafting pages |
 | ListHeader | All Codex/Library/Admin list views, feats-step, UnifiedSelectionModal |
 | UnifiedSelectionModal | AddFeatModal, AddSkillModal, AddLibraryItemModal, LoadFromLibraryModal (thin wrappers) |
@@ -63,6 +66,6 @@ Quick reference: `.cursor/rules/realms-unification.mdc`, `DESIGN_SYSTEM.md`.
 - **GridListRow** — Library, Codex, add-feat-modal, add-library-item-modal, add-skill-modal, equipment-step, feats-tab, library-section, creature-creator
 - **HubListRow** — Encounters hub, Crafting hub, Library Enhanced tab (list rows with icon, title, badge, subtitle, delete). **Do not use** for combat/skill encounter participants: those use **CombatantCard** and participant-specific blocks (health, initiative, roll state); HubListRow is for "open/delete" list items only.
 - **SkillRow** — skills-section, skills-step, creature-creator, SkillsAllocationPage. Table variant: when `isEditing` is false, hide `(species)` / `sourceLabel` and species/locked prof opacity so sheet play view matches base skill chrome; edit + allocation (`isEditing` true) keep source markers and locked remove/prof affordances (TASK-485). Card/compact still show source labels for creator flows.
-- **ValueStepper** — abilities-section, sheet-header, health-energy-allocator, dice-roller, SkillRow (all variants), skills-allocation defense, all creators, encounters. Prefer `ValueStepper` / `DecrementButton` / `IncrementButton` + `.btn-stepper`; quantities use `QuantitySelector` (same chrome). Do not hand-roll ± buttons.
+- **ValueStepper** (ADR-0002) — abilities-section, sheet-header, health-energy-allocator, dice-roller, SkillRow, GuidedSkillsPanel (Dec/Inc), skills-allocation defense, all creators, encounters. One chrome: soft `bg-surface-alt` / no invasive border / bold ± (`.btn-stepper`). Quantities: `QuantitySelector` wraps `ValueStepper`. `colorVariant` colors the **value** only; buttons stay neutral. `enableHoldRepeat` for HP/EN pools only. Do not hand-roll ± buttons.
 - **SectionHeader** — feats-tab, proficiencies-tab, notes-tab, archetype-section, crafting pages
 - **AddSubSkillModal** — Uses SelectionToggle (not GridListRow) — unique base-skill selector UX

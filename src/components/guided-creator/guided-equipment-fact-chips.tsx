@@ -26,7 +26,3 @@ export function GuidedFactChipRow({ chips, className }: GuidedFactChipRowProps) 
     </div>
   );
 }
-
-/** @deprecated Prefer GuidedFactChipRow — same renderer. */
-export const GuidedEquipmentFactChips = GuidedFactChipRow;
-export type GuidedEquipmentFactChipsProps = GuidedFactChipRowProps;

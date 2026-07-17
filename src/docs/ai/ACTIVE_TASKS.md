@@ -4,16 +4,18 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-487
+**Next task ID:** TASK-504
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`.
 
-**Counts:** 18 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 20 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Debt from AI workflow audit (2026-07-15):** TASK-477–481 — address alongside product work. TASK-476/482/484/486 done.
+**Realms Image Library epic (2026-07-16):** **TASK-491/492/493/494/495 done**. Next: **496** → 497/499 → 498. TASK-500 deferred.
+
+**Debt from AI workflow audit (2026-07-15):** TASK-477–480 — address alongside product work; repo-wide cadence → `/debt`. TASK-476/482/484/486/487/488/489/490 done; TASK-481 superseded by `/debt`.
 
 ---
 
@@ -162,8 +164,9 @@ Do **not** read the done archive at session start.
     - npm run build + lint pass; no new errors.
   build_validation: DEV-V-019
   developer_test_plan: |
-    Run DEV-V-019-T001–T007 in BUILD_VALIDATION.md (choice-card, login, admin feat remount,
-    library clamp, edit-archetype session remount, sheet library tab visibility, modal remounts).
+    Run DEV-V-019-T001–T007 + T009–T010 in BUILD_VALIDATION.md (choice-card, login, admin feat
+    remount, library clamp, edit-archetype session remount, sheet library tab visibility, modal
+    remounts, power-creator draft/?edit= bootstrap, remaining creators draft/?edit= bootstrap).
   completed_work: |
     Batch 1 (2026-07-15): 168 → 158 hook warnings (−10).
     - guided-choice-card: derive inactive overflow; sync expand via render when selected changes.
@@ -202,14 +205,39 @@ Do **not** read the done archive at session start.
     - Shared `src/lib/empty.ts` (dedupe EMPTY_* across skills/feats/ancestry).
     - skills Continue copies defenseVals (never persist DEFAULT_DEFENSE_SKILLS ref).
     - Settings modal uses isOpen while conditionally mounted.
+    Batch 4 start (2026-07-16): power-creator hydrate → remount bootstrap.
+    - New `lib/game/creator-cache.ts` (pure read + write/clear draft-cache helpers).
+    - `power-creator-bootstrap.ts`: pure cache-restore + library-record→form-state builders.
+    - page.tsx: PowerCreatorWorkspace remounts via key (editId|draft); initial state seeded in
+      useState from one-time render-adjust bootstrap — both hydrate effects deleted (−2 warnings).
+    - /audit + /cleanup same session: error state with retry (no infinite spinner on parts
+      failure), ?edit= waits on load.isLoading not rawItems.length (empty library / bad id →
+      blank creator, no hang), render-pure bootstrap (edit-mode cache clear moved to mount
+      effect), DEV-V-019-T009.
+    Batch 4 complete (2026-07-16): all remaining creator hydrates → bootstrap + remount.
+    - technique-creator: `technique-creator-bootstrap.ts` (cache restore + record→form-state,
+      weapon/No-Attack/TP inference preserved); TechniqueCreatorWorkspace remounts via
+      key={editId|draft}; hydrate + ?edit= effects deleted; autosave skips ?edit=.
+    - item-creator: `item-creator-bootstrap.ts` (unified record→form-state for edit + Load modal;
+      fixes old edit path dropping shield block/damage config, and Load modal now restores
+      imageUrl like the edit path); armament-type filter effect → changeArmamentType event
+      handler; dead isEditMode state removed.
+    - empowered-technique-creator: `empowered-technique-bootstrap.ts` (cache + record mapping via
+      shared row mappers, addWeapon/TP inference preserved); workspace remount; 3 effects deleted.
+    - creature-creator: `creature-creator-bootstrap.ts`; single-object state seeded via one-time
+      render adjust gated on the same flags as the shell loading prop (+ ?edit= now included in
+      that gate — no blank-form flash); edit-load toast dropped (parity with other creators).
+    - All four: edit-mode clears draft cache in mount effect; autosave skips ?edit= (loaded row no
+      longer leaks into draft cache); writeCreatorCache/clearCreatorCache from `creator-cache.ts`.
+    - Measured after batch 4: **104** react-hooks warnings (set-state-in-effect 36,
+      exhaustive-deps 60, preserve-manual-memoization 8). Build + 163 unit tests pass.
+    - DEV-V-019-T010.
   remaining_work: |
     Status stays **partial** until residual hook warnings are materially flattened (or owner
-    explicitly closes leftovers as intentional). Baseline after batch 3: **~108**
-    (set-state-in-effect 42, exhaustive-deps 57, preserve-manual-memoization 9).
+    explicitly closes leftovers as intentional). Baseline after batch 4: **104**
+    (set-state-in-effect 36, exhaustive-deps 60, preserve-manual-memoization 8).
 
     Still to finish (safe batches — continue TASK-430):
-    - Creator cache / `?edit=` hydrate effects (power, technique, empowered, item, creature) —
-      prefer remount keys / lazy init; smoke with DEV-V-019.
     - Encounter views + encounter route pages (Skill/Combat/Mixed) — careful; sync UI has DEV-V.
     - Crafting `[id]` page effects/deps.
     - Shared `components/ui/modal.tsx` (2) — high reuse; parity-test every fullScreenOnMobile modal.
@@ -396,43 +424,17 @@ Do **not** read the done archive at session start.
   completed_work: |
     Phase 1 (2026-07-01): codex_species.image_url + codex-art bucket (migration applied). Admin species editor CodexArtUploadField (crop + upload). /api/upload/codex-art (isAdmin + service role). REALMS §5.0.3 coverage matrix (species/creature high, weapon some, armor/shield/power/technique low; no skills/feats/traits).
   remaining_work: |
-    Seed starter species art. Phase 2 image_url columns + admin upload on creatures, powers, techniques. Equipment uses art bank only (no codex_equipment.image_url).     Follow-on TASK-417 for bank + user-library parity.
+    Phase 2 entity columns moved to TASK-494 (image_id on creatures/powers/techniques/equipment/empowered;
+    bank model per locked TASK-491 decisions). Seed/migrate existing art via TASK-498.
+    Do not extend entity-tied-only upload — Realms Image Library epic supersedes.
   follow_up_tasks:
-    - TASK-417
+    - TASK-491
+    - TASK-494
   notes: |
     2026-06-30: Product owner — species art is main marketing hook on cards. Prototype placeholders + GuidedChoiceCard hero layout landed first.
     2026-07-01: Phase 1 species pipeline shipped; guided UI already reads image_url.
-    2026-07-01: official_items.image_url + armament admin upload (weapon/armor/shield). REALMS §5.0.3 expanded with three-layer image model (official / bank / user upload).
-
----
-
-- id: TASK-417
-  title: Art bank + user-library image_url parity + copy-on-add
-  created_at: 2026-07-01
-  created_by: owner
-  priority: medium
-  status: not-started
-  description: |
-    Long-term card-art model (REALMS §5.0.3): (1) curated art bank all users pick from when creating custom species/armaments/powers/techniques/equipment; (2) privileged roles (developer, admin) may upload custom art tied to user-owned rows; (3) official items with image_url keep art when copied to personal library — user_* tables mirror official/codex image_url column shape.
-  related_files:
-    - src/docs/REALMS_PRODUCT_OVERVIEW.md
-    - src/docs/SUPABASE_SCHEMA.md
-    - src/lib/library-columnar.ts
-    - src/lib/codex-art.ts
-    - src/components/shared/codex-art-upload-field.tsx
-    - src/components/guided-creator/guided-choice-image.ts
-    - src/app/api/upload/codex-art/route.ts
-    - src/app/api/user/library/[type]/route.ts
-    - src/app/api/official/[type]/route.ts
-  acceptance_criteria:
-    - art_bank catalog (table or manifest) with categories: species, weapon, armor, shield, equipment, power, technique; admin CRUD; public read.
-    - Shared ArtBankPicker (or extend CodexArtUploadField) in species/item/power/technique creators — all users can pick bank image.
-    - image_url columns on user_powers, user_techniques, user_items, user_creatures, user_species (migrations + library-columnar + API).
-    - Add official/public item to user library copies image_url to new user row.
-    - /api/upload/user-creation-art (or equivalent) for developer+admin; writes user-creations bucket; sets user_* image_url.
-    - Creators and GuidedChoiceCard resolve image_url identically for official and user rows.
-  notes: |
-    2026-07-01: Owner direction — three-layer model documented in REALMS §5.0.3. Depends on TASK-405 phase 2 for full official coverage. codex_equipment stays bank-only (no per-row image).
+    2026-07-01: official_items.image_url + armament admin upload (weapon/armor/shield).
+    2026-07-16: Realms Image Library epic (TASK-491–500); ADR-0003 replaces three-layer framing. TASK-417 archived (superseded).
 
 ---
 
@@ -518,23 +520,138 @@ Do **not** read the done archive at session start.
 
 ---
 
-- id: TASK-481
-  title: Recurring AI debt cleanup sprint (cadence)
-  created_at: 2026-07-15
+# Realms Image Library epic (TASK-491–500)
+# TASK-491/492/493/494/495 done. Next: 496 → 497/499 → 498; TASK-500 deferred.
+
+---
+
+- id: TASK-496
+  title: Wire admin editors + creator publish-to-Realms into the Image Library
+  created_at: 2026-07-16
+  created_by: agent
+  priority: high
+  status: not-started
+  parent_task: TASK-495
+  related_files:
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
+    - src/app/(main)/admin/public-library/
+    - src/components/creator/
+    - src/lib/codex-art.ts
+  description: |
+    Depends on TASK-493, TASK-494, TASK-495. Admin official/codex editors and admin publish-from-creator
+    flows use RealmsImagePicker. On publish with a new upload: create bank asset named after the entity,
+    auto-tag with that entity category (admin may add more tags), set entity.image_id. No parallel
+    entity-tied-only upload paths remain on image-capable surfaces.
+  acceptance_criteria:
+    - Species, creatures, weapons, armor, shields, powers, techniques, empowered, equipment editors
+      use shared picker.
+    - Admin creator publish-to-Realms uploads land in bank with auto name + auto category tag.
+    - Existing species/armament art still displays (via migration or dual-read until TASK-498).
+    - BUILD_VALIDATION + npm run build.
+
+---
+
+- id: TASK-497
+  title: User/official row image_id parity + copy-on-add + creator bank picker
+  created_at: 2026-07-16
   created_by: agent
   priority: medium
   status: not-started
+  parent_task: TASK-495
   related_files:
-    - src/docs/ai/ARCHITECTURE_CONSTITUTION.md
-    - src/docs/ai/ACTIVE_TASKS.md
-    - src/docs/ai/WAITING_TASKS.md
+    - src/lib/library-columnar.ts
+    - src/app/api/user/library/[type]/route.ts
+    - src/app/api/official/[type]/route.ts
+    - src/docs/SUPABASE_SCHEMA.md
   description: |
-    Constitution anti-debt: scheduled cleanup over eternal compat docs. Delete parallel systems,
-    slim ACTIVE_TASKS, archive changelog older than 60 days, re-run duplication greps.
+    Depends on TASK-492 + TASK-495 (+ TASK-494). User_* tables get image_id (same semantics as
+    official/codex). Copy official→user copies image_id (same master bank file — no duplicate upload).
+    Creators: guests and signed-in users pick from bank by category; only admins upload-into-bank
+    (from admin surfaces / publish-to-Realms). Delivers original TASK-417 scope (user_* parity + copy-on-add + picker).
   acceptance_criteria:
-    - First sprint completed with a changelog entry listing deletions/consolidations.
-    - ACTIVE_TASKS hot path stays lean (prefer <20KB agent-eligible).
-    - AI_CHANGELOG rotation applied once (older entries to archive).
-    - Re-queue next sprint notes on this task or a successor.
+    - Migrations + columnar/API for user_powers, user_techniques, user_empowered_techniques,
+      user_items, user_creatures, user_species image_id (+ equipment when that path exists).
+    - Add-to-library / copy preserves image_id.
+    - Creators can pick bank images; non-admins cannot upload into the bank.
+    - GuidedChoiceCard resolves official and user rows identically; npm run build; BUILD_VALIDATION.
+  notes: |
+    No general-user custom card-art upload into a private bucket for this epic — shared bank only.
+    Personal portrait/profile custom upload remains separate (TASK-499 adds bank pick option).
+
+---
+
+- id: TASK-498
+  title: Migrate existing codex-art entity files into Realms Image Library catalog
+  created_at: 2026-07-16
+  created_by: agent
+  priority: medium
+  status: not-started
+  parent_task: TASK-492
+  related_files:
+    - sql/
+    - src/lib/codex-art.ts
+    - src/docs/SUPABASE_SCHEMA.md
+  description: |
+    Depends on TASK-492 and after TASK-494/496 wiring. One-time migration: register existing
+    codex-art/{entityType}/{entityId}.jpg as bank assets (name from entity, category from type),
+    set entity.image_id, retire entity-tied-only paths. Prefer moving/referencing the same Storage
+    object (no visual churn). Codex data: propose → owner approve → apply.
+  acceptance_criteria:
+    - Migration proposed and owner-approved before apply.
+    - Existing species/armament (and phase-2) images appear in /admin/images with correct tags.
+    - Entities resolve via image_id; no broken cards.
+    - Old entity-tied upload route deprecated or removed after callers gone.
+    - AI_CHANGELOG + schema notes updated.
+  notes: |
+    Run last among 491–499. Do not delete Storage objects until catalog + refs verified.
+
+---
+
+- id: TASK-499
+  title: Portrait + profile picture — pick species/creature bank images
+  created_at: 2026-07-16
+  created_by: agent
+  priority: medium
+  status: not-started
+  parent_task: TASK-495
+  related_files:
+    - src/components/shared/image-upload-modal.tsx
+    - src/app/(main)/my-account/page.tsx
+    - src/components/character-creator/steps/finalize-step.tsx
+    - src/app/api/upload/
+  description: |
+    Depends on TASK-495. Character portrait and account profile-picture flows gain choose from
+    Realms Image Library filtered to species + creature tags (guests/signed-in may pick). Keep
+    existing custom crop upload for personal photos. Selecting a bank image stores a reference or
+    copies the public URL into the portrait/profile field per ADR (portraits buckets may still hold
+    custom uploads only).
+  acceptance_criteria:
+    - Portrait + profile modals offer bank pick (species|creature) alongside custom upload.
+    - Picking a bank image works for guests where portrait staging already allows guest flow.
+    - No bank write from these surfaces; BUILD_VALIDATION; npm run build.
+  notes: |
+    Do not require admin. Custom upload remains; bank pick is additive.
+
+---
+
+- id: TASK-500
+  title: Deferred — enhanced-item images via Realms Image Library
+  created_at: 2026-07-16
+  created_by: agent
+  priority: low
+  status: not-started
+  parent_task: TASK-491
+  related_files:
+    - src/app/(main)/admin/public-library/AdminPublicEnhancedItemsTab.tsx
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+  description: |
+    Owner: enhanced items get images eventually, not now. When scheduled, add category tag and/or
+    picker filter + image_id on enhanced-item rows using the same bank patterns as TASK-491+.
+  acceptance_criteria:
+    - Not in MVP Image Library ship; reopen when owner prioritizes.
+    - Reuses RealmsImagePicker + bank — no parallel media system.
+  notes: |
+    Placeholder so the yes eventually decision is not rediscovered. Leave not-started until asked.
 
 ---

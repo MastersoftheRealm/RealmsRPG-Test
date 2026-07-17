@@ -36,7 +36,8 @@ Use this template when converting raw feedback into an actionable request to be 
   evidence: |
     # Optional: Reviewer notes, test screenshots, or verification commands output
   verification_status: |
-    # Optional: verified|failed|unverified
+    # Required when archiving user-facing work: pending-qa | verified | failed | skipped | n/a
+    # pending-qa = implementation done, owner manual QA not run yet (default for BUILD_VALIDATION tasks)
   automated_check: |
     # Optional: command to run for automated acceptance (e.g., "npm run build && node scripts/smoke_check.js")
   description: |

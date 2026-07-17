@@ -1,19 +1,20 @@
 /**
  * QuantitySelector Component
  * ==========================
- * Unified quantity +/- controls for equipment, items, etc.
- * Uses the same `.btn-stepper` chrome as ValueStepper (TASK-468).
+ * Thin quantity wrapper over ValueStepper (ADR-0002 / TASK-487).
+ * Same chrome as all other ± controls; adds stopPropagation for list-row use
+ * and quantity-specific a11y labels.
  *
  * Used by:
  * - GridListRow (when quantity prop provided)
- * - UnifiedSelectionModal (for equipment selection — quantity-first)
- * - AddLibraryItemModal (for adding equipment)
- * - LibrarySection (for equipment quantity editing)
+ * - UnifiedSelectionModal (quantity-first selection)
+ * - AddLibraryItemModal / LibrarySection equipment quantity
  */
 
 'use client';
 
 import { cn } from '@/lib/utils';
+import { ValueStepper } from './value-stepper';
 
 export interface QuantitySelectorProps {
   /** Current quantity value */
@@ -50,67 +51,28 @@ export function QuantitySelector({
   decrementLabel = 'Decrease quantity',
   incrementLabel = 'Increase quantity',
 }: QuantitySelectorProps) {
-  // Touch targets min 44px on mobile (below md), compact on desktop per MOBILE_UX.md
-  const sizeClasses = {
-    sm: {
-      button: 'min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] w-11 h-11 md:min-w-0 md:min-h-0 md:w-5 md:h-5 text-xs',
-      text: 'w-6 text-xs',
-    },
-    md: {
-      button: 'min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] w-11 h-11 md:min-w-0 md:min-h-0 md:w-6 md:h-6 text-sm',
-      text: 'w-8 text-sm',
-    },
-  };
-
-  const sizes = sizeClasses[size];
-
-  // Don't render if quantity is 1 and showWhenOne is false
   if (!showWhenOne && quantity === 1) {
     return null;
   }
 
   return (
     <div
-      className={cn('flex items-center gap-1', className)}
+      className={cn(className)}
       onClick={(e) => e.stopPropagation()}
       role="group"
       aria-label="Quantity"
     >
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onChange(Math.max(min, quantity - 1));
-        }}
-        disabled={disabled || quantity <= min}
-        className={cn('btn-stepper', sizes.button)}
-        title={decrementLabel}
-        aria-label={decrementLabel}
-      >
-        −
-      </button>
-      <span
-        className={cn(
-          'text-center font-medium text-text-primary tabular-nums',
-          sizes.text
-        )}
-        aria-live="polite"
-      >
-        {quantity}
-      </span>
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onChange(Math.min(max, quantity + 1));
-        }}
-        disabled={disabled || quantity >= max}
-        className={cn('btn-stepper', sizes.button)}
-        title={incrementLabel}
-        aria-label={incrementLabel}
-      >
-        +
-      </button>
+      <ValueStepper
+        value={quantity}
+        onChange={onChange}
+        min={min}
+        max={max}
+        size={size}
+        disabled={disabled}
+        variant="inline"
+        decrementTitle={decrementLabel}
+        incrementTitle={incrementLabel}
+      />
     </div>
   );
 }

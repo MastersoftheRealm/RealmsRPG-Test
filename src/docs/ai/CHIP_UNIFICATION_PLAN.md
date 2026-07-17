@@ -34,8 +34,8 @@ Apply per entity type (examples):
 
 | Entity | Collapsed columns (preferred) | Expanded descriptors (if not in columns) |
 |--------|------------------------------|------------------------------------------|
-| Power | Action, Damage, Area, Duration; Energy in right slot or column | Range, TP total, part-level energy not in part chips |
-| Technique | Action, Energy, Weapon | Range, damage breakdown, TP |
+| Power | Action, Damage, Area, Duration; **play sheet:** Energy header + far-right spend `rightSlot` only (never a static Energy *value* column). **Browse/stat-block:** Energy column OK when there is no spend button | Range, TP total, part-level energy not in part chips |
+| Technique | **Play sheet** (`includeActionColumn`): Action, Weapon, Training Pts + Energy header over spend `rightSlot`. **Browse:** Action/Energy/Weapon (or Energy/Weapon/TP) when no spend button | Range, damage breakdown, TP when not in columns |
 | Weapon/Armor | DR, crit, type, etc. | Properties without descriptions as descriptors; with descriptions as expandable |
 | Feat | Req level, Category, Ability, Uses, Recovery | Tags, type (character/archetype/state), requirements **only if not already in columns** |
 | Trait | Description, Uses, Recovery | Trait kind (ancestry/flaw/characteristic) **only if not in overview/header** |
@@ -219,8 +219,8 @@ Add to `/dev/styleguide`:
 |--------|-----------------|---------|--------------|
 | Feat | `lib/codex/feat-list.ts`, `feats-step.tsx` | ✅ | Category chip removed Phase C; Type chips hidden in creator (split tabs); codex keeps Type |
 | Trait | `library-feat-rows.tsx`, `species-trait-card.tsx` | ✅ | Category in collapsed badge; customization in expanded block (not chip) |
-| Power | `library-entity-rows.tsx`, `official-power-list.ts`, `library-selectable-builders.ts` | ✅ | Range → descriptor chip in expanded; energy in rightSlot (collapsed); official list has Range column |
-| Technique | `library-entity-rows.tsx`, `official-technique-list.ts`, `library-selectable-builders.ts` | ✅ | Range/damage → descriptor chips; official list has Damage column; energy column + use button OK |
+| Power | `library-entity-rows.tsx`, `official-power-list.ts`, `library-selectable-builders.ts` | ✅ | Range → descriptor chip in expanded; play sheet Energy header + spend in rightSlot only; official list has Range column |
+| Technique | `library-entity-rows.tsx`, `official-technique-list.ts`, `library-selectable-builders.ts` | ✅ | Range/damage → descriptor chips; official list has Damage column; play sheet Energy header + spend in rightSlot only (no static Energy value column) |
 | Weapon | `library-entity-rows.tsx` | ✅ | Range/damage/attack in columns; properties expandable |
 | Armor/Shield | `library-entity-rows.tsx` | ✅ | DR/crit in columns; armor reqs → descriptor chips; properties expandable |
 | Equipment | `library-entity-rows.tsx` | ✅ | Type/qty columns; rarity/cost badges; properties expandable |

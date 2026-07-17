@@ -26,6 +26,7 @@ import {
   ShieldsListSection,
   ArmorListSection,
   EquipmentListSection,
+  CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME,
   type SortState,
 } from '@/components/shared';
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
@@ -494,8 +495,8 @@ export function LibrarySection({
 
   const powerRowChrome = useMemo(
     () => ({
+      ...CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME,
       leftSlot: !!(showLibraryEditControls && onTogglePowerInnate),
-      rightSlot: true,
       delete: !!(showLibraryEditControls && onRemovePower),
     }),
     [showLibraryEditControls, onTogglePowerInnate, onRemovePower]
@@ -733,7 +734,7 @@ export function LibrarySection({
               sortState={techniqueSort}
               onSort={(col) => setTechniqueSort(toggleSort(techniqueSort, col))}
               rowChrome={{
-                rightSlot: true,
+                ...CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME,
                 delete: !!(showLibraryEditControls && onRemoveTechnique),
               }}
               emptyMessage="No techniques learned"

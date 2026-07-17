@@ -27,6 +27,7 @@ import type {
 } from '@/components/shared/entity-library-sections';
 import {
   POWER_GRID,
+  CHARACTER_SHEET_TECHNIQUE_GRID,
   CHARACTER_SHEET_WEAPON_GRID,
   CHARACTER_SHEET_SHIELD_GRID,
 } from '@/components/shared/entity-library-sections';
@@ -97,6 +98,11 @@ function needsProfBadge(
     : undefined;
 }
 
+/**
+ * Energy cost control for play-sheet powers/techniques.
+ * Cost appears ONLY here (rightSlot) — never also as a static Energy column.
+ * View-only (no onUse): same chrome, disabled — do not pass noop handlers.
+ */
 function buildEnergyButton(
   energyCost: number,
   canUse: boolean,
@@ -104,7 +110,9 @@ function buildEnergyButton(
   id: string | number,
   variant: 'primary' | 'success'
 ): ReactNode {
-  if (onUse && energyCost > 0) {
+  if (energyCost <= 0) return null;
+
+  if (onUse) {
     return (
       <RollButton
         value={energyCost}
@@ -113,14 +121,21 @@ function buildEnergyButton(
         disabled={!canUse}
         variant={variant}
         size="sm"
-        title={canUse ? `Use (costs ${energyCost} EP)` : 'Not enough energy'}
+        title={canUse ? `Spend ${energyCost} Energy` : 'Not enough energy'}
       />
     );
   }
-  if (energyCost > 0) {
-    return <span className="text-sm font-medium text-text-secondary">{energyCost}</span>;
-  }
-  return null;
+
+  return (
+    <RollButton
+      value={energyCost}
+      displayValue={String(energyCost)}
+      disabled
+      variant={variant}
+      size="sm"
+      title={`Energy cost ${energyCost}`}
+    />
+  );
 }
 
 export function mapPowerRows(powers: CharacterPower[], ctx: LibraryEntityRowContext): EntityPowerRow[] {
@@ -221,9 +236,9 @@ export function mapTechniqueRows(
       name: tech.name,
       description: tech.description,
       actionType: actionDisplay,
+      // Energy cost: rightSlot spend button only (no static Energy column — matches powers).
       columns: [
         { key: 'action', value: actionDisplay, align: 'center' },
-        { key: 'energy', value: energyCost, align: 'center' },
         {
           key: 'weapon',
           value: tech.weaponName || '-',
@@ -232,6 +247,7 @@ export function mapTechniqueRows(
         },
         { key: 'tp', value: techTP ?? '-', align: 'center' },
       ],
+      gridColumns: CHARACTER_SHEET_TECHNIQUE_GRID,
       detailSections: detailSections.length > 0 ? detailSections : undefined,
       badges: needsProfBadge(ctx, { techniques: [tech] }),
       totalTp: totalTP && totalTP > 0 ? totalTP : undefined,

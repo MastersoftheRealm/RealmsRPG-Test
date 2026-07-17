@@ -11,10 +11,16 @@ alwaysApply: true
 1. Pick highest-priority open task in `src/docs/ai/ACTIVE_TASKS.md`.
 2. Search `FEATURE_INDEX.md` + barrels (+ generated barrel inventory) — confirm it doesn't already exist.
 3. Game copy / caps / formulas → `GAME_RULES.md`. UI → `MOBILE_UX.md` + a11y rule.
+4. **Model escalation (pause once):** If the task matches a trigger below, **stop before coding** and tell the owner in 2–4 sentences: why a stronger model is safer, which TASK-###, and wait for “proceed” / model switch / narrower instructions. Do **not** pause again in the same chat after the owner says proceed.
+
+   **Pause triggers (only these):** Architect work (new shared/ui, new store, new API contract, migration *strategy*); live DB/schema migrations or cascade delete/replace; multi-system refactors with irreversible data risk; task notes explicitly say “Architect” / “stronger model” / “owner ack before implement.”
+
+   **Do not pause for:** routine UI wiring, copy, BUILD_VALIDATION, extending an existing pattern, continuing a `partial` with clear remaining_work, or work the owner already scoped to this agent/model.
 
 **While implementing:**
-- `in-progress` → `done` only if **all** AC met; else `partial` + `completed_work` / `remaining_work` / `follow_up_tasks`.
-- Move `done` blocks from `ACTIVE_TASKS.md` → `archive/TASK_QUEUE_DONE.md`.
+- `in-progress` → `done` when implementable AC met (build/tests/docs); else `partial` + `completed_work` / `remaining_work` / `follow_up_tasks`.
+- On archive: set `verification_status` (`pending-qa` if user-facing manual QA not run; see constitution Verification gate).
+- Move `done` blocks from `ACTIVE_TASKS.md` → `archive/TASK_QUEUE_DONE.md`; list `pending-qa` in `DEVELOPER_TASK_QUEUE.md`.
 - Blocked / human-owned → `WAITING_TASKS.md`. Human-only steps → `DEVELOPER_TASK_QUEUE.md`.
 - User-facing: `BUILD_VALIDATION.md` + changelog.
 - New shared/ui file → ADR + update `scripts/shared-ui-allowlist.json` (`npm run tasks:validate-shared-ui`).
@@ -23,6 +29,8 @@ alwaysApply: true
 **New tasks:** `AI_REQUEST_TEMPLATE.md` → `ACTIVE_TASKS.md` (next TASK-###). Process: `AI_TASK_QUEUE.md`.
 
 **Migrations:** Prefer Supabase MCP `apply_migration`; else Dashboard SQL. SQL in `sql/`. Codex: `realms-codex-data.mdc`.
+
+**Owner commands (on demand):** `/audit` → `/cleanup` (session / one TASK-###); `/debt` (repo-wide anti-debt). Authority: `PR_CHECKLIST.md` § Owner commands; `.cursor/commands/`.
 
 # Feedback Processing
 

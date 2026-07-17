@@ -28,7 +28,7 @@ export {
 // SkillSourceChip - Species/path skill pills (guided creator)
 export { SkillSourceChip, type SkillSourceChipProps, type SkillSourceKind } from './skill-source-chip';
 
-// ValueStepper - Unified +/- controls (abilities, skills, quantities)
+// ValueStepper - Unified +/- controls (ADR-0002: guided skills bonus chrome)
 export { ValueStepper, DecrementButton, IncrementButton, type ValueStepperProps, type StepperButtonProps } from './value-stepper';
 
 // EditSectionToggle - Blue pencil icon for edit mode sections
@@ -95,6 +95,7 @@ export {
   GRID_LIST_INLINE_SELECTION_COLUMN_TRACK,
   GRID_LIST_ROW_THUMBNAIL_COLUMN_WIDTH,
   THUMBNAIL_HEADER_COLUMN_KEY,
+  CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME,
 } from './grid-list-row-chrome';
 
 // OfficialPowerList - shared Realms Library powers grid (Library browse + Admin)
@@ -224,7 +225,7 @@ export type {
   FilterOption as SelectionFilterOption,
 } from './unified-selection-modal';
 
-// QuantitySelector - Unified quantity +/- controls
+// QuantitySelector - Thin quantity wrapper over ValueStepper (ADR-0002)
 // Use for: equipment quantity, item counts, stacks
 export { QuantitySelector, QuantityBadge } from './quantity-selector';
 export type { QuantitySelectorProps, QuantityBadgeProps } from './quantity-selector';
@@ -275,6 +276,8 @@ export { ImageUploadModal } from './image-upload-modal';
 export type { ImageUploadModalProps, CropShape } from './image-upload-modal';
 export { CodexArtUploadField } from './codex-art-upload-field';
 export type { CodexArtUploadFieldProps } from './codex-art-upload-field';
+export { RealmsImagePicker } from './realms-image-picker';
+export type { RealmsImagePickerProps, RealmsImagePickerSelection } from './realms-image-picker';
 
 // OnboardingTour - Optional first-time guided tour (Codex → Library → Creator)
 export { OnboardingTour, getTourCompleted, setTourCompleted } from './onboarding-tour';

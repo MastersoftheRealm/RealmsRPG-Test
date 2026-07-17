@@ -732,7 +732,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats.
 
@@ -846,6 +846,17 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Steps** | 1. Open Characters list; confirm tab is `Characters \| RealmsRPG`. 2. Open a character sheet; while loading confirm tab stays `Characters \| RealmsRPG`, then becomes `CharacterName \| RealmsRPG`. 3. Navigate back to list or new-character; confirm tab is not stuck on the character name. 4. (Optional) Soft-nav between two character ids; confirm title falls back during load then matches the new name. |
 | **Expected** | Detail tab is `Name \| RealmsRPG` after load; list/new stay `Characters \| RealmsRPG`; no stale name after leave. |
 | **Report** | DEV-V-009-T010: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T011 — Powers/Techniques Energy header + spend button only
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-502 |
+| **Where** | `/characters/[id]` → Library → Powers and Techniques (desktop) |
+| **Steps** | 1. Open Techniques with at least one technique that has an energy cost. 2. Confirm list headers are **Name \| Action \| Weapon \| Training Pts** plus a far-right **Energy** header over the spend buttons (no separate static Energy *value* column in the middle). 3. Confirm each paid technique shows a single far-right spend button labeled with the cost number (RollButton style), and no duplicate static energy number in the data columns. 4. Click the spend button; confirm current Energy decreases by that cost. 5. Open Powers; confirm the same pattern (Energy header over rightSlot spend buttons only). 6. Optional: open a campaign member character view; confirm energy costs still appear as disabled far-right buttons under Energy (not a static mid-row Energy column, and not clickable no-op spend). |
+| **Expected** | Energy cost appears only as the far-right spend control under an **Energy** ListHeader label; no duplicate static Energy data column beside it. View-only campaign sheet uses the same rightSlot chrome disabled. Creature/library browse lists that lack spend buttons may still show an Energy data column. Creator selected lists may keep an Energy column for budgeting (remove affordance only — not spend). |
+| **Report** | DEV-V-009-T011: PASS / FAIL / SKIP — |
 
 ---
 
@@ -1171,7 +1182,8 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 ## DEV-V-013 — Guided Simple character creator (TASK-394–403+)
 
 **Category:** End-to-end guided creator funnel — entry chooser, chapters, save.  
-**Prerequisite:** Run **DEV-004** (`sql/guided-creator-schema-seed.sql`) so starter species and Berserker loadouts/abilities exist.
+**Prerequisite:** Run **DEV-004** (`sql/guided-creator-schema-seed.sql`) so starter species and Berserker loadouts/abilities exist.  
+**Related (steppers):** TASK-487 / ADR-0002 — sitewide ± chrome; verify via **T053** (and Skills ± on T014).
 
 #### DEV-V-013-T001 — Entry chooser routes
 
@@ -1299,15 +1311,29 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 — Guided Simple character creator |
-| **Related task** | TASK-402 |
+| **Related task** | TASK-402, TASK-489, TASK-490, TASK-503 |
 | **Where** | Guided creator → Your Hero |
-| **Needs** | Signed-in account; complete prior steps |
+| **Needs** | Signed-in account; complete prior steps; path with weapons and/or powers that cost Training Points |
 
 **Steps**
-1. Enter name, allocate HP/EN, click **Save character**.
+1. Enter name, allocate HP/EN, click **Save character** (or Finish).
+2. Wait for the success toast ("Your character is ready!").
+3. If the play-together modal appears, click **View character** (or close the modal).
+4. On the character sheet → Proficiencies tab: confirm required part/property proficiencies for the loadout/powers were saved (not empty when the build spends TP).
+5. On Library → Feats: confirm archetype and character feat **names** match the Codex (not raw feat ids).
+6. Optionally: force a failed save (e.g. offline) and confirm the wizard draft is still intact.
+7. Optionally: start from `/characters/new?returnTo=/campaigns?tab=join`, finish guided save — confirm redirect honors `returnTo` **without** play-together (same as custom finalize).
+8. Signed-out save: confirm shared **Login Required to Save** modal (`LoginPromptModal`); after login, return to guided with query preserved.
 
 **Expected**
-- Character saves; play-together modal or redirect to sheet; character appears on `/characters`.
+- Wizard draft is **not** cleared until create returns a character id successfully.
+- After success: redirect to `/characters/{id}` (or sanitized `returnTo` when set), directly or after dismissing play-together (play-together only when no `returnTo`).
+- Finish/Save stays disabled after success (no second create while play-together is open).
+- Character sheet loads; **proficiencies** persist for armaments/powers/techniques (parity with custom creator `getCharacter`).
+- Feat rows show human-readable names (resolved from Codex at save; sheet also enriches id-as-name legacy rows).
+- Guest save uses shared LoginPromptModal with `redirect=` (not a broken `next=` param).
+- Character appears on `/characters`.
+- On failure: stay on Your Hero with draft preserved; error toast; no navigation.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -2271,23 +2297,23 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-013-T053 — ValueStepper sleek neutral default (TASK-468)
+#### DEV-V-013-T053 — ValueStepper unified guided-skills chrome (TASK-487 / ADR-0002)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 |
-| **Related task** | TASK-468 |
-| **Where** | Guided Equipment quantity + character sheet skill edit (or creator skills) |
+| **Related task** | TASK-487 (supersedes TASK-468 visual AC) |
+| **Where** | Guided Skills bonus ± + Equipment quantity + sheet HP/EN / skill edit |
 | **Needs** | Any stepper surface |
 
 **Steps**
-1. Equipment Quantity steppers: neutral surface buttons (not red/green circles).
-2. Skill value steppers (sheet edit or creator): same sleek family.
-3. Health/Energy allocators may keep soft green/blue tints — still not loud red/green circle pairs for −/+.
+1. Guided Skills: ± buttons are soft `surface-alt`, no invasive border, bold −/+, not red/green circles.
+2. Equipment Quantity and sheet skill/ability steppers match that same chrome.
+3. Health/Energy steppers use the same neutral buttons (value text may still be green/blue); no colored ± pills.
 4. Touch targets ≥44px below md; light/dark contrast OK.
 
 **Expected**
-- One shared stepper visual language; DESIGN_SYSTEM preference followed.
+- One shared stepper visual language (`ValueStepper` / Dec/Inc / `QuantitySelector`); no hand-rolled ±.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -2370,6 +2396,26 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Expected**
 - Threshold gate + fully spend Innate Energy; sheet-compatible save.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T058 — Add-modal ListHeader column sort (TASK-488)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-488 |
+| **Where** | Guided Loadout / Powers L2 browse; Advanced creator Powers add modal |
+| **Needs** | Path with equipment + powers/techniques catalog |
+
+**Steps**
+1. Guided Weapons → **See more options**: click **Currency** / **Training Points** / **Name** column headers; confirm list reorders ascending then descending on second click.
+2. Guided Powers/Techniques → **See more options**: click **Action Type**, **Energy**, and **Training Points**; confirm asc/desc toggle.
+3. On mobile (~360px): open **Sort by**, pick a non-Name column, confirm order changes; tap again to reverse.
+4. Spot-check Advanced character creator Powers add modal and creature creator inventory ListHeader (RANGE / ATTACK / DAMAGE).
+
+**Expected**
+- All labeled data columns sortable; spacer/action columns remain non-sortable; UnifiedSelectionModal `sortByColumn` uses row `columns` values (and enriched sort keys where display values are computed).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -2962,6 +3008,74 @@ Verifies behavior parity after removing setState-in-effect / fixing exhaustive-d
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-019-T008 — Create-time Library tab hide for power/martial-only
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-019 |
+| **Related task** | TASK-501 |
+| **Where** | Guided or advanced character creator → character sheet Library |
+| **Needs** | Create a new level-1 Power-only and Martial-only character |
+
+**Steps**
+1. Create a **Power** archetype character (guided or advanced); open the sheet → Library (view mode, not edit).
+2. Confirm **Techniques** is not shown; **Powers** is shown.
+3. Enter edit mode → Library → eye-toggle **Techniques** back on; leave edit — Techniques visible.
+4. Create a **Martial** archetype character; confirm **Powers** is hidden and **Techniques** is shown (unhide via edit as above).
+5. Optional: Powered-Martial character — both Powers and Techniques tabs visible by default.
+
+**Expected**
+- Defaults come from `libraryTabVisibility` set at create (`defaultLibraryTabVisibilityForArchetype`); same hide prefs as the existing eye toggle.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-019-T009 — Power creator draft restore + ?edit= bootstrap (batch 4 remount)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-019 |
+| **Related task** | TASK-430 |
+| **Where** | `/power-creator` (+ `?edit=<id>`) |
+| **Needs** | Account with at least one saved power |
+
+**Steps**
+1. Open `/power-creator`; set name, add a part, set damage/range/duration; refresh the page — draft restores.
+2. Load a saved power via Load modal — all fields replace the draft; "Power loaded successfully!" shows.
+3. From My Library, open a power's Edit link (`/power-creator?edit=<id>`) — the power loads; make no changes; navigate to plain `/power-creator` — a **blank** creator shows (edit mode clears the draft cache and does not autosave; behavior change from pre-batch-4, where the edited power leaked into the draft).
+4. Open `?edit=<invalid-id>` — blank creator renders (no infinite spinner).
+5. Simulate parts API failure (offline/devtools) — error message with **Try again** renders instead of a spinner.
+
+**Expected**
+- Draft cache round-trips on refresh; `?edit=` remounts the workspace per id; error and missing-row paths never hang on the loading state.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-019-T010 — Technique / item / empowered / creature creators draft restore + ?edit= bootstrap (batch 4 complete)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-019 |
+| **Related task** | TASK-430 |
+| **Where** | `/technique-creator`, `/item-creator`, `/empowered-technique-creator`, `/creature-creator` (+ `?edit=<id>`) |
+| **Needs** | Account with at least one saved technique, armament, empowered technique, and creature |
+
+**Steps** (repeat per creator)
+1. Open the creator; fill several fields (name, parts/properties, damage, weapon/type where present); refresh — draft restores, including part rows and weapon/type selection.
+2. Load a saved row via the Load modal — all fields replace the draft; the "loaded successfully" message shows.
+3. Open the creator with `?edit=<id>` — the row loads; navigate to the plain creator URL — a **blank** creator shows (edit mode clears the draft cache and does not autosave; same behavior change as T009).
+4. Open `?edit=<invalid-id>` — blank creator renders, no hang.
+5. Simulate reference-data API failure (offline/devtools) — error message with **Try again** renders (technique/item/empowered) instead of an endless spinner.
+
+**Creator-specific checks**
+- Technique: saved No Attack / weapon-TP techniques restore the right Weapon selection on load and `?edit=`.
+- Item (armament): switching Weapon/Armor/Shield type still drops incompatible properties and clears the ability requirement; editing a **shield** via `?edit=` now restores Shield Block / Shield Damage dice (old bug); loading via the Load modal now restores the item's image (previously dropped).
+- Creature: `?edit=` shows the loading state until the creature is ready (no blank-form flash); no "loaded" toast on `?edit=` (parity with the other creators).
+
+**Expected**
+- Draft caches round-trip per creator; `?edit=` remounts per id; edit mode never writes the loaded row into the draft cache.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-020 — Sitewide copy compliance (TASK-439)
@@ -3160,6 +3274,127 @@ Portrait cards match square crop; no search or ListHeader chrome; Add Character 
 
 ---
 
+## DEV-V-023 — Admin Realms Image Library (TASK-493)
+
+**Related tasks:** TASK-493  
+**Start URL:** `/admin` → **Open Image Library**  
+**Needs:** Admin account  
+
+#### DEV-V-023-T001 — Admin dashboard links to Image Library
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-023 |
+| **Related task** | TASK-493 |
+| **Where** | `/admin` |
+| **Needs** | Admin account |
+
+**Steps**
+1. Sign in as admin and go to **Admin**.
+2. Find the **Realms Image Library** card and click **Open Image Library**.
+
+**Expected**
+- Navigates to `/admin/images` with page title **Realms Image Library**.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-023-T002 — Upload image with name and category tags
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-023 |
+| **Related task** | TASK-493 |
+| **Where** | `/admin/images` |
+| **Needs** | Admin account |
+
+**Steps**
+1. On `/admin/images`, click **+** (Add image).
+2. Enter a name, add at least two category tags (e.g. **Weapon** and **Equipment**).
+3. Click **Upload & crop**, pick a square image, confirm crop, then **Add image**.
+
+**Expected**
+- New row appears in the list with thumbnail, name, and category labels.
+- Thumbnail click opens preview (ExpandableImage).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-023-T003 — Rename and retag without re-upload
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-023 |
+| **Related task** | TASK-493 |
+| **Where** | `/admin/images` |
+| **Needs** | Image from T002 |
+
+**Steps**
+1. Edit the image from T002 (pencil icon).
+2. Change the name and add/remove a category tag.
+3. Click **Save changes** without using **Replace image**.
+
+**Expected**
+- List updates with new name and tags; same thumbnail URL (no re-upload).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-023-T004 — Replace image updates master asset
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-023 |
+| **Related task** | TASK-493 |
+| **Where** | `/admin/images` edit modal |
+| **Needs** | Image from T002 |
+
+**Steps**
+1. Open edit modal for the test image.
+2. Click **Replace image**, crop a different file, confirm.
+3. Close modal and confirm list thumbnail shows the new art.
+
+**Expected**
+- Toast confirms replace; thumbnail updates (cache-busted URL).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-023-T005 — Delete shows usage warning and removes asset
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-023 |
+| **Related task** | TASK-493 |
+| **Where** | `/admin/images` |
+| **Needs** | Image from T002 (unused or with known usages) |
+
+**Steps**
+1. Edit the test image and click **Delete**.
+2. Confirm the delete modal lists usage count (0 or referenced entities).
+3. Confirm **Delete image** removes the row from the list.
+
+**Expected**
+- Delete modal warns about clearing references; image removed from bank after confirm.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-023-T006 — Search and category filter
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-023 |
+| **Related task** | TASK-493 |
+| **Where** | `/admin/images` |
+| **Needs** | At least two images with different category tags |
+
+**Steps**
+1. Add filter tag **Power** and confirm only power-tagged images show.
+2. Clear filter, search by partial name.
+
+**Expected**
+- Category filter and name search narrow the list correctly.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -3178,5 +3413,6 @@ Portrait cards match square crop; no search or ListHeader chrome; Add Character 
 | DEV-V-019 | React Compiler hook cleanup (TASK-430) | — | Manual — see suite above |
 | DEV-V-020 | Sitewide copy compliance (TASK-439) | — | Manual — see suite above |
 | DEV-V-022 | Characters list page (TASK-469) | — | Manual — see suite above |
+| DEV-V-023 | Admin Realms Image Library (TASK-493) | — | Manual — see suite above |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

@@ -67,6 +67,17 @@ export default function AdminPage() {
         </section>
 
         <section className="rounded-lg border border-border bg-surface p-6">
+          <h2 className="text-lg font-semibold text-text-primary mb-2">Realms Image Library</h2>
+          <p className="text-text-secondary mb-4">
+            Upload, rename, tag, replace, and delete shared card art. Images can have multiple category tags
+            and are referenced by species, creatures, armaments, powers, and techniques across the site.
+          </p>
+          <Button asChild>
+            <Link href="/admin/images">Open Image Library</Link>
+          </Button>
+        </section>
+
+        <section className="rounded-lg border border-border bg-surface p-6">
           <h2 className="text-lg font-semibold text-text-primary mb-2">Changelogs</h2>
           <p className="text-text-secondary mb-4">
             Review the latest codex and core-rules edits by category, including timestamp, actor, and before/after details.

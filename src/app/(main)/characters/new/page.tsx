@@ -7,8 +7,10 @@
 'use client';
 
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Sparkles, SlidersHorizontal, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { DescriptorChip } from '@/components/ui';
 import { CreatorFunnelHero, MarketingLinkButton } from '@/components/landing';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
@@ -32,7 +34,19 @@ const MODES = [
   },
 ];
 
+function withReturnTo(href: string, returnTo: string | null): string {
+  if (!returnTo || !returnTo.startsWith('/')) return href;
+  // Reject open redirects; keep query (e.g. campaigns?tab=join).
+  const safe = sanitizeRedirectPath(returnTo, '');
+  if (!safe) return href;
+  const sep = href.includes('?') ? '&' : '?';
+  return `${href}${sep}returnTo=${encodeURIComponent(safe)}`;
+}
+
 export default function NewCharacterChooserPage() {
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get('returnTo');
+
   return (
     <div className="min-h-screen bg-background">
       <CreatorFunnelHero align="center" title={copy.title} subtitle={copy.subtitle} />
@@ -44,7 +58,7 @@ export default function NewCharacterChooserPage() {
             return (
               <Link
                 key={mode.id}
-                href={mode.href}
+                href={withReturnTo(mode.href, returnTo)}
                 className={cn(
                   'group flex flex-col gap-4 rounded-card border p-6 sm:p-7 text-left min-h-[16rem]',
                   'bg-surface-alt/60 border-border-light dark:border-border',

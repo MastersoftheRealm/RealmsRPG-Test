@@ -23,7 +23,7 @@ alwaysApply: false
 | Two–N option pill toggle (same look as Library / source filter) | `@/components/shared` → SegmentedControl |
 | Section headers with + | `@/components/shared` → SectionHeader |
 | Roll buttons | `@/components/shared` → RollButton |
-| +/- steppers | `@/components/shared` → ValueStepper, DecrementButton, IncrementButton |
+| +/- steppers | `@/components/shared` → **ValueStepper** / Dec/Inc (ADR-0002 chrome); quantities → **QuantitySelector** (wraps ValueStepper). Never hand-roll ± |
 | Point display (spent/total) | `@/components/shared` → PointStatus |
 | Skill rows | `@/components/shared` → SkillRow |
 | Search | `@/components/ui` → SearchInput |
@@ -36,6 +36,8 @@ alwaysApply: false
 ### ListHeader in modals
 
 Do **not** strip ListHeader chrome with `className="border-0 rounded-none bg-transparent …"` unless there is an explicit design exception. Selection and proficiency modals should match Codex/Library/sheet list headers (`bg-primary-50`, rounded bar, dark border).
+
+**Sortable columns:** Every labeled data column must support ascending/descending sort (click header / mobile “Sort by”). Only spacer or action slots (`_actions`, empty label, thumbnails) set `sortable: false`. Prefer omitting `sortable` (defaults true) over setting `sortable: false` on Name, Action Type, Energy, Training Points, Currency, Damage, etc.
 
 ### Segmented toggles vs TabNavigation
 

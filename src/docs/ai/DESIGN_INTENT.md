@@ -20,6 +20,7 @@ Use when the “why” is non-obvious (browser bugs, intentional asymmetry, prod
 | Visual/a11y verify | Always serve production build; never reuse stray server | `guide/01-verification-and-ui-gates.md` |
 | ListHeader in modals | Keep Codex/Library chrome — do not flatten with transparent overrides | `realms-unification.mdc` |
 | Quantity selection | Quantity-first in-row stepper — not a side column that shoves the row | `guide/02-components-and-lists.md` |
+| ± steppers | One chrome sitewide (guided skills bonus style via `ValueStepper` / Dec/Inc; `QuantitySelector` wraps it) | ADR-0002 · `DESIGN_SYSTEM.md` |
 | Codex writes | Audit → SQL propose → owner approve before live mutate | `realms-codex-data.mdc` |
 
 When you discover a hard-won constraint, add **one** row here and a `// DESIGN_INTENT:` at the code site.

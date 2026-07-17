@@ -18,6 +18,7 @@ import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
 import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
 import type { CoreRulesMap } from '@/types/core-rules';
 import { buildRequiredProficiencies } from '@/lib/proficiencies';
+import { defaultLibraryTabVisibilityForArchetype } from '@/lib/character-library-tab-visibility';
 
 export const CHARACTER_STARTING_CURRENCY = 200;
 
@@ -478,6 +479,11 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           techniquePartsDb: options?.techniquePartsDb ?? [],
           itemPropertiesDb: options?.itemPropertiesDb ?? [],
         });
+
+        // DESIGN_INTENT: same libraryTabVisibility prefs as sheet eye toggle (TASK-501).
+        const libraryTabVisibility = defaultLibraryTabVisibilityForArchetype(
+          draft.archetype?.type
+        );
         
         return {
           name: draft.name || 'Unnamed Character',
@@ -530,6 +536,7 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           // Health/Energy current values (max is calculated from healthPoints + level + abilities)
           currentHealth: maxHealth,
           currentEnergy: maxEnergy,
+          ...(libraryTabVisibility && { libraryTabVisibility }),
           // Optional fields - only include if defined
           ...(draft.description && { description: draft.description }),
           ...(draft.notes && { notes: draft.notes }),

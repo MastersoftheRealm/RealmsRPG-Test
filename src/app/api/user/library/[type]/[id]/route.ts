@@ -20,6 +20,7 @@ import {
   toDbRowSpecies,
   type ColumnarLibraryType,
 } from '@/lib/library-columnar';
+import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
 
 const VALID_TYPES = ['powers', 'techniques', 'empowered-techniques', 'items', 'creatures', 'species'] as const;
 type LibraryType = (typeof VALID_TYPES)[number];
@@ -60,7 +61,9 @@ export async function GET(
         .eq('user_id', user.uid)
         .maybeSingle();
       if (!row) return NextResponse.json(null, { status: 404 });
-      return NextResponse.json(rowToItem(type, row as Record<string, unknown>, 'user'));
+      const record = row as Record<string, unknown>;
+      await enrichRowsWithBankImageUrls(supabase, [record]);
+      return NextResponse.json(rowToItem(type, record, 'user'));
     }
 
     const { data: row } = await supabase
@@ -71,6 +74,7 @@ export async function GET(
       .maybeSingle();
     if (!row) return NextResponse.json(null, { status: 404 });
     const r = row as Record<string, unknown>;
+    await enrichRowsWithBankImageUrls(supabase, [r]);
     if (r.data !== undefined && r.data !== null) {
       const d = (r.data as Record<string, unknown>) ?? {};
       return NextResponse.json({ id: r.id, docId: r.id, ...d });

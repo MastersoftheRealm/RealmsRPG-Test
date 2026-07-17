@@ -37,8 +37,8 @@ export interface AddSubSkillModalProps {
 
 const SUB_SKILL_COLUMNS = [
   { key: 'name', label: 'Name', sortable: true },
-  { key: 'ability', label: 'Abilities', sortable: false },
-  { key: 'base', label: 'Base', sortable: false },
+  { key: 'ability', label: 'Abilities', sortable: true },
+  { key: 'base', label: 'Base', sortable: true },
 ];
 
 export function AddSubSkillModal({

@@ -53,6 +53,23 @@ A task may be `done` only when **all** acceptance criteria are met **and**:
 
 If any AC remains open → **`partial`** with `completed_work` / `remaining_work` / `follow_up_tasks`. Never mark `done` to “finish later.” Prefer follow-up tasks over audit-after-done rediscovery.
 
+### Verification gate (owner QA)
+
+Implementation **`status`** and product **`verification_status`** are separate:
+
+| Field | Meaning |
+|-------|---------|
+| `status: done` | Implementable AC met, build/tests green, docs updated — task may move to archive. |
+| `verification_status: pending-qa` | **Default** when archiving user-facing work with a `BUILD_VALIDATION` suite but owner has not run manual QA yet. |
+| `verification_status: verified` | Owner ran linked suite/tests and PASS. |
+| `verification_status: failed` | Manual QA failed — file follow-up task or reopen as `partial`. |
+| `verification_status: skipped` | Owner explicitly waived manual QA. |
+| `verification_status: n/a` | No manual QA needed (docs-only, purely automated checks). |
+
+**Agents:** On archive, set `verification_status` honestly. List `pending-qa` tasks in `DEVELOPER_TASK_QUEUE.md` → **Pending owner QA**. Do **not** keep implementation-complete tasks in `ACTIVE_TASKS` waiting for QA.
+
+**Owner:** Run linked `DEV-V-###` tests; update archive `verification_status` to `verified` or `failed`; remove row from Pending owner QA when closed.
+
 ## Human review gates (stop and ask / DEV queue)
 
 Require owner review before merging:
@@ -62,16 +79,20 @@ Require owner review before merging:
 - API contract changes (request/response shapes clients depend on)
 - Live codex `UPDATE`/`INSERT`/`DELETE`
 
+**Model escalation:** Before implementing Architect-class or irreversible-data work, pause once and flag that a stronger model may be safer — see `.cursor/rules/realms-tasks.mdc` (narrow triggers; do not stall routine Implementer tasks).
+
 ## Anti-debt
 
 - Prefer **delete** the weaker of two parallel systems.
-- Cleanup sprints beat eternal “compat layer” docs (`ACTIVE_TASKS` TASK-481 cadence).
+- Cleanup sprints beat eternal “compat layer” docs — run `/debt` on demand.
 - When consolidating, ship a first slice + precise follow-ups in `ACTIVE_TASKS.md` — not aspirational prose only.
 - Blocked / human-owned work lives in `WAITING_TASKS.md` (not the session hot path).
+- **Session (on demand):** `/audit` then `/cleanup` — this chat / one TASK-###. **Repo (on demand):** `/debt`. See `PR_CHECKLIST.md` § Owner commands.
 
 ## On-demand deep refs
 
 - Patterns / components / gotchas → `AGENT_GUIDE.md` hub → `guide/` appendices
 - Feature map → `FEATURE_INDEX.md` + generated `FEATURE_INDEX_BARRELS.generated.md`
-- PR failure-mode checklist → `PR_CHECKLIST.md`
+- PR failure-mode checklist → `PR_CHECKLIST.md` (includes owner commands)
+- Slash commands → `.cursor/commands/` (`audit`, `cleanup`)
 - Task process → `AI_TASK_QUEUE.md` (process only; tasks live in `ACTIVE_TASKS.md` / `WAITING_TASKS.md`)

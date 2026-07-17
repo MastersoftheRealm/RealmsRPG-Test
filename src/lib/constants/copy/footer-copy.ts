@@ -11,8 +11,8 @@ export const FOOTER_COPY = {
       heading: 'Play',
       links: [
         { href: '/characters', label: 'Characters' },
-        { href: '/characters/new', label: 'Create a Character' },
         { href: '/campaigns', label: 'Campaigns' },
+        { href: '/encounters', label: 'Encounters' },
       ],
     },
     learn: {
@@ -27,7 +27,8 @@ export const FOOTER_COPY = {
       heading: 'Create',
       links: [
         { href: '/power-creator', label: 'Power Creator' },
-        { href: '/item-creator', label: 'Item Creator' },
+        { href: '/item-creator', label: 'Armament Creator' },
+        { href: '/technique-creator', label: 'Technique Creator' },
       ],
     },
     legal: {

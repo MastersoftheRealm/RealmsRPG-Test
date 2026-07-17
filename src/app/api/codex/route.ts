@@ -9,6 +9,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
+import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
 import type { CodexPayload } from '@/types/codex';
 import type { ArchetypeCategory } from '@/types/archetype';
 
@@ -113,10 +114,13 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
   const featRows = ((isTableMissing(eFeats) ? [] : feats) ?? []) as Row[];
     const skillRows = ((isTableMissing(eSkills) ? [] : skills) ?? []) as Row[];
     const speciesRows = ((isTableMissing(eSpecies) ? [] : species) ?? []) as Row[];
+    const equipRowsRaw = ((isTableMissing(eEquip) ? [] : equipment) ?? []) as Row[];
+    await enrichRowsWithBankImageUrls(supabase, speciesRows);
+    await enrichRowsWithBankImageUrls(supabase, equipRowsRaw);
     const traitRows = ((isTableMissing(eTraits) ? [] : traits) ?? []) as Row[];
     const partRows = ((isTableMissing(eParts) ? [] : parts) ?? []) as Row[];
     const propRows = ((isTableMissing(eProps) ? [] : properties) ?? []) as Row[];
-    const equipRows = ((isTableMissing(eEquip) ? [] : equipment) ?? []) as Row[];
+    const equipRows = equipRowsRaw;
     const archRows = ((isTableMissing(eArch) ? [] : archetypes) ?? []) as Row[];
     const archLevelRows = ((isTableMissing(eArchLevels) ? [] : archetypeLevels) ?? []) as Row[];
     const creatureRows = ((isTableMissing(eCreature) ? [] : creatureFeats) ?? []) as Row[];
@@ -215,6 +219,7 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
         adulthood_lifespan: toAdulthoodLifespan(r.adulthood_lifespan),
         is_starter: r.is_starter === true,
         image_url: typeof r.image_url === 'string' && r.image_url.trim() ? r.image_url.trim() : null,
+        image_id: typeof r.image_id === 'string' && r.image_id.trim() ? r.image_id.trim() : null,
       };
     });
 
@@ -292,6 +297,8 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
         properties: [] as string[],
         rarity: r.rarity ?? undefined,
         weight: undefined,
+        image_url: typeof r.image_url === 'string' && r.image_url.trim() ? r.image_url.trim() : null,
+        image_id: typeof r.image_id === 'string' && r.image_id.trim() ? r.image_id.trim() : null,
       };
     });
 

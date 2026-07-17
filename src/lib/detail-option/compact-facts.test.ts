@@ -144,7 +144,6 @@ describe('compact-facts formatters', () => {
           id: 1,
           name: 'Graze',
           description: 'Deal half damage on a miss.',
-          op_1_lvl: 2,
         },
         { id: PROPERTY_IDS.FINESSE, name: 'Finesse', description: 'Use Agility.' },
         { id: 99, name: 'Weapon Damage', description: 'Base damage.' },

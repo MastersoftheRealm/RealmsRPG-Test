@@ -205,7 +205,7 @@ const MOVEMENT_DESCRIPTIONS: Record<string, string> = {
 
 const SIMPLE_LIST_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: 'minmax(160px, 1fr)' },
-  { key: 'description', label: 'Description', width: '2fr', sortable: false },
+  { key: 'description', label: 'Description', width: '2fr' },
 ];
 const SIMPLE_LIST_GRID = 'minmax(160px, 1fr) 2fr';
 

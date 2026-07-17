@@ -21,6 +21,7 @@ import {
   toDbRowSpecies,
   type ColumnarLibraryType,
 } from '@/lib/library-columnar';
+import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
 
 const SPECIES_TABLE = 'codex_species';
 
@@ -50,6 +51,8 @@ const SPECIES_CODEX_DB_KEYS = new Set([
   'adulthood_lifespan',
   'languages',
   'payload',
+  'image_id',
+  'image_url',
 ]);
 
 function parseNumericId(id: unknown): number | null {
@@ -124,7 +127,9 @@ export async function GET(
         }
         throw error;
       }
-      const items = (rows ?? []).map((r) => {
+      const speciesRows = (rows ?? []) as Record<string, unknown>[];
+      await enrichRowsWithBankImageUrls(supabase, speciesRows);
+      const items = speciesRows.map((r) => {
         const item = rowToItemSpecies(r as Record<string, unknown>);
         (item as Record<string, unknown>)._source = 'official';
         return item;
@@ -148,7 +153,9 @@ export async function GET(
       throw error;
     }
 
-    const items = (rows ?? []).map((r) => rowToItem(type as ColumnarLibraryType, r as Record<string, unknown>, 'official'));
+    const officialRows = (rows ?? []) as Record<string, unknown>[];
+    await enrichRowsWithBankImageUrls(supabase, officialRows);
+    const items = officialRows.map((r) => rowToItem(type as ColumnarLibraryType, r, 'official'));
     items.sort((a, b) => {
       const na = String((a as Record<string, unknown>).name ?? '');
       const nb = String((b as Record<string, unknown>).name ?? '');

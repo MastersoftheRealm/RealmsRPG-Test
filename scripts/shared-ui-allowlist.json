@@ -54,6 +54,7 @@
     "src/components/shared/powered-martial-slider.tsx",
     "src/components/shared/quantity-selector.tsx",
     "src/components/shared/quick-armaments-sections.tsx",
+    "src/components/shared/realms-image-picker.tsx",
     "src/components/shared/roll-button.tsx",
     "src/components/shared/section-cost-badge.tsx",
     "src/components/shared/section-header.tsx",
