@@ -3674,6 +3674,28 @@ Click-open / click-close without moving the pointer. Expandable chips grow into 
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-021-T004 — Chip / GLR body tap toggles expand (not header-only)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-021 |
+| **Related task** | TASK-537 |
+| **Where** | `/dev/styleguide` → Expandable Chips; Library / Codex list at ~360px |
+| **Needs** | — |
+
+**Steps**
+1. Styleguide: expand an ExpandableChip via the **header**, then tap the **description body** — chip collapses. Expand again by tapping only the description area if the chip was collapsed… (collapsed chips have no body — expand via header, then confirm body tap collapses).
+2. Optionally open Options on a chip with options; tapping Options label/list must **not** collapse the chip unexpectedly (toggle Options only).
+3. At ~360px: open Library Powers (or Codex feats). Tap the **mobile summary** under a collapsed row name (stats/teaser) — row expands. Tap the expanded **description panel** (not a chip or button) — row collapses.
+4. With a row expanded, tap a nested property/part **chip body** — chip expands/collapses; the **row** stays expanded.
+
+**Expected**
+- ExpandableChip: header or expanded body toggles; Options / nested controls excluded.
+- GridListRow: header, mobile summary, or non-interactive expanded body toggles; chip groups and action buttons do not collapse the row when used for their own actions.
+- Stable vertical expand (T001/T002) still holds.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-022 — Characters list page (TASK-469)

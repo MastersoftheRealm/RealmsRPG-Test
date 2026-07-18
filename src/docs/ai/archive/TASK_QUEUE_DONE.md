@@ -1,3 +1,41 @@
+- id: TASK-537
+  title: Chip / GLR body tap toggles expand (not header-only)
+  created_at: 2026-07-18
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-18
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/ui/expandable-chip.tsx
+    - src/components/shared/grid-list-row.tsx
+    - src/lib/chip/chip-options-panel.tsx
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/guide/04-floating-ui-tooltips.md
+  description: |
+    Mobile/Chip UI: GridListRow items and ExpandableChips should expand/collapse when
+    tapping the body (mobile summary, expanded description panel, chip description),
+    not only the header/chevron trigger. Nested controls (Options, buttons, chip groups)
+    keep their own handlers.
+  acceptance_criteria:
+    - ExpandableChip: header or expanded body toggles; Options panel excluded via
+      data-expand-ignore / stopPropagation; stable full-row layout unchanged.
+    - GridListRow: header trigger, mobile summary, and non-interactive expanded body
+      toggle; chip groups and action buttons do not accidentally collapse the row.
+    - Docs (MOBILE_UX + stable-expand guide) + BUILD_VALIDATION DEV-V-021-T004;
+      npm run build.
+  notes: |
+    Owner feedback 2026-07-18. Extends TASK-445 stable expand hit-target grammar.
+  build_validation: |
+    suite: DEV-V-021
+    tests:
+      - DEV-V-021-T004
+  developer_test_plan: |
+    Suite DEV-V-021 T004 — see BUILD_VALIDATION.md (chip body + GLR mobile summary /
+    expanded panel toggle; nested chips/Options excluded).
+
+---
 - id: TASK-536
   title: GridListRow mobile — stop name squeeze beside X/+
   created_at: 2026-07-18

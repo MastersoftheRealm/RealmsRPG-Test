@@ -164,8 +164,11 @@ export function ExpandableChip({
     );
   }
 
-  const handleHeaderClick = (e: React.MouseEvent) => {
+  const toggleExpanded = (e: React.MouseEvent) => {
     if (!canExpand) return;
+    // Stop so parent GridListRow body/header handlers don't also toggle the row,
+    // and so shell + header don't double-toggle.
+    e.stopPropagation();
     const next = !isExpanded;
     if (next && fullWidthWhenExpanded && shellRef.current) {
       captureCollapsedLayout(shellRef.current);
@@ -181,8 +184,11 @@ export function ExpandableChip({
   };
 
   const handleHeaderKeyDown = (e: React.KeyboardEvent) => {
+    // Header <button> fires click on Enter/Space natively. This path is for the
+    // non-button shell (role=button) when uncontrolled.
     if ((e.key === 'Enter' || e.key === ' ') && canExpand && !onToggle) {
       e.preventDefault();
+      e.stopPropagation();
       const next = !isExpanded;
       if (next && fullWidthWhenExpanded && shellRef.current) {
         captureCollapsedLayout(shellRef.current);
@@ -192,6 +198,20 @@ export function ExpandableChip({
       setInternalExpanded(next);
       onExpandedChange?.(next);
     }
+  };
+
+  /**
+   * Body (description / padding) also toggles — not only the header button.
+   * Skip nested controls (header button, Options accordion, links).
+   */
+  const handleShellClick = (e: React.MouseEvent) => {
+    if (!canExpand) return;
+    const target = e.target as HTMLElement;
+    const interactive = target.closest?.(
+      'button, [role="button"], a, input, select, textarea, [data-expand-ignore]'
+    );
+    if (interactive && interactive !== e.currentTarget) return;
+    toggleExpanded(e);
   };
 
   const handleOptionsToggle = (e: React.MouseEvent) => {
@@ -216,12 +236,12 @@ export function ExpandableChip({
         className: cn(
           interactiveHover && canExpand && 'hover:shadow-md',
           isExpanded && interactiveHover && 'shadow-md',
-          !useButtonHeader && canExpand && 'cursor-pointer',
+          canExpand && 'cursor-pointer',
           !useButtonHeader && canExpand && !isExpanded && 'touch-target-md-compact',
           className
         ),
       })}
-      onClick={!useButtonHeader && canExpand ? handleHeaderClick : undefined}
+      onClick={canExpand ? handleShellClick : undefined}
       onKeyDown={!useButtonHeader && canExpand ? handleHeaderKeyDown : undefined}
       tabIndex={!useButtonHeader && canExpand ? 0 : undefined}
       role={!useButtonHeader && canExpand ? 'button' : undefined}
@@ -230,7 +250,7 @@ export function ExpandableChip({
       {useButtonHeader ? (
         <button
           type="button"
-          onClick={canExpand ? handleHeaderClick : (e) => e.stopPropagation()}
+          onClick={canExpand ? toggleExpanded : (e) => e.stopPropagation()}
           disabled={!canExpand && !onToggle}
           className={cn(
             'flex items-center gap-1.5 text-left w-full touch-target-md-compact',

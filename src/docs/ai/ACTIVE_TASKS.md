@@ -4,14 +4,16 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-537
+**Next task ID:** TASK-538
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`.
 
-**Counts:** 10 agent-eligible (TASK-391 superseded/skip; TASK-514–518/520/521/522/523/524/525/526/527/528/529/530/536 archived) · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 10 agent-eligible (TASK-391 superseded/skip; TASK-514–518/520/521/522/523/524/525/526/527/528/529/530/536/537 archived) · waiting/blocked in WAITING_TASKS · done in archive.
+
+**GLR / chip body expand (2026-07-18):** **TASK-537 done** — ExpandableChip + GridListRow toggle from header **or** body (mobile summary / expanded panel); pending-qa **DEV-V-021-T004**.
 
 **GLR mobile name width (2026-07-18):** **TASK-536 done** (merged #34/#35) — collapse empty desktop data tracks below `lg` via `--glr-*` CSS vars; pending-qa **DEV-V-016-T012**.
 
