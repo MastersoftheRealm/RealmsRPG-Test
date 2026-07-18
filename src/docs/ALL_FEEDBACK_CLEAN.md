@@ -1,6 +1,6 @@
 # ALL_FEEDBACK ? Consolidated & Curated
 
-Last updated: 2026-07-17 (admin archetype path parity tasks filed)
+Last updated: 2026-07-18 (sheet Skills Value stepper clip → TASK-543)
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -2472,6 +2472,15 @@ Notes
   Chip/mobile ui GLR items/chips/cards etc shouldn't just expand when you hit the item header thingy,but also if you hit the body to expand. Follow constitution, rules, guidelines
 - Expected: Expand/collapse from header **or** body — GridListRow mobile summary + non-interactive expanded panel; ExpandableChip expanded description; Options/buttons/chip groups keep their own handlers. GuidedChoiceCard select/"See more" grammar unchanged.
 - Disposition: Implemented as **TASK-539**. QA: DEV-V-021-T004.
+
+**Raw Feedback Log - 2026-07-18 (sheet Skills Value stepper + clipped)**
+- Date: 2026-07-18
+- Context: Character sheet Skills panel — desktop edit mode Value steppers
+- Priority: High
+- Feedback (verbatim):
+  desktop skills on character sheet, the + on skill val increase steppers is pushed behing the right side, so that's an issue.
+- Expected: In Skills edit mode on desktop (`lg+` narrow Skills column), each Value stepper shows a full usable `+` (not clipped by the panel/card edge); horizontal scroll via TableScroll if the table is wider than the panel.
+- Disposition: Implemented as **TASK-543** (renumbered; TASK-540–542 taken by auth / sticky footer / inventory+roll-log). QA: DEV-V-009-T024.
 
 **Raw Feedback Log - 2026-07-18 (roll log bonus dark mode + inventory add equipment)**
 - Date: 2026-07-18

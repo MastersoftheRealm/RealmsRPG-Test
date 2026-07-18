@@ -49,7 +49,7 @@ Audit: `ValueStepper`, `IconButton`, sheet action toolbar, tab triggers, list ro
 - **Within each panel:** Vertical scroll only. No horizontal scroll inside the panel.
 - **When to use collapse instead:** Few sections, lighter content, or sub-sections inside a panel (e.g. Library’s Powers/Techniques/Equipment as collapsible blocks). Use the current app collapsible pattern components in the relevant domain (for creator sections, `creator/collapsible-section.tsx`).
 
-**Character sheet:** Below `md`, use side-scroll of Abilities, Skills, Archetype, Library (`character-sheet-body.tsx`). Panels share PageContainer gutters with the sheet header; gap between panels during swipe (TASK-538). Sheet header and toolbar stay responsive (stack resources, toolbar position for thumb reach). Library → Inventory summary stacks Currency and Armament Proficiency below `sm` so labels do not overlap on phone widths (TASK-537).
+**Character sheet:** Below `md`, use side-scroll of Abilities, Skills, Archetype, Library (`character-sheet-body.tsx`). Panels share PageContainer gutters with the sheet header; gap between panels during swipe (TASK-538). Sheet header and toolbar stay responsive (stack resources, toolbar position for thumb reach). Library → Inventory summary stacks Currency and Armament Proficiency below `sm` so labels do not overlap on phone widths (TASK-537). Skills edit Value steppers: table min-width + `TableScroll` so `+` is not clipped in the narrow desktop Skills column (TASK-543; data-table scroll exception, not panel side-scroll).
 
 **Other dense pages:** Same idea — side-scroll between major sections where it fits (e.g. encounter tracker, campaign detail); collapse when sections are few.
 

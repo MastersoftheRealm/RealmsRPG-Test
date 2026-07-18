@@ -4,14 +4,16 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-543
+**Next task ID:** TASK-544
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`.
 
-**Counts:** 10 agent-eligible (TASK-391 superseded/skip; TASK-514–518/520/521/522/523/524/525/526/527/528/529/530/536/537/538/539/540/541/542 archived) · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 10 agent-eligible (TASK-391 superseded/skip; TASK-514–518/520/521/522/523/524/525/526/527/528/529/530/536/537/538/539/540/541/542/543 archived) · waiting/blocked in WAITING_TASKS · done in archive.
+
+**Sheet Skills Value stepper clip (2026-07-18):** **TASK-543 done** — edit-mode Value column min-width + compact ValueStepper; pending-qa **DEV-V-009-T024**. (Renumbered from conflicting TASK-540.)
 
 **Sheet Inventory add + roll log bonus dark mode (2026-07-18):** **TASK-542 done** — scoped existingIds / stackable gear; bonus chip dark tokens; pending-qa **DEV-V-009-T022–T023**. (Renumbered from conflicting TASK-540.)
 

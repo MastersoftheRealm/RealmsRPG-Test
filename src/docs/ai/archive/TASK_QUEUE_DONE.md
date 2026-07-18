@@ -1,3 +1,51 @@
+- id: TASK-543
+  title: Character sheet Skills — Value stepper + not clipped on desktop
+  created_at: 2026-07-18
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-18
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/skills-section.tsx
+    - src/components/shared/skill-row.tsx
+    - src/components/shared/skills-allocation-page.tsx
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Desktop character sheet Skills panel (narrow lg column): in edit mode the skill
+    Value increase (+) control was pushed/clipped behind the right edge. Preserve
+    shared ValueStepper; give the Value column and edit table enough min-width so
+    TableScroll scrolls instead of crushing the stepper.
+  acceptance_criteria:
+    - Skills edit Value steppers show full − / value / + on desktop lg Skills panel.
+    - + is not clipped by card/panel edge; TableScroll when table wider than panel.
+    - SkillsAllocationPage table headers stay in parity with sheet.
+    - BUILD_VALIDATION DEV-V-009-T024; npm run build.
+  notes: |
+    Owner feedback 2026-07-18. Root cause: w-full table in 1fr Skills column shrunk
+    the Value column below ValueStepper width without a table min-width.
+    Cleanup 2026-07-18: DESIGN_INTENT comments; Remove th sr-only; MOBILE_UX note.
+    Renumbered from TASK-540 on merge — TASK-540 auth (PR #41), TASK-541 sticky footer (PR #42),
+    TASK-542 inventory/roll-log (PR #43).
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/44
+  evidence: |
+    npm run build (agent); docs honesty cleanup after /audit.
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T024
+  developer_test_plan: |
+    Suite DEV-V-009 T024 — see BUILD_VALIDATION.md (Skills edit Value stepper + visible).
+
+---
 - id: TASK-542
   title: Fix roll log bonus dark mode + inventory Add equipment
   created_at: 2026-07-18

@@ -898,7 +898,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats.
 
@@ -1158,6 +1158,19 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Steps** | 1. Switch to dark mode. 2. Make an ability/skill roll with a non-zero bonus (or custom roll with mod). 3. Inspect the second numeric chip in the roll row (the bonus value between dice and total). |
 | **Expected** | Bonus chip uses dark-mode success/danger surface + border so the number stays readable (not light-on-light). |
 | **Report** | DEV-V-009-T023: PASS / FAIL / SKIP — |
+
+
+#### DEV-V-009-T024 — Skills edit Value stepper + fully visible (TASK-543)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-543 |
+| **Where** | `/characters/[id]` → Skills panel at desktop `lg+` (≥1024px) with edit mode on |
+| **Steps** | 1. Open a character sheet at ≥1024px width (Skills in the left column of the three-panel grid). 2. Enter sheet edit mode and click the Skills pencil so Value steppers appear. 3. Confirm each skill row shows a full `−` value `+` control — the `+` button is not clipped by the card/panel edge. 4. Confirm the remove (X) control remains usable. 5. If the table is wider than the panel, confirm `TableScroll` allows horizontal scroll without hiding the `+` permanently. 6. Optional ~360px: edit Skills; Value steppers remain fully usable via horizontal scroll. |
+| **Expected** | Value column has enough min-width for the compact ValueStepper; `+` is never cut off behind the right edge; table scrolls horizontally when needed instead of crushing the stepper. |
+| **Report** | DEV-V-009-T024: PASS / FAIL / SKIP — |
+
 
 ---
 
