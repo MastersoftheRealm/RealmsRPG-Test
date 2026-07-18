@@ -34,6 +34,10 @@
   notes: |
     Root cause for empty/broken add: global existingIds mixed weapon/armor/power
     numeric ids with codex equipment ids, filtering the list. Equipment is stackable.
+    Cleanup 2026-07-18: removed dead global existingIds from auto-proficiencies facade;
+    SoT is CharacterSheetModals.existingIdsForAddModal; archive pr_link committed.
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/43
   evidence: |
     npm run build (pass); vitest map-selection.test.ts (pass).
   build_validation: |

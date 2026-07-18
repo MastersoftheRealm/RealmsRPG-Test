@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect } from 'react';
 import { getArchetypeAbilityScore } from '@/lib/game/calculations';
 import {
   buildRequiredProficiencies,
@@ -76,21 +76,8 @@ export function useSheetAutoProficiencies({
   itemPropertiesDb,
   showToast,
 }: UseSheetAutoProficienciesArgs) {
-  const existingIds = useMemo(() => {
-    if (!character) return new Set<string>();
-    const ids = new Set<string>();
-    const add = (id: string | number | undefined) => {
-      const s = String(id ?? '');
-      if (s) ids.add(s);
-    };
-    character.powers?.forEach((p) => add(p.id));
-    character.techniques?.forEach((t) => add(t.id));
-    ((character.equipment?.weapons as Item[]) || []).forEach((w) => add(w.id));
-    ((character.equipment?.shields as Item[]) || []).forEach((s) => add(s.id));
-    ((character.equipment?.armor as Item[]) || []).forEach((a) => add(a.id));
-    ((character.equipment?.items as Item[]) || []).forEach((e) => add(e.id));
-    return ids;
-  }, [character]);
+  // Add-modal existing ids are scoped in CharacterSheetModals.existingIdsForAddModal
+  // (type-specific; equipment stackable). Do not rebuild a global id set here.
 
   const buildRequiredForCharacter = useCallback(
     (c: Character) => {
@@ -145,7 +132,6 @@ export function useSheetAutoProficiencies({
   ]);
 
   return {
-    existingIds,
     applyAutoProficiencies,
   };
 }

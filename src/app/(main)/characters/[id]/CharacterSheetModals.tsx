@@ -23,7 +23,11 @@ export type AddModalType = 'power' | 'innate-power' | 'technique' | 'weapon' | '
 export type FeatModalType = 'archetype' | 'character' | 'state' | null;
 export type SkillModalType = 'skill' | 'subskill' | null;
 
-/** Existing ids for the open add-modal type only (avoids cross-table numeric id collisions). */
+/**
+ * DESIGN_INTENT: Add-modal exclusion set is type-scoped only.
+ * Cross-table numeric ids (weapon id "1" vs codex gear id "1") must not hide rows.
+ * Equipment is stackable — return empty so owned gear stays selectable (quantity merges).
+ */
 function existingIdsForAddModal(
   character: Character | null,
   addModalType: AddModalType

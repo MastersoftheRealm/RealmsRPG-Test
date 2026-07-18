@@ -97,13 +97,10 @@ export function useAddLibraryItemData({
 
   const items: SelectableItem[] = useMemo(() => {
     const list = itemType === 'power' && powerSelectionMode === 'empowered' ? empoweredRawItems : rawItems;
+    // Callers pass type-scoped ids (CharacterSheetModals.existingIdsForAddModal).
+    // Equipment gets an empty set so stackable gear stays selectable.
     return list
-      .filter((item) => {
-        // Inventory gear is stackable — re-selecting merges quantity on the sheet.
-        // Also avoids false empties when weapon/armor numeric ids collide with codex gear ids.
-        if (itemType === 'equipment') return true;
-        return !existingIds.has(String((item as { id?: string | number }).id ?? ''));
-      })
+      .filter((item) => !existingIds.has(String((item as { id?: string | number }).id ?? '')))
       .map((item) =>
         buildSelectableItem(
           item as UserPower | UserTechnique | UserItem | EqItem,

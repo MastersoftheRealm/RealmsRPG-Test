@@ -116,11 +116,7 @@ export function mapSelectedToCharacterItems(
 
   return (selectedRaw as EqItem[]).map((i) => {
     const props = (i.properties || []) as EqItem['properties'];
-    const qtyKey = String(i.id);
-    const qty =
-      itemType === 'equipment'
-        ? (quantities[qtyKey] ?? quantities[i.id as unknown as string] ?? 1)
-        : 1;
+    const qty = itemType === 'equipment' ? (quantities[String(i.id)] ?? 1) : 1;
     return {
       id: i.id,
       name: String(i.name ?? ''),
