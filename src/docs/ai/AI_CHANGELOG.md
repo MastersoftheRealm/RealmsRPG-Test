@@ -573,3 +573,5 @@
 - 2026-06-26 | agent | Session: Character creator audit implementation | files: `archetype-step.tsx`, `species-step.tsx`, `species-modal.tsx`, `feats-step.tsx`, `ancestry-step.tsx`, `creator-tab-bar.tsx`, `finalize-step.tsx`, `character-creator-store.ts`, `character-creator-validation.ts`, `api-client.ts`, `CHARACTER_CREATOR_AUDIT_2026-06-26.md` | Summary: Completed all CC-26 audit items ??? sticky archetype confirm, a11y/touch targets, HE overspend validation, persist schema version, apiUpload portrait, login return path with query params, cloneInitialDraft on reset. Build exit 0.
 
 - 2026-06-26 | agent | Session: Character creator sticky footers + localized audit | files: `creator-step-footer.tsx`, all creator steps, `species-modal.tsx`, `skills-allocation-page.tsx`, `CHARACTER_CREATOR_AUDIT_2026-06-26.md` | Summary: Shared CreatorStepFooter on all steps; SpeciesModal flexLayout sticky footer with Pick Me on right; skills allocation sticky footer; localized 10-lens audit doc. Build exit 0.
+
+2026-07-18 | ci-fix | Rebaseline Linux visual snapshots after header overflow clip; refresh task-reconcile matches for TASK-515–528.
