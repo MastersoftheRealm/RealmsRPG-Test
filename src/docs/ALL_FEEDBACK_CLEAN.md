@@ -2472,3 +2472,12 @@ Notes
   Chip/mobile ui GLR items/chips/cards etc shouldn't just expand when you hit the item header thingy,but also if you hit the body to expand. Follow constitution, rules, guidelines
 - Expected: Expand/collapse from header **or** body — GridListRow mobile summary + non-interactive expanded panel; ExpandableChip expanded description; Options/buttons/chip groups keep their own handlers. GuidedChoiceCard select/"See more" grammar unchanged.
 - Disposition: Implemented as **TASK-539**. QA: DEV-V-021-T004.
+
+**Raw Feedback Log - 2026-07-18 (valid email shown as invalid)**
+- Date: 2026-07-18
+- Context: Auth — register / forgot-password / login email errors
+- Priority: High
+- Feedback (verbatim):
+  people put in an email in that's valid it says invalid email?
+- Expected: Valid addresses are accepted; only true format failures say invalid email. SMTP/confirmation-send failures must not be mislabeled as invalid email.
+- Disposition: Implemented as **TASK-540**. Root cause: register/forgot-password mapped any error containing `"email"` to “Invalid email address.” QA: DEV-V-024-T004–T005.

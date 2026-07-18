@@ -11,14 +11,21 @@ import { validateUsername } from '@/lib/username-rules';
 // Auth Schemas
 // =============================================================================
 
+/** Trim + lowercase so pasted emails with spaces do not fail as "invalid". */
+const authEmailSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .email('Please enter a valid email address');
+
 export const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: authEmailSchema,
   password: z.string().min(6, 'Password must be at least 6 characters'),
   rememberMe: z.boolean().optional(),
 });
 
 export const registerSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: authEmailSchema,
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string(),
   username: z.string().max(24).optional().or(z.literal('')),
@@ -38,7 +45,7 @@ export const registerSchema = z.object({
 });
 
 export const forgotPasswordSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: authEmailSchema,
 });
 
 // Auth form data types

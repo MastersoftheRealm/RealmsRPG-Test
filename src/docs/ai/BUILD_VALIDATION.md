@@ -2918,9 +2918,9 @@ Automated via `npm test` (`src/lib/library-types.test.ts`).
 
 ---
 
-## DEV-V-024 — Client error handling (TASK-479)
+## DEV-V-024 — Client error handling (TASK-479, TASK-540)
 
-Convention: `ARCHITECTURE.md` § Client error handling. Automated helper coverage via `src/lib/api-client.test.ts`.
+Convention: `ARCHITECTURE.md` § Client error handling. Automated helper coverage via `src/lib/api-client.test.ts` and `src/lib/auth-errors.test.ts`.
 
 #### DEV-V-024-T001 — getErrorMessage unit coverage
 
@@ -2952,6 +2952,27 @@ Convention: `ARCHITECTURE.md` § Client error handling. Automated helper coverag
 | **Steps** | Force a failing mutation (offline or invalid id) on delete, duplicate, or add-to-library. |
 | **Expected** | Error toast with a useful message; no silent no-op. Name lookup failures during creator save must not masquerade as “create new” when the API is down. |
 | **Report** | DEV-V-024-T003: PASS / FAIL / SKIP — |
+
+#### DEV-V-024-T004 — Auth error mapper unit coverage (TASK-540)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-024 |
+| **Task** | TASK-540 |
+| **Automated** | `npm test` — `src/lib/auth-errors.test.ts` |
+
+**Expected** — SMTP / “confirmation email” failures are **not** labeled “Invalid email address.” Real invalid-format and already-exists / credentials / rate-limit cases map correctly.
+
+#### DEV-V-024-T005 — Register accepts a normal email (TASK-540)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-024 |
+| **Task** | TASK-540 |
+| **Where** | `/register` |
+| **Steps** | 1. Open Create Account. 2. Enter a normal address (e.g. `name+tag@gmail.com` or with a trailing space when pasting). 3. Fill password + accept terms. 4. Submit. |
+| **Expected** | Field validation passes (trim/lowercase). If signup fails for send/SMTP reasons, Alert must **not** say “Invalid email address” — prefer a send-failure or generic message. Success → check-email or signed-in redirect. |
+| **Report** | DEV-V-024-T005: PASS / FAIL / SKIP — |
 
 ---
 
@@ -4169,7 +4190,7 @@ Admin/creator editors, user `image_id` parity, legacy catalog migration, portrai
 | DEV-V-020 | Sitewide copy compliance (TASK-439) | — | Manual — see suite above |
 | DEV-V-022 | Characters list page (TASK-469) | — | Manual — see suite above |
 | DEV-V-023 | Admin Realms Image Library (TASK-493) | — | Manual — see suite above |
-| DEV-V-024 | Client error handling (TASK-479) | — | Automated (`npm test`) + manual smoke |
+| DEV-V-024 | Client error handling (TASK-479, TASK-540) | — | Automated (`npm test`) + manual smoke |
 | DEV-V-025 | ExpandableImage adoption (TASK-478) | — | Manual — see suite above |
 | DEV-V-026 | Realms Image Library wiring (TASK-496–499, TASK-531–533) | — | Manual — see suite above |
 
