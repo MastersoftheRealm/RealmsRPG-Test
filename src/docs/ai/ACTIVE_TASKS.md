@@ -4,18 +4,20 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-514
+**Next task ID:** TASK-519
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`.
 
-**Counts:** 10 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 14 agent-eligible (TASK-391 superseded/skip) · waiting/blocked in WAITING_TASKS · done in archive.
 
 **Realms Image Library epic (2026-07-16):** **TASK-491–499 done**. TASK-500 deferred.
 
 **Character sheet feedback (2026-07-17):** **TASK-508–513 done** (archived; owner QA in DEVELOPER_TASK_QUEUE). TASK-504 remains expandable chips (not toast).
+
+**Admin archetype path parity (2026-07-17):** **TASK-514–518** — sync admin path builder with guided creator (feat groups, skills warn-cap, armaments UI split, drop recommended species column, cross-surface audit). **Skip TASK-391** (superseded). Guided creator is SoT; custom/advanced creator is transitional only. Owner decisions locked 2026-07-17 (see epic header below).
 
 **Debt from AI workflow audit (2026-07-15):** TASK-480 — address alongside product work; repo-wide cadence → `/debt`. TASK-476/477/478/482/484/486/487/488/489/490 done; TASK-481 superseded by `/debt`. TASK-475 done (Enhanced shell basic mode). TASK-479 done (client error handling).
 
@@ -328,25 +330,31 @@ Do **not** read the done archive at session start.
 ---
 
 - id: TASK-391
-  title: "Admin path builder — guidance_groups UI + seed remaining paths"
+  title: "SUPERSEDED — Admin path builder guidance_groups UI (use TASK-514–518)"
   created_at: 2026-06-29
   created_by: agent
-  priority: medium
+  priority: low
   status: not-started
+  follow_up_tasks:
+    - TASK-514
+    - TASK-515
+    - TASK-516
+    - TASK-517
+    - TASK-518
   description: |
-    Character creator Layer 1 uses `level1_guidance_groups` (JSONB) and `level1_recommended_species`
-    (TEXT) on `codex_archetypes`. Berserker reference path seeded; admin can edit via Advanced Path JSON
-    and recommended-species ChipSelect today. Add a structured admin UI for guidance group authoring
-    and optionally seed Warrior/Monk/power paths with grouped recommendations.
+    SUPERSEDED 2026-07-17 by owner archetype-path admin parity feedback. Do **not** implement
+    this task. Use **TASK-514** (feat groups + character/archetype split), **TASK-515** (skills),
+    **TASK-516** (armaments), **TASK-517** (remove recommended species), **TASK-518** (audit).
+    Original scope: structured admin UI for `level1_guidance_groups` + optional path seeding.
   related_files:
     - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
     - sql/codex-archetypes-creator-layer1-extensions.sql
     - src/lib/constants/creator-layer-governance.ts
   acceptance_criteria:
-    - Admin can add/edit/remove guidance groups without raw JSON (title, why, feat/power/armament picks per group).
-    - Layer 1 governance caps enforced in UI (max 3 groups, 7 items, 120-char why).
-    - Optional: at least one additional martial path seeded with guidance groups in Supabase.
-    - npm run build passes.
+    - Agents skip this task; implement TASK-514–518 instead.
+    - When the replacement epic is done, archive this block as superseded (`verification_status: n/a`).
+  notes: |
+    Kept in ACTIVE only so reconcile/history keep the id; not agent-eligible work.
 
 ---
 
@@ -422,5 +430,239 @@ Do **not** read the done archive at session start.
     - Reuses RealmsImagePicker + bank — no parallel media system.
   notes: |
     Placeholder so the yes eventually decision is not rediscovered. Leave not-started until asked.
+
+---
+
+# Admin archetype path ↔ guided creator parity (TASK-514–518)
+# Owner feedback 2026-07-17 + decisions 2026-07-17 (do not re-ask).
+# SoT: guided creator. Path data authored in admin must be consumable by guided today (and by
+# custom/advanced creator while it still exists). Custom/advanced will be phased out; guided will
+# become the entry for L1 and L3 navigation — design admin + shared path contracts for guided first.
+# Owner decisions locked:
+#   1) Feat groups: store an explicit audience/role on each guidance group (character vs archetype)
+#      — do NOT keep guessing from the group title containing "character".
+#   2) Armaments: UI-only split (weapons/shields vs armor); keep single `level1_armaments` storage.
+#   3) Recommended species: fully remove — drop `level1_recommended_species` column (owner approved).
+#   4) Skills: picker = max 3 base skills; legacy >3 / sub-skills may still exist — WARN on save,
+#      do not block; content cleanup to 3 is a later data pass.
+# Cross-ref: TASK-391 superseded; TASK-403 partial; DEV-V-008 / DEV-V-013.
+
+---
+
+- id: TASK-514
+  title: Admin archetype path — feat groups with explicit character vs archetype audience
+  created_at: 2026-07-17
+  created_by: agent
+  priority: high
+  status: not-started
+  parent_task: TASK-391
+  follow_up_tasks:
+    - TASK-518
+  related_files:
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/app/(main)/admin/codex/actions.ts
+    - src/types/archetype.ts
+    - src/lib/game/archetype-path.ts
+    - src/lib/constants/creator-layer-governance.ts
+    - src/components/guided-creator/steps/archetype-feats-step.tsx
+    - src/components/guided-creator/steps/character-feat-step.tsx
+    - src/components/guided-creator/guided-path-detail-modal.tsx
+  description: |
+    Bring admin archetype path create/edit feat authoring in line with the guided creator so path
+    data is usable without naming hacks. Today admin has a single Level 1 Feats ChipSelect and only
+    preserves `level1_guidance_groups` from existing JSON; guided's character-feat step currently
+    filters groups by whether the title string includes "character" — that is brittle and wrong for
+    a long-lived contract. Admin must author named feat groups (name + description/why), designate
+    feats into those groups, and choose whether each group is for character feats or archetype
+    feats via an explicit field on `PathGuidanceGroup` (e.g. `audience: "character" | "archetype"`).
+    Guided (and any remaining custom creator consumers) must read that field — not title heuristics.
+  acceptance_criteria:
+    - Extend `PathGuidanceGroup` with an explicit audience/role (`character` | `archetype`); parse
+      + validate in `archetype-path.ts` / path-validation; migrate/backfill existing groups that
+      relied on title heuristics where possible.
+    - Admin path modal can add / rename / remove feat guidance groups without raw JSON.
+    - Each group supports name (title), description (why), audience (character vs archetype), and
+      designated feat ids; LAYER1_GOVERNANCE caps enforced in UI.
+    - Character-feat groups and archetype-feat groups are authored in separate UI sections (not one
+      mixed ChipSelect).
+    - Guided `character-feat-step` and `archetype-feats-step` use the explicit audience field; remove
+      title-includes-"character" filtering.
+    - Flat `level1_feats` (CSV) stays consistent with grouped picks (union / documented sync rule —
+      no silent drift).
+    - Save/load round-trip via `saveArchetypeWithPath` / codex GET; no admin-local parser fork.
+    - Modal: `fullScreenOnMobile`; touch ≥44px; a11y labels.
+    - `npm run build` passes; BUILD_VALIDATION under DEV-V-008 or DEV-V-013; changelog on ship.
+  notes: |
+    Supersedes feat/guidance UI of TASK-391. Shared contract change on PathGuidanceGroup — treat as
+    Architect-class shape update; keep JSONB backward-compat for groups missing audience during
+    transition. Optional path content seeding remains out of scope unless owner asks.
+    Custom/advanced creator may still read the same path JSON until it is retired; do not invent a
+    second group format for custom.
+
+---
+
+- id: TASK-515
+  title: Admin archetype path — 3 base skills picker (warn on legacy excess)
+  created_at: 2026-07-17
+  created_by: agent
+  priority: high
+  status: not-started
+  follow_up_tasks:
+    - TASK-518
+  related_files:
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/app/(main)/admin/codex/actions.ts
+    - src/lib/game/path-validation.ts
+    - src/lib/guided-creator/build-character.ts
+    - src/lib/guided-creator/guided-skill-recommendations.ts
+    - src/docs/SUPABASE_SCHEMA.md
+  description: |
+    Admin archetype path create/edit currently offers all `codex_skills` in one ChipSelect with no
+    cap. Target authoring: at most 3 base skills (not sub-skills; sub-skills have non-empty
+    `codex_skills.base_skill`). Legacy paths may already have more than 3 or include sub-skills —
+    that is fine for now; show a clear warning on save/edit, do not block save. A later content
+    pass will bring all paths to exactly 3 base skills.
+  acceptance_criteria:
+    - Admin Level 1 Skills picker lists only base skills (`base_skill` empty/null); sub-skills
+      cannot be newly selected.
+    - New/changed selection is capped at 3 in the UI (cannot add a 4th).
+    - When editing a path that already has >3 skills and/or any sub-skills, show a non-blocking
+      warning on load and on save; allow save to proceed (owner will fix content later).
+    - Persist via `level1_skills` CSV; path-validation may emit warn-level issues for excess /
+      sub-skills but must not hard-fail save for legacy rows.
+    - Guided creator continues to consume `pathData.level1.skills` for valid paths.
+    - `npm run build` passes; BUILD_VALIDATION note for admin skill picker; changelog on ship.
+  notes: |
+    Guided SoT: `build-character.ts`, skills-step / `guided-skill-recommendations.ts`.
+    Do not invent a parallel skill model. Content cleanup of over-cap paths is out of scope here
+    (optional follow-up after all paths are audited).
+
+---
+
+- id: TASK-516
+  title: Admin archetype path — UI-only armaments split (weapons/shields vs armor)
+  created_at: 2026-07-17
+  created_by: agent
+  priority: high
+  status: not-started
+  follow_up_tasks:
+    - TASK-518
+  related_files:
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/components/guided-creator/steps/loadout-step.tsx
+    - src/components/guided-creator/guided-path-detail-modal.tsx
+    - src/lib/game/archetype-path.ts
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+  description: |
+    Admin Level 1 Armaments is a single ChipSelect mixing weapon, shield, and armor. Guided loadout
+    already separates weapon/shield vs armor by item category while storing one `level1_armaments`
+    list. Split the admin UI the same way — UI-only; do not add separate DB columns. Owner decided
+    UI-only split is preferred for long-term practice while guided can already distinguish by
+    item type/category.
+  acceptance_criteria:
+    - Admin path modal has separate pickers for weapons/shields and armor (not one mixed list).
+    - Options filtered by item type/category the same way guided loadout does (weapon + shield vs
+      armor); equipment/gear remains existing Equipment / shared-gear controls.
+    - Persistence stays a single `level1_armaments` CSV (or equivalent qty list); merge both
+      pickers on save; split on load by category — no schema change.
+    - Guided loadout weapon vs armor phases continue to work from the combined list.
+    - Higher-level progression armament pickers (if present) follow the same UI split or are
+      explicitly deferred in remaining_work.
+    - `fullScreenOnMobile` / touch / a11y preserved on the modal.
+    - `npm run build` passes; BUILD_VALIDATION for admin armament split; changelog on ship.
+  notes: |
+    Guided SoT: `loadout-step.tsx`, `guided-path-detail-modal.tsx`. Product: REALMS §5.0.1–5.0.2.
+    Revisit separate storage only if a future need proves category-from-codex insufficient.
+
+---
+
+- id: TASK-517
+  title: Drop recommended-species from archetype paths (column + all consumers)
+  created_at: 2026-07-17
+  created_by: agent
+  priority: high
+  status: not-started
+  follow_up_tasks:
+    - TASK-518
+  related_files:
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/app/(main)/admin/codex/actions.ts
+    - src/app/api/codex/route.ts
+    - src/components/character-creator/steps/species-step.tsx
+    - src/components/guided-creator/steps/species-step.tsx
+    - src/hooks/use-creator-path-data.ts
+    - src/lib/game/archetype-path.ts
+    - src/lib/game/archetype-display.ts
+    - src/lib/game/path-validation.ts
+    - src/types/archetype.ts
+    - src/types/codex.ts
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - sql/codex-archetypes-creator-layer1-extensions.sql
+  description: |
+    Product decision (REALMS §5.0.1 + owner 2026-07-17): no recommended species on archetype paths.
+    Species curation uses `codex_species.is_starter` only. Remove the concept everywhere and
+    drop the `codex_archetypes.level1_recommended_species` column (owner approved — do not leave
+    the column unused).
+  acceptance_criteria:
+    - Remove Recommended species UI from admin archetype path create/edit; stop reading/writing
+      the field on save.
+    - Advanced/custom creator species step no longer filters by `recommended_species`; use
+      starter / full-catalog patterns consistent with guided (`is_starter`) where applicable.
+    - Strip `recommended_species` from types, parsers (`archetype-path`, `archetype-display`),
+      codex API composition, `use-creator-path-data`, path-validation, seeds, and docs.
+    - Guided `species-step` stays on `is_starter` only (confirm no regression).
+    - Schema: write SQL in `sql/` to DROP COLUMN `level1_recommended_species` (and clean legacy
+      `path_data.level1.recommended_species` if present). Owner already approved the drop —
+      still follow codex workflow (audit → propose SQL → apply once in implement pass). Update
+      `SUPABASE_SCHEMA.md` when applied.
+    - Docs/FEATURE_INDEX no longer describe path-recommended species as active; `is_starter`
+      remains the curation lever.
+    - `npm run build` passes; BUILD_VALIDATION + changelog on ship.
+  notes: |
+    Do not confuse with species starter flag (TASK-403) — that stays. Column drop is approved;
+    implementers still land SQL in repo and apply via approved migration path (not silent MCP
+    without the sql/ file).
+
+---
+
+- id: TASK-518
+  title: Admin ↔ DB ↔ guided archetype-path sync audit (post 514–517)
+  created_at: 2026-07-17
+  created_by: agent
+  priority: medium
+  status: not-started
+  parent_task: TASK-514
+  related_files:
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/lib/game/archetype-path.ts
+    - src/lib/game/path-validation.ts
+    - src/lib/constants/creator-layer-governance.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+  description: |
+    After TASK-514–517 land, audit that admin authoring, Supabase columns/JSON, and guided
+    creator consumption stay aligned for archetype paths. Remove remaining duplicate admin-local
+    logic and Advanced Path JSON escape-hatch drift. Treat guided as the long-term consumer
+    (custom/advanced creator transitional / to be phased out — path contracts prioritize guided
+    L1/L3). File follow-ups for intentional gaps (e.g. higher-level progression UI, content pass
+    to trim paths to 3 skills).
+  acceptance_criteria:
+    - Walk Level 1 fields used by guided (feats/groups with audience, skills, powers/innate,
+      techniques, armaments weapon/armor UI pools, equipment/shared gear, abilities, armorStep,
+      notes) and confirm admin can author each without raw JSON for the common path; document any
+      remaining Advanced Path JSON-only fields.
+    - No parallel parsers: admin uses shared `archetype-path` / display helpers.
+    - Dead recommended-species / mixed-armament / title-heuristic feat UI paths removed.
+    - FEATURE_INDEX / AGENT_GUIDE pointers updated if admin surface capabilities change.
+    - BUILD_VALIDATION suites DEV-V-008 / DEV-V-013 refreshed for the parity epic; changelog entry.
+    - `npm run build` passes; residuals filed as follow_up_tasks (not silent), including optional
+      content pass to bring all paths to exactly 3 base skills.
+  notes: |
+    Depends on TASK-514–517 (read-only gap inventory can start in parallel; finish after them).
+    Prefer delete weaker duplicates over documenting forever (constitution anti-debt).
 
 ---

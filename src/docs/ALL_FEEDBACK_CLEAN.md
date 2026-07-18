@@ -1,6 +1,6 @@
 # ALL_FEEDBACK ? Consolidated & Curated
 
-Last updated: 2026-07-17
+Last updated: 2026-07-17 (admin archetype path parity tasks filed)
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -51,6 +51,7 @@ How to use
 - **Guided choice-card disclosure (2026-07-15):** **See more?** = in-card deepen (truncated copy / card content). **More details** = entity modal and/or lots of chip/fact disclosure. **See more options** = catalog Layer 2 only. Do not invent specialist verbs (Property details, Read more, Hide properties). When a card has both See more and modal More details, show modal More details only after expand/select. TASK-432?436.
 - **GridListRow fact chips (2026-07-15):** Column facts must stay as columns or self-describing expanded chips (e.g. Damage Reduction 2). Sitewide audit **TASK-437 done**.
 - **Guided L1 = curated picks, not silent kits (2026-07-15):** Layer 1 still requires deliberate user choice for identity and fighting-style decisions (path, species, ancestry, feats, weapons, armor). Soften prior ?accept defaults / barely touch middle chapters? and remove quick loadout kits; weapon/armor are individual path cards. Gear may offer optional ?Add all recommended.? Selection grammar: cards (few/curated) vs GridListRow (many/browse); entity depth ladder vs catalog breadth ladder ? see `REALMS_PRODUCT_OVERVIEW.md` ?3.1. TASK-442?443.
+- **Admin archetype path ↔ guided parity (2026-07-17):** Sync admin path builder with guided creator — named feat groups with explicit character vs archetype audience (no title heuristics), max 3 base skills with warn-not-block on legacy excess, armaments UI-only split (weapons/shields vs armor; single `level1_armaments`), drop `level1_recommended_species` column entirely (`is_starter` only). Guided is SoT; custom/advanced transitional. Tasks **TASK-514–518** (TASK-391 superseded). Owner decisions locked same day.
 - **Card ? GLR selection grammar (2026-07-15 session):** Cards are the quieter Layer?A presentation of the same entity facts as GridListRow; See more / row expand and More details / rich expand are the same depth ladder. ?See more options? is catalog breadth only. Share fact builders and labels sitewide; do not force one chrome component.
 - **Agent user-facing copy (2026-07-15):** Game-term capitalization + prefer/avoid vocab (no Check/Save/Class/DC; Abilities not Ability Scores in UI; Score = Bonus + 10; no em dash in UI). Guide = **TASK-438 done**. Sitewide string audit = **TASK-439 done**; residuals **TASK-440**.
 - **Named Bonuses Title Case (2026-07-15):** Capitalize Attack Bonus and essentially every named Bonus (Power Bonus, Martial Bonus, Ranged Attack Bonus, Skill Bonus, Defense Bonus, ?). Documented in `GAME_RULES.md` Terminology.
@@ -2273,4 +2274,20 @@ Notes
   - Techniques tab: no collapsed TP column (TP on expanded parts only).
 - Expected: Behaviors above on `/characters/[id]`; no ToastProvider render warning; existing saves unchanged on load except user equip actions.
 - Disposition: **TASK-508** toast · **TASK-509** equip/auto-equip · **TASK-510** section collapse · **TASK-511** archetype/milestone · **TASK-512** header DR/crit · **TASK-513** techniques TP column. Owner QA: DEV-V-008-T015, DEV-V-009-T011/T013–T016.
+
+**Raw Feedback Log — 2026-07-17 (Admin archetype path builder ↔ guided creator parity)**
+- Date: 2026-07-17
+- Context: Admin backend → Codex → Archetypes path create/edit; sync with guided creator + DB
+- Priority: High
+- Feedback (verbatim):
+  Archetype builder/editor on admin backend updates: We are syncing up all functionality for archetype paths between backend database, frontend guided creator, and admin, to be inline with the guided creator we've made well. Allow designated feats into their groups, also pick character/archetype separately, allow adding/naming groups/adding name descriptions for those feat groups. Only allow picking 3 skills (not sub skills) in the admin archetype path edit/creation modal, separate selecting armaments by weapon/shields and armor, remove all "recommended species" logic everywhere, this isn't part of it, remove duplicate logic, cleanup/audit where needed. Make this into tasks.
+- Expected: Admin path authoring matches guided creator data shape/UX for feat groups (named + described; character vs archetype), skills (≤3 base skills), armaments (weapons/shields vs armor), no path-recommended species; admin ↔ DB ↔ guided stay aligned; dead/duplicate logic removed.
+- Disposition: Tasks filed (no implementation this pass); owner clarified 2026-07-17:
+  - **TASK-514** — Feat groups: name/description; explicit audience field (character vs archetype); remove title-includes-"character" heuristic; path data for guided (custom/advanced transitional)
+  - **TASK-515** — Admin max 3 base skills (no sub-skills); warn on legacy >3 / sub-skills — do not block save
+  - **TASK-516** — Armaments UI-only split (weapons/shields vs armor); keep single `level1_armaments`
+  - **TASK-517** — Fully remove recommended species; DROP `level1_recommended_species` (owner approved)
+  - **TASK-518** — Cross-surface sync audit + cleanup after 514–517
+  - **TASK-391** superseded (skip)
+  Cross-ref: TASK-403 partial; REALMS §5.0.1 / `is_starter`; DEV-V-008 / DEV-V-013.
 
