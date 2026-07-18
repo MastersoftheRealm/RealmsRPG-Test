@@ -1,6 +1,19 @@
 {
-  "generated_at": "2026-07-18T02:35:38.671Z",
+  "generated_at": "2026-07-18T03:34:18.732Z",
   "tasks": [
+    {
+      "id": "TASK-535",
+      "title": "Codex content pass - reclassify clear innate powers on archetype paths",
+      "status": "not-started",
+      "completed_at": "",
+      "source": "src/docs/ai/ACTIVE_TASKS.md",
+      "matches": [],
+      "related_files": [
+        "sql/codex-archetypes-enrich-*-applied.sql",
+        "src/docs/GAME_RULES.md"
+      ],
+      "related_overlap": []
+    },
     {
       "id": "TASK-461",
       "title": "Sitewide compact fact rollout — cards and GridListRow parity",
@@ -202,18 +215,414 @@
       "related_overlap": []
     },
     {
-      "id": "TASK-521",
-      "title": "Codex content pass — trim archetype Level 1 skills to ≤3 base",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src/docs/ai/ACTIVE_TASKS.md",
-      "matches": [],
+      "id": "TASK-534",
+      "title": "Admin archetype edit modal — expandable feats + cleaner layout",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "a605e8fa23f02f8a5fe89f3b7408268fc5b6e8a0",
+          "subject": "Update task-reconcile report matches after CI fix commit (TASK-530 TASK-531 TASK-532 TASK-533 TASK-534)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
+        {
+          "hash": "3e0f167d6505686136830cf7317a32a0f2466064",
+          "subject": "Fix master CI: restore task-reconcile evidence (TASK-530 TASK-531 TASK-532 TASK-533 TASK-534).",
+          "files": [
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        }
+      ],
       "related_files": [
-        "src/lib/constants/creator-layer-governance.ts",
-        "src/lib/game/path-validation.ts",
-        "sql/"
+        "src/app/(main)/admin/codex/AdminArchetypesTab.tsx"
       ],
       "related_overlap": []
+    },
+    {
+      "id": "TASK-530",
+      "title": "Codex content pass - enrich archetype paths for guided creator",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "a605e8fa23f02f8a5fe89f3b7408268fc5b6e8a0",
+          "subject": "Update task-reconcile report matches after CI fix commit (TASK-530 TASK-531 TASK-532 TASK-533 TASK-534)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
+        {
+          "hash": "3e0f167d6505686136830cf7317a32a0f2466064",
+          "subject": "Fix master CI: restore task-reconcile evidence (TASK-530 TASK-531 TASK-532 TASK-533 TASK-534).",
+          "files": [
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        }
+      ],
+      "related_files": [
+        "sql/codex-archetypes-backup-20260717.sql",
+        "sql/codex-archetypes-ability-spread-20260717.sql",
+        "sql/codex-archetypes-enrich-*-applied.sql",
+        "src/docs/ai/ADR/0004-path-guidance-group-audience.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-521",
+      "title": "Codex content pass - trim archetype Level 1 skills to <=3 base",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "b196de6a98eacafe72aede664fef136617148c44",
+          "subject": "Ship image matte, GLR thumbnails, archetype enrichments, and admin polish (TASK-521, TASK-529–534).",
+          "files": [
+            "sql/README.md",
+            "sql/codex-archetypes-ability-spread-20260717.sql",
+            "sql/codex-archetypes-backup-20260717.sql",
+            "sql/codex-archetypes-emdash-scrub-20260717.sql",
+            "sql/codex-archetypes-enrich-abilities-backfill-applied.sql",
+            "sql/codex-archetypes-enrich-assassin-applied.sql",
+            "sql/codex-archetypes-enrich-beast-tamer-applied.sql",
+            "sql/codex-archetypes-enrich-berserker-applied.sql",
+            "sql/codex-archetypes-enrich-commander-applied.sql",
+            "sql/codex-archetypes-enrich-elementalist-applied.sql",
+            "sql/codex-archetypes-enrich-healer-applied.sql",
+            "sql/codex-archetypes-enrich-monk-applied.sql",
+            "sql/codex-archetypes-enrich-necromancer-applied.sql",
+            "sql/codex-archetypes-enrich-sharpshooter-applied.sql",
+            "sql/codex-archetypes-enrich-sorcerer-applied.sql",
+            "sql/codex-archetypes-enrich-wardsmith-applied.sql",
+            "sql/codex-archetypes-enrich-warrior-applied.sql",
+            "src/app/(main)/admin/codex/AdminArchetypesTab.tsx",
+            "src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx",
+            "src/app/(main)/admin/codex/AdminEquipmentTab.tsx",
+            "src/app/(main)/admin/codex/AdminFeatsTab.tsx",
+            "src/app/(main)/admin/codex/AdminPartsTab.tsx",
+            "src/app/(main)/admin/codex/AdminPropertiesTab.tsx",
+            "src/app/(main)/admin/codex/AdminSkillsTab.tsx",
+            "src/app/(main)/admin/codex/AdminSpeciesTab.tsx",
+            "src/app/(main)/admin/codex/AdminTraitsTab.tsx",
+            "src/app/(main)/admin/images/admin-image-edit-modal.tsx",
+            "src/app/(main)/admin/public-library/AdminPublicEnhancedItemsTab.tsx",
+            "src/app/(main)/codex/CodexEquipmentTab.tsx",
+            "src/app/(main)/creature-creator/CreatureCreatorHelpers.tsx",
+            "src/app/(main)/creature-creator/page.tsx",
+            "src/app/(main)/creature-creator/transformers.ts",
+            "src/app/(main)/library/LibraryCreaturesTab.tsx",
+            "src/app/(main)/library/LibraryItemsTab.tsx",
+            "src/app/(main)/library/LibraryPowersTab.tsx",
+            "src/app/(main)/library/LibraryTechniquesTab.tsx",
+            "src/app/(main)/library/components/UserLibraryEntityTabShell.tsx",
+            "src/app/globals.css",
+            "src/components/character-creator/steps/equipment-step.tsx",
+            "src/components/character-creator/steps/finalize-step.tsx",
+            "src/components/character-creator/steps/powers-step.tsx",
+            "src/components/character-sheet/add-library-item/map-selection.ts",
+            "src/components/character-sheet/library-entity-rows.tsx",
+            "src/components/guided-creator/guided-choice-image.ts",
+            "src/components/guided-creator/guided-choice-styles.ts",
+            "src/components/guided-creator/species-reveal-panel.tsx",
+            "src/components/shared/creature-stat-block.tsx",
+            "src/components/shared/entity-library-sections.tsx",
+            "src/components/shared/expandable-image.tsx",
+            "src/components/shared/filters/chip-select.tsx",
+            "src/components/shared/image-upload-modal.tsx",
+            "src/components/shared/list-row-thumbnail.tsx",
+            "src/components/shared/official-creature-list.tsx",
+            "src/components/shared/official-entity-list.tsx",
+            "src/components/shared/official-item-list.tsx",
+            "src/components/shared/official-power-list.tsx",
+            "src/components/shared/official-technique-list.tsx",
+            "src/components/shared/realms-image-picker.tsx",
+            "src/components/shared/unified-selection-modal.tsx",
+            "src/components/ui/modal.tsx",
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/DESIGN_SYSTEM.md",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/ai/guide/03-entity-card-art.md",
+            "src/hooks/add-library-item/build-empowered-selectable-item.ts",
+            "src/lib/crop-image.test.ts",
+            "src/lib/crop-image.ts",
+            "src/lib/library-selectable-builders.ts",
+            "src/lib/list-row-image.ts",
+            "src/lib/portrait.ts",
+            "src/types/character.ts",
+            "src/types/equipment.ts",
+            "src/types/library.ts"
+          ]
+        }
+      ],
+      "related_files": [
+        "sql/codex-archetypes-enrich-*-applied.sql"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-533",
+      "title": "Sitewide art-capable GLR list thumbnails",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "a605e8fa23f02f8a5fe89f3b7408268fc5b6e8a0",
+          "subject": "Update task-reconcile report matches after CI fix commit (TASK-530 TASK-531 TASK-532 TASK-533 TASK-534)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
+        {
+          "hash": "3e0f167d6505686136830cf7317a32a0f2466064",
+          "subject": "Fix master CI: restore task-reconcile evidence (TASK-530 TASK-531 TASK-532 TASK-533 TASK-534).",
+          "files": [
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/components/guided-creator/guided-choice-image.ts",
+        "src/components/shared/official-power-list.tsx",
+        "src/components/shared/official-technique-list.tsx",
+        "src/components/shared/official-creature-list.tsx",
+        "src/components/shared/official-item-list.tsx",
+        "src/components/shared/unified-selection-modal.tsx",
+        "src/components/shared/creature-stat-block.tsx",
+        "src/components/shared/entity-library-sections.tsx",
+        "src/components/character-sheet/library-entity-rows.tsx",
+        "src/components/character-sheet/add-library-item/map-selection.ts",
+        "src/lib/library-selectable-builders.ts",
+        "src/lib/list-row-image.ts",
+        "src/types/library.ts",
+        "src/types/character.ts",
+        "src/types/equipment.ts",
+        "src/app/(main)/library/LibraryPowersTab.tsx",
+        "src/app/(main)/library/LibraryTechniquesTab.tsx",
+        "src/app/(main)/library/LibraryCreaturesTab.tsx",
+        "src/app/(main)/creature-creator/page.tsx",
+        "src/app/(main)/creature-creator/transformers.ts",
+        "src/app/(main)/creature-creator/CreatureCreatorHelpers.tsx",
+        "src/components/character-creator/steps/equipment-step.tsx",
+        "src/components/character-creator/steps/powers-step.tsx",
+        "src/docs/ai/guide/03-entity-card-art.md",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-532",
+      "title": "Equipment / armament GLR list thumbnails",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "a605e8fa23f02f8a5fe89f3b7408268fc5b6e8a0",
+          "subject": "Update task-reconcile report matches after CI fix commit (TASK-530 TASK-531 TASK-532 TASK-533 TASK-534)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
+        {
+          "hash": "3e0f167d6505686136830cf7317a32a0f2466064",
+          "subject": "Fix master CI: restore task-reconcile evidence (TASK-530 TASK-531 TASK-532 TASK-533 TASK-534).",
+          "files": [
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/components/shared/official-entity-list.tsx",
+        "src/components/shared/official-item-list.tsx",
+        "src/app/(main)/codex/CodexEquipmentTab.tsx",
+        "src/app/(main)/admin/codex/AdminEquipmentTab.tsx",
+        "src/app/(main)/library/LibraryItemsTab.tsx",
+        "src/app/(main)/library/components/UserLibraryEntityTabShell.tsx",
+        "src/lib/list-row-image.ts",
+        "src/docs/ai/guide/03-entity-card-art.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-531",
+      "title": "Soft theme matte for transparent images",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "a605e8fa23f02f8a5fe89f3b7408268fc5b6e8a0",
+          "subject": "Update task-reconcile report matches after CI fix commit (TASK-530 TASK-531 TASK-532 TASK-533 TASK-534)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
+        {
+          "hash": "3e0f167d6505686136830cf7317a32a0f2466064",
+          "subject": "Fix master CI: restore task-reconcile evidence (TASK-530 TASK-531 TASK-532 TASK-533 TASK-534).",
+          "files": [
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/app/globals.css",
+        "src/lib/crop-image.ts",
+        "src/lib/crop-image.test.ts",
+        "src/lib/portrait.ts",
+        "src/components/shared/image-upload-modal.tsx",
+        "src/components/shared/expandable-image.tsx",
+        "src/components/shared/list-row-thumbnail.tsx",
+        "src/components/shared/realms-image-picker.tsx",
+        "src/components/shared/creature-stat-block.tsx",
+        "src/components/guided-creator/guided-choice-styles.ts",
+        "src/components/guided-creator/species-reveal-panel.tsx",
+        "src/components/character-creator/steps/finalize-step.tsx",
+        "src/docs/DESIGN_SYSTEM.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-529",
+      "title": "Widen high-complexity admin edit modals",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "3e0f167d6505686136830cf7317a32a0f2466064",
+          "subject": "Fix master CI: restore task-reconcile evidence (TASK-530 TASK-531 TASK-532 TASK-533 TASK-534).",
+          "files": [
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        },
+        {
+          "hash": "b196de6a98eacafe72aede664fef136617148c44",
+          "subject": "Ship image matte, GLR thumbnails, archetype enrichments, and admin polish (TASK-521, TASK-529–534).",
+          "files": [
+            "sql/README.md",
+            "sql/codex-archetypes-ability-spread-20260717.sql",
+            "sql/codex-archetypes-backup-20260717.sql",
+            "sql/codex-archetypes-emdash-scrub-20260717.sql",
+            "sql/codex-archetypes-enrich-abilities-backfill-applied.sql",
+            "sql/codex-archetypes-enrich-assassin-applied.sql",
+            "sql/codex-archetypes-enrich-beast-tamer-applied.sql",
+            "sql/codex-archetypes-enrich-berserker-applied.sql",
+            "sql/codex-archetypes-enrich-commander-applied.sql",
+            "sql/codex-archetypes-enrich-elementalist-applied.sql",
+            "sql/codex-archetypes-enrich-healer-applied.sql",
+            "sql/codex-archetypes-enrich-monk-applied.sql",
+            "sql/codex-archetypes-enrich-necromancer-applied.sql",
+            "sql/codex-archetypes-enrich-sharpshooter-applied.sql",
+            "sql/codex-archetypes-enrich-sorcerer-applied.sql",
+            "sql/codex-archetypes-enrich-wardsmith-applied.sql",
+            "sql/codex-archetypes-enrich-warrior-applied.sql",
+            "src/app/(main)/admin/codex/AdminArchetypesTab.tsx",
+            "src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx",
+            "src/app/(main)/admin/codex/AdminEquipmentTab.tsx",
+            "src/app/(main)/admin/codex/AdminFeatsTab.tsx",
+            "src/app/(main)/admin/codex/AdminPartsTab.tsx",
+            "src/app/(main)/admin/codex/AdminPropertiesTab.tsx",
+            "src/app/(main)/admin/codex/AdminSkillsTab.tsx",
+            "src/app/(main)/admin/codex/AdminSpeciesTab.tsx",
+            "src/app/(main)/admin/codex/AdminTraitsTab.tsx",
+            "src/app/(main)/admin/images/admin-image-edit-modal.tsx",
+            "src/app/(main)/admin/public-library/AdminPublicEnhancedItemsTab.tsx",
+            "src/app/(main)/codex/CodexEquipmentTab.tsx",
+            "src/app/(main)/creature-creator/CreatureCreatorHelpers.tsx",
+            "src/app/(main)/creature-creator/page.tsx",
+            "src/app/(main)/creature-creator/transformers.ts",
+            "src/app/(main)/library/LibraryCreaturesTab.tsx",
+            "src/app/(main)/library/LibraryItemsTab.tsx",
+            "src/app/(main)/library/LibraryPowersTab.tsx",
+            "src/app/(main)/library/LibraryTechniquesTab.tsx",
+            "src/app/(main)/library/components/UserLibraryEntityTabShell.tsx",
+            "src/app/globals.css",
+            "src/components/character-creator/steps/equipment-step.tsx",
+            "src/components/character-creator/steps/finalize-step.tsx",
+            "src/components/character-creator/steps/powers-step.tsx",
+            "src/components/character-sheet/add-library-item/map-selection.ts",
+            "src/components/character-sheet/library-entity-rows.tsx",
+            "src/components/guided-creator/guided-choice-image.ts",
+            "src/components/guided-creator/guided-choice-styles.ts",
+            "src/components/guided-creator/species-reveal-panel.tsx",
+            "src/components/shared/creature-stat-block.tsx",
+            "src/components/shared/entity-library-sections.tsx",
+            "src/components/shared/expandable-image.tsx",
+            "src/components/shared/filters/chip-select.tsx",
+            "src/components/shared/image-upload-modal.tsx",
+            "src/components/shared/list-row-thumbnail.tsx",
+            "src/components/shared/official-creature-list.tsx",
+            "src/components/shared/official-entity-list.tsx",
+            "src/components/shared/official-item-list.tsx",
+            "src/components/shared/official-power-list.tsx",
+            "src/components/shared/official-technique-list.tsx",
+            "src/components/shared/realms-image-picker.tsx",
+            "src/components/shared/unified-selection-modal.tsx",
+            "src/components/ui/modal.tsx",
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/DESIGN_SYSTEM.md",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/ai/guide/03-entity-card-art.md",
+            "src/hooks/add-library-item/build-empowered-selectable-item.ts",
+            "src/lib/crop-image.test.ts",
+            "src/lib/crop-image.ts",
+            "src/lib/library-selectable-builders.ts",
+            "src/lib/list-row-image.ts",
+            "src/lib/portrait.ts",
+            "src/types/character.ts",
+            "src/types/equipment.ts",
+            "src/types/library.ts"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/components/ui/modal.tsx",
+        "src/app/(main)/admin/codex/AdminArchetypesTab.tsx",
+        "src/app/(main)/admin/codex/AdminFeatsTab.tsx",
+        "src/app/(main)/admin/codex/AdminSpeciesTab.tsx",
+        "src/app/(main)/admin/codex/AdminSkillsTab.tsx",
+        "src/app/(main)/admin/codex/AdminEquipmentTab.tsx",
+        "src/app/(main)/admin/codex/AdminPropertiesTab.tsx",
+        "src/app/(main)/admin/codex/AdminPartsTab.tsx",
+        "src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx",
+        "src/app/(main)/admin/codex/AdminTraitsTab.tsx",
+        "src/app/(main)/admin/images/admin-image-edit-modal.tsx",
+        "src/app/(main)/admin/public-library/AdminPublicEnhancedItemsTab.tsx",
+        "src/docs/DESIGN_SYSTEM.md"
+      ],
+      "related_overlap": [
+        "src/components/ui/modal.tsx",
+        "src/app/(main)/admin/codex/AdminArchetypesTab.tsx",
+        "src/app/(main)/admin/codex/AdminFeatsTab.tsx",
+        "src/app/(main)/admin/codex/AdminSpeciesTab.tsx",
+        "src/app/(main)/admin/codex/AdminSkillsTab.tsx",
+        "src/app/(main)/admin/codex/AdminEquipmentTab.tsx",
+        "src/app/(main)/admin/codex/AdminPropertiesTab.tsx",
+        "src/app/(main)/admin/codex/AdminPartsTab.tsx",
+        "src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx",
+        "src/app/(main)/admin/codex/AdminTraitsTab.tsx",
+        "src/app/(main)/admin/images/admin-image-edit-modal.tsx",
+        "src/app/(main)/admin/public-library/AdminPublicEnhancedItemsTab.tsx",
+        "src/docs/DESIGN_SYSTEM.md"
+      ]
     },
     {
       "id": "TASK-528",
@@ -222,6 +631,13 @@
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "67b04d3a3149da2538c87620f6d6cd4e4c319cbd",
+          "subject": "Refresh task-reconcile report after reconcile commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
         {
           "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
           "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
@@ -268,6 +684,13 @@
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
         {
+          "hash": "67b04d3a3149da2538c87620f6d6cd4e4c319cbd",
+          "subject": "Refresh task-reconcile report after reconcile commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
+        {
           "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
           "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
           "files": [
@@ -310,6 +733,13 @@
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "67b04d3a3149da2538c87620f6d6cd4e4c319cbd",
+          "subject": "Refresh task-reconcile report after reconcile commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
         {
           "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
           "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
@@ -354,6 +784,13 @@
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "67b04d3a3149da2538c87620f6d6cd4e4c319cbd",
+          "subject": "Refresh task-reconcile report after reconcile commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
         {
           "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
           "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
@@ -404,6 +841,13 @@
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
         {
+          "hash": "67b04d3a3149da2538c87620f6d6cd4e4c319cbd",
+          "subject": "Refresh task-reconcile report after reconcile commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
+        {
           "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
           "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
           "files": [
@@ -450,6 +894,13 @@
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
         {
+          "hash": "67b04d3a3149da2538c87620f6d6cd4e4c319cbd",
+          "subject": "Refresh task-reconcile report after reconcile commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
+        {
           "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
           "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
           "files": [
@@ -490,6 +941,13 @@
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "67b04d3a3149da2538c87620f6d6cd4e4c319cbd",
+          "subject": "Refresh task-reconcile report after reconcile commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
         {
           "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
           "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
@@ -651,6 +1109,18 @@
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
         {
+          "hash": "abe1272cadac766e63f339c980f3bcee329b5967",
+          "subject": "Merge pull request #32 from MastersoftheRealm/cursor/fix-master-ci-f17d",
+          "files": []
+        },
+        {
+          "hash": "67b04d3a3149da2538c87620f6d6cd4e4c319cbd",
+          "subject": "Refresh task-reconcile report after reconcile commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
+        {
           "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
           "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
           "files": [
@@ -693,6 +1163,13 @@
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
         {
+          "hash": "67b04d3a3149da2538c87620f6d6cd4e4c319cbd",
+          "subject": "Refresh task-reconcile report after reconcile commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
+        {
           "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
           "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
           "files": [
@@ -731,6 +1208,13 @@
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "67b04d3a3149da2538c87620f6d6cd4e4c319cbd",
+          "subject": "Refresh task-reconcile report after reconcile commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
         {
           "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
           "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
@@ -779,6 +1263,13 @@
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
         {
+          "hash": "67b04d3a3149da2538c87620f6d6cd4e4c319cbd",
+          "subject": "Refresh task-reconcile report after reconcile commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
+        {
           "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
           "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
           "files": [
@@ -821,6 +1312,13 @@
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "67b04d3a3149da2538c87620f6d6cd4e4c319cbd",
+          "subject": "Refresh task-reconcile report after reconcile commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
         {
           "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
           "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
@@ -869,6 +1367,13 @@
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "67b04d3a3149da2538c87620f6d6cd4e4c319cbd",
+          "subject": "Refresh task-reconcile report after reconcile commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
         {
           "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
           "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
