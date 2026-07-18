@@ -331,8 +331,8 @@ export const GridListRow = memo(function GridListRow({
   );
 
   // When gridColumns is provided, use a CSS grid so columns align with ListHeader.
-  // Keep gridTemplateColumns in style (must match headers), but move layout concerns to classes
-  // so spacing/alignment are controlled by shared Tailwind utilities instead of inline styles.
+  // Templates are applied via --glr-desktop-grid / --glr-mobile-grid CSS variables (not inline
+  // gridTemplateColumns) so max-lg collapse can override the desktop track list.
   const useFlex = !gridColumns;
   const useThumbnailColumn = Boolean(thumbnail && gridColumns);
   const resolvedGridColumns =
@@ -434,16 +434,17 @@ export const GridListRow = memo(function GridListRow({
             compact ? 'px-3 py-1.5' : 'px-4 py-2',
             disabled && 'cursor-default',
             isRowClickable && 'cursor-pointer',
-            // max-lg: collapse empty desktop data tracks so name isn't squeezed beside X/+.
-            gridColumns && 'grid gap-2 items-center max-lg:[grid-template-columns:var(--glr-mobile-grid)]'
+            // DESIGN_INTENT: set template via CSS variables + classes, never inline
+            // `gridTemplateColumns` — inline styles beat max-lg media queries and blocked
+            // the mobile collapse (names squeezed; X landed mid-row before empty fr tracks).
+            gridColumns &&
+              'grid gap-2 items-center [grid-template-columns:var(--glr-desktop-grid)] max-lg:[grid-template-columns:var(--glr-mobile-grid)]'
           )}
           style={
             resolvedGridColumns
               ? ({
-                  gridTemplateColumns: resolvedGridColumns,
-                  ...(mobileGridColumns
-                    ? { ['--glr-mobile-grid' as string]: mobileGridColumns }
-                    : {}),
+                  ['--glr-desktop-grid' as string]: resolvedGridColumns,
+                  ['--glr-mobile-grid' as string]: mobileGridColumns ?? resolvedGridColumns,
                 } as CSSProperties)
               : undefined
           }

@@ -46,6 +46,22 @@ describe('grid-list-row-chrome mobile collapse', () => {
     ).toBe(`${GRID_LIST_ROW_THUMBNAIL_COLUMN_WIDTH} minmax(0, 1fr) 40px`);
   });
 
+  it('Library Powers: name + trailing 40px (inline X) — not mid-row empty fr', () => {
+    // POWER_GRID_COLUMNS + thumbnail; 6 data cols; 1 trailing action → inline delete
+    const desktop = gridTemplateColumnsWithThumbnail(
+      '1.5fr 0.8fr 1fr 1fr 0.8fr 1fr 1fr 40px'
+    );
+    const dataTracksUsed = 2 + 6;
+    expect(countGridTemplateTracks(desktop) - dataTracksUsed).toBe(1);
+    expect(
+      buildMobileCollapsedGridColumns({
+        resolvedGridColumns: desktop,
+        hasThumbnailColumn: true,
+        dataTracksUsed,
+      })
+    ).toBe(`${GRID_LIST_ROW_THUMBNAIL_COLUMN_WIDTH} minmax(0, 1fr) 40px`);
+  });
+
   it('reserves auto tracks for columns that stay visible on mobile', () => {
     const desktop = '1.5fr 0.8fr 0.8fr 40px';
     expect(

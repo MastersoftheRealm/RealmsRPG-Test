@@ -3065,10 +3065,10 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 |-------|-------|
 | **Suite** | DEV-V-016 |
 | **Task** | TASK-536 |
-| **Where** | `/library` → My Library → Armaments (or Codex Equipment); also an add-X modal with `+` selection |
-| **Needs** | Narrow viewport (~360px) or DevTools device mode; at least one list row with a Remove (X) or Add (+) control |
-| **Steps** | 1. Open Armaments (or Equipment) at ~360px width. 2. Confirm each row name uses most of the row width left of the X (and thumbnail if present) — not a thin left strip with large empty mid-row gap. 3. Open an add-item / selection modal with `+` toggles; confirm names similarly fill space left of `+`. 4. Spot-check a long name: wrapping is OK, but it should not look “squished” into the first desktop column track. |
-| **Expected** | Below `lg`, GridListRow collapses empty desktop data-column tracks; name gets `minmax(0, 1fr)` beside fixed action chrome. Desktop column alignment unchanged at `lg+`. |
+| **Where** | `/library` → My Library → **Powers** (primary); also Armaments / add-X modal with `+` |
+| **Needs** | Narrow viewport (~360px) or DevTools device mode; signed-in user with at least one power that has Remove (X) + Edit |
+| **Steps** | 1. Open My Library → Powers at ~360px width. 2. Confirm each power name uses most of the row width left of the X (and thumbnail if present) — not character-by-character wrap in a thin strip with a large empty gap before Edit. 3. Confirm X and Edit sit together on the right (not X mid-row with empty fr space). 4. Spot-check Armaments and an add-X modal `+` the same way. |
+| **Expected** | Below `lg`, GridListRow collapses empty desktop data-column tracks via `--glr-mobile-grid` (not overridden by inline `gridTemplateColumns`); name gets `minmax(0, 1fr)` beside action chrome. Desktop `lg+` alignment unchanged. |
 | **Report** | DEV-V-016-T012: PASS / FAIL / SKIP — |
 
 ---
