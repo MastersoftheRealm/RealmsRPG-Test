@@ -3114,6 +3114,18 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Expected** | Below `lg`, GridListRow collapses empty desktop data-column tracks via `--glr-mobile-grid` (not overridden by inline `gridTemplateColumns`); name gets `minmax(0, 1fr)` beside action chrome. Desktop `lg+` alignment unchanged. |
 | **Report** | DEV-V-016-T012: PASS / FAIL / SKIP — |
 
+#### DEV-V-016-T013 — Mobile selection modal sticky Add Selected (TASK-541)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-541 |
+| **Where** | `/characters/[id]` → Edit → Library → Add Power (or Add Feat / Add Skill); also creator Load from Library |
+| **Needs** | Narrow viewport (~360px) or DevTools device mode below 768px; enough list items that the modal content overflows |
+| **Steps** | 1. Open Add Power (or any UnifiedSelectionModal add-X) at ~360px width. 2. Confirm the modal is full-screen. 3. Scroll the item list. 4. Confirm **Cancel** and **Add Selected** (or Load) remain visible and pinned at the bottom of the screen without scrolling to reach them. 5. Select one or more rows → Add Selected still reachable and works. |
+| **Expected** | Primary actions live in Modal `footer` (not scrolled children); footer stays sticky on `fullScreenOnMobile`; list scrolls above it. |
+| **Report** | DEV-V-016-T013: PASS / FAIL / SKIP — |
+
 ---
 
 ## DEV-V-017 — Site copy modules (TASK-390)
@@ -4183,7 +4195,7 @@ Admin/creator editors, user `image_id` parity, legacy catalog migration, portrai
 | DEV-V-007 | Auth UI (Google only) | DEV-T-007 | Planned |
 | DEV-V-014 | Codex typing + roll timestamp (TASK-378) | — | Automated (`npm test`) |
 | DEV-V-015 | Library API typing (TASK-420) | — | Automated (`npm test`) + manual smoke |
-| DEV-V-016 | Library add/load selection parity (TASK-379, TASK-437, TASK-475) | — | Manual — see suite above (T001–T011) |
+| DEV-V-016 | Library add/load selection parity (TASK-379, TASK-437, TASK-475, TASK-536, TASK-541) | — | Manual — see suite above (T001–T013) |
 | DEV-V-017 | Site copy modules (TASK-390) | — | Manual — see suite above |
 | DEV-V-018 | CreatorPageShell parity (TASK-380 / TASK-431) | — | Manual — see suite above |
 | DEV-V-019 | React Compiler hook cleanup (TASK-430) | — | Manual — see suite above |

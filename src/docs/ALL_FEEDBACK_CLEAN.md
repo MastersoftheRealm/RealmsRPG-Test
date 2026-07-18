@@ -2473,6 +2473,15 @@ Notes
 - Expected: Expand/collapse from header **or** body — GridListRow mobile summary + non-interactive expanded panel; ExpandableChip expanded description; Options/buttons/chip groups keep their own handlers. GuidedChoiceCard select/"See more" grammar unchanged.
 - Disposition: Implemented as **TASK-539**. QA: DEV-V-021-T004.
 
+**Raw Feedback Log - 2026-07-18 (mobile modal sticky Add Selected)**
+- Date: 2026-07-18
+- Context: Mobile full-screen selection/add modals (UnifiedSelectionModal)
+- Priority: High
+- Feedback (verbatim):
+  in mobile a modal needs to have the add selected or whatever button sticky to the bottom of the screen so you don't have to scroll
+- Expected: On mobile full-screen modals, primary actions (Add Selected / Confirm / Load / etc.) stay pinned at the bottom without scrolling the list.
+- Disposition: Implemented as **TASK-541** (renumbered; TASK-540 taken by auth). QA: DEV-V-016-T013.
+
 **Raw Feedback Log - 2026-07-18 (valid email shown as invalid)**
 - Date: 2026-07-18
 - Context: Auth — register / forgot-password / login email errors

@@ -171,6 +171,12 @@ export function Modal({
 
   const useFullScreenMobile = fullScreenOnMobile && isMobileViewport;
 
+  // Callers may own overflow (e.g. UnifiedSelectionModal: overflow-hidden + inner list scroll).
+  // Do not also apply overflow-y-auto — twMerge keeps both and forces an !important fight.
+  const contentOwnsOverflow =
+    typeof contentClassName === 'string' &&
+    /(?:^|\s)!?overflow-/.test(contentClassName);
+
   const modalContent = (
     <div className={cn(
       'fixed inset-0 z-overlay flex',
@@ -258,16 +264,31 @@ export function Modal({
           </IconButton>
         )}
         
-        {/* Content */}
+        {/* Content — flex column under sticky header/footer. Default scrolls as a whole;
+            pass overflow-* in contentClassName for nested list scroll (see MOBILE_UX). */}
         <div className={cn(
-          (flexLayout || useFullScreenMobile) ? 'flex-1 min-h-0 overflow-y-auto scrollbar-thin' : '',
+          (flexLayout || useFullScreenMobile) && 'flex flex-col flex-1 min-h-0',
+          (flexLayout || useFullScreenMobile) &&
+            !contentOwnsOverflow &&
+            'overflow-y-auto scrollbar-thin',
           contentClassName ?? 'p-6'
         )}>
           {children}
         </div>
         
-        {/* Footer (optional slot) — shrink-0 keeps sticky when flexLayout / fullScreenOnMobile */}
-        {footer ? <div className="shrink-0">{footer}</div> : null}
+        {/* Footer (optional slot) — shrink-0 keeps sticky when flexLayout / fullScreenOnMobile.
+            Put primary actions (Add Selected, Confirm, etc.) here — not inside children —
+            so they stay pinned on mobile full-screen without scrolling. See MOBILE_UX.md. */}
+        {footer ? (
+          <div
+            className={cn(
+              'shrink-0',
+              useFullScreenMobile && 'pb-[env(safe-area-inset-bottom,0px)]'
+            )}
+          >
+            {footer}
+          </div>
+        ) : null}
       </div>
     </div>
   );
