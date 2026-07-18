@@ -27,6 +27,8 @@
       npm run build.
   notes: |
     Owner feedback 2026-07-18. Extends TASK-445 stable expand hit-target grammar.
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/39
   build_validation: |
     suite: DEV-V-021
     tests:
