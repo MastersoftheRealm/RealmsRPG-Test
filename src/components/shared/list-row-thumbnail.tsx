@@ -23,7 +23,7 @@ export function ListRowThumbnail({ src, alt, isPlaceholder = false, className }:
       isPlaceholder={isPlaceholder}
       stopPropagation
       className={cn(
-        'relative flex-shrink-0 rounded-md border border-border-light bg-surface-alt',
+        'relative flex-shrink-0 rounded-md border border-border-light bg-image-matte',
         'min-w-[44px] min-h-[44px] w-11 h-11',
         className
       )}

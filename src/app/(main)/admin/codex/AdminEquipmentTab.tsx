@@ -21,6 +21,7 @@ import { Pencil, Copy, X } from 'lucide-react';
 import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { metadataDescriptorChip } from '@/lib/chip/list-row-metadata';
 import type { ChipData } from '@/components/shared/grid-list-row';
+import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
 const COPY_NAME_SUFFIX = ' copy';
 
@@ -272,6 +273,7 @@ export function AdminEquipmentTab() {
         gridColumns={EQUIPMENT_GRID_COLUMNS}
         sortState={sortState}
         onSort={handleSort}
+        hasThumbnailColumn
       />
 
       {isLoading ? (
@@ -301,6 +303,7 @@ export function AdminEquipmentTab() {
                 id={e.id}
                 name={e.name}
                 description={e.description || ''}
+                thumbnail={resolveListRowThumbnail('equipment', e, e.name)}
                 gridColumns={EQUIPMENT_GRID_COLUMNS}
                 columns={[
                   { key: 'Category', value: formatListCellLabel(e.category || 'equipment') },
@@ -358,7 +361,7 @@ export function AdminEquipmentTab() {
         </div>
       )}
 
-      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Equipment' : 'Add Equipment'} size="lg" fullScreenOnMobile
+      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Equipment' : 'Add Equipment'} size="full" fullScreenOnMobile
         footer={
           <div className="flex justify-between">
             <div>

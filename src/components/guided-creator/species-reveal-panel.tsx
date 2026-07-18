@@ -152,7 +152,7 @@ export function SpeciesRevealPanel({
             alt={species.name}
             isPlaceholder={image.isPlaceholder}
             stopPropagation={false}
-            className="relative mx-auto h-28 w-28 shrink-0 overflow-hidden rounded-card border border-border-light bg-surface-alt shadow-sm sm:mx-0 sm:h-32 sm:w-32"
+            className="relative mx-auto h-28 w-28 shrink-0 overflow-hidden rounded-card border border-border-light bg-image-matte shadow-sm sm:mx-0 sm:h-32 sm:w-32"
           >
             <Image
               src={image.src}

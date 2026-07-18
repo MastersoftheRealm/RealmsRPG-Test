@@ -25,6 +25,7 @@ import {
 import { POWER_LIBRARY_LABELS } from './components/library-entity-tab.types';
 import { useLibraryEntitySync } from './hooks/use-library-entity-sync';
 import { useLibraryDuplicateConfirm } from './hooks/use-library-duplicate-confirm';
+import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
 const POWER_GRID_COLUMNS = '1.5fr 0.8fr 1fr 1fr 0.8fr 1fr 1fr 40px';
 const POWER_HEADER_COLUMNS = [
@@ -81,6 +82,7 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
         parts,
         hasDrift: syncResult.hasDrift,
         syncIssues: syncResult.issues,
+        raw: p,
       };
     });
   }, [powers, partsDb]);
@@ -135,6 +137,7 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
       onSort={handleSort}
       headerColumns={POWER_HEADER_COLUMNS}
       gridColumns={POWER_GRID_COLUMNS}
+      hasThumbnailColumn
       filteredCount={filteredData.length}
       driftedCount={sync.driftedCount}
       syncingAll={sync.syncingAll}
@@ -156,6 +159,7 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
           id={power.id}
           name={power.name}
           description={power.description}
+          thumbnail={resolveListRowThumbnail('power', power.raw, power.name)}
           gridColumns={POWER_GRID_COLUMNS}
           columns={[
             { key: 'Energy', value: power.energy, highlight: true },

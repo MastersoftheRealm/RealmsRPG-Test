@@ -3,6 +3,8 @@
  * Treat legacy placeholder path as "no portrait" so we never request it (avoids 404).
  */
 
+import { getImageMatteFillColor } from '@/lib/crop-image';
+
 /** Legacy path that may be stored in DB; we treat it as no portrait and use inline fallback. */
 export const PLACEHOLDER_PORTRAIT_PATH = '/images/placeholder-portrait.png';
 
@@ -63,7 +65,11 @@ export function blobToCompressedBase64(blob: Blob, maxSize = 700 * 1024): Promis
       }
       canvas.width = width;
       canvas.height = height;
-      ctx?.drawImage(img, 0, 0, width, height);
+      if (ctx) {
+        ctx.fillStyle = getImageMatteFillColor();
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+      }
       let quality = 0.7;
       const tryEncode = () => {
         const dataUrl = canvas.toDataURL('image/jpeg', quality);

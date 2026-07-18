@@ -100,6 +100,8 @@
   --color-surface-secondary: #f6f6f6;
   --color-background: #f6f6f6;
   --color-card: #ffffff;
+  /* Soft matte behind transparent art (cropper + JPEG bake + thumbs). Not pure white/black. */
+  --color-image-matte: #e8f1f8;
 
   /* ---------------------------------------------------------------------------
      STATUS COLORS (Success, Danger, Warning, Info)
@@ -393,6 +395,7 @@
     --color-surface-alt: #21262d;
     --color-surface-secondary: #0d1117;
     --color-background: #0d1117;
+    --color-image-matte: #1c2430;
     /* These @theme tokens previously had no dark value (stayed light): */
     --color-card: #161b22;
     --color-muted: #21262d;

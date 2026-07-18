@@ -32,7 +32,12 @@ interface ModalProps {
   className?: string;
   /** Content area className (use for custom padding/layout) */
   contentClassName?: string;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+  /**
+   * Desktop max-width. Prefer `sm`–`md` for confirms, `lg`–`2xl` for typical forms/lists,
+   * `3xl`/`full` for high-complexity editors (admin codex, multi-section forms).
+   * On viewports &lt; md with `fullScreenOnMobile`, size is ignored (full viewport).
+   */
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | 'full';
   showCloseButton?: boolean;
   /** Use flex layout for scrollable content with sticky header/footer */
   flexLayout?: boolean;
@@ -48,7 +53,10 @@ const sizeClasses = {
   lg: 'max-w-lg',
   xl: 'max-w-2xl',
   '2xl': 'max-w-3xl',
-  full: 'max-w-4xl',
+  /** Dense multi-field editors (~1024px) */
+  '3xl': 'max-w-5xl',
+  /** High-complexity admin / multi-section editors (~1152px; still inset via overlay padding) */
+  full: 'max-w-6xl',
 };
 
 const MOBILE_BREAKPOINT_PX = 768;

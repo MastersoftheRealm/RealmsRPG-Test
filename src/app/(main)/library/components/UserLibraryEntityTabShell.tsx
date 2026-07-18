@@ -28,6 +28,8 @@ type UserLibraryEntityTabShellBaseProps = {
   onSort: (key: string) => void;
   headerColumns: ListColumn[];
   gridColumns: string;
+  /** Pair with GridListRow `thumbnail` (species/equipment art column). */
+  hasThumbnailColumn?: boolean;
   filteredCount: number;
   children: ReactNode;
   listClassName?: string;
@@ -88,6 +90,7 @@ export function UserLibraryEntityTabShell(props: UserLibraryEntityTabShellProps)
     onSort,
     headerColumns,
     gridColumns,
+    hasThumbnailColumn = false,
     filteredCount,
     children,
     listClassName = 'flex flex-col gap-1 mt-2',
@@ -156,6 +159,7 @@ export function UserLibraryEntityTabShell(props: UserLibraryEntityTabShellProps)
         gridColumns={gridColumns}
         sortState={sortState}
         onSort={onSort}
+        hasThumbnailColumn={hasThumbnailColumn}
       />
 
       <div className={listClassName}>

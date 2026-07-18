@@ -382,7 +382,7 @@ export function AdminSkillsTab() {
         isOpen={modalOpen}
         onClose={closeModal}
         title={editing ? 'Edit Skill' : 'Add Skill'}
-        size="lg"
+        size="full"
         fullScreenOnMobile
         footer={
           <div className="flex justify-between">

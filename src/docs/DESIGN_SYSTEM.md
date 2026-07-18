@@ -73,6 +73,13 @@ Secondary blue shades for utility buttons and accents.
 | `utility-300` | #4584b6 | Utility buttons |
 | `utility-400` | #407cb6 | Hover states |
 
+### Image matte
+Soft backdrop behind transparent card/portrait art (thumbs, enlarge modal, cropper, JPEG bake). Not pure black or white.
+
+| Token | Light | Dark | Usage |
+|-------|-------|------|-------|
+| `image-matte` | #e8f1f8 | #1c2430 | `bg-image-matte`; canvas fill via `getImageMatteFillColor()` in `crop-image.ts` |
+
 ### Neutral Colors
 Grays for text, borders, and backgrounds.
 
@@ -148,6 +155,7 @@ Standard patterns for consistent UX across the app.
 - **Base component:** All modals must use `@/components/ui/modal` (Modal). Pass `isOpen`, `onClose`, and use `title`/`description` (simple) or `header`/`footer` (custom).
 - **Confirm/delete:** Use `ConfirmActionModal` or `DeleteConfirmModal` from `@/components/shared`; both compose base Modal and accept `isOpen`.
 - **Selection:** Use `UnifiedSelectionModal` for add-feat, add-power, add-technique, etc.
+- **Size guidance:** `sm`–`md` confirms; `lg`–`2xl` typical forms/lists; `3xl` (`max-w-5xl`) / `full` (`max-w-6xl`) for high-complexity multi-section editors (admin codex add/edit). Large dialogs use `fullScreenOnMobile`.
 
 ### Error display
 - **Persistent errors** (form validation, failed load, permission): Use `<Alert variant="danger">` (or `warning`/`info`). Keep in layout until user dismisses or fixes.
@@ -498,11 +506,19 @@ import { Modal } from '@/components/ui';
   onClose={() => setOpen(false)}
   title="Modal Title"
   description="Optional description"
-  size="md" // sm | md | lg | xl | 2xl | full
+  size="md" // sm | md | lg | xl | 2xl | 3xl | full
+  fullScreenOnMobile // large / complex dialogs
 >
   Modal content
 </Modal>
 ```
+
+| Size | Max width | Use for |
+|------|-----------|---------|
+| `sm` / `md` | max-w-sm / md | Confirms, short prompts |
+| `lg` / `xl` / `2xl` | max-w-lg / max-w-2xl / max-w-3xl | Typical forms, selection lists |
+| `3xl` | max-w-5xl | Dense multi-field editors |
+| `full` | max-w-6xl | High-complexity admin / multi-section editors |
 
 ---
 

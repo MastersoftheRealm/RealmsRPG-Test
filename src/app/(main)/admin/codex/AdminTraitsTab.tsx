@@ -295,7 +295,7 @@ export function AdminTraitsTab() {
         isOpen={modalOpen}
         onClose={closeModal}
         title={editing ? 'Edit Trait' : 'Add Trait'}
-        size="lg"
+        size="full"
         fullScreenOnMobile
         footer={
           <div className="flex justify-between">

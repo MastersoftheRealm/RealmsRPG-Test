@@ -21,6 +21,7 @@ import {
   SectionHeader,
 } from '@/components/shared';
 import type { ColumnValue, ChipData } from '@/components/shared/grid-list-row';
+import type { ListRowThumbnailProps } from '@/components/shared/list-row-thumbnail';
 import { IconButton } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
 
@@ -53,6 +54,11 @@ export interface OfficialEntityListProps<TRow extends OfficialEntityRow, TItem> 
   /** Optional total cost for the expanded row. */
   getTotalCost?: (row: TRow) => number | undefined;
   costLabel?: string;
+  /**
+   * Optional list-row art (species/equipment/etc.). When set, ListHeader gets
+   * `hasThumbnailColumn` and each row receives `GridListRow.thumbnail`.
+   */
+  getThumbnail?: (row: TRow) => ListRowThumbnailProps;
 
   errorMessage: string;
   sectionTitle?: string;
@@ -83,6 +89,7 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
   chipsLabel,
   getTotalCost,
   costLabel = 'Training Points',
+  getThumbnail,
   errorMessage,
   sectionTitle,
   searchPlaceholder,
@@ -126,6 +133,7 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
         gridColumns={gridColumns}
         sortState={sortState}
         onSort={handleSort}
+        hasThumbnailColumn={Boolean(getThumbnail)}
       />
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? (
@@ -142,6 +150,7 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
                 id={row.id}
                 name={row.name}
                 description={row.description}
+                thumbnail={getThumbnail?.(row)}
                 gridColumns={gridColumns}
                 columns={getColumns(row)}
                 chips={chips}

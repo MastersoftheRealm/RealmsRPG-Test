@@ -1,8 +1,9 @@
 /**
- * List-row thumbnail resolution — shared with guided choice cards (TASK-405).
- * Species-first; extend `kind` as other entity types gain art.
+ * List-row thumbnail resolution — shared with guided choice cards (TASK-405 / TASK-532 / TASK-533).
+ * Use `resolveListRowThumbnail(kind, record, name)` for species, creature, equipment, power, technique.
  *
- * **Agents:** Use with `GridListRow` `thumbnail` prop. Full guide: `AGENT_GUIDE.md` § Entity card art & list thumbnails.
+ * **Agents:** Use with `GridListRow` `thumbnail` + `ListHeader.hasThumbnailColumn`.
+ * Full guide: `guide/03-entity-card-art.md`.
  */
 
 import {

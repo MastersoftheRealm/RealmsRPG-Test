@@ -595,6 +595,8 @@ export function PowersStep() {
         name: item.name,
         description: userPower?.description,
         parts: partsWithTP,
+        image_id: userPower?.image_id ?? null,
+        image_url: userPower?.image_url ?? null,
         ...(existing?.innate ? { innate: true } : {}),
       };
     });
@@ -624,6 +626,8 @@ export function PowersStep() {
           op_3_lvl: part.op_3_lvl,
           applyDuration: part.applyDuration,
         })),
+        image_id: technique.image_id ?? null,
+        image_url: technique.image_url ?? null,
         ...(existing?.innate ? { innate: true } : {}),
       };
     });
@@ -662,6 +666,8 @@ export function PowersStep() {
         name: item.name,
         description: userTech?.description,
         parts: partsWithTP,
+        image_id: userTech?.image_id ?? null,
+        image_url: userTech?.image_url ?? null,
       };
     });
     updateDraft({ techniques: [...keptFromDraft, ...fromModal] });
@@ -852,6 +858,7 @@ export function PowersStep() {
                 columns={POWER_MODAL_COLUMNS.map(({ key, label }) => ({ key, label, width: key === 'name' ? '1.4fr' : '0.7fr', align: (key === 'name' ? 'left' : 'center') as 'left' | 'center' | 'right' }))}
                 gridColumns={POWER_GRID_COLUMNS}
                 compact
+                hasThumbnailColumn
                 rowChrome={{ leftSlot: showInnateControls }}
               />
               <div className="space-y-1">
@@ -869,6 +876,7 @@ export function PowersStep() {
                     id={power.id}
                     name={displayName}
                     description={power.description}
+                    thumbnail={power.thumbnail}
                     columns={power.columns}
                     gridColumns={POWER_GRID_COLUMNS}
                     detailSections={power.detailSections}
@@ -959,6 +967,7 @@ export function PowersStep() {
                 columns={TECHNIQUE_MODAL_COLUMNS.map(({ key, label }) => ({ key, label, width: key === 'name' ? '1.4fr' : key === 'Energy' ? '0.7fr' : key === 'Weapon' ? '1fr' : '0.8fr', align: (key === 'name' ? 'left' : 'center') as 'left' | 'center' | 'right' }))}
                 gridColumns={TECHNIQUE_GRID_COLUMNS}
                 compact
+                hasThumbnailColumn
               />
               <div className="space-y-1">
                 {selectedTechniqueItems.map(tech => {
@@ -973,6 +982,7 @@ export function PowersStep() {
                     id={tech.id}
                     name={displayName}
                     description={tech.description}
+                    thumbnail={tech.thumbnail}
                     columns={tech.columns}
                     gridColumns={TECHNIQUE_GRID_COLUMNS}
                     detailSections={tech.detailSections}

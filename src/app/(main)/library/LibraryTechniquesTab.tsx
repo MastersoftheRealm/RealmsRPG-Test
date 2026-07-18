@@ -32,6 +32,7 @@ import {
 } from './components/library-entity-tab.types';
 import { useLibraryEntitySync } from './hooks/use-library-entity-sync';
 import { useLibraryDuplicateConfirm } from './hooks/use-library-duplicate-confirm';
+import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
 const TECHNIQUE_GRID_COLUMNS = '1.5fr 0.8fr 0.8fr 1fr 1fr 1fr 40px';
 const TECHNIQUE_HEADER_COLUMNS = [
@@ -107,6 +108,7 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
         parts,
         hasDrift: syncResult.hasDrift,
         syncIssues: syncResult.issues,
+        raw: tech,
       };
     });
   }, [mode, techniques, partsDb]);
@@ -166,6 +168,7 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
       onSort={handleSort}
       headerColumns={TECHNIQUE_HEADER_COLUMNS}
       gridColumns={TECHNIQUE_GRID_COLUMNS}
+      hasThumbnailColumn
       filteredCount={filteredData.length}
       driftedCount={sync.driftedCount}
       syncingAll={sync.syncingAll}
@@ -187,6 +190,7 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
           id={tech.id}
           name={tech.name}
           description={tech.description}
+          thumbnail={resolveListRowThumbnail('technique', tech.raw, tech.name)}
           gridColumns={TECHNIQUE_GRID_COLUMNS}
           columns={[
             { key: 'Energy', value: tech.energy, highlight: true },

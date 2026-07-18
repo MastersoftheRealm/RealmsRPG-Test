@@ -1,3 +1,272 @@
+- id: TASK-534
+  title: Admin archetype edit modal — expandable feats + cleaner layout
+  created_at: 2026-07-17
+  created_by: owner
+  priority: medium
+  status: done
+  completed_at: 2026-07-17
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+  description: |
+    Clean up admin archetype path edit modal layout (avoid overlap) and let admins
+    expand selected feats to read Codex descriptions without leaving the modal.
+  acceptance_criteria:
+    - Selected Level 1 guidance-group feats (and L2+ add/remove feats) render as
+      expandable GridListRows with Codex description.
+    - Feat group header/remove and armament/equipment quantity rows do not overlap
+      or clip; full-width quantity rows; modal remains fullScreenOnMobile.
+    - BUILD_VALIDATION DEV-V-008-T021; npm run build.
+  notes: |
+    Owner feedback 2026-07-17. ChipSelect used for pick-only; selected feats listed below.
+    Cleanup: FEATURE_INDEX sync; QuantitySelector in PathQuantityRow; ChipSelect.onRemove optional;
+    dead removeFeats check in selectionFieldConfig removed.
+  evidence: |
+    npm run build green (post-cleanup).
+  build_validation: |
+    suite: DEV-V-008
+    tests:
+      - DEV-V-008-T021
+  developer_test_plan: |
+    Suite DEV-V-008 T021 — see BUILD_VALIDATION.md
+
+---
+- id: TASK-530
+  title: Codex content pass - enrich archetype paths for guided creator
+  created_at: 2026-07-17
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-17
+  implemented_by: agent
+  verification_status: pending-qa
+  parent_task: TASK-515
+  follow_up_tasks:
+    - TASK-521
+    - TASK-535
+  related_files:
+    - sql/codex-archetypes-backup-20260717.sql
+    - sql/codex-archetypes-ability-spread-20260717.sql
+    - sql/codex-archetypes-enrich-*-applied.sql
+    - src/docs/ai/ADR/0004-path-guidance-group-audience.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Enrich all published codex_archetypes Level 1 guidance for guided creator.
+  acceptance_criteria:
+    - Backup before mutate; character/archetype feat groups; recommended abilities (primary 3, secondary >=2, cost 7, spread); skills <=3; desc/notes; no new weapons/powers/techniques on paths that already had them.
+    - Innate power reclassify AC deferred to TASK-535 (energy tags unclear at apply time).
+  notes: |
+    2026-07-17: All 12 paths applied. Ability spread pass. Wardsmith power_prof_start 0->2.
+    Elementalist dropped mis-tagged Rage. Backup codex_archetypes_backup_20260717.
+    Cleanup: archive UTF-8; BV DEV-V-013-T064; SQL renamed *-applied; user-facing em dashes scrubbed.
+  evidence: |
+    Post-apply audit: 12/12 skills=3, has_abilities, char+arch guidance groups; all power paths power_prof_start=2.
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T064
+  developer_test_plan: |
+    Suite DEV-V-013 T064 - guided path content smoke (Berserker/Assassin/Sorcerer/Wardsmith).
+
+---
+
+- id: TASK-521
+  title: Codex content pass - trim archetype Level 1 skills to <=3 base
+  created_at: 2026-07-17
+  created_by: agent
+  priority: low
+  status: done
+  completed_at: 2026-07-17
+  implemented_by: agent
+  verification_status: n/a
+  parent_task: TASK-515
+  related_files:
+    - sql/codex-archetypes-enrich-*-applied.sql
+  description: |
+    Trim published path Level 1 skills to <=3 base (no sub-skills). Folded into TASK-530.
+  acceptance_criteria:
+    - All paths <=3 base skills; changelog when applied.
+  notes: |
+    Completed via TASK-530 path pass (Commander/Sharpshooter/Wardsmith/Beast Tamer trims).
+  evidence: |
+    Live audit 2026-07-17: all 12 paths skill_count=3.
+
+---
+- id: TASK-533
+  title: Sitewide art-capable GLR list thumbnails
+  created_at: 2026-07-17
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-17
+  implemented_by: agent
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-026
+    tests:
+      - DEV-V-026-T009
+  developer_test_plan: |
+    Suite DEV-V-026 T009 - see BUILD_VALIDATION.md
+  related_files:
+    - src/components/guided-creator/guided-choice-image.ts
+    - src/components/shared/official-power-list.tsx
+    - src/components/shared/official-technique-list.tsx
+    - src/components/shared/official-creature-list.tsx
+    - src/components/shared/official-item-list.tsx
+    - src/components/shared/unified-selection-modal.tsx
+    - src/components/shared/creature-stat-block.tsx
+    - src/components/shared/entity-library-sections.tsx
+    - src/components/character-sheet/library-entity-rows.tsx
+    - src/components/character-sheet/add-library-item/map-selection.ts
+    - src/lib/library-selectable-builders.ts
+    - src/lib/list-row-image.ts
+    - src/types/library.ts
+    - src/types/character.ts
+    - src/types/equipment.ts
+    - src/app/(main)/library/LibraryPowersTab.tsx
+    - src/app/(main)/library/LibraryTechniquesTab.tsx
+    - src/app/(main)/library/LibraryCreaturesTab.tsx
+    - src/app/(main)/creature-creator/page.tsx
+    - src/app/(main)/creature-creator/transformers.ts
+    - src/app/(main)/creature-creator/CreatureCreatorHelpers.tsx
+    - src/components/character-creator/steps/equipment-step.tsx
+    - src/components/character-creator/steps/powers-step.tsx
+    - src/docs/ai/guide/03-entity-card-art.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Owner: wire list thumbs for every art-capable entity across the codebase
+    using the shared species/equipment GLR image pattern.
+  acceptance_criteria:
+    - Powers, techniques, creatures, equipment/armaments show GLR thumbs in Library/Official lists.
+    - Selection modals for art-capable types show thumbs via SelectableItem.thumbnail.
+    - Character sheet library sections and creator selected lists (advanced equipment; creature creator powers/techniques/armaments) show thumbs.
+    - Non-art entities (feats, skills, archetypes, parts, properties, traits) stay without thumbs.
+    - Enhanced items remain deferred (TASK-500).
+    - npm run build.
+
+---
+
+- id: TASK-532
+  title: Equipment / armament GLR list thumbnails
+  created_at: 2026-07-17
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-17
+  implemented_by: agent
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-026
+    tests:
+      - DEV-V-026-T008
+  developer_test_plan: |
+    Suite DEV-V-026 T008 - see BUILD_VALIDATION.md
+  related_files:
+    - src/components/shared/official-entity-list.tsx
+    - src/components/shared/official-item-list.tsx
+    - src/app/(main)/codex/CodexEquipmentTab.tsx
+    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
+    - src/app/(main)/library/LibraryItemsTab.tsx
+    - src/app/(main)/library/components/UserLibraryEntityTabShell.tsx
+    - src/lib/list-row-image.ts
+    - src/docs/ai/guide/03-entity-card-art.md
+  description: |
+    Owner: small images should show in GLR for items with art, following the species
+    ListRowThumbnail / resolveListRowThumbnail pattern from product overview section 5.0.3.
+  acceptance_criteria:
+    - Codex, Admin Codex, Realms Library, and My Library armament lists show 44px thumbs.
+    - Uses shared resolveListRowThumbnail('equipment') + ListHeader.hasThumbnailColumn.
+    - ExpandableImage preview on thumb click (via ListRowThumbnail).
+    - npm run build.
+
+---
+
+- id: TASK-531
+  title: Soft theme matte for transparent images
+  created_at: 2026-07-17
+  created_by: owner
+  priority: medium
+  status: done
+  completed_at: 2026-07-17
+  implemented_by: agent
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-026
+    tests:
+      - DEV-V-026-T007
+  developer_test_plan: |
+    Suite DEV-V-026 T007 - see BUILD_VALIDATION.md
+  related_files:
+    - src/app/globals.css
+    - src/lib/crop-image.ts
+    - src/lib/crop-image.test.ts
+    - src/lib/portrait.ts
+    - src/components/shared/image-upload-modal.tsx
+    - src/components/shared/expandable-image.tsx
+    - src/components/shared/list-row-thumbnail.tsx
+    - src/components/shared/realms-image-picker.tsx
+    - src/components/shared/creature-stat-block.tsx
+    - src/components/guided-creator/guided-choice-styles.ts
+    - src/components/guided-creator/species-reveal-panel.tsx
+    - src/components/character-creator/steps/finalize-step.tsx
+    - src/docs/DESIGN_SYSTEM.md
+  description: |
+    Transparent art was compositing onto near-black (cropper bg + JPEG alpha→black).
+    Add a soft theme-aware image-matte token for display and bake fills.
+  acceptance_criteria:
+    - Transparent PNG areas use soft theme matte (not pure black/white) in cropper, thumbs, and enlarge modal.
+    - JPEG encode fills alpha with current theme --color-image-matte.
+    - Light/dark both use non-extreme soft colors matching UI.
+    - npm run build + crop-image unit test.
+
+---
+
+- id: TASK-529
+  title: Widen high-complexity admin edit modals
+  created_at: 2026-07-17
+  created_by: owner
+  priority: medium
+  status: done
+  completed_at: 2026-07-17
+  implemented_by: agent
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-008
+    tests:
+      - DEV-V-008-T020
+  developer_test_plan: |
+    Suite DEV-V-008 T020 - see BUILD_VALIDATION.md
+  related_files:
+    - src/components/ui/modal.tsx
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
+    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
+    - src/app/(main)/admin/codex/AdminPropertiesTab.tsx
+    - src/app/(main)/admin/codex/AdminPartsTab.tsx
+    - src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx
+    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
+    - src/app/(main)/admin/images/admin-image-edit-modal.tsx
+    - src/app/(main)/admin/public-library/AdminPublicEnhancedItemsTab.tsx
+    - src/docs/DESIGN_SYSTEM.md
+  description: |
+    Owner feedback: admin edit modals are high-complexity and felt too narrow. Widen
+    Modal size scale for complex editors and apply to admin add/edit dialogs.
+  acceptance_criteria:
+    - Modal supports wide sizes suitable for complex editors without breaking confirms.
+    - Admin Codex / Images / Public Library enhanced-item add-edit modals use wide desktop layout.
+    - fullScreenOnMobile retained on those dialogs.
+    - DESIGN_SYSTEM documents size guidance; BUILD_VALIDATION test added; npm run build.
+  evidence: |
+    Modal full = max-w-6xl; 3xl = max-w-5xl; admin edit modals size=full.
+  notes: |
+    Delete/confirm and species trait-picker selection modal left at smaller sizes.
+
+---
+
 # AI Task Queue - Archived (done + cancelled)
 
 Completed and cancelled tasks moved out of the active `AI_TASK_QUEUE.md` on 2026-06 to keep the

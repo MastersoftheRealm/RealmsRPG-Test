@@ -17,6 +17,7 @@ import {
   OFFICIAL_POWER_HEADER_COLUMNS,
   type OfficialPowerRow,
 } from '@/lib/library/official-power-list';
+import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
 export type { OfficialPowerRow };
 
@@ -81,6 +82,7 @@ export function OfficialPowerList({
       chipsLabel="Parts"
       getTotalCost={(p) => p.tp}
       costLabel="Training Points"
+      getThumbnail={(p) => resolveListRowThumbnail('power', p.raw, p.name)}
       errorMessage={errorMessage}
       sectionTitle={sectionTitle}
       searchPlaceholder={searchPlaceholder}

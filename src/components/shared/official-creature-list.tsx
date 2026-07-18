@@ -17,6 +17,7 @@ import {
   OFFICIAL_CREATURE_HEADER_COLUMNS,
   type OfficialCreatureRow,
 } from '@/lib/library/official-creature-list';
+import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
 export type { OfficialCreatureRow };
 
@@ -71,6 +72,7 @@ export function OfficialCreatureList({
         { key: 'Level', value: c.level, highlight: true, align: 'center' },
         { key: 'Type', value: formatOfficialCreatureType(c.type), align: 'center' },
       ]}
+      getThumbnail={(c) => resolveListRowThumbnail('creature', c.raw, c.name)}
       errorMessage={errorMessage}
       sectionTitle={sectionTitle}
       searchPlaceholder={searchPlaceholder}

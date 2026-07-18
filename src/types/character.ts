@@ -60,6 +60,9 @@ export interface CharacterPower {
   area?: string; // e.g., "Sphere 3", "Cone 5"
   duration?: string; // e.g., "Instant", "1 Minute", "Concentration"
   range?: string | number; // e.g., "30 spaces", "Melee", or numeric (spaces)
+  /** Bank art (persisted when added from library). */
+  image_id?: string | null;
+  image_url?: string | null;
   // Parts can be either just names (string[]) or full part data with TP info
   parts?: Array<string | {
     id?: string;
@@ -85,6 +88,9 @@ export interface CharacterTechnique {
   // Display fields for character sheet (like vanilla site)
   damage?: string; // e.g., "Weapon + 1d6"
   range?: string; // e.g., "Melee", "10 spaces"
+  /** Bank art (persisted when added from library). */
+  image_id?: string | null;
+  image_url?: string | null;
   // Parts can be either just names (string[]) or full part data with TP info
   parts?: Array<string | {
     id?: string;

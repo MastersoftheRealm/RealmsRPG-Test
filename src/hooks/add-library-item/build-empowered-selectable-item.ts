@@ -3,6 +3,7 @@ import type { UserTechnique } from '../use-user-library';
 import { formatPowerDamage, formatPowerRangeFromSteps } from '@/lib/calculators/power-calc';
 import { buildEntityMetadataDetailSections } from '@/lib/chip/list-row-metadata';
 import { formatDurationDisplay, formatSavedActionTypeForDisplay } from '@/lib/utils';
+import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
 export function buildEmpoweredPowerSelectableItem(item: UserTechnique): SelectableItem {
   const raw = item as unknown as Record<string, unknown>;
@@ -30,10 +31,11 @@ export function buildEmpoweredPowerSelectableItem(item: UserTechnique): Selectab
     typeof rangeSteps === 'number' && rangeSteps > 0 ? formatPowerRangeFromSteps(rangeSteps) : undefined;
   // Range omitted from columns → labeled expanded chip (TASK-437)
   const detailSections = buildEntityMetadataDetailSections({ range: rangeStr });
+  const name = String(item.name ?? '');
 
   return {
     id: String(item.id),
-    name: String(item.name ?? ''),
+    name,
     description: String(item.description ?? '') || 'No description available.',
     columns: [
       { key: 'Energy', value: energyValue, align: 'center' as const },
@@ -46,6 +48,7 @@ export function buildEmpoweredPowerSelectableItem(item: UserTechnique): Selectab
     badges: [{ label: 'Empowered', color: 'gray' as const }],
     totalCost: Number(totals.trainingPoints ?? 0) || undefined,
     costLabel: Number(totals.trainingPoints ?? 0) > 0 ? 'Training Points' : undefined,
+    thumbnail: resolveListRowThumbnail('technique', item, name),
     data: item,
   };
 }

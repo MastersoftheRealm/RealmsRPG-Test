@@ -298,7 +298,7 @@ export function ImageUploadModal({
           </>
         ) : (
           <>
-            <div className="relative w-full h-[400px] bg-text-primary/90 rounded-xl overflow-hidden">
+            <div className="relative w-full h-[400px] bg-image-matte rounded-xl overflow-hidden">
               <Suspense fallback={<div className="flex items-center justify-center h-full text-text-muted">Loading editor...</div>}>
                 <Cropper
                   image={imageSrc}
@@ -326,7 +326,7 @@ export function ImageUploadModal({
                 <div className="flex items-center gap-4">
                   <div
                     className={cn(
-                      'relative shrink-0 overflow-hidden border border-border-light bg-surface shadow-sm',
+                      'relative shrink-0 overflow-hidden border border-border-light bg-image-matte shadow-sm',
                       cropShape === 'round' ? 'h-20 w-20 rounded-full' : 'h-20 w-20 rounded-card'
                     )}
                   >

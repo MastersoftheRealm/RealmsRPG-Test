@@ -852,6 +852,52 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
+#### DEV-V-008-T020 — Admin edit modals use wide layout (TASK-529)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Admin codex / admin editors |
+| **Related task** | TASK-529 |
+| **Where** | `/admin/codex` (Archetypes + at least one other tab); optional `/admin/images` |
+| **Needs** | Admin account; desktop viewport ≥1280px |
+
+**Steps**
+1. Open **Add** or **Edit** on Archetypes. Confirm the dialog is clearly wider than a normal form modal (roughly content-page width, not a narrow card) and still has visible side margins/backdrop.
+2. Spot-check Feats, Species, or Parts edit modal — same wide treatment; header/footer usable; content scrolls inside the modal if tall.
+3. Resize below 768px (or device mode): modal goes full-screen (`fullScreenOnMobile`); no clipped controls.
+4. Optional: Image Library edit modal and Public Library enhanced-item edit — same wide desktop size.
+
+**Expected**
+- Complex admin add/edit modals use Modal `size="full"` (`max-w-6xl`); confirms/delete stay small; mobile full-screen preserved.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-008-T021 — Admin archetype modal: expandable selected feats + clean layout (TASK-534)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Admin codex |
+| **Related task** | TASK-534 |
+| **Where** | `/admin/codex` → Archetypes |
+| **Needs** | Admin account; Codex feats with descriptions |
+
+**Steps**
+1. Edit an archetype path. In a Character or Archetype feat guidance group, add 2+ feats via **Add feats**.
+2. Confirm selected feats appear as compact expandable rows (not pill chips only). Expand one — Codex description is readable; collapse and remove via row delete still work.
+3. Confirm group name + remove control align without overlapping; armament/equipment quantity rows are full-width (label + qty + remove do not clip each other).
+4. Optional: Level Progression (2+) **Add Feats** / **Remove Feats** — same expandable selected-feat rows.
+
+**Expected**
+- Admins can read feat text after picking without leaving the modal; dense controls do not overlap at desktop or ~360px width.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats.
@@ -2754,6 +2800,29 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-013-T064 — Path content smoke after archetype enrichment (TASK-530)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-530 |
+| **Where** | Guided creator → Path → Feats / Abilities / Skills (`/characters/new/guided`) |
+| **Needs** | Live codex paths enriched (RealmsRPG-Test) |
+
+**Steps**
+1. Open guided Path; open **More details** on **Berserker**, **Assassin**, **Sorcerer**, and **Wardsmith** in turn. Confirm each has a readable description (no placeholder / empty) and notes when present.
+2. Select **Berserker** → continue to Feats. Confirm guidance groups distinguish **character** vs **archetype** audiences (labels / sections match path authoring — e.g. Rage / Stay in the fight style groups for Berserker).
+3. On Abilities: confirm soft-defaults show primary **3**, secondary at least **2**, and Ability Point cost sum **7** (spread, not a flat dump of unused scores when the path recommends spread).
+4. On Skills: confirm the path recommends **at most 3** base skills (no sub-skills in the L1 list).
+5. Select **Wardsmith** and reach powers / proficiency: confirm Power Proficiency starts at **2** (not 0).
+6. Spot-check one other martial (**Warrior** or **Monk**) and one other power path (**Healer** or **Necromancer**) for the same shape: character + archetype feat groups, abilities sum 7, skills ≤3.
+
+**Expected**
+- Content matches the TASK-530 enrichment (not the older flat L1 feat lists).
+- Choice-card deep-dive chrome itself is covered by **T016**; this test is path **content**, not disclosure UX.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 #### DEV-V-013-T048 — Sitewide compact facts + Training Points chip labels (TASK-461)
 
 | Field | Value |
@@ -3840,9 +3909,9 @@ Meaningful inline art uses shared click-to-enlarge; justified exceptions stay do
 
 ---
 
-## DEV-V-026 — Realms Image Library wiring (TASK-496–499)
+## DEV-V-026 — Realms Image Library wiring (TASK-496–499, TASK-531–533)
 
-Admin/creator editors, user `image_id` parity, legacy catalog migration, and portrait/profile bank pick.
+Admin/creator editors, user `image_id` parity, legacy catalog migration, portrait/profile bank pick, soft theme matte for transparent art, and sitewide art-capable GLR list thumbs.
 
 #### DEV-V-026-T001 — Admin species/equipment use RealmsImageField
 
@@ -3956,6 +4025,73 @@ Admin/creator editors, user `image_id` parity, legacy catalog migration, and por
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-026-T007 — Soft theme matte behind transparent art
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-026 |
+| **Related task** | TASK-531 |
+| **Where** | Image upload/crop modal; Realms Image Library picker; guided choice card / list thumb; ExpandableImage enlarge |
+| **Needs** | PNG (or WebP) with transparent background; light and dark theme |
+
+**Steps**
+1. Open Upload & crop (admin images or picker) with a transparent PNG.
+2. Confirm cropper stage and output preview use a soft tinted matte — not pure black or white.
+3. Confirm & save; open the asset in the picker grid and ExpandableImage enlarge — matte matches theme.
+4. Toggle light ↔ dark; matte should stay soft and on-theme in both.
+
+**Expected**
+- Transparent areas use `bg-image-matte` / baked `--color-image-matte` (light soft primary tint; dark soft blue-gray).
+- New uploads no longer bake pure black into JPEG alpha holes.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-026-T008 — Equipment / armament GLR list thumbnails
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-026 |
+| **Related task** | TASK-532 |
+| **Where** | `/codex` Equipment; `/library` Realms + My Library armaments; `/admin/codex` Equipment |
+| **Needs** | At least one equipment/item with `image_id` / `image_url` set |
+
+**Steps**
+1. Open Codex Equipment — rows with art show a 44px thumb left of the name (placeholder when none).
+2. Open Library → Realms Library → Armaments — same thumb column; click thumb opens ExpandableImage preview.
+3. Open My Library → Armaments for an item that has bank art — thumb visible.
+4. Admin Codex Equipment — thumb + header alignment with name column.
+
+**Expected**
+- Same pattern as species: `ListHeader.hasThumbnailColumn` + `GridListRow.thumbnail` via `resolveListRowThumbnail('equipment', …)`.
+- No parallel lightbox / custom thumb component.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-026-T009 — All art-capable entity GLR thumbnails
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-026 |
+| **Related task** | TASK-533 |
+| **Where** | Library Realms + My (powers, techniques, empowered, creatures, armaments); Codex species/equipment; add-power/technique/equipment selection modals; character sheet Library tab; advanced creator Selected Equipment; creature creator selected powers/techniques/inventory |
+| **Needs** | At least one bank-imaged power, technique, creature, and armament |
+
+**Steps**
+1. Realms Library: Powers / Techniques / Creatures / Armaments — each shows 44px thumbs (placeholder when no art).
+2. My Library: same tabs — thumbs present; creature collapsed row shows thumb.
+3. Add Power / Add Technique / guided L2 equipment modal — thumbs appear on art-capable rows; feats/skills modals stay thumb-less.
+4. Character sheet Library — powers / techniques / weapons / armor / shields / equipment show thumbs (placeholder OK for older saves without `image_url`).
+5. Advanced creator Selected Equipment + Powers/Techniques selected lists — thumbs present.
+6. Creature creator — add-power/technique/armament modals and selected lists show thumbs.
+7. Click a thumb — ExpandableImage enlarge works; header columns stay aligned.
+
+**Expected**
+- One pattern: `resolveListRowThumbnail` + `ListHeader.hasThumbnailColumn` / `SelectableItem.thumbnail`.
+- No thumbs on non-art entities (feats, skills, archetypes, parts, properties, traits).
+- Enhanced items remain deferred (TASK-500).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## Planned suites (split from legacy DEV-T)
@@ -3979,6 +4115,6 @@ Admin/creator editors, user `image_id` parity, legacy catalog migration, and por
 | DEV-V-023 | Admin Realms Image Library (TASK-493) | — | Manual — see suite above |
 | DEV-V-024 | Client error handling (TASK-479) | — | Automated (`npm test`) + manual smoke |
 | DEV-V-025 | ExpandableImage adoption (TASK-478) | — | Manual — see suite above |
-| DEV-V-026 | Realms Image Library wiring (TASK-496–499) | — | Manual — see suite above |
+| DEV-V-026 | Realms Image Library wiring (TASK-496–499, TASK-531–533) | — | Manual — see suite above |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

@@ -17,6 +17,7 @@ import {
   OFFICIAL_TECHNIQUE_HEADER_COLUMNS,
   type OfficialTechniqueRow,
 } from '@/lib/library/official-technique-list';
+import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
 export type { OfficialTechniqueRow };
 
@@ -83,6 +84,7 @@ export function OfficialTechniqueList({
       chipsLabel="Parts"
       getTotalCost={(t) => t.tp}
       costLabel="Training Points"
+      getThumbnail={(t) => resolveListRowThumbnail('technique', t.raw, t.name)}
       errorMessage={
         errorMessage ?? `Failed to load ${empowered ? 'empowered techniques' : 'techniques'}`
       }

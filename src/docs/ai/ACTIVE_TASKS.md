@@ -4,22 +4,49 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-529
+**Next task ID:** TASK-536
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`.
 
-**Counts:** 10 agent-eligible (TASK-391 superseded/skip; TASK-514–518/515/516/520/522/523/524/525/526/527/528 archived) · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 10 agent-eligible (TASK-391 superseded/skip; TASK-514–518/520/521/522/523/524/525/526/527/528/529/530 archived) · waiting/blocked in WAITING_TASKS · done in archive.
+
+**Archetype path enrichment (2026-07-17):** **TASK-530 + TASK-521 done** — all 12 paths enriched (backup `codex_archetypes_backup_20260717`); pending-qa **DEV-V-013-T064**. Residual innate reclassify → **TASK-535**.
 
 **Realms Image Library epic (2026-07-16):** **TASK-491–499 done**. TASK-500 deferred.
 
 **Character sheet feedback (2026-07-17):** **TASK-508–513 / TASK-522 / TASK-523 / TASK-525 / TASK-526 / TASK-527 done** (archived; owner QA in DEVELOPER_TASK_QUEUE). TASK-504 remains expandable chips (not toast).
 
-**Admin archetype path parity (2026-07-17):** **TASK-514–518 done** (feat audience, skills, armaments UI, drop recommended species, post-audit; pending-qa). Follow-up **TASK-521** (content pass: trim L1 skills to ≤3). **Skip TASK-391** (superseded). Guided creator is SoT. Owner decisions locked 2026-07-17 (see epic header below).
+**Admin archetype path parity (2026-07-17):** **TASK-514–518 done** (pending-qa). Content pass **TASK-521/530 done**. **Skip TASK-391** (superseded). Guided creator is SoT.
 
 **Debt from AI workflow audit (2026-07-15):** TASK-480 — address alongside product work; repo-wide cadence → `/debt`. TASK-476/477/478/482/484/486/487/488/489/490 done; TASK-481 superseded by `/debt`. TASK-475 done (Enhanced shell basic mode). TASK-479 done (client error handling).
+
+---
+
+- id: TASK-535
+  title: Codex content pass - reclassify clear innate powers on archetype paths
+  created_at: 2026-07-17
+  created_by: agent
+  priority: low
+  status: not-started
+  parent_task: TASK-530
+  related_files:
+    - sql/codex-archetypes-enrich-*-applied.sql
+    - src/docs/GAME_RULES.md
+  description: |
+    TASK-530 left innate-power reclassify empty when energy tags were unclear. Audit each
+    path's Level 1 powers/techniques and move only clearly innate entries into the innate
+    slot / guidance when GAME_RULES energy taxonomy supports it. No new kit items unless
+    owner approves.
+  acceptance_criteria:
+    - Audit all 12 paths for powers that are unambiguously innate per GAME_RULES.
+    - Propose mapping (path, power id, reason) before live UPDATE; owner approve then apply.
+    - Paths with ambiguous energy stay unchanged; document skips in notes.
+    - Changelog + sql/ when applied.
+  notes: |
+    Deferred from TASK-530 cleanup. Do not bulk-mutate without owner ack (codex data rule).
 
 ---
 
@@ -435,31 +462,7 @@ Do **not** read the done archive at session start.
 
 # Admin archetype path ↔ guided creator parity (TASK-514–518) — DONE 2026-07-17
 # Owner decisions locked (do not re-ask): feat audience field; armaments UI-only split; DROP
-# recommended species; skills max 3 warn-not-block. Follow-up content pass = TASK-521.
+# recommended species; skills max 3 warn-not-block. Content pass TASK-521/530 done.
 # Cross-ref: TASK-391 superseded; DEV-V-008 / DEV-V-013 pending-qa.
-
----
-
-- id: TASK-521
-  title: Codex content pass — trim archetype Level 1 skills to ≤3 base
-  created_at: 2026-07-17
-  created_by: agent
-  priority: low
-  status: not-started
-  parent_task: TASK-515
-  related_files:
-    - src/lib/constants/creator-layer-governance.ts
-    - src/lib/game/path-validation.ts
-    - sql/
-  description: |
-    After TASK-515 admin picker caps new picks at 3 base skills (warn-only for legacy), run a
-    content pass so published paths recommend at most 3 base skills and no sub-skills. Audit →
-    propose SQL/mappings → owner approve → apply (codex data rules).
-  acceptance_criteria:
-    - Audit all `codex_archetypes` Level 1 skill lists; list rows with >3 skills or sub-skills.
-    - Propose trim mapping; apply after owner approval; post-counts show ≤3 base skills per path.
-    - Changelog note when applied.
-  notes: |
-    Filed from TASK-518 audit. Do not block admin saves on legacy excess (warn remains).
 
 ---

@@ -13,7 +13,7 @@ import { createCharacter, saveCharacter } from '@/services/character-service';
 import { useAuth, useCodexSkills, useMergedSpecies, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useGameRules } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { cleanForSave } from '@/lib/data-enrichment';
-import { dataUrlToBlob } from '@/lib/portrait';
+import { blobToCompressedBase64, dataUrlToBlob } from '@/lib/portrait';
 import { apiUpload } from '@/lib/api-client';
 import type { Character, CharacterPower, CharacterTechnique, Item } from '@/types';
 import { Spinner, Button, Alert, Modal, Textarea, useToast } from '@/components/ui';
@@ -266,46 +266,6 @@ function HealthEnergyAllocationSection() {
 // =============================================================================
 // Portrait Upload Component - uses ImageUploadModal for cropping
 // =============================================================================
-
-async function blobToCompressedBase64(blob: Blob, maxSize = 700 * 1024): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(blob);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      let { width, height } = img;
-      const maxDim = 400;
-      if (width > height && width > maxDim) {
-        height = Math.round((height * maxDim) / width);
-        width = maxDim;
-      } else if (height > maxDim) {
-        width = Math.round((width * maxDim) / height);
-        height = maxDim;
-      }
-      canvas.width = width;
-      canvas.height = height;
-      ctx?.drawImage(img, 0, 0, width, height);
-      let quality = 0.7;
-      const tryEncode = () => {
-        const dataUrl = canvas.toDataURL('image/jpeg', quality);
-        if (dataUrl.length > maxSize && quality > 0.3) {
-          quality -= 0.1;
-          tryEncode();
-        } else {
-          resolve(dataUrl);
-        }
-      };
-      tryEncode();
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error('Failed to load image'));
-    };
-    img.src = url;
-  });
-}
 
 function PortraitUpload() {
   const { draft, updateDraft } = useCharacterCreatorStore();

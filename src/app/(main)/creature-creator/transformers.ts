@@ -33,6 +33,8 @@ export interface CreaturePower {
   area: string;
   damage: string;
   innate?: boolean;
+  image_id?: string | null;
+  image_url?: string | null;
 }
 
 export interface CreatureTechnique {
@@ -43,6 +45,8 @@ export interface CreatureTechnique {
   action: string;
   weapon: string;
   damage: string;
+  image_id?: string | null;
+  image_url?: string | null;
 }
 
 /** Where a creature builder feat was chosen from (shown in feat list and persisted on save). */
@@ -119,6 +123,8 @@ export interface CreatureArmament {
   armorValue?: number;
   shieldDamage?: { amount: number; size: number } | null;
   shieldDR?: { amount: number; size: number } | null;
+  image_id?: string | null;
+  image_url?: string | null;
 }
 
 // =============================================================================
@@ -169,6 +175,8 @@ export function transformUserPowerToDisplayItem(
       area: display.area,
       damage: damageStr,
       innate: false,
+      image_id: power.image_id ?? null,
+      image_url: power.image_url ?? null,
     } as unknown as Record<string, unknown>,
   };
 }
@@ -221,6 +229,8 @@ export function transformUserTechniqueToDisplayItem(
       action: display.actionType,
       weapon: display.weaponName,
       damage: display.damageStr,
+      image_id: technique.image_id ?? null,
+      image_url: technique.image_url ?? null,
     } as unknown as Record<string, unknown>,
   };
 }
@@ -349,6 +359,8 @@ export function transformUserItemToDisplayItem(
       armorValue: item.armorValue,
       shieldDamage: item.shieldDamage ?? null,
       shieldDR: item.shieldDR ?? null,
+      image_id: item.image_id ?? null,
+      image_url: item.image_url ?? null,
     } as unknown as Record<string, unknown>,
   };
 }

@@ -11,6 +11,7 @@ import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { UnifiedSelectionModal, GridListRow, ListHeader, SourceFilter, InnateToggle, SegmentedControl, SkillsAllocationPage, ValueStepper, InfoTippy, RealmsImageField } from '@/components/shared';
+import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import { getSkillPointsHelp, subSkillsHelp } from '../../../../public/tooltip-text';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { useAuthStore } from '@/stores/auth-store';
@@ -338,6 +339,8 @@ function CreatureCreatorContent() {
             area: areaCol?.value ?? '-',
             damage: damageCol?.value ?? '-',
             innate: false,
+            image_id: technique.image_id ?? null,
+            image_url: technique.image_url ?? null,
           } as unknown as Record<string, unknown>,
         },
       };
@@ -1632,13 +1635,15 @@ function CreatureCreatorContent() {
                     { key: 'Duration', label: 'DURATION', width: '0.8fr', align: 'center' },
                   ]}
                   gridColumns="2rem 1.4fr 0.6fr 0.8fr 0.8fr 0.7fr 0.8fr"
+                  hasThumbnailColumn
                 />
                 <div className="space-y-1">
-                  {creature.powers.map((power: { id: string; name: string; energy?: number; action?: string; damage?: string; area?: string; duration?: string; innate?: boolean }) => (
+                  {creature.powers.map((power: { id: string; name: string; energy?: number; action?: string; damage?: string; area?: string; duration?: string; innate?: boolean; image_id?: string | null; image_url?: string | null }) => (
                     <GridListRow
                       key={power.id}
                       id={power.id}
                       name={power.name}
+                      thumbnail={resolveListRowThumbnail('power', power, power.name)}
                       columns={[
                         { key: 'Energy', value: power.energy ?? '-', align: 'center' as const },
                         { key: 'Action', value: power.action ?? '-', align: 'center' as const },
@@ -1710,13 +1715,15 @@ function CreatureCreatorContent() {
                     { key: 'Training Pts', label: 'Training Pts', width: '0.8fr', align: 'center' },
                   ]}
                   gridColumns="1.4fr 0.7fr 1fr 0.8fr"
+                  hasThumbnailColumn
                 />
                 <div className="space-y-1">
-                  {creature.techniques.map((tech: { id: string; name: string; energy?: number; weapon?: string; tp?: number }) => (
+                  {creature.techniques.map((tech: { id: string; name: string; energy?: number; weapon?: string; tp?: number; image_id?: string | null; image_url?: string | null }) => (
                     <GridListRow
                       key={tech.id}
                       id={tech.id}
                       name={tech.name}
+                      thumbnail={resolveListRowThumbnail('technique', tech, tech.name)}
                       columns={[
                         { key: 'Energy', value: tech.energy ?? '-', align: 'center' as const },
                         { key: 'Weapon', value: tech.weapon ?? '-', align: 'center' as const },
@@ -1796,6 +1803,7 @@ function CreatureCreatorContent() {
                   gridColumns="minmax(180px, 0.9fr) minmax(72px, 0.55fr) minmax(88px, 7rem) minmax(60px, 4rem) minmax(110px, 8rem) minmax(56px, 0.45fr) minmax(64px, 0.55fr) 40px"
                   sortState={armamentSort}
                   onSort={handleArmamentSort}
+                  hasThumbnailColumn
                 />
                 <div className="space-y-1">
                   {sortedArmaments.map((armament) => {
@@ -1804,6 +1812,7 @@ function CreatureCreatorContent() {
                       key={armament.id}
                       id={armament.id}
                       name={armament.name}
+                      thumbnail={resolveListRowThumbnail('equipment', armament, armament.name)}
                       gridColumns="minmax(180px, 0.9fr) minmax(72px, 0.55fr) minmax(88px, 7rem) minmax(60px, 4rem) minmax(110px, 8rem) minmax(56px, 0.45fr) minmax(64px, 0.55fr) 40px"
                       columns={[
                         {

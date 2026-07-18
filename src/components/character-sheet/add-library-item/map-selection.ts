@@ -80,6 +80,8 @@ export function mapSelectedToCharacterItems(
           cost: 0,
           level: 1,
           damage: powerData.damage as CharacterPower['damage'],
+          image_id: (entry as UserTechnique).image_id ?? null,
+          image_url: (entry as UserTechnique).image_url ?? null,
         };
       }
       const power = entry as UserPower;
@@ -91,6 +93,8 @@ export function mapSelectedToCharacterItems(
         cost: 0,
         level: 1,
         damage: power.damage as CharacterPower['damage'],
+        image_id: power.image_id ?? null,
+        image_url: power.image_url ?? null,
       };
     });
   }
@@ -105,6 +109,8 @@ export function mapSelectedToCharacterItems(
       actionType: t.actionType,
       isReaction: t.isReaction,
       damage: (t as { damage?: unknown }).damage as CharacterTechnique['damage'],
+      image_id: t.image_id ?? null,
+      image_url: t.image_url ?? null,
     }));
   }
 
@@ -120,6 +126,8 @@ export function mapSelectedToCharacterItems(
       equipped: false,
       quantity: itemType === 'equipment' ? (quantities[i.id] ?? 1) : 1,
       cost: 0,
+      image_id: i.image_id ?? null,
+      image_url: i.image_url ?? null,
     };
   });
 }

@@ -15,6 +15,7 @@ import {
 } from '@/components/shared';
 import { Button, DescriptorChip } from '@/components/ui';
 import type { DisplayItem } from '@/types/items';
+import { resolveListRowThumbnail, type ListRowImageKind } from '@/lib/list-row-image';
 
 // =============================================================================
 // ChipList
@@ -222,6 +223,13 @@ export function DefenseBlock({
 // displayItemToSelectableItem
 // =============================================================================
 
+function selectableImageKind(category: DisplayItem['category']): ListRowImageKind | null {
+  if (category === 'power') return 'power';
+  if (category === 'technique') return 'technique';
+  if (category === 'item') return 'equipment';
+  return null;
+}
+
 /** Convert DisplayItem to SelectableItem for UnifiedSelectionModal; stores DisplayItem in data for conversion back */
 export function displayItemToSelectableItem(item: DisplayItem, columns?: string[]): SelectableItem {
   const cols: ColumnValue[] = [];
@@ -239,12 +247,16 @@ export function displayItemToSelectableItem(item: DisplayItem, columns?: string[
     cols.push({ key: 'Points', value: String(item.cost) });
   }
   const badges = item.badges?.map(b => ({ label: b.label, color: 'gray' as const })) ?? [];
+  const imageKind = selectableImageKind(item.category);
   const base: SelectableItem = {
     id: item.id,
     name: item.name,
     description: item.description,
     columns: cols.length > 0 ? cols : undefined,
     badges: badges.length > 0 ? badges : undefined,
+    thumbnail: imageKind
+      ? resolveListRowThumbnail(imageKind, item.sourceData ?? item, item.name)
+      : undefined,
     data: item,
   };
   if (item.cost != null && (columns == null || columns.length === 0)) {

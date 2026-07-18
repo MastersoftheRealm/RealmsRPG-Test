@@ -59,11 +59,11 @@ export const GUIDED_CHOICE_STYLES = {
   detailsLink:
     'flex w-fit items-center font-nunito text-sm font-semibold text-primary-link-fg hover:text-primary-fg-hover hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm min-h-11 min-w-[44px] px-2 py-0.5',
   tagsRow: 'flex min-h-[1.625rem] flex-wrap gap-1.5',
-  /** Default inline art (paths, feats). */
-  media: 'relative h-12 w-12 shrink-0 overflow-hidden rounded-card bg-surface-alt',
+  /** Default inline art (paths, feats). Soft matte shows through transparent PNG areas. */
+  media: 'relative h-12 w-12 shrink-0 overflow-hidden rounded-card bg-image-matte',
   /** Larger selling-point art inline with title (species, equipment, powers). */
   mediaFeatured:
-    'relative h-[4.75rem] w-[4.75rem] sm:h-20 sm:w-20 shrink-0 overflow-hidden rounded-card border border-border-light bg-surface-alt dark:border-border',
+    'relative h-[4.75rem] w-[4.75rem] sm:h-20 sm:w-20 shrink-0 overflow-hidden rounded-card border border-border-light bg-image-matte dark:border-border',
   iconWrap:
     'flex h-12 w-12 shrink-0 items-center justify-center rounded-card bg-primary-subtle-bg text-primary-fg',
   selectedCheck:

@@ -49,6 +49,7 @@ These are recorded in `supabase_migrations.schema_migrations` on RealmsRPG-Test.
 | Leveled feats (`base_feat_id` column + backfill) | [leveled-feats-add-base-feat-id.sql](leveled-feats-add-base-feat-id.sql), [leveled-feats-migrate-roman-to-base-id.sql](leveled-feats-migrate-roman-to-base-id.sql) | 202/203 `feat_lvl >= 2` rows have `base_feat_id` on Test. |
 | Archetype path columnar fields | [codex-archetypes-path-columns.sql](codex-archetypes-path-columns.sql) | `level1_*` columns + `codex_archetype_levels` present on Test. |
 | Unarmed prowess recommendation flag | [codex-archetypes-recommend-unarmed-prowess.sql](codex-archetypes-recommend-unarmed-prowess.sql) | `level1_recommend_unarmed_prowess` column present. |
+| TASK-530 path enrichment (all 12 + ability + backup) | [codex-archetypes-backup-20260717.sql](codex-archetypes-backup-20260717.sql), [codex-archetypes-ability-spread-20260717.sql](codex-archetypes-ability-spread-20260717.sql), [codex-archetypes-enrich-*-applied.sql](codex-archetypes-enrich-berserker-applied.sql), [codex-archetypes-emdash-scrub-20260717.sql](codex-archetypes-emdash-scrub-20260717.sql) | Applied RealmsRPG-Test 2026-07-17. Per-path `*-applied.sql` is the replay source; em-dash scrub is idempotent. |
 | Empowered technique tables | [empowered-techniques-separate-tables.sql](empowered-techniques-separate-tables.sql) | `user_empowered_techniques`, `official_empowered_techniques` exist. |
 
 ---
@@ -81,6 +82,10 @@ These are recorded in `supabase_migrations.schema_migrations` on RealmsRPG-Test.
 | realms-image-library.sql | Applied — migration `realms_image_library` (TASK-492) |
 | codex-archetypes-path-columns.sql | Applied ad-hoc |
 | codex-archetypes-recommend-unarmed-prowess.sql | Applied ad-hoc |
+| codex-archetypes-enrich-*-applied.sql | Applied ad-hoc (TASK-530) — 12 paths + abilities backfill |
+| codex-archetypes-backup-20260717.sql | Applied ad-hoc — backup tables before TASK-530 |
+| codex-archetypes-ability-spread-20260717.sql | Applied ad-hoc — ability point spread pass |
+| codex-archetypes-emdash-scrub-20260717.sql | Applied ad-hoc — user-facing em/en dash scrub |
 | codex-archetypes-creator-layer1-extensions.sql | Migration `codex_archetypes_creator_layer1_extensions` |
 | guided-creator-schema-seed.sql | Migration `guided_creator_schema_seed` |
 | codex-art-species-image-url.sql | Migration `codex_art_species_image_url` |

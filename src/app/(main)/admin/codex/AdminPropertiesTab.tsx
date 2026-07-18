@@ -484,7 +484,7 @@ export function AdminPropertiesTab() {
         </div>
       )}
 
-      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Property' : 'Add Property'} size="lg" fullScreenOnMobile
+      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Property' : 'Add Property'} size="full" fullScreenOnMobile
         footer={
           <div className="flex justify-between">
             <div>

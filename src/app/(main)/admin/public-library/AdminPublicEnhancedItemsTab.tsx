@@ -238,7 +238,7 @@ function EnhancedItemEditModal({
       isOpen={isOpen}
       onClose={onClose}
       title={initial ? 'Edit Enhanced Item' : 'New Enhanced Item'}
-      size="lg"
+      size="full"
       fullScreenOnMobile
     >
       <div className="space-y-4">

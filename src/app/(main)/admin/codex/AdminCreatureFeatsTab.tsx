@@ -243,7 +243,7 @@ export function AdminCreatureFeatsTab() {
         </div>
       )}
 
-      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Creature Feat' : 'Add Creature Feat'} size="lg" fullScreenOnMobile
+      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Creature Feat' : 'Add Creature Feat'} size="full" fullScreenOnMobile
         footer={
           <div className="flex justify-between">
             <div>

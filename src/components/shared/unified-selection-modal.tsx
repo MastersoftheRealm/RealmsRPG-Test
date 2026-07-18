@@ -30,6 +30,7 @@ import {
   LoadingState,
   type ColumnValue,
   type ChipData,
+  type ListRowThumbnailProps,
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 
@@ -58,6 +59,8 @@ export interface SelectableItem {
   disabled?: boolean;
   /** Warning message if disabled or has requirements */
   warningMessage?: string;
+  /** List-row art for art-capable entities (powers, techniques, equipment, etc.). */
+  thumbnail?: ListRowThumbnailProps;
   /** Any extra data attached to the item (e.g. raw Feat, Skill for onConfirm) */
   data?: unknown;
 }
@@ -207,6 +210,10 @@ export function UnifiedSelectionModal({
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const { sortState, handleSort, sortItems } = useSort('name');
   const prevOpenRef = useRef(false);
+  const hasThumbnailColumn = useMemo(
+    () => items.some((item) => Boolean(item.thumbnail)),
+    [items]
+  );
 
   // Reset only when modal first opens (not on every render). When callers omit initialSelectedIds
   // they get default initialSelectedIds = new Set() which is a new reference each render — that
@@ -387,6 +394,7 @@ export function UnifiedSelectionModal({
             sortState={sortState}
             onSort={handleSort}
             hasSelectionColumn
+            hasThumbnailColumn={hasThumbnailColumn}
             compact
           />
         )}
@@ -425,6 +433,7 @@ export function UnifiedSelectionModal({
                           id={itemIdStr}
                           name={item.name}
                           description={item.description}
+                          thumbnail={item.thumbnail}
                           columns={item.columns}
                           chips={item.chips}
                           detailSections={item.detailSections}

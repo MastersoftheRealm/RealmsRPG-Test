@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils/cn';
 import { GridListRow } from './grid-list-row';
+import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import type { ChipData, ColumnValue } from '@/components/shared/grid-list-row';
 import {
   PowersListSection,
@@ -107,6 +108,8 @@ export interface CreatureData {
     damage?: string;
     range?: string;
     innate?: boolean;
+    image_id?: string | null;
+    image_url?: string | null;
     parts?: Array<string | { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }>;
   }>;
   techniques?: Array<{
@@ -118,6 +121,8 @@ export interface CreatureData {
     weapon?: string;
     tp?: number;
     damage?: string;
+    image_id?: string | null;
+    image_url?: string | null;
     parts?: Array<string | { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }>;
   }>;
   feats?: Array<{ name: string; description?: string }>;
@@ -131,6 +136,8 @@ export interface CreatureData {
     damageReduction?: number;
     properties?: Array<{ id?: number; name?: string; op_1_lvl?: number }>;
     libraryItem?: { properties?: Array<{ id?: number; name?: string; op_1_lvl?: number }> };
+    image_id?: string | null;
+    image_url?: string | null;
   }>;
 }
 
@@ -491,6 +498,8 @@ export function CreatureStatBlock({
             range: userMatch.range,
             area: userMatch.area,
             duration: userMatch.duration,
+            image_id: userMatch.image_id,
+            image_url: userMatch.image_url,
           }
         : officialMatch
           ? {
@@ -503,6 +512,8 @@ export function CreatureStatBlock({
               range: officialMatch.range,
               area: officialMatch.area,
               duration: officialMatch.duration,
+              image_id: officialMatch.image_id,
+              image_url: officialMatch.image_url,
             }
           : null;
 
@@ -510,6 +521,10 @@ export function CreatureStatBlock({
       const baseDescription = enriched?.description ?? ref.description;
       const parts = (enriched?.parts as unknown as Array<string | { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }>) ?? ref.parts ?? [];
       const damage = (enriched?.damage as unknown) ?? ref.damage;
+      const imageRecord = {
+        image_id: enriched?.image_id ?? (ref as { image_id?: string | null }).image_id,
+        image_url: enriched?.image_url ?? (ref as { image_url?: string | null }).image_url,
+      };
 
       const derived = derivePowerDisplay(
         {
@@ -536,6 +551,7 @@ export function CreatureStatBlock({
         id: `${creature.id}-power-${refId ?? idx}`,
         name: baseName,
         description: baseDescription,
+        thumbnail: resolveListRowThumbnail('power', imageRecord, baseName),
         actionType: derived.actionType || ref.action,
         damage: damageStr,
         area: derived.area || ref.area,
@@ -589,6 +605,8 @@ export function CreatureStatBlock({
             weapon: userMatch.weapon,
             actionType: userMatch.actionType,
             isReaction: userMatch.isReaction,
+            image_id: userMatch.image_id,
+            image_url: userMatch.image_url,
           }
         : officialMatch
           ? {
@@ -599,6 +617,8 @@ export function CreatureStatBlock({
               weapon: officialMatch.weapon,
               actionType: officialMatch.actionType,
               isReaction: officialMatch.isReaction,
+              image_id: officialMatch.image_id,
+              image_url: officialMatch.image_url,
             }
           : null;
 
@@ -606,6 +626,10 @@ export function CreatureStatBlock({
       const baseDescription = enriched?.description ?? ref.description;
       const parts = (enriched?.parts as unknown as Array<string | { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }>) ?? ref.parts ?? [];
       const damage = enriched?.damage ?? ref.damage;
+      const imageRecord = {
+        image_id: enriched?.image_id ?? (ref as { image_id?: string | null }).image_id,
+        image_url: enriched?.image_url ?? (ref as { image_url?: string | null }).image_url,
+      };
 
       const derived = deriveTechniqueDisplay(
         {
@@ -631,6 +655,7 @@ export function CreatureStatBlock({
         id: `${creature.id}-tech-${refId ?? idx}`,
         name: baseName,
         description: baseDescription,
+        thumbnail: resolveListRowThumbnail('technique', imageRecord, baseName),
         energyCost: typeof derived.energy === 'number' ? derived.energy : ref.energy,
         weaponName: derived.weaponName || ref.weapon,
         tp: derived.tp ?? ref.tp,
@@ -748,11 +773,18 @@ export function CreatureStatBlock({
     });
   }, [creatureSkills, skillsDb, creature.id, creature.abilities]);
 
+  const listThumbnail = resolveListRowThumbnail(
+    'creature',
+    { image_url: creature.imageUrl ?? null },
+    creature.name
+  );
+
   return (
     <GridListRow
       id={creature.id}
       name={creature.name}
       description={subline}
+      thumbnail={listThumbnail}
       columns={headerColumns}
       gridColumns="1.8fr 0.6fr 0.8fr 1fr 1fr 0.6fr 0.6fr"
       onEdit={showActions ? onEdit : undefined}
@@ -772,13 +804,13 @@ export function CreatureStatBlock({
                 <ExpandableImage
                   src={creature.imageUrl}
                   alt={`${creature.name} portrait`}
-                  className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border border-border-light bg-surface-alt"
+                  className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border border-border-light bg-image-matte"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={creature.imageUrl} alt="" className="h-full w-full object-cover" />
                 </ExpandableImage>
               ) : (
-                <div className="h-20 w-20 flex-shrink-0 rounded-lg border border-border-light bg-surface-alt" />
+                <div className="h-20 w-20 flex-shrink-0 rounded-lg border border-border-light bg-image-matte" />
               )}
 
               <div className="flex-1 min-w-0">
@@ -1012,6 +1044,7 @@ export function CreatureStatBlock({
                       id: `${creature.id}-w-${idx}`,
                       name: w.name,
                       description: w.description,
+                      thumbnail: resolveListRowThumbnail('equipment', w, w.name),
                       damage: w.damage,
                       range: normalizeRangeDisplay(w.range) || 'Melee',
                       attackBonus: getWeaponAttackBonus(
@@ -1035,6 +1068,7 @@ export function CreatureStatBlock({
                       id: `${creature.id}-s-${idx}`,
                       name: s.name,
                       description: s.description,
+                      thumbnail: resolveListRowThumbnail('equipment', s, s.name),
                       damage: s.damage,
                       properties: s.properties,
                       chips: propertiesToChips(resolveArmamentProperties(s), itemPropertiesDb as unknown as CodexProperty[]),
@@ -1053,6 +1087,7 @@ export function CreatureStatBlock({
                       id: `${creature.id}-a-${idx}`,
                       name: a.name,
                       description: a.description,
+                      thumbnail: resolveListRowThumbnail('equipment', a, a.name),
                       damageReduction: a.damageReduction,
                       armorValue: a.armorValue,
                       chips: propertiesToChips(resolveArmamentProperties(a), itemPropertiesDb as unknown as CodexProperty[]),
@@ -1095,6 +1130,7 @@ export function CreatureStatBlock({
                       { key: 'quantity', label: 'Qty', width: '4rem', align: 'center' },
                     ]}
                     gridColumns="1fr 0.6fr 4rem"
+                    hasThumbnailColumn
                   />
                   <div className="space-y-1 mt-2">
                     {equipment.map((e, idx) => (
@@ -1103,6 +1139,7 @@ export function CreatureStatBlock({
                         id={`${creature.id}-equipment-${idx}`}
                         name={e.name}
                         description={e.description}
+                        thumbnail={resolveListRowThumbnail('equipment', e, e.name)}
                         gridColumns="1fr 0.6fr 4rem"
                         columns={[
                           { key: 'type', value: formatListCellLabel(e.type), align: 'center' },

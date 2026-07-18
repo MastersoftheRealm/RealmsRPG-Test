@@ -207,7 +207,7 @@ export function AdminImageEditModal({
         isOpen={isOpen}
         onClose={onClose}
         title={isCreate ? 'Add image' : `Edit ${image.name}`}
-        size="lg"
+        size="full"
         fullScreenOnMobile
         footer={
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">

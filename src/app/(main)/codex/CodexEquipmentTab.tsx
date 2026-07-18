@@ -25,6 +25,7 @@ import { useEquipment, useItemProperties, type ItemProperty } from '@/hooks';
 import { metadataDescriptorChip } from '@/lib/chip/list-row-metadata';
 import { namedPropertyDescriptorChips } from '@/lib/detail-option/compact-facts';
 import type { ChipData } from '@/components/shared/grid-list-row';
+import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
 const EQUIPMENT_GRID_COLUMNS = '1.3fr 0.9fr 0.65fr 0.75fr 1fr 0.7fr 40px';
 const EQUIPMENT_COLUMNS = [
@@ -49,6 +50,8 @@ interface Equipment {
   damage?: string;
   armor_value?: number;
   properties?: string[];
+  image_id?: string | null;
+  image_url?: string | null;
 }
 
 interface EquipmentFilters {
@@ -86,6 +89,7 @@ function EquipmentCard({ item, propertiesDb = [] }: { item: Equipment; propertie
       id={item.id}
       name={item.name}
       description={item.description}
+      thumbnail={resolveListRowThumbnail('equipment', item, item.name)}
       gridColumns={EQUIPMENT_GRID_COLUMNS}
       columns={[
         { key: 'Category', value: formatListCellLabel(item.category) },
@@ -201,6 +205,7 @@ export function CodexEquipmentTab({ codexMode = 'public' }: { codexMode?: 'publi
         gridColumns={EQUIPMENT_GRID_COLUMNS}
         sortState={sortState}
         onSort={handleSort}
+        hasThumbnailColumn
       />
 
       <div className="flex flex-col gap-1 mt-2">

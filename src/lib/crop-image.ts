@@ -1,9 +1,36 @@
 /**
  * Image crop utilities — shared by ImageUploadModal and other uploaders.
  * Normalizes EXIF orientation before react-easy-crop so the crop box matches the output.
+ *
+ * Transparent pixels are composited onto the theme `--color-image-matte` before JPEG encode
+ * so alpha never becomes pure black.
  */
 
 import type { Area } from 'react-easy-crop';
+
+/** Light-theme fallback when CSS vars are unavailable (SSR / tests). */
+export const IMAGE_MATTE_FALLBACK = '#e8f1f8';
+
+/**
+ * Soft theme matte for transparent image areas. Reads `--color-image-matte`
+ * (light: soft primary tint; dark: soft blue-gray — never pure black/white).
+ */
+export function getImageMatteFillColor(): string {
+  if (typeof document === 'undefined') return IMAGE_MATTE_FALLBACK;
+  const value = getComputedStyle(document.documentElement)
+    .getPropertyValue('--color-image-matte')
+    .trim();
+  return value || IMAGE_MATTE_FALLBACK;
+}
+
+function fillCanvasWithImageMatte(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number
+): void {
+  ctx.fillStyle = getImageMatteFillColor();
+  ctx.fillRect(0, 0, width, height);
+}
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -37,6 +64,7 @@ export async function normalizeImageFileToDataUrl(file: File, maxEdge = 4096): P
         bitmap.close();
         throw new Error('Canvas unavailable');
       }
+      fillCanvasWithImageMatte(ctx, width, height);
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(bitmap, 0, 0, width, height);
@@ -88,6 +116,7 @@ export async function getCroppedImageBlob(imageSrc: string, pixelCrop: Area): Pr
     throw new Error('Could not get canvas context');
   }
 
+  fillCanvasWithImageMatte(ctx, crop.width, crop.height);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(image, crop.x, crop.y, crop.width, crop.height, 0, 0, crop.width, crop.height);

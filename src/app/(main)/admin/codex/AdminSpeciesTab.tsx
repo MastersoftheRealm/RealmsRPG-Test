@@ -479,7 +479,7 @@ export function AdminSpeciesTab() {
         </div>
       )}
 
-      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Species' : 'Add Species'} size="lg" fullScreenOnMobile
+      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Species' : 'Add Species'} size="full" fullScreenOnMobile
         footer={
           <div className="flex justify-between">
             <div>

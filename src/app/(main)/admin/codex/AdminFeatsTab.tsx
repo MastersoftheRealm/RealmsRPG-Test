@@ -257,7 +257,7 @@ function AdminFeatEditModal({
       isOpen={isOpen}
       onClose={onClose}
       title={title}
-      size="xl"
+      size="full"
       fullScreenOnMobile
       footer={
         <div className="flex justify-between">

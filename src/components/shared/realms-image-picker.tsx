@@ -90,12 +90,12 @@ export function RealmsImageField({
       </div>
       <div className="flex flex-wrap items-center gap-3">
         {imageUrl ? (
-          <div className="h-20 w-20 overflow-hidden rounded-card border border-border-light bg-surface-alt">
+          <div className="h-20 w-20 overflow-hidden rounded-card border border-border-light bg-image-matte">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={imageUrl} alt="" className="h-full w-full object-contain" />
           </div>
         ) : (
-          <div className="flex h-20 w-20 items-center justify-center rounded-card border border-border-light bg-surface-alt">
+          <div className="flex h-20 w-20 items-center justify-center rounded-card border border-border-light bg-image-matte">
             <ImageIcon className="h-8 w-8 text-text-muted dark:text-text-secondary" aria-hidden />
           </div>
         )}
@@ -362,7 +362,7 @@ export function RealmsImagePicker({
               <p className="text-sm font-medium text-text-primary">New library image</p>
               <div className="flex flex-wrap items-start gap-4">
                 {uploadPreview && (
-                  <div className="h-20 w-20 min-h-[44px] min-w-[44px] shrink-0 overflow-hidden rounded-card border border-border-light bg-surface">
+                  <div className="h-20 w-20 min-h-[44px] min-w-[44px] shrink-0 overflow-hidden rounded-card border border-border-light bg-image-matte">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={uploadPreview} alt="" className="h-full w-full object-contain" />
                   </div>
@@ -452,7 +452,7 @@ export function RealmsImagePicker({
                             : 'border-border-light hover:border-primary-outline-border hover:bg-primary-subtle-bg-hover/40'
                         )}
                       >
-                        <div className="relative aspect-square w-full bg-surface-alt">
+                        <div className="relative aspect-square w-full bg-image-matte">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={image.publicUrl}

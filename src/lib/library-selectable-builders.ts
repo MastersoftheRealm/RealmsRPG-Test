@@ -11,6 +11,8 @@ import {
   formatActionTypeForDisplay,
   formatListCellLabel,
 } from '@/lib/utils';
+import { resolveListRowThumbnail } from '@/lib/list-row-image';
+import type { ChoiceCardImageKind } from '@/components/guided-creator/guided-choice-image';
 import {
   deriveShieldAmountFromProperties,
   deriveShieldDamageFromProperties,
@@ -51,7 +53,24 @@ export type EqItem = {
     string | { id?: string | number; name?: string; op_1_lvl?: number; base_tp?: number; op_1_tp?: number }
   >;
   type?: string;
+  image_id?: string | null;
+  image_url?: string | null;
 };
+
+function selectableImageKind(itemType: LibraryItemType): ChoiceCardImageKind | null {
+  if (itemType === 'power') return 'power';
+  if (itemType === 'technique') return 'technique';
+  if (
+    itemType === 'weapon' ||
+    itemType === 'shield' ||
+    itemType === 'armor' ||
+    itemType === 'equipment' ||
+    itemType === 'item'
+  ) {
+    return 'equipment';
+  }
+  return null;
+}
 
 function capitalize(s: string | undefined): string {
   if (!s) return '-';
@@ -362,14 +381,21 @@ export function buildSelectableItem(
     columns.unshift({ key: 'type', value: typeLabel, align: 'center' as const });
   }
 
+  const name = String(item.name ?? '');
+  const imageKind = selectableImageKind(itemType);
+  const thumbnail = imageKind
+    ? resolveListRowThumbnail(imageKind, item, name)
+    : undefined;
+
   return {
     id: String(item.id),
-    name: String(item.name ?? ''),
+    name,
     description: String((item as UserPower | UserTechnique | UserItem).description ?? '') || 'No description available.',
     columns,
     detailSections,
     totalCost,
     costLabel: totalCost != null ? costLabel : undefined,
+    thumbnail,
     data: item,
   };
 }

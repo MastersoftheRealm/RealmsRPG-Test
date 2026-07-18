@@ -18,7 +18,8 @@ interface ChipSelectProps {
   options: { value: string; label: string }[];
   selectedValues: string[];
   onSelect: (value: string) => void;
-  onRemove: (value: string) => void;
+  /** Required when selectedValues is non-empty (chip remove buttons). Omit for pick-only. */
+  onRemove?: (value: string) => void;
   className?: string;
 }
 
@@ -71,14 +72,16 @@ export function ChipSelect({
                 className="inline-flex items-center gap-1 px-2 py-1 bg-primary-subtle-bg text-primary-fg-hover rounded-full text-sm"
               >
                 {option?.label || value}
-                <button
-                  type="button"
-                  onClick={() => onRemove(value)}
-                  className="hover:bg-primary-subtle-bg-hover rounded-full p-0.5 transition-colors"
-                  aria-label={`Remove ${option?.label || value}`}
-                >
-                  <X className="w-3 h-3" />
-                </button>
+                {onRemove && (
+                  <button
+                    type="button"
+                    onClick={() => onRemove(value)}
+                    className="hover:bg-primary-subtle-bg-hover rounded-full p-0.5 transition-colors"
+                    aria-label={`Remove ${option?.label || value}`}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
               </span>
             );
           })}

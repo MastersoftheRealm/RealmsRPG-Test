@@ -27,6 +27,7 @@ import {
 import { ARMAMENT_LIBRARY_LABELS } from './components/library-entity-tab.types';
 import { useLibraryEntitySync } from './hooks/use-library-entity-sync';
 import { useLibraryDuplicateConfirm } from './hooks/use-library-duplicate-confirm';
+import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
 const ARMAMENT_GRID_COLUMNS = '1.5fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr 40px';
 const ARMAMENT_HEADER_COLUMNS = [
@@ -89,6 +90,7 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
         parts,
         hasDrift: syncResult.hasDrift,
         syncIssues: syncResult.issues,
+        raw: item,
       };
     });
   }, [items, propertiesDb]);
@@ -144,6 +146,7 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
       onSort={handleSort}
       headerColumns={ARMAMENT_HEADER_COLUMNS}
       gridColumns={ARMAMENT_GRID_COLUMNS}
+      hasThumbnailColumn
       filteredCount={filteredData.length}
       driftedCount={sync.driftedCount}
       syncingAll={sync.syncingAll}
@@ -165,6 +168,7 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
           id={item.id}
           name={item.name}
           description={item.description}
+          thumbnail={resolveListRowThumbnail('equipment', item.raw, item.name)}
           gridColumns={ARMAMENT_GRID_COLUMNS}
           columns={[
             { key: 'Type', value: item.type, align: 'center' },

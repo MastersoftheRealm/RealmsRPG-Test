@@ -17,6 +17,7 @@ import {
   OFFICIAL_ITEM_HEADER_COLUMNS,
   type OfficialItemRow,
 } from '@/lib/library/official-item-list';
+import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
 export type { OfficialItemRow };
 
@@ -81,6 +82,7 @@ export function OfficialItemList({
       chipsLabel="Properties"
       getTotalCost={(i) => i.tp}
       costLabel="Training Points"
+      getThumbnail={(i) => resolveListRowThumbnail('equipment', i.raw, i.name)}
       errorMessage={errorMessage}
       sectionTitle={sectionTitle}
       searchPlaceholder={searchPlaceholder}

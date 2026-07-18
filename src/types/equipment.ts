@@ -68,6 +68,9 @@ export interface Item {
   damage?: string | DamageEntry[];
   armor?: number;
   range?: number;
+  /** Bank art (persisted when added from library). */
+  image_id?: string | null;
+  image_url?: string | null;
 }
 
 /** Item property */

@@ -40,12 +40,14 @@ export function ExpandableImageModal({
       fullScreenOnMobile
       contentClassName="flex items-center justify-center p-4"
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt={alt}
-        className="max-h-[min(70vh,32rem)] w-auto max-w-full object-contain rounded-lg"
-      />
+      <div className="flex max-h-[min(70vh,32rem)] max-w-full items-center justify-center rounded-lg bg-image-matte p-3 sm:p-4">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={alt}
+          className="max-h-[min(calc(70vh-1.5rem),30rem)] w-auto max-w-full object-contain"
+        />
+      </div>
     </Modal>
   );
 }

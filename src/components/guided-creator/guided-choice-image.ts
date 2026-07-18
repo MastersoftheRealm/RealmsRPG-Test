@@ -8,10 +8,18 @@
 
 import { readRecordImageUrl } from '@/lib/entity-image-url';
 
-export type ChoiceCardImageKind = 'species' | 'path' | 'equipment' | 'power' | 'technique';
+export type ChoiceCardImageKind =
+  | 'species'
+  | 'creature'
+  | 'path'
+  | 'equipment'
+  | 'power'
+  | 'technique';
 
 const PLACEHOLDER_BY_KIND: Record<ChoiceCardImageKind, string> = {
   species: '/images/placeholder-species-card.svg',
+  /** Creatures share portrait-style bank art with species; reuse species placeholder. */
+  creature: '/images/placeholder-species-card.svg',
   path: '/images/placeholder-path-card.svg',
   equipment: '/images/placeholder-equipment-card.svg',
   power: '/images/placeholder-power-card.svg',
@@ -33,7 +41,11 @@ export type ChoiceCardImageLayout = 'thumb' | 'hero';
 
 /** Species (and future equipment/powers) use larger featured inline art; paths stay thumb-sized. */
 export function defaultImageLayoutForKind(kind: ChoiceCardImageKind): ChoiceCardImageLayout {
-  return kind === 'species' || kind === 'equipment' || kind === 'power' || kind === 'technique'
+  return kind === 'species' ||
+    kind === 'creature' ||
+    kind === 'equipment' ||
+    kind === 'power' ||
+    kind === 'technique'
     ? 'hero'
     : 'thumb';
 }

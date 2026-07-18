@@ -644,7 +644,7 @@ export function AdminPartsTab() {
         </div>
       )}
 
-      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Part' : 'Add Part'} size="lg" fullScreenOnMobile
+      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Part' : 'Add Part'} size="full" fullScreenOnMobile
         footer={
           <div className="flex justify-between">
             <div>

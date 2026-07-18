@@ -34,6 +34,7 @@ import {
 } from '@/components/shared/entity-library-sections';
 import type { useRollsOptional } from './roll-context';
 import type { Abilities, CharacterPower, CharacterTechnique, Item } from '@/types';
+import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import {
   type CodexPart,
   type CodexProperty,
@@ -195,6 +196,7 @@ export function mapPowerRows(powers: CharacterPower[], ctx: LibraryEntityRowCont
       id,
       name: power.name,
       description: power.description,
+      thumbnail: resolveListRowThumbnail('power', power, power.name),
       columns,
       gridColumns: POWER_GRID,
       detailSections: detailSections.length > 0 ? detailSections : undefined,
@@ -237,6 +239,7 @@ export function mapTechniqueRows(
       name: tech.name,
       description: tech.description,
       actionType: actionDisplay,
+      thumbnail: resolveListRowThumbnail('technique', tech, tech.name),
       // Energy cost: rightSlot spend button only (no static Energy column — matches powers).
       columns: [
         { key: 'action', value: actionDisplay, align: 'center' },
@@ -319,6 +322,7 @@ export function mapWeaponRows(weapons: Item[], ctx: LibraryEntityRowContext): En
       id,
       name: item.name,
       description: item.description,
+      thumbnail: resolveListRowThumbnail('equipment', item, item.name),
       columns: [
         { key: 'range', value: rangeValue, align: 'center' },
         { key: 'attack', value: attackButton, align: 'center' },
@@ -405,6 +409,7 @@ export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): En
       id,
       name: item.name,
       description: item.description,
+      thumbnail: resolveListRowThumbnail('equipment', item, item.name),
       columns: [
         { key: 'range', value: rangeValue, align: 'center' },
         { key: 'attack', value: attackCell, align: 'center' },
@@ -474,6 +479,7 @@ export function mapArmorRows(armor: Item[], ctx: LibraryEntityRowContext): Entit
       id,
       name: item.name,
       description: item.description,
+      thumbnail: resolveListRowThumbnail('equipment', item, item.name),
       columns: [
         {
           key: 'dr',
@@ -543,6 +549,7 @@ export function mapEquipmentRows(equipment: Item[], ctx: LibraryEntityRowContext
       id: itemId,
       name: item.name,
       description: item.description,
+      thumbnail: resolveListRowThumbnail('equipment', item, item.name),
       columns: [
         { key: 'type', value: itemType, align: 'center' },
         { key: 'quantity', value: quantityStepper, align: 'center' },

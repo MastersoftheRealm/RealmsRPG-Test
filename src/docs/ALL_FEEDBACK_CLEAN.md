@@ -2353,7 +2353,7 @@ Notes
 - Feedback (verbatim themes):
   at some point during another tasks character library section title font seemed to be shrunk to be too small, fix. ensure we are following proj, rules, consistition, and design styles
 - Expected: Library card title matches Skills / Archetype sizing; list subsection titles readable and not shrunk by collapse chrome.
-- Disposition: Implemented as **TASK-525** — peer Library h2 (text-lg); SectionHeader default md; Library list subsections lg (text-base) + pb-1.5. QA: DEV-V-009-T018.
+- Disposition: Implemented as **TASK-525** ? peer Library h2 (text-lg); SectionHeader default md; Library list subsections lg (text-base) + pb-1.5. QA: DEV-V-009-T018.
 
 **Raw Feedback Log ? 2026-07-17 (library collapsed sections leftover space)**
 - Date: 2026-07-17
@@ -2362,7 +2362,7 @@ Notes
 - Feedback (verbatim):
   when library sections are collapsed they have too much space below them still. doesn't feel cleanly collapsed/out of the way/saving space.
 - Expected: Collapsed subsection headers stack tightly (accordion-like); no large `space-y-6` / header pad leftover under closed sections; touch targets still ?44px.
-- Disposition: Implemented as **TASK-526** — SectionHeader collapsible pb-1.5 (no full size pad); library stacks use space-y-2. QA: DEV-V-009-T019.
+- Disposition: Implemented as **TASK-526** ? SectionHeader collapsible pb-1.5 (no full size pad); library stacks use space-y-2. QA: DEV-V-009-T019.
 
 **Raw Feedback Log ? 2026-07-17 (guided loadout skips weapons/armor)**
 - Date: 2026-07-17
@@ -2390,3 +2390,49 @@ Notes
   Separate on the guided creator the path's by martial, power, and powered martial, (with tooltips for what each of those mean to a new user by their section title). This will work a lot more like the custom creator's first page when choosing a path, but use the updated guided ui, tooltips, etc. and the ux design goals followed from product overview.
 - Expected: Path cards grouped under Power / Powered-Martial / Martial section titles with InfoTippy tips; guided choice cards retained; no hybrid LayerNav hide.
 - Disposition: Implemented as **TASK-528**. QA: DEV-V-013-T063.
+
+**Raw Feedback Log - 2026-07-17 (admin edit modals too narrow)**
+- Date: 2026-07-17
+- Context: Admin pages ? Codex / Images / Public Library edit modals
+- Priority: Medium
+- Feedback (verbatim):
+  can we make the edit modals in the admin page be wider since they're such high complexity compared to a normal modal? they can be pretty wide, taking up a good protion of the screen as you go through them, still use best practice and follow consititution/design styles
+- Expected: Complex admin add/edit dialogs use a large desktop width (good portion of viewport) while keeping overlay margins, design tokens, and full-screen-on-mobile.
+- Disposition: Implemented as **TASK-529** - Modal `full` = max-w-6xl; admin edit modals use `size="full"`. QA: DEV-V-008-T020.
+
+**Raw Feedback Log - 2026-07-17 (transparent image black background)**
+- Date: 2026-07-17
+- Context: Image Library / entity art / crop upload
+- Priority: Medium
+- Feedback (verbatim):
+  for images with no background, make the background be not just black but a good very soft color that isn't full black/white and matches the current system theme/ui of the site.
+- Expected: Transparent art shows a soft theme-matched matte (light + dark), including crop/JPEG bake ? not pure black or white.
+- Disposition: Implemented as **TASK-531**. QA: DEV-V-026-T007.
+
+**Raw Feedback Log - 2026-07-17 (GLR item thumbnails missing)**
+- Date: 2026-07-17
+- Context: Library / Codex / Admin equipment armaments GridListRow
+- Priority: High
+- Feedback (verbatim):
+  okay now small images should be visible in GLR for items with images, but I don't see them, didn't we mention this desire in our product overview or somewhere else? didn't we have a pattern established to make this happen? Following the pattern for species, I believe, as a shared component/logic with the GLR/image system we made recently?
+- Expected: Equipment/armament GLR rows use the same ListRowThumbnail + resolveListRowThumbnail pattern as species (product overview section 5.0.3 / guide/03).
+- Disposition: Implemented as **TASK-532**. QA: DEV-V-026-T008.
+
+**Raw Feedback Log - 2026-07-17 (wire GLR thumbs for all image-capable entities)**
+- Date: 2026-07-17
+- Context: Sitewide GridListRow art for entities with Realms Image Library art
+- Priority: High
+- Feedback (verbatim):
+  Okay so it should be wired for all things that can have images now across the codebase.
+- Expected: Powers, techniques, empowered techniques, creatures, equipment/armaments, species use shared ListRowThumbnail pattern everywhere GLR browse/select appears; non-art entities stay thumb-less; enhanced items remain deferred.
+- Disposition: Implemented as **TASK-533**. QA: DEV-V-026-T009.
+
+**Raw Feedback Log - 2026-07-17 (admin archetype modal cleaner + readable feats)**
+- Date: 2026-07-17
+- Context: Admin Codex ? Archetypes edit modal
+- Priority: Medium
+- Feedback (verbatim):
+  make the admin edit modal for archetypes look cleaner and avoid overlap, also allow reading feats in the modal after adding them (expanding them) so you can read the feats you add.
+- Expected: Cleaner spacing/layout without overlapping controls; selected feats expandable to show Codex description in-modal.
+- Disposition: Implemented as **TASK-534**. QA: DEV-V-008-T021.
+

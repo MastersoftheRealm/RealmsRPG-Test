@@ -1,9 +1,18 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { SectionHeader, SearchInput, LoadingState, ErrorDisplay as ErrorState, GridListRow, ListEmptyState as EmptyState, ValueStepper } from '@/components/shared';
+import {
+  SectionHeader,
+  SearchInput,
+  LoadingState,
+  ErrorDisplay as ErrorState,
+  GridListRow,
+  ListEmptyState as EmptyState,
+  ValueStepper,
+  QuantitySelector,
+  ChipSelect,
+} from '@/components/shared';
 import { Modal, Button, Input, IconButton, useToast } from '@/components/ui';
-import { ChipSelect } from '@/components/shared';
 import { useCodexArchetypes, useCodexEquipment, useCodexFeats, useCodexSkills, useCodexItemProperties, useCodexPowerParts } from '@/hooks/use-codex';
 import { useOfficialLibrary } from '@/hooks/use-official-library';
 import { useQueryClient } from '@tanstack/react-query';
@@ -93,6 +102,7 @@ function labelForAbility(ability: string): string {
 type CodexFeatLike = {
   id?: string;
   name?: string;
+  description?: string;
   feat_lvl?: number;
   base_feat_id?: string;
   lvl_req?: number;
@@ -100,6 +110,80 @@ type CodexFeatLike = {
 };
 function toLeveledFeatLike(f: CodexFeatLike) {
   return { ...f, id: f.id ?? '' };
+}
+
+/** Selected feats as expandable rows so admins can read Codex descriptions after picking. */
+function SelectedFeatRows({
+  featIds,
+  featById,
+  onRemove,
+}: {
+  featIds: string[];
+  featById: Map<string, CodexFeatLike>;
+  onRemove: (id: string) => void;
+}) {
+  if (featIds.length === 0) return null;
+  return (
+    <div className="flex flex-col gap-1">
+      {featIds.map((id) => {
+        const feat = featById.get(id);
+        const name = feat
+          ? formatFeatName(toLeveledFeatLike(feat)) || id
+          : id;
+        const description = feat?.description?.trim() || 'No description in Codex.';
+        return (
+          <GridListRow
+            key={id}
+            id={id}
+            name={name}
+            description={description}
+            compact
+            onDelete={() => onRemove(id)}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+/** Quantity row for armaments / equipment — full-width so label and controls do not overlap. */
+function PathQuantityRow({
+  label,
+  quantity,
+  onQuantityChange,
+  onRemove,
+  removeLabel,
+}: {
+  label: string;
+  quantity: number;
+  onQuantityChange: (quantity: number) => void;
+  onRemove: () => void;
+  removeLabel: string;
+}) {
+  return (
+    <div className="flex items-center gap-2 rounded-md border border-border-light bg-surface px-3 py-2 min-h-[44px]">
+      <span className="text-sm text-text-primary min-w-0 flex-1 truncate" title={label}>
+        {label}
+      </span>
+      <QuantitySelector
+        quantity={quantity}
+        onChange={onQuantityChange}
+        min={1}
+        className="shrink-0"
+        decrementLabel={`Decrease quantity for ${label}`}
+        incrementLabel={`Increase quantity for ${label}`}
+      />
+      <IconButton
+        variant="ghost"
+        size="sm"
+        className="shrink-0 min-h-[44px] min-w-[44px]"
+        onClick={onRemove}
+        label={removeLabel}
+      >
+        <X className="w-4 h-4" />
+      </IconButton>
+    </div>
+  );
 }
 
 function guidedAbilitiesFromPath(pathData: unknown): RecommendedAbilities {
@@ -353,6 +437,14 @@ export function AdminArchetypesTab() {
       (a.name || '').toLowerCase().includes(search.toLowerCase()) ||
       (a.description || '').toLowerCase().includes(search.toLowerCase())
   );
+
+  const featById = useMemo(() => {
+    const map = new Map<string, CodexFeatLike>();
+    for (const feat of codexFeats as CodexFeatLike[]) {
+      if (feat.id != null && feat.id !== '') map.set(String(feat.id), feat);
+    }
+    return map;
+  }, [codexFeats]);
 
   const featOptions = useMemo<SelectionOption[]>(
     () =>
@@ -1194,7 +1286,7 @@ export function AdminArchetypesTab() {
         </div>
       )}
 
-      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Archetype' : 'Add Archetype'} size="lg" fullScreenOnMobile
+      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Archetype' : 'Add Archetype'} size="full" fullScreenOnMobile
         footer={
           <div className="flex justify-between">
             <div>
@@ -1461,13 +1553,14 @@ export function AdminArchetypesTab() {
               )}
 
               {/* Level 1 feat guidance groups — character vs archetype (TASK-514 / ADR-0004) */}
-              <div className="space-y-4 pt-2 border-t border-border-light md:col-span-2">
+              <div className="space-y-4 pt-3 border-t border-border-light">
                 <div>
                   <h5 className="text-sm font-medium text-text-primary">Feat guidance groups</h5>
                   <p className="text-xs text-text-muted dark:text-text-secondary mt-0.5">
-                    Name each group, add a short why, pick feats, and set audience. Flat Level 1 feats
-                    sync to the union of these picks on save. Max {LAYER1_GOVERNANCE.maxGroupsPerStep}{' '}
-                    groups per audience; max {LAYER1_GOVERNANCE.maxItemsPerGroup} feats per group.
+                    Name each group, add a short why, then pick feats. Expand a selected feat to read its
+                    Codex description. Flat Level 1 feats sync to the union of these picks on save. Max{' '}
+                    {LAYER1_GOVERNANCE.maxGroupsPerStep} groups per audience; max{' '}
+                    {LAYER1_GOVERNANCE.maxItemsPerGroup} feats per group.
                   </p>
                 </div>
 
@@ -1487,7 +1580,7 @@ export function AdminArchetypesTab() {
                     },
                   ] as const
                 ).map((section) => (
-                  <div key={section.audience} className="space-y-3 rounded-md border border-border-light bg-surface p-3">
+                  <div key={section.audience} className="space-y-3 rounded-md border border-border-light p-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <h6 className="text-sm font-medium text-text-secondary">{section.label}</h6>
                       <Button
@@ -1509,13 +1602,16 @@ export function AdminArchetypesTab() {
                     ) : (
                       section.groups.map((group) => {
                         const whyLen = group.why?.length ?? 0;
+                        const selectedFeatIds = group.feats ?? [];
+                        const atFeatCap =
+                          selectedFeatIds.length >= LAYER1_GOVERNANCE.maxItemsPerGroup;
                         return (
                           <div
                             key={group.id}
-                            className="space-y-2 rounded-md border border-border-light bg-surface-alt p-3"
+                            className="space-y-3 rounded-md border border-border-light bg-surface-alt/40 p-3"
                           >
-                            <div className="flex flex-wrap items-start gap-2">
-                              <div className="flex-1 min-w-[180px]">
+                            <div className="flex items-end gap-2">
+                              <div className="flex-1 min-w-0">
                                 <label
                                   htmlFor={`gg-title-${group.id}`}
                                   className="block text-xs font-medium text-text-secondary mb-1"
@@ -1535,7 +1631,7 @@ export function AdminArchetypesTab() {
                               <IconButton
                                 variant="ghost"
                                 size="sm"
-                                className="min-h-[44px] min-w-[44px] mt-5"
+                                className="shrink-0 min-h-[44px] min-w-[44px]"
                                 onClick={() => removeFeatGuidanceGroup(group.id)}
                                 label={`Remove ${group.title || section.audience} feat group`}
                               >
@@ -1566,39 +1662,41 @@ export function AdminArchetypesTab() {
                                 </p>
                               )}
                             </div>
-                            <ChipSelect
-                              label="Designated feats"
-                              placeholder={
-                                (group.feats?.length ?? 0) >= LAYER1_GOVERNANCE.maxItemsPerGroup
-                                  ? `Max ${LAYER1_GOVERNANCE.maxItemsPerGroup} feats`
-                                  : 'Select feats for this group'
-                              }
-                              options={section.options
-                                .filter(
-                                  (o) =>
-                                    (group.feats?.length ?? 0) < LAYER1_GOVERNANCE.maxItemsPerGroup ||
-                                    (group.feats ?? []).includes(o.value)
-                                )
-                                .map((o) => ({ value: o.value, label: o.label }))}
-                              selectedValues={group.feats ?? []}
-                              onSelect={(value) => {
-                                if ((group.feats?.length ?? 0) >= LAYER1_GOVERNANCE.maxItemsPerGroup) {
-                                  showToast(
-                                    `Max ${LAYER1_GOVERNANCE.maxItemsPerGroup} feats per group.`,
-                                    'warning'
-                                  );
-                                  return;
+                            <div className="space-y-2">
+                              <ChipSelect
+                                label="Add feats"
+                                placeholder={
+                                  atFeatCap
+                                    ? `Max ${LAYER1_GOVERNANCE.maxItemsPerGroup} feats`
+                                    : 'Select a feat to add'
                                 }
-                                updateFeatGuidanceGroup(group.id, {
-                                  feats: dedupeStrings([...(group.feats ?? []), value]),
-                                });
-                              }}
-                              onRemove={(value) =>
-                                updateFeatGuidanceGroup(group.id, {
-                                  feats: (group.feats ?? []).filter((id) => id !== value),
-                                })
-                              }
-                            />
+                                options={section.options
+                                  .filter((o) => !selectedFeatIds.includes(o.value))
+                                  .map((o) => ({ value: o.value, label: o.label }))}
+                                selectedValues={[]}
+                                onSelect={(value) => {
+                                  if (selectedFeatIds.length >= LAYER1_GOVERNANCE.maxItemsPerGroup) {
+                                    showToast(
+                                      `Max ${LAYER1_GOVERNANCE.maxItemsPerGroup} feats per group.`,
+                                      'warning'
+                                    );
+                                    return;
+                                  }
+                                  updateFeatGuidanceGroup(group.id, {
+                                    feats: dedupeStrings([...selectedFeatIds, value]),
+                                  });
+                                }}
+                              />
+                              <SelectedFeatRows
+                                featIds={selectedFeatIds}
+                                featById={featById}
+                                onRemove={(value) =>
+                                  updateFeatGuidanceGroup(group.id, {
+                                    feats: selectedFeatIds.filter((id) => id !== value),
+                                  })
+                                }
+                              />
+                            </div>
                           </div>
                         );
                       })
@@ -1613,8 +1711,8 @@ export function AdminArchetypesTab() {
               </div>
 
               {/* Level 1: Armaments (weapon/shield vs armor) & Equipment with quantity */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-border-light">
-                <div className="space-y-3 md:col-span-2">
+              <div className="space-y-4 pt-3 border-t border-border-light">
+                <div className="space-y-3">
                   <div>
                     <h5 className="text-sm font-medium text-text-secondary">
                       Armaments (recommended qty)
@@ -1624,7 +1722,7 @@ export function AdminArchetypesTab() {
                       level-1 armaments list.
                     </p>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <ChipSelect
                         label="Weapons & shields"
@@ -1637,39 +1735,21 @@ export function AdminArchetypesTab() {
                           .map((o) => ({ value: o.value, label: o.label }))}
                         selectedValues={[]}
                         onSelect={addLevel1Armament}
-                        onRemove={() => {}}
                       />
-                      <div className="flex flex-wrap gap-2 mt-1">
+                      <div className="space-y-2">
                         {level1WeaponShieldEntries.map((entry) => {
                           const label =
                             armamentOptions.find((o) => o.value === entry.id)?.label ??
                             entry.id;
                           return (
-                            <div
+                            <PathQuantityRow
                               key={`weapon-${entry.id}`}
-                              className="flex items-center gap-1 rounded-lg border border-border-light bg-surface px-2 py-1 min-h-[44px]"
-                            >
-                              <span className="text-sm truncate max-w-[120px]">{label}</span>
-                              <Input
-                                type="number"
-                                min={1}
-                                value={String(entry.quantity)}
-                                onChange={(e) => {
-                                  const q = Math.max(1, parseInt(e.target.value, 10) || 1);
-                                  updateLevel1ArmamentQty(entry.id, q);
-                                }}
-                                className="w-14 text-center"
-                                aria-label={`Quantity for ${label}`}
-                              />
-                              <IconButton
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeLevel1Armament(entry.id)}
-                                label={`Remove ${label}`}
-                              >
-                                <X className="w-4 h-4" />
-                              </IconButton>
-                            </div>
+                              label={label}
+                              quantity={entry.quantity}
+                              onQuantityChange={(q) => updateLevel1ArmamentQty(entry.id, q)}
+                              onRemove={() => removeLevel1Armament(entry.id)}
+                              removeLabel={`Remove ${label}`}
+                            />
                           );
                         })}
                       </div>
@@ -1686,39 +1766,21 @@ export function AdminArchetypesTab() {
                           .map((o) => ({ value: o.value, label: o.label }))}
                         selectedValues={[]}
                         onSelect={addLevel1Armament}
-                        onRemove={() => {}}
                       />
-                      <div className="flex flex-wrap gap-2 mt-1">
+                      <div className="space-y-2">
                         {level1ArmorEntries.map((entry) => {
                           const label =
                             armamentOptions.find((o) => o.value === entry.id)?.label ??
                             entry.id;
                           return (
-                            <div
+                            <PathQuantityRow
                               key={`armor-${entry.id}`}
-                              className="flex items-center gap-1 rounded-lg border border-border-light bg-surface px-2 py-1 min-h-[44px]"
-                            >
-                              <span className="text-sm truncate max-w-[120px]">{label}</span>
-                              <Input
-                                type="number"
-                                min={1}
-                                value={String(entry.quantity)}
-                                onChange={(e) => {
-                                  const q = Math.max(1, parseInt(e.target.value, 10) || 1);
-                                  updateLevel1ArmamentQty(entry.id, q);
-                                }}
-                                className="w-14 text-center"
-                                aria-label={`Quantity for ${label}`}
-                              />
-                              <IconButton
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeLevel1Armament(entry.id)}
-                                label={`Remove ${label}`}
-                              >
-                                <X className="w-4 h-4" />
-                              </IconButton>
-                            </div>
+                              label={label}
+                              quantity={entry.quantity}
+                              onQuantityChange={(q) => updateLevel1ArmamentQty(entry.id, q)}
+                              onRemove={() => removeLevel1Armament(entry.id)}
+                              removeLabel={`Remove ${label}`}
+                            />
                           );
                         })}
                       </div>
@@ -1726,11 +1788,14 @@ export function AdminArchetypesTab() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-text-secondary">Equipment (recommended qty)</label>
                   <ChipSelect
-                    label="Add equipment"
+                    label="Equipment (recommended qty)"
                     placeholder="Select equipment"
-                    options={equipmentOptions.map((o) => ({ value: o.value, label: o.label }))}
+                    options={equipmentOptions
+                      .filter(
+                        (o) => !form.level1Path.equipmentEntries.some((e) => e.id === o.value)
+                      )
+                      .map((o) => ({ value: o.value, label: o.label }))}
                     selectedValues={[]}
                     onSelect={(value) => {
                       if (form.level1Path.equipmentEntries.some((e) => e.id === value)) return;
@@ -1738,40 +1803,47 @@ export function AdminArchetypesTab() {
                         ...prev,
                         level1Path: {
                           ...prev.level1Path,
-                          equipmentEntries: [...prev.level1Path.equipmentEntries, { id: value, quantity: 1 }],
+                          equipmentEntries: [
+                            ...prev.level1Path.equipmentEntries,
+                            { id: value, quantity: 1 },
+                          ],
                         },
                       }));
                     }}
-                    onRemove={() => {}}
                   />
-                  <div className="flex flex-wrap gap-2 mt-1">
+                  <div className="space-y-2">
                     {form.level1Path.equipmentEntries.map((entry, idx) => {
-                      const label = equipmentOptions.find((o) => o.value === entry.id)?.label ?? entry.id;
+                      const label =
+                        equipmentOptions.find((o) => o.value === entry.id)?.label ?? entry.id;
                       return (
-                        <div key={`${entry.id}-${idx}`} className="flex items-center gap-1 rounded-lg border border-border-light bg-surface px-2 py-1">
-                          <span className="text-sm truncate max-w-[120px]">{label}</span>
-                          <Input
-                            type="number"
-                            min={1}
-                            value={String(entry.quantity)}
-                            onChange={(e) => {
-                              const q = Math.max(1, parseInt(e.target.value, 10) || 1);
-                              setForm((prev) => ({
-                                ...prev,
-                                level1Path: {
-                                  ...prev.level1Path,
-                                  equipmentEntries: prev.level1Path.equipmentEntries.map((e, i) =>
-                                    i === idx ? { ...e, quantity: q } : e
-                                  ),
-                                },
-                              }));
-                            }}
-                            className="w-14 text-center"
-                          />
-                          <IconButton variant="ghost" size="sm" onClick={() => setForm((prev) => ({ ...prev, level1Path: { ...prev.level1Path, equipmentEntries: prev.level1Path.equipmentEntries.filter((_, i) => i !== idx) } }))} label="Remove equipment">
-                            <X className="w-4 h-4" />
-                          </IconButton>
-                        </div>
+                        <PathQuantityRow
+                          key={`${entry.id}-${idx}`}
+                          label={label}
+                          quantity={entry.quantity}
+                          onQuantityChange={(q) =>
+                            setForm((prev) => ({
+                              ...prev,
+                              level1Path: {
+                                ...prev.level1Path,
+                                equipmentEntries: prev.level1Path.equipmentEntries.map((e, i) =>
+                                  i === idx ? { ...e, quantity: q } : e
+                                ),
+                              },
+                            }))
+                          }
+                          onRemove={() =>
+                            setForm((prev) => ({
+                              ...prev,
+                              level1Path: {
+                                ...prev.level1Path,
+                                equipmentEntries: prev.level1Path.equipmentEntries.filter(
+                                  (_, i) => i !== idx
+                                ),
+                              },
+                            }))
+                          }
+                          removeLabel={`Remove ${label}`}
+                        />
                       );
                     })}
                   </div>
@@ -1849,50 +1921,34 @@ export function AdminArchetypesTab() {
                       ],
                     }))
                   }
-                  onRemove={() => {}}
                 />
-                <div className="flex flex-wrap gap-2 mt-1">
+                <div className="space-y-2 mt-1">
                   {form.guidedSharedEquipmentEntries.map((entry, idx) => {
                     const label =
                       equipmentOptions.find((o) => o.value === entry.id)?.label ?? entry.id;
                     return (
-                      <div
+                      <PathQuantityRow
                         key={`${entry.id}-${idx}`}
-                        className="flex items-center gap-1 rounded-lg border border-border-light bg-surface px-2 py-1"
-                      >
-                        <span className="text-sm truncate max-w-[120px]">{label}</span>
-                        <Input
-                          type="number"
-                          min={1}
-                          value={String(entry.quantity)}
-                          onChange={(e) => {
-                            const q = Math.max(1, parseInt(e.target.value, 10) || 1);
-                            setForm((prev) => ({
-                              ...prev,
-                              guidedSharedEquipmentEntries: prev.guidedSharedEquipmentEntries.map(
-                                (item, i) => (i === idx ? { ...item, quantity: q } : item)
-                              ),
-                            }));
-                          }}
-                          className="w-14 text-center"
-                          aria-label={`Quantity for recommended gear ${label}`}
-                        />
-                        <IconButton
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            setForm((prev) => ({
-                              ...prev,
-                              guidedSharedEquipmentEntries: prev.guidedSharedEquipmentEntries.filter(
-                                (_, i) => i !== idx
-                              ),
-                            }))
-                          }
-                          label={`Remove recommended gear ${label}`}
-                        >
-                          <X className="w-4 h-4" />
-                        </IconButton>
-                      </div>
+                        label={label}
+                        quantity={entry.quantity}
+                        onQuantityChange={(q) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            guidedSharedEquipmentEntries: prev.guidedSharedEquipmentEntries.map(
+                              (item, i) => (i === idx ? { ...item, quantity: q } : item)
+                            ),
+                          }))
+                        }
+                        onRemove={() =>
+                          setForm((prev) => ({
+                            ...prev,
+                            guidedSharedEquipmentEntries: prev.guidedSharedEquipmentEntries.filter(
+                              (_, i) => i !== idx
+                            ),
+                          }))
+                        }
+                        removeLabel={`Remove recommended gear ${label}`}
+                      />
                     );
                   })}
                 </div>
@@ -1995,77 +2051,207 @@ export function AdminArchetypesTab() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {selectionFieldConfig.map((field) => {
-                      const options = (field.key === 'feats' || field.key === 'removeFeats')
+                      const isFeatField = field.key === 'feats';
+                      const options = isFeatField
                         ? getFeatOptionsForLevel(row.level)
                         : optionsByField[field.key];
+                      const selected = row[field.key];
+                      if (isFeatField) {
+                        return (
+                          <div key={`${row.rowId}-${field.key}`} className="space-y-2">
+                            <ChipSelect
+                              label={`Add ${field.label}`}
+                              placeholder={field.placeholder}
+                              options={options
+                                .filter((option) => !selected.includes(option.value))
+                                .map((option) => ({
+                                  value: option.value,
+                                  label: option.label,
+                                }))}
+                              selectedValues={[]}
+                              onSelect={(value) =>
+                                setForm((f) => ({
+                                  ...f,
+                                  levelPathRows: f.levelPathRows.map((candidate) =>
+                                    candidate.rowId === row.rowId
+                                      ? {
+                                          ...candidate,
+                                          [field.key]: dedupeStrings([
+                                            ...candidate[field.key],
+                                            value,
+                                          ]),
+                                        }
+                                      : candidate
+                                  ),
+                                }))
+                              }
+                            />
+                            <SelectedFeatRows
+                              featIds={selected}
+                              featById={featById}
+                              onRemove={(value) =>
+                                setForm((f) => ({
+                                  ...f,
+                                  levelPathRows: f.levelPathRows.map((candidate) =>
+                                    candidate.rowId === row.rowId
+                                      ? {
+                                          ...candidate,
+                                          [field.key]: candidate[field.key].filter(
+                                            (entry) => entry !== value
+                                          ),
+                                        }
+                                      : candidate
+                                  ),
+                                }))
+                              }
+                            />
+                          </div>
+                        );
+                      }
                       return (
-                      <ChipSelect
-                        key={`${row.rowId}-${field.key}`}
-                        label={`Add ${field.label}`}
-                        placeholder={field.placeholder}
-                        options={options.map((option) => ({
-                          value: option.value,
-                          label: option.label,
-                        }))}
-                        selectedValues={row[field.key]}
-                        onSelect={(value) =>
-                          setForm((f) => ({
-                            ...f,
-                            levelPathRows: f.levelPathRows.map((candidate) =>
-                              candidate.rowId === row.rowId
-                                ? { ...candidate, [field.key]: dedupeStrings([...candidate[field.key], value]) }
-                                : candidate
-                            ),
-                          }))
-                        }
-                        onRemove={(value) =>
-                          setForm((f) => ({
-                            ...f,
-                            levelPathRows: f.levelPathRows.map((candidate) =>
-                              candidate.rowId === row.rowId
-                                ? { ...candidate, [field.key]: candidate[field.key].filter((entry) => entry !== value) }
-                                : candidate
-                            ),
-                          }))
-                        }
-                      />
+                        <ChipSelect
+                          key={`${row.rowId}-${field.key}`}
+                          label={`Add ${field.label}`}
+                          placeholder={field.placeholder}
+                          options={options.map((option) => ({
+                            value: option.value,
+                            label: option.label,
+                          }))}
+                          selectedValues={selected}
+                          onSelect={(value) =>
+                            setForm((f) => ({
+                              ...f,
+                              levelPathRows: f.levelPathRows.map((candidate) =>
+                                candidate.rowId === row.rowId
+                                  ? {
+                                      ...candidate,
+                                      [field.key]: dedupeStrings([
+                                        ...candidate[field.key],
+                                        value,
+                                      ]),
+                                    }
+                                  : candidate
+                              ),
+                            }))
+                          }
+                          onRemove={(value) =>
+                            setForm((f) => ({
+                              ...f,
+                              levelPathRows: f.levelPathRows.map((candidate) =>
+                                candidate.rowId === row.rowId
+                                  ? {
+                                      ...candidate,
+                                      [field.key]: candidate[field.key].filter(
+                                        (entry) => entry !== value
+                                      ),
+                                    }
+                                  : candidate
+                              ),
+                            }))
+                          }
+                        />
                       );
                     })}
                     {removeFieldConfig.map((field) => {
-                      const options = (field.key === 'feats' || field.key === 'removeFeats')
+                      const isFeatField = field.key === 'removeFeats';
+                      const options = isFeatField
                         ? getFeatOptionsForLevel(row.level)
                         : optionsByField[field.key];
+                      const selected = row[field.key];
+                      if (isFeatField) {
+                        return (
+                          <div key={`${row.rowId}-${field.key}`} className="space-y-2">
+                            <ChipSelect
+                              label={field.label}
+                              placeholder={field.placeholder}
+                              options={options
+                                .filter((option) => !selected.includes(option.value))
+                                .map((option) => ({
+                                  value: option.value,
+                                  label: option.label,
+                                }))}
+                              selectedValues={[]}
+                              onSelect={(value) =>
+                                setForm((f) => ({
+                                  ...f,
+                                  levelPathRows: f.levelPathRows.map((candidate) =>
+                                    candidate.rowId === row.rowId
+                                      ? {
+                                          ...candidate,
+                                          [field.key]: dedupeStrings([
+                                            ...candidate[field.key],
+                                            value,
+                                          ]),
+                                        }
+                                      : candidate
+                                  ),
+                                }))
+                              }
+                            />
+                            <SelectedFeatRows
+                              featIds={selected}
+                              featById={featById}
+                              onRemove={(value) =>
+                                setForm((f) => ({
+                                  ...f,
+                                  levelPathRows: f.levelPathRows.map((candidate) =>
+                                    candidate.rowId === row.rowId
+                                      ? {
+                                          ...candidate,
+                                          [field.key]: candidate[field.key].filter(
+                                            (entry) => entry !== value
+                                          ),
+                                        }
+                                      : candidate
+                                  ),
+                                }))
+                              }
+                            />
+                          </div>
+                        );
+                      }
                       return (
-                      <ChipSelect
-                        key={`${row.rowId}-${field.key}`}
-                        label={field.label}
-                        placeholder={field.placeholder}
-                        options={options.map((option) => ({
-                          value: option.value,
-                          label: option.label,
-                        }))}
-                        selectedValues={row[field.key]}
-                        onSelect={(value) =>
-                          setForm((f) => ({
-                            ...f,
-                            levelPathRows: f.levelPathRows.map((candidate) =>
-                              candidate.rowId === row.rowId
-                                ? { ...candidate, [field.key]: dedupeStrings([...candidate[field.key], value]) }
-                                : candidate
-                            ),
-                          }))
-                        }
-                        onRemove={(value) =>
-                          setForm((f) => ({
-                            ...f,
-                            levelPathRows: f.levelPathRows.map((candidate) =>
-                              candidate.rowId === row.rowId
-                                ? { ...candidate, [field.key]: candidate[field.key].filter((entry) => entry !== value) }
-                                : candidate
-                            ),
-                          }))
-                        }
-                      />
+                        <ChipSelect
+                          key={`${row.rowId}-${field.key}`}
+                          label={field.label}
+                          placeholder={field.placeholder}
+                          options={options.map((option) => ({
+                            value: option.value,
+                            label: option.label,
+                          }))}
+                          selectedValues={selected}
+                          onSelect={(value) =>
+                            setForm((f) => ({
+                              ...f,
+                              levelPathRows: f.levelPathRows.map((candidate) =>
+                                candidate.rowId === row.rowId
+                                  ? {
+                                      ...candidate,
+                                      [field.key]: dedupeStrings([
+                                        ...candidate[field.key],
+                                        value,
+                                      ]),
+                                    }
+                                  : candidate
+                              ),
+                            }))
+                          }
+                          onRemove={(value) =>
+                            setForm((f) => ({
+                              ...f,
+                              levelPathRows: f.levelPathRows.map((candidate) =>
+                                candidate.rowId === row.rowId
+                                  ? {
+                                      ...candidate,
+                                      [field.key]: candidate[field.key].filter(
+                                        (entry) => entry !== value
+                                      ),
+                                    }
+                                  : candidate
+                              ),
+                            }))
+                          }
+                        />
                       );
                     })}
                   </div>

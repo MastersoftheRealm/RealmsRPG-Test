@@ -145,6 +145,7 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
         onSort={handleSort}
         headerColumns={CREATURE_HEADER_COLUMNS}
         gridColumns={CREATURE_GRID_COLUMNS}
+        hasThumbnailColumn
         filteredCount={filteredData.length}
         driftedCount={sync.driftedCount}
         syncingAll={sync.syncingAll}
@@ -170,6 +171,7 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
                 id: creature.docId,
                 name: creature.name,
                 description: creature.description,
+                imageUrl: creature.image_url ?? undefined,
                 level: creature.level,
                 type: creature.type,
                 size: creature.size,

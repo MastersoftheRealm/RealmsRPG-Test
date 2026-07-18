@@ -60,6 +60,8 @@ export interface LibraryPower {
     endsOnActivation?: boolean;
     sustain?: number;
   };
+  image_id?: string | null;
+  image_url?: string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
   /** Present on official-library rows when copied from Realms Library. */
@@ -81,6 +83,8 @@ export interface LibraryTechnique {
   weapon?: { id?: string | number; name?: string; tp?: number };
   actionType?: string;
   isReaction?: boolean;
+  image_id?: string | null;
+  image_url?: string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
   _source?: 'official' | string;
@@ -112,6 +116,7 @@ export interface LibraryItem {
   costs?: { totalTP?: number; totalCurrency?: number; totalIP?: number };
   rarity?: string;
   armorValue?: number;
+  image_id?: string | null;
   image_url?: string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
@@ -136,6 +141,7 @@ export interface LibrarySpecies {
   ave_height?: number;
   ave_weight?: number;
   adulthood_lifespan?: number[];
+  image_id?: string | null;
   image_url?: string | null;
   createdAt?: string;
   updatedAt?: string;
@@ -170,6 +176,8 @@ export interface LibraryCreature {
   armaments?: Array<{ name: string }>;
   hp?: number;
   attacks?: unknown[];
+  image_id?: string | null;
+  image_url?: string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
   _source?: 'official' | string;

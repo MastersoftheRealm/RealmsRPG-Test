@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { GridListRow, type ColumnValue, type ChipData } from '@/components/shared/grid-list-row';
 import { ListHeader, type ListColumn, type SortState } from '@/components/shared/list-header';
 import type { ListHeaderRowChrome } from '@/components/shared/grid-list-row-chrome';
+import type { ListRowThumbnailProps } from '@/components/shared/list-row-thumbnail';
 import { SectionHeader } from '@/components/shared/section-header';
 import { QuantitySelector } from '@/components/shared/quantity-selector';
 import { RollButton } from '@/components/shared/roll-button';
@@ -39,6 +40,8 @@ export type EntityRowExtras = {
   hideUsesInName?: boolean;
   nameContent?: ReactNode;
   supplementalExpandedContent?: ReactNode;
+  /** Art-capable rows: pair with ListHeader `hasThumbnailColumn`. */
+  thumbnail?: ListRowThumbnailProps;
 };
 
 export type EntityListControls = {
@@ -279,6 +282,7 @@ function renderInteractiveGridRows(
       name={item.name}
       nameContent={item.nameContent}
       description={item.description}
+      thumbnail={item.thumbnail}
       columns={item.columns ?? buildDefaultColumns(item, idx)}
       gridColumns={item.gridColumns ?? defaultGrid}
       expandedContent={
@@ -371,6 +375,7 @@ export function PowersListSection({
           sortState={sortState}
           onSort={onSort}
           rowChrome={rowChrome}
+          hasThumbnailColumn
         />
       )}
       {hasAny ? (
@@ -471,7 +476,14 @@ export function TechniquesListSection({
       {isContentVisible && (
         <>
       {showListHeader && hasAny && (
-        <ListHeader columns={cols} gridColumns={grid} sortState={sortState} onSort={onSort} rowChrome={rowChrome} />
+        <ListHeader
+          columns={cols}
+          gridColumns={grid}
+          sortState={sortState}
+          onSort={onSort}
+          rowChrome={rowChrome}
+          hasThumbnailColumn
+        />
       )}
       {hasAny ? (
         <div className="space-y-1">
@@ -552,7 +564,14 @@ export function WeaponsListSection({
   const listBody = (
     <>
       {showListHeader && hasAny && (
-        <ListHeader columns={cols} gridColumns={grid} sortState={sortState} onSort={onSort} rowChrome={rowChrome} />
+        <ListHeader
+          columns={cols}
+          gridColumns={grid}
+          sortState={sortState}
+          onSort={onSort}
+          rowChrome={rowChrome}
+          hasThumbnailColumn
+        />
       )}
       {hasAny ? (
         layout === 'characterSheet' ? (
@@ -601,6 +620,7 @@ export function WeaponsListSection({
                 id={String(w.id ?? idx)}
                 name={w.name}
                 description={w.description}
+                thumbnail={w.thumbnail}
                 columns={w.columns ?? [
                   { key: 'damage', value: w.damage ?? '-', align: 'center' },
                   { key: 'range', value: w.range ?? 'Melee', align: 'center' },
@@ -684,7 +704,14 @@ export function ShieldsListSection({
   const listBody = (
     <>
       {showListHeader && hasAny && (
-        <ListHeader columns={cols} gridColumns={grid} sortState={sortState} onSort={onSort} rowChrome={rowChrome} />
+        <ListHeader
+          columns={cols}
+          gridColumns={grid}
+          sortState={sortState}
+          onSort={onSort}
+          rowChrome={rowChrome}
+          hasThumbnailColumn
+        />
       )}
       {hasAny ? (
         layout === 'characterSheet' ? (
@@ -704,6 +731,7 @@ export function ShieldsListSection({
                   id={String(s.id ?? idx)}
                   name={s.name}
                   description={s.description}
+                  thumbnail={s.thumbnail}
                   columns={columns}
                   gridColumns={grid}
                   chips={s.chips}
@@ -784,6 +812,7 @@ export function ArmorListSection({
           sortState={sortState}
           onSort={onSort}
           rowChrome={rowChrome}
+          hasThumbnailColumn
         />
       )}
       {hasAny ? (
@@ -797,6 +826,7 @@ export function ArmorListSection({
                 id={String(a.id ?? idx)}
                 name={a.name}
                 description={a.description}
+                thumbnail={a.thumbnail}
                 columns={[
                   { key: 'dr', value: a.damageReduction ?? a.armorValue ?? '-', align: 'center' },
                   { key: 'crit', value: '-', align: 'center' },
@@ -878,6 +908,7 @@ export function EquipmentListSection({
           sortState={sortState}
           onSort={onSort}
           rowChrome={rowChrome}
+          hasThumbnailColumn
         />
       )}
       {hasAny ? (
@@ -903,6 +934,7 @@ export function EquipmentListSection({
                   id={String(e.id ?? idx)}
                   name={e.name}
                   description={e.description}
+                  thumbnail={e.thumbnail}
                   columns={columns}
                   gridColumns={grid}
                   compact={compactRows}

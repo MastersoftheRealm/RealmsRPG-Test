@@ -38,6 +38,7 @@ import {
   type ListColumn,
   type SortState,
 } from '@/components/shared';
+import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { FilterSection } from '@/components/codex';
 import { Spinner, Button, EmptyState, Card, DescriptorChip } from '@/components/ui';
@@ -119,6 +120,8 @@ interface UnifiedEquipmentItem {
   rarity?: string;
   category?: string; // Equipment category for display
   source: 'library' | 'codex' | 'public'; // Track where item came from
+  image_id?: string | null;
+  image_url?: string | null;
 }
 
 // Starting currency for new characters at level 1 is 200
@@ -298,6 +301,8 @@ export function EquipmentStep() {
           }),
           rarity: display.rarity,
           source: 'library',
+          image_id: userItem.image_id ?? null,
+          image_url: userItem.image_url ?? null,
         });
       }
     }
@@ -305,7 +310,7 @@ export function EquipmentStep() {
     // Add all equipment from the Codex (weapons, armor, and general equipment)
     if (codexEquipment) {
       for (const item of codexEquipment) {
-        const equip = item as { category?: string };
+        const equip = item as { category?: string; image_id?: string | null; image_url?: string | null };
         items.push({
           id: item.id,
           name: item.name,
@@ -331,6 +336,8 @@ export function EquipmentStep() {
           rarity: item.rarity,
           category: equip.category,
           source: 'codex',
+          image_id: equip.image_id ?? (item as { image_id?: string | null }).image_id ?? null,
+          image_url: equip.image_url ?? (item as { image_url?: string | null }).image_url ?? null,
         });
       }
     }
@@ -398,6 +405,8 @@ export function EquipmentStep() {
           rarity: display.rarity,
           category: type === 'equipment' ? 'Equipment' : undefined,
           source: 'public',
+          image_id: pub.image_id ?? null,
+          image_url: pub.image_url ?? null,
         });
       }
     }
@@ -569,6 +578,8 @@ export function EquipmentStep() {
         damage: item.damage,
         armor: item.armor_value,
         properties: item.properties as unknown as Item['properties'],
+        image_id: item.image_id ?? null,
+        image_url: item.image_url ?? null,
       };
       updateDraft({
         equipment: {
@@ -983,18 +994,25 @@ export function EquipmentStep() {
             gridColumns={SELECTED_EQUIPMENT_GRID}
             rightSlotWidth={RIGHT_SLOT_WIDTH}
             compact
+            hasThumbnailColumn
           />
           <div className="space-y-1 pb-2">
             {selectedItems.map((item) => {
               const fullItem = allEquipment.find((e) => e.id === item.id);
               const typeLabel = item.type.charAt(0).toUpperCase() + item.type.slice(1);
               const costTotal = item.cost * item.quantity;
+              const thumbnail = resolveListRowThumbnail(
+                'equipment',
+                fullItem ?? item,
+                item.name
+              );
               return (
                 <GridListRow
                   key={item.id}
                   id={item.id}
                   name={item.name}
                   description={fullItem?.description || undefined}
+                  thumbnail={thumbnail}
                   columns={[
                     { key: 'type', value: typeLabel, align: 'center' as const },
                     { key: 'cost', value: `${costTotal}c`, align: 'right' as const },
@@ -1185,6 +1203,7 @@ export function EquipmentStep() {
                 sortState={equipmentSort}
                 onSort={(col) => setEquipmentSort(toggleSort(equipmentSort, col))}
                 rightSlotWidth={RIGHT_SLOT_WIDTH}
+                hasThumbnailColumn
               />
             )}
             {activeTab === 'armor' && sortedEquipment.length > 0 && (
@@ -1194,6 +1213,7 @@ export function EquipmentStep() {
                 sortState={equipmentSort}
                 onSort={(col) => setEquipmentSort(toggleSort(equipmentSort, col))}
                 rightSlotWidth={RIGHT_SLOT_WIDTH}
+                hasThumbnailColumn
               />
             )}
             {activeTab === 'equipment' && sortedEquipment.length > 0 && (
@@ -1203,6 +1223,7 @@ export function EquipmentStep() {
                 sortState={equipmentSort}
                 onSort={(col) => setEquipmentSort(toggleSort(equipmentSort, col))}
                 rightSlotWidth={RIGHT_SLOT_WIDTH}
+                hasThumbnailColumn
               />
             )}
             <div className="space-y-1 max-h-[400px] overflow-y-auto">
@@ -1298,6 +1319,8 @@ export function EquipmentStep() {
                       ? [{ label: 'Properties', chips, hideLabelIfSingle: true as const }]
                       : undefined;
 
+                  const thumbnail = resolveListRowThumbnail('equipment', item, item.name);
+
                   if (activeTab === 'weapon') {
                     const propPayloads = (item.properties ?? []) as ItemPropertyPayload[];
                     const rangeLabel = formatRange(propPayloads);
@@ -1310,6 +1333,7 @@ export function EquipmentStep() {
                         id={item.id}
                         name={item.name}
                         description={item.description}
+                        thumbnail={thumbnail}
                         columns={[
                           { key: 'damage', value: item.damage ? formatDamageDisplay(item.damage) : '-', align: 'center' },
                           costColumn,
@@ -1330,6 +1354,7 @@ export function EquipmentStep() {
                         id={item.id}
                         name={item.name}
                         description={item.description}
+                        thumbnail={thumbnail}
                         columns={[
                           {
                             key: 'armor_value',
@@ -1354,6 +1379,7 @@ export function EquipmentStep() {
                       id={item.id}
                       name={item.name}
                       description={item.description}
+                      thumbnail={thumbnail}
                       columns={[categoryColumn, costColumn, sourceColumn]}
                       gridColumns={EQUIPMENT_LIST_GRID}
                       badges={badges}
