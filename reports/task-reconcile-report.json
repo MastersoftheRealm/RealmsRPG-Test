@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-18T02:35:32.768Z",
+  "generated_at": "2026-07-18T02:35:38.671Z",
   "tasks": [
     {
       "id": "TASK-461",
@@ -223,6 +223,14 @@
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
         {
+          "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
+          "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        },
+        {
           "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
           "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
           "files": [
@@ -260,6 +268,14 @@
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
         {
+          "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
+          "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        },
+        {
           "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
           "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
           "files": [
@@ -294,6 +310,14 @@
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
+          "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        },
         {
           "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
           "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
@@ -331,6 +355,14 @@
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
         {
+          "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
+          "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        },
+        {
           "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
           "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
           "files": [
@@ -360,7 +392,9 @@
         "src/docs/ai/AI_CHANGELOG.md",
         "src/docs/ai/archive/TASK_QUEUE_DONE.md"
       ],
-      "related_overlap": []
+      "related_overlap": [
+        "src/docs/ai/AI_CHANGELOG.md"
+      ]
     },
     {
       "id": "TASK-524",
@@ -369,6 +403,14 @@
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
+          "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        },
         {
           "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
           "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
@@ -396,7 +438,9 @@
         "src/docs/ALL_FEEDBACK_CLEAN.md",
         "src/docs/ai/AI_CHANGELOG.md"
       ],
-      "related_overlap": []
+      "related_overlap": [
+        "src/docs/ai/AI_CHANGELOG.md"
+      ]
     },
     {
       "id": "TASK-523",
@@ -405,6 +449,14 @@
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
+          "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        },
         {
           "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
           "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
@@ -439,6 +491,14 @@
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
         {
+          "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
+          "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        },
+        {
           "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
           "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
           "files": [
@@ -469,7 +529,9 @@
         "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
         "src/docs/ai/AI_CHANGELOG.md"
       ],
-      "related_overlap": []
+      "related_overlap": [
+        "src/docs/ai/AI_CHANGELOG.md"
+      ]
     },
     {
       "id": "TASK-514",
@@ -589,6 +651,14 @@
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
         {
+          "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
+          "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        },
+        {
           "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
           "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
           "files": [
@@ -623,6 +693,14 @@
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
         {
+          "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
+          "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        },
+        {
           "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
           "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
           "files": [
@@ -653,6 +731,14 @@
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
+          "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        },
         {
           "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
           "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
@@ -693,6 +779,14 @@
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
         {
+          "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
+          "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        },
+        {
           "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
           "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
           "files": [
@@ -728,6 +822,14 @@
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
         {
+          "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
+          "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        },
+        {
           "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
           "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
           "files": [
@@ -756,7 +858,9 @@
         "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
         "src/docs/ai/AI_CHANGELOG.md"
       ],
-      "related_overlap": []
+      "related_overlap": [
+        "src/docs/ai/AI_CHANGELOG.md"
+      ]
     },
     {
       "id": "TASK-519",
@@ -765,6 +869,14 @@
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "b2f4f36c10fb50fa0327ac9f8b16350b0976440f",
+          "subject": "Update task-reconcile report matches after CI fix commit (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528)",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        },
         {
           "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
           "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
@@ -794,7 +906,9 @@
         "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
         "src/docs/ai/AI_CHANGELOG.md"
       ],
-      "related_overlap": []
+      "related_overlap": [
+        "src/docs/ai/AI_CHANGELOG.md"
+      ]
     },
     {
       "id": "TASK-478",
