@@ -1124,6 +1124,17 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Expected** | Metric columns use tight content-sized widths (fit roll buttons / range text); Name wraps properties; table stays inside the panel; Unarmed alignment preserved; no regression to roll buttons. |
 | **Report** | DEV-V-009-T017: PASS / FAIL / SKIP — |
 
+#### DEV-V-009-T021 — Mobile side-scroll panels centered with header gutters (TASK-538)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-538 |
+| **Where** | `/characters/[id]` at ~360px and ~700px width (below `md`) |
+| **Steps** | 1. Open character sheet. 2. Compare left/right edges of the sheet header card vs the Abilities panel below — they should share the same horizontal gutters. 3. Swipe to Skills, Archetype, and Library; confirm each snapped panel keeps those gutters (not flush to the screen edge). 4. While swiping between panels, confirm a clear gap/margin between adjacent section cards. |
+| **Expected** | Side-scroll panels align with the header/PageContainer content width; gap between panels; snap stops do not shift content left of the header. Desktop `md+` grid unchanged. |
+| **Report** | DEV-V-009-T021: PASS / FAIL / SKIP — |
+
 ---
 
 ## DEV-V-005 — RLS policy consolidation (TASK-352, TASK-327)

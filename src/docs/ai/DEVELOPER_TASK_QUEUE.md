@@ -127,6 +127,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 | **TASK-534** | DEV-V-008 **T021** | Admin archetype modal: expandable selected feats + cleaner qty/group layout |
 | **TASK-536** | DEV-V-016 **T012** | Mobile GLR names fill space beside X/+ (no empty desktop-column squeeze) |
 | **TASK-537** | DEV-V-009 **T020** | Inventory Currency / Armament Proficiency stack on mobile; TabSummarySection solid fills (no gradient) |
+| **TASK-538** | DEV-V-009 **T021** | Sheet mobile side-scroll panels share header gutters + gap between panels |
 
 _Add rows when archiving user-facing work with `verification_status: pending-qa`. Remove when `verified` or `failed`._
 
