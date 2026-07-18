@@ -35,8 +35,10 @@
   notes: |
     Owner feedback 2026-07-18. Also narrowed my-account email-change mapping so bare
     "invalid" / "password" substrings do not mislabel errors.
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/41
   evidence: |
-    npm test — auth-errors.test.ts + auth-email.test.ts; npm run build (agent).
+    npm test — auth-errors.test.ts + auth-email.test.ts (7 passed); npm run build (agent).
   build_validation: |
     suite: DEV-V-024
     tests:
