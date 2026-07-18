@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-18T03:34:15.989Z",
+  "generated_at": "2026-07-18T03:34:18.732Z",
   "tasks": [
     {
       "id": "TASK-535",
@@ -222,6 +222,13 @@
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
         {
+          "hash": "a605e8fa23f02f8a5fe89f3b7408268fc5b6e8a0",
+          "subject": "Update task-reconcile report matches after CI fix commit (TASK-530 TASK-531 TASK-532 TASK-533 TASK-534)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
+        {
           "hash": "3e0f167d6505686136830cf7317a32a0f2466064",
           "subject": "Fix master CI: restore task-reconcile evidence (TASK-530 TASK-531 TASK-532 TASK-533 TASK-534).",
           "files": [
@@ -241,6 +248,13 @@
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "a605e8fa23f02f8a5fe89f3b7408268fc5b6e8a0",
+          "subject": "Update task-reconcile report matches after CI fix commit (TASK-530 TASK-531 TASK-532 TASK-533 TASK-534)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
         {
           "hash": "3e0f167d6505686136830cf7317a32a0f2466064",
           "subject": "Fix master CI: restore task-reconcile evidence (TASK-530 TASK-531 TASK-532 TASK-533 TASK-534).",
@@ -363,6 +377,13 @@
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
         {
+          "hash": "a605e8fa23f02f8a5fe89f3b7408268fc5b6e8a0",
+          "subject": "Update task-reconcile report matches after CI fix commit (TASK-530 TASK-531 TASK-532 TASK-533 TASK-534)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
+        {
           "hash": "3e0f167d6505686136830cf7317a32a0f2466064",
           "subject": "Fix master CI: restore task-reconcile evidence (TASK-530 TASK-531 TASK-532 TASK-533 TASK-534).",
           "files": [
@@ -408,6 +429,13 @@
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
         {
+          "hash": "a605e8fa23f02f8a5fe89f3b7408268fc5b6e8a0",
+          "subject": "Update task-reconcile report matches after CI fix commit (TASK-530 TASK-531 TASK-532 TASK-533 TASK-534)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
+        {
           "hash": "3e0f167d6505686136830cf7317a32a0f2466064",
           "subject": "Fix master CI: restore task-reconcile evidence (TASK-530 TASK-531 TASK-532 TASK-533 TASK-534).",
           "files": [
@@ -434,6 +462,13 @@
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "a605e8fa23f02f8a5fe89f3b7408268fc5b6e8a0",
+          "subject": "Update task-reconcile report matches after CI fix commit (TASK-530 TASK-531 TASK-532 TASK-533 TASK-534)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
         {
           "hash": "3e0f167d6505686136830cf7317a32a0f2466064",
           "subject": "Fix master CI: restore task-reconcile evidence (TASK-530 TASK-531 TASK-532 TASK-533 TASK-534).",
