@@ -21,6 +21,8 @@
   notes: |
     Owner feedback 2026-07-18. SectionHeader for library collapsibles already had no
     gradient background; only TabSummarySection bars were gradient-backed.
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/37
   build_validation: |
     suite: DEV-V-009
     tests:
@@ -28,7 +30,7 @@
   developer_test_plan: |
     Suite DEV-V-009 T020 — see BUILD_VALIDATION.md
   evidence: |
-    npm run build; inventory layout flex-col below sm; TabSummarySection solid fills.
+    npm run build (pass); inventory layout flex-col below sm; TabSummarySection solid fills.
 
 ---
 - id: TASK-536
