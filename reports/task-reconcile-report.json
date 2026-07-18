@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-17T17:10:11.034Z",
+  "generated_at": "2026-07-18T02:35:32.768Z",
   "tasks": [
     {
       "id": "TASK-461",
@@ -148,7 +148,7 @@
     },
     {
       "id": "TASK-391",
-      "title": "\"Admin path builder — guidance_groups UI + seed remaining paths\"",
+      "title": "\"SUPERSEDED — Admin path builder guidance_groups UI (use TASK-514–518)\"",
       "status": "not-started",
       "completed_at": "",
       "source": "src/docs/ai/ACTIVE_TASKS.md",
@@ -198,6 +198,601 @@
       "related_files": [
         "src/app/(main)/admin/public-library/AdminPublicEnhancedItemsTab.tsx",
         "src/docs/REALMS_PRODUCT_OVERVIEW.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-521",
+      "title": "Codex content pass — trim archetype Level 1 skills to ≤3 base",
+      "status": "not-started",
+      "completed_at": "",
+      "source": "src/docs/ai/ACTIVE_TASKS.md",
+      "matches": [],
+      "related_files": [
+        "src/lib/constants/creator-layer-governance.ts",
+        "src/lib/game/path-validation.ts",
+        "sql/"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-528",
+      "title": "Guided Path step - group by Power / Powered-Martial / Martial with tips",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
+          "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
+          "files": [
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-light-chromium-linux.png"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/components/guided-creator/steps/path-step.tsx",
+        "src/lib/constants/copy/guided-creator-copy.ts",
+        "public/tooltip-text.tsx",
+        "src/docs/REALMS_PRODUCT_OVERVIEW.md",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "src/docs/ALL_FEEDBACK_CLEAN.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-527",
+      "title": "Guided Loadout entry does not skip Weapons/Armor onto Equipment",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
+          "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
+          "files": [
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-light-chromium-linux.png"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/components/guided-creator/steps/loadout-step.tsx",
+        "src/components/guided-creator/use-guided-path-data.ts",
+        "src/lib/guided-creator/equipment-phase-candidates.ts",
+        "src/lib/guided-creator/equipment-phase-nav.test.ts",
+        "src/docs/ai/GUIDED_EQUIPMENT_PHASED_SPEC.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-526",
+      "title": "Collapsed library sections stack tightly",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
+          "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
+          "files": [
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-light-chromium-linux.png"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/components/shared/section-header.tsx",
+        "src/components/character-sheet/library-section.tsx",
+        "src/components/character-sheet/feats-tab.tsx",
+        "src/components/character-sheet/notes-tab.tsx",
+        "src/components/character-sheet/proficiencies-tab.tsx",
+        "src/components/shared/entity-library-sections.tsx"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-525",
+      "title": "Character Library section title size parity",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
+          "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
+          "files": [
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-light-chromium-linux.png"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/components/character-sheet/library-section.tsx",
+        "src/components/shared/section-header.tsx",
+        "src/components/shared/entity-library-sections.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+        "src/docs/ALL_FEEDBACK_CLEAN.md",
+        "src/docs/ai/AI_CHANGELOG.md",
+        "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-524",
+      "title": "Guided Ancestry pick order — characteristic before ancestry trait",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
+          "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
+          "files": [
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-light-chromium-linux.png"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/components/guided-creator/steps/ancestry-step.tsx",
+        "src/stores/guided-creator-store.ts",
+        "src/docs/REALMS_PRODUCT_OVERVIEW.md",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "src/docs/ALL_FEEDBACK_CLEAN.md",
+        "src/docs/ai/AI_CHANGELOG.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-523",
+      "title": "Weapons table - more space between Range/Attack/Damage",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
+          "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
+          "files": [
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-light-chromium-linux.png"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/components/shared/quick-armaments-sections.tsx",
+        "src/components/character-sheet/archetype-section.tsx",
+        "src/components/shared/index.ts"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-522",
+      "title": "Sheet header DR/crit cards match Speed/Evasion + correct equipped DR",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
+          "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
+          "files": [
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-light-chromium-linux.png"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/components/character-sheet/sheet-header.tsx",
+        "src/components/character-sheet/library-list-helpers.ts",
+        "src/components/character-sheet/library-list-helpers.test.ts",
+        "src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "src/docs/ai/DESIGN_INTENT.md",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ALL_FEEDBACK_CLEAN.md",
+        "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+        "src/docs/ai/AI_CHANGELOG.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-514",
+      "title": "Admin archetype path — feat groups with explicit character vs archetype audience",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "2ebd64c8a14f11d0120b4805a8bd960ffd9f3187",
+          "subject": "Ship admin path parity and sheet/guided polish (TASK-514–528).",
+          "files": [
+            "public/tooltip-text.tsx",
+            "sql/codex-archetypes-creator-layer1-extensions.sql",
+            "sql/codex-archetypes-drop-recommended-species.sql",
+            "src/app/(main)/admin/codex/AdminArchetypesTab.tsx",
+            "src/app/(main)/admin/codex/actions.ts",
+            "src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx",
+            "src/app/api/codex/route.ts",
+            "src/components/character-creator/steps/feats-step.tsx",
+            "src/components/character-creator/steps/species-step.tsx",
+            "src/components/character-sheet/archetype-section.tsx",
+            "src/components/character-sheet/feats-tab.tsx",
+            "src/components/character-sheet/library-list-helpers.test.ts",
+            "src/components/character-sheet/library-list-helpers.ts",
+            "src/components/character-sheet/library-section.tsx",
+            "src/components/character-sheet/notes-tab.tsx",
+            "src/components/character-sheet/proficiencies-tab.tsx",
+            "src/components/character-sheet/sheet-header.tsx",
+            "src/components/guided-creator/steps/ancestry-step.tsx",
+            "src/components/guided-creator/steps/archetype-feats-step.tsx",
+            "src/components/guided-creator/steps/character-feat-step.tsx",
+            "src/components/guided-creator/steps/loadout-step.tsx",
+            "src/components/guided-creator/steps/path-step.tsx",
+            "src/components/guided-creator/use-guided-path-data.ts",
+            "src/components/layout/header.tsx",
+            "src/components/layout/main-app-chrome.tsx",
+            "src/components/shared/entity-library-sections.tsx",
+            "src/components/shared/index.ts",
+            "src/components/shared/quick-armaments-sections.tsx",
+            "src/components/shared/section-header.tsx",
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/MOBILE_UX.md",
+            "src/docs/REALMS_PRODUCT_OVERVIEW.md",
+            "src/docs/SUPABASE_SCHEMA.md",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/ADR/0004-path-guidance-group-audience.md",
+            "src/docs/ai/ADR/README.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DESIGN_INTENT.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/FEATURE_INDEX_BARRELS.generated.md",
+            "src/docs/ai/GUIDED_EQUIPMENT_PHASED_SPEC.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/ai/guide/04-floating-ui-tooltips.md",
+            "src/hooks/use-creator-path-data.ts",
+            "src/lib/constants/copy/guided-creator-copy.ts",
+            "src/lib/constants/creator-layer-governance.ts",
+            "src/lib/game/archetype-display.ts",
+            "src/lib/game/archetype-path-helpers.test.ts",
+            "src/lib/game/archetype-path.ts",
+            "src/lib/game/path-validation.test.ts",
+            "src/lib/game/path-validation.ts",
+            "src/lib/guided-creator/equipment-phase-candidates.test.ts",
+            "src/lib/guided-creator/equipment-phase-candidates.ts",
+            "src/lib/guided-creator/equipment-phase-nav.test.ts",
+            "src/lib/guided-creator/loadout-pool.test.ts",
+            "src/stores/guided-creator-store.ts",
+            "src/types/archetype.ts",
+            "src/types/codex.ts"
+          ]
+        },
+        {
+          "hash": "67a8634e0d0861ced1e2d8738f4a619623e31a16",
+          "subject": "Queue admin archetype-path parity tasks (TASK-514–518).",
+          "files": [
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/ai/ACTIVE_TASKS.md"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/types/archetype.ts",
+        "src/lib/game/archetype-path.ts",
+        "src/lib/game/archetype-path-helpers.test.ts",
+        "src/lib/game/path-validation.ts",
+        "src/docs/ai/ADR/0004-path-guidance-group-audience.md",
+        "src/app/(main)/admin/codex/AdminArchetypesTab.tsx",
+        "src/app/(main)/admin/codex/actions.ts",
+        "src/app/api/codex/route.ts",
+        "src/lib/character/archetype-display.ts",
+        "src/components/guided-creator/steps/character-feat-step.tsx",
+        "src/components/guided-creator/steps/archetype-feats-step.tsx",
+        "src/components/character-creator/steps/feats-step.tsx"
+      ],
+      "related_overlap": [
+        "src/types/archetype.ts",
+        "src/lib/game/archetype-path.ts",
+        "src/lib/game/archetype-path-helpers.test.ts",
+        "src/lib/game/path-validation.ts",
+        "src/docs/ai/ADR/0004-path-guidance-group-audience.md",
+        "src/app/(main)/admin/codex/AdminArchetypesTab.tsx",
+        "src/app/(main)/admin/codex/actions.ts",
+        "src/app/api/codex/route.ts",
+        "src/components/guided-creator/steps/character-feat-step.tsx",
+        "src/components/guided-creator/steps/archetype-feats-step.tsx",
+        "src/components/character-creator/steps/feats-step.tsx"
+      ]
+    },
+    {
+      "id": "TASK-515",
+      "title": "Admin Level 1 skills — base-only, max 3, warn-only legacy",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
+          "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
+          "files": [
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-light-chromium-linux.png"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/app/(main)/admin/codex/AdminArchetypesTab.tsx",
+        "src/lib/game/path-validation.ts",
+        "src/lib/game/path-validation.test.ts",
+        "src/lib/guided-creator/creator-layer-governance.ts"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-516",
+      "title": "Admin Level 1 armaments — weapons/shields vs armor UI split",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
+          "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
+          "files": [
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-light-chromium-linux.png"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/app/(main)/admin/codex/AdminArchetypesTab.tsx"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-517",
+      "title": "Drop recommended-species from archetype paths (column + all consumers)",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
+          "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
+          "files": [
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-light-chromium-linux.png"
+          ]
+        }
+      ],
+      "related_files": [
+        "sql/codex-archetypes-drop-recommended-species.sql",
+        "src/docs/SUPABASE_SCHEMA.md",
+        "src/app/(main)/admin/codex/AdminArchetypesTab.tsx",
+        "src/app/(main)/admin/codex/actions.ts",
+        "src/app/api/codex/route.ts",
+        "src/types/archetype.ts",
+        "src/lib/game/archetype-path.ts",
+        "src/lib/character/archetype-display.ts",
+        "src/components/character-creator/steps/species-step.tsx"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-518",
+      "title": "Admin ↔ DB ↔ guided archetype-path sync audit (post 514–517)",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
+          "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
+          "files": [
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-light-chromium-linux.png"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "src/docs/ai/ACTIVE_TASKS.md",
+        "src/app/(main)/admin/codex/AdminArchetypesTab.tsx",
+        "src/lib/game/archetype-path.ts"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-520",
+      "title": "Guided Continue must not jump to furthest progress",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
+          "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
+          "files": [
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-light-chromium-linux.png"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/stores/guided-creator-store.ts",
+        "src/components/guided-creator/steps/ancestry-step.tsx",
+        "src/components/guided-creator/steps/loadout-step.tsx",
+        "src/docs/ai/guide/04-floating-ui-tooltips.md",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "src/docs/ALL_FEEDBACK_CLEAN.md",
+        "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+        "src/docs/ai/AI_CHANGELOG.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-519",
+      "title": "Fix header mid-width overflow empty strip",
+      "status": "done",
+      "completed_at": "2026-07-17",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "c53f28fab793c25b3df722ef22bcacf298b3f88c",
+          "subject": "Fix master CI: rebaseline visuals after header overflow clip (TASK-515 TASK-516 TASK-517 TASK-518 TASK-519 TASK-520 TASK-522 TASK-523 TASK-524 TASK-525 TASK-526 TASK-527 TASK-528).",
+          "files": [
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/about-mobile-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/home-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/privacy-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/resources-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/terms-desktop-light-chromium-linux.png"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/components/layout/header.tsx",
+        "src/components/layout/main-app-chrome.tsx",
+        "src/docs/MOBILE_UX.md",
+        "src/docs/ai/DESIGN_INTENT.md",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "src/docs/ALL_FEEDBACK_CLEAN.md",
+        "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+        "src/docs/ai/AI_CHANGELOG.md"
       ],
       "related_overlap": []
     },
@@ -462,21 +1057,6 @@
             "tests/visual/screenshots.pw.ts-snapshots/terms-mobile-light-chromium-win32.png",
             "tests/visual/screenshots.pw.ts-snapshots/terms-tablet-dark-chromium-win32.png",
             "tests/visual/screenshots.pw.ts-snapshots/terms-tablet-light-chromium-win32.png"
-          ]
-        },
-        {
-          "hash": "55419038633bf2582027c09e19b5545e1184ca92",
-          "subject": "Prepare KadinBranch for master merge (TASK-405 TASK-496 TASK-497 TASK-498 TASK-499)",
-          "files": [
-            "reports/task-reconcile-report.json",
-            "src/app/(main)/my-account/page.tsx",
-            "src/docs/ai/ACTIVE_TASKS.md",
-            "src/docs/ai/AI_CHANGELOG.md",
-            "src/docs/ai/BUILD_VALIDATION.md",
-            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
-            "src/docs/ai/FEATURE_INDEX.md",
-            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
-            "src/docs/ai/guide/03-entity-card-art.md"
           ]
         },
         {
@@ -9259,28 +9839,6 @@
             "tests/visual/screenshots.pw.ts-snapshots/styleguide-tablet-dark-chromium-linux.png",
             "tests/visual/screenshots.pw.ts-snapshots/styleguide-tablet-light-chromium-linux.png"
           ]
-        },
-        {
-          "hash": "f1e406fe2483f0e9710fcc381f0385f8062c1688",
-          "subject": "Refresh task-reconcile report after TASK-405/496–499 archive",
-          "files": [
-            "reports/task-reconcile-report.json"
-          ]
-        },
-        {
-          "hash": "55419038633bf2582027c09e19b5545e1184ca92",
-          "subject": "Prepare KadinBranch for master merge (TASK-405 TASK-496 TASK-497 TASK-498 TASK-499)",
-          "files": [
-            "reports/task-reconcile-report.json",
-            "src/app/(main)/my-account/page.tsx",
-            "src/docs/ai/ACTIVE_TASKS.md",
-            "src/docs/ai/AI_CHANGELOG.md",
-            "src/docs/ai/BUILD_VALIDATION.md",
-            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
-            "src/docs/ai/FEATURE_INDEX.md",
-            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
-            "src/docs/ai/guide/03-entity-card-art.md"
-          ]
         }
       ],
       "related_files": [
@@ -9319,21 +9877,6 @@
             "tests/visual/screenshots.pw.ts-snapshots/styleguide-mobile-light-chromium-linux.png",
             "tests/visual/screenshots.pw.ts-snapshots/styleguide-tablet-dark-chromium-linux.png",
             "tests/visual/screenshots.pw.ts-snapshots/styleguide-tablet-light-chromium-linux.png"
-          ]
-        },
-        {
-          "hash": "55419038633bf2582027c09e19b5545e1184ca92",
-          "subject": "Prepare KadinBranch for master merge (TASK-405 TASK-496 TASK-497 TASK-498 TASK-499)",
-          "files": [
-            "reports/task-reconcile-report.json",
-            "src/app/(main)/my-account/page.tsx",
-            "src/docs/ai/ACTIVE_TASKS.md",
-            "src/docs/ai/AI_CHANGELOG.md",
-            "src/docs/ai/BUILD_VALIDATION.md",
-            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
-            "src/docs/ai/FEATURE_INDEX.md",
-            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
-            "src/docs/ai/guide/03-entity-card-art.md"
           ]
         }
       ],
@@ -9376,21 +9919,6 @@
             "tests/visual/screenshots.pw.ts-snapshots/styleguide-tablet-dark-chromium-linux.png",
             "tests/visual/screenshots.pw.ts-snapshots/styleguide-tablet-light-chromium-linux.png"
           ]
-        },
-        {
-          "hash": "55419038633bf2582027c09e19b5545e1184ca92",
-          "subject": "Prepare KadinBranch for master merge (TASK-405 TASK-496 TASK-497 TASK-498 TASK-499)",
-          "files": [
-            "reports/task-reconcile-report.json",
-            "src/app/(main)/my-account/page.tsx",
-            "src/docs/ai/ACTIVE_TASKS.md",
-            "src/docs/ai/AI_CHANGELOG.md",
-            "src/docs/ai/BUILD_VALIDATION.md",
-            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
-            "src/docs/ai/FEATURE_INDEX.md",
-            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
-            "src/docs/ai/guide/03-entity-card-art.md"
-          ]
         }
       ],
       "related_files": [
@@ -9428,21 +9956,6 @@
             "tests/visual/screenshots.pw.ts-snapshots/styleguide-tablet-dark-chromium-linux.png",
             "tests/visual/screenshots.pw.ts-snapshots/styleguide-tablet-light-chromium-linux.png"
           ]
-        },
-        {
-          "hash": "55419038633bf2582027c09e19b5545e1184ca92",
-          "subject": "Prepare KadinBranch for master merge (TASK-405 TASK-496 TASK-497 TASK-498 TASK-499)",
-          "files": [
-            "reports/task-reconcile-report.json",
-            "src/app/(main)/my-account/page.tsx",
-            "src/docs/ai/ACTIVE_TASKS.md",
-            "src/docs/ai/AI_CHANGELOG.md",
-            "src/docs/ai/BUILD_VALIDATION.md",
-            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
-            "src/docs/ai/FEATURE_INDEX.md",
-            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
-            "src/docs/ai/guide/03-entity-card-art.md"
-          ]
         }
       ],
       "related_files": [
@@ -9478,21 +9991,6 @@
             "tests/visual/screenshots.pw.ts-snapshots/styleguide-tablet-dark-chromium-linux.png",
             "tests/visual/screenshots.pw.ts-snapshots/styleguide-tablet-light-chromium-linux.png"
           ]
-        },
-        {
-          "hash": "55419038633bf2582027c09e19b5545e1184ca92",
-          "subject": "Prepare KadinBranch for master merge (TASK-405 TASK-496 TASK-497 TASK-498 TASK-499)",
-          "files": [
-            "reports/task-reconcile-report.json",
-            "src/app/(main)/my-account/page.tsx",
-            "src/docs/ai/ACTIVE_TASKS.md",
-            "src/docs/ai/AI_CHANGELOG.md",
-            "src/docs/ai/BUILD_VALIDATION.md",
-            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
-            "src/docs/ai/FEATURE_INDEX.md",
-            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
-            "src/docs/ai/guide/03-entity-card-art.md"
-          ]
         }
       ],
       "related_files": [
@@ -9514,6 +10012,13 @@
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "ff9143715b7d187a64243ed2c5ba0cdb5ef863fe",
+          "subject": "Update task-reconcile report matches after reconcile commit (TASK-508 TASK-509 TASK-510 TASK-511 TASK-512 TASK-513)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
         {
           "hash": "d7e7892f1b47f9578bb1cedfd8487cfbce666feb",
           "subject": "Refresh task-reconcile report after KadinBranch merge (TASK-508 TASK-509 TASK-510 TASK-511 TASK-512 TASK-513)",
@@ -9581,6 +10086,13 @@
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
         {
+          "hash": "ff9143715b7d187a64243ed2c5ba0cdb5ef863fe",
+          "subject": "Update task-reconcile report matches after reconcile commit (TASK-508 TASK-509 TASK-510 TASK-511 TASK-512 TASK-513)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
+        {
           "hash": "d7e7892f1b47f9578bb1cedfd8487cfbce666feb",
           "subject": "Refresh task-reconcile report after KadinBranch merge (TASK-508 TASK-509 TASK-510 TASK-511 TASK-512 TASK-513)",
           "files": [
@@ -9605,6 +10117,13 @@
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "ff9143715b7d187a64243ed2c5ba0cdb5ef863fe",
+          "subject": "Update task-reconcile report matches after reconcile commit (TASK-508 TASK-509 TASK-510 TASK-511 TASK-512 TASK-513)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
         {
           "hash": "d7e7892f1b47f9578bb1cedfd8487cfbce666feb",
           "subject": "Refresh task-reconcile report after KadinBranch merge (TASK-508 TASK-509 TASK-510 TASK-511 TASK-512 TASK-513)",
@@ -9632,6 +10151,13 @@
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
         {
+          "hash": "ff9143715b7d187a64243ed2c5ba0cdb5ef863fe",
+          "subject": "Update task-reconcile report matches after reconcile commit (TASK-508 TASK-509 TASK-510 TASK-511 TASK-512 TASK-513)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
+        {
           "hash": "d7e7892f1b47f9578bb1cedfd8487cfbce666feb",
           "subject": "Refresh task-reconcile report after KadinBranch merge (TASK-508 TASK-509 TASK-510 TASK-511 TASK-512 TASK-513)",
           "files": [
@@ -9653,6 +10179,13 @@
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "ff9143715b7d187a64243ed2c5ba0cdb5ef863fe",
+          "subject": "Update task-reconcile report matches after reconcile commit (TASK-508 TASK-509 TASK-510 TASK-511 TASK-512 TASK-513)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
         {
           "hash": "d7e7892f1b47f9578bb1cedfd8487cfbce666feb",
           "subject": "Refresh task-reconcile report after KadinBranch merge (TASK-508 TASK-509 TASK-510 TASK-511 TASK-512 TASK-513)",
@@ -9677,6 +10210,13 @@
       "completed_at": "2026-07-17",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "ff9143715b7d187a64243ed2c5ba0cdb5ef863fe",
+          "subject": "Update task-reconcile report matches after reconcile commit (TASK-508 TASK-509 TASK-510 TASK-511 TASK-512 TASK-513)",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
         {
           "hash": "d7e7892f1b47f9578bb1cedfd8487cfbce666feb",
           "subject": "Refresh task-reconcile report after KadinBranch merge (TASK-508 TASK-509 TASK-510 TASK-511 TASK-512 TASK-513)",
