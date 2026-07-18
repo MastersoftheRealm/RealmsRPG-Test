@@ -44,10 +44,11 @@ Audit: `ValueStepper`, `IconButton`, sheet action toolbar, tab triggers, list ro
 ## Dense layouts (character sheet, etc.)
 
 - **Preferred:** **Horizontal (side) scrolling** between section panels on mobile. Each section is a full-width panel; user swipes or scrolls left/right (e.g. Abilities → Skills → Archetype → Library). Use `overflow-x-auto`, `scroll-snap-type: x mandatory`, `scroll-snap-align: start` on panels, and optional section strip/dots for current panel and tap-to-jump.
+- **Panel gutters (keep content aligned with the page):** Bleed the scroller with matching negative margin + padding (`-mx-4 px-4` / `sm:-mx-6 sm:px-6` to match `PageContainer`), set the same values as `scroll-padding-inline` (`scroll-px-4 sm:scroll-px-6`), size panels with `basis-full` (not `min-w-full` of the outer viewport), and leave a `gap-4` between panels so snap stops stay centered with the header above.
 - **Within each panel:** Vertical scroll only. No horizontal scroll inside the panel.
 - **When to use collapse instead:** Few sections, lighter content, or sub-sections inside a panel (e.g. Library’s Powers/Techniques/Equipment as collapsible blocks). Use the current app collapsible pattern components in the relevant domain (for creator sections, `creator/collapsible-section.tsx`).
 
-**Character sheet:** Below `md`, use side-scroll of Abilities, Skills, Archetype, Library. Sheet header and toolbar stay responsive (stack resources, toolbar position for thumb reach).
+**Character sheet:** Below `md`, use side-scroll of Abilities, Skills, Archetype, Library (`character-sheet-body.tsx`). Panels share PageContainer gutters with the sheet header; gap between panels during swipe. Toolbar stays responsive (stack resources, thumb reach).
 
 **Other dense pages:** Same idea — side-scroll between major sections where it fits (e.g. encounter tracker, campaign detail); collapse when sections are few.
 

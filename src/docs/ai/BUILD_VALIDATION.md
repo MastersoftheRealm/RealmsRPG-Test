@@ -898,7 +898,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats.
 
@@ -1112,6 +1112,17 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Steps** | 1. Open Weapons on desktop. 2. Confirm **Range**, **Attack**, and **Damage** are readable and not cramped, without the table overflowing the Archetype panel. 3. Confirm named properties remain one `• Property` per line under the weapon name; long property text wraps within the Name column. 4. Confirm Unarmed Prowess (same table) still aligns under the same headers. 5. At ~360px, confirm `TableScroll` allows horizontal scroll without crushing Attack/Damage under wrong headers. |
 | **Expected** | Metric columns use tight content-sized widths (fit roll buttons / range text); Name wraps properties; table stays inside the panel; Unarmed alignment preserved; no regression to roll buttons. |
 | **Report** | DEV-V-009-T017: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T020 — Mobile side-scroll panels centered with header gutters (TASK-537)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-537 |
+| **Where** | `/characters/[id]` at ~360px and ~700px width (below `md`) |
+| **Steps** | 1. Open character sheet. 2. Compare left/right edges of the sheet header card vs the Abilities panel below — they should share the same horizontal gutters. 3. Swipe to Skills, Archetype, and Library; confirm each snapped panel keeps those gutters (not flush to the screen edge). 4. While swiping between panels, confirm a clear gap/margin between adjacent section cards. |
+| **Expected** | Side-scroll panels align with the header/PageContainer content width; gap between panels; snap stops do not shift content left of the header. Desktop `md+` grid unchanged. |
+| **Report** | DEV-V-009-T020: PASS / FAIL / SKIP — |
 
 ---
 

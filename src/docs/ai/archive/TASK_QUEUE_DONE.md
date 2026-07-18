@@ -1,3 +1,38 @@
+- id: TASK-537
+  title: Character sheet mobile — center side-scroll panels with header gutters
+  created_at: 2026-07-18
+  created_by: owner
+  priority: medium
+  status: done
+  completed_at: 2026-07-18
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/character-sheet-body.tsx
+    - src/docs/MOBILE_UX.md
+  description: |
+    Mobile character sheet side-scroll panels (Abilities / Skills / Archetype /
+    Library) were not horizontally aligned with the sheet header and had no gap
+    between adjacent panels. Match PageContainer gutters via scroll-padding,
+    size panels with basis-full, and add gap-4 between snaps.
+  acceptance_criteria:
+    - Below md, each snapped panel shares left/right gutters with SheetHeader.
+    - Visible gap between adjacent side-scroll panels during swipe.
+    - Desktop md+ grid layout unchanged.
+    - BUILD_VALIDATION DEV-V-009-T020; npm run build; MOBILE_UX notes the pattern.
+  notes: |
+    Owner feedback 2026-07-18. Root cause: min-w-full panels sized to the outer
+    viewport without scroll-padding, so snap-start pulled later panels flush to
+    the screen edge while the header stayed inset.
+  evidence: |
+    npm run build; code review of character-sheet-body flex/snap classes.
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T020
+  developer_test_plan: |
+    Suite DEV-V-009 T020 — see BUILD_VALIDATION.md
+
 - id: TASK-536
   title: GridListRow mobile — stop name squeeze beside X/+
   created_at: 2026-07-18

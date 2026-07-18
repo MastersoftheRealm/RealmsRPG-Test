@@ -127,35 +127,37 @@ export function CharacterSheetBody() {
         <AbilitiesPanel />
       </div>
 
-      {/* Shared grid (desktop) + side-scroll panels (mobile); Library mounts once */}
+      {/* Shared grid (desktop) + side-scroll panels (mobile); Library mounts once.
+          Mobile: panel basis = padded content width (matches SheetHeader / PageContainer),
+          gap between panels, scroll-padding so snap aligns with the same gutters. */}
       <div
-        className="flex flex-nowrap overflow-x-auto snap-x snap-mandatory scroll-smooth touch-pan-x -mx-4 px-4 pb-4 md:mx-0 md:px-0 md:pb-0 md:grid md:grid-cols-1 lg:grid-cols-[1fr_1fr_2fr] md:gap-4 md:items-stretch md:overflow-visible md:snap-none"
+        className="flex flex-nowrap gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth touch-pan-x -mx-4 px-4 scroll-px-4 pb-4 sm:-mx-6 sm:px-6 sm:scroll-px-6 md:mx-0 md:px-0 md:scroll-px-0 md:pb-0 md:grid md:grid-cols-1 lg:grid-cols-[1fr_1fr_2fr] md:items-stretch md:overflow-visible md:snap-none"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <section
           aria-label="Abilities & Defenses"
-          className="md:hidden flex-shrink-0 w-full min-w-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden box-border"
+          className="md:hidden w-full shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden box-border"
         >
           <AbilitiesPanel />
         </section>
 
         <section
           aria-label="Skills"
-          className="flex-shrink-0 w-full min-w-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden md:min-w-0 md:overflow-visible md:flex md:flex-col md:min-h-[400px] box-border"
+          className="w-full shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden md:min-w-0 md:basis-auto md:overflow-visible md:flex md:flex-col md:min-h-[400px] box-border"
         >
           <SkillsPanel className="flex-1 min-h-0 md:min-h-0" />
         </section>
 
         <section
           aria-label="Archetype & Attacks"
-          className="flex-shrink-0 w-full min-w-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden md:min-w-0 md:overflow-visible md:flex md:flex-col md:min-h-[400px] box-border"
+          className="w-full shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden md:min-w-0 md:basis-auto md:overflow-visible md:flex md:flex-col md:min-h-[400px] box-border"
         >
           <ArchetypePanel className="flex-1 min-h-0 md:min-h-0" />
         </section>
 
         <section
           aria-label="Library"
-          className="flex-shrink-0 w-full min-w-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden md:min-w-0 md:overflow-visible md:flex md:flex-col md:min-h-[400px] box-border"
+          className="w-full shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden md:min-w-0 md:basis-auto md:overflow-visible md:flex md:flex-col md:min-h-[400px] box-border"
         >
           <LibraryPanel className="flex-1 min-h-0 md:min-h-0" />
         </section>

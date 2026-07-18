@@ -2446,3 +2446,12 @@ Notes
 - Disposition: Implemented as **TASK-536** — `buildMobileCollapsedGridColumns` + `max-lg` grid template on GridListRow. QA: DEV-V-016-T012.
 - Follow-up (2026-07-18): Owner screenshot on Library Powers still showed squeeze — root cause was inline `gridTemplateColumns` overriding the mobile class. `/cleanup` switched to CSS variables only.
 
+**Raw Feedback Log - 2026-07-18 (character sheet mobile side-scroll not centered)**
+- Date: 2026-07-18
+- Context: Character sheet mobile UI — lower half swipeable section panels
+- Priority: Medium
+- Feedback (verbatim):
+  On the character sheet mobile ui the swipable tabs/sections thing at the lower half aren't centered, and they have no margins between each of each other (which would likely help with the centering), the centering is the top half section of the sheet being centered with the bottom. Follow constitution and rules/design styles
+- Expected: Mobile side-scroll panels share horizontal gutters with the sheet header; visible gap/margin between adjacent panels; snap alignment stays centered with the top half.
+- Disposition: Implemented as **TASK-537**. QA: DEV-V-009-T020.
+
