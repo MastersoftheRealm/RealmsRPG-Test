@@ -19,7 +19,7 @@ Quick location table: [`AGENT_GUIDE.md`](../AGENT_GUIDE.md) § Components. Unifi
 
 | Use Case | Component | Notes |
 |----------|-----------|-------|
-| Powers, techniques, feats, equipment in lists | **GridListRow** | Sortable columns, leftSlot/rightSlot, expandable rows; below `lg` collapses empty `hideOnMobile` tracks so names aren’t squeezed beside X/+ (`buildMobileCollapsedGridColumns`) |
+| Powers, techniques, feats, equipment in lists | **GridListRow** | Sortable columns, leftSlot/rightSlot, expandable rows; below `lg` collapses empty `hideOnMobile` tracks so names aren’t squeezed beside X/+ (`buildMobileCollapsedGridColumns` via `--glr-desktop-grid` / `--glr-mobile-grid`, never inline `gridTemplateColumns`) |
 | Character sheet Powers/Techniques energy cost | **GridListRow** `rightSlot` spend `RollButton` + **`CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME`** (`rowChrome.rightSlotLabel: 'Energy'`) | Play lists: cost **only** on the far-right spend control under an **Energy** header — no static Energy value column in the middle (`mapPowerRows` / `mapTechniqueRows` + `CHARACTER_SHEET_TECHNIQUE_*`). Browse/creator/stat-block lists may keep an Energy column when there is no spend button. Do not pass noop `onUse*` handlers (omit them for view-only). |
 | Codex/Library browse, item cards | **ItemCard** (and GridListRow list rows) | Card layout, view/edit/duplicate/delete actions |
 | Base-skill selector (add sub-skill) | **SelectionToggle** | Unique UX; not GridListRow |

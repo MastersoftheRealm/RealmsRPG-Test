@@ -29,8 +29,13 @@
     Cleanup 2026-07-18: first ship set inline gridTemplateColumns which beat the
     max-lg class — Library Powers still showed mid-row X + squeezed names. Fixed by
     applying templates only via --glr-desktop-grid / --glr-mobile-grid CSS variables.
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/34
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/35
+  merged_at: 2026-07-18
   evidence: |
-    vitest grid-list-row-chrome.test.ts; npm run build; owner screenshot on Library Powers.
+    vitest grid-list-row-chrome.test.ts; npm run build; owner screenshot on Library Powers;
+    CI green on #35 (incl. mobile styleguide Linux baselines).
   build_validation: |
     suite: DEV-V-016
     tests:
