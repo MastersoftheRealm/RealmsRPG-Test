@@ -1,7 +1,7 @@
 /**
  * Character Sheet Body — desktop grid + mobile side-scroll (TASK-348).
  * Single LibrarySection mount shared across breakpoints (TASK-317).
- * Mobile panel gutters: basis-full + gap-4 + PageContainer-matched scroll-px (TASK-537).
+ * Mobile panel gutters: basis-full + gap-4 + PageContainer-matched scroll-px (TASK-538).
  */
 
 'use client';
