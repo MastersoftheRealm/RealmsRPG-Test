@@ -1,6 +1,7 @@
 /**
  * Character Sheet Body — desktop grid + mobile side-scroll (TASK-348).
  * Single LibrarySection mount shared across breakpoints (TASK-317).
+ * Mobile panel gutters: basis-full + gap-4 + PageContainer-matched scroll-px (TASK-537).
  */
 
 'use client';
@@ -136,28 +137,28 @@ export function CharacterSheetBody() {
       >
         <section
           aria-label="Abilities & Defenses"
-          className="md:hidden w-full shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden box-border"
+          className="md:hidden shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden box-border"
         >
           <AbilitiesPanel />
         </section>
 
         <section
           aria-label="Skills"
-          className="w-full shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden md:min-w-0 md:basis-auto md:overflow-visible md:flex md:flex-col md:min-h-[400px] box-border"
+          className="shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden md:min-w-0 md:basis-auto md:overflow-visible md:flex md:flex-col md:min-h-[400px] box-border"
         >
           <SkillsPanel className="flex-1 min-h-0 md:min-h-0" />
         </section>
 
         <section
           aria-label="Archetype & Attacks"
-          className="w-full shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden md:min-w-0 md:basis-auto md:overflow-visible md:flex md:flex-col md:min-h-[400px] box-border"
+          className="shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden md:min-w-0 md:basis-auto md:overflow-visible md:flex md:flex-col md:min-h-[400px] box-border"
         >
           <ArchetypePanel className="flex-1 min-h-0 md:min-h-0" />
         </section>
 
         <section
           aria-label="Library"
-          className="w-full shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden md:min-w-0 md:basis-auto md:overflow-visible md:flex md:flex-col md:min-h-[400px] box-border"
+          className="shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden md:min-w-0 md:basis-auto md:overflow-visible md:flex md:flex-col md:min-h-[400px] box-border"
         >
           <LibraryPanel className="flex-1 min-h-0 md:min-h-0" />
         </section>

@@ -10,6 +10,7 @@
   related_files:
     - src/components/character-sheet/character-sheet-body.tsx
     - src/docs/MOBILE_UX.md
+    - src/docs/ai/BUILD_VALIDATION.md
   description: |
     Mobile character sheet side-scroll panels (Abilities / Skills / Archetype /
     Library) were not horizontally aligned with the sheet header and had no gap
@@ -24,6 +25,8 @@
     Owner feedback 2026-07-18. Root cause: min-w-full panels sized to the outer
     viewport without scroll-padding, so snap-start pulled later panels flush to
     the screen edge while the header stayed inset.
+    Cleanup 2026-07-18: archive related_files + BUILD_VALIDATION; drop redundant
+    panel w-full; file header cites TASK-537.
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/38
   evidence: |
