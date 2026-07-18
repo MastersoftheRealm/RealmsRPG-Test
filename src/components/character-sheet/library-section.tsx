@@ -751,10 +751,10 @@ export function LibrarySection({
 
         {resolvedActiveTab === 'inventory' && (
           <div className="space-y-2">
-            {/* Inventory Summary: Currency + Armament Proficiency */}
+            {/* Inventory Summary: Currency + Armament Proficiency (stack on mobile to avoid overlap) */}
             <TabSummarySection variant="currency">
-              <div className="flex w-full flex-wrap items-center gap-y-2">
-                <div className="flex min-w-0 flex-1 items-center justify-start gap-2">
+              <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                <div className="flex min-w-0 items-center gap-2 sm:flex-1 sm:justify-start">
                   <span aria-hidden="true" className="text-sm">
                     💰
                   </span>
@@ -775,7 +775,7 @@ export function LibrarySection({
                         onCurrencyChange?.(newValue);
                       }
                     }}
-                    className="w-20 px-2 py-1 text-sm font-bold text-warning-fg border border-warning-300 dark:border-warning-600/50 rounded focus:ring-2 focus:ring-warning-500 bg-surface"
+                    className="w-20 rounded border border-currency-border bg-surface px-2 py-1 text-sm font-bold text-warning-fg focus:ring-2 focus:ring-currency-border"
                     title="Use +5, -10, or a number"
                     aria-label="Currency"
                   />
@@ -785,9 +785,9 @@ export function LibrarySection({
                   <>
                     <div
                       aria-hidden="true"
-                      className="mx-2 h-6 w-px shrink-0 self-center bg-border-light"
+                      className="mx-2 hidden h-6 w-px shrink-0 self-center bg-border-light sm:block"
                     />
-                    <div className="flex min-w-0 flex-1 items-center justify-end">
+                    <div className="flex min-w-0 items-center sm:flex-1 sm:justify-end">
                       <SummaryItem
                         icon="⚔️"
                         label="Armament Proficiency"

@@ -2446,3 +2446,12 @@ Notes
 - Disposition: Implemented as **TASK-536** — `buildMobileCollapsedGridColumns` + `max-lg` grid template on GridListRow. QA: DEV-V-016-T012.
 - Follow-up (2026-07-18): Owner screenshot on Library Powers still showed squeeze — root cause was inline `gridTemplateColumns` overriding the mobile class. `/cleanup` switched to CSS variables only.
 
+**Raw Feedback Log - 2026-07-18 (sheet Inventory TP / Armament Proficiency overlap + gradients)**
+- Date: 2026-07-18
+- Context: Character sheet Library → Inventory summary; Proficiencies / Notes tab summary bars
+- Priority: High
+- Feedback (verbatim):
+  On mobile uI for the character sheet the training points/armament proficiency overlaps. Also remove the background gradient for this section, dont need gradient here. Same for gradient on background kf the proficineices/notes header sections if any.
+- Expected: Currency and Armament Proficiency (TP) do not overlap on ~360px; TabSummarySection bars use solid fills (no gradient) on Inventory, Proficiencies, and Notes.
+- Disposition: Implemented as **TASK-537**. QA: DEV-V-009-T020.
+

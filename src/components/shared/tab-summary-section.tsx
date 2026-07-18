@@ -6,8 +6,8 @@
  * A unified component for displaying summary information at the top of tabs.
  * Used for: innate energy/pools, currency, armament proficiency, physical attributes, etc.
  *
- * Variants use theme-aware domain tokens (power/martial/currency/info/surface) — no
- * numbered ramps or ad-hoc `dark:` gradient pairs (Phase 4).
+ * Variants use solid theme-aware domain fills (power/martial/currency/info/surface) —
+ * no gradients, numbered ramps, or ad-hoc `dark:` pairs.
  */
 
 import { ReactNode } from 'react';
@@ -23,11 +23,11 @@ export interface TabSummarySectionProps {
 }
 
 const variantStyles = {
-  default: 'bg-gradient-to-r from-surface-alt to-surface border-border-light',
-  power: 'bg-gradient-to-r from-power-light to-surface border-power-border',
-  martial: 'bg-gradient-to-r from-martial-light to-surface border-martial-border',
-  currency: 'bg-gradient-to-r from-currency-light to-surface border-currency-border',
-  physical: 'bg-gradient-to-r from-info-light to-surface border-info-border',
+  default: 'bg-surface-alt border-border-light',
+  power: 'bg-power-light border-power-border',
+  martial: 'bg-martial-light border-martial-border',
+  currency: 'bg-currency-light border-currency-border',
+  physical: 'bg-info-light border-info-border',
 };
 
 export function TabSummarySection({
@@ -85,12 +85,12 @@ export function SummaryItem({
   className,
 }: SummaryItemProps) {
   return (
-    <div className={cn('flex items-center gap-2', className)}>
-      {icon && <span className="text-sm">{icon}</span>}
+    <div className={cn('flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5', className)}>
+      {icon && <span className="shrink-0 text-sm">{icon}</span>}
       <span className="text-sm text-text-secondary">{label}:</span>
       <span
         className={cn(
-          'font-bold text-sm',
+          'shrink-0 text-sm font-bold',
           highlight ? highlightColors[highlightColor] : 'text-text-primary'
         )}
       >

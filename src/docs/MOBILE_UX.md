@@ -47,7 +47,7 @@ Audit: `ValueStepper`, `IconButton`, sheet action toolbar, tab triggers, list ro
 - **Within each panel:** Vertical scroll only. No horizontal scroll inside the panel.
 - **When to use collapse instead:** Few sections, lighter content, or sub-sections inside a panel (e.g. Library’s Powers/Techniques/Equipment as collapsible blocks). Use the current app collapsible pattern components in the relevant domain (for creator sections, `creator/collapsible-section.tsx`).
 
-**Character sheet:** Below `md`, use side-scroll of Abilities, Skills, Archetype, Library. Sheet header and toolbar stay responsive (stack resources, toolbar position for thumb reach).
+**Character sheet:** Below `md`, use side-scroll of Abilities, Skills, Archetype, Library. Sheet header and toolbar stay responsive (stack resources, toolbar position for thumb reach). Library → Inventory summary stacks Currency and Armament Proficiency below `sm` so labels do not overlap on phone widths (TASK-537).
 
 **Other dense pages:** Same idea — side-scroll between major sections where it fits (e.g. encounter tracker, campaign detail); collapse when sections are few.
 
