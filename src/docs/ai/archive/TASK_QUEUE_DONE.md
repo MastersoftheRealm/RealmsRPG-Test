@@ -1,3 +1,135 @@
+- id: TASK-539
+  title: Chip / GLR body tap toggles expand (not header-only)
+  created_at: 2026-07-18
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-18
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/ui/expandable-chip.tsx
+    - src/components/shared/grid-list-row.tsx
+    - src/lib/chip/chip-options-panel.tsx
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/guide/04-floating-ui-tooltips.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Mobile/Chip UI: GridListRow items and ExpandableChips should expand/collapse when
+    tapping the body (mobile summary, expanded description panel, chip description),
+    not only the header/chevron trigger. Nested controls (Options, buttons, chip groups)
+    keep their own handlers.
+  acceptance_criteria:
+    - ExpandableChip: header or expanded body toggles; Options panel excluded via
+      data-expand-ignore / stopPropagation; stable full-row layout unchanged.
+    - GridListRow: header trigger, mobile summary, and non-interactive expanded body
+      toggle; chip groups and action buttons do not accidentally collapse the row.
+    - Docs (MOBILE_UX + stable-expand guide) + BUILD_VALIDATION DEV-V-021-T004;
+      npm run build.
+  notes: |
+    Owner feedback 2026-07-18. Extends TASK-445 stable expand hit-target grammar.
+    Cleanup 2026-07-18: archive related_files + evidence; BV T004 steps clarified;
+    feedback disposition logged; shell aria-expanded only when shell is the widget.
+    Merge note: parallel agent originally claimed TASK-537; renumbered to TASK-539
+    when merging open PRs onto master.
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/39
+  evidence: |
+    npm run build (agent); docs honesty cleanup after /audit.
+  build_validation: |
+    suite: DEV-V-021
+    tests:
+      - DEV-V-021-T004
+  developer_test_plan: |
+    Suite DEV-V-021 T004 — see BUILD_VALIDATION.md (chip body + GLR mobile summary /
+    expanded panel toggle; nested chips/Options excluded).
+
+---
+- id: TASK-538
+  title: Character sheet mobile — center side-scroll panels with header gutters
+  created_at: 2026-07-18
+  created_by: owner
+  priority: medium
+  status: done
+  completed_at: 2026-07-18
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/character-sheet-body.tsx
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Mobile character sheet side-scroll panels (Abilities / Skills / Archetype /
+    Library) were not horizontally aligned with the sheet header and had no gap
+    between adjacent panels. Match PageContainer gutters via scroll-padding,
+    size panels with basis-full, and add gap-4 between snaps.
+  acceptance_criteria:
+    - Below md, each snapped panel shares left/right gutters with SheetHeader.
+    - Visible gap between adjacent side-scroll panels during swipe.
+    - Desktop md+ grid layout unchanged.
+    - BUILD_VALIDATION DEV-V-009-T021; npm run build; MOBILE_UX notes the pattern.
+  notes: |
+    Owner feedback 2026-07-18. Root cause: min-w-full panels sized to the outer
+    viewport without scroll-padding, so snap-start pulled later panels flush to
+    the screen edge while the header stayed inset.
+    Cleanup 2026-07-18: archive related_files + BUILD_VALIDATION; drop redundant
+    panel w-full; file header cites TASK-538.
+    Merge note: parallel agent originally claimed TASK-537; renumbered to TASK-538
+    when merging open PRs onto master.
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/38
+  evidence: |
+    npm run build; code review of character-sheet-body flex/snap classes.
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T021
+  developer_test_plan: |
+    Suite DEV-V-009 T021 — see BUILD_VALIDATION.md
+
+---
+- id: TASK-537
+  title: Character sheet — mobile Inventory TP/Armament overlap + remove tab summary gradients
+  created_at: 2026-07-18
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-18
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/library-section.tsx
+    - src/components/shared/tab-summary-section.tsx
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    On mobile character sheet Inventory, Currency and Armament Proficiency (TP) overlapped
+    in the top summary bar. Also remove background gradients from that bar and from
+    Proficiencies / Notes (shared TabSummarySection) header summaries.
+  acceptance_criteria:
+    - Inventory summary stacks Currency and Armament Proficiency below sm; no overlap at ~360px.
+    - TabSummarySection variants use solid theme fills (no bg-gradient-to-r) sitewide.
+    - BUILD_VALIDATION DEV-V-009-T020; npm run build.
+  notes: |
+    Owner feedback 2026-07-18. SectionHeader for library collapsibles already had no
+    gradient background; only TabSummarySection bars were gradient-backed.
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/37
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T020
+  developer_test_plan: |
+    Suite DEV-V-009 T020 — see BUILD_VALIDATION.md
+  evidence: |
+    npm run build (pass); inventory layout flex-col below sm; TabSummarySection solid fills.
+
+---
 - id: TASK-536
   title: GridListRow mobile — stop name squeeze beside X/+
   created_at: 2026-07-18

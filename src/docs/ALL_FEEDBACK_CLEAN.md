@@ -2446,3 +2446,29 @@ Notes
 - Disposition: Implemented as **TASK-536** — `buildMobileCollapsedGridColumns` + `max-lg` grid template on GridListRow. QA: DEV-V-016-T012.
 - Follow-up (2026-07-18): Owner screenshot on Library Powers still showed squeeze — root cause was inline `gridTemplateColumns` overriding the mobile class. `/cleanup` switched to CSS variables only.
 
+**Raw Feedback Log - 2026-07-18 (sheet Inventory TP / Armament Proficiency overlap + gradients)**
+- Date: 2026-07-18
+- Context: Character sheet Library → Inventory summary; Proficiencies / Notes tab summary bars
+- Priority: High
+- Feedback (verbatim):
+  On mobile uI for the character sheet the training points/armament proficiency overlaps. Also remove the background gradient for this section, dont need gradient here. Same for gradient on background kf the proficineices/notes header sections if any.
+- Expected: Currency and Armament Proficiency (TP) do not overlap on ~360px; TabSummarySection bars use solid fills (no gradient) on Inventory, Proficiencies, and Notes.
+- Disposition: Implemented as **TASK-537**. QA: DEV-V-009-T020.
+
+**Raw Feedback Log - 2026-07-18 (character sheet mobile side-scroll not centered)**
+- Date: 2026-07-18
+- Context: Character sheet mobile UI — lower half swipeable section panels
+- Priority: Medium
+- Feedback (verbatim):
+  On the character sheet mobile ui the swipable tabs/sections thing at the lower half aren't centered, and they have no margins between each of each other (which would likely help with the centering), the centering is the top half section of the sheet being centered with the bottom. Follow constitution and rules/design styles
+- Expected: Mobile side-scroll panels share horizontal gutters with the sheet header; visible gap/margin between adjacent panels; snap alignment stays centered with the top half.
+- Disposition: Implemented as **TASK-538**. QA: DEV-V-009-T021.
+
+**Raw Feedback Log - 2026-07-18 (chip/GLR body tap to expand)**
+- Date: 2026-07-18
+- Context: ExpandableChip + GridListRow mobile/list expand hit targets
+- Priority: High
+- Feedback (verbatim):
+  Chip/mobile ui GLR items/chips/cards etc shouldn't just expand when you hit the item header thingy,but also if you hit the body to expand. Follow constitution, rules, guidelines
+- Expected: Expand/collapse from header **or** body — GridListRow mobile summary + non-interactive expanded panel; ExpandableChip expanded description; Options/buttons/chip groups keep their own handlers. GuidedChoiceCard select/"See more" grammar unchanged.
+- Disposition: Implemented as **TASK-539**. QA: DEV-V-021-T004.

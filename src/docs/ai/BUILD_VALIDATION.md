@@ -898,7 +898,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats.
 
@@ -1057,6 +1057,17 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Expected** | Collapsed subsection headers stack with modest `space-y-2` breathing room; collapsing still reclaim vertical space vs old `space-y-6`; title/chevron and + keep ≥44px targets on touch (coarse pointer). |
 | **Report** | DEV-V-009-T019: PASS / FAIL / SKIP — |
 
+#### DEV-V-009-T020 — Inventory Currency / Armament Proficiency no overlap; solid tab summaries
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-537 |
+| **Where** | `/characters/[id]` → Library → Inventory, Proficiencies, Notes (and Powers if innate energy > 0) |
+| **Steps** | 1. Open Inventory at ~360px width. 2. Confirm Currency and Armament Proficiency (TP) do not overlap — they stack vertically on narrow viewports. 3. Confirm the Inventory summary bar uses a solid fill (no left-to-right gradient). 4. Open Proficiencies and Notes; confirm their top summary bars are solid fills (no gradient). 5. Optional ≥640px: Currency and Armament Proficiency sit on one row without overlap. |
+| **Expected** | No overlapping labels/values on mobile; TabSummarySection variants use solid theme fills (`bg-*-light` / `bg-surface-alt`), not `bg-gradient-to-r`. |
+| **Report** | DEV-V-009-T020: PASS / FAIL / SKIP — |
+
 #### DEV-V-009-T018 — Library card title + subsection header size
 
 | Field | Value |
@@ -1112,6 +1123,17 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Steps** | 1. Open Weapons on desktop. 2. Confirm **Range**, **Attack**, and **Damage** are readable and not cramped, without the table overflowing the Archetype panel. 3. Confirm named properties remain one `• Property` per line under the weapon name; long property text wraps within the Name column. 4. Confirm Unarmed Prowess (same table) still aligns under the same headers. 5. At ~360px, confirm `TableScroll` allows horizontal scroll without crushing Attack/Damage under wrong headers. |
 | **Expected** | Metric columns use tight content-sized widths (fit roll buttons / range text); Name wraps properties; table stays inside the panel; Unarmed alignment preserved; no regression to roll buttons. |
 | **Report** | DEV-V-009-T017: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T021 — Mobile side-scroll panels centered with header gutters (TASK-538)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-538 |
+| **Where** | `/characters/[id]` at ~360px and ~700px width (below `md`) |
+| **Steps** | 1. Open character sheet. 2. Compare left/right edges of the sheet header card vs the Abilities panel below — they should share the same horizontal gutters. 3. Swipe to Skills, Archetype, and Library; confirm each snapped panel keeps those gutters (not flush to the screen edge). 4. While swiping between panels, confirm a clear gap/margin between adjacent section cards. |
+| **Expected** | Side-scroll panels align with the header/PageContainer content width; gap between panels; snap stops do not shift content left of the header. Desktop `md+` grid unchanged. |
+| **Report** | DEV-V-009-T021: PASS / FAIL / SKIP — |
 
 ---
 
@@ -3671,6 +3693,28 @@ Click-open / click-close without moving the pointer. Expandable chips grow into 
 **Expected**
 - Disclosure controls are below card body copy, never between title and description.
 - Selected short cards (e.g. No Flaw) still keep density min-height and the reserved action-row slot (TASK-455).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-021-T004 — Chip / GLR body tap toggles expand (not header-only)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-021 |
+| **Related task** | TASK-539 |
+| **Where** | `/dev/styleguide` → Expandable Chips; Library / Codex list at ~360px |
+| **Needs** | — |
+
+**Steps**
+1. Styleguide → **Expandable Chips**: expand a chip via the **header**, then tap the **description body** — chip collapses (collapsed chips have no body, so expand still starts from the header).
+2. On a chip with Options: open Options; tapping the Options control or option list must toggle Options only — it must **not** collapse the chip.
+3. At ~360px (Library Powers or Codex feats): tap the **mobile summary** under a collapsed row — row expands. Tap the expanded **description** (not a chip or button) — row collapses.
+4. With a row expanded, tap a nested property/part **chip header or body** — chip toggles; the **row** stays expanded.
+
+**Expected**
+- ExpandableChip: header or expanded body toggles; Options / nested controls excluded.
+- GridListRow: header, mobile summary, or non-interactive expanded body toggles; chip groups and action buttons do not collapse the row when used for their own actions.
+- Stable vertical expand (T001/T002) still holds.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
