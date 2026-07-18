@@ -35,7 +35,7 @@
     Root cause for empty/broken add: global existingIds mixed weapon/armor/power
     numeric ids with codex equipment ids, filtering the list. Equipment is stackable.
   evidence: |
-    npm run build; vitest map-selection.test.ts
+    npm run build (pass); vitest map-selection.test.ts (pass).
   build_validation: |
     suite: DEV-V-009
     tests:
