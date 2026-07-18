@@ -303,18 +303,33 @@ export const GridListRow = memo(function GridListRow({
     }
   };
 
+  const isRowClickable = (showExpander || selectable) && !(disabled && (!selectable || !showExpander));
+
   // Prevent row expand when clicking buttons/links inside (avoids nested button hydration error and wrong UX).
   // The row's clickable div has role="button", so we must only skip when the click is on a *different*
   // interactive element (e.g. Edit, Delete, RollButton), not the row trigger itself.
   const handleRowClickWithGuard = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     const rowTrigger = target.closest?.('[data-grid-row-trigger]');
-    const interactive = target.closest?.('button, [role="button"], a, input, select, textarea');
+    const interactive = target.closest?.(
+      'button, [role="button"], a, input, select, textarea, [data-expand-ignore]'
+    );
     if (interactive && interactive !== rowTrigger) return;
     handleRowClick();
   };
 
-  const isRowClickable = (showExpander || selectable) && !(disabled && (!selectable || !showExpander));
+  /**
+   * Mobile summary + expanded body also toggle the row (not only the header trigger).
+   * Skip nested controls and chip groups (chips own their expand/collapse).
+   */
+  const handleRowBodyClickWithGuard = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const interactive = target.closest?.(
+      'button, [role="button"], a, input, select, textarea, [data-expand-ignore], [data-chip-group]'
+    );
+    if (interactive) return;
+    handleRowClick();
+  };
 
   // Determine row styling based on state (equipped: no row green/checkmark — toggle is enough)
   const rowStyles = cn(
@@ -688,9 +703,16 @@ export const GridListRow = memo(function GridListRow({
         )}
       </div>
 
-      {/* Mobile summary — stats hidden from the collapsed grid; description teaser hides while expanded */}
+      {/* Mobile summary — stats hidden from the collapsed grid; description teaser hides while expanded.
+          Tapping the summary expands/collapses the row (same as the header trigger). */}
       {gridColumns && mobileSummaryColumns.length > 0 && (
-        <div className="lg:hidden px-4 pb-2 flex flex-wrap gap-2 text-xs text-text-secondary">
+        <div
+          className={cn(
+            'lg:hidden px-4 pb-2 flex flex-wrap gap-2 text-xs text-text-secondary',
+            isRowClickable && 'cursor-pointer'
+          )}
+          onClick={isRowClickable ? handleRowBodyClickWithGuard : undefined}
+        >
           {mobileSummaryColumns.map((col) =>
             col.value ? (
               col.key === 'description' ? (
@@ -719,13 +741,17 @@ export const GridListRow = memo(function GridListRow({
         </div>
       )}
       
-      {/* Expanded Content */}
+      {/* Expanded Content — body tap toggles collapse (nested buttons/chips excluded) */}
       {isExpanded && hasDetails && (
-        <div className={cn(
-          'border-t border-border-light bg-surface-alt',
-          compact ? 'px-3 py-3' : 'px-4 py-4',
-          selectable && 'mr-10' // Indent on right when selection button present
-        )}>
+        <div
+          className={cn(
+            'border-t border-border-light bg-surface-alt',
+            compact ? 'px-3 py-3' : 'px-4 py-4',
+            selectable && 'mr-10', // Indent on right when selection button present
+            isRowClickable && 'cursor-pointer'
+          )}
+          onClick={isRowClickable ? handleRowBodyClickWithGuard : undefined}
+        >
           {/* Custom expanded content takes precedence */}
           {expandedContent ? (
             expandedContent

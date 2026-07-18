@@ -11,11 +11,13 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`.
 
-**Counts:** 10 agent-eligible (TASK-391 superseded/skip; TASK-514–518/520/521/522/523/524/525/526/527/528/529/530/536/537/538 archived) · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 10 agent-eligible (TASK-391 superseded/skip; TASK-514–518/520/521/522/523/524/525/526/527/528/529/530/536/537/538/539 archived) · waiting/blocked in WAITING_TASKS · done in archive.
 
 **Sheet Inventory mobile summary (2026-07-18):** **TASK-537 done** — Currency / Armament Proficiency stack below `sm`; TabSummarySection solid fills; pending-qa **DEV-V-009-T020**.
 
 **Sheet mobile side-scroll gutters (2026-07-18):** **TASK-538 done** — panel `basis-full` + `gap-4` + PageContainer-matched scroll-padding; pending-qa **DEV-V-009-T021**.
+
+**GLR / chip body expand (2026-07-18):** **TASK-539 done** — ExpandableChip + GridListRow toggle from header **or** body (mobile summary / expanded panel); pending-qa **DEV-V-021-T004**.
 
 **GLR mobile name width (2026-07-18):** **TASK-536 done** (merged #34/#35) — collapse empty desktop data tracks below `lg` via `--glr-*` CSS vars; pending-qa **DEV-V-016-T012**.
 

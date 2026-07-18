@@ -57,7 +57,7 @@ Audit: `ValueStepper`, `IconButton`, sheet action toolbar, tab triggers, list ro
 ## Lists and tables
 
 - **ListHeader:** Desktop: column headers in a grid (`hidden lg:grid`). **Mobile:** no column headers; instead an expandable **"Sort by"** control that uses the same sort logic (sortState, onSort). Tap to expand and choose sort criteria (e.g. Name, Damage, Energy); tap an option to sort; tap same option again toggles A→Z / Z→A. Same behavior as desktop column clicks.
-- **GridListRow:** Use `hideOnMobile` on columns that aren’t essential on small viewports (e.g. hide secondary columns, show name + primary value). Expanded row shows full details. Below `lg`, the row collapses empty desktop data-column tracks (`buildMobileCollapsedGridColumns`) so the name keeps `minmax(0, 1fr)` beside X/+ actions instead of wrapping into a narrow first `fr` track. Apply templates via `--glr-desktop-grid` / `--glr-mobile-grid` classes — never inline `gridTemplateColumns` (inline styles override the mobile media query).
+- **GridListRow:** Use `hideOnMobile` on columns that aren’t essential on small viewports (e.g. hide secondary columns, show name + primary value). Expanded row shows full details. Below `lg`, the row collapses empty desktop data-column tracks (`buildMobileCollapsedGridColumns`) so the name keeps `minmax(0, 1fr)` beside X/+ actions instead of wrapping into a narrow first `fr` track. Apply templates via `--glr-desktop-grid` / `--glr-mobile-grid` classes — never inline `gridTemplateColumns` (inline styles override the mobile media query). **Expand hit target:** header trigger, mobile summary body, and non-interactive expanded-panel areas all toggle expand/collapse (buttons, links, chip groups excluded).
 - **Tabs:** TabNavigation uses `overflow-x-auto`; ensure tab strip scrolls horizontally on narrow screens instead of wrapping into a tall block.
 
 ---
@@ -77,7 +77,7 @@ When **creating or editing** a page or modal:
 
 3. **List/table**
    - Use `ListHeader` (hidden on mobile) and `GridListRow` with sensible `hideOnMobile` columns so mobile sees name + key info, details on expand.
-   - **Stable vertical expand:** Expand-in-place chips keep their collapsed vertical row, move to the chip group’s left edge, and take the full group width. Every chip from the same row onward reflows below the expanded chip. The pointer/finger stays vertically aligned, though horizontal re-aiming is expected. See AGENT_GUIDE → Stable expand toggle.
+   - **Stable vertical expand:** Expand-in-place chips keep their collapsed vertical row, move to the chip group’s left edge, and take the full group width. Every chip from the same row onward reflows below the expanded chip. The pointer/finger stays vertically aligned, though horizontal re-aiming is expected. Header **or expanded body** toggles (Options / nested controls excluded). GridListRow: header, mobile summary, or non-interactive expanded body. See AGENT_GUIDE → Stable expand toggle.
 
 4. **Verification**
    - Resize to 360px width (or use DevTools device mode); confirm no pinch-zoom needed, modals usable, controls tappable.
@@ -93,8 +93,8 @@ When **creating or editing** a page or modal:
 | Modal | `src/components/ui/modal.tsx` | `fullScreenOnMobile` prop → full-screen below `md`. |
 | Collapsible section pattern | `src/components/creator/collapsible-section.tsx` | Use for within-panel sub-sections or lighter pages. |
 | ListHeader | `src/components/shared/list-header.tsx` | Desktop: column header grid. Mobile: expandable "Sort by [criteria] (A→Z)" using same sortState/onSort; no column headers. |
-| ExpandableChip / ChipGroup | `src/components/ui/expandable-chip.tsx` | Wrap groups use `items-start`; expand keeps its row, moves left, and takes full group width. |
-| GridListRow | `src/components/shared/grid-list-row.tsx` | `hideOnMobile` on column values; mobile grid collapses vacated `fr` tracks so names aren’t squeezed by X/+. |
+| ExpandableChip / ChipGroup | `src/components/ui/expandable-chip.tsx` | Wrap groups use `items-start`; expand keeps its row, moves left, and takes full group width; header or body toggles. |
+| GridListRow | `src/components/shared/grid-list-row.tsx` | `hideOnMobile` on column values; mobile grid collapses vacated `fr` tracks so names aren’t squeezed by X/+; summary/body also toggle expand. |
 | TabNavigation | `src/components/ui/tab-navigation.tsx` | Tabs use `overflow-x-auto` in globals; triggers have `min-h` touch target below `md`. |
 | TableScroll | `src/components/ui/table-scroll.tsx` | Wrap data tables for horizontal scroll on narrow viewports. |
 | PageContainer | `src/components/ui/page-container.tsx` | `px-4 sm:px-6 lg:px-8`; adjust if audit shows overflow. |

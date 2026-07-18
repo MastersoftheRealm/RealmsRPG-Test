@@ -2464,3 +2464,11 @@ Notes
 - Expected: Mobile side-scroll panels share horizontal gutters with the sheet header; visible gap/margin between adjacent panels; snap alignment stays centered with the top half.
 - Disposition: Implemented as **TASK-538**. QA: DEV-V-009-T021.
 
+**Raw Feedback Log - 2026-07-18 (chip/GLR body tap to expand)**
+- Date: 2026-07-18
+- Context: ExpandableChip + GridListRow mobile/list expand hit targets
+- Priority: High
+- Feedback (verbatim):
+  Chip/mobile ui GLR items/chips/cards etc shouldn't just expand when you hit the item header thingy,but also if you hit the body to expand. Follow constitution, rules, guidelines
+- Expected: Expand/collapse from header **or** body — GridListRow mobile summary + non-interactive expanded panel; ExpandableChip expanded description; Options/buttons/chip groups keep their own handlers. GuidedChoiceCard select/"See more" grammar unchanged.
+- Disposition: Implemented as **TASK-539**. QA: DEV-V-021-T004.

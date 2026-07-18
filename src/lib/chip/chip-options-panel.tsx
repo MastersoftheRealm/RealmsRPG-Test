@@ -20,7 +20,11 @@ export function ChipOptionsPanel({
   const bodyText = size === 'md' ? 'text-sm' : 'text-xs';
 
   return (
-    <div className="mt-2 w-full">
+    <div
+      className="mt-2 w-full"
+      data-expand-ignore
+      onClick={(e) => e.stopPropagation()}
+    >
       <button
         type="button"
         onClick={onToggle}
