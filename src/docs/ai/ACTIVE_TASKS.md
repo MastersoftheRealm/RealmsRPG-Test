@@ -13,7 +13,7 @@ Do **not** read the done archive at session start.
 
 **Counts:** 10 agent-eligible (TASK-391 superseded/skip; TASK-514–518/520/521/522/523/524/525/526/527/528/529/530/536 archived) · waiting/blocked in WAITING_TASKS · done in archive.
 
-**GLR mobile name width (2026-07-18):** **TASK-536 done** — collapse empty desktop data tracks below `lg`; pending-qa **DEV-V-016-T012**.
+**GLR mobile name width (2026-07-18):** **TASK-536 done** (merged #34/#35) — collapse empty desktop data tracks below `lg` via `--glr-*` CSS vars; pending-qa **DEV-V-016-T012**.
 
 **Archetype path enrichment (2026-07-17):** **TASK-530 + TASK-521 done** — all 12 paths enriched (backup `codex_archetypes_backup_20260717`); pending-qa **DEV-V-013-T064**. Residual innate reclassify → **TASK-535**.
 
