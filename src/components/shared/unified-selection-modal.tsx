@@ -16,9 +16,8 @@
  */
 
 import { useState, useEffect, useMemo, useCallback, useRef, ReactNode } from 'react';
-import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Alert, Modal, Button, IconButton } from '@/components/ui';
+import { Alert, Modal, Button } from '@/components/ui';
 import { TabContentPanel } from '@/components/ui/tab-navigation';
 import { 
   GridListRow, 
@@ -336,53 +335,84 @@ export function UnifiedSelectionModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
+      title={title}
+      description={description}
       size={size}
-      showCloseButton={false}
       fullScreenOnMobile
       flexLayout={flexLayout}
-      titleA11y={title}
-    >
-      <div className={cn('flex flex-col flex-1 min-h-0 md:max-h-[70vh]', className)}>
-        {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h2 className="text-xl font-bold text-text-primary">{title}</h2>
-            {description && (
-              <p className="text-sm text-text-muted dark:text-text-secondary mt-1">{description}</p>
-            )}
+      contentClassName={cn(
+        // !overflow-hidden wins over Modal's default overflow-y-auto so only the list
+        // region scrolls and the Modal footer (Add Selected) stays pinned on mobile.
+        'flex flex-col flex-1 min-h-0 gap-4 !overflow-hidden p-4 md:p-6 md:max-h-[70vh]',
+        className
+      )}
+      footer={
+        <div className="flex flex-col gap-3 border-t border-border-light bg-surface px-4 py-3 md:px-6">
+          {footerExtra?.(selectedItems)}
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-sm text-text-muted dark:text-text-secondary">
+              {selectedIds.size} {itemLabel}{selectedIds.size !== 1 ? 's' : ''} selected
+              {maxSelections !== undefined && maxSelections !== 1 && ` (max ${maxSelections})`}
+            </span>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button
+                variant="secondary"
+                onClick={onClose}
+                className="min-h-11 flex-1 sm:flex-initial"
+              >
+                Cancel
+              </Button>
+              {primaryActions ? (
+                typeof primaryActions === 'function' ? (
+                  primaryActions(selectedItems)
+                ) : (
+                  primaryActions
+                )
+              ) : (
+                <Button
+                  onClick={handleConfirm}
+                  disabled={isConfirmDisabled}
+                  className="min-h-11 flex-1 sm:flex-initial"
+                >
+                  {confirmLabel}
+                  {selectedIds.size > 0 ? ` (${selectedIds.size})` : ''}
+                </Button>
+              )}
+            </div>
           </div>
-          <IconButton variant="ghost" size="sm" onClick={onClose} label="Close">
-            <X className="w-5 h-5" />
-          </IconButton>
         </div>
-        
-        {/* Search */}
-        <div className="mb-4">
-          <SearchInput
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder={searchPlaceholder || `Search ${itemLabel}s...`}
-            aria-label={searchPlaceholder || `Search ${itemLabel}s`}
-          />
-        </div>
-        
-        {headerExtra && <div className="mb-4">{headerExtra}</div>}
+      }
+    >
+      {/* Search — stays above the scrollable list */}
+      <div className="shrink-0">
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder={searchPlaceholder || `Search ${itemLabel}s...`}
+          aria-label={searchPlaceholder || `Search ${itemLabel}s`}
+        />
+      </div>
 
-        {limitWarningText && (
-          <Alert variant="warning" className="mb-4">
-            {limitWarningText}
-          </Alert>
-        )}
-        
-        {/* Filters (optional) */}
-        {showFilters && filterContent && (
+      {headerExtra ? <div className="shrink-0">{headerExtra}</div> : null}
+
+      {limitWarningText ? (
+        <Alert variant="warning" className="shrink-0">
+          {limitWarningText}
+        </Alert>
+      ) : null}
+
+      {/* Filters (optional) */}
+      {showFilters && filterContent ? (
+        <div className="shrink-0">
           <FilterSection defaultExpanded={false}>
             {filterContent}
           </FilterSection>
-        )}
-        
-        {/* Column Headers (if columns defined) — must match row grid for alignment */}
-        {columns.length > 0 && (
+        </div>
+      ) : null}
+
+      {/* Column Headers (if columns defined) — must match row grid for alignment */}
+      {columns.length > 0 ? (
+        <div className="shrink-0">
           <ListHeader
             columns={columns.map(col => ({
               key: col.key,
@@ -397,156 +427,128 @@ export function UnifiedSelectionModal({
             hasThumbnailColumn={hasThumbnailColumn}
             compact
           />
-        )}
-        
-        {/* Items List — no outline, no extra padding so columns align with header */}
-        {(() => {
-          const listBody = (
-            <>
-              {isLoading ? (
-                <LoadingState message="Loading..." size="md" padding="md" />
-              ) : error ? (
-                <Alert variant="danger" className="mx-4">
-                  {error.message}
-                </Alert>
-              ) : filteredItems.length === 0 ? (
-                <EmptyState
-                  title={emptyMessage || `No ${itemLabel}s found`}
-                  description={emptySubMessage}
-                  size="sm"
-                />
-              ) : (
-                <div className="space-y-1 min-w-0">
-                  {filteredItems.map(item => {
-                    const itemIdStr = String(item.id);
-                    const isSelected = selectedIds.has(itemIdStr);
-                    // Only item.disabled greys a row — never capacity/maxSelections
-                    // (budget-exhausted lists stay readable for browsing).
-                    const isSelectionDisabled = Boolean(item.disabled);
-                    const qty = showQuantity
-                      ? quantities[itemIdStr] ?? (isSelected ? 1 : 0)
-                      : undefined;
+        </div>
+      ) : null}
 
-                    return (
-                      <div key={itemIdStr} className="min-w-0">
-                        <GridListRow
-                          id={itemIdStr}
-                          name={item.name}
-                          description={item.description}
-                          thumbnail={item.thumbnail}
-                          columns={item.columns}
-                          chips={item.chips}
-                          detailSections={item.detailSections}
-                          totalCost={item.totalCost}
-                          costLabel={item.costLabel}
-                          badges={item.badges}
-                          gridColumns={
-                            gridColumns ? gridColumnsWithInlineSelection(gridColumns) : undefined
-                          }
-                          selectable
-                          isSelected={isSelected}
-                          onSelect={() => toggleSelection(item.id)}
-                          disabled={isSelectionDisabled}
-                          warningMessage={item.warningMessage}
-                          compact
-                          quantity={qty}
-                          quantityMin={showQuantity ? 0 : 1}
-                          quantityDecrementLabel={
-                            showQuantity
-                              ? `Decrease quantity for ${item.name}`
-                              : undefined
-                          }
-                          quantityIncrementLabel={
-                            showQuantity
-                              ? `Increase quantity for ${item.name}`
-                              : undefined
-                          }
-                          onQuantityChange={
-                            showQuantity && !isSelectionDisabled
-                              ? (delta) => {
-                                  const current = quantities[itemIdStr] ?? (isSelected ? 1 : 0);
-                                  const next = Math.max(0, Math.min(99, current + delta));
-                                  if (next <= 0) {
-                                    setSelectedIds((prev) => {
-                                      const nextSet = new Set(prev);
-                                      nextSet.delete(itemIdStr);
-                                      return nextSet;
-                                    });
-                                    setQuantities((q) => {
-                                      const nextQ = { ...q };
-                                      delete nextQ[itemIdStr];
-                                      return nextQ;
-                                    });
-                                    return;
-                                  }
-                                  if (maxSelections === 1) {
-                                    setSelectedIds(new Set([itemIdStr]));
-                                    setQuantities({ [itemIdStr]: next });
-                                    return;
-                                  }
-                                  setQuantities((q) => ({ ...q, [itemIdStr]: next }));
+      {/* Items List — only this region scrolls; footer stays pinned via Modal footer slot */}
+      {(() => {
+        const listBody = (
+          <>
+            {isLoading ? (
+              <LoadingState message="Loading..." size="md" padding="md" />
+            ) : error ? (
+              <Alert variant="danger" className="mx-4">
+                {error.message}
+              </Alert>
+            ) : filteredItems.length === 0 ? (
+              <EmptyState
+                title={emptyMessage || `No ${itemLabel}s found`}
+                description={emptySubMessage}
+                size="sm"
+              />
+            ) : (
+              <div className="space-y-1 min-w-0">
+                {filteredItems.map(item => {
+                  const itemIdStr = String(item.id);
+                  const isSelected = selectedIds.has(itemIdStr);
+                  // Only item.disabled greys a row — never capacity/maxSelections
+                  // (budget-exhausted lists stay readable for browsing).
+                  const isSelectionDisabled = Boolean(item.disabled);
+                  const qty = showQuantity
+                    ? quantities[itemIdStr] ?? (isSelected ? 1 : 0)
+                    : undefined;
+
+                  return (
+                    <div key={itemIdStr} className="min-w-0">
+                      <GridListRow
+                        id={itemIdStr}
+                        name={item.name}
+                        description={item.description}
+                        thumbnail={item.thumbnail}
+                        columns={item.columns}
+                        chips={item.chips}
+                        detailSections={item.detailSections}
+                        totalCost={item.totalCost}
+                        costLabel={item.costLabel}
+                        badges={item.badges}
+                        gridColumns={
+                          gridColumns ? gridColumnsWithInlineSelection(gridColumns) : undefined
+                        }
+                        selectable
+                        isSelected={isSelected}
+                        onSelect={() => toggleSelection(item.id)}
+                        disabled={isSelectionDisabled}
+                        warningMessage={item.warningMessage}
+                        compact
+                        quantity={qty}
+                        quantityMin={showQuantity ? 0 : 1}
+                        quantityDecrementLabel={
+                          showQuantity
+                            ? `Decrease quantity for ${item.name}`
+                            : undefined
+                        }
+                        quantityIncrementLabel={
+                          showQuantity
+                            ? `Increase quantity for ${item.name}`
+                            : undefined
+                        }
+                        onQuantityChange={
+                          showQuantity && !isSelectionDisabled
+                            ? (delta) => {
+                                const current = quantities[itemIdStr] ?? (isSelected ? 1 : 0);
+                                const next = Math.max(0, Math.min(99, current + delta));
+                                if (next <= 0) {
                                   setSelectedIds((prev) => {
-                                    if (prev.has(itemIdStr)) return prev;
                                     const nextSet = new Set(prev);
-                                    nextSet.add(itemIdStr);
+                                    nextSet.delete(itemIdStr);
                                     return nextSet;
                                   });
+                                  setQuantities((q) => {
+                                    const nextQ = { ...q };
+                                    delete nextQ[itemIdStr];
+                                    return nextQ;
+                                  });
+                                  return;
                                 }
-                              : undefined
-                          }
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </>
-          );
+                                if (maxSelections === 1) {
+                                  setSelectedIds(new Set([itemIdStr]));
+                                  setQuantities({ [itemIdStr]: next });
+                                  return;
+                                }
+                                setQuantities((q) => ({ ...q, [itemIdStr]: next }));
+                                setSelectedIds((prev) => {
+                                  if (prev.has(itemIdStr)) return prev;
+                                  const nextSet = new Set(prev);
+                                  nextSet.add(itemIdStr);
+                                  return nextSet;
+                                });
+                              }
+                            : undefined
+                        }
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        );
 
-          const listRegion = tabPanelA11y ? (
-            <TabContentPanel
-              tabGroupId={tabPanelA11y.tabGroupId}
-              id={tabPanelA11y.id}
-              activeTab={tabPanelA11y.activeTab}
-              className="flex-1 overflow-y-auto overflow-x-auto min-h-0"
-            >
-              {listBody}
-            </TabContentPanel>
-          ) : (
-            <div className="flex-1 overflow-y-auto overflow-x-auto min-h-0">{listBody}</div>
-          );
+        const listRegion = tabPanelA11y ? (
+          <TabContentPanel
+            tabGroupId={tabPanelA11y.tabGroupId}
+            id={tabPanelA11y.id}
+            activeTab={tabPanelA11y.activeTab}
+            className="flex-1 overflow-y-auto overflow-x-auto min-h-0"
+          >
+            {listBody}
+          </TabContentPanel>
+        ) : (
+          <div className="flex-1 overflow-y-auto overflow-x-auto min-h-0">{listBody}</div>
+        );
 
-          return listRegion;
-        })()}
-        
-        {/* Footer */}
-        <div className="flex flex-col gap-3 pt-4 border-t border-border-light mt-4">
-          {footerExtra?.(selectedItems)}
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-text-muted dark:text-text-secondary">
-              {selectedIds.size} {itemLabel}{selectedIds.size !== 1 ? 's' : ''} selected
-              {maxSelections !== undefined && maxSelections !== 1 && ` (max ${maxSelections})`}
-            </span>
-            <div className="flex gap-2">
-              <Button variant="secondary" onClick={onClose}>
-                Cancel
-              </Button>
-              {primaryActions ? (
-                typeof primaryActions === 'function' ? (
-                  primaryActions(selectedItems)
-                ) : (
-                  primaryActions
-                )
-              ) : (
-                <Button onClick={handleConfirm} disabled={isConfirmDisabled}>
-                  {confirmLabel}
-                  {selectedIds.size > 0 ? ` (${selectedIds.size})` : ''}
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+        return listRegion;
+      })()}
     </Modal>
   );
 }

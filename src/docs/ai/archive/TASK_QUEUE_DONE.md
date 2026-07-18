@@ -1,3 +1,41 @@
+- id: TASK-540
+  title: Mobile selection modals — sticky Add Selected / confirm footer
+  created_at: 2026-07-18
+  created_by: agent
+  completed_at: 2026-07-18
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T013
+  developer_test_plan: |
+    Suite DEV-V-016 T013 — see BUILD_VALIDATION.md
+  related_files:
+    - src/components/shared/unified-selection-modal.tsx
+    - src/components/ui/modal.tsx
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/guide/02-components-and-lists.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    On mobile full-screen selection/add modals, primary actions (Add Selected, Load, Confirm)
+    must stay pinned at the bottom so users do not scroll the list to reach them.
+  acceptance_criteria:
+    - UnifiedSelectionModal uses Modal footer slot for Cancel / Add Selected (or confirmLabel / primaryActions).
+    - List scrolls above the footer; footer remains visible on viewports < 768px with fullScreenOnMobile.
+    - MOBILE_UX + list-modal guide document footer-slot requirement.
+    - BUILD_VALIDATION DEV-V-016-T013; npm run build.
+  completed_work: |
+    - Moved UnifiedSelectionModal actions into Modal `footer`; title/description use Modal simple header.
+    - Content uses !overflow-hidden so only the list region scrolls; footer safe-area on mobile fullscreen.
+    - Docs: MOBILE_UX sticky-action rule; guide/02; feedback log; DEV-V-016-T013.
+  evidence: |
+    npm run build
+  notes: |
+    Root cause: footer lived inside Modal children (scroll region). Species/proficiency modals already used footer correctly.
+
 - id: TASK-539
   title: Chip / GLR body tap toggles expand (not header-only)
   created_at: 2026-07-18

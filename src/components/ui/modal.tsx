@@ -258,16 +258,30 @@ export function Modal({
           </IconButton>
         )}
         
-        {/* Content */}
+        {/* Content — flex column under sticky header/footer. Default scrolls as a whole;
+            list modals can set contentClassName with overflow-hidden + an inner scroll region. */}
         <div className={cn(
-          (flexLayout || useFullScreenMobile) ? 'flex-1 min-h-0 overflow-y-auto scrollbar-thin' : '',
+          (flexLayout || useFullScreenMobile)
+            ? 'flex flex-col flex-1 min-h-0 overflow-y-auto scrollbar-thin'
+            : '',
           contentClassName ?? 'p-6'
         )}>
           {children}
         </div>
         
-        {/* Footer (optional slot) — shrink-0 keeps sticky when flexLayout / fullScreenOnMobile */}
-        {footer ? <div className="shrink-0">{footer}</div> : null}
+        {/* Footer (optional slot) — shrink-0 keeps sticky when flexLayout / fullScreenOnMobile.
+            Put primary actions (Add Selected, Confirm, etc.) here — not inside children —
+            so they stay pinned on mobile full-screen without scrolling. See MOBILE_UX.md. */}
+        {footer ? (
+          <div
+            className={cn(
+              'shrink-0',
+              useFullScreenMobile && 'pb-[env(safe-area-inset-bottom,0px)]'
+            )}
+          >
+            {footer}
+          </div>
+        ) : null}
       </div>
     </div>
   );
