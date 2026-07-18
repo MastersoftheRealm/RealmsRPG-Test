@@ -10,6 +10,8 @@
   related_files:
     - src/components/character-sheet/library-section.tsx
     - src/components/shared/tab-summary-section.tsx
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/FEATURE_INDEX.md
   description: |
     On mobile character sheet Inventory, Currency and Armament Proficiency (TP) overlapped
     in the top summary bar. Also remove background gradients from that bar and from
