@@ -95,7 +95,7 @@ export function useCharacterSheetActions(args: UseCharacterSheetActionsArgs) {
     setPortraitRefreshKey,
   });
 
-  const { existingIds, applyAutoProficiencies } = useSheetAutoProficiencies({
+  const { applyAutoProficiencies } = useSheetAutoProficiencies({
     character,
     setCharacter,
     powerPartsDb,
@@ -190,7 +190,6 @@ export function useCharacterSheetActions(args: UseCharacterSheetActionsArgs) {
   // Public surface matches characters/[id]/page.tsx destructure (plus libraryHandlers bag).
   return {
     ...resource,
-    existingIds,
     handleModalAdd: library.handleModalAdd,
     handleAddFeats: feats.handleAddFeats,
     handleConfirmRemoveFeat: feats.handleConfirmRemoveFeat,

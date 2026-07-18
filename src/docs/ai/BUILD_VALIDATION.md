@@ -898,7 +898,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-540)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats.
 
@@ -964,8 +964,8 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Suite** | DEV-V-009 |
 | **Task** | TASK-318, TASK-349 |
 | **Where** | `/characters/[id]` → Edit → Library → Add on Powers, Techniques, Inventory |
-| **Steps** | 1. Open add modal for each type. 2. Toggle My Library / Realms Library source. 3. For powers, switch Powers vs Empowered mode. 4. Select item(s) and confirm Add Selected. |
-| **Expected** | Modal loads items, filters/sorts work, selection adds to sheet without duplicate IDs blocked; empowered powers use separate columns when in empowered mode. |
+| **Steps** | 1. Open add modal for each type. 2. Toggle My Library / Realms Library source. 3. For powers, switch Powers vs Empowered mode. 4. Select item(s) and confirm Add Selected. 5. For Equipment: confirm owned gear still appears (stackable) and Add Selected / custom add updates the Inventory list. |
+| **Expected** | Modal loads items, filters/sorts work, selection adds to sheet; powers/weapons/armor/shields hide already-owned ids of that type only; equipment remains selectable when already owned (quantity merges); empowered powers use separate columns when in empowered mode. |
 | **Report** | DEV-V-009-T006: PASS / FAIL / SKIP — |
 
 #### DEV-V-009-T007 — Unarmed Prowess columns align with weapons (Name | Range | Attack | Damage)
@@ -1135,16 +1135,42 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Expected** | Side-scroll panels align with the header/PageContainer content width; gap between panels; snap stops do not shift content left of the header. Desktop `md+` grid unchanged. |
 | **Report** | DEV-V-009-T021: PASS / FAIL / SKIP — |
 
-#### DEV-V-009-T022 — Skills edit Value stepper + fully visible (TASK-540)
+#### DEV-V-009-T022 — Inventory Add equipment actually adds items (TASK-542)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-009 — Character sheet refactor |
-| **Task** | TASK-540 |
+| **Task** | TASK-542 |
+| **Where** | `/characters/[id]` → Library → Inventory → Add equipment |
+| **Needs** | Owned character; Codex equipment available (or use custom form) |
+| **Steps** | 1. Open Add equipment. 2. Confirm Codex/library gear rows are listed (not an empty “already added” false empty). 3. Select one item with quantity ≥1 → Add Selected; confirm it appears under Equipment. 4. Add the same item again; confirm quantity stacks. 5. Add a custom item by name; confirm it appears and survives refresh. |
+| **Expected** | Library and custom adds update the Equipment list immediately; stacking merges quantity; custom notes persist after save/reload. |
+| **Report** | DEV-V-009-T022: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T023 — Roll log bonus badge readable in dark mode (TASK-542)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-542 |
+| **Where** | Character sheet → Roll log (personal or campaign) |
+| **Needs** | Dark theme enabled; a roll with a non-zero bonus/modifier |
+| **Steps** | 1. Switch to dark mode. 2. Make an ability/skill roll with a non-zero bonus (or custom roll with mod). 3. Inspect the second numeric chip in the roll row (the bonus value between dice and total). |
+| **Expected** | Bonus chip uses dark-mode success/danger surface + border so the number stays readable (not light-on-light). |
+| **Report** | DEV-V-009-T023: PASS / FAIL / SKIP — |
+
+
+#### DEV-V-009-T024 — Skills edit Value stepper + fully visible (TASK-543)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-543 |
 | **Where** | `/characters/[id]` → Skills panel at desktop `lg+` (≥1024px) with edit mode on |
 | **Steps** | 1. Open a character sheet at ≥1024px width (Skills in the left column of the three-panel grid). 2. Enter sheet edit mode and click the Skills pencil so Value steppers appear. 3. Confirm each skill row shows a full `−` value `+` control — the `+` button is not clipped by the card/panel edge. 4. Confirm the remove (X) control remains usable. 5. If the table is wider than the panel, confirm `TableScroll` allows horizontal scroll without hiding the `+` permanently. 6. Optional ~360px: edit Skills; Value steppers remain fully usable via horizontal scroll. |
 | **Expected** | Value column has enough min-width for the compact ValueStepper; `+` is never cut off behind the right edge; table scrolls horizontally when needed instead of crushing the stepper. |
-| **Report** | DEV-V-009-T022: PASS / FAIL / SKIP — |
+| **Report** | DEV-V-009-T024: PASS / FAIL / SKIP — |
+
 
 ---
 
@@ -2929,9 +2955,9 @@ Automated via `npm test` (`src/lib/library-types.test.ts`).
 
 ---
 
-## DEV-V-024 — Client error handling (TASK-479)
+## DEV-V-024 — Client error handling (TASK-479, TASK-540)
 
-Convention: `ARCHITECTURE.md` § Client error handling. Automated helper coverage via `src/lib/api-client.test.ts`.
+Convention: `ARCHITECTURE.md` § Client error handling. Automated helper coverage via `src/lib/api-client.test.ts` and `src/lib/auth-errors.test.ts`.
 
 #### DEV-V-024-T001 — getErrorMessage unit coverage
 
@@ -2963,6 +2989,27 @@ Convention: `ARCHITECTURE.md` § Client error handling. Automated helper coverag
 | **Steps** | Force a failing mutation (offline or invalid id) on delete, duplicate, or add-to-library. |
 | **Expected** | Error toast with a useful message; no silent no-op. Name lookup failures during creator save must not masquerade as “create new” when the API is down. |
 | **Report** | DEV-V-024-T003: PASS / FAIL / SKIP — |
+
+#### DEV-V-024-T004 — Auth error mapper unit coverage (TASK-540)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-024 |
+| **Task** | TASK-540 |
+| **Automated** | `npm test` — `src/lib/auth-errors.test.ts` |
+
+**Expected** — SMTP / “confirmation email” failures are **not** labeled “Invalid email address.” Real invalid-format and already-exists / credentials / rate-limit cases map correctly.
+
+#### DEV-V-024-T005 — Register accepts a normal email (TASK-540)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-024 |
+| **Task** | TASK-540 |
+| **Where** | `/register` |
+| **Steps** | 1. Open Create Account. 2. Enter a normal address (e.g. `name+tag@gmail.com` or with a trailing space when pasting). 3. Fill password + accept terms. 4. Submit. |
+| **Expected** | Field validation passes (trim/lowercase). If signup fails for send/SMTP reasons, Alert must **not** say “Invalid email address” — prefer a send-failure or generic message. Success → check-email or signed-in redirect. |
+| **Report** | DEV-V-024-T005: PASS / FAIL / SKIP — |
 
 ---
 
@@ -3103,6 +3150,18 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Steps** | 1. Open My Library → Powers at ~360px width. 2. Confirm each power name uses most of the row width left of the X (and thumbnail if present) — not character-by-character wrap in a thin strip with a large empty gap before Edit. 3. Confirm X and Edit sit together on the right (not X mid-row with empty fr space). 4. Spot-check Armaments and an add-X modal `+` the same way. |
 | **Expected** | Below `lg`, GridListRow collapses empty desktop data-column tracks via `--glr-mobile-grid` (not overridden by inline `gridTemplateColumns`); name gets `minmax(0, 1fr)` beside action chrome. Desktop `lg+` alignment unchanged. |
 | **Report** | DEV-V-016-T012: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T013 — Mobile selection modal sticky Add Selected (TASK-541)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-541 |
+| **Where** | `/characters/[id]` → Edit → Library → Add Power (or Add Feat / Add Skill); also creator Load from Library |
+| **Needs** | Narrow viewport (~360px) or DevTools device mode below 768px; enough list items that the modal content overflows |
+| **Steps** | 1. Open Add Power (or any UnifiedSelectionModal add-X) at ~360px width. 2. Confirm the modal is full-screen. 3. Scroll the item list. 4. Confirm **Cancel** and **Add Selected** (or Load) remain visible and pinned at the bottom of the screen without scrolling to reach them. 5. Select one or more rows → Add Selected still reachable and works. |
+| **Expected** | Primary actions live in Modal `footer` (not scrolled children); footer stays sticky on `fullScreenOnMobile`; list scrolls above it. |
+| **Report** | DEV-V-016-T013: PASS / FAIL / SKIP — |
 
 ---
 
@@ -4173,14 +4232,14 @@ Admin/creator editors, user `image_id` parity, legacy catalog migration, portrai
 | DEV-V-007 | Auth UI (Google only) | DEV-T-007 | Planned |
 | DEV-V-014 | Codex typing + roll timestamp (TASK-378) | — | Automated (`npm test`) |
 | DEV-V-015 | Library API typing (TASK-420) | — | Automated (`npm test`) + manual smoke |
-| DEV-V-016 | Library add/load selection parity (TASK-379, TASK-437, TASK-475) | — | Manual — see suite above (T001–T011) |
+| DEV-V-016 | Library add/load selection parity (TASK-379, TASK-437, TASK-475, TASK-536, TASK-541) | — | Manual — see suite above (T001–T013) |
 | DEV-V-017 | Site copy modules (TASK-390) | — | Manual — see suite above |
 | DEV-V-018 | CreatorPageShell parity (TASK-380 / TASK-431) | — | Manual — see suite above |
 | DEV-V-019 | React Compiler hook cleanup (TASK-430) | — | Manual — see suite above |
 | DEV-V-020 | Sitewide copy compliance (TASK-439) | — | Manual — see suite above |
 | DEV-V-022 | Characters list page (TASK-469) | — | Manual — see suite above |
 | DEV-V-023 | Admin Realms Image Library (TASK-493) | — | Manual — see suite above |
-| DEV-V-024 | Client error handling (TASK-479) | — | Automated (`npm test`) + manual smoke |
+| DEV-V-024 | Client error handling (TASK-479, TASK-540) | — | Automated (`npm test`) + manual smoke |
 | DEV-V-025 | ExpandableImage adoption (TASK-478) | — | Manual — see suite above |
 | DEV-V-026 | Realms Image Library wiring (TASK-496–499, TASK-531–533) | — | Manual — see suite above |
 

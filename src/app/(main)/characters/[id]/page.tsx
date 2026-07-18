@@ -320,7 +320,6 @@ export default function CharacterSheetPage({ params }: PageParams) {
     handleFullRecovery,
     handlePartialRecovery,
     handleLevelUp,
-    existingIds,
     handleAddFeats,
     handleConfirmRemoveFeat,
     handleAddSkills,
@@ -595,7 +594,6 @@ export default function CharacterSheetPage({ params }: PageParams) {
           character={character}
           displayCharacter={characterForDisplay}
           calculatedStats={calculatedStats}
-          existingIds={existingIds}
           skills={skills}
           traitsDb={traitsDb}
           onModalAdd={handleModalAdd}

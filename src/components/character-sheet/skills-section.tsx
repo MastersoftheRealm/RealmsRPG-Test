@@ -334,7 +334,7 @@ export function SkillsSection({
         </div>
       </div>
       
-      {/* DESIGN_INTENT: narrow lg Skills column must not crush ValueStepper; edit table min-width + TableScroll (TASK-540) */}
+      {/* DESIGN_INTENT: narrow lg Skills column must not crush ValueStepper; edit table min-width + TableScroll (TASK-543) */}
       <TableScroll>
         <table
           className={cn(

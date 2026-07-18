@@ -97,6 +97,8 @@ export function useAddLibraryItemData({
 
   const items: SelectableItem[] = useMemo(() => {
     const list = itemType === 'power' && powerSelectionMode === 'empowered' ? empoweredRawItems : rawItems;
+    // Callers pass type-scoped ids (CharacterSheetModals.existingIdsForAddModal).
+    // Equipment gets an empty set so stackable gear stays selectable.
     return list
       .filter((item) => !existingIds.has(String((item as { id?: string | number }).id ?? '')))
       .map((item) =>

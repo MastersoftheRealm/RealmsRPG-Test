@@ -239,7 +239,7 @@ export const SkillRow = memo(function SkillRow({
           )}
         </td>
         
-        {/* DESIGN_INTENT: compact + nowrap ValueStepper so + stays in-column on narrow sheet panels (TASK-540) */}
+        {/* DESIGN_INTENT: compact + nowrap ValueStepper so + stays in-column on narrow sheet panels (TASK-543) */}
         {isEditing && onValueChange && (
           <td className="py-2 px-1 text-center whitespace-nowrap">
             <ValueStepper

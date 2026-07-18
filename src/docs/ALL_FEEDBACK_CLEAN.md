@@ -1,6 +1,6 @@
 # ALL_FEEDBACK ? Consolidated & Curated
 
-Last updated: 2026-07-18 (sheet Skills Value stepper clip → TASK-540)
+Last updated: 2026-07-18 (sheet Skills Value stepper clip → TASK-543)
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -2480,4 +2480,31 @@ Notes
 - Feedback (verbatim):
   desktop skills on character sheet, the + on skill val increase steppers is pushed behing the right side, so that's an issue.
 - Expected: In Skills edit mode on desktop (`lg+` narrow Skills column), each Value stepper shows a full usable `+` (not clipped by the panel/card edge); horizontal scroll via TableScroll if the table is wider than the panel.
-- Disposition: Implemented as **TASK-540**. QA: DEV-V-009-T022.
+- Disposition: Implemented as **TASK-543** (renumbered; TASK-540–542 taken by auth / sticky footer / inventory+roll-log). QA: DEV-V-009-T024.
+
+**Raw Feedback Log - 2026-07-18 (roll log bonus dark mode + inventory add equipment)**
+- Date: 2026-07-18
+- Context: Character sheet roll log; Library → Inventory → Add equipment
+- Priority: High
+- Feedback (verbatim):
+  1. A few things to a address: the second (bonus) in the roll log has no dark mode thing in the roll log, fix it. 2. adding equipment in character inventory doesn't seem to actually let you add anything, fix that.
+- Expected: Roll log bonus chip readable in dark mode; Add equipment (library select + custom) updates the Inventory Equipment list (and stacks quantity when re-adding).
+- Disposition: Implemented as **TASK-542** (renumbered; TASK-540/541 taken by auth + sticky footer). QA: DEV-V-009-T022–T023.
+
+**Raw Feedback Log - 2026-07-18 (mobile modal sticky Add Selected)**
+- Date: 2026-07-18
+- Context: Mobile full-screen selection/add modals (UnifiedSelectionModal)
+- Priority: High
+- Feedback (verbatim):
+  in mobile a modal needs to have the add selected or whatever button sticky to the bottom of the screen so you don't have to scroll
+- Expected: On mobile full-screen modals, primary actions (Add Selected / Confirm / Load / etc.) stay pinned at the bottom without scrolling the list.
+- Disposition: Implemented as **TASK-541** (renumbered; TASK-540 taken by auth). QA: DEV-V-016-T013.
+
+**Raw Feedback Log - 2026-07-18 (valid email shown as invalid)**
+- Date: 2026-07-18
+- Context: Auth — register / forgot-password / login email errors
+- Priority: High
+- Feedback (verbatim):
+  people put in an email in that's valid it says invalid email?
+- Expected: Valid addresses are accepted; only true format failures say invalid email. SMTP/confirmation-send failures must not be mislabeled as invalid email.
+- Disposition: Implemented as **TASK-540**. Root cause: register/forgot-password mapped any error containing `"email"` to “Invalid email address.” QA: DEV-V-024-T004–T005.

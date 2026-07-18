@@ -336,7 +336,14 @@ export interface CodexEquipmentItem {
  * Falls back to Codex equipment data for general items if not found in user library
  */
 export function enrichItems(
-  characterItems: Array<{ id?: string | number; name?: string; equipped?: boolean; type?: string; quantity?: number }> | undefined,
+  characterItems: Array<{
+    id?: string | number;
+    name?: string;
+    description?: string;
+    equipped?: boolean;
+    type?: string;
+    quantity?: number;
+  }> | undefined,
   userItemLibrary: UserItem[],
   itemType: 'weapon' | 'armor' | 'equipment' | 'shield',
   codexEquipment?: CodexEquipmentItem[],
@@ -416,13 +423,25 @@ export function enrichItems(
       }
     }
     
-    // Not found in library or Codex - return placeholder
+    // Not found in library or Codex — keep character-stored fields (custom inventory items).
     const itemId = typeof charItem === 'object' ? String(charItem.id || name) : name;
+    const storedDescription =
+      typeof charItem === 'object' && typeof charItem.description === 'string'
+        ? charItem.description.trim()
+        : '';
+    const storedType = typeof charItem === 'object' ? String(charItem.type || '').toLowerCase() : '';
+    const resolvedType: EnrichedItem['type'] =
+      storedType === 'weapon' ||
+      storedType === 'armor' ||
+      storedType === 'shield' ||
+      storedType === 'equipment'
+        ? storedType
+        : itemType;
     return {
       id: itemId,
       name: name || itemId,
-      description: 'Item not found in your library',
-      type: itemType,
+      description: storedDescription || 'Item not found in your library',
+      type: resolvedType,
       equipped,
       quantity,
       notInLibrary: true,
@@ -443,17 +462,37 @@ export interface EnrichedCharacterData {
   equipment: EnrichedItem[];
 }
 
-/** Helper to safely convert equipment arrays — preserves id, name, equipped, quantity */
-function toEquipmentArray(items: unknown): Array<{ id?: string | number; name?: string; equipped?: boolean; quantity?: number }> {
+/** Helper to safely convert equipment arrays — preserves id, name, description, type, equipped, quantity */
+function toEquipmentArray(items: unknown): Array<{
+  id?: string | number;
+  name?: string;
+  description?: string;
+  type?: string;
+  equipped?: boolean;
+  quantity?: number;
+}> {
   if (!items) return [];
   if (Array.isArray(items)) {
     return items.map(item => {
       if (typeof item === 'string') return { name: item };
       if (item && typeof item === 'object') {
         const obj = item as Record<string, unknown>;
-        const result: { id?: string | number; name?: string; equipped?: boolean; quantity?: number } = {};
+        const result: {
+          id?: string | number;
+          name?: string;
+          description?: string;
+          type?: string;
+          equipped?: boolean;
+          quantity?: number;
+        } = {};
         if (obj.id) result.id = obj.id as string | number;
         if (obj.name) result.name = obj.name as string;
+        if (typeof obj.description === 'string' && obj.description.trim()) {
+          result.description = obj.description.trim();
+        }
+        if (typeof obj.type === 'string' && obj.type.trim()) {
+          result.type = obj.type.trim();
+        }
         if (obj.equipped) result.equipped = true;
         if (obj.quantity && obj.quantity !== 1) result.quantity = obj.quantity as number;
         return result;
@@ -870,6 +909,14 @@ export function cleanForSave(data: Character): Partial<Character> {
         if (i.name) clean.name = i.name;
         if (i.equipped) clean.equipped = true;
         if (i.quantity && i.quantity !== 1) clean.quantity = i.quantity;
+        // One-off custom inventory rows are not in codex/library — persist type + notes.
+        const idStr = i.id != null ? String(i.id) : '';
+        if (idStr.startsWith('custom-')) {
+          if (i.type) clean.type = i.type;
+          if (typeof i.description === 'string' && i.description.trim()) {
+            clean.description = i.description.trim();
+          }
+        }
         return Object.keys(clean).length > 0 ? clean : null;
       }
       return null;

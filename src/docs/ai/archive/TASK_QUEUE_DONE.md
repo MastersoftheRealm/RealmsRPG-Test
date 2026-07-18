@@ -1,4 +1,4 @@
-- id: TASK-540
+- id: TASK-543
   title: Character sheet Skills — Value stepper + not clipped on desktop
   created_at: 2026-07-18
   created_by: owner
@@ -27,11 +27,13 @@
     - Skills edit Value steppers show full − / value / + on desktop lg Skills panel.
     - + is not clipped by card/panel edge; TableScroll when table wider than panel.
     - SkillsAllocationPage table headers stay in parity with sheet.
-    - BUILD_VALIDATION DEV-V-009-T022; npm run build.
+    - BUILD_VALIDATION DEV-V-009-T024; npm run build.
   notes: |
     Owner feedback 2026-07-18. Root cause: w-full table in 1fr Skills column shrunk
     the Value column below ValueStepper width without a table min-width.
     Cleanup 2026-07-18: DESIGN_INTENT comments; Remove th sr-only; MOBILE_UX note.
+    Renumbered from TASK-540 on merge — TASK-540 auth (PR #41), TASK-541 sticky footer (PR #42),
+    TASK-542 inventory/roll-log (PR #43).
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/44
   evidence: |
@@ -39,9 +41,171 @@
   build_validation: |
     suite: DEV-V-009
     tests:
-      - DEV-V-009-T022
+      - DEV-V-009-T024
   developer_test_plan: |
-    Suite DEV-V-009 T022 — see BUILD_VALIDATION.md (Skills edit Value stepper + visible).
+    Suite DEV-V-009 T024 — see BUILD_VALIDATION.md (Skills edit Value stepper + visible).
+
+---
+- id: TASK-542
+  title: Fix roll log bonus dark mode + inventory Add equipment
+  created_at: 2026-07-18
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-18
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/roll-log.tsx
+    - src/hooks/add-library-item/use-add-library-item-data.ts
+    - src/components/character-sheet/add-library-item/map-selection.ts
+    - src/components/character-sheet/add-library-item/map-selection.test.ts
+    - src/components/character-sheet/add-library-item/add-custom-equipment-form.tsx
+    - src/app/(main)/characters/[id]/CharacterSheetModals.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/lib/data-enrichment.ts
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Owner feedback: (1) roll log bonus (second) chip missing dark-mode surface/border;
+    (2) character Inventory Add equipment did not let users add gear (cross-type
+    existingIds collisions + equipment incorrectly treated as unique).
+  acceptance_criteria:
+    - Bonus chip uses dark success/danger tokens and stays readable in dark mode.
+    - Add equipment lists Codex/library gear; Add Selected and custom add update
+      Equipment; re-add stacks quantity; custom notes persist via cleanForSave.
+    - existingIds scoped by modal type; equipment not excluded when already owned.
+    - BUILD_VALIDATION DEV-V-009-T022–T023; npm run build; targeted vitest.
+  notes: |
+    Root cause for empty/broken add: global existingIds mixed weapon/armor/power
+    numeric ids with codex equipment ids, filtering the list. Equipment is stackable.
+    Cleanup 2026-07-18: removed dead global existingIds from auto-proficiencies facade;
+    SoT is CharacterSheetModals.existingIdsForAddModal; archive pr_link committed.
+    Renumbered from TASK-540 on merge — TASK-540 auth (PR #41), TASK-541 sticky footer (PR #42).
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/43
+  merged_at: 2026-07-18
+  evidence: |
+    npm run build (pass); vitest map-selection.test.ts (pass).
+    Merged to master via PR #43 after conflict resolve (renumber → TASK-542).
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T022
+      - DEV-V-009-T023
+  developer_test_plan: |
+    Suite DEV-V-009 T022–T023 — see BUILD_VALIDATION.md
+
+---
+
+- id: TASK-541
+  title: Mobile selection modals — sticky Add Selected / confirm footer
+  created_at: 2026-07-18
+  created_by: agent
+  completed_at: 2026-07-18
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  pr_link: https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/42
+  merged_at: 2026-07-18
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T013
+  developer_test_plan: |
+    Suite DEV-V-016 T013 — see BUILD_VALIDATION.md
+  related_files:
+    - src/components/shared/unified-selection-modal.tsx
+    - src/components/ui/modal.tsx
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/guide/02-components-and-lists.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    On mobile full-screen selection/add modals, primary actions (Add Selected, Load, Confirm)
+    must stay pinned at the bottom so users do not scroll the list to reach them.
+  acceptance_criteria:
+    - UnifiedSelectionModal uses Modal footer slot for Cancel / Add Selected (or confirmLabel / primaryActions).
+    - List scrolls above the footer; footer remains visible on viewports < 768px with fullScreenOnMobile.
+    - MOBILE_UX + list-modal guide document footer-slot requirement.
+    - BUILD_VALIDATION DEV-V-016-T013; npm run build.
+  completed_work: |
+    - Moved UnifiedSelectionModal actions into Modal `footer`; title/description use Modal simple header.
+    - Content uses overflow-hidden (Modal skips default overflow-y-auto when content owns overflow);
+      only the list region scrolls; footer safe-area on mobile fullscreen.
+    - Footer `[&_button]:min-h-11` covers confirmLabel and primaryActions.
+    - Docs: MOBILE_UX sticky-action rule; guide/02; feedback log; DEV-V-016-T013.
+    - /cleanup: Modal overflow ownership; archive related_files honesty.
+  evidence: |
+    npm run build
+  notes: |
+    Root cause: footer lived inside Modal children (scroll region). Species/proficiency modals already used footer correctly.
+    Renumbered from TASK-540 on merge — TASK-540 already used by auth false-invalid-email (PR #41).
+    Follow-up (out of scope): recovery-modal / level-up-modal still put Confirm in children — file TASK if sticky needed there too.
+
+- id: TASK-540
+  title: Fix false "Invalid email" on auth forms
+  created_at: 2026-07-18
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-18
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/lib/auth-errors.ts
+    - src/lib/auth-errors.test.ts
+    - src/lib/validation/schemas.ts
+    - src/lib/validation/auth-email.test.ts
+    - src/app/(auth)/register/page.tsx
+    - src/app/(auth)/login/page.tsx
+    - src/app/(auth)/forgot-password/page.tsx
+    - src/app/(auth)/reset-password/page.tsx
+    - src/app/(main)/my-account/page.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Valid emails were shown as "Invalid email address" because register/forgot-password
+    mapped any Supabase error message containing the word "email" (including SMTP /
+    confirmation-send failures) to that copy. Also trim/lowercase auth email fields so
+    pasted addresses with whitespace do not fail Zod validation.
+  acceptance_criteria:
+    - Shared getAuthErrorMessage maps invalid-email only for real format failures.
+    - SMTP / confirmation-send errors use send-failure copy, not invalid email.
+    - Auth schemas trim+lowercase email; unit tests cover mapper + schema.
+    - Auth pages + forgot-password check Supabase { error }; BUILD_VALIDATION
+      DEV-V-024-T004–T005; npm run build + targeted tests.
+  notes: |
+    Owner feedback 2026-07-18. Also narrowed my-account email-change mapping so bare
+    "invalid" / "password" substrings do not mislabel errors.
+    Cleanup 2026-07-18: my-account uses getAuthErrorMessage('update-email'); DEV-V-024
+    suite intro + archive related_files honesty; removed unreachable switch default.
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/41
+  merged_at: 2026-07-18
+  evidence: |
+    npm test — auth-errors.test.ts + auth-email.test.ts; npm run build (agent).
+    Cleanup: update-email context tests + my-account wired to shared mapper.
+    Merged to master via PR #41 after CI green (verify + lint/contrast/build + visual/a11y).
+  build_validation: |
+    suite: DEV-V-024
+    tests:
+      - DEV-V-024-T004
+      - DEV-V-024-T005
+  developer_test_plan: |
+    Suite DEV-V-024 T004–T005 — see BUILD_VALIDATION.md (mapper units + register smoke).
 
 ---
 - id: TASK-539
