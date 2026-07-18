@@ -83,7 +83,7 @@
 | **Entity card art — product/schema** | REALMS §5.0.3 + `guide/03-entity-card-art.md` + `SUPABASE_SCHEMA.md` §2.5a |
 | Hub list row (Encounters/Crafting) | `HubListRow` |
 | Sortable column headers | `ListHeader` — data columns asc/desc by default; only spacer/action columns `sortable: false` (TASK-488) |
-| Selection modal (add/pick from library) | `UnifiedSelectionModal` (default `flexLayout`; `maxSelections` soft limit when max ≠ 1; `maxSelections={1}` replaces selection; `confirmLabel` / optional `primaryActions`) |
+| Selection modal (add/pick from library) | `UnifiedSelectionModal` (default `flexLayout` + `fullScreenOnMobile`; Cancel/Add Selected via Modal `footer` for sticky mobile actions; `maxSelections` soft limit when max ≠ 1; `maxSelections={1}` replaces selection; `confirmLabel` / optional `primaryActions`) |
 | + → ✓ selection button | `SelectionToggle`; equipped toggle: `EquipToggle`; innate: `InnateToggle` |
 | Source scope All / Realms / My Library | `SourceFilter` (on `SegmentedControl`) |
 | 2–N pill toggle | `SegmentedControl` |
@@ -133,7 +133,8 @@
 | Load from library (creators) | `LoadFromLibraryModal` + `useLoadModalLibrary`; species/creature rows: `@/lib/library/creator-load-selectables` |
 | Tooltips (defaults + interpolation) | `lib/tooltips/` — **`lib/tooltips/README.md`** (PR #14 onboarding), `legacy-tooltip-key-map.ts` |
 | Roles / quotas / limits | `lib/role-policy.ts`, `lib/role-limits.ts`, `lib/role-quota-messages.ts`, `lib/admin.ts` |
-| API client / validation / rate limit | `lib/api-client.ts` (`apiFetch`, `apiUpload`, `getErrorMessage`), `lib/api-validation.ts`, `lib/validation/schemas.ts`, `lib/rate-limit.ts` — client error convention: `ARCHITECTURE.md` § Client error handling |
+| API client / validation / rate limit | `lib/api-client.ts` (`apiFetch`, `apiUpload`, `getErrorMessage`), `lib/api-validation.ts`, `lib/validation/schemas.ts` (auth emails trim+lowercase), `lib/rate-limit.ts` — client error convention: `ARCHITECTURE.md` § Client error handling |
+| Auth error copy (login/register/reset/update-email) | `lib/auth-errors.ts` (`getAuthErrorMessage`) — do not map every message containing “email” to invalid address; my-account email change uses `update-email` context |
 | Supabase clients (server/client/middleware) | `lib/supabase/*` |
 | Generic utils (cn, string, number, object, motion, duration display) | `lib/utils/*` — list column labels: `formatColumnKeyLabel()` in `string.ts`; motion timing: `MOTION_DURATION_SLOW_MS` in `motion.ts`; duration layers in `duration.ts`: structured `formatDurationFromTypeAndValue` / `formatDurationWithModifiers`, any-shape `formatDurationDisplay`, compact list `formatDurationCompact` (TASK-477) |
 | Stable empty fallbacks for hook deps | `lib/empty.ts` (`EMPTY_STRING_ARRAY`, `EMPTY_NUMBER_RECORD`, `EMPTY_GUIDANCE_GROUPS`) — never mutate |

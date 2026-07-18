@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import type { AuthUser } from '@/types/auth';
 import { createClient } from '@/lib/supabase/client';
 import { apiUpload, getErrorMessage } from '@/lib/api-client';
+import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { changeUsernameAction, getUserProfileAction, deleteAccountAction } from '@/app/(auth)/actions';
 import { useAuthStore } from '@/stores';
 import { useAdmin } from '@/hooks';
@@ -248,18 +249,7 @@ function AccountContent() {
       setEmailPassword('');
       setEmailMessage({ type: 'success', text: 'Email updated successfully!' });
     } catch (err: unknown) {
-      const raw = getErrorMessage(err, 'Failed to update email');
-      let message = 'Failed to update email';
-      if (raw.includes('wrong') || raw.includes('password') || raw.includes('incorrect')) {
-        message = 'Incorrect password';
-      } else if (raw.includes('already in use')) {
-        message = 'Email already in use';
-      } else if (raw.toLowerCase().includes('invalid')) {
-        message = 'Invalid email address';
-      } else {
-        message = raw;
-      }
-      setEmailMessage({ type: 'error', text: message });
+      setEmailMessage({ type: 'error', text: getAuthErrorMessage(err, 'update-email') });
     } finally {
       setEmailChanging(false);
     }

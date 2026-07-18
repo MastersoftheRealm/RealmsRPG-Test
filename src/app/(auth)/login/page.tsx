@@ -14,6 +14,7 @@ import { createClient } from '@/lib/supabase/client';
 import { hasGuestEncountersToMigrate, migrateGuestEncountersOnSignIn } from '@/lib/guest-encounter-migration';
 
 import { loginSchema, type LoginFormData } from '@/lib/validation';
+import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { resendConfirmationAction } from '@/app/(auth)/auth-actions';
 import { AuthCard, FormInput, PasswordInput, SocialButton } from '@/components/auth';
@@ -79,7 +80,7 @@ function LoginContent() {
       sessionStorage.removeItem('loginRedirect');
       router.push(getRedirectPath());
     } catch (err) {
-      setError(getAuthErrorMessage(err));
+      setError(getAuthErrorMessage(err, 'login'));
     } finally {
       setIsLoading(false);
     }
@@ -100,7 +101,7 @@ function LoginContent() {
       setResendStatus('sent');
     } catch (e) {
       setResendStatus('idle');
-      setError(getAuthErrorMessage(e));
+      setError(getAuthErrorMessage(e, 'resend'));
     }
   };
 
@@ -121,7 +122,7 @@ function LoginContent() {
       }
     } catch (err: unknown) {
       console.error('Google sign-in error:', err);
-      setError(getAuthErrorMessage(err));
+      setError(getAuthErrorMessage(err, 'login'));
       setIsLoading(false);
     }
   };
@@ -243,14 +244,3 @@ export default function LoginPage() {
   );
 }
 
-function getAuthErrorMessage(error: unknown): string {
-  const e = error as { message?: string; code?: string };
-  const msg = (e.message ?? '').toLowerCase();
-  if (msg.includes('not confirmed') || msg.includes('email not confirmed')) {
-    return 'Please confirm your email before signing in.';
-  }
-  if (msg.includes('invalid') || msg.includes('credentials')) return 'Invalid email or password';
-  if (msg.includes('too many') || msg.includes('rate')) return 'Too many failed attempts. Please try again later.';
-  if (msg.includes('network') || msg.includes('fetch')) return 'Network error. Please check your connection.';
-  return e.message ?? 'An error occurred during sign in. Please try again.';
-}

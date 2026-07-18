@@ -36,6 +36,7 @@ Audit: `ValueStepper`, `IconButton`, sheet action toolbar, tab triggers, list ro
 ## Modals
 
 - **Full-screen on mobile:** For selection/add modals, wizards, recovery, level-up, settings, and other large dialogs, set **`fullScreenOnMobile`** on `Modal`. When viewport is &lt; `md`, the modal renders full-screen (sticky header/footer, scrollable content). On `md+`, existing size behavior applies.
+- **Sticky action buttons:** Put primary actions (**Add Selected**, Confirm, Load, Pick Me, etc.) in the Modal **`footer`** prop — never inside `children`. The footer is `shrink-0` outside the scroll region so users do not scroll to reach it on phones. `UnifiedSelectionModal` already wires Cancel / Add Selected (or `confirmLabel` / `primaryActions`) through `footer`.
 - **Which modals:** Add/load/settings/level-up/recovery, unified selection, add feat/skill/library item, confirm-action and delete-confirm when content is tall, login prompt. Small confirmations can stay centered without full-screen.
 - **Crafting:** Item selection happens within `/crafting` session flows (`/crafting` + `/crafting/[id]`), not a standalone `/crafting/new` page. DeleteConfirmModal for session delete uses fullScreenOnMobile. Touch targets ≥44px for roll inputs, steppers, and buttons on crafting session pages.
 
@@ -74,6 +75,7 @@ When **creating or editing** a page or modal:
 
 2. **Modal**
    - For selection, add-X, load, recovery, level-up, settings, wizards: set **`fullScreenOnMobile`** so it goes full-screen below `md`. Header/footer sticky, content scrollable.
+   - Confirm / Add Selected / Load actions go in Modal **`footer`** (not scrolled children).
 
 3. **List/table**
    - Use `ListHeader` (hidden on mobile) and `GridListRow` with sensible `hideOnMobile` columns so mobile sees name + key info, details on expand.
@@ -90,7 +92,7 @@ When **creating or editing** a page or modal:
 | Component | Location | Mobile behavior |
 |-----------|----------|-----------------|
 | Header | `src/components/layout/header.tsx` | Menu button below `xl`; inline nav `xl+` only (avoids mid-width document overflow). |
-| Modal | `src/components/ui/modal.tsx` | `fullScreenOnMobile` prop → full-screen below `md`. |
+| Modal | `src/components/ui/modal.tsx` | `fullScreenOnMobile` → full-screen below `md`; put actions in `footer` (sticky). |
 | Collapsible section pattern | `src/components/creator/collapsible-section.tsx` | Use for within-panel sub-sections or lighter pages. |
 | ListHeader | `src/components/shared/list-header.tsx` | Desktop: column header grid. Mobile: expandable "Sort by [criteria] (A→Z)" using same sortState/onSort; no column headers. |
 | ExpandableChip / ChipGroup | `src/components/ui/expandable-chip.tsx` | Wrap groups use `items-start`; expand keeps its row, moves left, and takes full group width; header or body toggles. |
