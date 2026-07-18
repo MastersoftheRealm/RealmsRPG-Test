@@ -41,9 +41,11 @@
     suite intro + archive related_files honesty; removed unreachable switch default.
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/41
+  merged_at: 2026-07-18
   evidence: |
     npm test — auth-errors.test.ts + auth-email.test.ts; npm run build (agent).
     Cleanup: update-email context tests + my-account wired to shared mapper.
+    Merged to master via PR #41 after CI green (verify + lint/contrast/build + visual/a11y).
   build_validation: |
     suite: DEV-V-024
     tests:
