@@ -99,7 +99,7 @@ These were migrated in Phase 1.1–1.2 **before** interactive-state audit. Re-au
 - [x] `Alert` — all status variants in styleguide
 - [x] `Toast` — styleguide trigger + `role="region"` on live region (TASK-384)
 - [x] `PointStatus` — variants in styleguide
-- [x] `TabSummarySection` — all five variants in styleguide; semantic domain tokens (Phase 4.3 ✅)
+- [x] `TabSummarySection` — all five variants in styleguide; solid semantic domain fills (Phase 4.3 ✅; TASK-537 dropped gradients)
 
 ## Findings log
 
