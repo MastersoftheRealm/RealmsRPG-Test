@@ -27,7 +27,6 @@ export function useCreatorPathData(): ArchetypePathData | undefined {
           fromDraft.level1.armaments?.length ||
           fromDraft.level1.equipment?.length ||
           fromDraft.level1.guidance_groups?.length ||
-          fromDraft.level1.recommended_species?.length ||
           fromDraft.level1.notes?.trim())
     );
     if (draftHasContent || draft.creationMode !== 'path') return fromDraft;

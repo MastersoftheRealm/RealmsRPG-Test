@@ -51,7 +51,7 @@ How to use
 - **Guided choice-card disclosure (2026-07-15):** **See more?** = in-card deepen (truncated copy / card content). **More details** = entity modal and/or lots of chip/fact disclosure. **See more options** = catalog Layer 2 only. Do not invent specialist verbs (Property details, Read more, Hide properties). When a card has both See more and modal More details, show modal More details only after expand/select. TASK-432?436.
 - **GridListRow fact chips (2026-07-15):** Column facts must stay as columns or self-describing expanded chips (e.g. Damage Reduction 2). Sitewide audit **TASK-437 done**.
 - **Guided L1 = curated picks, not silent kits (2026-07-15):** Layer 1 still requires deliberate user choice for identity and fighting-style decisions (path, species, ancestry, feats, weapons, armor). Soften prior ?accept defaults / barely touch middle chapters? and remove quick loadout kits; weapon/armor are individual path cards. Gear may offer optional ?Add all recommended.? Selection grammar: cards (few/curated) vs GridListRow (many/browse); entity depth ladder vs catalog breadth ladder ? see `REALMS_PRODUCT_OVERVIEW.md` ?3.1. TASK-442?443.
-- **Admin archetype path ↔ guided parity (2026-07-17):** Sync admin path builder with guided creator — named feat groups with explicit character vs archetype audience (no title heuristics), max 3 base skills with warn-not-block on legacy excess, armaments UI-only split (weapons/shields vs armor; single `level1_armaments`), drop `level1_recommended_species` column entirely (`is_starter` only). Guided is SoT; custom/advanced transitional. Tasks **TASK-514–518** (TASK-391 superseded). Owner decisions locked same day.
+- **Admin archetype path ? guided parity (2026-07-17):** Sync admin path builder with guided creator ? named feat groups with explicit character vs archetype audience (no title heuristics), max 3 base skills with warn-not-block on legacy excess, armaments UI-only split (weapons/shields vs armor; single `level1_armaments`), drop `level1_recommended_species` column entirely (`is_starter` only). Guided is SoT; custom/advanced transitional. Tasks **TASK-514?518** (TASK-391 superseded). Owner decisions locked same day.
 - **Card ? GLR selection grammar (2026-07-15 session):** Cards are the quieter Layer?A presentation of the same entity facts as GridListRow; See more / row expand and More details / rich expand are the same depth ladder. ?See more options? is catalog breadth only. Share fact builders and labels sitewide; do not force one chrome component.
 - **Agent user-facing copy (2026-07-15):** Game-term capitalization + prefer/avoid vocab (no Check/Save/Class/DC; Abilities not Ability Scores in UI; Score = Bonus + 10; no em dash in UI). Guide = **TASK-438 done**. Sitewide string audit = **TASK-439 done**; residuals **TASK-440**.
 - **Named Bonuses Title Case (2026-07-15):** Capitalize Attack Bonus and essentially every named Bonus (Power Bonus, Martial Bonus, Ranged Attack Bonus, Skill Bonus, Defense Bonus, ?). Documented in `GAME_RULES.md` Terminology.
@@ -76,7 +76,7 @@ How to use
 - Implement modern thin scrollbars sitewide.
 - **Buttons:** Use solid colors with clear white font (btn-solid, btn-outline-clean) ? no gradients. Match about page styles site-wide.
 - **Roll Log:** Single-row layout (1d20 X + Bonus = Total in boxes); roll=light grey, bonus=green, total=blue; smaller timestamp.
-- **Stable vertical chip expand (updated 2026-07-17):** ExpandableChip keeps its collapsed vertical row but intentionally moves to the chip group’s left edge and takes the full width. All chips from that row onward move below it. The pointer remains vertically aligned; preserving horizontal position is no longer the goal. Sitewide shared standard — **TASK-445 / TASK-504**.
+- **Stable vertical chip expand (updated 2026-07-17):** ExpandableChip keeps its collapsed vertical row but intentionally moves to the chip group?s left edge and takes the full width. All chips from that row onward move below it. The pointer remains vertically aligned; preserving horizontal position is no longer the goal. Sitewide shared standard ? **TASK-445 / TASK-504**.
 
 ### 7) Modals & Lists
 - Shared modal/list components should include: rounded headers, header spacing, sortable columns, and right-aligned add/select controls.
@@ -2146,7 +2146,7 @@ Notes
 - Feedback (verbatim themes):
   Need a place where admins can upload and manage database images. Same size/file-type restrictions and crop-to-aspect as other images. Images should be designated (and designations altered) into different sections ? e.g. a species image may also be usable for creatures, so it appears in the Realms image library picker for users creating creatures and for admins adding creatures to the Realms Library. Same for weapons, armor, shields, powers, techniques, equipment, empowered techniques. Upload may happen on the admin image page or when creating/publishing an entity (e.g. power with a mushroom image) ? either way the image lands in the library and is designated in that category. Must be easy to multi-designate, rename, etc. Entities with images: species, creatures, weapons, armor, shields, powers, techniques, equipment, empowered techniques. Without images: feats, skills, archetypes, parts, properties, creature feats, traits.
 - Expected: Shared Realms Image Library (catalog + multi-category tags) + admin management UI + picker in creators/admin editors; entity `image_url` parity; supersedes narrow ?art bank only? framing of TASK-417.
-- Disposition: Filed TASK-491–500 (2026-07-16). Architect gate TASK-491 done — ADR-0003 + REALMS §5.0.3 / schema / art-guide. Implement from TASK-492 when asked.
+- Disposition: Filed TASK-491?500 (2026-07-16). Architect gate TASK-491 done ? ADR-0003 + REALMS ?5.0.3 / schema / art-guide. Implement from TASK-492 when asked.
 
 **Raw Feedback Log ? 2026-07-16 (Realms Image Library ? owner clarifications)**
 - Date: 2026-07-16
@@ -2155,7 +2155,7 @@ Notes
 - Feedback (decisions):
   (1) Binding ? one master file in the shared bank; reusable in many places without duplicating instances; use best practice. (2) Delete ? warn listing all uses; support replace so all uses point to the new image; hard-delete without replace clears the image everywhere. (3) One image bank with name + multi-category ?libraries? tags (e.g. dagger ? equipment+weapon+shield+technique); pickers filter by those tags for users and admins. (4) Empowered techniques share power/technique designations (no separate tag). (5) Enhanced items ? no images for now; yes eventually. (6) Upload into bank ? admin only (admin Images page, or admin publishing via creators to Realms Library ? auto name from entity + auto category tag). (7) Pick from bank ? guests and all signed-in users; species/creature bank images also pickable for profile picture and character portrait. (8) Admin UI ? `/admin/images` card on admin dashboard.
 - Expected: Tasks/ADR encode master-asset + `image_id` refs, replace/delete-everywhere, category matrix, guest-readable picker, portrait integration, deferred enhanced images.
-- Disposition: Locked into TASK-491–500 (2026-07-16). TASK-491 Architect done — ADR-0003 + REALMS §5.0.3 / schema / art-guide rewrite. Implement from TASK-492 when asked.
+- Disposition: Locked into TASK-491?500 (2026-07-16). TASK-491 Architect done ? ADR-0003 + REALMS ?5.0.3 / schema / art-guide rewrite. Implement from TASK-492 when asked.
 
 **Raw Feedback Log ? 2026-07-16 (Hide opposite Library tab on create)**
 - Date: 2026-07-16
@@ -2184,33 +2184,33 @@ Notes
 - Expected: Archetype and character feats show Codex display names on the sheet (and in saved character data), not raw ids.
 - Disposition: Implemented as **TASK-503**. Root cause: `buildGuidedCharacterPayload` set `name: String(id)`. Now resolves names from `codexFeats`; sheet enrichFeat also prefers Codex when stored name equals id.
 
-**Raw Feedback Log — 2026-07-17 (Expandable chips full-width, vertical stability)**
+**Raw Feedback Log ? 2026-07-17 (Expandable chips full-width, vertical stability)**
 - Date: 2026-07-17
 - Context: Global/shared ExpandableChip behavior and documentation
 - Priority: High
 - Feedback (verbatim): Regarding expanding chip functionality, we have it so the chip remains in the same place so you don't have to move around, and while that is useful it looks bad, so instead of having it remain in the same place vertically and horizontally, just have it remain in the same place vertically, pushing all chips to below it while it's expanded, you mouse will always be inline vertically but the chip will move to be left aligned fully taking the width instead of being pushed to the side by previous chips. This is a global/shared component/logic and needs to be clear in the documentation and all use cases updated in one.
-- Expected: Shared expansion logic preserves the chip’s vertical row, left-aligns it at full group width, and moves same-row/later chips below; no call-site forks.
+- Expected: Shared expansion logic preserves the chip?s vertical row, left-aligns it at full group width, and moves same-row/later chips below; no call-site forks.
 - Disposition: Implemented as **TASK-504** through `ExpandableChip` + shared full-row layout logic; docs and DEV-V-021 updated.
 
-**Raw Feedback Log — 2026-07-17 (Your Hero feat chip color)**
+**Raw Feedback Log ? 2026-07-17 (Your Hero feat chip color)**
 - Date: 2026-07-17
-- Context: Guided character creator → Your Hero → Your Build
+- Context: Guided character creator ? Your Hero ? Your Build
 - Priority: Low
 - Feedback (verbatim):
   for the your hero step in guided creator I notice the archetype feats are yellow, that's unneeded, make them the same color.
 - Expected: Archetype and character feat chips use the same neutral list color in the Your Hero summary.
 - Disposition: Implemented in `guided-reveal-summary.tsx`; archetype feats now use the standard `list` chip variant.
 
-**Raw Feedback Log — 2026-07-17 (Your Hero loadout equipment ID chips)**
+**Raw Feedback Log ? 2026-07-17 (Your Hero loadout equipment ID chips)**
 - Date: 2026-07-17
-- Context: Guided character creator → Your Hero → Your Build → Loadout
+- Context: Guided character creator ? Your Hero ? Your Build ? Loadout
 - Priority: Low
 - Feedback (verbatim):
   for the your hero step in guided creator I notice the loadout has weapons/armor displayed nicely, but then after it has tiny chips that read [YxZ] or something like that, likely equipment ID's and quantitiy values, simply don't display equipment in the your build section since they mostly care about weapons and armor.
 - Expected: Loadout section in the Your Build summary shows only weapons/armor (and Unarmed Prowess), not general equipment chips.
 - Disposition: Implemented in `guided-reveal-summary.tsx`; `loadoutItems` no longer includes `draft.equipment`, so only armaments + Unarmed Prowess render.
 
-**Raw Feedback Log — 2026-07-17 (Power/Technique attack mode — drop weapon tying)**
+**Raw Feedback Log ? 2026-07-17 (Power/Technique attack mode ? drop weapon tying)**
 - Date: 2026-07-17
 - Context: Power / Technique / Empowered Technique creators; Add Weapon mechanic parts
 - Priority: High
@@ -2223,9 +2223,9 @@ Notes
 - Expected: Creators expose three attack modes only; no library weapon picker / TP scaling / weapon IDs on saves. Display uses attack mode labels. Cleanup across creators, calcs, columnar mapping, lists.
 - Disposition: Implemented as **TASK-507** (Architect proceed from owner). Shared `lib/attack-mode.ts`; creators use 3-mode Attack select; display column renamed Attack; dead creator-weapon picker/options/persistence removed. Owner QA: DEV-V-026.
 
-**Raw Feedback Log — 2026-07-17 (Sheet TP header + expandable part chips)**
+**Raw Feedback Log ? 2026-07-17 (Sheet TP header + expandable part chips)**
 - Date: 2026-07-17
-- Context: Character sheet → Library → Techniques (powers/parts globally on sheet)
+- Context: Character sheet ? Library ? Techniques (powers/parts globally on sheet)
 - Priority: High
 - Feedback (verbatim):
   Technique tab column header should say TP not Training PTs (same for powers if TP is listed)
@@ -2234,36 +2234,36 @@ Notes
 - Expected: Sheet Techniques column = TP; Parts & Proficiencies = expandable chips with TP: N (not descriptor + InfoTippy / spelled-out Training Points). Full-term Training Points stays for guided creator L1/L2.
 - Disposition: Implemented as **TASK-505**.
 
-**Raw Feedback Log — 2026-07-17 (Inventory summary horizontal layout)**
+**Raw Feedback Log ? 2026-07-17 (Inventory summary horizontal layout)**
 - Date: 2026-07-17
-- Context: Character sheet → Library → Inventory
+- Context: Character sheet ? Library ? Inventory
 - Priority: Low
 - Feedback (verbatim):
   Inventory tab: Currency and armament proficiency can be on the same line instead of vertically spaced, separated horizontally instead of vertically.
 - Expected: Currency stays left while Armament Proficiency is right-aligned in the same wrapping summary row, separated by a vertically centered divider at the row midpoint.
 - Disposition: Implemented in `library-section.tsx` with equal flex sides and one shared divider (no absolute/dual-divider hack); Currency input has `aria-label`.
 
-**Raw Feedback Log — 2026-07-17 (GLR name vs type descriptor tag)**
+**Raw Feedback Log ? 2026-07-17 (GLR name vs type descriptor tag)**
 - Date: 2026-07-17
-- Context: Character sheet → Feats/Traits (GridListRow compact rows with type badges)
+- Context: Character sheet ? Feats/Traits (GridListRow compact rows with type badges)
 - Priority: Medium
 - Feedback (verbatim):
   character sheet: GLR names get truncated with smaller pages, it should first hide the trait/feat type descriptor tag to avoid this.
 - Expected: When the name column is tight, hide the inline trait/feat type descriptor tag before truncating the name; tag remains available in the expanded row. Prefer column-width (container) over viewport breakpoints so narrow sheet panels on large screens behave correctly.
-- Disposition: Implemented in `grid-list-row.tsx` — name column is `@container`; compact inline badges use `hidden @[13rem]:inline-flex`. QA: DEV-V-009-T014.
+- Disposition: Implemented in `grid-list-row.tsx` ? name column is `@container`; compact inline badges use `hidden @[13rem]:inline-flex`. QA: DEV-V-009-T014.
 
-**Raw Feedback Log — 2026-07-17 (character sheet toast console error)**
+**Raw Feedback Log ? 2026-07-17 (character sheet toast console error)**
 - Date: 2026-07-17
 - Context: Character sheet open / auto-proficiency sync
 - Priority: High
 - Feedback (verbatim):
   Console error: Cannot update ToastProvider while rendering CharacterSheetPage. Stack points to showToast in toast.tsx from character sheet flow (useSheetAutoProficiencies / applyAutoProficiencies inside setCharacter updater).
 - Expected: No React setState-while-rendering warning; over-cap proficiency warning toast still appears when TP exceeds limit.
-- Disposition: Implemented as **TASK-508** — pure `computeAutoProficiencies` + deferred toast (`queueMicrotask`) after commit (not TASK-504; TASK-504 is expandable chips).
+- Disposition: Implemented as **TASK-508** ? pure `computeAutoProficiencies` + deferred toast (`queueMicrotask`) after commit (not TASK-504; TASK-504 is expandable chips).
 
-**Raw Feedback Log — 2026-07-17 (Character sheet feedback batch — coordinator)**
+**Raw Feedback Log ? 2026-07-17 (Character sheet feedback batch ? coordinator)**
 - Date: 2026-07-17
-- Context: Character sheet — parallel agent pass (toast, equip, collapse, archetype polish, header vitals, techniques columns)
+- Context: Character sheet ? parallel agent pass (toast, equip, collapse, archetype polish, header vitals, techniques columns)
 - Priority: High (mixed)
 - Feedback (themes):
   - Fix React console error when auto-proficiency sync shows over-cap toast.
@@ -2273,21 +2273,120 @@ Notes
   - Header quick ref: Damage Reduction + Critical Range when armored.
   - Techniques tab: no collapsed TP column (TP on expanded parts only).
 - Expected: Behaviors above on `/characters/[id]`; no ToastProvider render warning; existing saves unchanged on load except user equip actions.
-- Disposition: **TASK-508** toast · **TASK-509** equip/auto-equip · **TASK-510** section collapse · **TASK-511** archetype/milestone · **TASK-512** header DR/crit · **TASK-513** techniques TP column. Owner QA: DEV-V-008-T015, DEV-V-009-T011/T013–T016.
+- Disposition: **TASK-508** toast ? **TASK-509** equip/auto-equip ? **TASK-510** section collapse ? **TASK-511** archetype/milestone ? **TASK-512** header DR/crit ? **TASK-513** techniques TP column. Owner QA: DEV-V-008-T015, DEV-V-009-T011/T013?T016.
 
-**Raw Feedback Log — 2026-07-17 (Admin archetype path builder ↔ guided creator parity)**
+**Raw Feedback Log ? 2026-07-17 (Admin archetype path builder ? guided creator parity)**
 - Date: 2026-07-17
-- Context: Admin backend → Codex → Archetypes path create/edit; sync with guided creator + DB
+- Context: Admin backend ? Codex ? Archetypes path create/edit; sync with guided creator + DB
 - Priority: High
 - Feedback (verbatim):
   Archetype builder/editor on admin backend updates: We are syncing up all functionality for archetype paths between backend database, frontend guided creator, and admin, to be inline with the guided creator we've made well. Allow designated feats into their groups, also pick character/archetype separately, allow adding/naming groups/adding name descriptions for those feat groups. Only allow picking 3 skills (not sub skills) in the admin archetype path edit/creation modal, separate selecting armaments by weapon/shields and armor, remove all "recommended species" logic everywhere, this isn't part of it, remove duplicate logic, cleanup/audit where needed. Make this into tasks.
-- Expected: Admin path authoring matches guided creator data shape/UX for feat groups (named + described; character vs archetype), skills (≤3 base skills), armaments (weapons/shields vs armor), no path-recommended species; admin ↔ DB ↔ guided stay aligned; dead/duplicate logic removed.
+- Expected: Admin path authoring matches guided creator data shape/UX for feat groups (named + described; character vs archetype), skills (?3 base skills), armaments (weapons/shields vs armor), no path-recommended species; admin ? DB ? guided stay aligned; dead/duplicate logic removed.
 - Disposition: Tasks filed (no implementation this pass); owner clarified 2026-07-17:
-  - **TASK-514** — Feat groups: name/description; explicit audience field (character vs archetype); remove title-includes-"character" heuristic; path data for guided (custom/advanced transitional)
-  - **TASK-515** — Admin max 3 base skills (no sub-skills); warn on legacy >3 / sub-skills — do not block save
-  - **TASK-516** — Armaments UI-only split (weapons/shields vs armor); keep single `level1_armaments`
-  - **TASK-517** — Fully remove recommended species; DROP `level1_recommended_species` (owner approved)
-  - **TASK-518** — Cross-surface sync audit + cleanup after 514–517
+  - **TASK-514** ? Feat groups: name/description; explicit audience field (character vs archetype); remove title-includes-"character" heuristic; path data for guided (custom/advanced transitional)
+  - **TASK-515** ? Admin max 3 base skills (no sub-skills); warn on legacy >3 / sub-skills ? do not block save
+  - **TASK-516** ? Armaments UI-only split (weapons/shields vs armor); keep single `level1_armaments`
+  - **TASK-517** ? Fully remove recommended species; DROP `level1_recommended_species` (owner approved)
+  - **TASK-518** ? Cross-surface sync audit + cleanup after 514?517
   - **TASK-391** superseded (skip)
-  Cross-ref: TASK-403 partial; REALMS §5.0.1 / `is_starter`; DEV-V-008 / DEV-V-013.
+  Cross-ref: TASK-403 partial; REALMS ?5.0.1 / `is_starter`; DEV-V-008 / DEV-V-013.
 
+
+**Raw Feedback Log ? 2026-07-17 (header overhang empty strip)**
+- Date: 2026-07-17
+- Context: Site chrome / header in a smaller windowed browser
+- Priority: Medium
+- Feedback (verbatim):
+  When in a smaller windowed version of the site sometimes where a scrollbar appears at the bottom (usually due to a long header overhanging the right side) a bar of unfilled website appears where that header overhangs?
+- Expected: No document horizontal scroll from the header; no empty/unfilled strip beside the header or page background.
+- Disposition: Implemented as **TASK-519** ? desktop inline nav starts at xl; tighter header gutters/gaps; overflow-x-clip on header + MainAppChrome. QA: DEV-V-012-T007.
+
+**Raw Feedback Log ? 2026-07-17 (library section collapse chevrons)**
+- Date: 2026-07-17
+- Context: Character sheet ? Library section open/close arrows (TASK-510)
+- Priority: Medium
+- Feedback (verbatim):
+  The open close arrows for character library should be a very minimalistic feature with no surrounding circle, and they should appear to the right of the section names in the character sheet library not to the far right. They should match the ui/design of other up down open close arrows we use in the codebase such as for ascending decending header lists, for expandable chips, etc.
+- Expected: Minimal ChevronDown beside section title (ListHeader / ExpandableChip style); no bordered circle; + Add remains far right.
+- Disposition: Implemented in `SectionHeader` ? inline title+chevron toggle; BUILD_VALIDATION DEV-V-009-T013 updated.
+
+**Raw Feedback Log ? 2026-07-17 (guided Next jumps to furthest)**
+- Date: 2026-07-17
+- Context: Guided Simple character creator ? Foundation / Ancestry after revisiting earlier steps
+- Priority: High
+- Feedback (verbatim):
+  if I go from one step to a forward step, don't take me to the further step I've made it too in that step, for instance if I picked human race, went through the steps, then click back on ancestry or foundation step and went back and chose human aain, and hit next, it takes me to the last step I was on instead of the actual next screen. The next/back buttons should just take you to the previous or last screen never jump,
+- Expected: Footer Continue/Back only move one screen; Continue into a multi-screen step lands on its first inner screen (not furthest progress). Back still resumes the previous/last screen.
+- Disposition: Implemented as **TASK-520** ? `navigationIntent` split into `first` / `forward` / `back`; Ancestry + Loadout land on first screen for Continue. QA: DEV-V-013-T059.
+
+**Raw Feedback Log ? 2026-07-17 (weapons Range/Attack/Damage column spacing)**
+- Date: 2026-07-17
+- Context: Character sheet ? Archetype ? Weapons (`QuickWeaponsTable`)
+- Priority: Medium
+- Feedback (verbatim themes):
+  The range/attack/damage columns need more space between them in the weapons tab; reclaim horizontal space by wrapping bullet-point weapon properties onto lines below in the Name column.
+- Expected: Clear gaps between Range | Attack | Damage; named properties still one `?` per line under the name, wrapping long property text within Name; Unarmed trailing row stays aligned.
+- Disposition: Implemented as **TASK-523** ? `table-fixed` + content-sized metric cols via `QUICK_WEAPON_COL` (`3.75` / `3.75` / `4.25rem`, tight padding); properties `break-words` under Name. QA: DEV-V-009-T017.
+
+**Raw Feedback Log ? 2026-07-17 (sheet header DR/crit cards)**
+- Date: 2026-07-17
+- Context: Character sheet ? top header vitals (Speed / Evasion / Damage Reduction / Critical Range)
+- Priority: High
+- Feedback (verbatim):
+  the damage reduction/critical range cards on the top section of character sheet aren't the same size as speed/evasion, also the font colors are different for the displayed values, also damage reduction doesn't seem to be the value attached to the actual armor currently equipped.
+- Expected: DR / Critical Range cards match Speed / Evasion size and value color; DR matches equipped armor (same as library armor DR column).
+- Disposition: Implemented as **TASK-522** ? reuse LargeStatBlock; header reads enriched armor. QA: DEV-V-008-T015.
+
+**Raw Feedback Log ? 2026-07-17 (guided ancestry pick order)**
+- Date: 2026-07-17
+- Context: Guided Simple character creator ? Ancestry micro-flow
+- Priority: Medium
+- Feedback (verbatim):
+  make picking ancestry trait after picking character trait instead of ancestry character flaw. (swap the screen order)
+- Expected: Full Ancestry pick order is species options (if any) ? characteristic ? ancestry trait ? optional flaw ? bonus ancestry trait (if flaw taken). Characteristic must not be followed immediately by the flaw screen.
+- Disposition: Implemented as **TASK-524** ? swapped characteristic ahead of ancestry-trait-1 in guided `ancestry-step.tsx`. QA: DEV-V-013-T061.
+
+**Raw Feedback Log ? 2026-07-17 (character library section title too small)**
+- Date: 2026-07-17
+- Context: Character sheet ? Library panel
+- Priority: Medium
+- Feedback (verbatim themes):
+  at some point during another tasks character library section title font seemed to be shrunk to be too small, fix. ensure we are following proj, rules, consistition, and design styles
+- Expected: Library card title matches Skills / Archetype sizing; list subsection titles readable and not shrunk by collapse chrome.
+- Disposition: Implemented as **TASK-525** — peer Library h2 (text-lg); SectionHeader default md; Library list subsections lg (text-base) + pb-1.5. QA: DEV-V-009-T018.
+
+**Raw Feedback Log ? 2026-07-17 (library collapsed sections leftover space)**
+- Date: 2026-07-17
+- Context: Character sheet ? Library multi-section tabs (Inventory, Feats, Powers, Notes, Proficiencies)
+- Priority: Medium
+- Feedback (verbatim):
+  when library sections are collapsed they have too much space below them still. doesn't feel cleanly collapsed/out of the way/saving space.
+- Expected: Collapsed subsection headers stack tightly (accordion-like); no large `space-y-6` / header pad leftover under closed sections; touch targets still ?44px.
+- Disposition: Implemented as **TASK-526** — SectionHeader collapsible pb-1.5 (no full size pad); library stacks use space-y-2. QA: DEV-V-009-T019.
+
+**Raw Feedback Log ? 2026-07-17 (guided loadout skips weapons/armor)**
+- Date: 2026-07-17
+- Context: Guided Simple character creator ? Loadout chapter
+- Priority: High
+- Feedback (verbatim):
+  sometimes when going through guided creator going onto the loadout step it skips weapons and armor and jumps to general equipment right away.
+- Expected: Entering Loadout lands on Weapons (then Armor when applicable) before Equipment; cold catalog load must not lock the phase onto Equipment.
+- Disposition: Implemented as **TASK-527** ? defer phase-jump effects until catalogs/path ready; unresolved pool refs excluded from phase filters. QA: DEV-V-013-T062.
+
+**Raw Feedback Log - 2026-07-17 (library subsection title size + margin)**
+- Date: 2026-07-17
+- Context: Character sheet - Library collapsible subsections (follow-up to TASK-525/526)
+- Priority: Medium
+- Feedback (verbatim):
+  the title font is still too small, and it should have a slightly bigger margin below the section title too.
+- Expected: Subsection titles larger than text-sm; modest margin under each section title.
+- Disposition: Polished in SectionHeader / entity-library-sections - default/use lg (text-base); collapsible pb-1.5 under title. QA: DEV-V-009-T018.
+
+**Raw Feedback Log - 2026-07-17 (guided path type sections)**
+- Date: 2026-07-17
+- Context: Guided Simple character creator - Path step
+- Priority: High
+- Feedback (verbatim):
+  Separate on the guided creator the path's by martial, power, and powered martial, (with tooltips for what each of those mean to a new user by their section title). This will work a lot more like the custom creator's first page when choosing a path, but use the updated guided ui, tooltips, etc. and the ux design goals followed from product overview.
+- Expected: Path cards grouped under Power / Powered-Martial / Martial section titles with InfoTippy tips; guided choice cards retained; no hybrid LayerNav hide.
+- Disposition: Implemented as **TASK-528**. QA: DEV-V-013-T063.

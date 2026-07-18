@@ -57,7 +57,7 @@ export function LoadoutStep() {
     navigationIntent,
     entryNonce,
   } = useGuidedCreatorStore();
-  const { pathData } = useGuidedPathData();
+  const { pathData, isLoading: pathLoading } = useGuidedPathData();
   const { data: officialItems = [], isLoading: officialLoading } = useOfficialLibrary('items');
   const { data: codexEquipment = [], isLoading: codexLoading } = useEquipment();
   const { catalog, itemProperties, tpSummary } = useGuidedEquipmentCatalog(
@@ -67,7 +67,12 @@ export function LoadoutStep() {
   );
   const [l2Open, setL2Open] = useState(false);
 
-  const isLoading = officialLoading || codexLoading;
+  /**
+   * Phase visibility uses catalog classification. While catalogs/path are empty,
+   * unresolved pool refs default to "equipment" and weapon/armor look absent —
+   * so do not commit equipmentPhase jumps until ready (TASK-527).
+   */
+  const isLoading = officialLoading || codexLoading || pathLoading;
   const recommendUnarmed = pathData?.level1?.recommendUnarmedProwess === true;
   const armorMode = resolveArmorStepMode(pathData?.level1?.armorStep, draft.archetypeType);
 
@@ -166,21 +171,26 @@ export function LoadoutStep() {
   );
 
   useEffect(() => {
+    if (isLoading) return;
     if (!visiblePhases.includes(equipmentPhase)) {
       updateDraft({ equipmentPhase: visiblePhases[0] ?? 'gear' });
     }
-  }, [visiblePhases, equipmentPhase, updateDraft]);
+  }, [isLoading, visiblePhases, equipmentPhase, updateDraft]);
 
-  // Chapter rail / edit jump onto loadout: land on first equipment phase (weapon…).
+  // Chapter rail / Continue onto loadout: first equipment phase (never jump to furthest).
+  // Footer Back keeps the draft phase (last screen before leaving loadout).
+  // Wait for catalogs before consuming entryNonce — otherwise a cold cache makes
+  // visiblePhases === ['gear'] and locks the user onto Equipment (TASK-527).
   const lastLoadoutJumpNonce = useRef<number | null>(null);
   useEffect(() => {
-    if (navigationIntent !== 'first') return;
+    if (isLoading) return;
+    if (navigationIntent !== 'first' && navigationIntent !== 'forward') return;
     if (lastLoadoutJumpNonce.current === entryNonce) return;
     lastLoadoutJumpNonce.current = entryNonce;
     const first = visiblePhases[0] ?? 'weapon';
     updateDraft({ equipmentPhase: first });
     setL2Open(false);
-  }, [navigationIntent, entryNonce, visiblePhases, updateDraft]);
+  }, [isLoading, navigationIntent, entryNonce, visiblePhases, updateDraft]);
 
   /** Re-bucket weapons/armor and drop unresolved (stale) refs once lookup is ready. */
   useEffect(() => {

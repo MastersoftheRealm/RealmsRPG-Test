@@ -37,11 +37,22 @@ export interface PathItemRecommendation {
   quantity: number;
 }
 
+/**
+ * Which guided creator step consumes a feat guidance group (TASK-514).
+ * Explicit field — do not infer from title in new authoring.
+ */
+export type PathGuidanceAudience = 'character' | 'archetype';
+
 /** Build-goal group with one-line "why" copy for Layer 1 guided steps. */
 export interface PathGuidanceGroup {
   id: string;
   title: string;
   why?: string;
+  /**
+   * Feat groups: character vs archetype step. Optional on legacy JSON; parsers backfill
+   * from title heuristics when missing (TASK-514).
+   */
+  audience?: PathGuidanceAudience;
   feats?: string[];
   powers?: string[];
   /**
@@ -88,8 +99,6 @@ export interface ArchetypePathRecommendations {
   recommended_abilities?: Partial<Record<AbilityName, number>>;
   /** @deprecated Quick kits removed (TASK-442). Parsed only for legacy JSON / publish validation. */
   loadouts?: PathLoadout[];
-  /** Optional species IDs/names recommended for this path (species step Layer 1). */
-  recommended_species?: string[];
   /** Parsed armaments with quantity (id or "id:qty" from armaments array) */
   armamentRecommendations?: PathItemRecommendation[];
   /** Parsed equipment with quantity */

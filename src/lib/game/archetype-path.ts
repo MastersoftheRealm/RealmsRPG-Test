@@ -1,5 +1,82 @@
-import type { ArchetypePathData, ArchetypePathRecommendations, PathGuidanceGroup, PathItemRecommendation, PathLoadout } from '@/types/archetype';
+import type {
+  ArchetypePathData,
+  ArchetypePathRecommendations,
+  PathGuidanceAudience,
+  PathGuidanceGroup,
+  PathItemRecommendation,
+  PathLoadout,
+} from '@/types/archetype';
 import type { AbilityName } from '@/types/abilities';
+
+export type { PathGuidanceAudience };
+
+export function isPathGuidanceAudience(value: unknown): value is PathGuidanceAudience {
+  return value === 'character' || value === 'archetype';
+}
+
+/**
+ * Resolve feat-group audience. Prefers explicit `audience`; legacy rows without it
+ * use the title heuristic (TASK-514 / ADR-0004).
+ */
+export function resolvePathGuidanceAudience(
+  group: Pick<PathGuidanceGroup, 'title' | 'audience'>
+): PathGuidanceAudience {
+  if (isPathGuidanceAudience(group.audience)) return group.audience;
+  return group.title.toLowerCase().includes('character') ? 'character' : 'archetype';
+}
+
+/** Feat-bearing groups for a guided step audience. */
+export function filterFeatGuidanceGroups(
+  groups: PathGuidanceGroup[] | undefined,
+  audience: PathGuidanceAudience
+): PathGuidanceGroup[] {
+  return (groups ?? []).filter(
+    (g) => (g.feats?.length ?? 0) > 0 && resolvePathGuidanceAudience(g) === audience
+  );
+}
+
+/** Union of feat ids across guidance groups that designate feats. */
+export function unionFeatIdsFromGuidanceGroups(
+  groups: PathGuidanceGroup[] | undefined
+): string[] {
+  const ids = new Set<string>();
+  for (const group of groups ?? []) {
+    for (const id of group.feats ?? []) {
+      const key = String(id).trim();
+      if (key) ids.add(key);
+    }
+  }
+  return Array.from(ids);
+}
+
+/**
+ * Replace feat-bearing groups while preserving non-feat groups (powers, techniques, etc.).
+ */
+export function mergeFeatGuidanceGroups(
+  existing: PathGuidanceGroup[] | undefined,
+  featGroups: PathGuidanceGroup[]
+): PathGuidanceGroup[] {
+  const nonFeat = (existing ?? []).filter((g) => !(g.feats?.length));
+  return [...featGroups, ...nonFeat];
+}
+
+/** Seed a single archetype feat group when legacy paths only have flat `level1.feats`. */
+export function seedFeatGroupsFromFlatFeats(
+  flatFeats: string[],
+  existingGroups?: PathGuidanceGroup[]
+): PathGuidanceGroup[] {
+  const featGroups = (existingGroups ?? []).filter((g) => (g.feats?.length ?? 0) > 0);
+  if (featGroups.length > 0) return existingGroups ?? [];
+  const ids = flatFeats.map(String).filter(Boolean);
+  if (ids.length === 0) return existingGroups ?? [];
+  const seeded: PathGuidanceGroup = {
+    id: `seeded-feats-${Date.now().toString(36)}`,
+    title: 'Recommended feats',
+    audience: 'archetype',
+    feats: ids,
+  };
+  return mergeFeatGuidanceGroups(existingGroups, [seeded]);
+}
 
 const ABILITY_NAMES: AbilityName[] = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'];
 
@@ -177,12 +254,24 @@ function parseGuidanceGroups(value: unknown): PathGuidanceGroup[] | undefined {
       const id = typeof entry.id === 'string' ? entry.id : typeof entry.title === 'string' ? entry.title : null;
       const title = typeof entry.title === 'string' ? entry.title : id;
       if (!id || !title) return null;
+      const feats = toStringArray(entry.feats);
+      const explicitAudience = isPathGuidanceAudience(entry.audience)
+        ? entry.audience
+        : undefined;
+      // Backfill audience on feat groups so consumers never need title heuristics.
+      const audience =
+        explicitAudience ??
+        (feats.length > 0
+          ? resolvePathGuidanceAudience({ title, audience: undefined })
+          : undefined);
       const group: PathGuidanceGroup = {
         id,
         title,
         ...(typeof entry.why === 'string' ? { why: entry.why } : {}),
-        feats: toStringArray(entry.feats),
+        ...(audience ? { audience } : {}),
+        feats,
         powers: toStringArray(entry.powers),
+        innatePowers: toStringArray(entry.innatePowers ?? entry.innate_powers),
         techniques: toStringArray(entry.techniques),
         armaments: toStringArray(entry.armaments),
         equipment: toStringArray(entry.equipment),
@@ -237,7 +326,6 @@ export function parseArchetypePathData(value: unknown): ArchetypePathData | unde
         removeTechniques: toStringArray(level1Raw.removeTechniques),
         removeArmaments: toStringArray(level1Raw.removeArmaments),
         notes: typeof level1Raw.notes === 'string' ? level1Raw.notes : undefined,
-        recommended_species: toStringArray(level1Raw.recommended_species),
         guidance_groups: parseGuidanceGroups(level1Raw.guidance_groups),
         recommended_abilities: parseRecommendedAbilities(level1Raw.recommended_abilities),
         loadouts: loadoutsField.loadouts,

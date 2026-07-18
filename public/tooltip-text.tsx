@@ -44,6 +44,13 @@ effectiveness, and Training Points used for crafting powers. Common choices incl
 export const martialAbility = `Your Martial Ability reflects your combat style and approach to challenges. It influences Energy and Training
 Points for Techniques and proficiencies. Common picks include Strength, Vitality, Agility, or Acuity depending on your concept.`;
 
+/** Guided Path step section tips (Power / Powered-Martial / Martial). */
+export const powerPathType = `Power paths focus on supernatural abilities. You lean on Powers and Energy more than weapons or Techniques.`;
+
+export const martialPathType = `Martial paths focus on physical combat and training. You rely on weapons, Techniques, and martial skill rather than Powers.`;
+
+export const poweredMartialPathType = `Powered-Martial paths blend fighting skill with supernatural ability. You get both Martial and Power tools, each at a lighter level than a pure Power or Martial path.`;
+
 export const chooseYourSpecies = (
   <div>
     <div>Species Sources</div>

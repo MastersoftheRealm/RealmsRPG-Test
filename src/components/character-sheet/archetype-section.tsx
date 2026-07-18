@@ -14,7 +14,7 @@ import { EditSectionToggle, RollButton, SectionHeader, PoweredMartialSlider, Dec
 import { TableScroll } from '@/components/ui';
 import type { Character, Abilities, Item } from '@/types';
 import type { EnrichedItem } from '@/lib/data-enrichment';
-import { QuickArmorTable, QuickShieldsTable, QuickWeaponsTable } from '@/components/shared';
+import { QuickArmorTable, QuickShieldsTable, QuickWeaponsTable, QUICK_WEAPON_COL } from '@/components/shared';
 import { Card, DescriptorChip } from '@/components/ui';
 import { profPointsDescriptorVariant } from '@/lib/chip/descriptor-chip-variants';
 
@@ -200,14 +200,14 @@ function WeaponsSection({
         : String(unarmedAttackBonus)) // Prowess I: full Attack Bonus, no dice
     : String(Math.max(1, Math.floor(unarmedAbility / 2)));
 
-  // Same table as weapons so Name/Range/Attack/Damage columns share widths.
+  // Same QUICK_WEAPON_COL cells as weapon rows so Name/Range/Attack/Damage stay aligned.
   const unarmedRow = (
     <tr className="border-t border-border-light align-top">
-      <td className="py-2 font-medium text-text-secondary">
-        Unarmed Prowess
+      <td className={QUICK_WEAPON_COL.nameTd}>
+        <div className="break-words">Unarmed Prowess</div>
       </td>
-      <td className="text-center py-2 text-text-muted dark:text-text-secondary">Melee</td>
-      <td className="text-center py-2">
+      <td className={QUICK_WEAPON_COL.rangeTd}>Melee</td>
+      <td className={QUICK_WEAPON_COL.attackTd}>
         {onRollAttack ? (
           <RollButton
             value={unarmedAttackBonus}
@@ -220,7 +220,7 @@ function WeaponsSection({
           <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{unarmedAttackBonus >= 0 ? '+' : ''}{unarmedAttackBonus}</span>
         )}
       </td>
-      <td className="text-center py-2">
+      <td className={QUICK_WEAPON_COL.damageTd}>
         <div className="flex flex-col items-center gap-0.5">
           {onRollDamage ? (
             <RollButton

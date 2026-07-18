@@ -90,9 +90,21 @@ export interface ArmorItemCombatStats {
 /** Damage Reduction and Critical Range +1 bonus for one armor item (matches library armor rows). */
 export function deriveArmorItemCombatStats(item: ItemWithLibrarySource): ArmorItemCombatStats {
   const typed = item as ArmorScalarFields;
-  let damageReduction = typed.damageReduction ?? typed.armorValue ?? typed.armor ?? 0;
+  const fromLib = item.libraryItem as ArmorScalarFields | undefined;
+  let damageReduction =
+    typed.damageReduction ??
+    typed.armorValue ??
+    typed.armor ??
+    fromLib?.damageReduction ??
+    fromLib?.armorValue ??
+    fromLib?.armor ??
+    0;
   let criticalRangeIncrease =
-    typed.criticalRangeIncrease ?? typed.critRange ?? 0;
+    typed.criticalRangeIncrease ??
+    typed.critRange ??
+    fromLib?.criticalRangeIncrease ??
+    fromLib?.critRange ??
+    0;
 
   const props = resolveItemProperties(item);
   const payload = (props ?? []) as ItemPropertyPayload[];

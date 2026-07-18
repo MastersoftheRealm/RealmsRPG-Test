@@ -428,7 +428,6 @@ type SaveArchetypeWithPathInput = {
   level1_remove_techniques?: string;
   level1_remove_armaments?: string;
   level1_notes?: string;
-  level1_recommended_species?: string;
   level1_guidance_groups?: unknown;
   level1_recommended_abilities?: unknown;
   level1_loadouts?: unknown;
@@ -468,7 +467,6 @@ export async function saveArchetypeWithPath(
       level1_remove_techniques: payload.level1_remove_techniques ?? null,
       level1_remove_armaments: payload.level1_remove_armaments ?? null,
       level1_notes: payload.level1_notes ?? null,
-      level1_recommended_species: payload.level1_recommended_species ?? null,
       level1_guidance_groups: payload.level1_guidance_groups ?? null,
       level1_recommended_abilities: payload.level1_recommended_abilities ?? null,
       level1_loadouts: payload.level1_loadouts ?? null,

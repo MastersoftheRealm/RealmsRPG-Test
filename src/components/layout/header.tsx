@@ -91,8 +91,11 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-header w-full bg-surface-secondary border-b border-divider h-20">
-      <div className="layout-shell-wide">
-        <div className="flex items-center justify-between h-20 gap-14">
+      {/* DESIGN_INTENT: Inline nav at xl+ with tighter gutters than `.layout-shell-wide` —
+          nowrap labels at lg widened the document (empty strip). Do not put overflow-x-clip
+          on this header — it clips absolute nav/account menus; clip lives on MainAppChrome. */}
+      <div className="mx-auto w-full max-w-[var(--container-wide)] px-4 sm:px-6 lg:px-8 xl:px-16 min-w-0">
+        <div className="flex items-center justify-between h-20 gap-3 xl:gap-6 2xl:gap-10 min-w-0">
           {/* Logo */}
           <Link href="/" className="shrink-0">
             <Image
@@ -106,13 +109,13 @@ export function Header() {
             />
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-14 flex-1 justify-center">
+          {/* Desktop Navigation — xl+ only; nowrap labels need the wider band */}
+          <nav className="hidden xl:flex items-center gap-3 xl:gap-5 2xl:gap-8 flex-1 justify-center min-w-0">
             {isAdmin && (
               <Link
                 href="/admin"
                 className={cn(
-                  'font-semibold text-lg text-primary-fg hover:text-primary-fg-hover transition-colors whitespace-nowrap',
+                  'font-semibold text-base 2xl:text-lg text-primary-fg hover:text-primary-fg-hover transition-colors whitespace-nowrap',
                   pathname?.startsWith('/admin') ? 'text-primary-fg-active' : ''
                 )}
               >
@@ -129,18 +132,18 @@ export function Header() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className={cn(
-                    'font-semibold text-lg text-primary-fg hover:text-primary-fg-hover transition-colors whitespace-nowrap',
+                    'font-semibold text-base 2xl:text-lg text-primary-fg hover:text-primary-fg-hover transition-colors whitespace-nowrap',
                     pathname === item.href ? 'text-primary-fg-active' : ''
                   )}
                 >
                   {item.label}
                 </a>
               ) : (
-                <span key={item.href} className="inline-flex items-center gap-1">
+                <span key={item.href} className="inline-flex items-center gap-1 shrink-0">
                   <Link
                     href={item.href}
                     className={cn(
-                      'font-semibold text-lg text-primary-fg hover:text-primary-fg-hover transition-colors whitespace-nowrap',
+                      'font-semibold text-base 2xl:text-lg text-primary-fg hover:text-primary-fg-hover transition-colors whitespace-nowrap',
                       pathname === item.href ? 'text-primary-fg-active' : ''
                     )}
                   >
@@ -158,7 +161,7 @@ export function Header() {
           </nav>
 
           {/* Account Section */}
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             {!user && (
               <div className="hidden sm:block">
                 <ThemeToggle variant="inline" />
@@ -170,20 +173,20 @@ export function Header() {
               <button
                 type="button"
                 onClick={handleLoginClick}
-                className="font-semibold text-lg text-primary-fg hover:text-primary-fg-hover transition-colors whitespace-nowrap min-h-[44px] px-2 flex items-center"
+                className="font-semibold text-base 2xl:text-lg text-primary-fg hover:text-primary-fg-hover transition-colors whitespace-nowrap min-h-[44px] px-2 flex items-center"
               >
                 Login
               </button>
             )}
 
-            {/* Mobile menu button */}
+            {/* Compact / tablet menu (below xl) */}
             <button
               ref={mobileMenuButtonRef}
               type="button"
               aria-expanded={mobileMenuOpen}
               aria-controls={MOBILE_NAV_ID}
               aria-label="Toggle navigation menu"
-              className="lg:hidden p-2 text-text-secondary min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="xl:hidden p-2 text-text-secondary min-h-[44px] min-w-[44px] flex items-center justify-center"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? (
@@ -196,7 +199,7 @@ export function Header() {
         </div>
       </div>
 
-      {/* Mobile Navigation */}
+      {/* Compact / tablet Navigation */}
       {mobileMenuOpen ? (
         <div
           id={MOBILE_NAV_ID}
@@ -205,7 +208,7 @@ export function Header() {
           role="navigation"
           aria-label="Mobile navigation"
           onKeyDown={handleMobileNavKeyDown}
-          className="lg:hidden border-t border-border-light bg-surface outline-none"
+          className="xl:hidden border-t border-border-light bg-surface outline-none"
         >
           {!user && (
             <div className="px-4 pt-4 sm:hidden">
@@ -329,7 +332,7 @@ function NavDropdown({ item, pathname }: { item: DropdownItem; pathname: string 
         type="button"
         aria-label={`${item.label} menu`}
         aria-expanded={open}
-        className="font-semibold text-lg text-primary-fg hover:text-primary-fg-hover transition-colors flex items-center gap-1 whitespace-nowrap min-h-11"
+        className="font-semibold text-base 2xl:text-lg text-primary-fg hover:text-primary-fg-hover transition-colors flex items-center gap-1 whitespace-nowrap min-h-11 shrink-0"
         onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
       >
         {item.label}

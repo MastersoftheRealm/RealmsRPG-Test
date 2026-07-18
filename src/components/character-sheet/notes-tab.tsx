@@ -208,7 +208,7 @@ export function NotesTab({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {/* Character visibility is in Character settings (gear icon in toolbar). */}
 
       {/* Physical Attributes Summary */}

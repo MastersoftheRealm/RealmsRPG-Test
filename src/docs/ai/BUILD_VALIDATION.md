@@ -441,7 +441,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-#### DEV-V-008-T015 — Sheet header armor DR + Critical Range (TASK-512)
+#### DEV-V-008-T015 — Sheet header armor DR + Critical Range (TASK-512 / TASK-522)
 
 | Field | Value |
 |-------|-------|
@@ -453,13 +453,15 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 **Steps**
 1. Open a character with **no** equipped armor — confirm **Damage Reduction** and **Critical Range** do not appear in the header vitals row (Speed/Evasion area).
 2. Equip armor with known DR (and optional Critical Range +1 property). Confirm header shows **Damage Reduction** and **Critical Range** next to Speed/Evasion.
-3. Compare values to the armor row in the library list (DR column; Critical Range column when the armor has a crit bonus — header Critical Range = sheet **Evasion + 10 +** stacked crit bonus).
-4. Toggle dark mode; confirm labels readable and values use theme tokens.
+3. Compare header **Damage Reduction** to the equipped armor row’s DR column in Library — they must match (enriched armorValue / properties, not a stale raw field).
+4. Confirm header Critical Range = sheet **Evasion + 10 +** stacked Critical Range +1 from equipped armor (same as library crit column when a bonus exists).
+5. Confirm DR / Critical Range cards match Speed / Evasion card size (padding, value `text-4xl`, `text-text-primary` value color — not a smaller martial-colored variant).
+6. Toggle dark mode; confirm labels and values remain readable.
 
 **Expected**
 - Unarmored: no DR / Critical Range blocks.
-- Armored: values match equipped armor math from shared helpers.
-- Accessible labels on stat values.
+- Armored: DR matches library armor row; Critical Range matches shared helper math.
+- Header vitals cards are visually consistent (size + value color).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -756,6 +758,100 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
+#### DEV-V-008-T016 — Admin Level 1 skills picker (3 base, legacy warn)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Admin codex |
+| **Related task** | TASK-515 |
+| **Where** | `/admin/codex` → Archetypes |
+| **Needs** | Admin account; codex skills with at least one sub-skill |
+
+**Steps**
+1. Add or edit an archetype path. Open **Level 1 Recommendations → Skills**.
+2. Confirm the picker lists **base skills only** (`base_skill_id` empty/null). Sub-skills and any-base skills (`base_skill_id === 0`) are not offered as new picks.
+3. Select 3 skills. Confirm a 4th cannot be added (dropdown empty / warning toast).
+4. If a legacy path has more than 3 skills or any sub-skill (including `base_skill_id === 0`): open Edit — expect a non-blocking warning toast and inline warning; Save still succeeds.
+5. Save a valid ≤3 base-skill path; re-open and confirm skills round-trip.
+
+**Expected**
+- New authoring capped at 3 base skills (null/undefined `base_skill_id` only); legacy excess/sub-skills warn only (do not block save).
+- Guided creator still consumes `pathData.level1.skills` for paths with valid picks.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-008-T017 — Admin Level 1 armaments weapon/armor split
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Admin codex |
+| **Related task** | TASK-516 |
+| **Where** | `/admin/codex` → Archetypes |
+| **Needs** | Admin account; official items with weapon, shield, and armor |
+
+**Steps**
+1. Edit an archetype path Level 1 armaments. Confirm separate pickers: **Weapons & shields** and **Armor** (not one mixed list).
+2. Add at least one weapon/shield and one armor with quantities. Save.
+3. Re-open — each item appears under the correct picker; storage remains a single armaments list (guided loadout still sees both).
+4. Confirm Equipment / recommended gear controls are unchanged.
+
+**Expected**
+- UI split matches guided weapon vs armor phases; no new DB columns.
+- Touch targets / `fullScreenOnMobile` on the modal still work at ~360px.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-008-T018 — Admin Level 1 feat guidance groups (character vs archetype)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Admin codex |
+| **Related task** | TASK-514 |
+| **Where** | `/admin/codex` → Archetypes |
+| **Needs** | Admin account; Level 1 character + archetype feats in codex |
+
+**Steps**
+1. Edit an archetype path. Confirm Level 1 has separate **Character feat groups** and **Archetype feat groups** (not one mixed Feats ChipSelect).
+2. Add a group in each section: name, why, designated feats. Save.
+3. Re-open — groups persist with audience; **Synced Level 1 feats** lists the union.
+4. In guided creator on that path: Character Feat step shows only character-audience groups; Archetype Feats step shows only archetype-audience groups (no title-includes-"character" dependency).
+
+**Expected**
+- Explicit `audience` on groups; flat `level1_feats` matches union; modal `fullScreenOnMobile` / ≥44px touch targets.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-008-T019 — No path-recommended species (is_starter only)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Admin codex + creators |
+| **Related task** | TASK-517 |
+| **Where** | `/admin/codex` → Archetypes; `/characters/new/advanced` species; `/characters/new/guided` species |
+| **Needs** | Admin + at least one `is_starter` species |
+
+**Steps**
+1. Admin archetype path modal: confirm there is **no** Recommended species ChipSelect.
+2. Advanced creator path mode Layer 1 species: curated set is **starter** species (not path-specific IDs); Browse all still works.
+3. Guided species step still uses starters only (unchanged).
+
+**Expected**
+- No `level1_recommended_species` authoring or filtering; species curation = `is_starter`.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats.
@@ -900,9 +996,31 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Suite** | DEV-V-009 — Character sheet refactor |
 | **Task** | TASK-510 |
 | **Where** | `/characters/[id]` → Library → Feats, Powers (with innate energy), Inventory, Proficiencies, Notes |
-| **Steps** | 1. Open Feats; confirm Traits / Archetype Feats / Character Feats each show chevron + title (+ Add where applicable); empty sections start collapsed, sections with items start expanded. 2. Collapse a section; confirm list/empty text hides but header + chevron + Add remain. 3. Expand via chevron; collapse again. 4. With a section collapsed, click + Add and complete add; confirm that section expands after add. 5. Inventory: weapons/shields/armor/equipment sections behave the same. 6. Techniques tab: confirm no chevron (single section). 7. Notes: Appearance / Archetype / General / Custom Notes collapse; Custom Notes + expands after add note. 8. Proficiencies: Owned + Missing sections and owned category groups collapse. |
-| **Expected** | Session-only collapse state; empty default closed, non-empty default open; content hidden when collapsed; add-via-+ expands target section; techniques single-section has no chevron. |
+| **Steps** | 1. Open Feats; confirm Traits / Archetype Feats / Character Feats each show title with a minimal inline chevron immediately to the right of the name (no circle/border chrome; + Add stays far right where applicable); empty sections start collapsed, sections with items start expanded. 2. Collapse a section; confirm list/empty text hides but header + chevron + Add remain. 3. Expand via title/chevron; collapse again. 4. With a section collapsed, click + Add and complete add; confirm that section expands after add. 5. Inventory: weapons/shields/armor/equipment sections behave the same. 6. Techniques tab: confirm no chevron (single section). 7. Notes: Appearance / Archetype / General / Custom Notes collapse; Custom Notes + expands after add note. 8. Proficiencies: Owned + Missing sections and owned category groups collapse. |
+| **Expected** | Session-only collapse state; empty default closed, non-empty default open; content hidden when collapsed; add-via-+ expands target section; techniques single-section has no chevron; collapse chevrons match ListHeader/ExpandableChip minimal style (inline beside title, no surrounding circle). |
 | **Report** | DEV-V-009-T013: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T019 — Collapsed library sections stack tightly
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-526 |
+| **Where** | `/characters/[id]` → Library → Inventory, Feats, Powers (with innate), Notes, Proficiencies |
+| **Steps** | 1. Open Inventory; collapse Weapons, Shields, Armor, and Equipment. 2. Confirm the four headers stack with a modest gap (~8px) — not jammed, not a large leftover band under each closed header. 3. Expand one section; confirm list content appears under its header and neighboring collapsed headers keep that modest gap. 4. Repeat on Feats (collapse all subsections) and Notes (collapse Appearance / Archetype / General / Custom). 5. Optional: Powers with innate energy — collapse Innate Powers + Powers; same spacing. |
+| **Expected** | Collapsed subsection headers stack with modest `space-y-2` breathing room; collapsing still reclaim vertical space vs old `space-y-6`; title/chevron and + keep ≥44px targets on touch (coarse pointer). |
+| **Report** | DEV-V-009-T019: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T018 — Library card title + subsection header size
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-525 |
+| **Where** | `/characters/[id]` → Library panel (desktop grid next to Skills / Archetype) |
+| **Steps** | 1. Open a character sheet at desktop width (≥1024px). 2. Confirm the Library card shows a **Library** title at the same size/weight as **Skills** and **Archetype & Attacks** (`text-lg font-bold`). 3. Open Powers (or Feats/Inventory); confirm subsection titles (e.g. Powers, Innate Powers, Weapons) use readable uppercase labels (`text-base` / `lg`, not `text-sm` or `text-xs`). 4. Confirm a small margin under each subsection title before list content / next header. 5. If a collapsible subsection has a chevron, confirm the title size matches non-collapsible peers (collapse control does not shrink the label). 6. Optional ~360px: Library title still readable above tabs. |
+| **Expected** | Library card title matches peer sheet sections; Library list subsection headers are `lg` (`text-base`) with modest space below; SectionHeader default remains `md` elsewhere; size unchanged when collapsible. |
+| **Report** | DEV-V-009-T018: PASS / FAIL / SKIP — |
 
 #### DEV-V-009-T014 — Auto-proficiency over-cap toast (no render warning)
 
@@ -936,6 +1054,18 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Steps** | 1. Character with no equipped shields/armor — confirm Shields/Armor blocks not shown (no empty tables). 2. Equip shield/armor — tables appear with compact range where applicable. 3. Powered-Martial mixed archetype: milestone Innate/Feat toggles visible in section edit only; play view read-only. 4. Dark mode: milestone labels readable. |
 | **Expected** | Empty quick-armament sections hidden; milestone controls gated to edit; unarmed row label/range polish intact. |
 | **Report** | DEV-V-009-T016: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T017 — Weapons Range/Attack/Damage column breathing room (TASK-523)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-523 |
+| **Where** | `/characters/[id]` → Archetype → Weapons (desktop + ~360px) |
+| **Needs** | Equipped weapon with **multiple** named properties (preferably at least one long property name) |
+| **Steps** | 1. Open Weapons on desktop. 2. Confirm **Range**, **Attack**, and **Damage** are readable and not cramped, without the table overflowing the Archetype panel. 3. Confirm named properties remain one `• Property` per line under the weapon name; long property text wraps within the Name column. 4. Confirm Unarmed Prowess (same table) still aligns under the same headers. 5. At ~360px, confirm `TableScroll` allows horizontal scroll without crushing Attack/Damage under wrong headers. |
+| **Expected** | Metric columns use tight content-sized widths (fit roll buttons / range text); Name wraps properties; table stays inside the panel; Unarmed alignment preserved; no regression to roll buttons. |
+| **Report** | DEV-V-009-T017: PASS / FAIL / SKIP — |
 
 ---
 
@@ -1256,6 +1386,26 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-012-T007 — Mid-width window: no header-driven horizontal strip
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-012 — Landing page rebuild |
+| **Related task** | TASK-519 |
+| **Where** | `/` (any signed-in page with site header) |
+| **Needs** | Window or DevTools width ~1024–1279px (and spot-check ~1280–1400px with Admin visible) |
+
+**Steps**
+1. Resize to ~1100px wide so the header hamburger is visible (inline desktop nav is `xl+` only).
+2. Confirm the page has **no** bottom horizontal scrollbar caused by the header.
+3. Confirm there is **no** empty/unfilled vertical strip to the right of the header bar or page background when attempting to scroll horizontally.
+4. Widen past `xl` (~1280px+): inline nav appears; still no document-level horizontal scroll or unfilled strip beside the header (including when Admin is shown).
+
+**Expected**
+- Header never widens the document past the viewport; backgrounds stay continuous; mid-width uses the menu button instead of overflowing nowrap nav.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-013 — Guided Simple character creator (TASK-394–403+)
@@ -1332,6 +1482,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 2. Advance to Loadout step.
 
 **Expected**
+- First screen after entering Loadout is **Weapons & shields** (not Equipment); cold catalog load must not skip to Equipment (see T062).
 - Chapter rail shows **Loadout** (not Equipment) for this chapter.
 - One page title per Loadout phase (Weapons & shields / Armor / Equipment), like ancestry picks - not a chapter title plus a nested phase heading.
 - No Quick kits section or kit cards.
@@ -1447,7 +1598,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | **Needs** | Species with at least one flaw option |
 
 **Steps**
-1. Reach the optional flaw pick after characteristic.
+1. Reach the optional flaw pick after characteristic and ancestry trait.
 2. Confirm **No Flaw** appears as a **peer** card in the same 2-column grid as Flaw options (same width as one Flaw card — not a full-row span, not a small button below).
 3. Note the unselected No Flaw card height (and peer Flaw cards on the same or prior row).
 4. Select No Flaw; confirm selected check; confirm the card does **not** shrink relative to peer Flaw cards or its own unselected footprint (density min-height + reserved disclosure action-row slot remain).
@@ -1620,14 +1771,14 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 2. Click **More details** on an unselected-but-expanded path; confirm a full-screen-on-mobile modal opens with Overview + a collapsible Option lists section; confirm the path is still **not** selected.
 3. Close the modal; click the path card body; confirm the path **selects** and **More details** remains available (selected = expanded).
 4. With a path selected, open **More details** again; confirm selection stays selected after close.
-5. Show hybrid paths → expand / select → **More details** on a hybrid → Close → collapse hybrids → Show hybrids again → **More details** on the same hybrid still opens (detail lookup is against the full path list).
+5. Under **Powered-Martial Paths**, select a hybrid path → **More details** → Close → confirm the modal still opens on the same card (detail lookup is against the full path list; hybrids are always visible in their section).
 6. Species: repeat steps 1–4 for selection independence (content checked in T017).
 
 **Expected**
 - Progressive disclosure: truncated → **See more…** → **More details** (deep-dive). Cards without overflow may show **More details** while collapsed.
 - **More details** never toggles selection; card click still selects.
 - Path modal opens (content checked in T018); Close dismisses.
-- Catalog Layer 2 controls (`Show hybrid…` / `Show all species`) remain separate below the grid.
+- Path step shows type sections (not a hybrid LayerNav); species catalog Layer 2 (`Show all species`) remains separate below the species grid.
 - Switching entities remounts the modal (collapse state resets per entity).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
@@ -1675,7 +1826,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 4. Expand each listed catalog section (omit empty ones): archetype feats, character feats, weapons (Unarmed Prowess only when that path recommends it), armor, Equipment, techniques (martial) or powers (power / powered-martial). Confirm InfoTippy tips; collapsed rows show truncated descriptions + stats; expand for full copy; weapon/armor named property chips use descriptor + InfoTippy (Training Points spelled out, not TP) when codex properties are known.
 5. Confirm no raw-id “phantom” rows for missing powers/techniques/feats (unresolved refs omitted).
 6. Close modal; select the path via the card; reopen **More details** and confirm selection stays.
-7. Hybrid path: Show hybrids → **More details** on a hybrid → confirm powers section (not techniques) when powered-martial; selection independence still holds.
+7. Under **Powered-Martial Paths**, open **More details** on a hybrid → confirm powers section (not techniques); selection independence still holds.
 
 **Expected**
 - Catalogs remain read-only (do not apply equipment). Footer **Select** applies the path (see **T028**); browsing alone still does not select.
@@ -2495,6 +2646,111 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Expected**
 - All labeled data columns sortable; spacer/action columns remain non-sortable; UnifiedSelectionModal `sortByColumn` uses row `columns` values (and enriched sort keys where display values are computed).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T059 — Footer Continue does not jump to furthest screen (TASK-520)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-520 |
+| **Where** | Guided creator footer **Continue** after revisiting Foundation / Ancestry |
+| **Needs** | Progress through Ancestry (and optionally further), then return via chapter rail or Back |
+
+**Steps**
+1. Complete Foundation (path + Human); advance through Ancestry picks into Abilities (or further).
+2. Click **Foundation** or **Ancestry** on the chapter rail (or Back to Species).
+3. Re-select the same species (Human) if on Species; click footer **Continue**.
+
+**Expected**
+- Continue moves only to the immediate next screen (Species → Ancestry overview → first ancestry pick → …), not the furthest Ancestry pick or later chapter you had already reached.
+- Footer **Back** still returns to the previous screen / last inner screen (T031 unchanged).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T060 — Feat steps use guidance group audience (TASK-514)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-514 |
+| **Where** | Guided Character Feat + Archetype Feats steps |
+| **Needs** | Path with both character-audience and archetype-audience feat guidance groups |
+
+**Steps**
+1. Open guided creator on a path authored with separate character vs archetype feat groups.
+2. On **Character Feat**, Layer 1 cards come only from character-audience groups.
+3. On **Archetype Feats**, Layer 1 sections come only from archetype-audience groups (character groups absent).
+
+**Expected**
+- Filtering uses `PathGuidanceGroup.audience` (not title containing "character").
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T061 — Ancestry pick order: characteristic before ancestry trait (TASK-524)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-524 |
+| **Where** | Guided creator → Ancestry (after species overview) |
+| **Needs** | Starter species with characteristics, ancestry traits, and at least one flaw |
+
+**Steps**
+1. Complete Foundation (path + species); on Ancestry continue past the species overview (and any species-trait option picks).
+2. Confirm the next screen is **Pick a characteristic** (not ancestry trait or flaw).
+3. Select a characteristic → Next pick → confirm **Pick an ancestry trait**.
+4. Select an ancestry trait → Next pick → confirm **Take a flaw? (optional)**.
+5. Optionally take a flaw → Next pick → confirm bonus ancestry trait; or Skip / No Flaw → confirm advance without bonus trait.
+
+**Expected**
+- Order is characteristic → ancestry trait → optional flaw → (bonus ancestry trait if flaw taken).
+- Characteristic is never immediately followed by the flaw screen.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T062 — Loadout entry does not skip Weapons/Armor (TASK-527)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-527 |
+| **Where** | Guided creator → first entry into Loadout (path with weapons + armor, e.g. Berserker) |
+| **Needs** | Hard refresh or cold cache preferred so item catalogs load after the step mounts |
+
+**Steps**
+1. Complete Foundation through Skills/Feats as needed; click Continue (or chapter rail) onto **Loadout**.
+2. Repeat a few times with a hard refresh before re-entering Loadout (or clear site data for the origin).
+
+**Expected**
+- First Loadout screen is **Weapons & shields** (not Equipment), then Armor when the path includes it, then Equipment.
+- Spinner may show briefly while items load; after load, phase stays on Weapons (does not jump to Equipment).
+- Paths with no weapon/armor options may still open on Equipment only.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T063 — Path step grouped by Power / Powered-Martial / Martial (TASK-528)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-528 |
+| **Where** | Guided creator → Path (`/characters/new/guided`) |
+| **Needs** | Codex has at least one path in two different types (ideally all three) |
+
+**Steps**
+1. Open the guided Path step.
+2. Confirm paths appear under section headings **Power Paths**, **Powered-Martial Paths**, and **Martial Paths** (omit a heading only when that type has zero player-visible paths).
+3. Confirm there is **no** "Show hybrid…" / "Back to Power and Martial paths" LayerNav control.
+4. Hover/focus the **i** next to each visible section title; confirm a short new-user tip explains that type (Power / Powered-Martial / Martial).
+5. Select a path from each visible section in turn; confirm Continue enables and the card selection highlight follows the pick.
+6. At ~360px width: section titles + title-adjacent InfoTippy remain usable (inline tip size beside the heading — established pattern); cards still use the guided choice grid.
+
+**Expected**
+- Grouping order is Power → Powered-Martial → Martial (same as Advanced path picker).
+- Cards remain `GuidedChoiceCard` with More details / See more behavior unchanged.
+- Tooltips use shared `tooltip-text` copy via `InfoTippy` `size="inline"` on the section title.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

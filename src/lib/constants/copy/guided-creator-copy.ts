@@ -102,8 +102,12 @@ export const GUIDED_CREATOR_COPY = {
       title: 'Choose your path',
       description:
         'Your path suggests Abilities, Skills, Feats, and Loadout options. Then you choose among those options.',
-      showHybridPaths: 'Show hybrid (Powered-Martial) paths',
-      backToCorePaths: 'Back to Power and Martial paths',
+      /** Section headings — Power / Powered-Martial / Martial (InfoTippy on each title). */
+      groupTitles: {
+        power: 'Power Paths',
+        'powered-martial': 'Powered-Martial Paths',
+        martial: 'Martial Paths',
+      },
       emptyTitle: 'No paths available',
       emptyDescription: 'Try a different filter or check back later.',
       /** Modal chrome: preview; Select in footer applies the path. */

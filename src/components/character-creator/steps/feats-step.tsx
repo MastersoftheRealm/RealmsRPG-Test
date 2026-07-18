@@ -34,6 +34,7 @@ import { CreatorStepFooter } from '@/components/character-creator/creator-step-f
 import { useCodexFeats, useCodexSkills, useMergedSpecies, useTraits, useCreatorPathData, type Feat, type Skill } from '@/hooks';
 import { getValidationIssuesForStep, getStepCompletion } from '@/lib/character-creator-validation';
 import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats } from '@/lib/game/formulas';
+import { filterFeatGuidanceGroups } from '@/lib/game/archetype-path';
 import { checkFeatRequirements, type CharacterForFeatRequirement } from '@/lib/game/feat-requirements';
 import type { CodexSkillForFeat } from '@/lib/game/formulas';
 import { formatAbilityList, formatListCellLabel } from '@/lib/utils';
@@ -362,9 +363,9 @@ export function FeatsStep() {
       .filter((entry): entry is { displayFeat: Feat; familyLevels: Feat[] } => entry !== null);
   }, [feats, recommendedFeatRefs]);
 
-  /** Layer 1 build-goal groups from path_data.level1.guidance_groups (fallback: single recommended list). */
+  /** Layer 1 archetype feat groups (explicit audience; TASK-514). */
   const featGuidanceGroups = useMemo(() => {
-    const groups = pathData?.level1?.guidance_groups?.filter((g) => g.feats?.length) ?? [];
+    const groups = filterFeatGuidanceGroups(pathData?.level1?.guidance_groups, 'archetype');
     if (groups.length === 0) return null;
     return groups.map((group) => ({
       group,

@@ -4,6 +4,10 @@ import {
   parseIdQuantityStrings,
   serializeIdQuantityStrings,
   parseRecommendedAbilities,
+  parseArchetypePathData,
+  filterFeatGuidanceGroups,
+  resolvePathGuidanceAudience,
+  unionFeatIdsFromGuidanceGroups,
 } from '@/lib/game/archetype-path';
 
 describe('parseOptionalJsonField', () => {
@@ -76,5 +80,40 @@ describe('parseRecommendedAbilities', () => {
     expect(parseRecommendedAbilities({})).toBeUndefined();
     expect(parseRecommendedAbilities(null)).toBeUndefined();
     expect(parseRecommendedAbilities('nope')).toBeUndefined();
+  });
+});
+
+describe('PathGuidanceGroup audience (TASK-514)', () => {
+  it('parses explicit audience and backfills from title for feat groups', () => {
+    const parsed = parseArchetypePathData({
+      level1: {
+        guidance_groups: [
+          { id: 'c1', title: 'Character vibe', feats: ['10'] },
+          { id: 'a1', title: 'Devastating strikes', audience: 'archetype', feats: ['20', '21'] },
+          { id: 'kit', title: 'Weapon picks', armaments: ['w1'] },
+        ],
+      },
+    });
+    const groups = parsed?.level1?.guidance_groups ?? [];
+    expect(resolvePathGuidanceAudience(groups[0]!)).toBe('character');
+    expect(groups[0]?.audience).toBe('character');
+    expect(groups[1]?.audience).toBe('archetype');
+    expect(groups[2]?.audience).toBeUndefined();
+    expect(filterFeatGuidanceGroups(groups, 'character').map((g) => g.id)).toEqual(['c1']);
+    expect(filterFeatGuidanceGroups(groups, 'archetype').map((g) => g.id)).toEqual(['a1']);
+    expect(unionFeatIdsFromGuidanceGroups(groups)).toEqual(['10', '20', '21']);
+  });
+
+  it('does not keep recommended_species on parsed level1', () => {
+    const parsed = parseArchetypePathData({
+      level1: {
+        feats: ['1'],
+        recommended_species: ['4', '6'],
+      },
+    });
+    expect(parsed?.level1?.feats).toEqual(['1']);
+    expect(
+      (parsed?.level1 as { recommended_species?: string[] } | undefined)?.recommended_species
+    ).toBeUndefined();
   });
 });

@@ -81,7 +81,7 @@ export function LibraryCollapsibleSection({
     <div className={className}>
       <SectionHeader
         title={title}
-        size="sm"
+        size="lg"
         onAdd={onAddWrapped}
         addLabel={addLabel}
         rightContent={rightContent}
@@ -356,7 +356,7 @@ export function PowersListSection({
       {showTitle && (
         <SectionHeader
           title={title}
-          size="sm"
+          size="lg"
           onAdd={onAddWrapped}
           addLabel={addLabel}
           {...headerCollapseProps}
@@ -462,7 +462,7 @@ export function TechniquesListSection({
       {showTitle && (
         <SectionHeader
           title={title}
-          size="sm"
+          size="lg"
           onAdd={onAddWrapped}
           addLabel={addLabel}
           {...headerCollapseProps}
@@ -630,7 +630,7 @@ export function WeaponsListSection({
       {showTitle && (
         <SectionHeader
           title={title}
-          size="sm"
+          size="lg"
           onAdd={onAddWrapped}
           addLabel={addLabel}
           {...headerCollapseProps}
@@ -725,7 +725,7 @@ export function ShieldsListSection({
       {showTitle && (
         <SectionHeader
           title={title}
-          size="sm"
+          size="lg"
           onAdd={onAddWrapped}
           addLabel={addLabel}
           {...headerCollapseProps}
@@ -820,7 +820,7 @@ export function ArmorListSection({
       {showTitle && (
         <SectionHeader
           title={title}
-          size="sm"
+          size="lg"
           onAdd={onAddWrapped}
           addLabel={addLabel}
           {...headerCollapseProps}
@@ -920,7 +920,7 @@ export function EquipmentListSection({
   return (
     <div>
       {(showTitle || layout !== 'characterSheet') && (
-        <SectionHeader title={title} size="sm" onAdd={onAddWrapped} addLabel={addLabel} {...headerCollapseProps} />
+        <SectionHeader title={title} size="lg" onAdd={onAddWrapped} addLabel={addLabel} {...headerCollapseProps} />
       )}
       {isContentVisible ? listBody : null}
     </div>
@@ -1034,7 +1034,7 @@ export function FeatsTraitsListSection({
       {showTitle && (
         <SectionHeader
           title={title}
-          size="sm"
+          size="lg"
           onAdd={onAddWrapped}
           addLabel={addLabel}
           rightContent={headerRightContent}

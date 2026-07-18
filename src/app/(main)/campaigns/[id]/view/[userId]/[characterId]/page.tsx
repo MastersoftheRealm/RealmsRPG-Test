@@ -241,6 +241,7 @@ function CampaignCharacterViewContent() {
                 calculatedStats={calculatedStats}
                 isEditMode={false}
                 speedDisplayUnit={character.speedDisplayUnit ?? 'spaces'}
+                enrichedArmor={enrichedData?.armor as Item[] | undefined}
               />
               <AbilitiesSection
                 abilities={character.abilities}

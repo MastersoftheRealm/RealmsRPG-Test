@@ -81,6 +81,8 @@ interface SheetHeaderProps {
   onEditArchetype?: () => void;
   // Edit species/ancestry (opens modal from sheet)
   onEditSpecies?: () => void;
+  /** Library-enriched armor (same source as sheet armor rows) for DR / Critical Range. */
+  enrichedArmor?: Item[];
 }
 
 /**
@@ -330,6 +332,7 @@ function LargeStatBlock({
   label, 
   value, 
   valueSuffix,
+  valueAriaLabel,
   baseValue,
   defaultBase,
   isEditMode,
@@ -340,6 +343,8 @@ function LargeStatBlock({
   label: string; 
   value: number | string; 
   valueSuffix?: string;
+  /** Optional accessible name for the value (e.g. read-only DR / Critical Range). */
+  valueAriaLabel?: string;
   baseValue?: number;
   defaultBase?: number;
   isEditMode?: boolean;
@@ -354,7 +359,9 @@ function LargeStatBlock({
   return (
     <Card className="flex flex-col items-center p-4 bg-surface-alt min-w-[100px] shadow-none">
       <div className="flex items-center gap-1.5 w-full justify-center">
-        <span className="text-sm font-semibold text-text-secondary uppercase tracking-wide">{label}</span>
+        <span className="text-sm font-semibold text-text-secondary uppercase tracking-wide text-center">
+          {label}
+        </span>
         {isEditMode && onChange && (
           <EditSectionToggle
             onClick={() => setIsEditingBase(prev => !prev)}
@@ -364,7 +371,7 @@ function LargeStatBlock({
           />
         )}
       </div>
-      <span className="text-4xl font-bold text-text-primary mt-1">
+      <span className="text-4xl font-bold text-text-primary mt-1" aria-label={valueAriaLabel}>
         {value}{valueSuffix ? <span className="text-xl font-semibold text-text-secondary ml-0.5">{valueSuffix}</span> : null}
       </span>
       
@@ -400,28 +407,6 @@ function LargeStatBlock({
   );
 }
 
-/** Compact read-only vitals for equipped armor (DR + Critical Range threshold). */
-function ArmorQuickRefStat({
-  label,
-  value,
-  valueAriaLabel,
-}: {
-  label: string;
-  value: number;
-  valueAriaLabel: string;
-}) {
-  return (
-    <Card className="flex flex-col items-center p-3 bg-surface-alt min-w-[72px] max-w-[100px] shadow-none">
-      <span className="text-xs font-semibold text-text-secondary uppercase tracking-wide text-center leading-tight">
-        {label}
-      </span>
-      <span className="text-2xl font-bold text-martial-fg mt-1" aria-label={valueAriaLabel}>
-        {value}
-      </span>
-    </Card>
-  );
-}
-
 const DEFAULT_ACTION_POINTS = 4;
 
 export function SheetHeader({
@@ -448,6 +433,7 @@ export function SheetHeader({
   innatePools = 0,
   onEditArchetype,
   onEditSpecies,
+  enrichedArmor: enrichedArmorProp,
 }: SheetHeaderProps) {
   const { rules } = useGameRules();
   const ctx = useCharacterSheetOptional();
@@ -557,10 +543,20 @@ export function SheetHeader({
     ? speedDisplay.value.toFixed(1) : String(speedDisplay.value);
 
   const armorQuickRef = useMemo(() => {
+    // DESIGN_INTENT: Header DR/Critical Range must use library-enriched armor (same source as
+    // armor rows). Raw equipment often lacks armorValue; enrichment derives it from properties.
+    const enriched = enrichedArmorProp ?? ctx?.enrichedData?.armor;
     const raw = character.equipment?.armor ?? character.armor;
-    const armorItems: Item[] = Array.isArray(raw) ? raw : raw ? [raw as Item] : [];
+    const source = enriched ?? raw;
+    const armorItems: Item[] = Array.isArray(source) ? (source as Item[]) : source ? [source as Item] : [];
     return getEquippedArmorQuickRef(armorItems, calculatedStats.evasion);
-  }, [character.equipment?.armor, character.armor, calculatedStats.evasion]);
+  }, [
+    enrichedArmorProp,
+    ctx?.enrichedData?.armor,
+    character.equipment?.armor,
+    character.armor,
+    calculatedStats.evasion,
+  ]);
 
   // Handle name editing
   const handleNameSubmit = () => {
@@ -769,12 +765,12 @@ export function SheetHeader({
           />
           {armorQuickRef && (
             <>
-              <ArmorQuickRefStat
+              <LargeStatBlock
                 label="Damage Reduction"
                 value={armorQuickRef.damageReduction}
                 valueAriaLabel={`Damage Reduction ${armorQuickRef.damageReduction}`}
               />
-              <ArmorQuickRefStat
+              <LargeStatBlock
                 label="Critical Range"
                 value={armorQuickRef.criticalRange}
                 valueAriaLabel={`Critical Range ${armorQuickRef.criticalRange}`}

@@ -642,7 +642,7 @@ export function LibrarySection({
     <Card className={cn('shadow-md p-4 md:p-6 relative flex flex-col', className)}>
       {/* Edit Mode Indicator - Pencil toggles library in/out of edit (like other sections) */}
       {isEditMode && (
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-3 right-3 z-10">
           <EditSectionToggle 
             state={libraryEditState}
             isActive={isSectionEditing}
@@ -657,6 +657,11 @@ export function LibrarySection({
           />
         </div>
       )}
+
+      {/* Card title — peer of Skills / Archetype & Attacks (DESIGN_SYSTEM sheet section headers) */}
+      <div className={cn('mb-4', isEditMode && 'pr-10')}>
+        <h2 className="text-lg font-bold text-text-primary">Library</h2>
+      </div>
       
       {/* Tabs */}
       <TabNavigation
@@ -698,7 +703,7 @@ export function LibrarySection({
               </TabSummarySection>
             )}
 
-                        <div className="mb-4">
+            <div className="space-y-2">
               <PowersListSection
                 title="Innate Powers"
                 items={innatePowerRows}
@@ -710,19 +715,19 @@ export function LibrarySection({
                 emptyMessage="No innate powers. Enter edit mode (click the pencil) to mark powers as innate."
                 collapsible={innateEnergy > 0}
               />
-            </div>
 
-            <PowersListSection
-              title="Powers"
-              items={regularPowerRows}
-              onAdd={onAddPower}
-              addLabel="Add power"
-              sortState={powerSort}
-              onSort={(col) => setPowerSort(toggleSort(powerSort, col))}
-              rowChrome={powerRowChrome}
-              emptyMessage="No powers learned"
-              collapsible={innateEnergy > 0}
-            />
+              <PowersListSection
+                title="Powers"
+                items={regularPowerRows}
+                onAdd={onAddPower}
+                addLabel="Add power"
+                sortState={powerSort}
+                onSort={(col) => setPowerSort(toggleSort(powerSort, col))}
+                rowChrome={powerRowChrome}
+                emptyMessage="No powers learned"
+                collapsible={innateEnergy > 0}
+              />
+            </div>
           </>
         )}
 
@@ -745,7 +750,7 @@ export function LibrarySection({
         )}
 
         {resolvedActiveTab === 'inventory' && (
-          <div className="space-y-6">
+          <div className="space-y-2">
             {/* Inventory Summary: Currency + Armament Proficiency */}
             <TabSummarySection variant="currency">
               <div className="flex w-full flex-wrap items-center gap-y-2">

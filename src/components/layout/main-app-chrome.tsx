@@ -10,10 +10,12 @@ export function MainAppChrome({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const minimal = isMinimalChromeRoute(pathname);
 
+  // DESIGN_INTENT: overflow-x-clip here (not on Header) so mid-width chrome cannot
+  // widen the document while absolute header menus still paint outside the bar.
   if (minimal) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <main id="main-content" className="flex-1">
+      <div className="min-h-screen min-w-0 flex flex-col bg-background overflow-x-clip">
+        <main id="main-content" className="flex-1 min-w-0">
           <MainContentBoundary>{children}</MainContentBoundary>
         </main>
       </div>
@@ -21,9 +23,9 @@ export function MainAppChrome({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen min-w-0 flex flex-col bg-background overflow-x-clip">
       <Header />
-      <main id="main-content" className="flex-1">
+      <main id="main-content" className="flex-1 min-w-0">
         <MainContentBoundary>{children}</MainContentBoundary>
       </main>
       <Footer />

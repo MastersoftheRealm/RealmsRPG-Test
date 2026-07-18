@@ -13,7 +13,8 @@ Single reference for mobile breakpoints, touch targets, and layout patterns. Use
 | Phone | &lt; 640px | Primary mobile: single column, full-screen modals, side-scroll or collapse for dense sections. |
 | Tablet | `sm` (640px) – `md` (768px) | Often same as phone for modals/layout; can start 2-column where it helps. |
 | Desktop | `md` (768px)+ | Multi-column layouts, centered modals, full nav. |
-| Large | `lg` (1024px)+ | Header nav bar, list headers visible, character sheet 3-column grid. |
+| Large | `lg` (1024px)+ | List headers visible, character sheet 3-column grid. Site header still uses the menu button through `lg`. |
+| Wide | `xl` (1280px)+ | Site header inline desktop nav (`header.tsx`); hamburger hidden. |
 
 **Rule of thumb:** Use **&lt; 768px (`md`)** as the cutoff for “mobile” behavior (full-screen modals, section side-scroll, stacked layout). Use **&lt; 640px (`sm`)** when you need phone-specific tweaks (e.g. smaller gutters).
 
@@ -87,6 +88,7 @@ When **creating or editing** a page or modal:
 
 | Component | Location | Mobile behavior |
 |-----------|----------|-----------------|
+| Header | `src/components/layout/header.tsx` | Menu button below `xl`; inline nav `xl+` only (avoids mid-width document overflow). |
 | Modal | `src/components/ui/modal.tsx` | `fullScreenOnMobile` prop → full-screen below `md`. |
 | Collapsible section pattern | `src/components/creator/collapsible-section.tsx` | Use for within-panel sub-sections or lighter pages. |
 | ListHeader | `src/components/shared/list-header.tsx` | Desktop: column header grid. Mobile: expandable "Sort by [criteria] (A→Z)" using same sortState/onSort; no column headers. |

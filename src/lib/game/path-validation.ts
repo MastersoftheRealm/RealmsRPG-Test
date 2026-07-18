@@ -22,6 +22,11 @@ export interface PathValidationContext {
   martialProfStart?: number | null;
   /** Resolve official power snapshot for innate eligibility. */
   resolveInnatePower?: (powerId: string) => InnatePowerSnapshot | null;
+  /**
+   * Return true when the skill is a sub-skill (has a base). Used for Level 1 skill authoring
+   * warnings (TASK-515). Omit or return null when unknown — unknown ids are not treated as sub-skills.
+   */
+  isSubSkill?: (skillId: string) => boolean | null;
 }
 
 export interface PathValidationIssue {
@@ -55,13 +60,11 @@ export function validatePathDataForPublish(
 
   const listCounts: Array<[string, number]> = [
     ['feats', level1.feats?.length ?? 0],
-    ['skills', level1.skills?.length ?? 0],
     ['powers', level1.powers?.length ?? 0],
     ['innate powers', level1.innatePowers?.length ?? 0],
     ['techniques', level1.techniques?.length ?? 0],
     ['armaments', level1.armaments?.length ?? 0],
     ['equipment', level1.equipment?.length ?? 0],
-    ['recommended species', level1.recommended_species?.length ?? 0],
   ];
   for (const [label, count] of listCounts) {
     if (count > LAYER1_GOVERNANCE.maxItemsPerGroup) {
@@ -72,6 +75,8 @@ export function validatePathDataForPublish(
     }
   }
 
+  issues.push(...validateLevel1Skills(level1.skills ?? [], context));
+
   if (level1.notes && level1.notes.length > LAYER1_GOVERNANCE.maxWhyCopyLength * 4) {
     issues.push({
       severity: 'warning',
@@ -81,6 +86,36 @@ export function validatePathDataForPublish(
 
   issues.push(...validateLoadoutTrainingPoints(level1, context));
   issues.push(...validateInnatePowerRecommendations(level1, context));
+
+  return issues;
+}
+
+/** Level 1 path skills: prefer ≤3 base skills; legacy excess / sub-skills warn only (TASK-515). */
+export function validateLevel1Skills(
+  skillIds: string[],
+  context?: PathValidationContext
+): PathValidationIssue[] {
+  const issues: PathValidationIssue[] = [];
+  const ids = skillIds.map(String).filter(Boolean);
+  const max = LAYER1_GOVERNANCE.maxPathRecommendedBaseSkills;
+
+  if (ids.length > max) {
+    issues.push({
+      severity: 'warning',
+      message: `Level 1 recommends ${ids.length} skills (target max ${max} base skills). Save is allowed; trim in a later content pass.`,
+    });
+  }
+
+  const isSub = context?.isSubSkill;
+  if (isSub) {
+    const subSkillIds = ids.filter((id) => isSub(id) === true);
+    if (subSkillIds.length > 0) {
+      issues.push({
+        severity: 'warning',
+        message: `Level 1 includes ${subSkillIds.length} sub-skill(s). Paths should recommend base skills only; save is allowed for legacy rows.`,
+      });
+    }
+  }
 
   return issues;
 }
@@ -188,6 +223,12 @@ function validateGuidanceGroup(group: PathGuidanceGroup): PathValidationIssue[] 
     issues.push({
       severity: 'warning',
       message: `Guidance group "${group.title}" why-copy exceeds ${LAYER1_GOVERNANCE.maxWhyCopyLength} characters.`,
+    });
+  }
+  if ((group.feats?.length ?? 0) > 0 && group.audience == null) {
+    issues.push({
+      severity: 'warning',
+      message: `Feat guidance group "${group.title}" is missing audience (character vs archetype). Parsers backfill from title until re-saved.`,
     });
   }
   return issues;

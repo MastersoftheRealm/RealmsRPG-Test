@@ -1,4 +1,4 @@
-﻿# AI Task Queue - Archived (done + cancelled)
+# AI Task Queue - Archived (done + cancelled)
 
 Completed and cancelled tasks moved out of the active `AI_TASK_QUEUE.md` on 2026-06 to keep the
 active queue lean. Historical reference only. Stack note: older task text may mention Prisma/
@@ -6,6 +6,578 @@ Firebase/RTDB - the project is Supabase-only.
 
 ---
 
+- id: TASK-528
+  title: Guided Path step - group by Power / Powered-Martial / Martial with tips
+  created_at: 2026-07-17
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-17
+  implemented_by: agent
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T063
+  developer_test_plan: |
+    Suite DEV-V-013 T063 - see BUILD_VALIDATION.md
+  related_files:
+    - src/components/guided-creator/steps/path-step.tsx
+    - src/lib/constants/copy/guided-creator-copy.ts
+    - public/tooltip-text.tsx
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Owner asked to separate guided Path picks into Power, Powered-Martial, and Martial
+    sections (like Advanced archetype path picker), with InfoTippy on each section title
+    explaining the type for new users, while keeping GuidedChoiceCard / deep-dive UX.
+  acceptance_criteria:
+    - Paths grouped Power then Powered-Martial then Martial; empty types omit their section.
+    - Section titles have InfoTippy tips (tooltip-text.tsx); no hybrid LayerNav expand.
+    - Guided choice cards + More details unchanged; copy/product overview/BV updated.
+    - npm run build; DEV-V-013-T063.
+  evidence: |
+    npm run build.
+  notes: |
+    Supersedes prior "hide Powered-Martial behind Show hybrid" LayerNav on Path step.
+    Species starter curation + Show all species is unchanged.
+
+---
+- id: TASK-527
+  title: Guided Loadout entry does not skip Weapons/Armor onto Equipment
+  created_at: 2026-07-17
+  created_by: agent
+  priority: high
+  status: done
+  completed_at: 2026-07-17
+  implemented_by: agent
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T062
+  developer_test_plan: |
+    Suite DEV-V-013 T062 - see BUILD_VALIDATION.md
+  related_files:
+    - src/components/guided-creator/steps/loadout-step.tsx
+    - src/components/guided-creator/use-guided-path-data.ts
+    - src/lib/guided-creator/equipment-phase-candidates.ts
+    - src/lib/guided-creator/equipment-phase-nav.test.ts
+    - src/docs/ai/GUIDED_EQUIPMENT_PHASED_SPEC.md
+  description: |
+    Intermittent bug: entering guided Loadout sometimes skipped Weapons/Armor and opened
+    on Equipment. Cold catalog load made unresolved pool refs look like gear-only, then
+    entry-jump effects locked equipmentPhase onto gear.
+  acceptance_criteria:
+    - Entering Loadout with weapon/armor options lands on Weapons first (then Armor, then Equipment).
+    - Phase jump/redirect effects do not run (or consume entryNonce) while catalogs/path are loading.
+    - Unresolved pool refs are excluded from phase filters (no default-to-gear visibility collapse).
+    - Unit tests + BUILD_VALIDATION DEV-V-013-T062; npm run build.
+  evidence: |
+    vitest equipment-phase-candidates + equipment-phase-nav; npm run build.
+  notes: |
+    Root cause: resolveEquipmentRef defaults missing items to category equipment; visibility
+    collapsed to [gear] during spinner; lastLoadoutJumpNonce consumed before catalogs ready.
+
+---
+
+- id: TASK-526
+  title: Collapsed library sections stack tightly
+  created_at: 2026-07-17
+  created_by: agent
+  priority: medium
+  status: done
+  completed_at: 2026-07-17
+  implemented_by: agent
+  verification_status: pending-qa
+  parent_task: TASK-510
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T019
+  developer_test_plan: |
+    Suite DEV-V-009 T019 - see BUILD_VALIDATION.md
+  related_files:
+    - src/components/shared/section-header.tsx
+    - src/components/character-sheet/library-section.tsx
+    - src/components/character-sheet/feats-tab.tsx
+    - src/components/character-sheet/notes-tab.tsx
+    - src/components/character-sheet/proficiencies-tab.tsx
+    - src/components/shared/entity-library-sections.tsx
+  description: |
+    Collapsed Library subsections left large vertical gaps (space-y-6 stacks + SectionHeader
+    size pad on top of 44px touch targets). Tighten so closed headers reclaim space.
+  acceptance_criteria:
+    - Collapsed Inventory/Feats/Powers/Notes/Proficiencies headers stack tightly with no large leftover band under each closed header.
+    - SectionHeader collapsible rows omit size vertical pad; 44px touch targets on coarse pointer only.
+    - Expanded content still readable; techniques single-section unchanged.
+    - BUILD_VALIDATION DEV-V-009-T019; npm run build; FEATURE_INDEX + changelog.
+  evidence: |
+    npm run build; DEV-V-009-T019 added.
+  notes: |
+    Follow-up polish to TASK-510 collapse UX from owner feedback 2026-07-17. Gap tuned to space-y-2 after space-y-0 felt cramped. Title size/margin polish via TASK-525; SectionHeader default remains md.
+
+---
+
+- id: TASK-525
+  title: Character Library section title size parity
+  created_at: 2026-07-17
+  created_by: owner
+  priority: medium
+  status: done
+  completed_at: 2026-07-17
+  verification_status: pending-qa
+  implemented_by: agent
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T018
+  developer_test_plan: |
+    Suite DEV-V-009 T018 - see BUILD_VALIDATION.md
+  related_files:
+    - src/components/character-sheet/library-section.tsx
+    - src/components/shared/section-header.tsx
+    - src/components/shared/entity-library-sections.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ai/archive/TASK_QUEUE_DONE.md
+  description: |
+    Owner feedback: character Library section title font looked shrunk too small after other work.
+    Restore parity with Skills / Archetype card titles and readable subsection headers.
+  acceptance_criteria:
+    - Library card shows a peer title at text-lg font-bold matching Skills / Archetype & Attacks.
+    - Entity list SectionHeaders use lg (text-base) with modest pb under the title; size is applied on the title so collapse controls cannot shrink labels.
+    - SectionHeader default size md remains intentional sitewide; Library list subsections pass size="lg" explicitly; dense surfaces (e.g. creature-stat-block) keep explicit size="sm".
+    - BUILD_VALIDATION DEV-V-009-T018 + npm run build.
+  evidence: |
+    npm run build green.
+
+---
+  notes: |
+    2026-07-17 cleanup: subsection size raised to lg; default stays md (no sitewide blast).
+
+
+- id: TASK-524
+  title: Guided Ancestry pick order — characteristic before ancestry trait
+  created_at: 2026-07-17
+  created_by: owner
+  priority: medium
+  status: done
+  completed_at: 2026-07-17
+  verification_status: pending-qa
+  implemented_by: agent
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T061
+  developer_test_plan: |
+    Suite DEV-V-013 T061 — see BUILD_VALIDATION.md
+  related_files:
+    - src/components/guided-creator/steps/ancestry-step.tsx
+    - src/stores/guided-creator-store.ts
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - src/docs/ai/AI_CHANGELOG.md
+  description: |
+    Owner feedback: after picking the characteristic (character trait), the next screen
+    should be ancestry trait — not the optional flaw. Swap guided Ancestry micro-flow order.
+  acceptance_criteria:
+    - Guided Ancestry pick order is species options (if any) -> characteristic -> ancestry trait -> optional flaw -> bonus ancestry trait when a flaw is taken.
+    - Product docs (REALMS) and store chapter comment match the new order.
+    - BUILD_VALIDATION DEV-V-013-T061 + npm run build.
+  notes: |
+    Advanced character-creator single-page section order left unchanged (guided is SoT).
+  evidence: |
+    npm run build green; task list push order swapped in ancestry-step.tsx; AncestryPhase union order aligned; T061 added.
+
+---
+
+- id: TASK-523
+  title: Weapons table - more space between Range/Attack/Damage
+  created_at: 2026-07-17
+  created_by: owner
+  priority: medium
+  status: done
+  completed_at: 2026-07-17
+  verification_status: pending-qa
+  implemented_by: agent
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T017
+  developer_test_plan: |
+    Suite DEV-V-013 T017 — see BUILD_VALIDATION.md
+  related_files:
+    - src/components/shared/quick-armaments-sections.tsx
+    - src/components/character-sheet/archetype-section.tsx
+    - src/components/shared/index.ts
+  description: |
+    Owner feedback: Range/Attack/Damage columns on the Archetype Weapons table were too
+    cramped. Reclaim horizontal space by wrapping named-property bullets under Name.
+  acceptance_criteria:
+    - QuickWeaponsTable uses content-sized Range/Attack/Damage columns (not oversized %) so the row fits the panel without cramping metric cells.
+    - Named properties stay one bullet per line under Name and wrap long text within that column.
+    - Unarmed trailingRows use the same cell classes and stay aligned.
+    - BUILD_VALIDATION DEV-V-009-T017 + npm run build.
+  notes: |
+    Extends TASK-486 stacked-property layout; no new shared component - column constants only.
+    Final layout: table-fixed + rem metric cols (3.75 / 3.75 / 4.25) with tight padding (not large %).
+  evidence: |
+    npm run build; table-fixed + QUICK_WEAPON_COL rem widths + break-words properties; owner visual OK.
+
+---
+
+- id: TASK-522
+  title: Sheet header DR/crit cards match Speed/Evasion + correct equipped DR
+  created_at: 2026-07-17
+  created_by: agent
+  completed_at: 2026-07-17
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/sheet-header.tsx
+    - src/components/character-sheet/library-list-helpers.ts
+    - src/components/character-sheet/library-list-helpers.test.ts
+    - src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DESIGN_INTENT.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AI_CHANGELOG.md
+  description: |
+    Owner feedback: Damage Reduction / Critical Range header cards were smaller and used a
+    different value color than Speed/Evasion; Damage Reduction did not match the equipped
+    armor's library DR (header used raw equipment without enrichment).
+  acceptance_criteria:
+    - DR / Critical Range cards use the same LargeStatBlock sizing and text-text-primary values as Speed/Evasion.
+    - Header Damage Reduction matches the equipped armor row DR (enriched armorValue / properties).
+    - Critical Range remains Evasion + 10 + stacked crit bonuses.
+    - BUILD_VALIDATION DEV-V-008-T015 updated; npm run build + targeted tests.
+  build_validation: |
+    suite: DEV-V-008
+    tests:
+      - DEV-V-008-T015
+  developer_test_plan: |
+    Suite DEV-V-008 T015 - see BUILD_VALIDATION.md
+  evidence: |
+    Vitest library-list-helpers; npm run build.
+
+---
+
+- id: TASK-514
+  title: Admin archetype path — feat groups with explicit character vs archetype audience
+  created_at: 2026-07-17
+  created_by: agent
+  priority: high
+  status: done
+  completed_at: 2026-07-17
+  verification_status: pending-qa
+  parent_task: TASK-391
+  related_tasks:
+    - TASK-515
+    - TASK-516
+    - TASK-517
+    - TASK-518
+  follow_up_tasks:
+    - TASK-518
+  build_validation: |
+    suite: DEV-V-008
+    tests:
+      - DEV-V-008-T018
+      - DEV-V-013-T060
+  developer_test_plan: |
+    Suite DEV-V-008 Suite DEV-V-009 T018 — see BUILD_VALIDATION.md
+  related_files:
+    - src/types/archetype.ts
+    - src/lib/game/archetype-path.ts
+    - src/lib/game/archetype-path-helpers.test.ts
+    - src/lib/game/path-validation.ts
+    - src/docs/ai/ADR/0004-path-guidance-group-audience.md
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/app/(main)/admin/codex/actions.ts
+    - src/app/api/codex/route.ts
+    - src/lib/character/archetype-display.ts
+    - src/components/guided-creator/steps/character-feat-step.tsx
+    - src/components/guided-creator/steps/archetype-feats-step.tsx
+    - src/components/character-creator/steps/feats-step.tsx
+  implemented_by: |
+    agent (2026-07-17)
+  description: |
+    Explicit PathGuidanceGroup.audience so admin and guided creator share one feat-group
+    contract (character vs archetype) without title-string heuristics.
+  acceptance_criteria:
+    - PathGuidanceGroup has audience character|archetype; ADR-0004 accepted.
+    - Parse/backfill attaches audience (title heuristic only for legacy backfill).
+    - Admin authors Character vs Archetype feat groups separately (name, why, feats).
+    - level1_feats CSV = union of feat ids across feat guidance groups.
+    - Guided character-feat / archetype-feats steps filter via filterFeatGuidanceGroups.
+    - Advanced archetype L1 groups use audience filter; character L1 may still use flat
+      level1.feats + char_feat (documented transitional exception in ADR-0004).
+    - BUILD_VALIDATION DEV-V-008-T018 + DEV-V-013-T060; npm run build; targeted tests.
+  notes: |
+    Owner proceed for Architect contract. Legacy title heuristic only for parse backfill.
+  evidence: |
+    vitest archetype-path-helpers + path-validation; npm run build (cleanup pass).
+
+---
+
+- id: TASK-515
+  title: Admin Level 1 skills — base-only, max 3, warn-only legacy
+  created_at: 2026-07-17
+  created_by: agent
+  priority: high
+  status: done
+  completed_at: 2026-07-17
+  verification_status: pending-qa
+  related_tasks:
+    - TASK-514
+    - TASK-516
+    - TASK-518
+  build_validation: |
+    suite: DEV-V-008
+    tests:
+      - DEV-V-008-T016
+  developer_test_plan: |
+    Suite DEV-V-008 T016 — see BUILD_VALIDATION.md
+  related_files:
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/lib/game/path-validation.ts
+    - src/lib/game/path-validation.test.ts
+    - src/lib/guided-creator/creator-layer-governance.ts
+  implemented_by: |
+    agent (2026-07-17); cleanup aligned base_skill_id === 0 as sub-skill
+  description: |
+    Align admin L1 skills picker with guided SoT: base skills only, hard cap 3 new picks,
+    warn-only for legacy excess / sub-skills (including base_skill_id === 0).
+  acceptance_criteria:
+    - ChipSelect offers base skills only (base_skill_id == null / undefined; not 0).
+    - Max 3 new picks; UI blocks a 4th.
+    - Legacy >3 or sub-skills: inline + toast warnings on edit/duplicate/save; save not blocked.
+    - validateLevel1Skills + LAYER1_GOVERNANCE.maxPathRecommendedBaseSkills.
+    - BUILD_VALIDATION DEV-V-008-T016; npm run build; targeted tests.
+  notes: |
+    Cleanup 2026-07-17: predicate matches curated-skills / add-sub-skill-modal (0 = any-base sub).
+  evidence: |
+    path-validation.test.ts; npm run build (cleanup pass).
+
+---
+
+- id: TASK-516
+  title: Admin Level 1 armaments — weapons/shields vs armor UI split
+  created_at: 2026-07-17
+  created_by: agent
+  priority: high
+  status: done
+  completed_at: 2026-07-17
+  verification_status: pending-qa
+  related_tasks:
+    - TASK-515
+    - TASK-518
+  follow_up_tasks:
+    - TASK-518
+  build_validation: |
+    suite: DEV-V-008
+    tests:
+      - DEV-V-008-T017
+  developer_test_plan: |
+    Suite DEV-V-008 Suite DEV-V-009 T017 — see BUILD_VALIDATION.md
+  related_files:
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+  implemented_by: |
+    agent (2026-07-17)
+  description: |
+    Split L1 armaments authoring into Weapons & shields vs Armor pickers while keeping a
+    single level1_armaments / armamentEntries storage list for guided loadout.
+  acceptance_criteria:
+    - Separate Weapons & shields and Armor pickers (guided-style type filter).
+    - Save still writes one combined armaments list.
+    - Higher-level progression armament split deferred (TASK-518 notes / intentional L2+ ChipSelect).
+    - BUILD_VALIDATION DEV-V-008-T017; npm run build.
+  notes: |
+    Equipment / recommended gear controls unchanged.
+  evidence: |
+    npm run build (cleanup pass).
+
+---
+
+- id: TASK-517
+  title: Drop recommended-species from archetype paths (column + all consumers)
+  created_at: 2026-07-17
+  created_by: agent
+  priority: high
+  status: done
+  completed_at: 2026-07-17
+  verification_status: pending-qa
+  related_tasks:
+    - TASK-514
+    - TASK-518
+  follow_up_tasks:
+    - TASK-518
+  build_validation: |
+    suite: DEV-V-008
+    tests:
+      - DEV-V-008-T019
+  developer_test_plan: |
+    Suite DEV-V-008 T019 — see BUILD_VALIDATION.md
+  related_files:
+    - sql/codex-archetypes-drop-recommended-species.sql
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/app/(main)/admin/codex/actions.ts
+    - src/app/api/codex/route.ts
+    - src/types/archetype.ts
+    - src/lib/game/archetype-path.ts
+    - src/lib/character/archetype-display.ts
+    - src/components/character-creator/steps/species-step.tsx
+  implemented_by: |
+    agent (2026-07-17)
+  description: |
+    Removed path-recommended species end-to-end; DROP level1_recommended_species on
+    RealmsRPG-Test; advanced L1 species uses is_starter (guided unchanged).
+  acceptance_criteria:
+    - No Recommended species admin ChipSelect; types/parsers/API/display consumers stripped.
+    - Advanced species L1 curated set = is_starter; Browse all still works.
+    - SQL in sql/; SUPABASE_SCHEMA updated; migration applied on RealmsRPG-Test.
+    - BUILD_VALIDATION DEV-V-008-T019; npm run build.
+  notes: |
+    Audit: Berserker had "4, 6, 7". Applied drop_level1_recommended_species_and_backfill_guidance_audience.
+    Production RealmsRPG project was inactive in MCP — apply same SQL there if needed.
+  evidence: |
+    Live Test: column absent; path_data.level1.recommended_species count 0; npm run build (cleanup pass).
+
+---
+
+- id: TASK-518
+  title: Admin ↔ DB ↔ guided archetype-path sync audit (post 514–517)
+  created_at: 2026-07-17
+  created_by: agent
+  priority: medium
+  status: done
+  completed_at: 2026-07-17
+  verification_status: pending-qa
+  parent_task: TASK-514
+  follow_up_tasks:
+    - TASK-521
+  build_validation: |
+    suite: DEV-V-008
+    tests:
+      - DEV-V-008-T018
+      - DEV-V-008-T019
+  developer_test_plan: |
+    Suite DEV-V-008 Suite DEV-V-009 T018 — see BUILD_VALIDATION.md
+  related_files:
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/lib/game/archetype-path.ts
+  implemented_by: |
+    agent (2026-07-17)
+  description: |
+    Post 514–517 parity audit; residuals filed as TASK-521 (content: trim L1 skills ≤3).
+  completed_work: |
+    - L1 admin without raw JSON for common guided fields: feat groups+audience, skills=3,
+      powers/innate, techniques, armaments weapon/armor split, equipment qty, unarmed, notes,
+      recommended abilities, armorStep, shared gear.
+    - Advanced Path JSON remains escape hatch for rare/non-feat guidance groups and overrides.
+    - Dead recommended-species / title-heuristic feat filters / mixed armament ChipSelect removed.
+    - FEATURE_INDEX + BUILD_VALIDATION refreshed; shared parsers only.
+  remaining_work: |
+    - None for AC; content trim = TASK-521.
+  acceptance_criteria:
+    - Audit documents admin ↔ guided parity for L1 path fields; residuals tracked.
+    - Follow-up TASK-521 filed for codex content pass.
+    - BUILD_VALIDATION cross-links honest; npm run build.
+  notes: |
+    Higher-level (L2+) progression still ChipSelect rows — intentional; not Advanced-JSON-only.
+  evidence: |
+    npm run build (cleanup pass).
+
+---
+
+- id: TASK-520
+  title: Guided Continue must not jump to furthest progress
+  created_at: 2026-07-17
+  created_by: agent
+  completed_at: 2026-07-17
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/stores/guided-creator-store.ts
+    - src/components/guided-creator/steps/ancestry-step.tsx
+    - src/components/guided-creator/steps/loadout-step.tsx
+    - src/docs/ai/guide/04-floating-ui-tooltips.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AI_CHANGELOG.md
+  description: |
+    After revisiting Foundation/Ancestry (e.g. re-selecting Human), footer Continue was
+    resuming the furthest inner screen already completed instead of the immediate next screen.
+  acceptance_criteria:
+    - Footer Continue advances only one screen; into multi-screen steps lands on first inner screen.
+    - Footer Back still resumes previous/last inner screen (T031).
+    - Chapter rail first-of-step landing unchanged (T029/T030).
+    - BUILD_VALIDATION + changelog; npm run build.
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T059
+  developer_test_plan: |
+    Suite DEV-V-013 T059 — see BUILD_VALIDATION.md
+  evidence: |
+    npm run build — compiled successfully.
+
+---
+
+- id: TASK-519
+  title: Fix header mid-width overflow empty strip
+  created_at: 2026-07-17
+  created_by: agent
+  completed_at: 2026-07-17
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/layout/header.tsx
+    - src/components/layout/main-app-chrome.tsx
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/DESIGN_INTENT.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AI_CHANGELOG.md
+  description: |
+    In mid-width windowed browsers, the long nowrap desktop header could widen the document,
+    showing a bottom scrollbar and an unfilled strip beside the viewport-width header background.
+  acceptance_criteria:
+    - Header does not force document horizontal scroll at ~1024—1400px.
+    - No empty/unfilled strip beside header or page background from that overflow.
+    - Mid-width uses menu; xl+ keeps inline nav with tighter gutters/gaps.
+    - BUILD_VALIDATION + changelog; npm run build.
+  build_validation: |
+    suite: DEV-V-012
+    tests:
+      - DEV-V-012-T007
+  developer_test_plan: |
+    Suite DEV-V-013 T007 — see BUILD_VALIDATION.md
+  evidence: |
+    Desktop nav lg to xl; header gutters/gaps tightened; overflow-x-clip on MainAppChrome only (not header). MOBILE_UX + DESIGN_INTENT synced on cleanup.
+    Feedback logged 2026-07-17.
+
+---
 
 - id: TASK-478
   title: ExpandableImage adoption audit + enforcement checklist

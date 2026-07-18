@@ -13,6 +13,22 @@ import { useRollsOptional } from '@/components/character-sheet/roll-context';
 /** Named props already shown as table columns (not in MECHANIC_PROPERTY_NAMES). */
 const QUICK_ARMAMENT_COLUMN_PROP_NAMES = new Set(['Critical Range +1']);
 
+/**
+ * QuickWeaponsTable column classes — content-sized metric cols (not large %) so the table
+ * stays inside the panel; Name takes leftover width and wraps property bullets.
+ * Use the same `*Td` classes on `trailingRows` (e.g. Unarmed) so columns stay aligned.
+ */
+export const QUICK_WEAPON_COL = {
+  nameTh: 'min-w-0 text-left py-1 pr-1.5',
+  rangeTh: 'w-[3.75rem] text-center py-1 px-0.5',
+  attackTh: 'w-[3.75rem] text-center py-1 px-0.5',
+  damageTh: 'w-[4.25rem] text-center py-1 px-0.5',
+  nameTd: 'min-w-0 py-2 pr-1.5 font-medium text-text-secondary align-top',
+  rangeTd: 'text-center py-2 px-0.5 text-text-muted dark:text-text-secondary align-top',
+  attackTd: 'text-center py-2 px-0.5 align-top',
+  damageTd: 'text-center py-2 px-0.5 align-top',
+} as const;
+
 export type QuickArmamentAbilities = {
   strength?: number;
   agility?: number;
@@ -43,14 +59,16 @@ function displayNamedProperties(props: QuickArmamentItem['properties']): string[
   );
 }
 
-/** One `• Property` per line under the armament name (avoids cramped inline joins). */
+/** One `• Property` per line under the armament name; long names wrap within the Name column. */
 function NamedPropertiesUnderName({ names }: { names: string[] }) {
   if (names.length === 0) return null;
   // Stacked lines (not a semantic list): literal bullets are visual only; index keys allow duplicate names.
   return (
-    <div className="mt-0.5 text-xs font-normal text-text-muted dark:text-text-secondary">
+    <div className="mt-0.5 space-y-0.5 text-xs font-normal leading-snug text-text-muted dark:text-text-secondary">
       {names.map((p, i) => (
-        <div key={`${p}-${i}`}>• {p}</div>
+        <div key={`${p}-${i}`} className="break-words">
+          • {p}
+        </div>
       ))}
     </div>
   );
@@ -133,13 +151,20 @@ export function QuickWeaponsTable({
     <div className={cn('bg-surface-alt rounded-lg p-3 mb-4', className)}>
       {showHeader && <SectionHeader title={title} className="mb-2" />}
       <TableScroll>
-      <table className="w-full text-sm">
+      {/* DESIGN_INTENT: tight content-sized metric cols; Name wraps props so the row fits the panel */}
+      <table className="w-full table-fixed text-sm">
+        <colgroup>
+          <col />
+          <col className="w-[3.75rem]" />
+          <col className="w-[3.75rem]" />
+          <col className="w-[4.25rem]" />
+        </colgroup>
         <thead>
           <tr className="text-xs text-text-muted dark:text-text-secondary">
-            <th className="text-left py-1">Name</th>
-            <th className="text-center py-1">Range</th>
-            <th className="text-center py-1">Attack</th>
-            <th className="text-center py-1">Damage</th>
+            <th className={QUICK_WEAPON_COL.nameTh}>Name</th>
+            <th className={QUICK_WEAPON_COL.rangeTh}>Range</th>
+            <th className={QUICK_WEAPON_COL.attackTh}>Attack</th>
+            <th className={QUICK_WEAPON_COL.damageTh}>Damage</th>
           </tr>
         </thead>
         <tbody>
@@ -151,14 +176,14 @@ export function QuickWeaponsTable({
 
             return (
               <tr key={String(weapon.id ?? idx)} className="border-b border-border-subtle last:border-0 align-top">
-                <td className="py-2 font-medium text-text-secondary">
-                  {weapon.name}
+                <td className={QUICK_WEAPON_COL.nameTd}>
+                  <div className="break-words">{weapon.name}</div>
                   <NamedPropertiesUnderName names={displayProps} />
                 </td>
-                <td className="text-center py-2 text-text-muted dark:text-text-secondary">
+                <td className={QUICK_WEAPON_COL.rangeTd}>
                   {formatWeaponRangeCompact(weapon.range)}
                 </td>
-                <td className="text-center py-2">
+                <td className={QUICK_WEAPON_COL.attackTd}>
                   {rollContext?.canRoll !== false && rollContext ? (
                     <RollButton
                       value={attackBonus}
@@ -178,7 +203,7 @@ export function QuickWeaponsTable({
                     </span>
                   )}
                 </td>
-                <td className="text-center py-2">
+                <td className={QUICK_WEAPON_COL.damageTd}>
                   <div className="flex flex-col items-center gap-0.5">
                     {rollContext?.canRoll !== false && rollContext && rollStr !== '-' ? (
                       <RollButton
@@ -198,7 +223,7 @@ export function QuickWeaponsTable({
                     ) : (
                       <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{dice}</span>
                     )}
-                    {type && <span className="text-[10px] text-text-muted dark:text-text-secondary">{type}</span>}
+                    {type && <span className="text-[10px] break-words text-text-muted dark:text-text-secondary">{type}</span>}
                   </div>
                 </td>
               </tr>

@@ -353,9 +353,6 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
         removeTechniques: toStrArray(r.level1_remove_techniques),
         removeArmaments: toStrArray(r.level1_remove_armaments),
         notes: r.level1_notes ? String(r.level1_notes) : undefined,
-        recommended_species: toStrArray(
-          r.level1_recommended_species ?? level1FromLegacy?.recommended_species
-        ),
         guidance_groups: r.level1_guidance_groups ?? level1FromLegacy?.guidance_groups,
         recommended_abilities: r.level1_recommended_abilities ?? level1FromLegacy?.recommended_abilities,
         loadouts: r.level1_loadouts ?? level1FromLegacy?.loadouts,
@@ -374,7 +371,6 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
         removeTechniques: level1Raw.removeTechniques as string[],
         removeArmaments: level1Raw.removeArmaments as string[],
         notes: level1Raw.notes as string | undefined,
-        recommended_species: level1Raw.recommended_species as string[],
         guidance_groups: parseArchetypePathData({ level1: { guidance_groups: level1Raw.guidance_groups } })
           ?.level1?.guidance_groups,
       };
@@ -417,9 +413,6 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
         level1_remove_techniques: toStrArray(r.level1_remove_techniques),
         level1_remove_armaments: toStrArray(r.level1_remove_armaments),
         level1_notes: r.level1_notes ?? level1FromLegacy?.notes ?? '',
-        level1_recommended_species: toStrArray(
-          r.level1_recommended_species ?? level1FromLegacy?.recommended_species
-        ),
         level1_guidance_groups: level1FromColumns.guidance_groups ?? null,
       };
     });

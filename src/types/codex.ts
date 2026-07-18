@@ -197,7 +197,6 @@ export interface CodexArchetype extends Archetype {
   level1_remove_techniques?: string[];
   level1_remove_armaments?: string[];
   level1_notes?: string;
-  level1_recommended_species?: string[];
   level1_guidance_groups?: PathGuidanceGroup[] | null;
 }
 

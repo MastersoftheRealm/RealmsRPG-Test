@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import type { KeyboardEvent } from 'react';
 import { cn } from '@/lib/utils';
 import { Button, Alert, Spinner, SelectionCardSurface, DescriptorChip } from '@/components/ui';
@@ -62,27 +62,21 @@ export function SpeciesStep() {
   const layer = getStepLayer('species');
   const showFullCatalog = !pathMode || layer >= 2;
   const pathData = useCreatorPathData();
-  const recommendedSpeciesRefs = useMemo(
-    () => new Set((pathData?.level1?.recommended_species ?? []).map((v) => String(v).toLowerCase().trim())),
-    [pathData?.level1?.recommended_species]
+  /** Species curation uses `is_starter` only (TASK-517) — no path-recommended species. */
+  const hasStarters = useMemo(
+    () => species.some((s) => Boolean((s as Species).is_starter)),
+    [species]
   );
-  const hasRecommendedSpecies = recommendedSpeciesRefs.size > 0;
-  const matchesRecommended = useCallback(
-    (s: Species) =>
-      recommendedSpeciesRefs.has(String(s.id).toLowerCase()) ||
-      recommendedSpeciesRefs.has(String(s.name ?? '').toLowerCase()),
-    [recommendedSpeciesRefs]
-  );
-  const recommendedSpecies = useMemo(
-    () => (hasRecommendedSpecies ? species.filter(matchesRecommended) : []),
-    [species, hasRecommendedSpecies, matchesRecommended]
+  const starterSpecies = useMemo(
+    () => (hasStarters ? species.filter((s) => Boolean((s as Species).is_starter)) : []),
+    [species, hasStarters]
   );
   const speciesForGrid = useMemo(() => {
-    if (pathMode && !showFullCatalog && recommendedSpecies.length > 0) {
-      return recommendedSpecies;
+    if (pathMode && !showFullCatalog && starterSpecies.length > 0) {
+      return starterSpecies;
     }
     return species;
-  }, [pathMode, showFullCatalog, recommendedSpecies, species]);
+  }, [pathMode, showFullCatalog, starterSpecies, species]);
 
   const handleCardClick = (s: Species) => {
     setSelectedSpeciesForModal(s);
@@ -136,15 +130,15 @@ export function SpeciesStep() {
       {pathMode && draft.archetype?.name && (
         <>
           <PathHelpCard pathName={draft.archetype.name}>
-            {hasRecommendedSpecies
-              ? 'These species fit your path. Pick one, or browse all species below.'
+            {hasStarters && !showFullCatalog
+              ? 'Starter species for new characters. Pick one, or browse all species below.'
               : 'Choose the species that fits your character, or browse the full list.'}
           </PathHelpCard>
           <PathNotes pathName={draft.archetype.name} notes={pathData?.level1?.notes} />
         </>
       )}
 
-      {pathMode && !showFullCatalog && hasRecommendedSpecies && (
+      {pathMode && !showFullCatalog && hasStarters && (
         <div className="mb-4 flex flex-wrap gap-3">
           <Button
             variant="secondary"
@@ -156,10 +150,10 @@ export function SpeciesStep() {
         </div>
       )}
 
-      {pathMode && showFullCatalog && hasRecommendedSpecies && (
+      {pathMode && showFullCatalog && hasStarters && (
         <div className="mb-4">
           <Button variant="link" onClick={() => collapseLayer('species')} className="min-h-11 px-0">
-            ← Back to path recommendations
+            ← Back to starter species
           </Button>
         </div>
       )}
@@ -298,8 +292,8 @@ export function SpeciesStep() {
       
       {source !== 'all' && (!speciesForGrid || speciesForGrid.length === 0) && (
         <Alert variant="warning" className="mb-8">
-          {pathMode && !showFullCatalog && hasRecommendedSpecies
-            ? 'No recommended species matched this source filter. Browse all species or try another source.'
+          {pathMode && !showFullCatalog && hasStarters
+            ? 'No starter species matched this source filter. Browse all species or try another source.'
             : 'No species in this source. Try "All sources" or create species in the Species Creator (My species).'}
         </Alert>
       )}

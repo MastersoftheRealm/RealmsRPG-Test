@@ -3,7 +3,7 @@
 > **Do not edit by hand.** Run `npm run tasks:generate-index` after changing barrel exports.
 > Curated narrative map: [`FEATURE_INDEX.md`](FEATURE_INDEX.md).
 
-Generated: 2026-07-17
+Generated: 2026-07-18
 
 ## `src/components/shared/index.ts`
 
@@ -71,6 +71,7 @@ Generated: 2026-07-17
 - PropertyChipList
 - QuantityBadge
 - QuantitySelector
+- QUICK_WEAPON_COL
 - QuickArmorTable
 - QuickShieldsTable
 - QuickWeaponsTable

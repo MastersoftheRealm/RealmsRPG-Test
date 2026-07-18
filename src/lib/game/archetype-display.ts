@@ -159,9 +159,6 @@ export async function fetchCodexArchetypeById(
     removeTechniques: toStrArray(r.level1_remove_techniques),
     removeArmaments: toStrArray(r.level1_remove_armaments),
     notes: r.level1_notes ? String(r.level1_notes) : undefined,
-    recommended_species: toStrArray(
-      r.level1_recommended_species ?? level1FromLegacy?.recommended_species
-    ),
     guidance_groups: r.level1_guidance_groups ?? level1FromLegacy?.guidance_groups,
     recommended_abilities:
       r.level1_recommended_abilities ?? level1FromLegacy?.recommended_abilities,

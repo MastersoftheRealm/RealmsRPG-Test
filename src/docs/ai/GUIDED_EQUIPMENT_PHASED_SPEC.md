@@ -1,7 +1,7 @@
 # Guided Equipment — Phased Sub-flow Spec
 
 **Authority:** Implements [`REALMS_PRODUCT_OVERVIEW.md`](../REALMS_PRODUCT_OVERVIEW.md) §5.7 (equipment), §5.9 (resources), §3 / §3.1 (layers + selection grammar).  
-**Tasks:** TASK-422 (parent), TASK-424 (phased sub-flow), TASK-442 (kit removal), TASK-443 (phase visibility + card remodel), TASK-446 (L1 simplify + orphan fix), TASK-447
+**Tasks:** TASK-422 (parent), TASK-424 (phased sub-flow), TASK-442 (kit removal), TASK-443 (phase visibility + card remodel), TASK-446 (L1 simplify + orphan fix), TASK-447, TASK-527 (no cold-load jump to Equipment)
 
 ## UX summary
 
@@ -12,6 +12,8 @@ Within the guided **Loadout** chapter (`loadout` sub-step), users complete **vis
 3. **Equipment** — recommended items + remaining currency; optional **Add all recommended Equipment**
 
 Chapter rail title is **Loadout** (weapons, armor, Equipment, then Powers or Techniques). Internal phase id remains `gear`.
+
+**Entry timing (TASK-527):** Do not commit `equipmentPhase` from visibility until item catalogs (and path data) are loaded. Unresolved pool refs must not count as Equipment — otherwise a cold cache collapses visible phases to `['gear']` and locks the entry jump onto Equipment.
 
 **No quick kits.** Users pick weapons and armor individually from curated path pools. Live DB strip applied (TASK-442): `level1_loadouts` is metadata-only (`armorStep` / `sharedEquipment`); path picks use `level1_armaments` / `level1_equipment`.
 

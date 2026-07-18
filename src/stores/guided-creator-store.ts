@@ -6,7 +6,7 @@
  *
  * Chapters (rulebook-aligned):
  *   1. Foundation  -> path, species
- *   2. Ancestry    -> ancestry (species-trait options, ancestry trait, characteristic, optional flaw)
+ *   2. Ancestry    -> ancestry (species-trait options, characteristic, ancestry trait, optional flaw)
  *   3. Abilities   -> abilities (recommended array or customize)
  *   4. Your Archetype -> skills, archetype feats, character feat
  *   5. Equipment   -> loadout, powers OR techniques
@@ -233,11 +233,15 @@ interface GuidedCreatorState {
   completedSubSteps: GuidedSubStep[];
   draft: GuidedDraft;
   /**
-   * How the current sub-step was entered:
-   * - `first` — chapter rail / edit jump: land on first inner screen of the target step
-   * - `sequential` — footer Back/Continue: keep sequential history (last/next screen)
+   * How the current sub-step was entered (multi-screen steps use this for landing):
+   * - `first` — chapter rail / edit jump: land on first inner screen
+   * - `forward` — footer Continue: land on first inner screen (never jump to furthest)
+   * - `back` — footer Back: land on last inner screen (sequential history)
+   *
+   * Not persisted — hard refresh defaults to `forward` (first inner screen), which matches
+   * “never jump to furthest” better than resuming mid-step progress.
    */
-  navigationIntent: 'first' | 'sequential';
+  navigationIntent: 'first' | 'forward' | 'back';
   /** Bumped on every chapter/sub-step transition so inner steps can re-apply entry landing. */
   entryNonce: number;
 
@@ -259,7 +263,7 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
       currentSubStep: 'path',
       completedSubSteps: [],
       draft: cloneInitialDraft(),
-      navigationIntent: 'sequential',
+      navigationIntent: 'forward',
       entryNonce: 0,
 
       setSubStep: (subStep) => {
@@ -279,7 +283,7 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
         get().markSubStepComplete(current);
         set((state) => ({
           currentSubStep: GUIDED_SUBSTEP_ORDER[idx + 1],
-          navigationIntent: 'sequential',
+          navigationIntent: 'forward',
           entryNonce: state.entryNonce + 1,
         }));
       },
@@ -290,7 +294,7 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
         if (idx <= 0) return;
         set((state) => ({
           currentSubStep: GUIDED_SUBSTEP_ORDER[idx - 1],
-          navigationIntent: 'sequential',
+          navigationIntent: 'back',
           entryNonce: state.entryNonce + 1,
         }));
       },
@@ -328,7 +332,7 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
           currentSubStep: 'path',
           completedSubSteps: [],
           draft: cloneInitialDraft(),
-          navigationIntent: 'sequential',
+          navigationIntent: 'forward',
           entryNonce: 0,
         });
       },

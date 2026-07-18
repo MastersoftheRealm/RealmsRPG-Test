@@ -5,11 +5,10 @@ import { SectionHeader, SearchInput, LoadingState, ErrorDisplay as ErrorState, G
 import { Modal, Button, Input, IconButton, useToast } from '@/components/ui';
 import { ChipSelect } from '@/components/shared';
 import { useCodexArchetypes, useCodexEquipment, useCodexFeats, useCodexSkills, useCodexItemProperties, useCodexPowerParts } from '@/hooks/use-codex';
-import { useMergedSpecies } from '@/hooks';
 import { useOfficialLibrary } from '@/hooks/use-official-library';
 import { useQueryClient } from '@tanstack/react-query';
 import { deleteCodexDoc, saveArchetypeWithPath } from './actions';
-import { Pencil, Copy, X } from 'lucide-react';
+import { Pencil, Copy, Plus, X } from 'lucide-react';
 import { getFeatLevel, formatFeatName } from '@/lib/leveled-feats';
 import { formatListCellLabel } from '@/lib/utils';
 import {
@@ -20,22 +19,70 @@ import {
   parseOptionalJsonField,
   parseIdQuantityStrings,
   serializeIdQuantityStrings,
+  filterFeatGuidanceGroups,
+  mergeFeatGuidanceGroups,
+  seedFeatGroupsFromFlatFeats,
+  unionFeatIdsFromGuidanceGroups,
+  resolvePathGuidanceAudience,
   type Level1ArmorStep,
 } from '@/lib/game/archetype-path';
-import { validatePathDataForPublish } from '@/lib/game/path-validation';
+import { validateLevel1Skills, validatePathDataForPublish } from '@/lib/game/path-validation';
 import { snapshotOfficialPowerForInnate } from '@/lib/game/innate-eligibility';
 import {
   createItemTpResolver,
   trainingPointLimitFromRecommendedAbilities,
 } from '@/lib/guided-creator/loadout-tp';
+import { LAYER1_GOVERNANCE } from '@/lib/constants/creator-layer-governance';
 import type { PowerPart } from '@/hooks/codex-types';
 import type { LibraryPower } from '@/types/library';
 import type { AbilityName } from '@/types/abilities';
+import type { CodexSkill } from '@/types/codex';
+import type { PathGuidanceAudience, PathGuidanceGroup } from '@/types/archetype';
 
 const COPY_NAME_SUFFIX = ' copy';
 const ABILITY_OPTIONS = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'] as const;
 /** Level-1 ability cap mirrors the character creator (ABILITY_CONSTRAINTS.getMaxAbility(1)). */
 const RECOMMENDED_ABILITY_MAX = 3;
+const PATH_LEVEL1_MAX_BASE_SKILLS = LAYER1_GOVERNANCE.maxPathRecommendedBaseSkills;
+
+/**
+ * Base skills: empty/null `base_skill_id` only (TASK-515 AC + guided curated-skills SoT).
+ * `base_skill_id === 0` is an any-base sub-skill — not a base skill for path recommendations.
+ */
+function isCodexBaseSkill(skill: Pick<CodexSkill, 'base_skill_id'>): boolean {
+  return skill.base_skill_id == null;
+}
+
+function isCodexSubSkill(skill: Pick<CodexSkill, 'base_skill_id'>): boolean {
+  return skill.base_skill_id != null;
+}
+
+function toastLevel1SkillWarnings(
+  skillIds: string[],
+  skills: CodexSkill[],
+  showToast: (message: string, type: 'warning') => void
+): void {
+  const byId = new Map(skills.map((s) => [String(s.id), s]));
+  const issues = validateLevel1Skills(skillIds, {
+    isSubSkill: (id) => {
+      const skill = byId.get(String(id));
+      if (!skill) return null;
+      return isCodexSubSkill(skill);
+    },
+  });
+  for (const issue of issues) {
+    showToast(issue.message, 'warning');
+  }
+}
+
+function armamentTypeOf(
+  id: string,
+  typeById: Map<string, string>
+): 'weapon' | 'shield' | 'armor' | 'unknown' {
+  const t = typeById.get(id);
+  if (t === 'weapon' || t === 'shield' || t === 'armor') return t;
+  return 'unknown';
+}
 
 type RecommendedAbilities = Partial<Record<AbilityName, number>>;
 
@@ -43,7 +90,14 @@ function labelForAbility(ability: string): string {
   return ability.charAt(0).toUpperCase() + ability.slice(1);
 }
 
-type CodexFeatLike = { id?: string; name?: string; feat_lvl?: number; base_feat_id?: string; lvl_req?: number };
+type CodexFeatLike = {
+  id?: string;
+  name?: string;
+  feat_lvl?: number;
+  base_feat_id?: string;
+  lvl_req?: number;
+  char_feat?: boolean;
+};
 function toLeveledFeatLike(f: CodexFeatLike) {
   return { ...f, id: f.id ?? '' };
 }
@@ -99,8 +153,6 @@ type PathLevelForm = {
   removeTechniques: string[];
   removeArmaments: string[];
   notes: string;
-  /** Level 1 only: species IDs/names recommended on the species step */
-  recommendedSpecies: string[];
 };
 
 type SelectionOption = { value: string; label: string };
@@ -165,8 +217,25 @@ function makeLevelRow(level = 2): PathLevelForm {
     removeTechniques: [],
     removeArmaments: [],
     notes: '',
-    recommendedSpecies: [],
   };
+}
+
+function newFeatGuidanceGroup(audience: PathGuidanceAudience): PathGuidanceGroup {
+  const suffix = Math.random().toString(36).slice(2, 8);
+  return {
+    id: `feat-${audience}-${Date.now().toString(36)}-${suffix}`,
+    title: audience === 'character' ? 'Character feat picks' : 'Archetype feat picks',
+    why: '',
+    audience,
+    feats: [],
+  };
+}
+
+/** Load guidance groups for admin edit; seed from flat feats when groups lack feat lists. */
+function guidanceGroupsFromPathData(pathData: unknown, flatFeats: string[]): PathGuidanceGroup[] {
+  const parsed = parseArchetypePathData(pathData);
+  const existing = parsed?.level1?.guidance_groups ?? [];
+  return seedFeatGroupsFromFlatFeats(flatFeats, existing);
 }
 
 function toLevelForm(
@@ -199,7 +268,6 @@ function toLevelForm(
     removeTechniques: resolveSelectedValues(toSelectionArray(raw.removeTechniques), optionsByKey?.removeTechniques ?? []),
     removeArmaments: resolveSelectedValues(toSelectionArray(raw.removeArmaments), optionsByKey?.removeArmaments ?? []),
     notes: typeof raw.notes === 'string' ? raw.notes : '',
-    recommendedSpecies: toSelectionArray(raw.recommended_species),
   };
 }
 
@@ -235,10 +303,6 @@ function buildLevelPayload(level: PathLevelForm, includeLevel: boolean): Record<
   if (removeArmaments.length) payload.removeArmaments = removeArmaments;
   if (level.notes.trim()) payload.notes = level.notes.trim();
   if (isLevel1 && (level as PathLevelForm).recommendUnarmedProwess) payload.recommendUnarmedProwess = true;
-  if (isLevel1) {
-    const recommendedSpecies = dedupeStrings(level.recommendedSpecies);
-    if (recommendedSpecies.length) payload.recommended_species = recommendedSpecies;
-  }
   return payload;
 }
 
@@ -247,7 +311,6 @@ export function AdminArchetypesTab() {
   const { data: archetypes, isLoading, error, refetch } = useCodexArchetypes();
   const { data: codexFeats = [] } = useCodexFeats();
   const { data: codexSkills = [] } = useCodexSkills();
-  const { data: allSpecies = [] } = useMergedSpecies();
   const { data: codexEquipment = [] } = useCodexEquipment();
   const { data: powerPartsDb = [] } = useCodexPowerParts();
   const { data: officialPowers = [], isLoading: isLoadingOfficialPowers } = useOfficialLibrary('powers');
@@ -280,6 +343,8 @@ export function AdminArchetypesTab() {
     guidedRecommendedAbilities: {} as RecommendedAbilities,
     guidedArmorStep: '' as Level1ArmorStep | '',
     guidedSharedEquipmentEntries: [] as PathItemEntry[],
+    /** Level 1 guidance groups (feat groups authored here; others preserved). */
+    guidanceGroups: [] as PathGuidanceGroup[],
   });
 
   const filtered = (archetypes || []).filter(
@@ -303,17 +368,6 @@ export function AdminArchetypesTab() {
         .sort((a, b) => a.label.localeCompare(b.label)),
     [codexFeats]
   );
-  const speciesOptions = useMemo<SelectionOption[]>(
-    () =>
-      (allSpecies as Array<{ id?: string; name?: string }>)
-        .map((species) => ({
-          value: String(species.id ?? ''),
-          label: String(species.name ?? species.id ?? ''),
-        }))
-        .filter((s) => s.value && s.label)
-        .sort((a, b) => a.label.localeCompare(b.label)),
-    [allSpecies]
-  );
   const getFeatOptionsForLevel = useCallback(
     (pathLevel: number): SelectionOption[] => {
       return (codexFeats as CodexFeatLike[])
@@ -336,14 +390,73 @@ export function AdminArchetypesTab() {
     [codexFeats]
   );
   const featOptionsLevel1 = useMemo(() => getFeatOptionsForLevel(1), [getFeatOptionsForLevel]);
-
-  const skillOptions = useMemo<SelectionOption[]>(
+  const characterFeatOptionsLevel1 = useMemo(
     () =>
-      (codexSkills as Array<{ id?: string; name?: string }>)
+      featOptionsLevel1.filter((opt) => {
+        const feat = (codexFeats as CodexFeatLike[]).find((f) => String(f.id) === opt.value);
+        return Boolean(feat?.char_feat);
+      }),
+    [featOptionsLevel1, codexFeats]
+  );
+  const archetypeFeatOptionsLevel1 = useMemo(
+    () =>
+      featOptionsLevel1.filter((opt) => {
+        const feat = (codexFeats as CodexFeatLike[]).find((f) => String(f.id) === opt.value);
+        return !feat?.char_feat;
+      }),
+    [featOptionsLevel1, codexFeats]
+  );
+
+  const allSkillOptions = useMemo<SelectionOption[]>(
+    () =>
+      (codexSkills as CodexSkill[])
         .map((skill) => ({ value: String(skill.id ?? ''), label: String(skill.name ?? skill.id ?? '') }))
         .filter((skill) => skill.value && skill.label)
         .sort((a, b) => a.label.localeCompare(b.label)),
     [codexSkills]
+  );
+
+  const baseSkillOptions = useMemo<SelectionOption[]>(
+    () =>
+      (codexSkills as CodexSkill[])
+        .filter((skill) => isCodexBaseSkill(skill))
+        .map((skill) => ({ value: String(skill.id ?? ''), label: String(skill.name ?? skill.id ?? '') }))
+        .filter((skill) => skill.value && skill.label)
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    [codexSkills]
+  );
+
+  const skillById = useMemo(() => {
+    const map = new Map<string, CodexSkill>();
+    for (const skill of codexSkills as CodexSkill[]) {
+      if (skill.id != null) map.set(String(skill.id), skill);
+    }
+    return map;
+  }, [codexSkills]);
+
+  /** Picker options: base skills + any legacy-selected ids (so chips keep labels). */
+  const level1SkillPickerOptions = useMemo<SelectionOption[]>(() => {
+    const selected = form.level1Path.skills;
+    const byValue = new Map(baseSkillOptions.map((o) => [o.value, o]));
+    for (const id of selected) {
+      if (byValue.has(id)) continue;
+      const fromAll = allSkillOptions.find((o) => o.value === id);
+      if (fromAll) byValue.set(id, fromAll);
+      else byValue.set(id, { value: id, label: id });
+    }
+    return Array.from(byValue.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [baseSkillOptions, allSkillOptions, form.level1Path.skills]);
+
+  const level1SkillIssues = useMemo(
+    () =>
+      validateLevel1Skills(form.level1Path.skills, {
+        isSubSkill: (id) => {
+          const skill = skillById.get(String(id));
+          if (!skill) return null;
+          return isCodexSubSkill(skill);
+        },
+      }),
+    [form.level1Path.skills, skillById]
   );
 
   const powerOptions = useMemo<SelectionOption[]>(
@@ -370,12 +483,21 @@ export function AdminArchetypesTab() {
     [officialTechniques]
   );
 
-  const armamentOptions = useMemo<SelectionOption[]>(
+  const armamentTypeById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const item of officialItems) {
+      const id = String(item.id ?? '');
+      if (id) map.set(id, String(item.type ?? '').toLowerCase());
+    }
+    return map;
+  }, [officialItems]);
+
+  const weaponShieldArmamentOptions = useMemo<SelectionOption[]>(
     () =>
       officialItems
         .filter((item) => {
           const type = String(item.type ?? '').toLowerCase();
-          return type === 'weapon' || type === 'armor' || type === 'shield';
+          return type === 'weapon' || type === 'shield';
         })
         .map((item) => ({
           value: String(item.id ?? ''),
@@ -384,6 +506,53 @@ export function AdminArchetypesTab() {
         .filter((item) => item.value && item.label)
         .sort((a, b) => a.label.localeCompare(b.label)),
     [officialItems]
+  );
+
+  const armorArmamentOptions = useMemo<SelectionOption[]>(
+    () =>
+      officialItems
+        .filter((item) => String(item.type ?? '').toLowerCase() === 'armor')
+        .map((item) => ({
+          value: String(item.id ?? ''),
+          label: String(item.name ?? item.id ?? ''),
+        }))
+        .filter((item) => item.value && item.label)
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    [officialItems]
+  );
+
+  /** Combined for labels / unknown checks / remove-armaments (single storage pool). */
+  const armamentOptions = useMemo<SelectionOption[]>(
+    () =>
+      dedupeStrings([
+        ...weaponShieldArmamentOptions.map((o) => o.value),
+        ...armorArmamentOptions.map((o) => o.value),
+      ])
+        .map(
+          (id) =>
+            weaponShieldArmamentOptions.find((o) => o.value === id) ??
+            armorArmamentOptions.find((o) => o.value === id)
+        )
+        .filter((item): item is SelectionOption => Boolean(item))
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    [weaponShieldArmamentOptions, armorArmamentOptions]
+  );
+
+  const level1WeaponShieldEntries = useMemo(
+    () =>
+      form.level1Path.armamentEntries.filter((entry) => {
+        const kind = armamentTypeOf(entry.id, armamentTypeById);
+        return kind === 'weapon' || kind === 'shield' || kind === 'unknown';
+      }),
+    [form.level1Path.armamentEntries, armamentTypeById]
+  );
+
+  const level1ArmorEntries = useMemo(
+    () =>
+      form.level1Path.armamentEntries.filter(
+        (entry) => armamentTypeOf(entry.id, armamentTypeById) === 'armor'
+      ),
+    [form.level1Path.armamentEntries, armamentTypeById]
   );
 
   const equipmentOptions = useMemo<SelectionOption[]>(() => {
@@ -411,7 +580,7 @@ export function AdminArchetypesTab() {
   const optionsByField = useMemo(
     () => ({
       feats: featOptions,
-      skills: skillOptions,
+      skills: allSkillOptions,
       powers: powerOptions,
       innatePowers: powerOptions,
       techniques: techniqueOptions,
@@ -422,7 +591,7 @@ export function AdminArchetypesTab() {
       removeTechniques: techniqueOptions,
       removeArmaments: armamentOptions,
     }),
-    [featOptions, skillOptions, powerOptions, techniqueOptions, armamentOptions, equipmentOptions]
+    [featOptions, allSkillOptions, powerOptions, techniqueOptions, armamentOptions, equipmentOptions]
   );
 
   const isSelectionDataLoading =
@@ -442,14 +611,112 @@ export function AdminArchetypesTab() {
     | 'removeArmaments';
 
   const selectionFieldConfig: Array<{ key: PathSelectionKey; label: string; placeholder: string }> = [
+    // Level 1 feats authored via guidance groups (TASK-514); higher levels still use ChipSelect.
     { key: 'feats', label: 'Feats', placeholder: 'Select recommended feats' },
-    { key: 'skills', label: 'Skills', placeholder: 'Select recommended skills' },
+    { key: 'skills', label: 'Skills (max 3 base)', placeholder: 'Select up to 3 base skills' },
     { key: 'powers', label: 'Powers', placeholder: 'Select recommended powers' },
     { key: 'innatePowers', label: 'Innate Powers', placeholder: 'Select recommended innate powers' },
     { key: 'techniques', label: 'Techniques', placeholder: 'Select recommended techniques' },
     { key: 'armaments', label: 'Armaments', placeholder: 'Select recommended armaments' },
     { key: 'equipment', label: 'Equipment', placeholder: 'Select recommended equipment' },
   ];
+
+  /** Admin sections include empty newly-added groups (guided filter still requires feats). */
+  const isFeatOrientedGuidanceGroup = (g: PathGuidanceGroup) =>
+    (g.feats?.length ?? 0) > 0 || g.audience === 'character' || g.audience === 'archetype';
+  const characterFeatGroups = useMemo(
+    () =>
+      form.guidanceGroups.filter(
+        (g) => isFeatOrientedGuidanceGroup(g) && resolvePathGuidanceAudience(g) === 'character'
+      ),
+    [form.guidanceGroups]
+  );
+  const archetypeFeatGroups = useMemo(
+    () =>
+      form.guidanceGroups.filter(
+        (g) => isFeatOrientedGuidanceGroup(g) && resolvePathGuidanceAudience(g) === 'archetype'
+      ),
+    [form.guidanceGroups]
+  );
+  const syncedFeatPreviewLabels = useMemo(() => {
+    const ids = unionFeatIdsFromGuidanceGroups(form.guidanceGroups);
+    return ids.map((value) => featOptions.find((option) => option.value === value)?.label ?? value);
+  }, [form.guidanceGroups, featOptions]);
+
+  const updateFeatGuidanceGroup = (
+    groupId: string,
+    patch: Partial<Pick<PathGuidanceGroup, 'title' | 'why' | 'feats'>>
+  ) => {
+    setForm((prev) => ({
+      ...prev,
+      guidanceGroups: prev.guidanceGroups.map((g) =>
+        g.id === groupId
+          ? {
+              ...g,
+              ...patch,
+              audience: resolvePathGuidanceAudience(g),
+            }
+          : g
+      ),
+    }));
+  };
+
+  const addFeatGuidanceGroup = (audience: PathGuidanceAudience) => {
+    const current = filterFeatGuidanceGroups(form.guidanceGroups, audience);
+    if (current.length >= LAYER1_GOVERNANCE.maxGroupsPerStep) {
+      showToast(
+        `At most ${LAYER1_GOVERNANCE.maxGroupsPerStep} ${audience} feat groups (Layer 1 governance).`,
+        'warning'
+      );
+      return;
+    }
+    setForm((prev) => ({
+      ...prev,
+      guidanceGroups: [...prev.guidanceGroups, newFeatGuidanceGroup(audience)],
+    }));
+  };
+
+  const removeFeatGuidanceGroup = (groupId: string) => {
+    setForm((prev) => ({
+      ...prev,
+      guidanceGroups: prev.guidanceGroups.filter((g) => g.id !== groupId),
+    }));
+  };
+
+  const addLevel1Armament = (value: string) => {
+    setForm((prev) => {
+      if (prev.level1Path.armamentEntries.some((e) => e.id === value)) return prev;
+      return {
+        ...prev,
+        level1Path: {
+          ...prev.level1Path,
+          armamentEntries: [...prev.level1Path.armamentEntries, { id: value, quantity: 1 }],
+        },
+      };
+    });
+  };
+
+  const updateLevel1ArmamentQty = (id: string, quantity: number) => {
+    setForm((prev) => ({
+      ...prev,
+      level1Path: {
+        ...prev.level1Path,
+        armamentEntries: prev.level1Path.armamentEntries.map((e) =>
+          e.id === id ? { ...e, quantity } : e
+        ),
+      },
+    }));
+  };
+
+  const removeLevel1Armament = (id: string) => {
+    setForm((prev) => ({
+      ...prev,
+      level1Path: {
+        ...prev.level1Path,
+        armamentEntries: prev.level1Path.armamentEntries.filter((e) => e.id !== id),
+      },
+    }));
+  };
 
   const removeFieldConfig: Array<{ key: PathSelectionKey; label: string; placeholder: string }> = [
     { key: 'removeFeats', label: 'Remove Feats', placeholder: 'Select feats to remove at this level' },
@@ -522,6 +789,7 @@ export function AdminArchetypesTab() {
       guidedRecommendedAbilities: {},
       guidedArmorStep: '',
       guidedSharedEquipmentEntries: [],
+      guidanceGroups: [],
     });
     setModalOpen(true);
   };
@@ -542,6 +810,7 @@ export function AdminArchetypesTab() {
     setEditing(null);
     setCopySourceName(a.name || '');
     const equipmentMeta = guidedEquipmentMetaFromPath(a.path_data);
+    const level1Path = toLevelForm(rawLevel1, 1, optionsByField);
     setForm({
       name: ((a.name || '').trim() || 'Archetype') + COPY_NAME_SUFFIX,
       type: (a.type || 'power') as 'power' | 'powered-martial' | 'martial',
@@ -552,13 +821,15 @@ export function AdminArchetypesTab() {
       martialProfStart: a.martial_prof_start ?? 0,
       powerProfLevel5: a.power_prof_level5 ?? 0,
       martialProfLevel5: a.martial_prof_level5 ?? 0,
-      level1Path: toLevelForm(rawLevel1, 1, optionsByField),
+      level1Path,
       levelPathRows: levelRows.length ? levelRows : [makeLevelRow(2)],
       advancedPathJson: '',
       guidedRecommendedAbilities: guidedAbilitiesFromPath(a.path_data),
       guidedArmorStep: equipmentMeta.armorStep,
       guidedSharedEquipmentEntries: equipmentMeta.sharedEquipmentEntries,
+      guidanceGroups: guidanceGroupsFromPathData(a.path_data, level1Path.feats),
     });
+    toastLevel1SkillWarnings(level1Path.skills, codexSkills as CodexSkill[], showToast);
     setModalOpen(true);
   };
 
@@ -578,6 +849,7 @@ export function AdminArchetypesTab() {
     setEditing(a);
     setCopySourceName(null);
     const equipmentMeta = guidedEquipmentMetaFromPath(a.path_data);
+    const level1Path = toLevelForm(rawLevel1, 1, optionsByField);
     setForm({
       name: a.name || '',
       type: (a.type || 'power') as 'power' | 'powered-martial' | 'martial',
@@ -588,13 +860,15 @@ export function AdminArchetypesTab() {
       martialProfStart: a.martial_prof_start ?? 0,
       powerProfLevel5: a.power_prof_level5 ?? 0,
       martialProfLevel5: a.martial_prof_level5 ?? 0,
-      level1Path: toLevelForm(rawLevel1, 1, optionsByField),
+      level1Path,
       levelPathRows: levelRows.length ? levelRows : [makeLevelRow(2)],
       advancedPathJson: '',
       guidedRecommendedAbilities: guidedAbilitiesFromPath(a.path_data),
       guidedArmorStep: equipmentMeta.armorStep,
       guidedSharedEquipmentEntries: equipmentMeta.sharedEquipmentEntries,
+      guidanceGroups: guidanceGroupsFromPathData(a.path_data, level1Path.feats),
     });
+    toastLevel1SkillWarnings(level1Path.skills, codexSkills as CodexSkill[], showToast);
     setModalOpen(true);
   };
 
@@ -623,7 +897,42 @@ export function AdminArchetypesTab() {
       return;
     }
 
-    const level1Payload = buildLevelPayload(form.level1Path, false);
+    const featGroupsForSave: PathGuidanceGroup[] = form.guidanceGroups
+      .filter((g) => (g.feats?.length ?? 0) > 0)
+      .map((g) => {
+        const audience = resolvePathGuidanceAudience(g);
+        const feats = dedupeStrings(g.feats ?? []);
+        const why = g.why?.trim();
+        return {
+          id: g.id,
+          title: g.title.trim() || (audience === 'character' ? 'Character feats' : 'Archetype feats'),
+          audience,
+          ...(why ? { why } : {}),
+          feats,
+        };
+      });
+    const nonFeatGroups = form.guidanceGroups.filter(
+      (g) =>
+        !(g.feats?.length) &&
+        ((g.powers?.length ?? 0) > 0 ||
+          (g.techniques?.length ?? 0) > 0 ||
+          (g.armaments?.length ?? 0) > 0 ||
+          (g.equipment?.length ?? 0) > 0 ||
+          (g.innatePowers?.length ?? 0) > 0)
+    );
+    const guidanceGroupsForSave = mergeFeatGuidanceGroups(nonFeatGroups, featGroupsForSave);
+    const syncedFeats = unionFeatIdsFromGuidanceGroups(guidanceGroupsForSave);
+
+    const level1Payload = buildLevelPayload(
+      {
+        ...form.level1Path,
+        feats: syncedFeats.length > 0 ? syncedFeats : form.level1Path.feats,
+      },
+      false
+    );
+    if (guidanceGroupsForSave.length > 0) {
+      level1Payload.guidance_groups = guidanceGroupsForSave;
+    }
     const levelsPayload = form.levelPathRows
       .map((row) => buildLevelPayload(row, true))
       .filter((row) => Object.keys(row).length > 1)
@@ -671,6 +980,9 @@ export function AdminArchetypesTab() {
     const pathForValidation = parseArchetypePathData({
       level1: {
         ...previewLevel1,
+        ...(guidanceGroupsForSave.length > 0
+          ? { guidance_groups: guidanceGroupsForSave }
+          : {}),
         ...(previewAbilities ? { recommended_abilities: previewAbilities } : {}),
         ...(form.guidedArmorStep ? { armorStep: form.guidedArmorStep } : {}),
         ...(form.guidedSharedEquipmentEntries.length
@@ -692,6 +1004,11 @@ export function AdminArchetypesTab() {
         archetypeType: form.type,
         powerProfStart: form.powerProfStart,
         martialProfStart: form.martialProfStart,
+        isSubSkill: (skillId) => {
+          const skill = skillById.get(String(skillId));
+          if (!skill) return null;
+          return isCodexSubSkill(skill);
+        },
         resolveInnatePower: (powerId) => {
           const power = officialById.get(powerId);
           if (!power) return null;
@@ -716,15 +1033,12 @@ export function AdminArchetypesTab() {
     const finalLevel1 = previewLevel1;
     const finalLevels = levelsOverride || (structuredPathData?.levels as Record<string, unknown>[] | undefined) || [];
     const existingLevel1 = previewExistingLevel1;
-    const preservedGuidanceGroups =
+    const advancedGuidance =
       Array.isArray(finalLevel1.guidance_groups) && finalLevel1.guidance_groups.length > 0
-        ? finalLevel1.guidance_groups
-        : existingLevel1?.guidance_groups ?? null;
-    const preservedRecommendedSpecies = toCsv(
-      Array.isArray(finalLevel1.recommended_species)
-        ? finalLevel1.recommended_species
-        : finalLevel1.recommended_species ?? existingLevel1?.recommended_species
-    );
+        ? (finalLevel1.guidance_groups as PathGuidanceGroup[])
+        : null;
+    const preservedGuidanceGroups =
+      advancedGuidance ?? (guidanceGroupsForSave.length > 0 ? guidanceGroupsForSave : null);
     const preservedRecommendedAbilities =
       recommendedAbilitiesValue ??
       existingLevel1?.recommended_abilities ??
@@ -761,7 +1075,6 @@ export function AdminArchetypesTab() {
       level1_remove_techniques: toCsv(finalLevel1.removeTechniques),
       level1_remove_armaments: toCsv(finalLevel1.removeArmaments),
       level1_notes: typeof finalLevel1.notes === 'string' ? finalLevel1.notes : undefined,
-      level1_recommended_species: preservedRecommendedSpecies || undefined,
       level1_guidance_groups: preservedGuidanceGroups,
       level1_recommended_abilities: preservedRecommendedAbilities,
       level1_loadouts: preservedLoadouts,
@@ -1026,11 +1339,86 @@ export function AdminArchetypesTab() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {selectionFieldConfig
                   .filter((f) => {
-                    if (f.key === 'armaments' || f.key === 'equipment') return false;
+                    // Level 1 feats → guidance group sections below (TASK-514).
+                    if (f.key === 'feats' || f.key === 'armaments' || f.key === 'equipment') return false;
                     if (f.key === 'innatePowers' && form.type === 'martial') return false;
                     return true;
                   })
                   .map((field) => {
+                  if (field.key === 'skills') {
+                    const atCap =
+                      form.level1Path.skills.length >= PATH_LEVEL1_MAX_BASE_SKILLS;
+                    const skillOptionsForSelect = atCap
+                      ? level1SkillPickerOptions.filter((o) =>
+                          form.level1Path.skills.includes(o.value)
+                        )
+                      : level1SkillPickerOptions;
+                    return (
+                      <div key="level1-skills" className="space-y-1">
+                        <ChipSelect
+                          label={field.label}
+                          placeholder={
+                            atCap
+                              ? `Maximum ${PATH_LEVEL1_MAX_BASE_SKILLS} skills (remove one to add)`
+                              : field.placeholder
+                          }
+                          options={skillOptionsForSelect.map((option) => ({
+                            value: option.value,
+                            label: option.label,
+                          }))}
+                          selectedValues={form.level1Path.skills}
+                          onSelect={(value) => {
+                            if (
+                              form.level1Path.skills.length >= PATH_LEVEL1_MAX_BASE_SKILLS
+                            ) {
+                              showToast(
+                                `Paths recommend at most ${PATH_LEVEL1_MAX_BASE_SKILLS} base skills. Remove one before adding another.`,
+                                'warning'
+                              );
+                              return;
+                            }
+                            const skill = skillById.get(value);
+                            if (skill && isCodexSubSkill(skill)) {
+                              showToast(
+                                'Sub-skills cannot be newly selected. Choose a base skill.',
+                                'warning'
+                              );
+                              return;
+                            }
+                            setForm((prev) => ({
+                              ...prev,
+                              level1Path: {
+                                ...prev.level1Path,
+                                skills: dedupeStrings([...prev.level1Path.skills, value]),
+                              },
+                            }));
+                          }}
+                          onRemove={(value) =>
+                            setForm((prev) => ({
+                              ...prev,
+                              level1Path: {
+                                ...prev.level1Path,
+                                skills: prev.level1Path.skills.filter((entry) => entry !== value),
+                              },
+                            }))
+                          }
+                        />
+                        <p className="text-xs text-text-muted dark:text-text-secondary">
+                          Base skills only; target max {PATH_LEVEL1_MAX_BASE_SKILLS}. Legacy paths
+                          with more than {PATH_LEVEL1_MAX_BASE_SKILLS} or sub-skills can still be
+                          saved (warning only).
+                        </p>
+                        {level1SkillIssues.length > 0 && (
+                          <p
+                            role="status"
+                            className="text-xs text-warning-fg"
+                          >
+                            {level1SkillIssues.map((i) => i.message).join(' ')}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  }
                   const options = field.key === 'feats' ? featOptionsLevel1 : optionsByField[field.key];
                   return (
                   <ChipSelect
@@ -1071,57 +1459,270 @@ export function AdminArchetypesTab() {
                   ≤ Innate Energy (Power 16 / Powered-Martial 6 at level 1).
                 </p>
               )}
-              {/* Level 1: Armaments & Equipment with quantity */}
+
+              {/* Level 1 feat guidance groups — character vs archetype (TASK-514 / ADR-0004) */}
+              <div className="space-y-4 pt-2 border-t border-border-light md:col-span-2">
+                <div>
+                  <h5 className="text-sm font-medium text-text-primary">Feat guidance groups</h5>
+                  <p className="text-xs text-text-muted dark:text-text-secondary mt-0.5">
+                    Name each group, add a short why, pick feats, and set audience. Flat Level 1 feats
+                    sync to the union of these picks on save. Max {LAYER1_GOVERNANCE.maxGroupsPerStep}{' '}
+                    groups per audience; max {LAYER1_GOVERNANCE.maxItemsPerGroup} feats per group.
+                  </p>
+                </div>
+
+                {(
+                  [
+                    {
+                      audience: 'character' as const,
+                      label: 'Character feat groups',
+                      groups: characterFeatGroups,
+                      options: characterFeatOptionsLevel1,
+                    },
+                    {
+                      audience: 'archetype' as const,
+                      label: 'Archetype feat groups',
+                      groups: archetypeFeatGroups,
+                      options: archetypeFeatOptionsLevel1,
+                    },
+                  ] as const
+                ).map((section) => (
+                  <div key={section.audience} className="space-y-3 rounded-md border border-border-light bg-surface p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <h6 className="text-sm font-medium text-text-secondary">{section.label}</h6>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="min-h-[44px]"
+                        onClick={() => addFeatGuidanceGroup(section.audience)}
+                        aria-label={`Add ${section.audience} feat group`}
+                      >
+                        <Plus className="w-4 h-4 mr-1" aria-hidden />
+                        Add group
+                      </Button>
+                    </div>
+                    {section.groups.length === 0 ? (
+                      <p className="text-xs text-text-muted dark:text-text-secondary">
+                        No {section.audience} feat groups yet.
+                      </p>
+                    ) : (
+                      section.groups.map((group) => {
+                        const whyLen = group.why?.length ?? 0;
+                        return (
+                          <div
+                            key={group.id}
+                            className="space-y-2 rounded-md border border-border-light bg-surface-alt p-3"
+                          >
+                            <div className="flex flex-wrap items-start gap-2">
+                              <div className="flex-1 min-w-[180px]">
+                                <label
+                                  htmlFor={`gg-title-${group.id}`}
+                                  className="block text-xs font-medium text-text-secondary mb-1"
+                                >
+                                  Group name
+                                </label>
+                                <Input
+                                  id={`gg-title-${group.id}`}
+                                  value={group.title}
+                                  onChange={(e) =>
+                                    updateFeatGuidanceGroup(group.id, { title: e.target.value })
+                                  }
+                                  placeholder="Group name"
+                                  className="min-h-[44px]"
+                                />
+                              </div>
+                              <IconButton
+                                variant="ghost"
+                                size="sm"
+                                className="min-h-[44px] min-w-[44px] mt-5"
+                                onClick={() => removeFeatGuidanceGroup(group.id)}
+                                label={`Remove ${group.title || section.audience} feat group`}
+                              >
+                                <X className="w-4 h-4" />
+                              </IconButton>
+                            </div>
+                            <div>
+                              <label
+                                htmlFor={`gg-why-${group.id}`}
+                                className="block text-xs font-medium text-text-secondary mb-1"
+                              >
+                                Why (optional, max {LAYER1_GOVERNANCE.maxWhyCopyLength})
+                              </label>
+                              <Input
+                                id={`gg-why-${group.id}`}
+                                value={group.why ?? ''}
+                                onChange={(e) =>
+                                  updateFeatGuidanceGroup(group.id, {
+                                    why: e.target.value.slice(0, LAYER1_GOVERNANCE.maxWhyCopyLength),
+                                  })
+                                }
+                                placeholder="One-line why this group fits the path"
+                                className="min-h-[44px]"
+                              />
+                              {whyLen > LAYER1_GOVERNANCE.maxWhyCopyLength - 20 && (
+                                <p className="text-xs text-text-muted dark:text-text-secondary mt-0.5">
+                                  {whyLen}/{LAYER1_GOVERNANCE.maxWhyCopyLength}
+                                </p>
+                              )}
+                            </div>
+                            <ChipSelect
+                              label="Designated feats"
+                              placeholder={
+                                (group.feats?.length ?? 0) >= LAYER1_GOVERNANCE.maxItemsPerGroup
+                                  ? `Max ${LAYER1_GOVERNANCE.maxItemsPerGroup} feats`
+                                  : 'Select feats for this group'
+                              }
+                              options={section.options
+                                .filter(
+                                  (o) =>
+                                    (group.feats?.length ?? 0) < LAYER1_GOVERNANCE.maxItemsPerGroup ||
+                                    (group.feats ?? []).includes(o.value)
+                                )
+                                .map((o) => ({ value: o.value, label: o.label }))}
+                              selectedValues={group.feats ?? []}
+                              onSelect={(value) => {
+                                if ((group.feats?.length ?? 0) >= LAYER1_GOVERNANCE.maxItemsPerGroup) {
+                                  showToast(
+                                    `Max ${LAYER1_GOVERNANCE.maxItemsPerGroup} feats per group.`,
+                                    'warning'
+                                  );
+                                  return;
+                                }
+                                updateFeatGuidanceGroup(group.id, {
+                                  feats: dedupeStrings([...(group.feats ?? []), value]),
+                                });
+                              }}
+                              onRemove={(value) =>
+                                updateFeatGuidanceGroup(group.id, {
+                                  feats: (group.feats ?? []).filter((id) => id !== value),
+                                })
+                              }
+                            />
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                ))}
+                {syncedFeatPreviewLabels.length > 0 && (
+                  <p className="text-xs text-text-secondary">
+                    Synced Level 1 feats (union): {syncedFeatPreviewLabels.join(', ')}
+                  </p>
+                )}
+              </div>
+
+              {/* Level 1: Armaments (weapon/shield vs armor) & Equipment with quantity */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-border-light">
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-text-secondary">Armaments (recommended qty)</label>
-                  <ChipSelect
-                    label="Add armament"
-                    placeholder="Select armament"
-                    options={armamentOptions.map((o) => ({ value: o.value, label: o.label }))}
-                    selectedValues={[]}
-                    onSelect={(value) => {
-                      if (form.level1Path.armamentEntries.some((e) => e.id === value)) return;
-                      setForm((prev) => ({
-                        ...prev,
-                        level1Path: {
-                          ...prev.level1Path,
-                          armamentEntries: [...prev.level1Path.armamentEntries, { id: value, quantity: 1 }],
-                        },
-                      }));
-                    }}
-                    onRemove={() => {}}
-                  />
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {form.level1Path.armamentEntries.map((entry, idx) => {
-                      const label = armamentOptions.find((o) => o.value === entry.id)?.label ?? entry.id;
-                      return (
-                        <div key={`${entry.id}-${idx}`} className="flex items-center gap-1 rounded-lg border border-border-light bg-surface px-2 py-1">
-                          <span className="text-sm truncate max-w-[120px]">{label}</span>
-                          <Input
-                            type="number"
-                            min={1}
-                            value={String(entry.quantity)}
-                            onChange={(e) => {
-                              const q = Math.max(1, parseInt(e.target.value, 10) || 1);
-                              setForm((prev) => ({
-                                ...prev,
-                                level1Path: {
-                                  ...prev.level1Path,
-                                  armamentEntries: prev.level1Path.armamentEntries.map((e, i) =>
-                                    i === idx ? { ...e, quantity: q } : e
-                                  ),
-                                },
-                              }));
-                            }}
-                            className="w-14 text-center"
-                          />
-                          <IconButton variant="ghost" size="sm" onClick={() => setForm((prev) => ({ ...prev, level1Path: { ...prev.level1Path, armamentEntries: prev.level1Path.armamentEntries.filter((_, i) => i !== idx) } }))} label="Remove armament">
-                            <X className="w-4 h-4" />
-                          </IconButton>
-                        </div>
-                      );
-                    })}
+                <div className="space-y-3 md:col-span-2">
+                  <div>
+                    <h5 className="text-sm font-medium text-text-secondary">
+                      Armaments (recommended qty)
+                    </h5>
+                    <p className="text-xs text-text-muted dark:text-text-secondary mt-0.5">
+                      Split like guided loadout (weapons/shields vs armor). Stored as one
+                      level-1 armaments list.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <ChipSelect
+                        label="Weapons & shields"
+                        placeholder="Select weapon or shield"
+                        options={weaponShieldArmamentOptions
+                          .filter(
+                            (o) =>
+                              !form.level1Path.armamentEntries.some((e) => e.id === o.value)
+                          )
+                          .map((o) => ({ value: o.value, label: o.label }))}
+                        selectedValues={[]}
+                        onSelect={addLevel1Armament}
+                        onRemove={() => {}}
+                      />
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {level1WeaponShieldEntries.map((entry) => {
+                          const label =
+                            armamentOptions.find((o) => o.value === entry.id)?.label ??
+                            entry.id;
+                          return (
+                            <div
+                              key={`weapon-${entry.id}`}
+                              className="flex items-center gap-1 rounded-lg border border-border-light bg-surface px-2 py-1 min-h-[44px]"
+                            >
+                              <span className="text-sm truncate max-w-[120px]">{label}</span>
+                              <Input
+                                type="number"
+                                min={1}
+                                value={String(entry.quantity)}
+                                onChange={(e) => {
+                                  const q = Math.max(1, parseInt(e.target.value, 10) || 1);
+                                  updateLevel1ArmamentQty(entry.id, q);
+                                }}
+                                className="w-14 text-center"
+                                aria-label={`Quantity for ${label}`}
+                              />
+                              <IconButton
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeLevel1Armament(entry.id)}
+                                label={`Remove ${label}`}
+                              >
+                                <X className="w-4 h-4" />
+                              </IconButton>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <ChipSelect
+                        label="Armor"
+                        placeholder="Select armor"
+                        options={armorArmamentOptions
+                          .filter(
+                            (o) =>
+                              !form.level1Path.armamentEntries.some((e) => e.id === o.value)
+                          )
+                          .map((o) => ({ value: o.value, label: o.label }))}
+                        selectedValues={[]}
+                        onSelect={addLevel1Armament}
+                        onRemove={() => {}}
+                      />
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {level1ArmorEntries.map((entry) => {
+                          const label =
+                            armamentOptions.find((o) => o.value === entry.id)?.label ??
+                            entry.id;
+                          return (
+                            <div
+                              key={`armor-${entry.id}`}
+                              className="flex items-center gap-1 rounded-lg border border-border-light bg-surface px-2 py-1 min-h-[44px]"
+                            >
+                              <span className="text-sm truncate max-w-[120px]">{label}</span>
+                              <Input
+                                type="number"
+                                min={1}
+                                value={String(entry.quantity)}
+                                onChange={(e) => {
+                                  const q = Math.max(1, parseInt(e.target.value, 10) || 1);
+                                  updateLevel1ArmamentQty(entry.id, q);
+                                }}
+                                className="w-14 text-center"
+                                aria-label={`Quantity for ${label}`}
+                              />
+                              <IconButton
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeLevel1Armament(entry.id)}
+                                label={`Remove ${label}`}
+                              >
+                                <X className="w-4 h-4" />
+                              </IconButton>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -1192,40 +1793,11 @@ export function AdminArchetypesTab() {
               <p id="unarmed-prowess-desc" className="text-xs text-text-muted dark:text-text-secondary mt-0.5">
                 When enabled, the equipment step (choose a path) will show Unarmed Prowess in the simplified view so the player can add it.
               </p>
-              {!!form.level1Path.feats.length && (
-                <p className="text-xs text-text-secondary">
-                  Selected Feats: {getSelectedLabels(form.level1Path.feats, featOptions).join(', ')}
-                </p>
-              )}
               <Input
                 value={form.level1Path.notes}
                 onChange={(e) => setForm((f) => ({ ...f, level1Path: { ...f.level1Path, notes: e.target.value } }))}
                 placeholder="Level 1 notes (optional)"
                 aria-label="Level 1 path notes"
-              />
-              <ChipSelect
-                label="Recommended species (Layer 1 species step)"
-                placeholder="Select species recommended for this path"
-                options={speciesOptions}
-                selectedValues={form.level1Path.recommendedSpecies}
-                onSelect={(value) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    level1Path: {
-                      ...prev.level1Path,
-                      recommendedSpecies: dedupeStrings([...prev.level1Path.recommendedSpecies, value]),
-                    },
-                  }))
-                }
-                onRemove={(value) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    level1Path: {
-                      ...prev.level1Path,
-                      recommendedSpecies: prev.level1Path.recommendedSpecies.filter((entry) => entry !== value),
-                    },
-                  }))
-                }
               />
             </div>
 

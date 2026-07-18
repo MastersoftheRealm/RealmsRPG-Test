@@ -337,7 +337,7 @@ export function ProficienciesTab({
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <TabSummarySection variant="default">
         <SummaryRow>
           <SummaryItem icon="🎯" label="TP Limit" value={maxTp} />
@@ -429,102 +429,104 @@ export function ProficienciesTab({
         </div>
       )}
 
-      <LibraryCollapsibleSection
-        title="Owned Proficiencies"
-        itemCount={owned.length}
-        rightContent={<span className="text-xs text-text-muted">{owned.length} total</span>}
-      >
-        <div className="px-2 py-3 space-y-4">
-          {owned.length === 0 ? (
-            <p className="text-sm text-text-muted italic text-center py-2">No proficiencies saved.</p>
-          ) : (
-            <>
-              {(['power', 'technique', 'weapon', 'armor', 'builtin', 'custom'] as ProficiencyCategory[]).map((cat) => {
-                const list = ownedByCategory.get(cat) ?? [];
-                if (list.length === 0) return null;
-                const sectionTitle =
-                  cat === 'power'
-                    ? 'Power parts'
-                    : cat === 'technique'
-                      ? 'Technique parts'
-                      : cat === 'weapon'
-                        ? 'Weapon / shield properties'
-                        : cat === 'armor'
-                          ? 'Armor properties'
-                          : cat === 'builtin'
-                            ? 'Built-in'
-                          : 'Custom';
-                return (
-                  <LibraryCollapsibleSection key={cat} title={sectionTitle} itemCount={list.length}>
-                    <div data-chip-group className="flex flex-wrap gap-2 items-start">
-                      {list.map((prof) => {
-                        const partData = ownedPartDataById.get(prof.id);
-                        const isExpanded = expandedProfId === prof.id;
-                        return (
-                          <div
-                            key={prof.id}
-                            className="inline-flex items-start gap-1 max-w-full"
-                          >
-                            {partData ? (
-                              <PartChipComponent
-                                part={partData}
-                                size="md"
-                                isExpanded={isExpanded}
-                                fullWidthWhenExpanded
-                                className="min-w-0"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setExpandedProfId(isExpanded ? null : prof.id);
-                                }}
-                              />
-                            ) : (
-                              <DescriptorChip variant="listCost" size="md">
-                                {profChipLabel(prof)} | {calculateProficiencyTP(prof)} TP
-                              </DescriptorChip>
-                            )}
-                            {isEditMode && (
-                              <IconButton
-                                size="sm"
-                                variant="ghost"
-                                label={`Remove ${prof.name}`}
-                                onClick={() => removeProf(prof.id)}
-                              >
-                                <X className="w-4 h-4" />
-                              </IconButton>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </LibraryCollapsibleSection>
-                );
-              })}
-            </>
-          )}
-        </div>
-      </LibraryCollapsibleSection>
+      <div className="space-y-2">
+        <LibraryCollapsibleSection
+          title="Owned Proficiencies"
+          itemCount={owned.length}
+          rightContent={<span className="text-xs text-text-muted">{owned.length} total</span>}
+        >
+          <div className="px-2 py-3 space-y-2">
+            {owned.length === 0 ? (
+              <p className="text-sm text-text-muted italic text-center py-2">No proficiencies saved.</p>
+            ) : (
+              <>
+                {(['power', 'technique', 'weapon', 'armor', 'builtin', 'custom'] as ProficiencyCategory[]).map((cat) => {
+                  const list = ownedByCategory.get(cat) ?? [];
+                  if (list.length === 0) return null;
+                  const sectionTitle =
+                    cat === 'power'
+                      ? 'Power parts'
+                      : cat === 'technique'
+                        ? 'Technique parts'
+                        : cat === 'weapon'
+                          ? 'Weapon / shield properties'
+                          : cat === 'armor'
+                            ? 'Armor properties'
+                            : cat === 'builtin'
+                              ? 'Built-in'
+                            : 'Custom';
+                  return (
+                    <LibraryCollapsibleSection key={cat} title={sectionTitle} itemCount={list.length}>
+                      <div data-chip-group className="flex flex-wrap gap-2 items-start">
+                        {list.map((prof) => {
+                          const partData = ownedPartDataById.get(prof.id);
+                          const isExpanded = expandedProfId === prof.id;
+                          return (
+                            <div
+                              key={prof.id}
+                              className="inline-flex items-start gap-1 max-w-full"
+                            >
+                              {partData ? (
+                                <PartChipComponent
+                                  part={partData}
+                                  size="md"
+                                  isExpanded={isExpanded}
+                                  fullWidthWhenExpanded
+                                  className="min-w-0"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setExpandedProfId(isExpanded ? null : prof.id);
+                                  }}
+                                />
+                              ) : (
+                                <DescriptorChip variant="listCost" size="md">
+                                  {profChipLabel(prof)} | {calculateProficiencyTP(prof)} TP
+                                </DescriptorChip>
+                              )}
+                              {isEditMode && (
+                                <IconButton
+                                  size="sm"
+                                  variant="ghost"
+                                  label={`Remove ${prof.name}`}
+                                  onClick={() => removeProf(prof.id)}
+                                >
+                                  <X className="w-4 h-4" />
+                                </IconButton>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </LibraryCollapsibleSection>
+                  );
+                })}
+              </>
+            )}
+          </div>
+        </LibraryCollapsibleSection>
 
-      <LibraryCollapsibleSection
-        title="Missing For Current Loadout"
-        itemCount={missing.length}
-        rightContent={<span className="text-xs text-danger-fg">{missing.length} missing</span>}
-      >
-        <div className="px-2 py-3">
-          {missing.length === 0 ? (
-            <p className="text-sm text-success-fg italic text-center py-2">
-              All current powers, techniques, and armaments are covered.
-            </p>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {missing.map((prof) => (
-                <DescriptorChip key={prof.id} variant="danger" size="md">
-                  {profChipLabel(prof)} | {calculateProficiencyTP(prof)} TP
-                </DescriptorChip>
-              ))}
-            </div>
-          )}
-        </div>
-      </LibraryCollapsibleSection>
+        <LibraryCollapsibleSection
+          title="Missing For Current Loadout"
+          itemCount={missing.length}
+          rightContent={<span className="text-xs text-danger-fg">{missing.length} missing</span>}
+        >
+          <div className="px-2 py-3">
+            {missing.length === 0 ? (
+              <p className="text-sm text-success-fg italic text-center py-2">
+                All current powers, techniques, and armaments are covered.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {missing.map((prof) => (
+                  <DescriptorChip key={prof.id} variant="danger" size="md">
+                    {profChipLabel(prof)} | {calculateProficiencyTP(prof)} TP
+                  </DescriptorChip>
+                ))}
+              </div>
+            )}
+          </div>
+        </LibraryCollapsibleSection>
+      </div>
 
       {addProficiencyVariant ? (
         <AddProficiencyModal

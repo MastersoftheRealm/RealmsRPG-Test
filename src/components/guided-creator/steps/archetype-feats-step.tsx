@@ -23,6 +23,7 @@ import { getFeatRestrictionNotice } from '@/lib/codex/feat-restriction-notice';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from '../guided-choice-styles';
 import { GuidedStepLayout } from '../guided-step-layout';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import { filterFeatGuidanceGroups } from '@/lib/game/archetype-path';
 import { EMPTY_GUIDANCE_GROUPS, EMPTY_STRING_ARRAY } from '@/lib/empty';
 import type { PathGuidanceGroup } from '@/types/archetype';
 
@@ -50,7 +51,10 @@ export function ArchetypeFeatsStep() {
   const guidanceGroups = pathData?.level1?.guidance_groups;
   const pathFeats = pathData?.level1?.feats;
   const groups = useMemo(
-    () => guidanceGroups?.filter((g) => g.feats?.length) ?? EMPTY_GUIDANCE_GROUPS,
+    () => {
+      const filtered = filterFeatGuidanceGroups(guidanceGroups, 'archetype');
+      return filtered.length > 0 ? filtered : EMPTY_GUIDANCE_GROUPS;
+    },
     [guidanceGroups]
   );
   const fallbackFeatIds = pathFeats ?? EMPTY_STRING_ARRAY;

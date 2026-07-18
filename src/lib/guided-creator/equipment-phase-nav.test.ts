@@ -42,6 +42,15 @@ describe('equipment-phase-nav', () => {
     expect(visibleEquipmentPhases('required', visibility)).toEqual(['gear']);
   });
 
+  it('keeps weapon first when options exist (entry must not land on gear)', () => {
+    const visibility = resolveEquipmentPhaseVisibility('required', {
+      hasWeaponOptions: true,
+      hasArmorOptions: true,
+      recommendUnarmed: false,
+    });
+    expect(visibleEquipmentPhases('required', visibility)[0]).toBe('weapon');
+  });
+
   it('keeps weapon phase for unarmed paths without weapon options', () => {
     const visibility = resolveEquipmentPhaseVisibility('none', {
       hasWeaponOptions: false,

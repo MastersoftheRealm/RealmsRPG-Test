@@ -11,7 +11,7 @@ import {
   type EquipmentPhase,
 } from '@/lib/guided-creator/equipment-eligibility';
 import { catalogRowForRef } from '@/lib/guided-creator/equipment-catalog-rows';
-import { resolvePoolItemCategory } from '@/lib/guided-creator/loadout-tp';
+import { buildEquipmentLookup } from '@/lib/guided-creator/resolve-loadout-items';
 import type { AbilityName } from '@/types';
 import { normalizeId } from '@/lib/utils';
 
@@ -31,11 +31,15 @@ export function filterPoolToPhase(
   officialItems: LibraryItem[],
   codexEquipment: CodexEquipmentItem[]
 ): PathItemRecommendation[] {
+  const lookup = buildEquipmentLookup(officialItems, codexEquipment);
   return pool.filter((ref) => {
-    const category = resolvePoolItemCategory(ref, officialItems, codexEquipment);
-    if (phase === 'weapon') return category === 'weapon';
-    if (phase === 'armor') return category === 'armor';
-    if (phase === 'gear') return category === 'equipment';
+    // Unresolved refs default to "equipment" in resolveEquipmentRef — exclude them
+    // so an empty/partial catalog cannot falsely hide weapon/armor phases.
+    const entry = lookup.get(normalizeId(ref.id));
+    if (!entry) return false;
+    if (phase === 'weapon') return entry.category === 'weapon';
+    if (phase === 'armor') return entry.category === 'armor';
+    if (phase === 'gear') return entry.category === 'equipment';
     return false;
   });
 }

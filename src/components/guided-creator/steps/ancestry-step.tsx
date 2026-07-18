@@ -26,8 +26,8 @@ const overviewCopy = stepCopy.speciesOverview;
 
 type AncestryPhase =
   | 'species-trait-option'
-  | 'ancestry-trait-1'
   | 'characteristic'
+  | 'ancestry-trait-1'
   | 'flaw'
   | 'ancestry-trait-2'
   | 'done';
@@ -122,17 +122,17 @@ export function AncestryStep() {
     });
 
     list.push({
-      phase: 'ancestry-trait-1',
-      title: 'Pick an ancestry trait',
-      description: 'This trait makes your character distinct within their species.',
-      options: resolveTraits(species.ancestry_traits || [], allTraits),
-    });
-
-    list.push({
       phase: 'characteristic',
       title: 'Pick a characteristic',
       description: 'A personal detail that adds flavor to who you are.',
       options: resolveTraits(species.characteristics || [], allTraits),
+    });
+
+    list.push({
+      phase: 'ancestry-trait-1',
+      title: 'Pick an ancestry trait',
+      description: 'This trait makes your character distinct within their species.',
+      options: resolveTraits(species.ancestry_traits || [], allTraits),
     });
 
     list.push({
@@ -181,8 +181,8 @@ export function AncestryStep() {
   useEffect(() => {
     if (!species) return;
 
-    // Chapter rail / edit jump: always land on species overview.
-    if (navigationIntent === 'first') {
+    // Chapter rail / Continue: land on species overview (never jump to furthest pick).
+    if (navigationIntent === 'first' || navigationIntent === 'forward') {
       if (lastEntryNonce.current !== entryNonce) {
         lastEntryNonce.current = entryNonce;
         setPhaseIndex(0);
@@ -191,7 +191,7 @@ export function AncestryStep() {
       return;
     }
 
-    // Sequential Back/Continue (or first mount): resume progress / last screen.
+    // Footer Back: resume last inner screen (sequential history).
     if (lastEntryNonce.current === entryNonce && phaseInitialized.current) return;
     lastEntryNonce.current = entryNonce;
     setPhaseIndex(resolveInitialPhaseIndex(tasks, draft, ancestryChapterComplete));

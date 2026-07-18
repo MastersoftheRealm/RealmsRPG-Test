@@ -4,7 +4,8 @@
  * SectionHeader - Unified Section Header Component
  * =================================================
  * Minimal, sleek header pattern for ALL section lists across the site.
- * Simple title on left, optional + button on far right.
+ * Title on left (optional inline collapse chevron beside the name — ListHeader /
+ * ExpandableChip style, no circle chrome); optional + button on far right.
  * NO counts, NO backgrounds - just clean text and functionality.
  * 
  * Based on Equipment tab design (the cleanest current implementation).
@@ -37,16 +38,26 @@ interface SectionHeaderBaseProps {
   addButtonClassName?: string;
   /** Custom className for container */
   className?: string;
-  /** Size variant - controls text size and spacing */
+  /**
+   * Size variant - controls text size and spacing.
+   * DESIGN_INTENT: default `md` sitewide; character Library list subsections pass `lg` explicitly.
+   */
   size?: 'sm' | 'md' | 'lg';
 }
 
 export type SectionHeaderProps = SectionHeaderBaseProps & LibrarySectionCollapseHeaderProps;
 
-const sizeStyles = {
-  sm: 'text-xs py-1.5',
-  md: 'text-sm py-2',
-  lg: 'text-base py-2.5',
+/** Text size on the title itself (not only the row) so collapse buttons cannot shrink it. */
+const sizeTextStyles = {
+  sm: 'text-xs',
+  md: 'text-sm',
+  lg: 'text-base',
+};
+
+const sizePadStyles = {
+  sm: 'py-1.5',
+  md: 'py-2',
+  lg: 'py-2.5',
 };
 
 export function SectionHeader({
@@ -56,43 +67,57 @@ export function SectionHeader({
   rightContent,
   addButtonClassName,
   className,
-  size = 'sm',
+  size = 'md',
   collapsible = false,
   expanded = true,
   onExpandedChange,
 }: SectionHeaderProps) {
-  const collapseToggle =
-    collapsible && onExpandedChange ? (
-      <button
-        type="button"
-        onClick={() => onExpandedChange(!expanded)}
-        className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full border border-border-light text-text-muted hover:bg-surface-alt hover:text-text-primary transition-colors"
-        aria-expanded={expanded}
-        aria-label={expanded ? `Collapse ${title}` : `Expand ${title}`}
-      >
-        <ChevronDown
-          className={cn('w-4 h-4 transition-transform', expanded ? 'rotate-180' : 'rotate-0')}
-        />
-      </button>
-    ) : null;
+  const titleClassName = cn(
+    'font-semibold text-text-muted dark:text-text-secondary uppercase tracking-wide',
+    sizeTextStyles[size]
+  );
+  const canCollapse = collapsible && typeof onExpandedChange === 'function';
 
   return (
-    <div 
+    <div
       className={cn(
         'flex items-center justify-between',
-        sizeStyles[size],
+        // Collapsible: modest pb under the title (not full size pad) so stacks stay compact.
+        canCollapse ? 'pb-1.5' : sizePadStyles[size],
         className
       )}
     >
-      {/* Left: Title only - clean, minimal */}
-      <h2 className="font-semibold text-text-muted dark:text-text-secondary uppercase tracking-wide">
-        {title}
+      {/* Left: title with inline chevron (matches ListHeader / ExpandableChip — no circle chrome) */}
+      <h2 className={cn(titleClassName, canCollapse && 'm-0')}>
+        {canCollapse ? (
+          <button
+            type="button"
+            onClick={() => onExpandedChange(!expanded)}
+            className={cn(
+              // Match Button/IconButton: 44px min only on touch; desktop stays compact when collapsed.
+              'inline-flex items-center gap-1.5 text-left hover:text-text-primary transition-colors [@media(pointer:coarse)]:min-h-[44px]',
+              sizeTextStyles[size]
+            )}
+            aria-expanded={expanded}
+            aria-label={expanded ? `Collapse ${title}` : `Expand ${title}`}
+          >
+            <span>{title}</span>
+            <ChevronDown
+              className={cn(
+                'w-4 h-4 shrink-0 transition-transform duration-base ease-standard',
+                expanded && 'rotate-180'
+              )}
+              aria-hidden
+            />
+          </button>
+        ) : (
+          title
+        )}
       </h2>
-      
-      {/* Right: Collapse, custom content, and/or add button */}
+
+      {/* Right: custom content and/or add button */}
       <div className="flex items-center gap-2">
         {rightContent}
-        {collapseToggle}
         {onAdd && (
           <IconButton
             variant="ghost"

@@ -182,7 +182,7 @@ Earlier drafts over-emphasized “accept path defaults and barely touch the midd
 
 | Deliberate user pick required (curated set) | Soft default / optional assist OK |
 |---------------------------------------------|-----------------------------------|
-| Path, Species, Ancestry trait / characteristic / optional flaw | Recommended ability array (editable; Customize via LayerNav) |
+| Path, Species, Characteristic / Ancestry trait / optional flaw | Recommended ability array (editable; Customize via LayerNav) |
 | Archetype feat(s), Character feat (from path options) | Skill budget + path-suggested skills (user allocates / toggles) |
 | **Weapon** and **Armor** when those equipment phases apply (individual path cards — **no quick kits**) | Gear: optional **Add all recommended**; quantity steppers |
 | Powers / Techniques: confirm or toggle path recommendations (prefer visible cards over silent auto-all) | Path-prevalidated TP / currency (hide anxiety; never strand L1) |
@@ -292,7 +292,7 @@ The Core Rulebook Chapter 3 flow is **Archetype → Determine Ancestry → Deter
 ```mermaid
 flowchart LR
   G1["Ch1 Foundation: Path then Species"]
-  G2["Ch2 Ancestry: species-trait options, ancestry trait, characteristic, optional flaw"]
+  G2["Ch2 Ancestry: species-trait options, characteristic, ancestry trait, optional flaw"]
   G3["Ch3 Abilities: recommended array or customize"]
   G4["Ch4 Your Archetype: Skills then Archetype Feat(s) then Character Feat"]
   G5["Ch5 Loadout: weapons, armor, Equipment, then Powers OR Techniques"]
@@ -307,17 +307,17 @@ Decisions baked into this model:
 - **Species are path-ambiguous.** There are **no recommended species per path**. Instead, a **starter-species** flag curates a small Layer-1 set; "show all species" reveals the rest.
 - **Shared card format** across Path, Species, ancestry picks, feats, and equipment (and reused elsewhere): short eye-catcher description on the card, full description behind inline **See more…**, key facts as labeled chips where needed, and **hero art** where the entity is a visual selling point (species first). Consistency between steps is a goal — see §3.1.
 - **Choice-card deep-dive = entity depth, not catalog Layer 2:** **More details** opens [`GuidedEntityDetailModal`](../components/guided-creator/guided-entity-detail-modal.tsx) (overview + expandable read-only option catalogs). Selecting the card still chooses it; opening **More details** never selects. Path/species modals add footer **Select** to apply from the deep-dive (TASK-448). Catalog expand remains `GuidedLayerNav` **See more options**. Shipped: TASK-432–436, TASK-448.
-- **Ancestry** is a post-species, one-pick-at-a-time flow (full-width cards mimicking earlier steps): auto-granted species traits (some are "trait-with-options" requiring a pick via `option_trait_ids`), one ancestry trait of ~6, one characteristic of ~6, and an **optional** flaw of ~3 that grants an **extra** ancestry trait. Limited-use traits show the same uses notice pattern as feats (TASK-441). Mixed/make-your-own species is deferred.
+- **Ancestry** is a post-species, one-pick-at-a-time flow (full-width cards mimicking earlier steps): auto-granted species traits (some are "trait-with-options" requiring a pick via `option_trait_ids`), one characteristic of ~6, one ancestry trait of ~6, and an **optional** flaw of ~3 that grants an **extra** ancestry trait. Limited-use traits show the same uses notice pattern as feats (TASK-441). Mixed/make-your-own species is deferred.
 - **Loadout has no quick kits.** Weapon and armor phases (when present) are individual curated picks from the path pool; the Equipment phase may offer optional **Add all recommended Equipment**. Phases renumber to visible steps only (TASK-442–443). See §5.7. Chapter rail title is **Loadout** (TASK-459).
-- **Chapter 5 step is named "Powers" OR "Techniques"** (never both), chosen by archetype. **Powered-Martial** path options are hidden behind an easy expand affordance at first (same pattern as "show all species").
+- **Chapter 5 step is named "Powers" OR "Techniques"** (never both), chosen by archetype. Path selection surfaces **Power / Powered-Martial / Martial** sections up front (InfoTippy on each section title); species still uses starter curation + "show all species."
 - "How you fight" framing is avoided; character feats are usually **non-combat**, and copy reflects that.
 - Chapter count/naming (5 vs 6) is the working backbone and may be refined during playtest.
 
 #### 5.0.2 Guided-creator data needs
 
-Existing `path_data` already supports `guidance_groups`, `recommended_species` (unused by guided per above), and per-level recommendations ([`src/types/archetype.ts`](../types/archetype.ts)). Fields for guided (seeded by SQL first, promoted to admin later):
+Existing `path_data` already supports `guidance_groups` (feat groups use explicit `audience: "character"|"archetype"` — TASK-514/ADR-0004) and per-level recommendations ([`src/types/archetype.ts`](../types/archetype.ts)). Path-recommended species was removed (TASK-517). Fields for guided:
 
-- `codex_species.is_starter` (BOOLEAN) — curate the Layer-1 starter set.
+- `codex_species.is_starter` (BOOLEAN) — curate the Layer-1 starter set (only species curation lever).
 - Archetype **recommended abilities** (e.g. `codex_archetypes.level1_recommended_abilities`) — power the editable recommended array (soft default).
 - Archetype **level-1 Loadout recommendation pools** - flat curated lists of weapons/shields, armor, and Equipment (plus `armorStep` / shared Equipment metadata on `level1_loadouts`). **Not** bundled “quick kit” presets (removed TASK-442).
 - **Choice-card art** (TASK-405, TASK-491+): entities store `image_id` → Realms Image Library (optional denormalized `image_url` cache). Guests and signed-in users pick; admin-only bank writes. See §5.0.3.
@@ -425,7 +425,7 @@ The user begins by choosing an archetype (a **path**).
 | Layer 1 default | Path selection is primary; "Forge Your Own" is the Layer 3 entry point |
 | Card deep-dive | **More details** → path modal (overview + feat / weapon / armor / gear / power|technique catalogs; Close \| Select). Entity depth (§3.1), not catalog Layer 2. |
 
-**Current gap:** Advanced [`archetype-step.tsx`](../components/character-creator/steps/archetype-step.tsx) still weak on card previews. **Guided:** path deep-dive shipped (TASK-434/435); hybrid paths remain behind LayerNav expand.
+**Current gap:** Advanced [`archetype-step.tsx`](../components/character-creator/steps/archetype-step.tsx) still weak on card previews. **Guided:** path deep-dive shipped (TASK-434/435); paths grouped Power / Powered-Martial / Martial with section-title InfoTippy (TASK-528) — matches Advanced grouping, guided choice cards.
 
 ### 5.2 Species Selection
 
@@ -922,7 +922,7 @@ Only changes that the UX requires. Do not expand the data model beyond reducing 
 |---------|--------|--------|
 | Grouped feat / power recommendations with copy | A `guidance_groups` structure on the path, or extend `ArchetypePathRecommendations` | New |
 | Per-step path flavor text | A per-step `guidance` object, or surface the existing `level1_notes` | `level1_notes` exists but is **not shown in the creator** |
-| Species path hints | An optional `recommended_species[]` on the path | Missing |
+| Species path hints | Removed — use `codex_species.is_starter` only (TASK-517) | Removed |
 | Recommended Innate Powers (distinct from Powers) | `level1_innate_powers` TEXT (CSV) → `path_data.level1.innatePowers`; admin Appendix G validation (TASK-473). Applied 2026-07-15 on RealmsRPG-Test (`sql/codex-archetypes-level1-innate-powers-proposed.sql`) | Applied |
 | Admin Training Points / currency validation | Validate that path loadouts stay within budget before publish | Missing in admin |
 | Ability effect blurbs | A frontend constants map | New (no database change) |

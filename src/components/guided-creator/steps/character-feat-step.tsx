@@ -19,6 +19,7 @@ import { getFeatRestrictionNotice } from '@/lib/codex/feat-restriction-notice';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from '../guided-choice-styles';
 import { GuidedStepLayout } from '../guided-step-layout';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import { filterFeatGuidanceGroups } from '@/lib/game/archetype-path';
 import { EMPTY_GUIDANCE_GROUPS } from '@/lib/empty';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.characterFeat;
@@ -32,10 +33,10 @@ export function CharacterFeatStep() {
 
   const guidanceGroups = pathData?.level1?.guidance_groups;
   const characterFeatGroups = useMemo(
-    () =>
-      guidanceGroups?.filter(
-        (g) => g.feats?.length && g.title.toLowerCase().includes('character')
-      ) ?? EMPTY_GUIDANCE_GROUPS,
+    () => {
+      const filtered = filterFeatGuidanceGroups(guidanceGroups, 'character');
+      return filtered.length > 0 ? filtered : EMPTY_GUIDANCE_GROUPS;
+    },
     [guidanceGroups]
   );
 

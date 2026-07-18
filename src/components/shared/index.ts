@@ -194,7 +194,7 @@ export type {
 } from './entity-library-sections';
 
 // Quick armaments tables (Archetype-style)
-export { QuickWeaponsTable, QuickShieldsTable, QuickArmorTable } from './quick-armaments-sections';
+export { QuickWeaponsTable, QuickShieldsTable, QuickArmorTable, QUICK_WEAPON_COL } from './quick-armaments-sections';
 export type { QuickArmamentItem, QuickArmamentAbilities } from './quick-armaments-sections';
 
 // Species trait components

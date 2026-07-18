@@ -476,7 +476,7 @@ export function FeatsTab({
     ) : undefined;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-2">
       <FeatsTraitsListSection
         title="Traits"
         items={traitRows}

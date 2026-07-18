@@ -23,5 +23,8 @@ Use when the “why” is non-obvious (browser bugs, intentional asymmetry, prod
 | ± steppers | One chrome sitewide (guided skills bonus style via `ValueStepper` / Dec/Inc; `QuantitySelector` wraps it) | ADR-0002 · `DESIGN_SYSTEM.md` |
 | Codex writes | Audit → SQL propose → owner approve before live mutate | `realms-codex-data.mdc` |
 | ExpandableImage | Default for meaningful inline art; skip when nested in Link/button, edit-upload click, or decorative chrome | `guide/03-entity-card-art.md` § Adoption inventory |
+| Site header nav | Inline links at `xl+` only; tighter gutters than `.layout-shell-wide`; no `overflow-x-clip` on `<header>` (clips menus) — page clip on `MainAppChrome` | `header.tsx` · `main-app-chrome.tsx` · `MOBILE_UX.md` |
+| Sheet header DR / Critical Range | Prefer library-enriched armor (same as armor rows); raw equipment often lacks `armorValue` | `sheet-header.tsx` · `getEquippedArmorQuickRef` |
+| SectionHeader size | Default `md` (`text-sm`) sitewide; character Library list subsections use explicit `lg` (`text-base`) + collapsible `pb-1.5` | `section-header.tsx` · `entity-library-sections.tsx` |
 
 When you discover a hard-won constraint, add **one** row here and a `// DESIGN_INTENT:` at the code site.

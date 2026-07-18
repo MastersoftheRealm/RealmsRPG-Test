@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { buildPathLoadoutPool, isItemSelectedInDraft } from '@/lib/guided-creator/loadout-pool';
-import { validatePathDataForPublish } from '@/lib/game/path-validation';
 
 describe('loadout-pool', () => {
   it('builds pool from flat path recommendations only', () => {
@@ -32,31 +31,5 @@ describe('loadout-pool', () => {
     };
     expect(isItemSelectedInDraft(draft, 'w1')).toBe(true);
     expect(isItemSelectedInDraft(draft, 'w2')).toBe(false);
-  });
-});
-
-describe('validatePathDataForPublish loadouts', () => {
-  it('errors when legacy loadout exceeds TP budget', () => {
-    const issues = validatePathDataForPublish(
-      {
-        level1: {
-          loadouts: [
-            {
-              id: 'heavy',
-              title: 'Heavy kit',
-              armaments: [
-                { id: 'a', quantity: 1 },
-                { id: 'b', quantity: 1 },
-              ],
-            },
-          ],
-        },
-      },
-      {
-        resolveItemTrainingPoints: (id) => (id === 'a' ? 3 : 4),
-        trainingPointLimit: 5,
-      }
-    );
-    expect(issues.some((i) => i.severity === 'error' && i.message.includes('Heavy kit'))).toBe(true);
   });
 });

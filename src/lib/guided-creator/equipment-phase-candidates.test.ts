@@ -69,6 +69,16 @@ describe('equipment-phase-candidates', () => {
     expect(weapons.map((p) => p.id)).toEqual(['w1']);
   });
 
+  it('excludes unresolved pool refs from every phase (no default-to-gear)', () => {
+    const pool = [
+      { id: 'w1', quantity: 1 },
+      { id: 'missing-weapon', quantity: 1 },
+    ];
+    expect(filterPoolToPhase(pool, 'weapon', officialItems, []).map((p) => p.id)).toEqual(['w1']);
+    expect(filterPoolToPhase(pool, 'gear', officialItems, []).map((p) => p.id)).toEqual([]);
+    expect(filterPoolToPhase(pool, 'weapon', [], []).map((p) => p.id)).toEqual([]);
+  });
+
   it('returns path L1 weapon candidates without eligibility filtering', () => {
     const pool = [{ id: 'w1', quantity: 1 }];
     const candidates = getPhaseL1Candidates(pool, 'weapon', catalog, rankCtx, officialItems, []);
