@@ -24,6 +24,8 @@
     Owner feedback 2026-07-18. Root cause: min-w-full panels sized to the outer
     viewport without scroll-padding, so snap-start pulled later panels flush to
     the screen edge while the header stayed inset.
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/38
   evidence: |
     npm run build; code review of character-sheet-body flex/snap classes.
   build_validation: |
