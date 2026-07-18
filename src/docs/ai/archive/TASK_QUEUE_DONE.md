@@ -1,4 +1,4 @@
-- id: TASK-540
+- id: TASK-541
   title: Mobile selection modals — sticky Add Selected / confirm footer
   created_at: 2026-07-18
   created_by: agent
@@ -8,6 +8,7 @@
   status: done
   verification_status: pending-qa
   pr_link: https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/42
+  merged_at: 2026-07-18
   build_validation: |
     suite: DEV-V-016
     tests:
@@ -44,8 +45,66 @@
     npm run build
   notes: |
     Root cause: footer lived inside Modal children (scroll region). Species/proficiency modals already used footer correctly.
+    Renumbered from TASK-540 on merge — TASK-540 already used by auth false-invalid-email (PR #41).
     Follow-up (out of scope): recovery-modal / level-up-modal still put Confirm in children — file TASK if sticky needed there too.
 
+- id: TASK-540
+  title: Fix false "Invalid email" on auth forms
+  created_at: 2026-07-18
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-18
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/lib/auth-errors.ts
+    - src/lib/auth-errors.test.ts
+    - src/lib/validation/schemas.ts
+    - src/lib/validation/auth-email.test.ts
+    - src/app/(auth)/register/page.tsx
+    - src/app/(auth)/login/page.tsx
+    - src/app/(auth)/forgot-password/page.tsx
+    - src/app/(auth)/reset-password/page.tsx
+    - src/app/(main)/my-account/page.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Valid emails were shown as "Invalid email address" because register/forgot-password
+    mapped any Supabase error message containing the word "email" (including SMTP /
+    confirmation-send failures) to that copy. Also trim/lowercase auth email fields so
+    pasted addresses with whitespace do not fail Zod validation.
+  acceptance_criteria:
+    - Shared getAuthErrorMessage maps invalid-email only for real format failures.
+    - SMTP / confirmation-send errors use send-failure copy, not invalid email.
+    - Auth schemas trim+lowercase email; unit tests cover mapper + schema.
+    - Auth pages + forgot-password check Supabase { error }; BUILD_VALIDATION
+      DEV-V-024-T004–T005; npm run build + targeted tests.
+  notes: |
+    Owner feedback 2026-07-18. Also narrowed my-account email-change mapping so bare
+    "invalid" / "password" substrings do not mislabel errors.
+    Cleanup 2026-07-18: my-account uses getAuthErrorMessage('update-email'); DEV-V-024
+    suite intro + archive related_files honesty; removed unreachable switch default.
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/41
+  merged_at: 2026-07-18
+  evidence: |
+    npm test — auth-errors.test.ts + auth-email.test.ts; npm run build (agent).
+    Cleanup: update-email context tests + my-account wired to shared mapper.
+    Merged to master via PR #41 after CI green (verify + lint/contrast/build + visual/a11y).
+  build_validation: |
+    suite: DEV-V-024
+    tests:
+      - DEV-V-024-T004
+      - DEV-V-024-T005
+  developer_test_plan: |
+    Suite DEV-V-024 T004–T005 — see BUILD_VALIDATION.md (mapper units + register smoke).
+
+---
 - id: TASK-539
   title: Chip / GLR body tap toggles expand (not header-only)
   created_at: 2026-07-18

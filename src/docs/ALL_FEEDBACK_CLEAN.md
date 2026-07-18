@@ -2480,4 +2480,13 @@ Notes
 - Feedback (verbatim):
   in mobile a modal needs to have the add selected or whatever button sticky to the bottom of the screen so you don't have to scroll
 - Expected: On mobile full-screen modals, primary actions (Add Selected / Confirm / Load / etc.) stay pinned at the bottom without scrolling the list.
-- Disposition: Implemented as **TASK-540**. QA: DEV-V-016-T013.
+- Disposition: Implemented as **TASK-541** (renumbered; TASK-540 taken by auth). QA: DEV-V-016-T013.
+
+**Raw Feedback Log - 2026-07-18 (valid email shown as invalid)**
+- Date: 2026-07-18
+- Context: Auth — register / forgot-password / login email errors
+- Priority: High
+- Feedback (verbatim):
+  people put in an email in that's valid it says invalid email?
+- Expected: Valid addresses are accepted; only true format failures say invalid email. SMTP/confirmation-send failures must not be mislabeled as invalid email.
+- Disposition: Implemented as **TASK-540**. Root cause: register/forgot-password mapped any error containing `"email"` to “Invalid email address.” QA: DEV-V-024-T004–T005.
