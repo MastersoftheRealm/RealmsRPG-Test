@@ -179,6 +179,9 @@ export interface MobileCollapsedGridColumnsOptions {
  * Desktop templates keep empty `fr` tracks for columns that are `display: none`
  * on mobile, which squeezes the name left beside X/+ actions. Collapse to:
  * `[thumb?] minmax(0, 1fr) [visible mobile data…] [trailing action tracks]`.
+ *
+ * Callers must apply this via a CSS variable + `max-lg:[grid-template-columns:…]`
+ * class — not inline `style.gridTemplateColumns` (inline beats the media query).
  */
 export function buildMobileCollapsedGridColumns(
   options: MobileCollapsedGridColumnsOptions

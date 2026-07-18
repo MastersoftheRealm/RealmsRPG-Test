@@ -2444,4 +2444,5 @@ Notes
   The names of GLR items on mobile are being squished to the left and wrapped because of the X or + from them in some cases. Fix and merge with master using best practices.
 - Expected: On narrow viewports, item names use the available row width beside X/+ (and thumbnail when present) instead of wrapping into a narrow left strip caused by empty desktop column tracks.
 - Disposition: Implemented as **TASK-536** — `buildMobileCollapsedGridColumns` + `max-lg` grid template on GridListRow. QA: DEV-V-016-T012.
+- Follow-up (2026-07-18): Owner screenshot on Library Powers still showed squeeze — root cause was inline `gridTemplateColumns` overriding the mobile class. `/cleanup` switched to CSS variables only.
 

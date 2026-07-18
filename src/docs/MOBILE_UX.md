@@ -56,7 +56,7 @@ Audit: `ValueStepper`, `IconButton`, sheet action toolbar, tab triggers, list ro
 ## Lists and tables
 
 - **ListHeader:** Desktop: column headers in a grid (`hidden lg:grid`). **Mobile:** no column headers; instead an expandable **"Sort by"** control that uses the same sort logic (sortState, onSort). Tap to expand and choose sort criteria (e.g. Name, Damage, Energy); tap an option to sort; tap same option again toggles A→Z / Z→A. Same behavior as desktop column clicks.
-- **GridListRow:** Use `hideOnMobile` on columns that aren’t essential on small viewports (e.g. hide secondary columns, show name + primary value). Expanded row shows full details. Below `lg`, the row collapses empty desktop data-column tracks (`buildMobileCollapsedGridColumns`) so the name keeps `minmax(0, 1fr)` beside X/+ actions instead of wrapping into a narrow first `fr` track.
+- **GridListRow:** Use `hideOnMobile` on columns that aren’t essential on small viewports (e.g. hide secondary columns, show name + primary value). Expanded row shows full details. Below `lg`, the row collapses empty desktop data-column tracks (`buildMobileCollapsedGridColumns`) so the name keeps `minmax(0, 1fr)` beside X/+ actions instead of wrapping into a narrow first `fr` track. Apply templates via `--glr-desktop-grid` / `--glr-mobile-grid` classes — never inline `gridTemplateColumns` (inline styles override the mobile media query).
 - **Tabs:** TabNavigation uses `overflow-x-auto`; ensure tab strip scrolls horizontally on narrow screens instead of wrapping into a tall block.
 
 ---

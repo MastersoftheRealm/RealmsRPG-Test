@@ -26,14 +26,18 @@
       npm run build.
   notes: |
     Owner feedback 2026-07-18. Shared helper in grid-list-row-chrome.ts.
+    Cleanup 2026-07-18: first ship set inline gridTemplateColumns which beat the
+    max-lg class — Library Powers still showed mid-row X + squeezed names. Fixed by
+    applying templates only via --glr-desktop-grid / --glr-mobile-grid CSS variables.
   evidence: |
-    vitest grid-list-row-chrome.test.ts; npm run build.
+    vitest grid-list-row-chrome.test.ts; npm run build; owner screenshot on Library Powers.
   build_validation: |
     suite: DEV-V-016
     tests:
       - DEV-V-016-T012
   developer_test_plan: |
-    Suite DEV-V-016 T012 — see BUILD_VALIDATION.md
+    Suite DEV-V-016 T012 — see BUILD_VALIDATION.md (Library Powers at ~360px: name fills
+    row left of X/edit; no character-by-character wrap).
 
 ---
 - id: TASK-534
