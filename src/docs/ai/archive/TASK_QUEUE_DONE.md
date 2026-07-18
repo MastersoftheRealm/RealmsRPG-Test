@@ -13,6 +13,12 @@
     - src/lib/chip/chip-options-panel.tsx
     - src/docs/MOBILE_UX.md
     - src/docs/ai/guide/04-floating-ui-tooltips.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
   description: |
     Mobile/Chip UI: GridListRow items and ExpandableChips should expand/collapse when
     tapping the body (mobile summary, expanded description panel, chip description),
@@ -27,8 +33,12 @@
       npm run build.
   notes: |
     Owner feedback 2026-07-18. Extends TASK-445 stable expand hit-target grammar.
+    Cleanup 2026-07-18: archive related_files + evidence; BV T004 steps clarified;
+    feedback disposition logged; shell aria-expanded only when shell is the widget.
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/39
+  evidence: |
+    npm run build (agent); docs honesty cleanup after /audit.
   build_validation: |
     suite: DEV-V-021
     tests:

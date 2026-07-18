@@ -245,7 +245,8 @@ export function ExpandableChip({
       onKeyDown={!useButtonHeader && canExpand ? handleHeaderKeyDown : undefined}
       tabIndex={!useButtonHeader && canExpand ? 0 : undefined}
       role={!useButtonHeader && canExpand ? 'button' : undefined}
-      aria-expanded={canExpand ? isExpanded : undefined}
+      // When header is a real <button>, that button owns aria-expanded (avoid dual widgets).
+      aria-expanded={!useButtonHeader && canExpand ? isExpanded : undefined}
     >
       {useButtonHeader ? (
         <button

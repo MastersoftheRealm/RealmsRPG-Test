@@ -2446,3 +2446,12 @@ Notes
 - Disposition: Implemented as **TASK-536** — `buildMobileCollapsedGridColumns` + `max-lg` grid template on GridListRow. QA: DEV-V-016-T012.
 - Follow-up (2026-07-18): Owner screenshot on Library Powers still showed squeeze — root cause was inline `gridTemplateColumns` overriding the mobile class. `/cleanup` switched to CSS variables only.
 
+
+**Raw Feedback Log - 2026-07-18 (chip/GLR body tap to expand)**
+- Date: 2026-07-18
+- Context: ExpandableChip + GridListRow mobile/list expand hit targets
+- Priority: High
+- Feedback (verbatim):
+  Chip/mobile ui GLR items/chips/cards etc shouldn't just expand when you hit the item header thingy,but also if you hit the body to expand. Follow constitution, rules, guidelines
+- Expected: Expand/collapse from header **or** body — GridListRow mobile summary + non-interactive expanded panel; ExpandableChip expanded description; Options/buttons/chip groups keep their own handlers. GuidedChoiceCard select/"See more" grammar unchanged.
+- Disposition: Implemented as **TASK-537**. QA: DEV-V-021-T004.

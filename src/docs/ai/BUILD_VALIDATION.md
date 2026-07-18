@@ -3684,10 +3684,10 @@ Click-open / click-close without moving the pointer. Expandable chips grow into 
 | **Needs** | — |
 
 **Steps**
-1. Styleguide: expand an ExpandableChip via the **header**, then tap the **description body** — chip collapses. Expand again by tapping only the description area if the chip was collapsed… (collapsed chips have no body — expand via header, then confirm body tap collapses).
-2. Optionally open Options on a chip with options; tapping Options label/list must **not** collapse the chip unexpectedly (toggle Options only).
-3. At ~360px: open Library Powers (or Codex feats). Tap the **mobile summary** under a collapsed row name (stats/teaser) — row expands. Tap the expanded **description panel** (not a chip or button) — row collapses.
-4. With a row expanded, tap a nested property/part **chip body** — chip expands/collapses; the **row** stays expanded.
+1. Styleguide → **Expandable Chips**: expand a chip via the **header**, then tap the **description body** — chip collapses (collapsed chips have no body, so expand still starts from the header).
+2. On a chip with Options: open Options; tapping the Options control or option list must toggle Options only — it must **not** collapse the chip.
+3. At ~360px (Library Powers or Codex feats): tap the **mobile summary** under a collapsed row — row expands. Tap the expanded **description** (not a chip or button) — row collapses.
+4. With a row expanded, tap a nested property/part **chip header or body** — chip toggles; the **row** stays expanded.
 
 **Expected**
 - ExpandableChip: header or expanded body toggles; Options / nested controls excluded.
