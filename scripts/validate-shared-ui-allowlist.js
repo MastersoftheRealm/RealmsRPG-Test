@@ -19,7 +19,8 @@ function walk(dir, acc = []) {
   for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, ent.name);
     if (ent.isDirectory()) walk(p, acc);
-    else if (/\.(tsx?|jsx?)$/.test(ent.name)) {
+    else if (/\.(tsx?|jsx?)$/.test(ent.name) && !/\.(test|spec)\.(tsx?|jsx?)$/.test(ent.name)) {
+      // Colocated unit tests are not Architect shared/ui surface area.
       acc.push(path.relative(repoRoot, p).replace(/\\/g, '/'));
     }
   }

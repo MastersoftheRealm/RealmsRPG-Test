@@ -3059,6 +3059,18 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Expected** | Shared list chrome only; no sync-all or duplicate UI; delete/edit unchanged; loading/error match other My Library shell tabs. |
 | **Report** | DEV-V-016-T011: PASS / FAIL / SKIP — |
 
+#### DEV-V-016-T012 — Mobile GLR name not squeezed by X/+ (TASK-536)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-536 |
+| **Where** | `/library` → My Library → Armaments (or Codex Equipment); also an add-X modal with `+` selection |
+| **Needs** | Narrow viewport (~360px) or DevTools device mode; at least one list row with a Remove (X) or Add (+) control |
+| **Steps** | 1. Open Armaments (or Equipment) at ~360px width. 2. Confirm each row name uses most of the row width left of the X (and thumbnail if present) — not a thin left strip with large empty mid-row gap. 3. Open an add-item / selection modal with `+` toggles; confirm names similarly fill space left of `+`. 4. Spot-check a long name: wrapping is OK, but it should not look “squished” into the first desktop column track. |
+| **Expected** | Below `lg`, GridListRow collapses empty desktop data-column tracks; name gets `minmax(0, 1fr)` beside fixed action chrome. Desktop column alignment unchanged at `lg+`. |
+| **Report** | DEV-V-016-T012: PASS / FAIL / SKIP — |
+
 ---
 
 ## DEV-V-017 — Site copy modules (TASK-390)

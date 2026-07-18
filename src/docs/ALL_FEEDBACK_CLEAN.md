@@ -2436,3 +2436,12 @@ Notes
 - Expected: Cleaner spacing/layout without overlapping controls; selected feats expandable to show Codex description in-modal.
 - Disposition: Implemented as **TASK-534**. QA: DEV-V-008-T021.
 
+**Raw Feedback Log - 2026-07-18 (GLR mobile names squished by X/+)**
+- Date: 2026-07-18
+- Context: GridListRow lists on mobile (Library armaments, Codex equipment, add-X modals)
+- Priority: High
+- Feedback (verbatim):
+  The names of GLR items on mobile are being squished to the left and wrapped because of the X or + from them in some cases. Fix and merge with master using best practices.
+- Expected: On narrow viewports, item names use the available row width beside X/+ (and thumbnail when present) instead of wrapping into a narrow left strip caused by empty desktop column tracks.
+- Disposition: Implemented as **TASK-536** — `buildMobileCollapsedGridColumns` + `max-lg` grid template on GridListRow. QA: DEV-V-016-T012.
+
