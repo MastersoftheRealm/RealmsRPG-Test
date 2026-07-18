@@ -56,4 +56,19 @@ describe('getAuthErrorMessage', () => {
       getAuthErrorMessage(new Error('Failed to fetch'), 'login')
     ).toBe('Network error. Please check your connection.');
   });
+
+  it('maps update-email account copy without the register false-invalid path', () => {
+    expect(
+      getAuthErrorMessage(new Error('Current password is incorrect'), 'update-email')
+    ).toBe('Incorrect password');
+    expect(
+      getAuthErrorMessage({ message: 'Email already in use', code: 'user_already_exists' }, 'update-email')
+    ).toBe('Email already in use');
+    expect(
+      getAuthErrorMessage({ message: 'Email address is invalid', code: 'email_address_invalid' }, 'update-email')
+    ).toBe('Invalid email address.');
+    expect(
+      getAuthErrorMessage(new Error('Error sending confirmation email'), 'update-email')
+    ).toBe('We could not send the email right now. Please try again in a few minutes.');
+  });
 });

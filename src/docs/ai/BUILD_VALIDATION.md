@@ -2918,9 +2918,9 @@ Automated via `npm test` (`src/lib/library-types.test.ts`).
 
 ---
 
-## DEV-V-024 — Client error handling (TASK-479)
+## DEV-V-024 — Client error handling (TASK-479, TASK-540)
 
-Convention: `ARCHITECTURE.md` § Client error handling. Automated helper coverage via `src/lib/api-client.test.ts`.
+Convention: `ARCHITECTURE.md` § Client error handling. Automated helper coverage via `src/lib/api-client.test.ts` and `src/lib/auth-errors.test.ts`.
 
 #### DEV-V-024-T001 — getErrorMessage unit coverage
 

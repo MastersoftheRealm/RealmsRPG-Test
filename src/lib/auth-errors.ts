@@ -12,7 +12,8 @@ export type AuthErrorContext =
   | 'register'
   | 'forgot-password'
   | 'reset-password'
-  | 'resend';
+  | 'resend'
+  | 'update-email';
 
 function readAuthError(error: unknown): { message: string; code: string } {
   const e = error as { message?: unknown; code?: unknown };
@@ -40,6 +41,7 @@ function isAlreadyExistsError(message: string, code: string): boolean {
     code === 'user_already_exists' ||
     message.includes('already registered') ||
     message.includes('already exists') ||
+    message.includes('already in use') ||
     message.includes('user already')
   );
 }
@@ -93,6 +95,29 @@ function isInvalidCredentialsError(message: string, code: string): boolean {
   );
 }
 
+function isIncorrectPasswordError(message: string, code: string): boolean {
+  return (
+    isInvalidCredentialsError(message, code) ||
+    message.includes('incorrect') ||
+    message.includes('wrong password')
+  );
+}
+
+function fallbackMessage(context: AuthErrorContext): string {
+  switch (context) {
+    case 'register':
+      return 'An error occurred during registration. Please try again.';
+    case 'login':
+      return 'An error occurred during sign in. Please try again.';
+    case 'update-email':
+      return 'Failed to update email';
+    case 'forgot-password':
+    case 'resend':
+    case 'reset-password':
+      return 'An error occurred. Please try again.';
+  }
+}
+
 /**
  * Convert an unknown auth error into stable UI copy for the given context.
  */
@@ -112,8 +137,14 @@ export function getAuthErrorMessage(
     return 'Please confirm your email before signing in.';
   }
 
+  if (context === 'update-email' && isIncorrectPasswordError(message, code)) {
+    return 'Incorrect password';
+  }
+
   if (isAlreadyExistsError(message, code)) {
-    return 'An account with this email already exists.';
+    return context === 'update-email'
+      ? 'Email already in use'
+      : 'An account with this email already exists.';
   }
 
   if (isWeakPasswordError(message, code)) {
@@ -151,17 +182,5 @@ export function getAuthErrorMessage(
 
   if (rawMessage.trim()) return rawMessage;
 
-  switch (context) {
-    case 'register':
-      return 'An error occurred during registration. Please try again.';
-    case 'login':
-      return 'An error occurred during sign in. Please try again.';
-    case 'forgot-password':
-    case 'resend':
-      return 'An error occurred. Please try again.';
-    case 'reset-password':
-      return 'An error occurred. Please try again.';
-    default:
-      return 'An error occurred. Please try again.';
-  }
+  return fallbackMessage(context);
 }

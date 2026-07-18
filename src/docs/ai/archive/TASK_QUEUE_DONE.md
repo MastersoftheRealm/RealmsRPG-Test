@@ -20,6 +20,8 @@
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/ai/BUILD_VALIDATION.md
     - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
     - src/docs/ALL_FEEDBACK_CLEAN.md
   description: |
     Valid emails were shown as "Invalid email address" because register/forgot-password
@@ -35,10 +37,13 @@
   notes: |
     Owner feedback 2026-07-18. Also narrowed my-account email-change mapping so bare
     "invalid" / "password" substrings do not mislabel errors.
+    Cleanup 2026-07-18: my-account uses getAuthErrorMessage('update-email'); DEV-V-024
+    suite intro + archive related_files honesty; removed unreachable switch default.
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/41
   evidence: |
-    npm test — auth-errors.test.ts + auth-email.test.ts (7 passed); npm run build (agent).
+    npm test — auth-errors.test.ts + auth-email.test.ts; npm run build (agent).
+    Cleanup: update-email context tests + my-account wired to shared mapper.
   build_validation: |
     suite: DEV-V-024
     tests:
