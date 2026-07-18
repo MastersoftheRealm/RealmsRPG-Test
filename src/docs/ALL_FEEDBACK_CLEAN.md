@@ -2473,6 +2473,15 @@ Notes
 - Expected: Expand/collapse from header **or** body — GridListRow mobile summary + non-interactive expanded panel; ExpandableChip expanded description; Options/buttons/chip groups keep their own handlers. GuidedChoiceCard select/"See more" grammar unchanged.
 - Disposition: Implemented as **TASK-539**. QA: DEV-V-021-T004.
 
+**Raw Feedback Log - 2026-07-18 (roll log bonus dark mode + inventory add equipment)**
+- Date: 2026-07-18
+- Context: Character sheet roll log; Library → Inventory → Add equipment
+- Priority: High
+- Feedback (verbatim):
+  1. A few things to a address: the second (bonus) in the roll log has no dark mode thing in the roll log, fix it. 2. adding equipment in character inventory doesn't seem to actually let you add anything, fix that.
+- Expected: Roll log bonus chip readable in dark mode; Add equipment (library select + custom) updates the Inventory Equipment list (and stacks quantity when re-adding).
+- Disposition: Implemented as **TASK-542** (renumbered; TASK-540/541 taken by auth + sticky footer). QA: DEV-V-009-T022–T023.
+
 **Raw Feedback Log - 2026-07-18 (mobile modal sticky Add Selected)**
 - Date: 2026-07-18
 - Context: Mobile full-screen selection/add modals (UnifiedSelectionModal)

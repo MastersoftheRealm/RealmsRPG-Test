@@ -502,8 +502,8 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
             <span className={cn(
               'inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold border',
               roll.modifier >= 0
-                ? 'bg-success-50 text-success-fg border-success-200'
-                : 'bg-danger-50 text-danger-fg border-danger-200'
+                ? 'bg-success-50 dark:bg-success-900/30 text-success-fg border-success-200 dark:border-success-700/50'
+                : 'bg-danger-50 dark:bg-danger-900/30 text-danger-fg border-danger-200 dark:border-danger-700/50'
             )}>
               {roll.modifier >= 0 ? roll.modifier : -roll.modifier}
             </span>
