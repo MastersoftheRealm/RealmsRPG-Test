@@ -30,6 +30,8 @@
   notes: |
     Owner feedback 2026-07-18. Root cause: w-full table in 1fr Skills column shrunk
     the Value column below ValueStepper width without a table min-width.
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/44
   evidence: |
     npm run build (agent).
   build_validation: |
