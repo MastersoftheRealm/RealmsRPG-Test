@@ -60,7 +60,7 @@ export function mapSelectedToCharacterItems(
   const quantities = selected.reduce(
     (acc, s) => {
       const q = (s as SelectableItem & { quantity?: number }).quantity;
-      if (q != null) acc[s.id] = q;
+      if (q != null) acc[String(s.id)] = q;
       return acc;
     },
     {} as Record<string, number>
@@ -116,15 +116,21 @@ export function mapSelectedToCharacterItems(
 
   return (selectedRaw as EqItem[]).map((i) => {
     const props = (i.properties || []) as EqItem['properties'];
+    const qtyKey = String(i.id);
+    const qty =
+      itemType === 'equipment'
+        ? (quantities[qtyKey] ?? quantities[i.id as unknown as string] ?? 1)
+        : 1;
     return {
       id: i.id,
       name: String(i.name ?? ''),
       description: String(i.description ?? ''),
+      type: itemType === 'equipment' ? 'equipment' : itemType,
       properties: props as unknown as Item['properties'],
       damage: i.damage as Item['damage'],
       armor: i.armorValue ?? 0,
       equipped: false,
-      quantity: itemType === 'equipment' ? (quantities[i.id] ?? 1) : 1,
+      quantity: Math.max(1, Math.floor(Number(qty)) || 1),
       cost: 0,
       image_id: i.image_id ?? null,
       image_url: i.image_url ?? null,

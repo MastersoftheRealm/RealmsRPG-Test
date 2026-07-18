@@ -898,7 +898,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-540)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats.
 
@@ -964,8 +964,8 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Suite** | DEV-V-009 |
 | **Task** | TASK-318, TASK-349 |
 | **Where** | `/characters/[id]` → Edit → Library → Add on Powers, Techniques, Inventory |
-| **Steps** | 1. Open add modal for each type. 2. Toggle My Library / Realms Library source. 3. For powers, switch Powers vs Empowered mode. 4. Select item(s) and confirm Add Selected. |
-| **Expected** | Modal loads items, filters/sorts work, selection adds to sheet without duplicate IDs blocked; empowered powers use separate columns when in empowered mode. |
+| **Steps** | 1. Open add modal for each type. 2. Toggle My Library / Realms Library source. 3. For powers, switch Powers vs Empowered mode. 4. Select item(s) and confirm Add Selected. 5. For Equipment: confirm owned gear still appears (stackable) and Add Selected / custom add updates the Inventory list. |
+| **Expected** | Modal loads items, filters/sorts work, selection adds to sheet; powers/weapons/armor/shields hide already-owned ids of that type only; equipment remains selectable when already owned (quantity merges); empowered powers use separate columns when in empowered mode. |
 | **Report** | DEV-V-009-T006: PASS / FAIL / SKIP — |
 
 #### DEV-V-009-T007 — Unarmed Prowess columns align with weapons (Name | Range | Attack | Damage)
@@ -1134,6 +1134,30 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Steps** | 1. Open character sheet. 2. Compare left/right edges of the sheet header card vs the Abilities panel below — they should share the same horizontal gutters. 3. Swipe to Skills, Archetype, and Library; confirm each snapped panel keeps those gutters (not flush to the screen edge). 4. While swiping between panels, confirm a clear gap/margin between adjacent section cards. |
 | **Expected** | Side-scroll panels align with the header/PageContainer content width; gap between panels; snap stops do not shift content left of the header. Desktop `md+` grid unchanged. |
 | **Report** | DEV-V-009-T021: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T022 — Inventory Add equipment actually adds items (TASK-540)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-540 |
+| **Where** | `/characters/[id]` → Library → Inventory → Add equipment |
+| **Needs** | Owned character; Codex equipment available (or use custom form) |
+| **Steps** | 1. Open Add equipment. 2. Confirm Codex/library gear rows are listed (not an empty “already added” false empty). 3. Select one item with quantity ≥1 → Add Selected; confirm it appears under Equipment. 4. Add the same item again; confirm quantity stacks. 5. Add a custom item by name; confirm it appears and survives refresh. |
+| **Expected** | Library and custom adds update the Equipment list immediately; stacking merges quantity; custom notes persist after save/reload. |
+| **Report** | DEV-V-009-T022: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T023 — Roll log bonus badge readable in dark mode (TASK-540)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-540 |
+| **Where** | Character sheet → Roll log (personal or campaign) |
+| **Needs** | Dark theme enabled; a roll with a non-zero bonus/modifier |
+| **Steps** | 1. Switch to dark mode. 2. Make an ability/skill roll with a non-zero bonus (or custom roll with mod). 3. Inspect the second numeric chip in the roll row (the bonus value between dice and total). |
+| **Expected** | Bonus chip uses dark-mode success/danger surface + border so the number stays readable (not light-on-light). |
+| **Report** | DEV-V-009-T023: PASS / FAIL / SKIP — |
 
 ---
 

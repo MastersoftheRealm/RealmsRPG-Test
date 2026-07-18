@@ -4,6 +4,7 @@
 
 'use client';
 
+import { useMemo } from 'react';
 import type { Character, CharacterPower, CharacterTechnique, Item } from '@/types';
 import {
   AddLibraryItemModal,
@@ -21,6 +22,41 @@ import type { CharacterSheetStats } from './character-sheet-utils';
 export type AddModalType = 'power' | 'innate-power' | 'technique' | 'weapon' | 'shield' | 'armor' | 'equipment' | null;
 export type FeatModalType = 'archetype' | 'character' | 'state' | null;
 export type SkillModalType = 'skill' | 'subskill' | null;
+
+/** Existing ids for the open add-modal type only (avoids cross-table numeric id collisions). */
+function existingIdsForAddModal(
+  character: Character | null,
+  addModalType: AddModalType
+): Set<string> {
+  const ids = new Set<string>();
+  if (!character || !addModalType) return ids;
+  const add = (id: string | number | undefined) => {
+    const s = String(id ?? '');
+    if (s) ids.add(s);
+  };
+  switch (addModalType) {
+    case 'power':
+    case 'innate-power':
+      character.powers?.forEach((p) => add(p.id));
+      break;
+    case 'technique':
+      character.techniques?.forEach((t) => add(t.id));
+      break;
+    case 'weapon':
+      ((character.equipment?.weapons as Item[]) || []).forEach((w) => add(w.id));
+      break;
+    case 'armor':
+      ((character.equipment?.armor as Item[]) || []).forEach((a) => add(a.id));
+      break;
+    case 'shield':
+      ((character.equipment?.shields as Item[]) || []).forEach((s) => add(s.id));
+      break;
+    case 'equipment':
+      // Stackable — do not exclude owned gear (quantity merges on add).
+      break;
+  }
+  return ids;
+}
 
 interface SkillForModal {
   id: string;
@@ -65,7 +101,6 @@ interface CharacterSheetModalsProps {
   /** Codex-hydrated character for path-aware modals (optional). */
   displayCharacter?: Character | null;
   calculatedStats: CharacterSheetStats | null;
-  existingIds: Set<string>;
   skills: SkillForModal[];
   traitsDb: Array<{ name?: string; uses_per_rec?: number; rec_period?: string }>;
   onModalAdd: (items: CharacterPower[] | CharacterTechnique[] | Item[]) => void;
@@ -101,7 +136,6 @@ export function CharacterSheetModals({
   character,
   displayCharacter,
   calculatedStats,
-  existingIds,
   skills,
   traitsDb,
   onModalAdd,
@@ -119,6 +153,11 @@ export function CharacterSheetModals({
   setShowEditSpeciesModal,
   onSpeciesSave,
 }: CharacterSheetModalsProps) {
+  const scopedExistingIds = useMemo(
+    () => existingIdsForAddModal(character, addModalType),
+    [character, addModalType]
+  );
+
   return (
     <>
       {character && showEditArchetypeModal && (
@@ -147,7 +186,7 @@ export function CharacterSheetModals({
           onClose={() => setAddModalType(null)}
           itemType={addModalType === 'innate-power' ? 'power' : (addModalType as AddLibraryItemType)}
           titleOverride={addModalType === 'innate-power' ? 'Add Innate Power from Library' : undefined}
-          existingIds={existingIds}
+          existingIds={scopedExistingIds}
           onAdd={onModalAdd}
         />
       )}

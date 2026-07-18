@@ -1,3 +1,51 @@
+- id: TASK-540
+  title: Fix roll log bonus dark mode + inventory Add equipment
+  created_at: 2026-07-18
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-18
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/roll-log.tsx
+    - src/hooks/add-library-item/use-add-library-item-data.ts
+    - src/components/character-sheet/add-library-item/map-selection.ts
+    - src/components/character-sheet/add-library-item/map-selection.test.ts
+    - src/components/character-sheet/add-library-item/add-custom-equipment-form.tsx
+    - src/app/(main)/characters/[id]/CharacterSheetModals.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/lib/data-enrichment.ts
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Owner feedback: (1) roll log bonus (second) chip missing dark-mode surface/border;
+    (2) character Inventory Add equipment did not let users add gear (cross-type
+    existingIds collisions + equipment incorrectly treated as unique).
+  acceptance_criteria:
+    - Bonus chip uses dark success/danger tokens and stays readable in dark mode.
+    - Add equipment lists Codex/library gear; Add Selected and custom add update
+      Equipment; re-add stacks quantity; custom notes persist via cleanForSave.
+    - existingIds scoped by modal type; equipment not excluded when already owned.
+    - BUILD_VALIDATION DEV-V-009-T022–T023; npm run build; targeted vitest.
+  notes: |
+    Root cause for empty/broken add: global existingIds mixed weapon/armor/power
+    numeric ids with codex equipment ids, filtering the list. Equipment is stackable.
+  evidence: |
+    npm run build; vitest map-selection.test.ts
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T022
+      - DEV-V-009-T023
+  developer_test_plan: |
+    Suite DEV-V-009 T022–T023 — see BUILD_VALIDATION.md
+
+---
+
 - id: TASK-539
   title: Chip / GLR body tap toggles expand (not header-only)
   created_at: 2026-07-18

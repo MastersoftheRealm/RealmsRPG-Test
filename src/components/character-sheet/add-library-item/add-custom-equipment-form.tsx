@@ -69,7 +69,7 @@ export function AddCustomEquipmentForm({ onAdd }: AddCustomEquipmentFormProps) {
             incrementTitle="Increase quantity"
           />
         </div>
-        <Button size="sm" onClick={handleAdd} disabled={!canAdd} className="shrink-0">
+        <Button type="button" size="sm" onClick={handleAdd} disabled={!canAdd} className="shrink-0">
           <Plus className="w-4 h-4" />
           Add custom
         </Button>
