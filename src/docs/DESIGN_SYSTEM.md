@@ -649,7 +649,7 @@ These components are used across multiple pages and should be imported rather th
 | `RecoveryModal` | `@/components/character-sheet/recovery-modal` | Full/partial recovery dialog |
 | `RollLog` | `@/components/character-sheet/roll-log` | Dice roll history display |
 | `SheetActionToolbar` | `@/components/character-sheet/sheet-action-toolbar` | Floating action toolbar on character sheet |
-| `TabSummarySection` | `@/components/shared/tab-summary-section` | Color-coded summary bar for tabs |
+| `TabSummarySection` | `@/components/shared/tab-summary-section` | Color-coded solid summary bar for tabs (no gradient fills) |
 | `PoweredMartialSlider` | `@/components/shared/powered-martial-slider` | Power/martial proficiency allocation slider |
 
 ## Best Practices

@@ -1,3 +1,36 @@
+- id: TASK-537
+  title: Character sheet — mobile Inventory TP/Armament overlap + remove tab summary gradients
+  created_at: 2026-07-18
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-18
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/library-section.tsx
+    - src/components/shared/tab-summary-section.tsx
+  description: |
+    On mobile character sheet Inventory, Currency and Armament Proficiency (TP) overlapped
+    in the top summary bar. Also remove background gradients from that bar and from
+    Proficiencies / Notes (shared TabSummarySection) header summaries.
+  acceptance_criteria:
+    - Inventory summary stacks Currency and Armament Proficiency below sm; no overlap at ~360px.
+    - TabSummarySection variants use solid theme fills (no bg-gradient-to-r) sitewide.
+    - BUILD_VALIDATION DEV-V-009-T020; npm run build.
+  notes: |
+    Owner feedback 2026-07-18. SectionHeader for library collapsibles already had no
+    gradient background; only TabSummarySection bars were gradient-backed.
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T020
+  developer_test_plan: |
+    Suite DEV-V-009 T020 — see BUILD_VALIDATION.md
+  evidence: |
+    npm run build; inventory layout flex-col below sm; TabSummarySection solid fills.
+
+---
 - id: TASK-536
   title: GridListRow mobile — stop name squeeze beside X/+
   created_at: 2026-07-18
