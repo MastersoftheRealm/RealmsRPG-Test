@@ -92,7 +92,7 @@ When **creating or editing** a page or modal:
 | Component | Location | Mobile behavior |
 |-----------|----------|-----------------|
 | Header | `src/components/layout/header.tsx` | Menu button below `xl`; inline nav `xl+` only (avoids mid-width document overflow). |
-| Modal | `src/components/ui/modal.tsx` | `fullScreenOnMobile` prop → full-screen below `md`. |
+| Modal | `src/components/ui/modal.tsx` | `fullScreenOnMobile` → full-screen below `md`; put actions in `footer` (sticky). |
 | Collapsible section pattern | `src/components/creator/collapsible-section.tsx` | Use for within-panel sub-sections or lighter pages. |
 | ListHeader | `src/components/shared/list-header.tsx` | Desktop: column header grid. Mobile: expandable "Sort by [criteria] (A→Z)" using same sortState/onSort; no column headers. |
 | ExpandableChip / ChipGroup | `src/components/ui/expandable-chip.tsx` | Wrap groups use `items-start`; expand keeps its row, moves left, and takes full group width; header or body toggles. |

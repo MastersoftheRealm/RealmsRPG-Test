@@ -341,9 +341,9 @@ export function UnifiedSelectionModal({
       fullScreenOnMobile
       flexLayout={flexLayout}
       contentClassName={cn(
-        // !overflow-hidden wins over Modal's default overflow-y-auto so only the list
-        // region scrolls and the Modal footer (Add Selected) stays pinned on mobile.
-        'flex flex-col flex-1 min-h-0 gap-4 !overflow-hidden p-4 md:p-6 md:max-h-[70vh]',
+        // overflow-hidden: Modal skips its default overflow-y-auto; only the list region scrolls
+        // so the footer (Add Selected) stays pinned on mobile. See MOBILE_UX.md.
+        'flex flex-col flex-1 min-h-0 gap-4 overflow-hidden p-4 md:p-6 md:max-h-[70vh]',
         className
       )}
       footer={
@@ -354,12 +354,9 @@ export function UnifiedSelectionModal({
               {selectedIds.size} {itemLabel}{selectedIds.size !== 1 ? 's' : ''} selected
               {maxSelections !== undefined && maxSelections !== 1 && ` (max ${maxSelections})`}
             </span>
-            <div className="flex gap-2 w-full sm:w-auto">
-              <Button
-                variant="secondary"
-                onClick={onClose}
-                className="min-h-11 flex-1 sm:flex-initial"
-              >
+            {/* [&_button]: cover confirmLabel and primaryActions (species trait dual-add, etc.) */}
+            <div className="flex gap-2 w-full sm:w-auto [&_button]:min-h-11 [&_button]:flex-1 sm:[&_button]:flex-initial">
+              <Button variant="secondary" onClick={onClose}>
                 Cancel
               </Button>
               {primaryActions ? (
@@ -369,11 +366,7 @@ export function UnifiedSelectionModal({
                   primaryActions
                 )
               ) : (
-                <Button
-                  onClick={handleConfirm}
-                  disabled={isConfirmDisabled}
-                  className="min-h-11 flex-1 sm:flex-initial"
-                >
+                <Button onClick={handleConfirm} disabled={isConfirmDisabled}>
                   {confirmLabel}
                   {selectedIds.size > 0 ? ` (${selectedIds.size})` : ''}
                 </Button>

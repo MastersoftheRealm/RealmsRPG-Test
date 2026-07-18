@@ -20,6 +20,11 @@
     - src/docs/MOBILE_UX.md
     - src/docs/ai/guide/02-components-and-lists.md
     - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
   description: |
     On mobile full-screen selection/add modals, primary actions (Add Selected, Load, Confirm)
     must stay pinned at the bottom so users do not scroll the list to reach them.
@@ -30,12 +35,16 @@
     - BUILD_VALIDATION DEV-V-016-T013; npm run build.
   completed_work: |
     - Moved UnifiedSelectionModal actions into Modal `footer`; title/description use Modal simple header.
-    - Content uses !overflow-hidden so only the list region scrolls; footer safe-area on mobile fullscreen.
+    - Content uses overflow-hidden (Modal skips default overflow-y-auto when content owns overflow);
+      only the list region scrolls; footer safe-area on mobile fullscreen.
+    - Footer `[&_button]:min-h-11` covers confirmLabel and primaryActions.
     - Docs: MOBILE_UX sticky-action rule; guide/02; feedback log; DEV-V-016-T013.
+    - /cleanup: Modal overflow ownership; archive related_files honesty.
   evidence: |
     npm run build
   notes: |
     Root cause: footer lived inside Modal children (scroll region). Species/proficiency modals already used footer correctly.
+    Follow-up (out of scope): recovery-modal / level-up-modal still put Confirm in children — file TASK if sticky needed there too.
 
 - id: TASK-539
   title: Chip / GLR body tap toggles expand (not header-only)

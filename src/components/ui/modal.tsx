@@ -171,6 +171,12 @@ export function Modal({
 
   const useFullScreenMobile = fullScreenOnMobile && isMobileViewport;
 
+  // Callers may own overflow (e.g. UnifiedSelectionModal: overflow-hidden + inner list scroll).
+  // Do not also apply overflow-y-auto — twMerge keeps both and forces an !important fight.
+  const contentOwnsOverflow =
+    typeof contentClassName === 'string' &&
+    /(?:^|\s)!?overflow-/.test(contentClassName);
+
   const modalContent = (
     <div className={cn(
       'fixed inset-0 z-overlay flex',
@@ -259,11 +265,12 @@ export function Modal({
         )}
         
         {/* Content — flex column under sticky header/footer. Default scrolls as a whole;
-            list modals can set contentClassName with overflow-hidden + an inner scroll region. */}
+            pass overflow-* in contentClassName for nested list scroll (see MOBILE_UX). */}
         <div className={cn(
-          (flexLayout || useFullScreenMobile)
-            ? 'flex flex-col flex-1 min-h-0 overflow-y-auto scrollbar-thin'
-            : '',
+          (flexLayout || useFullScreenMobile) && 'flex flex-col flex-1 min-h-0',
+          (flexLayout || useFullScreenMobile) &&
+            !contentOwnsOverflow &&
+            'overflow-y-auto scrollbar-thin',
           contentClassName ?? 'p-6'
         )}>
           {children}
