@@ -39,8 +39,10 @@
     Renumbered from TASK-540 on merge — TASK-540 auth (PR #41), TASK-541 sticky footer (PR #42).
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/43
+  merged_at: 2026-07-18
   evidence: |
     npm run build (pass); vitest map-selection.test.ts (pass).
+    Merged to master via PR #43 after conflict resolve (renumber → TASK-542).
   build_validation: |
     suite: DEV-V-009
     tests:
