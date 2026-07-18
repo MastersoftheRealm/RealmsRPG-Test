@@ -18,7 +18,7 @@
  * - Accessible and responsive
  */
 
-import { useState, memo, ReactNode } from 'react';
+import { useState, memo, type CSSProperties, type ReactNode } from 'react';
 import { Edit, Copy, Plus, AlertCircle, X } from 'lucide-react';
 import { cn, formatColumnKeyLabel } from '@/lib/utils';
 import { formatCostDisplay } from '@/lib/game/creator-constants';
@@ -27,7 +27,12 @@ import { GridListChip } from './grid-list-chip';
 import { descriptorChipVariantForBadgeColor } from '@/lib/chip/grid-list-chip-utils';
 import { SelectionToggle } from './selection-toggle';
 import { QuantitySelector, QuantityBadge } from './quantity-selector';
-import { GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH, gridTemplateColumnsWithThumbnail } from './grid-list-row-chrome';
+import {
+  GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH,
+  buildMobileCollapsedGridColumns,
+  countGridTemplateTracks,
+  gridTemplateColumnsWithThumbnail,
+} from './grid-list-row-chrome';
 import type { ChipData } from './grid-list-row-types';
 import { ListRowThumbnail, type ListRowThumbnailProps } from './list-row-thumbnail';
 
@@ -93,48 +98,6 @@ function descriptionColumnTrackCount(
   return columns.reduce((sum, col, idx) => {
     if (col.key !== 'description') return sum;
     return sum + (columnSpans?.[idx] ?? 1);
-  }, 0);
-}
-
-/**
- * Count explicit tracks in a grid-template-columns string.
- * Supports basic tracks, minmax(), fit-content(), and repeat(<n>, ...).
- * This lets GridListRow detect when callers already reserved trailing action columns.
- */
-function countGridTemplateTracks(template?: string): number {
-  if (!template) return 0;
-
-  const tokens: string[] = [];
-  let current = '';
-  let parenDepth = 0;
-  let bracketDepth = 0;
-
-  for (const char of template) {
-    if (char === '(') parenDepth += 1;
-    if (char === ')') parenDepth = Math.max(0, parenDepth - 1);
-    if (char === '[') bracketDepth += 1;
-    if (char === ']') bracketDepth = Math.max(0, bracketDepth - 1);
-
-    const isSeparator = /\s/.test(char) && parenDepth === 0 && bracketDepth === 0;
-    if (isSeparator) {
-      const trimmed = current.trim();
-      if (trimmed) tokens.push(trimmed);
-      current = '';
-      continue;
-    }
-
-    current += char;
-  }
-
-  const last = current.trim();
-  if (last) tokens.push(last);
-
-  return tokens.reduce((count, token) => {
-    const repeatMatch = token.match(/^repeat\(\s*(\d+)\s*,/i);
-    if (repeatMatch) {
-      return count + Number.parseInt(repeatMatch[1], 10);
-    }
-    return count + 1;
   }, 0);
 }
 
@@ -416,6 +379,24 @@ export const GridListRow = memo(function GridListRow({
       ? 1 + descriptionColumnTrackCount(columns, columnSpans)
       : undefined;
 
+  /**
+   * Mobile collapses hidden data-column `fr` tracks so the name is not squeezed left
+   * beside X/+ (those tracks still reserved space when columns are `display: none`).
+   */
+  const mobileVisibleDataTracks = columns.reduce((sum, col, idx) => {
+    if (col.hideOnMobile !== false) return sum;
+    return sum + (columnSpans?.[idx] ?? 1);
+  }, 0);
+  const mobileGridColumns =
+    resolvedGridColumns
+      ? buildMobileCollapsedGridColumns({
+          resolvedGridColumns,
+          hasThumbnailColumn: useThumbnailColumn,
+          dataTracksUsed,
+          mobileVisibleDataTracks,
+        })
+      : undefined;
+
   const mobileSummaryColumns = columnsWithoutDescriptionPreview(
     columnsForMobileSummary(columns),
     suppressDescriptionPreview
@@ -446,16 +427,26 @@ export const GridListRow = memo(function GridListRow({
             }
           } : undefined}
           className={cn(
-            'flex-1 text-left transition-colors min-h-[44px]',
+            'flex-1 text-left transition-colors min-h-[44px] min-w-0',
             (showExpander || selectable) && (rowHoverClass ?? 'hover:bg-surface-alt'),
             // Compact rows are used heavily in add/load modals; keep 44px minimum touch target,
             // but avoid exceeding it via extra vertical padding.
             compact ? 'px-3 py-1.5' : 'px-4 py-2',
             disabled && 'cursor-default',
             isRowClickable && 'cursor-pointer',
-            gridColumns && 'grid gap-2 items-center'
+            // max-lg: collapse empty desktop data tracks so name isn't squeezed beside X/+.
+            gridColumns && 'grid gap-2 items-center max-lg:[grid-template-columns:var(--glr-mobile-grid)]'
           )}
-          style={resolvedGridColumns ? { gridTemplateColumns: resolvedGridColumns } : undefined}
+          style={
+            resolvedGridColumns
+              ? ({
+                  gridTemplateColumns: resolvedGridColumns,
+                  ...(mobileGridColumns
+                    ? { ['--glr-mobile-grid' as string]: mobileGridColumns }
+                    : {}),
+                } as CSSProperties)
+              : undefined
+          }
         >
           {useThumbnailColumn && thumbnail && (
             <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
@@ -464,12 +455,18 @@ export const GridListRow = memo(function GridListRow({
           )}
           {/* Name column: full name visible on mobile (wrap), truncate on desktop.
               @container so inline type tags hide based on *column* width (narrow sheet
-              panels), not viewport — name wins space before truncating. */}
+              panels), not viewport — name wins space before truncating.
+              Desktop-only span: mobile uses a collapsed template (name already 1fr). */}
           <div
-            style={nameGridColumnSpan ? { gridColumn: `span ${nameGridColumnSpan}` } : undefined}
+            style={
+              nameGridColumnSpan
+                ? ({ ['--glr-name-span' as string]: `span ${nameGridColumnSpan}` } as CSSProperties)
+                : undefined
+            }
             className={cn(
               '@container font-medium text-text-primary flex items-center gap-2 min-w-0',
-              useFlex && 'flex-1'
+              useFlex && 'flex-1',
+              nameGridColumnSpan && 'lg:[grid-column:var(--glr-name-span)]'
             )}
           >
             {!useThumbnailColumn && thumbnail && <ListRowThumbnail {...thumbnail} />}

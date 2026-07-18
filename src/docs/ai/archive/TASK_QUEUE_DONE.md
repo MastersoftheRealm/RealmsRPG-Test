@@ -1,3 +1,41 @@
+- id: TASK-536
+  title: GridListRow mobile — stop name squeeze beside X/+
+  created_at: 2026-07-18
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-18
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/shared/grid-list-row.tsx
+    - src/components/shared/grid-list-row-chrome.ts
+    - src/components/shared/grid-list-row-chrome.test.ts
+    - src/docs/MOBILE_UX.md
+  description: |
+    On mobile, GLR item names were squished left and wrapped because desktop
+    grid-template-columns still reserved empty fr tracks for hideOnMobile columns
+    while X/+ took the remaining flex space. Collapse the mobile grid so the name
+    gets minmax(0, 1fr) beside action chrome.
+  acceptance_criteria:
+    - Below lg, GridListRow uses a collapsed template (thumb? + name fr + visible
+      mobile cols + trailing action tracks); names are not left-squeezed by empty
+      desktop data tracks.
+    - Desktop lg+ column alignment unchanged; description name-span remains lg-only.
+    - Unit coverage for buildMobileCollapsedGridColumns; BUILD_VALIDATION T012;
+      npm run build.
+  notes: |
+    Owner feedback 2026-07-18. Shared helper in grid-list-row-chrome.ts.
+  evidence: |
+    vitest grid-list-row-chrome.test.ts; npm run build.
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T012
+  developer_test_plan: |
+    Suite DEV-V-016 T012 — see BUILD_VALIDATION.md
+
+---
 - id: TASK-534
   title: Admin archetype edit modal — expandable feats + cleaner layout
   created_at: 2026-07-17

@@ -101,3 +101,106 @@ export function hasListHeaderRowChrome(rowChrome?: ListHeaderRowChrome): boolean
     rowChrome.externalSelection
   );
 }
+
+/**
+ * Tokenize a `grid-template-columns` string into track tokens.
+ * Supports minmax(), fit-content(), and nested parentheses / brackets.
+ */
+export function tokenizeGridTemplateColumns(template?: string): string[] {
+  if (!template) return [];
+
+  const tokens: string[] = [];
+  let current = '';
+  let parenDepth = 0;
+  let bracketDepth = 0;
+
+  for (const char of template) {
+    if (char === '(') parenDepth += 1;
+    if (char === ')') parenDepth = Math.max(0, parenDepth - 1);
+    if (char === '[') bracketDepth += 1;
+    if (char === ']') bracketDepth = Math.max(0, bracketDepth - 1);
+
+    const isSeparator = /\s/.test(char) && parenDepth === 0 && bracketDepth === 0;
+    if (isSeparator) {
+      const trimmed = current.trim();
+      if (trimmed) tokens.push(trimmed);
+      current = '';
+      continue;
+    }
+
+    current += char;
+  }
+
+  const last = current.trim();
+  if (last) tokens.push(last);
+  return tokens;
+}
+
+/** Expand `repeat(n, …)` tokens so track counts / slices match rendered columns. */
+export function expandGridTemplateTokens(template?: string): string[] {
+  const expanded: string[] = [];
+  for (const token of tokenizeGridTemplateColumns(template)) {
+    const repeatMatch = token.match(/^repeat\(\s*(\d+)\s*,\s*(.+)\)$/i);
+    if (repeatMatch) {
+      const count = Number.parseInt(repeatMatch[1], 10);
+      const inner = repeatMatch[2].trim();
+      for (let i = 0; i < count; i += 1) expanded.push(inner);
+    } else {
+      expanded.push(token);
+    }
+  }
+  return expanded;
+}
+
+/** Count explicit tracks in a grid-template-columns string (repeat-aware). */
+export function countGridTemplateTracks(template?: string): number {
+  return expandGridTemplateTokens(template).length;
+}
+
+export interface MobileCollapsedGridColumnsOptions {
+  /** Full desktop template already including thumbnail track when present */
+  resolvedGridColumns: string;
+  hasThumbnailColumn: boolean;
+  /**
+   * Tracks consumed by thumbnail (optional) + Name + all data columns
+   * (respecting columnSpans). Trailing tracks beyond this are action columns.
+   */
+  dataTracksUsed: number;
+  /**
+   * How many data-column tracks stay visible below `lg`
+   * (`hideOnMobile: false`). Name always gets `minmax(0, 1fr)`.
+   */
+  mobileVisibleDataTracks?: number;
+}
+
+/**
+ * Mobile (`max-lg`) grid template for GridListRow.
+ *
+ * Desktop templates keep empty `fr` tracks for columns that are `display: none`
+ * on mobile, which squeezes the name left beside X/+ actions. Collapse to:
+ * `[thumb?] minmax(0, 1fr) [visible mobile data…] [trailing action tracks]`.
+ */
+export function buildMobileCollapsedGridColumns(
+  options: MobileCollapsedGridColumnsOptions
+): string {
+  const {
+    resolvedGridColumns,
+    hasThumbnailColumn,
+    dataTracksUsed,
+    mobileVisibleDataTracks = 0,
+  } = options;
+
+  const tracks = expandGridTemplateTokens(resolvedGridColumns);
+  const trailingActionTracks = tracks.slice(Math.max(0, dataTracksUsed));
+
+  const parts: string[] = [];
+  if (hasThumbnailColumn) {
+    parts.push(GRID_LIST_ROW_THUMBNAIL_COLUMN_WIDTH);
+  }
+  parts.push('minmax(0, 1fr)');
+  for (let i = 0; i < Math.max(0, mobileVisibleDataTracks); i += 1) {
+    parts.push('auto');
+  }
+  parts.push(...trailingActionTracks);
+  return parts.join(' ');
+}
