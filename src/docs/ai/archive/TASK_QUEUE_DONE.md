@@ -11,6 +11,7 @@
     - src/components/character-sheet/skills-section.tsx
     - src/components/shared/skill-row.tsx
     - src/components/shared/skills-allocation-page.tsx
+    - src/docs/MOBILE_UX.md
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/ai/BUILD_VALIDATION.md
     - src/docs/ai/DEVELOPER_TASK_QUEUE.md
@@ -30,10 +31,11 @@
   notes: |
     Owner feedback 2026-07-18. Root cause: w-full table in 1fr Skills column shrunk
     the Value column below ValueStepper width without a table min-width.
+    Cleanup 2026-07-18: DESIGN_INTENT comments; Remove th sr-only; MOBILE_UX note.
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/44
   evidence: |
-    npm run build (agent).
+    npm run build (agent); docs honesty cleanup after /audit.
   build_validation: |
     suite: DEV-V-009
     tests:

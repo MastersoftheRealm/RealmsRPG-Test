@@ -334,7 +334,7 @@ export function SkillsSection({
         </div>
       </div>
       
-      {/* Skills Table — edit mode: min-width so ValueStepper ± stays visible in narrow lg panel (TASK-540) */}
+      {/* DESIGN_INTENT: narrow lg Skills column must not crush ValueStepper; edit table min-width + TableScroll (TASK-540) */}
       <TableScroll>
         <table
           className={cn(
@@ -351,7 +351,11 @@ export function SkillsSection({
               {showEditControls && (
                 <th className="w-28 min-w-[7rem] py-2 text-center whitespace-nowrap">Value</th>
               )}
-              {showEditControls && <th className="w-10 min-w-10 py-2" aria-label="Remove" />}
+              {showEditControls && (
+                <th className="w-10 min-w-10 py-2">
+                  <span className="sr-only">Remove</span>
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>

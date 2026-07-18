@@ -390,7 +390,9 @@ export function SkillsAllocationPage({
                 <th className="w-16 min-w-16 py-2 text-center">Ability</th>
                 <th className="w-20 min-w-20 py-2 text-center">Bonus</th>
                 <th className="w-28 min-w-[7rem] py-2 text-center whitespace-nowrap">Value</th>
-                <th className="w-10 min-w-10 py-2" aria-label="Remove" />
+                <th className="w-10 min-w-10 py-2">
+                  <span className="sr-only">Remove</span>
+                </th>
               </tr>
             </thead>
             <tbody>
