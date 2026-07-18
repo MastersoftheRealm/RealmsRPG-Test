@@ -239,25 +239,26 @@ export const SkillRow = memo(function SkillRow({
           )}
         </td>
         
-        {/* Value Stepper (edit mode) — shared ValueStepper (TASK-468 audit) */}
+        {/* Value Stepper (edit mode) — shared ValueStepper (TASK-468); compact + nowrap so + isn't clipped in narrow sheet panels (TASK-540) */}
         {isEditing && onValueChange && (
-          <td className="py-2 text-center">
+          <td className="py-2 px-1 text-center whitespace-nowrap">
             <ValueStepper
               value={value}
               onChange={(newValue) => onValueChange(newValue - value)}
               min={proficient ? -Infinity : minValue}
               max={canIncrease ? undefined : value}
               size="sm"
+              variant="compact"
               decrementTitle={`Decrease ${name}`}
               incrementTitle={`Increase ${name}`}
-              className="justify-center"
+              className="inline-flex justify-center"
             />
           </td>
         )}
         
         {/* Remove button (edit mode) — species/locked show disabled affordance; keep column aligned */}
         {isEditing && (onRemove || isSpeciesSkill) && (
-          <td className="py-2 text-center">
+          <td className="py-2 px-0.5 text-center whitespace-nowrap">
             <IconButton
               variant="ghost"
               size="sm"

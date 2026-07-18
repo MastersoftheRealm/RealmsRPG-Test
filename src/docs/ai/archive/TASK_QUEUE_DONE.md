@@ -1,3 +1,45 @@
+- id: TASK-540
+  title: Character sheet Skills — Value stepper + not clipped on desktop
+  created_at: 2026-07-18
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-18
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/skills-section.tsx
+    - src/components/shared/skill-row.tsx
+    - src/components/shared/skills-allocation-page.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Desktop character sheet Skills panel (narrow lg column): in edit mode the skill
+    Value increase (+) control was pushed/clipped behind the right edge. Preserve
+    shared ValueStepper; give the Value column and edit table enough min-width so
+    TableScroll scrolls instead of crushing the stepper.
+  acceptance_criteria:
+    - Skills edit Value steppers show full − / value / + on desktop lg Skills panel.
+    - + is not clipped by card/panel edge; TableScroll when table wider than panel.
+    - SkillsAllocationPage table headers stay in parity with sheet.
+    - BUILD_VALIDATION DEV-V-009-T022; npm run build.
+  notes: |
+    Owner feedback 2026-07-18. Root cause: w-full table in 1fr Skills column shrunk
+    the Value column below ValueStepper width without a table min-width.
+  evidence: |
+    npm run build (agent).
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T022
+  developer_test_plan: |
+    Suite DEV-V-009 T022 — see BUILD_VALIDATION.md (Skills edit Value stepper + visible).
+
+---
 - id: TASK-539
   title: Chip / GLR body tap toggles expand (not header-only)
   created_at: 2026-07-18

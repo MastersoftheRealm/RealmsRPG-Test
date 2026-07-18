@@ -382,15 +382,15 @@ export function SkillsAllocationPage({
       {/* Single flat Skills table — same layout as character sheet (Prof, Skill, Ability, Bonus, Value) */}
       <Card className="shadow-md overflow-hidden mb-8 p-0">
         <TableScroll>
-          <table className="w-full text-sm">
+          <table className="w-full text-sm min-w-[32rem]">
             <thead>
               <tr className="text-xs text-text-muted uppercase tracking-wider border-b-2 border-border-light">
-                <th className="w-10 py-2 text-center">Prof</th>
+                <th className="w-10 min-w-10 py-2 text-center">Prof</th>
                 <th className="text-left py-2 pl-2">Skill</th>
-                <th className="w-16 py-2 text-center">Ability</th>
-                <th className="w-20 py-2 text-center">Bonus</th>
-                <th className="w-24 py-2 text-center">Value</th>
-                <th className="w-8 py-2"></th>
+                <th className="w-16 min-w-16 py-2 text-center">Ability</th>
+                <th className="w-20 min-w-20 py-2 text-center">Bonus</th>
+                <th className="w-28 min-w-[7rem] py-2 text-center whitespace-nowrap">Value</th>
+                <th className="w-10 min-w-10 py-2" aria-label="Remove" />
               </tr>
             </thead>
             <tbody>
