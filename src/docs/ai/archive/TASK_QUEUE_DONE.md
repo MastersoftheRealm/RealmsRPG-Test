@@ -7,6 +7,7 @@
   priority: high
   status: done
   verification_status: pending-qa
+  pr_link: https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/42
   build_validation: |
     suite: DEV-V-016
     tests:
