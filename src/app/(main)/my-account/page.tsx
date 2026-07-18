@@ -249,12 +249,18 @@ function AccountContent() {
       setEmailMessage({ type: 'success', text: 'Email updated successfully!' });
     } catch (err: unknown) {
       const raw = getErrorMessage(err, 'Failed to update email');
+      const lower = raw.toLowerCase();
       let message = 'Failed to update email';
-      if (raw.includes('wrong') || raw.includes('password') || raw.includes('incorrect')) {
+      if (lower.includes('incorrect') || lower.includes('wrong password') || lower.includes('invalid login')) {
         message = 'Incorrect password';
-      } else if (raw.includes('already in use')) {
+      } else if (lower.includes('already in use') || lower.includes('already registered') || lower.includes('already exists')) {
         message = 'Email already in use';
-      } else if (raw.toLowerCase().includes('invalid')) {
+      } else if (
+        lower.includes('email address is invalid') ||
+        lower.includes('unable to validate email') ||
+        lower.includes('invalid email') ||
+        (lower.includes('email') && lower.includes('invalid') && lower.includes('format'))
+      ) {
         message = 'Invalid email address';
       } else {
         message = raw;

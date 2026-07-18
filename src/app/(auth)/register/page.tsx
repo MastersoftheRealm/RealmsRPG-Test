@@ -14,6 +14,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { createClient } from '@/lib/supabase/client';
 
 import { registerSchema, type RegisterFormData } from '@/lib/validation';
+import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { createUserProfileAction } from '@/app/(auth)/actions';
 import { resendConfirmationAction } from '@/app/(auth)/auth-actions';
@@ -84,7 +85,7 @@ function RegisterContent() {
       sessionStorage.removeItem('loginRedirect');
       router.push(redirectPath);
     } catch (err) {
-      setError(getAuthErrorMessage(err));
+      setError(getAuthErrorMessage(err, 'register'));
     } finally {
       setIsLoading(false);
     }
@@ -105,7 +106,7 @@ function RegisterContent() {
       setResendStatus('sent');
     } catch (e) {
       setResendStatus('idle');
-      setError(getAuthErrorMessage(e));
+      setError(getAuthErrorMessage(e, 'resend'));
     }
   };
 
@@ -126,7 +127,7 @@ function RegisterContent() {
       }
     } catch (err: unknown) {
       console.error('Google sign-in error:', err);
-      setError(getAuthErrorMessage(err));
+      setError(getAuthErrorMessage(err, 'register'));
       setIsLoading(false);
     }
   };
@@ -289,16 +290,6 @@ export default function RegisterPage() {
       <RegisterContent />
     </Suspense>
   );
-}
-
-function getAuthErrorMessage(error: unknown): string {
-  const e = error as { message?: string };
-  const msg = (e.message ?? '').toLowerCase();
-  if (msg.includes('already') || msg.includes('exists')) return 'An account with this email already exists.';
-  if (msg.includes('weak') || msg.includes('password')) return 'Password is too weak. Please choose a stronger password.';
-  if (msg.includes('invalid') || msg.includes('email')) return 'Invalid email address.';
-  if (msg.includes('network') || msg.includes('fetch')) return 'Network error. Please check your connection.';
-  return e.message ?? 'An error occurred during registration. Please try again.';
 }
 
 function CheckIcon({ className }: { className?: string }) {

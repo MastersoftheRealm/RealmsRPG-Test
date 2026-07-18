@@ -12,6 +12,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createClient } from '@/lib/supabase/client';
 import { forgotPasswordSchema, type ForgotPasswordFormData } from '@/lib/validation';
+import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { AuthCard, FormInput } from '@/components/auth';
 import { Button, Alert } from '@/components/ui';
 
@@ -34,12 +35,13 @@ export default function ForgotPasswordPage() {
 
     try {
       const supabase = createClient();
-      await supabase.auth.resetPasswordForEmail(data.email, {
+      const { error: err } = await supabase.auth.resetPasswordForEmail(data.email, {
         redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/confirm?next=${encodeURIComponent('/reset-password')}`,
       });
+      if (err) throw err;
       setIsSuccess(true);
     } catch (err) {
-      setError(getAuthErrorMessage(err));
+      setError(getAuthErrorMessage(err, 'forgot-password'));
     } finally {
       setIsLoading(false);
     }
@@ -138,10 +140,3 @@ function CheckIcon({ className }: { className?: string }) {
   );
 }
 
-function getAuthErrorMessage(error: unknown): string {
-  const msg = (error as { message?: string })?.message ?? '';
-  if (msg.includes('rate') || msg.includes('too many')) return 'Too many requests. Please try again later.';
-  if (msg.includes('invalid') || msg.includes('email')) return 'Invalid email address.';
-  if (msg.includes('network') || msg.includes('fetch')) return 'Network error. Please check your connection.';
-  return 'An error occurred. Please try again.';
-}
