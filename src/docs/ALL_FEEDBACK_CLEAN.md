@@ -1,6 +1,6 @@
 # ALL_FEEDBACK ? Consolidated & Curated
 
-Last updated: 2026-07-19 (guided skills Ability chip + Skill Bonus tip → TASK-547)
+Last updated: 2026-07-19 (guided skills Ability chip + Skill Bonus tip → TASK-548)
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -16,6 +16,7 @@ How to use
 
 ### Tooltips (canonical standard)
 - **Tooltips:** static copy in `public/tooltip-text.tsx`, `InfoTippy` (`@floating-ui/react`). TASK-376 + TASK-392 complete. Do not reintroduce DB tooltips.
+- **Ability/defense definitions (2026-07-19):** Word-tied tips (no Info icon) via `WordHelpTip` + `getAbilityHelp` / `getDefenseHelp` on character sheet and guided Abilities — **TASK-547**.
 
 ---
 
@@ -2480,7 +2481,7 @@ Notes
 - Feedback (verbatim):
   In the guided creator we should list the ability that contributes to the skills listed so people know what ability is tied to each skill. Also a simple hover/tap topltip on the skill bonus to explain how its calculated would be good.
 - Expected: Each listed Skill shows its contributing Ability; Skill Bonus has hover/tap help showing Ability + Skill Value = Skill Bonus.
-- Disposition: Implemented as **TASK-547** (renumbered; TASK-544/545/546 taken by path ability + sheet dedupe). QA: DEV-V-013-T065.
+- Disposition: Implemented as **TASK-548** (renumbered; TASK-544–547 + DEV-V-013-T065 taken on master). QA: DEV-V-013-T066.
 
 **Raw Feedback Log - 2026-07-18 (sheet Skills Value stepper + clipped)**
 - Date: 2026-07-18
@@ -2544,3 +2545,12 @@ Notes
   people put in an email in that's valid it says invalid email?
 - Expected: Valid addresses are accepted; only true format failures say invalid email. SMTP/confirmation-send failures must not be mislabeled as invalid email.
 - Disposition: Implemented as **TASK-540**. Root cause: register/forgot-password mapped any error containing `"email"` to “Invalid email address.” QA: DEV-V-024-T004–T005.
+
+**Raw Feedback Log - 2026-07-19 (ability/defense word tooltips)**
+- Date: 2026-07-19
+- Context: Character sheet Abilities/Defenses; guided creator Abilities
+- Priority: High
+- Feedback (verbatim):
+  For character sheets/guided creator we need hover/tap tooltips (no icon just tied to the word) for all abilities, and defenses. [owner-provided ability + defense definition copy]. Use our integrated systems already existing for tooltips following our constitution and rules and using the proper docs to reference tooltip implementation.
+- Expected: Word-tied hover/focus/touch-hold tips on ability and defense names (no Info icon); copy from tooltip-text.tsx via InfoTippy/WordHelpTip.
+- Disposition: Implemented as **TASK-547** (renumbered; TASK-544/545/546 taken by PRs #45/#49/#48). QA: DEV-V-009-T026 + DEV-V-013-T065.

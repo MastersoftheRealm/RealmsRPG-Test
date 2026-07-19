@@ -30,7 +30,7 @@ alwaysApply: false
 | Primary nav tabs (underline, badges) | `@/components/ui` → TabNavigation |
 | Page layout | `@/components/ui` → PageContainer, PageHeader |
 | Modals, Buttons, Chips | `@/components/ui` |
-| Contextual help (optional rules / step info) | `@/components/shared` → **InfoTippy** + `public/tooltip-text.tsx` — **not** for menus/filters; see `guide/04-floating-ui-tooltips.md` |
+| Contextual help (optional rules / step info) | `@/components/shared` → **InfoTippy** / **WordHelpTip** (label-word tip, no icon) + `public/tooltip-text.tsx` — **not** for menus/filters; see `guide/04-floating-ui-tooltips.md` |
 | Entity list thumb / choice-card art | **Do not** build per-page — `guide/03-entity-card-art.md`; `REALMS_PRODUCT_OVERVIEW.md` §5.0.3 |
 
 ### ListHeader in modals

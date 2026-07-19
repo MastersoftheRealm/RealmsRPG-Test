@@ -14,10 +14,11 @@
 import { useMemo, useState } from 'react';
 import { cn, formatBonus } from '@/lib/utils';
 import { useRollsOptional } from './roll-context';
-import { RollButton, PointStatus, EditSectionToggle, DecrementButton, IncrementButton } from '@/components/shared';
+import { RollButton, PointStatus, EditSectionToggle, DecrementButton, IncrementButton, WordHelpTip } from '@/components/shared';
 import { Card } from '@/components/ui';
 import { DEFENSE_INCREASE_COST } from '@/lib/game/skill-allocation';
 import { calculateAbilityScoreCost, getAbilityIncreaseCost } from '@/lib/game/formulas';
+import { getAbilityHelp, getDefenseHelp } from '../../../public/tooltip-text';
 import type { Abilities, AbilityName, DefenseSkills } from '@/types';
 
 // =============================================================================
@@ -254,10 +255,14 @@ export function AbilitiesSection({
                 !showEditControls && 'hover:shadow-md'
               )}
             >
-              {/* Ability Name */}
-              <span className="text-xs font-bold text-text-muted dark:text-text-secondary uppercase tracking-wider mb-2">
+              {/* Ability Name — word-tied definition tip */}
+              <WordHelpTip
+                content={getAbilityHelp(ability)}
+                label={`About ${info.name}`}
+                className="mb-2 text-xs font-bold uppercase tracking-wider text-text-muted dark:text-text-secondary"
+              >
                 {info.name}
-              </span>
+              </WordHelpTip>
               
               {/* Ability Value / Roll Button */}
               {showEditControls ? (
@@ -319,10 +324,14 @@ export function AbilitiesSection({
                 key={defenseKey}
                 className="flex flex-col items-center p-3 bg-surface-alt rounded-lg"
               >
-                {/* Defense Name */}
-                <span className="text-[10px] font-semibold text-text-muted dark:text-text-secondary uppercase tracking-wider mb-1">
+                {/* Defense Name — word-tied definition tip */}
+                <WordHelpTip
+                  content={getDefenseHelp(defenseKey)}
+                  label={`About ${defenseInfo.name}`}
+                  className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-text-muted dark:text-text-secondary"
+                >
                   {defenseInfo.name}
-                </span>
+                </WordHelpTip>
                 
                 {/* Defense Score */}
                 <span className="text-lg font-bold text-text-primary mb-1">
