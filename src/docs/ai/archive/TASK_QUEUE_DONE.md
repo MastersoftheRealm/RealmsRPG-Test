@@ -7,6 +7,7 @@
   completed_at: 2026-07-19
   implemented_by: agent
   verification_status: pending-qa
+  merged_at: 2026-07-19
   related_files:
     - src/components/character-sheet/add-proficiency-modal.tsx
     - src/components/shared/unified-selection-modal.tsx
