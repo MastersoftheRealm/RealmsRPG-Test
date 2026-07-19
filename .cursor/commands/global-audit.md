@@ -20,7 +20,7 @@ Optional args narrow focus: `/global-audit selection` · `/global-audit docs` ·
 ## Three pillars (repo scale)
 
 1. **Clutter** — Dead exports, unused shared components, compat shims, stale ACTIVE_TASKS preamble, changelog bloat, docs that advertise removed APIs.
-2. **Fidelity** — Stale task `remaining_work`, FEATURE_INDEX/DATA_HANDLING claiming forks that no longer exist (or missing canonical paths), BUILD_VALIDATION that cannot pass as written.
+2. **Fidelity** — Stale task `remaining_work` / `status` lagging code (e.g. `not-started` but Phase already shipped), FEATURE_INDEX/DATA_HANDLING claiming forks that no longer exist (or missing canonical paths), BUILD_VALIDATION that cannot pass as written.
 3. **Constitution / unification** — Parallel selection shells, filter barrels, parsers, upload paths, formatters, admin↔codex list chrome, local copies of tooltip/auth/damage helpers vs barrels + `realms-unification.mdc`.
 
 ## Procedure (be thorough)
@@ -38,7 +38,8 @@ Optional args narrow focus: `/global-audit selection` · `/global-audit docs` ·
    - **Safe for `/debt`** — obvious dead code, docs lag, single-fork wire-up with clear canonical
    - **Needs TASK-###** — multi-file behavior risk, Architect-class, broad consumers
    - **Needs owner ack** — deleting something that might still be product-intentional
-5. **Output the report.** Do not start `/debt` unless the owner explicitly asks in the same message.
+5. **Order the recommended `/debt` slice** — smallest high-value deletes first; explicitly list **do-not-fold** items (separate TASK / ack).
+6. **Output the report.** Do not start `/debt` unless the owner explicitly asks in the same message.
 
 ## Report format
 
@@ -68,6 +69,7 @@ Optional args narrow focus: `/global-audit selection` · `/global-audit docs` ·
 
 ### Recommended `/debt` slice (if owner says proceed)
 - Ordered bullets: smallest high-value deletes first
+- Do-not-fold: …
 
 ### Follow-ups to file (do not file unless asked, or owner said “file tasks”)
 - Proposed TASK titles (one line each)
