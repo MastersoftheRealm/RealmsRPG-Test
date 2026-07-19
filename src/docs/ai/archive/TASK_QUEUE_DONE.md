@@ -46,8 +46,10 @@
       - DEV-V-016-T014
   developer_test_plan: |
     Suite DEV-V-016 T014 — see BUILD_VALIDATION.md (list-first Filters chrome).
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/51
   evidence: |
-    npm run build; pattern applied globally via UnifiedSelectionModal.
+    npm run build (pass); pattern applied globally via UnifiedSelectionModal.
 
 - id: TASK-546
   title: Fix duplicate traits / part chips / feats on character sheets
