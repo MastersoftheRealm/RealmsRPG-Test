@@ -12,7 +12,7 @@ function path(partial: Partial<Archetype>): Archetype {
 }
 
 describe('resolvePathAbilityLabels', () => {
-  it('resolves power path primary and distinct secondary', () => {
+  it('resolves power path primary and distinct secondary recommended', () => {
     expect(
       resolvePathAbilityLabels(
         path({
@@ -21,10 +21,15 @@ describe('resolvePathAbilityLabels', () => {
           secondary_ability: 'charisma',
         })
       )
-    ).toEqual({ primary: 'intelligence', secondary: 'charisma' });
+    ).toEqual({
+      primaryAbilities: ['intelligence'],
+      secondaryAbility: 'charisma',
+      powAbil: 'intelligence',
+      martAbil: null,
+    });
   });
 
-  it('omits secondary when it matches primary', () => {
+  it('omits secondary when it matches the archetype ability', () => {
     expect(
       resolvePathAbilityLabels(
         path({
@@ -33,10 +38,15 @@ describe('resolvePathAbilityLabels', () => {
           secondary_ability: 'intelligence',
         })
       )
-    ).toEqual({ primary: 'intelligence', secondary: null });
+    ).toEqual({
+      primaryAbilities: ['intelligence'],
+      secondaryAbility: null,
+      powAbil: 'intelligence',
+      martAbil: null,
+    });
   });
 
-  it('resolves martial primary from mart_abil with optional distinct secondary', () => {
+  it('resolves martial archetype ability with optional distinct secondary', () => {
     expect(
       resolvePathAbilityLabels(
         path({
@@ -45,10 +55,15 @@ describe('resolvePathAbilityLabels', () => {
           secondary_ability: 'vitality',
         })
       )
-    ).toEqual({ primary: 'strength', secondary: 'vitality' });
+    ).toEqual({
+      primaryAbilities: ['strength'],
+      secondaryAbility: 'vitality',
+      powAbil: null,
+      martAbil: 'strength',
+    });
   });
 
-  it('maps powered-martial power→primary and martial→secondary', () => {
+  it('treats powered-martial power + martial as two primary archetype abilities', () => {
     expect(
       resolvePathAbilityLabels(
         path({
@@ -57,20 +72,46 @@ describe('resolvePathAbilityLabels', () => {
           mart_abil: 'agility',
         })
       )
-    ).toEqual({ primary: 'acuity', secondary: 'agility' });
+    ).toEqual({
+      primaryAbilities: ['acuity', 'agility'],
+      secondaryAbility: null,
+      powAbil: 'acuity',
+      martAbil: 'agility',
+    });
   });
 
-  it('prefers admin Primary/Secondary fields over pow/mart when both set', () => {
+  it('does not treat martial-side secondary_ability fallback as Secondary chip', () => {
     expect(
       resolvePathAbilityLabels(
         path({
           type: 'powered-martial',
           archetype_ability: 'intelligence',
           secondary_ability: 'strength',
-          pow_abil: 'acuity',
-          mart_abil: 'agility',
         })
       )
-    ).toEqual({ primary: 'intelligence', secondary: 'strength' });
+    ).toEqual({
+      primaryAbilities: ['intelligence', 'strength'],
+      secondaryAbility: null,
+      powAbil: 'intelligence',
+      martAbil: 'strength',
+    });
+  });
+
+  it('can show a third Secondary when mart_abil and secondary_ability both exist', () => {
+    expect(
+      resolvePathAbilityLabels(
+        path({
+          type: 'powered-martial',
+          pow_abil: 'intelligence',
+          mart_abil: 'strength',
+          secondary_ability: 'charisma',
+        })
+      )
+    ).toEqual({
+      primaryAbilities: ['intelligence', 'strength'],
+      secondaryAbility: 'charisma',
+      powAbil: 'intelligence',
+      martAbil: 'strength',
+    });
   });
 });
