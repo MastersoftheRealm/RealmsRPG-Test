@@ -121,6 +121,7 @@ Generated: 2026-07-19
 - UnifiedSelectionModal
 - ValueStepper
 - WeaponsListSection
+- WordHelpTip
 
 ## `src/components/ui/index.ts`
 

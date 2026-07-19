@@ -51,8 +51,11 @@ describe('buildGuidedSkillSuggestions', () => {
 
     expect(suggestions).toHaveLength(1);
     expect(suggestions[0].skillId).toBe('99');
-    expect(suggestions[0].tags).toContain('Berserker');
-    expect(suggestions[0].badges[0]).toEqual({ label: 'Berserker', color: 'purple' });
+    expect(suggestions[0].tags).toEqual(['Berserker', 'Strength']);
+    expect(suggestions[0].badges).toEqual([
+      { label: 'Berserker', color: 'purple' },
+      { label: 'Strength', color: 'blue' },
+    ]);
   });
 
   it('tags ability-aligned skills with the governing ability', () => {
@@ -136,6 +139,9 @@ describe('buildGuidedSkillSuggestions', () => {
     });
 
     const map = guidedSuggestionsToBadgeMap(suggestions);
-    expect(map['99']).toEqual([{ label: 'Berserker', color: 'purple' }]);
+    expect(map['99']).toEqual([
+      { label: 'Berserker', color: 'purple' },
+      { label: 'Strength', color: 'blue' },
+    ]);
   });
 });

@@ -19,9 +19,10 @@
 
 import { useMemo } from 'react';
 import { cn, formatBonus } from '@/lib/utils';
-import { PointStatus, DecrementButton, IncrementButton, AbilityScoreGrid } from '@/components/shared';
+import { PointStatus, DecrementButton, IncrementButton, AbilityScoreGrid, WordHelpTip } from '@/components/shared';
 import type { AbilityName, Abilities } from '@/types';
 import { calculateAbilityScoreCost, getAbilityIncreaseCost } from '@/lib/game/formulas';
+import { getAbilityHelp } from '../../../public/tooltip-text';
 
 export interface AbilityScoreEditorProps {
   /** Current ability values */
@@ -189,10 +190,14 @@ export function AbilityScoreEditor({
                     !isEditMode && 'text-text-muted dark:text-text-secondary'
                   )}
                 >
-                  <div className="text-center mb-2">
-                    <h3 className="font-bold text-sm text-text-primary capitalize">
+                  <div className="mb-2 text-center">
+                    <WordHelpTip
+                      content={getAbilityHelp(ability)}
+                      label={`About ${info.name}`}
+                      className="font-bold text-sm capitalize text-text-primary"
+                    >
                       {compact ? info.shortName : info.name}
-                    </h3>
+                    </WordHelpTip>
                   </div>
 
                   <div className="flex items-center justify-center gap-2">

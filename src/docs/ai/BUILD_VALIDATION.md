@@ -898,7 +898,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats.
 
@@ -1181,6 +1181,19 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Steps** | 1. Create a guided character with a species that has species traits + at least one ancestry trait. 2. Open Feats/Traits — each species trait and ancestry trait appears once (no double listing). 3. Open a power/technique with parts — each expandable part chip name appears once (no 2–3 identical chips). 4. Confirm archetype/character feats are not duplicated across sections. 5. Optional: re-save a power in Power Creator and confirm part chips stay unique. |
 | **Expected** | Trait, feat, power/technique row, and part-chip lists have unique entries; species traits come from species codex, ancestry picks from `selectedTraits` only. |
 | **Report** | DEV-V-009-T025: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T026 — Ability and defense name tooltips (TASK-547)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-547 |
+| **Where** | `/characters/[id]` → Abilities & Defenses section |
+| **Steps** | 1. Open a character sheet. 2. Hover (desktop) or touch-hold ~400ms (mobile ~360px) the **Strength** ability name — confirm a tip opens with the Strength definition (no Info icon; tip is on the word). 3. Repeat for at least one other ability (e.g. **Charisma**). 4. Hover/touch-hold **Might** (or **Mental Fort.**) in the defenses row — confirm the matching defense tip (e.g. Might mentions Strength; Mental Fortitude mentions Intelligence). 5. Confirm roll buttons and edit steppers still work (tip does not block play controls). 6. Keyboard: Tab to an ability name and confirm the tip opens on focus. |
+| **Expected** | All six ability names and six defense names are word-tied help triggers; copy matches `tooltip-text.tsx` (`getAbilityHelp` / `getDefenseHelp`); no separate Info icons beside the names. |
+| **Report** | DEV-V-009-T026: PASS / FAIL / SKIP — |
+
+
 
 
 ---
@@ -1780,26 +1793,26 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 ---
 
-#### DEV-V-013-T012 — Feat steps Layer 2 browse
+#### DEV-V-013-T012 — Feat steps Layer 2 add modal
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 — Guided Simple character creator |
-| **Related task** | TASK-429 |
+| **Related task** | TASK-429, TASK-565 |
 | **Where** | Guided creator → Archetype Feats, then Character Feat |
 | **Needs** | Path + species + abilities + skills complete |
 
 **Steps**
-1. On Archetype Feats, confirm path guidance groups and **See more feats** below the grid.
-2. Click See more feats; confirm L1 groups are replaced by Browse feats (search + filters).
-3. Select a non-path feat; confirm counter updates (swap at max if already full).
-4. Click **← Back to recommendations**; confirm L1 groups return and selections remain.
-5. On Character Feat, repeat See more / back; confirm single-select replace works in L2.
+1. On Archetype Feats, confirm path guidance groups and **See more Feats** below the grid (L1 cards stay as path recommendations only — not the full catalog).
+2. Click See more Feats; confirm an **Add Archetype Feats** modal opens (`UnifiedSelectionModal`, full-screen on mobile) and L1 groups remain behind the overlay.
+3. Select a non-path feat (respect max); Add Selected; confirm counter updates and modal closes.
+4. Re-open See more Feats; deselect / replace; confirm L1 cards and counter stay in sync after confirm. Cancel leaves prior picks unchanged.
+5. On Character Feat, repeat with **See more Character Feats** → **Add Character Feat** modal; confirm single-select replace works.
 
 **Expected**
-- GuidedLayerNav expand/collapse matches abilities placement (below content).
-- L2 defaults to feats you qualify for; optional "Show feats I don't qualify for".
-- No modal overlay for Layer 2.
+- GuidedLayerNav opens an add modal (same grammar as Browse all Skills / See more options on Loadout & Powers) — does **not** dump all feats as in-step cards.
+- L2 defaults to feats you qualify for; optional "Show Feats I don't qualify for".
+- Modal uses `fullScreenOnMobile`; Add Selected / Cancel are sticky (≥44px targets).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -2475,13 +2488,13 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 1. Reach Powers or Techniques. Confirm the chapter still reads **Loadout** framing for prior phases, and this step title is **Your Powers** or **Your Techniques** (Martial → Techniques only; Power / powered-martial → Powers only).
 2. Confirm path recommendations appear as **GuidedChoiceCards** with visible selected/unselected state (soft-seeded affordable picks may start selected; deselecting clears them). Continue works with zero selections.
 3. Confirm **Training Points** PointStatus and per-card Training Points cost remain (TASK-456); overspend still shows a blocked reason.
-4. Click **See more options** below the grid; confirm L1 cards are replaced by **Browse Powers** / **Browse Techniques** (search + optional Action Type filter); path picks sort first when matching.
-5. Toggle a catalog pick (respecting TP); confirm selection updates the footer count.
-6. Click **← Back to recommendations**; confirm L1 cards return and prior selections remain. Non-path catalog picks appear as selected cards on L1 (flat grid or **Your other Powers/Techniques** section). Removing a promoted card updates Training Points immediately.
+4. Click **See more options** below the grid; confirm an add modal opens (`GuidedPowersTechniquesL2Modal` / `UnifiedSelectionModal`) while L1 cards stay behind the overlay (same grammar as feats TASK-565 / Loadout L2).
+5. Toggle a catalog pick (respecting TP); Add Selected; confirm selection updates and modal closes.
+6. Re-open See more options / cancel; confirm L1 cards and prior selections remain. Non-path catalog picks appear as selected cards on L1 (flat grid or **Your other Powers/Techniques** section). Removing a promoted card updates Training Points immediately.
 
 **Expected**
 - No silent select-all without visible card selection state.
-- GuidedLayerNav expand/collapse matches feats placement (below content); L2 is in-step (not a modal).
+- GuidedLayerNav opens an add modal below content (feats / Loadout / Powers L2 grammar) — not an in-step full-catalog card dump.
 - Martial never shows Powers browse; Power never shows Techniques browse.
 - L2 → L1 promotion keeps selected non-path cards visible (TASK-458).
 
@@ -2871,6 +2884,26 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-013-T066 — Guided skills Ability chip + Skill Bonus tip (TASK-548)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-548 |
+| **Where** | Guided creator → Skills (`/characters/new/guided`) |
+| **Needs** | Path + species with skills; abilities already set |
+
+**Steps**
+1. Open Skills. Confirm each listed Skill shows a contributing Ability chip (e.g. Strength) beside the name, before Species / path chips when present. Ability uses the primary chip style (distinct from Species descriptor).
+2. Hover (desktop) or touch-hold (mobile) the Skill Bonus number between the ± steppers. Confirm a tip shows Ability + Skill Value = Skill Bonus with the current numbers. Keyboard: focus the bonus control — accessible name includes the bonus and “how … Skill Bonus is calculated.”
+3. For a multi-ability Skill (e.g. Intimidate), confirm the chip matches the highest linked Ability and the tip notes that rule when applicable.
+4. Decline a path Skill so it appears in suggestions; confirm the card tags include the Ability (not only the path name).
+
+**Expected**
+- Players can see which Ability feeds each Skill and how the Skill Bonus is calculated without leaving the step.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 #### DEV-V-013-T064 — Path content smoke after archetype enrichment (TASK-530)
 
 | Field | Value |
@@ -2893,6 +2926,17 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 - Choice-card deep-dive chrome itself is covered by **T016**; this test is path **content**, not disclosure UX.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T065 — Ability name tooltips on guided Abilities step (TASK-547)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-547 |
+| **Where** | Guided creator → Abilities (`/characters/new/guided`) |
+| **Steps** | 1. Choose a Path and continue to the **Abilities** step (recommended array view). 2. Hover (desktop) or touch-hold (mobile) an ability name such as **Strength** / **STR** — confirm the definition tip opens on the word (no Info icon). 3. Open **Customize abilities** and confirm tips still work on ability names in the edit grid. 4. Optional: continue to Skills Layer 2 / Forge defenses if shown and confirm defense name tips (Might, Fortitude, etc.). |
+| **Expected** | Ability labels use `WordHelpTip` + `getAbilityHelp`; tips match sheet copy; path pills and steppers remain usable. |
+| **Report** | DEV-V-013-T065: PASS / FAIL / SKIP — |
 
 #### DEV-V-013-T048 — Sitewide compact facts + Training Points chip labels (TASK-461)
 

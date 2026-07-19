@@ -55,7 +55,7 @@
     - MOBILE_UX + guide/02 + FEATURE_INDEX updated; BUILD_VALIDATION DEV-V-016-T014.
     - npm run build passes.
   notes: |
-    Owner requested TASK-564 (skipped 547–563). Extends existing shared components
+    Owner requested TASK-564 (parallel agents used 547/548/565 on master). Extends existing shared components
     (no new shared/ui file / ADR). Complements TASK-541 sticky footer.
     Owner ack 2026-07-19: primary mode tabs always visible via `scopeExtra`;
     SourceFilter / advanced filters remain collapsed under Filters.
@@ -71,6 +71,167 @@
     npm run build (pass); list-first chrome + scopeExtra mode tabs; sourceFilterSummary
     gates default All; FilterSection aria-controls panel mount; LoadFromLibraryModal
     forwards scopeExtra; pattern via UnifiedSelectionModal.
+    Merged with master 2026-07-19 (kept TASK-548/565 archive entries).
+
+- id: TASK-548
+  title: Guided Skills — show contributing Ability + Skill Bonus formula tip
+  created_at: 2026-07-19
+  created_by: owner
+  priority: medium
+  status: done
+  completed_at: 2026-07-19
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/guided-creator/guided-skills-panel.tsx
+    - src/lib/guided-creator/guided-skill-recommendations.ts
+    - src/lib/guided-creator/guided-skill-recommendations.test.ts
+    - public/tooltip-text.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Guided Skills L1 list did not show which Ability feeds each Skill, and the
+    Skill Bonus number had no explanation. Add Ability chips and a hover/tap
+    InfoTippy on the bonus with Ability + Skill Value = Skill Bonus.
+  acceptance_criteria:
+    - Each GuidedSkillsPanel row shows the contributing Ability (highest linked).
+    - Skill Bonus has hover/tap tip with current formula numbers (GAME_RULES terms).
+    - Path-declined suggestion cards include Ability tags/badges.
+    - BUILD_VALIDATION DEV-V-013-T066; npm run build; unit tests for suggestions.
+  notes: |
+    Owner feedback 2026-07-19. Tip copy in `getGuidedSkillBonusHelp` (tooltip-text.tsx).
+    Multi-ability Skills note “highest linked Ability” in the tip.
+    Cleanup 2026-07-19: bonus tip child aria-label; Ability primary (vs Species descriptor);
+    remove uses text-danger-fg; DESIGN_INTENT on tip helper/call site.
+    Renumbered from TASK-544→545→547→548 on merge — TASK-544–547 taken by path ability,
+    sheet dedupe, and ability/defense word tooltips (PR #45/#49/#48/#47). BV tip is T066
+    (T065 = guided ability name tooltips from TASK-547).
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/46
+  evidence: |
+    npm run build; vitest guided-skill-recommendations.test.ts; /audit → /cleanup a11y+tokens
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T066
+  developer_test_plan: |
+    Suite DEV-V-013 T066 — see BUILD_VALIDATION.md
+
+---
+- id: TASK-565
+  title: Guided feats See more opens add modal (not card dump)
+  created_at: 2026-07-19
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-19
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/guided-creator/guided-feats-l2-modal.tsx
+    - src/components/guided-creator/guided-feats-browse-panel.tsx
+    - src/lib/guided-creator/feats-l2.ts
+    - src/lib/guided-creator/feats-l2.test.ts
+    - src/components/guided-creator/steps/archetype-feats-step.tsx
+    - src/components/guided-creator/steps/character-feat-step.tsx
+    - src/components/guided-creator/index.ts
+    - src/lib/constants/copy/guided-creator-copy.ts
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Owner: guided creator "See more Feats" / "See more Character Feats" must open an add
+    modal like other L2 See all buttons (skills / loadout / powers), not replace L1 with
+    a full in-step card grid of all feats.
+  acceptance_criteria:
+    - Archetype Feats + Character Feat GuidedLayerNav opens GuidedFeatsL2Modal (UnifiedSelectionModal).
+    - L1 path recommendation cards stay on the step; modal does not dump the catalog as cards.
+    - Confirm replaces draft feat ids; cancel leaves prior picks; maxSelections enforced.
+    - Removed GuidedFeatsBrowsePanel; FEATURE_INDEX + DEV-V-013-T012 updated.
+    - npm run build + feats-l2 unit tests pass.
+  notes: |
+    Owner scoped as TASK-565 (skip next-ID conflict with open queue). Supersedes TASK-429
+    in-step browse disposition for catalog L2. related_files includes deleted
+    guided-feats-browse-panel.tsx (replaced by modal).
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T012
+  developer_test_plan: |
+    Suite DEV-V-013 T012 — see BUILD_VALIDATION.md
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/50
+  merged_at: |
+    2026-07-19
+
+- id: TASK-547
+  title: Ability and defense name tooltips (sheet + guided creator)
+  created_at: 2026-07-19
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-19
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - public/tooltip-text.tsx
+    - src/components/shared/info-tippy.tsx
+    - src/components/shared/ability-score-grid.tsx
+    - src/components/shared/skills-allocation-page.tsx
+    - src/components/shared/index.ts
+    - src/components/character-sheet/abilities-section.tsx
+    - src/components/creator/ability-score-editor.tsx
+    - src/lib/tooltips/README.md
+    - src/docs/ai/guide/04-floating-ui-tooltips.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/FEATURE_INDEX_BARRELS.generated.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ai/archive/TASK_QUEUE_DONE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - .cursor/rules/realms-unification.mdc
+  description: |
+    Hover/tap (touch-hold) definition tooltips on ability and defense names for the
+    character sheet and guided creator — tip tied to the word itself (no Info icon).
+    Copy lives in public/tooltip-text.tsx; trigger via shared WordHelpTip (InfoTippy).
+  acceptance_criteria:
+    - All six abilities and six defenses have word-tied WordHelpTip triggers on the sheet.
+    - Guided Abilities step (AbilityScoreGrid) uses the same ability tips.
+    - Defense tips on SkillsAllocationPage when defense bonuses are shown.
+    - Copy matches owner-provided ability/defense definitions in tooltip-text.tsx.
+    - BUILD_VALIDATION DEV-V-009-T026 + DEV-V-013-T065; npm run build.
+  notes: |
+    Owner request 2026-07-19. Extends InfoTippy with WordHelpTip (no new shared file).
+    Does not replace getTooltipTextByPowerAbility (archetype pick guidance) or
+    ABILITY_EFFECT_BLURBS (always-visible Layer 1 cards).
+    Cleanup 2026-07-19: DESIGN_INTENT on WordHelpTip; AbilityScoreGrid aria on score
+    (not tile); guide/04 + tooltips README; related_files honesty.
+    Renumbered from TASK-544→545→546→547 on merge — path ability PRs #45/#49 and sheet
+    duplicates PR #48 claimed earlier IDs; BV tip test is T026 (T025 = duplicates).
+  build_validation: |
+    suite: DEV-V-009 / DEV-V-013
+    tests:
+      - DEV-V-009-T026
+      - DEV-V-013-T065
+  developer_test_plan: |
+    Suite DEV-V-009 T026 + DEV-V-013 T065 — see BUILD_VALIDATION.md.
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/47
+  merged_at: |
+    2026-07-19
+  evidence: |
+    npm run build (agent); /audit → /cleanup; CI green; merged to master via PR #47.
+
+---
 
 - id: TASK-546
   title: Fix duplicate traits / part chips / feats on character sheets

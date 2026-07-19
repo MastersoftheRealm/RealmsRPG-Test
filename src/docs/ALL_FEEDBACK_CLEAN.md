@@ -1,6 +1,6 @@
 # ALL_FEEDBACK ? Consolidated & Curated
 
-Last updated: 2026-07-19 (Archetype Ability vs Primary/Secondary UX clarification → TASK-545)
+Last updated: 2026-07-19 (guided skills Ability chip + Skill Bonus tip → TASK-548)
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -16,6 +16,7 @@ How to use
 
 ### Tooltips (canonical standard)
 - **Tooltips:** static copy in `public/tooltip-text.tsx`, `InfoTippy` (`@floating-ui/react`). TASK-376 + TASK-392 complete. Do not reintroduce DB tooltips.
+- **Ability/defense definitions (2026-07-19):** Word-tied tips (no Info icon) via `WordHelpTip` + `getAbilityHelp` / `getDefenseHelp` on character sheet and guided Abilities — **TASK-547**.
 
 ---
 
@@ -1771,7 +1772,7 @@ Notes
 - Priority: High
 - Feedback: Add Layer 2 to feat selection pages ? same button location/design as abilities go-deeper; view all feats (modal or in-step expand); same style/location button to go back. Follow product overview + shared modules.
 - Expected: GuidedLayerNav expand/collapse; L2 filtered ranked browse; selections persist when returning to L1.
-- Disposition: Implemented 2026-07-11 ? TASK-429 GuidedFeatsBrowsePanel in-step L2 (not modal).
+- Disposition: Implemented 2026-07-11 — TASK-429 GuidedFeatsBrowsePanel in-step L2 (not modal). Superseded 2026-07-19 — TASK-565 GuidedFeatsL2Modal (UnifiedSelectionModal), matching skills/loadout/powers L2 grammar.
 
 **Raw Feedback Log ? 2026-07-15 (Guided choice-card deep-dive / ?Layer 2 Cards?)**
 - Date: 2026-07-15
@@ -2473,6 +2474,15 @@ Notes
 - Expected: Expand/collapse from header **or** body — GridListRow mobile summary + non-interactive expanded panel; ExpandableChip expanded description; Options/buttons/chip groups keep their own handlers. GuidedChoiceCard select/"See more" grammar unchanged.
 - Disposition: Implemented as **TASK-539**. QA: DEV-V-021-T004.
 
+**Raw Feedback Log - 2026-07-19 (guided skills Ability + Skill Bonus tip)**
+- Date: 2026-07-19
+- Context: Guided creator → Skills step
+- Priority: Medium
+- Feedback (verbatim):
+  In the guided creator we should list the ability that contributes to the skills listed so people know what ability is tied to each skill. Also a simple hover/tap topltip on the skill bonus to explain how its calculated would be good.
+- Expected: Each listed Skill shows its contributing Ability; Skill Bonus has hover/tap help showing Ability + Skill Value = Skill Bonus.
+- Disposition: Implemented as **TASK-548** (renumbered; TASK-544–547 + DEV-V-013-T065 taken on master). QA: DEV-V-013-T066.
+
 **Raw Feedback Log - 2026-07-18 (sheet Skills Value stepper + clipped)**
 - Date: 2026-07-18
 - Context: Character sheet Skills panel — desktop edit mode Value steppers
@@ -2481,6 +2491,15 @@ Notes
   desktop skills on character sheet, the + on skill val increase steppers is pushed behing the right side, so that's an issue.
 - Expected: In Skills edit mode on desktop (`lg+` narrow Skills column), each Value stepper shows a full usable `+` (not clipped by the panel/card edge); horizontal scroll via TableScroll if the table is wider than the panel.
 - Disposition: Implemented as **TASK-543** (renumbered; TASK-540–542 taken by auth / sticky footer / inventory+roll-log). QA: DEV-V-009-T024.
+
+**Raw Feedback Log - 2026-07-19 (Guided feats See more → add modal)**
+- Date: 2026-07-19
+- Context: Guided creator → Archetype Feats / Character Feat Layer 2
+- Priority: High
+- Feedback (verbatim):
+  As task 565 (idc if this is higher than next highest I dont want task conflicts): see all Feats shouldn't add all fests to the list as cards it should instead be an add modal like other L2 see all buttons in the guided creator.
+- Expected: See more Feats / See more Character Feats opens an add modal (UnifiedSelectionModal grammar like Browse all Skills / Loadout / Powers), not an in-step full-catalog card grid.
+- Disposition: Implemented as **TASK-565**. QA: DEV-V-013-T012.
 
 **Raw Feedback Log - 2026-07-19 (duplicate sheet lists / part chips / traits / feats)**
 - Date: 2026-07-19
@@ -2544,3 +2563,12 @@ Notes
   people put in an email in that's valid it says invalid email?
 - Expected: Valid addresses are accepted; only true format failures say invalid email. SMTP/confirmation-send failures must not be mislabeled as invalid email.
 - Disposition: Implemented as **TASK-540**. Root cause: register/forgot-password mapped any error containing `"email"` to “Invalid email address.” QA: DEV-V-024-T004–T005.
+
+**Raw Feedback Log - 2026-07-19 (ability/defense word tooltips)**
+- Date: 2026-07-19
+- Context: Character sheet Abilities/Defenses; guided creator Abilities
+- Priority: High
+- Feedback (verbatim):
+  For character sheets/guided creator we need hover/tap tooltips (no icon just tied to the word) for all abilities, and defenses. [owner-provided ability + defense definition copy]. Use our integrated systems already existing for tooltips following our constitution and rules and using the proper docs to reference tooltip implementation.
+- Expected: Word-tied hover/focus/touch-hold tips on ability and defense names (no Info icon); copy from tooltip-text.tsx via InfoTippy/WordHelpTip.
+- Disposition: Implemented as **TASK-547** (renumbered; TASK-544/545/546 taken by PRs #45/#49/#48). QA: DEV-V-009-T026 + DEV-V-013-T065.

@@ -259,8 +259,8 @@ export {
 
 // ThemeToggle - Dark/Light/System theme switcher
 export { ThemeToggle } from './theme-toggle';
-export { InfoTippy } from './info-tippy';
-export type { InfoTippyProps } from './info-tippy';
+export { InfoTippy, WordHelpTip } from './info-tippy';
+export type { InfoTippyProps, WordHelpTipProps } from './info-tippy';
 export {
   DescriptorChipWithTip,
   type DescriptorChipWithTipProps,

@@ -1,11 +1,11 @@
 /**
- * Archetype feats — path guidance groups (L1) + filtered browse (L2).
+ * Archetype feats — path guidance groups (L1) + L2 add modal (TASK-565).
  */
 
 'use client';
 
 import { useMemo, useCallback, useState } from 'react';
-import { Spinner } from '@/components/ui';
+import { EmptyState, Spinner } from '@/components/ui';
 import { GuidedLayerNav } from '@/components/shared';
 import { cn } from '@/lib/utils';
 import { useCodexFeats, type Feat } from '@/hooks';
@@ -18,7 +18,7 @@ import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
 import { GuidedChoiceCard } from '../guided-choice-card';
 import { GuidedFeatRestrictionNotice } from '../guided-feat-restriction-notice';
-import { GuidedFeatsBrowsePanel } from '../guided-feats-browse-panel';
+import { GuidedFeatsL2Modal } from '../guided-feats-l2-modal';
 import { getFeatRestrictionNotice } from '@/lib/codex/feat-restriction-notice';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from '../guided-choice-styles';
 import { GuidedStepLayout } from '../guided-step-layout';
@@ -28,7 +28,6 @@ import { EMPTY_GUIDANCE_GROUPS, EMPTY_STRING_ARRAY } from '@/lib/empty';
 import type { PathGuidanceGroup } from '@/types/archetype';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.archetypeFeats;
-const layerNavCopy = GUIDED_CREATOR_COPY.layerNav;
 
 function resolveFeat(id: string, featById: Map<string, Feat>) {
   const key = String(id);
@@ -45,7 +44,7 @@ export function ArchetypeFeatsStep() {
   const { draft, updateDraft } = useGuidedCreatorStore();
   const { pathData, archetype } = useGuidedPathData();
   const { data: feats = [], isLoading } = useCodexFeats();
-  const [browsing, setBrowsing] = useState(false);
+  const [browseOpen, setBrowseOpen] = useState(false);
 
   const maxFeats = calculateMaxArchetypeFeats(1, draft.archetypeType ?? undefined);
   const guidanceGroups = pathData?.level1?.guidance_groups;
@@ -136,37 +135,38 @@ export function ArchetypeFeatsStep() {
         <div className="flex justify-center py-12">
           <Spinner />
         </div>
-      ) : browsing || !hasLayer1Options ? (
-        <>
-          <GuidedFeatsBrowsePanel
-            featType="archetype"
-            feats={feats}
-            selectedIds={draft.archetypeFeatIds}
-            maxSelections={maxFeats}
-            onSelectionChange={(ids) => updateDraft({ archetypeFeatIds: ids })}
-            recommendedIds={recommendedIds}
-            requirementCharacter={requirementCharacter}
-          />
-          {hasLayer1Options ? (
-            <GuidedLayerNav
-              collapseLabel={layerNavCopy.backToRecommendations}
-              onCollapse={() => setBrowsing(false)}
-            />
-          ) : null}
-        </>
       ) : (
         <>
-          {groups.length > 0 ? (
-            <div className="space-y-8">
-              <p className="font-nunito text-sm text-text-secondary">{stepCopy.groupIntro}</p>
-              {groups.map(renderGroupSection)}
-            </div>
+          {hasLayer1Options ? (
+            groups.length > 0 ? (
+              <div className="space-y-8">
+                <p className="font-nunito text-sm text-text-secondary">{stepCopy.groupIntro}</p>
+                {groups.map(renderGroupSection)}
+              </div>
+            ) : (
+              <div className={GUIDED_CHOICE_COMPACT_GRID_CLASS}>
+                {fallbackFeatIds.slice(0, maxFeats * 3).map((id) => renderFeatCard(String(id)))}
+              </div>
+            )
           ) : (
-            <div className={GUIDED_CHOICE_COMPACT_GRID_CLASS}>
-              {fallbackFeatIds.slice(0, maxFeats * 3).map((id) => renderFeatCard(String(id)))}
-            </div>
+            <EmptyState title={stepCopy.emptyTitle} description={stepCopy.emptyDescription} />
           )}
-          <GuidedLayerNav expandLabel={stepCopy.seeMore} onExpand={() => setBrowsing(true)} />
+
+          <GuidedLayerNav expandLabel={stepCopy.seeMore} onExpand={() => setBrowseOpen(true)} />
+
+          {browseOpen ? (
+            <GuidedFeatsL2Modal
+              isOpen
+              featType="archetype"
+              feats={feats}
+              recommendedIds={recommendedIds}
+              initialSelectedIds={draft.archetypeFeatIds}
+              maxSelections={maxFeats}
+              requirementCharacter={requirementCharacter}
+              onClose={() => setBrowseOpen(false)}
+              onConfirm={(ids) => updateDraft({ archetypeFeatIds: ids })}
+            />
+          ) : null}
         </>
       )}
     </GuidedStepLayout>
