@@ -55,6 +55,10 @@
     Suite DEV-V-009 T026 + DEV-V-013 T065 — see BUILD_VALIDATION.md.
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/47
+  merged_at: |
+    2026-07-19
+  evidence: |
+    npm run build (agent); /audit → /cleanup; CI green; merged to master via PR #47.
 
 ---
 - id: TASK-546
