@@ -83,4 +83,13 @@ describe('getAuthErrorMessage', () => {
       'Failed to update password'
     );
   });
+
+  it('maps delete-account incorrect password without local page forks', () => {
+    expect(
+      getAuthErrorMessage(new Error('Invalid login credentials'), 'delete-account')
+    ).toBe('Incorrect password');
+    expect(getAuthErrorMessage(new Error(''), 'delete-account')).toBe(
+      'Failed to delete account'
+    );
+  });
 });

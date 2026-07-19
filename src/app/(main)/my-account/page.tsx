@@ -338,14 +338,7 @@ function AccountContent() {
       }
       router.push('/');
     } catch (err: unknown) {
-      const raw = getErrorMessage(err, 'Failed to delete account');
-      let message = 'Failed to delete account';
-      if (raw.includes('wrong') || raw.includes('Invalid') || raw.includes('incorrect')) {
-        message = 'Incorrect password';
-      } else {
-        message = raw;
-      }
-      setDeleteError(message);
+      setDeleteError(getAuthErrorMessage(err, 'delete-account'));
       setDeleting(false);
     }
   };

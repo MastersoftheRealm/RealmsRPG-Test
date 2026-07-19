@@ -14,7 +14,8 @@ export type AuthErrorContext =
   | 'reset-password'
   | 'resend'
   | 'update-email'
-  | 'update-password';
+  | 'update-password'
+  | 'delete-account';
 
 function readAuthError(error: unknown): { message: string; code: string } {
   const e = error as { message?: unknown; code?: unknown };
@@ -114,6 +115,8 @@ function fallbackMessage(context: AuthErrorContext): string {
       return 'Failed to update email';
     case 'update-password':
       return 'Failed to update password';
+    case 'delete-account':
+      return 'Failed to delete account';
     case 'forgot-password':
     case 'resend':
     case 'reset-password':
@@ -141,7 +144,9 @@ export function getAuthErrorMessage(
   }
 
   if (
-    (context === 'update-email' || context === 'update-password') &&
+    (context === 'update-email' ||
+      context === 'update-password' ||
+      context === 'delete-account') &&
     isIncorrectPasswordError(message, code)
   ) {
     return context === 'update-password'

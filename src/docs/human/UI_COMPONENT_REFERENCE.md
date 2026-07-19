@@ -193,7 +193,7 @@ Pattern notes: expandable chips own their expansion state (or parent via Expanda
   - Props: `isOpen`, `onClose`, `title?`, `description?`, `size?` (`sm|md|lg|xl|2xl|full`), `showCloseButton?`.
   - Behavior: locks body scroll when open, listens for Escape key, backdrop click closes by default, modal content uses `animate-modal-pop` (CSS animation in design tokens).
 
-- `LoadingOverlay` / `LoadingState` (in `spinner.tsx`) — container-level or full-screen loading overlays used in pages or modals.
+- `LoadingState` (in `spinner.tsx`) — centered page/section loading. (`LoadingOverlay` removed `/debt` 2026-07-19.)
 
 Modal usage notes: any chip/list/collapsible can be used inside a modal; no modal-specific chip variants are used — components are reused inside modals.
 
@@ -411,7 +411,7 @@ These slots allow `GridListRow` to replace custom character sheet components (Po
 - Pattern: Centered spinner with optional message
 - Usage: Page/section loading states
 
-**LoadingOverlay** — removed (`/debt` 2026-07-19). Use `LoadingState` / `Spinner`.(src/components/ui/spinner.tsx#L137)
+**LoadingOverlay** — removed (`/debt` 2026-07-19). Use `LoadingState` / `Spinner`.
 - Props: `isLoading`, `message?`, `fullScreen?`
 - Pattern: Conditional overlay with backdrop + spinner
 - Usage: Forms, modals during save/submit
@@ -939,7 +939,7 @@ Based on the comprehensive audit, here are key patterns and recommendations:
      - `LoadingState` (spinner with message)
      - `LoadingSpinner` (in list-components, wrapper around Spinner)
    - **Recommendation:** 
-     - Keep: `Spinner` (primitive), `LoadingState` (with message), `LoadingOverlay` (blocking)
+     - Keep: `Spinner` (primitive), `LoadingState` (with message)
      - Remove: `LoadingSpinner` duplicate
      - Standardize loading message styling
 

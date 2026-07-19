@@ -14,7 +14,7 @@ Do **not** read the done archive at session start.
 
 **Counts:** 15 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** TASK-535 innate reclassify (codex, owner ack). TASK-500 image library deferred. TASK-381 sheet Phase 2 shipped (facade). Repo anti-debt → `/debt`.
+**Hot notes:** TASK-535 innate (codex ack). TASK-500 deferred. TASK-381 sheet facade shipped. Anti-debt → `/debt`.
 
 ---
 
@@ -121,20 +121,13 @@ Do **not** read the done archive at session start.
     explicitly closes leftovers as intentional). Baseline after batch 4: **104**
     (set-state-in-effect 36, exhaustive-deps 60, preserve-manual-memoization 8).
 
-    Still to finish (safe batches — continue TASK-430):
-    - Encounter views + encounter route pages (Skill/Combat/Mixed) — careful; sync UI has DEV-V.
-    - Crafting `[id]` page effects/deps.
-    - Shared `components/ui/modal.tsx` (2) — high reuse; parity-test every fullScreenOnMobile modal.
-    - Sheet domain hooks (`use-sheet-*-actions.ts`) — facade already split (TASK-381 Phase 2);
-      fix warnings per domain module, not the thin composer.
-    - Smaller leftovers as they appear in lint dumps (admin pages, use-profile, etc.).
+    Still to finish: encounters + crafting `[id]` + `modal.tsx` (parity-test FSM) + sheet
+    domain hooks (`use-sheet-*-actions`, not the thin facade) + smaller lint leftovers.
   follow_up_tasks:
     - TASK-381
   notes: |
-    Do not mass-disable. Prefer derive / remount / stable empties (`lib/empty.ts`).
-    2026-07-19 /debt: sheet actions are a facade (~199 LOC) over domain hooks — stale “god-file
-    ~45 warnings in use-character-sheet-actions” note removed. Creator pages still large
-    (TASK-381). Keep status partial until warning count is materially flattened or owner closes.
+    Prefer derive / remount / `lib/empty.ts`. Sheet actions are a facade (TASK-381 Phase 2);
+    creators still large. Keep partial until warnings flatten or owner closes.
 
 ---
 
@@ -422,14 +415,12 @@ Do **not** read the done archive at session start.
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/ai/guide/02-components-and-lists.md
   description: |
-    /global-audit: AddCombatantModal is a parallel add-picker (Modal + SearchInput +
-    custom rows) with encounter qty/type/initiative/campaign tabs. Owner ack required
-    before forcing UnifiedSelectionModal — may stay an intentional exception.
+    Parallel add-picker (Search + custom rows; qty/type/initiative/campaign). Owner ack
+    before USM migrate — may stay an intentional exception.
   acceptance_criteria:
-    - Owner decides: migrate onto USM (with scoped AC for initiative/campaign UX), or
-      document as intentional non-USM exception in FEATURE_INDEX + guide/02.
-    - If migrate: fullScreenOnMobile + sticky footer parity; behavior preserved; build green.
-    - If exception: docs list it beside RealmsImagePicker-style intentional alternates; no code fork creep.
+    - Owner decides: migrate onto USM (scoped initiative/campaign AC) or document exception
+      in FEATURE_INDEX + guide/02 (alongside RealmsImagePicker-style alternates).
+    - Migrate path: sticky footer + fullScreenOnMobile parity; build green.
   notes: |
     Filed from /audit after /debt 2026-07-19. Gated — do not implement migrate without owner ack.
 
@@ -447,15 +438,11 @@ Do **not** read the done archive at session start.
     - src/components/shared/unified-selection-modal.tsx
     - src/docs/ai/FEATURE_INDEX.md
   description: |
-    /global-audit: AdminSpeciesTab trait picker hand-rolls Modal + SearchInput +
-    GridListRow + useModalListState (same shell as pre-USM AddProficiencyModal).
-    AdminTraitsTab nests a similar list inside the edit modal. Prefer USM after
-    TASK-567, or ack as admin-only exception.
+    AdminSpecies trait picker hand-rolls Modal+Search+GLR (pre-USM shell). AdminTraits
+    nests similar list in edit modal. Prefer USM after TASK-567, or admin-only exception.
   acceptance_criteria:
-    - After TASK-567 pattern: migrate AdminSpecies trait picker to USM, or document
-      admin-only exception in FEATURE_INDEX / guide/02.
-    - AdminTraits nested list either shares the same shell or is explicitly scoped as
-      in-modal editor chrome (not a catalog picker).
+    - Migrate AdminSpecies trait picker to USM after TASK-567, or document admin-only
+      exception; AdminTraits nested list shares shell or is scoped as editor chrome.
     - npm run build if UI touched.
   notes: |
     Filed from /audit after /debt 2026-07-19. Prefer sequencing after TASK-567 lands.
