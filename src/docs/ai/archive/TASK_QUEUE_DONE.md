@@ -49,8 +49,10 @@
     Renumbered from TASK-544→545→546 on merge — TASK-544/545 path ability work (PR #45/#49).
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/48
+  merged_at: |
+    2026-07-19
   evidence: |
-    vitest: dedupe-saved-parts, collect-sheet-traits, build-character; npm run build.
+    vitest: dedupe-saved-parts, collect-sheet-traits, build-character; npm run build; CI green; merged to master via PR #48.
   build_validation: |
     suite: DEV-V-009
     tests:
