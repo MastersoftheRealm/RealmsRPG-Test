@@ -139,7 +139,7 @@ These terms are used consistently across all Realms resources. Capitalize them i
 | **Skill** / **Skills** | Trained competence; spent with Skill Points; used on Skill Rolls |
 | **Species** | Character lineage (Human, Elf, Dwarf, etc.). Not "race". |
 | **Archetype** / **Archetype Path** | Path type that guides Feats, Skills, and Loadout: Power, Martial, or Powered-Martial. Not "class". |
-| **Primary Ability** / **Secondary Ability** | Path governing Abilities (admin + creators). Every path has a **Primary Ability**; many also list a distinct **Secondary Ability**. Powered-Martial: Primary = Power side, Secondary = Martial side. Formulas that need the highest path Ability use the higher of Primary and Secondary when both apply. |
+| **Archetype Ability** | Governing Ability for a path. Powered-Martial paths have **two** Archetype Abilities: **Archetype Power Ability** and **Archetype Martial Ability** (both primary — never primary/secondary between those two). When a formula needs a single Archetype Ability score, use the higher of the two. Creators may label a path’s Archetype Ability as “Primary Ability” and an optional recommended ability as “Secondary Ability” for clarity; those are UX labels, not separate rules terms. |
 | **Score** | Passive target or passive total = **Bonus + 10** (Defense Score, Skill Score, Difficulty Score, Evasion, etc.). See Score Pattern above. |
 | **Bonus** | A number added to rolled dice. Other games call this a "modifier"; Realms does not. **Capitalize every named Bonus** when it is a rules label (same for related compounds). |
 | **Attack Bonus** | Bonus on an Attack Roll (often Martial Bonus or Power Bonus, including ranged or other specific Attack Bonuses). Capitalize as a game term. |
@@ -455,10 +455,10 @@ Any Bonus can be converted to a Score by adding 10.
 
 ### Health & Energy Allocation
 
-- **Base health:** 8 + Vitality (or Strength if Vitality is the Primary Ability)
-- **Base energy:** Primary Ability score (highest of Primary and Secondary when both apply)
+- **Base health:** 8 + Vitality (or Strength if Vitality is archetype ability)
+- **Base energy:** Archetype ability score
 - **Pool at level 1:** 18 points to divide between HP and EN
-- **Per level:** +12 to pool; add Vitality to Health, highest Primary/Secondary Ability to Energy
+- **Per level:** +12 to pool; add Vitality to Health, highest Archetype Ability to Energy
 
 ---
 

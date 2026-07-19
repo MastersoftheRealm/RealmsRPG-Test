@@ -36,7 +36,7 @@ export interface AbilityScoreGridProps {
   abilities: Abilities;
   powerAbility?: AbilityName;
   martialAbility?: AbilityName;
-  /** Path Secondary Ability (pill when distinct from power/martial Primary). */
+  /** Path Secondary Ability — UI label for optional recommended ability (pill when distinct from power/martial Archetype Abilities). */
   secondaryAbility?: AbilityName;
   mode?: 'display' | 'edit';
   onAbilityChange?: (ability: AbilityName, value: number) => void;
@@ -119,20 +119,21 @@ function abilityGradientClass(role: PathAbilityRole | null): string {
 /**
  * Visible pill copy — keep single-line and short on narrow tiles so wrapping cannot
  * grow the straddling pill into the ability name. Full terms stay on aria-label/title.
- * Guided path cards / overview use Primary + Secondary (not Power/Martial tags).
+ * Guided UX: Primary / Secondary for path archetype vs recommended secondary.
+ * Hybrid grid keeps Power / Martial (both are Archetype Abilities — not Primary/Secondary).
  */
 function pathAbilityVisibleLabel(role: PathAbilityRole, hybrid: boolean): string {
   if (role === 'secondary') return 'Secondary';
-  if (role === 'power') return 'Primary';
-  if (role === 'martial') return hybrid ? 'Secondary' : 'Primary';
+  if (role === 'power') return hybrid ? 'Power' : 'Primary';
+  if (role === 'martial') return hybrid ? 'Martial' : 'Primary';
   return 'Primary';
 }
 
-/** Full term for screen readers / hover (matches path overview wording). */
+/** Full term for screen readers / hover. */
 function pathAbilityAccessibleName(role: PathAbilityRole, hybrid: boolean): string {
   if (role === 'secondary') return 'Secondary Ability';
-  if (role === 'power') return 'Primary Ability';
-  if (role === 'martial') return hybrid ? 'Secondary Ability' : 'Primary Ability';
+  if (role === 'power') return hybrid ? 'Archetype Power Ability' : 'Primary Ability';
+  if (role === 'martial') return hybrid ? 'Archetype Martial Ability' : 'Primary Ability';
   return 'Primary Ability';
 }
 

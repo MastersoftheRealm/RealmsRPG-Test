@@ -1,6 +1,6 @@
 # ALL_FEEDBACK ? Consolidated & Curated
 
-Last updated: 2026-07-19 (guided path Primary/Secondary Ability labels → TASK-544)
+Last updated: 2026-07-19 (Archetype Ability vs Primary/Secondary UX clarification → TASK-545)
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -2489,7 +2489,16 @@ Notes
 - Feedback (verbatim):
   A major bug: on character sheets, some lists, powers, power parts lists, techniques/techniques expandable parts chips, etc there are many cases of duplicates in thede areas, such as a power having 2 or 3 of the same expandable part chip listed. Same for dome traits and Feats being listed on new characters and such, could be a backend storing error, how guided creator handles new character data, how data is being loaded, etc. Requires thorough investigation to fix globally not just bandaid and ensure our best practices for the codebase health are followed.
 - Expected: Unique part chips per power/technique; unique traits/feats on new and existing characters; fix at save/load/enrichment layers (not display-only bandaid).
-- Disposition: Implemented as **TASK-545** (renumbered; TASK-544 taken by guided Primary/Secondary path labels). Root causes: guided `selectedTraits` included species traits (sheet also lists species from codex); library parts arrays concatenated without dedupe on creator save/sync/calc. Shared `dedupeSavedParts` / `collectSheetTraits`. QA: DEV-V-009-T025.
+- Disposition: Implemented as **TASK-546** (renumbered; TASK-544/545 taken by path ability UX on master). Root causes: guided `selectedTraits` included species traits (sheet also lists species from codex); library parts arrays concatenated without dedupe on creator save/sync/calc. Shared `dedupeSavedParts` / `collectSheetTraits`. QA: DEV-V-009-T025.
+
+**Raw Feedback Log - 2026-07-19 (Archetype Ability vs Primary/Secondary UX clarification)**
+- Date: 2026-07-19
+- Context: After TASK-544 / PR #45 — GAME_RULES + powered-martial labeling
+- Priority: High
+- Feedback (verbatim):
+  Wait hold on, the primary ability is still called the archetype ability, it was just a fix on the ui/ux for nee users using thr guided creator to understand what paths primary abilities were vs secondary ones. For powered martial paths they have primary abilities (two). The distinction for primary and secondary also has nothing to with archetype type, ie power vs martial. Ie a martial character can have an archetype (primary) ability of Strength and a power character could also have a Archetype Ability of Strength. For a power user a primary, archetype, or power ability all describe the same thing, and for a martial a primary,  archetype ​​or martial ability ALSO describes the same thing. For understanding we use primary and secondary for paths and such, but that's not a game rule term really. Only archetype or power / martial ability is. For a powered martial character they have two archetype abilities, a power and martial one, and for calculations usung archetype ability in these cases its the higher of the two.
+- Expected: GAME_RULES keep Archetype Ability (hybrids = two primaries, higher-of-two for formulas). Guided Primary/Secondary = UX only. Powered-martial shows two Primary chips (not Primary+Secondary for power/martial sides). Ability grid hybrids keep Power/Martial pills.
+- Disposition: Implemented as **TASK-545**. QA: DEV-V-013-T018, T020, T034, T035.
 
 **Raw Feedback Log - 2026-07-19 (guided path Primary/Secondary Ability labels)**
 - Date: 2026-07-19
@@ -2498,7 +2507,7 @@ Notes
 - Feedback (verbatim):
   In the guided creator instrad of listing it as archetype ability and secondary, make it Primary and Secondary ability. In the archetype path selection screen ensure descriptor chips appear for Primary Abilty and Secondary on the cards for paths, in more details for an archetype path the abilities need only list Primary and Secondary and we dont need the "power" or "martial" tag in the more details modal.
 - Expected: Path cards show Primary Ability / Secondary Ability chips; More details Path Abilities use those labels only (no Power/Martial type tag); ability grid pills say Primary / Secondary.
-- Disposition: Implemented as **TASK-544**. QA: DEV-V-013-T018, T020, T034, T035.
+- Disposition: Implemented as **TASK-544**. Clarified/corrected by **TASK-545**. QA: DEV-V-013-T018, T020, T034, T035.
 
 **Raw Feedback Log - 2026-07-18 (roll log bonus dark mode + inventory add equipment)**
 - Date: 2026-07-18

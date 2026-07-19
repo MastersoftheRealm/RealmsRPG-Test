@@ -58,21 +58,21 @@ export function GuidedPathDetailOverview({ path, pathData }: GuidedPathDetailOve
   }, [level1?.proficiency, path.martial_prof_start, path.power_prof_start, pathType]);
 
   const abilityChips = useMemo(() => {
-    const { primary, secondary } = resolvePathAbilityLabels(path);
+    const { primaryAbilities, secondaryAbility } = resolvePathAbilityLabels(path);
     const chips: Array<{ key: string; label: string; variant?: 'primary' }> = [];
 
-    if (primary) {
+    for (const ability of primaryAbilities) {
       chips.push({
-        key: 'primary',
-        label: copy.primaryAbility(formatAbilityLabel(primary)),
+        key: `primary-${ability}`,
+        label: copy.primaryAbility(formatAbilityLabel(ability)),
         variant: 'primary',
       });
     }
 
-    if (secondary) {
+    if (secondaryAbility) {
       chips.push({
         key: 'secondary',
-        label: copy.secondaryAbility(formatAbilityLabel(secondary)),
+        label: copy.secondaryAbility(formatAbilityLabel(secondaryAbility)),
       });
     }
 

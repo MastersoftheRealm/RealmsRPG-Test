@@ -898,7 +898,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-545)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats.
 
@@ -1171,12 +1171,12 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Expected** | Value column has enough min-width for the compact ValueStepper; `+` is never cut off behind the right edge; table scrolls horizontally when needed instead of crushing the stepper. |
 | **Report** | DEV-V-009-T024: PASS / FAIL / SKIP — |
 
-#### DEV-V-009-T025 — No duplicate traits / part chips / feat rows (TASK-545)
+#### DEV-V-009-T025 — No duplicate traits / part chips / feat rows (TASK-546)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-009 — Character sheet refactor |
-| **Task** | TASK-545 |
+| **Task** | TASK-546 |
 | **Where** | `/characters/new/guided` finish → `/characters/[id]` Feats + Library Powers/Techniques; also Library / Official power expand |
 | **Steps** | 1. Create a guided character with a species that has species traits + at least one ancestry trait. 2. Open Feats/Traits — each species trait and ancestry trait appears once (no double listing). 3. Open a power/technique with parts — each expandable part chip name appears once (no 2–3 identical chips). 4. Confirm archetype/character feats are not duplicated across sections. 5. Optional: re-save a power in Power Creator and confirm part chips stay unique. |
 | **Expected** | Trait, feat, power/technique row, and part-chip lists have unique entries; species traits come from species codex, ancestry picks from `selectedTraits` only. |
@@ -1938,7 +1938,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 **Steps**
 1. Open **More details** on an unselected path card; confirm the path is still not selected.
 2. Confirm Overview shows full description immediately (no Power / Martial / Powered-Martial type chip); while options load, a “Loading path options…” line may appear under overview, then sections populate (no blank flash without feedback).
-3. Confirm proficiency (when present), path abilities as **Primary Ability** / **Secondary Ability** chips only (martial = one Primary chip; hybrid = Primary + Secondary; no Power/Martial ability tags), recommended ability scores, and recommended skills when data exists.
+3. Confirm proficiency (when present), path abilities as **Primary Ability** chips for each Archetype Ability (martial/power = one Primary; powered-martial = **two** Primary chips — both archetype abilities, not Primary+Secondary) plus optional **Secondary Ability** only when a distinct secondary recommended ability exists; no Power/Martial ability *tags* on those chips; recommended ability scores, and recommended skills when data exists.
 4. Expand each listed catalog section (omit empty ones): archetype feats, character feats, weapons (Unarmed Prowess only when that path recommends it), armor, Equipment, techniques (martial) or powers (power / powered-martial). Confirm InfoTippy tips; collapsed rows show truncated descriptions + stats; expand for full copy; weapon/armor named property chips use descriptor + InfoTippy (Training Points spelled out, not TP) when codex properties are known.
 5. Confirm no raw-id “phantom” rows for missing powers/techniques/feats (unresolved refs omitted).
 6. Close modal; select the path via the card; reopen **More details** and confirm selection stays.
@@ -1987,13 +1987,13 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 **Steps**
 1. On the Path step, confirm path cards show descriptor chips for **Primary Ability …** and **Secondary Ability …** when the path has those fields (Advanced creator parity).
 2. Open a **Martial** path → **More details**. Confirm overview shows Martial proficiency only (no Power Proficiency 0). Path abilities read `Primary Ability …` (no Power/Martial type chip). Section title is **Recommended Abilities** (not scores). Recommended Skills chips expand for descriptions.
-3. Open a **Powered-Martial** path → **More details**. Path Abilities show `Primary Ability …` and `Secondary Ability …` (not Power/Martial ability tags).
+3. Open a **Powered-Martial** path → **More details**. Path Abilities show **two** `Primary Ability …` chips (Power + Martial archetype abilities — both primary; not Primary/Secondary between them). No Power/Martial type chip on the overview.
 4. Confirm **Path Options** title + intro sit **above the expandable catalogs** (not inside Overview). Expand Archetype Feat Options (or similar); hover the InfoTippy: tip body must **not** repeat the section title as a heading.
 5. Expand Weapons / Armor / Powers or Techniques: list shows name + description only (no Stats column, no visible column header bar). Expand a row: fact chips are self-describing (`Damage Reduction N`, `Range …`, `Energy N`, `Action Type …`, `Uses N`, property chips with descriptions).
 6. Spot-check Species **More details** tips the same way (no redundant tip titles). Light + dark readable.
 
 **Expected**
-- Unused proficiency lines omitted; path abilities use Primary/Secondary only; no Power/Martial type tag in More details; Path Options bridges into catalogs; title-less tips; Name/Description catalogs with labeled fact chips.
+- Unused proficiency lines omitted; path abilities use Primary for Archetype Ability(ies) and Secondary only for a distinct recommended ability; powered-martial shows two Primaries; no Power/Martial type tag in More details; Path Options bridges into catalogs; title-less tips; Name/Description catalogs with labeled fact chips.
 - Card select still independent of **More details** (T016–T018).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
@@ -2272,18 +2272,18 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | **Suite** | DEV-V-013 |
 | **Related task** | TASK-451 |
 | **Where** | Guided creator → Abilities (and optionally Your Hero summary) |
-| **Needs** | A Power path with a distinct `secondary_ability` (not equal to Primary Ability) |
+| **Needs** | A Power path with a distinct `secondary_ability` (not equal to Archetype Ability) |
 
 **Steps**
 1. Choose a Power path that lists a Secondary Ability in Path **More details**.
 2. Continue to Abilities.
-3. On the ability grid, confirm the primary ability tile has a **Primary** pill (accessible name Primary Ability) and the secondary ability tile has a **Secondary** pill (accessible name Secondary Ability).
+3. On the ability grid, confirm the archetype ability tile has a **Primary** pill (accessible name Primary Ability) and the secondary ability tile has a **Secondary** pill (accessible name Secondary Ability).
 4. Optionally Customize Abilities and confirm both pills remain; check Your Hero summary grid if reached.
 
 **Expected**
-- Secondary Ability pill visible and distinct when path secondary ≠ primary ability.
+- Secondary Ability pill visible and distinct when path secondary ≠ archetype ability.
 - Pills stay single-line and do not overlap ability names (see also T035).
-- Hybrid paths use **Primary** / **Secondary** pills (not Power/Martial); no duplicate Secondary when it equals one of those.
+- Hybrid Powered-Martial paths use **Power** / **Martial** pills (both Archetype Abilities); no duplicate Secondary when `secondary_ability` equals one of those.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -2294,13 +2294,13 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | **Suite** | DEV-V-013 |
 | **Related task** | TASK-452, TASK-455 |
 | **Where** | Guided creator → Abilities (and Your Hero summary grid) |
-| **Needs** | DevTools ~360px width; path with Primary Ability (+ Secondary if available) |
+| **Needs** | DevTools ~360px width; path with Archetype Ability (+ Secondary if available) |
 
 **Steps**
 1. Resize viewport to ~360px width.
 2. On Abilities recommended grid, confirm each tile shows a short ability label (e.g. **INT**, not cramped **INTELLIGENCE**).
-3. Confirm path pills show short single-line copy (**Primary** / **Secondary**) and do **not** wrap into a taller pill that overlaps the ability name.
-4. Hover or inspect the pill: accessible name / title still exposes the full term (e.g. Primary Ability, Secondary Ability).
+3. Confirm path pills show short single-line copy (**Primary** / **Secondary**, or **Power** / **Martial** on hybrids) and do **not** wrap into a taller pill that overlaps the ability name.
+4. Hover or inspect the pill: accessible name / title still exposes the full term (e.g. Primary Ability, Secondary Ability, Archetype Power/Martial Ability on hybrids).
 5. Confirm pills stay inside their tile and do not spill into neighbor tiles at ~360px, tablet, or desktop.
 6. Continue to Your Hero and confirm the same grid behaves.
 
