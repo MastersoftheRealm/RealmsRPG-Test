@@ -63,7 +63,7 @@
 | Guided creator path data | `useGuidedPathData` in `components/guided-creator/use-guided-path-data.ts` (returns `isLoading` while codex archetypes load for selected path — Loadout phase entry waits on it, TASK-527) |
 | Autosave (debounced) | `useAutoSave` |
 | List sorting / modal list state | `useSort`, `sortByColumn`, `useModalListState` |
-| Tooltips (canonical) | `InfoTippy` + `public/tooltip-text.tsx` — **`guide/04-floating-ui-tooltips.md`** (decision matrix) |
+| Tooltips (canonical) | `InfoTippy` + `WordHelpTip` (word-tied, no icon) + `public/tooltip-text.tsx` (`getAbilityHelp` / `getDefenseHelp`) — **`guide/04-floating-ui-tooltips.md`** (decision matrix) |
 | Floating UI (`@floating-ui/react`) | Engine inside `InfoTippy` only today; new anchored UI → shared primitive first — see same guide appendix |
 
 > There is **one** codex fetch shared by all `useCodex*` and `useGameRules` (see `use-codex.ts`). Do not add a parallel codex fetch.
@@ -92,7 +92,7 @@
 | +/- steppers | `ValueStepper`, `DecrementButton`, `IncrementButton` (ADR-0002 / TASK-487 — guided skills bonus chrome); quantities: `QuantitySelector` (wraps ValueStepper), `QuantityBadge`; `UnifiedSelectionModal` `showQuantity` = in-row quantity-first |
 | Point allocation display | `PointStatus`; guided Loadout/powers: `LoadoutBudgetBar`; powered/martial split: `PoweredMartialSlider` |
 | Skill row / allocation | Advanced/creature: `SkillRow`, `SkillsAllocationPage`, `AddSkillModal`, `AddSubSkillModal`. Table `variant`: play view (`isEditing` false) hides `(species)` / `sourceLabel` and species-dimmed prof dots; edit/creator keep them (TASK-485). Sheet/creator edit Value column: `min-w-[7rem]` + compact `ValueStepper` so `+` is not clipped in the narrow desktop Skills panel (TASK-543). Guided L1: `GuidedSkillsPanel`; Guided L2 browse: `skills-step` + `GuidedLayerNav` → `AddSkillModal` (below recommended cards, not on the list) |
-| Ability score grid | `AbilityScoreGrid` (`ability-score-grid.tsx`): display/edit tiles; `powerAbility` / `martialAbility` / `secondaryAbility` pills; `resolveDistinctSecondaryAbility`; mobile display uses `shortName` below `sm`; path pills: **Primary** / **Secondary** (guided UX for archetype vs recommended secondary); hybrids keep **Power** / **Martial** (both Archetype Abilities); full aria-label + tile top padding (TASK-452, TASK-455, TASK-544, TASK-545); roomier edit grid |
+| Ability score grid | `AbilityScoreGrid` (`ability-score-grid.tsx`): display/edit tiles; `powerAbility` / `martialAbility` / `secondaryAbility` pills; `resolveDistinctSecondaryAbility`; mobile display uses `shortName` below `sm`; path pills: **Primary** / **Secondary** (guided UX for archetype vs recommended secondary); hybrids keep **Power** / **Martial** (both Archetype Abilities); full aria-label + tile top padding (TASK-452, TASK-455, TASK-544, TASK-545); roomier edit grid; ability names use `WordHelpTip` + `getAbilityHelp` (TASK-547) |
 | Guided path Primary/Secondary abilities | `resolvePathAbilityLabels` (`lib/guided-creator/path-ability-labels.ts`) — Primary Ability chips for each Archetype Ability (two on powered-martial); Secondary only for distinct recommended; SoT for cards + overview + select (TASK-544/545) |
 | Guided step footer | `GuidedStepFooter`: sticky Back/Continue; `completionHint` stacks above actions below `sm`, centered mid-bar on `sm+` (one mount; TASK-453) |
 | Tab summary header section | `TabSummarySection`, `SummaryItem`, `SummaryRow` — solid theme fills (`bg-*-light` / `bg-surface-alt`, no gradients); sheet Inventory Currency + Armament Proficiency stack below `sm` (TASK-537) |
@@ -114,7 +114,7 @@
 | Image upload + crop | `ImageUploadModal` |
 | Realms Image Library picker | `RealmsImagePicker` — bank browse/select; admin upload-into-bank (`resolveRealmsImagePickerCategories` in `lib/realms-images.ts`) |
 | Theme switch / onboarding | `ThemeToggle`, `OnboardingTour` |
-| Help tooltips | `InfoTippy` + `public/tooltip-text.tsx` — see `guide/04-floating-ui-tooltips.md` |
+| Help tooltips | `InfoTippy` / `WordHelpTip` + `public/tooltip-text.tsx` — see `guide/04-floating-ui-tooltips.md` |
 
 > UI primitives (Modal, Button, Chip, **DescriptorChip**, **ExpandableChip**, PageContainer, PageHeader, TabNavigation, SearchInput, **TableScroll**) live in `@/components/ui`. Modal sizes: `3xl`/`full` for high-complexity editors (admin codex add/edit use `full` + `fullScreenOnMobile`; see DESIGN_SYSTEM).
 
