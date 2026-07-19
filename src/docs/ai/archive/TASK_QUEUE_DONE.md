@@ -30,7 +30,7 @@
   notes: |
     Filed from /debt 2026-07-19. Lib consolidation — no manual QA suite.
   evidence: |
-    npm run build; vitest feat/guided tests (see PR).
+    npm run build (pass 2026-07-19); vitest feats-l2 + feat-selection + feat-restriction-notice (14 passed).
 
 - id: TASK-567
   title: Migrate AddProficiencyModal onto UnifiedSelectionModal
