@@ -295,6 +295,12 @@ export function AddSubSkillModal({
         searchFields={['name', 'description']}
         filterContent={filterContent}
         showFilters={true}
+        optionsActiveCount={(abilityFilter ? 1 : 0) + (baseSkillFilter ? 1 : 0)}
+        optionsSummary={
+          [abilityFilter && `Ability: ${abilityFilter}`, baseSkillFilter && 'Base skill filtered']
+            .filter(Boolean)
+            .join(' · ') || undefined
+        }
         footerExtra={footerExtra}
         confirmDisabled={confirmDisabled}
         size="xl"

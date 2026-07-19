@@ -490,6 +490,13 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
             {filterRow}
           </div>
         }
+        optionsSummary={
+          activeTab === 'creature'
+            ? 'Creature feats'
+            : activeTab === 'library'
+              ? 'Character & archetype'
+              : 'Species traits'
+        }
         size="xl"
         className="md:max-h-[85vh]"
       />

@@ -1,3 +1,54 @@
+- id: TASK-564
+  title: Add/selection modals — list-first Filters chrome
+  created_at: 2026-07-19
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-19
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/shared/filters/filter-section.tsx
+    - src/components/shared/unified-selection-modal.tsx
+    - src/components/character-sheet/add-library-item-modal.tsx
+    - src/components/character-sheet/add-feat-modal.tsx
+    - src/components/shared/add-skill-modal.tsx
+    - src/components/shared/add-sub-skill-modal.tsx
+    - src/components/creator/LoadFromLibraryModal.tsx
+    - src/app/(main)/creature-creator/AddCreatureFeatModal.tsx
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/guide/02-components-and-lists.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Add/load selection modals stacked always-visible source tabs, mode switches,
+    filter rows, and custom forms between search and the sticky footer, leaving
+    almost no room for the scrollable list on mobile and short desktop viewports.
+    Research + progressive-disclosure fix in shared chrome so the list is the
+    primary focus and Filters/search options stay secondary.
+  acceptance_criteria:
+    - Shared UnifiedSelectionModal / FilterSection compact variant: Search + Filters
+      on one toolbar row; headerExtra + filterContent collapsed by default on open.
+    - No new parallel modal chrome; Codex page FilterSection unchanged (page variant).
+    - Call sites can pass optionsSummary / optionsActiveCount; key add modals wired.
+    - MOBILE_UX + guide/02 + FEATURE_INDEX updated; BUILD_VALIDATION DEV-V-016-T014.
+    - npm run build passes.
+  notes: |
+    Owner requested TASK-564 (skipped 547–563). Extends existing shared components
+    (no new shared/ui file / ADR). Complements TASK-541 sticky footer.
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T014
+  developer_test_plan: |
+    Suite DEV-V-016 T014 — see BUILD_VALIDATION.md (list-first Filters chrome).
+  evidence: |
+    npm run build; pattern applied globally via UnifiedSelectionModal.
+
 - id: TASK-546
   title: Fix duplicate traits / part chips / feats on character sheets
   created_at: 2026-07-19

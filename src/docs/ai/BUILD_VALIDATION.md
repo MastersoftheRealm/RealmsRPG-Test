@@ -3175,6 +3175,18 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Expected** | Primary actions live in Modal `footer` (not scrolled children); footer stays sticky on `fullScreenOnMobile`; list scrolls above it. |
 | **Report** | DEV-V-016-T013: PASS / FAIL / SKIP — |
 
+#### DEV-V-016-T014 — Selection modal list-first Filters chrome (TASK-564)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-564 |
+| **Where** | `/characters/[id]` → Edit → Library → Add Power; also Add Feat, Add Skill, Add Equipment; spot-check creature creator Select Powers |
+| **Needs** | Narrow viewport (~360px) and a desktop width; enough list items to scroll |
+| **Steps** | 1. Open Add Power at ~360px. 2. Confirm the modal shows a compact row with **Search** and a **Filters** button (not a stack of SourceFilter / Powers–Empowered tabs / forms above the list). 3. Confirm several list rows are visible between the toolbar and the sticky footer without opening Filters. 4. Tap **Filters** — source / mode (and equipment custom-add when relevant) appear in the panel; Hide Filters collapses them again. 5. Open Add Feat — Filters starts collapsed; opening it reveals category/ability/checkboxes; list remains the main scroll region. 6. Spot-check desktop: same list-first layout (Filters not permanently expanded). |
+| **Expected** | `headerExtra` + `filterContent` live in collapsed-by-default compact `FilterSection`; list is the dominant focus; optional summary/badge when options are non-default; sticky footer still works (T013). |
+| **Report** | DEV-V-016-T014: PASS / FAIL / SKIP — |
+
 ---
 
 ## DEV-V-017 — Site copy modules (TASK-390)

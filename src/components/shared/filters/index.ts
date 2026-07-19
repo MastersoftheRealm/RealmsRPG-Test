@@ -11,7 +11,7 @@
  * - TagFilter: Multi-select tag filter with Any/All mode
  * - CheckboxFilter: Multiple checkbox options
  * - SelectFilter: Simple single-select dropdown
- * - FilterSection: Collapsible container for grouping filters
+ * - FilterSection: Collapsible container (`page` for Codex; `compact` + toolbarStart for selection modals)
  */
 
 export { ChipSelect } from './chip-select';

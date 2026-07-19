@@ -80,6 +80,17 @@ export function AddLibraryItemModal({
       ? EMPOWERED_POWER_COLUMNS
       : getListHeaderColumns(itemType);
 
+  const sourceLabel =
+    source === 'public' ? 'Realms Library' : source === 'my' ? 'My Library' : 'All sources';
+  const modeLabel =
+    itemType === 'power' && powerSelectionMode === 'empowered'
+      ? 'Empowered Techniques'
+      : null;
+  const optionsSummary = [sourceLabel, modeLabel].filter(Boolean).join(' · ');
+  const optionsActiveCount =
+    (source !== 'all' ? 1 : 0) +
+    (itemType === 'power' && powerSelectionMode === 'empowered' ? 1 : 0);
+
   return (
     <UnifiedSelectionModal
       isOpen={isOpen}
@@ -87,10 +98,12 @@ export function AddLibraryItemModal({
       title={titleOverride ?? getAddLibraryItemTitle(itemType)}
       description={
         itemType === 'equipment'
-          ? 'Pick from your library below, or add a custom item by name.'
-          : 'Click a row (or the + button) to select, then click Add Selected.'
+          ? 'Pick from your library below, or open Filters to add a custom item by name.'
+          : 'Click a row (or the + button) to select, then click Add Selected. Open Filters to switch library source.'
       }
       headerExtra={headerExtraContent}
+      optionsSummary={optionsSummary}
+      optionsActiveCount={optionsActiveCount}
       items={items}
       isLoading={isLoading}
       onConfirm={handleConfirm}
