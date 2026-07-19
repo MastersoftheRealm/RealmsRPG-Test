@@ -44,8 +44,6 @@
     (not tile); guide/04 + tooltips README; related_files honesty.
     Renumbered from TASK-544→545→546→547 on merge — path ability PRs #45/#49 and sheet
     duplicates PR #48 claimed earlier IDs; BV tip test is T026 (T025 = duplicates).
-  evidence: |
-    npm run build (agent); /audit → /cleanup docs + a11y honesty.
   build_validation: |
     suite: DEV-V-009 / DEV-V-013
     tests:
