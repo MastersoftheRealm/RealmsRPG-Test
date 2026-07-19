@@ -33,8 +33,9 @@ import {
 } from '@/lib/game/skill-allocation';
 import { useGameRules } from '@/hooks';
 import { formatBonus } from '@/lib/utils';
-import { SkillRow, PointStatus, AddSkillModal, AddSubSkillModal, ValueStepper } from '@/components/shared';
+import { SkillRow, PointStatus, AddSkillModal, AddSubSkillModal, ValueStepper, WordHelpTip } from '@/components/shared';
 import { Button, Spinner, Alert, Card, PageHeader, TableScroll } from '@/components/ui';
+import { getDefenseHelp } from '../../../public/tooltip-text';
 import type { Abilities, DefenseSkills } from '@/types';
 
 const DEFENSE_KEYS: (keyof DefenseSkills)[] = [
@@ -484,7 +485,13 @@ export function SkillsAllocationPage({
                 key={key}
                 className="flex flex-col p-3 rounded-lg bg-surface-alt border border-border-light"
               >
-                <span className="font-medium text-text-primary mb-1">{DEFENSE_LABELS[key]}</span>
+                <WordHelpTip
+                  content={getDefenseHelp(key)}
+                  label={`About ${DEFENSE_LABELS[key]}`}
+                  className="mb-1 font-medium normal-case text-text-primary"
+                >
+                  {DEFENSE_LABELS[key]}
+                </WordHelpTip>
                 <div className="flex items-center justify-between gap-2">
                   <ValueStepper
                     value={current}

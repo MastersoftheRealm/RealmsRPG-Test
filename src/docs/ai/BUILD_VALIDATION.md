@@ -898,7 +898,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-544)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats.
 
@@ -1170,6 +1170,17 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Steps** | 1. Open a character sheet at ≥1024px width (Skills in the left column of the three-panel grid). 2. Enter sheet edit mode and click the Skills pencil so Value steppers appear. 3. Confirm each skill row shows a full `−` value `+` control — the `+` button is not clipped by the card/panel edge. 4. Confirm the remove (X) control remains usable. 5. If the table is wider than the panel, confirm `TableScroll` allows horizontal scroll without hiding the `+` permanently. 6. Optional ~360px: edit Skills; Value steppers remain fully usable via horizontal scroll. |
 | **Expected** | Value column has enough min-width for the compact ValueStepper; `+` is never cut off behind the right edge; table scrolls horizontally when needed instead of crushing the stepper. |
 | **Report** | DEV-V-009-T024: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T025 — Ability and defense name tooltips (TASK-544)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-544 |
+| **Where** | `/characters/[id]` → Abilities & Defenses section |
+| **Steps** | 1. Open a character sheet. 2. Hover (desktop) or touch-hold ~400ms (mobile ~360px) the **Strength** ability name — confirm a tip opens with the Strength definition (no Info icon; tip is on the word). 3. Repeat for at least one other ability (e.g. **Charisma**). 4. Hover/touch-hold **Might** (or **Mental Fort.**) in the defenses row — confirm the matching defense tip (e.g. Might mentions Strength; Mental Fortitude mentions Intelligence). 5. Confirm roll buttons and edit steppers still work (tip does not block play controls). 6. Keyboard: Tab to an ability name and confirm the tip opens on focus. |
+| **Expected** | All six ability names and six defense names are word-tied help triggers; copy matches `tooltip-text.tsx` (`getAbilityHelp` / `getDefenseHelp`); no separate Info icons beside the names. |
+| **Report** | DEV-V-009-T025: PASS / FAIL / SKIP — |
 
 
 ---
@@ -2881,6 +2892,17 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 - Choice-card deep-dive chrome itself is covered by **T016**; this test is path **content**, not disclosure UX.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T065 — Ability name tooltips on guided Abilities step (TASK-544)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-544 |
+| **Where** | Guided creator → Abilities (`/characters/new/guided`) |
+| **Steps** | 1. Choose a Path and continue to the **Abilities** step (recommended array view). 2. Hover (desktop) or touch-hold (mobile) an ability name such as **Strength** / **STR** — confirm the definition tip opens on the word (no Info icon). 3. Open **Customize abilities** and confirm tips still work on ability names in the edit grid. 4. Optional: continue to Skills Layer 2 / Forge defenses if shown and confirm defense name tips (Might, Fortitude, etc.). |
+| **Expected** | Ability labels use `WordHelpTip` + `getAbilityHelp`; tips match sheet copy; path pills and steppers remain usable. |
+| **Report** | DEV-V-013-T065: PASS / FAIL / SKIP — |
 
 #### DEV-V-013-T048 — Sitewide compact facts + Training Points chip labels (TASK-461)
 

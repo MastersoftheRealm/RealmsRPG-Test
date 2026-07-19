@@ -33,6 +33,7 @@ Your Floating UI work **is in the repo** — it was extracted into shared primit
 |-----------|-----|----------------|
 | Optional rules / step help beside a heading | **`InfoTippy`** + export in `tooltip-text.tsx` | Raw Floating UI on the page, `Tooltip` from `@/components/ui`, `title=` only |
 | Help on a non-Info control (e.g. ability pick button) | **`InfoTippy`** with `children` + `label` / child `aria-label` | Separate tooltip library |
+| Definition tip on a label word (ability/defense name; no icon) | **`WordHelpTip`** + `getAbilityHelp` / `getDefenseHelp` in `tooltip-text.tsx` | Info icon sibling, `title=` only |
 | Level-aware help copy (points at level N) | Helper in **`tooltip-text.tsx`** (e.g. `getAbilityPointsHelp`) → **`InfoTippy`** | Inline paragraph duplicating rules |
 | Rich help (bullets, bold, JSX) | JSX export in **`tooltip-text.tsx`** → **`InfoTippy`** `content` | DB tooltips, markdown in random components |
 | Full-screen or multi-step flow | **`Modal`** (`fullScreenOnMobile` on mobile) | InfoTippy |
@@ -71,7 +72,7 @@ Use the dependency **inside `@/components/shared` or `@/components/ui`**, not ad
 | `characters/new` page header | ✅ Wired | |
 | Navbar Library / Codex | ✅ Wired | `placement="bottom"` |
 | Campaigns hub | ✅ Wired | |
-| Character sheet | ⬜ Planned | First-exposure help per `REALMS_PRODUCT_OVERVIEW.md` § 11 |
+| Character sheet | ◐ Partial | Ability + defense name tips via `WordHelpTip` (TASK-544); broader first-exposure tour still planned per `REALMS_PRODUCT_OVERVIEW.md` § 11 |
 | Standalone creators (power, technique, item, …) | ⬜ Planned | When Layer 1 UX lands |
 | Encounters, crafting, Codex/Library browse | ⬜ Planned | Scoped section help only where dense |
 

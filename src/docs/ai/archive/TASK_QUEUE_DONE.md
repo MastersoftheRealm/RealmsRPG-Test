@@ -1,3 +1,51 @@
+- id: TASK-544
+  title: Ability and defense name tooltips (sheet + guided creator)
+  created_at: 2026-07-19
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-19
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - public/tooltip-text.tsx
+    - src/components/shared/info-tippy.tsx
+    - src/components/shared/ability-score-grid.tsx
+    - src/components/shared/skills-allocation-page.tsx
+    - src/components/character-sheet/abilities-section.tsx
+    - src/components/creator/ability-score-editor.tsx
+    - src/docs/ai/guide/04-floating-ui-tooltips.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Hover/tap (touch-hold) definition tooltips on ability and defense names for the
+    character sheet and guided creator — tip tied to the word itself (no Info icon).
+    Copy lives in public/tooltip-text.tsx; trigger via shared WordHelpTip (InfoTippy).
+  acceptance_criteria:
+    - All six abilities and six defenses have word-tied WordHelpTip triggers on the sheet.
+    - Guided Abilities step (AbilityScoreGrid) uses the same ability tips.
+    - Defense tips on SkillsAllocationPage when defense bonuses are shown.
+    - Copy matches owner-provided ability/defense definitions in tooltip-text.tsx.
+    - BUILD_VALIDATION DEV-V-009-T025 + DEV-V-013-T065; npm run build.
+  notes: |
+    Owner request 2026-07-19. Extends InfoTippy with WordHelpTip (no new shared file).
+    Does not replace getTooltipTextByPowerAbility (archetype pick guidance) or
+    ABILITY_EFFECT_BLURBS (always-visible Layer 1 cards).
+  evidence: |
+    npm run build (agent).
+  build_validation: |
+    suite: DEV-V-009 / DEV-V-013
+    tests:
+      - DEV-V-009-T025
+      - DEV-V-013-T065
+  developer_test_plan: |
+    Suite DEV-V-009 T025 + DEV-V-013 T065 — see BUILD_VALIDATION.md.
+
+---
 - id: TASK-543
   title: Character sheet Skills — Value stepper + not clipped on desktop
   created_at: 2026-07-18

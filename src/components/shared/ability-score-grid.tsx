@@ -9,6 +9,8 @@
 
 import { cn, formatBonus } from '@/lib/utils';
 import { DecrementButton, IncrementButton } from '@/components/shared/value-stepper';
+import { WordHelpTip } from '@/components/shared/info-tippy';
+import { getAbilityHelp } from '../../../public/tooltip-text';
 import type { Abilities, AbilityName } from '@/types';
 
 export const ABILITY_DISPLAY_ORDER: AbilityName[] = [
@@ -219,24 +221,27 @@ export function AbilityScoreGrid({
               )}
               aria-label={`${info.name} ${formatBonus(value)}`}
             >
-              <span
+              <WordHelpTip
+                content={getAbilityHelp(ability)}
+                label={`About ${info.name}`}
                 className={cn(
                   'font-bold uppercase text-text-muted dark:text-text-secondary',
                   isEdit
                     ? 'text-xs tracking-wide sm:text-[11px] sm:tracking-wider'
                     : 'text-center text-[11px] tracking-wider'
                 )}
-                aria-hidden={!isEdit ? true : undefined}
               >
                 {isEdit ? (
                   info.name
                 ) : (
                   <>
-                    <span className="sm:hidden">{info.shortName}</span>
+                    <span className="sm:hidden" aria-hidden>
+                      {info.shortName}
+                    </span>
                     <span className="hidden sm:inline">{info.name}</span>
                   </>
                 )}
-              </span>
+              </WordHelpTip>
 
               <div
                 className={cn(
