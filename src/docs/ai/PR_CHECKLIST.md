@@ -23,7 +23,7 @@ Use before marking a task `done` or opening a PR. Keep answers short.
 
 ## Owner commands
 
-**Three pillars (every audit/cleanup/debt pass):** (1) remove clutter / keep honest, (2) verify feedback + AC actually met in code, (3) additions must be necessary and constitutional — extend shared/barrels, do not fork parallels.
+**Three pillars (every audit/cleanup/debt pass):** (1) remove clutter / keep honest (**prefer net remove**), (2) verify feedback + AC actually met in code, (3) additions must be necessary and constitutional — extend shared/barrels, do not fork parallels. Cleanup/debt changelog Summaries must **lead with a deletion or consolidation bullet**.
 
 | Command | Mode | Scope | Purpose |
 |---------|------|-------|---------|

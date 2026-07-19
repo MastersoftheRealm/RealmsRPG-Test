@@ -23,7 +23,7 @@ Same as `/audit`: this session’s files + task `related_files` / `related_tasks
 3. **Pillar 2** — Fix unmet AC / feedback behavior; correct status (`partial` if still open).
 4. **Pillar 3** — Replace in-scope forks with shared patterns; drop additions that are not required for AC.
 5. **Re-verify** — Targeted tests and/or `npm run build` if code changed. Never mark `done` early.
-6. **Changelog** — Only if cleanup was meaningful. Lead with **deletions/consolidations**; do not invent a changelog entry whose only substance is “docs honesty.”
+6. **Changelog** — Only if cleanup was meaningful. First bullet of the Summary **must** be a deletion or consolidation (file removed, fork wired to canonical, dead export dropped). Do not invent a changelog entry whose only substance is “docs honesty.”
 
 ## Apply freely (in scope)
 

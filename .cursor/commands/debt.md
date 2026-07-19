@@ -25,7 +25,7 @@ Whole repo within gates below. Prefer evidence (grep, `FEATURE_INDEX`, barrels) 
 2. **Apply in-scope** — Delete weaker duplicates, slim hot-path docs, rotate changelog (see checklist).
 3. **File follow-ups** — Gated → new `TASK-###` in `ACTIVE_TASKS.md` (specific fix), not more ritual prose.
 4. **Verify** — `npm run build` if code changed; targeted tests if behavior touched.
-5. **Log** — Append `AI_CHANGELOG.md` listing **deletions/consolidations** (required every run). Lead with net remove.
+5. **Log** — Append `AI_CHANGELOG.md` listing **deletions/consolidations** (required every run). First Summary bullet = a deletion or consolidation; prefer **net remove** on the diff.
 
 ## Checklist (default run)
 

@@ -47,9 +47,9 @@ Do **not** load full `AI_TASK_QUEUE.md`, full `AGENT_GUIDE.md` / `guide/` append
 A task may be `done` only when **all** acceptance criteria are met **and**:
 
 1. `npm run build` passes (and targeted tests if the area has them)
-2. No new parallel pattern introduced (or Architect ADR + owner ack)
+2. No new parallel pattern introduced (or Architect ADR + owner ack) — **prefer net remove** when cleaning or consolidating (delete weaker forks / dead code rather than leaving compat layers)
 3. `ACTIVE_TASKS.md` updated (`done` → move block to `archive/TASK_QUEUE_DONE.md`; bump status fields)
-4. `AI_CHANGELOG.md` entry appended
+4. `AI_CHANGELOG.md` entry appended (cleanup/debt entries **must lead with a deletion or consolidation bullet**; docs-only honesty is not enough)
 5. User-facing work: `BUILD_VALIDATION.md` tests + `developer_test_plan` when required
 
 If any AC remains open → **`partial`** with `completed_work` / `remaining_work` / `follow_up_tasks`. Never mark `done` to “finish later.” Prefer follow-up tasks over audit-after-done rediscovery.
@@ -86,7 +86,7 @@ Require owner review before merging:
 
 - Prefer **delete** the weaker of two parallel systems.
 - Prefer **extend** existing shared/ui/hook/lib (`FEATURE_INDEX` + barrels) over new parallel helpers/modals/parsers.
-- Cleanup must **remove** clutter and prove feedback/AC in code — not grow docs theater.
+- Cleanup must **remove** clutter and prove feedback/AC in code — not grow docs theater. Prefer **net remove** on cleanup/debt diffs.
 - When consolidating, ship a first slice + precise follow-ups in `ACTIVE_TASKS.md` — not aspirational prose only.
 - Blocked / human-owned work lives in `WAITING_TASKS.md` (not the session hot path).
 - **Session (on demand):** `/audit` → `/cleanup` (one TASK-### / this chat). **Repo (on demand):** `/global-audit` → `/debt`. See `PR_CHECKLIST.md` § Owner commands.
