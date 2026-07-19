@@ -1,6 +1,6 @@
 # ALL_FEEDBACK ? Consolidated & Curated
 
-Last updated: 2026-07-18 (sheet Skills Value stepper clip → TASK-543)
+Last updated: 2026-07-19 (guided path Primary/Secondary Ability labels → TASK-544)
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -2489,7 +2489,16 @@ Notes
 - Feedback (verbatim):
   A major bug: on character sheets, some lists, powers, power parts lists, techniques/techniques expandable parts chips, etc there are many cases of duplicates in thede areas, such as a power having 2 or 3 of the same expandable part chip listed. Same for dome traits and Feats being listed on new characters and such, could be a backend storing error, how guided creator handles new character data, how data is being loaded, etc. Requires thorough investigation to fix globally not just bandaid and ensure our best practices for the codebase health are followed.
 - Expected: Unique part chips per power/technique; unique traits/feats on new and existing characters; fix at save/load/enrichment layers (not display-only bandaid).
-- Disposition: Implemented as **TASK-544**. Root causes: guided `selectedTraits` included species traits (sheet also lists species from codex); library parts arrays concatenated without dedupe on creator save/sync/calc. Shared `dedupeSavedParts` / `collectSheetTraits`. QA: DEV-V-009-T025.
+- Disposition: Implemented as **TASK-545** (renumbered; TASK-544 taken by guided Primary/Secondary path labels). Root causes: guided `selectedTraits` included species traits (sheet also lists species from codex); library parts arrays concatenated without dedupe on creator save/sync/calc. Shared `dedupeSavedParts` / `collectSheetTraits`. QA: DEV-V-009-T025.
+
+**Raw Feedback Log - 2026-07-19 (guided path Primary/Secondary Ability labels)**
+- Date: 2026-07-19
+- Context: Guided creator → Path selection + More details + Abilities grid
+- Priority: Medium
+- Feedback (verbatim):
+  In the guided creator instrad of listing it as archetype ability and secondary, make it Primary and Secondary ability. In the archetype path selection screen ensure descriptor chips appear for Primary Abilty and Secondary on the cards for paths, in more details for an archetype path the abilities need only list Primary and Secondary and we dont need the "power" or "martial" tag in the more details modal.
+- Expected: Path cards show Primary Ability / Secondary Ability chips; More details Path Abilities use those labels only (no Power/Martial type tag); ability grid pills say Primary / Secondary.
+- Disposition: Implemented as **TASK-544**. QA: DEV-V-013-T018, T020, T034, T035.
 
 **Raw Feedback Log - 2026-07-18 (roll log bonus dark mode + inventory add equipment)**
 - Date: 2026-07-18
