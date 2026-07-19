@@ -35,7 +35,7 @@ Do **not** load full historical queues, full `AGENT_GUIDE.md`, or archive audits
 | Design constraints | `DESIGN_INTENT.md` |
 | ADRs | `src/docs/ai/ADR/` |
 | PR failure-mode checklist | `src/docs/ai/PR_CHECKLIST.md` (incl. owner commands) |
-| Owner commands | `/audit` → `/cleanup` (session); `/debt` (repo) — `.cursor/commands/` |
+| Owner commands | `/audit` → `/cleanup` (session); `/global-audit` → `/debt` (repo) — `.cursor/commands/` |
 | Barrel inventory (generated) | `FEATURE_INDEX_BARRELS.generated.md` (`npm run tasks:generate-index`) |
 | QA steps | `BUILD_VALIDATION.md` |
 | Deploy / secrets | `DEPLOYMENT_AND_SECRETS_SUPABASE.md` |

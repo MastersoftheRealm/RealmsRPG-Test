@@ -23,14 +23,17 @@ Use before marking a task `done` or opening a PR. Keep answers short.
 
 ## Owner commands
 
+**Three pillars (every audit/cleanup/debt pass):** (1) remove clutter / keep honest (**prefer net remove**), (2) verify feedback + AC actually met in code, (3) additions must be necessary and constitutional — extend shared/barrels, do not fork parallels. Cleanup/debt changelog Summaries must **lead with a deletion or consolidation bullet**.
+
 | Command | Mode | Scope | Purpose |
 |---------|------|-------|---------|
-| `/audit` (or “Audit”) | Read-only | This session / TASK-### | Score against items 1–17 + common AI mistakes. Report only. |
-| `/cleanup` (or “Cleanup”) | Apply | Same as audit | Fix Audit findings, then dead/dupe/litter in that file set. |
-| `/debt` (or “Debt”) | Apply | Repo-wide (gated) | Recurring anti-debt sprint: dupes, slim `ACTIVE_TASKS`, changelog rotation. |
+| `/audit` (or “Audit”) | Read-only | This session / TASK-### | Score pillars 1–3 + PR checklist. Report only. |
+| `/cleanup` (or “Cleanup”) | Apply | Same as audit | Remove clutter, meet AC/feedback, shape leftovers via shared patterns. |
+| `/global-audit` (or “Global audit”) | Read-only | Whole repo (deep) | Thorough parallel/dead/docs inventory; classify debt-safe vs TASK vs ack. |
+| `/debt` (or “Debt”) | Apply | Repo-wide (gated) | Apply debt-safe deletes/wires (prefer after `/global-audit`); slim hot-path docs. |
 
-**Session (`/audit` → `/cleanup`):** on demand after a task claims `done` or before commit/PR. Scope = this chat + task `related_files` / `related_tasks` only.
+**Session (`/audit` → `/cleanup`):** on demand after a task claims `done` or before commit/PR. Scope = this chat + task `related_files` / `related_tasks` only. Cleanup that only adds docs lines without removals or AC fixes is a failed cleanup.
 
-**Repo (`/debt`):** on demand when debt piles up. Not a substitute for session cleanup (and vice versa). Gated deletes → owner ack or new `TASK-###`.
+**Repo (`/global-audit` → `/debt`):** on demand when systemic drift piles up. Inventory first; then apply. Not a substitute for session cleanup (and vice versa). Gated deletes → owner ack or new `TASK-###`.
 
-**Implementations:** `.cursor/commands/audit.md`, `cleanup.md`, `debt.md`.
+**Implementations:** `.cursor/commands/audit.md`, `cleanup.md`, `global-audit.md`, `debt.md`.
