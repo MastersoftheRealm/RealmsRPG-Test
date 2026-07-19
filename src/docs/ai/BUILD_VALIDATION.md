@@ -1793,26 +1793,26 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 ---
 
-#### DEV-V-013-T012 — Feat steps Layer 2 browse
+#### DEV-V-013-T012 — Feat steps Layer 2 add modal
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 — Guided Simple character creator |
-| **Related task** | TASK-429 |
+| **Related task** | TASK-429, TASK-565 |
 | **Where** | Guided creator → Archetype Feats, then Character Feat |
 | **Needs** | Path + species + abilities + skills complete |
 
 **Steps**
-1. On Archetype Feats, confirm path guidance groups and **See more feats** below the grid.
-2. Click See more feats; confirm L1 groups are replaced by Browse feats (search + filters).
-3. Select a non-path feat; confirm counter updates (swap at max if already full).
-4. Click **← Back to recommendations**; confirm L1 groups return and selections remain.
-5. On Character Feat, repeat See more / back; confirm single-select replace works in L2.
+1. On Archetype Feats, confirm path guidance groups and **See more Feats** below the grid (L1 cards stay as path recommendations only — not the full catalog).
+2. Click See more Feats; confirm an **Add Archetype Feats** modal opens (`UnifiedSelectionModal`, full-screen on mobile) and L1 groups remain behind the overlay.
+3. Select a non-path feat (respect max); Add Selected; confirm counter updates and modal closes.
+4. Re-open See more Feats; deselect / replace; confirm L1 cards and counter stay in sync after confirm. Cancel leaves prior picks unchanged.
+5. On Character Feat, repeat with **See more Character Feats** → **Add Character Feat** modal; confirm single-select replace works.
 
 **Expected**
-- GuidedLayerNav expand/collapse matches abilities placement (below content).
-- L2 defaults to feats you qualify for; optional "Show feats I don't qualify for".
-- No modal overlay for Layer 2.
+- GuidedLayerNav opens an add modal (same grammar as Browse all Skills / See more options on Loadout & Powers) — does **not** dump all feats as in-step cards.
+- L2 defaults to feats you qualify for; optional "Show Feats I don't qualify for".
+- Modal uses `fullScreenOnMobile`; Add Selected / Cancel are sticky (≥44px targets).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -2488,13 +2488,13 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 1. Reach Powers or Techniques. Confirm the chapter still reads **Loadout** framing for prior phases, and this step title is **Your Powers** or **Your Techniques** (Martial → Techniques only; Power / powered-martial → Powers only).
 2. Confirm path recommendations appear as **GuidedChoiceCards** with visible selected/unselected state (soft-seeded affordable picks may start selected; deselecting clears them). Continue works with zero selections.
 3. Confirm **Training Points** PointStatus and per-card Training Points cost remain (TASK-456); overspend still shows a blocked reason.
-4. Click **See more options** below the grid; confirm L1 cards are replaced by **Browse Powers** / **Browse Techniques** (search + optional Action Type filter); path picks sort first when matching.
-5. Toggle a catalog pick (respecting TP); confirm selection updates the footer count.
-6. Click **← Back to recommendations**; confirm L1 cards return and prior selections remain. Non-path catalog picks appear as selected cards on L1 (flat grid or **Your other Powers/Techniques** section). Removing a promoted card updates Training Points immediately.
+4. Click **See more options** below the grid; confirm an add modal opens (`GuidedPowersTechniquesL2Modal` / `UnifiedSelectionModal`) while L1 cards stay behind the overlay (same grammar as feats TASK-565 / Loadout L2).
+5. Toggle a catalog pick (respecting TP); Add Selected; confirm selection updates and modal closes.
+6. Re-open See more options / cancel; confirm L1 cards and prior selections remain. Non-path catalog picks appear as selected cards on L1 (flat grid or **Your other Powers/Techniques** section). Removing a promoted card updates Training Points immediately.
 
 **Expected**
 - No silent select-all without visible card selection state.
-- GuidedLayerNav expand/collapse matches feats placement (below content); L2 is in-step (not a modal).
+- GuidedLayerNav opens an add modal below content (feats / Loadout / Powers L2 grammar) — not an in-step full-catalog card dump.
 - Martial never shows Powers browse; Power never shows Techniques browse.
 - L2 → L1 promotion keeps selected non-path cards visible (TASK-458).
 

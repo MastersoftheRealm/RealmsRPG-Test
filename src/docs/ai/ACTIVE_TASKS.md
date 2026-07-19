@@ -4,14 +4,16 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-548
+**Next task ID:** TASK-566
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`.
 
-**Counts:** 10 agent-eligible (TASK-391 superseded/skip; TASK-514–518/520/521/522/523/524/525/526/527/528/529/530/536/537/538/539/540/541/542/543/544/545/546/547 archived) · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 10 agent-eligible (TASK-391 superseded/skip; TASK-514–518/520/521/522/523/524/525/526/527/528/529/530/536/537/538/539/540/541/542/543/544/545/546/547/565 archived) · waiting/blocked in WAITING_TASKS · done in archive.
+
+**Guided feats L2 add modal (2026-07-19):** **TASK-565 done** — See more Feats opens UnifiedSelectionModal (not in-step card dump); pending-qa **DEV-V-013-T012**.
 
 **Ability/defense word tooltips (2026-07-19):** **TASK-547 done** — `WordHelpTip` + `getAbilityHelp` / `getDefenseHelp` on sheet, guided Abilities, skills defenses; pending-qa **DEV-V-009-T026** / **DEV-V-013-T065**. (Renumbered from conflicting TASK-544/545/546.)
 

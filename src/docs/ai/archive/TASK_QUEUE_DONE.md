@@ -1,3 +1,51 @@
+- id: TASK-565
+  title: Guided feats See more opens add modal (not card dump)
+  created_at: 2026-07-19
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-19
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/guided-creator/guided-feats-l2-modal.tsx
+    - src/components/guided-creator/guided-feats-browse-panel.tsx
+    - src/lib/guided-creator/feats-l2.ts
+    - src/lib/guided-creator/feats-l2.test.ts
+    - src/components/guided-creator/steps/archetype-feats-step.tsx
+    - src/components/guided-creator/steps/character-feat-step.tsx
+    - src/components/guided-creator/index.ts
+    - src/lib/constants/copy/guided-creator-copy.ts
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Owner: guided creator "See more Feats" / "See more Character Feats" must open an add
+    modal like other L2 See all buttons (skills / loadout / powers), not replace L1 with
+    a full in-step card grid of all feats.
+  acceptance_criteria:
+    - Archetype Feats + Character Feat GuidedLayerNav opens GuidedFeatsL2Modal (UnifiedSelectionModal).
+    - L1 path recommendation cards stay on the step; modal does not dump the catalog as cards.
+    - Confirm replaces draft feat ids; cancel leaves prior picks; maxSelections enforced.
+    - Removed GuidedFeatsBrowsePanel; FEATURE_INDEX + DEV-V-013-T012 updated.
+    - npm run build + feats-l2 unit tests pass.
+  notes: |
+    Owner scoped as TASK-565 (skip next-ID conflict with open queue). Supersedes TASK-429
+    in-step browse disposition for catalog L2. related_files includes deleted
+    guided-feats-browse-panel.tsx (replaced by modal).
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T012
+  developer_test_plan: |
+    Suite DEV-V-013 T012 — see BUILD_VALIDATION.md
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/50
+  merged_at: |
+
 - id: TASK-547
   title: Ability and defense name tooltips (sheet + guided creator)
   created_at: 2026-07-19
@@ -59,6 +107,7 @@
     npm run build (agent); /audit → /cleanup; CI green; merged to master via PR #47.
 
 ---
+
 - id: TASK-546
   title: Fix duplicate traits / part chips / feats on character sheets
   created_at: 2026-07-19
@@ -120,7 +169,6 @@
       - DEV-V-009-T025
   developer_test_plan: |
     Suite DEV-V-009 T025 — see BUILD_VALIDATION.md (no duplicate traits/part chips/feats).
-
 
 - id: TASK-545
   title: Correct Archetype Ability vs Primary/Secondary UX (powered-martial)
