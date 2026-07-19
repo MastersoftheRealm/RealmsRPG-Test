@@ -335,8 +335,7 @@ Do **not** read the done archive at session start.
     - Behavior parity for existing proficiency picks; BUILD_VALIDATION or targeted test if suite exists.
     - FEATURE_INDEX / guide note; npm run build.
   notes: |
-    Filed from /debt 2026-07-19. AddCombatantModal is a separate gated follow-up (initiative/
-    campaign behavior differs) — do not fold into this task.
+    Filed from /debt 2026-07-19. AddCombatantModal → TASK-571 (do not fold into this task).
 
 ---
 
