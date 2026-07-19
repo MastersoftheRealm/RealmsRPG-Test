@@ -140,6 +140,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 | **TASK-548** | DEV-V-013 **T066** | Guided Skills: Ability chip on each row + Skill Bonus hover/tap formula tip |
 | **TASK-564** | DEV-V-016 **T014** | Add/selection modals: list-first Search+Filters toolbar; source/filters collapsed by default |
 | **TASK-565** | DEV-V-013 **T012** | Guided feats See more opens add modal (not in-step full-catalog cards) |
+| **TASK-461** | DEV-V-013 **T048** | Compact-fact grammar sitewide (cards/GLR/descriptor tips); soft styleguide residuals closed |
 | **TASK-566** | DEV-V-013 **T067** (+ T065/T026 tip copy) | Guided Skills row layout (no chip/chevron overlap); Abilities mobile full names + 2-col tiles; ability/defense tips name once |
 
 _Add rows when archiving user-facing work with `verification_status: pending-qa`. Remove when `verified` or `failed`._

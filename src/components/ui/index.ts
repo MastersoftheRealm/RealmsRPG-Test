@@ -46,7 +46,7 @@ export { Tooltip } from './tooltip';
 // Note: alert-enhanced.tsx was removed - use Alert instead
 
 // Loading states
-export { Spinner, LoadingOverlay, LoadingState } from './spinner';
+export { Spinner, LoadingState } from './spinner';
 
 // Empty states
 export { EmptyState } from './empty-state';

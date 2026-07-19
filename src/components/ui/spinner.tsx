@@ -55,42 +55,6 @@ export function Spinner({
 }
 
 /**
- * LoadingOverlay Component
- * =========================
- * Full-screen or container loading overlay with spinner.
- */
-interface LoadingOverlayProps {
-  /** Whether to show the overlay */
-  isLoading: boolean;
-  /** Loading message */
-  message?: string;
-  /** Whether to cover the full viewport or just the container */
-  fullScreen?: boolean;
-}
-
-export function LoadingOverlay({
-  isLoading,
-  message = 'Loading...',
-  fullScreen = false,
-}: LoadingOverlayProps) {
-  if (!isLoading) return null;
-
-  return (
-    <div
-      className={cn(
-        'flex flex-col items-center justify-center bg-white/80 dark:bg-black/60 backdrop-blur-sm z-overlay',
-        fullScreen ? 'fixed inset-0' : 'absolute inset-0'
-      )}
-    >
-      <Spinner size="lg" />
-      {message && (
-        <p className="mt-4 text-text-muted font-medium">{message}</p>
-      )}
-    </div>
-  );
-}
-
-/**
  * LoadingState Component
  * =======================
  * Centered loading state for page sections.
@@ -126,5 +90,4 @@ export function LoadingState({
 }
 
 Spinner.displayName = 'Spinner';
-LoadingOverlay.displayName = 'LoadingOverlay';
 LoadingState.displayName = 'LoadingState';

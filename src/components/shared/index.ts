@@ -25,9 +25,6 @@ export {
   type AbilityScoreGridProps,
 } from './ability-score-grid';
 
-// SkillSourceChip - Species/path skill pills (guided creator)
-export { SkillSourceChip, type SkillSourceChipProps, type SkillSourceKind } from './skill-source-chip';
-
 // ValueStepper - Unified +/- controls (ADR-0002: guided skills bonus chrome)
 export { ValueStepper, DecrementButton, IncrementButton, type ValueStepperProps, type StepperButtonProps } from './value-stepper';
 
@@ -119,9 +116,6 @@ export type { PartData } from '@/lib/chip/part-data';
 export { GridListChip } from './grid-list-chip';
 export type { GridListChipProps } from './grid-list-chip';
 
-// Unified expandable chip (re-export from ui for convenience)
-export { ExpandableChip, ChipGroup } from '@/components/ui';
-export type { ExpandableChipProps, ExpandableChipOption } from '@/components/ui';
 export { SummaryChipList } from './summary-chip-list';
 export type { SummaryChipItem } from './summary-chip-list';
 
@@ -238,10 +232,8 @@ export {
   AbilityRequirementFilter,
   type AbilityRequirement,
   TagFilter,
-  CheckboxFilter,
   SelectFilter,
   SourceFilter,
-  sourceFilterLabel,
   sourceFilterSummary,
   type SourceFilterValue,
 } from './filters';
@@ -274,7 +266,7 @@ export type {
 } from './realms-image-picker';
 
 // OnboardingTour - Optional first-time guided tour (Codex → Library → Creator)
-export { OnboardingTour, getTourCompleted, setTourCompleted } from './onboarding-tour';
+export { OnboardingTour } from './onboarding-tour';
 
 // GuidedChoiceShell - Unified Layer 1/2/3 chrome for creator steps (three-layer model)
 export { GuidedChoiceShell, GuidedLayerNav } from './guided-choice';

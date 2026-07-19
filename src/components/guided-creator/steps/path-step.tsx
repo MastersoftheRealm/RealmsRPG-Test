@@ -23,7 +23,8 @@ import {
   powerPathType,
 } from '../../../../public/tooltip-text';
 import { GuidedChoiceCard } from '../guided-choice-card';
-import { GUIDED_CHOICE_GRID_CLASS, GUIDED_CHOICE_GRID_ITEM_CLASS } from '../guided-choice-grid';
+import { GUIDED_CHOICE_GRID_CLASS, GUIDED_CHOICE_GRID_ITEM_CLASS } from '../guided-choice-styles';
+
 import { GuidedPathDetailModal } from '../guided-path-detail-modal';
 import { GuidedStepLayout } from '../guided-step-layout';
 

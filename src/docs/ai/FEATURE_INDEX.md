@@ -99,7 +99,7 @@
 | Chip roles (descriptor vs expandable) | `DescriptorChip`, `ExpandableChip` (`@/components/ui`); `GridListChip` + `lib/chip/expandable-chip-props.ts`; `ChipData.kind` + `descriptorChipData()` in `lib/chip/chip-data-helpers.ts`; metadata builders in `lib/chip/list-row-metadata.ts` |
 | Stable expand toggle (chips) | `ExpandableChip` + `ChipGroup` (`data-chip-group`); `applyFullRowExpandLayout` (`lib/chip/full-row-expand-layout.ts`) — grow into remaining row width; do not force `w-full` on wrap expand (TASK-445). Header **or** expanded body toggles; Options uses `data-expand-ignore` (TASK-539). |
 | Feat tags (normalize + taxonomy) | `lib/codex/feat-tags.ts`, `lib/codex/feat-list.ts`; `sql/feat-tags-unification-phase*.sql` (phase 4 = live normalize chain); `docs/FEAT_TAGS.md` |
-| Part/property chips | Prefer `ExpandableChip` + `expandableChipPropsFromPartData`; thin `PartChipComponent` alias remains; `PartData` in `lib/chip/part-data.ts`; `partChipsFromDisplay` in `lib/chip/part-chips-from-display.ts` |
+| Part/property chips | Prefer `ExpandableChip` + `expandableChipPropsFromPartData`; thin deprecated `PartChipComponent` alias (1 call site — TASK-569); `PartData` in `lib/chip/part-data.ts`; `partChipsFromDisplay` in `lib/chip/part-chips-from-display.ts` |
 | Part/property → PartData (library rows) | `lib/library/part-display.ts` — `computePartTrainingPoints`, `characterPartsToPartData`, `itemPropertiesToPartData` |
 | Dedupe saved parts / entity refs | `lib/library/dedupe-saved-parts.ts` — `dedupeSavedParts`, `dedupeEntityRefs` (creators save, sync, calc, sheet chips) |
 | Sheet trait assembly (no species/ancestry dupes) | `lib/character/collect-sheet-traits.ts` — `collectSheetTraits` (Feats tab) |
@@ -108,7 +108,7 @@
 | Damage dice/type split (list cells) | `splitDamageDiceAndType` from `@/lib/utils` (single helper; sheet + entity lists + quick armaments) |
 | Shared list filters | `@/components/shared/filters` (`ChipSelect`, `FilterSection`, …) — not `@/components/codex` |
 | Creature stat block | `CreatureStatBlock` |
-| Filters | `ChipSelect`, `TagFilter`, `CheckboxFilter`, `SelectFilter`, `AbilityRequirementFilter` |
+| Filters | `ChipSelect`, `TagFilter`, `SelectFilter`, `AbilityRequirementFilter`, `SourceFilter` (`shared/filters`) |
 | List states | `ListEmptyState`, `LoadingState`, `ErrorDisplay` |
 | Search box | `SearchInput` |
 | Confirm/delete/login modals | `ConfirmActionModal`, `DeleteConfirmModal`, `LoginPromptModal` |
@@ -139,7 +139,7 @@
 | Tooltips (defaults + interpolation) | `lib/tooltips/` — **`lib/tooltips/README.md`** (PR #14 onboarding), `legacy-tooltip-key-map.ts` |
 | Roles / quotas / limits | `lib/role-policy.ts`, `lib/role-limits.ts`, `lib/role-quota-messages.ts`, `lib/admin.ts` |
 | API client / validation / rate limit | `lib/api-client.ts` (`apiFetch`, `apiUpload`, `getErrorMessage`), `lib/api-validation.ts`, `lib/validation/schemas.ts` (auth emails trim+lowercase), `lib/rate-limit.ts` — client error convention: `ARCHITECTURE.md` § Client error handling |
-| Auth error copy (login/register/reset/update-email) | `lib/auth-errors.ts` (`getAuthErrorMessage`) — do not map every message containing “email” to invalid address; my-account email change uses `update-email` context |
+| Auth error copy (login/register/reset/update-email/update-password/delete-account) | `lib/auth-errors.ts` (`getAuthErrorMessage`) — do not map every message containing “email” to invalid address; my-account uses `update-email` / `update-password` / `delete-account` |
 | Supabase clients (server/client/middleware) | `lib/supabase/*` |
 | Generic utils (cn, string, number, object, motion, duration display) | `lib/utils/*` — list column labels: `formatColumnKeyLabel()` in `string.ts`; motion timing: `MOTION_DURATION_SLOW_MS` in `motion.ts`; duration layers in `duration.ts`: structured `formatDurationFromTypeAndValue` / `formatDurationWithModifiers`, any-shape `formatDurationDisplay`, compact list `formatDurationCompact` (TASK-477) |
 | Stable empty fallbacks for hook deps | `lib/empty.ts` (`EMPTY_STRING_ARRAY`, `EMPTY_NUMBER_RECORD`, `EMPTY_GUIDANCE_GROUPS`) — never mutate |

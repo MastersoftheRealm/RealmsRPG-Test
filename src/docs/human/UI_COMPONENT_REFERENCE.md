@@ -175,11 +175,7 @@ Usage pattern: use `Chip` for small inline tags; `ExpandableChip` for chips with
 
 - `PartChipDetails` — expanded panel for the selected `PartChip` showing description, TP badge, option levels. See [src/components/shared/part-chip.tsx](src/components/shared/part-chip.tsx#L129).
 
-- `PartChipList` — container that manages expansion state for a list of `PartChip` instances (single-open accordion behavior). Renders expanded details below chips. See [src/components/shared/part-chip.tsx](src/components/shared/part-chip.tsx#L187).
-
-- `PropertyChipList` — thin wrapper mapping simple property strings to `PartChipList` entries for items. See [src/components/shared/part-chip.tsx](src/components/shared/part-chip.tsx#L242).
-
-Usage pattern: prefer `PartChipList` where multiple part chips are shown and a single expanded detail panel is required; `PartChip` can be used individually inside lists/cards.
+- `PartChipList` / `PropertyChipList` — **removed** (`/debt` 2026-07-19). Use **ExpandableChip** + `expandableChipPropsFromPartData` / `partChipsFromDisplay`. Thin deprecated `PartChip` alias remains for one sheet call site (TASK-569).
 
 ## Expandable / Collapsible patterns
 
@@ -189,7 +185,7 @@ Usage pattern: prefer `PartChipList` where multiple part chips are shown and a s
 
 - `CollapsibleGroup` — accordion-like grouping that manages which children are open; supports `allowMultiple` option. See [src/components/ui/collapsible.tsx](src/components/ui/collapsible.tsx#L138).
 
-Pattern notes: chips and part-chips implement their own expansion handlers (local state or parent-managed in `PartChipList`). `Collapsible` is used for larger section blocks (filters, lists, attribute groups).
+Pattern notes: expandable chips own their expansion state (or parent via ExpandableChip APIs). `Collapsible` is used for larger section blocks (filters, lists, attribute groups).
 
 ## Modals and overlays
 
@@ -197,7 +193,7 @@ Pattern notes: chips and part-chips implement their own expansion handlers (loca
   - Props: `isOpen`, `onClose`, `title?`, `description?`, `size?` (`sm|md|lg|xl|2xl|full`), `showCloseButton?`.
   - Behavior: locks body scroll when open, listens for Escape key, backdrop click closes by default, modal content uses `animate-modal-pop` (CSS animation in design tokens).
 
-- `LoadingOverlay` / `LoadingState` (in `spinner.tsx`) — container-level or full-screen loading overlays used in pages or modals.
+- `LoadingState` (in `spinner.tsx`) — centered page/section loading. (`LoadingOverlay` removed `/debt` 2026-07-19.)
 
 Modal usage notes: any chip/list/collapsible can be used inside a modal; no modal-specific chip variants are used — components are reused inside modals.
 
@@ -415,7 +411,7 @@ These slots allow `GridListRow` to replace custom character sheet components (Po
 - Pattern: Centered spinner with optional message
 - Usage: Page/section loading states
 
-**LoadingOverlay** - Overlay that covers content during async operations. File: [src/components/ui/spinner.tsx](src/components/ui/spinner.tsx#L137)
+**LoadingOverlay** — removed (`/debt` 2026-07-19). Use `LoadingState` / `Spinner`.
 - Props: `isLoading`, `message?`, `fullScreen?`
 - Pattern: Conditional overlay with backdrop + spinner
 - Usage: Forms, modals during save/submit
@@ -725,11 +721,10 @@ Multi-select dropdown with chip display. File: [src/components/shared/filters/ch
 - Props: `label`, `options`, `selectedValues`, `onSelect`, `onRemove`, `placeholder?`
 - Pattern: Select dropdown + chip list for selections
 
-### CheckboxFilter
+### CheckboxFilter — removed
 
-Multiple checkbox options. File: [src/components/shared/filters/checkbox-filter.tsx](src/components/shared/filters/checkbox-filter.tsx#L1)
-- Props: `label`, `options`, `selectedValues`, `onChange`
-- Usage: Filter by multiple boolean flags
+`CheckboxFilter` deleted (`/debt` 2026-07-19). Prefer `ChipSelect` / `TagFilter` / `SelectFilter`.
+
 
 ### AbilityRequirementFilter
 
@@ -805,15 +800,15 @@ Collapsible filter container. File: [src/components/shared/filters/filter-sectio
 
 ### Creator Tools
 - **Power Creator:** [src/app/(main)/power-creator/page.tsx](src/app/(main)/power-creator/page.tsx#L1)
-  - Components: CreatorSummaryPanel, PartChipList, PropertyChipList, CollapsibleSection
+  - Components: CreatorSummaryPanel, ExpandableChip / partChipsFromDisplay, CollapsibleSection
   - Pattern: Part selection with energy/TP costs
   
 - **Technique Creator:** [src/app/(main)/technique-creator/page.tsx](src/app/(main)/technique-creator/page.tsx#L1)
-  - Components: CreatorSummaryPanel, PartChipList, PropertyChipList, CollapsibleSection
+  - Components: CreatorSummaryPanel, ExpandableChip / partChipsFromDisplay, CollapsibleSection
   - Pattern: Similar to power creator, technique-specific properties
 
 - **Item Creator:** [src/app/(main)/item-creator/page.tsx](src/app/(main)/item-creator/page.tsx#L1)
-  - Components: CreatorSummaryPanel, PropertyChipList, Input, Select, Textarea
+  - Components: CreatorSummaryPanel, ExpandableChip / partChipsFromDisplay, Input, Select, Textarea
   - Pattern: Weapon/armor/equipment creation
 
 - **Creature Creator:** [src/app/(main)/creature-creator/page.tsx](src/app/(main)/creature-creator/page.tsx#L1)
@@ -942,15 +937,14 @@ Based on the comprehensive audit, here are key patterns and recommendations:
    - **Issue:** Multiple overlapping loading components:
      - `Spinner` (minimal spinner)
      - `LoadingState` (spinner with message)
-     - `LoadingOverlay` (blocking overlay)
      - `LoadingSpinner` (in list-components, wrapper around Spinner)
    - **Recommendation:** 
-     - Keep: `Spinner` (primitive), `LoadingState` (with message), `LoadingOverlay` (blocking)
+     - Keep: `Spinner` (primitive), `LoadingState` (with message)
      - Remove: `LoadingSpinner` duplicate
      - Standardize loading message styling
 
 3. **Filter Components**
-   - **Current:** Specialized filters in `codex/filters/` (not reused elsewhere)
+   - **Current:** Shared filters in `shared/filters/` (ChipSelect, TagFilter, SelectFilter, SourceFilter, …)
    - **Recommendation:** 
      - Move to `shared/` for reuse across library, character sheet modals
      - Create unified `<FilterBar>` composition component
@@ -984,7 +978,7 @@ Based on the comprehensive audit, here are key patterns and recommendations:
      - Consider Card composition pattern (Card.Header, Card.Body, Card.Footer)
 
 6. **Chip Category Colors**
-   - **Issue:** PartChip and PropertyChipList use category colors, but not all categories are standardized
+   - **Issue:** Part/category chips historically used category colors; prefer ExpandableChip + partChipVariant
    - **Recommendation:**
      - Audit all category tokens in globals.css
      - Create `CATEGORY_COLORS` mapping in design system docs
@@ -1077,7 +1071,7 @@ The goal of consistency is achieved through:
    - Backdrop click behavior consistent
    - Footer buttons always same alignment
 
-7. **PartChip/PropertyChipList** → Unified expandable chip pattern
+7. **PartChip/PropertyChipList** → ExpandableChip (lists deleted `/debt` 2026-07-19; PartChip alias TASK-569)
    - Powers, techniques use same display components
    - Consistent expand/collapse behavior
    - Category colors convey meaning

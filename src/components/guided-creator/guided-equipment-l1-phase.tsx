@@ -11,7 +11,8 @@ import type { GuidedDraft, GuidedEquipmentPhase } from '@/stores/guided-creator-
 import { GuidedChoiceCard } from './guided-choice-card';
 import { GuidedFactChipRow } from './guided-equipment-fact-chips';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from './guided-choice-styles';
-import { GUIDED_CHOICE_GRID_ITEM_CLASS } from './guided-choice-grid';
+import { GUIDED_CHOICE_GRID_ITEM_CLASS } from './guided-choice-styles';
+
 import {
   armorStatsForRef,
   libraryRowForRef,

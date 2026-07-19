@@ -287,16 +287,10 @@ function AccountContent() {
       setConfirmPassword('');
       setPasswordMessage({ type: 'success', text: 'Password updated successfully!' });
     } catch (err: unknown) {
-      const raw = getErrorMessage(err, 'Failed to update password');
-      let message = 'Failed to update password';
-      if (raw.includes('wrong') || raw.includes('incorrect')) {
-        message = 'Current password is incorrect';
-      } else if (raw.includes('weak')) {
-        message = 'Password is too weak';
-      } else {
-        message = raw;
-      }
-      setPasswordMessage({ type: 'error', text: message });
+      setPasswordMessage({
+        type: 'error',
+        text: getAuthErrorMessage(err, 'update-password'),
+      });
     } finally {
       setPasswordChanging(false);
     }
@@ -344,14 +338,7 @@ function AccountContent() {
       }
       router.push('/');
     } catch (err: unknown) {
-      const raw = getErrorMessage(err, 'Failed to delete account');
-      let message = 'Failed to delete account';
-      if (raw.includes('wrong') || raw.includes('Invalid') || raw.includes('incorrect')) {
-        message = 'Incorrect password';
-      } else {
-        message = raw;
-      }
-      setDeleteError(message);
+      setDeleteError(getAuthErrorMessage(err, 'delete-account'));
       setDeleting(false);
     }
   };

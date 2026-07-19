@@ -17,7 +17,13 @@ export {
   GuidedFeatRestrictionNotice,
   GuidedTraitRestrictionNotice,
 } from './guided-restriction-notice';
-export { GUIDED_CHOICE_STYLES, GUIDED_CHOICE_GRID_CLASS, GUIDED_CHOICE_COMPACT_GRID_CLASS, GUIDED_CHOICE_LIST_CLASS } from './guided-choice-styles';
+export {
+  GUIDED_CHOICE_STYLES,
+  GUIDED_CHOICE_GRID_CLASS,
+  GUIDED_CHOICE_COMPACT_GRID_CLASS,
+  GUIDED_CHOICE_GRID_ITEM_CLASS,
+  GUIDED_CHOICE_LIST_CLASS,
+} from './guided-choice-styles';
 export {
   resolveChoiceCardImage,
   defaultImageLayoutForKind,

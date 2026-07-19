@@ -96,5 +96,8 @@ export const GUIDED_CHOICE_GRID_CLASS = 'grid grid-cols-1 sm:grid-cols-2 gap-3 i
 export const GUIDED_CHOICE_COMPACT_GRID_CLASS =
   'grid grid-cols-1 sm:grid-cols-2 gap-3 items-stretch';
 
+/** Grid children fill cell width and row height (equal-height GuidedChoiceCard rows). */
+export const GUIDED_CHOICE_GRID_ITEM_CLASS = 'h-full w-full min-h-0';
+
 /** @deprecated Prefer GUIDED_CHOICE_COMPACT_GRID_CLASS for trait/feat picks. */
 export const GUIDED_CHOICE_LIST_CLASS = 'flex flex-col gap-3';

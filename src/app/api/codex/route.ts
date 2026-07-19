@@ -8,7 +8,7 @@ import { NextResponse } from 'next/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
-import { parseArchetypePathData } from '@/lib/game/archetype-path';
+import { coerceJsonRecord, parseArchetypePathData } from '@/lib/game/archetype-path';
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
 import type { CodexPayload } from '@/types/codex';
 import type { ArchetypeCategory } from '@/types/archetype';
@@ -40,20 +40,6 @@ function toNum(val: unknown): number | undefined {
   if (typeof val === 'number' && !Number.isNaN(val)) return val;
   const n = Number(val);
   return Number.isNaN(n) ? undefined : n;
-}
-
-function parseJsonObject(val: unknown): Record<string, unknown> | undefined {
-  if (!val) return undefined;
-  if (typeof val === 'object' && val !== null) return val as Record<string, unknown>;
-  if (typeof val === 'string') {
-    try {
-      const parsed = JSON.parse(val);
-      return typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : undefined;
-    } catch {
-      return undefined;
-    }
-  }
-  return undefined;
 }
 
 /** DB row shape (snake_case from Supabase) */
@@ -331,7 +317,7 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
         .filter((entry) => typeof entry.level === 'number')
         .sort((a, b) => Number(a.level) - Number(b.level));
 
-      const legacyPath = parseJsonObject(r.path_data);
+      const legacyPath = coerceJsonRecord(r.path_data);
       const level1FromLegacy =
         legacyPath && typeof legacyPath.level1 === 'object' && legacyPath.level1 !== null
           ? (legacyPath.level1 as Record<string, unknown>)

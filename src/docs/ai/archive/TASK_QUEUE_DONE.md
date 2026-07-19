@@ -1,3 +1,59 @@
+- id: TASK-461
+  title: Sitewide compact fact rollout — cards and GridListRow parity
+  created_at: 2026-07-15
+  created_by: agent
+  priority: medium
+  status: done
+  completed_at: 2026-07-19
+  implemented_by: agent
+  verification_status: pending-qa
+  parent_task: TASK-454
+  completed_work: |
+    - Library/Codex/selectable builders + combat-builder use namedPropertyDescriptorChips /
+      TRAINING_POINTS_COST_LABEL.
+    - LoadoutBudgetBar shared across guided equipment L1/L2 and powers/techniques.
+    - GuidedFactChipRow (ex GuidedEquipmentFactChips) — no expand path.
+    - GridListChip descriptor path uses DescriptorChipWithTip (InfoTippy) for property tips.
+    - Sheet partDataToChips: descriptor kind when no options; Training Points costLabel.
+    - Advanced powers/techniques add-modal columns spell Training Points.
+    - normalizeId used by powers L1 candidates; formatDamageReductionFact added.
+    - Powers/techniques L2: GuidedPowersTechniquesL2Modal → UnifiedSelectionModal (TASK-463 done).
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T048
+  developer_test_plan: |
+    Suite DEV-V-013 T048 — see BUILD_VALIDATION.md
+  related_files:
+    - src/lib/detail-option/compact-facts.ts
+    - src/components/shared/grid-list-chip.tsx
+    - src/components/guided-creator/loadout-budget-bar.tsx
+    - src/components/guided-creator/guided-equipment-fact-chips.tsx
+    - src/components/guided-creator/guided-powers-techniques-l2-modal.tsx
+    - src/components/character-sheet/library-list-helpers.ts
+    - src/components/character-creator/steps/powers-step.tsx
+  description: |
+    Roll TASK-454’s compact-fact grammar beyond the guided equipment pilot so weapons, armor,
+    powers, and techniques use the same fact language across cards, GridListRow expansions, add
+    modals, Library, Codex, and character surfaces.
+  acceptance_criteria:
+    - Audit compact card/row facts for weapons, armor, powers, and techniques; migrate one-off
+      formatter strings to shared builders without removing useful dense comparison columns.
+    - Equivalent facts use equivalent language across card and row presentations; structured
+      Action Type, Range, Spaces, Ability Requirement, damage, Currency, and Training Points follow
+      GAME_RULES capitalization.
+    - Named non-mechanic properties use the shared descriptor-chip + accessible InfoTippy pattern
+      wherever descriptions are helpful but expansion would add noise.
+    - No description is simultaneously repeated as a collapsed chip/column and expanded body.
+    - Split implementation into independent domain batches after TASK-454 (weapons/armor and
+      powers/techniques may proceed in parallel); each batch has focused tests.
+    - Update FEATURE_INDEX/AGENT_GUIDE if shared exports or usage guidance changes; npm run build.
+  notes: |
+    2026-07-19 /debt: closed — product surfaces shipped; styleguide demos / dense admin TP headers
+    are GAME_RULES-allowed soft residuals, not open AC.
+  evidence: |
+    npm run build; DEV-V-013-T048 updated for descriptor+InfoTippy.
+
 - id: TASK-391
   title: "SUPERSEDED — Admin path builder guidance_groups UI (use TASK-514–518)"
   created_at: 2026-06-29

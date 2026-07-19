@@ -13,7 +13,9 @@ export type AuthErrorContext =
   | 'forgot-password'
   | 'reset-password'
   | 'resend'
-  | 'update-email';
+  | 'update-email'
+  | 'update-password'
+  | 'delete-account';
 
 function readAuthError(error: unknown): { message: string; code: string } {
   const e = error as { message?: unknown; code?: unknown };
@@ -111,6 +113,10 @@ function fallbackMessage(context: AuthErrorContext): string {
       return 'An error occurred during sign in. Please try again.';
     case 'update-email':
       return 'Failed to update email';
+    case 'update-password':
+      return 'Failed to update password';
+    case 'delete-account':
+      return 'Failed to delete account';
     case 'forgot-password':
     case 'resend':
     case 'reset-password':
@@ -137,8 +143,15 @@ export function getAuthErrorMessage(
     return 'Please confirm your email before signing in.';
   }
 
-  if (context === 'update-email' && isIncorrectPasswordError(message, code)) {
-    return 'Incorrect password';
+  if (
+    (context === 'update-email' ||
+      context === 'update-password' ||
+      context === 'delete-account') &&
+    isIncorrectPasswordError(message, code)
+  ) {
+    return context === 'update-password'
+      ? 'Current password is incorrect'
+      : 'Incorrect password';
   }
 
   if (isAlreadyExistsError(message, code)) {

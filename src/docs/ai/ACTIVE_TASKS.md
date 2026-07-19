@@ -4,7 +4,7 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-569
+**Next task ID:** TASK-573
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
@@ -12,9 +12,9 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 12 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 15 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** TASK-535 innate reclassify (codex, owner ack). TASK-500 image library deferred. ExpandableChip (ex TASK-504) shipped via TASK-539. Repo anti-debt → `/debt` (TASK-481 superseded).
+**Hot notes:** TASK-535 innate (codex ack). TASK-500 deferred. TASK-381 sheet facade shipped. Anti-debt → `/debt`.
 
 ---
 
@@ -40,66 +40,6 @@ Do **not** read the done archive at session start.
     - Changelog + sql/ when applied.
   notes: |
     Deferred from TASK-530 cleanup. Do not bulk-mutate without owner ack (codex data rule).
-
----
-
-- id: TASK-461
-  title: Sitewide compact fact rollout — cards and GridListRow parity
-  created_at: 2026-07-15
-  created_by: agent
-  priority: medium
-  status: partial
-  completed_at: 2026-07-15
-  implemented_by: agent
-  parent_task: TASK-454
-  completed_work: |
-    - Library/Codex/selectable builders + combat-builder use namedPropertyDescriptorChips /
-      TRAINING_POINTS_COST_LABEL.
-    - LoadoutBudgetBar shared across guided equipment L1/L2 and powers/techniques.
-    - GuidedFactChipRow (ex GuidedEquipmentFactChips) — no expand path.
-    - GridListChip descriptor path uses DescriptorChipWithTip (InfoTippy) for property tips.
-    - Sheet partDataToChips: descriptor kind when no options; Training Points costLabel.
-    - Advanced powers/techniques add-modal columns spell Training Points.
-    - normalizeId used by powers L1 candidates; formatDamageReductionFact added.
-    - Powers/techniques L2: GuidedPowersTechniquesL2Modal → UnifiedSelectionModal (TASK-463 done).
-  remaining_work: |
-    - Soft residuals only: styleguide demos / dense admin TP headers (allowed by GAME_RULES).
-      Close as done after owner confirms no further fact-language batches, or trim to those demos.
-  build_validation: |
-    suite: DEV-V-013
-    tests:
-      - DEV-V-013-T048
-  developer_test_plan: |
-    Suite DEV-V-013 T048 — see BUILD_VALIDATION.md
-  related_files:
-    - src/lib/detail-option/compact-facts.ts
-    - src/components/shared/grid-list-chip.tsx
-    - src/components/guided-creator/loadout-budget-bar.tsx
-    - src/components/guided-creator/guided-equipment-fact-chips.tsx
-    - src/components/guided-creator/guided-powers-techniques-l2-modal.tsx
-    - src/components/character-sheet/library-list-helpers.ts
-    - src/components/character-creator/steps/powers-step.tsx
-  description: |
-    Roll TASK-454’s compact-fact grammar beyond the guided equipment pilot so weapons, armor,
-    powers, and techniques use the same fact language across cards, GridListRow expansions, add
-    modals, Library, Codex, and character surfaces.
-  acceptance_criteria:
-    - Audit compact card/row facts for weapons, armor, powers, and techniques; migrate one-off
-      formatter strings to shared builders without removing useful dense comparison columns.
-    - Equivalent facts use equivalent language across card and row presentations; structured
-      Action Type, Range, Spaces, Ability Requirement, damage, Currency, and Training Points follow
-      GAME_RULES capitalization.
-    - Named non-mechanic properties use the shared descriptor-chip + accessible InfoTippy pattern
-      wherever descriptions are helpful but expansion would add noise.
-    - No description is simultaneously repeated as a collapsed chip/column and expanded body.
-    - Split implementation into independent domain batches after TASK-454 (weapons/armor and
-      powers/techniques may proceed in parallel); each batch has focused tests.
-    - Update FEATURE_INDEX/AGENT_GUIDE if shared exports or usage guidance changes; npm run build.
-  notes: |
-    2026-07-15 audit: marked partial — core builders + LoadoutBudgetBar + GLR InfoTippy shipped.
-    2026-07-19 /debt: TASK-463 L2 USM already shipped; remaining_work reduced to soft residuals.
-  evidence: |
-    npm run build; DEV-V-013-T048 updated for descriptor+InfoTippy.
 
 ---
 
@@ -181,26 +121,13 @@ Do **not** read the done archive at session start.
     explicitly closes leftovers as intentional). Baseline after batch 4: **104**
     (set-state-in-effect 36, exhaustive-deps 60, preserve-manual-memoization 8).
 
-    Still to finish (safe batches — continue TASK-430):
-    - Encounter views + encounter route pages (Skill/Combat/Mixed) — careful; sync UI has DEV-V.
-    - Crafting `[id]` page effects/deps.
-    - Shared `components/ui/modal.tsx` (2) — high reuse; parity-test every fullScreenOnMobile modal.
-    - Smaller leftovers as they appear in lint dumps (admin pages, use-profile, etc.).
-
-    Do **not** drive remaining work through `use-character-sheet-actions.ts` (~45 warnings) while
-    it remains a god-file — see sequencing below / **TASK-381**.
+    Still to finish: encounters + crafting `[id]` + `modal.tsx` (parity-test FSM) + sheet
+    domain hooks (`use-sheet-*-actions`, not the thin facade) + smaller lint leftovers.
   follow_up_tasks:
     - TASK-381
   notes: |
-    Do not mass-disable. Prefer derive / remount / stable empties (`lib/empty.ts`).
-    **Sequencing (owner-friendly):** Batches 1–3 cleared the safer surfaces (~168→108).
-    The largest remaining pile (~45) sits in `use-character-sheet-actions.ts`. Cleaning that
-    file with surgical hook edits while it is still huge is high-risk. Prefer **TASK-381**
-    (split sheet/creator god files into smaller modules) *before* or *as* that pile is
-    reduced — same domain boundaries make exhaustive-deps / set-state-in-effect fixes
-    safer and reviewable. Creator hydrates / encounters / Modal can still proceed as
-    separate careful TASK-430 batches in parallel with TASK-381.
-    Keep status partial until warning count is materially flattened or owner closes residual.
+    Prefer derive / remount / `lib/empty.ts`. Sheet actions are a facade (TASK-381 Phase 2);
+    creators still large. Keep partial until warnings flatten or owner closes.
 
 ---
 
@@ -231,31 +158,41 @@ Do **not** read the done archive at session start.
 - id: TASK-381
   title: BIG-01/02 phased decomposition of character-sheet and creator god files
   priority: medium
-  status: not-started
+  status: partial
   created_at: 2026-06-26
   created_by: agent
   description: |
     Decompose large character-sheet/creator files via phased extractions with test-backed parity checkpoints.
-    Splitting first makes follow-on React Compiler hook cleanup (TASK-430) safer — especially the
-    ~45 react-hooks warnings concentrated in `use-character-sheet-actions.ts`.
+    Sheet actions Phase 2 shipped; remaining work is large creator/admin routes.
   related_files:
     - src/components/character-sheet/use-character-sheet-actions.ts
+    - src/components/character-sheet/use-sheet-library-actions.ts
+    - src/components/character-sheet/use-sheet-resource-actions.ts
+    - src/components/character-sheet/use-sheet-feat-actions.ts
+    - src/components/character-sheet/use-sheet-skill-identity-actions.ts
     - src/app/(main)/characters/[id]/page.tsx
-    - src/app/(main)/*-creator/page.tsx
+    - src/app/(main)/creature-creator/page.tsx
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/item-creator/page.tsx
     - src/docs/ai/BUILD_VALIDATION.md
   acceptance_criteria:
     - `use-character-sheet-actions` split by domain boundaries without behavior regressions.
     - Targeted large creator/sheet routes decomposed into stable shells/islands in phases.
     - Each phase ships with explicit parity validation and rollback plan.
     - `npm run build`, `npm test`, and `npm run lint` pass per phase.
+  completed_work: |
+    Phase 2 (sheet): `use-character-sheet-actions.ts` is a thin facade composing
+    `use-sheet-{library,resource,feat,skill-identity,auto-proficiencies}-actions`.
+  remaining_work: |
+    Creator/admin god files still large — start with power-creator + item-creator (owner
+    2026-07-01); species/creature deferred from beginner funnel; creature-creator ~1895 LOC,
+    AdminArchetypesTab ~2289 LOC remain for later phases.
   follow_up_tasks:
     - TASK-430
   notes: |
     High blast radius — proceed only with expanded DEV-V validation and small-scope PRs.
-    2026-07-01: Owner — start with power-creator and item-creator pages first; species/creature deferred from beginner funnel.
-    2026-07-15: Cross-link TASK-430 — recommend sheet actions split (this task) before / alongside
-    mass hook cleanup in `use-character-sheet-actions.ts`. God-file → smaller domain modules
-    (powers, techniques, inventory, feats, resources, etc.) with clear ownership + DEV-V per phase.
+    2026-07-19 /debt (/global-audit): marked partial — sheet AC satisfied; do not rediscover
+    sheet split. TASK-430 may clean domain hook warnings independently.
 
 ---
 
@@ -391,8 +328,7 @@ Do **not** read the done archive at session start.
     - Behavior parity for existing proficiency picks; BUILD_VALIDATION or targeted test if suite exists.
     - FEATURE_INDEX / guide note; npm run build.
   notes: |
-    Filed from /debt 2026-07-19. AddCombatantModal is a separate gated follow-up (initiative/
-    campaign behavior differs) — do not fold into this task.
+    Filed from /debt 2026-07-19. AddCombatantModal → TASK-571 (do not fold into this task).
 
 ---
 
@@ -417,5 +353,98 @@ Do **not** read the done archive at session start.
     - Existing feat-requirement / creature feat tests green; npm run build.
   notes: |
     Filed from /debt 2026-07-19. Small lib consolidation — safe Implementer work.
+
+---
+
+- id: TASK-569
+  title: Migrate last PartChip call site then delete alias
+  created_at: 2026-07-19
+  created_by: agent
+  priority: low
+  status: not-started
+  related_files:
+    - src/components/shared/part-chip.tsx
+    - src/components/character-sheet/proficiencies-tab.tsx
+    - src/lib/chip/expandable-chip-props.ts
+    - scripts/shared-ui-allowlist.json
+  description: |
+    /global-audit: deprecated PartChip / PartChipComponent has one consumer
+    (proficiencies-tab). Migrate to ExpandableChip + expandableChipPropsFromPartData,
+    then delete part-chip.tsx + allowlist row.
+  acceptance_criteria:
+    - proficiencies-tab uses ExpandableChip path only; no PartChip import.
+    - Delete part-chip.tsx; update shared barrel + allowlist; FEATURE_INDEX note.
+    - npm run build; tasks:validate-shared-ui green.
+  notes: |
+    Filed from /debt 2026-07-19 after global-audit. Do not keep forever compat alias.
+
+---
+
+- id: TASK-570
+  title: Replace guided parseItemRef with parseIdQuantityStrings
+  created_at: 2026-07-19
+  created_by: agent
+  priority: low
+  status: not-started
+  related_files:
+    - src/components/guided-creator/guided-path-detail-modal.tsx
+    - src/lib/game/archetype-path.ts
+    - src/lib/game/archetype-path-helpers.test.ts
+  description: |
+    /global-audit: guided-path-detail-modal local parseItemRef near-copies
+    parseIdQuantityStrings but uses lastIndexOf(':') vs indexOf — fold to canonical
+    helper with unit parity.
+  acceptance_criteria:
+    - Delete local parseItemRef; use parseIdQuantityStrings (or thin adapter).
+    - Behavior parity for id / id:qty armaments+equipment refs; tests cover edge cases.
+    - npm run build + vitest archetype-path helpers green.
+  notes: |
+    Filed from /debt 2026-07-19. Small lib consolidation — safe Implementer work.
+
+---
+
+- id: TASK-571
+  title: Decide AddCombatantModal — USM migrate or document exception
+  created_at: 2026-07-19
+  created_by: agent
+  priority: low
+  status: not-started
+  related_files:
+    - src/components/shared/add-combatant-modal.tsx
+    - src/components/shared/unified-selection-modal.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/guide/02-components-and-lists.md
+  description: |
+    Parallel add-picker (Search + custom rows; qty/type/initiative/campaign). Owner ack
+    before USM migrate — may stay an intentional exception.
+  acceptance_criteria:
+    - Owner decides: migrate onto USM (scoped initiative/campaign AC) or document exception
+      in FEATURE_INDEX + guide/02 (alongside RealmsImagePicker-style alternates).
+    - Migrate path: sticky footer + fullScreenOnMobile parity; build green.
+  notes: |
+    Filed from /audit after /debt 2026-07-19. Gated — do not implement migrate without owner ack.
+
+---
+
+- id: TASK-572
+  title: AdminSpecies trait picker — USM or document admin exception
+  created_at: 2026-07-19
+  created_by: agent
+  priority: low
+  status: not-started
+  related_files:
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
+    - src/components/shared/unified-selection-modal.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    AdminSpecies trait picker hand-rolls Modal+Search+GLR (pre-USM shell). AdminTraits
+    nests similar list in edit modal. Prefer USM after TASK-567, or admin-only exception.
+  acceptance_criteria:
+    - Migrate AdminSpecies trait picker to USM after TASK-567, or document admin-only
+      exception; AdminTraits nested list shares shell or is scoped as editor chrome.
+    - npm run build if UI touched.
+  notes: |
+    Filed from /audit after /debt 2026-07-19. Prefer sequencing after TASK-567 lands.
 
 ---

@@ -43,7 +43,7 @@ Task `related_files` may reference outdated paths. When implementing, prefer the
 | List utilities | `src/components/shared/list-components.tsx` | SearchInput, FilterSection, ResultsCount, EmptyState, LoadingState. **List headers:** use `ListHeader` from `src/components/shared/list-header.tsx` for all sortable list views (single source of truth; Option B). SortHeader/SortHeaderRow in list-components are legacy and unused in list views. **Do not** override ListHeader with transparent/flat `className` in modals unless there is a documented exception — keep the same bar styling as Codex/Library. |
 | Character sheet | `src/components/character-sheet/` | library-section, abilities-section, skills-section, feats-tab, modals |
 | Creators | `src/components/creator/` | ability-score-editor, health-energy-allocator, creator-summary-panel |
-| Filters | `src/components/shared/filters/` | TagFilter, CheckboxFilter, SelectFilter, AbilityRequirementFilter, SourceFilter (All / Realms Library / My Library) |
+| Filters | `src/components/shared/filters/` | TagFilter, SelectFilter, AbilityRequirementFilter, ChipSelect, SourceFilter (All / Realms Library / My Library) |
 
 Deep list/selection rules → [`guide/02-components-and-lists.md`](guide/02-components-and-lists.md).
 
