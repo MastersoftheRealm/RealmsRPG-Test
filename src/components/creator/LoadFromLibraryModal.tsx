@@ -20,7 +20,12 @@ export interface LoadFromLibraryModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
+  /** Always-visible primary mode chrome (pass-through to UnifiedSelectionModal). */
+  scopeExtra?: ReactNode;
+  /** Secondary chrome (e.g. SourceFilter) — collapsed under Filters in UnifiedSelectionModal. */
   headerExtra?: ReactNode;
+  optionsSummary?: ReactNode;
+  optionsActiveCount?: number;
   emptyMessage?: string;
   emptySubMessage?: string;
   searchPlaceholder?: string;
@@ -36,7 +41,10 @@ export function LoadFromLibraryModal({
   isLoading,
   error,
   title,
+  scopeExtra,
   headerExtra,
+  optionsSummary,
+  optionsActiveCount,
   emptyMessage = 'No items found',
   emptySubMessage,
   searchPlaceholder = 'Search...',
@@ -46,7 +54,7 @@ export function LoadFromLibraryModal({
       isOpen={isOpen}
       onClose={onClose}
       title={title}
-      description="Expand a row to view details. Select one item, then click Load."
+      description="Expand a row to view details. Select one item, then click Load. Open Filters for source options."
       items={selectableItems}
       isLoading={isLoading}
       error={error}
@@ -56,7 +64,10 @@ export function LoadFromLibraryModal({
       maxSelections={1}
       columns={columns}
       gridColumns={gridColumns}
+      scopeExtra={scopeExtra}
       headerExtra={headerExtra}
+      optionsSummary={optionsSummary}
+      optionsActiveCount={optionsActiveCount}
       emptyMessage={emptyMessage}
       emptySubMessage={emptySubMessage}
       searchPlaceholder={searchPlaceholder}

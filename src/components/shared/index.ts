@@ -252,6 +252,8 @@ export {
   CheckboxFilter,
   SelectFilter,
   SourceFilter,
+  sourceFilterLabel,
+  sourceFilterSummary,
   type SourceFilterValue,
 } from './filters';
 

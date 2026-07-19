@@ -6,10 +6,14 @@
 'use client';
 
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
+import { sourceFilterSummary } from '@/components/shared/filters/source-filter';
 import { useAddLibraryItemData, type AddLibraryItemType } from '@/hooks/use-add-library-item-data';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 import type { ReactNode } from 'react';
-import { AddLibraryItemHeaderExtra } from './add-library-item/power-header-extra';
+import {
+  AddLibraryItemHeaderExtra,
+  AddLibraryItemScopeExtra,
+} from './add-library-item/power-header-extra';
 import { AddCustomEquipmentForm } from './add-library-item/add-custom-equipment-form';
 import { mapSelectedToCharacterItems } from './add-library-item/map-selection';
 import {
@@ -55,15 +59,18 @@ export function AddLibraryItemModal({
     onAdd(mapSelectedToCharacterItems(itemType, selected, powerSelectionMode, dbs));
   };
 
-  const headerExtraContent: ReactNode = (
-    <div className="space-y-3">
-      <AddLibraryItemHeaderExtra
-        source={source}
-        onSourceChange={setSource}
+  const scopeExtra =
+    itemType === 'power' ? (
+      <AddLibraryItemScopeExtra
         itemType={itemType}
         powerSelectionMode={powerSelectionMode}
         onPowerSelectionModeChange={setPowerSelectionMode}
       />
+    ) : null;
+
+  const headerExtraContent: ReactNode = (
+    <div className="space-y-3">
+      <AddLibraryItemHeaderExtra source={source} onSourceChange={setSource} />
       {itemType === 'equipment' && (
         <AddCustomEquipmentForm
           onAdd={(item) => {
@@ -80,6 +87,10 @@ export function AddLibraryItemModal({
       ? EMPOWERED_POWER_COLUMNS
       : getListHeaderColumns(itemType);
 
+  // Mode tabs are always visible; summary/badge cover Filters-only state (source).
+  const optionsSummary = sourceFilterSummary(source);
+  const optionsActiveCount = source !== 'all' ? 1 : 0;
+
   return (
     <UnifiedSelectionModal
       isOpen={isOpen}
@@ -87,10 +98,13 @@ export function AddLibraryItemModal({
       title={titleOverride ?? getAddLibraryItemTitle(itemType)}
       description={
         itemType === 'equipment'
-          ? 'Pick from your library below, or add a custom item by name.'
-          : 'Click a row (or the + button) to select, then click Add Selected.'
+          ? 'Pick from your library below, or open Filters to add a custom item by name.'
+          : 'Click a row (or the + button) to select, then click Add Selected. Open Filters to switch library source.'
       }
+      scopeExtra={scopeExtra}
       headerExtra={headerExtraContent}
+      optionsSummary={optionsSummary}
+      optionsActiveCount={optionsActiveCount}
       items={items}
       isLoading={isLoading}
       onConfirm={handleConfirm}

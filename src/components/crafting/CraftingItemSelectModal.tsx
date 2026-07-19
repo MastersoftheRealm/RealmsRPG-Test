@@ -10,7 +10,11 @@
 
 import { useMemo, useState } from 'react';
 import { useUserItems, useEquipment, useItemProperties, useOfficialLibrary } from '@/hooks';
-import { SourceFilter, type SourceFilterValue } from '@/components/shared/filters/source-filter';
+import {
+  SourceFilter,
+  sourceFilterSummary,
+  type SourceFilterValue,
+} from '@/components/shared/filters/source-filter';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
 import { TabNavigation, useTabGroup } from '@/components/ui/tab-navigation';
 import {
@@ -188,27 +192,30 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
     onClose();
   };
 
+  const optionsSummary = sourceFilterSummary(source);
+  const optionsActiveCount = source !== 'all' ? 1 : 0;
+
   return (
     <UnifiedSelectionModal
       isOpen={isOpen}
       onClose={onClose}
       title="Select item to craft"
-      description="Choose Armaments or Equipment, then pick a source. Select one item and confirm."
-      headerExtra={
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <TabNavigation
-            tabs={[{ id: 'armaments', label: 'Armaments' }, { id: 'equipment', label: 'Equipment' }]}
-            activeTab={activeTab}
-            onTabChange={(id) => setActiveTab(id as CraftingTabId)}
-            variant="pill"
-            fullWidth
-            className="w-full sm:w-auto"
-            tabGroupId={tabGroupId}
-            sharedTabPanelId={sharedPanelId}
-          />
-          <SourceFilter value={source} onChange={setSource} />
-        </div>
+      description="Select one item and confirm. Switch Armaments/Equipment above the list; open Filters for library source."
+      scopeExtra={
+        <TabNavigation
+          tabs={[{ id: 'armaments', label: 'Armaments' }, { id: 'equipment', label: 'Equipment' }]}
+          activeTab={activeTab}
+          onTabChange={(id) => setActiveTab(id as CraftingTabId)}
+          variant="pill"
+          fullWidth
+          className="w-full"
+          tabGroupId={tabGroupId}
+          sharedTabPanelId={sharedPanelId}
+        />
       }
+      headerExtra={<SourceFilter value={source} onChange={setSource} />}
+      optionsSummary={optionsSummary}
+      optionsActiveCount={optionsActiveCount}
       items={items}
       isLoading={isLoading}
       onConfirm={handleConfirm}

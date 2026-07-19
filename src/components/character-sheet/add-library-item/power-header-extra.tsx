@@ -5,34 +5,38 @@ import { SegmentedControl } from '@/components/shared';
 import type { PowerSelectionMode } from '@/hooks/add-library-item/types';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 
-export function AddLibraryItemHeaderExtra({
-  source,
-  onSourceChange,
+/** Primary mode tabs — pass as UnifiedSelectionModal `scopeExtra` (always visible). */
+export function AddLibraryItemScopeExtra({
   itemType,
   powerSelectionMode,
   onPowerSelectionModeChange,
 }: {
-  source: SourceFilterValue;
-  onSourceChange: (value: SourceFilterValue) => void;
   itemType: string;
   powerSelectionMode: PowerSelectionMode;
   onPowerSelectionModeChange: (value: PowerSelectionMode) => void;
 }) {
+  if (itemType !== 'power') return null;
   return (
-    <div className="space-y-3">
-      <SourceFilter value={source} onChange={onSourceChange} />
-      {itemType === 'power' && (
-        <SegmentedControl<PowerSelectionMode>
-          value={powerSelectionMode}
-          onChange={onPowerSelectionModeChange}
-          aria-label="Power selection type"
-          tabs
-          options={[
-            { value: 'powers', label: 'Powers' },
-            { value: 'empowered', label: 'Empowered Techniques' },
-          ]}
-        />
-      )}
-    </div>
+    <SegmentedControl<PowerSelectionMode>
+      value={powerSelectionMode}
+      onChange={onPowerSelectionModeChange}
+      aria-label="Power selection type"
+      tabs
+      options={[
+        { value: 'powers', label: 'Powers' },
+        { value: 'empowered', label: 'Empowered Techniques' },
+      ]}
+    />
   );
+}
+
+/** Secondary chrome — pass as `headerExtra` (collapsed under Filters). */
+export function AddLibraryItemHeaderExtra({
+  source,
+  onSourceChange,
+}: {
+  source: SourceFilterValue;
+  onSourceChange: (value: SourceFilterValue) => void;
+}) {
+  return <SourceFilter value={source} onChange={onSourceChange} />;
 }

@@ -92,6 +92,8 @@ Generated: 2026-07-19
 - SkillsAllocationPage
 - SkillSourceChip
 - SourceFilter
+- sourceFilterLabel
+- sourceFilterSummary
 - SpeciesTraitCard
 - splitDamageDiceAndType
 - SummaryChipList

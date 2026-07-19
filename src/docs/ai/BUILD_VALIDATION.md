@@ -3239,6 +3239,18 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Expected** | Primary actions live in Modal `footer` (not scrolled children); footer stays sticky on `fullScreenOnMobile`; list scrolls above it. |
 | **Report** | DEV-V-016-T013: PASS / FAIL / SKIP — |
 
+#### DEV-V-016-T014 — Selection modal list-first Filters chrome (TASK-564)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-564 |
+| **Where** | `/characters/[id]` → Edit → Library → Add Power; also Add Feat, Add Skill, Add Equipment; spot-check creature creator Select Powers |
+| **Needs** | Narrow viewport (~360px) and a desktop width; enough list items to scroll |
+| **Steps** | 1. Open Add Power at ~360px. 2. Confirm **Search** + **Filters** on one row, and **Powers / Empowered Techniques** mode tabs always visible under search (not inside Filters). 3. Confirm a one-line source summary when Filters are closed (if source ≠ All). 4. Confirm several list rows are visible between chrome and the sticky footer. 5. Tap **Filters** — SourceFilter (and equipment custom-add when relevant) appear; mode tabs stay visible; Hide Filters collapses the panel. 6. Open Add Feat — Filters starts collapsed; opening it reveals category/ability/checkboxes. 7. Spot-check Crafting (Armaments/Equipment always visible; source under Filters), creature Add feat (feat-source tabs always visible), and a creator Load modal (source under Filters). 8. Spot-check desktop: Filters not permanently expanded. |
+| **Expected** | Primary mode tabs via `scopeExtra` always visible; `headerExtra`/`filterContent` collapsed by default; list remains the dominant focus; sticky footer still works (T013). |
+| **Report** | DEV-V-016-T014: PASS / FAIL / SKIP — |
+
 ---
 
 ## DEV-V-017 — Site copy modules (TASK-390)

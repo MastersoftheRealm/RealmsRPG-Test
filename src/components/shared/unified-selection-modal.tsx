@@ -120,14 +120,29 @@ export interface UnifiedSelectionModalProps {
   searchPlaceholder?: string;
   searchFields?: (keyof SelectableItem)[];
   
-  /** Optional content between search and list (e.g. SourceFilter for My/Public/All) */
+  /**
+   * Always-visible primary mode/scope chrome (Powers vs Empowered, Armaments vs Equipment,
+   * feat-source tabs, inventory type). Stays outside the Filters disclosure so users can
+   * switch catalog identity without opening Filters (TASK-564).
+   */
+  scopeExtra?: ReactNode;
+  /**
+   * Secondary chrome (SourceFilter, advanced filters, custom-add forms).
+   * Collapsed into the Filters panel with filterContent — not mode tabs (use scopeExtra).
+   */
   headerExtra?: ReactNode;
   /** When set, only items passing this filter are shown in the list; selection and confirm still use the full items list so selections from other "tabs" are kept. */
   displayFilter?: (item: SelectableItem) => boolean;
   
-  // Filters (optional)
+  // Filters (optional) — collapsed by default with headerExtra in the same Filters panel
   filterContent?: ReactNode;
   showFilters?: boolean;
+  /** Badge on the Filters toggle when collapsed (non-default filters / options in use). */
+  optionsActiveCount?: number;
+  /** One-line hint under the toolbar when Filters are collapsed (e.g. current source). */
+  optionsSummary?: ReactNode;
+  /** Filters toggle label (default "Filters"). */
+  optionsLabel?: string;
   
   // Quantity support (for equipment)
   showQuantity?: boolean;
@@ -136,7 +151,7 @@ export interface UnifiedSelectionModalProps {
   
   /** Optional extra content in footer (e.g. per-item options for selected items) */
   footerExtra?: (selectedItems: SelectableItem[]) => ReactNode;
-  /** When tabs live in headerExtra, wire list region to TabNavigation aria-controls (TASK-355) */
+  /** When tabs live in scopeExtra, wire list region to TabNavigation aria-controls (TASK-355) */
   tabPanelA11y?: {
     tabGroupId: string;
     id: string;
@@ -187,10 +202,14 @@ export function UnifiedSelectionModal({
   emptySubMessage,
   searchPlaceholder,
   searchFields = ['name', 'description'],
+  scopeExtra,
   headerExtra,
   displayFilter,
   filterContent,
   showFilters = false,
+  optionsActiveCount = 0,
+  optionsSummary,
+  optionsLabel = 'Filters',
   showQuantity = false,
   initialQuantities = {},
   footerExtra,
@@ -207,12 +226,15 @@ export function UnifiedSelectionModal({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [optionsExpanded, setOptionsExpanded] = useState(false);
   const { sortState, handleSort, sortItems } = useSort('name');
   const prevOpenRef = useRef(false);
   const hasThumbnailColumn = useMemo(
     () => items.some((item) => Boolean(item.thumbnail)),
     [items]
   );
+  // Filters disclosure = secondary only; primary mode tabs use scopeExtra (always visible).
+  const hasOptions = Boolean(headerExtra) || Boolean(showFilters && filterContent);
 
   // Reset only when modal first opens (not on every render). When callers omit initialSelectedIds
   // they get default initialSelectedIds = new Set() which is a new reference each render — that
@@ -237,6 +259,8 @@ export function UnifiedSelectionModal({
         setQuantities({});
       }
       setSearchQuery('');
+      // List-first: collapse Filters/options every time the modal opens (TASK-564).
+      setOptionsExpanded(false);
     }
   }, [isOpen, initialSelectedIds, initialQuantities, showQuantity]);
   
@@ -330,6 +354,15 @@ export function UnifiedSelectionModal({
     selectedIds.size === 0 ||
     overSelectionLimit ||
     (confirmDisabled?.(selectedItems) ?? false);
+
+  const searchField = (
+    <SearchInput
+      value={searchQuery}
+      onChange={setSearchQuery}
+      placeholder={searchPlaceholder || `Search ${itemLabel}s...`}
+      aria-label={searchPlaceholder || `Search ${itemLabel}s`}
+    />
+  );
   
   return (
     <Modal
@@ -343,7 +376,8 @@ export function UnifiedSelectionModal({
       contentClassName={cn(
         // overflow-hidden: Modal skips its default overflow-y-auto; only the list region scrolls
         // so the footer (Add Selected) stays pinned on mobile. See MOBILE_UX.md.
-        'flex flex-col flex-1 min-h-0 gap-4 overflow-hidden p-4 md:p-6 md:max-h-[70vh]',
+        // Tighter gap keeps chrome compact so the list is the dominant region (TASK-564).
+        'flex flex-col flex-1 min-h-0 gap-2 overflow-hidden p-4 md:gap-3 md:p-6 md:max-h-[70vh]',
         className
       )}
       footer={
@@ -376,31 +410,35 @@ export function UnifiedSelectionModal({
         </div>
       }
     >
-      {/* Search — stays above the scrollable list */}
+      {/* DESIGN_INTENT (TASK-564): List-first — Search (+ Filters) on one row; primary mode
+          tabs (scopeExtra) always visible under search; SourceFilter / advanced filters collapse. */}
       <div className="shrink-0">
-        <SearchInput
-          value={searchQuery}
-          onChange={setSearchQuery}
-          placeholder={searchPlaceholder || `Search ${itemLabel}s...`}
-          aria-label={searchPlaceholder || `Search ${itemLabel}s`}
-        />
+        {hasOptions ? (
+          <FilterSection
+            variant="compact"
+            label={optionsLabel}
+            expanded={optionsExpanded}
+            onExpandedChange={setOptionsExpanded}
+            activeCount={optionsActiveCount}
+            summary={optionsSummary}
+            toolbarStart={searchField}
+            belowToolbar={scopeExtra}
+          >
+            {headerExtra}
+            {showFilters && filterContent ? filterContent : null}
+          </FilterSection>
+        ) : (
+          <div className="space-y-2">
+            {searchField}
+            {scopeExtra ? <div className="shrink-0">{scopeExtra}</div> : null}
+          </div>
+        )}
       </div>
-
-      {headerExtra ? <div className="shrink-0">{headerExtra}</div> : null}
 
       {limitWarningText ? (
         <Alert variant="warning" className="shrink-0">
           {limitWarningText}
         </Alert>
-      ) : null}
-
-      {/* Filters (optional) */}
-      {showFilters && filterContent ? (
-        <div className="shrink-0">
-          <FilterSection defaultExpanded={false}>
-            {filterContent}
-          </FilterSection>
-        </div>
       ) : null}
 
       {/* Column Headers (if columns defined) — must match row grid for alignment */}

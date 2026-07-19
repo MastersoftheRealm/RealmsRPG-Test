@@ -2541,6 +2541,15 @@ Notes
 - Expected: Roll log bonus chip readable in dark mode; Add equipment (library select + custom) updates the Inventory Equipment list (and stacks quantity when re-adding).
 - Disposition: Implemented as **TASK-542** (renumbered; TASK-540/541 taken by auth + sticky footer). QA: DEV-V-009-T022–T023.
 
+**Raw Feedback Log - 2026-07-19 (add modal list cramped by filters)**
+- Date: 2026-07-19
+- Context: Add/selection modals (UnifiedSelectionModal) — mobile and desktop
+- Priority: High
+- Feedback (verbatim):
+  As a new task 564 we need to fix how add modals work, in mobile and desktop, they often have the list of options crammed between the filters and the footer buttons when you're scrolling so that you can barely see any of the list itself between all the filter rows and stuff. We need to research how best to handle these to make it intuitive and user friendly so the scrollable list is the main focus and filters/search are options instead. Do research, follow design styles ui, make any changes to the whole global shared components/structures if at all possible to follow our constitution and component guide.
+- Expected: List is the dominant focus; filters/search are secondary progressive-disclosure options; prefer shared UnifiedSelectionModal / FilterSection changes over one-off modal forks.
+- Disposition: Implemented as **TASK-564**. Research: always-visible `headerExtra` (SourceFilter, mode tabs, custom forms) + expanded filter rows squeezed the flex list against the sticky footer; FilterSection already collapsed `filterContent` but not `headerExtra`, and page spacing (`mb-6`) was heavy in modals. Fix: compact Search+Filters toolbar; `headerExtra`+`filterContent` in collapsed-by-default panel. QA: DEV-V-016-T014.
+
 **Raw Feedback Log - 2026-07-18 (mobile modal sticky Add Selected)**
 - Date: 2026-07-18
 - Context: Mobile full-screen selection/add modals (UnifiedSelectionModal)

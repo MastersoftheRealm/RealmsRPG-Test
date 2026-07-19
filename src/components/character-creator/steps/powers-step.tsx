@@ -18,7 +18,7 @@ import { Button, IconButton, Spinner, EmptyState, DescriptorChip } from '@/compo
 import { useUserPowers, useUserTechniques, useUserEmpoweredTechniques, usePowerParts, useTechniqueParts, useOfficialLibrary, useItemProperties, useMergedSpecies, useCodexSkills, useTraits, useCreatorPathData, type PowerPart, type TechniquePart } from '@/hooks';
 import { getValidationIssuesForStep, getStepCompletion } from '@/lib/character-creator-validation';
 import type { UserPower, UserTechnique } from '@/hooks/use-user-library';
-import { SourceFilter, type SourceFilterValue } from '@/components/shared';
+import { SourceFilter, sourceFilterSummary, type SourceFilterValue } from '@/components/shared';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
@@ -1038,28 +1038,28 @@ export function PowersStep() {
       <UnifiedSelectionModal
         isOpen={showPowerModal}
         onClose={() => setShowPowerModal(false)}
-        headerExtra={
-          <div className="space-y-3">
-            <SourceFilter value={source} onChange={setSource} />
-            <SegmentedControl<PowerModalTab>
-              value={powerModalTab}
-              onChange={setPowerModalTab}
-              aria-label="Power modal type"
-              tabs
-              options={[
-                { value: 'powers', label: 'Powers' },
-                { value: 'empowered', label: 'Empowered Techniques' },
-              ]}
-            />
-          </div>
+        scopeExtra={
+          <SegmentedControl<PowerModalTab>
+            value={powerModalTab}
+            onChange={setPowerModalTab}
+            aria-label="Power modal type"
+            tabs
+            options={[
+              { value: 'powers', label: 'Powers' },
+              { value: 'empowered', label: 'Empowered Techniques' },
+            ]}
+          />
         }
+        headerExtra={<SourceFilter value={source} onChange={setSource} />}
+        optionsSummary={sourceFilterSummary(source)}
+        optionsActiveCount={source !== 'all' ? 1 : 0}
         onConfirm={powerModalTab === 'empowered' ? handleEmpoweredPowerSelect : handlePowerSelect}
         items={powerModalTab === 'empowered' ? allEmpoweredSelectableItems : allPowerSelectableItems}
         displayFilter={displayFilterFn}
         title={powerModalTab === 'empowered' ? 'Select Empowered Techniques' : 'Select Powers'}
         description={powerModalTab === 'empowered'
-          ? 'Choose empowered techniques from Realms or My Library and add them to your powers list.'
-          : 'Choose from Realms Library or your library. Use the source filter to switch. You can also create your own in the Power or Technique Creator.'}
+          ? 'Choose empowered techniques from Realms or My Library and add them to your powers list. Open Filters to switch library source.'
+          : 'Choose from Realms Library or your library. Switch list type above; open Filters for source. You can also create your own in the Power or Technique Creator.'}
         initialSelectedIds={selectedPowerIds}
         searchPlaceholder={powerModalTab === 'empowered' ? 'Search empowered techniques...' : 'Search powers...'}
         itemLabel={powerModalTab === 'empowered' ? 'empowered technique' : 'power'}
@@ -1081,11 +1081,13 @@ export function PowersStep() {
         isOpen={showTechniqueModal}
         onClose={() => setShowTechniqueModal(false)}
         headerExtra={<SourceFilter value={source} onChange={setSource} />}
+        optionsSummary={sourceFilterSummary(source)}
+        optionsActiveCount={source !== 'all' ? 1 : 0}
         onConfirm={handleTechniqueSelect}
         items={allTechniqueSelectableItems}
         displayFilter={displayFilterFn}
         title="Select Techniques"
-        description="Choose from Realms Library or your library. Use the source filter to switch. You can also create your own in the Technique Creator."
+        description="Choose from Realms Library or your library. Open Filters to switch source. You can also create your own in the Technique Creator."
         initialSelectedIds={selectedTechniqueIds}
         searchPlaceholder="Search techniques..."
         itemLabel="technique"
