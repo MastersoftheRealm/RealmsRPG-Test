@@ -20,8 +20,6 @@ import type {
 } from '@/types';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types';
 import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
-import { applySpeciesTraitChoiceSelections } from '@/lib/choice-trait';
-import type { TraitWithChoiceOptions } from '@/lib/choice-trait';
 import type { GuidedDraft } from '@/stores/guided-creator-store';
 import type { Archetype, ArchetypePathData } from '@/types/archetype';
 import type { Species, Trait } from '@/hooks';
@@ -36,6 +34,7 @@ import {
   itemDamageReduction,
 } from '@/lib/game/equipment-equipped';
 import { normalizeId } from '@/lib/utils';
+import { dedupeEntityRefs } from '@/lib/library/dedupe-saved-parts';
 
 interface CodexPartLike {
   id?: string | number;
@@ -87,10 +86,11 @@ function resolvePowersForProficiency(
   draft: GuidedDraft,
   officialPowers: LibraryPower[] = []
 ): CharacterPower[] {
-  const innateKeys = new Set(draft.innatePowerIds.map((id) => normalizeId(id)));
+  const innatePowerIds = dedupeEntityRefs(draft.innatePowerIds ?? []);
+  const innateKeys = new Set(innatePowerIds.map((id) => normalizeId(id)));
   const orderedIds = [
-    ...draft.innatePowerIds,
-    ...draft.powerIds.filter((id) => !innateKeys.has(normalizeId(id))),
+    ...innatePowerIds,
+    ...dedupeEntityRefs(draft.powerIds ?? []).filter((id) => !innateKeys.has(normalizeId(id))),
   ];
 
   return orderedIds.map((id) => {
@@ -109,7 +109,7 @@ function resolveTechniquesForProficiency(
   draft: GuidedDraft,
   officialTechniques: LibraryTechnique[] = []
 ): CharacterTechnique[] {
-  return draft.techniqueIds.map((id) => {
+  return dedupeEntityRefs(draft.techniqueIds ?? []).map((id) => {
     const lib = findByNormalizedId(officialTechniques, id);
     return {
       id,
@@ -179,17 +179,15 @@ export function buildGuidedCharacterPayload(
   );
   const maxEnergy = calculateMaxEnergy(enAlloc, powAbil || martAbil, abilities, level);
 
-  const resolvedSpeciesTraits = applySpeciesTraitChoiceSelections(
-    ctx.species?.species_traits,
-    draft.selectedSpeciesTraitChoices,
-    (ctx.allTraits ?? []) as TraitWithChoiceOptions[]
-  );
-
+  // Species traits are derived from the species codex on the sheet — do not
+  // persist them into selectedTraits (that caused duplicate trait rows).
+  // Keep choice resolutions so choice-trait options still apply on load.
   const ancestry = draft.speciesId
     ? {
         id: draft.speciesId,
         name: draft.speciesName ?? ctx.species?.name ?? '',
-        selectedTraits: [...resolvedSpeciesTraits, ...draft.selectedAncestryTraitIds],
+        // DESIGN_INTENT: selectedTraits = ancestry picks only (not species_traits).
+        selectedTraits: dedupeEntityRefs(draft.selectedAncestryTraitIds ?? []),
         selectedFlaw: draft.selectedFlawId,
         selectedCharacteristic: draft.selectedCharacteristicId,
         selectedSpeciesTraitChoices: draft.selectedSpeciesTraitChoices,
@@ -215,31 +213,30 @@ export function buildGuidedCharacterPayload(
     const feat = findByNormalizedId(ctx.codexFeats, id);
     return { id, name: feat?.name?.trim() || String(id) };
   };
-  const archetypeFeats = draft.archetypeFeatIds.map(resolveFeatRef);
-  const characterFeats = draft.characterFeatIds.map(resolveFeatRef);
+  const archetypeFeats = dedupeEntityRefs(draft.archetypeFeatIds.map(resolveFeatRef));
+  const characterFeats = dedupeEntityRefs(draft.characterFeatIds.map(resolveFeatRef));
 
   // Lean save refs (parts stripped by cleanForSave) — resolve names from official library.
+  const innatePowerIds = dedupeEntityRefs(draft.innatePowerIds ?? []);
+  const innateKeys = new Set(innatePowerIds.map((id) => normalizeId(id)));
   const powersForSave: CharacterPower[] = [
-    ...draft.innatePowerIds.map((id) => {
+    ...innatePowerIds.map((id) => {
       const lib = findByNormalizedId(ctx.officialPowers, id);
       return { id, name: lib?.name ?? String(id), innate: true as const };
     }),
-    ...draft.powerIds
-      .filter(
-        (id) =>
-          !draft.innatePowerIds.some(
-            (iid) => normalizeId(iid) === normalizeId(id)
-          )
-      )
+    ...dedupeEntityRefs(draft.powerIds ?? [])
+      .filter((id) => !innateKeys.has(normalizeId(id)))
       .map((id) => {
         const lib = findByNormalizedId(ctx.officialPowers, id);
         return { id, name: lib?.name ?? String(id), innate: false as const };
       }),
   ];
-  const techniquesForSave: CharacterTechnique[] = draft.techniqueIds.map((id) => {
-    const lib = findByNormalizedId(ctx.officialTechniques, id);
-    return { id, name: lib?.name ?? String(id) };
-  });
+  const techniquesForSave: CharacterTechnique[] = dedupeEntityRefs(draft.techniqueIds ?? []).map(
+    (id) => {
+      const lib = findByNormalizedId(ctx.officialTechniques, id);
+      return { id, name: lib?.name ?? String(id) };
+    }
+  );
 
   const inventory = (() => {
     const lookup = buildEquipmentLookup(ctx.officialItems, ctx.codexEquipment);

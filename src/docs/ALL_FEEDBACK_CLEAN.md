@@ -2482,6 +2482,15 @@ Notes
 - Expected: In Skills edit mode on desktop (`lg+` narrow Skills column), each Value stepper shows a full usable `+` (not clipped by the panel/card edge); horizontal scroll via TableScroll if the table is wider than the panel.
 - Disposition: Implemented as **TASK-543** (renumbered; TASK-540–542 taken by auth / sticky footer / inventory+roll-log). QA: DEV-V-009-T024.
 
+**Raw Feedback Log - 2026-07-19 (duplicate sheet lists / part chips / traits / feats)**
+- Date: 2026-07-19
+- Context: Character sheets — powers, power/technique expandable part chips, traits, feats; guided creator new characters
+- Priority: Critical
+- Feedback (verbatim):
+  A major bug: on character sheets, some lists, powers, power parts lists, techniques/techniques expandable parts chips, etc there are many cases of duplicates in thede areas, such as a power having 2 or 3 of the same expandable part chip listed. Same for dome traits and Feats being listed on new characters and such, could be a backend storing error, how guided creator handles new character data, how data is being loaded, etc. Requires thorough investigation to fix globally not just bandaid and ensure our best practices for the codebase health are followed.
+- Expected: Unique part chips per power/technique; unique traits/feats on new and existing characters; fix at save/load/enrichment layers (not display-only bandaid).
+- Disposition: Implemented as **TASK-544**. Root causes: guided `selectedTraits` included species traits (sheet also lists species from codex); library parts arrays concatenated without dedupe on creator save/sync/calc. Shared `dedupeSavedParts` / `collectSheetTraits`. QA: DEV-V-009-T025.
+
 **Raw Feedback Log - 2026-07-18 (roll log bonus dark mode + inventory add equipment)**
 - Date: 2026-07-18
 - Context: Character sheet roll log; Library → Inventory → Add equipment

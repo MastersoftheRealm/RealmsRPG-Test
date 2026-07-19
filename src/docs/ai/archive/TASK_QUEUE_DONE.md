@@ -1,3 +1,57 @@
+- id: TASK-544
+  title: Fix duplicate traits / part chips / feats on character sheets
+  created_at: 2026-07-19
+  created_by: owner
+  priority: critical
+  status: done
+  completed_at: 2026-07-19
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/lib/library/dedupe-saved-parts.ts
+    - src/lib/character/collect-sheet-traits.ts
+    - src/lib/guided-creator/build-character.ts
+    - src/lib/data-enrichment.ts
+    - src/lib/library-sync.ts
+    - src/lib/library/part-display.ts
+    - src/lib/calculators/power-calc.ts
+    - src/lib/calculators/technique-calc.ts
+    - src/lib/library-columnar.ts
+    - src/components/character-sheet/feats-tab.tsx
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/technique-creator/page.tsx
+    - src/app/(main)/empowered-technique-creator/page.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Character sheets showed duplicate expandable part chips on powers/techniques,
+    and duplicate traits/feats on new (especially guided) characters. Root causes:
+    guided save stuffed species traits into ancestry.selectedTraits (sheet also
+    lists species traits from codex); creators/sync concatenated parts without
+    uniqueness; load/enrichment/display had no global dedupe.
+  acceptance_criteria:
+    - Shared dedupeSavedParts / dedupeEntityRefs used on creator save, library sync,
+      cost/display calc, enrichment, and sheet part chips.
+    - Guided save stores ancestry picks only in selectedTraits; sheet collectSheetTraits
+      tolerates legacy doubles.
+    - Feats/powers/techniques lists dedupe by normalized id.
+    - BUILD_VALIDATION DEV-V-009-T025; targeted vitest; npm run build.
+  notes: |
+    Owner feedback 2026-07-19. Global fix (not UI bandaid): write + read paths.
+  evidence: |
+    vitest: dedupe-saved-parts, collect-sheet-traits, build-character; npm run build.
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T025
+  developer_test_plan: |
+    Suite DEV-V-009 T025 — see BUILD_VALIDATION.md (no duplicate traits/part chips/feats).
+
+---
 - id: TASK-543
   title: Character sheet Skills — Value stepper + not clipped on desktop
   created_at: 2026-07-18

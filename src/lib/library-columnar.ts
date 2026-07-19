@@ -11,6 +11,7 @@ import {
   deriveTechniqueAttackMode,
   type AttackMode,
 } from '@/lib/attack-mode';
+import { dedupeSavedParts } from '@/lib/library/dedupe-saved-parts';
 
 export const COLUMNAR_LIBRARY_TYPES = ['powers', 'techniques', 'empowered-techniques', 'items', 'creatures'] as const;
 export type ColumnarLibraryType = (typeof COLUMNAR_LIBRARY_TYPES)[number];
@@ -30,11 +31,15 @@ function collectPayloadParts(payload: Record<string, unknown>): PartLike[] {
   if (power) {
     push(power.parts);
     push(power.mechanics);
+    push(power.autoMechanics);
     push(power.addWeaponPowerPart);
   }
   const technique = payload.technique as Record<string, unknown> | undefined;
-  if (technique) push(technique.parts);
-  return parts;
+  if (technique) {
+    push(technique.parts);
+    push(technique.autoMechanics);
+  }
+  return dedupeSavedParts(parts);
 }
 
 export const SCALAR_KEYS: Record<ColumnarLibraryType, string[]> = {

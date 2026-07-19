@@ -133,6 +133,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 | **TASK-541** | DEV-V-016 **T013** | Mobile selection modals: Add Selected / Load / Cancel sticky at bottom (no scroll to reach) |
 | **TASK-542** | DEV-V-009 **T022–T023** | Inventory Add equipment works (library + custom + stack); roll log bonus chip readable in dark mode |
 | **TASK-543** | DEV-V-009 **T024** | Skills edit Value stepper `+` fully visible in narrow desktop Skills panel (not clipped) |
+| **TASK-544** | DEV-V-009 **T025** | Sheet: no duplicate traits / part chips / feat or power rows (guided + library) |
 
 _Add rows when archiving user-facing work with `verification_status: pending-qa`. Remove when `verified` or `failed`._
 
