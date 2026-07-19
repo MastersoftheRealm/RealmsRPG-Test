@@ -12,15 +12,20 @@
     - src/components/shared/info-tippy.tsx
     - src/components/shared/ability-score-grid.tsx
     - src/components/shared/skills-allocation-page.tsx
+    - src/components/shared/index.ts
     - src/components/character-sheet/abilities-section.tsx
     - src/components/creator/ability-score-editor.tsx
+    - src/lib/tooltips/README.md
     - src/docs/ai/guide/04-floating-ui-tooltips.md
     - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/FEATURE_INDEX_BARRELS.generated.md
     - src/docs/ai/BUILD_VALIDATION.md
     - src/docs/ai/DEVELOPER_TASK_QUEUE.md
     - src/docs/ai/ACTIVE_TASKS.md
     - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ai/archive/TASK_QUEUE_DONE.md
     - src/docs/ALL_FEEDBACK_CLEAN.md
+    - .cursor/rules/realms-unification.mdc
   description: |
     Hover/tap (touch-hold) definition tooltips on ability and defense names for the
     character sheet and guided creator — tip tied to the word itself (no Info icon).
@@ -35,8 +40,10 @@
     Owner request 2026-07-19. Extends InfoTippy with WordHelpTip (no new shared file).
     Does not replace getTooltipTextByPowerAbility (archetype pick guidance) or
     ABILITY_EFFECT_BLURBS (always-visible Layer 1 cards).
+    Cleanup 2026-07-19: DESIGN_INTENT on WordHelpTip; AbilityScoreGrid aria on score
+    (not tile); guide/04 + tooltips README; related_files honesty.
   evidence: |
-    npm run build (agent).
+    npm run build (agent); /audit → /cleanup docs + a11y honesty.
   build_validation: |
     suite: DEV-V-009 / DEV-V-013
     tests:

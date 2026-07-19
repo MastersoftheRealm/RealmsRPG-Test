@@ -219,8 +219,8 @@ export function AbilityScoreGrid({
                 // After py-* so twMerge keeps clear-space under the straddling pill (incl. sm:py-2).
                 highlight && 'pt-3 sm:pt-3'
               )}
-              aria-label={`${info.name} ${formatBonus(value)}`}
             >
+              {/* Name is WordHelpTip (focusable); score carries ability context — no tile aria-label. */}
               <WordHelpTip
                 content={getAbilityHelp(ability)}
                 label={`About ${info.name}`}
@@ -262,6 +262,7 @@ export function AbilityScoreGrid({
                           'min-w-[2.75rem] text-center text-2xl font-bold',
                           abilityValueClass(value)
                         )}
+                        aria-label={`${info.name} ${formatBonus(value)}`}
                       >
                         {formatBonus(value)}
                       </span>
@@ -293,6 +294,7 @@ export function AbilityScoreGrid({
                       'min-w-[2.75rem] text-center text-2xl font-bold',
                       abilityValueClass(value)
                     )}
+                    aria-label={`${info.name} ${formatBonus(value)}`}
                   >
                     {formatBonus(value)}
                   </span>

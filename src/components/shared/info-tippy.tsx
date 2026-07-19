@@ -192,10 +192,9 @@ export interface WordHelpTipProps {
   disabled?: boolean;
 }
 
-/**
- * Word-tied contextual help — tip on the label itself (no Info icon).
- * Use for ability/defense names on the sheet and guided creator.
- */
+// DESIGN_INTENT: Definition help on the word itself (not an Info icon sibling).
+// 44px touch target; InfoTippy hover/focus/touch-hold; copy from tooltip-text.tsx.
+/** Word-tied contextual help for ability/defense names (sheet + guided creator). */
 export function WordHelpTip({
   content,
   label,

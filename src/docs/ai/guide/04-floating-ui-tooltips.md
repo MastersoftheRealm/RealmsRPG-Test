@@ -80,26 +80,27 @@ Use the dependency **inside `@/components/shared` or `@/components/ui`**, not ad
 
 1. **Search** — grep `tooltip-text.tsx` and existing `InfoTippy` on the same surface; reuse or extend copy.
 2. **Copy** — add a string, JSX export, or helper to `public/tooltip-text.tsx` (one file; no DB).
-3. **Wire** — import `InfoTippy` from `@/components/shared`:
+3. **Wire** — import `InfoTippy` / `WordHelpTip` from `@/components/shared`:
    - Page/step title: `<InfoTippy content={…} label="…" size="inline" />`
    - Default icon trigger: omit `children`; **`label` is required** (becomes `aria-label`).
    - Custom trigger: pass `children` (single element); child needs its own `aria-label`; keep `label` for consistency.
+   - Label-word tip (no icon): `<WordHelpTip content={getAbilityHelp(…)} label="About Strength">Strength</WordHelpTip>` (ability/defense names).
 4. **Mobile** — default touch-hold (~400ms) is built in; do not add parallel click handlers.
 5. **A11y** — every trigger has a discernable name; do not rely on `title` alone.
 6. **Verify** — hover, keyboard focus, touch-hold on ~360px width; JSX lists allow pointer into panel.
 
-## `InfoTippy` API (quick reference)
+## `InfoTippy` / `WordHelpTip` API (quick reference)
 
 | Prop | Purpose |
 |------|---------|
 | `content` | `string` or JSX from `tooltip-text.tsx` |
 | `label` | Accessible name (required) |
-| `size` | `'icon'` (default, 44px touch) or `'inline'` (compact, step headings) |
+| `size` | `InfoTippy` only: `'icon'` (default, 44px touch) or `'inline'` (compact, step headings) |
 | `placement` | `'top' \| 'bottom' \| 'left' \| 'right'` |
-| `children` | Optional custom trigger element |
+| `children` | `InfoTippy`: optional custom trigger element. `WordHelpTip`: visible label text/spans |
 | `allowHTML` | **Deprecated** — no-op; kept for call-site compat |
 
-Implementation: `src/components/shared/info-tippy.tsx` (product API) + shared Floating UI chrome in `src/lib/tooltips/floating-help.tsx` (arrow, transitions, placement — ported from Collin PR #14). Styleguide `Tooltip` in `@/components/ui` reuses the same primitive. Types: `InfoTippyProps` exported from `@/components/shared`.
+Implementation: `src/components/shared/info-tippy.tsx` (`InfoTippy` + `WordHelpTip`) + shared Floating UI chrome in `src/lib/tooltips/floating-help.tsx` (arrow, transitions, placement — ported from Collin PR #14). Styleguide `Tooltip` in `@/components/ui` reuses the same primitive. Types: `InfoTippyProps` / `WordHelpTipProps` exported from `@/components/shared`.
 
 ## Do not use (removed / wrong tool)
 
