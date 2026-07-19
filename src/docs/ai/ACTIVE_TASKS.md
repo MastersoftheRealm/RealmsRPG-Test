@@ -377,7 +377,7 @@ Do **not** read the done archive at session start.
   priority: medium
   status: not-started
   related_files:
-    - src/components/shared/add-proficiency-modal.tsx
+    - src/components/character-sheet/add-proficiency-modal.tsx
     - src/components/shared/unified-selection-modal.tsx
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/MOBILE_UX.md
