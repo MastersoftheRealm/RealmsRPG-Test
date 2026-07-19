@@ -45,6 +45,7 @@
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/50
   merged_at: |
+    2026-07-19
 
 - id: TASK-547
   title: Ability and defense name tooltips (sheet + guided creator)
