@@ -31,13 +31,13 @@ const stepCopy = GUIDED_CREATOR_COPY.steps.path;
 const detailCopy = stepCopy.detail;
 
 function pathAbilityTags(path: Archetype): string[] {
-  const { primary, secondary } = resolvePathAbilityLabels(path);
+  const { primaryAbilities, secondaryAbility } = resolvePathAbilityLabels(path);
   const tags: string[] = [];
-  if (primary) {
-    tags.push(detailCopy.primaryAbility(formatAbilityLabel(primary)));
+  for (const ability of primaryAbilities) {
+    tags.push(detailCopy.primaryAbility(formatAbilityLabel(ability)));
   }
-  if (secondary) {
-    tags.push(detailCopy.secondaryAbility(formatAbilityLabel(secondary)));
+  if (secondaryAbility) {
+    tags.push(detailCopy.secondaryAbility(formatAbilityLabel(secondaryAbility)));
   }
   return tags;
 }
@@ -93,16 +93,15 @@ export function PathStep() {
   const handleSelect = (path: Archetype) => {
     const type = (path.type || 'power') as ArchetypeCategory;
     const pathChanged = draft.archetypePathId !== String(path.id);
-    // Same SoT as path cards / More details chips (admin Primary / Secondary fields).
-    const { primary, secondary } = resolvePathAbilityLabels(path);
+    // Same SoT as path cards / More details (archetype abilities + optional secondary).
+    const { powAbil, martAbil } = resolvePathAbilityLabels(path);
 
     // Same path re-tap: keep all downstream picks. New path: invalidate dependents.
     updateDraft({
       archetypePathId: String(path.id),
       archetypeType: type,
-      pow_abil: type === 'martial' ? null : primary,
-      mart_abil:
-        type === 'power' ? null : type === 'powered-martial' ? secondary : primary,
+      pow_abil: powAbil,
+      mart_abil: martAbil,
       ...(pathChanged
         ? {
             // Soft-default only runs when Abilities mounts with abilitiesMode null —
