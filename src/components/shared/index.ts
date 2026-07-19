@@ -35,9 +35,6 @@ export { ValueStepper, DecrementButton, IncrementButton, type ValueStepperProps,
 export { EditSectionToggle, getEditState, type EditState } from './edit-section-toggle';
 
 // ============================================================================
-// Item display components
-export { ItemCard } from './item-card';
-
 // Modal components
 export { LoginPromptModal } from './login-prompt-modal';
 export type { LoginPromptReason } from './login-prompt-modal';
@@ -114,12 +111,8 @@ export type { OfficialItemListProps, OfficialItemRow } from './official-item-lis
 export { OfficialCreatureList } from './official-creature-list';
 export type { OfficialCreatureListProps, OfficialCreatureRow } from './official-creature-list';
 
-// Part/Property chip components (wrappers over unified ExpandableChip)
-export {
-  PartChip as PartChipComponent,
-  PartChipList,
-  PropertyChipList,
-} from './part-chip';
+// Part chip (thin ExpandableChip wrapper — prefer ExpandableChip + expandableChipPropsFromPartData)
+export { PartChip as PartChipComponent } from './part-chip';
 export type { PartData } from '@/lib/chip/part-data';
 
 // GridListRow chip adapter
@@ -179,8 +172,8 @@ export {
   EquipmentListSection,
   FeatsTraitsListSection,
   LibraryCollapsibleSection,
-  splitDamageDiceAndType,
 } from './entity-library-sections';
+export { splitDamageDiceAndType } from '@/lib/utils';
 export type {
   EntityPowerRow,
   EntityTechniqueRow,
@@ -196,10 +189,6 @@ export type {
 // Quick armaments tables (Archetype-style)
 export { QuickWeaponsTable, QuickShieldsTable, QuickArmorTable, QUICK_WEAPON_COL } from './quick-armaments-sections';
 export type { QuickArmamentItem, QuickArmamentAbilities } from './quick-armaments-sections';
-
-// Species trait components
-export { SpeciesTraitCard, TraitGroup } from './species-trait-card';
-export type { TraitData, TraitCategory, SpeciesTraitCardProps, TraitGroupProps } from './species-trait-card';
 
 // ============================================================================
 // UNIFIED SELECTION COMPONENTS

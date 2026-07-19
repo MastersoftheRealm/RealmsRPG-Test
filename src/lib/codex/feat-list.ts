@@ -2,7 +2,7 @@
  * Shared codex feat list helpers (Codex feats tab + Admin feats tab).
  */
 
-import type { AbilityRequirement } from '@/components/codex';
+import type { AbilityRequirement } from '@/components/shared/filters';
 import type { ChipData } from '@/components/shared/grid-list-row';
 import type { Feat, Skill } from '@/hooks';
 import { buildFeatLevelChips } from '@/lib/leveled-feats';

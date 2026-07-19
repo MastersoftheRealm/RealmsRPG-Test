@@ -15,12 +15,12 @@ This file gathers the main UI components, shared utilities, and style convention
 | Powers, techniques, feats, equipment in character sheet | **GridListRow** | Sortable columns, leftSlot/rightSlot, expandable rows |
 | Add-feat, add-skill, add-library-item modals | **GridListRow** or **UnifiedSelectionModal** | Consistent list selection with search |
 | Codex browse (feats, skills, equipment, parts) | **GridListRow** | Tab + filters + GridListRow list |
-| Library browse (user's items) | **ItemCard** / **ItemList** | Card layout, view/edit/duplicate/delete |
+| Library browse (user's items) | **GridListRow** / Official*List | Sortable columns; view/edit/duplicate/delete |
 | Base-skill selector (add sub-skill) | **SelectionToggle** | Unique UX; not GridListRow |
 | Species detail, level-up wizard | Custom layouts | Justified exceptions |
 | Quantity controls | **QuantitySelector** or **ValueStepper** | Not SelectionToggle |
 
-**Rule:** Prefer `GridListRow` for list rows with columns. Use `ItemCard`/`ItemList` for card-style layouts. Use `SelectionToggle` for add/select actions only.
+**Rule:** Prefer `GridListRow` for list rows with columns. Use `SelectionToggle` for add/select actions only.
 
 ---
 
@@ -394,15 +394,9 @@ The unified expandable list row now supports character sheet use cases with new 
 
 These slots allow `GridListRow` to replace custom character sheet components (PowerCard, TechniqueCard, ItemCard) while maintaining flexibility.
 
-### ItemCard & ItemList
+### ItemCard & ItemList — removed
 
-**ItemCard** - Unified item display component. File: [src/components/shared/item-card.tsx](src/components/shared/item-card.tsx#L1)
-- Props: `item`, `mode` (view|select|manage), `onSelect?`, `onEdit?`, `onDelete?`
-- Usage: Display items in codex, library, creator with consistent styling
-
-**ItemList** - Unified list with filtering, sorting, and search. File: [src/components/shared/item-list.tsx](src/components/shared/item-list.tsx#L1)
-- Props: `items`, `renderItem`, `layout` (list|grid), `searchFilter?`, `sortOptions?`, `filters?`, `emptyMessage?`
-- Pattern: Combines search, sort, filter, and list rendering in one component
+`ItemCard` / `ItemList` were deleted (`/debt` 2026-07-19). Use **GridListRow** + **Official\*List** / library shells.
 
 ---
 
@@ -542,28 +536,9 @@ D&D-style creature display component. File: [src/components/shared/creature-stat
 />
 ```
 
-### SpeciesTraitCard
+### SpeciesTraitCard — removed
 
-Unified trait display with limited uses tracking. File: [src/components/shared/species-trait-card.tsx](src/components/shared/species-trait-card.tsx#L1)
-
-- **Components:** `SpeciesTraitCard`, `TraitGroup`
-- **Props:** `trait`, `category` (species|ancestry|flaw|characteristic), `showUses?`, `currentUses?`, `onUseChange?`
-- **Features:**
-  - Category-based color coding
-  - Limited uses display with +/- controls
-  - Recovery period indicator
-  - Expandable description
-- **Usage:** Species modal, character sheet, character creator
-
-```tsx
-<SpeciesTraitCard
-  trait={traitData}
-  category="species"
-  showUses
-  currentUses={trait.uses.current}
-  onUseChange={(delta) => updateUses(trait.id, delta)}
-/>
-```
+`SpeciesTraitCard` / `TraitGroup` deleted (`/debt` 2026-07-19). Catalogs: **DetailOptionList** + `traitToDetailOption`. Selection: **GuidedChoiceCard**.
 
 ### CharacterCard
 

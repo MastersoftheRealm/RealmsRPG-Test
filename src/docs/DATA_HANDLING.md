@@ -50,11 +50,9 @@
 ### Official library (Realms Library)
 
 - **Endpoint:** `GET /api/official/{type}` — type = powers, techniques, empowered-techniques, items, creatures, species. No auth.
-- **Legacy:** `GET /api/public/{type}` still exists but is deprecated; migrate to `/api/official` (see TASK-315).
 - **Cache:** `Cache-Control: public, max-age=300, s-maxage=600, stale-while-revalidate=300`.
 - **Query keys:** `['official-library', type]`.
-- **Hooks:** `useOfficialLibrary(type)`, `useAddOfficialToLibrary(type)`.
-- **Deprecated aliases:** `usePublicLibrary`, `useAddPublicToLibrary` — same implementations; prefer official names in new code.
+- **Hooks:** `useOfficialLibrary(type)`, `useAddOfficialToLibrary(type)` in `hooks/use-official-library.ts`.
 
 ### Invalidation
 
@@ -107,8 +105,7 @@ Spreadsheet and list edit modes in the Codex Editor persist via `createCodexDoc`
 | Codex types       | `src/types/codex.ts` (`CodexPayload` — canonical GET /api/codex shape) |
 | Game rules (codex slice) | `src/hooks/use-game-rules.ts` |
 | User library hooks | `src/hooks/use-user-library.ts` |
-| Official library hooks | `src/hooks/use-public-library.ts` (`useOfficialLibrary`), `src/app/api/official/[type]/route.ts` |
-| Legacy public API (deprecated) | `src/app/api/public/[type]/route.ts` |
+| Official library hooks | `src/hooks/use-official-library.ts`, `src/app/api/official/[type]/route.ts` |
 | Library service   | `src/services/library-service.ts` |
 | Library types     | `src/types/library.ts` (`LibraryItemByType` — user + official GET shapes) |
 | Admin codex actions | `src/app/(main)/admin/codex/actions.ts` — create/update/delete codex + core_rules |

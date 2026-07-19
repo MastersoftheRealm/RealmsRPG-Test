@@ -47,8 +47,8 @@ import {
   getWeaponAttackBonus,
   resolveItemProperties,
   deriveArmorItemCombatStats,
-  splitDamageDiceAndType,
 } from './library-list-helpers';
+import { splitDamageDiceAndType } from '@/lib/utils';
 import {
   buildArmorRequirementMetadataChips,
   buildPartsAndMetadataDetailSections,

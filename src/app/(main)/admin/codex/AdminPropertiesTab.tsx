@@ -11,7 +11,7 @@ import {
   ListHeader,
 } from '@/components/shared';
 import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
-import { SelectFilter, FilterSection } from '@/components/codex';
+import { SelectFilter, FilterSection } from '@/components/shared/filters';
 import { useItemProperties, type ItemProperty } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';

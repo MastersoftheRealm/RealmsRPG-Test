@@ -52,7 +52,7 @@
 | Codex rules data (feats, skills, species, traits, parts, equipment, properties, archetypes) | `useCodexFull` + the `useCodex*` family (aliased `useSkills`/`useSpecies`/`usePowerParts`/etc.) |
 | Game rules constants | `useGameRules`, `getGameRulesFallback` |
 | Trait / skill id↔name resolution | `useResolvedTraits`, `useSkillIdToNameMap`, `resolveTraitIds`, `resolveSkillIdsToNames` |
-| Official library (browse + add to my library) | `useOfficialLibrary`, `useAddOfficialToLibrary` (legacy alias: `usePublicLibrary`) |
+| Official library (browse + add to my library) | `useOfficialLibrary`, `useAddOfficialToLibrary` (`hooks/use-official-library.ts`) |
 | User-created content (CRUD: powers/techniques/items/creatures/species) | `useUser*`, `useDelete*`, `useDuplicate*` from `use-user-library` |
 | Characters CRUD | `useCharacters`, `useCharacter`, `useSaveCharacter`, `useCreateCharacter`, `useDeleteCharacter`, `useDuplicateCharacter` |
 | Campaigns | `useCampaigns*`, `useCampaign`, `useCampaignRolls` |
@@ -99,12 +99,14 @@
 | Chip roles (descriptor vs expandable) | `DescriptorChip`, `ExpandableChip` (`@/components/ui`); `GridListChip` + `lib/chip/expandable-chip-props.ts`; `ChipData.kind` + `descriptorChipData()` in `lib/chip/chip-data-helpers.ts`; metadata builders in `lib/chip/list-row-metadata.ts` |
 | Stable expand toggle (chips) | `ExpandableChip` + `ChipGroup` (`data-chip-group`); `applyFullRowExpandLayout` (`lib/chip/full-row-expand-layout.ts`) — grow into remaining row width; do not force `w-full` on wrap expand (TASK-445). Header **or** expanded body toggles; Options uses `data-expand-ignore` (TASK-539). |
 | Feat tags (normalize + taxonomy) | `lib/codex/feat-tags.ts`, `lib/codex/feat-list.ts`; `sql/feat-tags-unification-phase*.sql` (phase 4 = live normalize chain); `docs/FEAT_TAGS.md` |
-| Part/property chips | `PartChipList`, `PartChipComponent` (thin aliases); `PartData` in `lib/chip/part-data.ts`; `partChipsFromDisplay` in `lib/chip/part-chips-from-display.ts` |
+| Part/property chips | Prefer `ExpandableChip` + `expandableChipPropsFromPartData`; thin `PartChipComponent` alias remains; `PartData` in `lib/chip/part-data.ts`; `partChipsFromDisplay` in `lib/chip/part-chips-from-display.ts` |
 | Part/property → PartData (library rows) | `lib/library/part-display.ts` — `computePartTrainingPoints`, `characterPartsToPartData`, `itemPropertiesToPartData` |
 | Dedupe saved parts / entity refs | `lib/library/dedupe-saved-parts.ts` — `dedupeSavedParts`, `dedupeEntityRefs` (creators save, sync, calc, sheet chips) |
 | Sheet trait assembly (no species/ancestry dupes) | `lib/character/collect-sheet-traits.ts` — `collectSheetTraits` (Feats tab) |
 | Entity list sections (powers/techniques/weapons/armor/etc.) | `*ListSection` from `entity-library-sections`; multi-section tabs use `useLibrarySectionCollapse` + `SectionHeader` collapsible (empty closed; + Add expands) |
-| Species trait cards | **Deprecated for catalogs** — use `DetailOptionList` + `traitToDetailOption` (deep-dive / species-modal). Selection picks: `GuidedChoiceCard`. `SpeciesTraitCard` / `TraitGroup` remain exported for rare interactive use-tracking UIs only — do not use for new read-only lists. |
+| Species / trait catalogs | `DetailOptionList` + `traitToDetailOption` (deep-dive / species-modal). Selection picks: `GuidedChoiceCard`. (`ItemCard` / `SpeciesTraitCard` deleted — `/debt` 2026-07-19.) |
+| Damage dice/type split (list cells) | `splitDamageDiceAndType` from `@/lib/utils` (single helper; sheet + entity lists + quick armaments) |
+| Shared list filters | `@/components/shared/filters` (`ChipSelect`, `FilterSection`, …) — not `@/components/codex` |
 | Creature stat block | `CreatureStatBlock` |
 | Filters | `ChipSelect`, `TagFilter`, `CheckboxFilter`, `SelectFilter`, `AbilityRequirementFilter` |
 | List states | `ListEmptyState`, `LoadingState`, `ErrorDisplay` |

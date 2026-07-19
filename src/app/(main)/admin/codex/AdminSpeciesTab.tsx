@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChipSelect, FilterSection } from '@/components/codex';
+import { ChipSelect, FilterSection } from '@/components/shared/filters';
 import {
   SectionHeader,
   SearchInput,

@@ -10,7 +10,7 @@ import { QuantitySelector } from '@/components/shared/quantity-selector';
 import { RollButton } from '@/components/shared/roll-button';
 import { deriveShieldAmountFromProperties } from '@/lib/calculators/item-calc';
 import { TP_COST_LABEL } from '@/lib/detail-option/compact-facts';
-import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
+import { formatListCellLabel, splitDamageDiceAndType } from '@/lib/utils';
 import { useRollsOptional } from '@/components/character-sheet/roll-context';
 import { useLibrarySectionCollapse } from '@/hooks/use-library-section-collapse';
 
@@ -102,21 +102,6 @@ function useEntityListSectionCollapse(
   onAdd?: () => void
 ) {
   return useLibrarySectionCollapse(collapsible ?? false, itemCount, onAdd);
-}
-
-export function splitDamageDiceAndType(damage: unknown): { dice: string; type: string; rollStr: string } {
-  if (!damage) return { dice: '-', type: '', rollStr: '-' };
-  if (typeof damage === 'string') {
-    const str = damage.trim();
-    const match = str.match(/^([\dd+\-\s]+)(?:\s+(.+))?$/);
-    if (!match) return { dice: str, type: '', rollStr: str };
-    return { dice: match[1].trim(), type: (match[2] ?? '').trim(), rollStr: str };
-  }
-  const formatted = formatDamageDisplay(damage as never);
-  const str = formatted ? String(formatted) : '-';
-  const match = str.match(/^([\dd+\-\s]+)(?:\s+(.+))?$/);
-  if (!match) return { dice: str, type: '', rollStr: str };
-  return { dice: match[1].trim(), type: (match[2] ?? '').trim(), rollStr: str };
 }
 
 // Powers (character sheet-like; creature stat block can include Energy)

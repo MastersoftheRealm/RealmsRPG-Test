@@ -2,7 +2,7 @@
  * Creature Creator - Display Item Transformers
  * =============================================
  * Transform user library data into DisplayItem format for use with
- * ItemSelectionModal and ItemCard components.
+ * selection modals and GridListRow list sections.
  */
 
 import type { DisplayItem, ItemStat } from '@/types/items';

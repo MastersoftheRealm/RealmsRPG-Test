@@ -13,7 +13,7 @@ import { guidedDraftToFeatRequirementCharacter } from '@/lib/guided-creator/feat
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
 import { GuidedChoiceCard } from '../guided-choice-card';
-import { GuidedFeatRestrictionNotice } from '../guided-feat-restriction-notice';
+import { GuidedFeatRestrictionNotice } from '../guided-restriction-notice';
 import { GuidedFeatsL2Modal } from '../guided-feats-l2-modal';
 import { getFeatRestrictionNotice } from '@/lib/codex/feat-restriction-notice';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from '../guided-choice-styles';

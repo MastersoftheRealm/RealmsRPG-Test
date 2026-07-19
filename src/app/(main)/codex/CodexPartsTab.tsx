@@ -8,10 +8,7 @@
 
 import { useState, useMemo } from 'react';
 import { formatListCellLabel } from '@/lib/utils';
-import {
-  SelectFilter,
-  FilterSection,
-} from '@/components/codex';
+import { SelectFilter, FilterSection } from '@/components/shared/filters';
 import {
   SearchInput,
   ListHeader,

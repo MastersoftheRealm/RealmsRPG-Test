@@ -6,10 +6,8 @@
 
 import { DetailOptionList } from '@/components/shared/detail-option-list';
 import type { Trait } from '@/hooks';
-import { traitToDetailOption, formatTraitRecoveryLabel } from '@/lib/detail-option';
+import { traitToDetailOption } from '@/lib/detail-option';
 import { GUIDED_OVERVIEW_STYLES as o } from './guided-choice-styles';
-
-export { formatTraitRecoveryLabel };
 
 export interface GuidedTraitOptionListProps {
   traits: Trait[];

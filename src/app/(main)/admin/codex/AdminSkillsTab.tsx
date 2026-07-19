@@ -10,7 +10,8 @@ import {
   ListHeader,
 } from '@/components/shared';
 import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
-import { ChipSelect, SelectFilter, FilterSection, CodexSkillRow } from '@/components/codex';
+import { ChipSelect, SelectFilter, FilterSection } from '@/components/shared/filters';
+import { CodexSkillRow } from '@/components/codex';
 import { useCodexSkills, type Skill } from '@/hooks';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
 import {
