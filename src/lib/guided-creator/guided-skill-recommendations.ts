@@ -129,12 +129,19 @@ export function buildGuidedSkillSuggestions(
   for (const rawId of declinedPathSkillIds) {
     const skillId = String(rawId);
     if (skillId === '0' || selectedSkillIds.has(skillId)) continue;
-    if (!codexSkills.some((s) => String(s.id) === skillId)) continue;
+    const skill = codexSkills.find((s) => String(s.id) === skillId);
+    if (!skill) continue;
+
+    const abilityLabel = formatGuidedSkillAbilityTag(skill, abilities);
+    const tags = abilityLabel ? [pathLabel, abilityLabel] : [pathLabel];
+    const badges = abilityLabel
+      ? [pathDeclinedBadge(pathLabel), abilityTagBadge(abilityLabel)]
+      : [pathDeclinedBadge(pathLabel)];
 
     const entry: Omit<GuidedSkillSuggestion, 'skillId'> = {
       kinds: ['path-declined'],
-      tags: [pathLabel],
-      badges: [pathDeclinedBadge(pathLabel)],
+      tags,
+      badges,
       sortRank: 0,
     };
     const prev = byId.get(skillId);

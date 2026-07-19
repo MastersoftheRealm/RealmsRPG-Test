@@ -1,3 +1,52 @@
+- id: TASK-548
+  title: Guided Skills — show contributing Ability + Skill Bonus formula tip
+  created_at: 2026-07-19
+  created_by: owner
+  priority: medium
+  status: done
+  completed_at: 2026-07-19
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/guided-creator/guided-skills-panel.tsx
+    - src/lib/guided-creator/guided-skill-recommendations.ts
+    - src/lib/guided-creator/guided-skill-recommendations.test.ts
+    - public/tooltip-text.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Guided Skills L1 list did not show which Ability feeds each Skill, and the
+    Skill Bonus number had no explanation. Add Ability chips and a hover/tap
+    InfoTippy on the bonus with Ability + Skill Value = Skill Bonus.
+  acceptance_criteria:
+    - Each GuidedSkillsPanel row shows the contributing Ability (highest linked).
+    - Skill Bonus has hover/tap tip with current formula numbers (GAME_RULES terms).
+    - Path-declined suggestion cards include Ability tags/badges.
+    - BUILD_VALIDATION DEV-V-013-T066; npm run build; unit tests for suggestions.
+  notes: |
+    Owner feedback 2026-07-19. Tip copy in `getGuidedSkillBonusHelp` (tooltip-text.tsx).
+    Multi-ability Skills note “highest linked Ability” in the tip.
+    Cleanup 2026-07-19: bonus tip child aria-label; Ability primary (vs Species descriptor);
+    remove uses text-danger-fg; DESIGN_INTENT on tip helper/call site.
+    Renumbered from TASK-544→545→547→548 on merge — TASK-544–547 taken by path ability,
+    sheet dedupe, and ability/defense word tooltips (PR #45/#49/#48/#47). BV tip is T066
+    (T065 = guided ability name tooltips from TASK-547).
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/46
+  evidence: |
+    npm run build; vitest guided-skill-recommendations.test.ts; /audit → /cleanup a11y+tokens
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T066
+  developer_test_plan: |
+    Suite DEV-V-013 T066 — see BUILD_VALIDATION.md
+
+---
 - id: TASK-565
   title: Guided feats See more opens add modal (not card dump)
   created_at: 2026-07-19

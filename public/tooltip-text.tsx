@@ -182,6 +182,34 @@ export function getSkillPointsHelp(
   );
 }
 
+/**
+ * Guided Skills step — how a listed Skill Bonus is calculated (proficient base skills).
+ * DESIGN_INTENT: Parameterized help like getAbilityPointsHelp (live numbers + static formula
+ * structure in tooltip-text). Supplementary InfoTippy copy — not a generic stat popover.
+ */
+export function getGuidedSkillBonusHelp(options: {
+  abilityLabel: string;
+  abilityValue: number;
+  skillValue: number;
+  skillBonus: number;
+  multiAbility?: boolean;
+}) {
+  const { abilityLabel, abilityValue, skillValue, skillBonus, multiAbility } = options;
+  const signed = (n: number) => (n >= 0 ? `+${n}` : `${n}`);
+  return (
+    <div>
+      <div>Skill Bonus</div>
+      <div>
+        <strong>{abilityLabel}</strong> ({signed(abilityValue)}) + Skill Value ({signed(skillValue)}) ={' '}
+        <strong>{signed(skillBonus)}</strong>
+      </div>
+      {multiAbility ? (
+        <div>Uses your highest linked Ability for this Skill.</div>
+      ) : null}
+    </div>
+  );
+}
+
 export const subSkillsHelp = (
   <div>
     <div>Sub-Skills</div>

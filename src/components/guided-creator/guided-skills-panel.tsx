@@ -1,6 +1,6 @@
 /**
  * GuidedSkillsPanel — Layer 1 skill allocation for the guided creator.
- * Simplified rows: name + source chip, bonus ±, X remove on right, tap to expand description.
+ * Simplified rows: name + ability + source chip, bonus ± with formula tip, X remove, expand description.
  * Layer 2 browse lives in the parent step (below recommended skills), not on this list.
  */
 
@@ -19,9 +19,16 @@ import {
   getSkillValueIncreaseCost,
   resolveSkillAllocationRules,
 } from '@/lib/game/skill-allocation';
-import { DecrementButton, IncrementButton, PointStatus } from '@/components/shared';
+import { formatGuidedSkillAbilityTag } from '@/lib/guided-creator/curated-skills';
+import {
+  DecrementButton,
+  IncrementButton,
+  InfoTippy,
+  PointStatus,
+} from '@/components/shared';
 import { DescriptorChip, IconButton, Spinner } from '@/components/ui';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import { getGuidedSkillBonusHelp } from '../../../public/tooltip-text';
 import type { Abilities } from '@/types';
 
 const panelCopy = GUIDED_CREATOR_COPY.steps.skills;
@@ -42,6 +49,9 @@ interface GuidedSkillRowItem {
   skill: Skill;
   value: number;
   bonus: number;
+  abilityLabel: string | null;
+  abilityValue: number;
+  multiAbility: boolean;
   isSpecies: boolean;
   isPath: boolean;
   canIncrease: boolean;
@@ -62,7 +72,18 @@ function GuidedSkillRow({
   onRemove?: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const { skill, bonus, isSpecies, isPath, canIncrease, canDecrease } = item;
+  const {
+    skill,
+    value,
+    bonus,
+    abilityLabel,
+    abilityValue,
+    multiAbility,
+    isSpecies,
+    isPath,
+    canIncrease,
+    canDecrease,
+  } = item;
   const bonusTone =
     bonus > 0
       ? 'text-success-fg'
@@ -71,6 +92,16 @@ function GuidedSkillRow({
         : 'text-text-secondary';
 
   const hasDescription = Boolean(skill.description);
+  const skillName = skill.name ?? 'skill';
+  const bonusHelp = abilityLabel
+    ? getGuidedSkillBonusHelp({
+        abilityLabel,
+        abilityValue,
+        skillValue: value,
+        skillBonus: bonus,
+        multiAbility,
+      })
+    : null;
 
   return (
     <li className="border-b border-border-light last:border-b-0">
@@ -84,11 +115,17 @@ function GuidedSkillRow({
             hasDescription && 'cursor-pointer'
           )}
           aria-expanded={hasDescription ? expanded : undefined}
-          aria-label={hasDescription ? `${expanded ? 'Collapse' : 'Expand'} ${skill.name} description` : undefined}
+          aria-label={hasDescription ? `${expanded ? 'Collapse' : 'Expand'} ${skillName} description` : undefined}
         >
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="font-nunito font-semibold text-text-primary">{skill.name}</span>
+              {/* DESIGN_INTENT: Ability = primary (guided ability chips); Species = descriptor; path = primary source */}
+              {abilityLabel && (
+                <DescriptorChip variant="primary" size="sm" title={`Contributing Ability: ${abilityLabel}`}>
+                  {abilityLabel}
+                </DescriptorChip>
+              )}
               {isSpecies && (
                 <DescriptorChip variant="descriptor" size="sm">Species</DescriptorChip>
               )}
@@ -120,21 +157,43 @@ function GuidedSkillRow({
             onClick={onDecrease}
             disabled={!canDecrease}
             size="md"
-            title={`Decrease ${skill.name ?? 'skill'} bonus`}
+            title={`Decrease ${skillName} Skill Value`}
           />
-          <span
-            className={cn(
-              'min-w-[2.75rem] text-center font-display text-lg font-bold tabular-nums',
-              bonusTone
-            )}
-          >
-            {formatBonus(bonus)}
-          </span>
+          {/* DESIGN_INTENT: Skill Bonus tip uses InfoTippy + getGuidedSkillBonusHelp (parameterized
+              like getAbilityPointsHelp) — supplementary formula copy with live numbers, not a required control. */}
+          {bonusHelp ? (
+            <InfoTippy
+              content={bonusHelp}
+              label={`How ${skillName} Skill Bonus is calculated`}
+              placement="top"
+            >
+              <button
+                type="button"
+                aria-label={`${formatBonus(bonus)}, how ${skillName} Skill Bonus is calculated`}
+                className={cn(
+                  'min-w-[2.75rem] min-h-11 px-1 text-center font-display text-lg font-bold tabular-nums rounded-md',
+                  'hover:bg-surface-alt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2',
+                  bonusTone
+                )}
+              >
+                {formatBonus(bonus)}
+              </button>
+            </InfoTippy>
+          ) : (
+            <span
+              className={cn(
+                'min-w-[2.75rem] text-center font-display text-lg font-bold tabular-nums',
+                bonusTone
+              )}
+            >
+              {formatBonus(bonus)}
+            </span>
+          )}
           <IncrementButton
             onClick={onIncrease}
             disabled={!canIncrease}
             size="md"
-            title={`Increase ${skill.name ?? 'skill'} bonus`}
+            title={`Increase ${skillName} Skill Value`}
           />
         </div>
 
@@ -143,8 +202,8 @@ function GuidedSkillRow({
             variant="ghost"
             size="sm"
             onClick={onRemove}
-            label={`Remove ${skill.name ?? 'skill'}`}
-            className="shrink-0 text-danger-700 hover:bg-danger-light dark:text-danger-400 min-h-11 min-w-11"
+            label={`Remove ${skillName}`}
+            className="shrink-0 text-danger-fg hover:bg-danger-light min-h-11 min-w-11"
           >
             <X className="h-4 w-4" aria-hidden />
           </IconButton>
@@ -244,6 +303,8 @@ export function GuidedSkillsPanel({
       const linkedKeys = getLinkedAbilityKeys(skill.ability);
       const chosenAbilityKey =
         getHighestLinkedAbilityKey(skill.ability, abilities) ?? linkedKeys[0];
+      const abilityValue = chosenAbilityKey ? (abilities[chosenAbilityKey] ?? 0) : 0;
+      const abilityLabel = formatGuidedSkillAbilityTag(skill, abilities);
       const bonus = calculateSkillBonusWithProficiency(
         skill.ability,
         value,
@@ -261,6 +322,9 @@ export function GuidedSkillsPanel({
         skill,
         value,
         bonus,
+        abilityLabel,
+        abilityValue,
+        multiAbility: linkedKeys.length > 1,
         isSpecies,
         isPath,
         canIncrease: canInc,
