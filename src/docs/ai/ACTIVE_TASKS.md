@@ -4,7 +4,7 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-571
+**Next task ID:** TASK-573
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
@@ -12,7 +12,7 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 13 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 15 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
 **Hot notes:** TASK-535 innate reclassify (codex, owner ack). TASK-500 image library deferred. TASK-381 sheet Phase 2 shipped (facade). Repo anti-debt → `/debt`.
 
@@ -407,5 +407,57 @@ Do **not** read the done archive at session start.
     - npm run build + vitest archetype-path helpers green.
   notes: |
     Filed from /debt 2026-07-19. Small lib consolidation — safe Implementer work.
+
+---
+
+- id: TASK-571
+  title: Decide AddCombatantModal — USM migrate or document exception
+  created_at: 2026-07-19
+  created_by: agent
+  priority: low
+  status: not-started
+  related_files:
+    - src/components/shared/add-combatant-modal.tsx
+    - src/components/shared/unified-selection-modal.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/guide/02-components-and-lists.md
+  description: |
+    /global-audit: AddCombatantModal is a parallel add-picker (Modal + SearchInput +
+    custom rows) with encounter qty/type/initiative/campaign tabs. Owner ack required
+    before forcing UnifiedSelectionModal — may stay an intentional exception.
+  acceptance_criteria:
+    - Owner decides: migrate onto USM (with scoped AC for initiative/campaign UX), or
+      document as intentional non-USM exception in FEATURE_INDEX + guide/02.
+    - If migrate: fullScreenOnMobile + sticky footer parity; behavior preserved; build green.
+    - If exception: docs list it beside RealmsImagePicker-style intentional alternates; no code fork creep.
+  notes: |
+    Filed from /audit after /debt 2026-07-19. Gated — do not implement migrate without owner ack.
+
+---
+
+- id: TASK-572
+  title: AdminSpecies trait picker — USM or document admin exception
+  created_at: 2026-07-19
+  created_by: agent
+  priority: low
+  status: not-started
+  related_files:
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
+    - src/components/shared/unified-selection-modal.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    /global-audit: AdminSpeciesTab trait picker hand-rolls Modal + SearchInput +
+    GridListRow + useModalListState (same shell as pre-USM AddProficiencyModal).
+    AdminTraitsTab nests a similar list inside the edit modal. Prefer USM after
+    TASK-567, or ack as admin-only exception.
+  acceptance_criteria:
+    - After TASK-567 pattern: migrate AdminSpecies trait picker to USM, or document
+      admin-only exception in FEATURE_INDEX / guide/02.
+    - AdminTraits nested list either shares the same shell or is explicitly scoped as
+      in-modal editor chrome (not a catalog picker).
+    - npm run build if UI touched.
+  notes: |
+    Filed from /audit after /debt 2026-07-19. Prefer sequencing after TASK-567 lands.
 
 ---
