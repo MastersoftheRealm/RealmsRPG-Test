@@ -21,6 +21,8 @@ import {
   type CharacterForFeatRequirement,
 } from '@/lib/game/feat-requirements';
 import { mapTraitRows, mapFeatRows, resolveTraitCustomizationKey, type FeatRowContext, type FeatLevelMeta } from './library-feat-rows';
+import { collectSheetTraits } from '@/lib/character/collect-sheet-traits';
+import { dedupeEntityRefs } from '@/lib/library/dedupe-saved-parts';
 import type { FeatTraitCustomization } from '@/types/feats';
 
 interface TraitData {
@@ -266,38 +268,16 @@ export function FeatsTab({
     [featsDb]
   );
 
-  const allTraitsWithCategories = useMemo(() => {
-    const result: { name: string; category: 'ancestry' | 'flaw' | 'characteristic' | 'species' }[] = [];
-
-    if (speciesTraitsFromCodex?.length) {
-      speciesTraitsFromCodex.forEach((name) => result.push({ name, category: 'species' }));
-    } else if (vanillaTraits?.speciesTraits?.length) {
-      vanillaTraits.speciesTraits.forEach((name) => result.push({ name, category: 'species' }));
-    }
-
-    if (ancestry?.selectedTraits?.length) {
-      ancestry.selectedTraits.forEach((name) => result.push({ name, category: 'ancestry' }));
-    }
-    if (ancestry?.selectedFlaw) result.push({ name: ancestry.selectedFlaw, category: 'flaw' });
-    if (ancestry?.selectedCharacteristic) {
-      result.push({ name: ancestry.selectedCharacteristic, category: 'characteristic' });
-    }
-
-    const hasNewFormat =
-      (ancestry?.selectedTraits?.length ?? 0) > 0 || ancestry?.selectedFlaw || ancestry?.selectedCharacteristic;
-
-    if (!hasNewFormat && vanillaTraits) {
-      if (vanillaTraits.flawTrait) result.push({ name: vanillaTraits.flawTrait, category: 'flaw' });
-      if (vanillaTraits.characteristicTrait) {
-        result.push({ name: vanillaTraits.characteristicTrait, category: 'characteristic' });
-      }
-      if (vanillaTraits.ancestryTraits?.length) {
-        vanillaTraits.ancestryTraits.forEach((name) => result.push({ name, category: 'ancestry' }));
-      }
-    }
-
-    return result;
-  }, [ancestry, vanillaTraits, speciesTraitsFromCodex]);
+  const allTraitsWithCategories = useMemo(
+    () =>
+      collectSheetTraits({
+        speciesTraitsFromCodex,
+        ancestry,
+        vanillaTraits,
+        legacyTraits: traits,
+      }),
+    [ancestry, vanillaTraits, speciesTraitsFromCodex, traits]
+  );
 
   const processedTraits = useMemo(() => {
     const enriched = allTraitsWithCategories.map((t) => {
@@ -314,37 +294,24 @@ export function FeatsTab({
         category: t.category,
       };
     });
-    traits.forEach((trait) => {
-      const e = enrichTrait(trait.name);
-      const traitKey = resolveTraitCustomizationKey(trait.name, traitsDb);
-      const custom = traitCustomizations[traitKey];
-      enriched.push({
-        name: custom?.customName?.trim() || e.name,
-        codexName: e.name,
-        traitKey,
-        customName: custom?.customName,
-        note: custom?.note,
-        description: e.description || trait.description,
-        maxUses: e.maxUses || trait.maxUses || 0,
-        recoveryPeriod: e.recoveryPeriod || trait.recoveryPeriod,
-        category: 'species' as const,
-      });
-    });
     return sortByColumn(enriched, traitSort);
-  }, [allTraitsWithCategories, traits, enrichTrait, traitSort, traitsDb, traitCustomizations]);
+  }, [allTraitsWithCategories, enrichTrait, traitSort, traitsDb, traitCustomizations]);
 
   const processedArchetypeFeats = useMemo(
-    () => sortByColumn(archetypeFeats.map(enrichFeat), archetypeFeatSort),
+    () => sortByColumn(dedupeEntityRefs(archetypeFeats).map(enrichFeat), archetypeFeatSort),
     [archetypeFeats, enrichFeat, archetypeFeatSort]
   );
   const processedCharacterFeats = useMemo(
-    () => sortByColumn(characterFeats.map(enrichFeat), characterFeatSort),
+    () => sortByColumn(dedupeEntityRefs(characterFeats).map(enrichFeat), characterFeatSort),
     [characterFeats, enrichFeat, characterFeatSort]
   );
   const processedStateFeats = useMemo(
     () =>
       sortByColumn(
-        stateFeats.map((f) => ({ ...enrichFeat(f), stateType: f.type || 'character' })),
+        dedupeEntityRefs(stateFeats).map((f) => ({
+          ...enrichFeat(f),
+          stateType: f.type || 'character',
+        })),
         stateFeatSort
       ),
     [stateFeats, enrichFeat, stateFeatSort]

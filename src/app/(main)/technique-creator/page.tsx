@@ -40,6 +40,7 @@ import {
   type TechniquePartPayload,
 } from '@/lib/calculators';
 import { attackModeColumnLabel, type AttackMode } from '@/lib/attack-mode';
+import { dedupeSavedParts } from '@/lib/library/dedupe-saved-parts';
 import { TechniqueCreatorEditor } from './technique-creator-editor';
 
 // =============================================================================
@@ -346,7 +347,7 @@ function TechniqueCreatorWorkspace({
   }, []);
 
   const getPayload = useCallback(() => {
-    const partsToSave = [
+    const partsToSave = dedupeSavedParts([
       ...selectedParts.map((sp) => ({
         id: Number(sp.part.id),
         name: sp.part.name,
@@ -361,7 +362,7 @@ function TechniqueCreatorWorkspace({
         op_2_lvl: mp.op_2_lvl,
         op_3_lvl: mp.op_3_lvl,
       })),
-    ];
+    ]);
     const damageToSave = damage.amount > 0 ? [{ amount: damage.amount, size: damage.size }] : [];
     return {
       name: name.trim(),

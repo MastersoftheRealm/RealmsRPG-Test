@@ -13,7 +13,6 @@ import {
   useMergedSpecies,
   useCodexSkills,
   useCodexFeats,
-  useTraits,
   useGameRules,
   useOfficialLibrary,
   useEquipment,
@@ -62,7 +61,6 @@ export function RevealStep() {
   const { data: allSpecies = [] } = useMergedSpecies();
   const { data: codexSkills = [] } = useCodexSkills();
   const { data: codexFeats = [] } = useCodexFeats();
-  const { data: allTraits = [] } = useTraits();
   const { data: officialItems = [] } = useOfficialLibrary('items');
   const { data: officialPowers = [] } = useOfficialLibrary('powers');
   const { data: officialTechniques = [] } = useOfficialLibrary('techniques');
@@ -137,7 +135,6 @@ export function RevealStep() {
         archetype,
         pathData,
         species,
-        allTraits,
         codexSkills,
         codexFeats,
         rules,

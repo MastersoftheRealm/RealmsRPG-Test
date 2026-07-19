@@ -1,4 +1,4 @@
-- id: TASK-545
+- id: TASK-547
   title: Guided Skills — show contributing Ability + Skill Bonus formula tip
   created_at: 2026-07-19
   created_by: owner
@@ -32,7 +32,7 @@
     Multi-ability Skills note “highest linked Ability” in the tip.
     Cleanup 2026-07-19: bonus tip child aria-label; Ability primary (vs Species descriptor);
     remove uses text-danger-fg; DESIGN_INTENT on tip helper/call site.
-    Renumbered from TASK-544 on merge — TASK-544 guided path Primary/Secondary (PR #45) already on master.
+    Renumbered from TASK-544→545→547 on merge — TASK-544/545/546 taken by path ability + sheet dedupe (PR #45/#49/#48).
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/46
   evidence: |
@@ -45,6 +45,120 @@
     Suite DEV-V-013 T065 — see BUILD_VALIDATION.md
 
 ---
+- id: TASK-546
+  title: Fix duplicate traits / part chips / feats on character sheets
+  created_at: 2026-07-19
+  created_by: owner
+  priority: critical
+  status: done
+  completed_at: 2026-07-19
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/lib/library/dedupe-saved-parts.ts
+    - src/lib/character/collect-sheet-traits.ts
+    - src/lib/guided-creator/build-character.ts
+    - src/components/guided-creator/steps/reveal-step.tsx
+    - src/lib/data-enrichment.ts
+    - src/lib/library-sync.ts
+    - src/lib/library/part-display.ts
+    - src/lib/calculators/power-calc.ts
+    - src/lib/calculators/technique-calc.ts
+    - src/lib/library-columnar.ts
+    - src/components/character-sheet/feats-tab.tsx
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/technique-creator/page.tsx
+    - src/app/(main)/empowered-technique-creator/page.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ai/guide/06-creators-and-loadouts.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Character sheets showed duplicate expandable part chips on powers/techniques,
+    and duplicate traits/feats on new (especially guided) characters. Root causes:
+    guided save stuffed species traits into ancestry.selectedTraits (sheet also
+    lists species traits from codex); creators/sync concatenated parts without
+    uniqueness; load/enrichment/display had no global dedupe.
+  acceptance_criteria:
+    - Shared dedupeSavedParts / dedupeEntityRefs used on creator save, library sync,
+      cost/display calc, enrichment, and sheet part chips.
+    - Guided save stores ancestry picks only in selectedTraits; sheet collectSheetTraits
+      tolerates legacy doubles.
+    - Feats/powers/techniques lists dedupe by normalized id.
+    - BUILD_VALIDATION DEV-V-009-T025; targeted vitest; npm run build.
+  notes: |
+    Owner feedback 2026-07-19. Global fix (not UI bandaid): write + read paths.
+    Cleanup 2026-07-19: drop dead allTraits from guided build context/reveal-step;
+    archive related_files includes guide/06 + reveal-step.
+    Renumbered from TASK-544→545→546 on merge — TASK-544/545 path ability work (PR #45/#49).
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/48
+  merged_at: |
+    2026-07-19
+  evidence: |
+    vitest: dedupe-saved-parts, collect-sheet-traits, build-character; npm run build; CI green; merged to master via PR #48.
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T025
+  developer_test_plan: |
+    Suite DEV-V-009 T025 — see BUILD_VALIDATION.md (no duplicate traits/part chips/feats).
+
+- id: TASK-545
+  title: Correct Archetype Ability vs Primary/Secondary UX (powered-martial)
+  created_at: 2026-07-19
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-19
+  implemented_by: agent
+  verification_status: pending-qa
+  parent_task: TASK-544
+  related_files:
+    - src/lib/guided-creator/path-ability-labels.ts
+    - src/lib/guided-creator/path-ability-labels.test.ts
+    - src/components/guided-creator/steps/path-step.tsx
+    - src/components/guided-creator/guided-path-detail-overview.tsx
+    - src/components/shared/ability-score-grid.tsx
+    - src/docs/GAME_RULES.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Owner clarification after TASK-544: Primary/Secondary are guided UX labels only.
+    Game term remains Archetype Ability (Power/Martial Archetype Ability on hybrids).
+    Powered-martial has two primary archetype abilities; Secondary is not the martial side.
+    Calculations using Archetype Ability on hybrids use the higher of the two.
+  acceptance_criteria:
+    - GAME_RULES restores Archetype Ability terminology (hybrids = two primaries; higher-of-two).
+    - Path cards/More details: Primary chip(s) for each Archetype Ability; Secondary only when distinct recommended.
+    - AbilityScoreGrid hybrids use Power/Martial pills again (not Primary/Secondary between them).
+    - Select draft pow/mart matches archetype abilities (not secondary_ability as martial when mart_abil exists).
+    - BUILD_VALIDATION T018/T020/T034/T035 corrected; npm run build + unit tests.
+  notes: |
+    Owner feedback 2026-07-19 after PR #45 merge. Fixes conflation of Secondary with Martial.
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/49
+  merged_at: |
+    2026-07-19
+  evidence: |
+    vitest path-ability-labels; npm run build; CI green; merged to master via PR #49
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T018
+      - DEV-V-013-T020
+      - DEV-V-013-T034
+      - DEV-V-013-T035
+  developer_test_plan: |
+    Suite DEV-V-013 T018, T020, T034, T035 — see BUILD_VALIDATION.md
+
 - id: TASK-544
   title: Guided creator — Primary/Secondary Ability labels on path cards and details
   created_at: 2026-07-19
