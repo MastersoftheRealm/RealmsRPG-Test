@@ -1190,7 +1190,7 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Task** | TASK-547 |
 | **Where** | `/characters/[id]` → Abilities & Defenses section |
 | **Steps** | 1. Open a character sheet. 2. Hover (desktop) or touch-hold ~400ms (mobile ~360px) the **Strength** ability name — confirm a tip opens with the Strength definition (no Info icon; tip is on the word). 3. Repeat for at least one other ability (e.g. **Charisma**). 4. Hover/touch-hold **Might** (or **Mental Fort.**) in the defenses row — confirm the matching defense tip (e.g. Might mentions Strength; Mental Fortitude mentions Intelligence). 5. Confirm roll buttons and edit steppers still work (tip does not block play controls). 6. Keyboard: Tab to an ability name and confirm the tip opens on focus. |
-| **Expected** | All six ability names and six defense names are word-tied help triggers; copy matches `tooltip-text.tsx` (`getAbilityHelp` / `getDefenseHelp`); no separate Info icons beside the names. |
+| **Expected** | All six ability names and six defense names are word-tied help triggers; copy matches `tooltip-text.tsx` (`getAbilityHelp` / `getDefenseHelp`) without repeating the name (e.g. “Acuity reflects…”, “Might (Strength) resists…”); no separate Info icons beside the names. |
 | **Report** | DEV-V-009-T026: PASS / FAIL / SKIP — |
 
 
@@ -2934,9 +2934,29 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | **Suite** | DEV-V-013 — Guided Simple character creator |
 | **Related task** | TASK-547 |
 | **Where** | Guided creator → Abilities (`/characters/new/guided`) |
-| **Steps** | 1. Choose a Path and continue to the **Abilities** step (recommended array view). 2. Hover (desktop) or touch-hold (mobile) an ability name such as **Strength** / **STR** — confirm the definition tip opens on the word (no Info icon). 3. Open **Customize abilities** and confirm tips still work on ability names in the edit grid. 4. Optional: continue to Skills Layer 2 / Forge defenses if shown and confirm defense name tips (Might, Fortitude, etc.). |
-| **Expected** | Ability labels use `WordHelpTip` + `getAbilityHelp`; tips match sheet copy; path pills and steppers remain usable. |
+| **Steps** | 1. Choose a Path and continue to the **Abilities** step (recommended array view). 2. Hover (desktop) or touch-hold (mobile) a full ability name such as **Strength** or **Acuity** — confirm the definition tip opens on the word (no Info icon). 3. Confirm tip copy starts once (e.g. “Acuity reflects…” / “Might (Strength) resists…”) — not “Acuity. Acuity…”. 4. Open **Customize abilities** and confirm tips still work on ability names in the edit grid. 5. Optional: sheet Defenses / skills allocation — same non-duplicated defense tips. |
+| **Expected** | Ability labels use `WordHelpTip` + `getAbilityHelp`; tips match sheet copy without repeating the name; path pills and steppers remain usable. |
 | **Report** | DEV-V-013-T065: PASS / FAIL / SKIP — |
+
+#### DEV-V-013-T067 — Guided Skills row layout + Abilities mobile full names (TASK-566)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-566 |
+| **Where** | Guided creator → Abilities + Skills (`/characters/new/guided`) |
+| **Needs** | Narrow viewport (~360px); path with skills (e.g. Tamer / Beastcraft) |
+
+**Steps**
+1. On **Abilities** (recommended grid) at ~360px: confirm all six labels show full names (Strength, Vitality, … — not STR/VIT/ACU). Tiles use a 2-column layout and do not look like tall skinny columns.
+2. Continue to **Skills**. Confirm each row: skill name + expand chevron on the first line; Ability / Species / path chips wrap on a line below (chips not truncated into “Beas”; chevron does not overlap chips).
+3. Confirm ± steppers and remove (X) stay clear of chips; expand/collapse still reveals the description.
+4. Spot-check desktop (`sm+`): Skills still usable; Abilities show full names in a wider grid.
+
+**Expected**
+- No overlapping expand control vs chips; path chips readable; mobile Abilities use full names and compact 2-col tiles.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
 #### DEV-V-013-T048 — Sitewide compact facts + Training Points chip labels (TASK-461)
 

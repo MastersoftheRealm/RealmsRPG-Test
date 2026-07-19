@@ -4,14 +4,16 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-566
+**Next task ID:** TASK-567
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`.
 
-**Counts:** 10 agent-eligible (TASK-391 superseded/skip; TASK-514–518/520/521/522/523/524/525/526/527/528/529/530/536/537/538/539/540/541/542/543/544/545/546/547/548/565 archived) · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 10 agent-eligible (TASK-391 superseded/skip; TASK-514–518/520/521/522/523/524/525/526/527/528/529/530/536/537/538/539/540/541/542/543/544/545/546/547/548/565/566 archived) · waiting/blocked in WAITING_TASKS · done in archive.
+
+**Guided Skills/Abilities mobile UI + tip copy (2026-07-19):** **TASK-566 done** — Skills row chips below name (no chevron overlap); Abilities full names + 2-col phone tiles; ability/defense tips name once; pending-qa **DEV-V-013-T067**.
 
 **Guided skills Ability + bonus tip (2026-07-19):** **TASK-548 done** — Ability chip on L1 rows; Skill Bonus InfoTippy formula; path-declined cards include Ability; pending-qa **DEV-V-013-T066**. (Renumbered from TASK-544–547 — those IDs taken on master; BV T066 because T065 = ability name tooltips.)
 

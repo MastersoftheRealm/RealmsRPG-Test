@@ -105,58 +105,67 @@ function GuidedSkillRow({
 
   return (
     <li className="border-b border-border-light last:border-b-0">
-      <div className="flex items-center gap-2 sm:gap-3 py-2.5">
-        <button
-          type="button"
-          onClick={() => hasDescription && setExpanded(!expanded)}
-          disabled={!hasDescription}
-          className={cn(
-            'min-w-0 flex-1 flex items-center gap-2 text-left min-h-11',
-            hasDescription && 'cursor-pointer'
-          )}
-          aria-expanded={hasDescription ? expanded : undefined}
-          aria-label={hasDescription ? `${expanded ? 'Collapse' : 'Expand'} ${skillName} description` : undefined}
-        >
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="font-nunito font-semibold text-text-primary">{skill.name}</span>
+      {/* DESIGN_INTENT: Name+chevron on one line; chips wrap below so they never collide with
+          expand control or ± steppers. Controls stay a shrink-0 column (not fighting chip width). */}
+      <div className="flex items-start gap-2 py-2">
+        <div className="min-w-0 flex-1">
+          <button
+            type="button"
+            onClick={() => hasDescription && setExpanded(!expanded)}
+            disabled={!hasDescription}
+            className={cn(
+              'flex max-w-full items-center gap-1.5 text-left min-h-11 py-0',
+              hasDescription ? 'cursor-pointer' : 'cursor-default'
+            )}
+            aria-expanded={hasDescription ? expanded : undefined}
+            aria-label={
+              hasDescription
+                ? `${expanded ? 'Collapse' : 'Expand'} ${skillName} description`
+                : undefined
+            }
+          >
+            <span className="font-nunito font-semibold text-text-primary">{skill.name}</span>
+            {hasDescription && (
+              <ChevronDown
+                className={cn(
+                  'h-4 w-4 shrink-0 text-text-muted dark:text-text-secondary transition-transform',
+                  expanded && 'rotate-180'
+                )}
+                aria-hidden
+              />
+            )}
+          </button>
+          {(abilityLabel || isSpecies || (isPath && pathSourceLabel)) && (
+            <div className="flex flex-wrap items-center gap-1.5 pb-0.5">
               {/* DESIGN_INTENT: Ability = primary (guided ability chips); Species = descriptor; path = primary source */}
               {abilityLabel && (
-                <DescriptorChip variant="primary" size="sm" title={`Contributing Ability: ${abilityLabel}`}>
+                <DescriptorChip
+                  variant="primary"
+                  size="sm"
+                  title={`Contributing Ability: ${abilityLabel}`}
+                >
                   {abilityLabel}
                 </DescriptorChip>
               )}
               {isSpecies && (
-                <DescriptorChip variant="descriptor" size="sm">Species</DescriptorChip>
+                <DescriptorChip variant="descriptor" size="sm">
+                  Species
+                </DescriptorChip>
               )}
               {isPath && pathSourceLabel && (
-                <DescriptorChip
-                  variant="primary"
-                  size="sm"
-                  className="max-w-[9rem] truncate"
-                  title={pathSourceLabel}
-                >
+                <DescriptorChip variant="primary" size="sm" title={pathSourceLabel}>
                   {pathSourceLabel}
                 </DescriptorChip>
               )}
             </div>
-          </div>
-          {hasDescription && (
-            <ChevronDown
-              className={cn(
-                'h-4 w-4 shrink-0 text-text-muted dark:text-text-secondary transition-transform',
-                expanded && 'rotate-180'
-              )}
-              aria-hidden
-            />
           )}
-        </button>
+        </div>
 
-        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+        <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
           <DecrementButton
             onClick={onDecrease}
             disabled={!canDecrease}
-            size="md"
+            size="sm"
             title={`Decrease ${skillName} Skill Value`}
           />
           {/* DESIGN_INTENT: Skill Bonus tip uses InfoTippy + getGuidedSkillBonusHelp (parameterized
@@ -171,7 +180,7 @@ function GuidedSkillRow({
                 type="button"
                 aria-label={`${formatBonus(bonus)}, how ${skillName} Skill Bonus is calculated`}
                 className={cn(
-                  'min-w-[2.75rem] min-h-11 px-1 text-center font-display text-lg font-bold tabular-nums rounded-md',
+                  'min-w-[2.5rem] min-h-11 px-0.5 text-center font-display text-base font-bold tabular-nums rounded-md sm:min-w-[2.75rem] sm:text-lg',
                   'hover:bg-surface-alt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2',
                   bonusTone
                 )}
@@ -182,7 +191,7 @@ function GuidedSkillRow({
           ) : (
             <span
               className={cn(
-                'min-w-[2.75rem] text-center font-display text-lg font-bold tabular-nums',
+                'min-w-[2.5rem] text-center font-display text-base font-bold tabular-nums sm:min-w-[2.75rem] sm:text-lg',
                 bonusTone
               )}
             >
@@ -192,28 +201,27 @@ function GuidedSkillRow({
           <IncrementButton
             onClick={onIncrease}
             disabled={!canIncrease}
-            size="md"
+            size="sm"
             title={`Increase ${skillName} Skill Value`}
           />
+          {onRemove ? (
+            <IconButton
+              variant="ghost"
+              size="sm"
+              onClick={onRemove}
+              label={`Remove ${skillName}`}
+              className="shrink-0 text-danger-fg hover:bg-danger-light min-h-11 min-w-11"
+            >
+              <X className="h-4 w-4" aria-hidden />
+            </IconButton>
+          ) : (
+            <span className="shrink-0 w-11" aria-hidden />
+          )}
         </div>
-
-        {onRemove ? (
-          <IconButton
-            variant="ghost"
-            size="sm"
-            onClick={onRemove}
-            label={`Remove ${skillName}`}
-            className="shrink-0 text-danger-fg hover:bg-danger-light min-h-11 min-w-11"
-          >
-            <X className="h-4 w-4" aria-hidden />
-          </IconButton>
-        ) : (
-          <span className="shrink-0 w-11" aria-hidden />
-        )}
       </div>
 
       {expanded && skill.description && (
-        <div className="pb-3 pl-2 pr-12">
+        <div className="pb-2.5 pr-2">
           <p className="font-nunito text-sm text-text-secondary leading-relaxed">
             {skill.description}
           </p>

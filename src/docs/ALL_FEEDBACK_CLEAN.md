@@ -1,6 +1,6 @@
 # ALL_FEEDBACK ? Consolidated & Curated
 
-Last updated: 2026-07-19 (guided skills Ability chip + Skill Bonus tip → TASK-548)
+Last updated: 2026-07-19 (guided Skills/Abilities mobile UI + tip copy → TASK-566)
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -16,7 +16,11 @@ How to use
 
 ### Tooltips (canonical standard)
 - **Tooltips:** static copy in `public/tooltip-text.tsx`, `InfoTippy` (`@floating-ui/react`). TASK-376 + TASK-392 complete. Do not reintroduce DB tooltips.
-- **Ability/defense definitions (2026-07-19):** Word-tied tips (no Info icon) via `WordHelpTip` + `getAbilityHelp` / `getDefenseHelp` on character sheet and guided Abilities — **TASK-547**.
+- **Ability/defense definitions (2026-07-19):** Word-tied tips (no Info icon) via `WordHelpTip` + `getAbilityHelp` / `getDefenseHelp` on character sheet and guided Abilities — **TASK-547**. Tip copy says the name once (not “Acuity. Acuity…”) — **TASK-566**.
+
+### Guided creator mobile density (2026-07-19)
+- **Skills L1 rows:** name + expand chevron; chips wrap below (no overlap / truncated path tags) — **TASK-566**.
+- **Abilities recommended grid:** full ability names on mobile; 2-col phone tiles (not tall STR/ACU columns) — **TASK-566**.
 
 ---
 
@@ -2563,3 +2567,12 @@ Notes
   For character sheets/guided creator we need hover/tap tooltips (no icon just tied to the word) for all abilities, and defenses. [owner-provided ability + defense definition copy]. Use our integrated systems already existing for tooltips following our constitution and rules and using the proper docs to reference tooltip implementation.
 - Expected: Word-tied hover/focus/touch-hold tips on ability and defense names (no Info icon); copy from tooltip-text.tsx via InfoTippy/WordHelpTip.
 - Disposition: Implemented as **TASK-547** (renumbered; TASK-544/545/546 taken by PRs #45/#49/#48). QA: DEV-V-009-T026 + DEV-V-013-T065.
+
+**Raw Feedback Log - 2026-07-19 (guided Skills/Abilities mobile UI + tip copy)**
+- Date: 2026-07-19
+- Context: Guided creator Skills + Abilities (mobile screenshots: Tamer)
+- Priority: High
+- Feedback (verbatim):
+  Skills on guided creator are crammed and ui overlaps for expanding button etc. Also abilities on mobile shoulndt be abbreviated in the abilities page guided creator plus elongated tall ability containers look off. Also tooltips for abilities dont need to say the name twice (ie Acutiy. Acuity is...) can just say Acuity is ... and so on. Same for defenses tooltips.
+- Expected: Skills rows without chip/chevron overlap or truncated path tags; Abilities show full names on mobile with less elongated tiles; ability/defense tips name the term once.
+- Disposition: Implemented as **TASK-566**. QA: DEV-V-013-T067 (+ tip copy in T065/T026).

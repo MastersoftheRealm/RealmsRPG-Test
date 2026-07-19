@@ -1,3 +1,46 @@
+- id: TASK-566
+  title: Guided Skills row layout + Abilities mobile full names + tip copy
+  created_at: 2026-07-19
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-19
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/guided-creator/guided-skills-panel.tsx
+    - src/components/shared/ability-score-grid.tsx
+    - public/tooltip-text.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Guided Skills L1 rows were cramped on mobile (expand chevron overlapped chips;
+    path tags truncated). Abilities recommended grid used STR/ACU abbreviations and
+    tall 3-col tiles. Ability/defense WordHelpTip copy repeated the name
+    (“Acuity. Acuity…”). Fix layout, show full ability names on mobile, and
+    dedupe tip sentences.
+  acceptance_criteria:
+    - GuidedSkillsPanel: name+chevron on first line; chips wrap below; no overlap with ±/X.
+    - AbilityScoreGrid display: full names on all breakpoints; 2-col phone / less elongated tiles.
+    - getAbilityHelp / getDefenseHelp say the name once (no “Name. Name…”).
+    - BUILD_VALIDATION DEV-V-013-T067; npm run build.
+  notes: |
+    Owner feedback 2026-07-19 with screenshots (Tamer Skills + Abilities).
+    shortName retained on ABILITY_DISPLAY_INFO for other call sites that may still need abbr.
+  evidence: |
+    npm run build
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T067
+  developer_test_plan: |
+    Suite DEV-V-013 T067 — see BUILD_VALIDATION.md
+
+---
 - id: TASK-548
   title: Guided Skills — show contributing Ability + Skill Bonus formula tip
   created_at: 2026-07-19
