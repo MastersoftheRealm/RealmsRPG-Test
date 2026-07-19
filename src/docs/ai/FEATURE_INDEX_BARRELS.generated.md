@@ -3,7 +3,7 @@
 > **Do not edit by hand.** Run `npm run tasks:generate-index` after changing barrel exports.
 > Curated narrative map: [`FEATURE_INDEX.md`](FEATURE_INDEX.md).
 
-Generated: 2026-07-18
+Generated: 2026-07-19
 
 ## `src/components/shared/index.ts`
 
@@ -92,6 +92,7 @@ Generated: 2026-07-18
 - SkillsAllocationPage
 - SkillSourceChip
 - SourceFilter
+- sourceFilterLabel
 - SpeciesTraitCard
 - splitDamageDiceAndType
 - SummaryChipList

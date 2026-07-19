@@ -114,17 +114,17 @@ export function FilterSection({
         <p className="mt-2 text-xs text-text-muted dark:text-text-secondary">{summary}</p>
       ) : null}
 
-      {isExpanded ? (
-        <div
-          id={panelId}
-          className={cn(
-            'rounded-lg border border-border-light bg-surface-alt',
-            isCompact ? 'mt-2 space-y-3 p-3' : 'p-4'
-          )}
-        >
-          {children}
-        </div>
-      ) : null}
+      {/* Keep mounted so aria-controls always resolves when collapsed. */}
+      <div
+        id={panelId}
+        hidden={!isExpanded}
+        className={cn(
+          'rounded-lg border border-border-light bg-surface-alt',
+          isCompact ? 'mt-2 space-y-3 p-3' : 'p-4'
+        )}
+      >
+        {children}
+      </div>
     </div>
   );
 }

@@ -6,6 +6,7 @@
 'use client';
 
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
+import { sourceFilterLabel } from '@/components/shared/filters/source-filter';
 import { useAddLibraryItemData, type AddLibraryItemType } from '@/hooks/use-add-library-item-data';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 import type { ReactNode } from 'react';
@@ -80,13 +81,11 @@ export function AddLibraryItemModal({
       ? EMPOWERED_POWER_COLUMNS
       : getListHeaderColumns(itemType);
 
-  const sourceLabel =
-    source === 'public' ? 'Realms Library' : source === 'my' ? 'My Library' : 'All sources';
   const modeLabel =
     itemType === 'power' && powerSelectionMode === 'empowered'
       ? 'Empowered Techniques'
       : null;
-  const optionsSummary = [sourceLabel, modeLabel].filter(Boolean).join(' · ');
+  const optionsSummary = [sourceFilterLabel(source), modeLabel].filter(Boolean).join(' · ');
   const optionsActiveCount =
     (source !== 'all' ? 1 : 0) +
     (itemType === 'power' && powerSelectionMode === 'empowered' ? 1 : 0);

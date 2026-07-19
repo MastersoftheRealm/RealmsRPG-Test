@@ -44,7 +44,7 @@ import {
 } from '@/components/creator';
 import { LoadingState } from '@/components/ui';
 import { ErrorDisplay } from '@/components/shared';
-import { SourceFilter } from '@/components/shared/filters/source-filter';
+import { SourceFilter, sourceFilterLabel } from '@/components/shared/filters/source-filter';
 import { EXCLUDED_PARTS } from '@/app/(main)/power-creator/power-creator-constants';
 import { attackModeColumnLabel, type AttackMode } from '@/lib/attack-mode';
 import { EmpoweredTechniqueCreatorEditor } from './empowered-technique-creator-editor';
@@ -867,6 +867,8 @@ function EmpoweredTechniqueWorkspace({
         columns: load.columns,
         gridColumns: load.gridColumns,
         headerExtra: <SourceFilter value={load.source} onChange={load.setSource} />,
+        optionsSummary: sourceFilterLabel(load.source),
+        optionsActiveCount: load.source !== 'all' ? 1 : 0,
         emptyMessage: load.emptyMessage,
         emptySubMessage: load.emptySubMessage,
         searchPlaceholder: 'Search empowered techniques...',

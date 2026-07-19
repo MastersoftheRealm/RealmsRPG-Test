@@ -122,7 +122,7 @@ export interface UnifiedSelectionModalProps {
   
   /**
    * Secondary chrome (SourceFilter, mode tabs, custom-add forms, etc.).
-   * Rendered inside the collapsible Filters panel so the list stays the primary focus (TASK-564).
+   * Always rendered inside the collapsible Filters panel with filterContent (TASK-564).
    */
   headerExtra?: ReactNode;
   /** When set, only items passing this filter are shown in the list; selection and confirm still use the full items list so selections from other "tabs" are kept. */
@@ -346,6 +346,15 @@ export function UnifiedSelectionModal({
     selectedIds.size === 0 ||
     overSelectionLimit ||
     (confirmDisabled?.(selectedItems) ?? false);
+
+  const searchField = (
+    <SearchInput
+      value={searchQuery}
+      onChange={setSearchQuery}
+      placeholder={searchPlaceholder || `Search ${itemLabel}s...`}
+      aria-label={searchPlaceholder || `Search ${itemLabel}s`}
+    />
+  );
   
   return (
     <Modal
@@ -393,10 +402,8 @@ export function UnifiedSelectionModal({
         </div>
       }
     >
-      {/*
-        List-first chrome (TASK-564): search (+ Filters toggle) on one compact row.
-        Source tabs, mode switches, and advanced filters live in the collapsed panel.
-      */}
+      {/* DESIGN_INTENT: List-first — Search (+ Filters) on one row; never stack always-visible
+          source/mode/filter rows between search and the list (TASK-564). */}
       <div className="shrink-0">
         {hasOptions ? (
           <FilterSection
@@ -406,25 +413,13 @@ export function UnifiedSelectionModal({
             onExpandedChange={setOptionsExpanded}
             activeCount={optionsActiveCount}
             summary={optionsSummary}
-            toolbarStart={
-              <SearchInput
-                value={searchQuery}
-                onChange={setSearchQuery}
-                placeholder={searchPlaceholder || `Search ${itemLabel}s...`}
-                aria-label={searchPlaceholder || `Search ${itemLabel}s`}
-              />
-            }
+            toolbarStart={searchField}
           >
             {headerExtra}
             {showFilters && filterContent ? filterContent : null}
           </FilterSection>
         ) : (
-          <SearchInput
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder={searchPlaceholder || `Search ${itemLabel}s...`}
-            aria-label={searchPlaceholder || `Search ${itemLabel}s`}
-          />
+          searchField
         )}
       </div>
 

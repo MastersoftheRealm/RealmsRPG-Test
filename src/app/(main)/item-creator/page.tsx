@@ -31,7 +31,7 @@ import {
   AdvancedCalculationsPanel,
   CreatorSummaryPanel,
 } from '@/components/creator';
-import { SourceFilter } from '@/components/shared/filters/source-filter';
+import { SourceFilter, sourceFilterLabel } from '@/components/shared/filters/source-filter';
 import { useAuthStore } from '@/stores';
 import {
   calculateItemCosts,
@@ -679,6 +679,8 @@ function ItemCreatorWorkspace({
         columns: load.columns,
         gridColumns: load.gridColumns,
         headerExtra: <SourceFilter value={load.source} onChange={load.setSource} />,
+        optionsSummary: sourceFilterLabel(load.source),
+        optionsActiveCount: load.source !== 'all' ? 1 : 0,
         emptyMessage: load.emptyMessage,
         emptySubMessage: load.emptySubMessage,
         searchPlaceholder: 'Search armaments...',

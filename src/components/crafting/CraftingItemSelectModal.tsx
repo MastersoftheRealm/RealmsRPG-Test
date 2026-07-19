@@ -10,7 +10,11 @@
 
 import { useMemo, useState } from 'react';
 import { useUserItems, useEquipment, useItemProperties, useOfficialLibrary } from '@/hooks';
-import { SourceFilter, type SourceFilterValue } from '@/components/shared/filters/source-filter';
+import {
+  SourceFilter,
+  sourceFilterLabel,
+  type SourceFilterValue,
+} from '@/components/shared/filters/source-filter';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
 import { TabNavigation, useTabGroup } from '@/components/ui/tab-navigation';
 import {
@@ -188,12 +192,16 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
     onClose();
   };
 
+  const tabLabel = activeTab === 'armaments' ? 'Armaments' : 'Equipment';
+  const optionsSummary = `${tabLabel} · ${sourceFilterLabel(source)}`;
+  const optionsActiveCount = (activeTab !== 'armaments' ? 1 : 0) + (source !== 'all' ? 1 : 0);
+
   return (
     <UnifiedSelectionModal
       isOpen={isOpen}
       onClose={onClose}
       title="Select item to craft"
-      description="Choose Armaments or Equipment, then pick a source. Select one item and confirm."
+      description="Select one item and confirm. Open Filters to switch Armaments/Equipment and library source."
       headerExtra={
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <TabNavigation
@@ -209,6 +217,8 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
           <SourceFilter value={source} onChange={setSource} />
         </div>
       }
+      optionsSummary={optionsSummary}
+      optionsActiveCount={optionsActiveCount}
       items={items}
       isLoading={isLoading}
       onConfirm={handleConfirm}

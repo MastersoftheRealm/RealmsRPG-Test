@@ -23,6 +23,11 @@ const OPTIONS: { value: SourceFilterValue; label: string }[] = [
   { value: 'my', label: 'My Library' },
 ];
 
+/** Human label for collapsed Filters summaries (TASK-564). */
+export function sourceFilterLabel(value: SourceFilterValue): string {
+  return OPTIONS.find((o) => o.value === value)?.label ?? 'All sources';
+}
+
 export function SourceFilter({ value, onChange, className }: SourceFilterProps) {
   return (
     <SegmentedControl

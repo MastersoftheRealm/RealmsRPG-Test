@@ -10,7 +10,7 @@
 import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { UnifiedSelectionModal, GridListRow, ListHeader, SourceFilter, InnateToggle, SegmentedControl, SkillsAllocationPage, ValueStepper, InfoTippy, RealmsImageField } from '@/components/shared';
+import { UnifiedSelectionModal, GridListRow, ListHeader, SourceFilter, sourceFilterLabel, InnateToggle, SegmentedControl, SkillsAllocationPage, ValueStepper, InfoTippy, RealmsImageField } from '@/components/shared';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import { getSkillPointsHelp, subSkillsHelp } from '../../../../public/tooltip-text';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
@@ -1042,6 +1042,8 @@ function CreatureCreatorContent() {
         error: load.error,
         title: 'Load Creature',
         headerExtra: <SourceFilter value={load.source} onChange={load.setSource} />,
+        optionsSummary: sourceFilterLabel(load.source),
+        optionsActiveCount: load.source !== 'all' ? 1 : 0,
         searchPlaceholder: 'Search creatures by name, type, or level...',
         emptyMessage: load.emptyMessage,
         emptySubMessage: load.emptySubMessage,
@@ -1113,6 +1115,13 @@ function CreatureCreatorContent() {
                 />
               </div>
             }
+            optionsSummary={[
+              sourceFilterLabel(librarySource),
+              powerModalTab === 'empowered' ? 'Empowered Techniques' : 'Powers',
+            ].join(' · ')}
+            optionsActiveCount={
+              (librarySource !== 'all' ? 1 : 0) + (powerModalTab === 'empowered' ? 1 : 0)
+            }
             onConfirm={(selected) => {
               const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
               const powers = items.map(displayItemToCreaturePower);
@@ -1121,8 +1130,8 @@ function CreatureCreatorContent() {
             items={powerModalTab === 'empowered' ? empoweredTechniqueSelectableItems : powerSelectableItems}
             title={powerModalTab === 'empowered' ? 'Select Empowered Techniques' : 'Select Powers'}
             description={powerModalTab === 'empowered'
-              ? 'Choose empowered techniques from your library or Realms Library and add them to the creature power list.'
-              : 'Choose powers from your library or Realms Library. Click a row (or the + button) to select, then click Add Selected.'}
+              ? 'Choose empowered techniques from your library or Realms Library. Open Filters to switch source or list type.'
+              : 'Choose powers from your library or Realms Library. Open Filters to switch source or Empowered Techniques.'}
             maxSelections={10}
             itemLabel={powerModalTab === 'empowered' ? 'empowered technique' : 'power'}
             searchPlaceholder={powerModalTab === 'empowered' ? 'Search empowered techniques...' : 'Search powers...'}
@@ -1140,6 +1149,8 @@ function CreatureCreatorContent() {
             isOpen={showTechniqueModal}
             onClose={() => setShowTechniqueModal(false)}
             headerExtra={<SourceFilter value={librarySource} onChange={setLibrarySource} />}
+            optionsSummary={sourceFilterLabel(librarySource)}
+            optionsActiveCount={librarySource !== 'all' ? 1 : 0}
             onConfirm={(selected) => {
               const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
               const techniques = items.map(displayItemToCreatureTechnique);
@@ -1147,7 +1158,7 @@ function CreatureCreatorContent() {
             }}
             items={techniqueSelectableItems}
             title="Select Techniques"
-            description="Choose techniques from your library or Realms Library. Click a row (or the + button) to select, then click Add Selected."
+            description="Choose techniques from your library or Realms Library. Open Filters to switch source."
             maxSelections={10}
             itemLabel="technique"
             searchPlaceholder="Search techniques..."
@@ -1195,6 +1206,21 @@ function CreatureCreatorContent() {
                 />
               </div>
             }
+            optionsSummary={[
+              sourceFilterLabel(librarySource),
+              (
+                {
+                  all: 'All types',
+                  weapon: 'Weapons',
+                  armor: 'Armor',
+                  shield: 'Shields',
+                  equipment: 'Equipment',
+                } as const
+              )[inventoryTab],
+            ].join(' · ')}
+            optionsActiveCount={
+              (librarySource !== 'all' ? 1 : 0) + (inventoryTab !== 'all' ? 1 : 0)
+            }
             onConfirm={(selected) => {
               const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
               const armaments = items.map(displayItemToCreatureArmament);
@@ -1203,7 +1229,7 @@ function CreatureCreatorContent() {
             items={armamentSelectableItems}
             displayFilter={inventoryDisplayFilter}
             title="Select Inventory"
-            description="Choose inventory items from your library or Realms Library. Filter by type tabs, then click Add Selected."
+            description="Choose inventory items from your library or Realms Library. Open Filters for source and type, then click Add Selected."
             maxSelections={10}
             itemLabel="inventory item"
             searchPlaceholder="Search inventory..."

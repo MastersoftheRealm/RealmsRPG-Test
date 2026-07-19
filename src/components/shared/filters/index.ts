@@ -26,4 +26,4 @@ export {
   type SelectOption,
 } from './filter-utils';
 export { FilterSection, type FilterSectionProps } from './filter-section';
-export { SourceFilter, type SourceFilterValue } from './source-filter';
+export { SourceFilter, sourceFilterLabel, type SourceFilterValue } from './source-filter';

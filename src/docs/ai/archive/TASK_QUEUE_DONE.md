@@ -9,13 +9,25 @@
   verification_status: pending-qa
   related_files:
     - src/components/shared/filters/filter-section.tsx
+    - src/components/shared/filters/source-filter.tsx
+    - src/components/shared/filters/index.ts
+    - src/components/shared/index.ts
     - src/components/shared/unified-selection-modal.tsx
     - src/components/character-sheet/add-library-item-modal.tsx
     - src/components/character-sheet/add-feat-modal.tsx
     - src/components/shared/add-skill-modal.tsx
     - src/components/shared/add-sub-skill-modal.tsx
     - src/components/creator/LoadFromLibraryModal.tsx
+    - src/components/crafting/CraftingItemSelectModal.tsx
+    - src/components/character-creator/steps/powers-step.tsx
     - src/app/(main)/creature-creator/AddCreatureFeatModal.tsx
+    - src/app/(main)/creature-creator/page.tsx
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/technique-creator/page.tsx
+    - src/app/(main)/empowered-technique-creator/page.tsx
+    - src/app/(main)/species-creator/page.tsx
+    - src/app/(main)/item-creator/page.tsx
+    - .cursor/rules/realms-unification.mdc
     - src/docs/MOBILE_UX.md
     - src/docs/ai/guide/02-components-and-lists.md
     - src/docs/ai/FEATURE_INDEX.md
