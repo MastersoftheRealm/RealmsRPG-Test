@@ -33,7 +33,7 @@ Your Floating UI work **is in the repo** — it was extracted into shared primit
 |-----------|-----|----------------|
 | Optional rules / step help beside a heading | **`InfoTippy`** + export in `tooltip-text.tsx` | Raw Floating UI on the page, `Tooltip` from `@/components/ui`, `title=` only |
 | Help on a non-Info control (e.g. ability pick button) | **`InfoTippy`** with `children` + `label` / child `aria-label` | Separate tooltip library |
-| Definition tip on a label word (ability/defense name; no icon) | **`WordHelpTip`** + `getAbilityHelp` / `getDefenseHelp` in `tooltip-text.tsx` | Info icon sibling, `title=` only |
+| Definition tip on a label word (ability/defense name; no icon) | **`WordHelpTip`** + `getAbilityHelp` / `getDefenseHelp` in `tooltip-text.tsx` (copy says the name once — e.g. “Acuity reflects…”, not “Acuity. Acuity…”) | Info icon sibling, `title=` only |
 | Level-aware help copy (points at level N) | Helper in **`tooltip-text.tsx`** (e.g. `getAbilityPointsHelp`) → **`InfoTippy`** | Inline paragraph duplicating rules |
 | Rich help (bullets, bold, JSX) | JSX export in **`tooltip-text.tsx`** → **`InfoTippy`** `content` | DB tooltips, markdown in random components |
 | Full-screen or multi-step flow | **`Modal`** (`fullScreenOnMobile` on mobile) | InfoTippy |
@@ -84,7 +84,7 @@ Use the dependency **inside `@/components/shared` or `@/components/ui`**, not ad
    - Page/step title: `<InfoTippy content={…} label="…" size="inline" />`
    - Default icon trigger: omit `children`; **`label` is required** (becomes `aria-label`).
    - Custom trigger: pass `children` (single element); child needs its own `aria-label`; keep `label` for consistency.
-   - Label-word tip (no icon): `<WordHelpTip content={getAbilityHelp(…)} label="About Strength">Strength</WordHelpTip>` (ability/defense names).
+   - Label-word tip (no icon): `<WordHelpTip content={getAbilityHelp(…)} label="About Strength">Strength</WordHelpTip>` (ability/defense names; tip copy names the term once).
 4. **Mobile** — default touch-hold (~400ms) is built in; do not add parallel click handlers.
 5. **A11y** — every trigger has a discernable name; do not rely on `title` alone.
 6. **Verify** — hover, keyboard focus, touch-hold on ~360px width; JSX lists allow pointer into panel.

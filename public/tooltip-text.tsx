@@ -39,40 +39,42 @@ export function getTooltipTextByPowerAbility(ability: AbilityName) {
   }
 }
 
-/** Definition help for ability name labels (sheet, guided creator, skills). No icon — tip on the word. */
+/** Definition help for ability name labels (sheet, guided creator, skills). No icon — tip on the word.
+ * Lead with the name once in the sentence (not "Acuity. Acuity is…"). */
 export const ABILITY_HELP: Record<AbilityName, string> = {
   strength:
-    'Strength. Strength governs physical actions like lifting, breaking, throwing, climbing, and stability. It determines your chance to hit and the damage dealt with some melee weapons.',
+    'Strength governs physical actions like lifting, breaking, throwing, climbing, and stability. It determines your chance to hit and the damage dealt with some melee weapons.',
   vitality:
-    'Vitality. Vitality represents resilience and endurance, affecting resistance to damage, toxins, illnesses, and more. It also contributes to your Health (HP) at each level.',
+    'Vitality represents resilience and endurance, affecting resistance to damage, toxins, illnesses, and more. It also contributes to your Health (HP) at each level.',
   agility:
-    'Agility. Agility measures speed and reflexes, affecting Evasion (EV) and Speed (SP). It determines your chance to hit and damage dealt with melee or ranged finesse weapons.',
+    'Agility measures speed and reflexes, affecting Evasion (EV) and Speed (SP). It determines your chance to hit and damage dealt with melee or ranged finesse weapons.',
   acuity:
-    'Acuity. Acuity reflects mental sharpness, influencing perception, reaction, and aim. It determines your chance to hit and the damage dealt with most ranged weapons.',
+    'Acuity reflects mental sharpness, influencing perception, reaction, and aim. It determines your chance to hit and the damage dealt with most ranged weapons.',
   intelligence:
-    'Intelligence. Intelligence covers knowledge, problem-solving, memory, and knowledge in topics such as history, lore, and language.',
+    'Intelligence covers knowledge, problem-solving, memory, and knowledge in topics such as history, lore, and language.',
   charisma:
-    'Charisma. Charisma governs social skills, including persuasion, intimidation, and emotional intelligence. It also represents your presence, poise, resolve, and confidence.',
+    'Charisma governs social skills, including persuasion, intimidation, and emotional intelligence. It also represents your presence, poise, resolve, and confidence.',
 };
 
 export function getAbilityHelp(ability: AbilityName): string {
   return ABILITY_HELP[ability] ?? '';
 }
 
-/** Definition help for defense name labels (sheet, skills allocation). No icon — tip on the word. */
+/** Definition help for defense name labels (sheet, skills allocation). No icon — tip on the word.
+ * Name once, then definition (not "Might. Might resists…"). Linked Ability stays in parentheses. */
 export const DEFENSE_HELP: Record<keyof DefenseSkills, string> = {
   might:
-    'Might (Strength). Resist being moved by force, grappled, or restrained, and helps to maintain a firm grip.',
+    'Might (Strength) resists being moved by force, grappled, or restrained, and helps to maintain a firm grip.',
   fortitude:
-    'Fortitude (Vitality). Resist poisons, environmental effects, and fend off diseases.',
+    'Fortitude (Vitality) resists poisons, environmental effects, and helps fend off diseases.',
   reflex:
-    'Reflexes (Agility). Dodge hazards, avoid being toppled, and maneuver to escape danger.',
+    'Reflex (Agility) helps you dodge hazards, avoid being toppled, and maneuver to escape danger.',
   discernment:
-    'Discernment (Acuity). Detect illusions, incoming attacks, trickery (e.g., sleight of hand or mimicry), and disguises.',
+    'Discernment (Acuity) helps you detect illusions, incoming attacks, trickery (e.g., sleight of hand or mimicry), and disguises.',
   mentalFortitude:
-    'Mental Fortitude (Intelligence). Overcome mind-altering effects, mind-reading, cognitive manipulation, and logical challenges.',
+    'Mental Fortitude (Intelligence) helps you overcome mind-altering effects, mind-reading, cognitive manipulation, and logical challenges.',
   resolve:
-    'Resolve (Charisma). Overcome charm, resist temptations, and avoid fear, intimidation, or possession.',
+    'Resolve (Charisma) helps you overcome charm, resist temptations, and avoid fear, intimidation, or possession.',
 };
 
 export function getDefenseHelp(defense: keyof DefenseSkills): string {

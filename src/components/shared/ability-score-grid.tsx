@@ -1,8 +1,8 @@
 /**
  * AbilityScoreGrid — unified six-ability tile row (character sheet layout).
  * Display mode: name + score (no roll buttons). Edit mode: +/- steppers.
- * Mobile: short ability labels + short single-line path pills (full terms on aria-label);
- * edit uses a roomier grid so 44px steppers are not forced into 3-col phone tiles.
+ * Mobile display: full ability names in a 2-col grid (avoids STR/ACU + tall skinny tiles);
+ * edit uses a roomier grid so 44px steppers are not forced into narrow phone tiles.
  */
 
 'use client';
@@ -22,6 +22,7 @@ export const ABILITY_DISPLAY_ORDER: AbilityName[] = [
   'charisma',
 ];
 
+/** Display names for the six abilities. `shortName` kept on the exported shape for callers that want abbr; the grid always shows `name` (TASK-566). */
 export const ABILITY_DISPLAY_INFO: Record<
   AbilityName,
   { name: string; shortName: string }
@@ -185,11 +186,12 @@ export function AbilityScoreGrid({
     <div
       className={cn(
         // Extra top padding clears straddling path pills above the tile edge.
-        'grid gap-3 pt-4 md:gap-4',
-        // Display: compact 3×2 phone grid. Edit: wider cells so 44px steppers fit.
+        'grid gap-2 pt-3 sm:gap-3 sm:pt-4 md:gap-4',
+        // Display: 2-col phone (full names, less elongated), 3-col tablet, 6-col desktop.
+        // Edit: wider cells so 44px steppers fit.
         isEdit
           ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6'
-          : 'grid-cols-3 sm:grid-cols-6',
+          : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6',
         className
       )}
     >
@@ -217,7 +219,7 @@ export function AbilityScoreGrid({
                 !isEdit && 'hover:shadow-md',
                 isEdit
                   ? 'flex-row items-center justify-between gap-2 px-3 py-2 sm:flex-col sm:justify-center sm:px-2 sm:py-2'
-                  : 'flex-col items-center px-2 py-2',
+                  : 'flex-col items-center justify-center px-1.5 py-1.5 sm:px-2 sm:py-2',
                 // After py-* so twMerge keeps clear-space under the straddling pill (incl. sm:py-2).
                 highlight && 'pt-3 sm:pt-3'
               )}
@@ -230,25 +232,17 @@ export function AbilityScoreGrid({
                   'font-bold uppercase text-text-muted dark:text-text-secondary',
                   isEdit
                     ? 'text-xs tracking-wide sm:text-[11px] sm:tracking-wider'
-                    : 'text-center text-[11px] tracking-wider'
+                    : // Full-width label; keep WordHelpTip default 44px touch target (MOBILE_UX).
+                      'w-full min-w-0 justify-center px-0.5 text-center text-[10px] leading-tight tracking-wide sm:text-[11px] sm:tracking-wider'
                 )}
               >
-                {isEdit ? (
-                  info.name
-                ) : (
-                  <>
-                    <span className="sm:hidden" aria-hidden>
-                      {info.shortName}
-                    </span>
-                    <span className="hidden sm:inline">{info.name}</span>
-                  </>
-                )}
+                {info.name}
               </WordHelpTip>
 
               <div
                 className={cn(
                   'flex items-center justify-center',
-                  isEdit ? 'min-h-11 shrink-0' : 'mt-1 min-h-[2.25rem]'
+                  isEdit ? 'min-h-11 shrink-0' : 'mt-0.5'
                 )}
               >
                 {isEdit ? (
@@ -293,7 +287,7 @@ export function AbilityScoreGrid({
                 ) : (
                   <span
                     className={cn(
-                      'min-w-[2.75rem] text-center text-2xl font-bold',
+                      'min-w-[2.5rem] text-center text-xl font-bold sm:min-w-[2.75rem] sm:text-2xl',
                       abilityValueClass(value)
                     )}
                     aria-label={`${info.name} ${formatBonus(value)}`}
