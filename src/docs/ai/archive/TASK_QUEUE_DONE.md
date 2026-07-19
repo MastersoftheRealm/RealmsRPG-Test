@@ -36,8 +36,10 @@
     Owner feedback 2026-07-19 after PR #45 merge. Fixes conflation of Secondary with Martial.
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/49
+  merged_at: |
+    2026-07-19
   evidence: |
-    vitest path-ability-labels; npm run build
+    vitest path-ability-labels; npm run build; CI green; merged to master via PR #49
   build_validation: |
     suite: DEV-V-013
     tests:
