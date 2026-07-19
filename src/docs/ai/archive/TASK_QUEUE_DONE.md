@@ -9,6 +9,7 @@
   verification_status: pending-qa
   related_files:
     - src/components/guided-creator/guided-feats-l2-modal.tsx
+    - src/components/guided-creator/guided-feats-browse-panel.tsx
     - src/lib/guided-creator/feats-l2.ts
     - src/lib/guided-creator/feats-l2.test.ts
     - src/components/guided-creator/steps/archetype-feats-step.tsx
@@ -33,7 +34,8 @@
     - npm run build + feats-l2 unit tests pass.
   notes: |
     Owner scoped as TASK-565 (skip next-ID conflict with open queue). Supersedes TASK-429
-    in-step browse disposition for catalog L2.
+    in-step browse disposition for catalog L2. related_files includes deleted
+    guided-feats-browse-panel.tsx (replaced by modal).
   build_validation: |
     suite: DEV-V-013
     tests:

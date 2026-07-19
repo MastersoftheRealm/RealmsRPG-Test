@@ -83,6 +83,24 @@ describe('buildGuidedFeatsL2Items', () => {
     expect(items.map((i) => i.id).sort()).toEqual(['a', 'b']);
     expect(items.find((i) => i.id === 'b')?.disabled).toBe(true);
   });
+
+  it('keeps selected feats in items when category filter would hide them', () => {
+    const feats = [
+      feat({ id: 'a', name: 'Alpha', category: 'Combat', char_feat: false }),
+      feat({ id: 'b', name: 'Bravo', category: 'Social', char_feat: false }),
+    ];
+    const items = buildGuidedFeatsL2Items({
+      featType: 'archetype',
+      feats,
+      recommendedIds: [],
+      selectedIds: ['a'],
+      requirementCharacter: character,
+      codexSkills: [],
+      showBlocked: false,
+      category: 'Social',
+    });
+    expect(items.map((i) => i.id).sort()).toEqual(['a', 'b']);
+  });
 });
 
 describe('selectedIdsFromFeatL2Items', () => {

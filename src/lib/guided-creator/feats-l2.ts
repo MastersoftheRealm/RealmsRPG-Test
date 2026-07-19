@@ -81,11 +81,13 @@ export function buildGuidedFeatsL2Items(opts: {
     featType === 'character' ? Boolean(f.char_feat) : !f.char_feat
   );
 
+  // Keep current picks in `items` even when filters would hide them — UnifiedSelectionModal
+  // confirm resolves via `items.filter(selectedIds)`, so dropping rows would wipe draft picks.
   const filtered = typed.filter((feat) => {
-    if (category && feat.category !== category) return false;
-    if (ability && !normalizeFeatAbilities(feat.ability).includes(ability)) return false;
     const id = String(feat.id);
     if (selectedSet.has(id)) return true;
+    if (category && feat.category !== category) return false;
+    if (ability && !normalizeFeatAbilities(feat.ability).includes(ability)) return false;
     const { met } = checkFeatRequirements(feat, requirementCharacter, codexSkills, feats);
     if (!met && !showBlocked) return false;
     return true;

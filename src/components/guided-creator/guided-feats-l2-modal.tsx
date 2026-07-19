@@ -2,6 +2,10 @@
  * Guided feats L2 — UnifiedSelectionModal (TASK-565).
  * Replaces in-step GuidedFeatsBrowsePanel card dump (same grammar as skills / loadout / powers).
  */
+// DESIGN_INTENT: Sheet AddFeatModal is add-only (excludes owned ids, full Character). Guided
+// needs replace-in-place selection (initialSelectedIds, maxSelections, Recommended badges,
+// draft CharacterForFeatRequirement) — peer of GuidedPowersTechniquesL2Modal / equipment L2,
+// not a sheet AddFeatModal fork.
 
 'use client';
 
@@ -92,10 +96,10 @@ export function GuidedFeatsL2Modal({
 
   const handleConfirm = useCallback(
     (selected: SelectableItem[]) => {
+      // UnifiedSelectionModal closes after onConfirm — do not double-call onClose.
       onConfirm(selectedIdsFromFeatL2Items(selected));
-      onClose();
     },
-    [onConfirm, onClose]
+    [onConfirm]
   );
 
   const title = featType === 'character' ? l2Copy.characterTitle : l2Copy.archetypeTitle;

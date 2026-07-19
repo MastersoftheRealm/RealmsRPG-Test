@@ -2464,13 +2464,13 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 1. Reach Powers or Techniques. Confirm the chapter still reads **Loadout** framing for prior phases, and this step title is **Your Powers** or **Your Techniques** (Martial → Techniques only; Power / powered-martial → Powers only).
 2. Confirm path recommendations appear as **GuidedChoiceCards** with visible selected/unselected state (soft-seeded affordable picks may start selected; deselecting clears them). Continue works with zero selections.
 3. Confirm **Training Points** PointStatus and per-card Training Points cost remain (TASK-456); overspend still shows a blocked reason.
-4. Click **See more options** below the grid; confirm L1 cards are replaced by **Browse Powers** / **Browse Techniques** (search + optional Action Type filter); path picks sort first when matching.
-5. Toggle a catalog pick (respecting TP); confirm selection updates the footer count.
-6. Click **← Back to recommendations**; confirm L1 cards return and prior selections remain. Non-path catalog picks appear as selected cards on L1 (flat grid or **Your other Powers/Techniques** section). Removing a promoted card updates Training Points immediately.
+4. Click **See more options** below the grid; confirm an add modal opens (`GuidedPowersTechniquesL2Modal` / `UnifiedSelectionModal`) while L1 cards stay behind the overlay (same grammar as feats TASK-565 / Loadout L2).
+5. Toggle a catalog pick (respecting TP); Add Selected; confirm selection updates and modal closes.
+6. Re-open See more options / cancel; confirm L1 cards and prior selections remain. Non-path catalog picks appear as selected cards on L1 (flat grid or **Your other Powers/Techniques** section). Removing a promoted card updates Training Points immediately.
 
 **Expected**
 - No silent select-all without visible card selection state.
-- GuidedLayerNav expand/collapse matches feats placement (below content); L2 is in-step (not a modal).
+- GuidedLayerNav opens an add modal below content (feats / Loadout / Powers L2 grammar) — not an in-step full-catalog card dump.
 - Martial never shows Powers browse; Power never shows Techniques browse.
 - L2 → L1 promotion keeps selected non-path cards visible (TASK-458).
 
