@@ -140,6 +140,30 @@ export function formatDamageDisplay(
 }
 
 /**
+ * Split a damage display into dice / type / full roll string for list cells and roll buttons.
+ * Canonical helper — do not fork in sheet/library/quick-armament modules.
+ */
+export function splitDamageDiceAndType(damage: unknown): {
+  dice: string;
+  type: string;
+  rollStr: string;
+} {
+  if (!damage) return { dice: '-', type: '', rollStr: '-' };
+  if (typeof damage === 'string') {
+    const str = damage.trim();
+    const match = str.match(/^([\dd+\-\s]+)(?:\s+(.+))?$/);
+    if (!match) return { dice: str, type: '', rollStr: str };
+    return { dice: match[1].trim(), type: (match[2] ?? '').trim(), rollStr: str };
+  }
+  const formatted = formatDamageDisplay(damage);
+  const str = formatted ? String(formatted).trim() : '';
+  if (!str) return { dice: '-', type: '', rollStr: '-' };
+  const match = str.match(/^([\dd+\-\s]+)(?:\s+(.+))?$/);
+  if (!match) return { dice: str, type: '', rollStr: str };
+  return { dice: match[1].trim(), type: (match[2] ?? '').trim(), rollStr: str };
+}
+
+/**
  * Normalize range display for consistent spacing and casing across list/detail/library views (TASK-290).
  * Trims, collapses multiple spaces to one, and standardizes "Spaces"/"Space" to lowercase.
  */

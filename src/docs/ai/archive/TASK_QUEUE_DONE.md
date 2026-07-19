@@ -1,3 +1,27 @@
+- id: TASK-391
+  title: "SUPERSEDED — Admin path builder guidance_groups UI (use TASK-514–518)"
+  created_at: 2026-06-29
+  created_by: agent
+  priority: low
+  status: done
+  completed_at: 2026-07-19
+  implemented_by: agent
+  verification_status: n/a
+  related_files:
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - sql/codex-archetypes-creator-layer1-extensions.sql
+    - src/lib/constants/creator-layer-governance.ts
+  description: |
+    SUPERSEDED 2026-07-17 by owner archetype-path admin parity feedback. Replaced by
+    TASK-514–518 (archived). Original scope: structured admin UI for level1_guidance_groups.
+  acceptance_criteria:
+    - Agents skip this task; implement TASK-514–518 instead.
+    - Archive as superseded (`verification_status: n/a`) when replacement epic done.
+  notes: |
+    Archived during /debt 2026-07-19 — replacement epic already done; no implementable work.
+  evidence: |
+    TASK-514–518 archive blocks; ACTIVE_TASKS hot-path trim.
+
 - id: TASK-566
   title: Guided Skills row layout + Abilities mobile full names + tip copy
   created_at: 2026-07-19

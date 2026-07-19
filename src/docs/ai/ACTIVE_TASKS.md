@@ -4,56 +4,17 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-567
+**Next task ID:** TASK-569
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
+**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-536–548, 564–566, etc.)
 
-**Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`.
+**Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 10 agent-eligible (TASK-391 superseded/skip; TASK-514–518/520/521/522/523/524/525/526/527/528/529/530/536/537/538/539/540/541/542/543/544/545/546/547/548/564/565/566 archived) · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 12 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Guided Skills/Abilities mobile UI + tip copy (2026-07-19):** **TASK-566 done** — Skills row chips below name (no chevron overlap); Abilities full names + 2-col phone tiles; ability/defense tips name once; pending-qa **DEV-V-013-T067**.
-
-**Add-modal list-first chrome (2026-07-19):** **TASK-564 done** — UnifiedSelectionModal search+Filters toolbar; `scopeExtra` mode tabs; headerExtra collapsed by default; pending-qa **DEV-V-016-T014**.
-
-**Guided skills Ability + bonus tip (2026-07-19):** **TASK-548 done** — Ability chip on L1 rows; Skill Bonus InfoTippy formula; path-declined cards include Ability; pending-qa **DEV-V-013-T066**. (Renumbered from TASK-544–547 — those IDs taken on master; BV T066 because T065 = ability name tooltips.)
-
-**Guided feats L2 add modal (2026-07-19):** **TASK-565 done** — See more Feats opens UnifiedSelectionModal (not in-step card dump); pending-qa **DEV-V-013-T012**.
-
-**Ability/defense word tooltips (2026-07-19):** **TASK-547 done** — `WordHelpTip` + `getAbilityHelp` / `getDefenseHelp` on sheet, guided Abilities, skills defenses; pending-qa **DEV-V-009-T026** / **DEV-V-013-T065**. (Renumbered from conflicting TASK-544/545/546.)
-
-**Sheet list duplicates (2026-07-19):** **TASK-546 done** — guided trait save + part/entity dedupe (creators/sync/calc/sheet); pending-qa **DEV-V-009-T025**. (Renumbered from TASK-544/545 — those IDs taken by path ability work on master.)
-
-**Archetype Ability vs Primary/Secondary UX (2026-07-19):** **TASK-545 done** — restore GAME_RULES Archetype Ability; powered-martial = two Primary chips; hybrid grid Power/Martial; Secondary only for distinct recommended. pending-qa **DEV-V-013-T018/T020/T034/T035**.
-
-**Guided path Primary/Secondary abilities (2026-07-19):** **TASK-544 done** — path cards + More details + ability pills use Primary/Secondary; no Power/Martial type tag in path deep-dive; pending-qa **DEV-V-013-T018/T020/T034/T035**.
-
-**Sheet Skills Value stepper clip (2026-07-18):** **TASK-543 done** — edit-mode Value column min-width + compact ValueStepper; pending-qa **DEV-V-009-T024**. (Renumbered from conflicting TASK-540.)
-
-**Sheet Inventory add + roll log bonus dark mode (2026-07-18):** **TASK-542 done** — scoped existingIds / stackable gear; bonus chip dark tokens; pending-qa **DEV-V-009-T022–T023**. (Renumbered from conflicting TASK-540.)
-
-**Mobile modal sticky actions (2026-07-18):** **TASK-541 done** — UnifiedSelectionModal Add Selected / Load via Modal `footer`; pending-qa **DEV-V-016-T013**.
-
-**Auth false invalid-email (2026-07-18):** **TASK-540 done** — shared `getAuthErrorMessage`; trim/lowercase auth emails; pending-qa **DEV-V-024-T004–T005**.
-
-**Sheet Inventory mobile summary (2026-07-18):** **TASK-537 done** — Currency / Armament Proficiency stack below `sm`; TabSummarySection solid fills; pending-qa **DEV-V-009-T020**.
-
-**Sheet mobile side-scroll gutters (2026-07-18):** **TASK-538 done** — panel `basis-full` + `gap-4` + PageContainer-matched scroll-padding; pending-qa **DEV-V-009-T021**.
-
-**GLR / chip body expand (2026-07-18):** **TASK-539 done** — ExpandableChip + GridListRow toggle from header **or** body (mobile summary / expanded panel); pending-qa **DEV-V-021-T004**.
-
-**GLR mobile name width (2026-07-18):** **TASK-536 done** (merged #34/#35) — collapse empty desktop data tracks below `lg` via `--glr-*` CSS vars; pending-qa **DEV-V-016-T012**.
-
-**Archetype path enrichment (2026-07-17):** **TASK-530 + TASK-521 done** — all 12 paths enriched (backup `codex_archetypes_backup_20260717`); pending-qa **DEV-V-013-T064**. Residual innate reclassify → **TASK-535**.
-
-**Realms Image Library epic (2026-07-16):** **TASK-491–499 done**. TASK-500 deferred.
-
-**Character sheet feedback (2026-07-17):** **TASK-508–513 / TASK-522 / TASK-523 / TASK-525 / TASK-526 / TASK-527 done** (archived; owner QA in DEVELOPER_TASK_QUEUE). TASK-504 remains expandable chips (not toast).
-
-**Admin archetype path parity (2026-07-17):** **TASK-514–518 done** (pending-qa). Content pass **TASK-521/530 done**. **Skip TASK-391** (superseded). Guided creator is SoT.
-
-**Debt from AI workflow audit (2026-07-15):** TASK-480 — address alongside product work; repo-wide cadence → `/debt`. TASK-476/477/478/482/484/486/487/488/489/490 done; TASK-481 superseded by `/debt`. TASK-475 done (Enhanced shell basic mode). TASK-479 done (client error handling).
+**Hot notes:** TASK-535 innate reclassify (codex, owner ack). TASK-500 image library deferred. ExpandableChip (ex TASK-504) shipped via TASK-539. Repo anti-debt → `/debt` (TASK-481 superseded).
 
 ---
 
@@ -91,8 +52,6 @@ Do **not** read the done archive at session start.
   completed_at: 2026-07-15
   implemented_by: agent
   parent_task: TASK-454
-  follow_up_tasks:
-    - TASK-463
   completed_work: |
     - Library/Codex/selectable builders + combat-builder use namedPropertyDescriptorChips /
       TRAINING_POINTS_COST_LABEL.
@@ -102,9 +61,10 @@ Do **not** read the done archive at session start.
     - Sheet partDataToChips: descriptor kind when no options; Training Points costLabel.
     - Advanced powers/techniques add-modal columns spell Training Points.
     - normalizeId used by powers L1 candidates; formatDamageReductionFact added.
+    - Powers/techniques L2: GuidedPowersTechniquesL2Modal → UnifiedSelectionModal (TASK-463 done).
   remaining_work: |
-    - Powers/techniques L2 still card browse — GridListRow bridge tracked as TASK-463.
-    - Soft residuals: styleguide demos / dense admin TP headers (allowed by GAME_RULES).
+    - Soft residuals only: styleguide demos / dense admin TP headers (allowed by GAME_RULES).
+      Close as done after owner confirms no further fact-language batches, or trim to those demos.
   build_validation: |
     suite: DEV-V-013
     tests:
@@ -116,6 +76,7 @@ Do **not** read the done archive at session start.
     - src/components/shared/grid-list-chip.tsx
     - src/components/guided-creator/loadout-budget-bar.tsx
     - src/components/guided-creator/guided-equipment-fact-chips.tsx
+    - src/components/guided-creator/guided-powers-techniques-l2-modal.tsx
     - src/components/character-sheet/library-list-helpers.ts
     - src/components/character-creator/steps/powers-step.tsx
   description: |
@@ -135,8 +96,8 @@ Do **not** read the done archive at session start.
       powers/techniques may proceed in parallel); each batch has focused tests.
     - Update FEATURE_INDEX/AGENT_GUIDE if shared exports or usage guidance changes; npm run build.
   notes: |
-    2026-07-15 audit: marked partial — core builders + LoadoutBudgetBar + GLR InfoTippy shipped;
-    powers/techniques §3.1 GridListRow L2 remains TASK-463.
+    2026-07-15 audit: marked partial — core builders + LoadoutBudgetBar + GLR InfoTippy shipped.
+    2026-07-19 /debt: TASK-463 L2 USM already shipped; remaining_work reduced to soft residuals.
   evidence: |
     npm run build; DEV-V-013-T048 updated for descriptor+InfoTippy.
 
@@ -211,70 +172,10 @@ Do **not** read the done archive at session start.
     remount, library clamp, edit-archetype session remount, sheet library tab visibility, modal
     remounts, power-creator draft/?edit= bootstrap, remaining creators draft/?edit= bootstrap).
   completed_work: |
-    Batch 1 (2026-07-15): 168 → 158 hook warnings (−10).
-    - guided-choice-card: derive inactive overflow; sync expand via render when selected changes.
-    - species-creator: module TRAIT_LIMITS; drop unnecessary form/traitLimits deps.
-    - AdminArchetypesTab: hoist toLeveledFeatLike.
-    - AdminFeatsTab: remount edit modal with key={sessionKey}; seed drafts in useState; remove reset effects.
-    - login: derive auth query error (no setState-in-effect); dismiss URL message on new attempt (parity with old setError(null)).
-    - empowered getPayload: add missing isReaction dep.
-    - Audit follow-up: DEV-V-019 T001–T003; drop unused skillIdToName on AdminFeatEditModal.
-    Batch 2 (2026-07-15): 158 → 138 hook warnings (−20).
-    - library page: one-time scope lock after auth (render adjust); clamp Enhanced tab state.
-    - guided/advanced ancestry+equipment + guided skills: stable empty fallbacks for hook deps.
-    - library-section: memoize tabs; edit-mode sync without effects; display fallback for active tab.
-    - EditArchetypeModal: remount-on-open via editArchetypeSessionKey; remove reset effect.
-    - useCreatorSave: add queryClient + setShowPublishConfirm deps.
-    - DEV-V-019 T004–T005.
-    Batch 2 audit (2026-07-15):
-    - Restored one-time library mode lock (not continuous auth/?view= follow).
-    - Controlled sheet tab: page clamps via resolveLibraryActiveTab (parent state parity).
-    - Edit archetype uses sessionKey (not ability-field key mid-edit).
-    - DEV-V-019 T004–T006 tightened / T006 added.
-    Full TASK-430 functional audit (2026-07-15):
-    - Batch 1 patterns OK (choice-card, login dismiss, admin feat remount, isReaction dep).
-    - Hardened: guest→always Realms scope; Enhanced displayTab belt-and-suspenders;
-      guided skills abilities via stable useMemo copy (no shared DEFAULT_ABILITIES mutate).
-    - No infinite-loop / RoH breaks found; build clean.
-    Batch 3 (2026-07-15): 138 → 108 hook warnings (−30). Careful pass; no eslint-disable.
-    - Stable empties / useMemo: advanced skills+powers steps, guided feat steps, abilities-step.
-    - Remount-on-open (drop reset effects): level-up, settings, add-feat, add-proficiency,
-      add-sub-skill, AddCreatureFeatModal (+ parent conditionals/keys).
-    - unified-selection-modal: drop redundant sortState dep (sortItems closes over it).
-    - Deferred: use-character-sheet-actions (45), creator cache/?edit hydrates, encounters, Modal.tsx.
-    - DEV-V-019 T007.
-    Batch 3 audit (2026-07-15):
-    - AddSkillModal remount parity (skills-allocation + guided-skills-panel).
-    - Shared `src/lib/empty.ts` (dedupe EMPTY_* across skills/feats/ancestry).
-    - skills Continue copies defenseVals (never persist DEFAULT_DEFENSE_SKILLS ref).
-    - Settings modal uses isOpen while conditionally mounted.
-    Batch 4 start (2026-07-16): power-creator hydrate → remount bootstrap.
-    - New `lib/game/creator-cache.ts` (pure read + write/clear draft-cache helpers).
-    - `power-creator-bootstrap.ts`: pure cache-restore + library-record→form-state builders.
-    - page.tsx: PowerCreatorWorkspace remounts via key (editId|draft); initial state seeded in
-      useState from one-time render-adjust bootstrap — both hydrate effects deleted (−2 warnings).
-    - /audit + /cleanup same session: error state with retry (no infinite spinner on parts
-      failure), ?edit= waits on load.isLoading not rawItems.length (empty library / bad id →
-      blank creator, no hang), render-pure bootstrap (edit-mode cache clear moved to mount
-      effect), DEV-V-019-T009.
-    Batch 4 complete (2026-07-16): all remaining creator hydrates → bootstrap + remount.
-    - technique-creator: `technique-creator-bootstrap.ts` (cache restore + record→form-state,
-      weapon/No-Attack/TP inference preserved); TechniqueCreatorWorkspace remounts via
-      key={editId|draft}; hydrate + ?edit= effects deleted; autosave skips ?edit=.
-    - item-creator: `item-creator-bootstrap.ts` (unified record→form-state for edit + Load modal;
-      fixes old edit path dropping shield block/damage config, and Load modal now restores
-      imageUrl like the edit path); armament-type filter effect → changeArmamentType event
-      handler; dead isEditMode state removed.
-    - empowered-technique-creator: `empowered-technique-bootstrap.ts` (cache + record mapping via
-      shared row mappers, addWeapon/TP inference preserved); workspace remount; 3 effects deleted.
-    - creature-creator: `creature-creator-bootstrap.ts`; single-object state seeded via one-time
-      render adjust gated on the same flags as the shell loading prop (+ ?edit= now included in
-      that gate — no blank-form flash); edit-load toast dropped (parity with other creators).
-    - All four: edit-mode clears draft cache in mount effect; autosave skips ?edit= (loaded row no
-      longer leaks into draft cache); writeCreatorCache/clearCreatorCache from `creator-cache.ts`.
-    - Measured after batch 4: **104** react-hooks warnings (set-state-in-effect 36,
-      exhaustive-deps 60, preserve-manual-memoization 8). Build + 163 unit tests pass.
-    - DEV-V-019-T010.
+    Batches 1–4 (2026-07-15/16): ~168 → **104** react-hooks warnings. Patterns: derive /
+    remount-on-open / stable empties (`lib/empty.ts`) / creator bootstrap+remount
+    (`lib/game/creator-cache.ts` + per-creator `*-bootstrap.ts`). DEV-V-019 T001–T007 +
+    T009–T010. Detail in AI_CHANGELOG / archive — do not re-expand batch logs here.
   remaining_work: |
     Status stays **partial** until residual hook warnings are materially flattened (or owner
     explicitly closes leftovers as intentional). Baseline after batch 4: **104**
@@ -388,35 +289,6 @@ Do **not** read the done archive at session start.
 
 ---
 
-- id: TASK-391
-  title: "SUPERSEDED — Admin path builder guidance_groups UI (use TASK-514–518)"
-  created_at: 2026-06-29
-  created_by: agent
-  priority: low
-  status: not-started
-  follow_up_tasks:
-    - TASK-514
-    - TASK-515
-    - TASK-516
-    - TASK-517
-    - TASK-518
-  description: |
-    SUPERSEDED 2026-07-17 by owner archetype-path admin parity feedback. Do **not** implement
-    this task. Use **TASK-514** (feat groups + character/archetype split), **TASK-515** (skills),
-    **TASK-516** (armaments), **TASK-517** (remove recommended species), **TASK-518** (audit).
-    Original scope: structured admin UI for `level1_guidance_groups` + optional path seeding.
-  related_files:
-    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
-    - sql/codex-archetypes-creator-layer1-extensions.sql
-    - src/lib/constants/creator-layer-governance.ts
-  acceptance_criteria:
-    - Agents skip this task; implement TASK-514–518 instead.
-    - When the replacement epic is done, archive this block as superseded (`verification_status: n/a`).
-  notes: |
-    Kept in ACTIVE only so reconcile/history keep the id; not agent-eligible work.
-
----
-
 - id: TASK-403
   title: Guided Simple Creator — Phase 8 admin & species starter flag
   created_at: 2026-06-30
@@ -492,9 +364,58 @@ Do **not** read the done archive at session start.
 
 ---
 
-# Admin archetype path ↔ guided creator parity (TASK-514–518) — DONE 2026-07-17
-# Owner decisions locked (do not re-ask): feat audience field; armaments UI-only split; DROP
-# recommended species; skills max 3 warn-not-block. Content pass TASK-521/530 done.
-# Cross-ref: TASK-391 superseded; DEV-V-008 / DEV-V-013 pending-qa.
+# Admin archetype path ↔ guided creator parity (TASK-514–518) — DONE 2026-07-17 (archive).
+# Owner decisions locked: feat audience field; armaments UI-only split; DROP recommended species;
+# skills max 3 warn-not-block. Content pass TASK-521/530 done. TASK-391 superseded (archived).
+
+---
+
+- id: TASK-567
+  title: Migrate AddProficiencyModal onto UnifiedSelectionModal
+  created_at: 2026-07-19
+  created_by: agent
+  priority: medium
+  status: not-started
+  related_files:
+    - src/components/character-sheet/add-proficiency-modal.tsx
+    - src/components/shared/unified-selection-modal.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/MOBILE_UX.md
+  description: |
+    /debt inventory: AddProficiencyModal still hand-rolls Modal + SearchInput + GridListRow
+    while add-feat / add-library-item / guided L2 use UnifiedSelectionModal. Migrate to USM
+    (list-first Filters chrome) without changing proficiency selection semantics.
+  acceptance_criteria:
+    - AddProficiencyModal wraps UnifiedSelectionModal (or thin wrapper) — no parallel list shell.
+    - Search/sort/list/footer match other add-X modals; fullScreenOnMobile + sticky footer.
+    - Behavior parity for existing proficiency picks; BUILD_VALIDATION or targeted test if suite exists.
+    - FEATURE_INDEX / guide note; npm run build.
+  notes: |
+    Filed from /debt 2026-07-19. AddCombatantModal is a separate gated follow-up (initiative/
+    campaign behavior differs) — do not fold into this task.
+
+---
+
+- id: TASK-568
+  title: Unify getMaxQualifiedFeatLevel character vs creature adapters
+  created_at: 2026-07-19
+  created_by: agent
+  priority: low
+  status: not-started
+  related_files:
+    - src/lib/game/feat-requirements.ts
+    - src/lib/game/creature-feat-utils.ts
+    - src/lib/codex/skill-list.ts
+    - src/lib/codex/feat-list.ts
+  description: |
+    /debt inventory: near-copy `getMaxQualifiedFeatLevel` in feat-requirements vs
+    creature-feat-utils; `buildSkillIdToName` duplicated in skill-list and feat-list.
+    Collapse to one API + thin adapters — no behavior change.
+  acceptance_criteria:
+    - Single canonical feat-level helper; creature path adapts inputs only.
+    - Single `buildSkillIdToName` (or shared import); delete weaker fork.
+    - Existing feat-requirement / creature feat tests green; npm run build.
+  notes: |
+    Filed from /debt 2026-07-19. Small lib consolidation — safe Implementer work.
 
 ---

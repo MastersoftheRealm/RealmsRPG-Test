@@ -13,8 +13,8 @@ import {
   TagFilter,
   SelectFilter,
   FilterSection,
-  CodexFeatRow,
-} from '@/components/codex';
+} from '@/components/shared/filters';
+import { CodexFeatRow } from '@/components/codex';
 import {
   SearchInput,
   ListHeader,

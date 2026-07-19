@@ -19,7 +19,7 @@ const ADMIN_PART_COLUMNS = [
   { key: '_actions', label: '', sortable: false as const },
 ];
 import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
-import { ChipSelect, SelectFilter, FilterSection } from '@/components/codex';
+import { ChipSelect, SelectFilter, FilterSection } from '@/components/shared/filters';
 import { useParts, type Part } from '@/hooks';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
 import { formatListCellLabel } from '@/lib/utils';

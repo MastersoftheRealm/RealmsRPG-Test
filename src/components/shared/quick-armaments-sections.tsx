@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { SectionHeader } from '@/components/shared/section-header';
 import { RollButton } from '@/components/shared/roll-button';
 import { TableScroll } from '@/components/ui';
-import { cn, formatDamageDisplay, formatWeaponRangeCompact } from '@/lib/utils';
+import { cn, formatWeaponRangeCompact, splitDamageDiceAndType } from '@/lib/utils';
 import { isMechanicPropertyName } from '@/lib/detail-option/compact-facts';
 import { deriveShieldAmountFromProperties } from '@/lib/calculators/item-calc';
 import { getWeaponAttackBonusFromProperties } from '@/lib/game/weapon-attack-ability';
@@ -100,23 +100,6 @@ function getAttackBonus(item: QuickArmamentItem, abilities: QuickArmamentAbiliti
   ).bonus;
 }
 
-function parseDamageDiceAndType(damage: unknown): { dice: string; type: string; rollStr: string } {
-  if (!damage) return { dice: '-', type: '', rollStr: '-' };
-  if (typeof damage === 'string') {
-    const strDamage = damage.trim();
-    const match = strDamage.match(/^([\dd+\-\s]+)(?:\s+(.+))?$/);
-    if (!match) return { dice: strDamage, type: '', rollStr: strDamage };
-    return { dice: match[1].trim(), type: (match[2] ?? '').trim(), rollStr: strDamage };
-  }
-  // Fall back to shared formatter for non-string shapes (if any)
-  const formatted = formatDamageDisplay(damage as never);
-  const formattedStr = formatted ? String(formatted).trim() : '';
-  if (!formattedStr) return { dice: '-', type: '', rollStr: '-' };
-  const match = formattedStr.match(/^([\dd+\-\s]+)(?:\s+(.+))?$/);
-  if (!match) return { dice: formattedStr, type: '', rollStr: formattedStr };
-  return { dice: match[1].trim(), type: (match[2] ?? '').trim(), rollStr: formattedStr };
-}
-
 export function QuickWeaponsTable({
   title = 'Weapons',
   items,
@@ -170,7 +153,7 @@ export function QuickWeaponsTable({
         <tbody>
           {rows.map((weapon, idx) => {
             const attackBonus = getAttackBonus(weapon, abilities, martialProf);
-            const { dice, type, rollStr } = parseDamageDiceAndType(weapon.damage);
+            const { dice, type, rollStr } = splitDamageDiceAndType(weapon.damage);
 
             const displayProps = displayNamedProperties(resolveQuickArmamentProperties(weapon));
 
@@ -283,7 +266,7 @@ export function QuickShieldsTable({
                 resolveQuickArmamentProperties(shield) as { id?: number; name?: string; op_1_lvl?: number }[]
               ) ?? '-'
             );
-            const { dice, rollStr } = parseDamageDiceAndType(shield.damage);
+            const { dice, rollStr } = splitDamageDiceAndType(shield.damage);
             const hasDamage = rollStr !== '-';
             const damageRollStr = hasDamage ? (String(rollStr).includes('Bludgeoning') ? String(rollStr) : `${rollStr} Bludgeoning`) : '';
 

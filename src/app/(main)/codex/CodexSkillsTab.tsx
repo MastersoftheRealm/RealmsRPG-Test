@@ -7,12 +7,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import {
-  ChipSelect,
-  SelectFilter,
-  FilterSection,
-  CodexSkillRow,
-} from '@/components/codex';
+import { ChipSelect, SelectFilter, FilterSection } from '@/components/shared/filters';
+import { CodexSkillRow } from '@/components/codex';
 import {
   SearchInput,
   ListHeader,

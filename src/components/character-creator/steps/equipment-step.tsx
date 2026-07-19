@@ -40,7 +40,7 @@ import {
 } from '@/components/shared';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
-import { FilterSection } from '@/components/codex';
+import { FilterSection } from '@/components/shared/filters';
 import { Spinner, Button, EmptyState, Card, DescriptorChip } from '@/components/ui';
 import { TabNavigation, TabContentPanel, useTabGroup } from '@/components/ui/tab-navigation';
 import { AlertCircle, Swords, Check, X, ShoppingBag, ChevronLeft } from 'lucide-react';

@@ -7,10 +7,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import {
-  SelectFilter,
-  FilterSection,
-} from '@/components/codex';
+import { SelectFilter, FilterSection } from '@/components/shared/filters';
 import {
   SearchInput,
   ListHeader,
