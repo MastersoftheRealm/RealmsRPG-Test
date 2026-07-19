@@ -8,6 +8,7 @@
 import type { PowerPart } from '@/hooks/codex-types';
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
 import { computePartTrainingPoints } from '@/lib/library/part-display';
+import { dedupeSavedParts } from '@/lib/library/dedupe-saved-parts';
 import { formatDurationFromTypeAndValue, formatDurationWithModifiers } from '@/lib/utils/duration';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
 import { deriveActionType, actionTypeFromSelection } from './action-type';
@@ -94,7 +95,8 @@ export function calculatePowerCosts(
   let tpRaw = 0;
   const tpSources: string[] = [];
 
-  partsPayload.forEach((pl) => {
+  const uniqueParts = dedupeSavedParts(partsPayload);
+  uniqueParts.forEach((pl) => {
     // Normalize to support both saved-format and UI-format
     const isUiShape = pl.part !== undefined;
 
@@ -579,16 +581,18 @@ export function derivePowerDisplay(
   powerDoc: PowerDocument,
   partsDb: PowerPart[]
 ): PowerDisplayData {
-  const partsPayload: PowerPartPayload[] = Array.isArray(powerDoc.parts)
-    ? powerDoc.parts.map((p) => ({
-        id: p.id,
-        name: p.name,
-        op_1_lvl: p.op_1_lvl || 0,
-        op_2_lvl: p.op_2_lvl || 0,
-        op_3_lvl: p.op_3_lvl || 0,
-        applyDuration: p.applyDuration || false,
-      }))
-    : [];
+  const partsPayload: PowerPartPayload[] = dedupeSavedParts(
+    Array.isArray(powerDoc.parts)
+      ? powerDoc.parts.map((p) => ({
+          id: p.id,
+          name: p.name,
+          op_1_lvl: p.op_1_lvl || 0,
+          op_2_lvl: p.op_2_lvl || 0,
+          op_3_lvl: p.op_3_lvl || 0,
+          applyDuration: p.applyDuration || false,
+        }))
+      : []
+  );
 
   const calc = calculatePowerCosts(partsPayload, partsDb);
   

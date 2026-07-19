@@ -10,6 +10,11 @@ import { computeMaxHealthEnergy } from '@/lib/game/calculations';
 import type { UserPower, UserTechnique, UserItem, SavedDamage } from '@/hooks/use-user-library';
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import { derivePowerDisplay, deriveTechniqueDisplay, formatPowerDamage, formatRange, deriveShieldAmountFromProperties, deriveShieldDamageFromProperties, deriveDamageReductionFromProperties } from '@/lib/calculators';
+import {
+  dedupeByNormalizedId,
+  dedupeEntityRefs,
+  dedupeSavedParts,
+} from '@/lib/library/dedupe-saved-parts';
 
 // =============================================================================
 // Types for Enriched Data
@@ -169,8 +174,9 @@ export function enrichPowers(
   publicPowerLibrary?: UserPower[]
 ): EnrichedPower[] {
   if (!characterPowers || characterPowers.length === 0) return [];
-  
-  return characterPowers.map(charPower => {
+
+  const uniquePowers = dedupeEntityRefs(characterPowers);
+  return uniquePowers.map(charPower => {
     const name = typeof charPower === 'string' ? charPower : charPower.name;
     const innate = typeof charPower === 'object' ? !!(charPower as unknown as { innate?: boolean }).innate : false;
     
@@ -203,7 +209,7 @@ export function enrichPowers(
         id: identityId,
         name: libraryItem.name,
         description: libraryItem.description || '',
-        parts: (libraryItem.parts || []).map(part => ({
+        parts: dedupeSavedParts(libraryItem.parts || []).map(part => ({
           id: String(part.id || ''),
           name: part.name || '',
           op_1_lvl: part.op_1_lvl,
@@ -244,8 +250,9 @@ export function enrichTechniques(
   publicTechniqueLibrary?: UserTechnique[]
 ): EnrichedTechnique[] {
   if (!characterTechniques || characterTechniques.length === 0) return [];
-  
-  return characterTechniques.map(charTech => {
+
+  const uniqueTechniques = dedupeEntityRefs(characterTechniques);
+  return uniqueTechniques.map(charTech => {
     const name = typeof charTech === 'string' ? charTech : charTech.name;
     
     let libraryItem = findInLibrary(userTechniqueLibrary, charTech);
@@ -285,7 +292,7 @@ export function enrichTechniques(
         id: libraryItem.id,
         name: libraryItem.name,
         description: libraryItem.description || '',
-        parts: (libraryItem.parts || []).map(part => ({
+        parts: dedupeSavedParts(libraryItem.parts || []).map(part => ({
           id: String(part.id || ''),
           name: part.name || '',
           op_1_lvl: part.op_1_lvl,
@@ -816,12 +823,22 @@ export function cleanForSave(data: Character): Partial<Character> {
   };
 
   if (Array.isArray(cleaned.feats)) {
-    cleaned.feats = cleaned.feats.map(cleanFeatEntry).filter(Boolean);
+    cleaned.feats = dedupeEntityRefs(
+      cleaned.feats.map(cleanFeatEntry).filter(Boolean) as Array<{
+        id?: string | number;
+        name?: string;
+      }>
+    );
   }
 
   // Clean up archetypeFeats — same lean format
   if (Array.isArray(cleaned.archetypeFeats)) {
-    cleaned.archetypeFeats = (cleaned.archetypeFeats as unknown[]).map(cleanFeatEntry).filter(Boolean);
+    cleaned.archetypeFeats = dedupeEntityRefs(
+      (cleaned.archetypeFeats as unknown[]).map(cleanFeatEntry).filter(Boolean) as Array<{
+        id?: string | number;
+        name?: string;
+      }>
+    );
   }
 
   // Player trait customizations — keyed by trait id
@@ -847,45 +864,58 @@ export function cleanForSave(data: Character): Partial<Character> {
   // Clean up powers — save id + name (compat) + innate flag only.
   // description, parts, cost, damage, etc. derived from library enrichment on load.
   if (Array.isArray(cleaned.powers)) {
-    cleaned.powers = cleaned.powers.map((p: unknown) => {
-      if (typeof p === 'string') return { name: p, innate: false };
-      if (p && typeof p === 'object') {
-        const power = p as { id?: string | number; name?: string; innate?: boolean };
-        const clean: Record<string, unknown> = {};
-        if (power.id) clean.id = power.id;
-        if (power.name) clean.name = power.name; // Backward compat lookup key
-        clean.innate = !!power.innate;
-        return clean;
-      }
-      return null;
-    }).filter(Boolean);
+    cleaned.powers = dedupeEntityRefs(
+      cleaned.powers
+        .map((p: unknown) => {
+          if (typeof p === 'string') return { name: p, innate: false };
+          if (p && typeof p === 'object') {
+            const power = p as { id?: string | number; name?: string; innate?: boolean };
+            const clean: Record<string, unknown> = {};
+            if (power.id) clean.id = power.id;
+            if (power.name) clean.name = power.name; // Backward compat lookup key
+            clean.innate = !!power.innate;
+            return clean;
+          }
+          return null;
+        })
+        .filter(Boolean) as Array<{ id?: string | number; name?: string }>
+    );
   }
 
   // Clean up techniques — save id + name (compat) only.
   // description, parts, cost, damage, etc. derived from library enrichment on load.
   if (Array.isArray(cleaned.techniques)) {
-    cleaned.techniques = cleaned.techniques.map((t: unknown) => {
-      if (typeof t === 'string') return { name: t };
-      if (t && typeof t === 'object') {
-        const tech = t as { id?: string | number; name?: string };
-        const clean: Record<string, unknown> = {};
-        if (tech.id) clean.id = tech.id;
-        if (tech.name) clean.name = tech.name; // Backward compat lookup key
-        return Object.keys(clean).length > 0 ? clean : null;
-      }
-      return null;
-    }).filter(Boolean);
+    cleaned.techniques = dedupeEntityRefs(
+      cleaned.techniques
+        .map((t: unknown) => {
+          if (typeof t === 'string') return { name: t };
+          if (t && typeof t === 'object') {
+            const tech = t as { id?: string | number; name?: string };
+            const clean: Record<string, unknown> = {};
+            if (tech.id) clean.id = tech.id;
+            if (tech.name) clean.name = tech.name; // Backward compat lookup key
+            return Object.keys(clean).length > 0 ? clean : null;
+          }
+          return null;
+        })
+        .filter(Boolean) as Array<{ id?: string | number; name?: string }>
+    );
   }
 
   // Clean up traits - save name only
   if (Array.isArray(cleaned.traits)) {
-    cleaned.traits = cleaned.traits.map((t: unknown) => {
-      if (typeof t === 'string') return t;
-      if (t && typeof t === 'object' && 'name' in t) {
-        return (t as { name: string }).name;
-      }
-      return null;
-    }).filter(Boolean);
+    cleaned.traits = dedupeByNormalizedId(
+      cleaned.traits
+        .map((t: unknown) => {
+          if (typeof t === 'string') return t;
+          if (t && typeof t === 'object' && 'name' in t) {
+            return (t as { name: string }).name;
+          }
+          return null;
+        })
+        .filter(Boolean) as string[],
+      (name) => name
+    );
   }
 
   // Clean up equipment — save { id, name, equipped?, quantity? } per item.

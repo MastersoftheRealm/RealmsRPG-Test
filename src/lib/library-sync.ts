@@ -1,5 +1,6 @@
 import type { SavedPart, SavedProperty, UserItem, UserPower, UserTechnique } from '@/hooks/use-user-library';
 import { findByIdOrName } from '@/lib/id-constants';
+import { dedupeSavedParts } from '@/lib/library/dedupe-saved-parts';
 
 type PartLike = {
   id?: string | number;
@@ -250,9 +251,10 @@ export function syncPowerParts(
     nextParts.push(next);
   }
 
+  const deduped = dedupeSavedParts(nextParts);
   const before = JSON.stringify(parts ?? []);
-  const after = JSON.stringify(nextParts);
-  return { value: nextParts, issues, hasDrift: issues.length > 0, changed: before !== after };
+  const after = JSON.stringify(deduped);
+  return { value: deduped, issues, hasDrift: issues.length > 0, changed: before !== after };
 }
 
 export function syncTechniqueParts(
@@ -312,9 +314,10 @@ export function syncItemProperties(
     nextProperties.push(next);
   }
 
+  const deduped = dedupeSavedParts(nextProperties);
   const before = JSON.stringify(properties ?? []);
-  const after = JSON.stringify(nextProperties);
-  return { value: nextProperties, issues, hasDrift: issues.length > 0, changed: before !== after };
+  const after = JSON.stringify(deduped);
+  return { value: deduped, issues, hasDrift: issues.length > 0, changed: before !== after };
 }
 
 export function getPowerSyncResult(power: UserPower, partsDb: PartLike[]): SyncResult<UserPower> {

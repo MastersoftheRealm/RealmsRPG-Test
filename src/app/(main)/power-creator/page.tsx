@@ -46,6 +46,7 @@ import {
   type DurationConfig,
 } from '@/lib/calculators';
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
+import { dedupeSavedParts } from '@/lib/library/dedupe-saved-parts';
 import { formatDurationFromTypeAndValue } from '@/lib/utils/duration';
 import type {
   SelectedPart,
@@ -483,7 +484,7 @@ function PowerCreatorWorkspace({
   }, []);
 
   const getPayload = useCallback(() => {
-    const partsToSave = [
+    const partsToSave = dedupeSavedParts([
       ...selectedParts.map((sp) => ({
         id: Number(sp.part.id),
         name: sp.part.name,
@@ -521,7 +522,7 @@ function PowerCreatorWorkspace({
             isMechanic: true,
           }]
         : []),
-    ];
+    ]);
     const damageToSave = damages
       .filter((d) => d.type !== 'none' && d.amount > 0)
       .map((d) => ({ amount: d.amount, size: d.size, type: d.type, applyDuration: d.applyDuration ?? false }));
