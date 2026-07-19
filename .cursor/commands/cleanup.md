@@ -22,8 +22,9 @@ Same as `/audit`: this session’s files + task `related_files` / `related_tasks
 2. **Pillar 1** — Delete / wire-to-canonical in scope.
 3. **Pillar 2** — Fix unmet AC / feedback behavior; correct status (`partial` if still open).
 4. **Pillar 3** — Replace in-scope forks with shared patterns; drop additions that are not required for AC.
-5. **Re-verify** — Targeted tests and/or `npm run build` if code changed. Never mark `done` early.
-6. **Changelog** — Only if cleanup was meaningful. First bullet of the Summary **must** be a deletion or consolidation (file removed, fork wired to canonical, dead export dropped). Do not invent a changelog entry whose only substance is “docs honesty.”
+5. **Doc sanity** — After FEATURE_INDEX / table edits, grep for collapsed rows (`||` with no cell between) and broken links to deleted files.
+6. **Re-verify** — Targeted tests and/or `npm run build` if code changed. Never mark `done` early.
+7. **Changelog** — Only if cleanup was meaningful. First bullet of the Summary **must** be a deletion or consolidation (file removed, fork wired to canonical, dead export dropped). Wiring a local mapper into an existing shared helper counts. Do not invent a changelog entry whose only substance is “docs honesty.”
 
 ## Apply freely (in scope)
 
@@ -32,6 +33,7 @@ Same as `/audit`: this session’s files + task `related_files` / `related_tasks
 - Docs/BV/FEATURE_INDEX/archive fields that were wrong or incomplete for *this* task
 - Token / a11y / mobile fixes on files already in scope
 - Barrel regen if exports changed (`npm run tasks:generate-index`)
+- Soft-trim `ACTIVE_TASKS.md` notes if this session pushed it over ~20KB
 
 ## Pause for owner ack (list, do not apply)
 

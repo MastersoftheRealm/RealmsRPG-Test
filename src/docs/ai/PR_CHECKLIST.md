@@ -34,6 +34,8 @@ Use before marking a task `done` or opening a PR. Keep answers short.
 
 **Session (`/audit` → `/cleanup`):** on demand after a task claims `done` or before commit/PR. Scope = this chat + task `related_files` / `related_tasks` only. Cleanup that only adds docs lines without removals or AC fixes is a failed cleanup.
 
-**Repo (`/global-audit` → `/debt`):** on demand when systemic drift piles up. Inventory first; then apply. Not a substitute for session cleanup (and vice versa). Gated deletes → owner ack or new `TASK-###`.
+**Repo (`/global-audit` → `/debt` → prefer `/audit` → `/cleanup` on the debt PR):** on demand when systemic drift piles up. Inventory first; then apply; session-audit the debt diff before merge. Not a substitute for session cleanup (and vice versa). Gated deletes → owner ack or new `TASK-###`.
+
+**Task filing:** write full `TASK-###` blocks before bumping `Next task ID` / Counts; verify id count matches. After FEATURE_INDEX table edits, check for collapsed cells (`||`).
 
 **Implementations:** `.cursor/commands/audit.md`, `cleanup.md`, `global-audit.md`, `debt.md`.

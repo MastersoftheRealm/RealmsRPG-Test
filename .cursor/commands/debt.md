@@ -21,16 +21,25 @@ Whole repo within gates below. Prefer evidence (grep, `FEATURE_INDEX`, barrels) 
 
 ## Procedure
 
-1. **Intake** — If a `/global-audit` report exists in this chat, prioritize its **debt-safe** rows. Else run a quick inventory (not a full global-audit writeup unless needed).
+1. **Intake** — If a `/global-audit` report exists in this chat, prioritize its **debt-safe** rows (honor **do-not-fold**). Else run a quick inventory (not a full global-audit writeup unless needed).
 2. **Apply in-scope** — Delete weaker duplicates, slim hot-path docs, rotate changelog (see checklist).
-3. **File follow-ups** — Gated → new `TASK-###` in `ACTIVE_TASKS.md` (specific fix), not more ritual prose.
-4. **Verify** — `npm run build` if code changed; targeted tests if behavior touched.
-5. **Log** — Append `AI_CHANGELOG.md` listing **deletions/consolidations** (required every run). First Summary bullet = a deletion or consolidation; prefer **net remove** on the diff.
+3. **File follow-ups** — Gated → new `TASK-###` in `ACTIVE_TASKS.md` (specific fix), not more ritual prose. Use **atomic task-filing** below.
+4. **Doc sanity** — After FEATURE_INDEX table edits, grep for collapsed cells (`||` with empty middle). Confirm deleted symbols are not still advertised as live.
+5. **Verify** — `npm run build` if code changed; targeted tests if behavior touched; `npm run tasks:generate-index` + `tasks:validate-shared-ui` if barrels/allowlist touched.
+6. **Log** — Append `AI_CHANGELOG.md` listing **deletions/consolidations** (required every run). First Summary bullet = a deletion or consolidation; prefer **net remove** on the diff.
+7. **Before merge** — Prefer session `/audit` → `/cleanup` on the debt PR. Mark draft PRs **ready for review** before `gh pr merge` (draft merge fails).
+
+## Atomic task-filing (required when creating TASK-###)
+
+1. Append the **full** task block(s) in one write (id, title, AC, related_files, notes).
+2. **Then** bump `Next task ID` and `Counts:` to match reality.
+3. Verify: `rg -c '^- id: TASK-' src/docs/ai/ACTIVE_TASKS.md` equals Counts; each new id appears as a real block (not only a mention in another task’s notes).
+4. If filing pushed ACTIVE over ~20KB, trim notes / soft-close residuals **in the same commit**.
 
 ## Checklist (default run)
 
 - **Duplication greps** — raw `fetch('/api/upload`, local `formatDuration`-style forks, parallel selection/list shells vs `FEATURE_INDEX` + barrels (`npm run tasks:validate-shared-ui` if shared/ui touched).
-- **ACTIVE_TASKS** — Archive `done` / superseded blocks; trim noise; keep agent-eligible hot path lean (target &lt;20KB).
+- **ACTIVE_TASKS** — Archive `done` / superseded blocks; trim noise; keep agent-eligible hot path lean (target &lt;20KB). Fix `status`/`remaining_work` that lag shipped code.
 - **AI_CHANGELOG** — Move entries older than ~60 days to `src/docs/ai/archive/AI_CHANGELOG_ARCHIVE.md` (create if missing).
 - **Parallel systems** — Delete the weaker fork and wire the canonical pattern; ship a first slice + `TASK-###` if the rest is large.
 

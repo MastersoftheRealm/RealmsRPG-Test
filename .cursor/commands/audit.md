@@ -1,6 +1,6 @@
 # Audit (session / task)
 
-**Read-only.** Score this chat / TASK-### against the three pillars below. Do **not** edit files, run formatters that write, or “fix” anything — report only.
+**Read-only by default.** Score this chat / TASK-### against the three pillars below. Do **not** edit product code or “fix” gaps — report only.
 
 Authority: `PR_CHECKLIST.md` § Owner commands + `ARCHITECTURE_CONSTITUTION.md`.
 
@@ -56,7 +56,7 @@ Optional args: `/audit TASK-502` = primary task; else infer from this chat + rec
 ### Cleanup candidates
 - Removals / wire-to-canonical safe for `/cleanup` (even if not DoD blockers)
 
-### Follow-ups (out of scope)
+### Follow-ups (propose only unless owner asked to file)
 - Items for `/global-audit`, `/debt`, or a new TASK-### — do not expand blast radius
 
 ### Next
@@ -65,7 +65,8 @@ Optional args: `/audit TASK-502` = primary task; else infer from this chat + rec
 
 ## Hard rules
 
-- **Zero edits.**
+- **Zero product edits.** Report only — do not “fix while auditing.”
+- **Follow-up filing exception:** If the owner’s message explicitly says to file tasks (e.g. “file follow-ups” / “make follow-up tasks”), you may edit `ACTIVE_TASKS.md` (+ brief changelog) **after** the report — use the **atomic task-filing** rules in `debt.md`. Still no product-code fixes in `/audit`.
 - Evidence over vibes.
 - If AC or owner feedback is unmet, verdict must not be “ready for done.”
 - “Docs honesty” alone is not a pass on pillar 1 if dead forks remain in scope.
