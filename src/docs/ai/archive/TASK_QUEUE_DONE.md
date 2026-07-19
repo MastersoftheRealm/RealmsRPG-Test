@@ -34,6 +34,8 @@
     - BUILD_VALIDATION T018/T020/T034/T035 corrected; npm run build + unit tests.
   notes: |
     Owner feedback 2026-07-19 after PR #45 merge. Fixes conflation of Secondary with Martial.
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/49
   evidence: |
     vitest path-ability-labels; npm run build
   build_validation: |
