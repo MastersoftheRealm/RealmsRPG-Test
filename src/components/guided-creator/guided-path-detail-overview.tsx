@@ -11,6 +11,7 @@ import { useCodexSkills } from '@/hooks';
 import { formatAbilityLabel } from '@/lib/constants/ability-effect-blurbs';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { speciesSkillToSummaryChipItem } from '@/lib/chip/species-skill-chips';
+import { resolvePathAbilityLabels } from '@/lib/guided-creator/path-ability-labels';
 import { cn } from '@/lib/utils';
 import type { AbilityName } from '@/types';
 import type { Archetype, ArchetypePathData } from '@/types/archetype';
@@ -57,54 +58,18 @@ export function GuidedPathDetailOverview({ path, pathData }: GuidedPathDetailOve
   }, [level1?.proficiency, path.martial_prof_start, path.power_prof_start, pathType]);
 
   const abilityChips = useMemo(() => {
+    const { primary, secondary } = resolvePathAbilityLabels(path);
     const chips: Array<{ key: string; label: string; variant?: 'primary' }> = [];
 
-    if (pathType === 'powered-martial') {
-      // Both Archetype Abilities are primary; call Power and Martial out explicitly.
-      const powerAbility = path.pow_abil ?? path.archetype_ability ?? null;
-      const martialAbility = path.mart_abil ?? path.secondary_ability ?? null;
-      if (powerAbility) {
-        chips.push({
-          key: 'power',
-          label: copy.archetypePowerAbility(formatAbilityLabel(powerAbility as AbilityName)),
-          variant: 'primary',
-        });
-      }
-      if (martialAbility) {
-        chips.push({
-          key: 'martial',
-          label: copy.archetypeMartialAbility(formatAbilityLabel(martialAbility as AbilityName)),
-          variant: 'primary',
-        });
-      }
-      return chips;
-    }
-
-    if (pathType === 'martial') {
-      const ability =
-        path.mart_abil ?? path.archetype_ability ?? path.secondary_ability ?? null;
-      if (ability) {
-        chips.push({
-          key: 'archetype',
-          label: copy.archetypeAbility(formatAbilityLabel(ability as AbilityName)),
-          variant: 'primary',
-        });
-      }
-      return chips;
-    }
-
-    // Power paths: one Archetype Ability; optional secondary is recommended, not a second Archetype Ability.
-    const primary = path.archetype_ability ?? path.pow_abil ?? null;
     if (primary) {
       chips.push({
-        key: 'archetype',
-        label: copy.archetypeAbility(formatAbilityLabel(primary as AbilityName)),
+        key: 'primary',
+        label: copy.primaryAbility(formatAbilityLabel(primary as AbilityName)),
         variant: 'primary',
       });
     }
 
-    const secondary = path.secondary_ability ?? null;
-    if (secondary && secondary !== primary) {
+    if (secondary) {
       chips.push({
         key: 'secondary',
         label: copy.secondaryAbility(formatAbilityLabel(secondary as AbilityName)),
@@ -112,7 +77,7 @@ export function GuidedPathDetailOverview({ path, pathData }: GuidedPathDetailOve
     }
 
     return chips;
-  }, [path, pathType]);
+  }, [path]);
 
   const recommendedAbilities = level1?.recommended_abilities;
 
@@ -131,22 +96,10 @@ export function GuidedPathDetailOverview({ path, pathData }: GuidedPathDetailOve
       .filter((item): item is NonNullable<typeof item> => Boolean(item));
   }, [level1?.skills, allSkills]);
 
-  const typeLabel =
-    pathType === 'martial'
-      ? copy.typeMartial
-      : pathType === 'powered-martial'
-        ? copy.typePoweredMartial
-        : copy.typePower;
-
   return (
     <div className="space-y-6">
       <div className="overflow-hidden rounded-card border border-border-light bg-surface shadow-card">
         <div className="space-y-3 p-4 sm:p-5">
-          <div className="flex flex-wrap items-center gap-2">
-            <DescriptorChip variant="primary" size="sm">
-              {typeLabel}
-            </DescriptorChip>
-          </div>
           {path.description?.trim() ? (
             <p className={cn(GUIDED_CHOICE_STYLES.body, 'whitespace-pre-wrap')}>
               {path.description.trim()}

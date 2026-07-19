@@ -1,3 +1,51 @@
+- id: TASK-544
+  title: Guided creator — Primary/Secondary Ability labels on path cards and details
+  created_at: 2026-07-19
+  created_by: owner
+  priority: medium
+  status: done
+  completed_at: 2026-07-19
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/lib/guided-creator/path-ability-labels.ts
+    - src/lib/guided-creator/path-ability-labels.test.ts
+    - src/components/guided-creator/steps/path-step.tsx
+    - src/components/guided-creator/guided-path-detail-overview.tsx
+    - src/components/shared/ability-score-grid.tsx
+    - src/lib/constants/copy/guided-creator-copy.ts
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Owner feedback: guided creator should label path abilities Primary and Secondary
+    (not Archetype Ability / Secondary Recommended). Path selection cards need Primary/
+    Secondary descriptor chips; More details should list only those chips and omit the
+    Power/Martial type tag.
+  acceptance_criteria:
+    - Path cards show Primary Ability / Secondary Ability descriptor chips when data exists.
+    - Path More details abilities use Primary/Secondary only; no Power/Martial type chip.
+    - AbilityScoreGrid pills use Primary/Secondary (visible + accessible names).
+    - BUILD_VALIDATION DEV-V-013 T018/T020/T034/T035 updated; npm run build + unit tests.
+  notes: |
+    Owner feedback 2026-07-19. Shared helper resolvePathAbilityLabels for cards + overview.
+    AbilityScoreGrid is shared with reveal; labels aligned sitewide for path pills.
+  evidence: |
+    npm run build; vitest path-ability-labels.test.ts
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T018
+      - DEV-V-013-T020
+      - DEV-V-013-T034
+      - DEV-V-013-T035
+  developer_test_plan: |
+    Suite DEV-V-013 T018, T020, T034, T035 — see BUILD_VALIDATION.md
+
+---
 - id: TASK-543
   title: Character sheet Skills — Value stepper + not clipped on desktop
   created_at: 2026-07-18
