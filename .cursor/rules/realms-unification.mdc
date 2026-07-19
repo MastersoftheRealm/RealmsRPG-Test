@@ -18,7 +18,7 @@ alwaysApply: false
 | Guided choice card hero art | `@/components/guided-creator` → **GuidedChoiceCard** + `guided-choice-image.ts` |
 | Admin / official card art | `@/components/shared` → **RealmsImageField** / **RealmsImagePicker** (`realms-images.ts`, ADR-0003) |
 | Sortable column headers | `@/components/shared` → ListHeader (default styling; see below) |
-| List selection modal (add-X, pick from library) | `@/components/shared` → UnifiedSelectionModal |
+| List selection modal (add-X, pick from library) | `@/components/shared` → UnifiedSelectionModal (list-first: Search+Filters; mode tabs in `scopeExtra`; SourceFilter/advanced in `headerExtra`) |
 | Source scope: All / Realms Library / My Library | `@/components/shared` → SourceFilter (built on SegmentedControl) |
 | Two–N option pill toggle (same look as Library / source filter) | `@/components/shared` → SegmentedControl |
 | Section headers with + | `@/components/shared` → SectionHeader |

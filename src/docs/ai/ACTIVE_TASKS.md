@@ -11,7 +11,9 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`.
 
-**Counts:** 10 agent-eligible (TASK-391 superseded/skip; TASK-514–518/520/521/522/523/524/525/526/527/528/529/530/536/537/538/539/540/541/542/543/544/545/546/547/548/565 archived) · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 10 agent-eligible (TASK-391 superseded/skip; TASK-514–518/520/521/522/523/524/525/526/527/528/529/530/536/537/538/539/540/541/542/543/544/545/546/547/548/564/565 archived) · waiting/blocked in WAITING_TASKS · done in archive.
+
+**Add-modal list-first chrome (2026-07-19):** **TASK-564 done** — UnifiedSelectionModal search+Filters toolbar; `scopeExtra` mode tabs; headerExtra collapsed by default; pending-qa **DEV-V-016-T014**.
 
 **Guided skills Ability + bonus tip (2026-07-19):** **TASK-548 done** — Ability chip on L1 rows; Skill Bonus InfoTippy formula; path-declined cards include Ability; pending-qa **DEV-V-013-T066**. (Renumbered from TASK-544–547 — those IDs taken on master; BV T066 because T065 = ability name tooltips.)
 

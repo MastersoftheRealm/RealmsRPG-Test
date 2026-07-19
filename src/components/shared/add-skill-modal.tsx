@@ -198,6 +198,8 @@ export function AddSkillModal({
         searchPlaceholder="Search Skills by name or description..."
         filterContent={filterContent}
         showFilters={true}
+        optionsActiveCount={abilityFilter ? 1 : 0}
+        optionsSummary={abilityFilter ? `Ability: ${abilityFilter}` : undefined}
         size="xl"
       />
     </>

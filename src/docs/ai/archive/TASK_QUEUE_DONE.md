@@ -1,3 +1,78 @@
+- id: TASK-564
+  title: Add/selection modals — list-first Filters chrome
+  created_at: 2026-07-19
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-19
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/shared/filters/filter-section.tsx
+    - src/components/shared/filters/source-filter.tsx
+    - src/components/shared/filters/index.ts
+    - src/components/shared/index.ts
+    - src/components/shared/unified-selection-modal.tsx
+    - src/components/character-sheet/add-library-item-modal.tsx
+    - src/components/character-sheet/add-library-item/power-header-extra.tsx
+    - src/components/character-sheet/add-feat-modal.tsx
+    - src/components/shared/add-skill-modal.tsx
+    - src/components/shared/add-sub-skill-modal.tsx
+    - src/components/creator/LoadFromLibraryModal.tsx
+    - src/components/crafting/CraftingItemSelectModal.tsx
+    - src/components/character-creator/steps/powers-step.tsx
+    - src/app/(main)/creature-creator/AddCreatureFeatModal.tsx
+    - src/app/(main)/creature-creator/page.tsx
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/technique-creator/page.tsx
+    - src/app/(main)/empowered-technique-creator/page.tsx
+    - src/app/(main)/species-creator/page.tsx
+    - src/app/(main)/item-creator/page.tsx
+    - .cursor/rules/realms-unification.mdc
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/guide/02-components-and-lists.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/FEATURE_INDEX_BARRELS.generated.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Add/load selection modals stacked always-visible source tabs, mode switches,
+    filter rows, and custom forms between search and the sticky footer, leaving
+    almost no room for the scrollable list on mobile and short desktop viewports.
+    Research + progressive-disclosure fix in shared chrome so the list is the
+    primary focus and Filters/search options stay secondary.
+  acceptance_criteria:
+    - Shared UnifiedSelectionModal / FilterSection compact variant: Search + Filters
+      on one toolbar row; headerExtra + filterContent collapsed by default on open.
+    - Primary mode tabs always visible via scopeExtra (Powers/Empowered, Armaments/
+      Equipment, feat-source, inventory type); SourceFilter stays under Filters.
+    - No new parallel modal chrome; Codex page FilterSection unchanged (page variant).
+    - Call sites can pass optionsSummary / optionsActiveCount; key add modals wired;
+      summary omitted when source is default All (sourceFilterSummary).
+    - MOBILE_UX + guide/02 + FEATURE_INDEX updated; BUILD_VALIDATION DEV-V-016-T014.
+    - npm run build passes.
+  notes: |
+    Owner requested TASK-564 (parallel agents used 547/548/565 on master). Extends existing shared components
+    (no new shared/ui file / ADR). Complements TASK-541 sticky footer.
+    Owner ack 2026-07-19: primary mode tabs always visible via `scopeExtra`;
+    SourceFilter / advanced filters remain collapsed under Filters.
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T014
+  developer_test_plan: |
+    Suite DEV-V-016 T014 — see BUILD_VALIDATION.md (list-first Filters chrome).
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/51
+  evidence: |
+    npm run build (pass); list-first chrome + scopeExtra mode tabs; sourceFilterSummary
+    gates default All; FilterSection aria-controls panel mount; LoadFromLibraryModal
+    forwards scopeExtra; pattern via UnifiedSelectionModal.
+    Merged with master 2026-07-19 (kept TASK-548/565 archive entries).
+
 - id: TASK-548
   title: Guided Skills — show contributing Ability + Skill Bonus formula tip
   created_at: 2026-07-19

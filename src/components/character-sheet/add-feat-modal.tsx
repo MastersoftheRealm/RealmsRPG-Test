@@ -243,6 +243,18 @@ export function AddFeatModal({
         searchPlaceholder="Search feats by name, description, or tags..."
         filterContent={filterContent}
         showFilters={true}
+        optionsActiveCount={
+          (selectedCategory ? 1 : 0) +
+          (selectedAbility ? 1 : 0) +
+          (showStateFeats ? 1 : 0) +
+          (showBlocked ? 1 : 0) +
+          (featType !== 'state' && showUpgradeableOnly ? 1 : 0)
+        }
+        optionsSummary={
+          [selectedCategory && `Category: ${selectedCategory}`, selectedAbility && `Ability: ${selectedAbility}`]
+            .filter(Boolean)
+            .join(' · ') || undefined
+        }
         hideDisabled={false}
         size="xl"
         className="md:max-h-[85vh]"

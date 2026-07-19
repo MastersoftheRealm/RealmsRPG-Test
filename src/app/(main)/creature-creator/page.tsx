@@ -10,7 +10,7 @@
 import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { UnifiedSelectionModal, GridListRow, ListHeader, SourceFilter, InnateToggle, SegmentedControl, SkillsAllocationPage, ValueStepper, InfoTippy, RealmsImageField } from '@/components/shared';
+import { UnifiedSelectionModal, GridListRow, ListHeader, SourceFilter, sourceFilterSummary, InnateToggle, SegmentedControl, SkillsAllocationPage, ValueStepper, InfoTippy, RealmsImageField } from '@/components/shared';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import { getSkillPointsHelp, subSkillsHelp } from '../../../../public/tooltip-text';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
@@ -1042,6 +1042,8 @@ function CreatureCreatorContent() {
         error: load.error,
         title: 'Load Creature',
         headerExtra: <SourceFilter value={load.source} onChange={load.setSource} />,
+        optionsSummary: sourceFilterSummary(load.source),
+        optionsActiveCount: load.source !== 'all' ? 1 : 0,
         searchPlaceholder: 'Search creatures by name, type, or level...',
         emptyMessage: load.emptyMessage,
         emptySubMessage: load.emptySubMessage,
@@ -1098,21 +1100,21 @@ function CreatureCreatorContent() {
           <UnifiedSelectionModal
             isOpen={showPowerModal}
             onClose={() => setShowPowerModal(false)}
-            headerExtra={
-              <div className="space-y-3">
-                <SourceFilter value={librarySource} onChange={setLibrarySource} />
-                <SegmentedControl<PowerModalTab>
-                  value={powerModalTab}
-                  onChange={setPowerModalTab}
-                  aria-label="Power modal type"
-                  tabs
-                  options={[
-                    { value: 'powers', label: 'Powers' },
-                    { value: 'empowered', label: 'Empowered Techniques' },
-                  ]}
-                />
-              </div>
+            scopeExtra={
+              <SegmentedControl<PowerModalTab>
+                value={powerModalTab}
+                onChange={setPowerModalTab}
+                aria-label="Power modal type"
+                tabs
+                options={[
+                  { value: 'powers', label: 'Powers' },
+                  { value: 'empowered', label: 'Empowered Techniques' },
+                ]}
+              />
             }
+            headerExtra={<SourceFilter value={librarySource} onChange={setLibrarySource} />}
+            optionsSummary={sourceFilterSummary(librarySource)}
+            optionsActiveCount={librarySource !== 'all' ? 1 : 0}
             onConfirm={(selected) => {
               const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
               const powers = items.map(displayItemToCreaturePower);
@@ -1121,8 +1123,8 @@ function CreatureCreatorContent() {
             items={powerModalTab === 'empowered' ? empoweredTechniqueSelectableItems : powerSelectableItems}
             title={powerModalTab === 'empowered' ? 'Select Empowered Techniques' : 'Select Powers'}
             description={powerModalTab === 'empowered'
-              ? 'Choose empowered techniques from your library or Realms Library and add them to the creature power list.'
-              : 'Choose powers from your library or Realms Library. Click a row (or the + button) to select, then click Add Selected.'}
+              ? 'Choose empowered techniques from your library or Realms Library. Open Filters to switch source.'
+              : 'Choose powers from your library or Realms Library. Switch list type above; open Filters for source.'}
             maxSelections={10}
             itemLabel={powerModalTab === 'empowered' ? 'empowered technique' : 'power'}
             searchPlaceholder={powerModalTab === 'empowered' ? 'Search empowered techniques...' : 'Search powers...'}
@@ -1140,6 +1142,8 @@ function CreatureCreatorContent() {
             isOpen={showTechniqueModal}
             onClose={() => setShowTechniqueModal(false)}
             headerExtra={<SourceFilter value={librarySource} onChange={setLibrarySource} />}
+            optionsSummary={sourceFilterSummary(librarySource)}
+            optionsActiveCount={librarySource !== 'all' ? 1 : 0}
             onConfirm={(selected) => {
               const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
               const techniques = items.map(displayItemToCreatureTechnique);
@@ -1147,7 +1151,7 @@ function CreatureCreatorContent() {
             }}
             items={techniqueSelectableItems}
             title="Select Techniques"
-            description="Choose techniques from your library or Realms Library. Click a row (or the + button) to select, then click Add Selected."
+            description="Choose techniques from your library or Realms Library. Open Filters to switch source."
             maxSelections={10}
             itemLabel="technique"
             searchPlaceholder="Search techniques..."
@@ -1177,24 +1181,24 @@ function CreatureCreatorContent() {
           <UnifiedSelectionModal
             isOpen={showArmamentModal}
             onClose={() => setShowArmamentModal(false)}
-            headerExtra={
-              <div className="space-y-3">
-                <SourceFilter value={librarySource} onChange={setLibrarySource} />
-                <SegmentedControl<InventoryTab>
-                  value={inventoryTab}
-                  onChange={setInventoryTab}
-                  aria-label="Inventory type"
-                  tabs
-                  options={[
-                    { value: 'all', label: 'All' },
-                    { value: 'weapon', label: 'Weapons' },
-                    { value: 'armor', label: 'Armor' },
-                    { value: 'shield', label: 'Shields' },
-                    { value: 'equipment', label: 'Equipment' },
-                  ]}
-                />
-              </div>
+            scopeExtra={
+              <SegmentedControl<InventoryTab>
+                value={inventoryTab}
+                onChange={setInventoryTab}
+                aria-label="Inventory type"
+                tabs
+                options={[
+                  { value: 'all', label: 'All' },
+                  { value: 'weapon', label: 'Weapons' },
+                  { value: 'armor', label: 'Armor' },
+                  { value: 'shield', label: 'Shields' },
+                  { value: 'equipment', label: 'Equipment' },
+                ]}
+              />
             }
+            headerExtra={<SourceFilter value={librarySource} onChange={setLibrarySource} />}
+            optionsSummary={sourceFilterSummary(librarySource)}
+            optionsActiveCount={librarySource !== 'all' ? 1 : 0}
             onConfirm={(selected) => {
               const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
               const armaments = items.map(displayItemToCreatureArmament);
@@ -1203,7 +1207,7 @@ function CreatureCreatorContent() {
             items={armamentSelectableItems}
             displayFilter={inventoryDisplayFilter}
             title="Select Inventory"
-            description="Choose inventory items from your library or Realms Library. Filter by type tabs, then click Add Selected."
+            description="Choose inventory items from your library or Realms Library. Switch type above; open Filters for source, then click Add Selected."
             maxSelections={10}
             itemLabel="inventory item"
             searchPlaceholder="Search inventory..."

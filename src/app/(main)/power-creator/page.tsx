@@ -24,7 +24,7 @@ import {
   type UseLoadModalLibraryReturn,
 } from '@/hooks';
 import { useAuthStore } from '@/stores';
-import { SourceFilter } from '@/components/shared/filters/source-filter';
+import { SourceFilter, sourceFilterSummary } from '@/components/shared/filters/source-filter';
 import { ErrorDisplay } from '@/components/shared';
 import {
   CreatorPageShell,
@@ -676,6 +676,8 @@ function PowerCreatorWorkspace({
         columns: load.columns,
         gridColumns: load.gridColumns,
         headerExtra: <SourceFilter value={load.source} onChange={load.setSource} />,
+        optionsSummary: sourceFilterSummary(load.source),
+        optionsActiveCount: load.source !== 'all' ? 1 : 0,
         emptyMessage: load.emptyMessage,
         emptySubMessage: load.emptySubMessage,
         searchPlaceholder: 'Search powers...',
