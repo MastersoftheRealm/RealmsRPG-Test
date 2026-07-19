@@ -1,4 +1,4 @@
-- id: TASK-544
+- id: TASK-545
   title: Guided Skills — show contributing Ability + Skill Bonus formula tip
   created_at: 2026-07-19
   created_by: owner
@@ -32,6 +32,7 @@
     Multi-ability Skills note “highest linked Ability” in the tip.
     Cleanup 2026-07-19: bonus tip child aria-label; Ability primary (vs Species descriptor);
     remove uses text-danger-fg; DESIGN_INTENT on tip helper/call site.
+    Renumbered from TASK-544 on merge — TASK-544 guided path Primary/Secondary (PR #45) already on master.
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/46
   evidence: |
@@ -42,6 +43,63 @@
       - DEV-V-013-T065
   developer_test_plan: |
     Suite DEV-V-013 T065 — see BUILD_VALIDATION.md
+
+---
+- id: TASK-544
+  title: Guided creator — Primary/Secondary Ability labels on path cards and details
+  created_at: 2026-07-19
+  created_by: owner
+  priority: medium
+  status: done
+  completed_at: 2026-07-19
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/lib/guided-creator/path-ability-labels.ts
+    - src/lib/guided-creator/path-ability-labels.test.ts
+    - src/components/guided-creator/steps/path-step.tsx
+    - src/components/guided-creator/guided-path-detail-overview.tsx
+    - src/components/guided-creator/steps/abilities-step.tsx
+    - src/components/shared/ability-score-grid.tsx
+    - src/lib/constants/copy/guided-creator-copy.ts
+    - src/docs/GAME_RULES.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Owner feedback: guided creator should label path abilities Primary and Secondary
+    (not Archetype Ability / Secondary Recommended). Path selection cards need Primary/
+    Secondary descriptor chips; More details should list only those chips and omit the
+    Power/Martial type tag.
+  acceptance_criteria:
+    - Path cards show Primary Ability / Secondary Ability descriptor chips when data exists.
+    - Path More details abilities use Primary/Secondary only; no Power/Martial type chip.
+    - AbilityScoreGrid pills use Primary/Secondary (visible + accessible names).
+    - BUILD_VALIDATION DEV-V-013 T018/T020/T034/T035 updated; npm run build + unit tests.
+  notes: |
+    Owner feedback 2026-07-19. Shared helper resolvePathAbilityLabels for cards + overview + select.
+    AbilityScoreGrid is shared with reveal; labels aligned sitewide for path pills.
+    Cleanup 2026-07-19: path select uses same helper SoT; dropped overview space-y-3 litter;
+    archive related_files honesty (abilities-step).
+    GAME_RULES 2026-07-19: Terminology + HP/EN use Primary/Secondary Ability (aligned with UI).
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/45
+  merged_at: |
+    2026-07-19
+  evidence: |
+    npm run build; vitest path-ability-labels.test.ts; CI green; merged to master via PR #45
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T018
+      - DEV-V-013-T020
+      - DEV-V-013-T034
+      - DEV-V-013-T035
+  developer_test_plan: |
+    Suite DEV-V-013 T018, T020, T034, T035 — see BUILD_VALIDATION.md
 
 ---
 - id: TASK-543
