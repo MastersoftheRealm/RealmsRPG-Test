@@ -42,6 +42,8 @@
     - BUILD_VALIDATION DEV-V-009-T025; targeted vitest; npm run build.
   notes: |
     Owner feedback 2026-07-19. Global fix (not UI bandaid): write + read paths.
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/48
   evidence: |
     vitest: dedupe-saved-parts, collect-sheet-traits, build-character; npm run build.
   build_validation: |
