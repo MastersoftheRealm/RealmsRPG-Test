@@ -2859,6 +2859,26 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-013-T065 — Guided skills Ability chip + Skill Bonus tip (TASK-544)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-544 |
+| **Where** | Guided creator → Skills (`/characters/new/guided`) |
+| **Needs** | Path + species with skills; abilities already set |
+
+**Steps**
+1. Open Skills. Confirm each listed Skill shows a contributing Ability chip (e.g. Strength) beside the name, before Species / path chips when present.
+2. Hover (desktop) or touch-hold (mobile) the Skill Bonus number between the ± steppers. Confirm a tip shows Ability + Skill Value = Skill Bonus with the current numbers.
+3. For a multi-ability Skill (e.g. Intimidate), confirm the chip matches the highest linked Ability and the tip notes that rule when applicable.
+4. Decline a path Skill so it appears in suggestions; confirm the card tags include the Ability (not only the path name).
+
+**Expected**
+- Players can see which Ability feeds each Skill and how the Skill Bonus is calculated without leaving the step.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 #### DEV-V-013-T064 — Path content smoke after archetype enrichment (TASK-530)
 
 | Field | Value |

@@ -1,6 +1,6 @@
 # ALL_FEEDBACK ? Consolidated & Curated
 
-Last updated: 2026-07-18 (sheet Skills Value stepper clip → TASK-543)
+Last updated: 2026-07-19 (guided skills Ability chip + Skill Bonus tip → TASK-544)
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -2472,6 +2472,15 @@ Notes
   Chip/mobile ui GLR items/chips/cards etc shouldn't just expand when you hit the item header thingy,but also if you hit the body to expand. Follow constitution, rules, guidelines
 - Expected: Expand/collapse from header **or** body — GridListRow mobile summary + non-interactive expanded panel; ExpandableChip expanded description; Options/buttons/chip groups keep their own handlers. GuidedChoiceCard select/"See more" grammar unchanged.
 - Disposition: Implemented as **TASK-539**. QA: DEV-V-021-T004.
+
+**Raw Feedback Log - 2026-07-19 (guided skills Ability + Skill Bonus tip)**
+- Date: 2026-07-19
+- Context: Guided creator → Skills step
+- Priority: Medium
+- Feedback (verbatim):
+  In the guided creator we should list the ability that contributes to the skills listed so people know what ability is tied to each skill. Also a simple hover/tap topltip on the skill bonus to explain how its calculated would be good.
+- Expected: Each listed Skill shows its contributing Ability; Skill Bonus has hover/tap help showing Ability + Skill Value = Skill Bonus.
+- Disposition: Implemented as **TASK-544**. QA: DEV-V-013-T065.
 
 **Raw Feedback Log - 2026-07-18 (sheet Skills Value stepper + clipped)**
 - Date: 2026-07-18

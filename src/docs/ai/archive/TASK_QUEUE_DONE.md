@@ -1,3 +1,45 @@
+- id: TASK-544
+  title: Guided Skills — show contributing Ability + Skill Bonus formula tip
+  created_at: 2026-07-19
+  created_by: owner
+  priority: medium
+  status: done
+  completed_at: 2026-07-19
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/guided-creator/guided-skills-panel.tsx
+    - src/lib/guided-creator/guided-skill-recommendations.ts
+    - src/lib/guided-creator/guided-skill-recommendations.test.ts
+    - public/tooltip-text.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Guided Skills L1 list did not show which Ability feeds each Skill, and the
+    Skill Bonus number had no explanation. Add Ability chips and a hover/tap
+    InfoTippy on the bonus with Ability + Skill Value = Skill Bonus.
+  acceptance_criteria:
+    - Each GuidedSkillsPanel row shows the contributing Ability (highest linked).
+    - Skill Bonus has hover/tap tip with current formula numbers (GAME_RULES terms).
+    - Path-declined suggestion cards include Ability tags/badges.
+    - BUILD_VALIDATION DEV-V-013-T065; npm run build; unit tests for suggestions.
+  notes: |
+    Owner feedback 2026-07-19. Tip copy in `getGuidedSkillBonusHelp` (tooltip-text.tsx).
+    Multi-ability Skills note “highest linked Ability” in the tip.
+  evidence: |
+    npm run build; vitest guided-skill-recommendations.test.ts
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T065
+  developer_test_plan: |
+    Suite DEV-V-013 T065 — see BUILD_VALIDATION.md
+
+---
 - id: TASK-543
   title: Character sheet Skills — Value stepper + not clipped on desktop
   created_at: 2026-07-18
