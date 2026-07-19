@@ -1193,8 +1193,17 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Expected** | All six ability names and six defense names are word-tied help triggers; copy matches `tooltip-text.tsx` (`getAbilityHelp` / `getDefenseHelp`) without repeating the name (e.g. “Acuity reflects…”, “Might (Strength) resists…”); no separate Info icons beside the names. |
 | **Report** | DEV-V-009-T026: PASS / FAIL / SKIP — |
 
+#### DEV-V-009-T027 — Add Proficiency uses UnifiedSelectionModal (TASK-567)
 
-
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-567 |
+| **Where** | `/characters/[id]` → Library → Proficiencies → + Add (any owned category) |
+| **Needs** | Owned character in edit mode; Codex parts/properties available |
+| **Steps** | 1. Open Add Power Part (or Technique / Weapon-Shield / Armor property) proficiency. 2. Confirm Search + ListHeader + selectable rows match other add-X modals (USM chrome; Cancel / Add Proficiency sticky in footer). 3. Select a row; set option levels in the footer panel; confirm Total TP updates. 4. Add Proficiency — row appears under Owned; modal closes. 5. Reopen the same Add variant — selection and option levels are empty (fresh mount). 6. Optional ~360px: footer actions stay pinned without scrolling the list. |
+| **Expected** | No parallel hand-rolled list shell; single-select + option levels via USM `footerExtra`; overspend still allowed when Total TP > 0; remount clears abandoned UI state (same as DEV-V-019-T007 step 4). |
+| **Report** | DEV-V-009-T027: PASS / FAIL / SKIP — |
 
 ---
 

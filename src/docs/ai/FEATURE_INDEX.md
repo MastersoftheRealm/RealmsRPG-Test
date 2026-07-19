@@ -83,7 +83,7 @@
 | **Entity card art — product/schema** | REALMS §5.0.3 + `guide/03-entity-card-art.md` + `SUPABASE_SCHEMA.md` §2.5a |
 | Hub list row (Encounters/Crafting) | `HubListRow` |
 | Sortable column headers | `ListHeader` — data columns asc/desc by default; only spacer/action columns `sortable: false` (TASK-488) |
-| Selection modal (add/pick from library) | `UnifiedSelectionModal` (default `flexLayout` + `fullScreenOnMobile`; list-first: Search + Filters toolbar; `scopeExtra` always-visible mode tabs; `headerExtra`/`filterContent` collapsed in `FilterSection` compact; Cancel/Add Selected via Modal `footer`; `maxSelections` soft limit when max ≠ 1; `maxSelections={1}` replaces selection; `confirmLabel` / optional `primaryActions`) |
+| Selection modal (add/pick from library) | `UnifiedSelectionModal` (default `flexLayout` + `fullScreenOnMobile`; list-first: Search + Filters toolbar; `scopeExtra` always-visible mode tabs; `headerExtra`/`filterContent` collapsed in `FilterSection` compact; Cancel/Add Selected via Modal `footer`; `maxSelections` soft limit when max ≠ 1; `maxSelections={1}` replaces selection; `confirmLabel` / optional `primaryActions` / `footerExtra`). Sheet add proficiency: `AddProficiencyModal` (thin USM wrapper; option levels in `footerExtra` — TASK-567) |
 | + → ✓ selection button | `SelectionToggle`; equipped toggle: `EquipToggle`; innate: `InnateToggle` |
 | Source scope All / Realms / My Library | `SourceFilter` (on `SegmentedControl`) |
 | 2–N pill toggle | `SegmentedControl` |

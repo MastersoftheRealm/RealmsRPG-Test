@@ -1,3 +1,43 @@
+- id: TASK-567
+  title: Migrate AddProficiencyModal onto UnifiedSelectionModal
+  created_at: 2026-07-19
+  created_by: agent
+  priority: medium
+  status: done
+  completed_at: 2026-07-19
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/add-proficiency-modal.tsx
+    - src/components/shared/unified-selection-modal.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/guide/02-components-and-lists.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    /debt inventory: AddProficiencyModal still hand-rolls Modal + SearchInput + GridListRow
+    while add-feat / add-library-item / guided L2 use UnifiedSelectionModal. Migrate to USM
+    (list-first Filters chrome) without changing proficiency selection semantics.
+  acceptance_criteria:
+    - AddProficiencyModal wraps UnifiedSelectionModal (or thin wrapper) — no parallel list shell.
+    - Search/sort/list/footer match other add-X modals; fullScreenOnMobile + sticky footer.
+    - Behavior parity for existing proficiency picks; BUILD_VALIDATION or targeted test if suite exists.
+    - FEATURE_INDEX / guide note; npm run build.
+  completed_work: |
+    - Rewrote AddProficiencyModal as thin USM wrapper (maxSelections=1).
+    - Option levels + Total TP via footerExtra; confirmDisabled when TP ≤ 0.
+    - Dropped parallel Modal/SearchInput/ListHeader/GridListRow/useModalListState shell.
+    - FEATURE_INDEX + guide/02; DEV-V-009-T027; DEVELOPER_TASK_QUEUE pending-qa.
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T027
+  developer_test_plan: |
+    Suite DEV-V-009 T027 — see BUILD_VALIDATION.md (also remount covered by DEV-V-019-T007 step 4).
+  notes: |
+    Filed from /debt 2026-07-19. AddCombatantModal → TASK-571; AdminSpecies → TASK-572.
+  evidence: |
+    npm run build (pass 2026-07-19).
+
 - id: TASK-461
   title: Sitewide compact fact rollout — cards and GridListRow parity
   created_at: 2026-07-15
