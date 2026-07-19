@@ -15,6 +15,7 @@
     - src/components/guided-creator/steps/abilities-step.tsx
     - src/components/shared/ability-score-grid.tsx
     - src/lib/constants/copy/guided-creator-copy.ts
+    - src/docs/GAME_RULES.md
     - src/docs/ai/BUILD_VALIDATION.md
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/ai/DEVELOPER_TASK_QUEUE.md
@@ -34,8 +35,9 @@
   notes: |
     Owner feedback 2026-07-19. Shared helper resolvePathAbilityLabels for cards + overview + select.
     AbilityScoreGrid is shared with reveal; labels aligned sitewide for path pills.
-    Cleanup 2026-07-19: path select uses same helper SoT; DESIGN_INTENT for GAME_RULES vs UI labels;
-    dropped overview space-y-3 litter; archive related_files honesty (abilities-step).
+    Cleanup 2026-07-19: path select uses same helper SoT; dropped overview space-y-3 litter;
+    archive related_files honesty (abilities-step).
+    GAME_RULES 2026-07-19: Terminology + HP/EN use Primary/Secondary Ability (aligned with UI).
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/45
   evidence: |
