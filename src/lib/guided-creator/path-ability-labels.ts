@@ -1,6 +1,10 @@
 /**
- * Resolve Primary / Secondary Ability labels for guided path cards and deep-dives.
+ * Resolve Primary / Secondary Ability labels for guided path cards, deep-dives, and select.
  * Mirrors admin Primary Ability / Secondary Ability fields with pow/mart fallbacks.
+ *
+ * DESIGN_INTENT: GAME_RULES still names governing scores “Archetype Ability” (and for
+ * Powered-Martial, Power/Martial Archetype Abilities). Guided creator UI labels them
+ * Primary / Secondary Ability per owner product language — same fields, different words.
  */
 
 import type { AbilityName, Archetype } from '@/types';

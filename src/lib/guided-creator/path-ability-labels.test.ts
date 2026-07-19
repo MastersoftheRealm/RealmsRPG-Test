@@ -59,4 +59,18 @@ describe('resolvePathAbilityLabels', () => {
       )
     ).toEqual({ primary: 'acuity', secondary: 'agility' });
   });
+
+  it('prefers admin Primary/Secondary fields over pow/mart when both set', () => {
+    expect(
+      resolvePathAbilityLabels(
+        path({
+          type: 'powered-martial',
+          archetype_ability: 'intelligence',
+          secondary_ability: 'strength',
+          pow_abil: 'acuity',
+          mart_abil: 'agility',
+        })
+      )
+    ).toEqual({ primary: 'intelligence', secondary: 'strength' });
+  });
 });

@@ -12,6 +12,7 @@
     - src/lib/guided-creator/path-ability-labels.test.ts
     - src/components/guided-creator/steps/path-step.tsx
     - src/components/guided-creator/guided-path-detail-overview.tsx
+    - src/components/guided-creator/steps/abilities-step.tsx
     - src/components/shared/ability-score-grid.tsx
     - src/lib/constants/copy/guided-creator-copy.ts
     - src/docs/ai/BUILD_VALIDATION.md
@@ -31,8 +32,10 @@
     - AbilityScoreGrid pills use Primary/Secondary (visible + accessible names).
     - BUILD_VALIDATION DEV-V-013 T018/T020/T034/T035 updated; npm run build + unit tests.
   notes: |
-    Owner feedback 2026-07-19. Shared helper resolvePathAbilityLabels for cards + overview.
+    Owner feedback 2026-07-19. Shared helper resolvePathAbilityLabels for cards + overview + select.
     AbilityScoreGrid is shared with reveal; labels aligned sitewide for path pills.
+    Cleanup 2026-07-19: path select uses same helper SoT; DESIGN_INTENT for GAME_RULES vs UI labels;
+    dropped overview space-y-3 litter; archive related_files honesty (abilities-step).
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/45
   evidence: |

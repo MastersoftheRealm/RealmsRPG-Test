@@ -16,7 +16,7 @@ import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { resolvePathAbilityLabels } from '@/lib/guided-creator/path-ability-labels';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
-import { DEFAULT_ABILITIES, type AbilityName, type Archetype, type ArchetypeCategory } from '@/types';
+import { DEFAULT_ABILITIES, type Archetype, type ArchetypeCategory } from '@/types';
 import {
   martialPathType,
   poweredMartialPathType,
@@ -34,10 +34,10 @@ function pathAbilityTags(path: Archetype): string[] {
   const { primary, secondary } = resolvePathAbilityLabels(path);
   const tags: string[] = [];
   if (primary) {
-    tags.push(detailCopy.primaryAbility(formatAbilityLabel(primary as AbilityName)));
+    tags.push(detailCopy.primaryAbility(formatAbilityLabel(primary)));
   }
   if (secondary) {
-    tags.push(detailCopy.secondaryAbility(formatAbilityLabel(secondary as AbilityName)));
+    tags.push(detailCopy.secondaryAbility(formatAbilityLabel(secondary)));
   }
   return tags;
 }
@@ -93,20 +93,16 @@ export function PathStep() {
   const handleSelect = (path: Archetype) => {
     const type = (path.type || 'power') as ArchetypeCategory;
     const pathChanged = draft.archetypePathId !== String(path.id);
-    const primaryAbility = path.archetype_ability ?? path.pow_abil ?? null;
-    const secondaryAbility = path.mart_abil ?? path.secondary_ability ?? null;
+    // Same SoT as path cards / More details chips (admin Primary / Secondary fields).
+    const { primary, secondary } = resolvePathAbilityLabels(path);
 
     // Same path re-tap: keep all downstream picks. New path: invalidate dependents.
     updateDraft({
       archetypePathId: String(path.id),
       archetypeType: type,
-      pow_abil: type === 'martial' ? null : primaryAbility,
+      pow_abil: type === 'martial' ? null : primary,
       mart_abil:
-        type === 'power'
-          ? null
-          : type === 'powered-martial'
-            ? secondaryAbility
-            : secondaryAbility ?? primaryAbility,
+        type === 'power' ? null : type === 'powered-martial' ? secondary : primary,
       ...(pathChanged
         ? {
             // Soft-default only runs when Abilities mounts with abilitiesMode null —

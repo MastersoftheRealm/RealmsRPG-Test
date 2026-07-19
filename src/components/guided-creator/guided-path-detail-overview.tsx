@@ -64,7 +64,7 @@ export function GuidedPathDetailOverview({ path, pathData }: GuidedPathDetailOve
     if (primary) {
       chips.push({
         key: 'primary',
-        label: copy.primaryAbility(formatAbilityLabel(primary as AbilityName)),
+        label: copy.primaryAbility(formatAbilityLabel(primary)),
         variant: 'primary',
       });
     }
@@ -72,7 +72,7 @@ export function GuidedPathDetailOverview({ path, pathData }: GuidedPathDetailOve
     if (secondary) {
       chips.push({
         key: 'secondary',
-        label: copy.secondaryAbility(formatAbilityLabel(secondary as AbilityName)),
+        label: copy.secondaryAbility(formatAbilityLabel(secondary)),
       });
     }
 
@@ -99,7 +99,7 @@ export function GuidedPathDetailOverview({ path, pathData }: GuidedPathDetailOve
   return (
     <div className="space-y-6">
       <div className="overflow-hidden rounded-card border border-border-light bg-surface shadow-card">
-        <div className="space-y-3 p-4 sm:p-5">
+        <div className="p-4 sm:p-5">
           {path.description?.trim() ? (
             <p className={cn(GUIDED_CHOICE_STYLES.body, 'whitespace-pre-wrap')}>
               {path.description.trim()}
