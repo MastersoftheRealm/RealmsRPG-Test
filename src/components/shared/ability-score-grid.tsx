@@ -38,7 +38,7 @@ export interface AbilityScoreGridProps {
   abilities: Abilities;
   powerAbility?: AbilityName;
   martialAbility?: AbilityName;
-  /** Path secondary recommended ability (pill when distinct from power/martial). */
+  /** Path Secondary Ability (pill when distinct from power/martial Primary). */
   secondaryAbility?: AbilityName;
   mode?: 'display' | 'edit';
   onAbilityChange?: (ability: AbilityName, value: number) => void;
@@ -56,7 +56,7 @@ function normalizeAbilityKey(value?: AbilityName | null): string | null {
 }
 
 /**
- * Secondary recommended ability for grid pills when distinct from power/martial tiles.
+ * Secondary Ability for grid pills when distinct from power/martial Primary tiles.
  * Shared by abilities step + reveal (and any other AbilityScoreGrid call sites).
  */
 export function resolveDistinctSecondaryAbility(
@@ -91,7 +91,7 @@ function getPathAbilityHighlight(
   const secondary = normalizeAbilityKey(secondaryAbility);
   if (pow && key === pow) return 'power';
   if (mart && key === mart) return 'martial';
-  // Secondary only when it is not already the power/martial archetype ability.
+  // Secondary only when it is not already the power/martial Primary Ability.
   if (secondary && key === secondary && secondary !== pow && secondary !== mart) {
     return 'secondary';
   }
@@ -121,20 +121,21 @@ function abilityGradientClass(role: PathAbilityRole | null): string {
 /**
  * Visible pill copy — keep single-line and short on narrow tiles so wrapping cannot
  * grow the straddling pill into the ability name. Full terms stay on aria-label/title.
+ * Guided path cards / overview use Primary + Secondary (not Power/Martial tags).
  */
 function pathAbilityVisibleLabel(role: PathAbilityRole, hybrid: boolean): string {
   if (role === 'secondary') return 'Secondary';
-  if (role === 'power') return hybrid ? 'Power' : 'Archetype';
-  if (role === 'martial') return hybrid ? 'Martial' : 'Archetype';
-  return 'Archetype';
+  if (role === 'power') return 'Primary';
+  if (role === 'martial') return hybrid ? 'Secondary' : 'Primary';
+  return 'Primary';
 }
 
-/** Full game term for screen readers / hover (matches path overview wording). */
+/** Full term for screen readers / hover (matches path overview wording). */
 function pathAbilityAccessibleName(role: PathAbilityRole, hybrid: boolean): string {
-  if (role === 'secondary') return 'Secondary Recommended Ability';
-  if (role === 'power') return hybrid ? 'Power Archetype Ability' : 'Archetype Ability';
-  if (role === 'martial') return hybrid ? 'Martial Archetype Ability' : 'Archetype Ability';
-  return 'Archetype Ability';
+  if (role === 'secondary') return 'Secondary Ability';
+  if (role === 'power') return 'Primary Ability';
+  if (role === 'martial') return hybrid ? 'Secondary Ability' : 'Primary Ability';
+  return 'Primary Ability';
 }
 
 function PathAbilityLabel({ role, hybrid }: { role: PathAbilityRole; hybrid: boolean }) {

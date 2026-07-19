@@ -1,6 +1,6 @@
 # ALL_FEEDBACK ? Consolidated & Curated
 
-Last updated: 2026-07-19 (ability/defense word tooltips → TASK-544)
+Last updated: 2026-07-19 (ability/defense word tooltips → TASK-545; path Primary/Secondary → TASK-544)
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -16,7 +16,7 @@ How to use
 
 ### Tooltips (canonical standard)
 - **Tooltips:** static copy in `public/tooltip-text.tsx`, `InfoTippy` (`@floating-ui/react`). TASK-376 + TASK-392 complete. Do not reintroduce DB tooltips.
-- **Ability/defense definitions (2026-07-19):** Word-tied tips (no Info icon) via `WordHelpTip` + `getAbilityHelp` / `getDefenseHelp` on character sheet and guided Abilities — **TASK-544**.
+- **Ability/defense definitions (2026-07-19):** Word-tied tips (no Info icon) via `WordHelpTip` + `getAbilityHelp` / `getDefenseHelp` on character sheet and guided Abilities — **TASK-545**.
 
 ---
 
@@ -2483,6 +2483,15 @@ Notes
 - Expected: In Skills edit mode on desktop (`lg+` narrow Skills column), each Value stepper shows a full usable `+` (not clipped by the panel/card edge); horizontal scroll via TableScroll if the table is wider than the panel.
 - Disposition: Implemented as **TASK-543** (renumbered; TASK-540–542 taken by auth / sticky footer / inventory+roll-log). QA: DEV-V-009-T024.
 
+**Raw Feedback Log - 2026-07-19 (guided path Primary/Secondary Ability labels)**
+- Date: 2026-07-19
+- Context: Guided creator → Path selection + More details + Abilities grid
+- Priority: Medium
+- Feedback (verbatim):
+  In the guided creator instrad of listing it as archetype ability and secondary, make it Primary and Secondary ability. In the archetype path selection screen ensure descriptor chips appear for Primary Abilty and Secondary on the cards for paths, in more details for an archetype path the abilities need only list Primary and Secondary and we dont need the "power" or "martial" tag in the more details modal.
+- Expected: Path cards show Primary Ability / Secondary Ability chips; More details Path Abilities use those labels only (no Power/Martial type tag); ability grid pills say Primary / Secondary.
+- Disposition: Implemented as **TASK-544**. QA: DEV-V-013-T018, T020, T034, T035.
+
 **Raw Feedback Log - 2026-07-18 (roll log bonus dark mode + inventory add equipment)**
 - Date: 2026-07-18
 - Context: Character sheet roll log; Library → Inventory → Add equipment
@@ -2517,4 +2526,4 @@ Notes
 - Feedback (verbatim):
   For character sheets/guided creator we need hover/tap tooltips (no icon just tied to the word) for all abilities, and defenses. [owner-provided ability + defense definition copy]. Use our integrated systems already existing for tooltips following our constitution and rules and using the proper docs to reference tooltip implementation.
 - Expected: Word-tied hover/focus/touch-hold tips on ability and defense names (no Info icon); copy from tooltip-text.tsx via InfoTippy/WordHelpTip.
-- Disposition: Implemented as **TASK-544**. QA: DEV-V-009-T025 + DEV-V-013-T065.
+- Disposition: Implemented as **TASK-545** (renumbered; TASK-544 taken by path Primary/Secondary PR #45). QA: DEV-V-009-T025 + DEV-V-013-T065.

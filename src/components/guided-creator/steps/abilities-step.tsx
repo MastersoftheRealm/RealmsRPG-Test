@@ -42,7 +42,7 @@ export function AbilitiesStep() {
       : draft.archetypeType === 'powered-martial'
         ? (draft.mart_abil ?? undefined)
         : (draft.mart_abil ?? primary ?? undefined);
-  // Secondary pill when path lists a secondary recommended ability distinct from archetype tiles.
+  // Secondary pill when path lists a Secondary Ability distinct from Primary tiles.
   const secondaryAbilityProp = useMemo(
     () =>
       resolveDistinctSecondaryAbility(
