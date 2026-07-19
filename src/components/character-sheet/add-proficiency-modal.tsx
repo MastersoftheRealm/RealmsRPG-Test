@@ -174,7 +174,7 @@ export function AddProficiencyModal({
   // Option levels seed empty; parent remounts via key={variant} while open.
 
   const buildProf = useCallback(
-    (item: SelectableItem): CharacterProficiency | null => {
+    (item: SelectableItem): CharacterProficiency => {
       if (isPart) {
         const part = item.data as PartLike;
         const kind = variant === 'power_part' ? 'power_part' : 'technique_part';
@@ -190,7 +190,7 @@ export function AddProficiencyModal({
       const item = selectedItems[0];
       if (!item) return;
       const prof = buildProf(item);
-      if (!prof || calculateProficiencyTP(prof) <= 0) return;
+      if (calculateProficiencyTP(prof) <= 0) return;
       onAdd(prof);
       // UnifiedSelectionModal closes after onConfirm — do not double-call onClose.
     },
@@ -201,8 +201,7 @@ export function AddProficiencyModal({
     (selectedItems: SelectableItem[]) => {
       const item = selectedItems[0];
       if (!item) return true;
-      const prof = buildProf(item);
-      return !prof || calculateProficiencyTP(prof) <= 0;
+      return calculateProficiencyTP(buildProf(item)) <= 0;
     },
     [buildProf]
   );
@@ -211,6 +210,12 @@ export function AddProficiencyModal({
     (selectedItems: SelectableItem[]) => {
       const item = selectedItems[0];
       if (!item) return null;
+
+      const totalTp = (
+        <p className="text-xs text-text-muted dark:text-text-secondary">
+          Total TP for this proficiency: {calculateProficiencyTP(buildProf(item))}
+        </p>
+      );
 
       if (isPart) {
         const selectedPart = item.data as PartLike;
@@ -248,30 +253,14 @@ export function AddProficiencyModal({
                 );
               })}
             </div>
-            <p className="text-xs text-text-muted dark:text-text-secondary">
-              Total TP for this proficiency:{' '}
-              {calculateProficiencyTP(
-                partToProf(
-                  selectedPart,
-                  variant as 'power_part' | 'technique_part',
-                  op1Level,
-                  op2Level,
-                  op3Level
-                )
-              )}
-            </p>
+            {totalTp}
           </div>
         );
       }
 
       const selectedProperty = item.data as PropertyLike;
       if ((selectedProperty.op_1_tp ?? 0) <= 0) {
-        return (
-          <p className="text-xs text-text-muted dark:text-text-secondary">
-            Total TP for this proficiency:{' '}
-            {calculateProficiencyTP(propertyToProf(selectedProperty, op1Level))}
-          </p>
-        );
+        return totalTp;
       }
 
       return (
@@ -296,14 +285,11 @@ export function AddProficiencyModal({
               aria-label="Option level"
             />
           </div>
-          <p className="text-xs text-text-muted dark:text-text-secondary">
-            Total TP for this proficiency:{' '}
-            {calculateProficiencyTP(propertyToProf(selectedProperty, op1Level))}
-          </p>
+          {totalTp}
         </div>
       );
     },
-    [isPart, variant, op1Level, op2Level, op3Level]
+    [isPart, op1Level, op2Level, op3Level, buildProf]
   );
 
   return (
@@ -317,7 +303,7 @@ export function AddProficiencyModal({
       maxSelections={1}
       columns={isPart ? PART_COLUMNS : PROPERTY_COLUMNS}
       gridColumns={isPart ? '1fr 0.5fr 0.5fr 0.5fr 0.5fr' : '1fr 0.5fr 0.5fr'}
-      itemLabel="proficiency"
+      itemLabel={isPart ? 'part' : 'property'}
       emptyMessage="No parts or properties found."
       emptySubMessage={
         items.length === 0

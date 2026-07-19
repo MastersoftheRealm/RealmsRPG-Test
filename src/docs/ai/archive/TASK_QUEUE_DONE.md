@@ -27,6 +27,8 @@
     - Option levels + Total TP via footerExtra; confirmDisabled when TP ≤ 0.
     - Dropped parallel Modal/SearchInput/ListHeader/GridListRow/useModalListState shell.
     - FEATURE_INDEX + guide/02; DEV-V-009-T027; DEVELOPER_TASK_QUEUE pending-qa.
+    - `/cleanup`: consolidated Total TP onto buildProf; chrome comment no longer cites
+      add-proficiency as custom Modal; itemLabel part/property.
   build_validation: |
     suite: DEV-V-009
     tests:
@@ -36,7 +38,7 @@
   notes: |
     Filed from /debt 2026-07-19. AddCombatantModal → TASK-571; AdminSpecies → TASK-572.
   evidence: |
-    npm run build (pass 2026-07-19).
+    npm run build (pass 2026-07-19); cleanup pass same day.
 
 - id: TASK-461
   title: Sitewide compact fact rollout — cards and GridListRow parity

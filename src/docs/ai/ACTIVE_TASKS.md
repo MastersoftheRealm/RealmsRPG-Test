@@ -414,7 +414,7 @@ Do **not** read the done archive at session start.
     - src/docs/ai/FEATURE_INDEX.md
   description: |
     AdminSpecies trait picker hand-rolls Modal+Search+GLR (pre-USM shell). AdminTraits
-    nests similar list in edit modal.     Prefer USM (TASK-567 AddProficiency pattern shipped), or admin-only exception.
+    nests similar list in edit modal. Prefer USM (TASK-567 AddProficiency pattern shipped), or admin-only exception.
   acceptance_criteria:
     - Migrate AdminSpecies trait picker to USM, or document admin-only
       exception; AdminTraits nested list shares shell or is scoped as editor chrome.
