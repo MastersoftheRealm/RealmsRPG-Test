@@ -67,6 +67,8 @@
     Suite DEV-V-016 T014 — see BUILD_VALIDATION.md (list-first Filters chrome).
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/51
+  merged_at: |
+    2026-07-19
   evidence: |
     npm run build (pass); list-first chrome + scopeExtra mode tabs; sourceFilterSummary
     gates default All; FilterSection aria-controls panel mount; LoadFromLibraryModal
