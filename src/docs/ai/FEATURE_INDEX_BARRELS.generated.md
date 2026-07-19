@@ -93,6 +93,7 @@ Generated: 2026-07-19
 - SkillSourceChip
 - SourceFilter
 - sourceFilterLabel
+- sourceFilterSummary
 - SpeciesTraitCard
 - splitDamageDiceAndType
 - SummaryChipList

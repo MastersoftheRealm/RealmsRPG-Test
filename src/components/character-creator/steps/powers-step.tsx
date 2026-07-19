@@ -18,7 +18,7 @@ import { Button, IconButton, Spinner, EmptyState, DescriptorChip } from '@/compo
 import { useUserPowers, useUserTechniques, useUserEmpoweredTechniques, usePowerParts, useTechniqueParts, useOfficialLibrary, useItemProperties, useMergedSpecies, useCodexSkills, useTraits, useCreatorPathData, type PowerPart, type TechniquePart } from '@/hooks';
 import { getValidationIssuesForStep, getStepCompletion } from '@/lib/character-creator-validation';
 import type { UserPower, UserTechnique } from '@/hooks/use-user-library';
-import { SourceFilter, sourceFilterLabel, type SourceFilterValue } from '@/components/shared';
+import { SourceFilter, sourceFilterSummary, type SourceFilterValue } from '@/components/shared';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
@@ -1051,7 +1051,7 @@ export function PowersStep() {
           />
         }
         headerExtra={<SourceFilter value={source} onChange={setSource} />}
-        optionsSummary={sourceFilterLabel(source)}
+        optionsSummary={sourceFilterSummary(source)}
         optionsActiveCount={source !== 'all' ? 1 : 0}
         onConfirm={powerModalTab === 'empowered' ? handleEmpoweredPowerSelect : handlePowerSelect}
         items={powerModalTab === 'empowered' ? allEmpoweredSelectableItems : allPowerSelectableItems}
@@ -1081,7 +1081,7 @@ export function PowersStep() {
         isOpen={showTechniqueModal}
         onClose={() => setShowTechniqueModal(false)}
         headerExtra={<SourceFilter value={source} onChange={setSource} />}
-        optionsSummary={sourceFilterLabel(source)}
+        optionsSummary={sourceFilterSummary(source)}
         optionsActiveCount={source !== 'all' ? 1 : 0}
         onConfirm={handleTechniqueSelect}
         items={allTechniqueSelectableItems}

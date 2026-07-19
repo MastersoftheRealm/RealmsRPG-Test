@@ -6,7 +6,7 @@
 'use client';
 
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
-import { sourceFilterLabel } from '@/components/shared/filters/source-filter';
+import { sourceFilterSummary } from '@/components/shared/filters/source-filter';
 import { useAddLibraryItemData, type AddLibraryItemType } from '@/hooks/use-add-library-item-data';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 import type { ReactNode } from 'react';
@@ -88,7 +88,7 @@ export function AddLibraryItemModal({
       : getListHeaderColumns(itemType);
 
   // Mode tabs are always visible; summary/badge cover Filters-only state (source).
-  const optionsSummary = sourceFilterLabel(source);
+  const optionsSummary = sourceFilterSummary(source);
   const optionsActiveCount = source !== 'all' ? 1 : 0;
 
   return (

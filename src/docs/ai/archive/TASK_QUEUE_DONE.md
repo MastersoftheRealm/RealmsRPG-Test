@@ -47,8 +47,11 @@
   acceptance_criteria:
     - Shared UnifiedSelectionModal / FilterSection compact variant: Search + Filters
       on one toolbar row; headerExtra + filterContent collapsed by default on open.
+    - Primary mode tabs always visible via scopeExtra (Powers/Empowered, Armaments/
+      Equipment, feat-source, inventory type); SourceFilter stays under Filters.
     - No new parallel modal chrome; Codex page FilterSection unchanged (page variant).
-    - Call sites can pass optionsSummary / optionsActiveCount; key add modals wired.
+    - Call sites can pass optionsSummary / optionsActiveCount; key add modals wired;
+      summary omitted when source is default All (sourceFilterSummary).
     - MOBILE_UX + guide/02 + FEATURE_INDEX updated; BUILD_VALIDATION DEV-V-016-T014.
     - npm run build passes.
   notes: |
@@ -65,8 +68,9 @@
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/51
   evidence: |
-    npm run build (pass); `/cleanup` wired optionsSummary on remaining headerExtra
-    sites + FilterSection aria-controls panel mount; pattern via UnifiedSelectionModal.
+    npm run build (pass); list-first chrome + scopeExtra mode tabs; sourceFilterSummary
+    gates default All; FilterSection aria-controls panel mount; LoadFromLibraryModal
+    forwards scopeExtra; pattern via UnifiedSelectionModal.
 
 - id: TASK-546
   title: Fix duplicate traits / part chips / feats on character sheets

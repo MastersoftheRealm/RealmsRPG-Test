@@ -12,7 +12,7 @@ import { useMemo, useState } from 'react';
 import { useUserItems, useEquipment, useItemProperties, useOfficialLibrary } from '@/hooks';
 import {
   SourceFilter,
-  sourceFilterLabel,
+  sourceFilterSummary,
   type SourceFilterValue,
 } from '@/components/shared/filters/source-filter';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
@@ -192,7 +192,7 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
     onClose();
   };
 
-  const optionsSummary = sourceFilterLabel(source);
+  const optionsSummary = sourceFilterSummary(source);
   const optionsActiveCount = source !== 'all' ? 1 : 0;
 
   return (

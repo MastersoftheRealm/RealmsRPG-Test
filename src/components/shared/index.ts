@@ -253,6 +253,7 @@ export {
   SelectFilter,
   SourceFilter,
   sourceFilterLabel,
+  sourceFilterSummary,
   type SourceFilterValue,
 } from './filters';
 

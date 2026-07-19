@@ -22,7 +22,7 @@ import {
 } from '@/hooks';
 import { CREATURE_TYPES, CREATOR_CACHE_KEYS, CACHE_EXPIRY_MS } from '@/lib/game/creator-constants';
 import { CreatorPageShell, CreatorSummaryPanel, CollapsibleSection } from '@/components/creator';
-import { SourceFilter, sourceFilterLabel } from '@/components/shared/filters/source-filter';
+import { SourceFilter, sourceFilterSummary } from '@/components/shared/filters/source-filter';
 import {
   UnifiedSelectionModal,
   type SelectableItem,
@@ -556,7 +556,7 @@ export default function SpeciesCreatorPage() {
         isLoading: load.isLoading,
         error: load.error,
         headerExtra: <SourceFilter value={load.source} onChange={load.setSource} />,
-        optionsSummary: sourceFilterLabel(load.source),
+        optionsSummary: sourceFilterSummary(load.source),
         optionsActiveCount: load.source !== 'all' ? 1 : 0,
         emptyMessage: load.emptyMessage,
         emptySubMessage: load.emptySubMessage,

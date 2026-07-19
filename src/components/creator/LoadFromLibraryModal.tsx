@@ -20,6 +20,8 @@ export interface LoadFromLibraryModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
+  /** Always-visible primary mode chrome (pass-through to UnifiedSelectionModal). */
+  scopeExtra?: ReactNode;
   /** Secondary chrome (e.g. SourceFilter) — collapsed under Filters in UnifiedSelectionModal. */
   headerExtra?: ReactNode;
   optionsSummary?: ReactNode;
@@ -39,6 +41,7 @@ export function LoadFromLibraryModal({
   isLoading,
   error,
   title,
+  scopeExtra,
   headerExtra,
   optionsSummary,
   optionsActiveCount,
@@ -61,6 +64,7 @@ export function LoadFromLibraryModal({
       maxSelections={1}
       columns={columns}
       gridColumns={gridColumns}
+      scopeExtra={scopeExtra}
       headerExtra={headerExtra}
       optionsSummary={optionsSummary}
       optionsActiveCount={optionsActiveCount}

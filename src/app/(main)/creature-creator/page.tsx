@@ -10,7 +10,7 @@
 import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { UnifiedSelectionModal, GridListRow, ListHeader, SourceFilter, sourceFilterLabel, InnateToggle, SegmentedControl, SkillsAllocationPage, ValueStepper, InfoTippy, RealmsImageField } from '@/components/shared';
+import { UnifiedSelectionModal, GridListRow, ListHeader, SourceFilter, sourceFilterSummary, InnateToggle, SegmentedControl, SkillsAllocationPage, ValueStepper, InfoTippy, RealmsImageField } from '@/components/shared';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import { getSkillPointsHelp, subSkillsHelp } from '../../../../public/tooltip-text';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
@@ -1042,7 +1042,7 @@ function CreatureCreatorContent() {
         error: load.error,
         title: 'Load Creature',
         headerExtra: <SourceFilter value={load.source} onChange={load.setSource} />,
-        optionsSummary: sourceFilterLabel(load.source),
+        optionsSummary: sourceFilterSummary(load.source),
         optionsActiveCount: load.source !== 'all' ? 1 : 0,
         searchPlaceholder: 'Search creatures by name, type, or level...',
         emptyMessage: load.emptyMessage,
@@ -1113,7 +1113,7 @@ function CreatureCreatorContent() {
               />
             }
             headerExtra={<SourceFilter value={librarySource} onChange={setLibrarySource} />}
-            optionsSummary={sourceFilterLabel(librarySource)}
+            optionsSummary={sourceFilterSummary(librarySource)}
             optionsActiveCount={librarySource !== 'all' ? 1 : 0}
             onConfirm={(selected) => {
               const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
@@ -1142,7 +1142,7 @@ function CreatureCreatorContent() {
             isOpen={showTechniqueModal}
             onClose={() => setShowTechniqueModal(false)}
             headerExtra={<SourceFilter value={librarySource} onChange={setLibrarySource} />}
-            optionsSummary={sourceFilterLabel(librarySource)}
+            optionsSummary={sourceFilterSummary(librarySource)}
             optionsActiveCount={librarySource !== 'all' ? 1 : 0}
             onConfirm={(selected) => {
               const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
@@ -1197,7 +1197,7 @@ function CreatureCreatorContent() {
               />
             }
             headerExtra={<SourceFilter value={librarySource} onChange={setLibrarySource} />}
-            optionsSummary={sourceFilterLabel(librarySource)}
+            optionsSummary={sourceFilterSummary(librarySource)}
             optionsActiveCount={librarySource !== 'all' ? 1 : 0}
             onConfirm={(selected) => {
               const items = selected.map((s: SelectableItem) => s.data as DisplayItem);

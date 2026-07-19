@@ -28,6 +28,11 @@ export function sourceFilterLabel(value: SourceFilterValue): string {
   return OPTIONS.find((o) => o.value === value)?.label ?? 'All sources';
 }
 
+/** Summary only when source is non-default — avoids a permanent "All sources" chrome line. */
+export function sourceFilterSummary(value: SourceFilterValue): string | undefined {
+  return value === 'all' ? undefined : sourceFilterLabel(value);
+}
+
 export function SourceFilter({ value, onChange, className }: SourceFilterProps) {
   return (
     <SegmentedControl
