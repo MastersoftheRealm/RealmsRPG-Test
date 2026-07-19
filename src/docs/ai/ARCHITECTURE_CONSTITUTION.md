@@ -85,15 +85,16 @@ Require owner review before merging:
 ## Anti-debt
 
 - Prefer **delete** the weaker of two parallel systems.
-- Cleanup sprints beat eternal “compat layer” docs — run `/debt` on demand.
+- Prefer **extend** existing shared/ui/hook/lib (`FEATURE_INDEX` + barrels) over new parallel helpers/modals/parsers.
+- Cleanup must **remove** clutter and prove feedback/AC in code — not grow docs theater.
 - When consolidating, ship a first slice + precise follow-ups in `ACTIVE_TASKS.md` — not aspirational prose only.
 - Blocked / human-owned work lives in `WAITING_TASKS.md` (not the session hot path).
-- **Session (on demand):** `/audit` then `/cleanup` — this chat / one TASK-###. **Repo (on demand):** `/debt`. See `PR_CHECKLIST.md` § Owner commands.
+- **Session (on demand):** `/audit` → `/cleanup` (one TASK-### / this chat). **Repo (on demand):** `/global-audit` → `/debt`. See `PR_CHECKLIST.md` § Owner commands.
 
 ## On-demand deep refs
 
 - Patterns / components / gotchas → `AGENT_GUIDE.md` hub → `guide/` appendices
 - Feature map → `FEATURE_INDEX.md` + generated `FEATURE_INDEX_BARRELS.generated.md`
 - PR failure-mode checklist → `PR_CHECKLIST.md` (includes owner commands)
-- Slash commands → `.cursor/commands/` (`audit`, `cleanup`)
+- Slash commands → `.cursor/commands/` (`audit`, `cleanup`, `global-audit`, `debt`)
 - Task process → `AI_TASK_QUEUE.md` (process only; tasks live in `ACTIVE_TASKS.md` / `WAITING_TASKS.md`)

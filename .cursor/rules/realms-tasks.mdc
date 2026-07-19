@@ -30,7 +30,7 @@ alwaysApply: true
 
 **Migrations:** Prefer Supabase MCP `apply_migration`; else Dashboard SQL. SQL in `sql/`. Codex: `realms-codex-data.mdc`.
 
-**Owner commands (on demand):** `/audit` → `/cleanup` (session / one TASK-###); `/debt` (repo-wide anti-debt). Authority: `PR_CHECKLIST.md` § Owner commands; `.cursor/commands/`.
+**Owner commands (on demand):** `/audit` → `/cleanup` (session / one TASK-###; pillars: remove clutter, meet feedback/AC, constitutional shared-first additions); `/global-audit` → `/debt` (repo inventory then apply). Authority: `PR_CHECKLIST.md` § Owner commands; `.cursor/commands/`.
 
 # Feedback Processing
 
