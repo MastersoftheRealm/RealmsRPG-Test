@@ -11,6 +11,8 @@
     - src/components/guided-creator/guided-skills-panel.tsx
     - src/components/shared/ability-score-grid.tsx
     - public/tooltip-text.tsx
+    - src/docs/ai/guide/04-floating-ui-tooltips.md
+    - src/lib/tooltips/README.md
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/ai/BUILD_VALIDATION.md
     - src/docs/ai/DEVELOPER_TASK_QUEUE.md
@@ -30,11 +32,12 @@
     - BUILD_VALIDATION DEV-V-013-T067; npm run build.
   notes: |
     Owner feedback 2026-07-19 with screenshots (Tamer Skills + Abilities).
-    shortName retained on ABILITY_DISPLAY_INFO for other call sites that may still need abbr.
+    ABILITY_DISPLAY_INFO.shortName kept on the exported shape; grid always shows full `name`.
+    Cleanup 2026-07-19: restore WordHelpTip 44px touch target on display tiles; tip docs name-once.
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/52
   evidence: |
-    npm run build
+    npm run build; /audit → /cleanup touch target + tip docs
   build_validation: |
     suite: DEV-V-013
     tests:

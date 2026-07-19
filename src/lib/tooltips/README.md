@@ -49,7 +49,7 @@ import { getAbilityPointsHelp } from '../../../../public/tooltip-text';
 />
 ```
 
-**Word-tied label tips (no Info icon):** use `WordHelpTip` + `getAbilityHelp` / `getDefenseHelp` from `tooltip-text.tsx` (ability/defense names on the sheet and guided creator — TASK-547). Same Floating UI engine as `InfoTippy`.
+**Word-tied label tips (no Info icon):** use `WordHelpTip` + `getAbilityHelp` / `getDefenseHelp` from `tooltip-text.tsx` (ability/defense names on the sheet and guided creator — TASK-547). Tip copy should name the term once (not “Acuity. Acuity…” — TASK-566). Same Floating UI engine as `InfoTippy`.
 
 Lookup table: `legacy-tooltip-key-map.ts`.
 

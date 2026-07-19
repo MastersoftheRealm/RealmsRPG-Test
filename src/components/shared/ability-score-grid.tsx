@@ -22,6 +22,7 @@ export const ABILITY_DISPLAY_ORDER: AbilityName[] = [
   'charisma',
 ];
 
+/** Display names for the six abilities. `shortName` kept on the exported shape for callers that want abbr; the grid always shows `name` (TASK-566). */
 export const ABILITY_DISPLAY_INFO: Record<
   AbilityName,
   { name: string; shortName: string }
@@ -231,8 +232,8 @@ export function AbilityScoreGrid({
                   'font-bold uppercase text-text-muted dark:text-text-secondary',
                   isEdit
                     ? 'text-xs tracking-wide sm:text-[11px] sm:tracking-wider'
-                    : // Compact tip target in display tiles so cards are not 44px-name + score tall.
-                      'w-full min-h-8 min-w-0 justify-center px-0.5 text-center text-[10px] leading-tight tracking-wide sm:min-h-9 sm:text-[11px] sm:tracking-wider'
+                    : // Full-width label; keep WordHelpTip default 44px touch target (MOBILE_UX).
+                      'w-full min-w-0 justify-center px-0.5 text-center text-[10px] leading-tight tracking-wide sm:text-[11px] sm:tracking-wider'
                 )}
               >
                 {info.name}
