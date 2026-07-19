@@ -22,7 +22,7 @@ import { DEFAULT_DEFENSE_SKILLS } from '@/types';
 import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
 import type { GuidedDraft } from '@/stores/guided-creator-store';
 import type { Archetype, ArchetypePathData } from '@/types/archetype';
-import type { Species, Trait } from '@/hooks';
+import type { Species } from '@/hooks';
 import { computeStartingCurrency } from '@/lib/guided-creator/equipment-currency';
 import { mergeLoadoutArmaments } from '@/lib/guided-creator/resolve-loadout-items';
 import { buildSuggestedAbilityArray } from '@/lib/game/suggested-abilities';
@@ -56,7 +56,6 @@ export interface BuildGuidedCharacterContext {
   archetype?: Archetype;
   pathData?: ArchetypePathData;
   species?: Species | null;
-  allTraits?: Trait[];
   codexSkills?: Array<{ id: string | number; name?: string; ability?: string; category?: string }>;
   /** Codex feats — resolve archetype/character feat display names on save. */
   codexFeats?: Array<{ id?: string | number; name?: string }>;

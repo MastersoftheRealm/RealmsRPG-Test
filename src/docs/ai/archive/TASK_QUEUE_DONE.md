@@ -11,6 +11,7 @@
     - src/lib/library/dedupe-saved-parts.ts
     - src/lib/character/collect-sheet-traits.ts
     - src/lib/guided-creator/build-character.ts
+    - src/components/guided-creator/steps/reveal-step.tsx
     - src/lib/data-enrichment.ts
     - src/lib/library-sync.ts
     - src/lib/library/part-display.ts
@@ -26,6 +27,7 @@
     - src/docs/ai/DEVELOPER_TASK_QUEUE.md
     - src/docs/ai/ACTIVE_TASKS.md
     - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ai/guide/06-creators-and-loadouts.md
     - src/docs/ALL_FEEDBACK_CLEAN.md
   description: |
     Character sheets showed duplicate expandable part chips on powers/techniques,
@@ -42,6 +44,8 @@
     - BUILD_VALIDATION DEV-V-009-T025; targeted vitest; npm run build.
   notes: |
     Owner feedback 2026-07-19. Global fix (not UI bandaid): write + read paths.
+    Cleanup 2026-07-19: drop dead allTraits from guided build context/reveal-step;
+    archive related_files includes guide/06 + reveal-step.
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/48
   evidence: |
