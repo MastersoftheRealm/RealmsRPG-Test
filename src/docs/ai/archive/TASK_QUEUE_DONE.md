@@ -31,6 +31,8 @@
   notes: |
     Owner feedback 2026-07-19 with screenshots (Tamer Skills + Abilities).
     shortName retained on ABILITY_DISPLAY_INFO for other call sites that may still need abbr.
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/52
   evidence: |
     npm run build
   build_validation: |
