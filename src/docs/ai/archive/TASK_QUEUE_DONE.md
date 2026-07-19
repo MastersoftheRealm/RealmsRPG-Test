@@ -44,6 +44,8 @@
       - DEV-V-013-T065
   developer_test_plan: |
     Suite DEV-V-009 T025 + DEV-V-013 T065 — see BUILD_VALIDATION.md.
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/47
 
 ---
 - id: TASK-543
