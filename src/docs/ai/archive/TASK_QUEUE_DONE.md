@@ -33,6 +33,8 @@
   notes: |
     Owner feedback 2026-07-19. Shared helper resolvePathAbilityLabels for cards + overview.
     AbilityScoreGrid is shared with reveal; labels aligned sitewide for path pills.
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/45
   evidence: |
     npm run build; vitest path-ability-labels.test.ts
   build_validation: |
