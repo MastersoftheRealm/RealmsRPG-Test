@@ -2869,8 +2869,8 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | **Needs** | Path + species with skills; abilities already set |
 
 **Steps**
-1. Open Skills. Confirm each listed Skill shows a contributing Ability chip (e.g. Strength) beside the name, before Species / path chips when present.
-2. Hover (desktop) or touch-hold (mobile) the Skill Bonus number between the ± steppers. Confirm a tip shows Ability + Skill Value = Skill Bonus with the current numbers.
+1. Open Skills. Confirm each listed Skill shows a contributing Ability chip (e.g. Strength) beside the name, before Species / path chips when present. Ability uses the primary chip style (distinct from Species descriptor).
+2. Hover (desktop) or touch-hold (mobile) the Skill Bonus number between the ± steppers. Confirm a tip shows Ability + Skill Value = Skill Bonus with the current numbers. Keyboard: focus the bonus control — accessible name includes the bonus and “how … Skill Bonus is calculated.”
 3. For a multi-ability Skill (e.g. Intimidate), confirm the chip matches the highest linked Ability and the tip notes that rule when applicable.
 4. Decline a path Skill so it appears in suggestions; confirm the card tags include the Ability (not only the path name).
 

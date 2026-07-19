@@ -141,7 +141,11 @@ export function getSkillPointsHelp(
   );
 }
 
-/** Guided Skills step — how a listed Skill Bonus is calculated (proficient base skills). */
+/**
+ * Guided Skills step — how a listed Skill Bonus is calculated (proficient base skills).
+ * DESIGN_INTENT: Parameterized help like getAbilityPointsHelp (live numbers + static formula
+ * structure in tooltip-text). Supplementary InfoTippy copy — not a generic stat popover.
+ */
 export function getGuidedSkillBonusHelp(options: {
   abilityLabel: string;
   abilityValue: number;

@@ -30,10 +30,12 @@
   notes: |
     Owner feedback 2026-07-19. Tip copy in `getGuidedSkillBonusHelp` (tooltip-text.tsx).
     Multi-ability Skills note “highest linked Ability” in the tip.
+    Cleanup 2026-07-19: bonus tip child aria-label; Ability primary (vs Species descriptor);
+    remove uses text-danger-fg; DESIGN_INTENT on tip helper/call site.
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/46
   evidence: |
-    npm run build; vitest guided-skill-recommendations.test.ts
+    npm run build; vitest guided-skill-recommendations.test.ts; /audit → /cleanup a11y+tokens
   build_validation: |
     suite: DEV-V-013
     tests:

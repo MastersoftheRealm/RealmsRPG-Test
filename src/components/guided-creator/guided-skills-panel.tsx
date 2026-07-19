@@ -120,8 +120,9 @@ function GuidedSkillRow({
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="font-nunito font-semibold text-text-primary">{skill.name}</span>
+              {/* DESIGN_INTENT: Ability = primary (guided ability chips); Species = descriptor; path = primary source */}
               {abilityLabel && (
-                <DescriptorChip variant="descriptor" size="sm" title={`Contributing Ability: ${abilityLabel}`}>
+                <DescriptorChip variant="primary" size="sm" title={`Contributing Ability: ${abilityLabel}`}>
                   {abilityLabel}
                 </DescriptorChip>
               )}
@@ -158,6 +159,8 @@ function GuidedSkillRow({
             size="md"
             title={`Decrease ${skillName} Skill Value`}
           />
+          {/* DESIGN_INTENT: Skill Bonus tip uses InfoTippy + getGuidedSkillBonusHelp (parameterized
+              like getAbilityPointsHelp) — supplementary formula copy with live numbers, not a required control. */}
           {bonusHelp ? (
             <InfoTippy
               content={bonusHelp}
@@ -166,6 +169,7 @@ function GuidedSkillRow({
             >
               <button
                 type="button"
+                aria-label={`${formatBonus(bonus)}, how ${skillName} Skill Bonus is calculated`}
                 className={cn(
                   'min-w-[2.75rem] min-h-11 px-1 text-center font-display text-lg font-bold tabular-nums rounded-md',
                   'hover:bg-surface-alt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2',
@@ -199,7 +203,7 @@ function GuidedSkillRow({
             size="sm"
             onClick={onRemove}
             label={`Remove ${skillName}`}
-            className="shrink-0 text-danger-700 hover:bg-danger-light dark:text-danger-400 min-h-11 min-w-11"
+            className="shrink-0 text-danger-fg hover:bg-danger-light min-h-11 min-w-11"
           >
             <X className="h-4 w-4" aria-hidden />
           </IconButton>
