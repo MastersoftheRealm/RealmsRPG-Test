@@ -180,3 +180,44 @@ export function InfoTippy({
     </>
   );
 }
+
+export interface WordHelpTipProps {
+  content: ReactNode;
+  /** Accessible name for the word trigger (required). */
+  label: string;
+  /** Visible label text (or short/full name spans). */
+  children: ReactNode;
+  className?: string;
+  placement?: TooltipPlacement;
+  disabled?: boolean;
+}
+
+// DESIGN_INTENT: Definition help on the word itself (not an Info icon sibling).
+// 44px touch target; InfoTippy hover/focus/touch-hold; copy from tooltip-text.tsx.
+/** Word-tied contextual help for ability/defense names (sheet + guided creator). */
+export function WordHelpTip({
+  content,
+  label,
+  children,
+  className,
+  placement = 'top',
+  disabled = false,
+}: WordHelpTipProps) {
+  return (
+    <InfoTippy content={content} label={label} placement={placement} disabled={disabled}>
+      <button
+        type="button"
+        aria-label={label}
+        className={cn(
+          'inline-flex items-center justify-center rounded-sm cursor-help',
+          'min-h-[var(--touch-target-min,44px)] min-w-[var(--touch-target-min,44px)] px-1',
+          'bg-transparent border-0 p-0 m-0 font-inherit text-inherit leading-inherit tracking-inherit',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2',
+          className
+        )}
+      >
+        {children}
+      </button>
+    </InfoTippy>
+  );
+}

@@ -11,9 +11,13 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`.
 
-**Counts:** 10 agent-eligible (TASK-391 superseded/skip; TASK-514–518/520/521/522/523/524/525/526/527/528/529/530/536/537/538/539/540/541/542/543/544/545/565 archived) · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 10 agent-eligible (TASK-391 superseded/skip; TASK-514–518/520/521/522/523/524/525/526/527/528/529/530/536/537/538/539/540/541/542/543/544/545/546/547/565 archived) · waiting/blocked in WAITING_TASKS · done in archive.
 
 **Guided feats L2 add modal (2026-07-19):** **TASK-565 done** — See more Feats opens UnifiedSelectionModal (not in-step card dump); pending-qa **DEV-V-013-T012**.
+
+**Ability/defense word tooltips (2026-07-19):** **TASK-547 done** — `WordHelpTip` + `getAbilityHelp` / `getDefenseHelp` on sheet, guided Abilities, skills defenses; pending-qa **DEV-V-009-T026** / **DEV-V-013-T065**. (Renumbered from conflicting TASK-544/545/546.)
+
+**Sheet list duplicates (2026-07-19):** **TASK-546 done** — guided trait save + part/entity dedupe (creators/sync/calc/sheet); pending-qa **DEV-V-009-T025**. (Renumbered from TASK-544/545 — those IDs taken by path ability work on master.)
 
 **Archetype Ability vs Primary/Secondary UX (2026-07-19):** **TASK-545 done** — restore GAME_RULES Archetype Ability; powered-martial = two Primary chips; hybrid grid Power/Martial; Secondary only for distinct recommended. pending-qa **DEV-V-013-T018/T020/T034/T035**.
 

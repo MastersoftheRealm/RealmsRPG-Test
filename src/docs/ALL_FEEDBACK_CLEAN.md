@@ -1,6 +1,6 @@
 # ALL_FEEDBACK ? Consolidated & Curated
 
-Last updated: 2026-07-19 (Guided feats See more → add modal → TASK-565)
+Last updated: 2026-07-19 (Guided feats L2 modal → TASK-565; ability/defense word tooltips → TASK-547)
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -16,6 +16,7 @@ How to use
 
 ### Tooltips (canonical standard)
 - **Tooltips:** static copy in `public/tooltip-text.tsx`, `InfoTippy` (`@floating-ui/react`). TASK-376 + TASK-392 complete. Do not reintroduce DB tooltips.
+- **Ability/defense definitions (2026-07-19):** Word-tied tips (no Info icon) via `WordHelpTip` + `getAbilityHelp` / `getDefenseHelp` on character sheet and guided Abilities — **TASK-547**.
 
 ---
 
@@ -2491,6 +2492,15 @@ Notes
 - Expected: See more Feats / See more Character Feats opens an add modal (UnifiedSelectionModal grammar like Browse all Skills / Loadout / Powers), not an in-step full-catalog card grid.
 - Disposition: Implemented as **TASK-565**. QA: DEV-V-013-T012.
 
+**Raw Feedback Log - 2026-07-19 (duplicate sheet lists / part chips / traits / feats)**
+- Date: 2026-07-19
+- Context: Character sheets — powers, power/technique expandable part chips, traits, feats; guided creator new characters
+- Priority: Critical
+- Feedback (verbatim):
+  A major bug: on character sheets, some lists, powers, power parts lists, techniques/techniques expandable parts chips, etc there are many cases of duplicates in thede areas, such as a power having 2 or 3 of the same expandable part chip listed. Same for dome traits and Feats being listed on new characters and such, could be a backend storing error, how guided creator handles new character data, how data is being loaded, etc. Requires thorough investigation to fix globally not just bandaid and ensure our best practices for the codebase health are followed.
+- Expected: Unique part chips per power/technique; unique traits/feats on new and existing characters; fix at save/load/enrichment layers (not display-only bandaid).
+- Disposition: Implemented as **TASK-546** (renumbered; TASK-544/545 taken by path ability UX on master). Root causes: guided `selectedTraits` included species traits (sheet also lists species from codex); library parts arrays concatenated without dedupe on creator save/sync/calc. Shared `dedupeSavedParts` / `collectSheetTraits`. QA: DEV-V-009-T025.
+
 **Raw Feedback Log - 2026-07-19 (Archetype Ability vs Primary/Secondary UX clarification)**
 - Date: 2026-07-19
 - Context: After TASK-544 / PR #45 — GAME_RULES + powered-martial labeling
@@ -2535,3 +2545,12 @@ Notes
   people put in an email in that's valid it says invalid email?
 - Expected: Valid addresses are accepted; only true format failures say invalid email. SMTP/confirmation-send failures must not be mislabeled as invalid email.
 - Disposition: Implemented as **TASK-540**. Root cause: register/forgot-password mapped any error containing `"email"` to “Invalid email address.” QA: DEV-V-024-T004–T005.
+
+**Raw Feedback Log - 2026-07-19 (ability/defense word tooltips)**
+- Date: 2026-07-19
+- Context: Character sheet Abilities/Defenses; guided creator Abilities
+- Priority: High
+- Feedback (verbatim):
+  For character sheets/guided creator we need hover/tap tooltips (no icon just tied to the word) for all abilities, and defenses. [owner-provided ability + defense definition copy]. Use our integrated systems already existing for tooltips following our constitution and rules and using the proper docs to reference tooltip implementation.
+- Expected: Word-tied hover/focus/touch-hold tips on ability and defense names (no Info icon); copy from tooltip-text.tsx via InfoTippy/WordHelpTip.
+- Disposition: Implemented as **TASK-547** (renumbered; TASK-544/545/546 taken by PRs #45/#49/#48). QA: DEV-V-009-T026 + DEV-V-013-T065.

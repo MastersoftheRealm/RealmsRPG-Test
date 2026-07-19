@@ -46,6 +46,130 @@
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/50
   merged_at: |
 
+- id: TASK-547
+  title: Ability and defense name tooltips (sheet + guided creator)
+  created_at: 2026-07-19
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-19
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - public/tooltip-text.tsx
+    - src/components/shared/info-tippy.tsx
+    - src/components/shared/ability-score-grid.tsx
+    - src/components/shared/skills-allocation-page.tsx
+    - src/components/shared/index.ts
+    - src/components/character-sheet/abilities-section.tsx
+    - src/components/creator/ability-score-editor.tsx
+    - src/lib/tooltips/README.md
+    - src/docs/ai/guide/04-floating-ui-tooltips.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/FEATURE_INDEX_BARRELS.generated.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ai/archive/TASK_QUEUE_DONE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - .cursor/rules/realms-unification.mdc
+  description: |
+    Hover/tap (touch-hold) definition tooltips on ability and defense names for the
+    character sheet and guided creator — tip tied to the word itself (no Info icon).
+    Copy lives in public/tooltip-text.tsx; trigger via shared WordHelpTip (InfoTippy).
+  acceptance_criteria:
+    - All six abilities and six defenses have word-tied WordHelpTip triggers on the sheet.
+    - Guided Abilities step (AbilityScoreGrid) uses the same ability tips.
+    - Defense tips on SkillsAllocationPage when defense bonuses are shown.
+    - Copy matches owner-provided ability/defense definitions in tooltip-text.tsx.
+    - BUILD_VALIDATION DEV-V-009-T026 + DEV-V-013-T065; npm run build.
+  notes: |
+    Owner request 2026-07-19. Extends InfoTippy with WordHelpTip (no new shared file).
+    Does not replace getTooltipTextByPowerAbility (archetype pick guidance) or
+    ABILITY_EFFECT_BLURBS (always-visible Layer 1 cards).
+    Cleanup 2026-07-19: DESIGN_INTENT on WordHelpTip; AbilityScoreGrid aria on score
+    (not tile); guide/04 + tooltips README; related_files honesty.
+    Renumbered from TASK-544→545→546→547 on merge — path ability PRs #45/#49 and sheet
+    duplicates PR #48 claimed earlier IDs; BV tip test is T026 (T025 = duplicates).
+  build_validation: |
+    suite: DEV-V-009 / DEV-V-013
+    tests:
+      - DEV-V-009-T026
+      - DEV-V-013-T065
+  developer_test_plan: |
+    Suite DEV-V-009 T026 + DEV-V-013 T065 — see BUILD_VALIDATION.md.
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/47
+  merged_at: |
+    2026-07-19
+  evidence: |
+    npm run build (agent); /audit → /cleanup; CI green; merged to master via PR #47.
+
+---
+
+- id: TASK-546
+  title: Fix duplicate traits / part chips / feats on character sheets
+  created_at: 2026-07-19
+  created_by: owner
+  priority: critical
+  status: done
+  completed_at: 2026-07-19
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/lib/library/dedupe-saved-parts.ts
+    - src/lib/character/collect-sheet-traits.ts
+    - src/lib/guided-creator/build-character.ts
+    - src/components/guided-creator/steps/reveal-step.tsx
+    - src/lib/data-enrichment.ts
+    - src/lib/library-sync.ts
+    - src/lib/library/part-display.ts
+    - src/lib/calculators/power-calc.ts
+    - src/lib/calculators/technique-calc.ts
+    - src/lib/library-columnar.ts
+    - src/components/character-sheet/feats-tab.tsx
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/technique-creator/page.tsx
+    - src/app/(main)/empowered-technique-creator/page.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ai/guide/06-creators-and-loadouts.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Character sheets showed duplicate expandable part chips on powers/techniques,
+    and duplicate traits/feats on new (especially guided) characters. Root causes:
+    guided save stuffed species traits into ancestry.selectedTraits (sheet also
+    lists species traits from codex); creators/sync concatenated parts without
+    uniqueness; load/enrichment/display had no global dedupe.
+  acceptance_criteria:
+    - Shared dedupeSavedParts / dedupeEntityRefs used on creator save, library sync,
+      cost/display calc, enrichment, and sheet part chips.
+    - Guided save stores ancestry picks only in selectedTraits; sheet collectSheetTraits
+      tolerates legacy doubles.
+    - Feats/powers/techniques lists dedupe by normalized id.
+    - BUILD_VALIDATION DEV-V-009-T025; targeted vitest; npm run build.
+  notes: |
+    Owner feedback 2026-07-19. Global fix (not UI bandaid): write + read paths.
+    Cleanup 2026-07-19: drop dead allTraits from guided build context/reveal-step;
+    archive related_files includes guide/06 + reveal-step.
+    Renumbered from TASK-544→545→546 on merge — TASK-544/545 path ability work (PR #45/#49).
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/48
+  merged_at: |
+    2026-07-19
+  evidence: |
+    vitest: dedupe-saved-parts, collect-sheet-traits, build-character; npm run build; CI green; merged to master via PR #48.
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T025
+  developer_test_plan: |
+    Suite DEV-V-009 T025 — see BUILD_VALIDATION.md (no duplicate traits/part chips/feats).
+
 - id: TASK-545
   title: Correct Archetype Ability vs Primary/Secondary UX (powered-martial)
   created_at: 2026-07-19
@@ -98,7 +222,6 @@
   developer_test_plan: |
     Suite DEV-V-013 T018, T020, T034, T035 — see BUILD_VALIDATION.md
 
----
 - id: TASK-544
   title: Guided creator — Primary/Secondary Ability labels on path cards and details
   created_at: 2026-07-19

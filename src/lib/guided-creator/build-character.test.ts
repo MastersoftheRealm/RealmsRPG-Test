@@ -150,6 +150,63 @@ describe('buildGuidedCharacterPayload', () => {
     expect(lean.libraryTabVisibility).toEqual({ techniques: false });
   });
 
+  it('stores ancestry picks only in selectedTraits (not species traits)', () => {
+    const payload = buildGuidedCharacterPayload(
+      minimalDraft({
+        speciesId: 'sp1',
+        speciesName: 'Elf',
+        selectedAncestryTraitIds: ['anc-1', 'anc-1', 'anc-2'],
+        selectedCharacteristicId: 'char-1',
+        selectedFlawId: 'flaw-1',
+      }),
+      {
+        species: {
+          id: 'sp1',
+          name: 'Elf',
+          species_traits: ['species-trait-a', 'species-trait-b'],
+          skills: [],
+        } as never,
+      }
+    );
+
+    expect(payload.ancestry?.selectedTraits).toEqual(['anc-1', 'anc-2']);
+    expect(payload.ancestry?.selectedTraits).not.toContain('species-trait-a');
+    expect(payload.ancestry?.selectedCharacteristic).toBe('char-1');
+    expect(payload.ancestry?.selectedFlaw).toBe('flaw-1');
+  });
+
+  it('dedupes power and feat ids on save', () => {
+    const payload = buildGuidedCharacterPayload(
+      minimalDraft({
+        innatePowerIds: ['p1', 'P1'],
+        powerIds: ['p1', 'p2', 'p2'],
+        techniqueIds: ['t1', 'T1', 't2'],
+        archetypeFeatIds: ['feat-a', 'Feat-A', 'feat-b'],
+        characterFeatIds: ['feat-c', 'feat-c'],
+      }),
+      {
+        officialPowers: [
+          { id: 'p1', docId: 'p1', name: 'Bolt' },
+          { id: 'p2', docId: 'p2', name: 'Shield' },
+        ],
+        officialTechniques: [
+          { id: 't1', docId: 't1', name: 'Slash' },
+          { id: 't2', docId: 't2', name: 'Parry' },
+        ],
+        codexFeats: [
+          { id: 'feat-a', name: 'Weapon Focus' },
+          { id: 'feat-b', name: 'Toughness' },
+          { id: 'feat-c', name: 'Lucky' },
+        ],
+      }
+    );
+
+    expect(payload.powers?.map((p) => p.id)).toEqual(['p1', 'p2']);
+    expect(payload.techniques?.map((t) => t.id)).toEqual(['t1', 't2']);
+    expect(payload.archetypeFeats?.map((f) => f.id)).toEqual(['feat-a', 'feat-b']);
+    expect(payload.feats?.map((f) => f.id)).toEqual(['feat-c']);
+  });
+
   it('resolves archetype and character feat names from codex', () => {
     const payload = buildGuidedCharacterPayload(
       minimalDraft({

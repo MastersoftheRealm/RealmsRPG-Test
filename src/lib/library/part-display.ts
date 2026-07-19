@@ -6,6 +6,7 @@
 import type { PartData } from '@/components/shared';
 import { trainingPointsForItemPropertyRef, type ItemPropertyTpRow } from '@/lib/calculators/item-calc';
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
+import { dedupeSavedParts } from '@/lib/library/dedupe-saved-parts';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 
 export interface CodexPartRow {
@@ -126,7 +127,8 @@ export function characterPartsToPartData(
   variant: PartTpVariant = 'power'
 ): PartData[] {
   if (!parts || parts.length === 0) return [];
-  return parts.map((part) => partPayloadToPartData(part as string | PartPayload, codexParts, variant));
+  const unique = dedupeSavedParts(parts as Array<string | PartPayload>);
+  return unique.map((part) => partPayloadToPartData(part as string | PartPayload, codexParts, variant));
 }
 
 export function itemPropertiesToPartData(
@@ -135,8 +137,9 @@ export function itemPropertiesToPartData(
 ): PartData[] {
   if (!properties || properties.length === 0) return [];
   const db = codexProperties as unknown as ItemPropertyTpRow[];
+  const unique = dedupeSavedParts(properties as Array<string | PropertyPayload>);
 
-  return properties.map((prop) => {
+  return unique.map((prop) => {
     if (typeof prop === 'string') {
       const codexProp = codexProperties.find((p) => p.name?.toLowerCase() === prop.toLowerCase());
       const tp = trainingPointsForItemPropertyRef(prop, db);

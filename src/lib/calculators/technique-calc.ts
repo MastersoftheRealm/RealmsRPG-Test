@@ -7,6 +7,7 @@
 
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
 import { computePartTrainingPoints } from '@/lib/library/part-display';
+import { dedupeSavedParts } from '@/lib/library/dedupe-saved-parts';
 import type { TechniquePart } from '@/hooks/codex-types';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
 import { attackModeColumnLabel, deriveTechniqueAttackMode, type AttackMode } from '@/lib/attack-mode';
@@ -169,7 +170,8 @@ export function calculateTechniqueCosts(
   let totalTP = 0;
   const tpSources: string[] = [];
 
-  partsPayload.forEach((pl) => {
+  const uniqueParts = dedupeSavedParts(partsPayload);
+  uniqueParts.forEach((pl) => {
     // Find part by ID or name for backwards compatibility
     const def = findByIdOrName(partsDb, {
       id: pl.id ?? pl.part?.id,
@@ -261,15 +263,17 @@ export function deriveTechniqueDisplay(
   techniqueDoc: TechniqueDocument,
   partsDb: TechniquePart[]
 ): TechniqueDisplayData {
-  const partsPayload: TechniquePartPayload[] = Array.isArray(techniqueDoc.parts)
-    ? techniqueDoc.parts.map((p) => ({
-        id: p.id,
-        name: p.name,
-        op_1_lvl: p.op_1_lvl || 0,
-        op_2_lvl: p.op_2_lvl || 0,
-        op_3_lvl: p.op_3_lvl || 0,
-      }))
-    : [];
+  const partsPayload: TechniquePartPayload[] = dedupeSavedParts(
+    Array.isArray(techniqueDoc.parts)
+      ? techniqueDoc.parts.map((p) => ({
+          id: p.id,
+          name: p.name,
+          op_1_lvl: p.op_1_lvl || 0,
+          op_2_lvl: p.op_2_lvl || 0,
+          op_3_lvl: p.op_3_lvl || 0,
+        }))
+      : []
+  );
 
   const calc = calculateTechniqueCosts(partsPayload, partsDb);
   // Use saved actionType/isReaction if available; fall back to derivation from parts

@@ -9,6 +9,8 @@
 
 import { cn, formatBonus } from '@/lib/utils';
 import { DecrementButton, IncrementButton } from '@/components/shared/value-stepper';
+import { WordHelpTip } from '@/components/shared/info-tippy';
+import { getAbilityHelp } from '../../../public/tooltip-text';
 import type { Abilities, AbilityName } from '@/types';
 
 export const ABILITY_DISPLAY_ORDER: AbilityName[] = [
@@ -219,26 +221,29 @@ export function AbilityScoreGrid({
                 // After py-* so twMerge keeps clear-space under the straddling pill (incl. sm:py-2).
                 highlight && 'pt-3 sm:pt-3'
               )}
-              aria-label={`${info.name} ${formatBonus(value)}`}
             >
-              <span
+              {/* Name is WordHelpTip (focusable); score carries ability context — no tile aria-label. */}
+              <WordHelpTip
+                content={getAbilityHelp(ability)}
+                label={`About ${info.name}`}
                 className={cn(
                   'font-bold uppercase text-text-muted dark:text-text-secondary',
                   isEdit
                     ? 'text-xs tracking-wide sm:text-[11px] sm:tracking-wider'
                     : 'text-center text-[11px] tracking-wider'
                 )}
-                aria-hidden={!isEdit ? true : undefined}
               >
                 {isEdit ? (
                   info.name
                 ) : (
                   <>
-                    <span className="sm:hidden">{info.shortName}</span>
+                    <span className="sm:hidden" aria-hidden>
+                      {info.shortName}
+                    </span>
                     <span className="hidden sm:inline">{info.name}</span>
                   </>
                 )}
-              </span>
+              </WordHelpTip>
 
               <div
                 className={cn(
@@ -259,6 +264,7 @@ export function AbilityScoreGrid({
                           'min-w-[2.75rem] text-center text-2xl font-bold',
                           abilityValueClass(value)
                         )}
+                        aria-label={`${info.name} ${formatBonus(value)}`}
                       >
                         {formatBonus(value)}
                       </span>
@@ -290,6 +296,7 @@ export function AbilityScoreGrid({
                       'min-w-[2.75rem] text-center text-2xl font-bold',
                       abilityValueClass(value)
                     )}
+                    aria-label={`${info.name} ${formatBonus(value)}`}
                   >
                     {formatBonus(value)}
                   </span>
