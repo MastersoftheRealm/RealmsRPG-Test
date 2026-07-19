@@ -1,32 +1,32 @@
 # Audit (session / task)
 
-Run a **read-only** audit of the current session and/or named task. Do **not** edit files, run formatters that write, or “fix” anything — report only.
+**Read-only.** Score this chat / TASK-### against the three pillars below. Do **not** edit files, run formatters that write, or “fix” anything — report only.
 
-Authority: `src/docs/ai/PR_CHECKLIST.md` § Owner commands + `ARCHITECTURE_CONSTITUTION.md` Definition of Done.
+Authority: `PR_CHECKLIST.md` § Owner commands + `ARCHITECTURE_CONSTITUTION.md`.
 
-Optional args after `/audit` (e.g. `/audit TASK-502`) = primary task id; otherwise infer from this chat + recent `ACTIVE_TASKS` / archive activity.
+Optional args: `/audit TASK-502` = primary task; else infer from this chat + recent `ACTIVE_TASKS` / archive.
+
+## Three pillars (score all three)
+
+1. **Clutter & honesty** — Dead code, unused exports, duplicate helpers, unneeded lines/compat shims, docs that claim more than the code does (or lag the code). Prefer delete over documenting forever.
+2. **Feedback / AC fidelity** — Did we actually do what the owner feedback and task acceptance criteria asked for? Diff the AC + `ALL_FEEDBACK_CLEAN` disposition against behavior in code (not against changelog prose).
+3. **Necessary + constitutional additions** — Anything this session *added*: was it required for the AC? Did it extend `FEATURE_INDEX` + barrels (`shared` / `ui` / hooks / lib) instead of forking a parallel component/helper/modal/parser/upload path? Architect gates honored?
 
 ## Scope (strict)
 
-1. Files touched in this conversation (prefer `git status` / diff).
-2. Task `related_files` / `related_tasks` for the target TASK-###.
-3. Docs that claim DoD for that work (`ACTIVE_TASKS`, archive block, `AI_CHANGELOG`, `BUILD_VALIDATION`, `FEATURE_INDEX` as relevant).
+1. Files touched in this conversation (`git status` / diff).
+2. Task `related_files` / `related_tasks`.
+3. Docs that claim DoD (`ACTIVE_TASKS`, archive, `AI_CHANGELOG`, `BUILD_VALIDATION`, `FEATURE_INDEX` as relevant).
 
-**Out of scope:** repo-wide debt (`/debt`), unrelated dirty files, live DB/codex mutation.
+**Out of scope:** repo-wide deep dive (`/global-audit`), `/debt` apply, unrelated dirty files, live DB/codex mutation.
 
 ## Procedure
 
 1. Identify target task(s) and in-scope file set.
-2. Walk **PR Checklist** items 1–17 against the code and docs (verify in code; docs can lag).
-3. Hunt common AI failure modes:
-   - Parallel / duplicate pattern vs `FEATURE_INDEX` + barrels
-   - Dead / unused code or exports introduced this session
-   - Premature `done` (open AC → should be `partial`)
-   - Missing changelog, BUILD_VALIDATION, DESIGN_INTENT, barrel index regen
-   - Token / `dark:` / a11y / mobile gaps on touched UI
-   - Upload or domain-parser forks
-   - Human gates skipped (new shared/ui, store, API contract)
-4. Output the report below. End with whether the owner should run `/cleanup` next.
+2. Score **pillars 1–3** with evidence (paths, AC quotes, greps).
+3. Walk **PR Checklist** 1–18 as a checklist under those pillars (tokens, mobile, a11y, uploads, barrels, verification_status, etc.).
+4. Call out AI failure modes: parallel shells, premature `done`, docs-only “honesty” that adds lines without removing clutter, new files that should have been props on shared components.
+5. End with whether the owner should run `/cleanup` next.
 
 ## Report format
 
@@ -35,6 +35,13 @@ Optional args after `/audit` (e.g. `/audit TASK-502`) = primary task id; otherwi
 
 **Verdict:** ready for done | gaps remain | not ready (partial)
 
+### Pillar scores
+| Pillar | Score | Notes |
+|--------|-------|-------|
+| 1 Clutter & honesty | pass / gaps | … |
+| 2 Feedback / AC fidelity | pass / gaps | … |
+| 3 Necessary + constitutional additions | pass / gaps | … |
+
 ### Scope
 - Files / tasks reviewed
 
@@ -42,15 +49,15 @@ Optional args after `/audit` (e.g. `/audit TASK-502`) = primary task id; otherwi
 - Short bullets
 
 ### Gaps (fix before done)
-| Severity | Finding | Evidence | Suggested fix |
-|----------|---------|----------|---------------|
-| blocker / major / minor | … | path or AC | … |
+| Severity | Pillar | Finding | Evidence | Suggested fix |
+|----------|--------|---------|----------|---------------|
+| blocker / major / minor | 1/2/3 | … | path or AC | … |
 
 ### Cleanup candidates
-- Dead code, dupes, litter safe for `/cleanup` (even if not DoD blockers)
+- Removals / wire-to-canonical safe for `/cleanup` (even if not DoD blockers)
 
 ### Follow-ups (out of scope)
-- Items for `/debt` or a new TASK-### — do not expand blast radius
+- Items for `/global-audit`, `/debt`, or a new TASK-### — do not expand blast radius
 
 ### Next
 - Say `/cleanup` to apply in-scope fixes, or address blockers manually.
@@ -58,6 +65,7 @@ Optional args after `/audit` (e.g. `/audit TASK-502`) = primary task id; otherwi
 
 ## Hard rules
 
-- **Zero edits.** No drive-by refactors.
-- Prefer evidence (paths, AC text, grep) over vibes.
-- If AC incomplete, verdict must not be “ready for done.”
+- **Zero edits.**
+- Evidence over vibes.
+- If AC or owner feedback is unmet, verdict must not be “ready for done.”
+- “Docs honesty” alone is not a pass on pillar 1 if dead forks remain in scope.

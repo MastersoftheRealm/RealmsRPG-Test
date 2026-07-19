@@ -1,12 +1,19 @@
-# Debt (repo-wide cleanup sprint)
+# Debt (repo-wide apply sprint)
 
-Recurring **repo-wide** anti-debt pass. Run on demand when docs drift, dupes accumulate, or `ACTIVE_TASKS` bloats.
+Apply **gated** repo-wide anti-debt. Prefer after a fresh `/global-audit` in this chat (or treat optional args as a narrow slice).
 
 Authority: `ARCHITECTURE_CONSTITUTION.md` § Anti-debt + `PR_CHECKLIST.md` § Owner commands.
 
-**Not** session scope — use `/audit` then `/cleanup` for a single task or this chat’s files.
+**Not** session scope — use `/audit` → `/cleanup` for one TASK-### / this chat’s files.
+**Not** a substitute for `/global-audit` — inventory first when drift is unclear; this command deletes/wires.
 
-Optional args after `/debt` (e.g. `/debt docs-only`) narrow focus; default = full checklist below.
+Optional args: `/debt docs-only` · `/debt from-audit` (apply only the “debt-safe” rows from the latest `/global-audit` report) · default = checklist below.
+
+## Three pillars (same intent as session cleanup)
+
+1. **Remove clutter** — Dead code, unused exports, stale hot-path docs, changelog rotation.
+2. **Honesty vs code** — Fix FEATURE_INDEX / DATA_HANDLING / ACTIVE_TASKS claims that lag reality.
+3. **Unify to canonical** — Delete weaker forks; wire `FEATURE_INDEX` + barrels; extend shared rather than adding parallels.
 
 ## Scope
 
@@ -14,16 +21,16 @@ Whole repo within gates below. Prefer evidence (grep, `FEATURE_INDEX`, barrels) 
 
 ## Procedure
 
-1. **Inventory** — Quick pass: parallel helpers, upload/domain-parser forks, stale task blocks, changelog size, obvious dead exports.
+1. **Intake** — If a `/global-audit` report exists in this chat, prioritize its **debt-safe** rows. Else run a quick inventory (not a full global-audit writeup unless needed).
 2. **Apply in-scope** — Delete weaker duplicates, slim hot-path docs, rotate changelog (see checklist).
-3. **File follow-ups** — Anything gated → new `TASK-###` in `ACTIVE_TASKS.md` (specific fix), not more ritual prose.
+3. **File follow-ups** — Gated → new `TASK-###` in `ACTIVE_TASKS.md` (specific fix), not more ritual prose.
 4. **Verify** — `npm run build` if code changed; targeted tests if behavior touched.
-5. **Log** — Append `AI_CHANGELOG.md` listing deletions/consolidations (required every run).
+5. **Log** — Append `AI_CHANGELOG.md` listing **deletions/consolidations** (required every run). First Summary bullet = a deletion or consolidation; prefer **net remove** on the diff.
 
 ## Checklist (default run)
 
 - **Duplication greps** — raw `fetch('/api/upload`, local `formatDuration`-style forks, parallel selection/list shells vs `FEATURE_INDEX` + barrels (`npm run tasks:validate-shared-ui` if shared/ui touched).
-- **ACTIVE_TASKS** — Archive `done` blocks; trim noise; keep agent-eligible hot path lean (target &lt;20KB).
+- **ACTIVE_TASKS** — Archive `done` / superseded blocks; trim noise; keep agent-eligible hot path lean (target &lt;20KB).
 - **AI_CHANGELOG** — Move entries older than ~60 days to `src/docs/ai/archive/AI_CHANGELOG_ARCHIVE.md` (create if missing).
 - **Parallel systems** — Delete the weaker fork and wire the canonical pattern; ship a first slice + `TASK-###` if the rest is large.
 
@@ -31,7 +38,7 @@ Whole repo within gates below. Prefer evidence (grep, `FEATURE_INDEX`, barrels) 
 
 - Unused imports/exports, dead helpers, docs that lag code
 - Obvious duplicate of existing shared/ui/hook/lib → delete weaker fork (in-repo references only)
-- Archive done tasks; changelog rotation; barrel regen after export changes (`npm run tasks:generate-index`)
+- Archive done/superseded tasks; changelog rotation; barrel regen after export changes (`npm run tasks:generate-index`)
 
 ## Pause for owner ack (list, do not apply)
 
@@ -47,6 +54,7 @@ Whole repo within gates below. Prefer evidence (grep, `FEATURE_INDEX`, barrels) 
 - No new parallel patterns.
 - Gated work → `TASK-###`, not an expanded `/debt` blast radius.
 - Repeatable: no “done” status — log and stop.
+- **Anti-theater:** Do not spend the sprint only rewriting docs. If nothing was deleted or wired to canonical, say so.
 
 ## Report format
 
@@ -54,7 +62,7 @@ Whole repo within gates below. Prefer evidence (grep, `FEATURE_INDEX`, barrels) 
 ## Debt sprint
 
 ### Applied
-- Bullets (deletions, consolidations, doc trims)
+- Bullets (deletions, consolidations, doc trims) — lead with deletions
 
 ### Gated (need ack or TASK-###)
 - Bullets
@@ -64,4 +72,7 @@ Whole repo within gates below. Prefer evidence (grep, `FEATURE_INDEX`, barrels) 
 
 ### Verification
 - build / tests run (or N/A docs-only)
+
+### Net
+- Rough removed vs added
 ```
