@@ -135,8 +135,8 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 | **TASK-543** | DEV-V-009 **T024** | Skills edit Value stepper `+` fully visible in narrow desktop Skills panel (not clipped) |
 | **TASK-544** | DEV-V-013 **T018 / T020 / T034 / T035** | Guided path cards + More details + ability pills use Primary/Secondary Ability; no Power/Martial type tag in path deep-dive |
 | **TASK-545** | DEV-V-013 **T018 / T020 / T034 / T035** | Correct Primary/Secondary UX vs Archetype Ability: hybrids = two Primaries; grid Power/Martial; GAME_RULES restored |
-| **TASK-546** | DEV-V-009 **T025** | Sheet: no duplicate traits / part chips / feat or power rows (guided + library)
-| **TASK-547** | DEV-V-009 **T026** + DEV-V-013 **T065** | Ability/defense name word-tied tooltips on sheet + guided Abilities (no Info icon)
+| **TASK-546** | DEV-V-009 **T025** | Sheet: no duplicate traits / part chips / feat or power rows (guided + library) |
+| **TASK-547** | DEV-V-009 **T026** + DEV-V-013 **T065** | Ability/defense name word-tied tooltips on sheet + guided Abilities (no Info icon) | |
 
 _Add rows when archiving user-facing work with `verification_status: pending-qa`. Remove when `verified` or `failed`._
 
