@@ -30,6 +30,8 @@
   notes: |
     Owner feedback 2026-07-19. Tip copy in `getGuidedSkillBonusHelp` (tooltip-text.tsx).
     Multi-ability Skills note “highest linked Ability” in the tip.
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/46
   evidence: |
     npm run build; vitest guided-skill-recommendations.test.ts
   build_validation: |
