@@ -1,4 +1,4 @@
-- id: TASK-545
+- id: TASK-546
   title: Ability and defense name tooltips (sheet + guided creator)
   created_at: 2026-07-19
   created_by: owner
@@ -42,7 +42,8 @@
     ABILITY_EFFECT_BLURBS (always-visible Layer 1 cards).
     Cleanup 2026-07-19: DESIGN_INTENT on WordHelpTip; AbilityScoreGrid aria on score
     (not tile); guide/04 + tooltips README; related_files honesty.
-    Renumbered from TASK-544 on merge — TASK-544 path Primary/Secondary (PR #45).
+    Renumbered from TASK-544→545→546 on merge — TASK-544 path Primary/Secondary (PR #45),
+    TASK-545 Archetype Ability UX (PR #49).
   evidence: |
     npm run build (agent); /audit → /cleanup docs + a11y honesty.
   build_validation: |
@@ -54,6 +55,59 @@
     Suite DEV-V-009 T025 + DEV-V-013 T065 — see BUILD_VALIDATION.md.
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/47
+
+---
+- id: TASK-545
+  title: Correct Archetype Ability vs Primary/Secondary UX (powered-martial)
+  created_at: 2026-07-19
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-07-19
+  implemented_by: agent
+  verification_status: pending-qa
+  parent_task: TASK-544
+  related_files:
+    - src/lib/guided-creator/path-ability-labels.ts
+    - src/lib/guided-creator/path-ability-labels.test.ts
+    - src/components/guided-creator/steps/path-step.tsx
+    - src/components/guided-creator/guided-path-detail-overview.tsx
+    - src/components/shared/ability-score-grid.tsx
+    - src/docs/GAME_RULES.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Owner clarification after TASK-544: Primary/Secondary are guided UX labels only.
+    Game term remains Archetype Ability (Power/Martial Archetype Ability on hybrids).
+    Powered-martial has two primary archetype abilities; Secondary is not the martial side.
+    Calculations using Archetype Ability on hybrids use the higher of the two.
+  acceptance_criteria:
+    - GAME_RULES restores Archetype Ability terminology (hybrids = two primaries; higher-of-two).
+    - Path cards/More details: Primary chip(s) for each Archetype Ability; Secondary only when distinct recommended.
+    - AbilityScoreGrid hybrids use Power/Martial pills again (not Primary/Secondary between them).
+    - Select draft pow/mart matches archetype abilities (not secondary_ability as martial when mart_abil exists).
+    - BUILD_VALIDATION T018/T020/T034/T035 corrected; npm run build + unit tests.
+  notes: |
+    Owner feedback 2026-07-19 after PR #45 merge. Fixes conflation of Secondary with Martial.
+  pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/49
+  merged_at: |
+    2026-07-19
+  evidence: |
+    vitest path-ability-labels; npm run build; CI green; merged to master via PR #49
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T018
+      - DEV-V-013-T020
+      - DEV-V-013-T034
+      - DEV-V-013-T035
+  developer_test_plan: |
+    Suite DEV-V-013 T018, T020, T034, T035 — see BUILD_VALIDATION.md
 
 ---
 - id: TASK-544

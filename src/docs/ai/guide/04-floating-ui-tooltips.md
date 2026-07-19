@@ -72,7 +72,7 @@ Use the dependency **inside `@/components/shared` or `@/components/ui`**, not ad
 | `characters/new` page header | ✅ Wired | |
 | Navbar Library / Codex | ✅ Wired | `placement="bottom"` |
 | Campaigns hub | ✅ Wired | |
-| Character sheet | ◐ Partial | Ability + defense name tips via `WordHelpTip` (TASK-545); broader first-exposure tour still planned per `REALMS_PRODUCT_OVERVIEW.md` § 11 |
+| Character sheet | ◐ Partial | Ability + defense name tips via `WordHelpTip` (TASK-546); broader first-exposure tour still planned per `REALMS_PRODUCT_OVERVIEW.md` § 11 |
 | Standalone creators (power, technique, item, …) | ⬜ Planned | When Layer 1 UX lands |
 | Encounters, crafting, Codex/Library browse | ⬜ Planned | Scoped section help only where dense |
 
