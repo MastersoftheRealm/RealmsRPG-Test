@@ -11,7 +11,9 @@ import { Spinner, EmptyState } from '@/components/ui';
 import { InfoTippy } from '@/components/shared';
 import { useCodexArchetypes } from '@/hooks';
 import { parseArchetypePathData, pathHasPlayerVisibleLevel1 } from '@/lib/game/archetype-path';
+import { formatAbilityLabel } from '@/lib/constants/ability-effect-blurbs';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import { resolvePathAbilityLabels } from '@/lib/guided-creator/path-ability-labels';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
 import { DEFAULT_ABILITIES, type Archetype, type ArchetypeCategory } from '@/types';
@@ -26,6 +28,19 @@ import { GuidedPathDetailModal } from '../guided-path-detail-modal';
 import { GuidedStepLayout } from '../guided-step-layout';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.path;
+const detailCopy = stepCopy.detail;
+
+function pathAbilityTags(path: Archetype): string[] {
+  const { primary, secondary } = resolvePathAbilityLabels(path);
+  const tags: string[] = [];
+  if (primary) {
+    tags.push(detailCopy.primaryAbility(formatAbilityLabel(primary)));
+  }
+  if (secondary) {
+    tags.push(detailCopy.secondaryAbility(formatAbilityLabel(secondary)));
+  }
+  return tags;
+}
 
 /** Display order matches Advanced archetype path picker (REALMS §5.1). */
 const PATH_GROUPS: ArchetypeCategory[] = ['power', 'powered-martial', 'martial'];
@@ -78,20 +93,16 @@ export function PathStep() {
   const handleSelect = (path: Archetype) => {
     const type = (path.type || 'power') as ArchetypeCategory;
     const pathChanged = draft.archetypePathId !== String(path.id);
-    const primaryAbility = path.archetype_ability ?? path.pow_abil ?? null;
-    const secondaryAbility = path.mart_abil ?? path.secondary_ability ?? null;
+    // Same SoT as path cards / More details chips (admin Primary / Secondary fields).
+    const { primary, secondary } = resolvePathAbilityLabels(path);
 
     // Same path re-tap: keep all downstream picks. New path: invalidate dependents.
     updateDraft({
       archetypePathId: String(path.id),
       archetypeType: type,
-      pow_abil: type === 'martial' ? null : primaryAbility,
+      pow_abil: type === 'martial' ? null : primary,
       mart_abil:
-        type === 'power'
-          ? null
-          : type === 'powered-martial'
-            ? secondaryAbility
-            : secondaryAbility ?? primaryAbility,
+        type === 'power' ? null : type === 'powered-martial' ? secondary : primary,
       ...(pathChanged
         ? {
             // Soft-default only runs when Abilities mounts with abilitiesMode null —
@@ -157,6 +168,7 @@ export function PathStep() {
                           className={GUIDED_CHOICE_GRID_ITEM_CLASS}
                           title={path.name}
                           description={path.description}
+                          tags={pathAbilityTags(path)}
                           selected={draft.archetypePathId === String(path.id)}
                           onSelect={() => handleSelect(path)}
                           onDetails={() => setDetailPathId(String(path.id))}
