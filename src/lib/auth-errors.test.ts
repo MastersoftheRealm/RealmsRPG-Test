@@ -71,4 +71,16 @@ describe('getAuthErrorMessage', () => {
       getAuthErrorMessage(new Error('Error sending confirmation email'), 'update-email')
     ).toBe('We could not send the email right now. Please try again in a few minutes.');
   });
+
+  it('maps update-password incorrect/weak without local page forks', () => {
+    expect(
+      getAuthErrorMessage(new Error('Current password is incorrect'), 'update-password')
+    ).toBe('Current password is incorrect');
+    expect(
+      getAuthErrorMessage({ message: 'Password is too weak', code: 'weak_password' }, 'update-password')
+    ).toBe('Password is too weak. Please choose a stronger password.');
+    expect(getAuthErrorMessage(new Error(''), 'update-password')).toBe(
+      'Failed to update password'
+    );
+  });
 });

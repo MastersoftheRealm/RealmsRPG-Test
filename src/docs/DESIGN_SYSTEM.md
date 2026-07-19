@@ -448,7 +448,7 @@ CSS classes available:
 ### Loading States
 
 ```tsx
-import { Spinner, LoadingState, LoadingOverlay } from '@/components/ui/spinner';
+import { Spinner, LoadingState } from '@/components/ui/spinner';
 
 // Simple spinner
 <Spinner size="md" variant="primary" />
@@ -457,7 +457,6 @@ import { Spinner, LoadingState, LoadingOverlay } from '@/components/ui/spinner';
 <LoadingState message="Loading data..." size="lg" />
 
 // Full overlay
-<LoadingOverlay isLoading={loading} message="Saving..." fullScreen />
 ```
 
 Use the `<Spinner>` / `<LoadingState>` components for spinners (the raw `.loading-spinner` classes were removed in Phase 0.4). Skeleton classes remain for placeholders:

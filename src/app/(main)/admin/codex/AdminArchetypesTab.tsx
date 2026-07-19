@@ -278,10 +278,6 @@ function resolveSelectedValues(values: string[], options: SelectionOption[]): st
   );
 }
 
-function parsePathData(value: unknown): Record<string, unknown> | undefined {
-  return coerceJsonRecord(value);
-}
-
 function makeLevelRow(level = 2): PathLevelForm {
   return {
     rowId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -887,7 +883,7 @@ export function AdminArchetypesTab() {
   };
 
   const openDuplicate = (a: ArchetypeItem) => {
-    const parsedPath = parsePathData(a.path_data);
+    const parsedPath = coerceJsonRecord(a.path_data);
     const rawLevel1 =
       parsedPath && typeof parsedPath.level1 === 'object' && parsedPath.level1 !== null
         ? (parsedPath.level1 as Record<string, unknown>)
@@ -926,7 +922,7 @@ export function AdminArchetypesTab() {
   };
 
   const openEdit = (a: ArchetypeItem) => {
-    const parsedPath = parsePathData(a.path_data);
+    const parsedPath = coerceJsonRecord(a.path_data);
     const rawLevel1 =
       parsedPath && typeof parsedPath.level1 === 'object' && parsedPath.level1 !== null
         ? (parsedPath.level1 as Record<string, unknown>)

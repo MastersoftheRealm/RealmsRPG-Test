@@ -16,7 +16,8 @@ import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { GuidedChoiceCard } from '../guided-choice-card';
 import { getSpeciesSizeOptions } from '../guided-species-utils';
-import { GUIDED_CHOICE_GRID_CLASS, GUIDED_CHOICE_GRID_ITEM_CLASS } from '../guided-choice-grid';
+import { GUIDED_CHOICE_GRID_CLASS, GUIDED_CHOICE_GRID_ITEM_CLASS } from '../guided-choice-styles';
+
 import { GuidedSpeciesDetailModal } from '../guided-species-detail-modal';
 import { GuidedStepLayout } from '../guided-step-layout';
 
