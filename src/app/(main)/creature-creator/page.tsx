@@ -1100,28 +1100,21 @@ function CreatureCreatorContent() {
           <UnifiedSelectionModal
             isOpen={showPowerModal}
             onClose={() => setShowPowerModal(false)}
-            headerExtra={
-              <div className="space-y-3">
-                <SourceFilter value={librarySource} onChange={setLibrarySource} />
-                <SegmentedControl<PowerModalTab>
-                  value={powerModalTab}
-                  onChange={setPowerModalTab}
-                  aria-label="Power modal type"
-                  tabs
-                  options={[
-                    { value: 'powers', label: 'Powers' },
-                    { value: 'empowered', label: 'Empowered Techniques' },
-                  ]}
-                />
-              </div>
+            scopeExtra={
+              <SegmentedControl<PowerModalTab>
+                value={powerModalTab}
+                onChange={setPowerModalTab}
+                aria-label="Power modal type"
+                tabs
+                options={[
+                  { value: 'powers', label: 'Powers' },
+                  { value: 'empowered', label: 'Empowered Techniques' },
+                ]}
+              />
             }
-            optionsSummary={[
-              sourceFilterLabel(librarySource),
-              powerModalTab === 'empowered' ? 'Empowered Techniques' : 'Powers',
-            ].join(' · ')}
-            optionsActiveCount={
-              (librarySource !== 'all' ? 1 : 0) + (powerModalTab === 'empowered' ? 1 : 0)
-            }
+            headerExtra={<SourceFilter value={librarySource} onChange={setLibrarySource} />}
+            optionsSummary={sourceFilterLabel(librarySource)}
+            optionsActiveCount={librarySource !== 'all' ? 1 : 0}
             onConfirm={(selected) => {
               const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
               const powers = items.map(displayItemToCreaturePower);
@@ -1130,8 +1123,8 @@ function CreatureCreatorContent() {
             items={powerModalTab === 'empowered' ? empoweredTechniqueSelectableItems : powerSelectableItems}
             title={powerModalTab === 'empowered' ? 'Select Empowered Techniques' : 'Select Powers'}
             description={powerModalTab === 'empowered'
-              ? 'Choose empowered techniques from your library or Realms Library. Open Filters to switch source or list type.'
-              : 'Choose powers from your library or Realms Library. Open Filters to switch source or Empowered Techniques.'}
+              ? 'Choose empowered techniques from your library or Realms Library. Open Filters to switch source.'
+              : 'Choose powers from your library or Realms Library. Switch list type above; open Filters for source.'}
             maxSelections={10}
             itemLabel={powerModalTab === 'empowered' ? 'empowered technique' : 'power'}
             searchPlaceholder={powerModalTab === 'empowered' ? 'Search empowered techniques...' : 'Search powers...'}
@@ -1188,39 +1181,24 @@ function CreatureCreatorContent() {
           <UnifiedSelectionModal
             isOpen={showArmamentModal}
             onClose={() => setShowArmamentModal(false)}
-            headerExtra={
-              <div className="space-y-3">
-                <SourceFilter value={librarySource} onChange={setLibrarySource} />
-                <SegmentedControl<InventoryTab>
-                  value={inventoryTab}
-                  onChange={setInventoryTab}
-                  aria-label="Inventory type"
-                  tabs
-                  options={[
-                    { value: 'all', label: 'All' },
-                    { value: 'weapon', label: 'Weapons' },
-                    { value: 'armor', label: 'Armor' },
-                    { value: 'shield', label: 'Shields' },
-                    { value: 'equipment', label: 'Equipment' },
-                  ]}
-                />
-              </div>
+            scopeExtra={
+              <SegmentedControl<InventoryTab>
+                value={inventoryTab}
+                onChange={setInventoryTab}
+                aria-label="Inventory type"
+                tabs
+                options={[
+                  { value: 'all', label: 'All' },
+                  { value: 'weapon', label: 'Weapons' },
+                  { value: 'armor', label: 'Armor' },
+                  { value: 'shield', label: 'Shields' },
+                  { value: 'equipment', label: 'Equipment' },
+                ]}
+              />
             }
-            optionsSummary={[
-              sourceFilterLabel(librarySource),
-              (
-                {
-                  all: 'All types',
-                  weapon: 'Weapons',
-                  armor: 'Armor',
-                  shield: 'Shields',
-                  equipment: 'Equipment',
-                } as const
-              )[inventoryTab],
-            ].join(' · ')}
-            optionsActiveCount={
-              (librarySource !== 'all' ? 1 : 0) + (inventoryTab !== 'all' ? 1 : 0)
-            }
+            headerExtra={<SourceFilter value={librarySource} onChange={setLibrarySource} />}
+            optionsSummary={sourceFilterLabel(librarySource)}
+            optionsActiveCount={librarySource !== 'all' ? 1 : 0}
             onConfirm={(selected) => {
               const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
               const armaments = items.map(displayItemToCreatureArmament);
@@ -1229,7 +1207,7 @@ function CreatureCreatorContent() {
             items={armamentSelectableItems}
             displayFilter={inventoryDisplayFilter}
             title="Select Inventory"
-            description="Choose inventory items from your library or Realms Library. Open Filters for source and type, then click Add Selected."
+            description="Choose inventory items from your library or Realms Library. Switch type above; open Filters for source, then click Add Selected."
             maxSelections={10}
             itemLabel="inventory item"
             searchPlaceholder="Search inventory..."

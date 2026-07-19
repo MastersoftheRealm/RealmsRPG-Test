@@ -121,8 +121,14 @@ export interface UnifiedSelectionModalProps {
   searchFields?: (keyof SelectableItem)[];
   
   /**
-   * Secondary chrome (SourceFilter, mode tabs, custom-add forms, etc.).
-   * Always rendered inside the collapsible Filters panel with filterContent (TASK-564).
+   * Always-visible primary mode/scope chrome (Powers vs Empowered, Armaments vs Equipment,
+   * feat-source tabs, inventory type). Stays outside the Filters disclosure so users can
+   * switch catalog identity without opening Filters (TASK-564).
+   */
+  scopeExtra?: ReactNode;
+  /**
+   * Secondary chrome (SourceFilter, advanced filters, custom-add forms).
+   * Collapsed into the Filters panel with filterContent — not mode tabs (use scopeExtra).
    */
   headerExtra?: ReactNode;
   /** When set, only items passing this filter are shown in the list; selection and confirm still use the full items list so selections from other "tabs" are kept. */
@@ -145,7 +151,7 @@ export interface UnifiedSelectionModalProps {
   
   /** Optional extra content in footer (e.g. per-item options for selected items) */
   footerExtra?: (selectedItems: SelectableItem[]) => ReactNode;
-  /** When tabs live in headerExtra, wire list region to TabNavigation aria-controls (TASK-355) */
+  /** When tabs live in scopeExtra, wire list region to TabNavigation aria-controls (TASK-355) */
   tabPanelA11y?: {
     tabGroupId: string;
     id: string;
@@ -196,6 +202,7 @@ export function UnifiedSelectionModal({
   emptySubMessage,
   searchPlaceholder,
   searchFields = ['name', 'description'],
+  scopeExtra,
   headerExtra,
   displayFilter,
   filterContent,
@@ -226,6 +233,7 @@ export function UnifiedSelectionModal({
     () => items.some((item) => Boolean(item.thumbnail)),
     [items]
   );
+  // Filters disclosure = secondary only; primary mode tabs use scopeExtra (always visible).
   const hasOptions = Boolean(headerExtra) || Boolean(showFilters && filterContent);
 
   // Reset only when modal first opens (not on every render). When callers omit initialSelectedIds
@@ -402,8 +410,8 @@ export function UnifiedSelectionModal({
         </div>
       }
     >
-      {/* DESIGN_INTENT: List-first — Search (+ Filters) on one row; never stack always-visible
-          source/mode/filter rows between search and the list (TASK-564). */}
+      {/* DESIGN_INTENT (TASK-564): List-first — Search (+ Filters) on one row; primary mode
+          tabs (scopeExtra) always visible under search; SourceFilter / advanced filters collapse. */}
       <div className="shrink-0">
         {hasOptions ? (
           <FilterSection
@@ -414,12 +422,16 @@ export function UnifiedSelectionModal({
             activeCount={optionsActiveCount}
             summary={optionsSummary}
             toolbarStart={searchField}
+            belowToolbar={scopeExtra}
           >
             {headerExtra}
             {showFilters && filterContent ? filterContent : null}
           </FilterSection>
         ) : (
-          searchField
+          <div className="space-y-2">
+            {searchField}
+            {scopeExtra ? <div className="shrink-0">{scopeExtra}</div> : null}
+          </div>
         )}
       </div>
 

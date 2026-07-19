@@ -1038,35 +1038,28 @@ export function PowersStep() {
       <UnifiedSelectionModal
         isOpen={showPowerModal}
         onClose={() => setShowPowerModal(false)}
-        headerExtra={
-          <div className="space-y-3">
-            <SourceFilter value={source} onChange={setSource} />
-            <SegmentedControl<PowerModalTab>
-              value={powerModalTab}
-              onChange={setPowerModalTab}
-              aria-label="Power modal type"
-              tabs
-              options={[
-                { value: 'powers', label: 'Powers' },
-                { value: 'empowered', label: 'Empowered Techniques' },
-              ]}
-            />
-          </div>
+        scopeExtra={
+          <SegmentedControl<PowerModalTab>
+            value={powerModalTab}
+            onChange={setPowerModalTab}
+            aria-label="Power modal type"
+            tabs
+            options={[
+              { value: 'powers', label: 'Powers' },
+              { value: 'empowered', label: 'Empowered Techniques' },
+            ]}
+          />
         }
-        optionsSummary={[
-          sourceFilterLabel(source),
-          powerModalTab === 'empowered' ? 'Empowered Techniques' : 'Powers',
-        ].join(' · ')}
-        optionsActiveCount={
-          (source !== 'all' ? 1 : 0) + (powerModalTab === 'empowered' ? 1 : 0)
-        }
+        headerExtra={<SourceFilter value={source} onChange={setSource} />}
+        optionsSummary={sourceFilterLabel(source)}
+        optionsActiveCount={source !== 'all' ? 1 : 0}
         onConfirm={powerModalTab === 'empowered' ? handleEmpoweredPowerSelect : handlePowerSelect}
         items={powerModalTab === 'empowered' ? allEmpoweredSelectableItems : allPowerSelectableItems}
         displayFilter={displayFilterFn}
         title={powerModalTab === 'empowered' ? 'Select Empowered Techniques' : 'Select Powers'}
         description={powerModalTab === 'empowered'
-          ? 'Choose empowered techniques from Realms or My Library and add them to your powers list. Open Filters to switch source or list type.'
-          : 'Choose from Realms Library or your library. Open Filters to switch source or Empowered Techniques. You can also create your own in the Power or Technique Creator.'}
+          ? 'Choose empowered techniques from Realms or My Library and add them to your powers list. Open Filters to switch library source.'
+          : 'Choose from Realms Library or your library. Switch list type above; open Filters for source. You can also create your own in the Power or Technique Creator.'}
         initialSelectedIds={selectedPowerIds}
         searchPlaceholder={powerModalTab === 'empowered' ? 'Search empowered techniques...' : 'Search powers...'}
         itemLabel={powerModalTab === 'empowered' ? 'empowered technique' : 'power'}

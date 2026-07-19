@@ -34,6 +34,11 @@ interface FilterSectionProps {
    * Creates a single toolbar row so the list stays the main focus below.
    */
   toolbarStart?: ReactNode;
+  /**
+   * Compact only: always-visible content between the toolbar row and the panel
+   * (e.g. primary mode tabs — TASK-564 scopeExtra).
+   */
+  belowToolbar?: ReactNode;
   className?: string;
 }
 
@@ -47,6 +52,7 @@ export function FilterSection({
   summary,
   label = 'Filters',
   toolbarStart,
+  belowToolbar,
   className,
 }: FilterSectionProps) {
   const [uncontrolledExpanded, setUncontrolledExpanded] = useState(defaultExpanded);
@@ -109,6 +115,10 @@ export function FilterSection({
       ) : (
         toggleButton
       )}
+
+      {isCompact && belowToolbar ? (
+        <div className="mt-2 shrink-0">{belowToolbar}</div>
+      ) : null}
 
       {!isExpanded && summary ? (
         <p className="mt-2 text-xs text-text-muted dark:text-text-secondary">{summary}</p>

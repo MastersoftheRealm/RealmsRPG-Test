@@ -352,7 +352,7 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
   let filterRow: ReactNode = null;
   if (activeTab === 'library') {
     filterRow = (
-      <div className="flex flex-wrap items-center gap-3 border-t border-border-light pt-3 mt-3">
+      <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
           <label htmlFor={categorySelectId} className="text-sm text-text-muted dark:text-text-secondary">
             Category:
@@ -411,7 +411,7 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
     );
   } else if (activeTab === 'creature') {
     filterRow = (
-      <div className="flex flex-wrap items-center gap-3 border-t border-border-light pt-3 mt-3">
+      <div className="flex flex-wrap items-center gap-3">
         <label className="flex min-h-[44px] cursor-pointer items-center gap-2 text-sm text-text-muted dark:text-text-secondary">
           <input
             type="checkbox"
@@ -424,6 +424,16 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
       </div>
     );
   }
+
+  const creatureFeatOptionsActive =
+    activeTab === 'library'
+      ? (selectedCategory ? 1 : 0) +
+        (selectedAbility ? 1 : 0) +
+        (showStateFeats ? 1 : 0) +
+        (showBlocked ? 1 : 0)
+      : activeTab === 'creature' && showBlocked
+        ? 1
+        : 0;
 
   const error = queryError ? `Failed to load feats: ${queryError.message}` : null;
   const isLoading = loadingCreatureFeats || loadingCodexFeats || loadingTraits;
@@ -467,7 +477,7 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
               : 'No species traits to add (or all are already added).'
         }
         searchPlaceholder="Search by name or description..."
-        headerExtra={
+        scopeExtra={
           <div
             id="creature-feat-panel"
             role="tabpanel"
@@ -487,15 +497,20 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
               tabs
               tabPanelId="creature-feat-panel"
             />
-            {filterRow}
           </div>
         }
+        headerExtra={filterRow ?? undefined}
+        optionsActiveCount={creatureFeatOptionsActive}
         optionsSummary={
-          activeTab === 'creature'
-            ? 'Creature feats'
-            : activeTab === 'library'
-              ? 'Character & archetype'
-              : 'Species traits'
+          activeTab === 'species'
+            ? undefined
+            : [
+                activeTab === 'library' && selectedCategory && `Category: ${selectedCategory}`,
+                activeTab === 'library' && selectedAbility && `Ability: ${selectedAbility}`,
+                showBlocked && 'Showing unavailable',
+              ]
+                .filter(Boolean)
+                .join(' · ') || undefined
         }
         size="xl"
         className="md:max-h-[85vh]"

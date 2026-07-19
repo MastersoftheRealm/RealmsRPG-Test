@@ -192,31 +192,28 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
     onClose();
   };
 
-  const tabLabel = activeTab === 'armaments' ? 'Armaments' : 'Equipment';
-  const optionsSummary = `${tabLabel} · ${sourceFilterLabel(source)}`;
-  const optionsActiveCount = (activeTab !== 'armaments' ? 1 : 0) + (source !== 'all' ? 1 : 0);
+  const optionsSummary = sourceFilterLabel(source);
+  const optionsActiveCount = source !== 'all' ? 1 : 0;
 
   return (
     <UnifiedSelectionModal
       isOpen={isOpen}
       onClose={onClose}
       title="Select item to craft"
-      description="Select one item and confirm. Open Filters to switch Armaments/Equipment and library source."
-      headerExtra={
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <TabNavigation
-            tabs={[{ id: 'armaments', label: 'Armaments' }, { id: 'equipment', label: 'Equipment' }]}
-            activeTab={activeTab}
-            onTabChange={(id) => setActiveTab(id as CraftingTabId)}
-            variant="pill"
-            fullWidth
-            className="w-full sm:w-auto"
-            tabGroupId={tabGroupId}
-            sharedTabPanelId={sharedPanelId}
-          />
-          <SourceFilter value={source} onChange={setSource} />
-        </div>
+      description="Select one item and confirm. Switch Armaments/Equipment above the list; open Filters for library source."
+      scopeExtra={
+        <TabNavigation
+          tabs={[{ id: 'armaments', label: 'Armaments' }, { id: 'equipment', label: 'Equipment' }]}
+          activeTab={activeTab}
+          onTabChange={(id) => setActiveTab(id as CraftingTabId)}
+          variant="pill"
+          fullWidth
+          className="w-full"
+          tabGroupId={tabGroupId}
+          sharedTabPanelId={sharedPanelId}
+        />
       }
+      headerExtra={<SourceFilter value={source} onChange={setSource} />}
       optionsSummary={optionsSummary}
       optionsActiveCount={optionsActiveCount}
       items={items}

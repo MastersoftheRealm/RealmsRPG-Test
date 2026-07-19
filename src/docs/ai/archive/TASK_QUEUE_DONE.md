@@ -31,6 +31,7 @@
     - src/docs/MOBILE_UX.md
     - src/docs/ai/guide/02-components-and-lists.md
     - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/FEATURE_INDEX_BARRELS.generated.md
     - src/docs/ai/BUILD_VALIDATION.md
     - src/docs/ai/DEVELOPER_TASK_QUEUE.md
     - src/docs/ai/ACTIVE_TASKS.md
@@ -52,6 +53,8 @@
   notes: |
     Owner requested TASK-564 (skipped 547–563). Extends existing shared components
     (no new shared/ui file / ADR). Complements TASK-541 sticky footer.
+    Owner ack 2026-07-19: primary mode tabs always visible via `scopeExtra`;
+    SourceFilter / advanced filters remain collapsed under Filters.
   build_validation: |
     suite: DEV-V-016
     tests:
@@ -61,7 +64,8 @@
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/51
   evidence: |
-    npm run build (pass); pattern applied globally via UnifiedSelectionModal.
+    npm run build (pass); `/cleanup` wired optionsSummary on remaining headerExtra
+    sites + FilterSection aria-controls panel mount; pattern via UnifiedSelectionModal.
 
 - id: TASK-546
   title: Fix duplicate traits / part chips / feats on character sheets
