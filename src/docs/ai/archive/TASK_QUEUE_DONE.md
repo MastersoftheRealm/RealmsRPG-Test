@@ -14,6 +14,7 @@
     - src/components/shared/index.ts
     - src/components/shared/unified-selection-modal.tsx
     - src/components/character-sheet/add-library-item-modal.tsx
+    - src/components/character-sheet/add-library-item/power-header-extra.tsx
     - src/components/character-sheet/add-feat-modal.tsx
     - src/components/shared/add-skill-modal.tsx
     - src/components/shared/add-sub-skill-modal.tsx
