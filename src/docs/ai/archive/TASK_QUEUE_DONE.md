@@ -1,3 +1,37 @@
+- id: TASK-568
+  title: Unify getMaxQualifiedFeatLevel character vs creature adapters
+  created_at: 2026-07-19
+  created_by: agent
+  priority: low
+  status: done
+  completed_at: 2026-07-19
+  implemented_by: agent
+  verification_status: n/a
+  related_files:
+    - src/lib/game/feat-requirements.ts
+    - src/app/(main)/creature-creator/creature-feat-utils.ts
+    - src/app/(main)/creature-creator/page.tsx
+    - src/lib/codex/skill-list.ts
+    - src/lib/codex/feat-list.ts
+    - src/hooks/codex-types.ts
+  description: |
+    /debt inventory: near-copy `getMaxQualifiedFeatLevel` in feat-requirements vs
+    creature-feat-utils; `buildSkillIdToName` duplicated in skill-list and feat-list.
+    Collapse to one API + thin adapters — no behavior change.
+  acceptance_criteria:
+    - Single canonical feat-level helper; creature path adapts inputs only.
+    - Single `buildSkillIdToName` (or shared import); delete weaker fork.
+    - Existing feat-requirement / creature feat tests green; npm run build.
+  completed_work: |
+    - Deleted creature-feat-utils `getMaxQualifiedFeatLevel`; creature-creator calls
+      canonical helper with `creatureToFeatRequirementCharacter` adapter.
+    - Deleted feat-list `buildSkillIdToName`; Codex/Admin feats tabs import from skill-list.
+    - hooks `buildSkillIdToNameMap` now delegates to skill-list (String keys).
+  notes: |
+    Filed from /debt 2026-07-19. Lib consolidation — no manual QA suite.
+  evidence: |
+    npm run build; vitest feat/guided tests (see PR).
+
 - id: TASK-567
   title: Migrate AddProficiencyModal onto UnifiedSelectionModal
   created_at: 2026-07-19

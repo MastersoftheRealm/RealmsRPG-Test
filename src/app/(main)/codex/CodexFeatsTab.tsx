@@ -31,10 +31,10 @@ import {
   CODEX_FEAT_HEADER_COLUMNS,
   FEAT_GRID_COLUMNS,
   buildFeatFilterOptions,
-  buildSkillIdToName,
   filterFeats,
   type FeatListFilters,
 } from '@/lib/codex/feat-list';
+import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import type { CodexSkillForFeat } from '@/lib/game/formulas';
 
 interface FeatFilters extends FeatListFilters {

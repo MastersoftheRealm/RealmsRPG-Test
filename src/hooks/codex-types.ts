@@ -36,6 +36,7 @@ export type {
 } from '@/types/codex';
 
 import type { Trait, Skill } from '@/types/codex';
+import { buildSkillIdToName } from '@/lib/codex/skill-list';
 
 // =============================================================================
 // Trait Resolution Utilities
@@ -86,8 +87,9 @@ export function useResolvedTraits(traitIds: (string | number)[]): {
 // Skill ID Resolution Utilities
 // =============================================================================
 
+/** Thin alias - canonical map builder lives in `@/lib/codex/skill-list`. */
 export function buildSkillIdToNameMap(skills: Skill[]): Map<string, string> {
-  return new Map(skills.map((s) => [s.id, s.name]));
+  return buildSkillIdToName(skills);
 }
 
 /** Species skill id "0" means "Any" (user picks any skill / extra skill point). */

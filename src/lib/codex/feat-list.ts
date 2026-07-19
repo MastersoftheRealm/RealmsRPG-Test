@@ -4,7 +4,7 @@
 
 import type { AbilityRequirement } from '@/components/shared/filters';
 import type { ChipData } from '@/components/shared/grid-list-row';
-import type { Feat, Skill } from '@/hooks';
+import type { Feat } from '@/hooks';
 import { buildFeatLevelChips } from '@/lib/leveled-feats';
 import { checkFeatRequirements } from '@/lib/game/feat-requirements';
 import type { CodexSkillForFeat } from '@/lib/game/formulas';
@@ -86,12 +86,6 @@ export function buildFeatFilterOptions(feats: Feat[] | undefined): FeatFilterOpt
     tags: Array.from(tags).sort(),
     abilReqAbilities: Array.from(abilReqAbilities).sort(),
   };
-}
-
-export function buildSkillIdToName(skills: Skill[]): Map<string, string> {
-  const map = new Map<string, string>();
-  skills.forEach((s) => map.set(String(s.id), s.name));
-  return map;
 }
 
 export function filterFeats(feats: Feat[], filters: FeatListFilters, options?: FilterFeatsOptions): Feat[] {

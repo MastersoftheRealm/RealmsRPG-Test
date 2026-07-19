@@ -8,11 +8,7 @@ import {
   getFeatFamilyId,
   getFeatLevel,
 } from '@/lib/leveled-feats';
-import {
-  checkFeatRequirements,
-  type CharacterForFeatRequirement,
-} from '@/lib/game/feat-requirements';
-import type { CodexSkillForFeat } from '@/lib/game/formulas';
+import type { CharacterForFeatRequirement } from '@/lib/game/feat-requirements';
 import type { CreatureSkill, CreatureState } from './creature-creator-types';
 import type { CreatureFeat } from './transformers';
 
@@ -58,23 +54,6 @@ export function codexFeatToCreatureFeat(feat: Feat): CreatureFeat {
     points: creaturePointsForPlayerFeat(feat),
     featSourceType: feat.char_feat ? 'character' : 'archetype',
   };
-}
-
-/** Highest feat level in a family the creature currently qualifies for. */
-export function getMaxQualifiedFeatLevel(
-  creature: CreatureState,
-  family: Feat[],
-  codexSkills: CodexSkillForFeat[],
-  allFeats: Feat[]
-): number {
-  const requirementCharacter = creatureToFeatRequirementCharacter(creature);
-  let max = 1;
-  family.forEach((feat) => {
-    const level = getFeatLevel(feat);
-    const { met } = checkFeatRequirements(feat, requirementCharacter, codexSkills, allFeats);
-    if (met) max = Math.max(max, level);
-  });
-  return max;
 }
 
 /** When adding library feats, replace lower levels in the same feat family (matches character sheet). */
