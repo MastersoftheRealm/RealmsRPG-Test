@@ -41,6 +41,7 @@
   developer_test_plan: |
     Suite DEV-V-013 T012 — see BUILD_VALIDATION.md
   pr_link: |
+    https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/50
   merged_at: |
 
 - id: TASK-545
