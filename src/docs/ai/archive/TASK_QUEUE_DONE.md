@@ -37,6 +37,8 @@
     Merged with master 2026-07-19 (kept TASK-564 archive entry from PR #51).
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/52
+  merged_at: |
+    2026-07-19
   evidence: |
     npm run build; /audit → /cleanup touch target + tip docs
   build_validation: |
