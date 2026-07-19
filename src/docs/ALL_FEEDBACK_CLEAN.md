@@ -1,6 +1,6 @@
 # ALL_FEEDBACK ? Consolidated & Curated
 
-Last updated: 2026-07-19 (Archetype Ability vs Primary/Secondary UX clarification → TASK-545)
+Last updated: 2026-07-19 (Guided feats See more → add modal → TASK-565)
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -1771,7 +1771,7 @@ Notes
 - Priority: High
 - Feedback: Add Layer 2 to feat selection pages ? same button location/design as abilities go-deeper; view all feats (modal or in-step expand); same style/location button to go back. Follow product overview + shared modules.
 - Expected: GuidedLayerNav expand/collapse; L2 filtered ranked browse; selections persist when returning to L1.
-- Disposition: Implemented 2026-07-11 ? TASK-429 GuidedFeatsBrowsePanel in-step L2 (not modal).
+- Disposition: Implemented 2026-07-11 — TASK-429 GuidedFeatsBrowsePanel in-step L2 (not modal). Superseded 2026-07-19 — TASK-565 GuidedFeatsL2Modal (UnifiedSelectionModal), matching skills/loadout/powers L2 grammar.
 
 **Raw Feedback Log ? 2026-07-15 (Guided choice-card deep-dive / ?Layer 2 Cards?)**
 - Date: 2026-07-15
@@ -2481,6 +2481,15 @@ Notes
   desktop skills on character sheet, the + on skill val increase steppers is pushed behing the right side, so that's an issue.
 - Expected: In Skills edit mode on desktop (`lg+` narrow Skills column), each Value stepper shows a full usable `+` (not clipped by the panel/card edge); horizontal scroll via TableScroll if the table is wider than the panel.
 - Disposition: Implemented as **TASK-543** (renumbered; TASK-540–542 taken by auth / sticky footer / inventory+roll-log). QA: DEV-V-009-T024.
+
+**Raw Feedback Log - 2026-07-19 (Guided feats See more → add modal)**
+- Date: 2026-07-19
+- Context: Guided creator → Archetype Feats / Character Feat Layer 2
+- Priority: High
+- Feedback (verbatim):
+  As task 565 (idc if this is higher than next highest I dont want task conflicts): see all Feats shouldn't add all fests to the list as cards it should instead be an add modal like other L2 see all buttons in the guided creator.
+- Expected: See more Feats / See more Character Feats opens an add modal (UnifiedSelectionModal grammar like Browse all Skills / Loadout / Powers), not an in-step full-catalog card grid.
+- Disposition: Implemented as **TASK-565**. QA: DEV-V-013-T012.
 
 **Raw Feedback Log - 2026-07-19 (Archetype Ability vs Primary/Secondary UX clarification)**
 - Date: 2026-07-19

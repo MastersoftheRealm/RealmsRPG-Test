@@ -269,13 +269,14 @@ export const GUIDED_CREATOR_COPY = {
       emptyDescription:
         'None are available right now. Use See more Character Feats, or pick another path.',
     },
-    /** Shared Layer 2 browse chrome for archetype + character feat steps. */
-    featsBrowse: {
-      heading: 'Browse Feats',
-      hint: (max: number) =>
+    /** Shared Layer 2 add-modal copy for archetype + character feat steps (TASK-565). */
+    featsL2: {
+      archetypeTitle: 'Add Archetype Feats',
+      characterTitle: 'Add Character Feat',
+      description: (max: number) =>
         max === 1
-          ? 'Showing Feats you qualify for. Pick one, or show locked Feats to see their requirements.'
-          : `Showing Feats you qualify for. Pick up to ${max}. Selecting another swaps your most recent pick.`,
+          ? 'Showing Feats you qualify for. Pick one, then Add Selected. Optionally show locked Feats to read requirements.'
+          : `Showing Feats you qualify for. Pick up to ${max}, then Add Selected.`,
       searchPlaceholder: 'Search Feats…',
       categoryLabel: 'Category',
       abilityLabel: 'Ability',
@@ -283,9 +284,10 @@ export const GUIDED_CREATOR_COPY = {
       allAbilities: 'All Abilities',
       showBlocked: "Show Feats I don't qualify for",
       recommendedBadge: 'Recommended',
-      requirementsNotMet: 'Requirements not met',
-      emptyTitle: 'No Feats match',
-      emptyDescription: 'Try clearing filters or showing locked Feats.',
+      emptyMessage: 'No Feats match your filters. Try clearing filters or showing locked Feats.',
+      overLimit: (max: number) =>
+        `You can select up to ${max} Feats. Deselect some to continue.`,
+      overLimitZero: 'No Feat slots left. Deselect a Feat on this step, then try again.',
     },
     loadout: {
       title: 'Loadout',

@@ -1769,26 +1769,26 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 ---
 
-#### DEV-V-013-T012 — Feat steps Layer 2 browse
+#### DEV-V-013-T012 — Feat steps Layer 2 add modal
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 — Guided Simple character creator |
-| **Related task** | TASK-429 |
+| **Related task** | TASK-429, TASK-565 |
 | **Where** | Guided creator → Archetype Feats, then Character Feat |
 | **Needs** | Path + species + abilities + skills complete |
 
 **Steps**
-1. On Archetype Feats, confirm path guidance groups and **See more feats** below the grid.
-2. Click See more feats; confirm L1 groups are replaced by Browse feats (search + filters).
-3. Select a non-path feat; confirm counter updates (swap at max if already full).
-4. Click **← Back to recommendations**; confirm L1 groups return and selections remain.
-5. On Character Feat, repeat See more / back; confirm single-select replace works in L2.
+1. On Archetype Feats, confirm path guidance groups and **See more Feats** below the grid (L1 cards stay as path recommendations only — not the full catalog).
+2. Click See more Feats; confirm an **Add Archetype Feats** modal opens (`UnifiedSelectionModal`, full-screen on mobile) and L1 groups remain behind the overlay.
+3. Select a non-path feat (respect max); Add Selected; confirm counter updates and modal closes.
+4. Re-open See more Feats; deselect / replace; confirm L1 cards and counter stay in sync after confirm. Cancel leaves prior picks unchanged.
+5. On Character Feat, repeat with **See more Character Feats** → **Add Character Feat** modal; confirm single-select replace works.
 
 **Expected**
-- GuidedLayerNav expand/collapse matches abilities placement (below content).
-- L2 defaults to feats you qualify for; optional "Show feats I don't qualify for".
-- No modal overlay for Layer 2.
+- GuidedLayerNav opens an add modal (same grammar as Browse all Skills / See more options on Loadout & Powers) — does **not** dump all feats as in-step cards.
+- L2 defaults to feats you qualify for; optional "Show Feats I don't qualify for".
+- Modal uses `fullScreenOnMobile`; Add Selected / Cancel are sticky (≥44px targets).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
