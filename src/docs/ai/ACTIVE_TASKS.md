@@ -404,7 +404,7 @@ Do **not** read the done archive at session start.
   status: not-started
   related_files:
     - src/lib/game/feat-requirements.ts
-    - src/lib/game/creature-feat-utils.ts
+    - src/app/(main)/creature-creator/creature-feat-utils.ts
     - src/lib/codex/skill-list.ts
     - src/lib/codex/feat-list.ts
   description: |
