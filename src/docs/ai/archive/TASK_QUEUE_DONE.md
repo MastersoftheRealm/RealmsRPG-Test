@@ -40,8 +40,10 @@
     GAME_RULES 2026-07-19: Terminology + HP/EN use Primary/Secondary Ability (aligned with UI).
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/45
+  merged_at: |
+    2026-07-19
   evidence: |
-    npm run build; vitest path-ability-labels.test.ts
+    npm run build; vitest path-ability-labels.test.ts; CI green; merged to master via PR #45
   build_validation: |
     suite: DEV-V-013
     tests:
