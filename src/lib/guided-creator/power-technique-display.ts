@@ -2,6 +2,7 @@
  * Shared power/technique card display helpers for guided L1 + L2 browse.
  * Loadout-style disclosure (TASK-470): title-adjacent Training Points;
  * mechanic facts (Action Type, Energy) as See more desc chips.
+ * Innate L1 cards use the same TP title chip (TASK-573); Energy stays in detail.
  */
 
 import type { ChipData } from '@/components/shared/grid-list-row-types';
@@ -102,19 +103,12 @@ export function resolvePowerTechniqueEnergy(
   }
 }
 
-export type PowerTechniqueTitleBudget = 'training-points' | 'energy';
-
 export function buildPowerTechniqueCardFacts(
   kind: PowersTechniquesKind,
   item: LibraryPower | LibraryTechnique | undefined,
   fallbackId: string,
   powerPartsDb: PowerPart[],
-  techniquePartsDb: TechniquePart[],
-  /**
-   * Title-adjacent budget chip: Training Points (regular) or Energy (innate track).
-   * Mechanic facts (Action Type; Energy when title is TP) stay in detailChips.
-   */
-  titleBudget: PowerTechniqueTitleBudget = 'training-points'
+  techniquePartsDb: TechniquePart[]
 ): PowerTechniqueCardFacts {
   const name = item?.name ? String(item.name) : fallbackId;
   const description = item?.description ? String(item.description) : undefined;
@@ -123,10 +117,8 @@ export function buildPowerTechniqueCardFacts(
   const detailChips: ChipData[] = [];
 
   if (!item) {
-    if (titleBudget === 'training-points') {
-      const tpChip = trainingPointsFactChip(tpCost);
-      if (tpChip) titleChips.push(tpChip);
-    }
+    const tpChip = trainingPointsFactChip(tpCost);
+    if (tpChip) titleChips.push(tpChip);
     return { name, description, titleChips, detailChips, tpCost };
   }
 
@@ -146,7 +138,7 @@ export function buildPowerTechniqueCardFacts(
       if (actionChip) detailChips.push(actionChip);
       const energy =
         typeof disp.energy === 'number' ? Math.max(0, Math.floor(disp.energy)) : undefined;
-      pushBudgetChips(titleChips, detailChips, titleBudget, tpCost, energy);
+      pushBudgetChips(titleChips, detailChips, tpCost, energy);
       return {
         name,
         description,
@@ -170,7 +162,7 @@ export function buildPowerTechniqueCardFacts(
     if (actionChip) detailChips.push(actionChip);
     const energy =
       typeof disp.energy === 'number' ? Math.max(0, Math.floor(disp.energy)) : undefined;
-    pushBudgetChips(titleChips, detailChips, titleBudget, tpCost, energy);
+    pushBudgetChips(titleChips, detailChips, tpCost, energy);
     return {
       name,
       description,
@@ -181,10 +173,8 @@ export function buildPowerTechniqueCardFacts(
       actionType: formatActionTypeValue(rawAction),
     };
   } catch {
-    if (titleBudget === 'training-points') {
-      const tpChip = trainingPointsFactChip(tpCost);
-      if (tpChip) titleChips.push(tpChip);
-    }
+    const tpChip = trainingPointsFactChip(tpCost);
+    if (tpChip) titleChips.push(tpChip);
     return { name, description, titleChips, detailChips, tpCost };
   }
 }
@@ -192,15 +182,9 @@ export function buildPowerTechniqueCardFacts(
 function pushBudgetChips(
   titleChips: ChipData[],
   detailChips: ChipData[],
-  titleBudget: PowerTechniqueTitleBudget,
   tpCost: number,
   energy: number | undefined
 ): void {
-  if (titleBudget === 'energy') {
-    const energyChip = energyFactChip(energy);
-    if (energyChip) titleChips.push(energyChip);
-    return;
-  }
   const tpChip = trainingPointsFactChip(tpCost);
   if (tpChip) titleChips.push(tpChip);
   const energyChip = energyFactChip(energy);

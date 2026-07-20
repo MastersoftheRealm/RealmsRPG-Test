@@ -408,10 +408,10 @@ export const GUIDED_CREATOR_COPY = {
         const label = kind === 'techniques' ? 'Techniques' : 'Powers';
         return `This path has no ${label} recommendations yet. Use See more options to browse, or add ${label} later on your character sheet.`;
       },
-      /** Innate Powers section (Power / Powered-Martial) — TASK-471 / TASK-472. */
+      /** Innate Powers section (Power / Powered-Martial) — TASK-471 / TASK-472 / TASK-573. */
       innateHeading: 'Innate Powers',
       innateIntro:
-        'Path-recommended innate powers. Each must fit your Innate Threshold; spend all Innate Energy before continuing.',
+        'Path-recommended innate powers. Each must fit your Innate Threshold and costs Training Points like other Powers. Filling your Innate Energy pool is recommended but optional.',
       innateEmpty:
         'No innate power recommendations on this path yet. Use See more Innate Powers to browse eligible options.',
       innateSeeMore: 'See more Innate Powers',
@@ -419,7 +419,8 @@ export const GUIDED_CREATOR_COPY = {
       innateThresholdHint: (threshold: number) => `Innate Threshold ${threshold}`,
       innateEnergyBlocked: 'Not enough Innate Energy remaining for that choice.',
       innateThresholdBlocked: 'That power exceeds your Innate Threshold.',
-      innateMustFill: 'Spend all Innate Energy to continue.',
+      /** Soft hint when Innate Energy remains — Continue stays enabled (TASK-573). */
+      innateMustFill: 'Innate Energy remaining — you can continue, or pick more innate powers.',
       powersHeading: 'Powers',
       techniquesHeading: 'Techniques',
       l2: {

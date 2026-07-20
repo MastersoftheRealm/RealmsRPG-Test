@@ -1,7 +1,8 @@
 /**
  * Powers OR Techniques — step title depends on archetype (never both).
  * L1: path cards (innate vs regular when Power) + shared Training Points.
- * L2: UnifiedSelectionModal (TASK-463); innate modal (TASK-471/472).
+ * L2: UnifiedSelectionModal (TASK-463); innate modal (TASK-471/472/573).
+ * Innate Energy fill is soft-warn only; innate picks spend TP like regular Powers.
  */
 
 'use client';
@@ -102,28 +103,37 @@ function pickAffordableIds(
   return picked;
 }
 
-/** Soft-seed innate picks that fit threshold and fill as much Innate Energy as possible. */
+/**
+ * Soft-seed innate picks that fit threshold, fill as much Innate Energy as possible,
+ * and stay within the shared Training Points budget.
+ */
 function pickInnateFillIds(
   ids: string[],
   energyOf: (id: string) => number | undefined,
+  tpOf: (id: string) => number,
   threshold: number,
-  energyMax: number
+  energyMax: number,
+  tpAlreadySpent: number,
+  tpLimit: number
 ): string[] {
   const candidates = ids
-    .map((id) => ({ id, energy: energyOf(id) }))
+    .map((id) => ({ id, energy: energyOf(id), tp: tpOf(id) }))
     .filter(
-      (row): row is { id: string; energy: number } =>
+      (row): row is { id: string; energy: number; tp: number } =>
         row.energy != null && row.energy >= 0 && row.energy <= threshold
     )
     .sort((a, b) => b.energy - a.energy);
 
   const picked: string[] = [];
-  let spent = 0;
+  let energySpent = 0;
+  let tpSpent = tpAlreadySpent;
   for (const row of candidates) {
-    if (spent + row.energy > energyMax) continue;
+    if (energySpent + row.energy > energyMax) continue;
+    if (tpSpent + row.tp > tpLimit) continue;
     picked.push(row.id);
-    spent += row.energy;
-    if (spent === energyMax) break;
+    energySpent += row.energy;
+    tpSpent += row.tp;
+    if (energySpent === energyMax) break;
   }
   return picked;
 }
@@ -256,10 +266,21 @@ export function PowersTechniquesStep() {
     [lookup, powerPartsDb, techniquePartsDb]
   );
 
-  const combatTpSpent = useMemo(
+  const regularTpSpent = useMemo(
     () => selectedIds.reduce((sum, id) => sum + resolveTpCost(id), 0),
     [selectedIds, resolveTpCost]
   );
+
+  const innateTpSpent = useMemo(
+    () =>
+      showInnateTrack
+        ? selectedInnateIds.reduce((sum, id) => sum + resolveTpCost(id), 0)
+        : 0,
+    [showInnateTrack, selectedInnateIds, resolveTpCost]
+  );
+
+  /** Innate + regular powers both spend the shared Training Points budget. */
+  const combatTpSpent = regularTpSpent + innateTpSpent;
 
   const tpBudget = useMemo(
     () => combineGuidedTpBudgets(loadoutTp, combatTpSpent),
@@ -277,14 +298,47 @@ export function PowersTechniquesStep() {
 
   const innateRemaining = innateEnergyMax - innateEnergySpent;
 
-  /** Soft-seed affordable regular recommendations once (exclude path innate ids). */
+  /**
+   * Soft-seed once: innate first (energy + TP), then regular with remaining TP,
+   * so innate recommendations are not starved by regular seed spend.
+   */
   useEffect(() => {
+    if (isLoading || pathData == null) return;
+
+    if (showInnateTrack && !didSeedInnate.current) {
+      if (selectedInnateIds.length > 0) {
+        didSeedInnate.current = true;
+      } else if (innateRecommendedIds.length === 0 || innateEnergyMax <= 0) {
+        didSeedInnate.current = true;
+      } else {
+        const regularKeys = new Set(selectedIds.map((id) => normalizeId(id)));
+        const innatePool = innateRecommendedIds.filter(
+          (id) => !regularKeys.has(normalizeId(id))
+        );
+        const seed = pickInnateFillIds(
+          innatePool,
+          resolveEnergy,
+          resolveTpCost,
+          innateThreshold,
+          innateEnergyMax,
+          loadoutTp.spent + regularTpSpent,
+          loadoutTp.limit
+        );
+        didSeedInnate.current = true;
+        if (seed.length > 0) {
+          updateDraft({ innatePowerIds: seed });
+          // Wait for draft update before seeding regular against remaining TP.
+          return;
+        }
+      }
+    }
+
     if (didSeedSelection.current) return;
     if (selectedIds.length > 0) {
       didSeedSelection.current = true;
       return;
     }
-    if (isLoading || pathData == null) return;
+    if (showInnateTrack && !didSeedInnate.current) return;
     if (allOptionIds.length === 0) {
       didSeedSelection.current = true;
       return;
@@ -294,7 +348,7 @@ export function PowersTechniquesStep() {
     const seed = pickAffordableIds(
       regularPool,
       resolveTpCost,
-      loadoutTp.spent,
+      loadoutTp.spent + innateTpSpent,
       loadoutTp.limit
     );
     didSeedSelection.current = true;
@@ -308,50 +362,20 @@ export function PowersTechniquesStep() {
     allOptionIds,
     innateRecommendedIds,
     isTechniques,
-    selectedIds.length,
+    showInnateTrack,
+    selectedIds,
+    selectedInnateIds.length,
     updateDraft,
     isLoading,
     pathData,
     resolveTpCost,
+    resolveEnergy,
     loadoutTp.spent,
     loadoutTp.limit,
-  ]);
-
-  /** Soft-seed innate path picks that fill Innate Energy when possible (skip regular picks). */
-  useEffect(() => {
-    if (!showInnateTrack) return;
-    if (didSeedInnate.current) return;
-    if (selectedInnateIds.length > 0) {
-      didSeedInnate.current = true;
-      return;
-    }
-    if (isLoading || pathData == null) return;
-    if (innateRecommendedIds.length === 0 || innateEnergyMax <= 0) {
-      didSeedInnate.current = true;
-      return;
-    }
-    const regularKeys = new Set(selectedIds.map((id) => normalizeId(id)));
-    const innatePool = innateRecommendedIds.filter((id) => !regularKeys.has(normalizeId(id)));
-    const seed = pickInnateFillIds(
-      innatePool,
-      resolveEnergy,
-      innateThreshold,
-      innateEnergyMax
-    );
-    didSeedInnate.current = true;
-    if (seed.length === 0) return;
-    updateDraft({ innatePowerIds: seed });
-  }, [
-    showInnateTrack,
-    selectedInnateIds.length,
-    selectedIds,
-    isLoading,
-    pathData,
-    innateRecommendedIds,
     innateEnergyMax,
     innateThreshold,
-    resolveEnergy,
-    updateDraft,
+    regularTpSpent,
+    innateTpSpent,
   ]);
 
   const isSelectedId = useCallback(
@@ -438,7 +462,9 @@ export function PowersTechniquesStep() {
         return;
       }
       const addTp = resolveTpCost(key);
-      const othersSpent = draft.powerIds.reduce((sum, x) => sum + resolveTpCost(x), 0);
+      const othersSpent =
+        draft.powerIds.reduce((sum, x) => sum + resolveTpCost(x), 0) +
+        draft.innatePowerIds.reduce((sum, x) => sum + resolveTpCost(x), 0);
       if (wouldExceedSharedTp(loadoutTp.spent + othersSpent, loadoutTp.limit, addTp)) {
         setBudgetMessage(ptCopy.tpBlocked);
         return;
@@ -475,12 +501,20 @@ export function PowersTechniquesStep() {
         setBudgetMessage(ptCopy.innateThresholdBlocked);
         return;
       }
-      const othersSpent = draft.innatePowerIds.reduce((sum, x) => {
+      const othersEnergy = draft.innatePowerIds.reduce((sum, x) => {
         const e = resolveEnergy(x);
         return sum + (e != null ? e : 0);
       }, 0);
-      if (othersSpent + energy > innateEnergyMax) {
+      if (othersEnergy + energy > innateEnergyMax) {
         setBudgetMessage(ptCopy.innateEnergyBlocked);
+        return;
+      }
+      const addTp = resolveTpCost(key);
+      const othersTp =
+        draft.innatePowerIds.reduce((sum, x) => sum + resolveTpCost(x), 0) +
+        draft.powerIds.reduce((sum, x) => sum + resolveTpCost(x), 0);
+      if (wouldExceedSharedTp(loadoutTp.spent + othersTp, loadoutTp.limit, addTp)) {
+        setBudgetMessage(ptCopy.tpBlocked);
         return;
       }
       const nextRegular = isSelectedId(key, draft.powerIds)
@@ -497,6 +531,8 @@ export function PowersTechniquesStep() {
       innateThreshold,
       innateEnergyMax,
       resolveEnergy,
+      resolveTpCost,
+      loadoutTp,
       isSelectedId,
       removeSelectedAlias,
       updateDraft,
@@ -506,10 +542,18 @@ export function PowersTechniquesStep() {
   const isRegularUnavailable = useCallback(
     (id: string) => {
       if (isSelectedId(id, selectedIds)) return false;
-      const othersSpent = selectedIds.reduce((sum, x) => sum + resolveTpCost(x), 0);
+      const othersSpent = regularTpSpent + innateTpSpent;
       return wouldExceedSharedTp(loadoutTp.spent + othersSpent, loadoutTp.limit, resolveTpCost(id));
     },
-    [isSelectedId, selectedIds, resolveTpCost, loadoutTp.spent, loadoutTp.limit]
+    [
+      isSelectedId,
+      selectedIds,
+      resolveTpCost,
+      loadoutTp.spent,
+      loadoutTp.limit,
+      regularTpSpent,
+      innateTpSpent,
+    ]
   );
 
   const isInnateUnavailable = useCallback(
@@ -517,25 +561,40 @@ export function PowersTechniquesStep() {
       if (isSelectedId(id, selectedInnateIds)) return false;
       const energy = resolveEnergy(id);
       if (energy == null || energy > innateThreshold) return true;
-      const othersSpent = selectedInnateIds.reduce((sum, x) => {
+      const othersEnergy = selectedInnateIds.reduce((sum, x) => {
         const e = resolveEnergy(x);
         return sum + (e != null ? e : 0);
       }, 0);
-      return othersSpent + energy > innateEnergyMax;
+      if (othersEnergy + energy > innateEnergyMax) return true;
+      return wouldExceedSharedTp(
+        loadoutTp.spent + regularTpSpent + innateTpSpent,
+        loadoutTp.limit,
+        resolveTpCost(id)
+      );
     },
-    [isSelectedId, selectedInnateIds, resolveEnergy, innateThreshold, innateEnergyMax]
+    [
+      isSelectedId,
+      selectedInnateIds,
+      resolveEnergy,
+      resolveTpCost,
+      innateThreshold,
+      innateEnergyMax,
+      loadoutTp.spent,
+      loadoutTp.limit,
+      regularTpSpent,
+      innateTpSpent,
+    ]
   );
 
   const resolveDisplay = useCallback(
-    (id: string, titleBudget: 'training-points' | 'energy' = 'training-points') => {
+    (id: string) => {
       const raw = resolveLibraryItem(id, lookup);
       const facts = buildPowerTechniqueCardFacts(
         isTechniques ? 'techniques' : 'powers',
         raw,
         id,
         powerPartsDb,
-        techniquePartsDb,
-        titleBudget
+        techniquePartsDb
       );
       return {
         id: String(id),
@@ -556,11 +615,9 @@ export function PowersTechniquesStep() {
       unavailable: boolean;
       onToggle: () => void;
       pathRecommended?: boolean;
-      /** Innate L1: Energy title-adjacent; regular: Training Points. */
-      titleBudget?: 'training-points' | 'energy';
     }
   ) => {
-    const item = resolveDisplay(id, opts.titleBudget ?? 'training-points');
+    const item = resolveDisplay(id);
     return (
       <GuidedChoiceCard
         key={item.id}
@@ -620,7 +677,10 @@ export function PowersTechniquesStep() {
     );
   };
 
-  const canContinue = !showInnateTrack || innateEnergyMax <= 0 || innateRemaining === 0;
+  /** Innate Energy under-fill is a soft warning only — never block Continue (TASK-573). */
+  const canContinue = true;
+  const innateSoftWarn =
+    showInnateTrack && innateEnergyMax > 0 && innateRemaining !== 0;
 
   const budgetBar = (
     <div className="flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
@@ -637,6 +697,10 @@ export function PowersTechniquesStep() {
   );
 
   const archetypeAbility = draft.pow_abil ?? draft.mart_abil;
+
+  /** TP spent outside the open L2 modal (loadout + the other powers track). */
+  const l2BaseTpSpent =
+    loadoutTp.spent + (l2Modal === 'innate' ? regularTpSpent : innateTpSpent);
 
   const handleL2Confirm = useCallback(
     (ids: string[]) => {
@@ -667,8 +731,14 @@ export function PowersTechniquesStep() {
       canContinue={canContinue}
       continueLabel={GUIDED_CREATOR_COPY.steps.skills.continueLabel}
       completionHint={
-        <span className="font-nunito">
-          {showInnateTrack && innateEnergyMax > 0 && innateRemaining !== 0
+        <span
+          className={
+            innateSoftWarn
+              ? 'font-nunito text-warning-700 dark:text-warning-400'
+              : 'font-nunito'
+          }
+        >
+          {innateSoftWarn
             ? ptCopy.innateMustFill
             : `${selectedIds.length}${allOptionIds.length ? ` / ${allOptionIds.length}` : ''}`}
         </span>
@@ -709,7 +779,6 @@ export function PowersTechniquesStep() {
                       selected: isSelectedId(id, selectedInnateIds),
                       unavailable: isInnateUnavailable(id),
                       onToggle: () => toggleInnateId(id),
-                      titleBudget: 'energy',
                       pathRecommended:
                         innatePromotedIds.length > 0 &&
                         isPathRecommendedPowersTechniquesId(
@@ -818,7 +887,7 @@ export function PowersTechniquesStep() {
         techniquePartsDb={techniquePartsDb}
         pathRecommendedIds={l2Modal === 'innate' ? innateRecommendedIds : allOptionIds}
         initialSelectedIds={l2Modal === 'innate' ? selectedInnateIds : selectedIds}
-        loadoutTpSpent={loadoutTp.spent}
+        loadoutTpSpent={l2BaseTpSpent}
         tpLimit={loadoutTp.limit}
         archetypeAbility={archetypeAbility}
         abilities={draft.abilities}

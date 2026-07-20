@@ -194,7 +194,8 @@ export function trainingPointLimitFromRecommendedAbilities(
 
 /**
  * Combine equipment loadout spend with powers/techniques spend against the same TP limit.
- * `combatTpSpent` is the sum of selected power/technique Training Points (part totals).
+ * `combatTpSpent` is the sum of selected power/technique Training Points (part totals),
+ * including innate powers (they spend TP like regular Powers).
  */
 export function combineGuidedTpBudgets(
   loadout: { spent: number; limit: number; remaining: number },
