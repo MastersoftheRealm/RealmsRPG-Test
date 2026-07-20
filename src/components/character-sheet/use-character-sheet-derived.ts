@@ -27,18 +27,14 @@ import { applySpeciesTraitChoiceSelections } from '@/lib/choice-trait';
 import type { CoreRulesMap } from '@/types/core-rules';
 import type { LibraryForView } from '@/services/character-service';
 import type { UserItem, UserPower, UserTechnique } from '@/hooks/use-user-library';
-import { calculateAllStats, type AllDerivedStats } from '@/lib/game/calculations';
+import {
+  calculateStats,
+  type CharacterSheetStats,
+} from '@/app/(main)/characters/[id]/character-sheet-utils';
 import { buildLibrarySectionProps } from '@/app/(main)/characters/[id]/library-section-props';
 import type { LibrarySectionProps } from './library-section';
 
-export type CharacterSheetStats = AllDerivedStats;
-
-function calculateStats(
-  character: Character,
-  rules?: Partial<CoreRulesMap>
-): CharacterSheetStats {
-  return calculateAllStats(character, rules);
-}
+export type { CharacterSheetStats };
 
 export interface CharacterSheetSkillRow {
   id: string;

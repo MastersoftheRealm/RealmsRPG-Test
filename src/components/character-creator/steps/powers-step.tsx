@@ -2,7 +2,7 @@
  * Powers Step
  * ===========
  * Allow users to select powers and techniques for their character.
- * Uses powers from user's library with ItemSelectionModal.
+ * Uses powers from user's library with UnifiedSelectionModal.
  */
 
 'use client';

@@ -617,19 +617,20 @@ Powers, techniques, and equipment management. File: [src/components/character-sh
 - Features: Tab navigation, add buttons, equip toggles, innate toggles
 - Tabs: Powers, Techniques, Weapons, Armor, Equipment
 
-### DiceRoller & RollLog
+### RollProvider & RollLog
 
-Dice rolling system. Files: [dice-roller.tsx](src/components/character-sheet/dice-roller.tsx#L1), [roll-log.tsx](src/components/character-sheet/roll-log.tsx#L1)
-- Features: Dice pool builder, roll history, fixed-position panel
-- Pattern: Context-based roll state management
+Dice rolling system. Files: [roll-context.tsx](src/components/character-sheet/roll-context.tsx#L1), [roll-log.tsx](src/components/character-sheet/roll-log.tsx#L1)
+- Features: Roll history, fixed-position panel, campaign roll sync
+- Pattern: Context-based roll state (`RollProvider`); used by sheet, encounters, creature creator, library creatures
+- Note: Standalone `DiceRoller` UI was removed (unused); ownership move to shared/game domain tracked as TASK-593
 
 ### Character Sheet Modals
 
 - **AddFeatModal** - Add feats from archetype or general pool
-- **AddSkillModal** - Add base skills
-- **AddSubSkillModal** - Add sub-skills
+- **AddSubSkillModal** - Add sub-skills (sheet: base skills are catalog-all — no Add Skill)
 - **AddLibraryItemModal** - Add powers, techniques, weapons, armor, equipment
 - **LevelUpModal** - Level up wizard with point allocation
+- **EditSpeciesModal** / **EditArchetypeModal** - Sheet identity editors
 
 ---
 
@@ -793,8 +794,8 @@ Collapsible filter container. File: [src/components/shared/filters/filter-sectio
 
 ### Character Sheet Pages
 - [src/app/(main)/characters/[id]/page.tsx](src/app/(main)/characters/[id]/page.tsx#L1)
-  - Uses: SheetHeader, AbilitiesSection, SkillsSection, LibrarySection, DiceRoller, RollLog
-  - Modals: AddFeatModal, AddSkillModal, AddSubSkillModal, AddLibraryItemModal, LevelUpModal
+  - Uses: SheetHeader, AbilitiesSection, SkillsSection, ArchetypeSection, LibrarySection, RollProvider, RollLog
+  - Modals: AddFeatModal, AddSubSkillModal, AddLibraryItemModal, LevelUpModal, EditSpecies/EditArchetype
   - Patterns: Section-based layout, edit mode toggle, auto-save
 
 ### Creator Tools

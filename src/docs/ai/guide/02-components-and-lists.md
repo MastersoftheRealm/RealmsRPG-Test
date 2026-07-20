@@ -51,7 +51,7 @@ Goal: "Learn once, use forever" — consistent UI across Library, Codex, Charact
 | DetailOptionList + lib/detail-option | Shared elongated option-row toolkit for deep-dive + remodeled species-modal / SpeciesRevealPanel granted traits (TASK-435) |
 | GuidedLayerNav | Layer 1 expand / Layer 2+ collapse below step content — guided creator (path, species, abilities), GuidedChoiceShell (Advanced path mode) |
 | SkillRow | skills-section, skills-step, creature-creator, SkillsAllocationPage. Table play view gates source chrome via `isEditing` (TASK-485) |
-| ValueStepper (ADR-0002) | abilities-section, sheet-header, health-energy-allocator, GuidedSkillsPanel Dec/Inc, dice-roller, all creators, encounters; QuantitySelector wraps it |
+| ValueStepper (ADR-0002) | abilities-section, sheet-header, health-energy-allocator, GuidedSkillsPanel Dec/Inc, roll-log, all creators, encounters; QuantitySelector wraps it |
 | SectionHeader | feats-tab, proficiencies-tab, notes-tab, archetype-section, crafting pages |
 | ListHeader | All Codex/Library/Admin list views, feats-step, UnifiedSelectionModal |
 | UnifiedSelectionModal | AddFeat/Skill/SubSkill/LibraryItem/Proficiency, LoadFromLibrary, CraftingItemSelect, AddCreatureFeat, guided L2 (feats/equipment/powers), AdminSpecies trait Add |
@@ -67,6 +67,6 @@ Quick reference: `.cursor/rules/realms-unification.mdc`, `DESIGN_SYSTEM.md`.
 - **GridListRow** — Library, Codex, add-feat-modal, add-library-item-modal, add-skill-modal, equipment-step, feats-tab, library-section, creature-creator
 - **HubListRow** — Encounters hub, Crafting hub, Library Enhanced tab (list rows with icon, title, badge, subtitle, delete). **Do not use** for combat/skill encounter participants: those use **CombatantCard** and participant-specific blocks (health, initiative, roll state); HubListRow is for "open/delete" list items only.
 - **SkillRow** — skills-section, skills-step, creature-creator, SkillsAllocationPage. Table variant: when `isEditing` is false, hide `(species)` / `sourceLabel` and species/locked prof opacity so sheet play view matches base skill chrome; edit + allocation (`isEditing` true) keep source markers and locked remove/prof affordances (TASK-485). Card/compact still show source labels for creator flows.
-- **ValueStepper** (ADR-0002) — abilities-section, sheet-header, health-energy-allocator, dice-roller, SkillRow, GuidedSkillsPanel (Dec/Inc), skills-allocation defense, all creators, encounters. One chrome: soft `bg-surface-alt` / no invasive border / bold ± (`.btn-stepper`). Quantities: `QuantitySelector` wraps `ValueStepper`. `colorVariant` colors the **value** only; buttons stay neutral. `enableHoldRepeat` for HP/EN pools only. Do not hand-roll ± buttons.
+- **ValueStepper** (ADR-0002) — abilities-section, sheet-header, health-energy-allocator, SkillRow, GuidedSkillsPanel (Dec/Inc), skills-allocation defense, all creators, encounters. One chrome: soft `bg-surface-alt` / no invasive border / bold ± (`.btn-stepper`). Quantities: `QuantitySelector` wraps `ValueStepper`. `colorVariant` colors the **value** only; buttons stay neutral. `enableHoldRepeat` for HP/EN pools only. Do not hand-roll ± buttons.
 - **SectionHeader** — feats-tab, proficiencies-tab, notes-tab, archetype-section, crafting pages
 - **AddSubSkillModal** — Uses SelectionToggle (not GridListRow) — unique base-skill selector UX

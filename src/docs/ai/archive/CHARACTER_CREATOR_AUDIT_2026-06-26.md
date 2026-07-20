@@ -1,5 +1,7 @@
 # Character Creator Localized Audit — 2026-06-26
 
+> **Historical.** Routes since 2026-06-30: entry chooser at `/characters/new`; Advanced at `/characters/new/advanced`; Guided Simple at `/characters/new/guided`. Do not treat this audit as current SoT — see `guide/06-creators-and-loadouts.md` + FEATURE_INDEX.
+
 > **Scope:** `src/components/character-creator/**`, `src/app/(main)/characters/new/page.tsx`, `src/stores/character-creator-store.ts`, `src/lib/character-creator-validation.ts`.
 > **Method:** Same 10-lens rubric as [`SYSTEMATIC_AUDIT_2026-06.md`](SYSTEMATIC_AUDIT_2026-06.md) (Area 5).
 > **Companion:** [`FULL_AUDIT_2026-06.md`](FULL_AUDIT_2026-06.md) pathology taxonomy; prior Area 5 findings in systematic audit § Area 5.

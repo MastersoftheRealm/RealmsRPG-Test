@@ -4,7 +4,7 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-593
+**Next task ID:** TASK-600
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
@@ -12,44 +12,9 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 2 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 9 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-
-**Hot notes:** Sheet wave **TASK-584–587** done (pending-qa). Automation: TASK-588–592 done (CI). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
-
----
-
-# Character sheet / list overload + Temp Modifier (TASK-584–587) — owner feedback 2026-07-20
-# All done 2026-07-20 (archive; pending-qa). TASK-582/583 also done.
-
-# TASK-584 done 2026-07-20 — Skills catalog-all + filters + − path (archive; pending-qa T032).
-# TASK-587 done 2026-07-20 — Sheet Defense Score hover tip (archive; pending-qa T035).
-# TASK-583 done 2026-07-20 — Parts/Properties & Proficiencies default collapsed + tips (archive).
-# TASK-585 done 2026-07-20 — Temp Modifier Architect ADR + shared dual affordance (archive).
-# TASK-586 done 2026-07-20 — Temp Modifier v1 sheet surfaces wired (archive; pending-qa T033/T034).
-
----
-
-# Guided Path / Archetype screen polish — TASK-578/579/580/581 done (archive).
-
-# TASK-579 done 2026-07-20 — Path feat uses chips + restriction notices (archive).
-# TASK-535 done 2026-07-20 — Path Level-1 innate power reclassify (archive).
-# TASK-581 done 2026-07-20 — tooltip layers docs + Armament tip sheet wire (archive).
-
-# TASK-440 done 2026-07-20 — Dense HUD Health/Energy (archive).
-# TASK-480 automation backlog → TASK-588–592 done (vitest extracts; CI matrix rows 1–9).
-
-# TASK-430 done 2026-07-20 — React Compiler hook warnings cleared (archive; DEV-V-019 pending-qa).
-
----
-
-# BUILD_VALIDATION automation backlog (from TASK-480) — extract pure helpers + vitest
-
-# TASK-588 done 2026-07-20 — path change reset vs retain draft patch (archive).
-# TASK-589 done 2026-07-20 — technique load columns vitest (archive).
-# TASK-590 done 2026-07-20 — innate threshold / TP parity vitest (archive).
-# TASK-591 done 2026-07-20 — ancestry pick task order vitest (archive).
-# TASK-592 done 2026-07-20 — guided Continue one-screen advance vitest (archive).
+**Hot notes:** Sheet/creator `/debt` 2026-07-20 applied (barrel prune, dead DiceRoller, docs). Filed TASK-593–599 from `/global-audit`. TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
 
 ---
 
@@ -77,17 +42,6 @@ Do **not** read the done archive at session start.
 
 ---
 
-# TASK-381 done 2026-07-20 — God-file decomposition phases (archive; pending-qa DEV-V-008 T023–T025 / DEV-V-018 T008–T010).
-# TASK-388 done 2026-07-20 — Post-activation onboarding (archive; pending-qa).
-# TASK-480 done 2026-07-20 — BUILD_VALIDATION automation growth (archive; CI coverage note in DEVELOPER_TASK_QUEUE).
-
----
-
-# Realms Image Library epic (TASK-491–500)
-# TASK-491–499 done. TASK-500 deferred.
-
----
-
 - id: TASK-500
   title: Deferred — enhanced-item images via Realms Image Library
   created_at: 2026-07-16
@@ -109,19 +63,200 @@ Do **not** read the done archive at session start.
 
 ---
 
-# Admin archetype path ↔ guided creator parity (TASK-514–518) — DONE 2026-07-17 (archive).
-# Owner decisions locked: feat audience field; armaments UI-only split; DROP recommended species;
-# skills max 3 warn-not-block. Content pass TASK-521/530 done. TASK-391 superseded (archived).
+# Sheet / creator debt follow-ups (from `/global-audit` 2026-07-20)
+
+- id: TASK-593
+  title: Move RollProvider/RollLog out of character-sheet into shared roll domain
+  created_at: 2026-07-20
+  created_by: agent
+  priority: medium
+  status: not-started
+  related_files:
+    - src/components/character-sheet/roll-context.tsx
+    - src/components/character-sheet/roll-log.tsx
+    - src/components/character-sheet/index.ts
+    - src/types/campaign-roll.ts
+    - src/services/campaign-roll-service.ts
+    - src/components/shared/entity-library-sections.tsx
+    - src/components/shared/quick-armaments-sections.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    Roll context/log live under character-sheet but are consumed by encounters, campaigns,
+    creature creator, library creatures, and shared entity rows. Move to a shared/game roll
+    home; dedupe local `rollDie` / die-image maps; update barrels + FEATURE_INDEX. Do not
+    change roll behavior.
+  acceptance_criteria:
+    - RollProvider/RollLog/useRolls* live outside character-sheet (shared or lib + thin UI).
+    - Single `rollDie` + die-image map; no triplicated helpers.
+    - All previous import sites compile; encounters/sheet/campaign rolls unchanged.
+    - FEATURE_INDEX + UI_COMPONENT_REFERENCE point at new home; `npm run build` passes.
+  notes: |
+    `/debt` 2026-07-20 deleted dead DiceRoller; barrel still re-exports Roll* from character-sheet.
+    Architect pause if new shared/ui file — ADR or owner ack.
 
 ---
 
-# TASK-569 done 2026-07-20 — PartChip alias deleted (archive).
-# TASK-570 done 2026-07-20 — guided parseItemRef → parseIdQuantityStrings (archive).
+- id: TASK-594
+  title: Unify sheet EditSpecies/EditArchetype with creator/guided species+path primitives
+  created_at: 2026-07-20
+  created_by: agent
+  priority: medium
+  status: not-started
+  related_files:
+    - src/components/character-sheet/edit-species-modal.tsx
+    - src/components/character-sheet/edit-archetype-modal.tsx
+    - src/components/character-creator/species-modal.tsx
+    - src/components/character-creator/MixedSpeciesModal.tsx
+    - src/components/character-creator/steps/archetype-step.tsx
+    - src/components/guided-creator/guided-species-detail-modal.tsx
+    - src/components/guided-creator/steps/path-step.tsx
+    - src/components/shared/choice-trait-option-select.tsx
+  description: |
+    Sheet edit-species (~819 LOC) and edit-archetype (~542 LOC) duplicate creator/guided
+    species ancestry and path-picker flows. Extract shared primitives (trait pickers, path
+    option lists, migration/confirm) and thin the sheet modals. Keep sheet-specific save
+    migration (skills after species change) and path-switch confirms.
+  acceptance_criteria:
+    - No parallel trait-resolution / path-card chrome beyond documented guided L1 grammar.
+    - Sheet edit flows still migrate skills and confirm path/forge switches.
+    - Mobile fullScreenOnMobile scroll remains correct (no unconditional max-h vh).
+    - Build + targeted smoke of edit species/archetype on a saved character.
+  notes: |
+    Product ack if UX should match GuidedChoiceCard vs SelectionCard. `/debt` already fixed
+    max-h under fullScreenOnMobile and wired SpeciesModal to findTraitByIdOrName.
 
 ---
 
-# TASK-571 done 2026-07-20 — AddCombatantModal documented as reusable non-USM session picker (archive).
-# TASK-572 done 2026-07-20 — AdminSpecies trait picker → USM; AdminTraits choice list = editor chrome (archive).
+- id: TASK-595
+  title: Shared creator skill-save + character payload builder slice
+  created_at: 2026-07-20
+  created_by: agent
+  priority: medium
+  status: not-started
+  related_files:
+    - src/lib/guided-creator/build-character.ts
+    - src/lib/guided-creator/build-skills.ts
+    - src/stores/character-creator-store.ts
+    - src/components/character-creator/steps/finalize-step.tsx
+    - src/lib/data-enrichment.ts
+    - src/lib/character-save.ts
+  description: |
+    Guided uses `buildGuidedSkillsArray` + `buildGuidedCharacterPayload`; Advanced builds
+    skills array inline in finalize (prof-only 0 must survive `cleanForSave`) and payload
+    in `getCharacter()`. Extract a shared creator skill-save helper + first slice of shared
+    payload assembly without merging stores/routes.
+  acceptance_criteria:
+    - One helper builds skill save rows for guided + advanced (preserves proficient value 0).
+    - Vitest covers prof-only 0 and species skill flags.
+    - Both save paths still set proficiencies + libraryTabVisibility via existing helpers.
+    - Stores/routes remain separate; `npm run build` + targeted tests pass.
+  notes: |
+    Do not merge guided-creator-store with character-creator-store (product decision).
 
-# TASK-403 done 2026-07-20 — Guided Phase 8 admin starter + path JSON (archive; residual → TASK-572).
-# TASK-575 done 2026-07-20 — Admin Official Enhanced → OfficialEnhancedList / OfficialEntityList (archive).
+---
+
+- id: TASK-596
+  title: Extract Advanced equipment-step catalog into lib (guided parity)
+  created_at: 2026-07-20
+  created_by: agent
+  priority: medium
+  status: not-started
+  related_files:
+    - src/components/character-creator/steps/equipment-step.tsx
+    - src/lib/guided-creator/equipment-catalog-rows.ts
+    - src/lib/guided-creator/equipment-eligibility.ts
+    - src/lib/guided-creator/loadout-tp.ts
+    - src/hooks/use-guided-equipment-catalog.ts
+    - src/docs/ai/GUIDED_EQUIPMENT_PHASED_SPEC.md
+  description: |
+    Advanced `equipment-step.tsx` (~1404 LOC) inlines catalog merge, currency/TP, path
+    recommendations, and list rows. Guided already extracted tested modules. Pull Advanced
+    pure catalog/budget logic into `lib/` (shared or character-creator) mirroring guided
+    patterns; keep Advanced page UX (inline list, CreatorResourceBar) unless product asks
+    for USM add-X.
+  acceptance_criteria:
+    - Pure helpers extracted with vitest; equipment-step becomes UI wiring.
+    - Path recommend / currency / TP behavior unchanged vs BUILD_VALIDATION DEV-V-001 equipment tests.
+    - No new parallel budget chrome; do not force LoadoutBudgetBar into Advanced without ack.
+  notes: |
+    Product decision: keep Advanced inline catalog vs migrate add onto USM — default keep list UX.
+
+---
+
+- id: TASK-597
+  title: Campaign RM character view reuses sheet derived assemble
+  created_at: 2026-07-20
+  created_by: agent
+  priority: medium
+  status: not-started
+  related_files:
+    - src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx
+    - src/components/character-sheet/use-character-sheet-derived.ts
+    - src/components/character-sheet/character-sheet-body.tsx
+    - src/app/(main)/characters/[id]/character-sheet-utils.ts
+    - src/app/(main)/characters/[id]/page.tsx
+  description: |
+    Campaign read-only character view (~355 LOC) re-assembles enrichment, calculateStats,
+    and section props instead of `useCharacterSheetDerived` / `CharacterSheetBody`. Wire
+    read-only mode through existing sheet assemble so Temp Modifier / library props stay
+    in parity with owner sheet.
+  acceptance_criteria:
+    - Campaign view uses sheet derived (or a read-only facade) — no parallel enrich/stats glue.
+    - Read-only: no edit/modals that mutate; rolls/log still work if currently present.
+    - Temp modifiers / library visibility match owner sheet display.
+    - Build + smoke open a campaign character view.
+  notes: |
+    Prefer extending CharacterSheetBody/context with isReadOnly over forking sections.
+
+---
+
+- id: TASK-598
+  title: Split oversized sheet + Advanced creator hot files
+  created_at: 2026-07-20
+  created_by: agent
+  priority: low
+  status: not-started
+  related_files:
+    - src/components/character-sheet/sheet-header.tsx
+    - src/components/character-sheet/library-section.tsx
+    - src/components/character-sheet/abilities-section.tsx
+    - src/components/character-creator/steps/equipment-step.tsx
+    - src/components/character-creator/steps/finalize-step.tsx
+    - src/components/character-creator/steps/powers-step.tsx
+    - src/components/character-creator/steps/feats-step.tsx
+  description: |
+    God-file hygiene after TASK-381 sheet facade: split sheet-header, library-section,
+    abilities-section and Advanced equipment/finalize/powers/feats steps along existing
+    section/action seams without behavior change. Coordinate with TASK-594/596 if they
+    already extract chunks.
+  acceptance_criteria:
+    - Target files under ~500 LOC where practical; no public API regressions.
+    - Parity smoke: sheet play/edit; Advanced create through equipment/powers/finalize.
+    - FEATURE_INDEX paths updated if files move.
+  notes: |
+    Skip if TASK-594/596 already shrink the same files enough.
+
+---
+
+- id: TASK-599
+  title: Single source of truth for archetype-category marketing copy
+  created_at: 2026-07-20
+  created_by: agent
+  priority: low
+  status: not-started
+  related_files:
+    - src/components/character-sheet/edit-archetype-modal.tsx
+    - src/components/character-creator/steps/archetype-step.tsx
+    - src/components/creator/archetype-selector.tsx
+    - src/lib/constants/copy
+  description: |
+    `ARCHETYPE_INFO` (Power / Powered-Martial / Martial titles+descriptions) is triplicated
+    with divergent copy between sheet edit-archetype and Advanced archetype-step (plus
+    emoji variant in creator/archetype-selector). Consolidate into one copy module after
+    owner picks canonical wording.
+  acceptance_criteria:
+    - One module exports archetype category title/description (selector may keep icons).
+    - Sheet + Advanced + creature/creator selectors consume it.
+    - Owner-approved copy strings (no silent rewrite of product voice).
+  notes: |
+    Needs owner ack on which descriptions win before implementing.
