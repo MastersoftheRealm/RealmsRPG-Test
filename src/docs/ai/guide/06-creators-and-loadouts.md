@@ -20,11 +20,11 @@ See **`REALMS_PRODUCT_OVERVIEW.md` §5.0** for product intent. Two creators coex
 
 **Guided DB fields** (see `SUPABASE_SCHEMA.md`): `codex_species.is_starter`, `codex_archetypes.level1_recommended_abilities`, `level1_loadouts` (metadata: `armorStep` / `sharedEquipment` only — no kits). Seed: `sql/guided-creator-schema-seed.sql` (applied as migration `guided_creator_schema_seed`; kit payload later cleared TASK-442).
 
-**Advanced step order** (unchanged):
+**Advanced step order** (`STEP_ORDER` in `character-creator-store.ts`):
 
-1. Species → 2. Powers → 3. Skills → 4. Feats → 5. Archetype → 6. Ancestry → 7. Abilities → 8. Equipment → 9. Finalize
+1. Archetype → 2. Species → 3. Ancestry → 4. Abilities → 5. Skills → 6. Feats → 7. Equipment → 8. Powers → 9. Finalize
 
-Steps live in `src/components/character-creator/steps/` (e.g., `species-step.tsx`, `abilities-step.tsx`).
+Steps live in `src/components/character-creator/steps/` (e.g., `archetype-step.tsx`, `species-step.tsx`). Matches BUILD_VALIDATION DEV-V-001.
 
 ## Creator load logic (avoid duplication)
 

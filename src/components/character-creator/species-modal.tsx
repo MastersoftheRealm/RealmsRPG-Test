@@ -6,7 +6,7 @@ import { Modal, Button, Card, DescriptorChip } from '@/components/ui';
 import { DetailOptionList, SummaryChipList, type DetailOptionItem } from '@/components/shared';
 import { speciesSkillToSummaryChipItem } from '@/lib/chip/species-skill-chips';
 import { traitToDetailOption } from '@/lib/detail-option';
-import { useCodexSkills } from '@/hooks';
+import { findTraitByIdOrName, useCodexSkills } from '@/hooks';
 import type { Species, Trait } from '@/hooks';
 import { getChoiceOptionIds, resolveChoiceOptionTraits } from '@/lib/choice-trait';
 
@@ -28,31 +28,18 @@ interface ResolvedTrait {
   optionTraits?: Array<Pick<Trait, 'id' | 'name' | 'description' | 'uses_per_rec' | 'rec_period'>>;
 }
 
-/**
- * Resolve trait IDs to full trait objects using findByIdOrName pattern.
- */
+/** Resolve trait IDs via shared findTraitByIdOrName (+ choice-option children). */
 function resolveTraits(traitIds: (string | number)[], allTraits: Trait[]): ResolvedTrait[] {
   if (!traitIds || !allTraits) return [];
-  
-  return traitIds.map(id => {
-    const idStr = String(id);
-    
-    // Try numeric ID match first
-    let trait = allTraits.find(t => t.id === idStr);
-    
-    // Try name match (case-insensitive)
-    if (!trait) {
-      trait = allTraits.find(t => 
-        String(t.name ?? '').toLowerCase() === idStr.toLowerCase()
-      );
-    }
-    
+
+  return traitIds.map((id) => {
+    const trait = findTraitByIdOrName(allTraits, id);
     if (trait) {
       const optionIds = getChoiceOptionIds(trait);
       const optionTraits = resolveChoiceOptionTraits(optionIds, allTraits);
-      return { 
-        id: trait.id, 
-        name: trait.name, 
+      return {
+        id: trait.id,
+        name: trait.name,
         description: trait.description || 'No description available.',
         found: true,
         uses_per_rec: trait.uses_per_rec,
@@ -66,13 +53,13 @@ function resolveTraits(traitIds: (string | number)[], allTraits: Trait[]): Resol
         })),
       };
     }
-    
-    // Return placeholder for unresolved traits
-    return { 
-      id: idStr, 
-      name: idStr, 
+
+    const idStr = String(id);
+    return {
+      id: idStr,
+      name: idStr,
       description: 'Trait details not found in database.',
-      found: false 
+      found: false,
     };
   });
 }

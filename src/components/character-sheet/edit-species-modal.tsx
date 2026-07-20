@@ -279,8 +279,9 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
       title={step === 'species' ? 'Change species' : 'Ancestry & traits'}
       size="lg"
       fullScreenOnMobile
+      flexLayout
     >
-      <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+      <div className="space-y-4 md:max-h-[70vh] md:overflow-y-auto">
         {step === 'species' && (
           <>
             <p className="text-sm text-text-secondary">
