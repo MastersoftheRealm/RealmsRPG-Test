@@ -8,12 +8,7 @@ import {
   type ItemProperty,
   type ItemPropertyTpRow,
 } from '@/lib/calculators/item-calc';
-import {
-  computeRemainingCurrency,
-  computeSpentCurrency,
-  computeStartingCurrency,
-  wouldExceedCurrency,
-} from '@/lib/guided-creator/equipment-currency';
+import { wouldExceedCurrency } from '@/lib/guided-creator/equipment-currency';
 import {
   buildRequiredProficiencies,
   calculateProficiencyTP,
@@ -25,13 +20,6 @@ import type { CodexEquipmentItem } from '@/types/codex';
 import type { Item } from '@/types/equipment';
 import type { CharacterPower, CharacterTechnique } from '@/types';
 import type { LibraryItem, UserItem } from '@/types/library';
-
-export {
-  computeStartingCurrency,
-  computeSpentCurrency,
-  computeRemainingCurrency,
-  wouldExceedCurrency,
-};
 
 /** Property shape used by Advanced equipment list / inventory rows. */
 export type AdvancedEquipmentProperty =
@@ -81,7 +69,7 @@ export type AdvancedSourceFilter = 'all' | 'public' | 'my';
 export const UNARMED_PROWESS_BASE_TP = 10;
 export const UNARMED_PROWESS_UPGRADE_TP = 6;
 
-export const UNARMED_PROWESS_LEVELS = [
+const UNARMED_PROWESS_LEVELS = [
   {
     level: 1,
     charLevel: 1,
@@ -329,7 +317,7 @@ export function buildAdvancedEquipmentCatalog(args: {
   return items;
 }
 
-export function findAdvancedEquipmentItem(
+function findAdvancedEquipmentItem(
   catalog: AdvancedEquipmentItem[],
   idOrName: string
 ): AdvancedEquipmentItem | undefined {

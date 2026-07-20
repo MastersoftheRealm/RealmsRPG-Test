@@ -50,15 +50,17 @@ import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelp
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
 import { CreatorResourceBar } from '@/components/character-creator/CreatorResourceBar';
 import { getValidationIssuesForStep, getStepCompletion } from '@/lib/character-creator-validation';
+import {
+  computeRemainingCurrency,
+  computeSpentCurrency,
+  computeStartingCurrency,
+} from '@/lib/guided-creator/equipment-currency';
 import { equipmentCurrencyHelp } from '../../../../public/tooltip-text';
 import {
   addAdvancedEquipmentToInventory,
   availableUnarmedProwessLevels,
   buildAdvancedEquipmentCatalog,
   computeAdvancedEquipmentProficiencyTp,
-  computeRemainingCurrency,
-  computeSpentCurrency,
-  computeStartingCurrency,
   computeUnarmedProwessTpCost,
   filterAdvancedEquipmentCatalog,
   filterPathRecommendedForPhase,
@@ -115,8 +117,6 @@ const EMPTY_PATH_RECOMMENDATIONS: PathItemRecommendation[] = [];
 // Match GridListRow right slot (w-[4rem] mr-2) so header columns align with row columns
 const RIGHT_SLOT_WIDTH = '4.5rem';
 
-type EquipmentTabId = AdvancedEquipmentTabId;
-
 export function EquipmentStep() {
   const { tabGroupId, sharedPanelId } = useTabGroup();
   const {
@@ -152,7 +152,7 @@ export function EquipmentStep() {
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
   
-  const [activeTab, setActiveTab] = useState<EquipmentTabId>('weapon');
+  const [activeTab, setActiveTab] = useState<AdvancedEquipmentTabId>('weapon');
   const [searchTerm, setSearchTerm] = useState('');
   const [sourceFilter, setSourceFilter] = useState<SourceFilterValue>('public');
   const [equipmentSort, setEquipmentSort] = useState<SortState>({ col: 'name', dir: 1 });
@@ -737,7 +737,7 @@ export function EquipmentStep() {
           { id: 'unarmed', label: currentUnarmedProwess > 0 ? `Unarmed Prowess (Lv ${currentUnarmedProwess})` : 'Unarmed Prowess' },
         ]}
         activeTab={activeTab}
-        onTabChange={(tabId) => setActiveTab(tabId as EquipmentTabId)}
+        onTabChange={(tabId) => setActiveTab(tabId as AdvancedEquipmentTabId)}
         variant="pill"
         className="mb-4"
         tabGroupId={tabGroupId}

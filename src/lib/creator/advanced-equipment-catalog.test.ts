@@ -4,9 +4,6 @@ import {
   availableUnarmedProwessLevels,
   buildAdvancedEquipmentCatalog,
   computeAdvancedEquipmentProficiencyTp,
-  computeRemainingCurrency,
-  computeSpentCurrency,
-  computeStartingCurrency,
   computeUnarmedProwessTpCost,
   filterAdvancedEquipmentCatalog,
   filterPathRecommendedForPhase,
@@ -21,6 +18,11 @@ import {
   UNARMED_PROWESS_UPGRADE_TP,
   type AdvancedEquipmentItem,
 } from '@/lib/creator/advanced-equipment-catalog';
+import {
+  computeRemainingCurrency,
+  computeSpentCurrency,
+  computeStartingCurrency,
+} from '@/lib/guided-creator/equipment-currency';
 import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
 import type { CodexEquipmentItem } from '@/types/codex';
 import type { LibraryItem } from '@/types/library';
