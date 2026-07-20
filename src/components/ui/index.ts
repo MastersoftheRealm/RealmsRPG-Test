@@ -5,8 +5,8 @@
  */
 
 // Core input components
-export { Button, buttonVariants, type ButtonProps } from './button';
-export { IconButton, iconButtonVariants, type IconButtonProps } from './icon-button';
+export { Button, type ButtonProps } from './button';
+export { IconButton, type IconButtonProps } from './icon-button';
 export { Input, type InputProps } from './input';
 export { Select, type SelectProps, type SelectOption } from './select';
 export { Checkbox, type CheckboxProps } from './checkbox';
@@ -28,13 +28,9 @@ export { ExpandableChip, ChipGroup, type ExpandableChipProps, type ExpandableChi
 export {
   TabNavigation,
   TabContentPanel,
-  TabPanel,
   useTabGroup,
-  tabButtonId,
-  tabPanelIdForTab,
   type Tab,
   type TabContentPanelProps,
-  type TabPanelProps,
 } from './tab-navigation';
 // Note: tabs.tsx (Tabs, TabsList, TabsTrigger, TabsContent) was removed - use TabNavigation instead
 

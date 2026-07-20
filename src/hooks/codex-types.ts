@@ -96,19 +96,6 @@ export function resolveSkillIdsToNames(skillIds: (string | number)[], allSkills:
   });
 }
 
-export function useSkillIdToNameMap(): {
-  skillIdToName: Map<string, string>;
-  isLoading: boolean;
-  error: Error | null;
-} {
-  const { data: skills, isLoading, error } = useCodexSkills();
-  const skillIdToName = useMemo(() => {
-    if (!skills) return new Map<string, string>();
-    return buildSkillIdToName(skills);
-  }, [skills]);
-  return { skillIdToName, isLoading, error: error || null };
-}
-
 export function useResolvedSkillNames(skillIds: (string | number)[]): {
   skillNames: string[];
   isLoading: boolean;

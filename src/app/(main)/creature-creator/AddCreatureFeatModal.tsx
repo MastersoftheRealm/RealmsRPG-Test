@@ -21,6 +21,7 @@ import {
   checkFeatRequirements,
 } from '@/lib/game/feat-requirements';
 import { buildFeatDetailSections } from '@/lib/codex/feat-list';
+import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
 import { buildUsesRecoveryDetailSections } from '@/lib/chip/list-row-metadata';
@@ -135,11 +136,10 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
     [creature.feats]
   );
 
-  const skillIdToName = useMemo(() => {
-    const map = new Map<string, string>();
-    (codexSkills as Skill[]).forEach((s) => map.set(String(s.id), s.name));
-    return map;
-  }, [codexSkills]);
+  const skillIdToName = useMemo(
+    () => buildSkillIdToName(codexSkills as Skill[]),
+    [codexSkills]
+  );
 
   const feats = useMemo((): FeatModal[] => {
     if (!codexFeats || !Array.isArray(codexFeats)) return [];

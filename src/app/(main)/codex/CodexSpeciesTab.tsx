@@ -28,6 +28,7 @@ const SPECIES_COLUMNS = [
   { key: '_desc', label: 'DESCRIPTION', align: 'left' as const },
 ];
 import { useSpecies, useUserSpecies, userSpeciesToSpecies, useTraits, useCodexSkills, resolveTraitIds, type Species, type Trait, type Skill } from '@/hooks';
+import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import { resolveSpeciesListRowThumbnail } from '@/lib/list-row-image';
 import { EmptyState } from '@/components/ui';
 
@@ -196,10 +197,10 @@ export function CodexSpeciesTab({ codexMode = 'public' }: { codexMode?: 'public'
   const { data: allSkills } = useCodexSkills({ enabled: isPublic || isMy });
   const { sortState, handleSort } = useSort('name');
 
-  const skillIdToName = useMemo((): Map<string, string> => {
-    if (!allSkills) return new Map<string, string>();
-    return new Map(allSkills.map((s: Skill) => [String(s.id), s.name] as [string, string]));
-  }, [allSkills]);
+  const skillIdToName = useMemo(
+    () => buildSkillIdToName(allSkills as Skill[] | undefined),
+    [allSkills]
+  );
 
   const [filters, setFilters] = useState<SpeciesFilters>({
     search: '',

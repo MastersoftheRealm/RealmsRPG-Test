@@ -69,8 +69,7 @@ Future **Archetypes** (ready-to-play character builds) will live in Realms Libra
 
 ### 2.4 Post-signup and onboarding
 
-- **Welcome banner:** For logged-in users on home, dismissible banner (once per session): “Welcome! Finish your character, browse Realms Library, or join the community” with links to Create character, Realms Library, Join Discord. Includes “Take a quick tour” to open the guided tour.
-- **Guided tour:** Optional 4-step modal (Welcome → Codex → Library → Character creator & save) with **Skip** and “Don’t show again” (localStorage). Triggered from welcome banner only (no auto-pop). Component: `OnboardingTour` in `@/components/shared`.
+- **Welcome / post-activation:** Pre-creation home tour removed (TASK-387). Post-save guidance (play-together, optional sheet tour, level-up milestones) is TASK-388 — see `REALMS_PRODUCT_OVERVIEW.md` §11.
 
 ### 2.5 Community and campaigns
 
@@ -91,18 +90,17 @@ Future **Archetypes** (ready-to-play character builds) will live in Realms Libra
 - [x] **Landing and CTAs:** Hero tagline; feature cards for Create a character, Browse Codex, Browse Realms Library (→ `/codex`, `/library`); “Join the Community” (Discord) on home and in nav/footer/About.
 - [x] **Character creator defaults:** Source filter default “Realms Library” in powers, equipment, species steps; modal copy “Choose from Realms Library or your library” and “Create your own” secondary; guest flow intact; “Create account to save” on finalize when not logged in.
 - [x] **Realms Library without login:** Library page (`/library`) shows Realms content read-only to guests via `LibraryPublicContent` with `readOnly`; My-Library toggle + Add button hidden until login. (Former `/browse` route consolidated here — redirects to `/library`, TASK-336.)
-- [x] **Post-signup welcome:** Dismissible welcome banner on home for logged-in users (sessionStorage); links to Create character, Realms Library, Join Discord, and “Take a quick tour.”
+- [x] **Landing rebuild:** Pre-creation `OnboardingTour` + welcome tour link removed (TASK-387); home is CTA-led (Start Playing).
 - [x] **Progression/dopamine:** “Step X of 9” on character creator page; success toast “Your character is ready!” on save; Library add-toast “Added to My Library. You can use it as-is or edit a copy.”
 - [x] **Quick start placeholder:** Character creator shows a short callout that ready-to-play Archetypes (e.g. Martial striker, Power caster) will be available soon in Realms Library; for now, choose from Codex and Realms Library in each step.
 - [x] **Discord and community links:** “Join the Community” in header nav (external), footer, About, and home CTAs; single Discord invite URL used everywhere.
-- [x] **Guided tutorial:** `OnboardingTour` component (4 steps, Skip, “Don’t show again”); triggered from welcome banner “Take a quick tour”; localStorage key `realms_tour_completed`.
 
 ---
 
 ## 4. What Still Needs to Be Done (Backlog)
 
 - [ ] **Archetypes in Realms Library:** Ready-to-play character builds (species, archetype, sample feats/skills/powers/techniques) in Realms Library; “Quick start” in character creator would load one and let user name/tweak. Requires data model and UI for Archetype entities and “Start from Archetype” flow.
-- [ ] **Optional auto-show tour:** Currently tour is trigger-only from “Take a quick tour.” Plan suggested optional one-time auto-show after first login; could be added later with same “Don’t show again” and skip.
+- [ ] **Post-activation onboarding (TASK-388):** Play-together prompt, optional sheet tour after first save, milestone level-up guides, tutorials on/off.
 - [ ] **Dismissible first-visit hints:** Optional short line on first visit to Codex/Library/Creator (“New here? The Codex has all species, feats, skills…” or “Use as-is or add to My Library to customize”) with dismiss and localStorage.
 - [ ] **“Find a group” / “Run a campaign” prominence:** Campaigns page could highlight these CTAs more for RMs; optional link to Discord or future LFG page.
 - [ ] **First-time milestone toasts (optional):** E.g. “You added your first power from Realms Library,” “Character saved—you can edit anytime,” only once per user, dismissible. Low priority; keep light.
@@ -147,7 +145,7 @@ When implementing or reviewing **any** UI, copy, or flow that touches onboarding
 | Home and CTAs | `src/app/(main)/home-page.tsx` |
 | Realms Library (guest read-only) | `src/app/(main)/library/page.tsx`, `src/app/(main)/library/LibraryPublicContent.tsx` (former `/browse` redirects here) |
 | Character creator | `src/app/(main)/characters/new/page.tsx`, `src/components/character-creator/steps/*.tsx`, `src/stores/character-creator-store.ts` |
-| Welcome banner & tour | `src/app/(main)/home-page.tsx`, `src/components/shared/onboarding-tour.tsx` |
+| Home / landing | `src/app/(main)/home-page.tsx` (post-activation onboarding → TASK-388) |
 | Header / footer / Discord | `src/components/layout/header.tsx`, `src/components/layout/footer.tsx` |
 | Library and Codex labels | `src/app/(main)/library/page.tsx`, `src/app/(main)/codex/page.tsx`, `src/components/shared/filters/source-filter.tsx` |
 

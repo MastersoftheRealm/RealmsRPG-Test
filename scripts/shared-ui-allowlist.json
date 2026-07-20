@@ -45,7 +45,6 @@
     "src/components/shared/official-item-list.tsx",
     "src/components/shared/official-power-list.tsx",
     "src/components/shared/official-technique-list.tsx",
-    "src/components/shared/onboarding-tour.tsx",
     "src/components/shared/point-status.tsx",
     "src/components/shared/powered-martial-slider.tsx",
     "src/components/shared/quantity-selector.tsx",

@@ -185,18 +185,18 @@ export function EquipmentStep() {
   /** Path Layer 1: one decision at a time — weapon, then armor. */
   const [loadoutPhase, setLoadoutPhase] = useState<'weapon' | 'armor'>('weapon');
   const pathData = useCreatorPathData();
-  const recommendedArmamentRefs = useMemo(
-    () => new Set((pathData?.level1?.armaments || []).map((v: string) => String(v).toLowerCase())),
-    [pathData?.level1?.armaments]
-  );
-  const recommendedEquipmentRefs = useMemo(
-    () => new Set((pathData?.level1?.equipment || []).map((v: string) => String(v).toLowerCase())),
-    [pathData?.level1?.equipment]
-  );
   const pathArmamentRecs = pathData?.level1?.armamentRecommendations;
   const pathEquipmentRecs = pathData?.level1?.equipmentRecommendations;
   const pathArmamentRecommendations = pathArmamentRecs ?? EMPTY_PATH_RECOMMENDATIONS;
   const pathEquipmentRecommendations = pathEquipmentRecs ?? EMPTY_PATH_RECOMMENDATIONS;
+  const recommendedArmamentRefs = useMemo(
+    () => new Set(pathArmamentRecommendations.map((r) => String(r.id).toLowerCase())),
+    [pathArmamentRecommendations]
+  );
+  const recommendedEquipmentRefs = useMemo(
+    () => new Set(pathEquipmentRecommendations.map((r) => String(r.id).toLowerCase())),
+    [pathEquipmentRecommendations]
+  );
   const pathRecommendsUnarmedProwess = pathData?.level1?.recommendUnarmedProwess === true;
 
   // Resolve path recommendations to full items (depends on allEquipment, so after it's defined)
@@ -440,21 +440,8 @@ export function EquipmentStep() {
       const item = findItem(rec.id);
       if (item) pushIfNew(item, rec.quantity);
     });
-    // Also resolve raw armaments/equipment refs in case they differ from parsed (e.g. legacy or alternate format)
-    (pathData?.level1?.armaments || []).forEach((ref: string) => {
-      const id = String(ref).includes(':') ? String(ref).split(':')[0].trim() : String(ref).trim();
-      if (!id) return;
-      const item = findItem(id);
-      if (item && !seenIds.has(String(item.id).toLowerCase())) pushIfNew(item, 1);
-    });
-    (pathData?.level1?.equipment || []).forEach((ref: string) => {
-      const id = String(ref).includes(':') ? String(ref).split(':')[0].trim() : String(ref).trim();
-      if (!id) return;
-      const item = findItem(id);
-      if (item && !seenIds.has(String(item.id).toLowerCase())) pushIfNew(item, 1);
-    });
     return out;
-  }, [allEquipment, pathArmamentRecommendations, pathEquipmentRecommendations, pathData?.level1?.armaments, pathData?.level1?.equipment]);
+  }, [allEquipment, pathArmamentRecommendations, pathEquipmentRecommendations]);
 
   const pathRecommendedForPhase = useMemo(() => {
     if (!pathMode || showFullEquipmentList) return pathRecommendedItems;
@@ -806,7 +793,7 @@ export function EquipmentStep() {
       )}
 
       {/* Path mode: recommended equipment = armaments (weapons, armor, shields) + general equipment from path. Show loading while public (official) library loads so recommended items can resolve. */}
-      {pathMode && !showFullEquipmentList && (pathRecommendedForPhase.length > 0 || (pathArmamentRecommendations.length + pathEquipmentRecommendations.length > 0 || (pathData?.level1?.armaments?.length ?? 0) + (pathData?.level1?.equipment?.length ?? 0) > 0)) && (
+      {pathMode && !showFullEquipmentList && (pathRecommendedForPhase.length > 0 || pathArmamentRecommendations.length + pathEquipmentRecommendations.length > 0) && (
         <div className="mb-6">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
             <div>

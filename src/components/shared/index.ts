@@ -11,7 +11,7 @@
 // Use these instead of creating inline/duplicate implementations.
 
 // RollButton - Unified dice roll button (character sheet, creatures, encounters)
-export { RollButton, rollButtonVariants, type RollButtonProps } from './roll-button';
+export { RollButton, type RollButtonProps } from './roll-button';
 
 // PointStatus - Unified point allocation display (creators, character sheet edit mode)
 export { PointStatus, type PointStatusProps } from './point-status';
@@ -19,8 +19,6 @@ export { PointStatus, type PointStatusProps } from './point-status';
 // AbilityScoreGrid - Six-ability tile row (sheet layout; display or edit)
 export {
   AbilityScoreGrid,
-  ABILITY_DISPLAY_ORDER,
-  ABILITY_DISPLAY_INFO,
   resolveDistinctSecondaryAbility,
   type AbilityScoreGridProps,
 } from './ability-score-grid';
@@ -51,8 +49,8 @@ export { GridListRow } from './grid-list-row';
 export type { ColumnValue, ChipData, ChipOptionData, GridListRowProps } from './grid-list-row';
 export { ListRowThumbnail } from './list-row-thumbnail';
 export type { ListRowThumbnailProps } from './list-row-thumbnail';
-export { ExpandableImage, ExpandableImageModal } from './expandable-image';
-export type { ExpandableImageProps, ExpandableImageModalProps } from './expandable-image';
+export { ExpandableImage } from './expandable-image';
+export type { ExpandableImageProps } from './expandable-image';
 
 // DetailOptionList — elongated deep-dive / trait catalog rows (GuidedEntityDetailModal, species modal)
 export { DetailOptionList } from './detail-option-list';
@@ -266,9 +264,6 @@ export type {
   RealmsImagePickerSelection,
 } from './realms-image-picker';
 
-// OnboardingTour - Optional first-time guided tour (Codex → Library → Creator)
-export { OnboardingTour } from './onboarding-tour';
-
 // GuidedChoiceShell - Unified Layer 1/2/3 chrome for creator steps (three-layer model)
 export { GuidedChoiceShell, GuidedLayerNav } from './guided-choice';
-export type { GuidedChoiceShellProps, GuidedChoiceGroup, GuidedLayerNavProps } from './guided-choice';
+export type { GuidedChoiceShellProps, GuidedLayerNavProps } from './guided-choice';
