@@ -678,7 +678,6 @@ export function PowersTechniquesStep() {
   };
 
   /** Innate Energy under-fill is a soft warning only — never block Continue (TASK-573). */
-  const canContinue = true;
   const innateSoftWarn =
     showInnateTrack && innateEnergyMax > 0 && innateRemaining !== 0;
 
@@ -728,18 +727,13 @@ export function PowersTechniquesStep() {
       subStep="powers-techniques"
       title={copy.title}
       description={copy.description}
-      canContinue={canContinue}
       continueLabel={GUIDED_CREATOR_COPY.steps.skills.continueLabel}
       completionHint={
         <span
-          className={
-            innateSoftWarn
-              ? 'font-nunito text-warning-700 dark:text-warning-400'
-              : 'font-nunito'
-          }
+          className={innateSoftWarn ? 'font-nunito text-warning-fg' : 'font-nunito'}
         >
           {innateSoftWarn
-            ? ptCopy.innateMustFill
+            ? ptCopy.innateSoftWarn
             : `${selectedIds.length}${allOptionIds.length ? ` / ${allOptionIds.length}` : ''}`}
         </span>
       }
@@ -753,10 +747,7 @@ export function PowersTechniquesStep() {
           {budgetBar}
 
           {budgetMessage ? (
-            <p
-              className="font-nunito text-sm text-warning-700 dark:text-warning-400 text-center"
-              role="status"
-            >
+            <p className="font-nunito text-sm text-warning-fg text-center" role="status">
               {budgetMessage}
             </p>
           ) : null}

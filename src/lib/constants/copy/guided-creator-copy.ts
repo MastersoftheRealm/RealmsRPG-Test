@@ -420,7 +420,7 @@ export const GUIDED_CREATOR_COPY = {
       innateEnergyBlocked: 'Not enough Innate Energy remaining for that choice.',
       innateThresholdBlocked: 'That power exceeds your Innate Threshold.',
       /** Soft hint when Innate Energy remains — Continue stays enabled (TASK-573). */
-      innateMustFill: 'Innate Energy remaining — you can continue, or pick more innate powers.',
+      innateSoftWarn: 'Innate Energy remaining — you can continue, or pick more innate powers.',
       powersHeading: 'Powers',
       techniquesHeading: 'Techniques',
       l2: {

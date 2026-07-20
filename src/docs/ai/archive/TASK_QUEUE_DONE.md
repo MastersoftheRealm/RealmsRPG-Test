@@ -12,6 +12,7 @@
     - src/components/guided-creator/guided-powers-techniques-l2-modal.tsx
     - src/lib/guided-creator/power-technique-display.ts
     - src/lib/guided-creator/powers-techniques-l2.ts
+    - src/lib/guided-creator/loadout-tp.ts
     - src/lib/constants/copy/guided-creator-copy.ts
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/ai/BUILD_VALIDATION.md

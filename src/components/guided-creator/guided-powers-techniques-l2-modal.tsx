@@ -144,10 +144,7 @@ export function GuidedPowersTechniquesL2Modal({
     (selected: SelectableItem[]) => {
       const tpSpent = computeL2PowersTechniquesTpSpent(selected, loadoutTpSpent);
       const errorEl = error ? (
-        <p
-          className="font-nunito text-sm text-warning-700 dark:text-warning-400 text-center"
-          role="alert"
-        >
+        <p className="font-nunito text-sm text-warning-fg text-center" role="alert">
           {error}
         </p>
       ) : null;
