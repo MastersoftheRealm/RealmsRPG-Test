@@ -2,6 +2,12 @@
 
 **Do not use these as current truth.** For active agent workflow, read root [`AGENTS.md`](../../../../AGENTS.md) and [`REMEDIATION_STATUS_2026-06.md`](../REMEDIATION_STATUS_2026-06.md).
 
+## July 2026 quality / global audits
+
+| Doc | Purpose |
+|-----|---------|
+| [`QUALITY_GLOBAL_AUDIT_2026-07-20.md`](QUALITY_GLOBAL_AUDIT_2026-07-20.md) | Pseudo `/global-audit` — god files, docs corpus, coverage shape → TASK-601–607 |
+
 ## June 2026 remediation & audits
 
 | Doc | Purpose |

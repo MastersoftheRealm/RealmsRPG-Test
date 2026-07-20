@@ -1,6 +1,125 @@
 {
-  "generated_at": "2026-07-20T19:49:33.568Z",
+  "generated_at": "2026-07-20T21:57:23.607Z",
   "tasks": [
+    {
+      "id": "TASK-601",
+      "title": "Split crafting [id] page under ~500 LOC facade",
+      "status": "not-started",
+      "completed_at": "",
+      "source": "src/docs/ai/ACTIVE_TASKS.md",
+      "matches": [],
+      "related_files": [
+        "src/app/(main)/crafting/[id]/page.tsx",
+        "src/services/crafting-service.ts",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-602",
+      "title": "Split combat + skill encounter views under ~500 LOC",
+      "status": "not-started",
+      "completed_at": "",
+      "source": "src/docs/ai/ACTIVE_TASKS.md",
+      "matches": [],
+      "related_files": [
+        "src/app/(main)/encounters/[id]/_components/CombatEncounterView.tsx",
+        "src/app/(main)/encounters/[id]/_components/SkillEncounterView.tsx",
+        "src/services/encounter-service.ts",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-603",
+      "title": "Split admin codex / core-rules hot files under ~500 LOC",
+      "status": "not-started",
+      "completed_at": "",
+      "source": "src/docs/ai/ACTIVE_TASKS.md",
+      "matches": [],
+      "related_files": [
+        "src/app/(main)/admin/codex/AdminFeatsTab.tsx",
+        "src/app/(main)/admin/codex/admin-archetype-editor.tsx",
+        "src/app/(main)/admin/codex/use-admin-archetype-workspace.ts",
+        "src/app/(main)/admin/codex/AdminPartsTab.tsx",
+        "src/app/(main)/admin/core-rules/page.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-604",
+      "title": "Split remaining creator hot files under ~500 LOC",
+      "status": "not-started",
+      "completed_at": "",
+      "source": "src/docs/ai/ACTIVE_TASKS.md",
+      "matches": [],
+      "related_files": [
+        "src/app/(main)/creature-creator/use-creature-creator-workspace.ts",
+        "src/app/(main)/creature-creator/creature-creator-editor.tsx",
+        "src/app/(main)/species-creator/page.tsx",
+        "src/app/(main)/empowered-technique-creator/page.tsx",
+        "src/components/guided-creator/steps/powers-techniques-step.tsx",
+        "src/components/character-creator/steps/ancestry-step.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-605",
+      "title": "Split shared + data-enrichment hot modules (co-located)",
+      "status": "not-started",
+      "completed_at": "",
+      "source": "src/docs/ai/ACTIVE_TASKS.md",
+      "matches": [],
+      "related_files": [
+        "src/components/shared/creature-stat-block.tsx",
+        "src/components/shared/entity-library-sections.tsx",
+        "src/components/shared/grid-list-row.tsx",
+        "src/lib/data-enrichment.ts",
+        "src/components/shared/index.ts",
+        "scripts/shared-ui-allowlist.json",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-606",
+      "title": "Docs corpus hygiene — changelog rotation + archive index honesty",
+      "status": "not-started",
+      "completed_at": "",
+      "source": "src/docs/ai/ACTIVE_TASKS.md",
+      "matches": [],
+      "related_files": [
+        "src/docs/ai/AI_CHANGELOG.md",
+        "src/docs/ai/archive/AI_CHANGELOG_ARCHIVE.md",
+        "src/docs/ai/archive/HISTORY_INDEX.md",
+        "src/docs/ai/archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md",
+        "src/docs/ai/ACTIVE_TASKS.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-607",
+      "title": "API route automated smoke + critical-path coverage slice",
+      "status": "not-started",
+      "completed_at": "",
+      "source": "src/docs/ai/ACTIVE_TASKS.md",
+      "matches": [],
+      "related_files": [
+        "src/app/api/characters/route.ts",
+        "src/lib/api-client.ts",
+        "src/lib/api-client.test.ts",
+        "vitest.config.ts",
+        "src/docs/ai/archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md"
+      ],
+      "related_overlap": []
+    },
     {
       "id": "TASK-326",
       "title": "Tighten Supabase security advisors (bucket listing + leaked-password protection)",
@@ -27,19 +146,100 @@
       "related_overlap": []
     },
     {
+      "id": "TASK-600",
+      "title": "Speed/Evasion header — Temp Modifier only (remove pencil base edit)",
+      "status": "done",
+      "completed_at": "2026-07-20",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "29cbef84f631c269d5606eeaba0d2a182e30288f",
+          "subject": "TASK-600: Speed/Evasion Temp Modifier only (remove pencil) (#83)",
+          "files": [
+            "src/app/(main)/characters/[id]/page.tsx",
+            "src/components/character-sheet/sheet-header.tsx",
+            "src/components/character-sheet/sheet-large-stat-block.tsx",
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/ADR/0006-temp-modifier-mode.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/components/character-sheet/sheet-large-stat-block.tsx",
+        "src/components/character-sheet/sheet-header.tsx",
+        "src/app/(main)/characters/[id]/page.tsx",
+        "src/docs/ai/ADR/0006-temp-modifier-mode.md",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "src/docs/ALL_FEEDBACK_CLEAN.md"
+      ],
+      "related_overlap": [
+        "src/components/character-sheet/sheet-large-stat-block.tsx",
+        "src/components/character-sheet/sheet-header.tsx",
+        "src/app/(main)/characters/[id]/page.tsx",
+        "src/docs/ai/ADR/0006-temp-modifier-mode.md",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "src/docs/ALL_FEEDBACK_CLEAN.md"
+      ]
+    },
+    {
       "id": "TASK-599",
       "title": "Single source of truth for archetype-category marketing copy",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src/docs/ai/ACTIVE_TASKS.md",
-      "matches": [],
+      "status": "done",
+      "completed_at": "2026-07-20",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "af4e09d7a238d7549e2f900e7411dc38a653d7e4",
+          "subject": "Merge pull request #82 from MastersoftheRealm/cursor/task-599-archetype-category-copy-2223",
+          "files": []
+        },
+        {
+          "hash": "463d96365cdb47a1325406e4b88d6181fa5273fb",
+          "subject": "TASK-599: Consolidate archetype-category marketing copy (option B)",
+          "files": [
+            "src/components/character-creator/steps/archetype-step.tsx",
+            "src/components/character-sheet/edit-archetype-modal.tsx",
+            "src/components/creator/archetype-selector.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/lib/constants/copy/archetype-category-copy.ts",
+            "src/lib/constants/copy/index.ts",
+            "src/lib/constants/site-copy.ts"
+          ]
+        }
+      ],
       "related_files": [
+        "src/lib/constants/copy/archetype-category-copy.ts",
+        "src/lib/constants/copy/index.ts",
+        "src/lib/constants/site-copy.ts",
         "src/components/character-sheet/edit-archetype-modal.tsx",
         "src/components/character-creator/steps/archetype-step.tsx",
         "src/components/creator/archetype-selector.tsx",
-        "src/lib/constants/copy"
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
       ],
-      "related_overlap": []
+      "related_overlap": [
+        "src/lib/constants/copy/archetype-category-copy.ts",
+        "src/lib/constants/copy/index.ts",
+        "src/lib/constants/site-copy.ts",
+        "src/components/character-sheet/edit-archetype-modal.tsx",
+        "src/components/character-creator/steps/archetype-step.tsx",
+        "src/components/creator/archetype-selector.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ]
     },
     {
       "id": "TASK-598",
@@ -48,6 +248,31 @@
       "completed_at": "2026-07-20",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "8aecdc25a3de8e4869fc68b8bf5869babf69b1cf",
+          "subject": "Merge pull request #81 from MastersoftheRealm/cursor/task-598-split-sheet-creator-hotfiles-1c02",
+          "files": []
+        },
+        {
+          "hash": "6f3a7558cc6149665f5451831b997e864e2e9f5f",
+          "subject": "TASK-598: cleanup — drop dead re-exports; unify tab/type forks",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/components/character-creator/steps/feats/apply-recommended-path-feats.ts",
+            "src/components/character-creator/steps/feats/feat-list-columns.ts",
+            "src/components/character-creator/steps/feats/full-feat-catalog.tsx",
+            "src/components/character-creator/steps/feats/path-feat-lists.tsx",
+            "src/components/character-creator/steps/powers-step.tsx",
+            "src/components/character-sheet/abilities-section-model.ts",
+            "src/components/character-sheet/index.ts",
+            "src/components/character-sheet/library-section.tsx",
+            "src/components/character-sheet/library-tab-config.ts",
+            "src/components/character-sheet/use-library-tab-navigation.tsx",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/lib/creator/advanced-powers-selectable.ts"
+          ]
+        },
         {
           "hash": "60e4e05cc1491ed9f7f23dd9c1466f8d8deeaa82",
           "subject": "TASK-598: Docs polish — FEATURE_INDEX paths, archive related_files, changelog",
