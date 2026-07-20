@@ -14,6 +14,7 @@ This file gathers the main UI components, shared utilities, and style convention
 |----------|-----------|-------|
 | Powers, techniques, feats, equipment in character sheet | **GridListRow** | Sortable columns, leftSlot/rightSlot, expandable rows |
 | Add-feat, add-skill, add-library-item modals | **GridListRow** or **UnifiedSelectionModal** | Consistent list selection with search |
+| Add combatant / session participant (encounters, VTT, downtime) | **AddCombatantModal** | Intentional non-USM shell (TASK-571); see FEATURE_INDEX |
 | Codex browse (feats, skills, equipment, parts) | **GridListRow** | Tab + filters + GridListRow list |
 | Library browse (user's items) | **GridListRow** / Official*List | Sortable columns; view/edit/duplicate/delete |
 | Base-skill selector (add sub-skill) | **SelectionToggle** | Unique UX; not GridListRow |
@@ -201,6 +202,9 @@ Modal usage notes: any chip/list/collapsible can be used inside a modal; no moda
 **UnifiedSelectionModal** - Generic selection modal using GridListRow. File: [src/components/shared/unified-selection-modal.tsx](src/components/shared/unified-selection-modal.tsx#L1)
 - Props: `isOpen`, `onClose`, `title`, `items`, `onSelect`, `renderItem`, `searchFilter`
 - Pattern: Highly configurable for any selection scenario (skills, feats, powers, etc.)
+
+**AddCombatantModal** - Encounter / session participant picker (intentional non-USM; TASK-571). File: [src/components/shared/add-combatant-modal.tsx](src/components/shared/add-combatant-modal.tsx#L1)
+- Pattern: Creature Library + Campaign Characters; extend for VTT/downtime — do not migrate onto USM. Canonical: FEATURE_INDEX.
 
 **LoginPromptModal** - Prompts user to login when accessing protected features. File: [src/components/shared/login-prompt-modal.tsx](src/components/shared/login-prompt-modal.tsx#L1)
 - Props: `isOpen`, `onClose`, `title?`, `message?`, `feature`

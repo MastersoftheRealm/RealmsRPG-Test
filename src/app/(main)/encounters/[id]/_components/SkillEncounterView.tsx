@@ -24,7 +24,7 @@ import {
 import { Button, Input, Card, CardContent, EmptyState } from "@/components/ui";
 import { ValueStepper } from "@/components/shared";
 import { useCodexSkills } from "@/hooks";
-import { AddCombatantModal } from "@/components/shared/add-combatant-modal";
+import { AddCombatantModal } from "@/components/shared";
 import { RollLog } from "@/components/character-sheet";
 import { computeSkillRollResult } from "@/lib/game/encounter-utils";
 import type {

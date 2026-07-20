@@ -313,28 +313,7 @@ Do **not** read the done archive at session start.
 
 ---
 
-- id: TASK-571
-  title: Decide AddCombatantModal — USM migrate or document exception
-  created_at: 2026-07-19
-  created_by: agent
-  priority: low
-  status: not-started
-  related_files:
-    - src/components/shared/add-combatant-modal.tsx
-    - src/components/shared/unified-selection-modal.tsx
-    - src/docs/ai/FEATURE_INDEX.md
-    - src/docs/ai/guide/02-components-and-lists.md
-  description: |
-    Parallel add-picker (Search + custom rows; qty/type/initiative/campaign). Owner ack
-    before USM migrate — may stay an intentional exception.
-  acceptance_criteria:
-    - Owner decides: migrate onto USM (scoped initiative/campaign AC) or document exception
-      in FEATURE_INDEX + guide/02 (alongside RealmsImagePicker-style alternates).
-    - Migrate path: sticky footer + fullScreenOnMobile parity; build green.
-  notes: |
-    Filed from /audit after /debt 2026-07-19. Gated — do not implement migrate without owner ack.
-
----
+# TASK-571 done 2026-07-20 — AddCombatantModal documented as reusable non-USM session picker (archive).
 
 - id: TASK-572
   title: AdminSpecies trait picker — USM or document admin exception

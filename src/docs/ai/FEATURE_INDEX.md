@@ -84,6 +84,7 @@
 | Hub list row (Encounters/Crafting) | `HubListRow` |
 | Sortable column headers | `ListHeader` — data columns asc/desc by default; only spacer/action columns `sortable: false` (TASK-488) |
 | Selection modal (add/pick from library) | `UnifiedSelectionModal` (default `flexLayout` + `fullScreenOnMobile`; list-first: Search + Filters toolbar; `scopeExtra` always-visible mode tabs; `headerExtra`/`filterContent` collapsed in `FilterSection` compact; Cancel/Add Selected via Modal `footer`; `maxSelections` soft limit when max ≠ 1; `maxSelections={1}` replaces selection; `confirmLabel` / optional `primaryActions` / `footerExtra`). Sheet add proficiency: `AddProficiencyModal` (thin USM wrapper; option levels in `footerExtra` — TASK-567) |
+| Encounter / session participant picker | **`AddCombatantModal`** (`add-combatant-modal.tsx`) — intentional non-USM shell (TASK-571). Creature Library + Campaign Characters drill-down; qty + combatant type + initiative/encounter payload. **Extend this** for combat/skill encounters (mixed reuses those views), VTT, downtime, and future session-play add-participant flows — do not fork and do not migrate onto USM. |
 | + → ✓ selection button | `SelectionToggle`; equipped toggle: `EquipToggle`; innate: `InnateToggle` |
 | Source scope All / Realms / My Library | `SourceFilter` (on `SegmentedControl`) |
 | 2–N pill toggle | `SegmentedControl` |

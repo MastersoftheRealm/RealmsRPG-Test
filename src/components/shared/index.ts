@@ -196,9 +196,7 @@ export type { SelectionToggleProps } from './selection-toggle';
 export { EquipToggle } from './equip-toggle';
 export type { EquipToggleProps } from './equip-toggle';
 
-// UnifiedSelectionModal - One modal pattern for all selection scenarios
-// Use for: adding skills, feats, powers, techniques, equipment, etc.
-// Works in: character sheet, character creator, creature creator
+// UnifiedSelectionModal - Catalog / sheet / creator add-X selection (feats, skills, …)
 export { UnifiedSelectionModal } from './unified-selection-modal';
 export type { 
   UnifiedSelectionModalProps, 
@@ -206,6 +204,11 @@ export type {
   ColumnHeader as SelectionColumnHeader,
   FilterOption as SelectionFilterOption,
 } from './unified-selection-modal';
+
+// AddCombatantModal — Encounter / session participant picker (intentional non-USM; TASK-571).
+// Extend for VTT, downtime, combat/skill encounters — do not fork or migrate to USM.
+export { AddCombatantModal } from './add-combatant-modal';
+export type { AddCombatantModalProps } from './add-combatant-modal';
 
 // QuantitySelector - Thin quantity wrapper over ValueStepper (ADR-0002)
 // Use for: equipment quantity, item counts, stacks

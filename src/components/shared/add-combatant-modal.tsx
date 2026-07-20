@@ -1,9 +1,18 @@
 /**
- * Add Combatant Modal
- * ====================
- * Shared modal for adding combatants/participants to encounters.
- * Supports: From Creature Library, From Campaign Characters.
- * Reused across combat, skill, and mixed encounter pages.
+ * AddCombatantModal — Encounter / session participant picker
+ * ==========================================================
+ * Intentional non-USM selection shell (TASK-571). Extend this component for
+ * combat, skill, downtime, VTT, and future session-play “add participant”
+ * flows — do not fork a parallel modal and do not migrate this grammar onto
+ * UnifiedSelectionModal (catalog add-X stays on USM).
+ *
+ * Why distinct from USM: library ↔ campaign scope, campaign drill-down,
+ * quantity + combatant type (enemy/ally/companion), and initiative / encounter
+ * payload shaping on confirm.
+ *
+ * Supports: Creature Library, Campaign Characters. Call sites today: combat +
+ * skill encounter views (mixed encounters reuse those views). Reuse the same
+ * export for VTT / downtime / etc.
  */
 
 'use client';
@@ -22,12 +31,13 @@ import type { Campaign, CampaignCharacterEncounterData } from '@/types/campaign'
 
 type TabId = 'library' | 'campaign';
 
-interface AddCombatantModalProps {
+export interface AddCombatantModalProps {
   onClose: () => void;
   onAdd: (combatants: TrackedCombatant[]) => void;
   /** For skill mode, also provide onAddParticipants */
   onAddParticipants?: (participants: SkillParticipant[]) => void;
-  mode: 'combat' | 'skill' | 'mixed';
+  /** Mixed encounter pages reuse combat/skill views — pass those modes, not a third value. */
+  mode: 'combat' | 'skill';
 }
 
 function generateId(): string {

@@ -11,6 +11,7 @@ Generated: 2026-07-20
 - ABILITY_DISPLAY_ORDER
 - AbilityRequirementFilter
 - AbilityScoreGrid
+- AddCombatantModal
 - AddSkillModal
 - AddSubSkillModal
 - ArmorListSection
