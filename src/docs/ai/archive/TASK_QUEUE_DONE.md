@@ -7,6 +7,7 @@
   completed_at: 2026-07-20
   implemented_by: agent
   verification_status: pending-qa
+  merged_at: 2026-07-20
   related_files:
     - src/components/shared/unified-selection-modal.tsx
     - src/lib/constants/copy/guided-creator-copy.ts
