@@ -8,13 +8,13 @@ Do **not** read the done archive at session start.
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-598, 596, 594, 597, 584, 587, 586, 583, etc.)
+**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-599, 598, 596, 594, 597, 584, 587, 586, 583, etc.)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 3 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 2 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** Audit multitask: TASK-593–598 done. Remaining from `/global-audit`: TASK-599. TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
+**Hot notes:** `/global-audit` follow-ups TASK-593–599 done. TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
 
 ---
 
@@ -62,28 +62,3 @@ Do **not** read the done archive at session start.
     Placeholder so the yes eventually decision is not rediscovered. Leave not-started until asked.
 
 ---
-
-# Sheet / creator debt follow-ups (from `/global-audit` 2026-07-20)
-
-- id: TASK-599
-  title: Single source of truth for archetype-category marketing copy
-  created_at: 2026-07-20
-  created_by: agent
-  priority: low
-  status: not-started
-  related_files:
-    - src/components/character-sheet/edit-archetype-modal.tsx
-    - src/components/character-creator/steps/archetype-step.tsx
-    - src/components/creator/archetype-selector.tsx
-    - src/lib/constants/copy
-  description: |
-    `ARCHETYPE_INFO` (Power / Powered-Martial / Martial titles+descriptions) is triplicated
-    with divergent copy between sheet edit-archetype and Advanced archetype-step (plus
-    emoji variant in creator/archetype-selector). Consolidate into one copy module after
-    owner picks canonical wording.
-  acceptance_criteria:
-    - One module exports archetype category title/description (selector may keep icons).
-    - Sheet + Advanced + creature/creator selectors consume it.
-    - Owner-approved copy strings (no silent rewrite of product voice).
-  notes: |
-    Needs owner ack on which descriptions win before implementing.

@@ -1,3 +1,35 @@
+- id: TASK-599
+  title: Single source of truth for archetype-category marketing copy
+  created_at: 2026-07-20
+  created_by: agent
+  completed_at: 2026-07-20
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/lib/constants/copy/archetype-category-copy.ts
+    - src/lib/constants/copy/index.ts
+    - src/lib/constants/site-copy.ts
+    - src/components/character-sheet/edit-archetype-modal.tsx
+    - src/components/character-creator/steps/archetype-step.tsx
+    - src/components/creator/archetype-selector.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    `ARCHETYPE_INFO` (Power / Powered-Martial / Martial titles+descriptions) was triplicated
+    with divergent copy between sheet edit-archetype and Advanced archetype-step (plus
+    emoji variant in creator/archetype-selector). Consolidated into one copy module after
+    owner picked canonical wording (option B — Advanced fantasy voice).
+  acceptance_criteria:
+    - One module exports archetype category title/description (selector may keep icons).
+    - Sheet + Advanced + creature/creator selectors consume it.
+    - Owner-approved copy strings (no silent rewrite of product voice).
+  notes: |
+    Owner chose B (Advanced fantasy). `ARCHETYPE_CATEGORY_INFO` in
+    `lib/constants/copy/archetype-category-copy.ts`; selector keeps local emoji icons.
+    verification_status pending-qa (DEV-V-001 T002 + DEV-V-008 T008).
+
 - id: TASK-598
   title: Split oversized sheet + Advanced creator hot files
   created_at: 2026-07-20
