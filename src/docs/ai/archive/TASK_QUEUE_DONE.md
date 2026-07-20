@@ -1,3 +1,38 @@
+- id: TASK-569
+  title: Migrate last PartChip call site then delete alias
+  created_at: 2026-07-19
+  created_by: agent
+  priority: low
+  status: done
+  completed_at: 2026-07-20
+  implemented_by: agent
+  verification_status: n/a
+  related_files:
+    - src/components/character-sheet/proficiencies-tab.tsx
+    - src/lib/chip/expandable-chip-props.ts
+    - scripts/shared-ui-allowlist.json
+    - src/components/shared/index.ts
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    /global-audit: deprecated PartChip / PartChipComponent has one consumer
+    (proficiencies-tab). Migrate to ExpandableChip + expandableChipPropsFromPartData,
+    then delete part-chip.tsx + allowlist row.
+  acceptance_criteria:
+    - proficiencies-tab uses ExpandableChip path only; no PartChip import.
+    - Delete part-chip.tsx; update shared barrel + allowlist; FEATURE_INDEX note.
+    - npm run build; tasks:validate-shared-ui green.
+  completed_work: |
+    - proficiencies-tab: ExpandableChip + expandableChipPropsFromPartData (same adapter
+      the alias used).
+    - Deleted shared/part-chip.tsx + PartChipComponent barrel export + allowlist row.
+    - FEATURE_INDEX note; PartData type re-export kept on shared.
+    - `/cleanup`: drop residual PartChip barrel comment + CHIP plan / UI-ref stale lists.
+  notes: |
+    Filed from /debt 2026-07-19 after global-audit. Compat-alias delete — no new QA suite
+    (behavior identical to prior ExpandableChip wrapper).
+  evidence: |
+    npm run build (pass 2026-07-20); npm run tasks:validate-shared-ui (85 files OK).
+
 - id: TASK-568
   title: Unify getMaxQualifiedFeatLevel character vs creature adapters
   created_at: 2026-07-19

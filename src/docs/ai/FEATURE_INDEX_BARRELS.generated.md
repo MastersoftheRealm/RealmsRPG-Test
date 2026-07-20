@@ -57,7 +57,6 @@ Generated: 2026-07-20
 - OfficialPowerList
 - OfficialTechniqueList
 - OnboardingTour
-- PartChipComponent
 - PointStatus
 - PoweredMartialSlider
 - PowersListSection
