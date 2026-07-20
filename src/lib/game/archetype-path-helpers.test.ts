@@ -48,6 +48,14 @@ describe('parseIdQuantityStrings', () => {
   it('drops empty ids and trims whitespace', () => {
     expect(parseIdQuantityStrings([' axe : 2 ', '', ':3'])).toEqual([{ id: 'axe', quantity: 2 }]);
   });
+
+  it('splits on the first colon (canonical; not lastIndexOf)', () => {
+    // Guided path detail previously used lastIndexOf; fold to indexOf for admin parity.
+    expect(parseIdQuantityStrings(['ns:item:5', 'plain:2'])).toEqual([
+      { id: 'ns', quantity: 1 },
+      { id: 'plain', quantity: 2 },
+    ]);
+  });
 });
 
 describe('serializeIdQuantityStrings', () => {

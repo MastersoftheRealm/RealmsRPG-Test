@@ -1,3 +1,33 @@
+- id: TASK-570
+  title: Replace guided parseItemRef with parseIdQuantityStrings
+  created_at: 2026-07-19
+  created_by: agent
+  priority: low
+  status: done
+  completed_at: 2026-07-20
+  implemented_by: agent
+  verification_status: n/a
+  related_files:
+    - src/components/guided-creator/guided-path-detail-modal.tsx
+    - src/lib/game/archetype-path.ts
+    - src/lib/game/archetype-path-helpers.test.ts
+  description: |
+    /global-audit: guided-path-detail-modal local parseItemRef near-copies
+    parseIdQuantityStrings but uses lastIndexOf(':') vs indexOf — fold to canonical
+    helper with unit parity.
+  acceptance_criteria:
+    - Delete local parseItemRef; use parseIdQuantityStrings (or thin adapter).
+    - Behavior parity for id / id:qty armaments+equipment refs; tests cover edge cases.
+    - npm run build + vitest archetype-path helpers green.
+  completed_work: |
+    - Deleted guided-path-detail-modal local parseItemRef.
+    - Guidance-group armaments/equipment refs parse via parseIdQuantityStrings.
+    - Added unit coverage for first-colon split (canonical vs former lastIndexOf).
+  notes: |
+    Filed from /debt 2026-07-19. Lib consolidation — no manual QA suite.
+  evidence: |
+    npm run build (pass 2026-07-20); npx vitest run src/lib/game/archetype-path-helpers.test.ts (13 passed).
+
 - id: TASK-569
   title: Migrate last PartChip call site then delete alias
   created_at: 2026-07-19
