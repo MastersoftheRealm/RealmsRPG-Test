@@ -42,7 +42,7 @@
   notes: |
     From owner feedback 2026-07-20. Supersedes TASK-472 full-spend Continue behavior.
   evidence: |
-    Unit tests power-technique-display; npm run build pending in PR evidence.
+    vitest power-technique-display + loadout-tp + build-character pass; npm run build pass 2026-07-20; DEV-V-013-T057 pending owner QA.
 
 - id: TASK-572
   title: AdminSpecies trait picker — USM or document admin exception
