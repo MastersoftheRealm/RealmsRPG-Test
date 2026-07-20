@@ -81,25 +81,30 @@ export function getDefenseHelp(defense: keyof DefenseSkills): string {
   return DEFENSE_HELP[defense] ?? '';
 }
 
+/** Sheet tip on defense Score values (not the defense name). Same copy for all six. */
+export const defenseScoreHelp =
+  'This number is a Defense Score: 10 + Defense Bonus. Scores are passive targets (Bonus + 10).';
+
 export const powerAbility = `Your Power Ability pairs with your Power usage and best fits your character. It helps determine Energy, your Power-related
 effectiveness, and Training Points used for crafting powers. Common choices include Acuity, Intelligence, or Charisma.`;
 
 export const martialAbility = `Your Martial Ability reflects your combat style and approach to challenges. It influences Energy and Training
 Points for Techniques and proficiencies. Common picks include Strength, Vitality, Agility, or Acuity depending on your concept.`;
 
-/** Guided Path step title — what an Archetype Path is (not "class"). */
-export const archetypePathHelp = `An Archetype Path is the type of adventurer your character is. Paths guide you with suggestions for Abilities, Skills, Feats, and Loadout - you can still deviate or rebuild the Path to make it your own.`;
+/** Guided / L1 tip — Path step title (what an Archetype Path is; not "class"). */
+export const guidedArchetypePathHelp = `An Archetype Path is the type of adventurer your character is. Paths guide you with suggestions for Abilities, Skills, Feats, and Loadout - you can still deviate or rebuild the Path to make it your own.`;
 
-/** Guided Path step section tips (Power / Powered-Martial / Martial). */
-export const powerPathType = `Power paths focus on supernatural ability - think spellcasters, artificers, elemental benders, warlocks, and bards. You lean on Powers and Energy more than weapons or Techniques.`;
+/** Guided / L1 Path step section tips (Power / Powered-Martial / Martial). */
+export const guidedPowerPathTypeHelp = `Power paths focus on supernatural ability - think spellcasters, artificers, elemental benders, warlocks, and bards. You lean on Powers and Energy more than weapons or Techniques.`;
 
-export const martialPathType = `Martial paths focus on physical combat and training - think weapon masters, scouts, and unarmed specialists. You rely on weapons, Techniques, and martial skill rather than Powers.`;
+export const guidedMartialPathTypeHelp = `Martial paths focus on physical combat and training - think weapon masters, scouts, and unarmed specialists. You rely on weapons, Techniques, and martial skill rather than Powers.`;
 
-export const poweredMartialPathType = `Powered-Martial paths blend fighting skill with supernatural ability - you train with both weapons or Techniques and Powers, each at a lighter level than a pure Martial or Power path.`;
+export const guidedPoweredMartialPathTypeHelp = `Powered-Martial paths blend fighting skill with supernatural ability - you train with both weapons or Techniques and Powers, each at a lighter level than a pure Martial or Power path.`;
 
 /**
  * Guided / L1-simplified tip for Path More details — Primary vs Secondary Ability.
- * Global Archetype Ability tips elsewhere may be more formula-specific (see guide/04; TASK-581).
+ * Prefer `guided*` prefix for creator teaching tips (see guide/04 § Copy scoping).
+ * Global Archetype Ability tips elsewhere may be more formula-specific.
  */
 export const guidedArchetypeAbilityHelp = (
   <div>
@@ -120,6 +125,7 @@ export const guidedArchetypeAbilityHelp = (
 /**
  * Global term tip — Armament Proficiency (weapons/armor Training Points ceiling).
  * Reuse anywhere the label appears (Path overview, sheet Inventory, etc.).
+ * Do not fork a second string; see guide/04 § Copy scoping.
  */
 export const armamentProficiencyHelp = (
   <div>
@@ -128,6 +134,74 @@ export const armamentProficiencyHelp = (
       piece you can use.
     </div>
     <div>Higher Martial Proficiency raises this limit as you level.</div>
+  </div>
+);
+
+/**
+ * Parts / Properties & Proficiencies section tips (TASK-583).
+ * Resolved from MetadataDetailSection.labelHelpKey in GridListRow — do not fork per surface.
+ */
+export const partsProficienciesPowerHelp = (
+  <div>
+    <div>
+      <strong>Parts</strong> are the pieces that compose a Power. You need proficiency with each part
+      to perform the Power with proficiency. Each part has a Training Points cost.
+    </div>
+  </div>
+);
+
+export const partsProficienciesTechniqueHelp = (
+  <div>
+    <div>
+      <strong>Parts</strong> are the pieces that compose a Technique. You need proficiency with each
+      part to perform the Technique with proficiency. Each part has a Training Points cost.
+    </div>
+  </div>
+);
+
+export const partsProficienciesGenericHelp = (
+  <div>
+    <div>
+      <strong>Parts</strong> are the pieces that compose a Power or Technique. You need proficiency
+      with each part to use or perform it with proficiency. Each part has a Training Points cost.
+    </div>
+  </div>
+);
+
+export const propertiesProficienciesWeaponHelp = (
+  <div>
+    <div>
+      <strong>Properties</strong> are the pieces that compose a weapon. You need proficiency with each
+      property to wield the weapon with proficiency. Each property has a Training Points cost.
+    </div>
+  </div>
+);
+
+export const propertiesProficienciesArmorHelp = (
+  <div>
+    <div>
+      <strong>Properties</strong> are the pieces that compose armor. You need proficiency with each
+      property to wear the armor with proficiency. Each property has a Training Points cost.
+    </div>
+  </div>
+);
+
+export const propertiesProficienciesShieldHelp = (
+  <div>
+    <div>
+      <strong>Properties</strong> are the pieces that compose a shield. You need proficiency with each
+      property to wield the shield with proficiency. Each property has a Training Points cost.
+    </div>
+  </div>
+);
+
+export const propertiesProficienciesItemHelp = (
+  <div>
+    <div>
+      <strong>Properties</strong> are the pieces that compose a weapon, armor, or shield. You need
+      proficiency with each property to wield or wear it with proficiency. Each property has a
+      Training Points cost.
+    </div>
   </div>
 );
 

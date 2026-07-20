@@ -17,6 +17,7 @@ import {
   OFFICIAL_TECHNIQUE_HEADER_COLUMNS,
   type OfficialTechniqueRow,
 } from '@/lib/library/official-technique-list';
+import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
 export type { OfficialTechniqueRow };
@@ -80,8 +81,10 @@ export function OfficialTechniqueList({
         { key: 'Weapon', value: t.weapon, align: 'center' },
         { key: 'Damage', value: t.damage, align: 'center' },
       ]}
-      getChips={(t) => t.parts}
-      chipsLabel="Parts"
+      getDetailSections={(t) => {
+        const section = partsProficienciesSection(t.parts, 'technique');
+        return section ? [section] : undefined;
+      }}
       getTotalCost={(t) => t.tp}
       costLabel="Training Points"
       getThumbnail={(t) => resolveListRowThumbnail('technique', t.raw, t.name)}

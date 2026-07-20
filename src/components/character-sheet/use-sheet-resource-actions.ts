@@ -14,8 +14,9 @@ import {
   withSyncedResourceFields,
   notifyLocalResourceEdit,
 } from '@/lib/encounter/character-resource-sync';
-import type { AbilityName, Archetype, Character, CharacterFeat } from '@/types';
+import type { AbilityName, Archetype, Character, CharacterFeat, CharacterTempModifiers } from '@/types';
 import type { CodexFeat, Trait } from '@/hooks/codex-types';
+import { patchTempModifiers } from '@/lib/character/temp-modifiers';
 import type { CharacterSheetStats } from './use-character-sheet-derived';
 
 type UseSheetResourceActionsArgs = {
@@ -184,6 +185,19 @@ export function useSheetResourceActions({
       );
     },
     [character, setCharacter],
+  );
+
+  const handleTempModifiersChange = useCallback(
+    (patch: CharacterTempModifiers) => {
+      setCharacter((prev) => {
+        if (!prev) return null;
+        const next = patchTempModifiers(prev.tempModifiers, patch);
+        if (next) return { ...prev, tempModifiers: next };
+        const { tempModifiers: _removed, ...rest } = prev;
+        return rest as Character;
+      });
+    },
+    [setCharacter],
   );
 
   const handleHealthPointsChange = useCallback(
@@ -420,6 +434,7 @@ export function useSheetResourceActions({
     handlePortraitUrlChange,
     handleAbilityChange,
     handleDefenseChange,
+    handleTempModifiersChange,
     handleHealthPointsChange,
     handleEnergyPointsChange,
     handleFullRecovery,

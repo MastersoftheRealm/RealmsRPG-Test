@@ -26,9 +26,11 @@ import {
   ShieldsListSection,
   ArmorListSection,
   EquipmentListSection,
+  InfoTippy,
   CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME,
   type SortState,
 } from '@/components/shared';
+import { armamentProficiencyHelp } from '../../../public/tooltip-text';
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 import { IconButton, Card } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
@@ -791,6 +793,13 @@ export function LibrarySection({
                       <SummaryItem
                         icon="⚔️"
                         label="Armament Proficiency"
+                        labelAccessory={
+                          <InfoTippy
+                            content={armamentProficiencyHelp}
+                            label="About Armament Proficiency"
+                            size="inline"
+                          />
+                        }
                         value={`${calculateArmamentProficiency(martialProficiency)} TP`}
                         highlight
                         highlightColor="warning"

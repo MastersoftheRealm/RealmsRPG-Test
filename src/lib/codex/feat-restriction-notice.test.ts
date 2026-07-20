@@ -30,6 +30,32 @@ describe('getFeatRestrictionNotice', () => {
     });
     expect(notice).toContain('once per Partial Recovery');
   });
+
+  it('omitLimitedUses drops uses sentence but keeps state teaching', () => {
+    const notice = getFeatRestrictionNotice(
+      {
+        state_feat: true,
+        uses_per_rec: 2,
+        rec_period: 'Partial',
+      },
+      { omitLimitedUses: true, level: 1 }
+    );
+    expect(notice).toContain('State feat');
+    expect(notice).not.toContain('2 times');
+    expect(notice).not.toContain('can be used');
+  });
+
+  it('omitLimitedUses with non-state uses-only returns null', () => {
+    const notice = getFeatRestrictionNotice(
+      {
+        state_feat: false,
+        uses_per_rec: 1,
+        rec_period: 'Full',
+      },
+      { omitLimitedUses: true }
+    );
+    expect(notice).toBeNull();
+  });
 });
 
 describe('getLimitedUsesNotice / getTraitRestrictionNotice', () => {

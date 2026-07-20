@@ -14,10 +14,7 @@ import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
 import type { ItemPropertyTpRow } from '@/lib/calculators/item-calc';
 import type { CodexFeat } from '@/types/codex';
 import { namedPropertyDescriptorChips } from './compact-facts';
-import {
-  formatLimitedUsesExpandedHint,
-  formatTraitRecoveryLabel,
-} from './format-recovery';
+import { formatTraitRecoveryLabel } from './format-recovery';
 
 /** Minimal trait shape (codex Trait / ResolvedTrait). */
 export interface DetailOptionTraitLike {
@@ -50,6 +47,10 @@ export function factChip(label: string): ChipData {
   return descriptorChipData(label, 'default');
 }
 
+/**
+ * Uses/recovery as a self-describing DescriptorChip (TASK-579).
+ * Label already states the fact — do not attach expandable restatement copy.
+ */
 export function usesFactChips(
   uses: number,
   recPeriod: string | undefined
@@ -57,15 +58,7 @@ export function usesFactChips(
   if (uses <= 0) return [];
   const recovery = formatTraitRecoveryLabel(recPeriod);
   const label = recovery ? `Uses ${uses} / ${recovery}` : `Uses ${uses}`;
-  const description = formatLimitedUsesExpandedHint(uses, recPeriod) ?? undefined;
-  return [
-    {
-      name: label,
-      description,
-      category: 'default',
-      kind: description ? undefined : 'descriptor',
-    },
-  ];
+  return [descriptorChipData(label, 'default')];
 }
 
 export function traitToDetailOption(trait: DetailOptionTraitLike): DetailOptionItemModel {

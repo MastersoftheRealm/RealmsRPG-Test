@@ -8,13 +8,14 @@
 'use client';
 
 import { createContext, useContext, type ReactNode } from 'react';
-import type { AbilityName, Character, CharacterLibraryTabId } from '@/types';
+import type { AbilityName, Character, CharacterLibraryTabId, CharacterTempModifiers } from '@/types';
 import type { EnrichedCharacterData } from '@/lib/data-enrichment';
 import type { LibrarySectionProps } from './library-section';
 import type { CharacterSheetSkillRow } from './use-character-sheet-derived';
 import type { CharacterSheetPointBudgets } from './use-character-sheet-derived';
 
-export type SkillModalType = 'skill' | 'subskill' | null;
+/** Sheet only opens Add Sub-Skill (base skills are catalog-all — TASK-584). */
+export type SkillModalType = 'subskill' | null;
 export type AddModalType =
   | 'power'
   | 'innate-power'
@@ -47,11 +48,12 @@ export interface CharacterSheetContextValue {
   /** Abilities & defenses */
   onAbilityChange: (ability: AbilityName, value: number) => void;
   onDefenseChange: (defense: string, value: number) => void;
+  /** Sparse Temp Modifier patch (ADR-0006 / TASK-586) */
+  onTempModifiersChange: (patch: CharacterTempModifiers) => void;
 
   /** Skills */
   onSkillChange: (skillId: string, updates: Partial<{ skill_val: number; prof: boolean; ability: string }>) => void;
   onRemoveSkill: (skillId: string) => void;
-  onAddSkill: () => void;
   onAddSubSkill: () => void;
 
   /** Archetype */

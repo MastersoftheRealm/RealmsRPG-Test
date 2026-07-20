@@ -320,6 +320,7 @@ export function PowersStep() {
           duration: display.duration,
           area: display.area,
           partChips,
+          partsFamily: 'power',
         });
         return [{
           id: itemId,
@@ -433,6 +434,7 @@ export function PowersStep() {
         const detailSections = buildPartsAndMetadataDetailSections({
           damage: display.damageStr !== '-' ? display.damageStr : undefined,
           partChips,
+          partsFamily: 'technique',
         });
         return [{
           id: itemId,

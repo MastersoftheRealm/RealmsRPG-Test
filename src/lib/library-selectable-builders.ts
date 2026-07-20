@@ -300,7 +300,11 @@ export function buildSelectableItem(
     const display = derivePowerDisplay(doc, powerPartsDb);
     const partChips = partChipsFromDisplay(display.partChips);
     // Range omitted from dense modal columns → labeled expanded chip (TASK-437)
-    detailSections = buildPartsAndMetadataDetailSections({ range: display.range, partChips });
+    detailSections = buildPartsAndMetadataDetailSections({
+      range: display.range,
+      partChips,
+      partsFamily: 'power',
+    });
     totalCost = display.tp > 0 ? display.tp : undefined;
     powerDisplay = {
       energy: display.energy,
@@ -333,6 +337,7 @@ export function buildSelectableItem(
     detailSections = buildPartsAndMetadataDetailSections({
       damage: display.damageStr !== '-' ? display.damageStr : undefined,
       partChips,
+      partsFamily: 'technique',
     });
     totalCost = typeof display.tp === 'number' && display.tp > 0 ? display.tp : undefined;
   } else if (
@@ -364,7 +369,15 @@ export function buildSelectableItem(
         };
       }
     );
-    const propertySection = propertiesProficienciesSection(propertyChips);
+    const propertyFamily =
+      effectiveType === 'armor'
+        ? 'armor'
+        : effectiveType === 'shield'
+          ? 'shield'
+          : effectiveType === 'weapon'
+            ? 'weapon'
+            : 'item';
+    const propertySection = propertiesProficienciesSection(propertyChips, propertyFamily);
     detailSections = propertySection ? [propertySection] : undefined;
     totalCost = propertyChips.reduce((sum, c) => sum + (c.cost ?? 0), 0) || undefined;
   }

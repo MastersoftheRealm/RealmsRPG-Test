@@ -10,7 +10,12 @@ import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { Spinner } from '@/components/ui';
 import { useMergedSpecies, useTraits, resolveTraitIds } from '@/hooks';
 import type { Species, Trait } from '@/hooks';
-import { getChoiceOptionIds, resolveChoiceOptionTraits } from '@/lib/choice-trait';
+import { getChoiceOptionIds } from '@/lib/choice-trait';
+import {
+  buildAncestryPickTasks,
+  type AncestryPickTask,
+} from '@/lib/guided-creator/ancestry-pick-tasks';
+import { landsOnFirstInnerScreen } from '@/lib/guided-creator/guided-substep-nav';
 import { useGuidedCreatorStore, type GuidedDraft } from '@/stores/guided-creator-store';
 import { GuidedChoiceCard } from '../guided-choice-card';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from '../guided-choice-styles';
@@ -24,28 +29,7 @@ import { getTraitRestrictionNotice } from '@/lib/codex/feat-restriction-notice';
 const stepCopy = GUIDED_CREATOR_COPY.steps.ancestry;
 const overviewCopy = stepCopy.speciesOverview;
 
-type AncestryPhase =
-  | 'species-trait-option'
-  | 'characteristic'
-  | 'ancestry-trait-1'
-  | 'flaw'
-  | 'ancestry-trait-2'
-  | 'done';
-
-interface PickTask {
-  phase: AncestryPhase;
-  title: string;
-  description: string;
-  options: Trait[];
-  parentTraitId?: string;
-  optional?: boolean;
-}
-
-function resolveTraits(ids: (string | number)[], allTraits: Trait[]): Trait[] {
-  return resolveTraitIds(ids, allTraits);
-}
-
-function isTaskFilled(task: PickTask, draft: GuidedDraft): boolean {
+function isTaskFilled(task: AncestryPickTask, draft: GuidedDraft): boolean {
   switch (task.phase) {
     case 'species-trait-option':
       return Boolean(task.parentTraitId && draft.selectedSpeciesTraitChoices[task.parentTraitId]);
@@ -64,7 +48,7 @@ function isTaskFilled(task: PickTask, draft: GuidedDraft): boolean {
 }
 
 function resolveInitialPhaseIndex(
-  tasks: PickTask[],
+  tasks: AncestryPickTask[],
   draft: GuidedDraft,
   ancestryAlreadyComplete: boolean
 ): number {
@@ -99,63 +83,14 @@ export function AncestryStep() {
     [allSpecies, draft.speciesId]
   );
 
-  const tasks = useMemo((): PickTask[] => {
+  const tasks = useMemo((): AncestryPickTask[] => {
     if (!species || !allTraits.length) return [];
-
-    const list: PickTask[] = [];
-    const speciesTraits = resolveTraits(species.species_traits || [], allTraits);
-
-    speciesTraits.forEach((trait) => {
-      const optionIds = getChoiceOptionIds(trait);
-      if (optionIds.length > 0) {
-        const options = resolveChoiceOptionTraits(optionIds, allTraits);
-        if (options.length > 0) {
-          list.push({
-            phase: 'species-trait-option',
-            title: `Choose your ${trait.name}`,
-            description: trait.description || 'Pick the option that fits your character.',
-            options,
-            parentTraitId: String(trait.id),
-          });
-        }
-      }
+    return buildAncestryPickTasks({
+      species,
+      allTraits,
+      selectedFlawId: draft.selectedFlawId,
+      selectedAncestryTraitIds: draft.selectedAncestryTraitIds,
     });
-
-    list.push({
-      phase: 'characteristic',
-      title: 'Pick a characteristic',
-      description: 'A personal detail that adds flavor to who you are.',
-      options: resolveTraits(species.characteristics || [], allTraits),
-    });
-
-    list.push({
-      phase: 'ancestry-trait-1',
-      title: 'Pick an ancestry trait',
-      description: 'This trait makes your character distinct within their species.',
-      options: resolveTraits(species.ancestry_traits || [], allTraits),
-    });
-
-    list.push({
-      phase: 'flaw',
-      title: 'Take a flaw? (optional)',
-      description: 'Flaws add depth, and grant an extra ancestry trait.',
-      options: resolveTraits(species.flaws || [], allTraits),
-      optional: true,
-    });
-
-    if (draft.selectedFlawId) {
-      const firstAncestryId = draft.selectedAncestryTraitIds[0];
-      list.push({
-        phase: 'ancestry-trait-2',
-        title: 'Pick your bonus ancestry trait',
-        description: 'Your flaw grants one additional ancestry trait.',
-        options: resolveTraits(species.ancestry_traits || [], allTraits).filter(
-          (t) => !firstAncestryId || String(t.id) !== firstAncestryId
-        ),
-      });
-    }
-
-    return list;
   }, [species, allTraits, draft.selectedFlawId, draft.selectedAncestryTraitIds]);
 
   const showOverview = Boolean(species);
@@ -187,7 +122,7 @@ export function AncestryStep() {
     if (!species) return;
 
     // Chapter rail / Continue: land on species overview (never jump to furthest pick).
-    if (navigationIntent === 'first' || navigationIntent === 'forward') {
+    if (landsOnFirstInnerScreen(navigationIntent)) {
       if (lastEntryNonce.current !== entryNonce) {
         lastEntryNonce.current = entryNonce;
         setPhaseIndex(0);
@@ -204,7 +139,7 @@ export function AncestryStep() {
   }, [tasks, draft, ancestryChapterComplete, species, navigationIntent, entryNonce]);
 
   const isSelected = useCallback(
-    (trait: Trait, task: PickTask | undefined = currentTask): boolean => {
+    (trait: Trait, task: AncestryPickTask | undefined = currentTask): boolean => {
       const id = String(trait.id);
       if (!task) return false;
       switch (task.phase) {
@@ -297,7 +232,7 @@ export function AncestryStep() {
   const ancestryComplete = useMemo(() => {
     if (!species || !allTraits.length) return false;
 
-    const speciesTraits = resolveTraits(species.species_traits || [], allTraits);
+    const speciesTraits = resolveTraitIds(species.species_traits || [], allTraits);
     for (const trait of speciesTraits) {
       const optionIds = getChoiceOptionIds(trait);
       if (optionIds.length > 0 && !draft.selectedSpeciesTraitChoices[String(trait.id)]) {

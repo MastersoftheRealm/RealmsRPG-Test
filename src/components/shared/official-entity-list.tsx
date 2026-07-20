@@ -22,6 +22,7 @@ import {
 } from '@/components/shared';
 import type { ColumnValue, ChipData } from '@/components/shared/grid-list-row';
 import type { ListRowThumbnailProps } from '@/components/shared/list-row-thumbnail';
+import type { MetadataDetailSection } from '@/lib/chip/list-row-metadata';
 import { IconButton } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
 
@@ -50,9 +51,11 @@ export interface OfficialEntityListProps<TRow extends OfficialEntityRow, TItem> 
   getColumns: (row: TRow) => ColumnValue[];
   /** Optional row badges (overrides library Realms default when set). */
   getBadges?: (row: TRow) => ComponentProps<typeof GridListRow>['badges'];
-  /** Optional expanded chips (parts/properties). */
+  /** Optional expanded chips (parts/properties). Prefer getDetailSections for Parts/Properties tips. */
   getChips?: (row: TRow) => ChipData[] | undefined;
   chipsLabel?: string;
+  /** Labeled sections (Parts/Properties & Proficiencies with collapse + family tip). Overrides chips when set. */
+  getDetailSections?: (row: TRow) => MetadataDetailSection[] | undefined;
   /** Optional total cost for the expanded row. */
   getTotalCost?: (row: TRow) => number | undefined;
   costLabel?: string;
@@ -92,6 +95,7 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
   getBadges,
   getChips,
   chipsLabel,
+  getDetailSections,
   getTotalCost,
   costLabel = 'Training Points',
   getThumbnail,
@@ -157,7 +161,8 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
           )
         ) : (
           filtered.map((row) => {
-            const chips = getChips?.(row);
+            const detailSections = getDetailSections?.(row);
+            const chips = detailSections ? undefined : getChips?.(row);
             const totalCost = getTotalCost?.(row);
             return (
               <GridListRow
@@ -169,7 +174,8 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
                 gridColumns={gridColumns}
                 columns={getColumns(row)}
                 chips={chips}
-                chipsLabel={chipsLabel}
+                chipsLabel={detailSections ? undefined : chipsLabel}
+                detailSections={detailSections}
                 totalCost={totalCost}
                 costLabel={costLabel}
                 badges={

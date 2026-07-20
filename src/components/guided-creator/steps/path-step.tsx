@@ -18,10 +18,10 @@ import { buildPathSelectionDraftPatch } from '@/lib/guided-creator/path-selectio
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { type Archetype, type ArchetypeCategory } from '@/types';
 import {
-  archetypePathHelp,
-  martialPathType,
-  poweredMartialPathType,
-  powerPathType,
+  guidedArchetypePathHelp,
+  guidedMartialPathTypeHelp,
+  guidedPoweredMartialPathTypeHelp,
+  guidedPowerPathTypeHelp,
 } from '../../../../public/tooltip-text';
 import { GuidedChoiceCard, type GuidedChoiceTag } from '../guided-choice-card';
 import { GUIDED_CHOICE_GRID_CLASS, GUIDED_CHOICE_GRID_ITEM_CLASS } from '../guided-choice-styles';
@@ -56,9 +56,9 @@ function pathAbilityTags(path: Archetype): GuidedChoiceTag[] {
 const PATH_GROUPS: ArchetypeCategory[] = ['power', 'powered-martial', 'martial'];
 
 const PATH_GROUP_TIP: Record<ArchetypeCategory, string> = {
-  power: powerPathType,
-  'powered-martial': poweredMartialPathType,
-  martial: martialPathType,
+  power: guidedPowerPathTypeHelp,
+  'powered-martial': guidedPoweredMartialPathTypeHelp,
+  martial: guidedMartialPathTypeHelp,
 };
 
 function sortByName(a: Archetype, b: Archetype): number {
@@ -111,7 +111,7 @@ export function PathStep() {
       title={stepCopy.title}
       titleAddon={
         <InfoTippy
-          content={archetypePathHelp}
+          content={guidedArchetypePathHelp}
           label="About Archetype Path"
           size="inline"
         />

@@ -20,7 +20,7 @@ What **you** need to do that AI cannot (Dashboard, prod validation, decisions). 
 | **Playwright** | `verify:visual` / `verify:a11y` + optional creator/loadout/chip audits | Pixel polish judgment, tooltip feel, touch ergonomics beyond baselines |
 | **Owner DEV-V** | Full step suites after user-facing ships (`pending-qa`) | Admin authoring, RLS/campaign multi-identity, Dashboard secrets (DEV-001+) |
 
-**Top 10 automation candidates (2026-07-20 audit)** — first four shipped as vitest; remainder filed as TASK-588–592:
+**Top 10 automation candidates (2026-07-20 audit)** — rows 1–9 are CI; row 10 human UI smoke:
 
 | # | Test | Status |
 | - | ---- | ------ |
@@ -29,10 +29,10 @@ What **you** need to do that AI cannot (Dashboard, prod validation, decisions). 
 | 3 | DEV-V-016-T006 / DEV-V-009-T022 — Builder → map → inventory stack | **CI** — builders + `map-selection.test.ts` + `merge-equipment-inventory.test.ts` |
 | 4 | DEV-V-013-T052 — Equipment L2 quantity-first | **CI** — `guided-equipment-l2.test.ts` (qty / budget / clear) |
 | 5 | DEV-V-001-T013 / DEV-V-013-T032 — Path change reset vs retain | **CI** — `path-selection-draft.test.ts` (TASK-588; T032 path same/new; T013 Advanced manual) |
-| 6 | DEV-V-013-T057 — Innate threshold / TP parity | **TASK-590** |
-| 7 | DEV-V-013-T059 — Continue advances one screen | **TASK-592** |
-| 8 | DEV-V-013-T061 — Ancestry task order | **TASK-591** |
-| 9 | DEV-V-016-T002 — Technique load columns | **TASK-589** |
+| 6 | DEV-V-013-T057 — Innate threshold / TP parity | **CI** — `powers-techniques-l2.test.ts` (TASK-590; threshold filter + shared TP; soft warn / L1 chips manual) |
+| 7 | DEV-V-013-T059 — Continue advances one screen | **CI** — `guided-substep-nav.test.ts` (TASK-592; one-step next + intent predicate; UI landing still human) |
+| 8 | DEV-V-013-T061 — Ancestry task order | **CI** — `ancestry-pick-tasks.test.ts` (TASK-591; characteristic → ancestry → flaw; flaw → trait-2) |
+| 9 | DEV-V-016-T002 — Technique load columns | **CI** — `library-selectable-builders.test.ts` (TASK-589; Action/Energy/Attack/Training Pts) |
 | 10 | DEV-V-009-T006 — Add library modal type parity | Human UI smoke (partial CI via builders); no TASK |
 
 **Already automated (pre-TASK-480):** DEV-V-014 (`codex-payload` + roll timestamp); large guided unit suite under `src/lib/guided-creator/*.test.ts`; Playwright visual/a11y + guided audits.
@@ -77,12 +77,12 @@ Each suite is a **category** of step-by-step tests. Full steps live in `[BUILD_V
 | ------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------- | ----------------------------------------------------------------------------------------------------------------- |
 | **DEV-V-001** | Character creator step guards                         | TASK-356                                                                                                                                                                 | T001–T015 (15)    | Ready — [open suite](BUILD_VALIDATION.md#dev-v-001--character-creator-step-guards)                                |
 | **DEV-V-008** | Archetype path completion                             | TASK-366–374, TASK-473, TASK-484, TASK-404, TASK-476, TASK-512, TASK-514–518, TASK-522, TASK-529, TASK-534, TASK-572, TASK-381                                                                     | T001–T025         | Ready — [open suite](BUILD_VALIDATION.md#dev-v-008--archetype-path-completion-task-366374)                        |
-| **DEV-V-009** | Character sheet refactor                              | TASK-317, TASK-348, TASK-365, TASK-375, TASK-318, TASK-349, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-523, TASK-525, TASK-526, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-567, TASK-582                                              | T001–T030 (30)    | Ready — [open suite](BUILD_VALIDATION.md#dev-v-009--character-sheet-refactor-task-317-task-348-task-365-task-375-task-483-task-485-task-486-task-502-task-478) |
+| **DEV-V-009** | Character sheet refactor                              | TASK-317, TASK-348, TASK-365, TASK-375, TASK-318, TASK-349, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-523, TASK-525, TASK-526, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-567, TASK-582, TASK-581, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587                                              | T001–T036 (36)    | Ready — [open suite](BUILD_VALIDATION.md#dev-v-009--character-sheet-refactor-task-317-task-348-task-365-task-375-task-483-task-485-task-486-task-502-task-478) |
 | **DEV-V-005** | RLS / DB migrations                                   | TASK-352, TASK-327, TASK-354                                                                                                                                             | T001–T003 (3)     | Ready — [open suite](BUILD_VALIDATION.md#dev-v-005--rls-policy-consolidation-task-352-task-327)                   |
 | **DEV-V-010** | Feat/trait custom name + note                         | TASK-377                                                                                                                                                                 | T001–T004 (4)     | Ready — [open suite](BUILD_VALIDATION.md#dev-v-010--feattrait-custom-name--note-task-377)                         |
 | **DEV-V-011** | UI verification safety net                            | TASK-383, TASK-385                                                                                                                                                       | T001–T006 (6)     | Ready — [open suite](BUILD_VALIDATION.md#dev-v-011--ui-verification-safety-net-task-383)                          |
 | **DEV-V-012** | Landing page rebuild                                  | TASK-387, TASK-519                                                                                                                                                       | T001–T007 (7)     | Ready — [open suite](BUILD_VALIDATION.md#dev-v-012--landing-page-rebuild-task-387)                                |
-| **DEV-V-013** | Guided Simple character creator                       | TASK-394–403, TASK-406–407, TASK-419, TASK-422, TASK-424–429, TASK-432–436, TASK-441–443, TASK-446–448, TASK-451–453, TASK-454–462, TASK-444, TASK-463–468, TASK-470–472, TASK-487–490, TASK-503, TASK-520, TASK-514, TASK-524, TASK-527, TASK-528, TASK-530, TASK-544, TASK-545, TASK-547, TASK-548, TASK-565, TASK-566, TASK-573, TASK-577, TASK-578, TASK-580 | T001–T071 (72; T070 reserved for TASK-579) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-013--guided-simple-character-creator-task-394403)                  |
+| **DEV-V-013** | Guided Simple character creator                       | TASK-394–403, TASK-406–407, TASK-419, TASK-422, TASK-424–429, TASK-432–436, TASK-441–443, TASK-446–448, TASK-451–453, TASK-454–462, TASK-444, TASK-463–468, TASK-470–472, TASK-487–490, TASK-503, TASK-520, TASK-514, TASK-524, TASK-527, TASK-528, TASK-530, TASK-544, TASK-545, TASK-547, TASK-548, TASK-565, TASK-566, TASK-573, TASK-577, TASK-578, TASK-579, TASK-580 | T001–T071 (72) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-013--guided-simple-character-creator-task-394403)                  |
 | **DEV-V-014** | Codex payload + roll timestamp                        | TASK-378                                                                                                                                                                 | T001+ (CI vitest) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-014--codex-payload--roll-timestamp-task-378)                       |
 | **DEV-V-015** | Library API typing                                    | TASK-420                                                                                                                                                                 | T001–T002         | Ready — [open suite](BUILD_VALIDATION.md#dev-v-015--library-api-typing-task-420)                                  |
 | **DEV-V-016** | Library add/load selection parity + GridListRow facts | TASK-379, TASK-437, TASK-475, TASK-536, TASK-541, TASK-564, TASK-574, TASK-480                                                                                         | T001–T015 (+ CI builders/inventory) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-016--library-addload-selection-parity-task-379)                    |
@@ -116,11 +116,17 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **TASK-584** | DEV-V-009 **T032** | Skills catalog-all base skills; Proficient/All + Show sub-skills filters; − clears value→prof (subs remove); no Add Skill / per-row X; pencil top-right |
+| **TASK-587** | DEV-V-009 **T035** | Defense Score value tip (`defenseScoreHelp`); name tips unchanged; roll chips still work |
+| **TASK-586** | DEV-V-009 **T033–T034** | Temp Modifier dual mode on header (Speed/Evasion/DR/crit/Terminal), Abilities (+ defenses + resource-maxima toggle), Skills; tint + persist + cascade; pencil spend locks |
 | **TASK-430** | DEV-V-019 **T001–T007, T009–T013** | React Compiler hook cleanup batches 1–7: remount/bootstrap, crafting FSM, sheet tour offer, admin queries, USM reopen; sitewide those three react-hooks rules at 0 |
 | **TASK-440** | DEV-V-020 **T004** | Library Creatures + compact CombatantCard + Creature Creator quickStats: Health / Energy (not HP / EN) |
 | **TASK-388** | DEV-V-029 **T001–T003** | Play-together after first save; optional sheet tour (Skip / Don't show again); level-up highlight cards (ability = scroll + edit mode) + My Account tutorials toggle |
+| **TASK-583** | DEV-V-009 **T031** | Parts/Properties & Proficiencies default collapsed + section InfoTippy (family copy); descriptor chips stay open |
 | **TASK-582** | DEV-V-009 **T028–T030** | Abilities/Defenses label parity; roll log die max/min badges dark contrast; desktop pencil icon-hugging |
+| **TASK-581** | DEV-V-009 **T036** | Inventory Armament Proficiency label tip (`armamentProficiencyHelp`, same as Path More details) |
 | **TASK-580** | DEV-V-013 **T071** | Training Points InfoTippy: shorter shared-budget copy (weapons/armor/Powers/Techniques); remaining gates affordability; no formula lecture |
+| **TASK-579** | DEV-V-013 **T070** | Path More details feats: Uses DescriptorChips (non-expanding); state/restriction notices match Archetype Feats cards; no uses chip + uses sentence dup |
 | **TASK-578** | DEV-V-013 **T069** | Path More details: no preview hint/Proficiency; Path Abilities tip; Weapons & Armor + live Armament Proficiency; compact recommended ability cards |
 | **TASK-577** | DEV-V-013 **T068** | Path L1: title Choose your Archetype Path + tip; Foundation subtitle; stronger section headers; example-rich path-type tips; ability chips slightly larger, Primary slight blue |
 | **TASK-576** | DEV-V-028 **T001–T004** | CodexBrowseListShell: Skills peers + Admin Images + Codex Archetypes chrome; Admin Archetypes path rows stay exceptional |
@@ -154,7 +160,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 | **TASK-514** | DEV-V-008 **T018** + DEV-V-013 **T060** | Admin feat guidance groups (character vs archetype audience); guided steps filter by audience |
 | **TASK-517** | DEV-V-008 **T019** | No path-recommended species; starters (`is_starter`) only |
 | **TASK-518** | DEV-V-008 **T018–T019** | Admin ↔ guided path parity audit after 514–517 |
-| **TASK-520** | DEV-V-013 **T059** | Guided Continue only advances one screen (no jump to furthest progress) |
+| **TASK-520** / **TASK-592** | DEV-V-013 **T059** | Guided Continue only advances one screen (no jump to furthest); CI via `guided-substep-nav.test.ts` |
 | **TASK-523** | DEV-V-009 **T017** | Weapons table: more space between Range/Attack/Damage; property bullets wrap under Name |
 | **TASK-524** | DEV-V-013 **T061** | Ancestry picks: characteristic → ancestry trait → optional flaw (not flaw right after characteristic) |
 | **TASK-525** | DEV-V-009 **T018** | Library card title matches Skills/Archetype; subsection headers `text-base` (`lg`) + modest title margin |
@@ -176,7 +182,9 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 | **TASK-546** | DEV-V-009 **T025** | Sheet: no duplicate traits / part chips / feat or power rows (guided + library) |
 | **TASK-547** | DEV-V-009 **T026** + DEV-V-013 **T065** | Ability/defense name word-tied tooltips on sheet + guided Abilities (no Info icon) |
 | **TASK-567** | DEV-V-009 **T027** | Add Proficiency modal on UnifiedSelectionModal (search/list/footer + option levels) |
+| **TASK-583** | DEV-V-009 **T031** | Parts/Properties sections default collapsed + family InfoTippy; descriptor chips stay open |
 | **TASK-582** | DEV-V-009 **T028–T030** | Abilities/Defenses name size parity; roll log die badges dark mode; EditSectionToggle desktop compact |
+| **TASK-581** | DEV-V-009 **T036** | Inventory Armament Proficiency InfoTippy; shared `armamentProficiencyHelp` |
 | **TASK-572** | DEV-V-008 **T022** | AdminSpecies trait Add on UnifiedSelectionModal; AdminTraits choice options stay inline editor chrome |
 | **TASK-381** | DEV-V-008 **T023–T025** (+ DEV-V-018 T008–T010) | AdminArchetypes Phase 6a–6c helpers/editor/workspace; creator workspace/editor parity suites |
 | **TASK-573** | DEV-V-013 **T057** | Guided innate: soft Continue warn (no hard block); innate TP spend + TP title chip parity |

@@ -40,6 +40,7 @@ import {
   resolveParentSkillNameForSubSkill,
 } from '@/lib/game/formulas';
 import { getArchetypeAbilityScore, calculatePowerAttackBonus } from '@/lib/game/calculations';
+import { withAbilitiesForResourceMaxima } from '@/lib/character/temp-modifiers';
 import type { Character, Item } from '@/types';
 
 export default function CampaignCharacterViewPage() {
@@ -251,6 +252,7 @@ function CampaignCharacterViewContent() {
                 martialAbility={character.mart_abil}
                 powerAbility={character.pow_abil}
                 isEditMode={false}
+                tempModifiers={character.tempModifiers}
               />
               <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_2fr] gap-4 items-stretch mt-4">
                 <SkillsSection
@@ -259,9 +261,9 @@ function CampaignCharacterViewContent() {
                   isEditMode={false}
                   totalSkillPoints={calculateSkillPointsForEntity(character.level || 1, 'character')}
                   speciesSkills={characterSpeciesSkills}
+                  tempModifiers={character.tempModifiers}
                   onSkillChange={() => {}}
                   onRemoveSkill={() => {}}
-                  onAddSkill={() => {}}
                   onAddSubSkill={() => {}}
                   className="flex-1"
                 />
@@ -331,7 +333,7 @@ function CampaignCharacterViewContent() {
                     speciesTraits: character.speciesTraits,
                   }}
                   speciesTraitsFromCodex={[]}
-                  archetypeAbility={getArchetypeAbilityScore(character)}
+                  archetypeAbility={getArchetypeAbilityScore(withAbilitiesForResourceMaxima(character))}
                   proficiencies={character.proficiencies}
                   onProficienciesChange={() => {}}
                   weight={character.weight}

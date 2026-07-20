@@ -6,6 +6,9 @@
  * Compact-fact grammar (TASK-454): when a column is omitted, prefer formatters in
  * `@/lib/detail-option/compact-facts` so chips read as natural language
  * ("2d6 Slashing damage", "Range 16 Spaces") rather than "Header: value".
+ *
+ * Parts/Properties & Proficiencies (TASK-583): sections set `defaultCollapsed` +
+ * `labelHelpKey` so GridListRow collapses them by default with type-appropriate InfoTippy.
  */
 
 import type { ChipData } from '@/components/shared/grid-list-row-types';
@@ -18,23 +21,96 @@ import {
   rangeFactChip,
 } from '@/lib/detail-option/compact-facts';
 
+/** InfoTippy key for Parts/Properties & Proficiencies (resolved in GridListRow). */
+export type PartsPropertiesHelpKey =
+  | 'power-parts'
+  | 'technique-parts'
+  | 'parts'
+  | 'weapon-properties'
+  | 'armor-properties'
+  | 'shield-properties'
+  | 'item-properties'
+  | 'properties';
+
 export type MetadataDetailSection = {
   label: string;
   chips: ChipData[];
   hideLabelIfSingle?: boolean;
+  /**
+   * When true, section starts collapsed with a chevron toggle (TASK-583).
+   * Used for Parts/Properties & Proficiencies; descriptor/metadata sections stay open.
+   */
+  defaultCollapsed?: boolean;
+  /** InfoTippy beside the section label (Parts/Properties & Proficiencies). */
+  labelHelpKey?: PartsPropertiesHelpKey;
 };
 
 export const PARTS_PROFICIENCIES_LABEL = 'Parts & Proficiencies';
 export const PROPERTIES_PROFICIENCIES_LABEL = 'Properties & Proficiencies';
 
-export function partsProficienciesSection(chips: ChipData[]): MetadataDetailSection | undefined {
-  if (chips.length === 0) return undefined;
-  return { label: PARTS_PROFICIENCIES_LABEL, chips };
+/** Official browse lists sometimes use short labels. */
+const PARTS_OR_PROPERTIES_LABELS = new Set([
+  PARTS_PROFICIENCIES_LABEL,
+  PROPERTIES_PROFICIENCIES_LABEL,
+  'Parts',
+  'Properties',
+]);
+
+export function isPartsOrPropertiesProficienciesLabel(label: string | undefined): boolean {
+  return Boolean(label && PARTS_OR_PROPERTIES_LABELS.has(label));
 }
 
-export function propertiesProficienciesSection(chips: ChipData[]): MetadataDetailSection | undefined {
+export function isPartsOrPropertiesProficienciesSection(
+  section: Pick<MetadataDetailSection, 'label' | 'defaultCollapsed'>
+): boolean {
+  return section.defaultCollapsed === true || isPartsOrPropertiesProficienciesLabel(section.label);
+}
+
+export function helpKeyForPartsOrPropertiesLabel(
+  label: string | undefined
+): PartsPropertiesHelpKey | undefined {
+  if (!label) return undefined;
+  if (label === PARTS_PROFICIENCIES_LABEL || label === 'Parts') return 'parts';
+  if (label === PROPERTIES_PROFICIENCIES_LABEL || label === 'Properties') return 'properties';
+  return undefined;
+}
+
+export function partsProficienciesSection(
+  chips: ChipData[],
+  family: 'power' | 'technique' | 'parts' = 'parts'
+): MetadataDetailSection | undefined {
   if (chips.length === 0) return undefined;
-  return { label: PROPERTIES_PROFICIENCIES_LABEL, chips };
+  const labelHelpKey: PartsPropertiesHelpKey =
+    family === 'power' ? 'power-parts' : family === 'technique' ? 'technique-parts' : 'parts';
+  return {
+    label: PARTS_PROFICIENCIES_LABEL,
+    chips,
+    defaultCollapsed: true,
+    labelHelpKey,
+  };
+}
+
+export function propertiesProficienciesSection(
+  chips: ChipData[],
+  family: 'weapon' | 'armor' | 'shield' | 'item' | 'properties' = 'properties'
+): MetadataDetailSection | undefined {
+  if (chips.length === 0) return undefined;
+  const labelHelpKey: PartsPropertiesHelpKey =
+    family === 'weapon'
+      ? 'weapon-properties'
+      : family === 'armor'
+        ? 'armor-properties'
+        : family === 'shield'
+          ? 'shield-properties'
+          : family === 'item'
+            ? 'item-properties'
+            : 'properties';
+  return {
+    label: PROPERTIES_PROFICIENCIES_LABEL,
+    chips,
+    defaultCollapsed: true,
+    labelHelpKey,
+  };
 }
 
 /** Non-expandable descriptor chip for list-row metadata (range, requirements, etc.). */
@@ -90,7 +166,7 @@ export function buildArmorRequirementMetadataChips(opts: {
     });
     if (reqChip) chips.push(reqChip);
   }
-    if (opts.agilityReduction && opts.agilityReduction > 0) {
+  if (opts.agilityReduction && opts.agilityReduction > 0) {
     const agilityChip = agilityReductionFactChip(-opts.agilityReduction);
     if (agilityChip) chips.push(agilityChip);
   }
@@ -140,8 +216,10 @@ export function buildPartsAndMetadataDetailSections(opts: {
   area?: string | null;
   actionType?: string | null;
   partChips: ChipData[];
+  /** Tailors Parts & Proficiencies InfoTippy copy (default generic parts). */
+  partsFamily?: 'power' | 'technique' | 'parts';
 }): MetadataDetailSection[] {
-  const parts = partsProficienciesSection(opts.partChips);
+  const parts = partsProficienciesSection(opts.partChips, opts.partsFamily ?? 'parts');
   return buildEntityMetadataDetailSections({
     range: opts.range,
     damage: opts.damage,

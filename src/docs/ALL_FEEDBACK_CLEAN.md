@@ -31,7 +31,7 @@ How to use
 - **More details:** drop preview hint + Proficiency section; Path Abilities Primary/Secondary tips; recommended abilities as mini ability cards; Weapons & Armor with live `getArmamentMax` + reusable Armament Proficiency tip — **TASK-578** (done, pending-qa).
 - **Feats deep-dive:** uses/recovery as non-expanding desc chips; restriction-notice cohesion with later feat cards — **TASK-579**.
 - **TP tip:** shorter, clearer `trainingPointsHelp` — **TASK-580**.
-- **Tooltip docs:** L1/guided vs global tip layers; consolidate Armament Proficiency export — **TASK-581** (after 578).
+- **Tooltip docs:** L1/guided vs global tip layers; consolidate Armament Proficiency export — **TASK-581** (done, pending-qa DEV-V-009-T036).
 
 ---
 
@@ -2643,7 +2643,7 @@ Notes
   - Foundation chapter subtitle should also say Archetype Path for game-term exposure.
   - Tip copy should prefer Archetype Path / type of adventurer; avoid calling it "class" per GAME_RULES.
 - Expected: Path L1 + More details teaching/cohesion polish; TP + path-type tip clarity; reusable Armament Proficiency tip; docs for L1 vs global tip layers.
-- Disposition: **TASK-577** / **TASK-578** / **TASK-580** implemented (pending-qa). Remaining: **TASK-579** (feat chips/notices), **TASK-581** (tooltip docs; depends 578).
+- Disposition: **TASK-577** / **TASK-578** / **TASK-579** / **TASK-580** / **TASK-581** implemented (pending-qa).
 
 **Raw Feedback Log - 2026-07-20 (sheet overload, skills model, Temp Modifier, roll log, desktop a11y)**
 - Date: 2026-07-20
@@ -2660,7 +2660,7 @@ Notes
   - Pencil: compact desktop; 44px mobile via responsive pattern; document desktop-first feedback.
   - v1 Temp Modifier surfaces: Speed, Evasion, Crit Range, DR, Terminal, Abilities (+ HP/EN/TP toggles), Defenses, Skills — layered on top of bases.
 - Expected: Quick wins shipped; remaining filed as tasks.
-- Disposition: **TASK-582** done (abilities/defenses labels, roll log die badges, EditSectionToggle desktop compact, MOBILE_UX/a11y desktop-vs-mobile docs). Filed **TASK-583** (parts collapse), **TASK-584** (skills model/chrome), **TASK-585** (Temp Modifier Architect), **TASK-586** (v1 wire; depends 585).
+- Disposition: **TASK-582** done (abilities/defenses labels, roll log die badges, EditSectionToggle desktop compact, MOBILE_UX/a11y desktop-vs-mobile docs). **TASK-583** done (Parts/Properties default collapsed + family InfoTippy sitewide; pending-qa DEV-V-009-T031). **TASK-584** done (skills catalog-all + filters + − path; pending-qa DEV-V-009-T032). **TASK-585** / **TASK-586** done (Temp Modifier Architect + v1 wire; pending-qa T033–T034).
 
 **Raw Feedback Log - 2026-07-20 (Defense Score tip)**
 - Date: 2026-07-20
@@ -2668,4 +2668,4 @@ Notes
 - Priority: Medium
 - Feedback: Add a hover tooltip on defense Score values so players see the number is a Score and what a Defense Score is per core rules; simple short tip for all six scores.
 - Expected: Word-tied tip on Score values; GAME_RULES Score / Defense Score copy; shared across defenses.
-- Disposition: Filed **TASK-587** (sheet Defense Score hover tip; related TASK-582 / TASK-547).
+- Disposition: **TASK-587** done (shared `defenseScoreHelp` WordHelpTip on Score values; pending-qa DEV-V-009-T035).

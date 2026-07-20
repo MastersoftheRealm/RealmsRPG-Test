@@ -1,7 +1,4 @@
-export {
-  formatTraitRecoveryLabel,
-  formatLimitedUsesExpandedHint,
-} from './format-recovery';
+export { formatTraitRecoveryLabel } from './format-recovery';
 export {
   traitToDetailOption,
   featToDetailOption,

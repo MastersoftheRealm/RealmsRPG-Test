@@ -46,7 +46,11 @@ export {
   buildUsesRecoveryDetailSections,
   partsProficienciesSection,
   propertiesProficienciesSection,
+  isPartsOrPropertiesProficienciesLabel,
+  isPartsOrPropertiesProficienciesSection,
+  helpKeyForPartsOrPropertiesLabel,
   PARTS_PROFICIENCIES_LABEL,
   PROPERTIES_PROFICIENCIES_LABEL,
   type MetadataDetailSection,
+  type PartsPropertiesHelpKey,
 } from './list-row-metadata';

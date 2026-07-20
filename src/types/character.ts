@@ -4,12 +4,36 @@
  * Main character data structure
  */
 
-import type { Abilities, AbilityName } from './abilities';
+import type { Abilities, AbilityName, DefenseName } from './abilities';
 import type { CharacterArchetype } from './archetype';
 import type { CharacterAncestry } from './ancestry';
 import type { CharacterSkills, DefenseSkills } from './skills';
 import type { CharacterFeat, FeatTraitCustomization } from './feats';
 import type { CharacterEquipment } from './equipment';
+
+/**
+ * Persisted Temp Modifier deltas (ADR-0006 / TASK-585).
+ * UI convenience — not a GAME_RULES term. Sparse integers; omit zeros on save.
+ * Layers on top of base/computed values; does not rewrite allocation bases.
+ */
+export interface CharacterTempModifiers {
+  speed?: number;
+  evasion?: number;
+  damageReduction?: number;
+  criticalRange?: number;
+  terminal?: number;
+  /** Ability Bonus/Penalty deltas (cascade per ADR-0006). */
+  abilities?: Partial<Abilities>;
+  /** Defense Bonus/Score layer deltas (by defense name). */
+  defenses?: Partial<Record<DefenseName, number>>;
+  /** Skill Bonus deltas keyed by skill id. */
+  skills?: Record<string, number>;
+  /**
+   * When true, ability temps also adjust max Health / max Energy / TP maxima.
+   * Default false (omit). Toggle lives in Abilities Temp Modifier UI (TASK-586).
+   */
+  applyAbilityToResourceMaxima?: boolean;
+}
 
 export type ProficiencyKind = 'power_part' | 'technique_part' | 'item_property' | 'custom';
 
@@ -266,6 +290,12 @@ export interface Character {
   /** Character-sheet library tab visibility preferences (applied outside edit mode). */
   libraryTabVisibility?: Partial<Record<CharacterLibraryTabId, boolean>>;
 
+  /**
+   * Temp Modifier deltas (ADR-0006). Persist across refresh and campaign view.
+   * Apply via `lib/character/temp-modifiers.ts` — do not invent parallel overlays.
+   */
+  tempModifiers?: CharacterTempModifiers;
+
   // Legacy fields for backward compatibility (vanilla site format)
   /** @deprecated Display-only computed field. Not saved. */
   allTraits?: unknown[];
@@ -381,6 +411,9 @@ export interface CharacterSaveData {
 
   // Trait uses (runtime state)
   traitUses?: Record<string, number>;
+
+  /** Temp Modifier deltas (ADR-0006) — runtime convenience, always saved when present */
+  tempModifiers?: CharacterTempModifiers;
 
   // User notes (free-form, always saved)
   description?: string;

@@ -56,6 +56,8 @@ export interface SkillRowProps {
   value: number;
   /** The calculated bonus (ability + skill value) */
   bonus: number;
+  /** Optional class for the bonus text (e.g. Temp Modifier tint). Not applied to RollButton. */
+  bonusClassName?: string;
   
   // ----- Ability -----
   /** Primary ability for this skill */
@@ -119,6 +121,7 @@ export const SkillRow = memo(function SkillRow({
   onToggleProficiency,
   value,
   bonus,
+  bonusClassName,
   ability,
   availableAbilities,
   onAbilityChange,
@@ -220,12 +223,13 @@ export const SkillRow = memo(function SkillRow({
           )}
         </td>
         
-        {/* Bonus / Roll Button */}
+        {/* Bonus / Roll Button — tint value only, never RollButton (ADR-0006) */}
         <td className="py-2 text-center">
           {isEditing || !showRollButton ? (
             <span className={cn(
               'inline-block min-w-[40px] font-bold',
-              bonus > 0 ? 'text-success-fg' : bonus < 0 ? 'text-danger-fg' : 'text-text-secondary'
+              bonusClassName ||
+                (bonus > 0 ? 'text-success-fg' : bonus < 0 ? 'text-danger-fg' : 'text-text-secondary')
             )}>
               {formatBonus(bonus)}
             </span>
@@ -256,17 +260,17 @@ export const SkillRow = memo(function SkillRow({
           </td>
         )}
         
-        {/* Remove button (edit mode) — species/locked show disabled affordance; keep column aligned */}
-        {isEditing && (onRemove || isSpeciesSkill) && (
+        {/* Remove button (edit mode) — omit column when onRemove unset (sheet uses − path, TASK-584) */}
+        {isEditing && onRemove && (
           <td className="py-2 px-0.5 text-center whitespace-nowrap">
             <IconButton
               variant="ghost"
               size="sm"
-              onClick={() => !isSpeciesSkill && !isLocked && onRemove?.()}
+              onClick={() => !isSpeciesSkill && !isLocked && onRemove()}
               label={isSpeciesSkill ? 'Species Skill (cannot remove)' : 'Remove skill'}
-              disabled={isSpeciesSkill || isLocked || !onRemove}
+              disabled={isSpeciesSkill || isLocked}
               className={cn(
-                isSpeciesSkill || isLocked || !onRemove
+                isSpeciesSkill || isLocked
                   ? 'text-text-muted dark:text-text-secondary opacity-50 cursor-not-allowed'
                   : 'text-danger-fg hover:opacity-80 hover:bg-transparent'
               )}
@@ -352,7 +356,8 @@ export const SkillRow = memo(function SkillRow({
                 {/* Bonus display */}
                 <span className={cn(
                   'w-12 text-right font-bold',
-                  bonus > 0 ? 'text-success-fg' : bonus < 0 ? 'text-danger-fg' : 'text-text-muted dark:text-text-secondary'
+                  bonusClassName ||
+                    (bonus > 0 ? 'text-success-fg' : bonus < 0 ? 'text-danger-fg' : 'text-text-muted dark:text-text-secondary')
                 )}>
                   {formatBonus(bonus)}
                 </span>

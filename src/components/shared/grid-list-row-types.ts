@@ -19,6 +19,7 @@
  *
  * ## Builders
  * - Metadata sections: `buildPartsAndMetadataDetailSections`, `metadataDescriptorChip`
+ * - Parts/Properties & Proficiencies: `defaultCollapsed` + `labelHelpKey` (TASK-583)
  * - Calculator parts: `partChipsFromDisplay`
  * - Feat rows: `buildFeatDetailSections` (`lib/codex/feat-list.ts`)
  */

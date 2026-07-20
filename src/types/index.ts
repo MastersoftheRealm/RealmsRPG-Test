@@ -74,6 +74,7 @@ export type {
   CharacterCondition,
   ResourcePool,
   CombatBonuses,
+  CharacterTempModifiers,
   Character,
   CharacterSummary,
   CharacterDraft,

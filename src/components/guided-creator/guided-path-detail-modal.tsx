@@ -27,6 +27,7 @@ import {
 import type { CodexFeat } from '@/types/codex';
 import type { Archetype, PathItemRecommendation } from '@/types/archetype';
 import type { LibraryItem, LibraryPower, LibraryTechnique } from '@/types/library';
+import { getFeatRestrictionNotice } from '@/lib/codex/feat-restriction-notice';
 import {
   guidedPathDetailArchetypeFeats,
   guidedPathDetailArmor,
@@ -43,6 +44,7 @@ import {
 import { GuidedEntityDetailModal, type GuidedEntityDetailSection } from './guided-entity-detail-modal';
 import { GuidedPathDetailOverview } from './guided-path-detail-overview';
 import { GuidedOverviewSection } from './guided-overview-section';
+import { GuidedRestrictionNotice } from './guided-restriction-notice';
 import { GUIDED_OVERVIEW_STYLES as o } from './guided-choice-styles';
 
 const detailCopy = GUIDED_CREATOR_COPY.steps.path.detail;
@@ -62,6 +64,17 @@ function findFeatByIdOrName(feats: CodexFeat[], ref: string): CodexFeat | undefi
   return feats.find(
     (f) => String(f.id).toLowerCase() === key || String(f.name).toLowerCase() === key
   );
+}
+
+/** Path deep-dive feat row: Uses DescriptorChip + restriction notice without uses restatement. */
+function pathFeatDetailOption(feat: CodexFeat): GuidedDetailOptionItem {
+  const base = featToDetailOption(feat);
+  const notice = getFeatRestrictionNotice(feat, { level: 1, omitLimitedUses: true });
+  if (!notice) return base;
+  return {
+    ...base,
+    supplementalExpandedContent: <GuidedRestrictionNotice notice={notice} />,
+  };
 }
 
 function collectFeatIds(level1: NonNullable<ReturnType<typeof parseArchetypePathData>>['level1']): string[] {
@@ -186,7 +199,7 @@ export function GuidedPathDetailModal({
           <div className="space-y-3">
             <p className={o.bodySecondary}>{detailCopy.archetypeFeatsIntro}</p>
             <GuidedDetailOptionList
-              items={archetypeFeats.map(featToDetailOption)}
+              items={archetypeFeats.map(pathFeatDetailOption)}
             />
           </div>
         ),
@@ -203,7 +216,7 @@ export function GuidedPathDetailModal({
           <div className="space-y-3">
             <p className={o.bodySecondary}>{detailCopy.characterFeatsIntro}</p>
             <GuidedDetailOptionList
-              items={characterFeats.map(featToDetailOption)}
+              items={characterFeats.map(pathFeatDetailOption)}
             />
           </div>
         ),

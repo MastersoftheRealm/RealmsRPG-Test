@@ -18,13 +18,30 @@
  * - Accessible and responsive
  */
 
-import { useState, memo, type CSSProperties, type ReactNode } from 'react';
-import { Edit, Copy, Plus, AlertCircle, X } from 'lucide-react';
+import { useEffect, useState, memo, type CSSProperties, type ReactNode } from 'react';
+import { ChevronDown, Edit, Copy, Plus, AlertCircle, X } from 'lucide-react';
 import { cn, formatColumnKeyLabel } from '@/lib/utils';
 import { formatCostDisplay } from '@/lib/game/creator-constants';
 import { Button, IconButton, DescriptorChip } from '@/components/ui';
 import { GridListChip } from './grid-list-chip';
 import { descriptorChipVariantForBadgeColor } from '@/lib/chip/grid-list-chip-utils';
+import {
+  helpKeyForPartsOrPropertiesLabel,
+  isPartsOrPropertiesProficienciesLabel,
+  isPartsOrPropertiesProficienciesSection,
+  type MetadataDetailSection,
+  type PartsPropertiesHelpKey,
+} from '@/lib/chip/list-row-metadata';
+import {
+  partsProficienciesGenericHelp,
+  partsProficienciesPowerHelp,
+  partsProficienciesTechniqueHelp,
+  propertiesProficienciesArmorHelp,
+  propertiesProficienciesItemHelp,
+  propertiesProficienciesShieldHelp,
+  propertiesProficienciesWeaponHelp,
+} from '../../../public/tooltip-text';
+import { InfoTippy } from './info-tippy';
 import { SelectionToggle } from './selection-toggle';
 import { QuantitySelector, QuantityBadge } from './quantity-selector';
 import {
@@ -37,6 +54,81 @@ import type { ChipData } from './grid-list-row-types';
 import { ListRowThumbnail, type ListRowThumbnailProps } from './list-row-thumbnail';
 
 export type { ChipData, ChipOptionData } from './grid-list-row-types';
+
+function partsPropertiesHelpContent(key: PartsPropertiesHelpKey): ReactNode {
+  switch (key) {
+    case 'power-parts':
+      return partsProficienciesPowerHelp;
+    case 'technique-parts':
+      return partsProficienciesTechniqueHelp;
+    case 'parts':
+      return partsProficienciesGenericHelp;
+    case 'weapon-properties':
+      return propertiesProficienciesWeaponHelp;
+    case 'armor-properties':
+      return propertiesProficienciesArmorHelp;
+    case 'shield-properties':
+      return propertiesProficienciesShieldHelp;
+    case 'item-properties':
+    case 'properties':
+      return propertiesProficienciesItemHelp;
+    default:
+      return partsProficienciesGenericHelp;
+  }
+}
+
+const DETAIL_SECTION_LABEL_CLASS =
+  'text-xs font-semibold text-text-muted dark:text-text-secondary uppercase tracking-wider';
+
+/** Shared label + optional collapse chevron + InfoTippy for expanded detail sections (TASK-583). */
+function DetailSectionLabel({
+  label,
+  collapsible,
+  open,
+  onToggle,
+  helpContent,
+}: {
+  label: string;
+  collapsible: boolean;
+  open: boolean;
+  onToggle: () => void;
+  helpContent: ReactNode | null;
+}) {
+  return (
+    <div className="flex items-center gap-1.5 min-w-0">
+      {collapsible ? (
+        <h3 className={cn(DETAIL_SECTION_LABEL_CLASS, 'm-0')}>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggle();
+            }}
+            className="inline-flex items-center gap-1.5 text-left hover:text-text-primary transition-colors [@media(pointer:coarse)]:min-h-[44px]"
+            aria-expanded={open}
+            aria-label={open ? `Collapse ${label}` : `Expand ${label}`}
+          >
+            <span>{label}</span>
+            <ChevronDown
+              className={cn(
+                'w-3.5 h-3.5 shrink-0 transition-transform duration-base ease-standard',
+                open && 'rotate-180'
+              )}
+              aria-hidden
+            />
+          </button>
+        </h3>
+      ) : (
+        <h3 className={DETAIL_SECTION_LABEL_CLASS}>{label}</h3>
+      )}
+      {helpContent ? (
+        <span className="inline-flex shrink-0" onClick={(e) => e.stopPropagation()}>
+          <InfoTippy content={helpContent} label={`${label} help`} size="inline" />
+        </span>
+      ) : null}
+    </div>
+  );
+}
 
 // =============================================================================
 // Types
@@ -127,7 +219,7 @@ export interface GridListRowProps {
   /** Label for chips section */
   chipsLabel?: string;
   /** Multiple labeled chip sections for consistent metadata display (Tags, Requirements, Type, etc.). When provided, replaces chips/chipsLabel. */
-  detailSections?: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }>;
+  detailSections?: MetadataDetailSection[];
   /** Total cost (TP, etc.) to display */
   totalCost?: number;
   /** Cost label */
@@ -256,6 +348,8 @@ export const GridListRow = memo(function GridListRow({
   const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
   const [expandedChipIndex, setExpandedChipIndex] = useState<number | null>(null);
   const [expandedOptionsChipIndex, setExpandedOptionsChipIndex] = useState<number | null>(null);
+  /** Open state for Parts/Properties & Proficiencies sections (default collapsed). */
+  const [openDetailSections, setOpenDetailSections] = useState<Record<string, boolean>>({});
   
   // Support both controlled and uncontrolled expansion
   const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
@@ -266,9 +360,27 @@ export const GridListRow = memo(function GridListRow({
     }
     onExpandChange?.(value);
   };
+
+  // Re-collapse Parts/Properties sections whenever the row closes (TASK-583).
+  useEffect(() => {
+    if (!isExpanded) setOpenDetailSections({});
+  }, [isExpanded]);
   
   const hasDetailSections = (detailSections?.length ?? 0) > 0;
   const hasChips = chips.length > 0 && !hasDetailSections;
+  /** Prefer detailSections; legacy chips/chipsLabel becomes one synthetic section (TASK-583). */
+  const expandedDetailSections: MetadataDetailSection[] = hasDetailSections
+    ? detailSections!
+    : hasChips
+      ? [
+          {
+            label: chipsLabel,
+            chips,
+            defaultCollapsed: isPartsOrPropertiesProficienciesLabel(chipsLabel) || undefined,
+            labelHelpKey: helpKeyForPartsOrPropertiesLabel(chipsLabel),
+          },
+        ]
+      : [];
   const descTrimmed = typeof description === 'string' ? description.trim() : '';
   const hasBodyContent =
     !!descTrimmed ||
@@ -820,64 +932,61 @@ export const GridListRow = memo(function GridListRow({
                 </div>
               )}
 
-              {/* Detail Sections - multiple header+chips groups (Tags, Requirements, Type, etc.) */}
-              {hasDetailSections && detailSections!.map((section, sectionIdx) => {
+              {/* Detail sections (+ legacy chips normalized above) */}
+              {expandedDetailSections.map((section, sectionIdx) => {
                 const sectionChips = section.chips;
                 if (sectionChips.length === 0) return null;
                 const showLabel = !section.hideLabelIfSingle || sectionChips.length > 1;
-                const sectionOffset = detailSections!.slice(0, sectionIdx).reduce((sum, s) => sum + s.chips.length, 0);
+                const sectionOffset = expandedDetailSections
+                  .slice(0, sectionIdx)
+                  .reduce((sum, s) => sum + s.chips.length, 0);
+                const collapsible = isPartsOrPropertiesProficienciesSection(section);
+                const sectionKey = `detail-${sectionIdx}`;
+                const sectionOpen = collapsible
+                  ? (openDetailSections[sectionKey] ?? false)
+                  : true;
+                const helpKey =
+                  section.labelHelpKey ?? helpKeyForPartsOrPropertiesLabel(section.label);
+                const helpContent = helpKey ? partsPropertiesHelpContent(helpKey) : null;
                 return (
                   <div key={sectionIdx} className={cn('space-y-3', sectionIdx > 0 && 'mt-4')}>
                     {showLabel && (
-                      <h3 className="text-xs font-semibold text-text-muted dark:text-text-secondary uppercase tracking-wider">
-                        {section.label}
-                      </h3>
+                      <DetailSectionLabel
+                        label={section.label}
+                        collapsible={collapsible}
+                        open={sectionOpen}
+                        onToggle={() =>
+                          setOpenDetailSections((prev) => ({
+                            ...prev,
+                            [sectionKey]: !sectionOpen,
+                          }))
+                        }
+                        helpContent={helpContent}
+                      />
                     )}
-                    <div data-chip-group className="flex flex-wrap gap-2 items-start">
-                      {sectionChips.map((chip, chipIdx) => {
-                        const index = sectionOffset + chipIdx;
-                        return (
-                          <GridListChip
-                            key={chipIdx}
-                            chip={chip}
-                            costLabel={costLabel}
-                            expanded={expandedChipIndex === index}
-                            onToggle={(e) => handleChipClick(index, e)}
-                            optionsOpen={expandedOptionsChipIndex === index}
-                            onOptionsOpenChange={(open) =>
-                              setExpandedOptionsChipIndex(open ? index : null)
-                            }
-                          />
-                        );
-                      })}
-                    </div>
+                    {sectionOpen && (
+                      <div data-chip-group className="flex flex-wrap gap-2 items-start">
+                        {sectionChips.map((chip, chipIdx) => {
+                          const index = sectionOffset + chipIdx;
+                          return (
+                            <GridListChip
+                              key={`${chip.name}-${chip.category ?? 'default'}-${chipIdx}`}
+                              chip={chip}
+                              costLabel={costLabel}
+                              expanded={expandedChipIndex === index}
+                              onToggle={(e) => handleChipClick(index, e)}
+                              optionsOpen={expandedOptionsChipIndex === index}
+                              onOptionsOpenChange={(open) =>
+                                setExpandedOptionsChipIndex(open ? index : null)
+                              }
+                            />
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 );
               })}
-
-              {/* Chips Section - legacy single section */}
-              {hasChips && chips.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="text-xs font-semibold text-text-muted dark:text-text-secondary uppercase tracking-wider">
-                    {chipsLabel}
-                  </h3>
-                  <div data-chip-group className="flex flex-wrap gap-2 items-start">
-                    {chips.map((chip, index) => (
-                      <GridListChip
-                        key={`${chip.name}-${chip.category ?? 'default'}-${index}`}
-                        chip={chip}
-                        costLabel={costLabel}
-                        expanded={expandedChipIndex === index}
-                        onToggle={(e) => handleChipClick(index, e)}
-                        optionsOpen={expandedOptionsChipIndex === index}
-                        onOptionsOpenChange={(open) =>
-                          setExpandedOptionsChipIndex(open ? index : null)
-                        }
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {supplementalExpandedContent}
 

@@ -27,13 +27,31 @@ Your Floating UI work **is in the repo** — it was extracted into shared primit
 
 `InfoTippy` is **not** a generic tooltip primitive. It is opinionated help chrome. Do not use it for nav menus, filters, or dynamic stat breakdowns.
 
+## Copy scoping — global term tips vs guided / L1 tips
+
+All product help copy still lives in **`public/tooltip-text.tsx`**. Scope the **export name and length**, not a second tip system.
+
+| Scope | Purpose | Naming | Examples |
+|-------|---------|--------|----------|
+| **Global term tip** | Same definition everywhere the term appears (sheet, Path overview, Codex, etc.) | Plain term + `Help` — no `guided` prefix | `armamentProficiencyHelp`, `getAbilityHelp` / `getDefenseHelp`, `defenseScoreHelp`, `trainingPointsHelp` |
+| **Guided / L1-simplified tip** | Shorter teaching copy for creator steps or More details (may omit formulas the sheet assumes) | `guided*` prefix | `guidedArchetypePathHelp`, `guidedArchetypeAbilityHelp`, `guidedPowerPathTypeHelp` / `guidedMartialPathTypeHelp` / `guidedPoweredMartialPathTypeHelp` |
+
+**Rules for agents**
+
+1. **Reuse global tips** when the label is the same game term sitewide. Do **not** invent a second Armament / Ability / Defense string for Path vs sheet.
+2. **Use guided / L1 tips** when creator teaching needs a shorter or step-specific explanation that would feel wrong on the play sheet (e.g. Primary vs Secondary Ability in Path More details).
+3. If a guided tip later becomes the sitewide definition, **rename/move** to the global name and update all call sites — do not leave duplicates.
+4. Marketing / landing copy stays in `src/lib/constants/copy/*` (not `tooltip-text.tsx`).
+
+**Armament Proficiency (TASK-578 / TASK-581):** `armamentProficiencyHelp` is the single global export. Path More details (Weapons and Armor) and sheet Inventory both consume it.
+
 ## Decision matrix — what to use when
 
 | User need | Use | Do **not** use |
 |-----------|-----|----------------|
 | Optional rules / step help beside a heading | **`InfoTippy`** + export in `tooltip-text.tsx` | Raw Floating UI on the page, `Tooltip` from `@/components/ui`, `title=` only |
 | Help on a non-Info control (e.g. ability pick button) | **`InfoTippy`** with `children` + `label` / child `aria-label` | Separate tooltip library |
-| Definition tip on a label word (ability/defense name; no icon) | **`WordHelpTip`** + `getAbilityHelp` / `getDefenseHelp` in `tooltip-text.tsx` (copy says the name once — e.g. “Acuity reflects…”, not “Acuity. Acuity…”) | Info icon sibling, `title=` only |
+| Definition tip on a label word (ability/defense name or Score value; no icon) | **`WordHelpTip`** + `getAbilityHelp` / `getDefenseHelp` / `defenseScoreHelp` in `tooltip-text.tsx` (name tips say the name once — e.g. “Acuity reflects…”, not “Acuity. Acuity…”) | Info icon sibling, `title=` only |
 | Level-aware help copy (points at level N) | Helper in **`tooltip-text.tsx`** (e.g. `getAbilityPointsHelp`) → **`InfoTippy`** | Inline paragraph duplicating rules |
 | Rich help (bullets, bold, JSX) | JSX export in **`tooltip-text.tsx`** → **`InfoTippy`** `content` | DB tooltips, markdown in random components |
 | Full-screen or multi-step flow | **`Modal`** (`fullScreenOnMobile` on mobile) | InfoTippy |
@@ -72,7 +90,7 @@ Use the dependency **inside `@/components/shared` or `@/components/ui`**, not ad
 | `characters/new` page header | ✅ Wired | |
 | Navbar Library / Codex | ✅ Wired | `placement="bottom"` |
 | Campaigns hub | ✅ Wired | |
-| Character sheet | ◐ Partial | Ability + defense name tips via `WordHelpTip` (TASK-547); broader first-exposure tour still planned per `REALMS_PRODUCT_OVERVIEW.md` § 11 |
+| Character sheet | ◐ Partial | Ability + defense name tips via `WordHelpTip` (TASK-547); defense Score values via `defenseScoreHelp` (TASK-587); Inventory Armament Proficiency via `armamentProficiencyHelp` (TASK-581); broader first-exposure tour still planned per `REALMS_PRODUCT_OVERVIEW.md` § 11 |
 | Standalone creators (power, technique, item, …) | ⬜ Planned | When Layer 1 UX lands |
 | Encounters, crafting, Codex/Library browse | ⬜ Planned | Scoped section help only where dense |
 
@@ -145,7 +163,7 @@ Implementation: `src/components/shared/info-tippy.tsx` (`InfoTippy` + `WordHelpT
   - **Do not repeat if already represented:** When a dedicated compact-fact / column covers a mechanic (Damage, Damage Reduction, Range, Ability Requirement), omit the matching named property chip. **Armor Base** / **Shield Base** are calculation-only — never user-facing chips.
   - **L1 named property chips:** property **name only** (Graze, Cleave) — do not append Training Points on those desc chips; budgets stay in title-adjacent Currency / Training Points. Pass `includeCost: true` only for dense browse surfaces that still need TP on the chip.
   - **Non-mechanic properties** (Graze, Cleave, …): non-expanding `kind: 'descriptor'` chips via `namedPropertyDescriptorChips` / `propertyDescriptorChip`. When a description exists, render with **`DescriptorChipWithTip`** — InfoTippy `size="inline"` **inside** the chip (not a sibling beside it). Guided cards: `GuidedFactChipRow`. GridListRow: `GridListChip` routes descriptors through `DescriptorChipWithTip`. Same inside-pattern for section help (e.g. Training Points `InfoTippy` via `PointStatus.labelAccessory` in `LoadoutBudgetBar`).
-  - **Character sheet parts/properties (TASK-505):** Always expandable chips with dense `TP: N` (`partDataToChips` + `TP_COST_LABEL`). Do **not** use descriptor + InfoTippy for sheet Parts & Proficiencies — the sheet is a play surface where users expand to delve deeper. Guided L1/L2 keeps spelled-out **Training Points** and descriptor tips for metadata facts.
+  - **Character sheet parts/properties (TASK-505 / TASK-583):** Always expandable chips with dense `TP: N` (`partDataToChips` + `TP_COST_LABEL`). Do **not** use descriptor + InfoTippy *on the chips* for sheet Parts & Proficiencies — the sheet is a play surface where users expand chips to delve deeper. The **section** (Parts/Properties & Proficiencies) defaults collapsed sitewide with a chevron + label InfoTippy (`labelHelpKey` / `tooltip-text` family tips). Guided L1/L2 keeps spelled-out **Training Points** and descriptor tips for metadata facts.
   - **Guided Loadout budgets:** reuse `LoadoutBudgetBar` (Currency optional + Training Points + tip inside label) — do not fork PointStatus chrome in phase layout / L2 footer / powers step.
   - **Deep-dive / progressive-disclosure catalogs** (`DetailOptionList`, choice-card More details): Name + Description only is fine (`showColumnHeaders={false}`); every omitted column fact must appear as a self-describing chip in the expanded row.
   - **Card anatomy / disclosure boundary:** Supporting facts, chips, and controls belong **above** See more / See less / More details. Do **not** append orphan facts or controls below that disclosure row. Guided weapon/armor cards (TASK-457): **Currency** / **Training Points** are `titleMeta` beside the name; mechanic + named-property chips live in `expandedExtra` (See more) via `DescriptorChipWithTip` — never expandable chips in the collapsed body, never chips under the disclosure row.

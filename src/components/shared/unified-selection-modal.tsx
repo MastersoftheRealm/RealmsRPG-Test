@@ -32,6 +32,7 @@ import {
   type ListRowThumbnailProps,
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
+import type { MetadataDetailSection } from '@/lib/chip/list-row-metadata';
 
 /** True when current selection/quantities differ from the modal’s open seed (TASK-574). */
 function selectionDiffersFromInitial(
@@ -73,7 +74,7 @@ export interface SelectableItem {
   /** Chips/tags to show when expanded */
   chips?: ChipData[];
   /** Labeled chip sections (Type, Requirements, etc.); overrides chips when set */
-  detailSections?: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }>;
+  detailSections?: MetadataDetailSection[];
   /** Total cost (TP, etc.) to show in expanded view */
   totalCost?: number;
   /** Cost label (e.g. "Training Points"; dense L3 columns may still use "TP") */

@@ -27,6 +27,7 @@ alwaysApply: false
 | Roll buttons | `@/components/shared` → RollButton |
 | +/- steppers | `@/components/shared` → **ValueStepper** / Dec/Inc (ADR-0002 chrome); quantities → **QuantitySelector** (wraps ValueStepper). Never hand-roll ± |
 | Point display (spent/total) | `@/components/shared` → PointStatus |
+| Sheet spend vs Temp Modifier | `@/components/shared` → **SectionDualModeToggles** (+ `TempModifierToggle`); helpers `lib/character/temp-modifiers.ts` (ADR-0006) — do not fork icon pairs |
 | Skill rows | `@/components/shared` → SkillRow |
 | Search | `@/components/ui` → SearchInput |
 | Primary nav tabs (underline, badges) | `@/components/ui` → TabNavigation |

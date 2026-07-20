@@ -16,6 +16,7 @@ import {
   formatRange as formatItemRange,
 } from '@/lib/calculators/item-calc';
 import { namedPropertyDescriptorChips } from '@/lib/detail-option/compact-facts';
+import { propertiesProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { useUserItems, useItemProperties, useDuplicateItem } from '@/hooks';
 import type { DisplayItem } from '@/types';
@@ -162,41 +163,52 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
       onConfirmDuplicate={dup.onConfirmDuplicate}
       duplicatePending={dup.isPending}
     >
-      {filteredData.map((item) => (
-        <GridListRow
-          key={item.id}
-          id={item.id}
-          name={item.name}
-          description={item.description}
-          thumbnail={resolveListRowThumbnail('equipment', item.raw, item.name)}
-          gridColumns={ARMAMENT_GRID_COLUMNS}
-          columns={[
-            { key: 'Type', value: item.type, align: 'center' },
-            { key: 'Rarity', value: item.rarity, align: 'center' },
-            { key: 'Currency', value: item.currency, align: 'center' },
-            { key: 'TP', value: item.tp, highlight: true, align: 'center' },
-            { key: 'Range', value: item.range, align: 'center' },
-            { key: 'Damage', value: item.damage, align: 'center' },
-          ]}
-          chips={item.parts}
-          chipsLabel="Properties & Proficiencies"
-          totalCost={item.tp}
-          costLabel="Training Points"
-          badges={item.hasDrift ? [{ label: 'Needs sync', color: 'amber' }] : []}
-          warningMessage={item.syncIssues[0]?.message}
-          rightSlot={
-            item.hasDrift ? (
-              <LibrarySyncRowAction
-                syncing={sync.syncingIds.has(item.id)}
-                onSync={() => void sync.handleSyncOne(item.id)}
-              />
-            ) : undefined
-          }
-          onEdit={() => router.push(`/item-creator?edit=${encodeURIComponent(item.id)}`)}
-          onDelete={() => onDelete({ id: item.id, name: item.name } as DisplayItem)}
-          onDuplicate={() => dup.openDuplicateConfirm(item.id, item.name)}
-        />
-      ))}
+      {filteredData.map((item) => {
+        const rawType = String(item.raw?.type ?? '').toLowerCase();
+        const propertyFamily =
+          rawType === 'armor'
+            ? 'armor'
+            : rawType === 'shield'
+              ? 'shield'
+              : rawType === 'weapon'
+                ? 'weapon'
+                : 'item';
+        const propertySection = propertiesProficienciesSection(item.parts, propertyFamily);
+        return (
+          <GridListRow
+            key={item.id}
+            id={item.id}
+            name={item.name}
+            description={item.description}
+            thumbnail={resolveListRowThumbnail('equipment', item.raw, item.name)}
+            gridColumns={ARMAMENT_GRID_COLUMNS}
+            columns={[
+              { key: 'Type', value: item.type, align: 'center' },
+              { key: 'Rarity', value: item.rarity, align: 'center' },
+              { key: 'Currency', value: item.currency, align: 'center' },
+              { key: 'TP', value: item.tp, highlight: true, align: 'center' },
+              { key: 'Range', value: item.range, align: 'center' },
+              { key: 'Damage', value: item.damage, align: 'center' },
+            ]}
+            detailSections={propertySection ? [propertySection] : undefined}
+            totalCost={item.tp}
+            costLabel="Training Points"
+            badges={item.hasDrift ? [{ label: 'Needs sync', color: 'amber' }] : []}
+            warningMessage={item.syncIssues[0]?.message}
+            rightSlot={
+              item.hasDrift ? (
+                <LibrarySyncRowAction
+                  syncing={sync.syncingIds.has(item.id)}
+                  onSync={() => void sync.handleSyncOne(item.id)}
+                />
+              ) : undefined
+            }
+            onEdit={() => router.push(`/item-creator?edit=${encodeURIComponent(item.id)}`)}
+            onDelete={() => onDelete({ id: item.id, name: item.name } as DisplayItem)}
+            onDuplicate={() => dup.openDuplicateConfirm(item.id, item.name)}
+          />
+        );
+      })}
     </UserLibraryEntityTabShell>
   );
 }

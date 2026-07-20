@@ -21,6 +21,11 @@ import type { AbilityName, ArchetypeCategory } from '@/types';
 import { DEFAULT_ABILITIES } from '@/types';
 import type { PathItemRecommendation } from '@/types/archetype';
 import { mergeLoadoutArmaments } from '@/lib/guided-creator/resolve-loadout-items';
+import {
+  nextGuidedSubStep,
+  prevGuidedSubStep,
+  type GuidedNavigationIntent,
+} from '@/lib/guided-creator/guided-substep-nav';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
 
@@ -241,7 +246,7 @@ interface GuidedCreatorState {
    * Not persisted — hard refresh defaults to `forward` (first inner screen), which matches
    * “never jump to furthest” better than resuming mid-step progress.
    */
-  navigationIntent: 'first' | 'forward' | 'back';
+  navigationIntent: GuidedNavigationIntent;
   /** Bumped on every chapter/sub-step transition so inner steps can re-apply entry landing. */
   entryNonce: number;
 
@@ -278,11 +283,11 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
 
       nextSubStep: () => {
         const current = get().currentSubStep;
-        const idx = GUIDED_SUBSTEP_ORDER.indexOf(current);
-        if (idx < 0 || idx >= GUIDED_SUBSTEP_ORDER.length - 1) return;
+        const next = nextGuidedSubStep(current, GUIDED_SUBSTEP_ORDER);
+        if (!next) return;
         get().markSubStepComplete(current);
         set((state) => ({
-          currentSubStep: GUIDED_SUBSTEP_ORDER[idx + 1],
+          currentSubStep: next,
           navigationIntent: 'forward',
           entryNonce: state.entryNonce + 1,
         }));
@@ -290,10 +295,10 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
 
       prevSubStep: () => {
         const current = get().currentSubStep;
-        const idx = GUIDED_SUBSTEP_ORDER.indexOf(current);
-        if (idx <= 0) return;
+        const prev = prevGuidedSubStep(current, GUIDED_SUBSTEP_ORDER);
+        if (!prev) return;
         set((state) => ({
-          currentSubStep: GUIDED_SUBSTEP_ORDER[idx - 1],
+          currentSubStep: prev,
           navigationIntent: 'back',
           entryNonce: state.entryNonce + 1,
         }));

@@ -73,6 +73,7 @@ Generated: 2026-07-20
 - RollButton
 - SearchInput
 - SectionCostBadge
+- SectionDualModeToggles
 - SectionHeader
 - SegmentedControl
 - SelectFilter
@@ -89,6 +90,7 @@ Generated: 2026-07-20
 - TabSummarySection
 - TagFilter
 - TechniquesListSection
+- TempModifierToggle
 - ThemeToggle
 - THUMBNAIL_HEADER_COLUMN_KEY
 - type AbilityRequirement
@@ -97,10 +99,13 @@ Generated: 2026-07-20
 - type EditState
 - type PointStatusProps
 - type RollButtonProps
+- type SectionDualModeTogglesProps
+- type SectionEditMode
 - type SegmentedControlProps
 - type SegmentedOption
 - type SourceFilterValue
 - type StepperButtonProps
+- type TempModifierToggleProps
 - type ValueStepperProps
 - UnifiedSelectionModal
 - ValueStepper

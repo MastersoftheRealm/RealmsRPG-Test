@@ -10,6 +10,7 @@ import {
   calculateMaxCharacterFeats,
 } from '@/lib/game/formulas';
 import { getArchetypeAbilityScore, calculatePowerAttackBonus } from '@/lib/game/calculations';
+import { withAbilitiesForResourceMaxima } from '@/lib/character/temp-modifiers';
 
 type EnrichedSheetData = {
   powers?: Character['powers'];
@@ -176,7 +177,8 @@ export function buildLibrarySectionProps({
       );
     },
     level: character.level,
-    archetypeAbility: getArchetypeAbilityScore(character),
+    // TP limit respects ability temps only when applyAbilityToResourceMaxima is on (ADR-0006)
+    archetypeAbility: getArchetypeAbilityScore(withAbilitiesForResourceMaxima(character)),
     powerPartsDb,
     techniquePartsDb,
     itemPropertiesDb,

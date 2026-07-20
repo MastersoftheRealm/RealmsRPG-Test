@@ -13,6 +13,7 @@ import { useSort } from '@/hooks/use-sort';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators/technique-calc';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
+import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
 import {
   useUserTechniques,
   useUserEmpoweredTechniques,
@@ -184,43 +185,45 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
       onConfirmDuplicate={dup.onConfirmDuplicate}
       duplicatePending={dup.isPending}
     >
-      {filteredData.map((tech) => (
-        <GridListRow
-          key={tech.id}
-          id={tech.id}
-          name={tech.name}
-          description={tech.description}
-          thumbnail={resolveListRowThumbnail('technique', tech.raw, tech.name)}
-          gridColumns={TECHNIQUE_GRID_COLUMNS}
-          columns={[
-            { key: 'Energy', value: tech.energy, highlight: true },
-            { key: 'TP', value: tech.tp },
-            { key: 'Action', value: tech.action },
-            { key: 'Weapon', value: tech.weapon },
-            { key: 'Damage', value: tech.damage },
-          ]}
-          chips={tech.parts}
-          chipsLabel="Parts & Proficiencies"
-          totalCost={typeof tech.tp === 'number' ? tech.tp : parseFloat(String(tech.tp)) || undefined}
-          costLabel="Training Points"
-          badges={tech.hasDrift ? [{ label: 'Needs sync', color: 'amber' }] : []}
-          warningMessage={tech.syncIssues[0]?.message}
-          rightSlot={
-            tech.hasDrift ? (
-              <LibrarySyncRowAction
-                syncing={sync.syncingIds.has(tech.id)}
-                onSync={() => void sync.handleSyncOne(tech.id)}
-              />
-            ) : undefined
-          }
-          onEdit={() => {
-            const creator = mode === 'empowered' ? '/empowered-technique-creator' : '/technique-creator';
-            router.push(`${creator}?edit=${encodeURIComponent(tech.id)}`);
-          }}
-          onDelete={() => onDelete({ id: tech.id, name: tech.name } as DisplayItem)}
-          onDuplicate={() => dup.openDuplicateConfirm(tech.id, tech.name)}
-        />
-      ))}
+      {filteredData.map((tech) => {
+        const partsSection = partsProficienciesSection(tech.parts, 'technique');
+        return (
+          <GridListRow
+            key={tech.id}
+            id={tech.id}
+            name={tech.name}
+            description={tech.description}
+            thumbnail={resolveListRowThumbnail('technique', tech.raw, tech.name)}
+            gridColumns={TECHNIQUE_GRID_COLUMNS}
+            columns={[
+              { key: 'Energy', value: tech.energy, highlight: true },
+              { key: 'TP', value: tech.tp },
+              { key: 'Action', value: tech.action },
+              { key: 'Weapon', value: tech.weapon },
+              { key: 'Damage', value: tech.damage },
+            ]}
+            detailSections={partsSection ? [partsSection] : undefined}
+            totalCost={typeof tech.tp === 'number' ? tech.tp : parseFloat(String(tech.tp)) || undefined}
+            costLabel="Training Points"
+            badges={tech.hasDrift ? [{ label: 'Needs sync', color: 'amber' }] : []}
+            warningMessage={tech.syncIssues[0]?.message}
+            rightSlot={
+              tech.hasDrift ? (
+                <LibrarySyncRowAction
+                  syncing={sync.syncingIds.has(tech.id)}
+                  onSync={() => void sync.handleSyncOne(tech.id)}
+                />
+              ) : undefined
+            }
+            onEdit={() => {
+              const creator = mode === 'empowered' ? '/empowered-technique-creator' : '/technique-creator';
+              router.push(`${creator}?edit=${encodeURIComponent(tech.id)}`);
+            }}
+            onDelete={() => onDelete({ id: tech.id, name: tech.name } as DisplayItem)}
+            onDuplicate={() => dup.openDuplicateConfirm(tech.id, tech.name)}
+          />
+        );
+      })}
     </UserLibraryEntityTabShell>
   );
 }

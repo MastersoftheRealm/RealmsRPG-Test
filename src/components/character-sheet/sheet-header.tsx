@@ -26,14 +26,26 @@ import {
   IncrementButton,
   ImageUploadModal,
   RealmsImagePicker,
-  EditSectionToggle,
   ExpandableImage,
+  SectionDualModeToggles,
+  TempModifierToggle,
+  type SectionEditMode,
 } from '@/components/shared';
 import { useGameRules } from '@/hooks';
 import { calculateHealthEnergyPool } from '@/lib/game/formulas';
+import { calculateAllStats } from '@/lib/game/calculations';
+import {
+  applyTempModifier,
+  applyTempModifiersToDisplayStats,
+  getEffectiveAbilities,
+  getScalarTempModifier,
+  shouldApplyAbilityTempsToResourceMaxima,
+  tempModifierValueClass,
+  type TempModifierScalarKey,
+} from '@/lib/character/temp-modifiers';
 import { useCharacterSheetOptional } from './character-sheet-context';
 import { getEquippedArmorQuickRef } from './library-list-helpers';
-import type { Character, Item } from '@/types';
+import type { Character, CharacterTempModifiers, Item } from '@/types';
 import { getEffectivePortrait, FALLBACK_PORTRAIT_DATA_URL } from '@/lib/portrait';
 import { resolveArchetypeDisplayName } from '@/lib/game/archetype-display';
 import { ArchetypePathGuidance } from './archetype-path-identity';
@@ -74,6 +86,8 @@ interface SheetHeaderProps {
   onEvasionBaseChange?: (value: number) => void;
   /** How to display speed: spaces (default), feet, or meters. Edit is always in spaces. */
   speedDisplayUnit?: 'spaces' | 'feet' | 'meters';
+  /** Sparse Temp Modifier patch (ADR-0006). Falls back to sheet context when omitted. */
+  onTempModifiersChange?: (patch: CharacterTempModifiers) => void;
   // Innate info from archetype progression
   innateThreshold?: number;
   innatePools?: number;
@@ -306,95 +320,120 @@ function ResourceInput({
 }
 
 /**
- * Pencil state for Speed/Evasion base: red when over default, green when under
+ * Large stat block for Speed / Evasion / DR / Critical Range.
+ * Pencil = rules base (Speed/Evasion only); Temp Modifier = layered delta (ADR-0006).
+ * `value` is the final display number/string (temps already applied by caller).
  */
-function getSpeedEvasionPencilState(
-  baseValue: number | undefined,
-  defaultBase: number | undefined
-): 'normal' | 'has-points' | 'over-budget' {
-  if (baseValue === undefined || defaultBase === undefined) return 'normal';
-  if (baseValue > defaultBase) return 'over-budget'; // increasing base = red
-  if (baseValue < defaultBase) return 'has-points';  // decreasing base = green
-  return 'normal';
-}
-
-/**
- * Large stat block for Speed and Evasion
- * - Pencil icon toggles base editing visibility (like other sections)
- * - Red when base > default, green when base < default
- */
-function LargeStatBlock({ 
-  label, 
-  value, 
+function LargeStatBlock({
+  label,
+  value,
   valueSuffix,
   valueAriaLabel,
   baseValue,
-  defaultBase,
   isEditMode,
-  onChange,
+  onBaseChange,
+  tempDelta = 0,
+  onTempDeltaChange,
   minBase = 0,
   maxBase = 20,
-}: { 
-  label: string; 
-  value: number | string; 
+}: {
+  label: string;
+  value: number | string;
   valueSuffix?: string;
   /** Optional accessible name for the value (e.g. read-only DR / Critical Range). */
   valueAriaLabel?: string;
   baseValue?: number;
-  defaultBase?: number;
   isEditMode?: boolean;
-  onChange?: (newBase: number) => void;
+  onBaseChange?: (newBase: number) => void;
+  tempDelta?: number;
+  onTempDeltaChange?: (delta: number) => void;
   minBase?: number;
   maxBase?: number;
 }) {
-  const [isEditingBase, setIsEditingBase] = useState(false);
-  const pencilState = getSpeedEvasionPencilState(baseValue, defaultBase);
-  const showEditControls = isEditMode && onChange && baseValue !== undefined && isEditingBase;
-  
+  const [mode, setMode] = useState<SectionEditMode>('none');
+  const [tempOnlyActive, setTempOnlyActive] = useState(false);
+  const canSpend = Boolean(isEditMode && onBaseChange && baseValue !== undefined);
+  const canTemp = Boolean(isEditMode && onTempDeltaChange);
+  const showSpendControls = canSpend && mode === 'spend';
+  const showTempControls =
+    canTemp && (canSpend ? mode === 'tempModifier' : tempOnlyActive);
+
   return (
     <Card className="flex flex-col items-center p-4 bg-surface-alt min-w-[100px] shadow-none">
       <div className="flex items-center gap-1.5 w-full justify-center">
         <span className="text-sm font-semibold text-text-secondary uppercase tracking-wide text-center">
           {label}
         </span>
-        {isEditMode && onChange && (
-          <EditSectionToggle
-            onClick={() => setIsEditingBase(prev => !prev)}
-            state={pencilState}
-            isActive={isEditingBase}
-            title={isEditingBase ? 'Hide base editing' : 'Edit base value'}
+        {canSpend && canTemp && (
+          <SectionDualModeToggles
+            mode={mode}
+            onModeChange={setMode}
+            spendState="normal"
+            hasTempModifiers={tempDelta !== 0}
+            spendTitle={`Edit ${label} base`}
+          />
+        )}
+        {!canSpend && canTemp && (
+          <TempModifierToggle
+            isActive={tempOnlyActive}
+            hasModifiers={tempDelta !== 0}
+            onClick={() => setTempOnlyActive((prev) => !prev)}
+            title={tempOnlyActive ? 'Close Temp Modifier' : 'Temp Modifier'}
           />
         )}
       </div>
-      <span className="text-4xl font-bold text-text-primary mt-1" aria-label={valueAriaLabel}>
-        {value}{valueSuffix ? <span className="text-xl font-semibold text-text-secondary ml-0.5">{valueSuffix}</span> : null}
+      <span
+        className={cn(
+          'text-4xl font-bold mt-1 tabular-nums',
+          tempModifierValueClass(tempDelta) || 'text-text-primary'
+        )}
+        aria-label={valueAriaLabel}
+      >
+        {value}
+        {valueSuffix ? (
+          <span className="text-xl font-semibold text-text-secondary ml-0.5">{valueSuffix}</span>
+        ) : null}
       </span>
-      
-      {showEditControls && (
+
+      {showSpendControls && baseValue !== undefined && onBaseChange && (
         <div className="flex items-center gap-1 mt-2">
           <DecrementButton
             size="sm"
-            onClick={() => onChange(Math.max(minBase, baseValue! - 1))}
-            disabled={baseValue! <= minBase}
+            onClick={() => onBaseChange(Math.max(minBase, baseValue - 1))}
+            disabled={baseValue <= minBase}
             title={`Decrease ${label} base`}
           />
-          <span
-            className={cn(
-              'text-xs min-w-[3rem] text-center',
-              pencilState === 'over-budget'
-                ? 'text-danger-fg font-bold'
-                : pencilState === 'has-points'
-                  ? 'text-success-fg font-bold'
-                  : 'text-text-muted dark:text-text-secondary'
-            )}
-          >
+          <span className="text-xs min-w-[3rem] text-center text-text-muted dark:text-text-secondary">
             Base: {baseValue}
           </span>
           <IncrementButton
             size="sm"
-            onClick={() => onChange(Math.min(maxBase, baseValue! + 1))}
-            disabled={baseValue! >= maxBase}
+            onClick={() => onBaseChange(Math.min(maxBase, baseValue + 1))}
+            disabled={baseValue >= maxBase}
             title={`Increase ${label} base`}
+          />
+        </div>
+      )}
+
+      {showTempControls && onTempDeltaChange && (
+        <div className="flex items-center gap-1 mt-2">
+          <DecrementButton
+            size="sm"
+            onClick={() => onTempDeltaChange(tempDelta - 1)}
+            title={`Decrease ${label} Temp Modifier`}
+          />
+          <span
+            className={cn(
+              'text-xs min-w-[3rem] text-center font-medium',
+              tempModifierValueClass(tempDelta) || 'text-text-muted dark:text-text-secondary'
+            )}
+          >
+            Temp: {tempDelta >= 0 ? `+${tempDelta}` : tempDelta}
+          </span>
+          <IncrementButton
+            size="sm"
+            onClick={() => onTempDeltaChange(tempDelta + 1)}
+            title={`Increase ${label} Temp Modifier`}
           />
         </div>
       )}
@@ -424,6 +463,7 @@ export function SheetHeader({
   onSpeedBaseChange,
   onEvasionBaseChange,
   speedDisplayUnit = 'spaces',
+  onTempModifiersChange: onTempModifiersChangeProp,
   innateThreshold = 0,
   innatePools = 0,
   onEditArchetype,
@@ -434,6 +474,12 @@ export function SheetHeader({
   const ctx = useCharacterSheetOptional();
   const character = (ctx?.character ?? characterProp) as Character;
   const isEditMode = ctx?.isEditMode ?? isEditModeProp;
+  const onTempModifiersChange = onTempModifiersChangeProp ?? ctx?.onTempModifiersChange;
+  const tempModifiers = character.tempModifiers;
+
+  const setScalarTemp = (key: TempModifierScalarKey, delta: number) => {
+    onTempModifiersChange?.({ [key]: delta });
+  };
   const currentHealth = character.currentHealth ?? character.health?.current ?? calculatedStats.maxHealth;
   const currentEnergy = character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy;
   const actionPoints = character.actionPoints ?? DEFAULT_ACTION_POINTS;
@@ -481,8 +527,28 @@ export function SheetHeader({
     await onPortraitChange(file);
   };
 
+  const displayStats = useMemo(() => {
+    // Ability temps always cascade into speed/evasion (and thus crit via armor quick-ref).
+    // Resource maxima only follow ability temps when the Abilities toggle is on (ADR-0006).
+    const effectiveAbilities = getEffectiveAbilities(character.abilities, tempModifiers);
+    const cascaded = calculateAllStats({ ...character, abilities: effectiveAbilities }, rules);
+    const withAbilityCascade = {
+      ...calculatedStats,
+      speed: cascaded.speed,
+      evasion: cascaded.evasion,
+    };
+    const resourceOverride = shouldApplyAbilityTempsToResourceMaxima(tempModifiers)
+      ? {
+          maxHealth: cascaded.maxHealth,
+          maxEnergy: cascaded.maxEnergy,
+          terminal: cascaded.terminal,
+        }
+      : undefined;
+    return applyTempModifiersToDisplayStats(withAbilityCascade, tempModifiers, resourceOverride);
+  }, [calculatedStats, character, rules, tempModifiers]);
+
   // Get health color for styling
-  const healthColor = getHealthColor(currentHealth, calculatedStats.maxHealth);
+  const healthColor = getHealthColor(currentHealth, displayStats.maxHealth);
 
   const canChangePortrait = Boolean(isEditMode && onPortraitChange);
   const effectivePortrait = getEffectivePortrait(character.portrait);
@@ -532,8 +598,14 @@ export function SheetHeader({
     </>
   );
 
-  // Speed display (spaces → value + unit per settings)
-  const speedDisplay = formatSpeedForDisplay(calculatedStats.speed, speedDisplayUnit);
+  // Speed display (spaces → value + unit per settings); temps applied in spaces first
+  const speedTemp = getScalarTempModifier(tempModifiers, 'speed');
+  const evasionTemp = getScalarTempModifier(tempModifiers, 'evasion');
+  const drTemp = getScalarTempModifier(tempModifiers, 'damageReduction');
+  const critTemp = getScalarTempModifier(tempModifiers, 'criticalRange');
+  const terminalTemp = getScalarTempModifier(tempModifiers, 'terminal');
+
+  const speedDisplay = formatSpeedForDisplay(displayStats.speed, speedDisplayUnit);
   const speedDisplayValue = typeof speedDisplay.value === 'number' && speedDisplay.value % 1 !== 0
     ? speedDisplay.value.toFixed(1) : String(speedDisplay.value);
 
@@ -544,14 +616,18 @@ export function SheetHeader({
     const raw = character.equipment?.armor ?? character.armor;
     const source = enriched ?? raw;
     const armorItems: Item[] = Array.isArray(source) ? (source as Item[]) : source ? [source as Item] : [];
-    return getEquippedArmorQuickRef(armorItems, calculatedStats.evasion);
+    return getEquippedArmorQuickRef(armorItems, displayStats.evasion);
   }, [
     enrichedArmorProp,
     ctx?.enrichedData?.armor,
     character.equipment?.armor,
     character.armor,
-    calculatedStats.evasion,
+    displayStats.evasion,
   ]);
+
+  const baseDamageReduction = armorQuickRef?.damageReduction ?? 0;
+  const baseCriticalRange = armorQuickRef?.criticalRange ?? 0;
+  const showCombatArmorStats = Boolean(armorQuickRef) || drTemp !== 0 || critTemp !== 0 || isEditMode;
 
   // Handle name editing
   const handleNameSubmit = () => {
@@ -737,41 +813,63 @@ export function SheetHeader({
 
         {/* Center section with Speed/Evasion - grows to fill available space */}
         <div className="flex-1 flex flex-wrap items-center justify-center gap-3 md:gap-4">
-          <LargeStatBlock 
-            label="Speed" 
+          <LargeStatBlock
+            label="Speed"
             value={speedDisplayValue}
             valueSuffix={speedDisplay.suffix}
             baseValue={speedBase}
-            defaultBase={6}
             isEditMode={isEditMode}
-            onChange={onSpeedBaseChange}
+            onBaseChange={onSpeedBaseChange}
+            tempDelta={speedTemp}
+            onTempDeltaChange={onTempModifiersChange ? (d) => setScalarTemp('speed', d) : undefined}
             minBase={1}
             maxBase={20}
           />
-          <LargeStatBlock 
-            label="Evasion" 
-            value={calculatedStats.evasion}
+          <LargeStatBlock
+            label="Evasion"
+            value={displayStats.evasion}
             baseValue={evasionBase}
-            defaultBase={10}
             isEditMode={isEditMode}
-            onChange={onEvasionBaseChange}
+            onBaseChange={onEvasionBaseChange}
+            tempDelta={evasionTemp}
+            onTempDeltaChange={onTempModifiersChange ? (d) => setScalarTemp('evasion', d) : undefined}
             minBase={0}
             maxBase={20}
           />
-          {armorQuickRef && (
+          {showCombatArmorStats && (
             <>
               <LargeStatBlock
                 label="Damage Reduction"
-                value={armorQuickRef.damageReduction}
-                valueAriaLabel={`Damage Reduction ${armorQuickRef.damageReduction}`}
+                value={applyTempModifier(baseDamageReduction, drTemp)}
+                valueAriaLabel={`Damage Reduction ${applyTempModifier(baseDamageReduction, drTemp)}`}
+                isEditMode={isEditMode}
+                tempDelta={drTemp}
+                onTempDeltaChange={
+                  onTempModifiersChange ? (d) => setScalarTemp('damageReduction', d) : undefined
+                }
               />
               <LargeStatBlock
                 label="Critical Range"
-                value={armorQuickRef.criticalRange}
-                valueAriaLabel={`Critical Range ${armorQuickRef.criticalRange}`}
+                value={applyTempModifier(baseCriticalRange, critTemp)}
+                valueAriaLabel={`Critical Range ${applyTempModifier(baseCriticalRange, critTemp)}`}
+                isEditMode={isEditMode}
+                tempDelta={critTemp}
+                onTempDeltaChange={
+                  onTempModifiersChange ? (d) => setScalarTemp('criticalRange', d) : undefined
+                }
               />
             </>
           )}
+          <LargeStatBlock
+            label="Terminal"
+            value={displayStats.terminal}
+            valueAriaLabel={`Terminal ${displayStats.terminal}`}
+            isEditMode={isEditMode}
+            tempDelta={terminalTemp}
+            onTempDeltaChange={
+              onTempModifiersChange ? (d) => setScalarTemp('terminal', d) : undefined
+            }
+          />
         </div>
 
         {/* Right: Action Points (left, spans vertically) + Health & Energy (right) */}
@@ -811,16 +909,15 @@ export function SheetHeader({
               <ResourceInput
                 label="Health"
                 current={currentHealth}
-                max={calculatedStats.maxHealth}
+                max={displayStats.maxHealth}
                 onChange={onHealthChange}
                 colorVariant="health"
-                subLabel={`Terminal: ${calculatedStats.terminal}`}
                 showBar
               />
               <ResourceInput
                 label="Energy"
                 current={currentEnergy}
-                max={calculatedStats.maxEnergy}
+                max={displayStats.maxEnergy}
                 onChange={onEnergyChange}
                 colorVariant="energy"
                 subLabel={innateThreshold > 0 ? `Innate: ${innateThreshold}${innatePools > 1 ? ` (${innatePools}×)` : ''}` : undefined}
@@ -836,8 +933,8 @@ export function SheetHeader({
                 hpBonus={healthPoints}
                 energyBonus={energyPoints}
                 poolTotal={totalHEPool}
-                maxHp={calculatedStats.maxHealth}
-                maxEnergy={calculatedStats.maxEnergy}
+                maxHp={displayStats.maxHealth}
+                maxEnergy={displayStats.maxEnergy}
                 onHpChange={onHealthPointsChange}
                 onEnergyChange={onEnergyPointsChange}
                 variant="inline"

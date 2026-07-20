@@ -1,3 +1,282 @@
+- id: TASK-592
+  title: Vitest — guided Continue advances one screen (DEV-V-013-T059)
+  created_at: 2026-07-20
+  completed_at: 2026-07-20
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  parent_task: TASK-480
+  related_files:
+    - src/lib/guided-creator/guided-substep-nav.ts
+    - src/lib/guided-creator/guided-substep-nav.test.ts
+    - src/stores/guided-creator-store.ts
+    - src/components/guided-creator/steps/ancestry-step.tsx
+    - src/components/guided-creator/steps/loadout-step.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Store nextSubStep / chapter entry already encodes never jump to furthest. Add focused
+    vitest (or extract pure next-index helper) proving Continue advances one sub-step from
+    chapter entry, not furthest completed.
+  acceptance_criteria:
+    - Automated coverage of one-screen advance vs furthest-jump regression.
+    - Prefer pure helper extract if store is hard to unit-test; no Playwright required.
+    - npm test green; matrix row #7 → CI.
+  notes: |
+    Extracted nextGuidedSubStep / prevGuidedSubStep / landsOnFirstInnerScreen into
+    guided-substep-nav.ts; store footer nav + Ancestry/Loadout entry consume helpers.
+    Vitest covers one-step walk of GUIDED_SUBSTEP_ORDER, species→ancestry (not abilities),
+    and landsOnFirstInnerScreen intent (forward/first vs back). UI phase reset stays human T059.
+- id: TASK-591
+  title: Vitest - ancestry pick task order (DEV-V-013-T061)
+  created_at: 2026-07-20
+  completed_at: 2026-07-20
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  parent_task: TASK-480
+  related_files:
+    - src/lib/guided-creator/ancestry-pick-tasks.ts
+    - src/lib/guided-creator/ancestry-pick-tasks.test.ts
+    - src/components/guided-creator/steps/ancestry-step.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Extract ancestry PickTask list builder (characteristic -> ancestry trait -> optional flaw ->
+    bonus ancestry) from ancestry-step into lib; unit-test order and flaw-gated second trait.
+  acceptance_criteria:
+    - Pure builder used by ancestry-step.
+    - Vitest asserts phase order and flaw -> ancestry-trait-2 presence.
+    - npm test green; matrix row #8 -> CI.
+  notes: |
+    Added ancestry-pick-tasks.ts + test: species-trait options first when present; characteristic
+    before ancestry-trait-1 before flaw; ancestry-trait-2 only when selectedFlawId is truthy;
+    skip (empty string) omits bonus trait. AncestryStep consumes buildAncestryPickTasks.
+- id: TASK-584
+  title: Skills sheet � catalog-all base skills + filters + edit chrome
+  created_at: 2026-07-20
+  completed_at: 2026-07-20
+  created_by: agent
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/skills-section.tsx
+    - src/components/character-sheet/use-sheet-skill-identity-actions.ts
+    - src/components/character-sheet/character-sheet-context.tsx
+    - src/components/character-sheet/character-sheet-body.tsx
+    - src/components/shared/skill-row.tsx
+    - src/lib/character/sheet-skills-display.ts
+    - src/lib/character/sheet-skills-display.test.ts
+    - src/app/(main)/characters/[id]/CharacterSheetModals.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T032
+  developer_test_plan: |
+    Suite DEV-V-009 T032 � Skills catalog list + filters + - removes.
+  description: |
+    Skills list model: always show every Codex base skill (no Add Skill opt-in for base skills).
+    Sub-skills: proficient ones always shown; unproficient sub-skills only if user added them.
+    Top filters: proficient-only vs include unproficient; toggle show sub-skills.
+    Edit chrome: pencil/Temp floating top-right; PointStatus nowrap; no remove-X (use -).
+  acceptance_criteria:
+    - All base Codex skills listed by default; filters work as specified.
+    - Sub-skill visibility rules match owner: prof always; unprof only if added.
+    - No remove-X; - path removes value then prof/sub-skill per GAME_RULES allocation.
+    - Header not cramped; DEV-V-009-T032; build; changelog; pending-qa.
+  notes: |
+    verification_status pending-qa until owner runs DEV-V-009-T032.
+- id: TASK-587
+  title: Sheet Defense Score hover tip (Score pattern)
+  created_at: 2026-07-20
+  completed_at: 2026-07-20
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/abilities-section.tsx
+    - public/tooltip-text.tsx
+    - src/docs/GAME_RULES.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/guide/04-floating-ui-tooltips.md
+    - src/lib/tooltips/README.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T035
+  developer_test_plan: |
+    Suite DEV-V-009 T035 � Defense Score hover tip.
+  description: |
+    On the character sheet Defenses row, each Defense Score value (large number) gets a short
+    WordHelpTip explaining Score / Defense Score per GAME_RULES (10 + Defense Bonus; Bonus + 10).
+    Shared defenseScoreHelp for all six; defense name tips unchanged.
+  acceptance_criteria:
+    - Hovering/focusing any defense Score value shows the shared short tip.
+    - Tip states it is a Score and defines Defense Score per core rules (Bonus + 10 pattern).
+    - Same tip for all six; does not replace getDefenseHelp on the defense name.
+    - Reusable export in tooltip-text.tsx; DEV-V-009-T035; build; changelog; pending-qa.
+  notes: |
+    Related: TASK-547 (name tips), TASK-582 (abilities/defenses layout). verification_status
+    pending-qa until owner runs DEV-V-009-T035.
+- id: TASK-590
+  title: Vitest - innate threshold filter / TP parity (DEV-V-013-T057)
+  created_at: 2026-07-20
+  completed_at: 2026-07-20
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  parent_task: TASK-480
+  related_files:
+    - src/lib/guided-creator/powers-techniques-l2.ts
+    - src/lib/guided-creator/powers-techniques-l2.test.ts
+    - src/lib/guided-creator/loadout-tp.ts
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Cover innate catalog filter (energy <= threshold) and TP spend parity for innate vs regular
+    via existing powers-techniques-l2 / loadout-tp helpers - no UI e2e.
+  acceptance_criteria:
+    - Vitest for threshold include/exclude and innate TP counting where helpers already exist.
+    - npm test green; matrix row #6 -> CI.
+  notes: |
+    Added powers-techniques-l2.test.ts: innate <= threshold include/exclude, TP cost parity with
+    regular mode, computeL2PowersTechniquesTpSpent + combineGuidedTpBudgets. Soft Continue warn
+    and L1 chip UI remain manual (DEV-V-013-T057).
+
+- id: TASK-586
+  title: Wire Temp Modifier v1 surfaces (header, abilities, defenses, skills)
+  created_at: 2026-07-20
+  completed_at: 2026-07-20
+  created_by: agent
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/sheet-header.tsx
+    - src/components/character-sheet/abilities-section.tsx
+    - src/components/character-sheet/skills-section.tsx
+    - src/components/character-sheet/character-sheet-body.tsx
+    - src/components/character-sheet/character-sheet-context.tsx
+    - src/components/character-sheet/use-sheet-resource-actions.ts
+    - src/components/character-sheet/use-sheet-auto-proficiencies.ts
+    - src/components/shared/skill-row.tsx
+    - src/components/shared/section-dual-mode-toggles.tsx
+    - src/lib/character/temp-modifiers.ts
+    - src/lib/character/temp-modifiers.test.ts
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/app/(main)/characters/[id]/library-section-props.ts
+    - src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/ADR/0006-temp-modifier-mode.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T034
+      - DEV-V-009-T033
+  developer_test_plan: |
+    Suite DEV-V-009 T034 � Temp Modifier on v1 sheet surfaces; T033 persistence/tint/cascade.
+  description: |
+    Wired Temp Modifier to Speed, Evasion, Critical Range, Damage Reduction, Terminal;
+    Abilities (+ HP/EN/TP max toggle); Defenses; Skills. Stacks on computed/armor defaults.
+    Pencil spend locks (no intentional overspend). ADR-0006 / SectionDualModeToggles.
+  acceptance_criteria:
+    - All v1 surfaces support Temp Modifier with tint + persistence.
+    - Ability cascade + HP/EN/TP toggles behave per TASK-585 ADR.
+    - Pencil cannot intentionally overspend pools.
+    - DEV-V-009-T034 (+ T033); build; changelog; pending-qa.
+  notes: |
+    Depends on TASK-585 (done). verification_status pending-qa until owner runs T033/T034.
+- id: TASK-589
+  title: Vitest -- technique load columns (DEV-V-016-T002)
+  created_at: 2026-07-20
+  completed_at: 2026-07-20
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  parent_task: TASK-480
+  related_files:
+    - src/lib/library-selectable-builders.ts
+    - src/lib/library-selectable-builders.test.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Extend library-selectable-builders tests for technique header/column contract
+    (Action, Energy, Attack, Training Pts) matching sheet add / creator Load.
+  acceptance_criteria:
+    - getListHeaderColumns('technique') + getItemColumns / buildSelectableItem assertions.
+    - npm test green; update DEVELOPER_TASK_QUEUE matrix row #9 to CI.
+  notes: |
+    Added DEV-V-016-T002 vitest; matrix row #9 -> CI; BUILD_VALIDATION T002 Attack label + Automated note.
+- id: TASK-585
+  title: Architect - Temp Modifier mode (persist, tint, dual affordance)
+  created_at: 2026-07-20
+  completed_at: 2026-07-20
+  created_by: agent
+  implemented_by: agent
+  priority: critical
+  status: done
+  verification_status: n/a
+  follow_up_tasks:
+    - TASK-586
+  related_files:
+    - src/docs/ai/ADR/0006-temp-modifier-mode.md
+    - src/docs/ai/ADR/README.md
+    - src/components/shared/temp-modifier-toggle.tsx
+    - src/components/shared/section-dual-mode-toggles.tsx
+    - src/components/shared/index.ts
+    - src/lib/character/temp-modifiers.ts
+    - src/lib/character/temp-modifiers.test.ts
+    - src/lib/character-save.ts
+    - src/lib/character-save.test.ts
+    - src/lib/data-enrichment.ts
+    - src/types/character.ts
+    - src/types/index.ts
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/DESIGN_SYSTEM.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - scripts/shared-ui-allowlist.json
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T033
+  developer_test_plan: |
+    Suite DEV-V-009 T033 - Temp Modifier dual mode + persistence (full after TASK-586 wire).
+  description: |
+    Architect ADR + persisted tempModifiers + shared dual affordance (pencil + Temp Modifier).
+    Tint/cascade/HP-EN-TP contract for TASK-586. Owner ack 2026-07-20.
+  acceptance_criteria:
+    - ADR + schema/docs for persisted temp modifiers.
+    - Shared dual affordance pattern without parallel forks.
+    - Tint + cascade + HP/EN/TP toggle contract documented for TASK-586.
+    - Owner ack; allowlist + generate-index as needed.
+    - DEV-V-009-T033 scaffold; build; changelog.
+  notes: |
+    ADR-0006 Accepted. Icon: SlidersHorizontal. Surface wire + T033 manual QA = TASK-586.
+    verification_status n/a (Architect scaffold; no clickable sheet surface yet).
 - id: TASK-588
   title: Vitest -- path change reset vs retain draft patch
   created_at: 2026-07-20
@@ -24,7 +303,93 @@
     - npm test green; changelog.
   notes: |
     Added buildPathSelectionDraftPatch; PathStep.handleSelect delegates; matrix row #5 -> CI.
-    Cleanup: FEATURE_INDEX claims T032 vitest only (T013 Advanced remains manual).
+- id: TASK-583
+  title: Collapse Parts/Properties & Proficiencies sitewide + type tips
+  created_at: 2026-07-20
+  completed_at: 2026-07-20
+  created_by: agent
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/lib/chip/list-row-metadata.ts
+    - src/lib/chip/index.ts
+    - src/components/shared/grid-list-row.tsx
+    - src/components/shared/grid-list-row-types.ts
+    - src/components/shared/official-entity-list.tsx
+    - src/components/shared/official-power-list.tsx
+    - src/components/shared/official-technique-list.tsx
+    - src/components/shared/official-item-list.tsx
+    - src/components/shared/entity-library-sections.tsx
+    - src/components/shared/unified-selection-modal.tsx
+    - src/components/shared/creature-stat-block.tsx
+    - src/components/character-sheet/library-entity-rows.tsx
+    - src/lib/library-selectable-builders.ts
+    - src/app/(main)/library/LibraryPowersTab.tsx
+    - src/app/(main)/library/LibraryTechniquesTab.tsx
+    - src/app/(main)/library/LibraryItemsTab.tsx
+    - src/app/(main)/creature-creator/use-creature-creator-workspace.ts
+    - src/components/character-creator/steps/powers-step.tsx
+    - public/tooltip-text.tsx
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/guide/04-floating-ui-tooltips.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T031
+  developer_test_plan: |
+    Suite DEV-V-009 T031 � Parts/Properties sections default collapsed + InfoTippy.
+  description: |
+    Parts/Properties & Proficiencies detailSections default collapsed with chevron +
+    family-tailored InfoTippy via MetadataDetailSection / GridListRow (no forks).
+  acceptance_criteria:
+    - Parts/Properties & Proficiencies default collapsed on expand of entity row (all surfaces).
+    - Chevron opens/closes; InfoTippy with type-appropriate copy.
+    - Descriptor chips outside those sections remain visible by default.
+    - DEV-V-009-T031; npm run build; changelog; archive pending-qa.
+  notes: |
+    Extended MetadataDetailSection with defaultCollapsed + labelHelpKey; builders set both.
+    GridListRow: DetailSectionLabel + legacy chips normalized to synthetic detailSections.
+    Cleanup: Library/Official use family section builders; deleted tip alias + duplicate GLR chrome.
+- id: TASK-581
+  title: Document L1/guided vs global tooltip layers; consolidate Armament Proficiency tip
+  created_at: 2026-07-20
+  completed_at: 2026-07-20
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  depends_on:
+    - TASK-578
+  related_files:
+    - src/docs/ai/guide/04-floating-ui-tooltips.md
+    - public/tooltip-text.tsx
+    - src/components/shared/tab-summary-section.tsx
+    - src/components/guided-creator/guided-path-detail-overview.tsx
+    - src/components/guided-creator/steps/path-step.tsx
+    - src/components/character-sheet/library-section.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T036
+  developer_test_plan: |
+    Suite DEV-V-009 T036 — Inventory Armament Proficiency tip (shared armamentProficiencyHelp).
+  description: |
+    Document global vs guided/L1 tip layers in guide/04; keep armamentProficiencyHelp as the
+    single global export; wire the same export on sheet Inventory.
+  acceptance_criteria:
+    - guide/04 documents L1/guided vs global tip layers with examples.
+    - Armament Proficiency tip is a shared tooltip-text export used by Path More details (no leftover duplicates).
+    - Sheet Inventory wired to the same export.
+    - npm run build; changelog; archive pending-qa.
+  notes: |
+    SummaryItem gained labelAccessory (PointStatus pattern). No duplicate tip strings found beyond
+    guided-creator-copy prose that states the number (not a tip definition). Renamed
+    archetypePathHelp → guidedArchetypePathHelp for guided* naming (cleanup).
 - id: TASK-430
   title: React Compiler hook warnings � exhaustive-deps / set-state-in-effect / preserve-manual-memoization
   created_at: 2026-07-13

@@ -239,6 +239,7 @@ export function useCreatureCreatorWorkspace() {
         range: display.range,
         duration: display.duration,
         partChips,
+        partsFamily: 'power',
       });
       return {
         ...base,
@@ -326,6 +327,7 @@ export function useCreatureCreatorWorkspace() {
       const detailSections = buildPartsAndMetadataDetailSections({
         damage: display.damageStr !== '-' ? display.damageStr : undefined,
         partChips,
+        partsFamily: 'technique',
       });
       return {
         ...base,
@@ -358,7 +360,6 @@ export function useCreatureCreatorWorkspace() {
           level: lvl > 1 ? lvl : undefined,
         };
       });
-      const propertySection = propertiesProficienciesSection(propertyChips);
       const totalCost = propertyChips.reduce((sum, c) => sum + (c.cost ?? 0), 0) || undefined;
       const base = displayItemToSelectableItem(displayItem, ['Type', 'TP', 'Cost']);
       const source = displayItem.sourceData as {
@@ -369,6 +370,9 @@ export function useCreatureCreatorWorkspace() {
         armorValue?: number;
       } | undefined;
       const type = String(source?.type ?? '').toLowerCase();
+      const propertyFamily =
+        type === 'armor' ? 'armor' : type === 'shield' ? 'shield' : type === 'weapon' ? 'weapon' : 'item';
+      const propertySection = propertiesProficienciesSection(propertyChips, propertyFamily);
       const dr = source?.damageReduction ?? source?.armorValue;
       const factChips: ChipData[] = [];
       if ((type === 'weapon' || type === 'shield') && source?.damage) {

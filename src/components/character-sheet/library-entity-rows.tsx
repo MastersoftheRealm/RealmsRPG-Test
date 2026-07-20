@@ -190,6 +190,7 @@ export function mapPowerRows(powers: CharacterPower[], ctx: LibraryEntityRowCont
     const detailSections = buildPartsAndMetadataDetailSections({
       range: power.range,
       partChips,
+      partsFamily: 'power',
     });
 
     return {
@@ -232,6 +233,7 @@ export function mapTechniqueRows(
       range: tech.range,
       damage: tech.damage,
       partChips,
+      partsFamily: 'technique',
     });
 
     return {
@@ -316,7 +318,7 @@ export function mapWeaponRows(weapons: Item[], ctx: LibraryEntityRowContext): En
         </div>
       );
 
-    const propertySection = propertiesProficienciesSection(propertyChips);
+    const propertySection = propertiesProficienciesSection(propertyChips, 'weapon');
 
     return {
       id,
@@ -363,7 +365,7 @@ export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): En
       propertiesToPartData(resolveItemProperties(item as ItemWithLibrarySource), ctx.itemPropertiesDb)
       );
 
-    const propertySection = propertiesProficienciesSection(propertyChips);
+    const propertySection = propertiesProficienciesSection(propertyChips, 'shield');
 
     const attackCell =
       shieldDamageStr !== '-' && ctx.rollContext?.canRoll !== false && ctx.rollContext ? (
@@ -472,7 +474,7 @@ export function mapArmorRows(armor: Item[], ctx: LibraryEntityRowContext): Entit
     const armorMeta = metadataDetailSection(
       buildArmorRequirementMetadataChips({ abilityRequirement: abilityReq, agilityReduction: agilityRed })
     );
-    const propertySection = propertiesProficienciesSection(propertyChips);
+    const propertySection = propertiesProficienciesSection(propertyChips, 'armor');
     const detailSections = mergeDetailSections(armorMeta, propertySection ? [propertySection] : undefined);
 
     return {
@@ -512,7 +514,7 @@ export function mapEquipmentRows(equipment: Item[], ctx: LibraryEntityRowContext
     const propertyChips = partDataToChips(
       propertiesToPartData(resolveItemProperties(item as ItemWithLibrarySource), ctx.itemPropertiesDb)
     );
-    const propertySection = propertiesProficienciesSection(propertyChips);
+    const propertySection = propertiesProficienciesSection(propertyChips, 'item');
     const itemType = formatListCellLabel(item.type);
     const qty = item.quantity ?? 1;
     const quantityStepper = ctx.onEquipmentQuantityChange ? (

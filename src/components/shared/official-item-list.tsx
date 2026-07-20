@@ -17,6 +17,7 @@ import {
   OFFICIAL_ITEM_HEADER_COLUMNS,
   type OfficialItemRow,
 } from '@/lib/library/official-item-list';
+import { propertiesProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
 export type { OfficialItemRow };
@@ -78,8 +79,19 @@ export function OfficialItemList({
         { key: 'Range', value: i.range, align: 'center' },
         { key: 'Damage', value: i.damage, align: 'center' },
       ]}
-      getChips={(i) => i.parts}
-      chipsLabel="Properties"
+      getDetailSections={(i) => {
+        const rawType = String(i.raw?.type ?? '').toLowerCase();
+        const family =
+          rawType === 'armor'
+            ? 'armor'
+            : rawType === 'shield'
+              ? 'shield'
+              : rawType === 'weapon'
+                ? 'weapon'
+                : 'item';
+        const section = propertiesProficienciesSection(i.parts, family);
+        return section ? [section] : undefined;
+      }}
       getTotalCost={(i) => i.tp}
       costLabel="Training Points"
       getThumbnail={(i) => resolveListRowThumbnail('equipment', i.raw, i.name)}

@@ -32,6 +32,7 @@ import {
   visibleEquipmentPhases,
   type EquipmentPhaseVisibility,
 } from '@/lib/guided-creator/equipment-phase-nav';
+import { landsOnFirstInnerScreen } from '@/lib/guided-creator/guided-substep-nav';
 import {
   computeRemainingCurrency,
   computeSpentCurrency,
@@ -184,7 +185,7 @@ export function LoadoutStep() {
   const lastLoadoutJumpNonce = useRef<number | null>(null);
   useEffect(() => {
     if (isLoading) return;
-    if (navigationIntent !== 'first' && navigationIntent !== 'forward') return;
+    if (!landsOnFirstInnerScreen(navigationIntent)) return;
     if (lastLoadoutJumpNonce.current === entryNonce) return;
     lastLoadoutJumpNonce.current = entryNonce;
     const first = visiblePhases[0] ?? 'weapon';

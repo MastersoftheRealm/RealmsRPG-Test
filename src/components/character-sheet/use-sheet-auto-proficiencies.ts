@@ -9,6 +9,7 @@
 
 import { useCallback, useEffect } from 'react';
 import { getArchetypeAbilityScore } from '@/lib/game/calculations';
+import { withAbilitiesForResourceMaxima } from '@/lib/character/temp-modifiers';
 import {
   buildRequiredProficiencies,
   dedupeHighestProficiencies,
@@ -44,7 +45,7 @@ export function computeAutoProficiencies(
   const newSpent = deduped.reduce((sum, p) => sum + calculateProficiencyTP(p), 0);
   const currentDeduped = dedupeHighestProficiencies(next.proficiencies || []);
   const currentSpent = currentDeduped.reduce((sum, p) => sum + calculateProficiencyTP(p), 0);
-  const ability = getArchetypeAbilityScore(next);
+  const ability = getArchetypeAbilityScore(withAbilitiesForResourceMaxima(next));
   const max = getTrainingPointLimit(next.level || 1, ability);
   const overLimit = newSpent > max;
   const thisActionAddedTp = newSpent > currentSpent;

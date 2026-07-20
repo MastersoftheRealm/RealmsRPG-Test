@@ -548,6 +548,7 @@ export function CreatureStatBlock({
       const detailSections = buildPartsAndMetadataDetailSections({
         range: rangeValue,
         partChips: partsChips,
+        partsFamily: 'power',
       });
 
       return {
@@ -653,6 +654,7 @@ export function CreatureStatBlock({
       const detailSections = buildPartsAndMetadataDetailSections({
         damage: damageStr,
         partChips: partsChips,
+        partsFamily: 'technique',
       });
       return {
         id: `${creature.id}-tech-${refId ?? idx}`,

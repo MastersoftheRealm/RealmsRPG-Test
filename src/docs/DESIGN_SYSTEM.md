@@ -640,6 +640,7 @@ These components are used across multiple pages and should be imported rather th
 |-----------|--------|---------|
 | `ErrorBoundary` | `@/components/shared/error-boundary` | Catches rendering errors, shows retry UI |
 | `EditSectionToggle` | `@/components/shared/edit-section-toggle` | Color-coded pencil icon (normal/has-points/over-budget) |
+| `TempModifierToggle` / `SectionDualModeToggles` | `@/components/shared` (ADR-0006) | Pencil + SlidersHorizontal dual mode; Temp Modifier value tint via `tempModifierValueClass` |
 | `SelectionToggle` | `@/components/shared/selection-toggle` | + → ✓ toggle for adding items in modals |
 | `EquipToggle` | `@/components/shared/equip-toggle` | Equipment equipped/unequipped toggle |
 | `InnateToggle` | `@/components/shared/innate-toggle` | Innate power toggle |

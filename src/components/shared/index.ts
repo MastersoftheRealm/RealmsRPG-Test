@@ -30,6 +30,14 @@ export { ValueStepper, DecrementButton, IncrementButton, type ValueStepperProps,
 // EditSectionToggle - Blue pencil icon for edit mode sections
 export { EditSectionToggle, getEditState, type EditState } from './edit-section-toggle';
 
+// Temp Modifier dual affordance (ADR-0006 / TASK-585) — pencil + SlidersHorizontal; mutual exclusive modes
+export { TempModifierToggle, type TempModifierToggleProps } from './temp-modifier-toggle';
+export {
+  SectionDualModeToggles,
+  type SectionDualModeTogglesProps,
+  type SectionEditMode,
+} from './section-dual-mode-toggles';
+
 // ============================================================================
 // Modal components
 export { LoginPromptModal } from './login-prompt-modal';

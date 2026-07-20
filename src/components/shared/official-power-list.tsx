@@ -17,6 +17,7 @@ import {
   OFFICIAL_POWER_HEADER_COLUMNS,
   type OfficialPowerRow,
 } from '@/lib/library/official-power-list';
+import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
 export type { OfficialPowerRow };
@@ -78,8 +79,10 @@ export function OfficialPowerList({
         { key: 'Area', value: p.area, align: 'center' },
         { key: 'Damage', value: p.damage, align: 'center' },
       ]}
-      getChips={(p) => p.parts}
-      chipsLabel="Parts"
+      getDetailSections={(p) => {
+        const section = partsProficienciesSection(p.parts, 'power');
+        return section ? [section] : undefined;
+      }}
       getTotalCost={(p) => p.tp}
       costLabel="Training Points"
       getThumbnail={(p) => resolveListRowThumbnail('power', p.raw, p.name)}

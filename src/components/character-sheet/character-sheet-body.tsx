@@ -21,6 +21,7 @@ function AbilitiesPanel({ className }: { className?: string }) {
     pointBudgets,
     onAbilityChange,
     onDefenseChange,
+    onTempModifiersChange,
   } = useCharacterSheet();
 
   return (
@@ -37,6 +38,8 @@ function AbilitiesPanel({ className }: { className?: string }) {
         spentAbilityPoints={pointBudgets?.spentAbilityPoints}
         totalSkillPoints={pointBudgets?.totalSkillPoints}
         spentSkillPoints={pointBudgets?.spentSkillPoints}
+        tempModifiers={character.tempModifiers}
+        onTempModifiersChange={onTempModifiersChange}
         onAbilityChange={onAbilityChange}
         onDefenseChange={onDefenseChange}
       />
@@ -53,8 +56,8 @@ function SkillsPanel({ className }: { className?: string }) {
     characterSpeciesSkills,
     onSkillChange,
     onRemoveSkill,
-    onAddSkill,
     onAddSubSkill,
+    onTempModifiersChange,
   } = useCharacterSheet();
 
   return (
@@ -68,9 +71,10 @@ function SkillsPanel({ className }: { className?: string }) {
       }
       spentSkillPoints={pointBudgets?.spentSkillPoints}
       speciesSkills={characterSpeciesSkills}
+      tempModifiers={character.tempModifiers}
+      onTempModifiersChange={onTempModifiersChange}
       onSkillChange={onSkillChange}
       onRemoveSkill={onRemoveSkill}
-      onAddSkill={onAddSkill}
       onAddSubSkill={onAddSubSkill}
       className={className}
     />

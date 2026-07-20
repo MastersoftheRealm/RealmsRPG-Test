@@ -15,6 +15,7 @@ import {
   dedupeEntityRefs,
   dedupeSavedParts,
 } from '@/lib/library/dedupe-saved-parts';
+import { normalizeTempModifiers } from '@/lib/character/temp-modifiers';
 
 // =============================================================================
 // Types for Enriched Data
@@ -632,6 +633,8 @@ const SAVEABLE_FIELDS = [
   'speedDisplayUnit',
   // Character-sheet library tab visibility preferences
   'libraryTabVisibility',
+  // Temp Modifier deltas (ADR-0006 / TASK-585) — persist across refresh / campaign view
+  'tempModifiers',
   // Ancestry/Species data (lean: { id, name, selectedTraits, selectedFlaw, selectedCharacteristic })
   'ancestry',
   // Conditions
@@ -678,6 +681,15 @@ export function cleanForSave(data: Character): Partial<Character> {
     if (data[field as keyof Character] !== undefined) {
       cleaned[field] = data[field as keyof Character];
     }
+  }
+
+  // Sparse Temp Modifier deltas (ADR-0006 — drop zeros / empty maps)
+  if (cleaned.tempModifiers !== undefined) {
+    const normalized = normalizeTempModifiers(
+      cleaned.tempModifiers as Character['tempModifiers']
+    );
+    if (normalized) cleaned.tempModifiers = normalized;
+    else delete cleaned.tempModifiers;
   }
 
   // Migrate defenseSkills → defenseVals (backward compat for old saves)

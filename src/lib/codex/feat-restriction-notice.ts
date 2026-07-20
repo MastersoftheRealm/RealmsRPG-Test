@@ -12,6 +12,11 @@ export const DEFAULT_STATE_DURATION_LABEL = '1 minute';
 export type FeatRestrictionNoticeOpts = {
   /** Character level — used for default Enter State uses when the feat has no per-feat limit. */
   level?: number;
+  /**
+   * When true, skip the limited-uses sentence (e.g. Path deep-dive already shows a Uses chip).
+   * State-feat teaching copy and default Enter State uses still surface.
+   */
+  omitLimitedUses?: boolean;
 };
 
 export type LimitedUseEntity = 'feat' | 'trait';
@@ -58,12 +63,18 @@ export function getFeatRestrictionNotice(
     );
   }
 
-  const usesNotice = getLimitedUsesNotice('feat', feat.uses_per_rec, feat.rec_period, {
-    forceFullRecovery: feat.state_feat === true,
-  });
-  if (usesNotice) {
-    parts.push(usesNotice);
-  } else if (feat.state_feat && opts?.level != null) {
+  if (!opts?.omitLimitedUses) {
+    const usesNotice = getLimitedUsesNotice('feat', feat.uses_per_rec, feat.rec_period, {
+      forceFullRecovery: feat.state_feat === true,
+    });
+    if (usesNotice) {
+      parts.push(usesNotice);
+    }
+  }
+
+  // Default Enter State uses when state feat has no per-feat limit (chip or sentence may cover limits).
+  const hasPerFeatUses = feat.uses_per_rec != null && feat.uses_per_rec > 0;
+  if (feat.state_feat && !hasPerFeatUses && opts?.level != null) {
     const enterStateUses = calculateProficiency(opts.level);
     if (enterStateUses > 0) {
       parts.push(

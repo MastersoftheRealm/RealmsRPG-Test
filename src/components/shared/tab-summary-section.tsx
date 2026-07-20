@@ -59,6 +59,8 @@ export interface SummaryItemProps {
   value: ReactNode;
   /** Optional icon/emoji before the label */
   icon?: ReactNode;
+  /** Optional help control beside the label (e.g. InfoTippy) — same slot as PointStatus.labelAccessory */
+  labelAccessory?: ReactNode;
   /** Highlight the value with color */
   highlight?: boolean;
   /** Color variant for highlighting */
@@ -80,6 +82,7 @@ export function SummaryItem({
   label,
   value,
   icon,
+  labelAccessory,
   highlight = false,
   highlightColor = 'primary',
   className,
@@ -87,7 +90,11 @@ export function SummaryItem({
   return (
     <div className={cn('flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5', className)}>
       {icon && <span className="shrink-0 text-sm">{icon}</span>}
-      <span className="text-sm text-text-secondary">{label}:</span>
+      <span className="inline-flex min-w-0 items-center gap-0.5 text-sm text-text-secondary">
+        <span>{label}</span>
+        {labelAccessory}
+        <span aria-hidden="true">:</span>
+      </span>
       <span
         className={cn(
           'shrink-0 text-sm font-bold',

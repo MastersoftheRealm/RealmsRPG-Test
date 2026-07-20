@@ -1004,7 +1004,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-585, TASK-586, TASK-587)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats.
 
@@ -1344,6 +1344,75 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Steps** | 1. Enter sheet edit mode at ≥768px. 2. Inspect Abilities and Skills pencil icons. 3. Confirm the control hugs the icon (no large empty button chrome). 4. Optional below `md`: confirm tap target is still comfortable (~44px). |
 | **Expected** | Desktop pencils are icon-dense; mobile still meets touch sizing via `touch-target-md-compact`. |
 | **Report** | DEV-V-009-T030: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T031 — Parts/Properties & Proficiencies default collapsed + InfoTippy (TASK-583)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-583 |
+| **Where** | `/characters/[id]` → Library (Powers / Techniques / Weapons); also Library page or Add Power modal |
+| **Steps** | 1. Sheet Library: expand a power (or technique) with parts — **Parts & Proficiencies** starts collapsed; chevron opens/closes; **i** tip uses power vs technique wording. 2. Expand a weapon/armor/shield — **Properties & Proficiencies** collapse + wield/wear tip. 3. My Library Powers / Techniques / Armaments (and Realms Official lists): same collapse + family tip (not generic “Power or Technique” on a pure power row). 4. Confirm descriptor chips outside those sections stay visible when the row is expanded. 5. Optional ~360px: tip via touch-hold (`size="inline"`). |
+| **Expected** | Parts/Properties default collapsed sitewide via `MetadataDetailSection` + GridListRow; family tips from `tooltip-text`; descriptor sections not collapsed. |
+| **Report** | DEV-V-009-T031: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T032 — Skills catalog list + filters + − removes (TASK-584)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-584 |
+| **Where** | `/characters/[id]` → Skills section (edit mode) |
+| **Needs** | Editable character; Codex skills loaded |
+| **Steps** | 1. Open Skills (play view) — confirm every Codex **base** skill appears (not only previously added). 2. Toggle **Proficient** filter — only proficient rows remain; **All** restores full catalog. 3. Uncheck **Show sub-skills** — sub-skill rows hide; re-check — proficient subs return; unproficient subs only if previously added via Add Sub-Skill. 4. Enter edit → pencil (spend): confirm dual toggles float top-right; Skill Points pill does not ugly-wrap; no **Add Skill** button; **Sub-Skill** remains. 5. No per-row **X**. On a base skill: **+** gains proficiency (value 0), further **+** raises value; **−** lowers value then clears proficiency (row stays in catalog). 6. Add a sub-skill, gain proficiency, then **−** until proficiency clears, then **−** again — sub-skill leaves the list. 7. Optional ~360px: filters usable; Value stepper still visible (TableScroll). |
+| **Expected** | Catalog-all base skills; filters as above; − path replaces remove-X; header chrome uncramped; species skills still locked. |
+| **Report** | DEV-V-009-T032: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T033 — Temp Modifier dual mode + persistence (TASK-585 / TASK-586)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-585 (contract); full UI wire TASK-586 |
+| **Where** | `/characters/[id]` → Edit mode → sections with `SectionDualModeToggles` (after TASK-586: header Speed/Evasion/DR/crit/Terminal, Abilities, Defenses, Skills) |
+| **Needs** | Character you can edit and save; after TASK-586 wiring |
+| **Steps** | 1. Enter sheet edit mode. 2. Confirm pencil and SlidersHorizontal sit together (dual affordance); activating one closes the other. 3. Set a positive Temp Modifier on a value — value tints warning/gold; roll chip stays untinted. 4. Set a negative Temp Modifier — value tints danger. 5. Refresh / reopen sheet (and optional campaign view) — deltas persist. 6. Abilities: confirm ability temps cascade to dependents but do **not** change max Health/Energy/TP unless the resource-maxima toggle is on. |
+| **Expected** | ADR-0006 contract: persist `tempModifiers`, dual toggles only via shared components, value tint not roll tint, cascade gate default off. |
+| **Report** | DEV-V-009-T033: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T034 — Temp Modifier on v1 sheet surfaces (TASK-586)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-586 |
+| **Where** | `/characters/[id]` → Edit mode → header (Speed/Evasion/DR/crit/Terminal), Abilities (+ defenses), Skills; optional campaign view |
+| **Needs** | Editable character; armor equipped recommended for DR/crit defaults |
+| **Steps** | 1. Enter edit mode. 2. Header: set Temp Modifiers on Speed, Evasion, DR, Critical Range, Terminal (LargeStatBlock) — values tint; pencil still edits Speed/Evasion base only. 3. Abilities: Temp mode adjusts ability/defense deltas; cascade shows on defense scores/skill bonuses; resource-maxima toggle default off (max HP/EN/TP unchanged until toggled on — then Proficiencies TP Limit and max Health/Energy follow effective abilities). 4. Skills: Temp column adjusts skill bonus deltas; spend mode cannot overspend skill points. 5. Refresh + open campaign view — temps persist and tint. |
+| **Expected** | All v1 surfaces support Temp Modifier with tint + persistence; ability cascade + HP/EN/TP toggle per ADR-0006; pencil spend locks prevent intentional overspend. |
+| **Report** | DEV-V-009-T034: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T035 — Defense Score hover tip (TASK-587)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-587 |
+| **Where** | `/characters/[id]` → Abilities & Defenses → Defenses row |
+| **Steps** | 1. Open a character sheet. 2. Hover (desktop) or touch-hold ~400ms (mobile ~360px) the large Score number under **Might** — confirm a tip opens explaining Defense Score (10 + Defense Bonus / Bonus + 10 passive target). 3. Repeat for at least one other defense (e.g. **Resolve**). 4. Confirm the defense **name** tip still uses `getDefenseHelp` (different copy). 5. Confirm roll chips still work. 6. Keyboard: Tab to a Score value — tip opens on focus; accessible name still includes the defense and Score number (not only “About Defense Score”). |
+| **Expected** | All six Score values share `defenseScoreHelp` from `tooltip-text.tsx` via `WordHelpTip`; tip does not replace name tips or roll controls; AT hears e.g. “Might Defense Score 14”. |
+| **Report** | DEV-V-009-T035: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T036 — Inventory Armament Proficiency tip (TASK-581)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-581 |
+| **Where** | `/characters/[id]` → Library → Inventory |
+| **Steps** | 1. Open Inventory on a character with Martial Proficiency set (Armament Proficiency shown). 2. Hover/focus the **i** beside the Armament Proficiency label. 3. Confirm tip explains the TP ceiling for weapons/armor (same copy as Path More details Weapons and Armor tip). 4. Optional ~360px: tip usable via touch-hold (`size="inline"`). |
+| **Expected** | Shared `armamentProficiencyHelp` from `tooltip-text.tsx`; no duplicate tip string; tip does not replace the numeric value. |
+| **Report** | DEV-V-009-T036: PASS / FAIL / SKIP — |
 
 ---
 
@@ -2955,14 +3024,15 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-013-T057 — Innate Energy soft warn + threshold + TP parity (TASK-472 / TASK-573)
+#### DEV-V-013-T057 — Innate Energy soft warn + threshold + TP parity (TASK-472 / TASK-573 / TASK-590)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 |
-| **Related task** | TASK-472, TASK-573 |
+| **Related task** | TASK-472, TASK-573, TASK-590 |
 | **Where** | Guided Powers step (Power archetype preferred — Innate Energy 16 at L1) |
 | **Needs** | Path or catalog with innate-eligible powers (Energy ≤ threshold 8 for Power) |
+| **Automated** | Threshold filter + shared TP spend: `npm test` — `powers-techniques-l2.test.ts` (TASK-590). Soft Continue warn + L1 TP chip UI remain manual. |
 
 **Steps**
 1. Confirm **Innate Energy** PointStatus uses progression budget (Power L1 = 16, Powered-Martial = 6), not threshold-only 8.
@@ -2996,14 +3066,15 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-013-T059 — Footer Continue does not jump to furthest screen (TASK-520)
+#### DEV-V-013-T059 — Footer Continue does not jump to furthest screen (TASK-520 / TASK-592)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 |
-| **Related task** | TASK-520 |
+| **Related task** | TASK-520 · automation TASK-592 |
 | **Where** | Guided creator footer **Continue** after revisiting Foundation / Ancestry |
 | **Needs** | Progress through Ancestry (and optionally further), then return via chapter rail or Back |
+| **CI** | `src/lib/guided-creator/guided-substep-nav.test.ts` — `nextGuidedSubStep` one-step index + `landsOnFirstInnerScreen` intent predicate (`forward`/`first` vs `back`). Full multi-screen landing remains human steps below. |
 
 **Steps**
 1. Complete Foundation (path + Human); advance through Ancestry picks into Abilities (or further).
@@ -3040,7 +3111,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 — Guided Simple character creator |
-| **Related task** | TASK-524 |
+| **Related task** | TASK-524 (order); **TASK-591** CI — `ancestry-pick-tasks.test.ts` |
 | **Where** | Guided creator → Ancestry (after species overview) |
 | **Needs** | Starter species with characteristics, ancestry traits, and at least one flaw |
 
@@ -3219,6 +3290,27 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-013-T070 — Path feat deep-dive uses chips + restriction notices (TASK-579)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-579 |
+| **Where** | Guided creator → Path → More details → Archetype / Character Feats sections |
+| **Needs** | Path with at least one limited-use feat and ideally one state feat (e.g. Berserker / Assassin / Sorcerer) |
+
+**Steps**
+1. Open More details on a path that lists feats. Expand a feat with limited uses (chip like `Uses 1 / Full Recovery`).
+2. Confirm the Uses chip is a non-expanding DescriptorChip (no chevron / no expandable restatement panel).
+3. Confirm there is **no** duplicate “This feat can be used … per … Recovery” sentence when the chip already states uses/recovery.
+4. Expand a **state** feat (if present): confirm the same info-warning callout style as Archetype Feats step cards (`GuidedFeatRestrictionNotice` — State feat / Enter State teaching). Uses chip still present when the feat has a per-feat limit; notice does not restate the uses sentence.
+5. At ~360px: expand a feat row; chip + notice remain readable; touch targets on expand control ≥44px.
+
+**Expected**
+- Uses/recovery = DescriptorChip only; state / meaningful restrictions use shared GuidedRestrictionNotice styling; no parallel warning UI; no uses chip + uses sentence duplication.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 #### DEV-V-013-T071 — Training Points tip clarity (TASK-580)
 
 | Field | Value |
@@ -3390,10 +3482,11 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-016 |
-| **Task** | TASK-379 |
+| **Task** | TASK-379 · TASK-589 |
 | **Where** | `/technique-creator` → Load |
-| **Steps** | 1. Open Load. 2. Confirm columns include Action, Energy, Weapon, Training Pts. 3. Select a technique → Load. |
-| **Expected** | Same list UX as add-technique modal columns; form restores parts/weapon/action correctly. |
+| **Steps** | 1. Open Load. 2. Confirm columns include Action, Energy, Attack, Training Pts. 3. Select a technique → Load. |
+| **Expected** | Same list UX as add-technique modal columns; form restores parts/attackMode/action correctly. Attack cell is the derived attack-mode label (Weapon / Unarmed / No Attack), not a tied-weapon name. |
+| **Automated** | Header + column contract: `npm test` — `library-selectable-builders.test.ts` (TASK-589). Full Load→form restore remains manual. |
 | **Report** | DEV-V-016-T002: PASS / FAIL / SKIP — |
 
 #### DEV-V-016-T003 — Item / armament creator Load from Library

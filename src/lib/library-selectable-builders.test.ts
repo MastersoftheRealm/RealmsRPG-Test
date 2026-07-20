@@ -40,6 +40,50 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
     expect(getModalGridColumns('power')).toMatch(/1\.2fr/);
   });
 
+  it('technique headers/columns are Action, Energy, Attack, Training Pts (DEV-V-016-T002)', () => {
+    const headers = getListHeaderColumns('technique').map((c) => c.key);
+    expect(headers).toEqual(['name', 'Action', 'Energy', 'Attack', 'Training Pts']);
+
+    const cols = getItemColumns(
+      { id: 't1', name: 'Strike' },
+      'technique',
+      {
+        energy: 3,
+        weaponName: 'Weapon',
+        tp: 4,
+        actionType: 'Action',
+      }
+    );
+    expect(cols.map((c) => c.key)).toEqual(['Action', 'Energy', 'Attack', 'Training Pts']);
+    expect(cols.find((c) => c.key === 'Action')?.value).toBe('Action');
+    expect(cols.find((c) => c.key === 'Energy')?.value).toBe('3');
+    expect(cols.find((c) => c.key === 'Attack')?.value).toBe('Weapon');
+    expect(cols.find((c) => c.key === 'Training Pts')?.value).toBe('4');
+    expect(getModalGridColumns('technique')).toMatch(/1\.4fr/);
+
+    const selectable = buildSelectableItem(
+      {
+        id: 't1',
+        name: 'Strike',
+        description: 'A strike.',
+        actionType: 'basic',
+        attackMode: 'weapon',
+        parts: [],
+      },
+      'technique',
+      emptyCodex
+    );
+    expect(selectable.columns?.map((c) => c.key)).toEqual([
+      'Action',
+      'Energy',
+      'Attack',
+      'Training Pts',
+    ]);
+    expect(selectable.columns?.find((c) => c.key === 'Action')?.value).toBe('Basic action');
+    expect(selectable.columns?.find((c) => c.key === 'Attack')?.value).toBe('Weapon');
+    expect(selectable.data).toMatchObject({ id: 't1', name: 'Strike' });
+  });
+
   it('mixed armament headers + buildSelectableItem facts (DEV-V-016-T003)', () => {
     // Headers use a combined "stat" column; buildSelectableItem passes effectiveType into
     // getItemColumns so row keys are Damage / Armor / Block (positional grid alignment).

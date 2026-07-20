@@ -10,6 +10,7 @@ import { QuantitySelector } from '@/components/shared/quantity-selector';
 import { RollButton } from '@/components/shared/roll-button';
 import { deriveShieldAmountFromProperties } from '@/lib/calculators/item-calc';
 import { TP_COST_LABEL } from '@/lib/detail-option/compact-facts';
+import type { MetadataDetailSection } from '@/lib/chip/list-row-metadata';
 import { formatListCellLabel, splitDamageDiceAndType } from '@/lib/utils';
 import { useRollsOptional } from '@/components/character-sheet/roll-context';
 import { useLibrarySectionCollapse } from '@/hooks/use-library-section-collapse';
@@ -35,7 +36,7 @@ export type EntityRowExtras = {
   chipsLabel?: string;
   totalTp?: number;
   columnSpans?: (number | undefined)[];
-  detailSections?: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }>;
+  detailSections?: MetadataDetailSection[];
   uses?: { current: number; max: number };
   hideUsesInName?: boolean;
   nameContent?: ReactNode;

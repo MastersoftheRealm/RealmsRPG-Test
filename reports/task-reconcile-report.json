@@ -1,192 +1,6 @@
 {
-  "generated_at": "2026-07-20T15:34:21.831Z",
+  "generated_at": "2026-07-20T17:03:48.443Z",
   "tasks": [
-    {
-      "id": "TASK-587",
-      "title": "Sheet Defense Score hover tip (Score pattern)",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/components/character-sheet/abilities-section.tsx",
-        "public/tooltip-text.tsx",
-        "src/docs/GAME_RULES.md"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-583",
-      "title": "Collapse Parts/Properties & Proficiencies sitewide + type tips",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/lib/chip/list-row-metadata.ts",
-        "src/components/shared/grid-list-row.tsx",
-        "src/components/character-sheet/library-entity-rows.tsx",
-        "src/lib/library-selectable-builders.ts",
-        "public/tooltip-text.tsx"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-584",
-      "title": "Skills sheet — catalog-all base skills + filters + edit chrome",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/components/character-sheet/skills-section.tsx",
-        "src/components/shared/skill-row.tsx",
-        "src/components/shared/add-skill-modal.tsx",
-        "src/hooks/use-codex.ts"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-585",
-      "title": "Architect — Temp Modifier mode (persist, tint, dual affordance)",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/components/shared/edit-section-toggle.tsx",
-        "src/components/character-sheet/sheet-header.tsx",
-        "src/components/character-sheet/abilities-section.tsx",
-        "src/components/character-sheet/skills-section.tsx",
-        "src/docs/ai/ADR/",
-        "src/docs/SUPABASE_SCHEMA.md"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-586",
-      "title": "Wire Temp Modifier v1 surfaces (header, abilities, defenses, skills)",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/components/character-sheet/sheet-header.tsx",
-        "src/components/character-sheet/abilities-section.tsx",
-        "src/components/character-sheet/skills-section.tsx"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-579",
-      "title": "Guided Path feat options — uses as descriptor chips + restriction-notice cohesion",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/lib/detail-option/builders.ts",
-        "src/lib/detail-option/format-recovery.ts",
-        "src/components/guided-creator/guided-path-detail-modal.tsx",
-        "src/components/guided-creator/guided-detail-option-list.tsx",
-        "src/components/guided-creator/guided-restriction-notice.tsx",
-        "src/lib/codex/feat-restriction-notice.ts",
-        "src/components/guided-creator/steps/archetype-feats-step.tsx"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-581",
-      "title": "Document L1/guided vs global tooltip layers; consolidate Armament Proficiency tip",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/docs/ai/guide/04-floating-ui-tooltips.md",
-        "public/tooltip-text.tsx",
-        "src/components/guided-creator/guided-path-detail-overview.tsx",
-        "src/components/character-sheet/library-section.tsx"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-535",
-      "title": "Codex content pass - reclassify clear innate powers on archetype paths",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "sql/codex-archetypes-enrich-*-applied.sql",
-        "src/docs/GAME_RULES.md"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-588",
-      "title": "Vitest — path change reset vs retain draft patch",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/components/guided-creator/steps/path-step.tsx",
-        "src/lib/guided-creator/"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-589",
-      "title": "Vitest — technique load columns (DEV-V-016-T002)",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/lib/library-selectable-builders.ts",
-        "src/lib/library-selectable-builders.test.ts"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-590",
-      "title": "Vitest — innate threshold filter / TP parity (DEV-V-013-T057)",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/lib/guided-creator/powers-techniques-l2.ts",
-        "src/lib/guided-creator/loadout-tp.ts"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-591",
-      "title": "Vitest — ancestry pick task order (DEV-V-013-T061)",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/components/guided-creator/steps/ancestry-step.tsx",
-        "src/lib/guided-creator/"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-592",
-      "title": "Vitest — guided Continue advances one screen (DEV-V-013-T059)",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/stores/guided-creator-store.ts"
-      ],
-      "related_overlap": []
-    },
     {
       "id": "TASK-326",
       "title": "Tighten Supabase security advisors (bucket listing + leaked-password protection)",
@@ -200,76 +14,6 @@
       "related_overlap": []
     },
     {
-      "id": "TASK-381",
-      "title": "BIG-01/02 phased decomposition of character-sheet and creator god files",
-      "status": "partial",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [
-        {
-          "hash": "2d6361cd49461197ff31559d903703a49f521528",
-          "subject": "debt: delete dead shared exports + wire parsers/auth (from /global-audit) (#56)",
-          "files": [
-            "scripts/shared-ui-allowlist.json",
-            "src/app/(main)/admin/codex/AdminArchetypesTab.tsx",
-            "src/app/(main)/my-account/page.tsx",
-            "src/app/api/codex/route.ts",
-            "src/components/guided-creator/guided-choice-grid.ts",
-            "src/components/guided-creator/guided-choice-styles.ts",
-            "src/components/guided-creator/guided-equipment-l1-phase.tsx",
-            "src/components/guided-creator/guided-summary-chips.tsx",
-            "src/components/guided-creator/index.ts",
-            "src/components/guided-creator/steps/path-step.tsx",
-            "src/components/guided-creator/steps/species-step.tsx",
-            "src/components/shared/filters/checkbox-filter.tsx",
-            "src/components/shared/filters/index.ts",
-            "src/components/shared/index.ts",
-            "src/components/shared/skill-source-chip.tsx",
-            "src/components/ui/index.ts",
-            "src/components/ui/spinner.tsx",
-            "src/docs/DESIGN_SYSTEM.md",
-            "src/docs/ai/ACTIVE_TASKS.md",
-            "src/docs/ai/AGENT_GUIDE.md",
-            "src/docs/ai/AI_CHANGELOG.md",
-            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
-            "src/docs/ai/FEATURE_INDEX.md",
-            "src/docs/ai/FEATURE_INDEX_BARRELS.generated.md",
-            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
-            "src/docs/ai/guide/02-components-and-lists.md",
-            "src/docs/human/UI_COMPONENT_REFERENCE.md",
-            "src/lib/auth-errors.test.ts",
-            "src/lib/auth-errors.ts"
-          ]
-        }
-      ],
-      "related_files": [
-        "src/components/character-sheet/use-character-sheet-actions.ts",
-        "src/components/character-sheet/use-sheet-library-actions.ts",
-        "src/components/character-sheet/use-sheet-resource-actions.ts",
-        "src/components/character-sheet/use-sheet-feat-actions.ts",
-        "src/components/character-sheet/use-sheet-skill-identity-actions.ts",
-        "src/app/(main)/characters/[id]/page.tsx",
-        "src/app/(main)/creature-creator/page.tsx",
-        "src/app/(main)/creature-creator/creature-creator-editor.tsx",
-        "src/app/(main)/creature-creator/use-creature-creator-workspace.ts",
-        "src/app/(main)/power-creator/page.tsx",
-        "src/app/(main)/power-creator/use-power-creator-workspace.ts",
-        "src/app/(main)/power-creator/power-creator-editor.tsx",
-        "src/app/(main)/item-creator/page.tsx",
-        "src/app/(main)/item-creator/use-item-creator-workspace.ts",
-        "src/app/(main)/item-creator/item-creator-editor.tsx",
-        "src/app/(main)/admin/codex/AdminArchetypesTab.tsx",
-        "src/app/(main)/admin/codex/admin-archetype-path-form.ts",
-        "src/app/(main)/admin/codex/admin-archetype-path-rows.tsx",
-        "src/app/(main)/admin/codex/admin-archetype-editor.tsx",
-        "src/app/(main)/admin/codex/use-admin-archetype-workspace.ts",
-        "src/docs/ai/BUILD_VALIDATION.md"
-      ],
-      "related_overlap": [
-        "src/app/(main)/admin/codex/AdminArchetypesTab.tsx"
-      ]
-    },
-    {
       "id": "TASK-500",
       "title": "Deferred — enhanced-item images via Realms Image Library",
       "status": "not-started",
@@ -279,6 +23,272 @@
       "related_files": [
         "src/app/(main)/admin/public-library/AdminPublicEnhancedItemsTab.tsx",
         "src/docs/REALMS_PRODUCT_OVERVIEW.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-592",
+      "title": "Vitest — guided Continue advances one screen (DEV-V-013-T059)",
+      "status": "done",
+      "completed_at": "2026-07-20",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/lib/guided-creator/guided-substep-nav.ts",
+        "src/lib/guided-creator/guided-substep-nav.test.ts",
+        "src/stores/guided-creator-store.ts",
+        "src/components/guided-creator/steps/ancestry-step.tsx",
+        "src/components/guided-creator/steps/loadout-step.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-591",
+      "title": "Vitest - ancestry pick task order (DEV-V-013-T061)",
+      "status": "done",
+      "completed_at": "2026-07-20",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/lib/guided-creator/ancestry-pick-tasks.ts",
+        "src/lib/guided-creator/ancestry-pick-tasks.test.ts",
+        "src/components/guided-creator/steps/ancestry-step.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-584",
+      "title": "Skills sheet � catalog-all base skills + filters + edit chrome",
+      "status": "done",
+      "completed_at": "2026-07-20",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "f3aa6ed3c24021d51b664df5bce1925a5579dcfc",
+          "subject": "fix(ci): correct TASK-584 related_files path and CRLF parse",
+          "files": [
+            "scripts/parse-related-files.js",
+            "src/docs/ai/ACTIVE_TASKS.md"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/components/character-sheet/skills-section.tsx",
+        "src/components/character-sheet/use-sheet-skill-identity-actions.ts",
+        "src/components/character-sheet/character-sheet-context.tsx",
+        "src/components/character-sheet/character-sheet-body.tsx",
+        "src/components/shared/skill-row.tsx",
+        "src/lib/character/sheet-skills-display.ts",
+        "src/lib/character/sheet-skills-display.test.ts",
+        "src/app/(main)/characters/[id]/CharacterSheetModals.tsx",
+        "src/app/(main)/characters/[id]/page.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "src/docs/ai/DEVELOPER_TASK_QUEUE.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-587",
+      "title": "Sheet Defense Score hover tip (Score pattern)",
+      "status": "done",
+      "completed_at": "2026-07-20",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/components/character-sheet/abilities-section.tsx",
+        "public/tooltip-text.tsx",
+        "src/docs/GAME_RULES.md",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/guide/04-floating-ui-tooltips.md",
+        "src/lib/tooltips/README.md",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "src/docs/ai/DEVELOPER_TASK_QUEUE.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-590",
+      "title": "Vitest - innate threshold filter / TP parity (DEV-V-013-T057)",
+      "status": "done",
+      "completed_at": "2026-07-20",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/lib/guided-creator/powers-techniques-l2.ts",
+        "src/lib/guided-creator/powers-techniques-l2.test.ts",
+        "src/lib/guided-creator/loadout-tp.ts",
+        "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-586",
+      "title": "Wire Temp Modifier v1 surfaces (header, abilities, defenses, skills)",
+      "status": "done",
+      "completed_at": "2026-07-20",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/components/character-sheet/sheet-header.tsx",
+        "src/components/character-sheet/abilities-section.tsx",
+        "src/components/character-sheet/skills-section.tsx",
+        "src/components/character-sheet/character-sheet-body.tsx",
+        "src/components/character-sheet/character-sheet-context.tsx",
+        "src/components/character-sheet/use-sheet-resource-actions.ts",
+        "src/components/character-sheet/use-sheet-auto-proficiencies.ts",
+        "src/components/shared/skill-row.tsx",
+        "src/components/shared/section-dual-mode-toggles.tsx",
+        "src/lib/character/temp-modifiers.ts",
+        "src/lib/character/temp-modifiers.test.ts",
+        "src/app/(main)/characters/[id]/page.tsx",
+        "src/app/(main)/characters/[id]/library-section-props.ts",
+        "src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "src/docs/ai/ADR/0006-temp-modifier-mode.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-589",
+      "title": "Vitest -- technique load columns (DEV-V-016-T002)",
+      "status": "done",
+      "completed_at": "2026-07-20",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/lib/library-selectable-builders.ts",
+        "src/lib/library-selectable-builders.test.ts",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-585",
+      "title": "Architect - Temp Modifier mode (persist, tint, dual affordance)",
+      "status": "done",
+      "completed_at": "2026-07-20",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/docs/ai/ADR/0006-temp-modifier-mode.md",
+        "src/docs/ai/ADR/README.md",
+        "src/components/shared/temp-modifier-toggle.tsx",
+        "src/components/shared/section-dual-mode-toggles.tsx",
+        "src/components/shared/index.ts",
+        "src/lib/character/temp-modifiers.ts",
+        "src/lib/character/temp-modifiers.test.ts",
+        "src/lib/character-save.ts",
+        "src/lib/character-save.test.ts",
+        "src/lib/data-enrichment.ts",
+        "src/types/character.ts",
+        "src/types/index.ts",
+        "src/docs/SUPABASE_SCHEMA.md",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/DESIGN_SYSTEM.md",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "scripts/shared-ui-allowlist.json"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-588",
+      "title": "Vitest -- path change reset vs retain draft patch",
+      "status": "done",
+      "completed_at": "2026-07-20",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "b7b74027145ccfc6c5dcebecb586155df803f183",
+          "subject": "feat(guided): extract path select retain/reset helper (TASK-588)",
+          "files": [
+            "src/components/guided-creator/steps/path-step.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/lib/guided-creator/path-selection-draft.test.ts",
+            "src/lib/guided-creator/path-selection-draft.ts"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/lib/guided-creator/path-selection-draft.ts",
+        "src/lib/guided-creator/path-selection-draft.test.ts",
+        "src/components/guided-creator/steps/path-step.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ],
+      "related_overlap": [
+        "src/lib/guided-creator/path-selection-draft.ts",
+        "src/lib/guided-creator/path-selection-draft.test.ts",
+        "src/components/guided-creator/steps/path-step.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ]
+    },
+    {
+      "id": "TASK-583",
+      "title": "Collapse Parts/Properties & Proficiencies sitewide + type tips",
+      "status": "done",
+      "completed_at": "2026-07-20",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/lib/chip/list-row-metadata.ts",
+        "src/lib/chip/index.ts",
+        "src/components/shared/grid-list-row.tsx",
+        "src/components/shared/grid-list-row-types.ts",
+        "src/components/shared/official-entity-list.tsx",
+        "src/components/shared/official-power-list.tsx",
+        "src/components/shared/official-technique-list.tsx",
+        "src/components/shared/official-item-list.tsx",
+        "src/components/shared/entity-library-sections.tsx",
+        "src/components/shared/unified-selection-modal.tsx",
+        "src/components/shared/creature-stat-block.tsx",
+        "src/components/character-sheet/library-entity-rows.tsx",
+        "src/lib/library-selectable-builders.ts",
+        "src/app/(main)/library/LibraryPowersTab.tsx",
+        "src/app/(main)/library/LibraryTechniquesTab.tsx",
+        "src/app/(main)/library/LibraryItemsTab.tsx",
+        "src/app/(main)/creature-creator/use-creature-creator-workspace.ts",
+        "src/components/character-creator/steps/powers-step.tsx",
+        "public/tooltip-text.tsx",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "src/docs/ai/guide/04-floating-ui-tooltips.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-581",
+      "title": "Document L1/guided vs global tooltip layers; consolidate Armament Proficiency tip",
+      "status": "done",
+      "completed_at": "2026-07-20",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/docs/ai/guide/04-floating-ui-tooltips.md",
+        "public/tooltip-text.tsx",
+        "src/components/shared/tab-summary-section.tsx",
+        "src/components/guided-creator/guided-path-detail-overview.tsx",
+        "src/components/guided-creator/steps/path-step.tsx",
+        "src/components/character-sheet/library-section.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
       ],
       "related_overlap": []
     },

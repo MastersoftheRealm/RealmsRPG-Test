@@ -8,14 +8,3 @@ export function formatTraitRecoveryLabel(recPeriod: string | undefined): string 
   if (lower.includes('partial') || lower.includes('short')) return 'Partial Recovery';
   return raw;
 }
-
-export function formatLimitedUsesExpandedHint(
-  uses: number,
-  recPeriod: string | undefined
-): string | null {
-  if (uses <= 0) return null;
-  const recovery = formatTraitRecoveryLabel(recPeriod);
-  return recovery
-    ? `Limited uses. Recovers on ${recovery}.`
-    : 'Limited uses per recovery period.';
-}

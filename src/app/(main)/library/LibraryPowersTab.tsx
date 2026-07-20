@@ -15,6 +15,7 @@ import {
   type PowerDocument,
 } from '@/lib/calculators/power-calc';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
+import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { useUserPowers, usePowerParts, useDuplicatePower } from '@/hooks';
 import type { DisplayItem } from '@/types';
 import { getPowerSyncResult, sanitizePowerForSync } from '@/lib/library-sync';
@@ -153,41 +154,43 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
       onConfirmDuplicate={dup.onConfirmDuplicate}
       duplicatePending={dup.isPending}
     >
-      {filteredData.map((power) => (
-        <GridListRow
-          key={power.id}
-          id={power.id}
-          name={power.name}
-          description={power.description}
-          thumbnail={resolveListRowThumbnail('power', power.raw, power.name)}
-          gridColumns={POWER_GRID_COLUMNS}
-          columns={[
-            { key: 'Energy', value: power.energy, highlight: true },
-            { key: 'Action', value: power.action },
-            { key: 'Duration', value: power.duration },
-            { key: 'Range', value: power.range },
-            { key: 'Area', value: power.area },
-            { key: 'Damage', value: power.damage },
-          ]}
-          chips={power.parts}
-          chipsLabel="Parts & Proficiencies"
-          totalCost={power.tp}
-          costLabel="Training Points"
-          badges={power.hasDrift ? [{ label: 'Needs sync', color: 'amber' }] : []}
-          warningMessage={power.syncIssues[0]?.message}
-          rightSlot={
-            power.hasDrift ? (
-              <LibrarySyncRowAction
-                syncing={sync.syncingIds.has(power.id)}
-                onSync={() => void sync.handleSyncOne(power.id)}
-              />
-            ) : undefined
-          }
-          onEdit={() => router.push(`/power-creator?edit=${encodeURIComponent(power.id)}`)}
-          onDelete={() => onDelete({ id: power.id, name: power.name } as DisplayItem)}
-          onDuplicate={() => dup.openDuplicateConfirm(power.id, power.name)}
-        />
-      ))}
+      {filteredData.map((power) => {
+        const partsSection = partsProficienciesSection(power.parts, 'power');
+        return (
+          <GridListRow
+            key={power.id}
+            id={power.id}
+            name={power.name}
+            description={power.description}
+            thumbnail={resolveListRowThumbnail('power', power.raw, power.name)}
+            gridColumns={POWER_GRID_COLUMNS}
+            columns={[
+              { key: 'Energy', value: power.energy, highlight: true },
+              { key: 'Action', value: power.action },
+              { key: 'Duration', value: power.duration },
+              { key: 'Range', value: power.range },
+              { key: 'Area', value: power.area },
+              { key: 'Damage', value: power.damage },
+            ]}
+            detailSections={partsSection ? [partsSection] : undefined}
+            totalCost={power.tp}
+            costLabel="Training Points"
+            badges={power.hasDrift ? [{ label: 'Needs sync', color: 'amber' }] : []}
+            warningMessage={power.syncIssues[0]?.message}
+            rightSlot={
+              power.hasDrift ? (
+                <LibrarySyncRowAction
+                  syncing={sync.syncingIds.has(power.id)}
+                  onSync={() => void sync.handleSyncOne(power.id)}
+                />
+              ) : undefined
+            }
+            onEdit={() => router.push(`/power-creator?edit=${encodeURIComponent(power.id)}`)}
+            onDelete={() => onDelete({ id: power.id, name: power.name } as DisplayItem)}
+            onDuplicate={() => dup.openDuplicateConfirm(power.id, power.name)}
+          />
+        );
+      })}
     </UserLibraryEntityTabShell>
   );
 }

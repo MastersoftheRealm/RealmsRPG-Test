@@ -101,25 +101,59 @@ export function useSheetSkillIdentityActions({
   );
 
   const handleSkillChange = useCallback(
-    (skillId: string, updates: Partial<{ skill_val: number; prof: boolean; ability: string }>) => {
+    (
+      skillId: string,
+      updates: Partial<{
+        name: string;
+        skill_val: number;
+        prof: boolean;
+        ability: string;
+        availableAbilities: string[];
+        category: string;
+        baseSkill: string;
+      }>,
+    ) => {
       if (!character) return;
       setCharacter((prev) => {
         if (!prev) return null;
         const currentSkills = (prev.skills || []) as unknown as Array<{
           id: string;
+          name?: string;
           skill_val?: number;
           prof?: boolean;
           ability?: string;
+          availableAbilities?: string[];
+          category?: string;
+          baseSkill?: string;
         }>;
-        const updatedSkills = currentSkills.map((skill) => {
-          if (skill.id === skillId) {
-            return { ...skill, ...updates };
-          }
-          return skill;
-        });
+        const idx = currentSkills.findIndex((skill) => String(skill.id) === String(skillId));
+        if (idx >= 0) {
+          const updatedSkills = currentSkills.map((skill, i) =>
+            i === idx ? { ...skill, ...updates } : skill
+          );
+          return {
+            ...prev,
+            skills: updatedSkills as unknown as typeof prev.skills,
+          };
+        }
+        // Catalog-only base skill first spend / ability / temp — upsert (TASK-584)
+        if (!updates.name) return prev;
+        const defaultAbility = updates.ability || 'strength';
+        const seeded = {
+          id: skillId,
+          name: updates.name,
+          category: updates.category ?? defaultAbility,
+          skill_val: updates.skill_val ?? 0,
+          prof: updates.prof ?? false,
+          ability: defaultAbility,
+          ...(updates.availableAbilities?.length
+            ? { availableAbilities: updates.availableAbilities }
+            : {}),
+          ...(updates.baseSkill ? { baseSkill: updates.baseSkill } : {}),
+        };
         return {
           ...prev,
-          skills: updatedSkills as unknown as typeof prev.skills,
+          skills: [...currentSkills, seeded] as unknown as typeof prev.skills,
         };
       });
     },
