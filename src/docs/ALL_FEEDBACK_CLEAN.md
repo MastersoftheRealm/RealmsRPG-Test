@@ -1,6 +1,6 @@
 # ALL_FEEDBACK ? Consolidated & Curated
 
-Last updated: 2026-07-20 (Guided Path / Archetype screen polish → TASK-577–581)
+Last updated: 2026-07-20 (Quality pseudo `/global-audit` → TASK-607–613)
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -50,6 +50,7 @@ How to use
 - Create and enforce shared list/header/modal patterns (sortable headers, consistent spacing, rounded modal edges).
 - **Modals with lists:** Unify add-X modals, load modals, and selection modals ? same logic, styles, EmptyState/LoadingState, FilterSection; align with Codex/Library. TASK-264 (done).
 - Find and remove true dead code.
+- **God-file / coverage follow-ups (2026-07-20 quality audit):** Continue TASK-598-style ≤~500 LOC facades for crafting, encounters, admin codex, remaining creators, shared hotspots (**TASK-607–611**); rotate live changelog + archive honesty (**TASK-612**); thin API route automated smoke (**TASK-613**). Report: `archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md`. (IDs renumbered after `/debt` claimed TASK-601–606.)
 
 ### 2) Crafting (2026-03-10)
 - **Core rules:** Add CRAFTING category to core_rules with crafting table, successes table (incl. calculation fields for auto-cost/price), enhanced/consumable tables, multipliers. TASK-293.
@@ -2677,3 +2678,11 @@ Notes
 - Feedback (verbatim): For speed/Evasion modifiers, remove the pencil/permanent modifier, only have the temp mod function. Remove the rest of the pencil editing function.
 - Expected: Speed and Evasion edit chrome is Temp Modifier only (no pencil / base stepper); DR/crit/Terminal already Temp-only; Abilities/Skills keep dual pencil+Temp.
 - Disposition: **TASK-600** done (pending-qa DEV-V-009-T038).
+
+**Raw Feedback Log - 2026-07-20 (codebase quality → pseudo global audit + tasks)**
+- Date: 2026-07-20
+- Context: Post owner website audit; agent quality review of codebase structure
+- Priority: Medium
+- Feedback (verbatim summary): Add a pseudo global audit with quality findings (god files, docs corpus weight, creator/admin/encounter complexity clusters, API/e2e coverage shape) and create/add tasks to fix those issues.
+- Expected: Archive audit report + ACTIVE_TASKS follow-ups; no drive-by product refactors in the filing pass.
+- Disposition: Report `archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md`; filed **TASK-607**–**TASK-613** (splits, docs hygiene, API smoke; renumbered after debt TASK-601–606 collision).
