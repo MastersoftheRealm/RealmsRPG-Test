@@ -26,7 +26,8 @@
     - Deleted creature-feat-utils `getMaxQualifiedFeatLevel`; creature-creator calls
       canonical helper with `creatureToFeatRequirementCharacter` adapter.
     - Deleted feat-list `buildSkillIdToName`; Codex/Admin feats tabs import from skill-list.
-    - hooks `buildSkillIdToNameMap` now delegates to skill-list (String keys).
+    - `/cleanup`: deleted unused hooks `buildSkillIdToNameMap` alias + barrel export;
+      resolve/useSkillIdToNameMap call `buildSkillIdToName` directly.
   notes: |
     Filed from /debt 2026-07-19. Lib consolidation — no manual QA suite.
   evidence: |
