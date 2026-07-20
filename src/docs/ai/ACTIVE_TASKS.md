@@ -96,7 +96,7 @@ Do **not** read the done archive at session start.
     - src/components/character-sheet/skills-section.tsx
     - src/components/shared/skill-row.tsx
     - src/components/shared/add-skill-modal.tsx
-    - src/hooks/use-codex-skills.ts
+    - src/hooks/use-codex.ts
   build_validation: |
     suite: DEV-V-009
     tests:

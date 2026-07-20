@@ -3,7 +3,8 @@
  * Stops at the first non-list sibling field (e.g. description, acceptance_criteria).
  */
 function parseRelatedFilesFromBlock(block) {
-  const lines = block.split('\n');
+  // Normalize CRLF so list-item regex `$` matches on Windows checkouts (CI uses LF).
+  const lines = block.replace(/\r/g, '').split('\n');
   const startIdx = lines.findIndex((l) => /^\s*related_files:\s*$/.test(l));
   if (startIdx === -1) return [];
   const files = [];
