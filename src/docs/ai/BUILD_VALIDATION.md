@@ -376,9 +376,10 @@ Use **Forge Your Own** for tab-guard and validation tests unless the test title 
 |-------|-------|
 | **Suite** | DEV-V-001 |
 | **Section** | 6. Equipment |
-| **Related task** | TASK-356 |
+| **Related task** | TASK-356 · TASK-596 |
 | **Where** | `/characters/new` → **7. Equipment** |
 | **Needs** | Logged-in; reach Equipment without spending currency yet
+| **CI** | Partial — `src/lib/creator/advanced-equipment-catalog.test.ts` asserts `computeStartingCurrency(1) === 200` (display chrome stays human)
 
 **Steps**
 1. Reach **7. Equipment** with a fresh creator session (or after archetype reset).

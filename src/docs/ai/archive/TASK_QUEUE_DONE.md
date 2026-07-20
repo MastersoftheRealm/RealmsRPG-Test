@@ -1,3 +1,33 @@
+- id: TASK-596
+  title: Extract Advanced equipment-step catalog into lib (guided parity)
+  created_at: 2026-07-20
+  created_by: agent
+  completed_at: 2026-07-20
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/lib/creator/advanced-equipment-catalog.ts
+    - src/lib/creator/advanced-equipment-catalog.test.ts
+    - src/components/character-creator/steps/equipment-step.tsx
+    - src/lib/guided-creator/equipment-currency.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Advanced `equipment-step.tsx` inlined catalog merge, currency/TP, path recommendations,
+    and inventory mutations. Guided already had tested currency/catalog modules. Extracted
+    Advanced pure helpers into `lib/creator/advanced-equipment-catalog.ts` (reuses guided
+    `computeStartingCurrency` / spend math); kept Advanced inline list + CreatorResourceBar.
+  acceptance_criteria:
+    - Pure helpers extracted with vitest; equipment-step becomes UI wiring.
+    - Path recommend / currency / TP behavior unchanged vs BUILD_VALIDATION DEV-V-001 equipment tests.
+    - No new parallel budget chrome; do not force LoadoutBudgetBar into Advanced without ack.
+  notes: |
+    equipment-step ~1404→~1082 LOC (UI split remains TASK-598). Vitest covers catalog merge,
+    path recommend/phase filter, currency (T014 partial CI), inventory add/remove/replace,
+    unarmed TP. verification_status pending-qa (DEV-V-001 T014–T015 display/save chrome).
+
 - id: TASK-594
   title: Unify sheet EditSpecies/EditArchetype with creator/guided species+path primitives
   created_at: 2026-07-20

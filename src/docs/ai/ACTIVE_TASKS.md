@@ -8,13 +8,13 @@ Do **not** read the done archive at session start.
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-594, 597, 584, 587, 586, 583, 581, 582, etc.)
+**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-596, 594, 597, 584, 587, 586, 583, 581, 582, etc.)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 5 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 4 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** Audit multitask: TASK-593–595, 597 done. Remaining from `/global-audit`: TASK-596, 598–599. TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
+**Hot notes:** Audit multitask: TASK-593–597 done. Remaining from `/global-audit`: TASK-598–599. TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
 
 ---
 
@@ -65,34 +65,6 @@ Do **not** read the done archive at session start.
 
 # Sheet / creator debt follow-ups (from `/global-audit` 2026-07-20)
 
-- id: TASK-596
-  title: Extract Advanced equipment-step catalog into lib (guided parity)
-  created_at: 2026-07-20
-  created_by: agent
-  priority: medium
-  status: not-started
-  related_files:
-    - src/components/character-creator/steps/equipment-step.tsx
-    - src/lib/guided-creator/equipment-catalog-rows.ts
-    - src/lib/guided-creator/equipment-eligibility.ts
-    - src/lib/guided-creator/loadout-tp.ts
-    - src/hooks/use-guided-equipment-catalog.ts
-    - src/docs/ai/GUIDED_EQUIPMENT_PHASED_SPEC.md
-  description: |
-    Advanced `equipment-step.tsx` (~1404 LOC) inlines catalog merge, currency/TP, path
-    recommendations, and list rows. Guided already extracted tested modules. Pull Advanced
-    pure catalog/budget logic into `lib/` (shared or character-creator) mirroring guided
-    patterns; keep Advanced page UX (inline list, CreatorResourceBar) unless product asks
-    for USM add-X.
-  acceptance_criteria:
-    - Pure helpers extracted with vitest; equipment-step becomes UI wiring.
-    - Path recommend / currency / TP behavior unchanged vs BUILD_VALIDATION DEV-V-001 equipment tests.
-    - No new parallel budget chrome; do not force LoadoutBudgetBar into Advanced without ack.
-  notes: |
-    Product decision: keep Advanced inline catalog vs migrate add onto USM — default keep list UX.
-
----
-
 - id: TASK-598
   title: Split oversized sheet + Advanced creator hot files
   created_at: 2026-07-20
@@ -117,7 +89,7 @@ Do **not** read the done archive at session start.
     - Parity smoke: sheet play/edit; Advanced create through equipment/powers/finalize.
     - FEATURE_INDEX paths updated if files move.
   notes: |
-    Skip if TASK-594/596 already shrink the same files enough.
+    TASK-596 extracted catalog/budget (~1404→~1082 LOC) — still over ~500; UI split still needed.
 
 ---
 
