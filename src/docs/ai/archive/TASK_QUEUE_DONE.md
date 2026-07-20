@@ -1,3 +1,41 @@
+- id: TASK-571
+  title: Decide AddCombatantModal — USM migrate or document exception
+  created_at: 2026-07-19
+  created_by: agent
+  priority: low
+  status: done
+  completed_at: 2026-07-20
+  implemented_by: agent
+  verification_status: n/a
+  related_files:
+    - src/components/shared/add-combatant-modal.tsx
+    - src/components/shared/index.ts
+    - src/components/shared/unified-selection-modal.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/guide/02-components-and-lists.md
+    - .cursor/rules/realms-unification.mdc
+  description: |
+    Parallel add-picker (Search + custom rows; qty/type/initiative/campaign). Owner ack
+    before USM migrate — may stay an intentional exception.
+  acceptance_criteria:
+    - Owner decides: migrate onto USM (scoped initiative/campaign AC) or document exception
+      in FEATURE_INDEX + guide/02 (alongside RealmsImagePicker-style alternates).
+    - Migrate path: sticky footer + fullScreenOnMobile parity; build green.
+  completed_work: |
+    - Owner chose **document exception** (2026-07-20): keep as distinct reusable shell.
+    - Documented AddCombatantModal as the encounter/session participant picker (FEATURE_INDEX,
+      guide/02 decision tree + intentional exceptions, realms-unification, AGENT_GUIDE).
+    - Framed for reuse: combat/skill/mixed today; extend for VTT, downtime, future session-play
+      — do not fork and do not migrate onto USM.
+    - Exported AddCombatantModal (+ props) from shared barrel; encounter views import from barrel.
+    - Component header states non-USM contract; scrubbed stale GridListRow chrome note.
+  notes: |
+    Filed from /audit after /debt 2026-07-19. Owner: document exception + reusable distinct
+    component for VTT / encounters / downtime. Docs + barrel — no manual QA suite.
+  evidence: |
+    Owner decision in chat 2026-07-20; npm run tasks:generate-index (AddCombatantModal in barrels);
+    npm run build pass 2026-07-20.
+
 - id: TASK-570
   title: Replace guided parseItemRef with parseIdQuantityStrings
   created_at: 2026-07-19

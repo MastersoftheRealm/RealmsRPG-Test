@@ -35,7 +35,7 @@ import type {
 import type { Encounter } from "@/types/encounter";
 import { CombatantCard } from "@/components/encounters/CombatantCard";
 import { CONDITION_OPTIONS } from "@/components/encounters/encounter-constants";
-import { AddCombatantModal } from "@/components/shared/add-combatant-modal";
+import { AddCombatantModal } from "@/components/shared";
 import { RollLog } from "@/components/character-sheet";
 import { useAuth } from "@/hooks";
 import { createClient } from "@/lib/supabase/client";
