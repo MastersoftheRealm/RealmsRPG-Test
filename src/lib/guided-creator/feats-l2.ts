@@ -6,6 +6,7 @@
 import type { SelectableItem } from '@/components/shared/unified-selection-modal';
 import type { Feat, Skill } from '@/hooks';
 import { buildFeatDetailSections } from '@/lib/codex/feat-list';
+import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 import {
   checkFeatRequirements,
@@ -74,8 +75,7 @@ export function buildGuidedFeatsL2Items(opts: {
 
   const recommendedSet = new Set(recommendedIds.map((id) => String(id)));
   const selectedSet = new Set(selectedIds.map((id) => String(id)));
-  const skillIdToName = new Map<string, string>();
-  codexSkills.forEach((s) => skillIdToName.set(String(s.id), s.name));
+  const skillIdToName = buildSkillIdToName(codexSkills);
 
   const typed = feats.filter((f) =>
     featType === 'character' ? Boolean(f.char_feat) : !f.char_feat

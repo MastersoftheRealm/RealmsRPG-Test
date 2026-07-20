@@ -118,7 +118,6 @@ export {
   useResolvedTraits,
   findTraitByIdOrName,
   resolveTraitIds,
-  useSkillIdToNameMap,
   useResolvedSkillNames,
   resolveSkillIdsToNames,
   type Feat,

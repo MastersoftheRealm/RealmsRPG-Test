@@ -28,7 +28,7 @@ import { FilterSection, ChipSelect } from '@/components/shared/filters';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
-import { useCodexFeats, useCodexSkills, useMergedSpecies, useTraits, useCreatorPathData, type Feat, type Skill } from '@/hooks';
+import { useCodexFeats, useCodexSkills, useMergedSpecies, useTraits, useCreatorPathData, type Feat } from '@/hooks';
 import { getValidationIssuesForStep, getStepCompletion } from '@/lib/character-creator-validation';
 import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats } from '@/lib/game/formulas';
 import { filterFeatGuidanceGroups } from '@/lib/game/archetype-path';
@@ -37,6 +37,7 @@ import type { CodexSkillForFeat } from '@/lib/game/formulas';
 import { formatAbilityList, formatListCellLabel } from '@/lib/utils';
 import { getFeatFamilyId, getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
 import { buildFeatDetailSections } from '@/lib/codex/feat-list';
+import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 import type { ArchetypeCategory } from '@/types';
 import { featSelectionHelp } from '../../../../public/tooltip-text';
@@ -165,14 +166,10 @@ export function FeatsStep() {
     return map;
   }, [feats]);
 
-  // Build skill ID -> name map for requirements and display
-  const skillIdToName = useMemo(() => {
-    const map = new Map<string, string>();
-    (skillsDb as Skill[]).forEach((s) => {
-      map.set(String(s.id), s.name);
-    });
-    return map;
-  }, [skillsDb]);
+  const skillIdToName = useMemo(
+    () => buildSkillIdToName(skillsDb),
+    [skillsDb]
+  );
 
   // Get feat limits based on archetype type and level
   const archetypeType = (draft.archetype?.type || 'power') as ArchetypeCategory;

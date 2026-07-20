@@ -7,8 +7,6 @@ Generated: 2026-07-20
 
 ## `src/components/shared/index.ts`
 
-- ABILITY_DISPLAY_INFO
-- ABILITY_DISPLAY_ORDER
 - AbilityRequirementFilter
 - AbilityScoreGrid
 - AddCombatantModal
@@ -30,7 +28,6 @@ Generated: 2026-07-20
 - EquipToggle
 - ErrorDisplay
 - ExpandableImage
-- ExpandableImageModal
 - FeatsTraitsListSection
 - FilterSection
 - getEditState
@@ -57,7 +54,6 @@ Generated: 2026-07-20
 - OfficialItemList
 - OfficialPowerList
 - OfficialTechniqueList
-- OnboardingTour
 - PointStatus
 - PoweredMartialSlider
 - PowersListSection
@@ -72,7 +68,6 @@ Generated: 2026-07-20
 - RealmsImagePicker
 - resolveDistinctSecondaryAbility
 - RollButton
-- rollButtonVariants
 - SearchInput
 - SectionCostBadge
 - SectionHeader
@@ -113,7 +108,6 @@ Generated: 2026-07-20
 
 - Alert
 - Button
-- buttonVariants
 - Card
 - CardContent
 - CardDescription
@@ -129,7 +123,6 @@ Generated: 2026-07-20
 - EmptyState
 - ExpandableChip
 - IconButton
-- iconButtonVariants
 - Input
 - LoadingState
 - Modal
@@ -140,12 +133,9 @@ Generated: 2026-07-20
 - SelectionCard
 - SelectionCardSurface
 - Spinner
-- tabButtonId
 - TabContentPanel
 - TableScroll
 - TabNavigation
-- TabPanel
-- tabPanelIdForTab
 - Textarea
 - ToastProvider
 - Tooltip
@@ -166,7 +156,6 @@ Generated: 2026-07-20
 - type SelectProps
 - type Tab
 - type TabContentPanelProps
-- type TabPanelProps
 - type TextareaProps
 - useTabGroup
 - useToast
@@ -281,7 +270,6 @@ Generated: 2026-07-20
 - useSaveCharacter
 - useSaveCraftingSession
 - useSaveEncounter
-- useSkillIdToNameMap
 - useSort
 - useSpecies
 - useTechniqueParts

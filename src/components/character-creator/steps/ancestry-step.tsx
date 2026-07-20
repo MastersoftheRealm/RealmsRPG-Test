@@ -27,6 +27,7 @@ import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
 import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
 import { useMergedSpecies, useTraits, useCodexSkills, useCreatorPathData, resolveTraitIds, type Trait, type Species } from '@/hooks';
+import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import { Heart, AlertTriangle, Sparkles, Star } from 'lucide-react';
 import { chooseYourAncestryTraits } from '../../../../public/tooltip-text';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
@@ -87,7 +88,7 @@ export function AncestryStep() {
     if (!speciesA || !speciesB || !allSkills) return [];
     const merged = [...(speciesA.skills || []), ...(speciesB.skills || [])];
     const seen = new Set<string>();
-    const map = new Map(allSkills.map((s: { id: string | number; name?: string }) => [String(s.id), s.name ?? String(s.id)]));
+    const map = buildSkillIdToName(allSkills);
     const options: { id: string; name: string }[] = [];
     merged.forEach((id: string | number) => {
       const sid = String(id);

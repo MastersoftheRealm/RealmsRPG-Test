@@ -91,16 +91,6 @@ export type DamageType = typeof ALL_DAMAGE_TYPES[number];
 /** Damage types NOT reduced by standard armor */
 export const ARMOR_EXCEPTION_TYPES = ['psychic', 'spiritual', 'sonic'] as const;
 
-/**
- * @deprecated Use POWER_DAMAGE_TYPES instead. Kept for backward compatibility.
- */
-export const MAGIC_DAMAGE_TYPES = POWER_DAMAGE_TYPES;
-
-/**
- * @deprecated Use TECHNIQUE_DAMAGE_TYPES instead. Kept for backward compatibility.
- */
-export const PHYSICAL_DAMAGE_TYPES = TECHNIQUE_DAMAGE_TYPES;
-
 // =============================================================================
 // Area of Effect
 // =============================================================================

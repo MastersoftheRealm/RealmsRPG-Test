@@ -51,7 +51,7 @@
 | Auth / current user | `useAuth`, `useAuthStore`, `useProfile`, `useAdmin` |
 | Codex rules data (feats, skills, species, traits, parts, equipment, properties, archetypes) | `useCodexFull` + the `useCodex*` family (aliased `useSkills`/`useSpecies`/`usePowerParts`/etc.) |
 | Game rules constants | `useGameRules`, `getGameRulesFallback` |
-| Trait / skill id↔name resolution | `useResolvedTraits`, `useSkillIdToNameMap`, `resolveTraitIds`, `resolveSkillIdsToNames` |
+| Trait / skill id↔name resolution | `useResolvedTraits`, `resolveTraitIds`, `resolveSkillIdsToNames`; skill maps via `buildSkillIdToName` (`lib/codex/skill-list`) |
 | Official library (browse + add to my library) | `useOfficialLibrary`, `useAddOfficialToLibrary` (`hooks/use-official-library.ts`) |
 | User-created content (CRUD: powers/techniques/items/creatures/species) | `useUser*`, `useDelete*`, `useDuplicate*` from `use-user-library` |
 | Characters CRUD | `useCharacters`, `useCharacter`, `useSaveCharacter`, `useCreateCharacter`, `useDeleteCharacter`, `useDuplicateCharacter` |
@@ -117,7 +117,7 @@
 | Standalone creator page shell (auth/load/save) | `CreatorPageShell` (+ `CreatorLayout`, `CreatorSaveToolbar`, `CollapsibleSection`) from `@/components/creator` |
 | Image upload + crop | `ImageUploadModal` |
 | Realms Image Library picker | `RealmsImagePicker` — bank browse/select; admin upload-into-bank (`resolveRealmsImagePickerCategories` in `lib/realms-images.ts`) |
-| Theme switch / onboarding | `ThemeToggle`, `OnboardingTour` |
+| Theme switch | `ThemeToggle` |
 | Help tooltips | `InfoTippy` / `WordHelpTip` + `public/tooltip-text.tsx` — see `guide/04-floating-ui-tooltips.md` |
 
 > UI primitives (Modal, Button, Chip, **DescriptorChip**, **ExpandableChip**, PageContainer, PageHeader, TabNavigation, SearchInput, **TableScroll**) live in `@/components/ui`. Modal sizes: `3xl`/`full` for high-complexity editors (admin codex add/edit use `full` + `fullScreenOnMobile`; see DESIGN_SYSTEM).

@@ -6,9 +6,10 @@
 'use client';
 
 import { useState, useMemo, useCallback, useId } from 'react';
-import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
+import { useCodexFeats, useCodexSkills, type Feat } from '@/hooks';
 import { checkFeatRequirements } from '@/lib/game/feat-requirements';
 import { buildFeatDetailSections } from '@/lib/codex/feat-list';
+import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 import { getFeatFamilyId, getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
 import { Alert } from '@/components/ui';
@@ -89,11 +90,10 @@ export function AddFeatModal({
 
   // Filter state seeds empty; parent remounts via key={featType} / conditional open.
 
-  const skillIdToName = useMemo(() => {
-    const map = new Map<string, string>();
-    (codexSkills as Skill[]).forEach((s) => map.set(String(s.id), s.name));
-    return map;
-  }, [codexSkills]);
+  const skillIdToName = useMemo(
+    () => buildSkillIdToName(codexSkills),
+    [codexSkills]
+  );
 
   const { categories, abilities } = useMemo(() => {
     const cats = new Set<string>();

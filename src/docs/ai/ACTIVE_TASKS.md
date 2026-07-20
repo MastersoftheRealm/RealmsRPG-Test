@@ -4,7 +4,7 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-575
+**Next task ID:** TASK-576
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
@@ -12,10 +12,10 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 13 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 10 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
 
-**Hot notes:** TASK-535 innate (codex ack). TASK-573 guided innate soft-warn/TP archived. TASK-574 add-modal declutter archived. TASK-500 deferred. TASK-381 sheet facade shipped. Anti-debt → `/debt`.
+**Hot notes:** TASK-535 innate (codex ack). TASK-575 Admin Enhanced list shell. TASK-500 deferred. TASK-381 sheet facade shipped.
 
 ---
 
@@ -212,7 +212,7 @@ Do **not** read the done archive at session start.
     - src/docs/REALMS_PRODUCT_OVERVIEW.md
     - src/components/character-creator/steps/finalize-step.tsx
     - src/components/character-sheet/
-    - src/components/shared/onboarding-tour.tsx
+    - src/app/(main)/home-page.tsx
   acceptance_criteria:
     - After first character save: dismissible play-together prompt (Discord + start campaign).
     - Optional sheet tour offered once post-save (Skip + Don't show again); not on home page.
@@ -315,5 +315,33 @@ Do **not** read the done archive at session start.
 
 # TASK-571 done 2026-07-20 — AddCombatantModal documented as reusable non-USM session picker (archive).
 # TASK-572 done 2026-07-20 — AdminSpecies trait picker → USM; AdminTraits choice list = editor chrome (archive).
+
+---
+
+- id: TASK-575
+  title: Admin Official Enhanced list → OfficialEntityList shell parity
+  created_at: 2026-07-20
+  created_by: agent
+  priority: medium
+  status: not-started
+  related_files:
+    - src/app/(main)/admin/public-library/AdminPublicEnhancedItemsTab.tsx
+    - src/components/shared/official-entity-list.tsx
+    - src/components/shared/official-item-list.tsx
+    - src/app/(main)/library/components/UserLibraryEntityTabShell.tsx
+  description: |
+    /global-audit 2026-07-20: AdminPublicEnhancedItemsTab hand-rolls SectionHeader +
+    SearchInput + ListHeader while peer Admin Official tabs use Official*List /
+    OfficialEntityList. Create or extend an OfficialEnhancedList (or shell) so admin
+    enhanced browse matches powers/items/creatures/techniques chrome. Keep create/edit
+    modal as-is. My Library Enhanced already uses UserLibraryEntityTabShell.
+  acceptance_criteria:
+    - Admin Official Enhanced list chrome shared with OfficialEntityList (or thin OfficialEnhancedList wrapper).
+    - No parallel Search+ListHeader shell left in AdminPublicEnhancedItemsTab for the browse list.
+    - Create/edit/delete flows unchanged; npm run build passes.
+    - FEATURE_INDEX note if a new OfficialEnhancedList lands.
+  notes: |
+    Filed from /debt after /global-audit. Do not fold into unrelated debt PRs.
+    TASK-500 (enhanced images) stays separate.
 
 ---
