@@ -403,24 +403,24 @@ export function UnifiedSelectionModal({
     overSelectionLimit ||
     (confirmDisabled?.(selectedItems) ?? false);
 
-  const hasUnconfirmedSelection = selectionDiffersFromInitial(
-    selectedIds,
-    openInitialIdsRef.current,
-    showQuantity,
-    quantities,
-    openInitialQuantitiesRef.current
-  );
-
-  /** Intercept Cancel / X / backdrop / Escape when picks would be lost (TASK-573). */
+  /** Intercept Cancel / X / backdrop / Escape when picks would be lost (TASK-573).
+   * Dirty check reads open-seed refs only in this event path (not during render). */
   const handleRequestClose = useCallback(() => {
     // Nested leave-confirm is open — ignore parent dismiss (Escape hits both listeners).
     if (leaveConfirmOpen) return;
+    const hasUnconfirmedSelection = selectionDiffersFromInitial(
+      selectedIds,
+      openInitialIdsRef.current,
+      showQuantity,
+      quantities,
+      openInitialQuantitiesRef.current
+    );
     if (hasUnconfirmedSelection) {
       setLeaveConfirmOpen(true);
       return;
     }
     onClose();
-  }, [leaveConfirmOpen, hasUnconfirmedSelection, onClose]);
+  }, [leaveConfirmOpen, selectedIds, showQuantity, quantities, onClose]);
 
   const handleDiscardAndClose = useCallback(() => {
     setLeaveConfirmOpen(false);
