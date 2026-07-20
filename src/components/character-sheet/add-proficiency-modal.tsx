@@ -297,7 +297,7 @@ export function AddProficiencyModal({
       isOpen={isOpen}
       onClose={onClose}
       title={VARIANT_TITLES[variant]}
-      description="Select a part or property, set option levels, then add. Overspend is allowed."
+      description="Set option levels below, then add (overspend allowed)."
       items={items}
       onConfirm={handleConfirm}
       maxSelections={1}

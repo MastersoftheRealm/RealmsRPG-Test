@@ -96,11 +96,9 @@ export function AddLibraryItemModal({
       isOpen={isOpen}
       onClose={onClose}
       title={titleOverride ?? getAddLibraryItemTitle(itemType)}
-      description={
-        itemType === 'equipment'
-          ? 'Pick from your library below, or open Filters to add a custom item by name.'
-          : 'Click a row (or the + button) to select, then click Add Selected. Open Filters to switch library source.'
-      }
+      {...(itemType === 'equipment'
+        ? { description: 'Open Filters to add a custom item by name.' }
+        : {})}
       scopeExtra={scopeExtra}
       headerExtra={headerExtraContent}
       optionsSummary={optionsSummary}

@@ -282,7 +282,7 @@ export function AddSubSkillModal({
         isOpen={isOpen}
         onClose={onClose}
         title="Add Sub-Skills"
-        description="Add specialized skills. Base skill will be added automatically if needed. Click a row (or the + button) to select, then click Add Selected. For “Any base” skills, choose the base skill below before confirming."
+        description="Base skill is added automatically; choose a base for “Any base” skills before confirming."
         items={items}
         isLoading={loading}
         onConfirm={handleConfirm}

@@ -693,7 +693,7 @@ export function AdminSpeciesTab() {
         isOpen={traitPickerFor !== null}
         onClose={() => setTraitPickerFor(null)}
         title={traitPickerFor ? TRAIT_PICKER_TITLES[traitPickerFor] : 'Add Trait'}
-        description="Select one or more traits, then add. Expand a row to see the full description. Traits already on this species field are hidden."
+        description="Traits already on this species field are hidden."
         items={traitPickerItems}
         onConfirm={addTraitsFromPicker}
         columns={TRAIT_PICKER_COLUMNS}

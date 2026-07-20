@@ -2581,6 +2581,17 @@ Notes
 - Expected: Word-tied hover/focus/touch-hold tips on ability and defense names (no Info icon); copy from tooltip-text.tsx via InfoTippy/WordHelpTip.
 - Disposition: Implemented as **TASK-547** (renumbered; TASK-544/545/546 taken by PRs #45/#49/#48). QA: DEV-V-009-T026 + DEV-V-013-T065.
 
+**Raw Feedback Log - 2026-07-20 (add-modal help clutter + footer gap + leave prompt)**
+- Date: 2026-07-20
+- Context: Add/selection modals (UnifiedSelectionModal) — mobile Browse Innate Powers screenshot
+- Priority: High
+- Feedback (verbatim):
+  Add modal help text adds to the clutter it needs to either be a single sentence or removed entirely (help text below title) also there's a white bar above the sticky buttons at the bottom of add modals thst also adds to the clutter.
+
+  Separate issue with add modals, if someone selects things then leaves the modal without confirming can we have it prompt 'Add selected?' Or something so they dont miss it?
+- Expected: Header help ≤1 sentence or omitted; no blank strip above sticky Cancel/Add Selected; dismissing with unconfirmed picks prompts Add selected? (confirm / don't add / keep browsing).
+- Disposition: Implemented as **TASK-574**. QA: DEV-V-016-T015.
+
 **Raw Feedback Log - 2026-07-19 (guided Skills/Abilities mobile UI + tip copy)**
 - Date: 2026-07-19
 - Context: Guided creator Skills + Abilities (mobile screenshots: Tamer)

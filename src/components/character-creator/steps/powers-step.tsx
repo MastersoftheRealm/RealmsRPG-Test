@@ -1057,9 +1057,6 @@ export function PowersStep() {
         items={powerModalTab === 'empowered' ? allEmpoweredSelectableItems : allPowerSelectableItems}
         displayFilter={displayFilterFn}
         title={powerModalTab === 'empowered' ? 'Select Empowered Techniques' : 'Select Powers'}
-        description={powerModalTab === 'empowered'
-          ? 'Choose empowered techniques from Realms or My Library and add them to your powers list. Open Filters to switch library source.'
-          : 'Choose from Realms Library or your library. Switch list type above; open Filters for source. You can also create your own in the Power or Technique Creator.'}
         initialSelectedIds={selectedPowerIds}
         searchPlaceholder={powerModalTab === 'empowered' ? 'Search empowered techniques...' : 'Search powers...'}
         itemLabel={powerModalTab === 'empowered' ? 'empowered technique' : 'power'}
@@ -1087,7 +1084,6 @@ export function PowersStep() {
         items={allTechniqueSelectableItems}
         displayFilter={displayFilterFn}
         title="Select Techniques"
-        description="Choose from Realms Library or your library. Open Filters to switch source. You can also create your own in the Technique Creator."
         initialSelectedIds={selectedTechniqueIds}
         searchPlaceholder="Search techniques..."
         itemLabel="technique"

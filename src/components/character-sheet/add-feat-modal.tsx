@@ -227,7 +227,7 @@ export function AddFeatModal({
         isOpen={isOpen}
         onClose={onClose}
         title={`Add ${featType === 'state' ? 'State' : featType === 'archetype' ? 'Archetype' : 'Character'} Feat`}
-        description="Select feats to add to your character. Feats are filtered by your level and requirements. Click a row (or the + button) to select, then click Add Selected."
+        description="Filtered by your level and requirements."
         items={items}
         isLoading={loading}
         onConfirm={(selected) => onAdd(selected.map(i => i.data as FeatModal))}

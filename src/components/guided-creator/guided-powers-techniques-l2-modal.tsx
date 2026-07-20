@@ -117,8 +117,8 @@ export function GuidedPowersTechniquesL2Modal({
         ? l2Copy.techniquesTitle
         : l2Copy.powersTitle;
 
-  const description =
-    mode === 'innate' ? l2Copy.innateDescription : l2Copy.description(kind);
+  // Innate: no header help (budget lives in footer). USM closes after onConfirm — do not double-close.
+  const description = mode === 'innate' ? undefined : l2Copy.description(kind);
 
   const handleConfirm = useCallback(
     (selected: SelectableItem[]) => {
@@ -135,9 +135,8 @@ export function GuidedPowersTechniquesL2Modal({
       }
       setError(null);
       onConfirm(selectedIdsFromL2Items(selected));
-      onClose();
     },
-    [mode, loadoutTpSpent, tpLimit, innateEnergyMax, onConfirm, onClose]
+    [mode, loadoutTpSpent, tpLimit, innateEnergyMax, onConfirm]
   );
 
   const footerExtra = useCallback(
