@@ -169,13 +169,9 @@ Usage pattern: use `Chip` for small inline tags; `ExpandableChip` for chips with
 
 ## Part / Property chips (domain-specific)
 
-- `PartChip` — unified chip used for parts (powers/techniques) and item properties. Shows `name`, optional TP (`tpCost`) and energy cost, chevron rotation when expanded. File: [src/components/shared/part-chip.tsx](src/components/shared/part-chip.tsx#L1).
-  - Props: `part: PartData` (name, text, description, tpCost, energyCost, optionLevels, category), `isExpanded?`, `onClick?`, `size?`, `className?`.
-  - Visuals: category-based `categoryStyles` (design tokens), rings when expanded, TP badge (Zap icon).
-
-- `PartChipDetails` — expanded panel for the selected `PartChip` showing description, TP badge, option levels. See [src/components/shared/part-chip.tsx](src/components/shared/part-chip.tsx#L129).
-
-- `PartChipList` / `PropertyChipList` — **removed** (`/debt` 2026-07-19). Use **ExpandableChip** + `expandableChipPropsFromPartData` / `partChipsFromDisplay`. Thin deprecated `PartChip` alias remains for one sheet call site (TASK-569).
+- Prefer **ExpandableChip** + `expandableChipPropsFromPartData` (`lib/chip/expandable-chip-props.ts`) for parts/properties with descriptions or option levels. `PartData` lives in `lib/chip/part-data.ts` (re-exported from `@/components/shared`).
+- Display helpers: `partChipsFromDisplay` (`lib/chip/part-chips-from-display.ts`).
+- `PartChip` / `PartChipComponent` / `PartChipDetails` / `PartChipList` / `PropertyChipList` — **deleted** (TASK-569 / prior `/debt`). Do not reintroduce aliases.
 
 ## Expandable / Collapsible patterns
 
@@ -857,7 +853,7 @@ All use: CreatorSummaryPanel, CollapsibleSection, Button, Input, Select, Checkbo
 ## Accessibility & Interaction Notes
 
 - **Keyboard accessibility:** 
-  - `ExpandableChip` and `PartChip` set `tabIndex` and `role='button'` and toggle on Enter/Space
+  - `ExpandableChip` sets `tabIndex` and `role='button'` and toggles on Enter/Space
   - `Collapsible` uses `aria-expanded` for screen readers
   - `TabNavigation` uses `role=tablist`, `role=tab`, `aria-selected`
   - All interactive components have visible focus rings (`focus-visible:ring`)
@@ -1071,7 +1067,7 @@ The goal of consistency is achieved through:
    - Backdrop click behavior consistent
    - Footer buttons always same alignment
 
-7. **PartChip/PropertyChipList** → ExpandableChip (lists deleted `/debt` 2026-07-19; PartChip alias TASK-569)
+7. **PartChip / PropertyChipList** → ExpandableChip (lists + PartChip alias deleted — `/debt` + TASK-569)
    - Powers, techniques use same display components
    - Consistent expand/collapse behavior
    - Category colors convey meaning

@@ -308,27 +308,7 @@ Do **not** read the done archive at session start.
 
 ---
 
-- id: TASK-569
-  title: Migrate last PartChip call site then delete alias
-  created_at: 2026-07-19
-  created_by: agent
-  priority: low
-  status: not-started
-  related_files:
-    - src/components/shared/part-chip.tsx
-    - src/components/character-sheet/proficiencies-tab.tsx
-    - src/lib/chip/expandable-chip-props.ts
-    - scripts/shared-ui-allowlist.json
-  description: |
-    /global-audit: deprecated PartChip / PartChipComponent has one consumer
-    (proficiencies-tab). Migrate to ExpandableChip + expandableChipPropsFromPartData,
-    then delete part-chip.tsx + allowlist row.
-  acceptance_criteria:
-    - proficiencies-tab uses ExpandableChip path only; no PartChip import.
-    - Delete part-chip.tsx; update shared barrel + allowlist; FEATURE_INDEX note.
-    - npm run build; tasks:validate-shared-ui green.
-  notes: |
-    Filed from /debt 2026-07-19 after global-audit. Do not keep forever compat alias.
+# TASK-569 done 2026-07-20 — PartChip alias deleted (archive).
 
 ---
 

@@ -6,7 +6,7 @@ type ChipVariant = NonNullable<VariantProps<typeof chipVariants>['variant']>;
 
 export type ExpandableChipShellSize = 'sm' | 'md';
 
-/** Shared shell classes for all expand-in-place chips (ui, GridListRow, PartChip). */
+/** Shared shell classes for all expand-in-place chips (ExpandableChip / GridListRow). */
 export function expandableChipShellClass({
   variant,
   expanded = false,

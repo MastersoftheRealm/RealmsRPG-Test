@@ -70,7 +70,7 @@ Audit targets (known today):
 |------|------|
 | `ui/expandable-chip.tsx` | **Single** expand-in-place implementation (GridListRow, proficiencies, styleguide) |
 | `shared/grid-list-chip.tsx` | Thin `ChipData` → `ExpandableChip` adapter for `GridListRow` |
-| `shared/part-chip.tsx` | Thin `PartData` wrappers; `PartChip` deprecated alias |
+| ~~`shared/part-chip.tsx`~~ | Deleted (TASK-569) — call sites use `ExpandableChip` + `expandableChipPropsFromPartData` |
 | `lib/chip/expandable-chip-props.ts` | `PartData` / `ChipData` → `ExpandableChipProps` |
 | `lib/chip/chip-options-panel.tsx` | Shared options sub-panel |
 | ~~`shared/expandable-grid-list-chip.tsx`~~ | **Deleted** — use `GridListChip` |
@@ -160,7 +160,7 @@ Add to `/dev/styleguide`:
 1. Unified `ExpandableChip` in `ui/` — options, costs, controlled/uncontrolled, descriptor mode ✅
 2. `lib/chip/expandable-chip-props.ts` + `lib/chip/index.ts` barrel ✅
 3. `GridListChip` wrapper; deleted `expandable-grid-list-chip.tsx` ✅
-4. `PartChipList` uses `ExpandableChip` directly; `PartChip` kept as deprecated alias ✅
+4. `PartChipList` / `PartChip` deleted — all call sites use `ExpandableChip` + adapters ✅ (TASK-569)
 5. `PartData` → `lib/chip/part-data.ts`; `ChipOptionsPanel` shared ✅
 6. `shared/index` re-exports `ExpandableChip`, `GridListChip` ✅
 

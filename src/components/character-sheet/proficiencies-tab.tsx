@@ -7,11 +7,12 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { IconButton, Button, Input, DescriptorChip } from '@/components/ui';
+import { IconButton, Button, Input, DescriptorChip, ExpandableChip } from '@/components/ui';
 import { Plus, X, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { TabSummarySection, SummaryItem, SummaryRow, ValueStepper, PartChipComponent, ConfirmActionModal, LibraryCollapsibleSection } from '@/components/shared';
+import { TabSummarySection, SummaryItem, SummaryRow, ValueStepper, ConfirmActionModal, LibraryCollapsibleSection } from '@/components/shared';
 import type { PartData } from '@/lib/chip/part-data';
+import { expandableChipPropsFromPartData } from '@/lib/chip/expandable-chip-props';
 import { AddProficiencyModal, type AddProficiencyVariant } from './add-proficiency-modal';
 import type { CharacterPower, CharacterTechnique, Item, CharacterProficiency } from '@/types';
 import {
@@ -467,16 +468,17 @@ export function ProficienciesTab({
                               className="inline-flex items-start gap-1 max-w-full"
                             >
                               {partData ? (
-                                <PartChipComponent
-                                  part={partData}
-                                  size="md"
-                                  isExpanded={isExpanded}
-                                  fullWidthWhenExpanded
-                                  className="min-w-0"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setExpandedProfId(isExpanded ? null : prof.id);
-                                  }}
+                                <ExpandableChip
+                                  {...expandableChipPropsFromPartData(partData, {
+                                    size: 'md',
+                                    isExpanded,
+                                    fullWidthWhenExpanded: true,
+                                    className: 'min-w-0',
+                                    onClick: (e) => {
+                                      e.stopPropagation();
+                                      setExpandedProfId(isExpanded ? null : prof.id);
+                                    },
+                                  })}
                                 />
                               ) : (
                                 <DescriptorChip variant="listCost" size="md">
