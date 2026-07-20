@@ -124,10 +124,9 @@ import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
 import {
   codexFeatToCreatureFeat,
   creatureToFeatRequirementCharacter,
-  getMaxQualifiedFeatLevel,
   mergeCreatureFeatsOnAdd,
 } from './creature-feat-utils';
-import { checkFeatRequirements } from '@/lib/game/feat-requirements';
+import { checkFeatRequirements, getMaxQualifiedFeatLevel } from '@/lib/game/feat-requirements';
 import { buildFeatLevelChips, buildFeatLevelsByFamily, getFeatFamilyId, getFeatLevel } from '@/lib/leveled-feats';
 import type { SelectableItem } from '@/components/shared';
 
@@ -569,7 +568,12 @@ function CreatureCreatorContent() {
             levelMeta = {
               currentLevel: getFeatLevel(codexFeat),
               minLevel: getFeatLevel(family[0]),
-              maxQualified: getMaxQualifiedFeatLevel(creature, family, skillsData, codexFeatsData as Feat[]),
+              maxQualified: getMaxQualifiedFeatLevel(
+                creatureToFeatRequirementCharacter(creature),
+                family,
+                skillsData,
+                codexFeatsData as Feat[]
+              ),
               family,
             };
           }

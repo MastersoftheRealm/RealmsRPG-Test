@@ -28,10 +28,10 @@ import {
   ADMIN_FEAT_HEADER_COLUMNS,
   FEAT_GRID_COLUMNS,
   buildFeatFilterOptions,
-  buildSkillIdToName,
   filterFeats,
   type FeatListFilters,
 } from '@/lib/codex/feat-list';
+import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 
 const COPY_NAME_SUFFIX = ' copy';

@@ -120,7 +120,6 @@ export {
   resolveTraitIds,
   useSkillIdToNameMap,
   useResolvedSkillNames,
-  buildSkillIdToNameMap,
   resolveSkillIdsToNames,
   type Feat,
   type Skill,

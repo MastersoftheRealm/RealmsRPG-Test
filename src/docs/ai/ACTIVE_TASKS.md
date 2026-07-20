@@ -12,7 +12,8 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 14 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 13 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+
 
 **Hot notes:** TASK-535 innate (codex ack). TASK-500 deferred. TASK-381 sheet facade shipped. Anti-debt → `/debt`.
 
@@ -304,30 +305,6 @@ Do **not** read the done archive at session start.
 # Admin archetype path ↔ guided creator parity (TASK-514–518) — DONE 2026-07-17 (archive).
 # Owner decisions locked: feat audience field; armaments UI-only split; DROP recommended species;
 # skills max 3 warn-not-block. Content pass TASK-521/530 done. TASK-391 superseded (archived).
-
----
-
-- id: TASK-568
-  title: Unify getMaxQualifiedFeatLevel character vs creature adapters
-  created_at: 2026-07-19
-  created_by: agent
-  priority: low
-  status: not-started
-  related_files:
-    - src/lib/game/feat-requirements.ts
-    - src/app/(main)/creature-creator/creature-feat-utils.ts
-    - src/lib/codex/skill-list.ts
-    - src/lib/codex/feat-list.ts
-  description: |
-    /debt inventory: near-copy `getMaxQualifiedFeatLevel` in feat-requirements vs
-    creature-feat-utils; `buildSkillIdToName` duplicated in skill-list and feat-list.
-    Collapse to one API + thin adapters — no behavior change.
-  acceptance_criteria:
-    - Single canonical feat-level helper; creature path adapts inputs only.
-    - Single `buildSkillIdToName` (or shared import); delete weaker fork.
-    - Existing feat-requirement / creature feat tests green; npm run build.
-  notes: |
-    Filed from /debt 2026-07-19. Small lib consolidation — safe Implementer work.
 
 ---
 

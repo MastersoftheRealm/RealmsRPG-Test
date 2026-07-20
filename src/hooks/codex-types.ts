@@ -36,6 +36,7 @@ export type {
 } from '@/types/codex';
 
 import type { Trait, Skill } from '@/types/codex';
+import { buildSkillIdToName } from '@/lib/codex/skill-list';
 
 // =============================================================================
 // Trait Resolution Utilities
@@ -86,13 +87,9 @@ export function useResolvedTraits(traitIds: (string | number)[]): {
 // Skill ID Resolution Utilities
 // =============================================================================
 
-export function buildSkillIdToNameMap(skills: Skill[]): Map<string, string> {
-  return new Map(skills.map((s) => [s.id, s.name]));
-}
-
 /** Species skill id "0" means "Any" (user picks any skill / extra skill point). */
 export function resolveSkillIdsToNames(skillIds: (string | number)[], allSkills: Skill[]): string[] {
-  const skillMap = buildSkillIdToNameMap(allSkills);
+  const skillMap = buildSkillIdToName(allSkills);
   return skillIds.map((id) => {
     if (String(id) === '0') return 'Any';
     return skillMap.get(String(id)) || String(id);
@@ -107,7 +104,7 @@ export function useSkillIdToNameMap(): {
   const { data: skills, isLoading, error } = useCodexSkills();
   const skillIdToName = useMemo(() => {
     if (!skills) return new Map<string, string>();
-    return buildSkillIdToNameMap(skills);
+    return buildSkillIdToName(skills);
   }, [skills]);
   return { skillIdToName, isLoading, error: error || null };
 }
