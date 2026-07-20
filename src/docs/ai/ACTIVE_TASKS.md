@@ -82,9 +82,11 @@ Do **not** read the done archive at session start.
     - src/components/character-sheet/library-inventory-panel.tsx
     - src/components/character-sheet/abilities-section.tsx
     - src/components/character-creator/steps/equipment-step.tsx
+    - src/components/character-creator/steps/equipment/
     - src/components/character-creator/steps/finalize-step.tsx
     - src/components/character-creator/steps/finalize/
     - src/components/character-creator/steps/powers-step.tsx
+    - src/components/character-creator/steps/powers/
     - src/components/character-creator/steps/feats-step.tsx
     - src/components/character-creator/steps/feats/
   description: |
@@ -106,10 +108,14 @@ Do **not** read the done archive at session start.
       use-library-section-rows, use-library-tab-navigation, library-powers-panel,
       library-inventory-panel. Re-exports LibrarySectionProps / LIBRARY_TAB_ORDER /
       resolveLibraryActiveTab from facade; barrel unchanged. Still uses library-entity-rows.
+    - equipment-step facade (~431 LOC) + `steps/equipment/` extracts (list-columns,
+      unarmed-prowess-panel, path-loadout-section, selected-equipment-list,
+      equipment-catalog-panel, step-header). Keeps catalog lib + guided currency; named
+      `EquipmentStep` + steps barrel unchanged.
   remaining_work: |
-    - equipment-step + powers-step UI split (parallel agents; still over ~500 after TASK-596 catalog extract).
+    - powers-step UI split finish if still over ~500 (parallel agent; `steps/powers/` started).
   notes: |
-    TASK-596 extracted catalog/budget (~1404→~1082 LOC) — still over ~500; UI split still needed.
+    TASK-596 extracted catalog/budget; TASK-598 equipment UI peel keeps that lib (no re-extract).
 
 ---
 
