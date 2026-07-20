@@ -7,6 +7,7 @@
   completed_at: 2026-07-20
   implemented_by: agent
   verification_status: n/a
+  merged_at: 2026-07-20
   related_files:
     - src/components/shared/add-combatant-modal.tsx
     - src/components/shared/index.ts
