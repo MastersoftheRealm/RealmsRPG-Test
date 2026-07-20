@@ -920,10 +920,8 @@ function TraitListModal({
 
   const description =
     mode === 'species_ancestry'
-      ? 'Select one or more traits, then add as species traits or ancestry traits. Expand a row to see full description.'
-      : mode === 'flaw'
-        ? 'Select one or more flaws to add. Expand a row to see full description.'
-        : 'Select one or more characteristics to add. Expand a row to see full description.';
+      ? 'Add as species traits or ancestry traits.'
+      : undefined;
 
   const addIds = (selected: SelectableItem[], category: TraitCategory) => {
     const ids = selected.map((s) => String(s.id));

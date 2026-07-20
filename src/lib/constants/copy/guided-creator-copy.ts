@@ -273,10 +273,11 @@ export const GUIDED_CREATOR_COPY = {
     featsL2: {
       archetypeTitle: 'Add Archetype Feats',
       characterTitle: 'Add Character Feat',
+      /** One-line header hint only — avoid multi-sentence chrome (TASK-573). */
       description: (max: number) =>
         max === 1
-          ? 'Showing Feats you qualify for. Pick one, then Add Selected. Optionally show locked Feats to read requirements.'
-          : `Showing Feats you qualify for. Pick up to ${max}, then Add Selected.`,
+          ? 'Feats you qualify for (optional: show locked to read requirements).'
+          : `Feats you qualify for — pick up to ${max}.`,
       searchPlaceholder: 'Search Feats…',
       categoryLabel: 'Category',
       abilityLabel: 'Ability',
@@ -352,9 +353,8 @@ export const GUIDED_CREATOR_COPY = {
           weaponTitle: 'Browse weapons & shields',
           armorTitle: 'Browse armor',
           gearTitle: 'Browse Equipment',
-          description: 'Common items you can take. Training Points update as you select.',
-          gearDescription:
-            'Common Equipment costing 50 Currency or less each. Remaining Currency updates as you select.',
+          description: 'Common items within your Training Point budget.',
+          gearDescription: 'Common Equipment at 50 Currency or less each.',
           tpLabel: 'Training Points',
           currencyLabel: 'Currency',
           confirmError: 'That selection does not fit. Check Training Points, hands, or Currency.',
@@ -426,12 +426,13 @@ export const GUIDED_CREATOR_COPY = {
         powersTitle: 'Browse Powers',
         techniquesTitle: 'Browse Techniques',
         innateTitle: 'Browse Innate Powers',
+        /** One-line header hint only — avoid multi-sentence chrome (TASK-573). */
         description: (kind: string) => {
           const label = kind === 'techniques' ? 'Techniques' : 'Powers';
-          return `Official ${label} within your theoretical Energy at level 1. Confirm to add picks to your recommendations.`;
+          return `Official ${label} within your level 1 Energy.`;
         },
-        innateDescription:
-          'Powers eligible as innate (Energy at or below your Innate Threshold). Confirm to update your innate picks.',
+        /** Empty = no header help text (budget is in the footer). */
+        innateDescription: '',
         emptyMessage: (kind: string, mode: string) => {
           if (mode === 'innate') return 'No innate-eligible Powers match.';
           return kind === 'techniques' ? 'No Techniques match.' : 'No Powers match.';

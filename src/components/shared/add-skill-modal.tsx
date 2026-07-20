@@ -182,7 +182,7 @@ export function AddSkillModal({
         isOpen={isOpen}
         onClose={onClose}
         title="Add Skills"
-        description="Expand a row to view details. Use the + button to add, then click Add Selected."
+        description={undefined}
         items={items}
         isLoading={loading}
         onConfirm={(selected) => onAdd(selected.map(i => i.data as Skill))}

@@ -1126,9 +1126,7 @@ function CreatureCreatorContent() {
             }}
             items={powerModalTab === 'empowered' ? empoweredTechniqueSelectableItems : powerSelectableItems}
             title={powerModalTab === 'empowered' ? 'Select Empowered Techniques' : 'Select Powers'}
-            description={powerModalTab === 'empowered'
-              ? 'Choose empowered techniques from your library or Realms Library. Open Filters to switch source.'
-              : 'Choose powers from your library or Realms Library. Switch list type above; open Filters for source.'}
+            description={undefined}
             maxSelections={10}
             itemLabel={powerModalTab === 'empowered' ? 'empowered technique' : 'power'}
             searchPlaceholder={powerModalTab === 'empowered' ? 'Search empowered techniques...' : 'Search powers...'}
@@ -1155,7 +1153,7 @@ function CreatureCreatorContent() {
             }}
             items={techniqueSelectableItems}
             title="Select Techniques"
-            description="Choose techniques from your library or Realms Library. Open Filters to switch source."
+            description={undefined}
             maxSelections={10}
             itemLabel="technique"
             searchPlaceholder="Search techniques..."
@@ -1211,7 +1209,7 @@ function CreatureCreatorContent() {
             items={armamentSelectableItems}
             displayFilter={inventoryDisplayFilter}
             title="Select Inventory"
-            description="Choose inventory items from your library or Realms Library. Switch type above; open Filters for source, then click Add Selected."
+            description={undefined}
             maxSelections={10}
             itemLabel="inventory item"
             searchPlaceholder="Search inventory..."

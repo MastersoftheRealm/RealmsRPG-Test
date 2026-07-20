@@ -1,3 +1,50 @@
+- id: TASK-573
+  title: Add-modal declutter + leave-with-selection prompt
+  created_at: 2026-07-20
+  created_by: agent
+  priority: high
+  status: done
+  completed_at: 2026-07-20
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/shared/unified-selection-modal.tsx
+    - src/lib/constants/copy/guided-creator-copy.ts
+    - src/components/character-sheet/add-feat-modal.tsx
+    - src/components/character-sheet/add-library-item-modal.tsx
+    - src/components/character-sheet/add-proficiency-modal.tsx
+    - src/components/shared/add-skill-modal.tsx
+    - src/components/shared/add-sub-skill-modal.tsx
+    - src/components/creator/LoadFromLibraryModal.tsx
+    - src/components/crafting/CraftingItemSelectModal.tsx
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/guide/02-components-and-lists.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/FEATURE_INDEX.md
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T015
+  developer_test_plan: |
+    Suite DEV-V-016 T015 — see BUILD_VALIDATION.md
+  description: |
+    Owner feedback on add/selection modals: header help text is clutter (≤1 sentence or remove);
+    white bar above sticky footer; dismiss with unconfirmed picks should prompt Add selected?
+    so users do not lose selections.
+  acceptance_criteria:
+    - Header `description` omitted or single short sentence across USM add/load callers (innate: none).
+    - No blank strip between scrollable list and sticky footer on USM.
+    - Cancel/X/backdrop/Escape with dirty selection → Add selected? (or Load selected?); confirm applies, Don't add discards, prompt close keeps browsing.
+    - npm run build; DEV-V-016-T015; changelog + docs.
+  completed_work: |
+    - UnifiedSelectionModal: `pb-0` content (no footer gap); leave-with-selection prompt for dirty picks.
+    - Trimmed/removed multi-sentence header help on USM callers + guided-creator-copy L2 strings.
+    - MOBILE_UX + guide/02 + FEATURE_INDEX + DEV-V-016-T015 + Pending owner QA.
+  notes: |
+    From owner screenshot feedback (Browse Innate Powers). Shared USM fix covers all add-X/load wrappers.
+  evidence: |
+    npm run build pass 2026-07-20; DEV-V-016-T015 pending owner QA.
+
 - id: TASK-572
   title: AdminSpecies trait picker — USM or document admin exception
   created_at: 2026-07-19

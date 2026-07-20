@@ -33,6 +33,32 @@ import {
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 
+/** True when current selection/quantities differ from the modal’s open seed (TASK-573). */
+function selectionDiffersFromInitial(
+  selectedIds: Set<string>,
+  initialIds: Set<string>,
+  showQuantity: boolean,
+  quantities: Record<string, number>,
+  initialQuantities: Record<string, number>
+): boolean {
+  if (selectedIds.size === 0) return false;
+  if (selectedIds.size !== initialIds.size) return true;
+  for (const id of selectedIds) {
+    if (!initialIds.has(id)) return true;
+  }
+  if (!showQuantity) return false;
+  for (const id of selectedIds) {
+    const current = quantities[id] ?? 1;
+    const seeded =
+      initialQuantities[id] ??
+      initialQuantities[id.toLowerCase()] ??
+      1;
+    const normalizedSeed = Math.max(1, Math.floor(Number(seeded)) || 1);
+    if (current !== normalizedSeed) return true;
+  }
+  return false;
+}
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -227,8 +253,13 @@ export function UnifiedSelectionModal({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [optionsExpanded, setOptionsExpanded] = useState(false);
+  /** Prompt when dismissing with unconfirmed picks (TASK-573). */
+  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
   const { sortState, handleSort, sortItems } = useSort('name');
   const prevOpenRef = useRef(false);
+  /** Snapshot of seed selection at open — stable for dirty checks (avoids new Set() each render). */
+  const openInitialIdsRef = useRef<Set<string>>(new Set());
+  const openInitialQuantitiesRef = useRef<Record<string, number>>({});
   const hasThumbnailColumn = useMemo(
     () => items.some((item) => Boolean(item.thumbnail)),
     [items]
@@ -244,6 +275,7 @@ export function UnifiedSelectionModal({
     prevOpenRef.current = isOpen;
     if (justOpened) {
       const ids = new Set([...initialSelectedIds].map((id) => String(id)));
+      openInitialIdsRef.current = ids;
       setSelectedIds(ids);
       if (showQuantity) {
         const next: Record<string, number> = {};
@@ -254,13 +286,19 @@ export function UnifiedSelectionModal({
             1;
           next[id] = Math.max(1, Math.floor(Number(seeded)) || 1);
         }
+        openInitialQuantitiesRef.current = next;
         setQuantities(next);
       } else {
+        openInitialQuantitiesRef.current = {};
         setQuantities({});
       }
       setSearchQuery('');
       // List-first: collapse Filters/options every time the modal opens (TASK-564).
       setOptionsExpanded(false);
+      setLeaveConfirmOpen(false);
+    }
+    if (!isOpen) {
+      setLeaveConfirmOpen(false);
     }
   }, [isOpen, initialSelectedIds, initialQuantities, showQuantity]);
   
@@ -337,8 +375,9 @@ export function UnifiedSelectionModal({
     : undefined;
 
   // Handle confirm — match by string id so codex number ids work
-  const handleConfirm = () => {
+  const handleConfirm = useCallback(() => {
     if (overSelectionLimit) return;
+    if (confirmDisabled?.(selectedItems)) return;
     const selected = selectedItems;
     // Attach quantities to items if needed
     if (showQuantity) {
@@ -346,14 +385,56 @@ export function UnifiedSelectionModal({
         (item as SelectableItem & { quantity?: number }).quantity = quantities[String(item.id)] || 1;
       });
     }
+    setLeaveConfirmOpen(false);
     onConfirm(selected);
     onClose();
-  };
+  }, [
+    overSelectionLimit,
+    confirmDisabled,
+    selectedItems,
+    showQuantity,
+    quantities,
+    onConfirm,
+    onClose,
+  ]);
 
   const isConfirmDisabled =
     selectedIds.size === 0 ||
     overSelectionLimit ||
     (confirmDisabled?.(selectedItems) ?? false);
+
+  const hasUnconfirmedSelection = selectionDiffersFromInitial(
+    selectedIds,
+    openInitialIdsRef.current,
+    showQuantity,
+    quantities,
+    openInitialQuantitiesRef.current
+  );
+
+  /** Intercept Cancel / X / backdrop / Escape when picks would be lost (TASK-573). */
+  const handleRequestClose = useCallback(() => {
+    // Nested leave-confirm is open — ignore parent dismiss (Escape hits both listeners).
+    if (leaveConfirmOpen) return;
+    if (hasUnconfirmedSelection) {
+      setLeaveConfirmOpen(true);
+      return;
+    }
+    onClose();
+  }, [leaveConfirmOpen, hasUnconfirmedSelection, onClose]);
+
+  const handleDiscardAndClose = useCallback(() => {
+    setLeaveConfirmOpen(false);
+    onClose();
+  }, [onClose]);
+
+  const isLoadConfirm = /load/i.test(confirmLabel);
+  const leavePromptTitle = isLoadConfirm ? 'Load selected?' : 'Add selected?';
+  const discardLabel = isLoadConfirm ? "Don't load" : "Don't add";
+  const leavePromptDescription = primaryActions
+    ? `You have ${selectedIds.size} ${itemLabel}${selectedIds.size !== 1 ? 's' : ''} selected. Leave without adding them?`
+    : `You have ${selectedIds.size} ${itemLabel}${selectedIds.size !== 1 ? 's' : ''} selected. ${
+        isLoadConfirm ? 'Load them before leaving?' : 'Add them before leaving?'
+      }`;
 
   const searchField = (
     <SearchInput
@@ -365,9 +446,10 @@ export function UnifiedSelectionModal({
   );
   
   return (
+    <>
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleRequestClose}
       title={title}
       description={description}
       size={size}
@@ -377,7 +459,8 @@ export function UnifiedSelectionModal({
         // overflow-hidden: Modal skips its default overflow-y-auto; only the list region scrolls
         // so the footer (Add Selected) stays pinned on mobile. See MOBILE_UX.md.
         // Tighter gap keeps chrome compact so the list is the dominant region (TASK-564).
-        'flex flex-col flex-1 min-h-0 gap-2 overflow-hidden p-4 md:gap-3 md:p-6 md:max-h-[70vh]',
+        // pb-0: avoid a blank strip between the list and the sticky footer (TASK-573).
+        'flex flex-col flex-1 min-h-0 gap-2 overflow-hidden px-4 pt-4 pb-0 md:gap-3 md:px-6 md:pt-6 md:pb-0 md:max-h-[70vh]',
         className
       )}
       footer={
@@ -390,7 +473,7 @@ export function UnifiedSelectionModal({
             </span>
             {/* [&_button]: cover confirmLabel and primaryActions (species trait dual-add, etc.) */}
             <div className="flex gap-2 w-full sm:w-auto [&_button]:min-h-11 [&_button]:flex-1 sm:[&_button]:flex-initial">
-              <Button variant="secondary" onClick={onClose}>
+              <Button variant="secondary" onClick={handleRequestClose}>
                 Cancel
               </Button>
               {primaryActions ? (
@@ -581,6 +664,38 @@ export function UnifiedSelectionModal({
         return listRegion;
       })()}
     </Modal>
+
+    {/* Leave with unconfirmed picks — Add selected? (TASK-573) */}
+    <Modal
+      isOpen={isOpen && leaveConfirmOpen}
+      onClose={() => setLeaveConfirmOpen(false)}
+      title={primaryActions ? 'Leave without adding?' : leavePromptTitle}
+      description={leavePromptDescription}
+      size="sm"
+      showCloseButton
+      titleA11y={primaryActions ? 'Leave without adding?' : leavePromptTitle}
+    >
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <Button
+          variant="secondary"
+          onClick={handleDiscardAndClose}
+          className="min-h-11 w-full sm:w-auto"
+        >
+          {discardLabel}
+        </Button>
+        {!primaryActions ? (
+          <Button
+            onClick={handleConfirm}
+            disabled={isConfirmDisabled}
+            className="min-h-11 w-full sm:w-auto"
+          >
+            {confirmLabel}
+            {selectedIds.size > 0 ? ` (${selectedIds.size})` : ''}
+          </Button>
+        ) : null}
+      </div>
+    </Modal>
+    </>
   );
 }
 

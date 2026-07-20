@@ -108,7 +108,9 @@ export function GuidedPowersTechniquesL2Modal({
         : l2Copy.powersTitle;
 
   const description =
-    mode === 'innate' ? l2Copy.innateDescription : l2Copy.description(kind);
+    mode === 'innate'
+      ? l2Copy.innateDescription || undefined
+      : l2Copy.description(kind);
 
   const handleConfirm = useCallback(
     (selected: SelectableItem[]) => {

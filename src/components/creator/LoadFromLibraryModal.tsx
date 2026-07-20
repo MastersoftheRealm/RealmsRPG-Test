@@ -54,7 +54,7 @@ export function LoadFromLibraryModal({
       isOpen={isOpen}
       onClose={onClose}
       title={title}
-      description="Expand a row to view details. Select one item, then click Load. Open Filters for source options."
+      description={undefined}
       items={selectableItems}
       isLoading={isLoading}
       error={error}

@@ -440,10 +440,10 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
 
   const description =
     activeTab === 'creature'
-      ? 'Creature feats from the codex (positive, zero, or negative feat point cost).'
+      ? 'Codex creature feats (any feat point cost).'
       : activeTab === 'library'
-        ? 'Character feats cost 0.5× feat level; archetype feats cost 1× feat level. Requirements match the character sheet.'
-        : 'Species flaws cost −0.5, characteristics 0, other traits 1 feat point.';
+        ? 'Character feats 0.5× level; archetype feats 1× level.'
+        : 'Flaws −0.5, characteristics 0, other traits 1 feat point.';
 
   return (
     <>
