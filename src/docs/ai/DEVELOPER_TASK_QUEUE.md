@@ -28,7 +28,7 @@ What **you** need to do that AI cannot (Dashboard, prod validation, decisions). 
 | 2 | DEV-V-016-T003 — Mixed armament load columns | **CI** — same (`buildSelectableItem` type + Damage/Armor/Block; headers name/type/stat) |
 | 3 | DEV-V-016-T006 / DEV-V-009-T022 — Builder → map → inventory stack | **CI** — builders + `map-selection.test.ts` + `merge-equipment-inventory.test.ts` |
 | 4 | DEV-V-013-T052 — Equipment L2 quantity-first | **CI** — `guided-equipment-l2.test.ts` (qty / budget / clear) |
-| 5 | DEV-V-001-T013 / DEV-V-013-T032 — Path change reset vs retain | **TASK-588** |
+| 5 | DEV-V-001-T013 / DEV-V-013-T032 — Path change reset vs retain | **CI** — `path-selection-draft.test.ts` (TASK-588; T032 path same/new; T013 Advanced manual) |
 | 6 | DEV-V-013-T057 — Innate threshold / TP parity | **TASK-590** |
 | 7 | DEV-V-013-T059 — Continue advances one screen | **TASK-592** |
 | 8 | DEV-V-013-T061 — Ancestry task order | **TASK-591** |

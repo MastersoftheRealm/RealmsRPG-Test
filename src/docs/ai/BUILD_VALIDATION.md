@@ -2456,9 +2456,10 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 |
-| **Related task** | TASK-451 |
+| **Related task** | TASK-451 · TASK-588 |
 | **Where** | Guided creator — Ancestry / Abilities / Skills / Feats |
 | **Needs** | Progress through Ancestry (with flaw + second trait if available), Abilities, Skills, Archetype Feat |
+| **Automated** | Path same/new select patch: `npm test` — `path-selection-draft.test.ts` (TASK-588). Full back-navigation retain remains manual. |
 
 **Steps**
 1. Complete Foundation; on Ancestry pick traits/characteristic/flaw (and second ancestry trait if flaw taken).

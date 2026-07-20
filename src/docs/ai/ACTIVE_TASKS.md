@@ -12,7 +12,7 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 16 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 15 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
 
 **Hot notes:** Sheet wave **TASK-583→587** (Temp Modifier Architect = 585 first; 583/584/587 parallel OK). Guided Path **TASK-579 / 581** still open. TASK-582 done (sheet polish). TASK-500 deferred. TASK-381: AdminArchetypes 6a–6c shipped (ready to close; species deferred). TASK-388 onboarding done.
@@ -286,7 +286,7 @@ Do **not** read the done archive at session start.
 ---
 
 # TASK-440 done 2026-07-20 — Dense HUD Health/Energy (archive).
-# TASK-480 automation backlog → TASK-588–592 (vitest extracts).
+# TASK-480 automation backlog → TASK-588 done; TASK-589–592 remain (vitest extracts).
 
 # TASK-430 done 2026-07-20 — React Compiler hook warnings cleared (archive; DEV-V-019 pending-qa).
 
@@ -294,23 +294,7 @@ Do **not** read the done archive at session start.
 
 # BUILD_VALIDATION automation backlog (from TASK-480) — extract pure helpers + vitest
 
-- id: TASK-588
-  title: Vitest — path change reset vs retain draft patch
-  created_at: 2026-07-20
-  created_by: agent
-  priority: low
-  status: not-started
-  parent_task: TASK-480
-  related_files:
-    - src/components/guided-creator/steps/path-step.tsx
-    - src/lib/guided-creator/
-  description: |
-    DEV-V-001-T013 / DEV-V-013-T032. Extract the same-path vs new-path draft patch from
-    PathStep.handleSelect into a pure helper under lib/guided-creator; unit-test retain vs clear.
-  acceptance_criteria:
-    - Pure helper used by path-step (no duplicated reset object in the component).
-    - Vitest covers same-path retain and different-path invalidate (abilities/skills/feats/loadout/powers).
-    - npm test green; changelog.
+# TASK-588 done 2026-07-20 — path change reset vs retain draft patch (archive).
 
 - id: TASK-589
   title: Vitest — technique load columns (DEV-V-016-T002)

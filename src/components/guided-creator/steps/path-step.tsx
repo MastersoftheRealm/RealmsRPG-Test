@@ -14,9 +14,9 @@ import { parseArchetypePathData, pathHasPlayerVisibleLevel1 } from '@/lib/game/a
 import { formatAbilityLabel } from '@/lib/constants/ability-effect-blurbs';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { resolvePathAbilityLabels } from '@/lib/guided-creator/path-ability-labels';
+import { buildPathSelectionDraftPatch } from '@/lib/guided-creator/path-selection-draft';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
-import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
-import { DEFAULT_ABILITIES, type Archetype, type ArchetypeCategory } from '@/types';
+import { type Archetype, type ArchetypeCategory } from '@/types';
 import {
   archetypePathHelp,
   martialPathType,
@@ -101,39 +101,8 @@ export function PathStep() {
   );
 
   const handleSelect = (path: Archetype) => {
-    const type = (path.type || 'power') as ArchetypeCategory;
-    const pathChanged = draft.archetypePathId !== String(path.id);
-    // Same SoT as path cards / More details (archetype abilities + optional secondary).
-    const { powAbil, martAbil } = resolvePathAbilityLabels(path);
-
-    // Same path re-tap: keep all downstream picks. New path: invalidate dependents.
-    updateDraft({
-      archetypePathId: String(path.id),
-      archetypeType: type,
-      pow_abil: powAbil,
-      mart_abil: martAbil,
-      ...(pathChanged
-        ? {
-            // Soft-default only runs when Abilities mounts with abilitiesMode null —
-            // reset scores so chapter-jump / skip cannot keep the previous path array.
-            abilities: { ...DEFAULT_ABILITIES },
-            abilitiesMode: null,
-            skills: {},
-            declinedPathSkillIds: [],
-            archetypeFeatIds: [],
-            characterFeatIds: [],
-            equipmentPhase: 'weapon' as const,
-            loadoutWeapons: [],
-            loadoutArmor: [],
-            armaments: [],
-            equipment: [],
-            currency: CHARACTER_STARTING_CURRENCY,
-            unarmedProwess: 0,
-            powerIds: [],
-            techniqueIds: [],
-          }
-        : {}),
-    });
+    // Same path re-tap: keep dependents. New path: invalidate (see buildPathSelectionDraftPatch).
+    updateDraft(buildPathSelectionDraftPatch(draft.archetypePathId, path));
   };
 
   return (

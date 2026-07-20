@@ -1,3 +1,30 @@
+- id: TASK-588
+  title: Vitest -- path change reset vs retain draft patch
+  created_at: 2026-07-20
+  completed_at: 2026-07-20
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  parent_task: TASK-480
+  related_files:
+    - src/lib/guided-creator/path-selection-draft.ts
+    - src/lib/guided-creator/path-selection-draft.test.ts
+    - src/components/guided-creator/steps/path-step.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    DEV-V-001-T013 / DEV-V-013-T032. Extract the same-path vs new-path draft patch from
+    PathStep.handleSelect into a pure helper under lib/guided-creator; unit-test retain vs clear.
+  acceptance_criteria:
+    - Pure helper used by path-step (no duplicated reset object in the component).
+    - Vitest covers same-path retain and different-path invalidate (abilities/skills/feats/loadout/powers).
+    - npm test green; changelog.
+  notes: |
+    Added buildPathSelectionDraftPatch; PathStep.handleSelect delegates; matrix row #5 -> CI.
+    Cleanup: FEATURE_INDEX claims T032 vitest only (T013 Advanced remains manual).
 - id: TASK-430
   title: React Compiler hook warnings � exhaustive-deps / set-state-in-effect / preserve-manual-memoization
   created_at: 2026-07-13
