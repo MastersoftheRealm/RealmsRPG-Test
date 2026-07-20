@@ -1009,7 +1009,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594, TASK-602)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats.
 
@@ -1458,6 +1458,18 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Steps** | 1. Enter sheet edit mode. 2. On Speed and Evasion LargeStatBlocks, confirm only the Temp Modifier (sliders) control appears — no pencil. 3. Toggle Temp on Speed, adjust +/− — value tints; no “Base:” stepper appears. 4. Repeat for Evasion. 5. Confirm Abilities/Skills still show dual pencil+Temp. |
 | **Expected** | Speed/Evasion are Temp-only; rules `speedBase`/`evasionBase` are not editable from the sheet header; dual mode remains on Abilities/Skills. |
 | **Report** | DEV-V-009-T038: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T039 — Recovery modal SegmentedControl (TASK-602)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-602 |
+| **Where** | `/characters/[id]` → toolbar **Recovery** |
+| **Needs** | Character with HP and/or Energy below max (optional: limited-use feats/traits) |
+| **Steps** | 1. Open **Recovery**. 2. Confirm Full / Partial is a shared `SegmentedControl` (pill track), not hand-rolled bordered buttons. 3. Switch to **Partial Recovery** — duration **2 / 4 / 6 hours** and **Automatic / Manual** are also SegmentedControls; Manual shows the HP/EN slider. 4. Confirm preview shows Health/Energy deltas; confirm CTA still reads **Full Recovery** or **Recover (Nh)**. 5. Optional ~360px: modal is full-screen; segments remain ≥44px touch targets. |
+| **Expected** | Three choice groups use SegmentedControl; recovery math unchanged; no parallel pill chrome; preview uses warning semantic surface (`warning-fg` / status panel), not numbered `warning-*` + `dark:` pairs on the choice clusters. |
+| **Report** | DEV-V-009-T039: PASS / FAIL / SKIP — |
 
 ---
 

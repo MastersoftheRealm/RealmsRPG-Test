@@ -1,3 +1,39 @@
+- id: TASK-602
+  title: Recovery modal → SegmentedControl + theme-aware status tokens
+  created_at: 2026-07-20
+  created_by: agent
+  completed_at: 2026-07-20
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T039
+  developer_test_plan: |
+    Suite DEV-V-009 T039 — see BUILD_VALIDATION.md
+  related_files:
+    - src/components/character-sheet/recovery-modal.tsx
+    - src/components/shared/segmented-control.tsx
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Replace hand-rolled Full/Partial, hours (2/4/6), and Auto/Manual button clusters in Recovery
+    with SegmentedControl (icons OK). Prefer warning-fg / semantic tokens over numbered warning-*
+    ramps + ad-hoc dark: pairs where practical. Keep recovery math and fullScreenOnMobile.
+  acceptance_criteria:
+    - Three choice groups use SegmentedControl (or documented exception if icon+color treatment cannot).
+    - No parallel pill chrome; touch targets ≥44px on mobile.
+    - BUILD_VALIDATION recovery smoke steps still pass (add/adjust if visual labels change).
+    - npm run build passes.
+  notes: |
+    From 2026-07-20 /global-audit. Wired mode/duration/allocation onto SegmentedControl; preview uses
+    statusPanel.warning + warning-fg; confirm CTA uses primary Button (no warning-* dark: pairs).
+    verification_status pending-qa (DEV-V-009-T039).
+
+---
+
 - id: TASK-601
   title: Extract technique / empowered / species creator workspaces (TASK-381 remainder)
   created_at: 2026-07-20
