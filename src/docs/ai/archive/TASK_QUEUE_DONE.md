@@ -7,6 +7,7 @@
   completed_at: 2026-07-20
   implemented_by: agent
   verification_status: pending-qa
+  merged_at: 2026-07-20
   related_files:
     - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
     - src/app/(main)/admin/codex/AdminTraitsTab.tsx
