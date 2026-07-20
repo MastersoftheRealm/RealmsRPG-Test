@@ -9,6 +9,7 @@
   verification_status: pending-qa
   related_files:
     - src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx
+    - src/components/character-sheet/read-only-sheet.ts
     - src/components/character-sheet/use-character-sheet-derived.ts
     - src/components/character-sheet/character-sheet-body.tsx
     - src/app/(main)/characters/[id]/character-sheet-utils.ts
@@ -25,7 +26,7 @@
     - Build + smoke open a campaign character view.
   notes: |
     Wired campaign RM view onto useCharacterSheetDerived + CharacterSheetProvider/Body;
-    read-only no-op handlers; rolls/log retained. verification_status pending-qa.
+    read-only helpers in `read-only-sheet.ts`; rolls/log retained. verification_status pending-qa.
 - id: TASK-593
   title: Move RollProvider/RollLog out of character-sheet into shared roll domain
   created_at: 2026-07-20
@@ -71,7 +72,6 @@
     - src/lib/creator/build-creator-skills.ts
     - src/lib/creator/build-creator-skills.test.ts
     - src/lib/guided-creator/build-character.ts
-    - src/lib/guided-creator/build-skills.ts
     - src/stores/character-creator-store.ts
     - src/components/character-creator/steps/finalize-step.tsx
     - src/lib/data-enrichment.ts
@@ -87,8 +87,8 @@
     - Both save paths still set proficiencies + libraryTabVisibility via existing helpers.
     - Stores/routes remain separate; `npm run build` + targeted tests pass.
   notes: |
-    Added `lib/creator/build-creator-skills.ts` + vitest (prof 0 + species ids). Guided wrapper
-    reuses it; Advanced finalize-step uses shared helper. Stores/routes unchanged.
+    Added `lib/creator/build-creator-skills.ts` + vitest (prof 0 + species ids). Guided
+    `build-character` + Advanced finalize call it directly (deleted thin build-skills wrapper).
 - id: TASK-592
   title: Vitest — guided Continue advances one screen (DEV-V-013-T059)
   created_at: 2026-07-20

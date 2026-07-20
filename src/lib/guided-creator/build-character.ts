@@ -26,7 +26,7 @@ import type { Species } from '@/hooks';
 import { computeStartingCurrency } from '@/lib/guided-creator/equipment-currency';
 import { mergeLoadoutArmaments } from '@/lib/guided-creator/resolve-loadout-items';
 import { buildSuggestedAbilityArray } from '@/lib/game/suggested-abilities';
-import { buildGuidedSkillsArray } from '@/lib/guided-creator/build-skills';
+import { buildCreatorSkillSaveRows } from '@/lib/creator/build-creator-skills';
 import { buildRequiredProficiencies } from '@/lib/proficiencies';
 import { defaultLibraryTabVisibilityForArchetype } from '@/lib/character-library-tab-visibility';
 import {
@@ -205,7 +205,10 @@ export function buildGuidedCharacterPayload(
     if (!(id in skillsForSave)) skillsForSave[id] = 0;
   });
 
-  const skillsArray = buildGuidedSkillsArray(skillsForSave, speciesSkillIds, ctx.codexSkills ?? []);
+  const skillsArray = buildCreatorSkillSaveRows(skillsForSave, {
+    speciesSkillIds,
+    codexSkills: ctx.codexSkills ?? [],
+  });
 
   // Lean save refs — resolve feat names from codex (same pattern as powers/techniques).
   const resolveFeatRef = (id: string) => {

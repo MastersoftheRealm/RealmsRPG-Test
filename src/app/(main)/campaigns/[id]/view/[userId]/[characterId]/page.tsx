@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, type Dispatch, type SetStateAction } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
@@ -22,12 +22,10 @@ import {
   buildCharacterSheetLibraryProps,
   resolveLibraryActiveTab,
 } from '@/components/character-sheet';
-import type {
-  AddModalType,
-  FeatModalType,
-  SkillModalType,
-} from '@/components/character-sheet/character-sheet-context';
-import type { CharacterSheetDerivedHandlers } from '@/components/character-sheet/use-character-sheet-derived';
+import {
+  buildReadOnlyLibraryHandlers,
+  buildReadOnlySheetContextValue,
+} from '@/components/character-sheet/read-only-sheet';
 import { RollLog, RollProvider } from '@/components/rolls';
 import {
   useUserPowers,
@@ -46,54 +44,10 @@ import {
   useOfficialLibrary,
 } from '@/hooks';
 import { useGameRules } from '@/hooks/use-game-rules';
-import type {
-  Character,
-  CharacterLibraryTabId,
-  CharacterTempModifiers,
-  AbilityName,
-  Item,
-} from '@/types';
+import type { Character, CharacterLibraryTabId, Item } from '@/types';
 import type { LibraryForView } from '@/services/character-service';
 
-const noop = () => {};
-const noopAbility = (_ability: AbilityName, _value: number) => {};
-const noopDefense = (_defense: string, _value: number) => {};
-const noopTemp = (_patch: CharacterTempModifiers) => {};
-const noopSkill = (
-  _skillId: string,
-  _updates: Partial<{ skill_val: number; prof: boolean; ability: string }>
-) => {};
-const noopProf = (_value: number) => {};
-const noopMilestone = (_level: number, _choice: 'innate' | 'feat') => {};
-const noopAddModal: (type: AddModalType) => void = noop;
-const noopFeatModal: (type: FeatModalType) => void = noop;
-const noopSkillModal: (type: SkillModalType) => void = noop;
-
-/** Stable no-op library handlers — view is read-only (no mutations). */
-const READONLY_LIBRARY_HANDLERS: Omit<CharacterSheetDerivedHandlers, 'setCharacter'> = {
-  handleRemovePower: noop,
-  handleTogglePowerInnate: noop,
-  handleUsePower: noop,
-  handleRemoveTechnique: noop,
-  handleUseTechnique: noop,
-  handleRemoveWeapon: noop,
-  handleToggleEquipWeapon: noop,
-  handleRemoveShield: noop,
-  handleToggleEquipShield: noop,
-  handleRemoveArmor: noop,
-  handleToggleEquipArmor: noop,
-  handleRemoveEquipment: noop,
-  handleEquipmentQuantityChange: noop,
-  handleCurrencyChange: noop,
-  handleStateUsesChange: noop,
-  handleEnterState: noop,
-  handleFeatUsesChange: noop,
-  handleFeatLevelChange: noop,
-  handleRequestRemoveFeat: noop,
-  handleTraitUsesChange: noop,
-  handleFeatCustomizationChange: noop,
-  handleTraitCustomizationChange: noop,
-};
+const READONLY_LIBRARY_HANDLERS = buildReadOnlyLibraryHandlers();
 
 export default function CampaignCharacterViewPage() {
   return (
@@ -209,10 +163,6 @@ function CampaignCharacterViewContent() {
     }
   }
 
-  const setCharacterNoop = useCallback<Dispatch<SetStateAction<Character | null>>>(() => {
-    /* read-only — ignore local mutations from sheet chrome */
-  }, []);
-
   const librarySectionProps = useMemo(() => {
     if (!character || !calculatedStats) return null;
     return buildCharacterSheetLibraryProps({
@@ -231,10 +181,7 @@ function CampaignCharacterViewContent() {
       stateFeatsList,
       stateUsesCurrent,
       stateUsesMax,
-      handlers: {
-        setCharacter: setCharacterNoop,
-        ...READONLY_LIBRARY_HANDLERS,
-      },
+      handlers: READONLY_LIBRARY_HANDLERS,
     });
   }, [
     character,
@@ -252,20 +199,13 @@ function CampaignCharacterViewContent() {
     stateFeatsList,
     stateUsesCurrent,
     stateUsesMax,
-    setCharacterNoop,
   ]);
 
   const sheetContextValue = useMemo(
     () =>
       character
-        ? {
+        ? buildReadOnlySheetContextValue({
             character,
-            setCharacter: setCharacterNoop,
-            isEditMode: false,
-            isOwner: false,
-            setAddModalType: noopAddModal,
-            setFeatModalType: noopFeatModal,
-            setSkillModalType: noopSkillModal,
             skills,
             pointBudgets,
             enrichedData,
@@ -273,22 +213,10 @@ function CampaignCharacterViewContent() {
             characterSpeciesSkills,
             libraryActiveTab,
             setLibraryActiveTab,
-            onAbilityChange: noopAbility,
-            onDefenseChange: noopDefense,
-            onTempModifiersChange: noopTemp,
-            onSkillChange: noopSkill,
-            onRemoveSkill: noop,
-            onAddSubSkill: noop,
-            onMartialProfChange: noopProf,
-            onPowerProfChange: noopProf,
-            onMilestoneChoiceChange: noopMilestone,
-            onEditArchetype: noop,
-            onEditSpecies: noop,
-          }
+          })
         : null,
     [
       character,
-      setCharacterNoop,
       skills,
       pointBudgets,
       enrichedData,

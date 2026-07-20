@@ -23,7 +23,6 @@ import { DIE_IMAGES, DIE_MAX, generateRollId, rollDie, type DieType } from '@/li
 
 // Re-export types for convenience
 export type { RollEntry, RollType, DieResult };
-export type { DieType };
 
 // Roll type colors (left border accent)
 const ROLL_TYPE_COLORS: Record<RollType, string> = {
@@ -519,4 +518,3 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
   );
 }
 
-export default RollLog;
