@@ -36,7 +36,7 @@ import type { Encounter } from "@/types/encounter";
 import { CombatantCard } from "@/components/encounters/CombatantCard";
 import { CONDITION_OPTIONS } from "@/components/encounters/encounter-constants";
 import { AddCombatantModal } from "@/components/shared";
-import { RollLog } from "@/components/character-sheet";
+import { RollLog } from "@/components/rolls";
 import { useAuth } from "@/hooks";
 import { createClient } from "@/lib/supabase/client";
 import { computeMaxHealthEnergy } from "@/lib/game/calculations";

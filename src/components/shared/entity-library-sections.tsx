@@ -12,7 +12,7 @@ import { deriveShieldAmountFromProperties } from '@/lib/calculators/item-calc';
 import { TP_COST_LABEL } from '@/lib/detail-option/compact-facts';
 import type { MetadataDetailSection } from '@/lib/chip/list-row-metadata';
 import { formatListCellLabel, splitDamageDiceAndType } from '@/lib/utils';
-import { useRollsOptional } from '@/components/character-sheet/roll-context';
+import { useRollsOptional } from '@/components/rolls';
 import { useLibrarySectionCollapse } from '@/hooks/use-library-section-collapse';
 
 // =============================================================================

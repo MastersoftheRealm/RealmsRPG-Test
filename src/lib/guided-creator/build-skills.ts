@@ -1,37 +1,19 @@
 /**
- * Build character sheet skill rows from guided creator allocations.
+ * Guided creator skill rows — thin wrapper over shared creator skill-save helper.
  */
 
-export interface GuidedSkillRow {
-  id: string;
-  name: string;
-  category: string;
-  skill_val: number;
-  prof: boolean;
-  ability?: string;
-}
+import {
+  buildCreatorSkillSaveRows,
+  type CreatorSkillCodexEntry,
+  type CreatorSkillSaveRow,
+} from '@/lib/creator/build-creator-skills';
+
+export type GuidedSkillRow = CreatorSkillSaveRow;
 
 export function buildGuidedSkillsArray(
   skills: Record<string, number>,
   speciesSkillIds: string[],
-  codexSkills: Array<{ id: string | number; name?: string; category?: string; ability?: string }>
+  codexSkills: CreatorSkillCodexEntry[]
 ): GuidedSkillRow[] {
-  const ids = new Set<string>();
-  speciesSkillIds.forEach((id) => {
-    if (id !== '0') ids.add(String(id));
-  });
-  Object.keys(skills).forEach((id) => ids.add(String(id)));
-
-  return Array.from(ids).map((skillId) => {
-    const skillData = codexSkills.find((s) => String(s.id) === skillId);
-    const skillVal = skills[skillId] ?? 0;
-    return {
-      id: skillId,
-      name: skillData?.name ?? skillId,
-      category: skillData?.category || skillData?.ability?.split(',')[0]?.trim() || 'other',
-      skill_val: skillVal,
-      prof: true,
-      ability: skillData?.ability?.split(',')[0]?.trim().toLowerCase(),
-    };
-  });
+  return buildCreatorSkillSaveRows(skills, { speciesSkillIds, codexSkills });
 }

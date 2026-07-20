@@ -13,7 +13,7 @@ import { Suspense } from 'react';
 import { UnifiedSelectionModal, SourceFilter, sourceFilterSummary, SegmentedControl, type SelectableItem } from '@/components/shared';
 import { LoadingState } from '@/components/ui';
 import { Skull } from 'lucide-react';
-import { RollLog, RollProvider } from '@/components/character-sheet';
+import { RollLog, RollProvider } from '@/components/rolls';
 import { formatListCellLabel } from '@/lib/utils';
 import {
   CreatorSummaryPanel,

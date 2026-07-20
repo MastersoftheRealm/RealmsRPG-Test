@@ -9,7 +9,7 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Users } from 'lucide-react';
 import { CreatureStatBlock } from '@/components/shared';
-import { RollLog, RollProvider } from '@/components/character-sheet';
+import { RollLog, RollProvider } from '@/components/rolls';
 import { useSort } from '@/hooks/use-sort';
 import {
   useUserCreatures,

@@ -1,3 +1,66 @@
+- id: TASK-593
+  title: Move RollProvider/RollLog out of character-sheet into shared roll domain
+  created_at: 2026-07-20
+  created_by: agent
+  completed_at: 2026-07-20
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/lib/rolls/die.ts
+    - src/components/rolls/roll-context.tsx
+    - src/components/rolls/roll-log.tsx
+    - src/components/rolls/index.ts
+    - src/types/campaign-roll.ts
+    - src/services/campaign-roll-service.ts
+    - src/components/shared/entity-library-sections.tsx
+    - src/components/shared/quick-armaments-sections.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    Roll context/log live under character-sheet but are consumed by encounters, campaigns,
+    creature creator, library creatures, and shared entity rows. Move to a shared/game roll
+    home; dedupe local `rollDie` / die-image maps; update barrels + FEATURE_INDEX. Do not
+    change roll behavior.
+  acceptance_criteria:
+    - RollProvider/RollLog/useRolls* live outside character-sheet (shared or lib + thin UI).
+    - Single `rollDie` + die-image map; no triplicated helpers.
+    - All previous import sites compile; encounters/sheet/campaign rolls unchanged.
+    - FEATURE_INDEX + UI_COMPONENT_REFERENCE point at new home; `npm run build` passes.
+  notes: |
+    Moved to `components/rolls` + `lib/rolls/die.ts` (single rollDie/DIE_IMAGES). Not under shared/ui.
+    All import sites updated; FEATURE_INDEX/DESIGN_SYSTEM/UI_COMPONENT_REFERENCE pointed at new home.
+- id: TASK-595
+  title: Shared creator skill-save + character payload builder slice
+  created_at: 2026-07-20
+  created_by: agent
+  completed_at: 2026-07-20
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/lib/creator/build-creator-skills.ts
+    - src/lib/creator/build-creator-skills.test.ts
+    - src/lib/guided-creator/build-character.ts
+    - src/lib/guided-creator/build-skills.ts
+    - src/stores/character-creator-store.ts
+    - src/components/character-creator/steps/finalize-step.tsx
+    - src/lib/data-enrichment.ts
+    - src/lib/character-save.ts
+  description: |
+    Guided uses `buildGuidedSkillsArray` + `buildGuidedCharacterPayload`; Advanced builds
+    skills array inline in finalize (prof-only 0 must survive `cleanForSave`) and payload
+    in `getCharacter()`. Extract a shared creator skill-save helper + first slice of shared
+    payload assembly without merging stores/routes.
+  acceptance_criteria:
+    - One helper builds skill save rows for guided + advanced (preserves proficient value 0).
+    - Vitest covers prof-only 0 and species skill flags.
+    - Both save paths still set proficiencies + libraryTabVisibility via existing helpers.
+    - Stores/routes remain separate; `npm run build` + targeted tests pass.
+  notes: |
+    Added `lib/creator/build-creator-skills.ts` + vitest (prof 0 + species ids). Guided wrapper
+    reuses it; Advanced finalize-step uses shared helper. Stores/routes unchanged.
 - id: TASK-592
   title: Vitest — guided Continue advances one screen (DEV-V-013-T059)
   created_at: 2026-07-20

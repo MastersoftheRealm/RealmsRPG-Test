@@ -11,7 +11,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Eye, EyeOff } from 'lucide-react';
-import { useRollsOptional } from './roll-context';
+import { useRollsOptional } from '@/components/rolls';
 import { NotesTab, type CharacterNote } from './notes-tab';
 import { ProficienciesTab } from './proficiencies-tab';
 import { FeatsTab } from './feats-tab';

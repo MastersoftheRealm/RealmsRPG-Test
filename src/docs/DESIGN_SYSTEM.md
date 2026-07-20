@@ -647,7 +647,7 @@ These components are used across multiple pages and should be imported rather th
 | `HealthEnergyAllocator` | `@/components/creator/health-energy-allocator` | HP/EN point allocation with stepper |
 | `CreatorSummaryPanel` | `@/components/creator/creator-summary-panel` | Cost/point summary in creators |
 | `RecoveryModal` | `@/components/character-sheet/recovery-modal` | Full/partial recovery dialog |
-| `RollLog` | `@/components/character-sheet/roll-log` | Dice roll history display |
+| `RollLog` | `@/components/rolls` | Dice roll history display (RollProvider / useRolls*) |
 | `SheetActionToolbar` | `@/components/character-sheet/sheet-action-toolbar` | Floating action toolbar on character sheet |
 | `TabSummarySection` | `@/components/shared/tab-summary-section` | Color-coded solid summary bar for tabs (no gradient fills) |
 | `PoweredMartialSlider` | `@/components/shared/powered-martial-slider` | Power/martial proficiency allocation slider |

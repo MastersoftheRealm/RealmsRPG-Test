@@ -34,7 +34,7 @@ import {
   useToast,
 } from '@/components/ui';
 import { DeleteConfirmModal, ExpandableImage } from '@/components/shared';
-import { RollEntryCard } from '@/components/character-sheet';
+import { RollEntryCard } from '@/components/rolls';
 import { useCampaign, useCharacters, useInvalidateCampaigns, useAuth, useCampaignRolls } from '@/hooks';
 import { addCharacterToCampaignAction, removeCharacterFromCampaignAction, deleteCampaignAction, updateCampaignAction } from '../actions';
 import { MAX_CAMPAIGN_CHARACTERS, OWNER_MAX_CHARACTERS } from '../constants';

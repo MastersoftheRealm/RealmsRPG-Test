@@ -5,7 +5,7 @@
  */
 
 import type { CampaignRollEntry } from '@/types/campaign-roll';
-import type { RollEntry } from '@/components/character-sheet/roll-context';
+import type { RollEntry } from '@/components/rolls';
 import { apiFetch } from '@/lib/api-client';
 
 export interface AddCampaignRollParams {

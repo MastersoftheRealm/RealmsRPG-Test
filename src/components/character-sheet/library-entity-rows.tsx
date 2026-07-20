@@ -32,7 +32,7 @@ import {
   CHARACTER_SHEET_WEAPON_GRID,
   CHARACTER_SHEET_SHIELD_GRID,
 } from '@/components/shared/entity-library-sections';
-import type { useRollsOptional } from './roll-context';
+import type { useRollsOptional } from '@/components/rolls';
 import type { Abilities, CharacterPower, CharacterTechnique, Item } from '@/types';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import {

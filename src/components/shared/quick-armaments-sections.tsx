@@ -8,7 +8,7 @@ import { cn, formatWeaponRangeCompact, splitDamageDiceAndType } from '@/lib/util
 import { isMechanicPropertyName } from '@/lib/detail-option/compact-facts';
 import { deriveShieldAmountFromProperties } from '@/lib/calculators/item-calc';
 import { getWeaponAttackBonusFromProperties } from '@/lib/game/weapon-attack-ability';
-import { useRollsOptional } from '@/components/character-sheet/roll-context';
+import { useRollsOptional } from '@/components/rolls';
 
 /** Named props already shown as table columns (not in MECHANIC_PROPERTY_NAMES). */
 const QUICK_ARMAMENT_COLUMN_PROP_NAMES = new Set(['Critical Range +1']);

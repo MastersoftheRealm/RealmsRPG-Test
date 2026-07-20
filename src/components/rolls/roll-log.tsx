@@ -19,25 +19,11 @@ import { DecrementButton, IncrementButton } from '@/components/shared';
 import { LoadingState, EmptyState, Card } from '@/components/ui';
 import type { CampaignRollEntry } from '@/types/campaign-roll';
 import { formatRollTimestamp } from '@/lib/roll-timestamp';
+import { DIE_IMAGES, DIE_MAX, generateRollId, rollDie, type DieType } from '@/lib/rolls/die';
 
 // Re-export types for convenience
 export type { RollEntry, RollType, DieResult };
-export type DieType = 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20';
-
-// Die max values
-const DIE_MAX: Record<DieType, number> = {
-  d4: 4, d6: 6, d8: 8, d10: 10, d12: 12, d20: 20,
-};
-
-// Dice image paths (matching vanilla site assets)
-const DIE_IMAGES: Record<DieType, string> = {
-  d4: '/images/D4.png',
-  d6: '/images/D6.png',
-  d8: '/images/D8.png',
-  d10: '/images/D10.png',
-  d12: '/images/D12.png',
-  d20: '/images/D20_1.png',
-};
+export type { DieType };
 
 // Roll type colors (left border accent)
 const ROLL_TYPE_COLORS: Record<RollType, string> = {
@@ -57,15 +43,6 @@ const ROLL_TYPE_ICONS: Record<RollType, string> = {
   defense: '🛡️',
   custom: '🎲',
 };
-
-// Dice roller helper
-function rollDie(type: DieType): number {
-  return Math.floor(Math.random() * DIE_MAX[type]) + 1;
-}
-
-function generateRollId(): string {
-  return `roll-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-}
 
 interface RollLogProps {
   className?: string;

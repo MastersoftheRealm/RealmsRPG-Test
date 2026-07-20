@@ -19,9 +19,8 @@ import {
   SkillsSection,
   ArchetypeSection,
   LibrarySection,
-  RollLog,
-  RollProvider,
 } from '@/components/character-sheet';
+import { RollLog, RollProvider } from '@/components/rolls';
 import { calculateStats } from '@/app/(main)/characters/[id]/character-sheet-utils';
 import { enrichCharacterData } from '@/lib/data-enrichment';
 import {

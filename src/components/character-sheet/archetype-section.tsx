@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { calculateProficiency, getArchetypeType, getArchetypeMilestoneLevels } from '@/lib/game/formulas';
-import { useRollsOptional } from './roll-context';
+import { useRollsOptional } from '@/components/rolls';
 import { EditSectionToggle, RollButton, SectionHeader, PoweredMartialSlider, DecrementButton, IncrementButton } from '@/components/shared';
 import { TableScroll } from '@/components/ui';
 import type { Character, Abilities, Item } from '@/types';

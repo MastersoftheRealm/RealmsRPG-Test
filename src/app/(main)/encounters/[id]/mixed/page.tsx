@@ -19,7 +19,7 @@ import {
   useAutoSave,
   useCampaignsFull,
 } from "@/hooks";
-import { RollProvider, RollLog } from "@/components/character-sheet";
+import { RollProvider, RollLog } from "@/components/rolls";
 import type { Encounter } from "@/types/encounter";
 import { defaultSkillEncounterState } from "@/types/encounter";
 import CombatEncounterView from "../_components/CombatEncounterView";

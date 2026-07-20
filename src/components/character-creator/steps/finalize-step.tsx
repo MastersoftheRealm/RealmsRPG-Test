@@ -13,6 +13,7 @@ import { createCharacter, saveCharacter } from '@/services/character-service';
 import { useAuth, useCodexSkills, useMergedSpecies, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useGameRules } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { cleanForSave } from '@/lib/data-enrichment';
+import { buildCreatorSkillSaveRows } from '@/lib/creator/build-creator-skills';
 import { blobToCompressedBase64, dataUrlToBlob } from '@/lib/portrait';
 import { apiUpload } from '@/lib/api-client';
 import type { Character, CharacterPower, CharacterTechnique, Item } from '@/types';
@@ -514,50 +515,16 @@ export function FinalizeStep() {
         rules,
       });
       
-      // Convert skills from Record<string, number> to array format
-      // Character sheet expects: Array<{ id, name, category, skill_val, prof }>
+      // Convert skills Record → array before cleanForSave so proficient-only 0 survives
+      // (shared with Guided via buildCreatorSkillSaveRows).
       if (characterData.skills && typeof characterData.skills === 'object' && !Array.isArray(characterData.skills)) {
-        const skillsRecord = characterData.skills as Record<string, number>;
-        const skillsArray: Array<{
-          id: string;
-          name: string;
-          category?: string;
-          skill_val: number;
-          prof: boolean;
-          baseSkill?: string;
-          ability?: string;
-        }> = [];
-        
-        // Convert each skill allocation to array format
-        Object.entries(skillsRecord).forEach(([skillId, points]) => {
-          if (points >= 0) {
-            const skillData = codexSkills?.find((s: { id: string; name: string }) => s.id === skillId || s.name === skillId);
-            const baseSkill = skillData?.base_skill_id !== undefined
-              ? (codexSkills?.find((s: { id: string }) => s.id === String(skillData?.base_skill_id)) as { name?: string })?.name
-              : undefined;
-            if (skillData) {
-              skillsArray.push({
-                id: skillData.id,
-                name: skillData.name,
-                category: (skillData as { category?: string }).category || skillData.ability?.split(',')[0]?.trim() || 'other',
-                skill_val: points,
-                prof: true,
-                ...(baseSkill && { baseSkill }),
-                ability: skillData.ability?.split(',')[0]?.trim().toLowerCase(),
-              });
-            } else {
-              skillsArray.push({
-                id: skillId,
-                name: skillId,
-                category: 'other',
-                skill_val: points,
-                prof: true,
-              });
-            }
+        characterData.skills = buildCreatorSkillSaveRows(
+          characterData.skills as Record<string, number>,
+          {
+            codexSkills: codexSkills ?? [],
+            includeBaseSkillName: true,
           }
-        });
-        
-        characterData.skills = skillsArray as unknown as Character['skills'];
+        ) as unknown as Character['skills'];
       }
 
       // Strip to lean schema (feats, powers, techniques, skills, equipment, etc.) so we don't persist
