@@ -70,15 +70,17 @@ Do **not** read the done archive at session start.
   created_at: 2026-07-20
   created_by: agent
   priority: low
-  status: not-started
+  status: partial
   related_files:
     - src/components/character-sheet/sheet-header.tsx
     - src/components/character-sheet/library-section.tsx
     - src/components/character-sheet/abilities-section.tsx
     - src/components/character-creator/steps/equipment-step.tsx
     - src/components/character-creator/steps/finalize-step.tsx
+    - src/components/character-creator/steps/finalize/
     - src/components/character-creator/steps/powers-step.tsx
     - src/components/character-creator/steps/feats-step.tsx
+    - src/components/character-creator/steps/feats/
   description: |
     God-file hygiene after TASK-381 sheet facade: split sheet-header, library-section,
     abilities-section and Advanced equipment/finalize/powers/feats steps along existing
@@ -88,6 +90,15 @@ Do **not** read the done archive at session start.
     - Target files under ~500 LOC where practical; no public API regressions.
     - Parity smoke: sheet play/edit; Advanced create through equipment/powers/finalize.
     - FEATURE_INDEX paths updated if files move.
+  completed_work: |
+    - sheet-header + abilities-section split (prior commits on branch).
+    - finalize-step facade (~456 LOC) + `steps/finalize/` extracts (appearance-age,
+      StepEditLink, ValidationModal, HealthEnergy, PortraitUpload, BuildSummary, IdentityFields).
+    - feats-step facade (~488 LOC) + `steps/feats/` extracts (columns, FeatRow, chip/summary,
+      PathFeatLists, FullFeatCatalog, path-apply helpers). Named exports + steps barrel unchanged.
+  remaining_work: |
+    - library-section split (in progress on branch / parallel agent).
+    - equipment-step + powers-step UI split (parallel agents; still over ~500 after TASK-596 catalog extract).
   notes: |
     TASK-596 extracted catalog/budget (~1404→~1082 LOC) — still over ~500; UI split still needed.
 

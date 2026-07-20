@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-20T19:14:15.237Z",
+  "generated_at": "2026-07-20T19:32:17.198Z",
   "tasks": [
     {
       "id": "TASK-326",
@@ -29,20 +29,48 @@
     {
       "id": "TASK-598",
       "title": "Split oversized sheet + Advanced creator hot files",
-      "status": "not-started",
+      "status": "partial",
       "completed_at": "",
       "source": "src/docs/ai/ACTIVE_TASKS.md",
-      "matches": [],
+      "matches": [
+        {
+          "hash": "0bdf4e00de5543ba6a43231fd5161bb0c34031a6",
+          "subject": "TASK-598: Drop accidental identity data attribute",
+          "files": [
+            "src/components/character-sheet/sheet-header-identity.tsx"
+          ]
+        },
+        {
+          "hash": "0b7c9f83ddfbf9ccc57c71a88e7ac64d378a5883",
+          "subject": "TASK-598: Split sheet-header and abilities-section",
+          "files": [
+            "src/components/character-sheet/abilities-section-model.ts",
+            "src/components/character-sheet/abilities-section.tsx",
+            "src/components/character-sheet/ability-stat-tile.tsx",
+            "src/components/character-sheet/defense-stat-tile.tsx",
+            "src/components/character-sheet/sheet-header-identity.tsx",
+            "src/components/character-sheet/sheet-header-resources.tsx",
+            "src/components/character-sheet/sheet-header.tsx",
+            "src/components/character-sheet/sheet-large-stat-block.tsx",
+            "src/components/character-sheet/sheet-resource-input.tsx"
+          ]
+        }
+      ],
       "related_files": [
         "src/components/character-sheet/sheet-header.tsx",
         "src/components/character-sheet/library-section.tsx",
         "src/components/character-sheet/abilities-section.tsx",
         "src/components/character-creator/steps/equipment-step.tsx",
         "src/components/character-creator/steps/finalize-step.tsx",
+        "src/components/character-creator/steps/finalize/",
         "src/components/character-creator/steps/powers-step.tsx",
-        "src/components/character-creator/steps/feats-step.tsx"
+        "src/components/character-creator/steps/feats-step.tsx",
+        "src/components/character-creator/steps/feats/"
       ],
-      "related_overlap": []
+      "related_overlap": [
+        "src/components/character-sheet/sheet-header.tsx",
+        "src/components/character-sheet/abilities-section.tsx"
+      ]
     },
     {
       "id": "TASK-599",
@@ -66,6 +94,29 @@
       "completed_at": "2026-07-20",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "ccba826b0b83deb3fec34899ba01f947dbf645cf",
+          "subject": "Merge pull request #80 from MastersoftheRealm/cursor/task-596-advanced-equipment-catalog-6c97",
+          "files": []
+        },
+        {
+          "hash": "28d9924ea052b938e332ea66549c25739ae2f22e",
+          "subject": "TASK-596: cleanup — drop dead exports; wire currency to guided",
+          "files": [
+            "src/components/character-creator/steps/equipment-step.tsx",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/lib/creator/advanced-equipment-catalog.test.ts",
+            "src/lib/creator/advanced-equipment-catalog.ts"
+          ]
+        },
+        {
+          "hash": "2c8088e12d82cb22e894d20d6fdcfa1d6387f951",
+          "subject": "TASK-596: Refresh task reconcile report after validate",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
         {
           "hash": "902f1e8c0fc9099381b2062d1f8855819ffaabc2",
           "subject": "TASK-596: Extract Advanced equipment catalog/budget into lib",
