@@ -429,4 +429,3 @@ export const SkillRow = memo(function SkillRow({
 
 SkillRow.displayName = 'SkillRow';
 
-export default SkillRow;

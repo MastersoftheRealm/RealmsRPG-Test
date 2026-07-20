@@ -517,7 +517,7 @@ Powers and techniques follow the same unified pattern as the other steps (§3.1)
 | Prefer visible choice over silent auto-all | Layer 1 may soft-seed affordable recommendations; regular picks stay optional (align with §3.1 choice principle) |
 | Training Points | Shared budget with Loadout on **regular** powers/techniques; per-choice cost visible; overspend blocked with a clear reason |
 | Innate vs regular (Power / Powered-Martial) | Separate L1 lists: **Innate Powers** (Innate Energy / Threshold) vs **Powers** (Training Points); techniques step has no innate track |
-| Innate Energy fill | Continue blocked until remaining Innate Energy is 0; budget from `calculateArchetypeProgression(...).innateEnergy` (L1 Power 16 / PM 6) — not `getInnateEnergyMax` |
+| Innate Energy fill | Continue blocked until remaining Innate Energy is 0; budget from `calculateArchetypeProgression(...).innateEnergy` (L1 Power 16 / PM 6) — not `ARCHETYPE_CONFIGS.innateEnergy` (Threshold mislabel) |
 | Contextual synergy copy | Why a power fits the build's role |
 | Layer 2 (guided) | **See more options** → `UnifiedSelectionModal` + GridListRow (Energy ≤ theoretical L1 max; fallback Energy > 20 excluded); innate See more → threshold-filtered modal |
 

@@ -86,4 +86,3 @@ export function SelectionToggle({
   );
 }
 
-export default SelectionToggle;

@@ -96,4 +96,3 @@ export function QuantityBadge({ quantity, className }: QuantityBadgeProps) {
   );
 }
 
-export default QuantitySelector;

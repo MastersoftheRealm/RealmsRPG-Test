@@ -731,7 +731,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 4. Martial path: Innate Powers control hidden; switching type to Martial clears innate picks.
 
 **Expected**
-- Validation uses progression Innate Energy/Threshold (not getInnateEnergyMax).
+- Validation uses progression Innate Energy/Threshold (not ARCHETYPE_CONFIGS.innateEnergy threshold).
 - Parsed `path_data.level1.innatePowers` available to guided creator (empty OK until seeded).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:

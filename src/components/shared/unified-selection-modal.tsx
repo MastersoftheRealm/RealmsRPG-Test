@@ -693,4 +693,3 @@ export function UnifiedSelectionModal({
   );
 }
 
-export default UnifiedSelectionModal;

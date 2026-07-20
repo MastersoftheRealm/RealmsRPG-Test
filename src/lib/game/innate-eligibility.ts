@@ -3,7 +3,8 @@
  * Used by admin path publish validation (TASK-473). Guided creator (TASK-471/472) may reuse.
  *
  * Budget source of truth: calculateArchetypeProgression(...).innateEnergy / innateThreshold.
- * Do NOT use getInnateEnergyMax / ARCHETYPE_CONFIGS.innateEnergy (mislabeled for Power).
+ * Do NOT use ARCHETYPE_CONFIGS.innateEnergy as Innate Energy budget (mislabeled Threshold for Power).
+ * Prefer `calculateArchetypeProgression(...).innateEnergy`.
  */
 
 import type { ArchetypeCategory } from '@/types/archetype';
@@ -149,7 +150,7 @@ function formatSavedActionHint(
   return isReaction ? `${base} Reaction` : `${base} Action`;
 }
 
-/** L1 progression budget from archetype type + starting profs (not getInnateEnergyMax). */
+/** L1 progression budget from archetype type + starting profs (not ARCHETYPE_CONFIGS.innateEnergy threshold). */
 export function getLevel1InnateBudget(
   archetypeType: ArchetypeCategory,
   powerProfStart?: number | null,

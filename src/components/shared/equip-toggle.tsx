@@ -84,4 +84,3 @@ export function EquipToggle({
   );
 }
 
-export default EquipToggle;

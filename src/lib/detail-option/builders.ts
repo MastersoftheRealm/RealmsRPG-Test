@@ -11,9 +11,7 @@
 
 import type { ChipData } from '@/components/shared/grid-list-row-types';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
-import type { ItemPropertyTpRow } from '@/lib/calculators/item-calc';
 import type { CodexFeat } from '@/types/codex';
-import { namedPropertyDescriptorChips } from './compact-facts';
 import { formatTraitRecoveryLabel } from './format-recovery';
 
 /** Minimal trait shape (codex Trait / ResolvedTrait). */
@@ -80,15 +78,4 @@ export function featToDetailOption(feat: CodexFeat): DetailOptionItemModel {
     description: feat.description?.trim() || undefined,
     chips: usesFactChips(uses, feat.rec_period),
   };
-}
-
-/**
- * @deprecated Prefer `namedPropertyDescriptorChips` from compact-facts.
- * Thin alias so callers share mechanic filtering and "Training Points" cost labels.
- */
-export function propertyChipsFromRefs(
-  properties: Array<string | { name?: string; id?: unknown; op_1_lvl?: number }> | undefined,
-  itemProperties: ItemPropertyTpRow[]
-): ChipData[] {
-  return namedPropertyDescriptorChips(properties, itemProperties);
 }

@@ -530,4 +530,3 @@ export function ListHeader({
   );
 }
 
-export default ListHeader;

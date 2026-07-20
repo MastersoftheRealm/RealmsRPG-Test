@@ -454,33 +454,6 @@ export function calculateArchetypeProgression(
   };
 }
 
-/**
- * Calculate power potency: 10 + power proficiency + power ability score.
- */
-export function calculatePowerPotency(powerProf: number, powerAbilityScore: number): number {
-  return 10 + powerProf + powerAbilityScore;
-}
-
-/**
- * Get the archetype feat limit.
- */
-export function getArchetypeFeatLimit(archetype: ArchetypeCategory | { type?: ArchetypeCategory }, rules?: Rules): number {
-  const type = typeof archetype === 'string' ? archetype : archetype?.type;
-  return getArchetypeConfig(type || 'power', rules).featLimit;
-}
-
-/**
- * Get the maximum innate energy for an archetype.
- *
- * @deprecated Misnamed: returns ARCHETYPE_CONFIGS.innateEnergy which is the
- * **Innate Threshold** for Power (8), not Innate Energy (Threshold × Pools = 16 at L1).
- * Prefer `calculateArchetypeProgression(...).innateEnergy` (character sheet / guided creator).
- */
-export function getInnateEnergyMax(archetype: ArchetypeCategory | { type?: ArchetypeCategory }, rules?: Rules): number {
-  const type = typeof archetype === 'string' ? archetype : archetype?.type;
-  return getArchetypeConfig(type || 'power', rules).innateEnergy;
-}
-
 /** Sum energy costs of powers marked innate (innate energy budget spent). */
 export function sumInnatePowerEnergyCosts(
   powers: Array<{ innate?: boolean; cost?: number }> = []
@@ -578,18 +551,6 @@ export function getLinkedAbilityMod(
     return v ?? 0;
   }
   return getHighestLinkedAbility(linkedAbilities, abilities);
-}
-
-/**
- * Calculate skill bonus: highest linked ability + skill value.
- */
-export function calculateSkillBonus(
-  linkedAbilities: string | string[] | undefined,
-  skillValue: number,
-  abilities: Abilities
-): number {
-  const abilityMod = getHighestLinkedAbility(linkedAbilities, abilities);
-  return abilityMod + skillValue;
 }
 
 /**

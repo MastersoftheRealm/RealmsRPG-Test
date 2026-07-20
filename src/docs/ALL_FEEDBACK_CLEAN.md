@@ -1,6 +1,6 @@
 # ALL_FEEDBACK ? Consolidated & Curated
 
-Last updated: 2026-07-20 (Quality pseudo `/global-audit` → TASK-607–613)
+Last updated: 2026-07-20 (`/debt` from quality audit — TASK-612 done)
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -50,7 +50,7 @@ How to use
 - Create and enforce shared list/header/modal patterns (sortable headers, consistent spacing, rounded modal edges).
 - **Modals with lists:** Unify add-X modals, load modals, and selection modals ? same logic, styles, EmptyState/LoadingState, FilterSection; align with Codex/Library. TASK-264 (done).
 - Find and remove true dead code.
-- **God-file / coverage follow-ups (2026-07-20 quality audit):** Continue TASK-598-style ≤~500 LOC facades for crafting, encounters, admin codex, remaining creators, shared hotspots (**TASK-607–611**); rotate live changelog + archive honesty (**TASK-612**); thin API route automated smoke (**TASK-613**). Report: `archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md`. (IDs renumbered after `/debt` claimed TASK-601–606.)
+- **God-file / coverage follow-ups (2026-07-20 quality audit):** Continue TASK-598-style ≤~500 LOC facades for crafting, encounters, admin codex, remaining creators, shared hotspots (**TASK-607–611**); thin API route automated smoke (**TASK-613**). Docs hygiene **TASK-612** done (HISTORY_INDEX + debt deletes; ~60-day changelog rotation N/A). Report: `archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md`.
 
 ### 2) Crafting (2026-03-10)
 - **Core rules:** Add CRAFTING category to core_rules with crafting table, successes table (incl. calculation fields for auto-cost/price), enhanced/consumable tables, multipliers. TASK-293.
