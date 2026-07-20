@@ -25,7 +25,8 @@
     - proficiencies-tab: ExpandableChip + expandableChipPropsFromPartData (same adapter
       the alias used).
     - Deleted shared/part-chip.tsx + PartChipComponent barrel export + allowlist row.
-    - FEATURE_INDEX + CHIP_UNIFICATION_PLAN note; PartData type re-export kept on shared.
+    - FEATURE_INDEX note; PartData type re-export kept on shared.
+    - `/cleanup`: drop residual PartChip barrel comment + CHIP plan / UI-ref stale lists.
   notes: |
     Filed from /debt 2026-07-19 after global-audit. Compat-alias delete — no new QA suite
     (behavior identical to prior ExpandableChip wrapper).

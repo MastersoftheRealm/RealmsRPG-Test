@@ -70,7 +70,6 @@ Audit targets (known today):
 |------|------|
 | `ui/expandable-chip.tsx` | **Single** expand-in-place implementation (GridListRow, proficiencies, styleguide) |
 | `shared/grid-list-chip.tsx` | Thin `ChipData` → `ExpandableChip` adapter for `GridListRow` |
-| ~~`shared/part-chip.tsx`~~ | Deleted (TASK-569) — call sites use `ExpandableChip` + `expandableChipPropsFromPartData` |
 | `lib/chip/expandable-chip-props.ts` | `PartData` / `ChipData` → `ExpandableChipProps` |
 | `lib/chip/chip-options-panel.tsx` | Shared options sub-panel |
 | ~~`shared/expandable-grid-list-chip.tsx`~~ | **Deleted** — use `GridListChip` |
@@ -129,7 +128,7 @@ Semantic descriptors (rarity, success/warning) may use existing `-light` fills �
 | **DescriptorChip** | `sm` | `text-xs`, `px-2 py-0.5` | N/A (non-expandable) |
 | **DescriptorChip** (prominent) | `md` / `lg` | Same tokens, larger padding/type | N/A — step counters, TP totals, hero rarity only |
 
-**Rule:** Size follows **role**, not page. GridListRow expanded chips, `SummaryChipList`, and `PartChipList` use **`md`** expandable chips. Row/card metadata stays **`sm`**. Do not use prominent `md`/`lg` descriptors for entity names that have descriptions — use `ExpandableChip` instead.
+**Rule:** Size follows **role**, not page. GridListRow expanded chips and `SummaryChipList` use **`md`** expandable chips. Row/card metadata stays **`sm`**. Do not use prominent `md`/`lg` descriptors for entity names that have descriptions — use `ExpandableChip` instead.
 
 **Variant:** Use `list`, `listWarning`, `listCost`, `power`, `technique`, and part `category` tokens — not one-off Tailwind on each call site.
 
@@ -153,7 +152,7 @@ Add to `/dev/styleguide`:
 6. Styleguide expandable + descriptor matrix ✅
 7. Utils: `lib/chip/expandable-chip-shell.ts`, `lib/chip/grid-list-chip-utils.ts` ✅
 
-**Files:** `chip.tsx`, `expandable-chip.tsx`, `expandable-grid-list-chip.tsx`, `part-chip.tsx`, `grid-list-row.tsx`, `add-skill-modal.tsx`, `choice-trait-option-select.tsx`, `styleguide/page.tsx`, `DESIGN_SYSTEM.md`, `FEATURE_INDEX.md`
+**Files:** `chip.tsx`, `expandable-chip.tsx`, `expandable-grid-list-chip.tsx` (later deleted), `grid-list-row.tsx`, `add-skill-modal.tsx`, `choice-trait-option-select.tsx`, `styleguide/page.tsx`, `DESIGN_SYSTEM.md`, `FEATURE_INDEX.md`
 
 ### Phase B — Component merge ✅ (audited 2026-07-02)
 
@@ -164,7 +163,7 @@ Add to `/dev/styleguide`:
 5. `PartData` → `lib/chip/part-data.ts`; `ChipOptionsPanel` shared ✅
 6. `shared/index` re-exports `ExpandableChip`, `GridListChip` ✅
 
-**Files:** `ui/expandable-chip.tsx`, `lib/chip/*`, `shared/grid-list-chip.tsx`, `shared/part-chip.tsx`, `grid-list-row.tsx`
+**Files:** `ui/expandable-chip.tsx`, `lib/chip/*`, `shared/grid-list-chip.tsx`, `grid-list-row.tsx`
 
 ### Phase C — Descriptor unification ✅ (audited 2026-07-03)
 

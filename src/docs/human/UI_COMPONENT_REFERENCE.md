@@ -169,9 +169,8 @@ Usage pattern: use `Chip` for small inline tags; `ExpandableChip` for chips with
 
 ## Part / Property chips (domain-specific)
 
-- Prefer **ExpandableChip** + `expandableChipPropsFromPartData` (`lib/chip/expandable-chip-props.ts`) for parts/properties with descriptions or option levels. `PartData` lives in `lib/chip/part-data.ts` (re-exported from `@/components/shared`).
+- **ExpandableChip** + `expandableChipPropsFromPartData` (`lib/chip/expandable-chip-props.ts`) for parts/properties with descriptions or option levels. `PartData` in `lib/chip/part-data.ts` (also `@/components/shared`).
 - Display helpers: `partChipsFromDisplay` (`lib/chip/part-chips-from-display.ts`).
-- `PartChip` / `PartChipComponent` / `PartChipDetails` / `PartChipList` / `PropertyChipList` — **deleted** (TASK-569 / prior `/debt`). Do not reintroduce aliases.
 
 ## Expandable / Collapsible patterns
 
@@ -1067,7 +1066,7 @@ The goal of consistency is achieved through:
    - Backdrop click behavior consistent
    - Footer buttons always same alignment
 
-7. **PartChip / PropertyChipList** → ExpandableChip (lists + PartChip alias deleted — `/debt` + TASK-569)
+7. **PartChip / PropertyChipList** → ExpandableChip (deleted)
    - Powers, techniques use same display components
    - Consistent expand/collapse behavior
    - Category colors convey meaning

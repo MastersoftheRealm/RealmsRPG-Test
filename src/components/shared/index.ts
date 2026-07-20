@@ -108,7 +108,6 @@ export type { OfficialItemListProps, OfficialItemRow } from './official-item-lis
 export { OfficialCreatureList } from './official-creature-list';
 export type { OfficialCreatureListProps, OfficialCreatureRow } from './official-creature-list';
 
-// PartData — use ExpandableChip + expandableChipPropsFromPartData (no PartChip alias)
 export type { PartData } from '@/lib/chip/part-data';
 
 // GridListRow chip adapter
