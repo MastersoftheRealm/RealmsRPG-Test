@@ -1,5 +1,5 @@
 /**
- * Power/technique card disclosure anatomy (TASK-470).
+ * Power/technique card disclosure anatomy (TASK-470 / TASK-573).
  */
 
 import { describe, expect, it } from 'vitest';
@@ -29,7 +29,7 @@ describe('buildPowerTechniqueCardFacts disclosure', () => {
     }
   });
 
-  it('innate titleBudget puts Energy title-adjacent and keeps Action Type value-only in detail', () => {
+  it('innate-eligible powers use the same TP title chip (Energy stays in detail)', () => {
     const power = {
       id: 'p2',
       docId: 'p2',
@@ -39,11 +39,11 @@ describe('buildPowerTechniqueCardFacts disclosure', () => {
       actionType: 'basic',
     } as LibraryPower;
 
-    const facts = buildPowerTechniqueCardFacts('powers', power, 'p2', [], [], 'energy');
-    expect(facts.titleChips.some((c) => /^Training Points\b/.test(c.name))).toBe(false);
+    const facts = buildPowerTechniqueCardFacts('powers', power, 'p2', [], []);
+    expect(facts.titleChips.some((c) => /^Training Points\b/.test(c.name))).toBe(true);
+    expect(facts.titleChips.some((c) => /^Energy\b/.test(c.name))).toBe(false);
     for (const chip of facts.detailChips) {
       expect(chip.name.startsWith('Action Type ')).toBe(false);
-      expect(/^Energy\b/.test(chip.name)).toBe(false);
     }
   });
 });

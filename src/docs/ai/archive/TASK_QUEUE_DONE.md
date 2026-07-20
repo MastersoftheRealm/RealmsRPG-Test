@@ -1,3 +1,50 @@
+- id: TASK-573
+  title: Guided innate — soft Continue warn + TP spend/chip parity
+  created_at: 2026-07-20
+  created_by: agent
+  priority: high
+  status: done
+  completed_at: 2026-07-20
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/guided-creator/steps/powers-techniques-step.tsx
+    - src/components/guided-creator/guided-powers-techniques-l2-modal.tsx
+    - src/lib/guided-creator/power-technique-display.ts
+    - src/lib/guided-creator/powers-techniques-l2.ts
+    - src/lib/guided-creator/loadout-tp.ts
+    - src/lib/constants/copy/guided-creator-copy.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T057
+  developer_test_plan: |
+    Suite DEV-V-013 T057 — Innate Energy soft warn + threshold + TP parity.
+  description: |
+    Owner feedback: guided creator should not hard-block Continue when Innate Energy is
+    under-filled (soft warning OK). Innate powers must spend shared Training Points like
+    regular Powers and show the same TP cost descriptor chip on L1 cards.
+  acceptance_criteria:
+    - Continue enabled with remaining Innate Energy; soft warning copy in footer/hint.
+    - Innate picks count toward shared TP spent (L1 bar + L2 confirm/unavailable).
+    - Innate L1 cards show Training Points title chip (Energy in detail chips).
+    - Threshold / over-budget Innate Energy gates unchanged.
+    - npm run build + targeted unit tests; BUILD_VALIDATION T057 updated.
+  completed_work: |
+    - Removed hard Continue gate on Innate Energy fill; soft warn via completionHint + copy.
+    - Innate TP included in combatTpSpent / toggles / unavailable / L2 base spend; L2 innate
+      footer shows Innate Energy + LoadoutBudgetBar; confirm checks TP + energy.
+    - **Deleted** Energy-as-titleBudget path from power-technique-display; innate + regular
+      share TP title chip anatomy.
+    - Soft-seed innate first (energy+TP) then regular with remaining TP.
+    - DEV-V-013-T057 + Pending owner QA row.
+  notes: |
+    From owner feedback 2026-07-20. Supersedes TASK-472 full-spend Continue behavior.
+  evidence: |
+    vitest power-technique-display + loadout-tp + build-character pass; npm run build pass 2026-07-20; DEV-V-013-T057 pending owner QA.
+
 - id: TASK-572
   title: AdminSpecies trait picker — USM or document admin exception
   created_at: 2026-07-19

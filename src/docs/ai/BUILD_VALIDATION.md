@@ -2773,24 +2773,24 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-013-T057 — Innate Energy fill + threshold gate (TASK-472)
+#### DEV-V-013-T057 — Innate Energy soft warn + threshold + TP parity (TASK-472 / TASK-573)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 |
-| **Related task** | TASK-472 |
+| **Related task** | TASK-472, TASK-573 |
 | **Where** | Guided Powers step (Power archetype preferred — Innate Energy 16 at L1) |
 | **Needs** | Path or catalog with innate-eligible powers (Energy ≤ threshold 8 for Power) |
 
 **Steps**
 1. Confirm **Innate Energy** PointStatus uses progression budget (Power L1 = 16, Powered-Martial = 6), not threshold-only 8.
 2. Attempt to select a power with Energy > Innate Threshold — blocked.
-3. With remaining Innate Energy > 0, Confirm Continue is blocked; spend to remaining 0 — Continue enabled.
-4. Regular powers remain optional (zero regular picks OK once innate is full).
-5. Save character: innate picks persist with `innate: true`.
+3. With remaining Innate Energy > 0, Continue stays enabled; footer/hint shows a soft warning (not a hard block). Spending to remaining 0 clears the soft warning.
+4. Innate L1 cards show a **Training Points** title chip (same as regular Powers); Energy stays in See more / detail chips. Selecting innate powers increases the shared Training Points spent (Loadout budget bar).
+5. Regular powers remain optional. Save character: innate picks persist with `innate: true`.
 
 **Expected**
-- Threshold gate + fully spend Innate Energy; sheet-compatible save.
+- Threshold gate preserved; Innate Energy under-fill is soft-warn only; innate TP spend + TP chip parity; sheet-compatible save.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
