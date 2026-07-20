@@ -1,5 +1,5 @@
 /**
- * Guided powers/techniques L2 — UnifiedSelectionModal (TASK-463 / TASK-471).
+ * Guided powers/techniques L2 — UnifiedSelectionModal (TASK-463 / TASK-471 / TASK-573).
  * Replaces in-step GuidedPowersTechniquesBrowsePanel card dump.
  */
 
@@ -38,7 +38,10 @@ export interface GuidedPowersTechniquesL2ModalProps {
   techniquePartsDb: TechniquePart[];
   pathRecommendedIds: string[];
   initialSelectedIds: string[];
-  /** Cross-phase Loadout TP already spent (regular mode). */
+  /**
+   * Shared TP already spent outside this modal's selection
+   * (loadout + the other powers track: innate vs regular).
+   */
   loadoutTpSpent: number;
   tpLimit: number;
   archetypeAbility?: AbilityName | string | null;
@@ -48,6 +51,13 @@ export interface GuidedPowersTechniquesL2ModalProps {
   innateEnergyMax?: number;
   onClose: () => void;
   onConfirm: (selectedIds: string[]) => void;
+}
+
+function energySpentOf(selected: SelectableItem[]): number {
+  return selected.reduce((sum, row) => {
+    const data = row.data as { energy?: number } | undefined;
+    return sum + Math.max(0, Math.floor(data?.energy ?? 0));
+  }, 0);
 }
 
 export function GuidedPowersTechniquesL2Modal({
@@ -112,18 +122,13 @@ export function GuidedPowersTechniquesL2Modal({
 
   const handleConfirm = useCallback(
     (selected: SelectableItem[]) => {
-      if (mode === 'regular') {
-        const tpSpent = computeL2PowersTechniquesTpSpent(selected, loadoutTpSpent);
-        if (tpSpent > tpLimit) {
-          setError(ptCopy.tpBlocked);
-          return;
-        }
-      } else {
-        const energySpent = selected.reduce((sum, row) => {
-          const data = row.data as { energy?: number } | undefined;
-          return sum + Math.max(0, Math.floor(data?.energy ?? 0));
-        }, 0);
-        if (energySpent > innateEnergyMax) {
+      const tpSpent = computeL2PowersTechniquesTpSpent(selected, loadoutTpSpent);
+      if (tpSpent > tpLimit) {
+        setError(ptCopy.tpBlocked);
+        return;
+      }
+      if (mode === 'innate') {
+        if (energySpentOf(selected) > innateEnergyMax) {
           setError(ptCopy.innateEnergyBlocked);
           return;
         }
@@ -136,41 +141,33 @@ export function GuidedPowersTechniquesL2Modal({
 
   const footerExtra = useCallback(
     (selected: SelectableItem[]) => {
+      const tpSpent = computeL2PowersTechniquesTpSpent(selected, loadoutTpSpent);
+      const errorEl = error ? (
+        <p className="font-nunito text-sm text-warning-fg text-center" role="alert">
+          {error}
+        </p>
+      ) : null;
+
       if (mode === 'innate') {
-        const spent = selected.reduce((sum, row) => {
-          const data = row.data as { energy?: number } | undefined;
-          return sum + Math.max(0, Math.floor(data?.energy ?? 0));
-        }, 0);
         return (
           <div className="flex flex-col items-center gap-2">
-            <PointStatus
-              total={innateEnergyMax}
-              spent={spent}
-              label={ptCopy.innateEnergyLabel}
-              variant="inline"
-            />
-            {error ? (
-              <p
-                className="font-nunito text-sm text-warning-700 dark:text-warning-400 text-center"
-                role="alert"
-              >
-                {error}
-              </p>
-            ) : null}
+            <div className="flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
+              <PointStatus
+                total={innateEnergyMax}
+                spent={energySpentOf(selected)}
+                label={ptCopy.innateEnergyLabel}
+                variant="inline"
+              />
+              <LoadoutBudgetBar tpTotal={tpLimit} tpSpent={tpSpent} />
+            </div>
+            {errorEl}
           </div>
         );
       }
-      const tpSpent = computeL2PowersTechniquesTpSpent(selected, loadoutTpSpent);
+
       return (
         <LoadoutBudgetBar tpTotal={tpLimit} tpSpent={tpSpent}>
-          {error ? (
-            <p
-              className="font-nunito text-sm text-warning-700 dark:text-warning-400 text-center"
-              role="alert"
-            >
-              {error}
-            </p>
-          ) : null}
+          {errorEl}
         </LoadoutBudgetBar>
       );
     },
@@ -179,14 +176,13 @@ export function GuidedPowersTechniquesL2Modal({
 
   const confirmDisabled = useCallback(
     (selected: SelectableItem[]) => {
-      if (mode === 'regular') {
-        return computeL2PowersTechniquesTpSpent(selected, loadoutTpSpent) > tpLimit;
+      if (computeL2PowersTechniquesTpSpent(selected, loadoutTpSpent) > tpLimit) {
+        return true;
       }
-      const spent = selected.reduce((sum, row) => {
-        const data = row.data as { energy?: number } | undefined;
-        return sum + Math.max(0, Math.floor(data?.energy ?? 0));
-      }, 0);
-      return spent > innateEnergyMax;
+      if (mode === 'innate') {
+        return energySpentOf(selected) > innateEnergyMax;
+      }
+      return false;
     },
     [mode, loadoutTpSpent, tpLimit, innateEnergyMax]
   );

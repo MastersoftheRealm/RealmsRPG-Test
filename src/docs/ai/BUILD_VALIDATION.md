@@ -2773,24 +2773,24 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-013-T057 — Innate Energy fill + threshold gate (TASK-472)
+#### DEV-V-013-T057 — Innate Energy soft warn + threshold + TP parity (TASK-472 / TASK-573)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 |
-| **Related task** | TASK-472 |
+| **Related task** | TASK-472, TASK-573 |
 | **Where** | Guided Powers step (Power archetype preferred — Innate Energy 16 at L1) |
 | **Needs** | Path or catalog with innate-eligible powers (Energy ≤ threshold 8 for Power) |
 
 **Steps**
 1. Confirm **Innate Energy** PointStatus uses progression budget (Power L1 = 16, Powered-Martial = 6), not threshold-only 8.
 2. Attempt to select a power with Energy > Innate Threshold — blocked.
-3. With remaining Innate Energy > 0, Confirm Continue is blocked; spend to remaining 0 — Continue enabled.
-4. Regular powers remain optional (zero regular picks OK once innate is full).
-5. Save character: innate picks persist with `innate: true`.
+3. With remaining Innate Energy > 0, Continue stays enabled; footer/hint shows a soft warning (not a hard block). Spending to remaining 0 clears the soft warning.
+4. Innate L1 cards show a **Training Points** title chip (same as regular Powers); Energy stays in See more / detail chips. Selecting innate powers increases the shared Training Points spent (Loadout budget bar).
+5. Regular powers remain optional. Save character: innate picks persist with `innate: true`.
 
 **Expected**
-- Threshold gate + fully spend Innate Energy; sheet-compatible save.
+- Threshold gate preserved; Innate Energy under-fill is soft-warn only; innate TP spend + TP chip parity; sheet-compatible save.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -3286,12 +3286,12 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Expected** | Primary mode tabs via `scopeExtra` always visible; `headerExtra`/`filterContent` collapsed by default; list remains the dominant focus; sticky footer still works (T013). |
 | **Report** | DEV-V-016-T014: PASS / FAIL / SKIP — |
 
-#### DEV-V-016-T015 — Add-modal chrome declutter + leave-with-selection prompt (TASK-573)
+#### DEV-V-016-T015 — Add-modal chrome declutter + leave-with-selection prompt (TASK-574)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-016 |
-| **Task** | TASK-573 |
+| **Task** | TASK-574 |
 | **Where** | Guided creator → Powers → See more Innate Powers (or sheet Library → Add Power / Add Feat); also spot-check Load from Library |
 | **Needs** | Narrow viewport (~360px) preferred; an account/character with selectable items |
 | **Steps** | 1. Open Browse Innate Powers (or Add Power). 2. Confirm header has at most a **single short** help line under the title (innate: none). 3. Confirm the sticky footer sits flush under the list — no blank white strip above Cancel / Add Selected (or the Innate Energy badge). 4. Select 1–2 rows; tap **Cancel** (or X). 5. Confirm an **Add selected?** prompt appears; choose **Add Selected** and confirm picks apply. 6. Re-open, select again, dismiss via X → **Don't add**; confirm modal closes without applying. 7. Re-open, select again, dismiss the prompt with X; confirm the selection modal stays open with picks intact. 8. Spot-check a Load modal: prompt says **Load selected?** / **Don't load**. |

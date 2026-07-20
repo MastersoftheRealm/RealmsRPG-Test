@@ -33,7 +33,7 @@ import {
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 
-/** True when current selection/quantities differ from the modal’s open seed (TASK-573). */
+/** True when current selection/quantities differ from the modal’s open seed (TASK-574). */
 function selectionDiffersFromInitial(
   selectedIds: Set<string>,
   initialIds: Set<string>,
@@ -253,7 +253,7 @@ export function UnifiedSelectionModal({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [optionsExpanded, setOptionsExpanded] = useState(false);
-  /** Prompt when dismissing with unconfirmed picks (TASK-573). */
+  /** Prompt when dismissing with unconfirmed picks (TASK-574). */
   const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
   const { sortState, handleSort, sortItems } = useSort('name');
   const prevOpenRef = useRef(false);
@@ -403,7 +403,7 @@ export function UnifiedSelectionModal({
     overSelectionLimit ||
     (confirmDisabled?.(selectedItems) ?? false);
 
-  /** Intercept Cancel / X / backdrop / Escape when picks would be lost (TASK-573).
+  /** Intercept Cancel / X / backdrop / Escape when picks would be lost (TASK-574).
    * Dirty check reads open-seed refs only in this event path (not during render). */
   const handleRequestClose = useCallback(() => {
     // Nested leave-confirm is open — ignore parent dismiss (Escape hits both listeners).
@@ -459,7 +459,7 @@ export function UnifiedSelectionModal({
         // overflow-hidden: Modal skips its default overflow-y-auto; only the list region scrolls
         // so the footer (Add Selected) stays pinned on mobile. See MOBILE_UX.md.
         // Tighter gap keeps chrome compact so the list is the dominant region (TASK-564).
-        // pb-0: avoid a blank strip between the list and the sticky footer (TASK-573).
+        // pb-0: avoid a blank strip between the list and the sticky footer (TASK-574).
         'flex flex-col flex-1 min-h-0 gap-2 overflow-hidden px-4 pt-4 pb-0 md:gap-3 md:px-6 md:pt-6 md:pb-0 md:max-h-[70vh]',
         className
       )}
@@ -665,7 +665,7 @@ export function UnifiedSelectionModal({
       })()}
     </Modal>
 
-    {/* Leave with unconfirmed picks — Add selected? (TASK-573) */}
+    {/* Leave with unconfirmed picks — Add selected? (TASK-574) */}
     <Modal
       isOpen={isOpen && leaveConfirmOpen}
       onClose={() => setLeaveConfirmOpen(false)}

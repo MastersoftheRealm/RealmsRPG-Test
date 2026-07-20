@@ -1,6 +1,6 @@
 # ALL_FEEDBACK ? Consolidated & Curated
 
-Last updated: 2026-07-19 (guided Skills/Abilities mobile UI + tip copy → TASK-566)
+Last updated: 2026-07-20 (guided innate soft Continue warn + TP chip/spend → TASK-573)
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -21,6 +21,10 @@ How to use
 ### Guided creator mobile density (2026-07-19)
 - **Skills L1 rows:** name + expand chevron; chips wrap below (no overlap / truncated path tags) — **TASK-566**.
 - **Abilities recommended grid:** full ability names on mobile; 2-col phone tiles (not tall STR/ACU columns) — **TASK-566**.
+
+### Guided innate Powers (2026-07-20)
+- **Continue:** do not hard-block when Innate Energy pool is under-filled; soft warning OK — **TASK-573**.
+- **Training Points:** innate powers spend shared TP like regular Powers and show the TP cost descriptor chip on guided cards — **TASK-573**.
 
 ---
 
@@ -2586,7 +2590,7 @@ Notes
 
   Separate issue with add modals, if someone selects things then leaves the modal without confirming can we have it prompt 'Add selected?' Or something so they dont miss it?
 - Expected: Header help ≤1 sentence or omitted; no blank strip above sticky Cancel/Add Selected; dismissing with unconfirmed picks prompts Add selected? (confirm / don't add / keep browsing).
-- Disposition: Implemented as **TASK-573**. QA: DEV-V-016-T015.
+- Disposition: Implemented as **TASK-574**. QA: DEV-V-016-T015.
 
 **Raw Feedback Log - 2026-07-19 (guided Skills/Abilities mobile UI + tip copy)**
 - Date: 2026-07-19
@@ -2596,3 +2600,12 @@ Notes
   Skills on guided creator are crammed and ui overlaps for expanding button etc. Also abilities on mobile shoulndt be abbreviated in the abilities page guided creator plus elongated tall ability containers look off. Also tooltips for abilities dont need to say the name twice (ie Acutiy. Acuity is...) can just say Acuity is ... and so on. Same for defenses tooltips.
 - Expected: Skills rows without chip/chevron overlap or truncated path tags; Abilities show full names on mobile with less elongated tiles; ability/defense tips name the term once.
 - Disposition: Implemented as **TASK-566**. QA: DEV-V-013-T067 (+ tip copy in T065/T026).
+
+**Raw Feedback Log - 2026-07-20 (guided innate soft warn + TP parity)**
+- Date: 2026-07-20
+- Context: Guided creator Powers step — Innate Powers
+- Priority: High
+- Feedback (verbatim):
+  Guided creator shouldnt stop a user from continuing if the haven't added innate powers equal to their innate power pool, but it can have a soft warning. Also innate powers still contribute to spent TP like normal powers amd should have TP cost descriptor chip like the other power cards in guided creator.
+- Expected: Continue enabled with remaining Innate Energy (soft warn OK); innate picks spend shared Training Points; innate L1 cards show TP cost chip like regular Powers.
+- Disposition: Implemented as **TASK-573**. QA: DEV-V-013-T057.

@@ -86,14 +86,7 @@ export function buildPowersTechniquesL2Items(opts: {
       if (energy == null || energy > innateThreshold) continue;
     }
 
-    const facts = buildPowerTechniqueCardFacts(
-      kind,
-      item,
-      id,
-      powerPartsDb,
-      techniquePartsDb,
-      mode === 'innate' ? 'energy' : 'training-points'
-    );
+    const facts = buildPowerTechniqueCardFacts(kind, item, id, powerPartsDb, techniquePartsDb);
     const actionValue = facts.actionType ?? formatActionTypeValue(
       kind === 'techniques'
         ? (item as LibraryTechnique).actionType
@@ -120,8 +113,9 @@ export function buildPowersTechniquesL2Items(opts: {
         { key: 'tp', value: String(facts.tpCost), align: 'center' },
       ],
       chips: chips.length > 0 ? chips : undefined,
-      totalCost: mode === 'regular' ? facts.tpCost : energy ?? 0,
-      costLabel: mode === 'regular' ? TRAINING_POINTS_COST_LABEL : 'Energy',
+      // Innate and regular both spend shared Training Points (TASK-573).
+      totalCost: facts.tpCost,
+      costLabel: TRAINING_POINTS_COST_LABEL,
       badges: isPath ? [{ label: 'Path', color: 'blue' }] : undefined,
       data: { kind, energy, tpCost: facts.tpCost },
     });
