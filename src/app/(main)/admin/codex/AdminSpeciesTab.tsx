@@ -11,21 +11,37 @@ import {
   ListEmptyState as EmptyState,
   ListHeader,
   RealmsImageField,
+  UnifiedSelectionModal,
   type ChipData,
+  type SelectableItem,
+  type SelectionColumnHeader,
 } from '@/components/shared';
 import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
 import { useSpecies, useCodexSkills, useTraits, type Species, type Trait, type Skill } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Copy, X, Plus } from 'lucide-react';
-import { useModalListState } from '@/hooks/use-modal-list-state';
 import { formatListCellLabel } from '@/lib/utils';
 import { resolveSpeciesListRowThumbnail } from '@/lib/list-row-image';
 import { speciesSkillToChipData } from '@/lib/chip/species-skill-chips';
+import { useSort } from '@/hooks/use-sort';
 
 const COPY_NAME_SUFFIX = ' copy';
-const TRAIT_PICKER_GRID = '1.5fr 0.6fr 0.6fr 60px';
-import { useSort } from '@/hooks/use-sort';
+const TRAIT_PICKER_GRID = '1.5fr 0.6fr 0.6fr';
+const TRAIT_PICKER_COLUMNS: SelectionColumnHeader[] = [
+  { key: 'name', label: 'NAME' },
+  { key: 'uses_per_rec', label: 'USES' },
+  { key: 'rec_period', label: 'RECOVERY' },
+];
+
+type TraitPickerField = 'speciesTraitIds' | 'ancestryTraitIds' | 'flawIds' | 'characteristicIds';
+
+const TRAIT_PICKER_TITLES: Record<TraitPickerField, string> = {
+  speciesTraitIds: 'Add Species Trait',
+  ancestryTraitIds: 'Add Ancestry Trait',
+  flawIds: 'Add Flaw',
+  characteristicIds: 'Add Characteristic',
+};
 
 export function AdminSpeciesTab() {
   const { showToast } = useToast();
@@ -79,15 +95,35 @@ export function AdminSpeciesTab() {
 
   const [typeFilters, setTypeFilters] = useState<string[]>([]);
   const [sizeFilters, setSizeFilters] = useState<string[]>([]);
-  const [traitPickerFor, setTraitPickerFor] = useState<null | 'speciesTraitIds' | 'ancestryTraitIds' | 'flawIds' | 'characteristicIds'>(null);
-
-  const traitPickerList = useModalListState({
-    items: (traits as Trait[]) || [],
-    searchFields: ['name', 'description'],
-    initialSortKey: 'name',
-  });
+  const [traitPickerFor, setTraitPickerFor] = useState<TraitPickerField | null>(null);
 
   const traitIdToTrait = useMemo(() => new Map((traits as Trait[]).map((t) => [String(t.id), t])), [traits]);
+
+  const traitPickerAlreadyIds = traitPickerFor ? form[traitPickerFor] : null;
+  const traitPickerItems = useMemo((): SelectableItem[] => {
+    if (!traitPickerFor || !traitPickerAlreadyIds) return [];
+    const already = new Set(traitPickerAlreadyIds.map(String));
+    return ((traits as Trait[]) || [])
+      .filter((t) => !already.has(String(t.id)))
+      .map((t) => ({
+        id: String(t.id),
+        name: t.name,
+        description: t.description ?? '',
+        columns: [
+          {
+            key: 'uses_per_rec',
+            value: t.uses_per_rec != null && t.uses_per_rec > 0 ? String(t.uses_per_rec) : '-',
+            align: 'center' as const,
+          },
+          {
+            key: 'rec_period',
+            value: t.rec_period ? formatListCellLabel(t.rec_period) : '-',
+            align: 'center' as const,
+          },
+        ],
+        data: t,
+      }));
+  }, [traitPickerFor, traitPickerAlreadyIds, traits]);
 
   const filterOptions = useMemo(() => {
     if (!species) return { types: [] as string[], sizes: [] as string[] };
@@ -223,12 +259,16 @@ export function AdminSpeciesTab() {
     setTraitPickerFor(null);
   };
 
-  const addTraitTo = (traitId: string) => {
-    if (!traitPickerFor) return;
+  const addTraitsFromPicker = (selected: SelectableItem[]) => {
+    if (!traitPickerFor || selected.length === 0) return;
+    const field = traitPickerFor;
+    const ids = selected.map((s) => String(s.id));
     setForm((f) => {
-      const arr = f[traitPickerFor];
-      if (arr.includes(traitId)) return f;
-      return { ...f, [traitPickerFor]: [...arr, traitId] };
+      const existing = new Set(f[field].map(String));
+      return {
+        ...f,
+        [field]: [...f[field], ...ids.filter((id) => !existing.has(id))],
+      };
     });
   };
 
@@ -649,70 +689,23 @@ export function AdminSpeciesTab() {
         </div>
       </Modal>
 
-      <Modal
+      <UnifiedSelectionModal
         isOpen={traitPickerFor !== null}
         onClose={() => setTraitPickerFor(null)}
-        title={traitPickerFor === 'speciesTraitIds' ? 'Add Species Trait' : traitPickerFor === 'ancestryTraitIds' ? 'Add Ancestry Trait' : traitPickerFor === 'flawIds' ? 'Add Flaw' : 'Add Characteristic'}
+        title={traitPickerFor ? TRAIT_PICKER_TITLES[traitPickerFor] : 'Add Trait'}
+        description="Select one or more traits, then add. Expand a row to see the full description. Traits already on this species field are hidden."
+        items={traitPickerItems}
+        onConfirm={addTraitsFromPicker}
+        columns={TRAIT_PICKER_COLUMNS}
+        gridColumns={TRAIT_PICKER_GRID}
+        itemLabel="trait"
+        emptyMessage="No traits found"
+        emptySubMessage="Try adjusting your search, or add traits in the Traits admin tab first."
+        searchPlaceholder="Search traits..."
+        searchFields={['name', 'description']}
+        confirmLabel="Add Selected"
         size="lg"
-        fullScreenOnMobile
-        footer={
-          <div className="flex justify-end">
-            <Button variant="outline" onClick={() => setTraitPickerFor(null)}>Done</Button>
-          </div>
-        }
-      >
-        <div className="space-y-2">
-          <SearchInput
-            value={traitPickerList.search}
-            onChange={traitPickerList.setSearch}
-            placeholder="Search traits..."
-          />
-          <ListHeader
-            columns={[
-              { key: 'name', label: 'NAME' },
-              { key: 'uses_per_rec', label: 'USES' },
-              { key: 'rec_period', label: 'RECOVERY' },
-              { key: '_actions', label: '', sortable: false as const },
-            ]}
-            gridColumns={TRAIT_PICKER_GRID}
-            sortState={traitPickerList.sortState}
-            onSort={traitPickerList.handleSort}
-          />
-          <div className="max-h-64 overflow-y-auto border border-border rounded-lg">
-            {traitPickerList.sortedItems.length === 0 ? (
-              <p className="text-sm text-text-muted p-4 text-center">No traits match. Adjust search.</p>
-            ) : (
-              traitPickerList.sortedItems.map((t: Trait) => {
-                const alreadyAdded = traitPickerFor ? form[traitPickerFor].includes(t.id) : false;
-                return (
-                  <GridListRow
-                    key={t.id}
-                    id={t.id}
-                    name={t.name}
-                    description={t.description || ''}
-                    gridColumns={TRAIT_PICKER_GRID}
-                    columns={[
-                      { key: 'Uses', value: t.uses_per_rec != null && t.uses_per_rec > 0 ? String(t.uses_per_rec) : '-' },
-                      { key: 'Recovery', value: t.rec_period || '-' },
-                    ]}
-                    rightSlot={
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={alreadyAdded}
-                        onClick={() => addTraitTo(t.id)}
-                        aria-label={alreadyAdded ? 'Already added' : `Add ${t.name}`}
-                      >
-                        {alreadyAdded ? 'Added' : 'Add'}
-                      </Button>
-                    }
-                  />
-                );
-              })
-            )}
-          </div>
-        </div>
-      </Modal>
+      />
     </div>
   );
 }

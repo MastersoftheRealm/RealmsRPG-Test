@@ -1,3 +1,41 @@
+- id: TASK-572
+  title: AdminSpecies trait picker — USM or document admin exception
+  created_at: 2026-07-19
+  created_by: agent
+  priority: low
+  status: done
+  completed_at: 2026-07-20
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
+    - src/hooks/use-modal-list-state.ts
+    - src/components/shared/grid-list-row-chrome.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/guide/02-components-and-lists.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    AdminSpecies trait picker hand-rolls Modal+Search+GLR (pre-USM shell). AdminTraits
+    nests similar list in edit modal. Prefer USM (TASK-567 AddProficiency pattern shipped), or admin-only exception.
+  acceptance_criteria:
+    - Migrate AdminSpecies trait picker to USM, or document admin-only
+      exception; AdminTraits nested list shares shell or is scoped as editor chrome.
+    - npm run build if UI touched.
+  completed_work: |
+    - Migrated AdminSpecies trait Add onto UnifiedSelectionModal (multi-select + Add Selected;
+      already-on-field traits hidden; Uses/Recovery columns).
+    - **Deleted** parallel Modal+SearchInput+ListHeader+per-row Add/Done shell + useModalListState
+      from AdminSpeciesTab.
+    - Scoped AdminTraits choice-option multi-select as intentional inline editor chrome
+      (comment + FEATURE_INDEX + guide/02); aligned ListHeader hasSelectionColumn +
+      gridColumnsWithInlineSelection (no nested USM).
+    - DEV-V-008-T022 + Pending owner QA row.
+  notes: |
+    Filed from /audit after /debt 2026-07-19. Prefer migrate path (same as TASK-567).
+  evidence: |
+    npm run build pass 2026-07-20; DEV-V-008-T022 pending owner QA.
+
 - id: TASK-571
   title: Decide AddCombatantModal — USM migrate or document exception
   created_at: 2026-07-19

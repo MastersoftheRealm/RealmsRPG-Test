@@ -314,26 +314,6 @@ Do **not** read the done archive at session start.
 ---
 
 # TASK-571 done 2026-07-20 — AddCombatantModal documented as reusable non-USM session picker (archive).
-
-- id: TASK-572
-  title: AdminSpecies trait picker — USM or document admin exception
-  created_at: 2026-07-19
-  created_by: agent
-  priority: low
-  status: not-started
-  related_files:
-    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
-    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
-    - src/components/shared/unified-selection-modal.tsx
-    - src/docs/ai/FEATURE_INDEX.md
-  description: |
-    AdminSpecies trait picker hand-rolls Modal+Search+GLR (pre-USM shell). AdminTraits
-    nests similar list in edit modal. Prefer USM (TASK-567 AddProficiency pattern shipped), or admin-only exception.
-  acceptance_criteria:
-    - Migrate AdminSpecies trait picker to USM, or document admin-only
-      exception; AdminTraits nested list shares shell or is scoped as editor chrome.
-    - npm run build if UI touched.
-  notes: |
-    Filed from /audit after /debt 2026-07-19. TASK-567 landed — safe to sequence.
+# TASK-572 done 2026-07-20 — AdminSpecies trait picker → USM; AdminTraits choice list = editor chrome (archive).
 
 ---
