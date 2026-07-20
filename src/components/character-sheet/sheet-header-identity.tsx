@@ -1,0 +1,334 @@
+'use client';
+
+import { useState } from 'react';
+import Image from 'next/image';
+import { Camera, Pencil } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Spinner } from '@/components/ui/spinner';
+import {
+  ImageUploadModal,
+  RealmsImagePicker,
+  ExpandableImage,
+} from '@/components/shared';
+import type { Character } from '@/types';
+import { getEffectivePortrait, FALLBACK_PORTRAIT_DATA_URL } from '@/lib/portrait';
+import { resolveArchetypeDisplayName } from '@/lib/game/archetype-display';
+import { ArchetypePathGuidance } from './archetype-path-identity';
+
+export function SheetHeaderIdentity({
+  character,
+  isEditMode,
+  healthColor,
+  onPortraitChange,
+  onPortraitUrlChange,
+  isUploadingPortrait = false,
+  portraitRefreshKey = null,
+  onNameChange,
+  onExperienceChange,
+  onEditArchetype,
+  onEditSpecies,
+}: {
+  character: Character;
+  isEditMode: boolean;
+  healthColor: 'green' | 'orange' | 'red';
+  onPortraitChange?: (file: File) => void | Promise<void>;
+  onPortraitUrlChange?: (url: string) => void | Promise<void>;
+  isUploadingPortrait?: boolean;
+  portraitRefreshKey?: number | null;
+  onNameChange?: (name: string) => void;
+  onExperienceChange?: (value: number) => void;
+  onEditArchetype?: () => void;
+  onEditSpecies?: () => void;
+}) {
+  // State for editing character name
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState(character.name || '');
+
+  // State for editing XP
+  const [isEditingXP, setIsEditingXP] = useState(false);
+  const [xpInput, setXpInput] = useState(String(character.experience ?? 0));
+
+  // Check if character can level up (XP >= level * 4)
+  const xp = character.experience ?? 0;
+  const level = character.level || 1;
+  const canLevelUp = xp >= (level * 4);
+
+  // Handle XP submission
+  const handleXPSubmit = () => {
+    const value = parseInt(xpInput, 10);
+    if (!isNaN(value) && value >= 0 && onExperienceChange) {
+      onExperienceChange(value);
+    }
+    setIsEditingXP(false);
+  };
+
+  // Image upload modal state
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showBankPicker, setShowBankPicker] = useState(false);
+
+  // Handle portrait click - open the upload modal
+  const handlePortraitClick = () => {
+    if (!isEditMode || !onPortraitChange) return;
+    setShowUploadModal(true);
+  };
+
+  // Handle cropped image from the modal - await upload so modal stays open until done
+  const handleCroppedImage = async (blob: Blob) => {
+    if (!onPortraitChange) return;
+    const file = new File([blob], 'portrait.jpg', { type: 'image/jpeg' });
+    await onPortraitChange(file);
+  };
+
+  const canChangePortrait = Boolean(isEditMode && onPortraitChange);
+  const effectivePortrait = getEffectivePortrait(character.portrait);
+  const portraitSrc =
+    effectivePortrait === FALLBACK_PORTRAIT_DATA_URL
+      ? effectivePortrait
+      : `${effectivePortrait}${portraitRefreshKey != null ? `?t=${portraitRefreshKey}` : ''}`;
+  const portraitFrameClass = cn(
+    'relative h-28 w-28 flex-shrink-0 overflow-hidden rounded-xl border-3 bg-surface shadow-lg md:h-36 md:w-36',
+    healthColor === 'green' && 'border-success-400',
+    healthColor === 'orange' && 'border-warning-400',
+    healthColor === 'red' && 'border-danger-600',
+    canChangePortrait && 'group cursor-pointer'
+  );
+  const portraitImage = (
+    <>
+      <Image
+        key={`portrait-${character.portrait ?? ''}-${portraitRefreshKey ?? ''}`}
+        src={portraitSrc}
+        alt=""
+        fill
+        unoptimized
+        priority
+        className={cn(
+          'object-cover transition-opacity',
+          isUploadingPortrait && 'opacity-50'
+        )}
+        sizes="(max-width: 768px) 112px, 144px"
+        onError={(e) => {
+          (e.target as HTMLImageElement).src = FALLBACK_PORTRAIT_DATA_URL;
+        }}
+      />
+      {/* Upload overlay in edit mode — click opens ImageUploadModal, not ExpandableImage */}
+      {canChangePortrait && (
+        <div className="absolute inset-0 flex items-center justify-center bg-transparent transition-colors group-hover:bg-text-primary/40">
+          <Camera
+            className="h-8 w-8 text-text-on-dark opacity-0 transition-opacity group-hover:opacity-100"
+            aria-hidden
+          />
+        </div>
+      )}
+      {isUploadingPortrait && (
+        <div className="absolute inset-0 flex items-center justify-center bg-text-primary/30">
+          <Spinner size="md" variant="white" />
+        </div>
+      )}
+    </>
+  );
+
+  // Handle name editing
+  const handleNameSubmit = () => {
+    if (nameInput.trim() && nameInput !== character.name && onNameChange) {
+      onNameChange(nameInput.trim());
+    }
+    setIsEditingName(false);
+  };
+
+  const normalizedPowerAbility = character.pow_abil?.trim().toLowerCase();
+  const normalizedMartialAbility = character.mart_abil?.trim().toLowerCase();
+  const showPowerAbility = Boolean(character.pow_abil?.trim());
+  const showMartialAbility = Boolean(character.mart_abil)
+    && normalizedMartialAbility !== normalizedPowerAbility;
+
+  return (
+    <>
+      {/* Left: Portrait and Identity */}
+      <div className="flex gap-4 flex-shrink-0 items-center" data-sheet-header-identity>
+        {/* Portrait — ExpandableImage in play view; edit mode click opens upload */}
+        {canChangePortrait ? (
+          <div
+            role="button"
+            tabIndex={0}
+            className={portraitFrameClass}
+            onClick={handlePortraitClick}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handlePortraitClick();
+              }
+            }}
+            title="Click to change portrait"
+            aria-label={`Change portrait for ${character.name}`}
+          >
+            {portraitImage}
+          </div>
+        ) : (
+          <ExpandableImage
+            src={portraitSrc}
+            alt={character.name}
+            className={portraitFrameClass}
+          >
+            {portraitImage}
+          </ExpandableImage>
+        )}
+
+        {/* Character Identity - Clean unified format */}
+        <div className="flex flex-col justify-center min-w-0">
+          {/* Editable Name - Always available with pencil icon */}
+          {isEditingName && onNameChange ? (
+            <input
+              type="text"
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              onBlur={handleNameSubmit}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleNameSubmit();
+                if (e.key === 'Escape') {
+                  setNameInput(character.name || '');
+                  setIsEditingName(false);
+                }
+              }}
+              className="text-2xl md:text-3xl font-bold text-text-primary px-2 py-1 border-2 border-primary-outline-border rounded-lg focus:ring-2 focus:ring-primary-outline-border"
+              autoFocus
+            />
+          ) : (
+            <h1 className="text-2xl md:text-3xl font-bold text-text-primary truncate flex items-center gap-2">
+              {character.name}
+              {onNameChange && isEditMode && (
+                <button
+                  onClick={() => setIsEditingName(true)}
+                  className="text-primary-fg hover:text-primary-fg-hover transition-colors hover:scale-110"
+                  title="Edit name"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+              )}
+            </h1>
+          )}
+
+          {/* Level and Species - separated */}
+          <p className="text-base text-text-primary flex items-center gap-2">
+            Level {character.level} · <span className="font-medium">{character.ancestry?.name || character.species || 'Unknown'}</span>
+            {onEditSpecies && (
+              <button
+                onClick={onEditSpecies}
+                className="text-primary-fg hover:text-primary-fg-hover transition-colors hover:scale-110"
+                title="Edit species and ancestry"
+                aria-label="Edit species and ancestry"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
+            )}
+          </p>
+
+          {/* Archetype: name and abilities */}
+          <div className="text-base text-text-primary">
+            <p className="flex flex-wrap items-center gap-2">
+              <span>
+                {resolveArchetypeDisplayName(character) ||
+                  (character.archetype?.type
+                    ? character.archetype.type
+                        .split('-')
+                        .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
+                        .join(' ')
+                    : 'No Archetype')}
+                {(showPowerAbility || showMartialAbility) && ': '}
+                {showPowerAbility && (
+                  <span className="text-power-fg capitalize">{character.pow_abil}</span>
+                )}
+                {showPowerAbility && showMartialAbility && ' / '}
+                {showMartialAbility && (
+                  <span className="text-martial-fg capitalize">{character.mart_abil}</span>
+                )}
+              </span>
+              {onEditArchetype && (
+                <button
+                  onClick={onEditArchetype}
+                  className="text-primary-fg hover:text-primary-fg-hover transition-colors hover:scale-110 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+                  title="Edit archetype and ability"
+                  aria-label="Edit archetype and ability"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+              )}
+            </p>
+            <ArchetypePathGuidance character={character} />
+          </div>
+
+          {/* XP Display - Always editable with pencil icon */}
+          <div className="text-base text-text-primary flex items-center gap-2">
+            {isEditingXP && onExperienceChange ? (
+              <div className="flex items-center gap-1">
+                <span>XP:</span>
+                <input
+                  type="number"
+                  value={xpInput}
+                  onChange={(e) => setXpInput(e.target.value)}
+                  onBlur={handleXPSubmit}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleXPSubmit();
+                    if (e.key === 'Escape') {
+                      setXpInput(String(character.experience ?? 0));
+                      setIsEditingXP(false);
+                    }
+                  }}
+                  className="w-16 px-1 py-0 text-base border-2 border-primary-outline-border rounded focus:ring-2 focus:ring-primary-outline-border"
+                  min={0}
+                  autoFocus
+                  aria-label="Experience points"
+                />
+              </div>
+            ) : (
+              <>
+                <span>XP: {character.experience ?? 0}</span>
+                {onExperienceChange && (
+                  <button
+                    onClick={() => {
+                      setXpInput(String(character.experience ?? 0));
+                      setIsEditingXP(true);
+                    }}
+                    className="text-primary-fg hover:text-primary-fg-hover transition-colors hover:scale-110"
+                    title="Edit XP"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                )}
+              </>
+            )}
+            {canLevelUp && (
+              <span
+                className="text-success-fg animate-pulse text-sm font-medium"
+                title="Ready to level up!"
+              >
+                ⬆ Level up!
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Portrait Upload Modal */}
+      <ImageUploadModal
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        onConfirm={handleCroppedImage}
+        onChooseFromLibrary={onPortraitUrlChange ? () => setShowBankPicker(true) : undefined}
+        cropShape="rect"
+        aspect={1}
+        title="Upload Character Portrait"
+      />
+      {onPortraitUrlChange && (
+        <RealmsImagePicker
+          isOpen={showBankPicker}
+          onClose={() => setShowBankPicker(false)}
+          onSelect={({ image }) => { void onPortraitUrlChange(image.publicUrl); }}
+          categories="portrait"
+          allowAdminUpload={false}
+          title="Choose Character Portrait"
+          description="Pick species or creature art from the Realms Image Library."
+        />
+      )}
+    </>
+  );
+}
