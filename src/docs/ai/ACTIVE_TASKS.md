@@ -12,9 +12,9 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 9 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 6 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** Sheet/creator `/debt` 2026-07-20 applied (barrel prune, dead DiceRoller, docs). Filed TASK-593–599 from `/global-audit`. TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
+**Hot notes:** Audit multitask: TASK-593, 595, 597 done. Remaining from `/global-audit`: TASK-594, 596, 598–599. TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
 
 ---
 
@@ -65,37 +65,6 @@ Do **not** read the done archive at session start.
 
 # Sheet / creator debt follow-ups (from `/global-audit` 2026-07-20)
 
-- id: TASK-593
-  title: Move RollProvider/RollLog out of character-sheet into shared roll domain
-  created_at: 2026-07-20
-  created_by: agent
-  priority: medium
-  status: not-started
-  related_files:
-    - src/components/character-sheet/roll-context.tsx
-    - src/components/character-sheet/roll-log.tsx
-    - src/components/character-sheet/index.ts
-    - src/types/campaign-roll.ts
-    - src/services/campaign-roll-service.ts
-    - src/components/shared/entity-library-sections.tsx
-    - src/components/shared/quick-armaments-sections.tsx
-    - src/docs/ai/FEATURE_INDEX.md
-  description: |
-    Roll context/log live under character-sheet but are consumed by encounters, campaigns,
-    creature creator, library creatures, and shared entity rows. Move to a shared/game roll
-    home; dedupe local `rollDie` / die-image maps; update barrels + FEATURE_INDEX. Do not
-    change roll behavior.
-  acceptance_criteria:
-    - RollProvider/RollLog/useRolls* live outside character-sheet (shared or lib + thin UI).
-    - Single `rollDie` + die-image map; no triplicated helpers.
-    - All previous import sites compile; encounters/sheet/campaign rolls unchanged.
-    - FEATURE_INDEX + UI_COMPONENT_REFERENCE point at new home; `npm run build` passes.
-  notes: |
-    `/debt` 2026-07-20 deleted dead DiceRoller; barrel still re-exports Roll* from character-sheet.
-    Architect pause if new shared/ui file — ADR or owner ack.
-
----
-
 - id: TASK-594
   title: Unify sheet EditSpecies/EditArchetype with creator/guided species+path primitives
   created_at: 2026-07-20
@@ -127,34 +96,6 @@ Do **not** read the done archive at session start.
 
 ---
 
-- id: TASK-595
-  title: Shared creator skill-save + character payload builder slice
-  created_at: 2026-07-20
-  created_by: agent
-  priority: medium
-  status: not-started
-  related_files:
-    - src/lib/guided-creator/build-character.ts
-    - src/lib/guided-creator/build-skills.ts
-    - src/stores/character-creator-store.ts
-    - src/components/character-creator/steps/finalize-step.tsx
-    - src/lib/data-enrichment.ts
-    - src/lib/character-save.ts
-  description: |
-    Guided uses `buildGuidedSkillsArray` + `buildGuidedCharacterPayload`; Advanced builds
-    skills array inline in finalize (prof-only 0 must survive `cleanForSave`) and payload
-    in `getCharacter()`. Extract a shared creator skill-save helper + first slice of shared
-    payload assembly without merging stores/routes.
-  acceptance_criteria:
-    - One helper builds skill save rows for guided + advanced (preserves proficient value 0).
-    - Vitest covers prof-only 0 and species skill flags.
-    - Both save paths still set proficiencies + libraryTabVisibility via existing helpers.
-    - Stores/routes remain separate; `npm run build` + targeted tests pass.
-  notes: |
-    Do not merge guided-creator-store with character-creator-store (product decision).
-
----
-
 - id: TASK-596
   title: Extract Advanced equipment-step catalog into lib (guided parity)
   created_at: 2026-07-20
@@ -180,33 +121,6 @@ Do **not** read the done archive at session start.
     - No new parallel budget chrome; do not force LoadoutBudgetBar into Advanced without ack.
   notes: |
     Product decision: keep Advanced inline catalog vs migrate add onto USM — default keep list UX.
-
----
-
-- id: TASK-597
-  title: Campaign RM character view reuses sheet derived assemble
-  created_at: 2026-07-20
-  created_by: agent
-  priority: medium
-  status: not-started
-  related_files:
-    - src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx
-    - src/components/character-sheet/use-character-sheet-derived.ts
-    - src/components/character-sheet/character-sheet-body.tsx
-    - src/app/(main)/characters/[id]/character-sheet-utils.ts
-    - src/app/(main)/characters/[id]/page.tsx
-  description: |
-    Campaign read-only character view (~355 LOC) re-assembles enrichment, calculateStats,
-    and section props instead of `useCharacterSheetDerived` / `CharacterSheetBody`. Wire
-    read-only mode through existing sheet assemble so Temp Modifier / library props stay
-    in parity with owner sheet.
-  acceptance_criteria:
-    - Campaign view uses sheet derived (or a read-only facade) — no parallel enrich/stats glue.
-    - Read-only: no edit/modals that mutate; rolls/log still work if currently present.
-    - Temp modifiers / library visibility match owner sheet display.
-    - Build + smoke open a campaign character view.
-  notes: |
-    Prefer extending CharacterSheetBody/context with isReadOnly over forking sections.
 
 ---
 

@@ -17,8 +17,6 @@ import { cleanForSave } from '@/lib/data-enrichment';
 import { getArchetypeCodexLookupId, applyPathProficiencyForLevel } from '@/lib/game/archetype-display';
 import {
   SheetHeader,
-  RollLog,
-  RollProvider,
   SheetActionToolbar,
   CharacterSheetProvider,
   CharacterSheetSettingsModal,
@@ -28,6 +26,7 @@ import {
   useCharacterSheetActions,
   resolveLibraryActiveTab,
 } from '@/components/character-sheet';
+import { RollLog, RollProvider } from '@/components/rolls';
 import {
   SheetTourOfferModal,
   SheetTour,

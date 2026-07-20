@@ -14,7 +14,7 @@
 
 import { useMemo, useState } from 'react';
 import { cn, formatBonus } from '@/lib/utils';
-import { useRollsOptional } from './roll-context';
+import { useRollsOptional } from '@/components/rolls';
 import {
   RollButton,
   PointStatus,

@@ -15,7 +15,7 @@
 import { useState, useCallback } from 'react';
 import { X, Pencil } from 'lucide-react';
 import { Button, IconButton, Textarea } from '@/components/ui';
-import { useRollsOptional } from './roll-context';
+import { useRollsOptional } from '@/components/rolls';
 import { TabSummarySection, SummaryItem, SummaryRow, LibraryCollapsibleSection } from '@/components/shared';
 import { formatSpeedString, type SpeedDisplayUnit } from '@/lib/utils/number';
 import type { Abilities } from '@/types';

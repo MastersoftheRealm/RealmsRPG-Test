@@ -116,6 +116,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **TASK-597** | Smoke (campaign RM view) | Open campaign → player character view: sheet sections match owner display (temp mods / library tabs); no edit chrome; rolls/log still work |
 | **TASK-584** | DEV-V-009 **T032** | Skills catalog-all base skills; Proficient/All + Show sub-skills filters; − clears value→prof (subs remove); no Add Skill / per-row X; pencil top-right |
 | **TASK-587** | DEV-V-009 **T035** | Defense Score value tip (`defenseScoreHelp`); name tips unchanged; roll chips still work |
 | **TASK-586** | DEV-V-009 **T033–T034** | Temp Modifier dual mode on header (Speed/Evasion/DR/crit/Terminal), Abilities (+ defenses + resource-maxima toggle), Skills; tint + persist + cascade; pencil spend locks |

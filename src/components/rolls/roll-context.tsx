@@ -9,10 +9,11 @@
 
 import React, { createContext, useContext, useCallback, useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { rollDie, generateRollId, DIE_MAX, type DieType } from '@/lib/rolls/die';
 
 // Types
 export interface DieResult {
-  type: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20';
+  type: DieType;
   value: number;
   isMax: boolean;
   isMin: boolean;
@@ -53,7 +54,7 @@ interface RollContextValue {
   rollSkill: (skillName: string, bonus: number, abilityAbbr?: string) => void;
   rollAttack: (weaponName: string, attackBonus: number) => void;
   rollDamage: (damageStr: string, bonus?: number, titleOverride?: string) => void;
-  rollCustom: (title: string, dieType: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20', count: number, modifier: number) => void;
+  rollCustom: (title: string, dieType: DieType, count: number, modifier: number) => void;
   
   // History management
   clearHistory: () => void;
@@ -64,28 +65,6 @@ interface RollContextValue {
 }
 
 const RollContext = createContext<RollContextValue | null>(null);
-
-// Helper to generate unique roll IDs
-let rollIdCounter = 0;
-function generateRollId(): string {
-  return `roll-${Date.now()}-${++rollIdCounter}`;
-}
-
-// Roll a single die
-function rollDie(type: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20'): number {
-  const max = parseInt(type.substring(1));
-  return Math.floor(Math.random() * max) + 1;
-}
-
-// Max values for each die type
-const DIE_MAX: Record<string, number> = {
-  d4: 4,
-  d6: 6,
-  d8: 8,
-  d10: 10,
-  d12: 12,
-  d20: 20,
-};
 
 const STORAGE_KEY = 'realms-roll-log';
 const MAX_PERSISTED_ROLLS = 20;
@@ -278,9 +257,9 @@ export function RollProvider({
 
   // Roll custom dice
   const rollCustom = useCallback((
-    title: string, 
-    dieType: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20', 
-    count: number, 
+    title: string,
+    dieType: DieType,
+    count: number,
     modifier: number
   ) => {
     if (!canRoll) return;

@@ -11,7 +11,7 @@
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
-import { useRollsOptional } from './roll-context';
+import { useRollsOptional } from '@/components/rolls';
 import {
   PointStatus,
   getEditState,

@@ -16,7 +16,7 @@ import {
   useAutoSave,
   useCampaignsFull,
 } from "@/hooks";
-import { RollProvider } from "@/components/character-sheet";
+import { RollProvider } from "@/components/rolls";
 import type { Encounter } from "@/types/encounter";
 import { defaultSkillEncounterState } from "@/types/encounter";
 import { computeSkillRollResult } from "@/lib/game/encounter-utils";

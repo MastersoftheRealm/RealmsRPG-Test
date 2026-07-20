@@ -619,7 +619,7 @@ Powers, techniques, and equipment management. File: [src/components/character-sh
 
 ### RollProvider & RollLog
 
-Dice rolling system. Files: [roll-context.tsx](src/components/character-sheet/roll-context.tsx#L1), [roll-log.tsx](src/components/character-sheet/roll-log.tsx#L1)
+Dice rolling system. Import from `@/components/rolls`. Files: [roll-context.tsx](src/components/rolls/roll-context.tsx#L1), [roll-log.tsx](src/components/rolls/roll-log.tsx#L1); die helpers [die.ts](src/lib/rolls/die.ts#L1)
 - Features: Roll history, fixed-position panel, campaign roll sync
 - Pattern: Context-based roll state (`RollProvider`); used by sheet, encounters, creature creator, library creatures
 - Note: Standalone `DiceRoller` UI was removed (unused); ownership move to shared/game domain tracked as TASK-593

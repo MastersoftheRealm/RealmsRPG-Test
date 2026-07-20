@@ -21,7 +21,7 @@ import { ExpandableImage } from './expandable-image';
 import { Card } from '@/components/ui';
 import { ListHeader, type ListColumn } from './list-header';
 import { RollButton } from './roll-button';
-import { useRollsOptional } from '@/components/character-sheet/roll-context';
+import { useRollsOptional } from '@/components/rolls';
 import {
   useCodexSkills,
   usePowerParts,
