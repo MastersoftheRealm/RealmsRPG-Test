@@ -30,7 +30,7 @@
     Filed from /debt 2026-07-19 after global-audit. Compat-alias delete — no new QA suite
     (behavior identical to prior ExpandableChip wrapper).
   evidence: |
-    npm run build; npm run tasks:validate-shared-ui (pending in evidence).
+    npm run build (pass 2026-07-20); npm run tasks:validate-shared-ui (85 files OK).
 
 - id: TASK-568
   title: Unify getMaxQualifiedFeatLevel character vs creature adapters
