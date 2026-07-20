@@ -17,11 +17,11 @@ import {
   mergeDetailSections,
 } from '@/lib/chip/list-row-metadata';
 import { buildEmpoweredPowerSelectableItem } from '@/hooks/add-library-item/build-empowered-selectable-item';
+import type { WithSource } from '@/hooks/add-library-item/types';
 
-export type LibrarySource = 'my' | 'public';
-export type WithSource<T> = T & { _source: LibrarySource };
+export type { WithSource };
 
-export type PathSelectableOptions = {
+type PathSelectableOptions = {
   selectedIds?: Set<string>;
   pathName?: string;
 };

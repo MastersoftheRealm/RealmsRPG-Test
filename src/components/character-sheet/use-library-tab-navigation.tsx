@@ -9,13 +9,14 @@ import { Eye, EyeOff } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 import {
   DEFAULT_TAB_VISIBILITY,
+  LIBRARY_TAB_DEFS,
   type TabType,
 } from './library-tab-config';
 import type { AddModalType } from './character-sheet-context';
 
 type LibraryTabDef = { id: TabType; label: string; onAdd?: () => void };
 
-export type LibraryNavTab = {
+type LibraryNavTab = {
   id: TabType;
   label: string;
   dimmed?: boolean;
@@ -55,25 +56,21 @@ export function useLibraryTabNavigation(options: {
     [activeTabProp, onActiveTabChange]
   );
 
-  const tabs = useMemo(
-    (): LibraryTabDef[] => [
-      { id: 'feats', label: 'Feats' },
-      {
-        id: 'powers',
-        label: 'Powers',
-        onAdd: onAddPowerProp ?? (setAddModalType ? () => setAddModalType('power') : undefined),
-      },
-      {
-        id: 'techniques',
-        label: 'Techniques',
-        onAdd: onAddTechniqueProp ?? (setAddModalType ? () => setAddModalType('technique') : undefined),
-      },
-      { id: 'inventory', label: 'Inventory' },
-      { id: 'proficiencies', label: 'Proficiencies' },
-      { id: 'notes', label: 'Notes' },
-    ],
-    [onAddPowerProp, onAddTechniqueProp, setAddModalType]
-  );
+  const tabs = useMemo((): LibraryTabDef[] => {
+    const onAddFor = (id: TabType): (() => void) | undefined => {
+      if (id === 'powers') {
+        return onAddPowerProp ?? (setAddModalType ? () => setAddModalType('power') : undefined);
+      }
+      if (id === 'techniques') {
+        return onAddTechniqueProp ?? (setAddModalType ? () => setAddModalType('technique') : undefined);
+      }
+      return undefined;
+    };
+    return LIBRARY_TAB_DEFS.map((def) => ({
+      ...def,
+      onAdd: onAddFor(def.id),
+    }));
+  }, [onAddPowerProp, onAddTechniqueProp, setAddModalType]);
 
   const resolvedTabVisibility = useMemo<Record<TabType, boolean>>(
     () => ({ ...DEFAULT_TAB_VISIBILITY, ...(tabVisibility ?? {}) }),

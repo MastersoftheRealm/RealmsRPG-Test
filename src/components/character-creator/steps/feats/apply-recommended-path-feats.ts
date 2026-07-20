@@ -1,8 +1,7 @@
 import type { Feat } from '@/hooks';
 import { getFeatFamilyId, getFeatLevel } from '@/lib/leveled-feats';
 import type { SelectedFeat } from './feat-list-columns';
-
-type FeatFamilyEntry = { displayFeat: Feat; familyLevels: Feat[] };
+import type { FeatFamilyEntry } from './path-mode-feat-families';
 
 interface ApplyRecommendedPathFeatsArgs {
   currentFeats: SelectedFeat[] | undefined;

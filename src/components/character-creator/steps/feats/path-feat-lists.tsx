@@ -7,8 +7,7 @@ import type { PathGuidanceGroup } from '@/types/archetype';
 import { FEAT_GRID_COLUMNS, FEAT_HEADER_COLUMNS } from './feat-list-columns';
 import type { FeatFilters, SelectedFeat } from './feat-list-columns';
 import { FeatRow } from './feat-row';
-
-type FeatFamilyEntry = { displayFeat: Feat; familyLevels: Feat[] };
+import type { FeatFamilyEntry } from './path-mode-feat-families';
 
 interface PathFeatListsProps {
   featGuidanceGroups: Array<{

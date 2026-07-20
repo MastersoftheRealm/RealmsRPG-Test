@@ -452,5 +452,3 @@ export function PowersStep() {
     </div>
   );
 }
-
-export default PowersStep;

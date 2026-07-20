@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-20T19:39:57.839Z",
+  "generated_at": "2026-07-20T19:49:33.568Z",
   "tasks": [
     {
       "id": "TASK-326",
@@ -48,6 +48,16 @@
       "completed_at": "2026-07-20",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "60e4e05cc1491ed9f7f23dd9c1466f8d8deeaa82",
+          "subject": "TASK-598: Docs polish — FEATURE_INDEX paths, archive related_files, changelog",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        },
         {
           "hash": "d31f6616851a3de12195997ca9cf3fdd9a12f4da",
           "subject": "TASK-598: Split Advanced powers-step selectable + panels",

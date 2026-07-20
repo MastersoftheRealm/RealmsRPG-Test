@@ -21,19 +21,14 @@ import {
 import { Card } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
 import { useCharacterSheetOptional } from './character-sheet-context';
-import {
-  LIBRARY_TAB_ORDER,
-  resolveLibraryActiveTab,
-  type TabType,
-} from './library-tab-config';
+import type { TabType } from './library-tab-config';
 import { useLibrarySectionRows } from './use-library-section-rows';
 import { useLibraryTabNavigation } from './use-library-tab-navigation';
 import { LibraryPowersPanel } from './library-powers-panel';
 import { LibraryInventoryPanel } from './library-inventory-panel';
 import type { LibrarySectionProps } from './library-section-props';
 
-export type { TabType, LibrarySectionProps };
-export { LIBRARY_TAB_ORDER, resolveLibraryActiveTab };
+export type { LibrarySectionProps };
 
 export function LibrarySection({
   powers,

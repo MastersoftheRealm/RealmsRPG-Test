@@ -4,7 +4,7 @@ import type { Abilities, AbilityName, DefenseSkills } from '@/types';
 export const ABILITY_ORDER: AbilityName[] = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'];
 
 /** Sheet tip touch: hug on desktop; 44px below md (overrides WordHelpTip default min size). */
-export const SHEET_TIP_TOUCH_CLASS =
+const SHEET_TIP_TOUCH_CLASS =
   'min-h-0 min-w-0 max-md:min-h-[var(--touch-target-min,44px)] max-md:min-w-[var(--touch-target-min,44px)]';
 
 /** Sheet tip: defense/ability name labels. */
