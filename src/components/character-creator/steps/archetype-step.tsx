@@ -13,12 +13,18 @@ import { Button, Spinner, SelectionCard, Card, DescriptorChip } from '@/componen
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useCodexArchetypes } from '@/hooks';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
-import { parseArchetypePathData, pathHasPlayerVisibleLevel1 } from '@/lib/game/archetype-path';
+import { AbilityPickButton } from '@/components/character-creator/AbilityPickButton';
+import {
+  ARCHETYPE_ABILITY_OPTIONS,
+  PATH_CATEGORY_GROUPS,
+  groupPathsByCategory,
+  listPlayerVisiblePaths,
+  pathCategoryGroupLabel,
+} from '@/lib/game/archetype-edit';
+import { formatAbilityLabel } from '@/lib/constants/ability-effect-blurbs';
 import type { Archetype, ArchetypeCategory, AbilityName } from '@/types';
 import { InfoTippy } from '@/components/shared';
-import { chooseCharacterCreationStyle, getTooltipTextByPowerAbility, martialAbility, powerAbility } from '../../../../public/tooltip-text';
-
-const ABILITIES: AbilityName[] = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'];
+import { chooseCharacterCreationStyle, martialAbility, powerAbility } from '../../../../public/tooltip-text';
 
 const ARCHETYPE_INFO: Record<ArchetypeCategory, { title: string; description: string }> = {
   power: {
@@ -34,48 +40,6 @@ const ARCHETYPE_INFO: Record<ArchetypeCategory, { title: string; description: st
     description: 'Master of physical combat and martial techniques. You rely on skill, training, and physical prowess.',
   },
 };
-
-function AbilityPickButton({
-  variant,
-  ability,
-  selected,
-  disabled,
-  onPick,
-}: {
-  variant: 'power' | 'martial';
-  ability: AbilityName;
-  selected: boolean;
-  disabled: boolean;
-  onPick: () => void;
-}) {
-
-  const abilityLabel = ability.charAt(0).toUpperCase() + ability.slice(1);
-
-  return (
-    <InfoTippy
-      content={getTooltipTextByPowerAbility(ability)}
-      label={`${abilityLabel} ability guidance`}
-    >
-      <button
-        type="button"
-        onClick={onPick}
-        disabled={disabled}
-        className={cn(
-          'px-3 py-2 min-h-11 min-w-11 rounded-lg text-sm font-medium transition-colors',
-          selected
-            ? variant === 'power'
-              ? 'bg-power-dark text-text-on-dark'
-              : 'bg-martial-dark text-text-on-dark'
-            : disabled
-              ? 'bg-surface text-text-muted dark:text-text-secondary cursor-not-allowed'
-              : 'bg-surface border border-border-light hover:border-border'
-        )}
-      >
-        {abilityLabel}
-      </button>
-    </InfoTippy>
-  );
-}
 
 export function ArchetypeStep() {
   const {
@@ -105,14 +69,15 @@ export function ArchetypeStep() {
   // always-reachable Layer 3 escape hatch, not a co-equal first choice.
   const [creationChoice, setCreationChoice] = useState<'forge' | 'path'>(draft.creationMode || 'path');
   
-  const archetypePathOptions = useMemo(() => {
-    return (codexArchetypes as Archetype[])
-      .map((archetype) => ({
-        ...archetype,
-        path_data: parseArchetypePathData(archetype.path_data),
-      }))
-      .filter((archetype) => pathHasPlayerVisibleLevel1(archetype.path_data));
-  }, [codexArchetypes]);
+  const archetypePathOptions = useMemo(
+    () => listPlayerVisiblePaths(codexArchetypes as Archetype[]),
+    [codexArchetypes],
+  );
+
+  const pathsByCategory = useMemo(
+    () => groupPathsByCategory(archetypePathOptions),
+    [archetypePathOptions],
+  );
 
   const selectedPath = useMemo(
     () => archetypePathOptions.find((option) => option.id === selectedPathId),
@@ -250,13 +215,13 @@ export function ArchetypeStep() {
             </div>
           ) : (
             <div className="space-y-5">
-              {(['power', 'powered-martial', 'martial'] as const).map((group) => {
-                const options = archetypePathOptions.filter((option) => option.type === group);
+              {PATH_CATEGORY_GROUPS.map((group) => {
+                const options = pathsByCategory[group];
                 if (options.length === 0) return null;
                 return (
                   <section key={group}>
                     <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wide mb-2">
-                      {group === 'power' ? 'Power Paths' : group === 'martial' ? 'Martial Paths' : 'Powered-Martial Paths'}
+                      {pathCategoryGroupLabel(group)}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {options.map((option) => (
@@ -282,12 +247,12 @@ export function ArchetypeStep() {
                             <div className="flex flex-wrap gap-1">
                               {option.archetype_ability && (
                                 <DescriptorChip variant="power" size="sm">
-                                  Primary Ability: {option.archetype_ability.charAt(0).toUpperCase() + option.archetype_ability.slice(1)}
+                                  Primary Ability: {formatAbilityLabel(option.archetype_ability)}
                                 </DescriptorChip>
                               )}
                               {option.secondary_ability && (
                                 <DescriptorChip variant="technique" size="sm">
-                                  Secondary Ability: {option.secondary_ability.charAt(0).toUpperCase() + option.secondary_ability.slice(1)}
+                                  Secondary Ability: {formatAbilityLabel(option.secondary_ability)}
                                 </DescriptorChip>
                               )}
                             </div>
@@ -314,16 +279,12 @@ export function ArchetypeStep() {
                 <div className="flex flex-wrap gap-1 mt-3">
                   {selectedPath.archetype_ability && (
                     <DescriptorChip variant="power" size="sm">
-                      Primary Ability:{' '}
-                      {selectedPath.archetype_ability.charAt(0).toUpperCase() +
-                        selectedPath.archetype_ability.slice(1)}
+                      Primary Ability: {formatAbilityLabel(selectedPath.archetype_ability)}
                     </DescriptorChip>
                   )}
                   {selectedPath.secondary_ability && (
                     <DescriptorChip variant="technique" size="sm">
-                      Secondary Ability:{' '}
-                      {selectedPath.secondary_ability.charAt(0).toUpperCase() +
-                        selectedPath.secondary_ability.slice(1)}
+                      Secondary Ability: {formatAbilityLabel(selectedPath.secondary_ability)}
                     </DescriptorChip>
                   )}
                 </div>
@@ -410,7 +371,7 @@ export function ArchetypeStep() {
                       <InfoTippy content={powerAbility} label="Power ability help" size="inline" />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      {ABILITIES.map((ability) => (
+                      {ARCHETYPE_ABILITY_OPTIONS.map((ability) => (
                         <AbilityPickButton
                           key={`power-${ability}`}
                           variant="power"
@@ -429,7 +390,7 @@ export function ArchetypeStep() {
                       <InfoTippy content={martialAbility} label="Martial ability help" size="inline" />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      {ABILITIES.map((ability) => (
+                      {ARCHETYPE_ABILITY_OPTIONS.map((ability) => (
                         <AbilityPickButton
                           key={`martial-${ability}`}
                           variant="martial"
@@ -444,7 +405,7 @@ export function ArchetypeStep() {
                 </div>
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {ABILITIES.map((ability) => (
+                  {ARCHETYPE_ABILITY_OPTIONS.map((ability) => (
                     <AbilityPickButton
                       key={ability}
                       variant={selectedType === 'power' ? 'power' : 'martial'}
