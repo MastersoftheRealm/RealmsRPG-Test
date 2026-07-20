@@ -2,7 +2,7 @@
  * AddCombatantModal — Encounter / session participant picker
  * ==========================================================
  * Intentional non-USM selection shell (TASK-571). Extend this component for
- * combat, skill, mixed, downtime, VTT, and future session-play “add participant”
+ * combat, skill, downtime, VTT, and future session-play “add participant”
  * flows — do not fork a parallel modal and do not migrate this grammar onto
  * UnifiedSelectionModal (catalog add-X stays on USM).
  *
@@ -11,7 +11,8 @@
  * payload shaping on confirm.
  *
  * Supports: Creature Library, Campaign Characters. Call sites today: combat +
- * skill encounter views; reuse the same export for VTT / downtime / etc.
+ * skill encounter views (mixed encounters reuse those views). Reuse the same
+ * export for VTT / downtime / etc.
  */
 
 'use client';
@@ -35,7 +36,8 @@ export interface AddCombatantModalProps {
   onAdd: (combatants: TrackedCombatant[]) => void;
   /** For skill mode, also provide onAddParticipants */
   onAddParticipants?: (participants: SkillParticipant[]) => void;
-  mode: 'combat' | 'skill' | 'mixed';
+  /** Mixed encounter pages reuse combat/skill views — pass those modes, not a third value. */
+  mode: 'combat' | 'skill';
 }
 
 function generateId(): string {

@@ -206,7 +206,7 @@ export type {
 } from './unified-selection-modal';
 
 // AddCombatantModal — Encounter / session participant picker (intentional non-USM; TASK-571).
-// Extend for VTT, downtime, combat/skill/mixed encounters — do not fork or migrate to USM.
+// Extend for VTT, downtime, combat/skill encounters — do not fork or migrate to USM.
 export { AddCombatantModal } from './add-combatant-modal';
 export type { AddCombatantModalProps } from './add-combatant-modal';
 

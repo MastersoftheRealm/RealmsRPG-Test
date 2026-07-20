@@ -10,7 +10,6 @@
   related_files:
     - src/components/shared/add-combatant-modal.tsx
     - src/components/shared/index.ts
-    - src/components/shared/unified-selection-modal.tsx
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/ai/guide/02-components-and-lists.md
     - .cursor/rules/realms-unification.mdc
@@ -23,12 +22,13 @@
     - Migrate path: sticky footer + fullScreenOnMobile parity; build green.
   completed_work: |
     - Owner chose **document exception** (2026-07-20): keep as distinct reusable shell.
-    - Documented AddCombatantModal as the encounter/session participant picker (FEATURE_INDEX,
-      guide/02 decision tree + intentional exceptions, realms-unification, AGENT_GUIDE).
-    - Framed for reuse: combat/skill/mixed today; extend for VTT, downtime, future session-play
+    - Documented AddCombatantModal as encounter/session participant picker (FEATURE_INDEX,
+      guide/02 decision tree, realms-unification, AGENT_GUIDE, UI_COMPONENT_REFERENCE).
+    - Framed for reuse: combat/skill today (mixed reuses those views); extend for VTT/downtime
       — do not fork and do not migrate onto USM.
     - Exported AddCombatantModal (+ props) from shared barrel; encounter views import from barrel.
-    - Component header states non-USM contract; scrubbed stale GridListRow chrome note.
+    - Dropped unused mode `'mixed'` (call sites pass combat|skill only).
+    - `/cleanup`: deduped guide/02 echoes; archive related_files honesty (dropped untouched USM).
   notes: |
     Filed from /audit after /debt 2026-07-19. Owner: document exception + reusable distinct
     component for VTT / encounters / downtime. Docs + barrel — no manual QA suite.
