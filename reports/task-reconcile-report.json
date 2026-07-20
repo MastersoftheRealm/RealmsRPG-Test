@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-20T19:13:25.607Z",
+  "generated_at": "2026-07-20T19:14:15.237Z",
   "tasks": [
     {
       "id": "TASK-326",
@@ -65,7 +65,24 @@
       "status": "done",
       "completed_at": "2026-07-20",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
-      "matches": [],
+      "matches": [
+        {
+          "hash": "902f1e8c0fc9099381b2062d1f8855819ffaabc2",
+          "subject": "TASK-596: Extract Advanced equipment catalog/budget into lib",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/components/character-creator/steps/equipment-step.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/lib/creator/advanced-equipment-catalog.test.ts",
+            "src/lib/creator/advanced-equipment-catalog.ts"
+          ]
+        }
+      ],
       "related_files": [
         "src/lib/creator/advanced-equipment-catalog.ts",
         "src/lib/creator/advanced-equipment-catalog.test.ts",
@@ -74,7 +91,13 @@
         "src/docs/ai/FEATURE_INDEX.md",
         "src/docs/ai/BUILD_VALIDATION.md"
       ],
-      "related_overlap": []
+      "related_overlap": [
+        "src/lib/creator/advanced-equipment-catalog.ts",
+        "src/lib/creator/advanced-equipment-catalog.test.ts",
+        "src/components/character-creator/steps/equipment-step.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ]
     },
     {
       "id": "TASK-594",
