@@ -673,7 +673,6 @@ export function UnifiedSelectionModal({
       description={leavePromptDescription}
       size="sm"
       showCloseButton
-      titleA11y={primaryActions ? 'Leave without adding?' : leavePromptTitle}
     >
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <Button

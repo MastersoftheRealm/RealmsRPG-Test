@@ -1126,7 +1126,6 @@ function CreatureCreatorContent() {
             }}
             items={powerModalTab === 'empowered' ? empoweredTechniqueSelectableItems : powerSelectableItems}
             title={powerModalTab === 'empowered' ? 'Select Empowered Techniques' : 'Select Powers'}
-            description={undefined}
             maxSelections={10}
             itemLabel={powerModalTab === 'empowered' ? 'empowered technique' : 'power'}
             searchPlaceholder={powerModalTab === 'empowered' ? 'Search empowered techniques...' : 'Search powers...'}
@@ -1153,7 +1152,6 @@ function CreatureCreatorContent() {
             }}
             items={techniqueSelectableItems}
             title="Select Techniques"
-            description={undefined}
             maxSelections={10}
             itemLabel="technique"
             searchPlaceholder="Search techniques..."
@@ -1209,7 +1207,6 @@ function CreatureCreatorContent() {
             items={armamentSelectableItems}
             displayFilter={inventoryDisplayFilter}
             title="Select Inventory"
-            description={undefined}
             maxSelections={10}
             itemLabel="inventory item"
             searchPlaceholder="Search inventory..."

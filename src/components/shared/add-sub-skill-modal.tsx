@@ -282,7 +282,7 @@ export function AddSubSkillModal({
         isOpen={isOpen}
         onClose={onClose}
         title="Add Sub-Skills"
-        description="Base skill is added automatically when needed. For “Any base” skills, choose the base below before confirming."
+        description="Base skill is added automatically; choose a base for “Any base” skills before confirming."
         items={items}
         isLoading={loading}
         onConfirm={handleConfirm}

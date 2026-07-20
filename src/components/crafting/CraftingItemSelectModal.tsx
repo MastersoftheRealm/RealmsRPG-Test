@@ -200,7 +200,6 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
       isOpen={isOpen}
       onClose={onClose}
       title="Select item to craft"
-      description={undefined}
       scopeExtra={
         <TabNavigation
           tabs={[{ id: 'armaments', label: 'Armaments' }, { id: 'equipment', label: 'Equipment' }]}

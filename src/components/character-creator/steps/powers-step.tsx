@@ -1057,7 +1057,6 @@ export function PowersStep() {
         items={powerModalTab === 'empowered' ? allEmpoweredSelectableItems : allPowerSelectableItems}
         displayFilter={displayFilterFn}
         title={powerModalTab === 'empowered' ? 'Select Empowered Techniques' : 'Select Powers'}
-        description={undefined}
         initialSelectedIds={selectedPowerIds}
         searchPlaceholder={powerModalTab === 'empowered' ? 'Search empowered techniques...' : 'Search powers...'}
         itemLabel={powerModalTab === 'empowered' ? 'empowered technique' : 'power'}
@@ -1085,7 +1084,6 @@ export function PowersStep() {
         items={allTechniqueSelectableItems}
         displayFilter={displayFilterFn}
         title="Select Techniques"
-        description={undefined}
         initialSelectedIds={selectedTechniqueIds}
         searchPlaceholder="Search techniques..."
         itemLabel="technique"

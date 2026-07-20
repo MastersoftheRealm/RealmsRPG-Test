@@ -431,8 +431,6 @@ export const GUIDED_CREATOR_COPY = {
           const label = kind === 'techniques' ? 'Techniques' : 'Powers';
           return `Official ${label} within your level 1 Energy.`;
         },
-        /** Empty = no header help text (budget is in the footer). */
-        innateDescription: '',
         emptyMessage: (kind: string, mode: string) => {
           if (mode === 'innate') return 'No innate-eligible Powers match.';
           return kind === 'techniques' ? 'No Techniques match.' : 'No Powers match.';

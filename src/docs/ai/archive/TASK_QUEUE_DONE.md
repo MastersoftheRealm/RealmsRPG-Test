@@ -17,10 +17,18 @@
     - src/components/shared/add-sub-skill-modal.tsx
     - src/components/creator/LoadFromLibraryModal.tsx
     - src/components/crafting/CraftingItemSelectModal.tsx
+    - src/components/guided-creator/guided-powers-techniques-l2-modal.tsx
+    - src/components/character-creator/steps/powers-step.tsx
+    - src/app/(main)/creature-creator/page.tsx
+    - src/app/(main)/creature-creator/AddCreatureFeatModal.tsx
+    - src/app/(main)/species-creator/page.tsx
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - .cursor/rules/realms-unification.mdc
     - src/docs/MOBILE_UX.md
     - src/docs/ai/guide/02-components-and-lists.md
     - src/docs/ai/BUILD_VALIDATION.md
     - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
   build_validation: |
     suite: DEV-V-016
     tests:
@@ -40,6 +48,9 @@
     - UnifiedSelectionModal: `pb-0` content (no footer gap); leave-with-selection prompt for dirty picks.
     - Trimmed/removed multi-sentence header help on USM callers + guided-creator-copy L2 strings.
     - MOBILE_UX + guide/02 + FEATURE_INDEX + DEV-V-016-T015 + Pending owner QA.
+    - `/cleanup`: dropped `description={undefined}` noise + empty `innateDescription`; one-line
+      sub-skill/proficiency help; removed dead leave-prompt `titleA11y`; powers L2 no double-close;
+      related_files matched diff.
   notes: |
     From owner screenshot feedback (Browse Innate Powers). Shared USM fix covers all add-X/load wrappers.
   evidence: |
