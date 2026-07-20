@@ -10,14 +10,11 @@ import { useState, useMemo } from 'react';
 import { formatListCellLabel } from '@/lib/utils';
 import { SelectFilter, FilterSection } from '@/components/shared/filters';
 import {
-  SearchInput,
-  ListHeader,
-  LoadingState,
+  CodexBrowseListShell,
   ErrorDisplay as ErrorState,
   GridListRow,
   type ChipData,
 } from '@/components/shared';
-import { EmptyState } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { useParts } from '@/hooks';
@@ -172,65 +169,58 @@ export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' |
   if (error) return <ErrorState message="Failed to load parts" onRetry={() => refetch()} />;
 
   return (
-    <div>
-      <div className="mb-4">
-        <SearchInput value={filters.search} onChange={(v) => setFilters(f => ({ ...f, search: v }))} placeholder="Search parts..." />
-      </div>
+    <CodexBrowseListShell
+      search={filters.search}
+      onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
+      searchPlaceholder="Search parts..."
+      filters={
+        <FilterSection>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <SelectFilter
+              label="Category"
+              value={filters.categoryFilter}
+              options={filterOptions.categories.map(c => ({ value: c, label: c }))}
+              onChange={(v) => setFilters(f => ({ ...f, categoryFilter: v }))}
+              placeholder="All Categories"
+            />
 
-      <FilterSection>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <SelectFilter
-            label="Category"
-            value={filters.categoryFilter}
-            options={filterOptions.categories.map(c => ({ value: c, label: c }))}
-            onChange={(v) => setFilters(f => ({ ...f, categoryFilter: v }))}
-            placeholder="All Categories"
-          />
+            <SelectFilter
+              label="Type"
+              value={filters.typeFilter}
+              options={[
+                { value: 'all', label: 'All' },
+                { value: 'power', label: 'Power' },
+                { value: 'technique', label: 'Technique' },
+              ]}
+              onChange={(v) => setFilters(f => ({ ...f, typeFilter: v as 'all' | 'power' | 'technique' }))}
+              placeholder={null}
+            />
 
-          <SelectFilter
-            label="Type"
-            value={filters.typeFilter}
-            options={[
-              { value: 'all', label: 'All' },
-              { value: 'power', label: 'Power' },
-              { value: 'technique', label: 'Technique' },
-            ]}
-            onChange={(v) => setFilters(f => ({ ...f, typeFilter: v as 'all' | 'power' | 'technique' }))}
-            placeholder={null}
-          />
-
-          <SelectFilter
-            label="Mechanics"
-            value={filters.mechanicMode}
-            options={[
-              { value: 'all', label: 'All Parts' },
-              { value: 'only', label: 'Only Mechanics' },
-              { value: 'hide', label: 'Hide Mechanics' },
-            ]}
-            onChange={(v) => setFilters(f => ({ ...f, mechanicMode: v as 'all' | 'only' | 'hide' }))}
-            placeholder={null}
-          />
-        </div>
-      </FilterSection>
-
-      <ListHeader
-        columns={PART_COLUMNS}
-        gridColumns={PART_GRID_COLUMNS}
-        sortState={sortState}
-        onSort={handleSort}
-      />
-
-      <div className="flex flex-col gap-1 mt-2">
-        {isLoading ? (
-          <LoadingState />
-        ) : filteredParts.length === 0 ? (
-          <EmptyState title="No parts found" size="sm" />
-        ) : (
-          filteredParts.map(part => (
-            <PartCard key={part.id} part={part} />
-          ))
-        )}
-      </div>
-    </div>
+            <SelectFilter
+              label="Mechanics"
+              value={filters.mechanicMode}
+              options={[
+                { value: 'all', label: 'All Parts' },
+                { value: 'only', label: 'Only Mechanics' },
+                { value: 'hide', label: 'Hide Mechanics' },
+              ]}
+              onChange={(v) => setFilters(f => ({ ...f, mechanicMode: v as 'all' | 'only' | 'hide' }))}
+              placeholder={null}
+            />
+          </div>
+        </FilterSection>
+      }
+      headerColumns={PART_COLUMNS}
+      gridColumns={PART_GRID_COLUMNS}
+      sortState={sortState}
+      onSort={handleSort}
+      isLoading={isLoading}
+      isEmpty={filteredParts.length === 0}
+      emptyTitle="No parts found"
+    >
+      {filteredParts.map((part) => (
+        <PartCard key={part.id} part={part} />
+      ))}
+    </CodexBrowseListShell>
   );
 }

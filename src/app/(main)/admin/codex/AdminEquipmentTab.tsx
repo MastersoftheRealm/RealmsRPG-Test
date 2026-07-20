@@ -2,13 +2,9 @@
 
 import { useMemo, useState } from 'react';
 import {
-  SectionHeader,
-  SearchInput,
-  LoadingState,
+  CodexBrowseListShell,
   ErrorDisplay as ErrorState,
   GridListRow,
-  ListEmptyState as EmptyState,
-  ListHeader,
   RealmsImageField,
 } from '@/components/shared';
 import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
@@ -232,36 +228,33 @@ export function AdminEquipmentTab() {
 
   return (
     <div>
-      <SectionHeader title="Equipment" onAdd={openAdd} size="md" />
-      <div className="mb-4 mt-2">
-        <SearchInput
-          value={filters.search}
-          onChange={(v) => setFilters(f => ({ ...f, search: v }))}
-          placeholder="Search equipment..."
-        />
-      </div>
-
-      <FilterSection>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <SelectFilter
-            label="Category"
-            value={filters.categoryFilter}
-            options={filterOptions.categories.map(c => ({ value: c, label: c }))}
-            onChange={(v) => setFilters(f => ({ ...f, categoryFilter: v }))}
-            placeholder="All Categories"
-          />
-          <SelectFilter
-            label="Rarity"
-            value={filters.rarityFilter}
-            options={filterOptions.rarities.map(r => ({ value: r, label: r }))}
-            onChange={(v) => setFilters(f => ({ ...f, rarityFilter: v }))}
-            placeholder="All Rarities"
-          />
-        </div>
-      </FilterSection>
-
-      <ListHeader
-        columns={[
+      <CodexBrowseListShell
+        sectionTitle="Equipment"
+        onAdd={openAdd}
+        search={filters.search}
+        onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
+        searchPlaceholder="Search equipment..."
+        filters={
+          <FilterSection>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <SelectFilter
+                label="Category"
+                value={filters.categoryFilter}
+                options={filterOptions.categories.map(c => ({ value: c, label: c }))}
+                onChange={(v) => setFilters(f => ({ ...f, categoryFilter: v }))}
+                placeholder="All Categories"
+              />
+              <SelectFilter
+                label="Rarity"
+                value={filters.rarityFilter}
+                options={filterOptions.rarities.map(r => ({ value: r, label: r }))}
+                onChange={(v) => setFilters(f => ({ ...f, rarityFilter: v }))}
+                placeholder="All Rarities"
+              />
+            </div>
+          </FilterSection>
+        }
+        headerColumns={[
           { key: 'name', label: 'NAME' },
           { key: 'category', label: 'CATEGORY' },
           { key: 'cost', label: 'COST' },
@@ -274,21 +267,13 @@ export function AdminEquipmentTab() {
         sortState={sortState}
         onSort={handleSort}
         hasThumbnailColumn
-      />
-
-      {isLoading ? (
-        <LoadingState />
-      ) : (
-        <div className="flex flex-col gap-1 mt-2">
-          {filteredEquipment.length === 0 ? (
-            <EmptyState
-              title="No equipment found"
-              description="No equipment matches your filters."
-              action={{ label: 'Add Equipment', onClick: openAdd }}
-              size="sm"
-            />
-          ) : (
-            filteredEquipment.map((e: EquipmentListItem & { category: string; cost: number; rarity: string }) => {
+        isLoading={isLoading}
+        isEmpty={filteredEquipment.length === 0}
+        emptyTitle="No equipment found"
+        emptyMessage="No equipment matches your filters."
+        emptyAction={{ label: 'Add Equipment', onClick: openAdd }}
+      >
+        {filteredEquipment.map((e: EquipmentListItem & { category: string; cost: number; rarity: string }) => {
               const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> = [];
               if (e.weight !== undefined) {
                 detailSections.push({
@@ -356,10 +341,8 @@ export function AdminEquipmentTab() {
                 }
               />
               );
-            })
-          )}
-        </div>
-      )}
+            })}
+      </CodexBrowseListShell>
 
       <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Equipment' : 'Add Equipment'} size="full" fullScreenOnMobile
         footer={

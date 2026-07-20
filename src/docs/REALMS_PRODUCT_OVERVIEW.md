@@ -419,7 +419,7 @@ The user begins by choosing an archetype (a **path**).
 | Requirement | Target |
 |-------------|--------|
 | Visually distinct choices | Path cards with image or icon, a one-line role identity, and a build preview |
-| No prior terminology required | Plain language ("Choose your path") over system jargon ("Select archetype category") |
+| No prior terminology required | Plain language first ("Choose your Archetype Path") over system jargon ("Select archetype category") — expose the game term, never "class" |
 | Minimal scrolling or searching | Grouped by Power / Powered-Martial / Martial; paginated if the list is long |
 | Layer 1 default | Path selection is primary; "Forge Your Own" is the Layer 3 entry point |
 | Card deep-dive | **More details** → path modal (overview + feat / weapon / armor / gear / power|technique catalogs; Close \| Select). Entity depth (§3.1), not catalog Layer 2. |

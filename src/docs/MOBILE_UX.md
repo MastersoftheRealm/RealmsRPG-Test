@@ -22,14 +22,16 @@ Single reference for mobile breakpoints, touch targets, and layout patterns. Use
 
 ## Touch targets
 
-- **Scope:** The 44×44px minimum applies to **mobile/touch viewports** (e.g. below `md`), not as a blanket rule for the whole site. WCAG 2.1 AA does not require a minimum target size; WCAG 2.5.5 (Level AAA) and platform guidelines (Apple HIG, Material) recommend 44–48pt for touch. We enforce 44px so the site is usable on phones without zoom.
-- **Minimum size (on touch):** Below `md`, tappable controls (buttons, icon buttons, steppers, tab triggers, toolbar icons, links in dense UI) should be at least 44×44px. On desktop (`md+`), controls can be smaller (e.g. compact steppers) since pointer precision is higher.
+- **Scope:** The 44×44px minimum applies to **mobile/touch viewports** (e.g. below `md`), not as a blanket rule for the whole site. WCAG 2.1 AA does not require a minimum target size; WCAG 2.5.5 (Level AAA) and platform guidelines (Apple HIG, Material) recommend 44–48pt for touch. We enforce 44px on phones so the site is usable without zoom — **not** so desktop chrome matches phone chrome.
+- **Desktop vs mobile (do not compromise either):** Design **two densities**. Mobile gets full-screen modals, side-scroll panels, and 44px targets. Desktop (`md+`) prefers **icon-hugging** controls (pencils, steppers, inline icons) without large empty hit-box chrome. Never “fix” desktop by applying mobile min-size padding that leaves empty painted space around icons (`EditSectionToggle`, sheet header actions, etc.).
+- **Owner feedback convention:** Feedback is **desktop-first** unless the owner prefixes **`mobile feedback:`**. Do not reinterpret desktop screenshots as a request to enlarge touch targets sitewide.
+- **Minimum size (on touch):** Below `md`, tappable controls (buttons, icon buttons, steppers, tab triggers, toolbar icons, links in dense UI) should be at least 44×44px. On desktop (`md+`), controls can be smaller (e.g. compact steppers, icon-only pencils) since pointer precision is higher.
 - **Spacing:** Leaving enough gap between targets (e.g. 8px) helps avoid mis-taps. Spacing **supplements** but does not replace a minimum target size on touch: small targets remain hard to tap accurately even with spacing.
 - **Implementation:** Prefer responsive sizing: `touch-target-md-compact` (utility in `globals.css`), `min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0`, or `--touch-target-min: 44px` on steppers/toggles. Use `@media(pointer:coarse)` on `Button`/`IconButton` where the control stays compact on desktop only.
-- **Spacing:** Leave enough gap between targets so taps don’t hit the wrong one.
+- **Legal / AA note:** WCAG 2.1 AA has no 44px target requirement; 44px is our mobile UX choice (AAA / platform HIG). Prefer UI cleanliness on desktop over AAA target size when they conflict.
 - **Reference:** `--touch-target-min: 44px` and `--mobile-gutter: 0.75rem` in `globals.css` (optional; use in components when helpful).
 
-Audit: `ValueStepper`, `IconButton`, sheet action toolbar, tab triggers, list row actions.
+Audit: `ValueStepper`, `IconButton`, `EditSectionToggle`, sheet action toolbar, tab triggers, list row actions.
 
 ---
 

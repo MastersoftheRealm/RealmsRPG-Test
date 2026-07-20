@@ -9,12 +9,9 @@
 
 import { useState, useMemo } from 'react';
 import {
-  SearchInput,
-  ListHeader,
-  LoadingState,
+  CodexBrowseListShell,
   ErrorDisplay as ErrorState,
   GridListRow,
-  ListEmptyState as EmptyState,
 } from '@/components/shared';
 import { useTraits, type Trait } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
@@ -57,26 +54,20 @@ export function CodexTraitsTab({ codexMode = 'public' }: { codexMode?: 'public' 
   if (error) return <ErrorState message="Failed to load traits" onRetry={() => refetch()} />;
 
   return (
-    <div>
-      <div className="mb-4 mt-2">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search traits..." />
-      </div>
-
-      <ListHeader
-        columns={TRAIT_COLUMNS}
-        gridColumns={TRAIT_GRID_COLUMNS}
-        sortState={sortState}
-        onSort={handleSort}
-      />
-
-      {isLoading ? (
-        <LoadingState />
-      ) : (
-        <div className="flex flex-col gap-1 mt-2">
-          {filtered.length === 0 ? (
-            <EmptyState title="No traits found" description="Try adjusting your search." size="sm" />
-          ) : (
-            filtered.map((t: Trait) => {
+    <CodexBrowseListShell
+      search={search}
+      onSearchChange={setSearch}
+      searchPlaceholder="Search traits..."
+      headerColumns={TRAIT_COLUMNS}
+      gridColumns={TRAIT_GRID_COLUMNS}
+      sortState={sortState}
+      onSort={handleSort}
+      isLoading={isLoading}
+      isEmpty={filtered.length === 0}
+      emptyTitle="No traits found"
+      emptyMessage="Try adjusting your search."
+    >
+      {filtered.map((t: Trait) => {
               const choiceOptionChips = choiceTraitOptionIdsToChipData(t.option_trait_ids, traitById);
               return (
                 <GridListRow
@@ -94,10 +85,7 @@ export function CodexTraitsTab({ codexMode = 'public' }: { codexMode?: 'public' 
                   }
                 />
               );
-            })
-          )}
-        </div>
-      )}
-    </div>
+          })}
+    </CodexBrowseListShell>
   );
 }

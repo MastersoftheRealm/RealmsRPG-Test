@@ -6,15 +6,25 @@
 
 import { useMemo } from 'react';
 import { DescriptorChip } from '@/components/ui';
-import { SummaryChipList } from '@/components/shared';
-import { useCodexSkills } from '@/hooks';
+import {
+  AbilityScoreGrid,
+  ABILITY_DISPLAY_ORDER,
+  InfoTippy,
+  SummaryChipList,
+} from '@/components/shared';
+import { useCodexSkills, useGameRules } from '@/hooks';
 import { formatAbilityLabel } from '@/lib/constants/ability-effect-blurbs';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { speciesSkillToSummaryChipItem } from '@/lib/chip/species-skill-chips';
 import { resolvePathAbilityLabels } from '@/lib/guided-creator/path-ability-labels';
+import { getArmamentMax } from '@/lib/game/formulas';
 import { cn } from '@/lib/utils';
-import type { AbilityName } from '@/types';
+import { DEFAULT_ABILITIES, type Abilities } from '@/types';
 import type { Archetype, ArchetypePathData } from '@/types/archetype';
+import {
+  armamentProficiencyHelp,
+  guidedArchetypeAbilityHelp,
+} from '../../../public/tooltip-text';
 import { GUIDED_CHOICE_STYLES, GUIDED_OVERVIEW_STYLES as o } from './guided-choice-styles';
 import { GuidedOverviewSection } from './guided-overview-section';
 
@@ -25,37 +35,11 @@ export interface GuidedPathDetailOverviewProps {
   pathData: ArchetypePathData | undefined;
 }
 
-function relevantProficiencyLines(
-  pathType: Archetype['type'],
-  power: number | null,
-  martial: number | null
-): string[] {
-  const parts: string[] = [];
-  const showPower = pathType === 'power' || pathType === 'powered-martial';
-  const showMartial = pathType === 'martial' || pathType === 'powered-martial';
-  if (showPower && power != null && Number.isFinite(power) && power > 0) {
-    parts.push(copy.proficiencyPower(power));
-  }
-  if (showMartial && martial != null && Number.isFinite(martial) && martial > 0) {
-    parts.push(copy.proficiencyMartial(martial));
-  }
-  return parts;
-}
-
 export function GuidedPathDetailOverview({ path, pathData }: GuidedPathDetailOverviewProps) {
   const { data: allSkills = [] } = useCodexSkills();
+  const { rules } = useGameRules();
   const level1 = pathData?.level1;
   const pathType = (path.type || 'power') as Archetype['type'];
-
-  const proficiency = useMemo(() => {
-    const power = level1?.proficiency?.power ?? path.power_prof_start ?? null;
-    const martial = level1?.proficiency?.martial ?? path.martial_prof_start ?? null;
-    return relevantProficiencyLines(
-      pathType,
-      power != null ? Number(power) : null,
-      martial != null ? Number(martial) : null
-    );
-  }, [level1?.proficiency, path.martial_prof_start, path.power_prof_start, pathType]);
 
   const abilityChips = useMemo(() => {
     const { primaryAbilities, secondaryAbility } = resolvePathAbilityLabels(path);
@@ -79,7 +63,21 @@ export function GuidedPathDetailOverview({ path, pathData }: GuidedPathDetailOve
     return chips;
   }, [path]);
 
-  const recommendedAbilities = level1?.recommended_abilities;
+  const recommendedAbilitiesGrid = useMemo(() => {
+    const raw = level1?.recommended_abilities;
+    if (!raw) return null;
+    const onlyAbilities = ABILITY_DISPLAY_ORDER.filter((ability) => raw[ability] != null);
+    if (onlyAbilities.length === 0) return null;
+    const abilities: Abilities = { ...DEFAULT_ABILITIES };
+    for (const ability of onlyAbilities) {
+      abilities[ability] = Number(raw[ability]);
+    }
+    return { abilities, onlyAbilities };
+  }, [level1?.recommended_abilities]);
+
+  const armamentMax = getArmamentMax(pathType, rules);
+  const weaponsAndArmorLine =
+    copy.weaponsAndArmor[pathType]?.(armamentMax) ?? copy.weaponsAndArmor.power(armamentMax);
 
   const skillChips = useMemo(() => {
     const ids = level1?.skills ?? [];
@@ -110,23 +108,20 @@ export function GuidedPathDetailOverview({ path, pathData }: GuidedPathDetailOve
         </div>
       </div>
 
-      {proficiency.length > 0 ? (
-        <GuidedOverviewSection title={copy.proficiencyTitle}>
-          <ul className="m-0 list-none space-y-1 p-0">
-            {proficiency.map((line) => (
-              <li key={line} className={o.body}>
-                {line}
-              </li>
-            ))}
-          </ul>
-        </GuidedOverviewSection>
-      ) : null}
-
       {abilityChips.length > 0 ? (
-        <GuidedOverviewSection title={copy.pathAbilitiesTitle}>
+        <GuidedOverviewSection
+          title={copy.pathAbilitiesTitle}
+          titleAddon={
+            <InfoTippy
+              content={guidedArchetypeAbilityHelp}
+              label="About Path Abilities"
+              size="inline"
+            />
+          }
+        >
           <div className="flex flex-wrap gap-2">
             {abilityChips.map((chip) => (
-              <DescriptorChip key={chip.key} variant={chip.variant} size="sm">
+              <DescriptorChip key={chip.key} variant={chip.variant} size="md">
                 {chip.label}
               </DescriptorChip>
             ))}
@@ -134,16 +129,27 @@ export function GuidedPathDetailOverview({ path, pathData }: GuidedPathDetailOve
         </GuidedOverviewSection>
       ) : null}
 
-      {recommendedAbilities && Object.keys(recommendedAbilities).length > 0 ? (
+      <GuidedOverviewSection
+        title={copy.weaponsAndArmorTitle}
+        titleAddon={
+          <InfoTippy
+            content={armamentProficiencyHelp}
+            label="About Armament Proficiency"
+            size="inline"
+          />
+        }
+      >
+        <p className={o.body}>{weaponsAndArmorLine}</p>
+      </GuidedOverviewSection>
+
+      {recommendedAbilitiesGrid ? (
         <GuidedOverviewSection title={copy.recommendedAbilitiesTitle}>
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(recommendedAbilities).map(([ability, value]) => (
-              <DescriptorChip key={ability} variant="primary" size="sm">
-                {formatAbilityLabel(ability as AbilityName)} {Number(value) >= 0 ? '+' : ''}
-                {value}
-              </DescriptorChip>
-            ))}
-          </div>
+          <AbilityScoreGrid
+            abilities={recommendedAbilitiesGrid.abilities}
+            onlyAbilities={recommendedAbilitiesGrid.onlyAbilities}
+            density="compact"
+            mode="display"
+          />
         </GuidedOverviewSection>
       ) : null}
 

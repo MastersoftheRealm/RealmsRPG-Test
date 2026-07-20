@@ -6,8 +6,9 @@
 
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
 import { PageContainer, PageHeader, Button, LoadingState, EmptyState, Alert, Input, TableScroll } from '@/components/ui';
 import { ConfirmActionModal, ErrorDisplay } from '@/components/shared';
 import { apiFetch } from '@/lib/api-client';
@@ -45,44 +46,51 @@ const ROLE_LABELS: Record<UserRole, string> = {
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [rolePolicies, setRolePolicies] = useState<Record<UserRole, RolePolicyRow> | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [syncedAt, setSyncedAt] = useState(0);
   const [updating, setUpdating] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [pendingChange, setPendingChange] = useState<
     { userId: string; label: string; oldRole: UserRole; newRole: UserRole } | null
   >(null);
-  const [reloadToken, setReloadToken] = useState(0);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    Promise.all([
-      apiFetch<UserRow[]>('/api/admin/users'),
-      apiFetch<RolePolicyRow[]>('/api/admin/role-policies'),
-    ])
-      .then(([userData, policyData]) => {
-        if (cancelled) return;
-        setUsers(Array.isArray(userData) ? userData : []);
-        const map = (Array.isArray(policyData) ? policyData : []).reduce(
-          (acc, row) => {
-            acc[row.role] = row;
-            return acc;
-          },
-          {} as Record<UserRole, RolePolicyRow>
-        );
-        setRolePolicies(map);
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load admin data');
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => { cancelled = true; };
-  }, [reloadToken]);
+  const {
+    data: adminData,
+    isLoading: loading,
+    error: queryError,
+    refetch,
+    dataUpdatedAt,
+  } = useQuery({
+    queryKey: ['admin', 'users-page'],
+    queryFn: async () => {
+      const [userData, policyData] = await Promise.all([
+        apiFetch<UserRow[]>('/api/admin/users'),
+        apiFetch<RolePolicyRow[]>('/api/admin/role-policies'),
+      ]);
+      const map = (Array.isArray(policyData) ? policyData : []).reduce(
+        (acc, row) => {
+          acc[row.role] = row;
+          return acc;
+        },
+        {} as Record<UserRole, RolePolicyRow>
+      );
+      return {
+        users: Array.isArray(userData) ? userData : [],
+        rolePolicies: map,
+      };
+    },
+  });
+  const error = queryError
+    ? queryError instanceof Error
+      ? queryError.message
+      : 'Failed to load admin data'
+    : null;
+
+  if (adminData && dataUpdatedAt !== syncedAt) {
+    setUsers(adminData.users);
+    setRolePolicies(adminData.rolePolicies);
+    setSyncedAt(dataUpdatedAt);
+  }
 
   const filteredUsers = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -153,7 +161,7 @@ export default function AdminUsersPage() {
       {loading ? (
         <LoadingState size="lg" padding="md" />
       ) : error ? (
-        <ErrorDisplay message={error} onRetry={() => setReloadToken((token) => token + 1)} />
+        <ErrorDisplay message={error} onRetry={() => void refetch()} />
       ) : filteredUsers.length === 0 ? (
         <EmptyState title="No users found." size="sm" />
       ) : (

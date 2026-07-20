@@ -19,6 +19,7 @@ export { PointStatus, type PointStatusProps } from './point-status';
 // AbilityScoreGrid - Six-ability tile row (sheet layout; display or edit)
 export {
   AbilityScoreGrid,
+  ABILITY_DISPLAY_ORDER,
   resolveDistinctSecondaryAbility,
   type AbilityScoreGridProps,
 } from './ability-score-grid';
@@ -89,6 +90,10 @@ export {
   THUMBNAIL_HEADER_COLUMN_KEY,
   CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME,
 } from './grid-list-row-chrome';
+
+// CodexBrowseListShell — Admin Codex + Codex browse list chrome (ADR-0005)
+export { CodexBrowseListShell } from './codex-browse-list-shell';
+export type { CodexBrowseListShellProps } from './codex-browse-list-shell';
 
 // OfficialPowerList - shared Realms Library powers grid (Library browse + Admin)
 export { OfficialPowerList } from './official-power-list';

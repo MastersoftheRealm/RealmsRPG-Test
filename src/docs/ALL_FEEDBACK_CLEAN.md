@@ -1,6 +1,6 @@
 # ALL_FEEDBACK ? Consolidated & Curated
 
-Last updated: 2026-07-20 (guided innate soft Continue warn + TP chip/spend → TASK-573)
+Last updated: 2026-07-20 (Guided Path / Archetype screen polish → TASK-577–581)
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -25,6 +25,13 @@ How to use
 ### Guided innate Powers (2026-07-20)
 - **Continue:** do not hard-block when Innate Energy pool is under-filled; soft warning OK — **TASK-573**.
 - **Training Points:** innate powers spend shared TP like regular Powers and show the TP cost descriptor chip on guided cards — **TASK-573**.
+
+### Guided Path / Archetype screen (2026-07-20)
+- **L1 chrome:** title "Choose your Archetype Path" + tip; Foundation subtitle exposes Archetype Path; stronger Power/Martial section headers; path-type tips positive + examples; ability chips slightly larger, Primary slight blue (same size Primary/Secondary) — **TASK-577** (done, pending-qa).
+- **More details:** drop preview hint + Proficiency section; Path Abilities Primary/Secondary tips; recommended abilities as mini ability cards; Weapons & Armor with live `getArmamentMax` + reusable Armament Proficiency tip — **TASK-578** (done, pending-qa).
+- **Feats deep-dive:** uses/recovery as non-expanding desc chips; restriction-notice cohesion with later feat cards — **TASK-579**.
+- **TP tip:** shorter, clearer `trainingPointsHelp` — **TASK-580**.
+- **Tooltip docs:** L1/guided vs global tip layers; consolidate Armament Proficiency export — **TASK-581** (after 578).
 
 ---
 
@@ -1636,7 +1643,7 @@ Notes
 - Priority: High
 - Feedback: (1) Fully scrap and rebuild home page as modern TTRPG startup landing page ? remove OnboardingTour, welcome tour, Codex/Library CTAs, multi-CTA sprawl; single primary CTA Start Playing; mid-page custom power + weapons/armor CTAs to creators (Layer 1 when built); Discord tertiary. (2) Sitewide UX overhaul one page at a time; creators currently Layer 3 only ? migrate to L1/L2/L3; character creator highest priority. (3) Tooltip system depends on Collin TASK-376 Tippy ? follow his methods. (4) Post-save: play-together prompt (Discord, campaign invite); optional sheet tour after character created; milestone level-up tutorials (first level-up, first ability point, delta-only per level); tutorials on/off toggle. Remove pre-creation home tour.
 - Expected: REALMS_PRODUCT_OVERVIEW.md updated; TASK-387 landing rebuild, TASK-386 creator pilot, TASK-388 post-activation.
-- Disposition: Documented 2026-06-28 in REALMS_PRODUCT_OVERVIEW.md Sections 4, 6, 11; tasks filed.
+- Disposition: Documented 2026-06-28 in REALMS_PRODUCT_OVERVIEW.md Sections 4, 6, 11; tasks filed. **TASK-388 implemented 2026-07-20** (play-together, sheet tour, level-up highlight guides, tutorials toggle; pending-qa DEV-V-029).
 
 **Raw Feedback Log ? 2026-06-28 (Validation-first critique ? external review)**
 - Date: 2026-06-28
@@ -2609,3 +2616,56 @@ Notes
   Guided creator shouldnt stop a user from continuing if the haven't added innate powers equal to their innate power pool, but it can have a soft warning. Also innate powers still contribute to spent TP like normal powers amd should have TP cost descriptor chip like the other power cards in guided creator.
 - Expected: Continue enabled with remaining Innate Energy (soft warn OK); innate picks spend shared Training Points; innate L1 cards show TP cost chip like regular Powers.
 - Disposition: Implemented as **TASK-573**. QA: DEV-V-013-T057.
+
+**Raw Feedback Log - 2026-07-20 (Guided Creator Path / Archetype screen improvements)**
+- Date: 2026-07-20
+- Context: Guided Creator — Foundation Path / Archetype screen + More details + tooltips
+- Priority: High
+- Feedback (verbatim):
+  Guided Creator (Improvements): Archetype screen, rename from choose your path to "Choose your Archetype Path" and it should have a i tooltip describing what an archetype path is something like "An Archetype Path is your character's class or the type of adventurer they are. These Path's guide you with suggestions for your Path, but make it your own! Deviate or recreate the Path to be your own!" something like this.
+
+  Remove the subtext from more details (it's self explanatory) ie "look at this thing and pick if you like" is obvious, also remove the "Proficiency" section since that's implied (don't need to see power proficiency 2), make the recommended abilities layout look the same as the abilities cards later in the creator but smaller versions, instead of the desc cards, should look good though. In more details we can have it describe the purpose of the primary (archetype) ability with an i next to the path ability section, it should essentially give details about what a primary archetype ability represents, and that its value influences real values such as energy training points and your attack or power bonus. secondary ability should be described as a recommendation with no direct game effect. (reference rules/my wording/core rules to write this well.
+
+  In more details we should have a section to describe the type of armaments they can utilize somewhere as a summary section such as Weapons and Armor with three varieties of descriptions, one for martial, power, and powered-martial. It'd be like (for martial) "You are able to wield the most technical weapons and wear the most advanced armor. Your Armament Proficiency is 12. (with another tooltip on what armament profiecicy is, and this tooltip can be reusable between each instance of armamanet profincy across the site, an i here hover elsewhere)
+
+  For feats expanded, uses per recovery is a desc chip not expanded, ie 1 Use / Full Recovery needs no expansion. For the feats in the overview the information warnings style we use on later feat cards could be used here instead too to make it feel cohesive?
+
+  Ability desc chips on cards should be larger, maybe add some color to each.
+
+  Power and Martial Path section headers in the first screen should be bolder/larger so it's clearer they are sections.
+
+  Fix tooltips: In the guided creator tooltips for Training Points need to be less calculation heavy/dense and more right to the point and clear. The power and martial paths should be less about what a path isn't and more about what it is. Also, reference core rules against current tooltips to ensure we are accurately representing each thing (ie a power user could be a spell caster, an artificer, an elemental bender, a warlock, bard, etc).
+
+  In general when adding a tooltip, it might be L1 or guided specific, or it might be generalizable, such as the ability/defense tooltips that should be the same regardless of where they are on the site when you hover an ability or defense name. Archetype ability tooltip is simplified in the guided creator more details for instance, but might be more specific when it's a global tooltip for archetype ability (ie describe how it adds to each thing, it's exact function, in simple but clear terms). this type of behavior is how our hover or i tooltips with function, so we can note this in our guideing documentation where needed/sensible.
+- Owner clarifications (same session):
+  - Armament Proficiency number from live core rules DB via helpers (`getArmamentMax` / rules table); if missing, add honestly (propose SQL, owner approve).
+  - Ability chips: slight enlarge for all; Primary slight blue; same size Primary/Secondary (not power/martial tint split).
+  - Foundation chapter subtitle should also say Archetype Path for game-term exposure.
+  - Tip copy should prefer Archetype Path / type of adventurer; avoid calling it "class" per GAME_RULES.
+- Expected: Path L1 + More details teaching/cohesion polish; TP + path-type tip clarity; reusable Armament Proficiency tip; docs for L1 vs global tip layers.
+- Disposition: **TASK-577** / **TASK-578** / **TASK-580** implemented (pending-qa). Remaining: **TASK-579** (feat chips/notices), **TASK-581** (tooltip docs; depends 578).
+
+**Raw Feedback Log - 2026-07-20 (sheet overload, skills model, Temp Modifier, roll log, desktop a11y)**
+- Date: 2026-07-20
+- Context: General site list rows + character sheet (Abilities/Defenses/Skills/header) + roll log dark mode
+- Priority: High
+- Feedback (verbatim summary):
+  Parts/Properties & Proficiencies expandable sections should default collapsed sitewide (chevron to open) with i tip explaining parts/properties ↔ proficiency/TP; leave descriptor chips open. Abilities/Defenses labels too small and mismatched (see image). Skills: show all Codex base skills by default (filter not opt-in); sub-skills prof always / unprof only if added; edit chrome cramped; remove X (use −); pencil was misheard as “gen”. Split pencil (rules spend) vs Temp Modifier (PlusMinus/sliders; persist; gold/red value tint; ability cascade except HP/EN/TP unless toggled). Desktop feedback default; don’t leak 44px chrome into desktop. Roll log dark mode die badges low contrast (see image).
+- Owner clarifications:
+  - Skills = (A) all Codex base skills always; no base opt-in; sub-skills as above.
+  - “Gen” = pencil.
+  - Name: **Temp Modifier** OK (UI convenience, not GAME_RULES term); icon PlusMinus/sliders.
+  - Persist on character (A).
+  - Parts collapse: everywhere.
+  - Pencil: compact desktop; 44px mobile via responsive pattern; document desktop-first feedback.
+  - v1 Temp Modifier surfaces: Speed, Evasion, Crit Range, DR, Terminal, Abilities (+ HP/EN/TP toggles), Defenses, Skills — layered on top of bases.
+- Expected: Quick wins shipped; remaining filed as tasks.
+- Disposition: **TASK-582** done (abilities/defenses labels, roll log die badges, EditSectionToggle desktop compact, MOBILE_UX/a11y desktop-vs-mobile docs). Filed **TASK-583** (parts collapse), **TASK-584** (skills model/chrome), **TASK-585** (Temp Modifier Architect), **TASK-586** (v1 wire; depends 585).
+
+**Raw Feedback Log - 2026-07-20 (Defense Score tip)**
+- Date: 2026-07-20
+- Context: Character sheet Abilities/Defenses (post TASK-582 density polish)
+- Priority: Medium
+- Feedback: Add a hover tooltip on defense Score values so players see the number is a Score and what a Defense Score is per core rules; simple short tip for all six scores.
+- Expected: Word-tied tip on Score values; GAME_RULES Score / Defense Score copy; shared across defenses.
+- Disposition: Filed **TASK-587** (sheet Defense Score hover tip; related TASK-582 / TASK-547).

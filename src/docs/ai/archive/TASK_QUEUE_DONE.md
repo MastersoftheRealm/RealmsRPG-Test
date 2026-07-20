@@ -1,3 +1,401 @@
+- id: TASK-430
+  title: React Compiler hook warnings � exhaustive-deps / set-state-in-effect / preserve-manual-memoization
+  created_at: 2026-07-13
+  created_by: agent
+  priority: low
+  status: done
+  completed_at: 2026-07-20
+  implemented_by: agent
+  verification_status: pending-qa
+  parent_task: TASK-321
+  related_files:
+    - eslint.config.mjs
+    - src/hooks/use-is-client.ts
+    - src/app/(main)/crafting/crafting-bootstrap.ts
+    - src/app/(main)/crafting/[id]/page.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/app/(main)/admin/core-rules/page.tsx
+    - src/app/(main)/admin/codex/CodexSpreadsheetView.tsx
+    - src/components/onboarding/sheet-tour.tsx
+    - src/components/ui/modal.tsx
+    - src/components/shared/unified-selection-modal.tsx
+  build_validation: |
+    suite: DEV-V-019
+    tests:
+      - DEV-V-019-T001
+      - DEV-V-019-T002
+      - DEV-V-019-T003
+      - DEV-V-019-T004
+      - DEV-V-019-T005
+      - DEV-V-019-T006
+      - DEV-V-019-T007
+      - DEV-V-019-T009
+      - DEV-V-019-T010
+      - DEV-V-019-T011
+      - DEV-V-019-T012
+      - DEV-V-019-T013
+  developer_test_plan: |
+    Full DEV-V-019 suite T001�T007 + T009�T013 (batches 1�7). Sitewide react-hooks compiler warnings should be 0.
+  description: |
+    Cleared React Compiler hook rule warnings (~171 ? 0) via derive / remount / useQuery / useIsClient batches without eslint-disable.
+  acceptance_criteria:
+    - Material reduction in react-hooks/* warnings without cascading re-render regressions.
+    - Prefer removing unnecessary effects over blanket eslint-disable.
+    - exhaustive-deps changes must not alter intentional mount-only / stable-ref patterns.
+    - npm run build + lint pass; no new errors.
+  completed_work: |
+    Batches 1�7 (2026-07-15/20): ~171 ? **0** react-hooks set-state-in-effect / exhaustive-deps / preserve-manual-memoization.
+    Patterns: derive, remount-on-open, useIsClient, useQuery for admin/profile fetches, crafting bootstrap + displaySessions,
+    sheet tour latch, core-rules/spreadsheet seed. DEV-V-019 T001�T013.
+  notes: |
+    Soft follow-up TASK-381 (sheet facade) was independent; domain hooks already quiet before close.
+- id: TASK-440
+  title: Copy compliance residuals — dense HP HUD abbreviation decision
+  created_at: 2026-07-15
+  created_by: agent
+  priority: low
+  status: done
+  completed_at: 2026-07-20
+  implemented_by: agent
+  verification_status: pending-qa
+  parent_task: TASK-439
+  related_files:
+    - src/app/(main)/library/LibraryCreaturesTab.tsx
+    - src/components/encounters/CombatantCard.tsx
+    - src/app/(main)/creature-creator/page.tsx
+    - src/docs/GAME_RULES.md
+    - src/docs/DESIGN_SYSTEM.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-020
+    tests:
+      - DEV-V-020-T004
+  developer_test_plan: |
+    Suite DEV-V-020 T004 — dense HUD Health / Energy labels.
+  description: |
+    Follow-up to TASK-439. Owner chose full Health / Energy over dense HP / EN on listed HUD surfaces.
+  acceptance_criteria:
+    - Owner decides: keep HP in dense HUD, or rename to Health (and EN→Energy where paired).
+    - Apply decision sitewide to listed surfaces (and peers if found).
+    - npm run build if UI touched.
+  completed_work: |
+    Renamed Library Creatures columns, compact CombatantCard labels, creature creator quickStats to Health/Energy.
+    GAME_RULES prefer/avoid + DESIGN_SYSTEM example aligned; DEV-V-020-T004 added.
+  notes: |
+    Left power/technique Energy-cost column abbreviations (e.g. creator EN) unchanged — not HP/EN pool HUD pairs.
+
+- id: TASK-480
+  title: Automate high-value BUILD_VALIDATION behaviors (vitest/Playwright growth)
+  created_at: 2026-07-15
+  created_by: agent
+  priority: medium
+  status: done
+  completed_at: 2026-07-20
+  implemented_by: agent
+  verification_status: n/a
+  related_files:
+    - src/lib/library-selectable-builders.test.ts
+    - src/lib/game/merge-equipment-inventory.test.ts
+    - src/components/character-sheet/add-library-item/map-selection.test.ts
+    - src/lib/guided-creator/guided-equipment-l2.test.ts
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  description: |
+    Audit residual: BUILD_VALIDATION.md is a manual human catalog, not a regression net.
+    Keep it for owner smoke; add automated tests for highest-churn guided/library/sheet behaviors.
+  acceptance_criteria:
+    - Identify top 10 DEV-V tests that should be automated; file follow-ups or implement first 3.
+    - Document which suites stay human-only vs CI-covered in DEVELOPER_TASK_QUEUE.
+    - At least 3 new automated tests merge; npm test / relevant Playwright green.
+  completed_work: |
+    Top-10 candidates documented in DEVELOPER_TASK_QUEUE (Automated vs human coverage).
+    Vitest shipped for DEV-V-016-T001/T003/T006, DEV-V-009-T022 stack merge, DEV-V-013-T052 L2 qty/budget.
+    Remaining candidates listed as backlog (path reset extract, innate, Continue nav, ancestry order, technique columns).
+  notes: |
+    verification_status n/a — docs + automated tests only; owner DEV-V smoke still authoritative for full suites.
+
+- id: TASK-388
+  title: "Post-activation onboarding (play together, sheet tour, level-up milestones)"
+  created_at: 2026-06-28
+  created_by: owner
+  priority: medium
+  status: done
+  completed_at: 2026-07-20
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/onboarding/play-together-modal.tsx
+    - src/components/onboarding/sheet-tour-offer-modal.tsx
+    - src/components/onboarding/sheet-tour.tsx
+    - src/components/onboarding/level-up-guide-card.tsx
+    - src/lib/onboarding-preferences.ts
+    - src/lib/level-up-guide.ts
+    - src/lib/constants/copy/onboarding-copy.ts
+    - src/components/guided-creator/steps/reveal-step.tsx
+    - src/components/character-creator/steps/finalize-step.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/app/(main)/my-account/page.tsx
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-029
+    tests:
+      - DEV-V-029-T001
+      - DEV-V-029-T002
+      - DEV-V-029-T003
+  developer_test_plan: |
+    Suite DEV-V-029 T001�T003 � play-together, sheet tour offer, level-up guides + tutorials toggle.
+  description: |
+    Section 11 of REALMS_PRODUCT_OVERVIEW.md. After first character save, guide users
+    toward playing together (Discord, campaign invite). Optional post-save sheet tour.
+    Contextual level-up tutorials for milestones � delta-only, skippable, global tutorials on/off.
+  acceptance_criteria:
+    - After first character save: dismissible play-together prompt (Discord + start campaign).
+    - Optional sheet tour offered once post-save (Skip + Don't show again); not on home page.
+    - First level-up shows contextual guide for fields that changed only.
+    - First ability-point level (e.g. level 3) shows where to allocate on sheet.
+    - User can disable all tutorials (setting or preference flag).
+    - Milestone flags stored (profile or character JSON); no repeat on subsequent level-ups of same type.
+    - `npm run build` passes.
+  completed_work: |
+    PlayTogetherModal shared by guided reveal + advanced finalize (localStorage dismiss).
+    Sheet tour offer via ?offerTour=1; highlight-chain SheetTour; level-up guide modal via
+    buildLevelUpGuideContent; My Account tutorials toggle; prefs in onboarding-preferences.ts.
+    Unit tests + DEV-V-029; build green.
+  notes: |
+    Prefs/milestones: browser localStorage (product TBD; profile sync deferred). Guides use sheet highlight cards not blocking modals; ability milestone scrolls Abilities + edit mode.
+
+- id: TASK-582
+  title: Sheet polish quick wins - abilities/defenses labels, roll log dark badges, desktop pencil
+  created_at: 2026-07-20
+  created_by: agent
+  priority: high
+  status: done
+  completed_at: 2026-07-20
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/abilities-section.tsx
+    - src/components/character-sheet/roll-log.tsx
+    - src/components/shared/edit-section-toggle.tsx
+    - src/docs/MOBILE_UX.md
+    - src/docs/ACCESSIBILITY.md
+    - .cursor/rules/realms-mobile.mdc
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T028
+      - DEV-V-009-T029
+      - DEV-V-009-T030
+  developer_test_plan: |
+    Suite DEV-V-009 T028-T030 - abilities/defenses label parity; roll log die badges dark; desktop pencil compact.
+  description: |
+    Quick wins from sheet/list feedback: unify larger Abilities/Defenses labels + defense card chrome;
+    fix roll log die max/min and crit total dark-mode contrast; EditSectionToggle icon-hugging on md+
+    via touch-target-md-compact; document desktop-first feedback and no 44px desktop inflation.
+  acceptance_criteria:
+    - Ability and defense names same larger size; defense cards bordered like abilities.
+    - Die face max/min and crit totals readable in dark mode.
+    - Desktop pencil not a large empty button; mobile still 44px via utility.
+    - Docs updated; DEV-V-009-T028-T030; build; pending-qa.
+  completed_work: |
+    - abilities-section: shared text-sm labels; defense bordered chrome (no forced min-height).
+    - /cleanup: deleted min-h-[7.5rem]; later dense tiles (gap-0.5/p-2/md roll; defense Score primary).
+    - roll-log: dark success/danger surfaces on die max/min + crit totals.
+    - edit-section-toggle: touch-target-md-compact; quieter md+ active (no fill/scale).
+    - MOBILE_UX + ACCESSIBILITY + realms-mobile.mdc desktop-vs-mobile guidance.
+    - Filed TASK-583-586 for remaining feedback.
+  notes: |
+    Follow-ups: TASK-583 parts collapse; TASK-584 skills catalog; TASK-585/586 Temp Modifier; TASK-587 Defense Score tip.
+- id: TASK-578
+  title: Guided Path More details — lean overview, ability tips, Weapons & Armor from live rules
+  created_at: 2026-07-20
+  created_by: agent
+  priority: high
+  status: done
+  completed_at: 2026-07-20
+  implemented_by: agent
+  verification_status: pending-qa
+  follow_up_tasks:
+    - TASK-581
+  related_files:
+    - src/components/guided-creator/guided-path-detail-overview.tsx
+    - src/components/guided-creator/guided-path-detail-modal.tsx
+    - src/components/guided-creator/guided-overview-section.tsx
+    - src/lib/constants/copy/guided-creator-copy.ts
+    - src/components/shared/ability-score-grid.tsx
+    - src/hooks/use-game-rules.ts
+    - src/lib/game/formulas.ts
+    - public/tooltip-text.tsx
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T069
+  developer_test_plan: |
+    Suite DEV-V-013 T069 — Path More details overview (BUILD_VALIDATION.md).
+  description: |
+    Path More details overview restructure. Removed preview hint and Proficiency section; Path
+    Abilities tip + md chips; Weapons and Armor from live getArmamentMax; compact recommended
+    ability cards via AbilityScoreGrid density/onlyAbilities; reusable armamentProficiencyHelp.
+  acceptance_criteria:
+    - No modal preview hint; no Proficiency overview section.
+    - Path Abilities tip(s) match GAME_RULES Primary vs Secondary meaning.
+    - Recommended Abilities use compact ability cards (not desc-chip list).
+    - Weapons and Armor shows type-appropriate prose + number from getArmamentMax / live rules.
+    - Reusable armamentProficiencyHelp export wired on this section.
+    - DB gap (if any) documented + SQL proposed; not silently faked in UI.
+    - Add DEV-V-013-T069; npm run build; changelog + archive with pending-qa.
+  completed_work: |
+    - Dropped path detailModalHint and Proficiency overview block.
+    - Path Abilities: md chips (Primary slight blue) + guidedArchetypeAbilityHelp InfoTippy.
+    - Weapons and Armor summary with path-type prose + getArmamentMax(useGameRules); armamentProficiencyHelp.
+    - Recommended abilities: AbilityScoreGrid density=compact + onlyAbilities (shared grid extend).
+    - Audited live core_rules ARCHETYPES.armamentMax (3/8/12) + ARMAMENT_PROFICIENCY table — OK, no SQL.
+    - DEV-V-013-T069; pending-qa.
+  notes: |
+    TASK-581 consolidates tooltip scoping docs onto armamentProficiencyHelp (sheet wire optional).
+    /cleanup: collapsed recommended-ability memos; dropped unused AbilityName import; DEV-V-013 T070 count note; feedback disposition; TP tip em dash.
+
+- id: TASK-580
+  title: Simplify Training Points InfoTippy copy (guided Loadout / Powers)
+  created_at: 2026-07-20
+  created_by: agent
+  priority: medium
+  status: done
+  completed_at: 2026-07-20
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - public/tooltip-text.tsx
+    - src/components/guided-creator/loadout-budget-bar.tsx
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T071
+  developer_test_plan: |
+    Suite DEV-V-013 T071 — Training Points tip clarity (BUILD_VALIDATION.md).
+  description: |
+    Rewrote trainingPointsHelp for Guided Creator — shorter shared-budget copy for weapons,
+    armor, Powers, and Techniques; remaining gates affordability; dropped level/ability formula lecture.
+  acceptance_criteria:
+    - TP tip is shorter, clearer, and still correct.
+    - All current consumers still import the same export.
+    - Add or extend DEV-V-013-T071; npm run build; changelog + archive with pending-qa.
+  completed_work: |
+    - Shortened trainingPointsHelp (2 lines: shared budget + remaining affordability).
+    - LoadoutBudgetBar still imports trainingPointsHelp (sole consumer).
+    - DEV-V-013-T071 added; suite index updated to T071.
+  notes: |
+    Path wave sibling; independent of Path More details (TASK-578/579/581).
+- id: TASK-577
+  title: Guided Path L1 — Archetype Path title, section headers, path-type tips, ability chips
+  created_at: 2026-07-20
+  created_by: agent
+  priority: high
+  status: done
+  completed_at: 2026-07-20
+  implemented_by: agent
+  verification_status: pending-qa
+  follow_up_tasks:
+    - TASK-578
+    - TASK-579
+    - TASK-581
+  related_files:
+    - src/components/guided-creator/steps/path-step.tsx
+    - src/components/guided-creator/guided-step-layout.tsx
+    - src/components/guided-creator/guided-choice-card.tsx
+    - src/lib/constants/copy/guided-creator-copy.ts
+    - public/tooltip-text.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T068
+  developer_test_plan: |
+    Suite DEV-V-013 T068 — Path L1 Archetype Path chrome (BUILD_VALIDATION.md).
+  description: |
+    Guided Path step L1 chrome from owner feedback. Renamed step title to Choose your Archetype Path;
+    Foundation subtitle exposes Archetype Path; InfoTippy explaining Archetype Path; stronger Power /
+    Powered-Martial / Martial section headers; rewritten path-type tips (Power examples); ability chips
+    slightly larger for Primary and Secondary; Primary slight primary blue (not power/martial tint).
+  acceptance_criteria:
+    - Title is Choose your Archetype Path with working Archetype Path InfoTippy from tooltip-text.
+    - Foundation subtitle exposes Archetype Path.
+    - Section headers are visually stronger as clear h3 section titles.
+    - Path-type tips are positive, example-rich, and rules-accurate vs GAME_RULES.
+    - Ability chips slightly larger; Primary slight blue; Primary/Secondary same size; no power/martial role tint.
+    - Add DEV-V-013-T068; npm run build; changelog + move done to archive with verification_status pending-qa.
+  notes: |
+    Wave start of TASK-577-581. More details left to TASK-578.
+
+- id: TASK-576
+  title: Shared list shell for Admin Codex + Codex browse (+ Admin Images)
+  created_at: 2026-07-20
+  created_by: agent
+  priority: medium
+  status: done
+  completed_at: 2026-07-20
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/components/shared/codex-browse-list-shell.tsx
+    - src/docs/ai/ADR/0005-codex-browse-list-shell.md
+    - src/components/shared/index.ts
+    - scripts/shared-ui-allowlist.json
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
+    - src/app/(main)/codex/CodexSkillsTab.tsx
+    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
+    - src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx
+    - src/app/(main)/admin/codex/AdminPartsTab.tsx
+    - src/app/(main)/admin/codex/AdminPropertiesTab.tsx
+    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - src/app/(main)/codex/CodexTraitsTab.tsx
+    - src/app/(main)/codex/CodexCreatureFeatsTab.tsx
+    - src/app/(main)/codex/CodexPartsTab.tsx
+    - src/app/(main)/codex/CodexPropertiesTab.tsx
+    - src/app/(main)/codex/CodexEquipmentTab.tsx
+    - src/app/(main)/codex/CodexSpeciesTab.tsx
+    - src/app/(main)/codex/CodexFeatsTab.tsx
+    - src/app/(main)/codex/CodexArchetypesTab.tsx
+    - src/app/(main)/admin/images/page.tsx
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-028
+    tests:
+      - DEV-V-028-T001
+      - DEV-V-028-T002
+      - DEV-V-028-T003
+      - DEV-V-028-T004
+  developer_test_plan: |
+    Suite DEV-V-028 T001�T004 � see BUILD_VALIDATION.md
+  description: |
+    /global-audit 2026-07-20: Admin Codex + Codex browse + Admin Images hand-rolled
+    SectionHeader + SearchInput + ListHeader. Shipped CodexBrowseListShell (ADR-0005);
+    migrated 8 admin codex tabs + 9 Codex browse tabs (incl. Archetypes chrome) + Admin Images. Admin Archetypes path rows remain exceptional (no ListHeader grid).
+  acceptance_criteria:
+    - One canonical shared list chrome used by Admin Codex tabs + matching Codex browse tabs.
+    - Admin Images either adopts the same shell or documents why bank UI stays separate.
+    - FEATURE_INDEX + barrels + shared-ui allowlist updated; no parallel hand-rolled forks remain
+      for those surfaces.
+    - npm run build; targeted DEV-V if user-facing list chrome changes.
+  completed_work: |
+    - ADR-0005 + CodexBrowseListShell in shared (allowlist + FEATURE_INDEX + unification rule).
+    - Migrated Admin: Skills, Traits, CreatureFeats, Parts, Properties, Equipment, Species, Feats.
+    - Migrated Codex browse peers (same set); my-mode empties unchanged.
+    - Admin Images bank list on shell; PageHeader stays page-level.
+    - AdminArchetypesTab documented exception (path-card UI); CodexArchetypesTab on shell.
+    - DEV-V-028 T001�T004.
+  notes: |
+    Owner ack 2026-07-20 (proceed). Nested modal lists (AdminTraits choice picker,
+    AdminSpecies trait USM) stay hand-rolled per ADR.
+
+---
 - id: TASK-403
   title: Guided Simple Creator — Phase 8 admin & species starter flag
   created_at: 2026-06-30

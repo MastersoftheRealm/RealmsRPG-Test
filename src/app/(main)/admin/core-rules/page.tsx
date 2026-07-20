@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { ChevronLeft, Plus, Trash2 } from 'lucide-react';
@@ -854,23 +854,26 @@ export default function AdminCoreRulesPage() {
   const activeTabDef = TABS.find(t => t.id === activeTab)!;
   const categoryId = activeTabDef.category;
 
-  // Load current data when tab changes
-  useEffect(() => {
-    if (rules) {
-      const currentData = rules[categoryId];
-      setEditData(currentData ? { ...(currentData as unknown as Record<string, unknown>) } : {});
-
-      // For progression tab, also load creature data
-      if (categoryId === 'PROGRESSION_PLAYER') {
-        const creatureRules = rules.PROGRESSION_CREATURE;
-        setCreatureEditData(creatureRules ? { ...(creatureRules as unknown as Record<string, unknown>) } : {});
-      }
-
-      setDirty(false);
-      setError(null);
-      setSuccess(null);
+  // Re-seed editor when category or fetched rules change (render-time — TASK-430)
+  const [seededRules, setSeededRules] = useState<CoreRulesMap | null>(null);
+  const [seededCategory, setSeededCategory] = useState<CategoryId | null>(null);
+  if (rules && (rules !== seededRules || categoryId !== seededCategory)) {
+    const currentData = rules[categoryId];
+    setEditData(currentData ? { ...(currentData as unknown as Record<string, unknown>) } : {});
+    if (categoryId === 'PROGRESSION_PLAYER') {
+      const creatureRules = rules.PROGRESSION_CREATURE;
+      setCreatureEditData(
+        creatureRules ? { ...(creatureRules as unknown as Record<string, unknown>) } : {}
+      );
+    } else {
+      setCreatureEditData({});
     }
-  }, [categoryId, rules]);
+    setDirty(false);
+    setError(null);
+    setSuccess(null);
+    setSeededRules(rules);
+    setSeededCategory(categoryId);
+  }
 
   const handleDataChange = useCallback((data: Record<string, unknown>) => {
     setEditData(data);

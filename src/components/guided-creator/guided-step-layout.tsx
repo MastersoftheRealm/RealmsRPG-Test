@@ -12,6 +12,8 @@ import { useGuidedCreatorStore, type GuidedSubStep } from '@/stores/guided-creat
 export interface GuidedStepLayoutProps {
   subStep: GuidedSubStep;
   title: string;
+  /** Optional help beside the title (e.g. InfoTippy). */
+  titleAddon?: ReactNode;
   description?: ReactNode;
   guidance?: ReactNode;
   children: ReactNode;
@@ -28,6 +30,7 @@ export interface GuidedStepLayoutProps {
 
 export function GuidedStepLayout({
   title,
+  titleAddon,
   description,
   guidance,
   children,
@@ -44,7 +47,10 @@ export function GuidedStepLayout({
   return (
     <div className={cn('flex flex-col', completionHint ? 'pb-32 sm:pb-24' : 'pb-24')}>
       <header className="mb-4">
-        <h2 className="font-display text-2xl sm:text-3xl font-bold text-text-primary">{title}</h2>
+        <div className="flex items-center gap-1">
+          <h2 className="font-display text-2xl sm:text-3xl font-bold text-text-primary">{title}</h2>
+          {titleAddon}
+        </div>
         {description && (
           <p className="mt-2 font-nunito text-base text-text-secondary leading-relaxed">{description}</p>
         )}

@@ -4,18 +4,259 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-577
+**Next task ID:** TASK-593
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-575, 573–574, 536–548, 564–566, etc.)
+**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-440, 430, 388, 582, 580, 578, 577, 576, etc.)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 9 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 16 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
 
-**Hot notes:** TASK-576 Codex/Images list shell (Architect). TASK-535 innate (codex ack). TASK-500 deferred. TASK-381 sheet facade shipped.
+**Hot notes:** Sheet wave **TASK-583→587** (Temp Modifier Architect = 585 first; 583/584/587 parallel OK). Guided Path **TASK-579 / 581** still open. TASK-582 done (sheet polish). TASK-500 deferred. TASK-381: AdminArchetypes 6a–6c shipped (ready to close; species deferred). TASK-388 onboarding done.
+
+---
+
+# Character sheet / list overload + Temp Modifier (TASK-583–587) — owner feedback 2026-07-20
+# Order: 585 (Architect ADR) → 586. Parallel OK: 583, 584, 587. TASK-582 done (quick wins).
+
+- id: TASK-587
+  title: Sheet Defense Score hover tip (Score pattern)
+  created_at: 2026-07-20
+  created_by: agent
+  priority: medium
+  status: not-started
+  related_files:
+    - src/components/character-sheet/abilities-section.tsx
+    - public/tooltip-text.tsx
+    - src/docs/GAME_RULES.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T035
+  developer_test_plan: |
+    Suite DEV-V-009 T035 — Defense Score hover tip (add steps when implementing).
+  description: |
+    Follow-up to TASK-582 abilities/defenses polish. On the character sheet Defenses row, each
+    Defense Score value (the large number, not the roll chip and not the defense name) needs a short
+    hover/focus tip explaining that the number is a Score and what a Defense Score is per GAME_RULES
+    Score pattern (Score = Bonus + 10; Defense Score = 10 + Defense Bonus; passive target). Same tip
+    copy for all six scores. Use WordHelpTip (or equivalent word-tied pattern) + export from
+    tooltip-text.tsx — do not invent a parallel tip system. Keep copy simple/short; match GAME_RULES
+    terminology (Score, Defense Score, Defense Bonus).
+  acceptance_criteria:
+    - Hovering/focusing any defense Score value shows the shared short tip.
+    - Tip states it is a Score and defines Defense Score per core rules (Bonus + 10 pattern).
+    - Same tip for all six; does not replace getDefenseHelp on the defense name.
+    - Reusable export in tooltip-text.tsx; DEV-V-009-T035; build; changelog; pending-qa.
+  notes: |
+    Related: TASK-547 (name tips), TASK-582 (abilities/defenses layout).
+
+- id: TASK-583
+  title: Collapse Parts/Properties & Proficiencies sitewide + type tips
+  created_at: 2026-07-20
+  created_by: agent
+  priority: high
+  status: not-started
+  related_files:
+    - src/lib/chip/list-row-metadata.ts
+    - src/components/shared/grid-list-row.tsx
+    - src/components/character-sheet/library-entity-rows.tsx
+    - src/lib/library-selectable-builders.ts
+    - public/tooltip-text.tsx
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T031
+  developer_test_plan: |
+    Suite DEV-V-009 T031 — Parts/Properties sections default collapsed + InfoTippy (add steps when implementing).
+  description: |
+    Everywhere Parts & Proficiencies / Properties & Proficiencies appear (sheet, Codex, library,
+    selection modals, creature creator), those detailSections start collapsed with a shared chevron
+    toggle. Add InfoTippy on the section label: parts/properties are the pieces that compose the
+    Power/Technique/weapon/armor/shield; proficiency with each is required to use/wield/wear/perform
+    with proficiency; each carries a TP amount — tailor copy per entity family using GAME_RULES
+    verbiage. Do NOT collapse ordinary descriptor/quick-reference chips. Extend MetadataDetailSection
+    / GridListRow — no forks.
+  acceptance_criteria:
+    - Parts/Properties & Proficiencies default collapsed on expand of entity row (all surfaces).
+    - Chevron opens/closes; InfoTippy with type-appropriate copy.
+    - Descriptor chips outside those sections remain visible by default.
+    - DEV-V-009-T031; npm run build; changelog; archive pending-qa.
+
+- id: TASK-584
+  title: Skills sheet — catalog-all base skills + filters + edit chrome
+  created_at: 2026-07-20
+  created_by: agent
+  priority: high
+  status: not-started
+  related_files:
+    - src/components/character-sheet/skills-section.tsx
+    - src/components/shared/skill-row.tsx
+    - src/components/shared/add-skill-modal.tsx
+    - src/hooks/use-codex-skills.ts
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T032
+  developer_test_plan: |
+    Suite DEV-V-009 T032 — Skills catalog list + filters + − removes (add steps when implementing).
+  description: |
+    Skills list model: always show every Codex base skill (no Add Skill opt-in for base skills).
+    Sub-skills: proficient ones always shown; unproficient sub-skills only if user added them (add/remove
+    for visibility). Top filters: proficient-only vs include unproficient; toggle show sub-skills.
+    Edit chrome: Add Skill near title fixed via new model; PointStatus no ugly wrap; pencil floating
+    icon-only top-right (compact); steppers not stranded far right; remove per-skill X — decreasing
+    with − enough clears skill value then proficiency (and sub-skill when applicable). Species locks stay.
+  acceptance_criteria:
+    - All base Codex skills listed by default; filters work as specified.
+    - Sub-skill visibility rules match owner: prof always; unprof only if added.
+    - No remove-X; − path removes value then prof/sub-skill per GAME_RULES allocation.
+    - Header not cramped; DEV-V-009-T032; build; changelog; pending-qa.
+
+- id: TASK-585
+  title: Architect — Temp Modifier mode (persist, tint, dual affordance)
+  created_at: 2026-07-20
+  created_by: agent
+  priority: critical
+  status: not-started
+  follow_up_tasks:
+    - TASK-586
+  related_files:
+    - src/components/shared/edit-section-toggle.tsx
+    - src/components/character-sheet/sheet-header.tsx
+    - src/components/character-sheet/abilities-section.tsx
+    - src/components/character-sheet/skills-section.tsx
+    - src/docs/ai/ADR/
+    - src/docs/SUPABASE_SCHEMA.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T033
+  developer_test_plan: |
+    Suite DEV-V-009 T033 — Temp Modifier dual mode + persistence (add steps when implementing).
+  description: |
+    ARCHITECT (ADR required). Introduce "Temp Modifier" UI convenience (not a GAME_RULES term) beside
+    pencil: Lucide PlusMinus / SlidersHorizontal family. Pencil = rules-compliant spend (no intentional
+    overspend; red pencil for graceful illegal state). Temp Modifier = layered Bonus/Penalty on top of
+    base values (does not rewrite armor/ability base); no resource spend UI; value tint gold (warning
+    family like over-max HP/EN) when positive, danger when negative — tint the VALUE not the roll button.
+    Persist on character (survive refresh/campaign view). Ability Temp Modifiers cascade to dependents
+    except HP/EN/TP maxima unless toggled in Abilities adjust UI (default off). Migrate pattern for
+    Speed/Evasion-style override pencils. Owner ack / ADR before new shared control + data shape.
+  acceptance_criteria:
+    - ADR + schema/docs for persisted temp modifiers.
+    - Shared dual affordance pattern (pencil + Temp Modifier) without parallel forks.
+    - Tint + cascade + HP/EN/TP toggle contract documented for TASK-586.
+    - Owner ack if new shared/ui file; allowlist + generate-index as needed.
+    - DEV-V-009-T033 scaffold or full; build; changelog.
+
+- id: TASK-586
+  title: Wire Temp Modifier v1 surfaces (header, abilities, defenses, skills)
+  created_at: 2026-07-20
+  created_by: agent
+  priority: high
+  status: not-started
+  related_files:
+    - src/components/character-sheet/sheet-header.tsx
+    - src/components/character-sheet/abilities-section.tsx
+    - src/components/character-sheet/skills-section.tsx
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T034
+  developer_test_plan: |
+    Suite DEV-V-009 T034 — Temp Modifier on v1 sheet surfaces (add steps when implementing).
+  description: |
+    Depends on TASK-585. Wire Temp Modifier to: Speed, Evasion, Critical Range, Damage Reduction,
+    Terminal; Abilities (+ HP/EN/TP max toggles); Defenses; Skills. Adjustments stack on top of
+    computed/armor defaults (e.g. DR/crit range on top of armor, not editing armor). Pencil paths
+    become rules-strict where applicable; existing override-via-pencil fields migrate to Temp Modifier.
+  acceptance_criteria:
+    - All v1 surfaces support Temp Modifier with tint + persistence.
+    - Ability cascade + HP/EN/TP toggles behave per TASK-585 ADR.
+    - Pencil cannot intentionally overspend pools.
+    - DEV-V-009-T034; build; changelog; pending-qa.
+  notes: |
+    Depends on TASK-585.
+
+---
+
+# Guided Path / Archetype screen polish (TASK-579, 581) — owner feedback 2026-07-20
+# Remaining: 579 (feats deep-dive); 581 after 578 (tooltip docs + Armament consolidate). TASK-578/580 done.
+
+- id: TASK-579
+  title: Guided Path feat options — uses as descriptor chips + restriction-notice cohesion
+  created_at: 2026-07-20
+  created_by: agent
+  priority: medium
+  status: not-started
+  related_files:
+    - src/lib/detail-option/builders.ts
+    - src/lib/detail-option/format-recovery.ts
+    - src/components/guided-creator/guided-path-detail-modal.tsx
+    - src/components/guided-creator/guided-detail-option-list.tsx
+    - src/components/guided-creator/guided-restriction-notice.tsx
+    - src/lib/codex/feat-restriction-notice.ts
+    - src/components/guided-creator/steps/archetype-feats-step.tsx
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T070
+  developer_test_plan: |
+    Suite DEV-V-013 T070 — Path feat deep-dive uses chips + notices (add steps when implementing).
+  description: |
+    In Path More details feat option rows, Uses/recovery chips (e.g. "Uses 1 / Full Recovery") must be
+    non-expanding DescriptorChips — the label is self-explanatory; drop expandable restatement via
+    usesFactChips / featToDetailOption (scope carefully if traits share the helper). Surface the same
+    GuidedFeatRestrictionNotice / GuidedRestrictionNotice info-warning style used on later guided feat
+    choice cards for state feats and meaningful restrictions — cohesive with archetype-feats-step; do
+    not invent a parallel warning UI. Avoid duplicating uses chip and uses sentence when redundant.
+  acceptance_criteria:
+    - Feat uses chips do not expand when the label already states uses/recovery.
+    - Path feat overview shows restriction/info notices consistent with archetype feats step cards.
+    - No parallel warning component invented.
+    - Add DEV-V-013-T070; npm run build; changelog + archive with pending-qa.
+  notes: |
+    Soft depends on TASK-577 only to keep Path wave ordered. Independent of TASK-581.
+    Same modal as TASK-578 (done) — extend feat option rows carefully.
+
+---
+
+- id: TASK-581
+  title: Document L1/guided vs global tooltip layers; consolidate Armament Proficiency tip
+  created_at: 2026-07-20
+  created_by: agent
+  priority: medium
+  status: not-started
+  depends_on:
+    - TASK-578
+  related_files:
+    - src/docs/ai/guide/04-floating-ui-tooltips.md
+    - public/tooltip-text.tsx
+    - src/components/guided-creator/guided-path-detail-overview.tsx
+    - src/components/character-sheet/library-section.tsx
+  build_validation: |
+    suite: n/a
+  developer_test_plan: |
+    Docs + copy consolidation; optional sheet Inventory Armament Proficiency tip smoke if wired.
+  description: |
+    After TASK-578 ships armamentProficiencyHelp: add a short scoping section to
+    guide/04-floating-ui-tooltips.md covering global term tips (same everywhere — abilities, defenses,
+    Armament Proficiency) vs guided/L1-simplified tips (shorter teaching copy for creator steps);
+    naming convention examples (armamentProficiencyHelp vs guidedArchetypeAbilityHelp). Consolidate
+    any duplicate Armament Proficiency strings onto the shared export. Optional low-risk stretch: wire
+    the same export on character sheet Inventory Armament Proficiency label; otherwise document as
+    follow-up and stop at export + path usage + docs.
+  acceptance_criteria:
+    - guide/04 documents L1/guided vs global tip layers with examples.
+    - Armament Proficiency tip is a shared tooltip-text export used by Path More details (no leftover duplicates).
+    - Optional sheet wire documented as done or explicit follow-up.
+    - npm run build if UI touched; changelog; archive (verification_status n/a if docs-only, pending-qa if sheet wired).
+  notes: |
+    Depends on TASK-578 (armament export + Path wire). Do not invent a second Armament tip string.
 
 ---
 
@@ -44,91 +285,102 @@ Do **not** read the done archive at session start.
 
 ---
 
-- id: TASK-440
-  title: Copy compliance residuals — dense HP HUD abbreviation decision
-  created_at: 2026-07-15
-  created_by: agent
-  priority: low
-  status: not-started
-  parent_task: TASK-439
-  related_files:
-    - src/app/(main)/library/LibraryCreaturesTab.tsx
-    - src/components/encounters/CombatantCard.tsx
-    - src/app/(main)/creature-creator/page.tsx
-  description: |
-    Follow-up to TASK-439 after sitewide audit. Styleguide em dashes and admin ±% modifier
-    wording are already cleaned. Remaining product question only:
-    - Dense HUD still shows HP (Library creatures column, encounter CombatantCard, creature
-      creator quickStats). GAME_RULES allows established dense abbreviations; full "Health"
-      would be more consistent if owner prefers.
-    Do not rewrite code comments or empty-state `—` placeholders.
-  acceptance_criteria:
-    - Owner decides: keep HP in dense HUD, or rename to Health (and EN→Energy where paired).
-    - Apply decision sitewide to listed surfaces (and peers if found).
-    - npm run build if UI touched.
-  notes: |
-    Low priority. Audit 2026-07-15: no other clear prefer/avoid UI hits remaining in src/app +
-    src/components + copy modules + tooltip-text.
+# TASK-440 done 2026-07-20 — Dense HUD Health/Energy (archive).
+# TASK-480 automation backlog → TASK-588–592 (vitest extracts).
+
+# TASK-430 done 2026-07-20 — React Compiler hook warnings cleared (archive; DEV-V-019 pending-qa).
 
 ---
 
-- id: TASK-430
-  title: React Compiler hook warnings — exhaustive-deps / set-state-in-effect / preserve-manual-memoization
-  created_at: 2026-07-13
+# BUILD_VALIDATION automation backlog (from TASK-480) — extract pure helpers + vitest
+
+- id: TASK-588
+  title: Vitest — path change reset vs retain draft patch
+  created_at: 2026-07-20
   created_by: agent
   priority: low
-  status: partial
-  parent_task: TASK-321
-
-  description: |
-    Follow-up from TASK-321. After clearing unused-vars / no-explicit-any / raw-color errors, remaining
-    ESLint noise is React Compiler hook rules (~171): set-state-in-effect (58), exhaustive-deps (104),
-    preserve-manual-memoization (9). eslint.config.mjs intentionally keeps these as warnings so lint
-    stays actionable without blocking. Fix in small, behavior-preserving batches with DEV-V where UI syncs.
+  status: not-started
+  parent_task: TASK-480
   related_files:
-    - eslint.config.mjs
-    - src/app/(main)/library/page.tsx
-    - src/components/guided-creator/steps/skills-step.tsx
-    - src/components/character-creator/steps/ancestry-step.tsx
-    - src/components/character-creator/steps/equipment-step.tsx
-    - src/components/character-sheet/library-section.tsx
-    - src/components/character-sheet/edit-archetype-modal.tsx
-    - src/app/(main)/characters/[id]/page.tsx
-    - src/app/(main)/characters/[id]/CharacterSheetModals.tsx
-    - src/hooks/use-creator-save.ts
-    - src/lib/empty.ts
-    - src/components/guided-creator/guided-choice-card.tsx
-    - src/app/(main)/species-creator/page.tsx
-    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
-    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
-    - src/app/(auth)/login/page.tsx
+    - src/components/guided-creator/steps/path-step.tsx
+    - src/lib/guided-creator/
+  description: |
+    DEV-V-001-T013 / DEV-V-013-T032. Extract the same-path vs new-path draft patch from
+    PathStep.handleSelect into a pure helper under lib/guided-creator; unit-test retain vs clear.
   acceptance_criteria:
-    - Material reduction in react-hooks/* warnings without cascading re-render regressions.
-    - Prefer removing unnecessary effects over blanket eslint-disable.
-    - exhaustive-deps changes must not alter intentional mount-only / stable-ref patterns.
-    - npm run build + lint pass; no new errors.
-  build_validation: DEV-V-019
-  developer_test_plan: |
-    Run DEV-V-019-T001–T007 + T009–T010 in BUILD_VALIDATION.md (choice-card, login, admin feat
-    remount, library clamp, edit-archetype session remount, sheet library tab visibility, modal
-    remounts, power-creator draft/?edit= bootstrap, remaining creators draft/?edit= bootstrap).
-  completed_work: |
-    Batches 1–4 (2026-07-15/16): ~168 → **104** react-hooks warnings. Patterns: derive /
-    remount-on-open / stable empties (`lib/empty.ts`) / creator bootstrap+remount
-    (`lib/game/creator-cache.ts` + per-creator `*-bootstrap.ts`). DEV-V-019 T001–T007 +
-    T009–T010. Detail in AI_CHANGELOG / archive — do not re-expand batch logs here.
-  remaining_work: |
-    Status stays **partial** until residual hook warnings are materially flattened (or owner
-    explicitly closes leftovers as intentional). Baseline after batch 4: **104**
-    (set-state-in-effect 36, exhaustive-deps 60, preserve-manual-memoization 8).
+    - Pure helper used by path-step (no duplicated reset object in the component).
+    - Vitest covers same-path retain and different-path invalidate (abilities/skills/feats/loadout/powers).
+    - npm test green; changelog.
 
-    Still to finish: encounters + crafting `[id]` + `modal.tsx` (parity-test FSM) + sheet
-    domain hooks (`use-sheet-*-actions`, not the thin facade) + smaller lint leftovers.
-  follow_up_tasks:
-    - TASK-381
-  notes: |
-    Prefer derive / remount / `lib/empty.ts`. Sheet actions are a facade (TASK-381 Phase 2);
-    creators still large. Keep partial until warnings flatten or owner closes.
+- id: TASK-589
+  title: Vitest — technique load columns (DEV-V-016-T002)
+  created_at: 2026-07-20
+  created_by: agent
+  priority: low
+  status: not-started
+  parent_task: TASK-480
+  related_files:
+    - src/lib/library-selectable-builders.ts
+    - src/lib/library-selectable-builders.test.ts
+  description: |
+    Extend library-selectable-builders tests for technique header/column contract
+    (Action, Energy, Attack, Training Pts) matching sheet add / creator Load.
+  acceptance_criteria:
+    - getListHeaderColumns('technique') + getItemColumns / buildSelectableItem assertions.
+    - npm test green; update DEVELOPER_TASK_QUEUE matrix row #9 to CI.
+
+- id: TASK-590
+  title: Vitest — innate threshold filter / TP parity (DEV-V-013-T057)
+  created_at: 2026-07-20
+  created_by: agent
+  priority: low
+  status: not-started
+  parent_task: TASK-480
+  related_files:
+    - src/lib/guided-creator/powers-techniques-l2.ts
+    - src/lib/guided-creator/loadout-tp.ts
+  description: |
+    Cover innate catalog filter (energy ≤ threshold) and TP spend parity for innate vs regular
+    via existing powers-techniques-l2 / loadout-tp helpers — no UI e2e.
+  acceptance_criteria:
+    - Vitest for threshold include/exclude and innate TP counting where helpers already exist.
+    - npm test green; matrix row #6 → CI.
+
+- id: TASK-591
+  title: Vitest — ancestry pick task order (DEV-V-013-T061)
+  created_at: 2026-07-20
+  created_by: agent
+  priority: low
+  status: not-started
+  parent_task: TASK-480
+  related_files:
+    - src/components/guided-creator/steps/ancestry-step.tsx
+    - src/lib/guided-creator/
+  description: |
+    Extract ancestry PickTask list builder (characteristic → ancestry trait → optional flaw →
+    bonus ancestry) from ancestry-step into lib; unit-test order and flaw-gated second trait.
+  acceptance_criteria:
+    - Pure builder used by ancestry-step.
+    - Vitest asserts phase order and flaw → ancestry-trait-2 presence.
+    - npm test green; matrix row #8 → CI.
+
+- id: TASK-592
+  title: Vitest — guided Continue advances one screen (DEV-V-013-T059)
+  created_at: 2026-07-20
+  created_by: agent
+  priority: low
+  status: not-started
+  parent_task: TASK-480
+  related_files:
+    - src/stores/guided-creator-store.ts
+  description: |
+    Store nextSubStep / chapter entry already encodes “never jump to furthest.” Add focused
+    vitest (or extract pure next-index helper) proving Continue advances one sub-step from
+    chapter entry, not furthest completed.
+  acceptance_criteria:
+    - Automated coverage of one-screen advance vs furthest-jump regression.
+    - Prefer pure helper extract if store is hard to unit-test; no Playwright required.
+    - npm test green; matrix row #7 → CI.
 
 ---
 
@@ -164,7 +416,7 @@ Do **not** read the done archive at session start.
   created_by: agent
   description: |
     Decompose large character-sheet/creator files via phased extractions with test-backed parity checkpoints.
-    Sheet actions Phase 2 shipped; remaining work is large creator/admin routes.
+    Sheet + power/item + creature + AdminArchetypes (6a–6c) shells shipped. Species deferred.
   related_files:
     - src/components/character-sheet/use-character-sheet-actions.ts
     - src/components/character-sheet/use-sheet-library-actions.ts
@@ -173,8 +425,19 @@ Do **not** read the done archive at session start.
     - src/components/character-sheet/use-sheet-skill-identity-actions.ts
     - src/app/(main)/characters/[id]/page.tsx
     - src/app/(main)/creature-creator/page.tsx
+    - src/app/(main)/creature-creator/creature-creator-editor.tsx
+    - src/app/(main)/creature-creator/use-creature-creator-workspace.ts
     - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/power-creator/use-power-creator-workspace.ts
+    - src/app/(main)/power-creator/power-creator-editor.tsx
     - src/app/(main)/item-creator/page.tsx
+    - src/app/(main)/item-creator/use-item-creator-workspace.ts
+    - src/app/(main)/item-creator/item-creator-editor.tsx
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/app/(main)/admin/codex/admin-archetype-path-form.ts
+    - src/app/(main)/admin/codex/admin-archetype-path-rows.tsx
+    - src/app/(main)/admin/codex/admin-archetype-editor.tsx
+    - src/app/(main)/admin/codex/use-admin-archetype-workspace.ts
     - src/docs/ai/BUILD_VALIDATION.md
   acceptance_criteria:
     - `use-character-sheet-actions` split by domain boundaries without behavior regressions.
@@ -184,112 +447,49 @@ Do **not** read the done archive at session start.
   completed_work: |
     Phase 2 (sheet): `use-character-sheet-actions.ts` is a thin facade composing
     `use-sheet-{library,resource,feat,skill-identity,auto-proficiencies}-actions`.
+    Phase 1 (power/item editors): presentational section islands in `*-creator-editor.tsx`.
+    Phase 3 (2026-07-20): workspace state/cost/save/load extracted to
+    `use-power-creator-workspace.ts` + `use-item-creator-workspace.ts`; pages are bootstrap
+    gate + CreatorPageShell wiring only (~265 / ~301 LOC). Load handlers typed via exported
+    `PowerLibraryRecord` / `ItemLibraryRecord` (no `any`). DEV-V-018-T008 + rollback note.
+    Phase 4 (2026-07-20): creature form body → `creature-creator-editor.tsx`. DEV-V-018-T009.
+    Phase 5 (2026-07-20): creature state/stats/modals data → `use-creature-creator-workspace.ts`;
+    page shell-only (~377 LOC) + editor (~815) + workspace (~1014). DEV-V-018-T010. Build/test green.
+    Phase 6a (2026-07-20): AdminArchetypes pure form helpers → `admin-archetype-path-form.ts`
+    (~297 LOC); `SelectedFeatRows` / `PathQuantityRow` → `admin-archetype-path-rows.tsx` (~76);
+    tab ~1900 LOC (was ~2184). Uses shared `PathItemRecommendation`. DEV-V-008-T023.
+    Phase 6b (2026-07-20): modal body → `admin-archetype-editor.tsx` (~1082 LOC); tab shell
+    ~925 LOC (list + modal footer + option memos + save). DEV-V-008-T024.
+    Phase 6c (2026-07-20): state/options/save → `use-admin-archetype-workspace.ts` (~869 LOC);
+    tab shell-only (~175 LOC). DEV-V-008-T025.
   remaining_work: |
-    Creator/admin god files still large — start with power-creator + item-creator (owner
-    2026-07-01); species/creature deferred from beginner funnel; creature-creator ~1895 LOC,
-    AdminArchetypesTab ~2289 LOC remain for later phases.
+    Implementable AdminArchetypes + creator god-file phases complete. Technique/empowered
+    already had editor islands. Species creator deferred from beginner funnel — no further
+    TASK-381 phases unless owner reopens. Ready to archive as done + pending-qa after
+    owner runs DEV-V-008 T023–T025 (and/or says close).
   follow_up_tasks:
     - TASK-430
   notes: |
     High blast radius — proceed only with expanded DEV-V validation and small-scope PRs.
     2026-07-19 /debt (/global-audit): marked partial — sheet AC satisfied; do not rediscover
     sheet split. TASK-430 may clean domain hook warnings independently.
+    2026-07-20: Phases 3–5 (power/item workspace, creature editor + workspace) — do not rediscover.
+    2026-07-20: Phase 6a–6c AdminArchetypes helpers/rows/editor/workspace — do not rediscover.
+    2026-07-20 /cleanup: dropped dead workspace return + private form helpers — do not rediscover.
+    Rollback Phase 3: drop use-*-creator-workspace.ts and restore prior page bodies (DEV-V-018-T008).
+    Rollback Phase 4: drop creature-creator-editor.tsx and restore page children (DEV-V-018-T009).
+    Rollback Phase 5: drop use-creature-creator-workspace.ts and restore prior page body (DEV-V-018-T010).
+    Rollback Phase 6a: inline form helpers + rows into AdminArchetypesTab; delete extracted modules
+    (DEV-V-008-T023).
+    Rollback Phase 6b: inline modal body into AdminArchetypesTab; delete admin-archetype-editor.tsx
+    (DEV-V-008-T024).
+    Rollback Phase 6c: inline workspace into AdminArchetypesTab; delete use-admin-archetype-workspace.ts
+    (DEV-V-008-T025).
 
 ---
 
-- id: TASK-388
-  title: "Post-activation onboarding (play together, sheet tour, level-up milestones)"
-  created_at: 2026-06-28
-  created_by: owner
-  priority: medium
-  status: not-started
-  description: |
-    Section 11 of REALMS_PRODUCT_OVERVIEW.md. After first character save, guide users
-    toward playing together (Discord, campaign invite). Optional post-save sheet tour.
-    Contextual level-up tutorials for milestones (first level-up, first ability point,
-    etc.) — delta-only, skippable, global tutorials on/off preference.
-  related_files:
-    - src/docs/REALMS_PRODUCT_OVERVIEW.md
-    - src/components/character-creator/steps/finalize-step.tsx
-    - src/components/character-sheet/
-    - src/app/(main)/home-page.tsx
-  acceptance_criteria:
-    - After first character save: dismissible play-together prompt (Discord + start campaign).
-    - Optional sheet tour offered once post-save (Skip + Don't show again); not on home page.
-    - First level-up shows contextual guide for fields that changed only.
-    - First ability-point level (e.g. level 3) shows where to allocate on sheet.
-    - User can disable all tutorials (setting or preference flag).
-    - Milestone flags stored (profile or character JSON); no repeat on subsequent level-ups of same type.
-    - `npm run build` passes.
-  notes: |
-    Replaces pre-creation home OnboardingTour with post-activation guidance.
-    Prefer InfoTippy/highlight chains over modal-heavy tours.
-
----
-
-- id: TASK-576
-  title: Shared list shell for Admin Codex + Codex browse (+ Admin Images)
-  created_at: 2026-07-20
-  created_by: agent
-  priority: medium
-  status: not-started
-  related_files:
-    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
-    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
-    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
-    - src/app/(main)/admin/codex/AdminPartsTab.tsx
-    - src/app/(main)/admin/codex/AdminPropertiesTab.tsx
-    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
-    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
-    - src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx
-    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
-    - src/app/(main)/codex/CodexSkillsTab.tsx
-    - src/app/(main)/codex/CodexSpeciesTab.tsx
-    - src/app/(main)/codex/CodexFeatsTab.tsx
-    - src/app/(main)/codex/CodexPartsTab.tsx
-    - src/app/(main)/codex/CodexPropertiesTab.tsx
-    - src/app/(main)/codex/CodexEquipmentTab.tsx
-    - src/app/(main)/codex/CodexArchetypesTab.tsx
-    - src/app/(main)/codex/CodexTraitsTab.tsx
-    - src/app/(main)/codex/CodexCreatureFeatsTab.tsx
-    - src/app/(main)/admin/images/page.tsx
-    - src/components/shared/official-entity-list.tsx
-    - src/docs/ai/FEATURE_INDEX.md
-  description: |
-    2026-07-20 /global-audit: AdminPublic* already on OfficialEntityList; Admin Codex (9 tabs),
-    Codex browse (9 tabs), and Admin Images still hand-roll SectionHeader + SearchInput + ListHeader.
-    Extract one shared list-page shell (or extend OfficialEntityList only if product scope expands
-    beyond official library grids — prefer a codex/admin browse shell named for that domain).
-    Architect-class: new shared UI needs ADR or owner ack before implement.
-  acceptance_criteria:
-    - One canonical shared list chrome used by Admin Codex tabs + matching Codex browse tabs.
-    - Admin Images either adopts the same shell or documents why bank UI stays separate.
-    - FEATURE_INDEX + barrels + shared-ui allowlist updated; no parallel hand-rolled forks remain
-      for those surfaces.
-    - npm run build; targeted DEV-V if user-facing list chrome changes.
-  notes: |
-    Do not fold into /debt. Do not invent a second OfficialEntityList fork — unify or extend
-    deliberately. Start with one admin tab + one Codex peer as a vertical slice.
-
----
-
-- id: TASK-480
-  title: Automate high-value BUILD_VALIDATION behaviors (vitest/Playwright growth)
-  created_at: 2026-07-15
-  created_by: agent
-  priority: medium
-  status: not-started
-  related_files:
-    - src/docs/ai/BUILD_VALIDATION.md
-    - tests/
-    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
-  description: |
-    Audit residual: BUILD_VALIDATION.md (~132KB) is a manual human catalog, not a regression net.
-    Keep it for owner smoke; add automated tests for highest-churn guided/library/sheet behaviors.
-  acceptance_criteria:
-    - Identify top 10 DEV-V tests that should be automated; file follow-ups or implement first 3.
-    - Document which suites stay human-only vs CI-covered in DEVELOPER_TASK_QUEUE.
-    - At least 3 new automated tests merge; npm test / relevant Playwright green.
+# TASK-388 done 2026-07-20 — Post-activation onboarding (archive).
+# TASK-480 done 2026-07-20 — BUILD_VALIDATION automation growth (archive; CI coverage note in DEVELOPER_TASK_QUEUE).
 
 ---
 

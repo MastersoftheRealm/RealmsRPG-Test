@@ -26,4 +26,32 @@ describe('mapSelectedToCharacterItems (equipment)', () => {
     expect(items[0].quantity).toBe(3);
     expect(items[0].id).toBe(1);
   });
+
+  it('normalizes fractional/invalid quantities to at least 1 (DEV-V-009-T022)', () => {
+    const selected: SelectableItem[] = [
+      {
+        id: '2',
+        name: 'Rope',
+        description: '',
+        columns: [],
+        data: { id: 2, name: 'Rope', description: '', properties: [] },
+        quantity: 2.7,
+      } as SelectableItem & { quantity: number },
+      {
+        id: '3',
+        name: 'Spike',
+        description: '',
+        columns: [],
+        data: { id: 3, name: 'Spike', description: '', properties: [] },
+        quantity: Number.NaN,
+      } as SelectableItem & { quantity: number },
+    ];
+
+    const items = mapSelectedToCharacterItems('equipment', selected, 'powers') as Array<{
+      quantity?: number;
+    }>;
+
+    expect(items[0].quantity).toBe(2);
+    expect(items[1].quantity).toBe(1);
+  });
 });

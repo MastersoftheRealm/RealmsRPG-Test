@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { calculateProficiency, getArchetypeType, getArchetypeMilestoneLevels } from '@/lib/game/formulas';
 import { useRollsOptional } from './roll-context';
@@ -334,13 +334,10 @@ export function ArchetypeSection({
   // Calculate proficiency points (effective max = level-based, or higher if manually raised)
   const level = character.level || 1;
   const levelBasedMax = calculateProficiency(level);
-  const totalProfPoints = Math.max(levelBasedMax, maxProfOverride ?? levelBasedMax);
-
-  useEffect(() => {
-    if (maxProfOverride !== null && maxProfOverride <= levelBasedMax) {
-      setMaxProfOverride(null);
-    }
-  }, [levelBasedMax, maxProfOverride]);
+  // Ignore stale overrides at/below level max (derive — no sync effect)
+  const effectiveMaxProfOverride =
+    maxProfOverride !== null && maxProfOverride > levelBasedMax ? maxProfOverride : null;
+  const totalProfPoints = Math.max(levelBasedMax, effectiveMaxProfOverride ?? levelBasedMax);
   const spentProfPoints = martialProf + powerProf;
   const remainingProfPoints = totalProfPoints - spentProfPoints;
 

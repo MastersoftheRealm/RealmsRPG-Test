@@ -216,7 +216,10 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
   const totalDice = Object.values(dicePool).reduce((a, b) => a + b, 0);
 
   return (
-    <div className={cn('fixed bottom-5 right-5 z-floating flex flex-col items-end', className)}>
+    <div
+      className={cn('fixed bottom-5 right-5 z-floating flex flex-col items-end', className)}
+      data-tour-id="sheet-tour-roll-log"
+    >
       {/* Panel */}
       <Card
         className={cn(
@@ -474,19 +477,14 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
               <span
                 key={di}
                 className={cn(
-                  'inline-flex items-center justify-center min-w-[22px] h-6 px-1 rounded text-xs font-bold',
-                  die.type === 'd20'
-                    ? cn(
-                        'border',
-                        die.isMax && 'bg-success-100 border-success-500 text-success-fg',
-                        die.isMin && 'bg-danger-100 border-danger-500 text-danger-fg',
-                        !die.isMax && !die.isMin && 'bg-surface-alt dark:bg-surface text-text-secondary dark:text-text-primary border-border-light'
-                      )
-                    : cn(
-                        die.isMax ? 'bg-success-100 border border-success-400 text-success-fg' :
-                        die.isMin ? 'bg-danger-100 border border-danger-400 text-danger-fg' :
-                        'bg-surface-alt dark:bg-surface text-text-secondary dark:text-text-primary border border-border-light'
-                      )
+                  'inline-flex items-center justify-center min-w-[22px] h-6 px-1 rounded text-xs font-bold border',
+                  die.isMax &&
+                    'bg-success-50 dark:bg-success-900/40 text-success-fg border-success-300 dark:border-success-700/60',
+                  die.isMin &&
+                    'bg-danger-50 dark:bg-danger-900/40 text-danger-fg border-danger-300 dark:border-danger-700/60',
+                  !die.isMax &&
+                    !die.isMin &&
+                    'bg-surface-alt dark:bg-surface text-text-secondary dark:text-text-primary border-border-light'
                 )}
               >
                 {die.value}
@@ -515,10 +513,14 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
           <>
             <span className="text-text-muted dark:text-text-secondary text-xs">=</span>
             <span className={cn(
-              'inline-flex items-center px-2 py-0.5 rounded text-sm font-bold',
-              roll.isCrit && 'bg-success-100 border border-success-400 text-success-fg',
-              roll.isCritFail && 'bg-danger-100 border border-danger-400 text-danger-fg',
-              !roll.isCrit && !roll.isCritFail && 'bg-primary-subtle-bg border border-primary-subtle-border text-primary-fg'
+              'inline-flex items-center px-2 py-0.5 rounded text-sm font-bold border',
+              roll.isCrit &&
+                'bg-success-50 dark:bg-success-900/40 text-success-fg border-success-300 dark:border-success-700/60',
+              roll.isCritFail &&
+                'bg-danger-50 dark:bg-danger-900/40 text-danger-fg border-danger-300 dark:border-danger-700/60',
+              !roll.isCrit &&
+                !roll.isCritFail &&
+                'bg-primary-subtle-bg border-primary-subtle-border text-primary-fg'
             )}>
               {roll.total}
             </span>

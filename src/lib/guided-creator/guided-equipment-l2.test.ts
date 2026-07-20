@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   applyGuidedEquipmentL2Selection,
   buildGuidedEquipmentL2Items,
+  computeL2GearSpend,
   computeL2TpSpent,
 } from '@/lib/guided-creator/guided-equipment-l2';
 import type {
@@ -262,5 +263,66 @@ describe('guided-equipment-l2', () => {
     const items = buildGuidedEquipmentL2Items('weapon', catalog, tight, [], []);
     // Greataxe 6 TP alone still fits when cross-phase spend is 0
     expect(items.some((i) => i.id === 'w2')).toBe(true);
+  });
+
+  it('gear quantity multiplies Currency spend and Confirm preserves qty (DEV-V-013-T052)', () => {
+    const selected = [
+      {
+        id: 'g1',
+        name: 'Rope',
+        quantity: 4,
+        data: {
+          ref: { id: 'g1', quantity: 1 },
+          category: 'equipment' as const,
+          row: catalog.get('g1')!,
+        },
+      },
+    ];
+    expect(computeL2GearSpend(selected)).toBe(20);
+
+    const result = applyGuidedEquipmentL2Selection(
+      'gear',
+      baseDraft,
+      selected,
+      catalog,
+      30,
+      200
+    );
+    expect(result.ok).toBe(true);
+    expect(result.partial?.equipment).toEqual([{ id: 'g1', quantity: 4 }]);
+  });
+
+  it('gear Confirm rejects over-budget quantity; empty selection clears gear (DEV-V-013-T052)', () => {
+    const over = applyGuidedEquipmentL2Selection(
+      'gear',
+      baseDraft,
+      [
+        {
+          id: 'g1',
+          name: 'Rope',
+          quantity: 50,
+          data: {
+            ref: { id: 'g1', quantity: 1 },
+            category: 'equipment' as const,
+            row: catalog.get('g1')!,
+          },
+        },
+      ],
+      catalog,
+      30,
+      200
+    );
+    expect(over.ok).toBe(false);
+
+    const cleared = applyGuidedEquipmentL2Selection(
+      'gear',
+      { ...baseDraft, equipment: [{ id: 'g1', quantity: 2 }] },
+      [],
+      catalog,
+      30,
+      200
+    );
+    expect(cleared.ok).toBe(true);
+    expect(cleared.partial?.equipment).toEqual([]);
   });
 });

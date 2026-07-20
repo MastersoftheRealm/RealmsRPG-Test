@@ -924,7 +924,87 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547)
+#### DEV-V-008-T023 — Admin Archetypes form helper extract parity (TASK-381 Phase 6a)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Admin codex |
+| **Related task** | TASK-381 |
+| **Where** | `/admin/codex` → Archetypes |
+| **Needs** | Admin account |
+
+**Steps**
+1. Open Add Archetype — confirm modal opens (`size="full"` / full-screen on mobile).
+2. Set name + type; author Level 1 skills (≤3 base), recommended abilities steppers, at least one feat guidance group with an expandable selected feat row, and one armament/equipment quantity row.
+3. Save → re-open Edit — fields round-trip (skills, abilities, feat groups, qty rows, innate powers if Power/PM).
+4. Duplicate an existing path — name gets ` copy` suffix; L1 recommendations restore; no console errors.
+5. Optional regression: re-smoke DEV-V-008-T013 / T014 / T016–T018 / T021 behaviors that touch the same modal.
+
+**Expected**
+- Behavior unchanged after extract to `admin-archetype-path-form.ts` + `admin-archetype-path-rows.tsx`.
+- Tab still owns list chrome, modal shell, and save/delete orchestration.
+
+**Rollback**
+- Inline helpers/rows back into `AdminArchetypesTab.tsx`; delete the two extracted modules.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-008-T024 — Admin Archetypes editor island parity (TASK-381 Phase 6b)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Admin codex |
+| **Related task** | TASK-381 |
+| **Where** | `/admin/codex` → Archetypes |
+| **Needs** | Admin account |
+
+**Steps**
+1. Repeat DEV-V-008-T023 smoke (add/edit/duplicate; L1 skills ≤3; feat guidance groups; qty rows; recommended abilities).
+2. Confirm modal footer still owns Cancel / Save / Delete (editor is body-only).
+3. Optional: re-smoke T013 / T014 / T016–T018 / T021 on the same modal.
+
+**Expected**
+- Behavior unchanged after modal body move to `admin-archetype-editor.tsx`.
+- Tab keeps list chrome, modal shell/footer, option memos, save/delete.
+
+**Rollback**
+- Inline modal body back into `AdminArchetypesTab.tsx`; delete `admin-archetype-editor.tsx`.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-008-T025 — Admin Archetypes workspace hook parity (TASK-381 Phase 6c)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Admin codex |
+| **Related task** | TASK-381 |
+| **Where** | `/admin/codex` → Archetypes |
+| **Needs** | Admin account |
+
+**Steps**
+1. Repeat DEV-V-008-T023 / T024 smoke (add/edit/duplicate; L1 skills/feats/qty/abilities; Save round-trip).
+2. Confirm list inline delete Yes/No and modal Delete confirm still work.
+3. Optional: re-smoke T013 / T014 / T016–T018 / T021.
+
+**Expected**
+- Behavior unchanged after state/options/save move to `use-admin-archetype-workspace.ts`.
+- Tab is list + Modal shell only; editor props come from the workspace return.
+
+**Rollback**
+- Inline workspace body back into `AdminArchetypesTab.tsx`; delete `use-admin-archetype-workspace.ts`.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats.
 
@@ -1231,6 +1311,40 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Expected** | No parallel hand-rolled list shell; single-select + option levels via USM `footerExtra`; overspend still allowed when Total TP > 0; remount clears abandoned UI state (same as DEV-V-019-T007 step 4). |
 | **Report** | DEV-V-009-T027: PASS / FAIL / SKIP — |
 
+#### DEV-V-009-T028 — Abilities and Defenses name size parity (TASK-582)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-582 |
+| **Where** | `/characters/[id]` → Abilities & Defenses (desktop) |
+| **Steps** | 1. Open a character sheet at desktop width. 2. Compare ability names (STRENGTH…CHARISMA) to defense names (MIGHT…RESOLVE) — same label size (`text-sm`, like Speed/Evasion). 3. Confirm ability tiles are compact (label glued to `md` roll chip; no tall empty card). 4. Confirm defense tiles show a large Score with a smaller roll chip under it (content-height; not equal-height empty boxes). 5. Optional ~360px: 3-col grid still readable; Mental Fort. does not overflow badly. |
+| **Expected** | Matching labels; dense header-stat density; Score is defense glance primary; no large empty band in ability tiles. |
+| **Report** | DEV-V-009-T028: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T029 — Roll log die face badges readable in dark mode (TASK-582)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-582 |
+| **Where** | Character sheet → Roll log (dark theme) |
+| **Needs** | Dark theme; rolls that hit die max and die min (or crit / crit-fail totals) |
+| **Steps** | 1. Switch to dark mode. 2. Roll until a die shows max (e.g. 8 on d8) and min (e.g. 1). 3. Inspect die-face chips and any crit/crit-fail total chip. |
+| **Expected** | Max/min die chips and crit totals use dark-mode success/danger surfaces + `*-fg` text (readable; not pale wash + washed text). Bonus chip remains readable (DEV-V-009-T023). |
+| **Report** | DEV-V-009-T029: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T030 — Edit pencil compact on desktop (TASK-582)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-582 |
+| **Where** | `/characters/[id]` → Edit mode → Abilities / Skills pencils (desktop `md+`) |
+| **Steps** | 1. Enter sheet edit mode at ≥768px. 2. Inspect Abilities and Skills pencil icons. 3. Confirm the control hugs the icon (no large empty button chrome). 4. Optional below `md`: confirm tap target is still comfortable (~44px). |
+| **Expected** | Desktop pencils are icon-dense; mobile still meets touch sizing via `touch-target-md-compact`. |
+| **Report** | DEV-V-009-T030: PASS / FAIL / SKIP — |
+
 ---
 
 ## DEV-V-005 — RLS policy consolidation (TASK-352, TASK-327)
@@ -1434,6 +1548,73 @@ These verify the automated design-system net itself. They are **command-line** c
 **Expected**
 - No **new** violations vs `tests/visual/auth-a11y-baseline.json`.
 - Pre-existing allowances on character sheet / my-account are documented in the baseline file.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+## DEV-V-029 — Post-activation onboarding (TASK-388)
+
+Verifies play-together after first save, optional sheet tour, level-up milestone guides, and tutorials toggle (REALMS_PRODUCT_OVERVIEW §11).
+
+#### DEV-V-029-T001 — Play-together after first character save
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-029 — Post-activation onboarding |
+| **Related task** | TASK-388 |
+| **Where** | Guided or Advanced creator finish |
+| **Needs** | Signed-in; clear `localStorage` key `realms_seen_play_together_prompt` (or use a fresh browser profile) |
+
+**Steps**
+1. Complete a character and save (no `?returnTo=`).
+2. Confirm play-together modal: Discord, Browse campaigns, Run games as RM, View my character.
+3. Optionally uncheck Don't show again, dismiss, then save another character — modal may reappear.
+4. With Don't show again checked (default), dismiss — subsequent saves skip the modal.
+5. Save with `?returnTo=/campaigns` — no play-together; redirect honors returnTo.
+
+**Expected**
+- Modal only on first-seen save path without returnTo; sheet navigation works after View my character.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-029-T002 — Optional sheet tour offer
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-029 — Post-activation onboarding |
+| **Related task** | TASK-388 |
+| **Where** | `/characters/{id}` after post-save handoff |
+| **Needs** | Tutorials on; sheet tour not dismissed forever |
+
+**Steps**
+1. After play-together → View my character (or save when play-together already seen), land on sheet with tour offer.
+2. Skip — no tour; Don't show again — never offers again; Take the tour — step card highlights sections; finish/skip completes.
+3. Confirm home `/` does not show a sheet tour.
+
+**Expected**
+- Offer is post-save only; Skip / Don't show again / tour complete behave as labeled.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-029-T003 — Level-up milestone guide + tutorials off
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-029 — Post-activation onboarding |
+| **Related task** | TASK-388 |
+| **Where** | Character sheet level-up + My Account |
+| **Needs** | Owned character; tutorials on initially |
+
+**Steps**
+1. Level up for the first time — floating delta guide highlights the sheet header (not a blocking modal).
+2. Level up into an ability-point milestone (e.g. to 3) — Abilities section highlighted, edit mode on; allocate tip once; no full sheet tour.
+3. My Account → turn off Show tutorials → level up again — no guide.
+4. Turn tutorials back on — already-seen milestones stay suppressed.
+
+**Expected**
+- Guides are skippable highlight cards, delta-scoped, and respect tutorials off + milestone flags.
+- Ability milestone shows *where* to spend (scroll + ring on Abilities) with edit mode enabled.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -2225,7 +2406,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 2. Click **Foundation** on the chapter rail.
 
 **Expected**
-- Lands on the Path step (**Choose your path**), not Species.
+- Lands on the Path step (**Choose your Archetype Path**), not Species.
 - Active chapter highlight is Foundation.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
@@ -2993,6 +3174,70 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-013-T068 — Path L1 Archetype Path chrome (TASK-577)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-577 |
+| **Where** | Guided creator → Path (`/characters/new/guided`) |
+| **Needs** | Codex has paths in at least two types |
+
+**Steps**
+1. Open guided creator. Confirm Foundation chapter subtitle includes **Archetype Path** (e.g. “Choose your Archetype Path and species”).
+2. On the Path step, confirm the title is **Choose your Archetype Path** with an **i** tip beside it. Hover/focus/touch-hold: tip explains Archetype Path warmly without saying “class”.
+3. Confirm section headings **Power Paths** / **Powered-Martial Paths** / **Martial Paths** read as clear, larger/bolder h3 titles (not tiny uppercase labels).
+4. Hover each section **i**: tip leads with what that path type *is* (Power: spellcasters / artificers / benders / warlocks / bards; Martial: weapon masters / scouts / unarmed specialists; Powered-Martial: blend at a lighter level). Mechanic term remains **Power** (not “spell”).
+5. On path cards, confirm Primary Ability chips are slightly larger than before and have a slight primary blue; Secondary Ability chips match that size and stay neutral (no power-fg / martial-fg role tint).
+6. At ~360px: title tip and section tips remain usable (`size="inline"`).
+
+**Expected**
+- Game-term **Archetype Path** is exposed on chapter rail + step title; path-type tips and ability chips match TASK-577 product decisions.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T069 — Path More details overview (TASK-578)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-578 |
+| **Where** | Guided creator → Path → More details on any path card |
+| **Needs** | Codex paths with recommended abilities (prefer one Martial + one Power) |
+
+**Steps**
+1. Open More details on a path. Confirm there is **no** preview subtext under the title (no “Preview this path…” line).
+2. Confirm there is **no** Proficiency section (no Power/Martial Proficiency lines in the overview).
+3. Confirm **Path Abilities** shows Primary (slight primary blue) and Secondary chips at the same larger (`md`) size as L1 cards, with an **i** tip. Tip explains Primary = Archetype Ability (Energy, Training Points, Attack Bonus) and Secondary = recommendation only; Powered-Martial has two Primaries.
+4. Confirm **Weapons and Armor** summary: type-appropriate prose and Armament Proficiency number matching path type (Power 3 / Powered-Martial 8 / Martial 12 from live rules). Section **i** tip explains Armament Proficiency (reusable global tip).
+5. Confirm **Recommended Abilities** use compact ability cards (name + bonus tiles), not DescriptorChip dumps.
+6. At ~360px: tips usable (`size="inline"`); recommended tiles remain readable.
+
+**Expected**
+- Lean overview: description, Path Abilities + tip, Weapons and Armor + Armament tip, recommended ability cards, recommended skills. Numbers from `getArmamentMax` / live core rules (not hardcoded UI fakes).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T071 — Training Points tip clarity (TASK-580)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-580 |
+| **Where** | Guided Loadout (Weapons) or Powers/Techniques — `LoadoutBudgetBar` Training Points InfoTippy |
+| **Needs** | Path with Training Points PointStatus visible |
+
+**Steps**
+1. Open guided creator and reach Weapons (or Powers/Techniques). Confirm **Training Points** PointStatus with an **i** tip beside the label.
+2. Hover/focus/touch-hold the tip: copy says Training Points are a **shared budget** for weapons, armor, Powers, and Techniques (full words — not TP).
+3. Confirm the tip does **not** lecture the level / Archetype Ability formula; it explains remaining = what you can still afford and that over-cost choices stay unavailable.
+4. Optionally select an affordable item and an over-budget pick: PointStatus remaining drops; unaffordable choices stay gated (behavior unchanged — tip only).
+
+**Expected**
+- Same `trainingPointsHelp` export on LoadoutBudgetBar; shorter teaching copy; still matches GAME_RULES shared-budget + remaining-gates affordability.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 #### DEV-V-013-T048 — Sitewide compact facts + Training Points chip labels (TASK-461)
 
 | Field | Value |
@@ -3318,6 +3563,60 @@ Admin Official Enhanced uses the same OfficialEntityList chrome as peer Official
 
 ---
 
+## DEV-V-028 — Codex browse list shell (TASK-576)
+
+Admin Codex tabs, Codex browse tabs (including Codex Archetypes header chrome), and Admin Images share `CodexBrowseListShell` (SectionHeader when admin + Search + filters + ListHeader + loading/empty/rows). Official* library grids stay on `OfficialEntityList`. **Admin** Archetypes path rows stay tab-local (ADR-0005).
+
+#### DEV-V-028-T001 — Admin Codex Skills list chrome
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-028 — Codex browse list shell |
+| **Task** | TASK-576 |
+| **Where** | `/admin/codex` → Skills |
+| **Needs** | Admin account |
+| **Steps** | 1. Open Skills. 2. Confirm SectionHeader (+ Add) + Search + filters + sortable ListHeader. 3. Search/filter still narrows rows. 4. Add opens create modal; Cancel closes. 5. Empty filters: empty state still offers Add Skill. |
+| **Expected** | Same chrome as peer admin codex tabs; no hand-rolled Search/ListHeader fork; create/edit/delete unchanged. |
+| **Report** | DEV-V-028-T001: PASS / FAIL / SKIP — |
+
+#### DEV-V-028-T002 — Codex browse Skills peer
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-028 |
+| **Task** | TASK-576 |
+| **Where** | `/codex` → Skills (Realms Codex) |
+| **Needs** | Signed-in user |
+| **Steps** | 1. Open Skills. 2. Confirm Search + filters + ListHeader (no SectionHeader Add). 3. Search/filter still works. 4. Switch My Codex if present — empty state still not the browse shell. |
+| **Expected** | Browse chrome matches admin minus Add header; my-mode empty unchanged. |
+| **Report** | DEV-V-028-T002: PASS / FAIL / SKIP — |
+
+#### DEV-V-028-T003 — Admin Images bank list uses shell
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-028 |
+| **Task** | TASK-576 |
+| **Where** | `/admin/images` |
+| **Needs** | Admin account |
+| **Steps** | 1. Open page. 2. Confirm PageHeader stays; Images SectionHeader + Search + category filter + thumbnail ListHeader. 3. Add image still opens edit modal. 4. Search/filter still narrows rows. |
+| **Expected** | Same CodexBrowseListShell chrome; upload/edit/delete unchanged. |
+| **Report** | DEV-V-028-T003: PASS / FAIL / SKIP — |
+
+#### DEV-V-028-T004 — Codex Archetypes browse chrome on shell
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-028 |
+| **Task** | TASK-576 |
+| **Where** | `/codex` → Archetypes (Realms Codex) |
+| **Needs** | Signed-in user |
+| **Steps** | 1. Open Archetypes. 2. Confirm Search + sortable ListHeader match peer Codex tabs. 3. Search still filters paths; expand a path card still works. |
+| **Expected** | Shell chrome; path-card bodies unchanged. Admin `/admin/codex` Archetypes may still use bordered non-ListHeader layout. |
+| **Report** | DEV-V-028-T004: PASS / FAIL / SKIP — |
+
+---
+
 ## DEV-V-017 — Site copy modules (TASK-390)
 
 Verifies owner-editable marketing prose lives in `src/lib/constants/copy/` and still renders on major routes. Edit strings in the named `*-copy.ts` file — pages should not need JSX string edits for migrated sections.
@@ -3435,9 +3734,12 @@ Verifies owner-editable marketing prose lives in `src/lib/constants/copy/` and s
 
 ---
 
-## DEV-V-018 — CreatorPageShell parity (TASK-380)
+## DEV-V-018 — CreatorPageShell parity (TASK-380 / TASK-381)
 
-Verifies shared auth/load/save chrome on standalone creators after `CreatorPageShell` rollout. Domain cost math is out of scope — focus on chrome parity.
+Verifies shared auth/load/save chrome on standalone creators after `CreatorPageShell` rollout.
+T001–T007 focus on chrome parity (domain cost math out of scope). **T008** covers power/item
+workspace-hook extraction parity after TASK-381 Phase 3. **T009–T010** cover creature editor
+islands (Phase 4) and workspace hook (Phase 5).
 
 #### DEV-V-018-T001 — Power creator chrome
 
@@ -3567,6 +3869,75 @@ Verifies shared auth/load/save chrome on standalone creators after `CreatorPageS
 - Shared `useLoadModalLibrary` chrome for species/creature; no duplicate load-list fetch UI.
 - Load toast parity across creators; shell loading gate for critical codex deps on species/creature.
 - Collapsible a11y: dedicated expand button; no heading skip.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-018-T008 — Power + item workspace hook parity (TASK-381 Phase 3)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 |
+| **Related task** | TASK-381 |
+| **Where** | `/power-creator`, `/item-creator` (+ `?edit=<id>` when available) |
+| **Needs** | Signed in; optional saved library power/armament |
+
+**Steps**
+1. Open `/power-creator` — set a name, add a part, tweak action/damage/range; confirm sidebar Energy/TP update; refresh — draft restores (same as DEV-V-019-T009).
+2. Reset — form clears; draft cache cleared.
+3. Load a saved power — form fills; success toast.
+4. Repeat 1–3 on `/item-creator` for Weapon (and briefly Armor/Shield type switch) — IP/TP/currency + rarity sidebar update; draft restore; Load toast.
+5. Optional: open `?edit=<id>` for each — loads target; navigating to plain `/power-creator` or `/item-creator` shows a blank draft (no edit leak).
+
+**Expected**
+- Behavior matches pre–Phase 3 (state lives in `use-*-creator-workspace`; page is shell-only).
+- No regression vs DEV-V-018-T001/T002 chrome or DEV-V-019-T009/T010 bootstrap.
+
+**Rollback** — Delete `use-*-creator-workspace.ts` and restore prior page bodies from git; keep editor islands + bootstrap.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-018-T009 — Creature creator editor islands (TASK-381 Phase 4)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 |
+| **Related task** | TASK-381 |
+| **Where** | `/creature-creator` (+ `?edit=<id>` when available) |
+| **Needs** | Signed in; optional saved library creature |
+
+**Steps**
+1. Open `/creature-creator` — set name, allocate HP/EN and an ability; add a resistance; refresh — draft restores (DEV-V-019-T010).
+2. Add feat / power / technique / inventory via section buttons — modals open; confirm adds rows; remove X and innate toggle work.
+3. Reset confirm still clears form (DEV-V-018-T005).
+4. Optional: `?edit=<id>` loads target; plain `/creature-creator` shows blank draft.
+
+**Expected**
+- Form sections render from `creature-creator-editor`; shell/modals/sidebar unchanged.
+- No regression vs T005 chrome or T010 bootstrap.
+
+**Rollback** — Delete `creature-creator-editor.tsx` and restore prior page children from git.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-018-T010 — Creature creator workspace hook (TASK-381 Phase 5)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 |
+| **Related task** | TASK-381 |
+| **Where** | `/creature-creator` (+ `?edit=<id>` when available) |
+| **Needs** | Signed in; optional saved library creature |
+
+**Steps**
+1. Repeat DEV-V-018-T009 smoke (draft restore, add/remove feat/power/technique/inventory, innate toggle, reset confirm).
+2. Over-budget save still blocked with error toast (DEV-V-018-T005).
+3. Optional: `?edit=<id>` then navigate to plain `/creature-creator` — blank draft (no edit leak).
+
+**Expected**
+- State lives in `use-creature-creator-workspace`; page is shell + modal/editor wiring only.
+- No regression vs T005 / T009 / DEV-V-019-T010.
+
+**Rollback** — Delete `use-creature-creator-workspace.ts` and restore prior page body from git; keep editor islands.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -3786,6 +4157,70 @@ Verifies behavior parity after removing setState-in-effect / fixing exhaustive-d
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-019-T011 — Crafting bootstrap + modal/sheet derive (batch 5)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-019 |
+| **Related task** | TASK-430 |
+| **Where** | `/crafting/<sessionId>`, any large Modal, character sheet header HP/EN, Archetype PoweredMartialSlider |
+| **Needs** | Crafting session (or create one); character with powered-martial archetype |
+
+**Steps**
+1. Open an existing crafting session — tool loads (no blank flash); change quantity/options — requirements update; refresh — session restores.
+2. Enhanced session: pick a power whose library name/energy differs from the stored ref — sidebar Power Energy / Effective Energy show the **live** values without waiting for a save.
+3. Open any selection/settings Modal — backdrop fades in; Escape closes; body scroll restores.
+4. On a character sheet: click HP (or EN) value, type a number, Enter — value applies; blur without Enter — value resets to current.
+5. In Archetype edit, drag PoweredMartialSlider — allocation updates; leave and re-enter edit — slider matches saved martial/power.
+
+**Expected**
+- No hydrate flash on crafting; live power metadata; modal portal still works after `useIsClient`; ResourceInput and slider stay controlled without sync effects.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-019-T012 — Admin/account queries + selection modal reopen (batch 6)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-019 |
+| **Related task** | TASK-430 |
+| **Where** | `/admin/changelogs`, `/admin/roles`, `/admin/users`, `/campaigns?tab=join`, `/my-account`, any UnifiedSelectionModal, Admin Images edit |
+| **Needs** | Admin account; any character sheet Add modal |
+
+**Steps**
+1. Admin Changelogs — switch tabs; list loads; force offline then Retry recovers.
+2. Admin Roles / Users — pages load; Roles edit+save still works; Users role change still works; Retry on error.
+3. Open `/campaigns?tab=join` — Join tab is active.
+4. My Account — profile loads; Retry works if profile fetch fails; change profile picture still updates avatar.
+5. Open an Add-X UnifiedSelectionModal, select items, close without confirm (leave prompt if dirty), reopen — search/filters reset; prior unconfirmed picks are gone.
+6. Admin Images — open edit on a row, change name fields, close, open create — form is blank (remount).
+
+**Expected**
+- No fetch-in-effect regressions; URL tab deep-link works; USM/image edit reset on open without wiping mid-session selection on re-render.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-019-T013 — Final leftovers: crafting FSM, sheet tour, core-rules, spreadsheet (batch 7)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-019 |
+| **Related task** | TASK-430 |
+| **Where** | `/crafting/<id>`, `/characters/<id>?offerTour=1`, sheet tour, `/admin/core-rules`, Admin Codex spreadsheet |
+| **Needs** | Crafting session with rolls; path character L5+ optional; admin |
+
+**Steps**
+1. Crafting: change quantity/options — DS/session labels update; enter rolls; change Difficulty Score Bonus — success/failure chips update live; Complete saves correct netDelta.
+2. Open character with `?offerTour=1` (tutorials on) — offer modal shows; URL loses the query; Start/Dismiss work; re-run tour from My Account if available.
+3. Sheet tour: advance steps — highlights move; Skip completes; reopen tour later starts at step 1.
+4. Admin Core Rules: switch tabs — editor reseeds; edit a field (dirty); Save; switch away and back — saved values show.
+5. Admin Codex spreadsheet: switch entity tabs — rows reload; edit a cell (dirty); tab switch clears dirty for the new tab.
+
+**Expected**
+- Zero `react-hooks/set-state-in-effect|exhaustive-deps|preserve-manual-memoization` warnings sitewide; no behavior regressions on the above flows.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-020 — Sitewide copy compliance (TASK-439)
@@ -3847,6 +4282,25 @@ Spot-checks Realms terminology and em-dash hygiene on high-traffic surfaces afte
 
 **Expected**
 - aria-labels use Bonus (Realms term), not modifier.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-020-T004 — Dense HUD uses Health / Energy (not HP / EN)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-020 |
+| **Related task** | TASK-440 |
+| **Where** | Library → Creatures; encounter CombatantCard (compact); Creature Creator summary |
+| **Needs** | Signed-in; a creature in My Library or Official; an encounter with a combatant; Creature Creator open |
+
+**Steps**
+1. Open Library → Creatures list; confirm column headers say **Health** and **Energy** (not HP / EN).
+2. Open an encounter with a combatant in compact card layout; confirm resource labels say **Health** and **Energy**.
+3. Open Creature Creator with stats computed; confirm summary quickStats chips say **Health** and **Energy**.
+
+**Expected**
+- Dense resource HUD labels use full Realms terms Health / Energy.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

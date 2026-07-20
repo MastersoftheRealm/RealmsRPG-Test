@@ -236,7 +236,7 @@ export function FeatsStep() {
       feats || []
     );
     return { met, reason };
-  }, [draft.abilities, draft.skills, draft.level, draft.defenseVals, draft.mart_abil, draft.archetype?.mart_abil, draft.speedBase, draft.feats, skillsDb, feats]);
+  }, [draft.abilities, draft.skills, draft.level, draft.defenseVals, draft.defenseSkills, draft.mart_abil, draft.archetype, draft.speedBase, draft.feats, skillsDb, feats]);
 
   // Filter and sort feats
   const filteredFeats = useMemo(() => {

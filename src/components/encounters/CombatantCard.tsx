@@ -1,5 +1,5 @@
 /**
- * Combatant Card - Single combatant display with HP, energy, conditions, actions
+ * Combatant Card - Single combatant display with Health, Energy, conditions, actions
  */
 
 'use client';
@@ -342,7 +342,7 @@ export const CombatantCard = memo(function CombatantCard({
           ) : (
             <div className="flex items-center gap-3 mb-2">
               <div className="flex items-center gap-1 flex-1">
-                <span className="text-xs text-health-text font-medium w-6">HP</span>
+                <span className="text-xs text-health-text font-medium shrink-0">Health</span>
                 {linkedResourcesReadOnly ? (
                   <span className="text-xs font-medium" title={linkedResourcesTitle}>{combatant.currentHealth} / {combatant.maxHealth}</span>
                 ) : (
@@ -374,7 +374,7 @@ export const CombatantCard = memo(function CombatantCard({
               </div>
 
               <div className="flex items-center gap-1 flex-1">
-                <span className="text-xs text-energy-text font-medium w-6">EN</span>
+                <span className="text-xs text-energy-text font-medium shrink-0">Energy</span>
                 {linkedResourcesReadOnly ? (
                   <span className="text-xs font-medium" title={linkedResourcesTitle}>{combatant.currentEnergy} / {combatant.maxEnergy}</span>
                 ) : (

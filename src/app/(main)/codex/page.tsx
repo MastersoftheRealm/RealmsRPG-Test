@@ -9,7 +9,7 @@
 
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { PageContainer, PageHeader, TabNavigation, TabContentPanel, useTabGroup, Button } from '@/components/ui';
 import { CodexCharacterFilter } from '@/components/codex';
 import { CodexFeatsTab } from './CodexFeatsTab';
@@ -53,16 +53,14 @@ export default function CodexPage() {
   const [activeTab, setActiveTab] = useState<TabId>('feats');
   const [showAdvanced, setShowAdvanced] = useState(false);
   // "View as character" selection — shared across all tabs and persisted locally.
-  const [characterFilterId, setCharacterFilterId] = useState('');
-
-  useEffect(() => {
+  const [characterFilterId, setCharacterFilterId] = useState(() => {
+    if (typeof window === 'undefined') return '';
     try {
-      const stored = window.localStorage.getItem(CODEX_CHARACTER_FILTER_KEY);
-      if (stored) setCharacterFilterId(stored);
+      return window.localStorage.getItem(CODEX_CHARACTER_FILTER_KEY) ?? '';
     } catch {
-      // ignore storage access errors (private mode, etc.)
+      return '';
     }
-  }, []);
+  });
 
   const handleCharacterFilterChange = useCallback((id: string) => {
     setCharacterFilterId(id);

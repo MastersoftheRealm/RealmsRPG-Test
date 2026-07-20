@@ -7,7 +7,7 @@
 
 'use client';
 
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, type ReactNode } from 'react';
 import type { AbilityName, Character, CharacterLibraryTabId } from '@/types';
 import type { EnrichedCharacterData } from '@/lib/data-enrichment';
 import type { LibrarySectionProps } from './library-section';
@@ -82,38 +82,9 @@ interface CharacterSheetProviderProps {
 }
 
 export function CharacterSheetProvider({ value, children }: CharacterSheetProviderProps) {
-  const memoValue = useMemo(
-    () => value,
-    [
-      value.character,
-      value.isEditMode,
-      value.isOwner,
-      value.skills,
-      value.pointBudgets,
-      value.enrichedData,
-      value.librarySectionProps,
-      value.characterSpeciesSkills,
-      value.libraryActiveTab,
-      value.setCharacter,
-      value.setAddModalType,
-      value.setFeatModalType,
-      value.setSkillModalType,
-      value.setLibraryActiveTab,
-      value.onAbilityChange,
-      value.onDefenseChange,
-      value.onSkillChange,
-      value.onRemoveSkill,
-      value.onAddSkill,
-      value.onAddSubSkill,
-      value.onMartialProfChange,
-      value.onPowerProfChange,
-      value.onMilestoneChoiceChange,
-      value.onEditArchetype,
-      value.onEditSpecies,
-    ]
-  );
+  // Pass through — React Compiler handles stability; avoid manual field-list useMemo (TASK-430).
   return (
-    <CharacterSheetContext.Provider value={memoValue}>
+    <CharacterSheetContext.Provider value={value}>
       {children}
     </CharacterSheetContext.Provider>
   );

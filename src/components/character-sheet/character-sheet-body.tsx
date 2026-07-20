@@ -124,7 +124,7 @@ export function CharacterSheetBody() {
   return (
     <>
       {/* Desktop: Abilities full width */}
-      <div className="hidden md:block">
+      <div className="hidden md:block" data-tour-id="sheet-tour-abilities">
         <AbilitiesPanel />
       </div>
 
@@ -137,6 +137,7 @@ export function CharacterSheetBody() {
       >
         <section
           aria-label="Abilities & Defenses"
+          data-tour-id="sheet-tour-abilities"
           className="md:hidden shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden box-border"
         >
           <AbilitiesPanel />
@@ -144,6 +145,7 @@ export function CharacterSheetBody() {
 
         <section
           aria-label="Skills"
+          data-tour-id="sheet-tour-skills"
           className="shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden md:min-w-0 md:basis-auto md:overflow-visible md:flex md:flex-col md:min-h-[400px] box-border"
         >
           <SkillsPanel className="flex-1 min-h-0 md:min-h-0" />
@@ -158,6 +160,7 @@ export function CharacterSheetBody() {
 
         <section
           aria-label="Library"
+          data-tour-id="sheet-tour-library"
           className="shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden md:min-w-0 md:basis-auto md:overflow-visible md:flex md:flex-col md:min-h-[400px] box-border"
         >
           <LibraryPanel className="flex-1 min-h-0 md:min-h-0" />

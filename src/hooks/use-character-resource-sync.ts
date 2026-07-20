@@ -33,11 +33,6 @@ export function useCharacterResourceSync(
     scheduleCharacterResourceSync(character.id, patch);
   }, [
     enabled,
-    character?.id,
-    character?.currentHealth,
-    character?.currentEnergy,
-    character?.actionPoints,
-    character?.health?.current,
-    character?.energy?.current,
+    character,
   ]);
 }

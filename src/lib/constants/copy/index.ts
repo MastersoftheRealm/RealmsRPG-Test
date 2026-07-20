@@ -35,3 +35,4 @@ export { RULES_COPY } from './rules-copy';
 export { RESOURCES_COPY } from './resources-copy';
 export { PRIVACY_COPY } from './privacy-copy';
 export { TERMS_COPY } from './terms-copy';
+export { ONBOARDING_COPY } from './onboarding-copy';

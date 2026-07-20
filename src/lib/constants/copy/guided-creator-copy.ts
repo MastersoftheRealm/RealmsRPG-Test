@@ -86,7 +86,7 @@ export const GUIDED_CREATOR_COPY = {
   },
 
   chapters: {
-    foundation: { title: 'Foundation', subtitle: 'Choose your path and species' },
+    foundation: { title: 'Foundation', subtitle: 'Choose your Archetype Path and species' },
     ancestry: { title: 'Ancestry', subtitle: 'Make your species your own' },
     abilities: { title: 'Abilities', subtitle: 'Who you are' },
     archetype: { title: 'Your Archetype', subtitle: 'Skills and Feats' },
@@ -99,9 +99,9 @@ export const GUIDED_CREATOR_COPY = {
 
   steps: {
     path: {
-      title: 'Choose your path',
+      title: 'Choose your Archetype Path',
       description:
-        'Your path suggests Abilities, Skills, Feats, and Loadout options. Then you choose among those options.',
+        'Your Archetype Path suggests Abilities, Skills, Feats, and Loadout options. Then you choose among those options.',
       /** Section headings — Power / Powered-Martial / Martial (InfoTippy on each title). */
       groupTitles: {
         power: 'Power Paths',
@@ -110,18 +110,23 @@ export const GUIDED_CREATOR_COPY = {
       },
       emptyTitle: 'No paths available',
       emptyDescription: 'Try a different filter or check back later.',
-      /** Modal chrome: preview; Select in footer applies the path. */
-      detailModalHint: 'Preview this path, then Select if it fits your character.',
       detail: {
         noDescription: 'No description is available for this path yet.',
         loadingCatalogs: 'Loading path options…',
-        proficiencyTitle: 'Proficiency',
-        proficiencyPower: (n: number) => `Archetype Power Proficiency ${n}`,
-        proficiencyMartial: (n: number) => `Archetype Martial Proficiency ${n}`,
         pathAbilitiesTitle: 'Path Abilities',
         primaryAbility: (label: string) => `Primary Ability ${label}`,
         secondaryAbility: (label: string) => `Secondary Ability ${label}`,
         recommendedAbilitiesTitle: 'Recommended Abilities',
+        weaponsAndArmorTitle: 'Weapons and Armor',
+        /** Path-type flavor + live Armament Proficiency number from getArmamentMax. */
+        weaponsAndArmor: {
+          power: (armamentMax: number) =>
+            `You favor lighter weapons and simpler armor. Your Armament Proficiency is ${armamentMax}.`,
+          'powered-martial': (armamentMax: number) =>
+            `You train with capable weapons and solid armor, though not the most specialized kit. Your Armament Proficiency is ${armamentMax}.`,
+          martial: (armamentMax: number) =>
+            `You are able to wield the most technical weapons and wear the most advanced armor. Your Armament Proficiency is ${armamentMax}.`,
+        },
         recommendedSkillsTitle: 'Recommended Skills',
         pathOptionsTitle: 'Path Options',
         pathOptionsIntro:
@@ -501,14 +506,6 @@ export const GUIDED_CREATOR_COPY = {
         description: 'Create a free account to save your character and play with friends.',
         signIn: 'Sign in',
         register: 'Create account',
-      },
-      playTogetherModal: {
-        title: "You're ready to play!",
-        description: 'Realms is most fun with a party. Join Discord, browse campaigns, or run games as Realm Master.',
-        viewCharacter: 'View my character',
-        discord: 'Join Discord',
-        campaigns: 'Browse campaigns',
-        runGames: 'Run games as RM',
       },
     },
   },

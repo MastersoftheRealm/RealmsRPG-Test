@@ -87,12 +87,49 @@ effectiveness, and Training Points used for crafting powers. Common choices incl
 export const martialAbility = `Your Martial Ability reflects your combat style and approach to challenges. It influences Energy and Training
 Points for Techniques and proficiencies. Common picks include Strength, Vitality, Agility, or Acuity depending on your concept.`;
 
+/** Guided Path step title — what an Archetype Path is (not "class"). */
+export const archetypePathHelp = `An Archetype Path is the type of adventurer your character is. Paths guide you with suggestions for Abilities, Skills, Feats, and Loadout - you can still deviate or rebuild the Path to make it your own.`;
+
 /** Guided Path step section tips (Power / Powered-Martial / Martial). */
-export const powerPathType = `Power paths focus on supernatural abilities. You lean on Powers and Energy more than weapons or Techniques.`;
+export const powerPathType = `Power paths focus on supernatural ability - think spellcasters, artificers, elemental benders, warlocks, and bards. You lean on Powers and Energy more than weapons or Techniques.`;
 
-export const martialPathType = `Martial paths focus on physical combat and training. You rely on weapons, Techniques, and martial skill rather than Powers.`;
+export const martialPathType = `Martial paths focus on physical combat and training - think weapon masters, scouts, and unarmed specialists. You rely on weapons, Techniques, and martial skill rather than Powers.`;
 
-export const poweredMartialPathType = `Powered-Martial paths blend fighting skill with supernatural ability. You get both Martial and Power tools, each at a lighter level than a pure Power or Martial path.`;
+export const poweredMartialPathType = `Powered-Martial paths blend fighting skill with supernatural ability - you train with both weapons or Techniques and Powers, each at a lighter level than a pure Martial or Power path.`;
+
+/**
+ * Guided / L1-simplified tip for Path More details — Primary vs Secondary Ability.
+ * Global Archetype Ability tips elsewhere may be more formula-specific (see guide/04; TASK-581).
+ */
+export const guidedArchetypeAbilityHelp = (
+  <div>
+    <div>
+      Your <strong>Primary Ability</strong> is this path&apos;s Archetype Ability. Its value
+      influences Energy, Training Points, and your Attack Bonus (Power Bonus or Martial Bonus).
+    </div>
+    <div>
+      Powered-Martial paths have <strong>two</strong> Primary Abilities (Power and Martial); both
+      are Archetype Abilities.
+    </div>
+    <div>
+      A <strong>Secondary Ability</strong> is only a recommendation. It has no direct game effect.
+    </div>
+  </div>
+);
+
+/**
+ * Global term tip — Armament Proficiency (weapons/armor Training Points ceiling).
+ * Reuse anywhere the label appears (Path overview, sheet Inventory, etc.).
+ */
+export const armamentProficiencyHelp = (
+  <div>
+    <div>
+      <strong>Armament Proficiency</strong> is the highest Training Points cost of a weapon or armor
+      piece you can use.
+    </div>
+    <div>Higher Martial Proficiency raises this limit as you level.</div>
+  </div>
+);
 
 export const chooseYourSpecies = (
   <div>
@@ -255,20 +292,14 @@ export const equipmentCurrencyHelp = (
   </div>
 );
 
-/** Guided Loadout + powers/techniques — shared Training Points budget (TASK-456). */
+/** Guided Loadout + powers/techniques — shared Training Points budget (TASK-456 / TASK-580). */
 export const trainingPointsHelp = (
   <div>
     <div>
-      <strong>Training Points</strong> are a shared budget for weapons, armor, Powers, and
+      <strong>Training Points</strong> are a shared budget you spend on weapons, armor, Powers, and
       Techniques.
     </div>
-    <div>
-      Your total comes from level and your highest Archetype Ability. Spent updates when you add
-      or remove a selection; remaining is what you can still afford.
-    </div>
-    <div>
-      If a choice is unavailable, you do not have enough Training Points remaining for its cost.
-    </div>
+    <div>Remaining is what you can still afford. Choices that cost more stay unavailable.</div>
   </div>
 );
 

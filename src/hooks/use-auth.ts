@@ -6,11 +6,12 @@
 
 'use client';
 
-import { useEffect, useCallback, useState, useRef } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/stores/auth-store';
 import type { AuthUser } from '@/types/auth';
 import { migrateGuestEncountersOnSignIn, hasGuestEncountersToMigrate } from '@/lib/guest-encounter-migration';
+import { useIsClient } from './use-is-client';
 
 function toAuthUser(user: { id: string; email?: string; user_metadata?: Record<string, unknown>; app_metadata?: { provider?: string }; identities?: Array<{ provider?: string }> } | null): AuthUser | null {
   if (!user) return null;
@@ -39,16 +40,12 @@ export function useAuth() {
     clearError,
   } = useAuthStore();
 
-  const [supabaseReady, setSupabaseReady] = useState(false);
+  const isClient = useIsClient();
   const mountedRef = useRef(true);
 
   useEffect(() => {
-    setSupabaseReady(true);
-    return () => { mountedRef.current = false; };
-  }, []);
-
-  useEffect(() => {
-    if (!supabaseReady) return;
+    if (!isClient) return;
+    mountedRef.current = true;
 
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY) {
       if (mountedRef.current) {
@@ -84,8 +81,11 @@ export function useAuth() {
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, [supabaseReady, setUser, setError, setInitialized]);
+    return () => {
+      mountedRef.current = false;
+      subscription.unsubscribe();
+    };
+  }, [isClient, setUser, setError, setInitialized, setLoading]);
 
   const signIn = useCallback(
     async (email: string, password: string) => {

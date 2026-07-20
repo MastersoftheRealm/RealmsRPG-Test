@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ChipSelect,
   ImageUploadModal,
@@ -38,11 +38,12 @@ export function AdminImageEditModal({
   const { showToast } = useToast();
   const isCreate = !image;
 
-  const [name, setName] = useState('');
-  const [categories, setCategories] = useState<RealmsImageCategory[]>([]);
+  // Parent remounts via key={image?.id ?? 'create'} when opening (TASK-430).
+  const [name, setName] = useState(image?.name ?? '');
+  const [categories, setCategories] = useState<RealmsImageCategory[]>(image?.categories ?? []);
   const [pendingBlob, setPendingBlob] = useState<Blob | null>(null);
   const [localPreview, setLocalPreview] = useState<string | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(image?.publicUrl ?? null);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadMode, setUploadMode] = useState<'create' | 'replace'>('create');
   const [saving, setSaving] = useState(false);
@@ -53,32 +54,8 @@ export function AdminImageEditModal({
   const [preparingDelete, setPreparingDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const resetForm = useCallback(() => {
-    setName(image?.name ?? '');
-    setCategories(image?.categories ?? []);
-    setPendingBlob(null);
-    setLocalPreview((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return null;
-    });
-    setPreviewUrl(image?.publicUrl ?? null);
-    setError(null);
-    setUsages([]);
-    setUsageWarningError(null);
-    setDeletePrepError(null);
-  }, [image]);
-
   useEffect(() => {
-    if (!isOpen) return;
-    resetForm();
-  }, [isOpen, image, resetForm]);
-
-  useEffect(() => {
-    if (!isOpen || !image?.id) {
-      setUsages([]);
-      setUsageWarningError(null);
-      return;
-    }
+    if (!isOpen || !image?.id) return;
     let cancelled = false;
     void getRealmsImageUsage(image.id)
       .then((report) => {

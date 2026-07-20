@@ -11,13 +11,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ChipSelect,
   FilterSection,
+  CodexBrowseListShell,
   GridListRow,
-  ListEmptyState,
-  ListHeader,
-  LoadingState,
   ErrorDisplay,
-  SectionHeader,
-  SearchInput,
 } from '@/components/shared';
 import { PageContainer, PageHeader } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
@@ -142,6 +138,18 @@ export default function AdminImagesPage() {
     setCategoryFilters((prev) => prev.filter((c) => c !== value));
   };
 
+  if (error) {
+    return (
+      <PageContainer size="xl">
+        <PageHeader
+          title="Realms Image Library"
+          description="Manage shared card art for species, creatures, armaments, powers, and techniques. One image can be tagged with multiple categories and referenced by many entities."
+        />
+        <ErrorDisplay message="Failed to load images" onRetry={() => { void refetch(); }} />
+      </PageContainer>
+    );
+  }
+
   return (
     <PageContainer size="xl">
       <PageHeader
@@ -149,88 +157,79 @@ export default function AdminImagesPage() {
         description="Manage shared card art for species, creatures, armaments, powers, and techniques. One image can be tagged with multiple categories and referenced by many entities."
       />
 
-      <FilterSection defaultExpanded>
-        <div className="grid gap-4 md:grid-cols-2">
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder="Search by name..."
-            aria-label="Search images by name"
-          />
-          <ChipSelect
-            label="Filter by category"
-            placeholder="Any category..."
-            options={CATEGORY_FILTER_OPTIONS}
-            selectedValues={categoryFilters}
-            onSelect={addCategoryFilter}
-            onRemove={removeCategoryFilter}
-          />
-        </div>
-      </FilterSection>
-
-      <SectionHeader title="Images" onAdd={openCreate} addLabel="Add image" className="mb-3" />
-
-      {isLoading ? (
-        <LoadingState message="Loading images..." />
-      ) : error ? (
-        <ErrorDisplay message="Failed to load images" onRetry={() => { void refetch(); }} />
-      ) : (
-        <div className="space-y-0">
-          <ListHeader
-            columns={[
-              { key: 'name', label: 'Name' },
-              { key: 'categories', label: 'Categories' },
-              { key: 'updated', label: 'Updated' },
-              { key: '_actions', label: '', sortable: false },
-            ]}
-            gridColumns={LIST_GRID}
-            sortState={sortState}
-            onSort={handleSort}
-            hasThumbnailColumn
-          />
-
-          {sortedImages.length === 0 ? (
-            <ListEmptyState
-              icon={<ImageIcon className="h-8 w-8" />}
-              title="No images yet"
-              message="Add an image to the shared bank, or adjust your search and filters."
+      <CodexBrowseListShell
+        sectionTitle="Images"
+        onAdd={openCreate}
+        addLabel="Add image"
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search by name..."
+        searchAriaLabel="Search images by name"
+        filters={
+          <FilterSection defaultExpanded>
+            <ChipSelect
+              label="Filter by category"
+              placeholder="Any category..."
+              options={CATEGORY_FILTER_OPTIONS}
+              selectedValues={categoryFilters}
+              onSelect={addCategoryFilter}
+              onRemove={removeCategoryFilter}
             />
-          ) : (
-            sortedImages.map((image) => (
-              <GridListRow
-                key={image.id}
-                id={image.id}
-                name={image.name}
-                thumbnail={{ src: image.publicUrl, alt: `${image.name} preview` }}
-                gridColumns={LIST_GRID}
-                columns={[
-                  { key: 'categories', value: formatRealmsImageCategoryLabels(image.categories) },
-                  { key: 'updated', value: formatUpdatedAt(image.updatedAt) },
-                ]}
-                rightSlot={
-                  <IconButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openEdit(image)}
-                    label="Edit"
-                    aria-label={`Edit ${image.name}`}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </IconButton>
-                }
-              />
-            ))
-          )}
-        </div>
-      )}
+          </FilterSection>
+        }
+        headerColumns={[
+          { key: 'name', label: 'Name' },
+          { key: 'categories', label: 'Categories' },
+          { key: 'updated', label: 'Updated' },
+          { key: '_actions', label: '', sortable: false },
+        ]}
+        gridColumns={LIST_GRID}
+        sortState={sortState}
+        onSort={handleSort}
+        hasThumbnailColumn
+        isLoading={isLoading}
+        loadingMessage="Loading images..."
+        isEmpty={sortedImages.length === 0}
+        emptyIcon={<ImageIcon className="h-8 w-8" />}
+        emptyTitle="No images yet"
+        emptyMessage="Add an image to the shared bank, or adjust your search and filters."
+      >
+        {sortedImages.map((image) => (
+          <GridListRow
+            key={image.id}
+            id={image.id}
+            name={image.name}
+            thumbnail={{ src: image.publicUrl, alt: `${image.name} preview` }}
+            gridColumns={LIST_GRID}
+            columns={[
+              { key: 'categories', value: formatRealmsImageCategoryLabels(image.categories) },
+              { key: 'updated', value: formatUpdatedAt(image.updatedAt) },
+            ]}
+            rightSlot={
+              <IconButton
+                variant="ghost"
+                size="sm"
+                onClick={() => openEdit(image)}
+                label="Edit"
+                aria-label={`Edit ${image.name}`}
+              >
+                <Pencil className="h-4 w-4" />
+              </IconButton>
+            }
+          />
+        ))}
+      </CodexBrowseListShell>
 
-      <AdminImageEditModal
-        isOpen={editImage !== undefined}
-        image={editImage ?? null}
-        onClose={closeEdit}
-        onSaved={handleSaved}
-        onRequestDelete={handleRequestDelete}
-      />
+      {editImage !== undefined && (
+        <AdminImageEditModal
+          key={editImage?.id ?? 'create'}
+          isOpen
+          image={editImage}
+          onClose={closeEdit}
+          onSaved={handleSaved}
+          onRequestDelete={handleRequestDelete}
+        />
+      )}
 
       {deleteTarget && (
         <AdminImageDeleteModal

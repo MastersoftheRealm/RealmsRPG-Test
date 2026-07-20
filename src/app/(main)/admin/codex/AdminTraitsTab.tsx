@@ -2,13 +2,11 @@
 
 import { useState, useMemo } from 'react';
 import {
-  SectionHeader,
+  CodexBrowseListShell,
   SearchInput,
   ListHeader,
-  LoadingState,
   ErrorDisplay as ErrorState,
   GridListRow,
-  ListEmptyState as EmptyState,
   gridColumnsWithInlineSelection,
 } from '@/components/shared';
 import { traitsByIdMap, choiceTraitOptionIdsToChipData } from '@/lib/choice-trait';
@@ -218,80 +216,105 @@ export function AdminTraitsTab() {
 
   return (
     <div>
-      <SectionHeader title="Traits" onAdd={openAdd} size="md" />
-      <div className="mb-4 mt-2">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search traits..." />
-      </div>
-
-      <ListHeader
-        columns={ADMIN_TRAIT_COLUMNS}
+      <CodexBrowseListShell
+        sectionTitle="Traits"
+        onAdd={openAdd}
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search traits..."
+        headerColumns={ADMIN_TRAIT_COLUMNS}
         gridColumns={ADMIN_TRAIT_GRID}
         sortState={sortState}
         onSort={handleSort}
-      />
-
-      {isLoading ? (
-        <LoadingState />
-      ) : (
-        <div className="flex flex-col gap-1 mt-2">
-          {filtered.length === 0 ? (
-            <EmptyState
-              title="No traits found"
-              description="Add one to get started."
-              action={{ label: 'Add Trait', onClick: openAdd }}
-              size="sm"
+        isLoading={isLoading}
+        isEmpty={filtered.length === 0}
+        emptyTitle="No traits found"
+        emptyMessage="Add one to get started."
+        emptyAction={{ label: 'Add Trait', onClick: openAdd }}
+      >
+        {filtered.map((t: Trait) => {
+          const choiceOptionChips = choiceTraitOptionIdsToChipData(t.option_trait_ids, traitById);
+          return (
+            <GridListRow
+              key={t.id}
+              id={t.id}
+              name={t.name}
+              description={t.description || ''}
+              gridColumns="1.5fr 0.6fr 0.6fr 0.6fr 40px"
+              columns={[
+                { key: 'Uses', value: t.uses_per_rec != null ? String(t.uses_per_rec) : '-' },
+                { key: 'Recovery', value: t.rec_period || '-' },
+                {
+                  key: 'Choice',
+                  value: t.option_trait_ids?.length ? `Yes (${t.option_trait_ids.length})` : '-',
+                },
+              ]}
+              detailSections={
+                choiceOptionChips.length > 0
+                  ? [{ label: 'Choice options', chips: choiceOptionChips }]
+                  : undefined
+              }
+              rightSlot={
+                <div className="flex items-center gap-1 pr-2">
+                  {pendingDeleteId === t.id ? (
+                    <div className="flex items-center gap-1 text-xs">
+                      <span className="text-danger-700 dark:text-danger-400 font-medium whitespace-nowrap">
+                        Remove?
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        onClick={() => handleInlineDelete(t.id)}
+                        className="text-xs px-2 py-0.5 h-6"
+                      >
+                        Yes
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => setPendingDeleteId(null)}
+                        className="text-xs px-2 py-0.5 h-6"
+                      >
+                        No
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <IconButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEdit(t)}
+                        label="Edit"
+                        aria-label="Edit"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </IconButton>
+                      <IconButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openDuplicate(t)}
+                        label="Duplicate"
+                        aria-label="Duplicate"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </IconButton>
+                      <IconButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setPendingDeleteId(t.id)}
+                        label="Delete"
+                        className="text-danger-fg hover:opacity-80 hover:bg-transparent"
+                      >
+                        <X className="w-4 h-4" />
+                      </IconButton>
+                    </>
+                  )}
+                </div>
+              }
             />
-          ) : (
-            filtered.map((t: Trait) => {
-              const choiceOptionChips = choiceTraitOptionIdsToChipData(t.option_trait_ids, traitById);
-              return (
-              <GridListRow
-                key={t.id}
-                id={t.id}
-                name={t.name}
-                description={t.description || ''}
-                gridColumns="1.5fr 0.6fr 0.6fr 0.6fr 40px"
-                columns={[
-                  { key: 'Uses', value: t.uses_per_rec != null ? String(t.uses_per_rec) : '-' },
-                  { key: 'Recovery', value: t.rec_period || '-' },
-                  { key: 'Choice', value: t.option_trait_ids?.length ? `Yes (${t.option_trait_ids.length})` : '-' },
-                ]}
-                detailSections={choiceOptionChips.length > 0 ? [{ label: 'Choice options', chips: choiceOptionChips }] : undefined}
-                rightSlot={
-                  <div className="flex items-center gap-1 pr-2">
-                    {pendingDeleteId === t.id ? (
-                      <div className="flex items-center gap-1 text-xs">
-                        <span className="text-danger-700 dark:text-danger-400 font-medium whitespace-nowrap">Remove?</span>
-                        <Button size="sm" variant="danger" onClick={() => handleInlineDelete(t.id)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
-                        <Button size="sm" variant="secondary" onClick={() => setPendingDeleteId(null)} className="text-xs px-2 py-0.5 h-6">No</Button>
-                      </div>
-                    ) : (
-                      <>
-                        <IconButton variant="ghost" size="sm" onClick={() => openEdit(t)} label="Edit" aria-label="Edit">
-                          <Pencil className="w-4 h-4" />
-                        </IconButton>
-                        <IconButton variant="ghost" size="sm" onClick={() => openDuplicate(t)} label="Duplicate" aria-label="Duplicate">
-                          <Copy className="w-4 h-4" />
-                        </IconButton>
-                        <IconButton
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setPendingDeleteId(t.id)}
-                          label="Delete"
-                          className="text-danger-fg hover:opacity-80 hover:bg-transparent"
-                        >
-                          <X className="w-4 h-4" />
-                        </IconButton>
-                      </>
-                    )}
-                  </div>
-                }
-              />
-              );
-            })
-          )}
-        </div>
-      )}
+          );
+        })}
+      </CodexBrowseListShell>
 
       <Modal
         isOpen={modalOpen}

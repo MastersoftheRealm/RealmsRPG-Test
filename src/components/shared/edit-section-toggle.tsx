@@ -73,19 +73,23 @@ export function EditSectionToggle({
         onClick?.();
       }}
       className={cn(
-        'min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)]',
-        'flex items-center justify-center p-2 rounded-md',
+        // 44px on mobile/touch; icon-hugging on desktop (MOBILE_UX.md — do not inflate md+ chrome)
+        'touch-target-md-compact inline-flex items-center justify-center',
+        'p-1 md:p-0.5 rounded-md',
         'transition-all duration-base ease-standard',
-        'hover:scale-110',
+        // Grow only on touch viewports; desktop stays icon-dense (MOBILE_UX.md)
+        'max-md:hover:scale-110',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
         colors.icon,
         colors.glow,
         isActive && [
-          'scale-110',
           'ring-1',
           colors.activeRing,
-          colors.activeBg,
           colors.activeGlow,
+          // Filled active plate only below md
+          'max-md:scale-110',
+          colors.activeBg,
+          'md:bg-transparent',
         ],
         onClick && 'cursor-pointer',
         !onClick && 'cursor-default',

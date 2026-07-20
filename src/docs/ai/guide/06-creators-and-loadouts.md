@@ -41,7 +41,7 @@ When loading a saved item/power/technique into a creator, follow this **three-st
 | Creator | Helper / rule | Location |
 |---------|----------------|----------|
 | Item/armament | `filterSavedItemPropertiesForList(savedProperties, propertiesDb)` | `@/lib/calculators` — returns only non-mechanic properties for the list. Load damage, DR, range, etc. from item.damage, item.damageReduction, etc. |
-| Power | Exclude `EXCLUDED_PARTS`; add to main list only when `!matchedPart.mechanic` | `handleLoadPower` in power-creator page; mechanic parts go to advanced or are skipped. |
+| Power | Exclude `EXCLUDED_PARTS`; add to main list only when `!matchedPart.mechanic` | `handleLoadPower` in `use-power-creator-workspace`; mechanic parts go to advanced or are skipped. |
 | Technique | Add to `loadedParts` only when `!matchedPart.mechanic` | `handleLoadTechnique` in technique-creator page. |
 
 **Rule:** Mechanic-only entries (parts/properties driven by dedicated UI) are restored from dedicated state only. Never restore them into the user-selectable list.
@@ -60,7 +60,7 @@ Standalone creators (power, technique, empowered technique, item/armament, speci
 - **Auth:** Soft gate (login modal) — no hard redirect. Species Load stays ungated (`requireAuthToLoad: false`); toolbar Load label follows that flag.
 - **Sidebar:** Default sticky on `lg+`; pass `stickySidebar={false}` for short summaries (species).
 - **Collapsibles:** Use **`CollapsibleSection`** only (`ui/Collapsible` removed). Expand control is a dedicated `<button>`; `rightSlot`/Remove sit outside it; section titles are `h2` (under page `h1`). Ad-hoc chrome screenshot audit: `npm run verify:shell-creators-audit` → `.shell-creators-audit/`.
-- **Domain logic** (cost math, `handleLoad*`) stays in each page workspace. **Section islands** (TASK-381): power → `power-creator-editor.tsx`; item → `item-creator-editor.tsx` + helpers; technique → `technique-creator-editor.tsx`; empowered → `empowered-technique-creator-editor.tsx` — presentational only; page owns state/save/load.
+- **Domain logic** (cost math, `handleLoad*`, draft cache) lives in each creator’s **workspace hook** where extracted (TASK-381): `use-power-creator-workspace`, `use-item-creator-workspace`, `use-creature-creator-workspace`. **Section islands** (presentational only): power → `power-creator-editor.tsx`; item → `item-creator-editor.tsx` + helpers; creature → `creature-creator-editor.tsx`; technique → `technique-creator-editor.tsx`; empowered → `empowered-technique-creator-editor.tsx`. Page wires `CreatorPageShell` + modals + editor. **Admin Archetypes** (same pattern, not CreatorPageShell): `use-admin-archetype-workspace` + `admin-archetype-editor` + `admin-archetype-path-form` / `admin-archetype-path-rows`; thin `AdminArchetypesTab` shell.
 - **Character sheet actions** (TASK-381 Phase 2): facade `useCharacterSheetActions` composes domain hooks — auto-proficiencies, library, resources/recovery/level-up, feats/traits/state, skills/identity; equipment id/name/index match via `sheet-item-match.ts`. Public return shape stays stable for `characters/[id]/page.tsx`.
 
 ## Allocation UI consistency

@@ -398,7 +398,6 @@ export function GuidedPathDetailModal({
       isOpen={isOpen && path != null}
       onClose={onClose}
       title={path?.name ?? ''}
-      description={GUIDED_CREATOR_COPY.steps.path.detailModalHint}
       onSelect={onSelect}
       overview={
         path ? (

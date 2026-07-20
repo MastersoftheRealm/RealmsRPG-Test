@@ -12,6 +12,7 @@ import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils/cn';
 import { Check, X, AlertTriangle, Info, XCircle } from 'lucide-react';
 import { MOTION_DURATION_SLOW_MS } from '@/lib/utils/motion';
+import { useIsClient } from '@/hooks/use-is-client';
 import { IconButton } from './icon-button';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
@@ -111,11 +112,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = React.useState<Toast[]>([]);
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useIsClient();
 
   const showToast = React.useCallback(
     (message: string, type: ToastType = 'info', duration?: number) => {

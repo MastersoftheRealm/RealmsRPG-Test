@@ -2,13 +2,9 @@
 
 import { useMemo, useState } from 'react';
 import {
-  SectionHeader,
-  SearchInput,
-  LoadingState,
+  CodexBrowseListShell,
   ErrorDisplay as ErrorState,
   GridListRow,
-  ListEmptyState as EmptyState,
-  ListHeader,
 } from '@/components/shared';
 
 const ADMIN_PART_COLUMNS = [
@@ -458,70 +454,59 @@ export function AdminPartsTab() {
 
   return (
     <div>
-      <SectionHeader title="Power & Technique Parts" onAdd={openAdd} size="md" />
-      <div className="mb-4 mt-2">
-        <SearchInput
-          value={filters.search}
-          onChange={(v) => setFilters(f => ({ ...f, search: v }))}
-          placeholder="Search parts..."
-        />
-      </div>
+      <CodexBrowseListShell
+        sectionTitle="Power & Technique Parts"
+        onAdd={openAdd}
+        search={filters.search}
+        onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
+        searchPlaceholder="Search parts..."
+        filters={
+          <FilterSection>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <SelectFilter
+                label="Category"
+                value={filters.categoryFilter}
+                options={filterOptions.categories.map(c => ({ value: c, label: c }))}
+                onChange={(v) => setFilters(f => ({ ...f, categoryFilter: v }))}
+                placeholder="All Categories"
+              />
 
-      <FilterSection>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <SelectFilter
-            label="Category"
-            value={filters.categoryFilter}
-            options={filterOptions.categories.map(c => ({ value: c, label: c }))}
-            onChange={(v) => setFilters(f => ({ ...f, categoryFilter: v }))}
-            placeholder="All Categories"
-          />
+              <SelectFilter
+                label="Type"
+                value={filters.typeFilter}
+                options={[
+                  { value: 'all', label: 'All' },
+                  { value: 'power', label: 'Power' },
+                  { value: 'technique', label: 'Technique' },
+                ]}
+                onChange={(v) => setFilters(f => ({ ...f, typeFilter: v as 'all' | 'power' | 'technique' }))}
+                placeholder={null}
+              />
 
-          <SelectFilter
-            label="Type"
-            value={filters.typeFilter}
-            options={[
-              { value: 'all', label: 'All' },
-              { value: 'power', label: 'Power' },
-              { value: 'technique', label: 'Technique' },
-            ]}
-            onChange={(v) => setFilters(f => ({ ...f, typeFilter: v as 'all' | 'power' | 'technique' }))}
-            placeholder={null}
-          />
-
-          <SelectFilter
-            label="Mechanics"
-            value={filters.mechanicMode}
-            options={[
-              { value: 'only', label: 'Only Mechanics' },
-              { value: 'hide', label: 'Hide Mechanics' },
-            ]}
-            onChange={(v) => setFilters(f => ({ ...f, mechanicMode: (v || '') as '' | 'only' | 'hide' }))}
-            placeholder="All parts"
-          />
-        </div>
-      </FilterSection>
-
-      <ListHeader
-        columns={ADMIN_PART_COLUMNS}
+              <SelectFilter
+                label="Mechanics"
+                value={filters.mechanicMode}
+                options={[
+                  { value: 'only', label: 'Only Mechanics' },
+                  { value: 'hide', label: 'Hide Mechanics' },
+                ]}
+                onChange={(v) => setFilters(f => ({ ...f, mechanicMode: (v || '') as '' | 'only' | 'hide' }))}
+                placeholder="All parts"
+              />
+            </div>
+          </FilterSection>
+        }
+        headerColumns={ADMIN_PART_COLUMNS}
         gridColumns={PART_GRID_COLUMNS}
         sortState={sortState}
         onSort={handleSort}
-      />
-
-      {isLoading ? (
-        <LoadingState />
-      ) : (
-        <div className="flex flex-col gap-1 mt-2">
-          {filteredParts.length === 0 ? (
-            <EmptyState
-              title="No parts found"
-              description="No parts match your filters."
-              action={{ label: 'Add Part', onClick: openAdd }}
-              size="sm"
-            />
-          ) : (
-            filteredParts.map((p: Part) => {
+        isLoading={isLoading}
+        isEmpty={filteredParts.length === 0}
+        emptyTitle="No parts found"
+        emptyMessage="No parts match your filters."
+        emptyAction={{ label: 'Add Part', onClick: openAdd }}
+      >
+        {filteredParts.map((p: Part) => {
               const formatEnergyCostAllowZero = (en: number | undefined): string | null => {
                 if (en === undefined || Number.isNaN(en)) return null;
                 if (p.percentage) {
@@ -639,10 +624,8 @@ export function AdminPartsTab() {
                   }
                 />
               );
-            })
-          )}
-        </div>
-      )}
+            })}
+      </CodexBrowseListShell>
 
       <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Part' : 'Add Part'} size="full" fullScreenOnMobile
         footer={

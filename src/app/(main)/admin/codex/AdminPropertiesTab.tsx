@@ -2,13 +2,9 @@
 
 import { useMemo, useState } from 'react';
 import {
-  SectionHeader,
-  SearchInput,
-  LoadingState,
+  CodexBrowseListShell,
   ErrorDisplay as ErrorState,
   GridListRow,
-  ListEmptyState as EmptyState,
-  ListHeader,
 } from '@/components/shared';
 import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
 import { SelectFilter, FilterSection } from '@/components/shared/filters';
@@ -311,40 +307,37 @@ export function AdminPropertiesTab() {
 
   return (
     <div>
-      <SectionHeader title="Armament Properties" onAdd={openAdd} size="md" />
-      <div className="mb-4 mt-2">
-        <SearchInput
-          value={filters.search}
-          onChange={(v) => setFilters(f => ({ ...f, search: v }))}
-          placeholder="Search properties..."
-        />
-      </div>
-
-      <FilterSection>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <SelectFilter
-            label="Type"
-            value={filters.typeFilter}
-            options={typeOptions.map(t => {
-              const lower = t.toLowerCase();
-              const label =
-                lower === 'armor'
-                  ? 'Armor'
-                  : lower === 'shield'
-                    ? 'Shield'
-                    : lower === 'weapon'
-                      ? 'Weapon'
-                      : t;
-              return { value: label, label };
-            })}
-            onChange={(v) => setFilters(f => ({ ...f, typeFilter: v }))}
-            placeholder="All Types"
-          />
-        </div>
-      </FilterSection>
-
-      <ListHeader
-        columns={[
+      <CodexBrowseListShell
+        sectionTitle="Armament Properties"
+        onAdd={openAdd}
+        search={filters.search}
+        onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
+        searchPlaceholder="Search properties..."
+        filters={
+          <FilterSection>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <SelectFilter
+                label="Type"
+                value={filters.typeFilter}
+                options={typeOptions.map(t => {
+                  const lower = t.toLowerCase();
+                  const label =
+                    lower === 'armor'
+                      ? 'Armor'
+                      : lower === 'shield'
+                        ? 'Shield'
+                        : lower === 'weapon'
+                          ? 'Weapon'
+                          : t;
+                  return { value: label, label };
+                })}
+                onChange={(v) => setFilters(f => ({ ...f, typeFilter: v }))}
+                placeholder="All Types"
+              />
+            </div>
+          </FilterSection>
+        }
+        headerColumns={[
           { key: 'name', label: 'NAME' },
           { key: 'type', label: 'TYPE' },
           { key: 'ip', label: 'ITEM PTS' },
@@ -355,21 +348,13 @@ export function AdminPropertiesTab() {
         gridColumns={PROPERTY_GRID_COLUMNS}
         sortState={sortState}
         onSort={handleSort}
-      />
-
-      {isLoading ? (
-        <LoadingState />
-      ) : (
-        <div className="flex flex-col gap-1 mt-2">
-          {filteredProperties.length === 0 ? (
-            <EmptyState
-              title="No properties found"
-              description="No properties match your filters."
-              action={{ label: 'Add Property', onClick: openAdd }}
-              size="sm"
-            />
-          ) : (
-            filteredProperties.map((p: ItemProperty) => {
+        isLoading={isLoading}
+        isEmpty={filteredProperties.length === 0}
+        emptyTitle="No properties found"
+        emptyMessage="No properties match your filters."
+        emptyAction={{ label: 'Add Property', onClick: openAdd }}
+      >
+        {filteredProperties.map((p: ItemProperty) => {
               const typeLabel = formatListCellLabel(p.type || 'general');
 
               const optionChips =
@@ -479,10 +464,8 @@ export function AdminPropertiesTab() {
                   }
                 />
               );
-            })
-          )}
-        </div>
-      )}
+            })}
+      </CodexBrowseListShell>
 
       <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Property' : 'Add Property'} size="full" fullScreenOnMobile
         footer={

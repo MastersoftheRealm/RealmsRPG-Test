@@ -12,7 +12,7 @@ import { useMemo, useState, useRef, useEffect, type KeyboardEvent, type ReactNod
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
-import { DescriptorChip } from '@/components/ui';
+import { DescriptorChip, type ChipProps } from '@/components/ui';
 import { ExpandableImage } from '@/components/shared';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { shouldExpandTaglineBody } from './guided-text';
@@ -28,12 +28,38 @@ import {
   type GuidedChoiceCardDensity,
 } from './guided-choice-styles';
 
+/** Card footer metadata chips — string shorthand or styled DescriptorChip config. */
+export type GuidedChoiceTag =
+  | string
+  | {
+      label: string;
+      variant?: ChipProps['variant'];
+      size?: ChipProps['size'];
+    };
+
+function normalizeChoiceTag(tag: GuidedChoiceTag): {
+  key: string;
+  label: string;
+  variant: ChipProps['variant'];
+  size: NonNullable<ChipProps['size']>;
+} {
+  if (typeof tag === 'string') {
+    return { key: tag, label: tag, variant: 'descriptor', size: 'sm' };
+  }
+  return {
+    key: tag.label,
+    label: tag.label,
+    variant: tag.variant ?? 'descriptor',
+    size: tag.size ?? 'sm',
+  };
+}
+
 export interface GuidedChoiceCardProps {
   title: string;
   description?: string | null;
   tagline?: string;
   fullDescription?: ReactNode;
-  tags?: string[];
+  tags?: GuidedChoiceTag[];
   /**
    * Title-adjacent metadata (e.g. Currency / Training Points chips).
    * Renders beside the title — never under the disclosure row.
@@ -432,11 +458,14 @@ export function GuidedChoiceCard({
 
         {showTags ? (
           <div className={s.tagsRow}>
-            {tags!.map((tag) => (
-              <DescriptorChip key={tag} size="sm">
-                {tag}
-              </DescriptorChip>
-            ))}
+            {tags!.map((tag) => {
+              const chip = normalizeChoiceTag(tag);
+              return (
+                <DescriptorChip key={chip.key} variant={chip.variant} size={chip.size}>
+                  {chip.label}
+                </DescriptorChip>
+              );
+            })}
           </div>
         ) : null}
 

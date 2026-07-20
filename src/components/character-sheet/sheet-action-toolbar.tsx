@@ -46,7 +46,10 @@ export function SheetActionToolbar({
   }
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:bottom-auto md:top-24 z-overlay flex flex-row md:flex-col justify-center md:justify-start gap-2 md:gap-2">
+    <div
+      className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:bottom-auto md:top-24 z-overlay flex flex-row md:flex-col justify-center md:justify-start gap-2 md:gap-2"
+      data-tour-id="sheet-tour-edit"
+    >
       {/* Edit / Done Toggle */}
       <button
         onClick={onToggleEditMode}

@@ -12,7 +12,7 @@
 
 'use client';
 
-import { useState, useRef, useEffect, KeyboardEvent, ChangeEvent, useMemo } from 'react';
+import { useState, useRef, KeyboardEvent, ChangeEvent, useMemo } from 'react';
 import Image from 'next/image';
 import { Camera, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -128,16 +128,11 @@ function ResourceInput({
   const [inputValue, setInputValue] = useState(String(current));
   const [isEditing, setIsEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  
-  // Sync input value when current changes externally
-  useEffect(() => {
-    if (!isEditing) {
-      setInputValue(String(current));
-    }
-  }, [current, isEditing]);
+  const displayValue = isEditing ? inputValue : String(current);
   
   const handleFocus = () => {
     setIsEditing(true);
+    setInputValue(String(current));
     // Select all text when focused
     setTimeout(() => inputRef.current?.select(), 0);
   };
@@ -268,7 +263,7 @@ function ResourceInput({
           ref={inputRef}
           type="text"
           inputMode="numeric"
-          value={inputValue}
+          value={displayValue}
           onChange={handleChange}
           onFocus={handleFocus}
           onBlur={handleBlur}
@@ -573,7 +568,7 @@ export function SheetHeader({
     && normalizedMartialAbility !== normalizedPowerAbility;
 
   return (
-    <Card className="shadow-md p-4 md:p-6 mb-4">
+    <Card className="shadow-md p-4 md:p-6 mb-4" data-tour-id="sheet-tour-header">
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Left: Portrait and Identity */}
         <div className="flex gap-4 flex-shrink-0 items-center">

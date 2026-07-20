@@ -10,12 +10,8 @@ import {
 } from '@/components/shared/filters';
 import { CodexFeatRow } from '@/components/codex';
 import {
-  SectionHeader,
-  SearchInput,
-  ListHeader,
-  LoadingState,
+  CodexBrowseListShell,
   ErrorDisplay as ErrorState,
-  ListEmptyState as EmptyState,
 } from '@/components/shared';
 import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
 import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
@@ -1076,104 +1072,94 @@ export function AdminFeatsTab() {
 
   return (
     <div>
-      <SectionHeader title="Feats" onAdd={openAdd} size="md" />
-      <div className="mb-4">
-        <SearchInput
-          value={filters.search}
-          onChange={(v) => setFilters(f => ({ ...f, search: v }))}
-          placeholder="Search names, tags, descriptions..."
-        />
-      </div>
-
-      <FilterSection>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          <div className="filter-group">
-            <label className="block text-sm font-medium text-text-secondary mb-1">Max Required Level</label>
-            <Input
-              type="number"
-              min={0}
-              value={filters.maxLevel ?? ''}
-              onChange={(e) => setFilters(f => ({ ...f, maxLevel: e.target.value ? parseInt(e.target.value) : null }))}
-              placeholder="No limit"
-            />
-          </div>
-          <div className="md:col-span-2">
-            <AbilityRequirementFilter
-              label="Ability/Defense Requirement"
-              abilities={filterOptions.abilReqAbilities}
-              requirements={filters.abilityRequirements}
-              onAdd={(req) => setFilters(f => ({ ...f, abilityRequirements: [...f.abilityRequirements, req] }))}
-              onRemove={(ability) => setFilters(f => ({ ...f, abilityRequirements: f.abilityRequirements.filter(r => r.ability !== ability) }))}
-            />
-          </div>
-          <ChipSelect
-            label="Category"
-            placeholder="Choose category"
-            options={filterOptions.categories.map(c => ({ value: c, label: c }))}
-            selectedValues={filters.categories}
-            onSelect={(v) => setFilters(f => ({ ...f, categories: [...f.categories, v] }))}
-            onRemove={(v) => setFilters(f => ({ ...f, categories: f.categories.filter(c => c !== v) }))}
-          />
-          <ChipSelect
-            label="Ability"
-            placeholder="Choose ability"
-            options={filterOptions.abilities.map(a => ({ value: a, label: a }))}
-            selectedValues={filters.abilities}
-            onSelect={(v) => setFilters(f => ({ ...f, abilities: [...f.abilities, v] }))}
-            onRemove={(v) => setFilters(f => ({ ...f, abilities: f.abilities.filter(a => a !== v) }))}
-          />
-          <div className="md:col-span-2">
-            <TagFilter
-              tags={filterOptions.tags}
-              selectedTags={filters.tags}
-              tagMode={filters.tagMode}
-              onSelect={(t) => setFilters(f => ({ ...f, tags: [...f.tags, t] }))}
-              onRemove={(t) => setFilters(f => ({ ...f, tags: f.tags.filter(tag => tag !== t) }))}
-              onModeChange={(mode) => setFilters(f => ({ ...f, tagMode: mode }))}
-            />
-          </div>
-          <SelectFilter
-            label="Feat Type"
-            value={filters.featTypeMode}
-            options={[
-              { value: 'archetype', label: 'Archetype feats' },
-              { value: 'character', label: 'Character feats' },
-            ]}
-            onChange={(v) => setFilters(f => ({ ...f, featTypeMode: (v || '') as '' | 'archetype' | 'character' }))}
-            placeholder="All types"
-          />
-          <SelectFilter
-            label="State Feats"
-            value={filters.stateFeatMode}
-            options={[
-              { value: 'only', label: 'Only state feats' },
-              { value: 'hide', label: 'Hide state feats' },
-            ]}
-            onChange={(v) => setFilters(f => ({ ...f, stateFeatMode: (v || '') as '' | 'only' | 'hide' }))}
-            placeholder="All states"
-          />
-        </div>
-      </FilterSection>
-
-      <ListHeader
-        columns={ADMIN_FEAT_HEADER_COLUMNS}
+      <CodexBrowseListShell
+        sectionTitle="Feats"
+        onAdd={openAdd}
+        search={filters.search}
+        onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
+        searchPlaceholder="Search names, tags, descriptions..."
+        filters={
+          <FilterSection>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="filter-group">
+                <label className="block text-sm font-medium text-text-secondary mb-1">Max Required Level</label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={filters.maxLevel ?? ''}
+                  onChange={(e) => setFilters(f => ({ ...f, maxLevel: e.target.value ? parseInt(e.target.value) : null }))}
+                  placeholder="No limit"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <AbilityRequirementFilter
+                  label="Ability/Defense Requirement"
+                  abilities={filterOptions.abilReqAbilities}
+                  requirements={filters.abilityRequirements}
+                  onAdd={(req) => setFilters(f => ({ ...f, abilityRequirements: [...f.abilityRequirements, req] }))}
+                  onRemove={(ability) => setFilters(f => ({ ...f, abilityRequirements: f.abilityRequirements.filter(r => r.ability !== ability) }))}
+                />
+              </div>
+              <ChipSelect
+                label="Category"
+                placeholder="Choose category"
+                options={filterOptions.categories.map(c => ({ value: c, label: c }))}
+                selectedValues={filters.categories}
+                onSelect={(v) => setFilters(f => ({ ...f, categories: [...f.categories, v] }))}
+                onRemove={(v) => setFilters(f => ({ ...f, categories: f.categories.filter(c => c !== v) }))}
+              />
+              <ChipSelect
+                label="Ability"
+                placeholder="Choose ability"
+                options={filterOptions.abilities.map(a => ({ value: a, label: a }))}
+                selectedValues={filters.abilities}
+                onSelect={(v) => setFilters(f => ({ ...f, abilities: [...f.abilities, v] }))}
+                onRemove={(v) => setFilters(f => ({ ...f, abilities: f.abilities.filter(a => a !== v) }))}
+              />
+              <div className="md:col-span-2">
+                <TagFilter
+                  tags={filterOptions.tags}
+                  selectedTags={filters.tags}
+                  tagMode={filters.tagMode}
+                  onSelect={(t) => setFilters(f => ({ ...f, tags: [...f.tags, t] }))}
+                  onRemove={(t) => setFilters(f => ({ ...f, tags: f.tags.filter(tag => tag !== t) }))}
+                  onModeChange={(mode) => setFilters(f => ({ ...f, tagMode: mode }))}
+                />
+              </div>
+              <SelectFilter
+                label="Feat Type"
+                value={filters.featTypeMode}
+                options={[
+                  { value: 'archetype', label: 'Archetype feats' },
+                  { value: 'character', label: 'Character feats' },
+                ]}
+                onChange={(v) => setFilters(f => ({ ...f, featTypeMode: (v || '') as '' | 'archetype' | 'character' }))}
+                placeholder="All types"
+              />
+              <SelectFilter
+                label="State Feats"
+                value={filters.stateFeatMode}
+                options={[
+                  { value: 'only', label: 'Only state feats' },
+                  { value: 'hide', label: 'Hide state feats' },
+                ]}
+                onChange={(v) => setFilters(f => ({ ...f, stateFeatMode: (v || '') as '' | 'only' | 'hide' }))}
+                placeholder="All states"
+              />
+            </div>
+          </FilterSection>
+        }
+        headerColumns={ADMIN_FEAT_HEADER_COLUMNS}
         gridColumns={FEAT_GRID_COLUMNS}
         sortState={sortState}
         onSort={handleSort}
-      />
-
-      <div className="flex flex-col gap-1 mt-2">
-        {isLoading ? (
-          <LoadingState />
-        ) : groupedFeats.length === 0 ? (
-          <EmptyState
-            title="No feats match your filters"
-            description="Add one to get started."
-            action={{ label: 'Add Feat', onClick: openAdd }}
-            size="sm"
-          />
-        ) : (
-          groupedFeats.map(({ main: feat, levels: familyLevels }) => (
+        isLoading={isLoading}
+        isEmpty={groupedFeats.length === 0}
+        emptyTitle="No feats match your filters"
+        emptyMessage="Add one to get started."
+        emptyAction={{ label: 'Add Feat', onClick: openAdd }}
+      >
+        {groupedFeats.map(({ main: feat, levels: familyLevels }) => (
             <CodexFeatRow
               key={feat.id}
               feat={feat}
@@ -1217,8 +1203,8 @@ export function AdminFeatsTab() {
               }
             />
           ))
-        )}
-      </div>
+        }
+      </CodexBrowseListShell>
 
       {modalOpen ? (
         <AdminFeatEditModal

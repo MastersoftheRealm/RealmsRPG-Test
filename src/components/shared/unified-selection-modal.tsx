@@ -15,7 +15,7 @@
  * - Flexible column/chip configuration per item type
  */
 
-import { useState, useEffect, useMemo, useCallback, useRef, ReactNode } from 'react';
+import { useState, useMemo, useCallback, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { Alert, Modal, Button } from '@/components/ui';
 import { TabContentPanel } from '@/components/ui/tab-navigation';
@@ -256,10 +256,10 @@ export function UnifiedSelectionModal({
   /** Prompt when dismissing with unconfirmed picks (TASK-574). */
   const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
   const { sortState, handleSort, sortItems } = useSort('name');
-  const prevOpenRef = useRef(false);
+  const [wasOpen, setWasOpen] = useState(false);
   /** Snapshot of seed selection at open — stable for dirty checks (avoids new Set() each render). */
-  const openInitialIdsRef = useRef<Set<string>>(new Set());
-  const openInitialQuantitiesRef = useRef<Record<string, number>>({});
+  const [openInitialIds, setOpenInitialIds] = useState<Set<string>>(() => new Set());
+  const [openInitialQuantities, setOpenInitialQuantities] = useState<Record<string, number>>({});
   const hasThumbnailColumn = useMemo(
     () => items.some((item) => Boolean(item.thumbnail)),
     [items]
@@ -267,40 +267,35 @@ export function UnifiedSelectionModal({
   // Filters disclosure = secondary only; primary mode tabs use scopeExtra (always visible).
   const hasOptions = Boolean(headerExtra) || Boolean(showFilters && filterContent);
 
-  // Reset only when modal first opens (not on every render). When callers omit initialSelectedIds
-  // they get default initialSelectedIds = new Set() which is a new reference each render — that
-  // was causing the effect to run every time and wipe selection after each + click.
-  useEffect(() => {
-    const justOpened = isOpen && !prevOpenRef.current;
-    prevOpenRef.current = isOpen;
-    if (justOpened) {
-      const ids = new Set([...initialSelectedIds].map((id) => String(id)));
-      openInitialIdsRef.current = ids;
-      setSelectedIds(ids);
-      if (showQuantity) {
-        const next: Record<string, number> = {};
-        for (const id of ids) {
-          const seeded =
-            initialQuantities[id] ??
-            initialQuantities[id.toLowerCase()] ??
-            1;
-          next[id] = Math.max(1, Math.floor(Number(seeded)) || 1);
-        }
-        openInitialQuantitiesRef.current = next;
-        setQuantities(next);
-      } else {
-        openInitialQuantitiesRef.current = {};
-        setQuantities({});
+  // Reset only when modal first opens (render-time adjust — TASK-430). Do not depend on
+  // initialSelectedIds identity: callers often pass `new Set()` each render.
+  if (isOpen && !wasOpen) {
+    const ids = new Set([...initialSelectedIds].map((id) => String(id)));
+    setOpenInitialIds(ids);
+    setSelectedIds(ids);
+    if (showQuantity) {
+      const next: Record<string, number> = {};
+      for (const id of ids) {
+        const seeded =
+          initialQuantities[id] ??
+          initialQuantities[id.toLowerCase()] ??
+          1;
+        next[id] = Math.max(1, Math.floor(Number(seeded)) || 1);
       }
-      setSearchQuery('');
-      // List-first: collapse Filters/options every time the modal opens (TASK-564).
-      setOptionsExpanded(false);
-      setLeaveConfirmOpen(false);
+      setOpenInitialQuantities(next);
+      setQuantities(next);
+    } else {
+      setOpenInitialQuantities({});
+      setQuantities({});
     }
-    if (!isOpen) {
-      setLeaveConfirmOpen(false);
-    }
-  }, [isOpen, initialSelectedIds, initialQuantities, showQuantity]);
+    setSearchQuery('');
+    setOptionsExpanded(false);
+    setLeaveConfirmOpen(false);
+    setWasOpen(true);
+  } else if (!isOpen && wasOpen) {
+    setLeaveConfirmOpen(false);
+    setWasOpen(false);
+  }
   
   // Filter items for display (displayFilter e.g. by source tab; selection still uses full items)
   const filteredItems = useMemo(() => {
@@ -403,24 +398,23 @@ export function UnifiedSelectionModal({
     overSelectionLimit ||
     (confirmDisabled?.(selectedItems) ?? false);
 
-  /** Intercept Cancel / X / backdrop / Escape when picks would be lost (TASK-574).
-   * Dirty check reads open-seed refs only in this event path (not during render). */
+  /** Intercept Cancel / X / backdrop / Escape when picks would be lost (TASK-574). */
   const handleRequestClose = useCallback(() => {
     // Nested leave-confirm is open — ignore parent dismiss (Escape hits both listeners).
     if (leaveConfirmOpen) return;
     const hasUnconfirmedSelection = selectionDiffersFromInitial(
       selectedIds,
-      openInitialIdsRef.current,
+      openInitialIds,
       showQuantity,
       quantities,
-      openInitialQuantitiesRef.current
+      openInitialQuantities
     );
     if (hasUnconfirmedSelection) {
       setLeaveConfirmOpen(true);
       return;
     }
     onClose();
-  }, [leaveConfirmOpen, selectedIds, showQuantity, quantities, onClose]);
+  }, [leaveConfirmOpen, selectedIds, openInitialIds, showQuantity, quantities, openInitialQuantities, onClose]);
 
   const handleDiscardAndClose = useCallback(() => {
     setLeaveConfirmOpen(false);

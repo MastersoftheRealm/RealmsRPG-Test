@@ -171,7 +171,7 @@ export function SpeciesModal({
   const speciesSkillChips = useMemo(() => {
     if (!species?.skills?.length) return [];
     return species.skills.map((skillId) => speciesSkillToSummaryChipItem(skillId, allSkills));
-  }, [species?.skills, allSkills]);
+  }, [species, allSkills]);
 
   if (!species || !isOpen) return null;
 

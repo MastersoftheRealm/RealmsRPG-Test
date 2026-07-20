@@ -7,7 +7,7 @@
 import { useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Sparkles } from 'lucide-react';
-import { Button, Input, Modal, Textarea, useToast } from '@/components/ui';
+import { Button, Input, Textarea, useToast } from '@/components/ui';
 import {
   useAuth,
   useMergedSpecies,
@@ -21,6 +21,7 @@ import {
   useItemProperties,
 } from '@/hooks';
 import { LoginPromptModal } from '@/components/shared';
+import { PlayTogetherModal } from '@/components/onboarding';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
 import { GuidedStepLayout } from '../guided-step-layout';
@@ -34,15 +35,16 @@ import { dataUrlToBlob } from '@/lib/portrait';
 import { apiUpload } from '@/lib/api-client';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import type { Character } from '@/types';
-import { MarketingExternalButton, MarketingLinkButton } from '@/components/landing/marketing-button';
-import { DISCORD_URL } from '@/lib/constants/site-copy';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { calculateHealthEnergyPool } from '@/lib/game/formulas';
 import { navigateThenResetCreator, scheduleCreatorReset } from '@/lib/creator-save-handoff';
+import {
+  characterSheetUrlWithTourOffer,
+  hasSeenPlayTogether,
+  shouldOfferSheetTour,
+} from '@/lib/onboarding-preferences';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.reveal;
-
-const PLAY_TOGETHER_KEY = 'realms_seen_play_together_prompt';
 
 function speciesAvgNumber(value: unknown): number | undefined {
   if (value == null) return undefined;
@@ -113,10 +115,12 @@ export function RevealStep() {
   const canSave = draft.name.trim().length > 0 && remaining === 0;
 
   /** Navigate only after a confirmed create; clear draft as we leave. Honors ?returnTo= like custom finalize. */
-  const goAfterSave = (characterId: string) => {
+  const goAfterSave = (characterId: string, offerTour = false) => {
     navigateThenResetCreator(() => {
       if (postSaveReturnTo) {
         router.push(postSaveReturnTo);
+      } else if (offerTour && shouldOfferSheetTour()) {
+        router.push(characterSheetUrlWithTourOffer(characterId));
       } else {
         router.push(`/characters/${characterId}`);
       }
@@ -191,12 +195,11 @@ export function RevealStep() {
       setSavedCharacterId(characterId);
       showToast('Your character is ready!', 'success');
       // Campaign/join returnTo skips play-together (custom finalize goes straight to returnTo).
-      const seen = localStorage.getItem(PLAY_TOGETHER_KEY);
-      if (!postSaveReturnTo && !seen) {
+      if (!postSaveReturnTo && !hasSeenPlayTogether()) {
         setShowPlayTogether(true);
         // Leave `saving` true so Finish stays disabled while play-together is open.
       } else {
-        goAfterSave(characterId);
+        goAfterSave(characterId, !postSaveReturnTo);
       }
     } catch (err) {
       const message =
@@ -209,10 +212,9 @@ export function RevealStep() {
   };
 
   const dismissPlayTogether = (goSheet: boolean) => {
-    localStorage.setItem(PLAY_TOGETHER_KEY, '1');
     setShowPlayTogether(false);
     if (goSheet && savedCharacterId) {
-      goAfterSave(savedCharacterId);
+      goAfterSave(savedCharacterId, true);
       return;
     }
     // Character already created — clear the wizard even if the user leaves via another CTA.
@@ -354,51 +356,11 @@ export function RevealStep() {
         contentType="character"
       />
 
-      <Modal
+      <PlayTogetherModal
         isOpen={showPlayTogether}
-        onClose={() => dismissPlayTogether(true)}
-        title={stepCopy.playTogetherModal.title}
-        description={stepCopy.playTogetherModal.description}
-        fullScreenOnMobile
-        footer={
-          <div className="flex flex-col gap-3 border-t border-border-light p-4 sm:flex-row">
-            <Button variant="secondary" onClick={() => dismissPlayTogether(true)} className="min-h-11">
-              {stepCopy.playTogetherModal.viewCharacter}
-            </Button>
-          </div>
-        }
-      >
-        <div className="space-y-3 p-4">
-          {DISCORD_URL && (
-            <MarketingExternalButton
-              href={DISCORD_URL}
-              size="lg"
-              className="w-full"
-              onClick={() => localStorage.setItem(PLAY_TOGETHER_KEY, '1')}
-            >
-              {stepCopy.playTogetherModal.discord}
-            </MarketingExternalButton>
-          )}
-          <MarketingLinkButton
-            href="/campaigns"
-            variant="outline"
-            size="lg"
-            className="w-full"
-            onClick={() => dismissPlayTogether(false)}
-          >
-            {stepCopy.playTogetherModal.campaigns}
-          </MarketingLinkButton>
-          <MarketingLinkButton
-            href="/campaigns?tab=create"
-            variant="outline"
-            size="lg"
-            className="w-full"
-            onClick={() => dismissPlayTogether(false)}
-          >
-            {stepCopy.playTogetherModal.runGames}
-          </MarketingLinkButton>
-        </div>
-      </Modal>
+        onViewCharacter={() => dismissPlayTogether(true)}
+        onLeaveElsewhere={() => dismissPlayTogether(false)}
+      />
     </>
   );
 }

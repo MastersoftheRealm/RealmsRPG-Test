@@ -179,10 +179,7 @@ export function ImageUploadModal({
   }, []);
 
   useEffect(() => {
-    if (!imageSrc || !croppedAreaPixels) {
-      clearOutputPreview();
-      return;
-    }
+    if (!imageSrc || !croppedAreaPixels) return;
 
     let cancelled = false;
     const timer = window.setTimeout(() => {

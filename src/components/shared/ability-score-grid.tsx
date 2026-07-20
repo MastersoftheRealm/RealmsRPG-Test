@@ -47,6 +47,13 @@ export interface AbilityScoreGridProps {
   canDecrease?: (ability: AbilityName) => boolean;
   /** Show "Next: N Points" under a tile when the next increase costs > 1. */
   getIncreaseCost?: (ability: AbilityName) => number;
+  /**
+   * Compact tiles for read-only overviews (e.g. Path More details recommended abilities).
+   * Edit mode ignores compact (steppers need default space).
+   */
+  density?: 'default' | 'compact';
+  /** When set, only render these abilities (order follows ABILITY_DISPLAY_ORDER). */
+  onlyAbilities?: AbilityName[];
   className?: string;
 }
 
@@ -177,25 +184,37 @@ export function AbilityScoreGrid({
   canIncrease,
   canDecrease,
   getIncreaseCost,
+  density = 'default',
+  onlyAbilities,
   className,
 }: AbilityScoreGridProps) {
   const isEdit = mode === 'edit';
+  const isCompact = density === 'compact' && !isEdit;
   const hybrid = isHybridPath(powerAbility, martialAbility);
+  const abilityOrder = onlyAbilities?.length
+    ? ABILITY_DISPLAY_ORDER.filter((ability) => onlyAbilities.includes(ability))
+    : ABILITY_DISPLAY_ORDER;
 
   return (
     <div
       className={cn(
         // Extra top padding clears straddling path pills above the tile edge.
-        'grid gap-2 pt-3 sm:gap-3 sm:pt-4 md:gap-4',
+        'grid',
+        isCompact
+          ? 'gap-2 pt-2'
+          : 'gap-2 pt-3 sm:gap-3 sm:pt-4 md:gap-4',
         // Display: 2-col phone (full names, less elongated), 3-col tablet, 6-col desktop.
         // Edit: wider cells so 44px steppers fit.
+        // Compact + filtered: denser auto columns for overview subsets (Path More details).
         isEdit
           ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6'
-          : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6',
+          : isCompact && onlyAbilities?.length
+            ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'
+            : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6',
         className
       )}
     >
-      {ABILITY_DISPLAY_ORDER.map((ability) => {
+      {abilityOrder.map((ability) => {
         const value = abilities[ability] ?? 0;
         const info = ABILITY_DISPLAY_INFO[ability];
         const highlight = getPathAbilityHighlight(
@@ -219,9 +238,11 @@ export function AbilityScoreGrid({
                 !isEdit && 'hover:shadow-md',
                 isEdit
                   ? 'flex-row items-center justify-between gap-2 px-3 py-2 sm:flex-col sm:justify-center sm:px-2 sm:py-2'
-                  : 'flex-col items-center justify-center px-1.5 py-1.5 sm:px-2 sm:py-2',
+                  : isCompact
+                    ? 'flex-col items-center justify-center px-1 py-1 sm:px-1.5 sm:py-1.5'
+                    : 'flex-col items-center justify-center px-1.5 py-1.5 sm:px-2 sm:py-2',
                 // After py-* so twMerge keeps clear-space under the straddling pill (incl. sm:py-2).
-                highlight && 'pt-3 sm:pt-3'
+                highlight && (isCompact ? 'pt-2.5 sm:pt-2.5' : 'pt-3 sm:pt-3')
               )}
             >
               {/* Name is WordHelpTip (focusable); score carries ability context — no tile aria-label. */}
@@ -233,7 +254,12 @@ export function AbilityScoreGrid({
                   isEdit
                     ? 'text-xs tracking-wide sm:text-[11px] sm:tracking-wider'
                     : // Full-width label; keep WordHelpTip default 44px touch target (MOBILE_UX).
-                      'w-full min-w-0 justify-center px-0.5 text-center text-[10px] leading-tight tracking-wide sm:text-[11px] sm:tracking-wider'
+                      cn(
+                        'w-full min-w-0 justify-center px-0.5 text-center leading-tight tracking-wide',
+                        isCompact
+                          ? 'text-[9px] sm:text-[10px]'
+                          : 'text-[10px] sm:text-[11px] sm:tracking-wider'
+                      )
                 )}
               >
                 {info.name}
@@ -287,7 +313,10 @@ export function AbilityScoreGrid({
                 ) : (
                   <span
                     className={cn(
-                      'min-w-[2.5rem] text-center text-xl font-bold sm:min-w-[2.75rem] sm:text-2xl',
+                      'min-w-[2.5rem] text-center font-bold',
+                      isCompact
+                        ? 'text-lg sm:min-w-[2.5rem] sm:text-xl'
+                        : 'text-xl sm:min-w-[2.75rem] sm:text-2xl',
                       abilityValueClass(value)
                     )}
                     aria-label={`${info.name} ${formatBonus(value)}`}

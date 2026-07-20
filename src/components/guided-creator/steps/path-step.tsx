@@ -18,11 +18,12 @@ import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
 import { DEFAULT_ABILITIES, type Archetype, type ArchetypeCategory } from '@/types';
 import {
+  archetypePathHelp,
   martialPathType,
   poweredMartialPathType,
   powerPathType,
 } from '../../../../public/tooltip-text';
-import { GuidedChoiceCard } from '../guided-choice-card';
+import { GuidedChoiceCard, type GuidedChoiceTag } from '../guided-choice-card';
 import { GUIDED_CHOICE_GRID_CLASS, GUIDED_CHOICE_GRID_ITEM_CLASS } from '../guided-choice-styles';
 
 import { GuidedPathDetailModal } from '../guided-path-detail-modal';
@@ -31,14 +32,22 @@ import { GuidedStepLayout } from '../guided-step-layout';
 const stepCopy = GUIDED_CREATOR_COPY.steps.path;
 const detailCopy = stepCopy.detail;
 
-function pathAbilityTags(path: Archetype): string[] {
+/** Path ability chips: slight enlarge for all; Primary uses primary (blue) tokens. */
+function pathAbilityTags(path: Archetype): GuidedChoiceTag[] {
   const { primaryAbilities, secondaryAbility } = resolvePathAbilityLabels(path);
-  const tags: string[] = [];
+  const tags: GuidedChoiceTag[] = [];
   for (const ability of primaryAbilities) {
-    tags.push(detailCopy.primaryAbility(formatAbilityLabel(ability)));
+    tags.push({
+      label: detailCopy.primaryAbility(formatAbilityLabel(ability)),
+      variant: 'primary',
+      size: 'md',
+    });
   }
   if (secondaryAbility) {
-    tags.push(detailCopy.secondaryAbility(formatAbilityLabel(secondaryAbility)));
+    tags.push({
+      label: detailCopy.secondaryAbility(formatAbilityLabel(secondaryAbility)),
+      size: 'md',
+    });
   }
   return tags;
 }
@@ -131,6 +140,13 @@ export function PathStep() {
     <GuidedStepLayout
       subStep="path"
       title={stepCopy.title}
+      titleAddon={
+        <InfoTippy
+          content={archetypePathHelp}
+          label="About Archetype Path"
+          size="inline"
+        />
+      }
       description={stepCopy.description}
       canContinue={Boolean(draft.archetypePathId)}
       hideBack
@@ -151,8 +167,8 @@ export function PathStep() {
                 const title = stepCopy.groupTitles[group];
                 return (
                   <section key={group} aria-label={title}>
-                    <div className="flex items-center gap-1 mb-2">
-                      <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wide">
+                    <div className="flex items-center gap-1.5 mb-3">
+                      <h3 className="text-base sm:text-lg font-bold text-text-primary tracking-tight">
                         {title}
                       </h3>
                       <InfoTippy

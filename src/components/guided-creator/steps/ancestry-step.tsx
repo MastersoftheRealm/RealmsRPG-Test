@@ -164,10 +164,15 @@ export function AncestryStep() {
   const currentTask = pickIndex >= 0 ? tasks[Math.min(pickIndex, Math.max(0, tasks.length - 1))] : undefined;
   const totalPicks = tasks.length;
 
+  const [trackedSpeciesId, setTrackedSpeciesId] = useState(draft.speciesId);
+  if (draft.speciesId !== trackedSpeciesId) {
+    setTrackedSpeciesId(draft.speciesId);
+    setPhaseIndex(0);
+  }
+
   useEffect(() => {
     phaseInitialized.current = false;
     lastEntryNonce.current = null;
-    setPhaseIndex(0);
   }, [draft.speciesId]);
 
   useEffect(() => {

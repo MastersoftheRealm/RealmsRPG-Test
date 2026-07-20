@@ -3,10 +3,10 @@
  * =================
  * Displays the six core abilities in a row with clickable roll buttons,
  * followed by a separate defenses row with defense scores and roll buttons.
- * 
- * Layout matches vanilla site:
- * - Row 1: 6 abilities with gradient roll buttons showing bonus
- * - Row 2: 6 defenses with score and gradient roll buttons for bonus
+ *
+ * // DESIGN_INTENT: Dense like sheet-header LargeStatBlock — label glued to value,
+ * content-height tiles (no equal-height empty cards). Ability play = RollButton;
+ * defense glance = Score, play = smaller bonus RollButton.
  */
 
 'use client';
@@ -46,6 +46,14 @@ interface AbilitiesSectionProps {
 // =============================================================================
 
 const ABILITY_ORDER: AbilityName[] = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'];
+
+/** Sheet tip: hug label on desktop; keep 44px touch below md (overrides WordHelpTip default min size). */
+const SHEET_STAT_TIP_CLASS =
+  'text-sm font-semibold uppercase tracking-wide text-text-secondary text-center leading-none px-0.5 min-h-0 min-w-0 max-md:min-h-[var(--touch-target-min,44px)] max-md:min-w-[var(--touch-target-min,44px)]';
+
+/** Shared tile chrome — breathing room without tall empty cards. */
+const SHEET_STAT_TILE_CLASS =
+  'flex flex-col items-center justify-center gap-2 px-2.5 py-3 rounded-xl border';
 
 const ABILITY_INFO: Record<AbilityName, { name: string; shortName: string; defenseKey: keyof DefenseSkills }> = {
   strength: { name: 'Strength', shortName: 'STR', defenseKey: 'might' },
@@ -235,8 +243,8 @@ export function AbilitiesSection({
         </div>
       )}
       
-      {/* Abilities Row */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 md:gap-4 mb-6">
+      {/* Abilities — label + roll; equal gap + tile padding (not squashed, not empty) */}
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5 md:gap-3 mb-4">
         {ABILITY_ORDER.map((ability) => {
           const value = abilities[ability] ?? 0;
           const info = ABILITY_INFO[ability];
@@ -250,30 +258,29 @@ export function AbilitiesSection({
             <div
               key={ability}
               className={cn(
-                'flex flex-col items-center p-3 bg-gradient-to-b from-surface to-surface-alt rounded-xl border-2 transition-all',
-                isPower ? 'border-power-border' : isMartial ? 'border-martial-border' : 'border-border-light',
+                SHEET_STAT_TILE_CLASS,
+                'bg-gradient-to-b from-surface to-surface-alt transition-all',
+                isPower ? 'border-power-border border-2' : isMartial ? 'border-martial-border border-2' : 'border-border-light',
                 !showEditControls && 'hover:shadow-md'
               )}
             >
-              {/* Ability Name — word-tied definition tip */}
               <WordHelpTip
                 content={getAbilityHelp(ability)}
                 label={`About ${info.name}`}
-                className="mb-2 text-xs font-bold uppercase tracking-wider text-text-muted dark:text-text-secondary"
+                className={SHEET_STAT_TIP_CLASS}
               >
                 {info.name}
               </WordHelpTip>
               
-              {/* Ability Value / Roll Button */}
               {showEditControls ? (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5">
                   <DecrementButton
                     onClick={() => onAbilityChange?.(ability, value - 1)}
                     disabled={!canDecrease}
                     size="sm"
                   />
                   <span className={cn(
-                    'text-2xl font-bold min-w-[56px] text-center',
+                    'text-xl font-bold min-w-[2.5rem] text-center tabular-nums leading-none',
                     value > 0 ? 'text-success-fg' : value < 0 ? 'text-danger-fg' : 'text-text-secondary'
                   )}>
                     {formatBonus(value)}
@@ -289,15 +296,14 @@ export function AbilitiesSection({
                 <RollButton
                   value={value}
                   onClick={() => rollContext?.rollAbility?.(ability, value)}
-                  size="lg"
+                  size="md"
                   title={`Roll ${info.name}`}
                 />
               ) : null}
               
-              {/* Cost indicator in edit mode - only show if next point costs 2 */}
               {showEditControls && cost > 1 && canIncrease && (
-                <span className="text-[10px] text-warning-fg font-medium mt-1">
-                  Next: {cost} Points
+                <span className="text-[10px] text-warning-fg font-medium leading-none">
+                  Next: {cost} Pts
                 </span>
               )}
             </div>
@@ -305,9 +311,9 @@ export function AbilitiesSection({
         })}
       </div>
       
-      {/* Defenses Row - Separate from abilities */}
-      <div className="border-t-2 border-border-light pt-4">
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 md:gap-4">
+      {/* Defenses — Score glance + roll; same tip/tile rhythm as abilities */}
+      <div className="border-t border-border-light pt-4">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5 md:gap-3">
           {ABILITY_ORDER.map((ability) => {
             const info = ABILITY_INFO[ability];
             const defenseKey = info.defenseKey;
@@ -322,31 +328,28 @@ export function AbilitiesSection({
             return (
               <div
                 key={defenseKey}
-                className="flex flex-col items-center p-3 bg-surface-alt rounded-lg"
+                className={cn(SHEET_STAT_TILE_CLASS, 'bg-surface-alt border-border-light')}
               >
-                {/* Defense Name — word-tied definition tip */}
                 <WordHelpTip
                   content={getDefenseHelp(defenseKey)}
                   label={`About ${defenseInfo.name}`}
-                  className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-text-muted dark:text-text-secondary"
+                  className={SHEET_STAT_TIP_CLASS}
                 >
                   {defenseInfo.name}
                 </WordHelpTip>
                 
-                {/* Defense Score */}
-                <span className="text-lg font-bold text-text-primary mb-1">
+                <span className="text-2xl font-bold text-text-primary leading-none tabular-nums">
                   {defenseScore}
                 </span>
                 
-                {/* Defense Bonus Roll Button / Edit Controls */}
                 {showEditControls ? (
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-0.5">
                     <DecrementButton
                       onClick={() => onDefenseChange?.(defenseKey, Math.max(0, defenseValue - 1))}
                       disabled={!canDecreaseDefense}
                       size="sm"
                     />
-                    <span className="text-sm font-bold min-w-[36px] text-center text-primary-link-fg">
+                    <span className="text-sm font-bold min-w-[2rem] text-center text-primary-link-fg tabular-nums leading-none">
                       {formatBonus(defenseBonus)}
                     </span>
                     <IncrementButton
@@ -365,9 +368,8 @@ export function AbilitiesSection({
                   />
                 ) : null}
                 
-                {/* Defense skill allocation indicator */}
                 {showEditControls && defenseValue > 0 && (
-                  <span className="text-[9px] text-primary-link-fg font-medium mt-0.5">
+                  <span className="text-[10px] text-primary-link-fg font-medium leading-none">
                     +{defenseValue} ({defenseValue * DEFENSE_INCREASE_COST}sp)
                   </span>
                 )}

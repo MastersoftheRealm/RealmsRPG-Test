@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -92,12 +92,12 @@ function CampaignsContent() {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabId>('my-campaigns');
 
-  useEffect(() => {
-    const tab = searchParams.get('tab');
-    if (tab === 'create' || tab === 'join') {
-      setActiveTab(tab);
-    }
-  }, [searchParams]);
+  const tabParam = searchParams.get('tab');
+  const urlTab: TabId | null =
+    tabParam === 'create' || tabParam === 'join' ? tabParam : null;
+  if (urlTab && activeTab !== urlTab) {
+    setActiveTab(urlTab);
+  }
 
   const { data: campaigns = [], isLoading: campaignsLoading, error: campaignsError, refetch: refetchCampaigns } = useCampaigns();
   const { data: characters = [], isLoading: charactersLoading } = useCharacters();

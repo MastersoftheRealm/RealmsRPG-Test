@@ -16,14 +16,12 @@ import {
 } from '@/components/shared/filters';
 import { CodexFeatRow } from '@/components/codex';
 import {
-  SearchInput,
-  ListHeader,
-  LoadingState,
+  CodexBrowseListShell,
   ErrorDisplay as ErrorState,
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
-import { Input, EmptyState } from '@/components/ui';
+import { Input } from '@/components/ui';
 import { useCodexFeats, useCodexSkills, useCharacter, type Feat, type Skill } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { groupFeatFamilies } from '@/lib/leveled-feats';
@@ -102,150 +100,143 @@ export function CodexFeatsTab({
   return (
     <div>
       <h2 className="sr-only">Feats</h2>
-      <div className="mb-4">
-        <SearchInput
-          value={filters.search}
-          onChange={(v) => setFilters(f => ({ ...f, search: v }))}
-          placeholder="Search names, tags, descriptions..."
-        />
-      </div>
-
-      {characterId && (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary-subtle-border bg-primary-subtle-bg px-4 py-3">
-          <p className="text-sm text-text-secondary">
-            Showing feats{' '}
-            <span className="font-semibold text-text-primary">
-              {activeCharacter?.name ?? 'this character'}
-            </span>{' '}
-            {showUnqualified ? 'can take, including those not yet qualified for' : 'qualifies for'},
-            filtered by level, Abilities, Skills, and Speed.
-          </p>
-          <button
-            type="button"
-            onClick={() => setShowUnqualified((v) => !v)}
-            aria-pressed={showUnqualified}
-            className={cn(
-              'px-3 py-2 rounded-lg border text-sm font-medium transition-colors min-h-[44px] flex-shrink-0',
-              showUnqualified
-                ? 'bg-surface border-border-light text-text-secondary hover:bg-surface-alt'
-                : 'bg-success-50 dark:bg-success-900/30 border-success-300 dark:border-success-600/50 text-success-fg'
+      <CodexBrowseListShell
+        search={filters.search}
+        onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
+        searchPlaceholder="Search names, tags, descriptions..."
+        filters={
+          <>
+            {characterId && (
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary-subtle-border bg-primary-subtle-bg px-4 py-3">
+                <p className="text-sm text-text-secondary">
+                  Showing feats{' '}
+                  <span className="font-semibold text-text-primary">
+                    {activeCharacter?.name ?? 'this character'}
+                  </span>{' '}
+                  {showUnqualified ? 'can take, including those not yet qualified for' : 'qualifies for'},
+                  filtered by level, Abilities, Skills, and Speed.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowUnqualified((v) => !v)}
+                  aria-pressed={showUnqualified}
+                  className={cn(
+                    'px-3 py-2 rounded-lg border text-sm font-medium transition-colors min-h-[44px] flex-shrink-0',
+                    showUnqualified
+                      ? 'bg-surface border-border-light text-text-secondary hover:bg-surface-alt'
+                      : 'bg-success-50 dark:bg-success-900/30 border-success-300 dark:border-success-600/50 text-success-fg'
+                  )}
+                >
+                  {showUnqualified ? 'Hide unqualified feats' : 'Show unqualified feats'}
+                </button>
+              </div>
             )}
-          >
-            {showUnqualified ? 'Hide unqualified feats' : 'Show unqualified feats'}
-          </button>
-        </div>
-      )}
 
-      <FilterSection>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          <div className="filter-group">
-            <label className="block text-sm font-medium text-text-secondary mb-1">
-              Max Required Level
-            </label>
-            <Input
-              type="number"
-              min={0}
-              value={filters.maxLevel ?? ''}
-              onChange={(e) => setFilters(f => ({
-                ...f,
-                maxLevel: e.target.value ? parseInt(e.target.value) : null
-              }))}
-              placeholder="No limit"
-            />
-            <p className="text-xs text-text-muted dark:text-text-secondary mt-1">Hide feats requiring higher levels</p>
-          </div>
+            <FilterSection>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="filter-group">
+                  <label className="block text-sm font-medium text-text-secondary mb-1">
+                    Max Required Level
+                  </label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={filters.maxLevel ?? ''}
+                    onChange={(e) => setFilters(f => ({
+                      ...f,
+                      maxLevel: e.target.value ? parseInt(e.target.value) : null
+                    }))}
+                    placeholder="No limit"
+                  />
+                  <p className="text-xs text-text-muted dark:text-text-secondary mt-1">Hide feats requiring higher levels</p>
+                </div>
 
-          <div className="md:col-span-2">
-            <AbilityRequirementFilter
-              label="Ability/Defense Requirement"
-              abilities={filterOptions.abilReqAbilities}
-              requirements={filters.abilityRequirements}
-              onAdd={(req) => setFilters(f => ({ ...f, abilityRequirements: [...f.abilityRequirements, req] }))}
-              onRemove={(ability) => setFilters(f => ({
-                ...f,
-                abilityRequirements: f.abilityRequirements.filter(r => r.ability !== ability)
-              }))}
-            />
-          </div>
+                <div className="md:col-span-2">
+                  <AbilityRequirementFilter
+                    label="Ability/Defense Requirement"
+                    abilities={filterOptions.abilReqAbilities}
+                    requirements={filters.abilityRequirements}
+                    onAdd={(req) => setFilters(f => ({ ...f, abilityRequirements: [...f.abilityRequirements, req] }))}
+                    onRemove={(ability) => setFilters(f => ({
+                      ...f,
+                      abilityRequirements: f.abilityRequirements.filter(r => r.ability !== ability)
+                    }))}
+                  />
+                </div>
 
-          <ChipSelect
-            label="Category"
-            placeholder="Choose category"
-            options={filterOptions.categories.map(c => ({ value: c, label: c }))}
-            selectedValues={filters.categories}
-            onSelect={(v) => setFilters(f => ({ ...f, categories: [...f.categories, v] }))}
-            onRemove={(v) => setFilters(f => ({ ...f, categories: f.categories.filter(c => c !== v) }))}
-          />
+                <ChipSelect
+                  label="Category"
+                  placeholder="Choose category"
+                  options={filterOptions.categories.map(c => ({ value: c, label: c }))}
+                  selectedValues={filters.categories}
+                  onSelect={(v) => setFilters(f => ({ ...f, categories: [...f.categories, v] }))}
+                  onRemove={(v) => setFilters(f => ({ ...f, categories: f.categories.filter(c => c !== v) }))}
+                />
 
-          <ChipSelect
-            label="Ability"
-            placeholder="Choose ability"
-            options={filterOptions.abilities.map(a => ({ value: a, label: a }))}
-            selectedValues={filters.abilities}
-            onSelect={(v) => setFilters(f => ({ ...f, abilities: [...f.abilities, v] }))}
-            onRemove={(v) => setFilters(f => ({ ...f, abilities: f.abilities.filter(a => a !== v) }))}
-          />
+                <ChipSelect
+                  label="Ability"
+                  placeholder="Choose ability"
+                  options={filterOptions.abilities.map(a => ({ value: a, label: a }))}
+                  selectedValues={filters.abilities}
+                  onSelect={(v) => setFilters(f => ({ ...f, abilities: [...f.abilities, v] }))}
+                  onRemove={(v) => setFilters(f => ({ ...f, abilities: f.abilities.filter(a => a !== v) }))}
+                />
 
-          <div className="md:col-span-2">
-            <TagFilter
-              tags={filterOptions.tags}
-              selectedTags={filters.tags}
-              tagMode={filters.tagMode}
-              onSelect={(t) => setFilters(f => ({ ...f, tags: [...f.tags, t] }))}
-              onRemove={(t) => setFilters(f => ({ ...f, tags: f.tags.filter(tag => tag !== t) }))}
-              onModeChange={(mode) => setFilters(f => ({ ...f, tagMode: mode }))}
-            />
-          </div>
+                <div className="md:col-span-2">
+                  <TagFilter
+                    tags={filterOptions.tags}
+                    selectedTags={filters.tags}
+                    tagMode={filters.tagMode}
+                    onSelect={(t) => setFilters(f => ({ ...f, tags: [...f.tags, t] }))}
+                    onRemove={(t) => setFilters(f => ({ ...f, tags: f.tags.filter(tag => tag !== t) }))}
+                    onModeChange={(mode) => setFilters(f => ({ ...f, tagMode: mode }))}
+                  />
+                </div>
 
-          <SelectFilter
-            label="Feat Type"
-            value={filters.featTypeMode}
-            options={[
-              { value: 'all', label: 'All' },
-              { value: 'archetype', label: 'Archetype' },
-              { value: 'character', label: 'Character' },
-            ]}
-            onChange={(v) => setFilters(f => ({ ...f, featTypeMode: v as 'all' | 'archetype' | 'character' }))}
-            placeholder={null}
-          />
+                <SelectFilter
+                  label="Feat Type"
+                  value={filters.featTypeMode}
+                  options={[
+                    { value: 'all', label: 'All' },
+                    { value: 'archetype', label: 'Archetype' },
+                    { value: 'character', label: 'Character' },
+                  ]}
+                  onChange={(v) => setFilters(f => ({ ...f, featTypeMode: v as 'all' | 'archetype' | 'character' }))}
+                  placeholder={null}
+                />
 
-          <SelectFilter
-            label="State Feats"
-            value={filters.stateFeatMode}
-            options={[
-              { value: 'all', label: 'All Feats' },
-              { value: 'only', label: 'Only State Feats' },
-              { value: 'hide', label: 'Hide State Feats' },
-            ]}
-            onChange={(v) => setFilters(f => ({ ...f, stateFeatMode: v as 'all' | 'only' | 'hide' }))}
-            placeholder={null}
-          />
-        </div>
-      </FilterSection>
-
-      <ListHeader
-        columns={CODEX_FEAT_HEADER_COLUMNS}
+                <SelectFilter
+                  label="State Feats"
+                  value={filters.stateFeatMode}
+                  options={[
+                    { value: 'all', label: 'All Feats' },
+                    { value: 'only', label: 'Only State Feats' },
+                    { value: 'hide', label: 'Hide State Feats' },
+                  ]}
+                  onChange={(v) => setFilters(f => ({ ...f, stateFeatMode: v as 'all' | 'only' | 'hide' }))}
+                  placeholder={null}
+                />
+              </div>
+            </FilterSection>
+          </>
+        }
+        headerColumns={CODEX_FEAT_HEADER_COLUMNS}
         gridColumns={FEAT_GRID_COLUMNS}
         sortState={sortState}
         onSort={handleSort}
-      />
-
-      <div className="flex flex-col gap-1 mt-2">
-        {isLoading ? (
-          <LoadingState />
-        ) : featFamilies.length === 0 ? (
-          <EmptyState title="No feats match your filters." size="sm" />
-        ) : (
-          featFamilies.map(({ main, levels }) => (
-            <CodexFeatRow
-              key={main.id}
-              feat={main}
-              skillIdToName={skillIdToName}
-              familyLevels={levels}
-            />
-          ))
-        )}
-      </div>
+        isLoading={isLoading}
+        isEmpty={featFamilies.length === 0}
+        emptyTitle="No feats match your filters."
+      >
+        {featFamilies.map(({ main, levels }) => (
+          <CodexFeatRow
+            key={main.id}
+            feat={main}
+            skillIdToName={skillIdToName}
+            familyLevels={levels}
+          />
+        ))}
+      </CodexBrowseListShell>
     </div>
   );
 }

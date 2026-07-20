@@ -2,13 +2,9 @@
 
 import { useState } from 'react';
 import {
-  SectionHeader,
-  SearchInput,
-  LoadingState,
+  CodexBrowseListShell,
   ErrorDisplay as ErrorState,
   GridListRow,
-  ListEmptyState as EmptyState,
-  ListHeader,
 } from '@/components/shared';
 import { Modal, Button, Input, IconButton, useToast } from '@/components/ui';
 import { useCreatureFeats, type CreatureFeat } from '@/hooks';
@@ -166,13 +162,13 @@ export function AdminCreatureFeatsTab() {
 
   return (
     <div>
-      <SectionHeader title="Creature Feats" onAdd={openAdd} size="md" />
-      <div className="mb-4 mt-2">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search creature feats..." />
-      </div>
-
-      <ListHeader
-        columns={[
+      <CodexBrowseListShell
+        sectionTitle="Creature Feats"
+        onAdd={openAdd}
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search creature feats..."
+        headerColumns={[
           { key: 'name', label: 'NAME' },
           { key: 'points', label: 'PTS' },
           { key: 'feat_lvl', label: 'FEAT LVL' },
@@ -182,21 +178,13 @@ export function AdminCreatureFeatsTab() {
         gridColumns="1.5fr 0.5fr 0.5fr 0.5fr 40px"
         sortState={sortState}
         onSort={handleSort}
-      />
-
-      {isLoading ? (
-        <LoadingState />
-      ) : (
-        <div className="flex flex-col gap-1 mt-2">
-          {filtered.length === 0 ? (
-            <EmptyState
-              title="No creature feats found"
-              description="Add one to get started."
-              action={{ label: 'Add Creature Feat', onClick: openAdd }}
-              size="sm"
-            />
-          ) : (
-            filtered.map((f: CreatureFeat) => (
+        isLoading={isLoading}
+        isEmpty={filtered.length === 0}
+        emptyTitle="No creature feats found"
+        emptyMessage="Add one to get started."
+        emptyAction={{ label: 'Add Creature Feat', onClick: openAdd }}
+      >
+        {filtered.map((f: CreatureFeat) => (
               <GridListRow
                 key={f.id}
                 id={f.id}
@@ -238,10 +226,8 @@ export function AdminCreatureFeatsTab() {
                   </div>
                 }
               />
-            ))
-          )}
-        </div>
-      )}
+            ))}
+      </CodexBrowseListShell>
 
       <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Creature Feat' : 'Add Creature Feat'} size="full" fullScreenOnMobile
         footer={

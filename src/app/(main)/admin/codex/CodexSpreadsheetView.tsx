@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Search, Replace, Copy, Save, Loader2, ChevronUp, ChevronDown } from 'lucide-react';
 import { Button, LoadingState, Modal, useToast } from '@/components/ui';
@@ -231,16 +231,22 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
     });
   }, []);
 
-  // Sync rows from API when tab or codex changes
-  useEffect(() => {
+  // Sync rows from API when tab or codex changes (render-time adjust — TASK-430)
+  const [seededRaw, setSeededRaw] = useState<unknown[] | undefined | null>(null);
+  if (rawArray !== seededRaw) {
+    setSeededRaw(rawArray);
     if (!rawArray) {
       setRows([]);
       setDirty(new Set());
-      return;
+    } else {
+      setRows(
+        rawArray.map((r) =>
+          r && typeof r === 'object' ? { ...(r as Record<string, unknown>) } : {}
+        )
+      );
+      setDirty(new Set());
     }
-    setRows(rawArray.map((r) => (r && typeof r === 'object' ? { ...(r as Record<string, unknown>) } : {})));
-    setDirty(new Set());
-  }, [activeTab, rawArray]);
+  }
 
   const updateCell = useCallback((rowIndex: number, colKey: string, value: unknown) => {
     setRows((prev) => {

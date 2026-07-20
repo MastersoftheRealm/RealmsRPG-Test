@@ -10,9 +10,7 @@ import { useState, useMemo } from 'react';
 import { formatListCellLabel } from '@/lib/utils';
 import { ChipSelect, FilterSection } from '@/components/shared/filters';
 import {
-  SearchInput,
-  ListHeader,
-  LoadingState,
+  CodexBrowseListShell,
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/shared';
@@ -30,7 +28,6 @@ const SPECIES_COLUMNS = [
 import { useSpecies, useUserSpecies, userSpeciesToSpecies, useTraits, useCodexSkills, resolveTraitIds, type Species, type Trait } from '@/hooks';
 import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import { resolveSpeciesListRowThumbnail } from '@/lib/list-row-image';
-import { EmptyState } from '@/components/ui';
 
 interface SpeciesFilters {
   search: string;
@@ -282,59 +279,47 @@ export function CodexSpeciesTab({ codexMode = 'public' }: { codexMode?: 'public'
   return (
     <div>
       <h2 className="sr-only">Species</h2>
-      <div className="mb-4">
-        <SearchInput
-          value={filters.search}
-          onChange={(v) => setFilters(f => ({ ...f, search: v }))}
-          placeholder="Search names, descriptions..."
-        />
-      </div>
+      <CodexBrowseListShell
+        search={filters.search}
+        onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
+        searchPlaceholder="Search names, descriptions..."
+        filters={
+          <FilterSection>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <ChipSelect
+                label="Type"
+                placeholder="Choose type"
+                options={filterOptions.types.map(t => ({ value: t, label: t }))}
+                selectedValues={filters.types}
+                onSelect={(v) => setFilters(f => ({ ...f, types: [...f.types, v] }))}
+                onRemove={(v) => setFilters(f => ({ ...f, types: f.types.filter(t => t !== v) }))}
+              />
 
-      <FilterSection>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ChipSelect
-            label="Type"
-            placeholder="Choose type"
-            options={filterOptions.types.map(t => ({ value: t, label: t }))}
-            selectedValues={filters.types}
-            onSelect={(v) => setFilters(f => ({ ...f, types: [...f.types, v] }))}
-            onRemove={(v) => setFilters(f => ({ ...f, types: f.types.filter(t => t !== v) }))}
-          />
-
-          <ChipSelect
-            label="Size"
-            placeholder="Choose size"
-            options={filterOptions.sizes.map(s => ({ value: s, label: s }))}
-            selectedValues={filters.sizes}
-            onSelect={(v) => setFilters(f => ({ ...f, sizes: [...f.sizes, v] }))}
-            onRemove={(v) => setFilters(f => ({ ...f, sizes: f.sizes.filter(s => s !== v) }))}
-          />
-        </div>
-      </FilterSection>
-
-      <ListHeader
-        columns={SPECIES_COLUMNS}
+              <ChipSelect
+                label="Size"
+                placeholder="Choose size"
+                options={filterOptions.sizes.map(s => ({ value: s, label: s }))}
+                selectedValues={filters.sizes}
+                onSelect={(v) => setFilters(f => ({ ...f, sizes: [...f.sizes, v] }))}
+                onRemove={(v) => setFilters(f => ({ ...f, sizes: f.sizes.filter(s => s !== v) }))}
+              />
+            </div>
+          </FilterSection>
+        }
+        headerColumns={SPECIES_COLUMNS}
         gridColumns={SPECIES_GRID_COLUMNS}
         hasThumbnailColumn
         sortState={sortState}
         onSort={handleSort}
-      />
-
-      <div className="flex flex-col gap-1 mt-2">
-        {isLoading ? (
-          <LoadingState />
-        ) : filteredSpecies.length === 0 ? (
-          <EmptyState
-            title={codexMode === 'my' ? 'No custom species yet' : 'No species match your filters.'}
-            description={codexMode === 'my' ? 'Create one in the Species Creator.' : undefined}
-            size="sm"
-          />
-        ) : (
-          filteredSpecies.map((s: Species) => (
-            <SpeciesCard key={s.id} species={s} allTraits={allTraits || []} skillIdToName={skillIdToName} />
-          ))
-        )}
-      </div>
+        isLoading={isLoading}
+        isEmpty={filteredSpecies.length === 0}
+        emptyTitle={codexMode === 'my' ? 'No custom species yet' : 'No species match your filters.'}
+        emptyMessage={codexMode === 'my' ? 'Create one in the Species Creator.' : undefined}
+      >
+        {filteredSpecies.map((s: Species) => (
+          <SpeciesCard key={s.id} species={s} allTraits={allTraits || []} skillIdToName={skillIdToName} />
+        ))}
+      </CodexBrowseListShell>
     </div>
   );
 }

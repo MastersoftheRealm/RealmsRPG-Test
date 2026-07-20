@@ -14,7 +14,7 @@ import {
 } from './power-creator-constants';
 import type { AdvancedPart, DamageConfig, RangeConfig, SelectedPart } from './power-creator-types';
 
-type PowerLibraryRecord = {
+export type PowerLibraryRecord = {
   name?: string;
   description?: string;
   parts?: unknown;

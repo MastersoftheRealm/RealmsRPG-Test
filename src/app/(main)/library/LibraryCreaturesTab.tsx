@@ -36,8 +36,8 @@ const CREATURE_HEADER_COLUMNS = [
   { key: 'size', label: 'SIZE', align: 'center' as const },
   { key: 'type', label: 'TYPE', align: 'center' as const },
   { key: 'archetype', label: 'ARCHETYPE', align: 'center' as const },
-  { key: 'hp', label: 'HP', align: 'center' as const },
-  { key: 'en', label: 'EN', align: 'center' as const },
+  { key: 'hp', label: 'Health', align: 'center' as const },
+  { key: 'en', label: 'Energy', align: 'center' as const },
 ];
 
 interface LibraryCreaturesTabProps {

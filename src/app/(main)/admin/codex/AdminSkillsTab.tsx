@@ -2,12 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import {
-  SectionHeader,
-  SearchInput,
-  LoadingState,
+  CodexBrowseListShell,
   ErrorDisplay as ErrorState,
-  ListEmptyState as EmptyState,
-  ListHeader,
 } from '@/components/shared';
 import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
 import { ChipSelect, SelectFilter, FilterSection } from '@/components/shared/filters';
@@ -275,109 +271,131 @@ export function AdminSkillsTab() {
 
   return (
     <div>
-      <SectionHeader title="Skills" onAdd={openAdd} size="md" />
-      <div className="mb-4 mt-2">
-        <SearchInput
-          value={filters.search}
-          onChange={(v) => setFilters(f => ({ ...f, search: v }))}
-          placeholder="Search names, descriptions..."
-        />
-      </div>
+      <CodexBrowseListShell
+        sectionTitle="Skills"
+        onAdd={openAdd}
+        search={filters.search}
+        onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
+        searchPlaceholder="Search names, descriptions..."
+        filters={
+          <FilterSection>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <ChipSelect
+                label="Ability"
+                placeholder="Choose ability"
+                options={filterOptions.abilities.map((a) => ({
+                  value: a,
+                  label:
+                    typeof a === 'string' && a.length > 0
+                      ? a.charAt(0).toUpperCase() + a.slice(1)
+                      : String(a),
+                }))}
+                selectedValues={filters.abilities}
+                onSelect={(v) => setFilters((f) => ({ ...f, abilities: [...f.abilities, v] }))}
+                onRemove={(v) =>
+                  setFilters((f) => ({ ...f, abilities: f.abilities.filter((a) => a !== v) }))
+                }
+              />
 
-      <FilterSection>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <ChipSelect
-            label="Ability"
-            placeholder="Choose ability"
-            options={filterOptions.abilities.map(a => ({
-              value: a,
-              label: typeof a === 'string' && a.length > 0 ? a.charAt(0).toUpperCase() + a.slice(1) : String(a),
-            }))}
-            selectedValues={filters.abilities}
-            onSelect={(v) => setFilters(f => ({ ...f, abilities: [...f.abilities, v] }))}
-            onRemove={(v) => setFilters(f => ({ ...f, abilities: f.abilities.filter(a => a !== v) }))}
-          />
+              <SelectFilter
+                label="Base Skill"
+                value={filters.baseSkill}
+                options={filterOptions.baseSkills.map((s) => ({ value: s, label: s }))}
+                onChange={(v) => setFilters((f) => ({ ...f, baseSkill: v }))}
+                placeholder="Base skill (any)"
+              />
 
-          <SelectFilter
-            label="Base Skill"
-            value={filters.baseSkill}
-            options={filterOptions.baseSkills.map(s => ({ value: s, label: s }))}
-            onChange={(v) => setFilters(f => ({ ...f, baseSkill: v }))}
-            placeholder="Base skill (any)"
-          />
-
-          <SelectFilter
-            label="Skill Type"
-            value={filters.subSkillMode}
-            options={[
-              { value: 'only', label: 'Only Sub-Skills' },
-              { value: 'hide', label: 'Hide Sub-Skills' },
-            ]}
-            onChange={(v) => setFilters(f => ({ ...f, subSkillMode: (v || '') as '' | 'only' | 'hide' }))}
-            placeholder="All skills"
-          />
-        </div>
-      </FilterSection>
-
-      <ListHeader
-        columns={SKILL_HEADER_COLUMNS}
+              <SelectFilter
+                label="Skill Type"
+                value={filters.subSkillMode}
+                options={[
+                  { value: 'only', label: 'Only Sub-Skills' },
+                  { value: 'hide', label: 'Hide Sub-Skills' },
+                ]}
+                onChange={(v) =>
+                  setFilters((f) => ({ ...f, subSkillMode: (v || '') as '' | 'only' | 'hide' }))
+                }
+                placeholder="All skills"
+              />
+            </div>
+          </FilterSection>
+        }
+        headerColumns={SKILL_HEADER_COLUMNS}
         gridColumns={SKILL_GRID_COLUMNS}
         sortState={sortState}
         onSort={handleSort}
-      />
-
-      {isLoading ? (
-        <LoadingState />
-      ) : (
-        <div className="flex flex-col gap-1 mt-2">
-          {filteredSkills.length === 0 ? (
-            <EmptyState
-              title="No skills found"
-              description="No skills match your filters."
-              action={{ label: 'Add Skill', onClick: openAdd }}
-              size="sm"
-            />
-          ) : (
-            filteredSkills.map((s: Skill) => (
-              <CodexSkillRow
-                key={s.id}
-                skill={s}
-                skillIdToName={skillIdToName}
-                variant="admin"
-                rightSlot={
-                  <div className="flex items-center gap-1 pr-2">
-                    {pendingDeleteId === s.id ? (
-                      <div className="flex items-center gap-1 text-xs">
-                        <span className="text-danger-700 dark:text-danger-400 font-medium whitespace-nowrap">Remove?</span>
-                        <Button size="sm" variant="danger" onClick={() => handleInlineDelete(s.id)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
-                        <Button size="sm" variant="secondary" onClick={() => setPendingDeleteId(null)} className="text-xs px-2 py-0.5 h-6">No</Button>
-                      </div>
-                    ) : (
-                      <>
-                        <IconButton variant="ghost" size="sm" onClick={() => openEdit(s)} label="Edit" aria-label="Edit">
-                          <Pencil className="w-4 h-4" />
-                        </IconButton>
-                        <IconButton variant="ghost" size="sm" onClick={() => openDuplicate(s)} label="Duplicate" aria-label="Duplicate">
-                          <Copy className="w-4 h-4" />
-                        </IconButton>
-                        <IconButton
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setPendingDeleteId(s.id)}
-                          label="Delete"
-                          className="text-danger-fg hover:opacity-80 hover:bg-transparent"
-                        >
-                          <X className="w-4 h-4" />
-                        </IconButton>
-                      </>
-                    )}
+        isLoading={isLoading}
+        isEmpty={filteredSkills.length === 0}
+        emptyTitle="No skills found"
+        emptyMessage="No skills match your filters."
+        emptyAction={{ label: 'Add Skill', onClick: openAdd }}
+      >
+        {filteredSkills.map((s: Skill) => (
+          <CodexSkillRow
+            key={s.id}
+            skill={s}
+            skillIdToName={skillIdToName}
+            variant="admin"
+            rightSlot={
+              <div className="flex items-center gap-1 pr-2">
+                {pendingDeleteId === s.id ? (
+                  <div className="flex items-center gap-1 text-xs">
+                    <span className="text-danger-700 dark:text-danger-400 font-medium whitespace-nowrap">
+                      Remove?
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      onClick={() => handleInlineDelete(s.id)}
+                      className="text-xs px-2 py-0.5 h-6"
+                    >
+                      Yes
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setPendingDeleteId(null)}
+                      className="text-xs px-2 py-0.5 h-6"
+                    >
+                      No
+                    </Button>
                   </div>
-                }
-              />
-            ))
-          )}
-        </div>
-      )}
+                ) : (
+                  <>
+                    <IconButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openEdit(s)}
+                      label="Edit"
+                      aria-label="Edit"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </IconButton>
+                    <IconButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openDuplicate(s)}
+                      label="Duplicate"
+                      aria-label="Duplicate"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </IconButton>
+                    <IconButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setPendingDeleteId(s.id)}
+                      label="Delete"
+                      className="text-danger-fg hover:opacity-80 hover:bg-transparent"
+                    >
+                      <X className="w-4 h-4" />
+                    </IconButton>
+                  </>
+                )}
+              </div>
+            }
+          />
+        ))}
+      </CodexBrowseListShell>
 
       <Modal
         isOpen={modalOpen}

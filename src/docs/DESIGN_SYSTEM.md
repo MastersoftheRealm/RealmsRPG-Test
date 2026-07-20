@@ -373,9 +373,9 @@ import { CreatorSummaryPanel } from '@/components/creator';
     { label: 'Ability Points', remaining: 5 },
     { label: 'Skill Points', remaining: -1 }, // Shows as danger
   ]}
-  // Quick stats (HP, EN chips)
+  // Quick stats (Health, Energy chips)
   quickStats={[
-    { label: 'HP', value: 30, color: 'bg-red-50 text-red-600' },
+    { label: 'Health', value: 30, color: 'bg-red-50 text-red-600' },
   ]}
   // Breakdown lists
   breakdowns={[

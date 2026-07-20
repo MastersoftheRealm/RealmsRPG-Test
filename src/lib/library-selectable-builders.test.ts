@@ -1,0 +1,108 @@
+import { describe, expect, it } from 'vitest';
+import {
+  buildSelectableItem,
+  getItemColumns,
+  getListHeaderColumns,
+  getModalGridColumns,
+} from '@/lib/library-selectable-builders';
+
+const emptyCodex = {
+  powerPartsDb: [],
+  techniquePartsDb: [],
+  itemPropertiesDb: [],
+};
+
+describe('library-selectable-builders (DEV-V-016 parity)', () => {
+  it('power headers/columns are Energy, Action, Duration, Area, Damage (DEV-V-016-T001)', () => {
+    const headers = getListHeaderColumns('power').map((c) => c.key);
+    expect(headers).toEqual(['name', 'Energy', 'Action', 'Duration', 'Area', 'Damage']);
+
+    const cols = getItemColumns(
+      { id: 'p1', name: 'Bolt' },
+      'power',
+      undefined,
+      {
+        energy: 2,
+        actionType: 'Action',
+        duration: 'Instant',
+        damage: '2d6 Fire',
+        area: 'Single',
+      }
+    );
+    expect(cols.map((c) => c.key)).toEqual([
+      'Energy',
+      'Action',
+      'Duration',
+      'Area',
+      'Damage',
+    ]);
+    expect(cols.find((c) => c.key === 'Damage')?.value).toContain('2d6');
+    expect(getModalGridColumns('power')).toMatch(/1\.2fr/);
+  });
+
+  it('mixed armament headers + buildSelectableItem facts (DEV-V-016-T003)', () => {
+    // Headers use a combined "stat" column; buildSelectableItem passes effectiveType into
+    // getItemColumns so row keys are Damage / Armor / Block (positional grid alignment).
+    expect(getListHeaderColumns('item').map((c) => c.key)).toEqual(['name', 'type', 'stat']);
+
+    const weapon = buildSelectableItem(
+      {
+        id: 'w1',
+        name: 'Longsword',
+        type: 'weapon',
+        description: 'A blade.',
+        damage: { amount: 1, size: 8, type: 'slashing' },
+        properties: [],
+      },
+      'item',
+      emptyCodex
+    );
+    expect(weapon.columns?.map((c) => c.key)).toEqual(['type', 'Damage']);
+    expect(String(weapon.columns?.[1]?.value)).toMatch(/1d8/i);
+
+    const armor = buildSelectableItem(
+      {
+        id: 'a1',
+        name: 'Chain',
+        type: 'armor',
+        description: '',
+        armorValue: 3,
+        properties: [],
+      },
+      'item',
+      emptyCodex
+    );
+    expect(armor.columns?.map((c) => c.key)).toEqual(['type', 'Armor']);
+    expect(String(armor.columns?.[1]?.value)).toBe('3');
+
+    const shield = buildSelectableItem(
+      {
+        id: 's1',
+        name: 'Shield',
+        type: 'shield',
+        description: '',
+        properties: [],
+      },
+      'item',
+      emptyCodex
+    );
+    expect(shield.columns?.[0]?.key).toBe('type');
+    expect(String(shield.columns?.[0]?.value).toLowerCase()).toContain('shield');
+  });
+
+  it('buildSelectableItem preserves data for sheet add mapping (DEV-V-016-T006)', () => {
+    const weapon = {
+      id: 'w1',
+      name: 'Longsword',
+      type: 'weapon',
+      description: 'A blade.',
+      damage: { amount: 1, size: 8, type: 'slashing' },
+      properties: [],
+    };
+    const selectable = buildSelectableItem(weapon, 'item', emptyCodex);
+    expect(selectable.id).toBe('w1');
+    expect(selectable.data).toBe(weapon);
+    expect(selectable.columns?.[0]?.key).toBe('type');
+    expect(String(selectable.columns?.[0]?.value).toLowerCase()).toContain('weapon');
+  });
+});

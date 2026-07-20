@@ -13,7 +13,6 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 export interface PoweredMartialSliderProps {
@@ -47,19 +46,13 @@ export function PoweredMartialSlider({
   allowZeroEnds = false,
   className,
 }: PoweredMartialSliderProps) {
-  // Slider value = martial (so left = 0 martial = all power, right = max martial = no power)
-  const [sliderValue, setSliderValue] = useState(martialValue);
-  
+  // Slider value = martial (left = 0 martial = all power, right = max martial = no power)
   const minMartial = allowZeroEnds ? 0 : (maxPoints > 1 ? 1 : 0);
   const maxMartial = allowZeroEnds ? maxPoints : (maxPoints > 1 ? maxPoints - 1 : maxPoints);
-  
-  useEffect(() => {
-    setSliderValue(Math.max(minMartial, Math.min(maxMartial, martialValue)));
-  }, [martialValue, minMartial, maxMartial]);
+  const sliderValue = Math.max(minMartial, Math.min(maxMartial, martialValue));
 
   const handleSliderChange = (newMartialValue: number) => {
     const clamped = Math.max(minMartial, Math.min(maxMartial, newMartialValue));
-    setSliderValue(clamped);
     onChange(maxPoints - clamped, clamped);
   };
   

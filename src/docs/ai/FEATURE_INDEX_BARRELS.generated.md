@@ -7,6 +7,7 @@ Generated: 2026-07-20
 
 ## `src/components/shared/index.ts`
 
+- ABILITY_DISPLAY_ORDER
 - AbilityRequirementFilter
 - AbilityScoreGrid
 - AddCombatantModal
@@ -16,6 +17,7 @@ Generated: 2026-07-20
 - CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME
 - ChipSelect
 - ChoiceTraitOptionListPicker
+- CodexBrowseListShell
 - ConfirmActionModal
 - CreatureStatBlock
 - DecrementButton
@@ -175,6 +177,7 @@ Generated: 2026-07-20
 - resolveTraitIds
 - sortByColumn
 - toggleSort
+- type AccountProfile
 - type CreateOfficialEnhancedItemInput
 - type CreatureFeat
 - type EnhancedItemsScope
@@ -187,6 +190,7 @@ Generated: 2026-07-20
 - type OfficialEnhancedItemPayload
 - type Part
 - type PowerPart
+- type ProfileDisplay
 - type SavedDamage
 - type SavedPart
 - type Skill
@@ -199,6 +203,7 @@ Generated: 2026-07-20
 - type UserPower
 - type UserSpecies
 - type UserTechnique
+- useAccountProfile
 - useAddLibraryItemData
 - useAddOfficialToLibrary
 - useAdmin
@@ -255,6 +260,7 @@ Generated: 2026-07-20
 - useGuidedEquipmentCatalog
 - useInvalidateCampaigns
 - useInvalidateEncounters
+- useIsClient
 - useItemProperties
 - useLibrarySectionCollapse
 - useLoadModalLibrary
@@ -267,6 +273,7 @@ Generated: 2026-07-20
 - useProfile
 - useResolvedSkillNames
 - useResolvedTraits
+- userProfileQueryKey
 - userSpeciesToSpecies
 - useSaveCharacter
 - useSaveCraftingSession

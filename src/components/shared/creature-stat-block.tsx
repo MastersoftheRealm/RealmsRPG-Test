@@ -421,7 +421,10 @@ export function CreatureStatBlock({
   const speed = 6 + Math.ceil(agility / 2) + sizeMod;
   const evasion = 10 + agility;
 
-  const armaments = Array.isArray(creature.armaments) ? creature.armaments : [];
+  const armaments = useMemo(
+    () => (Array.isArray(creature.armaments) ? creature.armaments : []),
+    [creature.armaments]
+  );
   const weapons = armaments.filter((a) => String(a.type ?? '').toLowerCase() === 'weapon');
   const shields = armaments.filter((a) => String(a.type ?? '').toLowerCase() === 'shield');
   const armor = armaments.filter((a) => String(a.type ?? '').toLowerCase() === 'armor');

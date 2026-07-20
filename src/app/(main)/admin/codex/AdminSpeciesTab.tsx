@@ -3,13 +3,9 @@
 import { useState, useMemo } from 'react';
 import { ChipSelect, FilterSection } from '@/components/shared/filters';
 import {
-  SectionHeader,
-  SearchInput,
-  LoadingState,
+  CodexBrowseListShell,
   ErrorDisplay as ErrorState,
   GridListRow,
-  ListEmptyState as EmptyState,
-  ListHeader,
   RealmsImageField,
   UnifiedSelectionModal,
   type ChipData,
@@ -356,35 +352,36 @@ export function AdminSpeciesTab() {
 
   return (
     <div>
-      <SectionHeader title="Species" onAdd={openAdd} size="md" />
-      <div className="mb-4 mt-2">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search species..." />
-      </div>
+      <CodexBrowseListShell
+        sectionTitle="Species"
+        onAdd={openAdd}
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search species..."
+        filters={
+          <FilterSection>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <ChipSelect
+                label="Type"
+                placeholder="Choose type"
+                options={filterOptions.types.map(t => ({ value: t, label: t }))}
+                selectedValues={typeFilters}
+                onSelect={(v) => setTypeFilters((prev) => [...prev, v])}
+                onRemove={(v) => setTypeFilters((prev) => prev.filter(t => t !== v))}
+              />
 
-      <FilterSection>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ChipSelect
-            label="Type"
-            placeholder="Choose type"
-            options={filterOptions.types.map(t => ({ value: t, label: t }))}
-            selectedValues={typeFilters}
-            onSelect={(v) => setTypeFilters((prev) => [...prev, v])}
-            onRemove={(v) => setTypeFilters((prev) => prev.filter(t => t !== v))}
-          />
-
-          <ChipSelect
-            label="Size"
-            placeholder="Choose size"
-            options={filterOptions.sizes.map(s => ({ value: s, label: s }))}
-            selectedValues={sizeFilters}
-            onSelect={(v) => setSizeFilters((prev) => [...prev, v])}
-            onRemove={(v) => setSizeFilters((prev) => prev.filter(s => s !== v))}
-          />
-        </div>
-      </FilterSection>
-
-      <ListHeader
-        columns={[
+              <ChipSelect
+                label="Size"
+                placeholder="Choose size"
+                options={filterOptions.sizes.map(s => ({ value: s, label: s }))}
+                selectedValues={sizeFilters}
+                onSelect={(v) => setSizeFilters((prev) => [...prev, v])}
+                onRemove={(v) => setSizeFilters((prev) => prev.filter(s => s !== v))}
+              />
+            </div>
+          </FilterSection>
+        }
+        headerColumns={[
           { key: 'name', label: 'NAME' },
           { key: 'type', label: 'TYPE' },
           { key: 'sizes', label: 'SIZES' },
@@ -394,21 +391,13 @@ export function AdminSpeciesTab() {
         hasThumbnailColumn
         sortState={sortState}
         onSort={handleSort}
-      />
-
-      {isLoading ? (
-        <LoadingState />
-      ) : (
-        <div className="flex flex-col gap-1 mt-2">
-          {filtered.length === 0 ? (
-            <EmptyState
-              title="No species found"
-              description="Add one to get started."
-              action={{ label: 'Add Species', onClick: openAdd }}
-              size="sm"
-            />
-          ) : (
-            filtered.map((s: Species) => {
+        isLoading={isLoading}
+        isEmpty={filtered.length === 0}
+        emptyTitle="No species found"
+        emptyMessage="Add one to get started."
+        emptyAction={{ label: 'Add Species', onClick: openAdd }}
+      >
+        {filtered.map((s: Species) => {
               // Build expandable chips for skills and traits so RMs can read descriptions inline
               const traitIdToTrait = new Map<string, Trait>(
                 (traits as Trait[]).map((t) => [String(t.id), t]),
@@ -514,10 +503,8 @@ export function AdminSpeciesTab() {
                   }
                 />
               );
-            })
-          )}
-        </div>
-      )}
+            })}
+      </CodexBrowseListShell>
 
       <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Species' : 'Add Species'} size="full" fullScreenOnMobile
         footer={

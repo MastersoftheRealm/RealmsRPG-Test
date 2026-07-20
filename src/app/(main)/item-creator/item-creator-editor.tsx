@@ -1,8 +1,8 @@
 /**
  * Item Creator — editor section islands (TASK-381 Phase 1)
  * ========================================================
- * Presentational form sections for the armament creator. State, cost math,
- * save/load, and CreatorPageShell stay in page.tsx.
+ * Presentational form sections for the armament creator. State/cost/save live in
+ * use-item-creator-workspace; CreatorPageShell wiring stays in page.tsx.
  */
 
 'use client';

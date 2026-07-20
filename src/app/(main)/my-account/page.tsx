@@ -7,20 +7,22 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import type { AuthUser } from '@/types/auth';
 import { createClient } from '@/lib/supabase/client';
 import { apiUpload, getErrorMessage } from '@/lib/api-client';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
-import { changeUsernameAction, getUserProfileAction, deleteAccountAction } from '@/app/(auth)/actions';
+import { changeUsernameAction, deleteAccountAction } from '@/app/(auth)/actions';
 import { useAuthStore } from '@/stores';
-import { useAdmin } from '@/hooks';
+import { useAdmin, useAccountProfile, type AccountProfile } from '@/hooks';
 import { ProtectedRoute } from '@/components/layout';
 import { cn } from '@/lib/utils';
-import { LoadingState, Button, Input, Alert, PageContainer, Spinner, Card, PageHeader } from '@/components/ui';
+import { LoadingState, Button, Input, Alert, PageContainer, Spinner, Card, PageHeader, Checkbox } from '@/components/ui';
 import { ExpandableImage, ImageUploadModal, RealmsImagePicker } from '@/components/shared';
 import { User as UserIcon, Mail, Lock, Trash2, AlertTriangle, AtSign, Camera } from 'lucide-react';
+import { ONBOARDING_COPY } from '@/lib/constants/copy/onboarding-copy';
+import { areTutorialsEnabled, setTutorialsEnabled } from '@/lib/onboarding-preferences';
 
 function hasPasswordProvider(authUser: AuthUser | null): boolean {
   if (!authUser) return false;
@@ -36,24 +38,6 @@ function getAuthProviderLabel(authUser: AuthUser | null): string {
   return p ? p.replace('.com', '') : 'Unknown';
 }
 
-interface UserProfile {
-  username?: string;
-  email?: string;
-  createdAt?: Date;
-  photoURL?: string;
-  role?: 'new_player' | 'playtester' | 'developer' | 'admin';
-  rolePolicy?: {
-    maxCampaigns: number;
-    maxPlayersPerCampaign: number;
-    maxCharacters: number;
-    maxPowers: number;
-    maxTechniques: number;
-    maxArmaments: number;
-    maxCreatures: number;
-    canUploadProfilePicture: boolean;
-  };
-}
-
 function AccountContent() {
   const router = useRouter();
   const { user } = useAuthStore();
@@ -62,10 +46,14 @@ function AccountContent() {
   const canChangeEmailPassword = useMemo(() => hasPasswordProvider(user), [user]);
   const authProviderLabel = useMemo(() => getAuthProviderLabel(user), [user]);
 
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [profileLoadError, setProfileLoadError] = useState<string | null>(null);
-  const [profileRetrying, setProfileRetrying] = useState(false);
+  const {
+    profile,
+    loading,
+    loadError: profileLoadError,
+    retrying: profileRetrying,
+    refetch: refetchProfile,
+    patchProfile,
+  } = useAccountProfile(user);
 
   const [newEmail, setNewEmail] = useState('');
   const [emailPassword, setEmailPassword] = useState('');
@@ -90,58 +78,9 @@ function AccountContent() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [tutorialsEnabled, setTutorialsEnabledState] = useState(() => areTutorialsEnabled());
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-
-  const loadProfile = useCallback(async (opts?: { isRetry?: boolean }) => {
-    if (!user) return;
-
-    if (opts?.isRetry) setProfileRetrying(true);
-    setProfileLoadError(null);
-    try {
-      const { profile: p, error } = await getUserProfileAction();
-      if (error) {
-        setProfileLoadError(error);
-        setProfile({
-          email: user.email ?? undefined,
-          photoURL: user.photoURL ?? undefined,
-        });
-        return;
-      }
-      if (p) {
-        const rawPhoto = (p.photoUrl as string) ?? undefined;
-        const photoURL = rawPhoto
-          ? `${rawPhoto}?t=${p.updatedAt ? new Date(p.updatedAt as string | number | Date).getTime() : Date.now()}`
-          : (user.photoURL ?? undefined);
-        setProfile({
-          username: (p.usernameDisplay as string | undefined) ?? (p.username as string | undefined) ?? undefined,
-          email: (p.email as string | undefined) ?? user.email ?? undefined,
-          createdAt: p.createdAt instanceof Date ? p.createdAt : p.createdAt ? new Date(p.createdAt as string | number | Date) : undefined,
-          photoURL,
-          role: (p.role as UserProfile['role']) ?? undefined,
-          rolePolicy: (p.rolePolicy as UserProfile['rolePolicy']) ?? undefined,
-        });
-      } else {
-        setProfile({
-          email: user.email ?? undefined,
-          photoURL: user.photoURL ?? undefined,
-        });
-      }
-    } catch (err: unknown) {
-      setProfileLoadError(getErrorMessage(err, 'Failed to load profile'));
-      setProfile({
-        email: user.email ?? undefined,
-        photoURL: user.photoURL ?? undefined,
-      });
-    } finally {
-      setLoading(false);
-      setProfileRetrying(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    void loadProfile();
-  }, [loadProfile]);
 
   const handleProfilePictureUpload = async (blob: Blob) => {
     if (!user) return;
@@ -153,9 +92,9 @@ function AccountContent() {
       formData.append('file', file);
 
       const { url } = await apiUpload<{ url: string }>('/api/upload/profile-picture', formData);
-      // Cache-bust so the browser shows the new image (same path is overwritten in storage)
-      setProfile((prev) => (prev ? { ...prev, photoURL: `${url}?t=${Date.now()}` } : null));
-      // Sync to Supabase Auth so header and any useAuth() consumer see the new picture
+      // Cache-bust so Header + this page share the new image (same path is overwritten in storage)
+      patchProfile({ photoURL: `${url}?t=${Date.now()}` });
+      // Sync to Supabase Auth so any useAuth() consumer sees the new picture
       const supabase = createClient();
       const { error: authSyncError } = await supabase.auth.updateUser({ data: { avatar_url: url } });
       if (authSyncError) {
@@ -189,7 +128,7 @@ function AccountContent() {
       if (profileError) throw profileError;
       const { error: authError } = await supabase.auth.updateUser({ data: { avatar_url: url } });
       if (authError) throw authError;
-      setProfile((prev) => (prev ? { ...prev, photoURL: `${url}?t=${Date.now()}` } : null));
+      patchProfile({ photoURL: `${url}?t=${Date.now()}` });
       setPictureMessage({ type: 'success', text: 'Profile picture updated!' });
     } catch (err: unknown) {
       setPictureMessage({
@@ -211,7 +150,7 @@ function AccountContent() {
     const result = await changeUsernameAction(newUsername.trim());
 
     if (result.success) {
-      setProfile((prev) => (prev ? { ...prev, username: newUsername.trim() } : null));
+      patchProfile({ username: newUsername.trim() });
       setNewUsername('');
       setUsernameMessage({ type: 'success', text: 'Username updated successfully!' });
     } else {
@@ -244,7 +183,7 @@ function AccountContent() {
       if (reauthError) throw new Error('Current password is incorrect');
       const { error } = await supabase.auth.updateUser({ email: newEmail });
       if (error) throw error;
-      setProfile((prev) => (prev ? { ...prev, email: newEmail } : null));
+      patchProfile({ email: newEmail });
       setNewEmail('');
       setEmailPassword('');
       setEmailMessage({ type: 'success', text: 'Email updated successfully!' });
@@ -368,7 +307,7 @@ function AccountContent() {
           <Button
             type="button"
             variant="secondary"
-            onClick={() => void loadProfile({ isRetry: true })}
+            onClick={() => void refetchProfile()}
             disabled={profileRetrying}
             aria-label="Retry loading account profile"
             className="min-h-[var(--touch-target-min,44px)] shrink-0 self-stretch sm:self-auto"
@@ -504,6 +443,25 @@ function AccountContent() {
             </span>
           </div>
         </div>
+      </Card>
+
+      <Card className="shadow-md p-6">
+        <h2 className="text-lg font-bold text-text-primary mb-2">
+          {ONBOARDING_COPY.account.tutorialsTitle}
+        </h2>
+        <p className="text-sm text-text-secondary mb-4">
+          {ONBOARDING_COPY.account.tutorialsDescription}
+        </p>
+        <Checkbox
+          id="account-tutorials-enabled"
+          checked={tutorialsEnabled}
+          label={ONBOARDING_COPY.account.tutorialsLabel}
+          onChange={(e) => {
+            const next = e.target.checked;
+            setTutorialsEnabledState(next);
+            setTutorialsEnabled(next);
+          }}
+        />
       </Card>
 
       <Card className="shadow-md p-6">
@@ -774,7 +732,7 @@ export default function MyAccountPage() {
   );
 }
 
-function formatRoleLabel(role: UserProfile['role'] | undefined): string {
+function formatRoleLabel(role: AccountProfile['role'] | undefined): string {
   if (!role) return 'Unknown';
   if (role === 'new_player') return 'New Player';
   if (role === 'playtester') return 'Playtester';

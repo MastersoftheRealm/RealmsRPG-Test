@@ -9,15 +9,12 @@
 import { useState, useMemo } from 'react';
 import { SelectFilter, FilterSection } from '@/components/shared/filters';
 import {
-  SearchInput,
-  ListHeader,
-  LoadingState,
+  CodexBrowseListShell,
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
-import { EmptyState } from '@/components/ui';
 import { useItemProperties, type ItemProperty } from '@/hooks';
 import { formatListCellLabel } from '@/lib/utils';
 
@@ -132,41 +129,34 @@ export function CodexPropertiesTab({ codexMode = 'public' }: { codexMode?: 'publ
   if (error) return <ErrorState message="Failed to load properties" onRetry={() => refetch()} />;
 
   return (
-    <div>
-      <div className="mb-4">
-        <SearchInput value={filters.search} onChange={(v) => setFilters(f => ({ ...f, search: v }))} placeholder="Search properties..." />
-      </div>
-
-      <FilterSection>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <SelectFilter
-            label="Type"
-            value={filters.typeFilter}
-            options={typeOptions.map(t => ({ value: t, label: formatListCellLabel(t) }))}
-            onChange={(v) => setFilters(f => ({ ...f, typeFilter: v }))}
-            placeholder="All Types"
-          />
-        </div>
-      </FilterSection>
-
-      <ListHeader
-        columns={PROPERTY_COLUMNS}
-        gridColumns={PROPERTY_GRID_COLUMNS}
-        sortState={sortState}
-        onSort={handleSort}
-      />
-
-      <div className="flex flex-col gap-1 mt-2">
-        {isLoading ? (
-          <LoadingState />
-        ) : filteredProperties.length === 0 ? (
-          <EmptyState title="No properties found." size="sm" />
-        ) : (
-          filteredProperties.map((prop: ItemProperty) => (
-            <PropertyCard key={prop.id} property={prop} />
-          ))
-        )}
-      </div>
-    </div>
+    <CodexBrowseListShell
+      search={filters.search}
+      onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
+      searchPlaceholder="Search properties..."
+      filters={
+        <FilterSection>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <SelectFilter
+              label="Type"
+              value={filters.typeFilter}
+              options={typeOptions.map(t => ({ value: t, label: formatListCellLabel(t) }))}
+              onChange={(v) => setFilters(f => ({ ...f, typeFilter: v }))}
+              placeholder="All Types"
+            />
+          </div>
+        </FilterSection>
+      }
+      headerColumns={PROPERTY_COLUMNS}
+      gridColumns={PROPERTY_GRID_COLUMNS}
+      sortState={sortState}
+      onSort={handleSort}
+      isLoading={isLoading}
+      isEmpty={filteredProperties.length === 0}
+      emptyTitle="No properties found."
+    >
+      {filteredProperties.map((prop: ItemProperty) => (
+        <PropertyCard key={prop.id} property={prop} />
+      ))}
+    </CodexBrowseListShell>
   );
 }

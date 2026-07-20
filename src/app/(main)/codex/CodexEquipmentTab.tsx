@@ -9,9 +9,7 @@
 import { useState, useMemo } from 'react';
 import { SelectFilter, FilterSection } from '@/components/shared/filters';
 import {
-  SearchInput,
-  ListHeader,
-  LoadingState,
+  CodexBrowseListShell,
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/shared';
@@ -173,49 +171,42 @@ export function CodexEquipmentTab({ codexMode = 'public' }: { codexMode?: 'publi
   if (error) return <ErrorState message="Failed to load equipment" onRetry={() => refetch()} />;
 
   return (
-    <div>
-      <div className="mb-4">
-        <SearchInput value={filters.search} onChange={(v) => setFilters(f => ({ ...f, search: v }))} placeholder="Search equipment..." />
-      </div>
-
-      <FilterSection>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <SelectFilter
-            label="Category"
-            value={filters.categoryFilter}
-            options={filterOptions.categories.map(c => ({ value: c, label: c }))}
-            onChange={(v) => setFilters(f => ({ ...f, categoryFilter: v }))}
-            placeholder="All Categories"
-          />
-          <SelectFilter
-            label="Rarity"
-            value={filters.rarityFilter}
-            options={filterOptions.rarities.map(r => ({ value: r, label: r }))}
-            onChange={(v) => setFilters(f => ({ ...f, rarityFilter: v }))}
-            placeholder="All Rarities"
-          />
-        </div>
-      </FilterSection>
-
-      <ListHeader
-        columns={EQUIPMENT_COLUMNS}
-        gridColumns={EQUIPMENT_GRID_COLUMNS}
-        sortState={sortState}
-        onSort={handleSort}
-        hasThumbnailColumn
-      />
-
-      <div className="flex flex-col gap-1 mt-2">
-        {isLoading ? (
-          <LoadingState />
-        ) : filteredEquipment.length === 0 ? (
-          <EmptyState title="No equipment found." size="sm" />
-        ) : (
-          filteredEquipment.map((item) => (
-            <EquipmentCard key={item.id} item={item} propertiesDb={propertiesDb} />
-          ))
-        )}
-      </div>
-    </div>
+    <CodexBrowseListShell
+      search={filters.search}
+      onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
+      searchPlaceholder="Search equipment..."
+      filters={
+        <FilterSection>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <SelectFilter
+              label="Category"
+              value={filters.categoryFilter}
+              options={filterOptions.categories.map(c => ({ value: c, label: c }))}
+              onChange={(v) => setFilters(f => ({ ...f, categoryFilter: v }))}
+              placeholder="All Categories"
+            />
+            <SelectFilter
+              label="Rarity"
+              value={filters.rarityFilter}
+              options={filterOptions.rarities.map(r => ({ value: r, label: r }))}
+              onChange={(v) => setFilters(f => ({ ...f, rarityFilter: v }))}
+              placeholder="All Rarities"
+            />
+          </div>
+        </FilterSection>
+      }
+      headerColumns={EQUIPMENT_COLUMNS}
+      gridColumns={EQUIPMENT_GRID_COLUMNS}
+      sortState={sortState}
+      onSort={handleSort}
+      hasThumbnailColumn
+      isLoading={isLoading}
+      isEmpty={filteredEquipment.length === 0}
+      emptyTitle="No equipment found."
+    >
+      {filteredEquipment.map((item) => (
+        <EquipmentCard key={item.id} item={item} propertiesDb={propertiesDb} />
+      ))}
+    </CodexBrowseListShell>
   );
 }

@@ -176,7 +176,7 @@ This is a **guide**, not a muzzle. Prefer Realms terms; avoid importing other sy
 | Power | Spell (unless flavor text clearly means in-world magic as fiction) |
 | Energy | Mana / Spell slots |
 | Defense / Evasion / Damage Reduction | Armor Class (AC) |
-| Health | HP (user unless a dense HUD abbreviation is already established) |
+| Health | HP / EN in dense HUD labels (prefer Health / Energy; TASK-440) |
 | Currency | c / gold shorthand in Layer 1 or Layer 2 UI |
 
 **Layer 1 / Layer 2 copy:** Spell game terms in full for new players (**Currency**, **Training Points**, **Damage Reduction**, …). Do not use compact abbreviations like `c` or `TP` in guided L1/L2 chrome, choice cards, or resource bars. Dense Layer 3 / advanced / table columns, and **character sheet / play lists**, may use short labels (`TP`, expandable chip `TP: N`) — the sheet is a working surface, not a guided creator disclosure ladder.

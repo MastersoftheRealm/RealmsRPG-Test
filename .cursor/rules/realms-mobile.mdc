@@ -13,6 +13,6 @@ When **creating or editing** any page, modal, or layout:
 
 3. **Dense layouts:** For pages with many sections (e.g. character sheet, encounter tracker), prefer **horizontal side-scroll** between section panels on mobile; use **Collapsible** or responsive stacking when sections are few or content is lighter.
 
-4. **Touch targets:** New interactive elements (buttons, icon buttons, steppers, tab triggers) must have a minimum size of **44×44px** on touch (use `--touch-target-min: 44px` or equivalent).
+4. **Touch targets:** **44×44px on mobile/touch only** (`touch-target-md-compact` or `min-*` below `md`). On **desktop (`md+`)**, prefer compact icon-hugging controls — do **not** inflate dense sheet chrome to 44px. Owner feedback is desktop-first unless labeled `mobile feedback:`.
 
 5. **Checklist:** Use the **Agent checklist** in `MOBILE_UX.md` when adding or significantly changing a page or modal (responsive breakpoints, side-scroll/collapse for dense sections, list/table patterns, verification at ~360px width).

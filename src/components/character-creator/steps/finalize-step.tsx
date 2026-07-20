@@ -21,10 +21,16 @@ import { useCharacterCreatorStore, CHARACTER_STARTING_CURRENCY, type CreatorStep
 import { getAllValidationIssues, type ValidationIssue } from '@/lib/character-creator-validation';
 import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
 import { calculateHealthEnergyPool } from '@/lib/game/formulas';
-import { navigateThenResetCreator } from '@/lib/creator-save-handoff';
+import { navigateThenResetCreator, scheduleCreatorReset } from '@/lib/creator-save-handoff';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { ABILITY_DISPLAY_NAMES } from '@/lib/game/constants';
 import { LoginPromptModal, ImageUploadModal, InfoTippy, RealmsImagePicker } from '@/components/shared';
+import { PlayTogetherModal } from '@/components/onboarding';
+import {
+  characterSheetUrlWithTourOffer,
+  hasSeenPlayTogether,
+  shouldOfferSheetTour,
+} from '@/lib/onboarding-preferences';
 import { finalizeSummaryHelp } from '../../../../public/tooltip-text';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
 import { CreatorResourceBar } from '@/components/character-creator/CreatorResourceBar';
@@ -403,6 +409,8 @@ export function FinalizeStep() {
   const [error, setError] = useState<string | null>(null);
   const [showValidation, setShowValidation] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [showPlayTogether, setShowPlayTogether] = useState(false);
+  const [savedCharacterId, setSavedCharacterId] = useState<string | null>(null);
 
   const creatorReturnPath = useMemo(() => {
     const qs = searchParams.toString();
@@ -625,14 +633,26 @@ export function FinalizeStep() {
           ? sanitizeRedirectPath(returnTo, '')
           : '';
       showToast('Your character is ready!', 'success');
-      navigateThenResetCreator(() => {
-        if (safeReturnTo) {
-          router.push(safeReturnTo);
-        } else {
-          router.push(`/characters/${characterId}`);
-        }
-      }, resetCreator);
-      // Leave `saving` true so Create stays disabled until the route changes.
+      setSavedCharacterId(characterId);
+
+      const goAfterSave = (offerTour: boolean) => {
+        navigateThenResetCreator(() => {
+          if (safeReturnTo) {
+            router.push(safeReturnTo);
+          } else if (offerTour && shouldOfferSheetTour()) {
+            router.push(characterSheetUrlWithTourOffer(characterId));
+          } else {
+            router.push(`/characters/${characterId}`);
+          }
+        }, resetCreator);
+      };
+
+      if (!safeReturnTo && !hasSeenPlayTogether()) {
+        setShowPlayTogether(true);
+        // Leave `saving` true so Create stays disabled while play-together is open.
+      } else {
+        goAfterSave(!safeReturnTo);
+      }
     } catch (err) {
       const message =
         err instanceof Error && err.message.trim()
@@ -1118,6 +1138,26 @@ export function FinalizeStep() {
         onClose={() => setShowLoginPrompt(false)}
         returnPath={creatorReturnPath}
         contentType="character"
+      />
+
+      <PlayTogetherModal
+        isOpen={showPlayTogether}
+        onViewCharacter={() => {
+          setShowPlayTogether(false);
+          if (savedCharacterId) {
+            navigateThenResetCreator(() => {
+              if (shouldOfferSheetTour()) {
+                router.push(characterSheetUrlWithTourOffer(savedCharacterId));
+              } else {
+                router.push(`/characters/${savedCharacterId}`);
+              }
+            }, resetCreator);
+          }
+        }}
+        onLeaveElsewhere={() => {
+          setShowPlayTogether(false);
+          scheduleCreatorReset(resetCreator);
+        }}
       />
     </div>
   );

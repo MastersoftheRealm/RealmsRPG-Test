@@ -6,8 +6,9 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
 import { Alert, Button, Input, PageContainer, PageHeader, LoadingState, EmptyState } from '@/components/ui';
 import { ErrorDisplay } from '@/components/shared';
 import { apiFetch } from '@/lib/api-client';
@@ -37,30 +38,30 @@ const ROLE_LABELS: Record<UserRole, string> = {
 
 export default function AdminRolesPage() {
   const [rows, setRows] = useState<RolePolicyRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [syncedAt, setSyncedAt] = useState(0);
   const [savingRole, setSavingRole] = useState<UserRole | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [reloadToken, setReloadToken] = useState(0);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    apiFetch<RolePolicyRow[]>('/api/admin/role-policies')
-      .then((data) => {
-        if (!cancelled) setRows(Array.isArray(data) ? data : []);
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load role policies');
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [reloadToken]);
+  const {
+    data: serverRows,
+    isLoading: loading,
+    error: queryError,
+    refetch,
+    dataUpdatedAt,
+  } = useQuery({
+    queryKey: ['admin', 'role-policies'],
+    queryFn: () => apiFetch<RolePolicyRow[]>('/api/admin/role-policies'),
+  });
+  const error = queryError
+    ? queryError instanceof Error
+      ? queryError.message
+      : 'Failed to load role policies'
+    : null;
+
+  if (serverRows && dataUpdatedAt !== syncedAt) {
+    setRows(Array.isArray(serverRows) ? serverRows : []);
+    setSyncedAt(dataUpdatedAt);
+  }
 
   const onNumberChange = (role: UserRole, key: keyof RolePolicyRow, rawValue: string) => {
     const value = Math.max(0, Math.floor(Number(rawValue) || 0));
@@ -134,7 +135,7 @@ export default function AdminRolesPage() {
       {loading ? (
         <LoadingState size="lg" padding="md" />
       ) : error ? (
-        <ErrorDisplay message={error} onRetry={() => setReloadToken((token) => token + 1)} />
+        <ErrorDisplay message={error} onRetry={() => void refetch()} />
       ) : rows.length === 0 ? (
         <EmptyState title="No role policies found." size="sm" />
       ) : (

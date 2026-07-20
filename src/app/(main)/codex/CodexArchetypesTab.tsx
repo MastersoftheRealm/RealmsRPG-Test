@@ -8,16 +8,13 @@
 
 import { useMemo, useState } from 'react';
 import {
-  SearchInput,
-  ListHeader,
-  LoadingState,
+  CodexBrowseListShell,
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/shared';
 import type { ColumnValue } from '@/components/shared/grid-list-row';
 import { useSort, sortByColumn } from '@/hooks/use-sort';
 import { useCodexArchetypes, useCodexFeats, useCodexSkills, useEquipment, useOfficialLibrary } from '@/hooks';
-import { EmptyState } from '@/components/ui';
 import { parseArchetypePathData, pathHasPlayerVisibleLevel1 } from '@/lib/game/archetype-path';
 import { formatListCellLabel } from '@/lib/utils';
 import type { Archetype, ArchetypePathRecommendations } from '@/types/archetype';
@@ -343,36 +340,28 @@ export function CodexArchetypesTab({ codexMode }: CodexArchetypesTabProps) {
     return <CodexMyCodexEmpty />;
   }
 
-  if (isLoading) return <LoadingState message="Loading archetype paths…" />;
   if (error) return <ErrorState message={error.message} />;
 
   return (
-    <div>
-      <div className="mb-4">
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder="Search archetype paths…"
-          aria-label="Search archetype paths"
-        />
+    <CodexBrowseListShell
+      search={search}
+      onSearchChange={setSearch}
+      searchPlaceholder="Search archetype paths…"
+      searchAriaLabel="Search archetype paths"
+      headerColumns={ARCHETYPE_COLUMNS}
+      gridColumns={ARCHETYPE_GRID_COLUMNS}
+      sortState={sortState}
+      onSort={handleSort}
+      isLoading={isLoading}
+      loadingMessage="Loading archetype paths…"
+      isEmpty={sorted.length === 0}
+      emptyTitle="No archetype paths match your search."
+    >
+      <div className="space-y-2">
+        {sorted.map((archetype) => (
+          <ArchetypePathCard key={archetype.id} archetype={archetype} lookups={lookups} />
+        ))}
       </div>
-
-      <ListHeader
-        columns={ARCHETYPE_COLUMNS}
-        gridColumns={ARCHETYPE_GRID_COLUMNS}
-        sortState={sortState}
-        onSort={handleSort}
-      />
-
-      {sorted.length === 0 ? (
-        <EmptyState title="No archetype paths match your search." size="sm" />
-      ) : (
-        <div className="space-y-2">
-          {sorted.map((archetype) => (
-            <ArchetypePathCard key={archetype.id} archetype={archetype} lookups={lookups} />
-          ))}
-        </div>
-      )}
-    </div>
+    </CodexBrowseListShell>
   );
 }

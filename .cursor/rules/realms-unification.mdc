@@ -22,6 +22,7 @@ alwaysApply: false
 | Encounter / session participant picker (combat, skill, VTT, downtime) | `@/components/shared` → **AddCombatantModal** — intentional non-USM (TASK-571); extend, do not fork or migrate to USM |
 | Source scope: All / Realms Library / My Library | `@/components/shared` → SourceFilter (built on SegmentedControl) |
 | Two–N option pill toggle (same look as Library / source filter) | `@/components/shared` → SegmentedControl |
+| Admin Codex / Codex browse list chrome | `@/components/shared` → **CodexBrowseListShell** (ADR-0005); not for Official* grids or Admin Archetypes path rows |
 | Section headers with + | `@/components/shared` → SectionHeader |
 | Roll buttons | `@/components/shared` → RollButton |
 | +/- steppers | `@/components/shared` → **ValueStepper** / Dec/Inc (ADR-0002 chrome); quantities → **QuantitySelector** (wraps ValueStepper). Never hand-roll ± |

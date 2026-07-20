@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
 import { Button, Modal, PageContainer, PageHeader, LoadingState, EmptyState, TabNavigation, TabContentPanel, useTabGroup, DescriptorChip } from '@/components/ui';
 import { ErrorDisplay } from '@/components/shared';
 import { apiFetch } from '@/lib/api-client';
@@ -79,34 +80,25 @@ function readActorLabel(entry: ChangeLogEntry): string {
 export default function AdminChangelogsPage() {
   const { tabGroupId, sharedPanelId } = useTabGroup();
   const [activeTab, setActiveTab] = useState<TabId>('codex_feats');
-  const [rows, setRows] = useState<ChangeLogEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<ChangeLogEntry | null>(null);
-  const [reloadToken, setReloadToken] = useState(0);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-
-    apiFetch<ChangeLogEntry[]>(
-      `/api/admin/changelogs?entityType=${encodeURIComponent(activeTab)}&limit=200`
-    )
-      .then((data) => {
-        if (!cancelled) setRows(Array.isArray(data) ? data : []);
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load changelogs');
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [activeTab, reloadToken]);
+  const {
+    data: rows = [],
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useQuery({
+    queryKey: ['admin', 'changelogs', activeTab],
+    queryFn: () =>
+      apiFetch<ChangeLogEntry[]>(
+        `/api/admin/changelogs?entityType=${encodeURIComponent(activeTab)}&limit=200`
+      ),
+  });
+  const error = queryError
+    ? queryError instanceof Error
+      ? queryError.message
+      : 'Failed to load changelogs'
+    : null;
 
   const tabs = useMemo(
     () =>
@@ -148,7 +140,7 @@ export default function AdminChangelogsPage() {
       {loading ? (
         <LoadingState size="lg" padding="md" />
       ) : error ? (
-        <ErrorDisplay message={error} onRetry={() => setReloadToken((token) => token + 1)} />
+        <ErrorDisplay message={error} onRetry={() => void refetch()} />
       ) : rows.length === 0 ? (
         <EmptyState title="No changelog entries yet for this tab." size="sm" />
       ) : (

@@ -15,6 +15,7 @@ import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
+import { useIsClient } from '@/hooks/use-is-client';
 import { IconButton } from './icon-button';
 
 interface ModalProps {
@@ -80,15 +81,18 @@ export function Modal({
   fullScreenOnMobile = false,
   titleA11y,
 }: ModalProps) {
-  const [mounted, setMounted] = React.useState(false);
+  const mounted = useIsClient();
   const [animating, setAnimating] = React.useState(false);
   const [isMobileViewport, setIsMobileViewport] = React.useState(false);
   const dialogRef = React.useRef<HTMLDivElement>(null);
   const previouslyFocusedRef = React.useRef<HTMLElement | null>(null);
 
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
+  // Render-time adjust: first open paint stays opacity-0, then transitions in.
+  if (isOpen && !animating) {
+    setAnimating(true);
+  } else if (!isOpen && animating) {
+    setAnimating(false);
+  }
 
   React.useEffect(() => {
     if (!mounted) return;
@@ -101,7 +105,6 @@ export function Modal({
 
   React.useEffect(() => {
     if (isOpen) {
-      setAnimating(true);
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';

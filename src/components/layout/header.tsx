@@ -52,12 +52,13 @@ export function Header() {
   useEffect(() => {
     if (!mobileMenuOpen) return;
     const node = mobileNavRef.current;
+    const menuButton = mobileMenuButtonRef.current;
     if (node) {
       const firstFocusable = node.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
       (firstFocusable ?? node).focus();
     }
     return () => {
-      mobileMenuButtonRef.current?.focus?.();
+      menuButton?.focus?.();
     };
   }, [mobileMenuOpen]);
 

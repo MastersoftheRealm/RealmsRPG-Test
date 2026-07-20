@@ -6,7 +6,7 @@
  * (crop via ImageUploadModal, create row, auto-return selection).
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Check, ImageIcon, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -184,12 +184,15 @@ export function RealmsImagePicker({
     setError(null);
   }, [resetUploadDraft, selectedImageId]);
 
-  useEffect(() => {
-    if (!isOpen) return;
+  const [wasOpen, setWasOpen] = useState(false);
+  if (isOpen && !wasOpen) {
     setPendingId(selectedImageId ?? null);
     resetUploadDraft();
     setError(null);
-  }, [isOpen, selectedImageId, resetUploadDraft]);
+    setWasOpen(true);
+  } else if (!isOpen && wasOpen) {
+    setWasOpen(false);
+  }
 
   const { data: images = [], isLoading, error: loadError, refetch } = useQuery({
     queryKey: ['realms-images', 'picker', filterCategories, search],

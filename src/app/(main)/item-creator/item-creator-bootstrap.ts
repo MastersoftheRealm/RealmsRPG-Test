@@ -72,7 +72,7 @@ export interface ItemCreatorFormState {
   imageUrl: string | null;
 }
 
-type ItemLibraryRecord = {
+export type ItemLibraryRecord = {
   name?: string;
   description?: string;
   type?: string;

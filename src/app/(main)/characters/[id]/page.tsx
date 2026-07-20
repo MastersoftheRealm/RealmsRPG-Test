@@ -6,8 +6,9 @@
 
 'use client';
 
-import { use, useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { use, useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { getCharacter, saveCharacter, type LibraryForView } from '@/services/character-service';
 import { useAuth, useAutoSave, useCampaignsFull, useCharacterResourceSync, useUserPowers, useUserTechniques, useUserEmpoweredTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useMergedSpecies, useCodexFeats, useCodexSkills, useCodexArchetypes, useEquipment, useOfficialLibrary } from '@/hooks';
 import { useGameRules } from '@/hooks/use-game-rules';
@@ -27,6 +28,13 @@ import {
   useCharacterSheetActions,
   resolveLibraryActiveTab,
 } from '@/components/character-sheet';
+import {
+  SheetTourOfferModal,
+  SheetTour,
+  LevelUpGuideCard,
+} from '@/components/onboarding';
+import { buildLevelUpGuideContent, type LevelUpGuideContent } from '@/lib/level-up-guide';
+import { shouldOfferSheetTour } from '@/lib/onboarding-preferences';
 import { useToast } from '@/components/ui';
 import { createClient } from '@/lib/supabase/client';
 import {
@@ -48,6 +56,9 @@ export default function CharacterSheetPage({ params }: PageParams) {
   const { user, loading: authLoading } = useAuth();
   const { showToast } = useToast();
   const { rules } = useGameRules();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   
   const [character, setCharacter] = useState<Character | null>(null);
   const [libraryForView, setLibraryForView] = useState<LibraryForView | undefined>(undefined);
@@ -57,6 +68,9 @@ export default function CharacterSheetPage({ params }: PageParams) {
   const [showLevelUpModal, setShowLevelUpModal] = useState(false);
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [sheetTourOfferLatched, setSheetTourOfferLatched] = useState(false);
+  const [sheetTourActive, setSheetTourActive] = useState(false);
+  const [levelUpGuide, setLevelUpGuide] = useState<LevelUpGuideContent | null>(null);
   const [addModalType, setAddModalType] = useState<AddModalType>(null);
   const [libraryActiveTab, setLibraryActiveTab] = useState<CharacterLibraryTabId>('feats');
   const [featModalType, setFeatModalType] = useState<FeatModalType>(null);
@@ -122,7 +136,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
       characterId: character.id,
       characterName: character.name,
     };
-  }, [campaignsFull, user?.uid, character]);
+  }, [campaignsFull, user, character]);
 
   const isInCampaign = useMemo(
     () =>
@@ -259,26 +273,37 @@ export default function CharacterSheetPage({ params }: PageParams) {
   useCharacterResourceSync(character, isOwner);
 
   /** Apply path level-5 proficiency floor when loading an existing path character (TASK-368). */
-  const pathProfAppliedKeyRef = useRef<string | null>(null);
-  useEffect(() => {
-    if (!character || codexArchetypes.length === 0) return;
+  const [pathProfAppliedKey, setPathProfAppliedKey] = useState<string | null>(null);
+  if (character && codexArchetypes.length > 0) {
     const level = character.level ?? 1;
-    if (level < 5) return;
-    const applyKey = `${character.id}:${level}:${character.pow_prof ?? 0}:${character.mart_prof ?? 0}`;
-    if (pathProfAppliedKeyRef.current === applyKey) return;
-
-    const lookupId = getArchetypeCodexLookupId(character);
-    if (!lookupId) return;
-    const pathArch = codexArchetypes.find((a) => a.id === lookupId) as Character['archetype'] | undefined;
-    const profUpdate = applyPathProficiencyForLevel(character, level, pathArch ?? character.archetype);
-    if (!profUpdate) {
-      pathProfAppliedKeyRef.current = applyKey;
-      return;
+    if (level >= 5) {
+      const applyKey = `${character.id}:${level}:${character.pow_prof ?? 0}:${character.mart_prof ?? 0}`;
+      if (pathProfAppliedKey !== applyKey) {
+        const lookupId = getArchetypeCodexLookupId(character);
+        if (lookupId) {
+          const pathArch = codexArchetypes.find((a) => a.id === lookupId) as
+            | Character['archetype']
+            | undefined;
+          const profUpdate = applyPathProficiencyForLevel(
+            character,
+            level,
+            pathArch ?? character.archetype
+          );
+          if (profUpdate) {
+            const next = { ...character, ...profUpdate };
+            setPathProfAppliedKey(
+              `${next.id}:${level}:${next.pow_prof ?? 0}:${next.mart_prof ?? 0}`
+            );
+            setCharacter(next);
+          } else {
+            setPathProfAppliedKey(applyKey);
+          }
+        } else {
+          setPathProfAppliedKey(applyKey);
+        }
+      }
     }
-
-    pathProfAppliedKeyRef.current = applyKey;
-    setCharacter((prev) => (prev ? { ...prev, ...profUpdate } : null));
-  }, [character, codexArchetypes]);
+  }
 
   // Auto-save with debounce — enabled for **owners in any mode**.
   // HP / energy / AP (and XP) can be changed while *not* in sheet edit mode; previously `enabled: effectiveEditMode`
@@ -319,7 +344,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
     handleEnergyPointsChange,
     handleFullRecovery,
     handlePartialRecovery,
-    handleLevelUp,
+    handleLevelUp: applyLevelUp,
     handleAddFeats,
     handleConfirmRemoveFeat,
     handleAddSkills,
@@ -358,6 +383,31 @@ export default function CharacterSheetPage({ params }: PageParams) {
     stateFeatsList,
     stateUsesMax,
   });
+
+  // Post-save sheet tour offer (?offerTour=1 from creator handoff).
+  const urlWantsTourOffer = searchParams.get('offerTour') === '1';
+  if (urlWantsTourOffer && shouldOfferSheetTour() && !sheetTourOfferLatched) {
+    setSheetTourOfferLatched(true);
+  }
+  const showSheetTourOffer = sheetTourOfferLatched;
+  useEffect(() => {
+    if (!urlWantsTourOffer) return;
+    router.replace(pathname, { scroll: false });
+  }, [urlWantsTourOffer, router, pathname]);
+
+  const handleLevelUp = useCallback(
+    (newLevel: number) => {
+      if (!character) return;
+      const previousLevel = character.level || 1;
+      applyLevelUp(newLevel);
+      const guide = buildLevelUpGuideContent(character, previousLevel, newLevel, rules);
+      if (guide) {
+        if (guide.enterEditMode) setIsEditMode(true);
+        setLevelUpGuide(guide);
+      }
+    },
+    [character, applyLevelUp, rules]
+  );
 
   const librarySectionProps = useMemo(() => {
     if (!character || !calculatedStats) return null;
@@ -611,6 +661,16 @@ export default function CharacterSheetPage({ params }: PageParams) {
           setShowEditSpeciesModal={setShowEditSpeciesModal}
           onSpeciesSave={handleEditSpeciesSave}
         />
+        <SheetTourOfferModal
+          isOpen={showSheetTourOffer}
+          onStart={() => {
+            setSheetTourOfferLatched(false);
+            setSheetTourActive(true);
+          }}
+          onDismiss={() => setSheetTourOfferLatched(false)}
+        />
+        <SheetTour active={sheetTourActive} onComplete={() => setSheetTourActive(false)} />
+        <LevelUpGuideCard content={levelUpGuide} onClose={() => setLevelUpGuide(null)} />
         </div>
       </CharacterSheetProvider>
     </RollProvider>

@@ -8,9 +8,9 @@
 'use client';
 
 import { useTheme } from 'next-themes';
-import { useEffect, useState } from 'react';
 import { Sun, Moon, Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useIsClient } from '@/hooks/use-is-client';
 
 interface ThemeToggleProps {
   /** Whether to show as a dropdown menu or inline buttons */
@@ -27,12 +27,7 @@ const THEME_OPTIONS = [
 
 export function ThemeToggle({ variant = 'dropdown', className }: ThemeToggleProps) {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  // Avoid hydration mismatch by only rendering after mount
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useIsClient();
 
   if (!mounted) {
     return null;
