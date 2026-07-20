@@ -28,7 +28,6 @@ Do **not** read the done archive at session start.
     - src/app/(main)/crafting/[id]/page.tsx
     - src/services/crafting-service.ts
     - src/docs/ai/FEATURE_INDEX.md
-    - src/docs/ai/archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md
   description: |
     Crafting session page is the largest TSX hotspot (~2009 LOC). Follow TASK-598 pattern:
     extract co-located panels/hooks/helpers; keep a thin page facade under ~500 LOC; no behavior
@@ -38,8 +37,7 @@ Do **not** read the done archive at session start.
     - Named exports / routes unchanged; FEATURE_INDEX updated if paths move.
     - `npm run build` passes; smoke crafting session load/roll/save if touched.
     - No new shared/ui barrel symbols unless Architect path.
-  notes: |
-    From QUALITY_GLOBAL_AUDIT_2026-07-20. Largest single win for play-loop readability.
+  notes: Largest single play-loop readability win (quality audit 2026-07-20).
 
 ---
 
@@ -54,7 +52,6 @@ Do **not** read the done archive at session start.
     - src/app/(main)/encounters/[id]/_components/SkillEncounterView.tsx
     - src/services/encounter-service.ts
     - src/docs/ai/FEATURE_INDEX.md
-    - src/docs/ai/archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md
   description: |
     Encounter play views are ~1246 / ~1435 LOC. Extract co-located combatant lists, round chrome,
     roll panels, and helpers so each facade lands near ~500 LOC (TASK-598 style). Preserve
@@ -63,9 +60,7 @@ Do **not** read the done archive at session start.
     - CombatEncounterView and SkillEncounterView facades each ≤ ~500 LOC (or justified partial with follow-up).
     - Behavior parity for combat/skill encounter play loops.
     - FEATURE_INDEX updated if module paths change; `npm run build` passes.
-  notes: |
-    From QUALITY_GLOBAL_AUDIT_2026-07-20. Prefer shared helpers between combat/skill only when
-    identical — do not force a premature mega-abstraction.
+  notes: Share combat/skill helpers only when identical — no premature mega-abstraction.
 
 ---
 
@@ -82,7 +77,6 @@ Do **not** read the done archive at session start.
     - src/app/(main)/admin/codex/AdminPartsTab.tsx
     - src/app/(main)/admin/core-rules/page.tsx
     - src/docs/ai/FEATURE_INDEX.md
-    - src/docs/ai/archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md
   description: |
     Admin codex/core-rules editors remain multi-file god zones (Feats ~1235, archetype editor ~1101,
     workspace hook ~930, Parts ~882, core-rules page ~981). Slice into co-located modules using
@@ -91,8 +85,7 @@ Do **not** read the done archive at session start.
     - Each listed hotspot reduced toward ≤ ~500 LOC facade (ship first slice + follow-ups if needed).
     - Reuse CodexBrowseListShell / existing admin patterns — no new list shell.
     - FEATURE_INDEX + build green; no live codex data mutations in this task.
-  notes: |
-    From QUALITY_GLOBAL_AUDIT_2026-07-20. Prefer Feats + archetype workspace first (largest).
+  notes: Prefer Feats + archetype workspace first (largest).
 
 ---
 
@@ -110,7 +103,6 @@ Do **not** read the done archive at session start.
     - src/components/guided-creator/steps/powers-techniques-step.tsx
     - src/components/character-creator/steps/ancestry-step.tsx
     - src/docs/ai/FEATURE_INDEX.md
-    - src/docs/ai/archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md
   description: |
     After TASK-598 sheet/Advanced splits, remaining creator surfaces still exceed ~800 LOC
     (creature workspace/editor, species page, empowered technique page, guided powers-techniques,
@@ -120,9 +112,7 @@ Do **not** read the done archive at session start.
     - Listed files moved toward ≤ ~500 LOC facades (partial OK with concrete follow_up_tasks).
     - No new parallel creator selection/modal systems; barrels stay honest.
     - Targeted vitest where logic extracts to `lib/`; `npm run build` passes.
-  notes: |
-    From QUALITY_GLOBAL_AUDIT_2026-07-20. Ancestry-step may already lean on `ancestry-pick-tasks` —
-    extract UI panels first.
+  notes: Ancestry-step — extract UI panels first (`ancestry-pick-tasks` already shared).
 
 ---
 
@@ -140,7 +130,6 @@ Do **not** read the done archive at session start.
     - src/components/shared/index.ts
     - scripts/shared-ui-allowlist.json
     - src/docs/ai/FEATURE_INDEX.md
-    - src/docs/ai/archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md
   description: |
     Shared hotspots (~1179 / ~1067 / ~1038 LOC) and `data-enrichment.ts` (~987) need co-located
     extracts without growing the public shared API. Prefer internal modules imported by the
@@ -150,8 +139,7 @@ Do **not** read the done archive at session start.
     - No new parallel GridListRow / library section chrome; consumers keep existing imports.
     - If new shared public exports: ADR + allowlist update + `tasks:validate-shared-ui`.
     - `npm run build` + relevant vitest (e.g. grid-list-row-chrome) pass.
-  notes: |
-    From QUALITY_GLOBAL_AUDIT_2026-07-20. Default Implementer path = private co-located files.
+  notes: Default Implementer path = private co-located files (Architect if new barrel API).
 
 ---
 
@@ -176,8 +164,7 @@ Do **not** read the done archive at session start.
     - Live changelog remains the recent working set; HISTORY_INDEX lists QUALITY_GLOBAL_AUDIT_2026-07-20.
     - No deletion of historical audit dumps without owner ack.
     - `npm run tasks:validate-docs` (or full `tasks:validate`) passes.
-  notes: |
-    From QUALITY_GLOBAL_AUDIT_2026-07-20. First slice is debt-safe under `/debt docs-only`.
+  notes: First slice debt-safe under `/debt docs-only`. HISTORY_INDEX already lists the quality audit.
 
 ---
 
@@ -192,7 +179,6 @@ Do **not** read the done archive at session start.
     - src/lib/api-client.ts
     - src/lib/api-client.test.ts
     - vitest.config.ts
-    - src/docs/ai/archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md
   description: |
     Coverage shape is strong for domain `lib/` (~63 vitest files) and Playwright visual/a11y, but
     `src/app/api/**` has no co-located route tests (29 routes). Add a thin automated slice:
@@ -204,8 +190,7 @@ Do **not** read the done archive at session start.
     - Document how to run the slice in task evidence / BUILD_VALIDATION or package script note.
     - Prefer existing vitest + Playwright configs; no new parallel harness.
     - `npm test` (or targeted vitest) green for new files.
-  notes: |
-    From QUALITY_GLOBAL_AUDIT_2026-07-20. Do not block on full API matrix — ship first slice + follow-ups.
+  notes: Ship first slice + follow-ups — do not block on full API matrix.
 
 ---
 
