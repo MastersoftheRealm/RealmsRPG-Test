@@ -1,3 +1,48 @@
+- id: TASK-598
+  title: Split oversized sheet + Advanced creator hot files
+  created_at: 2026-07-20
+  created_by: agent
+  completed_at: 2026-07-20
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/sheet-header.tsx
+    - src/components/character-sheet/library-section.tsx
+    - src/components/character-sheet/library-section-props.ts
+    - src/components/character-sheet/library-tab-config.ts
+    - src/components/character-sheet/use-library-section-rows.ts
+    - src/components/character-sheet/use-library-tab-navigation.tsx
+    - src/components/character-sheet/library-powers-panel.tsx
+    - src/components/character-sheet/library-inventory-panel.tsx
+    - src/components/character-sheet/abilities-section.tsx
+    - src/components/character-creator/steps/equipment-step.tsx
+    - src/components/character-creator/steps/equipment/
+    - src/components/character-creator/steps/finalize-step.tsx
+    - src/components/character-creator/steps/finalize/
+    - src/components/character-creator/steps/powers-step.tsx
+    - src/components/character-creator/steps/powers/
+    - src/lib/creator/advanced-powers-selectable.ts
+    - src/lib/creator/advanced-powers-selectable.test.ts
+    - src/components/character-creator/steps/feats-step.tsx
+    - src/components/character-creator/steps/feats/
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    God-file hygiene after TASK-381 sheet facade: split sheet-header, library-section,
+    abilities-section and Advanced equipment/finalize/powers/feats steps along existing
+    section/action seams without behavior change.
+  acceptance_criteria:
+    - Target files under ~500 LOC where practical; no public API regressions.
+    - Parity smoke: sheet play/edit; Advanced create through equipment/powers/finalize.
+    - FEATURE_INDEX paths updated if files move.
+  notes: |
+    Facades: sheet-header + abilities-section; library-section ~419; finalize ~456;
+    feats ~488; equipment ~431; powers ~456 + `lib/creator/advanced-powers-selectable`
+    (+ vitest merge/badge) and `steps/powers/` panels/modals/path-merge helpers.
+    Named exports + steps barrel unchanged. verification_status pending-qa (Advanced
+    create smoke through equipment/powers/finalize; sheet play/edit library).
+
 - id: TASK-596
   title: Extract Advanced equipment-step catalog into lib (guided parity)
   created_at: 2026-07-20

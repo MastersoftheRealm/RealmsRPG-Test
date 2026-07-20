@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-20T19:37:14.506Z",
+  "generated_at": "2026-07-20T19:38:19.298Z",
   "tasks": [
     {
       "id": "TASK-326",
@@ -27,12 +27,44 @@
       "related_overlap": []
     },
     {
-      "id": "TASK-598",
-      "title": "Split oversized sheet + Advanced creator hot files",
-      "status": "partial",
+      "id": "TASK-599",
+      "title": "Single source of truth for archetype-category marketing copy",
+      "status": "not-started",
       "completed_at": "",
       "source": "src/docs/ai/ACTIVE_TASKS.md",
+      "matches": [],
+      "related_files": [
+        "src/components/character-sheet/edit-archetype-modal.tsx",
+        "src/components/character-creator/steps/archetype-step.tsx",
+        "src/components/creator/archetype-selector.tsx",
+        "src/lib/constants/copy"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-598",
+      "title": "Split oversized sheet + Advanced creator hot files",
+      "status": "done",
+      "completed_at": "2026-07-20",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "f4be1a17d1abef36885119b74995db82cfa828f6",
+          "subject": "TASK-598: Split Advanced equipment-step into UI panels",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/components/character-creator/steps/equipment-step.tsx",
+            "src/components/character-creator/steps/equipment/equipment-catalog-panel.tsx",
+            "src/components/character-creator/steps/equipment/list-columns.ts",
+            "src/components/character-creator/steps/equipment/path-loadout-section.tsx",
+            "src/components/character-creator/steps/equipment/selected-equipment-list.tsx",
+            "src/components/character-creator/steps/equipment/step-header.tsx",
+            "src/components/character-creator/steps/equipment/unarmed-prowess-panel.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/FEATURE_INDEX.md"
+          ]
+        },
         {
           "hash": "0bab445f693cd0a5d17e5ca9f70c14642738a1a1",
           "subject": "TASK-598: Split library-section into panels and hooks",
@@ -115,8 +147,11 @@
         "src/components/character-creator/steps/finalize/",
         "src/components/character-creator/steps/powers-step.tsx",
         "src/components/character-creator/steps/powers/",
+        "src/lib/creator/advanced-powers-selectable.ts",
+        "src/lib/creator/advanced-powers-selectable.test.ts",
         "src/components/character-creator/steps/feats-step.tsx",
-        "src/components/character-creator/steps/feats/"
+        "src/components/character-creator/steps/feats/",
+        "src/docs/ai/FEATURE_INDEX.md"
       ],
       "related_overlap": [
         "src/components/character-sheet/sheet-header.tsx",
@@ -128,26 +163,14 @@
         "src/components/character-sheet/library-powers-panel.tsx",
         "src/components/character-sheet/library-inventory-panel.tsx",
         "src/components/character-sheet/abilities-section.tsx",
+        "src/components/character-creator/steps/equipment-step.tsx",
+        "src/components/character-creator/steps/equipment/",
         "src/components/character-creator/steps/finalize-step.tsx",
         "src/components/character-creator/steps/finalize/",
         "src/components/character-creator/steps/feats-step.tsx",
-        "src/components/character-creator/steps/feats/"
+        "src/components/character-creator/steps/feats/",
+        "src/docs/ai/FEATURE_INDEX.md"
       ]
-    },
-    {
-      "id": "TASK-599",
-      "title": "Single source of truth for archetype-category marketing copy",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src/docs/ai/ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/components/character-sheet/edit-archetype-modal.tsx",
-        "src/components/character-creator/steps/archetype-step.tsx",
-        "src/components/creator/archetype-selector.tsx",
-        "src/lib/constants/copy"
-      ],
-      "related_overlap": []
     },
     {
       "id": "TASK-596",

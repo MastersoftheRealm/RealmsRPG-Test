@@ -8,13 +8,13 @@ Do **not** read the done archive at session start.
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-596, 594, 597, 584, 587, 586, 583, 581, 582, etc.)
+**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-598, 596, 594, 597, 584, 587, 586, 583, etc.)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 4 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 3 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** Audit multitask: TASK-593–597 done. Remaining from `/global-audit`: TASK-598–599. TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
+**Hot notes:** Audit multitask: TASK-593–598 done. Remaining from `/global-audit`: TASK-599. TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
 
 ---
 
@@ -64,60 +64,6 @@ Do **not** read the done archive at session start.
 ---
 
 # Sheet / creator debt follow-ups (from `/global-audit` 2026-07-20)
-
-- id: TASK-598
-  title: Split oversized sheet + Advanced creator hot files
-  created_at: 2026-07-20
-  created_by: agent
-  priority: low
-  status: partial
-  related_files:
-    - src/components/character-sheet/sheet-header.tsx
-    - src/components/character-sheet/library-section.tsx
-    - src/components/character-sheet/library-section-props.ts
-    - src/components/character-sheet/library-tab-config.ts
-    - src/components/character-sheet/use-library-section-rows.ts
-    - src/components/character-sheet/use-library-tab-navigation.tsx
-    - src/components/character-sheet/library-powers-panel.tsx
-    - src/components/character-sheet/library-inventory-panel.tsx
-    - src/components/character-sheet/abilities-section.tsx
-    - src/components/character-creator/steps/equipment-step.tsx
-    - src/components/character-creator/steps/equipment/
-    - src/components/character-creator/steps/finalize-step.tsx
-    - src/components/character-creator/steps/finalize/
-    - src/components/character-creator/steps/powers-step.tsx
-    - src/components/character-creator/steps/powers/
-    - src/components/character-creator/steps/feats-step.tsx
-    - src/components/character-creator/steps/feats/
-  description: |
-    God-file hygiene after TASK-381 sheet facade: split sheet-header, library-section,
-    abilities-section and Advanced equipment/finalize/powers/feats steps along existing
-    section/action seams without behavior change. Coordinate with TASK-594/596 if they
-    already extract chunks.
-  acceptance_criteria:
-    - Target files under ~500 LOC where practical; no public API regressions.
-    - Parity smoke: sheet play/edit; Advanced create through equipment/powers/finalize.
-    - FEATURE_INDEX paths updated if files move.
-  completed_work: |
-    - sheet-header + abilities-section split (prior commits on branch).
-    - finalize-step facade (~456 LOC) + `steps/finalize/` extracts (appearance-age,
-      StepEditLink, ValidationModal, HealthEnergy, PortraitUpload, BuildSummary, IdentityFields).
-    - feats-step facade (~488 LOC) + `steps/feats/` extracts (columns, FeatRow, chip/summary,
-      PathFeatLists, FullFeatCatalog, path-apply helpers). Named exports + steps barrel unchanged.
-    - library-section facade (~419 LOC) + extracts: library-tab-config, library-section-props,
-      use-library-section-rows, use-library-tab-navigation, library-powers-panel,
-      library-inventory-panel. Re-exports LibrarySectionProps / LIBRARY_TAB_ORDER /
-      resolveLibraryActiveTab from facade; barrel unchanged. Still uses library-entity-rows.
-    - equipment-step facade (~431 LOC) + `steps/equipment/` extracts (list-columns,
-      unarmed-prowess-panel, path-loadout-section, selected-equipment-list,
-      equipment-catalog-panel, step-header). Keeps catalog lib + guided currency; named
-      `EquipmentStep` + steps barrel unchanged.
-  remaining_work: |
-    - powers-step UI split finish if still over ~500 (parallel agent; `steps/powers/` started).
-  notes: |
-    TASK-596 extracted catalog/budget; TASK-598 equipment UI peel keeps that lib (no re-extract).
-
----
 
 - id: TASK-599
   title: Single source of truth for archetype-category marketing copy
