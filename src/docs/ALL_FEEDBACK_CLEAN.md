@@ -1,6 +1,6 @@
 # ALL_FEEDBACK ? Consolidated & Curated
 
-Last updated: 2026-07-20 (Quality pseudo `/global-audit` → TASK-601–607)
+Last updated: 2026-07-20 (Quality pseudo `/global-audit` → TASK-607–613)
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -50,7 +50,7 @@ How to use
 - Create and enforce shared list/header/modal patterns (sortable headers, consistent spacing, rounded modal edges).
 - **Modals with lists:** Unify add-X modals, load modals, and selection modals ? same logic, styles, EmptyState/LoadingState, FilterSection; align with Codex/Library. TASK-264 (done).
 - Find and remove true dead code.
-- **God-file / coverage follow-ups (2026-07-20 quality audit):** Continue TASK-598-style ≤~500 LOC facades for crafting, encounters, admin codex, remaining creators, shared hotspots (**TASK-601–605**); rotate live changelog + archive honesty (**TASK-606**); thin API route automated smoke (**TASK-607**). Report: `archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md`.
+- **God-file / coverage follow-ups (2026-07-20 quality audit):** Continue TASK-598-style ≤~500 LOC facades for crafting, encounters, admin codex, remaining creators, shared hotspots (**TASK-607–611**); rotate live changelog + archive honesty (**TASK-612**); thin API route automated smoke (**TASK-613**). Report: `archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md`. (IDs renumbered after `/debt` claimed TASK-601–606.)
 
 ### 2) Crafting (2026-03-10)
 - **Core rules:** Add CRAFTING category to core_rules with crafting table, successes table (incl. calculation fields for auto-cost/price), enhanced/consumable tables, multipliers. TASK-293.
@@ -2685,4 +2685,4 @@ Notes
 - Priority: Medium
 - Feedback (verbatim summary): Add a pseudo global audit with quality findings (god files, docs corpus weight, creator/admin/encounter complexity clusters, API/e2e coverage shape) and create/add tasks to fix those issues.
 - Expected: Archive audit report + ACTIVE_TASKS follow-ups; no drive-by product refactors in the filing pass.
-- Disposition: Report `archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md`; filed **TASK-601**–**TASK-607** (splits, docs hygiene, API smoke).
+- Disposition: Report `archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md`; filed **TASK-607**–**TASK-613** (splits, docs hygiene, API smoke; renumbered after debt TASK-601–606 collision).

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-20T19:49:33.568Z",
+  "generated_at": "2026-07-20T21:39:09.262Z",
   "tasks": [
     {
       "id": "TASK-326",
@@ -27,19 +27,224 @@
       "related_overlap": []
     },
     {
-      "id": "TASK-599",
-      "title": "Single source of truth for archetype-category marketing copy",
+      "id": "TASK-601",
+      "title": "Extract technique / empowered / species creator workspaces (TASK-381 remainder)",
       "status": "not-started",
       "completed_at": "",
       "source": "src/docs/ai/ACTIVE_TASKS.md",
       "matches": [],
       "related_files": [
+        "src/app/(main)/technique-creator/page.tsx",
+        "src/app/(main)/empowered-technique-creator/page.tsx",
+        "src/app/(main)/species-creator/page.tsx",
+        "src/app/(main)/power-creator/use-power-creator-workspace.ts",
+        "src/components/creator/CreatorPageShell.tsx",
+        "src/docs/ai/FEATURE_INDEX.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-602",
+      "title": "Recovery modal → SegmentedControl + theme-aware status tokens",
+      "status": "not-started",
+      "completed_at": "",
+      "source": "src/docs/ai/ACTIVE_TASKS.md",
+      "matches": [],
+      "related_files": [
+        "src/components/character-sheet/recovery-modal.tsx",
+        "src/components/shared/segmented-control.tsx",
+        "src/docs/MOBILE_UX.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-603",
+      "title": "Unify Advanced + Guided portrait upload components",
+      "status": "not-started",
+      "completed_at": "",
+      "source": "src/docs/ai/ACTIVE_TASKS.md",
+      "matches": [],
+      "related_files": [
+        "src/components/character-creator/steps/finalize/portrait-upload.tsx",
+        "src/components/guided-creator/guided-portrait-upload.tsx",
+        "src/components/shared/image-upload-modal.tsx",
+        "src/lib/api-client.ts"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-604",
+      "title": "CreatureStatBlock weapon attack bonus → weapon-attack-ability helper",
+      "status": "not-started",
+      "completed_at": "",
+      "source": "src/docs/ai/ACTIVE_TASKS.md",
+      "matches": [],
+      "related_files": [
+        "src/components/shared/creature-stat-block.tsx",
+        "src/lib/game/weapon-attack-ability.ts",
+        "src/components/character-sheet/library-list-helpers.ts"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-605",
+      "title": "Document or redesign MixedSpeciesModal selection grammar",
+      "status": "not-started",
+      "completed_at": "",
+      "source": "src/docs/ai/ACTIVE_TASKS.md",
+      "matches": [],
+      "related_files": [
+        "src/components/character-creator/MixedSpeciesModal.tsx",
+        "src/components/character-creator/steps/species-step.tsx",
+        "src/components/character-sheet/edit-species-modal.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        ".cursor/rules/realms-unification.mdc"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-606",
+      "title": "Owner ack — Advanced CreatorResourceBar → PointStatus / LoadoutBudgetBar grammar",
+      "status": "not-started",
+      "completed_at": "",
+      "source": "src/docs/ai/ACTIVE_TASKS.md",
+      "matches": [],
+      "related_files": [
+        "src/components/character-creator/CreatorResourceBar.tsx",
+        "src/components/guided-creator/loadout-budget-bar.tsx",
+        "src/components/shared/point-status.tsx",
+        "src/docs/ai/FEATURE_INDEX.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-600",
+      "title": "Speed/Evasion header — Temp Modifier only (remove pencil base edit)",
+      "status": "done",
+      "completed_at": "2026-07-20",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "29cbef84f631c269d5606eeaba0d2a182e30288f",
+          "subject": "TASK-600: Speed/Evasion Temp Modifier only (remove pencil) (#83)",
+          "files": [
+            "src/app/(main)/characters/[id]/page.tsx",
+            "src/components/character-sheet/sheet-header.tsx",
+            "src/components/character-sheet/sheet-large-stat-block.tsx",
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/ADR/0006-temp-modifier-mode.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        },
+        {
+          "hash": "45431ca4a709b4b076fd2df18da7869cfbfc7ad8",
+          "subject": "TASK-600: Changelog for cleanup pass",
+          "files": [
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        },
+        {
+          "hash": "3272fa6c5f12178aaf13e401c64ab6ad6e4981b6",
+          "subject": "TASK-600: Cleanup stale ADR follow-up and T038 order",
+          "files": [
+            "src/docs/ai/ADR/0006-temp-modifier-mode.md",
+            "src/docs/ai/BUILD_VALIDATION.md"
+          ]
+        },
+        {
+          "hash": "87118fe6c1e9449ea1a6d7b9348b83c3c3126001",
+          "subject": "TASK-600: Speed/Evasion header Temp Modifier only",
+          "files": [
+            "src/app/(main)/characters/[id]/page.tsx",
+            "src/components/character-sheet/sheet-header.tsx",
+            "src/components/character-sheet/sheet-large-stat-block.tsx",
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/ADR/0006-temp-modifier-mode.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/components/character-sheet/sheet-large-stat-block.tsx",
+        "src/components/character-sheet/sheet-header.tsx",
+        "src/app/(main)/characters/[id]/page.tsx",
+        "src/docs/ai/ADR/0006-temp-modifier-mode.md",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "src/docs/ALL_FEEDBACK_CLEAN.md"
+      ],
+      "related_overlap": [
+        "src/components/character-sheet/sheet-large-stat-block.tsx",
+        "src/components/character-sheet/sheet-header.tsx",
+        "src/app/(main)/characters/[id]/page.tsx",
+        "src/docs/ai/ADR/0006-temp-modifier-mode.md",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "src/docs/ALL_FEEDBACK_CLEAN.md"
+      ]
+    },
+    {
+      "id": "TASK-599",
+      "title": "Single source of truth for archetype-category marketing copy",
+      "status": "done",
+      "completed_at": "2026-07-20",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "af4e09d7a238d7549e2f900e7411dc38a653d7e4",
+          "subject": "Merge pull request #82 from MastersoftheRealm/cursor/task-599-archetype-category-copy-2223",
+          "files": []
+        },
+        {
+          "hash": "463d96365cdb47a1325406e4b88d6181fa5273fb",
+          "subject": "TASK-599: Consolidate archetype-category marketing copy (option B)",
+          "files": [
+            "src/components/character-creator/steps/archetype-step.tsx",
+            "src/components/character-sheet/edit-archetype-modal.tsx",
+            "src/components/creator/archetype-selector.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/lib/constants/copy/archetype-category-copy.ts",
+            "src/lib/constants/copy/index.ts",
+            "src/lib/constants/site-copy.ts"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/lib/constants/copy/archetype-category-copy.ts",
+        "src/lib/constants/copy/index.ts",
+        "src/lib/constants/site-copy.ts",
         "src/components/character-sheet/edit-archetype-modal.tsx",
         "src/components/character-creator/steps/archetype-step.tsx",
         "src/components/creator/archetype-selector.tsx",
-        "src/lib/constants/copy"
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
       ],
-      "related_overlap": []
+      "related_overlap": [
+        "src/lib/constants/copy/archetype-category-copy.ts",
+        "src/lib/constants/copy/index.ts",
+        "src/lib/constants/site-copy.ts",
+        "src/components/character-sheet/edit-archetype-modal.tsx",
+        "src/components/character-creator/steps/archetype-step.tsx",
+        "src/components/creator/archetype-selector.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ]
     },
     {
       "id": "TASK-598",
@@ -48,6 +253,31 @@
       "completed_at": "2026-07-20",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "8aecdc25a3de8e4869fc68b8bf5869babf69b1cf",
+          "subject": "Merge pull request #81 from MastersoftheRealm/cursor/task-598-split-sheet-creator-hotfiles-1c02",
+          "files": []
+        },
+        {
+          "hash": "6f3a7558cc6149665f5451831b997e864e2e9f5f",
+          "subject": "TASK-598: cleanup — drop dead re-exports; unify tab/type forks",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/components/character-creator/steps/feats/apply-recommended-path-feats.ts",
+            "src/components/character-creator/steps/feats/feat-list-columns.ts",
+            "src/components/character-creator/steps/feats/full-feat-catalog.tsx",
+            "src/components/character-creator/steps/feats/path-feat-lists.tsx",
+            "src/components/character-creator/steps/powers-step.tsx",
+            "src/components/character-sheet/abilities-section-model.ts",
+            "src/components/character-sheet/index.ts",
+            "src/components/character-sheet/library-section.tsx",
+            "src/components/character-sheet/library-tab-config.ts",
+            "src/components/character-sheet/use-library-tab-navigation.tsx",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/lib/creator/advanced-powers-selectable.ts"
+          ]
+        },
         {
           "hash": "60e4e05cc1491ed9f7f23dd9c1466f8d8deeaa82",
           "subject": "TASK-598: Docs polish — FEATURE_INDEX paths, archive related_files, changelog",

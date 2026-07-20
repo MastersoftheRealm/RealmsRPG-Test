@@ -6,7 +6,7 @@
 
 | Doc | Purpose |
 |-----|---------|
-| [`QUALITY_GLOBAL_AUDIT_2026-07-20.md`](QUALITY_GLOBAL_AUDIT_2026-07-20.md) | Pseudo `/global-audit` — god files, docs corpus, coverage shape → TASK-601–607 |
+| [`QUALITY_GLOBAL_AUDIT_2026-07-20.md`](QUALITY_GLOBAL_AUDIT_2026-07-20.md) | Pseudo `/global-audit` — god files, docs corpus, coverage shape → TASK-607–613 |
 
 ## June 2026 remediation & audits
 

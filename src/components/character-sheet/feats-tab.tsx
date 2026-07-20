@@ -535,5 +535,3 @@ export function FeatsTab({
     </div>
   );
 }
-
-export default FeatsTab;

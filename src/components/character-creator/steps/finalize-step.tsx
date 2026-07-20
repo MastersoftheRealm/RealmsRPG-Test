@@ -279,8 +279,6 @@ export function FinalizeStep() {
           limit: startingCurrency,
         }}
         energy={energySummary}
-        layer={3}
-        creationMode={draft.creationMode}
       />
 
       <div className="flex items-center gap-1 mb-2">

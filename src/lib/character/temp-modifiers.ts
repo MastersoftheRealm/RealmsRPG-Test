@@ -8,15 +8,6 @@
 import type { Abilities, AbilityName, DefenseName } from '@/types/abilities';
 import type { CharacterTempModifiers } from '@/types/character';
 
-/** Cascade contract for TASK-586 (documented + enforced by helpers). */
-export const TEMP_MODIFIER_CASCADE = {
-  /** Ability temps affect defense/skill/roll display that reads effective abilities. */
-  abilityAffectsDefenses: true,
-  abilityAffectsSkills: true,
-  /** Default: ability temps do NOT change max HP / max EN / TP maxima. */
-  abilityAffectsResourceMaximaDefault: false,
-} as const;
-
 export type TempModifierScalarKey =
   | 'speed'
   | 'evasion'
@@ -139,30 +130,6 @@ export function getEffectiveAbilities(
     intelligence: applyTempModifier(abilities.intelligence, mods.abilities.intelligence),
     charisma: applyTempModifier(abilities.charisma, mods.abilities.charisma),
   };
-}
-
-/** True if any non-zero delta exists (for toggle chrome). */
-export function hasAnyTempModifier(mods: CharacterTempModifiers | undefined): boolean {
-  if (!mods) return false;
-  for (const key of SCALAR_KEYS) {
-    if (getScalarTempModifier(mods, key) !== 0) return true;
-  }
-  if (mods.abilities) {
-    for (const key of ABILITY_KEYS) {
-      if (getAbilityTempModifier(mods, key) !== 0) return true;
-    }
-  }
-  if (mods.defenses) {
-    for (const key of DEFENSE_KEYS) {
-      if (getDefenseTempModifier(mods, key) !== 0) return true;
-    }
-  }
-  if (mods.skills) {
-    for (const delta of Object.values(mods.skills)) {
-      if (typeof delta === 'number' && delta !== 0) return true;
-    }
-  }
-  return false;
 }
 
 function prunePartialRecord<T extends string>(

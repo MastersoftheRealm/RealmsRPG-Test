@@ -12,7 +12,6 @@ import { powersSelectionHelp } from '../../../../../public/tooltip-text';
 export interface PowersStepChromeProps {
   pathMode: boolean;
   layer: number;
-  creationMode?: 'path' | 'forge';
   proficiencySpent: number;
   proficiencyLimit: number;
   proficiencyRemaining: number;
@@ -34,7 +33,6 @@ export interface PowersStepChromeProps {
 export function PowersStepChrome({
   pathMode,
   layer,
-  creationMode,
   proficiencySpent,
   proficiencyLimit,
   proficiencyRemaining,
@@ -70,8 +68,6 @@ export function PowersStepChrome({
         <div className="mt-4 flex flex-col items-center justify-center gap-3">
           {pathMode && layer === 1 ? (
             <CreatorResourceBar
-              layer={layer}
-              creationMode={creationMode}
               trainingPoints={{
                 spent: proficiencySpent,
                 limit: proficiencyLimit,

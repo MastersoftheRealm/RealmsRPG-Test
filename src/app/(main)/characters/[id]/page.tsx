@@ -44,7 +44,12 @@ import type {
   Character,
   CharacterLibraryTabId,
 } from '@/types';
-import { CharacterSheetModals, type AddModalType, type FeatModalType, type SkillModalType } from './CharacterSheetModals';
+import { CharacterSheetModals } from './CharacterSheetModals';
+import type {
+  AddModalType,
+  FeatModalType,
+  SkillModalType,
+} from '@/components/character-sheet/character-sheet-context';
 
 interface PageParams {
   params: Promise<{ id: string }>;

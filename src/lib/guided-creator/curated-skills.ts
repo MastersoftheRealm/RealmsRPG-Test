@@ -331,7 +331,3 @@ export function curateGuidedSkillIds(
   };
 }
 
-/** @deprecated Prefer curateGuidedSkillIds for ability metadata. */
-export function getGuidedCuratedSkillIds(options: GuidedCuratedSkillsOptions): string[] {
-  return curateGuidedSkillIds(options).skillIds;
-}
