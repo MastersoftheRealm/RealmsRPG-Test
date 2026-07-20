@@ -191,8 +191,19 @@ export function RecoveryModal({
       isOpen={isOpen}
       onClose={onClose}
       fullScreenOnMobile
+      flexLayout
       title="Recovery"
       size="md"
+      footer={
+        <div className="flex justify-end gap-3">
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleConfirm}>
+            {mode === 'full' ? 'Full Recovery' : `Recover (${hours}h)`}
+          </Button>
+        </div>
+      }
     >
       <div className="space-y-6">
         {/* Mode Selection */}
@@ -263,9 +274,9 @@ export function RecoveryModal({
           <div className="space-y-4">
             {/* Hours Selection */}
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-2">
+              <p className="block text-sm font-medium text-text-secondary mb-2">
                 Recovery Duration
-              </label>
+              </p>
               <SegmentedControl<PartialHours>
                 value={hours}
                 onChange={handleHoursChange}
@@ -286,9 +297,9 @@ export function RecoveryModal({
 
             {/* Allocation Mode */}
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-2">
+              <p className="block text-sm font-medium text-text-secondary mb-2">
                 Allocation Mode
-              </label>
+              </p>
               <SegmentedControl<AllocationMode>
                 value={allocationMode}
                 onChange={setAllocationMode}
@@ -329,6 +340,7 @@ export function RecoveryModal({
                   max={totalQuarters}
                   value={hpQuarters}
                   onChange={(e) => setHpQuarters(Number(e.target.value))}
+                  aria-label="Allocate quarters between Health and Energy"
                   className="w-full h-3 rounded-lg appearance-none cursor-pointer"
                   style={{
                     background: `linear-gradient(to right, 
@@ -398,16 +410,6 @@ export function RecoveryModal({
             </div>
           </div>
         )}
-
-        {/* Actions */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-border-light">
-          <Button variant="secondary" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleConfirm}>
-            {mode === 'full' ? 'Full Recovery' : `Recover (${hours}h)`}
-          </Button>
-        </div>
       </div>
     </Modal>
   );

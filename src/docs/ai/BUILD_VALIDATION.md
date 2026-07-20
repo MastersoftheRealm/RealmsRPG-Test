@@ -1467,8 +1467,8 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Task** | TASK-602 |
 | **Where** | `/characters/[id]` → toolbar **Recovery** |
 | **Needs** | Character with HP and/or Energy below max (optional: limited-use feats/traits) |
-| **Steps** | 1. Open **Recovery**. 2. Confirm Full / Partial is a shared `SegmentedControl` (pill track), not hand-rolled bordered buttons. 3. Switch to **Partial Recovery** — duration **2 / 4 / 6 hours** and **Automatic / Manual** are also SegmentedControls; Manual shows the HP/EN slider. 4. Confirm preview shows Health/Energy deltas; confirm CTA still reads **Full Recovery** or **Recover (Nh)**. 5. Optional ~360px: modal is full-screen; segments remain ≥44px touch targets. |
-| **Expected** | Three choice groups use SegmentedControl; recovery math unchanged; no parallel pill chrome; preview uses warning semantic surface (`warning-fg` / status panel), not numbered `warning-*` + `dark:` pairs on the choice clusters. |
+| **Steps** | 1. Open **Recovery**. 2. Confirm Full / Partial is a shared `SegmentedControl` (pill track), not hand-rolled bordered buttons. 3. Switch to **Partial Recovery** — duration **2 / 4 / 6 hours** and **Automatic / Manual** are also SegmentedControls; Manual shows the HP/EN slider. 4. Confirm preview shows Health/Energy deltas; Confirm CTA still reads **Full Recovery** or **Recover (Nh)** and sits in the sticky Modal footer (Cancel alongside). 5. Optional ~360px: modal is full-screen; footer stays visible without scrolling; segments remain ≥44px touch targets. |
+| **Expected** | Three choice groups use SegmentedControl; recovery math unchanged; no parallel pill chrome; Cancel/confirm via Modal `footer` + `flexLayout`; preview uses warning semantic surface (`warning-fg` / status panel), not numbered `warning-*` + `dark:` pairs on the choice clusters. |
 | **Report** | DEV-V-009-T039: PASS / FAIL / SKIP — |
 
 ---

@@ -30,6 +30,7 @@
   notes: |
     From 2026-07-20 /global-audit. Wired mode/duration/allocation onto SegmentedControl; preview uses
     statusPanel.warning + warning-fg; confirm CTA uses primary Button (no warning-* dark: pairs).
+    /cleanup: Cancel/confirm → Modal footer + flexLayout; bare labels → visual captions (aria-label on controls).
     verification_status pending-qa (DEV-V-009-T039).
 
 ---
