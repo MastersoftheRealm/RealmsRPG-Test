@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-20T19:02:49.777Z",
+  "generated_at": "2026-07-20T19:14:15.237Z",
   "tasks": [
     {
       "id": "TASK-326",
@@ -23,23 +23,6 @@
       "related_files": [
         "src/app/(main)/admin/public-library/AdminPublicEnhancedItemsTab.tsx",
         "src/docs/REALMS_PRODUCT_OVERVIEW.md"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-596",
-      "title": "Extract Advanced equipment-step catalog into lib (guided parity)",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src/docs/ai/ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/components/character-creator/steps/equipment-step.tsx",
-        "src/lib/guided-creator/equipment-catalog-rows.ts",
-        "src/lib/guided-creator/equipment-eligibility.ts",
-        "src/lib/guided-creator/loadout-tp.ts",
-        "src/hooks/use-guided-equipment-catalog.ts",
-        "src/docs/ai/GUIDED_EQUIPMENT_PHASED_SPEC.md"
       ],
       "related_overlap": []
     },
@@ -77,6 +60,46 @@
       "related_overlap": []
     },
     {
+      "id": "TASK-596",
+      "title": "Extract Advanced equipment-step catalog into lib (guided parity)",
+      "status": "done",
+      "completed_at": "2026-07-20",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "902f1e8c0fc9099381b2062d1f8855819ffaabc2",
+          "subject": "TASK-596: Extract Advanced equipment catalog/budget into lib",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/components/character-creator/steps/equipment-step.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/lib/creator/advanced-equipment-catalog.test.ts",
+            "src/lib/creator/advanced-equipment-catalog.ts"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/lib/creator/advanced-equipment-catalog.ts",
+        "src/lib/creator/advanced-equipment-catalog.test.ts",
+        "src/components/character-creator/steps/equipment-step.tsx",
+        "src/lib/guided-creator/equipment-currency.ts",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ],
+      "related_overlap": [
+        "src/lib/creator/advanced-equipment-catalog.ts",
+        "src/lib/creator/advanced-equipment-catalog.test.ts",
+        "src/components/character-creator/steps/equipment-step.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ]
+    },
+    {
       "id": "TASK-594",
       "title": "Unify sheet EditSpecies/EditArchetype with creator/guided species+path primitives",
       "status": "done",
@@ -84,9 +107,15 @@
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
         {
-          "hash": "c91b21258df2ed0e2b74fa4c7b0cf7768f5db278",
+          "hash": "35bcafd6dbe3cb47b46a6e6dbabb1ebe51da1176",
+          "subject": "Merge pull request #79 from MastersoftheRealm/cursor/unify-sheet-species-archetype-edit-680d",
+          "files": []
+        },
+        {
+          "hash": "b5d50b0ba5dd9cd92ad741d993f234562dba11ab",
           "subject": "TASK-594: cleanup — drop dead export; wire species/path chrome",
           "files": [
+            "reports/task-reconcile-report.json",
             "src/components/character-creator/species-modal.tsx",
             "src/components/character-sheet/edit-species-modal.tsx",
             "src/components/guided-creator/steps/path-step.tsx",

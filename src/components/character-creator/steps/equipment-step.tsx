@@ -17,7 +17,6 @@ import { statusPanel } from '@/lib/ui/status-surface-classes';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useEquipment, useUserItems, useItemProperties, useOfficialLibrary, usePowerParts, useTechniqueParts, useMergedSpecies, useCodexSkills, useTraits, useCreatorPathData } from '@/hooks';
 import {
-  deriveItemDisplay,
   formatRange,
   trainingPointsForItemPropertyRef,
   type ItemPropertyPayload,
@@ -46,14 +45,39 @@ import { TabNavigation, TabContentPanel, useTabGroup } from '@/components/ui/tab
 import { AlertCircle, Swords, Check, X, ShoppingBag, ChevronLeft } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 import type { Item } from '@/types';
-import type { CharacterPower, CharacterTechnique } from '@/types';
 import type { PathItemRecommendation } from '@/types/archetype';
 import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
 import { CreatorResourceBar } from '@/components/character-creator/CreatorResourceBar';
 import { getValidationIssuesForStep, getStepCompletion } from '@/lib/character-creator-validation';
+import {
+  computeRemainingCurrency,
+  computeSpentCurrency,
+  computeStartingCurrency,
+} from '@/lib/guided-creator/equipment-currency';
 import { equipmentCurrencyHelp } from '../../../../public/tooltip-text';
-import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies, getTrainingPointLimit } from '@/lib/proficiencies';
+import {
+  addAdvancedEquipmentToInventory,
+  availableUnarmedProwessLevels,
+  buildAdvancedEquipmentCatalog,
+  computeAdvancedEquipmentProficiencyTp,
+  computeUnarmedProwessTpCost,
+  filterAdvancedEquipmentCatalog,
+  filterPathRecommendedForPhase,
+  isPathRecommendedItem,
+  pathRecommendedMergeKey,
+  recommendationIdSet,
+  recommendedItemsInInventory,
+  removeAdvancedEquipmentFromInventory,
+  replaceRecommendedInventory,
+  resolvePathRecommendedEquipment,
+  selectedItemsFromInventory,
+  UNARMED_PROWESS_BASE_TP,
+  UNARMED_PROWESS_UPGRADE_TP,
+  type AdvancedEquipmentItem,
+  type AdvancedEquipmentTabId,
+  type AdvancedLoadoutPhase,
+} from '@/lib/creator/advanced-equipment-catalog';
 
 // List column definitions and grid (unified with Library/Codex); name column wider for readability
 const WEAPON_LIST_COLUMNS: ListColumn[] = [
@@ -93,53 +117,6 @@ const EMPTY_PATH_RECOMMENDATIONS: PathItemRecommendation[] = [];
 // Match GridListRow right slot (w-[4rem] mr-2) so header columns align with row columns
 const RIGHT_SLOT_WIDTH = '4.5rem';
 
-// Unarmed Prowess constants
-const UNARMED_PROWESS_BASE_TP = 10;
-const UNARMED_PROWESS_UPGRADE_TP = 6;
-const UNARMED_PROWESS_LEVELS = [
-  { level: 1, charLevel: 1, name: 'Unarmed Prowess', description: 'Your unarmed strikes deal damage equal to your Attack Bonus (Ability + Martial Proficiency). Use Strength or Agility (whichever is higher) for attack and damage.' },
-  { level: 2, charLevel: 4, name: 'Unarmed Prowess II', description: 'Your unarmed damage increases to 1d2 + Attack Bonus (Ability + Martial Proficiency).' },
-  { level: 3, charLevel: 8, name: 'Unarmed Prowess III', description: 'Your unarmed damage increases to 1d4 + Attack Bonus (Ability + Martial Proficiency).' },
-  { level: 4, charLevel: 12, name: 'Unarmed Prowess IV', description: 'Your unarmed damage increases to 1d6 + Attack Bonus (Ability + Martial Proficiency).' },
-  { level: 5, charLevel: 16, name: 'Unarmed Prowess V', description: 'Your unarmed damage increases to 1d8 + Attack Bonus (Ability + Martial Proficiency).' },
-];
-
-type EquipmentTabId = 'weapon' | 'armor' | 'equipment' | 'unarmed';
-
-// Unified item type for display in equipment step
-interface UnifiedEquipmentItem {
-  id: string;
-  name: string;
-  type: 'weapon' | 'armor' | 'equipment';
-  description: string;
-  damage?: string;
-  armor_value?: number;
-  gold_cost: number;
-  currency: number;
-  properties: Array<string | { id?: string | number; name?: string; op_1_lvl?: number; base_tp?: number; op_1_tp?: number }>;
-  rarity?: string;
-  category?: string; // Equipment category for display
-  source: 'library' | 'codex' | 'public'; // Track where item came from
-  image_id?: string | null;
-  image_url?: string | null;
-}
-
-// Starting currency for new characters at level 1 is 200
-import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
-const STARTING_CURRENCY = CHARACTER_STARTING_CURRENCY;
-
-// Selected item type for our internal state with quantity
-interface SelectedItem {
-  id: string;
-  name: string;
-  type: string;
-  cost: number;
-  quantity: number;
-  damage?: string | Array<{ amount?: number | string; size?: number | string; type?: string }>;
-  armor?: number;
-  properties: Array<string | { id?: string | number; name?: string; op_1_lvl?: number; base_tp?: number; op_1_tp?: number }>;
-}
-
 export function EquipmentStep() {
   const { tabGroupId, sharedPanelId } = useTabGroup();
   const {
@@ -175,7 +152,7 @@ export function EquipmentStep() {
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
   
-  const [activeTab, setActiveTab] = useState<EquipmentTabId>('weapon');
+  const [activeTab, setActiveTab] = useState<AdvancedEquipmentTabId>('weapon');
   const [searchTerm, setSearchTerm] = useState('');
   const [sourceFilter, setSourceFilter] = useState<SourceFilterValue>('public');
   const [equipmentSort, setEquipmentSort] = useState<SortState>({ col: 'name', dir: 1 });
@@ -183,464 +160,169 @@ export function EquipmentStep() {
   const pathMode = draft.creationMode === 'path';
   const showFullEquipmentList = !pathMode || layer >= 2;
   /** Path Layer 1: one decision at a time — weapon, then armor. */
-  const [loadoutPhase, setLoadoutPhase] = useState<'weapon' | 'armor'>('weapon');
+  const [loadoutPhase, setLoadoutPhase] = useState<AdvancedLoadoutPhase>('weapon');
   const pathData = useCreatorPathData();
   const pathArmamentRecs = pathData?.level1?.armamentRecommendations;
   const pathEquipmentRecs = pathData?.level1?.equipmentRecommendations;
   const pathArmamentRecommendations = pathArmamentRecs ?? EMPTY_PATH_RECOMMENDATIONS;
   const pathEquipmentRecommendations = pathEquipmentRecs ?? EMPTY_PATH_RECOMMENDATIONS;
   const recommendedArmamentRefs = useMemo(
-    () => new Set(pathArmamentRecommendations.map((r) => String(r.id).toLowerCase())),
+    () => recommendationIdSet(pathArmamentRecommendations),
     [pathArmamentRecommendations]
   );
   const recommendedEquipmentRefs = useMemo(
-    () => new Set(pathEquipmentRecommendations.map((r) => String(r.id).toLowerCase())),
+    () => recommendationIdSet(pathEquipmentRecommendations),
     [pathEquipmentRecommendations]
   );
   const pathRecommendsUnarmedProwess = pathData?.level1?.recommendUnarmedProwess === true;
-
-  // Resolve path recommendations to full items (depends on allEquipment, so after it's defined)
 
   const { data: publicItems = [], isLoading: publicItemsLoading } = useOfficialLibrary('items');
 
   const isLoading = userItemsLoading || codexLoading || publicItemsLoading;
   const error = codexError;
 
-  // Current unarmed prowess level from draft (0 = not selected)
   const currentUnarmedProwess = draft.unarmedProwess || 0;
-  
-  // Calculate TP cost for unarmed prowess
-  const unarmedProwessTPCost = useMemo(() => {
-    if (currentUnarmedProwess === 0) return 0;
-    return UNARMED_PROWESS_BASE_TP + (currentUnarmedProwess - 1) * UNARMED_PROWESS_UPGRADE_TP;
-  }, [currentUnarmedProwess]);
+  const unarmedProwessTPCost = useMemo(
+    () => computeUnarmedProwessTpCost(currentUnarmedProwess),
+    [currentUnarmedProwess]
+  );
+  const availableUnarmedLevels = useMemo(
+    () => availableUnarmedProwessLevels(draft.level || 1),
+    [draft.level]
+  );
 
-  // Get available unarmed prowess levels based on character level
-  // In character creator, only show levels that are actually available (filter out future levels)
-  const availableUnarmedLevels = useMemo(() => {
-    const charLevel = draft.level || 1;
-    // Only show levels the character can actually select - hide higher levels entirely
-    return UNARMED_PROWESS_LEVELS.filter(up => up.charLevel <= charLevel);
-  }, [draft.level]);
-  
-  // Upgrade unarmed prowess to a specific level
   const setUnarmedProwessLevel = useCallback((level: number) => {
     updateDraft({ unarmedProwess: level });
   }, [updateDraft]);
 
-  // Combine user library items (weapons/armor) with Codex general equipment
-  const allEquipment = useMemo((): UnifiedEquipmentItem[] => {
-    const items: UnifiedEquipmentItem[] = [];
-    
-    // Add weapons and armor from user's item library
-    if (userItems && itemProperties) {
-      for (const userItem of userItems) {
-        // Get the raw data to access armamentType or type field
-        const rawData = userItem as unknown as Record<string, unknown>;
-        // Check both armamentType (old format) and type (new format from item creator)
-        const armamentType = rawData.armamentType as string || '';
-        const itemType = rawData.type as string || '';
-        
-        // Normalize to title case for comparison
-        const normalizedType = armamentType || 
-          (itemType.charAt(0).toUpperCase() + itemType.slice(1).toLowerCase());
-        
-        // Skip items that aren't weapons, shields, or armor
-        if (!normalizedType || !['Weapon', 'Shield', 'Armor'].includes(normalizedType)) {
-          continue;
-        }
-        
-        // Derive display data using item-calc
-        const display = deriveItemDisplay(
-          {
-            name: userItem.name,
-            description: userItem.description,
-            armamentType: normalizedType as 'Weapon' | 'Armor' | 'Shield',
-            properties: userItem.properties?.map(p => ({
-              id: p.id,
-              name: p.name,
-              op_1_lvl: p.op_1_lvl,
-            })),
-            damage: rawData.damage as { amount: number; size: number; type: string }[] | undefined,
-          },
-          itemProperties
-        );
-        
-        // Map armamentType to our tab types
-        let type: 'weapon' | 'armor' | 'equipment';
-        if (normalizedType === 'Weapon' || normalizedType === 'Shield') {
-          type = 'weapon';
-        } else if (normalizedType === 'Armor') {
-          type = 'armor';
-        } else {
-          type = 'equipment';
-        }
-        
-        items.push({
-          id: userItem.id,
-          name: display.name,
-          type,
-          description: display.description,
-          damage: display.damage || undefined,
-          armor_value: display.damageReduction || undefined,
-          gold_cost: display.currencyCost,
-          currency: display.currencyCost,
-          properties: (userItem.properties || []).map((prop: string | { id?: string | number; name?: string; op_1_lvl?: number }) => {
-            if (typeof prop === 'string') return prop;
-            const dbProp = itemProperties.find((p) =>
-              String(p.id) === String(prop.id) ||
-              String(p.name ?? '').toLowerCase() === String(prop.name ?? '').toLowerCase()
-            );
-            return {
-              id: prop.id,
-              name: prop.name,
-              op_1_lvl: prop.op_1_lvl,
-              base_tp: dbProp?.base_tp,
-              op_1_tp: dbProp?.op_1_tp,
-            };
-          }),
-          rarity: display.rarity,
-          source: 'library',
-          image_id: userItem.image_id ?? null,
-          image_url: userItem.image_url ?? null,
-        });
-      }
-    }
-    
-    // Add all equipment from the Codex (weapons, armor, and general equipment)
-    if (codexEquipment) {
-      for (const item of codexEquipment) {
-        const equip = item as { category?: string; image_id?: string | null; image_url?: string | null };
-        items.push({
-          id: item.id,
-          name: item.name,
-          type: item.type,
-          description: item.description || '',
-          damage: item.damage,
-          armor_value: item.armor_value,
-          gold_cost: item.gold_cost || 0,
-          currency: item.currency || item.gold_cost || 0,
-          properties: (item.properties || []).map((prop: string | { id?: string | number; name?: string; op_1_lvl?: number }) => {
-            if (typeof prop === 'string') {
-              const dbProp = itemProperties?.find((p) => String(p.name ?? '').toLowerCase() === prop.toLowerCase());
-              return {
-                name: prop,
-                id: dbProp?.id,
-                op_1_lvl: 0,
-                base_tp: dbProp?.base_tp,
-                op_1_tp: dbProp?.op_1_tp,
-              };
-            }
-            return prop as { id?: string | number; name?: string; op_1_lvl?: number; base_tp?: number; op_1_tp?: number };
-          }),
-          rarity: item.rarity,
-          category: equip.category,
-          source: 'codex',
-          image_id: equip.image_id ?? (item as { image_id?: string | null }).image_id ?? null,
-          image_url: equip.image_url ?? (item as { image_url?: string | null }).image_url ?? null,
-        });
-      }
-    }
+  const allEquipment = useMemo(
+    () =>
+      buildAdvancedEquipmentCatalog({
+        userItems,
+        codexEquipment,
+        publicItems,
+        itemProperties,
+      }),
+    [userItems, codexEquipment, publicItems, itemProperties]
+  );
 
-    // Add public library items (weapons, armor, equipment) — same shape as user library
-    if (publicItems.length > 0 && itemProperties) {
-      for (const pub of publicItems) {
-        const rawType = pub.type || '';
-        const normalizedType = rawType ? rawType.charAt(0).toUpperCase() + rawType.slice(1).toLowerCase() : '';
-        let type: 'weapon' | 'armor' | 'equipment';
-        if (rawType === 'weapon' || rawType === 'shield') {
-          type = 'weapon';
-        } else if (rawType === 'armor') {
-          type = 'armor';
-        } else {
-          type = 'equipment';
-        }
-        const display = deriveItemDisplay(
-          {
-            name: String(pub.name ?? ''),
-            description: String(pub.description ?? ''),
-            armamentType: (normalizedType || 'Weapon') as 'Weapon' | 'Armor' | 'Shield',
-            properties: (Array.isArray(pub.properties) ? pub.properties : []).map((p) => ({
-              id: p.id != null ? (typeof p.id === 'number' ? p.id : parseInt(String(p.id), 10)) : undefined,
-              name: p.name,
-              op_1_lvl: p.op_1_lvl,
-            })),
-            damage: pub.damage as { amount: number; size: number; type: string }[] | undefined,
-          },
-          itemProperties
-        );
-        items.push({
-          id: String(pub.id ?? pub.docId ?? ''),
-          name: display.name,
-          type,
-          description: display.description,
-          damage: display.damage || undefined,
-          armor_value: display.damageReduction || undefined,
-          gold_cost: display.currencyCost,
-          currency: display.currencyCost,
-          properties: (Array.isArray(pub.properties) ? pub.properties : []).map((prop: string | { id?: string | number; name?: string; op_1_lvl?: number }) => {
-            if (typeof prop === 'string') {
-              const dbProp = itemProperties?.find((p) => String(p.name ?? '').toLowerCase() === prop.toLowerCase());
-              return {
-                name: prop,
-                id: dbProp?.id,
-                op_1_lvl: 0,
-                base_tp: dbProp?.base_tp,
-                op_1_tp: dbProp?.op_1_tp,
-              };
-            }
-            const typed = prop as { id?: string | number; name?: string; op_1_lvl?: number };
-            const dbProp = itemProperties?.find((p) =>
-              String(p.id) === String(typed.id) ||
-              String(p.name ?? '').toLowerCase() === String(typed.name ?? '').toLowerCase()
-            );
-            return {
-              id: typed.id,
-              name: typed.name,
-              op_1_lvl: typed.op_1_lvl ?? 0,
-              base_tp: dbProp?.base_tp,
-              op_1_tp: dbProp?.op_1_tp,
-            };
-          }),
-          rarity: display.rarity,
-          category: type === 'equipment' ? 'Equipment' : undefined,
-          source: 'public',
-          image_id: pub.image_id ?? null,
-          image_url: pub.image_url ?? null,
-        });
-      }
-    }
+  const pathRecommendedItems = useMemo(
+    () =>
+      resolvePathRecommendedEquipment(
+        allEquipment,
+        pathArmamentRecommendations,
+        pathEquipmentRecommendations
+      ),
+    [allEquipment, pathArmamentRecommendations, pathEquipmentRecommendations]
+  );
 
-    return items;
-  }, [userItems, codexEquipment, publicItems, itemProperties]);
+  const pathRecommendedForPhase = useMemo(
+    () =>
+      filterPathRecommendedForPhase(pathRecommendedItems, {
+        pathMode,
+        showFullEquipmentList,
+        loadoutPhase,
+      }),
+    [pathRecommendedItems, pathMode, showFullEquipmentList, loadoutPhase]
+  );
 
-  // Path recommendations: armaments = weapons, armor, shields; equipment = general gear. Resolve from user + codex + public (official) library.
-  const pathRecommendedItems = useMemo((): Array<{ item: UnifiedEquipmentItem; quantity: number }> => {
-    const out: Array<{ item: UnifiedEquipmentItem; quantity: number }> = [];
-    const seenIds = new Set<string>();
-    const findItem = (idOrName: string) => {
-      const norm = String(idOrName).toLowerCase().trim();
-      return allEquipment.find(
-        (e) =>
-          String(e.id).toLowerCase().trim() === norm ||
-          String(e.name ?? '').toLowerCase().trim() === norm
-      );
-    };
-    const pushIfNew = (item: UnifiedEquipmentItem, quantity: number) => {
-      const key = String(item.id).toLowerCase();
-      if (seenIds.has(key)) return;
-      seenIds.add(key);
-      out.push({ item, quantity });
-    };
-    pathArmamentRecommendations.forEach((rec) => {
-      const item = findItem(rec.id);
-      if (item) pushIfNew(item, rec.quantity);
-    });
-    pathEquipmentRecommendations.forEach((rec) => {
-      const item = findItem(rec.id);
-      if (item) pushIfNew(item, rec.quantity);
-    });
-    return out;
-  }, [allEquipment, pathArmamentRecommendations, pathEquipmentRecommendations]);
+  const startingCurrency = useMemo(
+    () => computeStartingCurrency(draft.level || 1),
+    [draft.level]
+  );
 
-  const pathRecommendedForPhase = useMemo(() => {
-    if (!pathMode || showFullEquipmentList) return pathRecommendedItems;
-    if (loadoutPhase === 'weapon') {
-      return pathRecommendedItems.filter(({ item }) => item.type === 'weapon');
-    }
-    return pathRecommendedItems.filter(({ item }) => item.type === 'armor');
-  }, [pathRecommendedItems, pathMode, showFullEquipmentList, loadoutPhase]);
+  const selectedItems = useMemo(
+    () => selectedItemsFromInventory(draft.equipment?.inventory),
+    [draft.equipment?.inventory]
+  );
 
-  // Calculate starting currency - base 200 for level 1
-  // For higher levels: 200 * 1.45^(level-1)
-  const startingCurrency = useMemo(() => {
-    const level = draft.level || 1;
-    if (level <= 1) return STARTING_CURRENCY;
-    return Math.round(STARTING_CURRENCY * Math.pow(1.45, level - 1));
-  }, [draft.level]);
-  
-  // Get selected equipment from draft - use inventory array with quantity support
-  const selectedItems = useMemo((): SelectedItem[] => {
-    const inv = draft.equipment?.inventory || [];
-    return inv.map(item => ({
-      id: String(item.id),
-      name: item.name,
-      type: item.type || 'equipment',
-      cost: item.cost || 0,
-      quantity: item.quantity || 1,
-      damage: item.damage,
-      armor: item.armor,
-      properties: Array.isArray(item.properties) ? item.properties : [],
-    }));
-  }, [draft.equipment?.inventory]);
+  const spentCurrency = useMemo(
+    () =>
+      computeSpentCurrency(
+        selectedItems.map(({ cost, quantity }) => ({ cost, quantity }))
+      ),
+    [selectedItems]
+  );
 
-  const spentCurrency = useMemo(() => {
-    return selectedItems.reduce((sum: number, item) => sum + ((item.cost || 0) * (item.quantity || 1)), 0);
-  }, [selectedItems]);
+  const remainingCurrency = computeRemainingCurrency(startingCurrency, spentCurrency);
 
-  const remainingCurrency = startingCurrency - spentCurrency;
+  const proficiencyTpSummary = useMemo(
+    () =>
+      computeAdvancedEquipmentProficiencyTp({
+        inventory: draft.equipment?.inventory,
+        powers: draft.powers,
+        techniques: draft.techniques,
+        abilities: draft.abilities,
+        powAbil: draft.pow_abil,
+        martAbil: draft.mart_abil,
+        level: draft.level,
+        powerPartsDb,
+        techniquePartsDb,
+        itemPropertiesDb: itemProperties,
+      }),
+    [draft, powerPartsDb, techniquePartsDb, itemProperties]
+  );
 
-  const proficiencyTpSummary = useMemo(() => {
-    const inventory = draft.equipment?.inventory || [];
-    const weapons = inventory.filter((item) => item.type === 'weapon');
-    const shields = inventory.filter((item) => item.type === 'shield');
-    const armor = inventory.filter((item) => item.type === 'armor');
-    const required = buildRequiredProficiencies({
-      powers: (draft.powers || []) as CharacterPower[],
-      techniques: (draft.techniques || []) as CharacterTechnique[],
-      weapons: weapons as Item[],
-      shields: shields as Item[],
-      armor: armor as Item[],
-      powerPartsDb,
-      techniquePartsDb,
-      itemPropertiesDb: itemProperties ?? [],
-    });
-    const spent = dedupeHighestProficiencies(required).reduce((sum, p) => sum + calculateProficiencyTP(p), 0);
+  const filteredEquipment = useMemo(
+    () =>
+      filterAdvancedEquipmentCatalog(allEquipment, {
+        activeTab,
+        searchTerm,
+        sourceFilter,
+      }),
+    [allEquipment, activeTab, searchTerm, sourceFilter]
+  );
 
-    const abilities = draft.abilities || {};
-    const getAbility = (key: string | undefined): number =>
-      key ? Number((abilities as Record<string, unknown>)[key] ?? 0) || 0 : 0;
-    const highestAbility = Math.max(
-      ...Object.values(abilities).filter((v): v is number => typeof v === 'number'),
-      0
-    );
-    const archetypeAbility = Math.max(getAbility(draft.pow_abil), getAbility(draft.mart_abil), highestAbility);
-    const limit = getTrainingPointLimit(draft.level || 1, archetypeAbility);
-    return { spent, limit, remaining: limit - spent };
-  }, [draft, powerPartsDb, techniquePartsDb, itemProperties]);
-
-  // Filter equipment by type, search, and source (All / Public / My — My = library only)
-  const filteredEquipment = useMemo(() => {
-    return allEquipment.filter(item => {
-      if (item.type !== activeTab) return false;
-      if (sourceFilter === 'my' && item.source !== 'library') return false;
-      // Public library = public items + codex (codex is a form of public reference)
-      if (sourceFilter === 'public' && item.source !== 'public' && item.source !== 'codex') return false;
-      if (searchTerm) {
-        const term = searchTerm.toLowerCase();
-        const name = String(item.name ?? '');
-        const desc = String(item.description ?? '');
-        if (!name.toLowerCase().includes(term) && !desc.toLowerCase().includes(term)) {
-          return false;
-        }
-      }
-      return true;
-    });
-  }, [allEquipment, activeTab, searchTerm, sourceFilter]);
-
-  // Sorted list (unified sort via ListHeader)
   const sortedEquipment = useMemo(
     () => sortByColumn(filteredEquipment, equipmentSort),
     [filteredEquipment, equipmentSort]
   );
 
-  // Add item to inventory with a specific quantity (used by path recommended chips and by addItem)
-  const addItemWithQuantity = useCallback((item: UnifiedEquipmentItem, qty: number) => {
-    if (qty < 1) return;
-    const cost = item.gold_cost || item.currency || 0;
-    const totalCost = cost * qty;
-    if (totalCost > remainingCurrency) return;
+  const addItemWithQuantity = useCallback((item: AdvancedEquipmentItem, qty: number) => {
     const currentInventory: Item[] = draft.equipment?.inventory || [];
-    const existingIndex = currentInventory.findIndex((i) => String(i.id) === item.id);
-    if (existingIndex >= 0) {
-      const updated = [...currentInventory];
-      const existingQty = updated[existingIndex].quantity || 1;
-      updated[existingIndex] = {
-        ...updated[existingIndex],
-        quantity: existingQty + qty,
-      };
-      updateDraft({
-        equipment: {
-          ...draft.equipment,
-          inventory: updated,
-        },
-      });
-    } else {
-      const newItem: Item = {
-        id: item.id,
-        name: item.name,
-        type: item.type,
-        cost,
-        quantity: qty,
-        damage: item.damage,
-        armor: item.armor_value,
-        properties: item.properties as unknown as Item['properties'],
-        image_id: item.image_id ?? null,
-        image_url: item.image_url ?? null,
-      };
-      updateDraft({
-        equipment: {
-          ...draft.equipment,
-          inventory: [...currentInventory, newItem],
-        },
-      });
-    }
+    const next = addAdvancedEquipmentToInventory(
+      currentInventory,
+      item,
+      qty,
+      remainingCurrency
+    );
+    if (!next) return;
+    updateDraft({
+      equipment: {
+        ...draft.equipment,
+        inventory: next,
+      },
+    });
   }, [draft.equipment, remainingCurrency, updateDraft]);
 
-  const addItem = useCallback((item: UnifiedEquipmentItem) => {
+  const addItem = useCallback((item: AdvancedEquipmentItem) => {
     addItemWithQuantity(item, 1);
   }, [addItemWithQuantity]);
 
-  // Remove item from inventory (decrease quantity or remove)
   const removeItem = useCallback((itemId: string) => {
     const currentInventory: Item[] = draft.equipment?.inventory || [];
-    const existingIndex = currentInventory.findIndex(i => String(i.id) === itemId);
-    
-    if (existingIndex < 0) return;
-    
-    const existing = currentInventory[existingIndex];
-    const currentQty = existing.quantity || 1;
-    
-    if (currentQty <= 1) {
-      // Remove entirely
-      updateDraft({
-        equipment: {
-          ...draft.equipment,
-          inventory: currentInventory.filter(i => String(i.id) !== itemId),
-        }
-      });
-    } else {
-      // Decrease quantity
-      const updated = [...currentInventory];
-      updated[existingIndex] = {
-        ...updated[existingIndex],
-        quantity: currentQty - 1,
-      };
-      updateDraft({
-        equipment: {
-          ...draft.equipment,
-          inventory: updated,
-        }
-      });
-    }
+    const next = removeAdvancedEquipmentFromInventory(currentInventory, itemId);
+    if (next === currentInventory) return;
+    updateDraft({
+      equipment: {
+        ...draft.equipment,
+        inventory: next,
+      },
+    });
   }, [draft.equipment, updateDraft]);
 
-  // Get quantity of item in cart
   const getItemQuantity = useCallback((itemId: string): number => {
     const item = selectedItems.find(i => i.id === itemId);
     return item?.quantity || 0;
   }, [selectedItems]);
 
-  // Add all path-recommended equipment at once; if called again, replace previous recommended set (no duplicates)
   const addAllRecommendedEquipment = useCallback(() => {
     if (pathRecommendedItems.length === 0) return;
-    const recommendedIds = new Set(pathRecommendedItems.map(({ item }) => String(item.id)));
     const currentInventory: Item[] = draft.equipment?.inventory || [];
-    const otherItems = currentInventory.filter((i) => !recommendedIds.has(String(i.id)));
-    const recommendedEntries: Item[] = pathRecommendedItems.map(({ item, quantity }) => ({
-      id: item.id,
-      name: item.name,
-      type: item.type,
-      cost: item.gold_cost ?? item.currency ?? 0,
-      quantity,
-      damage: item.damage,
-      armor: item.armor_value,
-      properties: item.properties as unknown as Item['properties'],
-    }));
     updateDraft({
       equipment: {
         ...draft.equipment,
-        inventory: [...otherItems, ...recommendedEntries],
+        inventory: replaceRecommendedInventory(currentInventory, pathRecommendedItems),
       },
     });
   }, [pathRecommendedItems, draft.equipment, updateDraft]);
@@ -648,8 +330,7 @@ export function EquipmentStep() {
   const pathConfirmMode =
     pathMode && !showFullEquipmentList && pathRecommendedItems.length > 0 && !publicItemsLoading;
   const pathMergeKey = useMemo(
-    () =>
-      `${draft.archetype?.id ?? ''}:${pathRecommendedItems.map(({ item, quantity }) => `${item.id}:${quantity}`).join('|')}`,
+    () => pathRecommendedMergeKey(draft.archetype?.id, pathRecommendedItems),
     [draft.archetype?.id, pathRecommendedItems]
   );
   const hasMergedPathEquipmentRef = useRef<string | null>(null);
@@ -662,10 +343,10 @@ export function EquipmentStep() {
     hasMergedPathEquipmentRef.current = pathMergeKey;
   }, [pathConfirmMode, pathMergeKey, addAllRecommendedEquipment]);
 
-  const recommendedInInventory = useMemo(() => {
-    const invIds = new Set((draft.equipment?.inventory ?? []).map((i) => String(i.id)));
-    return pathRecommendedItems.filter(({ item }) => invIds.has(String(item.id)));
-  }, [draft.equipment?.inventory, pathRecommendedItems]);
+  const recommendedInInventory = useMemo(
+    () => recommendedItemsInInventory(draft.equipment?.inventory, pathRecommendedItems),
+    [draft.equipment?.inventory, pathRecommendedItems]
+  );
 
   const canContinue = useMemo(() => {
     const noErrors = !stepIssues.some((i) => i.severity === 'error');
@@ -1056,7 +737,7 @@ export function EquipmentStep() {
           { id: 'unarmed', label: currentUnarmedProwess > 0 ? `Unarmed Prowess (Lv ${currentUnarmedProwess})` : 'Unarmed Prowess' },
         ]}
         activeTab={activeTab}
-        onTabChange={(tabId) => setActiveTab(tabId as EquipmentTabId)}
+        onTabChange={(tabId) => setActiveTab(tabId as AdvancedEquipmentTabId)}
         variant="pill"
         className="mb-4"
         tabGroupId={tabGroupId}
@@ -1235,13 +916,11 @@ export function EquipmentStep() {
                   const cost = item.gold_cost || item.currency || 0;
                   const quantity = getItemQuantity(item.id);
                   const canAfford = cost <= remainingCurrency;
-                  const isRecommendedArmament =
-                    recommendedArmamentRefs.has(String(item.id).toLowerCase()) ||
-                    recommendedArmamentRefs.has(String(item.name).toLowerCase());
-                  const isRecommendedEquipment =
-                    recommendedEquipmentRefs.has(String(item.id).toLowerCase()) ||
-                    recommendedEquipmentRefs.has(String(item.name).toLowerCase());
-                  const isPathRecommended = item.type === 'equipment' ? isRecommendedEquipment : isRecommendedArmament;
+                  const isPathRecommended = isPathRecommendedItem(
+                    item,
+                    recommendedArmamentRefs,
+                    recommendedEquipmentRefs
+                  );
 
                   // No damage/rarity badges — damage (and armor DR) are columns; keep list clean
                   const badges: Array<{ label: string; color: 'amber' | 'blue' | 'red' | 'gray' }> = [];
