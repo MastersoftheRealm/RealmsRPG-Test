@@ -7,6 +7,7 @@
   completed_at: 2026-07-19
   implemented_by: agent
   verification_status: n/a
+  merged_at: 2026-07-20
   related_files:
     - src/lib/game/feat-requirements.ts
     - src/app/(main)/creature-creator/creature-feat-utils.ts
