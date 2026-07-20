@@ -9,6 +9,10 @@
   verification_status: pending-qa
   related_files:
     - src/components/character-sheet/sheet-header.tsx
+    - src/components/character-sheet/sheet-resource-input.tsx
+    - src/components/character-sheet/sheet-large-stat-block.tsx
+    - src/components/character-sheet/sheet-header-identity.tsx
+    - src/components/character-sheet/sheet-header-resources.tsx
     - src/components/character-sheet/library-section.tsx
     - src/components/character-sheet/library-section-props.ts
     - src/components/character-sheet/library-tab-config.ts
@@ -17,6 +21,9 @@
     - src/components/character-sheet/library-powers-panel.tsx
     - src/components/character-sheet/library-inventory-panel.tsx
     - src/components/character-sheet/abilities-section.tsx
+    - src/components/character-sheet/abilities-section-model.ts
+    - src/components/character-sheet/ability-stat-tile.tsx
+    - src/components/character-sheet/defense-stat-tile.tsx
     - src/components/character-creator/steps/equipment-step.tsx
     - src/components/character-creator/steps/equipment/
     - src/components/character-creator/steps/finalize-step.tsx

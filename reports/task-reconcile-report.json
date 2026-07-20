@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-20T19:38:19.298Z",
+  "generated_at": "2026-07-20T19:39:57.839Z",
   "tasks": [
     {
       "id": "TASK-326",
@@ -48,6 +48,31 @@
       "completed_at": "2026-07-20",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "d31f6616851a3de12195997ca9cf3fdd9a12f4da",
+          "subject": "TASK-598: Split Advanced powers-step selectable + panels",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/components/character-creator/steps/powers-step.tsx",
+            "src/components/character-creator/steps/powers/apply-path-power-recommendations.ts",
+            "src/components/character-creator/steps/powers/draft-power-selection.ts",
+            "src/components/character-creator/steps/powers/modal-columns.ts",
+            "src/components/character-creator/steps/powers/modal-empty-messages.ts",
+            "src/components/character-creator/steps/powers/powers-selected-section.tsx",
+            "src/components/character-creator/steps/powers/powers-selection-modals.tsx",
+            "src/components/character-creator/steps/powers/powers-step-chrome.tsx",
+            "src/components/character-creator/steps/powers/powers-step-proficiency-tp.ts",
+            "src/components/character-creator/steps/powers/techniques-selected-section.tsx",
+            "src/components/character-creator/steps/powers/use-powers-step-selectables.ts",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/lib/creator/advanced-powers-selectable.test.ts",
+            "src/lib/creator/advanced-powers-selectable.ts"
+          ]
+        },
         {
           "hash": "f4be1a17d1abef36885119b74995db82cfa828f6",
           "subject": "TASK-598: Split Advanced equipment-step into UI panels",
@@ -133,6 +158,10 @@
       ],
       "related_files": [
         "src/components/character-sheet/sheet-header.tsx",
+        "src/components/character-sheet/sheet-resource-input.tsx",
+        "src/components/character-sheet/sheet-large-stat-block.tsx",
+        "src/components/character-sheet/sheet-header-identity.tsx",
+        "src/components/character-sheet/sheet-header-resources.tsx",
         "src/components/character-sheet/library-section.tsx",
         "src/components/character-sheet/library-section-props.ts",
         "src/components/character-sheet/library-tab-config.ts",
@@ -141,6 +170,9 @@
         "src/components/character-sheet/library-powers-panel.tsx",
         "src/components/character-sheet/library-inventory-panel.tsx",
         "src/components/character-sheet/abilities-section.tsx",
+        "src/components/character-sheet/abilities-section-model.ts",
+        "src/components/character-sheet/ability-stat-tile.tsx",
+        "src/components/character-sheet/defense-stat-tile.tsx",
         "src/components/character-creator/steps/equipment-step.tsx",
         "src/components/character-creator/steps/equipment/",
         "src/components/character-creator/steps/finalize-step.tsx",
@@ -155,6 +187,10 @@
       ],
       "related_overlap": [
         "src/components/character-sheet/sheet-header.tsx",
+        "src/components/character-sheet/sheet-resource-input.tsx",
+        "src/components/character-sheet/sheet-large-stat-block.tsx",
+        "src/components/character-sheet/sheet-header-identity.tsx",
+        "src/components/character-sheet/sheet-header-resources.tsx",
         "src/components/character-sheet/library-section.tsx",
         "src/components/character-sheet/library-section-props.ts",
         "src/components/character-sheet/library-tab-config.ts",
@@ -163,10 +199,17 @@
         "src/components/character-sheet/library-powers-panel.tsx",
         "src/components/character-sheet/library-inventory-panel.tsx",
         "src/components/character-sheet/abilities-section.tsx",
+        "src/components/character-sheet/abilities-section-model.ts",
+        "src/components/character-sheet/ability-stat-tile.tsx",
+        "src/components/character-sheet/defense-stat-tile.tsx",
         "src/components/character-creator/steps/equipment-step.tsx",
         "src/components/character-creator/steps/equipment/",
         "src/components/character-creator/steps/finalize-step.tsx",
         "src/components/character-creator/steps/finalize/",
+        "src/components/character-creator/steps/powers-step.tsx",
+        "src/components/character-creator/steps/powers/",
+        "src/lib/creator/advanced-powers-selectable.ts",
+        "src/lib/creator/advanced-powers-selectable.test.ts",
         "src/components/character-creator/steps/feats-step.tsx",
         "src/components/character-creator/steps/feats/",
         "src/docs/ai/FEATURE_INDEX.md"
