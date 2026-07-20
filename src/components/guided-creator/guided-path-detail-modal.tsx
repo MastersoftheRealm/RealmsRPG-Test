@@ -15,7 +15,7 @@ import {
 } from '@/hooks';
 import { buildEquipmentCatalogRows } from '@/lib/guided-creator/equipment-catalog-rows';
 import { buildEquipmentLookup } from '@/lib/guided-creator/resolve-loadout-items';
-import { parseArchetypePathData } from '@/lib/game/archetype-path';
+import { parseArchetypePathData, parseIdQuantityStrings } from '@/lib/game/archetype-path';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import {
   buildCombatLookup,
@@ -54,18 +54,6 @@ export interface GuidedPathDetailModalProps {
   path: Archetype | null;
   /** Apply this path from the detail footer Select. */
   onSelect?: () => void;
-}
-
-function parseItemRef(raw: string): PathItemRecommendation {
-  const trimmed = String(raw).trim();
-  const colon = trimmed.lastIndexOf(':');
-  if (colon > 0) {
-    const qty = Number(trimmed.slice(colon + 1));
-    if (Number.isFinite(qty) && qty > 0) {
-      return { id: trimmed.slice(0, colon), quantity: qty };
-    }
-  }
-  return { id: trimmed, quantity: 1 };
 }
 
 function findFeatByIdOrName(feats: CodexFeat[], ref: string): CodexFeat | undefined {
@@ -117,8 +105,7 @@ function collectEquipmentRefs(
   level1.equipmentRecommendations?.forEach(add);
   level1.sharedEquipment?.forEach(add);
   level1.guidance_groups?.forEach((g) => {
-    g.armaments?.forEach((raw) => add(parseItemRef(String(raw))));
-    g.equipment?.forEach((raw) => add(parseItemRef(String(raw))));
+    parseIdQuantityStrings([...(g.armaments ?? []), ...(g.equipment ?? [])]).forEach(add);
   });
 
   return Array.from(byId.values());
