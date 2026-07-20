@@ -74,6 +74,12 @@ Do **not** read the done archive at session start.
   related_files:
     - src/components/character-sheet/sheet-header.tsx
     - src/components/character-sheet/library-section.tsx
+    - src/components/character-sheet/library-section-props.ts
+    - src/components/character-sheet/library-tab-config.ts
+    - src/components/character-sheet/use-library-section-rows.ts
+    - src/components/character-sheet/use-library-tab-navigation.tsx
+    - src/components/character-sheet/library-powers-panel.tsx
+    - src/components/character-sheet/library-inventory-panel.tsx
     - src/components/character-sheet/abilities-section.tsx
     - src/components/character-creator/steps/equipment-step.tsx
     - src/components/character-creator/steps/finalize-step.tsx
@@ -96,8 +102,11 @@ Do **not** read the done archive at session start.
       StepEditLink, ValidationModal, HealthEnergy, PortraitUpload, BuildSummary, IdentityFields).
     - feats-step facade (~488 LOC) + `steps/feats/` extracts (columns, FeatRow, chip/summary,
       PathFeatLists, FullFeatCatalog, path-apply helpers). Named exports + steps barrel unchanged.
+    - library-section facade (~419 LOC) + extracts: library-tab-config, library-section-props,
+      use-library-section-rows, use-library-tab-navigation, library-powers-panel,
+      library-inventory-panel. Re-exports LibrarySectionProps / LIBRARY_TAB_ORDER /
+      resolveLibraryActiveTab from facade; barrel unchanged. Still uses library-entity-rows.
   remaining_work: |
-    - library-section split (in progress on branch / parallel agent).
     - equipment-step + powers-step UI split (parallel agents; still over ~500 after TASK-596 catalog extract).
   notes: |
     TASK-596 extracted catalog/budget (~1404→~1082 LOC) — still over ~500; UI split still needed.
