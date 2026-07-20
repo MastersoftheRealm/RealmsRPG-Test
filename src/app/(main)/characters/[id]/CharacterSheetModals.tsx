@@ -24,9 +24,6 @@ import type {
   SkillModalType,
 } from '@/components/character-sheet/character-sheet-context';
 
-/** Re-export sheet modal unions (SoT: character-sheet-context). */
-export type { AddModalType, FeatModalType, SkillModalType };
-
 /**
  * DESIGN_INTENT: Add-modal exclusion set is type-scoped only.
  * Cross-table numeric ids (weapon id "1" vs codex gear id "1") must not hide rows.

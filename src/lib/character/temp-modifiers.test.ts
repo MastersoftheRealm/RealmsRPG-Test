@@ -3,7 +3,6 @@ import {
   applyTempModifier,
   applyTempModifiersToDisplayStats,
   getEffectiveAbilities,
-  hasAnyTempModifier,
   normalizeTempModifiers,
   patchTempModifiers,
   sectionHasTempModifiers,
@@ -59,13 +58,6 @@ describe('temp-modifiers (ADR-0006)', () => {
     expect(
       getEffectiveAbilities(base, { abilities: { strength: 1, vitality: -1 } })
     ).toEqual({ ...base, strength: 3, vitality: 0 });
-  });
-
-  it('hasAnyTempModifier detects sparse deltas', () => {
-    expect(hasAnyTempModifier(undefined)).toBe(false);
-    expect(hasAnyTempModifier({ speed: 0 })).toBe(false);
-    expect(hasAnyTempModifier({ speed: 1 })).toBe(true);
-    expect(hasAnyTempModifier({ abilities: { strength: -1 } })).toBe(true);
   });
 
   it('patchTempModifiers merges nested maps and normalizes', () => {

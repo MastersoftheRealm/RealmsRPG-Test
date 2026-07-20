@@ -132,30 +132,6 @@ export function getEffectiveAbilities(
   };
 }
 
-/** True if any non-zero delta exists (for toggle chrome). */
-export function hasAnyTempModifier(mods: CharacterTempModifiers | undefined): boolean {
-  if (!mods) return false;
-  for (const key of SCALAR_KEYS) {
-    if (getScalarTempModifier(mods, key) !== 0) return true;
-  }
-  if (mods.abilities) {
-    for (const key of ABILITY_KEYS) {
-      if (getAbilityTempModifier(mods, key) !== 0) return true;
-    }
-  }
-  if (mods.defenses) {
-    for (const key of DEFENSE_KEYS) {
-      if (getDefenseTempModifier(mods, key) !== 0) return true;
-    }
-  }
-  if (mods.skills) {
-    for (const delta of Object.values(mods.skills)) {
-      if (typeof delta === 'number' && delta !== 0) return true;
-    }
-  }
-  return false;
-}
-
 function prunePartialRecord<T extends string>(
   record: Partial<Record<T, number>> | undefined
 ): Partial<Record<T, number>> | undefined {
