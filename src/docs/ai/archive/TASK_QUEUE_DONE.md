@@ -1,3 +1,70 @@
+- id: TASK-403
+  title: Guided Simple Creator — Phase 8 admin & species starter flag
+  created_at: 2026-06-30
+  created_by: agent
+  priority: high
+  status: done
+  completed_at: 2026-07-20
+  implemented_by: agent
+  verification_status: n/a
+  related_files:
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/app/(main)/admin/codex/actions.ts
+  description: |
+    Admin species is_starter checkbox; admin archetype JSON fields for level1_recommended_abilities and level1_loadouts; save via saveArchetypeWithPath.
+  acceptance_criteria:
+    - isStarter persists on species; guided JSON fields editable and saved to DB columns.
+  completed_work: |
+    - isStarter checkbox wired in AdminSpeciesTab (openAdd/openEdit/save).
+    - Guided recommended abilities + loadouts persisted via saveArchetypeWithPath.
+    - TASK-404: structured admin abilities steppers + loadout controls (raw JSON removed for those fields).
+    - Soft residual (species trait-option picker polish) superseded by TASK-572 AdminSpecies → USM; no further 403 work.
+  notes: |
+    2026-07-20 /debt (/global-audit): AC met; archived. Do not rediscover optional trait-option residual — TASK-572 covers AdminSpecies trait Add.
+  follow_up_tasks:
+    - TASK-404
+    - TASK-572
+
+- id: TASK-575
+  title: Admin Official Enhanced list → OfficialEntityList shell parity
+  created_at: 2026-07-20
+  created_by: agent
+  priority: medium
+  status: done
+  completed_at: 2026-07-20
+  implemented_by: agent
+  verification_status: pending-qa
+  related_files:
+    - src/app/(main)/admin/public-library/AdminPublicEnhancedItemsTab.tsx
+    - src/components/shared/official-enhanced-list.tsx
+    - src/components/shared/official-entity-list.tsx
+    - src/lib/library/official-enhanced-list.ts
+    - src/components/shared/index.ts
+    - scripts/shared-ui-allowlist.json
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-027
+    tests:
+      - DEV-V-027-T001
+  developer_test_plan: |
+    Suite DEV-V-027 T001 — see BUILD_VALIDATION.md
+  description: |
+    /global-audit 2026-07-20: AdminPublicEnhancedItemsTab hand-rolled SectionHeader +
+    SearchInput + ListHeader while peer Admin Official tabs use Official*List /
+    OfficialEntityList. Shipped OfficialEnhancedList thin wrapper + searchTrailing
+    on OfficialEntityList for admin Create. Create/edit modal unchanged.
+  acceptance_criteria:
+    - Admin Official Enhanced list chrome shared with OfficialEntityList (or thin OfficialEnhancedList wrapper).
+    - No parallel Search+ListHeader shell left in AdminPublicEnhancedItemsTab for the browse list.
+    - Create/edit/delete flows unchanged; npm run build passes.
+    - FEATURE_INDEX note if a new OfficialEnhancedList lands.
+  notes: |
+    Filed from /debt after /global-audit. TASK-500 (enhanced images) stays separate.
+
+---
+
 - id: TASK-574
   title: Add-modal declutter + leave-with-selection prompt
   created_at: 2026-07-20

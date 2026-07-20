@@ -51,6 +51,7 @@ Generated: 2026-07-20
 - LoadingState
 - LoginPromptModal
 - OfficialCreatureList
+- OfficialEnhancedList
 - OfficialItemList
 - OfficialPowerList
 - OfficialTechniqueList

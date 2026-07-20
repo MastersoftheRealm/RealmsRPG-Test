@@ -48,6 +48,8 @@ export interface OfficialEntityListProps<TRow extends OfficialEntityRow, TItem> 
   headerColumns: ComponentProps<typeof ListHeader>['columns'];
   /** Collapsed-row column values for a single row. */
   getColumns: (row: TRow) => ColumnValue[];
+  /** Optional row badges (overrides library Realms default when set). */
+  getBadges?: (row: TRow) => ComponentProps<typeof GridListRow>['badges'];
   /** Optional expanded chips (parts/properties). */
   getChips?: (row: TRow) => ChipData[] | undefined;
   chipsLabel?: string;
@@ -73,6 +75,8 @@ export interface OfficialEntityListProps<TRow extends OfficialEntityRow, TItem> 
   onAddRequest?: (row: TRow) => void;
   onEdit?: (id: string) => void;
   onDelete?: (id: string, name: string) => void;
+  /** Optional control beside search (e.g. admin Create). Keeps list chrome when empty. */
+  searchTrailing?: ReactNode;
 }
 
 export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
@@ -85,6 +89,7 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
   gridColumns,
   headerColumns,
   getColumns,
+  getBadges,
   getChips,
   chipsLabel,
   getTotalCost,
@@ -102,6 +107,7 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
   onAddRequest,
   onEdit,
   onDelete,
+  searchTrailing,
 }: OfficialEntityListProps<TRow, TItem>) {
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
@@ -116,7 +122,9 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
     return <ErrorDisplay message={errorMessage} onRetry={onRetry} />;
   }
 
-  if (!isLoading && cardData.length === 0) {
+  // Bare empty when there is no create/trailing control; with searchTrailing keep chrome
+  // so admin create is not a dead-end on an empty library.
+  if (!isLoading && cardData.length === 0 && !searchTrailing) {
     return <ListEmptyState icon={emptyIcon} title={emptyTitle} message={emptyMessage} />;
   }
 
@@ -125,8 +133,11 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
   return (
     <div>
       {sectionTitle ? <SectionHeader title={sectionTitle} size="md" /> : null}
-      <div className="mb-4">
-        <SearchInput value={search} onChange={setSearch} placeholder={searchPlaceholder} />
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="min-w-[200px] flex-1">
+          <SearchInput value={search} onChange={setSearch} placeholder={searchPlaceholder} />
+        </div>
+        {searchTrailing}
       </div>
       <ListHeader
         columns={headerColumns}
@@ -139,7 +150,11 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
         {isLoading ? (
           <LoadingState />
         ) : filtered.length === 0 ? (
-          <ListEmptyState title={searchEmptyMessage} size="sm" />
+          cardData.length === 0 ? (
+            <ListEmptyState icon={emptyIcon} title={emptyTitle} message={emptyMessage} />
+          ) : (
+            <ListEmptyState title={searchEmptyMessage} size="sm" />
+          )
         ) : (
           filtered.map((row) => {
             const chips = getChips?.(row);
@@ -157,7 +172,10 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
                 chipsLabel={chipsLabel}
                 totalCost={totalCost}
                 costLabel={costLabel}
-                badges={variant === 'library' ? [{ label: 'Realms', color: 'blue' }] : undefined}
+                badges={
+                  getBadges?.(row) ??
+                  (variant === 'library' ? [{ label: 'Realms', color: 'blue' }] : undefined)
+                }
                 rightSlot={
                   canAdd() ? (
                     <IconButton

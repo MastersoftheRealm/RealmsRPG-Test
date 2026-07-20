@@ -19,7 +19,6 @@ After UI unification, chips still behave like **3–5 overlapping systems** with
 - Filter / selection pills (`ChipSelect`, `SegmentedControl`, `SourceFilter`)
 - Navigation tabs (`TabNavigation` pill variant)
 - Removable input tags (creator tag pickers) — may share `DescriptorChip` styles but keep remove affordance
-- `SkillSourceChip` (large touch-target source picker)
 - Inline stat badges (innate ★, quantity, uses stepper)
 
 ## Governing rules (product + engineering)

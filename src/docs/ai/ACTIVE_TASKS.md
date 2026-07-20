@@ -4,18 +4,18 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-576
+**Next task ID:** TASK-577
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-573–574, 536–548, 564–566, etc.)
+**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-575, 573–574, 536–548, 564–566, etc.)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 10 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 9 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
 
-**Hot notes:** TASK-535 innate (codex ack). TASK-575 Admin Enhanced list shell. TASK-500 deferred. TASK-381 sheet facade shipped.
+**Hot notes:** TASK-576 Codex/Images list shell (Architect). TASK-535 innate (codex ack). TASK-500 deferred. TASK-381 sheet facade shipped.
 
 ---
 
@@ -227,32 +227,49 @@ Do **not** read the done archive at session start.
 
 ---
 
-- id: TASK-403
-  title: Guided Simple Creator — Phase 8 admin & species starter flag
-  created_at: 2026-06-30
+- id: TASK-576
+  title: Shared list shell for Admin Codex + Codex browse (+ Admin Images)
+  created_at: 2026-07-20
   created_by: agent
-  priority: high
-  status: partial
-  description: |
-    Admin species is_starter checkbox; admin archetype JSON fields for level1_recommended_abilities and level1_loadouts; save via saveArchetypeWithPath.
+  priority: medium
+  status: not-started
   related_files:
+    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
     - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - src/app/(main)/admin/codex/AdminPartsTab.tsx
+    - src/app/(main)/admin/codex/AdminPropertiesTab.tsx
+    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
+    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
+    - src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx
     - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
-    - src/app/(main)/admin/codex/actions.ts
+    - src/app/(main)/codex/CodexSkillsTab.tsx
+    - src/app/(main)/codex/CodexSpeciesTab.tsx
+    - src/app/(main)/codex/CodexFeatsTab.tsx
+    - src/app/(main)/codex/CodexPartsTab.tsx
+    - src/app/(main)/codex/CodexPropertiesTab.tsx
+    - src/app/(main)/codex/CodexEquipmentTab.tsx
+    - src/app/(main)/codex/CodexArchetypesTab.tsx
+    - src/app/(main)/codex/CodexTraitsTab.tsx
+    - src/app/(main)/codex/CodexCreatureFeatsTab.tsx
+    - src/app/(main)/admin/images/page.tsx
+    - src/components/shared/official-entity-list.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    2026-07-20 /global-audit: AdminPublic* already on OfficialEntityList; Admin Codex (9 tabs),
+    Codex browse (9 tabs), and Admin Images still hand-roll SectionHeader + SearchInput + ListHeader.
+    Extract one shared list-page shell (or extend OfficialEntityList only if product scope expands
+    beyond official library grids — prefer a codex/admin browse shell named for that domain).
+    Architect-class: new shared UI needs ADR or owner ack before implement.
   acceptance_criteria:
-    - isStarter persists on species; guided JSON fields editable and saved to DB columns.
-  completed_work: |
-    - isStarter checkbox wired in AdminSpeciesTab (openAdd/openEdit/save).
-    - Guided recommended abilities + loadouts persisted via saveArchetypeWithPath.
-    - TASK-404 (2026-07-16): structured admin abilities steppers + existing structured loadout controls
-      (raw JSON textareas removed for those fields; Advanced Path JSON escape hatch retained).
-  remaining_work: |
-    - Species trait-option editing improvements beyond existing AdminSpeciesTab pickers (if needed for guided ancestry QA).
-  follow_up_tasks:
-    - TASK-404
+    - One canonical shared list chrome used by Admin Codex tabs + matching Codex browse tabs.
+    - Admin Images either adopts the same shell or documents why bank UI stays separate.
+    - FEATURE_INDEX + barrels + shared-ui allowlist updated; no parallel hand-rolled forks remain
+      for those surfaces.
+    - npm run build; targeted DEV-V if user-facing list chrome changes.
   notes: |
-    2026-06-30: JSON fields sufficient for prototype; full archetype creator UI deferred to TASK-404.
-    2026-07-16: TASK-404 delivered the structured admin loadout/abilities builder (no raw JSON). Remaining residual is only optional species trait-option editing; 403 stays partial for that narrow item.
+    Do not fold into /debt. Do not invent a second OfficialEntityList fork — unify or extend
+    deliberately. Start with one admin tab + one Codex peer as a vertical slice.
 
 ---
 
@@ -316,32 +333,5 @@ Do **not** read the done archive at session start.
 # TASK-571 done 2026-07-20 — AddCombatantModal documented as reusable non-USM session picker (archive).
 # TASK-572 done 2026-07-20 — AdminSpecies trait picker → USM; AdminTraits choice list = editor chrome (archive).
 
----
-
-- id: TASK-575
-  title: Admin Official Enhanced list → OfficialEntityList shell parity
-  created_at: 2026-07-20
-  created_by: agent
-  priority: medium
-  status: not-started
-  related_files:
-    - src/app/(main)/admin/public-library/AdminPublicEnhancedItemsTab.tsx
-    - src/components/shared/official-entity-list.tsx
-    - src/components/shared/official-item-list.tsx
-    - src/app/(main)/library/components/UserLibraryEntityTabShell.tsx
-  description: |
-    /global-audit 2026-07-20: AdminPublicEnhancedItemsTab hand-rolls SectionHeader +
-    SearchInput + ListHeader while peer Admin Official tabs use Official*List /
-    OfficialEntityList. Create or extend an OfficialEnhancedList (or shell) so admin
-    enhanced browse matches powers/items/creatures/techniques chrome. Keep create/edit
-    modal as-is. My Library Enhanced already uses UserLibraryEntityTabShell.
-  acceptance_criteria:
-    - Admin Official Enhanced list chrome shared with OfficialEntityList (or thin OfficialEnhancedList wrapper).
-    - No parallel Search+ListHeader shell left in AdminPublicEnhancedItemsTab for the browse list.
-    - Create/edit/delete flows unchanged; npm run build passes.
-    - FEATURE_INDEX note if a new OfficialEnhancedList lands.
-  notes: |
-    Filed from /debt after /global-audit. Do not fold into unrelated debt PRs.
-    TASK-500 (enhanced images) stays separate.
-
----
+# TASK-403 done 2026-07-20 — Guided Phase 8 admin starter + path JSON (archive; residual → TASK-572).
+# TASK-575 done 2026-07-20 — Admin Official Enhanced → OfficialEnhancedList / OfficialEntityList (archive).

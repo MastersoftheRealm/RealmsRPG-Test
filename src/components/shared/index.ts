@@ -102,6 +102,10 @@ export type { OfficialTechniqueListProps, OfficialTechniqueRow } from './officia
 export { OfficialItemList } from './official-item-list';
 export type { OfficialItemListProps, OfficialItemRow } from './official-item-list';
 
+// OfficialEnhancedList - shared Realms Library enhanced items grid (admin)
+export { OfficialEnhancedList } from './official-enhanced-list';
+export type { OfficialEnhancedListProps, OfficialEnhancedRow } from './official-enhanced-list';
+
 // OfficialCreatureList - shared Realms Library creatures grid
 export { OfficialCreatureList } from './official-creature-list';
 export type { OfficialCreatureListProps, OfficialCreatureRow } from './official-creature-list';
@@ -200,7 +204,6 @@ export type {
   UnifiedSelectionModalProps, 
   SelectableItem, 
   ColumnHeader as SelectionColumnHeader,
-  FilterOption as SelectionFilterOption,
 } from './unified-selection-modal';
 
 // AddCombatantModal — Encounter / session participant picker (intentional non-USM; TASK-571).

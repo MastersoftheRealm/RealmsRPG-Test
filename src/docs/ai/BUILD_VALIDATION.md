@@ -3300,6 +3300,24 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 
 ---
 
+## DEV-V-027 — Admin Official Enhanced list shell (TASK-575)
+
+Admin Official Enhanced uses the same OfficialEntityList chrome as peer Official*List tabs (powers/items/creatures/techniques), not a hand-rolled Search+ListHeader shell.
+
+#### DEV-V-027-T001 — Official Enhanced list chrome + create modal
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-027 — Admin Official Enhanced list shell |
+| **Task** | TASK-575 |
+| **Where** | `/admin/public-library` → Enhanced Items |
+| **Needs** | Admin account |
+| **Steps** | 1. Open Enhanced Items. 2. Confirm SectionHeader + Search + sortable ListHeader match peer Official tabs (Armaments/Powers). 3. Confirm **New Enhanced Item** sits beside search. 4. Open New → modal still creates; Cancel closes. 5. If rows exist: Edit opens modal; Delete confirm still works. 6. Empty library: New remains available (not a dead-end empty-only page). |
+| **Expected** | No parallel hand-rolled list shell; create/edit/delete unchanged; Enhanced badge on rows; empty + create still reachable. |
+| **Report** | DEV-V-027-T001: PASS / FAIL / SKIP — |
+
+---
+
 ## DEV-V-017 — Site copy modules (TASK-390)
 
 Verifies owner-editable marketing prose lives in `src/lib/constants/copy/` and still renders on major routes. Edit strings in the named `*-copy.ts` file — pages should not need JSX string edits for migrated sections.
@@ -4377,5 +4395,6 @@ Admin/creator editors, user `image_id` parity, legacy catalog migration, portrai
 | DEV-V-024 | Client error handling (TASK-479, TASK-540) | — | Automated (`npm test`) + manual smoke |
 | DEV-V-025 | ExpandableImage adoption (TASK-478) | — | Manual — see suite above |
 | DEV-V-026 | Realms Image Library wiring (TASK-496–499, TASK-531–533) | — | Manual — see suite above |
+| DEV-V-027 | Admin Official Enhanced list shell (TASK-575) | — | Manual — see suite above |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

@@ -41,6 +41,7 @@
     "src/components/shared/list-row-thumbnail.tsx",
     "src/components/shared/login-prompt-modal.tsx",
     "src/components/shared/official-creature-list.tsx",
+    "src/components/shared/official-enhanced-list.tsx",
     "src/components/shared/official-entity-list.tsx",
     "src/components/shared/official-item-list.tsx",
     "src/components/shared/official-power-list.tsx",

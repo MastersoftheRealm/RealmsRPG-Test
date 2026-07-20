@@ -113,6 +113,7 @@
 | Filters | `ChipSelect`, `TagFilter`, `SelectFilter`, `AbilityRequirementFilter`, `SourceFilter` (`shared/filters`) |
 | List states | `ListEmptyState`, `LoadingState`, `ErrorDisplay` |
 | Search box | `SearchInput` |
+| Official library entity grids (browse + admin) | `OfficialEntityList` + thin wrappers: `OfficialPowerList` / `OfficialTechniqueList` / `OfficialItemList` / `OfficialCreatureList` / **`OfficialEnhancedList`** (TASK-575; helpers in `lib/library/official-*-list.ts`). Optional `searchTrailing` for admin Create beside search. |
 | Confirm/delete/login modals | `ConfirmActionModal`, `DeleteConfirmModal`, `LoginPromptModal` |
 | Standalone creator page shell (auth/load/save) | `CreatorPageShell` (+ `CreatorLayout`, `CreatorSaveToolbar`, `CollapsibleSection`) from `@/components/creator` |
 | Image upload + crop | `ImageUploadModal` |

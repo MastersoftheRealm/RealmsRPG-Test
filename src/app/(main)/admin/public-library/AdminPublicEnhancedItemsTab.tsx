@@ -1,17 +1,12 @@
+/**
+ * Admin Official Library — Enhanced Items tab
+ * List chrome via OfficialEnhancedList (TASK-575). Create/edit stays in-tab modal.
+ */
+
 'use client';
 
-import { useMemo, useState } from 'react';
-import { Sparkles } from 'lucide-react';
-import {
-  SectionHeader,
-  SearchInput,
-  ListHeader,
-  LoadingState,
-  ErrorDisplay,
-  GridListRow,
-  ListEmptyState,
-  DeleteConfirmModal,
-} from '@/components/shared';
+import { useState } from 'react';
+import { DeleteConfirmModal, OfficialEnhancedList } from '@/components/shared';
 import {
   useOfficialLibrary,
   useEnhancedItems,
@@ -20,132 +15,54 @@ import {
   type OfficialEnhancedItem,
   type CreateOfficialEnhancedItemInput,
 } from '@/hooks';
-import { useSort } from '@/hooks/use-sort';
 import { Button, Modal, Select, Input } from '@/components/ui';
 import type { LibraryItem, LibraryPower } from '@/types/library';
-
-const GRID = '1.6fr 1.3fr 1.3fr 0.9fr 0.9fr 0.9fr 40px';
 
 export function AdminPublicEnhancedItemsTab() {
   const { data: enhanced = [], isLoading, error, refetch } = useEnhancedItems('official');
   const { data: items = [] } = useOfficialLibrary('items');
   const { data: powers = [] } = useOfficialLibrary('powers');
 
-  const [search, setSearch] = useState('');
-  const [deleteConfirm, setDeleteConfirm] = useState<OfficialEnhancedItem | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
   const [editTarget, setEditTarget] = useState<OfficialEnhancedItem | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const createMutation = useCreateOfficialEnhancedItem();
   const deleteMutation = useDeleteOfficialEnhancedItem();
-  const { sortState, handleSort, sortItems } = useSort('name');
-
-  const cardData = useMemo(() => {
-    return enhanced.map((e) => ({
-      ...e,
-      base: e.base_item_name,
-      power: e.power_name,
-      cost: e.currency_cost,
-      uses:
-        e.uses_type === 'permanent'
-          ? 'Permanent'
-          : `${e.uses_count ?? 1} / ${e.uses_type === 'full' ? 'Full' : 'Partial'}`,
-    }));
-  }, [enhanced]);
-
-  const filtered = useMemo(() => {
-    let list = [...cardData];
-    if (search.trim()) {
-      const s = search.toLowerCase();
-      list = list.filter(
-        (e) =>
-          e.name.toLowerCase().includes(s) ||
-          e.base.toLowerCase().includes(s) ||
-          e.power.toLowerCase().includes(s)
-      );
-    }
-    return sortItems(list);
-  }, [cardData, search, sortItems]);
-
-  if (error) {
-    return <ErrorDisplay message="Failed to load official enhanced items" onRetry={() => { void refetch(); }} />;
-  }
 
   return (
-    <div>
-      <SectionHeader title="Official Enhanced Items" size="md" />
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="flex-1 min-w-[200px]">
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder="Search by name, base item, or power..."
-          />
-        </div>
-        <Button
-          size="sm"
-          onClick={() => {
-            setEditTarget(null);
-            setIsCreateOpen(true);
-          }}
-        >
-          New Enhanced Item
-        </Button>
-      </div>
-
-      <ListHeader
-        columns={[
-          { key: 'name', label: 'NAME' },
-          { key: 'base', label: 'BASE ITEM' },
-          { key: 'power', label: 'POWER' },
-          { key: 'rarity', label: 'RARITY' },
-          { key: 'cost', label: 'COST (C)' },
-          { key: 'uses', label: 'USES' },
-          { key: '_actions', label: '', sortable: false as const },
-        ]}
-        gridColumns={GRID}
-        sortState={sortState}
-        onSort={handleSort}
+    <>
+      <OfficialEnhancedList
+        items={enhanced}
+        isLoading={isLoading}
+        error={error}
+        onRetry={() => {
+          void refetch();
+        }}
+        errorMessage="Failed to load official enhanced items"
+        sectionTitle="Official Enhanced Items"
+        emptyTitle="No official enhanced items"
+        emptyMessage="Use 'New Enhanced Item' to add one."
+        variant="admin"
+        onEdit={(id) => {
+          const item = enhanced.find((e) => e.id === id);
+          if (!item) return;
+          setEditTarget(item);
+          setIsCreateOpen(true);
+        }}
+        onDelete={(id, name) => setDeleteConfirm({ id, name })}
+        searchTrailing={
+          <Button
+            size="sm"
+            onClick={() => {
+              setEditTarget(null);
+              setIsCreateOpen(true);
+            }}
+          >
+            New Enhanced Item
+          </Button>
+        }
       />
-
-      <div className="flex flex-col gap-1 mt-2">
-        {isLoading ? (
-          <LoadingState />
-        ) : filtered.length === 0 ? (
-          <ListEmptyState
-            icon={<Sparkles className="w-8 h-8" />}
-            title="No official enhanced items"
-            message="Use 'New Enhanced Item' to add one."
-          />
-        ) : (
-          filtered.map((e) => (
-            <GridListRow
-              key={e.id}
-              id={e.id}
-              name={e.name}
-              description={e.description ?? undefined}
-              gridColumns={GRID}
-              columns={[
-                { key: 'base', value: e.base },
-                { key: 'power', value: e.power },
-                { key: 'rarity', value: e.rarity },
-                { key: 'cost', value: e.cost, align: 'right' },
-                {
-                  key: 'uses',
-                  value: e.uses,
-                  align: 'right',
-                },
-              ]}
-              badges={[{ label: 'Enhanced', color: 'purple' }]}
-              onEdit={() => {
-                setEditTarget(e);
-                setIsCreateOpen(true);
-              }}
-              onDelete={() => setDeleteConfirm(e)}
-            />
-          ))
-        )}
-      </div>
 
       {deleteConfirm && (
         <DeleteConfirmModal
@@ -175,7 +92,7 @@ export function AdminPublicEnhancedItemsTab() {
           }}
         />
       )}
-    </div>
+    </>
   );
 }
 
@@ -338,4 +255,3 @@ function EnhancedItemEditModal({
     </Modal>
   );
 }
-
