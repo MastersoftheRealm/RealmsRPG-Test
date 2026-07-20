@@ -2669,3 +2669,11 @@ Notes
 - Feedback: Add a hover tooltip on defense Score values so players see the number is a Score and what a Defense Score is per core rules; simple short tip for all six scores.
 - Expected: Word-tied tip on Score values; GAME_RULES Score / Defense Score copy; shared across defenses.
 - Disposition: **TASK-587** done (shared `defenseScoreHelp` WordHelpTip on Score values; pending-qa DEV-V-009-T035).
+
+**Raw Feedback Log - 2026-07-20 (Speed/Evasion Temp only)**
+- Date: 2026-07-20
+- Context: Character sheet header Speed / Evasion LargeStatBlocks
+- Priority: Medium
+- Feedback (verbatim): For speed/Evasion modifiers, remove the pencil/permanent modifier, only have the temp mod function. Remove the rest of the pencil editing function.
+- Expected: Speed and Evasion edit chrome is Temp Modifier only (no pencil / base stepper); DR/crit/Terminal already Temp-only; Abilities/Skills keep dual pencil+Temp.
+- Disposition: **TASK-600** done (pending-qa DEV-V-009-T038).

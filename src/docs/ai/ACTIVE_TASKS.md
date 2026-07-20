@@ -4,17 +4,17 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-600
+**Next task ID:** TASK-601
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-599, 598, 596, 594, 597, 584, 587, 586, 583, etc.)
+**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-600, 599, 598, 596, 594, 597, 584, 587, 586, 583, etc.)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
 **Counts:** 2 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** `/global-audit` follow-ups TASK-593–599 done. TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
+**Hot notes:** `/global-audit` follow-ups TASK-593–599 done. TASK-600 Speed/Evasion Temp-only. TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
 
 ---
 
