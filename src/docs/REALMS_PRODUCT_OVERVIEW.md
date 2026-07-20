@@ -218,7 +218,6 @@ Landing-page secondary CTAs for "create a custom power" and "create custom weapo
 
 ### What to remove from the current home page
 
-- **`OnboardingTour`** and "Take a quick tour" — removed (TASK-387 / `/debt` 2026-07-20); post-activation guidance is Section 11 / TASK-388.
 - **Logged-in welcome banner** with many parallel links — replace with a minimal continue/create prompt if needed, never competing with the hero CTA.
 - **Low-yield CTAs:** "Browse Codex," "Browse Realms Library," and similar reference-first links — **remove from the landing page**. Codex and Library remain reachable via nav for users who seek them; they are not conversion paths for first visits.
 - **Review carousel / feature sprawl** if it dilutes the primary message — replace with one strong proof block or social proof section, not many equal-weight cards.
@@ -908,7 +907,6 @@ Path data and logic: [`src/types/archetype.ts`](../types/archetype.ts), [`src/li
 
 | Remove | File / component |
 |--------|------------------|
-| Pre-creation onboarding tour | ~~`OnboardingTour`~~ deleted; home CTA-led (TASK-387) |
 | Codex / Library hero CTAs | Feature cards linking to `/codex`, `/library` |
 | Welcome banner link farm | Multi-link logged-in strip (replace with minimal continue/create) |
 
