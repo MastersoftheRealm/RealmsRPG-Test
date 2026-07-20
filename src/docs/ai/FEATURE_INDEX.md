@@ -112,8 +112,8 @@
 | Part/property → PartData (library rows) | `lib/library/part-display.ts` — `computePartTrainingPoints`, `characterPartsToPartData`, `itemPropertiesToPartData` |
 | Dedupe saved parts / entity refs | `lib/library/dedupe-saved-parts.ts` — `dedupeSavedParts`, `dedupeEntityRefs` (creators save, sync, calc, sheet chips) |
 | Sheet trait assembly (no species/ancestry dupes) | `lib/character/collect-sheet-traits.ts` — `collectSheetTraits` (Feats tab) |
-| Ancestry selection (Advanced + sheet Edit Species) | `lib/ancestry/ancestry-selection.ts` — trait buckets, mixed size/skills, draft builders, continue gates, toggles; UI `character-creator/TraitSection.tsx` (TASK-594) |
-| Archetype path/forge edit helpers | `lib/game/archetype-edit.ts` — `listPlayerVisiblePaths`, `groupPathsByCategory`, `redistributeProficiency`, `buildPathSwitchResult`, forge ability gate; UI `character-creator/AbilityPickButton.tsx` (TASK-594) |
+| Ancestry selection (Advanced + sheet Edit Species) | `lib/ancestry/ancestry-selection.ts` — trait buckets, mixed size/skills, draft builders, continue gates, toggles; UI `character-creator/TraitSection.tsx` (picker); SpeciesModal read-only catalog = local `SpeciesCatalogTraitSection` (TASK-594) |
+| Archetype path/forge edit helpers | `lib/game/archetype-edit.ts` — `listPlayerVisiblePaths`, `groupPathsByCategory`, `redistributeProficiency`, `buildPathSwitchResult`, forge ability gate; used by sheet Edit Archetype, Advanced archetype-step, Guided path-step; UI `character-creator/AbilityPickButton.tsx` (TASK-594) |
 | Entity list sections (powers/techniques/weapons/armor/etc.) | `*ListSection` from `entity-library-sections`; multi-section tabs use `useLibrarySectionCollapse` + `SectionHeader` collapsible (empty closed; + Add expands) |
 | Species / trait catalogs | `DetailOptionList` + `traitToDetailOption` (deep-dive / species-modal). Selection picks: `GuidedChoiceCard`. (`ItemCard` / `SpeciesTraitCard` deleted — `/debt` 2026-07-19.) |
 | Damage dice/type split (list cells) | `splitDamageDiceAndType` from `@/lib/utils` (single helper; sheet + entity lists + quick armaments) |

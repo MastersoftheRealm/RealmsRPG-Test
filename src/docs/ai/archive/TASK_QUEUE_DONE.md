@@ -14,10 +14,12 @@
     - src/lib/game/archetype-edit.test.ts
     - src/components/character-creator/TraitSection.tsx
     - src/components/character-creator/AbilityPickButton.tsx
+    - src/components/character-creator/species-modal.tsx
     - src/components/character-sheet/edit-species-modal.tsx
     - src/components/character-sheet/edit-archetype-modal.tsx
     - src/components/character-creator/steps/ancestry-step.tsx
     - src/components/character-creator/steps/archetype-step.tsx
+    - src/components/guided-creator/steps/path-step.tsx
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/ai/BUILD_VALIDATION.md
   description: |
@@ -32,8 +34,10 @@
     - Build + targeted smoke of edit species/archetype on a saved character.
   notes: |
     Consolidated onto ancestry-selection + archetype-edit libs; sheet uses TraitSection /
-    AbilityPickButton from character-creator. ARCHETYPE_INFO copy still sheet vs Advanced
-    (TASK-599). verification_status pending-qa (DEV-V-009-T037, DEV-V-008-T008).
+    AbilityPickButton + SelectionCardSurface species grid; Guided path-step uses
+    listPlayerVisiblePaths. SpeciesModal local catalog section renamed (not picker TraitSection).
+    ARCHETYPE_INFO copy still sheet vs Advanced (TASK-599). verification_status pending-qa
+    (DEV-V-009-T037, DEV-V-008-T008).
 - id: TASK-597
   title: Campaign RM character view reuses sheet derived assemble
   created_at: 2026-07-20

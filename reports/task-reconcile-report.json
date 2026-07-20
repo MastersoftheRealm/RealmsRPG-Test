@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-20T18:58:07.785Z",
+  "generated_at": "2026-07-20T19:02:49.777Z",
   "tasks": [
     {
       "id": "TASK-326",
@@ -84,7 +84,22 @@
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
         {
-          "hash": "bd434872786c6edc064e3db39ccc1cb2cd0d3f1d",
+          "hash": "c91b21258df2ed0e2b74fa4c7b0cf7768f5db278",
+          "subject": "TASK-594: cleanup — drop dead export; wire species/path chrome",
+          "files": [
+            "src/components/character-creator/species-modal.tsx",
+            "src/components/character-sheet/edit-species-modal.tsx",
+            "src/components/guided-creator/steps/path-step.tsx",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/lib/ancestry/ancestry-selection.ts"
+          ]
+        },
+        {
+          "hash": "8a8c00d9a37b239a2c120593232ab4c26ad1e23b",
           "subject": "TASK-594: Unify sheet Edit Species/Archetype with Advanced primitives",
           "files": [
             "reports/task-reconcile-report.json",
@@ -114,10 +129,12 @@
         "src/lib/game/archetype-edit.test.ts",
         "src/components/character-creator/TraitSection.tsx",
         "src/components/character-creator/AbilityPickButton.tsx",
+        "src/components/character-creator/species-modal.tsx",
         "src/components/character-sheet/edit-species-modal.tsx",
         "src/components/character-sheet/edit-archetype-modal.tsx",
         "src/components/character-creator/steps/ancestry-step.tsx",
         "src/components/character-creator/steps/archetype-step.tsx",
+        "src/components/guided-creator/steps/path-step.tsx",
         "src/docs/ai/FEATURE_INDEX.md",
         "src/docs/ai/BUILD_VALIDATION.md"
       ],
@@ -128,10 +145,12 @@
         "src/lib/game/archetype-edit.test.ts",
         "src/components/character-creator/TraitSection.tsx",
         "src/components/character-creator/AbilityPickButton.tsx",
+        "src/components/character-creator/species-modal.tsx",
         "src/components/character-sheet/edit-species-modal.tsx",
         "src/components/character-sheet/edit-archetype-modal.tsx",
         "src/components/character-creator/steps/ancestry-step.tsx",
         "src/components/character-creator/steps/archetype-step.tsx",
+        "src/components/guided-creator/steps/path-step.tsx",
         "src/docs/ai/FEATURE_INDEX.md",
         "src/docs/ai/BUILD_VALIDATION.md"
       ]

@@ -116,7 +116,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
-| **TASK-594** | DEV-V-009 **T037** + DEV-V-008 **T008** | Sheet Edit Species uses Advanced TraitSection; skill migration + mixed flaw scoping; Edit Archetype path groups SelectionCard + forge AbilityPickButton parity |
+| **TASK-594** | DEV-V-009 **T037** + DEV-V-008 **T008** | Sheet Edit Species: SelectionCard species grid + TraitSection ancestry; skill migration + mixed flaw scoping; Edit Archetype path groups SelectionCard + forge AbilityPickButton parity |
 | **TASK-597** | Smoke (campaign RM view) | Open campaign → player character view: sheet sections match owner display (temp mods / library tabs); no edit chrome; rolls/log still work |
 | **TASK-584** | DEV-V-009 **T032** | Skills catalog-all base skills; Proficient/All + Show sub-skills filters; − clears value→prof (subs remove); no Add Skill / per-row X; pencil top-right |
 | **TASK-587** | DEV-V-009 **T035** | Defense Score value tip (`defenseScoreHelp`); name tips unchanged; roll chips still work |

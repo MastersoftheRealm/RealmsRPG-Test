@@ -10,7 +10,11 @@ import { useMemo, useState } from 'react';
 import { Spinner, EmptyState } from '@/components/ui';
 import { InfoTippy } from '@/components/shared';
 import { useCodexArchetypes } from '@/hooks';
-import { parseArchetypePathData, pathHasPlayerVisibleLevel1 } from '@/lib/game/archetype-path';
+import {
+  PATH_CATEGORY_GROUPS,
+  groupPathsByCategory,
+  listPlayerVisiblePaths,
+} from '@/lib/game/archetype-edit';
 import { formatAbilityLabel } from '@/lib/constants/ability-effect-blurbs';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { resolvePathAbilityLabels } from '@/lib/guided-creator/path-ability-labels';
@@ -52,9 +56,6 @@ function pathAbilityTags(path: Archetype): GuidedChoiceTag[] {
   return tags;
 }
 
-/** Display order matches Advanced archetype path picker (REALMS §5.1). */
-const PATH_GROUPS: ArchetypeCategory[] = ['power', 'powered-martial', 'martial'];
-
 const PATH_GROUP_TIP: Record<ArchetypeCategory, string> = {
   power: guidedPowerPathTypeHelp,
   'powered-martial': guidedPoweredMartialPathTypeHelp,
@@ -70,23 +71,14 @@ export function PathStep() {
   const { data: codexArchetypes = [], isLoading } = useCodexArchetypes();
   const [detailPathId, setDetailPathId] = useState<string | null>(null);
 
-  const paths = useMemo(() => {
-    return (codexArchetypes as Archetype[])
-      .map((a) => ({ ...a, parsedPath: parseArchetypePathData(a.path_data) }))
-      .filter((a) => pathHasPlayerVisibleLevel1(a.parsedPath));
-  }, [codexArchetypes]);
+  const paths = useMemo(
+    () => listPlayerVisiblePaths(codexArchetypes as Archetype[]),
+    [codexArchetypes],
+  );
 
   const pathsByGroup = useMemo(() => {
-    const grouped: Record<ArchetypeCategory, Archetype[]> = {
-      power: [],
-      'powered-martial': [],
-      martial: [],
-    };
-    for (const path of paths) {
-      const type = (path.type || 'power') as ArchetypeCategory;
-      if (grouped[type]) grouped[type].push(path);
-    }
-    for (const group of PATH_GROUPS) {
+    const grouped = groupPathsByCategory(paths);
+    for (const group of PATH_CATEGORY_GROUPS) {
       grouped[group].sort(sortByName);
     }
     return grouped;
@@ -130,7 +122,7 @@ export function PathStep() {
             <EmptyState title={stepCopy.emptyTitle} description={stepCopy.emptyDescription} />
           ) : (
             <div className="space-y-6">
-              {PATH_GROUPS.map((group) => {
+              {PATH_CATEGORY_GROUPS.map((group) => {
                 const options = pathsByGroup[group];
                 if (options.length === 0) return null;
                 const title = stepCopy.groupTitles[group];

@@ -1418,14 +1418,15 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 
 **Steps**
 1. Enable edit mode; open **Change species**.
-2. Pick a single species → **Next: Ancestry**.
-3. Confirm ancestry/characteristic/flaw sections use the Advanced TraitSection chrome (section header + SelectionToggle / choice list picker), not chip-only toggles.
-4. Complete required picks and **Save species & ancestry** — skills migrate for the new species; modal closes.
-5. Optional: Mixed species — size select, one species trait per parent, choose-2 skills, flaw scoped by parent species; save succeeds.
-6. Mobile (&lt;768px): modal is full-screen; content scrolls (sticky header/footer if present); no stuck `max-h` viewport clip.
+2. Confirm species grid uses SelectionCard / SelectionCardSurface chrome (not plain dashed/border buttons).
+3. Pick a single species → **Next: Ancestry**.
+4. Confirm ancestry/characteristic/flaw sections use the Advanced TraitSection chrome (section header + SelectionToggle / choice list picker), not chip-only toggles.
+5. Complete required picks and **Save species & ancestry** — skills migrate for the new species; modal closes.
+6. Optional: Mixed species — size select, one species trait per parent, choose-2 skills, flaw scoped by parent species; save succeeds.
+7. Mobile (&lt;768px): modal is full-screen; content scrolls (sticky header/footer if present); no stuck `max-h` viewport clip.
 
 **Expected**
-- Sheet edit ancestry chrome matches Advanced TraitSection.
+- Species pick uses SelectionCard chrome; ancestry chrome matches Advanced TraitSection.
 - Skill migration still runs on save; mixed flaw → extra ancestry trait from flaw species only.
 - Mobile fullScreenOnMobile scroll remains usable.
 

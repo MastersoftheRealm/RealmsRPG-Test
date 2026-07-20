@@ -7,8 +7,8 @@
 
 'use client';
 
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { Modal, Button } from '@/components/ui';
+import { useState, useMemo, useCallback, useEffect, useRef, type KeyboardEvent } from 'react';
+import { Modal, Button, SelectionCard, SelectionCardSurface } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import type { Character, CharacterAncestry } from '@/types';
 import { useMergedSpecies, useTraits, useCodexSkills, useUserSpecies, resolveTraitIds, type Species } from '@/hooks';
@@ -31,6 +31,13 @@ import {
   trimTraitsForFlawMax,
 } from '@/lib/ancestry/ancestry-selection';
 import { AlertTriangle, Sparkles, Star, GitMerge, Heart } from 'lucide-react';
+
+function activateOnEnterOrSpace(e: KeyboardEvent, action: () => void) {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    action();
+  }
+}
 
 export interface EditSpeciesResult {
   ancestry: CharacterAncestry;
@@ -324,37 +331,35 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
               choose 2 species skills.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button
-                type="button"
+              <SelectionCardSurface
+                role="button"
+                tabIndex={0}
+                selected={isMixed}
                 onClick={() => setShowMixedModal(true)}
+                onKeyDown={(e) => activateOnEnterOrSpace(e, () => setShowMixedModal(true))}
                 className={cn(
-                  'flex flex-col items-center justify-center min-h-[100px] border-2 border-dashed rounded-xl p-4',
+                  'flex flex-col items-center justify-center min-h-[100px] border-dashed',
                   isMixed
-                    ? 'border-primary-outline-border bg-primary-subtle-bg'
+                    ? 'border-primary-outline-border'
                     : 'border-border hover:border-primary-outline-border',
                 )}
               >
                 <GitMerge className="w-8 h-8 text-primary-link-fg mb-1" />
                 <span className="font-medium text-text-primary">Mixed species</span>
-              </button>
+              </SelectionCardSurface>
               {allSpecies.map((s: Species) => {
                 const isSelected =
                   !isMixed && draftAncestry?.id && String(draftAncestry.id) === String(s.id);
                 return (
-                  <button
+                  <SelectionCard
                     key={s.id}
-                    type="button"
+                    selected={Boolean(isSelected)}
                     onClick={() => handleSingleSpeciesSelect(s)}
-                    className={cn(
-                      'text-left border-2 rounded-xl p-4 min-h-[100px]',
-                      isSelected
-                        ? 'border-primary-outline-border bg-primary-subtle-bg'
-                        : 'border-border hover:border-primary-outline-border',
-                    )}
+                    className="text-left min-h-[100px]"
                   >
-                    <span className="font-medium text-text-primary">{s.name}</span>
+                    <span className="font-medium text-text-primary block">{s.name}</span>
                     <p className="text-xs text-text-secondary line-clamp-2 mt-1">{s.description}</p>
-                  </button>
+                  </SelectionCard>
                 );
               })}
             </div>

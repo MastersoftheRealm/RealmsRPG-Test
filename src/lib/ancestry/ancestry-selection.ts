@@ -24,14 +24,6 @@ const EMPTY_BUCKETS: AncestryTraitBuckets = {
   characteristics: [],
 };
 
-/** Resolve trait id lists with a `found` flag (id matched a real trait, not a name fallback). */
-export function resolveTraitsWithFound(
-  ids: (string | number)[],
-  allTraits: Trait[],
-): Array<Trait & { found: boolean }> {
-  return resolveTraitIds(ids, allTraits).map((t) => ({ ...t, found: t.id !== t.name }));
-}
-
 /**
  * Trait buckets for single species or mixed (deduped ancestry/flaw/characteristic lists).
  * Mixed leaves `speciesTraits` empty — callers use per-parent species trait lists.
