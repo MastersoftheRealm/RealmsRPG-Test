@@ -27,7 +27,7 @@ const SPECIES_COLUMNS = [
   // Description column should be left-aligned while other non-name columns are centered
   { key: '_desc', label: 'DESCRIPTION', align: 'left' as const },
 ];
-import { useSpecies, useUserSpecies, userSpeciesToSpecies, useTraits, useCodexSkills, resolveTraitIds, type Species, type Trait, type Skill } from '@/hooks';
+import { useSpecies, useUserSpecies, userSpeciesToSpecies, useTraits, useCodexSkills, resolveTraitIds, type Species, type Trait } from '@/hooks';
 import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import { resolveSpeciesListRowThumbnail } from '@/lib/list-row-image';
 import { EmptyState } from '@/components/ui';
@@ -198,7 +198,7 @@ export function CodexSpeciesTab({ codexMode = 'public' }: { codexMode?: 'public'
   const { sortState, handleSort } = useSort('name');
 
   const skillIdToName = useMemo(
-    () => buildSkillIdToName(allSkills as Skill[] | undefined),
+    () => buildSkillIdToName(allSkills),
     [allSkills]
   );
 

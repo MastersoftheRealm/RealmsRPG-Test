@@ -13,7 +13,6 @@ import {
   useCodexSkills,
   useTraits,
   type Feat,
-  type Skill,
   type Trait,
   type CreatureFeat as CodexCreatureFeatRow,
 } from '@/hooks';
@@ -137,7 +136,7 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
   );
 
   const skillIdToName = useMemo(
-    () => buildSkillIdToName(codexSkills as Skill[]),
+    () => buildSkillIdToName(codexSkills),
     [codexSkills]
   );
 

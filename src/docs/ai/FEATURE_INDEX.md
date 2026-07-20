@@ -117,7 +117,7 @@
 | Standalone creator page shell (auth/load/save) | `CreatorPageShell` (+ `CreatorLayout`, `CreatorSaveToolbar`, `CollapsibleSection`) from `@/components/creator` |
 | Image upload + crop | `ImageUploadModal` |
 | Realms Image Library picker | `RealmsImagePicker` — bank browse/select; admin upload-into-bank (`resolveRealmsImagePickerCategories` in `lib/realms-images.ts`) |
-| Theme switch | `ThemeToggle` (post-activation onboarding → TASK-388; pre-creation `OnboardingTour` deleted) |
+| Theme switch | `ThemeToggle` |
 | Help tooltips | `InfoTippy` / `WordHelpTip` + `public/tooltip-text.tsx` — see `guide/04-floating-ui-tooltips.md` |
 
 > UI primitives (Modal, Button, Chip, **DescriptorChip**, **ExpandableChip**, PageContainer, PageHeader, TabNavigation, SearchInput, **TableScroll**) live in `@/components/ui`. Modal sizes: `3xl`/`full` for high-complexity editors (admin codex add/edit use `full` + `fullScreenOnMobile`; see DESIGN_SYSTEM).

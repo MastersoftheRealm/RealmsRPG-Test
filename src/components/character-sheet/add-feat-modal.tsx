@@ -6,7 +6,7 @@
 'use client';
 
 import { useState, useMemo, useCallback, useId } from 'react';
-import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
+import { useCodexFeats, useCodexSkills, type Feat } from '@/hooks';
 import { checkFeatRequirements } from '@/lib/game/feat-requirements';
 import { buildFeatDetailSections } from '@/lib/codex/feat-list';
 import { buildSkillIdToName } from '@/lib/codex/skill-list';
@@ -91,7 +91,7 @@ export function AddFeatModal({
   // Filter state seeds empty; parent remounts via key={featType} / conditional open.
 
   const skillIdToName = useMemo(
-    () => buildSkillIdToName(codexSkills as Skill[]),
+    () => buildSkillIdToName(codexSkills),
     [codexSkills]
   );
 

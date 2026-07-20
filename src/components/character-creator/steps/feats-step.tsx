@@ -28,7 +28,7 @@ import { FilterSection, ChipSelect } from '@/components/shared/filters';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
-import { useCodexFeats, useCodexSkills, useMergedSpecies, useTraits, useCreatorPathData, type Feat, type Skill } from '@/hooks';
+import { useCodexFeats, useCodexSkills, useMergedSpecies, useTraits, useCreatorPathData, type Feat } from '@/hooks';
 import { getValidationIssuesForStep, getStepCompletion } from '@/lib/character-creator-validation';
 import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats } from '@/lib/game/formulas';
 import { filterFeatGuidanceGroups } from '@/lib/game/archetype-path';
@@ -167,7 +167,7 @@ export function FeatsStep() {
   }, [feats]);
 
   const skillIdToName = useMemo(
-    () => buildSkillIdToName(skillsDb as Skill[]),
+    () => buildSkillIdToName(skillsDb),
     [skillsDb]
   );
 
