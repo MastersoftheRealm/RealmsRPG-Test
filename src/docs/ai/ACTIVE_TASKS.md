@@ -8,13 +8,13 @@ Do **not** read the done archive at session start.
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-600, 599, 598, 596, 594, 597, 584, 587, 586, 583, etc.)
+**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-601, 600, 599, 598, 596, 594, 597, 584, 587, 586, etc.)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 14 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 13 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** `/debt` filed TASK-601–606. Quality pseudo `/global-audit` → TASK-607–611, 613 (TASK-612 done) ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
+**Hot notes:** `/debt` TASK-601 done; remaining TASK-602–606. Quality pseudo `/global-audit` → TASK-607–611, 613 (TASK-612 done) ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
 
 ---
 
@@ -60,34 +60,6 @@ Do **not** read the done archive at session start.
     - Reuses RealmsImagePicker + bank — no parallel media system.
   notes: |
     Placeholder so the yes eventually decision is not rediscovered. Leave not-started until asked.
-
----
-
-- id: TASK-601
-  title: Extract technique / empowered / species creator workspaces (TASK-381 remainder)
-  created_at: 2026-07-20
-  created_by: agent
-  priority: medium
-  status: not-started
-  related_files:
-    - src/app/(main)/technique-creator/page.tsx
-    - src/app/(main)/empowered-technique-creator/page.tsx
-    - src/app/(main)/species-creator/page.tsx
-    - src/app/(main)/power-creator/use-power-creator-workspace.ts
-    - src/components/creator/CreatorPageShell.tsx
-    - src/docs/ai/FEATURE_INDEX.md
-  description: |
-    Finish TASK-381-style decomposition for technique, empowered-technique, and species creators.
-    Mirror power/item/creature: thin page + use-*-workspace + editor/bootstrap; keep CreatorPageShell
-    / useCreatorSave / LoadFromLibraryModal parity. No behavior change.
-  acceptance_criteria:
-    - Each of the three routes has a workspace hook + editor module; page.tsx is shell/bootstrap only.
-    - Save/load/reset/auth chrome unchanged vs current.
-    - FEATURE_INDEX rows updated; npm run build passes.
-    - Targeted smoke or existing DEV-V creator suites still apply where present.
-  notes: |
-    From 2026-07-20 /global-audit → /debt. Species was deferred when TASK-381 archived.
-    Coordinates with TASK-610 (LOC facade splits) — prefer completing workspace extract first.
 
 ---
 

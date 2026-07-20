@@ -1,3 +1,49 @@
+- id: TASK-601
+  title: Extract technique / empowered / species creator workspaces (TASK-381 remainder)
+  created_at: 2026-07-20
+  created_by: agent
+  completed_at: 2026-07-20
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T002
+      - DEV-V-016-T004
+      - DEV-V-016-T005
+  developer_test_plan: |
+    Suite DEV-V-016 T002 / T004 / T005 — see BUILD_VALIDATION.md
+  related_files:
+    - src/app/(main)/technique-creator/page.tsx
+    - src/app/(main)/technique-creator/use-technique-creator-workspace.ts
+    - src/app/(main)/technique-creator/technique-creator-editor.tsx
+    - src/app/(main)/technique-creator/technique-creator-bootstrap.ts
+    - src/app/(main)/empowered-technique-creator/page.tsx
+    - src/app/(main)/empowered-technique-creator/use-empowered-technique-creator-workspace.ts
+    - src/app/(main)/empowered-technique-creator/empowered-technique-creator-editor.tsx
+    - src/app/(main)/empowered-technique-creator/empowered-technique-bootstrap.ts
+    - src/app/(main)/species-creator/page.tsx
+    - src/app/(main)/species-creator/use-species-creator-workspace.ts
+    - src/app/(main)/species-creator/species-creator-editor.tsx
+    - src/app/(main)/species-creator/species-creator-bootstrap.ts
+    - src/components/creator/CreatorPageShell.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    Finish TASK-381-style decomposition for technique, empowered-technique, and species creators.
+    Mirror power/item/creature: thin page + use-*-workspace + editor/bootstrap; keep CreatorPageShell
+    / useCreatorSave / LoadFromLibraryModal parity. No behavior change.
+  acceptance_criteria:
+    - Each of the three routes has a workspace hook + editor module; page.tsx is shell/bootstrap only.
+    - Save/load/reset/auth chrome unchanged vs current.
+    - FEATURE_INDEX rows updated; npm run build passes.
+    - Targeted smoke or existing DEV-V creator suites still apply where present.
+  notes: |
+    From 2026-07-20 /global-audit → /debt. Species was deferred when TASK-381 archived.
+    Coordinates with TASK-610 (LOC facade splits) — prefer completing workspace extract first.
+    verification_status pending-qa (DEV-V-016 creator Load smoke).
+
 - id: TASK-600
   title: Speed/Evasion header — Temp Modifier only (remove pencil base edit)
   created_at: 2026-07-20

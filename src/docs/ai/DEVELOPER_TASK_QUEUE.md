@@ -116,6 +116,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **TASK-601** | DEV-V-016 **T002 / T004 / T005** | Technique / empowered / species creators: Load from Library (columns + restore), save/reset/auth chrome unchanged after workspace extract |
 | **TASK-600** | DEV-V-009 **T038** (+ T034) | Header Speed/Evasion: Temp Modifier only — no pencil / permanent base edit; Abilities/Skills still dual mode |
 | **TASK-599** | DEV-V-001 **T002** + DEV-V-008 **T008** | Forge type cards (Advanced + sheet Edit Archetype forge) share fantasy Power / Martial / Powered-Martial descriptions; creature ArchetypeSelector matches titles/descriptions (icons may differ) |
 | **TASK-598** | Smoke (Advanced create + sheet) | Advanced: equipment → powers (path Layer-1 auto-merge + USM source merge + innate toggle) → finalize; sheet play/edit Library powers/inventory still work after splits |

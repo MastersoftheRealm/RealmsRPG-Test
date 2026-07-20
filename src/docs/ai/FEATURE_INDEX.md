@@ -33,10 +33,10 @@
 | Codex (rules data browser) | `codex/page.tsx` |
 | Realms Library, guest read-only | `library/page.tsx` + `library/LibraryPublicContent.tsx` — guests see official "Realms" content with the My-Library toggle + "Add to library" hidden. (Former `/browse` was a redundant duplicate; removed and redirected to `/library` — TASK-336.) |
 | Power creator | `power-creator/page.tsx` (shell + bootstrap) + `use-power-creator-workspace.ts` + `power-creator-editor.tsx` (TASK-381) — chrome: `CreatorPageShell`. Guided power creator **not shipped** — blocked WAITING TASK-410–414 (owner spec TASK-414). |
-| Technique creator | `technique-creator/page.tsx` (`CreatorPageShell` + bootstrap/editor); workspace extract still open (TASK-601) |
-| Empowered technique creator | `empowered-technique-creator/page.tsx` (`CreatorPageShell`); workspace extract still open (TASK-601) |
+| Technique creator | `technique-creator/page.tsx` (shell + bootstrap) + `use-technique-creator-workspace.ts` + `technique-creator-editor.tsx` (TASK-601) — chrome: `CreatorPageShell` |
+| Empowered technique creator | `empowered-technique-creator/page.tsx` (shell + bootstrap) + `use-empowered-technique-creator-workspace.ts` + `empowered-technique-creator-editor.tsx` (TASK-601) — chrome: `CreatorPageShell` |
 | Item (armament) creator | `item-creator/page.tsx` (shell + bootstrap) + `use-item-creator-workspace.ts` + `item-creator-editor.tsx` (TASK-381) — chrome: `CreatorPageShell` |
-| Species creator | `species-creator/page.tsx` (`CreatorPageShell`, Load ungated); workspace extract still open (TASK-601) |
+| Species creator | `species-creator/page.tsx` (shell) + `use-species-creator-workspace.ts` + `species-creator-editor.tsx` / bootstrap (TASK-601); Load ungated — chrome: `CreatorPageShell` |
 | Creature creator | `creature-creator/page.tsx` (shell) + `use-creature-creator-workspace.ts` + `creature-creator-editor.tsx` (TASK-381 Phases 4–5) + `creature-skill-utils.ts`; `CreatorPageShell` + reset confirm |
 | Crafting (sessions + enhanced items) | `crafting/page.tsx`, `crafting/[id]/page.tsx` |
 | Encounters | `encounters/page.tsx`, `encounters/[id]/page.tsx`, `encounters/[id]/combat/page.tsx`, `encounters/[id]/mixed/page.tsx`, `encounters/[id]/skill/page.tsx` |
