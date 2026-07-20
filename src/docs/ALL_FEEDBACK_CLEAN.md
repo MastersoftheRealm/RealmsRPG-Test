@@ -2237,7 +2237,7 @@ Notes
 
   this is a large cleanup and refine task
 - Expected: Creators expose three attack modes only; no library weapon picker / TP scaling / weapon IDs on saves. Display uses attack mode labels. Cleanup across creators, calcs, columnar mapping, lists.
-- Disposition: Implemented as **TASK-507** (Architect proceed from owner). Shared `lib/attack-mode.ts`; creators use 3-mode Attack select; display column renamed Attack; dead creator-weapon picker/options/persistence removed. Owner QA: DEV-V-026.
+- Disposition: Implemented as **TASK-507** (Architect proceed from owner). Shared `lib/attack-mode.ts`; creators use 3-mode Attack select; display column renamed Attack; dead creator-weapon picker/options/persistence removed. Owner QA: DEV-V-026. **DB follow-up applied 2026-07-20:** zeroed Add Weapon option levels + stripped tied `payload.weapon` on official/user techniques; `weapon_name` rewritten to Attack labels (`sql/zero-add-weapon-option-levels-applied.sql`).
 
 **Raw Feedback Log ? 2026-07-17 (Sheet TP header + expandable part chips)**
 - Date: 2026-07-17

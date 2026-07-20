@@ -6,14 +6,9 @@ export function normalizePublicPower(p: LibraryPower): UserPower {
 }
 
 export function normalizePublicTechnique(t: LibraryTechnique): UserTechnique {
-  const weaponName =
-    typeof (t as LibraryTechnique & { weaponName?: string }).weaponName === 'string'
-      ? (t as LibraryTechnique & { weaponName?: string }).weaponName
-      : undefined;
   return {
     ...t,
     docId: t.docId || t.id,
-    weapon: t.weapon ?? (weaponName ? { name: weaponName } : undefined),
     isReaction: t.isReaction ?? false,
   };
 }

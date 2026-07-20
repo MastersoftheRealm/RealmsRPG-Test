@@ -25,7 +25,7 @@ function apiRoundTrip(
 }
 
 describe('library-columnar API round-trip — techniques', () => {
-  it('stores the attack mode and derives the Attack column label (Weapon)', () => {
+  it('stores attackMode in payload and derives the Attack label on read (Weapon)', () => {
     const body = {
       name: 'Whirlwind Cut',
       description: 'A spinning strike.',
@@ -41,7 +41,8 @@ describe('library-columnar API round-trip — techniques', () => {
 
     const { scalars, payload } = bodyToColumnar('techniques', body);
 
-    expect(scalars.weaponName).toBe('Weapon');
+    expect(scalars.weaponName).toBeUndefined();
+    expect(payload.weaponName).toBeUndefined();
     expect(payload.attackMode).toBe('weapon');
     expect(payload.parts).toHaveLength(2);
 
@@ -76,7 +77,6 @@ describe('library-columnar API round-trip — techniques', () => {
     const row = {
       id: 'tech-official-1',
       name: 'Official Slash',
-      weapon_name: 'Sunblade',
       action_type: 'basic',
       payload: {
         parts: [{ id: 7, name: 'Add Weapon Attack', op_1_lvl: 1 }],
@@ -134,7 +134,7 @@ describe('library-columnar API round-trip — empowered techniques', () => {
 
     const { scalars, payload } = bodyToColumnar('empowered-techniques', body);
 
-    expect(scalars.weaponName).toBe('Weapon');
+    expect(scalars.weaponName).toBeUndefined();
     expect(scalars.rangeSteps).toBe(3);
     expect(payload.attackMode).toBe('weapon');
     expect(payload.technique).toBeDefined();
@@ -151,7 +151,6 @@ describe('library-columnar API round-trip — empowered techniques', () => {
     const row = {
       id: 'emp-legacy',
       name: 'Stored Empowered',
-      weapon_name: 'Column Pike',
       payload: {
         empoweredTechnique: true,
         power: {
@@ -172,7 +171,6 @@ describe('library-columnar API round-trip — empowered techniques', () => {
     const row = {
       id: 'emp-migrate',
       name: 'Old Official Empowered',
-      weapon_name: 'Legacy Halberd',
       payload: {
         empoweredTechnique: true,
         power: { range: { steps: 0 }, parts: [{ id: 369, name: 'Add Weapon to Power', op_1_lvl: 2 }] },
@@ -283,7 +281,8 @@ describe('library-columnar bodyToColumnar payload isolation', () => {
 
     expect(scalars.parts).toBeUndefined();
     expect(payload.parts).toHaveLength(1);
-    expect(scalars.weaponName).toBe('Weapon');
+    expect(scalars.weaponName).toBeUndefined();
+    expect(payload.attackMode).toBe('weapon');
   });
 
   it('skips id/docId/_source in payload and promotes name to scalars', () => {

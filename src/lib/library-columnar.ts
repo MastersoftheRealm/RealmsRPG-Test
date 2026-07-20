@@ -49,12 +49,12 @@ export const SCALAR_KEYS: Record<ColumnarLibraryType, string[]> = {
     'imageId', 'imageUrl',
   ],
   techniques: [
-    'name', 'description', 'actionType', 'weaponName',
+    'name', 'description', 'actionType',
     'rangeSteps', 'durationType', 'durationValue', 'damage',
     'imageId', 'imageUrl',
   ],
   'empowered-techniques': [
-    'name', 'description', 'actionType', 'weaponName',
+    'name', 'description', 'actionType',
     'rangeSteps', 'durationType', 'durationValue', 'damage',
     'imageId', 'imageUrl',
   ],
@@ -85,7 +85,6 @@ export const SCALAR_KEYS: Record<ColumnarLibraryType, string[]> = {
 const BODY_TO_CAMEL: Record<string, string> = {
   action_type: 'actionType',
   is_reaction: 'isReaction',
-  weapon_name: 'weaponName',
   armor_value: 'armorValue',
   damage_reduction: 'damageReduction',
   hit_points: 'hitPoints',
@@ -108,7 +107,6 @@ const BODY_TO_CAMEL: Record<string, string> = {
 const CAMEL_TO_SNAKE: Record<string, string> = {
   actionType: 'action_type',
   isReaction: 'is_reaction',
-  weaponName: 'weapon_name',
   armorValue: 'armor_value',
   damageReduction: 'damage_reduction',
   hitPoints: 'hit_points',
@@ -213,7 +211,6 @@ export function rowToItem(
   }
   if (type === 'techniques' || type === 'empowered-techniques') {
     assignIfPresent('actionType', v(row, 'actionType', 'action_type'));
-    const legacyWeaponName = v(row, 'weaponName', 'weapon_name') as string | undefined | null;
     const savedParts = collectPayloadParts(payload);
     const attackMode: AttackMode =
       type === 'empowered-techniques'
@@ -227,11 +224,10 @@ export function rowToItem(
         : deriveTechniqueAttackMode({
             attackMode: payload.attackMode,
             parts: savedParts,
-            weaponName: legacyWeaponName ?? undefined,
             weapon: payload.weapon as { id?: string | number; name?: string } | undefined,
           });
     base.attackMode = attackMode;
-    // DESIGN_INTENT: weapon_name stores Attack labels (No Attack / Unarmed / Weapon), not weapon names.
+    // DESIGN_INTENT: Attack column label is derived from parts/attackMode — not a DB column.
     base.weaponName = attackModeColumnLabel(attackMode);
     const rangeSteps = v(row, 'rangeSteps', 'range_steps') as number | undefined | null;
     const durationType = v(row, 'durationType', 'duration_type') as string | undefined | null;
@@ -339,24 +335,6 @@ export function bodyToColumnar(
   }
 
   if (type === 'techniques' || type === 'empowered-techniques') {
-    const savedParts = collectPayloadParts(body);
-    const attackMode: AttackMode =
-      type === 'empowered-techniques'
-        ? derivePowerAttackMode({
-            attackMode: body.attackMode,
-            parts: savedParts,
-            weapon: (body.power as Record<string, unknown> | undefined)?.addWeapon as
-              | { id?: string | number; name?: string }
-              | undefined,
-          })
-        : deriveTechniqueAttackMode({
-            attackMode: body.attackMode,
-            parts: savedParts,
-            weaponName: typeof body.weaponName === 'string' ? body.weaponName : undefined,
-            weapon: body.weapon as { id?: string | number; name?: string } | undefined,
-          });
-    // DESIGN_INTENT: weapon_name stores Attack labels (No Attack / Unarmed / Weapon), not weapon names.
-    scalars.weaponName = attackModeColumnLabel(attackMode);
     const range = (body.range ?? (body.power as Record<string, unknown> | undefined)?.range) as
       | Record<string, unknown>
       | undefined;
@@ -396,7 +374,18 @@ export function bodyToColumnar(
     'image_id',
     'image_url',
     ...(type === 'powers' ? ['range', 'duration', 'area', 'damage'] : []),
-    ...((type === 'techniques' || type === 'empowered-techniques') ? ['range', 'duration', 'damage'] : []),
+    ...((type === 'techniques' || type === 'empowered-techniques')
+      ? [
+          'range',
+          'duration',
+          'damage',
+          // Derived Attack label — never persist (not a column; not payload SoT).
+          'weaponName',
+          'weapon_name',
+          // Legacy tied-weapon object — parts/attackMode are SoT.
+          'weapon',
+        ]
+      : []),
     ...(type === 'items'
       ? [
           // Stored in scalar columns (rangeSteps/isTwoHanded/etc.) via the block above.
@@ -437,6 +426,27 @@ export function bodyToColumnar(
       payload[k] = v;
     }
   }
+
+  // Persist derived attackMode beside parts (label stays client-derived on read).
+  if (type === 'techniques' || type === 'empowered-techniques') {
+    const savedParts = collectPayloadParts(payload);
+    const attackMode: AttackMode =
+      type === 'empowered-techniques'
+        ? derivePowerAttackMode({
+            attackMode: payload.attackMode ?? body.attackMode,
+            parts: savedParts,
+            weapon: (payload.power as Record<string, unknown> | undefined)?.addWeapon as
+              | { id?: string | number; name?: string }
+              | undefined,
+          })
+        : deriveTechniqueAttackMode({
+            attackMode: payload.attackMode ?? body.attackMode,
+            parts: savedParts,
+            weapon: body.weapon as { id?: string | number; name?: string } | undefined,
+          });
+    payload.attackMode = attackMode;
+  }
+
   return { scalars, payload };
 }
 

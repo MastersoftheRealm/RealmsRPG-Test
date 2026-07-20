@@ -11,4 +11,4 @@ alwaysApply: true
 
 **Agent OS:** `ARCHITECTURE_CONSTITUTION.md` · tasks `ACTIVE_TASKS.md` · SoT map in root `AGENTS.md`.
 
-**Before PR:** `npm run build`. CI: build + task reconcile (strict) + UI gates.
+**Before PR / push to master:** `npm run build` + `npm run tasks:validate` (strict reconcile needs `TASK-###` in commit subjects; `related_files` paths must exist). UI gates: lint/contrast/build + visual/a11y.

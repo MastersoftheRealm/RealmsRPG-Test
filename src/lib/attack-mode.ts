@@ -62,7 +62,7 @@ const hasPart = (parts: SavedPartLike[], id: number, ...names: string[]): boolea
 export function deriveTechniqueAttackMode(input: {
   attackMode?: unknown;
   parts?: SavedPartLike[] | null;
-  weaponName?: string | null;
+  /** @deprecated Legacy tied-weapon object; prefer parts / attackMode. */
   weapon?: { id?: string | number; name?: string } | null;
 }): AttackMode {
   const explicit = normalizeAttackMode(input.attackMode);
@@ -74,8 +74,7 @@ export function deriveTechniqueAttackMode(input: {
     return 'weapon';
   }
 
-  const legacyWeaponName = input.weaponName?.trim();
-  if (input.weapon?.name || input.weapon?.id || legacyWeaponName) return 'weapon';
+  if (input.weapon?.name || input.weapon?.id) return 'weapon';
 
   return 'unarmed';
 }

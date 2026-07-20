@@ -49,8 +49,10 @@ A task may be `done` only when **all** acceptance criteria are met **and**:
 1. `npm run build` passes (and targeted tests if the area has them)
 2. No new parallel pattern introduced (or Architect ADR + owner ack) — **prefer net remove** when cleaning or consolidating (delete weaker forks / dead code rather than leaving compat layers)
 3. `ACTIVE_TASKS.md` updated (`done` → move block to `archive/TASK_QUEUE_DONE.md`; bump status fields)
-4. `AI_CHANGELOG.md` entry appended (cleanup/debt entries **must lead with a deletion or consolidation bullet**; docs-only honesty is not enough)
-5. User-facing work: `BUILD_VALIDATION.md` tests + `developer_test_plan` when required
+4. Commit subject(s) include this task’s `TASK-###` (CI strict reconcile greps subjects — see `AI_TASK_QUEUE.md` § Evidence / CI)
+5. `AI_CHANGELOG.md` entry appended (cleanup/debt entries **must lead with a deletion or consolidation bullet**; docs-only honesty is not enough)
+6. User-facing work: `BUILD_VALIDATION.md` tests + `developer_test_plan` when required
+7. Before push: `npm run tasks:validate` when tasks/archives/`related_files` changed
 
 If any AC remains open → **`partial`** with `completed_work` / `remaining_work` / `follow_up_tasks`. Never mark `done` to “finish later.” Prefer follow-up tasks over audit-after-done rediscovery.
 

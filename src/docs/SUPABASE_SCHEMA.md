@@ -58,7 +58,7 @@ All **columnar** (scalars + `payload` JSONB). Legacy `public_*` JSONB tables (`p
 | Table | Shape | Key columns |
 |-------|--------|-------------|
 | `official_powers` | Columnar | id (PK), name, description, action_type, is_reaction, innate, range/duration/area/damage columns, **image_id (UUID, nullable FK → realms_images)**, **image_url (TEXT, nullable)** cache, payload (JSONB), created_at, updated_at |
-| `official_techniques` | Columnar | id (PK), name, description, action_type, weapon_name, promoted columns, **image_id**, **image_url** cache, payload (JSONB), created_at, updated_at |
+| `official_techniques` | Columnar | id (PK), name, description, action_type, promoted columns, **image_id**, **image_url** cache, payload (JSONB; `attackMode` + parts; Attack label derived in app — **dropped** `weapon_name` 2026-07-20), created_at, updated_at |
 | `official_empowered_techniques` | Columnar | Same shape as official_techniques + **image_id** (picker uses power\|technique tags — no separate category), **image_url** cache |
 | `official_items` | Columnar | id (PK), name, description, type, rarity, armor_value, damage_reduction, promoted columns, **image_id (UUID, nullable FK → realms_images)**, **image_url (TEXT, nullable)** — armament/equipment art cache, payload (JSONB), created_at, updated_at |
 | `official_creatures` | Columnar | id (PK), name, description, level, type, size, hit_points, energy_points, **image_id**, **image_url** cache, payload (JSONB), created_at, updated_at |
@@ -76,8 +76,8 @@ All **columnar** (scalars + `payload` JSONB). Species matches codex_species colu
 | Table | Shape | Key columns |
 |-------|--------|-------------|
 | `user_powers` | Columnar | id (PK), user_id (FK), name, description, action_type, is_reaction, innate, **image_id (UUID, nullable FK → realms_images)**, **image_url (TEXT, nullable)** cache, created_at, updated_at, payload (JSONB) |
-| `user_techniques` | Columnar | id (PK), user_id (FK), name, description, action_type, weapon_name, **image_id**, **image_url** cache, created_at, updated_at, payload (JSONB) |
-| `user_empowered_techniques` | Columnar | id (PK), user_id (FK), name, description, action_type, weapon_name, **image_id** (picker uses power\|technique tags), **image_url** cache, created_at, updated_at, payload (JSONB) |
+| `user_techniques` | Columnar | id (PK), user_id (FK), name, description, action_type, **image_id**, **image_url** cache, created_at, updated_at, payload (JSONB; `attackMode` + parts; Attack label derived in app — **dropped** `weapon_name` 2026-07-20) |
+| `user_empowered_techniques` | Columnar | id (PK), user_id (FK), name, description, action_type, **image_id** (picker uses power\|technique tags), **image_url** cache, created_at, updated_at, payload (JSONB; same attack-mode model as techniques) |
 | `user_items` | Columnar | id (PK), user_id (FK), name, description, type, rarity, armor_value, damage_reduction, **image_id (UUID, nullable FK → realms_images)**, **image_url (TEXT, nullable)** — same semantics as `official_items`, created_at, updated_at, payload (JSONB) |
 | `user_creatures` | Columnar | id (PK), user_id (FK), name, description, level, type, size, hit_points, energy_points, **image_id**, **image_url** cache, created_at, updated_at, payload (JSONB) |
 | `user_species` | Columnar | id (PK), user_id (FK), name, description, type, sizes, skills, species_traits, ancestry_traits, flaws, characteristics, ave_hgt_cm, ave_wgt_kg, adulthood_lifespan, languages, **image_id**, **image_url** cache, created_at, updated_at, payload (JSONB) — same semantics as `codex_species` |

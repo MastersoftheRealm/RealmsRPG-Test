@@ -83,7 +83,8 @@ export interface CharacterTechnique {
   name: string;
   cost?: number;
   description?: string;
-  weaponName?: string; // Required weapon type (e.g., "Sword", "Unarmed")
+  /** Derived Attack label ("No Attack" | "Unarmed" | "Weapon") from parts/attackMode. */
+  weaponName?: string;
   actionType?: string; // e.g., "Basic Action", "Free Action"
   // Display fields for character sheet (like vanilla site)
   damage?: string; // e.g., "Weapon + 1d6"

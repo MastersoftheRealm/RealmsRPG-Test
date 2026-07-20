@@ -155,7 +155,6 @@ export function techniqueLibraryRecordToFormState(
   const attackMode = deriveTechniqueAttackMode({
     attackMode: technique.attackMode,
     parts: savedParts,
-    weaponName: technique.weaponName,
     weapon: technique.weapon,
   });
 

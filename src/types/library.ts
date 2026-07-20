@@ -77,7 +77,7 @@ export interface LibraryTechnique {
   damage?: SavedDamage[];
   /** Attack mode (none | unarmed | weapon); preferred over legacy `weapon`. */
   attackMode?: AttackMode;
-  /** Display label ("No Attack" | "Unarmed" | "Weapon") reused from the weapon_name column. */
+  /** Derived Attack column label ("No Attack" | "Unarmed" | "Weapon") — not persisted. */
   weaponName?: string;
   /** @deprecated Legacy weapon reference; retained for reading older rows. */
   weapon?: { id?: string | number; name?: string; tp?: number };

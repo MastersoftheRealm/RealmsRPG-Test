@@ -138,7 +138,6 @@ export function getItemColumns(
       deriveTechniqueAttackMode({
         attackMode: technique.attackMode,
         parts: technique.parts,
-        weaponName: technique.weaponName,
         weapon: technique.weapon,
       }),
     );

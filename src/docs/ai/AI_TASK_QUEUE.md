@@ -24,7 +24,13 @@ Use [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md). Add to **`ACTIVE_TASKS.m
 
 ## Evidence / CI
 
-`npm run tasks:validate` — strict reconcile, doc links, FEATURE_INDEX + generated barrels, related_files, shared/ui allowlist. Prefer `TASK-###` in commit messages. Uploads: eslint `realms/no-raw-upload-fetch`.
+`npm run tasks:validate` — strict reconcile, doc links, FEATURE_INDEX + generated barrels, related_files, shared/ui allowlist. Run before push to `master` / opening a PR when you touched tasks or archives.
+
+**Strict reconcile:** Every `status: done` task with `completed_at` on/after the CI `--strict-since` date must appear in **some** commit subject (`git log --all --grep=TASK-###`). Put `TASK-###` in the implementing commit subject (or a follow-up `chore: reconcile TASK-…` commit). En-dash ranges (`TASK-530–534`) and changelog-only mentions do **not** count. Squash merges that rewrite subjects often wipe evidence — re-commit IDs explicitly.
+
+**related_files:** Open tasks (`not-started` / `in-progress` / `partial` / `blocked`) must list paths that exist in the tree. Verify with `ls` / editor, not guessed names (hooks often live in barrels like `use-codex.ts`, not `use-codex-skills.ts`).
+
+Uploads: eslint `realms/no-raw-upload-fetch`.
 
 ## Schema / codex
 

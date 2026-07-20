@@ -286,7 +286,6 @@ export function deriveTechniqueDisplay(
   const attackMode = deriveTechniqueAttackMode({
     attackMode: techniqueDoc.attackMode,
     parts: partsPayload,
-    weaponName: techniqueDoc.weaponName,
     weapon: techniqueDoc.weapon,
   });
   const weaponName = attackModeColumnLabel(attackMode);

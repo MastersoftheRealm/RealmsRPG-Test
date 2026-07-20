@@ -26,6 +26,8 @@ Use this template when converting raw feedback into an actionable request to be 
   developer_test_plan: |
     # Short pointer for the task queue, e.g. "Suite DEV-V-001 T001–T015 — see BUILD_VALIDATION.md"
   related_files:
+    # Real repo paths only (files or dirs that exist). CI validate-related-files fails on typos.
+    # Prefer concrete modules (e.g. src/hooks/use-codex.ts), not guessed filenames.
     - path/to/file.tsx
   implemented_by: |
     # Optional: agent or human who implemented changes

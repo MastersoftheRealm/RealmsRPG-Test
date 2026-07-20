@@ -5,21 +5,23 @@ Use before marking a task `done` or opening a PR. Keep answers short.
 1. **Search first** — Checked `FEATURE_INDEX` + barrels? Not re-implementing?
 2. **No parallel pattern** — Extended existing shell/hook/API, or ADR/owner ack?
 3. **AC complete** — Every acceptance criterion met? Else `partial` + follow-ups.
-4. **related_files** — Paths exist and match the diff?
-5. **Build** — `npm run build` (and targeted tests) green?
-6. **Tokens** — Semantic / `*-fg`; no raw palette outside exemptions?
-7. **Mobile** — `fullScreenOnMobile` / 44px targets where needed?
-8. **A11y** — Labels, headings, modal title/`titleA11y`?
-9. **Uploads** — Went through `apiUpload`?
-10. **Domain parsers** — Used `src/lib/game/*` not a local fork?
-11. **Schema/codex** — SQL in `sql/`; owner approve for live codex mutate?
-12. **ACTIVE_TASKS** — Status updated; `done` moved to archive with `verification_status` set?
-13. **Owner QA** — User-facing? `pending-qa` + indexed in `DEVELOPER_TASK_QUEUE` Pending owner QA until owner PASS?
-14. **Changelog** — `AI_CHANGELOG.md` entry?
-15. **Design intent** — Non-obvious constraint documented (`DESIGN_INTENT` / comment)?
-16. **Human gates** — New shared/ui file on allowlist + ADR? Store / API contract reviewed?
-17. **Uploads** — No raw `fetch('/api/upload…')` (eslint `realms/no-raw-upload-fetch`)?
-18. **Barrels** — If you changed shared/ui/hooks/services exports, ran `npm run tasks:generate-index`?
+4. **related_files** — Every listed path exists in the repo (real file/dir; no invented module names)? Match the diff? Globs (`*`) ok; directories ok if tracked children exist.
+5. **Commit subjects** — Each `done` task’s `TASK-###` appears in a git commit subject (`git log --grep=TASK-###`)? Ranges like `TASK-530–534` do **not** count — list IDs explicitly. Squash merges that drop subjects need a follow-up reconcile commit.
+6. **Build** — `npm run build` (and targeted tests) green?
+7. **Tokens** — Semantic / `*-fg`; no raw palette outside exemptions?
+8. **Mobile** — `fullScreenOnMobile` / 44px targets where needed?
+9. **A11y** — Labels, headings, modal title/`titleA11y`?
+10. **Uploads** — Went through `apiUpload`?
+11. **Domain parsers** — Used `src/lib/game/*` not a local fork?
+12. **Schema/codex** — SQL in `sql/`; owner approve for live codex mutate?
+13. **ACTIVE_TASKS** — Status updated; `done` moved to archive with `verification_status` set?
+14. **Owner QA** — User-facing? `pending-qa` + indexed in `DEVELOPER_TASK_QUEUE` Pending owner QA until owner PASS?
+15. **Changelog** — `AI_CHANGELOG.md` entry?
+16. **Design intent** — Non-obvious constraint documented (`DESIGN_INTENT` / comment)?
+17. **Human gates** — New shared/ui file on allowlist + ADR? Store / API contract reviewed?
+18. **Uploads** — No raw `fetch('/api/upload…')` (eslint `realms/no-raw-upload-fetch`)?
+19. **Barrels** — If you changed shared/ui/hooks/services exports, ran `npm run tasks:generate-index`?
+20. **Task CI locally** — Before push to `master` / PR: `npm run tasks:validate` (strict reconcile + related_files + docs/index/allowlist)?
 
 ## Owner commands
 
