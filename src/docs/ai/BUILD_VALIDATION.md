@@ -625,7 +625,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 |-------|-------|
 | **Suite** | DEV-V-008 — Archetype path completion |
 | **Section** | Edit archetype |
-| **Related task** | TASK-372, TASK-484 |
+| **Related task** | TASK-372, TASK-484, TASK-594 |
 | **Where** | Sheet edit mode → edit archetype |
 | **Needs** | Path character; edit mode enabled |
 
@@ -633,11 +633,14 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 1. Enable edit mode; open **Edit Archetype & Ability**.
 2. Observe path view (read-only identity) — path name, abilities, proficiency; no creation chip.
 3. Click **Switch to Forge Your Own** or **Choose a Different Path**.
+4. On **Choose a Different Path**, confirm paths are grouped Power / Powered-Martial / Martial (`SelectionCard`, not GuidedChoiceCard); confirm before apply.
+5. On forge editor, ability picks use the same ability-button chrome as Advanced forge.
 
 **Expected**
 - Path characters see read-only path card (not forge type picker first).
 - No **Forge Your Own Path** / **Archetype Path** creation chip on the path card.
 - Switch actions show **ConfirmActionModal** with data-loss warning before proceeding.
+- Path list grouping and forge ability buttons match Advanced creator (shared helpers).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -1004,7 +1007,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats.
 
@@ -1402,6 +1405,34 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Steps** | 1. Open a character sheet. 2. Hover (desktop) or touch-hold ~400ms (mobile ~360px) the large Score number under **Might** — confirm a tip opens explaining Defense Score (10 + Defense Bonus / Bonus + 10 passive target). 3. Repeat for at least one other defense (e.g. **Resolve**). 4. Confirm the defense **name** tip still uses `getDefenseHelp` (different copy). 5. Confirm roll chips still work. 6. Keyboard: Tab to a Score value — tip opens on focus; accessible name still includes the defense and Score number (not only “About Defense Score”). |
 | **Expected** | All six Score values share `defenseScoreHelp` from `tooltip-text.tsx` via `WordHelpTip`; tip does not replace name tips or roll controls; AT hears e.g. “Might Defense Score 14”. |
 | **Report** | DEV-V-009-T035: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T037 — Edit Species uses Advanced TraitSection (TASK-594)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Section** | Edit species / ancestry |
+| **Related task** | TASK-594 |
+| **Where** | Character sheet → edit mode → Change species |
+| **Needs** | Saved character; species with ancestry traits (and ideally a choice-trait species trait) |
+
+**Steps**
+1. Enable edit mode; open **Change species**.
+2. Confirm species grid uses SelectionCard / SelectionCardSurface chrome (not plain dashed/border buttons).
+3. Pick a single species → **Next: Ancestry**.
+4. Confirm ancestry/characteristic/flaw sections use the Advanced TraitSection chrome (section header + SelectionToggle / choice list picker), not chip-only toggles.
+5. Complete required picks and **Save species & ancestry** — skills migrate for the new species; modal closes.
+6. Optional: Mixed species — size select, one species trait per parent, choose-2 skills, flaw scoped by parent species; save succeeds.
+7. Mobile (&lt;768px): modal is full-screen; content scrolls (sticky header/footer if present); no stuck `max-h` viewport clip.
+
+**Expected**
+- Species pick uses SelectionCard chrome; ancestry chrome matches Advanced TraitSection.
+- Skill migration still runs on save; mixed flaw → extra ancestry trait from flaw species only.
+- Mobile fullScreenOnMobile scroll remains usable.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
 
 #### DEV-V-009-T036 — Inventory Armament Proficiency tip (TASK-581)
 

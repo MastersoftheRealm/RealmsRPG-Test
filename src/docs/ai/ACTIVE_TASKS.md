@@ -8,13 +8,13 @@ Do **not** read the done archive at session start.
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-584, 587, 586, 583, 581, 582, 580, 578, etc.)
+**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-594, 597, 584, 587, 586, 583, 581, 582, etc.)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 6 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 5 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** Audit multitask: TASK-593, 595, 597 done. Remaining from `/global-audit`: TASK-594, 596, 598–599. TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
+**Hot notes:** Audit multitask: TASK-593–595, 597 done. Remaining from `/global-audit`: TASK-596, 598–599. TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
 
 ---
 
@@ -64,37 +64,6 @@ Do **not** read the done archive at session start.
 ---
 
 # Sheet / creator debt follow-ups (from `/global-audit` 2026-07-20)
-
-- id: TASK-594
-  title: Unify sheet EditSpecies/EditArchetype with creator/guided species+path primitives
-  created_at: 2026-07-20
-  created_by: agent
-  priority: medium
-  status: not-started
-  related_files:
-    - src/components/character-sheet/edit-species-modal.tsx
-    - src/components/character-sheet/edit-archetype-modal.tsx
-    - src/components/character-creator/species-modal.tsx
-    - src/components/character-creator/MixedSpeciesModal.tsx
-    - src/components/character-creator/steps/archetype-step.tsx
-    - src/components/guided-creator/guided-species-detail-modal.tsx
-    - src/components/guided-creator/steps/path-step.tsx
-    - src/components/shared/choice-trait-option-select.tsx
-  description: |
-    Sheet edit-species (~819 LOC) and edit-archetype (~542 LOC) duplicate creator/guided
-    species ancestry and path-picker flows. Extract shared primitives (trait pickers, path
-    option lists, migration/confirm) and thin the sheet modals. Keep sheet-specific save
-    migration (skills after species change) and path-switch confirms.
-  acceptance_criteria:
-    - No parallel trait-resolution / path-card chrome beyond documented guided L1 grammar.
-    - Sheet edit flows still migrate skills and confirm path/forge switches.
-    - Mobile fullScreenOnMobile scroll remains correct (no unconditional max-h vh).
-    - Build + targeted smoke of edit species/archetype on a saved character.
-  notes: |
-    Product ack if UX should match GuidedChoiceCard vs SelectionCard. `/debt` already fixed
-    max-h under fullScreenOnMobile and wired SpeciesModal to findTraitByIdOrName.
-
----
 
 - id: TASK-596
   title: Extract Advanced equipment-step catalog into lib (guided parity)

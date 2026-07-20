@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-20T17:54:56.461Z",
+  "generated_at": "2026-07-20T19:02:49.777Z",
   "tasks": [
     {
       "id": "TASK-326",
@@ -27,61 +27,6 @@
       "related_overlap": []
     },
     {
-      "id": "TASK-593",
-      "title": "Move RollProvider/RollLog out of character-sheet into shared roll domain",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src/docs/ai/ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/components/character-sheet/roll-context.tsx",
-        "src/components/character-sheet/roll-log.tsx",
-        "src/components/character-sheet/index.ts",
-        "src/types/campaign-roll.ts",
-        "src/services/campaign-roll-service.ts",
-        "src/components/shared/entity-library-sections.tsx",
-        "src/components/shared/quick-armaments-sections.tsx",
-        "src/docs/ai/FEATURE_INDEX.md"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-594",
-      "title": "Unify sheet EditSpecies/EditArchetype with creator/guided species+path primitives",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src/docs/ai/ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/components/character-sheet/edit-species-modal.tsx",
-        "src/components/character-sheet/edit-archetype-modal.tsx",
-        "src/components/character-creator/species-modal.tsx",
-        "src/components/character-creator/MixedSpeciesModal.tsx",
-        "src/components/character-creator/steps/archetype-step.tsx",
-        "src/components/guided-creator/guided-species-detail-modal.tsx",
-        "src/components/guided-creator/steps/path-step.tsx",
-        "src/components/shared/choice-trait-option-select.tsx"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-595",
-      "title": "Shared creator skill-save + character payload builder slice",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src/docs/ai/ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/lib/guided-creator/build-character.ts",
-        "src/lib/guided-creator/build-skills.ts",
-        "src/stores/character-creator-store.ts",
-        "src/components/character-creator/steps/finalize-step.tsx",
-        "src/lib/data-enrichment.ts",
-        "src/lib/character-save.ts"
-      ],
-      "related_overlap": []
-    },
-    {
       "id": "TASK-596",
       "title": "Extract Advanced equipment-step catalog into lib (guided parity)",
       "status": "not-started",
@@ -95,22 +40,6 @@
         "src/lib/guided-creator/loadout-tp.ts",
         "src/hooks/use-guided-equipment-catalog.ts",
         "src/docs/ai/GUIDED_EQUIPMENT_PHASED_SPEC.md"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-597",
-      "title": "Campaign RM character view reuses sheet derived assemble",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src/docs/ai/ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx",
-        "src/components/character-sheet/use-character-sheet-derived.ts",
-        "src/components/character-sheet/character-sheet-body.tsx",
-        "src/app/(main)/characters/[id]/character-sheet-utils.ts",
-        "src/app/(main)/characters/[id]/page.tsx"
       ],
       "related_overlap": []
     },
@@ -146,6 +75,301 @@
         "src/lib/constants/copy"
       ],
       "related_overlap": []
+    },
+    {
+      "id": "TASK-594",
+      "title": "Unify sheet EditSpecies/EditArchetype with creator/guided species+path primitives",
+      "status": "done",
+      "completed_at": "2026-07-20",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "c91b21258df2ed0e2b74fa4c7b0cf7768f5db278",
+          "subject": "TASK-594: cleanup — drop dead export; wire species/path chrome",
+          "files": [
+            "src/components/character-creator/species-modal.tsx",
+            "src/components/character-sheet/edit-species-modal.tsx",
+            "src/components/guided-creator/steps/path-step.tsx",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/lib/ancestry/ancestry-selection.ts"
+          ]
+        },
+        {
+          "hash": "8a8c00d9a37b239a2c120593232ab4c26ad1e23b",
+          "subject": "TASK-594: Unify sheet Edit Species/Archetype with Advanced primitives",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/components/character-creator/AbilityPickButton.tsx",
+            "src/components/character-creator/TraitSection.tsx",
+            "src/components/character-creator/steps/ancestry-step.tsx",
+            "src/components/character-creator/steps/archetype-step.tsx",
+            "src/components/character-sheet/edit-archetype-modal.tsx",
+            "src/components/character-sheet/edit-species-modal.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/lib/ancestry/ancestry-selection.test.ts",
+            "src/lib/ancestry/ancestry-selection.ts",
+            "src/lib/game/archetype-edit.test.ts",
+            "src/lib/game/archetype-edit.ts"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/lib/ancestry/ancestry-selection.ts",
+        "src/lib/ancestry/ancestry-selection.test.ts",
+        "src/lib/game/archetype-edit.ts",
+        "src/lib/game/archetype-edit.test.ts",
+        "src/components/character-creator/TraitSection.tsx",
+        "src/components/character-creator/AbilityPickButton.tsx",
+        "src/components/character-creator/species-modal.tsx",
+        "src/components/character-sheet/edit-species-modal.tsx",
+        "src/components/character-sheet/edit-archetype-modal.tsx",
+        "src/components/character-creator/steps/ancestry-step.tsx",
+        "src/components/character-creator/steps/archetype-step.tsx",
+        "src/components/guided-creator/steps/path-step.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ],
+      "related_overlap": [
+        "src/lib/ancestry/ancestry-selection.ts",
+        "src/lib/ancestry/ancestry-selection.test.ts",
+        "src/lib/game/archetype-edit.ts",
+        "src/lib/game/archetype-edit.test.ts",
+        "src/components/character-creator/TraitSection.tsx",
+        "src/components/character-creator/AbilityPickButton.tsx",
+        "src/components/character-creator/species-modal.tsx",
+        "src/components/character-sheet/edit-species-modal.tsx",
+        "src/components/character-sheet/edit-archetype-modal.tsx",
+        "src/components/character-creator/steps/ancestry-step.tsx",
+        "src/components/character-creator/steps/archetype-step.tsx",
+        "src/components/guided-creator/steps/path-step.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ]
+    },
+    {
+      "id": "TASK-597",
+      "title": "Campaign RM character view reuses sheet derived assemble",
+      "status": "done",
+      "completed_at": "2026-07-20",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "f297492fb99f1569a7369111f9c88a2ed1d801c4",
+          "subject": "docs: restore ACTIVE_TASKS separator after TASK-597 archive",
+          "files": [
+            "src/docs/ai/ACTIVE_TASKS.md"
+          ]
+        },
+        {
+          "hash": "d6c19004ebbefaac3b025caacda507062feef7ec",
+          "subject": "TASK-597: campaign RM view uses sheet derived assemble",
+          "files": [
+            "src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/lib/creator/build-creator-skills.test.ts"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx",
+        "src/components/character-sheet/read-only-sheet.ts",
+        "src/components/character-sheet/use-character-sheet-derived.ts",
+        "src/components/character-sheet/character-sheet-body.tsx",
+        "src/app/(main)/characters/[id]/character-sheet-utils.ts",
+        "src/app/(main)/characters/[id]/page.tsx"
+      ],
+      "related_overlap": [
+        "src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx"
+      ]
+    },
+    {
+      "id": "TASK-593",
+      "title": "Move RollProvider/RollLog out of character-sheet into shared roll domain",
+      "status": "done",
+      "completed_at": "2026-07-20",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "05f1475449d1b8dfc8f6c7dfecaa01a9d3af0707",
+          "subject": "Merge pull request #78 from MastersoftheRealm/cursor/audit-tasks-skill-rolls-c405",
+          "files": []
+        },
+        {
+          "hash": "344946fa2a7d753f87c86890ac5478ab08d56ae1",
+          "subject": "TASK-593 TASK-595: move rolls domain; share creator skill-save",
+          "files": [
+            "src/app/(main)/campaigns/[id]/page.tsx",
+            "src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx",
+            "src/app/(main)/characters/[id]/page.tsx",
+            "src/app/(main)/creature-creator/page.tsx",
+            "src/app/(main)/encounters/[id]/_components/CombatEncounterView.tsx",
+            "src/app/(main)/encounters/[id]/_components/SkillEncounterView.tsx",
+            "src/app/(main)/encounters/[id]/combat/page.tsx",
+            "src/app/(main)/encounters/[id]/mixed/page.tsx",
+            "src/app/(main)/encounters/[id]/skill/page.tsx",
+            "src/app/(main)/library/LibraryCreaturesTab.tsx",
+            "src/components/character-creator/steps/finalize-step.tsx",
+            "src/components/character-sheet/abilities-section.tsx",
+            "src/components/character-sheet/archetype-section.tsx",
+            "src/components/character-sheet/index.ts",
+            "src/components/character-sheet/library-entity-rows.tsx",
+            "src/components/character-sheet/library-section.tsx",
+            "src/components/character-sheet/notes-tab.tsx",
+            "src/components/character-sheet/skills-section.tsx",
+            "src/components/rolls/index.ts",
+            "src/components/rolls/roll-context.tsx",
+            "src/components/rolls/roll-log.tsx",
+            "src/components/shared/creature-stat-block.tsx",
+            "src/components/shared/entity-library-sections.tsx",
+            "src/components/shared/quick-armaments-sections.tsx",
+            "src/docs/DESIGN_SYSTEM.md",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/human/UI_COMPONENT_REFERENCE.md",
+            "src/lib/creator/build-creator-skills.test.ts",
+            "src/lib/creator/build-creator-skills.ts",
+            "src/lib/guided-creator/build-skills.ts",
+            "src/lib/rolls/die.ts",
+            "src/services/campaign-roll-service.ts",
+            "src/types/campaign-roll.ts"
+          ]
+        },
+        {
+          "hash": "612d415572983cac1271e1883f7cc5572f2ecdba",
+          "subject": "Merge pull request #77 from MastersoftheRealm/cursor/sheet-creator-debt-3133",
+          "files": []
+        },
+        {
+          "hash": "bbe22ee67a028a0c9ec82b39658c6404663ca5b5",
+          "subject": "debt: sheet+creator prune DiceRoller/barrels; file TASK-593–599",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/components/character-creator/species-modal.tsx",
+            "src/components/character-creator/steps/powers-step.tsx",
+            "src/components/character-sheet/dice-roller.tsx",
+            "src/components/character-sheet/edit-archetype-modal.tsx",
+            "src/components/character-sheet/edit-species-modal.tsx",
+            "src/components/character-sheet/index.ts",
+            "src/components/character-sheet/use-character-sheet-derived.ts",
+            "src/components/guided-creator/guided-choice-styles.ts",
+            "src/components/guided-creator/index.ts",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/archive/CHARACTER_CREATOR_AUDIT_2026-06-26.md",
+            "src/docs/ai/guide/02-components-and-lists.md",
+            "src/docs/ai/guide/06-creators-and-loadouts.md",
+            "src/docs/human/UI_COMPONENT_REFERENCE.md"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/lib/rolls/die.ts",
+        "src/components/rolls/roll-context.tsx",
+        "src/components/rolls/roll-log.tsx",
+        "src/components/rolls/index.ts",
+        "src/types/campaign-roll.ts",
+        "src/services/campaign-roll-service.ts",
+        "src/components/shared/entity-library-sections.tsx",
+        "src/components/shared/quick-armaments-sections.tsx",
+        "src/docs/ai/FEATURE_INDEX.md"
+      ],
+      "related_overlap": [
+        "src/lib/rolls/die.ts",
+        "src/components/rolls/roll-context.tsx",
+        "src/components/rolls/roll-log.tsx",
+        "src/components/rolls/index.ts",
+        "src/types/campaign-roll.ts",
+        "src/services/campaign-roll-service.ts",
+        "src/components/shared/entity-library-sections.tsx",
+        "src/components/shared/quick-armaments-sections.tsx",
+        "src/docs/ai/FEATURE_INDEX.md"
+      ]
+    },
+    {
+      "id": "TASK-595",
+      "title": "Shared creator skill-save + character payload builder slice",
+      "status": "done",
+      "completed_at": "2026-07-20",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "05f1475449d1b8dfc8f6c7dfecaa01a9d3af0707",
+          "subject": "Merge pull request #78 from MastersoftheRealm/cursor/audit-tasks-skill-rolls-c405",
+          "files": []
+        },
+        {
+          "hash": "344946fa2a7d753f87c86890ac5478ab08d56ae1",
+          "subject": "TASK-593 TASK-595: move rolls domain; share creator skill-save",
+          "files": [
+            "src/app/(main)/campaigns/[id]/page.tsx",
+            "src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx",
+            "src/app/(main)/characters/[id]/page.tsx",
+            "src/app/(main)/creature-creator/page.tsx",
+            "src/app/(main)/encounters/[id]/_components/CombatEncounterView.tsx",
+            "src/app/(main)/encounters/[id]/_components/SkillEncounterView.tsx",
+            "src/app/(main)/encounters/[id]/combat/page.tsx",
+            "src/app/(main)/encounters/[id]/mixed/page.tsx",
+            "src/app/(main)/encounters/[id]/skill/page.tsx",
+            "src/app/(main)/library/LibraryCreaturesTab.tsx",
+            "src/components/character-creator/steps/finalize-step.tsx",
+            "src/components/character-sheet/abilities-section.tsx",
+            "src/components/character-sheet/archetype-section.tsx",
+            "src/components/character-sheet/index.ts",
+            "src/components/character-sheet/library-entity-rows.tsx",
+            "src/components/character-sheet/library-section.tsx",
+            "src/components/character-sheet/notes-tab.tsx",
+            "src/components/character-sheet/skills-section.tsx",
+            "src/components/rolls/index.ts",
+            "src/components/rolls/roll-context.tsx",
+            "src/components/rolls/roll-log.tsx",
+            "src/components/shared/creature-stat-block.tsx",
+            "src/components/shared/entity-library-sections.tsx",
+            "src/components/shared/quick-armaments-sections.tsx",
+            "src/docs/DESIGN_SYSTEM.md",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/human/UI_COMPONENT_REFERENCE.md",
+            "src/lib/creator/build-creator-skills.test.ts",
+            "src/lib/creator/build-creator-skills.ts",
+            "src/lib/guided-creator/build-skills.ts",
+            "src/lib/rolls/die.ts",
+            "src/services/campaign-roll-service.ts",
+            "src/types/campaign-roll.ts"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/lib/creator/build-creator-skills.ts",
+        "src/lib/creator/build-creator-skills.test.ts",
+        "src/lib/guided-creator/build-character.ts",
+        "src/stores/character-creator-store.ts",
+        "src/components/character-creator/steps/finalize-step.tsx",
+        "src/lib/data-enrichment.ts",
+        "src/lib/character-save.ts"
+      ],
+      "related_overlap": [
+        "src/lib/creator/build-creator-skills.ts",
+        "src/lib/creator/build-creator-skills.test.ts",
+        "src/components/character-creator/steps/finalize-step.tsx"
+      ]
     },
     {
       "id": "TASK-592",
@@ -382,6 +606,29 @@
       "completed_at": "2026-07-20",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "bbe22ee67a028a0c9ec82b39658c6404663ca5b5",
+          "subject": "debt: sheet+creator prune DiceRoller/barrels; file TASK-593–599",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/components/character-creator/species-modal.tsx",
+            "src/components/character-creator/steps/powers-step.tsx",
+            "src/components/character-sheet/dice-roller.tsx",
+            "src/components/character-sheet/edit-archetype-modal.tsx",
+            "src/components/character-sheet/edit-species-modal.tsx",
+            "src/components/character-sheet/index.ts",
+            "src/components/character-sheet/use-character-sheet-derived.ts",
+            "src/components/guided-creator/guided-choice-styles.ts",
+            "src/components/guided-creator/index.ts",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/archive/CHARACTER_CREATOR_AUDIT_2026-06-26.md",
+            "src/docs/ai/guide/02-components-and-lists.md",
+            "src/docs/ai/guide/06-creators-and-loadouts.md",
+            "src/docs/human/UI_COMPONENT_REFERENCE.md"
+          ]
+        },
         {
           "hash": "6265fc2d431002dd13a83850989680f6d9515ced",
           "subject": "feat: Temp Modifier sheet mode, skills catalog, and guided automation (TASK-535 TASK-579 TASK-581 TASK-583 TASK-584 TASK-585 TASK-586 TASK-587 TASK-589 TASK-590 TASK-591 TASK-592)",

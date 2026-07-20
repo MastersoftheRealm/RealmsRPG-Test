@@ -16,31 +16,31 @@ import { useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Button, Alert, Card, DescriptorChip } from '@/components/ui';
 import { statusBadgeDescriptorVariant } from '@/lib/chip/descriptor-chip-variants';
-import { SelectionToggle, ChoiceTraitOptionListPicker, InfoTippy, SummaryChipList } from '@/components/shared';
+import { InfoTippy, SummaryChipList } from '@/components/shared';
 import { speciesSkillToSummaryChipItem } from '@/lib/chip/species-skill-chips';
-import {
-  getChoiceOptionIds,
-  resolveChoiceOptionTraits,
-  firstSelectedChoiceOptionId,
-} from '@/lib/choice-trait';
+import { getChoiceOptionIds } from '@/lib/choice-trait';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
 import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
-import { useMergedSpecies, useTraits, useCodexSkills, useCreatorPathData, resolveTraitIds, type Trait, type Species } from '@/hooks';
-import { buildSkillIdToName } from '@/lib/codex/skill-list';
+import { TraitSection } from '@/components/character-creator/TraitSection';
+import { useMergedSpecies, useTraits, useCodexSkills, useCreatorPathData, resolveTraitIds, type Species } from '@/hooks';
+import {
+  averageMixedPhysical,
+  buildMixedSpeciesSkillOptions,
+  canContinueAncestryMixed,
+  canContinueAncestrySingle,
+  combineSpeciesSizes,
+  resolveAncestryTraitBuckets,
+  toggleCappedTraitSelection,
+  toggleMixedSpeciesSkillSelection,
+  toggleOptionalSingleSelection,
+  trimTraitsForFlawMax,
+} from '@/lib/ancestry/ancestry-selection';
 import { Heart, AlertTriangle, Sparkles, Star } from 'lucide-react';
 import { chooseYourAncestryTraits } from '../../../../public/tooltip-text';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
 import { getValidationIssuesForStep, getStepCompletion } from '@/lib/character-creator-validation';
 import { EMPTY_STRING_ARRAY } from '@/lib/empty';
-
-interface ResolvedTrait extends Trait {
-  found: boolean;
-}
-
-function resolveTraits(ids: (string | number)[], allTraits: Trait[]): ResolvedTrait[] {
-  return resolveTraitIds(ids, allTraits).map(t => ({ ...t, found: t.id !== t.name }));
-}
 
 export function AncestryStep() {
   const { draft, nextStep, prevStep, setStep, updateDraft } = useCharacterCreatorStore();
@@ -84,20 +84,10 @@ export function AncestryStep() {
   }, [speciesSkillIds, allSkills]);
 
   // Mixed only: unique skill IDs from both species for "choose 2" (id + name)
-  const mixedSpeciesSkillOptions = useMemo(() => {
-    if (!speciesA || !speciesB || !allSkills) return [];
-    const merged = [...(speciesA.skills || []), ...(speciesB.skills || [])];
-    const seen = new Set<string>();
-    const map = buildSkillIdToName(allSkills);
-    const options: { id: string; name: string }[] = [];
-    merged.forEach((id: string | number) => {
-      const sid = String(id);
-      if (seen.has(sid)) return;
-      seen.add(sid);
-      options.push({ id: sid, name: sid === '0' ? 'Any' : (map.get(sid) ?? sid) });
-    });
-    return options;
-  }, [speciesA, speciesB, allSkills]);
+  const mixedSpeciesSkillOptions = useMemo(
+    () => buildMixedSpeciesSkillOptions(speciesA, speciesB, allSkills),
+    [speciesA, speciesB, allSkills],
+  );
 
   // Current selections from draft (stable empty array for hook deps)
   const selectedTraitIds = draft.ancestry?.selectedTraits ?? EMPTY_STRING_ARRAY;
@@ -106,136 +96,69 @@ export function AncestryStep() {
   const selectedSpeciesTraits = draft.ancestry?.selectedSpeciesTraits;
   const selectedFlawSpeciesId = draft.ancestry?.selectedFlawSpeciesId || null;
 
-  // Resolve trait categories: single species
-  const { speciesTraits, ancestryTraits, flaws, characteristics } = useMemo(() => {
-    if (!allTraits) return { speciesTraits: [], ancestryTraits: [], flaws: [], characteristics: [] };
-    const resolve = (ids: (string | number)[]) => resolveTraits(ids, allTraits);
-
-    if (selectedSpecies) {
-      return {
-        speciesTraits: resolve(selectedSpecies.species_traits || []),
-        ancestryTraits: resolve(selectedSpecies.ancestry_traits || []),
-        flaws: resolve(selectedSpecies.flaws || []),
-        characteristics: resolve(selectedSpecies.characteristics || []),
-      };
-    }
-
-    if (speciesA && speciesB) {
-      // Deduplicate by ID so shared traits between the two species appear once (TASK-284)
-      const uniqueAncestryIds = Array.from(new Set([...(speciesA.ancestry_traits || []), ...(speciesB.ancestry_traits || [])].map(String)));
-      const uniqueFlawIds = Array.from(new Set([...(speciesA.flaws || []), ...(speciesB.flaws || [])].map(String)));
-      const uniqueCharIds = Array.from(new Set([...(speciesA.characteristics || []), ...(speciesB.characteristics || [])].map(String)));
-      return {
-        speciesTraits: [], // mixed uses selectedSpeciesTraits UI
-        ancestryTraits: resolve(uniqueAncestryIds),
-        flaws: resolve(uniqueFlawIds),
-        characteristics: resolve(uniqueCharIds),
-      };
-    }
-
-    return { speciesTraits: [], ancestryTraits: [], flaws: [], characteristics: [] };
-  }, [selectedSpecies, speciesA, speciesB, allTraits]);
+  const { speciesTraits, ancestryTraits, flaws, characteristics } = useMemo(
+    () =>
+      resolveAncestryTraitBuckets({
+        selectedSpecies,
+        speciesA,
+        speciesB,
+        allTraits,
+      }),
+    [selectedSpecies, speciesA, speciesB, allTraits],
+  );
 
   // Mixed: species traits from A and B (for "pick one from each")
   const speciesTraitsFromA = useMemo(
-    () => (speciesA && allTraits ? resolveTraits(speciesA.species_traits || [], allTraits) : []),
-    [speciesA, allTraits]
+    () => (speciesA && allTraits ? resolveTraitIds(speciesA.species_traits || [], allTraits) : []),
+    [speciesA, allTraits],
   );
   const speciesTraitsFromB = useMemo(
-    () => (speciesB && allTraits ? resolveTraits(speciesB.species_traits || [], allTraits) : []),
-    [speciesB, allTraits]
+    () => (speciesB && allTraits ? resolveTraitIds(speciesB.species_traits || [], allTraits) : []),
+    [speciesB, allTraits],
   );
 
   // Mixed: ancestry traits from flaw species only (for extra trait when flaw taken)
   const ancestryTraitsFromFlawSpecies = useMemo(() => {
     if (!selectedFlawSpeciesId || !allTraits) return [];
     const sp = speciesA?.id === selectedFlawSpeciesId ? speciesA : speciesB;
-    return sp ? resolveTraits(sp.ancestry_traits || [], allTraits) : [];
+    return sp ? resolveTraitIds(sp.ancestry_traits || [], allTraits) : [];
   }, [selectedFlawSpeciesId, speciesA, speciesB, allTraits]);
 
-  // Mixed: combined unique sizes (max 4)
-  const combinedSizes = useMemo(() => {
-    if (!speciesA && !speciesB) return [];
-    const set = new Set<string>();
-    (speciesA?.sizes || []).forEach((s) => set.add(s));
-    (speciesB?.sizes || []).forEach((s) => set.add(s));
-    if (speciesA?.size) set.add(speciesA.size);
-    if (speciesB?.size) set.add(speciesB.size);
-    return Array.from(set).slice(0, 4);
-  }, [speciesA, speciesB]);
+  const combinedSizes = useMemo(
+    () => combineSpeciesSizes(speciesA, speciesB),
+    [speciesA, speciesB],
+  );
 
-  // Mixed: averaged physical
-  const mixedAveragedPhysical = useMemo(() => {
-    if (!speciesA || !speciesB) return null;
-    const a = speciesA as Species;
-    const b = speciesB as Species;
-    const aveHeight =
-      (Number(a.ave_height) || 0) + (Number(b.ave_height) || 0) !== 0
-        ? Math.round(((Number(a.ave_height) || 0) + (Number(b.ave_height) || 0)) / 2)
-        : undefined;
-    const aveWeight =
-      (Number(a.ave_weight) || 0) + (Number(b.ave_weight) || 0) !== 0
-        ? Math.round(((Number(a.ave_weight) || 0) + (Number(b.ave_weight) || 0)) / 2)
-        : undefined;
-    const lifA = a.adulthood_lifespan;
-    const lifB = b.adulthood_lifespan;
-    const adulthood =
-      lifA?.[0] != null && lifB?.[0] != null
-        ? Math.round((Number(lifA[0]) + Number(lifB[0])) / 2)
-        : undefined;
-    const maxAge =
-      lifA?.[1] != null && lifB?.[1] != null
-        ? Math.round((Number(lifA[1]) + Number(lifB[1])) / 2)
-        : undefined;
-    return { aveHeight, aveWeight, adulthood, maxAge };
-  }, [speciesA, speciesB]);
+  const mixedAveragedPhysical = useMemo(
+    () => averageMixedPhysical(speciesA, speciesB),
+    [speciesA, speciesB],
+  );
 
   // Calculate max ancestry traits based on flaw selection
   const maxAncestryTraits = selectedFlaw ? 2 : 1;
 
   // Toggle ancestry trait selection
   const toggleAncestryTrait = useCallback((traitId: string) => {
-    const isSelected = selectedTraitIds.includes(traitId);
-    let newTraits: string[];
-
-    if (isSelected) {
-      newTraits = selectedTraitIds.filter(id => id !== traitId);
-    } else {
-      if (selectedTraitIds.length >= maxAncestryTraits) {
-        newTraits = [...selectedTraitIds.slice(1), traitId];
-      } else {
-        newTraits = [...selectedTraitIds, traitId];
-      }
-    }
-
     updateDraft({
       ancestry: {
         ...draft.ancestry,
         id: draft.ancestry?.id || '',
         name: draft.ancestry?.name || '',
-        selectedTraits: newTraits,
+        selectedTraits: toggleCappedTraitSelection(selectedTraitIds, traitId, maxAncestryTraits),
       },
     });
   }, [selectedTraitIds, maxAncestryTraits, draft.ancestry, updateDraft]);
 
   // Toggle flaw selection (single species)
   const toggleFlaw = useCallback((flawId: string) => {
-    const isSelected = selectedFlaw === flawId;
-    const newFlaw = isSelected ? null : flawId;
-
-    const currentTraits = selectedTraitIds;
-    const newMaxTraits = newFlaw ? 2 : 1;
-    const newTraits = currentTraits.length > newMaxTraits 
-      ? currentTraits.slice(0, newMaxTraits)
-      : currentTraits;
-
+    const newFlaw = toggleOptionalSingleSelection(selectedFlaw, flawId);
     updateDraft({
       ancestry: {
         ...draft.ancestry,
         id: draft.ancestry?.id || '',
         name: draft.ancestry?.name || '',
         selectedFlaw: newFlaw,
-        selectedTraits: newTraits,
+        selectedTraits: trimTraitsForFlawMax(selectedTraitIds, newFlaw),
       },
     });
   }, [selectedFlaw, selectedTraitIds, draft.ancestry, updateDraft]);
@@ -245,9 +168,6 @@ export function AncestryStep() {
     const isSelected = selectedFlaw === flawId;
     const newFlaw = isSelected ? null : flawId;
     const newFlawSpeciesId = isSelected ? null : speciesId;
-    const currentTraits = selectedTraitIds;
-    const newMaxTraits = newFlaw ? 2 : 1;
-    const newTraits = currentTraits.length > newMaxTraits ? currentTraits.slice(0, newMaxTraits) : currentTraits;
     updateDraft({
       ancestry: {
         ...draft.ancestry,
@@ -258,7 +178,7 @@ export function AncestryStep() {
         speciesNames: draft.ancestry?.speciesNames,
         selectedFlaw: newFlaw,
         selectedFlawSpeciesId: newFlawSpeciesId,
-        selectedTraits: newTraits,
+        selectedTraits: trimTraitsForFlawMax(selectedTraitIds, newFlaw),
       },
     });
   }, [selectedFlaw, selectedTraitIds, draft.ancestry, updateDraft]);
@@ -353,13 +273,12 @@ export function AncestryStep() {
 
   // Toggle characteristic selection
   const toggleCharacteristic = useCallback((charId: string) => {
-    const isSelected = selectedCharacteristic === charId;
     updateDraft({
       ancestry: {
         ...draft.ancestry,
         id: draft.ancestry?.id || '',
         name: draft.ancestry?.name || '',
-        selectedCharacteristic: isSelected ? null : charId,
+        selectedCharacteristic: toggleOptionalSingleSelection(selectedCharacteristic, charId),
       },
     });
   }, [selectedCharacteristic, draft.ancestry, updateDraft]);
@@ -387,56 +306,35 @@ export function AncestryStep() {
   const selectedSpeciesSkillIds = draft.ancestry?.selectedSpeciesSkillIds ?? [];
   const toggleMixedSpeciesSkill = useCallback((skillId: string) => {
     const current = draft.ancestry?.selectedSpeciesSkillIds ?? [];
-    const idx = current.indexOf(skillId);
-    if (idx >= 0) {
-      updateDraft({
-        ancestry: {
-          ...draft.ancestry,
-          id: draft.ancestry?.id || '',
-          name: draft.ancestry?.name || '',
-          mixed: true,
-          speciesIds: draft.ancestry?.speciesIds,
-          speciesNames: draft.ancestry?.speciesNames,
-          selectedSpeciesSkillIds: current.filter((_, i) => i !== idx),
-        },
-      });
-    } else if (current.length < 2) {
-      updateDraft({
-        ancestry: {
-          ...draft.ancestry,
-          id: draft.ancestry?.id || '',
-          name: draft.ancestry?.name || '',
-          mixed: true,
-          speciesIds: draft.ancestry?.speciesIds,
-          speciesNames: draft.ancestry?.speciesNames,
-          selectedSpeciesSkillIds: [...current, skillId],
-        },
-      });
-    }
+    updateDraft({
+      ancestry: {
+        ...draft.ancestry,
+        id: draft.ancestry?.id || '',
+        name: draft.ancestry?.name || '',
+        mixed: true,
+        speciesIds: draft.ancestry?.speciesIds,
+        speciesNames: draft.ancestry?.speciesNames,
+        selectedSpeciesSkillIds: toggleMixedSpeciesSkillSelection(current, skillId),
+      },
+    });
   }, [draft.ancestry, updateDraft]);
 
   // Validation: single species — ancestry picks + each choice-type species trait must have a valid option
-  const speciesTraitChoicesMap = draft.ancestry?.selectedSpeciesTraitChoices ?? {};
   const speciesChoiceTraitParents = speciesTraits.filter((t) => getChoiceOptionIds(t).length > 0);
-  const speciesChoicePicksComplete = speciesChoiceTraitParents.every((t) => {
-    const pid = String(t.id);
-    const picked = speciesTraitChoicesMap[pid];
-    return Boolean(picked && getChoiceOptionIds(t).includes(String(picked)));
+  const canContinueSingle = canContinueAncestrySingle({
+    selectedTraitIds,
+    ancestryTraitCount: ancestryTraits.length,
+    speciesChoiceParents: speciesChoiceTraitParents,
+    speciesTraitChoices: draft.ancestry?.selectedSpeciesTraitChoices,
   });
-  const canContinueSingle =
-    (selectedTraitIds.length >= 1 || ancestryTraits.length === 0) && speciesChoicePicksComplete;
-  // Mixed: need 1 species trait from each, 1 ancestry trait (2 if flaw), size chosen, and exactly 2 species skills
-  const hasSpeciesTraitA = !!selectedSpeciesTraits?.[0];
-  const hasSpeciesTraitB = !!selectedSpeciesTraits?.[1];
-  const hasTwoSpeciesSkills = mixedSpeciesSkillOptions.length <= 2
-    ? selectedSpeciesSkillIds.length === mixedSpeciesSkillOptions.length
-    : selectedSpeciesSkillIds.length === 2;
-  const canContinueMixed =
-    hasSpeciesTraitA &&
-    hasSpeciesTraitB &&
-    (selectedTraitIds.length >= 1 || ancestryTraits.length === 0) &&
-    !!draft.ancestry?.selectedSize &&
-    hasTwoSpeciesSkills;
+  const canContinueMixed = canContinueAncestryMixed({
+    selectedSpeciesTraits,
+    selectedTraitIds,
+    ancestryTraitCount: ancestryTraits.length,
+    selectedSize: draft.ancestry?.selectedSize,
+    mixedSkillOptionCount: mixedSpeciesSkillOptions.length,
+    selectedSpeciesSkillIds,
+  });
 
   const canContinue = isMixed && speciesA && speciesB ? canContinueMixed : canContinueSingle;
 
@@ -523,8 +421,8 @@ export function AncestryStep() {
   if (isMixed && speciesA && speciesB) {
     const nameA = draft.ancestry?.speciesNames?.[0] ?? speciesA.name;
     const nameB = draft.ancestry?.speciesNames?.[1] ?? speciesB.name;
-    const flawsFromA = allTraits ? resolveTraits(speciesA.flaws || [], allTraits) : [];
-    const flawsFromB = allTraits ? resolveTraits(speciesB.flaws || [], allTraits) : [];
+    const flawsFromA = allTraits ? resolveTraitIds(speciesA.flaws || [], allTraits) : [];
+    const flawsFromB = allTraits ? resolveTraitIds(speciesB.flaws || [], allTraits) : [];
     const ancestryForFirstSlot = ancestryTraits;
     const ancestryForSecondSlot = selectedFlaw ? ancestryTraitsFromFlawSpecies : [];
     const ph = mixedAveragedPhysical;
@@ -981,175 +879,6 @@ export function AncestryStep() {
       )}
 
       <CreatorStepFooter onBack={prevStep} onContinue={nextStep} continueDisabled={!canContinue} completionHint={<span>{ancestryCompletion.label}</span>} />
-    </div>
-  );
-}
-
-// =============================================================================
-// TraitSection Component
-// =============================================================================
-
-interface TraitSectionProps {
-  title: string;
-  subtitle?: string;
-  icon: React.ReactNode;
-  traits: ResolvedTrait[];
-  selectable: boolean;
-  selectedIds: string[];
-  onToggle: (id: string) => void;
-  variant?: 'default' | 'ancestry' | 'characteristic' | 'flaw';
-  /** When provided, choice traits (option_trait_ids) show a dropdown to pick one option; onToggle(optionId) is used. */
-  allTraits?: Trait[] | null;
-  /** Single-species automatic species traits: parent id → chosen option trait id. */
-  speciesTraitChoices?: Record<string, string>;
-  onSpeciesTraitChoiceChange?: (parentTraitId: string, optionId: string) => void;
-}
-
-function TraitSection({
-  title,
-  subtitle,
-  icon,
-  traits,
-  selectable,
-  selectedIds,
-  onToggle,
-  variant = 'default',
-  allTraits,
-  speciesTraitChoices,
-  onSpeciesTraitChoiceChange,
-}: TraitSectionProps) {
-  const variantStyles = {
-    default: {
-      border: 'border-border-light',
-      header: 'bg-surface-alt',
-      selected: 'border-primary-outline-border bg-primary-subtle-bg',
-    },
-    ancestry: {
-      border: 'border-warning-300',
-      header: 'bg-warning-light',
-      selected: 'border-warning-500 bg-warning-light',
-    },
-    characteristic: {
-      border: 'border-info-border',
-      header: 'bg-info-light',
-      selected: 'border-info-500 bg-info-light',
-    },
-    flaw: {
-      border: 'border-danger-300',
-      header: 'bg-danger-light',
-      selected: 'border-danger-500 bg-danger-light',
-    },
-  };
-
-  const styles = variantStyles[variant];
-
-  return (
-    <div className={cn('border rounded-xl overflow-hidden mb-6', styles.border)}>
-      <div className={cn('px-4 py-3 border-b flex items-center gap-2', styles.header, styles.border)}>
-        {icon}
-        <div>
-          <h3 className="font-bold text-text-primary">{title}</h3>
-          {subtitle && <p className="text-xs text-text-secondary">{subtitle}</p>}
-        </div>
-      </div>
-      
-      <div className="divide-y divide-border-subtle">
-        {traits.map(trait => {
-          const optionIds = getChoiceOptionIds(trait);
-          const optionOptions = resolveChoiceOptionTraits(optionIds, allTraits ?? undefined);
-          const isChoiceTrait = optionOptions.length > 0;
-          const selectedOptionId = firstSelectedChoiceOptionId(optionIds, selectedIds);
-          const isSelected = isChoiceTrait ? Boolean(selectedOptionId) : selectedIds.includes(trait.id);
-
-          if (isChoiceTrait && selectable) {
-            return (
-              <div
-                key={trait.id}
-                className={cn(
-                  'px-4 py-3 transition-colors',
-                  'hover:bg-surface-alt',
-                  isSelected && styles.selected
-                )}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-text-primary">{trait.name}</h4>
-                    <p className="text-sm text-text-secondary mt-1">{trait.description}</p>
-                    <ChoiceTraitOptionListPicker
-                      parentTraitName={trait.name}
-                      optionTraits={optionOptions}
-                      value={selectedOptionId ?? ''}
-                      onChange={(next) => {
-                        if (selectedOptionId) onToggle(selectedOptionId);
-                        if (next) onToggle(next);
-                      }}
-                      emptyLabel="Choose one option (expand to read)"
-                    />
-                  </div>
-                </div>
-              </div>
-            );
-          }
-
-          if (isChoiceTrait && !selectable && onSpeciesTraitChoiceChange && allTraits) {
-            const pid = String(trait.id);
-            const value = speciesTraitChoices?.[pid] ?? '';
-            const speciesChoiceSelected = Boolean(value);
-            return (
-              <div
-                key={trait.id}
-                className={cn(
-                  'px-4 py-3 transition-colors',
-                  'hover:bg-surface-alt',
-                  speciesChoiceSelected && styles.selected
-                )}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-text-primary">{trait.name}</h4>
-                    <p className="text-sm text-text-secondary mt-1">{trait.description}</p>
-                    <p className="text-xs text-text-muted mt-1">Choose one variant for this species trait.</p>
-                    <ChoiceTraitOptionListPicker
-                      parentTraitName={trait.name}
-                      optionTraits={optionOptions}
-                      value={value}
-                      onChange={(next) => onSpeciesTraitChoiceChange(pid, next)}
-                      emptyLabel="Choose one option (expand to read)"
-                    />
-                  </div>
-                </div>
-              </div>
-            );
-          }
-
-          return (
-            <div
-              key={trait.id}
-              className={cn(
-                'px-4 py-3 transition-colors',
-                selectable && 'hover:bg-surface-alt',
-                isSelected && styles.selected
-              )}
-            >
-              <div className="flex items-start gap-3">
-                {selectable && (
-                  <div className="shrink-0 self-center">
-                    <SelectionToggle
-                      isSelected={isSelected}
-                      onToggle={() => onToggle(trait.id)}
-                      size="lg"
-                    />
-                  </div>
-                )}
-                <div className="flex-1">
-                  <h4 className="font-medium text-text-primary">{trait.name}</h4>
-                  <p className="text-sm text-text-secondary mt-1">{trait.description}</p>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
     </div>
   );
 }

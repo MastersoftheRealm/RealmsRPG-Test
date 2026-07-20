@@ -64,7 +64,7 @@ function resolveTraits(traitIds: (string | number)[], allTraits: Trait[]): Resol
   });
 }
 
-interface TraitSectionProps {
+interface SpeciesCatalogTraitSectionProps {
   title: string;
   traits: ResolvedTrait[];
 }
@@ -87,7 +87,8 @@ function resolvedToDetailItem(trait: ResolvedTrait): DetailOptionItem {
   });
 }
 
-function TraitSection({ title, traits }: TraitSectionProps) {
+/** Read-only catalog sections (DetailOptionList) — not the selectable TraitSection picker. */
+function SpeciesCatalogTraitSection({ title, traits }: SpeciesCatalogTraitSectionProps) {
   if (!traits || traits.length === 0) return null;
 
   const plainItems: DetailOptionItem[] = [];
@@ -265,20 +266,20 @@ export function SpeciesModal({
         {/* Trait Sections - Order: Species Traits, Ancestry, Characteristics, Flaws */}
         {resolvedTraits && (
           <>
-            <TraitSection 
-              title="Species Traits" 
-              traits={resolvedTraits.speciesTraits} 
+            <SpeciesCatalogTraitSection
+              title="Species Traits"
+              traits={resolvedTraits.speciesTraits}
             />
-            <TraitSection 
-              title="Ancestry Traits" 
+            <SpeciesCatalogTraitSection
+              title="Ancestry Traits"
               traits={resolvedTraits.ancestryTraits}
             />
-            <TraitSection 
-              title="Characteristics" 
+            <SpeciesCatalogTraitSection
+              title="Characteristics"
               traits={resolvedTraits.characteristics}
             />
-            <TraitSection 
-              title="Flaws" 
+            <SpeciesCatalogTraitSection
+              title="Flaws"
               traits={resolvedTraits.flaws}
             />
           </>

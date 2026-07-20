@@ -12,15 +12,26 @@ import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Modal, Button, Spinner, SelectionCard, DescriptorChip } from '@/components/ui';
 import { ConfirmActionModal } from '@/components/shared';
+import { AbilityPickButton } from '@/components/character-creator/AbilityPickButton';
 import { useCodexArchetypes } from '@/hooks';
 import { calculateProficiency } from '@/lib/game/formulas';
-import { parseArchetypePathData, pathHasPlayerVisibleLevel1 } from '@/lib/game/archetype-path';
-import { applyPathProficiencyForLevel, resolveArchetypeDisplayName } from '@/lib/game/archetype-display';
+import { resolveArchetypeDisplayName } from '@/lib/game/archetype-display';
+import { formatAbilityLabel } from '@/lib/constants/ability-effect-blurbs';
+import {
+  ARCHETYPE_ABILITY_OPTIONS,
+  PATH_CATEGORY_GROUPS,
+  buildPathSwitchResult,
+  canSaveForgeAbilities,
+  groupPathsByCategory,
+  inferArchetypeCategoryFromCharacter,
+  listPlayerVisiblePaths,
+  pathCategoryGroupLabel,
+  redistributeProficiency,
+} from '@/lib/game/archetype-edit';
 import { isPathCharacter } from '@/components/character-sheet/archetype-path-identity';
 import type { Character, ArchetypeCategory, AbilityName, Archetype } from '@/types';
 
-const ABILITIES: AbilityName[] = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'];
-
+/** Sheet forge copy (proficiency-focused). Creator fantasy copy stays on Advanced until TASK-599. */
 const ARCHETYPE_INFO: Record<ArchetypeCategory, { title: string; description: string }> = {
   power: {
     title: 'Power',
@@ -28,7 +39,8 @@ const ARCHETYPE_INFO: Record<ArchetypeCategory, { title: string; description: st
   },
   'powered-martial': {
     title: 'Powered-Martial',
-    description: 'Proficiency split between Power and Martial (more in Martial if odd total). Choose both abilities.',
+    description:
+      'Proficiency split between Power and Martial (more in Martial if odd total). Choose both abilities.',
   },
   martial: {
     title: 'Martial',
@@ -41,73 +53,6 @@ const PATH_SWITCH_WARNING =
 
 const FORGE_SWITCH_WARNING =
   'Switching to Forge Your Own removes archetype path guidance. Your existing selections are kept, but they may no longer match path recommendations. Path progression notes will no longer appear on your sheet or at level-up.';
-
-function getArchetypeTypeFromCharacter(c: Character): ArchetypeCategory {
-  if (c.archetype?.type) return c.archetype.type;
-  const mart = c.mart_prof ?? c.martialProficiency ?? 0;
-  const pow = c.pow_prof ?? c.powerProficiency ?? 0;
-  if (pow > 0 && mart === 0) return 'power';
-  if (mart > 0 && pow === 0) return 'martial';
-  if (mart > 0 && pow > 0) return 'powered-martial';
-  return 'power';
-}
-
-function redistributeProficiency(total: number, type: ArchetypeCategory): { mart_prof: number; pow_prof: number } {
-  if (type === 'power') return { mart_prof: 0, pow_prof: total };
-  if (type === 'martial') return { mart_prof: total, pow_prof: 0 };
-  const half = Math.floor(total / 2);
-  return { mart_prof: half + (total % 2), pow_prof: half };
-}
-
-function buildPathSwitchResult(path: Archetype, character: Character): EditArchetypeResult {
-  const type = path.type;
-  const level = character.level || 1;
-  const totalProf = calculateProficiency(level);
-  const currentMart = character.mart_prof ?? character.martialProficiency ?? 0;
-  const currentPow = character.pow_prof ?? character.powerProficiency ?? 0;
-  const effectiveTotal = Math.min(currentMart + currentPow, totalProf);
-  const { mart_prof, pow_prof } = redistributeProficiency(effectiveTotal, type);
-
-  const primaryAbility = path.archetype_ability;
-  const powAbil =
-    type !== 'martial'
-      ? ((path.pow_abil || path.ability || primaryAbility) as AbilityName | undefined)
-      : undefined;
-  const martAbil =
-    type !== 'power'
-      ? ((path.mart_abil || path.secondary_ability || path.ability || primaryAbility) as
-          | AbilityName
-          | undefined)
-      : undefined;
-
-  const base: EditArchetypeResult = {
-    archetype: { id: path.id, type },
-    pow_abil: powAbil,
-    mart_abil: martAbil,
-    mart_prof,
-    pow_prof,
-    creationMode: 'path',
-    archetypePathId: path.id,
-  };
-
-  const profUpdate = applyPathProficiencyForLevel(
-    {
-      ...character,
-      ...base,
-      creationMode: 'path',
-      archetypePathId: path.id,
-    },
-    level,
-    path
-  );
-
-  return profUpdate ? { ...base, ...profUpdate } : base;
-}
-
-function capitalizeAbility(value?: string): string {
-  if (!value) return '';
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}
 
 type UiMode = 'path-view' | 'path-picker' | 'forge-edit';
 
@@ -155,30 +100,30 @@ export function EditArchetypeModal({
 
   const pathOptions = useMemo(
     () =>
-      (codexArchetypes as Archetype[])
-        .map((archetype) => ({
-          ...archetype,
-          path_data: parseArchetypePathData(archetype.path_data),
-        }))
-        .filter((archetype) => pathHasPlayerVisibleLevel1(archetype.path_data))
-        .filter((option) => option.id !== display.archetypePathId),
-    [codexArchetypes, display.archetypePathId]
+      listPlayerVisiblePaths(codexArchetypes as Archetype[], {
+        excludeId: display.archetypePathId,
+      }),
+    [codexArchetypes, display.archetypePathId],
   );
+
+  const pathsByCategory = useMemo(() => groupPathsByCategory(pathOptions), [pathOptions]);
 
   const [uiMode, setUiMode] = useState<UiMode>(() => (isPath ? 'path-view' : 'forge-edit'));
   const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(null);
   const [selectedType, setSelectedType] = useState<ArchetypeCategory>(() =>
-    getArchetypeTypeFromCharacter(character)
+    inferArchetypeCategoryFromCharacter(character),
   );
   const [selectedPowerAbility, setSelectedPowerAbility] = useState<AbilityName | null>(
-    character.pow_abil || null
+    character.pow_abil || null,
   );
   const [selectedMartialAbility, setSelectedMartialAbility] = useState<AbilityName | null>(
-    character.mart_abil || null
+    character.mart_abil || null,
   );
 
-  const martProf = redistributeProficiency(effectiveTotal, selectedType).mart_prof;
-  const powProf = redistributeProficiency(effectiveTotal, selectedType).pow_prof;
+  const { mart_prof: martProf, pow_prof: powProf } = redistributeProficiency(
+    effectiveTotal,
+    selectedType,
+  );
 
   // Fresh state per open via editArchetypeSessionKey remount in CharacterSheetModals (no reset effect).
 
@@ -196,12 +141,11 @@ export function EditArchetypeModal({
     }
   };
 
-  const canSaveForge =
-    selectedType === 'power'
-      ? Boolean(selectedPowerAbility)
-      : selectedType === 'martial'
-        ? Boolean(selectedMartialAbility)
-        : Boolean(selectedPowerAbility && selectedMartialAbility && selectedPowerAbility !== selectedMartialAbility);
+  const canSaveForge = canSaveForgeAbilities({
+    selectedType,
+    selectedPowerAbility,
+    selectedMartialAbility,
+  });
 
   const handleForgeSave = () => {
     if (!canSaveForge) return;
@@ -224,7 +168,7 @@ export function EditArchetypeModal({
     if (!pendingConfirm) return;
     if (pendingConfirm.type === 'switch-forge') {
       setUiMode('forge-edit');
-      setSelectedType(getArchetypeTypeFromCharacter(character));
+      setSelectedType(inferArchetypeCategoryFromCharacter(character));
       setPendingConfirm(null);
       return;
     }
@@ -274,7 +218,11 @@ export function EditArchetypeModal({
             </div>
           ) : uiMode === 'path-picker' ? (
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setUiMode('path-view')} className="min-h-[44px]">
+              <Button
+                variant="outline"
+                onClick={() => setUiMode('path-view')}
+                className="min-h-[44px]"
+              >
                 Back
               </Button>
             </div>
@@ -301,12 +249,12 @@ export function EditArchetypeModal({
               <div className="flex flex-wrap gap-2">
                 {display.pow_abil ? (
                   <DescriptorChip variant="power">
-                    Power: {capitalizeAbility(display.pow_abil)}
+                    Power: {formatAbilityLabel(display.pow_abil)}
                   </DescriptorChip>
                 ) : null}
                 {display.mart_abil ? (
                   <DescriptorChip variant="technique">
-                    Martial: {capitalizeAbility(display.mart_abil)}
+                    Martial: {formatAbilityLabel(display.mart_abil)}
                   </DescriptorChip>
                 ) : null}
               </div>
@@ -314,8 +262,8 @@ export function EditArchetypeModal({
                 Power +{currentPow} · Martial +{currentMart} at level {level}
               </p>
               <p className="text-xs text-text-muted dark:text-text-secondary">
-                Path abilities and proficiencies are set from the codex. Use the options below only if you
-                want to leave this path or choose a different one.
+                Path abilities and proficiencies are set from the codex. Use the options below only if
+                you want to leave this path or choose a different one.
               </p>
             </div>
 
@@ -348,20 +296,18 @@ export function EditArchetypeModal({
                 <Spinner />
               </div>
             ) : pathOptions.length === 0 ? (
-              <p className="text-text-secondary text-sm">No other archetype paths are available in the codex.</p>
+              <p className="text-text-secondary text-sm">
+                No other archetype paths are available in the codex.
+              </p>
             ) : (
               <div className="space-y-5">
-                {(['power', 'powered-martial', 'martial'] as const).map((group) => {
-                  const options = pathOptions.filter((option) => option.type === group);
+                {PATH_CATEGORY_GROUPS.map((group) => {
+                  const options = pathsByCategory[group];
                   if (options.length === 0) return null;
                   return (
                     <section key={group}>
                       <h4 className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-2">
-                        {group === 'power'
-                          ? 'Power Paths'
-                          : group === 'martial'
-                            ? 'Martial Paths'
-                            : 'Powered-Martial Paths'}
+                        {pathCategoryGroupLabel(group)}
                       </h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {options.map((option) => (
@@ -370,7 +316,9 @@ export function EditArchetypeModal({
                             onClick={() => setPendingConfirm({ type: 'switch-path', path: option })}
                             className="text-left min-h-[44px]"
                           >
-                            <span className="font-semibold text-text-primary block mb-1">{option.name}</span>
+                            <span className="font-semibold text-text-primary block mb-1">
+                              {option.name}
+                            </span>
                             {option.description ? (
                               <span className="text-sm text-text-secondary whitespace-pre-wrap block">
                                 {option.description}
@@ -390,7 +338,8 @@ export function EditArchetypeModal({
         {uiMode === 'forge-edit' && (
           <div className="space-y-6">
             <p className="text-sm text-text-muted dark:text-text-secondary">
-              Total proficiency at level {level}: {effectiveTotal} (redistributed when you change type).
+              Total proficiency at level {level}: {effectiveTotal} (redistributed when you change
+              type).
             </p>
 
             <div>
@@ -406,20 +355,23 @@ export function EditArchetypeModal({
                         'p-4 rounded-lg border-2 text-left transition-all min-h-[44px]',
                         selectedType === type
                           ? 'border-primary-outline-border bg-primary-subtle-bg'
-                          : 'border-border-light bg-surface hover:border-border'
+                          : 'border-border-light bg-surface hover:border-border',
                       )}
                     >
                       <span className="font-medium text-text-primary">{info.title}</span>
-                      <p className="text-xs text-text-muted dark:text-text-secondary mt-1">{info.description}</p>
+                      <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
+                        {info.description}
+                      </p>
                       {selectedType === type && (
                         <span className="text-xs text-primary-fg mt-2 inline-block">
                           {type === 'power' && `Power +${powProf}`}
                           {type === 'martial' && `Martial +${martProf}`}
-                          {type === 'powered-martial' && `Martial +${martProf} / Power +${powProf}`}
+                          {type === 'powered-martial' &&
+                            `Martial +${martProf} / Power +${powProf}`}
                         </span>
                       )}
                     </button>
-                  )
+                  ),
                 )}
               </div>
             </div>
@@ -438,74 +390,56 @@ export function EditArchetypeModal({
                   <div>
                     <h4 className="text-xs font-medium text-power-fg mb-2">Power Ability</h4>
                     <div className="flex flex-wrap gap-2">
-                      {ABILITIES.map((ability) => (
-                        <button
+                      {ARCHETYPE_ABILITY_OPTIONS.map((ability) => (
+                        <AbilityPickButton
                           key={`power-${ability}`}
-                          type="button"
-                          onClick={() => setSelectedPowerAbility(ability)}
+                          variant="power"
+                          ability={ability}
+                          selected={selectedPowerAbility === ability}
                           disabled={selectedMartialAbility === ability}
-                          className={cn(
-                            'px-3 py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] min-w-[44px]',
-                            selectedPowerAbility === ability
-                              ? 'bg-power-dark text-text-on-dark'
-                              : selectedMartialAbility === ability
-                                ? 'bg-surface-alt text-text-muted dark:text-text-secondary cursor-not-allowed'
-                                : 'bg-surface border border-border-light hover:border-border'
-                          )}
-                        >
-                          {capitalizeAbility(ability)}
-                        </button>
+                          onPick={() => setSelectedPowerAbility(ability)}
+                          withTooltip={false}
+                        />
                       ))}
                     </div>
                   </div>
                   <div>
-                    <h4 className="text-xs font-medium text-martial-fg mb-2">
-                      Martial Ability
-                    </h4>
+                    <h4 className="text-xs font-medium text-martial-fg mb-2">Martial Ability</h4>
                     <div className="flex flex-wrap gap-2">
-                      {ABILITIES.map((ability) => (
-                        <button
+                      {ARCHETYPE_ABILITY_OPTIONS.map((ability) => (
+                        <AbilityPickButton
                           key={`martial-${ability}`}
-                          type="button"
-                          onClick={() => setSelectedMartialAbility(ability)}
+                          variant="martial"
+                          ability={ability}
+                          selected={selectedMartialAbility === ability}
                           disabled={selectedPowerAbility === ability}
-                          className={cn(
-                            'px-3 py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] min-w-[44px]',
-                            selectedMartialAbility === ability
-                              ? 'bg-martial-dark text-text-on-dark'
-                              : selectedPowerAbility === ability
-                                ? 'bg-surface-alt text-text-muted dark:text-text-secondary cursor-not-allowed'
-                                : 'bg-surface border border-border-light hover:border-border'
-                          )}
-                        >
-                          {capitalizeAbility(ability)}
-                        </button>
+                          onPick={() => setSelectedMartialAbility(ability)}
+                          withTooltip={false}
+                        />
                       ))}
                     </div>
                   </div>
                 </div>
               ) : (
                 <div className="flex flex-wrap gap-2">
-                  {ABILITIES.map((ability) => (
-                    <button
+                  {ARCHETYPE_ABILITY_OPTIONS.map((ability) => (
+                    <AbilityPickButton
                       key={ability}
-                      type="button"
-                      onClick={() =>
+                      variant={selectedType === 'power' ? 'power' : 'martial'}
+                      ability={ability}
+                      selected={
+                        selectedType === 'power'
+                          ? selectedPowerAbility === ability
+                          : selectedMartialAbility === ability
+                      }
+                      disabled={false}
+                      onPick={() =>
                         selectedType === 'power'
                           ? setSelectedPowerAbility(ability)
                           : setSelectedMartialAbility(ability)
                       }
-                      className={cn(
-                        'px-4 py-2 rounded-lg font-medium transition-colors min-h-[44px]',
-                        (selectedType === 'power'
-                          ? selectedPowerAbility === ability
-                          : selectedMartialAbility === ability)
-                          ? 'bg-primary-button text-text-on-dark'
-                          : 'bg-surface border border-border-light hover:border-border'
-                      )}
-                    >
-                      {capitalizeAbility(ability)}
-                    </button>
+                      withTooltip={false}
+                    />
                   ))}
                 </div>
               )}
@@ -515,12 +449,12 @@ export function EditArchetypeModal({
               <div className="flex flex-wrap gap-2">
                 {selectedPowerAbility && (
                   <DescriptorChip variant="power">
-                    Power: {capitalizeAbility(selectedPowerAbility)}
+                    Power: {formatAbilityLabel(selectedPowerAbility)}
                   </DescriptorChip>
                 )}
                 {selectedMartialAbility && (
                   <DescriptorChip variant="technique">
-                    Martial: {capitalizeAbility(selectedMartialAbility)}
+                    Martial: {formatAbilityLabel(selectedMartialAbility)}
                   </DescriptorChip>
                 )}
               </div>
@@ -535,7 +469,9 @@ export function EditArchetypeModal({
         onConfirm={handleConfirmSwitch}
         title={confirmTitle}
         description={confirmDescription}
-        confirmLabel={pendingConfirm?.type === 'switch-forge' ? 'Continue to forge editor' : 'Change path'}
+        confirmLabel={
+          pendingConfirm?.type === 'switch-forge' ? 'Continue to forge editor' : 'Change path'
+        }
         confirmVariant="danger"
       />
     </>
