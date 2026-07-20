@@ -144,7 +144,7 @@ export function SheetHeaderIdentity({
   return (
     <>
       {/* Left: Portrait and Identity */}
-      <div className="flex gap-4 flex-shrink-0 items-center" data-sheet-header-identity>
+      <div className="flex gap-4 flex-shrink-0 items-center">
         {/* Portrait — ExpandableImage in play view; edit mode click opens upload */}
         {canChangePortrait ? (
           <div
