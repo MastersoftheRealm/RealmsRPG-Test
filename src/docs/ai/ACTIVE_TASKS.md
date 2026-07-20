@@ -122,6 +122,8 @@ Do **not** read the done archive at session start.
   notes: |
     Product decision: keep Advanced inline catalog vs migrate add onto USM — default keep list UX.
 
+---
+
 - id: TASK-598
   title: Split oversized sheet + Advanced creator hot files
   created_at: 2026-07-20
