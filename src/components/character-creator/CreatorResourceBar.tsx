@@ -6,14 +6,11 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import type { CreatorLayer } from '@/stores/character-creator-store';
 
 export interface CreatorResourceBarProps {
   trainingPoints?: { spent: number; limit: number };
   currency?: { spent: number; limit: number };
   energy?: { current: number; max: number };
-  layer?: CreatorLayer;
-  creationMode?: 'path' | 'forge';
   className?: string;
 }
 

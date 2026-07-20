@@ -18,11 +18,11 @@ import type { EditArchetypeResult } from '@/components/character-sheet';
 import { DeleteConfirmModal, AddSubSkillModal } from '@/components/shared';
 import type { AddLibraryItemType } from '@/hooks/use-add-library-item-data';
 import type { CharacterSheetStats } from './character-sheet-utils';
-
-export type AddModalType = 'power' | 'innate-power' | 'technique' | 'weapon' | 'shield' | 'armor' | 'equipment' | null;
-export type FeatModalType = 'archetype' | 'character' | 'state' | null;
-/** Sheet: Add Sub-Skill only (base skills catalog-all — TASK-584). */
-export type SkillModalType = 'subskill' | null;
+import type {
+  AddModalType,
+  FeatModalType,
+  SkillModalType,
+} from '@/components/character-sheet/character-sheet-context';
 
 /**
  * DESIGN_INTENT: Add-modal exclusion set is type-scoped only.

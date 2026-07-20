@@ -356,7 +356,6 @@ export function PowersStep() {
       <PowersStepChrome
         pathMode={pathMode}
         layer={layer}
-        creationMode={draft.creationMode}
         proficiencySpent={proficiencyTpSummary.spent}
         proficiencyLimit={proficiencyTpSummary.limit}
         proficiencyRemaining={proficiencyTpSummary.remaining}

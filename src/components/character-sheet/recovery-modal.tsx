@@ -434,5 +434,3 @@ export function RecoveryModal({
     </Modal>
   );
 }
-
-export default RecoveryModal;

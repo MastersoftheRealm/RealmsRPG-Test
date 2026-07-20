@@ -265,5 +265,3 @@ function GainCard({ icon, label, value, description }: GainCardProps) {
     </div>
   );
 }
-
-export default LevelUpModal;

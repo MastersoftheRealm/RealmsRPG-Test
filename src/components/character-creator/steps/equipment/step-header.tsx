@@ -8,7 +8,6 @@ import { equipmentCurrencyHelp } from '../../../../../public/tooltip-text';
 export interface EquipmentStepHeaderProps {
   pathMode: boolean;
   layer: number;
-  creationMode: 'path' | 'forge' | undefined;
   remainingCurrency: number;
   startingCurrency: number;
   proficiencyTpSpent: number;
@@ -19,7 +18,6 @@ export interface EquipmentStepHeaderProps {
 export function EquipmentStepHeader({
   pathMode,
   layer,
-  creationMode,
   remainingCurrency,
   startingCurrency,
   proficiencyTpSpent,
@@ -46,8 +44,6 @@ export function EquipmentStepHeader({
       <div className="flex flex-col items-end gap-2">
         {pathMode && layer === 1 ? (
           <CreatorResourceBar
-            layer={layer}
-            creationMode={creationMode}
             trainingPoints={{
               spent: proficiencyTpSpent,
               limit: proficiencyTpLimit,

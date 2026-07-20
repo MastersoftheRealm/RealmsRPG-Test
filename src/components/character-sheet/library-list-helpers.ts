@@ -15,6 +15,7 @@ import {
   type CodexPropertyRow,
 } from '@/lib/library/part-display';
 import { TP_COST_LABEL } from '@/lib/detail-option/compact-facts';
+import { capitalizeWords } from '@/lib/utils';
 import type { PartData } from '@/components/shared';
 import type { Abilities, CharacterPower, CharacterTechnique, Item } from '@/types';
 
@@ -49,10 +50,6 @@ export function chipDescriptionWithOptionLevels(
     if (opts.length > 0) parts.push(opts.join('; '));
   }
   return parts.length > 0 ? parts.join('\n\n') : undefined;
-}
-
-function capitalizeWords(str: string): string {
-  return str.replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export function formatArea(area: string | undefined): string {
