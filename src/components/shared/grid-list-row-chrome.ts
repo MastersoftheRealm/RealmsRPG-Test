@@ -24,7 +24,8 @@ export const GRID_LIST_ROW_SELECTION_COLUMN_WIDTH = '2.75rem';
 
 /**
  * Grid track appended for inline selection toggles — pair with `ListHeader hasSelectionColumn`
- * on **custom** Modal + GridListRow lists (e.g. AdminSpecies trait picker until TASK-572).
+ * on **custom** Modal / editor-chrome GridListRow lists (e.g. AdminTraits choice-option
+ * picker — intentional nested editor chrome, not an add-X USM; TASK-572).
  * Do **not** pre-wrap columns passed into `UnifiedSelectionModal` — it applies
  * `gridColumnsWithInlineSelection` internally. Encounter participant pick uses
  * `AddCombatantModal` (non-USM; no GridListRow selection column).

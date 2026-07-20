@@ -9,6 +9,7 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
   ListEmptyState as EmptyState,
+  gridColumnsWithInlineSelection,
 } from '@/components/shared';
 import { traitsByIdMap, choiceTraitOptionIdsToChipData } from '@/lib/choice-trait';
 import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
@@ -20,7 +21,8 @@ import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Copy, X, Plus } from 'lucide-react';
 
 const ADMIN_TRAIT_GRID = '1.5fr 0.6fr 0.6fr 0.6fr 40px';
-const CHOICE_TRAIT_GRID = '1.5fr 0.6fr 0.6fr 80px';
+/** Data columns only — selection track appended via gridColumnsWithInlineSelection / hasSelectionColumn. */
+const CHOICE_TRAIT_GRID = '1.5fr 0.6fr 0.6fr';
 const ADMIN_TRAIT_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'uses_per_rec', label: 'USES' },
@@ -398,6 +400,12 @@ export function AdminTraitsTab() {
             <p className="text-xs text-text-muted dark:text-text-secondary mb-2">
               When set, this trait becomes a choice trait: the player selects it then picks one option from this list. Expand rows to see descriptions.
             </p>
+            {/*
+              Intentional admin editor chrome (TASK-572): inline multi-select lives inside the
+              trait edit Modal — not an add-X selection modal. Do not wrap in UnifiedSelectionModal
+              (nested modal). useModalListState + ListHeader + GridListRow keep search/sort/GLR
+              grammar; AdminSpecies trait Add uses USM instead.
+            */}
             <SearchInput
               value={choiceSearch}
               onChange={setChoiceSearch}
@@ -409,11 +417,11 @@ export function AdminTraitsTab() {
                 { key: 'name', label: 'NAME' },
                 { key: 'uses_per_rec', label: 'USES' },
                 { key: 'rec_period', label: 'RECOVERY' },
-                { key: '_sel', label: '', sortable: false as const },
               ]}
               gridColumns={CHOICE_TRAIT_GRID}
               sortState={choiceSortState}
               onSort={handleChoiceSort}
+              hasSelectionColumn
             />
             <div className="max-h-48 overflow-y-auto border border-border rounded-lg mt-1 bg-surface-alt">
               {sortedChoiceTraits.length === 0 ? (
@@ -427,7 +435,7 @@ export function AdminTraitsTab() {
                       id={t.id}
                       name={t.name}
                       description={t.description || ''}
-                      gridColumns={CHOICE_TRAIT_GRID}
+                      gridColumns={gridColumnsWithInlineSelection(CHOICE_TRAIT_GRID)}
                       columns={[
                         { key: 'Uses', value: t.uses_per_rec != null ? String(t.uses_per_rec) : '-' },
                         { key: 'Recovery', value: t.rec_period || '-' },

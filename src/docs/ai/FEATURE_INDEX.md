@@ -62,7 +62,7 @@
 | Character creator path recommendations | `useCreatorPathData` — resolves `path_data` from draft or codex by `archetypePathId` |
 | Guided creator path data | `useGuidedPathData` in `components/guided-creator/use-guided-path-data.ts` (returns `isLoading` while codex archetypes load for selected path — Loadout phase entry waits on it, TASK-527) |
 | Autosave (debounced) | `useAutoSave` |
-| List sorting / modal list state | `useSort`, `sortByColumn`, `useModalListState` |
+| List sorting / modal list state | `useSort`, `sortByColumn`, `useModalListState` (rare non-USM only — AdminTraits choice-option editor chrome; TASK-572) |
 | Tooltips (canonical) | `InfoTippy` + `WordHelpTip` (word-tied, no icon) + `public/tooltip-text.tsx` (`getAbilityHelp` / `getDefenseHelp`) — **`guide/04-floating-ui-tooltips.md`** (decision matrix) |
 | Floating UI (`@floating-ui/react`) | Engine inside `InfoTippy` only today; new anchored UI → shared primitive first — see same guide appendix |
 
@@ -83,7 +83,8 @@
 | **Entity card art — product/schema** | REALMS §5.0.3 + `guide/03-entity-card-art.md` + `SUPABASE_SCHEMA.md` §2.5a |
 | Hub list row (Encounters/Crafting) | `HubListRow` |
 | Sortable column headers | `ListHeader` — data columns asc/desc by default; only spacer/action columns `sortable: false` (TASK-488) |
-| Selection modal (add/pick from library) | `UnifiedSelectionModal` (default `flexLayout` + `fullScreenOnMobile`; list-first: Search + Filters toolbar; `scopeExtra` always-visible mode tabs; `headerExtra`/`filterContent` collapsed in `FilterSection` compact; Cancel/Add Selected via Modal `footer`; `maxSelections` soft limit when max ≠ 1; `maxSelections={1}` replaces selection; `confirmLabel` / optional `primaryActions` / `footerExtra`). Sheet add proficiency: `AddProficiencyModal` (thin USM wrapper; option levels in `footerExtra` — TASK-567) |
+| Selection modal (add/pick from library) | `UnifiedSelectionModal` (default `flexLayout` + `fullScreenOnMobile`; list-first: Search + Filters toolbar; `scopeExtra` always-visible mode tabs; `headerExtra`/`filterContent` collapsed in `FilterSection` compact; Cancel/Add Selected via Modal `footer`; `maxSelections` soft limit when max ≠ 1; `maxSelections={1}` replaces selection; `confirmLabel` / optional `primaryActions` / `footerExtra`). Sheet add proficiency: `AddProficiencyModal` (thin USM wrapper; option levels in `footerExtra` — TASK-567). AdminSpecies trait Add: inline USM in `AdminSpeciesTab` (TASK-572). |
+| AdminTraits choice-option picker | Inline **editor chrome** inside trait edit Modal (`AdminTraitsTab` — `useModalListState` + ListHeader + selectable GLR; TASK-572). Not an add-X USM — nesting a selection modal inside the edit Modal is wrong; keep search/sort/GLR grammar. |
 | Encounter / session participant picker | **`AddCombatantModal`** (`add-combatant-modal.tsx`) — intentional non-USM shell (TASK-571). Creature Library + Campaign Characters drill-down; qty + combatant type + initiative/encounter payload. **Extend this** for combat/skill encounters (mixed reuses those views), VTT, downtime, and future session-play add-participant flows — do not fork and do not migrate onto USM. |
 | + → ✓ selection button | `SelectionToggle`; equipped toggle: `EquipToggle`; innate: `InnateToggle` |
 | Source scope All / Realms / My Library | `SourceFilter` (on `SegmentedControl`) |

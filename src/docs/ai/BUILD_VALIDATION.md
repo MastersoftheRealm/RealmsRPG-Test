@@ -898,6 +898,32 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
+#### DEV-V-008-T022 — AdminSpecies trait Add uses UnifiedSelectionModal (TASK-572)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Admin codex |
+| **Related task** | TASK-572 |
+| **Where** | `/admin/codex` → Species |
+| **Needs** | Admin account; Codex traits available |
+
+**Steps**
+1. Open **Add Species** (or edit an existing species).
+2. Under **Species Traits** (or Ancestry / Flaws / Characteristics), click **Add**.
+3. Confirm a selection modal opens with search, sortable Name/Uses/Recovery headers, selectable GridListRow list, and sticky **Cancel** / **Add Selected** footer (same grammar as other add-X USMs).
+4. Search for a trait; select 1–2 rows; click **Add Selected**. Confirm they appear in the species field list and can be removed with the row X.
+5. Re-open the same Add picker — already-added traits for that field are hidden.
+6. Optional: Traits tab → edit a choice trait — **Choice trait options** stays an inline searchable multi-select inside the edit modal (not a nested USM).
+
+**Expected**
+- Species trait Add uses UnifiedSelectionModal (no per-row Add/Done-only parallel shell).
+- AdminTraits choice options remain editor chrome inside the edit modal.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats.
