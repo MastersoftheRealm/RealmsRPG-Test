@@ -119,5 +119,3 @@ export function AddLibraryItemModal({
     />
   );
 }
-
-export default AddLibraryItemModal;

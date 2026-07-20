@@ -8,15 +8,6 @@
 import type { Abilities, AbilityName, DefenseName } from '@/types/abilities';
 import type { CharacterTempModifiers } from '@/types/character';
 
-/** Cascade contract for TASK-586 (documented + enforced by helpers). */
-export const TEMP_MODIFIER_CASCADE = {
-  /** Ability temps affect defense/skill/roll display that reads effective abilities. */
-  abilityAffectsDefenses: true,
-  abilityAffectsSkills: true,
-  /** Default: ability temps do NOT change max HP / max EN / TP maxima. */
-  abilityAffectsResourceMaximaDefault: false,
-} as const;
-
 export type TempModifierScalarKey =
   | 'speed'
   | 'evasion'

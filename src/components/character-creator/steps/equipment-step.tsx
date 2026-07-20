@@ -321,7 +321,6 @@ export function EquipmentStep() {
       <EquipmentStepHeader
         pathMode={pathMode}
         layer={layer}
-        creationMode={draft.creationMode}
         remainingCurrency={remainingCurrency}
         startingCurrency={startingCurrency}
         proficiencyTpSpent={proficiencyTpSummary.spent}

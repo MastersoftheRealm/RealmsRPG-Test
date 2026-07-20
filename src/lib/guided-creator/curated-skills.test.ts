@@ -5,7 +5,6 @@ import {
   formatGuidedAbilityKeysLabel,
   formatGuidedSkillAbilityTag,
   getGuidedAbilityRecommendationTiers,
-  getGuidedCuratedSkillIds,
   isTooBroadSkillAbility,
   resolveGuidedArchetypeAbilities,
   skillMatchesArchetypeAbility,
@@ -167,8 +166,8 @@ describe('curateGuidedSkillIds', () => {
     expect(skillIds).toContain('42');
   });
 
-  it('getGuidedCuratedSkillIds returns skill ids only', () => {
-    const ids = getGuidedCuratedSkillIds({
+  it('curateGuidedSkillIds returns skill ids for martial primary', () => {
+    const { skillIds } = curateGuidedSkillIds({
       codexSkills,
       abilities: berserkerAbilities,
       archetypeType: 'martial',
@@ -178,7 +177,7 @@ describe('curateGuidedSkillIds', () => {
       selectedSkillIds: new Set(),
     });
 
-    expect(ids).toContain('9');
+    expect(skillIds).toContain('9');
   });
 });
 

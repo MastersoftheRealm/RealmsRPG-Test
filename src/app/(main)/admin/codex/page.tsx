@@ -8,7 +8,8 @@
 'use client';
 
 import { useState } from 'react';
-import { PageContainer, PageHeader, TabNavigation, TabContentPanel, useTabGroup, Button } from '@/components/ui';
+import { PageContainer, PageHeader, TabNavigation, TabContentPanel, useTabGroup } from '@/components/ui';
+import { SegmentedControl } from '@/components/shared';
 import { AdminFeatsTab } from './AdminFeatsTab';
 import { AdminTraitsTab } from './AdminTraitsTab';
 import { AdminSpeciesTab } from './AdminSpeciesTab';
@@ -64,24 +65,15 @@ export default function AdminCodexPage() {
           title="Codex Editor"
           description="Edit feats, skills, species, and other game reference data."
         />
-        <div className="flex items-center gap-1 rounded-lg border border-border bg-surface-alt/50 p-0.5">
-          <Button
-            size="sm"
-            variant={viewMode === 'list' ? 'primary' : 'ghost'}
-            onClick={() => setViewMode('list')}
-            className="gap-1.5"
-          >
-            <List className="w-4 h-4" /> List
-          </Button>
-          <Button
-            size="sm"
-            variant={viewMode === 'spreadsheet' ? 'primary' : 'ghost'}
-            onClick={() => setViewMode('spreadsheet')}
-            className="gap-1.5"
-          >
-            <LayoutGrid className="w-4 h-4" /> Spreadsheet
-          </Button>
-        </div>
+        <SegmentedControl
+          aria-label="Codex editor view mode"
+          value={viewMode}
+          onChange={setViewMode}
+          options={[
+            { value: 'list', label: 'List', icon: <List className="w-4 h-4" /> },
+            { value: 'spreadsheet', label: 'Spreadsheet', icon: <LayoutGrid className="w-4 h-4" /> },
+          ]}
+        />
       </div>
 
       <TabNavigation
