@@ -37,6 +37,7 @@ import { ErrorDisplay } from '@/components/shared';
 import {
   bootstrapTechniqueCreatorFormState,
   type TechniqueCreatorFormState,
+  type TechniqueLibraryRecord,
 } from './technique-creator-bootstrap';
 import { TechniqueCreatorEditor } from './technique-creator-editor';
 import { useTechniqueCreatorWorkspace } from './use-technique-creator-workspace';
@@ -190,7 +191,8 @@ function TechniqueCreatorWorkspace({
         isLoading: load.isLoading,
         error: load.error,
         title: 'Load Technique from Library',
-        onSelect: (selected) => ws.handleLoadTechnique(selected.data),
+        onSelect: (selected) =>
+          ws.handleLoadTechnique(selected.data as TechniqueLibraryRecord),
       }}
       sidebar={
         <CreatorSummaryPanel

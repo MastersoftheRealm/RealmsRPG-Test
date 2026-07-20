@@ -13,7 +13,7 @@ export const MAX_FLAWS = 3;
 export const MAX_SKILLS = 2;
 export const MAX_SIZES = 2;
 export const MAX_LANGUAGES = 2;
-export const DEFAULT_LANGUAGES = ['Universal'];
+const DEFAULT_LANGUAGES = ['Universal'];
 export const SIZE_OPTIONS = ['Tiny', 'Small', 'Medium', 'Large', 'Huge'];
 
 export const SPECIES_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.SPECIES;
@@ -86,7 +86,7 @@ export function isSpeciesFormSaveReady(form: SpeciesFormState): boolean {
   );
 }
 
-export function normalizeTraitIds(ids: (string | number)[] | undefined, allTraits: Trait[]): string[] {
+function normalizeTraitIds(ids: (string | number)[] | undefined, allTraits: Trait[]): string[] {
   if (!ids?.length) return [];
   return ids.map((id) => {
     const str = String(id);
@@ -95,7 +95,7 @@ export function normalizeTraitIds(ids: (string | number)[] | undefined, allTrait
   });
 }
 
-export function normalizeSkillIds(ids: (string | number)[] | undefined, allSkills: Skill[]): string[] {
+function normalizeSkillIds(ids: (string | number)[] | undefined, allSkills: Skill[]): string[] {
   if (!ids?.length) return [];
   return ids.map((id) => {
     const str = String(id);

@@ -26,6 +26,7 @@ import {
   TECHNIQUE_CREATOR_CACHE_KEY,
   type TechniqueCreatorCache,
   type TechniqueCreatorFormState,
+  type TechniqueLibraryRecord,
   type TechniqueSelectedPart as SelectedPart,
   type TechniqueDamageConfig as DamageConfig,
 } from './technique-creator-bootstrap';
@@ -47,7 +48,7 @@ function toTechniquePartPayload(part: {
   };
 }
 
-export type UseTechniqueCreatorWorkspaceArgs = {
+type UseTechniqueCreatorWorkspaceArgs = {
   initialFormState: TechniqueCreatorFormState;
   editTechniqueId: string | null;
   techniqueParts: TechniquePart[];
@@ -316,9 +317,7 @@ export function useTechniqueCreatorWorkspace({
     setImageUrl(next.imageUrl);
   }, []);
 
-  // Load a technique from the library
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleLoadTechnique = useCallback((technique: any) => {
+  const handleLoadTechnique = useCallback((technique: TechniqueLibraryRecord) => {
     applyFormState(
       techniqueLibraryRecordToFormState(
         technique,

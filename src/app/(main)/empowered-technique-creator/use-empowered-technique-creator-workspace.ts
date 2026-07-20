@@ -44,7 +44,7 @@ import {
 } from './empowered-technique-bootstrap';
 import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
 
-export type UseEmpoweredTechniqueCreatorWorkspaceArgs = {
+type UseEmpoweredTechniqueCreatorWorkspaceArgs = {
   initialFormState: EmpoweredTechniqueFormState;
   editId: string | null;
   powerParts: PowerPart[];

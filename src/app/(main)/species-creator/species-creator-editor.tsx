@@ -29,7 +29,7 @@ import {
   type TraitCategory,
 } from './species-creator-bootstrap';
 
-export type SpeciesCreatorEditorProps = {
+type SpeciesCreatorEditorProps = {
   isAdmin: boolean;
   form: SpeciesFormState;
   onFormChange: (updater: (prev: SpeciesFormState) => SpeciesFormState) => void;
@@ -311,7 +311,7 @@ const TRAIT_LIST_COLUMNS = [
   { key: 'rec_period', label: 'RECOVERY' },
 ];
 
-export interface TraitListModalProps {
+interface TraitListModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;

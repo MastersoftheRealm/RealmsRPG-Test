@@ -35,7 +35,7 @@ import {
   type TraitCategory,
 } from './species-creator-bootstrap';
 
-export type UseSpeciesCreatorWorkspaceArgs = {
+type UseSpeciesCreatorWorkspaceArgs = {
   traits: Trait[];
   skills: Skill[];
   skillsLoading: boolean;

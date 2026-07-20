@@ -56,7 +56,7 @@ export interface TechniqueCreatorFormState {
   imageUrl: string | null;
 }
 
-type TechniqueLibraryRecord = {
+export type TechniqueLibraryRecord = {
   name?: string;
   description?: string;
   parts?: unknown;
