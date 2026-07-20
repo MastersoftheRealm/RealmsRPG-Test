@@ -63,12 +63,7 @@ interface SheetHeaderProps {
   onNameChange?: (name: string) => void;
   // Experience editing
   onExperienceChange?: (value: number) => void;
-  // Speed/Evasion base editing
-  speedBase?: number;
-  evasionBase?: number;
-  onSpeedBaseChange?: (value: number) => void;
-  onEvasionBaseChange?: (value: number) => void;
-  /** How to display speed: spaces (default), feet, or meters. Edit is always in spaces. */
+  /** How to display speed: spaces (default), feet, or meters. */
   speedDisplayUnit?: 'spaces' | 'feet' | 'meters';
   /** Sparse Temp Modifier patch (ADR-0006). Falls back to sheet context when omitted. */
   onTempModifiersChange?: (patch: CharacterTempModifiers) => void;
@@ -100,10 +95,6 @@ export function SheetHeader({
   portraitRefreshKey = null,
   onNameChange,
   onExperienceChange,
-  speedBase = 6,
-  evasionBase = 10,
-  onSpeedBaseChange,
-  onEvasionBaseChange,
   speedDisplayUnit = 'spaces',
   onTempModifiersChange: onTempModifiersChangeProp,
   innateThreshold = 0,
@@ -207,24 +198,16 @@ export function SheetHeader({
             label="Speed"
             value={speedDisplayValue}
             valueSuffix={speedDisplay.suffix}
-            baseValue={speedBase}
             isEditMode={isEditMode}
-            onBaseChange={onSpeedBaseChange}
             tempDelta={speedTemp}
             onTempDeltaChange={onTempModifiersChange ? (d) => setScalarTemp('speed', d) : undefined}
-            minBase={1}
-            maxBase={20}
           />
           <LargeStatBlock
             label="Evasion"
             value={displayStats.evasion}
-            baseValue={evasionBase}
             isEditMode={isEditMode}
-            onBaseChange={onEvasionBaseChange}
             tempDelta={evasionTemp}
             onTempDeltaChange={onTempModifiersChange ? (d) => setScalarTemp('evasion', d) : undefined}
-            minBase={0}
-            maxBase={20}
           />
           {showCombatArmorStats && (
             <>

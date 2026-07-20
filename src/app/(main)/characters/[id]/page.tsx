@@ -613,10 +613,6 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 portraitRefreshKey={portraitRefreshKey}
                 onNameChange={effectiveEditMode ? handleNameChange : undefined}
                 onExperienceChange={handleExperienceChange}
-                speedBase={character.speedBase ?? 6}
-                evasionBase={character.evasionBase ?? 10}
-                onSpeedBaseChange={(v: number) => setCharacter(prev => prev ? { ...prev, speedBase: v } : null)}
-                onEvasionBaseChange={(v: number) => setCharacter(prev => prev ? { ...prev, evasionBase: v } : null)}
                 speedDisplayUnit={character.speedDisplayUnit ?? 'spaces'}
                 innateThreshold={archetypeProgression?.innateThreshold || 0}
                 innatePools={archetypeProgression?.innatePools || 0}

@@ -1,3 +1,40 @@
+- id: TASK-600
+  title: Speed/Evasion header — Temp Modifier only (remove pencil base edit)
+  created_at: 2026-07-20
+  created_by: owner
+  completed_at: 2026-07-20
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T038
+      - DEV-V-009-T034
+  developer_test_plan: |
+    Suite DEV-V-009 T038 (+ T034) — see BUILD_VALIDATION.md
+  related_files:
+    - src/components/character-sheet/sheet-large-stat-block.tsx
+    - src/components/character-sheet/sheet-header.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/docs/ai/ADR/0006-temp-modifier-mode.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Owner feedback: for Speed/Evasion modifiers, remove the pencil/permanent modifier and keep
+    only Temp Modifier. Delete the LargeStatBlock spend/base-edit path (Speed/Evasion were the
+    only consumers); header cards match DR/crit/Terminal Temp-only chrome.
+  acceptance_criteria:
+    - Speed and Evasion show Temp Modifier toggle only in edit mode (no pencil / Base stepper).
+    - Sheet no longer wires onSpeedBaseChange / onEvasionBaseChange.
+    - Abilities/Skills dual pencil+Temp unchanged.
+    - BUILD_VALIDATION T038 (+ T034 wording); ADR-0006 layering note updated.
+  notes: |
+    verification_status pending-qa (DEV-V-009-T038). speedBase/evasionBase fields remain for
+    calculated defaults; not sheet-editable via header.
+
 - id: TASK-599
   title: Single source of truth for archetype-category marketing copy
   created_at: 2026-07-20

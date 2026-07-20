@@ -3,18 +3,12 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui';
-import {
-  DecrementButton,
-  IncrementButton,
-  SectionDualModeToggles,
-  TempModifierToggle,
-  type SectionEditMode,
-} from '@/components/shared';
+import { DecrementButton, IncrementButton, TempModifierToggle } from '@/components/shared';
 import { tempModifierValueClass } from '@/lib/character/temp-modifiers';
 
 /**
- * Large stat block for Speed / Evasion / DR / Critical Range.
- * Pencil = rules base (Speed/Evasion only); Temp Modifier = layered delta (ADR-0006).
+ * Large stat block for Speed / Evasion / DR / Critical Range / Terminal.
+ * Edit mode: Temp Modifier only (ADR-0006). No pencil / permanent base edit.
  * `value` is the final display number/string (temps already applied by caller).
  */
 export function LargeStatBlock({
@@ -22,34 +16,22 @@ export function LargeStatBlock({
   value,
   valueSuffix,
   valueAriaLabel,
-  baseValue,
   isEditMode,
-  onBaseChange,
   tempDelta = 0,
   onTempDeltaChange,
-  minBase = 0,
-  maxBase = 20,
 }: {
   label: string;
   value: number | string;
   valueSuffix?: string;
   /** Optional accessible name for the value (e.g. read-only DR / Critical Range). */
   valueAriaLabel?: string;
-  baseValue?: number;
   isEditMode?: boolean;
-  onBaseChange?: (newBase: number) => void;
   tempDelta?: number;
   onTempDeltaChange?: (delta: number) => void;
-  minBase?: number;
-  maxBase?: number;
 }) {
-  const [mode, setMode] = useState<SectionEditMode>('none');
-  const [tempOnlyActive, setTempOnlyActive] = useState(false);
-  const canSpend = Boolean(isEditMode && onBaseChange && baseValue !== undefined);
+  const [tempActive, setTempActive] = useState(false);
   const canTemp = Boolean(isEditMode && onTempDeltaChange);
-  const showSpendControls = canSpend && mode === 'spend';
-  const showTempControls =
-    canTemp && (canSpend ? mode === 'tempModifier' : tempOnlyActive);
+  const showTempControls = canTemp && tempActive;
 
   return (
     <Card className="flex flex-col items-center p-4 bg-surface-alt min-w-[100px] shadow-none">
@@ -57,21 +39,12 @@ export function LargeStatBlock({
         <span className="text-sm font-semibold text-text-secondary uppercase tracking-wide text-center">
           {label}
         </span>
-        {canSpend && canTemp && (
-          <SectionDualModeToggles
-            mode={mode}
-            onModeChange={setMode}
-            spendState="normal"
-            hasTempModifiers={tempDelta !== 0}
-            spendTitle={`Edit ${label} base`}
-          />
-        )}
-        {!canSpend && canTemp && (
+        {canTemp && (
           <TempModifierToggle
-            isActive={tempOnlyActive}
+            isActive={tempActive}
             hasModifiers={tempDelta !== 0}
-            onClick={() => setTempOnlyActive((prev) => !prev)}
-            title={tempOnlyActive ? 'Close Temp Modifier' : 'Temp Modifier'}
+            onClick={() => setTempActive((prev) => !prev)}
+            title={tempActive ? 'Close Temp Modifier' : 'Temp Modifier'}
           />
         )}
       </div>
@@ -87,26 +60,6 @@ export function LargeStatBlock({
           <span className="text-xl font-semibold text-text-secondary ml-0.5">{valueSuffix}</span>
         ) : null}
       </span>
-
-      {showSpendControls && baseValue !== undefined && onBaseChange && (
-        <div className="flex items-center gap-1 mt-2">
-          <DecrementButton
-            size="sm"
-            onClick={() => onBaseChange(Math.max(minBase, baseValue - 1))}
-            disabled={baseValue <= minBase}
-            title={`Decrease ${label} base`}
-          />
-          <span className="text-xs min-w-[3rem] text-center text-text-muted dark:text-text-secondary">
-            Base: {baseValue}
-          </span>
-          <IncrementButton
-            size="sm"
-            onClick={() => onBaseChange(Math.min(maxBase, baseValue + 1))}
-            disabled={baseValue >= maxBase}
-            title={`Increase ${label} base`}
-          />
-        </div>
-      )}
 
       {showTempControls && onTempDeltaChange && (
         <div className="flex items-center gap-1 mt-2">

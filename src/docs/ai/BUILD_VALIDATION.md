@@ -1379,9 +1379,9 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 |-------|-------|
 | **Suite** | DEV-V-009 — Character sheet refactor |
 | **Task** | TASK-585 (contract); full UI wire TASK-586 |
-| **Where** | `/characters/[id]` → Edit mode → sections with `SectionDualModeToggles` (after TASK-586: header Speed/Evasion/DR/crit/Terminal, Abilities, Defenses, Skills) |
+| **Where** | `/characters/[id]` → Edit mode → sections with `SectionDualModeToggles` (Abilities, Defenses, Skills) and header Temp-only LargeStatBlocks |
 | **Needs** | Character you can edit and save; after TASK-586 wiring |
-| **Steps** | 1. Enter sheet edit mode. 2. Confirm pencil and SlidersHorizontal sit together (dual affordance); activating one closes the other. 3. Set a positive Temp Modifier on a value — value tints warning/gold; roll chip stays untinted. 4. Set a negative Temp Modifier — value tints danger. 5. Refresh / reopen sheet (and optional campaign view) — deltas persist. 6. Abilities: confirm ability temps cascade to dependents but do **not** change max Health/Energy/TP unless the resource-maxima toggle is on. |
+| **Steps** | 1. Enter sheet edit mode. 2. On Abilities/Skills: confirm pencil and SlidersHorizontal sit together (dual affordance); activating one closes the other. Header Speed/Evasion/DR/crit/Terminal: Temp toggle only (no pencil). 3. Set a positive Temp Modifier on a value — value tints warning/gold; roll chip stays untinted. 4. Set a negative Temp Modifier — value tints danger. 5. Refresh / reopen sheet (and optional campaign view) — deltas persist. 6. Abilities: confirm ability temps cascade to dependents but do **not** change max Health/Energy/TP unless the resource-maxima toggle is on. |
 | **Expected** | ADR-0006 contract: persist `tempModifiers`, dual toggles only via shared components, value tint not roll tint, cascade gate default off. |
 | **Report** | DEV-V-009-T033: PASS / FAIL / SKIP — |
 
@@ -1393,9 +1393,21 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Task** | TASK-586 |
 | **Where** | `/characters/[id]` → Edit mode → header (Speed/Evasion/DR/crit/Terminal), Abilities (+ defenses), Skills; optional campaign view |
 | **Needs** | Editable character; armor equipped recommended for DR/crit defaults |
-| **Steps** | 1. Enter edit mode. 2. Header: set Temp Modifiers on Speed, Evasion, DR, Critical Range, Terminal (LargeStatBlock) — values tint; pencil still edits Speed/Evasion base only. 3. Abilities: Temp mode adjusts ability/defense deltas; cascade shows on defense scores/skill bonuses; resource-maxima toggle default off (max HP/EN/TP unchanged until toggled on — then Proficiencies TP Limit and max Health/Energy follow effective abilities). 4. Skills: Temp column adjusts skill bonus deltas; spend mode cannot overspend skill points. 5. Refresh + open campaign view — temps persist and tint. |
-| **Expected** | All v1 surfaces support Temp Modifier with tint + persistence; ability cascade + HP/EN/TP toggle per ADR-0006; pencil spend locks prevent intentional overspend. |
+| **Steps** | 1. Enter edit mode. 2. Header: set Temp Modifiers on Speed, Evasion, DR, Critical Range, Terminal (LargeStatBlock) — values tint; header cards show Temp toggle only (no pencil / base edit). 3. Abilities: Temp mode adjusts ability/defense deltas; cascade shows on defense scores/skill bonuses; resource-maxima toggle default off (max HP/EN/TP unchanged until toggled on — then Proficiencies TP Limit and max Health/Energy follow effective abilities). 4. Skills: Temp column adjusts skill bonus deltas; spend mode cannot overspend skill points. 5. Refresh + open campaign view — temps persist and tint. |
+| **Expected** | All v1 surfaces support Temp Modifier with tint + persistence; ability cascade + HP/EN/TP toggle per ADR-0006; pencil spend locks on Abilities/Skills prevent intentional overspend; Speed/Evasion have no permanent-base pencil. |
 | **Report** | DEV-V-009-T034: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T038 — Speed/Evasion Temp Modifier only (TASK-600)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-600 |
+| **Where** | `/characters/[id]` → Edit mode → header Speed / Evasion |
+| **Needs** | Editable character |
+| **Steps** | 1. Enter sheet edit mode. 2. On Speed and Evasion LargeStatBlocks, confirm only the Temp Modifier (sliders) control appears — no pencil. 3. Toggle Temp on Speed, adjust +/− — value tints; no “Base:” stepper appears. 4. Repeat for Evasion. 5. Confirm Abilities/Skills still show dual pencil+Temp. |
+| **Expected** | Speed/Evasion are Temp-only; rules `speedBase`/`evasionBase` are not editable from the sheet header; dual mode remains on Abilities/Skills. |
+| **Report** | DEV-V-009-T038: PASS / FAIL / SKIP — |
 
 #### DEV-V-009-T035 — Defense Score hover tip (TASK-587)
 
